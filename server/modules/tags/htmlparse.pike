@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.70 1998/01/29 14:21:40 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.71 1998/02/02 01:08:51 wing Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -677,20 +677,68 @@ inline string do_replace(string s, mapping (string:string) m)
   return replace(s, indices(m), values(m));
 }
 
-string tag_set(string tag, mapping m, object got)
+string tag_set( string tag, mapping m, object id )
 {
-  if (m->variable) {
-    if (m->value) {
+  if (m->variable)
+  {
+    if (m->value)
       // Set variable to value.
-      got->variables[m->variable] = m->value;
-    } else {
+      id->variables[ m->variable ] = m->value;
+    else if (m->from)
+      // Set variable to the value of another variable
+      if (id->variables[ m->from ])
+	id->variables[ m->variable ] = id->variables[ m->from ];
+      else
+	return "<!-- set: from variable doesn't exist -->";
+    else if (m->other)
+      // Set variable to the value of a misc variable
+      if (id->misc->variables && id->misc->variables[ m->other ])
+	id->variables[ m->variable ] = id->misc->variables[ m->other ];
+      else
+	return "<!-- set: other variable doesn't exist -->";
+    else
       // Unset variable.
-      m_delete(got->variables, m->variable);
-    }
+      m_delete( id->variables, m->variable );
     return("");
-  } else {
-    return("<!-- set: variable not specified -->");
   }
+  else
+    return("<!-- set: variable not specified -->");
+}
+
+string tag_concat( string tag, mapping m, object id )
+{
+  if (m->variable)
+  {
+    if (m->value)
+      // Set variable to value.
+      if (id->variables[ m->variable ])
+	id->variables[ m->variable ] += m->value;
+      else
+	id->variables[ m->variable ] = m->value;
+    else if (m->from)
+      // Set variable to the value of another variable
+      if (id->variables[ m->from ])
+	if (id->variables[ m->variable ])
+	  id->variables[ m->variable ] += id->variables[ m->from ];
+	else
+	  id->variables[ m->variable ] = id->variables[ m->from ];
+      else
+	return "<!-- concat: from variable doesn't exist -->";
+    else if (m->other)
+      // Set variable to the value of a misc variable
+      if (id->misc->variables[ m->other ])
+	if (id->variables[ m->variable ])
+	  id->variables[ m->variable ] += id->misc->variables[ m->other ];
+	else
+	  id->variables[ m->variable ] = id->misc->variables[ m->other ];
+      else
+	return "<!-- concat: other variable doesn't exist -->";
+    else
+      return "<!-- concat: nothing to concat from -->";
+    return("");
+  }
+  else
+    return("<!-- concat: variable not specified -->");
 }
 
 string tag_define(string tag,mapping m, string str, object got,object file,
@@ -1888,6 +1936,7 @@ mapping query_tag_callers()
 	    "imgs":tag_ximage,
 	    "version":tag_version,
 	    "set":tag_set,
+	    "concat":tag_concat,
 	    "unset":tag_set,
  	    "set_cookie":tag_add_cookie,
  	    "remove_cookie":tag_remove_cookie,
@@ -2034,35 +2083,9 @@ string tag_right(string t, mapping m, string s, object got)
 }
 
 string tag_formoutput(string tag_name, mapping args, string contents,
-		      object request_id, mapping defines)
+		      object id, mapping defines)
 {
-  string nullvalue = args->nullvalue || "";
-  string quote = args->quote || "#";
-  string multi_separator = args->multi_separator || ", ";
-  array(string) content_array = contents/quote;
-  int i;
-
-  for (i=1; i < sizeof(content_array); i += 2) {
-    mixed var_value = request_id->variables[content_array[i]];
-
-    if (content_array[i] == "") {
-      content_array[i] = quote;
-    } else if (var_value) {
-      if (arrayp(var_value)) {
-	content_array[i] = var_value * multi_separator;
-      } else if (search( var_value, "\000" ) != -1 ) {
-        content_array[i] = (var_value / "\000") * multi_separator;
-      } else {
-	content_array[i] = var_value;
-      }
-    } else {
-      content_array[i] = nullvalue;
-    }
-    content_array[i] = replace(content_array[i],
-			       ({ "<", ">", "&", "\"", "\'" }),
-			       ({ "&lt;", "&gt;", "&amp;", "&#34;", "&#39;" }));
-  }
-  return(content_array*"");
+  return do_output_tag( args, ({ id->variables }), contents, id );
 }
 
 string tag_gauge(string t, mapping args, string contents, 
@@ -2090,6 +2113,138 @@ string tag_gauge(string t, mapping args, string contents,
 	  " seconds</b></font><br>"+contents);
 } 
 
+// Changes the parsing order by first parsing it's contents and then
+// morphing itself into another tag that gets parsed. Makes it possible to
+// use, for example, tablify together with sqloutput.
+string tag_preparse( string tag_name, mapping args, string contents,
+		     object id )
+{
+  return make_container( args->tag, args - ([ "tag" : 1 ]),
+			 parse_rxml( contents, id ) );
+}
+
+// Removes empty lines
+string tag_trimlines( string tag_name, mapping args, string contents,
+		      object id )
+{
+  contents = parse_rxml( contents, id );
+  contents = contents / "\r\n" * "\n";
+  contents = contents / "\r" * "\n";
+  contents = (contents / "\n" - ({ "" })) * "\n";
+  return contents;
+}
+
+// Internal method for the default tag
+private string tag_input( string tag_name, mapping args, string name,
+			  multiset (string) value )
+{
+  werror( sprintf( "%O %O %O\n", args, name, value ) );
+  if (name && args->name != name
+      || args->_parsed)
+    return 0;
+  if (args->type == "checkbox" || args->type == "radio")
+    if (args->value)
+      if (value[ args->value ])
+	if (args->checked)
+	  return 0;
+	else
+	  args->checked = "checked";
+      else
+	if (args->checked)
+	  m_delete( args, "checked" );
+	else
+	  return 0;
+    else
+      if (value[ "on" ])
+	if (args->checked)
+	  return 0;
+	else
+	  args->checked = "checked";
+      else
+	if (args->checked)
+	  m_delete( args, "checked" );
+	else
+	  return 0;
+  else
+    return 0;
+  args->_parsed = "_parsed";
+  return make_tag( tag_name, args );
+}
+
+private string remove_leading_trailing_ws( string str )
+{
+  sscanf( str, "%*[\t\n\r ]%s", str ); str = reverse( str ); 
+  sscanf( str, "%*[\t\n\r ]%s", str ); str = reverse( str );
+  return str;
+}
+
+// Internal method for the default tag
+private string tag_option( string tag_name, mapping args, string contents,
+			   multiset (string) value )
+{
+  if (args->value)
+    if (value[ args->value ])
+      if (args->selected)
+	return 0;
+      else
+	args->selected = "selected";
+    else
+      return 0;
+  else
+    if (value[ remove_leading_trailing_ws( contents ) ])
+      if (args->selected)
+	return 0;
+      else
+	args->selected = "selected";
+    else
+      return 0;
+  return make_container( tag_name, args, contents );
+}
+
+// Internal method for the default tag
+private string tag_select( string tag_name, mapping args, string contents,
+			   string name, multiset (string) value )
+{
+  array (string) tmp;
+  int c;
+  
+  if (name && args->name != name
+      || args->_parsed)
+    return 0;
+  tmp = contents / "<option";
+  for (c=1; c < sizeof( tmp ); c++)
+    if (sizeof( tmp[c] / "</option>" ) == 1)
+      tmp[c] += "</option>";
+  contents = tmp * "<option";
+  contents = parse_html( contents, ([ ]), ([ "option" : tag_option ]), value );
+  args->_parsed = "_parsed";
+  return make_container( tag_name, args, contents );
+}
+
+// The default tag is used to give default values to forms elements,
+// without any fuss.
+string tag_default( string tag_name, mapping args, string contents,
+		    object id, object f, mapping defines, object fd )
+{
+  string multi_separator = args->multi_separator || "\000";
+
+  contents = parse_rxml( contents, id );
+  if (args->value)
+    return parse_html( contents, ([ "input" : tag_input ]),
+		       ([ "select" : tag_select ]),
+		       args->name, mkmultiset( args->value
+					       / multi_separator ) );
+  else if (args->variable && id->variables[ args->variable ])
+    return parse_html( contents, ([ "input" : tag_input ]),
+		       ([ "select" : tag_select ]),
+		       args->name,
+		       mkmultiset( id->variables[ args->variable ]
+				   / multi_separator ) );
+  else    
+    return contents;
+}
+
+
 mapping query_container_callers()
 {
   return (["comment":lambda(){ return ""; },
@@ -2114,6 +2269,9 @@ mapping query_container_callers()
 	   "deny":tag_deny,
 	   "smallcaps":tag_smallcaps,
 	   "formoutput":tag_formoutput,
+	   "preparse" : tag_preparse,
+	   "trimlines" : tag_trimlines,
+	   "default" : tag_default,
 	   ]);
 }
 
