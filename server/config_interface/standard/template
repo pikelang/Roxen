@@ -119,6 +119,10 @@
   </td></tr></table>
 </define>
 
+<define container='box'>
+   <cv-obox title='&_.title;'><contents/></cv-obox>
+</define>
+
 <define container="subtablist">
 <nooutput>
   <contents/>
