@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.52 1998/07/04 20:04:16 grubba Exp $
+# $Id: configure.in,v 1.53 1998/07/11 15:54:06 grubba Exp $
 #
 
 prefix=$PWD
@@ -495,24 +495,34 @@ roxen_lib_subdirs=""
 MAKE_GMP=""
 AC_SUBST(MAKE_GMP)
 if test -d $srcdir/gmp/.; then
+  # Empty the config cache...
   unset ac_cv_header_gmp_h
   unset ac_cv_lib_gmp_mpz_set_d
+  unset ac_cv_header_gmp2_gmp_h
+  unset ac_cv_lib_gmp2_mpz_set_d
   if test x$with_gmp = xyes; then
-    AC_CHECK_HEADERS(gmp.h)
-    AC_CHECK_LIB(gmp, mpz_set_d)
-    if test "$ac_cv_header_gmp_h$ac_cv_lib_gmp_mpz_set_d" = "yesyes"; then
-      echo Gmp already installed.
+    AC_CHECK_HEADERS(gmp2/gmp.h)
+    AC_CHECK_LIB(gmp2, mpz_set_d)
+    if test "$ac_cv_header_gmp2_gmp_h$ac_cv_lib_gmp2_mpz_set_d" = "yesyes";
+    then
+      echo Gmp2 installed.
     else
-      echo Enabling supplied gmp...
-      MAKE_GMP=gmp
-      roxen_lib_subdirs="$roxen_lib_subdirs gmp"
-      # Fool Pike into believing Gmp is installed.
-      # It will be when Pike is being built.
-      ac_cv_header_gmp_h=yes
-      ac_cv_lib_gmp_mpz_set_d=yes
-      PWD=`pwd`
-      CPPFLAGS="-I$srcdir/gmp -I$PWD/gmp ${CPPFLAGS}"
-      LDFLAGS="-L$PWD/gmp ${LDFLAGS}"
+      AC_CHECK_HEADERS(gmp.h)
+      AC_CHECK_LIB(gmp, mpz_set_d)
+      if test "$ac_cv_header_gmp_h$ac_cv_lib_gmp_mpz_set_d" = "yesyes"; then
+        echo Gmp already installed.
+      else
+        echo Enabling supplied gmp...
+        MAKE_GMP=gmp
+        roxen_lib_subdirs="$roxen_lib_subdirs gmp"
+        # Fool Pike into believing Gmp is installed.
+        # It will be when Pike is being built.
+        ac_cv_header_gmp_h=yes
+        ac_cv_lib_gmp_mpz_set_d=yes
+        PWD=`pwd`
+        CPPFLAGS="-I$srcdir/gmp -I$PWD/gmp ${CPPFLAGS}"
+        LDFLAGS="-L$PWD/gmp ${LDFLAGS}"
+      fi
     fi
   fi
 fi
