@@ -1,12 +1,12 @@
 /*
- * $Id: admin.pike,v 1.9 1998/09/16 12:46:20 js Exp $
+ * $Id: admin.pike,v 1.10 1998/09/16 21:04:46 js Exp $
  *
  * AutoAdmin, administration interface
  *
  * Johan Schön 1998-07-08
  */
 
-constant cvs_version = "$Id: admin.pike,v 1.9 1998/09/16 12:46:20 js Exp $";
+constant cvs_version = "$Id: admin.pike,v 1.10 1998/09/16 21:04:46 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -123,12 +123,8 @@ mixed find_file(string f, object id)
   
   if(mappingp(content))
     return content;
-  res += "<p>" + content + "</body>";
+  res += "<p>" + (content||"Select one of the two tabs above.") + "</body>";
   return http_string_answer(parse_rxml(res, id));
-//   |
-//   ([ "extra_heads":
-//      (["Expires": http_date( 0 ), "Last-Modified": http_date( time(1) ) ])
-//   ]);
 }
 
 array register_module()

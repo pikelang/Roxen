@@ -1,5 +1,5 @@
 /*
- * $Id: testrcpt.pike,v 1.9 1998/09/14 13:56:18 grubba Exp $
+ * $Id: testrcpt.pike,v 1.10 1998/09/16 21:04:49 js Exp $
  *
  * A skeleton test RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: testrcpt.pike,v 1.9 1998/09/14 13:56:18 grubba Exp $";
+constant cvs_version = "$Id: testrcpt.pike,v 1.10 1998/09/16 21:04:49 js Exp $";
 
 /*
  * Roxen glue
@@ -21,7 +21,7 @@ constant cvs_version = "$Id: testrcpt.pike,v 1.9 1998/09/14 13:56:18 grubba Exp 
 array register_module()
 {
   return({ MODULE_PROVIDER|MODULE_EXPERIMENTAL,
-	   "SMTP Test recipient",
+	   "AutoMail Recipient module: Test",
 	   "Experimental RCPT module for the AutoMail system." });
 }
 
@@ -134,18 +134,17 @@ multiset(string) query_domain()
 
 string query_automail_title()
 {
-  return "Rcpt: Database";
+  return "Rcpt: Test";
 }
 
 string query_automail_name()
 {
-  return "rcpt_db";
+  return "rcpt_test";
 }
 
 array(array(string)) query_automail_variables()
 {
-  return ({ ({ "Phone number", "phone_number" }),
-	    ({ "SMS number", "sms_number" })
+  return ({ ({ "Phone number", "phone_number" })
 	    });
 }
 

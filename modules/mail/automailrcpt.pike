@@ -1,5 +1,5 @@
 /*
- * $Id: automailrcpt.pike,v 1.4 1998/09/14 13:51:23 grubba Exp $
+ * $Id: automailrcpt.pike,v 1.5 1998/09/16 21:04:48 js Exp $
  *
  * A RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: automailrcpt.pike,v 1.4 1998/09/14 13:51:23 grubba Exp $";
+constant cvs_version = "$Id: automailrcpt.pike,v 1.5 1998/09/16 21:04:48 js Exp $";
 
 /*
  * Roxen glue
@@ -132,12 +132,11 @@ int put(string sender, string user, string domain,
   }
 
   int res;
-
   foreach(conf->get_providers("automail_clientlayer")||({}), object o) {
     object u = o->get_user_from_address(addr) ||
       o->get_user_from_address(addr2);
 
-    if (u) {
+    if (u && conf->get_provider("automail_admin")->query_status(u->id,query_automail_name())) {
       u->get_incoming()->create_mail_from_fd(mail);
       res = 1;
     }
