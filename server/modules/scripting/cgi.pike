@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.6 1996/12/08 03:03:43 neotron Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.7 1996/12/08 10:33:27 neotron Exp $";
 #include <module.h>
 
 inherit "module";
@@ -27,6 +27,9 @@ mapping build_env_vars(string f, object id, string|void path_info)
     
   if(QUERY(Enhancements))
     new |= build_roxen_env_vars(id);
+  
+  if(id->misc->ssi_env)
+    new |= id->misc->ssi_env;
   
   return new|env|(QUERY(env)?environment:([]));
 }
@@ -362,7 +365,7 @@ mapping handle_file_extension(object o, string e, object id)
     array c;
 
     c=id->realfile/"/";
-
+    
     // Handle the request with the location code.
     // This is done by setting the cgi-bin dir to the path of the 
     // script, and then calling the location dependant code.
@@ -370,7 +373,12 @@ mapping handle_file_extension(object o, string e, object id)
     o = 0;
     oldp=path;
     path=c[0..sizeof(c)-2]*"/" + "/";
-    err = catch(toret = find_file(c[-1], id));
+
+    //  use full path in case of path_info                         1-Nov-96-wk
+    if(id->misc->path_info)
+      err=catch(toret = find_file(id->realfile, id));
+    else
+      err=catch(toret = find_file(c[-1], id));
     path=oldp;
     if(err) throw(err);
     return toret;
