@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.434 2001/06/11 02:45:19 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.435 2001/06/13 13:45:23 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -779,11 +779,14 @@ array(string) userinfo(string u, RequestID|void id)
 //! 
 //! Fetches user information from the authentication module by calling
 //! its userinfo() method. Returns zero if no auth module was present.
+//!
+//! Note that you should always supply id if it's possible, some user
+//! databases require it (such as the htaccess database)
 {
   User uid;
   foreach( user_databases(), UserDB m )
     if( uid = m->find_user( u ) )
-      return uid->compat_userinfo();
+      return uid->compat_userinfo(id);
 }
 
 array(string) userlist(RequestID|void id)
@@ -792,10 +795,13 @@ array(string) userlist(RequestID|void id)
 //! Fetches the full list of valid usernames from the authentication
 //! module by calling its userlist() method. Returns zero if no auth
 //! module was present.
+//!
+//! Note that you should always supply id if it's possible, some user
+//! databases require it (such as the htaccess database)
 {
   array(string) list = ({});
   foreach( user_databases(), UserDB m )
-    list |= m->list_users();
+    list |= m->list_users(id);
   return list;
 }
 
@@ -805,10 +811,13 @@ array(string) user_from_uid(int u, RequestID|void id)
 //! Return the user data for id u from the authentication module. The
 //! id parameter might be left out if FTP. Returns zero if no auth
 //! module was present.
+//!
+//! Note that you should always supply id if it's possible, some user
+//! databases require it (such as the htaccess database)
 {
   User uid;
   foreach( user_databases(), UserDB m )
-    if( uid = m->find_user_from_uid( u ) )
+    if( uid = m->find_user_from_uid( u,id ) )
       return uid->compat_userinfo();
 }
 
@@ -862,35 +871,44 @@ User find_user( string user, RequestID|void id )
 //! database that the currently authenticated user came from, if any.
 //!
 //! The other user databases are processed in priority order
+//!
+//! Note that you should always supply id if it's possible, some user
+//! databases require it (such as the htaccess database)
 {
   User uid;
 
   if( id && id->misc->authenticated_user
-      && ( uid = id->misc->authenticated_user->database->find_user( user ) ))
+      && ( uid = id->misc->authenticated_user->database->find_user(user,id)))
     return uid;
   
   foreach( user_databases(), UserDB m )
-    if( uid = m->find_user( user ) )
+    if( uid = m->find_user( user,id ) )
       return uid;
 }
 
-array(string) list_users()
+array(string) list_users(RequestID|void id)
 //! Fetches the full list of valid usernames from the authentication
 //! modules by calling the list-users() methods.
+//!
+//! Note that you should always supply id if it's possible, some user
+//! databases require it (such as the htaccess database)
 {
   array(string) list = ({});
   foreach( user_databases(), UserDB m )
-    list |= m->list_users();
+    list |= m->list_users(id);
   return list;
 }
 
-array(string) list_groups()
+array(string) list_groups(RequestID|void id)
 //! Fetches the full list of valid groupnames from the authentication
 //! modules by calling the list-users() methods.
+//!
+//! Note that you should always supply id if it's possible, some user
+//! databases require it (such as the htaccess database)
 {
   array(string) list = ({});
   foreach( user_databases(), UserDB m )
-    list |= m->list_groups();
+    list |= m->list_groups(id);
   return list;
 }
 
@@ -902,6 +920,9 @@ Group find_group( string group, RequestID|void id )
 //! database that the currently authenticated user came from, if any.
 //!
 //! The other user databases are processed in priority order
+//!
+//! Note that you should always supply id if it's possible, some user
+//! databases require it (such as the htaccess database)
 {
   Group uid;
 
@@ -910,7 +931,7 @@ Group find_group( string group, RequestID|void id )
     return uid;
   
   foreach( user_databases(), UserDB m )
-    if( uid = m->find_group( group ) )
+    if( uid = m->find_group( group,id ) )
       return uid;
 }
 
