@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.193 1999/05/20 02:30:35 neotron Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.194 1999/05/20 16:07:14 kinkie Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -797,7 +797,7 @@ public void log(mapping file, object request_id)
   form=replace(form, 
 	       ({ 
 		 "$ip_number", "$bin-ip_number", "$cern_date",
-		 "$bin-date", "$method", "$resource", "$protocol",
+		 "$bin-date", "$method", "$resource", "$full_resource", "$protocol",
 		 "$response", "$bin-response", "$length", "$bin-length",
 		 "$referer", "$user_agent", "$user", "$user_id",
 		 "$request-time"
@@ -807,12 +807,8 @@ public void log(mapping file, object request_id)
 		 cern_http_date(time(1)),
 		 unsigned_to_bin(time(1)),
 		 (string)request_id->method,
-		 http_encode_string((string)request_id->not_query +
-				    ((request_id->misc &&
-				      request_id->misc->path_info) || "") +
-                                    ((request_id->query && 
-                                      strlen(request_id->query))?
-                                     "?"+request_id->query:"")),
+		 http_encode_string((string)request_id->not_query),
+		 http_encode_string((string)request_id->raw_url),
 		 (string)request_id->prot,
 		 (string)(file->error||200),
 		 unsigned_short_to_bin(file->error||200),
@@ -3757,6 +3753,7 @@ void create(string config)
 	 "\n"
 	 "$method        -- Request method\n"
 	 "$resource      -- Resource identifier\n"
+	 "$full_resource -- Full requested resource, including any query fields\n"
 	 "$protocol      -- The protocol used (normally HTTP/1.0)\n"
 	 "$response      -- The response code sent\n"
 	 "$bin-response  -- The response code sent as a binary short number\n"
