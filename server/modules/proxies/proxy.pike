@@ -165,6 +165,10 @@ void create()
 	 "# All hosts inside *.rydnet.lysator.liu.se has to be\n"
 	 "# accessed through lysator.liu.se\n"
 	 ".*\\.rydnet\\.lysator\\.liu\\.se        130.236.253.11  80\n"
+	 "# Do not access *.dec.com via a remote proxy\n"
+	 ".*\\.dec\\.com                         no_proxy        0\n"
+	 "# But all other .com\n"
+	 ".*\\.com                         130.236.253.11        0\n"
 	 "</pre>"
 	 "Please note that this <b>must</b> be "
 	 "<a href=$configurl/regexp.html>Regular Expressions</a>.");
@@ -434,7 +438,11 @@ void connected_to_server(object o, string file, object id, int is_remote,
 array is_remote_proxy(string hmm)
 {
   array tmp;
-  foreach(proxies, tmp) if(tmp[0](hmm)) return tmp[1];
+  foreach(proxies, tmp) if(tmp[0](hmm))
+    if(tmp[1]!="no_proxy")
+      return tmp[1];
+    else
+      return 0;
 }
 
 string is_filter(string hmm)

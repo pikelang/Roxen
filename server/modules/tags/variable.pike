@@ -1,5 +1,6 @@
-// This is a virtual "file-system".
-// It will be located somewhere in the name-space of the server.
+// This is a part of the language system developed by Mattias Wingstedt, ask
+// him if you want more info.
+
 #include <module.h>
 
 inherit "module";
@@ -82,7 +83,7 @@ mixed remap_url( mapping id, string url )
 
 string tag_variable( string tag, mapping m, object id ) 
 { 
-  id->misc += m; // Does this work, what are the semantics of +?
+  id->misc += m;
 }
 
 mapping query_tag_callers()

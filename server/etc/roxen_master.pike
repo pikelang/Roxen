@@ -183,10 +183,10 @@ mixed inhibit_compile_errors;
 string errors;
 string set_inhibit_compile_errors(mixed f)
 {
-  mixed f = errors||"";
+  mixed fr = errors||"";
   inhibit_compile_errors=f;
   errors="";
-  return f;
+  return fr;
 }
 
 /*

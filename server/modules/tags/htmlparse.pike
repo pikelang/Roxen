@@ -385,7 +385,7 @@ mapping handle_file_extension( object file, string e, object id)
 	   "error":error,
 	   "rettext":rettext,
 	   "extra_heads":extra_heads,
-	   "expires": time(1) - 100,
+//	   "expires": time(1) - 100,
 	   ]);
 }
 

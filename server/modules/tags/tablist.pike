@@ -1,5 +1,5 @@
 // The Tab lists tag module.
-
+// Developed by Fredrik Noring <noring@infovav.se>, ask him for more info
 #include <module.h>
 
 inherit "module";
