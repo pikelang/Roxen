@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.108 1998/09/11 22:15:21 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.109 1998/09/30 17:38:17 grubba Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -610,7 +610,7 @@ string describe_config_modules(array mods)
       roxen->rescan_modules();
       roxen_perror("CONFIG: Done.\n");
     }
-    if(!roxen->allmodules[mod]) res += "<li>The unknown modules '"+mod+"'\n";
+    if(!roxen->allmodules[mod]) res += "<li>The unknown module '"+mod+"'\n";
     else res += "<li>"+roxen->allmodules[mod][0]+"\n";
   }
   return res+"</ul>";
