@@ -9,7 +9,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.102 2000/08/19 07:17:25 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.103 2000/08/19 09:26:36 per Exp $";
 constant module_type = MODULE_PARSER|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -821,13 +821,38 @@ string simpletag_rul( string t, mapping m, string c, object id )
   return "<table>"+c+"</table>";
 }
 
-string simpletag_cf_perm( string t, mapping m, string c, RequestID id )
+class TagCfPerm
 {
-  if( !id->misc->config_user ) return "";
-  return CU_AUTH( m->perm )==!m->not ? c : "";
+  inherit RXML.Tag;
+  constant name = "cf-perm";
+  constant flags = 0;
+  class Frame
+  {
+    inherit RXML.Frame;
+    int do_iterate = -1;
+    void do_enter( RequestID id )
+    {
+      if( id->misc->config_user && ( CU_AUTH( args->perm )==!args->not ) )
+        do_iterate = 1;
+      return 0;
+    }
+  }
 }
 
-string simpletag_cf_userwants( string t, mapping m, string c, RequestID id )
+class TagCfUserWants
 {
-  return config_setting2( m->option ) ? c : "";
+  inherit RXML.Tag;
+  constant name = "cf-userwants";
+  constant flags = 0;
+  class Frame
+  {
+    inherit RXML.Frame;
+    int do_iterate = -1;
+    void do_enter( RequestID id )
+    {
+      if( config_setting2( args->option )==!args->not )
+        do_iterate = 1;
+      return 0;
+    }
+  }
 }
