@@ -2,7 +2,7 @@ class StringFile( string data, mixed|void _st )
 {
   int offset;
 
-  string _sprintf()
+  string _sprintf(int t)
   {
     return "StringFile("+strlen(data)+","+offset+")";
   }

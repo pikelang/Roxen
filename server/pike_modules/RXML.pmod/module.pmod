@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.296 2003/01/23 17:35:11 mani Exp $
+// $Id: module.pmod,v 1.297 2004/01/25 18:27:55 norrby Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -539,7 +539,7 @@ class Tag
   MARK_OBJECT;
   //! @endignore
 
-  string _sprintf()
+  string _sprintf(int t)
   {
     return "RXML.Tag(" + [string] this_object()->name +
       (this_object()->plugin_name ? "#" + [string] this_object()->plugin_name : "") +
@@ -1242,7 +1242,7 @@ class TagSet
     return name || sizeof (imported) && imported->tag_set_component_names() * "+";
   }
 
-  string _sprintf()
+  string _sprintf(int t)
   {
     return "RXML.TagSet(" +
       // No, the owner isn't written unambiguously; we try to be brief here.
@@ -1355,7 +1355,7 @@ class Value
   //! good reasons; the backtrace easily just becomes confusing
   //! instead.
 
-  string _sprintf() {return "RXML.Value";}
+  string _sprintf(int t) {return "RXML.Value";}
 }
 
 class Scope
@@ -1447,7 +1447,7 @@ class Scope
     else return "";
   }
 
-  string _sprintf() {return "RXML.Scope";}
+  string _sprintf(int t) {return "RXML.Scope";}
 }
 
 class Context
@@ -2313,7 +2313,7 @@ class Context
   MARK_OBJECT_ONLY;
   //! @endignore
 
-  string _sprintf() {return "RXML.Context" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.Context" + OBJ_COUNT;}
 
 #ifdef MODULE_DEBUG
 #if constant (thread_create)
@@ -2338,7 +2338,8 @@ class Context
   string _encode() {return scope_name;}
   void _decode (string data) {scope_name = data;}
 
-  string _sprintf() {return sprintf ("RXML.CacheStaticFrame(%O)", scope_name);}
+  string _sprintf(int t) {return sprintf ("RXML.CacheStaticFrame(%O)",
+                                          scope_name);}
 }
 
 static class NewRuntimeTags
@@ -2519,7 +2520,7 @@ class Backtrace
     error ("Cannot set index %O to %O.\n", i, val);
   }
 
-  string _sprintf() {return "RXML.Backtrace(" + (type || "") + ")";}
+  string _sprintf(int t) {return "RXML.Backtrace(" + (type || "") + ")";}
 }
 
 
@@ -4640,7 +4641,7 @@ class Frame
   MARK_OBJECT;
   //! @endignore
 
-  string _sprintf()
+  string _sprintf(int t)
   {
     return "RXML.Frame(" + (tag && [string] tag->name) + ")" + OBJ_COUNT;
   }
@@ -4984,7 +4985,7 @@ final class parse_frame
     result_type = content_type (PNone);
   }
 
-  string _sprintf() {return sprintf ("RXML.parse_frame(%O)", content_type);}
+  string _sprintf(int t) {return sprintf ("RXML.parse_frame(%O)", content_type);}
 }
 
 
@@ -5332,7 +5333,7 @@ class Parser
   MARK_OBJECT_ONLY;
   //! @endignore
 
-  string _sprintf()
+  string _sprintf(int t)
   {
     return sprintf ("RXML.Parser(%O)%s", type, OBJ_COUNT);
   }
@@ -5435,7 +5436,7 @@ class TagSetParser
 
   // Internals:
 
-  string _sprintf()
+  string _sprintf(int t)
   {
     return sprintf ("RXML.TagSetParser(%O,%O)%s", type, tag_set, OBJ_COUNT);
   }
@@ -5485,7 +5486,7 @@ class PNone
 #endif
   }
 
-  string _sprintf() {return "RXML.PNone" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.PNone" + OBJ_COUNT;}
 }
 
 
@@ -6092,7 +6093,7 @@ class Type
   MARK_OBJECT_ONLY;
   //! @endignore
 
-  string _sprintf()
+  string _sprintf(int t)
   {
     return "RXML.Type(" + this_object()->name + ", " +
       parser_prog->name + ")" + OBJ_COUNT;}
@@ -6138,7 +6139,7 @@ class TAny
     return val;
   }
 
-  string _sprintf() {return "RXML.t_any(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.t_any(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TNil t_nil = TNil();
@@ -6174,7 +6175,7 @@ static class TNil
 
   int subtype_of (Type other) {return 1;}
 
-  string _sprintf() {return "RXML.t_nil(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.t_nil(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TSame t_same = TSame();
@@ -6186,7 +6187,7 @@ static class TSame
   constant name = "same";
   Type supertype = t_any;
   Type conversion_type = 0;
-  string _sprintf() {return "RXML.t_same(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.t_same(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TType t_type = TType();
@@ -6231,7 +6232,7 @@ static class TType
 		 format_short (val), describe_error (err));
   }
 
-  string _sprintf() {return "RXML.t_type(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.t_type(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TParser t_parser = TParser();
@@ -6273,7 +6274,7 @@ static class TParser
 		 format_short (val), describe_error (err));
   }
 
-  string _sprintf() {return "RXML.t_parser(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.t_parser(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 // Basic types. Even though most of these have a `+ that fulfills
@@ -6317,7 +6318,7 @@ class TScalar
     return [string|int|float] val;
   }
 
-  string _sprintf() {return "RXML.t_scalar(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.t_scalar(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TNum t_num = TNum();
@@ -6361,7 +6362,7 @@ class TNum
     return [int|float] val;
   }
 
-  string _sprintf() {return "RXML.t_num(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.t_num(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TInt t_int = TInt();
@@ -6402,7 +6403,7 @@ class TInt
 		 format_short (val), describe_error (err));
   }
 
-  string _sprintf() {return "RXML.t_int(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.t_int(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TFloat t_float = TFloat();
@@ -6443,7 +6444,7 @@ class TFloat
 		 format_short (val), describe_error (err));
   }
 
-  string _sprintf() {return "RXML.t_float(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.t_float(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TString t_string = TString();
@@ -6512,7 +6513,7 @@ class TString
   string capitalize (string val) {return String.capitalize (val);}
   //! Converts the first literal character in @[val] to uppercase.
 
-  string _sprintf() {return "RXML.t_string(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.t_string(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 // Text types:
@@ -6543,7 +6544,7 @@ class TAnyText
   constant free_text = 1;
   constant handle_literals = 0;
 
-  string _sprintf() {return "RXML.t_any_text(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.t_any_text(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TText t_text = TText();
@@ -6571,7 +6572,7 @@ class TText
 		 format_short (val), name, describe_error (err));
   }
 
-  string _sprintf() {return "RXML.t_text(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.t_text(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 TXml t_xml = TXml();
@@ -6725,7 +6726,7 @@ class TXml
     return "&" + entity + ";";
   }
 
-  string _sprintf() {return "RXML.t_xml(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.t_xml(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 THtml t_html = THtml();
@@ -6747,7 +6748,7 @@ class THtml
 
   constant decode = 0;		// Cover it; not needed here.
 
-  string _sprintf() {return "RXML.t_html(" + parser_prog->name + ")" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.t_html(" + parser_prog->name + ")" + OBJ_COUNT;}
 }
 
 
@@ -6840,7 +6841,7 @@ class VarRef (string scope, string|array(string|int) var,
   //! @ignore
   MARK_OBJECT;
   //! @endignore
-  string _sprintf() {return "RXML.VarRef(" + name() + ")" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.VarRef(" + name() + ")" + OBJ_COUNT;}
 }
 
 class VariableChange (/*static*/ mapping settings)
@@ -6972,7 +6973,7 @@ class VariableChange (/*static*/ mapping settings)
   MARK_OBJECT;
   //! @endignore
 
-  string _sprintf()
+  string _sprintf(int t)
   {
     string ind = "";
     if (!mappingp (settings)) return "RXML.VariableChange()";
@@ -7046,7 +7047,7 @@ class CompiledError
   //! @ignore
   MARK_OBJECT;
   //! @endignore
-  string _sprintf() {return "RXML.CompiledError" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.CompiledError" + OBJ_COUNT;}
 }
 
 #ifdef RXML_COMPILE_DEBUG
@@ -7214,7 +7215,7 @@ static class PikeCompile
 	LITERAL (MARK_OBJECT) ";\n"
 #endif
 #ifdef DEBUG
-	"string _sprintf() {return \"object(compiled RXML code)\" + "
+	"string _sprintf(int t) {return \"object(compiled RXML code)\" + "
 	LITERAL (OBJ_COUNT)
 	";}\n"
 #endif
@@ -7271,7 +7272,7 @@ static class PikeCompile
   MARK_OBJECT;
   //! @endignore
 
-  string _sprintf() {return "RXML.PikeCompile" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.PikeCompile" + OBJ_COUNT;}
 }
 
 #ifdef RXML_PCODE_DEBUG
@@ -8130,7 +8131,7 @@ class RenewablePCode
 		format_short (_v__, 160));				\
   return _v__;								\
 } while (0)
-string _sprintf() {return "RXML.pmod";}
+string _sprintf(int t) {return "RXML.pmod";}
 #else
 #  define ENCODE_MSG(X...) do {} while (0)
 #  define ENCODE_DEBUG_RETURN(val) do return (val); while (0)
@@ -8423,7 +8424,7 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 	       x, Program.defined (object_program (x)));
   }
 
-  string _sprintf()
+  string _sprintf(int t)
   {
     return sprintf ("RXML.PCodec(%O,%d)", default_config, check_tag_set_hash);
   }
@@ -8504,7 +8505,7 @@ static class Nil
   mixed `+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
   mixed ``+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
   int `!() {return 1;}
-  string _sprintf() {return "RXML.nil";}
+  string _sprintf(int t) {return "RXML.nil";}
   mixed cast(string type)
   {
     switch(type)
@@ -8654,7 +8655,7 @@ class ScanStream
   MARK_OBJECT;
   //! @endignore
 
-  string _sprintf() {return "RXML.ScanStream" + OBJ_COUNT;}
+  string _sprintf(int t) {return "RXML.ScanStream" + OBJ_COUNT;}
 }
 
 private class Link

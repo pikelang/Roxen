@@ -1,6 +1,6 @@
 // Some debug tools.
 //
-// $Id: RoxenDebug.pmod,v 1.4 2001/08/28 21:35:59 mast Exp $
+// $Id: RoxenDebug.pmod,v 1.5 2004/01/25 18:27:57 norrby Exp $
 
 
 //! Helper to locate leaking objects. Use a line like this to mark a
@@ -50,7 +50,7 @@ class ObjectMarker
     }
   }
 
-  string _sprintf()
+  string _sprintf(int t)
   {
     return "RoxenDebug.ObjectMarker(" + id + ")";
   }

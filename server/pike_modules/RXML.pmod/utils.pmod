@@ -7,12 +7,12 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.30 2002/07/17 18:08:51 nilsson Exp $
+//! $Id: utils.pmod,v 1.31 2004/01/25 18:27:54 norrby Exp $
 
 constant is_RXML_encodable = 1;
 
 #ifdef RXML_ENCODE_DEBUG
-string _sprintf() {return "RXML.utils.pmod";}
+string _sprintf(int t) {return "RXML.utils.pmod";}
 #endif
 
 constant short_format_length = 40;

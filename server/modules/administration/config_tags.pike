@@ -11,7 +11,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.188 2002/11/10 01:49:35 mani Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.189 2004/01/25 18:28:01 norrby Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -315,7 +315,7 @@ class Scope_usr
     return config_setting( var );
   }
 
-  string _sprintf() { return "RXML.Scope(usr)"; }
+  string _sprintf(int t) { return "RXML.Scope(usr)"; }
 }
 
 RXML.Scope usr_scope=Scope_usr();

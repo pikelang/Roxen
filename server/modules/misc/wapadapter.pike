@@ -11,7 +11,7 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wapadapter.pike,v 1.11 2002/01/30 00:19:41 mast Exp $";
+constant cvs_version = "$Id: wapadapter.pike,v 1.12 2004/01/25 18:28:00 norrby Exp $";
 
 constant module_type = MODULE_FIRST|MODULE_FILE_EXTENSION|MODULE_TAG;
 constant module_name = "WAP Adapter";
@@ -183,7 +183,7 @@ static class TWml {
     return ::decode(replace([string]val, "$$", "$"));
   }
 
-  string _sprintf() { return "RXML.t_wml(" + parser_prog->name + ")"; }
+  string _sprintf(int t) { return "RXML.t_wml(" + parser_prog->name + ")"; }
 }
 
 class EntityClientWapSubscriber {

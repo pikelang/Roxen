@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.162 2003/01/26 02:21:45 mani Exp $
+// $Id: Roxen.pmod,v 1.163 2004/01/25 18:27:57 norrby Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2971,7 +2971,7 @@ class ScopeRoxen {
     predef::m_delete(c->misc->scope_roxen, var);
   }
 
-  string _sprintf() { return "RXML.Scope(roxen)"; }
+  string _sprintf(int t) { return "RXML.Scope(roxen)"; }
 }
 
 class ScopePage {
@@ -3059,7 +3059,7 @@ class ScopePage {
     predef::m_delete(c->misc->scope_page, var);
   }
 
-  string _sprintf() { return "RXML.Scope(page)"; }
+  string _sprintf(int t) { return "RXML.Scope(page)"; }
 }
 
 class ScopeCookie {
@@ -3104,7 +3104,7 @@ class ScopeCookie {
 		    http_encode_cookie(var)+"=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/");
   }
 
-  string _sprintf() { return "RXML.Scope(Cookie)"; }
+  string _sprintf(int t) { return "RXML.Scope(Cookie)"; }
 }
 
 RXML.Scope scope_roxen=ScopeRoxen();

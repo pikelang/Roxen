@@ -6,7 +6,7 @@ inherit "chili-module:filesystem";
 
 import Parser.XML.Tree;
 
-constant cvs_version = "$Id: webapp.pike,v 2.22 2002/11/14 05:15:39 mani Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.23 2004/01/25 18:27:59 norrby Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -707,7 +707,7 @@ class BaseWrapper
     "content-type",
   >);
 
-  string _sprintf()
+  string _sprintf(int t)
   {
     return "BaseWrapper(#" + _ident + ", collect: " + collect + ")";
   }
@@ -874,7 +874,7 @@ class RXMLParseWrapper
   
   static constant clazz = "RXMLWrapper";
 
-  string _sprintf()
+  string _sprintf(int t)
   {
     return "RXMLParseWrapper(#" + _ident + ", collect: " + collect + ")";
   }
@@ -936,7 +936,7 @@ class ServletChainingWrapper
   
   static constant clazz = "ChainingWrapper";
 
-  string _sprintf()
+  string _sprintf(int t)
   {
     return "ServletChainingWrapper(#" + _ident + ", collect: " + collect + ")";
   }

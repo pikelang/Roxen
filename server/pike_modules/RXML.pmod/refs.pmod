@@ -26,7 +26,7 @@ void create()
 	{RXML.fatal_error ("Trying to change the empty tag set.\n");}
       void changed()
 	{RXML.fatal_error ("Trying to change the empty tag set.\n");}
-      string _sprintf()
+      string _sprintf(int t)
 	{return "RXML.empty_tag_set";}
     } (0, "empty_tag_set"));
 }

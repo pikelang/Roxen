@@ -1,6 +1,6 @@
 // This is a ChiliMoon module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.51 2002/11/14 16:32:20 mani Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.52 2004/01/25 18:27:57 norrby Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -100,7 +100,7 @@ class JSInsert
     return content;
   }
   
-  string _sprintf()
+  string _sprintf(int t)
   {
     return sprintf("JSInsert(%O)", name);
   }
@@ -141,7 +141,7 @@ class JSSupport
     return inserts[name];
   }
   
-  string _sprintf()
+  string _sprintf(int t)
   {
     return sprintf("JSSupport(%d inserts)", sizeof (inserts));
   }

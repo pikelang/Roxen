@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.399 2003/01/23 17:17:23 mani Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.400 2004/01/25 18:27:57 norrby Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1912,7 +1912,7 @@ class Smallcapsstr (string bigtag, string smalltag, mapping bigarg, mapping smal
   static string text="",part="";
   static int last=UNDEF;
 
-  string _sprintf() {
+  string _sprintf(int t) {
     return "Smallcapsstr("+bigtag+","+smalltag+")";
   }
 
@@ -3247,7 +3247,7 @@ class Tracer (Configuration conf)
   string resolv="<ol>";
   int level;
 
-  string _sprintf()
+  string _sprintf(int t)
   {
     return "Tracer()";
   }

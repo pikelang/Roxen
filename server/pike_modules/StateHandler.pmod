@@ -1,7 +1,7 @@
 // This is the ChiliMoon state mechanism.
 // Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: StateHandler.pmod,v 1.12 2003/01/26 02:21:45 mani Exp $
+// $Id: StateHandler.pmod,v 1.13 2004/01/25 18:27:57 norrby Exp $
 
 #ifdef STATE_HANDLER_DEBUG
 # define STATE_WERR(X) werror("State: "+X+"\n")
@@ -83,7 +83,7 @@ class Page_state {
       id->misc+=(["state":(["keys":(<>),"values":([])])]);
   }
 
-  string _sprintf() {
+  string _sprintf(int t) {
     return "Page_state("+stateid+")";
   }
 
