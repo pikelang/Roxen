@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-constant cvs_version = "$Id: http.pike,v 1.57 1998/02/24 22:23:52 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.58 1998/02/27 04:51:52 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -549,6 +549,7 @@ private int parse_got(string s)
 void disconnect()
 {
   if(do_not_disconnect)  return;
+  catch(file && file->close());
   file = 0;
   my_fd = 0;
   destruct();
@@ -594,7 +595,7 @@ void end(string|void s, int|void keepit)
     catch {
       my_fd->set_close_callback(0);
       my_fd->set_read_callback(0);
-      my_fd->set_blocking();
+//       my_fd->set_blocking();
       if(s) my_fd->write(s);
       my_fd->close();
       destruct(my_fd);
@@ -682,7 +683,6 @@ void do_log()
   {
     int len;
     if(pipe) file->len = pipe->bytes_sent();
-//     werror("Managed to send "+file->len+" bytes\n");
     if(conf)
     {
       if(file->len > 0) conf->sent+=file->len;
@@ -746,7 +746,7 @@ void handle_request( )
     if((file->file == -1) || file->leave_me) 
     {
       if(do_not_disconnect) return;
-      my_fd = 0; file = 0;
+      my_fd = 0; file->close(); file = 0;
       return;
     }
 
@@ -820,6 +820,9 @@ void handle_request( )
 
     if(file->len > -1)
       myheads += ({"Content-length: " + file->len });
+#ifdef KEEP_ALIVE
+    myheads += ({ "Connection: Keep-Alive" });
+#endif
     head_string = (myheads+({"",""}))*"\r\n";
     
     if(conf) conf->hsent+=strlen(head_string||"");
@@ -862,8 +865,6 @@ void handle_request( )
 int processed;
 void got_data(mixed fooid, string s)
 {
-//   werror("got_data: '"+s+"'\n");
-
   int tmp;
   remove_call_out(do_timeout);
   call_out(do_timeout, 30); // Close down if we don't get more data 
@@ -909,7 +910,7 @@ void got_data(mixed fooid, string s)
 
   my_fd->set_close_callback(0); 
   my_fd->set_read_callback(0); 
-  my_fd->set_blocking();
+//   my_fd->set_blocking();
   processed=1;
 #ifdef THREADS
   roxen->handle(this_object()->handle_request);
