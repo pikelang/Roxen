@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.92 2002/04/17 19:08:57 mast Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.93 2002/06/03 17:21:19 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -395,7 +395,7 @@ mapping parse_and_find_htaccess( RequestID id )
   {
     string cmd, rest;
 
-    if(line[0] == '#')
+    if(!strlen(line) || line[0] == '#')
       continue;
 
     line = (replace(line, "\t", " ") / " " - ({""})) * " ";
