@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.684 2001/07/12 12:37:07 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.685 2001/07/16 14:40:57 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -521,7 +521,7 @@ class Queue
   }
 }
 
-// This is easier than when there is no threads.
+// This is easier than when there are no threads.
 // See the discussion below. :-)
 function async_sig_start( function f, int really )
 {
@@ -3662,7 +3662,12 @@ void describe_all_threads()
   for(i=0; i < sizeof(threads); i++) {
     report_debug("### Thread %s%s:\n",
 		 (string) thread_ids[i],
-		 threads[i] == backend_thread ? " (backend thread)" : "");
+#ifdef THREADS
+		 threads[i] == backend_thread ? " (backend thread)" : ""
+#else
+		 ""
+#endif
+		);
     report_debug(describe_backtrace(threads[i]->backtrace()) + "\n");
   }
 
