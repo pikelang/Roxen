@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.31 1997/05/08 18:28:46 peter Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.32 1997/05/20 10:48:36 per Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -89,6 +89,16 @@ void create()
   defvar("toparse", ({ "rxml","spml", "html", "htm" }), "Extensions to parse", 
 	 TYPE_STRING_LIST, "Parse all files ending with these extensions.");
 
+  defvar("parse_exec", 0, "Require exec bit on files for parsing", TYPE_FLAG,
+	 "If set, files has to have the execute bit (any of them) set "
+	 "in order for them to be parsed by this module. The exec bit "
+	 "is the one that is set by 'chmod +x filename'");
+	 
+  defvar("no_parse_exec", 0, "Don't Parse files with exec bit", TYPE_FLAG,
+	 "If set, no files with the exec bit set will be parsed. This is the "
+	 "reverse of the 'Require exec bit on files for parsing' flag. "
+	 "It is not very useful to set both variables.");
+	 
   defvar("ac", 1, "Access log", TYPE_FLAG,
 	 "If unset, the &lt;accessed&gt; tag will not work, and no access log "
 	 "will be needed. This will save three file descriptors.");
@@ -374,11 +384,13 @@ mapping handle_file_extension( object file, string e, object id)
     _stat=file->stat();
 
   if(_stat[1] > (QUERY(max_parse)*1024))
-  {
     return 0; // To large for me..
-  }
+
+  if(QUERY(parse_exec) &&   !(_stat[0] & 07111)) return 0;
+  if(QUERY(no_parse_exec) && (_stat[0] & 07111)) return 0;
 
   to_parse = file->read(0x7fffffff);
+
   if(err = catch( to_parse = do_parse( to_parse,id,file,defines,id->my_fd ) ))
   {
     destruct(file);
@@ -1208,6 +1220,8 @@ string tag_allow(string a, mapping (string:string) m,
   if(m->module)
     TEST(got->conf && got->conf->modules[m->module]);
   
+  if(m->exists) TEST(roxen->try_get_file(fix_relative(m->module,got),got,1));
+  
   if(m->language)
     if(!got->misc["accept-language"])
     {
@@ -1418,7 +1432,7 @@ string tag_aconfig(string tag, mapping m, string q, object got)
   string href, opts="", opt;
 
   if(!m->href)
-    href=strip_config(got->raw_url);
+    href=strip_prestate(strip_config(got->raw_url));
   else 
   {
     href=m->href;

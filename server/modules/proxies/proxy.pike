@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.19 1997/05/19 12:40:01 grubba Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.20 1997/05/20 10:48:33 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -493,7 +493,7 @@ array is_remote_proxy(string hmm)
 {
   array tmp;
   foreach(proxies, tmp) if(tmp[0](hmm))
-    if(tmp[1]!="no_proxy")
+    if(tmp[1][0]!="no_proxy")
       return tmp[1];
     else
       return 0;
@@ -516,7 +516,7 @@ mapping find_file( string f, object id )
 #ifdef PROXY_DEBUG
   perror("PROXY: Request for "+f+"\n");
 #endif
-  f=id->raw_url[strlen(QUERY(mountpoint))+1 .. 100000];
+  f=id->raw_url[strlen(QUERY(mountpoint))+1 .. ];
 
   if(sscanf(f, "%[^:/]:%d/%s", host, port, file) < 2)
   {
@@ -534,6 +534,7 @@ mapping find_file( string f, object id )
     port=80; /* Default */
   }
   host = lower_case(host);
+  sscanf(host, "%*s@%s", host);
   id->misc->proxyhost = host; // Used if the host is unknown.
   if(tmp = proxy_auth_needed(id))
     return tmp;

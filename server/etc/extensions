@@ -49,8 +49,11 @@ qt	video/quicktime
 viv     video/vnd.vivo 
 vivo    video/vnd.vivo 
 
+c	text/x-c-code
+cc	text/x-c++-code
 css	text/css
 etx	text/x-setext
+h	text/x-include-file
 htm	text/html
 html	text/html
 java	text/plain
@@ -72,8 +75,6 @@ arj	application/octet-stream
 asp     application/x-asap 
 bcpio	application/x-bcpio
 bin	application/octet-stream
-c	application/x-c-code
-cc	application/x-c++-code
 cdf	application/x-netcdf
 cdr	application/x-coreldraw
 cdrw    application/x-coreldraw
@@ -90,7 +91,6 @@ eps	application/postscript
 evy     application/x-envoy 
 exe	application/octet-stream
 gtar	application/x-gtar
-h	application/x-include-file
 hdf	application/x-hdf
 hqx	application/mac-binhex40
 iw      application/iconauthor 
@@ -161,7 +161,8 @@ dxr	application/x-director
 nspc    application/x-ns-proxy-autoconfig
 pac     application/x-ns-proxy-autoconfig
 
-# This is supposed to be just 'gzip' and 'compress', but Netscape barfs..
+# This is supposed to be just 'gzip' and 'compress', but Netscape
+# barfs.. Fixed in Netscape 3.*, but quite a lot of people still run 2.*
 Z	STRIP			x-compress
 gz	STRIP			x-gzip
 

@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.26 1997/05/15 23:30:45 neotron Exp $";
+string cvs_version = "$Id: http.pike,v 1.27 1997/05/20 10:48:38 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -298,6 +298,7 @@ private int parse_got(string s)
 	    
 	    if(method == "POST")
 	    {
+	      if(!data) data="";
 	      int l = (int)(contents-" ")-1; /* Length - 1 */
 	      wanted_data=l;
 	      have_data=strlen(data);
