@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.40 2000/03/24 09:00:37 wellhard Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.41 2000/03/24 14:21:28 jhs Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -560,21 +560,20 @@ class TagGButtom {
 	img_attrs->height = size->ysize;
       }
 
+      result = make_tag("img", img_attrs);
+
       //  Make button clickable if not dimmed
-      if (args->href && !new_args->dim) {
+      if(args->href && !new_args->dim)
+      {
 	mapping a_attrs = ([ "href" : args->href ]);
-	if (args->target)
-	  a_attrs->target = args->target;
-	
-	if (args->onClick)
-	  a_attrs->onClick = args->onClick;
-	
-	if (args->onclick)
-	  a_attrs->onclick = args->onclick;
-	
-	result=make_container("a", a_attrs, make_tag("img", img_attrs));
-      } else
-	result=make_tag("img", img_attrs);
+
+	foreach(indices(args), string arg)
+	  if(has_value("target/onmousedown/onmouseup/onclick/ondblclick/onmouseout/"
+		       "onmouseover/onkeypress/onkeyup/onkeydown"/"/", lower_case(arg)))
+	    a_attrs[arg] = args[arg];
+
+	result = make_container("a", a_attrs, result);
+      }
 
       return 0;
     }
