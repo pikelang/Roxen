@@ -1,6 +1,8 @@
 Changes since Roxen 1.0 
 -----------------------------------------------
 
+o <aconf> now tolerates href= and generally works better.
+
 o Roxen now gives an error message if the rights on the log an conf
   files are set wrongly, that is, if it is unable to save the
   configuration.
