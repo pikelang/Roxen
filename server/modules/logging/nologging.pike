@@ -2,7 +2,7 @@
 // This module can be used to turn off logging for some files.
 
 
-constant cvs_version = "$Id: nologging.pike,v 1.11 2000/10/12 22:51:58 nilsson Exp $";
+constant cvs_version = "$Id: nologging.pike,v 1.12 2000/11/13 08:51:54 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -79,6 +79,6 @@ int nolog(string what)
 
 int log(RequestID id, mapping file)
 {
-  if(nolog(id->not_query+"?"+id->query))
+  if(nolog(id->raw_url))
     return 1;
 }
