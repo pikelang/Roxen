@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.164 1998/02/05 00:59:18 js Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.165 1998/02/05 02:01:02 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -194,6 +194,11 @@ void unthreaded_handle(function f, mixed ... args)
   f(@args);
 }
 
+function handle = unthreaded_handle;
+
+#ifdef THREADS
+#define THREAD_DEBUG
+
 object do_thread_create(string id, function f, mixed ... args)
 {
   object t = thread_create(f, @args);
@@ -201,11 +206,6 @@ object do_thread_create(string id, function f, mixed ... args)
   werror(id+" started\n");
   return t;
 }
-
-function handle = unthreaded_handle;
-
-#ifdef THREADS
-#define THREAD_DEBUG
 
 object (Queue) handle_queue = Queue();
 
@@ -2230,7 +2230,6 @@ void start_shuffler_threads()
     do_thread_create( "Shuffle thread ["+i+"]", shuffle_thread, i );
   number_of_shuffler_threads = i;
 }
-#endif /* THREADS */
 
 #if efun(send_fd)
 object shuffler;
@@ -2253,7 +2252,8 @@ void init_shuffler()
     start_shuffler_threads();
   }
 }
-#endif /* send_fd */
+#endif /* efun(send_fd) */
+#endif /* THREADS */
 
 
 static private int _recurse;
@@ -2399,11 +2399,11 @@ int main(int|void argc, array (string)|void argv)
 #if efun(thread_set_concurrency)
   thread_set_concurrency(QUERY(numthreads)+QUERY(numshufflethreads)+1);
 #endif
-#endif /* THREADS */
 
 #if efun(send_fd)
   init_shuffler(); 
 #endif
+#endif /* THREADS */
 
   // Signals which cause a restart (exitcode != 0)
   foreach( ({ "SIGUSR1", "SIGUSR2", "SIGHUP", "SIGINT" }), string sig) {
