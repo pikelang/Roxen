@@ -6,7 +6,7 @@ inherit "roxenlib";
 import Thread;
 
 // AutoSite DNS Update 
-// $Id: AutoDNS.pike,v 1.14 1998/09/27 16:12:47 grubba Exp $
+// $Id: AutoDNS.pike,v 1.15 1998/09/27 16:33:02 grubba Exp $
 // Leif Stensson & Johan Schön, July 1998.
 
 string host_ip_no;
@@ -186,10 +186,19 @@ void do_update()
         if (rr_type == "A" && rr_value == "")
                rr_value = host_ip_no;
 
+	// FIXME: The below should really only check if
+	// the last character of rr_owner is a '.'.
         if      (rr_owner == "")              rr_owner = domain + ".";
         else if (sizeof(rr_owner / ".") == 1) rr_owner += "." + domain + "."; 
 	else if (rr_owner[-1] != '.') {
 	  rr_owner += ".";
+	}
+
+	// Kluge to fix rr_value.
+	if (rr_type == "MX") {
+	  if (rr_value[-1] != '.') {
+	    rr_value += ".";
+	  }
 	}
 
         file->write(rr_entry(rr_owner, ttl, rr_type, rr_value) + "\n");
