@@ -1,6 +1,6 @@
 /* This file is executed by Pike to bootstrap Roxen on NT.
  *
- * $Id: ntroxenloader.pike,v 1.4 2000/06/28 16:16:22 mast Exp $
+ * $Id: ntroxenloader.pike,v 1.5 2000/06/29 13:20:21 noring Exp $
  */
 
 string dir;
@@ -79,6 +79,8 @@ int main(int argc, array (string) argv)
 {
   add_constant ("getcwd", getcwd);
 
+  Options opt = Options();
+  
   if(argc > 1 && sizeof(argv[1]) && argv[1][0]=='+')
   {
     key = combine_path (getcwd(), argv[1][1..]);
@@ -86,7 +88,13 @@ int main(int argc, array (string) argv)
     argc--;
   }
 
-  Options opt = Options();
+  if(argc > 1 && argv[1] == "-silent")
+  {
+    opt->redirect = 1;
+    argv = argv[..0] + argv[2..];
+    argc--;
+  }
+  
   int i = search (argv, "--program");
   if (i >= 0) {
     opt->script = argv[i+1..];
@@ -95,8 +103,7 @@ int main(int argc, array (string) argv)
 
   foreach(Getopt.find_all_options(argv, ({
     ({ "cd", Getopt.HAS_ARG, ({ "--cd" }) }),
-    ({ "quiet", Getopt.NO_ARG, ({ "-q", "--quiet" }) }),
-    ({ "silent", Getopt.NO_ARG, ({ "-silent" }) })
+    ({ "quiet", Getopt.NO_ARG, ({ "-q", "--quiet" }) })
   })), array arg)
     switch(arg[0])
     {
@@ -106,10 +113,6 @@ int main(int argc, array (string) argv)
 	
       case "quiet":
 	opt->verbose = 0;
-	break;
-
-      case "silent":
-	opt->redirect = 1;
 	break;
     }
   argv = Getopt.get_args(argv, 0);
