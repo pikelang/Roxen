@@ -103,7 +103,7 @@ string parse( RequestID id )
     "<tr><td>Used languages:</td><td>"+l->languages+"</td></tr>"
     "<tr><td>Registered projects:</td><td>"+l->reg_proj+"</td></tr>"
     "<tr><td>Loaded project files:</td><td>"+l->load_proj+"</td></tr>"
-    "<tr><td>Current cache size:</td><td>"+String.in2size(l->bytes)+"</td></tr>"
+    "<tr><td>Current cache size:</td><td>"+String.int2size(l->bytes)+"</td></tr>"
     "</table><br />";
 
   return res +  "<p><cf-ok/></p>";
