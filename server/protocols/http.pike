@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.365 2002/03/28 03:08:28 per-bash Exp $";
+constant cvs_version = "$Id: http.pike,v 1.366 2002/04/05 14:29:27 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -995,7 +995,7 @@ int set_max_cache( int t )
 void disconnect()
 {
   file = 0;
-  conf->connection_drop( this_object() );
+  conf && conf->connection_drop( this_object() );
 #ifdef REQUEST_DEBUG
   if (my_fd) 
     MARK_FD("HTTP my_fd in HTTP disconnected?");
