@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.4.2.6 1997/03/10 22:06:45 grubba Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.4.2.7 1997/03/11 04:06:01 grubba Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -16,6 +16,7 @@ string cvs_version = "$Id: ftp.pike,v 1.4.2.6 1997/03/10 22:06:45 grubba Exp $";
 
 
 inherit "http"; /* For the variables and such.. (Per) */ 
+
 #include <config.h>
 #include <module.h>
 #include <stat.h>
@@ -24,7 +25,7 @@ import Array;
 
 #define perror	roxen_perror
 
-string dataport_addr, cwd ="/", remote_addr, prot, method;
+string dataport_addr, cwd ="/", remote_addr;
 int dataport_port;
 int GRUK = random(_time(1));
 #undef QUERY
@@ -258,11 +259,15 @@ varargs int|string list_file(string arg, int srt, int short, int column,
   else
     filename = combine_path(cwd, arg);
 
+  perror("FTP: list \"%s\"\n", filename);
 #if 0
   while(sizeof(filename) && filename[-1] == '.')
     filename=filename[..strlen(filename)-2];
-#else
-  filename = ((filename/"/")-({ ".", "" }))*"/";
+  /* #else */
+  filename = ((filename/"/")-({ "." }))*"/";
+  if (filename == "") {
+    filename="/";
+  }
 #endif /* 0 */
   
   this_object()->not_query = filename;
@@ -285,13 +290,13 @@ varargs int|string list_file(string arg, int srt, int short, int column,
     roxen->log(([ "error": 200, "len": strlen(tmp) ]), this_object());
     return tmp;
   } else {
-    if(arg[-1] != '/')
-      arg += "/";
+    if(filename[-1] != '/')
+      filename += "/";
     array (string) dir, parsed = ({});
     string s;
     mapping tsort = ([]);
 
-    not_query = arg;
+    not_query = arg = filename;
     if(dir = roxen->find_dir(filename, this_object()))
     {
       if(!srt)
@@ -435,8 +440,10 @@ void got_data(mixed fooid, string s)
       {
 	reply("230 Anonymous ftp, at your service\n");
 	rawauth = 0;
+	auth = 0;
       } else {
 	rawauth = arg;
+	auth = 0;
 	reply("331 Give me a password, then!\n");
       }
       break;
@@ -445,6 +452,7 @@ void got_data(mixed fooid, string s)
       if(!rawauth)
 	reply("230 Guest login ok, access restrictions apply.\n"); 
       else {	
+	method="LOGIN";
 	y = ({ "Basic", rawauth+":"+arg});
 	realauth = y[1];
 	if(conf && conf->auth_module) {
@@ -454,12 +462,18 @@ void got_data(mixed fooid, string s)
 	    /* Authentification successfull */
 	    if (Query("named_ftp") && !check_shell(misc->shell)) {
 	      reply("432 You are not allowed to use named-ftp. Try using anonymous\n");
+	      /* roxen->(({ "error":403, "len":-1 ]), this_object()); */
 	      break;
 	    }
 	  }
 	}
 	auth=y;
-	reply("230 User "+rawauth+" logged in.\n"); 
+	if(auth[0]) {
+	  cwd = misc->home;
+	  reply("230 User "+rawauth+" logged in.\n"); 
+	} else
+	  reply("230 Luser "+rawauth+" logged in.\n"); 
+	/* roxen->log(([ "error": 202, "len":-1 ]), this_object()); */
       }
       break;
 
@@ -490,14 +504,8 @@ void got_data(mixed fooid, string s)
       else 
 	ncwd = combine_path(cwd, arg);
       
-      if (auth && auth[0] == 1) {
-	/* Named ftp */
-	/* Should change to correct user here */
-	perror("Named directory:%s\n", ncwd);
-	st = file_stat(ncwd);
-      } else {
-	st = roxen->stat_file(ncwd, this_object());
-      }
+      st = roxen->stat_file(ncwd, this_object());
+
       if(!st) {
 	reply("550 "+arg+": No such file or directory.\n");
 	break;
