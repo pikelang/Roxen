@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.126 1998/05/15 08:40:10 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.127 1998/05/21 18:24:03 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1567,7 +1567,7 @@ string|array(string) tag_fix_color(string tagname, mapping args, object id,
   FIX(text,fg);
   FIX(color,fg);
 
-  if(changed) return ({ make_tag("tagname", args) });
+  if(changed) return ({ make_tag(tagname, args) });
   return 0;
 }
 
