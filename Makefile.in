@@ -148,9 +148,9 @@ install_only:
 	-@(cd extern;$(MAKE) install "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)";cd ../)
 	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/logs
 	-@$(SRCDIR)/mkdir -p $(prefix)/roxen/configurations
-	-chmod a+x $(prefix)
-	-chmod a+x $(prefix)/roxen
-	-chmod a+x $(prefix)/roxen/server
+	-chmod a+rx $(prefix)
+	-chmod a+rx $(prefix)/roxen
+	-chmod a+rx $(prefix)/roxen/server
 	-@for d in fonts nfonts modules etc bin base_server more_modules \
 		   config_actions server_templates \
 	           languages roxen-images protocols unfinishedmodules; do \
