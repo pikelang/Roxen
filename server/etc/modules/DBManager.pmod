@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.24 2001/08/20 12:01:11 nilsson Exp $
+// $Id: DBManager.pmod,v 1.25 2001/08/22 19:23:08 per Exp $
 
 //! Manages database aliases and permissions
 
@@ -605,20 +605,102 @@ void rename_db( string oname, string nname )
   changed();
 }
 
-void create_db( string name, string path, int is_internal )
+mapping get_group( string name )
+{
+  array r= query( "SELECT * FROM groups WHERE name=%s", name );
+  if( sizeof( r ) )
+    return r[0];
+}
+
+array(string) list_groups()
+{
+  return query( "SELECT name FROM groups" )->name;
+}
+
+int create_group( string name,    string lname,
+		     string comment, string pattern )
+{
+  if( get_group( name ) )
+  {
+    query( "UPDATE groups SET comment=%s, pattern=%s, lname=%s "
+	   "WHERE name=%s",  comment, pattern, lname, name );
+  }
+  else
+  {
+    query("INSERT INTO groups (comment,pattern,lname,name) "
+	  "VALUES (%s,%s,%s,%s)", comment, pattern, lname, name );
+  }
+}
+
+array(string) group_dbs( string group )
+{
+  return query( "SELECT db FROM db_groups WHERE groupn=%s", group )
+    ->db;
+}
+
+string db_group( string db )
+{
+  array q =query( "SELECT groupn FROM db_groups WHERE db=%s", db );
+  if( sizeof( q )  )
+    return q[0]->groupn;
+  return "internal";
+}
+
+string get_group_path( string db, string group )
+{
+  mapping m = get_group( group );
+  if( !m )
+    error("The group %O does not exist.", group );
+  if( strlen( m->pattern ) )
+  {
+    catch
+    {
+      Sql.Sql sq = Sql.Sql( m->pattern+"mysql" );
+      sq->query( "CREATE DATABASE "+db );
+    };
+    return m->pattern+db;
+  }
+  return 0;
+}
+
+void set_db_group( string db, string group )
+{
+  query("DELETE FROM db_groups WHERE db=%s", db);
+  query("INSERT INTO db_groups (db,groupn) VALUES (%s,%s)",
+	db, group );
+}
+
+void create_db( string name, string path, int is_internal,
+		string|void group )
 //! Create a new symbolic database alias.
 //!
 //! If @[is_internal] is specified, the database will be automatically
 //! created if it does not exist, and the @[path] argument is ignored.
 //!
 //! If the database @[name] already exists, an error will be thrown
+//!
+//! If group is specified, the @[path] will be generated
+//! automatically using the groups defined by @[create_group]
 {
   if( get( name ) )
     error("The database "+name+" already exists\n");
+
   if( has_value( name, "-" ) )
     name = replace( name, "-", "_" );
-  query( "INSERT INTO dbs values (%s,%s,%s)",
-         name, (is_internal?name:path), (is_internal?"1":"0") );
+
+  if( group && is_internal )
+  {
+    set_db_group( name, group );
+    path = get_group_path( name, group );
+    if( path )
+      is_internal = 0;
+  }
+  else
+    query("INSERT INTO db_groups (db,groupn) VALUES (%s,%s)",
+	  name, "internal" );
+
+  query( "INSERT INTO dbs values (%s,%s,%s)", name,
+	 (is_internal?name:path), (is_internal?"1":"0") );
   if( is_internal )
     catch(query( "CREATE DATABASE `"+name+"`"));
   changed();
@@ -730,6 +812,19 @@ static void create()
 	" whn int unsigned not null, "
 	" INDEX place (db,directory))");
 
+  query("CREATE TABLE IF NOT EXISTS db_groups ("
+	" db varchar(80) not null, "
+	" groupn varchar(80) not null)");
+
+  query("CREATE TABLE IF NOT EXISTS groups ( "
+	"  name varchar(80) not null primary key, "
+	"  lname varchar(80) not null, "
+	"  comment blob not null, "
+	"  pattern varchar(255) not null default '')");
+
+  catch(query("INSERT INTO groups (name,lname,comment,pattern) VALUES "
+      " ('internal','Uncategorized','Databases without any group','')"));
+
   query("CREATE TABLE IF NOT EXISTS module_tables ("
 	"  conf varchar(80) not null, "
 	"  module varchar(80) not null, "
@@ -750,7 +845,13 @@ CREATE TABLE dbs (
  local INT UNSIGNED NOT NULL )
  " );
     create_db( "shared", 0, 1 );
+    is_module_db( 0, "shared",
+		  "The shared database contains data that "
+		  "should be shared between multiple-frontend servers" );
     create_db( "local",  0, 1 );
+    is_module_db( 0, "local",
+		  "The local database contains data that "
+		  "should not be shared between multiple-frontend servers" );
   }
   
   if( !q->db_permissions )
@@ -778,5 +879,4 @@ CREATE TABLE db_permissions (
   };
 
   werror( describe_backtrace( err ) );
-    
 }

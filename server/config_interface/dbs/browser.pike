@@ -94,9 +94,9 @@ mixed move_db( string db, RequestID id )
       int ni, move_later;
       // In all cases, create the new db.
       if( catch {
-	DBManager.create_db( id->variables->name,
-			     id->variables->url,
-			     (ni = (id->variables->type == "internal")));
+	DBManager.create_db( id->variables->name, id->variables->url,
+			     (ni = (id->variables->type == "internal")),
+			     id->variables->group );
       } )
 	move_later = 1;
 

@@ -8,19 +8,38 @@ void really_do_create( RequestID id  )
 {
   DBManager.create_db( id->variables->name,
                        id->variables->url,
-                       id->variables->type == "internal" );
+                       id->variables->type == "internal",
+		       id->variables->group );
+  if( strlen( id->variables->comment ) )
+    DBManager.is_module_db( 0, id->variables->name,
+			    id->variables->comment-"\r" );
 }
 
 string parse(RequestID id )
 {
   RXML.user_set_var( "var.go-on",  "<cf-ok/>" );
+
+  string group_selector()
+  {
+    array res = ({});
+    string form = "";
+    foreach( DBManager.list_groups(), string c )
+      if( c != "internal" )
+	res += ({ ({DBManager.get_group(c)->lname, c}) });
+      else
+	res = ({ ({DBManager.get_group(c)->lname, c}) })+res;
+    foreach( res[0..0]+sort(res[1..]), array q )
+      form += "   <option value='"+q[1]+"'>"+q[0]+"\n";
+    return form;
+  };
+
   string error="",form =
 #"
 <gtext scale=0.6>"+_(0,"Create a new database")+#"</gtext><br />
 ERROR
 <table>
   <tr>
-    <td><b>"+_(0,"Name")+#":</b></td> <td><input name='name' value='&form.name;'/></td>
+    <td><b>"+_(0,"Name")+#":</b></td> <td><input name='name' value='&form.name;' size=30/></td>
     <td><b>"+_(0,"Type")+#":</b></td> <td width='100%'>
      <default variable=form.type><select name=type>
        <option value='internal'>  "+_(0,"Internal")+#"  </option>
@@ -44,12 +63,23 @@ ERROR
  </tr>
   <tr>
      <td><nbsp><b>"+_(0,"URL")+#":</b></nbsp></td>
-      <td colspan='3'><input name='url' size=50 value='&form.url;'/></td>
+      <td><input name='url' size=30 value='&form.url;'/></td>
+       <td><b>"+_(0,"Category")+#":</b></td> <td width='100%'>
+       <default variable='form.group'><select name=group> "+
+      group_selector()+#"
+       </select></default>
+      </td>
+
       </tr>
-      <tr><td colspan='4'><i>
+      <tr><td valign=top colspan='2'><i>
       "+_(0,"This URL is only used for </i>External<i> databases, it is "
 	  "totally ignored for databases defined internally in Roxen")+"</i>"
+      "</td>"+
+    "<td valign=top colspan='2'><i>"
+    +_(0,"This group is used to group the databses. For internal databases, the group can also be used to select which MySQL server the database should be created in")+"</i>"
       "</td></tr>"
+#"<tr><td valign=top><nbsp><b>"+_(0,"Comment")+#":</b></nbsp></td>
+      <td colspan=3><textarea name='comment' cols=50 rows=10>&form.comment;</textarea></td></tr>"
     "</table>";
 
   if( id->variables["ok.x"]  )
@@ -74,10 +104,8 @@ ERROR
 	   _(0,"Please specify a name for the database")+
 	   "</font>";
          break;
-       case "mysql":
-       case "roxen":
-       case "local":
-       case "shared":
+       case "mysql": case "roxen":
+       case "local": case "shared":
          error = sprintf("<font color='&usr.warncolor;'>"+
                          _(0,"%s is an internal database, used by roxen."
 			   "Please select another name")+

@@ -17,9 +17,7 @@ string parse( RequestID id )
   string q="";
   while( id->misc->orig )  id = id->misc->orig;
   q = (id->not_query/"/")[-1];
-  if( q == "index.html" || q == "browser.pike"  )
-    q = "";
-  if( q == "whatsnew.html" )
+  if( q == "index.html" || q == "browser.pike" || q == "edit_group.pike" )
     q = "";
   string res="";
   foreach( pages, array page )

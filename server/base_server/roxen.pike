@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.707 2001/08/22 15:41:24 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.708 2001/08/22 19:23:07 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3029,7 +3029,7 @@ class ArgCache
     if(catch(QUERY("SELECT md5 FROM "+name+" WHERE id=0")))
     {
       master()->resolv("DBManager.is_module_table")
-	( 0, "shared", name,
+	( 0, "local", name,
 	  "The argument cache, used to map between "
 	  "a short unique string and an argument "
 	  "mapping" );
@@ -3049,7 +3049,7 @@ class ArgCache
     // compiled.
     cache = ([]);
     function f = master()->resolv( "DBManager.cached_get" );
-    get_db = lambda() { return f("shared"); };
+    get_db = lambda() { return f("local"); };
     setup_table( );
   }
 
@@ -3153,7 +3153,8 @@ class ArgCache
     ensure_secret();
     object crypto = Crypto.arcfour();
     crypto->set_encrypt_key( secret );
-    a = Gmp.mpz( a, 36 )->digits( 256 );
+    if( catch(  a = Gmp.mpz( a, 36 )->digits( 256 ) ) )
+      return 0; // Not very likely to work...
     a = crypto->crypt( a );
     int i, j;
     if( sscanf( a, "%d\327%d", i, j ) != 2 )
