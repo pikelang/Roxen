@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.228 2001/08/21 21:50:26 mast Exp $
+// $Id: module.pmod,v 1.229 2001/08/21 22:31:27 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6779,7 +6779,9 @@ class PCode
     int update_count = ctx->state_updated;
 
 #ifdef MODULE_DEBUG
-    if (tag_set && tag_set->generation != generation) error ("P-code is stale.\n");
+    if (tag_set && tag_set->generation != generation)
+      error ("P-code is stale - tag set %O has generation %d and not %d.\n",
+	     tag_set->name, tag_set->generation, generation);
 #endif
 
     if (ctx->unwind_state)
