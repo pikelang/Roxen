@@ -37,7 +37,7 @@ the headers and the body). Please notify the author of the script of this\n\
 problem.\n"
 
 
-constant cvs_version = "$Id: cgi.pike,v 2.20 1999/06/02 21:20:53 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.21 1999/06/09 18:31:23 neotron Exp $";
 
 #ifdef CGI_DEBUG
 #define DWERROR(X)	report_debug(X)
@@ -479,10 +479,12 @@ class CGIWrapper
 	skip = 2;
       }
     }
+    string tmphead = headers;
+    headers = "";
+    
+    output( handle_headers( tmphead[..pos-1] ) );
+    output( tmphead[pos+skip..] );
 
-    output( handle_headers( headers[..pos-1] ) );
-    output( headers[pos+skip..] );
-    headers="";
     if(force_exit)
       call_out(done, 0);
     return 1;
