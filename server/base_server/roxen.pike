@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.31.2.4 1997/03/09 13:36:34 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.31.2.5 1997/03/11 04:25:03 grubba Exp $";
 
 #define IN_ROXEN
 #include <module.h>
@@ -1012,9 +1012,10 @@ int|mapping check_security(function a, object id, void|int slevel)
 	continue;
 
        case MOD_USER: // allow user=...
-	if(id->auth && id->auth[0] && level[1](id->auth[1])) return 0;
-	need_auth = 1;
-	continue;
+//	 perror("Allow user: "+id->auth[0]+" && "+id->auth[1]+"\n");
+	 if(id->auth && id->auth[0] && level[1](id->auth[1])) return 0;
+	 need_auth = 1;
+	 continue;
 	
        case MOD_PROXY_USER: // allow user=...
 	if(id->misc->proxyauth && id->misc->proxyauth[0] && 
@@ -1267,9 +1268,9 @@ public array find_dir(string file, object id)
     
     if(!search(file, loc))
     {
-//#ifdef MODULE_LEVEL_SECURITY
-//      if(check_security(tmp[1], id)) continue;
-//#endif
+#ifdef MODULE_LEVEL_SECURITY
+      if(check_security(tmp[1], id)) continue;
+#endif
       if(d=function_object(tmp[1])->find_dir(file[strlen(loc)..1000000], id))
 	dir |= d;
     } else {
@@ -1282,6 +1283,7 @@ public array find_dir(string file, object id)
       }
     }
   }
+
   if(sizeof(dir))
     return dir;
 }
@@ -1305,9 +1307,9 @@ public array stat_file(string file, object id)
       return ({ 0, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0 });
     if(!search(file, loc)) 
     {
-//#ifdef MODULE_LEVEL_SECURITY
-//      if(check_security(tmp[1], id)) continue;
-//#endif
+#ifdef MODULE_LEVEL_SECURITY
+      if(check_security(tmp[1], id)) continue;
+#endif
       if(s=function_object(tmp[1])->stat_file(file[strlen(loc)..], id))
 	return s;
     }
@@ -1409,13 +1411,13 @@ public mixed try_get_file(string s, object id, int|void status,
   fake_id->not_query=s;
   fake_id->misc->internal_get=1;
 
-  if(!(m = get_file(fake_id)))
+  if(!(m = get_file(fake_id)) || (m->error && (m->error/100 != 2)))
   {
     fake_id->end();
     return 0;
   }
   fake_id->end();
-  
+
   if(status) return 1;
   
 #ifdef COMPAT
@@ -1714,7 +1716,8 @@ void start(int num)
 #ifdef DEBUG
     perror("Opening port:%s...\n",
 	   map(port, lambda(mixed x){ return(x+""); } )*",");
-    array(mixed) port_error = 
+    array port_error;
+    port_error = 
 #endif /* DEBUG */
       catch {
 	array tmp;
@@ -1740,7 +1743,7 @@ void start(int num)
 #ifdef DEBUG
     if (port_error) {
       perror("Failed to open port %s at %s\n%s\n", port[0], port[2],
-	     master()->describe_backtrace(port_error));
+	     describe_backtrace(port_error));
     }
 #endif /* DEBUG */
   }
@@ -3421,7 +3424,7 @@ inline static private string checkfd_fix_line(string l)
 }
 
 
-string checkfd()
+string checkfd(object|void id)
 {
 //  perror(sprintf("%O\n", get_all_active_fd()));
   
