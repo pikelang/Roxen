@@ -1,6 +1,6 @@
 #charset iso-8859-2
 /*
- * $Id: cestina.pmod,v 1.6 2000/07/09 14:09:46 per Exp $
+ * $Id: cestina.pmod,v 1.7 2000/07/09 18:42:41 per Exp $
  *
  * Roxen locale support -- Cestina (Czech)
  *
@@ -527,11 +527,4 @@ string days(int n)
 {
   if(n == 1) return "jeden den";
   return _whatevers( "dní", n );
-}
-
-
-string module_doc_string(int var, int long)
-{
-  return (::module_doc_string(var,long) ||
-	  RoxenLocale.standard.module_doc_string( var, long ));
 }

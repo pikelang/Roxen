@@ -1,5 +1,5 @@
 /*
- * $Id: svenska.pmod,v 1.7 2000/07/09 14:09:46 per Exp $
+ * $Id: svenska.pmod,v 1.8 2000/07/09 18:42:42 per Exp $
  *
  * Roxen locale support -- Svenska (Swedish)
  *
@@ -503,10 +503,4 @@ string days(int n)
 {
   if(n == 1) return "en dag";
   return _whatevers( "dagar", n );
-}
-
-string module_doc_string(int var, int long)
-{
-  return (::module_doc_string(var,long) ||
-	  RoxenLocale.standard.module_doc_string( var, long ));
 }
