@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.466 2000/03/26 23:01:17 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.467 2000/03/27 00:08:37 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -700,7 +700,6 @@ class Protocol
 
   object find_configuration_for_url( string url, RequestID id )
   {
-//  werror("find configuration for '"+url+"'\n");
     object c;
     foreach( sorted_urls, string in )
     {
@@ -715,7 +714,16 @@ class Protocol
 	return c;
       }
     }
-    // Ouch.
+
+    // Ouch. Default to '*' first...
+    mixed i;
+    if( ip 
+        && ( i=open_ports[ name ][ 0 ] ) 
+        && ( i=i[ port ] ) 
+        && ( i != this_object()) )
+      return i->find_configuration_for_url( url, id );
+
+    // .. then grab the first configuration that is available at all.
     if(!(c = urls[sorted_urls[0]]->conf)->inited) c->enable_all_modules();
     id->misc->defaulted=1;
     return c;
