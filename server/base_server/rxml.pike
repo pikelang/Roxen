@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.123 2000/02/13 18:09:46 mast Exp $
+ * $Id: rxml.pike,v 1.124 2000/02/13 18:25:53 mast Exp $
  *
  * The Roxen RXML Parser. See also the RXML Pike module.
  *
@@ -21,9 +21,9 @@ string rxml_error(string tag, string error, RequestID id) {
   return (id->misc->debug?sprintf("(%s: %s)",capitalize(tag),error):"")+"<false>";
 }
 
-string handle_rxml_run_error (RXML.Backtrace err, RXML.Type type)
+string handle_run_error (RXML.Backtrace err, RXML.Type type)
 // This is used to report thrown RXML run errors. See
-// RXML.rxml_run_error().
+// RXML.run_error().
 {
 #ifdef MODULE_DEBUG
   // FIXME: Make this a user option.
@@ -34,9 +34,9 @@ string handle_rxml_run_error (RXML.Backtrace err, RXML.Type type)
   else return describe_error (err);
 }
 
-string handle_rxml_parse_error (RXML.Backtrace err, RXML.Type type)
+string handle_parse_error (RXML.Backtrace err, RXML.Type type)
 // This is used to report thrown RXML parse errors. See
-// RXML.rxml_parse_error().
+// RXML.parse_error().
 {
 #ifdef MODULE_DEBUG
   // FIXME: Make this a user option.
@@ -1324,7 +1324,7 @@ class TagEmit {
 
     array do_enter(RequestID id) {
       if(!(plugin=get_plugins()[args->source]))
-	rxml_parse_error("Source not present.");
+	parse_error("Source not present.");
       scope_name=args->scope||args->source;
       res=plugin->get_dataset(args, id);
       if(arrayp(res)) {
@@ -1339,7 +1339,7 @@ class TagEmit {
 	LAST_IF_TRUE = 1;
 	return 0;
       }
-      rxml_parse_error("Wrong return type from emit source plugin.");
+      parse_error("Wrong return type from emit source plugin.");
     }
 
     function do_iterate;

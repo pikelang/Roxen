@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.53 2000/02/13 18:04:40 mast Exp $
+//! $Id: module.pmod,v 1.54 2000/02/13 18:25:56 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -145,10 +145,10 @@ class Tag
       if (dont_throw) return 0;
       else {
 	array(string) missing = sort (indices (req_arg_types - atypes));
-	rxml_parse_error ("Required " +
-			  (sizeof (missing) > 1 ?
-			   "arguments " + String.implode_nicely (missing) + " are" :
-			   "argument " + missing[0] + " is") + " missing.\n");
+	parse_error ("Required " +
+		     (sizeof (missing) > 1 ?
+		      "arguments " + String.implode_nicely (missing) + " are" :
+		      "argument " + missing[0] + " is") + " missing.\n");
       }
     atypes += args & opt_arg_types;
 #ifdef MODULE_DEBUG
@@ -552,16 +552,16 @@ class Scope
 //! Interface for objects that emulates a scope mapping.
 {
   mixed `[] (string var, void|Context ctx, void|string scope_name)
-    {rxml_parse_error ("Cannot query variable" + _in_the_scope (scope_name) + ".\n");}
+    {parse_error ("Cannot query variable" + _in_the_scope (scope_name) + ".\n");}
 
   mixed `[]= (string var, mixed val, void|Context ctx, void|string scope_name)
-    {rxml_parse_error ("Cannot set variable" + _in_the_scope (scope_name) + ".\n");}
+    {parse_error ("Cannot set variable" + _in_the_scope (scope_name) + ".\n");}
 
   array(string) _indices (void|Context ctx, void|string scope_name)
-    {rxml_parse_error ("Cannot list variables" + _in_the_scope (scope_name) + ".\n");}
+    {parse_error ("Cannot list variables" + _in_the_scope (scope_name) + ".\n");}
 
   void m_delete (string var, void|Context ctx, void|string scope_name)
-    {rxml_parse_error ("Cannot delete variable" + _in_the_scope (scope_name) + ".\n");}
+    {parse_error ("Cannot delete variable" + _in_the_scope (scope_name) + ".\n");}
 
   private string _in_the_scope (string scope_name)
   {
@@ -653,8 +653,8 @@ class Context
 	else
 	  return val;
     }
-    else if (scope_name) rxml_parse_error ("Unknown scope %O.\n", scope_name);
-    else rxml_parse_error ("No current scope.\n");
+    else if (scope_name) parse_error ("Unknown scope %O.\n", scope_name);
+    else parse_error ("No current scope.\n");
   }
 
   mixed user_get_var (string var, void|string scope_name, void|Type want_type)
@@ -680,8 +680,8 @@ class Context
 	return ([object(Scope)] vars)->`[]= (var, val, this_object(), scope_name || "_");
       else
 	return vars[var] = val;
-    else if (scope_name) rxml_parse_error ("Unknown scope %O.\n", scope_name);
-    else rxml_parse_error ("No current scope.\n");
+    else if (scope_name) parse_error ("Unknown scope %O.\n", scope_name);
+    else parse_error ("No current scope.\n");
   }
 
   mixed user_set_var (string var, mixed val, void|string scope_name)
@@ -707,8 +707,8 @@ class Context
 	([object(Scope)] vars)->m_delete (var, this_object(), scope_name || "_");
       else
 	m_delete ([mapping(string:mixed)] vars, var);
-    else if (scope_name) rxml_parse_error ("Unknown scope %O.\n", scope_name);
-    else rxml_parse_error ("No current scope.\n");
+    else if (scope_name) parse_error ("Unknown scope %O.\n", scope_name);
+    else parse_error ("No current scope.\n");
   }
 
   void user_delete_var (string var, void|string scope_name)
@@ -734,8 +734,8 @@ class Context
 	return ([object(Scope)] vars)->_indices (this_object(), scope_name || "_");
       else
 	return indices ([mapping(string:mixed)] vars);
-    else if (scope_name) rxml_parse_error ("Unknown scope %O.\n", scope_name);
-    else rxml_parse_error ("No current scope.\n");
+    else if (scope_name) parse_error ("Unknown scope %O.\n", scope_name);
+    else parse_error ("No current scope.\n");
   }
 
   array(string) list_scopes()
@@ -863,9 +863,9 @@ class Context
       if (id && id->conf)
 	msg = (err->type == "run" ?
 	       ([function(Backtrace,Type:string)]
-		([object] id->conf)->handle_rxml_run_error) :
+		([object] id->conf)->handle_run_error) :
 	       ([function(Backtrace,Type:string)]
-		([object] id->conf)->handle_rxml_parse_error)
+		([object] id->conf)->handle_parse_error)
 	      ) ([object(Backtrace)] err, evaluator->type);
       else {
 #ifdef MODULE_DEBUG
@@ -1368,22 +1368,22 @@ class Frame
 
   //! Services.
 
-  void rxml_run_error (string msg, mixed... args)
+  void run_error (string msg, mixed... args)
   //! Throws an RXML run error with a dump of the parser stack in the
   //! current context. This is intended to be used by tags for errors
   //! that can occur during normal operation, such as when the
   //! connection to an SQL server fails.
   {
-    _rxml_run_error (msg, @args);
+    _run_error (msg, @args);
   }
 
-  void rxml_parse_error (string msg, mixed... args)
+  void parse_error (string msg, mixed... args)
   //! Throws an RXML parse error with a dump of the parser stack in
   //! the current context. This is intended to be used for programming
   //! errors in the RXML code, such as lookups in nonexisting scopes
   //! and invalid arguments to a tag.
   {
-    _rxml_parse_error (msg, @args);
+    _parse_error (msg, @args);
   }
 
   void terminate()
@@ -1616,10 +1616,10 @@ class Frame
 	mapping(string:Type) atypes = raw_args & tag->req_arg_types;
 	if (sizeof (atypes) < sizeof (tag->req_arg_types)) {
 	  array(string) missing = sort (indices (tag->req_arg_types - atypes));
-	  rxml_parse_error ("Required " +
-			    (sizeof (missing) > 1 ?
-			     "arguments " + String.implode_nicely (missing) + " are" :
-			     "argument " + missing[0] + " is") + " missing.\n");
+	  parse_error ("Required " +
+		       (sizeof (missing) > 1 ?
+			"arguments " + String.implode_nicely (missing) + " are" :
+			"argument " + missing[0] + " is") + " missing.\n");
 	}
 	atypes += raw_args & tag->opt_arg_types;
 #ifdef MODULE_DEBUG
@@ -1667,7 +1667,7 @@ class Frame
 	  break;
 	}
       if (!result_type)		// Sigh..
-	rxml_parse_error (
+	parse_error (
 	  "Tag returns " +
 	  String.implode_nicely ([array(string)] tag->result_types->name, "or") +
 	  " but " + [string] parser->type->name + " is expected.\n");
@@ -1937,7 +1937,7 @@ class Frame
 
 // Global services.
 
-void rxml_run_error (string msg, mixed... args)
+void run_error (string msg, mixed... args)
 //! Throws an RXML run error with a dump of the parser stack in the
 //! current context. This is intended to be used by tags for errors
 //! that can occur during normal operation, such as when the
@@ -1947,7 +1947,7 @@ void rxml_run_error (string msg, mixed... args)
   throw (Backtrace ("run", msg, get_context()));
 }
 
-void rxml_parse_error (string msg, mixed... args)
+void parse_error (string msg, mixed... args)
 //! Throws an RXML parse error with a dump of the parser stack in the
 //! current context. This is intended to be used for programming
 //! errors in the RXML code, such as lookups in nonexisting scopes and
@@ -1976,10 +1976,12 @@ void throw_fatal (mixed err)
     string msg;
     if (catch (msg = err[0])) throw (err);
     if (stringp (msg) && !has_value (msg, "\nRXML frame backtrace:\n")) {
-      Backtrace b = Backtrace ("fatal", 0);
-      if (sizeof (msg) && msg[-1] != '\n') msg += "\n";
-      msg += "RXML frame backtrace:\n" + b->describe_rxml_backtrace (1);
-      catch (err[0] = msg);
+      string descr = Backtrace ("fatal", 0)->describe_rxml_backtrace (1);
+      if (sizeof (descr)) {
+	if (sizeof (msg) && msg[-1] != '\n') msg += "\n";
+	msg += "RXML frame backtrace:\n" + descr;
+	catch (err[0] = msg);
+      }
     }
   }
   throw (err);
@@ -2383,7 +2385,7 @@ class Type
 
   void type_check (mixed val);
   //! Checks whether the given value is a valid one of this type. Type
-  //! errors are thrown with RXML.rxml_parse_error().
+  //! errors are thrown with RXML.parse_error().
 
   //!string quoting_scheme;
   //! An identifier for the quoting scheme this type uses, if any. The
@@ -2598,7 +2600,7 @@ static class TNone
 
   void type_check (mixed val)
   {
-    if (val != Void) rxml_parse_error ("A value is not accepted.\n");
+    if (val != Void) parse_error ("A value is not accepted.\n");
   }
 
   mixed convert (mixed val)
@@ -2633,7 +2635,7 @@ static class TText
   string convert (mixed val)
   {
     if (mixed err = catch {return (string) val;})
-      rxml_parse_error ("Couldn't convert value to text: " + describe_error (err));
+      parse_error ("Couldn't convert value to text: " + describe_error (err));
   }
 
   string _sprintf() {return "RXML.t_text" + PAREN_CNT (__count);}
@@ -2669,7 +2671,7 @@ static class TXml
   string convert (mixed val, void|Type from)
   {
     if (mixed err = catch {val = (string) val;})
-      rxml_parse_error ("Couldn't convert value to text: " + describe_error (err));
+      parse_error ("Couldn't convert value to text: " + describe_error (err));
     if (!from || from->quoting_scheme != quoting_scheme)
       val = quote ([string] val);
     return val;
@@ -2878,8 +2880,8 @@ class ScanStream
 
 // Various internal kludges.
 
-static function(string,mixed...:void) _rxml_run_error = rxml_run_error;
-static function(string,mixed...:void) _rxml_parse_error = rxml_parse_error;
+static function(string,mixed...:void) _run_error = run_error;
+static function(string,mixed...:void) _parse_error = parse_error;
 
 // Argh!
 static program PXml;

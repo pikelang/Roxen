@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.65 2000/02/13 18:09:51 mast Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.66 2000/02/13 18:25:59 mast Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -240,7 +240,7 @@ class TagAppend {
       if (args->from) {
 	// Append the value of another entity variable.
 	mixed from=context->user_get_var(args->from, args->scope);
-	if(!from) rxml_parse_error("From variable doesn't exist.");
+	if(!from) parse_error("From variable doesn't exist.");
 	if (value)
 	  value+=from;
 	else
@@ -248,7 +248,7 @@ class TagAppend {
 	context->user_set_var(args->variable, value, args->scope);
 	return 0;
       }
-      rxml_parse_error("No value specified.");
+      parse_error("No value specified.");
     }
   }
 }
@@ -351,7 +351,7 @@ class TagUnset {
     inherit RXML.Frame;
     array do_return(RequestID id) {
       if(!args->variable && !args->scope)
-	rxml_parse_error("Variable nor scope not specified.");
+	parse_error("Variable nor scope not specified.");
       if(!args->variable && args->scope!="roxen") {
 	RXML.get_context()->add_scope(args->scope, ([]) );
 	return 0;
@@ -385,12 +385,12 @@ class TagSet {
       if (args->from) {
 	// Copy a value from another entity variable.
 	mixed from=context->user_get_var(args->from, args->scope);
-	if(!from) rxml_parse_error("From variable doesn't exist.");
+	if(!from) parse_error("From variable doesn't exist.");
 	context->user_set_var(args->variable, from, args->scope);
 	return 0;
       }
 
-      rxml_parse_error("No value specified.");
+      parse_error("No value specified.");
     }
   }
 }
@@ -406,7 +406,7 @@ class TagInc {
 
     array do_return(RequestID id) {
       string res=inc(args, id);
-      if(res) rxml_parse_error(res);
+      if(res) parse_error(res);
       return 0;
     }
   }
@@ -423,7 +423,7 @@ class TagDec {
 
     array do_return(RequestID id) {
       string res=dec(args, id);
-      if(res) rxml_parse_error(res);
+      if(res) parse_error(res);
       return 0;
     }
   }
