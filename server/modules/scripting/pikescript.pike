@@ -9,7 +9,7 @@
 // This is an extension module.
 
 constant cvs_version=
-"$Id: pikescript.pike,v 1.45 1999/11/26 03:25:22 per Exp $";
+"$Id: pikescript.pike,v 1.46 1999/11/27 07:29:08 per Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -244,5 +244,4 @@ string status()
   res += "<hr>";
 
   return ("<pre><font size=+1>" + res + "</font></pre>");
-
 }
