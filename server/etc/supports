@@ -1,4 +1,4 @@
-## $Id: supports,v 1.53 1998/03/31 20:07:38 grubba Exp $
+t## $Id: supports,v 1.54 1998/04/16 11:56:40 js Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -68,6 +68,10 @@ mozilla/[3-9].*		javascript, tablecolor
 mozilla/[4-9].*		stylesheets
 mozilla/4\.0[4-9].*	pnginline
 mozilla/5\.0b1		-java, pnginline, tcl
+
+# Opera
+
+.*compatible.*opera.3.*		-java, javascript
 
 # BLAM BLAM BLAM BLAM
 .*compatible.*			-push
