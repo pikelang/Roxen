@@ -1,5 +1,5 @@
 /*
- * $Id: upload_license.pike,v 1.5 2002/08/13 11:59:48 wellhard Exp $
+ * $Id: upload_license.pike,v 1.6 2002/11/01 13:09:01 wellhard Exp $
  */
 
 #include <roxen.h>
@@ -20,7 +20,7 @@ mixed parse( RequestID id )
     <set variable='var.filename'
       ><get-post-filename filename='&form.file..filename;'
                           js-filename='&form.fixedfilename;'/></set>
-    <if variable='form.Overwirte..x'>
+    <if variable='form.Overwrite..x'>
       <set variable='var.ok' value='ok'/>
     </if>
     <elseif license='&var.filename;'>
