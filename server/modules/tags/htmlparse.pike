@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.169 1999/04/13 00:18:13 mast Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.170 1999/04/24 14:40:17 mast Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2006,7 +2006,10 @@ string tag_allow(string a, mapping (string:string) m,
     CACHE(10);
     TEST(id->conf->try_get_file(fix_relative(m->exists,id),id,1));
   }
-  
+
+  if(m->filename)
+    TEST(_match(id->not_query, m->filename/","));
+
   if(m->language)
   {
     NOCACHE();
@@ -2019,8 +2022,6 @@ string tag_allow(string a, mapping (string:string) m,
 		  ("*"+(lower_case(m->language)/",")*"*,*"+"*")/","));
     }
   }
-  if(m->filename)
-    TEST(_match(id->not_query, m->filename/","));
 
   IS_TEST(variable, id->variables);
   if(m->cookie) NOCACHE();
@@ -2414,6 +2415,7 @@ string tag_if(string tag, mapping m, string s, object id, object file,
 {
   string res, a, b;
 
+  //<otherwise> will be removed in 1.4, so _don't_ use it.
   if(sscanf(s, "%s<otherwise>%s", a, b) == 2)
   {
     // compat_if mode?
