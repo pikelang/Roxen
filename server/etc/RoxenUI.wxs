@@ -15,6 +15,8 @@
     <CustomAction Id="OldCreatePikeLocation" Directory="SERVERDIR"
       ExeCommand='"[SERVERDIR]\pike\bin\pike" -e "write(argv[1]); Stdio.write_file(argv[2], argv[3]);" "Creating pikelocation.txt..." "pikelocation.txt" "[SERVERDIR]\pike\bin\pike"'
       Execute="deferred" />
+    <CustomAction Id="SetCreatePikeLocation" Property="CreatePikeLocation"
+      Value="[SERVERDIR]" Execute="immediate" />
     <CustomAction Id="CreatePikeLocation" BinaryKey="Installer"
       VBScriptCall="CreatePikeLocation" Execute="deferred" />
     <CustomAction Id="StartBrowser" Property="BROWSER"
@@ -1123,7 +1125,8 @@ Click "Next" to start the installation.</Text>
       <Custom Action="DIRCA_TARGETDIR" After="CustomTextA_SetProperty_EDIT4"><![CDATA[TARGETDIR=""]]></Custom>
       <RemoveExistingProducts After="InstallInitialize" />
       <Custom Action="CreateConfigInterface" Sequence="5100">REMOVE=""</Custom>
-      <Custom Action="CreatePikeLocation" After="CreateConfigInterface">REMOVE=""</Custom>
+      <Custom Action="SetCreatePikeLocation" After="CreateConfigInterface">REMOVE=""</Custom>
+      <Custom Action="CreatePikeLocation" After="SetCreatePikeLocation">REMOVE=""</Custom>
     </InstallExecuteSequence>
     <Binary Id="DefBannerBitmap" src="Banner.bmp" />
     <Binary Id="UpFldrBtn" src="UpFldrBtn.icon" />
