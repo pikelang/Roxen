@@ -1,5 +1,12 @@
 Changes since Roxen 1.1 alpha 3
 -----------------------------------------------
+
+o Some changes to the graphics_text module. It should be somewhat
+  faster now, and also has some new features.
+
+o stop() is now called in modules on restart and shutdown, and when
+  shutting down the server in response to a signal.
+
 o FTP gateway now handles the 213 status response code.
 
 o If you access ftp://foo.bar.com via the FTP gateway, you now get a
