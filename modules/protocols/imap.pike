@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.53 1999/02/12 22:46:31 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.54 1999/02/13 16:18:40 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -871,20 +871,42 @@ class backend
     /* IMAP's glob patterns uses % and * as wild cards (equivalent
      * as long as there are no hierachical names. Pike's glob
      * patterns uses * and ?, which can not be escaped. To be able
-     * to match questionmarks properly, we use scanf instead. */
+     * to match questionmarks properly, we use scanf instead.
+     */
 
-    glob = replace(glob, ({ "*", "%", }), ({ "%*s", "%*s" }) );
+    string new_glob = replace(glob, ({ "*", "%", }), ({ "%*s", "%*s" }) );
 
-    if (stringp(name))
-      return sscanf(name, glob);
+    if (new_glob == glob) {
+      // Exact match only.
+      // This special case is needed since sscanf() will return 0 for all
+      // inputs.
+      if (arrayp(name)) {
+	foreach(name, string n) {
+	  if (glob == n) {
+	    return({ n });
+	  }
+	}
+	return ({});
+      } else {
+	if (name == glob) {
+	  return 1;
+	}
+	return 0;
+      }
+    } else {
+      int nglob = (sizeof(new_glob) - sizeof(glob))/2;
 
-    array(string) res = ({ });
+      if (stringp(name))
+	return (sscanf(name, new_glob) == nglob);
 
-    foreach(name, string n)
-      if (sscanf(n, glob))
-	res += ({ n });
+      array(string) res = ({ });
 
-    return res;
+      foreach(name, string n)
+	if (sscanf(n, new_glob) == nglob)
+	  res += ({ n });
+
+      return res;
+    }
   }
   
   array(array(object|string)) list(object|mapping(string:mixed) session,
