@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.15 2000/08/16 14:49:05 lange Exp $
+ * $Id: resolv.pike,v 1.16 2000/09/13 04:51:04 per Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -223,15 +223,53 @@ string parse( RequestID id )
     sscanf( id->variables->path, "%*s://%*[^/]/%s", file );
 
     file = "/"+file;
-    foreach( values(roxen->urls), object q )
+    // pass 1: Do real glob matching.
+    foreach( indices(roxen->urls), string u )
     {
-      nid = id->clone_me();
-      nid->raw_url = file;
-      nid->not_query = (http_decode_string((file/"?")[0]));
-      if( (c = q->port->find_configuration_for_url( op, nid, 1 )) )
+      mixed q = roxen->urls[u];
+      if( glob( u+"*", id->variables->path ) )
       {
-        nid->conf = c;
-        break;
+        werror(id->variables->path +" matches "+u+"\n");
+        nid = id->clone_me();
+        nid->raw_url = file;
+        nid->not_query = (http_decode_string((file/"?")[0]));
+        if( (c = q->port->find_configuration_for_url( op, nid, 1 )) )
+        {
+          nid->conf = c;
+          break;
+        }
+      } 
+    }
+
+    if(!c)
+    {
+      // pass 2: Find a configuration with the 'default' flag set.
+      foreach( roxen->configurations, c )
+        if( c->query( "default_server" ) )
+        {
+          nid = id->clone_me();
+          nid->raw_url = file;
+          nid->not_query = (http_decode_string((file/"?")[0]));
+          nid->conf = c;
+          break;
+        }
+        else
+          c = 0;
+    }
+    if(!c)
+    {
+      // pass 3: No such luck. Let's allow default fallbacks.
+      foreach( indices(roxen->urls), string u )
+      {
+        mixed q = roxen->urls[u];
+        nid = id->clone_me();
+        nid->raw_url = file;
+        nid->not_query = (http_decode_string((file/"?")[0]));
+        if( (c = q->port->find_configuration_for_url( op, nid, 1 )) )
+        {
+          nid->conf = c;
+          break;
+        }
       }
     }
     
@@ -304,7 +342,8 @@ string parse( RequestID id )
         nid->auth = c->auth_module->auth( nid->auth, nid );
       nid->misc->trace_leave(sprintf("Got auth %O\n", nid->auth));
     }
-    else {
+    else 
+    {
       nid->rawauth = 0;
       nid->realauth = 0;
       nid->auth = 0;
