@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.12 1997/10/10 20:10:48 mast Exp $
+# $Id: Makefile,v 1.13 1997/10/11 19:09:14 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -41,7 +41,7 @@ all : configure
 	./mkdir -p build/$$os; \
 	cd build/$$os && \
 	(test -f stamp-h || CONFIG_SITE=x $$srcdir/configure --prefix=$(prefix)) && \
-	$(MAKE);
+	$(MAKE) "prefix=$(prefix)"
 	@echo
 	@echo Roxen successfully compiled.
 	@echo
@@ -58,7 +58,7 @@ install : all
 	echo Installing Roxen 1.2 from build/$$os...; \
 	echo; \
 	cd build/$$os && \
-	$(MAKE) install;
+	$(MAKE) install "prefix=$(prefix)"
 	@echo
 	@echo Roxen successfully installed.
 	@echo
@@ -83,7 +83,7 @@ install_all :
 	echo Installing Roxen 1.2 and Pike 0.5 from build/$$os...; \
 	echo; \
 	cd build/$$os && \
-	$(MAKE) install_all;
+	$(MAKE) install_all "prefix=$(prefix)"
 	@echo
 	@echo Roxen and Pike successfully installed.
 	@echo
@@ -97,7 +97,7 @@ install_pike :
 	echo Installing Pike 0.5 from build/$$os...; \
 	echo; \
 	cd build/$$os && \
-	$(MAKE) install_pike;
+	$(MAKE) install_pike "prefix=$(prefix)"
 	@echo
 	@echo Pike successfully installed.
 	@echo
@@ -108,7 +108,7 @@ verify:
 	echo Verifying Roxen 1.2 in build/$$os...; \
 	echo; \
 	cd build/$$os && \
-	$(MAKE) verify;
+	$(MAKE) verify "prefix=$(prefix)"
 	@echo
 	@echo Verify OK.
 	@echo
@@ -119,7 +119,7 @@ verbose_verify:
 	echo Verifying Roxen 1.2 in build/$$os...; \
 	echo; \
 	cd build/$$os && \
-	$(MAKE) verbose_verify;
+	$(MAKE) verbose_verify "prefix=$(prefix)"
 	@echo
 	@echo Verify OK.
 	@echo
