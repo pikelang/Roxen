@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.194 2000/12/12 07:16:32 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.195 2001/01/31 14:15:28 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2335,6 +2335,19 @@ using the pre tag.
 
 <attr name=showid value=string>
  <p>Shows a part of the id object. E.g. showid=\"id->request_headers\".</p>
+</attr>
+
+<attr name=debug value=string>
+  <p>When you have access to the server debug log and want your RXML
+     page to write some kind of diagnostics message or similar, the
+     werror attribute is helpful.</p>
+
+  <p>This can be used on the error page, for instance, if you'd want
+     such errors to end up in the debug log:</p>
+
+  <ex type=box>
+<debug werror='File &page.url; not found!
+(linked from &client.referrer;)'/></ex>
 </attr>",
 
 //----------------------------------------------------------------------
