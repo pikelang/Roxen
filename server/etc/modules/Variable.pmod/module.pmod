@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.62 2001/08/08 23:12:46 nilsson Exp $
+// $Id: module.pmod,v 1.63 2001/08/17 19:32:36 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -33,6 +33,44 @@ mapping get_all_variables()
 Variable get_variables( string v )
 {
   return all_variables[v];
+}
+
+string get_diff_def_html( Variable v,
+			  string button_tag,
+			  string def_url,
+			  string diff_url,
+			  int page )
+{
+  if( page )
+    return v->diff( 2 );
+
+  if( v->is_defaulted() || (v->get_flags() & VAR_NO_DEFAULT) )
+    return "";
+
+  string oneliner = v->diff( 0 ), diff_button="";
+  mapping m;
+
+  if( !oneliner )
+  {
+    if( v->diff( 1 ) )
+    {
+      m = ([ "href":diff_url,"target":"_new", ]);
+      diff_button =
+	Roxen.make_container( "a",m,
+			      Roxen.make_container(
+				button_tag,
+				([]),
+				LOCALE(0,"Show changes")
+			      ) );
+    }
+  }
+  m = ([ "href":def_url, ]);
+  return diff_button + " " +
+    Roxen.make_container( "a",m,
+	Roxen.make_container( button_tag, ([]),
+			      LOCALE(0, "Restore default value" )+
+			      (oneliner||"") ) );
+
 }
 
 class Diff
@@ -170,9 +208,9 @@ class Variable
   //! The argument @[render] is used to select the operation mode.
   //!
   //! render=0 means that you should generate an inline diff. This
-  //! should be at most 2 lines of text with no more than 30 or so
-  //! characters per line. This is mostly useful for simple variable
-  //! types such as integers or choice-lists.
+  //! should be at most 1 line of text with no more than 30 or so
+  //! characters. This is mostly useful for simple variable types such
+  //! as integers or choice-lists.
   //!
   //! If you return 0 when render=0, this function will be called with
   //! render=1 instead. If you return a non-zero value, you indicate
