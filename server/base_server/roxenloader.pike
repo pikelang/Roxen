@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.191 2000/08/22 21:54:57 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.192 2000/08/25 12:27:50 jhs Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -254,6 +254,7 @@ class RequestID
 
   int time;
   //! Time of the request, standard unix time (seconds since the epoch; 1970).
+
   string raw_url;
   //! The nonparsed, nontouched, non-* URL requested by the client.
   //! Hence, this path is unlike <ref>not_query</ref> and
@@ -261,9 +262,11 @@ class RequestID
   //! used in conjunction with the former to generate absolute paths
   //! within the server. Be aware that this string will contain any
   //! URL variables present in the request as well as the file path.
+
   int do_not_disconnect;
   //! Typically 0, meaning the channel to the client will be disconnected upon
   //! finishing the request and the RequestID object destroyed with it.
+
   mapping (string:string) variables;
   //! Form variables submitted by the client browser, as found in the
   //! <tt>form</tt> scope in RXML. Both query (as found in the query part of
@@ -275,26 +278,32 @@ class RequestID
   //! The indices and values of this mapping map to the names and values of
   //! the variable names. All data (names and values) are decoded from their
   //! possible transport encoding.
+
   mapping (string:mixed) misc;
   //! This mapping contains miscellaneous non-standardized information, and
   //! is the typical location to store away your own request-local data for
   //! passing between modules et cetera. Be sure to use a key unique to your
   //! own application.
+
   mapping (string:string) cookies;
   //! The indices and values map to the names and values of the cookies sent
   //! by the client for the requested page. All data (names and values) are
   //! decoded from their possible transport encoding.
+
   mapping (string:string) request_headers;
   //! Indices and values map to the names and values of all HTTP headers sent
   //! with the request; all data has been transport decoded, and the header
   //! names are canonized (lowercased) on top of that. Here is where you look
   //! for the "user-agent" header, the "referer" [sic!] header and similar
   //! interesting data provided by the client.
+
   mapping (string:mixed) throttle;
   // ?
+
   mapping (string:mixed) client_var;
   //! The client scope; a mapping of various client-related variables, indices
   //! being the entity names and the values being their values respectively.
+
   multiset(string) prestate;
   //! A multiset of all prestates harvested from the URL. Prestates are boolean
   //! flags, who are introduced in an extra leading path segment of the URL
@@ -305,65 +314,82 @@ class RequestID
   //! Prestates are mostly useful for debugging purposes, since prestates
   //! generally lead to multiple URLs for identical documents resulting in
   //! poor usage of browser/proxy caches and the like. See <ref>config</ref>.
+
   multiset(string) config;
   //! Much like prestates, the id->config multiset is typically used for
   //! boolean information of state supplied by the client. The config state,
   //! however, is hidden in a client-side cookie treated specially by roxen,
   //! namely the <tt>RoxenConfig</tt> cookie.
+
   multiset(string) supports;
   //! All flags set by the supports system.
+
   multiset(string) pragma;
   //! All pragmas (lower-cased for canonization) sent with the request. For
   //! real-world applications typically only <pi>pragma["no-cache"]</pi> is of
   //! any particular interest, this being sent when the user does a forced
   //! reload of the page.
+
   array(string) client;
   array(string) referer;
 
   Stdio.File my_fd;
   // Don't touch; use the returned file descriptor from connection() instead.
+
   string prot;
   //! The protocol used for the request, e g "FTP", "HTTP/1.0", "HTTP/1.1".
   //! (Se also <ref>clientprot</ref>.)
+
   string clientprot;
   //! The protocol the client wanted to use in the request. This may
   //! not be the same as <ref>prot</ref>, if the client wanted to talk
   //! a higher protocol version than the server supports to date.
+
   string method;
   //! The method used by the client in this request, e g "GET", "POST".
 
   string realfile;
   //! When the the requested resource is an actual file in the real
   //! filesystem, this is its path.
+
   string virtfile;
   //! The mountpoint of the location module that provided the requested file.
   //! Note that this is not accessable from location modules; you need to keep
   //! track of your mountpoint on your own using <ref>defvar()</ref> and
   //! <ref>query()</ref>. This mountpoint is relative to the server URL.
+
   string rest_query;
   //! The scraps and leftovers of the requested URL's query part after
   //! removing all variables (that is, all key=value pairs) from it.
+
   string raw;
   //! The raw, untouched request in its entirety.
+
   string query;
   //! The entire raw query part (all characters after the first question mark,
   //! '?') of the requested URL.
+
   string not_query;
   //! The part of the path segment of the requested URL that is below
   //! the virtual server's mountpoint. For a typical server
   //! registering a URL with no ending path component, not_query will
   //! contain all characters from the leading '/' to, but not
   //! including, the first question mark ('?') of the URL.
+
   string extra_extension;
+
   string data;
   //! The raw request body, containing non-decoded post variables et cetera.
+
   string leftovers;
   array (int|string) auth;
   string rawauth;
   string realauth;
   string since;
+
   string remoteaddr;
   //! The client's IP address.
+
   string host;
   //! The client's hostname, if resolved.
 
@@ -377,7 +403,10 @@ class RequestID
 
   Stdio.File connection( );
   //! Returns the file descriptor used for the connection to the client.
-  object     configuration(); // really Configuration
+
+  object configuration();
+
+  //!Configuration configuration();
   //! Returns the <ref>Configuration</ref> object of the virtual server that
   //! is handling the request.
 }
