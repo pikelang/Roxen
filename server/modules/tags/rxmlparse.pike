@@ -18,7 +18,7 @@
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.10 1999/08/03 13:32:03 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.11 1999/08/07 12:06:54 nilsson Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -66,6 +66,10 @@ void create(object c)
 	 "in order for them to be parsed by this module. The exec bit "
 	 "is the one that is set by 'chmod +x filename'");
 	 
+  defvar("insert_href",1,"Allow &lt;insert href&gt;.",
+	 TYPE_FLAG|VAR_MORE,
+         "Should the usage of &lt;insert href&gt; be allowed?");
+
   defvar("no_parse_exec", 0, "Don't Parse files with exec bit",
 	 TYPE_FLAG|VAR_MORE,
 	 "If set, no files with the exec bit set will be parsed. This is the "
@@ -302,18 +306,16 @@ string tag_set( string tag, mapping m, object id )
       // Set variable to the value of another variable
       if (id->variables[ m->from ])
 	id->variables[ m->variable ] = id->variables[ m->from ];
-      else if (!m->debug || id->misc->debug)
-	return "Set: from variable doesn't exist";
       else
-	return "";
+	return m->debug||id->misc->debug?"(Set: from variable doesn't exist)<false>":"<false>";
+
     else if (m->other)
       // Set variable to the value of a misc variable
       if (id->misc->variables && id->misc->variables[ m->other ])
 	id->variables[ m->variable ] = id->misc->variables[ m->other ];
-      else if (m->debug || id->misc->debug)
-	return "Set: other variable doesn't exist";
-      else 
-	return "";
+      else
+	return m->debug||id->misc->debug?"(Set: other variable doesn't exist)<false>":"<false>";
+
 #if old_rxml_compat
     // Not part of RXML 1.4
     else if(m->define) {
@@ -328,12 +330,10 @@ string tag_set( string tag, mapping m, object id )
     else
       // Unset variable.
       m_delete( id->variables, m->variable );
-    return("");
-  } else {
-    if(id->misc->debug)
-      return("set on (line "+id->misc->line+"): variable not specified");
-    return("<!-- set (line "+id->misc->line+"): variable not specified -->");
+    return "";
   }
+
+  return m->debug||id->misc->debug?"(Set: variable not specified.)<false>":"<false>";
 }
 
 string tag_append( string tag, mapping m, object id )
@@ -353,10 +353,9 @@ string tag_append( string tag, mapping m, object id )
 	  id->variables[ m->variable ] += id->variables[ m->from ];
 	else
 	  id->variables[ m->variable ] = id->variables[ m->from ];
-      else if (m->debug || id->misc->debug)
-	return "<b>Append: from variable doesn't exist</b>";
       else
-	return "";
+        return m->debug||id->misc->debug?"(Append: from variable doesn't exist.)<false>":"<false>";
+
     else if (m->other)
       // Set variable to the value of a misc variable
       if (id->misc->variables[ m->other ])
@@ -364,10 +363,9 @@ string tag_append( string tag, mapping m, object id )
 	  id->variables[ m->variable ] += id->misc->variables[ m->other ];
 	else
 	  id->variables[ m->variable ] = id->misc->variables[ m->other ];
-      else if (m->debug || id->misc->debug)
-	return "<b>Append: other variable doesn't exist</b>";
       else
-	return "";
+        return m->debug||id->misc->debug?"(Append: other variable doesn't exist.)<false>":"<false>";
+
 #if old_rxml_compat
     // Not part of RXML 1.4
     else if(m->define) {
@@ -376,16 +374,9 @@ string tag_append( string tag, mapping m, object id )
       api_old_rxml_warning(id, "define attribute in append tag","only variables");
     }
 #endif
-    else if (m->debug || id->misc->debug)
-      return "<b>Append: nothing to append from</b>";
-    else
-      return "";
-    return("");
   }
-  else if (m->debug || id->misc->debug)
-    return("<b>Append: variable not specified</b>");
-  else
-    return "";
+
+  return m->debug||id->misc->debug?"(Append: Nothing to append from.)<false>":"<false>";
 }
 
 inline string do_replace(string s, mapping (string:string) m) {
@@ -404,12 +395,12 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
   // Not part of RXML 1.4
   if(n=m->define || m->name) {
     api_old_rxml_warning(id, "define or name attribute in insert tag","only variables");
-    return defines[n]||(id->misc->debug?"No such define: "+n:"");
+    return defines[n]||(id->misc->debug?"(Insert: No such define ("+n+").)<false>":"<false>");
   }
 #endif
 
   if (n=m->variable)
-    return id->variables[n]||(id->misc->debug?"No such variable: "+n:"");
+    return id->variables[n]||(id->misc->debug?"(Insert: No such variable ("+n+").)<false>":"<false>");
 
   if (n=m->variables) 
   {
@@ -432,7 +423,7 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
 
   if (n=m->cookie) {
     NOCACHE();
-    return id->cookies[n]||(id->misc->debug?"No such cookie: "+n:"");
+    return id->cookies[n]||(id->misc->debug?"(Insert: No such cookie ("+n+").)<false>":"<false>");
   }
 
   if (m->file) 
@@ -447,48 +438,42 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
       f = id->scan_for_query( f );
     s = id->conf->try_get_file(f, id);
 
+    if (!s) {
 
-    if(!s) {
-      if ((sizeof(f)>2) && (f[sizeof(f)-2..] == "--")) {
-	// Might be a compat insert. <!--#include file=foo.html-->
-	s = id->conf->try_get_file(f[..sizeof(f)-3], id);
-      }
-      if (!s) {
-
-	// Might be a PATH_INFO type URL.
-	array a = id->conf->open_file( f, "r", id );
-	if(a && a[0])
+      // Might be a PATH_INFO type URL.
+      array a = id->conf->open_file( f, "r", id );
+      if(a && a[0])
+      {
+	s = a[0]->read();
+	if(a[1]->raw)
 	{
-	  s = a[0]->read();
-	  if(a[1]->raw)
-	  {
-	    s -= "\r";
-	    if(!sscanf(s, "%*s\n\n%s", s))
-	      sscanf(s, "%*s\n%s", s);
-	  }
+	  s -= "\r";
+	  if(!sscanf(s, "%*s\n\n%s", s))
+	    sscanf(s, "%*s\n%s", s);
 	}
-	if(!s)
-	  return id->misc->debug?"No such file: "+f+"!":"";
       }
+      if(!s)
+        return id->misc->debug?"(Insert: No such file ("+f+").)<false>":"<false>";
     }
 
     return s;
   }
 
-  if(m->href) {
+  if(m->href && query("insert_href")) {
+    if(m->nocache) id->pragma["no-cache"] = 1;
     mixed error=catch {
       n=(string)Protocols.HTTP.get_url_data(m->href);
     };
-    if(arrayp(error)) return id->misc->debug?"\n<!-- "+error[0]+ "--><false>\n":"<false>";
-    if(n=="0") return id->misc->debug?"\n<!-- Page could not be fetched --><false>\n":"<false>";
+    if(arrayp(error)) return id->misc->debug?"(Insert: "+error[0]+")<false>\n":"<false>";
+    if(n=="0") return id->misc->debug?"(Insert: Page could not be fetched.)<false>\n":"<false>";
     return n+"<true>";
   }
 
   if(id->misc->debug) {
-    string ret="Could not fullfill your request.<br>\nArguments:<br>\n";
+    string ret="(Insert: Could not fullfill your request.<br>\nArguments:<br>\n";
     foreach(indices(m), string tmp)
       ret+=tmp+" : "+m[tmp]+"<br />\n";
-    return ret;
+    return ret+")<br />\n<false>";
   }
 
   return "";
@@ -504,7 +489,7 @@ string tag_modified(string tag, mapping m, object id, object file,
   if(m->by && !m->file && !m->realfile)
   {
     if(!id->conf->auth_module)
-      return id->misc->debug?"Modified by requires an user database!\n":"";
+      return id->misc->debug?"(Modified: Modified by requires a user database.)<false>":"<false>";
     m->name = id->conf->last_modified_by(file, id);
     CACHE(10);
     return tag_user(tag, m, id, file, defines);
@@ -519,7 +504,7 @@ string tag_modified(string tag, mapping m, object id, object file,
   if(m->by && m->realfile)
   {
     if(!id->conf->auth_module)
-      return id->misc->debug?"Modified by requires an user database!\n":"";
+      return id->misc->debug?"(Modified: Modified by requires a user database.)<false>":"<false>";
 
     if(f = open(m->realfile, "r"))
     {
@@ -547,8 +532,8 @@ string tag_modified(string tag, mapping m, object id, object file,
       return strftime(defines->timefmt || "%c", s[3]);
     else
       return tagtime(s[3], m, id);
-  else
-    return "Error: Cannot stat file";
+
+  return id->misc->debug?"(Modified: Couldn't stat file.)<false>":"<false>";
 }
 
 function tag_version = roxen.version;
@@ -571,7 +556,7 @@ string tag_user(string tag, mapping m, object id, object file,mapping defines)
   string b, dom;
 
   if(!id->conf->auth_module)
-    return id->misc->debug?"User requires an user database!\n":"";
+    return id->misc->debug?"(User: Requires a user database.)<false>":"<false>";
 
   if (!(b=m->name)) {
     return(tag_modified("modified", m | ([ "by":"by" ]), id, file,defines));
@@ -697,9 +682,7 @@ string tag_aconf(string tag, mapping m, string q, object id)
   {
     href=m->href;
     if (search(href, ":") == search(href, "//")-1)
-      return sprintf((id->misc->debug?"It is not possible to add "
-                      "configs to absolute URLs (yet, at least)\n":"")+
-		     "<a href=\"%s\">%s</a>", href, q);
+      return id->misc->debug?"(Aconf: It is not possible to add configs to absolute URLs .)<false>":"<false>";
     href=fix_relative(href, id);
     m_delete(m, "href");
   }
@@ -757,12 +740,12 @@ string tag_add_cookie(string tag, mapping m, object id, object file,
 		      mapping defines)
 {
   string cookies;
-  int    t;     //time
+  int t;     //time
 
   if(m->name)
     cookies = m->name+"="+http_encode_cookie(m->value||"");
   else
-    return id->misc->debug?"set-cookie requires a `name'":"";
+    return id->misc->debug?"(Set-cookie: Requires a name attribute.)<false>":"<false>";
 
   if(m->persistent)
     t=(3600*(24*365*2));
@@ -795,7 +778,7 @@ string tag_remove_cookie(string tag, mapping m, object id, object file,
     cookies = m->name+"="+http_encode_cookie(m->value||"")+
       "; expires="+http_date(0)+"; path=/";
   else
-    return id->misc->debug?"remove-cookie requires a `name'":"";
+    return id->misc->debug?"(Remove-cookie: Requires a name attribute.)<false>":"<false>";
 
   add_header(_extra_heads, "Set-Cookie", cookies);
   return "";
@@ -844,7 +827,7 @@ string tag_header(string tag, mapping m, object id, object file,
   }
   
   if(!(m->value && m->name))
-    return id->misc->debug?"Header requires both a name and a value.":"";
+    return id->misc->debug?"(Header: Requires both a name and a value.)<false>":"<false>";
 
   add_header(_extra_heads, m->name, m->value);
   return "";
@@ -854,7 +837,7 @@ string tag_redirect(string tag, mapping m, object id, object file,
 		    mapping defines)
 {
   if (!m->to) {
-    return(id->misc->debug?"Redirect requires attribute \"to\".":"");
+    return(id->misc->debug?"(Redirect: Requires attribute \"to\".)<false>":"<false>");
   }
 
   multiset(string) orig_prestate = id->prestate;
@@ -878,7 +861,7 @@ string tag_redirect(string tag, mapping m, object id, object file,
   if (m->text) {
     _rettext = m->text;
   }
-  return("");
+  return "";
 }
 
 string tag_auth_required (string tagname, mapping args, object id,
@@ -993,9 +976,9 @@ string tag_imgs(string tagname, mapping m, object id)
       string src=src[sizeof(src)-1];
       m->alt=String.capitalize(replace(src[..sizeof(src)-search(reverse(src),".")-2],"_"," "));
     }
-    return make_tag("img", m)+(id->misc->debug?tmp:"");
+    return make_tag("img", m)+(id->misc->debug?"(Imgs: "+tmp+")<false>":"<false>");
   }
-  return id->misc->debug?"No src given":"";
+  return id->misc->debug?"(Imgs: No src given.)<false>":"<false>";
 }
 
 string tag_roxen(string tagname, mapping m, object id)
@@ -1023,7 +1006,7 @@ string tag_debug( string tag_name, mapping args, object id )
     id->misc->debug = !id->misc->debug;
   else
     id->misc->debug = 1;
-  return "";
+  return "<!-- Debug is "+(id->misc->debug?"enabled":"disabled")+" -->";
 }
 
 array(string) tag_cache(string tag, mapping args, string contents, object id)
@@ -1452,6 +1435,31 @@ mixed tag_recursive_output (string tagname, mapping args, string contents,
   return ({res});
 }
 
+string tag_while(string tag, mapping m, string c, object id)
+{
+  int old_truth=id->misc->defines[" _ok"],loop,maxloop=(int)m->maxloops||10000;
+  string ret="",iter;
+  id->misc->defines[" _ok"]=0;
+  while(loop<maxloop && !id->misc->defines[" _ok"]) {
+    loop++;
+    id->misc->defines[" _ok"]=0;
+    iter=parse_html(c,([]),(["endwhile":lambda(string tag, mapping m, string c, object id) {
+					  parse_rxml(c,id);
+                                          return "";
+					} ]), id);
+    if(!id->misc->defines[" _ok"])
+      ret+=parse_rxml(iter,id);
+    if(iter==c) {
+      id->misc->defines[" _ok"]=old_truth;
+      return ret+id->misc->debug?"(While: No end condition.)<false>":"<false>";
+    }
+  }
+  id->misc->defines[" _ok"]=old_truth;
+  if(loop==maxloop)
+    return ret+(id->misc->debug?"(While: Too many iterations ("+maxloop+").)<false>":"<false>");
+  return ret;
+}
+
 string tag_replace(string tag,mapping m,string cont,object id) {
   switch(m->type) {
 
@@ -1508,7 +1516,7 @@ mapping query_container_callers()
 		       return crypt(c);
 		   },
 	   "doc":tag_doc,
-	   "default" : tag_default,
+	   "default":tag_default,
 	   "formoutput":tag_formoutput,
 	   "gauge":tag_gauge,
            "maketag":tag_maketag,
@@ -1522,7 +1530,8 @@ mapping query_container_callers()
 		     if(c[-1] != "\n") c+="\n";
 		     throw( ({ c, backtrace() }) );
 		   },
-	   "trimlines" : tag_trimlines,
+	   "trimlines":tag_trimlines,
+           "while":tag_while,
 #if old_rxml_compat
            // Not part of RXML 1.4
 	   "cset":lambda(string t, mapping m, string c, object id) {
