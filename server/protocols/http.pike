@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 
-string cvs_version = "$Id: http.pike,v 1.18 1997/02/13 13:01:14 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.19 1997/02/27 12:06:17 marcus Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
@@ -622,6 +622,9 @@ static void handle_request( )
   remove_call_out(timeout);
 #endif
   
+  my_fd->set_read_callback(0);
+  my_fd->set_close_callback(0); 
+
   if(conf)
   {
 //  perror("Handle request, got conf.\n");
@@ -637,9 +640,6 @@ static void handle_request( )
     if(err==-1) return;
     internal_error(err);
   }
-
-  my_fd->set_read_callback(0);
-  my_fd->set_close_callback(0); 
   if(!mappingp(file))
   {
     if(method != "GET" && method != "HEAD" && method != "POST")
