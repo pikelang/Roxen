@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.531 2002/07/03 20:20:32 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.532 2002/07/03 20:35:39 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3006,8 +3006,9 @@ void clean_up_for_module( ModuleInfo moduleinfo,
   {
     string foo;
     for(pr=0; pr<10; pr++)
-      foreach( values (pri[pr]->file_extension_modules), array mods )
-	mods -= ({me});
+      mapping modules = pri[pr]->file_extension_modules;
+      foreach( modules; string m; array mods )
+	modules[m] = mods - ({me});
   }
 
   if(moduleinfo->type & MODULE_PROVIDER) {
