@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.432 2000/02/16 11:04:46 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.433 2000/02/16 14:21:31 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2511,8 +2511,14 @@ string decode_charset( string charset, string data )
 void create()
 {
   SET_LOCALE(default_locale);
+
+  mkdirhier("precompiled/"+ uname()->machine+"."+uname()->release+"/");
+
   // Dump some programs (for speed)
   dump( "etc/roxen_master.pike" );
+  dump( "etc/modules/Dims.pmod" );
+
+  dump( "base_server/disk_cache.pike" );
   foreach( glob("*.pmod",get_dir( "etc/modules/RoxenLocale.pmod/")), string q )
     dump( "etc/modules/RoxenLocale.pmod/"+ q );
   dump( "base_server/roxen.pike" );
@@ -2526,7 +2532,6 @@ void create()
   dump( "base_server/socket.pike" );
   dump( "base_server/cache.pike" );
   dump( "base_server/supports.pike" );
-  dump( "base_server/fonts.pike");
   dump( "base_server/hosts.pike");
   dump( "base_server/language.pike");
   dump( "base_server/configuration.pike" );
@@ -2560,8 +2565,10 @@ void create()
 
   // compatibility
 //   int s = gethrtime();
-  add_constant( "roxen.fonts", (fonts = (object)"fonts.pike") );
+  add_constant( "roxen.fonts",
+                (fonts = ((program)"base_server/fonts.pike")()) );
 //   report_debug( "[fonts: %.2fms] ", (gethrtime()-s)/1000.0);
+  dump( "base_server/fonts.pike" );
 
   /* Delayed loading. */
 //   int s = gethrtime();
@@ -3090,7 +3097,6 @@ int main(int argc, array tmp)
   array argv = tmp;
   tmp = 0;
 
-  mkdirhier("precompiled/"+ uname()->machine+"."+uname()->release+"/");
   slowpipe = ((program)"slowpipe");
   fastpipe = ((program)"fastpipe");
 
@@ -3125,6 +3131,7 @@ int main(int argc, array tmp)
   }
   SET_LOCALE(default_locale);
   initiate_languages();
+  dump( "languages/abstract.pike" );
   mixed tmp;
 
   mark_fd(0, "Stdin");
