@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.121 2000/09/13 09:35:27 jonasw Exp $
+// $Id: wizard.pike,v 1.122 2001/01/17 16:26:02 anders Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -185,12 +185,13 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 
    case "color":
      int h, s, v;
+     array a;
      if(id->variables[m->name+".hsv"])
        sscanf(id->variables[m->name+".hsv"], "%d,%d,%d", h, s, v);
      else
      {
-       array tmp = rgb_to_hsv(@parse_color(current||"black"));
-       h = tmp[0]; s = tmp[1];  v = tmp[2];
+       a = parse_color(current||"black");
+       [h,s,v] = rgb_to_hsv(@a);
      }
      if(id->variables[m->name+".foo.x"]) {
        h = (int)id->variables[m->name+".foo.x"];
@@ -200,8 +201,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      else if(id->variables[m->name+".entered"] &&
 	     strlen(current=id->variables[m->name+".entered"]))
      {
-       array tmp = rgb_to_hsv(@parse_color(current||"black"));
-       h = tmp[0]; s = tmp[1];  v = tmp[2];
+       a = parse_color(current||"black");
+       [h,s,v] = rgb_to_hsv(@a);
      }
 
      m_delete(id->variables, m->name+".foo.x");
@@ -210,8 +211,9 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      m_delete(id->variables, m->name+".bar.y");
      id->variables[m->name+".hsv"] = h+","+s+","+v;
 
-     array a=hsv_to_rgb(h,s,v);
-     string bgcol=sprintf("#%02x%02x%02x",a[0],a[1],a[2]);
+     if(!a)
+       a = hsv_to_rgb(h,s,v);
+     string bgcol = sprintf("#%02x%02x%02x",a[0],a[1],a[2]);
      id->variables[m->name] = bgcol;
      return
      ("<table><tr>\n"
@@ -255,8 +257,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        sscanf(id->variables[m->name+".hsv"], "%d,%d,%d", h, s, v);
      else
      {
-       array tmp = rgb_to_hsv(@parse_color(current||"black"));
-       h = tmp[0]; s = tmp[1];  v = tmp[2];
+       a = parse_color(current||"black");
+       [h,s,v] = rgb_to_hsv(@a);
      }
      if(id->variables[m->name+".foo.x"]) {
        h = ((int)id->variables[m->name+".foo.x"])*2;
@@ -266,8 +268,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      else if(id->variables[m->name+".entered"] &&
 	     strlen(current=id->variables[m->name+".entered"]))
      {
-       array tmp = rgb_to_hsv(@parse_color(current||"black"));
-       h = tmp[0]; s = tmp[1];  v = tmp[2];
+       a = parse_color(current||"black");
+       [h,s,v] = rgb_to_hsv(@a);
      }
 
      m_delete(id->variables, m->name+".foo.x");
@@ -276,8 +278,9 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      m_delete(id->variables, m->name+".bar.y");
      id->variables[m->name+".hsv"] = h+","+s+","+v;
 
-     array a=hsv_to_rgb(h,s,v);
-     string bgcol=sprintf("#%02x%02x%02x",a[0],a[1],a[2]);
+     if(!a)
+       a = hsv_to_rgb(h,s,v);
+     bgcol = sprintf("#%02x%02x%02x",a[0],a[1],a[2]);
      id->variables[m->name] = bgcol;
      return
      ("<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n"
