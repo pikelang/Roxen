@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.186 2004/08/06 12:46:42 noring Exp $
+// $Id: Roxen.pmod,v 1.187 2004/09/06 11:21:37 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2295,25 +2295,25 @@ function get_client_charset_decoder( string åäö, RequestID|void id )
     }
   }
 
-  // Netscape seems to send "?" for characters that can't be represented
-  // by the current character set while IE encodes those characters
-  // as entities, while Opera uses "\201" or "?x829f;"...
+  // Netscape and Safari seem to send "?" for characters that can't be
+  // represented by the current character set while IE encodes those
+  // characters as entities, while Opera uses "\201" or "?x829f;"...
   string charset;
   string test = (åäö/"\0")[0];
   array tmp = test/"@";
   if(sizeof(tmp)>1)
     charset = tmp[1];
-  test = tmp[0];
+  string test2 = replace(tmp[0], ({ "\201",  "?x829f;", }), ({ "?", "?", }));
 
-  test = replace(test,
+  test = replace(test2,
 		 ({ "&aring;", "&#229;", "&#xe5;",
 		    "&auml;", "&#228;", "&#xe4;",
 		    "&ouml;", "&#246;", "&#xf6;",
-		    "&#33439;","&#x829f;", "\201", "?x829f;" }),
+		    "&#33439;","&#x829f;", }),
 		 ({ "?", "?", "?",
 		    "?", "?", "?",
 		    "?", "?", "?",
-		    "?", "?", "?", "?" }));
+		    "?", "?", }));
   
   switch( test ) {
   case "edv":
@@ -2322,8 +2322,11 @@ function get_client_charset_decoder( string åäö, RequestID|void id )
 		   (id?id->client*" ":"unknown client"));
     return 0;
 
-  case "åäö":
   case "åäö?":
+    if (test2 != test)
+      return Parser.parse_html_entities;
+    // FALL_THROUGH
+  case "åäö":
     return 0;
     
   case "\33-Aåäö":
@@ -2334,18 +2337,32 @@ function get_client_charset_decoder( string åäö, RequestID|void id )
   case "+AOUA5AD2-":
   case "+AOUA5AD2gp8-":
     id && id->set_output_charset && id->set_output_charset( "utf-7" );
-     return _charset_decoder(Locale.Charset.decoder("utf-7"))->decode;
+    return _charset_decoder(Locale.Charset.decoder("utf-7"))->decode;
      
-  case "Ã¥Ã¤Ã¶":
   case "Ã¥Ã¤Ã¶?":
+    if (test != test2) {
+      id && id->set_output_charset && id->set_output_charset( "utf-8" );
+      return lambda(string x) {
+	       return utf8_to_string(Parser.parse_html_entities(x));
+	     };
+    }
+    // FALL_THROUGH
+  case "Ã¥Ã¤Ã¶":
   case "Ã¥Ã¤":
   case "Ã¥Ã¤Ã¶\350\212\237":
   case "\357\277\275\357\277\275\357\277\275\350\212\237":
     id && id->set_output_charset && id->set_output_charset( "utf-8" );
     return utf8_to_string;
 
-  case "\214\212\232":
   case "\214\212\232?":
+    if (test != test2) {
+      id && id->set_output_charset && id->set_output_charset( "mac" );
+      return lambda(string x) {
+	       return utf8_to_string(_charset_decoder( Locale.Charset.decoder( "mac" ) )->decode(x));
+	     };
+    }
+    // FALL_THROUGH
+  case "\214\212\232":
     id && id->set_output_charset && id->set_output_charset( "mac" );
     return _charset_decoder( Locale.Charset.decoder( "mac" ) )->decode;
     
