@@ -23,6 +23,7 @@
 map binary
 nn binary
 rbf binary
+worldmap binary
 
 # Handling of foreign (ie CVS) identifiers.
 #
