@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.142 2004/05/27 21:24:32 _cvs_stephen Exp $
+// $Id: site_content.pike,v 1.143 2004/05/27 23:08:05 _cvs_stephen Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -43,27 +43,27 @@ string describe_tags( RoxenModule m, int q )
     if(tags[name] || conts[name])
       continue;
     if(new->get_tag(name)->flags & RXML.FLAG_EMPTY_ELEMENT)
-      tags+=(< replace(name,"#"," ") >);
+      tags+=(< replace(Roxen.html_encode_string(name),"#","&nbsp;") >);
     else
-      conts+=(< replace(name,"#"," ") >);
+      conts+=(< replace(Roxen.html_encode_string(name),"#","&nbsp;") >);
   }
 
-  array pi=indices(new->get_proc_instr_names());
+  array pi=map(indices(new->get_proc_instr_names()), Roxen.html_encode_string);
 
   return 
-    Roxen.html_encode_string(String.implode_nicely(map(sort(indices(tags)-
-							    ({"\x266a"})),
-						       lambda(string tag) {
-							 return "<"+tag+(tag[0]=='/'?"":"/")+">";
-						       } ) +
-						   map(sort(indices(conts)),
-						       lambda(string tag) {
-							 return "<"+tag+"></>";
-						       } ) +
-						   map(sort(pi),
-						       lambda(string tag) {
-							 return "<?"+tag+" ?>";
-						       } )));
+      String.implode_nicely(map(sort(indices(tags)-({"\x266a"})),
+				lambda(string tag) {
+				  return "<nobr>&lt;"+tag+(tag[0]=='/'?"":"/")+"&gt;</nobr>";
+				} ) +
+			    map(sort(indices(conts)),
+				lambda(string tag) {
+				  return "<nobr>&lt;"+tag+"/&gt;&lt;/&gt;</nobr>";
+				} ) +
+			    map(sort(pi),
+				lambda(string tag) {
+				  return "<nobr>&lt;?"+tag+" ?&gt;</nobr>";
+				} ),
+			    "and");
 }
 
 string describe_provides( RoxenModule m, int q )
@@ -88,10 +88,10 @@ do                                                                      \
    if(t&X)                                                              \
      if( Y )                                                            \
        res += ("<table border='0' cellspacing='0' cellpadding='0'><tr>" \
-               "<td valign='top'><b>" + #X + "</b> (</td>"     \
+               "<td valign='top'><nobr>" + #X + " (</nobr></td>"     \
                "<td valign='top'>"+Y(m,Z)+")</td></tr></table>");         \
      else                                                               \
-       res += "<b>" + #X + "</b><br />";                                 \
+       res += #X + "<br />";                                 \
 } while(0)
 
   T(MODULE_EXTENSION,      describe_exts,       "query_extensions");
@@ -127,13 +127,13 @@ string buttons( Configuration c, string mn, RequestID id )
     string a = glob( "*.x", indices( id->variables ) )[0]-".x";
     if( a == "Reload" )
     {
-      loader.LowErrorContainer ec = loader.LowErrorContainer(), nm;
+      roxenloader.LowErrorContainer ec = roxenloader.LowErrorContainer(), nm;
 
-      loader.push_compile_error_handler( ec );
+      roxenloader.push_compile_error_handler( ec );
 
       nm = c->reload_module( replace(mn,"!","#" ) );
 
-      loader.pop_compile_error_handler();
+      roxenloader.pop_compile_error_handler();
 
       if( strlen( ec->get() ) )
       {
@@ -328,32 +328,45 @@ string find_module_doc( string cn, string mn, RequestID id )
       "</pre></font>";
 
   // NGSERVER: Remove this replace
+  string fnas = EC(TRANSLATE(m->file_name_and_stuff()));
+  fnas = replace(fnas, "<br>", "</td></tr>\n<tr><td>");
+  fnas = "<tr><td nowrap=''>"+
+    ((fnas/":</b>")*":</b></td><td><img src='/*/unit' width=10 height=1 /></td><td>") +
+    "</td></tr>\n";
   return
-    replace( "<br /><b><font size='+2'>" +
-	     Roxen.html_encode_string((string)EC(TRANSLATE(m->register_module()[1])))
-	     + "</font></b><br />"
+    replace( "<b><h2>" +
+	     Roxen.html_encode_string(EC(TRANSLATE(m->register_module()[1])))
+	     + "</h2></b>"
                   + EC(TRANSLATE(m->info(id)||"")) + "</p><p>"
                   + EC(TRANSLATE(m->status()||"")) + "</p><p>"
-                  + eventlog + dbuttons +
+                  + dbuttons + eventlog +
                   ( config_setting( "devel_mode" ) ?
 		    "<br clear='all' />\n"
-		    "<h2>Developer information</h2>" +
-                    "<b>Identifier:</b> " + mi->sname + "<br />\n"
-		    "<b>Thread safe:</b> " + 
-		    (m->thread_safe ? 
+		    "<h3>Developer information</h3>"
+		    "<table border=0 cellpadding=0 cellspacing=0>"
+                    "<tr nowrap=''><td><b>Identifier:</b></td>"
+		    "<td><img src='/*/unit' width=10 height=1 /></td>"
+		    "<td>" + mi->sname + "</td></tr>\n"
+		    "<td nowrap=''><b>Thread safe:</b></td>"
+		    "<td><img src='/*/unit' width=10 height=1 /></td>"
+		    "<td>" + (m->thread_safe ? 
 		     "Yes" : "No") +
 #ifdef THREADS
 		    " <small>(<a href='../../../../../tasks/?task"
-		    "=locks.pike&class=status'>more info</a>)</small><br />\n"
-		    "<b>Number of accesses:</b> " + my_accesses +
+		    "=locks.pike&class=status'>more info</a>)</small></td></tr>\n"
+		    "<tr><td nowrap=''><b>Number of accesses:</b></td>"
+		    "<td><img src='/*/unit' width=10 height=1 /></td>"
+		    "<td>" + my_accesses +
 #endif
-                    "<br /><br />\n<table border='0' cellspacing='0' cellpadding='0'>"
-		    "<tr><td valign='top'><b>Type:</b> </td><td "
-                    "valign='top'>" + describe_type( m, mi->type, id ) +
-                    "</td></tr></table><br />\n" +
-                    EC(TRANSLATE(m->file_name_and_stuff())) +
+                    "</td></tr>\n"
+		    "<tr><td valign='top' nowrap=''><b>Type:</b></td>"
+		    "<td><img src='/*/unit' width=10 height=1 /></td>"
+		    "<td valign='top'>" + describe_type( m, mi->type, id ) +
+                    "</td></tr>\n"
+                    + fnas +
+		    "</table>\n" +		    
 		    homepage + creators  
-		    + "<h2>Inherit tree</h2>"+
+		    + "<h3>Inherit tree</h3>"+
                     program_info( m ) +
                     "<dl>" + 
                     (m->faked?"(Not on disk, faked module)":inherit_tree( m ))
@@ -386,7 +399,11 @@ string find_module_documentation( string conf, string mn, RequestID id )
     id = id->clone_me();
     id->conf = c;
     foreach(sort(indices(tags->get_tag_names())), string name)
-      full_doc += "<p>"+c->find_tag_doc( name, id, 1 )+"</p>";
+    {
+      string tag_doc = c->find_tag_doc( name, id, 1 );
+      if (tag_doc && sizeof(tag_doc))
+	full_doc += "<p>"+tag_doc+"</p>";
+    }
   }
 
   return "<br />"+full_doc;
@@ -400,11 +417,10 @@ string module_page( RequestID id, string conf, string module )
   string section = RXML.get_var( "section", "form" );
 
   if( section == "Status" || RXML.get_var( "info_section_is_it", "form" ) )
-    return "<blockquote>"+find_module_doc( conf, module, id )+"</blockquote>";
+    return find_module_doc( conf, module, id );
 
   if( section == "Docs" )
-    return
-      "<blockquote>"+find_module_documentation( conf, module, id )+"</blockquote>";
+    return find_module_documentation( conf, module, id );
   
   return "<cfg-variables source='module-variables' configuration='"+conf+"' "
           "section='&form.section;' module='"+module+"'/>";
@@ -415,13 +431,16 @@ string port_for( string url, int settings )
   string ourl = (url/"#")[0];
   url = roxen->normalize_url(url);
   if(!roxen->urls[url]) {
-    report_debug("site_content.pike:port_for(): URL %O not found!\n", ourl);
-    report_debug("Known URLS are:\n%{  %O\n%}\n", indices(roxen->urls));
+    //  report_debug(sprintf("site_content.pike:port_for(): URL %O not found!\n",
+    //  	       ourl));
+    //  report_debug(sprintf("Known URLS are:\n"
+    //  	       "%{  %O\n%}\n",
+    //  	       indices(roxen->urls)));
     return "";
   }
   Protocol p = roxen->urls[url]->port;
   if(!p) return "<font color='&usr.warncolor;'>Not open</font>";
-  string res =(settings?"<table border=0 cellspacing=0 cellpadding=2>":"")+
+  string res =
 #"
   <set variable='var.port' value='"+Roxen.http_encode_string(p->get_key())+
 "'/><set variable='var.url' value='"+Roxen.http_encode_string(url)+#"'/>
@@ -429,28 +448,43 @@ string port_for( string url, int settings )
     <if variable='var.port is &_.port;'>"+
     (settings?
 #"
+ <table border=0 cellspacing=0 cellpadding=4 width='100%'>
    <tr bgcolor='&usr.content-titlebg;'>
-      <td>
+      <td colspan=2>
         <font color='&usr.content-titlefg;' size=+1>
           <b>&_.name;</b>
 	</font>
       </td>
     </tr>
     <tr>
-      <td>":"")+#"
-        <if variable='_.warning != '>
+      <td colspan=2>":"")+#"
+        <if variable='_.warning = ?*'>
            <font color='&usr.warncolor;'><b>&_.warning;</b></font>
            <br clear='all' />
         </if>
+        <unset variable='var.end'/>
         <emit source='port-urls' port='&_.port;'>
           <if not variable='_.url is &var.url;'>
-          Shared with
-<a href='../&_.conf;/'>&_.confname;</a>
+            <if not='' variable='var.end'>
+              <set variable='var.end' value='.'/>
+              Shared with
+            </if>
+            <else>
+              and
+            </else>
+            <a href='../&_.conf;/'>&_.confname;</a>
           </if>
         </emit>
-      "+(settings?
+        &var.end;
+      </td>
+    </tr>
+    <tr>
+      <td><img src='/*/unit' width=20 height=1/></td>
+      <td>
+"
+      +(settings?
 #"<cfg-variables nosave='' source='port-variables' port='&port.port;'/>
-  <br clear='all' /></td></tr>
+  </td></tr>
   ":"")+#"
     </if>
   </emit>";
@@ -462,7 +496,7 @@ string parse( RequestID id )
 {
   array(string) path = ((id->misc->path_info||"")/"/")-({""});
 
-  // roxen_werror("site_content:parse(): path: %{%O,%}\n", path);
+  // roxen_perror("site_content:parse(): path: %{%O,%}\n", path);
 
   string section;
   array(string) _sec = id->real_variables->section;
@@ -498,48 +532,67 @@ string parse( RequestID id )
 	      "configuration='"+path[0]+"' section='&form.section;'/>";
 
      case "Ports":
-       string res = "<br />\n<blockquote>"
+       string res = 
 	 "<input type=hidden name='section' value='Ports' />"
 	 "<cfg-variables source='config-variables' "
-	 " configuration='"+path[0]+"' section='Ports'/>";
+	 " configuration='"+path[0]+"' section='Ports'/><br clear='all'/>";
        
        foreach( conf->query( "URLs" ), string url )
        {
 	 res += port_for( url, 1 );
        }
-       return res+"</blockquote><br />\n";
+       return res+"<br /><cf-save/>\n";
        break;
 
      case 0:
      case "":
      case "Status":
-       res = "<br />\n<blockquote><h1>URLs</h1>";
+       res = "\n<h1>" +
+ 	 "URLs</h1>";
+       res += "<table>";
        foreach( conf->query( "URLs" ), string url )
        {
 	 url = (url/"#")[0];
-         int open = (roxen->urls[ url ] 
-                     && roxen->urls[ url ]->port 
-                     && roxen->urls[ url ]->port->bound);
+
+	 //  If no port number is present we add the default port for
+	 //  the given protocol. This is needed to get a match in the
+	 //  roxen->urls mapping.
+	 string match_url = url;
+	 if (sizeof(url / ":") < 3) {
+	   sscanf(url, "%s://%s/%s", string proto, string host, string path);
+	   int portnum =
+	     roxen->protocols[proto] &&
+	     roxen->protocols[proto]->default_port;
+	   match_url = proto + "://" + host + ":" + portnum + "/" + path;
+	 }
+	 
+         int open = (roxen->urls[ match_url ] 
+                     && roxen->urls[ match_url ]->port 
+                     && roxen->urls[ match_url ]->port->bound);
+	 
          if( !open )
-           res += url + " "+port_for(url,0);
+           res += "<tr><td>" + url + "</td><td>"+port_for(url,0) + "</td></tr>\n";
          else if(search(url, "*")==-1)
-           res += ("<a target='server_view' href='"+url+"'>"+
-                   url+"</a> "+port_for(url,0)+"<br />\n");
+           res += ("<tr><td>" + "<a target='server_view' href='"+url+"'>"+
+                   url+"</a></td><td>"+port_for(url,0)+"</td></tr>\n");
 	 else if( sizeof( url/"*" ) == 2 )
-	   res += ("<a target='server_view' href='"+
+	   res += ("<tr><td><a target='server_view' href='"+
                    replace(url, "*", gethostname() )+"'>"+
-                   url+"</a> "+port_for(url,0)+"<br />\n");
+                   url+"</a></td><td>"+port_for(url,0)+"</td></tr>\n");
          else
-	   res += url + " "+port_for(url,0)+"<br />\n";
+	   res += "<tr><td>" +url + "</td><td>"+port_for(url,0)+"</td></tr>\n";
        }
+       res += "</table>\n";
 
        res += "<p>"+Roxen.html_encode_string(conf->variables->comment->query())+"</p>";
 
        res += "<br /><table><tr><td valign=\"top\">"
 	 "<h2>Request status</h2>";
        res += status(conf);
-       res += "</td><td valign=top>"
-	 "<h2>Cache status</h2><table cellpading='0' cellspacing='0' width='50'%>\n";
+       res += "</td>"
+	 "<td><img src='/*/unit' width='10' height='1' /></td>"
+	 "<td valign=top>"
+	 "<h2>Cache status</h2><table cellpading='0' cellspacing='0' width='100%'>\n";
 
        int total = conf->datacache->hits+conf->datacache->misses;
 
@@ -548,18 +601,21 @@ string parse( RequestID id )
 
        res += 
            sprintf("<tr><td><b>Hits: </b></td>"
-		   "<td align='right'>%d</td><td align='right'>%d%%</td></tr>\n",
+		   "<td align='right'>%d</td><td align='right'>%d</td>"
+		   "<td align='left'>%%</td></tr>\n",
                    conf->datacache->hits,
                    conf->datacache->hits*100 / total );
        res += 
            sprintf("<tr><td><b>Misses: </b></td>"
-		   "<td align='right'>%d</td><td align='right'>%d%%</td></tr>\n",
+		   "<td align='right'>%d</td><td align='right'>%d</td>"
+		   "<td align='left'>%%</td></tr>\n",
                    conf->datacache->misses,
                    conf->datacache->misses*100 / total );
 
        res += 
            sprintf("<tr><td><b>Entries: </b></td>"
-		   "<td align='right'>%d</td><td align='right'>%dKb</td></tr>\n",
+		   "<td align='right'>%d</td><td align='right'>%d</td>"
+		   "<td align='left'>Kb</td></tr>\n",
                    sizeof( conf->datacache->cache ),
                    (conf->datacache->current_size / 1024 ) );
        
