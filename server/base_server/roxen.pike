@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.303 1999/07/02 20:50:03 neotron Exp $
+ * $Id: roxen.pike,v 1.304 1999/07/10 21:44:32 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.303 1999/07/02 20:50:03 neotron Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.304 1999/07/10 21:44:32 peter Exp $";
 
 object backend_thread;
 object argcache;
@@ -1812,7 +1812,7 @@ class ImageCache
 
   static void draw( string name, RequestID id )
   {
-    mixed args = Array.map( Array.map( name/"$", argcache->lookup ), frommapp);
+    mixed args = Array.map( Array.map( name/"$", argcache->lookup, id->client ), frommapp);
     mapping meta;
     string data;
     mixed reply = draw_function( @copy_value(args), id );
@@ -2271,7 +2271,7 @@ class ArgCache
     return id;
   }
 
-  mapping lookup( string id )
+  mapping lookup( string id, string|void client )
   {
     LOCK();
     if(cache[id])
@@ -2279,7 +2279,7 @@ class ArgCache
 
     string q = read_args( id );
 
-    if(!q) error("Key does not exist!\n");
+    if(!q) error("Key does not exist! (Thinks "+ client +")\n");
     mixed data = decode_value(MIME.decode_base64( q ));
     data = mkmapping( data[0],data[1] );
 
