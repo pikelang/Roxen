@@ -1,11 +1,11 @@
 /*
- * $Id: cachestatus.pike,v 1.1 1997/08/24 02:33:02 peter Exp $
+ * $Id: cachestatus.pike,v 1.2 1997/08/24 16:44:30 neotron Exp $
  */
 
 inherit "wizard";
 constant name= "Cache//Cache status";
 
-constant doc = ("Show hitrate of the cacheing system.");
+constant doc = ("Show hitrate of the caching system.");
 
 constant more=1;
 
