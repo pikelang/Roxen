@@ -24,7 +24,7 @@ class Proxy
   {
     remove_call_out(close_client);
     call_out(close_client, 20);
-    if(!client) client = RoxenRPC.Client(ch,cp,"upgrade");
+    if(!client) client = RoxenRPC.Client(ch,(int)cp,"upgrade");
     return predef::`->(client, ident);
   }
   
