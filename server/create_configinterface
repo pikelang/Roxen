@@ -1,2 +1,2 @@
 #!/bin/sh
-./start --program bin/create_configif.pike $1
+./start --program bin/create_configif.pike $@
