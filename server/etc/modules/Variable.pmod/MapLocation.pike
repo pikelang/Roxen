@@ -1,4 +1,4 @@
-//! A class that enables specification of a physicla location.
+//! A class that enables specification of a physical location.
 
 inherit Variable.Variable;
 
