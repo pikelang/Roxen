@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.258 2001/06/24 14:14:18 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.259 2001/06/25 19:20:22 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1631,6 +1631,12 @@ Please install a newer version of Pike.
   add_constant("r_file_stat", file_stat);
   add_constant("roxenloader", this_object());
   add_constant("ErrorContainer", ErrorContainer);
+
+#if constant (thread_create)
+  add_constant("_cur_rxml_context", Thread.Local());
+#else
+  add_constant("_cur_rxml_context", 0);
+#endif
 
   start_mysql();
 

@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.51 2001/06/18 15:23:58 mast Exp $
+// $Id: module.h,v 1.52 2001/06/25 19:20:24 mast Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 /* #include "config.h" */
@@ -74,9 +74,9 @@
   ((value) ? (type && type != RXML.t_xml ? type->encode ((value), RXML.t_xml) : (value)) : RXML.nil)
 
 #if constant (thread_create)
-#  define RXML_CONTEXT (RXML._cur_rxml_context->get())
+#  define RXML_CONTEXT (_cur_rxml_context->get())
 #else
-#  define RXML_CONTEXT (RXML._cur_rxml_context)
+#  define RXML_CONTEXT (_cur_rxml_context)
 #endif
 
 #endif
