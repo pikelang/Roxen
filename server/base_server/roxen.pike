@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.530 2000/08/22 22:30:15 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.531 2000/08/22 22:57:44 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -611,6 +611,7 @@ class Protocol
 {
   inherit Stdio.Port: port;
   inherit "basic_defvar";
+  int bound;
 
   mapping path = ([]);
   constant name = "unknown";
@@ -828,7 +829,9 @@ class Protocol
     {
       report_error(LOC_M(6, "Failed to bind %s://%s:%d/ (%s)\n"), 
 		   (string)name, (ip||"*"), (int)port, strerror( errno() ));
-    }
+      bound = 0;
+    } else
+      bound = 1;
   }
 
   static string _sprintf( )
@@ -1241,7 +1244,6 @@ class FHTTP
       report_error(LOC_M(6,"Failed to bind %s://%s:%d/ (%s)\n"),
                    name,ip||"*",(int)port, strerror(errno()));
       destruct(portobj);
-      destruct();
       return;
     }
 
@@ -1633,7 +1635,7 @@ int register_url( string url, object/*(Configuration)*/ conf )
   {
     report_error(LOC_M(19,"Bad URL '%s' for server `%s'\n"),
 		 url, conf->query_name());
-    return 1;
+    return 0;
   }
   sscanf(host, "%[^:]:%d", host, port);
 
@@ -1736,6 +1738,7 @@ int register_url( string url, object/*(Configuration)*/ conf )
 			   describe_backtrace(err)));
       continue;
     }
+
     if( !( m[ required_host ][ port ] ) )
     {
       m_delete( m[ required_host ], port );
@@ -1747,10 +1750,19 @@ int register_url( string url, object/*(Configuration)*/ conf )
       }
       continue;
     }
+
+
+    if( !m[ required_host ][ port ]->bound )
+    {
+      failures++;
+      continue;
+    }
+
     urls[ url ]->port = m[ required_host ][ port ];
     m[ required_host ][ port ]->ref(url, urls[url]);
   }
-  if (failures == sizeof(required_hosts)) {
+  if (failures == sizeof(required_hosts)) 
+  {
     m_delete( urls, url );
     report_error(LOC_M(23, "Cannot register URL %s!\n"), url);
     sort_urls();
@@ -3156,6 +3168,13 @@ void enable_configurations()
                    config, describe_backtrace(err));
     report_debug("Enabled %s in %.1fms\n", config, (gethrtime()-t)/1000.0 );
   }
+  foreach( configurations, object c )
+  {
+    if(sizeof( c->registered_urls ) )
+      return;
+  }
+  report_fatal("No configurations could open any ports. Will shutdown.\n");
+  shutdown();
 }
 
 int all_modules_loaded;
