@@ -2,7 +2,6 @@
 <locale version="1.0"/>
 <project>admin_tasks</project>
 <language>hun</language>
-<file>../base_server/roxen.pike</file>
 <file>../config_interface/actions/cachestatus.pike</file>
 <file>../config_interface/actions/change_version.pike</file>
 <file>../config_interface/actions/debug_info.pike</file>
@@ -69,48 +68,6 @@
 <str id="238">
 <new/>
 <o>Features</o>
-<t></t>
-</str>
-
-<str id="dM">
-<new/>
-<o>Disabled modules</o>
-<t></t>
-</str>
-
-<str id="239">
-<new/>
-<o>All modules</o>
-<t></t>
-</str>
-
-<str id="240">
-<new/>
-<o>Name</o>
-<t></t>
-</str>
-
-<str id="241">
-<new/>
-<o>State</o>
-<t></t>
-</str>
-
-<str id="242">
-<new/>
-<o>Disabled</o>
-<t></t>
-</str>
-
-<str id="243">
-<new/>
-<o>N/A</o>
-<t></t>
-</str>
-
-<str id="244">
-<new/>
-<o>Enabled</o>
 <t></t>
 </str>
 
@@ -548,7 +505,7 @@
 
 <str id="74">
 <new/>
-<o>Loaded projects:</o>
+<o>Loaded project files:</o>
 <t></t>
 </str>
 
@@ -951,7 +908,9 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 
 <str id="42">
 <new/>
-<o>Indeed</o>
+<o>If you have more than one roxen version installed
+in the same location, you can use this action to
+change the currently running version.</o>
 <t></t>
 </str>
 
@@ -1018,5 +977,23 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 <str id="138">
 <new/>
 <o>Change version</o>
+<t></t>
+</str>
+
+<str id="87">
+<new/>
+<o>Non-garbing Memory Cache</o>
+<t></t>
+</str>
+
+<str id="139">
+<new/>
+<o>one day</o>
+<t></t>
+</str>
+
+<str id="140">
+<new/>
+<o>Unavailable features</o>
 <t></t>
 </str>

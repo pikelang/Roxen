@@ -2,7 +2,6 @@
 <locale version="1.0"/>
 <project>admin_tasks</project>
 <language>swe</language>
-<file>../base_server/roxen.pike</file>
 <file>../config_interface/actions/cachestatus.pike</file>
 <file>../config_interface/actions/change_version.pike</file>
 <file>../config_interface/actions/debug_info.pike</file>
@@ -63,41 +62,6 @@
 <str id="238">
 <o>Features</o>
 <t>Finesser</t>
-</str>
-
-<str id="dM">
-<o>Disabled modules</o>
-<t>Icke tillgängliga moduler</t>
-</str>
-
-<str id="239">
-<o>All modules</o>
-<t>Alla moduler</t>
-</str>
-
-<str id="240">
-<o>Name</o>
-<t>Namn</t>
-</str>
-
-<str id="241">
-<o>State</o>
-<t>Status</t>
-</str>
-
-<str id="242">
-<o>Disabled</o>
-<t>Inaktiv</t>
-</str>
-
-<str id="243">
-<o>N/A</o>
-<t>-</t>
-</str>
-
-<str id="244">
-<o>Enabled</o>
-<t>Aktiv</t>
 </str>
 
 <str id="8">
@@ -206,7 +170,6 @@
 </str>
 
 <str id="23">
-<new/>
 <o>Active filedescriptors</o>
 <t>Aktiva filer</t>
 </str>
@@ -304,13 +267,11 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="35">
-<new/>
 <o>Thread backtrace</o>
 <t>Trådanropslog</t>
 </str>
 
 <str id="36">
-<new/>
 <o>Shows a backtrace (stack) for each and every thread in Roxen.</o>
 <t>Visar en anropslog (stack) för alla trådar i Roxen</t>
 </str>
@@ -321,8 +282,8 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="38">
-<new/>
-<o>Main thread</o>
+<changed from="Main thread"/>
+<o>Backend thread</o>
 <t>Huvudtråden</t>
 </str>
 
@@ -437,7 +398,6 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="68">
-<new/>
 <o>supportdb</o>
 <t>supportdb</t>
 </str>
@@ -468,7 +428,8 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="74">
-<o>Loaded projects:</o>
+<changed from="Loaded projects:"/>
+<o>Loaded project files:</o>
 <t>Inlästa projekt:</t>
 </str>
 
@@ -552,15 +513,12 @@ processen försvinner efter senast 15 minuter.</t>
 <t>Nuvarande sökväg:</t>
 </str>
 
-
-
 <str id="88">
 <o>The other part should be submitted to a certificate authority, such as Thawte or VeriSign. The certificate authority will return the signed certificate that need to run a secure server.</o>
 <t>Den andra delen bör skickas till en "Certificate Authority", som t.ex. Thawte eller VeriSign. De kommer sedan att returnera ett signerat certifikat som du kan använda i din säkra webserver.</t>
 </str>
 
 <str id="89">
-<new/>
 <o>The other part is used to create a certificate. You can create a certificate yourself; this is not the recommended way to use SSL, and browsers will complain about not recognizing the entity that has signed the key (i.e. you). But a self-signed certificate is a lot better than nothing.</o>
 <t>Den andra delen används för att skapa ett certifikat. Du kan skapa
 ett certifikat själv men det är inte det rekommenderade sättet att
@@ -685,40 +643,36 @@ Trots att de flesta klienter accepterar 8-bitars ISO 8859-1 tecken i dessa fält 
 </str>
 
 <str id="112">
-<new/>
-<o>This is the DNS name of your server (i.e. the host part of the
+<changed from="This is the DNS name of your server (i.e. the host part of the
 URL).&lt;p&gt;Browsers will compare the URL they are connecting to
 with the Common Name in the server's certificate, and warn the user if
 they don't match.&lt;p&gt;Some Certificate Authorities allow wild
 cards in the Common Name. This means that you can have a certificate
 for &lt;tt&gt;*.roxen.com&lt;/tt&gt; which will match all servers at
-Roxen. Thawte allows wild card certificates, while VeriSign does not.</o>
+Roxen. Thawte allows wild card certificates, while VeriSign does not."/>
+<o>This is the DNS name of your server (i.e. the host part of the URL).&lt;p&gt;Browsers will compare the URL they are connecting to with the Common Name in the server's certificate, and warn the user if they don't match.&lt;p&gt;Some Certificate Authorities allow wild cards in the Common Name. This means that you can have a certificate for &lt;tt&gt;*.roxen.com&lt;/tt&gt; which will match all servers at Roxen.Thawte allows wild card certificates, while VeriSign does not.</o>
 <t>Det här är DNS-namnet för din server (datordelen av
 URLen)&lt;p&gt;Webbläsare kommer jämföra URLen de hämtar med 'Common
 Name' delen av certifikatet, och klaga om de inte matchar.</t>
 </str>
 
 <str id="113">
-<new/>
 <o>For how long should the certificate be valid?</o>
 <t>Hur länge ska certifikatet vara giltigt?</t>
 </str>
 
 <str id="114">
-<new/>
 <o>Certificate lifetime, in days</o>
 <t>Certifikatets livstid, i dagar</t>
 </str>
 
 <str id="115">
-<new/>
 <o>A certificate includes a validity period. How many days, from now, do you want the certificate to be valid?</o>
 <t>Ett certifikat inkluderar en livstid. Hur många dagar, räknat från
 idag, vill du att certifikatet ska vara giltigt?</t>
 </str>
 
 <str id="116">
-<new/>
 <o>Save the request in a file:</o>
 <t>Spara förfrågan i en fil: </t>
 </str>
@@ -729,37 +683,31 @@ idag, vill du att certifikatet ska vara giltigt?</t>
 </str>
 
 <str id="118">
-<new/>
 <o>Generate a new RSA key pair...</o>
 <t>Skapa ett nytt RSA-nyckelpar</t>
 </str>
 
 <str id="119">
-<new/>
 <o>Note that it is possible to have more than one certificate for the same key.</o>
 <t>Notera att det är möjligt att ha mer än ett certifikat med samma nyckel</t>
 </str>
 
 <str id="120">
-<new/>
 <o>Wrote %d-bit key in %s</o>
 <t>Skrev en %d-bittars nyckel i %s</t>
 </str>
 
 <str id="121">
-<new/>
 <o>Generate a Certificate Signing Request and an RSA key...</o>
 <t>Generera en certifikatsignerings förfrågan och en RSA nyckel...</t>
 </str>
 
 <str id="122">
-<new/>
 <o>Certificate Attributes?</o>
 <t>Certifikatattribut?</t>
 </str>
 
 <str id="123">
-<new/>
 <o>An X.509 certificate associates a Common Name with a public key. Some certificate authorities support "extended certificates", defined in PKCS#10. An extended certificate may contain other useful information associated with the name and the key. This information is signed by the CA, together with the X.509 certificate.</o>
 <t>Ett X.509-certifikat associerar ett s.k. 'Common Name' med en
 publik nyckel. En del certifikattillhandahållare tillåter utökade
@@ -768,25 +716,21 @@ innehållan annan användbar information, förutom namnet på nyckeln.</t>
 </str>
 
 <str id="124">
-<new/>
 <o>Email address</o>
 <t>Email adress</t>
 </str>
 
 <str id="125">
-<new/>
 <o>An email address to be embedded in the certificate.</o>
 <t>En email adress att associera med certifikatet</t>
 </str>
 
 <str id="126">
-<new/>
 <o>CSR Attributes?</o>
 <t>Attribut för förfrågan?</t>
 </str>
 
 <str id="127">
-<new/>
 <o>At last, you can add attributes to the Certificate Signing Request, which are meant for the Certificate Authority and are not included in the issued Certificate.</o>
 <t>Till sist, attribut som bara ingår i förfrågan och inte i
 certifikatet. De här används av de som tillhandahåller certifikatet
@@ -794,7 +738,6 @@ för att identifiera dig.</t>
 </str>
 
 <str id="128">
-<new/>
 <o>Challenge Password</o>
 <t>Lösenord</t>
 </str>
@@ -835,79 +778,71 @@ för att identifiera dig.</t>
 </str>
 
 <str id="40">
-<new/>
 <o>In order to use the SSL on your server, you first have to create a random key pair. One part of the key is kept secret. </o>
 <t>För att använda SSL på din sajt så måste du först ha skapat ett
 nyckelpar. Den ena halvan ska hållas hemlig</t>
 </str>
 
 <str id="41">
-<new/>
 <o>Change roxen version...</o>
 <t>Ändra roxenversion...</t>
 </str>
 
 <str id="42">
+<changed from=""/>
+<o>If you have more than one roxen version installed
+in the same location, you can use this action to
+change the currently running version.</o>
 <t>Om du har mer än en Roxenversion installerad i samma mapp så
 kan du använda den här för att byta vilken som körs.</t>
 </str>
 
 <str id="43">
-<new/>
 <o>1 month</o>
 <t>En månad</t>
 </str>
 
 <str id="44">
-<new/>
 <o>%d months</o>
 <t>%d månader</t>
 </str>
 
 <str id="45">
-<new/>
 <o>%d days</o>
 <t>%d dagar</t>
 </str>
 
 <str id="46">
-<new/>
 <o>Change Roxen version</o>
 <t>Ändra roxenversion</t>
 </str>
 
 <str id="47">
-<new/>
 <o>Changing roxen version</o>
 <t>Ändrar roxenversion</t>
 </str>
 
 <str id="48">
-<new/>
 <o>Version</o>
 <t>Version</t>
 </str>
 
 <str id="85">
-<new/>
 <o>Release date</o>
 <t>Släppdatum</t>
 </str>
 
 <str id="86">
-<new/>
 <o>Age</o>
 <t>Ålder</t>
 </str>
 
 <str id="136">
-<new/>
 <o>Directory</o>
 <t>Mapp</t>
 </str>
 
 <str id="137">
-<new/>
 <o>If you change to one these roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again</o>
 <t>Om du ändrar till en av de här roxenversionerna så kommer du inte
 kunna byta tillbaka igen från administrationsgränssnittet, du måste
@@ -916,7 +851,24 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 </str>
 
 <str id="138">
-<new/>
 <o>Change version</o>
 <t>Ändra version</t>
+</str>
+
+<str id="87">
+<new/>
+<o>Non-garbing Memory Cache</o>
+<t></t>
+</str>
+
+<str id="139">
+<new/>
+<o>one day</o>
+<t></t>
+</str>
+
+<str id="140">
+<new/>
+<o>Unavailable features</o>
+<t></t>
 </str>
