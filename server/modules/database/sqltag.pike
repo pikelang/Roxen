@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.83 2001/09/21 15:58:08 jhs Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.84 2001/09/25 21:10:46 nilsson Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -189,6 +189,7 @@ array|object do_sql_query(mapping args, RequestID id,
     if(arrayp(result)) rows=sizeof(result);
     if(objectp(result)) rows=result->num_rows();
     RXML.user_set_var(args->rowinfo, rows);
+    if(objectp(result)) m_delete(args, "rowinfo");
   }
   return result;
 }
@@ -271,7 +272,7 @@ class TagSqlplugin {
   }
 
   object get_dataset(mapping m, RequestID id) {
-    return Response(do_sql_query(m-(["rowinfo":""]), id, 1));
+    return Response(do_sql_query(m, id, 1));
   }
 }
 
