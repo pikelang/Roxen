@@ -13,7 +13,7 @@ constant LITET = 1.0e-40;
 constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e40;
 
-constant cvs_version = "$Id: create_graph.pike,v 1.82 1997/11/30 21:14:47 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.83 1997/11/30 21:58:03 hedda Exp $";
 
 /*
 These functions are written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -1228,26 +1228,26 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 
 	}
   
- graph->polygone(
-	  ({
-	    diagram_data["xsize"]-
-	    diagram_data["linewidth"]/2-
-	    (float)si-labelx/2, 
-	    diagram_data["ysize"]-ypos_for_xaxis-
-	    (float)si/4.0,
-
-	    diagram_data["xsize"]-
-	    diagram_data["linewidth"]/2-labelx/2, 
-	    diagram_data["ysize"]-ypos_for_xaxis,
-
-	    diagram_data["xsize"]-
-	    diagram_data["linewidth"]/2-
-	    (float)si-labelx/2, 
-	    diagram_data["ysize"]-ypos_for_xaxis+
-	    (float)si/4.0
-	  })
-	  );
-
+  graph->polygone(
+		  ({
+		    diagram_data["xsize"]-
+		    diagram_data["linewidth"]/2-
+		    (float)si-labelx/2, 
+		    diagram_data["ysize"]-ypos_for_xaxis-
+		    (float)si/4.0,
+		    
+		    diagram_data["xsize"]-
+		    diagram_data["linewidth"]/2-labelx/2, 
+		    diagram_data["ysize"]-ypos_for_xaxis,
+		    
+		    diagram_data["xsize"]-
+		    diagram_data["linewidth"]/2-
+		    (float)si-labelx/2, 
+		    diagram_data["ysize"]-ypos_for_xaxis+
+		    (float)si/4.0
+		  })
+		  );
+  
 
   //Rita yaxeln
   if ((diagram_data["yminvalue"]<=LITET)&&
