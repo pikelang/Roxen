@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.492 2000/06/26 17:46:19 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.493 2000/07/04 03:46:26 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -178,7 +178,7 @@ static class Privs
   int new_uid;
   int new_gid;
 
-#define LOGP (variables && variables->audit && GLOBVAR(audit))
+#define LOGP (variables && variables->audit && variables->audit->query())
 
 #if constant(geteuid) && constant(getegid) && constant(seteuid) && constant(setegid)
 #define HAVE_EFFECTIVE_USER
@@ -633,7 +633,7 @@ static array(object) handler_threads = ({});
 void start_handler_threads()
 {
   if (QUERY(numthreads) <= 1) {
-    QUERY(numthreads) = 1;
+    set( "numthreads", 1 );
     report_notice("Starting one thread to handle requests.\n");
   } else {
     report_notice("Starting "+
@@ -2966,7 +2966,6 @@ void reload_all_configurations()
   mapping config_cache = ([]);
   int modified;
 
-  configs = ([]);
   setvars(retrieve("Variables", 0));
 
   foreach(list_all_configurations(), string config)
