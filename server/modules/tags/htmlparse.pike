@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.168 1999/05/09 07:10:21 neotron Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.169 1999/05/09 07:16:34 neotron Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -1601,7 +1601,7 @@ string tag_cache(string tag, mapping args, string contents, object id)
   string parsed = cache_lookup("tag_cache", key);
   if(!parsed) {
     parsed = parse_rxml(contents, id);
-    cache_set("tag_cache", key, contents);
+    cache_set("tag_cache", key, parsed);
   }
   return parsed;
 #undef HASH
