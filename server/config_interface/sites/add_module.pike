@@ -662,7 +662,13 @@ mixed do_it( RequestID id )
   if( id->variables->encoded )
     id->variables->config = decode_site_name( id->variables->config );
 
-  Configuration conf = roxen.find_configuration( id->variables->config );
+  Configuration conf;
+  foreach(id->variables->config/"\0", string config) {
+    if (conf = roxen.find_configuration( id->variables->config )) {
+      id->variables->config = config;
+      break;
+    }
+  }
 
   if( !conf->inited )
     conf->enable_all_modules();
@@ -681,8 +687,14 @@ mixed parse( RequestID id )
   if( id->variables->module_to_add )
     return do_it( id );
 
-  object conf = roxen.find_configuration( id->variables->config );
-  
+  Configuration conf;
+  foreach(id->variables->config/"\0", string config) {
+    if (conf = roxen.find_configuration( id->variables->config )) {
+      id->variables->config = config;
+      break;
+    }
+  }
+
   if( !config_perm( "Site:"+conf->name ) )
     return LOCALE(226,"Permission denied");
 
