@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.53 1999/11/17 15:14:32 per Exp $ */
+/* $Id: module.pike,v 1.54 1999/11/17 23:23:48 per Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -32,7 +32,7 @@ string fix_cvs(string from)
 {
   from = replace(from, ({ "$", "Id: "," Exp $" }), ({"","",""}));
   sscanf(from, "%*s,v %s", from);
-  return from;
+  return replace(from,"/","-");
 }
 
 int module_dependencies(object configuration, 
@@ -49,7 +49,9 @@ int module_dependencies(object configuration,
 string file_name_and_stuff()
 {
   return ("<b>Loaded from:</b> "+(roxen->filename(this))+"<br>"+
-	  (this->cvs_version?"<b>CVS Version: </b>"+fix_cvs(this->cvs_version)+"<nr>\n":""));
+	  (this->cvs_version?
+           "<b>CVS Version: </b>"+
+           fix_cvs(this->cvs_version)+"\n":""));
 }
 
 static private object _my_configuration;
