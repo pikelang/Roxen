@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999-2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.19 2000/05/01 05:12:34 nilsson Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.20 2000/05/02 21:58:37 kuntri Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -20,11 +20,11 @@ TAGDOCUMENTATION;
 constant tagdoc=([
 
 "foldlist":({#"<desc cont><short hide>
- This tag is used to build folding lists, that are like <dl> lists,
+ This tag is used to build folding lists, that are like &lt;dl&gt; lists,
  but where each element can be unfolded.</short>This tag is used to
  build folding lists, that are like <tag>dl</tag> lists, but where
  each element can be unfolded. The tags used to build the lists
- elements are ft and fd. </desc>
+ elements are <tag>ft</tag> and <tag>fd</tag>. </desc>
 
 <attr name=unfolded>
 Will make all the elements in the list unfolded by default.
@@ -48,10 +48,25 @@ Will make this element unfolded by default.
 
 (["fd":#"<desc cont>
 The contents of this container will only be visible when the element
-it is written in is unfolded."])
+it is written in is unfolded.</desc>
+
+<ex>
+ <foldlist>
+   <ft>
+     Heading1
+     <fd>Contents 1</fd>
+   </ft>
+   <ft>
+     Heading2
+     <fd>Contents 2</fd>
+   </ft>
+ </foldlist>
+</ex>
+"])
   })])
 })]);
 #endif
+
 
 string encode_url(array states, RequestID id){
   object state=id->misc->foldlist->state;
