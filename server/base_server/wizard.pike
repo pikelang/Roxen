@@ -1,7 +1,7 @@
 /* Copyright © 1997, 1998, Idonex AB.
  * Some modifications by Francesco Chemolli
  *
- * $Id: wizard.pike,v 1.75 1998/11/02 08:20:18 peter Exp $
+ * $Id: wizard.pike,v 1.76 1998/11/25 19:33:44 grubba Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  * 
@@ -242,6 +242,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
    case "font":
      string res="";
      m->type = "select";
+     m->lines = "20";
      m->choices = roxen->available_fonts(1)*",";
      if(id->conf && id->conf->modules["graphic_text"] && !m->noexample)
        res = ("<input type=submit value='Example'><br>"+
@@ -392,7 +393,9 @@ string parse_wizard_page(string form, object id, string wiz_name)
   int page = ((int)id->variables->_page);
   mapping foo = ([]);
   // Cannot easily be inlined below, believe me... Side-effects.
-  form = parse_html(form,([ "var":wizard_tag_var, ]),
+  form = parse_html(form,(id->misc->extra_wizard_tags || ([])) +
+		    ([ "var":wizard_tag_var, ]),
+		    (id->misc->extra_wizard_container || ([])) +
 		    ([ "cvar":wizard_tag_var, 
 		       "help":parse_wizard_help]), id, foo );
   
@@ -552,10 +555,11 @@ int zonk=time();
 mapping get_actions(object id, string base,string dir, array args)
 {
   mapping acts = ([  ]);
+  if(id->pragma["no-cache"]) wizards=([]);
   foreach(get_dir(dir), string act)
   {
     mixed err;
-    _master->set_inhibit_compile_errors(0);
+    master()->set_inhibit_compile_errors(0);
     err = catch
     {
       if(act[0]!='#' && act[-1]=='e')
