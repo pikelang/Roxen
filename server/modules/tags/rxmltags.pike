@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.34 1999/12/12 23:23:53 per Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.35 1999/12/14 01:37:41 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -18,14 +18,14 @@ inherit "roxenlib";
 
 // ---------------- Module registration stuff ----------------
 
-void create(object c)
+void create()
 {
   defvar("insert_href",1,"Allow &lt;insert href&gt;.",
 	 TYPE_FLAG|VAR_MORE,
          "Should the usage of &lt;insert href&gt; be allowed?");
 }
 
-void start(int q, object c)
+void start()
 {
   add_api_function("query_modified", api_query_modified, ({ "string", }));
 }
@@ -449,9 +449,9 @@ string tag_fsize(string tag, mapping args, RequestID id)
   return rxml_error(tag, "Failed to find file", id);
 }
 
-array(string) tag_configimage(string t, mapping m, RequestID id)
+array(string)|string tag_configimage(string t, mapping m, RequestID id)
 {
-  if (!m->src) return ({rxml_error(t, "No src given", id)});
+  if (!m->src) return rxml_error(t, "No src given", id);
 
   if (m->src[sizeof(m->src)-4..][0] == '.')
     m->src = m->src[..sizeof(m->src)-5];
@@ -543,7 +543,7 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
       NOCACHE();
     else
       CACHE(60);
-    object q=Protocols.HTTP.get_url(m->href);
+    Protocols.HTTP q=Protocols.HTTP.get_url(m->href);
     if(q && q->status>0 && q->status<400)
       return ({ q->data() });
     return rxml_error(tag, (q ? q->status_desc: "No server response"), id);
@@ -604,10 +604,10 @@ string tag_remove_cookie(string tag, mapping m, RequestID id)
   return "";
 }
 
-string tag_modified(string tag, mapping m, object id, object file)
+string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
 {
   array (int) s;
-  object f;
+  Stdio.File f;
 
   if(m->by && !m->file && !m->realfile)
   {
@@ -661,7 +661,7 @@ string tag_modified(string tag, mapping m, object id, object file)
   return rxml_error(tag, "Couldn't stat file.", id);
 }
 
-string|array(string) tag_user(string tag, mapping m, object id, object file)
+string|array(string) tag_user(string tag, mapping m, RequestID id, Stdio.File file)
 {
   string *u;
   string b, dom;
@@ -1028,7 +1028,7 @@ class Smallcapsstr {
 
 string container_smallcaps(string t, mapping m, string s)
 {
-  object ret;
+  Smallcapsstr ret;
   string spc=m->space?"&nbsp;":"";
   m_delete(m, "space");
   mapping bm=([]), sm=([]);
@@ -1074,7 +1074,7 @@ string container_smallcaps(string t, mapping m, string s)
 
 string container_random(string tag, mapping m, string s)
 {
-  mixed q;
+  string|array q;
   if(!(q=m->separator || m->sep)) return (q=s/"\n")[random(sizeof(q))];
   return (q=s/q)[random(sizeof(q))];
 }
@@ -1085,7 +1085,7 @@ array(string) container_formoutput(string tag_name, mapping args,
   return ({ do_output_tag( args, ({ id->variables }), contents, id ) });
 }
 
-mixed container_gauge(string t, mapping args, string contents, RequestID id)
+array(string) container_gauge(string t, mapping args, string contents, RequestID id)
 {
   NOCACHE();
 
@@ -1094,8 +1094,8 @@ mixed container_gauge(string t, mapping args, string contents, RequestID id)
   t = gethrtime()-t;
   string define = args->define?args->define:"gauge";
 
-  if(args->silent) return "";
-  if(args->timeonly) return sprintf("%3.6f", t/1000000.0);
+  if(args->silent) return ({ "" });
+  if(args->timeonly) return ({ sprintf("%3.6f", t/1000000.0) });
   if(args->resultonly) return ({contents});
   return ({ "<br><font size=\"-1\"><b>Time: "+
 	   sprintf("%3.6f", t/1000000.0)+
@@ -1103,7 +1103,7 @@ mixed container_gauge(string t, mapping args, string contents, RequestID id)
 }
 
 // Removes empty lines
-mixed container_trimlines( string tag_name, mapping args,
+array(string) container_trimlines( string tag_name, mapping args,
                            string contents, RequestID id )
 {
   contents = replace(parse_rxml(contents,id), ({"\r\n","\r" }), ({"\n","\n"}));
@@ -1199,7 +1199,7 @@ string container_sort(string t, mapping m, string c, RequestID id)
   return pre + (m->reverse?reverse(lines):lines)*m->separator + post;
 }
 
-mixed container_recursive_output (string tagname, mapping args,
+array(string)|string container_recursive_output (string tagname, mapping args,
                                   string contents, RequestID id)
 {
   int limit;
@@ -1215,8 +1215,8 @@ mixed container_recursive_output (string tagname, mapping args,
     inside = args->inside ? args->inside / (args->separator || ",") : ({});
     outside = args->outside ? args->outside / (args->separator || ",") : ({});
     if (sizeof (inside) != sizeof (outside))
-      return "\n<b>'inside' and 'outside' replacement sequences "
-	"aren't of same length</b>\n";
+      return rxml_error(tagname, "'inside' and 'outside' replacement sequences "
+	"aren't of same length", id);
   }
 
   if (limit <= 0) return contents;
@@ -1323,7 +1323,7 @@ mapping query_if_callers()
 
 // ---------------- API registration stuff ---------------
 
-string api_query_modified(object id, string f, int|void by)
+string api_query_modified(RequestID id, string f, int|void by)
 {
   mapping m = ([ "by":by, "file":f ]);
   return tag_modified("modified", m, id, id);
