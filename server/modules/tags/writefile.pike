@@ -12,7 +12,7 @@
 #define _ok id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: writefile.pike,v 1.13 2003/01/26 02:25:25 mani Exp $";
+ "$Id: writefile.pike,v 1.14 2004/05/23 03:00:51 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -88,93 +88,122 @@ class TagWritefile {
 	return 0;
       }
 
-      string filename,rootpath,path,schroot=args->chroot||"";
+      string real_filename,rootpath,path,schroot=args->chroot||"";
 
-      path = id->conf->real_file(id->not_query||"/", id);
-      if (!path)
-	parse_error ("There is no file system for %O that supports this tag "
-		     "(i.e. implements real_file).\n", id->not_query || "/");
-
+      path = id->not_query || "/";
       path=dirname(path)+"/";
+
       if (QUERY(onlysubdirs))
 	rootpath = path;
-      else {
-	rootpath = id->conf->real_file("/",id);
-	if (!rootpath)
-	  parse_error ("There is no file system for / that supports this tag "
-		       "(i.e. implements real_file).\n");
-      }
+      else
+	rootpath = "/";
 
-      filename=((schroot+args->filename)[0]=='/'?rootpath:path)+
-       Stdio.append_path(schroot, args->filename);
+      string filename = 
+	Stdio.append_path(((schroot+args->filename)[0]=='/'?
+			   rootpath:path),
+			  Stdio.append_path(schroot, args->filename));
+      // Search for an existing real directory
+      string d = dirname(filename);
+      string real_dirname = id->conf->real_file(d+"/",id);
+      string new_dir = "";
+      while (!real_dirname && sizeof(d)) {
+	new_dir = Stdio.append_path(basename(d), new_dir);
+	d = dirname(d);
+	if (d == "/") d = "";
+	real_dirname = id->conf->real_file(d+"/",id);
+      }
+      if (!real_dirname)
+	parse_error ("There is no file system for %O that supports this tag "
+		     "(i.e. implements real_file).\n", dirname(filename));
+
+      real_filename = Stdio.append_path(real_dirname, new_dir,
+					basename(filename));
+
       if(args->remove) {
-        if(!rm(filename))
+        if(!rm(real_filename))
 	  _ok = 0;
-      }	else if(IS(args->moveto)) {
-	if(!mv(filename,((schroot+args->moveto)[0]=='/'?rootpath:path)+
-	   Stdio.append_path(schroot, args->moveto)))
-	  _ok = 0;
-      } else {
-	string towrite;
-	if(args->from) {
-	  towrite=RXML.user_get_var(args->from, "form");
-	  if(!towrite ||
-	   IS(args["max-size"]) && sizeof(towrite)>(int)args["max-size"]) {
+      }
+      else 
+	if(IS(args->moveto)) {
+	  string filename = 
+	    Stdio.append_path(((schroot+args->moveto)[0]=='/'?
+			       rootpath:path),
+			      Stdio.append_path(schroot, args->moveto));
+	  string real_dirname = id->conf->real_file(dirname(filename)+"/",id);
+	  if (!real_dirname)
+	    parse_error ("There is no file system for %O that supports this "
+			 "tag (i.e. implements real_file).\n", 
+			 dirname(filename));
+	  string real_moveto = 
+	    Stdio.append_path(real_dirname, basename(filename));
+
+	  if(!mv(real_filename, real_moveto))
 	    _ok = 0;
-	    return 0;
+	} 
+	else {
+	  string towrite;
+	  if(args->from) {
+	    towrite=RXML.user_get_var(args->from, "form");
+	    if(!towrite ||
+	       IS(args["max-size"]) && sizeof(towrite)>(int)args["max-size"]) {
+	      _ok = 0;
+	      return 0;
+	    }
 	  }
-	} else
-	  towrite=content;
-	object privs;
-	;{ Stat st;
-	   string diro,dirn;
-	   int domkdir=0;
-	   for(dirn=filename;
+	  else
+	    towrite=content||"";
+	  object privs;
+	  ;{ Stat st;
+	  string diro,dirn;
+	  int domkdir=0;
+	  for(dirn=real_filename;
 	      diro=dirn, diro!=(dirn=dirname(dirn)) && !(st = file_stat(dirn));
 	      domkdir=1);
-	   if(st) {
-	     privs = Privs("Writefile", st->uid, st->gid);
-	     if(domkdir && args->mkdirhier)
-	       Stdio.mkdirhier(dirname(filename));
-	   }
-	 }
-	_ok = 0;
-        object file=Stdio.File();
-	if(file->open(lastfile=filename, args->append?"wrca":"wrct")) {
-	  _ok = 1;
-	  file->write(towrite);
-	  object dims;
-	  if (IS(args["min-height"])|| IS(args["max-height"])||
-	      IS(args["min-width"]) || IS(args["max-width"])) {
-	    file->seek(0);
-	    dims = Dims.dims();
-	    array xy = dims->get(file);
-	    if(xy && 
-	       (IS(args["min-height"])&& xy[1] < (int)args["min-height"]||
-	        IS(args["max-height"])&& xy[1] > (int)args["max-height"]||
-	        IS(args["min-width"]) && xy[0] < (int)args["min-width"]||
-	        IS(args["max-width"]) && xy[0] > (int)args["max-width"]))
+	  if(st) {
+	    privs = Privs("Writefile", st->uid, st->gid);
+	    if(domkdir && args->mkdirhier)
+	      Stdio.mkdirhier(dirname(real_filename));
+	  }
+	  }
+	  _ok = 0;
+	  object file=Stdio.File();
+	  if(file->open(lastfile=real_filename, args->append?"wrca":"wrct")) {
+	    _ok = 1;
+	    if(String.width(towrite)>8)
+	      towrite = string_to_utf8(towrite);
+	    file->write(towrite);
+	    object dims;
+	    if (IS(args["min-height"])|| IS(args["max-height"])||
+		IS(args["min-width"]) || IS(args["max-width"])) {
+	      file->seek(0);
+	      dims = Dims.dims();
+	      array xy = dims->get(file);
+	      if(xy && 
+		 (IS(args["min-height"])&& xy[1] < (int)args["min-height"]||
+		  IS(args["max-height"])&& xy[1] > (int)args["max-height"]||
+		  IS(args["min-width"]) && xy[0] < (int)args["min-width"]||
+		  IS(args["max-width"]) && xy[0] > (int)args["max-width"]))
+		_ok = 0;
+	    }
+	    if (_ok && args["accept-type"]) {
+	      file->seek(0);
+	      array(string) types = args["accept-type"]/",";
 	      _ok = 0;
+	      catch {
+		if (!dims) {
+		  dims = Dims.dims();
+		  dims->f = file;
+		}
+		if (0<=search(types, "jpeg") && dims->get_JPEG() ||
+		    0<=search(types, "png") && (file->seek(0),dims->get_PNG()) ||
+		    0<=search(types, "gif") && (file->seek(0),dims->get_GIF()))
+		  _ok = 1;
+	      };
+	    }
+	    file->close();
 	  }
-	  if (_ok && args["accept-type"]) {
-	    file->seek(0);
-	    array(string) types = args["accept-type"]/",";
-	    _ok = 0;
-	    catch {
-	      if (!dims) {
-		dims = Dims.dims();
-		dims->f = file;
-	      }
-	      if (0<=search(types, "jpeg") && dims->get_JPEG() ||
-	          0<=search(types, "png") && (file->seek(0),dims->get_PNG()) ||
-	          0<=search(types, "gif") && (file->seek(0),dims->get_GIF()))
-		_ok = 1;
-	    };
-	  }
-	  file->close();
+	  privs = 0;
 	}
-	privs = 0;
-      }
       return 0;
     }
   }
