@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.17 1999/12/08 14:14:14 nilsson Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.18 2000/02/07 17:01:45 kuntri Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -15,7 +15,66 @@ inherit "roxenlib";
 TAGDOCUMENTATION
 #ifdef manual
 constant tagdoc=(["obox": ([
-  "standard":"<desc cont>Outlined box</desc>",
+  "standard":"<desc cont>Outlined box</desc>
+
+<attr name=align value=left,right>
+ Vertical alignment of the box.
+</attr>
+
+<attr name=bgcolor value=color>
+ Color of the background and title label.
+</attr>
+
+<attr name=fixedleft value=number>
+ Fixed length of line on the left side of the title. The unit is the
+ approximate width of a character.
+</attr>
+
+<attr name=fixedright value=number>
+ Fixed length of line on the right side of the title. The unit is the
+ approximate width of a character.
+</attr>
+
+<attr name=left value=number>
+ Length of the line on the left of the title.
+</attr>
+
+<attr name=outlinecolor value=color>
+ Color of the outline.
+</attr>
+
+<attr name=outlinewidth value=number>
+ Width, in pixels, of the outline.
+</attr>
+
+<attr name=right value=number>
+ Length of the line on the right of the title.
+</attr>
+
+<attr name=spacing value=number>
+ Width, in pixels, of the space in the box.
+</attr>
+
+<attr name=style value=caption,groupbox>
+ Style of the box. Groupbox is default
+</attr>
+
+<attr name=textcolor value=color>
+ Color of the text inside the box.
+</attr>
+
+<attr name=titlecolor value=color>
+ Color of the title text.
+</attr>
+
+<attr name=width value=number>
+ Width, in pixels, of the box.
+</attr>
+
+ Note that the left and right attributes are constrained by the width
+ argument. If the title is not specified in the argument list, you can
+ put it in a <tag>title</tag> container in the obox contents.",
+
   "svenska":"<desc cont>Ramlåda</desc>"]) ]);
 #endif
 
