@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: wizz.pike,v 1.2 2001/03/08 14:35:49 per Exp $";
+constant cvs_version = "$Id: wizz.pike,v 1.3 2001/03/24 23:28:59 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Really advanced wizard";
@@ -38,6 +38,7 @@ class PageForm {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
+      //      if(!WIZZ->the_page) run_error("No page sent to form\n");
       return ({ WIZZ->the_page });
     }
   }
@@ -70,6 +71,7 @@ class PageFrame {
     if(!vars["ok-label"]) vars["ok-label"]=LOCALE(0,"Ok");
     if(!vars["previous-label"]) vars["previous-label"]=LOCALE(0, "< Previous");
     if(!vars["next-label"]) vars["next-label"]=LOCALE(0, "Next >");
+    if(!vars->title) vars->title = vars->name || vars->wizard_name || LOCALE(0, "Roxen wizard");
     if(!vars->done) vars->done = "";
     if(!vars->cancel) vars->cancel = "";
   }
@@ -78,12 +80,15 @@ class PageFrame {
 
   array do_return(RequestID id) {
     result = "\n<!-- Wizard -->\n"
-      "<form method=\""+(vars->method||"POST")+"\" >\n" //action=\""+"\">\n"
+      "<form method=\""+(vars->method||"POST")+"\" >\n"
       "<input type=\"hidden\" name=\"magic_roxen_automatic_charset_variable\" value=\"едц\" />\n"
+      "<input type=\"hidden\" name=\"__state\" value=\"" + vars->__state + "\" />\n"
       "<input type=\"hidden\" name=\"__done-url\" value=\""+vars->done+"\" />\n"
-      "<input type=\"hidden\" name=\"__page\"  value=\""+id->misc->wizard->page+"\" />\n"+
-      (vars->cancel?"<input type=\"hidden\" name=\"__cancel-url\" value=\""+vars->cancel+"\" />\n":"")+
-      content+"</form>\n";
+      "<input type=\"hidden\" name=\"__page\"  value=\""+vars->page+"\" />\n"+
+      (vars->cancel?"<input type=\"hidden\" name=\"__cancel-url\" value=\""+
+       vars->cancel+"\" />\n":"");
+
+    result += content+"</form>\n";
     id->misc->wizard = old_wizard;
     return 0;
   }
@@ -144,13 +149,14 @@ class TagWizard {
   class Frame {
     inherit RXML.Frame;
     RXML.TagSet additional_tags = internal_tags;
-    mixed oldwiz;
+    mixed old_wizard;
 
     array do_enter(RequestID id) {
-      args->page=(int)id->variables->__page;
-      if(id->variables->__ok || id->variables->__cancel) args->page=0;
-      else if(id->variables->__prev_page) args->page-=2;
-      else if(args->page!=0 && !id->variables->__next_page) args->page--;
+      args->page = id->real_variables->__page ? (int)id->real_variables->__page[0] : 0;
+      args->pages = 0;
+      if(id->real_variables->__ok || id->real_variables->__cancel) args->page=0;
+      else if(id->real_variables->__prev_page) args->page-=2;
+      else if(args->page!=0 && !id->real_variables->__next_page) args->page--;
 
       if(rxml_tag_set->generation > page_internal_tags_generation) {
 	page_internal_tags = RXML.TagSet("TagWizard.page.form.internal",
@@ -163,22 +169,38 @@ class TagWizard {
 	page_internal_tags_generation = rxml_tag_set->generation;
       }
 
-      oldwiz=id->misc->wizard;
-      id->misc->wizard=args;
+      StateHandler.Page_state state = StateHandler.Page_state(id);
+      state->register_consumer("wizard");
+      if(id->real_variables->__state) {
+	state->use_session( StateHandler.decode_session_id(id->real_variables->__state[0]) );
+	state->decode(id->real_variables->__state[0]);
+      }
+      else
+	state->use_session();
+
+      old_wizard = id->misc->wizard;
+      id->misc->wizard = ( state->get() || ([]) ) | args |
+	map(id->real_variables, lambda(array in) { return sizeof(in)==1?in[0]:in; });
+      state->alter(id->misc->wizard);
+      id->misc->wizard->__state = state->encode();
     }
 
     array do_return(RequestID id) {
       if((id->variables->__ok && id->variables["__done-url"]) ||
 	 (id->variables->__cancel && id->variables["__cancel-url"])) {
-	mapping r = Roxen.http_redirect(id->variables["__done-url"] || id->variables["__cancel-url"], id);
+	mapping r = Roxen.http_redirect(id->variables["__done-url"] ||
+					id->variables["__cancel-url"], id);
 	if (r->error)
 	  id->misc->defines[" _error"] = r->error;
 	if (r->extra_heads)
 	  id->misc->defines[" _extra_heads"] += r->extra_heads;
 	return 0;
       }
-      array ret=({ PageFrame( id->misc->wizard->template || default_template, WIZZ ) });
-      id->misc->wizard=oldwiz;
+
+      array ret;
+      if(id->misc->wizard->pages)
+	ret = ({ PageFrame( id->misc->wizard->template || default_template, WIZZ ) });
+      id->misc->wizard = old_wizard;
       return ret;
     }
 
@@ -188,24 +210,28 @@ class TagWizard {
 constant default_template = #"
 <table bgcolor=\"#000000\" cellpadding=\"1\" border=\"0\" cellspacing=\"0\" width=\"80%\">
   <tr><td><table bgcolor=\"#eeeeee\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" width=\"100%\">
-    <tr><td valign=\"top\"><table width=\"100%\" cellspacing=\"0\" cellpadding=\"5\">
-      <tr><td valign=top><font size=\"+2\">&_.title;</font></td>
+    <tr><td valign=\"top\" align=\"center\">
+      <table width=\"97%\" cellspacing=\"0\" cellpadding=\"5\" border=\"0\">
+      <tr><td valign=\"top\"><font size=\"+2\">&_.title;</font></td>
           <td align=\"right\"><if variable='_.page == &_.pages;'>Completed</if>
                               <else>&_.page;/&_.pages;</else></td>
     <if variable='_.help'>
 	  <td align=\"right\"><input type=\"image\" name=\"help\" src=\"/internal-roxen-help\" border=\"0\" value=\"Help\"></td>
     </if>
       </tr>
-      <tr><td colspan=\"3\"><hr size=\"1\" noshade=\"noshade\" /></td></tr>
     </table>
+    <hr size=\"1\" noshade=\"noshade\" width=\"95%\" />
+    </td></tr><tr><td valign=\"top\">
     <table cellpadding=\"6\"><tr><td>" +
-  /*
+/*
+#"
 <pre><b>underscore</b>
 <insert variables='full' scope='_' />
 <b>form</b>
 <insert variables='full' scope='form' />
 </pre>
-  */
+"+
+*/
 #"        <form/>
     </td></tr></table>
     <table width=\"100%\"><tr><td width=\"33%\">
