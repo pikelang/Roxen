@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.185 2000/07/23 15:20:46 nilsson Exp $
+// $Id: roxenlib.pike,v 1.186 2000/08/03 06:16:42 mast Exp $
 
 //#pragma strict_types
 
@@ -12,6 +12,13 @@ inherit "http";
 
 #define roxen roxenp()
 
+class Protocol {
+  int port;
+  string ip;
+  program requesthandler;
+  array(string) sorted_urls = ({});
+  mapping(string:mapping) urls = ([]);
+};
 class Configuration {
   string parse_rxml(string,RequestID,void|Stdio.File,void|mapping(string:mixed));
   int|mapping check_security(function, RequestID);
@@ -22,6 +29,7 @@ class Configuration {
 };
 class RequestID {
   object(Configuration) conf;
+  object(Protocol) port_obj;
   string query;
   string not_query;
   string remoteaddr;
@@ -1067,8 +1075,8 @@ string strftime(string fmt, int t)
 }
 
 RoxenModule get_module (string modname)
-  //! Resolves a string as returned by get_modname to a module object if
-  //! one exists.
+//! Resolves a string as returned by get_modname to a module object if
+//! one exists.
 {
   string cname, mname;
   int mid = 0;
@@ -1077,33 +1085,29 @@ RoxenModule get_module (string modname)
       !sizeof (cname) || !sizeof(mname)) return 0;
   sscanf (mname, "%s#%d", mname, mid);
 
-  foreach (roxen->configurations, Configuration conf) {
-    mapping moddata;
-    if (conf->name == cname && (moddata = conf->modules[mname]))
+  if (Configuration conf = roxen->get_configuration (cname))
+    if (mapping moddata = conf->modules[mname])
       return moddata->copies[mid];
-  }
 
   return 0;
 }
 
 string get_modname (RoxenModule module)
-  //! Returns a string uniquely identifying the given module on the form
-  //! `<config name>/<module short name>#<copy>'.
+//! Returns a string uniquely identifying the given module on the form
+//! `<config name>/<module short name>#<copy>'.
 {
   if (!module) return 0;
 
-  foreach ([array(Configuration)]roxen->configurations, Configuration conf) {
-    string mname = conf->otomod[module];
-    if(mname)
+  if (Configuration conf = module->my_configuration())
+    if (string mname = conf->otomod[module])
       return conf->name + "/" + mname;
-  }
 
   return 0;
 }
 
 string get_modfullname (RoxenModule module)
-  //! This determines the full module name in approximately the same way
-  //! as the config UI.
+//! This determines the full module name in approximately the same way
+//! as the config UI.
 {
   if (module) {
     string name = 0;
