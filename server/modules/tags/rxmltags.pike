@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.73 2000/02/17 23:39:23 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.74 2000/02/21 16:29:47 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1461,9 +1461,9 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  Internal Roxen tag. Not yet documented.
 </desc>",
 
-"aconf":#"<desc cont>
+"aconf":#"<desc cont><short>
  Creates a link that can modify the persistent states in the cookie
- RoxenConfig.
+ RoxenConfig.</short>
 </desc>
 
 <attr name=href value=uri>
@@ -1486,9 +1486,9 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
 </attr>
  <p>All other attributes will be inherited by the generated a tag.</p>",
 
-"append":#"<desc tag>
+"append":#"<desc tag><short>
  Appends a value to a variable. The variable attribute and one more is
- required.
+ required.</short>
 </desc>
 
 <attr name=variable value=string>
@@ -1503,8 +1503,8 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  The name of another variable that the value should be copied from.
 </attr>",
 
-"apre":#"<desc cont>
- Creates a link that can modify prestates.
+"apre":#"<desc cont><short>
+ Creates a link that can modify prestates.</short>
 </desc>
 
 <attr name=href value=uri>
@@ -1531,11 +1531,11 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  <tag>apre</tag> works just like the <tag>a href=...</tag> container,
  but if no \"href\" attribute is specified, the current page is used.",
 
-"auth-required":#"<desc tag>
- Adds an HTTP auth required header and return code (401), that will force
- the user to supply a login name and password. This tag is needed when
- using access control in RXML in order for the user to be prompted to
- login.
+"auth-required":#"<desc tag><short>
+ Adds an HTTP auth required header and return code (401), that will
+ force the user to supply a login name and password.</short> This tag
+ is needed when using access control in RXML in order for the user to
+ be prompted to login.
 </desc>
 
 <attr name=realm value=string>
@@ -1546,8 +1546,8 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  Returns a message if a login failed or cancelled.
 </attr>",
 
-"autoformat":#"<desc cont>
- Replaces newlines with <tag>br</tag>:s.
+"autoformat":#"<desc cont><short>
+ Replaces newlines with <tag>br</tag>:s.</short>
 </desc>
 
 <attr name=nobr>
@@ -1562,12 +1562,12 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  This CSS definition will be applied on the p elements.
 </attr>",
 
-"cache":#"<desc cont>
+"cache":#"<desc cont><short>
  This simple tag RXML parse its contents and cache them using the
- normal Roxen memory cache. They key used to store the cached contents
- is the MD5 hash sum of the contents, the accessed file name, the
- query string, the server URL and the authentication information, if
- available. This should create an unique key.
+ normal Roxen memory cache.</short> They key used to store the cached
+ contents is the MD5 hash sum of the contents, the accessed file name,
+ the query string, the server URL and the authentication information,
+ if available. This should create an unique key.
 </desc>
 
 <attr name=key value=string>
@@ -1581,14 +1581,16 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  too long.
 </attr>",
 
-"catch":#"<desc cont>
+"catch":#"<desc cont><short>
  Evaluates the RXML code, and, if nothing goes wrong, returns the
- parsed contents. If something does go wrong, the error message is
- returned instead. See also <tag><ref type=tag>throw</ref></tag>.
+ parsed contents.</short> If something does go wrong, the error
+ message is returned instead. See also <tag><ref
+ type=tag>throw</ref></tag>.
 </desc>",
 
-"configimage":#"<desc tag>
- Returns one of the configuration images. The src attribute is required.
+"configimage":#"<desc tag><short>
+ Returns one of the internal Roxen configuration images.</short> The
+ src attribute is required.
 </desc>
 
 <attr name=src value=string>
@@ -1608,23 +1610,23 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
 </attr>
  All other attributes will be inherited by the generated img tag.",
 
-"configurl":#"<desc tag>
- Returns a URL to the configuration interface.
+"configurl":#"<desc tag><short>
+ Returns a URL to the configuration interface.</short>
 </desc>",
 
 "cset":#"<desc cont></desc>",
 
-"crypt":#"<desc cont>
- Encrypts the contents as a Unix style password. Useful when combined
- with services that use such passwords. <p>Unix style passwords are
- one-way encrypted, to prevent the actual clear-text password from
- being stored anywhere. When a login attempt is made, the password
- supplied is also encrypted and then compared to the stored encrypted
- password.</p>
+"crypt":#"<desc cont><short>
+ Encrypts the contents as a Unix style password.</short> Useful when
+ combined with services that use such passwords. <p>Unix style
+ passwords are one-way encrypted, to prevent the actual clear-text
+ password from being stored anywhere. When a login attempt is made,
+ the password supplied is also encrypted and then compared to the
+ stored encrypted password.</p>
 </desc>",
 
-"date":#"<desc tag>
- Inserts the time and date. Does not require attributes.
+"date":#"<desc tag><short>
+ Inserts the time and date.</short> Does not require attributes.
 </desc>
 
 <attr name=unix-time value=number>
@@ -1702,8 +1704,8 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  The number of decimals in the stardate.
 </attr>",
 
-"debug":#"<desc tag>
- Helps debugging RXML-pages as well as modules. When debugging mode is
+"debug":#"<desc tag><short>
+ Helps debugging RXML-pages as well as modules.</short> When debugging mode is
  turned on, all error messages will be displayed in the HTML code.
 </desc>
 
@@ -1723,17 +1725,17 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  Shows a part of the id object. E.g. showid=\"id->request_headers\".
 </attr>",
 
-"dec":#"<desc tag>
- Subtracts 1 from a variable. Attribute variable is required.
+"dec":#"<desc tag><short>
+ Subtracts 1 from a variable.</short> Attribute variable is required.
 </desc>
 
 <attr name=variable value=string>
  The variable to be decremented.
 </attr>",
 
-"default":#"<desc cont>
-
- Makes it easier to give default values to \"<tag>select</tag>\" or
+"default":#"<desc cont><short hide>
+ Used to set default values for form elements.</short> Makes it easier
+ to give default values to \"<tag>select</tag>\" or
  \"<tag>checkbox</tag>\" form elements.
 
  <p>The <tag>default</tag> container tag is placed around the form element it
@@ -1758,7 +1760,8 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
 
 </attr>",
 
-"doc":#"<desc cont>
+"doc":#"<desc cont><short hide>
+ Eases code documentation by reformatting it.</short>
  Eases documentation by replacing \"{\", \"}\" and \"&\" with \"<\", \">\" and
  \"&\". No attributes required.
 </desc>
@@ -1776,8 +1779,8 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  This CSS definition will be applied on the pre element.
 </attr>",
 
-"expire-time":#"<desc tag>
- Sets cache expire time for this document. Default bla bla.
+"expire-time":#"<desc tag><short>
+ Sets cache expire time for the document.</short>
 </desc>
 
 <attr name=now>
@@ -1818,8 +1821,8 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  It is not possible at the time to set the date beyond year 2038,
  since a unix time_t is used.",
 
-"for":#"<desc cont>
- Makes it possible to create loops in RXML.
+"for":#"<desc cont><short>
+ Makes it possible to create loops in RXML.</short>
 </desc>
 
 <attr name=from value=number>
@@ -1854,20 +1857,18 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
 
 </attr>",
 
-"formoutput":#"<desc cont></desc>",
-
-"fsize":#"<desc tag>
-
+"fsize":#"<desc tag><short>
+ Prints the size of the specified file.</short>
 </desc>
 
 <attr name=file value=string>
-
+ Show size for this file.
 </attr>",
 
-"gauge":#"<desc cont>
+"gauge":#"<desc cont><short>
  Measures how much CPU time it takes to run its contents through the
- RXML parser. Returns the number of seconds it took to parse the
- contents.
+ RXML parser.</short> Returns the number of seconds it took to parse
+ the contents.
 </desc>
 
 <attr name=define value=string>
@@ -1888,8 +1889,8 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  a database or such.
 </attr>",
 
-"header":#"<desc tag>
- Adds a header to this document.
+"header":#"<desc tag><short>
+ Adds a header to the document.</short>
 </desc>
 
 <attr name=name value=string>
@@ -1901,8 +1902,9 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
 </attr>
  See the Appendix for a list of HTTP headers.",
 
-"imgs":#"<desc tag>
- Generates a image tag with proper dimensions. Attribute src is required.
+"imgs":#"<desc tag><short>
+ Generates a image tag with proper dimensions.</short> Attribute src
+ is required.
 </desc>
 
 <attr name=src value=string>
@@ -1914,16 +1916,16 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
 </attr>
  All other attributes will be inherited by the generated img tag.",
 
-"inc":#"<desc tag>
- Adds 1 to a variable. Attribute variable is required.
+"inc":#"<desc tag><short>
+ Adds 1 to a variable.</short> Attribute variable is required.
 </desc>
 
 <attr name=variable value=string>
  The variable to be incremented.
 </attr>",
 
-"insert":#"<desc tag>
- Inserts a file, variable or other object into a webpage.
+"insert":#"<desc tag><short>
+ Inserts a file, variable or other object into a webpage.</short>
  One attribute is required.
 </desc>
 
@@ -1948,7 +1950,7 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  href and file where it's \"none\".
 </attr>",
 
-"maketag":#"<desc cont>
+"maketag":#"<desc cont><short hide>Makes it able to create tags.</short>
  This tag creates tags. The contents of the container will be put into
  the contents of the produced container. Requires the name attribute.
 </desc>
@@ -1980,8 +1982,9 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  &lt;replace from=A to=U&gt;MAD&lt;/replace&gt;
  &lt;/pre&gt;</p>",
 
-"modified":#"<desc tag>
- Prints when or by whom a page was last modified, by default the current page.
+"modified":#"<desc tag><short hide>
+ Prints when or by whom a page was last modified.</short> Prints when
+ or by whom a page was last modified, by default the current page.
 </desc>
 
 <attr name=by>
@@ -2004,8 +2007,8 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  than Roxen Webserver's virtual filesystem.
 </attr>",
 
-"random":#"<desc cont>
- Randomly chooses a message from its contents.
+"random":#"<desc cont><short>
+ Randomly chooses a message from its contents.</short>
 </desc>
 
 <attr name=separator value=string>
@@ -2032,8 +2035,8 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
 
 </attr>",
 
-"redirect":#"<desc tag>
- Redirects the user to another page. Requires the to attribute.
+"redirect":#"<desc tag><short>
+ Redirects the user to another page.</short> Requires the to attribute.
 </desc>
 
 <attr name=to value=string>
@@ -2062,8 +2065,8 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  to=... URL is absolute, i.e. begins with a \"/\", otherwise these
  state toggles have no effect.",
 
-"remove-cookie":#"<desc tag>
- Removes a cookie.
+"remove-cookie":#"<desc tag><short>
+ Removes a cookie.</short>
 </desc>
 
 <attr name=name>
@@ -2079,18 +2082,18 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
 Note that removing a cookie won't take effect until the next page
 load.",
 
-"repeat":#"<desc cont>
- Repeats the contents until a <tag>leave</tag> tag has been found.
- Requires no attributes.
+"repeat":#"<desc cont><short>
+ Repeats the contents until a <tag>leave</tag> tag has been
+ found.</short> Requires no attributes.
 </desc>
 
 <attr name=maxloops>
  The maximum number of loops. Default is 10000.
 </attr>",
 
-"replace":#"<desc cont>
- Replaces strings in the contents with other strings. Requires the
- from attribute.
+"replace":#"<desc cont><short>
+ Replaces strings in the contents with other strings.</short> Requires
+ the from attribute.
 </desc>
 
 <attr name=from value=string>
@@ -2112,8 +2115,8 @@ load.",
  and to are lists. Default is word.
 </attr>",
 
-"return":#"<desc tag>
- Changes the HTTP return code for this page.
+"return":#"<desc tag><short>
+ Changes the HTTP return code for this page.</short>
 
  See the Appendix for a list of HTTP return codes.
 </desc>
@@ -2122,8 +2125,8 @@ load.",
  The return code to set.
 </attr>",
 
-"roxen":#"<desc tag>
- Returns a nice Roxen logo.
+"roxen":#"<desc tag><short>
+ Returns a nice Roxen logo.</short>
 </desc>
 
 <attr name=size value=small,medium,large>
@@ -2147,8 +2150,8 @@ load.",
 </attr>
  All other attributes will be inherited by the generated img tag.",
 
-"scope":#"<desc cont>
- Creates a different variable scope. Variable changes inside the scope
+"scope":#"<desc cont><short>
+ Creates a different variable scope.</short> Variable changes inside the scope
  container will not affect variables in the rest of the page.
  Variables set outside the scope is not available inside the scope
  unless the extend attribute is used. No attributes are required.
@@ -2158,8 +2161,8 @@ load.",
  If set, all variables will be copied into the scope.
 </attr>",
 
-"set":#"<desc tag>
-Sets a variable. The variable attribute is required.
+"set":#"<desc tag><short>
+Sets a variable.</short> The variable attribute is required.
 </desc>
 
 <attr name=variable value=string>
@@ -2191,11 +2194,11 @@ Sets a variable. The variable attribute is required.
  if the operation failed. See also: <tag><ref type=tag>append</ref></tag>
  and <tag><ref type=tag>debug</ref></tag>",
 
-"set-cookie":#"<desc tag>
- Sets a cookie that will be stored by the user's browser. This is a
- simple and effective way of storing data that is local to the user.
- The cookie will be persistent, the next time the user visits the
- site, she will bring the cookie with her.
+"set-cookie":#"<desc tag><short>
+ Sets a cookie that will be stored by the user's browser.</short> This
+ is a simple and effective way of storing data that is local to the
+ user. The cookie will be persistent, the next time the user visits
+ the site, she will bring the cookie with her.
 </desc>
 
 <attr name=name value=string>
@@ -2249,8 +2252,9 @@ Adds a cookie named \"name\" with the value \"value\".
  Note that the change of a cookie will not take effect until the
  next page load.",
 
-"set-max-cache":#"<desc tag>
- Set the maximum time this document can be cached in any ram caches.
+"set-max-cache":#"<desc tag><short>
+ Sets the maximum time this document can be cached in any ram
+ caches.</short>
 
  <p>Default is to get this time from the other tags in the document
  (as an example, <tag>if supports=...</tag> sets the time to 0 seconds since
@@ -2264,8 +2268,8 @@ Adds a cookie named \"name\" with the value \"value\".
  Add this number of seconds to the time this page was last loaded.
 </attr>",
 
-"smallcaps":#"<desc cont>
- This tag prints the contents in smallcaps. If the size attribute is
+"smallcaps":#"<desc cont><short>
+ Prints the contents in smallcaps.</short> If the size attribute is
  given, font tags will be used, otherwise big and small tags will be
  used.
 </desc>
@@ -2295,8 +2299,8 @@ Adds a cookie named \"name\" with the value \"value\".
  is size-1.
 </attr>",
 
-"sort":#"<desc cont>
- Sorts the contents. No attributes required.
+"sort":#"<desc cont><short>
+ Sorts the contents.</short> No attributes required.
 </desc>
 
 <attr name=separator value=string>
@@ -2307,31 +2311,33 @@ Adds a cookie named \"name\" with the value \"value\".
  Reversed order sort.
 </attr>",
 
-"throw":#"<desc cont>
+"throw":#"<desc cont><short hide>
+ Throws a text to be catched by <tag>catch</tag>.</short>
  Throws an exception, with the enclosed text as the error message.
  This tag has a close relation to <tag>catch</tag>. The RXML parsing
  will stop at the <tag>throw</tag> tag.
 </desc>",
 
-"trimlines":#"<desc cont>
- This tag removes all empty lines from the contents.
+"trimlines":#"<desc cont><short>
+ Removes all empty lines from the contents.</short>
 </desc>",
 
 "unset":#"
-<desc tag>
- Unsets a variable, i.e. removes it. The variable attribute is required.
+<desc tag><short>
+ Unsets a variable, i.e. removes it.</short> The variable attribute is
+ required.
 </desc>
 
 <attr name=variable value=string>
  The name of the variable.
 </attr>",
 
-"user":#"<desc tag>
- Prints information about the specified user. By default, the full
- name of the user and her e-mail address will be printed, with a
+"user":#"<desc tag><short>
+ Prints information about the specified user.</short> By default, the
+ full name of the user and her e-mail address will be printed, with a
  mailto link and link to the home page of that user.
 
- The <tag>user</tag> tag requires an authentication module to work.
+ <p>The <tag>user</tag> tag requires an authentication module to work.</p>
 </desc>
 
 <attr name=email>
