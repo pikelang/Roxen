@@ -326,7 +326,11 @@ class ModuleWrapper
 	rr->stat = id->misc->defines[" _stat"];
 	rr->error = id->misc->defines[" _error"] || rr->error;
 	rr->rettext = id->misc->defines[" _rettext"];
-	rr->extra_heads = id->misc->defines[" _extra_heads"];	
+	if(id->misc->defines[" _extra_heads"])
+	  if(rr->extra_heads)
+	    rr->extra_heads |= id->misc->defines[" _extra_heads"];	
+	  else
+	    rr->extra_heads = id->misc->defines[" _extra_heads"];	
 	m_delete(rr, "len");
       }
     } else if(r->is_instance_of(response3_class) &&
