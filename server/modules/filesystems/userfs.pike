@@ -20,7 +20,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.52 2000/03/21 15:28:10 jhs Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.53 2000/03/21 17:27:22 nilsson Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "User Filesystem";
 constant module_doc  = "User filesystem. Uses the userdatabase (and thus the system passwd "
@@ -194,11 +194,13 @@ int|mapping|Stdio.File find_file(string f, RequestID id)
 
     if(!us || BAD_PASSWORD(us) || banish_list[u])
     { // No user, or access denied.
-      USERFS_WERR(sprintf("Bad password: %O? Banished? %O", BAD_PASSWORD(us), !!banish_list[u]));
+      USERFS_WERR(sprintf("Bad password: %O? Banished? %O",
+			  (us?BAD_PASSWORD(us):1),
+			  banish_list[u]));
       if(!banish_reported[u])
       {
 	banish_reported[u] = 1;
-	report_debug(sprintf("User %s banished (%O)...\n", u, us));
+	USERFS_WERR(sprintf("User %s banished (%O)...\n", u, us));
       }
       return 0;
     }
