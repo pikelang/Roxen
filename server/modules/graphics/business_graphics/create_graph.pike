@@ -358,6 +358,7 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
   if (diagram_data["labelsize"]>diagram_data["ysize"]/5)
     diagram_data["labelsize"]=diagram_data["ysize"]/5;
 
+  
   return diagram_data;
 
 };
@@ -1276,6 +1277,8 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   //Placera ut texten på X-axeln
   int s=sizeof(diagram_data["xnamesimg"]);
   for(int i=0; i<s; i++)
+    if ((diagram_data["values_for_xnames"][i]<diagram_data["xmaxvalue"])&&
+	(diagram_data["values_for_xnames"][i]>diagram_data["xminvalue"]))
     {
       graph->setcolor(@diagram_data["textcolor"]);
       graph->paste_alpha_color(diagram_data["xnamesimg"][i], 
@@ -1308,6 +1311,8 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   //Placera ut texten på Y-axeln
   s=sizeof(diagram_data["ynamesimg"]);
   for(int i=0; i<s; i++)
+    if ((diagram_data["values_for_ynames"][i]<diagram_data["ymaxvalue"])&&
+	(diagram_data["values_for_ynames"][i]>diagram_data["yminvalue"]))
     {
       //write("\nYmaXnames:"+diagram_data["ymaxynames"]+"\n");
       graph->setcolor(@diagram_data["textcolor"]);
