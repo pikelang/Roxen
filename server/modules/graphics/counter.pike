@@ -1,4 +1,4 @@
-// $Id: counter.pike,v 1.19 1998/08/07 09:06:17 neotron Exp $
+// $Id: counter.pike,v 1.20 1998/08/07 09:20:38 neotron Exp $
 // 
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 // Modifications  1 OCT 1997 by Bill Welliver <hww3@riverweb.com>
@@ -115,7 +115,7 @@
 // Initial revision
 //
 
-string cvs_version = "$Id: counter.pike,v 1.19 1998/08/07 09:06:17 neotron Exp $";
+string cvs_version = "$Id: counter.pike,v 1.20 1998/08/07 09:20:38 neotron Exp $";
 
 string copyright = ("<BR>Copyright 1997 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</A> and "
@@ -163,8 +163,10 @@ array register_module()
     "Graphical Counter", 
     "This is the Graphic &lt;Counter&gt; Module.<br><p>"
 	"\n<p><pre>"
-	"&lt; counter\n"
+	"&lt;counter\n"
     "         border=...                 | like &lt;IMG BORDER=...\n"  
+    "         bordercolor=...            | Changes the color of the border, if\n"
+    "                                    | the border is enabled.\n"  
     "         align=[left|center|right]  | like &lt;IMG ALIGN=...\n"
     "         width=...                  | like &lt;IMG WIDTH=...\n"
     "         height=...                 | like &lt;IMG HEIGHT=...\n"
@@ -499,7 +501,7 @@ string tag_counter( string tagname, mapping args, object id )
   if( args->version )
     return cvs_version;
   if( args->revision )
-    return "$Revision: 1.19 $" - "$" - " " - "Revision:";
+    return "$Revision: 1.20 $" - "$" - " " - "Revision:";
 
   //
   // bypass compatible accessed attributes
