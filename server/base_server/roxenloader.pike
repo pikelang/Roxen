@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.185 2000/08/01 00:25:22 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.186 2000/08/03 19:22:03 jhs Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -278,7 +278,9 @@ class RequestID
   mapping (string:string) request_headers;
   //! Indices and values map to the names and values of all HTTP headers sent
   //! with the request; all data has been transport decoded, and the header
-  //! names are canonized (lowercased) on top of that.
+  //! names are canonized (lowercased) on top of that. Here is where you look
+  //! for the "user-agent" header, the "referer" [sic!] header and similar
+  //! interesting data provided by the client.
   mapping (string:mixed) throttle;
   // ?
   mapping (string:mixed) client_var;
@@ -308,9 +310,6 @@ class RequestID
   //! reload of the page.
   array(string) client;
   array(string) referer;
-  //! The referer header(s) [sic!] sent with the request (the name misspelled
-  //! by unholy HTTP tradition, in roxen too in the best interest of backwards
-  //! compatibility).
 
   Stdio.File my_fd;
   // Don't touch; use the returned file descriptor from connection() instead.
@@ -327,7 +326,10 @@ class RequestID
   //! When the the requested resource is an actual file in the real
   //! filesystem, this is its path.
   string virtfile;
-  //! The path to the currently requested resource in the virtual filesystem.
+  //! The mountpoint of the location module that provided the requested file.
+  //! Note that this is not accessable from location modules; you need to keep
+  //! track of your mountpoint on your own using <ref>defvar()</ref> and
+  //! <ref>query()</ref>.
   string rest_query;
   //! The scraps and leftovers of the requested URL's query part after
   //! removing all variables (that is, all key=value pairs) from it.
