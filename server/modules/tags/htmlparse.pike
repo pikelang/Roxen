@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.63 1998/01/21 14:04:36 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.64 1998/01/21 21:34:40 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -460,7 +460,8 @@ void insert_in_map_list(mapping to_insert, string map_in_object)
   foreach(indices(to_insert), string s)
   {
     if(!in2[s]) in2[s] = ([]);
-    for(int i=0; i<sizeof(in); i++)
+    int i;
+    for(i=0; i<sizeof(in); i++)
       if(!in[i][s])
       {
 	in[i][s] = do_call;
