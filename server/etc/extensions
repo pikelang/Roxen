@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.33 1999/01/13 03:30:17 neotron Exp $
+# $Id: extensions,v 1.34 1999/04/14 16:11:01 neotron Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
@@ -192,6 +192,18 @@ wpc     application/wpc
 xcf	application/x-gimp
 xls	application/vnd.ms-excel
 zip	application/zip
+
+# WML - Wireless Markup Language
+# http://www.wapforum.org/docs/technical/wml-30-apr-98.pdf
+# WML source
+wml	text/x-wap.wml
+# Compiled WML
+wmlc	application/x-wap.wmlc             wmlc
+# WMLScript source
+wmls	text/x-wap.wmlscript
+# Compiled WMLScript
+wmlsc	application/x-wap.wmlscriptc
+
 
 # This one hasn't been registred with IANA yet, but is added anyway.
 # LivePicture PhotoVista RealSpace
