@@ -1122,7 +1122,7 @@ Click "Next" to start the installation.</Text>
       <Custom Action="CustomTextA_SetProperty_EDIT4" After="CustomTextA_SetProperty_EDIT3" />
       <Custom Action="DIRCA_TARGETDIR" After="CustomTextA_SetProperty_EDIT4"><![CDATA[TARGETDIR=""]]></Custom>
       <RemoveExistingProducts After="InstallInitialize" />
-      <Custom Action="CreateConfigInterface" Sequence="4100">REMOVE=""</Custom>
+      <Custom Action="CreateConfigInterface" Sequence="5100">REMOVE=""</Custom>
       <Custom Action="CreatePikeLocation" After="CreateConfigInterface">REMOVE=""</Custom>
     </InstallExecuteSequence>
     <Binary Id="DefBannerBitmap" src="Banner.bmp" />
