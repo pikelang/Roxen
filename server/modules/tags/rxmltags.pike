@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.306 2001/09/21 09:25:11 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.307 2001/09/21 12:33:01 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4857,12 +4857,12 @@ constant tagdoc=([
  separated list.</p>
 </attr>
 
-<attr name=drop value=string>
+<attr name='drop' value='string'>
  <p>The config state, or config states that should be dropped, in a comma
  separated list.</p>
 </attr>
 
-<attr name=class value=string>
+<attr name='class' value='string'>
  <p>This cascading style sheet (CSS) class definition will apply to
  the a-element.</p>
 
@@ -4876,11 +4876,11 @@ constant tagdoc=([
  required.</short>
 </p></desc>
 
-<attr name=variable value=string required='required'>
+<attr name='variable' value='string' required='required'>
  <p>The name of the variable.</p>
 </attr>
 
-<attr name=value value=string>
+<attr name='value' value='string'>
  <p>The value the variable should have appended.</p>
 
  <ex>
@@ -4890,7 +4890,7 @@ constant tagdoc=([
  </ex>
 </attr>
 
-<attr name=from value=string>
+<attr name='from' value='string'>
  <p>The name of another variable that the value should be copied
  from.</p>
 </attr>",
@@ -4911,22 +4911,22 @@ constant tagdoc=([
 
 </desc>
 
-<attr name=href value=uri>
+<attr name='href' value='uri'>
  <p>Indicates which page should be linked to, if any other than the
  present one.</p>
 </attr>
 
-<attr name=add value=string>
+<attr name='add' value='string'>
  <p>The prestate or prestates that should be added, in a comma
  separated list.</p>
 </attr>
 
-<attr name=drop value=string>
+<attr name='drop' value='string'>
  <p>The prestate or prestates that should be dropped, in a comma separated
  list.</p>
 </attr>
 
-<attr name=class value=string>
+<attr name='class' value='string'>
  <p>This cascading style sheet (CSS) class definition will apply to
  the a-element.</p>
 </attr>",
@@ -4940,11 +4940,11 @@ constant tagdoc=([
  be prompted to login.
 </p></desc>
 
-<attr name=realm value=string default='document access'>
+<attr name='realm' value='string' default='document access'>
  <p>The realm you are logging on to, i.e \"Demolabs Intranet\".</p>
 </attr>
 
-<attr name=message value=string>
+<attr name='message' value='string'>
  <p>Returns a message if a login failed or cancelled.</p>
 </attr>",
 
@@ -4960,7 +4960,7 @@ using the pre tag.
 </autoformat></ex>
 </desc>
 
-<attr name=p>
+<attr name='p'>
  <p>Replace empty lines with <tag>p</tag>:s.</p>
 <ex><autoformat p=''>
 It is almost like
@@ -4969,11 +4969,11 @@ using the pre tag.
 </autoformat></ex>
 </attr>
 
-<attr name=nobr>
+<attr name='nobr'>
  <p>Do not replace newlines with <tag>br /</tag>:s.</p>
 </attr>
 
-<attr name=nonbsp><p>
+<attr name='nonbsp'><p>
  Do not turn consecutive spaces into interleaved
  breakable/nonbreakable spaces. When this attribute is not given, the
  tag will behave more or less like HTML:s <tag>pre</tag> tag, making
@@ -4981,7 +4981,7 @@ using the pre tag.
  really long lines extending the browser window width.</p>
 </attr>
 
-<attr name=class value=string>
+<attr name='class' value='string'>
  <p>This cascading style sheet (CSS) definition will be applied on the
  p elements.</p>
 </attr>",
@@ -5039,7 +5039,7 @@ using the pre tag.
  cache entries.</p>
 </desc>
 
-<attr name=variable value=string>
+<attr name='variable' value='string'>
  <p>This is a comma-separated list of variables and scopes that the
  cache should depend on. The value can be an empty string, which is
  useful to only disable the default dependencies in compatibility
@@ -5050,7 +5050,7 @@ using the pre tag.
  of possible values, or else the cache should have a timeout.</p>
 </attr>
 
-<attr name=key value=string>
+<attr name='key' value='string'>
  <p>Use the value of this attribute directly in the key. This
  attribute mainly exist for compatibility; it's better to use the
  \"variable\" attribute instead.</p>
@@ -5061,33 +5061,33 @@ using the pre tag.
  propagating <tag>cache</tag> isn't reached at all then.</p>
 </attr>
 
-<attr name=profile value=string>
+<attr name='profile' value='string'>
  <p>A comma-separated list to choose one or more profiles from a set
  of preconfigured cache profiles. Which cache profiles are available
  depends on the RXML parser module in use; the standard RXML parser
  currently has none.</p>
 </attr>
 
-<attr name=shared value=string>
+<attr name='shared' value='string'>
  <p>Share the cache between different instances of the
  <tag>cache</tag> with identical content, wherever they may appear on
  this page or some other in the same server. See the tag description
  for details about shared caches.</p>
 </attr>
 
-<attr name=nocache>
+<attr name='nocache'>
  <p>Do not cache the content in any way. Typically useful to disable
  caching of a section inside another cache tag.</p>
 </attr>
 
-<attr name=propagate>
+<attr name='propagate'>
  <p>Propagate the cache settings to the surrounding <tag>cache</tag>
  tag, if there is any. Useful to locally add depends to a cache
  without introducing a new cache level. If there is no surrounding
  <tag>cache</tag> tag, this argument is ignored.</p>
 </attr>
 
-<attr name=nohash>
+<attr name='nohash'>
  <p>If the cache is shared, then the content won't be made part of the
  cache key. Thus the cache entries can be mixed up with other
  <tag>cache</tag> tags.</p>
@@ -5106,34 +5106,34 @@ using the pre tag.
  shift+reload is pressed in Netscape Navigator.</p>
 </attr>
 
-<attr name=years value=number>
+<attr name='years' value='number'>
  <p>Add this number of years to the time this entry is valid.</p>
 </attr>
-<attr name=months value=number>
+<attr name='months' value='number'>
  <p>Add this number of months to the time this entry is valid.</p>
 </attr>
-<attr name=weeks value=number>
+<attr name='weeks' value='number'>
  <p>Add this number of weeks to the time this entry is valid.</p>
 </attr>
-<attr name=days value=number>
+<attr name='days' value='number'>
  <p>Add this number of days to the time this entry is valid.</p>
 </attr>
-<attr name=hours value=number>
+<attr name='hours' value='number'>
  <p>Add this number of hours to the time this entry is valid.</p>
 </attr>
-<attr name=beats value=number>
+<attr name='beats' value='number'>
  <p>Add this number of beats to the time this entry is valid.</p>
 </attr>
-<attr name=minutes value=number>
+<attr name='minutes' value='number'>
  <p>Add this number of minutes to the time this entry is valid.</p>
 </attr>
-<attr name=seconds value=number>
+<attr name='seconds' value='number'>
  <p>Add this number of seconds to the time this entry is valid.</p>
 </attr>",
 
 // Intentionally left undocumented:
 //
-// <attr name=disable-key-hash>
+// <attr name='disable-key-hash'>
 //  Do not hash the key used in the cache entry. Normally the
 //  produced key is hashed to reduce memory usage and improve speed,
 //  but since that makes it theoretically possible that two cache
@@ -5191,19 +5191,19 @@ using the pre tag.
  src attribute is required.
 </p></desc>
 
-<attr name=src value=string>
+<attr name='src' value='string'>
  <p>The name of the picture to show.</p>
 </attr>
 
-<attr name=border value=number default=0>
+<attr name='border' value='number' default='0'>
  <p>The image border when used as a link.</p>
 </attr>
 
-<attr name=alt value=string default='The src string'>
+<attr name='alt' value='string' default='The src string'>
  <p>The picture description.</p>
 </attr>
 
-<attr name=class value=string>
+<attr name='class' value='string'>
  <p>This cascading style sheet (CSS) class definition will be applied to
  the image.</p>
 
@@ -5223,11 +5223,11 @@ using the pre tag.
  using the &lt;set&gt;&lt;/set&gt; construction.</p>
 </desc>
 
-<attr name=variable value=name>
+<attr name='variable' value='name'>
  <p>The variable to be set.</p>
 </attr>
 
-<attr name=quote value=html|none>
+<attr name='quote' value='html|none'>
  <p>How the content should be quoted before assigned to the variable.
  Default is html.</p>
 </attr>",
@@ -5244,7 +5244,7 @@ using the pre tag.
  the stored encrypted password.</p>
 </desc>
 
-<attr name=compare value=string>
+<attr name='compare' value='string'>
  <p>Compares the encrypted string with the contents of the tag. The tag
  will behave very much like an <xref href='../if/if.tag' /> tag.</p>
 <ex><crypt compare=\"LAF2kkMr6BjXw\">Roxen</crypt>
@@ -5262,7 +5262,7 @@ using the pre tag.
 <ex><date/></ex>
 </desc>
 
-<attr name=unix-time value=number of seconds>
+<attr name='unix-time' value='number of seconds'>
  <p>Display this time instead of the current. This attribute uses the
  specified Unix 'time_t' time as the starting time (which is
  <i>01:00, January the 1st, 1970</i>), instead of the current time.
@@ -5272,70 +5272,70 @@ using the pre tag.
 <ex><date unix-time='120'/></ex>
 </attr>
 
-<attr name=timezone value=local|GMT default=local>
+<attr name='timezone' value='local|GMT' default='local'>
  <p>Display the time from another timezone.</p>
 </attr>
 
-<attr name=years value=number>
+<attr name='years' value='number'>
  <p>Add this number of years to the result.</p>
  <ex><date date='' years='2'/></ex>
 </attr>
 
-<attr name=months value=number>
+<attr name='months' value='number'>
  <p>Add this number of months to the result.</p>
  <ex><date date='' months='2'/></ex>
 </attr>
 
-<attr name=weeks value=number>
+<attr name='weeks' value='number'>
  <p>Add this number of weeks to the result.</p>
  <ex><date date='' weeks='2'/></ex>
 </attr>
 
-<attr name=days value=number>
+<attr name='days' value='number'>
  <p>Add this number of days to the result.</p>
 </attr>
 
-<attr name=hours value=number>
+<attr name='hours' value='number'>
  <p>Add this number of hours to the result.</p>
  <ex><date time='' hours='2' type='iso'/></ex>
 </attr>
 
-<attr name=beats value=number>
+<attr name='beats' value='number'>
  <p>Add this number of beats to the result.</p>
  <ex><date time='' beats='10' type='iso'/></ex>
 </attr>
 
-<attr name=minutes value=number>
+<attr name='minutes' value='number'>
  <p>Add this number of minutes to the result.</p>
 </attr>
 
-<attr name=seconds value=number>
+<attr name='seconds' value='number'>
  <p>Add this number of seconds to the result.</p>
 </attr>
 
-<attr name=adjust value=number>
+<attr name='adjust' value='number'>
  <p>Add this number of seconds to the result.</p>
 </attr>
 
-<attr name=brief>
+<attr name='brief'>
  <p>Show in brief format.</p>
 <ex><date brief=''/></ex>
 </attr>
 
-<attr name=time>
+<attr name='time'>
  <p>Show only time.</p>
 <ex><date time=''/></ex>
 </attr>
 
-<attr name=date>
+<attr name='date'>
  <p>Show only date.</p>
 <ex><date date=''/></ex>
 </attr>
 
-<attr name=type value=string|ordered|iso|discordian|stardate|number|unix>
+<attr name='type' value='string|ordered|iso|discordian|stardate|number|unix'>
  <p>Defines in which format the date should be displayed in. Discordian
  and stardate only make a difference when not using part. Note that
- type=stardate has a separate companion attribute, prec, which sets
+ type='stardate' has a separate companion attribute, prec, which sets
  the precision.</p>
 
 <xtable>
@@ -5349,7 +5349,7 @@ using the pre tag.
 </xtable>
 </attr>
 
-<attr name=part value=year|month|day|wday|date|mday|hour|minute|second|yday|beat|week|seconds>
+<attr name='part' value='year|month|day|wday|date|mday|hour|minute|second|yday|beat|week|seconds'>
  <p>Defines which part of the date should be displayed. Day and wday is
  the same. Date and mday is the same. Yday is the day number of the
  year. Seconds is unix time type. Only the types string, number and
@@ -5372,7 +5372,7 @@ using the pre tag.
 </xtable>
 </attr>
 
-<attr name=strftime value=string>
+<attr name='strftime' value='string'>
  <p>If this attribute is given to date, it will format the result
  according to the argument string.</p>
 
@@ -5418,7 +5418,7 @@ using the pre tag.
 <ex><date strftime=\"%Y%m%d\"/></ex>
 </attr>
 
-<attr name=lang value=langcode>
+<attr name='lang' value='langcode'>
  <p>Defines in what language a string will be presented in. Used together
  with <att>type=string</att> and the <att>part</att> attribute to get
  written dates in the specified language.</p>
@@ -5426,12 +5426,12 @@ using the pre tag.
 <ex><date part='day' type='string' lang='de'></ex>
 </attr>
 
-<attr name=case value=upper|lower|capitalize>
+<attr name='case' value='upper|lower|capitalize'>
  <p>Changes the case of the output to upper, lower or capitalize.</p>
 <ex><date date='' lang='&client.language;' case='upper'/></ex>
 </attr>
 
-<attr name=prec value=number>
+<attr name='prec' value='number'>
  <p>The number of decimals in the stardate.</p>
 </attr>",
 
@@ -5442,23 +5442,23 @@ using the pre tag.
  turned on, all error messages will be displayed in the HTML code.
 </p></desc>
 
-<attr name=on>
+<attr name='on'>
  <p>Turns debug mode on.</p>
 </attr>
 
-<attr name=off>
+<attr name='off'>
  <p>Turns debug mode off.</p>
 </attr>
 
-<attr name=toggle>
+<attr name='toggle'>
  <p>Toggles debug mode.</p>
 </attr>
 
-<attr name=showid value=string>
+<attr name='showid' value='string'>
  <p>Shows a part of the id object. E.g. showid=\"id->request_headers\".</p>
 </attr>
 
-<attr name=werror value=string>
+<attr name='werror' value='string'>
   <p>When you have access to the server debug log and want your RXML
      page to write some kind of diagnostics message or similar, the
      werror attribute is helpful.</p>
@@ -5476,11 +5476,11 @@ using the pre tag.
  Subtracts 1 from a variable.</short>
 </p></desc>
 
-<attr name=variable value=string required='required'>
+<attr name='variable' value='string' required='required'>
  <p>The variable to be decremented.</p>
 </attr>
 
-<attr name=value value=number default=1>
+<attr name='value' value='number' default='1'>
  <p>The value to be subtracted.</p>
 </attr>",
 
@@ -5496,17 +5496,17 @@ using the pre tag.
  generated default values, e.g. by database tags.</p>
 </desc>
 
-<attr name=value value=string>
+<attr name='value' value='string'>
  <p>The value or values to set. If several values are given, they are separated with the
  separator string.</p>
 </attr>
 
-<attr name=separator value=string default=','>
+<attr name='separator' value='string' default=','>
  <p>If several values are to be selected, this is the string that
  separates them.</p>
 </attr>
 
-<attr name=name value=string>
+<attr name='name' value='string'>
  <p>If used, the default tag will only affect form element with this name.</p>
 </attr>
 
@@ -5573,7 +5573,7 @@ using the pre tag.
  before 2038 due to operating software limitations.
 </p></desc>
 
-<attr name=now>
+<attr name='now'>
  <p>Notify the client that the document expires now. The headers
  \"Pragma: no-cache\" and \"Cache-Control: no-cache\"
  will also be sent, besides the \"Expires\" header.</p>
@@ -5583,35 +5583,35 @@ using the pre tag.
  <p>The exact time of expiration, expressed as a posix time integer.</p>
 </attr>
 
-<attr name=years value=number>
+<attr name='years' value='number'>
  <p>Add this number of years to the result.</p>
 </attr>
 
-<attr name=months value=number>
+<attr name='months' value='number'>
   <p>Add this number of months to the result.</p>
 </attr>
 
-<attr name=weeks value=number>
+<attr name='weeks' value='number'>
   <p>Add this number of weeks to the result.</p>
 </attr>
 
-<attr name=days value=number>
+<attr name='days' value='number'>
   <p>Add this number of days to the result.</p>
 </attr>
 
-<attr name=hours value=number>
+<attr name='hours' value='number'>
   <p>Add this number of hours to the result.</p>
 </attr>
 
-<attr name=beats value=number>
+<attr name='beats' value='number'>
   <p>Add this number of beats to the result.</p>
 </attr>
 
-<attr name=minutes value=number>
+<attr name='minutes' value='number'>
   <p>Add this number of minutes to the result.</p>
 </attr>
 
-<attr name=seconds value=number>
+<attr name='seconds' value='number'>
    <p>Add this number of seconds to the result.</p>
 
 </attr>",
@@ -5622,19 +5622,19 @@ using the pre tag.
  Makes it possible to create loops in RXML.</short>
 </p></desc>
 
-<attr name=from value=number>
+<attr name='from' value='number'>
  <p>Initial value of the loop variable.</p>
 </attr>
 
-<attr name=step value=number>
+<attr name='step' value='number'>
  <p>How much to increment the variable per loop iteration. By default one.</p>
 </attr>
 
-<attr name=to value=number>
+<attr name='to' value='number'>
  <p>How much the loop variable should be incremented to.</p>
 </attr>
 
-<attr name=variable value=name>
+<attr name='variable' value='name'>
  <p>Name of the loop variable.</p>
 </attr>",
 
@@ -5644,7 +5644,7 @@ using the pre tag.
  Prints the size of the specified file.</short>
 </p></desc>
 
-<attr name=file value=string>
+<attr name='file' value='string'>
  <p>Show size for this file.</p>
 </attr>",
 
@@ -5656,20 +5656,20 @@ using the pre tag.
  the contents.
 </p></desc>
 
-<attr name=define value=string>
+<attr name='define' value='string'>
  <p>The result will be put into a variable. E.g. define=\"var.gauge\" will
  put the result in a variable that can be reached with <ent>var.gauge</ent>.</p>
 </attr>
 
-<attr name=silent>
+<attr name='silent'>
  <p>Don't print anything.</p>
 </attr>
 
-<attr name=timeonly>
+<attr name='timeonly'>
  <p>Only print the time.</p>
 </attr>
 
-<attr name=resultonly>
+<attr name='resultonly'>
  <p>Only print the result of the parsing. Useful if you want to put the time in
  a database or such.</p>
 </attr>",
@@ -5682,11 +5682,11 @@ using the pre tag.
  chapter 14, 'Header field definitions' in <a href='http://community.roxen.com/developers/idocs/rfc/rfc2616.html'>RFC 2616</a>, available at Roxen Community.
 </p></desc>
 
-<attr name=name value=string>
+<attr name='name' value='string'>
  <p>The name of the header.</p>
 </attr>
 
-<attr name=value value=string>
+<attr name='value' value='string'>
  <p>The value of the header.</p>
 </attr>",
 
@@ -5699,11 +5699,11 @@ using the pre tag.
  or PNG format.</short>
 </p></desc>
 
-<attr name=src value=string required='required'>
+<attr name='src' value='string' required='required'>
  <p>The path to the file that should be shown.</p>
 </attr>
 
-<attr name=alt value=string>
+<attr name='alt' value='string'>
  <p>Description of the image. If no description is provided, the filename
  (capitalized, without extension and with some characters replaced) will
  be used.</p>
@@ -5717,11 +5717,11 @@ using the pre tag.
  Adds 1 to a variable.</short>
 </p></desc>
 
-<attr name=variable value=string required='required'>
+<attr name='variable' value='string' required='required'>
  <p>The variable to be incremented.</p>
 </attr>
 
-<attr name=value value=number default=1>
+<attr name='value' value='number' default='1'>
  <p>The value to be added.</p>
 </attr>",
 
@@ -5731,7 +5731,7 @@ using the pre tag.
  Inserts a file, variable or other object into a webpage.</short>
 </p></desc>
 
-<attr name=quote value=html|none>
+<attr name='quote' value='html|none'>
  <p>How the inserted data should be quoted. Default is \"html\", except for
  href and file where it's \"none\".</p>
 </attr>",
@@ -5742,21 +5742,21 @@ using the pre tag.
  Inserts the value of a variable.</short>
 </p></desc>
 
-<attr name=variable value=string>
+<attr name='variable' value='string'>
  <p>The name of the variable.</p>
 </attr>
 
-<attr name=scope value=string>
+<attr name='scope' value='string'>
  <p>The name of the scope, unless given in the variable attribute.</p>
 </attr>
 
-<attr name=index value=number>
+<attr name='index' value='number'>
  <p>If the value of the variable is an array, the element with this
  index number will be inserted. 1 is the first element. -1 is the last
  element.</p>
 </attr>
 
-<attr name=split value=string>
+<attr name='split' value='string'>
  <p>A string with which the variable value should be splitted into an
  array, so that the index attribute may be used.</p>
 </attr>",
@@ -5772,7 +5772,7 @@ using the pre tag.
  variables so that they are not listed with this tag.
 </p></desc>
 
-<attr name=variables value=full|plain>
+<attr name='variables' value='full|plain'>
  <p>Sets how the output should be formatted.</p>
 
  <ex><pre>
@@ -5780,7 +5780,7 @@ using the pre tag.
 </pre></ex>
 </attr>
 
-<attr name=scope>
+<attr name='scope'>
  <p>The name of the scope that should be listed, if not the present scope.</p>
 </attr>",
 
@@ -5790,7 +5790,7 @@ using the pre tag.
  Inserts a listing of all present variable scopes.</short>
 </p></desc>
 
-<attr name=scopes value=full|plain>
+<attr name='scopes' value='full|plain'>
  <p>Sets how the output should be formatted.</p>
 
  <ex><insert scopes='plain'/></ex>
@@ -5813,7 +5813,7 @@ using the pre tag.
  inserted into other documents.
 </p></desc>
 
-<attr name=file value=string>
+<attr name='file' value='string'>
  <p>The virtual path to the file to be inserted.</p>
 
  <ex-box><eval><insert file='html_header.inc'/></eval></ex-box>
@@ -5829,7 +5829,7 @@ using the pre tag.
  can not fetch files from outside the virtual file system.
 </p></desc>
 
-<attr name=realfile value=string>
+<attr name='realfile' value='string'>
  <p>The virtual path to the file to be inserted.</p>
 </attr>",
 
@@ -5890,7 +5890,7 @@ using the pre tag.
  or by whom a page was last modified, by default the current page.
 </p></desc>
 
-<attr name=by>
+<attr name='by'>
  <p>Print by whom the page was modified. Takes the same attributes as
  <xref href='user.tag' />. This attribute requires a userdatabase.
  </p>
@@ -5899,18 +5899,18 @@ using the pre tag.
  realname='1'/>.</ex-box>
 </attr>
 
-<attr name=date>
+<attr name='date'>
     <p>Print the modification date. Takes all the date attributes in <xref href='date.tag' />.</p>
 
  <ex-box>This page was last modified on
 <modified date='1' case='lower' type='string'/>.</ex-box>
 </attr>
 
-<attr name=file value=path>
+<attr name='file' value='path'>
  <p>Get information about this file rather than the current page.</p>
 </attr>
 
-<attr name=realfile value=path>
+<attr name='realfile' value='path'>
  <p>Get information from this file in the computers filesystem rather
  than Roxen Webserver's virtual filesystem.</p>
 </attr>",
@@ -5945,16 +5945,16 @@ using the pre tag.
  \"http://server.com/index.html\" does not.
 </p></desc>
 
-<attr name=to value=URL required='required'>
+<attr name='to' value='URL' required='required'>
  <p>The location to where the client should be sent.</p>
 </attr>
 
-<attr name=add value=string>
+<attr name='add' value='string'>
  <p>The prestate or prestates that should be added, in a comma separated
  list.</p>
 </attr>
 
-<attr name=drop value=string>
+<attr name='drop' value='string'>
  <p>The prestate or prestates that should be dropped, in a comma separated
  list.</p>
 </attr>
@@ -5963,7 +5963,7 @@ using the pre tag.
  <p>Removes all prestates from the redirect target.</p>
 </attr>
 
-<attr name=text value=string>
+<attr name='text' value='string'>
  <p>Sends a text string to the browser, that hints from where and why the
  page was redirected. Not all browsers will show this string. Only
  special clients like Telnet uses it.</p>
@@ -5988,11 +5988,11 @@ using the pre tag.
  remove the cookie.
 </p></desc>
 
-<attr name=name>
+<attr name='name'>
  <p>Name of the cookie the browser should remove.</p>
 </attr>
 
-<attr name=value value=text>
+<attr name='value' value='text'>
  <p>Even though the cookie has been marked as expired some browsers
  will not remove the cookie until it is shut down. The text provided
  with this attribute will be the cookies intermediate value.</p>
@@ -6008,21 +6008,21 @@ load.</p>
  Replaces strings in the contents with other strings.</short>
 </p></desc>
 
-<attr name=from value=string required='required'>
+<attr name='from' value='string' required='required'>
  <p>String or list of strings that should be replaced.</p>
 </attr>
 
-<attr name=to value=string>
+<attr name='to' value='string'>
  <p>String or list of strings with the replacement strings. Default is the
  empty string.</p>
 </attr>
 
-<attr name=separator value=string default=','>
+<attr name='separator' value='string' default=','>
  <p>Defines what string should separate the strings in the from and to
  attributes.</p>
 </attr>
 
-<attr name=type value=word|words default=word>
+<attr name='type' value='word|words' default='word'>
  <p>Word means that a single string should be replaced. Words that from
  and to are lists.</p>
 </attr>",
@@ -6034,11 +6034,11 @@ load.</p>
  <!-- See the Appendix for a list of HTTP return codes. (We have no appendix) -->
 </p></desc>
 
-<attr name=code value=integer>
+<attr name='code' value='integer'>
  <p>The HTTP status code to return.</p>
 </attr>
 
-<attr name=text>
+<attr name='text'>
  <p>The HTTP status message to set. If you don't provide one, a default
  message is provided for known HTTP status codes, e g \"No such file
  or directory.\" for code 404.</p>
@@ -6050,31 +6050,31 @@ load.</p>
  Returns a nice Roxen logo.</short>
 </p></desc>
 
-<attr name=size value=small|medium|large default=medium>
+<attr name='size' value='small|medium|large' default='medium'>
  <p>Defines the size of the image.</p>
 <ex><roxen size='small'/>
 <roxen/>
 <roxen size='large'/></ex>
 </attr>
 
-<attr name=color value=black|white default=white>
+<attr name='color' value='black|white' default='white'>
  <p>Defines the color of the image.</p>
 <ex><roxen color='black'/></ex>
 </attr>
 
-<attr name=alt value=string default='\"Powered by Roxen\"'>
+<attr name='alt' value='string' default='\"Powered by Roxen\"'>
  <p>The image description.</p>
 </attr>
 
-<attr name=border value=number default=0>
+<attr name='border' value='number' default='0'>
  <p>The image border.</p>
 </attr>
 
-<attr name=class value=string>
+<attr name='class' value='string'>
  <p>This cascading style sheet (CSS) definition will be applied on the img element.</p>
 </attr>
 
-<attr name=target value=string>
+<attr name='target' value='string'>
  <p>Names a target frame for the link around the image.</p>
 
  <p>All other attributes will be inherited by the generated img tag.</p>
@@ -6087,7 +6087,7 @@ load.</p>
  container will not affect variables in the rest of the page.
 </p></desc>
 
-<attr name=extend value=name default=form>
+<attr name='extend' value='name' default='form'>
  <p>If set, all variables in the selected scope will be copied into
  the new scope. NOTE: if the source scope is \"magic\", as e.g. the
  roxen scope, the scope will not be copied, but rather linked and will
@@ -6095,7 +6095,7 @@ load.</p>
  just for the convinience of refering to the scope as \"_\".</p>
 </attr>
 
-<attr name=scope value=name default=form>
+<attr name='scope' value='name' default='form'>
  <p>The name of the new scope, besides \"_\".</p>
 </attr>",
 
@@ -6107,24 +6107,24 @@ load.</p>
 <ex-box><set variable='var.language'>Pike</set></ex-box>
 </desc>
 
-<attr name=variable value=string required='required'>
+<attr name='variable' value='string' required='required'>
  <p>The name of the variable.</p>
 <ex-box><set variable='var.foo' value='bar'/></ex-box>
 </attr>
 
-<attr name=value value=string>
+<attr name='value' value='string'>
  <p>The value the variable should have.</p>
 </attr>
 
-<attr name=expr value=string>
+<attr name='expr' value='string'>
  <p>An expression whose evaluated value the variable should have.</p>
 </attr>
 
-<attr name=from value=string>
+<attr name='from' value='string'>
  <p>The name of another variable that the value should be copied from.</p>
 </attr>
 
-<attr name=split value=string>
+<attr name='split' value='string'>
  <p>The value will be splitted by this string into an array.</p>
 
  <p>If none of the above attributes are specified, the variable is unset.
@@ -6159,51 +6159,51 @@ load.</p>
 <p>Note that the change of a cookie will not take effect until the
  next page load.</p></desc>
 
-<attr name=name value=string>
+<attr name='name' value='string'>
  <p>The name of the cookie.</p>
 </attr>
 
-<attr name=seconds value=number>
+<attr name='seconds' value='number'>
  <p>Add this number of seconds to the time the cookie is kept.</p>
 </attr>
 
-<attr name=minutes value=number>
+<attr name='minutes' value='number'>
  <p>Add this number of minutes to the time the cookie is kept.</p>
 </attr>
 
-<attr name=hours value=number>
+<attr name='hours' value='number'>
  <p>Add this number of hours to the time the cookie is kept.</p>
 </attr>
 
-<attr name=days value=number>
+<attr name='days' value='number'>
  <p>Add this number of days to the time the cookie is kept.</p>
 </attr>
 
-<attr name=weeks value=number>
+<attr name='weeks' value='number'>
  <p>Add this number of weeks to the time the cookie is kept.</p>
 </attr>
 
-<attr name=months value=number>
+<attr name='months' value='number'>
  <p>Add this number of months to the time the cookie is kept.</p>
 </attr>
 
-<attr name=years value=number>
+<attr name='years' value='number'>
  <p>Add this number of years to the time the cookie is kept.</p>
 </attr>
 
-<attr name=persistent>
+<attr name='persistent'>
  <p>Keep the cookie for five years.</p>
 </attr>
 
-<attr name=domain>
+<attr name='domain'>
  <p>The domain for which the cookie is valid.</p>
 </attr>
 
-<attr name=value value=string>
+<attr name='value' value='string'>
  <p>The value the cookie will be set to.</p>
 </attr>
 
-<attr name=path value=string default=\"/\"><p>
+<attr name='path' value='string' default=\"/\"><p>
  The path in which the cookie should be available. Use path=\"\" to remove
  the path argument from the sent cookie, thus making the cookie valid only
  for the present directory and below.</p>
@@ -6224,28 +6224,28 @@ load.</p>
  normal tags will override this value.</p>
 </desc>
 
-<attr name=years value=number>
+<attr name='years' value='number'>
  <p>Add this number of years to the time this page was last loaded.</p>
 </attr>
-<attr name=months value=number>
+<attr name='months' value='number'>
  <p>Add this number of months to the time this page was last loaded.</p>
 </attr>
-<attr name=weeks value=number>
+<attr name='weeks' value='number'>
  <p>Add this number of weeks to the time this page was last loaded.</p>
 </attr>
-<attr name=days value=number>
+<attr name='days' value='number'>
  <p>Add this number of days to the time this page was last loaded.</p>
 </attr>
-<attr name=hours value=number>
+<attr name='hours' value='number'>
  <p>Add this number of hours to the time this page was last loaded.</p>
 </attr>
-<attr name=beats value=number>
+<attr name='beats' value='number'>
  <p>Add this number of beats to the time this page was last loaded.</p>
 </attr>
-<attr name=minutes value=number>
+<attr name='minutes' value='number'>
  <p>Add this number of minutes to the time this page was last loaded.</p>
 </attr>
-<attr name=seconds value=number>
+<attr name='seconds' value='number'>
  <p>Add this number of seconds to the time this page was last loaded.</p>
 </attr>",
 
@@ -6254,36 +6254,33 @@ load.</p>
 "smallcaps":#"<desc cont='cont'><p><short>
  Prints the contents in smallcaps.</short> If the size attribute is
  given, font tags will be used, otherwise big and small tags will be
- used.
-</p>
+ used.</p>
 
 <ex><smallcaps>Roxen WebServer</smallcaps></ex>
+</desc>
 
-
-  </desc>
-
-<attr name=space>
+<attr name='space'>
  <p>Put a space between every character.</p>
 <ex><smallcaps space=''>Roxen WebServer</smallcaps></ex>
 </attr>
 
-<attr name=class value=string>
+<attr name='class' value='string'>
  <p>Apply this cascading style sheet (CSS) style on all elements.</p>
 </attr>
 
-<attr name=smallclass value=string>
+<attr name='smallclass' value='string'>
  <p>Apply this cascading style sheet (CSS) style on all small elements.</p>
 </attr>
 
-<attr name=bigclass value=string>
+<attr name='bigclass' value='string'>
  <p>Apply this cascading style sheet (CSS) style on all big elements.</p>
 </attr>
 
-<attr name=size value=number>
+<attr name='size' value='number'>
  <p>Use font tags, and this number as big size.</p>
 </attr>
 
-<attr name=small value=number default=size-1>
+<attr name='small' value='number' default='size-1'>
  <p>Size of the small tags. Only applies when size is specified.</p>
 
  <ex><smallcaps size='6' small='2'>Roxen WebServer</smallcaps></ex>
@@ -6300,14 +6297,14 @@ Wee!
 Ah,</sort></ex>
 </desc>
 
-<attr name=separator value=string>
+<attr name='separator' value='string'>
  <p>Defines what the strings to be sorted are separated with. The sorted
  string will be separated by the string.</p>
 
  <ex><sort separator='#'>way?#perhaps#this</sort></ex>
 </attr>
 
-<attr name=reverse>
+<attr name='reverse'>
  <p>Reversed order sort.</p>
 
  <ex><sort reverse=''>backwards?
@@ -6345,7 +6342,7 @@ just got zapped?
  Unsets a variable, i.e. removes it.</short>
 </p></desc>
 
-<attr name=variable value=string required='required'>
+<attr name='variable' value='string' required='required'>
  <p>The name of the variable.</p>
 
  <ex><set variable='var.jump' value='do it'/>
@@ -6364,30 +6361,30 @@ just got zapped?
  <p>The <tag>user</tag> tag requires an authentication module to work.</p>
 </desc>
 
-<attr name=email>
+<attr name='email'>
  <p>Only print the e-mail address of the user, with no link.</p>
  <ex-box>Email: <user name='foo' email='1'/></ex-box>
 </attr>
 
-<attr name=link>
+<attr name='link'>
  <p>Include links. Only meaningful together with the realname or email attribute.</p>
 </attr>
 
-<attr name=name>
+<attr name='name'>
  <p>The login name of the user. If no other attributes are specified, the
  user's realname and email including links will be inserted.</p>
 <ex-box><user name='foo'/></ex-box>
 </attr>
 
-<attr name=nolink>
+<attr name='nolink'>
  <p>Don't include the links.</p>
 </attr>
 
-<attr name=nohomepage>
+<attr name='nohomepage'>
  <p>Don't include homepage links.</p>
 </attr>
 
-<attr name=realname>
+<attr name='realname'>
  <p>Only print the full name of the user, with no link.</p>
 <ex-box><user name='foo' realname='1'/></ex-box>
 </attr>",
@@ -7108,7 +7105,7 @@ just got zapped?
  <i>State</i> plugin.
 </p></desc>
 
-<attr name=supports'' value='feature' required required='required'>
+<attr name='supports' value='feature' required='required'>
  <p>Choose what supports feature to test.</p>
 </attr>
 
