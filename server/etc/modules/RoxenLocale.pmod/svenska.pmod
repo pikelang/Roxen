@@ -1,5 +1,5 @@
 /*
- * $Id: svenska.pmod,v 1.5 2000/04/05 16:39:47 js Exp $
+ * $Id: svenska.pmod,v 1.6 2000/07/04 03:43:21 per Exp $
  *
  * Roxen locale support -- Svenska (Swedish)
  *
@@ -479,6 +479,8 @@ constant since = "sedan";
 constant next = "Nästa";
 constant previous = "Föregående";
 
+constant new_row = "Ny rad";
+
 string seconds(int n)
 {
   if(n == 1) return "en sekund";
@@ -503,8 +505,8 @@ string days(int n)
   return _whatevers( "dagar", n );
 }
 
-string module_doc_string(mixed module, string var, int long)
+string module_doc_string(string var, int long)
 {
-  return (::module_doc_string(module,var,long) ||
-	  RoxenLocale.standard.module_doc_string( module, var, long ));
+  return (::module_doc_string(var,long) ||
+	  RoxenLocale.standard.module_doc_string( var, long ));
 }

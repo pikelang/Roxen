@@ -1,7 +1,7 @@
 #charset iso-2022
 
 /*
- * $Id: nihongo.pmod,v 1.3 2000/03/14 02:22:11 per Exp $
+ * $Id: nihongo.pmod,v 1.4 2000/07/04 03:43:21 per Exp $
  *
  * Roxen locale support -- $(BF|K\8l(B (nihongo (Japanese))
  *
@@ -247,8 +247,8 @@ string days(int n)
   return _whatevers("$(BF|(B",n);
 }
 
-string module_doc_string(mixed module, string var, int long)
+string module_doc_string(string var, int long)
 {
-  return (::module_doc_string(module,var,long) ||
-	  RoxenLocale.standard.module_doc_string( module, var, long ));
+  return (::module_doc_string(var,long) ||
+	  RoxenLocale.standard.module_doc_string( var, long ));
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: english.pmod,v 1.1 2000/02/14 08:56:36 per Exp $
+ * $Id: english.pmod,v 1.2 2000/07/04 03:43:20 per Exp $
  *
  * Roxen locale support -- English
  *
@@ -11,13 +11,9 @@ constant name        = "english";
 constant language    = "language";
 constant latin1_name = "english";
 
-string module_doc_string( mixed module, string var, int long )
+string module_doc_string(string var, int long)
 {
-  return RoxenLocale.standard.module_doc_string( module, var, long );
-}
-
-void register_module_doc( mixed ... args )
-{
-  RoxenLocale.standard.register_module_doc( @args );
+  return (::module_doc_string(var,long) ||
+	  RoxenLocale.standard.module_doc_string( var, long ));
 }
 // English is the default language -- No need to do anything else.

@@ -1,5 +1,5 @@
 /*
- * $Id: standard.pmod,v 1.13 2000/05/22 00:28:26 nilsson Exp $
+ * $Id: standard.pmod,v 1.14 2000/07/04 03:43:21 per Exp $
  *
  * Roxen locale support -- Default language (English)
  *
@@ -510,6 +510,8 @@ constant previous = "Previous";
 constant actions = "Tasks";
 constant manual = "Manual";
 
+constant new_row = "New row";
+
 string _whatevers( string what, int n )
 {
   string as_string = roxenp()->language( name, "number" )(n);
@@ -544,9 +546,9 @@ string days(int n)
 
 
 //
-//  ([  "module_name":([ "variable":({ name, doc }) ]) ])
+//  ([  variable:({ name, doc, translate }), ...  ])
 //
-mapping _module_doc_strings = ([ ]);
+mapping(string:array(string|mapping(string:string))) _module_doc_strings=([]);
 
 string module_name( object mod )
 {
@@ -559,24 +561,23 @@ string module_name( object mod )
   }
 }
 
-string module_doc_string( mixed module, string var, int long )
+string module_doc_string( string ind, int long )
 {
-  if(_module_doc_strings[module] && _module_doc_strings[module][var])
-    return _module_doc_strings[module][var][long];
-  object ld = RoxenLocale.Modules[latin1_name];
-  if( !ld ) return 0;
-  return ld->module_doc( module_name(module), var, long );
+  return _module_doc_strings[ind] && _module_doc_strings[ind][long];
 }
 
-void register_module_doc( mixed module, string var, string name,
-			  string desc, void|mapping translate_options )
+void register_module_doc( string ind, 
+                          string name,
+			  string desc, 
+                          void|mapping translate_options )
 {
-  if(!_module_doc_strings[module])
-    _module_doc_strings[module] = ([ ]);
-  _module_doc_strings[module][var] = ({ name, desc, translate_options });
+  _module_doc_strings[ind] = ({ name, desc, translate_options });
 }
 
-
+void unregister_module_doc( string ind )
+{
+  m_delete( _module_doc_strings, ind );
+}
 
 
 

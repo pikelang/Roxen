@@ -1,4 +1,11 @@
+#include <module.h>
+#define LOW_LOCALE (roxenp()->locale->get())
+#define LC LOW_LOCALE
+
 static inherit "html";
+
+#define RequestID object
+
 
 static int unique_vid;
 
@@ -6,9 +13,11 @@ static int unique_vid;
 // of all variables) does not have these members. This this saves
 // quite a respectable amount of memory, the cost is speed. But not
 // all that great a percentage of speed.
-static mapping changed_values = set_weak_flag( ([]), 1 );
+static mapping changed_values = ([]);
+static mapping all_flags = ([]);
+static mapping all_warnings = ([]);
+
 static mapping invisibility_callbacks = set_weak_flag( ([]), 1 );
-static mapping all_flags = set_weak_flag( ([]), 1 );
 
 class Variable
 //. The basic variable type in Roxen. All other variable types should
@@ -17,8 +26,29 @@ class Variable
   constant type = "Basic";
   //. Mostly used for debug
 
-  static mixed _initial;
-  static int _id = unique_vid++;
+  constant is_variable = 1;
+
+  static string _id = (unique_vid++)->digits(256); 
+  // used for indexing the mappings.
+
+  static mixed _initial; // default value
+  static string _path;   // used for forms
+
+  void destroy()
+  {
+    // clean up...
+    m_delete( all_flags, _id );
+    m_delete( all_warnings, _id );
+    m_delete( invisibility_callbacks, _id );
+    m_delete( changed_values, _id );
+    RoxenLocale.standard.unregister_module_doc( _id );
+  }
+
+  string get_warnings()
+    //. Returns the current warnings, if any.
+  {
+    return all_warnings[ _id ];
+  }
 
   int check_visibility( RequestID id,
                         int more_mode,
@@ -28,42 +58,58 @@ class Variable
     //. Return 1 if this variable should be visible in the configuration
     //. interface.
   {
-    int flags = all_flags[this_object()];
+    int flags = all_flags[_id];
+    function cb;
     if( initial && !(flags & VAR_INITIAL) )      return 0;
     if( (flags & VAR_EXPERT) && !expert_mode )   return 0;
     if( (flags & VAR_MORE) && !more_mode )       return 0;
     if( (flags & VAR_DEVELOPER) && !devel_mode ) return 0;
-    if( invisibility_callbacks[this_object()] && 
-        invisibility_callbacks[this_object()]( id, this_object() ) )
+    if( (cb = invisibility_callbacks[_id]) && 
+        cb( id, this_object() ) )
       return 0;
     return 1;
   }
 
-  void set_invisibility_check_callback( function cb )
+  void set_invisibility_check_callback( function(RequestID,Variable:int) cb )
+    //. If the function passed as argument returns 1, the variable
+    //. will not be visible in the configuration interface.
+    //.
+    //. Pass 0 to remove the invisibility callback.
   {
     if( functionp( cb ) )
-      invisibility_callbacks[this_object()] = cb;
+      invisibility_callbacks[ _id ] = cb;
     else
-      m_delete( invisibility_callbacks, this_object() );
+      m_delete( invisibility_callbacks, _id );
   }
 
-  string doc( RequestID id )
+  string doc(  )
     //. Return the documentation for this variable (locale dependant).
     //. 
     //. The default implementation queries the locale object in roxen
     //. to get the documentation.
   {
-    return LC->module_doc_string( this_object(), 1, id );
+    return LC->module_doc_string( _id, 1 ) ||
+           RoxenLocale.standard.module_doc_string( _id, 1 ) ||
+           "No way!";
   }
   
-  string name( RequestID id )
+  string name(  )
     //. Return the name of this variable (locale dependant).
     //. 
     //. The default implementation queries the locale object in roxen
     //. to get the documentation.
   {
-    return LC->module_doc_string( this_object(), 0, id );
+    return LC->module_doc_string( _id, 0 ) ||
+           RoxenLocale.standard.module_doc_string( _id, 0 ) ||
+           "No way!";
   } 
+
+  string type_hint(  )
+    //. Return the type hint for this variable.
+    //. Type hints are generic documentation for this variable type, 
+    //. and is the same for all instances of the variable.
+  {
+  }
 
   mixed default_value()
     //. The default (initial) value for this variable.
@@ -77,37 +123,49 @@ class Variable
     //. value.
   {
     string err, e2;
+    void set_warning( string to )
+    { 
+      if( to && strlen(to) )
+        all_warnings[_id] = to; 
+      else
+        m_delete( all_warnings, _id );
+    };
     if( e2 = catch( [err,to] = verify_set( to )) )
-      return (string)e2;
-
+    {
+      set_warning( e2 );
+      return e2;
+    }
     low_set( to );
+    set_warning( err );
     return err;
   }
 
   void low_set( mixed to )
     //. Forced set. No checking is done whatsoever.
   {
-    if( to != default_value() )
-      changed_values[ this_object() ] = to;
+    if( !equal(to, default_value() ) )
+      changed_values[ _id ] = to;
     else
-      m_delete( changed_values, this_object() );
+      m_delete( changed_values, _id );
   }
-
+  
   mixed query( )
     //. Returns the current value for this variable.
   {
-    if( changed_values[ this_object() ] )
-      return changed_values[ this_object() ];
+    mixed v;
+    if( !zero_type( v = changed_values[ _id ] ) )
+      return v;
     return default_value();
   }
 
   int is_defaulted()
     //. Return true if this variable is set to the default value.
   {
-    return !changed_values[ this_object() ];
+    return zero_type( changed_values[ _id ] ) || 
+           equal(changed_values[ _id ], default_value());
   }
 
-  array(string|mixed) mixed verify_set( mixed new_value )
+  array(string|mixed) verify_set( mixed new_value )
     //. Return ({ error, new_value }) for the variable, or throw a string.
     //. 
     //. If error != 0, it should contain a warning or error message.
@@ -123,10 +181,11 @@ class Variable
   mapping(string:string) get_form_vars( RequestID id )
     //. Return all form variables preficed with path().
   {
-    array names = glob( path()+"*", indices(id->variables) );
+    string p = path();
+    array names = glob( p+"*", indices(id->variables) );
     mapping res = ([ ]);
     foreach( sort(names), string n )
-      res[ n[strlen(path()..) ] ] = id->variables[ n ];
+      res[ n[strlen(p).. ] ] = id->variables[ n ];
     return res;
   }
 
@@ -137,59 +196,79 @@ class Variable
     return what;
   }
   
-  mixed set_from_form( RequestID id )
+  void set_from_form( RequestID id )
     //. Set this variable from the form variable in id->Variables,
     //. if any are available. The default implementation simply sets
     //. the variable to the string in the form variables.
+    //.
+    //. Other side effects: Might create warnings to be shown to the 
+    //. user (see get_warnings)
   {
     mapping val;
-    if( sizeof( val = get_form_vars()) && val[""] && 
+    if( sizeof( val = get_form_vars(id)) && val[""] && 
         transform_from_form( val[""] ) != query() )
-      return set( transform_from_form( val[""] ));
+      set( transform_from_form( val[""] ));
   }
   
   string path()
     //. A unique identifier for this variable. 
     //. Should be used to prefix form variables.
   {
-    return "V"+_id;
+    return _path;
   }
 
-  string render_form( RequestID id )
+  void set_path( string to )
+    //. Set the path. Not normally called from user-level code.
+    //. 
+    //. This function must be called at least once before render_form
+    //. can be called. This is normally done by the configuration
+    //. interface.
+  {
+    _path = to;
+  }
+
+  string render_form( RequestID id );
     //. Return a form to change this variable. The name of all <input>
     //. or similar variables should be prefixed with the value returned
     //. from the path() function.
-  {
-  }
 
   string render_view( RequestID id )
     //. Return a 'view only' version of this variable.
   {
-    return (string)query();
+    return Roxen.html_encode_string( (string)query() );
   }
   
   static string _sprintf( int i )
   {
     if( i == 'O' )
-      return sprintf( "Variables.%s(%s) [%O]", type, name, query() );
+      return sprintf( "Variables.%s(%s) [%O]", type, 
+                      (string)name(), 
+                      query() );
   }
 
 
-  int deflocaledoc( string locale, string name, string doc )
+  int deflocaledoc( string locale, string name, string doc,
+                    mapping|void choices )
     //. Define the documentation (name and built-in runtime documentation) 
     //. for the specified locale.
     //. 
     //. Returns 1 if the locale exists, 0 otherwise.
+    //. 
+    //. The choices mapping is a mapping from value to the displayed
+    //. option title. You can pass 0 to avoid translation.
+
   {
     catch {
       RoxenLocale[locale]->
-        register_module_doc(this_object(),name,doc);
+        register_module_doc(_id, name,doc,choices);
       return 1;
     };
     return 0;
   }
 
-  void create(mixed default_value,int _flags,string std_name,string std_doc)
+
+  static void create(mixed default_value,int flags,
+                     string std_name,string std_doc)
     //. Constructor. 
     //. Flags is a bitwise or of one or more of 
     //. 
@@ -203,9 +282,11 @@ class Variable
     //. 
     //. Use deflocaledoc to define translations.
   {
-    _initial = _dv;
-    if( flags ) all_flags[ this_object() ] = _flags;
-    RoxenLocale.standard.register_module_doc(this_object(),std_name,std_doc);
+    _initial = default_value;
+    if( flags ) 
+      all_flags[ _id ] = flags;
+    if( std_name )
+      RoxenLocale.standard.register_module_doc(_id,std_name,std_doc);
   }
 }
 
@@ -248,7 +329,7 @@ class Float
     //. If prec is 3, and the float is 1, 1.000 will be shown.
     //. Default is 2.
   {
-    _prec = ndigits;
+    _prec = prec;
   }
 
   array(string|float) verify_set( float new_value )
@@ -270,14 +351,14 @@ class Float
     return ({ warn, new_value });
   }
   
-  int transform_from_form( string what )
+  float transform_from_form( string what )
   {
     return (float)what;
   }
 
   string render_view( RequestID id )
   {
-    return _format(query());
+    return Roxen.html_encode_string( _format(query()) );
   }
   
   string render_form( RequestID id )
@@ -358,7 +439,7 @@ class String
 {
   inherit Variable;
   constant type = "String";
-  constant width = 20;
+  constant width = 40;
   //. The width of the input field. Used by overriding classes.
   string render_form( RequestID id )
   {
@@ -374,9 +455,13 @@ class Text
 {
   inherit String;
   constant type = "Text";
+  constant cols = 60;
+  //. The width of the textarea
+  constant rows = 10;
+  //. The height of the textarea
   string render_form( RequestID id )
   {
-    return "<textarea name='"+path()+"'>"
+    return "<textarea cols='"+cols+"' rows='"+rows+"' name='"+path()+"'>"
            + Roxen.html_encode_string( query() || "" ) +
            "</textarea>";
   }
@@ -394,12 +479,12 @@ class Password
   constant width = 20;
   constant type = "Password";
 
-  mixed set_from_form( RequestID id )
+  void set_from_form( RequestID id )
   {
     mapping val;
-    if( sizeof( val = get_form_vars()) && 
+    if( sizeof( val = get_form_vars(id)) && 
         val[""] && strlen(val[""]) )
-      return set( crypt( val[""] ) );
+      set( crypt( val[""] ) );
   }
 
   string render_view( RequestID id )
@@ -469,55 +554,36 @@ class MultipleChoice
 
   static string _name( mixed what )
     //. Get the name used as value for an element gotten from the
-    //. get_list() function.
+    //. get_choice_list() function.
   {
     return  (string)what;
   }
 
   static string _title( mixed what )
     //. Get the title used as description (shown to the user) for an
-    //. element gotten from the get_list() function.
+    //. element gotten from the get_choice_list() function.
   {
-    mapping tr = LC->module_doc_string( this_object(), 2, id );
+    mapping tr = LC->module_doc_string( _id, 2 );
     if( tr )
       return tr[ what ] || (string)what;
     return (string)what;
   }
 
-  int deflocaledoc( string locale, string name, string doc,
-                    mapping choices )
-    //. Define the documentation (name and built-in runtime documentation) 
-    //. for the specified locale.
-    //. 
-    //. Returns 1 if the locale exists, 0 otherwise.
-    //. 
-    //. The choices mapping is a mapping from value to the displayed
-    //. option title. You can pass 0 to avoid translation.
-
-  {
-    catch {
-      RoxenLocale[locale]->
-        register_module_doc(this_object(),name,doc, choices);
-      return 1;
-    };
-    return 0;
-  }
-
-  void render_form( RequestID id )
+  string render_form( RequestID id )
   {
     string res = "<select name='"+path()+"'>\n";
-    foreach( get_list(), mixed elem )
+    foreach( get_choice_list(), mixed elem )
     {
       mapping m = ([]);
       m->value = _name( elem );
       if( m->value == query() )
         m->selected="selected";
-      res += "  "+make_container( "option", m, _title( elem ) )+"\n";
+      res += "  "+Roxen.make_container( "option", m, _title( elem ) )+"\n";
     }
     return res + "</select>";
   }
-  void create( mixed default_value, array choices,
-               int _flags, string std_name, string std_doc )
+  static void create( mixed default_value, array choices,
+                      int _flags, string std_name, string std_doc )
     //. Constructor. 
     //.
     //. Choices is the list of possible choices, can be set with 
@@ -576,22 +642,20 @@ class FloatChoice
     //. If prec is 3, and the float is 1, 1.000 will be shown.
     //. Default is 2.
   {
-    _prec = ndigits;
+    _prec = prec;
   }
 
   static string _title( mixed what )
   {
     if( !_prec )
-      return sprintf( "%d", (int)m );
-    return sprintf( "%1."+_prec+"f", m );
+      return sprintf( "%d", (int)what );
+    return sprintf( "%1."+_prec+"f", what );
   }
-
-  void set_from_
 
   int transform_from_form( string what )
   {
     array q = get_choice_list();
-    array a = mkmapping( map( q, _name ), q );
+    mapping a = mkmapping( map( q, _name ), q );
     return a[what] || (float)what; // Do we want this fallback?
   }
 }
@@ -603,11 +667,27 @@ class FontChoice
   constant type = "FontChoice";
   void set_choice_list()
   {
-    error("Not supported for this class\n");
   }
   array get_choice_list()
   {
-    return available_fonts();
+    return roxenp()->fonts->available_fonts();
+  }
+  static void create(mixed default_value,int flags,
+                     string std_name,string std_doc)
+    //. Constructor. 
+    //. Flags is a bitwise or of one or more of 
+    //. 
+    //. VAR_EXPERT         Only for experts 
+    //. VAR_MORE           Only visible when more-mode is on (default on)
+    //. VAR_DEVELOPER      Only visible when devel-mode is on (default on)
+    //. VAR_INITIAL        Should be configured initially.
+    //. 
+    //. The std_name and std_doc is the name and documentation string
+    //. for the default locale (always english)
+    //. 
+    //. Use deflocaledoc to define translations.
+  {
+    ::create( default_value,0, flags,std_name, std_doc );
   }
 }
 
@@ -634,55 +714,93 @@ class List
     return what;
   }
 
-  mixed set_from_form()
+  static int _current_count = time()*10+(gethrtime()/100000);
+  void set_from_form(RequestID id)
   {
     int rn;
     array l = query();
-    mapping vl = get_form_vals();
+    mapping vl = get_form_vars(id);
     // first do the assign...
-    foreach( indices( vl ), string vv )
-      if( sscanf( vv, ".%d.set", rn ) )
-        l[rn] = transform_from_form( vl[vv] );
 
+    if( (int)vl[".count"] != _current_count )
+      return;
+    _current_count++;
+
+    foreach( indices( vl ), string vv )
+      if( sscanf( vv, ".set.%d", rn ) )
+      {
+        m_delete( id->variables, path()+vv );
+        l[rn] = transform_from_form( vl[vv] );
+        m_delete( vl, vv );
+      }
     // then the move...
     foreach( indices(vl), string vv )
-      if( sscanf( vv, ".%d.up", rn ) )
+      if( sscanf( vv, ".up.%d.x%*s", rn ) == 2 )
+      {
+        m_delete( id->variables, path()+vv );
+        m_delete( vl, vv );
         l = l[..rn-2] + l[rn..rn] + l[rn-1..rn-1] + l[rn+1..];
-      else  if( sscanf( vv, ".%d.down", rn ) )
+      }
+      else  if( sscanf( vv, ".down.%d.x%*s", rn )==2 )
+      {
+        m_delete( id->variables, path()+vv );
         l = l[..rn-1] + l[rn+1..rn+1] + l[rn..rn] + l[rn+2..];
+      }
     // then the possible add.
-    if( vl[".new"] )
+    if( vl[".new.x"] )
+    {
+      m_delete( id->variables, path()+".new.x" );
       l += ({ transform_from_form( "" ) });
+    }
 
     // .. and delete ..
     foreach( indices(vl), string vv )
-      if( sscanf( vv, ".%d.delete", rn ) )
+      if( sscanf( vv, ".delete.%d.x%*s", rn )==2 )
+      {
+        m_delete( id->variables, path()+vv );
         l = l[..rn-1] + l[rn+1..];
-
-    return set( l ); // We are done. :-)
+      }
+    set( l ); // We are done. :-)
   }
 
   string render_form( RequestID id )
   {
-    string res = "<table>\n";
     string prefix = path()+".";
     int i;
+
+    _current_count++;
+
+    string res = "<table>\n"
+   "<input type=hidden name='"+prefix+"count' value='"+_current_count+"' />";
+
     foreach( map(query(), transform_to_form), string val )
     {
-      string pp = prefix+i+".";
-      res += 
-          "<tr><td>"+ input( pp+"set", val, width) + "</td>"
-          "\n<td><input type=submit "
-          "name='"+pp+"up"+"' value='^' /></td>"
-          "\n<td><input type=submit "
-          "name='"+pp+"down"+"' value='v' /></td>"
-          "\n<td><input type=submit "
-          "name='"+pp+"delete"+"' value='&locale.delete;' /></td>"
+      res += "<tr><td><font size=-1>"+ input( prefix+"set."+i, val, width) + "</font></td>";
+
+#define BUTTON(X,Y) ("<submit-gbutton2 name='"+X+"'>"+Y+"</submit-gbutton2>")
+      if( i )
+        res += "\n<td>"+
+            BUTTON(prefix+"up."+i, "^")+
+            "</td>";
+      else
+        res += "<td></td>";
+      if( i != sizeof( query())- 1 )
+        res += "\n<td>"+
+            BUTTON(prefix+"down."+i, "v")
+            +"</td>";
+      else
+        res += "<td></td>";
+      res += "\n<td>"+
+            BUTTON(prefix+"delete."+i, "&locale.delete;")
+          +"</td>";
           "</tr>";
       i++;
     }
     res += 
-        "<tr><td colspan=2><input type=submit name='"+prefix+"new' value='&locale.new;' /></td></tr></table>\n";
+        "<tr><td colspan='2'>"+
+        BUTTON(prefix+"new", "&locale.new_row;")+
+        "</td></tr></table>\n";
+
     return res;
   }
 }
@@ -695,25 +813,25 @@ class DirectoryList
 //. A list of directories
 {
   inherit List;
-  constant type="DirectorYList";
+  constant type="DirectoryList";
 }
 
 class StringList
 //. A list of strings
 {
   inherit List;
-  constant type="DirectorYList";
+  constant type="StringList";
 }
 
 class IntList
 //. A list of integers
 {
   inherit List;
-  constant type="DirectorYList";
+  constant type="IntList";
   constant width=20;
 
   string transform_to_form(int what) { return (string)what; }
-  float transform_from_form(string what) { return (int)what; }
+  int transform_from_form(string what) { return (int)what; }
 }
 
 class FloatList
@@ -730,7 +848,7 @@ class FloatList
     //. If prec is 3, and the float is 1, 1.000 will be shown.
     //. Default is 2.
   {
-    _prec = ndigits;
+    _prec = prec;
   }
 
   string transform_to_form(int what) 
@@ -740,7 +858,7 @@ class FloatList
   float transform_from_form(string what) { return (float)what; }
 }
 
-class UrlList
+class URLList
 //. A list of URLs
 {
   inherit List;
@@ -764,7 +882,8 @@ class Flag
 //. A on/off toggle.
 {
   inherit Variable;
-  
+  constant type = "Flag";
+
   int transform_from_form( string what )
   {
     return (int)what;
