@@ -1,12 +1,12 @@
 /*
- * $Id: configtablist.pike,v 1.4 1997/09/03 07:53:37 grubba Exp $
+ * $Id: configtablist.pike,v 1.5 1997/09/04 12:40:59 grubba Exp $
  *
  * Makes a tab-list like the one in the config-interface.
  *
  * $Author: grubba $
  */
 
-constant cvs_version="$Id: configtablist.pike,v 1.4 1997/09/03 07:53:37 grubba Exp $";
+constant cvs_version="$Id: configtablist.pike,v 1.5 1997/09/04 12:40:59 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -55,7 +55,7 @@ string tag_config_tab(string t, mapping a, string contents)
   m_delete(a, "selected");
 
   img_attrs->src = QUERY(location) + dir +
-    replace(http_encode_string(contents), "?", "%3f");
+    replace(http_encode_string(contents), "?", "%3f") + ".gif";
   if (a->alt) {
     img_attrs->alt = a->alt;
     m_delete(a, "alt");
@@ -89,6 +89,11 @@ mapping find_file(string f, object id)
   if (sizeof(arr) > 1) {
     object interface = roxen->configuration_interface();
     object(Image.image) button;
+
+    if (arr[-1][sizeof(arr[-1])-4..] == ".gif") {
+      arr[-1] = arr[-1][..sizeof(arr[-1])-5];
+    }
+
     switch (arr[0]) {
     case "s":	/* Selected */
       button = interface->draw_selected_button(arr[1..]*"/",
