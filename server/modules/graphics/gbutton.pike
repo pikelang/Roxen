@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.85 2001/07/20 12:13:15 jhs Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.86 2001/07/20 13:05:59 jhs Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -90,16 +90,14 @@ constant gbuttonattr=#"
 </ex>
 </attr>
 
-<attr name='textcolor' value='color'><p>
- Button text color.</p>
-<ex>
-<gbutton textcolor='#ff6600'>Text</gbutton>
-</ex>
+<attr name='textcolor' value='color'>
+ <p>Button text color.</p>
+<ex><gbutton textcolor='#ff6600'>Text</gbutton></ex>
 </attr>
 
 <attr name='frame-image' value='path'><p>
  Use this XCF-image as a frame for the button. The image is required
- to have at least the following layers: background, mask and frame.
+ to have at least the following layers: background, mask and frame.</p>
 "+/* <ex><gbutton frame-image='internal-roxen-tabframe'>foo</gbutton></ex> */#"
 </attr>
 

@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.261 2001/07/20 12:46:00 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.262 2001/07/20 13:06:19 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6865,7 +6865,7 @@ load.</p>
 </attr>
 
 <attr name='file' value='path'><p>
- Reads all tags and container tags and defines from the file.
+ Reads all tags and container tags and defines from the file.</p>
 
  <p>This file will be fetched just as if someone had tried to fetch it
  with an HTTP request. This makes it possible to use Pike script
