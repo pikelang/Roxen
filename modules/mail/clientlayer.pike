@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.39 1999/08/31 16:35:37 grubba Exp $
+ * $Id: clientlayer.pike,v 1.40 1999/09/01 15:33:17 grubba Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.39 1999/08/31 16:35:37 grubba Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.40 1999/09/01 15:33:17 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -183,6 +183,11 @@ Stdio.File new_body( string body_id )
   string f = query("maildir")+"/"+hash_body_id(body_id)+"/"+body_id;
   mkdirhier(f);
   return Stdio.File(f, "rwct");
+}
+
+array stat_body(string body_id )
+{
+  return file_stat(query("maildir")+"/"+hash_body_id(body_id)+"/"+body_id);
 }
 
 
@@ -585,7 +590,10 @@ class Mailbox
 //     _mail = 0; // No optimization, for safety...
     _unread = -1;
     modify( );
+    array st = stat_body(mm->headers()->body_id);
+    int sz = st && st[1]>0 && st[1];
     remove_mailbox_from_mail( mm->id, mm->message_id );
+    user->deallocate_quota(sz);
     destruct( mm );
   }
 
@@ -669,6 +677,16 @@ class Mailbox
   Mail low_create_mail( string bodyid, mapping headers )
   {
     /* This could be easier.. :-) */
+
+    // 0> Check quota.
+    int st = stat_body(bodyid);
+    int sz = st && (st[1]>0) && st[1];
+
+    if (!user->check_quota(sz)) {
+      // Out of quota.
+      return 0;
+    }
+
     // 1> Generate the db row for the 'messages' table.
     mapping row = ([
       "sender":headers->from,
@@ -687,6 +705,9 @@ class Mailbox
     //     _mail = 0;
     _unread = -1;
     modify();
+
+    // 5> Allocate quota.
+    user->allocate_quota(sz);
 
     if(!_mail) 
     {
@@ -709,15 +730,25 @@ class Mailbox
 
   Mail create_mail_from_fd( Stdio.File fd )
   {
+    // Check quota.
+    array st = fd->stat();
+    if (st && (st[1] > 0) && !user->check_quota(st[1])) {
+      // Out of quota.
+      return 0;
+    }
+
     string foo = read_headers_from_fd( fd );
     mapping headers = MIME.parse_headers( foo )[0];
     string bodyid = get_unique_body_id();
     fd->seek( 0 );
+    int amount;
     Stdio.File f = new_body( bodyid );
     do 
     {
       foo = fd->read( 8192 );
+      amount += sizeof(foo);
       if( f->write( foo ) != strlen(foo) ) {
+	f->close();
 	delete_body(bodyid);
 	error("Failed to write body.\n");
       }
@@ -728,14 +759,22 @@ class Mailbox
 
   Mail create_mail_from_data( string data )
   {
+    if (!user->check_quota(sizeof(data))) {
+      // Out of quota.
+      return 0;
+    }
     return create_mail( MIME.Message( data, 0, 0 ) );
   }
 
   Mail create_mail( MIME.Message m )
   {
+    string data = (string)m;
+    if (!user->check_quota(sizeof(data))) {
+      // Out of quota.
+      return 0;
+    }
     string bodyid = get_unique_body_id();
     object f = new_body( bodyid );
-    string data = (string)m;
     if(f->write(data) != strlen(data))
       error("Failed to write body.\n");
     return low_create_mail( bodyid, m->headers );
