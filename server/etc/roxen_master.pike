@@ -2,7 +2,7 @@
  * Roxen master
  */
 
-string cvs_version = "$Id: roxen_master.pike,v 1.38 1997/06/23 03:28:17 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.39 1997/09/14 13:34:19 grubba Exp $";
 
 object stdout, stdin;
 mapping names=([]);
@@ -231,7 +231,6 @@ void create()
   objects[object_program(this_object())] = this_object();
   /* make ourselves known */
   add_constant("_master",this_object());
-  add_constant("master",lambda() { return this_object(); });
   add_constant("version",lambda() { return version() + " Roxen Challenger master"; } );
 
 
