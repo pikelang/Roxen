@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.81 2003/03/05 12:44:20 mattias Exp $
+// $Id: module.pmod,v 1.82 2003/10/23 15:25:24 jonasw Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1409,8 +1409,14 @@ class List
 	query = "";
       else
 	query += "&";
-      query += "random="+random(4949494)+(section?"&section="+section:"");
 
+      //  The URL will get a fragment identifier below and since some
+      //  broken browsers (MSIE) incorrectly includes the fragment in
+      //  the last variable value we'll place section before random.
+      query +=
+	(section ? ("section=" + section + "&") : "") +
+	"random=" + random(4949494);
+      
       nid->misc->moreheads =
 	([
 	  "Location":nid->not_query+(nid->misc->path_info||"")+
