@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.49 1999/06/07 01:02:28 mast Exp $
+# $Id: Makefile,v 1.50 1999/06/07 03:02:33 mast Exp $
 #
 # Bootstrap Makefile
 #
@@ -210,6 +210,24 @@ censor_dbapi :
 	@for d in pike/*/bin/. pike/bin/. pike/*/lib/modules/Sql.pmod/. pike/lib/modules/Sql.pmod/.; do \
 	  if test -d $$d ; then \
 	    rm -rf $$d/rsql*; \
+	  else : ; fi; \
+	done
+
+censor_strong_crypto :
+	@echo "Censoring strong crypto..."
+	@for f in pike/*/lib/modules/SSL.pmod/*; do \
+	  if test -f $$f; then \
+	    echo "Censoring $$f"; \
+	    mv $$f $$f.orig; \
+	    sed -e '/^# *ifndef  *WEAK_CRYPTO_40BIT/,/^# *endif .*! *WEAK_CRYPTO_40BIT/d' \
+		-e '/^# *ifdef  *WEAK_CRYPTO_40BIT/d' \
+		-e '/^# *endif .*WEAK_CRYPTO_40BIT/d' \
+		< $$f.orig > $$f; \
+	    if grep WEAK_CRYPTO_40BIT $$f >/dev/null; then \
+	      echo "Failed to censor strong crypto; there are still references to WEAK_CRYPTO_40BIT in $$f."; \
+	      exit 1; \
+	    else : ; fi; \
+	    rm -f $$f.orig; \
 	  else : ; fi; \
 	done
 
