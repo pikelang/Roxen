@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.27 1998/03/01 02:49:52 per Exp $
+# $Id: start,v 1.28 1998/03/01 15:49:47 per Exp $
 
 VERSION=201; BETA=.a;
 
@@ -26,6 +26,8 @@ umask 022
 if [ "x$PIKE_MASTER" = "x" ]; then
   if [ -f lib/master.pike ]; then
     DEFINES="$DEFINES -mlib/master.pike"
+  elif [ -f lib/pike/master.pike ]; then
+    DEFINES="$DEFINES -mlib/pike/master.pike"
   else
     # This is used with localinstall
     if [ -f ../pike/src/lib/master.pike ]; then
@@ -61,10 +63,7 @@ fi
 
 pike=pike
 if [ -x bin/pike ] ; then pike=bin/pike; fi
-if [ -x bin/roxen ] ; then 
-  pike=bin/roxen; 
-  echo $DEFINES
-fi
+if [ -x bin/roxen ] ; then  pike=bin/roxen; fi
 if [ -x "$PIKE" ]; then pike="$PIKE"; fi
 
 rotate () {
