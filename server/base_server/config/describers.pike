@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.31 1997/08/12 11:10:37 per Exp $ */
+/* $Id: describers.pike,v 1.32 1997/08/12 12:01:40 per Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -122,12 +122,15 @@ mixed describe_actions(object node, object id)
   {
     string res="<dl>";
     array acts = ({});
-    foreach(get_dir("config_actions"), string act) catch {
-      if(act[0]!='#' && act[-1]=='e')
-	acts+=({"<!-- "+get_action(act)->name+" --><dt><font size=+2><a href=\"/Actions/?action="+
-		  act+"\">"+get_action(act)->name+"</a></font><dd>"+
-		  (get_action(act)->doc||"") });
-    };
+    foreach(get_dir("config_actions"), string act)
+      catch {
+	if(act[0]!='#' && act[-1]=='e')
+	  if(!get_action(act)->more || this_object()->more_mode)
+	    acts+=({"<!-- "+get_action(act)->name+" --><dt><font size=+2>"
+		      "<a href=\"/Actions/?action="+act+"\">"+
+		      get_action(act)->name+"</a></font><dd>"+
+		      (get_action(act)->doc||"") });
+      };
     return res+(sort(acts)*"\n")+"</dl>";
   }
   mixed res;
@@ -186,6 +189,7 @@ array|string describe_module_variable(object node)
 
 string describe_open_files(object node)
 {
+  if(!this_object()->more_mode) return 0;
   string res = link("<font size=+1>Open files</font><dd>");
   if(node->folded)
     return res;
@@ -339,6 +343,7 @@ string describe_global_debug(object node)
 {
   string res;
   mixed foo;
+  if(!this_object()->more_mode) return 0;
   if(node->folded)
     return link("<font size=+1>Debug information for developers</font>");
   else
@@ -515,6 +520,7 @@ string describe_request_status(object node)
 string describe_pipe_status(object node)
 {
   int *ru;
+  if(!this_object()->more_mode) return 0;
 #if efun(_pipe_debug)
   ru=_pipe_debug();
  if(node->folded)
@@ -571,6 +577,7 @@ string describe_process_status(object node)
 
 string describe_hostnames_status(object node)
 {
+  if(!this_object()->more_mode) return 0;
 
   if(node->folded)
     return link("<font size=+1>Host names</font>");

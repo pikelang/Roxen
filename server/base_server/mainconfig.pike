@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.53 1997/08/12 11:10:33 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.54 1997/08/12 12:01:35 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -1687,8 +1687,8 @@ mapping configuration_parse(object id)
     BUTTON(save, "Save", left);
     PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/%20%20%20%20%20%20>");
   }
-  BUTTON(restart, "Restart", left);
-  BUTTON(shutdown,"Shutdown", left);
+//  BUTTON(restart, "Restart", left);
+//  BUTTON(shutdown,"Shutdown", left);
 
   PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/rm/%20>");
   PUSH("</nobr><br clear=all>");

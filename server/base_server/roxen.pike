@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.93 1997/08/12 06:32:06 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.94 1997/08/12 12:01:38 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1067,33 +1067,36 @@ int set_u_and_gid()
   array pw;
   
   u=QUERY(User);
-  if(sscanf(u, "%s:%s", u, g) == 2)
+  sscanf(u, "%s:%s", u, g);
+  if(strlen(u))
   {
     if(getuid())
     {
       perror("It is not possible to change uid and gid if the server\n"
              "is not started as root.\n");
     } else {
-    if(pw = getpwnam(u))
-    {
-      u = (string)pw[2];
-    } else
-      pw = getpwuid((int)u);
+      if(pw = getpwnam(u))
+      {
+	u = (string)pw[2];
+	if(!g) g = (string)pw[3];
+      } else
+	pw = getpwuid((int)u);
 #if efun(initgroups)
-    if(pw)
-      initgroups(pw[0], (int)g);
+      if(pw)
+	initgroups(pw[0], (int)g);
 #endif
 #if efun(setegid) && defined(SET_EFFECTIVE)
-    setegid((int)g);
+      setegid((int)g);
 #else
-    setgid((int)g);
+      setgid((int)g);
 #endif
 #if efun(seteuid) && defined(SET_EFFECTIVE)
-    seteuid((int)u);
+      seteuid((int)u);
 #else
-    setuid((int)u);
+      setuid((int)u);
 #endif
-    return 1;
+      report_notice("Setting UID to "+u+" and GID to "+g);
+      return 1;
     }
   }
 }
@@ -1181,7 +1184,7 @@ object enable_configuration(string name)
 }
 
 // Enable all configurations
-static private void enable_configurations()
+void enable_configurations()
 {
   array err;
 
@@ -1449,7 +1452,7 @@ private void define_global_variables( int argc, array (string) argv )
 	  "a module is added, etc.).");
   
   globvar("ConfigurationPassword", "", "Configuration interface: Password", 
-	  TYPE_PASSWORD|VAR_MORE,
+	  TYPE_PASSWORD|VAR_EXPERT,
 	  "The password you will have to enter to use the configuration "
 	  "interface. Please note that changing this password in the "
 	  "configuration interface will _not_ require an additional entry "
@@ -1457,25 +1460,23 @@ private void define_global_variables( int argc, array (string) argv )
 	  "that you use the <a href=/(changepass)/Globals/>form instead</a>.");
   
   globvar("ConfigurationUser", "", "Configuration interface: User", 
-	  TYPE_STRING|VAR_MORE,
+	  TYPE_STRING|VAR_EXPERT,
 	  "The username you will have to enter to use the configuration "
 	  "interface");
   
-  globvar("ConfigurationIPpattern", "*", "Configuration interface: IP-Pattern", 
+  globvar("ConfigurationIPpattern","*", "Configuration interface: IP-Pattern", 
 	  TYPE_STRING|VAR_MORE,
 	  "The IP-pattern hosts trying to connect to the configuration "
 	  "interface will have to match.");
   
-  
   globvar("User", "", "Change uid and gid to", TYPE_STRING,
 	  "When roxen is run as root, to be able to open port 80 "
-	  "for listening, change to this user-id:group-id when the port "
-	  " has been opened. <b>NOTE:</b> Since this is done before the "
-	  "modules have been loaded, you will have to use the numeric user and"
-	  " group id's, and not the symbolic ones.\n");
+	  "for listening, change to this user-id and group-id when the port "
+	  " has been opened. If you only specify a symbolic username, the "
+	  "default group of that user will be used.");
   
   globvar("NumHostnameLookup", 2, "Number of hostname lookup processes", 
-	  TYPE_INT|VAR_MORE, 
+	  TYPE_INT|VAR_MORE,
 	  "The number of simultaneos host-name lookup processes roxen should "
 	  "run. Roxen must be restarted for a change of this variable to "+
 	  "take effect. If you constantly see a large host name lookup "
