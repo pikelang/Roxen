@@ -375,7 +375,7 @@ array(Image.Image) make_text_image(
     foreach((args->bgturbulence/";"),  string s)
     {
       array q= s/",";
-      if(sizeof(q)<2) args+=({ ((float)s)||0.2, ({ 255,255,255 }) });
+      if(sizeof(q)<2) arg+=({ ((float)s)||0.2, ({ 255,255,255 }) });
       arg+=({ ((float)q[0])||0.2, parse_color(q[1]) });
     }
     background=background->turbulence(arg);
