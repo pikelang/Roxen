@@ -1,3 +1,9 @@
+/*
+ * $Id: create_configif.pike,v 1.6 2000/03/07 18:52:37 grubba Exp $
+ *
+ * Create an initial configuration interface server.
+ */
+
 int mkdirhier(string from)
 {
   string a, b;
@@ -55,7 +61,10 @@ int main(int argc, array argv)
 	port = def_port;
     }
 
-    user = rl->read( "Administrator Username [administrator]: ");
+    do {
+      user = rl->read( "Administrator user name [administrator]: ");
+    } while(((search(user, "/") != -1) || (search(user, "\\"))) &&
+	    write("User name may not contain slashes.\n"));
     if( !strlen(user-" ") )
       user = "administrator";
 
@@ -69,19 +78,19 @@ int main(int argc, array argv)
     } while(!strlen(password) || (password != passwd2));
   } while( strlen( passwd2 = rl->read( "Ok? [y]: " ) ) && passwd2[0]=='n' );
 
-  string ufile=(configdir+"_configinterface/settings/"+user->name+"_uid");
+  string ufile=(configdir+"_configinterface/settings/" + user + "_uid");
   mkdirhier( ufile );
-  Stdio.write_file( ufile,
+  Stdio.write_file(ufile,
 string_to_utf8(#"<?XML version=\"1.0\"  encoding=\"UTF-8\"?>
 <map>
   <str>permissions</str> : <a> <str>Everything</str> </a>
   <str>real_name</str>   : <str>Configuration Interface Default User</str>
-  <str>password</str>    : <str>"+crypt( password )+ #"
-  <str>name</str>        : <str>"+user+"\n</map>" ));
+  <str>password</str>    : <str>" + crypt(password) + #"
+  <str>name</str>        : <str>" + user + "\n</map>" ));
 
   if(admin)
   {
-    write("Administrator user \""+user->name+"\" created.");
+    write("Administrator user \"" + user + "\" created.");
     return 0;
   }
 
