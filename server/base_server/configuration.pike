@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.559 2004/04/20 15:29:42 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.560 2004/04/28 16:30:11 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1326,6 +1326,108 @@ string examine_return_mapping(mapping m)
    res+="<br />";
 
    return res;
+}
+
+//! Attempt to lock @[path].
+//!
+//! @param path
+//!   Path to lock.
+//!
+//! @param locktype
+//!   Type of lock (currently only @expr{"DAV:write"@} is defined).
+//!
+//! @param lockscope
+//!   Scope of lock either @expr{"DAV:exclusive"@} or
+//!   @expr{"DAV:shared"@}.
+//!
+//! @returns
+//!   Returns a result mapping on failure,
+//!   and the resulting locktoken identifier on success.
+mapping(string:mixed)|string lock_file(string path,
+				       string locktype,
+				       string lockscope,
+				       int(0..1) recursive,
+				       RequestID id)
+{
+  // Canonicalize path.
+  if (!has_suffix(path, "/")) path+="/";
+
+  // First check if there's already some lock on path that prevents
+  // us from locking it.
+  multiset(DAVLock) locks = (<>);
+
+  foreach(location_module_cache||location_modules(),
+	  [string loc, function func])
+  {
+    string subpath;
+    if (has_prefix(path, loc)) {
+      // path == loc + subpath.
+      subpath = path[sizeof(loc)..];
+    } else if (recursive && has_prefix(loc, path)) {
+      // loc == path + ignored.
+      subpath = "/";
+    } else {
+      // Does not apply to this location module.
+      continue;
+    }
+    multiset(DAVLock) new_locks =
+      function_object(func)->find_locks(subpath, recursive, id);
+    if (new_locks) {
+      locks |= new_locks;
+    }
+  }
+
+  mapping(string:mixed) ret;
+
+  foreach(locks; DAVLock lock;) {
+    if (ret = lock->attempt_lock(locktype, lockscope, recursive, id)) {
+      // Some lock prevents us from creating a new lock.
+      return ret;
+    }
+  }
+
+  // No existing lock complains about us creating a new lock.
+  string locktoken = roxen->new_locktoken_string();
+  locks = (<>);
+  foreach(location_module_cache||location_modules(),
+	  [string loc, function func])
+  {
+    string subpath;
+    if (has_prefix(path, loc)) {
+      // path == loc + subpath.
+      subpath = path[sizeof(loc)..];
+    } else if (recursive && has_prefix(loc, path)) {
+      // loc == path + ignored.
+      subpath = "/";
+    } else {
+      // Does not apply to this location module.
+      continue;
+    }
+
+    mapping(string:mixed)|DAVLock new_lock =
+      function_object(func)->lock_file(subpath, locktype, lockscope,
+				       locktoken, recursive, id);
+    if (new_lock) {
+      if (mappingp(new_lock)) {
+	// Failure. Unlock any new locks we've already created.
+	foreach(locks; DAVLock lock; ) {
+	  // FIXME: Unregistration?
+	  lock->unlock(locktoken, id);
+	}
+	return new_lock;
+      }
+      locks[new_lock] = 1;
+    }
+  }
+  if (!sizeof(locks)) {
+    // None of the location modules support locking (readonly?).
+    return Roxen.http_status(501);
+  }
+
+  // FIXME: Timeout handling?
+
+  // Success.
+  return locktoken;
 }
 
 mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
