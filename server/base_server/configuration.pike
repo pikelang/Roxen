@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.45 1997/08/06 16:39:06 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.46 1997/08/07 17:18:31 mirar Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -2124,7 +2124,7 @@ int load_module(string module_file)
 
   if(prog=cache_lookup("modules", module_file)) {
     err = catch {
-      obj = prog(thist_object());
+      obj = prog(this_object());
     };
   } else {
     string dir;
