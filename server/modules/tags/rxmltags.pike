@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.283 2001/08/25 00:24:01 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.284 2001/08/28 03:58:07 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4366,130 +4366,154 @@ constant tagdoc=([
 "&roxen;":#"<desc scope='scope'><p><short>
  This scope contains information specific to this Roxen
  WebServer.</short> It is not possible to write any information to
- this scope
+ this scope.
 </p></desc>",
 
 "&roxen.domain;":#"<desc ent='ent'><p>
- The domain name of this site.
+ The domain name of this site. The information is taken from the
+ client request, so a request to \"http://community.roxen.com/\" would
+ give this entity the value \"community.roxen.com\", while a request
+ for \"http://community/\" would give the entity value \"community\".
 </p></desc>",
 
 "&roxen.hits;":#"<desc ent='ent'><p>
  The number of hits, i.e. requests the webserver has accumulated since
  it was last started.
 </p></desc>",
+
 "&roxen.hits-per-minute;":#"<desc ent='ent'><p>
- The number of hits per minute, in average.
+ The average number of requests per minute since the webserver last
+ started.
 </p></desc>",
 
 "&roxen.pike-version;":#"<desc ent='ent'><p>
- The version of Pike the webserver is using.
+ The version of Pike the webserver is using, e.g. \"Pike v7.2 release 140\".
 </p></desc>",
 
 "&roxen.sent;":#"<desc ent='ent'><p>
-The total amount of data the webserver has sent.
+ The total amount of data the webserver has sent since it last started.
 </p></desc>",
 
 "&roxen.sent-kbit-per-second;":#"<desc ent='ent'><p>
-The average amount of data the webserver has sent, in
-Kibibits.
+ The average amount of data the webserver has sent, in Kibibits.
 </p></desc>",
 
 "&roxen.sent-mb;":#"<desc ent='ent'><p>
- The total amount of data the webserver has sent, in
- Mebibits.
+ The total amount of data the webserver has sent, in Mebibits.
 </p></desc>",
 
 "&roxen.sent-per-minute;":#"<desc ent='ent'><p>
- The number of bytes that the webserver sends during a
- minute, on average.
+ The average number of bytes that the webserver sends during a
+ minute. Based on the sent amount of data and uptime since last server start.
 </p></desc>",
 
 "&roxen.server;":#"<desc ent='ent'><p>
- The URL of the webserver.
+ The URL of the webserver. The information is taken from the client request,
+ so a request to \"http://community.roxen.com/index.html\" would give this
+ entity the value \"http://community.roxen.com/\", while a request for
+ \"http://community/index.html\" would give the entity the value
+ \"http://community/\".
 </p></desc>",
 
 "&roxen.ssl-strength;":#"<desc ent='ent'><p>
- How many bits encryption strength are the SSL capable of
+ Contains the maximum number of bits encryption strength that the SSL is capable of.
+ Note that this is the server side capability, not the client capability.
+ Possible values are 0, 40, 128 or 168.
 </p></desc>",
 
 "&roxen.time;":#"<desc ent='ent'><p>
- The current posix time.
+ The current posix time. An example output: \"244742740\".
 </p></desc>",
 
 "&roxen.unique-id;":#"<desc ent='ent'><p>
  Returns a unique id that can be used for e.g. session
- identification.
+ identification. An example output: \"7fcda35e1f9c3f7092db331780db9392\".
+ Note that a new id will be generated every time this entity is used,
+ so you need to store the value in another variable if you are going
+ to use it more than once.
 </p></desc>",
 
 "&roxen.uptime;":#"<desc ent='ent'><p>
- The total uptime of the webserver, in seconds.
+ The total uptime of the webserver since last start, in seconds.
 </p></desc>",
 
 "&roxen.uptime-days;":#"<desc ent='ent'><p>
- The total uptime of the webserver, in days.
+ The total uptime of the webserver since last start, in days.
 </p></desc>",
 
 "&roxen.uptime-hours;":#"<desc ent='ent'><p>
- The total uptime of the webserver, in hours.
+ The total uptime of the webserver since last start, in hours.
 </p></desc>",
 
 "&roxen.uptime-minutes;":#"<desc ent='ent'><p>
- The total uptime of the webserver, in minutes.
+ The total uptime of the webserver since last start, in minutes.
 </p></desc>",
 
 //----------------------------------------------------------------------
 
 "&client;":#"<desc scope='scope'><p><short>
  This scope contains information specific to the client/browser that
- is accessing the page.</short>
+ is accessing the page. All support variables defined in the support
+ file is added to this scope.</short>
 </p></desc>",
 
 "&client.ip;":#"<desc ent='ent'><p>
- The client is located on this IP-address.
+ The client is located on this IP-address. An example output: \"194.52.182.15\".
 </p></desc>",
 
 "&client.host;":#"<desc ent='ent'><p>
  The host name of the client, if possible to resolve.
+ An example output: \"www.roxen.com\".
 </p></desc>",
 
 "&client.name;":#"<desc ent='ent'><p>
- The name of the client, i.e. \"Mozilla/4.7\".
+ The name of the client, i.e. the sent user agent string up until the
+ first space character. An example output: \"Mozilla/4.7\".
 </p></desc>",
 
 "&client.Fullname;":#"<desc ent='ent'><p>
  The full user agent string, i.e. name of the client and additional
- info like; operating system, type of computer, etc. E.g.
+ info like; operating system, type of computer, etc. An example output:
  \"Mozilla/4.7 [en] (X11; I; SunOS 5.7 i86pc)\".
 </p></desc>",
 
 "&client.fullname;":#"<desc ent='ent'><p>
  The full user agent string, i.e. name of the client and additional
- info like; operating system, type of computer, etc. E.g.
+ info like; operating system, type of computer, etc. Unlike <ent>client.fullname</ent>
+ this value is lowercased. An example output:
  \"mozilla/4.7 [en] (x11; i; sunos 5.7 i86pc)\".
 </p></desc>",
 
 "&client.referrer;":#"<desc ent='ent'><p>
  Prints the URL of the page on which the user followed a link that
  brought her to this page. The information comes from the referrer
- header sent by the browser.
+ header sent by the browser. An example output: \"http://www.roxen.com/index.xml\".
 </p></desc>",
 
 "&client.accept-language;":#"<desc ent='ent'><p>
  The client prefers to have the page contents presented in this
- language.
+ language, according to the accept-language header. An example output: \"en\".
 </p></desc>",
 
 "&client.accept-languages;":#"<desc ent='ent'><p>
- The client prefers to have the page contents presented in this
- language but these additional languages are accepted as well.
+ The client prefers to have the page contents presented in these
+ languages, according to the accept-language header. An example output: \"en, sv\".
 </p></desc>",
 
 "&client.language;":#"<desc ent='ent'><p>
- The clients most preferred language.
+ The clients most preferred language. Usually the same value as
+ <ent>client.accept-language</ent>, but is possibly altered by
+ a customization module like the Preferred language analyzer.
+ It is recommended that this entity is used over the <ent>client.accept-language</ent>
+ when selecting languages. An example output: \"en\".
 </p></desc>",
 
 "&client.languages;":#"<desc ent='ent'><p>
- An ordered list of the clients most preferred languages.
+ An ordered list of the clients most preferred languages. Usually the
+ same value as <ent>client.accept-language</ent>, but is possibly altered
+ by a customization module like the Preferred language analyzer, or
+ reorganized according to quality identifiers according to the HTTP
+ specification. An example output: \"en, sv\".
 </p></desc>",
 
 "&client.authenticated;":#"<desc ent='ent'><p>
@@ -4503,7 +4527,7 @@ Kibibits.
 </p></desc>",
 
 "&client.password;":#"<desc ent='ent'><p>
-
+ Returns the password the user used when he/she tried to log on the site.
 </p></desc>",
 
 "&client.height;":#"<desc ent='ent'><p>
@@ -4545,17 +4569,22 @@ Kibibits.
 </desc>",
 
 "&page.realfile;":#"<desc ent='ent'><p>
- Path to this file in the file system.
+ Path to this file in the file system. An example output:
+ \"/home/joe/html/index.html\".
 </p></desc>",
 
 "&page.virtroot;":#"<desc ent='ent'><p>
- The root of the present virtual filesystem.
+ The root of the present virtual filesystem, usually \"/\".
 </p></desc>",
 
 //  &page.virtfile; is same as &page.path; but deprecated since we want to
 //  harmonize with SiteBuilder entities.
 "&page.path;":#"<desc ent='ent'><p>
- Absolute path to this file in the virtual filesystem.
+ Absolute path to this file in the virtual filesystem. E.g. with the
+ URL \"http://www.roxen.com/partners/../products/index.xml\", as well
+ as \"http://www.roxen.com/products/index.xml\", the value will be
+ \"/products/index.xml\", given that the virtual filsystem was mounted
+ on \"/\".
 </p></desc>",
 
 "&page.pathinfo;":#"<desc ent='ent'><p>
@@ -4565,12 +4594,14 @@ Kibibits.
 </p></desc>",
 
 "&page.query;":#"<desc ent='ent'><p>
- The query part of the page URI.
+ The query part of the page URL. If the page URL is
+ \"http://www.server.com/index.html?a=1&amp;b=2\"
+ the value of this entity is \"a=1&amp;b=2\".
 </p></desc>",
 
 "&page.url;":#"<desc ent='ent'><p>
- The absolute path for this file from the web server's root or point
- of view including query variables.
+ The absolute path for this file from the web server's root
+ view including query variables.
 </p></desc>",
 
 "&page.last-true;":#"<desc ent='ent'><p>
@@ -4595,23 +4626,29 @@ Kibibits.
 </p></desc>",
 
 "&page.ssl-strength;":#"<desc ent='ent'><p>
- The strength in bits of the current SSL connection.
+ The number of bits used in the key of the current SSL connection.
 </p></desc>",
 
 "&page.self;":#"<desc ent='ent'><p>
- The name of this file.
+ The name of this file, derived from the URL. If the URL is
+ \"http://community.roxen.com/articles/index.html\", then the
+ value of this entity is \"index.html\".
 </p></desc>",
 
 "&page.dir;":#"<desc ent='ent'><p>
- The name of the directory in the virtual filesystem where the file resides.
+ The name of the directory in the virtual filesystem where the file resides,
+ as derived from the URL. If the URL is
+ \"http://community.roxen.com/articles/index.html\", then the
+ value of this entity is \"/articles/\".
 </p></desc>",
 
 //----------------------------------------------------------------------
 
 "&form;":#"<desc scope='scope'><p><short hide='hide'>
- This scope contains form variables.</short>This scope contains the
+ This scope contains form variables.</short> This scope contains the
  form variables, i.e. the answers to HTML forms sent by the client.
- There are no predefined entities for this scope.
+ Both variables resulting from POST operations and GET operations gets
+ into this scope. There are no predefined entities for this scope.
 </p></desc>",
 
 //----------------------------------------------------------------------
@@ -4626,16 +4663,30 @@ Kibibits.
 //----------------------------------------------------------------------
 
 "&var;":#"<desc scope='scope'><p><short>
- This scope is empty when the page parsing begins.</short> There are
- no predefined entities for this
+ General variable scope.</short> This scope is always empty when the
+ page parsing begins and is therefore suitable to use as storage for
+ all variables used during parsing.
 </p></desc>",
 
 //----------------------------------------------------------------------
 
 "roxen_automatic_charset_variable":#"<desc tag='tag'><p>
  If put inside a form, the right character encoding of the submitted
- form can be guessed by Roxen WebServer.
-</p></desc>",
+ form can be guessed by Roxen WebServer. The tag will insert another
+ tag that forces the client to submit the string \"едц\". Since the
+ WebServer knows the name and the content of the form variable it can
+ select the proper character decoder for the requests variables.
+</p>
+
+<ex type='box'>
+<form>
+  <roxen_automatic_charset_variable/>
+  Name: <input name='name'/><br />
+  Mail: <input name='mail'/><br />
+  <input type='submit'/>
+</form>
+</ex>
+</desc>",
 
 //----------------------------------------------------------------------
 
@@ -4656,54 +4707,58 @@ Kibibits.
   </td>
 </tr></table>
 </ex>
+
+ <p>It can also successfully be used when the wiretap module is turned off
+ for e.g. performance reasons.</p>
 </desc>
 
 <attr name='text' value='color'><p>
- Set the text color within the scope.</p>
+ Set the text color to this value within the scope.</p>
 </attr>
 
 <attr name='bgcolor' value='color'<p>
- Set the background color within the scope.</p>
+ Set the background color to this value within the scope.</p>
 </attr>
 
 <attr name='link' value='color'<p>
- Set the link color within the scope.</p>
+ Set the link color to this value within the scope.</p>
 </attr>
 
 <attr name='alink' value='color'<p>
- Set the active link color within the scope.</p>
+ Set the active link color to this value within the scope.</p>
 </attr>
 
 <attr name='vlink' value='color'<p>
- Set the visited link color within the scope.</p>
+ Set the visited link color to this value within the scope.</p>
 </attr>",
 
 //----------------------------------------------------------------------
 
 "aconf":#"<desc cont='cont'><p><short>
- Creates a link that can modify the persistent states in the cookie
+ Creates a link that can modify the config states in the cookie
  RoxenConfig.</short> In practice it will add &lt;keyword&gt;/ right
- after the server, i.e. if you want to remove bacon and add egg the
+ after the server in the URL. E.g. if you want to remove the config
+ state bacon and add config state egg the
  first \"directory\" in the path will be &lt;-bacon,egg&gt;. If the
  user follows this link the WebServer will understand how the
  RoxenConfig cookie should be modified and will send a new cookie
  along with a redirect to the given url, but with the first
- \"directory\" removed. The presence of a certain keyword in can be
- controlled with <xref href='../if/if_config.tag' />.</p>
+ \"directory\" removed. The presence of a certain config state can be
+ detected by the <xref href='../if/if_config.tag'/> tag.</p>
 </desc>
 
-<attr name=href value=uri>
+<attr name='href' value='uri'>
  <p>Indicates which page should be linked to, if any other than the
  present one.</p>
 </attr>
 
-<attr name=add value=string>
- <p>The \"cookie\" or \"cookies\" that should be added, in a comma
+<attr name='add' value='string'>
+ <p>The config state, or config states that should be added, in a comma
  separated list.</p>
 </attr>
 
 <attr name=drop value=string>
- <p>The \"cookie\" or \"cookies\" that should be dropped, in a comma
+ <p>The config state, or config states that should be dropped, in a comma
  separated list.</p>
 </attr>
 
@@ -4711,7 +4766,7 @@ Kibibits.
  <p>This cascading style sheet (CSS) class definition will apply to
  the a-element.</p>
 
- <p>All other attributes will be inherited by the generated a tag.</p>
+ <p>All other attributes will be inherited by the generated <tag>a</tag> tag.</p>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -5004,11 +5059,25 @@ using the pre tag.
 
 //----------------------------------------------------------------------
 
-"charset":#"<desc cont='cont'><p><short>
- </short>
+"charset":#"<desc cont='cont' tag='tag'><p>
+ <short>Converts between character sets.</short> The tag can be used both
+ to decode texts encoded in strange character encoding schemas, but also
+ to decide upon the final encoding of the resulting page. All character
+ sets listed in <a href='http://rfc.roxen.com/1345'>RFC 1345</a> are
+ supported.
+</p>
+</desc>
 
- </p>
-</desc>",
+<attr name='in' value='Character set'><p>
+ Converts the contents of the charset tag from the character set indicated
+ by this attribute to the internal text representation.</p>
+</attr>
+
+<attr name='out' value='Character set'><p>
+ Sets the output conversion character set of the current request. The page
+ will be sent encoded with the indicated character set.</p>
+</attr>
+",
 
 //----------------------------------------------------------------------
 
