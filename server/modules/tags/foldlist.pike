@@ -1,13 +1,11 @@
-// This is a roxen module. Copyright © 1999-2000, Roxen IS.
+// This is a roxen module. Copyright © 1999-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.24 2001/01/06 05:03:19 nilsson Exp $";
-constant thread_safe=1;
+constant cvs_version = "$Id: foldlist.pike,v 1.25 2001/01/21 21:43:42 nilsson Exp $";
+constant thread_safe = 1;
 
 #include <module.h>
-
 inherit "module";
-inherit "state";
 
 constant module_type = MODULE_TAG;
 constant module_name = "Folding lists";
@@ -202,7 +200,7 @@ class TagFoldlist {
 
       // Register ourselfs as state consumers and incorporate our initial state.
       state_id = (args->name || "fl")+":"+id->misc->foldlist_depth+":"+hist;
-      object state=Page_state(id);
+      object state=StateHandler.Page_state(id);
       state_id = state->register_consumer(state_id, id);
       if(id->variables->state && !state->uri_decode(id->variables->state))
 	RXML.run_error("Error in state.");

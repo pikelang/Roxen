@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.57 2000/09/18 19:32:39 kuntri Exp $";
-constant thread_safe=1;
+constant cvs_version = "$Id: tablify.pike,v 1.58 2001/01/21 21:43:53 nilsson Exp $";
+constant thread_safe = 1;
+
 #include <module.h>
 inherit "module";
-inherit "state";
 
 constant module_type = MODULE_TAG;
 constant module_name = "Tablify";
@@ -401,7 +401,7 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
 		  }, sep);
 
   if(m["interactive-sort"]) {
-    m->state=Page_state(id);
+    m->state=StateHandler.Page_state(id);
     m->state->register_consumer((m->name || "tb")+sizeof(rows), id);
     m->sortcol=(int)m->sortcol;
     if(id->variables->state){
