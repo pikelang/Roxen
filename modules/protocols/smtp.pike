@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.68 1999/02/02 15:28:16 grubba Exp $
+ * $Id: smtp.pike,v 1.69 1999/03/12 17:56:53 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.68 1999/02/02 15:28:16 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.69 1999/03/12 17:56:53 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -672,7 +672,7 @@ static class Smtp_Connection {
 
     array a = (args[i+1..]/" ") - ({ "" });
 	
-    if (!sizeof(a)) {
+    if (!sizeof(a) || a[0] == "<>") {
       // Empty return address == bounce message.
       if (connection_class > 0) {
 	connection_class = 0;
