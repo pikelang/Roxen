@@ -8,7 +8,7 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wml.pike,v 1.11 2000/09/10 16:35:09 nilsson Exp $";
+constant cvs_version = "$Id: wml.pike,v 1.12 2000/11/02 13:41:18 kuntri Exp $";
 
 constant module_type = MODULE_TAG;
 constant module_name = "WAP WML helper";
@@ -19,10 +19,11 @@ produce WML that suits different WAP clients.";
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"wml":#"<desc cont>
+"wml":#"<desc cont='cont'><p><short>
  Processes the wml tag and adapts the contents to better suit the
- client. The contents is always preparsed. No attributes are required.
-</desc>
+ client.</short> The contents is always preparsed. No attributes are
+ required.
+</p></desc>
 
 <attr name=from value=1.0|1.1>
  Tells what version of wml is used. Default is 1.1
