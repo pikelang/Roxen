@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.244 2000/09/16 18:02:01 nilsson Exp $
+// $Id: rxml.pike,v 1.245 2000/09/18 11:02:43 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1558,7 +1558,7 @@ class TagEmitSources {
   }
 }
 
-class TagEmitForeach {
+class TagEmitValues {
   inherit RXML.Tag;
   constant name="emit";
   constant plugin_name="values";
