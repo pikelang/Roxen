@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.836 2002/10/30 19:40:01 nilsson Exp $";
+constant cvs_version="$Id: core.pike,v 1.837 2002/11/02 17:48:07 mani Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -71,10 +71,11 @@ string md5( string what )
   return Gmp.mpz(Crypto.md5()->update( what )->digest(),256)
     ->digits(32);
 }
-  
+
+// NGSERVER: remove this function
 string query_configuration_dir()
 {
-  return configuration_dir;
+  return loader.query_configuration_dir();
 }
 
 string filename( program|object o )
@@ -2191,7 +2192,7 @@ private int current_user_id_number, current_user_id_file_last_mod;
 private void restore_current_user_id_number()
 {
   if(!current_user_id_file)
-    current_user_id_file = open(configuration_dir + "LASTUSER~", "rwc");
+    current_user_id_file = open("$CONFIGDIR/LASTUSER~", "rwc");
   if(!current_user_id_file)
   {
     call_out(restore_current_user_id_number, 2);
@@ -4318,12 +4319,8 @@ int main(array(string) tmp)
   mark_fd(1, "Stdout");
   mark_fd(2, "Stderr");
 
-  configuration_dir =
-    Getopt.find_option(argv, "d",({"config-dir","configuration-directory" }),
-	     ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }), "../configurations");
-
-  if(configuration_dir[-1] != '/')
-    configuration_dir += "/";
+  // NGSERVER: Remove this.
+  configuration_dir = loader.query_configuration_dir();
 
   restore_global_variables(); // restore settings...
 
