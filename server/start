@@ -118,9 +118,9 @@ oo
   
   echo "Server restart at `date`"
   rotate $LOGDIR/debug/$FILES
-  args="-DROXEN $DEBUG roxenloader --config-dir=$DIR --start-script-pid=$$"
-  echo Executing $ulpc -m etc/master.pike $args $@ 2>$LOGDIR/debug/$FILES.1 
-  $ulpc -m etc/master.pike $args $@ 2>>$LOGDIR/debug/$FILES.1 1>&2
+  args="-DROXEN $DEBUG base_server/roxenloader --config-dir=$DIR --start-script-pid=$$"
+  echo Executing $ulpc -m $args $@ 2>$LOGDIR/debug/$FILES.1 
+  $ulpc $args $@ 2>>$LOGDIR/debug/$FILES.1 1>&2
   if [ -z "$noshutdown" ] ; then 
     if [ -f "$sdfile" ] ; then
 
@@ -154,7 +154,7 @@ You can use the configuration interface in the server to get debug info.
 oo
 else
   echo "Server restart at `date`"
-  args="-DROXEN $DEBUG roxenloader --config-dir=$DIR --start-script-pid=$$"
-  echo Executing $ulpc -m etc/master.pike $args $@
-  $ulpc -m etc/master.pike $args $@
+  args="-DROXEN $DEBUG base_server/roxenloader--config-dir=$DIR --start-script-pid=$$"
+  echo Executing $ulpc $args $@
+  $ulpc $args $@
 fi
