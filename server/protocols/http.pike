@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.468 2005/03/01 19:12:16 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.469 2005/03/31 09:53:13 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1829,6 +1829,38 @@ void send_result(mapping|void result)
 	misc->connection = "close";
       }
 
+      // Check for wide headers.
+      // FIXME: Assumes no header names are wide.
+      foreach(heads; string header_name; string content) {
+	if (String.width(content) > 8) {
+	  array(array(string)|int) tokenized =
+	    MIME.decode_words_tokenized(string_to_utf8(content));
+	  foreach(tokenized, array(string)|int token) {
+	    if (arrayp(token)) {
+	      string raw = utf8_to_string(token[0])
+	      if (String.width(raw) > 8) {
+		if (token[1]) {
+		  // Should not happen in normal circumstances.
+		  catch {
+		    // Attempt to recode in UTF-8.
+		    token[0] = string_to_utf8(Locale.Charset.
+					      decoder(token[1])->
+					      feed(raw)->drain());
+		  };
+		}
+		token[1] = "utf-8";
+	      } else {
+		token[0] = raw;
+	      }
+	    }
+	  }
+	  string q = MIME.encode_words_quoted(tokenized, "q");
+	  string b = MIME.encode_words_quoted(tokenized, "b");
+	  // Prefer QP to BASE-64 if they are the same length.
+	  heads[header_name] = (sizeof(b)<sizeof(q))?b:q;
+	}
+      }
+
 	if( mixed err = catch( head_string += Roxen.make_http_headers( heads ) ) )
 	{
 #ifdef DEBUG
@@ -1849,10 +1881,6 @@ void send_result(mapping|void result)
 	  }
 	  head_string += "\r\n";
 	}
-
-	if (sscanf (heads["Content-Type"], "; charset=%s", string charset) ||
-	    String.width( head_string ) > 8 )
-          head_string = output_encode( head_string, 0, charset )[1];
         conf->hsent += strlen(head_string);
     }
   else
