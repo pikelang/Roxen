@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.266 2001/04/24 23:35:04 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.267 2001/07/12 17:05:33 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -564,6 +564,7 @@ function alter_image(label)
 // -------------------- Image cache functions --------------------
 
 roxen.ImageCache image_cache;
+private int magic_counter;
 
 string status() {
   array s=image_cache->status();
@@ -1070,7 +1071,7 @@ string do_gtext(mapping arg, string c, RequestID id)
 
     if(!id->supports->images) return sprintf(lp,arg->alt);
 
-    string sn="gtext"+id->misc->gtext_mi++;
+    string sn = "gtext" + (magic_counter++ % 65535);
     if(!id->supports->js_image_object) {
       return (!input)?
         ("<a"+ea+"href=\""+url+"\">"+Roxen.make_tag("img",arg+(["name":sn]),xml)+"</a>"):
