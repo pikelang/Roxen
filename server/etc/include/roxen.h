@@ -1,4 +1,4 @@
-// $Id: roxen.h,v 1.15 2000/07/15 11:17:44 grubba Exp $
+// $Id: roxen.h,v 1.16 2000/07/17 14:13:42 lange Exp $
 // -*- Pike -*-
 
 #ifndef _ROXEN_H_
@@ -30,7 +30,7 @@
 
 #ifndef _STR_LOCALE
 #define _STR_LOCALE(Z, X, Y)	\
-    (__LOCALEMODULE.translate(X, __LOCALEOBJECT->get, X, Y))
+    (__LOCALEMODULE.translate(X, __LOCALEOBJECT->get(), X, Y))
 #endif /* !_STR_LOCALE */
 
 #ifndef _DEF_LOCALE
