@@ -2,15 +2,37 @@ inherit "http_common";
 
 void main(int argc, array argv)
 {
-  string sep;
-  if( argc < 4 )  exit( BADARG );
-  if( argc == 5 )  sep = "\n"; else  sep = "\r\n";
+  string  sep = "\r\n";
+  int     psize = 100000;
+  if( argc < 4 )
+    exit( BADARG );
+
+  if( argc == 5 )
+  {
+    switch( (int)argv[4] )
+    {
+      case 1:
+	break;
+      case 2:
+	sep = "\n";
+	break;
+      case 3:
+	psize = 1;
+	break;
+      case 4:
+	psize = 10;
+	break;
+    }
+  }
 
   Stdio.File f = connect(  argv[1] );
 
-  f->write( "GET "+argv[2]+" HTTP/1.0"+sep+
-	    "User-Agent: testcript"+sep+
-	    sep );
+
+  write_fragmented( f, 
+		    "GET "+argv[2]+" HTTP/1.0"+sep+
+		    "Connection: close"+sep+
+		    "User-Agent: testcript"+sep+sep,
+		    psize );
 
   string _d = f->read();
 

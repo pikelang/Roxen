@@ -6,7 +6,10 @@ void main(int argc, array argv)
 
   Stdio.File f = connect( argv[1] );
 
-  f->write( "PING" + (argc==5?"\n":"\r\n") );
+  if( (int)argv[-1] == 3 )
+    write_fragmented( f, "PING\r\n", 1 );
+  else
+    f->write( "PING" + ((int)argv[-1]==2?"\n":"\r\n") );
   
   string data = f->read();
 

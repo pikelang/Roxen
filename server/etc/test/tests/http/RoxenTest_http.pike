@@ -25,8 +25,12 @@ function run( string script, string file, int len, string ... ma  )
 	 };
 }
 
-#define stest( X,Y,Z,Å ) atest( X, run( Y,Z,Å ), simple_check )
-#define stest2( X,Y,Z,Å ) atest( X+" (no \\r)", run( Y,Z,Å,"1" ), simple_check )
+#define _test( X,Y,Z,Å,Ä,Ö) atest(X+Ä, run(Y,Z,Å,Ö), simple_check )
+
+#define stest( X,Y,Z,Å )   _test( X,Y,Z,Å, "",                 "1" )
+#define stest2( X,Y,Z,Å )  _test( X,Y,Z,Å," (no \\r)",          "2" )
+#define stest3( X,Y,Z,Å )  _test( X,Y,Z,Å," (1 b packets)",  "3" )
+#define stest4( X,Y,Z,Å )  _test( X,Y,Z,Å," (10 b packets)", "4" )
 
 void setup( )
 {
@@ -52,6 +56,26 @@ void setup( )
   stest2( "HTTP/1.0 /",        "http/http10.pike", "/",        0 );
   stest2( "HTTP/1.0 /nofile",  "http/http10.pike", "/nofile",  0 );
 
-  stest2( "PING",              "http/ping.pike",   "/",        0 );
+  stest3( "PING",              "http/ping.pike",   "/",        0 );
 
+  stest3( "HTTP/0.9 /1k.raw",  "http/http09.pike", "/1k.raw",  1024 );
+  stest3( "HTTP/0.9 /10k.raw", "http/http09.pike", "/10k.raw", 1024*10 );
+  stest3( "HTTP/0.9 /",        "http/http09.pike", "/",        0 );
+  stest3( "HTTP/0.9 /nofile",  "http/http09.pike", "/nofile",  0 );
+
+  stest3( "HTTP/1.0 /1k.raw",  "http/http10.pike", "/1k.raw",  1024 );
+  stest3( "HTTP/1.0 /10k.raw", "http/http10.pike", "/10k.raw", 1024*10 );
+  stest3( "HTTP/1.0 /",        "http/http10.pike", "/",        0 );
+  stest3( "HTTP/1.0 /nofile",  "http/http10.pike", "/nofile",  0 );
+
+
+  stest4( "HTTP/0.9 /1k.raw",  "http/http09.pike", "/1k.raw",  1024 );
+  stest4( "HTTP/0.9 /10k.raw", "http/http09.pike", "/10k.raw", 1024*10 );
+  stest4( "HTTP/0.9 /",        "http/http09.pike", "/",        0 );
+  stest4( "HTTP/0.9 /nofile",  "http/http09.pike", "/nofile",  0 );
+
+  stest4( "HTTP/1.0 /1k.raw",  "http/http10.pike", "/1k.raw",  1024 );
+  stest4( "HTTP/1.0 /10k.raw", "http/http10.pike", "/10k.raw", 1024*10 );
+  stest4( "HTTP/1.0 /",        "http/http10.pike", "/",        0 );
+  stest4( "HTTP/1.0 /nofile",  "http/http10.pike", "/nofile",  0 );
 }

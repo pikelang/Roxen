@@ -48,6 +48,17 @@ Stdio.File connect( string url )
   return f;
 }
 
+void write_fragmented( Stdio.File to,
+		       string what,
+		       int chars )
+{
+  foreach( what/((float)chars), string w )
+  {
+    to->write( w );
+    sleep( 0.01 );
+  }
+}
+
 
 void verify_headers( string headers, int content_length,
 		     string expected_prot, int expected_code,
