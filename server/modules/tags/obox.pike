@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.23 2000/03/13 21:05:57 nilsson Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.24 2000/03/21 21:10:10 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -17,7 +17,7 @@ TAGDOCUMENTATION
 constant tagdoc=(["obox":([
   "standard":#"<desc cont>Outlined box</desc>
 
-<attr name=align value=left,right>
+<attr name=align value=left|right>
  Vertical alignment of the box.
 </attr>
 
@@ -55,7 +55,7 @@ constant tagdoc=(["obox":([
  Width, in pixels, of the space in the box.
 </attr>
 
-<attr name=style value=caption,groupbox>
+<attr name=style value=caption|groupbox>
  Style of the box. Groupbox is default
 </attr>
 

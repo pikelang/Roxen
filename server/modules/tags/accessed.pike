@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.26 2000/03/13 06:25:12 per Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.27 2000/03/21 21:10:00 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -62,7 +62,7 @@ constant tagdoc=([
  <ex><accessed></ex>
  </desc>
 
-<attr name=add value=int>
+<attr name=add value=number>
  Increments the number of accesses with this number instead of one,
  each time the page is accessed.</attr>
 
@@ -71,11 +71,11 @@ constant tagdoc=([
  use the cheat attribute and still want to keep track of the
  real number of accesses.</attr>
 
-<attr name=case value=upper,lower,capitalize>
+<attr name=case value=upper|lower|capitalize>
  Sets the result to upper case, lower case or with the first letter capitalized.
 </attr>
 
-<attr name=cheat value=int>
+<attr name=cheat value=number>
  Adds this number of accesses to the actual number of accesses before
  printing the result. If your page has been accessed 72 times and you
  add &lt;accessed cheat=100&gt; the result will be 172.</attr>
@@ -110,17 +110,17 @@ constant tagdoc=([
  Will print the result as words in the chosen language if used together
  with type=string.
 
- <ex><accessed type=string></ex>
- <ex><accessed type=string lang=sv></ex>
+ <ex><accessed type=\"string\"/></ex>
+ <ex><accessed type=\"string\" lang=\"sv\"/></ex>
 </attr>
 
-<attr name=per value=second,minute,hour,day,week,month,year>
+<attr name=per value=second|minute|hour|day|week|month|year>
  Shows the number of accesses per unit of time.
 
- <ex><accessed per=week></ex>
+ <ex><accessed per=\"week\"/></ex>
 </attr>
 
-<attr name=prec value=int>
+<attr name=prec value=number>
  Rounds the number of accesses to this number of significant digits. If
  prec=2 show 12000 instead of 12148.
 </attr>
@@ -146,20 +146,20 @@ constant tagdoc=([
  depend on the lang tag, default is English. All normal date
  related attributes can be used. See the &lt;date&gt; tag.
 
- <ex><accessed since></ex>
+ <ex><accessed since=\"\"/></ex>
 </attr>
 
-<attr name=type value=number,string,roman,iso,discordian,stardate,mcdonalds,linus,ordered>
+<attr name=type value=number|string|roman|iso|discordian|stardate|mcdonalds|linus|ordered>
  Specifies how the count are to be presented. Some of these are only
  useful together with the since attribute.
 
- <ex><accessed type=roman></ex>
- <ex><accessed since type=iso></ex>
- <ex><accessed since type=discordian></ex>
- <ex><accessed since type=stardate></ex>
- <ex><accessed type=mcdonalds></ex>
- <ex><accessed since type=linus></ex>
- <ex><accessed type=ordered></ex>
+ <ex><accessed type=\"roman\"/></ex>
+ <ex><accessed since=\"\" type=\"iso\"/></ex>
+ <ex><accessed since=\"\" type=\"discordian\"/></ex>
+ <ex><accessed since=\"\" type=\"stardate\"/></ex>
+ <ex><accessed type=\"mcdonalds\"/></ex>
+ <ex><accessed type=\"linus\"/></ex>
+ <ex><accessed type=\"ordered\"/></ex>
 
 </attr>"]);
 #endif

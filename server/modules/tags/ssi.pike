@@ -6,7 +6,7 @@ inherit "roxenlib";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.24 2000/03/20 02:01:04 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.25 2000/03/21 21:10:42 nilsson Exp $";
 
 
 constant module_type = MODULE_PARSER;
@@ -86,7 +86,7 @@ constant tagdoc=([
  occurs while parsing the SSI-tag.
 </attr>
 
-<attr name=sizefmt value=bytes,abbrev>
+<attr name=sizefmt value=bytes|abbrev>
  The value sets the format to be used when displaying the size of a
  file. Bytes gives a count in bytes while abbrev gives a count in KB
  or MB, as appropriate.
@@ -115,61 +115,61 @@ constant tagdoc=([
  <ex type=vert><!--#echo var=sizefmt --></ex>
 </attr>
 
-<attr name=var value=document name>
+<attr name=var value='document name'>
  Name of the current document (= page)
  <ex type=vert><!--#echo var=\"document name\" --></ex>
 </attr>
 
-<attr name=var value=document uri>
+<attr name=var value='document uri'>
  URI (URL) to the current page.
  <ex type=vert><!--#echo var=uri --></ex>
 </attr>
 
-<attr name=var value=date local>
+<attr name=var value='date local'>
  Time and date, in current time zone.
 </attr>
 
-<attr name=var value=date gmt>
+<attr name=var value='date gmt'>
  Time and date, GMT time zone.
 </attr>
 
-<attr name=var value=last modified>
+<attr name=var value='last modified'>
  Last time this document was modified.
 </attr>
 
-<attr name=var value=server software>
+<attr name=var value='server software'>
  The web server software
 </attr>
 
-<attr name=var value=server name>
+<attr name=var value='server name'>
  The web server name
 </attr>
 
-<attr name=var value=remote host>
+<attr name=var value='remote host'>
  Name of client machine
 </attr>
 
-<attr name=var value=remote addr>
+<attr name=var value='remote addr'>
  Numeric IP address of client machine
 </attr>
 
-<attr name=var value=auth type>
+<attr name=var value='auth type'>
  Authentication type (typically Basic)
 </attr>
 
-<attr name=var value=remote user>
+<attr name=var value='remote user'>
  Client user name
 </attr>
 
-<attr name=var value=http referrer>
+<attr name=var value='http referrer'>
  URL of the referring page
 </attr>
 
-<attr name=var value=gateway interface>
+<attr name=var value='gateway interface'>
 
 </attr>
 
-<attr name=var value=http cookie>
+<attr name=var value='http cookie'>
 
 </attr>
 
@@ -177,31 +177,31 @@ constant tagdoc=([
 
 </attr>
 
-<attr name=var value=http accept>
+<attr name=var value='http accept'>
 
 </attr>
 
-<attr name=var value=http user agent>
+<attr name=var value='http user agent'>
 
 </attr>
 
-<attr name=var value=path translated>
+<attr name=var value='path translated'>
  Translated path.
 </attr>
 
-<attr name=var value=query string unescaped>
+<attr name=var value='query string unescaped'>
  The query string.
 </attr>
 
-<attr name=var value=request method>
+<attr name=var value='request method'>
  Request method (typically GET)
 </attr>
 
-<attr name=var value=server protocol>
+<attr name=var value='server protocol'>
  Protocol used for request.
 </attr>
 
-<attr name=var value=server port>
+<attr name=var value='server port'>
  Server's port number
 </attr>",
 

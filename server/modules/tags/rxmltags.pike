@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.101 2000/03/21 00:40:00 mast Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.102 2000/03/21 21:09:50 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1777,11 +1777,11 @@ documentation for that module.</desc>",
  Show only date.
 </attr>
 
-<attr name=type value=string,ordered,iso,discordian,stardate,number>
+<attr name=type value=string|ordered|iso|discordian|stardate|number>
  Defines in which format the date should be displayed in.
 </attr>
 
-<attr name=part value=year,month,day,wday,date,mday,hour,minute,second,yday,beat,week,seconds>
+<attr name=part value=year|month|day|wday|date|mday|hour|minute|second|yday|beat|week|seconds>
  Defines which part of the date should be displayed. Day and wday is
  the same. Date and mday is the same. Yday is the day number of the
  year. Seconds is unix time type. Only the types string, number and
@@ -1790,9 +1790,11 @@ documentation for that module.</desc>",
 
 <attr name=lang value=language_code>
  Defines in what language the a string will be presented in.
+ Available languages:
+ <lang/>
 </attr>
 
-<attr name=case value=upper,lower,capitalized>
+<attr name=case value=upper|lower|capitalized>
  Changes the case of the output to upper, lower or capitalized.
 </attr>
 
@@ -2045,7 +2047,7 @@ documentation for that module.</desc>",
  Inserts the contents at that URL.
 </attr>
 
-<attr name=quote value=html,none>
+<attr name=quote value=html|none>
  How the inserted data should be quoted. Default is \"html\", except for
  href and file where it's \"none\".
 </attr>",
@@ -2063,7 +2065,7 @@ documentation for that module.</desc>",
  Tags should not be terminated with a trailing slash.
 </attr>
 
-<attr name=type value=tag,container>
+<attr name=type value=tag|container>
  What kind of tag should be produced. Default is tag.
 </attr>
  Inside the maketag container the container attrib is defined. It is
@@ -2217,7 +2219,7 @@ load.",
  attributes. Default is \",\".
 </attr>
 
-<attr name=type value=word,words>
+<attr name=type value=word|words>
  Word means that a single string should be replaced. Words that from
  and to are lists. Default is word.
 </attr>",
@@ -2236,11 +2238,11 @@ load.",
  Returns a nice Roxen logo.</short>
 </desc>
 
-<attr name=size value=small,medium,large>
+<attr name=size value=small|medium|large>
  Defines the size of the image. Default is small.
 </attr>
 
-<attr name=color value=blue,green,purple,brown>
+<attr name=color value=black|white>
  Defines the color of the image. Default is blue.
 </attr>
 

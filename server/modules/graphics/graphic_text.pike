@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.223 2000/03/21 15:23:19 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.224 2000/03/21 21:13:20 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -124,7 +124,7 @@ opaque=70</gtext>
 
 </attr>
 
-<attr name=font_size value=int>
+<attr name=fontsize value=number>
 
 </attr>
 
@@ -295,7 +295,7 @@ opaque=70</gtext>
  Add space around the text.
 </attr>
 
-<attr name=talign value=left,right,center>
+<attr name=talign value=left|right|center>
  Adjust the alignment of the text.
 </attr>
 

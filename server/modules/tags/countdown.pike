@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.28 2000/02/24 03:20:15 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.29 2000/03/21 21:10:59 nilsson Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -18,32 +18,32 @@ This tag can count days, minutes, months, etc. from a specified date or time. It
 give the time to or from a few special events. See below for a full list.</desc>
 
 <p>Time:</p>
-<attr name=year value=int>Sets the year.</attr>
-<attr name=month value=int|month_name>Sets the month.</attr>
-<attr name=day value=int|day_name>Sets the weekday.</attr>
-<attr name=mday value=int>Sets the day of the month.</attr>
-<attr name=hour value=int>Sets the hour.</attr>
-<attr name=minute value=int>Sets the minute.</attr>
-<attr name=second value=int>Sets the second.</attr>
+<attr name=year value=number>Sets the year.</attr>
+<attr name=month value=number|month_name>Sets the month.</attr>
+<attr name=day value=number|day_name>Sets the weekday.</attr>
+<attr name=mday value=number>Sets the day of the month.</attr>
+<attr name=hour value=number>Sets the hour.</attr>
+<attr name=minute value=number>Sets the minute.</attr>
+<attr name=second value=number>Sets the second.</attr>
 <attr name=iso value=year-month-day>Sets the year, month and day all at once
 (YYYY-MM-DD, YYYYMMDD or YYYY-MMM-DD, e.g. 1999-FEB-12)</attr>
 <attr name=event value=easter,gregorian-easter,julian-easter,christmas,christmas-day,christmas-eve>
 Sets the time of an evet to count down to.</attr>
 <br>
-<attr name=years value=int>Add this number of years to the result.</attr>
-<attr name=months value=int>Add this number of months to the result.</attr>
-<attr name=weeks value=int>Add this number of weeks to the result.</attr>
-<attr name=days value=int>Add this number of days to the result.</attr>
-<attr name=hours value=int>Add this number of hours to the result.</attr>
-<attr name=beats value=int>Add this number of beats to the result.</attr>
-<attr name=minutes value=int>Add this number of minutes to the result.</attr>
-<attr name=seconds value=int>Add this number of seconds to the result.</attr>
+<attr name=years value=number>Add this number of years to the result.</attr>
+<attr name=months value=number>Add this number of months to the result.</attr>
+<attr name=weeks value=number>Add this number of weeks to the result.</attr>
+<attr name=days value=number>Add this number of days to the result.</attr>
+<attr name=hours value=number>Add this number of hours to the result.</attr>
+<attr name=beats value=number>Add this number of beats to the result.</attr>
+<attr name=minutes value=number>Add this number of minutes to the result.</attr>
+<attr name=seconds value=number>Add this number of seconds to the result.</attr>
 <attr name=now value=year-month-day>Sets the 'present' time, if other than really present time.
 (YYYY-MM-DD, YYYYMMDD or YYYY-MMM-DD, e.g. 1999-FEB-12)</attr>
 
 <p>Presentation:</p>
 
-<attr name=display value=when,years,months,weeks,days,hours,beats,minutes,seconds,combined,dogyears,boolean>
+<attr name=display value=when|years|months|weeks|days|hours|beats|minutes|seconds|combined|dogyears|boolean>
 <table>
 <tr><td><i>display=when</i></td><td>Shows when the time will occur.
                          All arguments that are valid in a
@@ -67,11 +67,13 @@ Sets the time of an evet to count down to.</attr>
 </table>
 </attr>
 <attr name=type value=type>As for 'date'. Useful values for type include string, number and ordered.</attr>
-<attr name=lang value=langcodes>The language in which the result should be written if the type is string.</attr>
+<attr name=lang value=langcodes>The language in which the result should be written if the type is string.
+<lang/>
+</attr>
 <attr name=since>Negate the period of time.</attr>
 <attr name=next>Always count down to the next event. &lt;countdown day=friday
 next&gt; says 6 on a friday as opposed to 0 without the next attribute.</attr>
-<attr name=prec value=year,month,week,day,hour,minute,second>modifies the precision for 'boolean' and 'combined'.</attr>
+<attr name=prec value=year|month|week|day|hour|minute|second>modifies the precision for 'boolean' and 'combined'.</attr>
 "]);
 #endif
 
