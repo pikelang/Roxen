@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 2.11 2003/09/03 11:20:59 grubba Exp $
+ * $Id: smtprelay.pike,v 2.12 2003/09/03 12:44:37 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -14,7 +14,10 @@ inherit "module";
 
 #pragma strict_types
 
-constant cvs_version = "$Id: smtprelay.pike,v 2.11 2003/09/03 11:20:59 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 2.12 2003/09/03 12:44:37 grubba Exp $";
+
+//<locale-token project="automail">_</locale-token>
+#define _(X,Y)	_DEF_LOCALE("automail",X,Y)
 
 /*
  * Some globals
@@ -25,19 +28,46 @@ static Thread.Mutex queue_mutex = Thread.Mutex();
 #endif /* THREADS */
 
 static Configuration conf;
-static Sql.sql sql;
 
 static Protocols.DNS.async_client dns = Protocols.DNS.async_client();
+
+/*
+ * Database definition.
+ */
+
+static constant db_defs = 
+  ([
+    "send_q":({
+      "id int auto_increment primary key",
+      "sender varchar(255) not null",
+      "user varchar(255) not null",
+      "domain varchar(255) not null",
+      "mailid varchar(32) not null",
+      "received_at int not null",
+      "send_at int not null",
+      "times int not null",
+      "remoteident varchar(255) not null",
+      "remoteip varchar(32) not null",
+      "remotename varchar(255) not null",
+    }),
+  ]);
 
 /*
  * Roxen glue
  */
 
-array register_module()
+constant module_type     = MODULE_PROVIDER;
+LocaleString module_name = _(0, "Mail: SMTP relay");
+LocaleString module_doc  = _(0, "RCPT module that handles relaying to "
+			     "other MTAs via SMTP.");
+
+class DatabaseVar
 {
-  return({ MODULE_PROVIDER,
-	   "SMTP-relay",
-	   "SMTP-relay RCPT module for the AutoMail system." });
+  inherit Variable.StringChoice;
+  array get_choice_list( )
+  {
+    return sort(DBManager.list( my_configuration() ));
+  }
 }
 
 void create()
@@ -45,8 +75,8 @@ void create()
   defvar("spooldir", "/var/spool/mqueue/", "Mail queue directory", TYPE_DIR,
 	 "Directory where the mail spool queue is stored.");
 
-  defvar("sqlurl", "mysql://mail:mail@/mail", "Database URL",
-	 TYPE_STRING, "");
+  defvar("db",
+	 DatabaseVar("mail", ({}), 0, "Spool database", ""));
 
   defvar("maxhops", 10, "Limits: Maximum number of hops", TYPE_INT,
 	 "Maximum number of MTA hops (used to avoid loops).<br>\n"
@@ -82,7 +112,7 @@ array(string)|multiset(string)|string query_provides()
 
 string status()
 {
-  if (!sql) {
+  if (!get_my_sql(1)) {
     return("<font color=red>Failed to connect to sql database!</font>");
   }
   return("Connected OK.");
@@ -93,18 +123,34 @@ void start(int i, Configuration c)
   if (c) {
     conf = c;
 
-    if (!catch { sql = Sql.sql([string]QUERY(sqlurl)); }) {
+    string db = query("db");
 
-      /* Initialize the sql-database if needed */
-      init_db();
+    if (!DBManager.get(db, conf)) {
+      if (DBManager.get(db)) {
+	report_error(db+
+		     " exists, but cannot be written to from this module.");
+	return;
+      }
+      DBManager.create_db(db, 0, 1);	// ??????
+      DBManager.is_module_db(this_module(), db,
+			     "This database contains the spooling information.");
+      DBManager.set_permission(db, conf, DBManager.WRITE);
+    }
+    set_my_db(db);
 
-      /* Start delivering mail soon after everything has loaded. */
-      check_mail(10);
-    } else {
+    /* Initialize the sql-database tables if needed */
+    create_sql_tables(db_defs, "Mail spool", 1);
+    
+    /* Start delivering mail soon after everything has loaded. */
+    check_mail(10);
+
+#if 0
+    {
       /* Try reconnecting to the SQL-server in a minute */
       remove_call_out(start);
       call_out(start, 60, i, c);
     }
+#endif /* 0 */
   }
 }
 
@@ -807,10 +853,10 @@ static void mail_sent(int res, mapping message)
 #ifdef THREADS
     mixed key = queue_mutex->lock();
 #endif /* THREADS */
-    sql->query(sprintf("DELETE FROM send_q WHERE id=%s", message->id));
+    sql_query("DELETE FROM send_q WHERE id=%s", message->id);
 
-    array a = sql->query(sprintf("SELECT id FROM send_q WHERE mailid='%s'",
-				 sql->quote(message->mailid)));
+    array a = sql_query("SELECT id FROM send_q WHERE mailid='%s'",
+			message->mailid);
 
     if (!a || !sizeof(a)) {
       rm(combine_path(QUERY(spooldir), message->mailid));
@@ -837,25 +883,25 @@ static void send_mail()
   mixed key = queue_mutex->lock();
 #endif /* THREADS */
   // Select some mail to send.
-  array m = sql->query(sprintf("SELECT * FROM send_q WHERE send_at < %d "
-			       "ORDER BY mailid, domain",
-			       time()));
+  array m = sql_query("SELECT * FROM send_q WHERE send_at < %d "
+		      "ORDER BY mailid, domain",
+		      time());
 
   // FIXME: Add some grouping code here.
 
   foreach(m || ({}), mapping mm) {
     // Needed to not send it twice at the same time.
     // Resend in an hour.
-    sql->query(sprintf("UPDATE send_q "
-		       "SET send_at = %d, times = %d WHERE id = %s",
-		       time() + 60*60, ((int)mm->times) + 1, mm->id));
+    sql_query("UPDATE send_q "
+	      "SET send_at = %d, times = %d WHERE id = %s",
+	      time() + 60*60, ((int)mm->times) + 1, mm->id);
     // Send the message.
     MailSender(mm, mail_sent);
   }
 
   // Recheck again in 10 sec <= X <= 1 hour.
 
-  m = sql->query("SELECT min(send_at) AS send_at FROM send_q");
+  m = sql_query("SELECT min(send_at) AS send_at FROM send_q");
 
   int t = 60*60;
   if (m && sizeof(m) && (m[0]->send_at)) {
@@ -1105,7 +1151,7 @@ int relay(string from, string user, string domain,
 		       from, user, domain, csum));
 #endif /* RELAY_DEBUG */
 
-  if (!sql) {
+  if (!get_my_sql(1)) {
     /* Module is not properly configured yet... */
     return(0);
   }
@@ -1243,23 +1289,20 @@ int relay(string from, string user, string domain,
   }
  
   if (smtp) {
-    sql->query(sprintf("INSERT INTO send_q "
-		       "(sender, user, domain, mailid, received_at, send_at, "
-		       "remoteident, remoteip, remotename) "
-		       "VALUES('%s', '%s', '%s', '%s', %d, 0, "
-		       "'%s', '%s', '%s')",
-		       sql->quote(from), sql->quote(user),
-		       sql->quote(domain), sql->quote(csum), time(),
-		       smtp->remoteident || "UNKNOWN", smtp->remoteip,
-		       smtp->remotename));
+    sql_query("INSERT INTO send_q "
+	      "(sender, user, domain, mailid, received_at, send_at, "
+	      "remoteident, remoteip, remotename) "
+	      "VALUES(%s, %s, %s, %s, %d, 0, "
+	      "%s, %s, %s)",
+	      from, user, domain, csum, time(),
+	      smtp->remoteident || "UNKNOWN", smtp->remoteip,
+	      smtp->remotename);
   } else {
-    sql->query(sprintf("INSERT INTO send_q "
-		       "(sender, user, domain, mailid, received_at, send_at, "
-		       "remoteident, remoteip, remotename) "
-		       "VALUES('%s', '%s', '%s', '%s', %d, 0, "
-		       "'', '', '')",
-		       sql->quote(from), sql->quote(user),
-		       sql->quote(domain), sql->quote(csum), time()));
+    sql_query("INSERT INTO send_q "
+	      "(sender, user, domain, mailid, received_at, send_at, "
+	      "remoteident, remoteip, remotename) "
+	      "VALUES(%s, %s, %s, %s, %d, 0, '', '', '')",
+	      from, user, domain, csum, time());
   }
 
 #ifdef THREADS
@@ -1275,26 +1318,3 @@ int relay(string from, string user, string domain,
   return(1);
 }
 
-static void init_db()
-{
-  /* Check if the required tables exist.
-   * FIXME: Probably only works with mysql!
-   */
-  if (catch(sql->query("DESCRIBE send_q"))) {
-    /* Create the required tables. */
-
-    sql->query("CREATE TABLE send_q ("
-	       "id int auto_increment primary key,"
-	       "sender varchar(255) not null,"
-	       "user varchar(255) not null,"
-	       "domain varchar(255) not null,"
-	       "mailid varchar(32) not null,"
-	       "received_at int not null,"
-	       "send_at int not null,"
-	       "times int not null,"
-	       "remoteident varchar(255) not null,"
-	       "remoteip varchar(32) not null,"
-	       "remotename varchar(255) not null"
-	       ")");
-  }
-}
