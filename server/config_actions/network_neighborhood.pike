@@ -29,20 +29,25 @@ string show_servers(string c,array s)
 string page_0()
 {
   array sn = indices(neighborhood);
-  sort(Array.map(sn, lambda(string s){ return neighborhood[s]->host; }), sn);
+  sort(Array.map(sn, lambda(string s){ return neighborhood[s]->host+":"+neighborhood[s]->uid+neighborhood[s]->config_url; }), sn);
   return html_table(({"Config URL", "User", "Host", "Uptime", "Last Reboot","Version",
 			/*({"Server info"})*/}),
 		    Array.map(sn, lambda(string s) {
      mapping ns = neighborhood[s];
-     return({(string)"<font size=+1><a href='"+s+"'>"+s+"</a></font>",
-	     (string)getpwuid(ns->uid)[0],
-	     (string)"<font size=+1>"+ns->host+"</font>",
-	     (string)"<font size=+1>"+(ns->sequence/2)+"</font>",
-	     (string)"<font size=+1>"+(ns->seq_reboots>1?"<font fg=red><blink>":"")+
-	     (string)roxen->language("en","date")(ns->last_reboot)+
-   	     (string)(ns->seq_reboots>1?"</blink></font>":"")+"</font>",
-	     (string)"<font size=+1>"+(sv(ns->version))+"</font>",
-	       /* ({  show_servers(ns->comment,ns->server_urls||"") })*/ });
+     int re=ns->seq_reboots>1;
+     string ER="",RE="";
+     if(re)
+     {
+       RE="<font color=red><b><blink>";
+       ER="</blink></b></font>";
+     }
+     return({  "<a href='"+s+"'>"+s+"</a></font>",
+	       RE+getpwuid(ns->uid)[0]+ER,
+	       RE+ns->host+ER,
+	       RE+(string)(ns->sequence/2)+ER,
+	       RE+roxen->language("en","date")(ns->last_reboot)+ER,
+	       RE+sv(ns->version)+ER
+     });
     }));
 }
 
