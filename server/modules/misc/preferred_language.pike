@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.16 2000/11/06 11:16:54 kuntri Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.17 2000/11/07 10:09:26 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -118,15 +118,15 @@ constant tagdoc=([
 </attr>",
 
 		      ([
-"&_.code;":"<desc ent><p>
+"&_.code;":#"<desc ent><p>
  The language code.</p>
 </desc>",
 
-"&_.en;":"<desc ent><p>
+"&_.en;":#"<desc ent><p>
  The language name in english.</p>
 </desc>",
 
-"&_.local;":"<desc ent><p>
+"&_.local;":#"<desc ent><p>
  The language name as written in the language itself.</p>
 </desc>",
 
