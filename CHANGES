@@ -51,6 +51,8 @@ o Fixed --pid-file.
 
 o Quoting fixes and changes.
 
+o Added HTTP MOVE to filesystem.pike (Roaming access).
+
 
 Changes since Roxen Challenger 1.2.61 Yellow
 -----------------------------------------------
