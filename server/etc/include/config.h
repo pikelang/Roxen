@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.27 2001/04/27 16:23:28 mast Exp $
+ * $Id: config.h,v 1.28 2001/08/21 09:25:05 jonasw Exp $
  *
  * User configurable things not accessible from the normal
  * administration interface. Not much, but there are some things..  
@@ -81,3 +81,8 @@
 
 /*---------------- End of configurable options. */
 #endif /* if _ROXEN_CONFIG_H_ */
+
+//  Cache timeout for RAM cache
+#ifndef INITIAL_CACHEABLE
+# define INITIAL_CACHEABLE 300
+#endif

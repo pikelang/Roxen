@@ -2,13 +2,9 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.329 2001/08/20 11:46:47 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.330 2001/08/21 09:25:02 jonasw Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
-
-#ifndef INITIAL_CACHEABLE
-# define INITIAL_CACHEABLE 300
-#endif
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
