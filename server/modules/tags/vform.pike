@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.32 2001/10/08 12:32:57 anders Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.33 2001/10/24 13:51:09 jens Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -359,6 +359,30 @@ class TagVForm {
     }
   }
 
+  class TagVerifyOk {
+    inherit RXML.Tag;
+    constant name = "verify-ok";
+    constant flags = RXML.FLAG_EMPTY_ELEMENT;
+    
+    class Frame {
+      inherit RXML.Frame;
+      
+      array do_return(RequestID id) {
+	
+	if(args->name) {
+	  id->misc->vform_failed[args->name] = 0;
+	  id->misc->vform_verified[args->name] = 1;
+	  if( !sizeof(id->misc->vform_failed) )
+	    id->misc->vform_ok = 1;
+	}
+	else
+	  id->misc->vform_ok = 1;
+	
+	return 0;
+      }
+    }
+  }
+
   class TagClear {
     inherit RXML.Tag;
     constant name = "clear";
@@ -383,6 +407,7 @@ class TagVForm {
     constant plugin_name = "vform-failed";
 
     int eval(string ind, RequestID id) {
+      if(!id->real_variables[ind]) return 0;
       if(!ind || !sizeof(ind)) return !id->misc->vform_ok;
       return id->misc->vform_failed[ind];
     }
@@ -408,6 +433,7 @@ class TagVForm {
 					 TagIfVFailed(),
 					 TagIfVVerified(),
 					 TagVerifyFail(),
+					 TagVerifyOk(),
 				      }) );
 
   class Frame {
@@ -506,6 +532,17 @@ constant tagdoc=([
 "verify-fail":#"<desc tag='tag'><p><short>
  If put in a vform tag, the vform will always fail.</short>This is
  useful e.g. if you put the verify-fail tag in an if tag.
+</p></desc>",
+
+"verify-ok":#"<desc tag='tag'><p><short>
+
+ If put in a vform tag, the vform will always be verified.</short>This
+ tag is probably only useful when the name-attribute inside the tag is
+ set. If it is it will force that specific vform-variable as verified
+ ok even if the &lt;vinput&gt;-tag that tested the variable failed.
+
+<attr name='name' value='string'><p>
+ The name of the vform variable to force as verified ok.
 </p></desc>",
 
 // It's a tagdoc bug that these, locally defined if-plugins does not show up
