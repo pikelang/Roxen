@@ -56,8 +56,10 @@ private string parse_mapping(mapping doc) {
 
 // --------------------- Find documentation --------------
 
-RXML.TagSet rxml_tag_set = RXML.TagSet ("rxml_tag_set");
-string find_tag_doc(string name) {
+RXML.TagSet rxml_tag_set;
+
+string find_tag_doc(string name, RequestID id) {
+  if(!rxml_tag_set) rxml_tag_set=id->conf->rxml_tag_set;
   RXML.PHtml parser = rxml_tag_set (RXML.t_text (RXML.PHtmlCompat));
   //  foreach(parser->get_overridden_low_tag(name), object x) {
     // 1. Determine module of origin.
