@@ -1,11 +1,8 @@
 // This is a roxen module. Copyright © 1998 - 2000, Roxen IS.
 
 inherit "module";
-inherit "roxenlib";
 
-// import Array;
-
-constant cvs_version = "$Id: demo.pike,v 1.16 2000/04/05 14:38:27 jhs Exp $";
+constant cvs_version = "$Id: demo.pike,v 1.17 2000/07/03 05:35:41 nilsson Exp $";
 
 void create()
 {
@@ -29,33 +26,33 @@ constant module_name = "Demo module";
 constant module_doc  = "This module makes it possible to develop, RXML code interactively.";
 
 #define FOO "<title>Demo</title>\n" \
-"<body bgcolor=white>\n" \
-"<form action=%d>\n" \
-"<input type=submit name=_submit value=Clear>\n" \
+"<body bgcolor='white'>\n" \
+"<form action='%d'>\n" \
+"<input type='submit' name='_submit' value='Clear' />\n" \
 "</form>\n" \
-"<p><br><p><br><p>\n" \
+"<p><br /></p><p><br /></p>\n" \
 "%s" \
-"<p><br><p><br><p>\n" \
+"<p><br /></p><p><br /></p>\n" \
 "<form>\n" \
-"<textarea name=_data cols=60 rows=14>%s</textarea>\n" \
-"<br><input type=submit name=_submit value=Clear> " \
-"<input type=submit value='    Show    '>\n" \
-"<br><input type=submit name=_submit value='Push'>\n"+\
-(sizeof(stack)?"<input type=submit name=_submit value='Pop'>"\
-" <input type=submit name=_submit value='Swap'>":"")+\
+"<textarea name='_data' cols='60' rows='14'>%s</textarea>\n" \
+"<br /><input type='submit' name='_submit' value='Clear' /> " \
+"<input type='submit' value='    Show    ' />\n" \
+"<br /><input type='submit' name='_submit' value='Push' />\n"+\
+(sizeof(stack)?"<input type='submit' name='_submit' value='Pop' />"\
+" <input type='submit' name='_submit' value='Swap' />":"")+\
 " (Stack size: "+sizeof(stack)+")\n"\
 "</form>\n" \
 "<table><tr><td>"\
-"<form action=%d>" \
-"<input type=submit value=' <-- previous '>" \
+"<form action='%d'>" \
+"<input type='submit' value=' <-- previous ' />" \
 "</form>" \
 "</td><td>"\
-"<form>Position: <input size=4 type=string name=pos value='"+(int)f+"'>"\
-"<input type=submit name=go value='Go!'></form>"\
+"<form>Position: <input size='4' type='string' name='pos' value='"+(int)f+"' />"\
+"<input type='submit' name='go' value='Go!' /></form>"\
 "</td><td>"\
 "</td><td>"\
-"<form action=%d>" \
-"<input type=submit value=' next --> '>" \
+"<form action='%d'>" \
+"<input type='submit' value=' next --> ' />" \
 "</form>" \
 "</td></tr></table>" \
 "</body>"
@@ -63,10 +60,10 @@ constant module_doc  = "This module makes it possible to develop, RXML code inte
 object mdb;
 array(string) stack=({ });
 
-mixed find_file( string f, object id )
+mapping find_file( string f, RequestID id )
 {
   if(id->variables->go)
-    return http_redirect(query("location")+id->variables->pos,id);
+    return Roxen.http_redirect(query("location")+id->variables->pos,id);
   if (!mdb) {
     mdb = Yabu.db(query("dbpath"), "wcCr")["demo"];
     if(!mdb[42])
@@ -112,10 +109,11 @@ No more bottles of beer on the wall";
   }
   if (!stringp( data ))
     data = "";
-  return http_string_answer( parse_rxml( sprintf( FOO, (int)f,
-						  data,
-						  replace(data, ({ "<", ">", "&" }),
-							  ({"&lt;","&gt;","&amp;"})),
-						  ((int)f)-1,
-						  ((int)f)+1), id));
+  return Roxen.http_string_answer( Roxen.parse_rxml
+				   ( sprintf( FOO, (int)f,
+					      data,
+					      replace(data, ({ "<", ">", "&" }),
+						      ({"&lt;","&gt;","&amp;"})),
+					      ((int)f)-1,
+					      ((int)f)+1), id));
 }

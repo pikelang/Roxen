@@ -1,10 +1,9 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 inherit "module";
-inherit "roxenlib";
 
-constant cvs_version = "$Id: language.pike,v 1.28 2000/03/16 18:57:13 nilsson Exp $";
-constant thread_safe=1;
+constant cvs_version = "$Id: language.pike,v 1.29 2000/07/03 05:35:41 nilsson Exp $";
+constant thread_safe = 1;
 
 #if DEBUG_LEVEL > 20
 # ifndef LANGUAGE_DEBUG
@@ -172,13 +171,13 @@ mixed remap_url( RequestID id, string url )
     redirect_url = reverse( (reverse( url ) / ".")[1..] * "." );
     if (id->query)
       redirect_url += "?" + id->query;
-    redirect_url = add_pre_state( redirect_url, (id->prestate - language_list)+
+    redirect_url = Roxen.add_pre_state( redirect_url, (id->prestate - language_list)+
 				  (< extension >) );
     redirect_url = id->conf->query( "MyWorldLocation" ) +
       redirect_url[1..];
 
     id->misc->in_language=0;
-    return http_redirect( redirect_url );
+    return Roxen.http_redirect( redirect_url );
   }
   found_languages_orig = find_files( url, id );
   found_languages = copy_value( found_languages_orig );

@@ -3,11 +3,9 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.42 2000/05/03 07:35:56 mast Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.43 2000/07/03 05:35:41 nilsson Exp $";
 
-#include <module.h>
 inherit "module";
-inherit "roxenlib";
 
 // Fairly weak check of password for portability.
 #define CRYPTWD_CHECK(cryptwd) \
@@ -33,7 +31,7 @@ void report_io_error (string f, mixed... args)
 void try_find_user(string|int u)
 {
   array uid;
-  switch(QUERY(method))
+  switch(query("method"))
   {
 #if efun(getpwuid) && efun(getpwnam)
   case "getpwent":
@@ -54,7 +52,7 @@ void try_find_user(string|int u)
 #endif
 
   case "file":
-    if(!equal(file_stat(QUERY(file)), fstat))
+    if(!equal(file_stat(query("file")), fstat))
       read_data();
     break;
 
@@ -85,18 +83,18 @@ array(string) user_from_uid(int u)
 
 int method_is_not_file()
 {
-  return !(QUERY(method) == "file" || QUERY(method) == "shadow");
+  return !(query("method") == "file" || query("method") == "shadow");
 }
 
 int method_is_not_shadow()
 {
-  return QUERY(method) != "shadow";
+  return query("method") != "shadow";
 }
 
 int method_is_file_or_getpwent()
 {
-  return (QUERY(method) == "file") || (QUERY(method)=="getpwent") ||
-    (QUERY(method) == "shadow");
+  return (query("method") == "file") || (query("method")=="getpwent") ||
+    (query("method") == "shadow");
 }
 
 void create()
@@ -245,7 +243,7 @@ void read_data()
       destruct(privs);
     }
     privs = 0;
-    if (!data) report_io_error ("Error reading passwd database from " + query ("file"));
+    if (!data) report_io_error ("Error reading passwd database from " + query("file"));
     last_password_read = time();
     break;
 
@@ -304,7 +302,7 @@ void read_data()
 		 ({"å","ä","ö", "Ö","Å","Ä"}));
 
 /* Two loops for speed.. */
-  if(QUERY(Strip)) {
+  if(query("Strip")) {
     foreach(data/"\n", data)
     {
       if(sizeof(entry=data/":") > 6)
@@ -327,12 +325,12 @@ void read_data()
     }
   }
 #if efun(getpwent)
-  if(QUERY(method) == "getpwent" && (original_data))
+  if(query("method") == "getpwent" && (original_data))
     slow_update();
 #endif
 
   // We do need to continue calling out.. Duh.
-  int delta = QUERY(update);
+  int delta = query("update");
   if (delta > 0) {
     last_password_read=time(1);
     remove_call_out(read_data);
@@ -345,7 +343,7 @@ void start(int i)
   if(i<2)
     read_data();
   /* Automatic update */
-  int delta = QUERY(update);
+  int delta = query("update");
   if (delta > 0) {
     last_password_read=time(1);
     remove_call_out(read_data);
@@ -387,7 +385,7 @@ array|int auth(array(string) auth, object id)
   u = arr[0];
   p = arr[1..]*":";
 
-  if(QUERY(method) == "none")
+  if(query("method") == "none")
   {
     succ++;
     return ({ 1, u, 0 });

@@ -3,11 +3,10 @@
 // YP User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: ypuserdb.pike,v 1.14 2000/03/16 18:57:14 nilsson Exp $";
-constant thread_safe=1;
+constant cvs_version = "$Id: ypuserdb.pike,v 1.15 2000/07/03 05:35:41 nilsson Exp $";
+constant thread_safe = 1;
 
 inherit "module";
-inherit "roxenlib";
 
 #if constant(Yp.Domain)
 
@@ -26,17 +25,17 @@ mapping(string:int) failed = ([]);
 string status()
 {
   return("<h1>Security info</h1>\n"
-	 "<b>YP-server:</b> " + domain->server("passwd.byname") + "<br>\n"
-	 "<b>YP-domain:</b> " + default_yp_domain() + "<br>\n"
+	 "<b>YP-server:</b> " + domain->server("passwd.byname") + "<br />\n"
+	 "<b>YP-domain:</b> " + default_yp_domain() + "<br />\n"
 	 "<p>\n"
 	 "<b>Successful auths:</b> " + (string)succ +
-	 ", " + (string)emptypasswd + " had empty password fields.<br>\n"
+	 ", " + (string)emptypasswd + " had empty password fields.<br />\n"
 	 "<b>Failed auths:</b> " + (string)fail +
-	 ", " + (string)nouser + " had the wrong username.<br>\n"
+	 ", " + (string)nouser + " had the wrong username.<br />\n"
 	 "<p>\n"
 	 "<h3>Failure by host</h3>" +
 	 (Array.map(indices(failed), lambda(string s) {
-	   return roxen->quick_ip_to_host(s) + ": " + failed[s] + "<br>\n";
+	   return roxen->quick_ip_to_host(s) + ": " + failed[s] + "<br />\n";
 	 }) * "") +
 	 "<p>The database has " + sizeof(domain->all("passwd.byname")) +
 	 " entries.");

@@ -55,11 +55,33 @@
 // ... any yes, the code for this module is rather messy. It was a
 // quick for fun.
 
-#include <module.h>
 inherit "module";
-inherit "roxenlib";
 
-string version = "$Id: randomtext.pike,v 1.3 2000/02/22 18:06:28 leif Exp $";
+string version = "$Id: randomtext.pike,v 1.4 2000/07/03 05:35:41 nilsson Exp $";
+
+#if __ROXEN_VERSION__ < 2.0
+#include <module.h>
+array register_module()
+{ return ({ MODULE_PARSER,
+       "Random Text Generator Module",
+       ("This module provides a simple way of generating texts on a "
+        "semi-random basis according to a set of rules. Apart from its "
+        "amusement value, this can be useful for testing and educational "
+        "purposes, such as generating small quiz pages or producing "
+        "many different kinds of input to text processing tags."),
+       0,
+       1 });
+}
+#else
+constant module_type = MODULE_PARSER;
+constant module_name = "Random Text Generator Module"; 
+constant module_doc  =
+   "This module provides a simple way of generating texts on a "
+   "semi-random basis according to a set of rules. Apart from its "
+   "amusement value, this can be useful for testing and educational "
+   "purposes, such as generating small quiz pages or producing "
+   "many different kinds of input for testing text processing tags.";
+#endif
 
 mapping text_cache = ([ ]);
 
@@ -93,36 +115,13 @@ void create()
         );
 }
 
-#if __ROXEN_VERSION__ < 2.0
-array register_module()
-{ return ({ MODULE_PARSER,
-       "Random Text Generator Module",
-       ("This module provides a simple way of generating texts on a "
-        "semi-random basis according to a set of rules. Apart from its "
-        "amusement value, this can be useful for testing and educational "
-        "purposes, such as generating small quiz pages or producing "
-        "many different kinds of input to text processing tags."),
-       0,
-       1 });
-}
-#else
-constant module_type = MODULE_PARSER;
-constant module_name = "Random Text Generator Module"; 
-constant module_doc  =
-   "This module provides a simple way of generating texts on a "
-   "semi-random basis according to a set of rules. Apart from its "
-   "amusement value, this can be useful for testing and educational "
-   "purposes, such as generating small quiz pages or producing "
-   "many different kinds of input for testing text processing tags.";
-#endif
-
 string status()
 { return
-     "<b>Most recent tagtime</b>:" + recenttagtime + "<br>" +
-     "<b>Most recent file</b>:" + recentfile + "<br>" +
-     "<b>Most recent error</b>:" + recenterror + "<br>" +
-     "<b>Steps in recent run</b>:" + recentsteps + "<br>" +
-     "<b>Debug diagnostics</b>:" + recentdiag + "<br>" +
+     "<b>Most recent tagtime</b>:" + recenttagtime + "<br />" +
+     "<b>Most recent file</b>:" + recentfile + "<br />" +
+     "<b>Most recent error</b>:" + recenterror + "<br />" +
+     "<b>Steps in recent run</b>:" + recentsteps + "<br />" +
+     "<b>Debug diagnostics</b>:" + recentdiag + "<br />" +
      "<b>Text cache for</b>: " + sprintf("%O", indices(text_cache));
 }
 
