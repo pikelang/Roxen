@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.167 1998/11/18 04:53:44 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.168 1998/11/22 17:06:51 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -15,7 +15,7 @@ mapping profile_map = ([]);
 /* A configuration.. */
 
 
-inherit "rxml";
+#include "rxml.pike";
 
 public string real_file(string file, object id);
 
@@ -899,11 +899,14 @@ int|mapping check_security(function a, object id, void|int slevel)
   //    ~0  OK -- Test passed.
 
   if(!(seclevels = misc_cache[ a ]))
-    misc_cache[ a ] = seclevels = ({
-      function_object(a)->query_seclevels(),
-      function_object(a)->query("_seclvl"),
-      function_object(a)->query("_sec_group")
-    });
+    if(function_object(a)->query_seclevels)
+      misc_cache[ a ] = seclevels = ({
+	function_object(a)->query_seclevels(),
+	function_object(a)->query("_seclvl"),
+	function_object(a)->query("_sec_group")
+      });
+    else
+      misc_cache[ a ] = seclevels = ({({}),0,"foo" });
 
   if(slevel && (seclevels[1] > slevel)) // "Trustlevel" to low.
     return 1;
@@ -2373,20 +2376,23 @@ object enable_module( string modname )
   //    perror("Initializing ");
 #endif
   if (module->type & (MODULE_LOCATION | MODULE_EXTENSION |
-		      MODULE_FILE_EXTENSION | MODULE_LOGGER |
+		      MODULE_CONFIG| MODULE_FILE_EXTENSION | MODULE_LOGGER |
 		      MODULE_URL | MODULE_LAST | MODULE_PROVIDER |
 		      MODULE_FILTER | MODULE_PARSER | MODULE_FIRST))
   {
-    me->defvar("_priority", 5, "Priority", TYPE_INT_LIST,
-	       "The priority of the module. 9 is highest and 0 is lowest."
-	       " Modules with the same priority can be assumed to be "
-	       "called in random order", 
-	       ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
+    if(module->type != MODULE_CONFIG)
+    {
+      me->defvar("_priority", 5, "Priority", TYPE_INT_LIST,
+		 "The priority of the module. 9 is highest and 0 is lowest."
+		 " Modules with the same priority can be assumed to be "
+		 "called in random order", 
+		 ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
 
-    me->deflocaledoc("svenska", "_priority", "Prioritet",
-		     "Modulens prioritet, 9 är högst och 0 är"
-		     " lägst. Moduler med samma prioritet anropas i "
-		     "mer eller mindre slumpmässig ordning.");
+      me->deflocaledoc("svenska", "_priority", "Prioritet",
+		       "Modulens prioritet, 9 är högst och 0 är"
+		       " lägst. Moduler med samma prioritet anropas i "
+		       "mer eller mindre slumpmässig ordning.");
+    }
       
     if(module->type != MODULE_LOGGER &&
        module->type != MODULE_PROVIDER)
@@ -2402,7 +2408,7 @@ object enable_module( string modname )
 			 "Gruppnamnet som används när klienten bes"
 			 " ange lösenord. I de flesta klienter visas den "
 			 " här informationen för användaren i"
-			 "lösenordsdialogen.");
+			 " lösenordsdialogen.");
 
 
 	me->defvar("_seclvl",  0, "Security: Security level", TYPE_INT, 
@@ -2595,7 +2601,7 @@ object enable_module( string modname )
 
 
   me->defvar("_name", "", " Module name", TYPE_STRING|VAR_MORE,
-	     "An optional name. Set to something to remaind you what "
+	     "An optional name. You can set it to something to remaind you what "
 	     "the module really does.");
 
   me->deflocaledoc("svenska", "_name", "Namn",
@@ -3104,10 +3110,6 @@ int load_module(string module_file)
   }
 
   err = "";
-  roxen->somemodules[module_file]=
-    ({ module_data[1], module_data[2]+"<p><i>"+
-       replace(obj->file_name_and_stuff(),"0<br>", module_file+"<br>")
-       +"</i>", module_data[0] });
   if (!arrayp( module_data ))
     err = LOCALE->bad_register_module_result();
   else
@@ -3120,9 +3122,9 @@ int load_module(string module_file)
       if (module_data[3] && !arrayp( module_data[3] ))
 	err = LOCALE->bad_register_module4() + err;
      case 3:
-      if (!stringp( module_data[2] ))
+      if (!stringp( module_data[2] ) && !mappingp(module_data[2]))
 	err = LOCALE->bad_register_module3() + err;
-      if (!stringp( module_data[1] ))
+      if (!stringp( module_data[1] ) && !mappingp(module_data[1]))
 	err = LOCALE->bad_register_module2() + err;
       if (!intp( module_data[0] ))
 	err = LOCALE->bad_register_module1() + err;
@@ -3158,14 +3160,33 @@ int load_module(string module_file)
   mapping tmpp = modules[ module_file ];
 
   tmpp->type=module_data[0];
-  tmpp->name=module_data[1];
-  tmpp->doc=module_data[2];
+  if(mappingp(module_data[1]))
+  {
+    tmpp->names=module_data[1];
+    tmpp->name=module_data[1]->standard;
+  }
+  else
+  {
+    tmpp->name=module_data[1];
+    tmpp->names=([ "standard":module_data[1] ]);
+  }
+  
+  if(mappingp(module_data[2]))
+  {
+    tmpp->doc=module_data[2]->standard;
+    tmpp->docs=module_data[2];
+  } else {
+    tmpp->doc = module_data[2];
+    tmpp->docs = ([ "standard":module_data[2] ]);
+  }
   tmpp->extra=module_data[3];
   tmpp["program"]=prog;
   tmpp->master=obj;
   tmpp->copies=(foo ? 0 : (tmpp->copies||([])));
   tmpp->sname=module_file;
       
+  roxen->somemodules[module_file]=
+  ({ tmpp->name, tmpp->doc, module_data[0] });
 #ifdef MODULE_DEBUG
 #if efun(gethrtime)
   perror(" Done (%3.3f seconds).\n", (gethrtime()-start_time)/1000000.0);
@@ -3519,7 +3540,7 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
 	 "%h    Hour  (e.g. '00')\n</pre>"
 	 ,0, log_is_not_enabled);
   deflocaledoc("svenska", "LogFile", 
-	       "Logging: Loggfil",
+	       "Loggning: Loggfil",
 	       "Filen som roxen loggar i. Filnamnet kan vara relativt "
 	       +getcwd()+
 #". Du kan använda några kontrollkoder för att få flera loggfiler och
@@ -3538,7 +3559,7 @@ $user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID, du
 	 "of the patterns in this list. This also affects the access counter "
 	 "log.\n",0, log_is_not_enabled);
   deflocaledoc("svenska", "NoLog", 
-	       "Loggning: Logga intget för",
+	       "Loggning: Logga inte för",
 #"Logga inte några förfrågningar vars IP-nummer matchar
   något av de mönster som står i den här listan.  Den här variabeln
   påverkar även &lt;accessed&gt; RXML-styrkoden.");
