@@ -1,6 +1,6 @@
 // Some debug tools.
 //
-// $Id: RoxenDebug.pmod,v 1.6 2004/04/04 14:52:53 mani Exp $
+// $Id: RoxenDebug.pmod,v 1.7 2004/05/16 21:56:18 mani Exp $
 
 
 //! Helper to locate leaking objects. Use a line like this to mark a
@@ -10,6 +10,7 @@
 //! RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker(this);
 
 mapping(string:int) object_markers = ([]);
+mapping(string:string) object_create_places = ([]);
 
 int log_create_destruct = 1;
 
@@ -18,35 +19,83 @@ class ObjectMarker
 {
   int count = ++all_constants()->__object_marker_count;
   string id;
+  int flags;
+
+  static void debug_msg (array bt, int ignore_frames, string msg, mixed... args)
+  {
+    if (sizeof (args)) msg = sprintf (msg, @args);
+
+    string file;
+    int i;
+
+  find_good_frame: {
+      for (i = -1 - ignore_frames; i >= -sizeof (bt); i--)
+	if ((file = bt[i][0]) && bt[i][1] && bt[i][2] &&
+	    !(<"__INIT", "create">)[function_name(bt[i][2])])
+	  break find_good_frame;
+
+      for (i = -1 - ignore_frames; i >= -sizeof (bt); i--)
+	if ((file = bt[i][0]) &&
+	    !(<"__INIT", "create">)[function_name(bt[i][2] || debug_msg)])
+	  break find_good_frame;
+
+      for (i = -1 - ignore_frames; i >= -sizeof (bt); i--)
+	if ((file = bt[i][0]))
+	  break find_good_frame;
+    }
+
+    if (file) {
+      string cwd = getcwd() + "/";
+      if (has_prefix (file, cwd)) file = file[sizeof (cwd)..];
+      werror ("%s:%d: %s", file, bt[i][1], msg);
+    }
+    else werror (msg);
+  }
 
   //!
-  void create (void|string|object obj)
+  void create (void|string|object obj, void|int _flags)
   {
+    flags = _flags;
     if (obj) {
       string new_id = stringp (obj) ? obj : sprintf ("%O", obj);
       string cnt = sprintf ("[%d]", count);
-      if (new_id[sizeof (new_id) - sizeof (cnt)..] != cnt) new_id += cnt;
+      if (!has_suffix (new_id, cnt)) new_id += cnt;
+
       if (id) {
 	if (new_id == id) return;
 	if (log_create_destruct)
-	  if (object_markers[id] > 0) werror ("rename  %s -> %s\n", id, new_id);
-	  else werror ("rename  ** %s -> %s\n", id, new_id);
-	if (--object_markers[id] <= 0) m_delete (object_markers, id);
+	  if (object_markers[id] > 0)
+	    debug_msg (backtrace(), 1, "rename  %s -> %s\n", id, new_id);
+	  else
+	    debug_msg (backtrace(), 1, "rename  ** %s -> %s\n", id, new_id);
+	if (--object_markers[id] <= 0) {
+	  m_delete (object_markers, id);
+	  m_delete (object_create_places, id);
+	}
       }
       else
-	if (log_create_destruct) werror ("create  %s\n", new_id);
+	if (log_create_destruct)
+	  debug_msg (backtrace(), 1, "create  %s\n", new_id);
+
       id = new_id;
       object_markers[id]++;
+      object_create_places[id] = describe_backtrace (backtrace());
     }
   }
 
   void destroy()
   {
-    if (id) {
-      if (log_create_destruct)
-	if (object_markers[id] > 0) werror ("destroy %s\n", id);
-	else werror ("destroy ** %s\n", id);
-      if (--object_markers[id] <= 0) m_delete (object_markers, id);
+    if (global::this) {
+      if (id) {
+	if (log_create_destruct)
+	  if (object_markers[id] > 0) debug_msg (backtrace(), 1, "destroy %s\n", id);
+	  else debug_msg (backtrace(), 1, "destroy ** %s\n", id);
+	if (--object_markers[id] <= 0) m_delete (object_markers, id);
+      }
+      if (flags && log_create_destruct) {
+	werror("destructing...\n"
+	       "%s\n", describe_backtrace(backtrace()));
+      }
     }
   }
 
@@ -57,9 +106,18 @@ class ObjectMarker
 }
 
 //!
-string report_leaks()
+string report_leaks (void|int clear)
 {
-  string res = "leaks: " + sort (indices (object_markers)) * ",\n       " + "\n";
-  object_markers = ([]);
+  string res = "leaks: " +
+    sort (map (indices (object_markers),
+	       lambda (string id) {
+		 if (string bt = object_create_places[id])
+		   return id + ":\n         " +
+		     replace (bt[..sizeof (bt) - 2], "\n", "\n         ");
+		 else
+		   return id;
+	       })) * "\n       " +
+    "\n";
+  if (clear) object_markers = ([]);
   return res;
 }
