@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.33 2000/02/16 07:07:16 per Exp $
+// $Id: module.h,v 1.34 2000/03/06 18:56:21 nilsson Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 #ifndef MODULE_CONSTANTS_H
@@ -14,7 +14,7 @@
 #define GLOBVAR(x) roxen->variables[ #x ][VAR_VALUE]
 #endif /* IN_ROXEN */
 
-#define CACHE(seconds) id->misc->cacheable=min(id->misc->cacheable,seconds)
-#define NOCACHE() id->misc->cacheable=0
+#define CACHE(seconds) ([mapping(string:mixed)]id->misc)->cacheable=min(([mapping(string:mixed)]id->misc)->cacheable,seconds)
+#define NOCACHE() ([mapping(string:mixed)]id->misc)->cacheable=0
 #define TAGDOCUMENTATION mapping tagdocumentation(){return get_value_from_file(__FILE__,"tagdoc","#define manual\n");}
 #endif
