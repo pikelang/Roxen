@@ -50,11 +50,6 @@ urw_itc_avant_garde-demi-r binary
 /pike-roxen.in foreign_ident
 /rxml_packages/gtext_headers foreign_ident
 /server/base_server/cache.pike foreign_ident
-/server/base_server/config/builders.pike foreign_ident
-/server/base_server/config/describers.pike foreign_ident
-/server/base_server/config/draw_things.pike foreign_ident
-/server/base_server/config/low_describers.pike foreign_ident
-/server/base_server/config/savers.pike foreign_ident
 /server/base_server/configuration.pike foreign_ident
 /server/base_server/dates.pike foreign_ident
 /server/base_server/disk_cache.pike foreign_ident
@@ -64,7 +59,6 @@ urw_itc_avant_garde-demi-r binary
 /server/base_server/html.pike foreign_ident
 /server/base_server/http.pike foreign_ident
 /server/base_server/language.pike foreign_ident
-/server/base_server/mainconfig.pike foreign_ident
 /server/base_server/module.pike foreign_ident
 /server/base_server/module_support.pike foreign_ident
 /server/base_server/newdecode.pike foreign_ident
