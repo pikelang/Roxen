@@ -1,6 +1,6 @@
 // static private inherit "db";
 
-/* $Id: persistent.pike,v 1.22 1997/04/13 00:42:00 per Exp $ */
+/* $Id: persistent.pike,v 1.23 1997/04/14 01:52:22 per Exp $ */
 
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
@@ -68,23 +68,30 @@ static void compat_persist()
   _id=(__id[0]+".class/"+__id[1]);
 
 #define COMPAT_DIR "dbm_dir.perdbm/"
- object file = files.file();
+  object file = files.file();
   array var;
-  catch {
+  mixed tmp;
+  catch
+  {
     if(!file->open(COMPAT_DIR+_id, "r")) return 0;
     perror("compat restore ("+ _id +")\n");
-    var=decode_value(file->read(0x7ffffff));
+    var=decode_value(tmp=file->read(0x7ffffff));
   };
   if(var)
   {
     foreach(var, var) catch {
       this_object()[var[0]] = var[1];
     };
-    remove_call_out(really_save);
-    call_out(really_save,0);
+    if(!__id)
+    {
+      mixed i = nameof(this_object());
+      if(!arrayp(i)) __id=({i});
+      else __id = i;
+    }
+    
+    open_db(__id[0])->set(__id[1], tmp );
     rm(COMPAT_DIR+_id);
   }
-
 }
 
 nomask public void persist(mixed id)
