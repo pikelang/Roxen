@@ -1,5 +1,12 @@
-Roxen modules neded by AutoSite
--------------------------------
+CVS modules needed by AutoSite
+------------------------------
+AutoSite
+logview_sql
+menumaker
+sitebuilder
+
+Roxen modules needed by AutoSite
+--------------------------------
   AutoMail Database API Module
     Database URL : mysql://auto:site@kopparorm.idonex.se/autosite 
   AutoSite Administration Interface
@@ -28,4 +35,11 @@ Roxen modules neded by AutoSite
      Default SQL-database host : mysql://auto:site@kopparorm.idonex.se/autosite 
   Tablify 
   WebLayout Templates 
-  Wizard generator 
+  Wizard generator
+  SQL Databases
+     Table : logview-sql  mysql://auto:site@kopparorm.idonex.se/statistics
+             autosite     mysql://auto:site@kopparorm.idonex.se/autosite
+  LogView SQL
+     Mount point : 
+     User URL encoding format : $PATH
+  LogView SQL Log module
