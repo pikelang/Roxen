@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.35 1999/03/28 20:05:55 marcus Exp $";
+string cvs_version = "$Id: install.pike,v 1.36 1999/03/30 19:54:48 marcus Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -407,6 +407,12 @@ class Environment
     v[1] = val;
   }
 
+  string get(string var)
+  {
+    array(string) v = env[var];
+    return v && (v-({0}))*":";
+  }
+
   int finalize()
   {
     if(!changed())
@@ -495,12 +501,21 @@ void main(int argc, string *argv)
 #endif
 
     if(envobj->finalize()) {
+      if(find_arg(argv, 0, "recheck-env")) {
+	write("Environment has changed.\n");
+	exit(0);
+      }
       write("Environment has changed.  Rerunning install script.\n");
       Process.system("./start " + argv[1..] * " " +
 		     " --no-env-setup --once --program bin/install.pike");
       exit(0);
-    } else
+    } else {
+      if(find_arg(argv, 0, "recheck-env")) {
+	write("Environment not changed.\n");
+	exit(0);
+      }
       write(popen("clear"));
+    }
   }
 
   write("[1m              Roxen Challenger Installation Script\n"

@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.52 1999/03/28 20:05:53 marcus Exp $
+# $Id: start,v 1.53 1999/03/30 19:54:46 marcus Exp $
 
 VERSION=202; BETA=.b;
 
@@ -103,6 +103,9 @@ parse_args() {
      pike="truss $pike"
   ;;
   --no-env-setup)
+   pass2="$pass2 $1"
+  ;;
+  --recheck-env)
    pass2="$pass2 $1"
   ;;
   --log-dir=*)
