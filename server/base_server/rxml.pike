@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.210 2000/07/26 14:11:25 kuntri Exp $
+// $Id: rxml.pike,v 1.211 2000/07/31 01:58:54 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -631,6 +631,7 @@ class TagHelp {
 
   class Frame {
     inherit RXML.Frame;
+    inherit "rxmlhelp";
 
     array do_return(RequestID id) {
       RXML.PXml parser = rxml_tag_set (RXML.t_html (RXML.PXml), id);
@@ -680,6 +681,8 @@ class TagNumber {
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
+      if(args->type=="roman") return ({ Roxen.int2roman((int)args->num) });
+      if(args->type=="memory") return ({ Roxen.sizetostring((int)args->num) });
       result=roxen.language(args->lang||args->language||
                             id->misc->defines->theme_language,
 			    args->type||"number",id)( (int)args->num );
@@ -1970,7 +1973,7 @@ class TagIfLanguage {
   inherit IfMatch;
   constant plugin_name = "language";
   array source(RequestID id) {
-    return id->pref_languages->get_languages();
+    return id->misc->pref_languages->get_languages();
   }
 }
 
@@ -2632,15 +2635,14 @@ Available variables are:",
  The language to use.
  <lang/>
  <ex type='vert'>Mitt favoritnummer är <number num='11' language='sv'/>.</ex>
- <ex type='vert'>My favorite number is <number num='21' language='en'/>.</ex>
- <ex type='vert'>Il mio numero preferito &egrave;<number num='15'
- language='it'/>.</ex>
+ <ex type='vert'>Il mio numero preferito &egrave;<number num='15' language='it'/>.</ex>
 </attr>
 
-<attr name=type value=number|ordered default=number>
+<attr name=type value=number|ordered|roman|memory default=number>
  Sets output format.
- <ex type='vert'>It was his <number num='15' type='ordered'/> birthday
- yesterday.</ex>
+ <ex type='vert'>It was his <number num='15' type='ordered'/> birthday yesterday.</ex>
+ <ex type='vert'>Only <number num='274589226' type='memory'/> left on the Internet.</ex>
+ <ex type='vert'>Spock Garfield <number num='17' type='roman'/> rests here.</ex>
 </attr>",
 
 "strlen":#"<desc cont><short>
