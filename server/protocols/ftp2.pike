@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.61 1998/07/23 16:38:17 grubba Exp $
+ * $Id: ftp2.pike,v 1.62 1998/08/26 19:20:20 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -772,7 +772,7 @@ class LSFile
       session->conf->log(([ "error":200, "len":sizeof(listing) ]), session);
     }
     if (!dir_stack->ptr) {
-      output(0);	// End marker.
+      output(0);		// End marker.
     } else {
       name_directories = 1;
     }
@@ -820,6 +820,7 @@ class LSFile
       return s;
     } else {
       // EOF
+      master_session->file = 0;	// Avoid extra log-entry.
       return "";
     }
   }
@@ -1542,6 +1543,11 @@ class FTPSession
       BACKEND_CLOSE(fd);
     }
     curr_pipe = 0;
+
+    if (session && session->file) {
+      session->conf->log(session->file, session);
+      session->file = 0;
+    }
 
     send(226, ({ "Transfer complete." }));
   }
