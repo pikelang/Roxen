@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-string cvs_version="$Id: SQLuserdb.pike,v 1.2 1997/10/21 20:39:45 grubba Exp $";
+string cvs_version="$Id: SQLuserdb.pike,v 1.3 1997/12/16 16:18:21 grubba Exp $";
 
 //#define SQLAUTHDEBUG
 
@@ -125,7 +125,7 @@ void open_db() {
 	if(objectp(db)) //already open
 		return;
 	err=catch{
-		db=Sql.msql(QUERY(sqlserver),QUERY(database),QUERY(dbuser),QUERY(dbpass));
+		db=Sql.sql(QUERY(sqlserver),QUERY(database),QUERY(dbuser),QUERY(dbpass));
 	};
 	if (err) {
 		perror ("SQLauth: Couldn't open authentication database!\n");
