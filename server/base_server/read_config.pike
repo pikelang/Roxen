@@ -4,13 +4,11 @@
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-// string cvs_version = "$Id: read_config.pike,v 1.27 1999/11/29 22:09:53 per Exp $";
+// string cvs_version = "$Id: read_config.pike,v 1.28 1999/12/13 04:30:04 mast Exp $";
 #else
 import spider;
 # include "newdecode.pike"
 #endif
-
-static class Privs {};
 
 // import Array;
 // import Stdio;
@@ -155,9 +153,6 @@ private static void read_it(string cl)
   if(configs[cl]) return;
 
   Stdio.File fd;
-#ifndef THREADS
-  Privs privs = Privs("Reading config file"); // Change to root user.
-#endif
 
   mixed err;
   err = catch {
@@ -209,10 +204,6 @@ void remove( string reg , object current_configuration)
 void remove_configuration( string name )
 {
   string f;
-
-#ifndef THREADS
-  Privs privs = Privs("Removing config file"); // Change to root user.
-#endif
 
   f = configuration_dir + replace(name, " ", "_");
   if(!file_stat( f ))   f = configuration_dir + name;
