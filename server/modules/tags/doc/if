@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,16 +95,16 @@
 
 
 
-&lt;if&gt; is defined in the Main RXML parser module.
+<tt>&lt;if&gt;</tt> is defined in the <i>Main RXML parser</i> module.
 <p>
-<tt>&lt;if&gt;</tt> is used to conditionally show its 
-contents. <tt>&lt;else&gt;</tt>, <tt>&lt;elif&gt;</tt> or <tt>&lt;elseif&gt;</tt> can be
-used to suggest alternative content.
+<tt>&lt;if&gt;</tt> is used to conditionally show its contents.
+<tt>&lt;else&gt;</tt>, <tt>&lt;elif&gt;</tt> or <tt>&lt;elseif&gt;</tt> can be used to
+suggest alternative content.
 
 <p>It is possible to use glob patterns in almost all attributes, where
-* means match zero or more characters while ? matches one
-character. Thus <tt>m*f??</tt> will match <tt>motherfoo</tt> as well
-as <tt>mfoo</tt>.
+* means match zero or more characters while ? matches one character.
+* Thus <tt>t*f??</tt> will match <tt>trainfoo</tt> as well as
+* <tt>tfoo</tt> but not <tt>trainfork</tt> or <tt>tfo</tt>.
 
 
 <br clear=all>
@@ -113,7 +118,7 @@ as <tt>mfoo</tt>.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -133,6 +138,9 @@ as <tt>mfoo</tt>.
 <a href="#date">date</a>,
 <a href="#defined">defined</a>,
 <a href="#domain">domain</a>,
+<a href="#eval">eval</a>,
+<a href="#exists">exists</a>,
+<a href="#filename">filename</a>,
 <a href="#host">host</a>,
 <a href="#language">language</a>,
 <a href="#match">match</a>,
@@ -140,6 +148,7 @@ as <tt>mfoo</tt>.
 <a href="#prestate">prestate</a>,
 <a href="#referrer">referrer</a>,
 <a href="#supports">supports</a>,
+<a href="#time">time</a>,
 <a href="#user">user</a>,
 <a href="#variable">variable</a>,
 <a href="#after">after</a>,
@@ -208,8 +217,10 @@ as <tt>mfoo</tt>.
 
 <p><dt><tt><b><a name="accept">accept</a></b></tt>=<i>type1[,type2,...]</i>
 <dd>
-Does the browser accept certain content types, for example
-<i>image/jpeg</i> or <i>text/html</i>? 
+Returns true is the browser accept certain content types as specified
+by it's Accept-header, for example <i>image/jpeg</i> or
+<i>text/html</i>. If browser states that it accepts */* that is not
+taken in to account as this is always untrue.
 
 
 
@@ -231,8 +242,8 @@ the value <i>value</i>?
 
 <p><dt><tt><b><a name="date">date</a></b></tt>=<i>yyyymmdd</i>
 <dd>
-Is the date yyyymmdd? The attributes <tt>before</tt>, <tt>after</tt>
-and <tt>inclusive</tt> modifies the behavior. 
+Is the date yyyymmdd? The attributes <tt>before</tt>,
+<tt>after</tt> and <tt>inclusive</tt> modifies the behavior.
 
 
 
@@ -246,10 +257,40 @@ Is the define defined?
 
 <p><dt><tt><b><a name="domain">domain</a></b></tt>=<i>pattern[,pattern...]</i>
 <dd>
-Does the users computer's DNS name match any of the patterns? Note that
-domain names are resolved asynchronously, and the the first time
+Does the users computer's DNS name match any of the patterns? Note
+that domain names are resolved asynchronously, and the the first time
 someone accesses a page, the domain name will probably not have been
-resolved. 
+resolved.
+
+
+
+
+<p><dt><tt><b><a name="eval">eval</a></b></tt>=<i>RXML expression</i>
+<dd>
+Returns true if <tt>RXML expression</font></tt> returns a string that
+evaluates to true if casted to an integer in Pike, i.e. the string
+begins with 1-9 or a number of zeroes followed by 1-7 (octal greater
+than zero).
+
+<b>Future versions of Roxen (starting from version 1.4) will
+evaluate to true on a number of zeroes followed by 1-9 (decimal
+greater than zero).</b>
+
+
+
+
+<p><dt><tt><b><a name="exists">exists</a></b></tt>=<i>path</i>
+<dd>
+Returns true if the file <tt>path</font></tt> exists. If <tt>path</font></tt>
+does not begin with <i>/</i>, it is assumed to be a URL relative
+to the directory containing the page with the <tt>&lt;if&gt;</tt>-statement.
+
+
+
+
+<p><dt><tt><b><a name="filename">filename</a></b></tt>=<i>filepattern1[,filepattern2,...]</i>
+<dd>
+Returns true if the current page is among the listed filepatterns.
 
 
 
@@ -263,8 +304,8 @@ Does the users computers IP address match any of the patterns?
 
 <p><dt><tt><b><a name="language">language</a></b></tt>=<i>language1[,lang2,...]</i>
 <dd>
-Does the client prefer one of the languages listed, as specified
-by the <tt>Accept-Language</tt> header?
+Does the client prefer one of the languages listed, as specified by
+the <tt>Accept-Language</tt> header?
 
 
 
@@ -279,6 +320,7 @@ Does the string match one of the patterns?
 <p><dt><tt><b><a name="name">name</a></b></tt>=<i>pattern[,pattern...]</i>
 <dd>
 Does the full name of the browser match any of the patterns?
+
 
 
 
@@ -307,10 +349,18 @@ of all available features.
 
 
 
+<p><dt><tt><b><a name="time">time</a></b></tt>=<i>ttmm</i>
+<dd>
+Is the date ttmm? The attributes <tt>before</tt>, <tt>after</tt>
+and <tt>inclusive</tt> modifies the behavior.
+
+
+
+
 <p><dt><tt><b><a name="user">user</a></b></tt>=<i>name[,name,...]|any</i>
 <dd>
-Has the user been authentificated as one of these users? If <i>any</i> is
-given as argument, any authentificated user will do.
+Has the user been authenticated as one of these users? If <i>any</i>
+is given as argument, any authenticated user will do.
 
 
 
@@ -321,9 +371,8 @@ Does the variable exist and, optionally, does it's content match the
 pattern?
 </dl>
 
-<p><b>Modifier Attributes</b></p>
+<p><b>Modifier Attributes</b>
 <dl>
-
 
 
 
@@ -372,8 +421,8 @@ file system.
 <p><dt><tt><b><a name="group">group</a></b></tt>=<i>group, groupfile path</i>
 <dd>
 Used together with the <tt>user</tt> attribute to check if the
-current user is a member of the group according the the groupfile.
-The groupfile is of the following format:
+current user is a member of the group according the the groupfile. The
+groupfile is of the following format:
 
 <p><pre>
 group : user1, user2, user3
@@ -387,8 +436,8 @@ group : user4
 
 <dd>
 Used together with the <tt>date</tt> and <tt>before</tt> or
-<tt>after</tt> attributes. The contents will also be shown if the date is
-the current date.
+<tt>after</tt> attributes. The contents will also be shown if the
+date is the current date.
 
 
 
@@ -396,9 +445,9 @@ the current date.
 
 <dd>
 Used together with the <tt>file</tt> attribute to indicate what
-Challenger's virtual file system should be used to find the password file.
-This might be a security hazard, since anyone will be able to read the
-password file.
+Challenger's virtual file system should be used to find the password
+file. This might be a security hazard, since anyone will be able to
+read the password file.
 
 
 
@@ -412,15 +461,13 @@ Inverts the results of all tests.
 <p><dt><tt><b><a name="or">or</a></b></tt>
 
 <dd>
-If several conditional attributes are given, only one of them has to be
-true for the contents to be shown.
-</dl>
+If several conditional attributes are given, only one of them has to
+be true for the contents to be shown.
 
 
 </dl>
 
 <p>
-
 
 <br>&nbsp;&nbsp;<a href="#Complex expressions"><define name=kludge2>Complex expressions</define><insert name=kludge2 " "=&nbsp;></a>
 
@@ -428,7 +475,8 @@ true for the contents to be shown.
 <icon type=warning>
 <p>You might be tempted to write expressions like:
 
-<p><doc><tt>{if variable="foo is bar" or variable="bar is foo"}Something{/if}</font></tt></doc>
+<p><doc><tt>{if variable="foo is bar" or variable="bar is
+foo"}Something{/if}</font></tt></doc>
 
 <p>This will not work, as you can only use an attribute once.
 
@@ -627,4 +675,5 @@ The year 2000 is yet to come.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

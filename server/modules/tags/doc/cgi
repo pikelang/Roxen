@@ -78,7 +78,7 @@
 
 
 
-<b><font color=#ffffff size=+3 >&nbsp;&lt;comment&gt;&nbsp;...&nbsp;&lt;/comment&gt;&nbsp;</font></b>
+<b><font color=#ffffff size=+3 >&nbsp;&lt;cgi&gt;&nbsp;</font></b>
 
 </td>
 <td>
@@ -95,13 +95,12 @@
 
 
 
-<tt>&lt;comment&gt;</tt> is defined in the <i>Main RXML parser</i> module.
+<tt>&lt;cgi&gt;</tt> is defined in the <i>CGI executable support</i> module.
 <p>
-The contents will be completely removed from the page. As opposed to
-HTML comments where you can still see the comment by doing <i>View
-Source</i> in the browser.
-
-<p>RXML tags within the <tt>&lt;comment&gt;</tt> tag will not be parsed.
+Executes a CGI script, any attributes is forwarded from the tag to the
+CGI script. The same can be achived bu the <tt>&lt;insert&gt;</tt> tag or
+SSI <tt>&lt;-- #exec --&gt;</tt>, but the <tt>&lt;cgi&gt;</tt> tag has a nicer
+syntax. 
 
 
 <br clear=all>
@@ -129,6 +128,8 @@ Source</i> in the browser.
 
 
 
+<a href="#script">script</a>,
+<a href="#"></a>,
 &nbsp;
 
 </td>
@@ -183,6 +184,28 @@ Source</i> in the browser.
 
 
 <dl>
+
+<p><dt><tt><b><a name="script">script</a></b></tt>
+
+<dd>
+The CGI script to invoke.
+
+
+
+<p><dt><tt><b><a name=""></a></b></tt>
+
+<dd>
+
+
+<p><dt><tt><b><a name="default-<i>argument</i>">default-<i>argument</i></a></b></tt>
+
+<dd>
+This argument will be sent to the CGI script, unless a form variable
+exists with the same name.
+
+
+
+
 
 </dl>
 

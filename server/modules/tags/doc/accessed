@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,7 +95,7 @@
 
 
 
-&lt;accessed&gt; is defined in the Main RXML parser module.
+<tt>&lt;accessed&gt;</tt> is defined in the <i>Main RXML parser</i> module.
 <p>
 <tt>&lt;accessed&gt;</tt> generates an access counter that shows how many
 times the page has been accessed. In combination with the
@@ -101,7 +106,7 @@ counters.
 store the number of accesses to each page. Thus it will use more
 resources than most other tags and can therefore be deactivated in the
 <i>RXML parser</i> module. By default the access count is
-only kept for files that actually contain an<tt>&lt;accessed&gt;</tt> tag,
+only kept for files that actually contain an <tt>&lt;accessed&gt;</tt> tag,
 but that can also be configured.
 
 
@@ -116,7 +121,7 @@ but that can also be configured.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -202,8 +207,8 @@ but that can also be configured.
 
 <p><dt><tt><b><a name="add">add</a></b></tt>=<i>number</i>
 <dd>
-Increments the number of accesses with this number instead of
-one, each time the page is accessed.
+Increments the number of accesses with this number instead of one,
+each time the page is accessed.
 
 
 
@@ -211,9 +216,9 @@ one, each time the page is accessed.
 <p><dt><tt><b><a name="addreal">addreal</a></b></tt>
 
 <dd>
-Prints the real number of accesses as a HTML comment. Useful if
-you use the <tt>cheat</tt> attribute and still want to keep track of
-the real number of accesses.
+Prints the real number of accesses as an HTML comment. Useful if you
+use the <tt>cheat</tt> attribute and still want to keep track of the
+real number of accesses.
 
 
 
@@ -226,9 +231,9 @@ Capitalizes the first letter of the result.
 
 <p><dt><tt><b><a name="cheat">cheat</a></b></tt>=<i>number</i>
 <dd>
-Adds this number of accesses to the actual number of accesses
-before printing the result. If your page has been accessed 72 times
-and you add <doc><tt>{accessed cheat=100}</font></tt></doc> the result will be 172.
+Adds this number of accesses to the actual number of accesses before
+printing the result. If your page has been accessed 72 times and you
+add <doc><tt>{accessed cheat=100}</font></tt></doc> the result will be 172.
 
 
 
@@ -243,20 +248,19 @@ Multiplies the actual number of accesses by the factor.
 <p><dt><tt><b><a name="file">file</a></b></tt>=<i>filename</i>
 <dd>
 Shows the number of times the page <i>filename</i> has been
-accessed instead of how many times the current page has been
-accessed. If filename does not begin with "/", it is assumed to be a
-URL relative to the directory containing the page with the
-<tt>&lt;accessed&gt;</tt> tag. Note that you have to type in the full name
+accessed instead of how many times the current page has been accessed.
+If the filename does not begin with "/", it is assumed to be a URL
+relative to the directory containing the page with the
+<tt>&lt;accessed&gt;</tt> tag. Note, that you have to type in the full name
 of the file. If there is a file named tmp/index.html, you cannot
 shorten the name to tmp/, even if you've set Challenger up to use
 index.html as a default page. The <i>filename</i> refers to the
 <b>virtual</b> filesystem.
 
-<p>
-One limitation is that you cannot reference a file that does not have
-its own <doc><tt>{accessed}</font></tt></doc> tag. You can use <doc><tt>{accessed silent}</font></tt></doc> on
-a page if you want it to be possible to count accesses to it, but
-don't want an access counter to show on the page itself.
+<p>One limitation is that you cannot reference a file that does not
+have its own <doc><tt>{accessed}</font></tt></doc> tag. You can use <doc><tt>{accessed
+silent}</font></tt></doc> on a page if you want it to be possible to count accesses
+to it, but don't want an access counter to show on the page itself.
 
 
 
@@ -283,13 +287,12 @@ es
 sv
 
 <dd>
-Will print the result as words in the chosen language if used
-together with <tt>type=string</tt>. Available languages are ca,
-es_CA (catala), hr (croatian), cs (czech), nl (dutch), en (english),
-fi (finnish), fr (french), de (german), hu (hungarian), it (italian),
-jp (japanese), mi (maori), no (norweigan), pt (portuguese), ru
-(russian), sr (serbian), si (slovenian), es (spanish) and sv
-(swedish).
+Will print the result as words in the chosen language if used together
+with <tt>type=string</tt>. Available languages are ca, es_CA
+(Catala), hr (Croatian), cs (Czech), nl (Dutch), en (English), fi
+(Finnish), fr (French), de (German), hu (Hungarian), it (Italian), jp
+(Japanese), mi (Maori), no (Norwegian), pt (Portuguese), ru (Russian),
+sr (Serbian), si (Slovenian), es (Spanish) and sv (Swedish).
 
 
 
@@ -337,9 +340,9 @@ Rounds the number of accesses to this number of significant digits. If
 <dd>
 Resets the counter. This should probably only be done under very
 special conditions, maybe within an <doc><tt>{if}</font></tt></doc> statement.
-<p>
-Can be used together with the file argument, but is limited to files
-in the current- and sub-directories.
+
+<p>This can be used together with the file argument, but it is limited
+to files in the current- and sub-directories.
 
 
 
@@ -350,7 +353,7 @@ Print nothing. The access count will be updated but not printed. This
 option is useful because the access count is normally only kept for
 pages with actual <tt>&lt;access&gt;</tt> on them. <doc><tt>{accessed
 file=filename}</font></tt></doc> can then be used to get the access count for the
-page with the silent counter. 
+page with the silent counter.
 
 
 
@@ -365,8 +368,8 @@ Print the result in uppercase.
 
 <dd>
 Inserts the date that the access count started. The language will
-depend on the <tt>lang</tt> tag, default is English. All normal
-date related attributes can be used. See the <tt>&lt;date&gt;</tt> tag.
+depend on the <tt>lang</tt> tag, default is English. All normal date
+related attributes can be used. See the <tt>&lt;date&gt;</tt> tag.
 
 
 
@@ -413,7 +416,8 @@ useful together with the <tt>since</tt> attribute.
   </td>
   <td bgcolor=white>
 <pre><define name=foo>
-This page has been accessed <accessed type=string cheat=90 addreal>
+This page has been accessed
+<accessed type=string cheat=90 addreal>
 times since <accessed since>.
 </define>
 <insert name=foo "<"=&lt; ">"=&gt; ></pre>
@@ -440,7 +444,8 @@ times since <accessed since>.
 <td valign=top bgcolor=#ffffff>
 
 
-This page has been accessed <accessed type=string cheat=90 addreal>
+This page has been accessed
+<accessed type=string cheat=90 addreal>
 times since <accessed since>.
 
 
@@ -461,4 +466,5 @@ times since <accessed since>.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

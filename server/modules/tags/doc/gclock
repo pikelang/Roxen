@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,7 +95,7 @@
 
 
 
-&lt;gclock&gt; is defined in the Pike Image Module module.
+<tt>&lt;gclock&gt;</tt> is defined in the <i>Pike Image Module</i> module.
 <p>
 Draw an analogue clock that will always show the right time through
 creative usage of GIF animations.
@@ -107,7 +112,7 @@ creative usage of GIF animations.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -270,4 +275,5 @@ Add or subtract a number of seconds to the actual time.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

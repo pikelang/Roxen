@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -73,7 +78,7 @@
 
 
 
-<b><font color=#ffffff size=+3 >&nbsp;&lt;variable&gt;&nbsp;</font></b>
+<b><font color=#ffffff size=+3 >&nbsp;&lt;set&gt;&nbsp;</font></b>
 
 </td>
 <td>
@@ -90,7 +95,7 @@
 
 
 
-&lt;variable&gt; is defined in the Main RXML parser module.
+<tt>&lt;set&gt;</tt> is defined in the <i>Main RXML parser</i> module.
 <p>
 Sets a variable to a new value.
 
@@ -106,7 +111,7 @@ Sets a variable to a new value.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -207,9 +212,9 @@ Set the variable to the contents of this define.
 
 <p><dt><tt><b><a name="expr">expr</a></b></tt>=<i>expression</i>
 <dd>
-Set the variable to the result of a simple mathematical
-expression. Operators that can be used are +, -, *, /, % and |. Only
-numerical values can be used in the expression.
+Set the variable to the result of a simple mathematical expression.
+Operators that can be used are +, -, *, /, % and |. Only numerical
+values can be used in the expression.
 
 
 
@@ -231,9 +236,9 @@ Set the variable to the value of the named variable.
 <p><dt><tt><b><a name="other">other</a></b></tt>=<i>variable</i>
 <dd>
 Set the variable to the value of this <i>other</i> variable. This is
-mostly useful from within <i>output</i> tags like
-<tt>&lt;sqloutput&gt;</tt> where all columns from the SQL result will be
-available as <i>other</i> variables.
+mostly useful from within <i>output</i> tags like <tt>&lt;sqloutput&gt;</tt>
+where all columns from the SQL result will be available as
+<i>other</i> variables.
 
 
 
@@ -247,9 +252,9 @@ Set the variable to this value.
 </dl>
 
 <p>
-If none of the above attributes are specified, the variable is
-unset. If debug is currently on, more specific debug information is
-provided if the operation failed.
+If none of the above attributes are specified, the variable is unset.
+If debug is currently on, more specific debug information is provided
+if the operation failed.
 
 
 <dl>
@@ -380,4 +385,5 @@ provided if the operation failed.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,7 +95,7 @@
 
 
 
-&lt;wizard&gt; is defined in the Wizard generator module.
+<tt>&lt;wizard&gt;</tt> is defined in the <i>Wizard generator</i> module.
 <p>
 The <tt>&lt;wizard&gt;</tt> tag generates wizard-like user interfaces, where
 the user is guided through several pages of controls. It is very
@@ -112,7 +117,7 @@ page container tag. The <tt>&lt;page&gt;</tt> tag can in turn contain
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -253,7 +258,9 @@ The text on the <i>previous</i> button.
 
 </dl>
 
-<p>Attributes for <tt>&lt;var&gt;</tt> and <tt>&lt;cvar&gt;</tt>
+<p>
+Attributes for <tt>&lt;var&gt;</tt> and <tt>&lt;cvar&gt;</tt>
+
 
 <dl>
 
@@ -280,7 +287,7 @@ The name of the variable.
 
 <p><dt><tt><b><a name="options">options</a></b></tt>=<i>option1,option2,...</i>
 <dd>
-Available for <i>select</i> or <i>select_multiple</i>variables.
+Available for <i>select</i> or <i>select_multiple</i> variables.
 
 
 
@@ -349,18 +356,21 @@ The variable type.
   </td>
   <td bgcolor=white>
 <pre><define name=foo>
-<page>
 <wizard name="Sample wizard" ok-label=Done 
-  done=wizard.html cancel=wizard.html>
+ done=wizard.html cancel=wizard.html>
 
 <page>
-<b>Message</b> <var name=message size=30 value="Hello World">
+<b>Message</b>
+<var name=message size=30
+  value="Hello World">
 
-<p><var name=color type=color>
+<p><var name=color type=color-small>
 </page>
 
 <page>
-<formoutput><gtext fg=#color#>#message#</gtext></formoutput>
+<formoutput>
+<gtext fg=#color#>#message#</gtext>
+</formoutput>
 </page>
 
 </wizard>
@@ -389,18 +399,21 @@ The variable type.
 <td valign=top bgcolor=#ffffff>
 
 
-<page>
 <wizard name="Sample wizard" ok-label=Done 
-  done=wizard.html cancel=wizard.html>
+ done=wizard.html cancel=wizard.html>
 
 <page>
-<b>Message</b> <var name=message size=30 value="Hello World">
+<b>Message</b>
+<var name=message size=30
+  value="Hello World">
 
-<p><var name=color type=color>
+<p><var name=color type=color-small>
 </page>
 
 <page>
-<formoutput><gtext fg=#color#>#message#</gtext></formoutput>
+<formoutput>
+<gtext fg=#color#>#message#</gtext>
+</formoutput>
 </page>
 
 </wizard>
@@ -423,4 +436,5 @@ The variable type.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

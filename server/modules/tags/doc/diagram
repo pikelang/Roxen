@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,119 +95,168 @@
 
 
 
-&lt;diagram&gt; is defined in the Business Graphics module.
+<tt>&lt;diagram&gt;</tt> is defined in the <i>Business Graphics</i> module.
 <p>
 The <tt>&lt;diagram&gt;</tt> container tag is used to draw pie, bar, or line
 charts as well as graphs. It is quite complex with six internal
-container tags. 
+container tags.
 
 
-<br>&nbsp;&nbsp;<a href="#Internal Tags"><define name=kludge2>Internal Tags</define><insert name=kludge2 " "=&nbsp;></a>
+
+<br><a href="#Internal Tags"><b><define name=kludge1>Internal Tags</define><insert name=kludge1 " "=&nbsp;></b></a>
 
 
-<dl><dt><tt><b>&lt;data&gt;</b></tt><dd>
-The data the diagram is to visualize, in tabular form.
+<dl><dt><tt><b>&lt;data&gt;</b></tt><dd>The data the diagram is to visualize,
+in tabular form.
 
-<p><dt><tt><b>&lt;colors&gt;</b></tt><dd>
-The colors for different pie slices, bars or lines.
+<p><dt><tt><b>&lt;colors&gt;</b></tt><dd>The colors for different pie slices,
+bars or lines.
 
-<p><dt><tt><b>&lt;legend&gt;</b></tt><dd>
-A separate legend with description of the different pie slices, bars
-or lines. 
+<p><dt><tt><b>&lt;legend&gt;</b></tt><dd>A separate legend with description of
+the different pie slices, bars or lines.
 
-<p><dt><tt><b>&lt;xaxis&gt;</b></tt><dd>
-Used for specifying the quantity and unit of the x-axis, as well as its
-scale, in a graph.
+<p><dt><tt><b>&lt;xaxis&gt;</b></tt><dd>Used for specifying the quantity and
+unit of the x-axis, as well as its scale, in a graph.
 
-<p><dt><tt><b>&lt;yaxis&gt;</b></tt><dd>
-Used for specifying the quantity and unit of the x-axis, as well as its
-scale, in a graph or line chart.
+<p><dt><tt><b>&lt;yaxis&gt;</b></tt><dd>Used for specifying the quantity and
+unit of the x-axis, as well as its scale, in a graph or line chart.
 
-<p><dt><tt><b>&lt;xnames&gt;</b></tt><dd>
-Separate tag that can be used to give names to put along the pie
-slices or under the bars. The names are usually part of the data.
+<p><dt><tt><b>&lt;xnames&gt;</b></tt><dd>Separate tag that can be used to give
+names to put along the pie slices or under the bars. The names are
+usually part of the data.
 </dl>
 
 
-<br>&nbsp;&nbsp;<a href="#Pie"><define name=kludge2>Pie</define><insert name=kludge2 " "=&nbsp;></a>
 
-<source separator="Results in">
-<diagram type=pie width=200 height=200 name='Population'
-  tonedbox='lightblue,lightblue,white,white'>
-<data separator=,>5305048,5137269,4399993,8865051</data>
-<legend separator=,>Denmark,Finland,Norway,Sweden</legend>
+<br><a href="#Pie"><b><define name=kludge1>Pie</define><insert name=kludge1 " "=&nbsp;></b></a>
+
+
+<source>
+<diagram type=pie width=200 height=200
+name='Population'
+tonedbox='lightblue,lightblue,white,white'>
+<data separator=,>
+5305048,5137269,4399993,8865051
+</data>
+<legend separator=,>
+Denmark,Finland,Norway,Sweden</legend>
 </diagram>
 </source>
 
 
-<br>&nbsp;&nbsp;<a href="#Bar"><define name=kludge2>Bar</define><insert name=kludge2 " "=&nbsp;></a>
 
-<source separator="Results in">
-<diagram type=bar width=200 height=250 name='Population'
-  horgrid tonedbox='lightblue,lightblue,white,white'>
-<data xnamesvert xnames separator=,>Denmark,Finland,Norway,Sweden
+<br><a href="#Bar"><b><define name=kludge1>Bar</define><insert name=kludge1 " "=&nbsp;></b></a>
+
+
+<source>
+<diagram type=bar width=200 height=250
+name='Population' horgrid
+tonedbox='lightblue,lightblue,white,white'>
+<data xnamesvert xnames separator=,>
+Denmark,Finland,Norway,Sweden
 5305048,5137269,4399993,8865051</data>
 </diagram>
 </source>
 
-<p><source separator="Results in"><diagram type=bar width=200 height=250 name='Age structure'
-  horgrid tonedbox='lightblue,lightblue,white,white'>
-<data xnamesvert xnames form=column separator=,>Denmark,951175,3556339,797534
+<p><source>
+<diagram type=bar width=200 height=250
+name='Age structure' horgrid
+tonedbox='lightblue,lightblue,white,white'>
+<data xnamesvert xnames form=column
+  separator=,>
+Denmark,951175,3556339,797534
 Finland,966593,3424107,746569
 Norway,857952,2846030,696011
 Sweden,1654180,5660410,1550461</data>
-<legend separator=,>0-14,15-64,65-</legend>
+<legend separator=,>
+0-14,15-64,65-
+</legend>
 </diagram>
 </source>
 
 
-<br>&nbsp;&nbsp;<a href="#Sumbar"><define name=kludge2>Sumbar</define><insert name=kludge2 " "=&nbsp;></a>
+<br><a href="#Sumbar"><b><define name=kludge1>Sumbar</define><insert name=kludge1 " "=&nbsp;></b></a>
 
-<br><source separator="Results in"><diagram type=sumbar width=200 height=250 name='Land Use'
-  horgrid tonedbox='lightblue,lightblue,white,white'>
-<data xnamesvert xnames form=column separator=,>Denmark,27300,4200,10500
+
+<source>
+<diagram type=sumbar width=200 height=250
+name='Land Use' horgrid
+tonedbox='lightblue,lightblue,white,white'>
+<data xnamesvert xnames form=column
+  separator=,>
+Denmark,27300,4200,10500
 Finland,24400,231800,48800
 Norway,9240,83160,215600
 Sweden,32880,279480,102750</data>
-<legend separator=,>Arable,Forests,Other</legend>
+<legend separator=,>
+Arable,Forests,Other
+</legend>
 <yaxis quantity=area>
 <yaxis unit=km^2>
-</diagram></source>
+</diagram>
+</source>
 
 
-<br>&nbsp;&nbsp;<a href="#Normalized Sumbar"><define name=kludge2>Normalized Sumbar</define><insert name=kludge2 " "=&nbsp;></a>
 
-<source separator="Results in"><diagram type=normsumbar width=200 height=250 name='Land Use'
-  horgrid tonedbox='lightblue,lightblue,white,white'>
-<data xnamesvert xnames, form=column separator=,>Denmark,27300,4200,10500
+<br><a href="#Normalized Sumbar"><b><define name=kludge1>Normalized Sumbar</define><insert name=kludge1 " "=&nbsp;></b></a>
+
+
+<source>
+<diagram type=normsumbar width=200 height=250
+name='Land Use' horgrid
+tonedbox='lightblue,lightblue,white,white'>
+<data xnamesvert xnames form=column
+  separator=,>
+Denmark,27300,4200,10500
 Finland,24400,231800,48800
 Norway,9240,83160,215600
 Sweden,32880,279480,102750
-<legend separator=,>Arable,Forests,Other</legend>
+</data>
+<legend separator=,>
+Arable,Forests,Other
+</legend>
 <yaxis quantity=%>
-</diagram></source>
+</diagram>
+</source>
 
 
-<br>&nbsp;&nbsp;<a href="#Line Chart"><define name=kludge2>Line Chart</define><insert name=kludge2 " "=&nbsp;></a>
 
-<source separator="Results in"><diagram type=line width=200 height=250 name='Exchange Rates'
-  horgrid tonedbox='lightblue,lightblue,white,white'>
-<data form=row separator=,>1992,1993,1994,1995,1996
+<br><a href="#Line Chart"><b><define name=kludge1>Line Chart</define><insert name=kludge1 " "=&nbsp;></b></a>
+
+
+<source>
+<diagram type=line width=200 height=250
+name='Exchange Rates' horgrid
+tonedbox='lightblue,lightblue,white,white'>
+<data form=row separator=,
+ xnamesvert xnames>
+1992,1993,1994,1995,1996
 0.166,0.154,0.157,0.179,0.172
 0.223,0.175,0.191,0.229,0.218
 0.161,0.141,0.142,0.158,0.155
-0.172,0.128,0.130,0.149,0.140</data>
+0.172,0.128,0.130,0.149,0.140
+</data>
 <yaxis start=0.09 stop=0.25>
-<legend separator=,>Danish kroner (DKr),Markkaa (FMk),Norwegian kronor (NKr),Swedish kronor (SKr)</legend>
+<legend separator=,>
+Danish kroner (DKr),
+Markkaa (FMk),
+Norwegian kronor (NKr),
+Swedish kronor (SKr)
+</legend>
 <xaxis quantity=year>
 <yaxis quantity=US$>
-</diagram></source>
+</diagram>
+</source>
 
 
-<br>&nbsp;&nbsp;<a href="#Graph"><define name=kludge2>Graph</define><insert name=kludge2 " "=&nbsp;></a>
 
-<source separator="Results in"><diagram type=graph width=200 height=300 name='Simple Functions'
-  horgrid tonedbox='lightblue,lightblue,white,white'>
+<br><a href="#Graph"><b><define name=kludge1>Graph</define><insert name=kludge1 " "=&nbsp;></b></a>
+
+
+<source>
+<diagram type=graph width=200 height=300
+name='Simple Functions' horgrid
+tonedbox='lightblue,lightblue,white,white'>
 <colors separator=" ">#60b0ff darkred</colors>
 <data separator=,><pike>
   float c;
@@ -222,8 +276,11 @@ Sweden,32880,279480,102750
 </pike></data>
 <axis start=-2.1 stop=2.1>
 <axis start=-6.1 stop=6.1>
-<legend separator=,>x^2,x^3</legend>
-</diagram></source>
+<legend separator=,>
+x^2,x^3
+</legend>
+</diagram>
+</source>
 
 
 <br clear=all>
@@ -237,7 +294,7 @@ Sweden,32880,279480,102750
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -349,7 +406,7 @@ Sweden,32880,279480,102750
 
 <p><dt><tt><b><a name="3d">3d</a></b></tt>=<i>number</i>
 <dd>
-Draws a piechart on top of a cylinder, takes the height of the
+Draws a pie-chart on top of a cylinder, takes the height of the
 cylinder as argument.
 
 
@@ -364,7 +421,7 @@ Use the image as background.
 
 <p><dt><tt><b><a name="bgcolor">bgcolor</a></b></tt>=<i>color</i>
 <dd>
-Set the background color to use for anti-aliasing.</p>
+Set the background color to use for anti-aliasing.
 
 
 
@@ -393,7 +450,7 @@ Use this font. Can be overridden in the <tt>&lt;legend&gt;</tt>,
 
 <p><dt><tt><b><a name="fontsize">fontsize</a></b></tt>=<i>number</i>
 <dd>
-Height of the text.</p>
+Height of the text.
 
 
 
@@ -538,8 +595,8 @@ Set the width of the diagram.
 
 <p><dt><tt><b><a name="xgridspace">xgridspace</a></b></tt>=<i>number</i>
 <dd>
-Set the space between two vertical grid lines. The unit is the same as for
-the data.
+Set the space between two vertical grid lines. The unit is the same as
+for the data.
 
 
 
@@ -554,15 +611,17 @@ as for the data.
 </dl>
 
 <p>
-Regular <doc><tt>{img}</font></tt></doc> arguments will be passed on to the
-generated <doc><tt>{img}</font></tt></doc> tag.
+Regular <doc><tt>{img}</font></tt></doc> arguments will be passed on to the generated
+<doc><tt>{img}</font></tt></doc> tag.
 
 
 <dl>
 </dl>
 
 <p>
-Attributes for the internal <tt>&lt;data&gt;</tt> container tag.
+
+<br>&nbsp;&nbsp;<a href="#&lt;data&gt;"><define name=kludge2>&lt;data&gt;</define><insert name=kludge2 " "=&nbsp;></a>
+
 
 
 <dl>
@@ -584,8 +643,7 @@ How to interpret the tabular data, by default row.
 <p><dt><tt><b><a name="lineseparator">lineseparator</a></b></tt>
 
 <dd>
-Set the separator between rows, by default newline.
-lineseparator.
+Set the separator between rows, by default newline. lineseparator.
 
 
 
@@ -621,7 +679,9 @@ Write the names vertically.
 </dl>
 
 <p>
-Attributes for the internal <tt>&lt;colors&gt;</tt> container tag.
+
+<br>&nbsp;&nbsp;<a href="#&lt;colors&gt;"><define name=kludge2>&lt;colors&gt;</define><insert name=kludge2 " "=&nbsp;></a>
+
 
 
 <dl>
@@ -635,7 +695,9 @@ Set the separator between colors, by default tab.
 </dl>
 
 <p>
-Attributes for the internal <tt>&lt;legend&gt;</tt> container tag.
+
+<br>&nbsp;&nbsp;<a href="#&lt;legend&gt;"><define name=kludge2>&lt;legend&gt;</define><insert name=kludge2 " "=&nbsp;></a>
+
 
 
 <dl>
@@ -649,8 +711,9 @@ Set the separator between legends, by default tab.
 </dl>
 
 <p>
-Attributes for the internal <tt>&lt;xaxis&gt;</tt> and <tt>&lt;yaxis&gt;</tt>
-container tags.
+
+<br>&nbsp;&nbsp;<a href="#&lt;xaxis&gt;, &lt;yaxis&gt;"><define name=kludge2>&lt;xaxis&gt;, &lt;yaxis&gt;</define><insert name=kludge2 " "=&nbsp;></a>
+
 
 
 <dl>
@@ -686,7 +749,9 @@ Set the name of the unit of this axis.
 </dl>
 
 <p>
-Attributes for the <tt>&lt;xnames&gt;</tt> container tag.
+
+<br>&nbsp;&nbsp;<a href="#&lt;xnames&gt;"><define name=kludge2>&lt;xnames&gt;</define><insert name=kludge2 " "=&nbsp;></a>
+
 
 
 <dl>
@@ -699,7 +764,7 @@ Set the separator between names, by default tab.
 
 
 <p><dt><tt><b><a name="orient">orient</a></b></tt>=vert
-horis
+horiz
 
 <dd>
 How to write names, vertically or horizontally.
@@ -734,4 +799,5 @@ How to write names, vertically or horizontally.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

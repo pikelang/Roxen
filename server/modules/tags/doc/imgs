@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,7 +95,7 @@
 
 
 
-&lt;imgs&gt; is defined in the Main RXML parser module.
+<tt>&lt;imgs&gt;</tt> is defined in the <i>Main RXML parser</i> module.
 <p>
 Works like an <doc><tt>{img}</font></tt></doc> tag where the server automatically sets
 the <tt>width</tt> and <tt>height</tt> attributes. That way, the
@@ -111,7 +116,7 @@ will read the first bytes of the image file to determine its size.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -210,4 +215,5 @@ tag.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,7 +95,7 @@
 
 
 
-&lt;number&gt; is defined in the Main RXML parser module.
+<tt>&lt;number&gt;</tt> is defined in the <i>Main RXML parser</i> module.
 <p>
 Prints a number as a word.
 
@@ -106,7 +111,7 @@ Prints a number as a word.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -198,11 +203,11 @@ es
 sv
 
 <dd>
-The language to use. Available languages are ca, es_CA (catala), hr
-(croatian), cs (czech), nl (dutch), en (english), fi (finnish), fr
-(french), de (german), hu (hungarian), it (italian), jp (japanese), mi
-(maori), no (norweigan), pt (portuguese), ru (russian), sr (serbian),
-si (slovenian), es (spanish) and sv (swedish).
+The language to use. Available languages are ca, es_CA (Catala), hr
+(Croatian), cs (Czech), nl (Dutch), en (English), fi (Finnish), fr
+(French), de (German), hu (Hungarian), it (Italian), jp (Japanese), mi
+(Maori), no (Norwegian), pt (Portuguese), ru (Russian), sr (Serbian),
+si (Slovenian), es (Spanish) and sv (Swedish).
 
 
 
@@ -282,4 +287,5 @@ si (slovenian), es (spanish) and sv (swedish).
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,7 +95,7 @@
 
 
 
-&lt;date&gt; is defined in the Main RXML parser module.
+<tt>&lt;date&gt;</tt> is defined in the <i>Main RXML parser</i> module.
 <p>
 This tag prints the date and time.
 
@@ -106,7 +111,7 @@ This tag prints the date and time.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -247,12 +252,12 @@ sv
 
 <dd>
 Used together with <tt>type=string</tt> and the <tt>part</tt>
-attribute to get written dates in the specified langauge. Available
-languages are ca, es_CA (catala), hr (croatian), cs (czech), nl
-(dutch), en (english), fi (finnish), fr (french), de (german), hu
-(hungarian), it (italian), jp (japanese), mi (maori), no (norweigan), 
-pt (portuguese), ru (russian), sr (serbian), si (slovenian), es
-(spanish) and sv (swedish).
+attribute to get written dates in the specified language. Available
+languages are ca, es_CA (Catala), hr (Croatian), cs (Czech), nl
+(Dutch), en (English), fi (Finnish), fr (French), de (German), hu
+(Hungarian), it (Italian), jp (Japanese), mi (Maori), no (Norwegian),
+pt (Portuguese), ru (Russian), sr (Serbian), si (Slovenian), es
+(Spanish) and sv (Swedish).
 
 
 
@@ -271,7 +276,7 @@ Prints the results in lower case.
 
 <p><dt><tt><b><a name="minute">minute</a></b></tt>=<i>number</i>
 <dd>
-Adds this number of minutes to tha current date.
+Adds this number of minutes to the current date.
 
 
 
@@ -287,18 +292,18 @@ yday
 
 <dd>
 <ul>
-<li><kbd>year</kbd>; The year
-<li><kbd>month</kbd>; The month
-<li><kbd>day</kbd>; The weekday, starting with Sunday.
-<li><kbd>date</kbd>; The number of days since the first this month.
-<li><kbd>hour</kbd>; The number of hours since midnight.
-<li><kbd>minute</kbd>; The number of minutes since the last full hour.
-<li><kbd>second</kbd>; The number of seconds since the last full minute.
-<li><kbd>yday</kbd>; The day since the first of january.
+<li><tt>year</font></tt>; The year
+<li><tt>month</font></tt>; The month
+<li><tt>day</font></tt>; The weekday, starting with Sunday.
+<li><tt>date</font></tt>; The number of days since the first this month.
+<li><tt>hour</font></tt>; The number of hours since midnight.
+<li><tt>minute</font></tt>; The number of minutes since the last full hour.
+<li><tt>second</font></tt>; The number of seconds since the last full minute.
+<li><tt>yday</font></tt>; The day since the first of January.
 </ul>
 
 <p>The return value of these parts are modified by both
-    <kbd>type</kbd> and <kbd>lang</kbd>.  
+<tt>type</font></tt> and <tt>lang</font></tt>.
 
 
 
@@ -318,7 +323,7 @@ Adds this number of seconds to the current date.
 <p><dt><tt><b><a name="time">time</a></b></tt>
 
 <dd>
-Print the time only.
+Prints the time only.
 
 
 
@@ -344,10 +349,10 @@ make a difference when <i>not</i> using <tt>part</tt>. Note that
 
 
 <p><dt><tt><b><a name="unix_time">unix_time</a></b></tt>=<i>time_t</i>
-<dd>
-This attribute uses the specified unix time_t time as the starting
-time, instead of the current time. This is mostly useful when the
-<tt>&lt;date&gt;</tt> tag is used from a pike-script or roxen module.
+<dd> This attribute uses the
+specified Unix time_t time as the starting time, instead of the
+current time. This is mostly useful when the <tt>&lt;date&gt;</tt> tag is
+used from a Pike-script or Roxen module.
 
 
 
@@ -355,7 +360,7 @@ time, instead of the current time. This is mostly useful when the
 <p><dt><tt><b><a name="upper">upper</a></b></tt>
 
 <dd>
-Print the result in upper case.
+Prints the result in upper case.
 
 
 
@@ -429,4 +434,5 @@ Print the result in upper case.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

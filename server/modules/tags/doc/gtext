@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,9 +95,14 @@
 
 
 
-&lt;gtext&gt; is defined in the Graphics text module.
+<tt>&lt;gtext&gt;</tt> is defined in the <i>Graphics text</i> module.
 <p>
-Renders a GIF image from the text in the contents.
+Renders a GIF image of the enclosed text.
+
+<p>Note: If the background and text colors are not set in the
+<tt>&lt;body&gt;</tt> tag of the page, the <tt>bg</tt> and <tt>fg</tt>
+attributes must be set, otherwise the <tt>&lt;gtext&gt;</tt> tag will only
+render a "Please reload this page"-message.
 
 
 <br clear=all>
@@ -106,7 +116,7 @@ Renders a GIF image from the text in the contents.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -139,14 +149,14 @@ Renders a GIF image from the text in the contents.
 <a href="#italic">italic</a>,
 <a href="#light">light</a>,
 <a href="#magic">magic</a>,
-<a href="#magic_</b></tt><i>argument</i></tt></b>">magic_</b></tt><i>argument</i></tt></b></a>,
+<a href="#magic_</b></tt><i>argument</i><tt><b>">magic_</b></tt><i>argument</i><tt><b></a>,
 <a href="#magicbg">magicbg</a>,
 <a href="#maxlen">maxlen</a>,
 <a href="#mirrortile">mirrortile</a>,
 <a href="#move">move</a>,
 <a href="#nfont">nfont</a>,
 <a href="#notrans">notrans</a>,
-<a href="#opague">opague</a>,
+<a href="#opaque">opaque</a>,
 <a href="#quant">quant</a>,
 <a href="#rescale">rescale</a>,
 <a href="#rotate">rotate</a>,
@@ -227,7 +237,7 @@ Renders a GIF image from the text in the contents.
 
 <p><dt><tt><b><a name="alpha">alpha</a></b></tt>=<i>path</i>
 <dd>
-Use the specifed image as an alpha channel, together with the
+Use the specified image as an alpha channel, together with the
 <tt>background</tt> attribute.
 
 
@@ -235,23 +245,23 @@ Use the specifed image as an alpha channel, together with the
 
 <p><dt><tt><b><a name="alt">alt</a></b></tt>=<i>string</i>
 <dd>
-Sets the <tt>alt</tt> attribute of the generated <doc><tt>{img}</font></tt></doc>
-tag. Will be default set to the alt attribute of the contents of the
+Sets the <tt>alt</tt> attribute of the generated <doc><tt>{img}</font></tt></doc> tag.
+Will be default set to the alt attribute of the contents of the
 <tt>&lt;gtext&gt;</tt> tag.
 
 
 
 
-<p><dt><tt><b><a name="background">background</a></b></tt>=<i>path|color</i>
+<p><dt><tt><b><a name="background">background</a></b></tt>=<i>path</i>
 <dd>
-Specifies the image or color to use as background.
+Specifies the image to use as background.
 
 
 
 
 <p><dt><tt><b><a name="bevel">bevel</a></b></tt>=<i>width</i>
 <dd>
-Draws a bevel box. 
+Draws a bevel box.
 
 
 
@@ -268,7 +278,8 @@ that is pressed down.
 <dd>
 Tells the <tt>&lt;gtext&gt;</tt> tag what the background color of the page
 is. This is used for anti-alias purposes. The module can be configured
-to try to find out this by itself, by parsing at appropriate HTML tags.
+to try to find out this by itself, by parsing at appropriate HTML
+tags.
 
 
 
@@ -340,9 +351,9 @@ Apply a glowing outline around the text.
 
 <p><dt><tt><b><a name="href">href</a></b></tt>=<i>URL</i>
 <dd>
-Link the image to the specified URL. The link color of the
-document will be used as the default foreground rather than the
-foreground color.
+Link the image to the specified URL. The link color of the document
+will be used as the default foreground rather than the foreground
+color.
 
 
 
@@ -364,24 +375,24 @@ Use a light version of the font, if available.
 <p><dt><tt><b><a name="magic">magic</a></b></tt>=<i>message</i>
 <dd>
 Used together with the <tt>href</tt> attribute to generate a
-JavaScript that will hightlight the image when the mouse is moved over
+JavaScript that will highlight the image when the mouse is moved over
 it.
 
 
 
 
-<p><dt><tt><b><a name="magic_</b></tt><i>argument</i></tt></b>">magic_</b></tt><i>argument</i></tt></b></a></b></tt>=<i>value</i>
+<p><dt><tt><b><a name="magic_</b></tt><i>argument</i><tt><b>">magic_</b></tt><i>argument</i><tt><b></a></b></tt>=<i>value</i>
 <dd>
-Same as for any <tt>&lt;gtext&gt;</tt> attribute, except for the highlighting
-image. 
+Same as for any <tt>&lt;gtext&gt;</tt> attribute, except for the
+highlighting image.
 
 
 
 
 <p><dt><tt><b><a name="magicbg">magicbg</a></b></tt>=<i>color|path</i>
 <dd>
-Same as the <tt>background</tt> attribure, except for the highlighting
-image. 
+Same as the <tt>background</tt> attribute, except for the
+highlighting image.
 
 
 
@@ -396,8 +407,8 @@ Sets the maximum length of the rendered text, by default 300.
 <p><dt><tt><b><a name="mirrortile">mirrortile</a></b></tt>
 
 <dd>
-Tiles the background and forground images around x-axis and y-axis for odd
-frames, creating seamless textures.
+Tiles the background and foreground images around x-axis and y-axis
+for odd frames, creating seamless textures.
 
 
 
@@ -420,12 +431,12 @@ be used, or the default font, if there is no define.
 <p><dt><tt><b><a name="notrans">notrans</a></b></tt>
 
 <dd>
-By default, the background of the image is set as a transparent
-color. This option overrides that behavior.
+By default, the background of the image is set as a transparent color.
+This option overrides that behavior.
 
 
 
-<p><dt><tt><b><a name="opague">opague</a></b></tt>=<i>percentage</i>
+<p><dt><tt><b><a name="opaque">opaque</a></b></tt>=<i>percentage</i>
 <dd>
 Generate text with this amount of opaqueness. 100% is default.
 
@@ -434,7 +445,7 @@ Generate text with this amount of opaqueness. 100% is default.
 
 <p><dt><tt><b><a name="quant">quant</a></b></tt>=<i>number</i>
 <dd>
-Use this number of colors in the generated image.  For GIF images,
+Use this number of colors in the generated image. For GIF images,
 fewer colors implies smaller images but also aliasing effects. It is
 advisable to use powers of 2 to optimize the palette allocation.
 
@@ -470,9 +481,9 @@ attribute.
 
 
 
-<p><dt><tt><b><a name="scroll">scroll</a></b></tt>=<i></i>
-<dd>
-Generate an animated GIF image of the text scrolling.
+<p><dt><tt><b><a name="scroll">scroll</a></b></tt>=<i>width,steps,delay</i>
+<dd> Generate an animated
+GIF image of the text scrolling.
 
 
 
@@ -504,13 +515,13 @@ Add space around the text.
 <dd>
 Generate a separate GIF image out of each word. This will allow the
 browser to word-wrap the text, but will disable certain attributes
-like <tt>magic</tt>. 
+like <tt>magic</tt>.
 
 
 
 <p><dt><tt><b><a name="split">split</a></b></tt>=<i>character</i>
 <dd>
-Split the string also at each occurance of the character.
+Split the string also at each occurrence of the character.
 
 
 
@@ -520,7 +531,7 @@ eight
 center
 
 <dd>
-Justify the text.
+Adjust the alignment of the text.
 
 
 
@@ -633,7 +644,8 @@ Sets the vertical spacing.
   <td bgcolor=white>
 <pre><define name=foo>
 <gtext>The time is <date time></gtext>
-<br><gtext href=http://www.roxen.com/ magic>Roxen Platform</gtext>
+<br><gtext href=http://www.roxen.com/
+magic>Roxen Platform</gtext>
 </define>
 <insert name=foo "<"=&lt; ">"=&gt; ></pre>
    <br clear=all>
@@ -660,7 +672,8 @@ Sets the vertical spacing.
 
 
 <gtext>The time is <date time></gtext>
-<br><gtext href=http://www.roxen.com/ magic>Roxen Platform</gtext>
+<br><gtext href=http://www.roxen.com/
+magic>Roxen Platform</gtext>
 
 
    <br clear=all>
@@ -680,4 +693,5 @@ Sets the vertical spacing.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

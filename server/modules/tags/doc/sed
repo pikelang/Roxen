@@ -1,0 +1,291 @@
+
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table cellpadding=1 cellspacing=0 border=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+
+
+
+<b><font color=#ffffff size=+3 >&nbsp;&lt;sed&gt;&nbsp;...&nbsp;&lt;/sed&gt;&nbsp;</font></b>
+
+</td>
+<td>
+<img src=/internal-roxen-unit width=200 height=1 alt=""></td>
+</tr>
+
+<tr>
+<td bgcolor=black colspan=2>
+
+
+<table cellpadding=4 border=0 cellspacing=0 width=100%>
+<tr>
+<td bgcolor=#ffffff>
+
+
+
+<tt>&lt;sed&gt;</tt> is defined in the <i>SED module</i> module.
+<p>
+Emulates a subset of <i>sed</i> operations in RXML. (<i>Sed</i> is the
+Unix "Stream EDitor" program which edits a stream of text according to
+a set of instructions.)
+
+
+<br clear=all>
+<img src=/internal-roxen-unit width=1 height=10 alt="">
+
+</td>
+</tr>
+</table>
+
+
+<table cellpadding=4 border=0 cellspacing=0>
+<tr>
+<td bgcolor=#113377 width=1%>
+<font color=white>Attributes</font>
+</td>
+<td bgcolor=#ffffff>
+<img src=/internal-roxen-unit width=100% height=1 alt=""></td>
+</tr>
+<tr>
+
+<td bgcolor=#ffffff colspan=2>
+
+
+
+
+
+
+<a href="#append">append</a>,
+<a href="#chars">chars</a>,
+<a href="#lines">lines</a>,
+<a href="#prepend">prepend</a>,
+<a href="#split">split</a>,
+<a href="#suppress">suppress</a>,
+&nbsp;
+
+</td>
+</tr>
+</table>
+
+
+</td>
+</tr>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<p>
+<b><font color=#113377 size=+2 >Attributes</font></b>
+
+
+
+<dl>
+
+<p><dt><tt><b><a name="append">append</a></b></tt>
+
+<dd>
+
+
+
+<p><dt><tt><b><a name="chars">chars</a></b></tt>
+
+<dd>
+
+
+
+<p><dt><tt><b><a name="lines">lines</a></b></tt>
+
+<dd>
+
+
+
+<p><dt><tt><b><a name="prepend">prepend</a></b></tt>
+
+<dd>
+
+
+
+<p><dt><tt><b><a name="split">split</a></b></tt>=<i>&lt;linesplit&gt;</i>
+<dd>
+
+
+
+
+<p><dt><tt><b><a name="suppress">suppress</a></b></tt>
+
+<dd>
+
+
+</dl>
+
+<p>
+<pre>
+Syntax :
+
+&lt;sed [suppress] [lines] [chars] [split=&lt;linesplit&gt;]
+      [append] [prepend]&gt;
+ &lt;e [rxml]&gt;edit command&lt;/e&gt;
+ &lt;raw&gt;raw, unparsed data&lt;/raw&gt;
+ &lt;rxml&gt;data run in rxml parser before edited&lt;/rxml&gt;
+ &lt;source variable|cookie=name [rxml]&gt;
+ &lt;destination variable|cookie=name&gt;
+ &lt;/sed&gt;
+
+edit commands supported:
+ <firstline>,<lastline><edit command>
+    ^^ numeral (17) ^^
+       or relative (+17, -17)
+       or a search regexp (/regexp/)
+       or multiple (17/regexp//regexp/+2)
+
+ D                  - delete first line in space
+ G                  - insert hold space
+ H                  - append current space to hold space
+ P                  - print current data
+ a<string>          - insert
+ c<string>          - change current space
+ d                  - delete current space
+ h                  - copy current space to hold space
+ i<string>          - print string
+ l                  - print current space
+ p                  - print first line in data
+ q                  - quit evaluating
+ s/regexp/with/x    - replace
+ y/chars/chars/     - replace chars
+
+ where line is numeral, first line==1</pre>
+
+
+<dl>
+
+</dl>
+
+
+
+
+
+
+
+
+
+
+<b><font color=#113377 size=+2 >Example</font></b>
+
+
+
+
+<if not cookie=rxml-help>
+
+</td></tr>
+</table>
+</body>
+</html>
+
+

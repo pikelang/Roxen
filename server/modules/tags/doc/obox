@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,7 +95,7 @@
 
 
 
-&lt;obox&gt; is defined in the Outlined box module.
+<tt>&lt;obox&gt;</tt> is defined in the <i>Outlined box</i> module.
 <p>
 This tag draws outlined boxes.
 
@@ -106,7 +111,7 @@ This tag draws outlined boxes.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -379,4 +384,5 @@ This is just a sample box.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

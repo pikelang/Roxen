@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,7 +95,7 @@
 
 
 
-&lt;use&gt; is defined in the Main RXML module module.
+<tt>&lt;use&gt;</tt> is defined in the <i>Main RXML module</i> module.
 <p>
 Reads tags, container tags and defines from a file or package.
 
@@ -106,7 +111,7 @@ Reads tags, container tags and defines from a file or package.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -183,9 +188,9 @@ Reads all tags and container tags and defines from the file.
 
 <p>This file will be fetched just as if someone had tried to fetch it
 with an HTTP request. This makes it possible to use Pike script
-results and other dynamic documents. Note however that the results of the
-parsing are heavily cached for performance reasons, if you do not want
-this cache use <doc><tt>{insert file=... nocache}</font></tt></doc> instead.
+results and other dynamic documents. Note, however, that the results of the
+parsing are heavily cached for performance reasons. If you do not want
+this cache, use <doc><tt>{insert file=... nocache}</font></tt></doc> instead.
 
 
 
@@ -196,7 +201,7 @@ Reads all tags, container tags and defines from the given
 package. Packages are files located in
 <i>local/rxml_packages/</i>. 
 
-<p>By default the package <i>gtext_headers</i> is available, that
+<p>By default, the package <i>gtext_headers</i> is available, that
 replaces normal headers with graphical headers. It redefines the h1,
 h2, h3, h4, h5 and h6 container tags.
 
@@ -285,4 +290,5 @@ since the parsed definitions is cached.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

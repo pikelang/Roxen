@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,7 +95,7 @@
 
 
 
-&lt;countdown&gt; is defined in the Countdown module.
+<tt>&lt;countdown&gt;</tt> is defined in the <i>Countdown</i> module.
 <p>
 This tag counts the time to or from a specified date. 
 
@@ -106,7 +111,7 @@ This tag counts the time to or from a specified date.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -271,7 +276,7 @@ Presentation related attributes
 <p><dt><tt><b><a name="combined">combined</a></b></tt>
 
 <dd>
-Shows an english text describing the time period. Example: 2 days, 1
+Shows an English text describing the time period. Example: 2 days, 1
 hour and 5 seconds. You may use the <tt>prec</tt> attribute to limit
 how precise the description should be. You can also use the
 <tt>month</tt> attribute if you want to see years/months/days
@@ -322,13 +327,12 @@ es
 sv
 
 <dd>
-Will print the result as words in the choosen language if used
-together with <tt>type=string</tt>. Available languages are ca,
-es_CA (catalan), hr (croatian), cs (czech), nl (dutch), en (english),
-fi (finnish), fr (french), de (german), hu (hungarian), it (italian),
-jp (japanese), mi (maori), no (norweigan), pt (portuguese), ru
-(russian), sr (serbian), si (slovenian), es (spanish) and sv
-(swedish).
+Will print the result as words in the chosen language if used together
+with <tt>type=string</tt>. Available languages are ca, es_CA
+(Catalan), hr (Croatian), cs (Czech), nl (Dutch), en (English), fi
+(Finnish), fr (French), de (German), hu (Hungarian), it (Italian), jp
+(Japanese), mi (Maori), no (Norwegian), pt (Portuguese), ru (Russian),
+sr (Serbian), si (Slovenian), es (Spanish) and sv (Swedish).
 
 
 
@@ -355,9 +359,9 @@ Prints the number of month until the time.
 <p><dt><tt><b><a name="nowp">nowp</a></b></tt>
 
 <dd>
-Returns 1 if the specified time is now, otherwize 0. How precise now
-should be interpreted is definied by the <tt>prec</tt>
-attributes. The default precision is one day.
+Returns 1 if the specified time is now, otherwise 0. How precise now
+should be interpreted is defined by the <tt>prec</tt> attributes.
+The default precision is one day.
 
 
 
@@ -371,7 +375,7 @@ second
 
 <dd>
 A modifier for the <tt>nowp</tt> and <tt>combined</tt>
-attributes. Sets the precition for these attributes.
+attributes. Sets the precision for these attributes.
 
 
 
@@ -456,12 +460,15 @@ Prints the number of years until the time.
   </td>
   <td bgcolor=white>
 <pre><define name=foo>
-<p>I am <countdown iso=1980-06-28 since years type=string> years old.</p>
+<p>I am <countdown iso=1980-06-28
+since years type=string> years old.</p>
 
-<p>There are <countdown year2000 days> days left until year 2000.</p>
+<p>There are <countdown year2000 days>
+days left until year 2000.</p>
 
 <p>Is this a Sunday?
-<br><if eval='<countdown day=sunday nowp>'>Yes, this is a Sunday.</if>
+<br><if eval='<countdown day=sunday nowp>'>
+Yes, this is a Sunday.</if>
 <else>No, it isn´t.</else>
 </define>
 <insert name=foo "<"=&lt; ">"=&gt; ></pre>
@@ -488,12 +495,15 @@ Prints the number of years until the time.
 <td valign=top bgcolor=#ffffff>
 
 
-<p>I am <countdown iso=1980-06-28 since years type=string> years old.</p>
+<p>I am <countdown iso=1980-06-28
+since years type=string> years old.</p>
 
-<p>There are <countdown year2000 days> days left until year 2000.</p>
+<p>There are <countdown year2000 days>
+days left until year 2000.</p>
 
 <p>Is this a Sunday?
-<br><if eval='<countdown day=sunday nowp>'>Yes, this is a Sunday.</if>
+<br><if eval='<countdown day=sunday nowp>'>
+Yes, this is a Sunday.</if>
 <else>No, it isn´t.</else>
 
 
@@ -514,4 +524,5 @@ Prints the number of years until the time.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

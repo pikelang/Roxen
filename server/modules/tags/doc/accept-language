@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,11 +95,11 @@
 
 
 
-&lt;accept-language&gt; is defined in the Main RXML parser module.
+<tt>&lt;accept-language&gt;</tt> is defined in the <i>Main RXML parser</i> module.
 <p>
 
 Returns the language code of the language the user prefers, as
-specified by the fist language in the accept-language header.
+specified by the first language in the accept-language header.
 
 <p>If no accept-language is sent by the users browser <tt>None</tt> will be
 returned.
@@ -111,7 +116,7 @@ returned.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -213,7 +218,8 @@ list.
   </td>
   <td bgcolor=white>
 <pre><define name=foo>
-Your prefered language is <accept-language>
+Your preferred language is
+<accept-language>
 </define>
 <insert name=foo "<"=&lt; ">"=&gt; ></pre>
    <br clear=all>
@@ -239,7 +245,8 @@ Your prefered language is <accept-language>
 <td valign=top bgcolor=#ffffff>
 
 
-Your prefered language is <accept-language>
+Your preferred language is
+<accept-language>
 
 
    <br clear=all>
@@ -259,4 +266,5 @@ Your prefered language is <accept-language>
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

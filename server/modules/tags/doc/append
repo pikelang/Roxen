@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,7 +95,7 @@
 
 
 
-&lt;append&gt; is defined in the Main RXML parser module.
+<tt>&lt;append&gt;</tt> is defined in the <i>Main RXML parser</i> module.
 <p>
 Append a value to a variable.
 
@@ -106,7 +111,7 @@ Append a value to a variable.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -303,4 +308,5 @@ Append the variable to this value.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,12 +95,12 @@
 
 
 
-&lt;throw&gt; is defined in the Main RXML parser module.
+<tt>&lt;throw&gt;</tt> is defined in the <i>Main RXML parser</i> module.
 <p>
 This tag throws an exception, with the enclosed text as the error
 message. The RXML parsing will stop at the <tt>&lt;throw&gt;</tt> tag.
 
-<p>Has a close relation with the <tt>&lt;catch&gt;</tt> tag.
+<p>Has a close relation to the <tt>&lt;catch&gt;</tt> tag.
 
 
 <br clear=all>
@@ -109,7 +114,7 @@ message. The RXML parsing will stop at the <tt>&lt;throw&gt;</tt> tag.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -260,4 +265,5 @@ message. The RXML parsing will stop at the <tt>&lt;throw&gt;</tt> tag.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

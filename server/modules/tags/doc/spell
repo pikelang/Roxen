@@ -78,7 +78,7 @@
 
 
 
-<b><font color=#ffffff size=+3 >&nbsp;&lt;line&gt;&nbsp;</font></b>
+<b><font color=#ffffff size=+3 >&nbsp;&lt;spell&gt;&nbsp;...&nbsp;&lt;/spell&gt;&nbsp;</font></b>
 
 </td>
 <td>
@@ -95,9 +95,9 @@
 
 
 
-<tt>&lt;line&gt;</tt> is defined in the <i>Main RXML parser</i> module.
+<tt>&lt;spell&gt;</tt> is defined in the <i>Spell checker</i> module.
 <p>
-Prints the current line number of the current page.
+Checks and marks common misspellings in the contents.
 
 
 <br clear=all>
@@ -125,6 +125,7 @@ Prints the current line number of the current page.
 
 
 
+<a href="#warn">warn</a>,
 &nbsp;
 
 </td>
@@ -180,6 +181,13 @@ Prints the current line number of the current page.
 
 <dl>
 
+<p><dt><tt><b><a name="warn">warn</a></b></tt>
+
+<dd>
+Report all unknown words.
+
+
+
 </dl>
 
 
@@ -204,7 +212,9 @@ Prints the current line number of the current page.
   </td>
   <td bgcolor=white>
 <pre><define name=foo>
-The current line is line <line>.
+<spell warn>
+Acctually spelling is not what I do best.
+</spell>
 </define>
 <insert name=foo "<"=&lt; ">"=&gt; ></pre>
    <br clear=all>
@@ -230,7 +240,9 @@ The current line is line <line>.
 <td valign=top bgcolor=#ffffff>
 
 
-The current line is line <line>.
+<spell warn>
+Acctually spelling is not what I do best.
+</spell>
 
 
    <br clear=all>

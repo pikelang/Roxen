@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,10 +95,10 @@
 
 
 
-&lt;user&gt; is defined in the Main RXML parser module.
+<tt>&lt;user&gt;</tt> is defined in the <i>Main RXML parser</i> module.
 <p>
-Prints information about the specified user. By default the full name
-of the user and her email address will be printed, with a mailto link
+Prints information about the specified user. By default, the full name
+of the user and her e-mail address will be printed, with a mailto link
 and link to the home page of that user.
 
 <p>The <tt>&lt;user&gt;</tt> tag requires an <i>Authentification</i> module
@@ -111,7 +116,7 @@ to work.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -202,7 +207,7 @@ Only print the full name of the user, with no link.
 <p><dt><tt><b><a name="email">email</a></b></tt>
 
 <dd>
-Only print the email address of the user, with no link.
+Only print the e-mail address of the user, with no link.
 
 
 
@@ -291,4 +296,5 @@ Don't include the links.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

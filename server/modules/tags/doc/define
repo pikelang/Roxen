@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,7 +95,7 @@
 
 
 
-&lt;define&gt; is defined in the Main RXML parser module.
+<tt>&lt;define&gt;</tt> is defined in the <i>Main RXML parser</i> module.
 <p>
 Defines new tags, container tags or defines.
 
@@ -106,7 +111,7 @@ Defines new tags, container tags or defines.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -121,9 +126,9 @@ Defines new tags, container tags or defines.
 
 
 <a href="#container">container</a>,
+<a href="#name">name</a>,
 <a href="#tag">tag</a>,
 <a href="#default_</b></tt><i>attribute</i><tt><b>">default_</b></tt><i>attribute</i><tt><b></a>,
-<a href="#name">name</a>,
 &nbsp;
 
 </td>
@@ -186,6 +191,14 @@ Define a new RXML container tag, or override a previous definition.
 
 
 
+<p><dt><tt><b><a name="name">name</a></b></tt>
+
+<dd>
+Sets the specified define. Can be inserted later by the
+<tt>&lt;insert&gt;</tt> tag.
+
+
+
 <p><dt><tt><b><a name="tag">tag</a></b></tt>
 
 <dd>
@@ -194,33 +207,23 @@ Defines a new RXML tag, or overrides a previous definition.
 
 
 <p><dt><tt><b><a name="default_</b></tt><i>attribute</i><tt><b>">default_</b></tt><i>attribute</i><tt><b></a></b></tt>=<i>value</i>
-<dd> 
-Set a default value for an attribute, that will be used when the 
+<dd>
+Set a default value for an attribute, that will be used when the
 attribute is not specified when the defined tag is used.
 
-
-
-
-<p><dt><tt><b><a name="name">name</a></b></tt>
-
-<dd>
-Sets the specified define. Can be inserted later by the
-<tt>&lt;insert&gt;</tt> tag.
 
 
 </dl>
 
 <p>
-<p>You can use a few special tokens in the definition of tags and
+You can use a few special tokens in the definition of tags and
 container tags:
 
 <dl>
-<p><dt><tt><b>#args#</b></tt><dd>
-All arguments sent to the tag. Useful when defining a new tag that are
-more or less only an alias for an old one.
+<p><dt><tt><b>#args#</b></tt><dd>All arguments sent to the tag. Useful when
+defining a new tag that is more or less only an alias for an old one.
 
-<p><dt><tt><b>&attribute;</b></tt><dd>
-Inserts the value of that attribute.
+<p><dt><tt><b>&amp;attribute;</b></tt><dd>Inserts the value of that attribute.
 </dl>
 
 
@@ -306,8 +309,10 @@ Inserts the value of that attribute.
   </td>
   <td bgcolor=white>
 <pre><define name=foo>
-<define tag=test default_foo=foo default_bar=bar>
-The test tag: Testing testing. Foo is &foo;, bar is &bar;
+<define tag=test default_foo=foo
+  default_bar=bar>
+The test tag: Testing testing.
+Foo is &foo;, bar is &bar;
 </define>
 
 <test foo=Hello bar=World>
@@ -337,8 +342,10 @@ The test tag: Testing testing. Foo is &foo;, bar is &bar;
 <td valign=top bgcolor=#ffffff>
 
 
-<define tag=test default_foo=foo default_bar=bar>
-The test tag: Testing testing. Foo is &foo;, bar is &bar;
+<define tag=test default_foo=foo
+  default_bar=bar>
+The test tag: Testing testing.
+Foo is &foo;, bar is &bar;
 </define>
 
 <test foo=Hello bar=World>
@@ -362,4 +369,5 @@ The test tag: Testing testing. Foo is &foo;, bar is &bar;
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

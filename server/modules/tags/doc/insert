@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,9 +95,11 @@
 
 
 
-&lt;insert&gt; is defined in the Main RXML parser module.
+<tt>&lt;insert&gt;</tt> is defined in the <i>Main RXML parser</i> module.
 <p>
-Inserts values from files, cookies, defines or variables.
+Inserts values from files, cookies, defines or variables. If used to
+insert cookies or variables <tt>&lt;insert&gt;</tt> will quote before
+inserting, to make it impossible to insert dangerous RXML tags.
 
 
 <br clear=all>
@@ -106,7 +113,7 @@ Inserts values from files, cookies, defines or variables.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -122,6 +129,7 @@ Inserts values from files, cookies, defines or variables.
 
 <a href="#cookie">cookie</a>,
 <a href="#cookies">cookies</a>,
+<a href="#encode">encode</a>,
 <a href="#define">define</a>,
 <a href="#file">file</a>,
 <a href="#</b></tt><i>fromword</i><tt><b>"></b></tt><i>fromword</i><tt><b></a>,
@@ -192,8 +200,27 @@ Inserts the value of the cookie.
 <p><dt><tt><b><a name="cookies">cookies</a></b></tt>=full
 
 <dd>
-Inserts the value of all cookies. With the optional argument full the
+Inserts the value of all cookies. With the optional argument full, the
 insertion will be more verbose.
+
+
+
+<dl>
+
+</dl>
+
+
+
+<p><dt><tt><b><a name="encode">encode</a></b></tt>=none
+html
+
+<dd>
+Determines what quoting method should be when inserting cookies or
+variables. Default is <i>html</i>, which means that &lt;, &gt; and
+&amp; will be quoted, to make sure you can't insert RXML tags. If you
+choose <i>none</i> nothing will be quoted. It will be possible to
+insert dangerous RXML tags so you must be of what your variables
+contain.
 
 
 
@@ -215,18 +242,18 @@ another file, if you have inserted the file.
 <p><dt><tt><b><a name="file">file</a></b></tt>=<i>path</i>
 <dd>
 Inserts the file. This file will then be fetched just as if someone
-had tried to fetch it through a HTTP request. This makes it possible to
+had tried to fetch it through an HTTP request. This makes it possible to
 include things like the result of Pike scripts.
 
 <p>If path does not begin with <i>/</i>, it is assumed to be a URL
 relative to the directory containing the page with the
 <tt>&lt;insert&gt;</tt> tag. Note that included files will be parsed if they
-are named with a extension the main RXML parser handles. This might
-cause unexpected behaviour, it will for example not be possible to
+are named with an extension the main RXML parser handles. This might
+cause unexpected behavior. For example, it will not be possible to
 share any macros defined by the <tt>&lt;define&gt;</tt> tags. 
 
 <p>If you want to have a file with often used macros you should name
-it with an extension that won't be parsed, for example
+it with an extension that won't be parsed. For example,
 <i>.txt</i>.
 
 
@@ -243,7 +270,7 @@ it. Note that only lower case character sequences can be replaced.
 <p><dt><tt><b><a name="nocache">nocache</a></b></tt>
 
 <dd>
-Don't cache results when inserting files but always fetch the file. 
+Don't cache results when inserting files, but always fetch the file. 
 
 
 
@@ -332,4 +359,5 @@ Insert the variable.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,7 +95,7 @@
 
 
 
-&lt;tablify&gt; is defined in the Tablify module.
+<tt>&lt;tablify&gt;</tt> is defined in the <i>Tablify</i> module.
 <p>
 This tag generates tables from the contents, by default in tab
 separated form. This simplifies making tables significantly.
@@ -107,7 +112,7 @@ separated form. This simplifies making tables significantly.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -211,7 +216,7 @@ text
 <dd>
 This is not an argument but rather a container tag used in the
 contents that sets the field type for each column. Fields marked
-numerical will be right aligned and formatted
+numerically will be right aligned and formatted
 
 
 
@@ -224,8 +229,8 @@ numerical will be right aligned and formatted
 <p><dt><tt><b><a name="nice">nice</a></b></tt>
 
 <dd>
-Generates tables with customable layouts. The first row is referred to
-as the title row. The additional attributes are:
+Generates tables with customizable layouts. The first row is referred
+to as the title row. The additional attributes are:
 
 
 
@@ -265,7 +270,7 @@ Sets the background color of cell X.
 <p><dt><tt><b><a name="nicer">nicer</a></b></tt>
 
 <dd>
-Generates tables with even more customable layouts and gtext font
+Generates tables with even more customizable layouts and gtext font
 capabilities for the title field. Nicer uses the same attributes as
 nice plus these:
 
@@ -303,7 +308,7 @@ Sets the font size to use for the HTML text.
 
 <p><dt><tt><b>modulo</b></tt>=<i>number</i>
 <dd>
-The number of rows that are to use the same color, default is one. 
+The number of rows that are to use the same color, default is one.
 
 
 
@@ -411,4 +416,5 @@ Sets the separator used for separating rows, default is newline.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

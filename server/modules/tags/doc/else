@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,13 +95,14 @@
 
 
 
-&lt;else&gt; is defined in the Main RXML parser module.
+<tt>&lt;else&gt;</tt> is defined in the <i>Main RXML parser</i> module.
 <p>
 Show the contents if the previous <tt>&lt;if&gt;</tt> tag didn't, or if
 there was a <tt>&lt;false&gt;</tt> above.
 
-<p><icon type=warning>The result is undefined if there has been no
-<tt>&lt;if&gt;</tt>, <tt>&lt;true&gt;</tt> or <tt>&lt;false&gt;</tt> tag above.
+<icon type=warning>
+The result is undefined if there has been no <tt>&lt;if&gt;</tt>,
+<tt>&lt;true&gt;</tt> or <tt>&lt;false&gt;</tt> tag above.
 
 
 <br clear=all>
@@ -110,7 +116,7 @@ there was a <tt>&lt;false&gt;</tt> above.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -203,7 +209,7 @@ there was a <tt>&lt;false&gt;</tt> above.
   </td>
   <td bgcolor=white>
 <pre><define name=foo>
-<flase>
+
 <else>
 Show this.
 </else>
@@ -232,7 +238,7 @@ Show this.
 <td valign=top bgcolor=#ffffff>
 
 
-<flase>
+
 <else>
 Show this.
 </else>
@@ -255,4 +261,5 @@ Show this.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

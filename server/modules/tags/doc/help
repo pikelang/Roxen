@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,7 +95,7 @@
 
 
 
-&lt;help&gt; is defined in the Main RXML parser module.
+<tt>&lt;help&gt;</tt> is defined in the <i>Main RXML parser</i> module.
 <p> 
 Gives help texts for tags.
 If given no arguments, it will list all available
@@ -108,7 +113,7 @@ help texts.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -209,8 +214,7 @@ Gives the help text for that tag.
   </td>
   <td bgcolor=white>
 <pre><define name=foo>
-<help>
-<p><help for=configurl>
+<help for=configurl>
 </define>
 <insert name=foo "<"=&lt; ">"=&gt; ></pre>
    <br clear=all>
@@ -236,8 +240,7 @@ Gives the help text for that tag.
 <td valign=top bgcolor=#ffffff>
 
 
-<help>
-<p><help for=configurl>
+<help for=configurl>
 
 
    <br clear=all>
@@ -257,4 +260,5 @@ Gives the help text for that tag.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

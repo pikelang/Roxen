@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,10 +95,10 @@
 
 
 
-&lt;sqloutput&gt; is defined in the SQL module module.
+<tt>&lt;sqloutput&gt;</tt> is defined in the <i>SQL</i> module.
 <p>
-Insert the results of a SQL query into HTML or
-RXML. <tt>&lt;sqloutput&gt;</tt> works like all <i>output</i> tags. By default
+Insert the results of a SQL query into HTML or RXML.
+<tt>&lt;sqloutput&gt;</tt> works like all <i>output</i> tags. By default
 anything within #'s will be interpreted as a variable. Thus #column#
 will be replaced by the column value. ## will be replaced by a #. The
 inserted SQL results will by default be HTML quoted, &lt; will for
@@ -106,7 +111,7 @@ columns for each row in the result of the query. If the result is
 empty, the <tt>&lt;sqloutput&gt;</tt> will not return anything.
 
 <p>Within the <tt>&lt;sqloutput&gt;</tt> the column values can be accessed
-as <i>other</i> variables. This is useful for transfering the result
+as <i>other</i> variables. This is useful for transferring the result
 to normal RXML variables.
 
 
@@ -121,7 +126,7 @@ to normal RXML variables.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -254,10 +259,10 @@ you wish to dynamically build the query.
     <th>Population</th>
   </tr>
   <sqloutput host=test 
-    query="SELECT country, population FROM countries ORDER BY country">
+   query="SELECT country, population FROM countries ORDER BY country">
     <tr>
-      <th>#country#</th>
-      <th>#population#</th>
+      <td>#country#</td>
+      <td>#population#</td>
     </tr>
   </sqloutput>
 </table>
@@ -292,10 +297,10 @@ you wish to dynamically build the query.
     <th>Population</th>
   </tr>
   <sqloutput host=test 
-    query="SELECT country, population FROM countries ORDER BY country">
+   query="SELECT country, population FROM countries ORDER BY country">
     <tr>
-      <th>#country#</th>
-      <th>#population#</th>
+      <td>#country#</td>
+      <td>#population#</td>
     </tr>
   </sqloutput>
 </table>
@@ -321,11 +326,11 @@ you wish to dynamically build the query.
   <td bgcolor=white>
 <pre><define name=foo>
 <sqloutput host=test
-  query="SELECT population FROM countries WHERE country='Sweden'">
+ query="SELECT population FROM countries WHERE country='Sweden'">
   <set variable=swepop other=population>
 </sqloutput>
 
-Sweden's population is <insert variable=swedpop>.
+The population of Sweden is <insert variable=swepop>.
 </define>
 <insert name=foo "<"=&lt; ">"=&gt; ></pre>
    <br clear=all>
@@ -352,11 +357,11 @@ Sweden's population is <insert variable=swedpop>.
 
 
 <sqloutput host=test
-  query="SELECT population FROM countries WHERE country='Sweden'">
+ query="SELECT population FROM countries WHERE country='Sweden'">
   <set variable=swepop other=population>
 </sqloutput>
 
-Sweden's population is <insert variable=swedpop>.
+The population of Sweden is <insert variable=swepop>.
 
 
    <br clear=all>
@@ -376,4 +381,5 @@ Sweden's population is <insert variable=swedpop>.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

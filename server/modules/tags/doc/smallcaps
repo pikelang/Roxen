@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,7 +95,7 @@
 
 
 
-&lt;smallcaps&gt; is defined in the Main RXML parser module.
+<tt>&lt;smallcaps&gt;</tt> is defined in the <i>Main RXML parser</i> module.
 <p>
 This tag prints the contents in smallcaps
 
@@ -106,7 +111,7 @@ This tag prints the contents in smallcaps
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -196,7 +201,7 @@ Sets the font size for the lower case letters.
 <p><dt><tt><b><a name="space">space</a></b></tt>
 
 <dd>
-Insert a space between every letter.
+Inserts a space between every letter.
 
 
 
@@ -224,7 +229,8 @@ Insert a space between every letter.
   </td>
   <td bgcolor=white>
 <pre><define name=foo>
-<smallcaps size=6 small=2 space>Roxen Challenger</smallcaps>
+<smallcaps size=6 small=2 space>Roxen
+Challenger</smallcaps>
 </define>
 <insert name=foo "<"=&lt; ">"=&gt; ></pre>
    <br clear=all>
@@ -250,7 +256,8 @@ Insert a space between every letter.
 <td valign=top bgcolor=#ffffff>
 
 
-<smallcaps size=6 small=2 space>Roxen Challenger</smallcaps>
+<smallcaps size=6 small=2 space>Roxen
+Challenger</smallcaps>
 
 
    <br clear=all>
@@ -270,4 +277,5 @@ Insert a space between every letter.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

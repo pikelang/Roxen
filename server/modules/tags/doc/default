@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,7 +95,7 @@
 
 
 
-&lt;default&gt; is defined in the Main RXML parser module.
+<tt>&lt;default&gt;</tt> is defined in the <i>Main RXML parser</i> module.
 <p>
 Makes it easier to give default values to <doc><tt>{select}</font></tt></doc> or
 <doc><tt>{checkbox}</font></tt></doc> form elements.
@@ -98,8 +103,7 @@ Makes it easier to give default values to <doc><tt>{select}</font></tt></doc> or
 <p>The <tt>&lt;default&gt;</tt> container tag is placed around the form
 element it should give a default value.
 
-<p>This tag is especially useful in combination with <a
-href=../database/>database tags</a>.
+<p>This tag is especially useful in combination with <a href="../database/index.html">database tags</a>.
 
 
 <br clear=all>
@@ -113,7 +117,7 @@ href=../database/>database tags</a>.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -284,4 +288,5 @@ Only affect form element with this name.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,7 +95,7 @@
 
 
 
-&lt;sort&gt; is defined in the Main RXML parser module.
+<tt>&lt;sort&gt;</tt> is defined in the <i>Main RXML parser</i> module.
 <p>
 Sorts the contents divided by newline or the specified separator.
 
@@ -106,7 +111,7 @@ Sorts the contents divided by newline or the specified separator.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -216,7 +221,7 @@ Are
 2
 You
 Listening
-<sort>
+</sort>
 </define>
 <insert name=foo "<"=&lt; ">"=&gt; ></pre>
    <br clear=all>
@@ -251,7 +256,7 @@ Are
 2
 You
 Listening
-<sort>
+</sort>
 
 
    <br clear=all>
@@ -271,4 +276,5 @@ Listening
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

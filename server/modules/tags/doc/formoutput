@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,17 +95,17 @@
 
 
 
-&lt;formoutput&gt; is defined in the Main RXML parser module.
+<tt>&lt;formoutput&gt;</tt> is defined in the <i>Main RXML parser</i> module.
 <p>
 A tag for inserting variables into just about any context. By default
 anything within #'s will be interpreted as a variable. Thus #name#
 will be replaced by the value of the variable name. ## will be
 replaced by a #.
 
-<p>By default the variable will be HTML quoted, that is &lt; will be
-inserted as &amp;lt; &gt; as &amp;gt; and &amp; as &amp;amp;. There
-are however instances when that is not what you want, for example when
-inserting variables into SQL queries. Therefore the quoting can be
+<p>By default, the variable will be HTML quoted, that is, &lt; will be
+inserted as &amp;lt; &gt; as &amp;gt; and &amp; as &amp;amp;. However, there
+are instances when that is not what you want, for example, when
+inserting variables into SQL queries. Therefore, the quoting can be
 controlled by #variable : quote=<i>scheme</i>#. The different quoting
 schemes are:
 
@@ -110,19 +115,30 @@ schemes are:
 <p><dt><tt><b>none</b></tt><dd>
 No quoting. This is dangerous and should never be used unless you have
 total control over the contents of the variable. If the variable
-contains a RXML tag the tag will be parsed.
+contains an RXML tag, the tag will be parsed.
+
+<p><dt><tt><b>html</b></tt><dd>
+The default quoting, for inserting into regular HTML or RXML.
+
+<p><dt><tt><b>dtag</b></tt><dd>
+For inserting into HTML or RXML attributes that are quoted with ". For
+example <doc><tt>{{img src="/base/#image#"}}</font></tt></doc>.
+
+<p><dt><tt><b>stag</b></tt><dd>
+For inserting into HTML or RXML attributes that are quoted with '. For
+example <doc><tt>{{img src='/base/#image#'}}</font></tt></doc>.
 
 <p><dt><tt><b>url</b></tt><dd>
 For inserting variables into URLs.
 
 <p><dt><tt><b>pike</b></tt><dd>
-For inserting into pike strings, for use with the <tt>&lt;pike&gt;</tt> tag.
+For inserting into Pike strings, for use with the <tt>&lt;pike&gt;</tt> tag.
 
 <p><dt><tt><b>js, javascript</b></tt><dd>
-For inserting into javascript strings.
+For inserting into Javascript strings.
 
 <p><dt><tt><b>mysql</b></tt><dd>
-For inserting into mysql SQL queries.
+For inserting into MySQL SQL queries.
 
 <p><dt><tt><b>sql, oracle</b></tt><dd>
 For inserting into SQL queries.
@@ -140,7 +156,7 @@ For inserting into SQL queries.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -295,4 +311,5 @@ Hello $foo$
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+

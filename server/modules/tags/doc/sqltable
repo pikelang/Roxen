@@ -1,4 +1,9 @@
 
+<!-- THIS-IS-INTERNAL-RXML-DOC-AUTOMATICLY-GENERATED-FROM-THE-MANUAL -->
+</dump-if>
+
+
+
 
 
 
@@ -90,7 +95,7 @@
 
 
 
-&lt;sqltable&gt; is defined in the SQL mdoule module.
+<tt>&lt;sqltable&gt;</tt> is defined in the <i>SQL</i> module.
 <p>
 Creates a HTML or ASCII table from the results of an SQL query.
 
@@ -106,7 +111,7 @@ Creates a HTML or ASCII table from the results of an SQL query.
 <table cellpadding=4 border=0 cellspacing=0>
 <tr>
 <td bgcolor=#113377 width=1%>
-<font color=white>Arguments&nbsp;passed&nbsp;to&nbsp;the&nbsp;tag:</font>
+<font color=white>Attributes</font>
 </td>
 <td bgcolor=#ffffff>
 <img src=/internal-roxen-unit width=100% height=1 alt=""></td>
@@ -183,15 +188,16 @@ Creates a HTML or ASCII table from the results of an SQL query.
 <p><dt><tt><b><a name="ascii">ascii</a></b></tt>
 
 <dd>
-Create an ASCII table rather than a HTML table. Useful for interacting
-with the <tt>&lt;diagram&gt;</tt> and <tt>&lt;tablify&gt;</tt> tags.
+Create an ASCII table rather than a HTML table. Useful for
+<br>interacting with the <tt>&lt;diagram&gt;</tt> and <tt>&lt;tablify&gt;</tt>
+<br>tags.
 
 
 
 <p><dt><tt><b><a name="host">host</a></b></tt>=<i>database</i>
 <dd>
-Which database to connect to, usually a symbolic name. If omitted the
-default database will be used.
+Which database to connect to, usually a symbolic name.
+<br>If omitted the default database will be used.
 
 
 
@@ -213,8 +219,8 @@ Do not show any errors in the page, in case the query fails.
 <p><dt><tt><b><a name="parse">parse</a></b></tt>
 
 <dd>
-If specified, the query will be parsed by the RXML parser. Useful if
-you wish to dynamically build the query.
+If specified, the query will be parsed by the RXML parser.
+<br>Useful if you wish to dynamically build the query.
 
 
 
@@ -243,9 +249,8 @@ you wish to dynamically build the query.
   <td bgcolor=white>
 <pre><define name=foo>
 <tablify preparse nice>Country	Population
-  <sqltable ascii host=test 
-    query="SELECT country, population FROM countries ORDER BY country"
-></tablify>
+<sqltable ascii host=test query="SELECT country, population FROM countries ORDER BY country">
+</tablify>
 </define>
 <insert name=foo "<"=&lt; ">"=&gt; ></pre>
    <br clear=all>
@@ -272,9 +277,8 @@ you wish to dynamically build the query.
 
 
 <tablify preparse nice>Country	Population
-  <sqltable ascii host=test 
-    query="SELECT country, population FROM countries ORDER BY country"
-></tablify>
+<sqltable ascii host=test query="SELECT country, population FROM countries ORDER BY country">
+</tablify>
 
 
    <br clear=all>
@@ -294,4 +298,5 @@ you wish to dynamically build the query.
 </table>
 </body>
 </html>
-</if not cookie=rxml-help>
+
+
