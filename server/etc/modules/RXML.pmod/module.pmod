@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.88 2000/04/15 00:33:58 nilsson Exp $
+//! $Id: module.pmod,v 1.89 2000/05/03 08:52:15 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -2321,7 +2321,10 @@ class Parser
 	context->handle_exception (err, this_object()); // May throw.
 	return ({});
       }
-    return surrounding_type->free_text ? 0 : ({});
+    if (!surrounding_type->free_text)
+      parse_error ("Unknown variable reference &%s; not allowed in this context.\n",
+		   varref);
+    return 0;
   }
 
   //! Interface.

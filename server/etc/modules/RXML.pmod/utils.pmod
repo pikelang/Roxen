@@ -5,7 +5,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.10 2000/03/06 17:50:29 mast Exp $
+//! $Id: utils.pmod,v 1.11 2000/05/03 08:52:15 mast Exp $
 
 
 array return_zero (mixed... ignored) {return 0;}
@@ -85,7 +85,9 @@ int(1..1)|string|array p_xml_entity_cb (Parser.HTML p, string str)
       return out && ({out});
     }
   }
-  return p->type->free_text ? 0 : ({});
+  if (!p->type->free_text)
+    RXML.parse_error ("Unknown entity &%s; not allowed in this context.\n", entity);
+  return 0;
 }
 
 int(1..1)|string|array p_xml_compat_entity_cb (Parser.HTML p, string str)
@@ -99,5 +101,7 @@ int(1..1)|string|array p_xml_compat_entity_cb (Parser.HTML p, string str)
 			  // in things like "nice><evil stuff='...'"?
 			  RXML.t_text :
 			  p->type);
-  return p->type->free_text ? 0 : ({});
+  if (!p->type->free_text)
+    RXML.parse_error ("Unknown entity &%s; not allowed in this context.\n", entity);
+  return 0;
 }
