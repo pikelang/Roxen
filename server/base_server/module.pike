@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.102 2000/12/05 00:38:57 nilsson Exp $
+// $Id: module.pike,v 1.103 2001/01/04 07:30:37 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -456,6 +456,7 @@ mapping api_functions()
   return _api_functions;
 }
 
+#if ROXEN_COMPAT <= 1.4
 mapping(string:function) query_tag_callers()
 //! Compat
 {
@@ -475,6 +476,7 @@ mapping(string:function) query_container_callers()
       m[replace(q[10..], "_", "-")] = this_object()[q];
   return m;
 }
+#endif
 
 mapping(string:array(int|function)) query_simpletag_callers()
 {
