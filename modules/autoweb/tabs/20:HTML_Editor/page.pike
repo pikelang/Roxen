@@ -28,8 +28,10 @@ mapping dl(object id, string filename)
 #if 1
 string encode_url(string base, string func, string path)
 {
-  if(func=="dl")
-    return combine_path(base, func, MIME.encode_base64(path)+"/"+path);
+  if(func=="dl") {
+    return combine_path(base, func, MIME.encode_base64(path)+
+			"/"+(path/"/")[-1]);
+  }
   return combine_path(base, func, MIME.encode_base64(path));
 }
 
@@ -85,7 +87,9 @@ string|mapping navigate(object id, string f, string base_url)
       br += ({ ({ "Edit File", (["filename":f ]) }) });
     br += ({ ({ "Edit Metadata", ([ "path":f ]) }),
 	     ({ "Download File", encode_url(base_url, "dl", f) }),
-	     ({ "Remove File", ([ "path":f ]) }) });
+	     ({ "Move File", ([ "path":f ]) }),
+	     ({ "Remove File", ([ "path":f ]) })
+    });
     wanted_buttons=br;
 
     // Show info about the file;
@@ -137,12 +141,13 @@ string|mapping navigate(object id, string f, string base_url)
 	  files += ({ file });
       }
     }
-
+    res += "<browser>";
     // Display directories.
     foreach(sort(dirs), string item) {
       string href = "<a href='"+encode_url(base_url, "go", f+item+"/")+"'>";
-      res += href+"<img src='internal-gopher-menu' border=0></a>";
-      res += "&nbsp;&nbsp;"+href+wa->html_safe_encode(item+"/")+"</a><br>\n";
+      res += href+"<img src='/internal-gopher-menu' border=0></a>";
+      res += "&nbsp;&nbsp;"+href+"<tt>"+
+	     wa->html_safe_encode(item+"/")+"</tt></a><br>\n";
     }
     
     // Display files.
@@ -153,11 +158,20 @@ string|mapping navigate(object id, string f, string base_url)
 	img = wa->content_types[md->content_type||
 			       "autosite/unknown"]->img;
       string href = "<a href='"+encode_url(base_url, "go", f+item)+"'>";
-      res += href+"<img src='"+img+"' border=0></a>";
-      res += "&nbsp;&nbsp;"+href+wa->html_safe_encode(item)+"</a><br>\n";
+      res += href+"<img src='/"+img+"' border=0></a>";
+      res += "&nbsp;&nbsp;"+href+"<tt>";
+      res += replace(sprintf("%-22s", wa->html_safe_encode(item)),
+		     " ", "&nbsp;");
+      if(md->title)
+	res += wa->html_safe_encode(md->title);
+      res += "</tt></a><br>\n";
+      
     }
+    if(!sizeof(dirs+files))
+      res += "Empty!";
+      
+    res += "</browser>";
   }
-  
   if(sizeof(f)>1)
     res = "<a href='"+encode_url(base_url, "go", combine_path(f, "../"))+"'>"
       "Up to parent directory</a><br>\n<br>\n"+res;

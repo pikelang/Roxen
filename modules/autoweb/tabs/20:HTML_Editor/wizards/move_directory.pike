@@ -33,8 +33,8 @@ int verify_0( object id )
 
 string page_1( object id )
 {
-  return ERROR + "Move directory from " + id->variables->path + " to " +
-    id->variables->newpath + " ?";
+  return ERROR + "Move directory from <b>" + id->variables->path +
+    "</b> to <b>" + id->variables->newpath + "</b> ?";
 }
 
 int verify_1( object id )
@@ -46,7 +46,4 @@ mixed wizard_done( object id )
 {
   mv(id->misc->wa->real_path(id, id->variables->path),
      id->misc->wa->real_path(id, id->variables->newpath));
-  werror("Moving directory %O to %O\n",
-	 id->misc->wa->real_path(id, id->variables->path),
-	 id->misc->wa->real_path(id, id->variables->newpath));
 }

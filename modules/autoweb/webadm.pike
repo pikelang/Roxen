@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.10 1998/08/02 19:56:52 wellhard Exp $
+ * $Id: webadm.pike,v 1.11 1998/08/03 14:44:40 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.10 1998/08/02 19:56:52 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.11 1998/08/03 14:44:40 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -82,30 +82,6 @@ string|int get_variable_value(object db, string customer_id, string variable)
   return query_result[0]->value;
 }
 
-
-string insert_menuitems(string tag, mapping args, string customer_id, object db)
-{
-  string query =
-    "select * from customers_menu,customers_files where "
-    "customers_menu.customer_id='"+customer_id+"' and "
-    "customers_menu.file_id=customers_files.id "
-    "order by customers_menu.item_order";
-  array menu_items = db->query(query);
-  if(!sizeof(menu_items)) {
-    werror("Query [%s] returned zero rows\n", query);
-    return "";
-  }
-  array a = ({ });
-  foreach(menu_items, mapping menu_item)
-    a +=
-    ({ "  <tmpldefault tag=menuitem"+menu_item->item_order+">\n"
-       "    <mi href=\""+menu_item->filename+"\">"+menu_item->title+"</mi>\n"
-       "  </tmpldefault>\n"
-       "  <tmplinsert tag=menuitem"+menu_item->item_order+">" });
-  return "\n"+(a*"\n\n");
-}
-
-
 string update_template(string tag_name, mapping args, object id)
 {
   object db = id->conf->call_provider("sql","sql_object",id);
@@ -143,9 +119,7 @@ string update_template(string tag_name, mapping args, object id)
   template =
     parse_html(template, ([ "insertnavigation": insert_navigation ]), ([ ]),
 	       navigation);
-  template =
-    parse_html(template, ([ "insertmenuitems" : insert_menuitems ]), ([ ]),
-	       id->variables->customer_id, db);
+
   // Fetch variables from database
   array variables =
     db->query("select * from customers_preferences,template_vars where "
@@ -206,6 +180,7 @@ mapping query_tag_callers()
   ]);
 }
 
+// Tablist
 
 string make_tablist(array(object) tabs, object current, object id)
 {
@@ -225,10 +200,11 @@ string make_tablist(array(object) tabs, object current, object id)
     make_container("config_tablist", ([]), res_tabs)+"\n\n";
 }
 
+// Validation
 
 int validate_customer(object id)
 {
-  werror("Validating customer: %O", id->misc->customer_id);
+  // werror("Validating customer: %O", id->misc->customer_id);
   catch {
     return equal(credentials[id->misc->customer_id],
 		 ((id->realauth||"*:*")/":"));

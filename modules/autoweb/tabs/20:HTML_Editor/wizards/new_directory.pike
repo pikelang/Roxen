@@ -53,9 +53,8 @@ int verify_0(object id)
 
 string page_1(object id)
 {
-  return "Summary: The directory <br>"
-    "<b><tt>"+id->variables->dirname+"</tt></b><br>"
-    " will be created<br> ";
+  return "Create directory <b>"+id->variables->dirname+
+    "</b> ?";
 }
 
 void wizard_done(object id)
