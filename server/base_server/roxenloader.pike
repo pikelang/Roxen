@@ -3,15 +3,15 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.36 1997/08/27 19:03:38 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.37 1997/08/31 18:38:24 grubba Exp $";
 
 #define perror roxen_perror
 
 //
 // NOTE:
-//	This file uses replace_master() this implies that the
-//	master() efun will return the old master and not the
-//	new one.
+//	This file uses replace_master(). This implies that the
+//	master() efun when used in this file will return the old
+//	master and not the new one.
 //
 private static object new_master;
 
