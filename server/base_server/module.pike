@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.186 2004/05/08 14:40:20 grubba Exp $
+// $Id: module.pike,v 1.187 2004/05/09 17:54:21 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1242,7 +1242,7 @@ void recurse_copy_files(string source, string destination, int depth,
 				  behavior[query_location()+destination] ||
 				  behavior[0],
 				  result, id);
-    if (res && res->error != 204) {
+    if (res && (res->error != 204) && (res->error != 201)) {
       result->add_status(destination, res->error, res->rettext);
       if (res->error >= 300) {
 	// RFC 2518 8.8.3 and 8.8.8 (error minimization).
