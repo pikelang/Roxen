@@ -210,6 +210,8 @@ worldmap binary
 /server/modules/graphics/pimage.pike foreign_ident
 /server/modules/graphics/tablist.pike foreign_ident
 /server/modules/graphics/wiretap.pike foreign_ident
+/server/modules/icecast/dir_playlist.pike foreign_ident
+/server/modules/icecast/icecast.pike foreign_ident
 /server/modules/ldap/ldaptag.pike foreign_ident
 /server/modules/ldap/ldapuserauth.pike foreign_ident
 /server/modules/logging/client_logger.pike foreign_ident
