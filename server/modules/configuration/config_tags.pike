@@ -529,7 +529,7 @@ string container_configif_output(string t, mapping m, string c, object id)
 #if constant(Locale.list_languages)
      array(string) langs=Locale.list_languages("config_interface");
 #else
-     array(string) langs=Locale.list_languages("config_interface");
+     array(string) langs=RoxenLocale.list_languages("config_interface");
 #endif
      variables = map( sort(langs),
                       lambda( string l )
@@ -542,8 +542,6 @@ string container_configif_output(string t, mapping m, string c, object id)
 			//                        cl[ LOW_LOCALE->latin1_name ] = 1;
 			//                        if( LOW_LOCALE->latin1_name == "standard" )
 			//                          cl[ "english" ] = 1;
-                        if( !rl[l] )
-                          return 0;
                         return ([
                           "name":l,
 			  /*
