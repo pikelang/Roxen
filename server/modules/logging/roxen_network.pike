@@ -8,7 +8,7 @@ inherit "module";
 
 // ---------------- Module registration stuff ----------------
 
-constant cvs_version = "$Id: roxen_network.pike,v 1.7 2001/09/03 18:18:32 nilsson Exp $";
+constant cvs_version = "$Id: roxen_network.pike,v 1.8 2001/11/30 14:41:46 grubba Exp $";
 constant module_type = MODULE_ZERO;
 constant thread_safe = 1;
 constant module_name = "Roxen Network module";
@@ -72,7 +72,9 @@ void create(Configuration _conf) {
 }
 
 void start() {
+#ifndef OFFLINE
   Poster(build_package);
+#endif /* OFFLINE */
 }
 
 string internal_location() {
