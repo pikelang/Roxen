@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.175 2000/05/15 10:41:36 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.176 2000/05/22 05:24:26 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -777,6 +777,13 @@ string parse_html_lines (string data, mapping tags, mapping containers,
 
 #endif
 
+static local mapping fd_marks = ([]);
+mixed mark_fd( int fd, string|void with )
+{
+  if(!with)
+    return fd_marks[ fd ];
+  fd_marks[fd] = with;
+}
 
 // Code to trace fd usage.
 #ifdef FD_DEBUG
@@ -1037,6 +1044,8 @@ Please install a newer pike version
 #ifdef INTERNAL_ERROR_DEBUG
   add_constant("throw", paranoia_throw);
 #endif /* INTERNAL_ERROR_DEBUG */
+
+  add_constant( "mark_fd", mark_fd );
 
   mixed err;
 
