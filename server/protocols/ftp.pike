@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.11 1997/04/10 04:36:30 marcus Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.12 1997/04/16 20:41:46 marcus Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -16,6 +16,7 @@ string cvs_version = "$Id: ftp.pike,v 1.11 1997/04/10 04:36:30 marcus Exp $";
 
 
 inherit "http"; /* For the variables and such.. (Per) */ 
+inherit "roxenlib";
 
 #include <config.h>
 #include <module.h>
@@ -820,7 +821,8 @@ void got_data(mixed fooid, string s)
 	  reply("550 "+arg+": No such file or directory.\n");
 	else if(f->data == -1)
 	  reply("550 "+arg+": Permission denied.\n");
-	connect_and_send(f);
+	else
+	  connect_and_send(f);
       } else {
 	reply(reply_enumerate("Permission denied\n"+(f->data||""), "550"));
       }
