@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.116 2000/03/30 20:08:39 per Exp $
+// $Id: wizard.pike,v 1.117 2000/04/03 15:49:30 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -502,7 +502,7 @@ string parse_wizard_page(string form, RequestID id, string wiz_name, void|string
 	 "<table bgcolor=\"#000000\" cellpadding=\"1\" border=\"0\" cellspacing=\"0\" width=\"80%\">\n"
 	 "  <tr><td><table bgcolor=\"#eeeeee\" cellpadding=\"0\" "
 	   "cellspacing=\"0\" border=\"0\" width=\"100%\">\n"
-	 "    <tr><td valign=\"top\"><table width=\"100%\" height=\"100%\" cellspacing=\"0\" cellpadding=\"5\">\n"
+	 "    <tr><td valign=\"top\"><table width=\"100%\" cellspacing=\"0\" cellpadding=\"5\">\n"
          "      <tr><td valign=top><font size=\"+2\">"+make_title()+"</font></td>\n"
          "<td align=\"right\">"+
 	 (wiz_name=="done"
