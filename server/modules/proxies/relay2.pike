@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.18 2001/04/17 06:51:22 per Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.19 2001/05/03 17:33:11 per Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -150,7 +150,9 @@ class Relay
         } else 
           status = header;
       }
-      if( sscanf( type, "text/%*s;charset=%s", charset ) == 2 )
+      if(!type)
+	type = "text/html";
+      else if( sscanf( type, "text/%*s;charset=%s", charset ) == 2 )
         type = String.trim_all_whites( (type/";")[0] );
     }
 
