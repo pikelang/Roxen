@@ -11,7 +11,7 @@
  * Make sure links work _inside_ unfolded dokuments.
  */
 
-constant cvs_version = "$Id: directories2.pike,v 1.18 1999/12/27 20:23:03 nilsson Exp $";
+constant cvs_version = "$Id: directories2.pike,v 1.19 1999/12/27 21:37:25 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -20,11 +20,17 @@ inherit "roxenlib";
 
 int DIRLISTING;
 array README;
+string OUT_FORM;
 void start( int num, Configuration conf )
 {
-  module_dependencies (conf, ({ "foldlist" }));
   DIRLISTING=query("dirlisting");
   README=query("readme");
+  OUT_FORM="<img border=\"0\" src=\"%s\" alt=\"\"> "
+    "<a href=\"%s\">%-40s</a>"+
+    (query("size")?"   %11s":"%.0s")+
+    (query("date")=="Don't show dates"?"   %s":"%.0s")+
+    "   %s\n";
+
 }
 
 array register_module()
@@ -69,6 +75,14 @@ void create()
   defvar("size", 1, "Include file size", TYPE_FLAG,
 	 "If set, include the size of the file in the listing.",
 	 0, !DIRLISTING);
+
+  defvar("date", "Don't show dates", "Dates", TYPE_MULTIPLE_STRING,
+	 "Select whether to include the last modification date in directory "
+	 "listings, and if so, on what format. `ISO dates' gives dates "
+         "like 1999-11-26, while `Text dates' gives dates like `Fri Nov 26, "
+         "1999'.",
+         ({ "Don't show dates", "Show ISO dates", "Show text dates" }),
+	 !DIRLISTING);
 }
 
 string container_arel(string t, mapping m, string contents, RequestID id)
@@ -155,18 +169,24 @@ string describe_directory(string d, RequestID id)
     result += "<hr noshade><pre>\n";
   }
 
-  result += "<foldlist folded>\n";
+  if(id->misc->foldlist_exists) result += "<foldlist folded>\n";
 
   foreach(sort(dir), string file) {
     array stats = id->conf->stat_file(d + file, id);
     string type = "Unknown";
     string icon;
-    int len = stats?stats[1]:0;
+    int len = 0;
+    string mtime = "";
+    if(stats) {
+      len=stats[1];
+      mtime=ctime(stats[3]);
+      mtime=mtime[0..sizeof(mtime)-2];
+    }
 
     switch(-len) {
     case 3:
     case 2:
-      type = "   "+({ 0,0,"Directory","Module location" })[-stats[1]];
+      type = ({ 0,0,"Directory","Module location" })[-stats[1]];
 
       /* Directory or module */
       file += "/";
@@ -175,19 +195,15 @@ string describe_directory(string d, RequestID id)
       break;
     default:
       array tmp = id->conf->type_from_filename(file,1);
-      if (tmp) {
-	type = tmp[0];
-      }
+      if (tmp) type = tmp[0];
       icon = image_from_type(type);
-      if (tmp && tmp[1]) {
-	type += " " + tmp[1];
-      }
+      if (tmp && tmp[1]) type += " " + tmp[1];
 
       break;
     }
-    result += sprintf("<ft><img border=\"0\" src=\"%s\" alt=\"\"> "
-		      "<a href=\"%s\">%-40s</a> %8s %-20s\n",
-		      icon, id->misc->rel_base+file, file, sizetostring(len), type);
+    if(id->misc->foldlist_exists) result+="<ft>";
+    result += sprintf(OUT_FORM, icon, id->misc->rel_base+file, file,
+		      sizetostring(len), mtime, type);
 
     array(string) split_type = type/"/";
     string extras = "Not supported for this file type";
@@ -240,9 +256,9 @@ string describe_directory(string d, RequestID id)
       }
       break;
     }
-    result += "<fd>"+extras+"</fd></ft>\n";
+    if(id->misc->foldlist_exists) result += "<fd>"+extras+"</fd></ft>\n";
   }
-  result += "</foldlist>\n";
+  if(id->misc->foldlist_exists) result += "</foldlist>\n";
   if (!level) {
     result +="</pre></body></html>\n";
   }
@@ -290,6 +306,8 @@ string|mapping parse_directory(RequestID id)
   if (f[-1] != '.') {
     f += ".";
   }
+
+  id->misc->foldlist_exists=search(indices(id->conf->modules),"foldlist")!=-1;
   id->misc->rel_base="";
   return http_string_answer(parse_rxml(describe_directory(f, id), id));
 }
