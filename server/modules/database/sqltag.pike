@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.88 2001/10/12 09:17:58 grubba Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.89 2001/10/12 11:25:43 grubba Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -235,6 +235,33 @@ class TagSQLOutput {
 }
 #endif
 
+class SqlEmitResponse {
+  inherit EmitObject;
+  private object sqlres;
+  private array(string) cols;
+  private int fetched;
+
+  private mapping(string:mixed) really_get_row() {
+    array val;
+    if(sqlres && (val = sqlres->fetch_row()))
+      fetched++;
+    else {
+      sqlres = 0;
+      return 0;
+    }
+    return mkmapping(cols, val);
+  }
+
+  int num_rows_left() {
+    return sqlres && (sqlres->num_rows() - fetched + !!next_row);
+  }
+
+  void create(object _sqlres) {
+    sqlres = _sqlres;
+    cols = sqlres->fetch_fields()->name;
+  }
+}
+
 class TagSqlplugin {
   inherit RXML.Tag;
   inherit "emit_object";
@@ -246,35 +273,8 @@ class TagSqlplugin {
     "db":RXML.t_text(RXML.PEnt),
   ]);
 
-  class Response {
-    inherit EmitObject;
-    private object sqlres;
-    private array(string) cols;
-    private int fetched;
-
-    private mapping(string:mixed) really_get_row() {
-      array val;
-      if(sqlres && (val = sqlres->fetch_row()))
-	fetched++;
-      else {
-	sqlres = 0;
-	return 0;
-      }
-      return mkmapping(cols, val);
-    }
-
-    int num_rows_left() {
-      return sqlres && (sqlres->num_rows() - fetched + !!next_row);
-    }
-
-    void create(object _sqlres) {
-      sqlres = _sqlres;
-      cols = sqlres->fetch_fields()->name;
-    }
-  }
-
   object get_dataset(mapping m, RequestID id) {
-    return Response(do_sql_query(m, id, 1));
+    return SqlEmitResponse(do_sql_query(m, id, 1));
   }
 }
 
