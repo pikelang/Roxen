@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.5 2001/08/14 10:00:00 tomas Exp $
+// $Id: roxen.cpp,v 1.6 2001/08/23 13:31:33 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -244,7 +244,7 @@ BOOL CRoxen::CreatePikeCmd(char *cmd, std::string pikeloc, CCmdLine &cmdline, ch
   p += sprintf(p, " ntroxenloader.pike +../logs/%hs.run", key);
 
   // Insert silent flag if required (must be first argument after +/../xxxxx.run)
-  if (_Module.m_bService || cmdline.GetVerbose() == 0)
+  if (_Module.m_bService || (cmdline.GetVerbose() == 0 && !cmdline.IsPassHelp()))
     p += sprintf(p, " -silent");
 
   // Insert roxen args

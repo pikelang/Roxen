@@ -1,6 +1,6 @@
 // cmdline.h: interface for the CCmdLine class.
 //
-// $Id: cmdline.h,v 1.6 2001/08/14 10:00:00 tomas Exp $
+// $Id: cmdline.h,v 1.7 2001/08/23 13:31:33 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -84,6 +84,7 @@ public:
   BOOL IsOnce()       { return m_bOnce; }
   BOOL IsHelp()       { return m_bHelp; }
   BOOL IsVersion()    { return m_bVersion; }
+  BOOL IsPassHelp()   { return m_bPassHelp; }
   BOOL IsKeepMysql()  { return m_bKeepMysql; }
   BOOL IsMsdev()      { return m_bMsdev; }
 
