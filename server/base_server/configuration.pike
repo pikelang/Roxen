@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.427 2001/04/23 15:55:34 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.428 2001/05/03 17:26:41 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2036,14 +2036,15 @@ int|string try_get_file(string s, RequestID id,
   fake_id->misc->common = id->misc->common;
   fake_id->misc->internal_get = !not_internal;
 
+  if (fake_id->scan_for_query)
+    // FIXME: If we're using e.g. ftp this doesn't exist. But the
+    // right solution might be that clone_me() in an ftp id object
+    // returns a vanilla (i.e. http) id instead when this function is
+    // used.
+    s = fake_id->scan_for_query (s);
+
   s = Roxen.fix_relative (s, id);
 
-  if (fake_id->scan_for_query)
-  // FIXME: If we're using e.g. ftp this doesn't exist. But the
-  // right solution might be that clone_me() in an ftp id object
-  // returns a vanilla (i.e. http) id instead when this function is
-  // used.
-    s = fake_id->scan_for_query (s);
   fake_id->raw_url=s;
   fake_id->not_query=s;
 
