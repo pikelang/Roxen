@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.97 2000/08/28 05:31:52 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.98 2000/08/29 21:57:04 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -392,6 +392,32 @@ void name_program( program p, string name )
   load_time[ name ] = time();
 }
 
+#if __VERSION__ > 7.0
+
+static constant MasterDescriber = ::Describer;
+
+class Describer
+{
+  inherit MasterDescriber;
+
+  string describe_string (string m, int maxlen)
+  {
+    canclip++;
+    if(sizeof(m) < 40)
+      return  sprintf("%O", m);;
+    clipped++;
+    return sprintf("%O+[%d]+%O",m[..15],sizeof(m)-(32),m[sizeof(m)-16..]);
+  }
+
+  string describe_array (array m, int maxlen)
+  {
+    if(!sizeof(m)) return "({})";
+    return "({" + describe_comma_list(m,maxlen-2) +"})";
+  }
+}
+
+#else
+
 string stupid_describe(mixed m, int maxlen)
 {
   string typ;
@@ -445,6 +471,7 @@ string stupid_describe(mixed m, int maxlen)
   }
 }
 
+#endif
 
 constant bt_max_string_len = 99999999;
 int long_file_names;
