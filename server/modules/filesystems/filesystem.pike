@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.81 2000/05/05 23:30:26 nilsson Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.82 2000/05/16 17:18:29 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -45,7 +45,7 @@ int puts, deletes, mkdirs, moves, chmods;
 
 static mapping http_low_answer(int errno, string data, string|void desc)
 {
-  mapping res = ::http_low_answer(errno, data);
+  mapping res = Roxen.http_low_answer(errno, data);
 
   if (desc) {
     res->rettext = desc;
