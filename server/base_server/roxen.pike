@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.594 2000/12/30 07:02:56 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.595 2000/12/30 07:17:13 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -87,10 +87,23 @@ Sql.sql connect_to_my_mysql( int ro, string db )
 void start_mysql()
 {
   int st = gethrtime();
+  Sql.sql db;
+  
   report_notice( "Starting mysql ... ");
-  if( !catch( connect_to_my_mysql( 0, "mysql" ) ) )
+  void connected_ok(int was)
   {
-    report_notice("Done [%.1fms]\n", (gethrtime()-st)/1000.0);
+    string version = db->query( "SELECT VERSION() as v" )[0]->v;
+    report_notice("%s %s [%.1fms]\n",
+                  (was?"Was running":"Done"),
+                  version, (gethrtime()-st)/1000.0);
+    if( (float)version < 3.23 )
+      report_notice( "Warning: This is a very old Mysql. "
+                     "Please use 3.23.*\n");
+  };
+
+  if( !catch( db = connect_to_my_mysql( 0, "mysql" ) ) )
+  {
+    connected_ok(1);
     return;
   }
 
@@ -125,9 +138,9 @@ void start_mysql()
       report_fatal("\nFailed to start mysql. Aborting\n");
       exit(1);
     }
-    if( !catch( connect_to_my_mysql( 0, "mysql" ) ) )
+    if( !catch( db = connect_to_my_mysql( 0, "mysql" ) ) )
     {
-      report_notice("Done [%.1fms]\n", (gethrtime()-st)/1000.0);
+      connected_ok(0);
       return;
     }
   }
@@ -2083,8 +2096,14 @@ class ImageCache
         db->query( "DELETE FROM "+name+     " WHERE id='"+q+"'" );
       }
     }
-    db->query( "OPTIMIZE TABLE "+name+"_data\n");
-    db->query( "OPTIMIZE TABLE "+name+"_meta\n");
+    catch
+    {
+      // Old versions of Mysql lacks OPTIMIZE. Not that we support
+      // them, really, but it might be nice not to throw an error, at
+      // least.
+      db->query( "OPTIMIZE TABLE "+name+"_data\n");
+      db->query( "OPTIMIZE TABLE "+name+"_meta\n");
+    };
     db->query( "select RELEASE_LOCK('"+name+"')" );
   }
 
@@ -3218,6 +3237,8 @@ int main(int argc, array tmp)
   argv -= ({ 0 });
   argc = sizeof(argv);
 
+  start_mysql();
+
   add_constant( "roxen.fonts",
                 (fonts = ((program)"base_server/fonts.pike")()) );
 
@@ -3227,7 +3248,6 @@ int main(int argc, array tmp)
 
   set_locale();
 
-  start_mysql();
 
 #if efun(syslog)
   init_logger();
