@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.103 2001/07/12 18:34:31 mast Exp $
+// $Id: Roxen.pmod,v 1.104 2001/07/21 07:13:42 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -773,10 +773,14 @@ mixed eval_p_code (RXML.PCode p_code, RequestID id)
 //! function initiates a new context for the evaluation, so it won't
 //! recurse in the currently ongoing RXML evaluation, if any.
 //!
-//! If @[p_code] is stale, i.e. if any of the tag sets used in it have
-//! changed since it was created, then an @[RXML.StalePCode] instance
-//! is returned. The caller should in evaluate from source if that
-//! happens.
+//! @note
+//! The caller should first check with @[p_code->is_stale] that the
+//! p-code isn't stale, i.e. that none of the tag sets used in it have
+//! changed since it was created. If that's the case it isn't safe to
+//! evaluate the p-code, so it should be discarded and perhaps
+//! replaced with a new one retrieved by @[RXML.string_to_p_code] or
+//! generated from source. See also @[RXML.RenewablePCode], which
+//! never can become stale.
 {
   return p_code->eval (p_code->new_context (id));
 }
