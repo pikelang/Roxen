@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.168 2004/05/16 21:16:32 mani Exp $
+// $Id: Roxen.pmod,v 1.169 2004/05/16 21:30:31 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -573,7 +573,8 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
     url = add_pre_state (url, prestates);
 
   if( String.width( url )>8 && !has_value( url, "?" ) )
-    url += "?magic_roxen_automatic_charset_variable=едц";
+    url += "?magic_roxen_automatic_charset_variable="+
+      magic_charset_variable_value;
 
   url = http_encode_string (url);
   if (variables) {
@@ -2093,6 +2094,8 @@ class _charset_decoder(object cs)
 }
 
 static multiset(string) charset_warned_for = (<>);
+
+constant magic_charset_variable_value = "едц&#x829f;";
 
 function get_client_charset_decoder( string едц, RequestID|void id )
   //! Returns a decoder for the clients charset, given the clients
