@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.135 1997/09/16 01:35:01 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.136 1997/09/18 02:24:57 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1680,11 +1680,15 @@ private void define_global_variables( int argc, array (string) argv )
 
 
   globvar("neigh_ips",  ({lambda(){
-    string n = reverse(gethostbyname(gethostname())[1][0]);
-    sscanf(n,"%*d.%s", n);
-    n=reverse(n)+".";
+    catch {
+      mixed foo = gethostbyname(gethostname());
+      string n = reverse(foo[1][0]);
+      sscanf(n,"%*d.%s", n);
+      n=reverse(n)+".";
     // Currently only defaults to C-nets..
-    return n+"255";
+      return n+"255";
+    };
+    return "0.0.0.0";
   }()}), "Neighborhood: Broadcast addresses", TYPE_STRING_LIST|VAR_MORE,
   "");
 
