@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.56 1998/09/20 01:47:05 grubba Exp $
+ * $Id: smtp.pike,v 1.57 1998/09/20 01:58:53 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.56 1998/09/20 01:47:05 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.57 1998/09/20 01:58:53 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -89,6 +89,9 @@ static class Mail {
 
   void set_limit(int l)
   {
+#ifdef SMTP_DEBUG
+    roxen_perror("Size limit is %O\n", l);
+#endif /* SMTP_DEBUG */
     limit = l;
   }
 
@@ -660,12 +663,12 @@ static class Smtp_Connection {
 
     float szfactor = parent->query_size_factor();
 
-    if (fss->bfree * szfactor <= (limit / (fss->blocksize || 512))) {
+    if (fss->bavail * szfactor <= (limit / (fss->blocksize || 512))) {
       if (fss->blocks * szfactor <= (limit / (fss->blocksize || 512))) {
-	limit = (fss->blocksize || 512) * fss->blocks * szfactor;
+	limit = (int)((fss->blocksize || 512) * fss->blocks * szfactor);
 	hard = 1;
       } else {
-	limit = (fss->blocksize || 512) * fss->bfree * szfactor;
+	limit = (int)((fss->blocksize || 512) * fss->bavail * szfactor);
 	hard = 0;
       }
     }
