@@ -6,6 +6,8 @@
   </pike>
 </define>
 
+<define><pike>
+</pike></define>
 
 <pike>
   id->variables->show_wizard=!(id->variables->ok||id->variables->cancel);
@@ -31,17 +33,16 @@
 	  <input type=hidden name=edit value='¤edit:quote=mysql¤'>
 	  <b>Activate template: </b>
 
-	  <cset preparse variable=options><sqloutput quote='£' query="
-	    SELECT * FROM customers_schemes
-	      WHERE customer_id='¤customer_id¤'"
-	    >£id£:£name£,</sqloutput></cset>
-          <fix_options>	  
 	  <cset preparse variable=default><sqloutput quote='£' query="
 	    SELECT * FROM customers
 	      WHERE id=¤customer_id¤">£template_scheme_id£</sqloutput></cset>
 	  <formoutput quote='$'>
-	    <var name="new_scheme" type="select"
-		 options="$options$" default="$default$">
+	  <cvar parse name="new_scheme" type="select"
+	    default="$default$"><sqloutput quote='£' query="
+	    SELECT * FROM customers_schemes
+	      WHERE customer_id='¤customer_id¤'"
+	    >£id£:£name£
+</sqloutput></cvar>
 	  </formoutput>
 	  <p>
 	  Select the template you would like to make active.<br>
@@ -63,13 +64,9 @@
 	<page>
 	  <input type=hidden name=edit value='¤edit:quote=mysql¤'>
 	  <b>Load template: </b>
-	  <cset preparse variable=options><sqloutput quote='£' query="
-	    SELECT * FROM template_schemes">£id£:£name£,</sqloutput></cset>
-	  <fix_options>
-	  <formoutput quote='$'>
-	    <var name="load_scheme" type="select"
-		 options="$options$">
-	  </formoutput>
+	  <cvar parse name="load_scheme" type="select"><sqloutput quote='£'
+	    query="SELECT * FROM template_schemes">£id£:£name£
+</sqloutput></cvar>
 	  <p>
 	  Select the template you would like to load 
 	  into the active template.<br>
@@ -105,14 +102,10 @@
 	<page>
 	  <input type=hidden name=edit value='¤edit:quote=mysql¤'>
 	  <b>Template: </b>
-          <cset preparse variable=options><sqloutput quote='£' query="
-	    SELECT * FROM template_schemes"
-	    >£id£:£name:quote=mysql£,</sqloutput></cset>
-	  <fix_options>
-	  <formoutput quote='$'>
-	    <var name="load_scheme" type="select"
-		 options="$options$">
-	  </formoutput>	  
+	  <cvar parse name="load_scheme" type="select"><sqloutput quote='£'
+	    query="SELECT * FROM template_schemes"
+	    >£id£:£name:quote=mysql£
+</sqloutput></cvar>
 	  <p>Select a template you would like your
 	      new template to be based on.<br>
 	</page>
@@ -163,16 +156,14 @@
 	<page>
 	  <input type=hidden name=edit value='¤edit:quote=mysql¤'>
 	  <b>Remove template: </b>
-          <cset preparse variable=options><sqloutput quote='£' query="
+	  <cvar parse name="remove_scheme" type="select"><sqloutput quote='£'
+	    query="
 	    SELECT * FROM customers_schemes
 	      WHERE customer_id='¤customer_id¤'
 	        AND NOT(id='¤current_scheme¤')
-	      ORDER BY name">£id£:£name:quote=mysql£,</sqloutput></cset>
-	  <fix_options>
-	  <formoutput quote='$'>
-	    <var name="remove_scheme" type="select"
-		 options="$options$">
-	  </formoutput>	  
+	      ORDER BY name">£id£:£name:quote=mysql£
+</sqloutput></cvar>
+
 	  <p>Select the template you would like to remove.<br>
 	     You can not remove an active template.<br>
 	</page>
@@ -329,12 +320,11 @@
   <h3>Template Functions</h3>
   <formoutput quote='¤'>
     <sqloutput quote='£' query="select * from customers_schemes where
-                                id=¤current_scheme¤">
+                                id='¤current_scheme¤'">
       <b>Active template:</b> £name:quote=mysql£<br>
     </sqloutput>
   </formoutput>
 </if>
-
 
 <comment>
 <!--  Debug  -->

@@ -5,10 +5,11 @@ class AutoFile {
   object id;
   string filename;
   
-  string real_path(string path)
+  string real_path(string path, string|void cache_file)
   {
     path = replace(path, "../", "");
-    return id->misc->wa->query("searchpath")+id->misc->customer_id+
+    return id->misc->wa->query("searchpath")+(cache_file?"/":"")+
+      id->misc->customer_id+
       (sizeof(path)?(path[0]=='/'?path:"/"+path):"/");
   }
   
@@ -49,9 +50,24 @@ class AutoFile {
     return "";
   }
 
+  int writable()
+  {
+    object file = Stdio.File(real_path(filename), "wc");
+    if(file) {
+      file->close();
+      return 1;
+    }
+    return 0; 
+  }
+  
   array get_dir()
   {
     return predef::get_dir(real_path(filename));
+  }
+
+  string get_name()
+  {
+    return filename;
   }
   
   int visiblep()
@@ -249,7 +265,8 @@ class MetaData {
   
   mapping get()
   {
-    mapping md_default =  ([ "content_type":"autosite/unknown",
+    mapping md_default =  ([ "content_type":ContentTypes()->
+			                    content_type_from_extension(f),
 			     "title":"Unknown",
 			     "template":"Yes",
 			     "keywords":"",
@@ -284,19 +301,37 @@ class MetaData {
     return 1;
   }
   
+  static private string tag_meta(string tag, mapping args, mapping md)
+  {
+    //werror("Meta %O\n", args);
+    if(args["name"] == "keywords")
+      md["keywords"] = args["content"];
+    if(args["name"] == "description")
+      md["description"] = args["content"];
+  }
+  
   static private string container_title(string tag, mapping args,
 					string contents, mapping md)
   {
-    if(tag="title")
-      md["title"] = contents;
+    md["title"] = contents;
+  }
+  
+  static private string container_template(string tag, mapping args,
+					   string contents, mapping md)
+  {
+    md["template"] = "Yes";
+    if(args["none"])
+      md["template"] = "No";
   }
   
   mapping get_from_html(string html)
   {
-    mapping md = ([]);
+    mapping md = ([ "template":"Yes" ]);
     md->content_type = ContentTypes()->content_type_from_extension(f);
     if((md->content_type == "text/html")&&(sizeof(html))) 
-      parse_html(html, ([ ]), ([ "title":container_title ]), md);
+      parse_html(html, ([ "meta": tag_meta ]),
+		 ([ "template": container_template,
+		    "title":container_title ]), md);
     return md;
   }
 
@@ -453,7 +488,8 @@ class Misc {
 }
 
 class AutoFilter {
-  static private string tag_body(string tag, mapping args, string contents, mapping res)
+  static private string container_body(string tag, mapping args,
+				       string contents, mapping res)
   {
     res->res = contents;
     return "";
@@ -463,7 +499,7 @@ class AutoFilter {
   {
     if(md->content_type=="text/html") {
       mapping res = ([ "res":"" ]);
-      parse_html(contents, ([ ]), ([ "body":tag_body ]), res);
+      parse_html(contents, ([ ]), ([ "body":container_body ]), res);
       if(sizeof(res->res))
 	return res->res;
     }

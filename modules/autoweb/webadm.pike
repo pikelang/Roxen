@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.36 1998/10/04 17:00:23 wellhard Exp $
+ * $Id: webadm.pike,v 1.37 1999/09/20 22:20:26 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.36 1998/10/04 17:00:23 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.37 1999/09/20 22:20:26 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -134,17 +134,24 @@ string mean_color(string c1, string c2)
 
 string update_template(string tag_name, mapping args, object id)
 {
+  if(args->customer_id)
+    id->misc->customer_id = args->customer_id;
+  if(!id->misc->customer_id) {
+    werror("No customer for update_template\n");
+    return "";
+  }
+  //werror("Updating template for: %s\n%O\n", id->misc->customer_id, args);
   object db = get_db(DB_ALIAS, id);
   if(!db)
     return "";
   string templatesdir = combine_path(roxen->filename(this)+
 				     "/", "../../../")+"templates/";
   string destfile = query("searchpath")+
-		    (string)id->variables->customer_id+
+		    (string)id->misc->customer_id+
 		    "/templates/default.tmpl";
   // Fetch active scheme
   array scheme = db->query ("select * from customers where "
-			    "id='"+id->variables->customer_id+"'");
+			    "id='"+id->misc->customer_id+"'");
   string scheme_id = 0;
   if(sizeof(scheme))
     scheme_id = scheme[0]->template_scheme_id;
