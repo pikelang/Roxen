@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.111 1999/03/30 23:11:17 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.112 1999/03/30 23:14:33 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -874,11 +874,6 @@ class nat_wrapper // Wrapper emulator when not using the binary wrapper.
 #endif
 }
 
-void got_some_data(object to, string d)
-{
-  to->write( d );
-}
-
 // Start a CGI.
 object spawn_cgi(string wrapper, string f, array(string) args, mapping env,
 		 string wd, int|string uid, object pipe1, object pipe2,
@@ -1254,7 +1249,9 @@ mixed low_find_file(string f, object id, string path)
   if(id->my_fd && id->data) {
     sender(pipe4, id->data);
     id->my_fd->set_id( pipe4 );                       // for put.. post?
-    id->my_fd->set_read_callback(cgi->got_some_data); // lets try, atleast..
+    id->my_fd->set_read_callback(lambda(object to, string d) {
+				   to->write(d);
+				 });		      // lets try, atleast..
     id->my_fd->set_nonblocking();
   } else {
     closer(pipe4);
