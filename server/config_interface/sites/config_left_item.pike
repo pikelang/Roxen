@@ -35,7 +35,6 @@ string selected_item( string q, Configuration c, RequestID id,
   string pre = "";
   int do_js = config_setting( "modulelistmode" ) == "js";
   int unfolded = config_setting( "modulelistmode" ) == "uf";
-  string hide_popup = "";
 
   if( do_js )
   {
@@ -138,7 +137,7 @@ string selected_item( string q, Configuration c, RequestID id,
 		sel+"-indicator;\" width='12' height='12' alt='' /></td>"
 		"<td>");
 	if( !do_js )
-	  pre += "<a "+hide_popup+
+	  pre += "<a "+
 	    " href=\""+quoted_url+Roxen.http_encode_string(group_name)+
 	    "!0/"+((module&&strlen(module))?module+"/":"")
 	    +"\">"+Roxen.html_encode_string(group_name)+
@@ -163,7 +162,7 @@ string selected_item( string q, Configuration c, RequestID id,
 	  pre += ("\n<tr><td valign='top'>"
 		  "<img src=\"&usr.item-indicator;\" width='12' "
 		  "height='12' alt='' /></td>"
-		  "<td><a "+hide_popup+" href=\""+quoted_url+
+		  "<td><a href=\""+quoted_url+
 		  Roxen.http_encode_string(group_name)+"!0/"+data->sname+
 		  "/\">"+Roxen.html_encode_string(data->name)+
 		  "</a></td></tr>\n");
