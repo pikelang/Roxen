@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.669 2001/05/29 21:52:58 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.670 2001/06/06 02:39:51 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -579,6 +579,7 @@ local static void handler_thread(int id)
 	  report_error(LOC_M(5, "Uncaught error in handler thread: %sClient "
 			     "will not get any response from Roxen.")+"\n",
 		       describe_backtrace(q));
+	  catch (q = 0);
 	}
       }) {
 	catch {
@@ -586,6 +587,8 @@ local static void handler_thread(int id)
 	  report_error(sprintf("Raw error: %O\n", h[0]));
 	  report_error(sprintf("Original raw error: %O\n", q[0]));
 	};
+	catch (q = 0);
+	catch (h = 0);
       }
     }
   }
