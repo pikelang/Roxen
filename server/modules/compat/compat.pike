@@ -714,7 +714,6 @@ mapping query_tag_callers() {
     "vfs":tag_vfs,
     "set-max-cache":tag_set_max_cache,
     "configurl":"",
-    "formoutput":container_formoutput,
     "accept-language":tag_accept_language
   ]);
   return active;
@@ -736,6 +735,7 @@ mapping query_container_callers() {
     "gtext-url":container_gtext
   ]);
   if(enabled->rxmltags) active+=([
+    "formoutput":container_formoutput,
     "source":container_source,
     "recursive-output":container_recursive_output,
     "default":container_default,
