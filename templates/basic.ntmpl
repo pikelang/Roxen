@@ -1,4 +1,5 @@
-<navigation maxwidth=150 preload transparent=$$bg_color$$>
+<navigation maxwidth=150 preload transparent=$$bg_color$$
+  bg=$$bg_color$$>
 
   <include file=std_navigation_text.inc>
 

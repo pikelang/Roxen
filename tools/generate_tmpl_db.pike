@@ -25,7 +25,7 @@ string tag_insert(string tag, mapping args, mapping oa)
     }
     args[oa->insertvariable] = query_result[0][indices(query_result[0])[0]];
   }
-
+  //werror("%O", args);
   if(oa->removevariables2&&
      oa->insertvariable2&&
      oa->query2&&args[(oa->removevariables2/",")[0]])
@@ -49,8 +49,8 @@ string tag_insert(string tag, mapping args, mapping oa)
     values += (i?",":"")+"'"+db->quote(args[arg])+"'";
     i++;
   }
-  string q = sprintf("insert into " +
-		     oa->table + " ("+cols+") values ("+values+")");
+  string q = "insert into " +
+	     oa->table + " ("+cols+") values ("+values+")";
   db->query(q);
   //write("  "+q+"\n");
   return "";

@@ -3,27 +3,46 @@
   <delete all>
 
   <!--  Layout wizards  -->
-  <insert name="General" title="Edit general layout preferences"
-          help="help" category="tmpl">
+  <insert name="General"
+    title="Edit layout file, text color, and link color preferences."
+    help="" category="tmpl">
 
-  <insert name="Heading" title="Edit heading preferences"
-          help="help" category="tmpl">
+  <insert name="Background"
+    title="Edit background image and background color preferences."
+    help="" category="tmpl">
 
-  <insert name="Page head text" title="Edit page head text preferences"
-          help="help" category="tmpl">
+  <insert name="Title"
+    title="Edit title preferences"
+    help="" category="tmpl">
 
-  <insert name="Page head layout" title="Edit page head layout preferences"
-          help="help" category="tmpl">
+  <insert name="Graphical element"
+    title="Edit corner, line and logo preferences."
+    help="" category="tmpl">
+
+  <insert name="Heading 1"
+    title="Edit heding level 1 preferences."
+    help="" category="tmpl">
+
+  <insert name="Heading 2"
+    title="Edit heding level 2 preferences."
+    help="" category="tmpl">
+
+  <insert name="Footer"
+    title="Edit footer preferences"
+    help="" category="tmpl">
 
   <!--  Navigation wizards  -->
-  <insert name="Navigation type" title="Edit general navigation preferences"
-          help="help" category="nav">
+  <insert name="Navigation type"
+    title="Edit general navigation preferences"
+    help="" category="nav">
 
-  <insert name="Navigation text" title="Edit navigation text preferences"
-          help="help" category="nav">
+  <insert name="Navigation text"
+    title="Edit navigation text preferences"
+    help="" category="nav">
 
-  <insert name="Navigation colors" title="Edit navigation colors"
-          help="help" category="nav">
+  <insert name="Navigation colors"
+    title="Edit navigation colors"
+    help="" category="nav">
 
 </sql-insert>
 
@@ -35,18 +54,25 @@
   <delete all>
 
   <insert name="General p1" _wizard_name="General">
-  <insert name="General p2" _wizard_name="General" title="Page colors">
+  <insert name="General p2" _wizard_name="General">
   <insert name="General p3" _wizard_name="General" title="Link colors">
 
-  <insert name="Heading p1" _wizard_name="Heading" title="Heading level 1">
+  <insert name="Background p1" _wizard_name="Background" title="Background">
+  <insert name="Background p2" _wizard_name="Background" title="Text background">
 
-  <insert name="Heading p2" _wizard_name="Heading" title="Heading level 2">
+  <insert name="Title p1" _wizard_name="Title">
 
-  <insert name="Page head text p1" _wizard_name="Page head text">
-  <insert name="Page head text p2" _wizard_name="Page head text">
+  <insert name="Graphical element p1" _wizard_name="Graphical element" title="">
+  <insert name="Graphical element p2" _wizard_name="Graphical element" title="Logo">
+  <insert name="Graphical element p3" _wizard_name="Graphical element" title="Corner">
 
-  <insert name="Page head layout p1" _wizard_name="Page head layout">
-  <insert name="Page head layout p2" _wizard_name="Page head layout">
+  <insert name="Heading 1 p1" _wizard_name="Heading 1" title="">
+  <insert name="Heading 1 p2" _wizard_name="Heading 1" title="">
+
+  <insert name="Heading 2 p1" _wizard_name="Heading 2" title="">
+  <insert name="Heading 2 p2" _wizard_name="Heading 2" title="">
+
+  <insert name="Footer p1" _wizard_name="Footer">
 
   <insert name="Navigation type p1" _wizard_name="Navigation type">
 
@@ -64,13 +90,15 @@
 
    <insert name="template files">
    <insert name="navigation files">
-   <insert name="justification">
+   <insert name="align">
    <insert name="font size">
    <insert name="font style">
    <insert name="background images">
    <insert name="navigation background images">
    <insert name="page head images">
-
+   <insert name="logo position">
+   <insert name="dingbat">
+   
 </sql-insert>
 
 
@@ -93,17 +121,9 @@
           type="select" help=""
 	  _page_name="General p1" _option_group_name="template files">
 
-  <insert name="bg_image" title="Background image"
-          type="select" help=""
-          _page_name="General p1" _option_group_name="background images">
-
   <insert name="text_color" title="Text color"
           type="color-small" help=""
 	  _page_name="General p2">
-
-  <insert name="bg_color" title="Background color"
-          type="color-small" help=""
-          _page_name="General p2">
 
   <!--  Link colors  -->
   <insert name="link_color" title="Link color"
@@ -118,97 +138,160 @@
           type="color-small" help=""
 	  _page_name="General p3">
 
+  <!--  Background  -->	  
+  <insert name="bg_color" title="Background color"
+          type="color-small" help=""
+          _page_name="Background p1">
+
+  <insert name="bg_image_color" title="Background image color"
+          type="color-small" help=""
+          _page_name="Background p1">
+
+  <insert name="bg_image" title="Background image"
+          type="select" help=""
+          _page_name="Background p1" _option_group_name="background images">
+
+  <!--  Text background  -->	  
+  <insert name="text_bg_color" title="Text background color"
+          type="color-small" help=""
+          _page_name="Background p2">
+
+  <insert name="text_bg_image_color" title="Text background image color"
+          type="color-small" help=""
+          _page_name="Background p2">
+
+  <insert name="text_bg_image" title="Text background image"
+          type="select" help=""
+          _page_name="Background p2" _option_group_name="background images">
+
+  <!--  Title  -->
+  <insert name="title_color" title="Color"
+          type="color-small" help=""
+	  _page_name="Title p1">
+
+  <insert name="title_font" title="Font"
+          type="font" help=""
+	  _page_name="Title p1">
+
+  <insert name="title_font_style" title="Font style"
+          type="select" help=""
+	  _page_name="Title p1" _option_group_name="font style">
+
+  <insert name="title_size" title="Font size"
+          type="select" help=""
+	  _page_name="Title p1" _option_group_name="font size">
+
+  <insert name="title_align" title="Align"
+          type="select" help=""
+	  _page_name="Title p1" _option_group_name="align">
+
+  <insert name="title_shadow" title="Shadow"
+          type="toggle" help=""
+	  _page_name="Title p1">
+
+  <!--  Graphical element  -->	  
+  <insert name="page_head_image" title="Image"
+          type="select" help=""
+	  _page_name="Graphical element p1" _option_group_name="page head images">
+
+  <insert name="page_head_image_align" title="Image align"
+          type="select" help=""
+	  _page_name="Graphical element p1" _option_group_name="align">
+
+  <insert name="page_head_bar_color" title="Bar color"
+          type="color-small" help=""
+	  _page_name="Graphical element p1">
+
+  <insert name="logo_position" title="Logo position"
+          type="select" help=""
+          _page_name="Graphical element p2" _option_group_name="logo position">
+
+  <insert name="corner_1" title="Corner 1"
+          type="int" help=""
+          _page_name="Graphical element p3">
+
+  <insert name="corner_2" title="Corner 2"
+          type="int" help=""
+          _page_name="Graphical element p3">
+
+  <!--  Footer  -->	  
+  <insert name="footer_align" title="Align"
+          type="select" help=""
+	  _page_name="Footer p1" _option_group_name="align">
+
   <!--  Heading 1  -->	  
   <insert name="h1_color" title="Color"
           type="color-small" help=""
-	  _page_name="Heading p1">
+	  _page_name="Heading 1 p1">
 
   <insert name="h1_font" title="Font"
           type="font" help=""
-	  _page_name="Heading p1">
+	  _page_name="Heading 1 p1">
 
   <insert name="h1_font_style" title="Font style"
           type="select" help=""
-	  _page_name="Heading p1" _option_group_name="font style">
+	  _page_name="Heading 1 p1" _option_group_name="font style">
 
   <insert name="h1_size" title="Font size"
           type="select" help=""
-	  _page_name="Heading p1" _option_group_name="font size">
+	  _page_name="Heading 1 p1" _option_group_name="font size">
 
-  <insert name="h1_align" title="Justification"
+  <insert name="h1_align" title="Align"
           type="select" help=""
-	  _page_name="Heading p1" _option_group_name="justification">
+	  _page_name="Heading 1 p1" _option_group_name="align">
 
   <insert name="h1_shadow" title="Shadow"
           type="toggle" help=""
-	  _page_name="Heading p1">
+	  _page_name="Heading 1 p1">
+
+  <insert name="h1_dingbat_color" title="Dingbat color"
+          type="color-small" help=""
+	  _page_name="Heading 1 p2" _option_group_name="dingbat">
+
+  <insert name="h1_dingbat_size" title="Dingbat size"
+          type="select" help=""
+	  _page_name="Heading 1 p2" _option_group_name="font size">
+
+  <insert name="h1_dingbat" title="Dingbat"
+          type="select" help=""
+	  _page_name="Heading 1 p2" _option_group_name="dingbat">
 
   <!--  Heading 2  -->	  
   <insert name="h2_color" title="Color"
           type="color-small" help=""
-	  _page_name="Heading p2">
+	  _page_name="Heading 2 p1">
 
   <insert name="h2_font" title="Font"
           type="font" help=""
-	  _page_name="Heading p2">
+	  _page_name="Heading 2 p1">
 
   <insert name="h2_font_style" title="Font style"
           type="select" help=""
-	  _page_name="Heading p2"  _option_group_name="font style">
+	  _page_name="Heading 2 p1"  _option_group_name="font style">
 
   <insert name="h2_size" title="Font size"
           type="select" help=""
-	  _page_name="Heading p2" _option_group_name="font size">
+	  _page_name="Heading 2 p1" _option_group_name="font size">
 
-  <insert name="h2_align" title="Justification"
+  <insert name="h2_align" title="Align"
           type="select" help=""
-	  _page_name="Heading p2" _option_group_name="justification">
+	  _page_name="Heading 2 p1" _option_group_name="align">
 
   <insert name="h2_shadow" title="Shadow"
           type="toggle" help=""
-	  _page_name="Heading p2">
+	  _page_name="Heading 2 p1">
 
-  <!--  Page head text  -->
-  <insert name="page_head_text" title="Text"
-          type="string" help=""
-	  _page_name="Page head text p1">
-
-  <insert name="page_head_text_color" title="Color"
+  <insert name="h2_dingbat_color" title="Dingbat color"
           type="color-small" help=""
-	  _page_name="Page head text p2">
+	  _page_name="Heading 2 p2" _option_group_name="dingbat">
 
-  <insert name="page_head_text_font" title="Font"
-          type="font" help=""
-	  _page_name="Page head text p2">
-
-  <insert name="page_head_text_font_style" title="Font style"
+  <insert name="h2_dingbat_size" title="Dingbat size"
           type="select" help=""
-	  _page_name="Page head text p2" _option_group_name="font style">
+	  _page_name="Heading 2 p2" _option_group_name="font size">
 
-  <insert name="page_head_text_size" title="Font size"
+  <insert name="h2_dingbat" title="Dingbat"
           type="select" help=""
-	  _page_name="Page head text p2" _option_group_name="font size">
-
-  <insert name="page_head_text_align" title="Justification"
-          type="select" help=""
-	  _page_name="Page head text p2" _option_group_name="justification">
-
-  <insert name="page_head_text_shadow" title="Shadow"
-          type="toggle" help=""
-	  _page_name="Page head text p2">
-
-  <!--  Page head layout  -->	  
-  <insert name="page_head_image" title="Image"
-          type="select" help=""
-	  _page_name="Page head layout p1" _option_group_name="page head images">
-
-  <insert name="page_head_image_align" title="Image justification"
-          type="select" help=""
-	  _page_name="Page head layout p1" _option_group_name="justification">
-
-  <insert name="page_head_bar_color" title="Bar color"
-          type="color-small" help=""
-	  _page_name="Page head layout p2">
+	  _page_name="Heading 2 p2" _option_group_name="dingbat">
 
   <!--  Navigation Variables  -->
   <!--  Navigation type  -->
@@ -233,9 +316,9 @@
           type="select" help=""
 	  _page_name="Navigation text p1" _option_group_name="font size">
 
-  <insert name="nav_align" title="Justification"
+  <insert name="nav_align" title="Align"
           type="select" help=""
-	  _page_name="Navigation text p1" _option_group_name="justification">
+	  _page_name="Navigation text p1" _option_group_name="align">
 
   <insert name="nav_shadow" title="Shadow"
           type="toggle" help=""
@@ -277,14 +360,16 @@
     expression='<formoutput quote=§>
                   <if match="§variable_$h1_shadow$§ is 1">
 		    <cset variable=shadow>shadow=60,1</cset></if>
-		</formoutput>
-		<formoutput quote=§>
-                  <gtext align=center nfont="§variable_$h1_font$§"
-		    §variable_$h1_font_style$§
-                    fg=§variable_$h1_color$§ scale=§variable_$h1_size$§
-		    §shadow§ bg=lightgrey>Example Text</gtext>
-		</formoutput>'
-    where="name='Heading p1'">
+		  </formoutput>
+		  <formoutput quote=§>
+                    <gtext align=center nfont="§variable_$h1_font$§"
+		      §variable_$h1_font_style$§
+                      fg=black scale=§variable_$h1_size$§
+		      §shadow§ bg=lightgrey>Example Text</gtext>
+		    </sqloutput>
+		  </formoutput>
+		</quote>'
+    where="name='Heading 1 p1'">
 
   <update column="example_html"
     expression='<formoutput quote=§>
@@ -297,20 +382,20 @@
                     fg=§variable_$h2_color$§ scale=§variable_$h2_size$§
 		    §shadow§ bg=lightgrey>Example Text</gtext>
 		</formoutput>'
-    where="name='Heading p2'">
+    where="name='Heading 2 p1'">
 
   <update column="example_html"
     expression='<formoutput quote=§>
-                  <if match="§variable_$page_head_text_shadow$§ is 1">
+                  <if match="§variable_$title_shadow$§ is 1">
 		    <cset variable=shadow>shadow=60,1</cset></if>
 		</formoutput>
 		<formoutput quote=§>
-                  <gtext align=center nfont="§variable_$page_head_text_font$§"
-		    §variable_$page_head_text_font_style$§
-                    fg=§variable_$page_head_text_color$§ scale=§variable_$page_head_text_size$§
+                  <gtext align=center nfont="§variable_$title_font$§"
+		    §variable_$title_font_style$§
+                    fg=§variable_$title_color$§ scale=§variable_$title_size$§
 		    §shadow§ bg=lightgrey>Example Text</gtext>
 		</formoutput>'
-    where="name='Page head text p2'">
+    where="name='Title p1'">
 
   <update column="example_html"
     expression='<formoutput quote=§>
@@ -342,9 +427,13 @@
   <insert name="Sand" value="sand.tmpl" _group_name="template files">
 
   <!--  Background files  -->
-  <insert name="none" value="none" _group_name="background images">
-  <insert name="Sand" value="/img/sand/sand.jpg" _group_name="background images">
-  <insert name="Blue clouds" value="/img/dawn/blue_clouds.jpg" _group_name="background images">
+  <insert name="--- None ---" value="" _group_name="background images">
+  <insert name="Paper" value="/img/bg/paper.pnm" _group_name="background images">
+  <insert name="Craters" value="/img/bg/craters.pnm" _group_name="background images">
+  <insert name="Crincled paper" value="/img/bg/crinkle_paper.pnm"
+    _group_name="background images">
+  <insert name="Cracks" value="/img/bg/cracks.pnm"  _group_name="background images">
+  <insert name="Small" value="/img/bg/small.pnm"  _group_name="background images">
 
   <!--  Navigation files  -->
   <insert name="Basic" value="basic.ntmpl" _group_name="navigation files">
@@ -353,10 +442,10 @@
   <insert name="Dawn" value="dawn.ntmpl" _group_name="navigation files">
   <insert name="Sand" value="sand.ntmpl" _group_name="navigation files">
 
-  <!--  Justification  -->
-  <insert name="Left" value="left" _group_name="justification">
-  <insert name="Center" value="center" _group_name="justification">
-  <insert name="Right" value="right" _group_name="justification">
+  <!--  Align  -->
+  <insert name="Left" value="left" _group_name="align">
+  <insert name="Center" value="center" _group_name="align">
+  <insert name="Right" value="right" _group_name="align">
 
   <!--  Font size  -->
   <insert name="24" value="1.0" _group_name="font size">
@@ -367,13 +456,13 @@
   <insert name="8"  value="0.3" _group_name="font size">
 
   <!--  font style  -->
-  <insert name="regular" value="" _group_name="font style">
-  <insert name="bold" value="bold" _group_name="font style">
-  <insert name="italic" value="italic" _group_name="font style">
-  <insert name="bold italic" value="bold italic" _group_name="font style">
+  <insert name="Regular" value="" _group_name="font style">
+  <insert name="Bold" value="bold" _group_name="font style">
+  <insert name="Italic" value="italic" _group_name="font style">
+  <insert name="Bold Italic" value="bold italic" _group_name="font style">
 
   <!--  Navigation images  -->
-  <insert name="none" value="none" _group_name="navigation background images">
+  <insert name="--- None ---" value="none" _group_name="navigation background images">
   <insert name="bg 1" value="/img/nav1/bg1.pnm" _group_name="navigation background images">
   <insert name="bg 2" value="/img/nav1/bg2.pnm" _group_name="navigation background images">
   <insert name="bg 3" value="/img/nav1/bg3.pnm" _group_name="navigation background images">
@@ -382,11 +471,34 @@
   <insert name="bg 6" value="/img/nav1/bg6.pnm" _group_name="navigation background images">
   <insert name="cashew" value="/img/nav2/cashew.pnm" _group_name="navigation background images">
 
-  <!--  Page head images-->
-  <insert name="none" value="none" _group_name="page head images">
-  <insert name="Sand" value="/img/sand/sand.jpg" _group_name="page head images">
-  <insert name="Blue clouds" value="/img/dawn/blue_clouds.jpg" _group_name="page head images">
-  <insert name="Squares" value="/img/Klee/rutor.gif" _group_name="page head images">
+  <!--  Page head images  -->
+  <insert name="--- None ---" _group_name="page head images" value="">
+
+  <insert name="Sand" _group_name="page head images"
+    value="<img src=/img/sand/sand.jpg width=100% height=34>">
+
+  <insert name="Blue clouds" _group_name="page head images"
+    value="<img src=/img/dawn/blue_clouds.jpg width=100% height=41>">
+
+  <insert name="Squares" _group_name="page head images"
+    value="<img src=/img/Klee/rutor.gif width=92 height=47>">
+
+  <!--  Logo position  -->
+  <insert name="--- None ---" value="none" _group_name="logo position">
+  <insert name="Left" value="left" _group_name="logo position">
+  <insert name="Center" value="center" _group_name="logo position">
+  <insert name="Right" value="center" _group_name="logo position">
+  
+  <!--  Dingbat  -->
+  <insert name="--- None ---" value="" _group_name="dingbat">
+  <insert name="Sun" value="j" _group_name="dingbat">
+  <insert name="Winter" value="d" _group_name="dingbat">
+  <insert name="1" value="1" _group_name="dingbat">
+  <insert name="2" value="2" _group_name="dingbat">
+  <insert name="3" value="3" _group_name="dingbat">
+  <insert name="4" value="4" _group_name="dingbat">
+  <insert name="5" value="5" _group_name="dingbat">
+  <insert name="6" value="6" _group_name="dingbat">
 
 </sql-insert>
 
@@ -407,13 +519,24 @@
             removevariables="_variable_name"
             insertvariable="variable_id"
 	    query="select id from template_vars where
-	           name='#_variable_name#'">
+	           name='#_variable_name#'"
+
+            insertvariable2="value"
+	    removevariables2="_option_name,_dummy_name"
+            query2="SELECT o.value
+	              FROM template_options as o,
+		           template_vars as v,
+		           template_option_groups as g
+	              WHERE v.name='#_dummy_name#'
+		        AND v.option_group_id=g.id
+		        AND o.option_group_id=g.id
+			AND o.name='#_option_name#'">
 
   <delete all>
 
   <!--  Basic  -->
   <insert scheme_id=1 _variable_name="template_name" value="basic.tmpl">
-  <insert scheme_id=1 _variable_name="bg_image" value="none">
+  <insert scheme_id=1 _variable_name="bg_image" value="">
   <insert scheme_id=1 _variable_name="bg_color" value="white">
   <insert scheme_id=1 _variable_name="text_color" value="black">
 
@@ -427,21 +550,21 @@
   <insert scheme_id=1 _variable_name="h1_size" value="0.5">
   <insert scheme_id=1 _variable_name="h1_shadow" value="0">
   <insert scheme_id=1 _variable_name="h1_align" value="left">
+  <insert scheme_id=1 _variable_name="h1_dingbat" value="">
 
   <insert scheme_id=1 _variable_name="h2_color" value="black">
   <insert scheme_id=1 _variable_name="h2_font" value="helvetica">
   <insert scheme_id=1 _variable_name="h2_font_style" value="">
   <insert scheme_id=1 _variable_name="h2_size" value="0.4">
   <insert scheme_id=1 _variable_name="h2_shadow" value="0">
-  <insert scheme_id=1 _variable_name="h2_align" value="left">
+  <insert scheme_id=1 _variable_name="h2_dingbat" value="">
 
-  <insert scheme_id=1 _variable_name="page_head_text" value="Slogan">
-  <insert scheme_id=1 _variable_name="page_head_text_color" value="black">
-  <insert scheme_id=1 _variable_name="page_head_text_font" value="officina sans">
-  <insert scheme_id=1 _variable_name="page_head_text_font_style" value="bold">
-  <insert scheme_id=1 _variable_name="page_head_text_size" value="0.6">
-  <insert scheme_id=1 _variable_name="page_head_text_align" value="left">
-  <insert scheme_id=1 _variable_name="page_head_text_shadow" value="0">
+  <insert scheme_id=1 _variable_name="title_color" value="black">
+  <insert scheme_id=1 _variable_name="title_font" value="officina sans">
+  <insert scheme_id=1 _variable_name="title_font_style" value="bold">
+  <insert scheme_id=1 _variable_name="title_size" value="0.6">
+  <insert scheme_id=1 _variable_name="title_align" value="left">
+  <insert scheme_id=1 _variable_name="title_shadow" value="0">
 
   <insert scheme_id=1 _variable_name="page_head_image" value="none">
   <insert scheme_id=1 _variable_name="page_head_image_align" value="left">
@@ -467,7 +590,7 @@
 
   <!--  Night  -->
   <insert scheme_id=2 _variable_name="template_name" value="night.tmpl">
-  <insert scheme_id=2 _variable_name="bg_image" value="none">
+  <insert scheme_id=2 _variable_name="bg_image" value="">
   <insert scheme_id=2 _variable_name="bg_color" value="black">
   <insert scheme_id=2 _variable_name="text_color" value="white">
 
@@ -481,6 +604,7 @@
   <insert scheme_id=2 _variable_name="h1_size" value="0.5">
   <insert scheme_id=2 _variable_name="h1_shadow" value="0">
   <insert scheme_id=2 _variable_name="h1_align" value="left">
+  <insert scheme_id=2 _variable_name="h1_dingbat" value="">
 
   <insert scheme_id=2 _variable_name="h2_color" value="white">
   <insert scheme_id=2 _variable_name="h2_font" value="officina sans">
@@ -488,14 +612,14 @@
   <insert scheme_id=2 _variable_name="h2_size" value="0.4">
   <insert scheme_id=2 _variable_name="h2_shadow" value="0">
   <insert scheme_id=2 _variable_name="h2_align" value="left">
+  <insert scheme_id=2 _variable_name="h2_dingbat" value="">
 
-  <insert scheme_id=2 _variable_name="page_head_text" value="Slogan">
-  <insert scheme_id=2 _variable_name="page_head_text_color" value="white">
-  <insert scheme_id=2 _variable_name="page_head_text_font" value="officina sans">
-  <insert scheme_id=2 _variable_name="page_head_text_font_style" value="bold">
-  <insert scheme_id=2 _variable_name="page_head_text_size" value="1">
-  <insert scheme_id=2 _variable_name="page_head_text_align" value="right">
-  <insert scheme_id=2 _variable_name="page_head_text_shadow" value="0">
+  <insert scheme_id=2 _variable_name="title_color" value="white">
+  <insert scheme_id=2 _variable_name="title_font" value="officina sans">
+  <insert scheme_id=2 _variable_name="title_font_style" value="bold">
+  <insert scheme_id=2 _variable_name="title_size" value="1">
+  <insert scheme_id=2 _variable_name="title_align" value="right">
+  <insert scheme_id=2 _variable_name="title_shadow" value="0">
 
   <insert scheme_id=2 _variable_name="page_head_image" value="none">
   <insert scheme_id=2 _variable_name="page_head_image_align" value="left">
@@ -521,7 +645,7 @@
 
   <!--  Klee  -->
   <insert scheme_id=3 _variable_name="template_name" value="Klee.tmpl">
-  <insert scheme_id=3 _variable_name="bg_image" value="none">
+  <insert scheme_id=3 _variable_name="bg_image" value="">
   <insert scheme_id=3 _variable_name="bg_color" value="white">
   <insert scheme_id=3 _variable_name="text_color" value="black">
 
@@ -535,6 +659,7 @@
   <insert scheme_id=3 _variable_name="h1_size" value="0.5">
   <insert scheme_id=3 _variable_name="h1_shadow" value="0">
   <insert scheme_id=3 _variable_name="h1_align" value="left">
+  <insert scheme_id=3 _variable_name="h1_dingbat" value="">
 
   <insert scheme_id=3 _variable_name="h2_color" value="black">
   <insert scheme_id=3 _variable_name="h2_font" value="officina sans">
@@ -542,16 +667,17 @@
   <insert scheme_id=3 _variable_name="h2_size" value="0.4">
   <insert scheme_id=3 _variable_name="h2_shadow" value="0">
   <insert scheme_id=3 _variable_name="h2_align" value="left">
+  <insert scheme_id=3 _variable_name="h2_dingbat" value="">
 
-  <insert scheme_id=3 _variable_name="page_head_text" value="Slogan">
-  <insert scheme_id=3 _variable_name="page_head_text_color" value="navy">
-  <insert scheme_id=3 _variable_name="page_head_text_font" value="officina sans">
-  <insert scheme_id=3 _variable_name="page_head_text_font_style" value="bold italic">
-  <insert scheme_id=3 _variable_name="page_head_text_size" value="0.5">
-  <insert scheme_id=3 _variable_name="page_head_text_align" value="right">
-  <insert scheme_id=3 _variable_name="page_head_text_shadow" value="0">
+  <insert scheme_id=3 _variable_name="title_color" value="navy">
+  <insert scheme_id=3 _variable_name="title_font" value="officina sans">
+  <insert scheme_id=3 _variable_name="title_font_style" value="bold italic">
+  <insert scheme_id=3 _variable_name="title_size" value="0.5">
+  <insert scheme_id=3 _variable_name="title_align" value="right">
+  <insert scheme_id=3 _variable_name="title_shadow" value="0">
 
-  <insert scheme_id=3 _variable_name="page_head_image" value="/img/Klee/rutor.gif">
+  <insert scheme_id=3 _variable_name="page_head_image"
+    _dummy_name="page_head_image" _option_name="Squares">
   <insert scheme_id=3 _variable_name="page_head_image_align" value="right">
   <insert scheme_id=3 _variable_name="page_head_bar_color" value="none">
 
@@ -575,7 +701,7 @@
 
   <!--  Dawn  -->
   <insert scheme_id=4 _variable_name="template_name" value="dawn.tmpl">
-  <insert scheme_id=4 _variable_name="bg_image" value="none">
+  <insert scheme_id=4 _variable_name="bg_image" value="">
   <insert scheme_id=4 _variable_name="bg_color" value="white">
   <insert scheme_id=4 _variable_name="text_color" value="black">
 
@@ -589,6 +715,7 @@
   <insert scheme_id=4 _variable_name="h1_size" value="0.5">
   <insert scheme_id=4 _variable_name="h1_shadow" value="0">
   <insert scheme_id=4 _variable_name="h1_align" value="center">
+  <insert scheme_id=4 _variable_name="h1_dingbat" value="">
 
   <insert scheme_id=4 _variable_name="h2_color" value="black">
   <insert scheme_id=4 _variable_name="h2_font" value="officina sans">
@@ -596,16 +723,17 @@
   <insert scheme_id=4 _variable_name="h2_size" value="0.4">
   <insert scheme_id=4 _variable_name="h2_shadow" value="0">
   <insert scheme_id=4 _variable_name="h2_align" value="center">
+  <insert scheme_id=4 _variable_name="h2_dingbat" value="">
 
-  <insert scheme_id=4 _variable_name="page_head_text" value="Slogan">
-  <insert scheme_id=4 _variable_name="page_head_text_color" value="blue">
-  <insert scheme_id=4 _variable_name="page_head_text_font" value="officina sans">
-  <insert scheme_id=4 _variable_name="page_head_text_font_style" value="bold">
-  <insert scheme_id=4 _variable_name="page_head_text_size" value="0.6">
-  <insert scheme_id=4 _variable_name="page_head_text_align" value="center">
-  <insert scheme_id=4 _variable_name="page_head_text_shadow" value="0">
+  <insert scheme_id=4 _variable_name="title_color" value="blue">
+  <insert scheme_id=4 _variable_name="title_font" value="officina sans">
+  <insert scheme_id=4 _variable_name="title_font_style" value="bold">
+  <insert scheme_id=4 _variable_name="title_size" value="0.6">
+  <insert scheme_id=4 _variable_name="title_align" value="center">
+  <insert scheme_id=4 _variable_name="title_shadow" value="0">
 
-  <insert scheme_id=4 _variable_name="page_head_image" value="/img/dawn/blue_clouds.jpg">
+  <insert scheme_id=4 _variable_name="page_head_image"
+    _dummy_name="page_head_image" _option_name="Blue clouds">
   <insert scheme_id=4 _variable_name="page_head_image_align" value="center">
   <insert scheme_id=4 _variable_name="page_head_bar_color" value="black">
 
@@ -629,7 +757,7 @@
 
   <!--  Sand  -->
   <insert scheme_id=5 _variable_name="template_name" value="sand.tmpl">
-  <insert scheme_id=5 _variable_name="bg_image" value="none">
+  <insert scheme_id=5 _variable_name="bg_image" value="">
   <insert scheme_id=5 _variable_name="bg_color" value="white">
   <insert scheme_id=5 _variable_name="text_color" value="black">
 
@@ -643,6 +771,7 @@
   <insert scheme_id=5 _variable_name="h1_size" value="0.5">
   <insert scheme_id=5 _variable_name="h1_shadow" value="0">
   <insert scheme_id=5 _variable_name="h1_align" value="left">
+  <insert scheme_id=5 _variable_name="h1_dingbat" value="">
 
   <insert scheme_id=5 _variable_name="h2_color" value="#180c60">
   <insert scheme_id=5 _variable_name="h2_font" value="officina sans">
@@ -650,16 +779,17 @@
   <insert scheme_id=5 _variable_name="h2_size" value="0.5">
   <insert scheme_id=5 _variable_name="h2_shadow" value="0">
   <insert scheme_id=5 _variable_name="h2_align" value="left">
+  <insert scheme_id=5 _variable_name="h2_dingbat" value="">
 
-  <insert scheme_id=5 _variable_name="page_head_text" value="Slogan">
-  <insert scheme_id=5 _variable_name="page_head_text_color" value="#180c60">
-  <insert scheme_id=5 _variable_name="page_head_text_font" value="officina sans">
-  <insert scheme_id=5 _variable_name="page_head_text_font_style" value="bold">
-  <insert scheme_id=5 _variable_name="page_head_text_size" value="0.5">
-  <insert scheme_id=5 _variable_name="page_head_text_align" value="left">
-  <insert scheme_id=5 _variable_name="page_head_text_shadow" value="0">
+  <insert scheme_id=5 _variable_name="title_color" value="#180c60">
+  <insert scheme_id=5 _variable_name="title_font" value="officina sans">
+  <insert scheme_id=5 _variable_name="title_font_style" value="bold">
+  <insert scheme_id=5 _variable_name="title_size" value="0.5">
+  <insert scheme_id=5 _variable_name="title_align" value="left">
+  <insert scheme_id=5 _variable_name="title_shadow" value="0">
 
-  <insert scheme_id=5 _variable_name="page_head_image" value="/img/sand/sand.jpg">
+  <insert scheme_id=5 _variable_name="page_head_image"
+    _dummy_name="page_head_image" _option_name="Sand">
   <insert scheme_id=5 _variable_name="page_head_image_align" value="right">
   <insert scheme_id=5 _variable_name="page_head_bar_color" value="#a31805">
 

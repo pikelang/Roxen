@@ -1,22 +1,14 @@
 <include file='gtext_headers.inc'>
+<include file='bg_image.inc'>
 
+<formoutput quote=£>
 <html>
 <head><title><as-meta var=title></title></head>
 <body bgcolor='$$bg_color$$' text='$$text_color$$' link='$$link_color$$'
-      vlink='$$vlink_color$$' alink='$$alink_color$$'>
+      vlink='$$vlink_color$$' alink='$$alink_color$$' £bg_image£>
   <table cellpadding=0 cellspacing=0 border=0>
     <tr>
-      <if not match='$$page_head_image$$ is none'>
-        <if supports=tableimages>
-          <td height=50 align=$$page_head_image_align$$
-	      bgcolor=$$page_head_bar_color$$
-              background="$$page_head_image$$">&nbsp;</td>
-        </if>
-	<else><td align=$$page_head_image_align$$
-                  bgcolor=$$page_head_bar_color$$>
-          <img src="$$page_head_image$$"></td>
-        </else>
-      </if>
+      <td>$$page_head_image$$</td>
     </tr>
     <tr>
       <td><img height=2 width=100% src=/internal-roxen-unit></td>
@@ -26,13 +18,24 @@
         <include file='$$nav_name$$'>
       </td>
     </tr>
-    <tr>
-      <td><table><tr>
-        <td width=10%></td>
-        <td width=80% valign=top><tmplinsert tag=content></td>
-        <td width=10%></td>
-      </tr></table></td>
-    </tr>
+    <tr><td>
+      <table border=0>
+        <tr>
+          <td width=10%>&nbsp;</td>
+          <td width=80% valign=top><tmplinsert tag=content></td>
+          <td width=10%>&nbsp;</td>
+        </tr>
+        <tr>
+          <td colspan=3 height=10></td>
+        </tr>
+        <tr>
+          <td>&nbsp;</td>
+          <td align=$$footer_align$$><insert file=/footer.html></td>
+          <td>&nbsp;</td>
+        </tr>
+      </table>
+    </td></tr>
   </table>
 </body>
 </html>
+</formoutput>
