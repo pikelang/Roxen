@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.94 1999/09/05 01:41:32 per Exp $
+ * $Id: roxenloader.pike,v 1.95 1999/09/06 12:41:26 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.94 1999/09/05 01:41:32 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.95 1999/09/06 12:41:26 per Exp $";
 
 #define perror roxen_perror
 private static int perror_status_reported=0;
@@ -463,7 +463,6 @@ static private void initiate_cache()
   add_constant("cache_remove", cache->cache_remove);
   add_constant("cache_clear", cache->cache_clear);
   add_constant("cache_expire", cache->cache_expire);
-  add_constant("cache", cache);
   add_constant("capitalize", 
                lambda(string s){return upper_case(s[0..0])+s[1..];});
 }
