@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.138 2003/06/16 16:07:25 grubba Exp $
+// $Id: module.pike,v 1.139 2003/06/17 11:58:34 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -370,7 +370,7 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     //
     //			This property is not defined on collections.
     if (st->isreg) {
-      if (o->mode & 0111) return "T";
+      if (st->mode & 0111) return "T";
       return "F";
     }
     break;
