@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.86 1997/11/26 22:07:25 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.87 1997/11/29 19:48:02 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -2560,19 +2560,25 @@ void create(string config)
 
   perror("Creating virtual server '"+config+"'\n");
 
-  defvar("ZNoSuchFile", "<title>Sorry. I cannot find this resource</title>"
-	 "\n<h2 align=center><configimage src=roxen.gif alt=\"File not found\">\n"
+  defvar("ZNoSuchFile", "<title>Sorry. I cannot find this resource</title>\n"
+	 "<body bgcolor='#ffffff' text='#000000' alink='#ff0000' "
+	 "vlink='#00007f' link='#0000ff'>\n"
+	 "<h2 align=center><configimage src=roxen.gif alt=\"File not found\">\n"
 	 "<p><hr noshade>"
 	 "\n<i>Sorry</i></h2>\n"
 	 "<br clear>\n<font size=\"+2\">The resource requested "
 	 "<i>$File</i>\ncannot be found.<p>\n\nIf you feel that this is a "
 	 "configuration error, please contact "
-	 "the administrators or the author of the <if referer>"
-	 "<a href=\"<referer>\">referring</a> </if> <else>referring</else>"
-	 " page."
+	 "the administrators or the author of the\n"
+	 "<if referrer>"
+	 "<a href=\"<referrer>\">referring</a>"
+	 "</if>\n"
+	 "<else>referring</else>\n"
+	 "page."
 	 "<p>\n</font>\n"
 	 "<hr noshade>"
-	 "<version>, at <a href=\"$Me\">$Me</a>.\n", 
+	 "<version>, at <a href=\"$Me\">$Me</a>.\n"
+	 "</body>\n", 
 
 	 "Messages: No such file", TYPE_TEXT_FIELD,
 	 "What to return when there is no resource or file available "
