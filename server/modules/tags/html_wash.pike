@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.10 2000/09/14 11:53:54 wellhard Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.11 2000/09/14 13:01:37 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "HTML washer";
@@ -165,7 +165,8 @@ class TagWashHtml
 		       "paragraphify":RXML.t_text(RXML.PXml),
                        "unparagraphify":RXML.t_text(RXML.PXml),
                        "linkify":RXML.t_text(RXML.PXml),
-                       "unlinkify":RXML.t_text(RXML.PXml) ]);
+                       "unlinkify":RXML.t_text(RXML.PXml),
+		       "close-tags":RXML.t_text(RXML.PXml) ]);
 
     link_regexp =
       Regexp("(((http)|(https)|(ftp))://([^ \t\n\r<]+)(\\.[^ \t\n\r<>\"]+)+)|"
@@ -278,6 +279,10 @@ And some more text to the same paragraph.
 <p>An other paragraph.
 And some more text to the same paragraph.</p>
 </wash-html></pre></ex>
+</attr>
+
+<attr name='close-tags'>
+ Terminate all tags with an ending slash. 
 </attr>",
 
     ]);
