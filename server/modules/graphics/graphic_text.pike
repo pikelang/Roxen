@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.195 1999/12/09 09:58:24 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.196 1999/12/11 20:39:34 nilsson Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -54,7 +54,7 @@ void create()
          "Normally this will only waste bandwidth");
 }
 
-TAGDOCUMENTATION
+TAGDOCUMENTATION;
 #ifdef manual
 constant gtextargs="";
 constant tagdoc=(["gtext":"<desc cont></desc>"+gtextargs,
@@ -73,9 +73,6 @@ constant tagdoc=(["gtext":"<desc cont></desc>"+gtextargs,
 
 // ------------------- The actual graphics routines ----------------------
 
-#define MAX(a,b) ((a)<(b)?(b):(a))
-#define MIN(a,b) ((a)<(b)?(a):(b))
-
 static private mapping (int:array(array(int))) matrixes = ([]);
 array (array(int)) make_matrix(int size)
 {
@@ -86,11 +83,11 @@ array (array(int)) make_matrix(int size)
   res = allocate(size, allocate)(size);
   for(i=0; i<size; i++)
     for(j=0; j<size; j++)
-      res[i][j] = (int)MAX((float)size/2.0-sqrt((size/2-i)*(size/2-i) + (size/2-j)*(size/2-j)),0);
+      res[i][j] = (int)max((float)size/2.0-sqrt((size/2-i)*(size/2-i) + (size/2-j)*(size/2-j)),0);
   return matrixes[size] = res;
 }
 
-object blur(object img, int amnt)
+Image.Image blur(object img, int amnt)
 {
   img->setcolor(0,0,0);
   img = img->autocrop(amnt, 0,0,0,0, 0,0,0);
@@ -100,7 +97,7 @@ object blur(object img, int amnt)
   return img;
 }
 
-object outline(object on, object with,
+Image.Image outline(Image.Image on, Image.Image with,
 		       array (int) color, int radie, int x, int y)
 {
   int steps=10;
@@ -117,14 +114,14 @@ constant grey = ({ 128,128,128 });
 constant black = ({ 0,0,0 });
 constant wwwb = ({ lgrey,lgrey,grey,black });
 
-object bevel(object in, int width, int|void invert)
+Image.Image bevel(Image.Image in, int width, int|void invert)
 {
   int h=in->ysize();
   int w=in->xsize();
 
-  object corner = Image.Image(width+1,width+1);
-  object corner2 = Image.Image(width+1,width+1);
-  object pix = Image.Image(1,1);
+  Image.Image corner = Image.Image(width+1,width+1);
+  Image.Image corner2 = Image.Image(width+1,width+1);
+  Image.Image pix = Image.Image(1,1);
 
   for(int i=-1; i<=width; i++) {
     corner->line(i,width-i,i,-1, @white);
@@ -160,11 +157,11 @@ object bevel(object in, int width, int|void invert)
   return in;
 }
 
-object make_text_image(mapping args, object font, string text, RequestID id)
+Image.Image make_text_image(mapping args, Image.Font font, string text, RequestID id)
 {
   if( args->encoding )
     text = roxen.decode_charset(args->encoding,text);
-  object text_alpha=font->write(@(text/"\n"));
+  Image.Image text_alpha=font->write(@(text/"\n"));
   int xoffset=0, yoffset=0;
 
   if(!text_alpha->xsize() || !text_alpha->ysize())
@@ -224,9 +221,12 @@ object make_text_image(mapping args, object font, string text, RequestID id)
   if(args->move)
   {
     int dx,dy;
-    sscanf(args->move, "%d,%d", dx, dy);
-    xoffset += dx;
-    yoffset += dy;
+    if(sscanf(args->move, "%d,%d", dx, dy)==2)
+      m_delete(args,"move");
+    else {
+      xoffset += dx;
+      yoffset += dy;
+    }
   }
 
   if(args->ghost)
@@ -254,24 +254,24 @@ object make_text_image(mapping args, object font, string text, RequestID id)
   array (int) bgcolor = parse_color(args->bgcolor);
   array (int) fgcolor = parse_color(args->fgcolor);
 
-  object background,foreground;
+  Image.Image background,foreground;
 
   if(args->texture)
   {
-    object t = roxen.load_image(args->texture,id);
+    Image.Image t = roxen.load_image(args->texture,id);
     if( t )
     {
       foreground = t;
       if(args->tile)
       {
-	object b2 = Image.Image(xsize,ysize);
+	Image.Image b2 = Image.Image(xsize,ysize);
 	for(int x=0; x<xsize; x+=foreground->xsize())
 	  for(int y=0; y<ysize; y+=foreground->ysize())
 	    b2->paste(foreground, x, y);
 	foreground = b2;
       } else if(args->mirrortile) {
-	object b2 = Image.Image(xsize,ysize);
-	object b3 = Image.Image(foreground->xsize()*2,foreground->ysize()*2);
+	Image.Image b2 = Image.Image(xsize,ysize);
+	Image.Image b3 = Image.Image(foreground->xsize()*2,foreground->ysize()*2);
 	b3->paste(foreground,0,0);
 	b3->paste(foreground->mirrorx(),foreground->xsize(),0);
 	b3->paste(foreground->mirrory(),0,foreground->ysize());
@@ -300,11 +300,11 @@ object make_text_image(mapping args, object font, string text, RequestID id)
                                @(parse_color(args->background[1..]))))
        && (background_is_color=1))))
   {
-    object alpha;
+    Image.Image alpha;
     if(args->alpha && (alpha = roxen.load_image(args->alpha,id)) && background_is_color)
     {
-      xsize=MAX(xsize,alpha->xsize());
-      ysize=MAX(ysize,alpha->ysize());
+      xsize=max(xsize,alpha->xsize());
+      ysize=max(ysize,alpha->ysize());
       if((float)args->scale)
 	alpha=alpha->scale(1/(float)args->scale);
       background=Image.Image(xsize,ysize, @(parse_color(args->background[1..])));
@@ -315,14 +315,14 @@ object make_text_image(mapping args, object font, string text, RequestID id)
 
     if(args->tile)
     {
-      object b2 = Image.Image(xsize,ysize);
+      Image.Image b2 = Image.Image(xsize,ysize);
       for(int x=0; x<xsize; x+=background->xsize())
 	for(int y=0; y<ysize; y+=background->ysize())
 	  b2->paste(background, x, y);
       background = b2;
     } else if(args->mirrortile) {
-      object b2 = Image.Image(xsize,ysize);
-      object b3 = Image.Image(background->xsize()*2,background->ysize()*2);
+      Image.Image b2 = Image.Image(xsize,ysize);
+      Image.Image b3 = Image.Image(background->xsize()*2,background->ysize()*2);
       b3->paste(background,0,0);
       b3->paste(background->mirrorx(),background->xsize(),0);
       b3->paste(background->mirrory(),0,background->ysize());
@@ -340,8 +340,8 @@ object make_text_image(mapping args, object font, string text, RequestID id)
       }
       background = b2;
     }
-    xsize = MAX(xsize,background->xsize());
-    ysize = MAX(ysize,background->ysize());
+    xsize = max(xsize,background->xsize());
+    ysize = max(ysize,background->ysize());
 
     if(alpha)
       background->paste_alpha_color(alpha->invert(),@bgcolor);
@@ -437,7 +437,7 @@ object make_text_image(mapping args, object font, string text, RequestID id)
       int bl=(int)(a[1]);
       array(int)clr=parse_color(a[-1]);
       int j;
-      object ta = text_alpha->copy();
+      Image.Image ta = text_alpha->copy();
       for (j=0;j<bl;j++)
 	ta=ta->apply_matrix(({
 	  ({6,7,7,7,6}),({7,8,8,8,7}),({7,8,8,8,7}),({7,8,8,8,7}),({6,7,7,7,6})
@@ -451,7 +451,7 @@ object make_text_image(mapping args, object font, string text, RequestID id)
   {
     int sd = ((int)args->shadow+10)*2;
     int sdist = ((int)(args->shadow/",")[-1])+2;
-    object ta = text_alpha->copy();
+    Image.Image ta = text_alpha->copy();
     ta = ta->color(256-sd,256-sd,256-sd);
     array sc = parse_color(args->scolor||"black");
     background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
@@ -464,11 +464,11 @@ object make_text_image(mapping args, object font, string text, RequestID id)
     int xs,ys;
     xs = text_alpha->xsize()+sdist*2+4;
     ys = text_alpha->ysize()+sdist*2+4;
-    object ta = Image.Image(xs+sdist*2,ys+sdist*2);
+    Image.Image ta = Image.Image(xs+sdist*2,ys+sdist*2);
     array sc = parse_color(args->scolor||"black");
 
     ta->paste_alpha_color(text_alpha,255,255,255,sdist,sdist);
-    ta = blur(ta, MIN((sdist/2),1))->color(256,256,256);
+    ta = blur(ta, min((sdist/2),1))->color(256,256,256);
 
     background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
 				  xoffset+sdist,yoffset+sdist);
@@ -553,7 +553,8 @@ constant replace_to   = values( iso88591 ) + ({ nbsp, "<", ">", "&", });
 
 mixed draw_callback(mapping args, string text, RequestID id)
 {
-  object|array data;
+  array data;
+  Image.Font font;
   Image.Image img;
   int elapsed;
 
@@ -606,7 +607,7 @@ mixed draw_callback(mapping args, string text, RequestID id)
   }
 
   if( args->afont )
-    data = resolve_font(args->afont+" "+(args->font_size||32));
+    font = resolve_font(args->afont+" "+(args->font_size||32));
   else
   {
     if(!args->nfont) args->nfont = args->font;
@@ -615,17 +616,17 @@ mixed draw_callback(mapping args, string text, RequestID id)
     if(args->light) bold=-1;
     if(args->black) bold=2;
     if(args->italic) italic=1;
-    data = get_font(args->nfont||"default",
+    font = get_font(args->nfont||"default",
                     (int)args->font_size||32,bold,italic,
                     lower_case(args->talign||"left"),
                     (float)(int)args->xpad, (float)(int)args->ypad);
   }
 
-  if (!data)
+  if (!font)
     error("gtext: No font!\n");
 
   // Fonts and such are now initialized.
-  img = make_text_image(args,data,text,id);
+  img = make_text_image(args, font, text, id);
 
   // Now we have the image in 'img', or nothing.
 
@@ -634,7 +635,7 @@ mixed draw_callback(mapping args, string text, RequestID id)
     if(!args->notrans)
     {
       array (int) bgcolor = parse_color(args->bgcolor);
-      object alpha;
+      Image.Image alpha;
       alpha = img->distancesq( @bgcolor );
       alpha->gamma( 8 );
       return ([ "img":img, "alpha":alpha ]);
@@ -649,16 +650,16 @@ mixed draw_callback(mapping args, string text, RequestID id)
     sscanf(args->fadein,"%d,%d,%d,%d", amount, steps, delay, initialdelay);
     if(initialdelay)
     {
-      object foo=Image.Image(img->xsize(),img->ysize(),@parse_color(args->bgcolor));
+      Image.Image foo=Image.Image(img->xsize(),img->ysize(),@parse_color(args->bgcolor));
       res += foo->gif_add(0,0,initialdelay);
     }
     for(int i = 0; i<(steps-1); i++)
     {
-      object foo=img->clone();
+      Image.Image foo=img->clone();
       foo = foo->apply_matrix(make_matrix(( (int)((steps-i)*amount))));
       res += foo->gif_add(0,0,delay);
     }
-    res+= img->gif_add(0,0,delay);
+    res += img->gif_add(0,0,delay);
     res += img->gif_end();
     data = ({ res, ({ img->xsize(), img->ysize() }) });
   }
@@ -691,7 +692,7 @@ mixed draw_callback(mapping args, string text, RequestID id)
   ]);
 }
 
-mapping find_internal(string f, object rid)
+mapping find_internal(string f, RequestID id)
 {
   if( strlen(f)>4 && query("ext") && f[-4]=='.') // Remove .ext
     f = f[..strlen(f)-5];
@@ -701,10 +702,10 @@ mapping find_internal(string f, object rid)
     if( sizeof(id_text)==2 )
     {   // It's a gtext-id
       string second_key = roxen->argcache->store( (["":id_text[1]]) );
-      return image_cache->http_file_answer( id_text[0][1..] +"$"+ second_key, rid );
+      return image_cache->http_file_answer( id_text[0][1..] +"$"+ second_key, id );
     }
   }
-  return image_cache->http_file_answer( f, rid );
+  return image_cache->http_file_answer( f, id );
 }
 
 
@@ -824,7 +825,7 @@ string fix_text(string c, mapping m, RequestID id) {
 
 // ----------------- gtext tags and containers -------------------
 
-string tag_gtext_url(string t, mapping arg, string c, RequestID id) {
+string container_gtext_url(string t, mapping arg, string c, RequestID id) {
   c=fix_text(c,arg,id);
   mapping p=mk_gtext_arg(arg,id);
   if(arg->href && !p->fgcolor) p->fgcolor=id->misc->defines->link||"#0000ff";
@@ -832,8 +833,7 @@ string tag_gtext_url(string t, mapping arg, string c, RequestID id) {
   if(query("ext")) ext="."+(p->format || "gif");
   if(!arg->short)
     return query_internal_location()+image_cache->store( ({p,c}), id )+ext;
-  else
-    return "+"+image_cache->store( ({p,c}), id )+ext;
+  return "+"+image_cache->store( ({p,c}), id )+ext;
 }
 
 string tag_gtext_id(string t, mapping arg, RequestID id) {
@@ -841,11 +841,10 @@ string tag_gtext_id(string t, mapping arg, RequestID id) {
   if(arg->href && !p->fgcolor) p->fgcolor=id->misc->defines->link||"#0000ff";
   if(!arg->short)
     return query_internal_location()+"$"+image_cache->store(p, id)+"/";
-  else
-    return "+"+image_cache->store(p, id )+"/";
+  return "+"+image_cache->store(p, id )+"/foo";
 }
 
-string tag_graphicstext(string t, mapping arg, string c, RequestID id)
+string container_gtext(string t, mapping arg, string c, RequestID id)
 {
   mapping defines=id->misc->defines;
   if((c-" ")=="") 
@@ -927,8 +926,8 @@ string tag_graphicstext(string t, mapping arg, string c, RequestID id)
     string num2 = image_cache->store( ({ p, c }),id );
     size = image_cache->metadata( num2, id );
     if(size) {
-      arg->width=MAX(arg->xsize,size->xsize);
-      arg->height=MAX(arg->ysize,size->ysize);
+      arg->width=max(arg->xsize,size->xsize);
+      arg->height=max(arg->ysize,size->ysize);
     }
 
     if(!id->supports->images) return sprintf(lp,arg->alt);
@@ -968,17 +967,17 @@ string tag_graphicstext(string t, mapping arg, string c, RequestID id)
   return sprintf(lp,make_tag("img",arg));
 }
 
-array(string) tag_gh(string t, mapping m, string c, RequestID id) {
+array(string) container_gh(string t, mapping m, string c, RequestID id) {
   int i;
   if(sscanf(t, "%s%d", t, i)==2 && i>1)
     m->scale = (string)(1.0 / ((float)i*0.6));
   if(!m->valign) m->valign="top";
- return ({ "<p>"+tag_graphicstext("",m,c,id)+"<br>" });
+ return ({ "<p>"+container_gtext("",m,c,id)+"<br>" });
 }
 
-array(string) tag_anfang(string t, mapping m, string c, RequestID id) {
+array(string) container_anfang(string t, mapping m, string c, RequestID id) {
   if(!m->align) m->align="left";
-  return ({ "<br clear=\"left\">"+tag_graphicstext("",m,c[0..0],id)+c[1..] });
+  return ({ "<br clear=\"left\">"+container_gtext("",m,c[0..0],id)+c[1..] });
 }
 
 
@@ -991,7 +990,7 @@ inline string ns_color(array (int) col)
   return sprintf("#%02x%02x%02x", col[0],col[1],col[2]);
 }
 
-int|array (string) tag_body(string t, mapping args, RequestID id, object file,
+int|array (string) tag_body(string t, mapping args, RequestID id, Stdio.File file,
 			       mapping defines)
 {
   int changed=0;
@@ -1019,7 +1018,7 @@ int|array (string) tag_body(string t, mapping args, RequestID id, object file,
 }
 
 string|array(string) tag_fix_color(string tagname, mapping args, RequestID id,
-				   object file, mapping defines)
+				   Stdio.File file, mapping defines)
 {
   int changed;
 
@@ -1040,7 +1039,7 @@ string|array(string) tag_fix_color(string tagname, mapping args, RequestID id,
   return 0;
 }
 
-string|void pop_color(string tagname,mapping args,RequestID id,object file,
+string|void tag_pop_color(string tagname, mapping args, RequestID id, Stdio.File file,
 		 mapping defines)
 {
   array c = id->misc->colors;
@@ -1077,7 +1076,7 @@ mapping query_tag_callers()
 	 break;
        default:
 	 tags[t] = tag_fix_color;
-	 tags["/"+t]=pop_color;
+	 tags["/"+t]=tag_pop_color;
       }
     }
   return tags;
@@ -1085,10 +1084,10 @@ mapping query_tag_callers()
 
 mapping query_container_callers()
 {
-  return ([ "anfang":tag_anfang,
-            "gtext-url":tag_gtext_url, "gh":tag_gh,
-	    "gh1":tag_gh, "gh2":tag_gh,
-	    "gh3":tag_gh, "gh4":tag_gh,
-	    "gh5":tag_gh, "gh6":tag_gh,
-	    "gtext":tag_graphicstext ]);
+  return ([ "anfang":container_anfang,
+            "gtext-url":container_gtext_url, "gh":container_gh,
+	    "gh1":container_gh, "gh2":container_gh,
+	    "gh3":container_gh, "gh4":container_gh,
+	    "gh5":container_gh, "gh6":container_gh,
+	    "gtext":container_gtext ]);
 }
