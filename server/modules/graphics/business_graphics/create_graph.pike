@@ -261,11 +261,12 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 
 };
 
+# ifndef ROXEN
 object get_font(string j, int p, int t, int h, string fdg, int s, int hd)
 {
   return Image.font()->load("avant_garde");
 };
-
+#endif
 
 //rita bilderna för texten
 //ta ut xmaxynames, ymaxynames xmaxxnames ymaxxnames
@@ -1142,6 +1143,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 }
 
 
+#ifndef ROXEN
 int main(int argc, string *argv)
 {
   write("\nRitar axlarna. Filen sparad som test.ppm\n");
@@ -1273,3 +1275,4 @@ int main(int argc, string *argv)
   o->close();
 
 };
+#endif

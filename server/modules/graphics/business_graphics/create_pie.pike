@@ -426,6 +426,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 
 }
 
+#ifndef ROXEN
 int main(int argc, string *argv)
 {
   write("\nRitar axlarna. Filen sparad som test.ppm\n");
@@ -562,3 +563,4 @@ int main(int argc, string *argv)
   o->close();
 
 };
+#endif
