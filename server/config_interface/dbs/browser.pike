@@ -67,7 +67,8 @@ mixed backup_db( string db, RequestID id )
     "<table width='100%'><tr><td valign=top>"
     "<input type=hidden name=action value='&form.action;' />"
     "<submit-gbutton2 name='ok'>"+_(201,"Ok")+"</submit-gbutton2></td>\n"
-    "<td valign=top align=right><a href='"+Roxen.html_encode_string(id->not_query)+
+    "<td valign=top align=right><a href='"+
+    Roxen.html_encode_string(id->not_query)+
       "?db="+
        Roxen.html_encode_string(id->variables->db)+"'><gbutton> "+
     _(202,"Cancel")+" </gbutton></a></td>\n</table>\n";
@@ -147,8 +148,11 @@ mixed move_db( string db, RequestID id )
       {
 	foreach( DBManager.db_tables( db ), string table )
 	{
+	  // Note: This _only_ works with MySQL.
 	  mixed err;
+
 	  werror( "Copying the table "+table+" ... ");
+
 	  if( err = catch {
 	    string def;
 	    if( catch( def = 
@@ -168,7 +172,7 @@ mixed move_db( string db, RequestID id )
 		has_multi_pri += (p == "PRI");
 	      foreach( res, mapping m )
 	      {
-		// FIXME: A real keyword list here.
+		// FIXME: A real keyword list with alternatives here.
 		if( m->Field == "when" )
 		{
 		  report_warning( _(412,"The source database used the string "
@@ -178,14 +182,16 @@ mixed move_db( string db, RequestID id )
 				  m->Field, "whn" );
 		  m->Field = "whn";
 		}
-		defs += ({
-		  (m->Field+" "+m->Type+" "
-		   +(m->Null=="YES"?"":"NOT NULL ")+
-		   ("DEFAULT "+(m->Default?"'"+m->Default+"'":"NULL")+" ")+
-		   ((has_multi_pri<1 && (m->Key == "PRI")) ?
-		    ("PRIMARY KEY") : "" )
-		   + " " +m->Extra )
-		});
+
+		defs +=
+		  ({
+		    (m->Field+" "+m->Type+" "
+		     +(m->Null=="YES"?"":"NOT NULL ")+
+		     ("DEFAULT "+(m->Default?"'"+m->Default+"'":"NULL")+" ")+
+		     ((has_multi_pri<1 && (m->Key == "PRI")) ?
+		      ("PRIMARY KEY") : "" )
+		     + " " +m->Extra )
+		  });
 	      }
 	      def += defs * "," + ")";
 	    }
@@ -215,11 +221,12 @@ mixed move_db( string db, RequestID id )
       switch( id->variables->what )
       {
 	case "copy": // move, no delete
-	case "dup":  // create new
+	case "dup":  // create new. Same as copy right now.
 	  if( db != id->variables->name )
 	    DBManager.copy_db_md( db, id->variables->name );
 	  // Done.
 	  break;
+
 	case "move": // move & delete
 	  // Delete the old data.
 	  if( db != id->variables->name )
@@ -235,9 +242,11 @@ mixed move_db( string db, RequestID id )
   }
   if(!id->variables->name)
     id->variables->name = db;
+
   if(!id->variables->type)
     id->variables->type =
       DBManager.is_internal( db ) ? "internal" : "external";
+
   if( !id->variables->url )
     id->variables->url  = DBManager.db_url( db ) || "";
 
@@ -322,9 +331,12 @@ mixed delete_db( string db, RequestID id )
 mixed clear_db( string db, RequestID id )
 {
   VERIFY(_(425,"Are you sure you want to delete all tables in %s?"));
+
   Sql.Sql sq = DBManager.get( db );
-  foreach( sq->query( "show tables" ), mapping r )
-    sq->query( "drop table "+values(r)[0] );
+
+  foreach( DBManager.db_tables( db ), string r )
+    sq->query( "drop table "+r );
+
   return 0;
 }
 
@@ -388,9 +400,8 @@ string store_image( string x )
 mapping|string parse( RequestID id )
 {
   if( id->variables->image )
-  {
     return m_delete( .State->images, id->variables->image );
-  }
+
   if( !id->variables->db )
     return Roxen.http_redirect( "/dbs/", id );
 
@@ -441,17 +452,19 @@ mapping|string parse( RequestID id )
     mapping h = hs->query();
     catch {
       if( id->variables->table )
-	foreach( db->query( "describe "+id->variables->table ), mapping r )
-	  sel_t_columns += ({ r->Field });
-
+	sel_t_columns = DBManager.db_table_fields( id->variables->db,
+						   id->variables->table )
+	  ->name;
       if( h[id->variables->db+"."+id->variables->table] )
 	id->variables->query = h[id->variables->db+"."+id->variables->table];
       else if( id->variables->table )
 	id->variables->query = "SELECT "+(sel_t_columns*", ")+" FROM "+id->variables->table;
-      else
+      else if( DBManager.is_mysql( id->variables->db ) )
 	id->variables->query = "SHOW TABLES";
+      else
+	id->variables->query = "";
     };
-  }  
+  }
 
   if( id->variables["run_q.x"] )
   {
@@ -609,20 +622,21 @@ mapping|string parse( RequestID id )
   int sort_ok;
   string deep_table_info( string table )
   {
+    array data = DBManager.db_table_fields( id->variables->db, table );
+    if( !data )
+      return sprintf((string)_(0,"Cannot list fields in %s databases"), 
+		     DBManager.db_driver(id->variables->db) );
     string res = "<tr><td></td><td colspan='3'><table>";
-    array data = db->query( "describe "+table );
     foreach( data, mapping r )
     {
-//       if( search( lower_case(r->Type), "blob" ) == -1 )
       res += "<tr>\n";
-      res += "<td><font size=-1><b>"+r->Field+"</b></font></td>\n";
-      res += "<td><font size=-1>"+r->Type+"</font></td>\n";
-      res += "<td><font size=-1>"+(strlen(r->Key)?_(373,"Key"):"")+"</font></td>\n";
-      res += "<td><font size=-1>"+r->Extra+"</font></td>\n";
+      res += "<td><font size=-1><b>"+r->name+"</b></font></td>\n";
+      res += "<td><font size=-1>"+r->type+"</font></td>\n";
       res += "</tr>\n";
     }
     return res+ "</table></td></tr>";
   };
+
   void add_table_info( string table, mapping tbi )
   {
     string res = "";
@@ -634,51 +648,44 @@ mapping|string parse( RequestID id )
 
     
     if( tbi )
-    {
       res += "<td align=right> <font size=-1>"+
-	tbi->Rows+" "+_(374,"rows")+"</font></td><td align=right><font size=-1>"+
-	( (int)tbi->Data_length+(int)tbi->Index_length)/1024+_(375,"KiB")+
+	tbi->rows+" "+_(374,"rows")+"</font></td><td align=right>"
+	"<font size=-1>"+
+	( (int)tbi->data_length+(int)tbi->index_length)/1024+_(375,"KiB")+
 	"</font></td>";
-    }
+
     if( id->variables->table == table )
       res += "</tr>\n<tr><td colspan='4'><font size='-1'>"
 	+ table_module_info( table )+"</font></td></tr>\n";
 
     if( tbi )
       sort_ok = 1;
-    table_data += ({({ table,
-		     (tbi ?(int)tbi->Data_length+ (int)tbi->Index_length:0),
-		     (tbi ?(int)tbi->Rows:0),
-		     res+
-		       ( id->variables->table == table ?
-			 deep_table_info( table ) : "")
-		  })});
+
+    table_data += ({({
+      table,
+      (tbi ?(int)tbi->data_length+ (int)tbi->index_length:0),
+      (tbi ?(int)tbi->rows:0),
+      res+
+      ( id->variables->table == table ?
+	deep_table_info( table ) : "")
+    })});
   };
 
-  if( catch
-  {
-    array(mapping) tables = db->query( "show table status" );
-    
-    foreach( tables, mapping tb )
-      add_table_info( tb->Name, tb );
-  } )
-  {
-    if( catch {
-      foreach( DBManager.db_tables( id->variables->db ), string tb )
-	add_table_info( tb, 0 );
-    } )
-      ;
-  }
+  foreach( DBManager.db_tables( id->variables->db ), string tb )
+    add_table_info(tb,
+		   DBManager.db_table_information(id->variables->db, tb));
 
   switch( id->variables->sort )
   {
     default:
       sort( column( table_data, 0 ), table_data );
       break;
+
     case "rows":
       sort( column( table_data, 2 ), table_data );
       table_data = reverse( table_data );
       break;
+
     case "size":
       sort( column( table_data, 1 ), table_data );
       table_data = reverse( table_data );
@@ -689,18 +696,23 @@ mapping|string parse( RequestID id )
   if( sort_ok )
   {
     res +=
-      "<tr><td align=right>"+SEL("name",1)+"</td>"
+      "<tr><td align=right>"+
+
+      SEL("name",1)+"</td>"
       "<td><b><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=name'>"+
       _(376,"Name")+
       "</a></b></td>\n"
       "<td align=right><b><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=rows'>"+
+
       SEL("rows",0)+String.capitalize(_(374,"rows"))+
       "</a></b></td>\n"
       "<td align=right><b><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=size'>"+
+
       SEL("size",0)+_(377,"Size")+
       "</a></b></td>\n"
       "</tr>";
   }
+
   res += column( table_data, 3 )*"\n";
 
   res += "</table></td></tr></table>";
@@ -718,8 +730,10 @@ mapping|string parse( RequestID id )
 
   res += qres;
 
-#define ADD_ACTION(X) if(!actions[X][2] || DBManager.is_internal(id->variables->db) ) \
-   res += sprintf("<a href='%s?db=%s&action=%s'><gbutton>%s</gbutton></a>\n",	\
+
+#define ADD_ACTION(X) if(!actions[X][2] || \
+			 DBManager.is_internal(id->variables->db) ) \
+   res += sprintf("<a href='%s?db=%s&action=%s'><gbutton>%s</gbutton></a>\n",\
 		  id->not_query, id->variables->db, X, actions[X][0] )
   
   switch( id->variables->db )
@@ -733,6 +747,6 @@ mapping|string parse( RequestID id )
       foreach( indices( actions ), string x )
 	ADD_ACTION( x );
       break;
-  }  
+  }
   return res+"</st-page></subtablist></cv-split></content></tmpl>";
 }

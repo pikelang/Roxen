@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.43 2001/09/21 09:53:39 per Exp $
+// $Id: DBManager.pmod,v 1.44 2001/10/01 15:05:27 per Exp $
 
 //! Manages database aliases and permissions
 
@@ -282,24 +282,116 @@ mapping(string:mapping(string:int)) get_permission_map( )
   return res;
 }
 
+string db_driver( string db )
+//! Returns the name of the protocol used to connect to the database 'db'.
+//! This is the part before :// in the database URL.  
+{
+  if( !(db = db_url( db )) ) return "mysql";
+  sscanf( db, "%[^:]:", db );
+  return db;
+}
+
+int is_mysql( string db )
+//! Returns true if the specified database is a MySQL database.
+{
+  return !(db = db_url( db )) || has_prefix( db, "mysql://" );
+}
+
+array(mapping(string:mixed)) db_table_fields( string name, string table )
+//! Returns a mapping of fields in the database, if it's supported by
+//! the protocol handler. Otherwise returns 0.
+{
+  Sql.Sql db = cached_get( name );
+  if( db->list_fields )
+    return db->list_fields( table );
+  return 0;
+}
+
+array(string) db_tables( string name )
+//! Attempt to list all tables in the specified DB, and then return
+//! the list.
+{
+  object db = get(name);
+  array rows = ({}), row;
+  mixed res;
+  if( db->list_tables )
+  {
+    if( arrayp( res = db->list_tables() ) )
+      return res;
+    while( row = res->fetch_row()  )
+      rows += row[0];
+  }
+  return rows;
+}
+
+mapping db_table_information( string db, string table )
+//! Return a mapping with at least the indices rows, data_length
+//! and index_length, if possible. Otherwise returns 0.
+{
+  switch( db_driver( db ) )
+  {
+    case "mysql":
+    {
+      foreach( get(db)->query( "SHOW TABLE STATUS" ), mapping r )
+      {
+	if( r->Name == table )
+	  return ([ "rows":(int)r->Rows,
+		    "data_length":(int)r->Data_length,
+		    "index_length":(int)r->Index_length ]);
+      }
+    }
+    default:
+      catch{
+	return ([
+	  "rows":(int)get(db)->query( "SELECT COUNT(*) AS cnt FROM "+table )[0]->cnt,
+	]);
+      };
+  }
+  return 0;
+}
+
+
 mapping db_stats( string name )
 //! Return statistics for the specified database (such as the number
 //! of tables and their total size). If the database is not an
 //! internal database, or the database does not exist, 0 is returned
 {
-  Sql.Sql db;
-  array d;
-  db = cached_get( name );
-  if( catch( d = db->query( "SHOW TABLE STATUS" ) ) )
-    return 0;
   mapping res = ([]);
-  foreach( d, mapping r )
+  Sql.Sql db = cached_get( name );
+  array d;
+
+  switch( db_driver( name ) )
   {
-    res->size += (int)r->Data_length+(int)r->Index_length;
-    res->tables++;
-    res->rows += (int)r->Rows;
+    case "mysql":
+      if( !catch( d = db->query( "SHOW TABLE STATUS" ) ) )
+      {
+	foreach( d, mapping r )
+	{
+	  res->size += (int)r->Data_length+(int)r->Index_length;
+	  res->tables++;
+	  res->rows += (int)r->Rows;
+	}
+	return res;
+      }
+
+      // fallthrough to generic interface.
+    default:
+      catch
+      {
+	foreach( db_tables( name ), string n )
+	{
+	  mapping i  = db_table_information( name, n );
+	  res->tables++;
+	  if( i )
+	  {
+	    res->rows += i->rows;
+	    res->size += i->data_length+i->index_length;
+	  }
+	}
+	return res;
+      };
   }
-  return res;
+  return 0;
 }
 
 
@@ -338,6 +430,7 @@ string db_url( string name,
 }
 
 static mapping connection_user_cache  = ([]);
+
 string get_db_user( string name, Configuration c, int ro )
 {
   string key = name+"|"+(c&&c->name)+"|"+ro;
@@ -448,17 +541,6 @@ array(mapping) restore( string dbname, string directory, string|void todb,
     res += db->query( "RESTORE TABLE "+table+" FROM %s", directory );
   }
   return res;
-}
-
-array(string) db_tables( string db )
-//! Attempt to list all tables (using SHOW TABLES) in the specified
-//! DB, and then return the list.
-{
-  object _tables = cached_get(db)->big_query( "show tables" );
-  array tables = ({});
-  while( array q = _tables->fetch_row() )
-    tables += q;
-  return tables;
 }
 
 void delete_backup( string dbname, string directory )
