@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.1 1998/09/16 02:59:22 nisse Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.2 1998/09/18 15:35:12 nisse Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -15,9 +15,17 @@ import "/home/nisse/hack/AutoSite/pike-modules";
 #define IMAP_DEBUG
 
 /* Names of imap related attributes */
+
+/* Mailbox attributes */
 #define UID_VALIDITY "IMAP:uid_validity"
-#define UID "IMAP:uid"
 #define NEXT_UID "IMAP:next_uid"
+#define DEFINED_FLAGS "IMAP:defined_flags"
+
+/* Mail attributes */
+#define UID "IMAP:uid"
+
+/* User attributes */
+#define IMAP_SUBSCRIBED "IMAP:subscribed"
 
 /* In IMAP, it is crucial that the client and server are in synch at
  * all times. The servers view of a mailbox may not change unless it
@@ -26,7 +34,7 @@ import "/home/nisse/hack/AutoSite/pike-modules";
  * early, and the cache is only updated in response to a command from
  * the client. */
 
-class mail
+class imap_mail
 {
   object mail;     // Clientlayer object
   int serial;      // To poll for changes */
@@ -81,7 +89,7 @@ class mail
     }
 }
   
-class mailbox
+class imap_mailbox
 {
   object mailbox;  // Clientlayer object 
   int serial;      // To poll for changes */
@@ -91,6 +99,9 @@ class mailbox
   
   array contents;
 
+  /* Flags (except system flags) defined for this mailbox */
+  multiset flags;
+  
   int alloc_uid()
     {
       int res = next_uid++;
@@ -115,6 +126,7 @@ class mailbox
 	next_uid = mailbox->get(NEXT_UID);
 	contents = get_contents(0);
       }
+      flags = m->get("DEFINED_FLAGS") || (< >);
     }
 
   array get_contents(int make_new_uids)
@@ -144,7 +156,7 @@ class mailbox
 	foreach(new, object mail)
 	  mail->set(UID, alloc_uid());
       }
-      return Array.map(mail, a, 0) + Array.map(mail, new, 1);
+      return Array.map(a, mail, 0) + Array.map(imap_new, mail, 1);
     }
   
   array update()
@@ -181,18 +193,61 @@ class mailbox
 
 	contents = new_contents;
 
-	res += ({ ({ imap_number(sizeof(contents)), "EXISTS" }) });
+	res += ({ get_exists() });
 
 	/* Updated flags */
 	res += contents->update() - ({ 0 });
 
-	res += ({ ({ imap_number(sizeof(contents->is_recent - ({ 0 }) )),
-		     "RECENT" }) });
+	res += ({ get_recent() });
 
 	return res;
       }
       else
 	return 0;
+    }
+
+  array get_uidvalidity()
+    {
+      return ({ "OK", imap_prefix( ({ "UIDVALIDITY",
+				      imap_number(uidvalidity) }) ) });
+    }
+
+  array get_exists()
+    {
+      return ({ imap_number(sizeof(contents)), "EXISTS" });
+    }
+
+  array get_recent()
+    {
+      return ({ imap_number(sizeof(contents->is_recent - ({ 0 }) )),
+		"RECENT" });
+    }
+
+  array get_unseen()
+    {
+      int unseen = sizeof(contents->flags["\Seen"] - ({ 1 }) );
+      return ({ "OK", imap_prefix( ({ "UNSEEN", imap_number(unseen) }) ) });
+    }
+
+  array get_flags()
+    {
+      return ({ "FLAGS", imap_list(
+	({ "\\Answered", "\\Deleted", "\\Draft",
+	   "\\Flagged", "\\Recent", "\\Seen",
+	   @indices(flags)
+	}) ) });
+    }
+
+  array get_permanent_flags()
+    {
+      /* All flags except \Recent are permanent */
+      return ({ "OK", imap_prefix(
+	({ "PERMANENTFLAGS",
+	   imap_list(
+	     ({ "\\Answered", "\\Deleted", "\\Draft",
+		"\\Flagged", "\\Seen",
+		@indices(flags)
+	     })) }) ) });
     }
 }
 
@@ -232,13 +287,8 @@ class backend
       return session->mailbox && session->mailbox->update();
     }
 
-  array list(object|mapping session, string reference, string glob)
+  array imap_glob(string glob, string|array(string) name)
     {
-      if ( (reference != "") )
-	return ({ });
-
-      array res = ({ });
-      
       /* IMAP's glob patterns uses % and * as wild cards (equivalent
        * as long as there are no hierachical names. Pike's glob
        * patterns uses * and ?, which can not be escaped. To be able
@@ -246,19 +296,61 @@ class backend
 
       glob = replace(glob, ({ "*", "%", }), ({ "%*s", "%*s" }) );
 
-      foreach(session->user->mailboxes->query_name(), string name)
-      {
-	/* FIXME: Could add support for \Marked and \Unmarked. */
+      if (stringp(name))
+	return sscanf(name, glob);
+
+      array res = ({ });
+
+      foreach(names, string n)
 	if (sscanf(name, glob))
-	  res += ({ ({ imap_list( ({}) ), "nil", name }) });
-      }
+	  res += ({ n });
+
       return res;
+    }
+  
+  array list(object|mapping session, string reference, string glob)
+    {
+      if ( (reference != "") )
+	return ({ });
+
+      return Array.map(imap_glob(glob, session->user->mailboxes->query_name()),
+		       lambda (string name)
+			 { return ({ imap_list( ({}) ), "nil", name }); } );
     }
 
   array lsub(object|mapping session, string reference, string glob)
     {
+      if ( (reference != "") )
+	return ({ });
+
+      return Array.map(imap_glob(glob,
+				 indices(session->user->get(IMAP_SUBSCRIBED)
+					 || (< >))),
+		       lambda (string name)
+			 { return ({ imap_list( ({}) ), "nil", name }); } );
+    }
+
+  array select(object|mapping session, string mailbox)
+    {
+      object m = session->user->get_mailbox(mailbox);
+
+      if (!m)
+      {
+	session->mailbox = 0;
+	return 0;
+      }
+      m = imap_mail(m);
+      session->mailbox = m;
+
+      return ({ m->get_uidvalidity(),
+		m->get_exists(),
+		m->get_recent(),
+		m->get_unseen(),
+		m->get_flags(),
+		m->get_permanent_flags() });
       
     }
+  
 }
 
 array register_module()
