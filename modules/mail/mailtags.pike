@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit Regexp : regexp;
 
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.14 1998/09/20 00:49:38 per Exp $";
+"$Id: mailtags.pike,v 1.15 1998/09/20 15:14:08 per Exp $";
 
 constant thread_safe = 1;
 
@@ -577,7 +577,100 @@ static string mktimestamp(int t)
 		 off/60, off%60, tz));
 }
 
+static int filter_mail_list( Mail m, object id )
+{
+  if(id->variables->mail_match)
+    if(search(lower_case(values(m->headers())*"\n"),
+	      lower_case(id->variables->mail_match))==-1)
+      return 0;
+
+  if(!m->flags()->deleted &&
+     (id->variables->listall || 
+      !m->flags()->read))
+    return 1;
+
+  return 0;
+}
+
+
+
+static string trim_from( string from )
+{
+  string q;
+  from = replace(from , "\\\"", "''");
+  if(sscanf(from, "%*s\"%s\"%*s", q)==3) return q;
+  if(sscanf(from, "\"%s\"<%*s@%*s>", q)) return q;
+  if(sscanf(from, "%s<%*s@%*s>", q)) return q;
+  if(sscanf(from, "(\"%s\")%*s@%*s", q)) return q;
+  if(sscanf(from, "(%s)%*s@%*s", q)) return q;
+  if(sscanf(from, "%*s@%*s(\"%s\")", q)==3) return q;
+  if(sscanf(from, "%*s@%*s(%s)", q)==3) return q;
+  return from;
+}
+
+
+
+static string trim_subject( string from )
+{
+  string a,b;
+  string ofrom = from;
+  if(from == "0") from = "No subject";
+  if(sscanf(from, "%s[%*s]%s", a, b)==3)
+  {
+    from = a+b;
+    if(!strlen(from-" "))
+      from = ofrom;
+  }
+  return from[..40];
+}
+
+
 /* Tag functions --------------------------------------------------- */
+
+//
+// <send-mail-by-id mail_id=...>
+//
+string tag_send_mail_by_id( string t, mapping args, object id )
+{
+  MIME.Message m;
+  args->mail = (args->mail/"\0")[0];
+
+  m = MIME.Message(tag_mail_body("",args,id));
+
+  string from = tag_mail_userinfo("",(["email":1]),id);
+  multiset to = (mkmultiset( ((m->headers->cc||"") / ",")-({""})) |
+		 mkmultiset( ((m->headers->to||"") / ",")-({""})) );
+  m_delete(m->headers, "bcc");
+
+  get_smtprelay()->send_message( from, to, (string)m );
+}
+
+// 
+// <mail-set-flag name=... [clear]>
+//
+string tag_mail_set_flag( string t, mapping args, object id )
+{
+  Mail mail = clientlayer->get_cache_obj( clientlayer->Mail, 
+					  id->variables->mail_id );
+  if(!mail || mail->user != UID )
+    return "";
+  if(args->clear)
+    mail->clear_flag( args->name );
+  else
+    mail->set_flag( args->name );
+}
+
+//
+// <mail-mailboxid mailbox=... [create]>
+//
+string tag_mail_mailboxid( string t, mapping args, object id )
+{
+  if(!args->mailbox) return (string)0;
+  if(args->create) 
+    return (string)UID->get_or_create_mailbox( args->mailbox )->id;
+  return (string)UID->get_mailbox( args->mailbox )->id;
+}
+
 
 // <new-outgoing-mail>
 // Returns: A mailid usable for a new outgoing mail.
@@ -751,6 +844,7 @@ string tag__compose_mail( string t, mapping args, object id )
   m->headers["Content-Transfer-Encoding"] = "8bit";
   m->headers->date = mktimestamp( time() );
 
+  m->headers["mime-version"] = "1.0";
   m->headers["message-id"] = ("<\""+tag_mail_userinfo("",(["email":1]),id)+
 			      time()+gethrtime()+"\"@"+gethostname()+">");
 
@@ -905,14 +999,22 @@ string tag_mail_userinfo( string tag, mapping args, object id )
   return t;
 }
 
+
+//
+// <mail-if-address-book>
+//   ..rxml code..
+// </mail-if-address-book>
+//
+//  Returns true if the user has a address book.
+//
 string container_mail_if_address_book( string tag, mapping args,
 				       string contents, object id )
 {
 #ifdef UIDPARANOIA
   if(!UID) return "";
 #endif
-  if( !UID->get( "addressbook" ) ) return "";
-  return contents;
+  if( !UID->get( "addressbook" ) ) return "<false>";
+  return contents+"<true>";
 }
 
 //
@@ -955,11 +1057,11 @@ string container_mail_address_book( string tag, mapping args,
   return do_output_tag( args, vars, contents, id );
 }
 
-
+//
 // <delete-mail mail=id>
 // Please note that this function only removes a reference from the
 // mail, if it is referenced by e.g. other clients, or is present in
-// more than one mailbox, the mail will not be deleted.
+// more than one mailbox, the message on disk will not be deleted.
 //
 string tag_delete_mail(string tag, mapping args, object id)
 {
@@ -972,9 +1074,11 @@ string tag_delete_mail(string tag, mapping args, object id)
   return "";
 }
 
+//
 // <mail-body mail=id>
 // Returns the _raw_ body.
-// Not currently used except for internaly from mail_body_part.
+// Not currently used except for internaly from mail_body_part and a
+// few other tag functions. Might be removed before this is finished.
 //
 string tag_mail_body(string tag, mapping args, object id)
 {
@@ -987,6 +1091,7 @@ string tag_mail_body(string tag, mapping args, object id)
 }
 
 
+//
 // <mail-verify-login>
 //  .. page ...
 // </mail-verify-login>
@@ -995,10 +1100,11 @@ string container_mail_verify_login(string tag, mapping args, string
 				   contents, object id)
 {
   if(string res = login(id))
-    return res;
+    return res+"<false>";
   return contents;
 }
 
+//
 // <list-mailboxes>
 //  #name# #id# #unread# #read# #mail#
 // </list-mailboxes>
@@ -1022,6 +1128,20 @@ string container_list_mailboxes(string tag, mapping args, string contents,
     ]) });
 
   sort(vars->name, vars);
+
+  array tmp = ({});
+  foreach(vars, mapping v)
+    switch(v->name)
+    {
+     case "drafts":
+     case "sent":
+     case "deleted":
+       tmp = tmp + ({ v });
+       break;
+     default:
+       tmp = ({ v }) + tmp;
+    }
+  vars = tmp;
 
   if(!args->quick)
   {
@@ -1116,9 +1236,12 @@ string tag_mail_next( string tag, mapping args, object id )
   return "NOPE";
 }
 
+//
 //  <mail-make-hidden>
-//    returns 4711 <input type=hidden value=""> for all variables in
-//    id->variables.
+//    returns a <input type=hidden value=""> for all variables in
+//    id->variables except a few chosen ones.
+//    Somewhat specific to the current html pages...
+//    This might not be all that desireable, really.
 //
 string tag_mail_make_hidden( string tag, mapping args, object id )
 {
@@ -1141,6 +1264,16 @@ string tag_mail_make_hidden( string tag, mapping args, object id )
   return res;
 }
 
+//
+//  <process-move-actions>
+//
+//  Handles all 'move' actions, i.e, actions with a destination
+//  included in their name.  The move actions are:
+//
+//  move_mail_to_MBOX.x         move the mail (copy+delete)
+//  copy_mail_to_MBOX.x         copy the mail
+//  bounce_mail_to_EMAIL.x      forward the mail to an external mbox
+//
 string tag_process_move_actions( string tag, mapping args, object id )
 {
 #ifdef UIDPARANOIA
@@ -1209,7 +1342,15 @@ string tag_process_move_actions( string tag, mapping args, object id )
 
 }
 
-  string tag_process_user_buttons( string tag, mapping args, object id )
+
+// 
+//  <process-user-buttons>
+//    Check all user_button_ID.x variables, and if one is set, set the 
+//    variables matching the actions to be performed for that user
+//    button.  This is nowdays the only buttons present on the page,
+//    there are no hardcoded buttons.
+//
+string tag_process_user_buttons( string tag, mapping args, object id )
 {
 #ifdef UIDPARANOIA
   if(!UID) return "";
@@ -1232,7 +1373,16 @@ string tag_process_move_actions( string tag, mapping args, object id )
   return "";
 }
 
+//
 // <user-buttons type=type>
+//
+//  display all user buttons. Also, if no buttons are defined, default 
+//  to <previous> <next>  <reply> <followup>  <delete>
+//  
+//  This tag assumes there is a <gbutton name=... value=...> tag.
+//  value is the title, and name is the name of the variable to be
+//  set, without ".x". (e.g, 'previous' instead of 'previous.x')
+//
 string tag_user_buttons( string tag, mapping args, object id )
 {
 #ifdef UIDPARANOIA
@@ -1338,50 +1488,18 @@ string tag_user_buttons( string tag, mapping args, object id )
   return res;
 }
 
-static int filter_mail_list( Mail m, object id )
-{
-  if(id->variables->mail_match)
-    if(search(lower_case(values(m->headers())*"\n"),
-	      lower_case(id->variables->mail_match))==-1)
-      return 0;
-
-  if(!m->flags()->deleted &&
-     (id->variables->listall || 
-      !m->flags()->read))
-    return 1;
-
-  return 0;
-}
-
-
-string trim_from( string from )
-{
-  string q;
-  from = replace(from , "\\\"", "''");
-  if(sscanf(from, "%*s\"%s\"%*s", q)==3) return q;
-  if(sscanf(from, "\"%s\"<%*s@%*s>", q)) return q;
-  if(sscanf(from, "%s<%*s@%*s>", q)) return q;
-  if(sscanf(from, "(\"%s\")%*s@%*s", q)) return q;
-  if(sscanf(from, "(%s)%*s@%*s", q)) return q;
-  if(sscanf(from, "%*s@%*s(\"%s\")", q)==3) return q;
-  if(sscanf(from, "%*s@%*s(%s)", q)==3) return q;
-  return from;
-}
-
-string trim_subject( string from )
-{
-  string a,b;
-  string ofrom = from;
-  if(from == "0") from = "No subject";
-  if(sscanf(from, "%s[%*s]%s", a, b)==3)
-  {
-    from = a+b;
-    if(!strlen(from-" "))
-      from = ofrom;
-  }
-  return from[..40];
-}
-
+//
+//  <mail-scrollbar num=... start=... page=...>
+//   num is the total number of items, start is the starting item, and 
+//   page is the height of a 'page' of items.
+// 
+//   Create a vertical scrollbar with buttons for up and down, and a
+//   clickable tray in between them.
+//
+//   I have found no way to make this thing scale according to the
+//   available space for the throgh, so I make it 300 pixels high,
+//   which should be enough for most fonts.
+//
 string tag_mail_scrollbar( string tag, mapping args, object id )
 {
   float len = (float)args->num;
@@ -1398,7 +1516,33 @@ string tag_mail_scrollbar( string tag, mapping args, object id )
 }
 
 #define MAIL_PER_PAGE 12
+//
 // <list-mail-quick mailbox=id>
+//
+//  Hardcoded (fast) email listing function for the current RXML
+//  client.
+//
+//  This one gives
+//  <tr><td>flags checkbox</td><td>subject</td><td>from</td><td>when</td></tr>
+//  for each mail in the mailbox matching the current filter.
+//
+// <formoutput quote=$>
+//   <table width=100% cellpadding=0 cellspacing=0 
+//  	 bgcolor=darkred cellspacing=0 border=0><tr><td width=100%>
+//   <table width=100% cellpadding=2 cellspacing=1
+//  	 bgcolor=white cellspacing=0 border=0>
+//   <tr bgcolor=black>
+//      <td><font color=white>Flag</td>
+//      <td><font color=white>Subject</td>
+//      <td><font color=white>From</td>
+//      <td><font color=white>Age</td>
+//      <td width=15><img src=/internal-roxen-unit width=1 height=1></td>
+//   </tr>
+//   <list-mail-quick mailbox=$mailbox_id$>
+//   </table></td></tr></table>
+// </formoutput>
+// 
+// 
 array(string) tag_list_mail_quick( string tag, mapping args, object id )
 {
   string res;
@@ -1495,34 +1639,51 @@ array(string) tag_list_mail_quick( string tag, mapping args, object id )
   }
   return ({ res });
 }
+
+// 
+//  <new-mail-flag>: Show a flag indicating that this mail is not read 
+//  yet. Currently, this is a ugly image.
+//
 string tag_new_mail_flag( string tag, mapping args, object id )
 {
   return "<img src=new.gif>"; // FIXME
 }
 
+
+//
+// <process-mail-actions>
+// 
+//  list_boxes              zap mail_id, zap mailbox_id
+//  list_unread             zap mail_id, zap listall
+//  list_all                zap mail_id, set listall=1
+//  list_match              zap mail_id
+//  list_clear_match        zap mail_id, zap list_match
+//  delete                  <delete-mail mail=#mail_id#> and next
+//  scroll_down             list_start+=MAIL_PER_PAGE
+//  scroll_up               list_start-=MAIL_PER_PAGE
+//  scroll_goto             misc->mail_goto_rel = pct
+//  next                    mail_id=<mail-next>
+//  previous                mail_id=<mail-next previous>
+//
 string tag_process_mail_actions( string tag, mapping args, object id )
 {
   foreach(glob("list_*.x", indices(id->variables)), string v)
   {
+    m_delete(id->variables, "mail_id");
     switch(v-".x")
     {
      case "list_boxes":
-       m_delete(id->variables, "mail_id");
        m_delete(id->variables, "mailbox_id");
        break;
      case "list_unread":
-       m_delete(id->variables, "mail_id");
        m_delete(id->variables, "listall");
        break;
      case "list_all":
-       m_delete(id->variables, "mail_id");
        id->variables->listall = "1";
        break;
      case "list_match":
-       m_delete(id->variables, "mail_id");
        break;
      case "list_clear_match":
-       m_delete(id->variables, "mail_id");
        m_delete(id->variables, "mail_match");
        break;
     }
@@ -1570,9 +1731,12 @@ string tag_process_mail_actions( string tag, mapping args, object id )
   }
 }
 
+//
 // <list-mail mailbox=id>
 //   #subject# #from# etc.
 // </list-mail>
+//
+//  See <list-mail-quick>
 string container_list_mail( string tag, mapping args, string contents, 
 			     object id )
 {
@@ -1608,6 +1772,12 @@ string container_list_mail( string tag, mapping args, string contents,
   return do_output_tag( args, variables, contents, id );
 }
 
+
+//  <container-mail-a variable1=value1 ...>
+//
+//  Create a <a href=..> pointing to the current page with a lot of
+//  forms variables set
+//
 string container_mail_a( string tag, mapping args, string c, object id )
 {
   mapping q= copy_value(id->variables);
@@ -1634,6 +1804,11 @@ string container_mail_a( string tag, mapping args, string c, object id )
   return make_container("a", q, c );
 }
 
+//
+// <amail-user-variable variable=... [set=to]>
+//
+//  Get the value of one user variable.
+//
 string tag_amail_user_variable( string tag, mapping args, object id )
 {
   mixed res;
@@ -1646,13 +1821,14 @@ string tag_amail_user_variable( string tag, mapping args, object id )
     return (string)(UID->get( "amhc_"+args->variable ) || args["default"]);
 }
 
+//
 // <mail-body-part mail=id part=num>
 //
 // Part 0 is the non-multipart part of the mail.
 // If part > the available number of parts, part 0 is returned.
 // MIME.Message last_mail_mime;
 // string last_mail;
-
+//
 string tag_mail_body_part( string tag, mapping args, object id )
 {
   MIME.Message m;
@@ -1689,6 +1865,7 @@ string tag_mail_body_part( string tag, mapping args, object id )
   }
 }
 
+//
 // <mail-body-parts mail=id
 //             binary-part-url=URL
 //	            (default not_query?mail=#mail#&part=#part#&name=#name#)
@@ -1703,7 +1880,7 @@ string tag_mail_body_part( string tag, mapping args, object id )
 //                  (default #data#)
 //    full mime-data
 // </mail-body-parts>
-
+//
 array(string) container_mail_body_parts( string tag, mapping args,
 					 string contents, object id)
 {
@@ -1915,9 +2092,10 @@ string low_container_mail_body_parts( string tag, mapping args,
   return res;
 }
 
+//
 // <debug-import-mail-from-dir dir=...>
 //  Guess. :-)
-
+//
 string tag_debug_import_mail_from_dir( string tag, mapping args,
 				       object id )
 {
@@ -1938,7 +2116,9 @@ string tag_debug_import_mail_from_dir( string tag, mapping args,
   return res;
 }
 
+//
 // <mail-xface>xfacetext</mail-xface>
+//
 string container_mail_xface( string tag, mapping args, 
 			     string contents, object id )
 {
@@ -1951,10 +2131,13 @@ string container_mail_xface( string tag, mapping args,
   }
 }
 
+//
 // <get-mail mail=id>
 //   #subject# #from# #body# etc.
 // </get-mail>
+//
 // NOTE: Body contains the headers. See <mail-body-parts>
+//
 string container_get_mail( string tag, mapping args, 
 			   string contents, object id )
 {
@@ -1963,7 +2146,7 @@ string container_get_mail( string tag, mapping args,
 
   while(!mid) 
   {
-    mid =clientlayer->get_cache_obj( clientlayer->Mail, args->mail );
+    mid = clientlayer->get_cache_obj( clientlayer->Mail, args->mail );
     if(!mid)
     {
       string om = args->mail;
