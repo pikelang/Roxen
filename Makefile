@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.6 1997/08/20 03:00:16 grubba Exp $
+# $Id: Makefile,v 1.7 1997/09/14 13:55:45 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -34,7 +34,7 @@ blurb :
 	@sleep 10
 
 all : configure
-	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z/]' '[a-z_]'`; \
+	@os=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`; \
 	srcdir=`pwd`; \
 	echo Attempting to build Roxen 1.2 in build/$$os...; \
 	echo; \
