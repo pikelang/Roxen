@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.4 1999/08/11 00:52:05 nilsson Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.5 1999/08/13 19:11:12 nilsson Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -278,8 +278,8 @@ string tag_accessed(string tag, mapping m, object id)
   if(m->since) 
   {
     if(m->database)
-      return id->conf->api_functions()->tag_time_map[0](id,database_created(0),m);
-    return id->conf->api_functions()->tag_time_map[0](id,database_created(m->file),m);
+      return id->conf->api_functions()->tag_time_wrapper[0](id,database_created(0),m);
+    return id->conf->api_functions()->tag_time_wrapper[0](id,database_created(m->file),m);
   }
 
   real="<!-- ("+counts+") -->";

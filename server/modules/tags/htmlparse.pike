@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.182 1999/08/01 17:44:20 nilsson Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.183 1999/08/13 19:11:12 nilsson Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -326,7 +326,7 @@ int query_num(string file, int count)
 array register_module()
 {
   return ({ MODULE_FILE_EXTENSION|MODULE_PARSER, 
-	    "RXML parser", 
+	    "Old RXML parser", 
 	    ("This module adds a lot of RXML tags, it also handles the "
 	     "mapping from .html to the rxml parser, and the "
 	     "database for the &lr;accessed&gt; tag"), ({}), 1 });

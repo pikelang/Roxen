@@ -166,7 +166,10 @@ string tag_include(string tag, mapping m, object id)
             "RXML command \"insert\", so why not use that one instead.");
 
   if(m->virtual) {
+    int debug=id->misc->debug;
+    id->misc->debug=-1;
     string ret=id->conf->api_functions()->read_file[0](id, m->virtual);
+    id->misc->debug=debug;
     
     if(ret=="" && sizeof(m->virtual)>2 && m->virtual[sizeof(m->virtual)-2..]=="--") {
       ret=id->conf->api_functions()->read_file[0](id, m->virtual[..sizeof(m->virtual)-3]);
