@@ -8,7 +8,7 @@ constant thread_safe=1;
 
 core.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.57 2004/05/31 23:01:52 _cvs_stephen Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.58 2004/06/01 21:33:51 _cvs_dirix Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -264,14 +264,14 @@ mapping get_my_args( mapping args, RequestID id )
     mixed err = catch 
     {
       a->src = Roxen.fix_relative( args->src, id );
-      array(int)|Stat st = (id->conf->try_stat_file(a->src, id) ||
-			    file_stat(a->src));
+      Stdio.Stat st = (id->conf->try_stat_file(a->src, id) 
+					|| file_stat(a->src));
       if (st)
       {
 	string fn = id->conf->real_file( a->src, id );
-	if( fn ) Roxen.add_cache_stat_callback( id, fn, st[ST_MTIME] );
-      	a->mtime = (string) (a->stat = st[ST_MTIME]);
-	a->filesize = (string) st[ST_SIZE];
+	if( fn ) Roxen.add_cache_stat_callback( id, fn, st->mtime );
+      	a->mtime = (string) (a->stat = st->mtime);
+	a->filesize = (string) st->size;
       }
     };
 #ifdef DEBUG
