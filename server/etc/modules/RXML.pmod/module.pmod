@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.157 2001/05/17 22:00:32 nilsson Exp $
+// $Id: module.pmod,v 1.158 2001/05/18 19:49:27 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -133,7 +133,7 @@ class RequestID { };
 
 // Use defines since typedefs doesn't work in soft casts yet.
 #define SCOPE_TYPE mapping(string:mixed)|object(Scope)
-#define UNWIND_STATE mapping(string:mixed)|mapping(object:array)
+#define UNWIND_STATE mapping(string|object:mixed|array)
 
 
 class Tag
@@ -348,7 +348,6 @@ class Tag
     // Note: args may be zero when this is called for PI tags.
 
     Context ctx = parser->context;
-    // FIXME: P-code generation.
 
     object/*(Frame)HMM*/ frame;
     MAKE_FRAME (frame, ctx, parser, args);
@@ -359,6 +358,7 @@ class Tag
     mixed result;
     EVAL_FRAME (frame, ctx, parser, parser->type, args, content, result);
 
+    if (parser->p_code) parser->p_code->add (frame);
     return result;
   }
 
@@ -367,9 +367,9 @@ class Tag
   {
     Type type = parser->type;
     if (type->handle_literals) parser->handle_literal();
+    else if (parser->p_code) parser->p_code_literal();
 
     Context ctx = parser->context;
-    // FIXME: P-code generation.
 
     string splice_args;
     if (args && (splice_args = args["::"])) {
@@ -400,7 +400,11 @@ class Tag
     mixed result;
     EVAL_FRAME (frame, ctx, parser, type, args, content, result);
 
-    if (result != nil) {
+    if (parser->p_code) {
+      parser->p_code->add (frame);
+      if (result != nil) parser->add_value (result);
+    }
+    else if (result != nil) {
       if (type->free_text) return ({result});
       parser->add_value (result);
     }
@@ -411,6 +415,7 @@ class Tag
   {
     Type type = parser->type;
     if (type->handle_literals) parser->handle_literal();
+    else if (parser->p_code) parser->p_code_literal();
 
     sscanf (content, "%[ \t\n\r]%s", string ws, string rest);
     if (ws == "" && rest != "") {
@@ -422,7 +427,6 @@ class Tag
     }
 
     Context ctx = parser->context;
-    // FIXME: P-code generation.
 
     object/*(Frame)HMM*/ frame;
     MAKE_FRAME (frame, ctx, parser, 0);
@@ -433,7 +437,11 @@ class Tag
     mixed result;
     EVAL_FRAME (frame, ctx, parser, type, 0, content, result);
 
-    if (result != nil) {
+    if (parser->p_code) {
+      parser->p_code->add (frame);
+      if (result != nil) parser->add_value (result);
+    }
+    else if (result != nil) {
       if (type->free_text) return ({result});
       parser->add_value (result);
     }
@@ -1564,6 +1572,8 @@ class Context
   //	do_process() with this stream piece.)
   // "exec_left": array (Exec array left to evaluate. Only used
   //	between Frame._exec_array() and Frame._eval().)
+  // "p_code_pos": int (The position in the p-code array, when a PCode
+  //	object is used for the evaluation.)
 
   MARK_OBJECT_ONLY;
 
@@ -1878,29 +1888,29 @@ constant FLAG_RAW_ARGS		= 0x00004000;
 //(!) arbitrarily.
 
 constant FLAG_CACHE_DIFF_ARGS	= 0x00010000;
-//! If set, the arguments to the tag need not be the same (using
-//! @[equal]) as the cached args.
+//(!) If set, the arguments to the tag need not be the same (using
+//(!) @[equal]) as the cached args.
 
 constant FLAG_CACHE_DIFF_CONTENT = 0x00020000;
-//! If set, the content need not be the same.
+//(!) If set, the content need not be the same.
 
 constant FLAG_CACHE_DIFF_RESULT_TYPE = 0x00040000;
-//! If set, the result type need not be the same. (Typically
-//! not useful unless cached_return() is used.)
+//(!) If set, the result type need not be the same. (Typically
+//(!) not useful unless @[cached_return] is used.)
 
 constant FLAG_CACHE_DIFF_VARS	= 0x00080000;
-//! If set, the variables with external scope in vars (i.e. normally
-//! those that has been accessed with get_var()) need not have the
-//! same values (using equal()) as the actual variables.
+//(!) If set, the variables with external scope in vars (i.e. normally
+//(!) those that has been accessed with @[get_var]) need not have the
+//(!) same values (using @[equal]) as the actual variables.
 
 constant FLAG_CACHE_DIFF_TAG_INSTANCE = 0x00100000;
-//! If set, the tag in the source document needs to be the same, so
-//! the same frame may be used when the tag occurs in another context.
+//(!) If set, the tag in the source document needs to be the same, so
+//(!) the same frame may be used when the tag occurs in another context.
 
 constant FLAG_CACHE_EXECUTE_RESULT = 0x00200000;
-//! If set, an exec array will be stored in the frame instead of the
-//! final result. On a cache hit it'll be executed to produce the
-//! result.
+//(!) If set, an exec array will be stored in the frame instead of the
+//(!) final result. On a cache hit it'll be executed to produce the
+//(!) result.
 
 class Frame
 //! A tag instance. A new frame is normally created for every parsed
@@ -1920,31 +1930,33 @@ class Frame
   //! frame.
 
   Tag tag;
-  //! The RXML.Tag object this frame was created from.
+  //! The @[RXML.Tag] object this frame was created from.
 
   int flags;
-  //! Various bit flags that affect parsing. See the FLAG_* constants.
-  //! It's copied from Tag.flag when the frame is created.
+  //! Various bit flags that affect parsing. See the @tt{FLAG_*@}
+  //! constants. It's copied from @[Tag.flag] when the frame is
+  //! created.
 
   mapping(string:mixed) args;
   //! The (parsed and evaluated) arguments passed to the tag. Set
   //! every time the frame is executed, before any frame callbacks are
-  //! called. Not set for processing instruction (FLAG_PROC_INSTR)
+  //! called. Not set for processing instruction (@[FLAG_PROC_INSTR])
   //! tags.
 
   Type content_type;
   //! The type of the content.
 
   mixed content = nil;
-  //! The content, if any. Set before do_process() and do_return() are
-  //! called. Initialized to RXML.nil every time the frame executed.
+  //! The content, if any. Set before @[do_process] and @[do_return]
+  //! are called. Initialized to @[RXML.nil] every time the frame
+  //! executed.
 
   Type result_type;
   //! The required result type. If it has a parser, it will affect how
   //! execution arrays are handled; see the return value for
-  //! do_return() for details.
+  //! @[do_return] for details.
   //!
-  //! This is set by the type inference from Tag.result_types before
+  //! This is set by the type inference from @[Tag.result_types] before
   //! any frame callbacks are called. The frame may change this type,
   //! but it must produce a result value which matches it. The value
   //! is converted before being inserted into the parent content if
@@ -1952,41 +1964,48 @@ class Frame
   //! if conversion is impossible.
 
   mixed result = nil;
-  //! The result, which is assumed to be either RXML.nil or a valid
+  //! The result, which is assumed to be either @[RXML.nil] or a valid
   //! value according to result_type. The exec arrays returned by e.g.
-  //! do_return() changes this. It may also be set directly.
-  //! Initialized to RXML.nil every time the frame executed.
+  //! @[do_return] changes this. It may also be set directly.
+  //! Initialized to @[RXML.nil] every time the frame executed.
   //!
-  //! If result_type has a parser set, it will be used by do_return()
-  //! etc before assigning to this variable. Thus it contains the
-  //! value after any parsing and will not be parsed again.
+  //! If @[result_type] has a parser set, it will be used by
+  //! @[do_return] etc before assigning to this variable. Thus it
+  //! contains the value after any parsing and will not be parsed
+  //! again.
 
   //! @decl mapping(string:mixed) vars;
+  //!
   //! Set this to introduce a new variable scope that will be active
   //! during parsing of the content and return values (but see also
-  //! FLAG_PARENT_SCOPE).
+  //! @[FLAG_PARENT_SCOPE]).
 
   //! @decl string scope_name;
+  //!
   //! The scope name for the variables. Must be set before the scope
   //! is used for the first time, and can't be changed after that.
 
   //! @decl TagSet additional_tags;
+  //!
   //! If set, the tags in this tag set will be used in addition to the
   //! tags inherited from the surrounding parser. The additional tags
   //! will in turn be inherited by subparsers.
 
   //! @decl TagSet local_tags;
+  //!
   //! If set, the tags in this tag set will be used in the parser for
   //! the content, instead of the one inherited from the surrounding
   //! parser. The tags are not inherited by subparsers.
 
   //! @decl Frame parent_frame;
+  //!
   //! If this variable exists, it gets set to the frame object of the
   //! closest surrounding tag that defined this tag in its
-  //! additional_tags or local_tags. Useful to access the "mother tag"
-  //! from the subtags it defines.
+  //! @[additional_tags] or @[local_tags]. Useful to access the
+  //! "mother tag" from the subtags it defines.
 
   //! @decl string raw_tag_text;
+  //!
   //! If this variable exists, it gets the raw text representation of
   //! the tag, if there is any. Note that it's after parsing of any
   //! splice argument.
@@ -1994,27 +2013,28 @@ class Frame
   //! @decl array do_enter (RequestID id);
   //! @decl array do_process (RequestID id, void|mixed piece);
   //! @decl array do_return (RequestID id);
-  //! do_enter() is called first thing when processing the tag.
-  //! do_process() is called after (some of) the content has been
-  //! processed. do_return() is called lastly before leaving the tag.
   //!
-  //! For tags that loops more than one time (see do_iterate):
-  //! do_enter() is only called initially before the first call to
-  //! do_iterate(). do_process() is called after each iteration.
-  //! do_return() is called after the last call to do_process().
+  //! @[do_enter] is called first thing when processing the tag.
+  //! @[do_process] is called after (some of) the content has been
+  //! processed. @[do_return] is called lastly before leaving the tag.
   //!
-  //! The result_type variable is set to the type of result the parser
-  //! wants. The tag may change it; the value will then be converted
-  //! to the type that the parser wants. If the result type is
-  //! sequential, it's spliced into the surrounding content, otherwise
-  //! it replaces the previous value of the content, if any. If the
-  //! result is RXML.nil, it does not affect the surrounding content
-  //! at all.
+  //! For tags that loops more than one time (see @[do_iterate]):
+  //! @[do_enter] is only called initially before the first call to
+  //! @[do_iterate]. @[do_process] is called after each iteration.
+  //! @[do_return] is called after the last call to @[do_process].
+  //!
+  //! The @[result_type] variable is set to the type of result the
+  //! parser wants. The tag may change it; the value will then be
+  //! converted to the type that the parser wants. If the result type
+  //! is sequential, it's added to the surrounding content, otherwise
+  //! it is used as value of the content, and there's an error of the
+  //! content has a value already. If the result is @[RXML.nil], it
+  //! does not affect the surrounding content at all.
   //!
   //! Return values:
   //! @list dl
   //!  @item array
-  //!   A so-called execution array to be handled by the parser. The
+  //!   A so-called exec array to be handled by the parser. The
   //!	elements are processed in order, and have the following usage:
   //!   @list dl
   //!    @item string
@@ -2039,68 +2059,70 @@ class Frame
   //!	  Use a call to this function to propagate the tag to be
   //!	  handled by an overridden tag definition, if any exists. If
   //!	  this is used, it's probably necessary to define the
-  //!	  raw_tag_text variable. For further details see the doc for
-  //!	  propagate_tag() in this class.
+  //!	  @[raw_tag_text] variable. For further details see the doc
+  //!	  for @[propagate_tag] in this class.
   //!   @endlist
   //!  @item 0
   //!   Do nothing special. Exits the tag when used from
-  //!   do_process() and FLAG_STREAM_RESULT is set.
+  //!   @[do_process] and @[FLAG_STREAM_RESULT] is set.
   //! @endlist
   //!
   //! Note that the intended use is not to postparse by setting a
   //! parser on the result type, but instead to return an array with
-  //! literal strings and RXML.Frame objects where parsing (or, more
-  //! accurately, evaluation) needs to be done.
+  //! literal strings and @[RXML.Frame] objects where parsing (or,
+  //! more accurately, evaluation) needs to be done.
   //!
   //! If an array instead of a function is given, the array is handled
-  //! as above. If the result variable is RXML.nil (which it defaults
-  //! to), content is used as result if it's of a compatible type.
+  //! as above. If the result variable is @[RXML.nil] (which it
+  //! defaults to), @[content] is used as @[result] if it's of a
+  //! compatible type.
   //!
-  //! If there is no do_return() and the result from parsing the
-  //! content is not RXML.nil, it's assigned to or added to the result
-  //! variable. Assignment is used if the content type is
-  //! nonsequential, addition otherwise. Thus earlier values are
-  //! simply overridden for nonsequential types.
+  //! If there is no @[do_return] and the result from parsing the
+  //! content is not @[RXML.nil], it's assigned to or added to the
+  //! @[result] variable. Assignment is used if the content type is
+  //! nonsequential, addition otherwise.
   //!
-  //! Regarding do_process only:
+  //! Regarding @[do_process] only:
   //!
-  //! Normally the content variable is set to the parsed content of
-  //! the tag before do_process() is called. This may be RXML.nil if
-  //! the content parsing didn't produce any result.
+  //! Normally the @[content] variable is set to the parsed content of
+  //! the tag before @[do_process] is called. This may be @[RXML.nil]
+  //! if the content parsing didn't produce any result.
   //!
-  //! piece is used when the tag is operating in streaming mode (i.e.
-  //! FLAG_STREAM_CONTENT is set). It's then set to each successive
-  //! part of the content in the stream, and the content variable is
-  //! never touched. do_process() is also called "normally" with no
-  //! piece argument afterwards. Note that tags that support streaming
-  //! mode might still be used nonstreaming (it might also vary
-  //! between iterations).
+  //! @[piece] is used when the tag is operating in streaming mode
+  //! (i.e. @[FLAG_STREAM_CONTENT] is set). It's then set to each
+  //! successive part of the content in the stream, and the @[content]
+  //! variable is never touched. @[do_process] is also called
+  //! "normally" with no @[piece] argument afterwards. Note that tags
+  //! that support streaming mode might still be used nonstreaming (it
+  //! might also vary between iterations).
   //!
-  //! As long as FLAG_STREAM_RESULT is set, do_process() will be
+  //! As long as @[FLAG_STREAM_RESULT] is set, @[do_process] will be
   //! called repeatedly until it returns 0. It's only the result piece
   //! from the execution array that is propagated after each turn; the
   //! result variable only accumulates all these pieces.
 
   //! @decl int do_iterate (RequestID id);
+  //!
   //! Controls the number of passes in the tag done by the parser. In
   //! every pass, the content of the tag (if any) is processed, then
-  //! do_process() is called.
+  //! @[do_process] is called.
   //!
-  //! Before doing any pass, do_iterate() is called. If the return
-  //! value is nonzero, that many passes is done, then do_iterate() is
-  //! called again and the process repeats. If the return value is
-  //! zero, the tag exits and the value in result is used in the
+  //! Before doing any pass, @[do_iterate] is called. If the return
+  //! value is nonzero, that many passes is done, then @[do_iterate]
+  //! is called again and the process repeats. If the return value is
+  //! zero, the tag exits and the value in @[result] is used in the
   //! surrounding content as described above.
   //!
   //! The most common way to iterate is to do the setup before every
   //! pass (e.g. setup the variable scope) and return 1 to do one pass
   //! through the content. This will repeat until 0 is returned.
   //!
-  //! If do_iterate is a positive integer, that many passes is done
-  //! and then the tag exits. If do_iterate is zero or missing, one
-  //! pass is done. If do_iterate is negative, no pass is done.
+  //! If @[do_iterate] is a positive integer, that many passes is done
+  //! and then the tag exits. If @[do_iterate] is zero or missing, one
+  //! pass is done. If @[do_iterate] is negative, no pass is done.
 
   //! @decl int|function(RequestID:int) is_valid;
+  //!
   //! When defined, the frame may be cached. First the name of the tag
   //! must be the same. Then the conditions specified by the cache
   //! bits in flag are checked. Then, if this is a function, it's
@@ -2110,45 +2132,45 @@ class Frame
   optional array cached_return (Context ctx, void|mixed piece);
   //! If defined, this will be called to get the value from a cached
   //! frame (that's still valid) instead of using the cached result.
-  //! It's otherwise handled like do_return(). Note that the cached
+  //! It's otherwise handled like @[do_return]. Note that the cached
   //! frame may be used from several threads. FIXME: Not yet
   //! implemented.
 
   //(!) Services:
 
   final mixed get_var (string var, void|string scope_name, void|Type want_type)
-  //! A wrapper for easy access to RXML.Context.get_var().
+  //! A wrapper for easy access to @[RXML.Context.get_var].
   {
     return get_context()->get_var (var, scope_name, want_type);
   }
 
   final mixed set_var (string var, mixed val, void|string scope_name)
-  //! A wrapper for easy access to RXML.Context.set_var().
+  //! A wrapper for easy access to @[RXML.Context.set_var].
   {
     return get_context()->set_var (var, val, scope_name);
   }
 
   final void delete_var (string var, void|string scope_name)
-  //! A wrapper for easy access to RXML.Context.delete_var().
+  //! A wrapper for easy access to @[RXML.Context.delete_var].
   {
     get_context()->delete_var (var, scope_name);
   }
 
   void run_error (string msg, mixed... args)
-  //! A wrapper for easy access to RXML.run_error().
+  //! A wrapper for easy access to @[RXML.run_error].
   {
     _run_error (msg, @args);
   }
 
   void parse_error (string msg, mixed... args)
-  //! A wrapper for easy access to RXML.parse_error().
+  //! A wrapper for easy access to @[RXML.parse_error].
   {
     _parse_error (msg, @args);
   }
 
   void tag_debug (string msg, mixed... args)
-  //! Writes the message to the debug log if this tag has FLAG_DEBUG
-  //! set.
+  //! Writes the message to the debug log if this tag has
+  //! @[FLAG_DEBUG] set.
   {
     if (flags & FLAG_DEBUG) report_debug (msg, @args);
   }
@@ -2161,28 +2183,29 @@ class Frame
   }
 
   void suspend()
-  //! Used together with resume() for nonblocking mode. May be called
+  //! Used together with @[resume] for nonblocking mode. May be called
   //! from any frame callback to suspend the parser: The parser will
-  //! just stop, leaving the context intact. If it returns, the parser
-  //! is used in a place that doesn't support nonblocking, so just go
-  //! ahead and block.
+  //! just stop, leaving the context intact. If this function returns,
+  //! the parser is used in a place that doesn't support nonblocking,
+  //! so it's then ok to go ahead and block.
   {
     fatal_error ("FIXME\n");
   }
 
   void resume()
   //! Makes the parser continue where it left off. The function that
-  //! called suspend() will be called again.
+  //! called @[suspend] will be called again.
   {
     fatal_error ("FIXME\n");
   }
 
   mapping(string:Tag) get_plugins()
   //! Returns the plugins registered for this tag, which is assumed to
-  //! be a socket tag, i.e. to have FLAG_SOCKET_TAG set (see
-  //! Tag.plugin_name for details). Indices are the plugin_name values
-  //! for the plugin Tag objects, values are the plugin objects
-  //! themselves. Don't be destructive on the returned mapping.
+  //! be a socket tag, i.e. to have @[FLAG_SOCKET_TAG] set (see
+  //! @[Tag.plugin_name] for details). Indices are the
+  //! @tt{plugin_name@} values for the plugin @[RXML.Tag] objects,
+  //! values are the plugin objects themselves. Don't be destructive
+  //! on the returned mapping.
   {
 #ifdef MODULE_DEBUG
     if (!(tag->flags & FLAG_SOCKET_TAG))
@@ -2192,21 +2215,22 @@ class Frame
   }
 
   final Tag get_overridden_tag()
-  //! Returns the Tag object the tag for this frame overrides, if any.
+  //! Returns the @[RXML.Tag] object the tag for this frame overrides,
+  //! if any.
   {
     return get_context()->tag_set->get_overridden_tag (tag);
   }
 
   Frame|string propagate_tag (void|mapping(string:string) args, void|string content)
   //! This function is intended to be used in the execution array from
-  //! do_return() etc to propagate the tag to the next overridden tag
+  //! @[do_return] etc to propagate the tag to the next overridden tag
   //! definition, if any exists. It either returns a frame from the
   //! overridden tag or, if no overridden tag exists, a string
   //! containing a formatted tag (which requires that the result type
-  //! supports formatted tags, i.e. has a working format_tag()
-  //! function). If args and content are given, they will be used in
-  //! the tag after parsing, otherwise the raw_tag_text variable is
-  //! used, which must have a string value.
+  //! supports formatted tags, i.e. has a working @[format_tag]
+  //! function). If @[args] and @[content] are given, they will be
+  //! used in the tag after parsing, otherwise the @[raw_tag_text]
+  //! variable is used, which must have a string value.
   {
 #ifdef MODULE_DEBUG
 #define CHECK_RAW_TEXT							\
@@ -2433,6 +2457,10 @@ class Frame
 	  res += piece;
 	}
 	else if (piece != nil) {
+	  if (result != nil)
+	    parse_error (
+	      "Cannot append another value %s to non-sequential result type %s.\n",
+	      utils->format_short (piece), result_type->name);
 	  THIS_TAG_DEBUG ("Exec[%d]: Setting result to %t\n", i, piece);
 	  result = res = piece;
 	}
@@ -2454,7 +2482,7 @@ class Frame
 
     if (objectp (err) && ([object] err)->thrown_at_unwind) {
       THIS_TAG_DEBUG ("Exec: Interrupted at position %d\n", i);
-      mapping(string:mixed)|mapping(object:array) ustate;
+      UNWIND_STATE ustate;
       if ((ustate = ctx->unwind_state) && !zero_type (ustate->stream_piece)) {
 	// Subframe wants to stream. Update stream_piece and send it on.
 	if (result_type->name != parser->type->name)
@@ -2672,13 +2700,18 @@ class Frame
 	    THIS_TAG_DEBUG ("Setting parent_frame to %O from local_tags\n", up);
 	    this->parent_frame = up;
 	  }
-	  else
-	    for (Frame f = up; f; f = f->up)
-	      if (f->additional_tags && f->additional_tags->has_tag (tag)) {
-		THIS_TAG_DEBUG ("Setting parent_frame to %O from additional_tags\n", f);
-		this->parent_frame = f;
-		break;
+	  else {
+	    int nest = 1;
+	    Frame frame = up;
+	    for (; frame; frame = frame->up)
+	      if (frame->additional_tags && frame->additional_tags->has_tag (tag)) {
+		if (!--nest) break;
 	      }
+	      else if (frame->tag == tag) nest++;
+	    THIS_TAG_DEBUG ("Setting parent_frame to %O from additional_tags\n", frame);
+	    this->parent_frame = frame;
+	    break;
+	  }
 
 	if (TagSet add_tags = raw_content && [object(TagSet)] this->additional_tags) {
 	  TagSet tset = ctx->tag_set;
@@ -2963,6 +2996,11 @@ class Frame
 			    content += res;
 			  }
 			  else if (res != nil) {
+			    if (content != nil)
+			      parse_error (
+				"Cannot append another value %s to non-sequential "
+				"content type %s.\n", utils->format_short (res),
+				content_type->name);
 			    THIS_TAG_DEBUG ("Iter[%d]: Setting content to %t\n",
 					    debug_iter, res);
 			    content = res;
@@ -3119,7 +3157,7 @@ class Frame
 	LEAVE_SCOPE (ctx, this);
 	string action;
 	if (objectp (err2) && ([object] err2)->thrown_at_unwind) {
-	  mapping(string:mixed)|mapping(object:array) ustate = ctx->unwind_state;
+	  UNWIND_STATE ustate = ctx->unwind_state;
 	  if (!ustate) ustate = ctx->unwind_state = ([]);
 #ifdef DEBUG
 	  if (ustate[this])
@@ -3221,7 +3259,7 @@ class Frame
 //(!) Global services.
 
 //! Shortcuts to some common functions in the current context (see the
-//! corresponding functions in the Context class for details).
+//! corresponding functions in the @[Context] class for details).
 final mixed get_var (string var, void|string scope_name, void|Type want_type)
   {return get_context()->get_var (var, scope_name, want_type);}
 final mixed user_get_var (string var, void|string scope_name, void|Type want_type)
@@ -3259,8 +3297,8 @@ final void parse_error (string msg, mixed... args)
 
 final void fatal_error (string msg, mixed... args)
 //! Throws a Pike error that isn't catched and handled anywhere. It's
-//! just like the common error() function, but includes the RXML frame
-//! backtrace.
+//! just like the common @[error] function, but includes the RXML
+//! frame backtrace.
 {
   if (sizeof (args)) msg = sprintf (msg, @args);
   array bt = backtrace();
@@ -3310,24 +3348,27 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
 //!   an error. (This is a convenience to avoid many special cases
 //!   when treating both arrays and scalar types.)
 //!  @item
-//!   If a value is an object which has an rxml_var_eval identifier,
-//!   it's treated as a Value object and the rxml_var_eval function is
-//!   called to produce its value.
+//!   If a value is an object which has an @tt{rxml_var_eval@}
+//!   identifier, it's treated as an @[RXML.Value] object and the
+//!   @[RXML.Value.rxml_var_eval] function is called to produce its
+//!   value.
 //!  @item
 //!   If a value which is about to be indexed is an object which has a
-//!   `[] function, it's called as a Scope object.
+//!   @tt{`[]@} function, it's called as an @[RXML.Scope] object (see
+//!   @ref{RXML.Scope.`[]@}).
 //!  @item
 //!   Both the special value nil and the undefined value (a zero with
 //!   zero_type 1) may be used to signify no value at all, and both
 //!   will be returned as the undefined value.
 //! @endlist
 //!
-//! If the want_type argument is set, the result value is converted to
-//! that type with Type.encode(). If the value can't be converted, an
-//! RXML error is thrown.
+//! If the @[want_type] argument is set, the result value is converted
+//! to that type with @[RXML.Type.encode]. If the value can't be
+//! converted, an RXML error is thrown.
 //!
 //! This function is mainly for internal use; you commonly want to use
-//! get_var, set_var, user_get_var or user_set_var instead.
+//! @[get_var], @[set_var], @[user_get_var] or @[user_set_var]
+//! instead.
 {
 #ifdef MODULE_DEBUG
   if (arrayp (index) ? !sizeof (index) : !(stringp (index) || intp (index)))
@@ -3460,10 +3501,10 @@ final Frame make_tag (string name, mapping(string:mixed) args, void|mixed conten
 		      void|Tag overridden_by)
 //! Returns a frame for the specified tag, or 0 if no such tag exists.
 //! The tag definition is looked up in the current context and tag
-//! set. args and content are not parsed or evaluated. If
-//! overridden_by is given, the returned frame will come from the tag
-//! that overridden_by overrides, if there is any (name is not used in
-//! that case).
+//! set. @[args] and @[content] are not parsed or evaluated; they're
+//! used as-is by the tag. If @[overridden_by] is given, the returned
+//! frame will come from the tag that @[overridden_by] overrides, if
+//! there is any (@[name] is not used in that case).
 {
   TagSet tag_set = get_context()->tag_set;
   Tag tag = overridden_by ? tag_set->get_overridden_tag (overridden_by) :
@@ -3475,11 +3516,11 @@ final Frame make_unparsed_tag (string name, mapping(string:string) args,
 			       void|string content, void|Tag overridden_by)
 //! Returns a frame for the specified tag, or 0 if no such tag exists.
 //! The tag definition is looked up in the current context and tag
-//! set. args and content are given unparsed in this variant; they're
-//! parsed when the frame is about to be evaluated. If overridden_by
-//! is given, the returned frame will come from the tag that
-//! overridden_by overrides, if there is any (name is not used in that
-//! case).
+//! set. @[args] and @[content] are given unparsed in this variant;
+//! they're parsed and evaluated when the frame is about to be
+//! evaluated. If @[overridden_by] is given, the returned frame will
+//! come from the tag that @[overridden_by] overrides, if there is any
+//! (@[name] is not used in that case).
 {
   TagSet tag_set = get_context()->tag_set;
   Tag tag = overridden_by ? tag_set->get_overridden_tag (overridden_by) :
@@ -3610,7 +3651,7 @@ class Parser
 #endif
   }
 
-  mixed handle_var (string varref, Type surrounding_type)
+  mixed handle_var (TagSetParser parser, string varref, Type want_type)
   // Parses and evaluates a possible variable reference, with the
   // appropriate error handling.
   {
@@ -3630,13 +3671,15 @@ class Parser
       COND_PROF_ENTER(mixed id=context->id,varref,"entity");
       if (zero_type (val = context->get_var ( // May throw.
 		       splitted[1..], splitted[0],
-		       encoding ? t_string : surrounding_type)))
+		       encoding ? t_string : want_type)))
 	val = nil;
       COND_PROF_LEAVE(mixed id=context->id,varref,"entity");
       PROFILE_SWITCH (context, "var:" + varref, "rxml internal");
       if (encoding && !(val = Roxen->roxen_encode (val + "", encoding)))
 	parse_error ("Unknown encoding %O.\n", encoding);
       context->current_var = 0;
+      if (parser->p_code)
+	parser->p_code->add (VarRef (splitted[0], splitted[1..], encoding));
       return val;
     }) {
       context->current_var = 0;
@@ -3656,11 +3699,15 @@ class Parser
   //! The expected result type of the current stream. (The parser
   //! should not do any type checking on this.)
 
-  int compile;
-  //! Must be set to nonzero before a stream is fed which should be
-  //! compiled to p-code.
+  optional PCode p_code;
+  //! Must be set to a new @[PCode] object before a stream is fed
+  //! which should be compiled to p-code. The object will receive the
+  //! compiled code during evaluation and can be used to repeat the
+  //! evaluation after the stream is finished. Parsers that doesn't
+  //! support compilation doesn't have this defined.
 
   //! @decl int unwind_safe;
+  //!
   //! If nonzero, the parser supports unwinding with throw()/catch().
   //! Whenever an exception is thrown from some evaluation function,
   //! it should be able to call that function again with identical
@@ -3672,9 +3719,8 @@ class Parser
 
   mixed feed (string in);
   //! Feeds some source data to the parse stream. The parser may do
-  //! scanning and parsing before returning. If context is set, it may
-  //! also do evaluation in that context. Returns nonzero if there
-  //! could be new data to get from eval().
+  //! scanning, parsing and evaluation before returning. Returns
+  //! nonzero if there could be new data to get from eval().
 
   void finish (void|string in);
   //! Like feed(), but also finishes the parse stream. A last bit of
@@ -3701,10 +3747,6 @@ class Parser
   //! returned by previous eval() calls should not be returned again
   //! as (part of) this return value. Returns RXML.nil if there's no
   //! data (for sequential types the empty value is also ok).
-
-  optional PCode p_compile();
-  //! Define this to return a p-code representation of the current
-  //! stream, which always is finished.
 
   optional void reset (Context ctx, Type type, mixed... args);
   //! Define to support reuse of a parser object. It'll be called
@@ -3787,6 +3829,8 @@ class TagSetParser
   TagSet tag_set;
   //! The tag set used for parsing.
 
+  PCode p_code;
+
   //! In addition to the type, the tag set is part of the static
   //! configuration.
   optional void reset (Context ctx, Type type, TagSet tag_set, mixed... args);
@@ -3803,6 +3847,7 @@ class TagSetParser
   {
     ::initialize (ctx, type);
     tag_set = _tag_set;
+    p_code = 0;
   }
 
   mixed read();
@@ -3844,8 +3889,10 @@ class PNone
 {
   inherit Parser;
 
-  string data = "";
-  int evalpos = 0;
+  static string data = "";
+  static int evalpos = 0;
+
+  PCode p_code;
 
   int feed (string in)
   {
@@ -3856,6 +3903,7 @@ class PNone
   void finish (void|string in)
   {
     if (in) data += in;
+    if (p_code) p_code->add (data);
   }
 
   string eval()
@@ -3863,16 +3911,6 @@ class PNone
     string res = data[evalpos..];
     evalpos = sizeof (data);
     return res;
-  }
-
-  string byte_compile()
-  {
-    return data;
-  }
-
-  string byte_interpret (string byte_code, Context ctx)
-  {
-    return byte_code;
   }
 
   void reset (Context ctx)
@@ -3903,9 +3941,9 @@ static mapping(string:Type) reg_types = ([]);
 
 class Type
 //! A static type definition. It does type checking and specifies some
-//! properties of the type. It may also contain a Parser program that
-//! will be used to read text and evaluate values of this type. Note
-//! that the parser is not relevant for type checking.
+//! properties of the type. It may also contain a @[Parser] program
+//! that will be used to read text and evaluate values of this type.
+//! Note that the parser is not relevant for type checking.
 //!
 //! @note
 //! The doc for this class is rather lengthy, but most of it applies
@@ -4025,7 +4063,7 @@ class Type
 	if ((p = pco->free_parser)) {
 	  pco->free_parser = p->_next_free;
 	  // ^^^ Using interpreter lock to here.
-	  p->data_callback = p->compile = 0;
+	  p->data_callback = 0;
 	  p->reset (ctx, this_object(), tset, @parser_args);
 #ifdef RXML_OBJ_DEBUG
 	  p->__object_marker->create (p);
@@ -4072,7 +4110,7 @@ class Type
       if ((p = free_parser)) {
 	// Relying on interpreter lock here.
 	free_parser = p->_next_free;
-	p->data_callback = p->compile = 0;
+	p->data_callback = 0;
 	p->reset (ctx, this_object(), @parser_args);
 #ifdef RXML_OBJ_DEBUG
 	p->__object_marker->create (p);
@@ -4875,8 +4913,12 @@ static class TXml
     if (objectp (tag)) tagname = tag->name, flags = tag->flags;
     else tagname = tag;
 
-    if (flags & FLAG_PROC_INSTR)
-      return "<?" + tagname + (content?" "+content:"") + "?>";
+    if (flags & FLAG_PROC_INSTR) {
+      if (!content) content = "";
+      else if (sizeof (content) && !(<' ', '\t', '\n', '\r'>)[content[0]])
+	content = " " + content;
+      return "<?" + tagname + content + "?>";
+    }
 
     string res = "<" + tagname;
 
@@ -4933,17 +4975,30 @@ static class THtml
 
 //(!) P-code compilation and evaluation:
 
-class VarRef(string scope, string var)
+class VarRef (string scope, string|array(string|int) var, void|string encoding)
 //! A helper for representing variable reference tokens.
 {
   constant is_RXML_VarRef = 1;
-  int valid (Context ctx) {return ctx->exist_scope (scope);}
-  mixed get (Context ctx) {return ctx->get_var (var, scope);}
+
+  mixed get (Context ctx, void|Type want_type)
+  {
+    if (encoding) {
+      string val = ctx->get_var (var, scope, t_string);
+      if (!(val = Roxen->roxen_encode (val + "", encoding)))
+	parse_error ("Unknown encoding %O.\n", encoding);
+      return val;
+    }
+    else return ctx->get_var (var, scope, want_type);
+  }
+
   mixed set (Context ctx, mixed val) {return ctx->set_var (var, val, scope);}
+
   void delete (Context ctx) {ctx->delete_var (var, scope);}
-  string name() {return scope + "." + var;}
+
+  string name() {return scope + "." + (arrayp (var) ? (array(string)) var * "." : var);}
+
   MARK_OBJECT;
-  string _sprintf() {return "RXML.VarRef(" + scope + "." + var + ")" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.VarRef(" + name() + ")" + OBJ_COUNT;}
 }
 
 class PCode
@@ -4953,27 +5008,86 @@ class PCode
   constant is_RXML_PCode = 1;
   constant thrown_at_unwind = 1;
 
-  array p_code = ({});
+  Type type;
+  //! The type the p-code evaluates to. Should be the same as the
+  //! setting in the parser used to create this object.
+
+  int recover_errors;
+  //! Nonzero if error recovery is allowed. Should be the same as the
+  //! setting in the parser used to create this object.
 
   int error_count;
   //! Number of RXML errors that occurred during evaluation. If this
   //! is nonzero, the value from eval() shouldn't be trusted.
 
-  mixed eval (Context ctx)
+  mixed eval (Context context)
   //! Evaluates the p-code in the given context.
   {
-    // FIXME
+    mixed res = nil;
+    int pos = 0;
 
-    // Note: Remember to initialize Frame.content and Frame.result
-    // when reusing frames.
+    ENTER_CONTEXT (context);
+    if (mixed err = catch {
+      if (context && context->unwind_state && context->unwind_state->top) {
+#ifdef MODULE_DEBUG
+	if (context->unwind_state->top != this_object())
+	  fatal_error ("The context got an unwound state from another PCode object. "
+		       "Can't rewind.\n");
+#endif
+	pos = m_delete (context->unwind_state, "pos");
+	m_delete (context->unwind_state, "top");
+	if (!sizeof (context->unwind_state)) context->unwind_state = 0;
+      }
+
+      // Note: Remember to initialize Frame.content and Frame.result
+      // when reusing frames.
+
+    })
+      if (objectp (err) && ([object] err)->thrown_at_unwind) {
+#ifdef DEBUG
+	if (err != this_object()) {
+	  LEAVE_CONTEXT();
+	  fatal_error ("Internal error: Unexpected unwind object catched.\n");
+	}
+#endif
+	if (!context->unwind_state) context->unwind_state = ([]);
+	context->unwind_state->p_code_pos = pos;
+	context->unwind_state->top = err;
+      }
+      else {
+	LEAVE_CONTEXT();
+	throw_fatal (err);
+      }
+
+    LEAVE_CONTEXT();
+    return res;
   }
 
   function(Context:mixed) compile();
   //! Returns a compiled function for doing the evaluation. The
   //! function will receive a context to do the evaluation in.
 
+  static void create (Type _type)
+  {
+    type = _type;
+  }
+
 
   //(!) Internals:
+
+  static array p_code = allocate (16);
+  static int length = 0;
+
+  void add (mixed entry)
+  {
+    if (sizeof (p_code) == length) p_code += allocate (sizeof (p_code));
+    p_code[length++] = entry;
+  }
+
+  void finish()
+  {
+    p_code = p_code[..length - 1];
+  }
 
   void report_error (string msg)
   {
