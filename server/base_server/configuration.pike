@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.69 1997/08/29 00:33:57 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.70 1997/08/31 02:45:37 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -876,7 +876,7 @@ object _lock(object|function f)
 }
 
 #define LOCK(X) key=_lock(X)
-#define UNLOCK() do{/*perror("unlock\n");*/key=0;}while(0)
+#define UNLOCK() do{key=0;}while(0)
 #else
 #define LOCK(X)
 #define UNLOCK(X)

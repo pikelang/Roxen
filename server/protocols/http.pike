@@ -1,12 +1,12 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.37 1997/08/19 02:32:07 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.38 1997/08/31 02:45:44 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
 int first;
 
-constant shuffle=roxen->shuffle;
+//constant shuffle=roxen->shuffle;
 constant decode=roxen->decode;
 constant find_supports=roxen->find_supports;
 constant version=roxen->version;
@@ -36,9 +36,10 @@ int kept_alive;
 
 int time;
 string raw_url;
-int do_not_disconnect = 0;
+int do_not_disconnect;
 
 mapping (string:string) variables = ([ ]);
+
 mapping (string:mixed) misc = ([ ]);
 
 multiset   (string) prestate     = (< >);
@@ -47,9 +48,9 @@ multiset   (string) supports     = (< >);
 
 string remoteaddr, host;
 
-array  (string) client      = ({ "Unknown" });
+array  (string) client      = ({ });
 array  (string) referer     = ({ });
-multiset   (string) pragma      = (< >);
+multiset (string) pragma      = (< >);
 
 mapping (string:string) cookies = ([ ]);
 
@@ -763,6 +764,27 @@ constant errors =
   
   ]);
 
+
+void do_log(array id)
+{
+  if(conf)
+  {
+    int len;
+    pipe = id[0];
+    file = id[1];
+    
+    if(len = pipe->bytes_sent()) file->len = len;
+    if(conf)
+    {
+      conf->log(file, this_object());
+      if(file->len > 0) conf->sent+=file->len;
+    }
+  }
+  my_fd=0;
+  pipe=file=0;
+  destruct(this_object());
+}
+
 void handle_request( )
 {
   catch{mark_fd(my_fd->query_fd(), "HTTP: Handling");};
@@ -922,7 +944,7 @@ void handle_request( )
       myheads += ({"Content-length: " + file->len });
     head_string = (myheads+({"",""}))*"\r\n";
     
-    if(conf)conf->hsent+=strlen(head_string||"");
+    if(conf) conf->hsent+=strlen(head_string||"");
 
     if(method=="HEAD")
     {
@@ -939,10 +961,7 @@ void handle_request( )
       return;
     }
 
-    if(conf)
-      conf->sent+=(file->len>0 ? file->len : 1000);
-
-
+#ifdef USE_SHUFFLE 0
     if(!file->data &&
        (file->len<=0 || (file->len > 30000))
 #ifdef KEEP_CONNECTION_ALIVE
@@ -957,22 +976,26 @@ void handle_request( )
       destruct(thiso);
       return;
     }
-
+#endif
+    
     if(file->len < 3000 &&
 #ifdef KEEP_CONNECTION_ALIVE
        !keep_alive &&
 #endif
        file->len >= 0)
     {
-
-      if(file->data)
-	head_string += file->data;
+      if(file->data) head_string += file->data;
       if(file->file) 
       {
 	head_string += file->file->read(file->len);
 	destruct(file->file);
       }
-      if(conf) conf->log(file, thiso);
+      
+      if(conf)
+      {
+	file->len = strlen( head_string );
+	conf->log(file, thiso);
+      }
       end(head_string);
       return;
     }
@@ -982,8 +1005,8 @@ void handle_request( )
   if(file->data)  send(file->data);
   if(file->file)  send(file->file);
   pipe->output(my_fd);
-  
-  if(conf) conf->log(file, thiso);
+
+  pipe->set_done_callback( do_log, ({ pipe, file }) );
 
 #ifdef KEEP_CONNECTION_ALIVE
   if(keep_alive)
@@ -993,13 +1016,8 @@ void handle_request( )
       misc->connection=0;
       pipe->set_done_callback(keep_connection_alive);
     }
-  } else 
+  } 
 #endif
-  {
-    my_fd=0;
-    pipe=file=0;
-    destruct(thiso);
-  }
 }
 
 /* We got some data on a socket.

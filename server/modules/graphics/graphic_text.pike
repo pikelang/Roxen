@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.56 1997/08/25 13:51:35 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.57 1997/08/31 02:45:40 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -739,8 +739,9 @@ void restore_cached_args()
   {
     string data = o->read();
     catch {
-      if(sizeof(indices(Gz)))
-	data=Gz->inflate()->inflate(data);
+      object q;
+      if(sizeof(indices(q=Gz)))
+	data=q->inflate()->inflate(data);
     };
     catch {
       cached_args |= decode_value(data);
@@ -754,8 +755,9 @@ void save_cached_args()
   object o = open(".gtext_args_"+hash(mc->name), "wct");
   string data=encode_value(cached_args);
   catch {
-    if(sizeof(indices(Gz)))
-      data=Gz->deflate()->deflate(data);
+    object q;
+    if(sizeof(indices(q=Gz)))
+      data=q->deflate()->deflate(data);
   };
   o->write(data);
 }
