@@ -1,6 +1,6 @@
 // static private inherit "db";
 
-/* $Id: persistent.pike,v 1.23 1997/04/14 01:52:22 per Exp $ */
+/* $Id: persistent.pike,v 1.24 1997/04/14 02:00:27 per Exp $ */
 
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
@@ -34,12 +34,10 @@ void really_save()
     else __id = i;
   }
 
-  foreach(indices(this_object()), string a)
-  {
-    b=this_object()[a];
-    if(!catch { this_object()[a]=b; } ) // It can be assigned. Its a variable!
-      res += ({ ({ a, b }) });
-  }
+  foreach(persistent_variables(object_program(this_object()), this_object()),
+	  string a)
+    res += ({ ({ a, this_object()[a] }) });
+
   open_db(__id[0])->set(__id[1], encode_value(res) );
 }
 
