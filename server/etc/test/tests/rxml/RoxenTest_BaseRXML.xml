@@ -948,23 +948,79 @@ a&auml; &amp; b  &gt;
 </test>
 
 <test>
-  <rxml><set variable="var.i" expr="1 - 1"/><if variable="var.i is 0">a</if><else>b</else></rxml>
-  <result>a</result>
+  <rxml type="string">
+    <if variable="var.foo">1</if><else>0</else>
+    <if variable="var.foo is ">1<!-- Bogus 2.2 behavior. --></if><else>0<!-- 2.1 behavior. --></else>
+    <if variable="var.foo is 0">1</if><else>0</else>
+    <if variable="var.foo = ?*">1</if><else>0</else>
+  </rxml>
+  <result>0100</result>
 </test>
 
 <test>
-  <rxml><if variable="var.i is 0">a</if><else>b</else></rxml>
-  <result>b</result>
+  <rxml type="string">
+    <set variable="var.foo" value=""/>
+    <if variable="var.foo">1</if><else>0</else>
+    <if variable="var.foo is ">1</if><else>0</else>
+    <if variable="var.foo is 0">1</if><else>0</else>
+    <if variable="var.foo = ?*">1</if><else>0</else>
+  </rxml>
+  <result>1100</result>
 </test>
 
 <test>
-  <rxml><set variable="var.i" expr="1 - 1"/><if variable="var.i = ?*">a</if><else>b</else></rxml>
-  <result>a</result>
+  <rxml type="string">
+    <set variable="var.foo"></set>
+    <if variable="var.foo">1</if><else>0</else>
+    <if variable="var.foo is ">1</if><else>0</else>
+    <if variable="var.foo is 0">1</if><else>0</else>
+    <if variable="var.foo = ?*">1</if><else>0</else>
+  </rxml>
+  <result>0100</result>
 </test>
 
 <test>
-  <rxml><if variable="var.i = ?*">a</if><else>b</else></rxml>
-  <result>b</result>
+  <rxml type="string">
+    <set variable="var.foo" value="0"/>
+    <if variable="var.foo">1</if><else>0</else>
+    <if variable="var.foo is ">1</if><else>0</else>
+    <if variable="var.foo is 0">1</if><else>0</else>
+    <if variable="var.foo = ?*">1</if><else>0</else>
+  </rxml>
+  <result>1011</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable="var.foo" expr="0"/> <!-- Same as value='0' in 2.1. -->
+    <if variable="var.foo">1</if><else>0<!-- Reported 2.2 behavior. --></else>
+    <if variable="var.foo is ">1<!-- Reported bogus 2.2 behavior. --></if><else>0</else>
+    <if variable="var.foo is 0">1<!-- Reported 2.1 compat issue. --></if><else>0<!-- Bogus 2.2 behavior. --></else>
+    <if variable="var.foo = ?*">1<!-- 2.1 behavior. --></if><else>0<!-- Bogus 2.2 behavior. --></else>
+  </rxml>
+  <result>0100</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable="var.foo" value="1"/>
+    <if variable="var.foo">1</if><else>0</else>
+    <if variable="var.foo is ">1</if><else>0</else>
+    <if variable="var.foo is 0">1</if><else>0</else>
+    <if variable="var.foo = ?*">1</if><else>0</else>
+  </rxml>
+  <result>1001</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable="var.foo" expr="1"/>
+    <if variable="var.foo">1</if><else>0</else>
+    <if variable="var.foo is ">1</if><else>0</else>
+    <if variable="var.foo is 0">1</if><else>0</else>
+    <if variable="var.foo = ?*">1</if><else>0</else>
+  </rxml>
+  <result>1001</result>
 </test>
 
 
