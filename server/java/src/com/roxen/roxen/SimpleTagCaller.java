@@ -1,5 +1,5 @@
 /*
- * $Id: SimpleTagCaller.java,v 1.4 2000/02/21 18:30:46 marcus Exp $
+ * $Id: SimpleTagCaller.java,v 1.5 2000/08/18 14:59:20 marcus Exp $
  *
  */
 
@@ -26,6 +26,9 @@ public interface SimpleTagCaller {
 
   /** Never apply any prefix to this tag. */
   public static final int FLAG_NO_PREFIX = 0x00000002;
+
+  /** A processing instruction tag (<?name ?> syntax).  Arguments not used. */
+  public static final int FLAG_PROC_INSTR = 0x00000010;
 
   /** Don't preparse the content with the PHtml parser. */
   public static final int FLAG_DONT_PREPARSE = 0x00000040;
