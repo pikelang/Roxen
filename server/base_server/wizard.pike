@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.143 2003/03/18 16:48:15 jonasw Exp $
+// $Id: wizard.pike,v 1.144 2004/01/22 10:54:07 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -421,7 +421,11 @@ string compress_state(mapping state)
   state = copy_value(state);
   m_delete(state,"_state");
   m_delete(state,"next_page");
+  m_delete(state,"next_page.x");
+  m_delete(state,"next_page.y");
   m_delete(state,"prev_page");
+  m_delete(state,"prev_page.x");
+  m_delete(state,"prev_page.y");
   m_delete(state,"help");
   m_delete(state,"action");
   m_delete(state,"unique");
@@ -594,7 +598,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 			       && id->real_variables->_state[0]);
 #endif
 
-  if(id->real_variables->cancel)
+  if(id->real_variables->cancel || id->real_variables["cancel.x"])
      return http_redirect((s->cancel_url&&s->cancel_url[0])
 			  || cancel || id->not_query,
 			  @(id->conf?({id}):({})));
@@ -610,7 +614,9 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
   mapping(string:array) automaton = this_object()->wizard_automaton;
   function dispatcher;
   string oldpage, page_name;
-  if (automaton && (!v->_page || v->next_page || v->prev_page || v->ok)) {
+  if (automaton && (!v->_page || v->next_page || v["next_page.x"] ||
+		    v->prev_page || v["prev_page.x"] ||
+		    v->ok || v["ok.x"])) {
     if (!v->_page && automaton->start) v->_page = "start";
     oldpage = v->_page;
     if (v->_page) {
@@ -628,14 +634,20 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 	DEBUGMSG ("Wizard: Internal redirect to page " + redirect + "\n");
 	// Redirect takes precedence over the user choice.
 	m_delete (v, "next_page");
+	m_delete (v, "next_page.x");
+	m_delete (v, "next_page.y");
 	m_delete (v, "prev_page");
+	m_delete (v, "prev_page.x");
+	m_delete (v, "prev_page.y");
 	m_delete (v, "ok");
+	m_delete (v, "ok.x");
+	m_delete (v, "ok.y");
 	v->_page = redirect;
       }
     }
   }
 
-  if(v->next_page)
+  if(v->next_page || v["next_page.x"])
   {
     function c=this_object()["verify_"+v->_page];
     int fail = 0;
@@ -649,13 +661,13 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
       DEBUGMSG ("Wizard: Going to next page\n");
     }
   }
-  else if(v->prev_page)
+  else if(v->prev_page || v["prev_page.x"])
   {
     v->_page = automaton ? v->_prev : PAGE(-1);
     DEBUGMSG ("Wizard: Going to previous page\n");
     offset=-1;
   }
-  else if(v->ok)
+  else if(v->ok || v["ok.x"])
   {
     function c=this_object()["verify_"+v->_page];
     int fail = 0;
