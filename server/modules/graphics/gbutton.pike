@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.79 2001/03/28 09:49:29 kuntri Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.80 2001/03/30 11:14:36 jhs Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -38,6 +38,17 @@ constant module_name = "Graphics: GButton";
 constant module_doc  = 
 "Provides the <tt>&lt;gbutton&gt;</tt> tag that is used to draw graphical "
 "buttons.";
+
+void create()
+{
+  defvar("ext", Variable.Flag(0, VAR_MORE,
+			      "Append format to generated images",
+			      "Append the image format (.gif, .png, "
+			      ".jpg, etc) to the generated images. "
+			      "This is not necessary, but might seem "
+			      "nicer, especially to people who try "
+			      "to mirror your site."));
+}
 
 mapping tagdocumentation() {
   Stdio.File file=Stdio.File();
@@ -676,9 +687,10 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
 //   }
 }
 
-
 mapping find_internal(string f, RequestID id)
 {
+  if(strlen(f)>4 && query("ext") && f[-4]=='.') // Remove .ext
+    f = f[..strlen(f)-5];
   return button_cache->http_file_answer(f, id);
 }
 
@@ -773,6 +785,10 @@ class ButtonFrame {
     string img_src =
       query_absolute_internal_location(id) +
       button_cache->store( ({ new_args, content }), id);
+
+    if(query("ext"))
+      img_src += "." + (new_args->format || "gif");
+
 //     werror("argcache->store took %dµs\n", gethrtime()-t );
     return ({ img_src, new_args });
   }
