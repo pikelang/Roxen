@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.23 2000/02/08 22:54:10 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.24 2000/02/08 22:55:15 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -458,18 +458,6 @@ string tag_button(string tag, mapping args, string contents, RequestID id)
     "extra_mask_layers":args["extra-mask-layers"],
     "extra_frame_layers":args["extra-frame-layers"],
   ]);
-
-//   array hsv = Image.Color( @new_args->bg )->hsv( );
-//   hsv[-1] = min( hsv[-1]+70, 255 );
-//   new_args->bob = (array)Image.Color.hsv( @hsv );
-//   hsv[-1] = max( hsv[-1]-140, 0 );
-//   new_args->bo = (array)Image.Color.hsv( @hsv );
-
-//   if(args->bordercolor)
-//     new_args->bo=parse_color(args->bordercolor); //  Border color
-
-//   if(args->borderbottom)
-//     new_args->bob=parse_color(args->borderbottom);
 
   new_args->quant = args->quant || 128;
   foreach(glob("*-*", indices(args)), string n)
