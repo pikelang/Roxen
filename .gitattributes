@@ -24,6 +24,7 @@ bn binary
 map binary
 ni binary
 nn binary
+rbf binary
 
 # Handling of foreign (ie CVS) identifiers.
 #
