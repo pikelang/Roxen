@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.30 2004/06/10 16:25:50 anders Exp $
+ * $Id: resolv.pike,v 1.31 2004/06/11 18:15:21 jonasw Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -226,7 +226,7 @@ string parse( RequestID id )
     "&nbsp;&nbsp;&nbsp;" +LOCALE(30,"Password")+ ": "
     "<input name='password' value='&form.password;' type='password' "
     "size='12' /></td></tr></table>\n"
-    "<cf-ok/><cf-cancel href='?class=&form.class;'/>\n";
+    "<table border='0'><tr><td><cf-ok/></td><td><cf-cancel href='?class=&form.class;'/></td></tr></table>\n";
 
   roxen.InternalRequestID nid = roxen.InternalRequestID();
   nid->client = id->client;
