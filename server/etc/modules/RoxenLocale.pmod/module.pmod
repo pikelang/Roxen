@@ -191,7 +191,7 @@ string translate(LocaleObject locale_object, string id,
   return str;
 }
 
-void clean_cache() {
+static void clean_cache() {
   remove_call_out(clean_cache);
   int t=time(1)-CLEAN_CYCLE;
   foreach(indices(locales), string lang) {
@@ -202,3 +202,64 @@ void clean_cache() {
   }
   call_out(clean_cache, CLEAN_CYCLE);
 }
+
+class DeferredLocale
+{
+  static string project;
+  static string key;
+  static string fallback;
+  function(void:LocaleObject) get_locale;
+  static void create(function(void:LocaleObject) get_locale_, string key_, string fallback_)
+  {
+    get_locale = get_locale_;
+    key = key_;
+    fallback = fallback_;
+  }
+  static inline string lookup()
+  {
+    return translate(get_locale(), key, fallback);
+  }
+  static string _sprintf(int c)
+  {
+    switch(c) {
+    case 's':
+      return lookup();
+    case 'O':
+      return
+	sprintf("%O", lookup());
+    default:
+      error(sprintf("Illegal formatting char '%c'\n", c));
+    }
+  }
+  static string `+(mixed x)
+  {
+    return lookup()+x;
+  }
+  static string ``+(mixed x)
+  {
+    return x+lookup();
+  }
+  static int _sizeof()
+  {
+    return sizeof(lookup());
+  }
+  static int|string `[](int a,int|void b)
+  {
+    if (query_num_arg() < 2) {
+      return lookup()[a];
+    }
+    return lookup()[a..b];
+  }
+  static array(string) `/(string s)
+  {
+    return lookup()/s;
+  }
+  static array(int) _indices()
+  {
+    return indices(lookup());
+  }
+  static array(int) _values()
+  {
+    return values(lookup());
+  }
+};
