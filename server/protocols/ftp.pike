@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.30 1997/08/03 22:50:04 grubba Exp $
+ * $Id: ftp.pike,v 1.31 1997/08/12 12:07:28 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -677,9 +677,15 @@ void got_data(mixed fooid, string s)
     else
       perror("recieved '"+cmdlin+"' "+GRUK+"\n");
 #endif
-    switch (cmd)
-    {
-     case "user":
+    if (!conf->extra_statistics->ftp) {
+      conf->extra_statistics->ftp = (["commands":([ cmd:1 ])]);
+    } else if (!conf->extra_statistics->ftp->commands) {
+      conf->extra_statistics->ftp->commands = ([ cmd:1 ]);
+    } else {
+      conf->extra_statistics->ftp->commands[cmd]++;
+    }
+    switch (cmd) {
+    case "user":
       if(!arg || arg == "ftp" || arg == "anonymous") {
 	reply("230 Anonymous ftp, at your service\n");
 	session_auth = 0;
@@ -694,7 +700,7 @@ void got_data(mixed fooid, string s)
       cwd = "/";
       break;
       
-     case "pass": 
+    case "pass": 
       if(!rawauth)
 	reply("230 Guest login ok, access restrictions apply.\n"); 
       else {	
@@ -715,7 +721,13 @@ void got_data(mixed fooid, string s)
 	}
 	session_auth = auth = y;
 	if(auth[0] == 1) {
-	  cwd = misc->home;
+	  if (stringp(misc->home)) {
+	    // Check if it is possible to cd to the users home-directory.
+	    array(int) st = roxen->stat_file(misc->home, this_object());
+	    if (st && (st[1] < 0)) {
+	      cwd = misc->home;
+	    }
+	  }
 	  reply("230 User "+username+" logged in.\n"); 
 	} else
 	  reply("230 Guest user "+username+" logged in.\n"); 
@@ -723,17 +735,23 @@ void got_data(mixed fooid, string s)
       }
       break;
 
-     case "quit": 
+    case "quit": 
       reply("221 Bye! It was nice talking to you!\n"); 
       end(); 
       return;
 
-     case "noop": reply("220 Nothing done ok\n"); break;
-     case "syst": reply("215 UNIX Type: L8: Roxen Challenger Information Server\n"); break;
-     case "pwd":  reply("257 \""+cwd+"\" is current directory.\n"); break;
-     case "cdup":
+    case "noop":
+      reply("220 Nothing done ok\n");
+      break;
+    case "syst":
+      reply("215 UNIX Type: L8: Roxen Challenger Information Server\n");
+      break;
+    case "pwd":
+      reply("257 \""+cwd+"\" is current directory.\n");
+      break;
+    case "cdup":
       arg = "..";
-     case "cwd":  
+    case "cwd":  
       string ncwd, f;
       array (int) st;
       array (string) dir;
@@ -797,13 +815,13 @@ void got_data(mixed fooid, string s)
       reply("250 CWD command successful.\n");
       break;
       
-     case "type": 
+    case "type": 
        /*  if (arg!="I") reply("504 Only binary mode supported (sorry)\n"); 
 	   else */
       reply("200 Using binary mode for transferring files\n");
       break;
 
-     case "port": 
+    case "port": 
       int a,b,c,d,e,f;
       if (sscanf(arg,"%d,%d,%d,%d,%d,%d",a,b,c,d,e,f)<6) 
 	reply("501 i don't understand your parameters\n");
@@ -818,13 +836,16 @@ void got_data(mixed fooid, string s)
       }
       break;
       
-     case "nlst": 
+    case "nlst": 
       int short=0, tsort=0, F=0, C=0, d=0, a=0, r=0;
       short = 1;
 
-     case "list": 
+    case "list": 
       mapping f;
       string args;
+
+      // Count this as a request.
+      conf->requests++;
 
       // Restore auth-info
       auth = session_auth;
@@ -906,8 +927,12 @@ void got_data(mixed fooid, string s)
       }
       break;
 	      
-     case "retr": 
+    case "retr": 
+      // Count this as a request
+      conf->requests++;
+
       string f;
+
       if(!arg || !strlen(arg))
       {
 	reply("501 'RETR': Missing argument\n");
@@ -923,7 +948,10 @@ void got_data(mixed fooid, string s)
       roxen->log(file, this_object());
       break;
 
-     case "stat":
+    case "stat":
+      // Count this as a request
+      conf->requests++;
+
       string|int dirlist;
       if(!arg || !strlen(arg))
       {
@@ -952,7 +980,10 @@ void got_data(mixed fooid, string s)
       reply("211 End of Status\n");
       break;
       
-     case "size":
+    case "size":
+      // Count this a request
+      conf->requests++;
+
       if(!arg || !strlen(arg))
       {
 	reply("501 'SIZE': Missing argument\n");
@@ -967,6 +998,9 @@ void got_data(mixed fooid, string s)
       reply("213 "+ file->len +"\n");
       break;
     case "stor": // Store file..
+      // Count this as a request
+      conf->requests++;
+
       string f;
       if(!arg || !strlen(arg))
       {
@@ -981,6 +1015,9 @@ void got_data(mixed fooid, string s)
       break;
 
     case "dele":
+      // Count this as a request
+      conf->requests++;
+
       if(!arg || !strlen(arg))
       {
 	reply("501 'DELE': Missing argument\n");
