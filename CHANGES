@@ -1,11 +1,17 @@
+Changes since Roxen Challenger 1.2.45 Yellow
+-----------------------------------------------
+
+o Fixed dynamic linking for FreeBSD ELF. 
+
+
 Changes since Roxen Challenger 1.2.43 Yellow
 -----------------------------------------------
 
 o Fixed bug that made the config object sent to modules sometimes be 0.
 
-o Renabled the decoding of URLs in a way that shouldn't break anything.
+o Reenabled the decoding of URLs in a way that shouldn't break anything.
 
-o Fixed Business Graphics to use background and forground colors if available.
+o Fixed Business Graphics to use background and foreground colors if available.
 
 o Made a new SSL3 demo certificate that expires in the year 2011.
 
