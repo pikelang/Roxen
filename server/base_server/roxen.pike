@@ -4,10 +4,9 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.630 2001/02/09 00:15:20 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.631 2001/02/22 17:56:33 mast Exp $";
 
-// Used when running threaded to find out which thread is the backend thread,
-// for debug purposes only.
+// Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
 
 // The argument cache. Used by the image cache.
@@ -489,7 +488,7 @@ local static void handler_thread(int id)
 	  h=0;
 	} else if(!h) {
 	  // Roxen is shutting down.
-	  report_debug("Handle thread ["+id+"] stopped\n");
+	  report_debug("Handle thread ["+id+"] stopped.\n");
 	  thread_reap_cnt--;
 #ifdef NSERIOUS
 	  if(!thread_reap_cnt) report_debug("+++ATH\n");
@@ -545,8 +544,11 @@ void start_handler_threads()
   handler_threads += new_threads;
 }
 
+static Thread.MutexKey backend_block_lock;
+
 void stop_handler_threads()
-//! Stop all the handler threads, but give up if it takes too long.
+//! Stop all the handler threads and the backend, but give up if it
+//! takes too long.
 {
   int timeout=10;
 #if constant(_reset_dmalloc)
@@ -560,6 +562,19 @@ void stop_handler_threads()
     thread_reap_cnt++;
   }
   handler_threads = ({});
+
+  if (this_thread() != backend_thread) {
+    thread_reap_cnt++;
+    Thread.Mutex mutex = Thread.Mutex();
+    backend_block_lock = mutex->lock();
+    call_out (lambda () {
+		thread_reap_cnt--;
+		report_debug("Backend thread stopped.\n");
+		mutex->lock();
+		error("Backend stop failed.\n");
+	      }, 0);
+  }
+
   while(thread_reap_cnt) {
     sleep(0.1);
     if(--timeout<=0) {
@@ -3101,7 +3116,7 @@ static private int _recurse;
 // FIXME: Ought to use the shutdown code.
 void exit_when_done()
 {
-  report_debug("Interrupt request received. Exiting,\n");
+  report_debug("Interrupt request received.\n");
   die_die_die=1;
 
   if(++_recurse > 4)
