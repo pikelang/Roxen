@@ -32,7 +32,7 @@
 // 1.6   nov 23 law
 //       new directory format (used by ftp.uwp.edu) 
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.5 1996/11/27 14:05:21 per Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.6 1996/11/30 15:13:05 kg Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -452,6 +452,26 @@ program Request = class
     return "<pre>"+res+"</pre>";
   }
 
+  string parse_directory_without_first_line()
+  {
+    string res ;
+    string *dir ;
+    dir=((buffer/"\r")*"")/"\n";
+    if (sizeof(dir)<1) return 0; /* nope */
+ 
+    while (dir[0]=="") dir=dir[1..sizeof(dir)-1];
+    dir=dir[1..sizeof(dir)-1] ;
+ 
+    if (sizeof(dir)<1) return 0; /* nope */
+ 
+    buffer=dir*"\n" ;
+    if (!(res=parse_unix_ls_directory()) &&
+	!(res=parse_unix_ls_directory_floating_date()) &&
+	!(res=parse_uwp_directory()))
+      return 0 ;
+    return res ;
+  }
+
   string parse_directory()
   {
     string res,s,r,t;
@@ -467,7 +487,8 @@ program Request = class
     }
     else if (!(res=parse_unix_ls_directory()) &&
 	     !(res=parse_unix_ls_directory_floating_date()) &&
-	     !(res=parse_uwp_directory()))
+	     !(res=parse_uwp_directory()) &&
+	     !(res=parse_directory_without_first_line()))
     {
       /* unknown, return preformatted */
       perror("FTP GATEWAY: unknown list format at "+
@@ -797,13 +818,14 @@ program Request = class
   {
     if (r=="226") return; /* message from previous session? */
     if (r=="230") return; /* login ok (?) */
+    // Should check for 213 in the next check, according to Jason Rumney
     if (r=="211" || r=="212") /* stat done */
     {
       dir_completed();
       dontsaveserver=0;
       return;
     }
-    else if (r=="502"||r=="500") /* command not implemented *sigh* */
+    else if (r=="502"||r=="500"||r=="550") /* command not implemented *sigh* */
     {
       set_what_now("opening data connection");
       switch (master->query("method"))
@@ -860,7 +882,7 @@ program Request = class
     if (r=="331") /* Send your password, please */
     {
       array f;
-      if(0)
+      if(0) // Silly
 	if(id->realauth && sizeof(f = id->realauth/":") == 2)
 	  write_server("pass "+f[1]);
 	else
