@@ -16,12 +16,12 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.65 2000/11/26 15:44:40 nilsson Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.66 2001/01/08 16:07:54 per Exp $";
 
 constant path = "config_interface/";
 
 object charset_decoder;
-Filesystem.System tar;
+Sql.sql docs;
 
 string template_for( string f, object id )
 {
@@ -74,11 +74,22 @@ string real_file( mixed f, mixed id )
 
   sscanf(f, "%[^/]/%s", locale, rest);
 
-  if( tar && rest && (sscanf( rest, "docs/%s", rest ) ))
+  if( docs && rest && (sscanf( rest, "docs/%s", rest ) ))
     return 0;
   array(string|array) stat_info = low_stat_file(locale, rest, id);
   return stat_info && stat_info[0];
 }
+
+mapping get_docfile( string f )
+{
+  array q;
+  if( f=="" || f[-1] == '/' )
+    return get_docfile( f+"index.html" )||get_docfile( f+"index.xml" );
+  if( sizeof(q = docs->query( "SELECT * FROM docs WHERE name='/%s'", f )) )
+    return q[0];
+}
+
+
 
 array(int)|Stat stat_file( string f, object id )
 {
@@ -92,12 +103,9 @@ array(int)|Stat stat_file( string f, object id )
 
   sscanf(f, "%[^/]/%s", locale, rest);
 
-  if( tar && rest && (sscanf( rest, "docs/%s", rest ) ))
-  {
-    object s = tar->stat( rest );
-    if( s )
-      return ({ s->mode, s->size, s->atime, s->mtime, s->ctime, s->uid, s->gid });
-  }
+  if( docs && rest && (sscanf( rest, "docs/%s", rest ) ))
+    if( mapping f = get_docfile( rest ) )
+      return ({ 0555, strlen(f->contents), time(), 0, 0, 0, 0 });
 
   array(string|Stat) ret = low_stat_file(locale, rest, id);
   return ret && (ret[1]);
@@ -118,11 +126,6 @@ mixed find_dir( string f, object id )
 
   sscanf(f, "%[^/]/%s", locale, rest);
 
-  if( tar && rest && (sscanf( rest, "docs/%s", rest ) ))
-  {
-    return tar->get_dir( rest );
-  }
-
   multiset languages;
     languages=(multiset)Locale.list_languages("roxen_config");
 
@@ -134,6 +137,7 @@ mixed find_dir( string f, object id )
 
 mixed find_file( string f, object id )
 {
+  int is_docs;
   if( !id->misc->internal_get )
   {
     if( !id->misc->config_user )
@@ -199,28 +203,34 @@ mixed find_file( string f, object id )
     id->misc->defines->theme_language = locale;
     id->misc->defines->language = locale;
     // add template to all rxml/html pages...
-    type = id->conf->type_from_filename( id->not_query );
+    if(id->not_query[-1] == '/' )
+      type = "text/html";
+    else
+      type = id->conf->type_from_filename( id->not_query );
   }
 
-  if( tar && rest && (sscanf( rest, "docs/%s", df ) ))
+  if( docs && rest && (sscanf( rest, "docs/%s", rest ) ))
   {
-    object s = tar->stat( df );
-    if( !s ) return 0;
-    if( s->isdir() ) return -1;
-    string data = tar->open( df, "r" )->read();
-    if( type == "text/html" )
+    if( mapping f = get_docfile( rest ) )
     {
-      string title;
-      sscanf( data, "%*s<title>%s</title>", title );
-      sscanf( data, "%*s<br clear=\"all\">%s", data );
-      sscanf( data, "%s</body>", data );
-      retval = "<topmenu selected='docs' base='"+
-             query_location()+locale+"/'/>"
-             "<content>"+data+"</content>";
-      if( title )
-        retval="<title>: Docs "+html_encode_string(title)+"</title>" + retval;
-    } else
-      retval = data;
+      is_docs = 1;
+      string data = f->contents;
+      f = 0;
+      if( type == "text/html" )
+      {
+        string title;
+        sscanf( data, "%*s<title>%s</title>", title );
+        sscanf( data, "%*s<br clear=\"all\">%s", data );
+        sscanf( data, "%s</body>", data );
+        retval = "<topmenu selected='docs' base='"+
+               query_location()+locale+"/'/>"
+               "<content>"+data+"</content>";
+        if( title )
+          retval="<title>: Docs "+html_encode_string(title)+"</title>" +
+                           retval;
+      } else
+        retval = data;
+    }
   }
   else
   {
@@ -254,12 +264,15 @@ mixed find_file( string f, object id )
   if( locale != "standard" ) 
     roxen.set_locale( locale );
 
+  if( !retval )
+    return 0;
+
   if( type  == "text/html" )
   {
     string data, title="", pre;
     if( stringp( retval ) )
       data = retval;
-    else
+    else 
       data = retval->read();
 
     if( 3 == sscanf( data, "%s<title>%s</title>%s", pre, title, data ) )
@@ -279,24 +292,18 @@ mixed find_file( string f, object id )
       id->misc->defines = ([]);
     id->misc->defines[" _stat"] = id->misc->stat;
      
-    //      return http_string_answer( data, type );
     retval = http_rxml_answer( data, id );
 
-
-    NOCACHE();
+    if(!is_docs)
+    {
+      NOCACHE();
+      retval->expires = time(1);
+    }
     retval->stat = 0;
     retval->len = strlen( retval->data );
-    retval->expires = time(1);
     if( locale != "standard" ) 
       roxen.set_locale( "standard" );
   }
-//   foreach( glob( "cf_goto_*", indices( id->variables ) - ({ 0 }) ), string q )
-//     if( sscanf( q, "cf_goto_%s.x", q ) )
-//     {
-//       while( id->misc->orig ) id = id->misc->orig;
-//       q = fix_relative( q, id );
-//       return http_redirect( q, id );
-//     }
   if( stringp( retval ) )
     retval = http_string_answer( retval, type );
 
@@ -305,17 +312,55 @@ mixed find_file( string f, object id )
 
 void start(int n, Configuration cfg)
 {
-  catch(tar = Filesystem.Tar( "config_interface/docs.tar" ));
-  if(!tar)
-    report_notice( "Failed to open documentation tar-file. "
-                   "Documentation will not be available.\n" );
   if( cfg )
   {
+    if( !(docs = DBManager.get( "docs", cfg ) ) )
+    {
+      if( DBManager.get( "docs" ) )
+      {
+        report_warning( "The database 'docs' exists, but this server can "
+                        "not read from it.\n"
+                        "Documentation will be unavailable.\n" );
+      }
+      else
+      {
+        Filesystem.Tar T;
+        report_notice( "Creating the 'docs' database\n");
+        catch(T = Filesystem.Tar( "config_interface/docs.tar" ));
+        if( !T )
+          report_notice( "Failed to open the documentation tar-file.\n");
+        else
+        {
+          DBManager.create_db( "docs", "docs", 1 );
+          DBManager.set_permission( "docs", cfg, DBManager.WRITE );
+          docs = DBManager.get( "docs", cfg );
+          catch(docs->query( "DROP TABLE docs" ));
+          docs->query( "CREATE TABLE docs "
+                     "(name VARCHAR(80) PRIMARY KEY,contents MEDIUMBLOB)");
+          void rec_process( string dir )
+          {
+            foreach( T->get_dir( dir ), string f )
+            {
+              if( T->stat( f )->isdir() )
+                rec_process( f );
+              else
+              {
+                if( search( f, "internal-roxen" ) != -1 ) continue;
+                docs->query( "INSERT INTO docs VALUES ('%s','%s')", f,
+                             T->open(f, "r")->read());
+              }
+            }
+          };
+          rec_process("/");
+        }
+      }
+    }
+
     cfg->add_modules(({
       "config_tags", "config_userdb",   "contenttypes",    "indexfiles",
       "gbutton",     "wiretap",         "graphic_text",    "pathinfo",
       "pikescript",  "translation_mod", "rxmlparse",        "rxmltags",
-      "tablist",     "update"
+      "tablist",     "update",          "cimg"
     }));
   }
   call_out( zap_old_modules, 0 );
