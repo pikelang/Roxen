@@ -5,7 +5,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.6 1998/07/21 05:52:58 js Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.7 1998/07/21 14:35:55 wellhard Exp $";
 
 mapping host_to_id;
 
@@ -44,7 +44,7 @@ void update_host_cache(object id)
 string file_from_host(object id, string file)
 {
   string prefix,dir;
-  string prefix=id->misc->customer_id=host_to_id[get_host(id)];
+  string prefix=id->misc->customer_id=id->variables->customer_id=host_to_id[get_host(id)];
   if(prefix)
     dir = "/" + prefix + "/";
   else
