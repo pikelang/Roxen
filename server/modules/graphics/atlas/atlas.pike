@@ -5,12 +5,11 @@
  */
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: atlas.pike,v 1.5 2000/04/06 07:34:43 wing Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.6 2000/09/10 13:53:43 nilsson Exp $";
 
 #include <module.h>
 
 inherit "module";
-inherit "roxenlib";
 
 constant module_type = MODULE_PARSER | MODULE_EXPERIMENTAL;
 constant module_name = "Atlas";
@@ -18,70 +17,55 @@ constant module_doc  =
 #"Provides the <tt>&lt;atlas&gt;</tt> tag that creates a world map. It is
 possible to highlight countries on the generated world map.";
 
-/* Temporary cache. */
+roxen.ImageCache the_cache;
 
-#define RANDOM() random(2*1024*1024*1024-1)
-
-static private int cache_base = RANDOM();
-static private mapping cache = ([]);
-static private mapping cache_reverse = ([]);
-static private mapping cache_meta = ([]);
-
-/* Store the state and return a unique key.  If the
-   same state has been stored before, use that key. */
-static private string cache_set(mixed value)
-{
-  string x = encode_value(value);
-  string key = cache_reverse[x];
-
-  if(!key)
-  {
-    /* Heavy key.  We do not want anyone
-       to guess someone else's map number. */
-    key = sprintf("%08x%08x%08x.gif",
-		  RANDOM(), cache_base + sizeof(cache), time(1));
-
-    cache[key] = value;
-    cache_reverse[x] = key;
-  }
-
-  return key;
+void start() {
+  the_cache = roxen.ImageCache( "atlas", generate_image );
 }
 
-static private mixed cache_get(string key)
-{
-  return cache[key];
+mapping find_internal( string f, RequestID id ) {
+  return the_cache->http_file_answer( f, id );
 }
 
-/* Set meta data, i.e. the calculated image for example. */
-static private void cache_set_meta(string key, mixed meta)
-{
-  cache_meta[key] = meta;
-}
 
-static private mixed cache_get_meta(string key)
-{
-  return cache_meta[key];
-}
+// ---------------------- Tags ------------------------------
 
-/* Tags. */
+#ifdef OLD_RXML_COMPAT
+inherit "roxenlib";
 
 array(string) container_atlas_list_regions(string t, mapping arg, string contents,
 				     RequestID id)
 {
-  return ({do_output_tag(arg, Array.map(.Map.Earth()->regions(),
-					lambda(string c)
-					  { return ([ "name":c ]); }),
+  return ({do_output_tag(arg, map(.Map.Earth()->regions(),
+				  lambda(string c)
+				  { return ([ "name":c ]); }),
 			 contents, id)});
 }
 
 array(string) container_atlas_list_countries(string t, mapping arg, string contents,
 				       RequestID id)
 {
-  return ({do_output_tag(arg, Array.map(.Map.Earth()->countries(),
-					lambda(string c)
-					  { return ([ "name":c ]); }),
+  return ({do_output_tag(arg, map(.Map.Earth()->countries(),
+				  lambda(string c)
+				  { return ([ "name":c ]); }),
 			 contents, id)});
+}
+#endif
+
+class TagEmitAtlas {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "atlas";
+
+  array get_dataset( mapping args, RequestID id ) {
+    if (args->list=="countries")
+      return map(.Map.Earth()->countries(),
+		 lambda(string c) { return (["name":c]); });
+    if (args->list=="regions")
+      return map(.Map.Earth()->regions(),
+		 lambda(string c) { return (["name":c]); });
+    RXML.parse_error("No valid list argument given\n");
+  }
 }
 
 string cont_atlas_country(string t, mapping arg, mapping state)
@@ -98,74 +82,67 @@ string cont_atlas_country(string t, mapping arg, mapping state)
   return "";
 }
 
-string container_atlas(string t, mapping arg, string contents, RequestID id)
-{
-  /* Construct a state which will be used
-     in order to draw the image later on. */
-  mapping state = ([ "arg":arg, "color":([]) ]);
+constant imgargs = ({ "width", "height", "alt", "src", "class", "border", "name" });
 
-  /* Parse internal tags. */
+string container_atlas(string t, mapping args, string contents, RequestID id)
+{
+  // Construct a state which will be used
+  // in order to draw the image later on.
+  mapping state=([]);
+  foreach( indices(args), string arg)
+    if(!imgargs[arg]) {
+      state[arg]=args[arg];
+      m_delete(args, arg);
+    }
+  state->color=([]);
+
+  // Parse internal tags.
   parse_html(contents,
 	     ([ "atlas-country":cont_atlas_country ]),
 	     ([]),
 	     state);
 
-  /* Calculate size of image.  Preserve
-     image aspect ratio if possible. */
+  // Calculate size of image.  Preserve
+  // image aspect ratio if possible.
   int w, h;
-  if(arg->width) {
-    sscanf(arg->width, "%d", w);
+  if(args->width) {
+    sscanf(args->width, "%d", w);
     h = (int)(w*3.0/5.0);
-    sscanf(arg->height||"", "%d", h);
+    sscanf(args->height||"", "%d", h);
   } else {
-    sscanf(arg->height||"300", "%d", h);
+    sscanf(args->height||"300", "%d", h);
     w = (int)(h*5.0/3.0);
   }
   state->width = w;
   state->height = h;
 
-  return "<img border=0"
-         " alt=" + (arg->alt || "\"\"") +
-         " width=" + state->width +
-         " height=" + state->height +
-         " src=" + query_internal_location() + cache_set(state) + ">";
+  args->src = query_internal_location()+the_cache->store(state, id);
+  return RXML.t_xml->format_tag("img", args);
 }
 
-mapping find_internal(string filename, RequestID id)
+mixed generate_image(mapping state, RequestID id)
 {
-  string r = cache_get_meta(filename);
+  if(!state)
+    return 0;
 
-  if(!r)
-  {
-    mapping state = cache_get(filename);
+  mapping opt = ([]);
+  if(state->bgcolor)
+    opt->color_sea = parse_color(state->bgcolor);
+  state->fgcolor = parse_color(state->fgcolor || "#ffffff");
 
-    if(!state)
-      return 0;
+  .Map.Earth m = .Map.Earth(([ "region":state->region ]));
 
-    mapping arg = state->arg;
+  Image img = m->image(state->width, state->height,
+		       ([ "color_fu":
+			  lambda(string name, mapping state)
+			  {
+			    return state->color[name] || state->fgcolor;
+			  },
+			  "fu_args":({ state }) ]) + opt);
 
-    mapping opt = ([]);
-    if(arg->bgcolor)
-      opt->color_sea = parse_color(arg->bgcolor);
-    state->fgcolor = parse_color(arg->fgcolor || "#ffffff");
+  // Kludge because the image package does not handle polygons
+  // correctly (notice the funny pixels at the top of the map).
+  img->line(0, 0, img->xsize(), 0, 0,0,0);
 
-    .Map.Earth m = .Map.Earth(([ "region":arg->region ]));
-
-    Image img = m->image(state->width, state->height,
-			 ([ "color_fu":
-			    lambda(string name, mapping state)
-			    {
-			      return state->color[name] || state->fgcolor;
-			    },
-			    "fu_args":({ state }) ]) + opt);
-
-    /* Kludge because the image package does not handle polygons
-       correctly (notice the funny pixels at the top of the map). */
-    img->line(0, 0, img->xsize(), 0, 0,0,0);
-
-    r = Image.GIF.encode(img);
-    cache_set_meta(filename, r);
-  }
-
-  return http_string_answer(r, "image/gif");
+  return img;
 }
