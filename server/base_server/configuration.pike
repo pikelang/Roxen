@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.135 1998/05/27 22:10:38 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.136 1998/05/28 00:08:29 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -370,7 +370,7 @@ void map_providers(string provides, string fun, mixed ... args)
 // return the first positive response.
 mixed call_provider(string provides, string fun, mixed ... args)
 {
-  foreach(get_providers(providers), object mod) {
+  foreach(get_providers(provides), object mod) {
     function f;
     if(objectp(mod) && functionp(f = mod[fun])) {
       mixed error;
