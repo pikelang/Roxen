@@ -11,6 +11,8 @@ o The htaccess module is now a MODULE_URL module, which improves the internal
 o The start-script now uses the pike named "roxen" if it exists, so that
   Roxen shows up as "roxen" instead of as "pike" in process-listings.
 
+o The LIST and NLST commands in the ftp-module now support glob-patterns.
+
 
 Changes since Roxen Challenger 1.2 alpha 8
 -----------------------------------------------
