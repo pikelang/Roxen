@@ -14,29 +14,20 @@ string status(object|mapping conf)
 #define NBSP(X)  replace(X, " ", "&nbsp;")
 
   string res = "<table>"
-    "<tr align='left'><th>"+ LOCALE(2,"Sent data:") +"</th>"
+    "<tr align='left'><th>"+ LOCALE(2,"Sent data") +":</th>"
     "<td>"+ NBSP(Roxen.sizetostring(conf->sent)) +"</td>"
     "<td>"+ sprintf(" (%.2f",
 		    (((float)conf->sent)/(1024.0*1024.0)/dt) * 8192.0)+
     "&nbsp;kbit/"+ LOCALE(3,"sec") +") </td>"
-    "</tr><tr align='left'><th>"+ LOCALE(4,"Sent headers:")+"</th>"
+    "</tr><tr align='left'><th>"+ LOCALE(4,"Sent headers")+":</th>"
     "<td>"+ NBSP(Roxen.sizetostring(conf->hsent)) +"</td></tr>\n"
-    "<tr align='left'><th>"+ LOCALE(234,"Requests:") +"</th>"
+    "<tr align='left'><th>"+ LOCALE(234,"Requests") +":</th>"
     "<td align='right'>"+ conf->requests +"</td>"
     "<td align='right'>"+ sprintf(" (%.2f", 
 				  ((float)conf->requests*60.0)/dt)+
     "/"+ LOCALE(6,"min") +") </td>"
-    "</tr><tr align='left'><th>"+ LOCALE(7,"Received data:") +"</th>"
+    "</tr><tr align='left'><th>"+ LOCALE(7,"Received data") +":</th>"
     "<td>"+ NBSP(Roxen.sizetostring(conf->received)) +"</td></tr>\n";
-
-  if (conf->misc && !zero_type(conf->misc->ftp_users)) {
-    res += sprintf("<tr align='left'><th>%s</th><td>%8d</td>"
-		   "<td align='right'> (%.2f/%s) </td>"
-		   "<th>%s</th><td>%d</td></tr>\n",
-		   LOCALE(8,"FTP users (total):"), conf->misc->ftp_users,
-		   (((float)conf->misc->ftp_users*60.0)/dt), 
-		   LOCALE(6,"min"), LOCALE(9,"FTP users (now):"), 
-		   conf->misc->ftp_users_now);
   }
   res += "</table>\n\n";
 
