@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.388 2000/01/10 09:05:55 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.389 2000/01/12 23:20:10 grubba Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -539,10 +539,18 @@ void handler_thread(int id)
 	}
       } while(1);
     }) {
-      report_error(/* LOCALE->uncaught_error(*/describe_backtrace(q)/*)*/);
-      if (q = catch {h = 0;}) {
-	report_error(LOCALE->
-		     uncaught_error(describe_backtrace(q)));
+      if (h = catch {
+	report_error(/* LOCALE->uncaught_error(*/describe_backtrace(q)/*)*/);
+	if (q = catch {h = 0;}) {
+	  report_error(LOCALE->
+		       uncaught_error(describe_backtrace(q)));
+	}
+      }) {
+	catch {
+	  report_error("Error reporting error:\n");
+	  report_error(sprintf("Raw error: %O\n", h[0]));
+	  report_error(sprintf("Original raw error: %O\n", q[0]));
+	};
       }
     }
   }
