@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
 #define DB_ALIAS "autosite"
-constant cvs_version="$Id: autositefs.pike,v 1.29 1998/10/01 04:22:07 js Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.30 1998/10/05 00:33:42 js Exp $";
 
 mapping host_to_id;
 multiset(int) hidden_sites;
@@ -148,6 +148,7 @@ mixed find_file(string f, object id)
       if((md->template)&&(md->template!="No"))
 	d = "<template><content>"+d+"</content></template>";
       int t=gethrtime();
+      id->misc->seclevel=1;
       res = http_string_answer(parse_rxml(d, id), "text/html");
       werror("parse_rxml: %f (f: %O)\n",(gethrtime()-t)/1000.0,f);
     }
