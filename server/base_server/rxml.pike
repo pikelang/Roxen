@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.235 2000/08/29 13:05:53 per Exp $
+// $Id: rxml.pike,v 1.236 2000/08/29 14:44:12 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -190,13 +190,12 @@ string parse_rxml(string what, RequestID id,
     _error=200;
   if(!_extra_heads)
     _extra_heads=([ ]);
-  if(!defines->sizefmt)
-    defines->sizefmt = "abbrev";
-  if(!_stat)
+  if(!_stat) {
     if(id->misc->stat)
       _stat=id->misc->stat;
     else if(file)
       _stat=file->stat();
+  }
 
   id->misc->defines = defines;
 
