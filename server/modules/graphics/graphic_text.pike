@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.158 1998/11/19 10:42:54 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.159 1998/11/19 10:47:47 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -517,7 +517,7 @@ object make_text_image(mapping args, object font, string text,object id)
   {
     string c1="black",c2="black",c3="black",c4="black";
     sscanf(args->bgscale, "%s,%s,%s,%s", c1, c2, c3, c4);
-    background->tuned_box(0,0, xsize,ysize,
+    background->tuned_box(0,0, background->xsize()-1,background->ysize()-1,
 			  ({parse_color(c1),parse_color(c2),parse_color(c3),
 			      parse_color(c4)}));
   }
