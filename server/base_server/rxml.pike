@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.135 2000/02/16 20:02:37 mast Exp $
+ * $Id: rxml.pike,v 1.136 2000/02/17 18:09:54 nilsson Exp $
  *
  * The Roxen RXML Parser. See also the RXML Pike module.
  *
@@ -402,12 +402,7 @@ array(string)|string call_container(RXML.PXml parser, mapping args,
   TRACE_ENTER("container &lt;"+tag+"&gt", rf);
 
   if(args->preparse) contents = parse_rxml(contents, id);
-  if(args->trimwhites) {
-    sscanf(contents, "%*[ \t\n\r]%s", contents);
-    contents = reverse(contents);
-    sscanf(contents, "%*[ \t\n\r]%s", contents);
-    contents = reverse(contents);
-  }
+  if(args->trimwhites) contents = String.trim_all_whites(contents);
 
 #ifdef MODULE_LEVEL_SECURITY
   if(check_security(rf, id, id->misc->seclevel))
@@ -744,6 +739,8 @@ private string use_file_doc(string f, string data)
 	String.implode_nicely( sort(ind) )+"<br />";
   }
 
+  if(help) res+="<br /><br />All tags accept the <i>help</i> attribute.";
+
   return res;
 }
 
@@ -833,12 +830,8 @@ class UserTag {
       vars = nargs;
       m_delete(args, "scope");
 
-      if(!(RXML.FLAG_NONCONTAINER&flags) && args->trimwhites) {
-	sscanf(content, "%*[ \t\n\r]%s", content);
-	content = reverse(content);
-	sscanf(content, "%*[ \t\n\r]%s", content);
-	content = reverse(content);
-      }
+      if(!(RXML.FLAG_NONCONTAINER&flags) && args->trimwhites)
+	content=String.trim_all_whites(content);
 
 #ifdef OLD_RXML_COMPAT
       array replace_from = map(indices(nargs),make_entity)+({"#args#", "<contents>"});
@@ -897,19 +890,14 @@ class TagDefine {
 	      m_delete( args, arg );
 	    }
 #endif
-	content=parse_html(content,([]),(["attrib":
+	content=parse_html(content||"",([]),(["attrib":
 				  lambda(string tag, mapping m, string cont) {
 				    if(m->name) defaults[m->name]=parse_rxml(cont,id);
 				    return "";
 				  }
 	]));
 
-	if(args->trimwhites) {
-	  sscanf(content, "%*[ \t\n\r]%s", content);
-	  content = reverse(content);
-	  sscanf(content, "%*[ \t\n\r]%s", content);
-	  content = reverse(content);
-	}
+	if(args->trimwhites) content=String.trim_all_whites(content);
 
 #ifdef OLD_RXML_COMPAT
 	content = replace( content, indices(args), values(args) );

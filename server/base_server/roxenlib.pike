@@ -1,4 +1,4 @@
-// $Id: roxenlib.pike,v 1.153 2000/02/16 11:05:12 per Exp $
+// $Id: roxenlib.pike,v 1.154 2000/02/17 18:10:22 nilsson Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -1167,14 +1167,6 @@ string roxen_encode( string val, string encoding )
   }
 }
 
-// internal method for do_output_tag
-private string remove_leading_trailing_ws( string str )
-{
-  sscanf( str, "%*[\t\n\r ]%s", str ); str = reverse( str );
-  sscanf( str, "%*[\t\n\r ]%s", str ); str = reverse( str );
-  return str;
-}
-
 // This method needs lot of work... but so do the rest of the system too
 // RXML needs types
 private int compare( string a, string b )
@@ -1330,7 +1322,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	else
 	{
 	  array(string) options =  exploded[c] / ":";
-	  string var = trim (options[0]);
+	  string var = String.trim_whites(options[0]);
 	  mixed val = vars[var];
 	  array(string) encodings = ({});
 	  string multisep = multi_separator;
@@ -1339,9 +1331,9 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 
 	  foreach(options[1..], string option) {
 	    array (string) foo = option / "=";
-	    string optval = trim (foo[1..] * "=");
+	    string optval = String.trim_whites(foo[1..] * "=");
 
-	    switch (lower_case (trim( foo[0] ))) {
+	    switch (lower_case (String.trim_whites( foo[0] ))) {
 	      case "empty":
 		empty = optval;
 		break;
@@ -1363,10 +1355,10 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 		}
 		break;
 	      case "encode":
-		encodings += Array.map (lower_case (optval) / ",", trim);
+		encodings += Array.map (lower_case (optval) / ",", String.trim_whites);
 		break;
 	      default:
-		return "<b>Unknown option " + trim (foo[0]) +
+		return "<b>Unknown option " + String.trim_whites(foo[0]) +
 		  " in replace field " + ((c >> 1) + 1) + "</b>";
 	    }
 	  }
@@ -1387,7 +1379,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 
 	  if (!sizeof (encodings))
 	    encodings = args->encode ?
-	      Array.map (lower_case (args->encode) / ",", trim) : ({"html"});
+	      Array.map (lower_case (args->encode) / ",", String.trim_whites) : ({"html"});
 
 	  string tmp_val;
 	  foreach (encodings, string encoding)
@@ -1469,15 +1461,6 @@ Stdio.File open_log_file( string logfile )
     return lf;
   }
   return Stdio.stderr;
-}
-
-string trim( string what )
-{
-  if (stringp (what)) {
-    sscanf(reverse(what), "%*[ \t]%s", what);
-    sscanf(reverse(what), "%*[ \t]%s", what);
-  }
-  return what;
 }
 
 string|int tagtime(int t, mapping m, RequestID id, function language)

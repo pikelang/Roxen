@@ -299,8 +299,8 @@ string get_var_doc( string s, object mod, int n, object id )
 string theme_name( string theme )
 {
   catch {
-    return trim(Stdio.read_bytes("config_interface/standard/themes/"+
-                                 theme+"/name")); };
+    return String.trim_all_whites(Stdio.read_bytes("config_interface/standard/themes/"+
+					       theme+"/name")); };
   return "Unknown theme";
 }
 
