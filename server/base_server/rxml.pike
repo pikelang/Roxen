@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.110 2000/02/08 01:30:40 nilsson Exp $
+ * $Id: rxml.pike,v 1.111 2000/02/08 07:15:35 nilsson Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -136,19 +136,19 @@ class ScopePage {
   mixed `[] (string var, void|RXML.Context c, void|string scope) {
     if(in_defines[var])
       return c->id->misc->defines[converter[var]];
-    if(objectp(c->id->misc->page[var])) return c->id->misc->page[var]->rxml_var_eval(c, var, "page");
-    return c->id->misc->page[var];
+    if(objectp(c->id->misc->scope_page[var])) return c->id->misc->scope_page[var]->rxml_var_eval(c, var, "page");
+    return c->id->misc->scope_page[var];
   }
 
   mixed `[]= (string var, mixed val, void|RXML.Context c, void|string scope_name) {
     if(in_defines[var])
       return c->id->misc->defines[converter[var]]=val;
-    return c->id->misc->page[var]=val;
+    return c->id->misc->scope_page[var]=val;
   }
 
   array(string) _indices(void|RXML.Context c) {
     if(!c) return ({});
-    array ind=indices(c->id->misc->page);
+    array ind=indices(c->id->misc->scope_page);
     foreach(indices(in_defines), string def)
       if(c->id->misc->defines[converter[def]]) ind+=({def});
     return ind;
@@ -162,7 +162,7 @@ class ScopePage {
       else
 	::m_delete(var, c, scope_name);
     }
-    predef::m_delete(c->id->misc->page, var);
+    predef::m_delete(c->id->misc->scope_page, var);
   }
 
   string _sprintf() { return "RXML.Scope(page)"; }
@@ -181,7 +181,7 @@ RXML.TagSet entities_tag_set = class
 
   void prepare_context (RXML.Context c) {
     c->add_scope("roxen",scope_roxen);
-    c->id->misc->page=([]);
+    c->id->misc->scope_page=([]);
     c->add_scope("page",scope_page);
     c->add_scope("cookie" ,c->id->cookies);
     c->add_scope("form", c->id->variables);
@@ -1150,10 +1150,10 @@ class TagIf {
       if(id->misc->_ifs) plugins+=id->misc->_ifs;
       array possible = indices(args) & indices(plugins);
 
-      int last=0;
+      int ifval=0;
       foreach(possible, string s) {
-	last = LAST_IF_TRUE = plugins[ s ]( args[s], id, args, and, s );
-	if(last) {
+	ifval = plugins[ s ]( args[s], id, args, and, s );
+	if(ifval) {
 	  if(!and) {
 	    do_iterate = 1;
 	    return 0;
@@ -1165,7 +1165,7 @@ class TagIf {
 	    return 0;
 	  }
       }
-      if(last) {
+      if(ifval) {
 	do_iterate = 1;
 	return 0;
       }
