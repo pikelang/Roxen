@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.41 2000/12/02 16:11:49 nilsson Exp $
+// $Id: module.pmod,v 1.42 2000/12/08 08:13:02 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -97,6 +97,7 @@ class Variable
   {
     int flags = get_flags();
     function cb;
+    if( flags & VAR_INVISIBLE )                      return 0;
     if( initial && !(flags & VAR_INITIAL) )          return 0;
     if( (flags & VAR_EXPERT) && !expert_mode )       return 0;
     if( (flags & VAR_MORE) && !more_mode )           return 0;
