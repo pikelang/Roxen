@@ -8,10 +8,10 @@
 // See fnord.pike for more information of what this tag does.
 
 // This variable is shown in the configinterface as the version of the module.
-string cvs_version = "$Id: newstyle_fnord.pike,v 1.4 2000/03/31 12:44:42 nilsson Exp $";
+constant cvs_version = "$Id: newstyle_fnord.pike,v 1.5 2000/07/02 16:47:14 nilsson Exp $";
 
 // Tell Roxen that this module is threadsafe.
-int thread_safe=1;
+constant thread_safe=1;
 
 // Include and inherit code that is needed in every module.
 #include <module.h>

@@ -4,11 +4,11 @@
 // of a container.
 
 // This variable is shown in the configinterface as the version of the module.
-string cvs_version = "$Id: fnord.pike,v 1.9 2000/03/17 00:39:43 nilsson Exp $";
+constant cvs_version = "$Id: fnord.pike,v 1.10 2000/07/02 16:46:08 nilsson Exp $";
 
 // Tell Roxen that this module is threadsafe. That is there is no
 // request specific data in global variables.
-int thread_safe=1;
+constant thread_safe=1;
 
 // Include and inherit code that is needed in every module.
 #include <module.h>
