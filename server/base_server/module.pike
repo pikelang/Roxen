@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.38 1999/01/21 23:31:24 marcus Exp $ */
+/* $Id: module.pike,v 1.39 1999/04/24 17:55:02 grubba Exp $ */
 
 #include <module.h>
 
@@ -306,8 +306,8 @@ void deflocaledoc( string locale, string variable,
       ->register_module_doc( this_object(), variable, name, doc, translate );
 }
 
-// Convenience function, define an invissible variable, this variable
-// will be saved, but it won't be vissible in the configuration interface.
+// Convenience function, define an invisible variable, this variable
+// will be saved, but it won't be visible in the configuration interface.
 void definvisvar(string name, int value, int type, array|void misc)
 {
   defvar(name, value, "", type, "", misc, 1);
