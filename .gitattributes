@@ -102,14 +102,6 @@ nn binary
 /server/etc/modules/RXML.pmod/module.pmod foreign_ident
 /server/etc/modules/RXML.pmod/utils.pmod foreign_ident
 /server/etc/modules/Roxen.pmod foreign_ident
-/server/etc/modules/RoxenLocale.pmod/cestina.pmod foreign_ident
-/server/etc/modules/RoxenLocale.pmod/deutsch.pmod foreign_ident
-/server/etc/modules/RoxenLocale.pmod/english.pmod foreign_ident
-/server/etc/modules/RoxenLocale.pmod/magyar.pmod foreign_ident
-/server/etc/modules/RoxenLocale.pmod/nederlands.pmod foreign_ident
-/server/etc/modules/RoxenLocale.pmod/nihongo.pmod foreign_ident
-/server/etc/modules/RoxenLocale.pmod/standard.pmod foreign_ident
-/server/etc/modules/RoxenLocale.pmod/svenska.pmod foreign_ident
 /server/etc/modules/RoxenRPC.pmod/Client.pike foreign_ident
 /server/etc/modules/RoxenRPC.pmod/HTTP.pmod/Client.pike foreign_ident
 /server/etc/modules/RoxenRPC.pmod/HTTP.pmod/Server.pike foreign_ident
