@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.49 2001/09/25 15:31:27 wellhard Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.50 2001/09/25 16:28:31 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -517,13 +517,19 @@ void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_co
 
 			 int logerrorsr =
 			   conf->find_module("rxmlparse")->query("logerrorsr");
-			 if(m["ignore-rxml-run-error"])
+			 int quietr =
+			   conf->find_module("rxmlparse")->query("quietr");
+			 if(m["ignore-rxml-run-error"]) {
 			   conf->find_module("rxmlparse")->getvar("logerrorsr")->set(0);
-
+			   conf->find_module("rxmlparse")->getvar("quietr")->set(1);
+			 }
 			 res = conf->try_get_file(args->file, id);
-			 if(m["ignore-rxml-run-error"])
+			 if(m["ignore-rxml-run-error"]) {
 			   conf->find_module("rxmlparse")->getvar("logerrorsr")->
 			     set(logerrorsr);
+			   conf->find_module("rxmlparse")->getvar("quietr")->
+			     set(quietr);
+			 }
 		       },
 
 		       "result":
@@ -539,6 +545,18 @@ void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_co
 			 }
 			 test_ok( );
 		       },
+
+		       "glob" :
+		       lambda(object t, mapping m, string c) {
+			 if( !glob(c, res) ) {
+			   if(m->not) return;
+			   test_error("Failed (result %O does not match %O)\n",
+				      res, c);
+			   throw(1);
+			 }
+			 test_ok( );
+		       },
+
     ]));
 
   if( mixed error = catch(parser->finish(c)) ) {
