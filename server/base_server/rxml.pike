@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.177 2000/03/22 15:11:49 nilsson Exp $
+// $Id: rxml.pike,v 1.178 2000/03/23 00:35:10 mast Exp $
 
 inherit "rxmlhelp";
 #include <request_trace.h>
@@ -483,7 +483,7 @@ class GenericTag {
 void add_parse_module (RoxenModule mod)
 {
   RXML.TagSet tag_set =
-    mod->query_tag_set ? mod->query_tag_set() : RXML.TagSet (sprintf ("%O", mod));
+    mod->query_tag_set ? mod->query_tag_set() : RXML.TagSet (mod->module_identifier());
   mapping(string:mixed) defs;
 
   if (mod->query_tag_callers &&
