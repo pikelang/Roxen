@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.427 2004/04/13 16:51:05 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.428 2004/04/13 18:33:40 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1599,15 +1599,6 @@ void send_result(mapping|void result)
 	  file->data = "\r\n";
 	  break;
 
-	case 200..Protocols.HTTP.HTTP_NO_CONTENT-1:
-	case Protocols.HTTP.HTTP_NO_CONTENT+1..299:
-	  // Some browsers, e.g. Netscape 4.7, don't trust a zero
-	  // content length when using keep-alive. So let's force a
-	  // close in that case.
-	  if( file->len <= 0 )
-	    misc->connection = "close";
-	  break;
-
 	case 0:
 	  file->error = Protocols.HTTP.HTTP_OK;
 	  break;
@@ -1629,12 +1620,10 @@ void send_result(mapping|void result)
 	  // Fold lines nicely.
 	  head_status = map (head_status / "\n", String.trim_all_whites) * " ";
       }
-      else
-	head_status = errors[file->error] || "";
 
       mapping(string:string) heads = make_response_headers (file);
 
-      if (!file->error || file->error == 200) {
+      if (file->error == 200) {
 	if (none_match && misc->etag &&
 	    (none_match[misc->etag] || none_match["*"])) {
 	  // We have a if-none-match header that matches our etag.
@@ -1650,7 +1639,7 @@ void send_result(mapping|void result)
 	  } else {
 	    file->error = 412;
 	  }
-	  file->file = file->data = 0;	  
+	  file->file = file->data = file->len = 0;
 	} else if(since && misc->last_modified)
 	{
 	  /* ({ time, len }) */
@@ -1673,13 +1662,12 @@ void send_result(mapping|void result)
 	       )
 	  {
 	    file->error = 304;
-	    file->file = file->data = 0;
+	    file->file = file->data = file->len = 0;
 	  }
 	}
-      }
 
-        if(misc->range && file->len && objectp(file->file) && !file->data &&
-           file->error == 200 && (method == "GET" || method == "HEAD"))
+	else if(misc->range && file->len && objectp(file->file) && !file->data &&
+		(method == "GET" || method == "HEAD"))
           // Plain and simple file and a Range header. Let's play.
           // Also we only bother with 200-requests. Anything else should be
           // nicely and completely ignored. Also this is only used for GET and
@@ -1714,19 +1702,33 @@ void send_result(mapping|void result)
                 file->file = MultiRangeWrapper(file, heads, ranges, this_object());
               }
             } else {
-              // Got the header, but the specified ranges was out of bounds.
+	      // Got the header, but the specified ranges were out of bounds.
               // Reply with a 416 Requested Range not satisfiable.
               file->error = 416;
               heads["Content-Range"] = "*/"+file->len;
-              if(method == "GET") {
-		file->rettext = "The requested byte range is out-of-bounds. Sorry.";
-		file->file = file->data = file->type = 0;
+	      if(method == "GET") {
+		file->file = file->data = file->type = file->len = 0;
               }
             }
           }
 	}
+      }
 
-	head_string = sprintf("%s %d %s\r\n", prot, file->error, head_status);
+      head_string = sprintf("%s %d %s\r\n", prot, file->error,
+			    head_status || errors[file->error] || "");
+
+      // Must update the content length after the modifications of the
+      // data to send that might have been done above for 206 or 304.
+      heads["Content-Length"] = (string)file->len;
+
+      // Some browsers, e.g. Netscape 4.7, don't trust a zero
+      // content length when using keep-alive. So let's force a
+      // close in that case.
+      if( file->error/100 == 2 && file->len <= 0 )
+      {
+	heads->Connection = "close";
+	misc->connection = "close";
+      }
 
 	if( mixed err = catch( head_string += Roxen.make_http_headers( heads ) ) )
 	{
