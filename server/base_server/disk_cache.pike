@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: disk_cache.pike,v 1.40 1999/03/23 22:24:43 mast Exp $";
+// string cvs_version = "$Id: disk_cache.pike,v 1.41 1999/04/24 20:56:09 mast Exp $";
 #include <module.h>
 #include <stat.h>
 
@@ -288,7 +288,6 @@ class Cache {
     cd = basename;
     lcs = command_stream->pipe();
 
-#if constant(Process.create_process)
     // FIXME: Should use spawn_pike() here.
     object proc = Process.create_process(({
       "bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
@@ -300,43 +299,6 @@ class Cache {
 	"gid":0,
       ]));
 
-#else /* !constant(Process.create_process) */
-    if(!fork())
-    {
-      mixed err;
-      /* Child */
-      err = catch {
-	lcs->dup2( Stdio.File("stdin") );
-	/* object privs = Privs("Starting the garbage collector"); */
-	// start garbagecollector niced as possible to reduce I/O-Load
-
-	// FIXME: Should use spawn_pike() here.
-#if !constant(nice)
-	exec("/usr/bin/nice", "-19",
-	     "bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
-	     "-M", "etc/modules", "bin/garbagecollector.pike");
-	perror("Failed to start niced garbage collector - retry without nice\n");
-#else
-	int q=9;
-	nice(q);
-	nice(q);
-#endif
-	Process.exec("bin/pike", "-m", "lib/pike/master.pike", "-I", "etc/include",
-	     "-M", "etc/modules", "bin/garbagecollector.pike");
-	perror("Failed to start garbage collector (exec failed)!\n");
-#if efun(real_perror)
-	perror("bin/pike: ");real_perror();
-#endif
-      };
-      catch {
-	if (err) {
-	  perror(sprintf("Error when trying to start garbage-collector:\n"
-			 "%s\n", describe_backtrace(err)));
-	}
-      };
-      exit(0);
-    }
-#endif /* constant(Process.create_process) */
     /* Master */
     mixed err;
     err = catch {

@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.87 1999/03/27 22:17:06 marcus Exp $
+ * $Id: roxenloader.pike,v 1.88 1999/04/24 20:56:10 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -15,7 +15,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.87 1999/03/27 22:17:06 marcus Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.88 1999/04/24 20:56:10 mast Exp $";
 
 // Macro to throw errors
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -318,7 +318,6 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
   if(!p) 
     error("Popen failed. (couldn't create pipe)\n");
 
-#if constant(Process.create_process)
   mapping opts = ([
     "env": (env || getenv()),
     "stdout":p,
@@ -348,64 +347,6 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
   p->close();
   destruct(f);
   return 0;
-#else
-  if(!fork())
-  {
-    mixed err;
-
-    err = catch {
-      if(p->query_fd() < 0)
-      {
-	perror("File to dup2 to closed!\n");
-	exit(99);
-      }
-      p->dup2(Stdio.File("stdout"));
-      // p->close();
-      // p2->close();
-#if constant(_verify_internals)
-      _verify_internals();
-#endif
-      object privs;
-      if (!getuid()) {
-	int olduid = 0, oldgid = getgid();
-#if constant(geteuid) && constant(getegid)
-	olduid = geteuid(), oldgid = getegid();
-#endif
-	switch(query_num_arg()) {
-	  case 4:
-	    oldgid = gid;
-	  case 3:
-	    olduid = uid;
-	    break;
-	}
-	privs = Privs ("Executing '" + s + "'");
-#if efun(initgroups)
-	array pw = getpwuid(uid);
-	if(pw) catch (initgroups(pw[0], oldgid));
-#endif
-	setgid(oldgid);
-	setuid(olduid);
-      }
-      catch(exece("/bin/sh", ({ "-c", s }), (env||getenv())));
-    };
-    catch {
-      if (err) {
-	report_error(sprintf("Error in popen():\n"
-			     "%s\n", describe_backtrace(err)));
-      } else {
-	report_error(sprintf("popen(%O) failed\n", s));
-      }
-    };
-    exit(69);
-  }else{
-    string t;
-    // p->close();
-    destruct(p);
-    t=f->read(0x7fffffff);
-    destruct(f);
-    return t;
-  }
-#endif
 }
 
 // Low level create process on Pike 0.5
@@ -438,7 +379,6 @@ int spawne(string s,string *args, mapping|array env, object stdin,
 {
   int pid, *olduid = allocate(2, "int");
 
-#if constant(Process.create_process)
   int u, g;
   if(uid) { u = uid[0]; g = uid[1]; } else
 #if efun(geteuid)
@@ -460,27 +400,6 @@ int spawne(string s,string *args, mapping|array env, object stdin,
     return(proc->pid());
   }
   return(-1);
-#else /* !constant(Process.create_process) */
-  if(pid=fork()) return pid;
-
-  object privs;
-  if (!getuid()) {
-    privs = Privs ("Executing '" + s + "' (outside roxen)");
-    if(arrayp(uid) && sizeof(uid) == 2)
-    {
-      setgid(uid[1]);
-      setuid(uid[0]);
-    }
-#if constant(geteuid) && constant(getegid)
-    else {
-      setgid(getegid());
-      setuid(geteuid());
-    }
-#endif
-  }
-  catch(low_spawne(s, args, env, stdin, stdout, stderr, wd));
-  exit(99); 
-#endif /* constant(Process.create_process) */
 }
 
 // Start a new Pike process with the same configuration as the current one
@@ -502,7 +421,6 @@ int spawn_pike(array(string) args, void|string wd, object|void stdin,
     preargs += ({ "-M"+s });
   foreach(new_master->pike_program_path, string s)
     preargs += ({ "-P"+s });
-#if constant(Process.create_process)
   object proc = Process.create_process(({ pikebin }) + preargs + args, ([
     "toggle_uid":1,
     "stdin":stdin,
@@ -516,22 +434,6 @@ int spawn_pike(array(string) args, void|string wd, object|void stdin,
     return(proc->pid());
   }
   return -1;
-
-#else /* !constant(Process.create_process) */
-  if ((pid = fork()) == 0) {
-    catch {
-      stdin && stdin->dup2(Stdio.File("stdin"));
-      stdout && stdout->dup2(Stdio.File("stdout"));
-      stderr && stderr->dup2(Stdio.File("stderr"));
-      if(wd)
-	cd(wd);
-      exece(pikebin, preargs+args, getenv());
-      perror(sprintf("Spawn_pike: Failed to exece %s\n", pikebin));
-    }
-    exit(99);
-  }
-  return pid;
-#endif /* constant(Process.create_process) */
 }
 
 
