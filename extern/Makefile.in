@@ -13,7 +13,7 @@ HAVE_SHUFFLE=@shuffle@
 
 OTHERFLAGS=@CFLAGS@
 
-CFLAGS=-g @DEFS@ @CFLAGS@ $(PREFLAGS) $(OTHERFLAGS)
+CFLAGS=@DEFS@ @CFLAGS@ $(PREFLAGS) $(OTHERFLAGS)
 PREFLAGS=-I. -I$(SRCDIR) -I$(SRCDIR)/../.. -I../..
 
 LDFLAGS=@LDFLAGS@
@@ -32,7 +32,7 @@ none-localinstall:
 -install:
 
 fcgi: 
-	(cd fast_cgi; $(MAKE))
+	(cd fast_cgi; $(MAKE) "CFLAGS=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)" "CC=$(CC)")
 	cp fast_cgi/cgi-fcgi/cgi-fcgi fcgi
 	@(strip fcgi || echo)
 
@@ -48,7 +48,6 @@ purecgi: cgi.o Makefile
 shuffle:	shuffle.o
 	$(CC) -O $(LDFLAGS) -o shuffle shuffle.o -lthread -lsocket $(LIBS)
 	@(strip shuffle || echo)
-
 
 pureshuffle:	shuffle.o
 	purify $(CC) -O $(LDFLAGS) -o shuffle shuffle.o -lthread -lsocket $(LIBS)
@@ -85,7 +84,7 @@ localinstall: fcgi roxen_hostname cgi
 
 clean: 
 	@rm -f roxen_hostname cgi shuffle fcgi *.o  core
-	@(cd fast_cgi; $(MAKE) clean)
+	@(cd fast_cgi; $(MAKE) clean "CFLAGS=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)" "CC=$(CC)")
 
 spotless: clean
 	@rm -f config.* stamp-h
