@@ -1,3 +1,38 @@
+Changes since Roxen 2.0.50
+-----------------------------------------------
+
+o Enable addition of this PHP-module even if PHP4 is not currently
+  available in the pike, but instead of parsing php4 scripts, return a
+  description of how to get php4 support. This should stop quite a lot
+  of mails to the mailinglist. :-)
+
+o Lots if updates and fixes in the inline documentation.
+
+o Fixed the RXML-compatibility module to support a few more things.
+
+o Added a "Default site" flag to the site-specific settings. That will
+  make Roxen use that for requests that can't be matched to a specific
+  site when using virtual hosting. (ie: The client did not sent the
+  host header.)
+
+o Note: The gbutton align argument was renamed img-align to resolve
+  the conflict with the normal <img align>.
+
+o Fixed the font system to handle font names with spaces.
+
+o Several small bugfixes.
+
+
+Changes since Roxen 2.0.46
+-----------------------------------------------
+
+o Fixed typo that prevented SSL-certificate handling from
+  working. (Roxen generated certificate requests that Thawte and
+  Verisign didn't like.)
+
+o Fixed RSAREF-support.
+
+
 Changes since Roxen 2.0.44
 -----------------------------------------------
 
