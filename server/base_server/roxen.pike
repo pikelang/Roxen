@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.758 2001/11/21 12:24:41 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.759 2001/11/22 15:41:43 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2129,6 +2129,11 @@ void restart_if_stuck (int force)
   call_out (restart_if_stuck,10);
   signal(signum("SIGALRM"),
 	 lambda( int n ) {
+	   if (!query("abs_engage")) {
+	     abs_started = 0;
+	     report_debug("Anti-Block System Disabled.\n");
+	     return;
+	   }
 	   report_debug("**** %s: ABS engaged!\n"
 			"Trying to dump backlog: \n",
 			ctime(time()) - "\n");
@@ -2141,7 +2146,7 @@ void restart_if_stuck (int force)
 	   _exit(1); 	// It might now quit correctly otherwise, if it's
 	   //  locked up
 	 });
-  alarm (60*query("abs_timeout")+10);
+  alarm (60*query("abs_timeout")+20);
 }
 #endif
 
@@ -4195,6 +4200,11 @@ string check_variable(string name, mixed value)
       restart_if_stuck(1);
     else
       remove_call_out(restart_if_stuck);
+    break;
+  case "abs_timeout":
+    if (value < 0) {
+      return "The timeout must be >= 0 minutes.";
+    }
     break;
 #endif
 
