@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.447 2001/07/05 04:32:25 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.448 2001/07/11 02:31:35 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2455,13 +2455,13 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   mixed err;
   int module_type;
 
-  roxen->bootstrap_info->set (({this_object(), modname}));
-
   if( datacache ) datacache->flush();
 
   if( sscanf(modname, "%s#%d", modname, id ) != 2 )
     while( modules[ modname ] && modules[ modname ][ id ] )
       id++;
+
+  roxen->bootstrap_info->set (({this_object(), modname + "#" + id}));
 
 #ifdef MODULE_DEBUG
   int start_time = gethrtime();
