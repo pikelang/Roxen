@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.36 1998/04/24 08:43:10 per Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.37 1998/06/13 20:30:43 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -41,6 +41,11 @@ void create()
 #endif
     );
   defvar("file", ".htaccess", "Htaccess file name", TYPE_STRING|VAR_MORE);
+  defvar("denyhtlist", ({".htaccess", ".htpasswd", ".htgroup"}),
+	 "Deny file list", TYPE_STRING_LIST, 
+	 "Always deny access to these files. This is useful to protect "
+	 "htaccess related files.");
+  
 }
 
 
@@ -847,8 +852,10 @@ mapping remap_url(object id)
     if(access_violation)
       return access_violation;
     else {
+
       string s = (id->not_query/"/")[-1];
-      if ((sizeof(s) >= 3) && (s[..2] == ".ht")) {
+      if (search(QUERY(denyhtlist), s) != -1) {
+	werror("Denied access for "+s+"\n");
 	id->misc->error_code = 401;
 	return http_low_answer(401, "<title>Access Denied</title>"
 			       "<h2 align=center>Access Denied</h2>");
