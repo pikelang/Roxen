@@ -2,6 +2,6 @@
 <pike>
   if( id->variables->uid == id->auth[1] )
     return "<auth-required realm=\"Roxen configuration interface\">";
-  return "<redirect to=/standard/>";
+  return sprintf("<redirect to=\"%s\">", id->referer*"");
 </pike>
 </content>
