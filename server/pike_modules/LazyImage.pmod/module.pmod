@@ -667,9 +667,9 @@ class LazyImage( LazyImage parent )
     if( result )
       add_layers( result );
     int t2 = gethrtime();
-    werror("%20s:", operation_name);
+//      werror("%20s:", operation_name);
     float t = gauge{ result = process( result ); };
-    werror(" %.3f %.3f\n",t,(gethrtime()-t2)/1000000.0 );
+//      werror(" %.3f %.3f\n",t,(gethrtime()-t2)/1000000.0 );
     return result;
   }
 
@@ -1195,7 +1195,6 @@ class Crop
   };
 }
 
-
 class Scale
 //! Scale the layers to the specified size. Uses the 'width' and
 //! 'height' arguments (in pixels). If either width or height are not
@@ -1370,7 +1369,7 @@ class X									\
     Layers process( Layers layers )					\
     {									\
       Layers victims = layers;						\
-									\
+      string what = args->what||"both";					\
       if( args->layers )						\
 	victims = find_layers( args->layers, layers );			\
       else if( args["layers-id"] )					\
@@ -1379,25 +1378,18 @@ class X									\
 									\
       foreach( victims, Image.Layer l )					\
       {									\
-	Image.Image i;							\
-	foreach((args->what=="both"?({"image","alpha"}):({args->what})),\
-	        string what)                                            \
-        {                                                               \
-	if( what == "alpha" )					        \
-	  i = l->alpha() || l->image()->copy()->clear(255,255,255);	\
-	else								\
-	  i = l->image();						\
-									\
-	if( !i )							\
-	  continue;							\
-									\
-	i = i->Z( A );							\
-									\
-	if( what == "alpha" )					        \
-	  l->set_image( l->image(), i );				\
-	else								\
-	  l->set_image( i, l->alpha() );				\
+	Image.Image i=l->image(),a=l->alpha();				\
+	if( what == "alpha" || what == "both")  		        \
+	{                                                               \
+	  if(!a) a = i->copy()->clear(255,255,255);                     \
+	  a = a->Z(A);                                                  \
 	}                                                               \
+	if( what == "image" || what == "both" ) 			\
+	  i = i->Z( A );						\
+									\
+	if( i && a && (i->xsize() != a->xsize() || i->ysize() != a->ysize()))\
+          a = a->copy(0,0,i->xsize()-1,i->ysize()-1);                   \
+        l->set_image( i,a );                                            \
       }									\
 									\
       return layers;							\
@@ -1420,6 +1412,8 @@ BASIC_I_OR_A_OPERATION( Grey,   "grey", grey, );
 BASIC_I_OR_A_OPERATION( Color,  "color", color,
 			translate_color(args->color));
 BASIC_I_OR_A_OPERATION( MirrorX, "mirror-x", mirrorx, );
+BASIC_I_OR_A_OPERATION( Rotate, "rotate", rotate,
+			translate_coordinate(args->amount,0) );
 BASIC_I_OR_A_OPERATION( MirrorY, "mirror-y", mirrory, );
 BASIC_I_OR_A_OPERATION( HSV2RGB, "hsv-to-rgb", hsv_to_rgb, );
 BASIC_I_OR_A_OPERATION( RGB2HSV, "rgb-to-hsv", rgb_to_hsv, );
