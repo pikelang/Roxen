@@ -7,7 +7,7 @@ inherit "roxen-module://filesystem";
 
 import Parser.XML.Tree;
 
-constant cvs_version = "$Id: webapp.pike,v 2.18 2002/06/24 12:06:16 nilsson Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.19 2002/06/28 23:33:18 nilsson Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -696,6 +696,8 @@ class BaseWrapper
   static object _id;
   static string _data;
   static string header;
+  static string retcode;
+  static string rettext;
   mapping(string:string) headermap = ([ ]);
   static int _ident;
   static int first=1;
@@ -749,29 +751,27 @@ class BaseWrapper
         else
           set_collect(2);
         
-        if (lower_case((headers[0]/" ")[1]) != "200") {
-          WRAP_WERR(sprintf("status: '%s'",
-                            lower_case((headers[0]/" ")[1]) ));
-        }
-        else {
-          string name, value;
-          foreach(headers[1..], string h) {
-            WRAP_WERR(sprintf("header=%s", h || "null"));
-            if (sscanf(h, "%s:%s", name, value) == 2) {
-              WRAP_WERR(sprintf("name=%s, value=%s", name || "null", value || "null"));
-              if ( !ignore_heads[lower_case(name)] )
-                Roxen.add_http_header(headermap, name,
-                                      String.trim_all_whites(value));
-              if (lower_case(name) == "content-type") {
-                content_type = String.trim_all_whites((value/";")[0]);
-                WRAP_WERR(sprintf("content-type: '%s'", content_type));
-                if (check(content_type)) {
-                  WRAP_WERR("check returned true");
-                  set_collect(1);
-                }
-                else
-                  WRAP_WERR("check returned false");
+        array(string) line = (headers[0]/" ");
+        retcode = line[1];
+        rettext = (sizeof(line)>2) ? (line[2..])*" " : 0;
+
+        string name, value;
+        foreach(headers[1..], string h) {
+          WRAP_WERR(sprintf("header=%s", h || "null"));
+          if (sscanf(h, "%s:%s", name, value) == 2) {
+            WRAP_WERR(sprintf("name=%s, value=%s", name || "null", value || "null"));
+            if ( !ignore_heads[lower_case(name)] )
+              Roxen.add_http_header(headermap, name,
+                                    String.trim_all_whites(value));
+            if (lower_case(name) == "content-type") {
+              content_type = String.trim_all_whites((value/";")[0]);
+              WRAP_WERR(sprintf("content-type: '%s'", content_type));
+              if (retcode == "200" && check(content_type)) {
+                WRAP_WERR("check returned true");
+                set_collect(1);
               }
+              else
+                WRAP_WERR("check returned false");
             }
           }
         }
@@ -908,13 +908,21 @@ class RXMLParseWrapper
     set_id_headers();
     mapping res;
     if (collect == 1)
+    {
       res = Roxen.http_rxml_answer(get_data(1), _id);
+      WEBAPP_WERR(sprintf("get_result returns rxml_answer=%O", res));
+    }
     else
     {
       string ct = content_type;
       if (!ct || strlen(ct) == 0)
         ct = "text/plain";
-      res = Roxen.http_string_answer(get_data(1), ct);
+      res = ([ "data":get_data(1),
+               "type":ct,
+               "extra_heads":headermap,
+               "error":(int)retcode,
+               "rettext":rettext ]);
+      //WEBAPP_WERR(sprintf("get_result returns string_answer=%O", res));
     }
 //     WRAP_WERR(sprintf("_id->misc=%O",
 //                       mkmapping(indices(_id->misc), values(_id->misc))));
@@ -1369,8 +1377,8 @@ mixed call_servlet( RXML.Frame frame, RequestID id, string f, string name )
       report_error("Path verification of %O failed:\n"
 		   "%O is not a prefix of %O\n",
 		   oldf, normalized_path, norm_f);
-      return "<h2>File " + f + " exists, but access forbidden "
-			     "by user</h2>";
+      frame->parse_error("File " + f + " exists, but access forbidden "
+			 "by user");
     }
     
     /* Adjust not_query */
@@ -1463,27 +1471,7 @@ mixed call_servlet( RXML.Frame frame, RequestID id, string f, string name )
               mixed res = rxml_wrapper->get_result();
               //WEBAPP_WERR(sprintf("res=%O", res ));
               
-//               if (res->error)
-//                 RXML_CONTEXT->set_misc (" _error", res->error);
-//               if (res->extra_heads)
-//                 RXML_CONTEXT->extend_scope ("header", res->extra_heads);
-//               foreach(rxml_wrapper->headermap, string h)
-//               {
-//                 if (stringp(rxml_wrapper->headermap[h]))
-//                 {
-//                   WEBAPP_WERR(sprintf("add_response_header(%s, %s)",
-//                                       h,  rxml_wrapper->headermap[h]));
-//                   id->add_response_header(h, rxml_wrapper->headermap[h]);
-//                 }
-//                 else
-//                   foreach(rxml_wrapper->headermap[h], string v)
-//                   {
-//                     WEBAPP_WERR(sprintf("add_response_header(%s, %s)",
-//                                         h,  rxml_wrapper->headermap[h]));
-//                     id->add_response_header(h, v);
-//                   }
-//               }
-              return res["data"];
+              return res;
             }
             WEBAPP_WERR(sprintf("rxml_wrapper=%O\n", rxml_wrapper));
 
@@ -1547,7 +1535,72 @@ class TagServlet
         WEBAPP_WERR(sprintf("module:%O\n", m->query_name()));
         if (m->query("tagtarget") == args->webapp)
         {
-          result = m->call_servlet(this_object(), id, args->uri || "", args->name || "");
+          string uri = args->uri || "";
+          RequestID fake_id;
+
+          if(!objectp(id))
+            error("No ID passed to 'TagServlet do_return'\n");
+
+          // id->misc->common is here for compatibility; it's better to use
+          // id->root_id->misc.
+          if ( !id->misc )
+            id->misc = ([]);
+          if ( !id->misc->common )
+            id->misc->common = ([]);
+
+          fake_id = id->clone_me();
+
+          fake_id->misc->common = id->misc->common;
+          fake_id->misc->internal_get = 1;
+
+          if (fake_id->scan_for_query)
+            // FIXME: If we're using e.g. ftp this doesn't exist. But the
+            // right solution might be that clone_me() in an ftp id object
+            // returns a vanilla (i.e. http) id instead when this function is
+            // used.
+            uri = fake_id->scan_for_query (uri);
+
+          uri = Roxen.fix_relative (uri, id);
+
+          fake_id->raw_url=uri;
+          fake_id->not_query=uri;
+          fake_id->method = "GET";
+
+          mapping hdrs = m->call_servlet(this_object(), fake_id,
+                                         uri, args->name || "");
+
+          CACHE( fake_id->misc->cacheable );
+          destruct (fake_id);
+          
+          if (!mappingp(hdrs) && !objectp(hdrs)) {
+            run_error("do_return(%O): uri = %O\n   hdrs = %O is not a mapping.\n",
+                         id, uri, hdrs);
+          }
+
+          if (hdrs->error)
+            RXML_CONTEXT->set_misc (" _error", hdrs->error);
+          if (hdrs->extra_heads)
+            RXML_CONTEXT->extend_scope ("header", hdrs->extra_heads);
+//               foreach(rxml_wrapper->headermap, string h)
+//               {
+//                 if (stringp(rxml_wrapper->headermap[h]))
+//                 {
+//                   WEBAPP_WERR(sprintf("add_response_header(%s, %s)",
+//                                       h,  rxml_wrapper->headermap[h]));
+//                   id->add_response_header(h, rxml_wrapper->headermap[h]);
+//                 }
+//                 else
+//                   foreach(rxml_wrapper->headermap[h], string v)
+//                   {
+//                     WEBAPP_WERR(sprintf("add_response_header(%s, %s)",
+//                                         h,  rxml_wrapper->headermap[h]));
+//                     id->add_response_header(h, v);
+//                   }
+//               }
+          if (hdrs->rettext)
+            RXML_CONTEXT->set_misc (" _rettext", hdrs->rettext);
+          result = hdrs["data"];
+
           return 0;
         }
       }
@@ -1582,7 +1635,15 @@ mixed find_file( string f, RequestID id )
   return Roxen.http_string_answer( status(), "text/html" );
 }
 
-
+// Place holder to be able to find tagdoc.
+class TagServlet 
+{
+  inherit RXML.Tag;
+  constant name = "servlet";
+  class Frame {
+    inherit RXML.Frame;
+  }
+}
 #endif
 
 
