@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.259 2001/06/25 19:20:22 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.260 2001/06/27 13:02:36 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1027,9 +1027,9 @@ int main(int argc, array(string) argv)
 Roxen 2.2 should be run with Pike 7.2.
 
 It might still be possible to start roxen with Pike "+__VERSION__+#", 
-but the functionality and stability might be affected, and stange 
-errors might occurr. If this does happen, please do not report it 
-as a bug unless you have checked that it also occurs with Pike 7.2
+but the functionality and stability might be affected, and strange
+errors might occur. If this does happen, please do not report it
+as a bug unless you have checked that it also occurs with Pike 7.2.
 ---------------------------------------------------------------
 
 
