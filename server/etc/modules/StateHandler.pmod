@@ -1,7 +1,7 @@
 // This is the Roxen WebServer state mechanism.
 // Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: StateHandler.pmod,v 1.4 2001/02/11 04:46:41 nilsson Exp $
+// $Id: StateHandler.pmod,v 1.5 2001/06/25 17:17:18 wellhard Exp $
 
 #ifdef STATE_HANDLER_DEBUG
 # define STATE_WERR(X) werror("State: "+X+"\n")
@@ -111,7 +111,10 @@ class Page_state {
 
   int uri_decode(string from)
   {
-    return decode(replace(from, ([ "%2B":"+", "%2F":"/", "%3D":"=" ])));
+    return decode(replace(from, ([ " ":"+",
+				   "%2B":"+",
+				   "%2F":"/",
+				   "%3D":"=" ])));
   }
 
   int decode(string from)
@@ -129,7 +132,8 @@ class Page_state {
       for(int i=1; i<sizeof(from); i++)
         chksum+=from[i];
       if(from[0] != CHKSPACE[chksum%64]) {
-	report_fatal("Error in state checksum.\n");
+	report_fatal("Error in state checksum. (%O, %O)\n",
+		     id->not_query, from);
         return 0;
       }
       from=from[1..];
