@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.25 2004/08/31 08:44:52 grubba Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.26 2004/08/31 12:14:18 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -20,7 +20,7 @@ void create() {
 	 "blocked while it fetches the web page.");
   defvar("recursion_limit", 5, "Maximum recursion depth for <insert href>",
 	 TYPE_INT|VAR_MORE,
-	 "Maxumum number of nested <insert href>'s allowed. "
+	 "Maxumum number of nested <tt>&lt;insert href&gt;</tt>'s allowed. "
 	 "May be set to zero to disable the limit.");
 }
 
