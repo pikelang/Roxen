@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.454 2000/03/10 17:16:11 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.455 2000/03/13 06:16:06 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1823,16 +1823,19 @@ void restart_if_stuck (int force)
 class ConfigIFCache
 {
   string dir;
-  void create( string name )
+  void create( string name, int|void settings )
   {
-    dir = configuration_dir + "_configinterface/" + name + "/";
+    if( settings )
+      dir = configuration_dir + "_configinterface/" + name + "/";
+    else
+      dir = "../var/"+roxen_version()+"/config_caches/" + name + "/";
     mkdirhier( dir );
   }
 
   mixed set( string name, mixed to )
   {
-    Stdio.File f = Stdio.File();
-    if(!f->open(  dir + replace( name, "/", "-" ), "wct" ))
+    Stdio.File f;
+    if(!(f=open(  dir + replace( name, "/", "-" ), "wct" )))
     {
       mkdirhier( dir+"/foo" );
       if(!f->open(  dir + replace( name, "/", "-" ), "wct" ))
@@ -1851,35 +1854,22 @@ class ConfigIFCache
 
   mixed get( string name )
   {
-    Stdio.File f = Stdio.File();
-    if(!f->open( dir + replace( name, "/", "-" ), "r" )) {
-      // Try falling back to the Roxen 2.0.11 file (Roxen 2.0b1)...
-      if (!f->open( ".configuration_settings/" +
-		    replace(configuration_dir-".", "/", "-") +
-		    "/" + (dir/"_configinterface/")[-1] +
-		    replace(name, "/", "-"), "r")) {
-	return 0;
-      }
-      report_warning("Using Roxen 2.0.11-style configuration file...\n");
-      catch {
-	return decode_value(f->read());
-      };
-      report_error("Roxen 2.0.11-style fallback failed.\n");
-      return 0;
-    }
+    Stdio.File f;
     mapping q = ([]);
+    f=open( dir + replace( name, "/", "-" ), "r" );
+    if(!f) return 0;
     decode_variable( 0, ([ "name":"res" ]), utf8_to_string(f->read()), q );
     return q->res;
   }
 
   array list()
   {
-    return get_dir( dir );
+    return r_get_dir( dir );
   }
 
   void delete( string name )
   {
-    rm( dir + replace( name, "/", "-" ) );
+    r_rm( dir + replace( name, "/", "-" ) );
   }
 }
 
@@ -2181,8 +2171,8 @@ class ImageCache
     meta_cache_insert( id, meta );
 
     string data = encode_value( meta );
-    Stdio.File f = Stdio.File(  );
-    if(!f->open(dir+id+".i", "wct" ))
+    Stdio.File f;
+    if(!(f=open(dir+id+".i", "wct" )))
     {
       report_error( "Failed to open image cache persistant cache file "+
                     dir+id+".i: "+strerror( errno() )+ "\n" );
@@ -2193,8 +2183,8 @@ class ImageCache
 
   static void store_data( string id, string data )
   {
-    Stdio.File f = Stdio.File(  );
-    if(!f->open(dir+id+".d", "wct" ))
+    Stdio.File f;
+    if(!(f = open(dir+id+".d", "wct" )))
     {
       data_cache_insert( id, data );
       report_error( "Failed to open image cache persistant cache file "+
@@ -2209,26 +2199,27 @@ class ImageCache
     Stdio.File f;
     if( meta_cache[ id ] )
       return meta_cache[ id ];
-    f = Stdio.File( );
-    if( !f->open(dir+id+".i", "r" ) )
+    if( !(f=open(dir+id+".i", "r" ) ) )
       return 0;
     return meta_cache_insert( id, decode_value( f->read() ) );
   }
 
-  void flush(int|void age) {
+  void flush(int|void age) 
+  {
     report_debug("Flushing "+name+" image cache.\n");
-    foreach(get_dir(dir), string f)
-      if(f[-2]=='.' && (f[-1]=='i' || f[-1]=='d') && (!age || age>file_stat(dir+f)[2]))
-	rm(dir+f);
+    foreach(r_get_dir(dir), string f)
+      if(f[-2]=='.' && (f[-1]=='i' || f[-1]=='d') && 
+         (!age || age>r_file_stat(dir+f)[2]))
+	r_rm(dir+f);
   }
 
   array status(int|void age) {
     int files=0, size=0, aged=0;
     array stat;
-    foreach(get_dir(dir), string f)
+    foreach(r_get_dir(dir), string f)
       if(f[-2]=='.' && (f[-1]=='i' || f[-1]=='d')) {
 	files++;
-	stat=file_stat(dir+f,1);
+	stat=r_file_stat(dir+f,1);
 	if(stat[1]>0) size+=stat[1];
         if(age<stat[2]) aged++;
       }
@@ -2243,11 +2234,8 @@ class ImageCache
     if( data_cache[ id ] )
       f = data_cache[ id ];
     else
-    {
-      f = Stdio.File( );
-      if(!f->open(dir+id+".d", "r" ))
+      if(!(f = open( dir+id+".d", "r" )))
         return 0;
-    }
 
     m = restore_meta( id );
 
@@ -2397,13 +2385,19 @@ class ArgCache
         path += "/";
       path += replace(name, "/", "_")+"/";
       mkdirhier( path + "/tmp" );
-      Stdio.File test = Stdio.File();
-      if (!test->open (path + "/.testfile", "wc"))
-	error ("Can't create files in the argument cache directory " + path + "\n");
-      else {
-	test->close();
-	rm (path + "/.testfile");
-      }
+      Stdio.File test;
+      if (!(test = open (path + "/.testfile", "wc")))
+        error ("Can't create files in the argument cache directory " + 
+               path + 
+#if constant(strerror)
+               " ("+strerror(errno())+
+#endif
+               "\n");
+//       else 
+//       {
+// 	rm (path + "/.testfile"); // It is better not to remove it, 
+// this way permission problems are detected rather early.
+//       }
     }
   }
 
@@ -2414,14 +2408,14 @@ class ArgCache
       array res = db->query("select contents from "+name+" where id='"+id+"'");
       if( sizeof(res) )
       {
-        db->query("update "+name+" set atime='"+
-                  time()+"' where id='"+id+"'");
+        db->query("update "+name+" set atime='"+time()+"' where id='"+id+"'");
         return res[0]->contents;
       }
       return 0;
     } else {
-      if( search( id, "/" )<0 && file_stat( path+id ) )
-        return Stdio.read_bytes(path+"/"+id);
+      Stdio.File f;
+      if( search( id, "/" )<0 && (f = open(path+"/"+id, "r")))
+        return f->read();
     }
     return 0;
   }
@@ -2445,15 +2439,16 @@ class ArgCache
       _key = replace(_key-"=","/","=");
       string short_key = _key[0..1];
 
-      while( file_stat( path+short_key ) )
+      Stdio.File f;
+      while( f = open( path+short_key, "r" ) )
       {
-        if( Stdio.read_bytes( path+short_key ) == long_key )
+        if( f->read() == long_key )
           return short_key;
         short_key = _key[..strlen(short_key)];
         if( strlen(short_key) >= strlen(_key) )
           short_key += "."; // Not very likely...
       }
-      Stdio.File f = Stdio.File( path + short_key, "wct" );
+      f = open( path+short_key, "wct" );
       f->write( long_key );
       return short_key;
     }
@@ -2463,8 +2458,8 @@ class ArgCache
   int key_exists( string key )
   {
     LOCK();
-    if( !is_db )
-      return !!file_stat( path+key );
+    if( !is_db ) 
+      return !!open( path+key, "r" );
     return !!read_args( key );
   }
 
@@ -2535,7 +2530,7 @@ class ArgCache
     if( is_db )
       db->query( "delete from "+name+" where id='"+id+"'" );
     else
-      rm( path+id );
+      r_rm( path+id );
   }
 }
 
@@ -2554,8 +2549,6 @@ string decode_charset( string charset, string data )
 void create()
 {
   SET_LOCALE(default_locale);
-
-  mkdirhier("precompiled/"+ uname()->machine+"."+uname()->release+"/");
 
   // Dump some programs (for speed)
   dump( "etc/roxen_master.pike" );
@@ -2967,7 +2960,7 @@ void create_pid_file(string where)
   where = replace(where, ({ "$pid", "$uid" }),
 		  ({ (string)getpid(), (string)getuid() }));
 
-  rm(where);
+  r_rm(where);
   if(catch(Stdio.write_file(where, sprintf("%d\n%d", getpid(), getppid()))))
     report_debug("I cannot create the pid file ("+where+").\n");
 #endif
