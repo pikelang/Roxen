@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.78 2000/11/13 09:57:04 per Exp $
+// $Id: module_support.pike,v 1.79 2000/11/13 10:23:20 per Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
@@ -238,7 +238,7 @@ class ModuleInfo( string sname, string filename )
   
   RoxenModule instance( Configuration conf, void|int silent )
   {
-    roxenloader.ErrorContainer ec = roxenloader.LowErrorContainer();
+    roxenloader.ErrorContainer ec = roxenloader.ErrorContainer();
     roxenloader.push_compile_error_handler( ec );
     catch
     {
