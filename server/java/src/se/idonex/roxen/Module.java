@@ -1,5 +1,5 @@
 /*
- * $Id: Module.java,v 1.2 1999/12/19 21:01:12 marcus Exp $
+ * $Id: Module.java,v 1.3 2000/01/05 18:15:24 marcus Exp $
  *
  */
 
@@ -78,7 +78,7 @@ public abstract class Module {
   
   public abstract String queryName();
 
-  public abstract String queryDescription();
+  public abstract String info();
 
   public String queryProvides()
   {
@@ -91,6 +91,11 @@ public abstract class Module {
       (this instanceof ParserModule? MODULE_PARSER : 0) |
       (this instanceof SecurityModule? MODULE_SECURITY : 0) |
       (this instanceof ExperimentalModule? MODULE_EXPERIMENTAL : 0);
+  }
+
+  final boolean queryUnique()
+  {
+    return this instanceof UniqueModule;
   }
 
   public RoxenConfiguration myConfiguration()
@@ -159,6 +164,18 @@ public abstract class Module {
   public String queryString(String name)
   {
     return (String)query(name);
+  }
+
+  protected native void set(String name, Object value);
+
+  protected void set(String name, int value)
+  {
+    set(name, new Integer(value));
+  }
+
+  String checkVariable(String name, Object value)
+  {
+    return null;
   }
 
 }
