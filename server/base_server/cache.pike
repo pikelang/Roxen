@@ -1,4 +1,4 @@
-//string cvs_version = "$Id: cache.pike,v 1.39 2000/02/17 22:47:15 nilsson Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.40 2000/02/18 11:10:01 nilsson Exp $";
 
 #define LOCALE	roxenp()->locale->get()->config_interface
 #include <roxen.h>
@@ -13,15 +13,13 @@ int get_size(mixed x)
     return strlen(x)+svalsize;
   else if(arrayp(x))
   {
-    mixed f;
     int i;
-    foreach(x, f)
+    foreach(x, mixed f)
       i += get_size(f);
     return svalsize + 4 + i;    // (base) + arraysize
   } else if(multisetp(x)) {
-    mixed f;
     int i;
-    foreach(indices(x), f)
+    foreach(indices(x), mixed f)
       i += get_size(f);
     return svalsize + i;    // (base) + arraysize
   } else if(objectp(x) || functionp(x)) {
@@ -193,7 +191,6 @@ void cache_clean()
 {
   remove_call_out(cache_clean);
   int gc_time=roxenp()->query("mem_cache_gc");
-  call_out(cache_clean, gc_time);
   string a, b;
   array c;
   int t=time(1);
@@ -239,6 +236,7 @@ void cache_clean()
       }
     }
   }
+  call_out(cache_clean, gc_time);
 }
 
 void create()
