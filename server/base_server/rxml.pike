@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.237 2000/08/29 23:24:05 nilsson Exp $
+// $Id: rxml.pike,v 1.238 2000/08/30 00:44:27 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -780,6 +780,7 @@ class UserTag {
 class TagDefine {
   inherit RXML.Tag;
   constant name = "define";
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame {
     inherit RXML.Frame;
@@ -1033,7 +1034,7 @@ class TagEval {
 class TagNoOutput {
   inherit RXML.Tag;
   constant name = "nooutput";
-  constant flags = 0;
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame {
     inherit RXML.Frame;
@@ -1046,7 +1047,7 @@ class TagNoOutput {
 class TagStrLen {
   inherit RXML.Tag;
   constant name = "strlen";
-  constant flags = 0;
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
   class Frame {
     inherit RXML.Frame;
@@ -1385,7 +1386,7 @@ class TagCond
 class TagEmit {
   inherit RXML.Tag;
   constant name = "emit";
-  constant flags = RXML.FLAG_SOCKET_TAG;
+  constant flags = RXML.FLAG_SOCKET_TAG|RXML.FLAG_DONT_REPORT_ERRORS;
   mapping(string:RXML.Type) req_arg_types = (["source":RXML.t_text(RXML.PEnt)]);
   
   private int compare( string a, string b )
@@ -1534,6 +1535,7 @@ class TagEmitForeach {
 class TagComment {
   inherit RXML.Tag;
   constant name = "comment";
+  constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
   class Frame {
     inherit RXML.Frame;
     int do_iterate=-1;
