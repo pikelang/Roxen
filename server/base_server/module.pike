@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.122 2001/08/09 16:59:56 mast Exp $
+// $Id: module.pike,v 1.123 2001/08/13 18:20:10 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -63,6 +63,11 @@ string module_identifier()
   }
   return _module_identifier;
 #endif
+}
+
+RoxenModule this_module()
+{
+  return this_object(); // To be used from subclasses.
 }
 
 string _sprintf()
@@ -404,6 +409,7 @@ static void create_sql_tables( mapping(string:array(string)) defenitions )
 }
 
 static string sql_table_exists( string name )
+//! Return the real name of the table 'name' if it exists.
 {
   if(strlen(name))
     name = "_"+name;
@@ -416,7 +422,8 @@ static string sql_table_exists( string name )
 
 
 static string get_my_table( string|array(string) name,
-			    void|array(string)|string defenition )
+			    void|array(string)|string defenition,
+			    string|void comment )
 //! @decl string get_my_table( string name, array(string) types )
 //! @decl string get_my_table( string name, string defenition )
 //! @decl string get_my_table( string defenition )
@@ -481,6 +488,8 @@ static string get_my_table( string|array(string) name,
       catch
       {
 	get_my_sql()->query( "CREATE TABLE "+res+" ("+defenition+")" );
+	DBManager.is_module_table( this_object(), my_db, res,
+				   oname+"\0"+comment );
       };
     if( error )
     {
