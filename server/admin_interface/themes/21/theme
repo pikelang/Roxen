@@ -16,7 +16,7 @@
 
 <theme-set what="gbutton-frame-image" to="gbutton.xcf"  themefile="1" />
 
-<theme-set what="logo-html" to='<img border="0" src="/*/unit" width="15" height="1" alt="" /><imgs border="0" src="&usr.logo;" alt="" />' />
+<theme-set what="logo-html" to='<img border="0" src="/$/unit" width="15" height="1" alt="" /><imgs border="0" src="&usr.logo;" alt="" />' />
 
 <theme-set what="body-args" to='
     link=&usr.linkcolor; 

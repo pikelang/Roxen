@@ -59,7 +59,7 @@ string selected_item( string q, Configuration c, RequestID id,
      "width='&usr.left-buttonwidth;' bgcolor='&usr.left-buttonbg;' "
      "icon_src='&usr.selected-indicator;' "
      "align_icon='left'>Sites</gbutton><br />"
-     "<img src='/*/unit' width='1' height='5'/><br />"
+     "<img src='/$/unit' width='1' height='5'/><br />"
      "<gbutton frame-image='&usr.left-buttonframe;' "
      "width='&usr.left-buttonwidth;' "+
      (module == "" ?
@@ -67,7 +67,7 @@ string selected_item( string q, Configuration c, RequestID id,
      " href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' "
      " icon_src='&usr.selected-indicator;' align_icon='left'>"+
      c->query_name()+"</gbutton><br />"
-     "<img src='/*/unit' width='1' height='2'/><br />");
+     "<img src='/$/unit' width='1' height='2'/><br />");
 
   string url = id->not_query + id->misc->path_info;
   string pre_site_url="";
@@ -257,7 +257,7 @@ string selected_item( string q, Configuration c, RequestID id,
       else
         pre +=
           "<tr><td>"
-	  "<img src='/*/unit' width=1 height=3 /></td></tr>\n"
+	  "<img src='/$/unit' width=1 height=3 /></td></tr>\n"
           "<tr><td valign='top' width='0%'>"
           "<img src='&usr." + (unfolded&&fold ? "unfolded" : sel) + ";' "
 	  "      vspace='1' hspace='4' alt='' /></td>"
@@ -363,7 +363,7 @@ string selected_item( string q, Configuration c, RequestID id,
     pre += "</table>";
   pre += "</box-frame>"
     "<br clear='all'/>"
-    "<img src='/*/unit' width='1' height='2'/><br />";
+    "<img src='/$/unit' width='1' height='2'/><br />";
 
   // Do not allow easy addition and removal of modules to and
   // from the administration interface server. Most of the time
@@ -381,7 +381,7 @@ string selected_item( string q, Configuration c, RequestID id,
 		 "Add module </gbutton>",
 		 Roxen.http_encode_string( c->name ) )+
       sprintf("<br />\n"
-	      "<img src='/*/unit' width=1 height=1/><br />"
+	      "<img src='/$/unit' width=1 height=1/><br />"
 	      "<gbutton frame-image='&usr.left-buttonframe;' "
 	      "width='&usr.left-buttonwidth;' "
 	      "bgcolor='&usr.left-buttonbg;' "

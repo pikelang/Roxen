@@ -33,6 +33,7 @@ Major changes from Roxen 3.3:
    have any redistribution rights for Roxens manuals.
  - Lots of minor bugs have been fixed, and some have been introduced.
  - Improved easter eggs.
+ - /internal-roxen-foo has been replaced by /$/foo
 
  New modules:
    - CVS Repository file system; can mount a CVS repository.

@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.129 2004/05/31 16:09:23 _cvs_stephen Exp $ -->
+<!-- $Id: template,v 1.130 2004/06/06 11:03:51 _cvs_stephen Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -14,7 +14,7 @@
   <table cellspacing="0" cellpadding="4">
     <eval><emit ::='&_.args;'>
       <cf-render-variable/>
-      <tr><td><img src="/*/unit" width="1" height="10"/></td></tr>
+      <tr><td><img src="/$/unit" width="1" height="10"/></td></tr>
     </emit></eval>
   </table>
   <if not variable='_.nosave'><cf-save/></if>
@@ -55,15 +55,15 @@
        <else>
 	 <set variable="var.leftside-padwidth" value="0"/>
        </else>
-       <img src="/*/unit" width="&var.leftside-padwidth;" height="&usr.leftside-padheight;" alt="" align="center" /><br />
+       <img src="/$/unit" width="&var.leftside-padwidth;" height="&usr.leftside-padheight;" alt="" align="center" /><br />
        &var.left-content:none;&var.leftimage:none;
      </td>
      <if variable="usr.split2-width is ?*">
-       <td ::="&usr.split2-tableargs:none;"><img height="1" src="/*/unit" width="&usr.split2-width;" /></td>
+       <td ::="&usr.split2-tableargs:none;"><img height="1" src="/$/unit" width="&usr.split2-width;" /></td>
      </if>
-     <td ::="&usr.split-tableargs:none;"><img height="1" src="/*/unit" width="1" /></td>
+     <td ::="&usr.split-tableargs:none;"><img height="1" src="/$/unit" width="1" /></td>
      <if variable="usr.split2-width is ?*">
-       <td ::="&usr.split2-tableargs:none;"><img height="1" src="/*/unit" width="&usr.split2-width;" /></td>
+       <td ::="&usr.split2-tableargs:none;"><img height="1" src="/$/unit" width="&usr.split2-width;" /></td>
      </if>
      <td ::="&usr.content-tableargs:none;">
        <contents/>
@@ -94,7 +94,7 @@
       </if>
       <else>
         <td ::="&usr.subtabs-tableargs:none;">
-        <img src="/*/unit" width="1" height="&usr.leftside-padheight;" />
+        <img src="/$/unit" width="1" height="&usr.leftside-padheight;" />
 	</td>
       </else>
     </tr>
@@ -189,13 +189,13 @@
                   >User</gbutton><br />
               <font color="&usr.top-fgcolor;">&usr.user-name;</font>
      </td>
-     <td width='0%'><img src='/*/unit' width='20' /></td>
+     <td width='0%'><img src='/$/unit' width='20' /></td>
    </tr>
    <tr>
-     <td colspan="3" ::="&usr.toptabs-tableargs:none;" width="100%" valign="bottom"><img src="/*/unit" width="&usr.toptabs-padwidth;" height="1" alt="" />&var._top_content:none;</td>
+     <td colspan="3" ::="&usr.toptabs-tableargs:none;" width="100%" valign="bottom"><img src="/$/unit" width="&usr.toptabs-padwidth;" height="1" alt="" />&var._top_content:none;</td>
    </tr>
   </table>
-  <img src="/*/unit" width="1" height="10" alt="" /><br />
+  <img src="/$/unit" width="1" height="10" alt="" /><br />
 
   <table cellpadding="10" width="100%"><tr><td>
 

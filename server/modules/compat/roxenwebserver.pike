@@ -17,7 +17,7 @@
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
 constant cvs_version =
- "$Id: roxenwebserver.pike,v 1.9 2004/06/04 08:33:15 _cvs_stephen Exp $";
+ "$Id: roxenwebserver.pike,v 1.10 2004/06/06 11:03:58 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_unique = 1;
 
@@ -85,7 +85,7 @@ mapping first_try(RequestID id)
   if(sizeof(m)>sizeof(introxen) && has_prefix(m,introxen))
   {
     hitcounts->internal_roxen_++;
-    id->not_query = "/*/" + m[sizeof(introxen)..];
+    id->not_query = "/$/" + m[sizeof(introxen)..];
   }
 
   if(!id->misc->_roxenwebserver)
@@ -181,7 +181,7 @@ class TagConfigImage {
 	args->src = args->src[..sizeof(args->src)-5];
 
       args->alt = args->alt || args->src;
-      args->src = "/*/" + args->src;
+      args->src = "/$/" + args->src;
       args->border = args->border || "0";
 
       int xml=!m_delete(args, "noxml");

@@ -25,7 +25,7 @@ function run( string url, string ... more  )
 	 };
 }
 
-#define ir(X) "/*/"+X
+#define ir(X) "/$/"+X
 
 #define test_r_c( X,Y ) atest( ir(X), run(ir(X), Y), simple_check )
 #define test_r( X ) atest( ir(X), run(ir(X)), simple_check )

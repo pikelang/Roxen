@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.43 2004/05/27 21:24:38 _cvs_stephen Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.44 2004/06/06 11:04:00 _cvs_stephen Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -17,7 +17,7 @@ constant module_doc  =
   ("This module provides the <tt>&lt;obox&gt;</tt> tag that "
    "draws outlined boxes.");
 
-constant unit_gif = "/*/unit";
+constant unit_gif = "/$/unit";
 
 static string img_placeholder (mapping args)
 {

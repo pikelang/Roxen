@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.870 2004/06/04 08:33:21 _cvs_stephen Exp $";
+constant cvs_version="$Id: core.pike,v 1.871 2004/06/06 11:04:03 _cvs_stephen Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1461,7 +1461,7 @@ class Protocol
     URL2CONF_MSG("sorted_urls: %O\n"
 		 "url: %O\n", sorted_urls, url);
     // The URLs are sorted from longest to shortest, so that short
-    // urls (such as http://*/) will not match before more complete
+    // urls (such as http://$/) will not match before more complete
     // ones (such as http://*.chilimoon.com/)
     foreach( sorted_urls, string in )
     {

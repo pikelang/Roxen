@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.429 2004/06/05 15:19:48 _cvs_dirix Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.430 2004/06/06 11:04:00 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -619,7 +619,7 @@ class TagChili {
       string color = m_delete(args, "color") || "white";
       mapping aargs = (["href": "http://www.chilimoon.org/"]);
 
-      args->src = "/*/chili-"+size+"-"+color;
+      args->src = "/$/chili-"+size+"-"+color;
       args->width =  (["small":"36", "medium":"57", "large":"151"])[size];
       args->height = (["small":"40", "medium":"64", "large":"169"])[size];
 
@@ -4221,7 +4221,7 @@ just got zapped?
  Returns true if the named page is viewable.</short> A nonviewable page
  is e.g. a file that matches the internal files patterns in the filesystem module.
  If the path does not begin with /, it is assumed to be a URL relative to the directory
- containing the page with the <tag>if</tag>-statement. 'Magic' files like /*/unit
+ containing the page with the <tag>if</tag>-statement. 'Magic' files like /$/unit
  will evaluate as true. This is a <i>State</i> plugin.</p>
 </desc>
 
@@ -4235,7 +4235,7 @@ just got zapped?
  is nonviewable, e.g. matches the internal files patterns in the filesystem module,
  it will still be detected by this if plugin. If the path does not begin with /, it
  is assumed to be a URL relative to the directory containing the page with the if statement.
- 'Magic' files like /*/unit will evaluate as true.
+ 'Magic' files like /$/unit will evaluate as true.
  This is a <i>State</i> plugin.</p></desc>
 
 <attr name='internal-exists' value='path' required='1'>

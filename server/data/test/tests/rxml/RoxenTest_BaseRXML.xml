@@ -1372,12 +1372,12 @@ b</sizeof></rxml>
 </test>
 
 <test>
-<rxml><if exists="/*/chili-large-black">yes</if></rxml>
+<rxml><if exists="/$/chili-large-black">yes</if></rxml>
 <result>yes</result>
 </test>
 
 <test>
-<rxml><if exists="/*/unit">yes</if></rxml>
+<rxml><if exists="/$/unit">yes</if></rxml>
 <result>yes</result>
 </test>
 

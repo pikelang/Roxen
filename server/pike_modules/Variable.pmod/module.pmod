@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.92 2004/06/04 08:33:20 _cvs_stephen Exp $
+// $Id: module.pmod,v 1.93 2004/06/06 11:04:02 _cvs_stephen Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1458,16 +1458,16 @@ class List
 #define DIMBUTTON(X) ("<disabled-gbutton icon-src='"+X+"'></disabled-gbutton>")
       if( i )
         res += "\n<td>"+
-            REORDER(prefix+"up."+i, "/*/up")+
+            REORDER(prefix+"up."+i, "/$/up")+
             "</td>";
       else
-        res += "\n<td>"+DIMBUTTON("/*/up")+"</td>";
+        res += "\n<td>"+DIMBUTTON("/$/up")+"</td>";
       if( i != sizeof( query())- 1 )
         res += "\n<td>"+
-            REORDER(prefix+"down."+i, "/*/down")
+            REORDER(prefix+"down."+i, "/$/down")
             +"</td>";
       else
-        res += "\n<td>"+DIMBUTTON("/*/down")+"</td>";
+        res += "\n<td>"+DIMBUTTON("/$/down")+"</td>";
       res += "\n<td>"+
             BUTTON(prefix+"delete."+i, LOCALE(227, "Delete") )
           +"</td>";
@@ -1639,7 +1639,7 @@ class PortList
 
   string transform_from_form( string v, mapping va )
   {
-    if( v == "" ) return "http://*/";
+    if( v == "" ) return "http://$/";
     v = v[sizeof(path())..];
     if( sizeof( va[v+"path"] ) && va[v+"path"][-1] != '/' )
       va[v+"path"]+="/";

@@ -12,9 +12,9 @@ string parse( RequestID id )
   // Ok. I am lazy. This could be optimized. :-)
   return #"
 <table><tr>
-  <td><img src='/*/unit' width='50'/></td>
+  <td><img src='/$/unit' width='50'/></td>
   <td><eval><insert file=\"welcome.txt\" /></eval></td>
-  <td><img src='/*/unit' width='50'/></td>
+  <td><img src='/$/unit' width='50'/></td>
 </tr></table>
 ";
 }

@@ -45,16 +45,16 @@ Stand alone settings (no other settings are based on these):
   content-extratableargs
 
 
-  next                          /*/next
-  selected-indicator   		/*/next
-  err-1                		/*/err_1
-  err-2                		/*/err_2
-  err-3                		/*/err_3
-  left-image           		/*/unit
-  logo                 		/*/roxen
-  database-small                /*/database_small
-  table-small                   /*/table_small
-  item-indicator                /*/dot
+  next                          /$/next
+  selected-indicator   		/$/next
+  err-1                		/$/err_1
+  err-2                		/$/err_2
+  err-3                		/$/err_3
+  left-image           		/$/unit
+  logo                 		/$/roxen
+  database-small                /$/database_small
+  table-small                   /$/table_small
+  item-indicator                /$/dot
   --------------------------------------------------------
 
 Base settings:
@@ -65,8 +65,8 @@ Base settings:
   fgcolor              user
   bgcolor              user
   font                 user
-  tab-frame-image      /*/tabframe
-  gbutton-frame-image  /*/gbutton
+  tab-frame-image      /$/tabframe
+  gbutton-frame-image  /$/gbutton
   --------------------------------------------------------
 
 

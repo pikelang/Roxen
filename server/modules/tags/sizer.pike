@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.31 2004/06/04 08:33:19 _cvs_stephen Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.32 2004/06/06 11:04:01 _cvs_stephen Exp $";
 #include <request_trace.h>
 #include <module.h>
 inherit "module";
@@ -23,11 +23,11 @@ constant module_doc  =
 
 #include <variables.h>
 
-#define NOTE(X) ("<tr><td valign='top'><imgs src='/*/err_1' /></td>\n"\
+#define NOTE(X) ("<tr><td valign='top'><imgs src='/$/err_1' /></td>\n"\
 		"<td><font color='black' size='-1'>" + (X) +"</font></td></tr>")
-#define WARN(X) ("<tr><td valign='top'><imgs src='/*/err_2' /></td>\n"\
+#define WARN(X) ("<tr><td valign='top'><imgs src='/$/err_2' /></td>\n"\
 		 "<td><font color='black' size='-1'>" + (X) +"</font></td></tr>")
-#define ERR(X) ("<tr><td valign='top'><imgs src='/*/err_3' /></td>\n"\
+#define ERR(X) ("<tr><td valign='top'><imgs src='/$/err_3' /></td>\n"\
 		 "<td><font color='black' size='-1'>" + (X) +"</font></td></tr>")
 
 class Combo( string file, RequestID id )

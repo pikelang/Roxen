@@ -607,7 +607,7 @@ class AdminUser
           set_src + #"' /></td></tr>
   </table>
   </td>
-  <td><img src='/*/unit' height='5' /><br />\n\n";
+  <td><img src='/$/unit' height='5' /><br />\n\n";
 
     int is_me = this == id->misc->config_user;
 

@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.570 2004/06/04 08:29:31 _cvs_stephen Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.571 2004/06/06 11:04:03 _cvs_stephen Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -654,7 +654,7 @@ static mixed strip_fork_information(RequestID id)
 {
   array a = id->not_query/"::";
   //  FIX: Must not subtract ":" chars since it breaks proper URL:s,
-  //  e.g. "/*/colorbar:x,y,z" and several others.
+  //  e.g. "/$/colorbar:x,y,z" and several others.
   //  id->not_query = a[0]-":";
   id->not_query = a[0];
   id->misc->fork_information = a[1..];
@@ -1588,11 +1588,11 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     TIMER_START(internal_magic);
 #ifndef NO_INTERNAL_HACK
     // Find internal-foo-bar images
-    // min length == 17 (/*/?..)
+    // min length == 17 (/$/?..)
     // This will save some time indeed.
-    if(sizeof(file) > 3 && file[1]=='*'
-       && has_prefix(file,"/*/") && (loc=file[3..])) {
-	//  Mark all /*/* as cacheable even though the user might be
+    if(sizeof(file) > 3 && file[1]=="/$/"[1]
+       && has_prefix(file,"/$/") && (loc=file[3..])) {
+	//  Mark all /$/* as cacheable even though the user might be
 	//  authenticated (which normally disables protocol-level caching).
 	RAISE_CACHE(60 * 60 * 24 * 365);  //  1 year
 	PROTO_CACHE();
@@ -2775,10 +2775,10 @@ int(0..1) is_file(string virt_path, RequestID id, int(0..1)|void internal)
       m_delete(id->misc, "internal_get");
     return res;
   }
-  if(stat_file(virt_path, id) || virt_path=="/*/unit")
+  if(stat_file(virt_path, id) || virt_path=="/$/unit")
     return 1;
   string f = (virt_path/"/")[-1];
-  if(has_prefix(virt_path, "/*/")) {
+  if(has_prefix(virt_path, "/$/")) {
     if(internal_roxen_image(f, id) ||
        has_prefix(f, "pixel-"))
       return 1;
@@ -3835,7 +3835,7 @@ blank.</p>
 also set 'URLs'.</p>");
 
   defvar("URLs", 
-         Variable.PortList( ({"http://*/"}), VAR_INITIAL|VAR_NO_DEFAULT,
+         Variable.PortList( ({"http://$/"}), VAR_INITIAL|VAR_NO_DEFAULT,
            "Ports: URLs",
 	   ("Bind to these URLs. You can use '*' and '?' to perform "
 	    "globbing (using any of these will default to binding to "
@@ -4002,15 +4002,15 @@ also set 'URLs'.</p>");
     <col width='0*' />
   </colgroup>
   <tr>
-    <td><img src='/*/unit' height='30' /></td>
+    <td><img src='/$/unit' height='30' /></td>
   </tr><tr>
     <td></td>
-    <td><img src='/*/404' /></td>
-    <td><img src='/*/unit' width='30' /></td>
-    <td valign='bottom'><img src='/*/page-not-found-2' /></td>
+    <td><img src='/$/404' /></td>
+    <td><img src='/$/unit' width='30' /></td>
+    <td valign='bottom'><img src='/$/page-not-found-2' /></td>
     <td></td>
   </tr><tr>
-    <td><img src='/*/unit' height='30' /></td>
+    <td><img src='/$/unit' height='30' /></td>
   </tr><tr>
     <td colspan='3'></td>
     <td colspan='2'>
@@ -4034,17 +4034,17 @@ also set 'URLs'.</p>");
   </tr><tr valign='bottom' height='100%'>
     <td colspan='3'></td>
     <td>
-      <img src='/*/unit' height='20' />
+      <img src='/$/unit' height='20' />
       <table border='0' cellspacing='0' cellpadding='0'>
         <tr>
-          <td><img src='/*/chili-small-white.gif' /></td>
+          <td><img src='/$/chili-small-white.gif' /></td>
           <td class='info'>
             &nbsp;&nbsp;<b>ChiliMoon</b> <font color='#ffbe00'>|</font>
             version &server.dist-version;
           </td>
         </tr>
       </table>
-      <img src='/*/unit' height='20' />
+      <img src='/$/unit' height='20' />
     </td>
     <td></td>
   </tr>

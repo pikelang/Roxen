@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.146 2004/06/04 08:29:15 _cvs_stephen Exp $
+// $Id: site_content.pike,v 1.147 2004/06/06 11:03:53 _cvs_stephen Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -330,7 +330,7 @@ string find_module_doc( string cn, string mn, RequestID id )
   string fnas = EC(TRANSLATE(m->file_name_and_stuff()));
   fnas = replace(fnas, "<br>", "</td></tr>\n<tr><td>");
   fnas = "<tr><td nowrap=''>"+
-    ((fnas/":</b>")*":</b></td><td><img src='/*/unit' width=10 height=1 /></td><td>") +
+    ((fnas/":</b>")*":</b></td><td><img src='/$/unit' width=10 height=1 /></td><td>") +
     "</td></tr>\n";
   return     "<b><h2>" +
 	     Roxen.html_encode_string(EC(TRANSLATE(m->register_module()[1])))
@@ -343,22 +343,22 @@ string find_module_doc( string cn, string mn, RequestID id )
 		    "<h3>Developer information</h3>"
 		    "<table border=0 cellpadding=0 cellspacing=0>"
                     "<tr nowrap=''><td><b>Identifier:</b></td>"
-		    "<td><img src='/*/unit' width=10 height=1 /></td>"
+		    "<td><img src='/$/unit' width=10 height=1 /></td>"
 		    "<td>" + mi->sname + "</td></tr>\n"
 		    "<td nowrap=''><b>Thread safe:</b></td>"
-		    "<td><img src='/*/unit' width=10 height=1 /></td>"
+		    "<td><img src='/$/unit' width=10 height=1 /></td>"
 		    "<td>" + (m->thread_safe ? 
 		     "Yes" : "No") +
 #ifdef THREADS
 		    " <small>(<a href='../../../../../tasks/?task"
 		    "=locks.pike&class=status'>more info</a>)</small></td></tr>\n"
 		    "<tr><td nowrap=''><b>Number of accesses:</b></td>"
-		    "<td><img src='/*/unit' width=10 height=1 /></td>"
+		    "<td><img src='/$/unit' width=10 height=1 /></td>"
 		    "<td>" + my_accesses +
 #endif
                     "</td></tr>\n"
 		    "<tr><td valign='top' nowrap=''><b>Type:</b></td>"
-		    "<td><img src='/*/unit' width=10 height=1 /></td>"
+		    "<td><img src='/$/unit' width=10 height=1 /></td>"
 		    "<td valign='top'>" + describe_type( m, mi->type, id ) +
                     "</td></tr>\n"
                     + fnas +
@@ -476,7 +476,7 @@ string port_for( string url, int settings )
       </td>
     </tr>
     <tr>
-      <td><img src='/*/unit' width=20 height=1/></td>
+      <td><img src='/$/unit' width=20 height=1/></td>
       <td>
 "
       +(settings?
@@ -587,7 +587,7 @@ string parse( RequestID id )
 	 "<h2>Request status</h2>";
        res += status(conf);
        res += "</td>"
-	 "<td><img src='/*/unit' width='10' height='1' /></td>"
+	 "<td><img src='/$/unit' width='10' height='1' /></td>"
 	 "<td valign=top>"
 	 "<h2>Cache status</h2><table cellpading='0' cellspacing='0' width='100%'>\n";
 

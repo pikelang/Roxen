@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1999 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.38 2004/05/27 21:24:38 _cvs_stephen Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.39 2004/06/06 11:04:00 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -29,11 +29,11 @@ constant tagdoc=([
 </attr>
 
 <attr name='foldedsrc'><p>
- The image to use for folded items. The default is '/*/unfold'.</p>
+ The image to use for folded items. The default is '/$/unfold'.</p>
 </attr>
 
 <attr name='unfoldedsrc'><p>
- The image to use for unfolded items. The default is '/*/fold'.</p>
+ The image to use for unfolded items. The default is '/$/fold'.</p>
 </attr>",
 
 ([ "ft":({#"<desc type='cont'><p>
@@ -236,8 +236,8 @@ class TagFoldlist {
 			   "def":def,
 			   "cnt":0,
 			   "hist":hist,
-			   "fsrc":args->foldedsrc||"/*/unfold",
-			   "ufsrc":args->unfoldedsrc||"/*/fold"
+			   "fsrc":args->foldedsrc||"/$/unfold",
+			   "ufsrc":args->unfoldedsrc||"/$/fold"
       ]);
       return 0;
     }

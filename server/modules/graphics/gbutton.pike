@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.105 2004/06/05 15:19:45 _cvs_dirix Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.106 2004/06/06 11:03:59 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -165,7 +165,7 @@ constant gbuttonattr=#"
 </ex>
 <ex>
 <gbutton width='150' align='center' align-icon='center-after'
-  icon-src='/*/help'>Roxen 2.0</gbutton>
+  icon-src='/$/help'>Roxen 2.0</gbutton>
 </ex>
 </attr>
 
