@@ -7,7 +7,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.24 2004/05/20 23:20:45 _cvs_stephen Exp $";
+constant cvs_version = "$Id: email.pike,v 1.25 2004/05/22 15:50:09 _cvs_stephen Exp $";
 
 constant thread_safe=1;
 
@@ -88,7 +88,7 @@ void create()
 object notasciicharset = Regexp("[^\1-\177]");
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.24 $"/" ")[1];
+string revision = ("$Revision: 1.25 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -456,7 +456,7 @@ class TagEmail {
 		      Roxen.html_encode_string(error[0]));
 
      error = catch {
-       o = Protocols.SMTP.client(query("CI_server_restrict") ?
+       o = Protocols.SMTP.Client(query("CI_server_restrict") ?
 				 query("CI_server") :
 				 (args->server || query("CI_server")));
      };
