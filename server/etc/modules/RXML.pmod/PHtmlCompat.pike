@@ -6,7 +6,7 @@
 //!
 //! Created 2000-01-08 by Martin Stjernholm.
 //!
-//! $Id: PHtmlCompat.pike,v 1.10 2000/02/08 06:28:14 mast Exp $
+//! $Id: PHtmlCompat.pike,v 1.11 2000/02/11 01:07:43 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -113,6 +113,7 @@ static void create (
   _set_entity_callback (.utils.p_html_compat_entity_cb);
   _set_tag_callback (.utils.p_html_compat_tagmap_tag_cb);
 
+  xml_tag_syntax (1);
   if (flag_parse_html_compat)
     parse_html_compat (1);
 }
@@ -123,11 +124,13 @@ int parse_html_compat (void|int flag)
 //!    for tags in them.
 //! o  Be case insensitive when matching tag names. It's assumed that
 //!    the registered tags are already lowercased.
+//! o  Don't recognize any processing instructions and similar
+//!    constructs.
+//! o  Allow whitespace between the tag starter and the name.
 {
   int oldflag = flag_parse_html_compat;
   if (!zero_type (flag) && !oldflag != !flag) {
     if (flag) {
-      xml_tag_syntax (1);
       case_insensitive_tag (1);
       ignore_unknown (1);
       ws_before_tag_name (1);
@@ -136,7 +139,6 @@ int parse_html_compat (void|int flag)
       add_quote_tag ("[CDATA[", 0);
     }
     else {
-      xml_tag_syntax (2);
       case_insensitive_tag (0);
       ignore_unknown (0);
       ws_before_tag_name (0);
