@@ -1,4 +1,4 @@
-          Installing Roxen Challenger 1.2 - the Source distribution
+          Installing Roxen Challenger 1.3 - the Source distribution
           +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   1. Get the source server package.
@@ -64,8 +64,8 @@
 ----------------------------------------------------------------------------
 Example installation session using the 4b route:
 
-bash$ tar xzf roxen_1.2.tar.gz
-bash$ cd roxen_1.2
+bash$ tar xzf roxen_1.3.tar.gz
+bash$ cd roxen_1.3
 bash$ mkdir solaris
 bash$ cd solaris
 bash$ ../configure --prefix=/usr/www
