@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.367 2002/04/05 14:35:37 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.368 2002/04/19 14:30:14 stewa Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -958,6 +958,9 @@ private final int parse_got_2( )
 	      misc->files += ({ part->disp_params->name });
 	    } else 
 	      real_variables[part->disp_params->name] += ({part->getdata()});
+	    if(part->headers["content-type"])
+	      real_variables[part->disp_params->name+".mimetype"] +=
+		({ part->headers["content-type"] });
 	  }
 	}
 	break;
