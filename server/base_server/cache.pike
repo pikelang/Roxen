@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.44 2000/03/07 02:37:59 nilsson Exp $
+// $Id: cache.pike,v 1.45 2000/03/10 02:59:17 nilsson Exp $
 
 #pragma strict_types
 
@@ -252,7 +252,6 @@ void create()
 {
   cache=([ ]);
   add_constant( "cache", this_object() );
-  add_constant( "Cache", this_object() );
   call_out(cache_clean, 60);
   CACHE_WERR("Now online.");
 }
