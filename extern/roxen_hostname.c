@@ -57,7 +57,9 @@ It should be redesigned. That would not be all that hard, really.
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
+#endif /* HAVE_ARPA_INET_H */
 #include <netdb.h>
 
 #ifndef AF_INET

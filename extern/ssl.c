@@ -20,7 +20,9 @@
 #include <sys/wait.h>
 #include <sys/time.h>
 #include <netinet/in.h>
+#ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
+#endif /* HAVE_ARPA_INET_H */
 #include <netinet/in.h>
 #include <string.h>
 #include <unistd.h>

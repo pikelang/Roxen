@@ -9,7 +9,7 @@
  * See the file "LICENSE.TERMS" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * $Id: fcgimisc.h,v 1.1.1.1 1996/11/11 23:31:40 per Exp $
+ * $Id: fcgimisc.h,v 1.2 1997/06/01 15:43:47 grubba Exp $
  */
 
 #ifndef _FCGIMISC_H
@@ -26,7 +26,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
+#endif /* HAVE_ARPA_INET_H */
 #include <sys/un.h>
 
 /*
