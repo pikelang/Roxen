@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.15 2001/08/03 13:59:08 leif Exp $
+// $Id: ExtScript.pmod,v 1.16 2003/06/02 16:48:55 grubba Exp $
 
 // 
 
@@ -21,7 +21,7 @@ class Handler
              proc;
   Stdio.File pipe;
   Stdio.File pipe_other;
-  string     binpath;
+  array(string) command;
   mapping(string:mixed)
              settings;
   int        runcount = 0;
@@ -205,12 +205,11 @@ class Handler
 #endif
 
       mixed bt;
-      if (bt = catch (
-        proc = Process.create_process( ({ binpath, "--cmdsocket=3" }),
-                                       opts
-                                     )
-               ))
-	{ werror("ExtScript, create_process failed: " +
+      if (bt = catch {
+        proc = Process.create_process(command, opts);
+	  })
+	{
+	  werror("ExtScript, create_process failed: " +
                  describe_backtrace(bt) + "\n");
           return ({ -1, "unable to start helper process" });
         }
@@ -418,10 +417,58 @@ class Handler
 
   void create(string helper_program_path, void|mapping settings0)
   {
-    binpath = helper_program_path;
     settings = settings0 ? settings0 : ([ ]);
     proc = 0; pipe = 0;
     timeout = time(0) + 300;
+    command = ({ helper_program_path, "--cmdsocket=3" });
+#ifdef __NT__
+    string binpath = helper_program_path;
+    string ft, cmd;
+
+    mixed bt = catch {
+      string ext = "." + reverse(array_sscanf(reverse(binpath), "%[^.].")[0]);
+      werror("Looking up extension %O\n", ext);
+      ft = RegGetValue(HKEY_CLASSES_ROOT, ext, "");
+      werror("ft:%O\n", ft);
+      cmd = RegGetValue(HKEY_CLASSES_ROOT, ft+"\\shell\\open\\command", "");
+      werror("cmd:%O\n", cmd);
+    };
+    if (bt) {
+      werror("Failed to lookup in registry:\n%s\n",
+	     describe_backtrace(bt));
+    }
+    if (cmd) {
+      // Perform %-substitution.
+      command = ({});
+      foreach(Process.split_quoted_string(cmd), string arg) {
+	if (sizeof(arg) && arg[0] == '%') {
+	  int argno;
+	  if (arg == "%*") {
+	    command += ({ "--cmdsocket=3" });
+	  } else if (sscanf(arg, "%%%d", argno)) {
+	    if (argno == 1) {
+	      command += ({ binpath });
+	    } else if (argno == 2) {
+	      command += ({ "--cmdsocket=3" });
+	    }
+	  } else {
+	    command += ({ arg });
+	  }
+	} else {
+	  command += ({ arg });
+	}
+      }
+    } else {
+      string s = Stdio.read_file(binpath, 0, 1);
+      if (s && has_prefix(s, "#!")) {
+	command = Process.split_quoted_string(s[2..]) + command;
+      } else {
+	// Hope we can execute it anyway...
+	// Not likely, but we can hope.
+      }
+    }
+#endif /* __NT__ */
+    werror("Resulting command: %O\n", command);
   }
 }
 
