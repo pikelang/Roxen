@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.293 2001/09/01 01:03:41 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.294 2001/09/01 03:17:30 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1238,9 +1238,9 @@ class TagCache {
 		    RXML.FLAG_DONT_CACHE_RESULT |
 		    RXML.FLAG_CUSTOM_TRACE);
 
-  static class TimeOutEntry (TimeOutEntry next,
-			     mapping(string:RXML.PCode) alternatives,
-			     mapping(string:int) timeouts)
+  static class TimeOutEntry (
+    TimeOutEntry next,
+    array(mapping(string:array(int|RXML.PCode))) timeout_cache)
     {}
 
   static TimeOutEntry timeout_list;
@@ -1248,24 +1248,30 @@ class TagCache {
   static void do_timeouts()
   {
     int now = time (1);
-    for (TimeOutEntry t = timeout_list; t; t = t->next)
-      foreach (indices (t->timeouts), string key)
-	if (t->timeouts[key] < now) {
-	  m_delete (t->alternatives, key);
-	  m_delete (t->timeouts, key);
-	}
+    for (TimeOutEntry t = timeout_list, prev; t; t = t->next) {
+      mapping(string:array(int|RXML.PCode)) cachemap = t->timeout_cache[0];
+      if (cachemap) {
+	foreach (indices (cachemap), string key)
+	  if (cachemap[key][0] < now) m_delete (cachemap, key);
+	prev = t;
+      }
+      else
+	if (prev) prev->next = t->next;
+	else timeout_list = t->next;
+    }
     roxen.background_run (roxen.query("mem_cache_gc"), do_timeouts);
   }
 
-  static void add_timeouts (mapping(string:RXML.PCode) alternatives,
-			    mapping(string:int) timeouts)
+  static void add_timeout_cache (mapping(string:array(int|RXML.PCode)) timeout_cache)
   {
     if (!timeout_list)
       roxen.background_run (roxen.query("mem_cache_gc"), do_timeouts);
     else
       for (TimeOutEntry t = timeout_list; t; t = t->next)
-	if (t->timeouts == timeouts) return;
-    timeout_list = TimeOutEntry (timeout_list, alternatives, timeouts);
+	if (t->timeout_cache[0] == timeout_cache) return;
+    timeout_list =
+      TimeOutEntry (timeout_list,
+		    set_weak_flag (({timeout_cache}), 1));
   }
 
   class Frame {
@@ -1281,7 +1287,7 @@ class TagCache {
     string content_hash;
     array(string|int) subvariables;
     mapping(string:RXML.PCode) alternatives;
-    mapping(string:int) timeouts;
+    mapping(string:array(int|RXML.PCode)) timeout_cache;
 
     array do_enter (RequestID id)
     {
@@ -1419,21 +1425,42 @@ class TagCache {
 	if (!args["disable-key-hash"])
 	  key = Crypto.md5()->update (key)->digest();
 
-	if (alternatives) {
-	  if ((evaled_content = alternatives[key]))
-	    if (evaled_content->is_stale()) {
-	      m_delete (alternatives, key);
-	      evaled_content = 0;
+	if (timeout)
+	  if (timeout_cache) {
+	    array entry = timeout_cache[key];
+	    if (entry) {
+	      evaled_content = entry[1];
+	      if (evaled_content->is_stale()) {
+		m_delete (timeout_cache, key);
+		evaled_content = 0;
+	      }
+	      else {
+		entry[0] = time() + timeout;
+		do_iterate = -1;
+		key = keymap = 0;
+		TRACE_ENTER("tag &lt;cache&gt; cache hit", tag);
+		return ({evaled_content});
+	      }
 	    }
-	    else {
-	      if (timeout) timeouts[key] = time() + timeout;
-	      do_iterate = -1;
-	      key = keymap = 0;
-	      TRACE_ENTER("tag &lt;cache&gt; cache hit", tag);
-	      return ({evaled_content});
-	    }
-	}
-	else alternatives = ([]);
+	  }
+	  else add_timeout_cache (timeout_cache = ([]));
+
+	else
+	  if (alternatives) {
+	    if ((evaled_content = alternatives[key]))
+	      if (evaled_content->is_stale()) {
+		m_delete (alternatives, key);
+		evaled_content = 0;
+	      }
+	      else {
+		if (timeout) timeout_cache[key] = time() + timeout;
+		do_iterate = -1;
+		key = keymap = 0;
+		TRACE_ENTER("tag &lt;cache&gt; cache hit", tag);
+		return ({evaled_content});
+	      }
+	  }
+	  else alternatives = ([]);
       }
 
       keymap += ([]);
@@ -1460,22 +1487,16 @@ class TagCache {
 	  cache_set("tag_cache", key, evaled_content, timeout);
 	  TRACE_LEAVE ("added shared cache entry");
 	}
-	else {
-	  alternatives[key] = evaled_content;
+	else
 	  if (timeout) {
-	    if (!timeouts) {
-	      timeouts = ([]);
-	      add_timeouts (alternatives, timeouts);
-	    }
-	    timeouts[key] = time() + timeout;
+	    timeout_cache[key] = ({time() + timeout, evaled_content});
 	    TRACE_LEAVE ("added time limited cache entry");
 	  }
 	  else {
-	    // Only caches without timeouts is worth saving.
+	    alternatives[key] = evaled_content;
 	    RXML_CONTEXT->state_update();
 	    TRACE_LEAVE ("added (possibly persistent) cache entry");
 	  }
-	}
       }
       else
 	TRACE_LEAVE ("");
@@ -1485,13 +1506,12 @@ class TagCache {
 
     array save()
     {
-      return ({content_hash, subvariables, alternatives, timeouts});
+      return ({content_hash, subvariables, alternatives});
     }
 
     void restore (array saved)
     {
-      [content_hash, subvariables, alternatives, timeouts] = saved;
-      if (timeouts) add_timeouts (alternatives, timeouts);
+      [content_hash, subvariables, alternatives] = saved;
     }
   }
 }
@@ -4950,8 +4970,7 @@ using the pre tag.
  <p>Besides the value produced by the content, all assignments to RXML
  variables in any scope are cached. I.e. an RXML code block which
  produces a value in a variable may be cached, and the same value will
- be assigned again to that variable when the cached entry is used
- again.</p>
+ be assigned again to that variable when the cached entry is used.</p>
 
  <p>When the content is evaluated, the produced result is associated
  with a key that is built by taking the values of certain variables
