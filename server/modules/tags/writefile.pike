@@ -11,7 +11,7 @@
 #define _ok id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: writefile.pike,v 1.11 2001/11/26 14:00:14 mast Exp $";
+ "$Id: writefile.pike,v 1.12 2001/12/03 13:03:17 anders Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -209,7 +209,7 @@ constant tagdoc=([
 <p>Specifies the type=file form field variable which uploaded the
      file to be written. If this attribute is omitted, the container
      content is what will be written instead. Given the example
-     below, the parameter <var>from=wrapupafile</var> should be
+     below, the parameter <i>from=wrapupafile</i> should be
      specified.</p>
 
 <ex-box><form method='post'
