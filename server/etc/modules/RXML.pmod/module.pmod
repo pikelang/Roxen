@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.294 2002/10/07 13:35:40 mast Exp $
+// $Id: module.pmod,v 1.295 2002/10/07 17:56:53 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3978,14 +3978,16 @@ class Frame
 		if (evaler->is_RXML_PCode) {
 		  if (!(comp = evaler->p_code_comp)) {
 		    comp = evaler->p_code_comp = PikeCompile();
-		    THIS_TAG_TOP_DEBUG ("Evaluating and compiling unparsed"
-					DO_IF_DEBUG (" (with new %O in %O)\n",
-						     comp, evaler));
+		    THIS_TAG_TOP_DEBUG (
+		      "%s", "Evaluating and compiling unparsed"
+		      DO_IF_DEBUG (+ sprintf (" (with new %O in %O)\n",
+					      comp, evaler)));
 		  }
 		  else
-		    THIS_TAG_TOP_DEBUG ("Evaluating and compiling unparsed"
-					DO_IF_DEBUG (" (with old %O in %O)\n",
-						     comp, evaler));
+		    THIS_TAG_TOP_DEBUG (
+		      "%s", "Evaluating and compiling unparsed"
+		      DO_IF_DEBUG (+ sprintf (" (with old %O in %O)\n",
+					      comp, evaler)));
 		}
 
 		else {
@@ -4001,14 +4003,16 @@ class Frame
 		  else
 		    if (!(comp = evaler->p_code->p_code_comp)) {
 		      comp = evaler->p_code->p_code_comp = PikeCompile();
-		      THIS_TAG_TOP_DEBUG ("Evaluating and compiling unparsed"
-					  DO_IF_DEBUG (" (with new %O in %O in %O)\n",
-						       comp, evaler->p_code, evaler));
+		      THIS_TAG_TOP_DEBUG (
+			"%s", "Evaluating and compiling unparsed"
+			DO_IF_DEBUG (+ sprintf (" (with new %O in %O in %O)\n",
+						comp, evaler->p_code, evaler)));
 		    }
 		    else
-		      THIS_TAG_TOP_DEBUG ("Evaluating and compiling unparsed"
-					  DO_IF_DEBUG (" (with old %O in %O in %O)\n",
-						       comp, evaler->p_code, evaler));
+		      THIS_TAG_TOP_DEBUG (
+			"%s", "Evaluating and compiling unparsed"
+			DO_IF_DEBUG (+ sprintf (" (with old %O in %O in %O)\n",
+						comp, evaler->p_code, evaler)));
 		}
 
 		in_args = _prepare (ctx, type, args && args + ([]), comp);
@@ -7089,11 +7093,13 @@ static class PikeCompile
     mixed resolved;
     if (zero_type (resolved = bindings[what[index]])) {
       delayed_resolve_places[what] = index;
-      COMP_MSG ("%O delayed_resolve %O\n", this_object(), what[index]);
+      COMP_MSG ("%O delayed_resolve %O in %O[%O]\n",
+		this_object(), what[index], format_short (what), index);
     }
     else {
       what[index] = resolved;
-      COMP_MSG ("%O delayed_resolve immediately %O\n", this_object(), what[index]);
+      COMP_MSG ("%O delayed_resolve immediately %O in %O[%O]\n",
+		this_object(), what[index], format_short (what), index);
     }
   }
 
@@ -7703,7 +7709,15 @@ class PCode
 
 		else {
 		  if (ctx->state_updated > update_count) {
-		    exec[pos + 2] = frame->_save();
+		    array frame_state = frame->_save();
+		    if (stringp (frame_state[0]))
+		      // Must resolve before updating the exec array
+		      // since it might be evaluated concurrently in
+		      // other threads, and the check on p_code_comp
+		      // is only done at the start.
+		      frame_state[0] = frame->args =
+			p_code_comp->resolve (frame_state[0]);
+		    exec[pos + 2] = frame_state;
 		    flags |= UPDATED;
 		    update_count = ctx->state_updated;
 		  }
@@ -7861,6 +7875,7 @@ class PCode
     flags = other->flags;
     generation = other->generation;
     protocol_cache_time = other->protocol_cache_time;
+    p_code_comp = other->p_code_comp;
   }
 
   //! @ignore
