@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.388 2004/06/16 01:00:16 _cvs_stephen Exp $
+// $Id: loader.pike,v 1.389 2004/06/16 01:53:39 _cvs_stephen Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.388 2004/06/16 01:00:16 _cvs_stephen Exp $";
+constant cvs_version="$Id: loader.pike,v 1.389 2004/06/16 01:53:39 _cvs_stephen Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1311,7 +1311,7 @@ class CSql {
     ::create(url);
   }
 
-  private void destroy() {
+  static void destroy() {
     Thread.MutexKey k=mt->lock();
     if(sizeof(sql_free_list[dbname]+=({master_sql}))
      >max_sql_connections_cached)
