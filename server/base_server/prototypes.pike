@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.69 2004/03/02 10:32:43 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.70 2004/03/02 10:40:11 grubba Exp $";
 
 class Variable
 {
@@ -1298,10 +1298,10 @@ class RoxenModule
     query_property(string path, string prop_name, RequestID id);
   mapping(string:mixed) set_property(string path, string prop_name,
 				     string|array(Parser.XML.Tree.Node) value,
-				     RequestID id);
+				     RequestID id, mixed context);
   mapping(string:mixed) set_dead_property(string path, string prop_name,
 					  array(Parser.XML.Tree.Node) value,
-					  RequestID id);
+					  RequestID id, mixed context);
   mapping(string:mixed) remove_property(string path, string prop_name,
 					RequestID id);
   void find_properties(string path, string mode, MultiStatus result,
