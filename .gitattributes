@@ -30,7 +30,6 @@
 *.rgs eol=crlf
 *.tar binary
 *.ttf binary
-/local/fonts/aggstock.txt eol=crlf
 /server/data/fonts/Andover.txt eol=crlf
 /server/data/fonts/Font.txt eol=crlf
 /server/data/fonts/Hultog.txt eol=crlf
