@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.43 1997/05/08 21:34:35 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.44 1997/05/30 09:18:14 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -15,12 +15,12 @@ array register_module()
 {
   return ({ MODULE_LOCATION | MODULE_PARSER,
 	      "Graphics text",
-	      "Makes a few new tags, which render text to gifs "
-	      "using the image module in pike. \n<p>"
+	      "Defines a few new containers, which all render text to gifs "
+	      "using the image module in pike.\n<p>"
 	      "<b>&lt;gh1&gt;</b> to <b>&lt;gh6&gt;:</b> Headers<br>\n"
 	      "<b>&lt;gh&gt;:</b> Header<br>\n"
 	      "<b>&lt;gtext&gt;:</b> Graphical text<br>\n"
-	      "<b>&lt;anfang&gt;:</b> Make the first character to a "
+	      "<b>&lt;anfang&gt;:</b> Make the first character a "
 	      "graphical one. Not all that usefull, really.<br>\n"
 	      "<br>\n"
 	      "<b>Common arguments:</b>\n <pre>"
@@ -28,12 +28,16 @@ array register_module()
 	      "                 &lt;body&gt; tag, if any\n"
 	      " fg=color        Use this foreground, default taken from the\n"
 	      "                 &lt;body&gt; tag, if any\n"
-	      " font=fnt        Use this font. The fonts can be found in the\n"
+	      " nfont=fnt       Use this font. The fonts can be found in the\n"
 	      "                 directory specified in the configuration\n"
 	      "                 interface.\n"
 	      "                 If no font is specified, the one from the\n"
-	      "                 define 'font' is used, or if there is no\n"
+	      "                 define 'nfont' is used, or if there is no\n"
 	      "                 define, the default font will be used.\n"
+	      " bold            Try to find a bold version of the font.\n"
+	      " italic          Try to find an italic version of the font.\n"
+	      " black           Try to find a black (heavy) version of the font.\n"
+	      " light           Try to find a light version of the font.\n"
 	      " scale=float     Scale to this font, mostly useful in the &lt;gtext&gt;\n"
 	      "                 tag, will not work at all in the &lt;gh[number]&gt;\n"
 	      "                 tags.\n"
@@ -66,8 +70,8 @@ array register_module()
 	      " shadow=int,dist Draw a drop-shadow (variable distance/intensity)\n"
 	      " bshadow=dist    Draw a blured drop-shadow (variable distance)\n"
 	      " ghost=dist,blur,col\n"
-	      "                 Do a 'ghost text'. Do NOT use together with "
-	      "                   'shadow'. Magic coloring won't work with it."
+	      "                 Do a 'ghost text'. Do NOT use together with\n"
+	      "                 'shadow'. Magic coloring won't work with it.\n"
 	      " glow=color      Draw a 'glow' outline around the text.\n"
 	      " opaque=0-100%   Draw with more or less opaque text (100%\n"
 	      "                 is default)\n"
@@ -781,7 +785,11 @@ string tag_graphicstext(string t, mapping arg, string contents,
 			object id, object foo, mapping defines)
 {
 // Allow <accessed> and others inside <gtext>.
-  
+
+
+  if(arg->help)
+    return register_module()[2];
+
 #if efun(_static_modules)
   contents = parse_rxml(contents, id, foo, defines);
 #else
