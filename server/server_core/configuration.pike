@@ -1,11 +1,11 @@
-// This file is part of Internet Server.
+// This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
 //
 
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.537 2002/10/01 23:39:06 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.538 2002/10/22 00:05:49 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1322,7 +1322,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 #else
        sscanf(file, "/internal-%s-%[^/]", type, loc) == 2
 #endif
-       ) || (sizeof(file)>3 && file[1]==0 && sscanf(file, "/\0/%s", loc)==1 && (type="roxen")) ) {
+       ) || (sizeof(file)>3 && file[1]==1 && sscanf(file, "/\1/%s", loc)==1 && (type="roxen")) ) {
       switch(type) {
        case "roxen":
 	//  Mark all /internal-roxen-* as cacheable even though the user might be
@@ -3599,12 +3599,7 @@ also set 'URLs'.</p>");
     <td><img src=\"/internal-roxen-page-not-found&var.404;\" border=\"0\" alt=\"Page not found\" width=\"404\" hspace=\"2\" /></td>
     <td>&nbsp;</td>
     <td align=\"right\"><font face=\"lucida,helvetica,arial\">
-      <if variable='roxen.product-name is Roxen CMS'>
-        <b>Roxen CMS&nbsp;</b>
-      </if>
-      <else>
-        <b>Internet Server &roxen.base-version;&nbsp;</b>
-      </else>
+        <b>ChiliMoon &roxen.base-version;&nbsp;</b>
     </font></td>
   </tr>
   <tr>
