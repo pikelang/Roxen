@@ -33,15 +33,6 @@ umask 022
 #
 # pidfile=$configdir/_roxen_pid
 
-# Xauthority for CMS Instant
-#
-# If the Forms and Response module in CMS Instant is enabled Roxen has
-# to connect to the X server during start. Two examples are provided,
-# for Linux/gdm and Solaris/dtlogin. Note: don't forget the export row.
-#
-# XAUTHORITY=/var/gdm/:0.Xauth
-# XAUTHORITY=`/bin/ls -1t /var/dt/A:0-* | /bin/head -1`
-# export XAUTHORITY
 
 ### You should not _have_ to change anything below here...
 
