@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.7 1998/09/02 00:25:40 grubba Exp $
+ * $Id: smtp.pike,v 1.8 1998/09/03 00:04:40 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.7 1998/09/02 00:25:40 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.8 1998/09/03 00:04:40 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -167,7 +167,7 @@ class Server {
 	  to_do[addr] = 0;
 	  int verbatim = 1;
 	  foreach(expns, object o) {
-	    string|multiset e = o->expn(addr);
+	    string|multiset e = o->expn(addr, this_object());
 	    if (e) {
 	      verbatim = 0;
 	      if (stringp(e)) {
@@ -192,6 +192,37 @@ class Server {
 #endif /* SMTP_DEBUG */
 
       return(expanded);
+    }
+
+    static array(string) do_parse_address(string addr)
+    {
+      array a = MIME.tokenize(addr)/({ ',' });
+
+      int i;
+      for(i=0; i<sizeof(a); i++) {
+	int j;
+	if ((j = search(a[i], '<')) != -1) {
+	  int k;
+	  if ((k = search(a[i], '>', j)) != -1) {
+	    a[i] = a[i][j+1..k-1];
+	  } else {
+	    a[i] = a[i][j+1..];
+	  }
+	}
+	for (j=0; j < sizeof(a[i]); j++) {
+	  if (intp(a[i][j])) {
+	    if (a[i][j] == '@') {
+	      a[i][j] = "@";
+	    } else if (a[i][j] == '.') {
+	      a[i][j] = ".";
+	    } else {
+	      a[i][j] = "";
+	    }
+	  }
+	}
+	a[i] *= "";
+      }
+      return(a);
     }
 
     void smtp_NOOP(string noop, string args)
@@ -264,7 +295,7 @@ class Server {
 	return;
       }
 
-      multiset m = do_expn((<args>));
+      multiset m = do_expn((<@do_parse_address(args)>));
 
       array result = ({});
 
@@ -282,7 +313,7 @@ class Server {
 	}
 	if (!handled) {
 	  // Default.
-	  result += ({ a });
+	  result += ({ "<" + a + ">" });
 	}
       }
 
@@ -358,7 +389,7 @@ class Server {
 
 	    foreach(conf->get_providers("smtp_expn")||({}), object o) {
 	      if (functionp(o->expn) &&
-		  o->expn(sender, recipient, this_object())) {
+		  o->expn(recipient, this_object())) {
 		recipient_ok = 1;
 		break;
 	      }
@@ -571,7 +602,7 @@ void start(int i, object c)
   if (c) {
     mixed err;
     err = catch {
-      if (spooler && !smtp_server) {
+      if (!smtp_server) {
 	smtp_server = Server(c, ([]), QUERY(port));
       }
     };
