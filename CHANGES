@@ -1,3 +1,15 @@
+Changes since Roxen Challenger 1.2 alpha 10
+-----------------------------------------------
+
+o Added some more directories to search by default for nfonts and modules.
+  "../local/modules" and "../local/nfonts". Roxen will by default not install
+  anything in these directories.
+
+o The number of FTP users can now be viewed under "Status and debug info".
+
+o Fixed double \r-bug in the simulated "ls -l" in the ftp-protocol module.
+
+
 Changes since Roxen Challenger 1.2 alpha 9
 -----------------------------------------------
 
