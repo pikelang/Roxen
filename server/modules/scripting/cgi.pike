@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.55 1998/01/12 14:24:08 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.56 1998/01/12 14:32:37 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -663,8 +663,22 @@ mixed find_file(string f, object id)
   {
     if(QUERY(user) && id->misc->is_user &&
        (us = file_stat(id->misc->is_user)) &&
-       (us[0] >= 10)) {
-      uid = us[5..6];
+       (us[5] >= 10)) {
+      // Scan for symlinks
+      string fname = "";
+      foreach(id->misc->is_user/"/", string part) {
+	array a;
+	fname += part + "/";
+	if ((!(a = file_stat(fname, 1))) ||
+	    ((< -3, -4 >)[a[1]])) {
+	  // Symlink or device encountered.
+	  fname = 0;
+	  break;
+	}
+      }
+      if (fname) {
+	uid = us[5..6];
+      }
     }
     else if(runuser)
       uid = runuser;
