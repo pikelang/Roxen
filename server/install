@@ -1,4 +1,7 @@
 #!/bin/sh
+#
+# $Id: install,v 1.4 1998/03/02 18:40:39 grubba Exp $
+#
 
 # Find the default master
 if [ -f lib/pike/master.pike ]; then

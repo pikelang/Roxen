@@ -1,3 +1,4 @@
+// $Id: profile.pike,v 1.2 1998/03/02 18:44:16 grubba Exp $
 #ifdef PROFILE
 inherit "wizard";
 

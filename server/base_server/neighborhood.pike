@@ -1,3 +1,4 @@
+// $Id: neighborhood.pike,v 1.31 1998/03/02 18:26:34 grubba Exp $
 #define DELAY 20
 // #define NEIGH_DEBUG
 mapping neighborhood = ([ ]);

@@ -1,4 +1,5 @@
 #!/usr/local/bin/pike
+// $Id: tetris.pike,v 1.2 1998/03/02 18:38:56 grubba Exp $
 #define IAC "\377"
 #define DONT "\376"
 #define DO "\375"

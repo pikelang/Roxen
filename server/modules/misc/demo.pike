@@ -1,3 +1,5 @@
+// $Id: demo.pike,v 1.4 1998/03/02 18:36:25 grubba Exp $
+//
 // (c) 1998 Idonex AB
 #include <module.h>
 

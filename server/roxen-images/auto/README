@@ -1,3 +1,5 @@
+$Id: README,v 1.2 1998/03/02 18:39:42 grubba Exp $
+
 These files are generated automatically by the configuration interface
 if they do not exist. Supplied to speed up loading of configuration pages.
 

@@ -1,6 +1,8 @@
 #!/usr/local/bin/pike
 #!NO_MODULE
 
+/* $Id: sqladduser.pike,v 1.2 1998/03/02 18:27:31 grubba Exp $ */
+
 /*
  * This program is (C) 1997 Francesco Chemolli <kinkie@comedia.it>
  * You can use, duplicate and distribute it freely under the terms of

@@ -1,4 +1,5 @@
 // -*- Pike -*-
+// $Id: variables.h,v 1.4 1998/03/02 18:28:08 grubba Exp $
 // Fallback-resources, don't change here.
 
 mapping errors=

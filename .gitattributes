@@ -46,6 +46,7 @@ urw_itc_avant_garde-demi-r binary
 /server/base_server/config/low_describers.pike foreign_ident
 /server/base_server/config/savers.pike foreign_ident
 /server/base_server/configuration.pike foreign_ident
+/server/base_server/dates.pike foreign_ident
 /server/base_server/disk_cache.pike foreign_ident
 /server/base_server/dummy_hosts.pike foreign_ident
 /server/base_server/fonts.pike foreign_ident
@@ -56,6 +57,7 @@ urw_itc_avant_garde-demi-r binary
 /server/base_server/mainconfig.pike foreign_ident
 /server/base_server/module.pike foreign_ident
 /server/base_server/module_support.pike foreign_ident
+/server/base_server/neighborhood.pike foreign_ident
 /server/base_server/newdecode.pike foreign_ident
 /server/base_server/persistent.pike foreign_ident
 /server/base_server/privs.pike foreign_ident
@@ -65,6 +67,7 @@ urw_itc_avant_garde-demi-r binary
 /server/base_server/roxen.pike foreign_ident
 /server/base_server/roxenlib.pike foreign_ident
 /server/base_server/roxenloader.pike foreign_ident
+/server/base_server/smartpipe.pike foreign_ident
 /server/base_server/socket.pike foreign_ident
 /server/base_server/spinnerlib.pike foreign_ident
 /server/base_server/struct/node.pike foreign_ident
@@ -72,6 +75,7 @@ urw_itc_avant_garde-demi-r binary
 /server/bin/garbagecollector.pike foreign_ident
 /server/bin/install.pike foreign_ident
 /server/bin/pdbi.pike foreign_ident
+/server/bin/sqladduser.pike foreign_ident
 /server/config_actions/cachestatus.pike foreign_ident
 /server/config_actions/changepass.pike foreign_ident
 /server/config_actions/clearlog.pike foreign_ident
@@ -92,6 +96,7 @@ urw_itc_avant_garde-demi-r binary
 /server/config_actions/problems.pike foreign_ident
 /server/config_actions/proc.pike foreign_ident
 /server/config_actions/processstatus.pike foreign_ident
+/server/config_actions/profile.pike foreign_ident
 /server/config_actions/quick_config.pike foreign_ident
 /server/config_actions/reloadconfiginterface.pike foreign_ident
 /server/config_actions/reloadconfigurations.pike foreign_ident
@@ -102,16 +107,27 @@ urw_itc_avant_garde-demi-r binary
 /server/etc/config.html foreign_ident
 /server/etc/config.int.html foreign_ident
 /server/etc/extensions foreign_ident
+/server/etc/include/config.h foreign_ident
+/server/etc/include/confignode.h foreign_ident
+/server/etc/include/module.h foreign_ident
+/server/etc/include/roxen.h foreign_ident
+/server/etc/include/stat.h foreign_ident
+/server/etc/include/udp.h foreign_ident
+/server/etc/include/variables.h foreign_ident
 /server/etc/modules/Dims.pmod foreign_ident
 /server/etc/modules/PDB.pmod foreign_ident
 /server/etc/modules/RoxenRPC.pmod/Client.pike foreign_ident
+/server/etc/modules/RoxenRPC.pmod/HTTP.pmod/Client.pike foreign_ident
+/server/etc/modules/RoxenRPC.pmod/HTTP.pmod/Server.pike foreign_ident
 /server/etc/modules/RoxenRPC.pmod/Server.pike foreign_ident
 /server/etc/restart.html foreign_ident
+/server/etc/roxen_hilfe.pike foreign_ident
 /server/etc/roxen_master.pike foreign_ident
 /server/etc/shutdown.html foreign_ident
 /server/etc/supports foreign_ident
 /server/etc/upgrade_servers foreign_ident
 /server/etc/welcome.html foreign_ident
+/server/install foreign_ident
 /server/languages/catala.pike foreign_ident
 /server/languages/croatian.pike foreign_ident
 /server/languages/czech.pike foreign_ident
@@ -131,6 +147,7 @@ urw_itc_avant_garde-demi-r binary
 /server/languages/slovenian.pike foreign_ident
 /server/languages/spanish.pike foreign_ident
 /server/languages/swedish.pike foreign_ident
+/server/mkdir foreign_ident
 /server/modules/directories/directories.pike foreign_ident
 /server/modules/directories/directories2.pike foreign_ident
 /server/modules/directories/fastdir.pike foreign_ident
@@ -152,6 +169,7 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/graphics/business_graphics/create_bars.pike foreign_ident
 /server/modules/graphics/business_graphics/create_graph.pike foreign_ident
 /server/modules/graphics/business_graphics/create_pie.pike foreign_ident
+/server/modules/graphics/business_graphics/polyline.pike foreign_ident
 /server/modules/graphics/counter.pike foreign_ident
 /server/modules/graphics/graphic_text.pike foreign_ident
 /server/modules/graphics/pimage.pike foreign_ident
@@ -161,6 +179,7 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/logging/nologging.pike foreign_ident
 /server/modules/misc/SQLuserdb.pike foreign_ident
 /server/modules/misc/contenttypes.pike foreign_ident
+/server/modules/misc/demo.pike foreign_ident
 /server/modules/misc/ip-less_hosts.pike foreign_ident
 /server/modules/misc/ismap.pike foreign_ident
 /server/modules/misc/language.pike foreign_ident
@@ -198,6 +217,8 @@ urw_itc_avant_garde-demi-r binary
 /server/protocols/gopher.pike foreign_ident
 /server/protocols/http.pike foreign_ident
 /server/protocols/ssl3.pike foreign_ident
+/server/protocols/tetris.pike foreign_ident
+/server/roxen-images/auto/README foreign_ident
 /server/server_templates/bare.pike foreign_ident
 /server/server_templates/basic.pike foreign_ident
 /server/server_templates/ftp.pike foreign_ident

@@ -1,4 +1,8 @@
-/* Incremental Pike evaluator, modified to work within Roxen */
+/*
+ * $Id: roxen_hilfe.pike,v 1.2 1998/03/02 18:33:07 grubba Exp $
+ *
+ * Incremental Pike evaluator, modified to work within Roxen
+ */
 
 #include <simulate.h>
 #include <stdio.h>

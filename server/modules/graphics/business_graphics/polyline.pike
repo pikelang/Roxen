@@ -1,4 +1,7 @@
 #!NOMODULE
+//
+// $Id: polyline.pike,v 1.3 1998/03/02 18:35:50 grubba Exp $
+//
 #define CAP_BUTT       0
 #define CAP_ROUND      1
 #define CAP_PROJECTING 2

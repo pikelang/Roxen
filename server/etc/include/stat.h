@@ -1,3 +1,4 @@
+// $Id: stat.h,v 1.4 1998/03/02 18:29:55 grubba Exp $
 #define S_IFMT   0170000
 #define S_IFSOCK 0140000
 #define S_IFLNK	 0120000

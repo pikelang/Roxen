@@ -1,3 +1,6 @@
+//
+// $Id: Client.pike,v 1.4 1998/03/02 18:32:09 grubba Exp $
+//
 // Roxen HTTP RPC
 //
 // Copyright (C) 1996, 1997 Informationsvävarna

@@ -1,3 +1,4 @@
+// $Id: module.h,v 1.13 1998/03/02 18:28:49 grubba Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 

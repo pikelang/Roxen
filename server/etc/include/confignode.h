@@ -1,3 +1,4 @@
+// $Id: confignode.h,v 1.3 1998/03/02 18:29:39 grubba Exp $
 #define NODE_ROOT          0
 # define NODE_ERRORS        11 
 # define NODE_WIZARDS        12

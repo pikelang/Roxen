@@ -1,4 +1,8 @@
-/* A somewhat more optimized Pipe.pipe... */
+/*
+ * $Id: smartpipe.pike,v 1.6 1998/03/02 18:26:06 grubba Exp $
+ *
+ * A somewhat more optimized Pipe.pipe...
+ */
 
 #if !constant(spider.shuffle)
 # error This should not happend...
