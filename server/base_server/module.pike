@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.20 1997/08/13 15:12:58 grubba Exp $ */
+/* $Id: module.pike,v 1.21 1997/08/13 19:19:34 grubba Exp $ */
 
 #include <module.h>
 
@@ -329,13 +329,23 @@ class IP_with_mask {
     }
     return(res);
   }
-  void create(string _ip, string _mask)
+  void create(string _ip, string|int _mask)
   {
     net = ip_to_int(_ip);
-    mask = ip_to_int(_mask);
+    if (intp(_mask)) {
+      if (_mask > 32) {
+	report_error(sprintf("Bad netmask: %s/%d\n"
+			     "Using %s/32\n", _ip, _mask, _ip));
+	_mask = 32;
+      }
+      mask = ~0<<(32-_mask);
+    } else {
+      mask = ip_to_int(_mask);
+    }
     if (net & ~mask) {
-      throw(({ sprintf("Bad netmask: %s for network %s\n", _ip, _mask),
-		 backtrace() }));
+      report_error(sprintf("Bad netmask: %s for network %s\n"
+			   "Ignoring node-specific bits\n", _ip, _mask));
+      net &= mask;
     }
   }
   int `()(string ip)
@@ -346,39 +356,54 @@ class IP_with_mask {
 
 array query_seclevels()
 {
-  string sl, sec;
   array patterns=({ });
 
   if(catch(query("_seclevels"))) {
     return patterns;
   }
   
-  foreach(replace(query("_seclevels"),({" ","\t","\\\n"}),({"","",""}))/"\n",sl)
-  {
+  foreach(replace(query("_seclevels"),
+		  ({" ","\t","\\\n"}),
+		  ({"","",""}))/"\n", string sl) {
     if(!strlen(sl) || sl[0]=='#')
       continue;
 
-    // sl = lower_case(sl);	// Lower case?	/grubba
     string type, value;
     if(sscanf(sl, "%s=%s", type, value)==2)
     {
       switch(lower_case(type))
       {
       case "allowip":
-	if (sizeof(value/",") == 1) {
+	array(string|int) arr;
+	if (sizeof(arr = (value/"/")) == 2) {
+	  // IP/bits
+	  arr[1] = (int)arr[1];
+	  patterns += ({ ({ MOD_ALLOW, IP_with_mask(@arr) }) });
+	} else if ((sizeof(arr = (value/":")) == 2) ||
+		   (sizeof(arr = (value/",")))) {
+	  // IP:mask or IP,mask
+	  patterns += ({ ({ MOD_ALLOW, IP_with_mask(@arr) }) });
+	} else {
+	  // Pattern
 	  value = replace(value, ({ "?", ".", "*" }), ({ ".", "\\.", ".*" }));
 	  patterns += ({ ({ MOD_ALLOW, Regexp(value)->match, }) });
-	} else {
-	  patterns += ({ ({ MOD_ALLOW, IP_with_mask(@(value/",")) }) });
 	}
 	break;
 
       case "denyip":
-	if (sizeof(value/",") == 1) {
+	array(string|int) arr;
+	if (sizeof(arr = (value/"/")) == 2) {
+	  // IP/bits
+	  arr[1] = (int)arr[1];
+	  patterns += ({ ({ MOD_DENY, IP_with_mask(@arr) }) });
+	} else if ((sizeof(arr = (value/":")) == 2) ||
+		   (sizeof(arr = (value/",")))) {
+	  // IP:mask or IP,mask
+	  patterns += ({ ({ MOD_DENY, IP_with_mask(@arr) }) });
+	} else {
+	  // Pattern
 	  value = replace(value, ({ "?", ".", "*" }), ({ ".", "\\.", ".*" }));
 	  patterns += ({ ({ MOD_DENY, Regexp(value)->match, }) });
-	} else {
-	  patterns += ({ ({ MOD_DENY, IP_with_mask(@(value/",")) }) });
 	}
 	break;
 
@@ -416,11 +441,13 @@ array query_seclevels()
 	}
 	break;
       default:
-	perror("Unknown Security:Patterns directive\n");
+	report_error(sprintf("Unknown Security:Patterns directive: "
+			     "type=\"%s\"\n", type));
 	break;
       }
     } else {
-      perror("Unknown Security:Patterns directive\n");
+      report_error(sprintf("Syntax error in Security:Patterns directive: "
+			   "line=\"%s\"\n", sl));
     }
   }
   return patterns;
