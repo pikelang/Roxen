@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.11 2001/08/01 10:55:47 per Exp $
+ * $Id: debug_info.pike,v 1.12 2001/08/28 14:00:58 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -168,7 +168,7 @@ string find_class( string f, int l )
     return class_cache[ f+":"+l ] = fix_cname(cname+"()");
   if( sscanf( lines[l-1], "%*sclass %[^ \t]", cname ) == 2)
     return class_cache[ f+":"+l ] = fix_cname(cname+"()");
-  if( sizeof( lines ) < l+1 )
+  if( sizeof( lines ) <= l+1 )
     return 0;
   if( sscanf( lines[l+1], "%*sclass %[^ \t]", cname ) == 2)
     return class_cache[ f+":"+l ] = fix_cname(cname+"()");
