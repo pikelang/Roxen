@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.68 1998/02/17 15:08:41 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.69 1998/02/17 16:22:36 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -61,7 +61,12 @@ mixed *register_module()
        "                 <b>sumbars</b>, <b>normsumbars</b>, <b>linechart</b>,"
        " <b>barchart</b>,\n"
        "                 <b>piechart</b> and <b>graph</b>\n"
-       "  <b>background</b>     Takes the filename of a ppm image as input.\n"
+#if constant(Image.JPEG.decode)
+       "  <b>background</b>     Takes the filename of a pnm-, gif- or\n"
+       "                 jpeg-image as input.\n"
+#else
+       "  <b>background</b>     Takes the filename of a pnm image as input.\n"
+#endif
        "  <b>width</b>          Width of diagram image in pixels.\n"
        "                 (will not have any effect below 100)\n"
        "  <b>height</b>         Height of diagram image in pixels.\n"
@@ -648,7 +653,8 @@ int|object PPM(string fname, object id)
   // q = Stdio.read_file((string)fname);
   //  q = Stdio.read_bytes(fname);
   //  if(!q) q = roxen->try_get_file( dirname(id->not_query)+fname, id);
-  if(!q) perror("Diagram: Unknown PPM image '"+fname+"'\n");
+
+  if(!q) perror("Diagram: Unknown image '"+fname+"'\n");
   mixed g = Gz;
   if (g->inflate) {
     catch {
@@ -656,12 +662,36 @@ int|object PPM(string fname, object id)
     };
   }
   if(q)
-    {
+    { 
       object foo;
-      if (catch{foo=image()->fromppm(q);})
-	return 1;
-      else
-	return foo;
+#if constant(Image.JPEG.decode)
+      if (q[0..2]=="GIF")
+	if (catch{foo=Image.GIF.decode(q);})
+	  return 1;
+	else
+	  return foo;
+      else if (search(q[0..13],"JFIF")!=-1)
+	if (catch{foo=Image.JPEG.decode(q);})
+	  return 1;
+	else
+	  return foo;
+      else 
+#endif
+	if (q[0..0]=="P")
+	  if (catch{foo=Image.PNM.decode(q);})
+	    return 1;
+	  else
+	    return foo;
+
+#if constant(Image.JPEG.decode)
+      perror("Diagram: Unknown image type for '"+fname+"', "
+	     "only GIF, jpeg and pnm is supported.\n");
+      return 1;
+#else
+      perror("Diagram: Unknown image type for '"+fname+"', "
+	     "only pnm is supported.\n");
+       return 1;
+#endif
     }
   else
     return 1;
@@ -706,8 +736,13 @@ mapping find_file(string f, object id)
       if (!(res->image))
 	throw(({"Missing font or similar error!\n", backtrace() }));
       res->image=res->image->
+#if constant(Image.JPEG.decode)
+	write("The file was", "not found ",
+	      "or was not a","jpeg-, gif- or","pnm-picture.");
+#else
 	write("The file was","not found ",
-	      "or was not a","ppm-picture.  ");
+	      "or was not a","pnm-picture.");
+#endif
     }
   } else if(res->tonedbox) {
     m_delete( res, "bg" );
