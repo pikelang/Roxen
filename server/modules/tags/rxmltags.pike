@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.302 2001/09/13 21:49:46 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.303 2001/09/19 10:57:02 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6957,10 +6957,10 @@ just got zapped?
 
 "if#internal-exists":#"<desc plugin='1'><p><short>
  Returns true if the named page exists.</short> If the page at the given path
- is non-viewable, e.g. matchas the internal files patterns in the filesystem module,
+ is non-viewable, e.g. matches the internal files patterns in the filesystem module,
  it will still be detected by this if plugin. If the path does not begin with /, it
- is assumed to be a URL relative to the directory containing the page with the if-statement.
- 'Magic' files like /internal-roxen-unit will evaluate as true.</p>
+ is assumed to be a URL relative to the directory containing the page with the if statement.
+ 'Magic' files like /internal-roxen-unit will evaluate as true.</p></desc>
 
 <attr name='internal-exists' value='path' required='1'>
  <p>Choose what path in the virtual filesystem to test.</p>
