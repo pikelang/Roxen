@@ -320,13 +320,17 @@ object get_font(string j, int p, int t, int h, string fdg, int s, int hd)
 //ta ut xmaxynames, ymaxynames xmaxxnames ymaxxnames
 mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
 {
-  object notext=get_font("avant_garde", 32, 0, 0, "left",0,0);
+  object notext=get_font("avant_garde", diagram_data["fontsize"], 0, 0, "left",0,0);
   int j;
   diagram_data["xnamesimg"]=allocate(j=sizeof(diagram_data["xnames"]));
   for(int i=0; i<j; i++)
     if (((diagram_data["values_for_xnames"][i]>LITET)||(diagram_data["values_for_xnames"][i]<-LITET))&&
 	((diagram_data["xnames"][i]) && sizeof(diagram_data["xnames"][i])))
-      diagram_data["xnamesimg"][i]=notext->write(diagram_data["xnames"][i])->scale(0,diagram_data["fontsize"]);
+      diagram_data["xnamesimg"][i]=notext->write(diagram_data["xnames"][i])
+#ifndef ROXEN
+->scale(0,diagram_data["fontsize"])
+#endif
+;
     else
       diagram_data["xnamesimg"][i]=
 	image(diagram_data["fontsize"],diagram_data["fontsize"]);
@@ -334,7 +338,11 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
   diagram_data["ynamesimg"]=allocate(j=sizeof(diagram_data["ynames"]));
   for(int i=0; i<j; i++)
     if ((diagram_data["values_for_ynames"][i]>LITET)||(diagram_data["values_for_ynames"][i]<-LITET))
-      diagram_data["ynamesimg"][i]=notext->write(diagram_data["ynames"][i])->scale(0,diagram_data["fontsize"]);
+      diagram_data["ynamesimg"][i]=notext->write(diagram_data["ynames"][i])
+#ifndef ROXEN
+->scale(0,diagram_data["fontsize"])
+#endif
+;
     else
       diagram_data["ynamesimg"][i]=
 	image(diagram_data["fontsize"],diagram_data["fontsize"]);
@@ -477,8 +485,11 @@ mapping set_legend_size(mapping diagram_data)
 	diagram_data["legendcolor"]=diagram_data["bgcolor"];
       for(int i=0; i<j; i++)
 	if (diagram_data["legend_texts"][i] && (sizeof(diagram_data["legend_texts"][i])))
-	  texts[i]=notext->write(diagram_data["legend_texts"][i])->
-	    scale(0,diagram_data["legendfontsize"]);
+	  texts[i]=notext->write(diagram_data["legend_texts"][i])
+#ifndef ROXEN
+	    ->scale(0,diagram_data["legendfontsize"])
+#endif
+;
       	else
 	  texts[i]=
 	    image(diagram_data["legendfontsize"],diagram_data["legendfontsize"]);
@@ -631,8 +642,11 @@ mapping(string:mixed) create_graph(mapping diagram_data)
     graph=image(diagram_data["xsize"],diagram_data["ysize"],
 		@(diagram_data["bgcolor"]));
   else
-    graph=diagram_data["image"];
-
+    {
+      graph=diagram_data["image"];
+      diagram_data["xsize"]=diagram_data["image"]->xsize();
+      diagram_data["ysize"]=diagram_data["image"]->ysize();
+    }
   diagram_data["image"]=graph;
   set_legend_size(diagram_data);
 
@@ -744,7 +758,11 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	label=diagram_data["labels"][0];
       if ((label!="")&&(label!=0))
 	labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
-	  write(label)->scale(0,diagram_data["labelsize"]);
+	  write(label)
+#ifndef ROXEN
+->scale(0,diagram_data["labelsize"])
+#endif
+;
       else
 	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
       labely=diagram_data["labelsize"];
@@ -1048,7 +1066,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
     else
       if (diagram_data["yminvalue"]>LITET)
 	{
-	  write("\n\n"+sprintf("%O",make_polygon_from_line(diagram_data["linewidth"], 
+	  /*	  write("\n\n"+sprintf("%O",make_polygon_from_line(diagram_data["linewidth"], 
 							   ({
 							     xpos_for_yaxis,
 							     diagram_data["ysize"]-diagram_data["linewidth"],
@@ -1078,7 +1096,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 							   
 			       )
 		+
-		"\n\n");
+		"\n\n");*/
 	  graph->
 	    polygone(make_polygon_from_line(diagram_data["linewidth"], 
 					    ({
@@ -1247,7 +1265,11 @@ graph->
 	label=diagram_data["labels"][1];
       if ((label!="")&&(label!=0))
 	labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
-	  write(label)->scale(0,diagram_data["labelsize"]);
+	  write(label)
+#ifndef ROXEN
+->scale(0,diagram_data["labelsize"])
+#endif
+;
       else
 	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
       
@@ -1304,7 +1326,7 @@ int main(int argc, string *argv)
 
   mapping(string:mixed) diagram_data;
   diagram_data=(["type":"graph",
-		 "textcolor":({0,0,0}),
+		 "textcolor":({0,255,0}),
 		 "subtype":"",
 		 "orient":"vert",
 		 "data": 
@@ -1314,7 +1336,7 @@ int main(int argc, string *argv)
 		    ({3.2, 13.3, 3.5, 13.7} )}),
 		 "fontsize":32,
 		 "axcolor":({0,0,0}),
-		 "bgcolor":({255,255,255}),
+		 "bgcolor":0,//({255,255,255}),
 		 "labelcolor":({0,0,0}),
 		 "datacolors":({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}) }),
 		 "linewidth":2.2,
@@ -1331,103 +1353,13 @@ int main(int argc, string *argv)
 		 "grindwidth": 0.5
 
   ]);
-  /*
-  diagram_data["data"]=({({ 
-     101.858620,
-    146.666672,
-    101.825584,
-    146.399109,
-    101.728462,
-    146.147629,
-    101.573090,
-    145.927322,
-    101.368790,
-    145.751419,
-    95.240158,
-    141.665649,
-    109.106468,
-    137.043549,
-    109.606232,
-    136.701111,
-    109.848892,
-    136.145996,
-    109.760834,
-    135.546616,
-    109.368790,
-    135.084732,
-    101.858620,
-    130.077972,
-    101.858719,
-    2.200001,
-    101.792381,
-    1.823779,
-    101.601372,
-    1.492934,
-    101.308723,
-    1.247373,
-    100.949730,
-    1.116712,
-    100.567711,
-    1.116711,
-    100.208717,
-    1.247372,
-    99.916069,
-    1.492933,
-    99.725060,
-    1.823777,
-    99.658722,
-    2.199999,
-    99.658623,
-    130.666672,
-    99.691658,
-    130.934219,
-    99.788780,
-    131.185715,
-    99.944160,
-    131.406036,
-    100.148453,
-    131.581924,
-    106.277084,
-    135.667679,
-    92.410774,
-    140.289780,
-    91.911018,
-    140.632217,
-    91.668350,
-    141.187317,
-    91.756401,
-    141.786713,
-    92.148453,
-    142.248581,
-    99.658623,
-    147.255371,
-    99.658623,
-    397.799988,
-    99.724960,
-    398.176208,
-    99.915970,
-    398.507050,
-    100.208618,
-    398.752625,
-    100.567612,
-    398.883270,
-    100.949631,
-    398.883270,
-    101.308624,
-    398.752625,
-    101.601273,
-    398.507050,
-    101.792282,
-    398.176208,
-    101.858620,
-    397.799988
 
-})});
-  */
+  diagram_data["image"]=image(2,2)->fromppm(read_file("girl.ppm"));
 
   object o=Stdio.File();
   o->open("test.ppm", "wtc");
   o->write(create_graph(diagram_data)["image"]->toppm());
+  //o->write(diagram_data["image"]->toppm());
   o->close();
 
 };

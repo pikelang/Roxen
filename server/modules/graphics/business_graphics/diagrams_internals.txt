@@ -120,7 +120,10 @@ float xspace, float yspace,
 int xsize, ysize;
 //anger hur stor bild man ska generera.
 
-"graph":image-object, 
+"image":image-object,
+// Denna kan sättas till bakgrundsbilden innan create_XXX anropas.
+// OBS om den ska användas så måste bgcolor vara 0!!!
+ 
 "xstart": var_i_bilden_vi_kan_börja_rita_data-int, //från höger
 "ystart": var_i_bilden_vi_kan_börja_rita_data-int, //Nerifrån!
 "xstop":int, //från höger
