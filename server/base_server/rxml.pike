@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.188 2000/04/14 19:01:10 kuntri Exp $
+// $Id: rxml.pike,v 1.189 2000/04/14 23:21:40 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2033,27 +2033,27 @@ scope created within the define tag.
 
 }),
 
-"else":#"<desc cont><short>
- Show the contents if the previous <tag><ref type='tag'>if</ref></tag>
- tag didn't, or if there was a <tag><ref type='tag'>false</ref></tag>
- above.</short> The result is undefined if there has been no <tag><ref
- type='tag'>if</ref></tag>, <true> or <tag><ref
- type='tag'>false</ref></tag> tag above.
-</desc>",
+"else":#"<desc cont><short hide>
+ Show the contents if the previous <if> tag didn't, or if there was a
+ <false> tag above.</short>Show the contents if the previous <tag><ref
+ type='tag'>if</ref></tag> tag didn't, or if there was a <tag><ref
+ type='tag'>false</ref></tag> tag above. The result is undefined if there
+ has been no <tag><ref type='tag'>if</ref></tag>, <true> or <tag><ref
+ type='tag'>false</ref></tag> tag above. </desc>",
 
-"elseif":#"<desc cont><short>
- Same as the <tag><ref type='tag'>if</ref></tag>, but it will only
- evaluate if the previous <tag><ref type='tag'>if</ref></tag> tag
- returned false.</short>
-</desc>",
+"elseif":#"<desc cont><short hide>
+ Same as the <if> tag, but it will only evaluate if the previous <if>
+ tag returned false.</short>Same as the <tag><ref
+ type='tag'>if</ref></tag>, but it will only evaluate if the previous
+ <tag><ref type='tag'>if</ref></tag> tag returned false. </desc>",
 
-"false":#"<desc tag><short>
- Internal tag used to set the return value of <tag><ref
- type='tag'>if</ref></tag> tags.</short> It will ensure that the next <tag><ref
- type='tag'>else</ref></tag> tag will show its contents. It can be
- useful if you are writing your own <tag><ref type='tag'>if</ref></tag>
- lookalike tag.
-</desc>",
+"false":#"<desc tag><short hide>
+ Internal tag used to set the return value of <if> tags.
+ </short>Internal tag used to set the return value of <tag><ref
+ type='tag'>if</ref></tag> tags. It will ensure that the next
+ <tag><ref type='tag'>else</ref></tag> tag will show its contents. It
+ can be useful if you are writing your own <tag><ref
+ type='tag'>if</ref></tag> lookalike tag. </desc>",
 
 "help":#"<desc tag><short>
  Gives help texts for tags.</short> If given no arguments, it will list all
@@ -2064,15 +2064,16 @@ scope created within the define tag.
  Gives the help text for that tag.
 </attr>",
 
-"if":#"<desc cont><short>
- <tag><ref type='tag'>if</ref></tag> is used to conditionally show its
- contents.</short> <tag><ref type='tag'>else</ref></tag>, <tag><ref
- type='tag'>elif</ref></tag> or <tag><ref type='tag'>elseif</ref></tag>
- can be used to suggest alternative content. It is possible to use
- glob patterns in almost all attributes, where * means match zero or
- more characters while ? matches one character. * Thus t*f?? will
- match trainfoo as well as * tfoo but not trainfork or tfo.
-</desc>
+"if":#"<desc cont><short hide>
+ <if> is used to conditionally show its contents.</short><tag><ref
+ type='tag'>if</ref></tag> is used to conditionally show its contents.
+ <tag><ref type='tag'>else</ref></tag>, <tag><ref
+ type='tag'>elif</ref></tag> or <tag><ref
+ type='tag'>elseif</ref></tag> can be used to suggest alternative
+ content. It is possible to use glob patterns in almost all
+ attributes, where * means match zero or more characters while ?
+ matches one character. * Thus t*f?? will match trainfoo as well as *
+ tfoo but not trainfork or tfo. </desc>
 
 <attr name=not>
  Inverts the result (true->false, false->true).
@@ -2279,13 +2280,13 @@ The following features are supported:
  the contents are parsed by the RXML parser.</short>
 </desc>",
 
-"true":#"<desc tag><short>
- An internal tag used to set the return value of
- <tag><ref type='tag'>if</ref></tag> tags.</short> It will ensure that the next
+"true":#"<desc tag><short hide>
+ An internal tag used to set the return value of <if> tags. </short>An
+ internal tag used to set the return value of <tag><ref
+ type='tag'>if</ref></tag> tags. It will ensure that the next
  <tag><ref type='tag'>else</ref></tag> tag will not show its contents.
- It can be useful if you are writing your own
- <tag><ref type='tag'>if</ref></tag> lookalike tag.
-</desc>",
+ It can be useful if you are writing your own <tag><ref
+ type='tag'>if</ref></tag> lookalike tag. </desc>",
 
 "undefine":#"<desc tag><short>
  Removes a definition made by the define container.</short> One attribute is
