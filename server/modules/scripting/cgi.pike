@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.78 1998/03/23 08:20:57 neotron Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.79 1998/04/06 19:05:55 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -386,7 +386,7 @@ class spawn_cgi
 			      "<title>%s</title>\n"
 			      "<h2>%s</h2>\n", errcode, err, err, err);
 
-    object(files.file) output = files.file("stdout");
+    object(Stdio.File) output = Stdio.File("stdout");
     int bytes;
     
     while ((bytes = output->write(to_write)) > 0) {
@@ -471,11 +471,11 @@ class spawn_cgi
 	if (pipe4)
 	  destruct(pipe4);
 	
-	pipe3->dup2(files.file("stdin"));
+	pipe3->dup2(Stdio.File("stdin"));
 	destruct(pipe3);
-	pipe1->dup2(files.file("stdout"));
+	pipe1->dup2(Stdio.File("stdout"));
 	if(dup_err)
-	  pipe1->dup2(files.file("stderr"));
+	  pipe1->dup2(Stdio.File("stderr"));
 	destruct(pipe1);
 
 	object privs;
@@ -671,7 +671,7 @@ mixed low_find_file(string f, object id, string path)
 #endif
 
   wd = dirname(f);
-  if ((!(pipe1=files.file())) || (!(pipe2=pipe1->pipe()))) {
+  if ((!(pipe1=Stdio.File())) || (!(pipe2=pipe1->pipe()))) {
     report_error(sprintf("cgi->find_file(\"%s\"): Can't open pipe "
 			 "-- Out of fd's?\n", f));
     return(0);
@@ -679,7 +679,7 @@ mixed low_find_file(string f, object id, string path)
   pipe2->set_blocking(); pipe1->set_blocking();
   pipe2->set_id(pipe2);
 
-  if ((!(pipe3=files.file())) || (!(pipe4=pipe3->pipe()))) {
+  if ((!(pipe3=Stdio.File())) || (!(pipe4=pipe3->pipe()))) {
     report_error(sprintf("cgi->find_file(\"%s\"): Can't open input pipe "
 			 "-- Out of fd's?\n", f));
     return(0);

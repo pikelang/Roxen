@@ -3,12 +3,12 @@
 
 inherit "modules/filesystems/filesystem";
 
-constant cvs_version= "$Id: incoming.pike,v 1.2 1998/02/24 11:02:40 grubba Exp $";
+constant cvs_version= "$Id: incoming.pike,v 1.3 1998/04/06 19:01:42 grubba Exp $";
 
 
 static class decaying_file {
 
-  inherit files.file;
+  inherit Stdio.File;
 
   static int rate, left;
   static function other_read_callback;

@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-string cvs_version = "$Id: proxy.pike,v 1.30 1998/03/26 07:51:50 per Exp $";
+string cvs_version = "$Id: proxy.pike,v 1.31 1998/04/06 19:08:27 grubba Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -35,7 +35,7 @@ inherit "roxenlib";
 #include <proxyauth.pike>
 #include <roxen.h>
 
-program filep = files.file;
+program filep = Stdio.File;
 
 mapping (object:string) requests = ([ ]);
 object logfile;
@@ -83,6 +83,10 @@ void start()
 
 void do_write(string host, string oh, string id, string more)
 {
+#ifdef PROXY_DEBUG
+  roxen_perror(sprintf("PROXY: do_write(\"%O\",\"%s\",\"%s\",\"%s\")\n",
+		       host, oh, id, more));
+#endif /* PROXY_DEBUG */
   if(!host)     host=oh;
   logfile->write("[" + cern_http_date(time(1)) + "] http://" +
 		 host + ":" + id + "\t" + more + "\n");
@@ -92,6 +96,9 @@ void log(string file, string more)
 {
   string host, rest;
 
+#ifdef PROXY_DEBUG
+  roxen_perror(sprintf("PROXY: log(\"%s\",\"%s\")\n", file, more));
+#endif /* PROXY_DEBUG */
   if(!logfile) return;
   sscanf(file, "%s:%s", host, rest);
   roxen->ip_to_host(host, do_write, host, rest, more);

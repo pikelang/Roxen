@@ -5,7 +5,7 @@
 
 // import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.32 1998/03/26 07:51:47 per Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.33 1998/04/06 19:02:34 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -420,7 +420,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
 
   array st;
 
-  f = files.file();
+  f = Stdio.File();
 
   if((!(st = file_stat(groupfile))) || (st[1] == -4) ||
      (!(f->open(groupfile, "r")))) {
