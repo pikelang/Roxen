@@ -1,6 +1,8 @@
 /* Program to start Roxen as a service or in console mode on NT.
  *
  * Based on the service example code from Microsoft.
+ *
+ * $Id: roxen_service.c,v 1.4 2000/06/28 17:16:53 mast Exp $
  */
 
 #include <windows.h>
@@ -16,7 +18,7 @@
 #include <ctype.h>
 
 #define LOCATION_COOKIE "(#*&)@(*&$Server Location Cookie:"
-#define DEFAULT_LOCATION "C:\\Program Files\\Roxen Internet Software\\WebServer\\server"
+#define DEFAULT_LOCATION "C:\\Program Files\\Roxen Internet Software\\WebServer2\\server"
 
 char server_location[_MAX_PATH * 2] = LOCATION_COOKIE DEFAULT_LOCATION;
 
@@ -25,7 +27,7 @@ char server_location[_MAX_PATH * 2] = LOCATION_COOKIE DEFAULT_LOCATION;
 HANDLE hServerStopEvent = NULL;
 HANDLE hProcess;
 DWORD ExitCode = 0;
-DWORD dwThreadId, dwThrdParam = 1; 
+DWORD dwThreadId;
 HANDLE hThread;
 
 char key[9];
@@ -201,7 +203,7 @@ VOID ServiceStop (int write_stop_file)
 	hThread = CreateThread(NULL,
 		0,
 		ThreadServiceStop,
-		&dwThrdParam,
+		(LPVOID) write_stop_file,
 		0,
 		&dwThreadId);
   }
@@ -269,8 +271,12 @@ int start_roxen()
 #define CONSOLEARG "-console"
 #define CONSOLEARGLEN (sizeof (CONSOLEARG) - sizeof (""))
   cmdline = GetCommandLine();
-  for (; *cmdline && isspace (*cmdline); cmdline++) {}
-  for (; *cmdline && !isspace (*cmdline); cmdline++) {}
+  if (*cmdline == '"') {
+    for (cmdline++; *cmdline && *cmdline != '"'; cmdline++) {}
+    if (*cmdline == '"') cmdline++;
+  }
+  else
+    for (; *cmdline && !isspace (*cmdline); cmdline++) {}
   for (; *cmdline && isspace (*cmdline); cmdline++) {}
   if (!_tcsncmp (cmdline, TEXT(CONSOLEARG), CONSOLEARGLEN) &&
       (!cmdline[CONSOLEARGLEN] || isspace (cmdline[CONSOLEARGLEN]))) {
@@ -278,7 +284,7 @@ int start_roxen()
     for (; *cmdline && isspace (*cmdline); cmdline++) {}
   }
 
-  _sntprintf (cmd, sizeof (cmd), TEXT("%hs ntroxenloader.pike +../logs/%hs.run %s%s"),
+  _sntprintf (cmd, sizeof (cmd), TEXT("\"%hs\" ntroxenloader.pike +../logs/%hs.run %s%s"),
 	      pikeloc, key, console_mode ? TEXT("") : TEXT("-silent "), cmdline);
   cmd[sizeof (cmd) - 1] = 0;
 
