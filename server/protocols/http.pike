@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.327 2001/08/15 16:55:27 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.328 2001/08/17 19:40:53 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -526,6 +526,7 @@ class PrefLanguages {
     else
       qualities=({1.0})*sizeof(lang);
     sorted=1;
+    decoded=1;
   }
 
   void sort_lang() {
