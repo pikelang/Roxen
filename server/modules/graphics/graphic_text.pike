@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.88 1997/10/16 12:16:29 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.89 1997/10/16 23:46:06 js Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -941,7 +941,7 @@ int find_or_insert(mapping find)
 
 string magic_javascript_header(object id)
 {
-  if(!id->supports->javascript || !id->supports->images) return "";
+  if(!id->supports->netscape_javascript || !id->supports->images) return "";
   return
     ("\n<script>\n"
      "function img_act(ri,hi,txt)\n"
@@ -959,7 +959,7 @@ string magic_image(string url, int xs, int ys, string sn,
 		   string mess,object id,string input,string extra_args)
 {
   if(!id->supports->images) return alt;
-  if(!id->supports->javascript)
+  if(!id->supports->netscape_javascript)
     return (!input)?
       ("<a "+extra_args+"href=\""+url+"\"><img _parsed=1 src=\""+image_1+"\" name="+sn+" border=0 "+
        "alt=\""+alt+"\"></a>\n"):
