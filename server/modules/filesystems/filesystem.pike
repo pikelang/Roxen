@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.106 2001/08/16 15:26:28 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.107 2001/08/16 15:27:05 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -489,7 +489,7 @@ mixed find_file( string f, RequestID id )
 #if constant(system.normalize_path)
     if (!has_prefix(norm_f, normalized_path) &&
 #ifdef __NT__
-	(norm_f+"/" != normalized_path)
+	(norm_f+"\\" != normalized_path)
 #else /* !__NT__ */
 	(norm_f+"/" != normalized_path)
 #endif /* __NT__ */
