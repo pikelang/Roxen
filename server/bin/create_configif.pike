@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.45 2002/07/10 12:42:38 nilsson Exp $
+ * $Id: create_configif.pike,v 1.46 2002/10/22 01:26:34 nilsson Exp $
  *
  * Create an initial administration interface server.
  */
@@ -93,8 +93,8 @@ int main(int argc, array argv)
 
   if(has_value(argv, "--help")) {
     write(#"
-Creates and initializes a Internet Server configuration
-interface. Arguments:
+Creates and initializes a ChiliMoon configuration interface.
+Arguments:
 
  -d dir   The location of the configuration files.
           Defaults to \"../configurations\".

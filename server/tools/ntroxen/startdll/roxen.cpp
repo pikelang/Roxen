@@ -1,6 +1,6 @@
 // roxen.cpp: implementation of the CRoxen class.
 //
-// $Id: roxen.cpp,v 1.17 2002/10/01 23:21:42 nilsson Exp $
+// $Id: roxen.cpp,v 1.18 2002/10/22 01:25:28 nilsson Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -15,7 +15,7 @@
 
 
 #define LOCATION_COOKIE "(#*&)@(*&$Server Location Cookie:"
-#define DEFAULT_LOCATION "C:\\Program Files\\Roxen Internet Software\\Roxen CMS\\server"
+#define DEFAULT_LOCATION "C:\\Program Files\\ChiliMoon\\server"
 #define DEFAULT_PIKE_JRE_JVMDLL "java/jre/bin/hotspot/jvm.dll"
 
 char server_location[_MAX_PATH * 2] = LOCATION_COOKIE DEFAULT_LOCATION;
@@ -69,7 +69,7 @@ void CRoxen::PrintVersion()
 {
   /*
     if [ -f server_core/roxen.pike ]; then
-      echo "Internet Server `roxen_version`"
+      echo "ChiliMoon `roxen_version`"
       exit 0
     else
       echo 'server_core/roxen.pike not found!'
