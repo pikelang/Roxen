@@ -25,48 +25,72 @@ string parse( RequestID id )
 	      "start":(q[i]->start || i->time),
 	      "written":(int)q[i]->written,
 	      "host":i->remoteaddr,
+	      "closed":((!i->my_fd&&2) || !!catch(i->my_fd->query_address())),
+	      "cc":q[i]->closed,
 	      "file":i->not_query || "?",
 	      "len":q[i]->len,
 	      "stat":(i->file && i->file->stat) || (i->misc && i->misc->stat),
+	      "hoststart":i->remoteaddr+sprintf("%010d",(time()-(q[i]->start || i->time))),
 	      ])
 	  });
 	}
       }
-      sort( rows );
+      sort( column(rows,"hoststart"), rows );
+      
       res += "<table cellspacing=0 border=0 cellpadding=2 width=100% >";
       res += "<tr bgcolor='&usr.fade2;'>"
-	"<td><b>Host</b></td>"
-	"<td><b>File</b></td>"
-	"<td align=right><b>Time</b></td>"
-	"<td align=right><b>Sent</b></td>"
-	"<td align=right><b>Bandwidth</b></td>"
+	"<td><b>"+LOCALE(0,"File")+"</b></td>"
+	"<td align=right><b>"+LOCALE(0,"Time")+"</b></td>"
+	"<td align=right><b>"+LOCALE(0,"Sent (Mib)")+"</b></td>"
+	"<td align=right><b>"+LOCALE(0,"Kibyte/s")+"</b></td>"
 	"</tr>";
-      float total_bw = 0.0;
+      float total_bw = 0.0, host_bw;
+      string oh;
       foreach( rows, mapping r )
       {
-//  	res += sprintf( "%O", r );
+	if( r->host != oh )
+	{
+	  if( oh )
+	    res += sprintf("<tr bgcolor='&usr.fade2;'><td colspan=3>"
+			   + roxen.quick_ip_to_host(oh)+
+			   "</td><td align=right>%.1f</td>"
+			   "</tr><tr><td>&nbsp;</td></tr>", host_bw);
+	  oh = r->host;
+	  host_bw = 0.0;
+	}
 	res += sprintf(
-	  "<tr><td>%s</td>" // host
 	  "<td>%s</td>"      // file
 	  "<td align=right>%2dm %02ds</td>"     // time (min)
-	  "<td align=right>%.1f / %s Mb</td>" // sent
-	  "<td align=right>%.1fKbit/sec</td>" // bw
-          "</tr>"
-	  ,
-          roxen.quick_ip_to_host( r->host ),
+	  "<td align=right>%.1f / %s</td>" // sent
+	  "<td align=right>%.1f</td>" // bw
+          "</tr>",
 	  r->file,
 	  (time(1)-r->start)/60, (time(1)-r->start)%60,
           (r->written/1024.0/1024.0),
 	  (r->len&&sprintf("%.1f", r->len/1024.0/1024.0 )) ||
 	  (r->stat?sprintf("%.1f",r->stat[ST_SIZE]/1024.0/1024.0):" - "),
-	  ((r->written*8)/(time(r->start)+0.1))/1024.0);
-	total_bw += ((r->written*8)/(time(r->start)+0.1))/1024.0;
+	  ((r->written)/(time(r->start)+0.1))/1024.0);
+
+	if( !r->closed )
+	{
+	  host_bw +=  ((r->written)/(time(r->start)+0.1))/1024.0;
+	  total_bw += ((r->written)/(time(r->start)+0.1))/1024.0;
+	}
       }
+      if( oh )
+	res += sprintf("<tr bgcolor='&usr.fade2;'><td colspan=3>"
+		       + roxen.quick_ip_to_host(oh)+
+		       "</td><td align=right>%.1f</td></tr>"
+		       "<tr><td>&nbsp;</td></tr>", host_bw);
       res +=
-	sprintf("<tr bgcolor='&usr.fade2;'><td colspan=4>Total bandwidth</td><td>%.1fKbit/sec</td></tr>",
+	sprintf("<tr bgcolor='&usr.fade2;'><td colspan=3>"
+		+LOCALE(0,"Total bandwidth")+"</td>"
+		"<td align=right>%.1f</td></tr>",
 		total_bw );
       res += "</table>";
     }
   }
+  res += "<input type=hidden name=action value='connections.pike' />"
+    "<submit-gbutton>"+LOCALE(0,"Refresh")+"</submit-gbutton>";
   return res;
 }
