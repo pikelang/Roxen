@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.25 2002/01/05 14:00:01 per-bash Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.26 2002/04/20 10:50:31 jhs Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -367,39 +367,44 @@ void create( Configuration c )
   if( c )
   {
     defvar( "patterns", "", "Relay patterns", TYPE_TEXT,
-            "Syntax: \n"
+            "<p>Syntax:\n"
             "<pre>\n"
-            "[LAST ]EXTENSION extension CALL url-prefix [rxml] [trimheaders] [raw] [utf8] [cache] [stream]\n"
-            "[LAST ]LOCATION location CALL url-prefix [rxml] [trimheaders] [raw] [utf8] [cache] [stream]\n"
-            "[LAST ]MATCH regexp CALL url [rxml] [trimheaders] [raw] [utf8] [cache] [stream]\n"
-            "</pre> \\1 to \\9 will be replaced with submatches from the regexp.<p>"
-            "rxml, trimheaders etc. are flags. If rxml is specified, the "
-            "result of the relay will be RXML-parsed, Trimheaders and raw are "
-            " mutually exclusive, if "
-            "trimheaders is present, only the most essential headers are sent "
-            "to the remote server (actually, no headers at all right now), "
-            "if raw is specified, the request is sent to the remote server"
-            " exactly as it arrived to roxen, not even the Host: header "
-            "is changed.  If utf8 is specified the request is utf-8 encoded "
-            "before it is sent to the remote server.<p>"
-	    " Cache and stream alter the sending of data to the client. "
-	    " If cache is specified, the data can end up in the roxen "
-	    " data-cache, if stream is specified, the data is streamed "
-	    "directly from the server to the client. This disables logging "
-	    "and the headers will be exactly those sent by the remote server, "
-	    "also, this only works for http clients. "
-	    "Less memory is used, however. </p><p>" 
-            " For EXTENSION and LOCATION, the matching local filename is "
-            "appended to the url-prefix specified, no replacing is done.<p>"
-            "If last is specified, the match is only tried if roxen "
-            "fails to find a file (a 404 error). If rewrite is specified, "
-            "redirects and file contents are rewritten, if possible, so that "
-	    "links and images point to the correct place.</p>");
-    defvar("pre-rxml", "", 
+            "[LAST ]EXTENSION extension CALL url-prefix [rxml] [trimheaders] [raw] [utf8] [cache] [stream] [rewrite]\n"
+            "[LAST ]LOCATION location CALL url-prefix [rxml] [trimheaders] [raw] [utf8] [cache] [stream] [rewrite]\n"
+            "[LAST ]MATCH regexp CALL url [rxml] [trimheaders] [raw] [utf8] [cache] [stream] [rewrite]\n"
+            "</pre> \\1 to \\9 will be replaced with submatches from the "
+	    "regexp.</p><p>"
+
+	    "Rxml, trimheaders etc. are flags. If <b>rxml</b> is specified, "
+	    "the result of the relay will be RXML-parsed. Trimheaders and raw "
+	    "are mutually exclusive. If <b>trimheaders</b> is present, only "
+	    "the most essential headers are sent to the remote server "
+	    "(actually, no headers at all right now), if <b>raw</b> is "
+	    "specified, the request is sent to the remote server exactly as it "
+	    "arrived to Roxen, not even the Host: header is changed.  If "
+	    "<b>utf8</b> is specified the request is utf-8 encoded before it "
+	    "is sent to the remote server.</p><p>"
+
+	    "Cache and stream alter the sending of data to the client. If "
+	    "<b>cache</b> is specified, the data can end up in the roxen "
+	    "data cache, if <b>stream</b> is specified, the data is streamed "
+	    "directly from the server to the client. This disables logging, "
+	    "headers will be exactly those sent by the remote server, and this "
+	    "only works for http clients. Less memory is used, however.</p><p>"
+
+            "For <b>EXTENSION</b> and <b>LOCATION</b>, the URL path+query "
+	    "components (<b>location</b> part trimmed off) is appended to the "
+	    "<b>url-prefix</b> specified; no replacing is done.</p><p>"
+
+            "If <b>LAST</b> is specified, the match is only tried if Roxen "
+            "fails to find a file (a 404 error). If <b>rewrite</b> is "
+	    "specified, redirects and file contents are rewritten if possible, "
+	    "so that links and images point to the correct place.</p>");
+    defvar("pre-rxml", "",
            "Header-RXML", TYPE_TEXT,
            "Included before the page contents for redirectpatterns with "
            "the 'rxml' attribute set if the content-type is text/*" );
-    defvar("post-rxml", "", 
+    defvar("post-rxml", "",
            "Footer-RXML", TYPE_TEXT,
            "Included after the page contents for redirectpatterns with "
            "the 'rxml' attribute set if the content-type is text/*" );
@@ -454,7 +459,7 @@ void start( int i, Configuration c )
          case "extension":
            tokens = tokens[1..];
            tokens[1] += "\\1."+tokens[0]+"\\2";
-           tokens[0] = "(.*)\\."+
+           tokens[0] = "([^?]*)\\."+
                      replace(tokens[0],
                              ({"*", ".", "?" }),
                              ({ "\\*", "\\.", "\\?" }) )
