@@ -3012,7 +3012,7 @@ cd</rxml>
 
 <test>
 <rxml>&roxen.version;</rxml>
-<regexp>ChiliMoon/2003\.[0-9]+</regexp>
+<regexp>ChiliMoon/2004\.[0-9]+</regexp>
 </test>
 
 <test>
