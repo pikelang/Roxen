@@ -1,114 +1,108 @@
+// Handles supports
+// Copyright (c) 1999-2000 Idonex AB
+//
+
 #include <module.h>
 inherit "socket";
 
 #define LOCALE	roxenp()->LOW_LOCALE->base_server
 // The db for the nice '<if supports=..>' tag.
-mapping (string:array (array (object|multiset))) supports;
-private multiset default_supports = (< >);
+private mapping (string:array (array (object|multiset))) supports;
+private multiset default_supports;
+private mapping default_client_var;
 
-private static inline array positive_supports(array from)
-{
-  array res = copy_value(from);
-  int i;
-  for(i=0; i<sizeof(res); i++)
-    if(res[i][0] == '-')
-      res[i] = 0;
-  return res - ({ 0 });
-}
 
-private inline array negative_supports(array from)
-{
-  array res = copy_value(from);
-  int i;
-  for(i=0; i<sizeof(res); i++)
-    if(res[i][0] != '-')
-      res[i] = 0;
+//------------------ Code to decode the supports file ----------------------
+
+private array split_supports(array from) {
+  mapping m=([]);
+  multiset pos=(<>),neg=(<>);
+  string i,v;
+  foreach(from, string s) {
+    if(s[0]=='*') {
+      if(sscanf(s,"*%s=%s", i, v)==2)
+        m[i]=v;
+      else
+        report_debug("Error in supports database (%s)\n", s);
+    }
     else
-      res[i] = res[i][1..];
-  return res - ({ 0 });
+      if(s[0]=='-')
+	neg[s]=1;
+      else
+	pos[s]=1;
+  }
+  return ({pos, neg, m});
 }
 
-private static mapping foo_defines = ([ ]);
-// '#define' in the 'supports' file.
-static private string current_section; // Used below.
-// '#section' in the 'supports' file.
-
-private void parse_supports_string(string what)
+private void parse_supports_string(string what, string current_section, mapping defines)
 {
-  string foo;
-  
-  array lines;
-  int i;
-  lines=replace(what, "\\\n", " ")/"\n"-({""});
-
-  foreach(lines, foo)
+  foreach(replace(what, "\\\n", " ")/"\n"-({""}), string line)
   {
     array bar, gazonk;
-    if(foo[0] == '#')
+    if(line[0] == '#')
     {
       string file;
       string name, to;
-      if(sscanf(foo, "#include <%s>", file))
+      if(sscanf(line, "#include <%s>", file))
       {
-	if(foo=Stdio.read_bytes(file))
-	  parse_supports_string(foo);
+	if(line=Stdio.read_bytes(file))
+	  parse_supports_string(line, current_section, defines);
 	else
 	  report_error(LOCALE->supports_bad_include(file));
-      } else if(sscanf(foo, "#define %[^ ] %s", name, to)) {
+      }
+      else if(sscanf(line, "#define %[^ ] %s", name, to)) {
 	name -= "\t";
-	foo_defines[name] = to;
+	defines[name] = to;
 //	werror("#defining '"+name+"' to "+to+"\n");
-      } else if(sscanf(foo, "#section %[^ ] {", name)) {
+      }
+      else if(sscanf(line, "#section %[^ ] {", name)) {
 //	werror("Entering section "+name+"\n");
 	current_section = name;
 	if(!supports[name])
 	  supports[name] = ({});
-      } else if((foo-" ") == "#}") {
+      }
+      else if((line-" ") == "#}") {
 //	werror("Leaving section "+current_section+"\n");
 	current_section = 0;
-      } else {
-//	werror("Comment: "+foo+"\n");
       }
 
-    } else {
+    }
+    else {
       int rec = 10;
-      string q=replace(foo,",", " ");
-      foo="";
+      string q=replace(line,",", " ");
+      line="";
 
       // Handle all defines.
-      while((strlen(foo)!=strlen(q)) && --rec)
+      while((strlen(line)!=strlen(q)) && --rec)
       {
-	foo=q;
-	q = replace(q, indices(foo_defines), values(foo_defines));
+	line=q;
+	q = replace(q, indices(defines), values(defines));
       }
 
-      foo=q;
+      line=q;
 
       if(!rec)
 	report_debug("Too deep recursion while replacing defines.\n");
 
-//    werror("Parsing supports line '"+foo+"'\n");
-      bar = replace(foo, ({"\t",","}), ({" "," "}))/" " -({ "" });
-      foo="";
+//    werror("Parsing supports line '"+line+"'\n");
+      bar = replace(line, ({"\t",","}), ({" "," "}))/" " -({ "" });
+      line="";
 
       if(sizeof(bar) < 2)
 	continue;
 
-      if(bar[0] == "default")
-	default_supports = aggregate_multiset(@bar[1..]);
-      else
-      {
-	gazonk = bar[1..];
+      if(bar[0] == "default") {
+	array tmp=split_supports(bar[1..]);
+	default_supports = tmp[0]-tmp[1];
+        default_client_var = tmp[2];
+      }
+      else {
 	mixed err;
 	if (err = catch {
 	  supports[current_section]
-	    += ({ ({ Regexp(bar[0])->match,
-		     aggregate_multiset(@positive_supports(gazonk)),
-		     aggregate_multiset(@negative_supports(gazonk)),
-	    })});
-	}) {
+	    += ({ ({ Regexp(bar[0])->match }) + split_supports(bar[1..]) });
+	})
 	  report_error(LOCALE->supports_bad_regexp(describe_backtrace(err)));
-	}
       }
     }
   }
@@ -117,11 +111,72 @@ private void parse_supports_string(string what)
 public void initiate_supports()
 {
   supports = ([ 0:({ }) ]);
-  foo_defines = ([ ]);
-  current_section = 0;
-  parse_supports_string(roxenp()->QUERY(Supports));
-  foo_defines = 0;
+  default_supports = (< >);
+  default_client_var = ([ ]);
+  parse_supports_string(roxenp()->QUERY(Supports), 0, ([]) );
 }
+
+
+//---------------------- Returns the supports flags ------------------------
+
+
+// Return a list of 'supports' values for the current connection.
+
+private array(multiset|mapping) lookup_supports(string from)
+{
+  multiset (string) sup;
+  mapping (string:string) m;
+
+  if(!(sup = cache_lookup("supports", from)) || !(m = cache_lookup("supports", from))) {
+    sup = (<>);
+    m = ([]);
+    multiset (string) nsup = (< >);
+    foreach(indices(supports), string v)
+    {
+      if(!v || !search(from, v))
+      {
+	//  werror("Section "+v+" match "+from+"\n");
+	foreach(supports[v], array(function|multiset) s)
+	  if(s[0](from))
+	  {
+	    sup |= s[1];
+	    nsup |= s[2];
+            m += s[3];
+	  }
+      }
+    }
+    if(!sizeof(sup))
+    {
+      sup = default_supports;
+#ifdef DEBUG
+      werror("Unknown client: \""+from+"\"\n");
+#endif
+    }
+    sup -= nsup;
+    cache_set("supports", from, sup);
+  }
+
+  return ({ sup, m });
+}
+
+multiset(string) find_supports(string from, void|multiset existing_sup)
+{
+  if(!strlen(from) || from == "unknown")
+    return default_supports|existing_sup;
+
+  return lookup_supports(from)[0]|existing_sup;
+}
+
+mapping(string:string) find_client_var(string from, void|mapping existing_cv)
+{
+  if(!strlen(from) || from == "unknown")
+    return default_client_var+existing_cv;
+
+  return lookup_supports(from)[1]+existing_cv;
+}
+
+
+//------------------- Code that updates the supports database --------------
 
 array _new_supports = ({});
 
@@ -165,7 +220,7 @@ void got_data_from_roxen_com(object this, string foo)
 
 void connected_to_roxen_com(object port)
 {
-  if(!port) 
+  if(!port)
   {
 #ifdef DEBUG
     werror("Failed to connect to www.roxen.com:80.\n");
@@ -211,48 +266,4 @@ public void update_supports_from_roxen_com()
     roxenp()->store("Variables", roxenp()->variables, 0, 0);
   }
   call_out(update_supports_from_roxen_com, roxenp()->QUERY(next_supports_update)-time());
-}
-
-// Return a list of 'supports' values for the current connection.
-
-public multiset find_supports(string from, void|multiset existing_sup)
-{
-  multiset (string) sup =  (< >);
-  multiset (string) nsup = (< >);
-
-  array (function|multiset) s;
-  string v;
-  array f;
-
-  if(!existing_sup) existing_sup = (<>);
-
-  if(!strlen(from) || from == "unknown")
-    return default_supports|existing_sup;
-  if(!(sup = cache_lookup("supports", from))) {
-    sup = (<>);
-    foreach(indices(supports), v)
-    {
-      if(!v || !search(from, v))
-      {
-	//  werror("Section "+v+" match "+from+"\n");
-	f = supports[v];
-	foreach(f, s)
-	  if(s[0](from))
-	  {
-	    sup |= s[1];
-	    nsup  |= s[2];
-	  }
-      }
-    }
-    if(!sizeof(sup))
-    {
-      sup = default_supports;
-#ifdef DEBUG
-      werror("Unknown client: \""+from+"\"\n");
-#endif
-    }
-    sup -= nsup;
-    cache_set("supports", from, sup);
-  }
-  return sup|existing_sup;
 }
