@@ -128,6 +128,7 @@ worldmap binary
 /server/data/test/filesystem/test_rxml_package foreign_ident
 /server/data/test/tests/ftp/RoxenTest_ftp.pike foreign_ident
 /server/data/test/tests/ftp/ftp_test.pike foreign_ident
+/server/etc/include/proxyauth.pike foreign_ident
 /server/font_handlers/builtin.pike foreign_ident
 /server/font_handlers/imagedir.pike foreign_ident
 /server/font_handlers/old.pike foreign_ident
