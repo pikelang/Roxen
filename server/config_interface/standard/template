@@ -42,24 +42,27 @@
 <define tag=topmenu default_base="" default_selected=home>
   <top-menu>
     <item first perm="View Settings"
-          title="<cf-locale get=sites>" href="&base;sites/" 
+          title="<cf-locale get=sites>" href="&base;sites/"
       <if match="&selected; is sites"> selected</if> />
     <item perm="View Settings"
-          title="<cf-locale get=eventlog>" href="&base;event_log/" 
+          title="<cf-locale get=eventlog>" href="&base;event_log/"
           <if match="&selected; is event_log"> selected</if> />
     <item perm="View Settings"
-          title="<cf-locale get=globals>" href="&base;global_settings/" 
+          title="<cf-locale get=globals>" href="&base;global_settings/"
           <if match="&selected; is globals"> selected</if> />
     <item perm="Actions" title="<cf-locale get=actions>" href="&base;actions/"
           <if match="&selected; is actions"> selected</if>  />
-    <item last=20 title="<cf-locale get=home>" href="&base;" 
+    <item last=20 title="<cf-locale get=home>" href="&base;"
           <if match="&selected; is home"> selected</if> />
   </top-menu>
 </define>
 
 <define container=submit-gbutton default_align=baseline>
- <cset variable=___________ preparse><gbutton-url #args#><contents></gbutton-url></cset>
-  <input align=&align; type=image name='<contents>' value='<contents>' src='<insert variable=___________>' border=0>
+<cset variable=gbutton_url>
+  <gbutton-url preparse><contents></gbutton-url>
+</cset>
+<input align=&align; type=image name='<contents>' value='<contents>'
+       src='&form.gbutton_url;' border=0>
 </define>
 
 <define container=tmpl>
@@ -70,7 +73,7 @@
 
   <body hspace=0 vspace=0
         topmargin=0 leftmargin=0 marginwidth=0 marginheight=0
-        bottommargin=0 rightmargin=0 margin=0  
+        bottommargin=0 rightmargin=0 margin=0
         bgcolor=&usr.bgcolor; text=black>
 
     <form method=POST action='<cf-current-url>'>
@@ -91,15 +94,13 @@
           </tr>
          </cf-userwants>
          <tr><td align=right>
-            <formoutput>
-              <gbutton href='/standard/change_user.html?uid=#config_user_uid#'
-                       align=right bgcolor=##d9dee7 width=70>User:</gbutton> 
+         <gbutton href='/standard/change_user.html?uid=&form.config_user_uid;'
+                  align=right bgcolor=#d9dee7 width=70>User:</gbutton>
           </td><td>
-            <font color=##78849c><pike> 
-                   return id->misc->config_user->real_name + " (" + id->misc->config_user->name +")";
-               </pike></font>
+            <font color=#78849c>
+               &form.config_user_name; (&form.config_user_uid;)
+            </font>
            </td></tr>
-             </formoutput>
           </table>
         </middle>
         <contents>
@@ -114,4 +115,3 @@
     <submit-gbutton align=right preparse> <cf-locale get=save> </submit-gbutton>
   <!-- /cf-perm -->
 </define>
-
