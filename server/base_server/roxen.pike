@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.776 2002/02/01 16:53:53 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.777 2002/02/06 09:27:55 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3265,6 +3265,8 @@ class ArgCache
     object crypto = Crypto.arcfour();
     crypto->set_encrypt_key( server||secret );
     string res = crypto->crypt( a+"\327"+b );
+    // Ensure that we do not have a leading NUL.
+    res[0] |= 0x80;
     res = Gmp.mpz( res, 256 )->digits( 36 );
     return res;
   }
@@ -3293,19 +3295,31 @@ class ArgCache
     return 0;
   }
 
-  static array decode_id( string a )
+  array(int) low_decode_id(string a, string key)
   {
-    string oa = a;
-    ensure_secret();
-    object crypto = Crypto.arcfour();
-    crypto->set_encrypt_key( secret );
     if( catch(  a = Gmp.mpz( a, 36 )->digits( 256 ) ) )
       return 0; // Not very likely to work...
-    a = crypto->crypt( a );
+    object crypto = Crypto.arcfour();
+    crypto->set_encrypt_key(key);
+    a = crypto->crypt(a);
+    // Fix the high-order bit altered by encode_id().
+    a[0] &= 0x7f;
     int i, j;
-    if( sscanf( a, "%d\327%d", i, j ) != 2 )
-      return plugin_decode_id( oa );
-    return ({ i, j });
+    if((sscanf(a, "%d\327%d", i, j) == 2) &&
+       (a == i + "\327" + j)) {
+      return ({ i, j });
+    }
+    return 0;
+  }
+
+  static array(int) decode_id( string a )
+  {
+    array(int) res;
+    ensure_secret();
+    if (res = low_decode_id(a, secret)) {
+      return res;
+    }
+    return plugin_decode_id(a);
   }
   
   int key_exists( string key )
