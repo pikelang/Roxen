@@ -1,5 +1,5 @@
 // This code has to work both in 'roxen.pike' and all modules
-string cvs_version = "$Id: socket.pike,v 1.6 1997/05/25 10:57:37 grubba Exp $";
+string cvs_version = "$Id: socket.pike,v 1.7 1997/05/27 23:38:17 grubba Exp $";
 
 #if !efun(roxen)
 #define roxen roxenp()
@@ -53,8 +53,8 @@ private void got_host_name(string host, string oh, int port,
     destruct(f);
     return;
   }
-  f->set_nonblocking(0, connected, failed);
   f->set_id( ({ callback, args, f }) );
+  f->set_nonblocking(0, connected, failed);
 //#ifdef DEBUG
   mark_fd(f->query_fd(), "async socket communication: -> "+host+":"+port);
 //#endif
