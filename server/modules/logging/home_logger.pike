@@ -3,14 +3,12 @@
 // This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
-constant cvs_version = "$Id: home_logger.pike,v 1.24 2000/06/21 02:01:14 hop Exp $";
-constant thread_safe=1;
 
+constant cvs_version = "$Id: home_logger.pike,v 1.25 2000/07/03 06:47:16 nilsson Exp $";
+constant thread_safe = 1;
 
-#include <module.h>
 #include <config.h>
 inherit "module";
-inherit "roxenlib";
 
 constant module_type = MODULE_LOGGER;
 constant module_name = "User logger";
@@ -326,7 +324,7 @@ string start()
 {
   object f;
   if(cache_head) destruct(cache_head);
-  cache_head = CacheFile(QUERY(num), QUERY(delay), this_object(), mutex);
+  cache_head = CacheFile(query("num"), query("delay"), this_object(), mutex);
   parse_log_formats();
 }
 
@@ -352,10 +350,10 @@ static void do_log(mapping file, object request_id, function log_function)
 	       }), ({
 		 (string)request_id->remoteaddr,
 		   host_ip_to_int(request_id->remoteaddr),
-		   cern_http_date(time(1)),
+		   Roxen.cern_http_date(time(1)),
 		   unsigned_to_bin(time(1)),
 		   (string)request_id->method,
-		   http_encode_string(request_id->not_query+
+		   Roxen.http_encode_string(request_id->not_query+
 				      (request_id->query?"?"+request_id->query:
 				       "")),
 		   (string)request_id->prot,
@@ -365,7 +363,7 @@ static void do_log(mapping file, object request_id, function log_function)
 		   unsigned_to_bin(file->len),
 		   (string)
 		   (sizeof(request_id->referer)?request_id->referer[0]:"-"),
-		   http_encode_string(sizeof(request_id->client)?request_id->client*" ":"-"),
+		   Roxen.http_encode_string(sizeof(request_id->client)?request_id->client*" ":"-"),
 		   extract_user(request_id->realauth),
 		   (string)request_id->cookies->RoxenUserID,
 		 }));
@@ -422,14 +420,14 @@ mapping cached_homes = ([]);
 string home(string of, object id)
 {
   string|int l, f;
-  foreach(QUERY(Logs), l)
+  foreach(query("Logs"), l)
   {
     if(!search(of, l))
     {
       if(cached_homes[l] && !(cached_homes[l]==-1 && id->pragma["no-cache"]))
 	return (l=cached_homes[l])==-1?0:l;
       f=l;
-      l=id->conf->real_file(l+QUERY(AccessLog), id);
+      l=id->conf->real_file(l+query("AccessLog"), id);
       if(l)
 	cached_homes[f]=l;
       else
@@ -441,7 +439,7 @@ string home(string of, object id)
       catch{f=sprintf(l,f);};
       if(cached_homes[f] && !(cached_homes[f]==-1 && id->pragma["no-cache"]))
 	return (l=cached_homes[f])==-1?0:l;
-      l=id->conf->real_file(f+QUERY(AccessLog), id);
+      l=id->conf->real_file(f+query("AccessLog"), id);
       if(l) cached_homes[f]=l;
       else cached_homes[f]=-1;
       return l;
@@ -457,7 +455,7 @@ inline string format_log(object id, mapping file)
 		 roxen->quick_ip_to_host(id->remoteaddr),
 		 (string)(sizeof(id->referer)?id->referer*", ":"-"),
 		 replace((string)(id->client?id->client*" ":"-")," ","%20"),
-		 cern_http_date(id->time),
+		 Roxen.cern_http_date(id->time),
 		 (string)id->method, (string)id->raw_url,
 		 (string)id->prot,   (string)file->error,
 		 (string)(file->len>=0?file->len:"?"));
@@ -474,6 +472,6 @@ mixed log(object id, mapping file)
     fnord->wait(); // Tell it not to die
     do_log(file,id,fnord->write);
   }
-  if(QUERY(block) && fnord)
+  if(query("block") && fnord)
     return 1;
 }

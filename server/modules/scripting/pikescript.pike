@@ -6,15 +6,13 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.61 2000/06/26 19:45:45 sigge Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.62 2000/07/03 06:43:20 nilsson Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
 
-inherit "module";
-inherit "roxenlib";
 #include <config.h>
-#include <module.h>
+inherit "module";
 
 constant module_type = MODULE_FILE_EXTENSION;
 constant module_name = "Pike script support";
@@ -82,7 +80,7 @@ void create()
 
 array (string) query_file_extensions()
 {
-  return QUERY(exts);
+  return query("exts");
 }
 
 #ifdef THREADS
@@ -100,9 +98,9 @@ array|mapping call_script(function fun, object got, object file)
   }
   string|array (int) uid, olduid, us;
 
-  if(got->rawauth && (!QUERY(rawauth) || !QUERY(clearpass)))
+  if(got->rawauth && (!query("rawauth") || !query("clearpass")))
     got->rawauth=0;
-  if(got->realauth && !QUERY(clearpass))
+  if(got->realauth && !query("clearpass"))
     got->realauth=0;
 
 #ifdef THREADS
@@ -115,7 +113,7 @@ array|mapping call_script(function fun, object got, object file)
 #endif
 
 #if constant(__builtin.security)
-  if (!QUERY(trusted)) {
+  if (!query("trusted")) {
     // EXPERIMENTAL: Call with low credentials.
     // werror(sprintf("call_script(): Calling %O with creds.\n", fun));
     err = catch {
@@ -138,10 +136,10 @@ array|mapping call_script(function fun, object got, object file)
     return ({ -1, err });
 
   if(stringp(result))
-    return http_rxml_answer( result, got );
+    return Roxen.http_rxml_answer( result, got );
 
   if(result == -1)
-    return http_pipe_in_progress();
+    return Roxen.http_pipe_in_progress();
 
   if(mappingp(result))
   {
@@ -158,7 +156,7 @@ array|mapping call_script(function fun, object got, object file)
     return 0;
   }
 
-  return http_string_answer(sprintf("%O", result));
+  return Roxen.http_string_answer(sprintf("%O", result));
 }
 
 mapping handle_file_extension(object f, string e, object got)
@@ -218,14 +216,14 @@ mapping handle_file_extension(object f, string e, object got)
       if(strlen(e->get()))
       {
         report_debug(e->get());
-        return http_string_answer("<h1>Error compiling pike script</h1><p><pre>"+
-                                  html_encode_string(e->get())+"</pre>");
+        return Roxen.http_string_answer("<h1>Error compiling pike script</h1><p><pre>"+
+                                  Roxen.html_encode_string(e->get())+"</pre>");
       }
-      return http_string_answer("<h1>Error while compiling pike script</h1>\n");
+      return Roxen.http_string_answer("<h1>Error while compiling pike script</h1>\n");
     }
 
 #if constant(__builtin.security)
-    if (!QUERY(trusted)) {
+    if (!query("trusted")) {
       // EXPERIMENTAL: Lower the credentials.
       luser_creds->apply(p);
     }
@@ -234,7 +232,7 @@ mapping handle_file_extension(object f, string e, object got)
     o=p();
     if (!(fun = scripts[got->not_query]=o->parse))
       /* Should not happen */
-      return http_string_answer("<h1>No string parse(object id) "
+      return Roxen.http_string_answer("<h1>No string parse(object id) "
                                 "function in pike-script</h1>\n");
   }
   got->misc->cacheable=0;
@@ -246,11 +244,11 @@ mapping handle_file_extension(object f, string e, object got)
     throw( err[1] );
   }
   if (stringp(err || "")) {
-    return http_string_answer(err || "");
+    return Roxen.http_string_answer(err || "");
   }
   report_error("PIKESCRIPT: Unexpected return value %O from script %O\n",
 	       err, got->not_query);
-  return http_string_answer("");
+  return Roxen.http_string_answer("");
 }
 
 string status()

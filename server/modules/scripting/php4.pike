@@ -1,4 +1,3 @@
-#include <module.h>
 #include <variables.h>
 inherit "module";
 
@@ -14,10 +13,8 @@ inherit "module";
 
 
 #include <roxen.h>
-inherit "roxenlib";
 
-
-constant cvs_version="$Id: php4.pike,v 2.7 2000/06/04 19:18:03 nilsson Exp $";
+constant cvs_version="$Id: php4.pike,v 2.8 2000/07/03 06:43:20 nilsson Exp $";
 constant thread_safe=1;
 constant module_type=MODULE_FILE_EXTENSION;
 
@@ -42,7 +39,7 @@ class PHPScript
     if(strlen(buffer))
     {
       close_when_done = 1;
-      if(QUERY(rxml))
+      if(query("rxml"))
       {
         if( mid )
           buffer = parse_rxml(buffer, mid);
@@ -95,7 +92,7 @@ class PHPScript
     if(buffer == "" )
     {
       buffer = what;
-      if(!QUERY(rxml)) write_callback();
+      if(!query("rxml")) write_callback();
     }
     else
       buffer += what;
@@ -159,7 +156,7 @@ class PHPScript
       "env":environment,
     ]);
 
-    if(!QUERY(rxml))
+    if(!query("rxml"))
     {
       mid->my_fd->set_blocking();
       options->my_fd = mid->my_fd;
@@ -199,11 +196,11 @@ class PHPScript
     environment |= build_roxen_env_vars(id);
     if(id->misc->ssi_env)     	environment |= id->misc->ssi_env;
     if(id->misc->is_redirected) environment["REDIRECT_STATUS"] = "1";
-    if(id->rawauth && QUERY(rawauth))
+    if(id->rawauth && query("rawauth"))
       environment["HTTP_AUTHORIZATION"] = (string)id->rawauth;
     else
       m_delete(environment, "HTTP_AUTHORIZATION");
-    if(QUERY(clearpass) && id->auth && id->realauth ) {
+    if(query("clearpass") && id->auth && id->realauth ) {
       environment["REMOTE_USER"] = (id->realauth/":")[0];
       environment["REMOTE_PASSWORD"] = (id->realauth/":")[1];
     } else
@@ -277,13 +274,13 @@ string status()
 
 int|mapping handle_file_extension(object o, string e, object id)
 {
-  return http_string_answer( status(), "text/html" );
+  return Roxen.http_string_answer( status(), "text/html" );
 }
 #endif
 
 array (string) query_file_extensions()
 {
-  return QUERY(ext);
+  return query("ext");
 }
 
 void create(object conf)

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.38 2000/05/25 17:14:10 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.39 2000/07/03 06:43:20 nilsson Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -9,10 +9,9 @@ constant cvs_version = "$Id: cgi.pike,v 2.38 2000/05/25 17:14:10 grubba Exp $";
 # define UNIX 0
 #endif
 
-#include <roxen.h>
 #include <module.h>
+#include <roxen.h>
 inherit "module";
-inherit "roxenlib";
 
 /* maximum size of the header before sending and error message and
  * killing the script.
@@ -93,7 +92,7 @@ array lookup_user( string what )
 
 array init_groups( int uid, int gid )
 {
-  if(!QUERY(setgroups))
+  if(!query("setgroups"))
     return ({});
   return get_cached_groups_for_user( uid )-({ gid });
 }
@@ -103,7 +102,7 @@ array verify_access( RequestID id )
   array us;
   if(!getuid())
   {
-    if(QUERY(user) && id->misc->is_user &&
+    if(query("user") && id->misc->is_user &&
        (us = file_stat(id->misc->is_user)) &&
        (us[5] >= 10))
     {
@@ -124,7 +123,7 @@ array verify_access( RequestID id )
 	    // Assume that top-level symlinks are safe.
             if (!a || (a[1] == -4) ||
                 (b && (b[5] != us[5]) && (b[5] >= 10)) ||
-                !QUERY(allow_symlinks)) {
+                !query("allow_symlinks")) {
               error("CGI: Bad symlink or device encountered: \"%s\"\n", fname);
 	    }
 	    /* This point is only reached if a[1] == -3.
@@ -149,7 +148,7 @@ array verify_access( RequestID id )
     else if(us)
       us = us[5..6];
     else
-      us = lookup_user( QUERY(runuser) );
+      us = lookup_user( query("runuser") );
   } else
     us = ({ getuid(), getgid() });
   return ({ us[0], us[1], init_groups( us[0], us[1] ) });
@@ -350,7 +349,7 @@ class RXMLWrapper
 
     if(strlen(data))
     {
-      output( parse_rxml( data, mid ) );
+      output( Roxen.parse_rxml( data, mid ) );
       data="";
     }
     ::done();
@@ -623,7 +622,7 @@ class CGIScript
       Stdio.File fd = stdout;
       if( (command/"/")[-1][0..2] != "nph" )
         fd = CGIWrapper( fd,mid,kill_script )->get_fd();
-      if( QUERY(rxml) )
+      if( query("rxml") )
         fd = RXMLWrapper( fd,mid,kill_script )->get_fd();
       stdout = 0;
       call_out( check_pid, 0.1 );
@@ -675,13 +674,13 @@ class CGIScript
     Stdio.File t, stderr;
     stdin  = Stdio.File();
     stdout = Stdio.File();
-    switch( QUERY(stderr) )
+    switch( query("stderr") )
     {
      case "main log file":
        stderr = Stdio.stderr;
        break;
      case "custom log file":
-       stderr = open_log_file( query( "cgilog" ) );
+       stderr = Roxen.open_log_file( query( "cgilog" ) );
        break;
      case "browser":
        stderr = stdout;
@@ -728,13 +727,13 @@ class CGIScript
 	}
       }
       options->setgroups = extra_gids;
-      if( !uid && QUERY(warn_root_cgi) )
+      if( !uid && query("warn_root_cgi") )
         report_warning( "CGI: Running "+command+" as root (as per request)" );
     }
-    if(QUERY(nice))
+    if(query("nice"))
     {
       m_delete(options, "priority");
-      options->nice = QUERY(nice);
+      options->nice = query("nice");
     }
     if( limits )
       options->rlimit = limits;
@@ -749,8 +748,8 @@ class CGIScript
     if(!(pid = Process.create_process( ({ command }) + arguments, options )))
 #endif /* __NT__ */
       error("Failed to create CGI process.\n");
-    if(QUERY(kill_call_out))
-      call_out( kill_script, QUERY(kill_call_out)*60 );
+    if(query("kill_call_out"))
+      call_out( kill_script, query("kill_call_out")*60 );
     return this_object();
   }
 
@@ -804,19 +803,19 @@ class CGIScript
     }
 #endif
 
-    environment =(QUERY(env)?getenv():([]));
+    environment =(query("env")?getenv():([]));
     environment |= global_env;
-    environment |= build_env_vars( id->realfile, id, id->misc->path_info );
-    environment |= build_roxen_env_vars(id);
+    environment |= Roxen.build_env_vars( id->realfile, id, id->misc->path_info );
+    environment |= Roxen.build_roxen_env_vars(id);
     if(id->misc->ssi_env)
       environment |= id->misc->ssi_env;
     if(id->misc->is_redirected)
       environment["REDIRECT_STATUS"] = "1";
-    if(id->rawauth && QUERY(rawauth))
+    if(id->rawauth && query("rawauth"))
       environment["HTTP_AUTHORIZATION"] = (string)id->rawauth;
     else
       m_delete(environment, "HTTP_AUTHORIZATION");
-    if(QUERY(clearpass) && id->auth && id->realauth ) {
+    if(query("clearpass") && id->auth && id->realauth ) {
       environment["REMOTE_USER"] = (id->realauth/":")[0];
       environment["REMOTE_PASSWORD"] = (id->realauth/":")[1];
     } else {
@@ -873,34 +872,34 @@ string real_file( string f, RequestID id )
 {
   DWERR("real_file()");
 
-  return combine_path( QUERY(searchpath), f );
+  return combine_path( query("searchpath"), f );
 }
 
 mapping handle_file_extension(object o, string e, RequestID id)
 {
   DWERR("handle_file_extension()");
 
-  if(!QUERY(ex))
+  if(!query("ex"))
     return 0;
 #if UNIX
   if(o && !(o->stat()[0]&0111))
-    if(QUERY(noexec))
+    if(query("noexec"))
       return 0;
     else
-      return http_low_answer(500, "<title>CGI - File Not Executable</title>"
+      return Roxen.http_low_answer(500, "<title>CGI - File Not Executable</title>"
 			     "<h1>CGI Error - File Not Executable</h1><b>"
 			     "The script you tried to run is not executable."
 			     "Please contact the server administrator about "
 			     "this problem.</b>");
 #endif
-  return http_stream( CGIScript( id )->run()->get_fd() );
+  return Roxen.http_stream( CGIScript( id )->run()->get_fd() );
 }
 
 array(string) find_dir( string f, RequestID id )
 {
   DWERR("find_dir()");
 
-  if(QUERY(ls))
+  if(query("ls"))
     return get_dir(real_file( f,id ));
 }
 
@@ -913,10 +912,10 @@ int|object(Stdio.File)|mapping find_file( string f, RequestID id )
 #if UNIX
   if(!(stat[0]&0111))
   {
-    if(QUERY(noexec))
+    if(query("noexec"))
       return Stdio.File(real_file(f, id), "r");
     report_notice( "CGI: "+real_file(f,id)+" is not executable\n");
-    return http_low_answer(500, "<title>CGI Error - Script Not Executable</title>"
+    return Roxen.http_low_answer(500, "<title>CGI Error - Script Not Executable</title>"
 			   "<h1>CGI Error - Script Not Executable</h1> <b>"
 			   "The script you tried to run is not executable. "
 			   "Please contact the server administrator about "
@@ -924,8 +923,8 @@ int|object(Stdio.File)|mapping find_file( string f, RequestID id )
   }
 #endif
   if(stat[1] < 0)
-    if(!QUERY(ls))
-      return http_low_answer(403, "<title>CGI Directory Listing "
+    if(!query("ls"))
+      return Roxen.http_low_answer(403, "<title>CGI Directory Listing "
 			     "Disabled</title><h1>Listing of CGI directories "
 			     "is disabled.</h1>");
     else
@@ -934,7 +933,7 @@ int|object(Stdio.File)|mapping find_file( string f, RequestID id )
     // Make foo.cgi/ be handled using PATH_INFO
     return 0;
   id->realfile = real_file( f,id );
-  return http_stream( CGIScript( id )->run()->get_fd() );
+  return Roxen.http_stream( CGIScript( id )->run()->get_fd() );
 }
 
 
@@ -947,7 +946,7 @@ array (string) query_file_extensions()
   return query("ext");
 }
 
-int run_as_user_enabled() { return (getuid() || !QUERY(user)); }
+int run_as_user_enabled() { return (getuid() || !query("user")); }
 void create(Configuration conf)
 {
   defvar("env", 0, "Pass environment variables", TYPE_FLAG|VAR_MORE,
@@ -1015,7 +1014,7 @@ void create(Configuration conf)
 	    "browser" }));
 
   defvar("cgilog", GLOBVAR(logdirprefix)+
-	 short_name(conf? conf->name:".")+"/cgi.log",
+	 Roxen.short_name(conf? conf->name:".")+"/cgi.log",
 	 "Log file", TYPE_STRING,
 	 "Where to log errors from CGI scripts. You can also choose to send "
 	 "the errors to the browser or to the main Roxen log file. "
@@ -1026,7 +1025,7 @@ void create(Configuration conf)
 	 "%m    Month (i.e. '08')\n"
 	 "%d    Date  (i.e. '10' for the tenth)\n"
 	 "%h    Hour  (i.e. '00')\n</pre>", 0,
-	 lambda() { return (QUERY(stderr) != "custom log file"); });
+	 lambda() { return (query("stderr") != "custom log file"); });
 
   defvar("rawauth", 0, "Raw user info", TYPE_FLAG|VAR_MORE,
 	 "If set, the raw, unparsed, user info will be sent to the script, "
@@ -1057,7 +1056,7 @@ void create(Configuration conf)
            "realtime",
          })
 #if UNIX
-         ,lambda(){return QUERY(nice);}
+         ,lambda(){return query("nice");}
 #endif
          );
 #if UNIX
@@ -1172,7 +1171,7 @@ int|string tag_cgi( string tag, mapping args, RequestID id )
   m_delete(args, "script");
   if(!file)
     RXML.parse_error("No \"script\" argument to the CGI tag.");
-  fid->not_query = fix_relative( file, id );
+  fid->not_query = Roxen.fix_relative( file, id );
 
 #ifdef OLD_RXML_COMPAT
   foreach(indices(args), string arg )
@@ -1197,6 +1196,6 @@ int|string tag_cgi( string tag, mapping args, RequestID id )
     return data;
   };
   return ("Failed to run CGI script: <font color=\"red\"><pre>"+
-          (html_encode_string(describe_backtrace(e))/"\n")[0]+
+          (Roxen.html_encode_string(describe_backtrace(e))/"\n")[0]+
           "</pre></font>");
 }

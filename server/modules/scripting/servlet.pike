@@ -1,14 +1,12 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 
-#include <module.h>
 inherit "module";
 
 #if constant(Servlet.servlet)
-string cvs_version = "$Id: servlet.pike,v 2.8 2000/03/29 13:57:44 marcus Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.9 2000/07/03 06:43:20 nilsson Exp $";
 int thread_safe=1;
 constant module_unique = 0;
 
-inherit "roxenlib";
 static inherit "http";
 
 object servlet;
@@ -32,7 +30,7 @@ static mapping(string:string) make_initparam_mapping()
 {
   mapping(string:string) p = ([]);
   string n, v;
-  foreach(QUERY(parameters)/"\n", string s)
+  foreach(query("parameters")/"\n", string s)
     if(2==sscanf(s, "%[^=]=%s", n, v))
       p[n]=v;
   return p;
@@ -45,8 +43,8 @@ void start(int x, Configuration conf)
   else if(x != 0)
     return;
 
-  mixed exc = catch(servlet = Servlet.servlet(QUERY(classname),
-					      QUERY(codebase)));
+  mixed exc = catch(servlet = Servlet.servlet(query("classname"),
+					      query("codebase")));
   status_info="";
   if(exc)
   {
@@ -108,7 +106,7 @@ class RXMLParseWrapper
 
   int close(void|string how)
   {
-    _file->write(parse_rxml(_data,_id));
+    _file->write(Roxen.parse_rxml(_data,_id));
     _data="";
     return _file->close(how);
   }
@@ -135,12 +133,12 @@ mixed find_file( string f, RequestID id )
   id->my_fd->set_close_callback(0);
   id->my_fd->set_blocking();
   id->misc->path_info = f;
-  id->misc->mountpoint = QUERY(location);
-  if(QUERY(rxml))
+  id->misc->mountpoint = query("location");
+  if(query("rxml"))
     id->my_fd = RXMLParseWrapper(id->my_fd, id);
   servlet->service(id);
 
-  return http_pipe_in_progress();
+  return Roxen.http_pipe_in_progress();
 }
 
 #else
