@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_common_api",X,Y)
 // end of the locale related stuff
 
-constant cvs_version="$Id: common_api.pike,v 1.4 2000/11/24 16:50:37 per Exp $";
+constant cvs_version="$Id: common_api.pike,v 1.5 2000/11/27 06:17:12 per Exp $";
 //! This string (filtered to remove some ugly cvs id markup) shows up in
 //! the roxen administration interface when handling module parameters in
 //! developer mode (configured under "User Settings" below the Admin tab).
@@ -17,7 +17,7 @@ constant cvs_version="$Id: common_api.pike,v 1.4 2000/11/24 16:50:37 per Exp $";
 //! the file in the inherit tree. Optional, but convenient, especially if
 //! you use cvs for version control of your code.
 
-LocaleString module_name_locale = LOCALE(0,"Tamaroxchi");
+LocaleString module_name_locale = LOCALE(1,"Tamaroxchi");
 //! The name that will show up in the module listings when adding modules
 //! or viewing the modules of a virtual server. Keep it fairly informative
 //! and unique, since this is the only means for identification of your
@@ -28,7 +28,7 @@ constant module_type = MODULE_ZERO;
 //! (|) for hybrid modules. Hybrid modules must implement the required
 //! API functions for all of the module types they are hybrids of.
 
-LocaleString module_doc_locale = LOCALE(0,"This module does nothing, but its "
+LocaleString module_doc_locale = LOCALE(2,"This module does nothing, but its "
 				  "inlined documentation gets imported "
 				  "into the roxen programmer manual. "
 				  "You really don't want to add this "
@@ -83,7 +83,7 @@ mapping(string:function(RequestID:void)) query_action_buttons( RequestID id )
 //! object in the admin interface sent with the request used to invoke the
 //! action by the administrator.
 {
-  return ([ LOCALE(0,"Scratch me!") : scratch_me ]);
+  return ([ LOCALE(3,"Scratch me!") : scratch_me ]);
 }
 
 void scratch_me()
@@ -92,9 +92,9 @@ void scratch_me()
   if(itching)
   {
     itching = 0;
-    report_notice(LOCALE(0,"Aah, that's good.\n"));
+    report_notice(LOCALE(4,"Aah, that's good.\n"));
   } else
-    report_warning(LOCALE(0,"Ouch!\n"));
+    report_warning(LOCALE(5,"Ouch!\n"));
 }
 
 LocaleString info( Configuration conf )
@@ -108,7 +108,7 @@ LocaleString info( Configuration conf )
 {
   string mp = query_internal_location();
   
-  return sprintf(LOCALE(0,"This string overrides the documentation string "
+  return sprintf(LOCALE(6,"This string overrides the documentation string "
 			"given in module_doc[_locale], but only once the "
 			"module is added to a server. The module's internal "
 			"mountpoint is found at <tt>%s</tt>"), mp );
@@ -132,7 +132,7 @@ LocaleString check_variable(string variable, mixed set_to)
     if(set_to=="whatevervalueweaccept")
       return 0;
     else // if it's not, return an error message.
-      return LOCALE(0,"Sorry, we don't accept that value.")+"\n";
+      return LOCALE(7,"Sorry, we don't accept that value.")+"\n";
   }
 }
 
@@ -151,7 +151,7 @@ void start(int occasion, Configuration conf)
 //! also happens just before calling <ref>stop()</ref> upon reloading
 //! the module.
 {
-  report_notice(LOCALE(0,"Wow, I feel good!")+"\n");
+  report_notice(LOCALE(8,"Wow, I feel good!")+"\n");
 }
 
 void stop()
@@ -161,7 +161,7 @@ void stop()
 //! when the administrator drops the module, reloads the module or
 //! when the server is being shut down.
 {
-  report_notice(LOCALE(0,"Guess that's what I get for all this itching. *sigh*")+"\n");
+  report_notice(LOCALE(9,"Guess that's what I get for all this itching. *sigh*")+"\n");
 }
 
 string status()
@@ -177,16 +177,16 @@ string status()
 
   switch(itching)
   {
-    case 0: return LOCALE(0,"Feelin' fine.");
-    case 1: how_much = LOCALE(0,"a bit"); break;
-    case 2: how_much = LOCALE(0,"noticeably"); break;
-    case 3: how_much = LOCALE(0,"quite a bit"); break;
-    case 4: how_much = LOCALE(0,"really much"); break;
-    case 5: how_much = LOCALE(0,"a lot"); break;
-    case 6: how_much = LOCALE(0,"unbearably"); break;
-    default: how_much = LOCALE(0,"more than any sane person could stand");
+    case 0: return LOCALE(10,"Feelin' fine.");
+    case 1: how_much = LOCALE(11,"a bit"); break;
+    case 2: how_much = LOCALE(12,"noticeably"); break;
+    case 3: how_much = LOCALE(13,"quite a bit"); break;
+    case 4: how_much = LOCALE(14,"really much"); break;
+    case 5: how_much = LOCALE(15,"a lot"); break;
+    case 6: how_much = LOCALE(16,"unbearably"); break;
+    default: how_much = LOCALE(17,"more than any sane person could stand");
   }
-  return sprintf(LOCALE(0,"I'm itching %s. Please scratch me!"), how_much);
+  return sprintf(LOCALE(18,"I'm itching %s. Please scratch me!"), how_much);
 }
 
 mapping|int|Stdio.File find_internal(string file, RequestID id)

@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.66 2000/11/24 16:50:36 per Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.67 2000/11/27 06:17:09 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -24,9 +24,9 @@ Configuration conf;
 // Module interface functions
 
 constant module_type=MODULE_TAG|MODULE_PROVIDER;
-LocaleString module_name_locale=LOCALE(0,"SQL tags");
+LocaleString module_name_locale=LOCALE(1,"SQL tags");
 LocaleString module_doc_locale =
-LOCALE(0,
+LOCALE(2,
        "The SQL tags module provides the tags <tt>&lt;sqlquery&gt;</tt> and"
        "<tt>&lt;sqltable&gt;</tt> as well as being a source to the "
        "<tt>&lt;emit&gt;</tt> tag (<tt>&lt;emit source=\"sql\" ... &gt;</tt>)."
@@ -131,7 +131,7 @@ array|object do_sql_query(mapping args, RequestID id, void|int big_query)
     error = catch(con = Sql.sql(lower_case(host)=="localhost"?"":host));
 
   if (error)
-    RXML.run_error(LOCALE(0,"Couldn't connect to SQL server")+
+    RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
 		   ": "+error[0]+"\n");
 
   // Got a connection now. Any errors below this point ought to be
@@ -330,9 +330,9 @@ string query_provides()
 
 void create()
 {
-  defvar("hostname", "mysql://localhost/", LOCALE(0,"Default database"),
+  defvar("hostname", "mysql://localhost/", LOCALE(4,"Default database"),
 	 TYPE_STRING | VAR_INITIAL,
-	 LOCALE(0,"The default database that will be used if no <i>host</i> "
+	 LOCALE(5,"The default database that will be used if no <i>host</i> "
 	 "attribute is given to the tags. "
 	 "The value is a database URL in this format:\n"
 	 "<p><blockquote><pre>"
@@ -367,14 +367,14 @@ string status()
     else
       o = Sql.sql(QUERY(hostname));
 
-    return(sprintf(LOCALE(0,"The default database is connected to %s "
+    return(sprintf(LOCALE(6,"The default database is connected to %s "
 			  "server on %s.")+
 		   "<br />\n",
 		   Roxen.html_encode_string (o->server_info()),
 		   Roxen.html_encode_string (o->host_info())));
   }) {
     return
-      "<font color=\"red\">"+LOCALE(0,"The default database is not connected")+
+      "<font color=\"red\">"+LOCALE(7,"The default database is not connected")+
       ":</font><br />\n" +
       replace( Roxen.html_encode_string( describe_error(err) ),
 	       "\n", "<br />\n") +

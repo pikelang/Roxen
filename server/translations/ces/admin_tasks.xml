@@ -2,7 +2,7 @@
 <locale version="1.0"/>
 <project>admin_tasks</project>
 <language>ces</language>
-<dumped>975023384</dumped>
+<dumped>975305586</dumped>
 <file>../base_server/roxen.pike</file>
 <file>../config_interface/standard/actions/cachestatus.pike</file>
 <file>../config_interface/standard/actions/debug_info.pike</file>

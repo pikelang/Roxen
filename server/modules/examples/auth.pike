@@ -9,11 +9,11 @@ inherit "module";
 // end of the locale related stuff
 
 
-constant cvs_version = "$Id: auth.pike,v 1.3 2000/11/24 16:50:37 per Exp $";
+constant cvs_version = "$Id: auth.pike,v 1.4 2000/11/27 06:17:12 per Exp $";
 constant module_type = MODULE_AUTH;
-LocaleString module_name_locale = LOCALE(0,"RefDoc for MODULE_AUTH");
+LocaleString module_name_locale = LOCALE(1,"RefDoc for MODULE_AUTH");
 LocaleString module_doc_locale =
-  LOCALE(0,"This module does nothing, but its inlined documentation "
+  LOCALE(2,"This module does nothing, but its inlined documentation "
 	 "gets imported into the roxen programmer manual. You definetely "
 	 "don't want to use this module in your virtual servers, since "
 	 "anybody with access to your admin interface or server configuration "
@@ -24,8 +24,8 @@ LocaleString module_doc_locale =
 void create()
 {
   defvar("users", Variable.StringList(({}), VAR_INITIAL,
-				      LOCALE(0,"Users and Passwords"),
-				      LOCALE(0,"A list of username:password "
+				      LOCALE(3,"Users and Passwords"),
+				      LOCALE(4,"A list of username:password "
 					     "pairs the module should grant "
 					     "access for."));
 }

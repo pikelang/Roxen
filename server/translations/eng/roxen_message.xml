@@ -2,12 +2,12 @@
 <locale version="1.0"/>
 <project>roxen_message</project>
 <language>eng</language>
-<dumped>975023413</dumped>
+<dumped>975305618</dumped>
 <file>../base_server/configuration.pike</file>
 <file>../base_server/roxen.pike</file>
 <file>../modules/configuration/update.pike</file>
-<file>../protocols/prot_fhttp.pike</file>
 <file>../protocols/prot_hilfe.pike</file>
+<file>../protocols/prot_fhttp.pike</file>
 <added id="1"/>
 
 <str id="1">

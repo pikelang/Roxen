@@ -2,7 +2,7 @@
 <locale version="1.0"/>
 <project>roxen_config</project>
 <language>ces</language>
-<dumped>975023402</dumped>
+<dumped>975305608</dumped>
 <file>../base_server/config_userdb.pike</file>
 <file>../base_server/configuration.pike</file>
 <file>../base_server/global_variables.pike</file>
@@ -31,8 +31,8 @@
 <file>../etc/modules/Variable.pmod/Email.pike</file>
 <file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
 <file>../etc/modules/Variable.pmod/module.pmod</file>
-<file>../etc/modules/Variable.pmod/Image.pike</file>
 <file>../etc/modules/Variable.pmod/Upload.pike</file>
+<file>../etc/modules/Variable.pmod/Image.pike</file>
 <file>../modules/configuration/config_filesystem.pike</file>
 <file>../modules/configuration/config_tags.pike</file>
 <file>../modules/configuration/config_userdb.pike</file>
