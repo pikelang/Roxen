@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.402 2004/04/04 01:31:35 mani Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.403 2004/04/04 15:11:04 mani Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -19,7 +19,7 @@ inherit "module";
 
 // ---------------- Module registration stuff ----------------
 
-constant module_type = MODULE_TAG | MODULE_PROVIDER;
+constant module_type = MODULE_TAG;
 constant module_name = "Tags: RXML 2 tags";
 constant module_doc  = "This module provides the common RXML tags.";
 
@@ -43,10 +43,6 @@ int cache_static_in_2_5()
     compat_level = (float) my_configuration()->query("compat_level");
   }
   return compat_level >= 2.5 && RXML.FLAG_IS_CACHE_STATIC;
-}
-
-multiset query_provides() {
-  return (< "modified", "rxmltags" >);
 }
 
 private object compile_handler = class {
