@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.309 2000/12/17 21:13:43 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.310 2001/05/03 17:28:19 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2081,6 +2081,13 @@ int|string try_get_file(string s, RequestID id,
   fake_id = id->clone_me();
 
   fake_id->misc->common = id->misc->common;
+
+  if (fake_id->scan_for_query)
+    // FIXME: If we're using e.g. ftp this doesn't exist. But the
+    // right solution might be that clone_me() in an ftp id object
+    // returns a vanilla (i.e. http) id instead when this function is
+    // used.
+    s = fake_id->scan_for_query (s);
 
   s = Roxen.fix_relative (s, id);
 
