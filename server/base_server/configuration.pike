@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.114 1998/03/27 18:28:30 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.115 1998/03/30 17:08:25 js Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1788,9 +1788,9 @@ public mapping(string:array(mixed)) find_dir_stat(string file, object id)
       }
     } else if(search(loc, file)==0 && loc[strlen(file)-1]=='/' &&
 	      (loc[0]==loc[-1]) && loc[-1]=='/' &&
-	      sizeof(function_object(tmp[1])->find_dir("", id)||({}))) {
+	      (function_object(tmp[1])->stat_file(".", id))) {
       /* loc == file + "/" + subpath + "/"
-       * and find_dir() returns a non-empty directory.
+       * and stat_file(".") returns non-zero.
        */
       loc=loc[strlen(file)..];
       sscanf(loc, "%s/", loc);
