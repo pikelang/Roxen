@@ -352,6 +352,16 @@ e</result>
 </test>
 
 <test>
+<rxml><maketag name="x" type="tag"><attrib name="y">&amp;</attrib></maketag></rxml>
+<result><x y="&amp;" /></result>
+</test>
+
+<test>
+<rxml><maketag name="x" type="container"><attrib name="y">&amp;</attrib></maketag></rxml>
+<result><x y="&amp;"></x></result>
+</test>
+
+<test>
 <rxml><maketag name=X type=container>a<br></maketag></rxml>
 <result><X>a<br></X></result>
 </test>
