@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.147 2002/10/15 10:06:29 grubba Exp $
+// $Id: Roxen.pmod,v 1.148 2002/10/15 12:00:00 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3408,9 +3408,6 @@ array(int) parse_since(string date)
     string m;
     if(sscanf(dat, "%d-%s-%d %d:%d:%d", day, m, year, hour, minute, second)>2)
     {
-      month=monthnum[m];
-    } else if(dat[3]==',') {
-      sscanf(dat, "%*s, %d %s %d %d:%d:%d", day, m, year, hour, minute, second);
       month=monthnum[m];
     } else if(!(int)dat) {
       sscanf(dat, "%*[^ ] %s %d %d:%d:%d %d", m, day, hour, minute, second, year);
