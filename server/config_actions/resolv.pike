@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.14 1998/05/18 22:00:26 per Exp $
+ * $Id: resolv.pike,v 1.15 1998/07/07 10:56:15 js Exp $
  */
 
 inherit "wizard";
@@ -57,7 +57,7 @@ void trace_leave_ol(string desc)
 #if efun(gethrvtime)
 	     " (CPU = "+sprintf("%.2f)", delay2/1000000.0)+
 #endif /* efun(gethrvtime) */
-	     "<br>"+desc+efont)+"<p>";
+	     "<br>"+html_encode_string(desc)+efont)+"<p>";
 
 }
 
@@ -87,7 +87,7 @@ void trace_leave_table(string desc)
 #if efun(gethrtime)
 	     "Time: "+sprintf("%.5f",delay/1000000.0)+
 #endif
-	     "<br>"+desc+efont)+"</td></tr>";
+	     "<br>"+html_encode_string(desc)+efont)+"</td></tr>";
 }
 
 string page_0(object id)
