@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.712 2001/08/23 23:00:25 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.713 2001/08/23 23:24:13 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3278,32 +3278,6 @@ void create()
 
   define_global_variables();
 
-  // This is currently needed to resolve the circular references in
-  // RXML.pmod correctly. :P
-  master()->resolv ("RXML.refs");
-  master()->resolv ("RXML.PXml");
-  master()->resolv ("RXML.PEnt");
-  foreach(({ "module.pmod","PEnt.pike", "PExpr.pike","PXml.pike",
-	     "refs.pmod","utils.pmod" }), string q )
-    dump( "etc/modules/RXML.pmod/"+ q );
-  dump( "etc/modules/RXML.pmod/module.pmod" );
-  // Already loaded. No delayed dump possible.
-  dump( "etc/roxen_master.pike" );
-  dump( "etc/modules/Roxen.pmod" );
-  dump( "base_server/config_userdb.pike" );
-  dump( "base_server/disk_cache.pike" );
-  dump( "base_server/roxen.pike" );
-  dump( "base_server/basic_defvar.pike" );
-  dump( "base_server/newdecode.pike" );
-  dump( "base_server/read_config.pike" );
-  dump( "base_server/global_variables.pike" );
-  dump( "base_server/module_support.pike" );
-  dump( "base_server/socket.pike" );
-  dump( "base_server/cache.pike" );
-  dump( "base_server/supports.pike" );
-  dump( "base_server/hosts.pike");
-  dump( "base_server/language.pike");
-
 #ifndef __NT__
   if(!getuid())
     add_constant("Privs", Privs);
@@ -3340,6 +3314,32 @@ void create()
 
   add_constant( "roxen.locale", locale );
   //add_constant( "roxen.ImageCache", ImageCache );
+
+  // This is currently needed to resolve the circular references in
+  // RXML.pmod correctly. :P
+  master()->resolv ("RXML.refs");
+  master()->resolv ("RXML.PXml");
+  master()->resolv ("RXML.PEnt");
+  foreach(({ "module.pmod","PEnt.pike", "PExpr.pike","PXml.pike",
+	     "refs.pmod","utils.pmod" }), string q )
+    dump( "etc/modules/RXML.pmod/"+ q );
+  dump( "etc/modules/RXML.pmod/module.pmod" );
+  // Already loaded. No delayed dump possible.
+  dump( "etc/roxen_master.pike" );
+  dump( "etc/modules/Roxen.pmod" );
+  dump( "base_server/config_userdb.pike" );
+  dump( "base_server/disk_cache.pike" );
+  dump( "base_server/roxen.pike" );
+  dump( "base_server/basic_defvar.pike" );
+  dump( "base_server/newdecode.pike" );
+  dump( "base_server/read_config.pike" );
+  dump( "base_server/global_variables.pike" );
+  dump( "base_server/module_support.pike" );
+  dump( "base_server/socket.pike" );
+  dump( "base_server/cache.pike" );
+  dump( "base_server/supports.pike" );
+  dump( "base_server/hosts.pike");
+  dump( "base_server/language.pike");
 
 //int s = gethrtime();
   _configuration = (program)"configuration";
