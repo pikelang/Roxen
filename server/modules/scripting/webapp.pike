@@ -7,11 +7,7 @@ inherit "roxen-module://filesystem";
 
 import Parser.XML.Tree;
 
-//<locale-token project="mod_webapp">LOCALE</locale-token>
-#define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
-// end of the locale related stuff
-
-constant cvs_version = "$Id: webapp.pike,v 2.15 2002/04/24 12:53:20 wellhard Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.16 2002/06/13 22:58:33 nilsson Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -37,11 +33,9 @@ static inherit "http";
 string status_info="";
 
 constant module_type = MODULE_LOCATION;
-
-LocaleString module_name = LOCALE(1,"Java: Java Web Application bridge");
-LocaleString module_doc =
-LOCALE(2,"An interface to Java <a href=\"http://java.sun.com/"
-       "products/servlet/index.html""\">Servlets</a>.");
+constant module_name = "Java: Java Web Application bridge";
+constant  module_doc = "An interface to Java <a href=\"http://java.sun.com/"
+  "products/servlet/index.html""\">Servlets</a>.";
 
 #if constant(Servlet.servlet)
 //#if 1
@@ -227,10 +221,9 @@ void parse_servlet(Node c)
       WEBAPP_WERR(sprintf("servlet %s parsed:\n%O", data["servlet-name"], data));
       if (servlets[data["servlet-name"]])
         {
-          report_error(LOCALE(26, "Duplicate entry of %s in web.xml\n"),
-                       data["servlet-name"]);
-          status_info+=sprintf(LOCALE(27,"<pre>Duplicate entry of %s in web.xml</pre>"),
-                              data["servlet-name"]);
+          report_error("Duplicate entry of %s in web.xml\n", data["servlet-name"]);
+          status_info += "<pre>Duplicate entry of "+data["servlet-name"]+" in web.xml</pre>";
+
         }
       else
         {
@@ -364,7 +357,7 @@ void start(int x, Configuration conf)
   webapp_info["webapp"] = (warname/"/")[-1];
 
   if(warname=="servlets/NONE") {
-    status_info = LOCALE(3, "No Web Application selected");
+    status_info = "No Web Application selected";
     return;
   }
 
@@ -385,11 +378,11 @@ void start(int x, Configuration conf)
       status_info = exc->describe();
     }
     else if (arrayp(exc)) {
-      report_error(LOCALE(4, "Servlet: %s\n"),exc[0]);
-      status_info=sprintf(LOCALE(5, "<pre>%s</pre>"),exc[0]);
+      report_error("Servlet: %s\n", exc[0]);
+      status_info = "<pre>"+exc[0]+"</pre>";
     }
     else
-      status_info = sprintf(LOCALE(6, "error: \n%O\n"), exc);
+      status_info = sprintf("error: \n%O\n", exc);
     return(0);
   }
 
@@ -400,7 +393,7 @@ void start(int x, Configuration conf)
   }
   else
     {
-      status_info += LOCALE(7, "Deployment descriptor is corrupt");
+      status_info += "Deployment descriptor is corrupt";
       return (0);
     }
 
@@ -523,8 +516,8 @@ void start(int x, Configuration conf)
   
   if(exc2)
   {
-    report_error(LOCALE(4, "Servlet: %s\n"),describe_backtrace(exc2));
-    status_info+=sprintf(LOCALE(5, "<pre>%s</pre>"),describe_error(exc2));
+    report_error("Servlet: %s\n", describe_backtrace(exc2));
+    status_info += "<pre>"+describe_error(exc2)+"</pre>";
   }
   else
   {
@@ -590,85 +583,83 @@ string status()
     (webapp_info["description"] ?
      webapp_info["description"] :
           "") +
-    LOCALE(8, "<table border=0>")+
-    "<tr><td colspan=4><hr /></td></tr>" +
-    "<tr>" +
-    "<th align=left>Name</th>" +
-    "<th align=left>Mapping&nbsp;&nbsp;&nbsp;</th>" +
-    "<th align=left>Class</th>" +
-    "<th align=left>Description" +
-    "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
-    "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
-    "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" +
-    "</th>" +
-    "</tr>" +
-    "<tr><td colspan=4><hr /></td></tr>" +
+    "<table border='0'>"
+    "<tr><td colspan='4'><hr /></td></tr>"
+    "<tr>"
+    "<th align='left'>Name</th>"
+    "<th align='left'>Mapping&nbsp;&nbsp;&nbsp;</th>"
+    "<th align='left'>Class</th>"
+    "<th align='left'>Description"
+    "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+    "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+    "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+    "</th>"
+    "</tr>"
+    "<tr><td colspan='4'><hr /></td></tr>" +
 
     ((map(indices(servlets),
           lambda(string serv) {
-            string ret = "<tr valign=top>";
+            string ret = "<tr valign='top'>";
 
-            ret += "<th align=left>";
+            ret += "<th align='left'>";
             ret += ( servlets[serv]["display-name"] ||
                      servlets[serv]["servlet-name"] );
             ret += "</th>";
 
             if (servlets[serv]->url) {
-              ret += "<td nowrap>";
+              ret += "<td nowrap='nowrap'>";
               ret += (servlets[serv]->url*",");
               ret += "</td>";
-              ret += "<td nowrap>";
+              ret += "<td nowrap='nowrap'>";
               ret += servlets[serv]["servlet-class"];
               ret += "</td>";
             }
             else
               ret += "<td></td><td></td>";
 
-            ret += "<td rowspan=2>";
+            ret += "<td rowspan='2'>";
             if (servlets[serv]->description)
               ret += servlets[serv]->description;
             ret += "</td>";
 
-            ret += "</tr><tr valign=top>";
+            ret += "</tr><tr valign='top'>";
 
-            ret += "<td colspan=3>";
+            ret += "<td colspan='3'>";
             if (servlets[serv]->initialized == 1)
               ret += servlets[serv]->servlet->info() ||
-                LOCALE(10, "<i>No servlet information available</i>");
+                "<i>No servlet information available</i>";
             else if (!servlets[serv]->loaded)
-              ret += LOCALE(29, "<i>Servlet not loaded.</i>");
+              ret += "<i>Servlet not loaded.</i>";
             else if (servlets[serv]->loaded == -1)
               {
-                ret += "<font color='&usr.warncolor;'>";
-                ret += LOCALE(30, "<b>Servlet failed to load!</b>");
-                ret += "</font>";
+                ret += "<font color='&usr.warncolor;'>"
+		  "<b>Servlet failed to load!</b>"
+		  "</font>";
               }
             else if (!servlets[serv]->initialized)
-              ret += LOCALE(31, "<i>Servlet not initialized</i>");
+              ret += "<i>Servlet not initialized</i>";
             else if (servlets[serv]->initialized == -1)
               {
-                ret += "<font color='&usr.warncolor;'>";
-                ret += LOCALE(32, "<b>Servlet failed to initialize!</b>");
-                ret += "</font>";
+                ret += "<font color='&usr.warncolor;'>"
+		  "<b>Servlet failed to initialize!</b>"
+		  "</font>";
               }
             ret += "</td>";
 
             ret += "</tr>";
             return ret;
           })
-      )*"<tr><td colspan=4><hr /></td></tr>") +
-    "<tr><td colspan=4><hr /></td></tr>" +
+      )*"<tr><td colspan='4'><hr /></td></tr>") +
+    "<tr><td colspan='4'><hr /></td></tr>" +
     "</table>" + status_info;
 }
 
 string query_name()
 {
   string name = query("warname");
-  if (sizeof(name) > 20) {
-    return sprintf(LOCALE(33,"Java: WAR loaded from %s...%s"),
-		   name[..7], name[sizeof(name)-8..]);
-  }
-  return sprintf(LOCALE(11, "Java: WAR loaded from %s"), name);
+  if (sizeof(name) > 20)
+    return "Java: WAR loaded from " + name[..7] + "..." + name[sizeof(name)-8..];
+  return "Java: WAR loaded from " + name;
 }
 
 mapping(string:function) query_action_buttons()
@@ -958,8 +949,8 @@ int load_servlet(mapping(string:string|mapping|Servlet.servlet) servlet)
         if(exc)
           {
             servlet->loaded = -1;
-            report_error(LOCALE(4, "Servlet: %s\n"),exc[0]);
-            status_info=sprintf(LOCALE(5, "<pre>%s</pre>"),exc[0]);
+            report_error("Servlet: %s\n", exc[0]);
+            status_info = "<pre>" + exc[0] + "</pre>";
           }
         else
           if(servlet->servlet)
@@ -991,9 +982,8 @@ int load_servlet(mapping(string:string|mapping|Servlet.servlet) servlet)
           else
             {
               servlet->initialized = -2; // mark unknown exception
-              //report_error(LOCALE(4, "Servlet: %s\n"),e[0]);
-              report_error(LOCALE(4, "Servlet: %s\n"),describe_backtrace(e));
-              status_info=sprintf(LOCALE(5, "<pre>%s</pre>"),e[0]);
+              report_error("Servlet: %s\n", describe_backtrace(e));
+              status_info = e[0];
             }
         }
     }
@@ -1199,9 +1189,9 @@ mixed find_file( string f, RequestID id )
 #endif /* __NT__ */
 	) {
       errors++;
-      report_error(LOCALE(0, "Path verification of %O failed:\n"
-			  "%O is not a prefix of %O\n"
-			  ), oldf, normalized_path, norm_f);
+      report_error("Path verification of %O failed:\n"
+		   "%O is not a prefix of %O\n",
+		   oldf, normalized_path, norm_f);
       return http_low_answer(403, "<h2>File exists, but access forbidden "
 			     "by user</h2>");
     }
@@ -1491,19 +1481,19 @@ class ClassPathList
           Stat s = r_file_stat( val2 );
           Stdio.File f = Stdio.File();
           if( !s )
-            warn += val2 + LOCALE(12, " does not exist\n");
+            warn += val2 + " does not exist.\n";
           else if( s[ ST_SIZE ] == -2 )
             ;
           else if( !(f->open( val2, "r" )) )
-            warn += LOCALE(13, "Can't read ") + val2 + "\n";
+            warn += "Can't read " + val2 + ".\n";
           else {
             if( f->read(2) != "PK" )
-              warn += val2 + LOCALE(14, " is not a JAR file\n");
+              warn += val2 + " is not a JAR file.\n";
             f->close();
           }
         }
       else
-        warn += value + LOCALE(12, " does not exist\n");
+        warn += value + " does not exist.\n";
     }
     if( strlen( warn ) )
       return ({ warn, value });
@@ -1526,19 +1516,19 @@ class WARPath
     Stat s = r_file_stat( value );
     Stdio.File f = Stdio.File();
     if( !s )
-      warn += value + LOCALE(12, " does not exist\n");
+      warn += value + " does not exist.\n");
     else if( s[ ST_SIZE ] == -2 )
       { // directory
         if ( f->open(combine_path(value, "WEB-INF/web.xml"), "r") )
           f->close();
         else
-          warn += value + LOCALE(15, " is not a valid Web Application Directory");
+          warn += value + " is not a valid Web Application Directory.";
       }
     else if( !(f->open( value, "r" )) )
-      warn += LOCALE(13, "Can't read ") + value + "\n";
+      warn += "Can't read " + value + ".\n";
     else {
       if( f->read(2) != "PK" )
-        warn += value + LOCALE(14, " is not a JAR file\n");
+        warn += value + " is not a JAR file.\n";
       f->close();
     }
     if( strlen( warn ) )
@@ -1556,9 +1546,9 @@ void create()
 {
   defvar("warname",
          WARPath( "servlets/NONE", VAR_INITIAL|VAR_NO_DEFAULT,
-                  LOCALE(16, "Web Application Archive"),
-                  LOCALE(17, "The archive file (.war) or directory "
-                         "containing the Web Application.") ) );
+		  "Web Application Archive",
+                  ("The archive file (.war) or directory "
+		   "containing the Web Application.") ) );
 
 
   // insert and modify the filesystem configuration
@@ -1580,54 +1570,51 @@ void create()
 
 
   defvar("rxml", 0,
-         LOCALE(18, "Parse RXML in servlet output"), TYPE_FLAG|VAR_MORE,
-	 LOCALE(19, "If this is set, the output from the servlets handled by "
-                "this module will be RXML parsed. "
-                "NOTE: No data will be returned to the "
-                "client until the output is fully parsed.") );
+         "Parse RXML in servlet output", TYPE_FLAG|VAR_MORE,
+	 ("If this is set, the output from the servlets handled by "
+	  "this module will be RXML parsed. "
+	  "NOTE: No data will be returned to the "
+	  "client until the output is fully parsed.") );
 
-  defvar("rxmltypes", "text/xml text/html", LOCALE(0, "RXMLTypes"), TYPE_TEXT,
-	 LOCALE(23, "Content types that should be passed on to the "
-                "RXML Parser."), 0,
+  defvar("rxmltypes", "text/xml text/html", "RXMLTypes", TYPE_TEXT,
+	 "Content types that should be passed on to the RXML Parser.", 0,
          lambda() { return !query("rxml"); } );
 
   defvar("codebase",
-         ClassPathList( ({""}), VAR_MORE,
-                        LOCALE(20, "Class path"),
-                        LOCALE(21, "Any number of directories and/or JAR "
-                               "files from which to load the "
-                               "support classes.") ) );
+         ClassPathList( ({""}), VAR_MORE, "Class path",
+                        ("Any number of directories and/or JAR "
+			 "files from which to load the "
+			 "support classes.") ) );
 
-  defvar("parameters", "", LOCALE(22, "Parameters"), TYPE_TEXT,
-	 LOCALE(23, "Parameters for all servlets on the form "
-                "<tt><i>name</i>=<i>value</i></tt>, one per line.") );
+  defvar("parameters", "", "Parameters", TYPE_TEXT,
+	 ("Parameters for all servlets on the form "
+	  "<tt><i>name</i>=<i>value</i></tt>, one per line.") );
 
 #ifdef ENABLE_JSP
-  defvar("jspengine", "None",
-         LOCALE(0, "Servlet engine"), TYPE_MULTIPLE_STRING,
-         LOCALE(0, "Select the jsp engine that should handle files with "
-                "the .jsp extension."),
+  defvar("jspengine", "None", "Servlet engine", TYPE_MULTIPLE_STRING,
+         ("Select the jsp engine that should handle files with "
+	  "the .jsp extension."),
          ({ "None", "GNUJSP", "Jasper" })
          );
 
-  defvar("jspdebug", 0, LOCALE(0, "JSP Debug"), TYPE_FLAG|VAR_MORE,
-	 LOCALE(0, "Enable debug output from the JSP engine."), 0,
+  defvar("jspdebug", 0, "JSP Debug", TYPE_FLAG|VAR_MORE,
+	 "Enable debug output from the JSP engine.", 0,
          lambda() { return query("jspengine") == "None"; } );
 
-  defvar("jspsenderrtoclient", 0, LOCALE(0, "Send Errors To Client"),
+  defvar("jspsenderrtoclient", 0, "Send Errors To Client",
          TYPE_FLAG|VAR_MORE,
-	 LOCALE(0, "Return jsp compilation errors to the client."), 0,
+	 "Return jsp compilation errors to the client.", 0,
          lambda() { return query("jspengine") != "Jasper"; } );
 
 #endif // ENABLE_JSP
 
-  defvar("anyservlet", 0, LOCALE(24, "Access any servlet"), TYPE_FLAG|VAR_MORE,
-	 LOCALE(25, "Use a servlet mapping that mounts any servlet onto "
-                "&lt;Mount Point&gt;/servlet/") );
+  defvar("anyservlet", 0, "Access any servlet", TYPE_FLAG|VAR_MORE,
+	 ("Use a servlet mapping that mounts any servlet onto "
+	  "&lt;Mount Point&gt;/servlet/") );
 
-  defvar("preloadall", 0, LOCALE(34, "Preload all servlets"),
+  defvar("preloadall", 0, "Preload all servlets",
          TYPE_FLAG|VAR_MORE,
-	 LOCALE(35, "Load all servlets at module initialization time "
-                "even if load-on-startup is not specified in web.xml") );
+	 ("Load all servlets at module initialization time "
+	  "even if load-on-startup is not specified in web.xml") );
 }
 
