@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.86 2001/05/16 09:50:41 per Exp $";
+  "$Id: config_filesystem.pike,v 1.87 2001/05/16 10:25:46 per Exp $";
 
 constant path = "config_interface/";
 
@@ -477,15 +477,24 @@ void start(int n, Configuration cfg)
         }
       }
     }
+    string am = query( "auth_method" );
 
-    cfg->disable_module( "auth_httpbasic#0" );
-    cfg->disable_module( "auth_httpcookie#0" );
-
+    foreach( ({ "auth_httpbasic", "auth_httpcookie" }), string s )
+    {
+      if( am != s )
+      {
+	m_delete( cfg->enabled_modules, s+"#0" );
+	if( cfg->find_module( s+"#0" ) )
+	  cfg->disable_module( s+"#0" );
+      }
+      else
+	cfg->enable_module( s+"#0" );
+    }
     cfg->add_modules(({
       "config_tags", "contenttypes",    "indexfiles",
       "gbutton",     "graphic_text",    "pathinfo",        "javascript_support",
       "pikescript",  "translation_mod", "rxmlparse",       "rxmltags",
-      "tablist",     "update",          "cimg", query( "auth_method" )
+      "tablist",     "update",          "cimg", 
     }));
 
     RoxenModule m;
