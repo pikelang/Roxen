@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.477 2001/08/30 14:43:50 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.478 2001/08/31 06:23:21 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1569,7 +1569,9 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
   // Map the file extensions, but only if there is a file...
   TIMER_START(extension_module);
   if(objectp(fid) &&
-     (tmp = file_extension_modules(loc = Roxen.extension(id->not_query, id))))
+     (tmp = file_extension_modules(loc =
+				   lower_case(Roxen.extension(id->not_query,
+							      id)))))
   {
     foreach(tmp, funp)
     {
@@ -1619,7 +1621,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     TIMER_START(content_type_module);
     if(stringp(id->extension)) {
       id->not_query += id->extension;
-      loc = Roxen.extension(id->not_query, id);
+      loc = lower_case(Roxen.extension(id->not_query, id));
     }
     TRACE_ENTER("Content-type mapping module", types_module);
     tmp=type_from_filename(id->not_query, 1, loc);
