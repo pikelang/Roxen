@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.147 2000/07/28 16:30:00 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.148 2000/07/28 21:57:00 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1594,10 +1594,10 @@ documentation for that module.</desc>",
 <attr name=value value=string>
  The value the variable should have appended.
 
-<ex type='vert'>
+<ex>
 <define variable='var.ris'/>
 <append variable='var.ris' value='Roxen Internet Software'/>
-&var.ris;
+<ent>var.ris</ent>
 </ex>
 </attr>
 
