@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <sys/signal.h>
 #include <sys/time.h>
-#include "../pike/src/machine.h" /* for MAX_OPEN_FILEDESCRIPTORS */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
