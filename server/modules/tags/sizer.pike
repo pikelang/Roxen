@@ -1,5 +1,5 @@
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.4 2001/01/29 05:40:32 per Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.5 2001/03/06 11:34:26 jhs Exp $";
 #include <module.h>
 inherit "module";
 
@@ -270,8 +270,8 @@ string simpletag_page_size( string name,
   
   res += "<table width=100% cellpadding=0 cellspacing=0>\n"
     "  <tr><th align=left><font size=-1 color=black>File</font></th>"
-    "<th align=right><font size=-1 color=black>Size</font></th>"
-    "<th align=right><font size=-1 color=black>&nbsp; Headers</font></th>"
+    "<th align=right><font size=-1 color=black>Size (kb)</font></th>"
+    "<th align=right><font size=-1 color=black>&nbsp; Headers (b)</font></th>"
     "<td align=right><font size=-1 color=black>&nbsp; % of page</font></td></tr>"
     "<tr><td colspan=4><hr noshade size=1></td></tr>";
 
@@ -298,7 +298,7 @@ string simpletag_page_size( string name,
   {
     int i = -1;
     res += "<table><tr>";
-    foreach( (args->speeds?(float)(args->speeds/",")
+    foreach( (args->speeds?(array(float))(args->speeds/",")
 	      :({ 28.8, 56.0, 64.0, 256.0, 384.0,1024.0 })), float kbit )
     {
       int time = (int)((total*8)/(kbit*1000)+0.7);
