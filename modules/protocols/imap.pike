@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.48 1999/02/09 21:26:55 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.49 1999/02/09 21:34:51 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -505,7 +505,9 @@ class imap_mail
     case "uid":
       return response(imap_number(uid));
     default:
-      throw( ({ "Internal error", backtrace() }) );
+      throw( ({ sprintf("Internal error: Unknown attribute %O\n",
+			attr->wanted),
+		backtrace() }) );
     }
   }
   
