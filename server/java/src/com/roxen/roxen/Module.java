@@ -1,5 +1,5 @@
 /*
- * $Id: Module.java,v 1.10 2000/10/05 19:25:51 marcus Exp $
+ * $Id: Module.java,v 1.11 2000/10/10 21:46:21 marcus Exp $
  *
  */
 
@@ -170,7 +170,8 @@ public abstract class Module {
       (this instanceof FileExtensionModule? MODULE_FILE_EXTENSION : 0) |
       (this instanceof SecurityModule? MODULE_SECURITY : 0) |
       (this instanceof ExperimentalModule? MODULE_EXPERIMENTAL : 0) |
-      (this instanceof ProviderModule? MODULE_PROVIDER : 0);
+      (this instanceof ProviderModule? MODULE_PROVIDER : 0) |
+      (this instanceof LastResortModule? MODULE_LAST : 0);
   }
 
   final boolean queryUnique()

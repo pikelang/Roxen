@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.76 2000/08/28 05:31:50 per Exp $
+// $Id: module_support.pike,v 1.77 2000/10/10 21:46:19 marcus Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
@@ -130,7 +130,8 @@ class ModuleInfo
   object instance( object conf, void|int silent )
   {
 #if constant(Java.jvm)
-    if( filename[sizeof(filename)-6..]==".class" )
+    if( filename[sizeof(filename)-6..]==".class" ||
+        filename[sizeof(filename)-4..]==".jar" )
       return ((program)"javamodule.pike")(conf, filename);
 #endif
     return load( filename, silent )( conf );
@@ -226,6 +227,7 @@ class ModuleInfo
         {
           if( (search( file, ".pike" ) == strlen(file)-5 ) ||
               (search( file, ".so" ) == strlen(file)-3 ) ||
+              (search( file, ".jar" ) == strlen(file)-4 ) ||
               (search( file, ".class" ) == strlen(file)-6 ) )
           {
             Stdio.File f = Stdio.File( dir+file, "r" );
@@ -330,7 +332,7 @@ array rec_find_all_modules( string dir )
         if( file[-1] == '~' ) continue;
         if( (< "so", "pike",
 #if constant(Java.jvm)
-	       "class"
+	       "class", "jar"
 #endif
 	>)[ extension( file ) ] )
         {
