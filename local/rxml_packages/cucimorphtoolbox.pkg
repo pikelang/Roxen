@@ -1,0 +1,67 @@
+<define tag="showtimestamp" scope="rx" trimwhites
+><if variable="_.value is infinity">
+ ++++
+</if
+><elseif variable="_.value > 1"
+><sscanf
+  variables="var.year,var.month,var.day,var.hour,var.minute,var.second,var.tz"
+  format="%4d-%2d-%2d %2d:%2d:%2d%3d">&_.value;</sscanf
+><if not variable="_.nowday"
+ ><showday year="&var.year;" month="&var.month;" day="&var.day;"
+/> </if
+><if not variable="_.nodate"
+ ><sprintf format="%04d/%02d/%02d" split=","
+  >&var.year;,&var.month;,&var.day;</sprintf
+></if
+><if variable="_.time"
+  ><if expr="1&var.hour;&var.minute;&var.second;>1000"
+   > <sprintf format="%02d:%02d:%02d" split=","
+   >&var.hour;,&var.minute;,&var.second;</sprintf
+  ></if
+ ></if
+></elseif
+><else>---</else></define>
+
+<define tag="initpopup" scope="rx" trimwhites
+><if not Variable="var._apopup">
+<script type="text/javascript" language="javascript"> <!--
+var warr=new Object();
+var sarr=new Object();
+function setstatus(idx)
+{ if(idx!='')
+     window.status=sarr[idx];
+  return true;
+}
+function createpopupn(ln,options,target)
+{ if(!target||target=="")
+     target="_popup";
+   warr[target]=window.open('',target,
+    'resizable=1,menubar=0,directories=0,status=0,personalbar=0,toolbar=0,width=640,height=480,scrollbars=1,scroll=auto,'+options);
+   warr[target].location=ln;warr[target].focus();
+}
+// -->
+</script>
+<set variable="var._apopup" value="0" />
+</if
+></define>
+
+<define container="apopup" scope="rx" trimwhites
+><attrib name=href></attrib
+><attrib name=onclick></attrib
+><attrib name=target></attrib
+><attrib name=status></attrib
+><attrib name=options></attrib
+><initpopup
+/><if sizeof="rx.target > 0"
+ ><a href="javascript:void(0);"
+  onmouseover="return setstatus('&_.status:js;');"
+  onmouseout="window.status='';"
+  onclick="createpopupn('&_.href:js;','&_.options:js;','&_.target:js;');&rx.onclick:;"
+ ::="&_.rest-args;"><contents/></a
+></if
+><else
+ ><a href="&_.href:;" onmouseover="return setstatus('&_.status:js;');"
+  onmouseout="window.status='';" onclick="&rx.onclick:;"
+ ::="&_.rest-args:;"><contents/></a
+></else
+></define>
