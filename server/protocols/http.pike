@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.413 2004/06/02 12:57:25 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.414 2004/06/21 16:27:50 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -935,7 +935,6 @@ static void do_timeout()
 string link_to(string file, int line, string fun, int eid, int qq)
 {
   if (!file || !line) return "<a>";
-  if(file[0]!='/') file = combine_path(getcwd(), file);
   return ("<a href=\"/(old_error,find_file)/error/?"+
 	  "file="+Roxen.http_encode_url(file)+
 	  (fun ? "&fun="+Roxen.http_encode_url(fun) : "") +
@@ -1257,8 +1256,14 @@ void timer(int start)
 string handle_error_file_request (string msg, array(string) rxml_bt, array(array) bt,
 				  string raw_bt_descr, string raw_url, string raw)
 {
-  string data = Stdio.read_bytes(variables->file);
-
+  // Check that the file is valid and is present in the backtrace.
+  string data;
+  foreach(bt, array frame) {
+    if (frame[0] == variables->file) {
+      data = Stdio.read_bytes(variables->file);
+      break;
+    }
+  }
   if(!data)
     return error_page_header (variables->file) +
       "<h3><i>Source file could not be read</i></h3>\n"
