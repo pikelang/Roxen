@@ -169,7 +169,10 @@ class FTFont
   Image.Image write( string ... what )
   {
     object key = lock->lock();
-    face->set_size( 0, size * 2);
+    if( roxen->query("font_oversampling") )
+      face->set_size( 0, size * 2);
+    else
+      face->set_size( 0, size );
     if( !sizeof( what ) )
       return Image.Image( 1,height() );
 
@@ -214,7 +217,10 @@ class FTFont
     rr->setcolor( 0,0,0 );
     if( fake_italic )
       rr = rr->skewx( -(rr->ysize()/3) );
-    return rr->scale(0.5);
+    if( roxen->query("font_oversampling") )
+      return rr->scale(0.5);
+    else
+      return rr;
   }
 
   string _sprintf() {
