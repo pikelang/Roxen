@@ -10,6 +10,7 @@
 /server/modules/proxies/gopher.pike -text -crlf
 *.png binary
 /server/tools/roxenstarter/roxenstarter.rc eol=crlf
+*.tar binary
 *.ttf binary
 /server/nfonts/Andover.txt eol=crlf
 /server/nfonts/Font.txt eol=crlf
