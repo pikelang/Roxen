@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.206 2000/02/29 15:02:26 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.207 2000/02/29 23:14:05 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -349,7 +349,8 @@ string fix_text(string c, mapping m, RequestID id) {
     m_delete(m, "preparse");
   }
 
-  c=html_decode_string(c);
+  c=replace(c, replace_entities+({"   ","  ", "\n\n\n", "\n\n", "\r"}),
+	    replace_values+({" ", " ", "\n", "\n", ""}));
 
   if(m->maxlen) {
     c = c[..(((int)m->maxlen||QUERY(deflen))-1)];
