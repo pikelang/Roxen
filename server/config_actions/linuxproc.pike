@@ -1,5 +1,5 @@
 /*
- * $Id: linuxproc.pike,v 1.2 1997/10/11 07:37:11 neotron Exp $
+ * $Id: linuxproc.pike,v 1.3 1997/10/11 08:54:43 neotron Exp $
  */
 
 inherit "wizard";
@@ -21,17 +21,22 @@ void create()
 string format_proc_line(string in, int ipid)
 {
   string pre;
+  int end, begin;
   int pid;
   sscanf(in, "%*s(%d)%*s", pid);
-  sscanf(in,"%[ ]%s",pre,in);
-//  pre=replace(pre,"  "," |");
+  in = replace(in, ({"|-", "`-"}), ({"+-", "+-"}));
+  if(in[0] == ' ')
+    begin = search(in, "+-") + 2;
+  if((end = search(in, ") ")) == -1 &&(end = search(in, ")")) == -1)
+    end = strlen(in) -1;
+  perror("%d %d %s\n", begin, end, in[begin..end]);
   if(search(in,"/proc/")==-1)
-    return (pre+
+    return ((begin ? html_encode_string(in[0..begin-1]) :"")+
 	    "<a href=/Actions/?action=linuxproc.pike&pid="+pid+"&unique="+time()+">"+
 	    (ipid==pid?"<b>":"")+
-	    html_encode_string(in)+
-	    (ipid==pid?"</b>":"")+
-	    "</a>\n");
+	    html_encode_string(in[begin..end])+
+	    (ipid==pid?"</b>":"")+"</a>"+ html_encode_string(in[end+1..])+
+	    "\n");
   return "";
 }
 
@@ -119,7 +124,7 @@ string get_status(int pid)
       
     }
   }
-  return sprintf("<b>Process name:</b>  %s\n"
+  string out = sprintf("<b>Process name:</b>  %s\n"
 		 "<b>Process state:</b> %s\n"
 		 "<b>Parent pid:</b>    <a href="
 		 "/Actions/?action=linuxproc.pike&pid=%d&unique=%d>%d</a>\n"
@@ -135,7 +140,7 @@ string get_status(int pid)
 		 "<b>User and group information:</b>\n\n"
 		 "  <b>    %8s  %12s</b>\n"
 		 "  <b>uid</b> %8s  %12s\n"
-		 "  <b>gid</b> %8s  %12s  \n",
+		 "  <b>gid</b> %8s  %12s\n\n",
 		 name, state,
 		 ppid, time(), ppid, 
 		 cwd, vmsize,
@@ -144,6 +149,16 @@ string get_status(int pid)
 		 "real", "effective",
 		 uid[0], uid[1], 
 		 gid[0], gid[1]);
+  status = Stdio.read_file("/proc/"+pid+"/stat");
+  if(!stringp(status) || !strlen(status))
+    return out;
+  array stat = status / " ";
+  out += sprintf("\n"
+		 "<b>Page Faults (non I/O) :</b> %s\n"
+		 "<b>Page Faults (I/O)     :</b> %s\n",
+		 stat[9], stat[11]);
+		 
+  return out;
 }
 
 mixed page_0(object id, object mc)
@@ -151,7 +166,7 @@ mixed page_0(object id, object mc)
   object p = ((program)"privs")("Process status");
   int pid = (int)id->variables->pid || roxen->roxenpid || roxen->startpid;
   
-  string tree = Array.map(popen("/usr/bin/pstree -pa "+pid)/"\n",
+  string tree = Array.map(popen("/usr/bin/pstree -pa "+pid)/"\n" - ({""}),
 			  format_proc_line, pid)*"";
 
   return ("<h2>Process Tree for "+pid+"</h2><pre>\n"+
