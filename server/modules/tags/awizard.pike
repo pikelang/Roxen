@@ -2,11 +2,8 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version="$Id: awizard.pike,v 1.1 1999/10/29 07:15:39 per Exp $";
+constant cvs_version="$Id: awizard.pike,v 1.2 1999/11/02 01:38:47 per Exp $";
 constant thread_safe=1;
-
-#define TI() { int start = gethrtime()
-#define TE(X) werror((X)+": %20.3f\n", (gethrtime()-start)/1000000.0 ); }
 
 array register_module()
 {
@@ -22,14 +19,12 @@ int nid=1;
 string store( mapping what )
 {
   call_out( m_delete, 3600*1, cache, (string)nid );
-  werror("store  == "+(string)nid+"\n");
   cache[ (string)nid ] = what;
   return (string)nid++;
 }
 
 mapping lookup( string id )
 {
-  werror("lookup "+id+"\n");
   return cache[id];
 }
 
@@ -243,7 +238,6 @@ class Page
     m_delete(id->variables,"error_message");
     eval(eeval + button_code[ id->misc->button_id ] + verify, id);
     if(id->misc->return_me) return id->misc->return_me;
-//     werror("can leave: "+!id->variables->error_message+"\n");
     return !id->variables->error_message;
   }
 
@@ -347,7 +341,6 @@ class Store
     string contents, goto;
 
 
-    TI();
     if( v->_____state)
       s = lookup( v->_____state );
     else
@@ -369,17 +362,17 @@ class Store
       m_delete(v, q);
     }
     
-    TE("Init");
-
     if(goto)
     {
-      TI();
       mapping er;
 
       string extra_eval;
-      if(sscanf(goto, "%*s/eval/%s.", extra_eval) == 2)
+      if(sscanf(goto, "%*s/eval/%s", extra_eval) == 2)
+      {
 	extra_eval = lookup( extra_eval )->code;
-
+        if(!extra_eval)
+          throw(({"Failed to find extra eval in cache\n", backtrace()}));
+      }
       last_page = pages[ (int)v->_page_num ];
 
       if(last_page) v->last_page = last_page->name;
@@ -398,8 +391,7 @@ class Store
 	return http_redirect( goto, id );
       }
 
-      if( last_page 
-          && last_page->can_leave( id, extra_eval ))
+      if( last_page && last_page->can_leave( id, extra_eval ))
       {
 	if(new_page)
 	{
@@ -408,7 +400,6 @@ class Store
 	  v->_page_num = (string)(new_page-1);
 	}
       }
-      TE("Goto");
     }
 
 
@@ -421,10 +412,8 @@ class Store
     
     if(!error) 
     {
-      TI();
       contents = page->generate( id, header, footer );
       error = id->misc->return_me;
-      TE("Generate");
     }
 
     if(error)

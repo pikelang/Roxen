@@ -1,6 +1,14 @@
 string module_global_page( RequestID id, Configuration conf )
 {
-  return "Global modules page\n";
+  switch( id->variables->action )
+  {
+   default:
+     return "<insert file=global_module_page.inc nocache>\n";
+   case "add_module":
+     return "<insert file=add_module.inc nocache>\n";
+   case "delete_module":
+     return "<insert file=add_module.inc nocache>\n";
+  }
 }
 
 string module_page( RequestID id, string conf, string module )
@@ -34,6 +42,7 @@ string parse( RequestID id )
     return "Hm?";
   
   object conf = roxen->find_configuration( path[0] );
+  id->misc->current_configuration = conf;
 
   if( sizeof( path ) == 1 )
   {

@@ -438,6 +438,10 @@ string set_variable( string v, object in, mixed to, object id )
     in->set( v, val );
   else
     var[ VAR_VALUE ] = val;
+
+  remove_call_out( in->save );
+  call_out( in->save, 1 );
+
   return warning;
 }
 

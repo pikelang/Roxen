@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.37 1999/10/08 17:21:53 per Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.38 1999/11/02 01:38:46 per Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -327,8 +327,11 @@ mapping handle_file_extension(object f, string e, object got)
       err=catch(p=compile_string(file));
     master()->set_inhibit_compile_errors(0);
     if(strlen(e->get()))
+    {
+      werror(e->get());
       return http_string_answer("<h1>Error compiling pike script</h1><p>"+
 				html_encode_string(e->get()));
+    }
 #ifndef __NT__
 #if efun(setegid)
     add_constant("setegid", ban[0]);

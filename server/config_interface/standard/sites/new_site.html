@@ -9,24 +9,52 @@
 
 <content>
 <h1><cf-locale get=create_new_site></h1>
+
 <cf-locale get=site_pre_text>
+
 <p>
 
-<cf-dirlist dir=templates/>
-   <a href="templates/#file#"><cf-locale get=create_new> #loc_name#</a>
-</cf-dirlist>
 
-<table>
-<tr><td><b><cf-locale get=site_name>:</b></td> 
-    <td><input size=40 name=name></td></tr>
-<tr><td><b><cf-locale get=site_type>:</b></td>
-    <td><select name=site-type>
-         <configif-output source=site-types><option>#name#
-         </configif-output>
-        </select>
-    </td></tr></table>
-  <configif-output source=site-types>
-  <h2>#name#</h2>
-    #doc#
-  </configif-output>
+
+
+<awizard>
+   <page name=select_name>
+     <obox title="Select site name">
+       <b>Site name:</b> <var name=name default=""><p>
+
+
+<blockquote>
+The name of the configuration must contain characters 
+other than space and tab, it should not end with 
+~, and it must not be 'CVS', 'Global Variables' or 
+'global variables', nor the name of an existing 
+configuration, and the character '/' cannot be 
+used</blockquote>
+
+
+       <dbutton title="Create new site with template ->" 
+                page=new_with_template>
+         <insert file=verify_site_name.pike nocache>
+       </dbutton>
+       <dbutton title="Create new site ->" page=final_create>
+         <insert file=verify_site_name.pike nocache>
+       </dbutton>
+       <button title=" Cancel " href="../sites/">
+     </obox>
+   </page>
+
+
+   <page name=final_create>
+     <insert file=create_site.pike nocache>
+     <formoutput quote=¤><goto href="../sites/site.html/¤name¤/"></formoutput>
+   </page>
+
+   <page name=new_with_template>
+     <obox title="<h2>Create new site using template</h2>">
+     </obox>
+   </page>
+
+</awizard>
+   
+
 </content>
