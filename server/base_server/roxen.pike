@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.219 1998/07/13 20:13:38 neotron Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.220 1998/07/13 20:34:47 neotron Exp $";
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
@@ -1172,7 +1172,8 @@ void restart_if_stuck (int force) {
   signal(signum("SIGALRM"),lambda( int n ) {
 			     werror ("**** %s: ABS engaged! Restarting. \n",
 				     (ctime(time())-"\n"));
-			     fork_or_quit();
+			     _exit(1); // It might now quit correctly otherwise, if it's
+			     //  locked up
 			   });
   alarm (60*QUERY(abs_timeout)+10);
 }
