@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.77 1997/09/24 14:26:14 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.78 1997/09/24 14:27:19 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -814,6 +814,8 @@ mapping find_file(string f, object rid)
   object g;
   if (sizeof(indices(g=Gz))) {
     catch(f = g->inflate()->inflate(MIME.decode_base64(f)));
+  } else {
+    catch(f = MIME.decode_base64(f));
   }
   return http_string_answer(write_text(id,f,0,rid), "image/gif");
 }
