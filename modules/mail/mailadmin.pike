@@ -1,5 +1,5 @@
 /*
- * $Id: mailadmin.pike,v 1.3 1998/09/08 21:30:35 js Exp $
+ * $Id: mailadmin.pike,v 1.4 1998/09/09 14:10:42 js Exp $
  *
  * A general administration module for Roxen AutoMail
  * Johan Schön, September 1998
@@ -8,7 +8,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: mailadmin.pike,v 1.3 1998/09/08 21:30:35 js Exp $";
+constant cvs_version="$Id: mailadmin.pike,v 1.4 1998/09/09 14:10:42 js Exp $";
 constant thread_safe=1;
 
 mapping sql_objs=([]);
@@ -109,7 +109,7 @@ string tag_admin(string tag_name, mapping args, object id)
     }
   }
 
-  // select the whole status matrix for html generating
+  // select the whole status matrix for html generating later on
   array users=db->query("select realname,username,id from users where customer_id='"+
 			customer+"' order by realname");
   foreach(users, mapping user)
