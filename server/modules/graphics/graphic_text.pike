@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.60 1997/09/01 01:44:21 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.61 1997/09/01 14:20:48 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -602,102 +602,108 @@ mapping find_cached_args(int num);
 array(int)|string write_text(int _args, string text, int size,
 			     object id)
 {
-  object img;
-  mapping args = find_cached_args(_args);
-  if(!args) {
-    args=(["fg":"black","bg":"white"]);
-    text="Please reload this page";
-  }
-
   string key = base_key+_args;
-
+  array err;
   text = replace(text, ({ "&lt;", "&gt;", "&amp;" }), ({ "<", ">", "&" }));
 
-  // Check the cache first..
-  if(mixed data = cache_lookup(key, text))
+  err = catch
   {
-    if(args->nocache) // Remove from cache. Very usable for access counters
-      cache_remove(key, text);
-    if(size) return data[1];
-    return data[0];
-  }
-  //  Nothing found in the cache. Generate a new image.
-
+    object img;
+    mapping args = find_cached_args(_args);
+    if(!args)
+    {
+      args=(["fg":"black","bg":"white"]);
+      text="Please reload this page";
+    }
+    // Check the cache first..
+    while(mixed data = cache_lookup(key, text))
+    {
+      if(data == "rendering") { sleep(0.1); continue; }
+      if(args->nocache) // Remove from cache. Very usable for access counters
+	cache_remove(key, text);
+      if(size) return data[1];
+      return data[0];
+    }
+    //  Nothing found in the cache. Generate a new image.
+    cache_set(key, text, "rendering");
 
 #if efun(get_font)
-  if(args->nfont)
-  {
-    int bold, italic;
-    if(args->bold) bold=1;
-    if(args->light) bold=-1;
-    if(args->italic) italic=1;
-    if(args->black) bold=2;
-    data = get_font(args->nfont,(int)args->font_size||32,bold,italic,
-		    lower_case(args->talign||"left"),
-		    (float)(int)args->xpad, (float)(int)args->ypad);
-  }
-  else 
-#endif
-  {
-    string fkey = args->font+"/"+args->talign+"/"+args->xpad+"/"+args->ypad;
-    data = cache_lookup("fonts", fkey);
-    if(!data)
-    { 
-      data = load_font(args->font, lower_case(args->talign||"left"),
-		       (int)args->xpad,(int)args->ypad);
-      cache_set("fonts", fkey, data);
+    if(args->nfont)
+    {
+      int bold, italic;
+      if(args->bold) bold=1;
+      if(args->light) bold=-1;
+      if(args->italic) italic=1;
+      if(args->black) bold=2;
+      data = get_font(args->nfont,(int)args->font_size||32,bold,italic,
+		      lower_case(args->talign||"left"),
+		      (float)(int)args->xpad, (float)(int)args->ypad);
     }
-  }
+    else 
+#endif
+    {
+      string fkey = args->font+"/"+args->talign+"/"+args->xpad+"/"+args->ypad;
+      data = cache_lookup("fonts", fkey);
+      if(!data)
+      { 
+	data = load_font(args->font, lower_case(args->talign||"left"),
+			 (int)args->xpad,(int)args->ypad);
+	cache_set("fonts", fkey, data);
+      }
+    }
 
-  // Fonts and such are now initialized.
-  img = make_text_image(args,data,text,id);
+    // Fonts and such are now initialized.
+    img = make_text_image(args,data,text,id);
 
-  // Now we have the image in 'img', or nothing.
-  if(!img) return 0;
+    // Now we have the image in 'img', or nothing.
+    if(!img) return 0;
   
-  int q = (int)args->quant||(args->background||args->texture?250:QUERY(cols));
+    int q = (int)args->quant||(args->background||args->texture?250:QUERY(cols));
 
-  if(q>255) q=255;
-  if(q<3) q=3;
+    if(q>255) q=255;
+    if(q<3) q=3;
 
 // Quantify
-  if(!args->fs)
-  {
+    if(!args->fs)
+    {
 #ifdef QUANT_DEBUG
-    print_colors(img->select_colors(q-1)+({parse_color(args->bg)}));
+      print_colors(img->select_colors(q-1)+({parse_color(args->bg)}));
 #endif
-    img = img->map_closest(img->select_colors(q-1)+({parse_color(args->bg)}));
-  }
+      img = img->map_closest(img->select_colors(q-1)+({parse_color(args->bg)}));
+    }
 
 // place in cache, as a gif image. 
 
-  if(!args->scroll)
-  {
-    if(args->fs)
-      data=({ img->togif_fs(@(args->notrans?({}):parse_color(args->bg))),
-	      ({img->xsize(),img->ysize()})});
-    else
-      data=({ img->togif(@(args->notrans?({}):parse_color(args->bg))),
-	      ({img->xsize(),img->ysize()})});
-    img=0;
-  } else {
-    int len=100, steps=30, delay=5, ox;
-    string res = img->gif_begin() + img->gif_netscape_loop();
-    sscanf(args->scroll, "%d,%d,%d", len, steps, delay);
-    img=img->copy(0,0,(ox=img->xsize())+len-1,img->ysize()-1);
-    img->paste(img, ox, 0);
-    for(int i = 0; i<steps; i++)
+    if(!args->scroll)
     {
-      int xp = i*ox/steps;
-      res += img->copy(xp, 0, xp+len, img->ysize(),
-		       @parse_color(args->bg))->gif_add(0,0,delay);
+      if(args->fs)
+	data=({ img->togif_fs(@(args->notrans?({}):parse_color(args->bg))),
+		({img->xsize(),img->ysize()})});
+      else
+	data=({ img->togif(@(args->notrans?({}):parse_color(args->bg))),
+		({img->xsize(),img->ysize()})});
+      img=0;
+    } else {
+      int len=100, steps=30, delay=5, ox;
+      string res = img->gif_begin() + img->gif_netscape_loop();
+      sscanf(args->scroll, "%d,%d,%d", len, steps, delay);
+      img=img->copy(0,0,(ox=img->xsize())+len-1,img->ysize()-1);
+      img->paste(img, ox, 0);
+      for(int i = 0; i<steps; i++)
+      {
+	int xp = i*ox/steps;
+	res += img->copy(xp, 0, xp+len, img->ysize(),
+			 @parse_color(args->bg))->gif_add(0,0,delay);
+      }
+      res += img->gif_end();
+      data = ({ res, ({ len, img->ysize() }) });
     }
-    res += img->gif_end();
-    data = ({ res, ({ len, img->ysize() }) });
-  }
-  cache_set(key, text, data);
-  if(size) return data[1];
-  return data[0];
+    cache_set(key, text, data);
+    if(size) return data[1];
+    return data[0];
+  };
+  cache_set(key, text, 0);
+  throw(err);
 }
 
   
