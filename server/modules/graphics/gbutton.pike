@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.49 2000/05/25 11:49:12 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.50 2000/06/01 15:05:38 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -39,39 +39,171 @@ constant module_doc  =
 "Provides the <tt>&lt;gbutton&gt;</tt> tag that is used to draw graphical "
 "buttons.";
 
-TAGDOCUMENTATION
+mapping tagdocumentation() {
+  Stdio.File file=Stdio.File();
+  if(!file->open(__FILE__,"r")) return 0;
+  string doc=compile_string("#define manual\n"+file->read())->gbuttonattr;
+  string imagecache=button_cache->documentation();
+
+  return (["gbutton":"<desc cont><short>Creates graphical buttons.</short> </desc>"
+
+	   +doc
+	   +imagecache,
+
+	   "gbutton-url":#"<desc><short>Generates an URI to the button.</short>
+<tag>gbutton-url</tag> takes the same attributes as <tag>gbutton</tag>
+including the image cache attributes.</desc>"
+
+	   +doc
+	   +imagecache,
+  ]);
+}
+
 #ifdef manual
-constant tagdoc=(["gbutton":#"<desc cont><short>Generates graphical buttons</short></desc>
+constant gbuttonattr=#"
+<attr name='pagebgcolor' value='color'>
 
-<attr name=bgcolor value=color>Background color inside and outside button.</attr>
+</attr>
 
-<attr name=bordercolor value=color>Button border color</attr>
+<attr name='bgcolor' value='color'>
+ Background color inside and outside button.
+<ex>
+<gbutton bgcolor='lightblue'>Background</gbutton>
+</ex>
+</attr>
 
-<attr name=textcolor value=color>Button text color</attr>
+<attr name='bordercolor' value='color'>
+ Button border color.
+<ex>
+<gbutton bordercolor='red'>Border</gbutton>
+</ex>
+</attr>
 
-<attr name=href value=url>Button URL</attr>
+<attr name='textcolor' value='color'>
+ Button text color
+<ex>
+<gbutton textcolor='#ff6600'> Text</gbutton>
+</ex>
+</attr>
 
-<attr name=alt value=string>Alternative button alt text</attr>
+<attr name=frame-image value='path'>
+ Use this XCF-image as a frame for the button. The image is required
+ to have at least the following layers: background, mask and frame.
+ More information on how to create frame images can be found in the
+ Roxen documentation; Web Site Creator/Graphical tags section.
+<ex>
+<gbutton frame-image='internal-roxen-tabframe'>foo</gbutton>
+</ex>
+</attr>
 
-<attr name=border value=number>Image border</attr>
+<attr name='border_image' value='path'>
+ Use this image as border.
+</attr>
 
-<attr name=state value=enabled|disabled>Set to enabled or disabled to select button state.</attr>
+<attr name='alt' value='string'>
+ Alternative button and alt text.
+</attr>
 
-<attr name=textstyle value=normal|condensed>Set to normal or condensed to alter text style.</attr>
+<attr name='href' value='uri'>
+ Button URI.
+</attr>
 
-<attr name=icon-src value=path>Icon reference</attr>
+<attr name='textstyle' value='normal|condensed'>
+ Set to <att>normal</att> or <att>condensed</att> to alter text style.
+</attr>
 
-<attr name=icon-data value=string>Inline icon data</attr>
+<attr name='width' value=''>
+ Minimum button width.
+</attr>
 
-<attr name=align value=left|center|right>Text alignment</attr>
+<attr name='align' value='left|center|right'>
+ Set text alignment. There are some alignment restrictions: when text
+ alignment is either <att>left</att> or <att>right</att>, icons must
+ also be aligned <att>left</att> or <att>right</att>.
+</attr>
 
-<attr name=align-icon value=left|center-before|center-after|right>Icon alignment.
-	     There are some alignment restrictions: when text alignment is 
-	     either left or right, icons must also be 
-	     aligned left or right.</attr>
-",
+<attr name='state' value='enabled|disabled'>
+ Set to <att>enabled</att> or <att>disabled</att> to select button state.
+</attr>
 
-"gbutton-url":""]);
+<attr name='icon-src' value='URI'>
+ Fetch the icon from this URI.
+</attr>
+
+<attr name='icon-data' value=''>
+ Inline icon data.
+</attr>
+
+<attr name='align-icon' value='left|center-before|center-after|right'>
+ Set icon alignment.
+
+<table>
+<tr><td>left</td><td>Place icon on the left side of the text.</td></tr>
+<tr><td>center-before</td><td>Center the icon before the text.Requires the <att>align='center'</att> attribute.</td></tr>
+<tr><td>center-after</td><td>Center the icon after the text. Requires the <att>align='center'</att> attribute.</td></tr>
+<tr><td>right</td><td>Place icon on the right side of the text.</td></tr>
+
+<ex>
+<gbutton width='150' align-icon='center-before' icon-src='internal-roxen-help'>Roxen 2.0</gbutton>
+</ex>
+<ex>
+<gbutton width='150' align='center' align-icon='center-after'
+  icon-src='internal-roxen-help'>Roxen 2.0</gbutton>
+</ex>
+</attr>
+
+<attr name='font' value=''>
+
+</attr>
+
+<attr name='extra-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
+
+</attr>
+
+<attr name='extra-left-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
+
+</attr>
+
+<attr name='extra-right-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
+
+</attr>
+
+<attr name='extra-background-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
+
+</attr>
+
+<attr name='extra-mask-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
+
+</attr>
+
+<attr name='extra-frame-layers' value='[''],[first|last],[selected|unselected],[background|mask|frame|left|right]'>
+
+<ex>
+<gbutton border_image='gbutton.xcf' alt='foo'>bu</gbutton>
+</ex>
+
+
+<ex>
+<gbutton  alt='Edit' bgcolor='#aeaeae'
+  extra-background-layers='unselected background,last unselected background,last background' 
+  extra-frame-layers='unselected frame,last unselected frame,last frame' 
+  extra-layers='unselected,last unselected,last' 
+  extra-left-layers='unselected left,last unselected left,last left'
+  extra-mask-layers='unselected mask,last unselected mask,last mask'
+  extra-right-layers='unselected right,last unselected right,last right' >Buttontext
+</gbutton>
+</ex>
+</attr>
+
+<!-- <table>
+<tr><td>A</td><td>B</td><td>C</td></tr>
+<tr><td>''</td><td>''</td><td>''</td></tr>
+<tr><td>'first'</td><td>'selected'</td><td>'background'</td></tr>
+<tr><td>'last'</td><td>'unselected'</td><td>'mask'</td></tr>
+<tr><td></td><td></td><td>'frame'</td></tr>
+<tr><td></td><td></td><td>'left'</td></tr>
+<tr><td></td><td></td><td>'right'</td></tr>
+</table> -->";
 #endif
 
 function TIMER( function f )
