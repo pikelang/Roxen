@@ -86,7 +86,7 @@ parse_args() {
   ;;
   --config-dir=*)
    DIR=`echo $1 | sed -e 's/--config-dir=//'`
-   FILES=`echo $1 | sed -e's/--config-dir=//' -e's/.//g' -e's./..g' -e 's.-..g'`
+   FILES=`echo $1 | sed -e's/--config-dir=//' -e's/\.//g' -e's./..g' -e 's.-..g'`
   ;;
   '--debug')
     debug=1
@@ -166,6 +166,7 @@ oo
   fi
   
   echo $$: "Server restart at `date`"
+  echo $$: "Debug log in $LOGDIR/debug/$FILES.1"
   rotate $LOGDIR/debug/$FILES
 
   start_roxen 2>>$LOGDIR/debug/$FILES.1 1>&2
