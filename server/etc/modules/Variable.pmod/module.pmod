@@ -621,8 +621,12 @@ class Directory
 
   array verify_set( string value )
   {
+    if( !strlen( value ) )
+      return ::verify_set( value );
     if( !(r_file_stat( value ) && (r_file_stat( value )[ ST_SIZE ] == -2 )))
        return ({value+" is not a directory", value });
+    if( strlen(value) && value[-1] != '/' )
+      value += "/";
     return ::verify_set( value );
   }
 
@@ -842,7 +846,7 @@ class List
   static int _current_count = time()*100+(gethrtime()/10000);
   void set_from_form(RequestID id)
   {
-    int rn;
+    int rn, do_goto;
     array l = query();
     mapping vl = get_form_vars(id);
     // first do the assign...
@@ -862,18 +866,21 @@ class List
     foreach( indices(vl), string vv )
       if( sscanf( vv, ".up.%d.x%*s", rn ) == 2 )
       {
+        do_goto = 1;
         m_delete( id->variables, path()+vv );
         m_delete( vl, vv );
         l = l[..rn-2] + l[rn..rn] + l[rn-1..rn-1] + l[rn+1..];
       }
       else  if( sscanf( vv, ".down.%d.x%*s", rn )==2 )
       {
+        do_goto = 1;
         m_delete( id->variables, path()+vv );
         l = l[..rn-1] + l[rn+1..rn+1] + l[rn..rn] + l[rn+2..];
       }
     // then the possible add.
     if( vl[".new.x"] )
     {
+      do_goto = 1;
       m_delete( id->variables, path()+".new.x" );
       l += ({ transform_from_form( "" ) });
     }
@@ -882,9 +889,18 @@ class List
     foreach( indices(vl), string vv )
       if( sscanf( vv, ".delete.%d.x%*s", rn )==2 )
       {
+        do_goto = 1;
         m_delete( id->variables, path()+vv );
         l = l[..rn-1] + l[rn+1..];
       }
+    if( do_goto )
+    {
+      id->misc->moreheads = ([
+        "Location":id->raw_url+"?random="+random(4949494)+"#"+path(),
+      ]);
+      if( id->misc->defines )
+        id->misc->defines[ " _error" ] = 302;
+    }
     set( l ); // We are done. :-)
   }
 
@@ -895,26 +911,25 @@ class List
 
     _current_count++;
 
-    string res = "<table>\n"
-    "<input type='hidden' name='"+prefix+"count' value='"+_current_count+"' />";
+    string res = "<a name='"+path()+"'>\n</a><table>\n"
+    "<input type='hidden' name='"+prefix+"count' value='"+_current_count+"' />\n";
 
     foreach( map(query(), transform_to_form), string val )
     {
-      res += "<tr><td><font size='-1'>"+ input( prefix+"set."+i, val, width) + "</font></td>";
-
+      res += "<tr>\n<td><font size='-1'>"+ input( prefix+"set."+i, val, width) + "</font></td>\n";
 #define BUTTON(X,Y) ("<submit-gbutton2 name='"+X+"'>"+Y+"</submit-gbutton2>")
       if( i )
         res += "\n<td>"+
             BUTTON(prefix+"up."+i, "^")+
             "</td>";
       else
-        res += "<td></td>";
+        res += "\n<td></td>";
       if( i != sizeof( query())- 1 )
         res += "\n<td>"+
             BUTTON(prefix+"down."+i, "v")
             +"</td>";
       else
-        res += "<td></td>";
+        res += "\n<td></td>";
       res += "\n<td>"+
             BUTTON(prefix+"delete."+i, LOCALE(227, "Delete") )
           +"</td>";
@@ -922,9 +937,9 @@ class List
       i++;
     }
     res += 
-        "<tr><td colspan='2'>"+
+        "\n<tr><td colspan='2'>"+
         BUTTON(prefix+"new", LOCALE(297, "New row") )+
-        "</td></tr></table>\n";
+        "</td></tr></table>\n\n";
 
     return res;
   }
@@ -943,11 +958,18 @@ class DirectoryList
   array verify_set( array(string) value )
   {
     string warn = "";
-    foreach( value, string value )
-      if( !(r_file_stat( value ) && (r_file_stat( value )[ ST_SIZE ] == -2 )))
-        warn += value+" is not a directory\n";
+    foreach( value, string vi )
+    {
+      if(!strlen(vi)) // empty
+        continue;
+      if( !(r_file_stat( vi ) && (r_file_stat( vi )[ ST_SIZE ] == -2 )))
+        warn += vi+" is not a directory\n";
+      if( strlen(vi) && vi[-1] != '/' )
+        value = replace( value, vi, vi+"/" );
+    }
     if( strlen( warn ) )
       return ({ warn, value });
+    
     return ::verify_set( value );
   }
 }
