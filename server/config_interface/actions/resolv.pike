@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.20 2001/04/17 07:01:55 per Exp $
+ * $Id: resolv.pike,v 1.21 2001/09/03 18:39:26 per Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -336,8 +336,8 @@ string parse( RequestID id )
                                       id->variables->password);
 
       nid->realauth=id->variables->user+":"+id->variables->password;
-
-      nid->auth=({0,nid->realauth});
+      nid->misc->user = id->variables->user;
+      nid->misc->password = id->variables->password;
       if(c && c->auth_module)
         nid->auth = c->auth_module->auth( nid->auth, nid );
       nid->misc->trace_leave(sprintf("Got auth %O\n", nid->auth));
