@@ -1,5 +1,6 @@
+//string cvs_version = "$Id: cache.pike,v 1.30 1999/12/27 22:47:48 nilsson Exp $";
+
 #define LOCALE	roxenp()->locale->get()->config_interface
-//string cvs_version = "$Id: cache.pike,v 1.29 1999/12/15 07:59:33 per Exp $";
 #include <roxen.h>
 #include <config.h>
 
@@ -25,7 +26,7 @@ int get_size(mixed x)
     return svalsize + i;    // (base) + arraysize
   } else if(objectp(x) || functionp(x)) {
     return svalsize + 128; // (base) + object struct + some extra.
-    // _Should_ consider size of global variables / refcount 
+    // _Should_ consider size of global variables / refcount
   }
   return svalsize; // base
 }
@@ -40,11 +41,16 @@ int get_size(mixed x)
 #define CACHE_TIME_OUT 300
 
 #if DEBUG_LEVEL > 8
-#ifndef CACHE_DEBUG
-#define CACHE_DEBUG
-#endif
+# ifndef CACHE_DEBUG
+#  define CACHE_DEBUG
+# endif
 #endif
 
+#ifdef CACHE_DEBUG
+# define CACHE_WERR(X) werror("CACHE: "+X+"\n");
+#else
+# define CACHE_WERR(X)
+#endif
 
 mapping cache;
 mapping hits=([]), all=([]);
@@ -60,36 +66,30 @@ void cache_expire(string in)
 
 mixed cache_lookup(string in, string what)
 {
-#ifdef CACHE_DEBUG
-  perror(sprintf("CACHE: cache_lookup(\"%s\",\"%s\")  ->  ", in, what));
-#endif
+  CACHE_WERR(sprintf("cache_lookup(\"%s\",\"%s\")  ->  ", in, what));
   all[in]++;
   if(cache[in] && cache[in][what])
   {
-#ifdef CACHE_DEBUG
-    perror("Hit\n");
-#endif
+    CACHE_WERR("Hit");
     hits[in]++;
     cache[in][what][TIMESTAMP]=time(1);
     return cache[in][what][DATA];
   }
-#ifdef CACHE_DEBUG
-  perror("Miss\n");
-#endif
+  CACHE_WERR("Miss");
   return 0;
 }
 
 string status()
 {
   string res, a;
-  res = "<table cellpadding=3 cellspacing=0 border=0>"
-      #"<tr bgcolor=#f0f0ff>
+  res = "<table cellpadding=\"3\" cellspacing=\"0\" border=\"0\">"
+      #"<tr bgcolor=\"#f0f0ff\">
 <td><cf-locale get=class_></td>
-<td align=right><cf-locale get=entries></td>
-<td align=right><cf-locale get=size></td>
-<td align=right><cf-locale get=hits></td>
-<td align=right><cf-locale get=misses></td>
-<td align=right><cf-locale get=hitpct></td>
+<td align=\"right\"><cf-locale get=entries></td>
+<td align=\"right\"><cf-locale get=size></td>
+<td align=\"right\"><cf-locale get=hits></td>
+<td align=\"right\"><cf-locale get=misses></td>
+<td align=\"right\"><cf-locale get=hitpct></td>
 ";
   array c, b;
   mapping ca = ([]), cb=([]), ch=([]), ct=([]);
@@ -117,8 +117,8 @@ string status()
   {
     if(ct[a])
     {
-      res += ("<tr align=right bgcolor="+(n/3%2?"#f0f0ff":"white")+
-	      "><td align=left>"+a+"</td><td>"+cb[a]+"</td><td>" +
+      res += ("<tr align=\"right\" bgcolor=\""+(n/3%2?"#f0f0ff":"white")+
+	      "\"><td align=\"left\">"+a+"</td><td>"+cb[a]+"</td><td>" +
 	      sprintf("%.1f", ((mem=c[i])/1024.0)) + "</td>");
       res += "<td>"+ch[a]+"</td><td>"+(ct[a]-ch[a])+"</td>";
       if(ct[a])
@@ -133,34 +133,31 @@ string status()
     }
     i++;
   }
-  res += "<tr align=right bgcolor=lightblue><td align=left>&nbsp;</td><td>"+totale+"</td><td>" + sprintf("%.1f", (totalm/1024.0)) + "</td>";
-    res += "<td>"+totalh+"</td><td>"+(totalr-totalh)+"</td>";
-    if(totalr)
-      res += "<td>"+(totalh*100)/totalr+"%</td>";
-    else
-      res += "<td>0%</td>";
-    res += "</tr>";
+  res += "<tr align=\"right\" bgcolor=\"lightblue\"><td align=\"left\">&nbsp;</td><td>"+
+    totale+"</td><td>" + sprintf("%.1f", (totalm/1024.0)) + "</td>";
+  res += "<td>"+totalh+"</td><td>"+(totalr-totalh)+"</td>";
+  if(totalr)
+    res += "<td>"+(totalh*100)/totalr+"%</td>";
+  else
+    res += "<td>0%</td>";
+  res += "</tr>";
   return res + "</table>";
 }
 
 void cache_remove(string in, string what)
 {
-#ifdef CACHE_DEBUG
-  perror(sprintf("CACHE: cache_remove(\"%s\",\"%O\")\n", in, what));
-#endif
+  CACHE_WERR(sprintf("cache_remove(\"%s\",\"%O\")", in, what));
   if(!what)
     m_delete(cache, in);
   else
-    if(cache[in]) 
+    if(cache[in])
       m_delete(cache[in], what);
 }
 
 mixed cache_set(string in, string what, mixed to, int|void tm)
 {
-#ifdef CACHE_DEBUG
-  perror(sprintf("CACHE: cache_set(\"%s\", \"%s\", %O)\n",
-		 in, what, to));
-#endif
+  CACHE_WERR(sprintf("cache_set(\"%s\", \"%s\", %O)",
+		     in, what, to));
   if(!cache[in])
     cache[in]=([ ]);
   cache[in][what] = allocate(ENTRY_SIZE);
@@ -172,9 +169,7 @@ mixed cache_set(string in, string what, mixed to, int|void tm)
 
 void cache_clear(string in)
 {
-#ifdef CACHE_DEBUG
-  perror("CACHE: cache_clear(\"%s\")\n", in);
-#endif
+  CACHE_WERR("cache_clear(\"%s\")", in);
   if(cache[in])
     m_delete(cache,in);
 }
@@ -185,21 +180,19 @@ void cache_clean()
   call_out(cache_clean, CACHE_TIME_OUT);
   string a, b;
   int cache_time_out=CACHE_TIME_OUT;
-#ifdef CACHE_DEBUG
-  perror("CACHE: cache_clean()\n");
-#endif
+  CACHE_WERR("cache_clean()");
   foreach(indices(cache), a)
   {
 #ifdef CACHE_DEBUG
 #if DEBUG_LEVEL > 40
-    perror("CACHE:   Class  " + a + "\n");
+    CACHE_WERR("  Class  " + a);
 #endif
 #endif
     foreach(indices(cache[a]), b)
     {
 #ifdef CACHE_DEBUG
 #if DEBUG_LEVEL > 40
-      perror("CACHE:      " + b + " ");
+      CACHE_WERR("     " + b + " ");
 #endif
 #endif
 #ifdef DEBUG
@@ -211,7 +204,7 @@ void cache_clean()
       {
 #ifdef CACHE_DEBUG
 #if DEBUG_LEVEL > 40
-	perror("DELETED\n");
+	CACHE_WERR("DELETED");
 #endif
 #endif	
 	m_delete(cache[a], b);
@@ -219,14 +212,14 @@ void cache_clean()
 #ifdef CACHE_DEBUG
 #if DEBUG_LEVEL > 40
       else
-	perror("Ok\n");
+	CACHE_WERR("Ok");
 #endif
 #endif	
       if(!sizeof(cache[a]))
       {
 #ifdef CACHE_DEBUG
 #if DEBUG_LEVEL > 40
-	perror("CACHE:    Class DELETED.\n");
+	CACHE_WERR("   Class DELETED.");
 #endif
 #endif
 	m_delete(cache, a);
@@ -237,9 +230,7 @@ void cache_clean()
 
 void create()
 {
-#ifdef CACHE_DEBUG
-  perror("CACHE: Now online.\n");
-#endif
+  CACHE_WERR("Now online.");
   cache=([  ]);
   add_constant( "cache", this_object() );
   add_constant( "Cache", this_object() );
