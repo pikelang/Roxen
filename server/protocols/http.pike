@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.196 2000/02/04 01:35:19 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.197 2000/02/08 22:14:42 per Exp $";
 
 #define MAGIC_ERROR
 
@@ -52,11 +52,7 @@ object port_obj;
 #include <variables.h>
 
 #undef QUERY
-#if constant(cpp)
 #define QUERY(X)	_query( #X )
-#else /* !constant(cpp) */
-#define QUERY(X) 	_query("X")
-#endif /* constant(cpp) */
 
 int time;
 string raw_url;
