@@ -162,7 +162,7 @@ string render_form( RequestID id, void|mapping additional_args )
     ({ "0", LOCALE(484, "Day") }),
     ({ "1", LOCALE(485, "Sunday") }),
     ({ "2", LOCALE(486, "Monday") }),
-    ({ "3",  LOCALE(487, "Tuesday") }),
+    ({ "3", LOCALE(487, "Tuesday") }),
     ({ "4", LOCALE(488, "Wednesday") }),
     ({ "5", LOCALE(489, "Thursday") }),
     ({ "6", LOCALE(490, "Friday") }),
