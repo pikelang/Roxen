@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.57 1997/12/15 20:07:17 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.58 1997/12/23 11:13:28 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1847,15 +1847,22 @@ string tag_pr(string tagname, mapping m)
 	  "src=/internal-roxen-power-"+size+"-"+color+"></a>");
 }
 
+string tag_number(string t, mapping args)
+{
+  return language(args->language||args->lang||"en", 
+		  args->type||"number")( (int)args->num );
+}
 
 mapping query_tag_callers()
 {
    return (["accessed":tag_accessed,
 	    "modified":tag_modified,
 	    "pr":tag_pr,
+	    "number":tag_number,
 	    "imgs":tag_ximage,
 	    "version":tag_version,
 	    "set":tag_set,
+	    "unset":tag_set,
  	    "set_cookie":tag_add_cookie,
  	    "remove_cookie":tag_remove_cookie,
 	    "clientname":tag_clientname,

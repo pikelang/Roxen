@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.94 1997/12/19 17:41:37 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.95 1997/12/23 11:13:25 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -629,7 +629,12 @@ int number=0;
 
 mapping find_cached_args(int num);
 
-constant nbsp = sprintf("%c",160);
+constant nbsp = iso88591["&nbsp;"];
+
+constant replace_from = indices( iso88591 )+ ({"&ss;","&lt;","&gt;","&amp",});
+constant replace_to   = values( iso88591 ) + ({ nbsp, "<", ">", "&", }); 
+
+#define simplify_text( from ) replace(from,replace_from,replace_to)
 
 array(int)|string write_text(int _args, string text, int size,
 			     object id)
@@ -648,9 +653,8 @@ array(int)|string write_text(int _args, string text, int size,
 
     if(!args->verbatim)
     {
-      text = replace(text, nbsp, "&nbsp;");
-      text = replace(text,({ "&nbsp;","&ss;","&lt;","&gt;","&amp;"}),
-		     ({" ",nbsp,"<", ">", "&" }));
+      text = replace(text, nbsp, " ");
+      text = simplify_text( text );
       string res="",nspace="",cspace="";
       foreach(text/"\n", string line)
       {

@@ -6,7 +6,7 @@
  * doc = "Handles the conversion of numbers and dates to Portuguese. You have to restart the server for updates to take effect. Translation by cjsawaia@8415.com.br";
  */
 
-string cvs_version = "$Id: portuguese.pike,v 1.5 1997/08/19 06:38:17 per Exp $";
+string cvs_version = "$Id: portuguese.pike,v 1.6 1997/12/23 11:13:23 per Exp $";
  
 inline string month(int num)
 {
@@ -100,14 +100,14 @@ string number(int num)
      return number((num/10)*10)+ " e " +number(num%10);
  
    case 100..199: return "cento e "+number(num%100);
-   case 200..299: "duzentos e "+number(num%100);
-   case 300..399: "trezentos e "+number(num%100);
-   case 400..499: "quatrocentos e "+number(num%100);
-   case 500..599: "quinhentos e "+number(num%100);
-   case 600..699: "seiscentos e "+number(num%100);
-   case 700..799: "setecentos e "+number(num%100);
-   case 800..899: "oitocentos e "+number(num%100);
-   case 900..999: "novecentos e "+number(num%100);
+   case 200..299: return "duzentos e "+number(num%100);
+   case 300..399: return "trezentos e "+number(num%100);
+   case 400..499: return "quatrocentos e "+number(num%100);
+   case 500..599: return "quinhentos e "+number(num%100);
+   case 600..699: return "seiscentos e "+number(num%100);
+   case 700..799: return "setecentos e "+number(num%100);
+   case 800..899: return "oitocentos e "+number(num%100);
+   case 900..999: return "novecentos e "+number(num%100);
  
    case 1000..1999: return "mil "+number(num%1000);
    case 2000..999999: return number(num/1000)+" mil "+number(num%1000);
