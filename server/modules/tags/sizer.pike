@@ -1,5 +1,5 @@
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.15 2001/05/16 07:51:00 per Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.16 2001/07/17 12:33:35 jhs Exp $";
 #include <request_trace.h>
 #include <module.h>
 inherit "module";
@@ -515,16 +515,16 @@ constant tagdoc=([
 
 </desc>
 
-<attr name=page value=path><p>
- Calculate size and downloadtime for another page than the current. </p>
+<attr name=page value=path>
+ <p>Calculate size and downloadtime for another page than the current.</p>
 </attr>
 
-<attr name=include value=summary,details,dltime,suggestions><p>
- What information to present.
+<attr name=include value=summary,details,dltime,suggestions>
+ <p>What information to present.</p>
 </attr>
 
 <attr name=speeds value=28.8,56.0,64.0,256.0,384.0,1024.0>
- Show the time it will take to download a page using the specified
+ <p>Show the time it will take to download a page using the specified
  speed(s) in kbit/s.</p>
 </attr>
 
@@ -537,4 +537,3 @@ constant tagdoc=([
 </ex>",
     ]);
 #endif
-
