@@ -1,9 +1,10 @@
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
+constant thread_safe=1;
 
 roxen.ImageCache the_cache;
-constant cvs_version="$Id: cimg.pike,v 1.6 1999/09/14 20:26:57 jhs Exp $";
+constant cvs_version="$Id: cimg.pike,v 1.7 1999/11/15 03:27:13 per Exp $";
 
 array register_module()
 {
