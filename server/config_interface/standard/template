@@ -100,7 +100,7 @@
 
 <define tag="cf-next">
    <comment> FIXME: gbutton should handle HTML entities </comment>
-   <submit-gbutton preparse="1" href="&_.href;"> <translate id="203">Next</translate> > </submit-gbutton>
+   <submit-gbutton2 preparse="1" name="next"> <translate id="203">Next</translate> > </submit-gbutton2>
 </define>
 
 <define container="content"><cset quote="none" variable="var.content"><contents/></cset></define>
