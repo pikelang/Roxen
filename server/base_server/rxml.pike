@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.74 2000/01/21 22:28:29 mast Exp $
+ * $Id: rxml.pike,v 1.75 2000/01/23 06:25:24 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -72,7 +72,35 @@ class Scope_roxen {
   }
 }
 
+class Scope_page {
+  inherit RXML.Scope;
+  constant in_defines=({"fgcolor","bgcolor","theme_bgcolor","theme_fgcolor",
+			"theme_language"});
+
+  mixed `[] (string var, void|RXML.Context c, void|string scope) {
+    if(has_value(in_defines, var))
+      return c->id->misc->defines[var];
+    if(objectp(c->id->misc->page[var])) return c->id->misc->page[var]->rxml_var_eval(c);
+    return c->id->misc->page[var];
+  }
+
+  mixed `[]= (string var, mixed val, void|RXML.Context c, void|string scope_name) {
+    if(has_value(in_defines, var))
+      return c->id->misc->defines[var]=val;
+    return c->id->misc->page[var]=val;
+  }
+
+  array(string) _indices(void|RXML.Context c) {
+    if(!c) return ({});
+    array ind=indices(c->id->misc->page);
+    foreach(in_defines, string def)
+      if(c->id->misc->defines[def]) ind+=({def});
+    return ind;
+  }
+}
+
 RXML.Scope scope_roxen=Scope_roxen();
+RXML.Scope scope_page=Scope_page();
 
 RXML.TagSet rxml_tag_set = class
 {
@@ -81,7 +109,9 @@ RXML.TagSet rxml_tag_set = class
   string prefix = RXML_NAMESPACE;
 
   void prepare_context (RXML.Context c) {
-    c->extend_scope("roxen",scope_roxen);
+    c->add_scope("roxen",scope_roxen);
+    c->id->misc->page=([]);
+    c->extend_scope("page",scope_page);
     c->extend_scope("cookie" ,c->id->cookies);
     c->extend_scope("form", c->id->variables);
     c->extend_scope("client", c->id->client_var);
