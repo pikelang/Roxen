@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.189 2004/11/22 13:48:51 grubba Exp $
+// $Id: Roxen.pmod,v 1.190 2005/02/08 14:17:28 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -282,7 +282,7 @@ string short_name(string|Configuration long_name)
     return "x"+id[..19];
 
   while( strlen(string_to_utf8( id )) > 20 )
-    id = id[..strlen(id)-1];
+    id = id[..strlen(id)-2];
 
   return string_to_utf8( id );
 }
