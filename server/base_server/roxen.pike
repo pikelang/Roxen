@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.871 2004/05/04 10:59:03 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.872 2004/05/04 15:02:35 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -101,6 +101,8 @@ string filename( program|object o )
     fname = "Unknown Program";
   return fname-(getcwd()+"/");
 }
+
+static int once_mode;
 
 // Note that 2.5 is a nonexisting version. It's only used for the
 // cache static optimization for tags such as <if> and <emit> inside
@@ -433,7 +435,7 @@ private void really_low_shutdown(int exit_code)
 #ifdef THREADS
   catch (stop_handler_threads());
 #endif /* THREADS */
-  if (!exit_code) {
+  if (!exit_code || once_mode) {
     // We're shutting down; Attempt to take mysqld with us.
     catch { report_notice("Shutting down MySQL.\n"); };
     catch {
@@ -443,14 +445,10 @@ private void really_low_shutdown(int exit_code)
   }
   destruct (cache);
   catch {
-#if 0
-    if (exit_code)
+    if (exit_code && !once_mode)
       report_notice("Restarting Roxen.\n");
     else
       report_notice("Shutting down Roxen.\n");
-#else
-    report_notice("Restarting or shutting down Roxen.\n");
-#endif
   };
   roxenloader.real_exit( exit_code ); // Now we die...
 }
@@ -4510,6 +4508,8 @@ int main(int argc, array tmp)
   mark_fd(0, "Stdin");
   mark_fd(1, "Stdout");
   mark_fd(2, "Stderr");
+
+  once_mode = (int)Getopt.find_option(argv, "o", "once");
 
   configuration_dir =
     Getopt.find_option(argv, "d",({"config-dir","configuration-directory" }),
