@@ -55,7 +55,7 @@ string page_0()
 		      "Last Reboot","Version", /*({"Server info"})*/}),
 		    Array.map(sn, lambda(string s) {
      mapping ns = neighborhood[s];
-     int vanished = (time() - ns->rec_time) > 300;
+     int vanished = (time() - ns->rec_time) > 600;	/* 10 minutes */
      int re=ns->seq_reboots;
      string ER="",RE="";
      if(vanished) {
