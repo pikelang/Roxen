@@ -25,7 +25,7 @@ string describe_exts( object m, string func )
   return String.implode_nicely( m[func]() );
 }
 
-string describe_location( object m )
+string describe_location( object m, int q )
 {
   return m->query_location();
 }
@@ -35,7 +35,7 @@ string make_if( string q )
   return "<if "+q+"=?></if>";
 }
 
-string describe_tags( object m )
+string describe_tags( object m, int q )
 {
   return html_encode_string(String.implode_nicely( map(indices(m->query_tag_callers()),make_tag,([]))+
                             map(indices(m->query_container_callers()),
@@ -43,7 +43,7 @@ string describe_tags( object m )
                             map(indices(m->query_if_callers()),make_if)));
 }
 
-string describe_provides( object m )
+string describe_provides( object m, int q )
 {
   if( arrayp( m->query_provides() ) )
     return String.implode_nicely( m->query_provides() );

@@ -1,10 +1,8 @@
 /*
- * $Id: debug_info.pike,v 1.4 1999/11/23 06:42:15 per Exp $
+ * $Id: debug_info.pike,v 1.5 1999/11/24 01:59:53 per Exp $
  */
 inherit "roxenlib";
 #include <stat.h>
-
-mapping last_usage;
 
 int creation_date = time();
 
@@ -156,9 +154,14 @@ string find_class( string f, int l )
 
 mixed page_0( object id )
 {
+  mapping last_usage;
   gc();
   last_usage = roxen->query_var("__memory_usage");
-  if(!last_usage) last_usage = _memory_usage(); 
+  if(!last_usage) 
+  {
+    last_usage = _memory_usage(); 
+    roxen->set_var( "__memory_usage", last_usage );
+  }
 
   string res="";
   string first="";
@@ -196,6 +199,10 @@ mixed page_0( object id )
         sprintf( "%.1f",(foo[bn]-last_usage[bn])/1024.0 )+"</font>",
       }) });
     }
+  roxen->set_var("__memory_usage", foo);
+
+
+  mapping bar = roxen->query_var( "__num_clones" )||([]);
 
   object t = ADT.Table->table(table, 
                               ({ "<font color=black    >Entry", "Number", 
@@ -208,8 +215,6 @@ mixed page_0( object id )
                                 ([ "type":"num" ]),
                               }));
   res += "<pre>"+ADT.Table.ASCII.encode( t )+"</pre>";
-
-  roxen->set_var("__memory_usage", foo);
 
 #if efun(_dump_obj_table)
   array table = ({
@@ -281,18 +286,34 @@ mixed page_0( object id )
          line=0;
          break;
       }
+      
+      string col = "darkred  ";
+
+      if( bar[ s ] > allobj[s] )
+	col="darkgreen";
+      else if( bar[ s ] == allobj[s] )
+	col="black    ";
+      
+      string color = "<font color="+col+">";
+      string nocolor = "</font>";
+
       if( line )
-        table += ({
-          ({ f+":"+line, allobj[s] }),
-        });
+        table += 
+          ({
+            ({ color+f+":"+line, allobj[s], 
+               (allobj[ s ]-bar[ s ])+nocolor }),
+          });
       else
-        table += ({
-          ({ f, allobj[s] }),
+        table += 
+        ({
+          ({ color+f, allobj[s], (allobj[ s ]-bar[ s ])+nocolor }),
         });
+      bar[ s ] = allobj[ s ];
     }
 
-  object t = ADT.Table->table(table, ({ "File",  "Clones"}),
-                              ({ 0, ([ "type":"num" ])}));
+  roxen->set_var("__num_clones", bar);
+  object t = ADT.Table->table(table, ({ "<font color=black    >File",  "Clones", "Change</font>"}),
+                              ({ 0, ([ "type":"num" ]),([ "type":"num" ])}));
   res += "<pre>"+ADT.Table.ASCII.encode( t ) + "</pre>";
   
 #endif
