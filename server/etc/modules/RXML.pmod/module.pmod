@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.45 2000/02/07 00:12:42 mast Exp $
+//! $Id: module.pmod,v 1.46 2000/02/08 06:28:14 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -10,7 +10,7 @@
 //! WARNING: This API is not yet set in stone; expect incompatible
 //! changes.
 
-#pragma strict_types
+//#pragma strict_types // Disabled for now since it doesn't work well enough.
 
 
 #ifdef OBJ_COUNT_DEBUG
@@ -2522,7 +2522,7 @@ static class TXml
     if (mixed err = catch {val = (string) val;})
       rxml_fatal ("Couldn't convert value to text: " + describe_error (err));
     if (!from || from->quoting_scheme != quoting_scheme)
-      val = quote (val);
+      val = quote ([string] val);
     return val;
   }
 

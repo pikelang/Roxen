@@ -4,9 +4,9 @@
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEnt.pike,v 1.3 2000/02/08 06:24:43 mast Exp $
+//! $Id: PEnt.pike,v 1.4 2000/02/08 06:28:14 mast Exp $
 
-#pragma strict_types
+//#pragma strict_types // Disabled for now since it doesn't work well enough.
 
 inherit RXML.PHtml;
 

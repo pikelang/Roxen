@@ -5,9 +5,9 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.23 2000/02/08 06:23:26 mast Exp $
+//! $Id: PXml.pike,v 1.24 2000/02/08 06:28:14 mast Exp $
 
-#pragma strict_types
+//#pragma strict_types // Disabled for now since it doesn't work well enough.
 
 inherit RXML.TagSetParser : TagSetParser;
 inherit Parser.HTML : low_parser;

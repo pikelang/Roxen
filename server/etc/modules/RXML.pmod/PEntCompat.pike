@@ -1,13 +1,13 @@
 //! Variant of PHtmlCompat that parses only entities.
 //!
-//! This parser is used mainly to parse the argument to old style
+//! This parser is used mainly to parse the arguments to old style
 //! tags.
 //!
 //! Created 2000-01-28 by Martin Stjernholm.
 //!
-//! $Id: PEntCompat.pike,v 1.3 2000/02/08 06:26:48 mast Exp $
+//! $Id: PEntCompat.pike,v 1.4 2000/02/08 06:28:14 mast Exp $
 
-#pragma strict_types
+//#pragma strict_types // Disabled for now since it doesn't work well enough.
 
 inherit RXML.PHtmlCompat;
 

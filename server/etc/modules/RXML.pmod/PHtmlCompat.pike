@@ -6,9 +6,9 @@
 //!
 //! Created 2000-01-08 by Martin Stjernholm.
 //!
-//! $Id: PHtmlCompat.pike,v 1.9 2000/02/08 06:24:15 mast Exp $
+//! $Id: PHtmlCompat.pike,v 1.10 2000/02/08 06:28:14 mast Exp $
 
-#pragma strict_types
+//#pragma strict_types // Disabled for now since it doesn't work well enough.
 
 inherit RXML.PHtml;
 
