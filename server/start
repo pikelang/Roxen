@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.52 1998/10/31 23:43:48 grubba Exp $
+# $Id: start,v 1.53 1998/11/06 02:57:53 marcus Exp $
 
 VERSION=202; BETA=.b;
 
@@ -149,6 +149,11 @@ parse_args() {
     DEFINES="-DKEEP_ALIVE $DEFINES"
   ;;
   '--once')
+    once=1
+  ;;
+# Misspelling --once might give undesirable results, so let's accept
+# some "creative" spellings...  :-)
+  '--onve'|'--onec'|'--onev')
     once=1
   ;;
   '--gdb')
