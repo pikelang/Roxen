@@ -12,7 +12,7 @@
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.17 1999/08/16 10:58:58 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.18 1999/08/20 15:50:15 nilsson Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -212,7 +212,7 @@ string tagtime(int t,mapping m,object id)
 #endif
 }
 
-string insert_file(string file, object id)
+string api_read_file(object id, string file)
 {
   string s, f = fix_relative(file, id);
   id = id->clone_me();
@@ -411,11 +411,6 @@ string api_query_define(object id, string what)
 string api_query_variable(object id, string what)
 {
   return id->variables[what];
-}
-
-string api_read_file(object id, string f)
-{
-  return insert_file(f, id);
 }
 
 string api_query_cookie(object id, string f)
