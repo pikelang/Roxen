@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.76 2000/03/11 02:24:00 mast Exp $
+//! $Id: module.pmod,v 1.77 2000/03/11 03:26:15 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1360,10 +1360,11 @@ class Frame
   //! the tag before do_process() is called. This may be Void if the
   //! content parsing didn't produce any result.
   //!
-  //! If the result from parsing the content is not Void, it's
-  //! assigned to or added to the content variable. Assignment is used
-  //! if the content type is nonsequential, addition otherwise. Thus
-  //! earlier values are simply overridden for nonsequential types.
+  //! If there is no do_return() and the result from parsing the
+  //! content is not Void, it's assigned to or added to the content
+  //! variable. Assignment is used if the content type is
+  //! nonsequential, addition otherwise. Thus earlier values are
+  //! simply overridden for nonsequential types.
   //!
   //! piece is used when the tag is operating in streaming mode (i.e.
   //! FLAG_STREAM_CONTENT is set). It's then set to each successive
@@ -1606,7 +1607,6 @@ class Frame
 #define EVSTAT_ENTERED 1
 #define EVSTAT_LAST_ITER 2
 #define EVSTAT_ITER_DONE 3
-#define EVSTAT_RETURNED 4
     int eval_state = EVSTAT_BEGIN;
     int iter;
     Parser subparser;
@@ -1932,17 +1932,14 @@ class Frame
 	      exec = 0;
 	    }
 	  }
-
-	  /* Fall through. */
-	case EVSTAT_RETURNED:
-	  if (result == Void && !(flags & FLAG_EMPTY_ELEMENT))
+	  else if (result == Void && !(flags & FLAG_EMPTY_ELEMENT))
 	    if (result_type->_parser_prog == PNone) {
 	      if (content_type->subtype_of (result_type))
 		result = content;
 	    }
 	    else
 	      if (stringp (content_type)) {
-		eval_state = EVSTAT_RETURNED; // Only need to record this state here.
+		eval_state = EVSTAT_ITER_DONE; // Only need to record this state here.
 		if (!exec) exec = ({content});
 		_exec_array (parser, exec, flags & FLAG_PARENT_SCOPE); // Might unwind.
 		exec = 0;
