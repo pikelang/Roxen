@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.189 1999/10/09 23:57:20 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.190 1999/11/04 16:53:04 neotron Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1375,9 +1375,10 @@ string tag_insert(string tag,mapping m,object id,object file,mapping defines)
     m_delete( m, "encode" );
   }
 
-  if (n=m->name || m->define) 
+  if (n=m->name || m->define)
   {
     m_delete(m, "name");
+    m_delete(m, "define");
     return do_replace(defines[n]||
 		      (id->misc->debug?"No such define: "+n:""), m);
   }
