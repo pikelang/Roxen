@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.84 1999/03/27 22:17:20 grubba Exp $
+ * $Id: roxenloader.pike,v 1.85 1999/06/21 20:24:56 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.84 1999/03/27 22:17:20 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.85 1999/06/21 20:24:56 mast Exp $";
 
 #define perror roxen_perror
 private static int perror_status_reported=0;
@@ -128,12 +128,16 @@ int mkdirhier(string from, int|void mode)
 
   foreach(f[0..sizeof(f)-2], a)
   {
-    r = mkdir(b+a);
+    if (query_num_arg() > 1) {
+      mkdir(b+a, mode);
 #if constant(chmod)
-    if (mode) {
-      catch { chmod(b+a, mode); };
+      array(int) stat = file_stat (b + a, 1);
+      if (stat && stat[0] & ~mode)
+	// Race here. Not much we can do about it at this point. :\
+	catch (chmod (b+a, stat[0] & mode));
+#endif
     }
-#endif /* constant(chmod) */
+    else mkdir(b+a);
     b+=a+"/";
   }
   if(!r)
