@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.178 2004/05/05 15:39:47 mast Exp $
+// $Id: module.pike,v 1.179 2004/05/05 21:17:56 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -386,7 +386,7 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
 //! RFC 2518 PROPFIND implementation with recursion according to
 //! @[depth]. See @[find_properties] for details.
 void recurse_find_properties(string path, string mode,
-			     int depth, MultiStatus result,
+			     int depth, MultiStatus.Prefixed result,
 			     RequestID id,
 			     multiset(string)|void filt)
 {
@@ -408,13 +408,7 @@ void recurse_find_properties(string path, string mode,
       properties : properties->find_properties(mode, result, filt);
 
     if (ret) {
-      result->add_response(path, XMLStatusNode(ret->error, ret->rettext));
-      if (ret->rettext) {
-	Parser.XML.Tree.ElementNode descr =
-	  Parser.XML.Tree.ElementNode ("DAV:responsedescription", ([]));
-	descr->add_child (Parser.XML.Tree.TextNode (ret->rettext));
-	result->add_response (path, descr);
-      }
+      result->add_status (path, ret->error, ret->rettext);
       SIMPLE_TRACE_LEAVE ("Got status %d: %O", ret->error, ret->rettext);
       return;
     }
@@ -438,7 +432,7 @@ void recurse_find_properties(string path, string mode,
 
 mapping(string:mixed) patch_properties(string path,
 				       array(PatchPropertyCommand) instructions,
-				       MultiStatus result, RequestID id)
+				       MultiStatus.Prefixed result, RequestID id)
 {
   SIMPLE_TRACE_ENTER (this, "Patching properties for %O", path);
   mapping(string:mixed)|PropertySet properties = query_properties(path, id);
@@ -978,7 +972,7 @@ mapping(string:mixed) write_access(string path, int(0..1) recursive, RequestID i
 {
   // FIXME: Implement recursive!
 
-  if (!sizeof(path) || (path[-1] != '/')) path += "/";
+  if (!has_suffix (path, "/")) path += "/";
 
   int(0..3)|DAVLock lock = check_locks(path, 0, id);
 
@@ -1042,7 +1036,7 @@ mapping(string:mixed) delete_file(string path, RequestID id)
   return find_file(path, id) || Roxen.http_status(404);
 }
 
-int(0..1) recurse_delete_files(string path, MultiStatus stat, RequestID id)
+int(0..1) recurse_delete_files(string path, MultiStatus.Prefixed stat, RequestID id)
 {
   Stat st = stat_file(path, id);
   if (!st) return 0;
@@ -1065,7 +1059,7 @@ int(0..1) recurse_delete_files(string path, MultiStatus stat, RequestID id)
     //   Additionally 204 (No Content) errors SHOULD NOT be returned
     //   in the 207 (Multi-Status). The reason for this prohibition
     //   is that 204 (No COntent) is the default success code.
-    stat->add_response(path, XMLStatusNode(ret->code));
+    stat->add_status (path, ret->code, ret->rettext);
   }
   return ret->code >= 300;
 }
@@ -1080,7 +1074,7 @@ mapping copy_file(string path, string dest, int(-1..1) behavior, RequestID id)
 void recurse_copy_files(string path, int depth, string dest_prefix,
 			string dest_suffix,
 			mapping(string:int(-1..1)) behavior,
-			MultiStatus result, RequestID id)
+			MultiStatus.Prefixed result, RequestID id)
 {
   Stat st = stat_file(path, id);
   if (!st) return;
@@ -1092,19 +1086,19 @@ void recurse_copy_files(string path, int depth, string dest_prefix,
 	!has_prefix(dest_uri->path||"/", query_location())) {
       // Destination is not local to this module.
       // FIXME: Not supported yet.
-      result->add_response(dest_suffix, XMLStatusNode(502));
+      result->add_status(dest_suffix, 502);
       return;
     }
     dest_prefix = (dest_uri->path||"/")[sizeof(query_location())..];
     Stat dest_st;
     if (!(dest_st = stat_file(combine_path(dest_prefix, ".."), id)) ||
 	!(dest_st->isdir)) {
-      result->add_response("", XMLStatusNode(409));
+      result->add_status("", 409);
       return;
     }
     if (combine_path(dest_prefix, dest_suffix, ".") ==
 	combine_path(path, ".")) {
-      result->add_response(dest_suffix, XMLStatusNode(403, "Source and destination are the same."));
+      result->add_status(dest_suffix, 403, "Source and destination are the same.");
       return;
     }
   }
@@ -1113,7 +1107,7 @@ void recurse_copy_files(string path, int depth, string dest_prefix,
   mapping res = copy_file(path, dest_prefix + dest_suffix,
 			  behavior[dest_prefix + dest_suffix]||behavior[0],
 			  id);
-  result->add_response(dest_suffix, XMLStatusNode(res->error, res->data));
+  result->add_status(dest_suffix, res->error, res->rettext);
   if (res->error >= 300) {
     // RFC 2518 8.8.3 and 8.8.8 (error minimization).
     return;
