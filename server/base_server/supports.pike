@@ -2,7 +2,7 @@
 // Copyright © 1999 - 2001, Roxen IS.
 //
 // Handles supports
-// $Id: supports.pike,v 1.24 2001/06/17 20:07:11 nilsson Exp $
+// $Id: supports.pike,v 1.25 2002/01/02 09:57:44 jonasw Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -123,7 +123,7 @@ private array(multiset(string)|mapping(string:string)) lookup_supports(string fr
 {
   if(array(multiset(string)|mapping(string:string)) q = 
      [array(multiset(string)|mapping(string:string))] cache_lookup("supports", from))
-    return q;
+    return q + ({ });
 
   multiset (string) sup = (<>);
   mapping (string:string) m = ([]);
