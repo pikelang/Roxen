@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.27 1997/06/09 22:16:58 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.28 1997/07/07 10:38:21 grubba Exp $";
 
 #include <module.h>
 
@@ -332,6 +332,25 @@ void got_some_data(object to, string d)
 }
 
 
+void cgi_fail(int errcode, string err)
+{
+  string to_write = sprintf("HTTP/1.0 %d %s\r\n"
+			    "\r\n"
+			    "<title>%s</title>\n"
+			    "<h2>%s</h2>\n", errcode, err, err, err);
+
+  object(files.file) output = files.file("stdout");
+  int bytes;
+
+  while ((bytes = output->write(to_write)) > 0) {
+    if ((to_write = to_write[bytes..]) == "") {
+      break;
+    }
+  }
+
+  exit(0);
+}
+
 mixed find_file(string f, object id)
 {
   array tmp2;
@@ -410,16 +429,17 @@ mixed find_file(string f, object id)
 	 !((us[0]&0111) ||
 	   ((us[0]&0100) && (uid == us[5])) ||
 	   (us[0]&0444) ||
-	   ((us[0]&0400) && (uid == us[5]))))
-	return http_low_answer(403, "<h2>File exists, but access forbidden "
-			       "by user</h2>");
+	   ((us[0]&0400) && (uid == us[5])))) {
+	cgi_fail(403, "File exists, but access forbidden by user");
+      }
       
       if(QUERY(use_wrapper)) {
 	if(!(us = file_stat(combine_path(oldwd,
 					 (QUERY(wrapper)||"bin/cgi")))) ||
-	   !(us[0]&0111))
-	  return http_low_answer(403, "<h2>Wrapper exists, but access forbidden "
-				 "for user</h2>");
+	   !(us[0]&0111)) {
+	  cgi_fail(403,
+		   "Wrapper exists, but access forbidden for user");
+	}
 	exece(combine_path(oldwd, (QUERY(wrapper)||"bin/cgi")),
 	      ({f})+make_args(id->rest_query),
 	      my_build_env_vars(f, id, path_info));
@@ -535,6 +555,3 @@ mapping last_resort(object id)
     }
   }
 }
-
-
-
