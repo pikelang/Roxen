@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.23 2001/10/29 10:37:05 grubba Exp $
+ * $Id: resolv.pike,v 1.24 2002/06/13 12:19:02 stewa Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -231,6 +231,7 @@ string parse( RequestID id )
       {
         // werror(id->variables->path +" matches "+u+"\n");
         nid = id->clone_me();
+	nid->misc -= ([ "authenticated_user" : 1 ]);
         nid->raw_url = file;
         nid->not_query = (http_decode_string((file/"?")[0]));
 	string host;
@@ -253,6 +254,7 @@ string parse( RequestID id )
         if( c->query( "default_server" ) )
         {
           nid = id->clone_me();
+	  nid->misc -= ([ "authenticated_user" : 1 ]);
           nid->raw_url = file;
           nid->not_query = (http_decode_string((file/"?")[0]));
           nid->conf = c;
@@ -268,6 +270,7 @@ string parse( RequestID id )
       {
         mixed q = roxen->urls[u];
         nid = id->clone_me();
+	nid->misc -= ([ "authenticated_user" : 1 ]);
         nid->raw_url = file;
         nid->not_query = (http_decode_string((file/"?")[0]));
         if( (c = q->port->find_configuration_for_url( op, nid, 1 )) )
