@@ -35,6 +35,17 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 {
   float xminvalue=0.0, xmaxvalue=-STORT, yminvalue=0.0, ymaxvalue=-STORT;
 
+  if (diagram_data["type"]=="graph")
+    diagram_data["subtype"]="line";
+
+  if ((diagram_data["subtype"]==0)||
+      (diagram_data["subtype"]==""))
+    diagram_data["subtype"]="line";
+
+  if (diagram_data["subtype"]=="line")
+    if (!(diagram_data["drawtype"]))
+      diagram_data["drawtype"]="linear";
+
   foreach(diagram_data["data"], array(float) d)
     {
       int j=sizeof(d);
@@ -61,11 +72,13 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 		yminvalue=k;
 	      if (ymaxvalue<(k=d[i]))
 		ymaxvalue=k;
-	      xminvalue=10.0;
-	      xmaxvalue=0.0;
+	      xminvalue=0.0;
+	      xmaxvalue=10.0;
 	    }
 	else
-	  werror("\""+diagram_data["type"]+"is an unknown graph type!");
+	  throw( ({"\""+diagram_data["type"]+"\" is an unknown graph type!\n",
+	backtrace()}));
+      //werror("\""+diagram_data["type"]+"is an unknown graph type!");
     }
   xmaxvalue=max(xmaxvalue, xminvalue+LITET);
   ymaxvalue=max(ymaxvalue, yminvalue+LITET);
@@ -98,15 +111,17 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
   write("Dxminvalue:"+ diagram_data["xminvalue"]+"\n");
 
   //Ge tomma namn på xnames om namnen inte finns
+  //Och ge bars max och minvärde på x-axeln.
   if (diagram_data["type"]=="bars")
-    if (!(diagram_data["xnames"]))
-      diagram_data["xnames"]=allocate(sizeof(diagram_data["data"][0]));
-  
-  //Om xnames finns så sätt xspace.
+    {
+      if (!(diagram_data["xnames"]))
+	diagram_data["xnames"]=allocate(sizeof(diagram_data["data"][0]));
+    }
+  //Om xnames finns så sätt xspace om inte values_for_xnames finns
   if (diagram_data["xnames"])
-    diagram_data["xspace"]=(diagram_data["xmaxvalue"]-
-			    diagram_data["xminvalue"])
-      /(float)sizeof(diagram_data["xnames"]);
+    diagram_data["xspace"]=max((diagram_data["xmaxvalue"]-
+				diagram_data["xminvalue"])
+			       /(float)sizeof(diagram_data["xnames"]), LITET*20);
 
   //Om ynames finns så sätt yspace.
   if (diagram_data["ynames"])
@@ -133,7 +148,8 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
   int j;
   diagram_data["xnamesimg"]=allocate(j=sizeof(diagram_data["xnames"]));
   for(int i=0; i<j; i++)
-    if ((diagram_data["values_for_xnames"][i]>LITET)||(diagram_data["values_for_xnames"][i]<-LITET))
+    if (((diagram_data["values_for_xnames"][i]>LITET)||(diagram_data["values_for_xnames"][i]<-LITET))&&
+	((diagram_data["xnames"][i]) && sizeof(diagram_data["xnames"][i])))
       diagram_data["xnamesimg"][i]=notext->write(diagram_data["xnames"][i])->scale(0,diagram_data["fontsize"]);
     else
       diagram_data["xnamesimg"][i]=
@@ -252,7 +268,9 @@ mapping set_legend_size(mapping diagram_data)
       
       //Skapa strecket för graph/boxen för bars.
       write("J:"+j+"\n");
-      if (diagram_data["type"]=="graph")
+      if ((diagram_data["type"]=="graph") ||
+	  (diagram_data["type"]=="bars") ||
+	  (diagram_data["type"]=="pie"))
 	for(int i=0; i<j; i++)
 	  {
 	    write("diagram_data[\"legendfontsize\"]"+diagram_data["legendfontsize"]+"\n");
@@ -280,7 +298,8 @@ mapping set_legend_size(mapping diagram_data)
 							   (float)(diagram_data["linewidth"]/2+1)
 							 }))+"\n"); 
 	    plupps[i]->setcolor(255,255,255);
-	    if (diagram_data["linewidth"]*1.5<(float)diagram_data["legendfontsize"])
+	    if ((diagram_data["linewidth"]*1.5<(float)diagram_data["legendfontsize"])&&
+		(diagram_data["subtype"]=="line")&&(diagram_data["drawtype"]!="level"))
 	      plupps[i]->polygone(make_polygon_from_line(diagram_data["linewidth"], 
 							 ({
 							   (float)(diagram_data["linewidth"]/2+1),
@@ -301,7 +320,9 @@ mapping set_legend_size(mapping diagram_data)
 
 	  }
       else
-	werror("Graph type unknown!");
+	throw( ({"\""+diagram_data["type"]+"\" is an unknown graph type!\n",
+		 backtrace()}));
+      //werror("Graph type unknown!");
       //else FIXME
 
       //Ta reda på hur många kolumner vi kan ha:
@@ -370,9 +391,12 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   if (!(diagram_data["xspace"]))
     {
       //Initera hur långt det ska vara emellan.
-      
       float range=(diagram_data["xmaxvalue"]-
 		 diagram_data["xminvalue"]);
+      if ((range>-LITET)&&
+	  (range<LITET))
+	range=LITET*10.0;
+
       write("range"+range+"\n");
       float space=pow(10.0, floor(log(range/3.0)/log(10.0)));
       if (range/space>5.0)
@@ -458,7 +482,10 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   int labely=0;
   if (diagram_data["labels"])
     {
-      label=diagram_data["labels"][0]+" ["+diagram_data["labels"][2]+"]"; //Xstorhet
+      if (diagram_data["labels"][2] && sizeof(diagram_data["labels"][2]))
+	label=diagram_data["labels"][0]+" ["+diagram_data["labels"][2]+"]"; //Xstorhet
+      else
+	label=diagram_data["labels"][0];
       labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
 	write(label)->scale(0,diagram_data["labelsize"]);
       labely=diagram_data["labelsize"];
@@ -911,7 +938,10 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       int x;
       int y;
       
-      label=diagram_data["labels"][1]+" ["+diagram_data["labels"][3]+"]"; //Ystorhet
+      if (diagram_data["labels"][3] && sizeof(diagram_data["labels"][3]))
+	label=diagram_data["labels"][1]+" ["+diagram_data["labels"][3]+"]"; //Ystorhet
+      else
+	label=diagram_data["labels"][1];
       labelimg=get_font("avant_garde", 32, 0, 0, "left",0,0)->
 	write(label)->scale(0,diagram_data["labelsize"]);
       
@@ -968,7 +998,7 @@ int main(int argc, string *argv)
   mapping(string:mixed) diagram_data;
   diagram_data=(["type":"graph",
 		 "textcolor":({0,0,0}),
-		 "subtyp":"",
+		 "subtype":"",
 		 "orient":"vert",
 		 "data": 
 		 ({ ({1.2, 12.3, 4.01, 10.0, 4.3, 12.0 }),
