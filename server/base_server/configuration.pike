@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.31 1997/05/30 02:08:45 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.32 1997/05/31 19:15:53 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -2060,17 +2060,23 @@ int load_module(string module_file)
   {
     string dir;
 
-//   _master->set_inhibit_compile_errors("");
+   _master->set_inhibit_compile_errors("");
 
     err = catch { obj = roxen->load_from_dirs(roxen->QUERY(ModuleDirs), module_file); };
 
     if( err && obj ) {
       obj=0;
-      report_error("Error while enabling module ("+module_file+"):\n"+
+    }
+
+    if (sizeof(_master->errors)) {
+      report_error(sprintf("While compiling module (\"%s\"):\n%s\n",
+			   module_file, _master->errors));
+    } else if (err) {
+      report_error("While enabling module ("+module_file+"):\n"+
 		   describe_backtrace(err)+"\n");
     }
 
-//    _master->set_inhibit_compile_errors(0);
+    _master->set_inhibit_compile_errors(0);
 
     prog = roxen->last_loaded();
   }
