@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.21 2001/08/10 12:09:00 per Exp $
+// $Id: DBManager.pmod,v 1.22 2001/08/13 18:23:57 per Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 #include <roxen.h>
@@ -224,6 +224,7 @@ Sql.Sql sql_cache_get(string what)
 }
 #else
 Sql.Sql sql_cache_get(string what)
+//! Roxen 1.3 compatibility function
 {
   if(sql_cache[ what ] )
     return sql_cache[ what ];
@@ -312,21 +313,11 @@ mapping db_stats( string name )
 //! of tables and their total size). If the database is not an
 //! internal database, or the database does not exist, 0 is returned
 {
-  array(mapping(string:mixed)) d = query("SELECT local FROM dbs WHERE name=%s", name );
   Sql.Sql db;
-  int rst;
-  if( (sizeof( d ) && (int)d[0]["local"] ) )
-  {
-    db = connect_to_my_mysql( 0, "roxen" );
-    db->query( "USE "+name );
-    rst = 1;
-  }
-  else
-    db = cached_get( name );
+  array d;
+  db = cached_get( name );
   if( catch( d = db->query( "SHOW TABLE STATUS" ) ) )
     return 0;
-  if( rst )
-    db->query( "USE roxen" );
   mapping res = ([]);
   foreach( d, mapping r )
   {
@@ -457,6 +448,161 @@ void drop_db( string name )
   changed();
 }
 
+void set_url( string db, string url, int is_internal )
+//! Set the URL for the specified database.
+//! No data is copied.
+//! This function call only works for external databases. 
+{
+  query( "UPDATE dbs SET path=%s, local=%d WHERE name=%s",
+	 url, is_internal, db );
+//   changed();
+}
+
+void copy_db_md( string oname, string nname )
+//! Copy the metadata from oname to nname. Both databases must exist
+//! prior to this call.
+{
+  mapping m = get_permission_map( )[oname];
+  foreach( indices( m ), string s )
+    if( Configuration c = roxenp()->find_configuration( s ) )
+      set_permission( nname, c, m[s] );
+  changed();
+}
+
+array(mapping) backups( string dbname )
+{
+  if( dbname )
+    return query( "SELECT * FROM db_backups WHERE db=%s", dbname );
+  return query("SELECT * FROM db_backups"); 
+}
+
+array(mapping) restore( string dbname, string directory, string|void todb,
+			array|void tables )
+//! Restore the contents of the database dbname from the backup
+//! directory. New tables will not be deleted.
+//!
+//! The format of the result is as for the second element in the
+//! return array from @[backup]. If todb is specified, the backup will
+//! be restored in todb, not in dbname.
+{
+  Sql.Sql db = cached_get( todb || dbname );
+
+  if( !directory )
+    error("Illegal directory\n");
+
+  if( !db )
+    error("Illegal database\n");
+
+  directory = combine_path( getcwd(), directory );
+
+  array q =
+    tables ||
+    query( "SELECT tbl FROM db_backups WHERE db=%s AND directory=%s",
+	   dbname, directory )->tbl;
+
+  array res = ({});
+  foreach( q, string table )
+  {
+    db->query( "DROP TABLE IF EXISTS "+table);
+    directory = combine_path( getcwd(), directory );
+    res += db->query( "RESTORE TABLE "+table+" FROM %s", directory );
+  }
+  return res;
+}
+
+array(string) db_tables( string db )
+//! Attempt to list all tables (using SHOW TABLES) in the specified
+//! DB, and then return the list.
+{
+  object _tables = cached_get(db)->big_query( "show tables" );
+  array tables = ({});
+  while( array q = _tables->fetch_row() )
+    tables += q;
+  return tables;
+}
+
+void delete_backup( string dbname, string directory )
+//! Delete a backup previously done with @[backup].
+{
+  // 1: Delete all backup files.
+  directory = combine_path( getcwd(), directory );
+
+  foreach( query( "SELECT tbl FROM db_backups WHERE db=%s AND directory=%s",
+		  dbname, directory )->tbl, string table )
+  {
+    rm( directory+"/"+table+".frm" );
+    rm( directory+"/"+table+".MYD" );
+  }
+  // 2: Delete the information about this backup.
+  query( "DELETE FROM db_backups WHERE db=%s AND directory=%s",
+	 dbname, directory );
+}
+
+array(string|array(mapping)) backup( string dbname, string directory )
+//! Make a backup of all data in the specified database.
+//! If a directory is not specified, one will be created in $VARDIR.
+//! The return value is ({ "name of the directory", result }).
+//!
+//! The format of result is:
+//!  ({([ "Table":tablename,
+//!      "Msg_type":one of "status" "error" "info" or "warnign",
+//!      "Msg_text":"The message"
+//!  ])})
+//!
+//! Currently this function only works for internal databases.
+{
+  Sql.Sql db = cached_get( dbname );
+
+  if( !db )
+    error("Illegal database\n");
+
+  if( !directory )
+    directory = roxen_path( "$VARDIR/"+dbname+"-"+isodate(time(1)) );
+  directory = combine_path( getcwd(), directory );
+
+  if( is_internal( dbname ) )
+  {
+    mkdirhier( directory+"/" );
+    array tables = db_tables( dbname );
+    array res = ({});
+    foreach( tables, string table )
+    {
+      query( "DELETE FROM db_backups WHERE "
+	     "db=%s AND directory=%s AND tbl=%s",
+	     dbname, directory, table );
+      query( "INSERT INTO db_backups (db,tbl,directory,whn) "
+	     "VALUES (%s,%s,%s,%d)",
+	     dbname, table, directory, time() );
+      res += db->query( "BACKUP TABLE "+table+" TO %s",directory);
+    }
+    return ({ directory,res });
+  }
+  else
+  {
+    error("Currently only handles internal databases\n");
+    // Harder. :-)
+  }
+}
+
+
+void rename_db( string oname, string nname )
+//! Rename a database. Pleae note that the actual data (in the case of
+//! internal database) is not copied. The old database is deleted,
+//! however. For external databases, only the metadata is modified, no
+//! attempt is made to alter the external database.
+{
+  query( "UPDATE dbs SET name=%s WHERE name=%s", oname, nname );
+  query( "UPDATE db_permissions SET db=%s WHERE db=%s", oname, nname );
+  if( is_internal( oname ) )
+  {
+    Sql.Sql db = connect_to_my_mysql( 0, "mysql" );
+    db->query("CREATE DATABASE IF NOT EXISTS %s",nname);
+    db->query("UPDATE db SET Db=%s WHERE Db=%s",oname, nname );
+    db->query("DROP DATABASE IF EXISTS %s",oname);
+    query( "FLUSH PRIVILEGES" );
+  }
+  changed();
+}
 
 void create_db( string name, string path, int is_internal )
 //! Create a new symbolic database alias.
@@ -468,6 +614,8 @@ void create_db( string name, string path, int is_internal )
 {
   if( get( name ) )
     error("The database "+name+" already exists\n");
+  if( has_value( name, "-" ) )
+    name = replace( name, "-", "_" );
   query( "INSERT INTO dbs values (%s,%s,%s)",
          name, (is_internal?name:path), (is_internal?"1":"0") );
   if( is_internal )
@@ -519,8 +667,69 @@ int set_permission( string name, Configuration c, int level )
   return 1;
 }
 
+mapping module_table_info( string db, string table )
+{
+  array td;
+  if( sizeof(td=query("SELECT * FROM module_tables WHERE db=%s AND tbl=%s",
+		      db, table ) ) )
+    return td[0];
+  return ([]);
+}
+
+string insert_statement( string db, string table, mapping row )
+//! Convenience function.
+{
+  function q = cached_get( db )->quote;
+  string res = "INSERT INTO "+table+" ";
+  array(string) vi = ({});
+  array(string) vv = ({});
+  foreach( indices( row ), string r )
+    if( !has_value( r, "." ) )
+    {
+      vi += ({r});
+      vv += ({"'"+q(row[r])+"'"});
+    }
+  return res + "("+vi*","+") VALUES ("+vv*","+")";
+}
+
+void is_module_table( RoxenModule module, string db, string table,
+		   string|void comment )
+//! Tell the system that the table 'table' in the database 'db'
+//! belongs to the module 'module'. The comment is optional, and will
+//! be shown in the configuration interface if present.
+{
+  string mn = module ? module->sname(): "";
+  string cn = module ? module->my_configuration()->name : "";
+  catch(query("DELETE FROM module_tables WHERE "
+	      "module=%s AND conf=%s AND tbl=%s AND db=%s",
+	      mn,cn,table,db ));
+
+  query("INSERT INTO module_tables (conf,module,db,tbl,comment) VALUES "
+	"(%s,%s,%s,%s,%s)",
+	cn,mn,db,table,comment||"" );
+}
+
 static void create()
 {
+  mixed err = 
+  catch {
+  query("CREATE TABLE IF NOT EXISTS db_backups ("
+	" db varchar(80) not null, "
+	" tbl varchar(80) not null, "
+	" directory varchar(255) not null, "
+	" whn int unsigned not null, "
+	" INDEX place (db,directory))");
+
+  query("CREATE TABLE IF NOT EXISTS module_tables ("
+	"  conf varchar(80) not null, "
+	"  module varchar(80) not null, "
+	"  db   varchar(80) not null, "
+	"  tbl varchar(80) not null, "
+	"  comment blob not null, "
+	"  INDEX place (db,tbl), "
+	"  INDEX own (conf,module) "
+	")");
+    
   multiset q = (multiset)query( "SHOW TABLES" )->Tables_in_roxen;
   if( !q->dbs )
   {
@@ -555,4 +764,9 @@ CREATE TABLE db_permissions (
 	}
       }, 0 );
   }
+  return;
+  };
+
+  werror( describe_backtrace( err ) );
+    
 }
