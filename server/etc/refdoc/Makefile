@@ -1,7 +1,7 @@
 #
 # Main Makefile for extracting autodoc.
 #
-# $Id: Makefile,v 1.2 2002/10/29 20:47:53 nilsson Exp $
+# $Id: Makefile,v 1.3 2002/10/30 04:04:42 nilsson Exp $
 #
 
 PIKE=pike
@@ -21,7 +21,7 @@ modref: build/modref.xml $(REFDOC)/structure/modref.css \
 low_modref:
 	rm -rf modref || /bin/true
 	@mkdir modref
-	@cp $(REFDOC)/structure/modref.css $(REFDOC)/modref/style.css
+	@cp $(REFDOC)/structure/modref.css modref/style.css
 	@$(PIKE) $(REFDOC)/presentation/tree-split-autodoc.pike \
 	  build/modref.xml $(REFDOC)/structure/modref.html modref
 	@mkdir modref/images
