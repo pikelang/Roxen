@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit Regexp : regexp;
 
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.24 1998/11/26 04:49:56 per Exp $";
+"$Id: mailtags.pike,v 1.25 1998/11/26 04:58:36 per Exp $";
 
 constant thread_safe = 1;
 
@@ -1250,8 +1250,18 @@ string tag_mail_body(string tag, mapping args, object id)
 string container_mail_verify_login(string tag, mapping args, string
 				   contents, object id)
 {
+  id->misc->defines[" _extra_heads"] =([
+    "Expires":http_date(time(1)),
+    "Last-Modified":http_date(time(1)),
+    "Pragma":"no-cache",
+    "Cache-Control":"no-cache",
+    "Expire":http_date(time(1)),
+    ]);
+  NOCACHE();
   if(string res = login(id))
     return res+"<false>";
+  id->variables->some_number=(abs(gethrtime())+""+abs(time())+
+                              ""+random(0x7ffffffff));
   return contents;
 }
 
