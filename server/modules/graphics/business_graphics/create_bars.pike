@@ -652,7 +652,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       barsdiagram->paste_alpha_color(diagram_data["ynamesimg"][i], 
 			       @(diagram_data["textcolor"]), 
 			       (int)floor(xpos_for_yaxis-
-					  si/4.0-diagram_data["linewidth"]*2-
+					  si/4.0-
 					  diagram_data["ynamesimg"][i]->xsize()),
 			       (int)floor(-(diagram_data["values_for_ynames"][i]-
 					    diagram_data["yminvalue"])
