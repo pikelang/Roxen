@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.132 1997/09/14 19:04:00 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.133 1997/09/14 22:58:42 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -593,6 +593,8 @@ void connected_to_roxen_com(object port)
 
 public void update_supports_from_roxen_com()
 {
+  // FIXME:
+  // This code has a race-condition, but it only occurs once a week...
   if(QUERY(next_supports_update) <= time())
   {
     if(QUERY(AutoUpdate))
