@@ -620,24 +620,34 @@ string get_var_form( string s, object mod, object id )
       tmp="<select name=\""+path+"\">  ";
       misc=var[ VAR_MISC ];
       translate = LOW_LOCALE->module_doc_string(mod, s, 2);
-      if(!translate)
-	translate = mkmapping(misc,misc);
+      if(!translate) translate = ([]);
 
+      int found = 0;
       for(i=0; i<sizeof(misc); i++)
       {
 	if(misc[i]==var[VAR_VALUE])
         {
+	  found = 1;
           if( view_mode )
-            return "<b>"+html_encode_string((string)translate[misc[i]])+"</b>";
+            return "<b>"+html_encode_string((string)(translate[misc[i]]||misc[i]))+"</b>";
 	  tmp+=("  <option value=\""+
 		replace((string)misc[i],"\"","&quote;")
 		+ "\" selected> "+
-		translate[misc[i]]+" ");
+		(translate[misc[i]] || misc[i])+" ");
         }
  	else
 	  tmp+=("  <option value=\""+
 		replace((string)misc[i],"\"","&quote;")+ "\"> "+
-		translate[misc[i]]+" ");
+		(translate[misc[i]] || misc[i])+" ");
+      }
+      if (!found) {		// To avoid user confusion.
+	if( view_mode )
+	  return "<b>"+html_encode_string(
+	    (string)(translate[var[VAR_VALUE]]||var[VAR_VALUE]))+"</b>";
+	tmp+=("  <option value=\""+
+	      replace((string)var[VAR_VALUE],"\"","&quote;")
+	      + "\" selected> "+
+	      (translate[var[VAR_VALUE]] || var[VAR_VALUE])+" ");
       }
       return pre+tmp+"</select>";
     }
