@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.170 2000/04/19 15:14:42 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.171 2000/04/19 15:33:09 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -95,7 +95,7 @@ int use_syslog, loggingfield;
 string oct;
 int last_was_change;
 int roxen_started = time();
-float roxen_started_flt = [float]time(time());
+float roxen_started_flt = (float)time(time()); //Kludge for bug in type inference
 string short_time()
 {
   if( last_was_change>0 )
