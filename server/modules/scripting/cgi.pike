@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.133 1999/08/12 19:32:46 marcus Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.134 1999/11/29 21:35:45 neotron Exp $";
 
 class Shuffle
 {
@@ -867,7 +867,8 @@ class CGIScript
     else
       m_delete(environment, "HTTP_AUTHORIZATION");
     if(QUERY(clearpass) && id->auth && id->realauth ) {
-      environment["REMOTE_USER"] = (id->realauth/":")[0];
+      // Already set in roxenlib.pike
+      //      environment["REMOTE_USER"] = (id->realauth/":")[0];
       environment["REMOTE_PASSWORD"] = (id->realauth/":")[1];
     } else {
       m_delete(environment, "REMOTE_PASSWORD");
