@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.373 2002/07/10 13:57:36 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.374 2002/09/03 15:51:25 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -132,36 +132,11 @@ class AuthEmulator
   }
 }
 
-AuthEmulator auth;
-
-array(string) output_charset = ({});
-string input_charset;
-
-void set_output_charset( string|function to, int|void mode )
-{
-  if( search( output_charset, to ) != -1 ) // Already done.
-    return;
-
-  switch( mode )
-  {
-   case 0: // Really set.
-     output_charset = ({ to });
-     break;
-
-   case 1: // Only set if not already set.
-     if( !sizeof( output_charset ) )
-       output_charset = ({ to });
-     break;
-
-   case 2: // Join.
-     output_charset |= ({ to });
-     break;
-  }
-}
+array|AuthEmulator auth;
 
 string charset_name( function|string what )
 {
-  switch( f )
+  switch( what )
   {
    case string_to_unicode:   return "ISO10646-1";
    case string_to_utf8:      return "UTF-8";
@@ -171,7 +146,7 @@ string charset_name( function|string what )
 
 function charset_function( function|string what, int allow_entities )
 {
-  switch( f )
+  switch( what )
   {
    case "ISO-10646-1":
    case "ISO10646-1":
@@ -1969,13 +1944,6 @@ void handle_request( )
       return;
   TIMER_END(handle_request);
   send_result();
-}
-
-void adjust_for_config_path( string p )
-{
-  if( not_query )  not_query = not_query[ strlen(p).. ];
-  raw_url = raw_url[ strlen(p).. ];
-  misc->site_prefix_path = p;
 }
 
 string url_base()

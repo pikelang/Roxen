@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.51 2002/06/17 09:36:33 anders Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.52 2002/09/03 15:51:24 mast Exp $";
 
 class Variable
 {
@@ -584,8 +584,7 @@ class RequestID
   //! The raw request body, containing non-decoded post variables et cetera.
 
   string leftovers;
-  string rawauth;
-  string realauth;
+  string rawauth, realauth; // Used by many modules, so let's keep this.
   string since;
 
   string remoteaddr;
@@ -715,6 +714,31 @@ class RequestID
     }
   }
 
+  array(string) output_charset = ({});
+  string input_charset;
+
+  void set_output_charset( string|function to, int|void mode )
+  {
+    if( search( output_charset, to ) != -1 ) // Already done.
+      return;
+
+    switch( mode )
+    {
+      case 0: // Really set.
+	output_charset = ({ to });
+	break;
+
+      case 1: // Only set if not already set.
+	if( !sizeof( output_charset ) )
+	  output_charset = ({ to });
+	break;
+
+      case 2: // Join.
+	output_charset |= ({ to });
+	break;
+    }
+  }
+
   string scan_for_query( string f )
   {
     if(sscanf(f,"%s?%s", f, query) == 2)
@@ -735,6 +759,13 @@ class RequestID
       rest_query=replace(rest_query, "+", "\000");
     }
     return f;
+  }
+
+  void adjust_for_config_path( string p )
+  {
+    if( not_query )  not_query = not_query[ strlen(p).. ];
+    raw_url = raw_url[ strlen(p).. ];
+    misc->site_prefix_path = p;
   }
 
   void end(string|void s, int|void keepit){}
