@@ -4,6 +4,31 @@ Changes since Roxen Challenger 1.2.24 Yellow
 o The basic filesystem now clears the old entry in the stat-cache for
   files uploaded or deleted.
 
+o Now works with Pike 0.6-NT again.
+
+o Several fixes to the SSL certificate generation code.
+
+o Fixed a couple of more minor leaks in Pike 0.6.
+
+o Improved support for poll(2) in Pike 0.6.
+
+o Improved error messages in Pike 0.6.
+
+o Lots of fixes to Process.create_process() in Pike 0.6.
+
+o Updated a few actions to work with Pike 0.6.
+
+o Fixed some bugs in roxen_master.pike.
+
+o Several fixes to Business Graphics.
+
+o More modules updated to work with Pike 0.6.
+
+o The IP-less module now causes authorization to be against the correct
+  auth module, instead of against the master port servers auth module.
+
+o Fixed several bugs in both the FTP protocol modules.
+
 
 Changes since Roxen Challenger 1.2.21 Yellow
 -----------------------------------------------
