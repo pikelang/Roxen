@@ -44,44 +44,40 @@ string describe_location( RoxenModule m, RequestID id )
 		   : mp || "";
 }
 
-string simplified_make_container( string tagname, mapping args, string c )
+string format_container(string name)
 {
-  return Roxen.make_tag(tagname, args)+Roxen.make_tag("/",([]));
+  return "<"+replace(name, "#", " ")+"></>";
 }
 
 string describe_tags( RoxenModule m, int q )
 {
-  multiset tags=(multiset)indices(m->query_tag_callers());
-  multiset conts=(multiset)indices(m->query_container_callers());
-
-  mapping simple=m->query_simpletag_callers();
-  foreach(indices(simple), string name) {
-    if(tags[name] || conts[name])
-      continue;
-    if(simple[name][0] & RXML.FLAG_EMPTY_ELEMENT)
-      tags+=(< name >);
-    else
-      conts+=(< name >);
-  }
-
+  multiset tags=(<>), conts=(<>);
   RXML.TagSet new=m->query_tag_set();
   foreach(indices(new->get_tag_names()), string name) {
     if(tags[name] || conts[name])
       continue;
     if(new->get_tag(name)->flags & RXML.FLAG_EMPTY_ELEMENT)
-      tags+=(< name >);
+      tags+=(< replace(name,"#"," ") >);
     else
-      conts+=(< name >);
+      conts+=(< replace(name,"#"," ") >);
   }
+
+  array pi=indices(new->get_proc_instr_names());
 
   return 
     Roxen.html_encode_string(String.implode_nicely(map(sort(indices(tags)-
 							    ({"\x266a"})),
 						       lambda(string tag) {
-							 return Roxen.make_tag(tag+(tag[0]=='/'?"":"/"), ([]));
+							 return "<"+tag+(tag[0]=='/'?"":"/")+">";
 						       } ) +
 						   map(sort(indices(conts)),
-						       simplified_make_container, ([]), "")));
+						       lambda(string tag) {
+							 return "<"+tag+"></>";
+						       } ) +
+						   map(sort(pi),
+						       lambda(string tag) {
+							 return "<?"+tag+" ?>";
+						       } )));
 }
 
 string describe_provides( RoxenModule m, int q )
@@ -114,7 +110,7 @@ do                                                                      \
   T(MODULE_LOCATION,   describe_location,                       id);
   T(MODULE_URL,                        0,                        0);
   T(MODULE_FILE_EXTENSION, describe_exts,  "query_file_extensions");
-  T(MODULE_PARSER,         describe_tags,                        0);
+  T(MODULE_TAG,            describe_tags,                        0);
   T(MODULE_LAST,                       0,                        0);
   T(MODULE_FIRST,                      0,                        0);
   T(MODULE_AUTH,                       0,                        0);
