@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.15 2001/03/08 14:35:46 per Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.16 2001/05/08 09:44:10 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";
@@ -132,7 +132,7 @@ class TagWashHtml
 
     array do_return(RequestID id)
     {
-      result = content;
+      result = content||"";
 
       if(args->unparagraphify)
 	result = unparagraphify(result);
