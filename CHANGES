@@ -1,3 +1,27 @@
+Changes since Roxen 2.1.143
+-----------------------------------------------
+
+o Fixed handling of malformed PNGs.
+
+o Fixed handling of magic-* in gtext.
+
+o Fixed problem with SSL requests getting cut short on NT.
+
+o Added check for broken JVM thread implementation on Linux.
+
+o Extended Java module support.
+
+
+Changes since Roxen 2.1.135
+-----------------------------------------------
+
+o Fixed problem where cgi-scripts would not execute based on extension.
+
+o Added an example site template with some example pages.
+
+o Tweaked the Roxen 1.3 compatibility.
+
+
 Changes since Roxen 2.1.115
 -----------------------------------------------
 
