@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.55 1998/08/12 15:37:18 grubba Exp $
+# $Id: configure.in,v 1.56 1998/09/17 22:22:50 grubba Exp $
 #
 
 prefix=$PWD
@@ -425,6 +425,27 @@ else
   fi
 fi
 
+# CCSHARED are the C *flags* used to create objects to go into a shared
+# library -- this is only needed for a few systems
+AC_MSG_CHECKING(CCSHARED)
+if test -z "$CCSHARED" ; then
+  if test "$GCC" = yes ; then
+    case $pike_cv_sys_os in
+      BSD/OS*) CCSHARED="";;
+      *) CCSHARED="-fpic";;
+    esac
+  else
+    case $pike_cv_sys_os in
+	hp*|HP*) CCSHARED="+z"; ;;
+	FreeBSD*) CCSHARED="-fpic";;
+	SCO_SV*) CCSHARED="-KPIC -dy -Bdynamic";;
+	Solaris*) CCSHARED="-KPIC -Bdynamic";;
+        Windows_NT*) CCSHARED="-shared" ;;
+    esac
+  fi
+fi
+AC_MSG_RESULT($CCSHARED)
+
 AC_MSG_CHECKING(LINKFORSHARED)
 
 AC_CACHE_VAL(roxen_cv_sys_linkforshared,[
@@ -471,7 +492,7 @@ REALCFLAGS="$CFLAGS"
 AC_SUBST(REALCFLAGS)
 
 # Pass a joined CFLAGS to the other configure-scripts.
-CFLAGS="$CFLAGS $WARN $OPTIMIZE"
+CFLAGS="$CFLAGS $CCSHARED $WARN $OPTIMIZE"
 
 export CC CFLAGS REALCFLAGS WARN OPTIMIZE
 
