@@ -1,5 +1,5 @@
 // AutoSite Mail API
-// $Id: AutoMailAPI.pike,v 1.9 1998/07/25 21:53:59 leif Exp $
+// $Id: AutoMailAPI.pike,v 1.10 1998/08/30 04:24:40 per Exp $
 // Leif Stensson, July 1998.
 
 #include <module.h>
@@ -19,14 +19,13 @@ void create()
          "'mailboxes' and 'messages'."
         );
 
-  roxen->set_var("AutoMailAPI_hook", this_object());
 }
 
 string status()
 { string s = "<B>Module version</B>:" +
-                  (("$Revision: 1.9 $"/":")[1]/"$")[0] +
-                  (("$Date: 1998/07/25 21:53:59 $"/"e:")[1]/"$")[0] +
-                  (("$Author: leif $"/"or:")[1]/"$")[0] + "<BR>\n";
+                  (("$Revision: 1.10 $"/":")[1]/"$")[0] +
+                  (("$Date: 1998/08/30 04:24:40 $"/"e:")[1]/"$")[0] +
+                  (("$Author: per $"/"or:")[1]/"$")[0] + "<BR>\n";
   s += "<B>Database</B>: " + db_status;
   if (last_insert_id)
   { s += "<BR>\n<B>ID of most recent insert</B>: " + last_insert_id;
@@ -54,7 +53,7 @@ string status()
 }        
 
 array register_module()
-{ return ({ 0, "AutoMail Database API Module", "", 0, 1 });
+{ return ({ MODULE_PROVIDER, "AutoMail Database API Module", "", 0, 1 });
 }
 
 mixed get_mail_contents(int mail_id)
@@ -76,47 +75,27 @@ mixed get_mail_header(int mail_id)
 }
 
 string mysql_quote_string(string s)
-{ string result = "", tmp = "", c; int i;
-
-  // This is potentially slow and might cause a lot of
-  // work for the garbage collector, but it will do for
-  // now.
-
-  for(i = 0; i < sizeof(s); ++i)
-  { c = s[i..i];
-    if      (c ==  "'") c = "\\'";
-    else if (c == "\"") c = "\\\"";
-    else if (c == "\\") c = "\\\\";
-    else if (c == "\0") c = "\\0";
-    tmp += c;
-    if (i % 100 == 99)
-    { result += tmp;
-      tmp = "";
-    }
-  }
-  return result + tmp;
+{
+  return replace(s, ({ "'", "\"", "\\", "\0" }),
+		 ({ "\\'", "\\\"", "\\\\", "\\0" }));
 }
 
 
 int new_mail(string from, string header, string contents)
-{ if (!database) return -1;
+{
+  if (!database) return -1;
 
-  array header_lines = (header) / "\n";
   string subject = "";
-  int i;
-  for(i = 0; i < sizeof(header_lines); ++i)
-     if (header_lines[i][0..7] == "Subject:")
-        subject = header_lines[i][9..99];
-
-  while (subject[0..0] == " ") subject = subject[1..99];
-
+  if(sscanf(header, "%*s\nSubject:%*[\t ]%s\n", subject) != 3)
+    if(sscanf("foo\n"+header, "%*s\nSubject:%*[\t ]%s\n", subject) != 3)
+      subject="<NONE>";
+    
   database->big_query("INSERT INTO messages (from_addr,header,contents,date,subject) "
                     + "VALUES ('" + mysql_quote_string(from) + "',"
                               "'" + mysql_quote_string(header) + "',"
                               "'" + mysql_quote_string(contents) + "',"
                               "NOW(),"
-                              "'" + mysql_quote_string(subject) + "')"
-                     );
+                              "'" + mysql_quote_string(subject) + "')");
 
   // Extract the mail ID number.
   
@@ -232,7 +211,7 @@ mixed get_new_mail(int user_id, void|string folder)
 
 mixed mark_as_received(int mail_id, int user_id)
 { if (!database) return -1;
-  database->big_query("UPDATE mailboxes SET received=NOW() "
+ database->big_query("UPDATE mailboxes SET received=NOW() "
                "WHERE message_id="+mail_id+" AND user_id="+user_id);
   return 1;
 }
