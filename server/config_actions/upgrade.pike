@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.22 1997/09/03 08:35:44 grubba Exp $
+ * $Id: upgrade.pike,v 1.23 1997/09/06 16:09:28 grubba Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -186,6 +186,9 @@ string upgrade_module(string m, object rpc)
   if(modules[m])
   {
     mkdir("old_modules");
+#if constant(chmod)
+    catch { chmod("old_modules", 0755); };
+#endif /* constant(chmod) */
     if(mv(modules[m]->fname, "old_modules/"+m+":"+modules[m]->version))
       res+="Moved "+modules[m]->fname+" to old_modules/"+m+":"+
 	modules[m]->version+"<br>";
@@ -196,13 +199,18 @@ string upgrade_module(string m, object rpc)
   if(Stdio.file_size("modules/"+rm[0])>0)
   {
     mkdir("old_modules");
+#if constant(chmod)
+    catch { chmod("old_modules", 0755); };
+#endif /* constant(chmod) */
     if(mv("modules/"+rm[0], "old_modules/"+m+".pike"))
       res+="Moved modules/"+rm[0]+" to old_modules/"+m+".pike<br>\n";
     else
       res+="Failed to move modules/"+rm[0]+" to old_modules/"+m+".pike<br>\n";
   }
-  mkdirhier("modules/"+rm[0]);
-  object o = open("modules/"+rm[0], "wct");
+  mixed __mkdirhier = mkdirhier;	// Fool pike's type-checker.
+  __mkdirhier("modules/"+rm[0], 0755);
+
+  object o = open("modules/"+rm[0], "wct", 0644);
   if(!o) res += "Failed to open "+"modules/"+rm[0]+" for writing.<br>";
   else {
     o->write(rm[1]);
@@ -363,7 +371,7 @@ string upgrade_component(string m, object rpc)
     else
       res+="Failed to move "+rthingie[0]+" to old_components/"+m+ext+"<br>\n";
   }
-  object o = open(rthingie[0], "wct");
+  object o = open(rthingie[0], "wct", 0644);
   if(!o) res += "Failed to open "+rthingie[0]+" for writing.<br>";
   else
   {
