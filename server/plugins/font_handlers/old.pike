@@ -2,7 +2,7 @@
 // Copyright © 1996 - 2000, Roxen IS.
 
 #include <config.h>
-constant cvs_version = "$Id: old.pike,v 1.13 2002/10/22 00:15:25 nilsson Exp $";
+constant cvs_version = "$Id: old.pike,v 1.14 2003/01/22 00:05:26 mani Exp $";
 
 constant name = "Compatibility bitmap fonts";
 constant doc = 
@@ -15,7 +15,7 @@ inherit FontHandler;
 array available_fonts()
 {
   array res = ({});
-  foreach(roxen->query("font_dirs"), string dir)
+  foreach(core.query("font_dirs"), string dir)
   {
     dir+="32/";
     if(array d = r_get_dir(dir))
@@ -46,7 +46,7 @@ array(mapping) font_information( string fnt )
   string ofnt = fnt;
   fnt = replace(lower_case( fnt ), " ", "_");
   array font_infos=({});
-  foreach(roxen->query("font_dirs"), string dir)
+  foreach(core.query("font_dirs"), string dir)
   {
     dir+="32/";
     if( r_file_stat( dir+fnt ) )
@@ -87,7 +87,7 @@ array has_font( string name, int size )
   array available, fallback_available;
   if( String.width( name ) > 8 )
     return 0;
-  foreach(roxen->query("font_dirs"), string dir)
+  foreach(core.query("font_dirs"), string dir)
   {
     base_dir = dir+size+"/"+fix_name(name);
     if (available = r_get_dir(base_dir))
@@ -101,7 +101,7 @@ array has_font( string name, int size )
   return (available ? available : fallback_available) - ({ "CVS" });
 }
 
-class MyFont {
+class OldFont {
   inherit Image.Font;
 
   void set_x_spacing(int|float delta) {
@@ -117,11 +117,6 @@ class MyFont {
     else
       ::set_y_spacing( (float)delta );
   }
-
-  string _sprintf() {
-    return sprintf( "OldFont" );
-  }
-
 }
 
 Font open( string name, int size, int bold, int italic )
@@ -129,8 +124,8 @@ Font open( string name, int size, int bold, int italic )
   if( String.width( name ) > 8 )
     return 0;
   string f = make_font_name( name, size, bold, italic );
-  Image.Font fn = MyFont();
-  foreach( roxen->query( "font_dirs"), string dir )
+  Image.Font fn = OldFont();
+  foreach( core.query( "font_dirs"), string dir )
     foreach( ({ size, 32 }), int sz )
     {
       if( r_file_stat( dir+"/"+sz+"/"+f ) )

@@ -30,9 +30,11 @@ class myFont
   inherit id::myFont;
   object mytar; // don't type, CIF use this file.
 
-  string _sprintf()
-  {
-    return sprintf( "FontTar(%O,%d)", path, height() );
+  string _sprintf(int t) {
+    switch(t) {
+    case 't': return "FontTar";
+    case 'O': return sprintf( "FontTar(%O,%d)", path, height() );
+    }
   }
 
   static mapping(string:Image.Image) load_char( string c )
@@ -92,6 +94,6 @@ void update_font_list()
       }
     }
   };
-  foreach(roxen->query("font_dirs"), string dir)
+  foreach(core.query("font_dirs"), string dir)
     rec_find_in_dir( dir );
 }

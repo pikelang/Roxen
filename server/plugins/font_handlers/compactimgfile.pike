@@ -24,9 +24,8 @@ class StringFile
   string data;
   int offset;
 
-  string _sprintf()
-  {
-    return "StringFile("+strlen(data)+","+offset+")";
+  string _sprintf(int t) {
+    return t=='O' && sprintf("%O(%d,%d)", this_program, strlen(data), offset);
   }
 
   string read(int nbytes)
@@ -187,6 +186,6 @@ void update_font_list()
     }
   };
 
-  foreach(roxen->query("font_dirs"), string dir)
+  foreach(core.query("font_dirs"), string dir)
     rec_find_in_dir( dir );
 }

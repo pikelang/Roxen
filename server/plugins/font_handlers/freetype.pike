@@ -62,7 +62,7 @@ static void build_font_names_cache( )
       }
     }
   };
-  map( roxen->query("font_dirs"), traverse_font_dir );
+  map( core.query("font_dirs"), traverse_font_dir );
 
   ttf_font_names_cache = new_ttf_font_names_cache;
 }
@@ -169,7 +169,7 @@ class FTFont
   Image.Image write( string ... what )
   {
     object key = lock->lock();
-    if( roxen->query("font_oversampling") )
+    if( core.query("font_oversampling") )
       face->set_size( 0, size * 2);
     else
       face->set_size( 0, size );
@@ -217,14 +217,10 @@ class FTFont
     rr->setcolor( 0,0,0 );
     if( fake_italic )
       rr = rr->skewx( -(rr->ysize()/3) );
-    if( roxen->query("font_oversampling") )
+    if( core.query("font_oversampling") )
       return rr->scale(0.5);
     else
       return rr;
-  }
-
-  string _sprintf() {
-    return "Freetype";
   }
 
   static void create(object r, int s, string fn, int fb, int fi)
@@ -330,9 +326,9 @@ Font open(string f, int size, int bold, int italic )
 
 void create()
 {
-  roxen.getvar( "font_dirs" )
-      ->add_changed_callback( lambda(Variable.Variable v){
-                                ttf_font_names_cache=0;
-                              } );
+  core.getvar( "font_dirs" )
+    ->add_changed_callback( lambda(Variable.Variable v){
+			      ttf_font_names_cache=0;
+			    } );
 }
 #endif

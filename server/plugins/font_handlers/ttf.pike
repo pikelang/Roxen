@@ -4,7 +4,7 @@
 #if !constant(Image.FreeType.Face)
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.17 2002/10/22 00:15:25 nilsson Exp $";
+constant cvs_version = "$Id: ttf.pike,v 1.18 2003/01/22 00:05:26 mani Exp $";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader. Uses freetype to render text.";
@@ -74,7 +74,7 @@ static void build_font_names_cache( )
       }
     }
   };
-  map( roxen->query("font_dirs"), traverse_font_dir );
+  map( core.query("font_dirs"), traverse_font_dir );
 
   ttf_font_names_cache = new_ttf_font_names_cache;
 }
@@ -95,9 +95,11 @@ class TTFWrapper
     return rsize ? rsize : (rsize = text_extents("W")[1] );
   }
 
-  static string _sprintf()
-  {
-    return sprintf( "TTF(%O,%d)", real, size );
+  static string _sprintf(int t) {
+    switch(t) {
+    case 't': return "TTF";
+    case 'O': return sprintf( "TTF(%O,%d)", real, size );
+    }
   }
 
   static Image.image write_encoded(string ... what)
@@ -152,7 +154,7 @@ class TTFWrapper
     rr->setcolor( 0,0,0 );
     if( fake_italic )
       rr = rr->skewx( -(rr->ysize()/3) );
-    if( roxen->query("font_oversampling") )
+    if( core.query("font_oversampling") )
       return rr->scale(0.5);
     else
       return rr;
@@ -171,7 +173,7 @@ class TTFWrapper
     fake_italic = fi;
     real = r;
     size = s;
-    if( roxen->query("font_oversampling") )
+    if( core.query("font_oversampling") )
       real->set_height( (int)(size*64/34.5) ); // aproximate to pixels
     else
       real->set_height( (int)(size*32/34.5) ); // aproximate to pixels
@@ -274,7 +276,7 @@ Font open(string f, int size, int bold, int italic )
 
 void create()
 {
-  roxen.getvar( "font_dirs" )
+  core.getvar( "font_dirs" )
       ->add_changed_callback( lambda(Variable.Variable v){
                                 ttf_font_names_cache=0;
                               } );

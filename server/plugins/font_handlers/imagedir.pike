@@ -3,7 +3,7 @@
 
 #include <config.h>
 #include <stat.h>
-constant cvs_version = "$Id: imagedir.pike,v 1.14 2002/10/22 00:15:24 nilsson Exp $";
+constant cvs_version = "$Id: imagedir.pike,v 1.15 2003/01/22 00:05:26 mani Exp $";
 
 constant name = "Image directory fonts";
 constant doc = ("Handles a directory with images (in almost any format), each "
@@ -32,9 +32,11 @@ class myFont
   static int size, rsize;
   static array files;
 
-  string _sprintf()
-  {
-    return sprintf( "FontDir(%O,%d)", path, height() );
+  string _sprintf(int t) {
+    switch(t) {
+    case 't': return "FontDir";
+    case 'O': return sprintf( "FontDir(%O,%d)", path, height() );
+    }
   }
   
   static string encode_char( string c )
@@ -180,7 +182,7 @@ static string font_name( string what )
 void update_font_list()
 {
   font_list = ([]);  
-  foreach(roxen->query("font_dirs"), string dir)
+  foreach(core.query("font_dirs"), string dir)
     foreach( (get_dir( dir )||({})), string d )
       if( file_stat( dir+d )[ ST_SIZE ] == -2 ) { // isdir
         if( file_stat( dir+d+"/fontinfo" ) )
@@ -246,7 +248,7 @@ Font open( string name, int size, int bold, int italic )
 
 void create()
 {
-  roxen.getvar( "font_dirs" )
+  core.getvar( "font_dirs" )
       ->add_changed_callback( lambda(Variable.Variable v){
                                 font_list = 0;
                               } );
