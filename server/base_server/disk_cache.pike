@@ -10,7 +10,7 @@ object this = this_object();
 string hash_file_name_r(string what, int nd, int hv)
 {
   if(nd)
-    return sprintf("%x/%s",(hn&511)%nd,hash_file_name_r(what, nd/512, hv/512));
+    return sprintf("%x/%s",(hv&511)%nd,hash_file_name_r(what, nd/512, hv/512));
   return sprintf("%x",hv);
 }
 
