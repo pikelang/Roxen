@@ -1,4 +1,4 @@
-//string cvs_version = "$Id: cache.pike,v 1.32 1999/12/27 23:08:51 nilsson Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.33 2000/01/06 22:33:07 mast Exp $";
 
 #define LOCALE	roxenp()->locale->get()->config_interface
 #include <roxen.h>
@@ -69,15 +69,18 @@ mixed cache_lookup(string in, string what)
 {
   CACHE_WERR(sprintf("cache_lookup(\"%s\",\"%s\")  ->  ", in, what));
   all[in]++;
-  if(cache[in] && cache[in][what])
-  {
-    CACHE_WERR("Hit");
-    hits[in]++;
-    cache[in][what][TIMESTAMP]=time(1);
-    return cache[in][what][DATA];
-  }
-  CACHE_WERR("Miss");
-  return 0;
+  if(array entry = cache[in] && cache[in][what])
+    if (entry[TIMEOUT] && entry[TIMEOUT] < time(1)) {
+      CACHE_WERR("Timed out");
+      m_delete (cache[in], what);
+    }
+    else {
+      CACHE_WERR("Hit");
+      hits[in]++;
+      return entry[DATA];
+    }
+  else CACHE_WERR("Miss");
+  return ([])[0];
 }
 
 string status()
@@ -163,7 +166,7 @@ mixed cache_set(string in, string what, mixed to, int|void tm)
     cache[in]=([ ]);
   cache[in][what] = allocate(ENTRY_SIZE);
   cache[in][what][DATA] = to;
-  cache[in][what][TIMEOUT] = tm;
+  cache[in][what][TIMEOUT] = time(1) + tm;
   cache[in][what][TIMESTAMP] = time(1);
   return to;
 }
@@ -200,7 +203,7 @@ void cache_clean()
       if(!intp(cache[a][b][TIMESTAMP]))
 	error("Illegal timestamp in cache ("+a+":"+b+")\n");
 #endif
-      if(cache[a][b][TIMESTAMP]+cache[a][b][TIMEOUT] <
+      if(cache[a][b][TIMEOUT] <
 	 (time(1) - (cache_time_out - get_size(cache[a][b][DATA])/100)))
       {
 #ifdef CACHE_DEBUG
