@@ -1,4 +1,4 @@
-//string cvs_version = "$Id: cache.pike,v 1.30 1999/12/27 22:47:48 nilsson Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.31 1999/12/27 22:49:05 nilsson Exp $";
 
 #define LOCALE	roxenp()->locale->get()->config_interface
 #include <roxen.h>
@@ -169,7 +169,7 @@ mixed cache_set(string in, string what, mixed to, int|void tm)
 
 void cache_clear(string in)
 {
-  CACHE_WERR("cache_clear(\"%s\")", in);
+  CACHE_WERR(sprintf("cache_clear(\"%s\")", in));
   if(cache[in])
     m_delete(cache,in);
 }
