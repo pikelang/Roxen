@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.14 2000/02/18 00:54:13 nilsson Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.15 2000/02/21 23:49:40 wellhard Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -299,7 +299,7 @@ mixed filter( mapping response, object id)
   string type = ((response->type - " ")/";")[0];
   if(type != "text/html")
     return response;
-  
+
   response->data =
     parse_html(response->data,
 	       ([ "js-filter-insert":int_tag_js_filter_insert ]), ([]), id);
@@ -325,3 +325,35 @@ mapping query_tag_callers()
 }
 
 
+class TagJSFilter
+{
+  inherit RXML.Tag;
+
+  constant name = "js-filter";
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    
+    array do_return(RequestID id)
+    {
+      if(!jssp(id))
+	return ({ content });
+
+      content = 
+	parse_html(content,
+		   ([ "js-filter-insert":int_tag_js_filter_insert ]),
+		   ([]), id);
+      
+      content = parse_html(content, ([]),
+			   ([ "js-post-write":container_js_write ]), id);
+      id->misc->javascript_support = 0;      
+      return ({ content });
+    }
+  }
+  
+  void create()
+  {
+    result_types = ({ RXML.t_html(RXML.PXml) });
+  }
+}
