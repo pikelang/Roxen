@@ -690,10 +690,7 @@ mapping set_legend_size(mapping diagram_data)
 	}
     }
   else
-      diagram_data["legend_size"]=0;
-
-
-
+    diagram_data["legend_size"]=0;
 }
 
 mapping(string:mixed) init_bg(mapping diagram_data)
