@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.43 1998/02/28 20:59:57 grubba Exp $
+# $Id: configure.in,v 1.44 1998/03/04 12:45:48 mast Exp $
 #
 
 prefix=$PWD
@@ -117,6 +117,10 @@ else
 fi
 
 roxen_cv_prog_CC="$CC"
+
+if test -f stamp-h -a "x`cat stamp-h`" != "x${with_pike}" ; then
+  unset ac_cv_prog_CC
+fi
 
 AC_PROG_CC
 AC_AIX
@@ -553,5 +557,5 @@ fi
 export CPPFLAGS LDFLAGS
 
 AC_CONFIG_SUBDIRS($roxen_lib_subdirs extern pike)
-AC_OUTPUT(Makefile, echo foo >stamp-h)
+AC_OUTPUT(Makefile, echo ${PIKEVERSION} >stamp-h)
 

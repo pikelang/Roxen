@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.24 1998/03/01 01:56:31 mast Exp $
+# $Id: Makefile,v 1.25 1998/03/04 12:45:48 mast Exp $
 #
 # Bootstrap Makefile
 #
@@ -40,9 +40,13 @@ all : configure
 	srcdir=`pwd`; \
 	echo "Attempting to build Roxen 1.2 in $$builddir ..."; \
 	echo; \
+	if test -d pike/0.6/src ; then pikeversion=0.6; \
+	else pikeversion=0.5; \
+	fi; \
 	./mkdir -p "$$builddir"; \
 	cd "$$builddir" && \
-	(test -f stamp-h || CONFIG_SITE=x $$srcdir/configure --prefix=$(prefix)) && \
+	(test -f stamp-h && test "`cat stamp-h`" = $$pikeversion || \
+	 CONFIG_SITE=x $$srcdir/configure --prefix=$(prefix) --with-pike=$$pikeversion) && \
 	$(MAKE) "prefix=$(prefix)"
 	@echo
 	@echo Roxen successfully compiled.
@@ -51,7 +55,7 @@ all : configure
 configure : configure.in
 	@echo Rebuilding the configure-scripts...
 	@echo
-	@pike/0.6/src/run_autoconfig 2>&1 | grep -v warning
+	@pike/*/src/run_autoconfig 2>&1 | grep -v warning
 	@echo
 
 install : all
@@ -75,22 +79,24 @@ install_low :
 localinstall : all
 	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
-	echo "Installing Roxen 1.2 from $$builddir ..."; \
+	test -f "$$builddir"/stamp-h && pikeversion=`cat "$$builddir"/stamp-h`; \
+	echo "Installing Roxen 1.2 and Pike $$pikeversion from $$builddir locally ..."; \
 	echo; \
 	cd "$$builddir" && \
 	$(MAKE) localinstall; \
 	builddir=`pwd`; \
 	$$srcdir/mkdir -p $$srcdir/server/lib; \
 	rm -f $$srcdir/server/lib/pike; \
-	ln -s "$$builddir"/pike/0.6/src/lib $$srcdir/server/lib/pike;
+	ln -s "$$builddir"/pike/$$pikeversion/src/lib $$srcdir/server/lib/pike;
 	@echo
-	@echo Roxen successfully installed.
+	@echo Roxen and Pike successfully installed locally.
 	@echo
 
 install_all :
 	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
-	echo "Installing Roxen 1.2 and Pike 0.5 from $$builddir ..."; \
+	test -f "$$builddir"/stamp-h && pikeversion=`cat "$$builddir"/stamp-h`; \
+	echo "Installing Roxen 1.2 and Pike $$pikeversion from $$builddir ..."; \
 	echo; \
 	cd "$$builddir" && \
 	$(MAKE) install_all "prefix=$(prefix)"
@@ -104,7 +110,8 @@ install_all :
 install_pike :
 	@builddir="$(BUILDDIR)"; \
 	srcdir=`pwd`; \
-	echo "Installing Pike 0.5 from $$builddir ..."; \
+	test -f "$$builddir"/stamp-h && pikeversion=`cat "$$builddir"/stamp-h`; \
+	echo "Installing Pike $$pikeversion from $$builddir ..."; \
 	echo; \
 	cd "$$builddir" && \
 	$(MAKE) install_pike "prefix=$(prefix)"
