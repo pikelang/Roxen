@@ -1,5 +1,5 @@
 /* 
- * $Id: sqltag.pike,v 1.32 1998/11/02 12:35:29 mast Exp $
+ * $Id: sqltag.pike,v 1.33 1999/04/11 13:25:03 mast Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.32 1998/11/02 12:35:29 mast Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.33 1999/04/11 13:25:03 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -262,7 +262,7 @@ string sqlquery_tag(string tag_name, mapping args,
 	  con->master_sql->insert_id();
       else
 	return "<!-- No insert_id present. --><false>";
-    return(res?"<true>":"<false>");
+    return("<true>");
   } else {
     return("<!-- No query! --><false>");
   }
