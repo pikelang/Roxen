@@ -4,7 +4,7 @@
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
 
-string cvs_version= "$Id: filesystem.pike,v 1.23 1997/09/17 00:44:08 grubba Exp $";
+string cvs_version= "$Id: filesystem.pike,v 1.24 1997/10/11 20:54:21 grubba Exp $";
 int thread_safe=1;
 
 
@@ -138,6 +138,11 @@ string query_location()
 
 mixed stat_file( mixed f, mixed id )
 {
+  array fs;
+  if(stat_cache && !id->pragma["no-cache"] &&
+     (fs=cache_lookup("stat_cache",path+f)))
+    return fs;
+
   object privs;
 
   if (((int)id->misc->uid) && ((int)id->misc->gid) &&
@@ -145,13 +150,11 @@ mixed stat_file( mixed f, mixed id )
     // NB: Root-access is prevented.
     privs=Privs("Statting file", (int)id->misc->uid, (int)id->misc->gid );
   }
+  fs = file_stat(path + f);  /* No security currently in this function */
+  privs = 0;
   if(!stat_cache)
-    return file_stat(path + f); /* No security currently in this function */
-  array fs;
-  if(!id->pragma["no-cache"]&&(fs=cache_lookup("stat_cache",path+f)))
     return fs;
-  fs = file_stat(path+f);
-  cache_set("stat_cache",path+f,fs);
+  cache_set("stat_cache", path+f, fs);
   return fs;
 }
 
@@ -183,8 +186,10 @@ array find_dir( string f, object id )
     privs=Privs("Getting dir", (int)id->misc->uid, (int)id->misc->gid );
   }
 
-  if(!(dir = get_dir( path + f )))
+  if(!(dir = get_dir( path + f ))) {
+    privs = 0;
     return 0;
+  }
 
   privs = 0;
 
@@ -361,6 +366,7 @@ mixed find_file( string f, object id )
     }
 
     if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
+      privs = 0;
       errors++;
       report_error("Creation of " + f + " failed. Permission denied.\n");
       return http_low_answer(403, "<h2>Permission denied.</h2>");
@@ -420,9 +426,11 @@ mixed find_file( string f, object id )
 
     if(!rm(f))
     {
+      privs = 0;
       id->misc->error_code = 405;
       return 0;
     }
+    privs = 0;
     deletes++;
     return http_low_answer(200,(f+" DELETED from the server"));
 
