@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.110 2001/09/11 12:12:52 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.111 2001/09/11 15:17:19 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -226,6 +226,14 @@ string query_location()
 #define FILTER_INTERNAL_FILE(f, id) \
   (!id->misc->internal_get && sizeof (filter (internal_files, glob, (f/"/")[-1])))
 
+#define SETUID(X)							\
+  if( access_as_user )                                                  \
+  {									\
+    User uid = id->conf->authenticate( id );				\
+    if( uid && uid->uid() )						\
+      privs=Privs(X, uid->uid(), uid->gid() );		\
+  }
+
 mixed stat_file( string f, RequestID id )
 {
   Stat fs;
@@ -242,9 +250,7 @@ mixed stat_file( string f, RequestID id )
      (fs=cache_lookup("stat_cache",f)))
     return fs[0];
   object privs;
-  if (access_as_user && ((int)id->misc->uid) && ((int)id->misc->gid))
-    // NB: Root-access is prevented.
-    privs=Privs("Statting file", (int)id->misc->uid, (int)id->misc->gid );
+  SETUID("Statting file");
 
   /* No security currently in this function */
   fs = file_stat(decode_path(f));
@@ -282,10 +288,7 @@ array find_dir( string f, RequestID id )
 		  (id->misc->internal_get ? " (internal)" : ""));
 
   object privs;
-
-  if (((int)id->misc->uid) && ((int)id->misc->gid) && access_as_user )
-    // NB: Root-access is prevented.
-    privs=Privs("Getting dir", (int)id->misc->uid, (int)id->misc->gid );
+  SETUID("Read dir");
 
   if (catch {
     f = NORMALIZE_PATH(decode_path(path + f));
@@ -565,10 +568,7 @@ mixed find_file( string f, RequestID id )
       TRACE_ENTER("Opening file \"" + f + "\"", 0);
 
       object privs;
-      if (access_as_user &&
-          ((int)id->misc->uid) && ((int)id->misc->gid))
-	// NB: Root-access is prevented.
-	privs=Privs("Getting file", (int)id->misc->uid, (int)id->misc->gid );
+      SETUID("Open file");
 
       o = Stdio.File( );
       if(!o->open(norm_f, "r" )) o = 0;
@@ -625,12 +625,7 @@ mixed find_file( string f, RequestID id )
     }
     mkdirs++;
     object privs;
-
-    if (((int)id->misc->uid) && ((int)id->misc->gid)) {
-      // NB: Root-access is prevented.
-      privs=Privs("Creating directory",
-		  (int)id->misc->uid, (int)id->misc->gid );
-    }
+    SETUID("Creating file");
 
     if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
       privs = 0;
@@ -692,10 +687,7 @@ mixed find_file( string f, RequestID id )
     }
 
 
-    if (((int)id->misc->uid) && ((int)id->misc->gid)) {
-      // NB: Root-access is prevented.
-      privs=Privs("Saving file", (int)id->misc->uid, (int)id->misc->gid );
-    }
+    SETUID("Saving file");
 
     if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
       privs = 0;
@@ -795,10 +787,7 @@ mixed find_file( string f, RequestID id )
     }
 
 
-    if (((int)id->misc->uid) && ((int)id->misc->gid)) {
-      // NB: Root-access is prevented.
-      privs=Privs("CHMODing file", (int)id->misc->uid, (int)id->misc->gid );
-    }
+    SETUID("CHMODing file");
 
     if (query("no_symlinks") && (contains_symlinks(path, oldf))) {
       privs = 0;
@@ -875,10 +864,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if (((int)id->misc->uid) && ((int)id->misc->gid)) {
-      // NB: Root-access is prevented.
-      privs=Privs("Moving file", (int)id->misc->uid, (int)id->misc->gid );
-    }
+    SETUID("Moving file");
 
     if (query("no_symlinks") &&
 	((contains_symlinks(path, oldf)) ||
@@ -977,10 +963,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if (((int)id->misc->uid) && ((int)id->misc->gid)) {
-      // NB: Root-access is prevented.
-      privs=Privs("Moving file", (int)id->misc->uid, (int)id->misc->gid );
-    }
+    SETUID("Moving file");
 
     if (query("no_symlinks") &&
         ((contains_symlinks(path, f)) ||
@@ -1045,10 +1028,7 @@ mixed find_file( string f, RequestID id )
     report_notice(LOCALE(49,"DELETING the file %s.\n"),f);
     accesses++;
 
-    if (((int)id->misc->uid) && ((int)id->misc->gid)) {
-      // NB: Root-access is prevented.
-      privs=Privs("Deleting file", id->misc->uid, id->misc->gid );
-    }
+    SETUID("Deleting file");
 
     /* Clear the stat-cache for this file */
     if (stat_cache) {
