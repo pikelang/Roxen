@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.65 1998/11/30 00:37:04 grubba Exp $
+ * $Id: smtp.pike,v 1.66 1998/12/05 20:26:09 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.65 1998/11/30 00:37:04 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.66 1998/12/05 20:26:09 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -737,10 +737,10 @@ static class Smtp_Connection {
 
       if (fss->bavail * szfactor <= (limit / bsize)) {
 	if (fss->blocks * szfactor <= (limit / bsize)) {
-	  limit = (int)(bsize * fss->blocks * szfactor);
+	  limit = (int)(bsize * (fss->blocks * szfactor));
 	  hard = 1;
 	} else {
-	  limit = (int)(bsize * fss->bavail * szfactor);
+	  limit = (int)(bsize * (fss->bavail * szfactor));
 	  hard = 0;
 	}
       }
