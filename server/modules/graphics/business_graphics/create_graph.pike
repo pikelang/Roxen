@@ -12,7 +12,7 @@ inherit "polyline.pike";
 constant LITET = 1.0e-40;
 constant STORT = 1.0e40;
 
-constant cvs_version = "$Id: create_graph.pike,v 1.73 1997/10/24 22:16:57 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.74 1997/10/28 12:30:58 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -377,129 +377,131 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
 {
   int tobig=1;
   int xmaxynames=0, ymaxynames=0, xmaxxnames=0, ymaxxnames=0;
+  int r=0;
   while(tobig)
     {
-      if (tobig>9)
+      r++;
+      if (r>9)
 	throw( ({"Very bad error while trying to resize the textfont!\n",
 		 backtrace()}));
-
-
-  object notext=get_font("avant_garde", diagram_data["fontsize"], 0, 0, "left",0,0);
-
-  if (!(notext))
-    throw(({"Missing font or similar error!\n", backtrace() }));
-  int j;
-  diagram_data["xnamesimg"]=allocate(j=sizeof(diagram_data["xnames"]));
-  for(int i=0; i<j; i++)
-    {
-      if (((diagram_data["values_for_xnames"][i]>LITET)||(diagram_data["values_for_xnames"][i]<-LITET))&&
-	  ((diagram_data["xnames"][i]) && sizeof(diagram_data["xnames"][i])))
-	diagram_data["xnamesimg"][i]=notext->write(diagram_data["xnames"][i])
-	  ->scale(0,diagram_data["fontsize"])
-	  ;
-      else
-	diagram_data["xnamesimg"][i]=
-	  image(diagram_data["fontsize"],diagram_data["fontsize"]);
       
-      if (diagram_data["xnamesimg"][i]->xsize()<1)
-	diagram_data["xnamesimg"][i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
-    }
-
-  diagram_data["ynamesimg"]=allocate(j=sizeof(diagram_data["ynames"]));
-  if ((diagram_data["type"]=="bars")||
-      (diagram_data["type"]=="sumbars"))
-    for(int i=0; i<j; i++)
-      {
-	if ((diagram_data["ynames"][i]) && (sizeof(diagram_data["ynames"][i])))
-	  {
-	    if (diagram_data["ynames"][i]=="-0")
-	      diagram_data["ynames"][i]="0";
-	    diagram_data["ynamesimg"][i]=notext->write(diagram_data["ynames"][i])
+      
+      object notext=get_font("avant_garde", diagram_data["fontsize"], 0, 0, "left",0,0);
+      
+      if (!(notext))
+	throw(({"Missing font or similar error!\n", backtrace() }));
+      int j;
+      diagram_data["xnamesimg"]=allocate(j=sizeof(diagram_data["xnames"]));
+      for(int i=0; i<j; i++)
+	{
+	  if (((diagram_data["values_for_xnames"][i]>LITET)||(diagram_data["values_for_xnames"][i]<-LITET))&&
+	      ((diagram_data["xnames"][i]) && sizeof(diagram_data["xnames"][i])))
+	    diagram_data["xnamesimg"][i]=notext->write(diagram_data["xnames"][i])
 	      ->scale(0,diagram_data["fontsize"])
 	      ;
+	  else
+	    diagram_data["xnamesimg"][i]=
+	      image(diagram_data["fontsize"],diagram_data["fontsize"]);
+	  
+	  if (diagram_data["xnamesimg"][i]->xsize()<1)
+	    diagram_data["xnamesimg"][i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
+	}
+      
+      diagram_data["ynamesimg"]=allocate(j=sizeof(diagram_data["ynames"]));
+      if ((diagram_data["type"]=="bars")||
+	  (diagram_data["type"]=="sumbars"))
+	for(int i=0; i<j; i++)
+	  {
+	    if ((diagram_data["ynames"][i]) && (sizeof(diagram_data["ynames"][i])))
+	      {
+		if (diagram_data["ynames"][i]=="-0")
+		  diagram_data["ynames"][i]="0";
+		diagram_data["ynamesimg"][i]=notext->write(diagram_data["ynames"][i])
+		  ->scale(0,diagram_data["fontsize"])
+		  ;
+	      }
+	    else
+	      diagram_data["ynamesimg"][i]=
+		image(diagram_data["fontsize"],diagram_data["fontsize"]);
+	    
+	    if (diagram_data["ynamesimg"][i]->xsize()<1)
+	      diagram_data["ynamesimg"][i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
 	  }
-	else
-	  diagram_data["ynamesimg"][i]=
-	    image(diagram_data["fontsize"],diagram_data["fontsize"]);
-	
-	if (diagram_data["ynamesimg"][i]->xsize()<1)
-	  diagram_data["ynamesimg"][i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
-      }
-  else
-    for(int i=0; i<j; i++)
-      {
-	if (((diagram_data["values_for_ynames"][i]>LITET)||(diagram_data["values_for_ynames"][i]<-LITET))&&    
-	    ((diagram_data["ynames"][i]) && (sizeof(diagram_data["ynames"][i]))))
-	  diagram_data["ynamesimg"][i]=notext->write(diagram_data["ynames"][i])
-	    ->scale(0,diagram_data["fontsize"])
-	    ;
-	else
-	  diagram_data["ynamesimg"][i]=
-	    image(diagram_data["fontsize"],diagram_data["fontsize"]);
-	
-	if (diagram_data["ynamesimg"][i]->xsize()<1)
-	  diagram_data["ynamesimg"][i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
-      }
-  
-  if (diagram_data["orient"]=="vert")
-    for(int i; i<sizeof(diagram_data["xnamesimg"]); i++)
-      diagram_data["xnamesimg"][i]=diagram_data["xnamesimg"][i]->rotate_ccw();
-
-
-  xmaxynames=0, ymaxynames=0, xmaxxnames=0, ymaxxnames=0;
-  
-  foreach(diagram_data["xnamesimg"], object img)
-    if (img->ysize()>ymaxxnames) 
-      ymaxxnames=img->ysize();
-
-  foreach(diagram_data["xnamesimg"], object img)
-    if (img->xsize()>xmaxxnames) 
-      xmaxxnames=img->xsize();
-
-  foreach(diagram_data["ynamesimg"], object img)
-    if (img->ysize()>ymaxynames) 
-      ymaxynames=img->ysize();
-
-  foreach(diagram_data["ynamesimg"], object img)
-    if (img->xsize()>xmaxynames) 
-      xmaxynames=img->xsize();
-  
-  diagram_data["ymaxxnames"]=ymaxxnames;
-  diagram_data["xmaxxnames"]=xmaxxnames;
-  diagram_data["ymaxynames"]=ymaxynames;
-  diagram_data["xmaxynames"]=xmaxynames;
-
-  if (ymaxxnames+xmaxynames>diagram_data["ysize"]/2)
-    {
-      tobig+=2;
-      diagram_data["fontsize"]=diagram_data["fontsize"]*diagram_data["ysize"]/2/(ymaxxnames+xmaxynames);
+      else
+	for(int i=0; i<j; i++)
+	  {
+	    if (((diagram_data["values_for_ynames"][i]>LITET)||(diagram_data["values_for_ynames"][i]<-LITET))&&    
+		((diagram_data["ynames"][i]) && (sizeof(diagram_data["ynames"][i]))))
+	      diagram_data["ynamesimg"][i]=notext->write(diagram_data["ynames"][i])
+		->scale(0,diagram_data["fontsize"])
+		;
+	    else
+	      diagram_data["ynamesimg"][i]=
+		image(diagram_data["fontsize"],diagram_data["fontsize"]);
+	    
+	    if (diagram_data["ynamesimg"][i]->xsize()<1)
+	      diagram_data["ynamesimg"][i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);
+	  }
+      
+      if (diagram_data["orient"]=="vert")
+	for(int i; i<sizeof(diagram_data["xnamesimg"]); i++)
+	  diagram_data["xnamesimg"][i]=diagram_data["xnamesimg"][i]->rotate_ccw();
+      
+      
+      xmaxynames=0, ymaxynames=0, xmaxxnames=0, ymaxxnames=0;
+      
+      foreach(diagram_data["xnamesimg"], object img)
+	if (img->ysize()>ymaxxnames) 
+	  ymaxxnames=img->ysize();
+      
+      foreach(diagram_data["xnamesimg"], object img)
+	if (img->xsize()>xmaxxnames) 
+	  xmaxxnames=img->xsize();
+      
+      foreach(diagram_data["ynamesimg"], object img)
+	if (img->ysize()>ymaxynames) 
+	  ymaxynames=img->ysize();
+      
+      foreach(diagram_data["ynamesimg"], object img)
+	if (img->xsize()>xmaxynames) 
+	  xmaxynames=img->xsize();
+      
+      diagram_data["ymaxxnames"]=ymaxxnames;
+      diagram_data["xmaxxnames"]=xmaxxnames;
+      diagram_data["ymaxynames"]=ymaxynames;
+      diagram_data["xmaxynames"]=xmaxynames;
+      
+      if (ymaxxnames+xmaxynames>diagram_data["ysize"]/2)
+	{
+	  tobig+=2;
+	  diagram_data["fontsize"]=diagram_data["fontsize"]*diagram_data["ysize"]/2/(ymaxxnames+xmaxynames);
+	}
+      
+      if (ymaxynames>diagram_data["ysize"]/3)
+	{
+	  tobig+=2;
+	  diagram_data["fontsize"]=diagram_data["fontsize"]*diagram_data["ysize"]/3/ymaxynames;
+	}
+      
+      if (xmaxynames>diagram_data["xsize"]/2)
+	{
+	  tobig+=2;
+	  diagram_data["fontsize"]=diagram_data["fontsize"]*diagram_data["xsize"]/2/xmaxynames;
+	}
+      
+      if (xmaxxnames>diagram_data["xsize"]/3)
+	{
+	  tobig+=2;
+	  diagram_data["fontsize"]=diagram_data["fontsize"]*diagram_data["xsize"]/3/xmaxxnames;
+	}
+      
+      if (tobig==1)
+	tobig=0;
+      else
+	tobig--;
+      
     }
   
-  if (ymaxynames>diagram_data["ysize"]/3)
-    {
-      tobig+=2;
-      diagram_data["fontsize"]=diagram_data["fontsize"]*diagram_data["ysize"]/3/ymaxynames;
-    }
-
-  if (xmaxynames>diagram_data["xsize"]/2)
-    {
-      tobig+=2;
-      diagram_data["fontsize"]=diagram_data["fontsize"]*diagram_data["xsize"]/2/xmaxynames;
-    }
-
-  if (xmaxxnames>diagram_data["xsize"]/3)
-    {
-      tobig+=2;
-      diagram_data["fontsize"]=diagram_data["fontsize"]*diagram_data["xsize"]/3/xmaxxnames;
-    }
-  
-  if (tobig==1)
-    tobig=0;
-  else
-    tobig--;
-
-    }
-
 }
 
 string no_end_zeros(string f)
