@@ -1,4 +1,12 @@
-Changes since Roxen 2.0.112
+Changes since Roxen 2.1.115
+-----------------------------------------------
+
+o GIF support disabled per default to make Unisys happy.
+
+o Updated all Roxen parts and products to work without GIF support.
+
+
+Changes since Roxen 2.1.112
 -----------------------------------------------
 
 o Typo that prevented that Administration Interface from loading
@@ -8,7 +16,7 @@ o The bug that prevented you from running a Roxen from a path
   containing a symlink has been found and eliminated. (Thanks Mirar!)
 
 
-Changes since Roxen 2.0.105
+Changes since Roxen 2.1.105
 -----------------------------------------------
 
 o New filesystem module that mounts tar-files.
