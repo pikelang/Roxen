@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.143 1998/08/14 12:33:29 neotron Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.144 1998/08/18 10:52:43 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -779,12 +779,8 @@ array(int)|string write_text(int _args, string text, int size, object id)
   array err;
   string orig_text = text;
   mixed data;
-  mapping args = find_cached_args(_args);
+  mapping args = find_cached_args(_args) || ([]);
 
-  if(!args)
-  {
-    throw( ({ "Internal error in gtext: Got request for non-existant gtext class", backtrace() }) );
-  }
   if(data = cache_lookup(key, text))
   {
     if(args->nocache) // Remove from cache. Very useful for access counters
@@ -804,12 +800,12 @@ array(int)|string write_text(int _args, string text, int size, object id)
   err = catch
   {
     object img;
-    if(!args)
+
+    if(!sizeof(args))
     {
       args=(["fg":"black","bg":"white","notrans":"1"]);
       text="Please reload this page";
     }
-
     if(!args->verbatim)
     {
       text = replace(text, nbsp, " ");
