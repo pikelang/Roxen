@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.54 2000/12/12 00:03:43 per Exp $
+// $Id: global_variables.pike,v 1.55 2000/12/16 02:16:37 per Exp $
 
 /*
 #pragma strict_types
@@ -261,8 +261,12 @@ void define_global_variables(  )
 	 LOCALE(93, "The default font to use when modules request a font."));
 
   defvar("font_dirs", ({"../local/nfonts/", "nfonts/" })+
-         ((getenv("RX_FONTPATH")||"")/","-({""})),
-	 LOCALE(94, "Font directories"), 
+#ifdef __NT__
+         ({combine_path(replace(getenv("SystemRoot"),"\\","/"),"fonts/")})
+#else
+         ((getenv("RX_FONTPATH")||"")/","-({""}))
+#endif
+         , LOCALE(94, "Font directories"), 
 	 TYPE_DIR_LIST,
 	 LOCALE(95, "This is where the fonts are located."));
 
