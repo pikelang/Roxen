@@ -28,7 +28,7 @@ string status(object|mapping conf)
     "/"+ LOCALE(6,"min") +") </td>"
     "</tr><tr align='left'><th>"+ LOCALE(7,"Received data") +":</th>"
     "<td>"+ NBSP(Roxen.sizetostring(conf->received)) +"</td></tr>\n";
-  }
+
   res += "</table>\n\n";
 
   if (conf->extra_statistics && conf->extra_statistics->ftp && 
