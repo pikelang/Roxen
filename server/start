@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.68 1999/07/21 21:33:51 marcus Exp $
+# $Id: start,v 1.69 1999/08/05 22:51:16 bash-peter Exp $
 
 cd `dirname $0`
 
@@ -17,8 +17,8 @@ extra_args=""
 # Default verbosity level.
 verbose=1
 
-# Default to using a relative path.
-roxendir="."
+# Do not default to using a relative path.
+roxendir="`pwd`"
 
 # Set up environment
 if test -f etc/environment; then
