@@ -1,26 +1,27 @@
 <h2>Image cache attributes</h2>
 
-<attr name='format' value='gif|jpeg|png|avs|gmp|bd|hrz|ilbm|psx|pnm|ps|pvr|tga|tiff|wbf|wbmpxbm|xpm' default='gif'><p>
+<attr name='format' value='gif|jpeg|png|avs|gmp|bd|hrz|ilbm|psx|pnm|ps|pvr|tga|tiff|wbf|wbmp|xbm|xpm' default='gif'><p>
  The format to encode the image to. The formats available are:</p>
 <xtable>
-<row><c>gif</c><c>Graphics Interchange Format (might be missing in your roxen)</c></row>
-<row><c>jpeg</c><c>Joint Photography Expert Group image compression</c></row>
-<row><c>png</c><c>Portable Networks Graphics</c></row>
-<row><c>avs</c><c></c></row>
-<row><c>bmp</c><c>Windows BitMaP file</c></row>
-<row><c>gd</c><c></c></row>
-<row><c>hrz</c><c>HRZ is (was?) used for amatuer radio slow-scan TV.</c></row>
-<row><c>ilbm</c><c></c></row>
-<row><c>pcx</c><c>Zsoft PCX file format (PC / DOS)</c></row>
-<row><c>pnm</c><c>Portable AnyMap</c></row>
-<row><c>ps</c><c>Adobe PostScript file</c></row>
-<row><c>pvr</c><c>Pover VR (dreamcast image)</c></row>
-<row><c>tga</c><c>TrueVision Targa (PC / DOS)</c></row>
-<row><c>tiff</c><c>Tag Image File Format</c></row>
-<row><c>wbf</c><c>WAP Bitmap File (WAP 1.0)</c></row>
-<row><c>wbmp</c><c>Wireless Bitmap Format (WAP 1.1-)</c></row>
-<row><c>xbm</c><c>XWindows Bitmap File</c></row>
-<row><c>xpm</c><c>XWindows Pixmap File</c></row>
+<row><h>Acronym</h><h>Acronym interpretation</h></row>
+<row><c><p>gif</p></c><c><p>Graphics Interchange Format (might be missing in your roxen)</p></c></row>
+<row><c><p>jpeg</p></c><c><p>Joint Photography Expert Group image compression</p></c></row>
+<row><c><p>png</p></c><c><p>Portable Networks Graphics</p></c></row>
+<row><c><p>avs</p></c><c><p></p></c></row>
+<row><c><p>bmp</p></c><c><p>Windows BitMaP file</p></c></row>
+<row><c><p>gd</p></c><c><p></p></c></row>
+<row><c><p>hrz</p></c><c><p>HRZ is (was?) used for amatuer radio slow-scan TV.</p></c></row>
+<row><c><p>ilbm</p></c><c><p>Interchangeable File Format: interleaved bitmap</p></c></row>
+<row><c><p>pcx</p></c><c><p>Zsoft PCX file format (PC / DOS)</p></c></row>
+<row><c><p>pnm</p></c><c><p>Portable AnyMap</p></c></row>
+<row><c><p>ps</p></c><c><p>Adobe PostScript file</p></c></row>
+<row><c><p>pvr</p></c><c><p>Pover VR (dreamcast image)</p></c></row>
+<row><c><p>tga</p></c><c><p>TrueVision Targa (PC / DOS)</p></c></row>
+<row><c><p>tiff</p></c><c><p>Tag Image File Format</p></c></row>
+<row><c><p>wbf</p></c><c><p>WAP Bitmap File (WAP 1.0)</p></c></row>
+<row><c><p>wbmp</p></c><c><p>Wireless Bitmap Format (WAP 1.1-)</p></c></row>
+<row><c><p>xbm</p></c><c><p>XWindows Bitmap File</p></c></row>
+<row><c><p>xpm</p></c><c><p>XWindows Pixmap File</p></c></row>
 </xtable>
 <ex type='vert'>
 <### format='png'/>
@@ -48,9 +49,10 @@
 <attr name='dither' value='none|random|floyd-steinberg' default='none'><p>
  Choose the dithering method.</p>
 <xtable>
-<row><c>none</c><c>No dithering is performed at all.</c></row>
-<row><c>random</c><c>Random scatter dither. Not visually pleasing, but it is useful for very high resolution printing.</c></row>
-<row><c>floyd-steinberg</c><c>Error diffusion dithering. Usually the best dithering method.</c></row>
+<row><h>Method</h><h>Meaning</h></row>
+<row><c><p>none</p></c><c><p>No dithering is performed at all.</p></c></row>
+<row><c><p>random</p></c><c><p>Random scatter dither. Not visually pleasing, but it is useful for very high resolution printing.</p></c></row>
+<row><c><p>floyd-steinberg</p></c><c><p>Error diffusion dithering. Usually the best dithering method.</p></c></row>
 </xtable>
 
 <ex type='vert'>
@@ -141,10 +143,11 @@
  Select the unit to use while rotating.</p>
 
 <xtable>
-<row><c>rad</c><c>Radians</c></row>
-<row><c>deg</c><c>Degrees</c></row>
-<row><c>ndeg</c><c>'New' degrees (400 for each full rotation)</c></row>
-<row><c>part</c><c>0 - 1.0 (1.0 == full rotation)</c></row>
+<row><h>Unit</h><h>Meaning</h></row>
+<row><c><p>rad</p></c><c><p>Radians</p></c></row>
+<row><c><p>deg</p></c><c><p>Degrees</p></c></row>
+<row><c><p>ndeg</p></c><c><p>'New' degrees (400 for each full rotation)</p></c></row>
+<row><c><p>part</p></c><c><p>0 - 1.0 (1.0 == full rotation)</p></c></row>
 </xtable>
 </attr>
 
