@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.7 2000/09/26 13:19:41 nilsson Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.8 2000/12/15 15:58:37 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Additional RXML tags";
@@ -205,6 +205,26 @@ class TagDice {
   }
 }
 
+class TagEmitKnownLangs
+{
+  inherit RXML.Tag;
+  constant name = "emit", plugin_name = "known-langs";
+  array get_dataset(mapping m, RequestID id)
+  {
+    return map(roxenp()->list_languages(),
+	       lambda(string id)
+	       {
+		 object language = roxenp()->language_low(id);
+		 string eng_name = language->id()[1];
+		 if(eng_name == "standard")
+		   eng_name = "english";
+		 return ([ "id" : id,
+			 "name" : language->id()[2],
+		  "englishname" : eng_name ]);
+	       });
+  }
+}
+
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
@@ -264,6 +284,27 @@ description.</desc>
 <ex>
 <sprintf format='#%02x%02x%02x' split=','>250,0,33</sprintf>
 </ex></attr>",
+
+  "emit#known-langs":#"<desc cont='cont'><p><short>
+ Outputs all languages partially supported by roxen,
+ (for example for the number tag).</short></p>
+
+ <ex><emit source='known-langs' sort='englishname'>
+  4711 in &_.englishname;: <number lang='&_.id;' num='4711'/><br />
+</emit></ex>
+
+ <attr name='_.id'>
+   <p>Prints the ISO 639-2 id of the language.</p>
+ </attr>
+
+ <attr name='_.name'>
+   <p>The name of the language in the language itself.</p>
+ </attr>
+
+ <attr name='_.englishname'>
+   <p>The name of the language in English.</p>
+ </attr>
+</desc>",
 
 ]);
 #endif
