@@ -159,10 +159,14 @@
   </table>
 
     <!-- enctype="multipart/form-data"  -->
-   <form method="POST" action="&cf.current-url;">
-     <roxen-automatic-charset-variable/>
+   <if not variable='_.noform'>
+     <form method="POST" action="&cf.current-url;">
+       <roxen-automatic-charset-variable/>
+       &var.content:none;
+     </form>
+   </if><else>
      &var.content:none;
-   </form>
+   </else>
 </gauge>
     <div align="right">
      <font size="-1"><b>&roxen.version; / &roxen.pike-version;</b><br />
