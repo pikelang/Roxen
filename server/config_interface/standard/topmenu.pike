@@ -25,7 +25,10 @@ string parse( RequestID id )
     if(!t[3] || config_perm( t[3] ) )
     {
       mapping a = ([]);
-      a->href = id->misc->last_tag_args->base + t[2];
+      if( id->misc->last_tag_args->base )
+        a->href = id->misc->last_tag_args->base + t[2];
+      else
+        a->href = "/standard/"+t[2]; 
       if( id->misc->last_tag_args->selected == t[1] )
         a->selected = "selected";
       res += Roxen.make_container( "tab", a, " "+t[0]+" " );
