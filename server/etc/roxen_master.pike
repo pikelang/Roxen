@@ -5,12 +5,11 @@ inherit "/master": master;
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.105 2000/11/02 08:01:17 per Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.106 2000/11/02 08:30:55 per Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
 
-#define SECURITY 1
 #define SECURITY_DEBUG 1
 
 #include <security.h>
