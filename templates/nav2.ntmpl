@@ -1,4 +1,4 @@
-<navigation maxwidth=200 preload imgbase=/img/
+<navigation maxwidth=150 preload imgbase=/img/
             bgsrc='$$nav_bg_img$$' tile>
 
   <textstyle center scale=$$nav_size$$ xspacing=5 yspacing=5
@@ -20,7 +20,7 @@
 
   <boxstyle middle text bg=lightblue fg=white alpha=100>
   <boxstyle middle text selected bg=navyblue fg=yellow alpha=120>
-  <boxstyle middle text mouseover bg=darkblue alpha=120>
+  <boxstyle middle text mouseover bg=darkblue fg=yellow alpha=120>
 
   <boxstyle right text bg=$$bg_color$$
     alpha='nav2/top_middle_alpha.pnm' alphainvert rot=90>

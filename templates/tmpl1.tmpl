@@ -1,8 +1,26 @@
-<html>
-<head><title><tmplinsert tag=doctitle></title></head>
+<include file='gtext_headers.inc'>
 
+<html>
+<head><title><as-meta var=title></title></head>
 <body bgcolor='$$bg_color$$' text='$$text_color$$' link='$$link_color$$'
       vlink='$$vlink_color$$' alink='$$alink_color$$'>
-<insertnavigation>
-<tmplinsert tag=content>
+  <table>
+    <tr>
+      <td>
+        &nbsp;
+      </td>
+      <td>
+	<gtext background=#dddddd alpha='/img/blury_grid_larger.pnm' shaddow=60,0.5><autosite-webadm-customername></gtext>        
+      </td>
+    </tr>
+    <tr>
+      <td valign=top>
+        <include file='$$nav_name$$'>
+      </td>
+      <td valign=top>
+        <tmplinsert tag=content>
+      </td>
+    </tr>
+  </table>
 </body>
+</html>
