@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.27 1998/09/12 17:53:42 grubba Exp $
+ * $Id: smtp.pike,v 1.28 1998/09/12 19:14:40 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.27 1998/09/12 17:53:42 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.28 1998/09/12 19:14:40 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -895,8 +895,8 @@ static class Smtp_Connection {
     report_notice("SMTP: Mail spooled OK.\n");
 
     if (sizeof(expanded)) {
-      // SMTP_ERROR(sprintf("The following recipients were unavailable:\n"
-      // 		   "%s\n", String.implode_nicely(indices(expanded))));
+      roxen_perror(sprintf("The following recipients were unavailable:\n"
+			   "%s\n", String.implode_nicely(indices(expanded))));
     }
 
     do_RSET();
