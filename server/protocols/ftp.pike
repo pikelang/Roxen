@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.102 2004/06/30 16:59:34 mast Exp $
+ * $Id: ftp.pike,v 2.103 2004/08/18 17:00:45 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1670,7 +1670,7 @@ class FTPSession
 		"ftp communication: -> "+remote[0]+":"+remote[1]);
 #endif
 	if (use_ssl) {
-	  fd = SSL.sslfile(fd, port_obj->ctx);
+	  fd = RoxenSSLFile(fd, port_obj->ctx);
 	  DWRITE("FTP: Created an sslfile: %O\n", fd);
 	}
 	if(pasv_callback) {
@@ -1748,7 +1748,7 @@ class FTPSession
     Stdio.File raw_connection = f;
 
     if (use_ssl) {
-      f = (object)SSL.sslfile(f, port_obj->ctx, 1, 0);
+      f = (object)RoxenSSLFile(f, port_obj->ctx, 1, 0);
     }
 
     f->set_nonblocking(lambda(mixed ignored, string data) {
