@@ -1515,20 +1515,14 @@ private string docurl;
 // I will remove this in a future version of roxen.
 private program __p;
 program last_loaded() { return __p; }
-object load(string s) 
+object load(string s)   // Should perhaps be renamed to 'reload'. 
 {
   if(file_size(s+".pike")>0)
-    if(__p=(program)(s+".pike")) return __p();
+    if(__p=compile_file(s+".pike")) return __p();
   if(file_size(s+".lpc")>0)
-    if(__p=(program)(s+".lpc")) return __p();
+    if(__p=compile_file(s+".lpc")) return __p();
   if(file_size(s+".module")>0)
-    if(__p=(program)(s+".module")) return __p();
-#if 0
-  if(file_size(s)>0)
-    if(__p=(program)(s)) return __p();
-  if(file_size(s+".so")>0) // Loadable C-library.. TBD
-    ; /* */
-#endif
+    if(__p=compile_file(s+".module")) return __p();
   return 0; // FAILED..
 }
 
@@ -2421,6 +2415,12 @@ private void define_global_variables( int argc, array (string) argv )
   globvar("_v", CONFIGURATION_FILE_LEVEL, 0, TYPE_INT, 0, 0, 1);
     
 
+
+  globvar("logdirprefix", "../logs/", "Log directory prefix", TYPE_DIR,
+	  "This is the default file path that will be prepended to the log "
+	  " file path in all the default modules and the virtual server.");
+  
+
   // Cache variables. The actual code recides in the file
   // 'disk_cache.pike'
   
@@ -2458,16 +2458,16 @@ private void define_global_variables( int argc, array (string) argv )
 	  "variable.",
 	  0, cache_disabled_p);
 
-  globvar("logdirprefix", "../logs/", "Log directory prefix", TYPE_DIR,
-	  "This is the default file path that will be prepended to the log "
-	  " file path in all the default modules and the virtual server.");
+  globvar("hash_num_dirs", 500,
+	  "Proxy disk cache: Number of hash directories",
+	  TYPE_INT,
+	  "This is the number of directories to hash the contents of the disk "
+	  "cache into.  Changing this value currently invalidates the whole "
+	  "cache, since the cache cannot find the old files.  In the future, "
+	  " the cache will be recalculated when this value is changed."); 
   
-  globvar("cachefname", "Hash", "Proxy disk cache: File name method", 
-	  TYPE_STRING_LIST, "Hash is fastest and has the smallest "
-	  "overhead, hierarchy is easiest to browse manually.", 
-	  ({ "Hash", "Flat", "Hierarchy" }),
-	  cache_disabled_p);
-
+  /// End of cache variables..
+  
   globvar("docurl", "http://roxen.com", "Documentation URL",
 	  TYPE_STRING,
 	 "The URL to prepend to all documentation urls throughout the "
