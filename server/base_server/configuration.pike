@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.317 2000/07/09 16:09:25 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.318 2000/07/09 18:19:12 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -59,12 +59,9 @@ function    types_fun;
 function    auth_fun;
 
 string name;
-
-mapping variables = ([]);
-
 int inited;
-
 int config_id;
+
 int get_config_id() {
   if(config_id) return config_id;
   for(int i=sizeof(roxen->configurations); i;)
