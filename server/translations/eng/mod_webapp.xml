@@ -58,7 +58,7 @@
 </str>
 
 <str id="11">
-<o>WAR loaded from %s</o>
+<o>Java: WAR loaded from %s</o>
 <t></t>
 </str>
 
@@ -120,7 +120,7 @@
 </str>
 
 <str id="23">
-<o>Parameters for the servlet on the form &lt;tt&gt;&lt;i&gt;name&lt;/i&gt;=&lt;i&gt;value&lt;/i&gt;&lt;/tt&gt;, one per line.</o>
+<o>Parameters for all servlets on the form &lt;tt&gt;&lt;i&gt;name&lt;/i&gt;=&lt;i&gt;value&lt;/i&gt;&lt;/tt&gt;, one per line.</o>
 <t></t>
 </str>
 
@@ -131,5 +131,56 @@
 
 <str id="25">
 <o>Use a servlet mapping that mounts any servlet onto &amp;lt;Mount Point&amp;gt;/servlet/</o>
+<t></t>
+</str>
+
+<str id="26">
+<o>Duplicate entry of %s in web.xml
+</o>
+<t></t>
+</str>
+
+<str id="27">
+<o>&lt;pre&gt;Duplicate entry of %s in web.xml&lt;/pre&gt;</o>
+<t></t>
+</str>
+
+<str id="28">
+<o>Application: </o>
+<t></t>
+</str>
+
+<str id="29">
+<o>&lt;i&gt;Servlet not loaded&lt;/i&gt;</o>
+<t></t>
+</str>
+
+<str id="30">
+<o>&lt;b&gt;Servlet failed to load!&lt;/b&gt;</o>
+<t></t>
+</str>
+
+<str id="31">
+<o>&lt;i&gt;Servlet not initialized&lt;/i&gt;</o>
+<t></t>
+</str>
+
+<str id="32">
+<o>&lt;b&gt;Servlet failed to initialize!&lt;/b&gt;</o>
+<t></t>
+</str>
+
+<str id="33">
+<o>Java: WAR loaded from %s...%s</o>
+<t></t>
+</str>
+
+<str id="34">
+<o>Preload all servlets</o>
+<t></t>
+</str>
+
+<str id="35">
+<o>Load all servlets at module initialization time even if load-on-startup is not specified in web.xml</o>
 <t></t>
 </str>

@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.4 2002/01/30 16:31:43 tomas Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.5 2002/02/04 13:09:04 tomas Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -40,6 +40,7 @@ LOCALE(2,"An interface to Java <a href=\"http://java.sun.com/"
        "products/servlet/index.html""\">Servlets</a>.");
 
 #if constant(Servlet.servlet)
+//#if 1
 
 // map from servlet name to various info about the servlet
 // Each servlet maps to a mapping that contains the following info:
@@ -96,11 +97,16 @@ static mapping http_low_answer(int errno, string data, string|void desc)
 
 void stop()
 {
-  foreach(indices(servlets), string serv)
-    {
-      if (servlets[serv]->loaded == 1)
-        destruct(servlets[serv]->servlet);
-    }
+  // Generate a list sorted on reverse init order
+  array ind = indices(servlets);
+  sort(values(servlets)->prio, ind);
+  ind = reverse(ind);
+
+  // Unload servlets in reverse priority order
+  foreach ( ind, string serv) {
+    if (servlets[serv]->loaded == 1)
+      destruct(servlets[serv]->servlet);
+  }
 
   if (objectp(conf_ctx)) {
     destruct(conf_ctx);
@@ -219,9 +225,9 @@ void parse_servlet(Node c)
       WEBAPP_WERR(sprintf("servlet %s parsed:\n%O", data["servlet-name"], data));
       if (servlets[data["servlet-name"]])
         {
-          report_error(LOCALE(0, "Duplicate entry of %s in web.xml\n"),
+          report_error(LOCALE(26, "Duplicate entry of %s in web.xml\n"),
                        data["servlet-name"]);
-          status_info+=sprintf(LOCALE(0,"<pre>Duplicate entry of %s in web.xml</pre>"),
+          status_info+=sprintf(LOCALE(27,"<pre>Duplicate entry of %s in web.xml</pre>"),
                               data["servlet-name"]);
         }
       else
@@ -330,6 +336,8 @@ void start(int x, Configuration conf)
       
       warname = dir;
     }
+  
+  webapp_info["webapp"] = (warname/"/")[-1];
 
   if(warname=="servlets/NONE") {
     status_info = LOCALE(3, "No Web Application selected");
@@ -389,13 +397,14 @@ void start(int x, Configuration conf)
 
   mixed exc2 = catch {
     cls_loader = Servlet.loader(codebase);
+    //    conf_ctx = Servlet.context(conf, this_object());
     conf_ctx = Servlet.conf_context(conf);
   };
   
   if(exc2)
   {
-    report_error(LOCALE(4, "Servlet: %s\n"),exc2[0]);
-    status_info+=sprintf(LOCALE(5, "<pre>%s</pre>"),exc2[0]);
+    report_error(LOCALE(4, "Servlet: %s\n"),describe_backtrace(exc2));
+    status_info+=sprintf(LOCALE(5, "<pre>%s</pre>"),describe_error(exc2));
   }
   else
   {
@@ -448,7 +457,15 @@ void start(int x, Configuration conf)
 
 string status()
 {
-  return LOCALE(8, "<h2>Servlets:</h2>")+
+  return "<h2>" + LOCALE(28, "Application: ") +
+    ( webapp_info["display-name"] && sizeof(webapp_info["display-name"]) > 0 ?
+      webapp_info["display-name"] :
+      webapp_info["webapp"] ) +
+    "</h2>" +
+    (webapp_info["description"] ?
+     webapp_info["description"] :
+          "") +
+    LOCALE(8, "<h2>Servlets:</h2>")+
     ((map(indices(servlets),
           lambda(string serv) {
             string ret = "<h3>";
@@ -466,19 +483,19 @@ string status()
               ret += servlets[serv]->servlet->info() ||
                 LOCALE(10, "<i>No servlet information available</i>");
             else if (!servlets[serv]->loaded)
-              ret += LOCALE(0, "<i>Servlet not loaded</i>");
+              ret += LOCALE(29, "<i>Servlet not loaded</i>");
             else if (servlets[serv]->loaded == -1)
               {
                 ret += "<font color='&usr.warncolor;'>";
-                ret += LOCALE(0, "<b>Servlet failed to load!</b>");
+                ret += LOCALE(30, "<b>Servlet failed to load!</b>");
                 ret += "</font>";
               }
             else if (!servlets[serv]->initialized)
-              ret += LOCALE(0, "<i>Servlet not initialized</i>");
+              ret += LOCALE(31, "<i>Servlet not initialized</i>");
             else if (servlets[serv]->initialized == -1)
               {
                 ret += "<font color='&usr.warncolor;'>";
-                ret += LOCALE(0, "<b>Servlet failed to initialize!</b>");
+                ret += LOCALE(32, "<b>Servlet failed to initialize!</b>");
                 ret += "</font>";
               }
 
@@ -492,10 +509,10 @@ string query_name()
 {
   string name = query("warname");
   if (sizeof(name) > 20) {
-    return sprintf(LOCALE(0,"WAR loaded from %s...%s"),
+    return sprintf(LOCALE(33,"Java: WAR loaded from %s...%s"),
 		   name[..7], name[sizeof(name)-8..]);
   }
-  return sprintf(LOCALE(11, "WAR loaded from %s"), name);
+  return sprintf(LOCALE(11, "Java: WAR loaded from %s"), name);
 }
 
 mapping(string:function) query_action_buttons()
@@ -653,11 +670,14 @@ mapping(string:string|mapping|Servlet.servlet) match_path_servlet(string f, Requ
 {
   foreach(indices(servletmaps["path"]), string p)
     {
-//       WEBAPP_WERR(sprintf("match_path_servlet(%s) trying %s (p[..sizeof(p)-3]='%s')",
-//              f, p, p[..sizeof(p)-3]));
+//        WEBAPP_WERR(sprintf("match_path_servlet(%s) trying %s (p[..sizeof(p)-3]='%s')",
+//               f, p, p[..sizeof(p)-3]));
+//        WEBAPP_WERR(sprintf("servlet_path='%s', path_info='%s'",
+//                            id->misc->servlet_path || "(null)",
+//                            id->misc->path_info || "(null)"));
       if (p[..sizeof(p)-3] == f)
         {
-          WEBAPP_WERR("match on 'path'!!");
+          WEBAPP_WERR(sprintf("match on path=%s !!", p));
           return servlets[servletmaps["path"][p]];
         }
     }
@@ -669,7 +689,7 @@ mapping(string:string|mapping|Servlet.servlet) match_path_servlet(string f, Requ
   else
     {
       id->misc->servlet_path = a[..sizeof(a)-2]*"/";
-      id->misc->path_info = "/" + a[sizeof(a)-1]||"" + id->misc->path_info||"";
+      id->misc->path_info = "/" + (a[sizeof(a)-1]||"") + (id->misc->path_info||"");
       return match_path_servlet(id->misc->servlet_path, id);
     }
 }
@@ -702,15 +722,31 @@ mapping(string:string|mapping|Servlet.servlet) map_servlet(string f, RequestID i
 {
   mapping(string:string|mapping|Servlet.servlet) serv;
   string index = combine_path("/", f);
+
   id->misc->servlet_path = index;
   id->misc->path_info = 0;
-
-  serv = match_anyservlet(index, id) ||
-    match_exact_servlet(index, id) ||
-    match_path_servlet(index, id) ||
-    match_ext_servlet(index, id) ||
-    match_default_servlet(index, id);
-
+  serv = match_anyservlet(index, id);
+  if (!serv) {
+    id->misc->servlet_path = index;
+    id->misc->path_info = 0;
+    serv = match_exact_servlet(index, id);
+  }
+  if (!serv) {
+    id->misc->servlet_path = index;
+    id->misc->path_info = 0;
+    serv = match_path_servlet(index, id);
+  }
+  if (!serv) {
+    id->misc->servlet_path = index;
+    id->misc->path_info = 0;
+    serv = match_ext_servlet(index, id);
+  }
+  if (!serv) {
+    id->misc->servlet_path = index;
+    id->misc->path_info = 0;
+    serv = match_default_servlet(index, id);
+  }
+  
   if (serv)
     {
       load_servlet(serv);
@@ -751,9 +787,9 @@ mixed find_file( string f, RequestID id )
 //            "servlets_default=%O\n"
 //            "servlets_any=%O\n"
 //            , f, servlets_exact, servlets_path, servlets_ext, servlets_default, servlets_any));
-    WEBAPP_WERR(sprintf("Servlet mapping not found for '%s'!\n"
-                        "servlets=%O\n"
-                        , f, servlets));
+//     WEBAPP_WERR(sprintf("Servlet mapping not found for '%s'!\n"
+//                         "servlets=%O\n"
+//                         , f, servlets));
     if (!is_special(f, id))
       return ::find_file(f, id);
     else 
@@ -1069,9 +1105,9 @@ void create()
 	 LOCALE(25, "Use a servlet mapping that mounts any servlet onto "
                 "&lt;Mount Point&gt;/servlet/") );
 
-  defvar("preloadall", 0, LOCALE(0, "Preload all servlets"),
+  defvar("preloadall", 0, LOCALE(34, "Preload all servlets"),
          TYPE_FLAG|VAR_MORE,
-	 LOCALE(0, "Load all servlets at module initialization time "
+	 LOCALE(35, "Load all servlets at module initialization time "
                 "even if load-on-startup is not specified in web.xml") );
 }
 
