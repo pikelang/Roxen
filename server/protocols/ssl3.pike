@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.51 1999/05/14 04:16:54 mast Exp $
+/* $Id: ssl3.pike,v 1.52 1999/05/14 04:19:05 mast Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -93,14 +93,10 @@ array|void real_port(array port, object cfg)
     ({ report_error, throw }) ("ssl3: No 'cert-file' argument!\n");
   }
 
-#ifdef THREADS
   object privs = Privs ("Reading cert file");
-#endif
   string f = read_file(options["cert-file"]);
   string f2 = options["key-file"] && read_file(options["key-file"]);
-#ifdef THREADS
   destruct (privs);
-#endif
   if (!f)
     ({ report_error, throw }) ("ssl3: Reading cert-file failed!\n");
   
@@ -112,8 +108,11 @@ array|void real_port(array port, object cfg)
   if (!part || !(cert = part->decoded_body()))
     ({ report_error, throw }) ("ssl3: No certificate found.\n");
   
-  if (options["key-file"])
+  if (options["key-file"]) {
+    if (!f2)
+      ({ report_error, throw }) ("ssl3: Reading key-file failed!\n");
     msg = Tools.PEM.pem_msg()->init(f2);
+  }
 
   part = msg->parts["RSA PRIVATE KEY"];
   
