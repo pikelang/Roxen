@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.23 2000/09/21 03:57:41 per Exp $
+ * $Id: config.h,v 1.24 2001/10/12 14:47:39 anders Exp $
  *
  * User configurable things not accessible from the normal
  * administration interface. Not much, but there are some things..  
@@ -44,14 +44,15 @@
  * conversion. Thus you can't use if if you want to run a proxy. 
  */
 
-#undef NO_DNS
+// #undef NO_DNS
 
 
 /* This option turns of all ip->hostname lookups. However the
  * hostname->ip lookups are still functional. This _is_ usable
  * if you run a proxy.. :-)
  */
-#undef NO_REVERSE_LOOKUP
+
+// #undef NO_REVERSE_LOOKUP
 
 
 /* Should we use sete?id instead of set?id?.
