@@ -1,6 +1,6 @@
-static private inherit "db";
+// static private inherit "db";
 
-/* $Id: persistent.pike,v 1.11 1997/02/24 07:35:01 per Exp $ */
+/* $Id: persistent.pike,v 1.12 1997/02/25 04:53:11 per Exp $ */
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
 * Variables and callouts are saved between restarts.          *
@@ -16,85 +16,78 @@ static private inherit "db";
 * (remember to save info about seek etc.. But it is possible) *
 '*************************************************************/
 
-/* Search for 'persist' to find the (two) public methods */
-
 #define PRIVATE private static inline 
 
-static object this = this_object();
+private static string __id;
+#define DIR "dbm_dir.perdbm/"
 
-PRIVATE multiset __vars = (<>);
-PRIVATE string __id;
-
-/*** Private code ***/
-
-
-PRIVATE void save_variables()
+PRIVATE void really_save()
 {
-  mixed b, a;
-  array res = ({ }), variable;
-  if(!sizeof(__vars)) // First time, not initialized.
-    foreach(indices(this), a)
-    {
-      b=this[a];
-      if(!catch { this[a]=b; } ) // It can be assigned. Its a variable!
-      {
-	__vars[a] = 1;
-	res += ({ ({ a, b }) });
-      }
-    }
-  else
-    foreach(indices(__vars), a)
-      res += ({ ({ a, this[a] }) });
-  db_set("v", res);
-}
+  object file = files.file();
+  array res = ({ });
+  mixed b;
 
-PRIVATE void restore_variables()
-{
-  array var;
-  if(var = db_get("v"))
-    foreach(var, var) catch {
-      this[var[0]] = var[1];
-    };
-}
-
-static void really_save()
-{
   if(!__id)
   {
     mixed i = nameof(this_object());
     if(arrayp(i)) __id=(i[0]+".class/"+i[1]);
-    db_open( __id, 1 );
   }
 
-  save_variables();
+  foreach(indices(this_object()), string a)
+  {
+    b=this_object()[a];
+    if(!catch { this_object()[a]=b; } ) // It can be assigned. Its a variable!
+      res += ({ ({ a, b }) });
+  }
+  perror("save ("+ __id +")\n");
+  if(!file->open(DIR+__id,"wct"))
+  {
+    mkdirhier(DIR+__id);
+    if(!file->open(DIR+__id, "wct"))
+      error("Save of object not possible.\n");
+  }
+  file->write(encode_value(res));
 }
 
 
 /* Public methods! */
 static int ___destructed = 0;
+
 public void begone()
 {
   remove_call_out(really_save);
   ___destructed=1;
-  db_destroy();
+  rm(DIR+__id);
+  __id=0;
 }
 
 
 nomask public void persist(mixed id)
 {
+  object file = files.file();
+
   if(arrayp(id)) id=(id[0]+".class/"+id[1]);
   /* No known id. This should not really happend. */
   if(!id)  error("No known id in persist.\n");
   
   __id = id;
-  db_open( id, 0 );
-  restore_variables();
+// Restore
+
+  array var;
+  catch {
+    if(!file->open(DIR+__id, "r")) return 0;
+    perror("restore ("+ __id +")\n");
+    var=decode_value(file->read(0x7ffffff));
+  };
+  if(var) foreach(var, var) catch {
+    this_object()[var[0]] = var[1];
+  };
   
-  if(functionp(this->persisted))
-    this->persisted();
+  if(functionp(this_object()->persisted))
+    this_object()->persisted();
 }
   
-public void save()
+nomask public void save()
 {
   if(!___destructed)
   {
