@@ -29,6 +29,9 @@ Some practical programming guidelines.
   constructs, the functions themselves should be sprintf compatible in their
   argumentlists or be made so.
 
+- Remove every occurence of inherit roxenlib; then restart the server and
+  prepend every identifier the compiler complains about with "Roxen."
+
 
 ChiliMoon specific guidelines.
 

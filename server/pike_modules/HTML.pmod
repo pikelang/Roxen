@@ -1,6 +1,8 @@
+// NGSERVER: drop this module, fold any patches to it into String.HTML in Pike
+
 // This is a roxen pike module. Copyright © 2001, Roxen IS.
 //
-// $Id: HTML.pmod,v 1.8 2004/05/31 14:58:08 _cvs_stephen Exp $
+// $Id: HTML.pmod,v 1.9 2004/06/01 15:59:13 _cvs_stephen Exp $
 
 //! Functions that helps generating HTML. All functions generates
 //! HTML that is XHTML compliant as well as backwards compatible
