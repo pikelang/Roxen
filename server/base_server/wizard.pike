@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.7 1997/08/20 08:22:19 per Exp $
+/* $Id: wizard.pike,v 1.8 1997/08/20 08:35:28 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -101,8 +101,10 @@ string compress_state(mapping state)
   return MIME.encode_base64( from );
 }
 
-string parse_wizard_help(string t, mapping m, string contents, object id)
+string parse_wizard_help(string t, mapping m, string contents, object id,
+			 mapping v)
 {
+  v->help=1;
   if(!id->variables->help) return "";
   return contents;
 }
@@ -120,28 +122,25 @@ string parse_wizard_page(string form, object id, string wiz_name)
 
   string res;
   int page = ((int)id->variables->_page);
-
+  mapping foo = ([]);
   // Cannot easily be inlined below, believe me... Side-effects.
   form = parse_html(form,([ "var":wizard_tag_var, ]),
-		    ([ "help":parse_wizard_help]), id);
+		    ([ "help":parse_wizard_help]), id, foo );
   
   res = ("<!--Wizard-->\n"
-	 "<table bgcolor=black cellpadding=1 border=0 cellspacing=0 width=80%>\n"
-         " <form method=get>\n"
+         "<form method=get>\n"
 	 " <input type=hidden name=action value=\""+id->variables->action+"\">\n"
 	 " <input type=hidden name=_page value=\""+page+"\">\n"
-	 " <input type=hidden name=_state value=\""+compress_state(id->variables)+"\">\n"	 "  <tr><td>\n"
-	 "  <table bgcolor=#f0f0ff cellpadding=0 "
+	 " <input type=hidden name=_state value=\""+compress_state(id->variables)+"\">\n"
+	 "<table bgcolor=black cellpadding=1 border=0 cellspacing=0 width=80%>\n"
+	 "  <tr><td><table bgcolor=#d0e0ff cellpadding=0 "
 	 "         cellspacing=0 border=0 width=100%>\n"
-	 "    <tr><td>\n"
-	 "  <table bgcolor=#e0e0ff cellpadding=0 "
-	 "         cellspacing=3 border=0 width=100%>\n"
-	 "    <tr><td>\n"
+	 "    <tr><td><table width=100%>\n"
 	 "<font size=+2>"+(this_object()->wizard_name||this_object()->name)+"</font>"
 	 " </td>\n<td align=right>"+
 	 (max_page!=1?"Page "+(page+1)+"/"+(max_page+1):"")+"</td>\n"
 	  " \n<td align=right>"+
-	 (!id->variables->help?
+	 (v->help && !id->variables->help?
 	  "<font size=-1><input type=image name=help src="+
 	  (id->conf?"/internal-roxen-help":"/image/help.gif")+
 	  " border=0 value=\"Help\"></font>":"")
@@ -169,8 +168,9 @@ string parse_wizard_page(string form, object id, string wiz_name)
 	 "    </td><tr>\n"
 	 "  </table>\n"
 	 "  </td></tr>\n"
+         "</table>\n"
          " </form>\n"
-         "</table>\n");
+	  );
   return res;
 }
 
