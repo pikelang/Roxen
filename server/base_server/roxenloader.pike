@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.182 2000/07/14 18:24:32 jhs Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.183 2000/07/14 23:52:21 jhs Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -280,11 +280,12 @@ class RequestID
   //! with the request; all data has been transport decoded, and the header
   //! names are canonized (lowercased) on top of that.
   mapping (string:mixed) throttle;
-  //! ?
-  mapping (string:string) client_var;
-  //! ?
+  // ?
+  mapping (string:mixed) client_var;
+  //! The client scope; a mapping of various client-related variables, indices
+  //! being the entity names and the values being their values respectively.
   multiset(string) prestate;
-  //! A mapping of all prestates harvested from the URL. Prestates are boolean
+  //! A multiset of all prestates harvested from the URL. Prestates are boolean
   //! flags, who are introduced in an extra leading path segment of the URL
   //! path put within parentheses, as in <a
   //! href="http://docs.roxen.com/(tables)/">docs://www.roxen.com/(tables)/</a>,
@@ -299,7 +300,7 @@ class RequestID
   //! however, is hidden in a client-side cookie treated specially by roxen,
   //! namely the <tt>RoxenConfig</tt> cookie.
   multiset(string) supports;
-  //! ...
+  //! All flags set by the supports system.
   multiset(string) pragma;
   //! All pragmas (lower-cased for canonization) sent with the request. For
   //! real-world applications typically only <pi>pragma["no-cache"]</pi> is of
@@ -326,7 +327,7 @@ class RequestID
   //! When the the requested resource is an actual file in the real
   //! filesystem, this is its path.
   string virtfile;
-  //! ?
+  //! The path to the currently requested resource in the virtual filesystem.
   string rest_query;
   //! The scraps and leftovers of the requested URL's query part after
   //! removing all variables (that is, all key=value pairs) from it.
@@ -348,6 +349,7 @@ class RequestID
   string realauth;
   string since;
   string remoteaddr;
+  //! The client's IP address.
   string host;
 
   void create(object|void master_request_id);
