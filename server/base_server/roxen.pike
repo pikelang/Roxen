@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.157 1998/01/17 02:57:19 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.158 1998/01/21 04:33:51 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -90,21 +90,34 @@ private static void fork_or_quit()
 #ifdef SOCKET_DEBUG
   perror("SOCKETS: fork_or_quit()\n                 Bye!\n");
 #endif
+
+#if constant(fork) && !defined(THREADS)
+
   if(fork()) 
     exit(-1);	// Restart.
   // Now we're running in the forked copy.
 
-  // FIXME: This probably doesn't work correctly on threaded servers.
+  // FIXME: This probably doesn't work correctly on threaded servers,
+  // since only one thread is left running after the fork().
 #if efun(_pipe_debug)
   call_out(lambda() {  // Wait for all connections to finish
     call_out(Simulate.this_function(), 20);
     if(!_pipe_debug()[0]) exit(0);
   }, 1);
-#endif
+#endif /* efun(_pipe_debug) */
   call_out(lambda(){ exit(0); }, 600); // Slow buggers..
   f=indices(portno);
   for(i=0; i<sizeof(f); i++)
     catch(destruct(f[i]));
+#else /* !constant(fork) */
+
+  // FIXME:
+  // Should probably attempt something similar to the above,
+  // but this should be sufficient for the time being.
+
+  exit(-1);	// Restart
+
+#endif /* constant(fork) */
 }
 
 // Keep a count of how many times in a row there has been an error
