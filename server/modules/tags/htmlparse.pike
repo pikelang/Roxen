@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.136 1998/09/17 12:31:57 mast Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.137 1998/09/18 14:05:19 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -559,6 +559,7 @@ mapping handle_file_extension( object file, string e, object id)
     catch(file->close());
     destruct(file);
   }
+//   report_debug(sprintf("%O", id->misc->defines));
   return (["data":to_parse,
 	   "type":"text/html",
 	   "stat":_stat,
@@ -2569,6 +2570,7 @@ mapping query_tag_callers()
 	    "redirect":tag_redirect,
 	    "auth-required":tag_auth_required,
 	    "expire_time":tag_expire_time,
+	    "expire-time":tag_expire_time,
 	    "signature":tag_signature,
 	    "user":tag_user,
 	    "line":tag_line,
@@ -2723,7 +2725,7 @@ string tag_gauge(string t, mapping args, string contents,
   string define = args->define?args->define:"gauge";
 
   defines[define+"_time"] = sprintf("%3.6f", t/1000000.0);
-  defines[define+"_time"] = contents;
+  defines[define+"_result"] = contents;
 
   if(args->silent) return "";
   if(args->timeonly) return sprintf("%3.6f", t/1000000.0);
