@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 2.3 1999/10/21 14:19:10 grubba Exp $
+ * $Id: smtprelay.pike,v 2.4 1999/10/21 14:37:30 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 2.3 1999/10/21 14:19:10 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 2.4 1999/10/21 14:37:30 grubba Exp $";
 
 /*
  * Some globals
@@ -503,7 +503,7 @@ class MailSender
       //   * No lone '\r' or '\n', only "\r\n".
       //   * If a line starts with '.', it must be doubled.
       //   * The file must end with "\r\n".
-      Stdio.sendfile(0, mail, 0, -1, 0, message_sent);
+      Stdio.sendfile(0, mail, 0, -1, 0, con, message_sent);
       break;
     default:
       // Bounce.
