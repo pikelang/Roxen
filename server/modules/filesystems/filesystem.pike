@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.69 2000/03/07 21:15:36 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.70 2000/03/07 22:42:17 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -90,8 +90,8 @@ void create()
 	 "will be able to retrieve them.");
 
   defvar("dir", 1, "Enable directory listings per default", TYPE_FLAG|VAR_MORE,
-	 "If set, you have to create a file named .www_not_browsable ("
-	 "or .nodiraccess) in a directory to disable directory listings."
+	 "If set, you have to create a file named .www_not_browsable "
+	 "or .nodiraccess in a directory to disable directory listings."
 	 " If unset, a file named .www_browsable in a directory will "
 	 "_enable_ directory listings.\n");
 
@@ -125,11 +125,13 @@ void create()
 
   defvar("access_as_user", 0, "Access file as the logged in user",
 	 TYPE_FLAG|VAR_MORE,
-	 "EXPERIMENTAL. Access file as the logged in user.<br>\n"
-	 "This is useful for eg named-ftp.");
+	 "Access file as the logged in user. This is useful for eg "
+	 "named-ftp.<br>\n"
+	 "WARNING: This can have severe impact on performance when using "
+	 "threads, since all threads need to be locked every time such "
+	 "an access is done.");
 
   defvar("no_symlinks", 0, "Forbid access to symlinks", TYPE_FLAG|VAR_MORE,
-	 "EXPERIMENTAL.\n"
 	 "Forbid access to paths containing symbolic links.<br>\n"
 	 "NOTE: This can cause *alot* of lstat system-calls to be performed "
 	 "and can make the server much slower.");
@@ -161,13 +163,6 @@ int stat_cache;
 
 void start()
 {
-#ifdef THREADS
-  if(QUERY(access_as_user))
-    report_warning("It is not possible to use 'Access as user' when "
-		   "running with threads. Remove -DENABLE_THREADS from "
-		   "the start script if you really need this function\n");
-#endif
-
   path = QUERY(searchpath);
   stat_cache = QUERY(stat_cache);
   internal_files = map (QUERY (internal_files) / ",", String.trim_whites);
@@ -196,19 +191,15 @@ mixed stat_file( string f, RequestID id )
      (fs=cache_lookup("stat_cache",path+f)))
     return fs[0];
 
-#ifndef THREADS
   object privs;
   if (((int)id->misc->uid) && ((int)id->misc->gid) &&
       (QUERY(access_as_user))) {
     // NB: Root-access is prevented.
     privs=Privs("Statting file", (int)id->misc->uid, (int)id->misc->gid );
   }
-#endif
 
   fs = file_stat(path + f);  /* No security currently in this function */
-#ifndef THREADS
   privs = 0;
-#endif
   if(!stat_cache)
     return fs;
   cache_set("stat_cache", path+f, ({fs}));
@@ -240,13 +231,11 @@ array find_dir( string f, RequestID id )
 
   object privs;
 
-#ifndef THREADS
   if (((int)id->misc->uid) && ((int)id->misc->gid) &&
       (QUERY(access_as_user))) {
     // NB: Root-access is prevented.
     privs=Privs("Getting dir", (int)id->misc->uid, (int)id->misc->gid );
   }
-#endif
 
   if(!(dir = get_dir( path + f ))) {
     privs = 0;
@@ -486,21 +475,17 @@ mixed find_file( string f, RequestID id )
 	  return 0;
 	}
       }
-#ifndef THREADS
+
+      TRACE_ENTER("Opening file \"" + f + "\"", 0);
+
       object privs;
       if (((int)id->misc->uid) && ((int)id->misc->gid) &&
 	  (QUERY(access_as_user))) {
 	// NB: Root-access is prevented.
 	privs=Privs("Getting file", (int)id->misc->uid, (int)id->misc->gid );
       }
-#endif
-
-      TRACE_ENTER("Opening file \"" + f + "\"", 0);
       o = open( f, "r" );
-
-#ifndef THREADS
       privs = 0;
-#endif
 
       if(!o || (QUERY(no_symlinks) && (contains_symlinks(path, oldf))))
       {
@@ -546,13 +531,11 @@ mixed find_file( string f, RequestID id )
     mkdirs++;
     object privs;
 
-// #ifndef THREADS // Ouch. This is is _needed_. Well well...
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
       // NB: Root-access is prevented.
       privs=Privs("Creating directory",
 		  (int)id->misc->uid, (int)id->misc->gid );
     }
-// #endif
 
     if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
       privs = 0;
@@ -562,11 +545,11 @@ mixed find_file( string f, RequestID id )
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
+    int code = mkdir( f );
+    privs = 0;
+
     TRACE_ENTER("MKDIR: Accepted", 0);
 
-    int code = mkdir( f );
-
-    privs = 0;
     if (code) {
       chmod(f, 0777 & ~(id->misc->umask || 022));
       TRACE_LEAVE("MKDIR: Success");
@@ -614,12 +597,10 @@ mixed find_file( string f, RequestID id )
 
     object privs;
 
-// #ifndef THREADS // Ouch. This is is _needed_. Well well...
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
       // NB: Root-access is prevented.
       privs=Privs("Saving file", (int)id->misc->uid, (int)id->misc->gid );
     }
-// #endif
 
     if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
       privs = 0;
@@ -628,8 +609,6 @@ mixed find_file( string f, RequestID id )
       TRACE_LEAVE("PUT: Contains symlinks. Permission denied");
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
-
-    TRACE_ENTER("PUT: Accepted", 0);
 
     rm( f );
     mkdirhier( f );
@@ -646,14 +625,15 @@ mixed find_file( string f, RequestID id )
       }
     }
 
+    object to = open(f, "wct");
+    privs = 0;
+
+    TRACE_ENTER("PUT: Accepted", 0);
+
     /* Clear the stat-cache for this file */
     if (stat_cache) {
       cache_set("stat_cache", f, 0);
     }
-
-    object to = open(f, "wct");
-
-    privs = 0;
 
     if(!to)
     {
@@ -725,12 +705,10 @@ mixed find_file( string f, RequestID id )
 
     object privs;
 
-// #ifndef THREADS // Ouch. This is is _needed_. Well well...
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
       // NB: Root-access is prevented.
       privs=Privs("CHMODing file", (int)id->misc->uid, (int)id->misc->gid );
     }
-    // #endif
 
     if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
       privs = 0;
@@ -739,6 +717,9 @@ mixed find_file( string f, RequestID id )
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
+    array err = catch(chmod(f, id->misc->mode & 0777));
+    privs = 0;
+
     chmods++;
 
     TRACE_ENTER("CHMOD: Accepted", 0);
@@ -746,11 +727,6 @@ mixed find_file( string f, RequestID id )
     if (stat_cache) {
       cache_set("stat_cache", f, 0);
     }
-#ifdef DEBUG
-    werror(sprintf("CHMODing file "+f+" to 0%o\n", id->misc->mode));
-#endif
-    array err = catch(chmod(f, id->misc->mode & 0777));
-    privs = 0;
 
     if(err)
     {
@@ -809,16 +785,12 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    moves++;
-
     object privs;
 
-// #ifndef THREADS // Ouch. This is is _needed_. Well well...
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
       // NB: Root-access is prevented.
       privs=Privs("Moving file", (int)id->misc->uid, (int)id->misc->gid );
     }
-// #endif
 
     if (QUERY(no_symlinks) &&
 	((contains_symlinks(path, oldf)) ||
@@ -829,23 +801,18 @@ mixed find_file( string f, RequestID id )
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
+    int code = mv(movefrom, f);
+    privs = 0;
+
+    moves++;
+
     TRACE_ENTER("MV: Accepted", 0);
 
     /* Clear the stat-cache for this file */
-#ifdef __NT__
-    //    if(movefrom[-1] == '/')
-    //      movefrom = move_from[..strlen(movefrom)-2];
-#endif
     if (stat_cache) {
       cache_set("stat_cache", movefrom, 0);
       cache_set("stat_cache", f, 0);
     }
-#ifdef DEBUG
-    werror("Moving file "+movefrom+" to "+ f+"\n");
-#endif
-
-    int code = mv(movefrom, f);
-    privs = 0;
 
     if(!code)
     {
@@ -922,13 +889,10 @@ mixed find_file( string f, RequestID id )
     }
 
     object privs;
-
-// #ifndef THREADS // Ouch. This is is _needed_. Well well...
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
       // NB: Root-access is prevented.
       privs=Privs("Moving file", (int)id->misc->uid, (int)id->misc->gid );
     }
-// #endif
 
     if (QUERY(no_symlinks) &&
         ((contains_symlinks(path, f)) ||
@@ -939,25 +903,18 @@ mixed find_file( string f, RequestID id )
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
 
+    int code = mv(f, moveto);
+    privs = 0;
+
     TRACE_ENTER("MOVE: Accepted", 0);
 
     moves++;
 
     /* Clear the stat-cache for this file */
-#ifdef __NT__
-    //    if(movefrom[-1] == '/')
-    //      movefrom = move_from[..strlen(movefrom)-2];
-#endif
     if (stat_cache) {
       cache_set("stat_cache", moveto, 0);
       cache_set("stat_cache", f, 0);
     }
-#ifdef DEBUG
-    werror("Moving file " + f + " to " + moveto + "\n");
-#endif
-
-    int code = mv(f, moveto);
-    privs = 0;
 
     if(!code)
     {
