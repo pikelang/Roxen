@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.21 2000/09/22 14:17:35 jonasw Exp $
+// $Id: module.pmod,v 1.22 2000/09/28 02:22:10 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -10,13 +10,8 @@ static inline string getloclang() {
 
 //<locale-token project="roxen_config"> LOCALE </locale-token>
 
-#if constant(Locale.DeferredLocale)
 #define LOCALE(X,Y)	\
   ([string](mixed)Locale.DeferredLocale("roxen_config",getloclang,X,Y))
-#else  /* !Locale.DeferredLocale */
-#define LOCALE(X,Y)	\
-  ([string](mixed)RoxenLocale.DeferredLocale("roxen_config",getloclang,X,Y))
-#endif /* Locale.DeferredLocale */
 
 // Increased for each variable, used to index the mappings below.
 static int unique_vid;
@@ -206,6 +201,12 @@ class Variable
       m_delete( all_warnings, _id );
   }
 
+  void add_warning( string to )
+  //! Like set_warning, but adds to the current warning, if any.
+  {
+    set_warning( (get_warnings()||"") + to );
+  }
+
   int set( mixed to )
     //! Set the variable to a new value. 
     //! If this function returns true, the set was successful. 
@@ -224,12 +225,12 @@ class Variable
     {
       if( stringp( e2 ) )
       {
-        set_warning( e2 );
+        add_warning( e2 );
         return ([])[0];
       }
       throw( e2 );
     }
-    set_warning( err );
+    add_warning( err );
     return low_set( to );
   }
 
@@ -274,6 +275,13 @@ class Variable
            equal(changed_values[ _id ], default_value());
   }
 
+  array(string|mixed) verify_set_from_form( mixed new_value )
+  //! Like verify_set, but only called when the variables are set
+  //! from a form.
+  {
+    return ({ 0, new_value });
+  }
+
   array(string|mixed) verify_set( mixed new_value )
     //! Return ({ error, new_value }) for the variable, or throw a string.
     //! 
@@ -312,11 +320,27 @@ class Variable
     //!
     //! Other side effects: Might create warnings to be shown to the 
     //! user (see get_warnings)
+    //! 
+    //! Calls verify_set_from_form and verify_set
   {
-    mapping val;
+    mixed val;
     if( sizeof( val = get_form_vars(id)) && val[""] && 
-        transform_from_form( val[""] ) != query() )
-      set( transform_from_form( val[""] ));
+        (val = transform_from_form( val[""] )) != query() )
+    {
+      array b;
+      mixed q = catch( b = verify_set_from_form( val ) );
+      if( q || sizeof( b ) != 2 )
+      {
+        if( q )
+          add_warning( q );
+        else
+          add_warning( "Internal error: Illegal sized array "
+                       "from verify_set_from_form\n" );
+        return;
+      }
+      if( q[0] ) set_warning( q[0] );
+      set( q[1] );
+    }
   }
   
   string path()
@@ -621,7 +645,7 @@ class URL
   constant type = "URL";
   constant width = 50;
 
-  array verify_set( string new_value )
+  array verify_set_from_form( string new_value )
   {
     return verify_port( new_value, 1 );
   } 
@@ -1059,7 +1083,7 @@ class URLList
   inherit List;
   constant type="URLList";
 
-  array verify_set( array(string) new_value )
+  array verify_set_from_form( array(string) new_value )
   {
     string warn  = "";
     array res = ({});
@@ -1083,7 +1107,7 @@ class PortList
   inherit List;
   constant type="PortList";
 
-  array verify_set( array(string) new_value )
+  array verify_set_from_form( array(string) new_value )
   {
     string warn  = "";
     array res = ({});
@@ -1187,17 +1211,12 @@ static array(string) verify_port( string port, int nofhttp )
   }
   if(!nofhttp) // it's a port, not a URL
   {
-#if constant(Crypto) && constant(Crypto.rsa) && constant(Standards) && constant(Standards.PKCS.RSA) && constant(SSL) && constant(SSL.sslfile)
+#if constant(SSL.sslfile)
     /* All is A-OK */
 #else
     if( (protocol == "https" || protocol == "ftps") )
-    {
-      warning += 
-              "SSL support not available in this Pike version. "
-              "Transformed "+protocol+" to ";
-      protocol = protocol[ ..strlen(protocol)-2 ];
-      warning += protocol+".\n";
-    }
+      warning +=  "SSL support not available in this Pike version.\n"
+              "Please use "+protocol[..strlen(protocol)-2]+" instead.\n";
 #endif
   }
   int pno;

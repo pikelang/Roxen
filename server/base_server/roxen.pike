@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.560 2000/09/25 09:31:54 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.561 2000/09/28 02:22:11 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1547,8 +1547,6 @@ class IMAP
 mapping protocols = ([
 #if constant(HTTPLoop.prog)
   "fhttp":FHTTP,
-#else
-  "fhttp":HTTP,
 #endif
   "http":HTTP,
   "ftp":FTP,
@@ -1657,7 +1655,13 @@ int register_url( string url, object/*(Configuration)*/ conf )
 		 url, conf->query_name());
     return 0;
   }
+  if( !protocols[ protocol ] )
+  {
+    report_error(LOC_M(0,"The protocol '%s' is not available")+"\n", protocol);
+    return 0;
+  }
   sscanf(host, "%[^:]:%d", host, port);
+
 
   if( !port )
   {
