@@ -9,36 +9,6 @@ constant box      = "small";
 String box_name = _(263,"News from www.roxen.com");
 String box_doc  = _(281,"The news headlines from www.roxen.com");
 
-
-
-class Fetcher
-{
-  Protocols.HTTP.Query query;
-
-  void done( Protocols.HTTP.Query q )
-  {
-    data = query->data();
-    
-    cache_set( "risnews_data", "data", data );
-    destruct();
-  }
-  
-  void fail( Protocols.HTTP.Query q )
-  {
-    data = "Failed to connect to server";
-    call_out( Fetcher, 30 );
-  }
-
-  void create()
-  {
-    call_out( Fetcher, 3600 );
-    query = Protocols.HTTP.Query( )->set_callbacks( done, fail );
-    query->async_request( "www.roxen.com", 80,
-			  "GET /index.xml?__xsl=print.xsl HTTP/1.0",
-			  ([ "Host":"www.roxen.com:80" ]) );
-  }
-}
-
 string extract_nonfluff( string from )
 {
   string res = "";
@@ -60,28 +30,18 @@ string extract_nonfluff( string from )
       res += "<a href='"+last_a+"'>"+last_alt+"</a><br />";
   };
   Parser.HTML( )->add_tags((["a":parse_a,"img":parse_img,"font":parse_font]))
-    ->finish( data )->read();
+    ->finish( from )->read();
   return res;
 }
 
-Fetcher fetcher;
-string data;
 string parse( RequestID id )
 {
   string contents;
-  if( !data )
-  {
-    if( !(data = cache_lookup( "risnews_data", "data" )) )
-    {
-      if( !fetcher )
-	fetcher = Fetcher();
-      contents = "Fetching data from www.roxen.com...";
-    } else {
-      call_out( Fetcher, 3600 );
-      contents = extract_nonfluff( data );
-    }
-  } else
-    contents = extract_nonfluff( data );
+  if( !(contents = .Box.get_http_data( "www.roxen.com", 80,
+			      "GET /index.xml?__xsl=print.xsl HTTP/1.0") ) )
+    contents = "Fetching data from www.roxen.com...";
+  else
+    contents = extract_nonfluff( contents );
   return
     "<box type='"+box+"' title='"+box_name+"'>"+contents+"</box>";
 }

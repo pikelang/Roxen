@@ -21,7 +21,7 @@ class Fetcher
   void done( Protocols.HTTP.Query q )
   {
     crunch_data = Data( query->data() );
-    cache_set( "crunch_data", "data", query->data() );
+    cache_set( "box_data", "crunch", query->data(), 9000 );
     destruct();
   }
   
