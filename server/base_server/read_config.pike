@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.34 2000/03/07 02:39:38 nilsson Exp $
+// $Id: read_config.pike,v 1.35 2000/03/24 20:54:37 per Exp $
 
 #include <module.h>
 
@@ -202,7 +202,10 @@ void remove_configuration( string name )
 {
   string f;
 
+  m_delete(configs, name );
   f = configuration_dir + replace(name, " ", "_");
+  m_delete(configs, replace(name," ", "_") );
+
   if(!file_stat( f ))   f = configuration_dir + name;
   if(!rm(f) && file_stat(f))
   {
