@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.157 1999/10/04 18:53:22 marcus Exp $
+// $Id: http.pike,v 1.158 1999/10/04 19:12:45 per Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.157 1999/10/04 18:53:22 marcus Exp $";
+constant cvs_version = "$Id: http.pike,v 1.158 1999/10/04 19:12:45 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -762,7 +762,7 @@ void end(string|void s, int|void keepit)
     object fd = my_fd;
     my_fd=0;
     if(s) leftovers += s;
-    o->chain(fd,conf,leftovers);
+    o->chain(fd,port_obj,leftovers);
     disconnect();
     return;
   }
@@ -1685,7 +1685,7 @@ void create(object f, object c)
 void chain(object f, object c, string le)
 {
   my_fd = f;
-  conf = c;
+  port_obj = c;
   do_not_disconnect=-1;
   MARK_FD("Kept alive");
   if(strlen(le))
