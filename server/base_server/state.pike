@@ -3,14 +3,11 @@
 
 string register_state_consumer(string name, object id) {
 
-  if(search(name,"-")!=-1)
-    return "";
-
   if(!id->misc->state)
     id->misc->state=(["keys":([]),"values":([])]);
 
   if(search(indices(id->misc->state->keys),name)!=-1)
-    return name+"-"+(string)id->misc->state->keys[name]++;
+    return ((string)id->misc->state->keys[name]++)+name;
 
   id->misc->state->keys+=([name:0]);
   return name;
