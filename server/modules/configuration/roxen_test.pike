@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.14 2001/02/01 06:56:37 per Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.15 2001/02/05 13:21:16 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -32,7 +32,7 @@ RequestID get_id()
   id->cookies=([]);
   id->config=(<>);
   id->real_variables=([]);
-  id->variables=([]);
+  id->variables = FakedVariables( id->real_variables );
   id->prestate=(<>);
   id->supports=(< "images" >);
   id->client_var=([]);
