@@ -7,21 +7,26 @@ inherit "roxenlib";
 #include <config_interface.h>
 
 constant module_type = MODULE_PARSER|MODULE_CONFIG;
-constant module_name = "Upgrade handler for the config interface";
+constant module_name = "Upgrade client";
 
 object db;
+
+object updater;
 
 void start(int num, Configuration conf)
 {
   conf->parse_html_compat=1;
-  db=Yabu.db(QUERY(yabudir),"wcS");
-  UpdateInfoFiles();
+  if(!num)
+  {
+    catch(db=Yabu.db(QUERY(yabudir),"wcS"));
+    updater=UpdateInfoFiles();
+  }
 }
 
 void stop()
 {
-  if(db)
-    catch(db->close());
+  catch(db->close());
+  catch(destruct(updater));
 }
 
 void create()
@@ -142,13 +147,13 @@ class GetInfoFile
     res->size=httpquery->headers->size;
     db["pkginfo"][(string)num]=res;
     db["pkginfo"]->sync();
-    report_notice("Added information about package number "+num+".");
+    report_notice("Upgrade: Added information about package number "+num+".\n");
   }
 
   void request_fail(object httpquery, int num)
   {
-    report_error("Failed to connect to upgrade server to fetch "
-		 "information about package number "+num+".");
+    report_error("Upgrade: Failed to connect to upgrade server to fetch "
+		 "information about package number "+num+".\n");
   }
 
   void create(int pkgnum)
@@ -174,18 +179,19 @@ class UpdateInfoFiles
     array(int) delete_packages=decode_ranges(lines[2]);
     if(lines[0]!="upgrade")
     {
-      report_error("Wrong answer from server.");
+      report_error("Upgrade: Wrong answer from server.\n");
       return;
     }
     if(sizeof(new_packages))
-      report_notice("Found new packages: "+ ((array(string))new_packages)*", ");
+      report_notice("Upgrade: Found new packages: "+ ((array(string))new_packages)*", "+"\n");
     else
-      report_notice("No new packages found");
+      report_notice("Upgrade: No new packages found.\n");
 
     if(sizeof(delete_packages))
-      report_notice("Deleting packages: "+ ((array(string))delete_packages)*", ");
+      report_notice("Upgrade: Deleting packages: "+ ((array(string))delete_packages)*", "+
+		    "\n");
     else
-      report_notice("No packages to delete found");
+      report_notice("Upgrade: No packages to delete found.\n.");
 
     foreach(new_packages, int i)
       GetInfoFile(i);
@@ -197,8 +203,8 @@ class UpdateInfoFiles
 
   void request_fail(object httpquery)
   {
-    report_error("Failed to connect to upgrade server to fetch "
-		 "information about new packages.");
+    report_error("Upgrade: Failed to connect to upgrade server to fetch "
+		 "information about new packages.\n");
   }
 
   void do_request()
@@ -209,6 +215,11 @@ class UpdateInfoFiles
 		  (["content-type":"application/x-www-form-urlencoded"]),
 		  "have_packages="+encode_ranges((array(int))indices(db["pkginfo"])));
     call_out(do_request, 12*3600);
+  }
+
+  void destroy()
+  {
+    remove_call_out(do_request);
   }
   
   void create()
