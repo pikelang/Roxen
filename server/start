@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.205 2002/10/30 19:10:49 nilsson Exp $
+# $Id: start,v 1.206 2002/11/03 20:06:42 mani Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -65,7 +65,11 @@ DIR=../configurations
 LOGDIR=../logs
 FILES="default"
 program=server_core/loader.pike
-VARDIR=../var
+
+if [ "x$VARDIR" = "x" ] ; then
+  VARDIR=../var
+else :; fi
+
 LOCALDIR=../local
 SELF_TEST_DIR=data/test
 
@@ -763,7 +767,7 @@ PIKEVERSION="`\"$pike\" --version 2>&1|head -1`"
 LS="`ls -lL \"$pike\" 2>/dev/null`"
 LS="$LS `cd pike_modules && find . -ls 2>/dev/null`"
 LS="$LS `cd server_core && find . -ls 2>/dev/null`"
-LS="$LS `cd data/includes && find . -ls 2>/dev/null`"
+LS="$LS `cd data/include && find . -ls 2>/dev/null`"
 LS="$LS `cd plugins && find . -ls 2>/dev/null`"
 
 VERSION_DATA="$PIKEVERSION   $DEFINES   $LS  `uname -m` `uname -r`"
