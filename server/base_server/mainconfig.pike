@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.105 1998/07/04 13:17:10 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.106 1998/07/07 17:16:39 grubba Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -1493,9 +1493,6 @@ mapping configuration_parse(object id)
       break;
 #endif /* 0 */
       
-      /* This only asks "do you really want to...", it does not delete
-       * the node */
-
       /* Clear any memory caches associated with this configuration */
     case "zapcache":
       object c = o->config();
@@ -1505,6 +1502,8 @@ mapping configuration_parse(object id)
       }
       break;
 
+      /* This only asks "do you really want to...", it does not delete
+       * the node */
     case "delete":	
      PUSH(default_head("Roxen Configuration")+
 	  status_row(o));
@@ -1656,7 +1655,7 @@ mapping configuration_parse(object id)
        return new_configuration(id);
 
 
-       // When a port has been changed the admin are prompted to
+       // When a port has been changed the admin is prompted to
        // change the server URL. This is where we come when we are
        // done.
        
