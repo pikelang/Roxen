@@ -100,7 +100,7 @@ install: fcgi cgi
 		if /bin/cp $$f $(prefix)/roxen/server/bin/; then :; \
 		else exit 1; fi; \
 	done
-	-@ln -s $(prefix)/roxen/server/bin/cgi $(prefix)/roxen/server/bin/cgi-bin
+	-@ln -s cgi $(prefix)/roxen/server/bin/cgi-bin
 	@echo Done.
 
 localinstall: fcgi cgi
