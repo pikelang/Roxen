@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.35 2004/05/14 18:10:29 grubba Exp $
+// $Id: webdav.pike,v 1.36 2004/06/01 16:03:58 jonasw Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,9 +9,9 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.35 2004/05/14 18:10:29 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.36 2004/06/01 16:03:58 jonasw Exp $";
 constant thread_safe = 1;
-constant module_name = "DAV: Protocol support";
+constant module_name = "WebDAV: Protocol support";
 constant module_type = MODULE_FIRST;
 constant module_doc  = "Adds support for various HTTP extensions defined "
   "in <a href='http://rfc.roxen.com/2518'>RFC 2518 (WEBDAV)</a>, such as "
@@ -38,11 +38,11 @@ Configuration conf;
 void create()
 {
   defvar( "lock-timeout", 3600, "Default lock timeout", TYPE_INT,
-	  "Number of seconds a DAV lock should by default be valid for. "
+	  "Number of seconds a WebDAV lock should by default be valid for. "
 	  "Negative disables locking. Zero means that locks default to "
 	  "being valid for infinite duration." );
   defvar( "max-lock-timeout", 86400, "Maximum lock timeout", TYPE_INT,
-	  "Maximum number of seconds a DAV lock should be valid for. "
+	  "Maximum number of seconds a WebDAV lock should be valid for. "
 	  "Negative disables the timeout header. "
 	  "Zero enables infinite locks. " );
 }
