@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.93 1999/07/24 18:26:02 nilsson Exp $
+/* $Id: wizard.pike,v 1.94 1999/10/04 12:22:29 nilsson Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -114,6 +114,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
     m_delete(m,"default");
     m->value = loc_encode(current||m->value||"", m, "none");
     if(!m->size)m->size="60,1";
+    m_delete(m,"quote");
     return make_tag("input", m);
 
    case "list": // String....
@@ -129,7 +130,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
       m->name="_delete_"+n+":"+v;
       m->value = " Remove ";
       m->type = "submit";
-      res+=make_tag("input",m)+"</td></tr>";
+      res+=make_tag("input",m-(["quote":""]))+"</td></tr>";
     }
     m->name = "_new_"+n;
     m->type = "string";
@@ -148,7 +149,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed b)
     m_delete(m, "value");
     if(!m->rows)m->rows="6";
     if(!m->cols)m->cols="40";
-    return make_container("textarea", m, loc_encode(current||"", m, "html"));
+    return make_container("textarea", m-(["quote":""]), loc_encode(current||"", m, "html"));
 
    case "radio":
     m_delete(m,"default");
