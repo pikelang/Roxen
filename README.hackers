@@ -1,12 +1,12 @@
 A few guidelines to people contributing to the code:
 
 We are using the CVS version of Pike so all recent Pike constructs are
-allowed and even preferred. The goal is to make and use general
+allowed and even preferred. The goal is to use or design and create general
 components from Pike instead of special purpose ones in ChiliMoon.
-Before implementing a new functions, see if it already exists in Pike
+Before implementing a new function, see if it already exists in Pike
 or if Pike can be extended with this functionality.
 
-Some pratical programming guidelines.
+Some practical programming guidelines.
 
 - Use "this" instead of "this_object()" (though the latter will be
   converted into the former by the optimizer).
