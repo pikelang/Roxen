@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.87 2002/01/11 11:57:23 grubba Exp $
+// $Id: global_variables.pike,v 1.88 2002/04/24 11:46:50 mast Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -119,7 +119,7 @@ void set_up_http_variables( Protocol o )
 		 "disconnected (after a timeout). Setting this higher than "
 		 "14000 is not recommended if you have modem users."));
 
-  defvar("show_internals", 1, LOCALE(72, "Show internal errors"), 
+  defvar("show_internals", 0, LOCALE(72, "Show internal errors"),
 	 TYPE_FLAG,
 	 LOCALE(73, "Show 'Internal server error' messages to the user. "
 		"This is very useful if you are debugging your own modules "
