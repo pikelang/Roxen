@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.32 1998/09/18 18:20:18 grubba Exp $";
+string cvs_version = "$Id: install.pike,v 1.33 1999/04/22 09:30:29 per Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -44,7 +44,7 @@ object roxenp()
 object|void open(string filename, string mode, int|void perm)
 {
   object o;
-  o=File();
+  o=Stdio.File();
   if(o->open(filename, mode, perm || 0666)) {
 #ifdef DEBUG
     perror("Opened fd "+o->query_fd()+"\n");
@@ -145,16 +145,16 @@ string gets(void|int sp)
 #else
   string s="", tmp;
   
-  while((tmp = stdin -> read(1)))
+  while((tmp = Stdio.stdin -> read(1)))
     switch(tmp)
     {
     case "\010":
       s = s[0..strlen(s) - 2];
       break;
-
+      
     case " ":  case "\t": 
       if(!sp)
-	while((stdin -> read(1)) != "\n") 
+	while((Stdio.stdin -> read(1)) != "\n") 
 	  ;
       else {
 	s += tmp;
@@ -196,7 +196,7 @@ private string get_domain(int|void l)
 #endif
     if(!s)
     {
-      t = read_bytes("/etc/resolv.conf");
+      t = Stdio.read_bytes("/etc/resolv.conf");
       if(t) 
       {
 	if(sscanf(t, "%*sdomain%*[ \t]%s\n", s)!=3)
