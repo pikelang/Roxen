@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.136 2001/02/07 21:57:25 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.137 2001/02/15 14:20:58 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -479,9 +479,13 @@ array get_variable_maps( object mod,
     variables = filter( variables,
                         lambda( mapping q ) { return q->sname[0] != '_'; } );
 
+  int f = config_setting("form-font-size");
+  string fs;
+  if( f >= 0 )  fs = "+"+f; else  fs = ""+f;
+
   map( variables, lambda( mapping q ) {
                     if( search( q->form, "<" ) != -1 )
-                      q->form=("<font size='-1'>"+q->form+"</font>");
+                      q->form=("<font size='"+fs+"'>"+q->form+"</font>");
                   } );
 
   if( m->section && (m->section != "_all"))
@@ -997,6 +1001,17 @@ string simpletag_cf_render_variable( string t, mapping m,
 #define usr(X) RXML.get_var( X, "usr" )
 #define var(X) RXML.get_var( X, "var" )
 
+  string dfs, dfe;
+  string df = config_setting( "docs-font-size" );
+  
+  if( !df )
+    dfs = dfe = "";
+  else
+  {
+    dfe = "</font>";
+    dfs = "<font size='"+(df>0?"+":"")+df+"'>";
+  }
+  
   switch( usr( "changemark" ) )
   {
     case "not":
@@ -1004,7 +1019,7 @@ string simpletag_cf_render_variable( string t, mapping m,
 	"<tr><td valign='top' width='20%'><b>"+
 	Roxen.html_encode_string(_("name"))+"</b></td>\n"
 	"<td valign='top'>"+_("form")+"</td></tr>\n"
-	"<tr><td colspan='2'>"+_("doc")+"</td></tr>\n";
+	"<tr><td colspan='2'>"+dfs+_("doc")+dfe+"</td></tr>\n";
 
     case "color":
       if( (int)_("changed") == 1 )
@@ -1015,7 +1030,7 @@ string simpletag_cf_render_variable( string t, mapping m,
 	"<td valign='top' "+extra+">"+_("form")+"</td>\n"
 	"</tr>\n"
 	"<tr>\n"
-	"<td colspan='2'>"+_("doc")+"</td>\n"
+	"<td colspan='2'>"+dfs+_("doc")+dfe+"</td>\n"
 	"</tr>\n";
       break;
 
@@ -1047,7 +1062,7 @@ string simpletag_cf_render_variable( string t, mapping m,
 	"<tr><td valign='top' width='20%'><b>"+
 	Roxen.html_encode_string(_("name"))+"</b></td>"
 	"<td valign='top'>"+_("form")+"</td></tr>"
-	"<tr><td colspan='2'>"+_("doc")+"</td></tr>\n";
+	"<tr><td colspan='2'>"+dfs+_("doc")+dfe+"</td></tr>\n";
   }
 }
 
