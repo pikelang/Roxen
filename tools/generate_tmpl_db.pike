@@ -4,24 +4,37 @@
 
 object db;
 
-string tag_insert(string tag, mapping args, string table )
+string tag_insert(string tag, mapping args, mapping oa)
 {
   string cols = "", values = ""; 
   int i = 0;
+  if(oa->switchvariable) {
+    string query = "select * from template_wizards where name='"+
+		    args->wizard_name+"' and category='"+args->category+"'";
+    string result = db->query(query);
+    if(sizeof(result)>0) 
+      args->wizard_id = db->query(query)[0]->id;
+    else {
+      write("  *** Wizard ["+args->wizard_name+"] does not exist\n");
+      return "";
+    }
+    args -= ([ "wizard_name":"" ]);
+  }
   foreach(indices(args), string arg) {
     cols += (i?",":"")+arg;
     values += (i?",":"")+"'"+db->quote(args[arg])+"'";
     i++;
   }
-  string q = sprintf("insert into " + table + " ("+cols+") values ("+values+")");
+  string q = sprintf("insert into " +
+		     oa->table + " ("+cols+") values ("+values+")");
   db->query(q);
   write("  "+q+"\n");
 }
 
-string tag_delete(string tag, mapping args, string table )
+string tag_delete(string tag, mapping args, mapping oa)
 {
   if(args->all) {
-    string q = "delete from "+table;
+    string q = "delete from "+oa->table;
     db->query(q);
     write("  "+q+"\n");
   }
@@ -33,7 +46,7 @@ string container_sql_insert(string tag, mapping args, string contents)
   parse_html(contents,
 	     ([ "insert" : tag_insert, "delete" : tag_delete ]),
 	     ([ ]),
-	     args->table );
+	     args);
 }
 
 int main(int argc, array(string) argv)
