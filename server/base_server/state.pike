@@ -1,6 +1,6 @@
 // This is Roxen state mechanism. Copyright © 1999, Idonex AB.
 //
-// $Id: state.pike,v 1.10 1999/11/29 22:10:54 per Exp $
+// $Id: state.pike,v 1.11 2000/01/28 16:31:06 wellhard Exp $
 
 #define CHKSPACE "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+/"
 
@@ -108,14 +108,29 @@ class Page_state {
   }
 
   // Encode present state into a string
-  string encode(void|mixed value, void|string key) {
-    if(value)
-      return encode_state4real(id->misc->state->values+([key||stateid:value]));
+  string encode(void|mixed value, void|string|array key) {
+    if(value) {
+      if(arrayp(key)) {
+	if(!arrayp(value))
+	  error("Bad argument 1 to encode. "
+		"If key is an array then value also has to be an array.");
+
+	if(sizeof(value) != sizeof(key))
+	  error("encode called on arrays of different sizes (%d != %d).",
+		sizeof(value), sizeof(key));
+	
+	return encode_state4real(id->misc->state->values+
+				 mkmapping(key, value));
+      }
+      else
+	return encode_state4real(id->misc->state->values+
+				 ([key||stateid:value]));
+    }
     return encode_state4real(id->misc->state->values);
   }
 
   // Encode present state into a URI safe string
-  string uri_encode(void|mixed value, void|string key) {
+  string uri_encode(void|mixed value, void|string|array key) {
     return replace(encode(value,key),({"+","/","="}),({"-","!","*"}));
   }
 
