@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2001, Roxen IS.
 
 #include <module.h>
 inherit "module";
@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.7 2004/05/16 00:28:39 mani Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.8 2004/05/17 00:41:48 mani Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
