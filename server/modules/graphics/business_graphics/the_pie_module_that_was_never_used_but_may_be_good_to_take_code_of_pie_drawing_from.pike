@@ -1,12 +1,12 @@
 /*
- * $Id: the_pie_module_that_was_never_used_but_may_be_good_to_take_code_of_pie_drawing_from.pike,v 1.1.1.1 1997/09/29 23:28:50 hedda Exp $
+ * $Id: the_pie_module_that_was_never_used_but_may_be_good_to_take_code_of_pie_drawing_from.pike,v 1.2 1997/10/06 19:51:58 hedda Exp $
  *
  * Makes pie-idagrams
  *
  * $Author: hedda $
  */
 
-constant cvs_version="$Id: the_pie_module_that_was_never_used_but_may_be_good_to_take_code_of_pie_drawing_from.pike,v 1.1.1.1 1997/09/29 23:28:50 hedda Exp $";
+constant cvs_version="$Id: the_pie_module_that_was_never_used_but_may_be_good_to_take_code_of_pie_drawing_from.pike,v 1.2 1997/10/06 19:51:58 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>

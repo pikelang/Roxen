@@ -5,6 +5,7 @@
 *.jpg binary
 /server/modules/proxies/gopher.pike -text -crlf
 *.ppm binary
+avant_garde binary
 bi binary
 bn binary
 button_font binary

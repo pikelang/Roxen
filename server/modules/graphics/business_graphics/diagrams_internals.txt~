@@ -1,15 +1,5 @@
-Diagram info:
-
-Huvud-funktioner:
-create_graph(mapping diagra_data);
-create_bars(mapping diagra_data);
-create_sumbars(mapping diagra_data);
-create_pie(mapping diagra_data);
-
-
-
-
 Graphs: 
+
 Graphs är punkter eller punkter med linjer mellan sig. Punkterna anges
 med x, y.
 Indata på formen x, y, y, y omvandlas.
@@ -96,15 +86,7 @@ int xsize, ysize;
 "textcolor":({int r, int g, int b})
 // färgen på texten
 
-"labelcolor":({int r, int g, int b})
-// färgen på labelstexten (default är textcolor):({int r, int g, int b})
-
 "orient":"hor" eller "vert"
 //Anger om skriften på x-axel ska skrivas horizontelt eller vertikalt.
 
 "linewidth":float bredd på ala linjer
-
-
-"image":object(image)
-//bilden som grafen ritas i.
-
