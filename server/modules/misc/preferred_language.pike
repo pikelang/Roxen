@@ -6,9 +6,8 @@
 #include <module.h>
 
 inherit "module";
-inherit "roxenlib";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.10 2000/04/25 14:21:26 nilsson Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.11 2000/04/30 18:56:24 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_PARSER;
 constant module_name = "Preferred Language Analyzer";
@@ -76,7 +75,7 @@ class TagEmitLanguages {
 					      ->misc->pref_languages)
 					     ->get_language() )->language;
 
-    string url=strip_prestate(strip_config(id->raw_url));
+    string url=Roxen.strip_prestate(Roxen.strip_config(id->raw_url));
     array(string) conf_langs=Array.map(indices(id->config) & languages,
 			       lambda(string lang) { return "-"+lang; } );
 
@@ -86,8 +85,8 @@ class TagEmitLanguages {
       res+=({ (["code":lid[0],
 		"en":lid[1],
 		"local":lid[2],
-		"preurl":add_pre_state(url, id->prestate-aggregate_multiset(@languages)+(<lang>)),
-		"confurl":add_config(url, conf_langs+({lang}), id->prestate),
+		"preurl":Roxen.add_pre_state(url, id->prestate-aggregate_multiset(@languages)+(<lang>)),
+		"confurl":Roxen.add_config(url, conf_langs+({lang}), id->prestate),
 		"localized":localized(lang) ]) });
     }
     return res;
