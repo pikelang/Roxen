@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.20 2000/03/24 21:45:36 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.21 2000/04/04 08:28:56 wellhard Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -161,6 +161,19 @@ static private string container_js_link(string name, mapping args,
   return make_container_unquoted("a", args, contents);
 }
 
+static private string container_js_popup_link(string name, mapping args,
+					      string contents, object id)
+{
+  string event = "return showPopup('"+id->misc->_popupname+"', '"+
+		 (id->misc->_popupparent||"none")+"', "+args->ox+", "+
+		 args->oy+", "+args->od;
+  if(id->supports->js_global_event)
+    event += ", event";
+  event += ");";
+  
+  return do_output_tag(args, ({ ([ "event":event ]) }), contents, id);
+}
+
 static private string int_cont_js_popup_label(string name, mapping args,
 					      string contents, mapping m)
 {
@@ -182,7 +195,7 @@ static private string container_js_popup(string name, mapping args,
     if(m->label)
       args->label = m->label;
   }
-  
+
   mapping largs = copy_value(args);
   if(largs["args-variable"]) m_delete(largs, "args-variable");
   if(largs->label) m_delete(largs, "label");
@@ -229,6 +242,7 @@ static private string container_js_popup(string name, mapping args,
   
   id->misc->_popupparent = old_pparent;
   id->misc->_popuplevel--;
+  id->misc->_popupname = popupname;
   //werror(" leaving.\n");
   
   if(args["args-variable"])
@@ -282,7 +296,8 @@ string container_js_dragdrop(string name, mapping args, string contents,
 }
 
 static private
-string tag_js_include(string name, mapping args, object id)
+string container_js_include(string name, mapping args, string contents,
+			    object id)
 {
   if(!id->supports["javascript1.2"] &&
      id->client_var && (float)(id->client_var->javascript) < 1.2)
@@ -300,7 +315,7 @@ string tag_js_dragdrop_body(string name, mapping args, object id)
 }
 
 static private
-string tag_js_insert(string name, mapping args, object id)
+string container_js_insert(string name, mapping args, string contents, object id)
 {
   get_jss(id); // Fire of some side effects.
   return make_tag("js-filter-insert", args);
@@ -344,16 +359,17 @@ mapping query_container_callers()
 {
   return ([ "js-write"       : container_js_write,
 	    "js-popup"       : container_js_popup,
+	    "js-popup-link"  : container_js_popup_link,
 	    "js-dragdrop"    : container_js_dragdrop,
 	    "js-link"        : container_js_link,
+	    "js-include"     : container_js_include,
+	    "js-insert"      : container_js_insert
   ]);
 }
 
 mapping query_tag_callers()
 {
-  return ([ "js-include"       : tag_js_include,
-	    "js-insert"        : tag_js_insert,
-            "js-dragdrop-body" : tag_js_dragdrop_body ]);
+  return ([ "js-dragdrop-body" : tag_js_dragdrop_body ]);
 }
 
 
