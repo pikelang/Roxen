@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.144 1998/08/18 10:52:43 neotron Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.145 1998/08/20 07:39:28 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -55,21 +55,38 @@ void create()
 
 	 "If the images in the cache have not been accessed for this "
 	 "number of hours they are removed.");
+
+
+  defvar("colorparsing", ({"body", "td", "layer", "ilayer", "table"}),
+	 "Tags to parse for color", 
+	 TYPE_STRING_LIST,
+	 "Which tags should be parsed for document colors? "
+	 "This will affect documents without gtext as well as documents "
+	 "with it, the parsing time is relative to the number of parsed "
+	 "tags in a document. You have to reload this module or restart "
+	 "roxen for changes of this variable to take effect.");
+
+  defvar("colormode", 1, "Normalize colors in parsed tags", TYPE_FLAG,
+	 "If set, replace 'roxen' colors (@c,m,y,k etc) with "
+	 "'netscape' colors (#rrggbb). Setting this to off will make the "
+	 "performance impact of the 'Tags to parse for color' option quite"
+	 " dramatically. You can try this out with the &lt;gauge&gt; tag.");
+	 
+//   defvar("notspeedy", 0, "Automaticaly detect colors in tables",
+// 	 TYPE_FLAG,
+// 	 "If this flag is set, the tags 'table', 'th', 'tr', 'td', 'font'"
+// 	 " 'layer' and 'ilayer'"
+// 	 " will be parsed to automatically detect the colors of"
+// 	 " a document. This will slow down the parser in a noticeable way, "
+// 	 "but it will be easier to use &lt;gtext&gt; since the colors "
+// 	 "will almost always have the correct default values");
   
-  defvar("speedy", 0, "Avoid automatic detection of document colors in tables",
-	 TYPE_FLAG|VAR_MORE,
-	 "If this flag is set, the tags 'table', 'th', 'tr', 'td', 'font'"
-	 " 'layer' and 'ilayer'"
-	 " will <b>not</b> be parsed to automatically detect the colors of"
-	 " a document. You will then have to specify all colors in all calls"
-	 " to &lt;gtext&gt; or in the 'body' tag");
-  
-  defvar("nobody", 0, "Avoid automatic detection of document colors from body",
-	 TYPE_FLAG|VAR_MORE,
-	 "If this flag is set, the 'body' tag"
-	 " will <b>not</b> be parsed to automatically detect the colors of "
-	 " a document. You will then have to specify all colors in all calls "
-	 " to &lt;gtext&gt;");
+//   defvar("body", 1, "Automatically detect colors in the &lt;body&gt; tag",
+// 	 TYPE_FLAG,
+// 	 "If this flag is not set, the 'body' tag"
+// 	 " will <b>not</b> be parsed to automatically detect the colors of "
+// 	 " a document. You will then have to specify all colors in all calls "
+// 	 " to &lt;gtext&gt;");
 
   defvar("deflen", 300, "Default maximum text-length", TYPE_INT|VAR_MORE,
 	 "The module will, per default, not try to render texts "
@@ -140,7 +157,7 @@ object load_font(string name, string justification, int xs, int ys)
   return fnt;
 }
 
-static private mapping (int:mapping(string:mixed)) cached_args = ([ ]);
+static private mapping cached_args = ([ ]);
 
 #define MAX(a,b) ((a)<(b)?(b):(a))
 
@@ -748,6 +765,8 @@ constant replace_to   = values( iso88591 ) + ({ nbsp, "<", ">", "&", });
 
 #define simplify_text( from ) replace(from,replace_from,replace_to)
 
+#define CACHE_SIZE 2048
+
 #define FNAME(a,b) (query("cache_dir")+sprintf("%x",hash(reverse(a[6..])))+sprintf("%x",hash(b))+sprintf("%x",hash(reverse(b-" ")))+sprintf("%x",hash(b[12..])))
 
 array get_cache_file(string a, string b)
@@ -842,7 +861,6 @@ array(int)|string write_text(int _args, string text, int size, object id)
 
 //  cache_set(key, text, "rendering");
 
-#if efun(get_font)
     if(args->nfont)
     {
       int bold, italic;
@@ -856,16 +874,17 @@ array(int)|string write_text(int _args, string text, int size, object id)
     }
     else if(args->font)
     {
-#endif
-      string fkey = args->font+"/"+args->talign+"/"+args->xpad+"/"+args->ypad;
-//       data = cache_lookup("fonts", fkey);
-//       if(!data)
-//       { 
+      int bold, italic;
+      if(args->bold) bold=1;
+      if(args->light) bold=-1;
+      if(args->italic) italic=1;
+      if(args->black) bold=2;
+      data = get_font(args->nfont,(int)args->font_size||32,bold,italic,
+		      lower_case(args->talign||"left"),
+		      (float)(int)args->xpad, (float)(int)args->ypad);
+      if(!data)
 	data = load_font(args->font, lower_case(args->talign||"left"),
 			 (int)args->xpad,(int)args->ypad);
-// 	cache_set("fonts", fkey, data);
-//       }
-#if efun(get_font)
     } else {
       int bold, italic;
       if(args->bold) bold=1;
@@ -876,7 +895,6 @@ array(int)|string write_text(int _args, string text, int size, object id)
 		      lower_case(args->talign||"left"),
 		      (float)(int)args->xpad, (float)(int)args->ypad);
     }
-#endif
 
     if (!data) {
       roxen_perror("gtext: No font!\n");
@@ -1052,27 +1070,34 @@ string quote(string in)
 
 #define ARGHASH query("cache_dir")+"ARGS_"+hash(mc->name)
 
+int last_argstat;
+
 void restore_cached_args()
 {
   args_restored = 1;
-  object o = open(ARGHASH, "r");
-  if(o)
+  array a = file_stat(ARGHASH);
+  if(a && (a[ST_MTIME] > last_argstat))
   {
-    string data = o->read();
-    catch {
-      object q;
-      if(sizeof(indices(q=Gz)))
-	data=q->inflate()->inflate(data);
-    };
-    catch {
-      cached_args |= decode_value(data);
-    };
-  }
-  if (cached_args && sizeof(cached_args)) {
-    number = sort(indices(cached_args))[-1]+1;
-  } else {
-    cached_args = ([]);
-    number = 0;
+    last_argstat = a[ST_MTIME];
+    object o = open(ARGHASH, "r");
+    if(o)
+    {
+      string data = o->read();
+      catch {
+	object q;
+	if(sizeof(indices(q=Gz)))
+	  data=q->inflate()->inflate(data);
+      };
+      catch {
+	cached_args |= decode_value(data);
+      };
+    }
+    if (cached_args && sizeof(cached_args)) {
+      number = sort(indices(cached_args))[-1]+1;
+    } else {
+      cached_args = ([]);
+      number = 0;
+    }
   }
 }
 
@@ -1102,11 +1127,8 @@ mapping find_cached_args(int num)
 {
   if(!args_restored) restore_cached_args();
   if(cached_args[num]) return cached_args[num];
-#if 0
-  This can be really slow. If the args are restored, we should be happy anyway. 
-  restore_cached_args();
+  restore_cached_args(); /* Not slow anymore, checks with stat... */
   if(cached_args[num]) return cached_args[num];
-#endif
   return 0;
 }
 
@@ -1115,20 +1137,30 @@ mapping find_cached_args(int num)
 int find_or_insert(mapping find)
 {
   mapping f2 = copy_value(find);
-  foreach(glob("magic_*", indices(f2)), string q) m_delete(f2,q);
-  if(!args_restored)   restore_cached_args();
-  array a = indices(cached_args);
-  array b = values(cached_args);
-  int i;
-  for(i=0; i<sizeof(a); i++) if(equal(f2, b[i]))  return a[i];
-#if 0
-  Again often a bad idea. Maybe should be a configurable option
-  (could be useful if you run several servers against the same cache fiel,
-   which you 2
-  restore_cached_args();
-  for(i=0; i<sizeof(a); i++) if(equal(f2, b[i])) return a[i];
-#endif
-  cached_args[number]=f2; // Save the same that you try to restore, please.
+  int res;
+  string q;
+
+  foreach(glob("magic_*", indices(f2)), q) 
+    m_delete(f2,q);
+
+  if(!args_restored)
+    restore_cached_args( );
+
+  array a=indices(f2),b=values(f2);
+  sort(a,b);
+  q = a*""+b*"";
+
+  if(res = cached_args[ q ])
+    return res;
+
+  restore_cached_args(); /* Not slow now, checks with stat.. */
+
+  if(res = cached_args[ q ])
+    return res;
+
+  cached_args[ number ] = f2;
+  cached_args[ q ] = number;
+
   remove_call_out(save_cached_args);
   call_out(save_cached_args, 10);
   return number++;
@@ -1157,7 +1189,7 @@ string magic_image(string url, int xs, int ys, string sn,
   if(!id->supports->images) return alt;
   if(!id->supports->netscape_javascript)
     return (!input)?
-      ("<a "+extra_args+"href=\""+url+"\"><img src=\""+image_1+"\" name="+sn+" border=0 "+
+       ("<a "+extra_args+"href=\""+url+"\"><img src=\""+image_1+"\" name="+sn+" border=0 "+
        "alt=\""+alt+"\"></a>\n"):
     ("<input type=image "+extra_args+" src=\""+image_1+"\" name="+input+">");
 
@@ -1215,6 +1247,19 @@ string tag_gtext_id(string t, mapping arg,
 #endif
 		   ;
 
+  if(arg->background) 
+    arg->background = fix_relative(arg->background,id);
+  if(arg->texture) 
+    arg->texture = fix_relative(arg->texture,id);
+  if(arg->magic_texture)
+    arg->magic_texture=fix_relative(arg->magic_texture,id);
+  if(arg->magic_background) 
+    arg->magic_background=fix_relative(arg->magic_background,id);
+  if(arg->magicbg) 
+    arg->magicbg = fix_relative(arg->magicbg,id);
+  if(arg->alpha) 
+    arg->alpha = fix_relative(arg->alpha,id);
+
   int num = find_or_insert( arg );
 
   if(!short)
@@ -1261,31 +1306,6 @@ string tag_graphicstext(string t, mapping arg, string contents,
   string pre, post, defalign, gt, rest, magic;
   int i;
   string split;
-
-  // No images here, let's generate an alternative..
-  if(!id->supports->images || id->prestate->noimages)
-  {
-    if(!arg->split) contents=replace(contents,"\n", "\n<br>\n");
-    if(arg->submit) return "<input type=submit name=\""+(arg->name+".x")
-		      + "\" value=\""+contents+"\">";
-    switch(t)
-    {
-     case "gtext":
-     case "anfang":
-      if(arg->href)
-	return "<a href=\""+arg->href+"\">"+contents+"</a>";
-      return contents;
-     default:
-      if(sscanf(t, "%s%d", t, i)==2)
-	rest="<h"+i+">"+contents+"</h"+i+">";
-      else
-	rest="<h1>"+contents+"</h1>";
-      if(arg->href)
-	return "<a href=\""+arg->href+"\">"+rest+"</a>";
-      return rest;
-      
-    }
-  }
 
   contents = contents[..((int)arg->maxlen||QUERY(deflen))];
   m_delete(arg, "maxlen");
@@ -1493,7 +1513,7 @@ string|array (string) tag_body(string t, mapping args, object id, object file,
      ||args->background||args->vlink)
     cols=1;
 
-#define FIX(Y,Z,X) do{if(!args->Y || args->Y==""){if(cols){defines->X=Z;args->Y=Z;changed=1;}}else{defines->X=args->Y;if(args->Y[0]!='#'){args->Y=ns_color(parse_color(args->Y));changed=1;}}}while(0)
+#define FIX(Y,Z,X) do{if(!args->Y || args->Y==""){if(cols){defines->X=Z;args->Y=Z;changed=1;}}else{defines->X=args->Y;if(QUERY(colormode)&&args->Y[0]!='#'){args->Y=ns_color(parse_color(args->Y));changed=1;}}}while(0)
 
   if(!search((id->client||({}))*"","Mosaic"))
   {
@@ -1509,7 +1529,8 @@ string|array (string) tag_body(string t, mapping args, object id, object file,
     FIX(alink,  "#ff0000",alink);
     FIX(vlink,  "#551a8b",vlink);
   }
-  if(changed) return ({make_tag("body", args) });
+  if(changed && QUERY(colormode))
+    return ({make_tag("body", args) });
 }
 
 
@@ -1524,21 +1545,23 @@ string|array(string) tag_fix_color(string tagname, mapping args, object id,
   else
     id->misc->colors += ({ ({ defines->fg, defines->bg, tagname }) });
 #undef FIX
-#define FIX(X,Y) if(args->X && args->X!=""){defines->Y=args->X;if(args->X[0]!='#'){args->X=ns_color(parse_color(args->X));changed = 1;}}
+#define FIX(X,Y) if(args->X && args->X!=""){defines->Y=args->X;if(QUERY(colormode) && args->X[0]!='#'){args->X=ns_color(parse_color(args->X));changed = 1;}}
 
   FIX(bgcolor,bg);
   FIX(text,fg);
   FIX(color,fg);
+#undef FIX
 
-  if(changed) return ({ make_tag(tagname, args) });
+  if(changed && QUERY(colormode))
+    return ({ make_tag(tagname, args) });
   return 0;
 }
 
 string|void pop_color(string tagname,mapping args,object id,object file,
 		 mapping defines)
 {
-  array c = id->misc->colors;
   if(args->help) return "This end-tag is parsed by &lt;gtext&gt; to get the document colors.";
+  array c = id->misc->colors;
   if(!c ||!sizeof(c)) 
     return;
 
@@ -1554,28 +1577,24 @@ string|void pop_color(string tagname,mapping args,object id,object file,
     }
   c = c[..sizeof(c)-i-2];
   id->misc->colors = c;
-
 }
 
 mapping query_tag_callers()
 {
-  return ([ "gtext-id":tag_gtext_id, ])
-    | (query("nobody")?([]):(["body":tag_body]))
-       // No reson to pop the end of body	 "/body":pop_color]))
-    | (query("speedy")?([]):
-       (["font":tag_fix_color,
-	 "table":tag_fix_color,
-	 "tr":tag_fix_color,
-	 "td":tag_fix_color,
-	 "layer":tag_fix_color,
-	 "ilayer":tag_fix_color,
-	 "/td":pop_color,
-	 "/tr":pop_color,
-	 "/font":pop_color,
-	 "/table":pop_color,
-	 "/layer":pop_color,
-	 "/ilayer":pop_color,
-       ]));
+  mapping tags = ([ "gtext-id":tag_gtext_id]);
+  foreach(query("colorparsing"), string t)
+  {
+    switch(t)
+    {
+     case "body":
+       tags[t] = tag_body;
+       break;
+     default:
+       tags[t] = tag_fix_color;
+       tags["/"+t]=pop_color;
+    }
+  }
+  return tags;
 }
 
 
