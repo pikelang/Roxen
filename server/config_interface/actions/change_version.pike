@@ -134,7 +134,7 @@ string parse( RequestID id )
       "<td>"+nice_relative_date( diff )+"</td>"
       "<td>"+f->dir+"</td></tr>\n";
   }
-  res += "</table>";
+  res += "</table>\n";
   
 
   if( warn )
@@ -150,9 +150,16 @@ string parse( RequestID id )
 			   roxen.configuration_dir,
 			   "server_version"),
 	      combine_path(getcwd(),"../start") )
-      +"</td></tr></table>";
-	      
+      +"</td></tr></table>\n";
 
+  res += "<table><tr><td valign='top'>"
+    "<img src='&usr.err-2;' alt='#' /></td>\n"
+    "<td>"+
+    _(0,"Note that the server will be automatically restarted with "
+      "the new version.")+
+    "</td>\n"
+    "</tr></table>\n";
+  
   res += "<submit-gbutton>"+_(138,"Change version")+"</submit-gbutton>";
 	      
   return res;
