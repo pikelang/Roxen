@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.200 2000/10/02 19:41:18 nilsson Exp $
+// $Id: roxenlib.pike,v 1.201 2001/01/01 09:06:55 nilsson Exp $
 
 //#pragma strict_types
 
@@ -1025,7 +1025,7 @@ string strftime(string fmt, int t)
       res += sprintf("%02d:%02d", lt->hour, lt->min);
       break;
     case 'S':	// Seconds [00,61]; 0-prefix
-      res += sprintf("%02", lt->sec);
+      res += sprintf("%02d", lt->sec);
       break;
     case 't':	// Tab
       res += "\t";
