@@ -3,8 +3,9 @@
 
 #include <module.h>
 inherit "module";
+inherit "roxenlib";
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.5 1998/09/09 09:21:19 per Exp $";
+"$Id: mailtags.pike,v 1.6 1998/09/09 10:03:27 per Exp $";
 
 constant thread_safe = 1;
 
@@ -25,55 +26,58 @@ constant thread_safe = 1;
 
 /* Prototypes ----------------------------------------------------- */
 
-class  ClientLayer 
+class Common
 {
-  class Common
-  {
-    int get_serial();
-  }
+  int get_serial();
+}
 
-  class User
-  {
-    inherit Common;
-    array(Mailbox) mailboxes();
-    mixed set( string name, mixed to );
-    mixed get( string name );
-    Mailbox get_or_create_mailbox( string name );
-    Mailbox get_incoming();
-    Mailbox get_drafts();
-  }
+class Mail
+{
+  inherit Common;
+  object mailbox;
+  object user;
+  string body();
+  Stdio.File body_fd();
+  mapping headers(int force);
+  multiset flags(int force);
+  void set_flag(string name);
+  void clear_flag(string name);
+  mixed set(string name, mixed to);
+  mixed get(string name);
+}
 
-  class Mail
-  {
-    inherit Common;
-    string body();
-    Stdio.File body_fd();
-    mapping headers(int force);
-    multiset flags(int force);
-    void set_flag(string name);
-    void clear_flag(string name);
-    mixed set(string name, mixed to);
-    mixed get(string name);
-  }
+class Mailbox
+{
+  inherit Common;
+  object user;
+  int rename(string to);
+  void delete();
+  string query_name(int force);
 
-  class Mailbox
-  {
-    inherit Common;
-    int rename(string to);
-    void delete();
-    string query_name(int force);
+  array(Mail) mails();
+  Mail add_mail(Mail m, int|void do_not_copy_the_flags);
+  void remove_mail(Mail m);
 
-    array(Mail) mails();
-    Mail add_mail(Mail m, int|void do_not_copy_the_flags);
-    void remove_mail(Mail m);
+  Mail low_create_mail( string bodyid, mapping headers );
+  Mail create_mail_from_fd( Stdio.File from );
+  Mail create_mail_from_data( string from );
+  Mail create_mail( MIME.Message from );
 
-    Mail low_create_mail( string bodyid, mapping headers )
-    Mail create_mail_from_fd( Stdio.File from );
-    Mail create_mail_from_data( string from );
-    Mail create_mail( MIME.Message from );
+}
 
-  }
+class User
+{
+  inherit Common;
+  array(Mailbox) mailboxes();
+  mixed set( string name, mixed to );
+  mixed get( string name );
+  Mailbox get_or_create_mailbox( string name );
+  Mailbox get_incoming();
+  Mailbox get_drafts();
+}
 
+class ClientLayer
+{
   User get_user( string username, string password );
   object get_cache_obj( program type, int id );
 }
@@ -114,12 +118,12 @@ array register_module()
 	    0,1 });
 }
 
-void query_tag_callers()
+mapping query_tag_callers()
 {
   return common_callers(  "tag_" );
 }
 
-void query_container_callers()
+mapping query_container_callers()
 {
   return common_callers(  "container_" );
 }
@@ -169,8 +173,12 @@ static mapping common_callers( string prefix )
 
 static string verify_ownership( Mail mailid, object id )
 {
-  // FIXME!
   if(!secure) return 0;
+  if(mailid->user != UID) 
+  {
+    id->realauth = 0;
+    return login( id );
+  }
 }
 
 static int num_unread(array(Mail) from)
@@ -198,7 +206,6 @@ static mapping make_flagmapping(multiset from)
 
 string login(object id)
 {
-  int id;
   string force = ("<return code=304>"
 		  "<header name=WWW-Authenticate "
                   "        value='realm=e-mail'>");
@@ -225,8 +232,8 @@ string tag_delete_mail(string tag, mapping args, object id)
   Mail mid = clientlayer->get_cache_obj( clientlayer->Mail, (int)args->mail );
   if(res = login(id))
     return res;
-  if(mail && mail->user == UID )
-    mid->delete();
+  if(mid && mid->user == UID )
+    mid->mailbox->remove_mail( mid );
 }
 
 // <mail-body mail=id>
@@ -236,7 +243,7 @@ string tag_mail_body(string tag, mapping args, object id)
   if(res = login(id))
     return res;
 
-  Mail mail = clientlyer->get_cache_obj( clientlayer->Mail, (int)args->mail );
+  Mail mail = clientlayer->get_cache_obj( clientlayer->Mail, (int)args->mail );
   if(res = login(id))
     return res;
   if(mail && mail->user == UID )
@@ -310,10 +317,10 @@ string tag_mail_body_part( string tag, mapping args, object id )
 {
   MIME.Message m = MIME.Message( tag_mail_body( tag, args, id ) );
   int part = (int)args->part;
-  if(!part) return msg->getdata();
-  if( msg->body_parts && sizeof(msg->body_parts) > part )
-    return msg->body_parts[ part ]->getdata();
-  return msg->getdata();
+  if(!part) return m->getdata();
+  if( m->body_parts && sizeof(m->body_parts) > part )
+    return m->body_parts[ part ]->getdata();
+  return m->getdata();
 }
 
 // <mail-body-parts mail=id
@@ -396,7 +403,7 @@ string container_mail_body_parts( string tag, mapping args, string contents,
       if(msg->type == "image") 
 	format = image_part_format;
       else
-	nformat = binary_part_format;
+	format = binary_part_format;
       
       mapping q = ([ "#url#":replace(binary_part_url,
 				     ({"#mail#", "#part#" }),
