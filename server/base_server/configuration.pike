@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.574 2004/05/14 16:36:01 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.575 2004/05/14 18:09:05 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1411,6 +1411,8 @@ DAVLock|LockFlag check_locks(string path, int(0..1) recursive, RequestID id)
   return state;
 }
 
+static multiset(DAVLock) active_locks = (<>);
+
 //! Unlock the lock represented by @[lock] on @[path].
 //!
 //! @returns
@@ -1439,8 +1441,50 @@ mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID id)
       if (ret) return ret;
     }
   }
+  active_locks[lock] = 0;
   // destruct(lock);
   return 0;
+}
+
+//! Force expiration of any locks that have timed out.
+int expire_locks(RequestID id)
+{
+  int t = time(1);
+  int min_time = 0x7fffffff;
+  foreach(active_locks; DAVLock lock;) {
+    if (lock->expiry_time) {
+      if (lock->expiry_time < t) {
+	unlock_file(lock->path, lock, id);
+      } else if (lock->expiry_time < min_time) {
+	min_time = lock->expiry_time;
+      }
+    }
+  }
+  return min_time - t;
+}
+
+static void expire_lock_loop()
+{
+  int t = expire_locks(0);	// NOTE: Called with RequestID 0!
+
+  if (sizeof(active_locks)) {
+    // Expire locks at least once every hour.
+    if (t < 3600) {
+      roxen.background_run(t, expire_lock_loop);
+    } else {
+      roxen.background_run(3600, expire_lock_loop);
+    }
+  }
+}
+
+//! Refresh a lock.
+//!
+//! Update the expiry time for the lock.
+void refresh_lock(DAVLock lock)
+{
+  if (lock->expiry_delta) {
+    lock->expiry_time = lock->expiry_delta + time(1);
+  }
 }
 
 //! Attempt to lock @[path].
@@ -1511,9 +1555,9 @@ mapping(string:mixed)|DAVLock lock_file(string path,
       continue;
     }
 
-    mapping(string:mixed)|DAVLock new_lock =
+    mapping(string:mixed) lock_error =
       function_object(func)->lock_file(subpath, lock, id);
-    if (mappingp(new_lock)) {
+    if (lock_error) {
       // Failure. Unlock the new lock.
       foreach(location_module_cache||location_modules(),
 	      [string loc2, function func2])
@@ -1531,11 +1575,21 @@ mapping(string:mixed)|DAVLock lock_file(string path,
 	if (func == func2) break;
       }
       // destruct(lock);
-      return new_lock;
+      return lock_error;
     }
   }
 
-  // FIXME: Timeout handling?
+  if (expiry_delta) {
+    // Lock with timeout.
+    // FIXME: Race-conditions.
+    if (!sizeof(active_locks)) {
+      // Start the lock expiration loop.
+      active_locks[lock] = 1;
+      expire_lock_loop();
+    } else {
+      active_locks[lock] = 1;
+    }
+  }
 
   // Success.
   return lock;
