@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.315 1999/04/14 15:23:36 marcus Exp $
+ * $Id: roxen.pike,v 1.316 1999/04/24 23:20:48 marcus Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,8 +8,9 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.315 1999/04/14 15:23:36 marcus Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.316 1999/04/24 23:20:48 marcus Exp $";
 
+object backend_thread;
 
 // Some headerfiles
 #define IN_ROXEN
@@ -2599,6 +2600,7 @@ int main(int|void argc, array (string)|void argv)
 #ifdef THREADS
   start_handler_threads();
   catch( this_thread()->set_name("Backend") );
+  backend_thread = this_thread();
 #if efun(thread_set_concurrency)
   thread_set_concurrency(QUERY(numthreads)+1);
 #endif
