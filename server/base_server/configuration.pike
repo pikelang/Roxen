@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.413 2001/01/21 21:56:49 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.414 2001/01/28 05:45:29 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -640,41 +640,35 @@ AuthModule find_auth_module( string name )
       return m;
 }
 
-public User authenticate( RequestID id,
-			  UserDB|void database,
-			  AuthModule|void method )
+public User authenticate( RequestID id, UserDB|void database)
 //! Try to authenticate the request with users from the specified user
 //! database. If no @[database] is specified, all datbases in the
 //! current configuration are searched in priority order, then the
-//! configuration user database. Same goes for the @[method].
+//! configuration user database.
 //!
 //! The return value is the autenticated user.
 //! id->misc->authenticated_user is always set to the return value.
 {
   User u;
-  if( method )
-    return id->misc->authenticated_user = method->authenticate( id, database );
-  else
-    foreach( auth_modules(), method )
-      if( u = method->authenticate( id, database ) )
-	return id->misc->authenticated_user = u;
+  foreach( auth_modules(), AuthModule method )
+    if( u = method->authenticate( id, database ) )
+      return id->misc->authenticated_user = u;
 }
 
 public mapping authenticate_throw( RequestID id, string realm,
-				   UserDB|void database,
-				   AuthModule|void method)
+				   UserDB|void database)
 //! Returns a reply mapping, similar to @[Roxen.http_rxml_reply] with
 //! friends. If no @[database] is specified, all datbases in the
 //! current configuration are searched in priority order, then the
-//! configuration user database. Same goes for the @[method]
+//! configuration user database.
 {
   mapping m;
-  if( method )
-    return method->authenticate_throw( id, realm, database );
-  else
-    foreach( auth_modules(), method )
-      if( m  = method->authenticate_throw( id, realm, database ) )
-	return m;
+  foreach( auth_modules(), AuthModule method )
+    if( m  = method->authenticate_throw( id, realm, database ) )
+    {
+      werror( "%O\n", m );
+      return m;
+    }
 }
 
 
