@@ -7,7 +7,6 @@ void create(object c)
 {
   if(c)
   {
-    defvar("location", "/ri/", "The mountpoint", TYPE_LOCATION, "");
     defvar("cache-dir", "../gimage/"+c->short_name( c->name )+"/",
 	   "Cache directory", TYPE_STRING, 
 	   "Image and argument cache directory.");
@@ -22,7 +21,7 @@ void start()
 array register_module()
 {
   return ({ 
-    MODULE_LOCATION|MODULE_PARSER,
+    MODULE_PARSER,
     "Roxen image manipulation tag",
     "Layer base image manipulation tag with plugins",
     0,1 
@@ -202,7 +201,7 @@ mapping cache_image(int hmm, mapping val)
 
 /*  ---------------------------------------- LOCATION FUNCTIONS */
 
-mapping find_file(string f, object id)
+mapping find_internal(string f, object id)
 {
   int img_id = (int)f;
   int oimc = id->misc->cacheable;
@@ -301,7 +300,7 @@ string tag_rimage_id( string t, mapping m, string contents, object id )
       m->height = (string)t->ysize;
     }
   }
-  return query_location() + i[0];
+  return query_internal_location() + i[0];
 }
 
 string tag_rimage(string t, mapping m, string contents, object id)

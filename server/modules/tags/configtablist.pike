@@ -1,12 +1,12 @@
 /*
- * $Id: configtablist.pike,v 1.11 1998/07/10 01:08:11 js Exp $
+ * $Id: configtablist.pike,v 1.12 1999/02/27 00:42:13 marcus Exp $
  *
  * Makes a tab-list like the one in the config-interface.
  *
- * $Author: js $
+ * $Author: marcus $
  */
 
-constant cvs_version="$Id: configtablist.pike,v 1.11 1998/07/10 01:08:11 js Exp $";
+constant cvs_version="$Id: configtablist.pike,v 1.12 1999/02/27 00:42:13 marcus Exp $";
 constant thread_safe=1;
 
 #define use_contents_cache 0
@@ -29,7 +29,7 @@ mapping(string:string) gif_cache = ([]);
 
 array register_module()
 {
-  return(({ MODULE_PARSER|MODULE_LOCATION, "Config tab-list", 
+  return(({ MODULE_PARSER, "Config tab-list", 
 	      "Adds some tags for making a config-interface "
 	      "look-alike tab-list.<br>\n"
 	      "Usage:<br>\n"
@@ -53,8 +53,6 @@ array register_module()
 
 void create()
 {
-  defvar("location", "/configtabs/", "Mountpoint", TYPE_LOCATION|VAR_MORE,
-	 "The URL-prefix for the buttons.");
 }
 
 string tag_config_tab(string t, mapping a, string contents)
@@ -72,7 +70,7 @@ string tag_config_tab(string t, mapping a, string contents)
   dir+="/";
   m_delete(a, "selected");
 
-  img_attrs->src = QUERY(location) + dir +
+  img_attrs->src = query_internal_location() + dir +
     replace(http_encode_string(contents), "?", "%3f") + ".gif";
   if (a->alt) {
     img_attrs->alt = a->alt;
@@ -147,7 +145,7 @@ object load_interface()
   return(roxen->configuration_interface());
 }
 
-mapping find_file(string f, object id)
+mapping find_internal(string f, object id)
 {
   string s;
 #if use_gif_cache
