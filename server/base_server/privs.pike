@@ -1,6 +1,6 @@
 #if efun(seteuid)
 #include <module.h>
-string cvs_version = "$Id: privs.pike,v 1.23 1997/10/08 15:30:44 grubba Exp $";
+string cvs_version = "$Id: privs.pike,v 1.24 1997/10/09 03:47:46 grubba Exp $";
 
 int saved_uid;
 int saved_gid;
@@ -54,6 +54,18 @@ void create(string reason, int|string|void uid, int|void gid)
   saved_uid = geteuid();
   saved_gid = getegid();
   seteuid(0);
+
+  /* A string of digits? */
+  if (stringp(uid) && ((int)uid) &&
+      (replace(uid, ({ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" }),
+	       ({ "", "", "", "", "", "", "", "", "", "" })) == "")) {
+    uid = (int)uid;
+  }
+  if (stringp(gid) && ((int)gid) &&
+      (replace(gid, ({ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" }),
+	       ({ "", "", "", "", "", "", "", "", "", "" })) == "")) {
+    gid = (int)gid;
+  }
 
   if(!stringp(uid)) {
     u = getpwuid(uid);
