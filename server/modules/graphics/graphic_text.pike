@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.116 1998/03/10 22:23:12 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.117 1998/03/20 03:36:42 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -24,118 +24,7 @@ array register_module()
 	      "Graphics text",
 	      ("Generates graphical texts.<p>"
 	       "See <tt>&lt;gtext help&gt;&lt;/gtext&gt;</tt> for "
-	       "more information.\n<p>"+doc()),
-#if 0
-	      "Defines a few new containers, which all render text to gifs "
-	      "using the image module in pike.\n<p>"
-	      "<b>&lt;gh1&gt;</b> to <b>&lt;gh6&gt;:</b> Headers<br>\n"
-	      "<b>&lt;gh&gt;:</b> Header<br>\n"
-	      "<b>&lt;gtext&gt;:</b> Graphical text<br>\n"
-	      "<b>&lt;anfang&gt;:</b> Make the first character a "
-	      "graphical one. Not all that useful, really.<br>\n"
-	      "<br>\n"
-	      "<b>Common arguments:</b>\n <pre>"
-	      " verbatim        Do not try to be typographically correct\n"
-	      " bg=color        Use this background, default taken from the\n"
-	      "                 &lt;body&gt; tag, if any\n"
-	      " fg=color        Use this foreground, default taken from the\n"
-	      "                 &lt;body&gt; tag, if any\n"
-	      " nfont=fnt       Use this font. The fonts can be found in the\n"
-	      "                 directory specified in the configuration\n"
-	      "                 interface.\n"
-	      "                 If no font is specified, the one from the\n"
-	      "                 define 'nfont' is used, or if there is no\n"
-	      "                 define, the default font will be used.\n"
-	      " bold            Try to find a bold version of the font.\n"
-	      " italic          Try to find an italic version of the font.\n"
-	      " black           Try to find a black (heavy) version of the font.\n"
-	      " light           Try to find a light version of the font.\n"
-	      " scale=float     Scale to this font, mostly useful in the &lt;gtext&gt;\n"
-	      "                 tag, will not work at all in the &lt;gh[number]&gt;\n"
-	      "                 tags.\n"
-	      " 2 3 4 5 6       Short for scale=1.0/([number]*0.6)\n"
-	      " notrans         Do _not_ make the background color transparent\n"
-	      " split           Make each word into a separate gif image\n"
-	      " split=char      Split the string also at CHAR\n"
-	      " href=url        Link the image to the specified URL\n"
-	      "                 The 'link' color of the document will be\n"
-	      "                 used as the default foreground of the text\n"
-	      " alt=message     Sets the 'alt' attribute.\n"
-	      "                 Use alt=\"\" if no alternate message is wanted.\n"
-	      " quant=cols      Use this number of colors\n"
-	      " magic[=message] Modifier to href, more flashy links\n"
-	      "                 Does <b>not</b> work with 'split'\n"
-	      " magicbg=bg      As background, but for the 'magic' image\n"
-	      " magic_X         same as X, where X is any other argument,\n"
-	      "                 but for the 'magic' image.\n"
-	      " fuzz[=color]    Apply the 'glow' effect to the result\n"
- 	      " fs              Use floyd-steinberg dithering\n"
-	      " border=int,col. Draw an border (width is the first argument\n"
-	      "                 in the specified color\n"
-	      " spacing=int     Add this amount of spacing around the text\n"
-	      " xspacing=int    like spacing, but only horizontal\n"
-	      " yspacing=int    like spacing, but only vertical\n"
-	      " size=int,int    Use this (absolute) size\n"
-	      " xsize=int       Use this (absolute) size\n"
-	      " ysize=int       Use this (absolute) size\n"
-	      " bevel=int       Draw a bevel box (width is the argument)\n"
-	      " pressed         Invert the \"direction\" of the bevel box\n"
-	      " talign=dir      Justify the text to the left, right, or center\n"
-	      " textbox=al,col. Use 'al' as opaque value to draw a box below\n"
-	      "                 the text with the specified color.\n"
-	      " xpad=X%         Increase padding between characters with X%\n"
-	      " xpad=Y%         Increase padding between lines with Y%\n"
-	      " shadow=int,dist Draw a drop-shadow (variable distance/intensity)\n"
-	      " bshadow=dist    Draw a blured drop-shadow (variable distance)\n"
-	      " scolor=color    Use this color as the shadow color.\n"
-	      " ghost=dist,blur,col\n"
-	      "                 Do a 'ghost text'. Do NOT use together with\n"
-	      "                 'shadow'. Magic coloring won't work with it.\n"
-	      " glow=color      Draw a 'glow' outline around the text.\n"
-	      " opaque=0-100%   Draw with more or less opaque text (100%\n"
-	      "                 is default)\n"
-	      " rotate=ang(deg.)Rotate the finished image\n"
-	      " background=file Use the specifed file as a background\n"
-	      "                 Supported file-formats: gif and ppm, jpeg if\n"
-	      "                 the jpeg library was available when roxen was\n"
-	      "                 compiled\n"
-	      " texture=file    Use the specified file as text texture\n"
-	      " tile            Tile the background and foreground images\n"
-	      "                 if they are smaller than the actual image\n"
-	      " mirrortile      same as above, but mirror around x and y axis\n"
-	      "                 for odd frames, creating seamless textures\n"
-	      " turbulence=args args is: frequency,color;freq,col;freq,col\n"
-	      "                 Apply a turbulence filter, and use this as the\n"
-	      "                 background.\n"
-	      " maxlen=arg      The maximum length of the rendered text will be\n"
-	      "                 the specified argument. The default is 300, this\n"
-	      "                 is used to safeguard against mistakes like\n"
-	      "                 &lt;gh1&gt;&lt;/gh&gt;, which would otherwise\n"
-	      "                 parse the whole document.\n"
-	      " help            Display this text\n"
-	      " scroll=width,steps,delay  Make a horrible scrolltext\n"
-	      " fadein=blur,steps,delay,initialdelay  Make a (somewhat less) horrible fadein\n"
-	      "\n"
-	      "<b>Arguments passed on the the &lt;a&gt; tag (if href is specified):</b>\n "
-	      " target=...\n"
-	      " onClick=...\n"
-	      "</pre>\n",
-#endif
-	      0,
-	      1,
-	      });
-}
-
-
-array (string) list_fonts()
-{
-  array fnts;
-  catch(fnts = get_dir("fonts/32/") - ({".",".."}));
-  if(!fnts)
-  {
-    return ({});
-  }
-  return fnts;
+	       "more information.\n<p>"+doc()), 0, 1, });
 }
 
 void create()
@@ -146,9 +35,7 @@ void create()
 	 "directory. We currently do not clean this directory.");
   
   defvar("cache_age", 48, "Cache max age",
-
 	 TYPE_INT,
-
 	 "If the images in the cache have not been accessed for this "
 	 "number of hours they are removed.");
   
@@ -177,22 +64,9 @@ void create()
   defvar("gif", 0, "Append .gif to all images", TYPE_FLAG|VAR_MORE,
 	 "Append .gif to all images made by gtext. Normally this will "
 	 "only waste bandwidth");
-
-#ifdef TYPE_FONT
   // compatibility variables...
   defvar("default_size", 32, 0, TYPE_INT,0,0,1);
   defvar("default_font", "urw_itc_avant_garde-demi-r",0,TYPE_STRING,0,0,1);
-#else
-  defvar("default_size", 32, "Default font size", TYPE_INT_LIST,
-	 "The default size for the font. This is used for the 'base' size, "
-	 "and can be scaled up or down in the tags.",
-	 ({ 16, 32, 64 }));
-  
-  defvar("default_font", "urw_itc_avant_garde-demi-r", "Default font",
-	 TYPE_STRING_LIST,
-	 "The default font. The 'font dir' will be prepended to the path",
-	 list_fonts());
-#endif
 }
 
 string query_location() { return query("location"); }
@@ -229,475 +103,6 @@ object load_font(string name, string justification, int xs, int ys)
 }
 
 static private mapping (int:mapping(string:mixed)) cached_args = ([ ]);
-
-#define MAX(a,b) ((a)<(b)?(b):(a))
-
-#if !efun(make_matrix)
-static private mapping (int:array(array(int))) matrixes = ([]);
-array (array(int)) make_matrix(int size)
-{
-  if(matrixes[size]) return matrixes[size];
-  array res;
-  int i;
-  int j;
-  res = Array.map(allocate(size), lambda(int s, int size){
-    return allocate(size); }, size);
-
-  for(i=0; i<size; i++)
-    for(j=0; j<size; j++)
-      res[i][j] = (int)MAX((float)size/2.0-sqrt((size/2-i)*(size/2-i) + (size/2-j)*(size/2-j)),0);
-  return matrixes[size] = res;
-}
-#endif
-
-string fix_relative(string file, object id)
-{
-  if(file != "" && file[0] == '/') return file;
-  file = combine_path(dirname(id->not_query) + "/",  file);
-  return file;
-}
-
-object last_image;      // Cache the last image for a while.
-string last_image_name;
-object load_image(string f,object id)
-{
-  if(last_image_name == f && last_image) return last_image->copy();
-  string data;
-  object file;
-  object img
-#if !constant(Image.PNM)
-  =Image.image()
-#endif
-    ;
-  
-  if(!(data=roxen->try_get_file(fix_relative(f, id),id)))
-    if(!(file=open(f,"r")) || (!(data=file->read())))
-      return 0;
-//werror("Read "+strlen(data)+" bytes.\n");
-#if constant(Image.PNM.decode)
-  catch { if(!img) img = Image.PNM.decode( data ); };
-#endif
-#if constant(Image.GIF.decode)
-  catch { if(!img) img = Image.GIF.decode( data ); };
-#endif
-#if constant(Image.JPEG.decode)
-  catch { if(!img) img = Image.JPEG.decode( data ); };
-#endif
-#if !constant(Image.PNM.decode)
-  if (catch { if(!img->frompnm(data)) return 0;}) return 0;
-#endif
-  if(!img) return 0;
-  last_image = img; last_image_name = f;
-  return img->copy();
-}
-
-object  blur(object img, int amnt)
-{
-  img->setcolor(0,0,0);
-  img = img->autocrop(amnt, 0,0,0,0, 0,0,0);
-
-  for(int i=0; i<amnt; i++) 
-    img = img->apply_matrix( make_matrix((int)sqrt(img->ysize()+20)));
-  return img;
-}
-
-object  outline(object  on, object  with,
-		       array (int) color, int radie, int x, int y)
-{
-  int steps=10;
-  for(int j=0; j<=steps; j++)
-    on->paste_alpha_color(with, @color,
-			  (int)(0.5+x-(sin((float)j/steps*3.145*2)*radie)),
-			  (int)(0.5+y-(cos((float)j/steps*3.145*2)*radie)));
-  return on;
-}
-
-array white = ({ 255,255,255 });
-array lgrey = ({ 200,200,200 });
-array grey = ({ 128,128,128 });
-array black = ({ 0,0,0 });
-
-array wwwb = ({ lgrey,lgrey,grey,black });
-object  bevel(object  in, int width, int|void invert)
-{
-  int h=in->ysize();
-  int w=in->xsize();
-
-  object corner = Image.image(width+1,width+1);
-  object corner2 = Image.image(width+1,width+1);
-  object pix = Image.image(1,1);
-
-  for(int i=-1; i<=width; i++) {
-    corner->line(i,width-i,i,-1, @white);
-    corner2->setpixel(width-i, width-i, @white);
-    in->paste_alpha(pix, 185, w - width + i+1, h - width + i+1);
-  }
-
-  if(!invert)
-  {
-    in->paste_alpha(Image.image(width,h-width*2,@white), 160, 0, width);
-    in->paste_alpha(Image.image(width,h-width*2,@black), 128, in->xsize()-width, width);
-    in->paste_alpha(Image.image(w-width,width,@white), 160, 0, 0);
-    in->paste_alpha(Image.image(w-width,width,@black), 128, width, in->ysize()-width);
-  } else  {
-    corner=corner->invert();
-    corner2=corner2->invert();
-    in->paste_alpha(Image.image(width,h-width*2,@black), 160, 0, width);
-    in->paste_alpha(Image.image(width,h-width*2,@white), 128, in->xsize()-width, width);
-    in->paste_alpha(Image.image(w-width,width,@black), 160, 0, 0);
-    in->paste_alpha(Image.image(w-width,width,@white), 128, width, in->ysize()-width);
-  }
-
-  in->paste_mask(corner, corner->color(95,95,95), in->xsize()-width,-1);
-  in->paste_mask(corner, corner->invert()->color(128,128,128),
-		 in->xsize()-width,-1);
-  in->paste_mask(corner, corner->color(95,95,95), -1, in->ysize()-width);
-  in->paste_mask(corner, corner->invert()->color(128,128,128),
-                 -1, in->ysize()-width);
-  corner=0;
-  in->paste_mask(corner2, corner2->color(70,70,70), -1, -1);
-
-  corner2 = pix = 0;
-  return in;
-}
-
-
-object make_text_image(mapping args, object font, string text,object id)
-{
-  object text_alpha=font->write(@(text/"\n"));
-  int xoffset=0, yoffset=0;
-
-  if(!text_alpha->xsize() || !text_alpha->ysize())
-    text_alpha = Image.image(10,10, 0,0,0);
-  
-//  perror("Making image of '%s', args=%O\n", text, args);
-
-  if(int op=((((int)args->opaque)*255)/100)) // Transparent text...
-    text_alpha=text_alpha->color(op,op,op);
-
-  int txsize=text_alpha->xsize();
-  int tysize=text_alpha->ysize(); // Size of the text, in pixels. 
-
-  int xsize=txsize; // image size, in pixels
-  int ysize=tysize;
-
-//  perror("Xsize=%d; ysize=%d\n",xsize,ysize);
-
-  if(args->bevel)
-  {
-    xoffset += (int)args->bevel;
-    yoffset += (int)args->bevel;
-    xsize += ((int)args->bevel)*2;
-    ysize += ((int)args->bevel)*2;
-  }
-
-  if(args->spacing)
-  {
-    xoffset += (int)args->spacing;
-    yoffset += (int)args->spacing;
-    xsize += ((int)args->spacing)*2;
-    ysize += ((int)args->spacing)*2;
-  }
-
-  if(args->yspacing)
-  {
-    yoffset += (int)args->yspacing;
-    ysize += ((int)args->yspacing)*2;
-  }
-
-  if(args->shadow)
-  {
-    xsize+=((int)(args->shadow/",")[-1])+2;
-    ysize+=((int)(args->shadow/",")[-1])+2;
-  }
-
-  if(args->bshadow)
-  {
-    xsize+=(int)args->bshadow+3;
-    ysize+=(int)args->bshadow+3;
-  }
-
-  if(args->fadein)
-  {
-    xsize+=6;
-    ysize+=6;
-    xoffset+=3;
-    yoffset+=3;
-  }
-
-  if(args->move)
-  {
-    int dx,dy;
-    sscanf(args->move, "%d,%d", dx, dy);
-    xoffset += dx;
-    yoffset += dy;
-  }
-
-  if(args->ghost)
-  {
-    int howmuch=(int)args->ghost;
-    xsize+=howmuch*2+10;
-    xoffset += 3;
-    ysize+=howmuch*2+10;
-  }
-
-  if(args->xspacing)
-  {
-    xoffset += (int)args->xspacing;
-    xsize += ((int)args->xspacing)*2;
-  }
-
-  if(args->border)
-  {
-    xoffset += (int)args->border;
-    yoffset += (int)args->border;
-    xsize += ((int)args->border)*2;
-    ysize += ((int)args->border)*2;
-  }
-
-  
-  array (int) bgcolor = parse_color(args->bg);
-  array (int) fgcolor = parse_color(args->fg);
-
-  object background,foreground;
-
-
-  if(args->texture) {
-    foreground = load_image(args->texture,id);
-    if(args->tile)
-    {
-      object b2 = Image.image(xsize,ysize);
-      for(int x=0; x<xsize; x+=foreground->xsize())
-	for(int y=0; y<ysize; y+=foreground->ysize())
-	  b2->paste(foreground, x, y);
-      foreground = b2;
-    } else if(args->mirrortile) {
-      object b2 = Image.image(xsize,ysize);
-      object b3 = Image.image(foreground->xsize()*2,foreground->ysize()*2);
-      b3->paste(foreground,0,0);
-      b3->paste(foreground->mirrorx(),foreground->xsize(),0);
-      b3->paste(foreground->mirrory(),0,foreground->ysize());
-      b3->paste(foreground->mirrorx()->mirrory(),foreground->xsize(),
-		foreground->ysize());
-      foreground = b3;
-      for(int x=0; x<xsize; x+=foreground->xsize())
-      {
-	for(int y=0; y<ysize; y+=foreground->ysize())
-	  if(y%2)
-	    b2->paste(foreground->mirrory(), x, y);
-	  else
-	    b2->paste(foreground, x, y);
-	foreground = foreground->mirrorx();
-      }
-      foreground = b2;
-    }
-  }
-
-  if((args->background) && (background = load_image(args->background, id))) {
-    background = background;
-    if((float)args->scale >= 0.1)
-      background = background->scale(1.0/(float)args->scale);
-
-    if(args->tile)
-    {
-      object b2 = Image.image(xsize,ysize);
-      for(int x=0; x<xsize; x+=background->xsize())
-	for(int y=0; y<ysize; y+=background->ysize())
-	  b2->paste(background, x, y);
-      background = b2;
-    } else if(args->mirrortile) {
-      object b2 = Image.image(xsize,ysize);
-      object b3 = Image.image(background->xsize()*2,background->ysize()*2);
-      b3->paste(background,0,0);
-      b3->paste(background->mirrorx(),background->xsize(),0);
-      b3->paste(background->mirrory(),0,background->ysize());
-      b3->paste(background->mirrorx()->mirrory(),background->xsize(),
-		background->ysize());
-      background = b3;
-      for(int x=0; x<xsize; x+=background->xsize())
-      {
-	for(int y=0; y<ysize; y+=background->ysize())
-	  if(y%2)
-	    b2->paste(background->mirrory(), x, y);
-	  else
-	    b2->paste(background, x, y);
-	background = background->mirrorx();
-      }
-      background = b2;
-    }
-
-    xsize = background->xsize();
-    ysize = background->ysize();
-    switch(lower_case(args->talign||"left")) {
-    case "center":
-      xoffset = (xsize/2 - txsize/2);
-      yoffset = (ysize/2 - tysize/2);
-      break;
-    case "right":
-      xoffset = (xsize - txsize);
-      break;
-    case "left":
-    }
-  } else
-    background = Image.image(xsize, ysize, @bgcolor);
-
-  if(args->border)
-  {
-    int b = (int)args->border;
-    background->setcolor(@parse_color((args->border/",")[-1]));
-
-    for(--b;b>=0;b--)
-    {
-      // upper left -- upper right
-      background->line(b,b, xsize-b-1, b);
-
-      // lower left -- lower right
-      background->line(b,ysize-b-1, xsize-b-1, ysize-b-1);
-
-      // upper left -- lower left
-      background->line(b,b,   b, ysize-b-1);
-      // upper right -- lower right
-      background->line(xsize-b-1,b, xsize-b-1, ysize-b-1);
-    }
-  }
-  
-  background->setcolor(@bgcolor);
-
-  if(args->size || args->xsize || args->ysize)
-  {
-    int xs=background->xsize(), ys=background->ysize();
-    if(args->size) { xs=(int)args->size; ys=(int)(args->size/",")[-1]; }
-    if(args->xsize) xs=(int)args->xsize; 
-    if(args->ysize) ys=(int)args->ysize;
-    background = background->copy(0,0,xs,ys);
-  }
-
-  
-  if(args->turbulence)
-  {
-    array (float|array(int)) arg=({});
-    foreach((args->turbulence/";"),  string s)
-    {
-      array q= s/",";
-      if(sizeof(q)<2) args+=({ ((float)s)||0.2, ({ 255,255,255 }) });
-      arg+=({ ((float)q[0])||0.2, parse_color(q[1]) });
-    }
-    background=background->turbulence(arg);
-  }
-  
-
-  if(args->bevel)
-    background = bevel(background,(int)args->bevel,!!args->pressed);
-
-  if(args->textbox) // Draw a text-box on the background.
-  {
-    int alpha,border;
-    string bg;
-    sscanf(args->textbox, "%d,%s", alpha, bg);
-    sscanf(bg,"%s,%d", bg,border);
-    background->paste_alpha(Image.image(txsize+border*2,tysize+border*2,
-				  @parse_color(bg)),
-			    255-(alpha*255/100),xoffset-border,yoffset-border);
-  }
-
-  if(args->ghost)
-  { // Francesco..
-    int sdist = (int)args->ghost;
-    int bl=(int)(args->ghost/",")[1];
-    array(int)clr=parse_color((args->ghost/",")[-1]);
-    int j;
-    object ta = text_alpha->copy();
-    for (j=0;j<bl;j++)
-      ta=ta->apply_matrix(({
-	({6,7,7,7,6}),({7,8,8,8,7}),({7,8,8,8,7}),({7,8,8,8,7}),({6,7,7,7,6})
-       }));
-    background->paste_alpha_color(ta,@clr,xoffset+sdist,yoffset+sdist);
-    fgcolor=bgcolor;
-  }
-
-  
-  if(args->shadow)
-  {
-    int sd = ((int)args->shadow+10)*2;
-    int sdist = ((int)(args->shadow/",")[-1])+2;
-    object ta = text_alpha->copy();
-    ta = ta->color(256-sd,256-sd,256-sd);
-    array sc = parse_color(args->scolor||"black");
-    background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
-				  xoffset+sdist,yoffset+sdist);
-  }
-
-#define MIN(x,y) ((x)<(y)?(x):(y))
-
-  if(args->bshadow)
-  {
-    int sdist = (int)(args->bshadow)+1;
-    int xs,ys;
-    xs = text_alpha->xsize()+sdist*2+4;
-    ys = text_alpha->ysize()+sdist*2+4;
-    object ta = Image.image(xs+sdist*2,ys+sdist*2);
-    array sc = parse_color(args->scolor||"black");
-
-    ta->paste_alpha_color(text_alpha,255,255,255,sdist,sdist);
-    ta = blur(ta, MIN((sdist/2),1))->color(256,256,256);
-
-    background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
-				  xoffset+sdist,yoffset+sdist);
-  }
-
-  if(args->glow)
-  {
-    int amnt = (int)(args->glow/",")[-1]+2;
-    array (int) blurc = parse_color((args->glow/",")[0]);
-    background->paste_alpha_color(blur(text_alpha, amnt),@blurc,
-				  xoffset-amnt, yoffset-amnt);
-  }
-  
-  if(args->chisel)
-    foreground=text_alpha->apply_matrix(({ ({8,1,0}),
-					   ({1,0,-1}),
-					   ({0,-1,-8}) }),
-					128,128,128, 15 )
-      ->color(@fgcolor);
-  
-
-  if(!foreground)  foreground=Image.image(txsize, tysize, @fgcolor);
-  if(args->textscale)
-  {
-    string c1="black",c2="black",c3="black",c4="black";
-    sscanf(args->textscale, "%s,%s,%s,%s", c1, c2, c3, c4);
-    foreground->tuned_box(0,0, txsize,tysize,
-			  ({parse_color(c1),parse_color(c2),parse_color(c3),
-			      parse_color(c4)}));
-  }
-  if(args->outline)
-    outline(background, text_alpha, parse_color((args->outline/",")[0]),
-	    ((int)(args->outline/",")[-1])+1, xoffset, yoffset);
-
-  background->paste_mask(foreground, text_alpha, xoffset, yoffset);
-
-  if(args->scale)
-    if((float)args->scale <= 2.0)
-      background = background->scale((float)args->scale);
-
-
-  foreground = text_alpha = 0;
-
-
-  if(args->rotate)
-  {
-    string c;
-    if(sscanf(args->rotate, "%*d,%s", c)==2)
-       background->setcolor(@parse_color(c));
-    else
-       background->setcolor(@bgcolor);
-    background = background->rotate((float)args->rotate);
-  }
-
-  if(args->crop) background = background->autocrop();
-  
-  return background;
-}
 
 string base_key;
 object mc;
@@ -741,18 +146,7 @@ void start(int|void val, object|void conf)
   }
 }
 
-#ifdef QUANT_DEBUG
-void print_colors(array from)
-{
-#if efun(color_name)
-  for(int i=0; i<sizeof(from); i++)
-    perror("%d: %s\n", i, color_name(from[i]));
-#endif
-}
-#endif
-
 int number=0;
-
 mapping find_cached_args(int num);
 
 
@@ -788,7 +182,6 @@ constant iso88591
 
 
 constant nbsp = iso88591["&nbsp;"];
-
 constant replace_from = indices( iso88591 )+ ({"&ss;","&lt;","&gt;","&amp",});
 constant replace_to   = values( iso88591 ) + ({ nbsp, "<", ">", "&", }); 
 
@@ -847,174 +240,152 @@ array(int)|string write_text(int _args, string text, int size, object id)
 
   // So. We have to actually draw the thing...
 
-  err = catch
+  object img;
+  if(!args)
   {
-    object img;
-    if(!args)
-    {
-      args=(["fg":"black","bg":"white","notrans":"1"]);
-      text="Please reload this page";
-    }
+    args=(["fg":"black","bg":"white","notrans":"1"]);
+    text="Please reload this page";
+  }
 
-    if(!args->verbatim)
+  if(!args->verbatim)
+  {
+    text = replace(text, nbsp, " ");
+    text = simplify_text( text );
+    string res="",nspace="",cspace="";
+    foreach(text/"\n", string line)
     {
-      text = replace(text, nbsp, " ");
-      text = simplify_text( text );
-      string res="",nspace="",cspace="";
-      foreach(text/"\n", string line)
+      cspace="";nspace="";
+      foreach(line/" ", string word)
       {
-	cspace="";nspace="";
-	foreach(line/" ", string word)
-	{
-	  string nonum;
-	  if(strlen(word) &&
-	     (nonum = replace(word,
-			      ({"1","2","3","4","5","6","7","8","9","0","."}),
-			      ({"","","","","","","","","","",""}))) == "") {
-	    cspace=nbsp+nbsp;
-	    if((strlen(word)-strlen(nonum)<strlen(word)/2) &&
-	       (upper_case(word) == word)) {
-	      word=((word/"")*nbsp);
-	    }
-	  } else if(cspace!="") {
-	    cspace=" ";
+	string nonum;
+	if(strlen(word) &&
+	   (nonum = replace(word,
+			    ({"1","2","3","4","5","6","7","8","9","0","."}),
+			    ({"","","","","","","","","","",""}))) == "") {
+	  cspace=nbsp+nbsp;
+	  if((strlen(word)-strlen(nonum)<strlen(word)/2) &&
+	     (upper_case(word) == word)) {
+	    word=((word/"")*nbsp);
 	  }
-	  res+=(nspace==cspace?nspace:" ")+word;
-
-	  if(cspace!="")   nspace=cspace;
-	  else    	   nspace=" ";
+	} else if(cspace!="") {
+	  cspace=" ";
 	}
-	res+="\n";
+	res+=(nspace==cspace?nspace:" ")+word;
+
+	if(cspace!="")   nspace=cspace;
+	else    	   nspace=" ";
       }
-      text = replace(res[..strlen(res)-2], ({ "!","?",": " }), ({ nbsp+"!",nbsp+"?",nbsp+": " }));
-      text = replace(replace(replace(text,({". ",". "+nbsp}), ({"\000","\001"})),".","."+nbsp+nbsp),({"\000","\001"}),({". ","."+nbsp}));
+      res+="\n";
     }
+    text = replace(res[..strlen(res)-2], ({ "!","?",": " }), ({ nbsp+"!",nbsp+"?",nbsp+": " }));
+    text = replace(replace(replace(text,({". ",". "+nbsp}), ({"\000","\001"})),".","."+nbsp+nbsp),({"\000","\001"}),({". ","."+nbsp}));
+  }
 
 //  cache_set(key, text, "rendering");
 
-#if efun(get_font)
-    if(args->nfont)
-    {
-      int bold, italic;
-      if(args->bold) bold=1;
-      if(args->light) bold=-1;
-      if(args->italic) italic=1;
-      if(args->black) bold=2;
-      data = get_font(args->nfont,(int)args->font_size||32,bold,italic,
-		      lower_case(args->talign||"left"),
-		      (float)(int)args->xpad, (float)(int)args->ypad);
-    }
-    else if(args->font)
-    {
-#endif
-      string fkey = args->font+"/"+args->talign+"/"+args->xpad+"/"+args->ypad;
-//       data = cache_lookup("fonts", fkey);
-//       if(!data)
-//       { 
-	data = load_font(args->font, lower_case(args->talign||"left"),
-			 (int)args->xpad,(int)args->ypad);
-// 	cache_set("fonts", fkey, data);
-//       }
-#if efun(get_font)
-    } else {
-      int bold, italic;
-      if(args->bold) bold=1;
-      if(args->light) bold=-1;
-      if(args->italic) italic=1;
-      if(args->black) bold=2;
-      data = get_font(roxen->QUERY(default_font),32,bold,italic,
-		      lower_case(args->talign||"left"),
-		      (float)(int)args->xpad, (float)(int)args->ypad);
-    }
-#endif
+  if(args->nfont)
+  {
+    int bold, italic;
+    if(args->bold) bold=1;
+    if(args->light) bold=-1;
+    if(args->italic) italic=1;
+    if(args->black) bold=2;
+    data = get_font(args->nfont,(int)args->font_size||32,bold,italic,
+		    lower_case(args->talign||"left"),
+		    (float)(int)args->xpad, (float)(int)args->ypad);
+  }
+  else if(args->font)
+  {
+    // compatibility fonts...
+    data = load_font(args->font, lower_case(args->talign||"left"),
+		     (int)args->xpad,(int)args->ypad);
+  } else {
+    int bold, italic;
+    if(args->bold) bold=1;
+    if(args->light) bold=-1;
+    if(args->italic) italic=1;
+    if(args->black) bold=2;
+    data = get_font(roxen->QUERY(default_font),32,bold,italic,
+		    lower_case(args->talign||"left"),
+		    (float)(int)args->xpad, (float)(int)args->ypad);
+  }
 
-    if (!data) {
-      roxen_perror("gtext: No font!\n");
-//       werror("no font found! < "+_args+" <"+text+">\n");
-//       cache_set(key, orig_text, 0);
-      return(0);
-    }
+  if (!data) {
+    roxen_perror("gtext: No font!\n");
+    return(0);
+  }
 
-    // Fonts and such are now initialized.
-    img = make_text_image(args,data,text,id);
-
-    // Now we have the image in 'img', or nothing.
-    if(!img) {
-//       werror("error while drawing image? (no image) < "+_args+" <"+text+">\n");
-//       cache_set(key, orig_text, 0);
-      return 0;
-    }
+  // Fonts and such are now initialized.
+  // Draw the actual image....
+  img = GText.make_text_image(args,data,text,dirname(id->not_query),id);
   
-    int q = (int)args->quant||(args->background||args->texture?250:QUERY(cols));
-
+  // Now we have the image in 'img', or nothing.
+  if(!img) return 0;
+  
+  //	 Quantify
+  if(!args->fs)
+  {
+    int q=(int)args->quant||
+      (args->background||args->texture?150:QUERY(cols));
     if(q>255) q=255;
     if(q<3) q=3;
+    img=img->map_closest(img->select_colors(q-1)+({parse_color(args->bg)}));
+  }
 
-// Quantify
-    if(!args->fs)
+  if(!args->scroll)
+  {
+    if(args->fadein)
     {
-#ifdef QUANT_DEBUG
-      print_colors(img->select_colors(q-1)+({parse_color(args->bg)}));
-#endif
-      img = img->map_closest(img->select_colors(q-1)+({parse_color(args->bg)}));
-    }
-
-    if(!args->scroll)
-      if(args->fadein)
+      // Animated fade	
+      int amount=2, steps=10, delay=10, initialdelay=0, ox;
+      string res = img->gif_begin();
+      sscanf(args->fadein, "%d,%d,%d,%d", amount, steps, delay, initialdelay);
+      if(initialdelay)
       {
-	int amount=2, steps=10, delay=10, initialdelay=0, ox;
-	string res = img->gif_begin();
-	sscanf(args->fadein, "%d,%d,%d,%d", amount, steps, delay, initialdelay);
-	if(initialdelay)
-	{
-	  object foo=Image.image(img->xsize(),img->ysize(),@parse_color(args->bg));
-	  res += foo->gif_add(0,0,initialdelay);
-	}
-	for(int i = 0; i<(steps-1); i++)
-	{
-	  object foo=img->clone();
-	  foo = foo->apply_matrix(make_matrix(( (int)((steps-i)*amount))));
-	  res += foo->gif_add(0,0,delay);
-	}
-	res+= img->gif_add(0,0,delay);
-	res += img->gif_end();
-	data = ({ res, ({ img->xsize(), img->ysize() }) });
+	object foo=Image.image(img->xsize(),img->ysize(),@parse_color(args->bg));
+	res += foo->gif_add(0,0,initialdelay);
       }
-      else
+      for(int i = 0; i<(steps-1); i++)
       {
-	if(args->fs)
-	  data=({ img->togif_fs(@(args->notrans?({}):parse_color(args->bg))),
-		  ({img->xsize(),img->ysize()})});
-	else
-	  data=({ img->togif(@(args->notrans?({}):parse_color(args->bg))),
-		  ({img->xsize(),img->ysize()})});
-	img=0;
-      } else {
-	int len=100, steps=30, delay=5, ox;
-	string res = img->gif_begin() + img->gif_netscape_loop();
-	sscanf(args->scroll, "%d,%d,%d", len, steps, delay);
-	img=img->copy(0,0,(ox=img->xsize())+len-1,img->ysize()-1);
-	img->paste(img, ox, 0);
-	for(int i = 0; i<steps; i++)
-	{
-	  int xp = i*ox/steps;
-	  res += img->copy(xp, 0, xp+len, img->ysize(),
-			   @parse_color(args->bg))->gif_add(0,0,delay);
-	}
-	res += img->gif_end();
-	data = ({ res, ({ len, img->ysize() }) });
+	object foo=img->clone();
+	foo = foo->apply_matrix(GText.make_matrix(((int)((steps-i)*amount))));
+	res += foo->gif_add(0,0,delay);
+      }
+      res+= img->gif_add(0,0,delay);
+      res += img->gif_end();
+      data = ({ res, ({ img->xsize(), img->ysize() }) });
+    } else {
+      // NORMAL IMAGE HERE
+      if(args->fs)
+	data=({ img->togif_fs(@(args->notrans?({}):parse_color(args->bg))),
+		({img->xsize(),img->ysize()})});
+      else
+	data=({ img->togif(@(args->notrans?({}):parse_color(args->bg))),
+		({img->xsize(),img->ysize()})});
+      img=0;
     }
+  } else {
+    // Animated scrolltext
+    int len=100, steps=30, delay=5, ox;
+    string res = img->gif_begin() + img->gif_netscape_loop();
+    sscanf(args->scroll, "%d,%d,%d", len, steps, delay);
+    img=img->copy(0,0,(ox=img->xsize())+len-1,img->ysize()-1);
+    img->paste(img, ox, 0);
+    for(int i = 0; i<steps; i++)
+    {
+      int xp = i*ox/steps;
+      res += img->copy(xp, 0, xp+len, img->ysize(),
+		       @parse_color(args->bg))->gif_add(0,0,delay);
+    }
+    res += img->gif_end();
+    data = ({ res, ({ len, img->ysize() }) });
+  }
 
-// place in caches, as a gif image.
-    if(!args->nocache)
-      store_cache_file( key, orig_text, data );
-    cache_set(key, orig_text, data);
-    if(size) return data[1];
-    return data[0];
-  };
-//   werror("Got error < "+_args+" <"+text+">\n");
-  cache_set(key, text, 0);
-  throw(err);
+  // place in caches, as a gif image.
+  if(!args->nocache) store_cache_file( key, orig_text, data );
+  cache_set(key, orig_text, data);
+  if(size) return data[1];
+  return data[0];
 }
 
 mapping find_file(string f, object rid); // Pike 0.5...
@@ -1052,7 +423,7 @@ mapping find_file(string f, object rid)
     
   if (sizeof(f)) {
     object g;
-    if (f[0] == '$') {	// Illegal in BASE64
+    if (f[0] == '$') {	// Illegal in BASE64, for speed
       f = f[1..];
     } else if (sizeof(indices(g=Gz))) {
       catch(f = g->inflate()->inflate(MIME.decode_base64(f)));
@@ -1063,6 +434,7 @@ mapping find_file(string f, object rid)
 
   return http_string_answer(write_text(id,f,0,rid), "image/gif");
 }
+
 mapping url_cache = ([]);
 string quote(string in)
 {
@@ -1256,6 +628,8 @@ string tag_gtext_id(string t, mapping arg,
   else
     return (string)num;
 }
+
+
 
 string tag_graphicstext(string t, mapping arg, string contents,
 			object id, object foo, mapping defines)
