@@ -55,10 +55,10 @@
 </define>
 
 
-<if not variable="category">
-<if not variable="install">
-<if not variable="details">
-  <cset variable="category"></cset>
+<if not variable="form.category">
+<if not variable="form.install">
+<if not variable="form.details">
+  <cset variable="form.category"></cset>
 </if>
 </if>
 </if>
@@ -71,8 +71,7 @@
 </define>
 
 <comment> ================ Show uninstall page ================== </comment>
-
-<if variable=uninstall>
+<if variable=form.uninstall>
 
   Installed packages:
   <rul>
@@ -86,9 +85,8 @@
 <else>
 
 <comment> ================ Show details page ================== </comment>
-
-<if variable=details>
-  <if variable="download">
+<if variable="form.details">
+  <if variable="form.download">
     <update-start-download package="&form.details;" />
     <redirect to="/standard/update.html?bar" />
   </if>
@@ -109,12 +107,12 @@
 
 <update-package-is-downloaded package="&form.details;"
    variable=downloaded installed_variable=installed>
-<if variable="installed">
+<if variable="form.installed">
   <input type="hidden" name="uninstall_package" value="&form.details;" />
   <input type="submit" name="do_uninstall" value="Uninstall this package" />
 </if>
 <else>
-<if not variable="downloaded">
+<if not variable="form.downloaded">
   <input type="hidden" name="details" value="&form.details;" />
   <input type="submit" name="download" value="Download this package" />
 </if>
@@ -127,16 +125,16 @@
 
 <comment> ================ Show start page ================== </comment>
 
-<if variable="category is ">
+<if variable="form.category is ">
 
-  <if variable=uninstall_package>
+  <if variable=form.uninstall_package>
     <update-uninstall-package package="&form.uninstall_package;">
   </if>
 
 
 <h1>Roxen Update System</h1>
 
-<if variable="update_list">
+<if variable="form.update_list">
   <update-update-list/>
   <update-scan-local-packages/>
   Launched a package list update request. <br>
@@ -199,13 +197,13 @@ This information was last synchronized with the main server &update.last_updated
 
 <comment> ================ Show install page ================== </comment>
 
-<if variable="install">
+<if variable="form.install">
 
-<if variable="no">
+<if variable="form.no">
 foobar
   <redirect to="/standard/update.html?foo" />
 </if>
-<if variable="yes">
+<if variable="form.yes">
 
 <update-install-package package="&form.install;">
 
@@ -239,8 +237,8 @@ The following files will be installed:<br>
 
 <comment> ================ Show category ==================== </comment>
 
-<if variable="category">
-  <if not variable="category is ">
+<if variable="form.category">
+  <if not variable="form.category is ">
     <package-box name="&form.category;" title="Foo">
   </if>
 </if>
