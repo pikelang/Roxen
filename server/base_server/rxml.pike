@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.278 2001/02/13 19:49:50 mast Exp $
+// $Id: rxml.pike,v 1.279 2001/02/18 21:42:21 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1604,6 +1604,7 @@ class TagEmit {
 	}
 	
 	if(args->filter) {
+	  // Parse the filter argument
 	  array pairs = args->filter / ",";
 	  filter = ([]);
 	  foreach( args->filter / ",", string pair) {
@@ -1615,6 +1616,9 @@ class TagEmit {
 	      filter[v] = g;
 	  }
 
+	  // If rowinfo or negative skiprows are used we have
+	  // to do filtering in a loop of its own, instead of
+	  // doing it during the emit loop.
 	  if(args->rowinfo ||
 	     (args->skiprows && args->skiprows[-1]=='-')) {
 	    m_delete(args, "filter");
@@ -1626,6 +1630,9 @@ class TagEmit {
 	  }
 	  else {
 
+	    // If skiprows is to be used we must only count
+	    // the rows that wouldn't be filtered in the
+	    // emit loop.
 	    if(args->skiprows) {
 	      int skiprows = (int)args->skiprows;
 	      if(skiprows > sizeof(res))
@@ -1646,7 +1653,7 @@ class TagEmit {
 
 	if(!args->filter) {
 	  if(args->skiprows) {
-	    if(args->skiprows[0]=='-') args->skiprows=sizeof(res)-(int)args->skiprows-1;
+	    if(args->skiprows[0]=='-') args->skiprows=sizeof(res)+(int)args->skiprows;
 	    res=res[(int)args->skiprows..];
 	  }
 
@@ -2900,6 +2907,8 @@ scope created within the define tag.
 </attr>
 ",
 
+"if#Match":#"<desc plugin><short>Case sensitive version of the match plugin</short></desc>",
+
 "if#pragma":#"<desc plugin><short>
  Compares the HTTP header pragma with a string.</short> Pragma is a
  <i>State</i> plugin.
@@ -2993,6 +3002,8 @@ The following features are supported:",
  '&lt;' and '&gt;'.
 </attr>
 ",
+
+"if#Variable":#"<desc plugin><short>Case sensitive version of the variable plugin</short></desc>",
 
 // The list of support flags is extracted from the supports database and
 // concatenated to this entry.
