@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.18 2002/04/12 08:54:25 tomas Exp $
+// $Id: cmdline.cpp,v 1.19 2002/06/05 10:46:26 nilsson Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -209,7 +209,7 @@ BOOL CArgList::Remove(const char *item)
 //////////////////////////////////////////////////////////////////////
 
 CCmdLine::CCmdLine()
-: m_SelfTestDir("etc\\test"), m_LogDir("..\\logs"),
+: m_SelfTestDir("data\\test"), m_LogDir("..\\logs"),
   m_ConfigDir("..\\configurations")
 {
   m_bPreloaded      = FALSE;
@@ -429,7 +429,7 @@ void CCmdLine::PrintHelp()
     "      .B--self-test-verboseB.:        Runs a testsuite, report all tests.",
 //    "      .B--self-test-quietB.:          Runs a testsuite, only report errors.",
     "      .B--self-test-dir=DIRB.:        Use this self test directory instead of",
-    "                                  the default .Betc/testB. directory.",
+    "                                  the default .Bdata/testB. directory.",
     "",
     "      .B--onceB.:                     Run the server only once, in the foreground.",
     "                                  This is very useful when debugging.",
@@ -1468,8 +1468,8 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
         
         //DEFINES="-DRUN_SELF_TEST -DSELF_TEST_DIR=\"$SELF_TEST_DIR\" $DEFINES"
         //rm -rf $VARDIR/test_config*
-        //cp -R etc/test/config $VARDIR/test_config
-        //cp etc/test/filesystem/test_rxml_package rxml_packages/test_rxml_package
+        //cp -R data/test/config $VARDIR/test_config
+        //cp data/test/filesystem/test_rxml_package rxml_packages/test_rxml_package
         //DIR=$VARDIR/test_config
         //once=1
         //remove_dumped=1

@@ -64,10 +64,10 @@ array available_versions()
   array res = ({});
   foreach( glob("server*",get_dir( ".." )), string f )
   {
-    if( file_stat( "../"+f+"/etc/include/version.h" ) )
+    if( file_stat( "../"+f+"/data/include/version.h" ) )
     {
       catch {
-	string s = Stdio.read_file( "../"+f+"/etc/include/version.h" );
+	string s = Stdio.read_file( "../"+f+"/data/include/version.h" );
 	string a, b;
 	sscanf( s, "%*s__roxen_vers%*s\"%s\"", a );
 	sscanf( s, "%*s__roxen_build%*s\"%s\"", b );

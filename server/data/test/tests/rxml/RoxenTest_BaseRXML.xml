@@ -2453,7 +2453,7 @@ cd</rxml>
 
 <test>
 <rxml>&page.realfile;</rxml>
-<result>etc/test/filesystem/index.html</result>
+<result>data/test/filesystem/index.html</result>
 </test>
 
 <!-- This should probably be initialized also -->

@@ -17,7 +17,7 @@ fail()
 
 version_fixup()
 {
-    #cd server/etc/include
+    #cd server/data/include
 
     echo "Bumping ntstart version..."
 

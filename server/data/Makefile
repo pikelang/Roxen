@@ -1,7 +1,7 @@
 #
 # Main makefile for extracting autodoc.
 #
-# $Id: Makefile,v 1.3 2001/11/16 16:06:14 nilsson Exp $
+# $Id: Makefile,v 1.4 2002/06/05 10:32:54 nilsson Exp $
 #
 
 PIKE=pike
@@ -34,11 +34,11 @@ build/autodoc.xml: recursive_join
 	  autodoc.xml
 
 recursive_join: extract
-	@(cd build/etc && $(MAKE) PIKE="$(PIKE)" join)
+	@(cd build/data && $(MAKE) PIKE="$(PIKE)" join)
 	@(cd build/base && $(MAKE) PIKE="$(PIKE)" join)
 
 extract: build/etc/Makefile build/base/Makefile
-	@(cd build/etc && $(MAKE) PIKE="$(PIKE)" extract)
+	@(cd build/data && $(MAKE) PIKE="$(PIKE)" extract)
 	@(cd build/base && $(MAKE) PIKE="$(PIKE)" extract)
 
 manual.xml: build/autodoc.xml $(REFDOC)/structure/onepage.xml $(REFDOC)/bin/assembler.pike
@@ -55,13 +55,13 @@ autodoc.xml: $(XMLFILES) $(REFDOC)/bin/join.pike
 
 # Makefiles
 
-build/etc/Makefile: Makefile.in build/etc
+build/data/Makefile: Makefile.in build/data
 	@sed -e "s#@SRCDIR@#../../modules#" \
 	     -e "s#@REFDOC@#$(REFDOC)#" \
 	     -e "s#@ROOT@#../../#" \
 	     -e "s#@BUILDROOT@#../#" \
 	     -e "s#@EXTARGS@##" \
-	  <Makefile.in >build/etc/Makefile
+	  <Makefile.in >build/data/Makefile
 
 build/base/Makefile: Makefile.in build/base
 	@sed -e "s#@SRCDIR@#../../../base_server#" \
@@ -73,8 +73,8 @@ build/base/Makefile: Makefile.in build/base
 
 # Directories
 
-build/etc: build
-	@test -d build/etc || mkdir build/etc
+build/data: build
+	@test -d build/data || mkdir build/data
 
 build/base: build
 	@test -d build/base || mkdir build/base

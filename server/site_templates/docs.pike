@@ -22,7 +22,7 @@ void init_modules( Configuration c, RequestID id )
 # Feel free to add to this, but do it after the #include line if
 # you want to override any defaults
 
-#include <etc/extensions>
+#include <data/extensions>
 tag text/html
 xml text/html
 rad text/html

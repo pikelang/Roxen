@@ -16,7 +16,7 @@
 # Feel free to add to this, but do it after the #include
 # line if you want to override any defaults
 
-#include %3cetc/extensions%3e</str></var>
+#include %3cdata/extensions%3e</str></var>
 </region>
 
 <region name='directories#0'>
@@ -51,13 +51,13 @@
   </a></var>
   <var name='path_encoding'>     <str>iso-8859-1</str> </var>
   <var name='put'>               <int>0</int> </var>
-  <var name='searchpath'>        <str>etc/test/filesystem/</str> </var>
+  <var name='searchpath'>        <str>data/test/filesystem/</str> </var>
   <var name='stat_cache'>        <int>0</int> </var>
   <var name='tilde'>             <int>0</int> </var>
 </region>
 
 <region name='roxen_test#0'>
-  <var name='selftestdir'>       <str>etc/test</str> </var>
+  <var name='selftestdir'>       <str>data/test</str> </var>
 </region>
 
 <region name='rxmlparse#0'>
