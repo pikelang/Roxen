@@ -5,6 +5,8 @@ prefix=@prefix@
 
 @SET_MAKE@
 
+INSTALL=@INSTALL@
+
 all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ pike extern
 
 pike: force
