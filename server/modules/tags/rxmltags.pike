@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.384 2002/10/23 18:09:47 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.385 2002/10/23 20:15:20 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1553,10 +1553,6 @@ class TagCache {
 	  // subvariables is part of the persistent state, but we'll
 	  // come to update_state later anyway if it should be called.
 	}
-	if (overridden_keymap) {
-	  RXML_CONTEXT->misc->cache_key = overridden_keymap;
-	  overridden_keymap = 0;
-	}
 
 	if (args->shared) {
 	  cache_set(cache_tag_location, key, evaled_content, timeout);
@@ -1586,6 +1582,11 @@ class TagCache {
       }
       else
 	TAG_TRACE_LEAVE ("");
+
+      if (overridden_keymap) {
+	RXML_CONTEXT->misc->cache_key = overridden_keymap;
+	overridden_keymap = 0;
+      }
 
       result += content;
       return 0;
