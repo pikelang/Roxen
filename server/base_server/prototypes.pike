@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.29 2001/08/13 18:21:11 per Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.30 2001/08/15 15:48:06 per Exp $";
 
 class Variable
 {
@@ -647,20 +647,16 @@ class RequestID
       string v, a, b;
 
       foreach(query / "&", v)
-        if(sscanf(v, "%s=%s", a, b) == 2)
-        {
-          a = _Roxen.http_decode_string(replace(a, "+", " "));
-          b = _Roxen.http_decode_string(replace(b, "+", " "));
-
-          if(variables[ a ])
-            variables[ a ] +=  "\0" + b;
-          else
-            variables[ a ] = b;
-        } else
-          if(strlen( rest_query ))
-            rest_query += "&" + _Roxen.http_decode_string( v );
-          else
-            rest_query = _Roxen.http_decode_string( v );
+	if(sscanf(v, "%s=%s", a, b) == 2)
+	{
+	  a = _Roxen.http_decode_string(replace(a, "+", " "));
+	  b = _Roxen.http_decode_string(replace(b, "+", " "));
+	  real_variables[ a ] += ({ b });
+	} else
+	  if(strlen( rest_query ))
+	    rest_query += "&" + _Roxen.http_decode_string( v );
+	  else
+	    rest_query = _Roxen.http_decode_string( v );
       rest_query=replace(rest_query, "+", "\000");
     }
     return f;
@@ -674,13 +670,14 @@ class RequestID
     object c,t;
     c=object_program(t=this_object())(0, port_obj, conf);
 
-    // c->first = first;
     c->port_obj = port_obj;
     c->conf = conf;
     c->root_id = root_id;
     c->time = time;
     c->raw_url = raw_url;
-    c->variables = copy_value(variables);
+
+    c->real_variables = copy_value( real_variables );
+    c->variables = FakedVariables( c->real_variables );
     c->misc = copy_value( misc );
     c->misc->orig = t;
 
