@@ -7,7 +7,7 @@ inherit "freetype";
 #else
 inherit "ttf";
 #endif
-constant cvs_version = "$Id: builtin.pike,v 1.14 2004/06/30 16:58:48 mast Exp $";
+constant cvs_version = "$Id: builtin.pike,v 1.15 2004/08/31 09:14:34 grubba Exp $";
 
 constant name = "Builtin fonts";
 constant doc =  "Fonts included in pike (and roxen)";
@@ -69,6 +69,10 @@ Font open( string name, int size, int bold, int italic )
   switch( replace(lower_case(name)," ","_")-"_" )
   {
    case "roxenbuiltin":
+     Configuration conf = roxen->current_configuration->get();
+     License.Key key = conf && conf->getvar("license")->get_key();
+     if (key && key->type() == "personal")
+       return Image.Font();
 #if constant(__rbf) && constant(grbf)
 #ifdef THREADS
      object key = lock->lock();
