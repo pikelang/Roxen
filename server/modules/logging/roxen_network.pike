@@ -8,7 +8,7 @@ inherit "module";
 
 // ---------------- Module registration stuff ----------------
 
-constant cvs_version = "$Id: roxen_network.pike,v 1.4 2000/12/10 23:59:17 nilsson Exp $";
+constant cvs_version = "$Id: roxen_network.pike,v 1.5 2001/07/06 11:36:09 nilsson Exp $";
 constant module_type = MODULE_ZERO;
 constant thread_safe = 1;
 constant module_name = "Roxen Network module";
@@ -130,7 +130,7 @@ string build_package() {
 
   foreach( ({ "owner", "webmaster", "ad" }), string var)
     if(sizeof(query(var)))
-      info->owner = query(var);
+      info[var] = query(var);
 
   string pkg = "";
 
