@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.201 1998/05/14 08:40:10 neotron Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.202 1998/05/15 07:50:03 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1000,8 +1000,6 @@ array(object) get_configuration_ports()
   return(values(configuration_ports));
 }
 
-
-
 // This has to be refined in some way. It is not all that nice to do
 // it like this (write a file in /tmp, and then exit.)  The major part
 // of code to support this is in the 'start' script.
@@ -1023,6 +1021,7 @@ void kill_me()
     int pid;
     perror("Shutting down Roxen.\n");
 
+#ifndef __NT__
 #ifdef USE_SHUTDOWN_FILE
 
     // Fallback for systems without geteuid, Roxen will (probably)
@@ -1042,10 +1041,10 @@ void kill_me()
       kill(startpid, signum("SIGHUP"));
       kill(getppid(), signum("SIGINTR"));
       kill(getppid(), signum("SIGHUP"));
-//	kill(startpid, signum("SIGKILL"));
     }
 
 #endif /* USE_SHUTDOWN_FILE */
+#endif
   }
   // Die nicely (we're shutting down).
   call_out(exit, 2, 0);
