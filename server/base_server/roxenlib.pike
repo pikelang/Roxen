@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.72 1998/07/17 19:42:28 noring Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.73 1998/07/17 22:55:41 mast Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -848,14 +848,15 @@ string program_directory()
 string html_encode_string(string str)
 // Encodes str for use as a literal in html text.
 {
-  return replace(str, ({"&", "<", ">" }), ({"&amp;", "&lt;", "&gt;"}));
+  return replace(str, ({"&", "<", ">", "\"", "\'", "\000" }),
+		 ({"&amp;", "&lt;", "&gt;", "&#34;", "&#39;", "&#0;"}));
 }
 
 string html_decode_string(string str)
 // Decodes str, opposite to html_encode_string()
 {
-  return replace(str, ({"&amp;", "&lt;", "&gt;", "&#34;", "&#39;"}),
-		 ({"&", "<", ">", "\"", "\'" }) );
+  return replace(str, ({"&amp;", "&lt;", "&gt;", "&#34;", "&#39;", "&#0;"}),
+		 ({"&", "<", ">", "\"", "\'", "\000" }) );
 }
 
 string html_encode_tag_value(string str)
@@ -1009,22 +1010,27 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 		  done = 1;
 		  switch (remove_leading_trailing_ws( foo[1] )) {
 		  default:
-		    done = 0;
+		    return "<b>Unknown quote option " +
+		      remove_leading_trailing_ws( foo[1] ) +
+		      " in variable " + options[0] + "</b>";
 		    break;
 		  case "none":
 		    exploded[c] = do_output_tag_var( vars[ options[0] ],
 						     multi_separator );
 		    break;
 		  case "url":
+		    // HTTP encoding, including special characters in
+		    // URL:s.
 		    exploded[c]
 		      = replace( do_output_tag_var( vars[ options[0] ],
 						    multi_separator ),
-				 ({ "\"", "'", " ", "\t", "\n", "\r",
-				    "&", "?", "=", "%" }),
-				 ({ "%22", "%27", "%20", "%09", "%0A", "%0D",
-				    "%26", "%3F", "%3D", "%25" }) );
+				 ({ "\000", "\"", "'", " ", "\t", "\n", "\r",
+				    "&", "?", "=", "%", "/", ":" }),
+				 ({ "%00", "%22", "%27", "%20", "%09", "%0A", "%0D",
+				    "%26", "%3F", "%3D", "%25", "%2F", "%3A" }) );
 		    break;
 		  case "mysql":
+		    // MySQL quoting followed by dtag quoting (see below).
 		    exploded[c]
 		      = replace( do_output_tag_var( vars[ options[0] ],
 						    multi_separator ),
@@ -1033,6 +1039,8 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 		    break;
 		    
 		  case "mysql-pike":
+		    // MySQL quoting followed by Pike string quoting
+		    // (for use in a <pike> tag inside an output tag).
 		    exploded[c]
 		      = replace( do_output_tag_var( vars[ options[0] ],
 						    multi_separator ),
@@ -1042,6 +1050,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 		  
 		  case "sql":
 		  case "oracle":
+		    // SQL/Oracle quoting followed by dtag quoting.
 		    exploded[c]
 		      = replace( do_output_tag_var( vars[ options[0] ],
 						    multi_separator ),
@@ -1050,27 +1059,40 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 		    break;
 
 		  case "html":
+		    // For generic html text and in tag arguments. Does
+		    // not work in RXML tags (use dtag or stag instead).
+		    exploded[c]
+		      = html_encode_string( do_output_tag_var( vars[ options[0] ],
+							       multi_separator ));
+		    break;
+
+		  case "dtag":
+		    // Quote quotes for a double quoted tag. Only for
+		    // internal use, i.e. in arguments to other RXML tags.
 		    exploded[c]
 		      = replace( do_output_tag_var( vars[ options[0] ],
 						    multi_separator ),
-				 ({ "<", ">", "&", "\"", "\'" }),
-				 ({ "&lt;", "&gt;", "&amp;", "&#34;",
-				    "&#39;" }) );
-		    break;
+				 "\"", "\"'\"'\"");
+
+		  case "stag":
+		    // Quote quotes for a double quoted tag. Only for
+		    // internal use, i.e. in arguments to other RXML tags.
+		    exploded[c]
+		      = replace( do_output_tag_var( vars[ options[0] ],
+						    multi_separator ),
+				 "'", "'\"'\"'");
 		  }
 		}
 	    }
 	  }
 	  if (!done)
-	    exploded[c] = replace( do_output_tag_var( vars[ options[0] ],
-						      multi_separator ),
-				   ({ "<", ">", "&", "\"", "\'" }),
-				   ({ "&lt;", "&gt;", "&amp;", "&#34;",
-				      "&#39;" }) );
+	    exploded[c] = html_encode_string ( do_output_tag_var( vars[ options[0] ],
+								  multi_separator ));
 	}
       new_contents += exploded * "";
     }
   }
+
   if (!args->preprocess)
     return parse_rxml( new_contents, my_id );
   else
