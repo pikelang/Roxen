@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.288 2000/11/22 07:11:26 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.289 2000/12/02 20:12:10 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -86,7 +86,11 @@ int do_set_cookie;
 
 string raw_url;
 int do_not_disconnect;
-mapping (string:string) variables       = ([ ]);
+
+mapping(string:mixed) real_variables = ([]);
+// mapping (string:string) variables       = ([ ]);
+mapping(string:string) variables = ([]);
+
 mapping (string:mixed)  misc            =
 ([
 #ifdef REQUEST_DEBUG
@@ -291,7 +295,7 @@ void decode_charset_encoding( string|function(string:string) decoder )
   if( since )
     since = safe_decoder( since );
 
-  decode_map( variables, decoder );
+  decode_map( real_variables, decoder );
   decode_map( misc, decoder );
   decode_map( cookies, decoder );
   decode_map( request_headers, decoder );
@@ -389,11 +393,7 @@ string scan_for_query( string f )
       {
 	a = http_decode_string(replace(a, "+", " "));
 	b = http_decode_string(replace(b, "+", " "));
-
-	if(variables[ a ])
-	  variables[ a ] +=  "\0" + b;
-	else
-	  variables[ a ] = b;
+	real_variables[ a ] += ({ b });
       } else
 	if(strlen( rest_query ))
 	  rest_query += "&" + http_decode_string( v );
@@ -708,11 +708,17 @@ void things_to_do_when_not_sending_from_cache( )
 	cache_set("hosts_for_cookie",remoteaddr,1);
     }
 
-  if( mixed q = variables->magic_roxen_automatic_charset_variable )
-    decode_charset_encoding(Roxen.get_client_charset_decoder(q,this_object()));
+  if( mixed q = real_variables->magic_roxen_automatic_charset_variable )
+    decode_charset_encoding(Roxen.get_client_charset_decoder(q[0],this_object()));
+
+  make_variables_from_real_variables();
 }
 
-
+static void make_variables_from_real_variables( )
+{
+  foreach( indices( real_variables ), string q )
+    variables[ q ] = real_variables[ q ]*"\0";
+}
 
 static Roxen.HeaderParser hp = Roxen.HeaderParser();
 static function(string:array(string|mapping)) hpf = hp->feed;
@@ -948,39 +954,40 @@ private int parse_got( string new_data )
            {
              a = http_decode_string( a );
              b = http_decode_string( b );
-		      
-             if( variables[ a ] )
-               variables[ a ] +=  "\0" + b;
-             else
-               variables[ a ] = b;
+	     real_variables[ a ] += ({ b });
            }
        break;
 	    
      case "multipart/form-data":
        object messg = MIME.Message(data, misc);
-       foreach(messg->body_parts, object part) {
-         if(part->disp_params->filename) {
-           variables[part->disp_params->name]=part->getdata();
-           variables[part->disp_params->name+".filename"]=
-             part->disp_params->filename;
-           if(!misc->files)
-             misc->files = ({ part->disp_params->name });
-           else
-             misc->files += ({ part->disp_params->name });
-         } else {
-           if(variables[part->disp_params->name])
-             variables[part->disp_params->name] += "\0" + part->getdata();
-           else
-             variables[part->disp_params->name] = part->getdata();
-         }
+       foreach(messg->body_parts, object part)
+       {
+         if(part->disp_params->filename)
+	 {
+           real_variables[part->disp_params->name] += ({part->getdata()});
+           real_variables[part->disp_params->name+".filename"] +=
+             ({part->disp_params->filename});
+	   misc->files += ({ part->disp_params->name });
+         } else 
+	   real_variables[part->disp_params->name] += ({part->getdata()});
        }
-//        werror("%O\n", variables );
        break;
     }
   }
   return 3;	// Done.
 }
 
+int get_max_cache()
+{
+  return misc->cacheable;
+}
+
+int set_max_cache( int t )
+{
+  int ot = misc->cacheable;
+  misc->cacheable = t;
+  return ot;
+}
 
 void disconnect()
 {
