@@ -12,7 +12,7 @@
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.26 1999/10/08 16:17:50 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.27 1999/10/10 18:20:06 grubba Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -120,6 +120,7 @@ string tag_modified(string tag, mapping m, object id, object file)
   
   if(m->by && !m->file && !m->realfile)
   {
+    // FIXME: The auth module should probably not be used in this case.
     if(!id->conf->auth_module)
       return rxml_error(tag, "Modified by requires a user database.", id);
     m->name = id->conf->last_modified_by(file, id);
