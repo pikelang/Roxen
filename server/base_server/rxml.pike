@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.30 1999/10/18 17:10:03 nilsson Exp $
+ * $Id: rxml.pike,v 1.31 1999/10/18 21:13:40 per Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -549,38 +549,42 @@ string use_file_doc( string f, string data, RequestID nid, object id )
   return res;
 }
 
-array tag_use(string tag, mapping m, string c, RequestID id)
+string|array tag_use(string tag, mapping m, string c, RequestID id)
 {
   mapping res = ([]);
-  object nid = id->clone_me();
-  nid->misc->tags = 0;
-  nid->misc->containers = 0;
-  nid->misc->defines = ([]);
-  nid->misc->_tags = 0;
-  nid->misc->_containers = 0;
-  nid->misc->defaults = ([]);
-  nid->misc->_ifs = ([]);
+
+#define SETUP_NID()                             \
+    object nid = id->clone_me();                \
+    nid->misc->tags = 0;                        \
+    nid->misc->containers = 0;                  \
+    nid->misc->defines = ([]);                  \
+    nid->misc->_tags = 0;                       \
+    nid->misc->_containers = 0;                 \
+    nid->misc->defaults = ([]);                 \
+    nid->misc->_ifs = ([]);
 
   if(m->packageinfo)
   {
+    SETUP_NID();
     string res ="<dl>";
     foreach(list_packages(), string f)
-      res += use_file_doc( f, read_package( f ), nid,id );
+      res += use_file_doc( f, read_package( f ), id, id );
     return ({res+"</dl>"});
   }
 
   if(!m->file && !m->package) 
-    return ({"<use help>"});
+    return "<use help>";
   
   if(id->pragma["no-cache"] || 
      !(res=cache_lookup("macrofiles:"+name,(m->file||("pkg!"+m->package)))))
   {
+    SETUP_NID();
     res = ([]);
     string foo;
     if(m->file)
-      foo = try_get_file( fix_relative(m->file,nid), nid );
+      foo = try_get_file( fix_relative(m->file, nid), nid );
     else 
-      foo=read_package( m->package );
+      foo = read_package( m->package );
       
     if(!foo)
       return ({ rxml_error(tag, "Failed to fetch "+(m->file||m->package)+".", id)-"<false>" });
@@ -599,8 +603,14 @@ array tag_use(string tag, mapping m, string c, RequestID id)
       if(!res->containers[t]) m_delete(res->_containers, t);
     res->defines = nid->misc->defines||([]);
     res->defaults = nid->misc->defaults||([]);
-    res->_ifs = nid->misc->_ifs;
-    m_delete(res->defines, "line");
+    res->_ifs = nid->misc->_ifs - id->misc->_ifs;
+    m_delete( res->defines, " _stat" );
+    m_delete( res->defines, " _error" );
+    m_delete( res->defines, " _extra_heads" );
+    m_delete( res->defines, " _rettext" );
+    m_delete( res->defines, " _ok" );
+    m_delete( res->defines, "line");
+    m_delete( res->defines, "sizefmt");
     cache_set("macrofiles:"+name, (m->file || ("pkg!"+m->package)), res);
   }
   id->misc->tags += copy_value(res->tags);
@@ -610,7 +620,9 @@ array tag_use(string tag, mapping m, string c, RequestID id)
   id->misc->_tags += res->_tags;
   id->misc->_containers += res->_containers;
   id->misc->_ifs += res->_ifs;
-  return ({parse_rxml( c, id )});
+
+  c = parse_rxml( c, id );
+  return ({ c });
 }
 
 string tag_define(string tag, mapping m, string str, RequestID id, 
