@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.55 2000/04/04 17:56:50 jhs Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.56 2000/04/04 18:03:44 jhs Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -280,7 +280,7 @@ void create()
 
 // --------------------- More interface functions --------------------------
 
-void start(int level, object _conf)
+void start(int level, Configuration _conf)
 {
   if (_conf)
     conf = _conf;
