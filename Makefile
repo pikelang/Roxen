@@ -76,7 +76,7 @@ install_data:
 	${INSTALL_DATA}   README   	${PREFIX}/${PROGNAME}/;
 	${INSTALL_DATA}   Manifest   	${PREFIX}/${PROGNAME}/;
 	${INSTALL_DATA}   start  	${PREFIX}/${PROGNAME}/;
-	${INSTALL_DATA}   server/tools/init.d_chilimoon ${STARTSCRIPTS}
+	${INSTALL_DATA}   server/tools/init.d_chilimoon ${STARTSCRIPTS}/chilimoon
 config_test: 
 	@if [ -f /etc/chilimoon/_admininterface/settings/admin_uid ] ; then\
 	: ;\
