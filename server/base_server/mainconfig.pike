@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.117 1999/01/15 12:34:59 neotron Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.118 1999/04/22 09:20:47 per Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -1102,8 +1102,8 @@ int nunfolded(object o)
 }
 
 
-object module_font = get_font("base_server/config/font",0,0,0,"left",1.0,1.0);
-object button_font = get_font("base_server/config/button_font",0,0,0,"left",1.0,1.0);
+object module_font = resolve_font(0); // default font.
+object button_font = resolve_font(0); // default font.
 mapping(string:object) my_colortable = ([]);
 
 mapping auto_image(string in, object id)
