@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.98 1998/02/20 12:57:18 mirar Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.99 1998/02/22 19:52:14 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1565,6 +1565,7 @@ class StringFile
 // this is not as trivial as it sounds. Consider gtext. :-)
 public array open_file(string fname, string mode, object id)
 {
+  werror("open_file "+fname+" as "+mode+"\n");
   object oc = id->conf;
   string oq = id->not_query;
   function funp;
@@ -1585,9 +1586,10 @@ public array open_file(string fname, string mode, object id)
     mode -= "R";
     if(f = real_file(fname, id))
     {
-      werror("open in raw mode.\n");
+      werror("opening "+fname+" in raw mode.\n");
       return ({ open(f, mode), ([]) });
     }
+//     return ({ 0, (["error":302]) });
   }
 
   if(mode=="r")
@@ -1604,7 +1606,7 @@ public array open_file(string fname, string mode, object id)
     {
       if(id->misc->error_code)
 	file = http_low_answer(id->misc->error_code,"Failed" );
-      else if(id->method != "GET" && id->method != "HEAD" && id->method != "POST")
+      else if(id->method!="GET"&&id->method != "HEAD"&&id->method!="POST")
 	file = http_low_answer(501, "Not implemented.");
       else
 	file=http_low_answer(404,replace(parse_rxml(query("ZNoSuchFile"),id),
@@ -1619,7 +1621,7 @@ public array open_file(string fname, string mode, object id)
     {
       file->file = StringFile(file->data);
       m_delete(file, "data");
-    } else 
+    } 
     id->not_query = oq;
     return ({ file->file, file });
   }
