@@ -66,44 +66,6 @@ string parse( RequestID id )
     "<br clear='all' />" +
     (core->query("cache")?"<br />"+ core->get_garb_info():"");
 
-
-  // ---
-
-  c = cache->ngc_status();
-
-  if(sizeof(c)) {
-    res += "<br /><font size='+1'><b>"
-      "Non-garbing Memory Cache</b></font>\n"
-      "<br />\n"
-      "<box-frame iwidth='100%' bodybg='&usr.content-bg;' "
-      "           box-frame='yes' padding='0'>\n"
-      "<table cellpadding=\"3\" cellspacing=\"0\" border=\"0\">"
-      "<tr bgcolor=\"&usr.obox-titlebg;\">"
-      "<th align=\"left\">Class</th>"
-      "<th align=\"right\">Entries</th>"
-      "<th align=\"right\">Size</th></tr>";
-
-    i = totale = totalm = 0;
-    foreach(sort(indices(c)), string name) {
-      array ent = c[name];
-      res += ("<tr align=\"right\" bgcolor=\"" +
-	      (i/3%2?"&usr.fade1;":"&usr.obox-bgcolor;") +
-	      "\"><td align=\"left\">"+ name +"</td><td>"+ ent[0] +
-	      "</td><td>" +
-	      String.int2size(ent[1]) + "</td></tr>");
-      totale += ent[0];
-      totalm += ent[1];
-      i++;
-    }
-
-    res += "<tr align=\"right\" bgcolor=\"&usr.fade2;\">"
-      "<td align=\"left\"><b>Total</b></td><td>" +
-      totale + "</td><td>" + String.int2size(totalm) + "</td></tr>\n"
-      "</table>\n"
-      "</box-frame>\n"
-      "<br clear='all' />\n";
-  }
-
   // ---
 
   mapping l=Locale.cache_status();
