@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.214 1999/10/18 21:13:20 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.215 1999/10/19 02:35:24 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 #include <request_trace.h>
@@ -835,8 +835,13 @@ private mapping internal_gopher_image(string from)
   // Disallow "internal-gopher-..", it won't really do much harm, but a list of
   // all files in '..' might be retrieved (that is, the actual directory
   // file was sent to the browser)
-  return (["file":open("roxen-images/dir/"+from+".gif","r"),
-	  "type":"image/gif"]);
+  object f = open("roxen-images/dir/"+from+".gif","r");
+  if (f) {
+    return (["file":f, "type":"image/gif"]);
+  } else {
+    // File not found.
+    return 0;
+  }
 }
 
 private static int nest = 0;
@@ -1029,9 +1034,13 @@ private mapping internal_roxen_image(string from)
     return http_string_answer(draw_saturation_bar(hue,bright,w),"image/gif");
 
   if(Stdio.File f=open("roxen-images/"+from+".gif", "r"))
-    return (["file":f,"type":"image/gif"]);
-  else
-    return (["file":open("roxen-images/"+from+".jpg", "r"),"type":"image/jpeg"]);
+    return (["file":f, "type":"image/gif"]);
+  else if (f = open("roxen-images/"+from+".jpg", "r")) {
+    return (["file":f, "type":"image/jpeg"]);
+  } else {
+    // File not found.
+    return 0;
+  }
 }
 
 
