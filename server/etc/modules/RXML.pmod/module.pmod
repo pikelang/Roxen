@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.322 2004/01/27 18:35:41 mast Exp $
+// $Id: module.pmod,v 1.323 2004/01/27 19:27:49 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1664,9 +1664,10 @@ class Context
 	  if (sizeof (var) > 1) {
 	    if (array rec_chgs = misc->recorded_changes)
 	      if (rec_chgs[-1][encode_value_canonic (({scope_name}))])
-		// The scope is added in the same entry. Since we can't
-		// do subindexing reliably in it we have to add another
-		// entry to ensure correct sequence.
+		// The scope is added in the same entry. Since we
+		// can't do subindexing reliably in it we have to add
+		// another entry to ensure correct sequence. C.f.
+		// delete_var and VariableChange.add.
 		misc->recorded_changes +=
 		  ({([encode_value_canonic (({scope_name}) + var): val])});
 	      else
@@ -1689,7 +1690,7 @@ class Context
 	    // with the new variable setting. This is done not only as
 	    // an optimization but also to ensure that VariableChange
 	    // doesn't try to set the variable before the scope is
-	    // installed.
+	    // installed. C.f. delete_var and VariableChange.add.
 	    scope[index] = val;
 	  else
 	    rec_chgs[-1][encode_value_canonic (({scope_name, index}))] = val;
@@ -1756,9 +1757,10 @@ class Context
 	  if (sizeof (var) > 1) {
 	    if (array rec_chgs = misc->recorded_changes)
 	      if (rec_chgs[-1][encode_value_canonic (({scope_name}))])
-		// The scope is added in the same entry. Since we can't
-		// do subindexing reliably in it we have to add another
-		// entry to ensure correct sequence.
+		// The scope is added in the same entry. Since we
+		// can't do subindexing reliably in it we have to add
+		// another entry to ensure correct sequence. C.f.
+		// set_var and VariableChange.add.
 		misc->recorded_changes +=
 		  ({([encode_value_canonic (({scope_name}) + var): nil])});
 	      else
@@ -1779,7 +1781,7 @@ class Context
 	    // delete the variable. This is done not only as an
 	    // optimization but also to ensure that VariableChange
 	    // doesn't try to set the variable before the scope is
-	    // installed.
+	    // installed. C.f. set_var and VariableChange.add.
 	    m_delete (scope, var);
 	  else
 	    rec_chgs[-1][encode_value_canonic (({scope_name, var}))] = nil;
@@ -7104,9 +7106,44 @@ class VariableChange (/*static*/ mapping settings)
     return nil;
   }
 
-  void add (VariableChange later_chg)
+  int add (VariableChange later_chg)
   {
-    settings += later_chg->settings;
+    // Fix any sequence dependecies between the current settings and
+    // later_chg. Return zero if we can't resolve them so that the
+    // entries must remain separate.
+    mapping later_sets = later_chg->settings;
+    foreach (indices (later_sets), mixed encoded_var) {
+      if (stringp (encoded_var)) {
+	mixed var = decode_value (encoded_var);
+	string scope_name;
+	if (arrayp (var) && stringp (scope_name = var[0]) && sizeof (var) > 1)
+	  if (SCOPE_TYPE scope = settings[encode_value_canonic (({scope_name}))]) {
+
+	    // There's a variable change in later_chg in a scope
+	    // that's added in this entry.
+	    if (sizeof (var) > 2)
+	      // Subindexed variable. Since we can't do subindexing
+	      // reliably in it we have to keep the sequence. C.f.
+	      // Context.set_var and Context.delete_var.
+	      return 0;
+	    else {
+	      // Since the scope is added in this object we simply
+	      // modify it for the variable change. C.f.
+	      // Context.set_var and Context.delete_var.
+	      mixed val = later_sets[encoded_var];
+	      if (val == nil)
+		m_delete (scope, var[1]);
+	      else
+		scope[var[1]] = later_sets[encoded_var];
+	      continue;
+	    }
+	  }
+      }
+
+      settings[encoded_var] = later_sets[encoded_var];
+    }
+
+    return 1;
   }
 
   void eval_rxml_consts (Context ctx)
@@ -7944,7 +7981,9 @@ class PCode
 	      if (item->is_RXML_VariableChange) {
 		// Try to compact VariableChange entries separated by
 		// constants.
-		if (var_chg) var_chg->add (item);
+		if (var_chg) {
+		  if (!var_chg->add (item)) break;
+		}
 		else var_chg = item;
 		exec[end] = nil; // Ignore in the `+ below.
 	      }
@@ -8277,7 +8316,7 @@ class PCode
       return intro + ")" + OBJ_COUNT;
   }
 
-  constant P_CODE_VERSION = 5.0;
+  constant P_CODE_VERSION = 5.1;
   // Version spec encoded with the p-code, so we can detect and reject
   // incompatible p-code dumps even when the encoded format hasn't
   // changed in an obvious way.
