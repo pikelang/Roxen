@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.93 2001/06/17 20:07:09 nilsson Exp $
+// $Id: module_support.pike,v 1.94 2001/06/30 15:53:36 mast Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -514,13 +514,13 @@ array(ModuleInfo) all_modules()
   if( all_modules_cache ) 
     return all_modules_cache;
 
-  werror("Searching for pike-modules directories ... ");
+  report_debug("Searching for pike-modules directories ... \b");
   int t = gethrtime();
   foreach( find_all_pike_module_directories( ), string d )
     master()->add_module_path( d );
-  werror(" Done [%dms]\n", (gethrtime()-t)/1000 );
+  report_debug("\bDone [%dms]\n", (gethrtime()-t)/1000 );
 
-  werror("Searching for roxen modules ... ");
+  report_debug("Searching for roxen modules ... \b");
   t = gethrtime();
   if( !modules )
   {
@@ -536,7 +536,7 @@ array(ModuleInfo) all_modules()
   map( possible, find_module, 1 );
   array(ModuleInfo) tmp = values( modules ) - ({ 0 });
   sort( tmp->get_name(), tmp );
-  werror(" Done [%dms]\n", (gethrtime()-t)/1000 );
+  report_debug("\bDone [%dms]\n", (gethrtime()-t)/1000 );
 
   return all_modules_cache = tmp;
 }
