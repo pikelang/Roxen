@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.51 1998/06/10 17:14:31 grubba Exp $
+# $Id: configure.in,v 1.52 1998/07/04 20:04:16 grubba Exp $
 #
 
 prefix=$PWD
@@ -324,6 +324,7 @@ if test $cflags_is_set = no; then
   # AC_SYS_OS_COMPILER_FLAG(Solaris,-Xc,Xc,WARN)
 
   # HP-UX
+  AC_SYS_OS_COMPILER_FLAG(HP-UX,-D__STDC_EXT__,stdc_ext,CFLAGS)
   AC_SYS_OS_COMPILER_FLAG(HP-UX,+Odataprefetch,plus_Odataprefetch,OPTIMIZE)
   AC_SYS_OS_COMPILER_FLAG(HP-UX,+Ofailsafe,plus_Ofailsafe,OPTIMIZE)
   AC_SYS_OS_COMPILER_FLAG(HP-UX,+O3,plus_O3,OPTIMIZE)
@@ -411,7 +412,7 @@ else
       if test "$CC" = "$BINDIR/smartlink cc" -a -x /usr/bin/cc ; then
         CC="$BINDIR/smartlink /usr/bin/cc"
       fi
-      CFLAGS="-Aa -D_HPUX_SOURCE +Olibcalls $CFLAGS"
+      CFLAGS="-Ae +Olibcalls $CFLAGS"
       AC_TRY_COMPILE([int foo(int bar);],[],[],[
         CC="$OLD_CC"
 	CFLAGS="$OLD_CFLAGS"
