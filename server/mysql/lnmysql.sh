@@ -21,7 +21,7 @@ check_installation () {
 	    MYSQL_SHARE=$1/share/mysql
 	    true
 	else
-	    echo " -Binary found!"
+	    echo " -Binary not found!"
 	    false
 	fi
     else

@@ -28,8 +28,14 @@ install : all install_dirs install_data mysql make_demo_cert config_test \
 
 	
 pike_version_test:
-	@CONTINUE=0;\
-	if [ `which pike` ] ; then\
+	CONTINUE=0;\
+        PIKEBIN=0;\
+	if [ -f /usr/bin/pike ] ; then\
+	PIKEBIN=1;\
+        else\
+	if [ -f /usr/local/bin/pike ] ; then\
+	PIKEBIN=1;\
+	if [ "$${PIKEBIN}" == "1" ] ; then\
 	echo TESTING PIKE VERSION;\
 	echo Current Pike Version is `pike --dumpversion`;\
 	PIKE_VERSION=`pike --dumpversion`;\
