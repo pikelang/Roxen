@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.14 2000/04/06 07:34:42 wing Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.15 2000/09/04 17:22:29 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -29,7 +29,7 @@ void create()
 	 "tags in a document. You have to reload this module or restart "
 	 "roxen for changes of this variable to take effect.");
 
-  defvar("colormode", 1, "Normalize colors in parsed tags",
+  defvar("colormode", 0, "Normalize colors in parsed tags",
          TYPE_FLAG|VAR_INITIAL,
 	 "If set, replace 'roxen' colors (@c,m,y,k etc) with "
 	 "'netscape' colors (#rrggbb). Setting this to off will lessen the "
