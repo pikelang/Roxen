@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: cgi.pike,v 2.31 2000/01/25 10:47:22 per Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.32 2000/02/11 10:42:15 per Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -67,7 +67,7 @@ array get_cached_groups_for_user( int uid )
 {
   if(cached_groups[ uid ] && cached_groups[ uid ][1]+3600>time(1))
     return cached_groups[ uid ][0];
-  return (cached_groups[ uid ] = ({ get_groups_for_user( uid ), time(1) }))[0];
+  return (cached_groups[uid] = ({ get_groups_for_user( uid ), time(1) }))[0];
 }
 
 array lookup_user( string what )
@@ -335,7 +335,6 @@ class Wrapper
 ** parses the result and sends it to the client.
 ** Please note that the headers are also parsed.
 */
-
 class RXMLWrapper
 {
   inherit Wrapper;
