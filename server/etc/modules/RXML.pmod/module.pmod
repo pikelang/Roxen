@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.234 2001/08/22 22:19:08 mast Exp $
+// $Id: module.pmod,v 1.235 2001/08/23 17:22:12 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -4508,10 +4508,6 @@ class Parser
 
     else {
       if (mixed err = catch {
-	if (PCode p_code = evaler->p_code)
-	  p_code->add (context,
-		       VarRef (splitted[0], splitted[1..], encoding, want_type), val);
-
 #ifdef DEBUG
 	if (TAG_DEBUG_TEST (context->frame))
 	  TAG_DEBUG (context->frame, "    Looking up variable %s in context of type %s\n",
@@ -4545,6 +4541,9 @@ class Parser
 	if ((err = catch {
 	  context->handle_exception (err, this_object()); // May throw.
 	})) {
+	  VarRef varref = VarRef (splitted[0], splitted[1..], encoding, want_type);
+	  if (PCode p_code = evaler->p_code)
+	    p_code->add (context, varref, varref);
 	  FRAME_DEPTH_MSG ("%*s%O frame_depth increase line %d\n",
 			   context->frame_depth, "", varref, __LINE__);
 	  context->frame_depth--;
@@ -4552,6 +4551,10 @@ class Parser
 	}
 	val = nil;
       }
+
+      if (PCode p_code = evaler->p_code)
+	p_code->add (context,
+		     VarRef (splitted[0], splitted[1..], encoding, want_type), val);
     }
     FRAME_DEPTH_MSG ("%*s%O frame_depth increase line %d\n",
 		     context->frame_depth, "", varref, __LINE__);
