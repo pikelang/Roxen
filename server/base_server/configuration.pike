@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.174 1999/05/20 12:44:12 kinkie Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.175 1999/05/22 23:53:36 mast Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2489,7 +2489,7 @@ object enable_module( string modname )
 		   "In patterns: * matches one or more characters, "
 		   "and ? matches one character.<p>"
 		   "In username: 'any' stands for any valid account "
-		   "(from .htaccess or auth-module.) "
+		   "(from .htaccess or an authentication module.) "
 		   "<p>allow and deny are short-circuit rules."
 		   "<p>The default (used when _no_ "
 		   "entries are present) is 'allow ip=*', allowing"
@@ -2522,7 +2522,7 @@ object enable_module( string modname )
 		   "In patterns: * matches one or more characters, "
 		   "and ? matches one character.<p>"
 		   "In username: 'any' stands for any valid account "
-		   "(from .htaccess or auth-module.) "
+		   "(from .htaccess or an authentication module.) "
 		   "<p>allow and deny are short-circuit rules."
 		   "<p>The default (used when _no_ "
 		   "entries are present) is 'deny ip=*', allowing"
@@ -3471,7 +3471,8 @@ void create(string config)
 	 "<i>/welcome.msg</i> doesn't exist.\n");
   
   defvar("named_ftp", 0, "Allow named FTP", TYPE_FLAG|VAR_MORE,
-	 "Allow ftp to normal user-accounts (requires auth-module).\n");
+	 "Allow ftp to normal user-accounts (requires an authentication "
+	 "module, e.g. 'User database and security').\n");
 
   defvar("anonymous_ftp", 1, "Allow anonymous FTP", TYPE_FLAG|VAR_MORE,
 	 "Allows anonymous ftp.\n");
