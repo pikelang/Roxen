@@ -2,7 +2,7 @@
 import Image;
 
 constant Image = image;
-string cvs_verison = "$Id: draw_things.pike,v 1.21 1997/08/12 09:00:00 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.22 1997/08/12 19:45:41 per Exp $";
 
 
 object (Image) load_image(string f)
@@ -30,7 +30,7 @@ object (Image) load_image(string f)
 }
 
 #define PASTE(X,Y) do{\
-  if(!first_icon){knappar->paste(pad,cxp,0);cxp+=pad->xsize();}\
+  /*if(!first_icon){knappar->paste(pad,cxp,0);cxp+=pad->xsize();}*/\
   if(X){knappar->paste(X,cxp,0);cxp+=X->xsize();first_icon=0;}\
   if(strlen(Y)) {\
     object f = font->write(Y)->scale(0.45);\

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.48 1997/08/12 06:31:57 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.49 1997/08/12 19:45:36 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -78,7 +78,7 @@ varargs int defvar(string var, mixed value, string name, int type,
 {
   variables[var]                = allocate( VAR_SIZE );
   variables[var][ VAR_VALUE ]        = value;
-  variables[var][ VAR_TYPE ]         = type;
+  variables[var][ VAR_TYPE ]         = type & VAR_TYPE_MASK;
   variables[var][ VAR_DOC_STR ]      = doc_str;
   variables[var][ VAR_NAME ]         = name;
   variables[var][ VAR_MISC ]         = misc;

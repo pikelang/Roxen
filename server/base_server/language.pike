@@ -3,7 +3,7 @@ import String;
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *
- * $Id: language.pike,v 1.9 1997/07/10 09:20:02 grubba Exp $
+ * $Id: language.pike,v 1.10 1997/08/12 19:45:37 per Exp $
  * This file is included by roxen.pike. Not very nice to have a
  * cvs_version variable here.
  *
@@ -24,9 +24,9 @@ void initiate_languages()
   langs = get_dir("languages");
   if(!langs)
   {
-    this_object()->nwrite("No languages available!\n"+
-			  "This is a serious error.\n"
-			  "Most SPML tags will not work as expected!\n");
+    report_fatal("No languages available!\n"+
+		 "This is a serious error.\n"
+		 "Most RXML tags will not work as expected!\n");
     return 0;
   }
   p = "Adding languages: ";
@@ -54,12 +54,12 @@ void initiate_languages()
 	  }
 	} 
       }) {
-	perror("Initialization of language %s failed:%s\n",
-	       lang, describe_backtrace(err));
+	report_error(sprintf("Initialization of language %s failed:%s\n",
+			     lang, describe_backtrace(err)));
       }
     }
   }
-  perror(p+"\n");
+  report_notice(p+"\n");
 }
 
 private string nil()

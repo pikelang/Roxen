@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.32 1997/08/12 12:01:40 per Exp $ */
+/* $Id: describers.pike,v 1.33 1997/08/12 19:45:40 per Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -67,7 +67,7 @@ string describe_interval(int i)
 string describe_times(array (int) times)
 {
   
-  if(sizeof(times) < 2)
+  if(sizeof(times) < 6)
     return implode_nicely(map(times, describe_time));
 
   int d, every=1;

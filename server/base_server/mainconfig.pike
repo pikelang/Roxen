@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.56 1997/08/12 19:25:09 peter Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.57 1997/08/12 19:45:38 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -83,7 +83,7 @@ class Node {
     }
 #endif
     if(mappingp(tmp)) {
-      werror("Got mapping.\n");
+//      werror("Got mapping.\n");
       return tmp;
     }
     if(arrayp(tmp) && sizeof(tmp))
@@ -1679,9 +1679,9 @@ mapping configuration_parse(object id)
   }
 
   if(!more_mode)
-    BUTTON(morevars, "More settings", left);
+    BUTTON(morevars, "More options", left);
   else
-    BUTTON(nomorevars, "Less settings", left);
+    BUTTON(nomorevars, "Fewer options", left);
     
   if((o->changed||root->changed))
   {

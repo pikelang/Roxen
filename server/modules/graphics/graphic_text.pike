@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.50 1997/08/12 06:32:22 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.51 1997/08/12 19:45:43 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -106,7 +106,6 @@ array (string) list_fonts()
   catch(fnts = get_dir("fonts/32/") - ({".",".."}));
   if(!fnts)
   {
-    report_error("Failed to find any fonts in 'fonts/32/'. No default font.\n");
     return ({});
   }
   return fnts;
@@ -165,9 +164,10 @@ object(Font) load_font(string name, string justification, int xs, int ys)
 
   if(!fnt->load( name ))
   {
-      report_error("Failed to load the font "+name+", using the default font.\n");
+      report_debug("Failed to load the compatibility font "+name+
+		   ", using the default font.\n");
     if(!fnt->load("fonts/"+QUERY(default_size) +"/"+ QUERY(default_font)))
-      error("Failed to load the default font\n");
+      report_error("Failed to load the default compatibility font\n");
   }
   catch {
     if(justification=="right") fnt->right();
