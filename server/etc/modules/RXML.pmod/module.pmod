@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.121 2000/11/06 20:28:15 mast Exp $
+//! $Id: module.pmod,v 1.122 2000/11/27 02:15:07 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -2865,21 +2865,22 @@ class Frame
 
 // Global services.
 
-//! Shortcuts to some common functions in the current context.
-mixed get_var (string var, void|string scope_name, void|Type want_type)
+//! Shortcuts to some common functions in the current context (see the
+//! corresponding functions in the Context class for details).
+final mixed get_var (string var, void|string scope_name, void|Type want_type)
   {return get_context()->get_var (var, scope_name, want_type);}
-mixed user_get_var (string var, void|string scope_name, void|Type want_type)
+final mixed user_get_var (string var, void|string scope_name, void|Type want_type)
   {return get_context()->user_get_var (var, scope_name, want_type);}
-mixed set_var (string var, mixed val, void|string scope_name)
+final mixed set_var (string var, mixed val, void|string scope_name)
   {return get_context()->set_var (var, val, scope_name);}
-mixed user_set_var (string var, mixed val, void|string scope_name)
+final mixed user_set_var (string var, mixed val, void|string scope_name)
   {return get_context()->user_set_var (var, val, scope_name);}
-void delete_var (string var, void|string scope_name)
+final void delete_var (string var, void|string scope_name)
   {get_context()->delete_var (var, scope_name);}
-void user_delete_var (string var, void|string scope_name)
+final void user_delete_var (string var, void|string scope_name)
   {get_context()->user_delete_var (var, scope_name);}
 
-void run_error (string msg, mixed... args)
+final void run_error (string msg, mixed... args)
 //! Throws an RXML run error with a dump of the parser stack in the
 //! current context. This is intended to be used by tags for errors
 //! that can occur during normal operation, such as when the
@@ -2890,7 +2891,7 @@ void run_error (string msg, mixed... args)
   throw (Backtrace ("run", msg, get_context(), bt[..sizeof (bt) - 2]));
 }
 
-void parse_error (string msg, mixed... args)
+final void parse_error (string msg, mixed... args)
 //! Throws an RXML parse error with a dump of the parser stack in the
 //! current context. This is intended to be used for programming
 //! errors in the RXML code, such as lookups in nonexisting scopes and
@@ -2901,7 +2902,7 @@ void parse_error (string msg, mixed... args)
   throw (Backtrace ("parse", msg, get_context(), bt[..sizeof (bt) - 2]));
 }
 
-void fatal_error (string msg, mixed... args)
+final void fatal_error (string msg, mixed... args)
 //! Throws a Pike error that isn't catched and handled anywhere. It's
 //! just like the common error() function, but includes the RXML frame
 //! backtrace.
@@ -2911,7 +2912,7 @@ void fatal_error (string msg, mixed... args)
   throw_fatal (({msg, bt[..sizeof (bt) - 2]}));
 }
 
-void throw_fatal (mixed err)
+final void throw_fatal (mixed err)
 //! Mainly used internally to throw an error that includes the RXML
 //! frame backtrace.
 {
@@ -3050,8 +3051,8 @@ final void tag_debug (string msg, mixed... args)
       werror (msg, @args);
 }
 
-Frame make_tag (string name, mapping(string:mixed) args, void|mixed content,
-		void|Tag overridden_by)
+final Frame make_tag (string name, mapping(string:mixed) args, void|mixed content,
+		      void|Tag overridden_by)
 //! Returns a frame for the specified tag, or 0 if no such tag exists.
 //! The tag definition is looked up in the current context and tag
 //! set. args and content are not parsed or evaluated. If
@@ -3065,8 +3066,8 @@ Frame make_tag (string name, mapping(string:mixed) args, void|mixed content,
   return tag && tag (args, content);
 }
 
-Frame make_unparsed_tag (string name, mapping(string:string) args, void|string content,
-			 void|Tag overridden_by)
+final Frame make_unparsed_tag (string name, mapping(string:string) args,
+			       void|string content, void|Tag overridden_by)
 //! Returns a frame for the specified tag, or 0 if no such tag exists.
 //! The tag definition is looked up in the current context and tag
 //! set. args and content are given unparsed in this variant; they're
