@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.17 2000/08/14 18:53:49 mast Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.18 2000/08/16 03:00:40 per Exp $";
 constant thread_safe=1;
 
 
@@ -482,8 +482,11 @@ string container_pike(string tag, mapping m, string s, RequestID request_id,
   {
     master()->set_inhibit_compile_errors(0);
     if (e->get())
+    {
       RXML.parse_error ("Error compiling Pike code:\n%s", e->get());
-    else throw (err);
+    }
+    else 
+      throw (err);
   }
   master()->set_inhibit_compile_errors(0);
   
