@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.258 2001/11/21 12:26:47 mast Exp $
+// $Id: module.pmod,v 1.259 2001/11/21 13:15:49 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6986,8 +6986,6 @@ class PCode
     array parts;
     int ppos = 0;
     int update_count = ctx->state_updated;
-
-    TAG_DEBUG (ctx->frame, "eval %s\n", _sprintf ('O', (["verbose": 1])));
 
 #if 0
     // This check doesn't work in some "chicken-and-egg" cases when
