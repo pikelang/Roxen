@@ -1,5 +1,5 @@
 /*
- * $Id: locks.pike,v 1.11 2002/06/13 00:28:52 nilsson Exp $
+ * $Id: locks.pike,v 1.12 2002/11/07 12:47:01 agehall Exp $
  */
 
 #include <config.h>
@@ -10,7 +10,7 @@ inherit "../logutil";
 
 constant task = "debug_info";
 constant name = "Module lock status";
-constant doc  = "Shows various information about the module thread locks in Roxen.";
+constant doc  = "Shows various information about the module thread locks in ChiliMoon.";
 
 string describe_module(object q)
 {
@@ -70,8 +70,14 @@ string parse( RequestID id )
   array rows = ({});
   foreach(sort(indices(res)), string q)
     rows += ({ ({q,(string)(res[q]||""),(string)(locks[q]||"") }) });
-  return data +
-    html_table( ({ "Module", "File", "Locked", "Unlocked" }), rows ) +
-    "<p><cf-ok/></p>";
+
+  data += "<table bgcolor='&usr.fade1;'>";
+  data += "<th>Module</th><th>File</th><th>Locked</th><th>Unlocked</th>";
+  foreach(rows, array row) {
+    data += sprintf("<tr><td>%s</td><td>%s</td><td>%s</td></tr>",
+		    @row);
+  }
+
+  return data + "</table><p><cf-ok/></p>";
 }
 #endif /* THREADS */

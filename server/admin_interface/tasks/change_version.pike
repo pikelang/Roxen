@@ -1,7 +1,7 @@
 
 constant task = "maintenance";
-constant name = "Change Roxen version...";
-constant doc  = ("If you have more than one Roxen version installed\n"
+constant name = "Change ChiliMoon version...";
+constant doc  = ("If you have more than one version of ChiliMoon installed\n"
 		 "in the same location, you can use this task to\n"
 		 "change the currently running version.");
 
@@ -90,7 +90,7 @@ string nice_relative_date( object t )
 
 string parse( RequestID id )
 {
-  string res = "<gtext>Change Roxen version</gtext>";
+  string res = "<gtext fgcolor='&usr.fgcolor;'>Change ChiliMoon version</gtext>";
   int warn;
 
   if( id->variables->server )

@@ -1,5 +1,5 @@
 /*
- * $Id: restart.pike,v 1.15 2002/06/15 20:24:02 nilsson Exp $
+ * $Id: restart.pike,v 1.16 2002/11/07 12:47:01 agehall Exp $
  */
 
 #include <admin_interface.h>
@@ -19,9 +19,9 @@ mixed parse( RequestID id )
        return
 	 "<input type='hidden' name='task' value='restart.pike' />"
 	 "<font color='&usr.warncolor;'><h1>Restart</h1></font>"
-	 "Roxen will restart automatically.\n\n<p><i>"
+	 "ChiliMoon will restart automatically.\n\n<p><i>"
 	 "You might see the old process for a while in the process table "
-	 "when doing 'ps' or running 'top'. This is normal. Roxen waits for a "
+	 "when doing 'ps' or running 'top'. This is normal. ChiliMoon waits for a "
 	 "while for all connections to finish, the process will go away after "
 	 "at most 15 minutes.</i></p>";
      }
@@ -33,9 +33,9 @@ mixed parse( RequestID id )
        roxen->shutdown(0.5);
        return
 	 "<font color='&usr.warncolor;'><h1>Shutdown</h1></font>"
-	 "Roxen will <b>not</b> restart automatically.\n\n<p><i>"
+	 "ChiliMoon will <b>not</b> restart automatically.\n\n<p><i>"
 	 "You might see the old process for a while in the process table "
-	 "when doing 'ps' or running 'top'. This is normal. Roxen waits for a "
+	 "when doing 'ps' or running 'top'. This is normal. ChiliMoon waits for a "
 	 "while for all connections to finish, the process will go away after "
 	 "at most 15 minutes.</i></p>";
      }

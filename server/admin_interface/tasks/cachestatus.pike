@@ -1,12 +1,12 @@
 
 constant task = "status";
 constant name = "Cache status";
-constant doc  = "Show information about the main memory cache in Roxen";
+constant doc  = "Show information about the main memory cache in ChiliMoon";
 
 string parse( RequestID id )
 {
 
-  string res = "<b>WebServer Memory Cache</b><br />"
+  string res = "<b>Memory Cache</b><br />"
     "<table cellpadding=\"3\" cellspacing=\"0\" border=\"0\">"
     "<tr bgcolor=\"&usr.fade3;\">"
     "<td>Class</td>"

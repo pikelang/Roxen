@@ -4,7 +4,7 @@
 constant task = "debug_info";
 constant name = "Thread backtrace";
 constant doc  = ("Shows a backtrace (stack) for each and every "
-		 "thread in Roxen.");
+		 "thread in ChiliMoon.");
 
 static string last_id, last_from;
 

@@ -3,10 +3,10 @@ inherit "wizard";
 constant task = "debug_info";
 constant name = "Pike module list";
 constant doc  = ("Show information about which features and modules are "
-		 "available in the Pike this Roxen is using.");
+		 "available in the Pike this ChiliMoon is using.");
 
 constant all_features = ({
-  // only include modules that are sensible to use with Roxen
+  // only include modules that are sensible to use with ChiliMoon
   "threads", "out-of-band_data", "Crypto", "Gdbm", "Gmp", "Gz",
   "Image.FreeType", "Image.GIF", "Image.JPEG", "Image.TIFF", "Image.TTF",
   "Image.PNG", "Java", "Mird", "Msql", "Mysql", "Odbc", "Oracle", "PDF",
