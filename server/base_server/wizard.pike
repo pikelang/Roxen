@@ -1,7 +1,7 @@
 /* Copyright © 1997, 1998, Idonex AB.
  * Some modifications by Francesco Chemolli
  *
- * $Id: wizard.pike,v 1.89 1999/11/28 21:35:29 mast Exp $
+ * $Id: wizard.pike,v 1.90 1999/12/16 21:47:26 mast Exp $
  *  name="Wizard generator";
  *  doc="This file generates all the nice wizards";
  * 
@@ -492,11 +492,14 @@ string parse_wizard_page(string form, object id, string wiz_name, void|string pa
   // page. Netscape ignores one of them, but IE sends both. Thus we
   // have to discard the extra value in the IE case. (We simply assume
   // both values are the same here; maybe it could be done better.)
-  id->variables->action = (id->variables->action/"\0")[0];
+  if (stringp (id->variables->action))
+    id->variables->action = (id->variables->action/"\0")[0];
 
   res = ("<!--Wizard-->\n"
-         "<form method=get>\n"
-	 " <input type=hidden name=action value=\""+id->variables->action+"\">\n"
+         "<form method=get>\n" +
+	 (stringp (id->variables->action) ?
+	  " <input type=hidden name=action value=\""+id->variables->action+"\">\n" :
+	  "") +
 	 " <input type=hidden name=_page value=\""+page+"\">\n"
 	 " <input type=hidden name=_state value=\""+compress_state(id->variables)+"\">\n"
 	 "<table bgcolor=black cellpadding=1 border=0 cellspacing=0 width=80%>\n"
