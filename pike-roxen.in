@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: pike-roxen.in,v 1.1 1998/07/01 19:12:35 grubba Exp $
+# $Id: pike-roxen.in,v 1.2 1998/07/01 20:03:08 grubba Exp $
 #
 # Start the Roxen Pike stand-alone.
 #
@@ -8,7 +8,7 @@
 # 
 
 # Roxen's install prefix
-prefix="@prefix@/roxen/server/"
+prefix="#prefix#/roxen/server/"
 
 binprefix="$prefix/bin/"
 libprefix="$prefix/lib/pike/"

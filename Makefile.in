@@ -173,7 +173,7 @@ install_only:
 	    chmod a+rx $(prefix)/bin/.; \
 	  fi; \
 	  echo "Installing $(prefix)/bin/pike-roxen"; \
-	  sed <$(SRCDIR)/pike-roxen.in -e 's!@prefix@!$(prefix)!' >$(prefix)/bin/pike-roxen || exit 1; \
+	  sed <$(SRCDIR)/pike-roxen.in -e 's!#prefix#!$(prefix)!' >$(prefix)/bin/pike-roxen || exit 1; \
 	  chmod a+rx $(prefix)/bin/pike-roxen; \
 	fi
 	@echo Roxen installed.
