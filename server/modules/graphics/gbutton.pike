@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.75 2001/01/12 16:16:11 anders Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.76 2001/02/02 13:03:15 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -725,86 +725,98 @@ mapping find_internal(string f, RequestID id)
   return button_cache->http_file_answer(f, id);
 }
 
+mapping __stat_cache = ([ ]);
+int get_file_stat( string f, RequestID id  )
+{
+  if( __stat_cache[ f ] )
+    return __stat_cache[ f ];
+
+  call_out( m_delete, 10, __stat_cache, f );
+  return __stat_cache[ f ] = (id->conf->stat_file( f,id )
+			      || file_stat( f )
+			      || ({ 0,0,0,0 }))[ST_MTIME];
+}
 
 class ButtonFrame {
   inherit RXML.Frame;
 
   array mk_url(RequestID id) 
   {
+//     int t = gethrtime();
     string fi = (args["frame-image"] ||
 		 id->misc->defines["gbutton-frame-image"]);
     if( fi )
       fi = Roxen.fix_relative( fi, id );
     
     //  Harmonize some attribute names to RXML standards...
-    args->icon_src = args["icon-src"] || args->icon_src;
-    args->icon_data = args["icon-data"] || args->icon_data;
-    args->align_icon = args["align-icon"] || args->align_icon;
+    args->icon_src = args["icon-src"]       || args->icon_src;
+    args->icon_data = args["icon-data"]     || args->icon_data;
+    args->align_icon = args["align-icon"]   || args->align_icon;
     args->valign_icon = args["valign-icon"] || args->valign_icon;
     m_delete(args, "icon-src");
     m_delete(args, "icon-data");
     m_delete(args, "align-icon");
     
-    mapping new_args = ([
-      "pagebg" :parse_color(args->pagebgcolor ||
+    mapping new_args =
+      ([
+	"pagebg" :parse_color(args->pagebgcolor ||
+			      id->misc->defines->theme_bgcolor ||
+			      id->misc->defines->bgcolor ||
+			      args->bgcolor ||
+			      "#eeeeee"),                 // _page_ bg color
+	"bg"  : parse_color(args->bgcolor ||
 			    id->misc->defines->theme_bgcolor ||
 			    id->misc->defines->bgcolor ||
-			    args->bgcolor ||
-			    "#eeeeee"),                 // _page_ bg color
-      "bg"  : parse_color(args->bgcolor ||
-			  id->misc->defines->theme_bgcolor ||
-			  id->misc->defines->bgcolor ||
-			  "#eeeeee"),                   //  Background color
-      "txt" : parse_color(args->textcolor ||
-			  id->misc->defines->theme_bgcolor ||
-			  id->misc->defines->fgcolor ||
-			  "#000000"),                   //  Text color
-      "txtalpha": (args->textalpha?(float)args->textalpha:1.0),
-      "txtmode": (args->textmode||"normal"),
-      "cnd" : (args->condensed ||                       //  Condensed text
-	       (lower_case(args->textstyle || "") == "condensed")),
-      "wi"  : (int) args->width,                        //  Min button width
-      "al"  : args->align || "left",                    //  Text alignment
-      "dim" : (args->dim ||                             //  Button dimming
-	       (< "dim", "disabled" >)[lower_case(args->state || "")]),
-      "icn" : args->icon_src &&
-               Roxen.fix_relative(args->icon_src, id),  // Icon URL
-      "icd" : args->icon_data,                          //  Inline icon data
-      "ica" : lower_case(args->align_icon || "left"),   //  Icon alignment
-      "icva": lower_case(args->valign_icon || "middle"),//  Vertical align
-      "font": (args->font||id->misc->defines->font||
-	       roxen->query("default_font")),
-      "border_image":fi,
-      "extra_layers":args["extra-layers"],
-      "extra_left_layers":args["extra-left-layers"],
-      "extra_right_layers":args["extra-right-layers"],
-      "extra_background_layers":args["extra-background-layers"],
-      "extra_mask_layers":args["extra-mask-layers"],
-      "extra_frame_layers":args["extra-frame-layers"],
-      "scale":args["scale"],
-      "format":args["format"],
-      "gamma":args["gamma"],
-      "crop":args["crop"],
-    ]);
-
-
+			    "#eeeeee"),                   //  Background color
+	"txt" : parse_color(args->textcolor ||
+			    id->misc->defines->theme_bgcolor ||
+			    id->misc->defines->fgcolor ||
+			    "#000000"),                   //  Text color
+	"txtalpha": (args->textalpha?(float)args->textalpha:1.0),
+	"txtmode": (args->textmode||"normal"),
+	"cnd" : (args->condensed ||                       //  Condensed text
+		 (lower_case(args->textstyle || "") == "condensed")),
+	"wi"  : (int) args->width,                        //  Min button width
+	"al"  : args->align || "left",                    //  Text alignment
+	"dim" : (args->dim ||                             //  Button dimming
+		 (< "dim", "disabled" >)[lower_case(args->state || "")]),
+	"icn" : args->icon_src &&
+	Roxen.fix_relative(args->icon_src, id),  // Icon URL
+	"icd" : args->icon_data,                          //  Inline icon data
+	"ica" : lower_case(args->align_icon || "left"),   //  Icon alignment
+	"icva": lower_case(args->valign_icon || "middle"),//  Vertical align
+	"font": (args->font||id->misc->defines->font||
+		 roxen->query("default_font")),
+	"border_image":fi,
+	"extra_layers":args["extra-layers"],
+	"extra_left_layers":args["extra-left-layers"],
+	"extra_right_layers":args["extra-right-layers"],
+	"extra_background_layers":args["extra-background-layers"],
+	"extra_mask_layers":args["extra-mask-layers"],
+	"extra_frame_layers":args["extra-frame-layers"],
+	"scale":args["scale"],
+	"format":args["format"],
+	"gamma":args["gamma"],
+	"crop":args["crop"],
+      ]);
     if( fi )
-      new_args->stat = (id->conf->stat_file( fi,id )
-			|| file_stat( fi )
-			|| ({ 0,0,0,0 }))[ST_MTIME];
-
-    string fn;
-    if( new_args->stat && (fn = id->conf->real_file( fi, id ) ) )
-      Roxen.add_cache_stat_callback( id, fn, new_args->stat );
+      new_args->stat = get_file_stat( fi, id );
 
     new_args->quant = args->quant || 128;
     foreach(glob("*-*", indices(args)), string n)
       new_args[n] = args[n];
 
+    //  if( new_args->stat && (fn = id->conf->real_file( fi, id ) ) )
+    //     Roxen.add_cache_stat_callback( id, fn, new_args->stat );
+
+    string fn;
+//     werror("mkurl took %dµs\n", gethrtime()-t );
+
+//     t = gethrtime();
     string img_src =
       query_absolute_internal_location(id) +
       button_cache->store( ({ new_args, content }), id);
-
+//     werror("argcache->store took %dµs\n", gethrtime()-t );
     return ({ img_src, new_args });
   }
 }
