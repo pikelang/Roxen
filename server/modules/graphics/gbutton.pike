@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.6 1999/11/16 13:53:02 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.7 1999/11/24 17:35:26 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -34,9 +34,9 @@ inherit "roxenlib";
 
 
 roxen.ImageCache  button_cache;
-object button_font = resolve_font("haru 32");
-object button_border;
-object button_mask;
+Image.Font button_font;
+Image.Image button_border;
+Image.Image button_mask;
 
 
 //  Distance between icon image and text
@@ -92,6 +92,7 @@ array register_module()
 void start()
 {
   button_cache = roxen.ImageCache("gbutton", draw_button);
+  button_font  = resolve_font( "haru 32" );
 }
 
 
@@ -117,7 +118,8 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   if (!args->dim)
     b = button_border->clone()->grey()->
             modify_by_intensity(1, 1, 1, args->bo, ({ 255, 255, 255 }) );
-  else {
+  else 
+  {
     array dim_bg = ({ 255, 255, 255 });
     array dim_bo = ({ 0, 0, 0 });
     for (int i = 0; i < 3; i++) {
@@ -228,7 +230,7 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
     int icn_y = (b_height - icon->img->ysize()) / 2;
     
     if (!icon->alpha)
-      icon->alpha = icon->img->clone()->clear(Image.Color.white);
+      icon->alpha = icon->img->clone()->clear(({255,255,255}));
     if (args->dim)
       icon->alpha *= 0.3;
     button->paste_mask(icon->img, icon->alpha, icn_x, icn_y);
