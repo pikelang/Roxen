@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.432 2003/05/21 15:17:50 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.433 2003/06/05 11:21:13 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -934,7 +934,11 @@ class TagInsertVariables {
     if(var=="full")
       return map(sort(context->list_var(args->scope)),
 		 lambda(string s) {
-		   return sprintf("%s=%O", s, context->get_var(s, args->scope) );
+		   mixed value = context->get_var(s, args->scope);
+		   if (zero_type (value))
+		     return sprintf("%s=UNDEFINED", s);
+		   else
+		     return sprintf("%s=%O", s, value);
 		 } ) * "\n";
     return String.implode_nicely(sort(context->list_var(args->scope)));
   }
