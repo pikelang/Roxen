@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.5 1999/05/14 18:42:40 grubba Exp $
+ * $Id: Roxen.pmod,v 1.6 1999/05/14 18:55:33 grubba Exp $
  *
  * Various helper functions.
  *
@@ -218,6 +218,7 @@ class QuotaDB
       }
     } else {
       key = data[8..len-1];
+      catalog_file->seek(offset + 8 + sizeof(key));
     }
 
     return QuotaEntry(key, data_offset, quota);
