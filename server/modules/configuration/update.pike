@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.15 2000/06/02 21:30:55 js Exp $
+ * $Id: update.pike,v 1.16 2000/06/02 22:01:40 js Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -432,7 +432,7 @@ string tag_update_install_package(string t, mapping m, RequestID id)
   installed[m->package]=1;
   installed->sync();
 
-  Stdio.recursive_rm(roxen_path("$VVARDIR/precompiled/"));
+  catch(Stdio.recursive_rm(roxen_path("$VVARDIR/precompiled/")));
   
   return res+"<br /><br /><b>Package installed completely.</b>";
 }
