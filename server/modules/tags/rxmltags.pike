@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.394 2002/08/16 15:11:02 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.395 2002/08/23 12:37:15 noring Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4526,15 +4526,45 @@ class TagIfTime {
   int eval(string ti, RequestID id, mapping m) {
     CACHE(time(1)%60); // minute resolution...
 
-    int tok, a, b, d;
-    mapping c;
-    c=localtime(time(1));
+    int|object a, b, d;
+    
+    if(sizeof(ti) <= 5 /* Format is hhmm or hh:mm. */)
+    {
+	    mapping c = localtime(time(1));
+	    
+	    b=(int)sprintf("%02d%02d", c->hour, c->min);
+	    a=(int)replace(ti,":","");
 
-    b=(int)sprintf("%02d%02d", c->hour, c->min);
-    a=(int)replace(ti,":","");
+	    if(m->until)
+		    d = (int)m->until;
+		    
+    }
+    else /* Format is ISO8601 yyyy-mm-dd or yyyy-mm-ddThh:mm etc. */
+    {
+	    if(has_value(ti, "T"))
+	    {
+		    /* The Calendar module can for some reason not
+		     * handle the ISO8601 standard "T" extension. */
+		    a = Calendar.ISO.dwim_time(replace(ti, "T", " "))->minute();
+		    b = Calendar.ISO.Minute();
+	    }
+	    else
+	    {
+		    a = Calendar.ISO.dwim_day(ti);
+		    b = Calendar.ISO.Day();
+	    }
 
-    if(m->until) {
-      d = (int)m->until;
+	    if(m->until)
+		    if(has_value(m->until, "T"))
+			    /* The Calendar module can for some reason not
+			     * handle the ISO8601 standard "T" extension. */
+			    d = Calendar.ISO.dwim_time(replace(m->until, "T", " "))->minute();
+		    else
+			    d = Calendar.ISO.dwim_day(m->until);
+    }
+    
+    if(d)
+    {
       if (d > a && (b > a && b < d) )
 	return 1;
       if (d < a && (b > a || b < d) )
@@ -8064,10 +8094,10 @@ just got zapped?
 //----------------------------------------------------------------------
 
 "if#time":#"<desc type='plugin'><p><short>
- Is the time hhmm?</short> The attributes before, after and inclusive modifies
- the behavior. Time is a <i>Utils</i> plugin.
+ Is the time hhmm, hh:mm, yyyy-mm-dd or yyyy-mm-ddThh:mm?</short> The attributes before, after,
+ inclusive and until modifies the behavior. Time is a <i>Utils</i> plugin.
 </p></desc>
-<attr name='time' value='hhmm' required='required'><p>
+<attr name='time' value='hhmm|yyyy-mm-dd|yyyy-mm-ddThh:mm' required='required'><p>
  Choose what time to test.</p>
 </attr>
 
@@ -8077,6 +8107,10 @@ just got zapped?
 
 <attr name='before'><p>
  The time before present time.</p>
+</attr>
+
+<attr name='until' value='hhmm|yyyy-mm-dd|yyyy-mm-ddThh:mm'><p>
+ Gives true for the time range between present time and the time value of 'until'.</p>
 </attr>
 
 <attr name='inclusive'><p>
