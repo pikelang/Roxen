@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.754 2001/11/09 15:55:42 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.755 2001/11/12 17:27:25 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -909,8 +909,12 @@ static void bg_process_queue()
 	bg_last_busy = time();
       }
 
-#if 0
-      report_debug ("background run %O (%{%O, %})\n", task[0], task[1] / 1);
+#ifdef DEBUG_BACKGROUND_RUN
+      report_debug ("background run %s (%s)\n",
+		    functionp (task[0]) ?
+		    master()->describe_function (task[0]) : sprintf ("%O", task[0]),
+		    map (task[1], lambda (mixed arg)
+				    {return sprintf ("%O", arg);}) * ", ");
 #endif
       if (task[0])		// Ignore things that have become destructed.
 	task[0] (@task[1]);
@@ -1006,6 +1010,8 @@ class BackgroundProcess
   {
     stopping = 1;
   }
+
+  string _sprintf() {return "BackgroundProcess()";}
 }
 
 
