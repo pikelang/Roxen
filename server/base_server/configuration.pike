@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.305 2000/04/25 22:22:32 jhs Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.306 2000/05/04 23:28:52 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -488,7 +488,7 @@ array location_modules(RequestID id)
   return location_module_cache;
 }
 
-array filter_modules(RequestID id)
+array(function) filter_modules(RequestID id)
 {
   if(!filter_module_cache)
   {
@@ -1167,40 +1167,26 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
   if(!no_magic)
   {
 #ifndef NO_INTERNAL_HACK
-    string type;
-    // No, this is not beautiful... :)
+    // Find internal-foo-bar images
     // min length == 17 (/internal-roxen-?..)
     // This will save some time indeed.
+    string type;
     if(sizeof(file) > 17 && (file[0] == '/') &&
        sscanf(file, "%*s/internal-%s-%[^/]", type, loc) == 3)
     {
       switch(type) {
+       case "roxen":
+	TRACE_LEAVE(LOCALE->magic_internal_roxen());
+	return internal_roxen_image(loc);
+
        case "gopher":
 	TRACE_LEAVE(LOCALE->magic_internal_gopher());
 	return internal_gopher_image(loc);
-
-       case "spinner": case "roxen":
-	TRACE_LEAVE(LOCALE->magic_internal_roxen());
-	return internal_roxen_image(loc);
       }
     }
 #endif
 
-    if(id->prestate->diract && dir_module)
-    {
-      LOCK(dir_module);
-      TRACE_ENTER(LOCALE->directory_module(), dir_module);
-      tmp = dir_module->parse_directory(id);
-      UNLOCK();
-      if(mappingp(tmp))
-      {
-	TRACE_LEAVE("");
-	TRACE_LEAVE(LOCALE->returning_data());
-	return tmp;
-      }
-      TRACE_LEAVE("");
-    }
-
+    // Locate internal location resources.
     if(!search(file, QUERY(InternalLoc)))
     {
       TRACE_ENTER(LOCALE->magic_internal_module_location(), 0);
@@ -1384,11 +1370,10 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
 	TRACE_LEAVE(LOCALE->returning_data());
 
 	// Keep query (if any).
-	/* FIXME: Should probably keep prestate etc.
-	 *	/grubba 1999-01-14
-	 */
+	// FIXME: Should probably keep config <foo>
 	string new_query = Roxen.http_encode_string(id->not_query) + "/" +
 	  (id->query?("?"+id->query):"");
+	new_query=Roxen.add_pre_state(new_query, id->prestate);
 
 	return Roxen.http_redirect(new_query, id);
       }
@@ -1461,6 +1446,7 @@ mapping|int low_get_file(RequestID id, int|void no_magic)
 	TRACE_LEAVE("");
     }
   }
+
   if(objectp(fid))
   {
     if(stringp(id->extension)) {
@@ -1518,14 +1504,16 @@ mixed handle_request( RequestID id  )
   return file;
 }
 
-mixed get_file(RequestID id, int|void no_magic, int|void internal_get)
+mapping get_file(RequestID id, int|void no_magic, int|void internal_get)
 {
   int orig_internal_get = id->misc->internal_get;
   id->misc->internal_get = internal_get;
 
-  mixed res, res2;
+  mapping|int res;
+  mapping res2;
   function tmp;
   res = low_get_file(id, no_magic);
+
   // finally map all filter type modules.
   // Filter modules are like TYPE_LAST modules, but they get called
   // for _all_ files.
@@ -1549,8 +1537,7 @@ mixed get_file(RequestID id, int|void no_magic, int|void internal_get)
 public array(string) find_dir(string file, RequestID id)
 {
   string loc;
-  array dir = ({ });
-  array|mapping|object tmp;
+  array dir;
   array | mapping d;
   TRACE_ENTER(LOCALE->list_directory(file), 0);
 //   file=replace(file, "//", "/");
@@ -1569,17 +1556,17 @@ public array(string) find_dir(string file, RequestID id)
     id->not_query = file;
     LOCK(funp);
     TRACE_ENTER(LOCALE->url_module(), funp);
-    tmp=funp( id, file );
+    void|mapping|object remap=funp( id, file );
     UNLOCK();
 
-    if(mappingp( tmp ))
+    if(mappingp( remap ))
     {
       id->not_query=of;
       TRACE_LEAVE(LOCALE->returned_no_thanks());
       TRACE_LEAVE("");
       return 0;
     }
-    if(objectp( tmp ))
+    if(objectp( remap ))
     {
       array err;
       nest ++;
@@ -1588,7 +1575,7 @@ public array(string) find_dir(string file, RequestID id)
       file = id->not_query;
       err = catch {
 	if( nest < 20 )
-	  tmp = (id->conf || this_object())->find_dir( file, id );
+	  dir = (id->conf || this_object())->find_dir( file, id );
 	else
 	  error("Too deep recursion in roxen::find_dir() while mapping "
 		+file+".\n");
@@ -1597,13 +1584,13 @@ public array(string) find_dir(string file, RequestID id)
       TRACE_LEAVE("");
       if(err)
 	throw(err);
-      return tmp;
+      return dir;
     }
     id->not_query=of;
   }
 #endif /* URL_MODULES */
 
-  foreach(location_modules(id), tmp)
+  foreach(location_modules(id), array tmp)
   {
     loc = tmp[0];
     if(!search(file, loc)) {
@@ -1620,14 +1607,14 @@ public array(string) find_dir(string file, RequestID id)
 	if(mappingp(d))
 	{
 	  if(d->files) {
-	    dir |= d->files;
 	    TRACE_LEAVE(LOCALE->got_exclusive_dir());
-	    TRACE_LEAVE(LOCALE->returning_file_list(sizeof(dir)));
-	    return dir;
+	    TRACE_LEAVE(LOCALE->returning_file_list(sizeof(d->files)));
+	    return d->files;
 	  } else
 	    TRACE_LEAVE("");
 	} else {
 	  TRACE_LEAVE(LOCALE->got_files());
+	  if(!dir && d) dir=({ });
 	  dir |= d;
 	}
       } else
@@ -1645,12 +1632,14 @@ public array(string) find_dir(string file, RequestID id)
       TRACE_LEAVE(LOCALE->added_module_mountpoint());
     }
   }
+  if(!dir) return ([])[0];
   if(sizeof(dir))
   {
     TRACE_LEAVE(LOCALE->returning_file_list(sizeof(dir)));
     return dir;
   }
   TRACE_LEAVE(LOCALE->returning_no_dir());
+  return 0;
 }
 
 // Stat a virtual file.
