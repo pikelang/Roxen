@@ -1,0 +1,17 @@
+-*- html -*-
+<info>
+version="$Id: roxenlogo,v 1.1 2000/02/06 14:49:14 nilsson Exp $";
+name="roxenlogo";
+doc="Defines the tag 'roxenlogo', with the attribute size, which makes a roxen logo. Default size is 4.";
+help=1;
+</info>
+
+<define tag=1><td bgcolor="#FF6600"><img src="internal-roxen-unit"></td></define>
+<define tag=0><td></td></define>
+<define container=ft><for to=1><tr><contents></tr></for></define>
+<define tag=roxenlogo preparse>
+<attrib name=size>4</attrib><table cellspacing=0 border=0 cellpadding=&size;>
+<ft><for to=7><1></for></ft><tr><1><1><0><0><0><0><1><1></tr>
+<ft><1><1><0><1><1><1><1><1></ft><ft><1><1><0><0><1><1><0><0></ft>
+<tr><1><1><0><0><1><1><0><1></tr></table></define>
+<undefine tag=1><undefine tag=2><undefine container=ft>
