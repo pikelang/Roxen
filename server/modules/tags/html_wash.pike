@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.23 2001/09/21 15:58:15 jhs Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.24 2001/09/27 15:22:06 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";
@@ -207,7 +207,7 @@ constant tagdoc=([
 
 <attr name='keep-tags' value='list'><p>
  Comma-separated array of empty element <tag>tags</tag> not to
- filter. Quote all other empty element tags i.e. transform \"&lt;\",
+ filter. Quote all other empty element tags, i.e. transform \"&lt;\",
  \"&gt;\" and \"&amp;\" to \"&amp;lt;\", \"&amp;gt;\" and
  \"&amp;amp;\".</p>
 
@@ -221,7 +221,7 @@ constant tagdoc=([
 
 <attr name='keep-containers' value='list'><p>
  Comma-separated array of <tag>container</tag>...<tag>/</tag> tags not
- to filter. Quote all other container tags e.i. transform \"&lt;\",
+ to filter. Quote all other container tags, i.e. transform \"&lt;\",
  \"&gt;\" and \"&amp;\" to \"&amp;lt;\", \"&amp;gt;\" and
  \"&amp;amp;\".</p>
 
