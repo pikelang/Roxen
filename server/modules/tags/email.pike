@@ -7,7 +7,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.20 2002/09/24 12:45:07 anders Exp $";
+constant cvs_version = "$Id: email.pike,v 1.21 2002/11/26 12:18:51 anders Exp $";
 
 constant thread_safe=1;
 
@@ -87,7 +87,7 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.20 $"/" ")[1];
+string revision = ("$Revision: 1.21 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -342,7 +342,8 @@ class TagEmail {
      
      if(!stringp(split) || !sizeof(split))
 	split = "\0"; //default 
-     tox = args->to || headers->TO || ((replace(query("CI_to"),"\r","")/"\n")*split);
+     tox = args->to || headers->TO ||
+       ((replace(query("CI_to"),"\r","")/"\n")*split);
      if (!tox || sizeof(tox)<1)
        RXML.run_error(EMAIL_LABEL+"Recipient address is missing!");
 
@@ -351,7 +352,10 @@ class TagEmail {
 
      // converting bare LFs (QMail specials:)
      if(query("CI_qmail_spec"))
-       body = (Array.map(body / "\r\n", lambda(string el1) { return (replace(el1, "\n", "\r\n")); }))*"\r\n";
+       body = Array.map(body / "\r\n",
+			lambda(string el1) {
+			  return (replace(el1, "\n", "\r\n")); }
+			)*"\r\n";
 
      // charset
      chs = args->charset || id->misc->input_charset || query("CI_charset");
@@ -359,13 +363,14 @@ class TagEmail {
      //	id->misc->input_charset;
 
      // UTF8 -> dest. charset
-     if(sizeof(chs)) {
-
+     if(sizeof(chs))
+     {
 	// Subject
-/*	if(zero_type(args["subject"]))
-	  subject = Locale.Charset.encoder(chs)->clear()->feed(query("CI_nosubject"))->drain();*/
-	subject = Locale.Charset.encoder(chs)->clear()->feed(args->subject||query("CI_nosubject"))->drain();
-	subject = MIME.encode_word(({subject, chs}), "base64" );
+	subject = Locale.Charset.encoder(chs)
+	  ->clear()
+	  ->feed(args->subject||query("CI_nosubject"))
+	  ->drain();
+	subject = MIME.encode_word(({subject, chs}), "base64");
 
 	// Body
 	body = Locale.Charset.encoder(chs)->clear()->feed(body)->drain();
@@ -373,44 +378,62 @@ class TagEmail {
 	chs = ";charset=\""+chs+"\"";
      }
 
-     if (arrayp(id->misc->_email_atts_) && sizeof(id->misc->_email_atts_)) {
-       m=MIME.Message(body, ([ "MIME-Version":"1.0",
-			     "content-type":(headers["CONTENT-TYPE"]||args->mimetype||"text/plain")
-				+ chs,
-			     "content-transfer-encoding":(headers["CONTENT-TRANSFER-ENCODING"]||"8bit"),
-			   ]));
-       error = catch(
-         m=MIME.Message("", ([ "MIME-Version":"1.0", "subject":subject,
-			     "from":nice_from_h(fromx),
-			     "to":replace(tox, split, ","),
-			     "content-type":"multipart/mixed",
-			     "x-mailer":"Roxen's email, r"+revision
-			   ]) + headers,
-			({ m }) + id->misc->_email_atts_
-         ));
+     string fenc =
+       headers["CONTENT-TRANSFER-ENCODING"] || args->mimeencoding || "8bit";
+
+     if (arrayp(id->misc->_email_atts_) && sizeof(id->misc->_email_atts_))
+     {
+       m = MIME.Message(body,
+			([ "MIME-Version" : "1.0",
+			   "content-type" : ( (headers["CONTENT-TYPE"] ||
+					       args->mimetype ||
+					       "text/plain") +
+					      chs ),
+			   "content-transfer-encoding" : fenc,
+			]));
+       error = catch {
+	 m=MIME.Message("",
+			([ "MIME-Version" : "1.0",
+			   "subject"      : subject,
+			   "from"         : nice_from_h(fromx),
+			   "to"           : replace(tox, split, ","),
+			   "content-type" : "multipart/mixed",
+			   "x-mailer"     : "Roxen's email, r"+revision
+			]) + headers,
+			({ m }) + id->misc->_email_atts_ );
+       };
        m_delete(id->misc,"_email_atts_");
      } else
-     error = catch(
-       m=MIME.Message(body, ([ "MIME-Version":"1.0", "subject":subject,
-			     "from":nice_from_h(fromx),
-			     "to":replace(tox, split, ","),
-			     "content-type":(headers["CONTENT-TYPE"]||args->mimetype||"text/plain")
-				+ chs,
-			     "content-transfer-encoding":(headers["CONTENT-TRANSFER-ENCODING"]||"8bit"),
-			     "x-mailer":"Roxen's email, r"+revision
-			   ]) + headers)
-     );
+       error = catch {
+	 m = MIME.Message(body,
+			  ([ "MIME-Version" : "1.0",
+			     "subject"      : subject,
+			     "from"         : nice_from_h(fromx),
+			     "to"           : replace(tox, split, ","),
+			     "content-type" : ( (headers["CONTENT-TYPE"] ||
+						 args->mimetype ||
+						 "text/plain") +
+						chs ),
+			     "content-transfer-encoding" : fenc,
+			     "x-mailer"     : "Roxen's email, r"+revision
+			  ]) + headers );
+       };
 
      if (error)
-       RXML.run_error(EMAIL_LABEL+"MIME message processing error: "+Roxen.html_encode_string(error[0]));
+       RXML.run_error(EMAIL_LABEL+"MIME message processing error: "+
+		      Roxen.html_encode_string(error[0]));
 
-     error = catch(o = Protocols.SMTP.client(query("CI_server_restrict") ? query("CI_server") : (args->server||query("CI_server"))));
+     error = catch {
+       o = Protocols.SMTP.client(query("CI_server_restrict") ?
+				 query("CI_server") :
+				 (args->server || query("CI_server")));
+     };
      if (error)
-       RXML.run_error(EMAIL_LABEL+"Couldn't connect to mail server. "+Roxen.html_encode_string(error[0]));
+       RXML.run_error(EMAIL_LABEL+"Couldn't connect to mail server. "+
+		      Roxen.html_encode_string(error[0]));
 
      catch(msglast = (string)m);
 
-//werror(sprintf("D: send_mess: %O\n", (string)m));
      error = catch(o->send_message(only_from_addr(fromx), tox/split,
 				   (string)m));
      if (error)
@@ -507,6 +530,10 @@ value=''><p>
 <attr name='mimetype' value='MIME type'><p>
  Overrides the MIME type of the body.
 </p>
+</attr>
+
+<attr name='mimeencoding' value='MIME encoding'><p>
+ Sets the MIME encoding of the message.</p>
 </attr>
 
 <attr name='charset' value='' default='iso-8859-1'><p>
