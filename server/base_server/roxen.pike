@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.577 2000/11/21 13:16:01 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.578 2000/11/21 13:16:23 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2715,7 +2715,7 @@ mapping low_decode_image(string data, void|mixed tocolor)
   return 0;
 }
 
-function decode_layers = Image.decode_layers;
+constant decode_layers = Image.decode_layers;
 
 mapping low_load_image(string f, RequestID id)
 {
