@@ -1,4 +1,4 @@
-constant cvs_version="$Id: newpikescript.pike,v 1.4 1998/03/26 08:26:04 per Exp $";
+constant cvs_version="$Id: newpikescript.pike,v 1.5 1998/05/26 08:42:47 per Exp $";
 constant thread_safe=1;
 
 #if !constant(Remote)
@@ -38,7 +38,7 @@ void create()
 	 "if possible. If this flag is set to 'Yes', this vill have "
 	 "precedence over the 'Local URI to uid patterns' variable");
 
-  defvar("permission maps", "*: STAT\n", "Local URI to uid patterns", TYPE_TEXT,
+  defvar("permission maps", "*: STAT\n", "Local URI to uid patterns",TYPE_TEXT,
 	 "Use these user/groups. Syntax: \"pattern: STAT\" or "
 	 "\"pattern: uid[/gid]\"<br>STAT means 'use file owner uid/gid',"
 	 " otherwise the specified uid is used.");
@@ -108,9 +108,49 @@ object server_for(int uid, int gid)
   return server_for(uid,gid);
 }
 
+class FakedRoxen
+{
+  // So. What do we allow?
+
+#define FAKE(x) case #x: return roxen->x;
+  mixed `[](string what)
+  {
+    switch(what)
+    {
+      FAKE(set_var);
+      FAKE(query_var);
+      FAKE(real_version);
+      FAKE(version);
+      FAKE(start_time);
+      FAKE(find_supports);
+      FAKE(full_status);
+      FAKE(userlist);
+      FAKE(user_from_uid);
+      FAKE(last_modified_by);
+      FAKE(type_from_filename);
+      FAKE(config_url);
+      FAKE(query);
+      FAKE(available_fonts);
+      
+      FAKE(quick_host_to_ip);
+      FAKE(quick_ip_to_host);
+      FAKE(blocking_ip_to_host);
+      FAKE(blocking_host_to_ip);
+      FAKE(ip_to_host);
+      FAKE(host_to_ip);
+      FAKE(languages);
+      FAKE(language);
+    }
+  } 
+}
+
 array uid_patterns = ({});
+object faked_roxen;
+
 void start()
 {
+  faked_roxen = FakedRoxen(  );
+
   foreach(query("permission maps")/"\n", string line)
     if(strlen(line) && line[0] != '#')
     {
@@ -173,6 +213,33 @@ array (int) find_uid(string file, string isuser, object id)
   return getpwnam("nodbody")?getpwnam("nodbody")[2..3]:({65535,65535});
 }
 
+class Call
+{
+  object id;
+  void create(object _id) { id = _id; }
+  void done(mixed result, int is_error)
+  {
+    id->do_not_disconnect = 0;
+    if(is_error)
+    {
+      result = id->internal_error( ({ result[0],
+				      ({({__FILE__, __LINE__, done,
+					  ({ result, is_error })})})+
+				      ({"Result from remote server" })+
+				      result[1]}));
+      id->send_result( result );
+    }
+    else if(!result)
+      id->send_result(0);
+    else if(stringp(result))
+      id->send_result( http_string_answer(parse_rxml(result,id),"text/html") );
+    else
+      id->send_result( result );
+
+    destruct();
+  }
+}
+
 mapping handle_file_extension(object file, string ext, object id)
 {
   int mode = file->stat()[0];
@@ -188,16 +255,16 @@ mapping handle_file_extension(object file, string ext, object id)
   {
     uid = getuid();
     gid = getgid();
-  } else 
+  } else
     [uid,gid] = find_uid(id->not_query, id->misc->is_user, id);
 
   object server = server_for( uid,gid );
   string file_name = id->conf->real_file( id->not_query, id );
 
-  if(!server) 
+  if(!server)
     error("Failed to connect to pike-script server for "+uid+"\n");
 
-  if(!file_name) 
+  if(!file_name)
   {
     werror("Copying temporary file... ["+id->not_query+"]\n");
     file_name = "/tmp/"+getpid()+"."+uid+".pike";
@@ -206,21 +273,50 @@ mapping handle_file_extension(object file, string ext, object id)
   }
   array err;
   mixed res;
-  if(err=catch(res=server->call_pikescript
-		 (file_name, roxen,mkmapping(indices(id),values(id)))))
-  {
-    if(!id->misc->__idipikescripterror++)
-    {
-      destruct(server);
-      return handle_file_extension(file,ext,id);
-    }
-    throw(err);
-  }
-  if(stringp(res))
-    return http_string_answer(parse_rxml(res, id));
-  return res;
-}
 
+  /* Now it is time to call the script.. If possible, do this in a non
+   * blocking fashion, otherwise a normal user can stop the server by
+   * writing stupid pikescripts.
+   *
+   * If it is not possible to do this non-blocking, we should setup a
+   * timeout instead. This is rather hard to do in a threaded server.
+   * */
+
+
+  if(id->misc->orig) /* Not a direct request. We must block */
+  {
+    if(err=catch(res=server->call_pikescript
+		 (file_name, faked_roxen,mkmapping(indices(id),values(id)))))
+    {
+      if(!id->misc->__idipikescripterror++)
+      {
+	destruct(server);
+	return handle_file_extension(file,ext,id);
+      }
+      throw(err);
+    }
+    if(stringp(res))
+      return http_string_answer(parse_rxml(res, id));
+    return res;
+  } else {
+    object call = Call( id );
+    if(err=catch(server->call_pikescript->async
+		 (file_name, faked_roxen,
+		  mkmapping(indices(id),values(id)),
+		  call->done)))
+    {
+      destruct(call);
+      if(!id->misc->__idipikescripterror++)
+      {
+	destruct(server);
+	return handle_file_extension(file,ext,id);
+      }
+      throw(err);
+    }
+    id->do_not_disconnect = 1;
+    return http_pipe_in_progress();
+  }
+}
 #else
 
 // This is now a stand-alone pike program.
@@ -259,7 +355,23 @@ void got_compile_error(string file, int line, string err)
   errors += sprintf("%s:%d:%s\n",file,line,err);
 }
 
-mixed _call_pikescript(string file, object roxen, mapping id)
+array trim_errormessage(array emsg)
+{
+  array res = ({});
+  foreach(emsg[1], array q)
+  {
+    for(int i=0; i<sizeof(q); i++)
+    {
+      if(functionp(q[i]) || programp(q[i]) || objectp(q[i]))
+	q[i] = sprintf("%O", q[i]);
+    }
+    res += ({ q });
+  }
+  return ({ emsg[0], res[3..] });
+}
+
+mixed _call_pikescript(string file, object roxen, mapping id, 
+		       object|void done)
 {
   eventlog("Call script "+file);
   globals->roxen = roxen;
@@ -267,14 +379,30 @@ mixed _call_pikescript(string file, object roxen, mapping id)
   if(set_roxen) set_roxen(roxen, id->conf);
   array err;
   err = catch {
-    return get_pikescript( file, id  )->parse( id );
+    mixed res=get_pikescript( file, id  )->parse( id );
+    if(done) 
+    {
+      done->async( res );
+      return 0;
+    }
+    return res;
   };
   if(err[0] == "Compilation failed.\n")
   {
     eventlog("Compilation failed:\n   "+replace(errors,"\n", "\n   "));
-    return ("<h1>Compilation of "+file+" failed</h1><pre>"+errors+"</pre>");
+    if(done)
+    {
+      done->async("<h1>Compilation of "+
+		  file+" failed</h1><pre>"+errors+"</pre>");
+      return 0;
+    }
+    else
+      return ("<h1>Compilation of "+file+" failed</h1><pre>"+errors+"</pre>");
   }
-  throw(err);
+  if(done)
+    done->async( trim_errormessage(err), 1 );
+  else
+    throw(err);
 }
 
 function call_pikescript = _call_pikescript;
@@ -318,7 +446,12 @@ int main()
   add_constant("globals", globals);
   string name = get_some_random_data();
 
-  remote_server = Remote.Server(0,0);
+  add_include_path(getcwd()+"/base_server/");
+  add_program_path(getcwd()+"/base_server/");
+  add_module_path(getcwd()+"/base_server/");
+  add_module_path(getcwd()+"/etc/modules/");
+
+  remote_server = Remote.Server("localhost",0);
 
   in_file=(replace(remote_server->port->query_address(),
 		   "0.0.0.0",gethostname())+"\n"+name);
