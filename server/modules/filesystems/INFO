@@ -1,10 +1,16 @@
 <standard>
   <name>Filesystem modules</name>
-  <doc>Provides file systems that can be mounted in Roxen's virtual 
+  <doc>Provides file systems that can be mounted in ChiliMoon's virtual 
        file system.</doc>
 </standard>
 
 <svenska>
   <name>Filsystemsmoduler</name>
-  <doc>Moduler som bygger upp roxens virtuella filsystem.</doc>
+  <doc>Moduler som bygger upp ChiliMoon's virtuella filsystem.</doc>
 </svenska>
+
+<nld>
+ <name>Filesystem modules</name>
+ <doc>Filesystemen die in het virtuele Filesysteem van ChiliMoon 
+	gemound kunnen worden.</doc>
+</nld>
