@@ -1,6 +1,6 @@
-// This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.73 2002/01/24 01:12:04 mast Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.74 2004/05/23 02:39:59 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -543,10 +543,14 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
     rows = rows[1..];
   }
 
+  int col_min = sizeof((rows + ({({})}))[0]);
   id->misc->tmp_colmax=0;
   rows = map(rows,lambda(string r, string s){
 		    array t=r/s;
-		    if(sizeof(t)>id->misc->tmp_colmax) id->misc->tmp_colmax=sizeof(t);
+		    if(sizeof(t)>id->misc->tmp_colmax)
+		      id->misc->tmp_colmax = sizeof(t);
+		    if (sizeof(t) < col_min)
+		      col_min = sizeof(t);
 		    return t;
 		  }, sep);
 
@@ -565,26 +569,32 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
   }
 
   if((int)m->sortcol) {
-    int sortcol=abs((int)m->sortcol)-1,num=0;
-    if(m->fields && sortcol+1<sizeof(m->fields)) {
-      switch(m->fields[sortcol]) {
-      case "num":
-      case "int":
-      case "economic-int":
-      case "float":
-      case "economic-float":
-	rows = map(rows, lambda(array a, int c) {
-			   return ({ sizeof (a) > c ? (float)a[c] : -1e99 })+a;
-			 }, sortcol);
-        sortcol=0;
-        num=1;
+    int sortcol = abs((int)m->sortcol)-1;
+    if (sortcol < col_min) {
+      int num;
+      if(m->fields && (sortcol+1 < sizeof(m->fields))) {
+	switch(m->fields[sortcol]) {
+	case "num":
+	case "int":
+	case "economic-int":
+	case "float":
+	case "economic-float":
+	  rows = map(rows,
+		     lambda(array a, int c) {
+		       return ({
+			 (sizeof(a) > c) ? (float)a[c] : -1e99
+		       }) + a;
+		     }, sortcol);
+	  sortcol=0;
+	  num=1;
+	}
       }
+      sort(column(rows, sortcol), rows);
+      if(num)
+	rows = map(rows, lambda(array a) { return a[1..]; });
     }
-    sort(column(rows,sortcol),rows);
     if((int)m->sortcol<0)
       rows=reverse(rows);
-    if(num)
-      rows = map(rows, lambda(array a) { return a[1..]; });
   }
 
   if(m->min || m->max) {
