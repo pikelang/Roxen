@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.326 2004/03/30 20:09:16 mast Exp $
+// $Id: module.pmod,v 1.327 2004/03/30 20:21:01 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6286,7 +6286,10 @@ static class TBottom
 
 TNil t_nil = TNil();
 //! Type version of @[RXML.nil], i.e. the type that signifies no value
-//! at all (not even the empty value of some type).
+//! at all (not even the empty value of some type). This type is a
+//! subtype of every other type since all the RXML evaluation
+//! functions can return no value (i.e. @[RXML.nil]) regardless of the
+//! expected type.
 //!
 //! Supertype: @[RXML.t_any]
 
@@ -6306,6 +6309,8 @@ static class TNil
   {
     type_check (val);
   }
+
+  int subtype_of (Type other) {return 1;}
 
   string _sprintf()
   {
