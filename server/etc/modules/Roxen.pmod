@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.29 2000/08/22 19:18:46 per Exp $
+ * $Id: Roxen.pmod,v 1.30 2000/08/23 03:14:20 nilsson Exp $
  *
  * Various helper functions.
  *
@@ -709,6 +709,19 @@ SRestore add_scope_constants( string|void name )
   return res;
 }
 
+//! A mapping suitable for Parser.HTML.add_entities to initialize it
+//! to transform the standard character reference entities.
+mapping(string:string) parser_charref_table =
+  lambda () {
+    mapping(string:string) table = ([]);
+    for (int i = 0; i < sizeof (replace_entities); i++) {
+      string chref = replace_entities[i];
+      table[chref[1..sizeof (chref) - 2]] = replace_values[i];
+    }
+    return table;
+  }();
+
+
 
 // RXML complementary stuff shared between configurations.
 
@@ -730,28 +743,38 @@ class ScopeRoxen {
   }
 #endif
 
-  string|int `[] (string var, void|RXML.Context c, void|string scope) {
+  mixed `[] (string var, void|RXML.Context c, void|string scope) {
     switch(var)
     {
      case "uptime":
+       c->id->misc->cacheable=1;
        return (time(1)-roxenp()->start_time);
      case "uptime-days":
+       c->id->misc->cacheable=3600*2;
        return (time(1)-roxenp()->start_time)/3600/24;
      case "uptime-hours":
+       c->id->misc->cacheable=1800;
        return (time(1)-roxenp()->start_time)/3600;
      case "uptime-minutes":
+       c->id->misc->cacheable=60;
        return (time(1)-roxenp()->start_time)/60;
      case "hits-per-minute":
+       c->id->misc->cacheable=60;
        return c->id->conf->requests / ((time(1)-roxenp()->start_time)/60 + 1);
      case "hits":
+       c->id->misc->cacheable=0;
        return c->id->conf->requests;
      case "sent-mb":
+       c->id->misc->cacheacle=10;
        return sprintf("%1.2f",c->id->conf->sent / (1024.0*1024.0));
      case "sent":
+       c->id->misc->cacheable=0;
        return c->id->conf->sent;
      case "sent-per-minute":
+       c->id->misc->cacheable=60;
        return c->id->conf->sent / ((time(1)-roxenp()->start_time)/60 || 1);
      case "sent-kbit-per-second":
+       c->id->misc->cacheable=1;
        return sprintf("%1.2f",((c->id->conf->sent*8)/1024.0/
                                (time(1)-roxenp()->start_time || 1)));
      case "ssl-strength":
@@ -761,6 +784,7 @@ class ScopeRoxen {
      case "version":
        return roxenp()->version();
      case "time":
+       c->id->misc->cacheable=1;
        return time(1);
      case "server":
        return c->id->conf->query("MyWorldLocation");
@@ -770,7 +794,11 @@ class ScopeRoxen {
        sscanf(tmp, "%s:", tmp);
        sscanf(tmp, "%s/", tmp);
        return tmp;
-   
+     case "locale":
+       c->id->misc->cachealbe=0;
+       return roxenp()->locale->get();
+     default:
+       return RXML.nil;
     }
     :: `[] (var, c, scope);
   }
@@ -779,7 +807,8 @@ class ScopeRoxen {
     return ({"uptime", "uptime-days", "uptime-hours", "uptime-minutes",
 	     "hits-per-minute", "hits", "sent-mb", "sent",
              "sent-per-minute", "sent-kbit-per-second", "ssl-strength",
-              "pike-version", "version", "time", "server"});
+              "pike-version", "version", "time", "server", "domain",
+	     "locale"});
   }
 
   string _sprintf() { return "RXML.Scope(roxen)"; }
@@ -793,6 +822,7 @@ class ScopePage {
   constant in_defines=aggregate_multiset(@indices(converter));
 
   mixed `[] (string var, void|RXML.Context c, void|string scope) {
+    c->id->misc->cacheable=0;
     switch (var) {
       case "pathinfo": return c->id->misc->path_info;
     }
@@ -813,6 +843,7 @@ class ScopePage {
 
   array(string) _indices(void|RXML.Context c) {
     if(!c) return ({});
+    c->id->misc->cacheable=0;
     array ind=indices(c->id->misc->scope_page);
     foreach(indices(in_defines), string def)
       if(c->id->misc->defines[converter[def]]) ind+=({def});
@@ -839,56 +870,57 @@ class ScopePage {
   string _sprintf() { return "RXML.Scope(page)"; }
 }
 
+class ScopeCookie {
+  inherit RXML.Scope;
+
+  mixed `[] (string var, void|RXML.Context c, void|string scope) {
+    if(!c) return RXML.nil;
+    c->id->misc->cacheable=0;
+    return c->id->cookies[var];
+  }
+
+  mixed `[]= (string var, mixed val, void|RXML.Context c, void|string scope_name) {
+    if(c && c->id->cookies[var]!=val) {
+      c->id->cookies[var]=val;
+      add_http_header(c->id->misc->defines[" _extra_heads"], "Set-Cookie", http_encode_cookie(var)+
+		      "="+http_encode_cookie( (string)(val||"") )+
+		      "; expires="+http_date(time(1)+(3600*24*365*2))+"; path=/");
+    }
+    return RXML.nil;
+  }
+
+  array(string) _indices(void|RXML.Context c) {
+    if(!c) return ({});
+    c->id->misc->cacheable=0;
+    return indices(c->id->cookies);
+  }
+
+  void m_delete (string var, void|RXML.Context c, void|string scope_name) {
+    if(!c || !c->id->cookies[var]) return;
+    predef::m_delete(c->id->cookies, var);
+    add_http_header(c->id->misc->defines[" _extra_heads"], "Set-Cookie",
+		    http_encode_cookie(var)+"=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/");
+  }
+
+  string _sprintf() { return "RXML.Scope(Cookie)"; }
+}
+
 RXML.Scope scope_roxen=ScopeRoxen();
 RXML.Scope scope_page=ScopePage();
-
-//! A mapping suitable for Parser.HTML.add_entities to initialize it
-//! to transform the standard character reference entities.
-mapping(string:string) parser_charref_table =
-  lambda () {
-    mapping(string:string) table = ([]);
-    for (int i = 0; i < sizeof (replace_entities); i++) {
-      string chref = replace_entities[i];
-      table[chref[1..sizeof (chref) - 2]] = replace_values[i];
-    }
-    return table;
-  }();
+RXML.Scope scope_cookie=ScopeCookie();
 
 RXML.TagSet entities_tag_set = class
 // This tag set always has the lowest priority.
 {
   inherit RXML.TagSet;
 
-  mapping(string:string) make_other_client_vars(RXML.Context c)
-  {
-    array tmp;
-    return 
-    ([
-      "authenticated-user": (c->id->auth&&c->id->auth[0]&&c->id->auth[1]),
-      "remote-user":(c->id->rawauth&&(c->id->rawauth/":")[0]),
-      /* 
-         FIXME: It should probably be configurable if this is to be included or
-         not. It could be rather useful, though. Especially for SQL based user
-         systems. 
-
-         This code includes the password if the user database did _not_ 
-         authenticate the user, not otherwise.
-      */
-      "remote-password":(c->id->auth 
-                         && !c->id->auth[0] 
-                         && c->id->rawauth
-                         && (sizeof(tmp = c->id->rawauth/":") > 1) 
-                         && tmp[1]),
-    ]);
-  }
-
   void prepare_context (RXML.Context c) {
     c->add_scope("roxen",scope_roxen);
     c->id->misc->scope_page=([]);
     c->add_scope("page",scope_page);
-    c->add_scope("cookie" ,c->id->cookies);
+    c->add_scope("cookie", scope_cookie);
     c->add_scope("form", c->id->variables);
-    c->add_scope("client", c->id->client_var | make_other_client_vars(c));
+    c->add_scope("client", c->id->client_var);
     c->add_scope("var", ([]) );
   }
 
