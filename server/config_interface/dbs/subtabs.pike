@@ -1,4 +1,5 @@
 #include <roxen.h>
+#include <config_interface.h>
 
 //<locale-token project="roxen_config">LOCALE</locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
@@ -24,14 +25,14 @@ string parse( RequestID id )
     string tpost = "";
     if( page[2] )
     {
-      res += "<cf-perm perm='"+page[2]+"'>";
-      tpost = "</cf-perm>"+tpost;
+      if( !config_perm( page[2] ) )
+	continue;
     }
-    if( page[3] )
-    {
-      res += "<cf-userwants option='"+page[3]+"'>";
-      tpost = "</cf-userwants>"+tpost;
-    }
+//     if( page[3] )
+//     {
+//       res += "<cf-userwants option='"+page[3]+"'>";
+//       tpost = "</cf-userwants>"+tpost;
+//     }
 
     string ea="";
     if( page == pages[0] )       ea = "first ";
