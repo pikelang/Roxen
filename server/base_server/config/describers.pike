@@ -120,8 +120,8 @@ string describe_module_copy_variables(object node)
 }  
 
 
-#define DOTDOT(node) ("<a href=/(moredocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/More%20Documentation></a>")
-#define NODOTDOT(node) ("<a href=/(lessdocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/Less%20Documentation></a>")
+#define DOTDOT(node) ("<a href=/(moredocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/More%20Documentation><img border=0 alt="" hspacing=0 vspacing=0 src=/auto/button/rm/%20></a>")
+#define NODOTDOT(node) ("<a href=/(lessdocs)"+node->path(1)+"><img border=0 src=/auto/button/lm/Less%20Documentation><img border=0 alt="" hspacing=0 vspacing=0 src=/auto/button/rm/%20></a>")
 
 string shorten(string in, object node)
 {
