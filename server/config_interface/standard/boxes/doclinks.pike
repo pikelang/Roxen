@@ -10,8 +10,8 @@ constant box      = "small";
 constant box_initial = 1;
 constant box_position = -1;
 
-String box_name = _(0,"Documentation links");
-String box_doc = _(0,"Links to the inline documentation");
+String box_name = _(363,"Documentation links");
+String box_doc = _(364,"Links to the inline documentation");
 
 #define path(X) X
 string parse( RequestID id )
