@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.32 1998/10/03 10:17:25 grubba Exp $
+ * $Id: smtprelay.pike,v 1.33 1998/10/03 11:14:37 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.32 1998/10/03 10:17:25 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.33 1998/10/03 11:14:37 grubba Exp $";
 
 /*
  * Some globals
@@ -572,7 +572,7 @@ class MailSender
       // Try send a notify bounce after 4, 8, and 16 hours and 
       // after 1, 2, 4 and 7 days.
       if ((< 4, 8, 16, 24, 48, 96, 168 >)[t]) {
-	if (t != 168) {
+	if (t < 168) {
 	  parent->bounce(message, "554", ({
 	    sprintf("Message not delivered after %d attempts.", t),
 	    sprintf("Will continue to attempt to send %d more times.",
