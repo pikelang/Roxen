@@ -1,12 +1,12 @@
 /*
- * $Id: tablist.pike,v 1.23 1999/11/14 11:32:04 per Exp $
+ * $Id: tablist.pike,v 1.24 1999/11/15 02:47:14 per Exp $
  *
  * Makes a tab list like the one in the config interface.
  *
  * $Author: per $
  */
 
-constant cvs_version="$Id: tablist.pike,v 1.23 1999/11/14 11:32:04 per Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.24 1999/11/15 02:47:14 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -69,6 +69,10 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
 
   //  Encode arguments in string
   mapping args = ([
+  "dither": a->dither || d->dither  || 0,
+   "quant": a->quant  || d->quant   || "250",
+   "gamma": a->gamma  || d->gamma   || 0,
+  "format": a->format || d->format  || "gif",
     "sel" : a->selected,
     "bg"  : parse_color(a->bgcolor || d->bgcolor || "white"),
     "fg"  : parse_color(a->selcolor || d->selcolor || "white"),
@@ -76,7 +80,10 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
     "txt" : parse_color(a->textcolor || d->textcolor ||
 			(a->selected ? "black" : "white"))
   ]);
-  string dir = (MIME.encode_base64(encode_value(args)) - "\r" - "\n") + "|";
+
+  foreach( glob( "*-*", indices(d)), string n )   args[n] = d[n];
+  foreach( glob( "*-*", indices(a)), string n )   args[n] = a[n];
+
   m_delete(a, "selected");
   
   //  Create <img> tag
@@ -103,16 +110,20 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
     img_attrs->width = size->xsize;
     img_attrs->height = size->ysize;
   }
-  return make_container("a", a, make_container("b", ([]),
-					       make_tag("img", img_attrs)));
+  d->result += 
+            make_container("a", a, 
+                           make_container("b", ([]),
+                                          make_tag("img", img_attrs)));
+  return "";
 }
 
 string container_tablist(string t, mapping a, string contents, RequestID id)
 {
-  string res=replace(parse_html(contents, ([]), (["tab":internal_tag_tab]), 
-                                a, id),
-		 ({ "\n", "\r" }), ({ "", "" }));
-  return res;
+  a->result="";
+  replace(parse_html(contents, ([]), (["tab":internal_tag_tab]), 
+                     a, id),
+          ({ "\n", "\r" }), ({ "", "" }));
+  return a->result;
 }
 
 
@@ -120,31 +131,27 @@ Image.Image mask_image;
 Image.Image frame_image;
 object button_font = resolve_font("haru 32");
 
-mapping(string:Image.Image) draw_tab(mapping args, string txt)
+Image.Image draw_tab(mapping args, string txt)
 {
-  Image.Image text;
-  //  Create image with proper background
-  text = button_font->write( txt )->scale(0, frame_image->ysize());
+  Image.Image text = button_font->write( txt )
+                      ->scale(0, frame_image->ysize());
 
+  //  Create image with proper background
   Image.Image i = Image.Image(frame_image->xsize() * 2 + text->xsize(),
                               frame_image->ysize(),
                               args->sel ? args->fg : args->dim);
-  Image.Image mask = Image.Image(frame_image->xsize() * 2 + text->xsize(),
-                                 frame_image->ysize(),Image.Color.white );
-  
   //  Add outside corners
   i->paste_alpha_color(mask_image, args->bg);
-  mask->paste_alpha_color(mask_image, Image.Color.black);
+
 
   i->paste_alpha_color(mask_image->mirrorx(), args->bg,
                        i->xsize() - mask_image->xsize(), 0);
-  mask->paste_alpha_color(mask_image->mirrorx(), Image.Color.black,
-                          i->xsize() - mask_image->xsize(), 0);
-  
+
   //  Add tab frame. We compose the corners in a separate buffer where we
   //  draw the sides using a mult() operation to preserve antialiasing.
   object corner = i->copy(0, 0,
-			  frame_image->xsize() - 1, frame_image->ysize() - 1);
+			  frame_image->xsize() - 1, 
+                          frame_image->ysize() - 1);
   corner *= frame_image;
   i->paste(corner);
   i->paste(corner->mirrorx(), i->xsize() - corner->xsize(), 0);
@@ -160,7 +167,7 @@ mapping(string:Image.Image) draw_tab(mapping args, string txt)
   if (!args->sel)
     i->line(0, i->ysize() - 1, i->xsize(), i->ysize() - 1, 0, 0, 0);
   
-  return ([ "img":i, "alpha":mask ]);
+  return i;
 }
 
 mapping find_internal(string f, object id)
