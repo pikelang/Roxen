@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.86 2000/03/23 19:52:42 grubba Exp $
+//! $Id: module.pmod,v 1.87 2000/03/25 01:51:44 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -240,6 +240,18 @@ class Tag
     }
   }
 
+  /* Can't define `== here due to Pike bugs..
+  int __hash()
+  {
+    return hash (this_object()->name);
+  }
+
+  int `== (mixed other)
+  {
+    return objectp (other) && other->is_RXML_Tag && other->name == this_object()->name;
+  }
+  */
+
   MARK_OBJECT;
 
   string _sprintf()
@@ -445,6 +457,12 @@ class TagSet
     return plugins[name] = res;
   }
 
+  int has_effective_tags (TagSet tset)
+  //! This one deserves some explanation.
+  {
+    return tset == top_tag_set && !got_local_tags;
+  }
+
   mixed `->= (string var, mixed val)
   {
     switch (var) {
@@ -453,6 +471,7 @@ class TagSet
 	filter (imported, "dont_notify", changed);
 	imported = [array(TagSet)] val;
 	imported->do_notify (changed);
+	top_tag_set = sizeof (imported) && imported[0];
 	break;
       default:
 	::`->= (var, val);
@@ -483,6 +502,7 @@ class TagSet
     plugins = ([]);
     (notify_funcs -= ({0}))();
     set_weak_flag (notify_funcs, 1);
+    got_local_tags = sizeof (tags) || !!(low_tags || low_containers || low_entities);
   }
 
   // Internals.
@@ -506,6 +526,12 @@ class TagSet
 
   static mapping(string:Tag) tags = ([]);
   // Private since we want to track changes in this.
+
+  static TagSet top_tag_set;
+  // The imported tag set with the highest priority.
+
+  static int got_local_tags;
+  // Nonzero if there are local tags, including low_tags etc.
 
   static array(function(:void)) notify_funcs = ({});
   // Weak (when nonempty).
@@ -885,10 +911,9 @@ class Context
   //! current context only.
   {
     if (!new_runtime_tags) new_runtime_tags = NewRuntimeTags();
-    new_runtime_tags->add_tags[tag] = 1;
+    new_runtime_tags->add_tags[tag->name] = tag;
     // By doing the following, we can let remove_tags take precedence.
-    new_runtime_tags->remove_tags[tag] = 0;
-    new_runtime_tags->remove_tags[tag->name] = 0;
+    m_delete (new_runtime_tags->remove_tags, tag->name);
   }
 
   void remove_runtime_tag (string|Tag tag)
@@ -896,6 +921,7 @@ class Context
   //! it's assumed to be a tag name without prefix.
   {
     if (!new_runtime_tags) new_runtime_tags = NewRuntimeTags();
+    if (objectp (tag)) tag = tag->name;
     new_runtime_tags->remove_tags[tag] = 1;
   }
 
@@ -903,12 +929,12 @@ class Context
   //! Returns all currently active runtime tags. Don't be destructive
   //! on the returned multiset.
   {
-    multiset(Tag) tags = runtime_tags;
+    mapping(string:Tag) tags = runtime_tags;
     if (new_runtime_tags) {
       tags |= new_runtime_tags->add_tags;
       tags -= new_runtime_tags->remove_tags;
     }
-    return tags;
+    return mkmultiset (values (tags));
   }
 
   void handle_exception (mixed err, PCode|Parser evaluator)
@@ -1006,7 +1032,7 @@ class Context
 #define ENTER_SCOPE(ctx, frame) (frame->vars && ctx->enter_scope (frame))
 #define LEAVE_SCOPE(ctx, frame) (frame->vars && ctx->leave_scope (frame))
 
-  multiset(Tag) runtime_tags = (<>);
+  mapping(string:Tag) runtime_tags = ([]);
   NewRuntimeTags new_runtime_tags;
   // Used to record the result of any add_runtime_tag() and
   // remove_runtime_tag() calls since the last time the parsers ran.
@@ -1049,8 +1075,8 @@ class Context
 
 static class NewRuntimeTags
 {
-  multiset(Tag) add_tags = (<>);
-  multiset(Tag|string) remove_tags = (<>);
+  mapping(string:Tag) add_tags = ([]);
+  mapping(string:int) remove_tags = ([]);
 }
 
 class Backtrace
@@ -1589,18 +1615,15 @@ class Frame
   private void _handle_runtime_tags (Context ctx, TagSetParser parser)
   {
     // FIXME: PCode handling.
-    multiset(string|Tag) rem_tags = ctx->new_runtime_tags->remove_tags;
-    multiset(Tag) add_tags = ctx->new_runtime_tags->add_tags - rem_tags;
-    if (sizeof (rem_tags))
-      foreach (indices (add_tags), Tag tag)
-	if (rem_tags[tag->name]) add_tags[tag] = 0;
-    array(string|Tag) arr_rem_tags = (array) rem_tags;
-    array(Tag) arr_add_tags = (array) add_tags;
+    mapping(string:int) rem_tags = ctx->new_runtime_tags->remove_tags;
+    mapping(string:Tag) add_tags = ctx->new_runtime_tags->add_tags - rem_tags;
+    array(string) arr_rem_tags = indices (rem_tags);
+    array(Tag) arr_add_tags = values (add_tags);
     for (Parser p = parser; p; p = p->_parent)
       if (p->tag_set_eval && !p->_local_tag_set && p->add_runtime_tag) {
 	foreach (arr_add_tags, Tag tag)
 	  ([object(TagSetParser)] p)->add_runtime_tag (tag);
-	foreach (arr_rem_tags, string|object(Tag) tag)
+	foreach (arr_rem_tags, string tag)
 	  ([object(TagSetParser)] p)->remove_runtime_tag (tag);
       }
     ctx->runtime_tags |= add_tags;
@@ -1724,15 +1747,18 @@ class Frame
 #endif
 
     if (TagSet add_tags = raw_content && [object(TagSet)] this->additional_tags) {
-      int hash = HASH_INT2 (ctx->tag_set->id_number, add_tags->id_number);
-      orig_tag_set = ctx->tag_set;
-      TagSet local_ts;
-      if (!(local_ts = local_tag_set_cache[hash])) {
-	local_ts = TagSet (add_tags->name + "+" + orig_tag_set->name);
-	local_ts->imported = ({add_tags, orig_tag_set});
-	local_tag_set_cache[hash] = local_ts; // Race, but it doesn't matter.
+      TagSet tset = ctx->tag_set;
+      if (!tset->has_effective_tags (add_tags)) {
+	int hash = HASH_INT2 (tset->id_number, add_tags->id_number);
+	orig_tag_set = tset;
+	TagSet local_ts;
+	if (!(local_ts = local_tag_set_cache[hash])) {
+	  local_ts = TagSet (add_tags->name + "+" + orig_tag_set->name);
+	  local_ts->imported = ({add_tags, orig_tag_set});
+	  local_tag_set_cache[hash] = local_ts; // Race, but it doesn't matter.
+	}
+	ctx->tag_set = local_ts;
       }
-      ctx->tag_set = local_ts;
     }
 
     if (!result_type) {
@@ -2678,7 +2704,7 @@ class Type
       }
 
       if (ctx->tag_set == tset && p->add_runtime_tag && sizeof (ctx->runtime_tags))
-	foreach (indices (ctx->runtime_tags), Tag tag)
+	foreach (values (ctx->runtime_tags), Tag tag)
 	  p->add_runtime_tag (tag);
     }
 
