@@ -6,7 +6,7 @@ object sql = connect_to_my_mysql( 0, "local" );
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.111 2001/02/22 23:48:00 per Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.112 2001/03/14 23:24:20 mast Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -680,8 +680,6 @@ void name_program( program p, string name )
   load_time[ name ] = time();
 }
 
-#if __VERSION__ > 7.0
-
 class Describer
 {
   inherit master::Describer;
@@ -701,63 +699,6 @@ class Describer
     return "({" + describe_comma_list(m,maxlen-2) +"})";
   }
 }
-
-#else
-
-string stupid_describe(mixed m, int maxlen)
-{
-  string typ;
-  if (catch (typ=sprintf("%t",m)))
-    typ = "object";		// Object with a broken _sprintf(), probably.
-  switch(typ)
-  {
-    case "int":
-    case "float":
-      return (string)m;
-
-    case "string":
-      canclip++;
-      if(sizeof(m) < 40)
-        return  sprintf("%O", m);;
-      clipped++;
-      return sprintf("%O+[%d]+%O",m[..15],sizeof(m)-(32),m[sizeof(m)-16..]);
-
-    case "array":
-      if(!sizeof(m)) return "({})";
-      return "({" + stupid_describe_comma_list(m,maxlen-2) +"})";
-
-    case "mapping":
-      if(!sizeof(m)) return "([])";
-      return "mapping["+sizeof(m)+"]";
-
-    case "multiset":
-      if(!sizeof(m)) return "(<>)";
-      return "multiset["+sizeof(m)+"]";
-
-    case "function":
-      if(string tmp=describe_program(m)) return tmp;
-      if(object o=function_object(m))
-	return (describe_object(o)||"")+"->"+function_name(m);
-      else {
-	string tmp;
-	if (catch (tmp = function_name(m)))
-	  // The function object has probably been destructed.
-	  return "function";
-	return tmp || "function";
-      }
-
-    case "program":
-      if(string tmp=describe_program(m)) return tmp;
-      return typ;
-
-    default:
-      if (objectp(m))
-	if(string tmp=describe_object(m)) return tmp;
-      return typ;
-  }
-}
-
-#endif
 
 constant bt_max_string_len = 99999999;
 int long_file_names;
