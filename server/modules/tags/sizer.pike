@@ -1,5 +1,5 @@
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.9 2001/03/06 12:20:27 jhs Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.10 2001/03/06 12:23:17 jhs Exp $";
 #include <module.h>
 inherit "module";
 
@@ -274,7 +274,7 @@ string simpletag_page_size( string name,
     "  <tr><th align='left'><font size='-1' color='black'>File</font></th>"
     "<th align='right'><font size='-1' color='black'>Size (kb)</font></th>"
     "<th align='right'><font size='-1' color='black'>&nbsp; Headers (b)</font></th>"
-    "<td align='right'><font size='-1' color='black'>&nbsp; % of page</font></td></tr>"
+    "<th align='right'><font size='-1' color='black'>&nbsp; % of page</font></td></tr>"
     "<tr><td colspan='4'><hr noshade='noshade' size='1'></td></tr>";
 
   foreach( files, string file )
