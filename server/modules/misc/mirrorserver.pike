@@ -1,13 +1,13 @@
-import RoxenRPC;
 #include <module.h>
 inherit "module";
-object rpc;
 
 #if !constant(Privs)
 constant Privs=((program)"privs");
 #endif /* !constant(Privs) */
 
-// #define MIRRORSERVER_DEBUG
+#ifndef MIRRORSERVER_DEBUG
+//#define MIRRORSERVER_DEBUG
+#endif /* MIRRORSERVER_DEBUG */
 
 class MirrorServer {
   import Stdio;
@@ -118,18 +118,31 @@ void start(int arg, object conf)
   if(conf) {
     mixed err;
     if (err = catch {
+      array(string) a = lower_case(query("port"))/":";
       object privs;
-      array a = lower_case(query("port"))/":";
-      if(((int)a[1]) < 1024)
-	privs = Privs("Opening Mirror Server Port: \"" +
+      if (((int)a[1]) < 1024)
+	privs = Privs("Opening Mirror Server port \"" +
 		      query("port") + "\"\n");
-      server = Server(a[0]!="any"?a[0]:0,(int)a[1]);
+      server = RoxenRPC.Server(a[0]!="any"?a[0]:0,(int)a[1]);
       privs = 0;
       server->provide("mirror", MirrorServer(FakeID(conf),query("base")));
     }) {
+      if (!server) {
+	report_error("Failed to initialize Mirror Server on port \"" +
+		     query("port") + "\"\n");
+      }
 #ifdef MIRRORSERVER_DEBUG
-      report_error(describe_backtrace(err));
+      report_error("Error:"+strerror(errno())+"\n"+describe_backtrace(err));
 #endif /* MIRRORSERVER_DEBUG */
     }
+  }
+}
+
+string status()
+{
+  if (!server) {
+    return("<font color=red>Failed to open port.</font>\n");
+  } else {
+    return("Server is up.\n");
   }
 }
