@@ -422,7 +422,7 @@ string set_variable( string v, object in, mixed to, object id )
        val /= ",";
        int i;
        for( i = 0; i<sizeof( val ); i++ )
-         val[i] = trim( val[i] );
+         val[i] = String.trim_whites( val[i] );
        if( var[ VAR_TYPE ] == TYPE_INT_LIST )
          val = (array(int))val;
        else if( var[ VAR_TYPE ] == TYPE_DIR_LIST )

@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: cgi.pike,v 2.32 2000/02/11 10:42:15 per Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.33 2000/02/17 18:17:19 nilsson Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -10,8 +10,6 @@ constant cvs_version = "$Id: cgi.pike,v 2.32 2000/02/11 10:42:15 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
-
-#define old_rxml_compat 1
 
 /* maximum size of the header before sending and error message and
  * killing the script.
@@ -407,8 +405,8 @@ class CGIWrapper
         post += h+"\n";
         continue;
       }
-      header = trim(header);
-      value = trim(value);
+      header = String.trim_whites(header);
+      value = String.trim_whites(value);
       switch(lower_case( header ))
       {
        case "status":
@@ -1174,7 +1172,7 @@ int|string tag_cgi( string tag, mapping args, RequestID id )
     return rxml_error(tag,"No \"script\" argument to the CGI tag.", id);
   fid->not_query = fix_relative( file, id );
 
-#if old_rxml_compat
+#ifdef OLD_RXML_COMPAT
   foreach(indices(args), string arg )
   {
     if(arg[..7] == "default-")
