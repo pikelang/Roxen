@@ -3,13 +3,13 @@
 #include <module.h>
 inherit "module";
 
-//<locale-token project="mod_emit_timerange_sql">LOCALE</locale-token>
-//<locale-token project="mod_emit_timerange_sql">SLOCALE</locale-token>
+//<locale-token project="mod_emit_timerange">LOCALE</locale-token>
+//<locale-token project="mod_emit_timerange">SLOCALE</locale-token>
 #define SLOCALE(X,Y)  _STR_LOCALE("mod_emit_timerange",X,Y)
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.12 2004/05/24 16:42:55 anders Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.13 2004/05/25 16:17:50 anders Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
