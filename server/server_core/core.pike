@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.852 2004/01/25 18:29:21 norrby Exp $";
+constant cvs_version="$Id: core.pike,v 1.853 2004/01/25 18:49:00 mani Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4216,8 +4216,6 @@ void describe_all_threads()
 
 constant dump = loader.dump;
 
-program slowpipe, fastpipe;
-
 void initiate_argcache()
 {
   int t = gethrtime();
@@ -4272,13 +4270,9 @@ int main(array(string) tmp)
   master()->resolv( "DBManager.is_module_table" )
     ( 0, "local", "compiled_formats",
       "Compiled and cached log and security pattern code. ");
-  
-  slowpipe = ((program)"server_core/slowpipe");
-  fastpipe = ((program)"server_core/fastpipe");
+
   dump( "pike_modules/DBManager.pmod" );
   dump( "pike_modules/VFS.pmod" );
-  dump( "server_core/slowpipe.pike" );
-  dump( "server_core/fastpipe.pike" );
   dump( "server_core/throttler.pike" );
 
   if (!has_value (compat_levels, __roxen_version__))
