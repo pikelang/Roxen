@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.84 1998/10/20 06:40:24 mast Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.85 1998/10/27 00:29:22 grubba Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -75,11 +75,14 @@ static mapping build_env_vars(string f, object id, string path_info)
   } else
     new["SCRIPT_NAME"]=id->not_query;
 
+  new["DOCUMENT_NAME"]=(new["SCRIPT_NAME"]/"/")[-1];
+
+  new["DOCUMENT_URI"]=id->conf->query("MyWorldLocation") + "/" + new["SCRIPT_NAME"];
     
-  if(tmp = roxen->real_file(new["SCRIPT_NAME"], id))
+  if(tmp = id->conf->real_file(new["SCRIPT_NAME"], id))
     new["SCRIPT_FILENAME"] = tmp;
     
-  if(tmp = roxen->real_file("/", id))
+  if(tmp = id->conf->real_file("/", id))
     new["DOCUMENT_ROOT"] = tmp;
 
   if(!new["PATH_TRANSLATED"])
