@@ -11,12 +11,6 @@ string parse( RequestID id )
   while( id->misc->orig )  id = id->misc->orig;
   sscanf( id->not_query, "/%s", q );
 
-  // NGSERVER Remove these
-  if( q == "index.html" )
-    q = "";
-  if( q == "whatsnew.html" )
-    q = "";
-
   string res="";
   foreach( pages, array page )
   {
