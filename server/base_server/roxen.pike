@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.161 1998/02/04 05:17:57 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.162 1998/02/04 05:23:56 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -222,7 +222,8 @@ void handler_thread(int id)
 	   }
 	 } while(1);
        })
-      perror("Error in handle_thread: "+describe_backtrace(q));
+      perror("Uncaught error in handler thread: "+describe_backtrace(q)+
+	     "Client will not respond.\n");
   }
 }
 
