@@ -18,23 +18,19 @@ Roxen 2.2+ LDAP directory user database module
 #define ROXEN_HASH_SIGN		"{x-roxen-hash}"
 
 constant cvs_version =
-  "$Id: userdb_ldap.pike,v 1.13 2002/06/12 09:51:31 hop Exp $";
+  "$Id: userdb_ldap.pike,v 1.14 2002/06/14 00:08:58 nilsson Exp $";
 inherit UserDB;
 inherit "module";
 
 constant name = "ldapuserdb";
 constant module_unique  = 0;
 
-//<locale-token project="mod_userdb_ldap">_</locale-token>
-#define _(X,Y)	_DEF_LOCALE("mod_userdb_ldap",X,Y)
-
 #include <module.h>
 
-LocaleString module_name =
-  _(1,"Authentication: LDAP directory database");
-
-LocaleString module_doc =
-  _(2, "LDAP directory user database <br />\nNote: in <i>guest</i> mode are supported passwords hashed by {CRYPT}, {SHA}, {SSHA}, {MD5} and {SMD5} schemas.");
+constant module_name = "Authentication: LDAP directory database";
+constant module_doc  = #"LDAP directory user database <br />
+Note: in <i>guest</i> mode are supported passwords hashed by
+{CRYPT}, {SHA}, {SSHA}, {MD5} and {SMD5} schemas.";
 
 
 /*

@@ -3,34 +3,31 @@
 // Index files only module, a directory module that will not try to
 // generate any directory listings, instead only using index files.
 
-constant cvs_version = "$Id: indexfiles.pike,v 1.21 2002/01/25 14:52:07 anders Exp $";
+constant cvs_version = "$Id: indexfiles.pike,v 1.22 2002/06/14 00:07:34 nilsson Exp $";
 constant thread_safe = 1;
 
 inherit "module";
 #include <module.h>
 
-//<locale-token project="mod_indexfiles">LOCALE</locale-token>
-#define LOCALE(X,Y)	_DEF_LOCALE("mod_indexfiles",X,Y)
-// end locale stuff
 
 //************** Generic module stuff ***************
 
 constant module_type = MODULE_DIRECTORIES;
-LocaleString module_name = LOCALE(1,"Index files only");
-LocaleString module_doc  =
-  LOCALE(2,"Index files only module, a directory module that will not try "
-	 "to generate any directory listings, instead only using the  "
-	 "specified index files."
-	 "<p>You can use this directory module if you do not want "
-	 "any automatic directory listings at all, but still want \n"
-	 "to use index.html with friends</p>");
+constant module_name = "Index files only";
+constant module_doc  =
+  ("Index files only module, a directory module that will not try "
+   "to generate any directory listings, instead only using the  "
+   "specified index files."
+   "<p>You can use this directory module if you do not want "
+   "any automatic directory listings at all, but still want \n"
+   "to use index.html with friends</p>");
 
 void create()
 {
   defvar("indexfiles", ({ "index.xml", "index.html" }),
-	 LOCALE(3,"Index files"), TYPE_STRING_LIST|VAR_NOT_CFIF,
-	 LOCALE(4,"If one of these files is present in a directory, it will "
-		"be returned instead of 'no such file'."));
+	 "Index files", TYPE_STRING_LIST|VAR_NOT_CFIF,
+	 ("If one of these files is present in a directory, it will "
+	  "be returned instead of 'no such file'."));
 }
 
 // The only important function in this file...

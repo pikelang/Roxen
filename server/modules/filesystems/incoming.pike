@@ -3,18 +3,13 @@
 #include <module.h>
 inherit "modules/filesystems/filesystem";
 
-constant cvs_version= "$Id: incoming.pike,v 1.17 2001/09/03 18:10:23 nilsson Exp $";
-
-//<locale-token project="mod_incoming">_</locale-token>
-#define _(X,Y)	_DEF_LOCALE("mod_incoming",X,Y)
-// end of the locale related stuff
-
-LocaleString module_name = _(1,"File systems: Incoming filesystem");
-LocaleString module_doc = 
-_(2,"This file system is used only for uploads, the files that are uploaded\n"
-"can either not be downloaded, or they will be scrambled during the download.\n"
-"This is considered a nice way to treat people who try to "
-"use your FTP site for warez distribution.");
+constant cvs_version= "$Id: incoming.pike,v 1.18 2002/06/14 00:08:07 nilsson Exp $";
+constant module_name = "File systems: Incoming filesystem";
+constant module_doc =
+("This file system is used only for uploads, the files that are uploaded\n"
+ "can either not be downloaded, or they will be scrambled during the download.\n"
+ "This is considered a nice way to treat people who try to "
+ "use your FTP site for warez distribution.");
 
 static class decaying_file {
 
@@ -103,18 +98,18 @@ void create()
   ::create();
 
   defvar("bitrot", 0,
-	 _(3,"Scrambled downloads: Return files with bitrot"), TYPE_FLAG,
-	 _(4,"If this function is enabled, downloads <i>are</i> allowed, "
-	 "but the files will be scrambled."));
+	 "Scrambled downloads: Return files with bitrot", TYPE_FLAG,
+	 ("If this function is enabled, downloads <i>are</i> allowed, "
+	  "but the files will be scrambled."));
 
   defvar("bitrot_header", 2376,
-	 _(5,"Scrambled downloads: Unscrambled header length"),TYPE_INT,
-	 _(6,"Number of bytes to be sent without any bitrot at all."), 0,
+	 "Scrambled downloads: Unscrambled header length", TYPE_INT,
+	 "Number of bytes to be sent without any bitrot at all.", 0,
 	 lambda(){ return !query("bitrot"); });
 
   defvar("bitrot_percent", 3,
-	 _(7,"Scrambled downloads: Percent of bits to rot"), TYPE_INT,
-	 _(8,"Selects the percentage of the file that will receive bitrot"), 0,
+	 "Scrambled downloads: Percent of bits to rot", TYPE_INT,
+	 "Selects the percentage of the file that will receive bitrot", 0,
 	 lambda(){ return !query("bitrot"); });
 }
 

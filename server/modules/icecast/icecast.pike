@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2001, Roxen IS.
 
 inherit "module";
-constant cvs_version="$Id: icecast.pike,v 1.10 2002/06/12 05:06:30 hop Exp $";
+constant cvs_version="$Id: icecast.pike,v 1.11 2002/06/14 00:08:58 nilsson Exp $";
 constant thread_safe=1;
 
 #define BSIZE 16384
@@ -12,15 +12,13 @@ constant thread_safe=1;
 #include <stat.h>
 #include <request_trace.h>
 
-//<locale-token project="mod_icecast">LOCALE</locale-token>
-#define _(X,Y)	_DEF_LOCALE("mod_icecast",X,Y)
 
-constant     module_type = MODULE_LOCATION | MODULE_TAG;
-LocaleString module_name = _(0,"Icecast: Server");
-LocaleString  module_doc = _(0, "Supports the ICY and Audio-cast protocols "
-			     "for streaming MPEG sound. Relies on other "
-			     "modules for the actual mpeg streams." );
-constant   module_unique = 0;
+constant module_type = MODULE_LOCATION | MODULE_TAG;
+constant module_name = "Icecast: Server";
+constant  module_doc = ( "Supports the ICY and Audio-cast protocols "
+			 "for streaming MPEG sound. Relies on other "
+			 "modules for the actual mpeg streams." );
+constant module_unique = 0;
 
 TAGDOCUMENTATION;
 #ifdef manual
@@ -703,43 +701,41 @@ class VarStreams
 
 void create()
 {
-  defvar( "streams", VarStreams( ({}), 0, _(0,"Streams"),
-				 _(0,"All the streams") ) );
+  defvar( "streams", VarStreams( ({}), 0, "Streams", "All the streams" ) );
 
   defvar("location", "/strm/",
-	 _(0,"Mount point"), TYPE_LOCATION|VAR_INITIAL,
-	 _(0,"Where the module will be mounted in the site's virtual "
-   	     "file system."));
+	 "Mount point", TYPE_LOCATION|VAR_INITIAL,
+	 "Where the module will be mounted in the site's virtual file system.");
 
   defvar("udpmeta", 0,
-	 _(0,"UDP port"), TYPE_INT|VAR_MORE,
-	 _(0,"Port number for out of band metadata exchange. Note: Works only "
-   	     "for Audiocast clients (like FreeAmp). "
-	     "<br /><b>Zero disables support</b>."));
+	 "UDP port", TYPE_INT|VAR_MORE,
+	 ("Port number for out of band metadata exchange. Note: Works only "
+	  "for Audiocast clients (like FreeAmp). "
+	  "<br /><b>Zero disables support</b>."));
 
   defvar("mdtitle", "%artist%: %album% [%year%]: %title%",
-	 _(0,"Stream title"), TYPE_STRING|VAR_MORE,
-	 _(0,"The template for title of stream<br />"
-	     "Usable macros are:"
-	     "<ul>"
-	     "<li>%artist%<br />"
-	     "Performer(s)/Soloist(s) <i>(TPE1 in v2.3+)</i><br /></li>"
-	     "<li>%album%<br />"
-	     "Album/Movie/Show title <i>(TALB in v2.3+)</i><br /></li>"
-	     "<li>%title%<br />"
-	     "Title/songname/content description "
-	     	"<i>(TIT2 in v2.3+)</i><br /></li>"
-	     "<li>%track%<br />"
-	     "Album/Movie/Show title <i>(TRCK in v2.3+)</i><br /></li>"
-	     "<li>%year%<br />"
-	     "A year of the recording<i>(TYER in v2.3+)</i><br /></li>"
-	     "</ul>"
-   	     "."));
+	 "Stream title", TYPE_STRING|VAR_MORE,
+	 ("The template for title of stream<br />"
+	  "Usable macros are:"
+	  "<ul>"
+	  "<li>%artist%<br />"
+	  "Performer(s)/Soloist(s) <i>(TPE1 in v2.3+)</i><br /></li>"
+	  "<li>%album%<br />"
+	  "Album/Movie/Show title <i>(TALB in v2.3+)</i><br /></li>"
+	  "<li>%title%<br />"
+	  "Title/songname/content description "
+	  "<i>(TIT2 in v2.3+)</i><br /></li>"
+	  "<li>%track%<br />"
+	  "Album/Movie/Show title <i>(TRCK in v2.3+)</i><br /></li>"
+	  "<li>%year%<br />"
+	  "A year of the recording<i>(TYER in v2.3+)</i><br /></li>"
+	  "</ul>"
+	  "."));
 
   defvar("pllen", 0,
-	 _(0,"Playlist lenght"), TYPE_INT|VAR_MORE,
-	 _(0,"Max. lenght of returned playlist. Useful for long playlists."
-	     "<br /><b>Zero means full lenght</b>."));
+	 "Playlist lenght", TYPE_INT|VAR_MORE,
+	 ("Max. lenght of returned playlist. Useful for long playlists."
+	  "<br /><b>Zero means full lenght</b>."));
 }
 
 mapping playlists(int s)

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2001, Roxen IS.
 
 constant cvs_version =
-  "$Id: auth_httpcookie.pike,v 1.9 2001/09/03 18:40:49 nilsson Exp $";
+  "$Id: auth_httpcookie.pike,v 1.10 2002/06/14 00:08:58 nilsson Exp $";
 inherit AuthModule;
 inherit "module";
 
@@ -9,16 +9,10 @@ inherit "module";
 
 constant name = "cookie";
 
-//<locale-token project="mod_auth_httpcookie">_</locale-token>
-#define _(X,Y)	_DEF_LOCALE("mod_auth_httpcookie",X,Y)
-
 #include <module.h>
 
-LocaleString module_name =
-  _(1,"Authentication: HTTP Cookie");
-
-LocaleString module_doc =
-  _(2,"Authenticate users using a cookie.");
+constant module_name = "Authentication: HTTP Cookie";
+constant  module_doc = "Authenticate users using a cookie.";
 
 static User low_authenticate( RequestID id,
 			      string user, string password,
@@ -160,6 +154,6 @@ static void create()
   Username: UNINPUT<br />
   Password: PWINPUT<br />
            <input type=submit value=' Ok ' />
-</form></body>",0,
-   _(3,"User form"),_(4,"The user/password request form shown to the user"))); 
+</form></body>", 0,
+   "User form", "The user/password request form shown to the user"));
 }

@@ -1,22 +1,16 @@
 // This is a roxen module. Copyright © 2001, Roxen IS.
 
 constant cvs_version =
-  "$Id: auth_httpbasic.pike,v 1.8 2001/09/03 18:40:48 nilsson Exp $";
+  "$Id: auth_httpbasic.pike,v 1.9 2002/06/14 00:08:58 nilsson Exp $";
 inherit AuthModule;
 inherit "module";
 
 constant name = "basic";
 
-//<locale-token project="mod_auth_httpbasic">_</locale-token>
-#define _(X,Y)	_DEF_LOCALE("mod_auth_httpbasic",X,Y)
-
 #include <module.h>
 
-LocaleString module_name =
-  _(1,"Authentication: Password");
-
-LocaleString module_doc =
-  _(2,"Authenticate users using basic username/password authentication.");
+constant module_name = "Authentication: Password";
+constant module_doc  = "Authenticate users using basic username/password authentication.";
 
 static array(string) parse_auth_header( mixed header )
 {

@@ -9,13 +9,7 @@
 //  o Add readme support
 //
 
-//<locale-token project="mod_directories">LOCALE</locale-token>
-//<locale-token project="mod_directories">SLOCALE</locale-token>
-#define SLOCALE(X,Y)	_STR_LOCALE("mod_directories",X,Y)
-#define LOCALE(X,Y)	_DEF_LOCALE("mod_directories",X,Y)
-// end locale stuff
-
-constant cvs_version = "$Id: directories.pike,v 1.93 2002/01/25 14:52:08 anders Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.94 2002/06/14 00:07:34 nilsson Exp $";
 constant thread_safe = 1;
 
 constant default_template= #"
@@ -106,9 +100,8 @@ string template;
 int override;
 
 constant module_type = MODULE_DIRECTORIES|MODULE_TAG;
-LocaleString module_name = LOCALE(1,"Directory Listings");
-LocaleString module_doc =
-  LOCALE(2,"This module pretty prints a list of files.");
+constant module_name = "Directory Listings";
+constant  module_doc = "This module pretty prints a list of files.";
 
 void set_template()
 {
@@ -119,15 +112,15 @@ string status()
 {
   if( query("default-template") && query("template") != template )
     return 
-      LOCALE(3,"The directory list template is not the same as the default "
-	     "template, but the default template is used. This might be a "
-	     "residue from an old configuration file, or intentional.");
+      ("The directory list template is not the same as the default "
+       "template, but the default template is used. This might be a "
+       "residue from an old configuration file, or intentional.");
 }
 
 mapping query_action_buttons()
 {
   if(query("default-template") && query("template") != default_template )
-    return ([ LOCALE(4,"Reset template to default")  : set_template ]);
+    return ([ "Reset template to default"  : set_template ]);
   return ([]);
 }
 
@@ -136,24 +129,24 @@ void create()
   defvar("indexfiles",
          ({ "index.html", "index.xml", "index.htm", "index.pike",
             "index.cgi" }),
-	 LOCALE(5,"Index files"), TYPE_STRING_LIST|VAR_INITIAL,
-	 LOCALE(6,"If one of these files is present in a directory, it will "
-		"be returned instead of the directory listing."));
+	 "Index files", TYPE_STRING_LIST|VAR_INITIAL,
+	 ("If one of these files is present in a directory, it will "
+	  "be returned instead of the directory listing."));
 
-  defvar("override", 0, LOCALE(7,"Allow directory index file overrides"),
+  defvar("override", 0, "Allow directory index file overrides",
          TYPE_FLAG,
-	 LOCALE(8,"If this variable is set, you can get a listing of all "
-		"files in a directory by appending '.' to the directory "
-		"name. It is <em>very</em> useful for debugging, but some"
-		" people regard it as a security hole."));
+	 ("If this variable is set, you can get a listing of all "
+	  "files in a directory by appending '.' to the directory "
+	  "name. It is <em>very</em> useful for debugging, but some"
+	  " people regard it as a security hole."));
 
-  defvar("default-template", 1, LOCALE(9,"Use the default template"),
+  defvar("default-template", 1, "Use the default template",
          TYPE_FLAG,
-         LOCALE(10,"If true, use the default directory layout template") );
+         "If true, use the default directory layout template" );
 
-  defvar("template", default_template, LOCALE(11,"Directorylisting template"),
+  defvar("template", default_template, "Directorylisting template",
 	 TYPE_TEXT,
-         LOCALE(12,"The template for directory list generation."),
+         "The template for directory list generation.",
 	 0,
          lambda(){ return query("default-template"); } );
 }

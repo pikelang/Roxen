@@ -2,17 +2,13 @@
 //
 #include <module.h>
 inherit "module";
-//<locale-token project="mod_gxml">_</locale-token>
-#define _(X,Y)	_DEF_LOCALE("mod_gxml",X,Y)
-// end of the locale related stuff
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.21 2001/10/29 06:12:17 per Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.22 2002/06/14 00:08:58 nilsson Exp $";
 constant module_type = MODULE_TAG;
-
-LocaleString module_name = _(1,"Graphics: GXML tag");
-LocaleString module_doc  = _(2,"Provides the tag <tt>&lt;gxml&gt;</tt>.");
+constant module_name = "Graphics: GXML tag";
+constant module_doc  = "Provides the tag <tt>&lt;gxml&gt;</tt>.";
 
 roxen.ImageCache the_cache;
 
@@ -27,13 +23,13 @@ void flush_cache() {
 
 mapping(string:function) query_action_buttons()
 {
-  return ([ _(3,"Clear cache"):flush_cache ]);
+  return ([ "Clear cache":flush_cache ]);
 }
 
 string status() {
   array s=the_cache->status();
-  return sprintf(_(4,"<b>Images in cache:</b> %d images<br />\n"
-                   "<b>Cache size:</b> %s"),
+  return sprintf( "<b>Images in cache:</b> %d images<br />\n"
+		  "<b>Cache size:</b> %s",
 		 s[0]/2, Roxen.sizetostring(s[1]));
 }
 

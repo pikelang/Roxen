@@ -10,22 +10,18 @@
 
 inherit "filesystem";
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.22 2001/09/03 18:10:23 nilsson Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.23 2002/06/14 00:08:07 nilsson Exp $";
 
 #include <module.h>
 #include <roxen.h>
 
 #include <request_trace.h>
 
-//<locale-token project="mod_restrictedfs">_</locale-token>
-#define _(X,Y)	_DEF_LOCALE("mod_restrictedfs",X,Y)
-// end of the locale related stuff
-
 constant module_type = MODULE_LOCATION;
-LocaleString module_name = _(1,"File systems: Restricted file system");
-LocaleString module_doc  =
-  _(2,"The restricted file system makes a users real home "
-    "directory available to her. Useful for FTP sites.");
+constant module_name = "File systems: Restricted file system";
+constant module_doc  =
+ ("The restricted file system makes a users real home "
+  "directory available to her. Useful for FTP sites.");
 constant module_unique = 0;
 
 #if constant(system.normalize_path)
@@ -38,9 +34,9 @@ void create()
 {
   ::create();
   defvar("remap_home", 0,
-	 _(3,"Hide path to the home directory"),
+	 "Hide path to the home directory",
 	 TYPE_FLAG|VAR_INITIAL,
-	 _(4,"If set, the user's home directory will be available "
+	 ("If set, the user's home directory will be available "
 	  "as the root of this file system. If not set the user's home "
 	  "directory will be available as its normal path, just as on an "
 	  "ordinary FTP site."
