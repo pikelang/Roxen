@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.36 2002/01/07 16:16:17 mast Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.37 2002/03/12 13:47:33 anders Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -610,27 +610,27 @@ constant tagdoc=([
  desired it should be specified with the date-attribute.
 
  <p>
- Examples:<br>
- date='%Y-%M-%D %h:%m' will verify a date formatted as '2040-11-08 2:46',<br>
+ Examples:<br />
+ date='%Y-%M-%D %h:%m' will verify a date formatted as '2040-11-08 2:46',<br />
  date='%Y w%W %e %h:%m %p %z' will verify '1913 w4 monday 2:14 pm CET'
  </p>
  <p>
- These are the format characters:<br>
- %Y absolute year <br>
- %y dwim year (70-99 is 1970-1999, 0-69 is 2000-2069)<br>
- %M month (number, name or short name) (needs %y)<br>
- %W week (needs %y)<br>
- %D date (needs %y, %m)<br>
- %d short date (20000304, 000304)<br>
- %a day (needs %y)<br>
- %e weekday (needs %y, %w)<br>
- %h hour (needs %d, %D or %W)<br>
- %m minute (needs %h)<br>
- %s second (needs %m)<br>
- %f fraction of a second (needs %s)<br>
- %t short time (205314, 2053)<br>
- %z zone<br>
- %p 'am' or 'pm'<br>
+ These are the format characters:<br />
+ %Y absolute year <br />
+ %y dwim year (70-99 is 1970-1999, 0-69 is 2000-2069)<br />
+ %M month (number, name or short name) (needs %y)<br />
+ %W week (needs %y)<br />
+ %D date (needs %y, %m)<br />
+ %d short date (20000304, 000304)<br />
+ %a day (needs %y)<br />
+ %e weekday (needs %y, %w)<br />
+ %h hour (needs %d, %D or %W)<br />
+ %m minute (needs %h)<br />
+ %s second (needs %m)<br />
+ %f fraction of a second (needs %s)<br />
+ %t short time (205314, 2053)<br />
+ %z zone<br />
+ %p 'am' or 'pm'<br />
  %n empty string (to be put at the end of formats).
  You can also use '%*[....]' to skip some characters.
  </p>
