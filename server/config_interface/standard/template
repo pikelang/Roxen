@@ -25,7 +25,7 @@
 <table><tr><td valign=top width=150><img src=/internal-roxen-unit width=150 height=1><br>
 &form.leftside:none;&form.leftimage:none;</td><td width='100%' valign=top>
 <subtablist width='100%'>
-  <st-tabs><insert file=cv_startpage_tabs.pike nocache></st-tabs>
+  <st-tabs><insert file=/standard/cv_startpage_tabs.pike nocache></st-tabs>
   <st-page><contents></st-page>
 </subtablist></td></tr></table>
 </define>

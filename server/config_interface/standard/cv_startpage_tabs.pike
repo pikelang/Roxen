@@ -1,7 +1,7 @@
 array pages =
 ({
   ({ "welcome",     "",                0,               0             }),
-  ({ "upgrade",     "upgrade.html",    0,               0             }),
+  ({ "upgrade",     "upgrade/",    0,               0             }),
   ({ "usersettings","settings.html",   0,               0             }),
   ({ "users",       "users.html",      "Edit Users",    0             }),
 });
@@ -39,5 +39,6 @@ string parse(object id)
     res += "</tab>";
     res += tpost;
   }
+
   return res;
 }
