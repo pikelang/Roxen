@@ -57,7 +57,12 @@ private string attr_cont(string t, mapping m, string c)
 {
   string p="";
   if(!m->name) m->name="(Not entered)";
-  if(m->value) p=sprintf("<i>%s=%s</i><br />",m->name,attr_vals(m->value));
+  if(m->value) p=sprintf("<i>%s=%s</i>%s<br />",
+			 m->name,
+			 attr_vals(m->value),
+			 m->default?" ("+m->default+")":""
+			 );
+  if(m->required) p+="<i>This attribute is required.</i><br />";
   return sprintf("<p><b>%s</b><br />%s%s</p>",m->name,p,c);
 }
 
