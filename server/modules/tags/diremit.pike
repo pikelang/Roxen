@@ -6,6 +6,92 @@ constant module_name = "Tags: Dir emit source";
 constant module_doc = "This module provies the 'dir' emit source. It "
   "or anoter compatible module is required by the Directory Listings module";
 
+class Imagesize(mapping m, RequestID id) {
+  inherit RXML.Value;
+  int x,y;
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+    if( !x && !y && (m->type / "/")[0] == "image" ) {
+      switch( (m->type / "/")[-1] ) {
+      case "gif":
+      case "jpeg":
+      case "jpg":
+      case "png":
+	catch {
+	  object fd = id->conf->open_file( m->path, "r", id )[0];
+	  array xy = Dims.dims()->get( fd );
+	  x = (int)xy[0];
+	  y = (int)xy[1];
+	};
+	break;
+      default:
+	catch {
+	  Image.Image i = roxen.load_image( m->path,id );
+	  m["x-size"] = i->xsize();
+	  m["y-size"] = i->ysize();
+	};
+      }
+    }
+    if(!x || !y) return ENCODE_RXML_TEXT("?", type);
+    return ENCODE_RXML_INT(var=="x-size"?x:y, type);
+  }
+}
+
+class Realfile(mapping m, RequestID id) {
+  inherit RXML.Value;
+  mapping n;
+
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+    if(!n) {
+      n = ([]);
+      string file = m->path;
+      foreach( id->conf->location_modules(), mixed tmp ) {
+	if(!search(file, tmp[0])) {
+#ifdef MODULE_LEVEL_SECURITY
+	  if(id->conf->check_security(tmp[1], id))
+	    continue;
+#endif
+	  string s;
+	  if(s=function_object(tmp[1])->real_file(file[strlen(tmp[0])..],id)) {
+	    n["real-filename"] = s;
+	    n["real-dirname"]  = dirname( s );
+	    n["vfs"] = function_object(tmp[1])->module_identifier();
+	    n["vfs-root"] = function_object(tmp[1])->real_file( "", id );
+	    break;
+	  }
+	}
+      }
+      if(!n["real-filename"]) {
+	n["real-filename"] = id->conf->real_file( m->path, id );
+	if( n["real-filename"] )
+	  n["real-dirname"] = dirname( n["real-filename"] );
+      }
+    }
+    return ENCODE_RXML_TEXT(n[var], type);
+  }
+}
+
+class Thumbnail(mapping m, mapping args, RequestID id) {
+  inherit RXML.Value;
+
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
+    if( (m->type / "/")[0] == "image" ) {
+      string ms = (args["thumbnail-size"]?args["thumbnail-size"]:"60");
+      mapping cia = ([
+	"max-width":ms,
+	"max-height":ms,
+	"src":m->path,
+	"format":(args["thumbnail-format"]?args["thumbnail-format"]:"png"),
+      ]);
+      if( args["thumbnail-format"] == "jpeg" )
+	cia["jpeg-quality"] = "40";
+      return ENCODE_RXML_TEXT( Roxen.parse_rxml( RXML.t_xml->
+						 format_tag( "cimg-url",
+							     cia ), id ), type);
+    }
+    return ENCODE_RXML_TEXT(m["type-img"], type);
+  }
+}
+
 class TagDirectoryplugin
 {
   inherit RXML.Tag;
@@ -25,8 +111,6 @@ class TagDirectoryplugin
 
     if( !a || !sizeof(a) )
       return ({});
-
-    multiset opt = mkmultiset( (args->options||"")/"," - ({""}) );
 
     mapping get_datum( string file )
     {
@@ -68,81 +152,10 @@ class TagDirectoryplugin
         m["type-img"] = Roxen.image_from_type( m->type );
       }
 
-      if( opt["real-file"] )
-      {
-        string file = m->path;
-        foreach( id->conf->location_modules( ), mixed tmp )
-        {
-          if(!search(file, tmp[0]))
-          {
-#ifdef MODULE_LEVEL_SECURITY
-            if(id->conf->check_security(tmp[1], id))
-              continue;
-#endif
-            string s;
-            if(s=function_object(tmp[1])->real_file(file[strlen(tmp[0])..],id))
-            {
-              m["real-filename"] = s;
-              m["real-dirname"]  = dirname( s );
-              m["vfs"] = function_object(tmp[1])->module_identifier();
-              m["vfs-root"] = function_object(tmp[1])->real_file( "", id );
-              break;
-            }
-          }
-        }
-        if( !m["real-file"] )
-        {
-          m["real-file"] = id->conf->real_file( m->path, id );
-          if( m["real-file"] )
-            m["real-dirname"] = dirname( m["real-file"] );
-        }
-      }
-
-      if( opt->thumbnail )
-        if( (m->type / "/") [ 0 ]  == "image" )
-        {
-          string ms = (args["thumbnail-size"]?args["thumbnail-size"]:"60");
-          mapping cia = ([
-            "max-width":ms,
-            "max-height":ms,
-            "src":m->path,
-            "format":(args["thumbnail-format"]?args["thumbnail-format"]:"png"),
-          ]);
-	  if( args["thumbnail-format"] == "jpeg" )
-	    cia["jpeg-quality"] = "40";
-          m->thumbnail = 
-                       Roxen.parse_rxml( RXML.t_xml->format_tag( "cimg-url",
-                                                                 cia ), id );
-        } else
-          m->thumbnail = m["type-img"];
-
-      if( opt->imagesize )
-        if( (m->type / "/") [ 0 ]  == "image" )
-        {
-          switch( (m->type / "/") [ -1 ] )
-          {
-           case "gif":
-           case "jpeg":
-           case "jpg":
-             catch
-             {
-               object fd = id->conf->open_file( m->path, "r", id )[0];
-               array xy = Dims.dims()->get( fd );
-               m["x-size"] = xy[0];
-               m["y-size"] = xy[1];
-             };
-             break;
-           default:
-             catch
-             {
-               Image.Image i = roxen.load_image( m->path,id );
-               m["x-size"] = (string)i->xsize();
-               m["y-size"] = (string)i->ysize();
-             };
-          }
-          if( !m["x-size"] )
-            m["x-size"] = m["y-size"] = "?";
-        }
+      m["real-filename"] = m["real-dirname"] = m["vfs"] =
+	m["vfs-root"] = Realfile(m, id);
+      m->thumbnail = Thumbnail(m, args, id);
+      m["x-size"] = m["y-size"] = Imagesize(m, id);
 
       return m;
     };
@@ -218,27 +231,6 @@ constant tagdoc=([
 
 <attr name='directory' value='path'><p>
  Apply the listing to this directory.</p>
-</attr>
-
-<attr name='options' value='(real-file,thumbnail,imagesize)'><p>
- Use these options to customize the directory listings. These argument
- have been made options due to them demanding a lot of raw computing
- power, since they involve image manipulation and other demanding
- tasks. These options can be combined.</p>
-
-<xtable>
-<row><c><p>real-file</p></c><c><p>Makes it possible to show the absolute
-location of the file including the filename from an 'outside Roxen' view.</p></c></row>
-<row><c><p>thumbnail</p></c><c><p>Makes it possible to use image thumbnails in a
-directory listing. Note: Remember that some imageformats needs heavy
-computations to generate thumbnails. <ext>tiff</ext> for instance
-needs to unpack its image to be able to resolve the image's height and
-width. </p></c></row> <row><c><p>imagesize</p></c><c><p>Makes it able to show the
-image's height and width in a directory listing. Note: Remember that
-some imageformats needs heavy computations to generate thumbnails.
-<ext>tiff</ext> for instance needs to unpack its image to be able to
-resolve the image's height and width.</p></c></row>
-</xtable>
 </attr>
 
 <attr name='thumbnail-size' value='number'><p>
@@ -346,6 +338,14 @@ resolve the image's height and width.</p></c></row>
  Returns the path to the file or directory.
 </p></desc>",
 
+"&_.real-dirname;":#"<desc ent='ent'><p>
+ Returns the directory of the real file in the filesystem.
+</p></desc>",
+
+"&_.real-filename;":#"<desc ent='ent'><p>
+ Returns the path to the real file in the filesystem.
+</p></desc>",
+
 "&_.size;":#"<desc ent='ent'><p>
  Returns a file's size in kb(kilobytes).
 </p></desc>",
@@ -362,6 +362,14 @@ resolve the image's height and width.</p></c></row>
  Returns the image associated with the file's content-type or
  directory. Only available when <att>option=\"thumbnail\"</att> is
  used.
+</p></desc>",
+
+"&_.vfs;":#"<desc ent='ent'><p>
+ Returns the name of the virtual filesystem that keeps the file.
+</p></desc>",
+
+"&_.vfs-root;":#"<desc ent='ent'><p>
+ Returns the root directory of the virtual filesystem that keeps the file.
 </p></desc>",
 
 "&_.x-size;":#"<desc ent='ent'><p>
