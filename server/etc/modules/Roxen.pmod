@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.11 2000/03/19 16:38:05 nilsson Exp $
+ * $Id: Roxen.pmod,v 1.12 2000/03/20 03:08:47 mast Exp $
  *
  * Various helper functions.
  *
@@ -694,6 +694,9 @@ class ScopePage {
   constant in_defines=aggregate_multiset(@indices(converter));
 
   mixed `[] (string var, void|RXML.Context c, void|string scope) {
+    switch (var) {
+      case "pathinfo": return c->id->misc->path_info;
+    }
     if(in_defines[var])
       return c->id->misc->defines[converter[var]];
     if(objectp(c->id->misc->scope_page[var])) return c->id->misc->scope_page[var]->rxml_var_eval(c, var, "page");
@@ -701,6 +704,9 @@ class ScopePage {
   }
 
   mixed `[]= (string var, mixed val, void|RXML.Context c, void|string scope_name) {
+    switch (var) {
+      case "pathinfo": return c->id->misc->path_info = val;
+    }
     if(in_defines[var])
       return c->id->misc->defines[converter[var]]=val;
     return c->id->misc->scope_page[var]=val;
@@ -711,16 +717,23 @@ class ScopePage {
     array ind=indices(c->id->misc->scope_page);
     foreach(indices(in_defines), string def)
       if(c->id->misc->defines[converter[def]]) ind+=({def});
+    if (c->id->misc->path_info) ind += ({"pathinfo"});
     return ind;
   }
 
   void m_delete (string var, void|RXML.Context c, void|string scope_name) {
     if(!c) return;
+    switch (var) {
+      case "pathinfo":
+	predef::m_delete (c->id->misc, "pathinfo");
+	return;
+    }
     if(in_defines[var]) {
       if(var[0..4]=="theme")
 	predef::m_delete(c->id->misc->defines, converter[var]);
       else
 	::m_delete(var, c, scope_name);
+      return;
     }
     predef::m_delete(c->id->misc->scope_page, var);
   }
