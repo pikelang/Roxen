@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.41 1999/12/08 19:28:20 nilsson Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.42 2000/01/11 19:14:16 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -276,10 +276,13 @@ object(sql) sql_object(void|string host)
   object(sql) con;
   function sql_connect = conf->sql_connect;
   mixed error;
+  /* Is this really a good idea? /mast
   error = catch(con = sql_connect(host));
   if(error)
     return 0;
   return con;
+  */
+  return sql_connect(host);
 }
 
 string query_provides()
@@ -302,19 +305,19 @@ void create()
 	 "SQL servers your pike has support for, but the following "
 	 "might exist: msql, mysql, odbc, oracle, postgres.\n");
 
-  defvar("log_error", 0, "Enable the log_error attribute",
-	 TYPE_FLAG|VAR_MORE, "Enables the attribute \"log_error\" "
-	 "which causes errors to be logged to the event log.\n");
+  defvar("log_error", 0, "Log errors to the event log",
+	 TYPE_FLAG, "Enable this to log database connection and SQL "
+	 "errors to the event log.\n");
 
 #ifdef SQL_TAG_COMPAT
   defvar("database", "", "Default SQL database (deprecated)",
-	 TYPE_STRING|VAR_MORE,
+	 TYPE_STRING,
 	 "Specifies the name of the default SQL database.\n");
   defvar("user", "", "Default username (deprecated)",
-	 TYPE_STRING|VAR_MORE,
+	 TYPE_STRING,
 	 "Specifies the default username to use for access.\n");
   defvar("password", "", "Default password (deprecated)",
-	 TYPE_STRING|VAR_MORE,
+	 TYPE_STRING,
 	 "Specifies the default password to use for access.\n");
 #endif // SQL_TAG_COMPAT
 }
@@ -336,7 +339,7 @@ void stop()
 
 string status()
 {
-  if (catch {
+  if (mixed err = catch {
     object o;
     if (conf->sql_connect)
       o = conf->sql_connect(QUERY(hostname));
@@ -345,10 +348,13 @@ string status()
 #ifdef SQL_TAG_COMPAT
 		  , QUERY(database), QUERY(user), QUERY(password)
 #endif // SQL_TAG_COMPAT
-		  );
+		 );
     return(sprintf("Connected to %s server on %s<br>\n",
 		   o->server_info(), o->host_info()));
   })
-  return "<font color=red>Not connected.</font><br>\n";
+    return
+      "<font color=red>Not connected:</font> " +
+      replace (html_encode_string (describe_error(err)), "\n", "<br>\n") +
+      "<br>\n";
 }
 
