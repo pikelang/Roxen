@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.142 2003/01/22 16:12:49 grubba Exp $
+// $Id: wizard.pike,v 1.143 2003/03/18 16:48:15 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -118,7 +118,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       m->type = "text";
     m_delete(m,"default");
     m->value = loc_encode(current||m->value||"", m, "none");
-    if(!m->size)m->size="60,1";
+    if(!m->size)m->size="60";
     m_delete(m,"quote");
     return make_tag("input", m);
 
@@ -127,7 +127,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     if(!id->variables[n]) id->variables[n]=current;
 
     m->type = "text";
-    if(!m->size)m->size="60,1";
+    if(!m->size)m->size="60";
     m_delete(m,"default");
     foreach((current||"")/"\0"-({""}), string v)
     {
@@ -177,7 +177,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
     m->type = "number";
     m_delete(m,"default");
     m->value = (string)((int)current);
-    if(!m->size)m->size="8,1";
+    if(!m->size)m->size="8";
     return make_tag("input", m);
 
    case "float":
