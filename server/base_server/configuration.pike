@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.412 2001/01/19 21:20:16 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.413 2001/01/21 21:56:49 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -649,14 +649,15 @@ public User authenticate( RequestID id,
 //! configuration user database. Same goes for the @[method].
 //!
 //! The return value is the autenticated user.
+//! id->misc->authenticated_user is always set to the return value.
 {
   User u;
   if( method )
-    return method->authenticate( id, database );
+    return id->misc->authenticated_user = method->authenticate( id, database );
   else
     foreach( auth_modules(), method )
-      if( u  = method->authenticate( id, database ) )
-	return u;
+      if( u = method->authenticate( id, database ) )
+	return id->misc->authenticated_user = u;
 }
 
 public mapping authenticate_throw( RequestID id, string realm,
