@@ -7,7 +7,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.21 2002/11/26 12:18:51 anders Exp $";
+constant cvs_version = "$Id: email.pike,v 1.22 2003/01/13 18:40:29 mast Exp $";
 
 constant thread_safe=1;
 
@@ -87,12 +87,17 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.21 $"/" ")[1];
+string revision = ("$Revision: 1.22 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
 
   constant name  = "email";
+
+  RXML.Type content_type =
+    (float) my_configuration()->query ("compat_level") >= 3.4 ?
+    RXML.t_text (RXML.PXml) :
+    RXML.t_xml (RXML.PXml);
 
   // It says that the resulting code has the type "any" and
   // should be parsed once by the XML-parser.
