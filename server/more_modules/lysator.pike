@@ -1,10 +1,11 @@
 // This is a roxen module. (c) Lysator ACS, 1996.
 
-string cvs_version = "$Id: lysator.pike,v 1.4 1997/05/27 00:11:12 grubba Exp $";
+string cvs_version = "$Id: lysator.pike,v 1.5 1997/05/31 19:17:54 grubba Exp $";
 // Lysator specific parsing, used at www.lysator.liu.se
 
 #include <config.h>
 #include <module.h>
+#include <simulate.h>
 
 inherit "module";
 
