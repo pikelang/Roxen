@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.7 2000/03/20 19:11:31 js Exp $
+ * $Id: update.pike,v 1.8 2000/03/24 18:40:12 jhs Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -7,6 +7,22 @@
  * Author: Johan Schön
  * January-March 2000
  */
+
+#ifdef UPDATE_DEBUG
+# define UPDATE_MSG(X) werror("Update client: "+X+"\n")
+# define UPDATE_MSGS(X, Y) werror("Update client: "+X+"\n", @Y)
+#else
+# define UPDATE_MSG(X)
+# define UPDATE_MSGS(X, Y)
+#endif
+
+#ifdef UPDATE_NOISY_DEBUG
+# define UPDATE_NOISE(X) werror("Update client noise: "+X+"\n")
+# define UPDATE_NOISES(X, Y) werror("Update client noise: "+X+"\n", @Y)
+#else
+# define UPDATE_NOISE(X)
+# define UPDATE_NOISES(X, Y)
+#endif
 
 inherit "module";
 inherit "html";
@@ -33,13 +49,23 @@ mapping(int:GetPackage) package_downloads = ([ ]);
 int inited;
 void post_start()
 {
-  catch(db=Yabu.db(roxen_path(QUERY(yabudir)),"wcSQ"));
+#ifdef UPDATE_DEBUG
+  if(mixed error =
+#endif
+  catch(db=Yabu.db(roxen_path(QUERY(yabudir)),"wcSQ"))
+#ifdef UPDATE_DEBUG
+    )
+    UPDATE_MSGS("post_start() failed to create yabu database: %O", ({ error }));
+#else
+  ;
+#endif
   pkginfo=db["pkginfo"];
   misc=db["misc"];
   installed=db["installed"];
   mkdirhier(roxen_path(QUERY(pkgdir)+"/foo"));
   if(QUERY(do_external_updates))
     updater=UpdateInfoFiles();
+  UPDATE_NOISES("db == %O", ({ db }));
 }
 
 void start(int num, Configuration conf)
@@ -47,6 +73,7 @@ void start(int num, Configuration conf)
   if(conf && !inited)
   {
     inited++;
+    UPDATE_NOISE("Initializing...");
 #if !constant(thread_create)
     call_out( post_start, 1 );
 #else
@@ -57,8 +84,10 @@ void start(int num, Configuration conf)
 
 void stop()
 {
+  UPDATE_NOISE("Shutting down...");
   catch(db->close());
   catch(destruct(updater));
+  UPDATE_NOISE("Shutdown complete.");
 }
 
 void create()
@@ -170,13 +199,15 @@ string tag_update_uninstall_package(string t, mapping m, RequestID id)
 
 string container_update_package_output(string t, mapping m, string c, RequestID id)
 {
+  UPDATE_NOISES("<%s>: args = %O, contents = %O", ({ t, m, c }));
   array res=({ });
   int i=0;
 
   if(!m->package)
   {
-    array(string) packages=indices(pkginfo);
-    packages=sort(packages);
+    UPDATE_MSGS("pkginfo = %O", ({ pkginfo }));
+    array(string) packages = indices(pkginfo);
+    packages = sort(packages);
     if(m->reverse)
       packages=reverse(packages);
 
