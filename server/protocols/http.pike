@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.316 2001/06/07 04:33:52 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.317 2001/06/08 20:13:07 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1092,7 +1092,7 @@ string format_backtrace(int eid)
   if (bt && sizeof (bt)) {
     res += "<h3>Pike backtrace</h3>\n<ul>\n";
     int q = sizeof (bt);
-    foreach(reverse (bt), [string file, int line, string func, string descr])
+    foreach(bt, [string file, int line, string func, string descr])
       res += "<li value="+(q--)+">" +
 	link_to (file, line, func, eid, q) +
 	(file ? Roxen.html_encode_string (file) : "<i>Unknown program</i>") +
@@ -1165,11 +1165,11 @@ int store_error(mixed _err)
       objectp (err) && err->is_generic_error) {
 
     object d = master()->Describer();
-    d->identify_parts(err);
+    d->identify_parts(err[1]);
     function dcl = d->describe_comma_list;
     bt = ({});
 
-    foreach (err[1], mixed ent) {
+    foreach (reverse (err[1]), mixed ent) {
       string file, func, descr;
       int line;
       if (arrayp (ent)) {
