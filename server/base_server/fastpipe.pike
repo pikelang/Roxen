@@ -2,9 +2,7 @@
 // by Francesco Chemolli, based upon work by Per Hedbor and others.
 // Copyright © 1999 - 2000, Roxen IS.
 
-constant cvs_version="$Id: fastpipe.pike,v 1.4 2000/02/20 17:41:33 nilsson Exp $";
-
-#if constant (Stdio.sendfile)
+constant cvs_version="$Id: fastpipe.pike,v 1.5 2000/08/12 06:12:45 per Exp $";
 
 private array(string) headers=({});
 private Stdio.File file;
@@ -54,6 +52,3 @@ void set_done_callback(function|void f, void|mixed ... args)
   callback_args=args;
 }
 
-#else
-inherit "smartpipe";
-#endif
