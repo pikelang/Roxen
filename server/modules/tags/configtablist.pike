@@ -1,17 +1,27 @@
 /*
- * $Id: configtablist.pike,v 1.9 1998/03/14 20:57:30 js Exp $
+ * $Id: configtablist.pike,v 1.10 1998/03/19 15:33:11 js Exp $
  *
  * Makes a tab-list like the one in the config-interface.
  *
  * $Author: js $
  */
 
-constant cvs_version="$Id: configtablist.pike,v 1.9 1998/03/14 20:57:30 js Exp $";
+constant cvs_version="$Id: configtablist.pike,v 1.10 1998/03/19 15:33:11 js Exp $";
 constant thread_safe=1;
 
+#define use_contents_cache 0
+#define use_gif_cache      1
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
+
+#if use_contents_cache  
+mapping(string:string) contents_cache = ([]);
+#endif
+
+#if use_gif_cache  
+mapping(string:string) gif_cache = ([]);
+#endif
 
 /*
  * Functions
@@ -80,10 +90,40 @@ string tag_config_tab(string t, mapping a, string contents)
 					       make_tag("img", img_attrs)));
 }
 
+int my_hash(mixed o)
+{
+  switch(sprintf("%t",o))
+  {
+    case "string": return hash(o);
+    case "int": return o;
+    case "mapping":
+      int h = 17 + sizeof(o);
+      foreach(indices(o), mixed index)
+         h += hash(index) * my_hash(o[index]);
+      return h;
+
+   case "array":
+    return hash(sprintf("%O",o));
+   default:
+     return hash(encode_value(o));
+  }
+}
+
 string tag_config_tablist(string t, mapping a, string contents)
 {
-  return(replace(parse_html(contents, ([]), (["tab":tag_config_tab])),
-		 ({ "\n", "\r" }), ({ "", "" })));
+#if use_contents_cache  
+  object md5 = Crypto.md5();
+  md5->update(contents+my_hash(a));
+  string key=md5->digest();
+  if(contents_cache[key])
+    return contents_cache[key];
+#endif
+  string res=replace(parse_html(contents, ([]), (["tab":tag_config_tab])),
+		 ({ "\n", "\r" }), ({ "", "" }));
+#if use_contents_cache  
+  contents_cache[key]=res;
+#endif  
+  return res;
 }
 
 mapping query_container_callers()
@@ -109,6 +149,15 @@ object load_interface()
 
 mapping find_file(string f, object id)
 {
+  string s;
+#if use_gif_cache
+  if(s=gif_cache[f])
+  {
+    werror("Configtablist: "+f+" found in cache.\n");
+    return http_string_answer(s,"image/gif");
+  }
+#endif  
+
   array pagecolor; //=({ 122, 122, 122 }); //parse_color("lightblue");
   array(string) arr = f/"/";
   if (sizeof(arr) > 1) {
@@ -135,8 +184,13 @@ mapping find_file(string f, object id)
     default:
       return 0;
     }
-    return http_string_answer(Image.GIF.encode(button,@pagecolor),
-			      "image/gif");
+    
+    s=Image.GIF.encode(button,@pagecolor);
+#if use_gif_cache
+    if(!gif_cache[f])
+      gif_cache[f]=s;
+#endif  
+    return http_string_answer(s,"image/gif");
   }
   return 0;
 }
