@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.1 1999/11/27 07:49:40 per Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.2 1999/12/21 16:48:31 per Exp $";
 constant thread_safe=1;
 
 inherit "roxenlib";
@@ -69,6 +69,7 @@ string reporterr (string header, string dump)
 // Helper functions, to be used in the pike script.
 class Helpers
 {
+  inherit "roxenlib";
   string data = "";
   void output(mixed ... args) 
   {
