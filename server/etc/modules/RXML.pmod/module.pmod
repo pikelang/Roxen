@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.310 2003/03/31 12:58:01 mast Exp $
+// $Id: module.pmod,v 1.311 2003/04/23 12:56:29 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1346,7 +1346,17 @@ class Value
   //! implementor is free to ignore it.
   {
     mixed val = rxml_const_eval (ctx, var, scope_name);
+    // We replace the variable object with the evaluated value when
+    // rxml_const_eval is used. However, we hide
+    // ctx->misc->recorded_changes so that the setting isn't cached.
+    // That since rxml_const_eval should work for values that only are
+    // constant in the current request. Note that we can still
+    // overcache the returned result; it's up to the user to avoid
+    // that with suitable cache tags.
+    array rec_chgs = ctx->misc->recorded_changes;
+    ctx->misc->recorded_changes = 0;
     ctx->set_var(var, val, scope_name);
+    ctx->misc->recorded_changes = rec_chgs;
     return type ? type->encode (val) : val;
   }
 
@@ -8150,7 +8160,7 @@ class PCode
       return intro + ")" + OBJ_COUNT;
   }
 
-  constant P_CODE_VERSION = 4.2;
+  constant P_CODE_VERSION = 4.3;
   // Version spec encoded with the p-code, so we can detect and reject
   // incompatible p-code dumps even when the encoded format hasn't
   // changed in an obvious way.
