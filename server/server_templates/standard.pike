@@ -1,5 +1,5 @@
 /*
- * $Id: standard.pike,v 1.5 1997/08/14 00:26:43 grubba Exp $
+ * $Id: standard.pike,v 1.6 1997/10/09 14:49:06 peter Exp $
  */
 
 constant selected = 1;
@@ -9,7 +9,6 @@ constant modules = ({
   "cgi#0",
   "contenttypes#0",
   "ismap#0",
-  "pikescript#0",
   "htaccess#0",
   "htmlparse#0",
   "directories#0",
