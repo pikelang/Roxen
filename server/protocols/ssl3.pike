@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.34 1998/06/12 23:07:54 nisse Exp $
+/* $Id: ssl3.pike,v 1.35 1998/06/22 21:26:51 grubba Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -240,16 +240,14 @@ string get_data_file()
   roxen_perror(sprintf("SSL3:get_data_file()\n"));
 #endif /* SSL3_DEBUG */
   string s;
-  if(to_send->head)
+  if ((s = to_send->head))
   {
-    s = to_send->head;
     to_send->head = 0;
     return s;
   }
 
-  if(to_send->data)
+  if ((s = to_send->data))
   {
-    s = to_send->data;
     to_send->data = 0;
     return s;
   }
@@ -257,6 +255,13 @@ string get_data_file()
   if(to_send->file) {
     // Read some more data
     s = to_send->file->read(CHUNK,1);
+  }
+
+  if (!s || !sizeof(s)) {
+    if (to_send->file) {
+      to_send->file->close();
+      to_send->file = 0;
+    }
   }
 
   return s;
