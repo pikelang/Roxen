@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.8 1997/05/26 22:45:07 nisse Exp $
+/* $Id: ssl3.pike,v 1.9 1997/08/01 07:48:06 nisse Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -81,17 +81,22 @@ mapping(string:string) parse_pem(string f)
 #endif
   return parts;
 }
-    
+
+class roxen_ssl_context {
+  inherit SSL.context;
+  int port; /* port number */
+}
+
 private object new_context(object c)
 {
   mapping contexts = roxen->query_var("ssl3_contexts");
-  object ctx = SSL.context();;
+  object ctx = roxen_ssl_context();;
   
   if (!contexts)
-    {
-      contexts = ([ c : ctx ]);
-      roxen->set_var("ssl3_contexts", contexts);
-    }
+  {
+    contexts = ([ c : ctx ]);
+    roxen->set_var("ssl3_contexts", contexts);
+  }
   else
     contexts[c] = ctx;
   return ctx;
@@ -110,8 +115,10 @@ array|void real_port(array port)
   werror("SSL3: real_port()\n");
   werror(sprintf("port = %O\n", port));
 #endif
+
   string cert, key;
   object ctx = new_context(roxen->current_configuration);
+  ctx->port = port[0];
   mapping options = parse_args(port[3]);
 
 #ifdef SSL3_DEBUG
@@ -366,6 +373,141 @@ void handle_request( )
   if(conf) conf->log(file, thiso);
 }
 
+class fallback_redirect_request {
+  string in = "";
+  string out;
+  string prefix;
+  int port;
+  object f;
+
+  void die()
+  {
+#if 0
+    /* Close the file, DAMMIT */
+    object dummy = Stdio.File();
+    if (dummy->open("/dev/null", "rw"))
+      dummy->dup2(f);
+#endif    
+    f->close();
+    destruct(f);
+    destruct(this_object());
+  }
+  
+  void write_callback(object id)
+  {
+    int written = id->write(out);
+    if (written <= 0)
+      die();
+    out = out[written..];
+    if (!strlen(out))
+      die();
+  }
+
+  void read_callback(object id, string s)
+  {
+    in += s;
+    string name;
+
+    if (search(in, "\r\n\r\n") >= 0)
+    {
+//      werror(sprintf("request = '%s'\n", in));
+      array(string) lines = in / "\r\n";
+      array(string) req = replace(lines[0], "\t", " ") / " ";
+      if (sizeof(req) < 2)
+      {
+	out = "HTTP/1.0 400 Bad Request\r\n\r\n";
+      }
+      else
+      {
+	if (sizeof(req) == 2)
+	{
+	  name = req[1];
+	}
+	else
+	{
+	  name = req[1..sizeof(req)-2] * " ";
+	  foreach(Array.map(lines[1..], `/, ":"), array header)
+	  {
+	    if ( (lower_case(header[0]) == "host")
+		 &&  (sizeof(header) >= 2))
+	      prefix = "https://" + header[1] - " ";
+	  }
+	}
+	if (prefix[-1] == '/')
+	  prefix = prefix[..strlen(prefix)-2];
+	out = sprintf("HTTP/1.0 301 Redirect to secure server\r\n"
+		      "Location: %s:%d%s\r\n\r\n", prefix, port, name);
+      }
+      f->set_read_callback(0);
+      f->set_write_callback(write_callback);
+    }
+  }
+  
+  void create(object socket, string s, string l, int p)
+  {
+    f = socket;
+    prefix = l;
+    port = p;
+    f->set_nonblocking(read_callback, 0, die);
+    f->set_id(f);
+    read_callback(f, s);
+  }
+}
+
+void http_fallback(object alert, object|int n, string data)
+{
+//  trace(1);
+#if 0
+  werror(sprintf("ssl3->http_fallback: alert(%d, %d)\n"
+		 "seq_num = %s\n"
+		 "data = '%s'", alert->level, alert->description,
+		 (string) n, data));
+#endif
+  if ( (my_fd->current_write_state->seq_num == 0)
+       && search(lower_case(data), "http"))
+  {
+    /* Redirect to a https-url */
+//    my_fd->set_close_callback(0);
+//    my_fd->leave_me_alone = 1;
+    fallback_redirect_request(my_fd->raw_file, data,
+			      my_fd->config->query("MyWorldLocation") || "/",
+			      my_fd->context->port);
+    destruct(my_fd);
+    destruct(this_object());
+//    my_fd = 0; /* Forget ssl-object */
+  }
+}
+
+void ssl_accept_callback(object id)
+{
+  id->set_alert_callback(0); /* Forget about http_fallback */
+  id->raw_file = 0;          /* Not needed any more */
+}
+
+class roxen_sslfile {
+  inherit SSL.sslfile : ssl;
+
+  object raw_file;
+  object config;
+#if 0
+  int leave_me_alone; /* If this is set, don't let
+		       * the ssl-code shut down the connection. */
+
+  void die(int status)
+  {
+//    werror("ssl3.pike, roxen_ssl_file: die called\n");
+    if (!leave_me_alone)
+      ssl::die(status);
+  }
+#endif
+  
+  void create(object f, object ctx, object id)
+  {
+    raw_file = f;
+    config = id;
+    ssl::create(f, ctx);
+  }
+}
 
 void create(object f, object c)
 {
@@ -388,8 +530,9 @@ void create(object f, object c)
       roxen_perror("ssl3.pike: No SSL context!\n");
       throw( ({ "ssl3.pike: No SSL context!\n", backtrace() }) );
     }
-    // http::create(SSL.sslfile(f, ctx), c);
-    my_fd = SSL.sslfile(f, ctx);
+    my_fd = roxen_sslfile(f, ctx, c);
+    my_fd->set_alert_callback(http_fallback);
+    my_fd->set_accept_callback(ssl_accept_callback);
     conf = c;
     my_fd->set_nonblocking(got_data,0,end);
   } else {
