@@ -1,6 +1,6 @@
 #charset iso-8859-2
 /*
- * $Id: cestina.pmod,v 1.3 2000/03/13 13:14:42 hop Exp $
+ * $Id: cestina.pmod,v 1.4 2000/03/14 02:22:11 per Exp $
  *
  * Roxen locale support -- Cestina (Czech)
  *
@@ -338,22 +338,15 @@ class _base_server {
 
 };
 
-
-class _config_actions
-{
-  inherit .standard._config_actions; //Fallback
-
-  constant all_memory_caches_flushed = "V¹echny pamì»ové cache byly vymazány.";
-
-  constant font_test_string = "Pøíli¹ ¾lu»ouèký kùò úpìl ïábelské ódy.";
-}
-
-
 class _config_interface
 {
   // config/low_describers.pike
 
   inherit .standard._config_interface; //Fallback
+
+  constant all_memory_caches_flushed = "V¹echny pamì»ové cache byly vymazány.";
+
+  constant font_test_string = "Pøíli¹ ¾lu»ouèký kùò úpìl ïábelské ódy.";
 
   string module_hint() {
     return "(Modul)";

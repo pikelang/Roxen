@@ -1,5 +1,5 @@
 /*
- * $Id: svenska.pmod,v 1.1 2000/02/14 08:56:36 per Exp $
+ * $Id: svenska.pmod,v 1.2 2000/03/14 02:22:11 per Exp $
  *
  * Roxen locale support -- Svenska (Swedish)
  *
@@ -317,18 +317,14 @@ class _base_server {
   }
 };
 
-class _config_actions
-{
-  inherit RoxenLocale.standard._config_actions;
-  constant all_memory_caches_flushed = "Alla minnescachar har tömts.";
-
-  constant font_test_string = "Gud hjälpe W Zorns mö qvickt få byxa!";
-}
-
 class _config_interface
 {
   inherit standard::_config_interface;
   // config/low_describers.pike
+
+  constant all_memory_caches_flushed = "Alla minnescachar har tömts.";
+  constant font_test_string = "Gud hjälpe W Zorns mö qvickt få byxa!";
+
   string module_hint() {
     return "(Modul)";
   }

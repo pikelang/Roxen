@@ -1,6 +1,6 @@
 #charset iso-8859-2
 /*
- * $Id: magyar.pmod,v 1.1 2000/02/14 08:56:36 per Exp $
+ * $Id: magyar.pmod,v 1.2 2000/03/14 02:22:11 per Exp $
  *
  * Roxen locale support -- Default language (English)
  *
@@ -138,11 +138,6 @@ class _base_server {
 	   (bt ? "\n" + bt : "\n"));
   }
 };
-
-class _config_actions
-{
-  inherit .standard._config_actions;
-}
 
 class _config_interface
 {

@@ -1,5 +1,5 @@
 /*
- * $Id: deutsch.pmod,v 1.1 2000/02/14 08:56:36 per Exp $
+ * $Id: deutsch.pmod,v 1.2 2000/03/14 02:22:11 per Exp $
  *
  * Roxen locale support -- Deutsch (German)
  *
@@ -318,14 +318,10 @@ class _base_server {
   }
 }
 
-class _config_actions {
-  inherit standard::_config_actions;
-
-  constant all_memory_caches_flushed = "Alle Speicher-Caches wurden geleert.";
-}
-
 class _config_interface {
   inherit standard::_config_interface;
+
+  constant all_memory_caches_flushed = "Alle Speicher-Caches wurden geleert.";
 
   string module_hint() {
     return "(Modul)";

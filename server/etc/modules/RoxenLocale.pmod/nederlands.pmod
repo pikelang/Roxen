@@ -1,5 +1,5 @@
 /*
- * $Id: nederlands.pmod,v 1.1 2000/02/14 08:56:36 per Exp $
+ * $Id: nederlands.pmod,v 1.2 2000/03/14 02:22:11 per Exp $
  *
  * Roxen locale support -- Dutch
  *
@@ -334,18 +334,14 @@ class _base_server {
 
 object(_base_server) base_server = _base_server();
 
-class _config_actions
-{
-  constant all_memory_caches_flushed = "Alle geheugen caches zijn geleegd.";
-
-  constant font_test_string = "The quick brown fox jumped over the lazy dog.";
-}
-object(_config_actions) config_actions = _config_actions();
-
 class _config_interface
 {
   inherit standard::_config_interface;
   // config/low_describers.pike
+  constant all_memory_caches_flushed = "Alle geheugen caches zijn geleegd.";
+
+  constant font_test_string = "The quick brown fox jumped over the lazy dog.";
+
   string module_hint() {
     return "(Module)";
   }

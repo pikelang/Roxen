@@ -1,7 +1,7 @@
 #charset iso-2022
 
 /*
- * $Id: nihongo.pmod,v 1.2 2000/03/14 00:39:27 grubba Exp $
+ * $Id: nihongo.pmod,v 1.3 2000/03/14 02:22:11 per Exp $
  *
  * Roxen locale support -- $(BF|K\8l(B (nihongo (Japanese))
  *
@@ -34,10 +34,10 @@ class _base_server {
   string anonymous_user() { return("$(BL$>\(B"); }
 };
 
-class _config_actions
+class _config_interface
 {
-  inherit RoxenLocale.standard._config_actions;
-
+  inherit standard::_config_interface;
+  // config/low_describers.pike
   constant font_test_string =("$(B$$$m$O$K$[$X$H(B"
 			      "$(B$A$j$L$k$r(B"
 			      "$(B$o$+$h$?$l$=(B"
@@ -46,12 +46,6 @@ class _config_actions
 			      "$(B$1$U$3$($F(B"
 			      "$(B$"$5$-$f$a$K$7(B"
 			      "$(B$q$R$b$;$9(B");
-}
-
-class _config_interface
-{
-  inherit standard::_config_interface;
-  // config/low_describers.pike
   string module_hint() {
     return "($(B%"%I%*%s%b%8%e!<%k(B)";
   }

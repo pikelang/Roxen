@@ -1,5 +1,5 @@
 /*
- * $Id: standard.pmod,v 1.4 2000/03/14 00:27:12 mast Exp $
+ * $Id: standard.pmod,v 1.5 2000/03/14 02:22:11 per Exp $
  *
  * Roxen locale support -- Default language (English)
  *
@@ -331,20 +331,11 @@ class _base_server
 };
 
 object(_base_server) base_server = _base_server();
-
-class _config_actions
+class _config_interface
 {
   constant all_memory_caches_flushed = "All memory caches have been flushed.";
 
   constant font_test_string = "The quick brown fox jumped over the lazy dog.";
-}
-
-object(_config_actions) config_actions = _config_actions();
-
-class _config_interface
-{
-  // Kludge since config_tags.pike only looks in this class.
-  inherit _config_actions;
 
   // config/low_describers.pike
   string module_hint() {
