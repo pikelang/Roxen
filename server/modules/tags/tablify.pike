@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: tablify.pike,v 1.31 1999/08/08 19:32:56 neotron Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.32 1999/08/09 13:00:21 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -29,7 +29,6 @@ string encode_url(int col, int state, string state_id, object id){
     replace(preview_altered_state(id, state_id, state),({"+","/","="}),({"-","!","*"}));
 }
 
-
 string html_nice_table(array subtitles, array table, mapping opt, object id)
 {
   string r = "",type;
@@ -37,9 +36,9 @@ string html_nice_table(array subtitles, array table, mapping opt, object id)
   int m = (int)opt->modulo || 1;
   if(opt->nice || opt->nicer)
     r+="<table bgcolor=\""+(opt->bordercolor||"#000000")+"\" border=\"0\" "
-       "cellspacing=\"0\" cellpadding=\"1\">\n"
+       "cellspacing=\"0\" cellpadding=\""+(opt->border||"1")+"\">\n"
        "<tr><td>\n"
-       "<table border=\""+(opt->border||"0")+"\" cellspacing=\""+(opt->cellspacing||"0")+
+       "<table border=\""+(opt->grid||"0")+"\" cellspacing=\""+(opt->cellspacing||"0")+
        "\" cellpadding=\""+(opt->cellpadding||"4")+"\">\n";
 
   if (subtitles) {
@@ -180,13 +179,16 @@ string tag_tablify(string tag, mapping m, string q, object id)
     m_delete(m, "bgcolor");
     id->conf->api_functions()->old_rxml_warning[0](id, "tablify attribute bgcolor","bordercolor");
   }
+  if (m->preprocess || m->parse) {
+    q = parse_rxml(q, id);
+    id->conf->api_functions()->old_rxml_warning[0](id, "tablify attribute "+(m->parse?"parse":"preprocess","preparse"));
+    m_delete(m, "parse");
+    m_delete(m, "preprocess");
+  }
 #endif
 
   if(m->help) return register_module()[2];
 
-  if (m->preprocess || m->parse) {
-    q = parse_rxml(q, id);
-  }
   mapping arg_list = ([]);
   q = parse_html(q, ([]), (["fields":container_fields]), m, arg_list);
 
@@ -203,17 +205,20 @@ string tag_tablify(string tag, mapping m, string q, object id)
     rows = rows[1..];
   }
 
-  if(m->min)
-    rows = rows[((int)m->min)..];
-  if(m->max)
-    rows = rows[..((int)m->max-1)];
-
   id->misc->tmp_colmax=0;
   rows = Array.map(rows,lambda(string r, string s){
 			  array t=r/s;
 			  if(sizeof(t)>id->misc->tmp_colmax) id->misc->tmp_colmax=sizeof(t);
 			  return t;
 			}, sep);
+
+  if(m->min || m->max) {
+    m->min=m->min?(int)m->min-1:0;
+    m->max=m->max?(int)m->max-1:sizeof(rows)-1;
+    rows = rows[m->min..m->max];
+    m_delete(m,"min");
+    m_delete(m,"max");
+  }
 
   arg_list+=(["is":(int)m->sortcol]);
   if((int)m->sortcol>0) sort(column(rows,(int)m->sortcol-1),rows);
@@ -233,7 +238,7 @@ string tag_tablify(string tag, mapping m, string q, object id)
       rows=reverse(rows);
   }
 
-  return html_nice_table(title, rows, m + arg_list, id);
+  return html_nice_table(title, rows, arg_list + m, id);
 }
 
 mapping query_container_callers()
