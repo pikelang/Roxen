@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.93 1999/03/04 13:50:39 mast Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.94 1999/04/24 09:59:11 neotron Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -171,8 +171,8 @@ static mapping build_env_vars(string f, object id, string path_info)
   if(!strlen(new["QUERY_STRING"]))
     m_delete(new, "QUERY_STRING");
     
-  if(id->auth && id->auth[0] && stringp(id->auth[1]))
-    new["REMOTE_USER"] = (id->auth[1]/":")[0];
+  if(id->realauth)
+    new["REMOTE_USER"] = (id->realauth / ":")[0];
     
   if(id->data && strlen(id->data))
   {
@@ -203,19 +203,19 @@ static mapping build_roxen_env_vars(object id)
 
   new["COOKIES"] = "";
   foreach(indices(id->cookies), tmp)
-    {
-      new["COOKIE_"+tmp] = id->cookies[tmp];
-      new["COOKIES"]+= tmp+" ";
-    }
+  {
+    new["COOKIE_"+tmp] = id->cookies[tmp];
+    new["COOKIES"]+= tmp+" ";
+  }
 	
   foreach(indices(id->config), tmp)
-    {
-      new["WANTS_"+replace(tmp, " ", "_")]="true";
-      if(new["CONFIGS"])
-	new["CONFIGS"] += " " + replace(tmp, " ", "_");
-      else
-	new["CONFIGS"] = replace(tmp, " ", "_");
-    }
+  {
+    new["WANTS_"+replace(tmp, " ", "_")]="true";
+    if(new["CONFIGS"])
+      new["CONFIGS"] += " " + replace(tmp, " ", "_");
+    else
+      new["CONFIGS"] = replace(tmp, " ", "_");
+  }
 
   foreach(indices(id->variables), tmp)
   {
