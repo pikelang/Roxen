@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.48 1997/10/13 12:06:30 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.49 1997/10/13 14:07:47 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -391,6 +391,7 @@ class spawn_cgi
 	pipe1->dup2(files.file("stdout"));
 	if(dup_err)
 	  pipe1->dup2(files.file("stderr"));
+	destruct(pipe1);
 
 	object privs;
 	if (!getuid()) {
