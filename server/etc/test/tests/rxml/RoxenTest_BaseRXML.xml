@@ -1220,6 +1220,31 @@ b</strlen></rxml>
 <result>aa,,01,</result>
 </test>
 
+<test>
+<rxml><emit source="TESTER" test="4">&_.a; &_.b; &_.c;<delimiter>,</delimiter></emit></rxml>
+<result>1 aa ca,2 ba cb,3 ab ba</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" test="4" filter="b=a*">&_.a;</emit></rxml>
+<result>13</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" test="4" filter="c=c*">&_.a;</emit></rxml>
+<result>12</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" test="4" sort="b">&_.a;</emit></rxml>
+<result>132</result>
+</test>
+
+<test>
+<rxml><emit source="TESTER" test="4" sort="c">&_.a;</emit></rxml>
+<result>312</result>
+</test>
+
 
 <comment>Missing test: values emit plugin</comment>
 
