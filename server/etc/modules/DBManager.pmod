@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.35 2001/09/03 16:51:55 per Exp $
+// $Id: DBManager.pmod,v 1.36 2001/09/03 17:35:12 per Exp $
 
 //! Manages database aliases and permissions
 
@@ -465,7 +465,7 @@ void drop_db( string name )
 //! Drop the database @[name]. If the database is internal, the actual
 //! tables will be deleted as well.
 {
-  if( (<  "local" >)[ name ] )
+  if( (< "local", "mysql", "roxen"  >)[ name ] )
     error( "Cannot drop the 'local' database\n" );
 
   array q = query( "SELECT name,local FROM dbs WHERE name=%s", name );
