@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.106 2002/02/08 17:11:21 grubba Exp $
+// $Id: module_support.pike,v 1.107 2002/02/26 13:23:40 wellhard Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -147,6 +147,7 @@ class FakeModuleInfo( string sname )
   constant filename = "NOFILE";
   constant type = 0;
   constant multiple_copies = 0;
+  constant locked = 0;
   string name, description;
   
   void save()  { }
@@ -155,6 +156,7 @@ class FakeModuleInfo( string sname )
   int rec_find_module( string what, string dir )  { }
   int find_module( string sn )  { }
   int check (void|int force) { }
+  int unlocked(object /*License.Key*/ key) { }
 
   static string _sprintf()
   {
@@ -207,7 +209,7 @@ class FakeModuleInfo( string sname )
 class ModuleInfo( string sname, string filename )
 {
   int last_checked;
-  int type, multiple_copies;
+  int type, multiple_copies, locked;
 
   mapping|string name;
   mapping|string description;
@@ -271,8 +273,8 @@ class ModuleInfo( string sname, string filename )
   
   RoxenModule instance( Configuration conf, void|int silent )
   {
-//     werror("Instance %O <%O,%O,%O,%O,%O>\n", this_object(),
-// 	  time()-last_checked,type,multiple_copies,name,description);
+    // werror("Instance %O <%O,%O,%O,%O,%O,%O>\n", this_object(),
+    //        time()-last_checked,type,multiple_copies,name,description,locked);
     roxenloader.ErrorContainer ec = roxenloader.ErrorContainer();
     roxenloader.push_compile_error_handler( ec );
     mixed err = catch
@@ -328,6 +330,7 @@ class ModuleInfo( string sname, string filename )
 	       "multiple_copies":multiple_copies,
 	       "name":encode_string(name),
 	       "description":encode_string(description),
+	       "locked":locked,
              ]) );
   }
 
@@ -352,6 +355,8 @@ class ModuleInfo( string sname, string filename )
       multiple_copies = !data[4];
     else
       multiple_copies = 1;
+    if( sizeof( data ) > 5)
+      locked = data[5];
     last_checked = file_stat( filename )[ ST_MTIME ];
     save();
   }
@@ -359,6 +364,7 @@ class ModuleInfo( string sname, string filename )
   int init_module( string what )
   {
     filename = what;
+    werror("init_module: %O\n", filename);
     mixed q =catch
     {
       RoxenModule mod = instance( 0, 1 );
@@ -453,6 +459,7 @@ class ModuleInfo( string sname, string filename )
             multiple_copies = data->multiple_copies;
             name = decode_string( data->name );
             description = decode_string( data->description );
+	    locked = data->locked;
             return 1;
           }
           else
@@ -465,6 +472,11 @@ class ModuleInfo( string sname, string filename )
       return init_module( roxen_path( filename ) );
     else
       return find_module( sname );
+  }
+
+  int unlocked(object /*License.Key*/ key)
+  {
+    return key->is_module_unlocked(sname);
   }
 }
 
