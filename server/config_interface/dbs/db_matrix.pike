@@ -96,8 +96,10 @@ string|mapping parse( RequestID id )
     res += "</tr>\n";
   }
 
-
   mapping rres = ([]);
+  foreach( DBManager.list_groups(), string g )
+    rres[g]="";
+  
   foreach( sort(indices(q)), string db )
   {
     mapping p = q[db];
@@ -138,7 +140,6 @@ string|mapping parse( RequestID id )
       PERM(WRITE,_(433,"W"),"write");
       rres[DBManager.db_group(db)] += "</nobr></td>";
     }
-
     string format_stats( mapping s, string url )
     {
       if( !url )

@@ -13,6 +13,8 @@ string c_name( string c, RequestID id )
 
 void really_do_create( RequestID id  )
 {
+  while( strlen(id->variables->url) && id->variables->url[-1] == '/' )
+    id->variables->url = id->variables->url[..strlen(id->variables->url)-2];
   DBManager.create_group( c_name(id->variables->name,id),
 			     id->variables->lname,
 			     id->variables->comment,

@@ -3,6 +3,12 @@
 #include <roxen.h>
 //<locale-token project="roxen_config">_</locale-token>
 #define _(X,Y)	_STR_LOCALE("roxen_config",X,Y)
+string trim_sl( string x )
+{
+  while( strlen(x) && x[-1] == '/' )
+    x = x[..strlen(x)-2];
+  return x;
+}
 
 string parse( RequestID id )
 {
@@ -15,11 +21,14 @@ string parse( RequestID id )
     "<input type=hidden name=group value='&form.group;'/>";
 
   if( id->variables->lname )
+  {
+    if( strlen(id->variables->pattern) )
+      id->variables->pattern = "mysql://"+trim_sl(id->variables->pattern)+"/";
     DBManager.create_group( id->variables->group,
 			    id->variables->lname,
 			    id->variables->comment,
 			    id->variables->pattern );
-
+  }
   c = DBManager.get_group( id->variables->group );
 
 
@@ -31,8 +40,10 @@ string parse( RequestID id )
   res += "<tr><td><b>Name:</b></td><td> <input size=50 name=lname value='"+
     Roxen.html_encode_string(c->lname)+"' /></td></tr>";
   
-  res += "<tr><td><b>URL:</b> </td><td> <input size=50 name=pattern value='"+
-    Roxen.html_encode_string(c->pattern)+"' /></td></tr>";
+  res += "<tr><td><b>URL:</b> </td><td> "
+    "mysql://<input size=42 name=pattern value='"+
+    Roxen.html_encode_string(trim_sl((c->pattern/"://")[-1]))+
+    "' /></td></tr>";
   
   res += "<tr><td valign=top><b>Comment:</b></td><td valign=top> <textarea cols='50' rows=4 name=comment>"+
     Roxen.html_encode_string(c->comment)+"</textarea></td></tr>";
