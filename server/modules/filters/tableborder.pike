@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: tableborder.pike,v 1.8 2000/07/20 14:50:53 jhs Exp $";
+constant cvs_version = "$Id: tableborder.pike,v 1.9 2000/11/19 04:52:44 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Table Unveiler";
@@ -34,15 +34,16 @@ constant module_doc  =
 	      "\">toggles the prestate</a>."
 	    "</p>";
 
-array(string) alter_table(string name, mapping arg, string contents)
+static array(string) alter_table(object parser, mapping(string:string) arg, string contents)
 {
   arg->border = "1";
-  return ({ Roxen.make_container(name, arg, recursive_parse(contents)) });
+  return ({ Roxen.make_container("table", arg, recursive_parse(contents)) });
 }
 
-string recursive_parse(string contents)
+static string recursive_parse(string contents)
 {
-  return parse_html(contents, ([ ]), ([ "table" : alter_table ]));
+  return Parser.HTML()->add_container("table", alter_table)->
+    finish(contents)->read();
 }
 
 mapping filter(mapping result, RequestID id)
