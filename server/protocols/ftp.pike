@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.89 1998/04/03 19:05:41 js Exp $
+ * $Id: ftp.pike,v 1.90 1998/04/13 15:15:12 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -583,17 +583,13 @@ class ls_program {
 	}
       }
 
-      if ((dir_stack->ptr > 1) || (dir_stack->ptr && sizeof(args))) {
-	name_directories = 1;
-      }
-      
       if (sizeof(args)) {
 	foreach(indices(args), string s) {
 	  args[s] = id->my_stat_file(combine_path(id->cwd, s));
 	}
 	output->write(list_files(args, id->cwd, flags));
       }
-      int name_directories;
+
       if ((dir_stack->ptr > 1) || (sizeof(files))) {
 	name_directories = 1;
       }
@@ -837,7 +833,7 @@ void done_callback(object fd)
 
 void connected_to_send(object fd,mapping file)
 {
-  object pipe=Pipe.pipe();
+  object pipe=roxen->pipe();
 
   if(!file->len)
     file->len = file->data?(stringp(file->data)?strlen(file->data):0):0;
@@ -1131,8 +1127,13 @@ int open_file(string arg, int|void noport)
       } else if(err = catch(file = roxen->get_file(this_object()))) {
 	roxen_perror(sprintf("FTP: Error opening file\n%s\n",
 			     describe_backtrace(err)));
-	catch { file = 0; };
-	reply("550 "+arg+": Error, can't open file.\n");
+	// Lots of paranoia.
+	catch {
+	  reply("550 "+arg+": Error, can't open file.\n");
+	};
+	catch {
+	  file = 0;
+	};
 	return 0;
       }
     }
@@ -1722,7 +1723,8 @@ void handle_data(string s, mixed key)
       if(!open_file(arg))
 	break;
       if (restart_point && (oldcmd == "rest")) {
-	if (!(file->file->seek || (file->file->seek(restart_point) == -1))) {
+	if (!(file->file && file->file->seek &&
+	      (file->file->seek(restart_point) != -1))) {
 	  reply("550 'RETR': Error restoring restart point\n");
 	  break;
 	}
@@ -1935,10 +1937,14 @@ void handle_data(string s, mixed key)
     default:
       reply("502 command '"+ cmd +"' unimplemented.\n");
     }
-    oldcmd = cmd;
+    catch {
+      oldcmd = cmd;
+    };
   }
 
-  partial = s;
+  catch {
+    partial = s;
+  };
 
   if (objectp(key))
     destruct(key);
