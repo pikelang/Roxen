@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.96 2000/03/13 20:50:25 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.97 2000/03/15 10:58:57 per Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -478,18 +478,20 @@ string|array(string) tag_imgs(string tag, mapping m, RequestID id)
 
 array(string) tag_roxen(string tagname, mapping m, RequestID id)
 {
-  string size = m->size || "small";
-  string color = m->color || "blue";
+  string size = m->size || "medium";
+  string color = m->color || "white";
   mapping aargs = (["href": "http://www.roxen.com/"]);
   m_delete(m, "color");
   m_delete(m, "size");
   m->src = "/internal-roxen-power-"+size+"-"+color;
-  m->width = (["small":"100","medium":"200","large":"300"])[size];
-  m->height = (["small":"35","medium":"60","large":"90"])[size];
+  m->width =  (["small":"40","medium":"60","large":"100"])[size];
+  m->height = (["small":"40","medium":"60","large":"100"])[size];
+
+  if( color == "white" && size == "large" ) m->height="99";
   if(!m->alt) m->alt="Powered by Roxen";
   if(!m->border) m->border="0";
   if(!m->noxml) m["/"]="/";
-  if (m->target) aargs->target = m->target, m_delete (m, "target");
+  if(m->target) aargs->target = m->target, m_delete (m, "target");
   return ({ make_container ("a", aargs, make_tag("img", m)) });
 }
 
