@@ -46,11 +46,13 @@ static string desc_cont(string t, mapping m, string c, string rt)
   m->type=m->type||"";
   if(m->tag) dt=sprintf("&lt;%s/&gt;", rt);
   if(m->cont) dt=(m->tag?dt+" and ":"")+sprintf("&lt;%s&gt;&lt;/%s&gt;", rt, rt);
-  if(m->pi) dt=sprintf("&lt;?%s ... ?&gt;", rt);
   if(m->plugin) {
     sscanf(dt,"%*s#%s",dt);
     dt="plugin "+dt;
   }
+  if(m->ent) dt=rt;
+  if(m->scope) dt=rt[..sizeof(rt)-2]+" ... ;";
+  if(m->pi) dt=rt+" ... ?&gt;";
   return sprintf("<h2>%s</h2><p>%s</p>",dt,c);
 }
 
@@ -184,6 +186,7 @@ mapping call_tagdocumentation(RoxenModule o) {
     cache_set("tagdoc", name, 0);
     return 0;
   }
+  RXMLHELP_WERR("("+String.implode_nicely(indices(doc))+")");
   cache_set("tagdoc", name, doc);
   return doc;
 }
@@ -201,7 +204,19 @@ string find_tag_doc(string name, void|object id) {
     generation=new_gen;
   }
 
-  array tags=tag_set->get_overridden_tags(name);
+  array tags;
+
+  if(name[..1]=="<?") {
+    RXMLHELP_WERR(name+"?> is a processing instruction.");
+    object tmp=tag_set->get_tag(name[2..], 1);
+    if(tmp)
+      tags=({ tmp });
+    else
+      tags=({});
+  }
+  else
+    tags=tag_set->get_overridden_tags(name);
+
   if(!sizeof(tags)) return "<h4>That tag ("+name+") is not defined</h4>";
   string plugindoc="";
 

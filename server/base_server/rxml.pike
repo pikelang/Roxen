@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.236 2000/08/29 14:44:12 nilsson Exp $
+// $Id: rxml.pike,v 1.237 2000/08/29 23:24:05 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -473,11 +473,20 @@ class TagHelp {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      RXML.PXml parser = rxml_tag_set (RXML.t_html (RXML.PXml), id);
-      array tags = Array.sort_array(indices(parser->tags()+parser->containers()),
-				    lambda(string a, string b) {
-				      if(lower_case(a)==lower_case(b)) return a>b;
-				      return lower_case(a)>lower_case(b); })-({"\x266a"});
+      array tags=map(indices(RXML.get_context()->tag_set->get_tag_names()),
+		     lambda(string tag) {
+		       if(tag[..3]=="!--#" || !has_value(tag, "#"))
+			 return tag;
+		       return "";
+		     } ) - ({ "" });
+      tags += map(indices(RXML.get_context()->tag_set->get_proc_instr_names()),
+		  lambda(string tag) { return "&lt;?"+tag+"?&gt;"; } );
+      tags = Array.sort_array(tags,
+			      lambda(string a, string b) {
+				if(a[..4]=="&lt;?") a=a[5..];
+				if(b[..4]=="&lt;?") b=b[5..];
+				if(lower_case(a)==lower_case(b)) return a>b;
+				return lower_case(a)>lower_case(b); })-({"\x266a"});
       string help_for = args->for || id->variables->_r_t_h;
       string ret="<h2>Roxen Interactive RXML Help</h2>";
 
@@ -489,18 +498,27 @@ class TagHelp {
 	array tag_links;
 
 	foreach(tags, string tag) {
-	  if(lower_case(tag[0..0])!=char) {
+	  if(tag[0]!='&' && lower_case(tag[0..0])!=char) {
 	    if(tag_links && char!="/") ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+
 					 String.implode_nicely(tag_links)+"</p>";
 	    char=lower_case(tag[0..0]);
 	    tag_links=({});
 	  }
-	  if(tag[0..sizeof(RXML_NAMESPACE)]!=RXML_NAMESPACE+":")
+	  if (tag[0]=='&' && lower_case(tag[5..5])!=char) {
+	    if(tag_links && char!="/") ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+
+					 String.implode_nicely(tag_links)+"</p>";
+	    char=lower_case(tag[5..5]);
+	    tag_links=({});
+	  }
+	  if(tag[0..sizeof(RXML_NAMESPACE)]!=RXML_NAMESPACE+":") {
+	    string enc=tag;
+	    if(enc[0..4]=="&lt;?") enc="<?"+enc[5..sizeof(enc)-6];
 	    if(undocumented_tags[tag])
 	      tag_links += ({ tag });
 	    else
 	      tag_links += ({ sprintf("<a href=\"%s?_r_t_h=%s\">%s</a>\n",
-				      id->not_query, Roxen.http_encode_url(tag), tag) });
+				      id->not_query, Roxen.http_encode_url(enc), tag) });
+	    }
 	}
 
 	ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+String.implode_nicely(tag_links)+"</p>";
