@@ -6,7 +6,11 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.815 2002/12/04 15:29:30 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.816 2002/12/09 12:53:57 grubba Exp $";
+
+//! @appears roxen
+//!
+//! The Roxen WebServer main program.
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4784,12 +4788,12 @@ function compile_log_format( string fmt )
 // 
 // 
 // NOTE: It's up to the security checks in this file to ensure that
-// nothing is overcached. All patterns that does checks using
+// nothing is overcached. All patterns that perform checks using
 // information from the client (such as remote address, referer etc)
-// _has_ to use NOCACHE(). It's not nessesary, however, to do that for
-// checks that use the authentication module API, since it's up to the
-// user database and authentication modules to ensure that nothing is
-// overcached in that case.
+// _have_ to use NOCACHE() or NO_PROTO_CACHE(). It's not nessesary, however,
+// to do that for checks that use the authentication module API, since
+// then it's up to the user database and authentication modules to ensure
+// that nothing is overcached in that case.
 array security_checks = ({
   "ip=%s:%s",2,({
     lambda( string a, string b ){
@@ -4798,7 +4802,7 @@ array security_checks = ({
       net &= mask;
       return ({ net, sprintf("%c",mask)[0] });
     },
-    " NOCACHE();\n"
+    " NO_PROTO_CACHE();\n"
     "  if( (Roxen.ip_to_int( id->remoteaddr ) & %[1]d) == %[0]d ) ",
   }),
   "ip=%s/%d",2,({
@@ -4808,11 +4812,11 @@ array security_checks = ({
       net &= mask;
       return ({ net, sprintf("%c",mask)[0] });
     },
-    " NOCACHE();\n"
+    " NO_PROTO_CACHE();\n"
     "  if( (Roxen.ip_to_int( id->remoteaddr ) & %[1]d) == %[0]d ) ",
   }),
   "ip=%s",1,({
-    " NOCACHE();\n"
+    " NO_PROTO_CACHE();\n"
     "  if( sizeof(filter(%[0]O/\",\",lambda(string q){\n"
     "            return glob(q,id->remoteaddr);\n"
     "           })) )"
@@ -4839,7 +4843,7 @@ array security_checks = ({
     (<"  User user" >),
   }),
   "dns=%s",1,({
-    "NOCACHE();"
+    "NO_PROTO_CACHE();"
     "  if(!dns && \n"
     "     ((dns=roxen.quick_ip_to_host(id->remoteaddr))!=id->remoteaddr))\n"
     "    if( (id->misc->delayed+=0.1) < 1.0 )\n"
@@ -4859,7 +4863,7 @@ array security_checks = ({
       "  string referer = sizeof(id->referer||({}))?"
       "id->referer[0]:\"\"; "
     >),
-    "  NOCACHE();"
+    "  NO_PROTO_CACHE();"
     "  if( sizeof(filter(%[0]O/\",\",lambda(string q){\n"
     "            return glob(q,referer);\n"
     "           })) )"
@@ -4880,7 +4884,7 @@ array security_checks = ({
     " if( %[0]s[l->wday] )"
   }),
   "accept_language=%s",1,({
-    "  NOCACHE(); "
+    "  NO_PROTO_CACHE(); "
     "  if( has_value(id->misc->pref_languages->get_languages(), %O))"
   }),
   "luck=%d%%",1,({
