@@ -7,6 +7,10 @@ prefix=@prefix@
 
 INSTALL=@INSTALL@
 
+CC=@CC@
+CFLAGS=@CFLAGS@
+LDFLAGS=@LDFLAGS@
+
 all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ pike extern
 
 pike: force
@@ -16,7 +20,7 @@ exterm: force
 	@(cd extern;$(MAKE) all)
 
 gmp: force
-	-@(cd gmp;$(MAKE) all)
+	-@(cd gmp;$(MAKE) CC="$(CC)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" all)
 
 gdbm: force
 	-@(cd gdbm;$(MAKE) all)
