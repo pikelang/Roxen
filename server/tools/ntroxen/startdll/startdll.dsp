@@ -102,13 +102,7 @@ SOURCE=.\startdll.cpp
 
 SOURCE=.\startdll.idl
 
-!IF  "$(CFG)" == "startdll - Win32 Debug"
-
 # ADD MTL /tlb ".\startdll.tlb" /h "startdll.h" /iid "startdll_i.c" /Oicf
-
-!ELSEIF  "$(CFG)" == "startdll - Win32 Release"
-
-!ENDIF 
 
 # End Source File
 # Begin Source File
