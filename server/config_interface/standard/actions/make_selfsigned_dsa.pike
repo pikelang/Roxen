@@ -1,8 +1,8 @@
 /*
- * $Id: make_selfsigned_dsa.pike,v 1.4 2000/04/17 02:19:47 peter Exp $
+ * $Id: make_selfsigned_dsa.pike,v 1.5 2000/04/17 12:44:10 peter Exp $
  */
 
-#if constant(_Crypto) && constant(Crypto.dsa) && constant(Crypto.RSA)
+#if constant(_Crypto) && constant(Crypto.dsa) && constant(Crypto.rsa)
 inherit "wizard";
 
 import Standards.PKCS;
