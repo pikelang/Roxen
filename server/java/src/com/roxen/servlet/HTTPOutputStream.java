@@ -7,7 +7,7 @@ class HTTPOutputStream extends ServletOutputStream
 {
   final int id;
 
-  public native void close() throws IOException;
+  private native void low_close() throws IOException;
   private native void low_write(byte b[], int offs, int len) throws IOException;
   private native void forgetfd();
   protected void finalize() throws Throwable
@@ -75,6 +75,12 @@ class HTTPOutputStream extends ServletOutputStream
       low_write(buf, 0, to_write);
     if(bufsize > 0 && buf.length>bufsize)
       buf = new byte[(bufsize==0? 1:bufsize)];
+  }
+
+  public synchronized void close() throws IOException
+  {
+    flush();
+    low_close();
   }
 
   synchronized void setBufferSize(int size)

@@ -500,7 +500,7 @@ void create()
     ({"getRequestDispatcher", "(Ljava/lang/String;Ljava/lang/String;)Ljavax/servlet/RequestDispatcher;", native_getRequestDispatcher}),
     ({"getResourceURL", "(Ljava/lang/String;)Ljava/lang/String;", native_getResourceURL})}));
   natives_bind2 = stream_class->register_natives(({
-    ({"close", "()V", native_close}),
+    ({"low_close", "()V", native_close}),
     ({"low_write", "([BII)V", native_writeba}),
     ({"forgetfd", "()V", native_forgetfd})}));
 
