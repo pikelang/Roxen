@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: roxenlib.pike,v 1.216 2002/12/02 15:56:31 grubba Exp $
+// $Id: roxenlib.pike,v 1.217 2002/12/02 15:57:03 grubba Exp $
 
 //#pragma strict_types
 
@@ -185,7 +185,7 @@ static string do_output_tag( mapping(string:string) args,
 //! Method for use by tags that replace variables in their content,
 //! like formoutput, sqloutput and others.
 //!
-//! @deprecated
+//! @note
 //!   This function is obsolete. This kind of functionality is now
 //!   provided intrinsicly by the new RXML parser framework, in a way
 //!   that avoids many of the problems that stems from this function.
