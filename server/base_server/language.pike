@@ -4,7 +4,7 @@
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *
- * $Id: language.pike,v 1.15 1999/08/30 09:33:43 per Exp $
+ * $Id: language.pike,v 1.16 1999/08/30 09:33:51 per Exp $
  * This file is included by roxen.pike. Not very nice to have a
  * cvs_version variable here.
  *
@@ -16,7 +16,6 @@
 #include <roxen.h>
 
 mapping languages = ([ ]);
-object codec = master()->Codec();
 
 void initiate_languages()
 {
