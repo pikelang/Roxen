@@ -38,12 +38,6 @@ All examples are made for the &lt;cimg&gt; tag.
    (except black and white) is it unlimited.</p>
 
 <ex>
-<### quant='100'/>
-</ex>
-<ex>
-<### quant='10'/>
-</ex>
-<ex>
 <### quant='2'/>
 </ex>
 
@@ -83,7 +77,7 @@ All examples are made for the &lt;cimg&gt; tag.
 <attr name='background-color' value='color' default='taken from the page'>
  The color to render the image against.
 <ex>
-<### background-color='black' opaque-value='50'/>
+<### background-color='red' opaque-value='50'/>
 </ex>
 </attr>
 
@@ -102,19 +96,10 @@ All examples are made for the &lt;cimg&gt; tag.
 <attr name='gamma' value='number' default='1.0'>
  Perform gamma adjustment.
 <ex>
-<### gamma='0.1'/>
-</ex>
-<ex>
 <### gamma='0.5'/>
 </ex>
 <ex>
-<### gamma='1.0'/>
-</ex>
-<ex>
-<### gamma='2.0'/>
-</ex>
-<ex>
-<### gamma='8.0'/>
+<### gamma='1.5'/>
 </ex>
 </attr>
 
@@ -137,12 +122,6 @@ All examples are made for the &lt;cimg&gt; tag.
 <ex>
 <### cs-hsv-rgb='1'/>
 </ex>
-<ex>
-<### cs-grey='1' cs-hsv-rgb='1' cs-rgb-hsv='1'/>
-</ex>
-<ex>
-<### cs-hsv-rgb='1' cs-invert='1' cs-rgb-hsv='1'/>
-</ex>
 </attr>
 
 <h3>Transform attributes</h3>
@@ -152,19 +131,10 @@ All examples are made for the &lt;cimg&gt; tag.
 <ex>
 <### rotate-cw='20'/>
 </ex>
-<ex>
-<### rotate-cw='90'/>
-</ex>
 </attr>
 
 <attr name='rotate-ccw' value='degree' default='0'>
  Rotate the image counter clock-wise.
-<ex>
-<### rotate-ccw='20'/>
-</ex>
-<ex>
-<### rotate-ccw='90'/>
-</ex>
 </attr>
 
 <attr name='rotate-unit' value='rad|deg|ndeg|part' default='deg'>
@@ -176,38 +146,20 @@ All examples are made for the &lt;cimg&gt; tag.
 <tr><td>ndeg</td><td>'New' degrees (400 for each full rotation)</td></tr>
 <tr><td>part</td><td>0 - 1.0 (1.0 == full rotation)</td></tr>
 </table>
-<ex>
-<### rotate-ccw='1.2' rotate-unit='rad'/>
-</ex>
-<ex>
-<### rotate-ccw='20' rotate-unit='deg'/>
-</ex>
-<ex>
-<### rotate-ccw='0.2' rotate-unit='part'/>
-</ex>
 </attr>
 
 <attr name='mirror-x' value='0|1' default='0'>
  Mirror the image around the X-axis.
-<ex>
-<### mirror-x='1'/>
-</ex>
 </attr>
 
 <attr name='mirror-y' value='0|1' default='0'>
  Mirror the image around the Y-axis.
-<ex>
-<### mirror-y='1'/>
-</ex>
 </attr>
 
 <attr name='scale' value='fact' default='1.0'>
  Scale fact times. (0.5 -> half size, 2.0 -> double size)
 <ex>
 <### scale='0.5'/>
-</ex>
-<ex>
-<### scale='1.2'/>
 </ex>
 </attr>
 
@@ -216,59 +168,29 @@ All examples are made for the &lt;cimg&gt; tag.
  is scaled to the specified width or hight, and the value that is zero
  is scaled in proportion to the other value.
 <ex>
-<### scale='10,40'/>
-</ex>
-<ex>
-<### scale='100,0'/>
-</ex>
-<ex>
-<### scale='0,10'/>
-</ex>
-<ex>
-<### scale='100,10'/>
+<### scale='20,50'/>
 </ex>
 </attr>
 
 <attr name='max-width' value='xsize'>
  If width is larger than 'xsize', scale width to 'xsize' while
  keeping aspect.
-<ex>
-<###  max-width='300'/>
-</ex>
-<ex>
-<### max-width='100'/>
-</ex>
 </attr>
 
 <attr name='max-height' value='ysize'>
  If width is larger than 'ysize', scale width to 'ysize' while
  keeping aspect.
-<ex>
-<### max-height='300'/>
-</ex>
-<ex>
-<### max-height='30'/>
-</ex>
 </attr>
 
 <attr name='x-offset' value='pixels' default='0'>
  Cut n pixels from the beginning of the X scale.
 <ex>
-<### x-offset='10'/>
-</ex>
-<ex>
-<### x-offset='50'/>
+<### x-offset='100'/>
 </ex>
 </attr>
 
 <attr name='y-offset' value='pixels' default='0'>
  Cut n pixels from the beginning of the Y scale.
-<ex>
-<### y-offset='10'/>
-</ex>
-<ex>
-<### y-offset='30'/>
-</ex>
 </attr>
 
 <attr name='x-size' value='pixels' default='whole image'>
@@ -280,27 +202,12 @@ All examples are made for the &lt;cimg&gt; tag.
 
 <attr name='y-size' value='pixels' default='whole image'>
  Keep n pixels from the beginning of the Y scale.
-<ex>
-<### y-size='30'/>
-</ex>
-<ex>
-<### y-size='100'/>
-</ex>
 </attr>
 
 <attr name=crop value='x0,y0-x1,y1' default='whole image'>
  Crop the image by specifying the pixel coordinates.
 <ex>
-<### crop='50,00-150,20'/>
-</ex>
-<ex>
 <### crop='50,28-150,92'/>
-</ex>
-<ex>
-<### crop='0,0-200,20'/>
-</ex>
-<ex>
-<### crop='0,28-200,92'/>
 </ex>
 </attr>
 
@@ -308,9 +215,6 @@ All examples are made for the &lt;cimg&gt; tag.
 
 <attr name='jpeg-quality' value='percentage' default='75'>
  Set the quality on the output jpeg image.
-<ex>
-<### format='jpeg' jpeg-quality='100'/>
-</ex>
 <ex>
 <### format='jpeg' jpeg-quality='30'/>
 </ex>
@@ -331,12 +235,6 @@ All examples are made for the &lt;cimg&gt; tag.
 <attr name='jpeg-smooth' value='0-100' default='0'>
  Smooth the image while compressing it. This produces smaller files,
  but might undo the effects of dithering.
-<ex>
-<### format='jpeg' jpeg-quality='10' jpeg-smooth='0'/>
-</ex>
-<ex>
-<### format='jpeg' jpeg-quality='10' jpeg-smooth='100'/>
-</ex>
 </attr>
 
 <attr name='bmp-bpp' value='1,4,8,24' default='24'>
