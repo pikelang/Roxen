@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.49 2002/03/22 17:09:01 anders Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.50 2002/06/19 07:58:46 hop Exp $";
 
 #include <module.h>
 inherit "module";
@@ -333,7 +333,9 @@ class TagJSInclude {
 	 id->client_var && (float)(id->client_var->javascript) < 1.2)
 	result = "<!-- Client do not support Javascript 1.2 -->"; // Throw an run_error instead?
       else
-	result = "<script charset=\"iso-8859-1\" language=\"javascript\" src=\"" +
+	result = "<script charset=\"" + 
+     	  (args->charset || id->misc->input_charset || query("charset")) +
+	  "\" language=\"javascript\" src=\"" +
 	  query_absolute_internal_location(id) + args->file + "\"></script>";
       return 0;
     }
@@ -737,3 +739,14 @@ clicked.</p>
 
 ]);
 #endif
+
+void create() {
+
+  defvar("charset", "iso-8859-1", "Default: Charset",
+         TYPE_STRING|VAR_MORE,
+         "The default charset will be used if no '<i>charset</i>' "
+         "attribute is given to the &lt;js-include/&gt;.<br>"
+         "Note: Used only if charset is unknown (defined"
+	 "in filesystem module, mostly.");
+
+}
