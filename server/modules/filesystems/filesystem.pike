@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.111 2001/09/11 15:17:19 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.112 2001/09/21 09:52:09 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -139,7 +139,7 @@ void create()
 		"Alt-Ctrl-Reload in Netscape). Therefore this option should "
 		"not be used on file systems that change a lot."));
 
-  defvar("access_as_user", 0, LOCALE(35,"Access file as the logged in user"),
+  defvar("access_as_user", 0, LOCALE(35,"Access files as the logged in user"),
 	 TYPE_FLAG|VAR_MORE,
 	 LOCALE(36,"If set, the module will access files as the authenticated "
 		"user. This assumes that a authentication module which imports"
@@ -147,6 +147,21 @@ void create()
 		"database</i> module is used. This option is very useful for "
 		"named FTP sites, but it will have severe performance impacts "
 		"since all threads will be locked for each access."));
+
+  defvar("access_as_user_db",
+	 Variable.UserDBChoice( " all", VAR_MORE,
+				 LOCALE(0,"Authentication database to use"), 
+				 LOCALE(36,"The User database module to use "
+					"when authenticating users for the "
+					"access file as the logged in user "
+					"feature."),
+				my_configuration()));
+
+  defvar( "access_as_user_throw", 0,
+	  LOCALE(0,"Access files as the logged in user forces login"),
+	  TYPE_FLAG|VAR_MORE,
+	  LOCALE(0,"If true, a user will have to be logged in to access files in "
+		 "this filesystem") );
 
   defvar("no_symlinks", 0, LOCALE(37,"Forbid access to symlinks"),
 	 TYPE_FLAG|VAR_MORE,
@@ -181,7 +196,8 @@ void create()
 string path, mountpoint, charset, path_encoding, normalized_path;
 int stat_cache, dotfiles, access_as_user, no_symlinks, tilde;
 array(string) internal_files;
-
+UserDB access_as_user_db;
+int access_as_user_throw;
 void start()
 {
   tilde = query("tilde");
@@ -189,11 +205,17 @@ void start()
   path_encoding = query("path_encoding");
   no_symlinks = query("no_symlinks");
   access_as_user = query("access_as_user");
+  access_as_user_throw = query("access_as_user_throw");
+  access_as_user_db =
+    my_configuration()->find_user_database( query("access_as_user_db") );
   dotfiles = query(".files");
   path = query("searchpath");
   mountpoint = query("mountpoint");
   stat_cache = query("stat_cache");
   internal_files = query("internal_files");
+
+  
+
 #if constant(system.normalize_path)
   if (catch {
     if ((<'/','\\'>)[path[-1]]) {
@@ -229,7 +251,17 @@ string query_location()
 #define SETUID(X)							\
   if( access_as_user )                                                  \
   {									\
-    User uid = id->conf->authenticate( id );				\
+    User uid = id->conf->authenticate( id,access_as_user_db );		\
+    if( access_as_user_throw && !uid )                                  \
+       return id->conf->authenticate_throw( id, "User",access_as_user_db);\
+    if( uid && uid->uid() )						\
+      privs=Privs(X, uid->uid(), uid->gid() );		\
+  }
+
+#define SETUID_NT(X)							\
+  if( access_as_user )                                                  \
+  {									\
+    User uid = id->conf->authenticate( id,access_as_user_db );		\
     if( uid && uid->uid() )						\
       privs=Privs(X, uid->uid(), uid->gid() );		\
   }
@@ -250,7 +282,7 @@ mixed stat_file( string f, RequestID id )
      (fs=cache_lookup("stat_cache",f)))
     return fs[0];
   object privs;
-  SETUID("Statting file");
+  SETUID_NT("Statting file");
 
   /* No security currently in this function */
   fs = file_stat(decode_path(f));
@@ -288,7 +320,7 @@ array find_dir( string f, RequestID id )
 		  (id->misc->internal_get ? " (internal)" : ""));
 
   object privs;
-  SETUID("Read dir");
+  SETUID_NT("Read dir");
 
   if (catch {
     f = NORMALIZE_PATH(decode_path(path + f));
