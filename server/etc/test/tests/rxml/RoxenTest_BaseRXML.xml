@@ -27,6 +27,18 @@
 </result>
 </test>
 
+<test>
+<rxml><set variable="var.x" value="Ensuring integrity between tests"/></rxml>
+<result></result>
+</test>
+
+<test>
+<rxml>&var.x;</rxml>
+<result></result>
+</test>
+
+
+<!-- ............................................................ -->
 <comment>True/False/Else/Then</comment>
 <test>
 <rxml><true/><then>1</then><else>0</else></rxml>
@@ -59,6 +71,7 @@
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Case</comment>
 <test>
 <rxml><case case=upper>aA</case></rxml>
@@ -86,6 +99,7 @@
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Comment</comment>
 <test>
 <rxml><set variable='var.i' value='3'/><comment preparse><set variable=var.i value='4'/>x</comment>&var.i;</rxml>
@@ -113,6 +127,7 @@
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Define/undefine</comment>
 <test>
 <rxml><define if='x'>3</define><if x='3'>1</if><undefine if='x'/><if x='3'>1</if><else>0</else></rxml>
@@ -225,6 +240,7 @@
 </test>
 
 
+<!-- ............................................................ -->
 <comment>String number test</comment>
 <test>
 <rxml><number lang=swe num=43></rxml>
@@ -242,6 +258,7 @@
 </test>
 
 
+<!-- ............................................................ -->
 <comment>IfIs operands</comment>
 <test>
 <rxml><set variable='var.i' value='10' /><set variable='var.j' value='0'/><set variable="var.x" value=""/><if sizeof="var.x is 0">5</if></rxml>
@@ -409,6 +426,7 @@
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Sort</comment>
 <test>
 <rxml><sort separator=,>1,3,5,0,8</sort></rxml>
@@ -431,6 +449,7 @@
 </test>
 
 
+<!-- ............................................................ -->
 <comment>If caller test</comment>
 <test>
 <rxml><set variable='var.a' value='foo'/><if match="&var.a; is foo">x</if><else>y</else>&var.a;</rxml>
@@ -463,6 +482,7 @@
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Strlen</comment>
 <test>
 <rxml><strlen>a
@@ -486,6 +506,7 @@ b</strlen></rxml>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>User Ifs</comment>
 <test>
 <rxml><define if=q><if variable="var.i = 4"></if></define><if q>a</if><set variable=var.i value='3'/><if q>b</if><set variable='var.i' value='4'/><if q>c</if></rxml>
@@ -513,6 +534,7 @@ b</strlen></rxml>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Loops (for)</comment>
 <test>
 <rxml><for variable=var.i from=3 to=3><insert variable=var.i></for></rxml>
@@ -555,6 +577,7 @@ b</strlen></rxml>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>If tests</comment>
 <test>
 <rxml><define if=p><true/></define><define if=q><false/></define><if p and q>p&q</if><if p and p>p</if><if q and q>q</if></rxml>
@@ -622,6 +645,7 @@ b</strlen></rxml>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Elseif tests</comment>
 <test>
 <rxml><set variable="var.x">Y</set><if variable="var.x = Y">A</if><elseif variable="var.x = Y">B</elseif><else>C</else></rxml>
@@ -639,6 +663,7 @@ b</strlen></rxml>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>If plugins</comment>
 <test>
 <rxml><if exists="/index.html">yes</if></rxml>
@@ -771,6 +796,8 @@ b</strlen></rxml>
 <comment>Missing test: <cond></comment>
 <comment>Missing test: path emit plugin</comment>
 
+
+<!-- ............................................................ -->
 <comment>Emit tests</comment>
 <test>
 <rxml><emit source="values" values="1,2,3" split=",">&_.value;:</emit></rxml>
@@ -1176,6 +1203,8 @@ b</strlen></rxml>
 
 <comment>Missing test: values emit plugin</comment>
 
+
+<!-- ............................................................ -->
 <comment>Use tests</comment>
 <test>
 <rxml><use package="test_rxml_package"/><bä/></rxml>
@@ -1240,6 +1269,8 @@ b</strlen></rxml>
 
 <comment>Missing test: <help> tag</comment>
 
+
+<!-- ............................................................ -->
 <comment>Number tests</comment>
 <test>
 <rxml><number num="3"/></rxml>
@@ -1282,6 +1313,7 @@ b</strlen></rxml>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Noparse/eval/nooutput tests</comment>
 <test>
 <rxml><noparse><roxen/></noparse></rxml>
@@ -1309,6 +1341,7 @@ b</strlen></rxml>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Strlen tests</comment>
 <test>
 <rxml><strlen/></rxml>
@@ -1327,6 +1360,7 @@ cd</rxml>
 </test>
 
 
+<!-- ............................................................ -->
 <comment>Entity tests</comment>
 <test>
 <rxml><set variable="var.x">&amp;</set>&var.x;</rxml>
@@ -1343,27 +1377,245 @@ cd</rxml>
 <result>&</result>
 </test>
 
+
+<!-- ............................................................ -->
+<comment>Form scope</comment>
 <test>
 <rxml>&form.no-such-variable;</rxml>
 <result></result>
 </test>
 
 <test>
+<rxml><insert variables="full" scope="form"/> Checking for backtrace</rxml>
+<glob>*</glob>
+</test>
+
+
+<!-- ............................................................ -->
+<comment>Var scope</comment>
+<test>
 <rxml>&var.no-such-variable;</rxml>
 <result></result>
 </test>
 
+<test>
+<rxml><insert variables="full" scope="var"/> Checking for backtrace</rxml>
+<glob>*</glob>
+</test>
+
+
+<!-- ............................................................ -->
+<comment>Page scope</comment>
 <test>
 <rxml>&page.no-such-variable;</rxml>
 <result></result>
 </test>
 
 <test>
+<rxml><insert variables="full" scope="page"/> Checking for backtrace</rxml>
+<glob>*</glob>
+</test>
+
+
+<!-- ............................................................ -->
+<comment>Client scope</comment>
+<test>
 <rxml>&client.no-such-variable;</rxml>
 <result></result>
 </test>
 
 <test>
+<rxml><insert variables="full" scope="client"/> Checking for backtrace</rxml>
+<glob>*</glob>
+</test>
+
+<test>
+<rxml>&client.fullname;</rxml>
+<result></result>
+</test>
+
+<test>
+<rxml>&client.Fullname;</rxml>
+<result></result>
+</test>
+
+<test>
+<rxml>&client.accept-language;</rxml>
+<result></result>
+</test>
+
+<test>
+<rxml>&client.accept-languages;</rxml>
+<result></result>
+</test>
+
+<test>
+<rxml>&client.authentucated;</rxml>
+<result>0</result>
+</test>
+
+<test>
+<rxml>&client.host;</rxml>
+<result>127.0.0.1</result>
+</test>
+
+<test>
+<rxml>&client.ip;</rxml>
+<result>127.0.0.1</result>
+</test>
+
+<test>
+<rxml>&client.javascript;</rxml>
+<result></result>
+</test>
+
+<test>
+<rxml>&client.language;</rxml>
+<result></result>
+</test>
+
+<test>
+<rxml>&client.languages;</rxml>
+<result></result>
+</test>
+
+<test>
+<rxml>&client.name;</rxml>
+<result></result>
+</test>
+
+<test>
+<rxml>&client.password;</rxml>
+<result></result>
+</test>
+
+<test>
+<rxml>&client.referrer;</rxml>
+<result></result>
+</test>
+
+<test>
+<rxml>&client.tm;</rxml>
+<result>&lt;TM&gt;</result>
+</test>
+
+<test>
+<rxml>&client.user;</rxml>
+<result></result>
+</test>
+
+
+<!-- ............................................................ -->
+<comment>Cookie scope</comment>
+<test>
 <rxml>&cookie.no-such-cookie;</rxml>
 <result></result>
+</test>
+
+<test>
+<rxml><insert variables="full" scope="cookie"/> Checking for backtrace</rxml>
+<glob>*</glob>
+</test>
+
+
+<!-- ............................................................ -->
+<comment>Roxen scope</comment>
+<test>
+<rxml>&roxen.no-such-variable;</rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><insert variables="full" scope="roxen"/> Checking for backtrace</rxml>
+<glob>*</glob>
+</test>
+
+<test>
+<rxml>&roxen.domain;</rxml>
+<regexp>.*\.[a-z][a-z].$</regexp>
+</test>
+
+<test>
+<rxml>&roxen.hits;</rxml>
+<regexp>[0-9]+</regexp>
+</test>
+
+<test>
+<rxml>&roxen.hits-per-minute;</rxml>
+<regexp>[0-9]+</regexp>
+</test>
+
+<test>
+<rxml>&roxen.locale;</rxml>
+<result>eng</result>
+</test>
+
+<test>
+<rxml>&roxen.path;</rxml>
+<result></result>
+</test>
+
+<test>
+<rxml>&roxen.pike-version;</rxml>
+<regexp>Pike v7.[3-9] release [0-9]+</regexp>
+</test>
+
+<test>
+<rxml>&roxen.sent;</rxml>
+<regexp>[0-9]+</regexp>
+</test>
+
+<test>
+<rxml>&roxen.sent-kbit-per-second;</rxml>
+<regexp>[0-9]+\.[0-9]+</regexp>
+</test>
+
+<test>
+<rxml>&roxen.sent-mb;</rxml>
+<regexp>[0-9]+\.[0-9]+</regexp>
+</test>
+
+<test>
+<rxml>&roxen.sent-per-minute;</rxml>
+<regexp>[0-9]+</regexp>
+</test>
+
+<test>
+<rxml>&roxen.server;</rxml>
+<glob>http://*:12321</glob>
+</test>
+
+<test>
+<rxml>&roxen.ssl-strength;</rxml>
+<result>0</result>
+</test>
+
+<test>
+<rxml>&roxen.time;</rxml>
+<regexp>[0-9]+</regexp>
+</test>
+
+<test>
+<rxml>&roxen.uptime;</rxml>
+<regexp>[0-9]+</regexp>
+</test>
+
+<test>
+<rxml>&roxen.uptime-days;</rxml>
+<regexp>[0-9]+</regexp>
+</test>
+
+<test>
+<rxml>&roxen.uptime-hours;</rxml>
+<regexp>[0-9]+</regexp>
+</test>
+
+<test>
+<rxml>&roxen.uptime-minutes;</rxml>
+<regexp>[0-9]+</regexp>
+</test>
+
+<test>
+<rxml>&roxen.version;</rxml>
+<regexp>Roxen/2\.2\.[0-9]+</regexp>
 </test>
