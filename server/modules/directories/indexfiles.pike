@@ -3,7 +3,7 @@
 // Index files only module, a directory module that will not try to
 // generate any directory listings, instead only using index files.
 
-constant cvs_version = "$Id: indexfiles.pike,v 1.22 2002/06/14 00:07:34 nilsson Exp $";
+constant cvs_version = "$Id: indexfiles.pike,v 1.23 2002/06/15 20:10:53 nilsson Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -30,6 +30,8 @@ void create()
 	  "be returned instead of 'no such file'."));
 }
 
+array(string) indexfiles;
+
 // The only important function in this file...
 // Given a request ID, try to find a matching index file.
 // If one is found, return it, if not, simply return "no such file" (0)
@@ -45,7 +47,7 @@ mapping parse_directory(RequestID id)
       return Roxen.http_redirect("/"+(f/"/"-({""}))*"/"+"/", id);
   }
 
-  foreach(query("indexfiles"), string file)
+  foreach(indexfiles, string file)
   {
     array s;
     if((s = id->conf->stat_file(f+file, id)) && (s[ST_SIZE] >= 0))
@@ -58,4 +60,12 @@ mapping parse_directory(RequestID id)
   }
   id->not_query = f;
   return 0;
+}
+
+void start(int n, Configuration c)
+{
+  if (c)
+  {
+    indexfiles = query("indexfiles")-({""});
+  }
 }
