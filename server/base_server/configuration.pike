@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.564 2004/05/03 16:09:43 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.565 2004/05/03 20:24:26 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1328,6 +1328,34 @@ string examine_return_mapping(mapping m)
    res+="<br />";
 
    return res;
+}
+
+//! Find all applicable locks for this user on @[path].
+multiset(DAVLock) find_locks(string path, int(0..1) recursive,
+			     int(0..1) exclude_shared, RequestID id)
+{
+  multiset(DAVLock) locks = (<>);
+
+  foreach(location_module_cache||location_modules(),
+	  [string loc, function func])
+  {
+    string subpath;
+    if (has_prefix(path, loc)) {
+      // path == loc + subpath.
+      subpath = path[sizeof(loc)..];
+    } else if (recursive && has_prefix(loc, path)) {
+      // loc == path + ignored.
+      subpath = "/";
+    } else {
+      // Does not apply to this location module.
+      continue;
+    }
+    multiset(DAVLock) sub_locks =
+      function_object(func)->find_locks(subpath, recursive,
+					exclude_shared, id);
+    if (sub_locks) locks |= sub_locks;
+  }
+  return locks;
 }
 
 //! Check if there are any applicable locks for this user on @[path].
