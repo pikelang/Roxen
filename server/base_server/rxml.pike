@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.61 2000/01/11 02:02:55 mast Exp $
+ * $Id: rxml.pike,v 1.62 2000/01/12 08:30:58 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -10,7 +10,7 @@ inherit "roxenlib";
 inherit "rxmlhelp";
 #include <request_trace.h>
 
-#define old_rxml_compat 1
+#define OLD_RXML_COMPAT
 
 #define TAGMAP_COMPAT
 
@@ -122,7 +122,7 @@ array|string call_tag(RXML.PHtml parser, mapping args, string|function rf,
   if(args->help)
   {
     TRACE_ENTER("tag &lt;"+tag+" help&gt", rf);
-    string h = find_tag_doc(tag);
+    string h = find_tag_doc(tag, id);
     TRACE_LEAVE("");
     return h;
   }
@@ -156,7 +156,7 @@ array(string)|string call_container(RXML.PHtml parser, mapping args,
   if(args->help)
   {
     TRACE_ENTER("container &lt;"+tag+" help&gt", rf);
-    string h = find_tag_doc(tag);
+    string h = find_tag_doc(tag, id);
     TRACE_LEAVE("");
     return h;
   }
@@ -425,22 +425,30 @@ string report_rxml_error (mixed err)
 
 string tag_help(string t, mapping args, RequestID id)
 {
-  array tags = ({}); //FIXME: Return list of all known tags.
+  RXML.PHtml parser = rxml_tag_set (RXML.t_text (RXML.PHtmlCompat), id);
+  array tags = sort(indices(parser->tags()+parser->containers()));
   string help_for = args->for || id->variables->_r_t_h;
 
   if(!help_for)
   {
-    string out = "<h3>Roxen Interactive RXML Help</h3>"
+    string char, ret = "<h2>Roxen Interactive RXML Help</h2>"
       "<b>Here is a list of all defined tags. Click on the name to "
       "receive more detailed information.</b><p>\n";
-    array tag_links = ({});
-    foreach(tags, string tag)
-      tag_links += ({ sprintf("<a href=?_r_t_h=%s>%s</a>\n", tag, tag) });
+    array tag_links;
 
-    return out + String.implode_nicely(tag_links)+"</p>";
+    foreach(tags, string tag) {
+      if(tag[0..0]!=char) {
+	if(tag_links && char!="/") ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+String.implode_nicely(tag_links)+"</p>";
+	char=tag[0..0];
+	tag_links=({});
+      }
+      if(tag[0..2]!="rx:") tag_links += ({ sprintf("<a href=\""+id->not_query+"?_r_t_h=%s\">%s</a>\n", tag, tag) });
+    }
+
+    return ret + "<h3>"+upper_case(char)+"</h3>\n<p>"+String.implode_nicely(tag_links)+"</p>";
   }
 
-  return find_tag_doc(help_for);
+  return find_tag_doc(help_for, id);
 }
 
 
@@ -686,7 +694,7 @@ string tag_define(string tag, mapping m, string str, RequestID id,
 { 
   if(m->variable)
     id->variables[m->variable] = str;
-#if old_rxml_compat
+#ifdef OLD_RXML_COMPAT
   else if (m->name) {
     defines[m->name]=str;
     old_rxml_warning(id, "attempt to define name ","variable");
@@ -703,7 +711,7 @@ string tag_define(string tag, mapping m, string str, RequestID id,
       id->misc->defaults = ([]);
     id->misc->defaults[n] = ([]);
 
-#if old_rxml_compat
+#ifdef OLD_RXML_COMPAT
     // This is not part of RXML 1.4
     foreach( indices(m), string arg )
       if( arg[..7] == "default_" )
@@ -721,7 +729,7 @@ string tag_define(string tag, mapping m, string str, RequestID id,
       }
     ]));
 
-#if old_rxml_compat
+#ifdef OLD_RXML_COMPAT
     id->misc->tags[n] = replace( str, indices(m), values(m) );
 #else
     id->misc->tags[n] = str;
@@ -738,7 +746,7 @@ string tag_define(string tag, mapping m, string str, RequestID id,
       id->misc->defaults = ([]);
     id->misc->defaults[n] = ([]);
 
-#if old_rxml_compat
+#ifdef OLD_RXML_COMPAT
     // This is not part of RXML 1.4
     foreach( indices(m), string arg )
       if( arg[0..7] == "default_" )
@@ -756,7 +764,7 @@ string tag_define(string tag, mapping m, string str, RequestID id,
       }
     ]));
 
-#if old_rxml_compat
+#ifdef OLD_RXML_COMPAT
     id->misc->containers[n] = replace( str, indices(m), values(m) );
 #else
     id->misc->containers[n] = str;
@@ -776,7 +784,7 @@ string tag_undefine(string tag, mapping m, RequestID id,
 { 
   if(m->variable)
     m_delete(id->variables,m->variable);
-#if old_rxml_compat
+#ifdef OLD_RXML_COMPAT
   else if (m->name) 
     m_delete(defines,m->name);
 #endif
@@ -916,7 +924,7 @@ string tag_case(string t, mapping m, string c, RequestID id)
     case "capitalize": return capitalize(c);
     }
 
-#if old_rxml_compat
+#ifdef OLD_RXML_COMPAT
   if(m->lower) {
     c = lower_case(c);
     old_rxml_warning(id, "attribute lower","case=lower");
