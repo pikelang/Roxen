@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.579 2004/05/28 17:05:47 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.580 2004/06/15 09:24:28 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4166,7 +4166,7 @@ also set 'URLs'."));
         <tr>
           <td><img src='/internal-roxen-roxen-mini.gif' /></td>
           <td class='info'>
-            &nbsp;&nbsp;<b>Roxen CMS</b> <font color='#ffbe00'>|</font>
+            &nbsp;&nbsp;<b>&roxen.product-name;</b> <font color='#ffbe00'>|</font>
             version &roxen.dist-version;
           </td>
         </tr>
