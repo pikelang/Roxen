@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.15 1996/12/10 04:13:32 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.16 1996/12/10 04:19:52 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -396,6 +396,8 @@ object (Image) make_text_image(mapping args, object font, string text)
 }
 
 
+int number=time(1), _start=time(1);
+
 array(int)|string write_text(int _args, string text, int size,
 			     object id)
 {
@@ -408,7 +410,7 @@ array(int)|string write_text(int _args, string text, int size,
 
   // Check the cache first..
   if(!id /*|| (!id->pragma["no-cache"])*/)
-    if(mixed data = cache_lookup("graphical text:"+_args, text))
+    if(mixed data = cache_lookup("gtext:"+(_args-_start), text))
     {
       if(size) return data[1];
       return data[0];
@@ -444,7 +446,7 @@ array(int)|string write_text(int _args, string text, int size,
 	    ({img->xsize(),img->ysize()})});
   img=0;
 
-  cache_set("graphical text:"+_args, text, data);
+  cache_set("gtext:"+(_args-_start), text, data);
   if(size) return data[1];
   return data[0];
 }
@@ -477,7 +479,6 @@ string quote(string in)
   return res;
 }
 
-int number=time(1);
 
 int find_or_insert(mapping find)
 {
