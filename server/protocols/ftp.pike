@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.7 1997/04/05 17:56:12 marcus Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.8 1997/04/05 18:16:32 marcus Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -197,12 +197,10 @@ string file_ls(array (int) st, string file)
       perm += "S";
     else
       perm += "-";
-  if(st[1] < 0)
-    st[1] =  512;
   string ct = ctime(st[-4]);
   return sprintf("%s   1 %-10s %-6d%12d %s %s %s\r\n", perm,
 		 name_from_uid(st[-2]), st[-1],
-		 st[1], ct[4..9], ct[11..15], file);
+		 (st[1]<0? 512:st[1]), ct[4..9], ct[11..15], file);
 }
 
 void done_callback(object fd)
