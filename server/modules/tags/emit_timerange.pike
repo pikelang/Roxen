@@ -4,7 +4,7 @@
 inherit "module";
 
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.16 2004/05/23 14:14:41 _cvs_dirix Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.17 2004/05/24 21:59:23 _cvs_dirix Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -569,7 +569,7 @@ class TagEmitTimeRange
       if((what = m_delete(args, "from-week-day")) && from)
       {
         what = lower_case(what);
-        if(search(gregorian_weekdays,lower_case(what)) == -1)
+        if(!has_value(gregorian_weekdays,lower_case(what))
           RXML.parse_error("Unknown day: %O\n",what);
         int weekday = from->week_day();
 
@@ -590,7 +590,7 @@ class TagEmitTimeRange
 
       if(what = m_delete(args, "to-week-day")){
 	what = lower_case(what);
-	if(search(gregorian_weekdays,what) == -1)
+	if(!has_value(gregorian_weekdays,what))
 	  RXML.parse_error("Unknown day: %O\n",what);
 	change_to = 0;
 	weekday_needed = 0;
@@ -616,7 +616,7 @@ class TagEmitTimeRange
       if((what = m_delete(args, "from-week-day")) && from)
 			{
         what = lower_case(what);
-        if(search(gregorian_weekdays,lower_case(what)) == -1)
+        if(!has_value(gregorian_weekdays,lower_case(what)))
           RXML.parse_error("Unknown day: %O\n",what);
         int weekday_needed, change_to;
         int weekday = from->week_day();
@@ -636,7 +636,7 @@ class TagEmitTimeRange
       if((what = m_delete(args, "to-week-day")))
       {
 	what = lower_case(what);
-	if(search(gregorian_weekdays,what) == -1)
+	if(!has_value(gregorian_weekdays,what))
 	  RXML.parse_error("Unknown day: %O\n",what);
 	int change_to = 0, weekday_needed = 0;
 	int weekday = to->week_day();
