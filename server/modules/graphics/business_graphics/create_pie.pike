@@ -15,7 +15,7 @@ constant STORT = 1.0e40;
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.32 1998/01/21 16:43:06 grubba Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.33 1998/02/17 20:02:40 hedda Exp $";
 
 /*
  * name = "BG: Create pies";
@@ -274,7 +274,9 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	  
 	  edge_nr+=pnumbers[i];
 	}
-      piediagram=piediagram->polygone(arr+arr2);
+      piediagram=piediagram->polygone(arr[2*(int)(FI*400/(2*PI))..]+
+				      arr[..2*(int)(FI*400/(2*PI))+1]
+				      +arr2);
     }
   
   piediagram=piediagram->setcolor(255,255,255);
