@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.251 2000/09/20 01:28:40 kuntri Exp $
+// $Id: rxml.pike,v 1.252 2000/09/20 23:38:13 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -2149,6 +2149,11 @@ constant tagdoc=([
 </desc>",
 
 "&page;":"<desc scope><short>This scope contains information specific to this page.</short></desc>",
+"&form;":"<desc scope><short>This scope contains the form variables, i.e. the answears to HTML forms "
+"sent by the client.</short></desc>",
+"&cookie;":"<desc scope><short>This scope contains the cookies sent by the client. Adding, deleting or "
+"changing in this scope updates the clients cookies.</short></desc>",
+"&var;":"<desc scope><short>This scope is empty when the page parsing begins.</short></desc>",
 
 "case":#"<desc cont><short>
  Alters the case of the contents.</short>
