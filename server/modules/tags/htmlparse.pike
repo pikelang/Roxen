@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.64 1998/01/21 21:34:40 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.65 1998/01/21 22:35:06 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -148,6 +148,7 @@ inline void open_names_file()
 #ifdef THREADS
 object db_lock = Thread.Mutex();
 #endif /* THREADS */
+
 
 static void close_db_file(object db)
 {
@@ -649,8 +650,6 @@ string fix_relative(string file, object got)
     file = got->not_query + file;
   else
     file = dirname(got->not_query) + "/" +  file;
-  // The below looks really buggy...
-  // return simplify_path(replace(file, ({ "//", "..."}), ({"./..", "//"})));
   return simplify_path(file);
 }
 
@@ -1950,10 +1949,8 @@ string tag_autoformat(string tag, mapping m, string s, object got,object file)
 {
   if(m->p)
     s = replace(s, "\n\n", "<p>");
-
-  s = replace(s, "\n", "<br>\n");
-  perror("Autoformating\n");
-  perror("Line2\n");
+  if(!m->nobr)
+    s = replace(s, "\n", "<br>\n");
   return s;
 }
 
@@ -2065,9 +2062,26 @@ string tag_formoutput(string tag_name, mapping args, string contents,
   return(content_array*"");
 }
 
+string tag_gauge(string t, mapping args, string contents, 
+		 object id, mapping defines)
+{
+  int t = gauge { contents = parse_rxml( contents, id ); };
+  string define = args->define?args->define:"gauge";
+
+  defines[define+"_time"] = sprintf("%3.2f", t/1000.0);
+  defines[define+"_time"] = contents;
+
+  if(args->silent) return "";
+  if(args->timeonly) return sprintf("%3.2f", t/1000.0);
+  if(args->resultonly) return contents;
+  return ("<br><font size=-1><b>Time: "+
+	  sprintf("%3.2f", t/1000.0)+
+	  " seconds</b></font><br>"+contents);
+} 
+
 mapping query_container_callers()
 {
-  return (["comment":lambda(){ return ""; },
+  return (["comment":"",
 	   "source":tag_source,
 	   "doc":tag_source2,
 	   "autoformat":tag_autoformat,
@@ -2080,6 +2094,7 @@ mapping query_container_callers()
 	   "else if":tag_elseif,
 	   "elseif":tag_elseif,
 	   "else":tag_else,
+	   "gauge":tag_gauge,
 	   "allow":tag_if,
 	   "prestate":tag_prestate,
 	   "apre":tag_aprestate,
