@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.4 1998/09/24 19:31:47 nisse Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.5 1998/09/28 18:17:00 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -133,7 +133,7 @@ class imap_mail
 		    address_list_to_imap(h->cc),
 		    address_list_to_imap(h->bcc),
 		    string_to_imap(h["in-reply-to"]),
-		    string_to_imap(h["message-id"]) }) )
+		    string_to_imap(h["message-id"]) }) );
     }
   
   // array collect(mixed ...args) { return args; }
