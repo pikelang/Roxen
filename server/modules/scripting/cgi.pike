@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.44 1997/09/30 14:13:38 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.45 1997/10/08 19:40:37 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -310,7 +310,7 @@ array find_dir(string f, object id)
 array extract_path_info(string f)
 {
   string hmm, tmp_path=path, path_info="";
-  int found;
+  int found = 0;
   
   foreach(f/"/", hmm)
   {
@@ -331,10 +331,7 @@ array extract_path_info(string f)
 	break;
       }
     } else {
-      if(path_info)
-	path_info += "/" + hmm;
-      else
-	path_info = strlen(hmm) ? hmm : "/";
+      path_info += "/" + hmm;
     }
   }
   if(!found)  return 0;
