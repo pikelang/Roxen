@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.255 1998/11/22 17:31:09 per Exp $
+ * $Id: roxen.pike,v 1.256 1998/11/30 03:53:16 grubba Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.255 1998/11/22 17:31:09 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.256 1998/11/30 03:53:16 grubba Exp $";
 
 
 // Some headerfiles
@@ -1021,7 +1021,7 @@ static string MKPORTKEY(array(string) p)
 // Seems like it. Changed to a mapping.
 private mapping(string:object) configuration_ports = ([]);
 
-// Used by openports.pike
+// Used by config_actions/openports.pike
 array(object) get_configuration_ports()
 {
   return(values(configuration_ports));
@@ -1047,6 +1047,52 @@ program my_compile_file(string file)
   return compile_file( file );
 }
 
+array compile_module( string file )
+{
+  array foo;
+  object o;
+  program p;
+
+  MD_PERROR(("Compiling " + file + "...\n"));
+  
+  if (catch(p = my_compile_file(file)) || (!p)) {
+    MD_PERROR((" compilation failed"));
+    throw("MODULE: Compilation failed.\n");
+  }
+  // Set the module-filename, so that create in the
+  // new object can get it.
+  last_module_name = file;
+  
+  array err = catch(o =  p());
+
+  last_module_name = 0;
+
+  if (err) {
+    MD_PERROR((" load failed\n"));
+    throw(err);
+  } else if (!o) {
+    MD_PERROR((" load failed\n"));
+    throw("Failed to initialize module.\n");
+  } else {
+    MD_PERROR((" load ok - "));
+    if (!o->register_module) {
+      MD_PERROR(("register_module missing"));
+      throw("No registration function in module.\n");
+    }
+  }
+
+  foo = o->register_module();
+  if (!foo) {
+    MD_PERROR(("registration failed.\n"));
+    return 0;
+  } else {
+    MD_PERROR(("registered."));
+  }
+  return({ foo[1], foo[2]+"<p><i>"+
+	   replace(o->file_name_and_stuff(), "0<br>", file+"<br>")
+	   +"</i>", foo[0] });
+}
+
 // ([ filename:stat_array ])
 mapping(string:array) module_stat_cache = ([]);
 object load(string s, object conf)   // Should perhaps be renamed to 'reload'. 
@@ -1070,15 +1116,6 @@ object load(string s, object conf)   // Should perhaps be renamed to 'reload'.
       perror(s+".pike exists, but compilation failed.\n");
   }
 #if 0
-  if(st=file_stat(s+".lpc"))
-    if(cvs?(__p=master()->cvs_load_file( cvs+".lpc" )):
-       (__p=my_compile_file(s+".lpc")))
-    {
-      my_loaded[__p]=s+".lpc";
-      module_stat_cache[s-dirname(s)]=st;
-      return __p(conf);
-    } else
-      perror(s+".lpc exists, but compilation failed.\n");
   if(st=file_stat(s+".module"))
     if(__p=load_module(s+".so"))
     {
@@ -2130,6 +2167,7 @@ array available_fonts(int cache)
 }
 
 
+
 // Somewhat misnamed, since there can be more then one
 // configuration-interface port nowdays. But, anyway, this function
 // opens and listens to all configuration interface ports.
@@ -2148,10 +2186,10 @@ void initiate_configuration_port( int|void first )
   // First find out if we have any new ports.
   mapping(string:array(string)) new_ports = ([]);
   foreach(QUERY(ConfigPorts), port) {
-    if ((< "ssl", "ssleay" >)[port[1]]) {
+    if ((< "ssl", "ssleay", "ssl3" >)[port[1]]) {
       // Obsolete versions of the SSL protocol.
       report_warning(LOCALE->obsolete_ssl(port[1]));
-      port[1] = "ssl3";
+      port[1] = "https";
     }
     string key = MKPORTKEY(port);
     if (!configuration_ports[key]) {
@@ -2291,48 +2329,7 @@ void scan_module_dir(string d)
 	case "mod":
 	case "so":
 	  string *module_info;
-	  if (!(err=catch( module_info = lambda ( string file ) {
-	    array foo;
-	    object o;
-	    program p;
-	     
-	    if (catch(p = my_compile_file(file)) || (!p)) {
-	      MD_PERROR((" compilation failed"));
-	      throw("Compilation failed.\n");
-	    }
-	    // Set the module-filename, so that create in the
-	    // new object can get it.
-	    last_module_name = file;
-
-	    array err = catch(o =  p());
-
-	    last_module_name = 0;
-
-	    if (err) {
-	      MD_PERROR((" load failed"));
-	      throw(err);
-	    } else if (!o) {
-	      MD_PERROR((" load failed"));
-	      throw("Failed to initialize module.\n");
-	    } else {
-	      MD_PERROR((" load ok - "));
-	      if (!o->register_module) {
-		MD_PERROR(("register_module missing"));
-		throw("No registration function in module.\n");
-	      }
-	    }
-
-	    foo = o->register_module();
-	    if (!foo) {
-	      MD_PERROR(("registration failed.\n"));
-	      return 0;
-	    } else {
-	      MD_PERROR(("registered."));
-	    }
-	    return({ foo[1], foo[2]+"<p><i>"+
-		       replace(o->file_name_and_stuff(), "0<br>", file+"<br>")
-		       +"</i>", foo[0] });
-	  }(path + file)))) {
+	  if (!(err = catch( module_info = compile_module(path + file)))) {
 	    // Load OK
 	    if (module_info) {
 	      // Module load OK.
