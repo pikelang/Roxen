@@ -226,6 +226,8 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
     if (t > st->mtime) t = st->mtime;
     return Roxen.iso8601_date_time(t);	// MS kludge.
   case "DAV:displayname":	// RFC2518 13.2
+    if ((path == "") || (path == "/")) return "/";
+    if (path[-1] == '/') return basename(path[..sizeof(path)-2]);
     return basename(path);
   case "DAV:getcontentlanguage":// RFC2518 13.3
     return "en";			// MS kludge.
