@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.164 2000/03/10 04:27:04 nilsson Exp $
+// $Id: rxml.pike,v 1.165 2000/03/11 03:33:45 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -1065,7 +1065,7 @@ class TagNoOutput {
 
   class Frame {
     inherit RXML.Frame;
-    array do_return() {
+    array do_process() {
       return ({""});
     }
   }
@@ -1093,12 +1093,16 @@ class TagCase {
   constant name = "case";
   class Frame {
     inherit RXML.Frame;
-    array do_return(RequestID id) {
+    int cap=0;
+    array do_process(RequestID id) {
       if(args->case)
 	switch(lower_case(args->case)) {
 	case "lower": return ({ lower_case(content) });
 	case "upper": return ({ upper_case(content) });
-	case "capitalize": return ({ capitalize(content) });
+	case "capitalize":
+	  if(cap) return content;
+	  cap=1;
+	  return ({ capitalize(content) });
 	}
 
 #ifdef OLD_RXML_COMPAT
@@ -1166,8 +1170,10 @@ class FrameIf {
   }
 
   array do_return(RequestID id) {
-    LAST_IF_TRUE = 1;
-    result = content;
+    if(do_iterate==1) {
+      LAST_IF_TRUE = 1;
+      result = content;
+    }
     return 0;
   }
 }
