@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.238 2000/08/13 00:23:16 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.239 2000/08/13 03:08:27 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2154,9 +2154,9 @@ static void create(object f, object c, object cc)
     if( c ) port_obj = c;
     if( cc ) conf = cc;
     time = _time(1);
+    call_out(do_timeout, 30);
     string q = f->read( 8192, 1 );
     if( q ) got_data( 0, q );
-    call_out(do_timeout, 30);
   }
 }
 
@@ -2176,8 +2176,8 @@ void chain(object f, object c, string le)
     remove_call_out(do_timeout);
     call_out(do_timeout, 150);
     time = _time(1);
-    string q = f->read( 8192, 1 );
-    if( q ) got_data( 0, q );
+//     string q = f->read( 8192, 1 );
+//     if( q ) got_data( 0, q );
   }
 
   if(!my_fd)
