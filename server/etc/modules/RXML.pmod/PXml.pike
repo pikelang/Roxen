@@ -13,7 +13,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.51 2000/09/08 03:24:50 mast Exp $
+//! $Id: PXml.pike,v 1.52 2001/03/01 03:13:32 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -203,12 +203,12 @@ static void create (
 #endif
   }
 
-  if (type->encoding_type != "xml"
+  if (!type->entity_syntax
 #ifdef OLD_RXML_COMPAT
       && not_compat
 #endif
      )
-    // Don't decode entities if we're outputting xml-like stuff.
+    // Don't decode normal entities if we're outputting xml-like stuff.
     add_entities (tag_set->get_string_entities());
 
   if (!type->free_text) {
