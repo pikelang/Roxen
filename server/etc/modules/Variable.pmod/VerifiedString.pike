@@ -4,7 +4,7 @@
 
 inherit Variable.String;
 
-constant type = "mulcusverString"; // How about "String"?
+constant type = "VerifiedString";
 array(function(string:array(string))) verifications = ({});
 int default_on_error = 0;
 
@@ -17,7 +17,7 @@ array(string) verify_set( string new_value ) {
   foreach(verifications, function(string:array(string)) verify) {
     [warn, new_value] = verify(new_value);
     if(warn && logic_mode==AND) {
-      if(default_on_error) new_value = [string]_initial;
+      if(default_on_error) new_value = default_value();
       return ({ warn, new_value });
     }
     if(!warn && logic_mode==OR) {
