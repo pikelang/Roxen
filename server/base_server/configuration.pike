@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.157 1998/10/01 00:04:37 peter Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.158 1998/10/01 23:38:27 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1764,6 +1764,8 @@ public array open_file(string fname, string mode, object id)
   string oq = id->not_query;
   function funp;
   mapping file;
+  // FIXME: Shouldn't id->not_query be set to fname here?
+  // grubba 1998-10-01
   foreach(oc->first_modules(), funp)
     if(file = funp( id )) 
       break;
@@ -1791,9 +1793,14 @@ public array open_file(string fname, string mode, object id)
     if(!file)
     {
       file = oc->get_file( id );
-      if(!file)
+      if(!file) {
 	foreach(oc->last_modules(), funp) if(file = funp( id ))
 	  break;
+	if (file == 1) {
+	  // Recurse.
+	  return open_file(id->not_query, mode, id);
+	}
+      }
     }
 
     if(!mappingp(file))
