@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.30 1998/11/18 04:54:28 per Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.31 1999/04/07 18:58:00 peter Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -21,15 +21,17 @@ inherit "roxenlib";
 constant Mutex=__builtin.mutex;
 #endif /* _static_modules */
 
-mixed *register_module()
+array register_module()
 {
   return ({ 
     MODULE_FILE_EXTENSION,
     "Pike script support", 
     "Support for user Pike-scripts, like CGI, but handled internally in the"
     " server, and thus much faster, but blocking, and less secure.\n"
+    "<br><img src=/image/err_2.gif align=left alt=\"\">"
     "NOTE: This module should not be enabled if you allow anonymous PUT!<br>\n"
-    "NOTE: Enabling this module is the same thing as letting your users run programs with the same right as the server!"
+    "NOTE: Enabling this module is the same thing as letting your users run"
+    " programs with the same right as the server!"
     });
 }
 
