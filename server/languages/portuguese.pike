@@ -8,8 +8,8 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: portuguese.pike,v 1.8 2000/01/17 21:03:20 nilsson Exp $";
-constant _id = ({ "pt", "portuguese" });
+constant cvs_version = "$Id: portuguese.pike,v 1.9 2000/01/26 00:29:54 nilsson Exp $";
+constant _id = ({ "pt", "portuguese", "" });
 constant _aliases = ({ "pt", "port", "portuguese" });
  
 constant months = ({

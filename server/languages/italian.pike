@@ -16,8 +16,8 @@
 
 inherit "abstract";
 
-constant cvs_version = "$Id: italian.pike,v 1.10 2000/01/17 21:03:20 nilsson Exp $";
-constant _id = ({ "it", "italian" });
+constant cvs_version = "$Id: italian.pike,v 1.11 2000/01/26 00:29:54 nilsson Exp $";
+constant _id = ({ "it", "italian", "italiano" });
 constant _aliases = ({ "it", "ita", "italiano", "italian" });
 
 constant months = ({

@@ -1,5 +1,5 @@
 /* From: Tvns B|ker <bueker@bidnix.bid.fh-hannover.de> 
-string cvs_version = "$Id: german.pike,v 1.8 2000/01/17 21:03:20 nilsson Exp $";
+string cvs_version = "$Id: german.pike,v 1.9 2000/01/26 00:29:54 nilsson Exp $";
    Subject: New 'german.lpc' ...
  
    Hi,
@@ -18,7 +18,7 @@ string cvs_version = "$Id: german.pike,v 1.8 2000/01/17 21:03:20 nilsson Exp $";
 
 inherit "abstract.pike";
 
-constant _id = ({ "de", "german" });
+constant _id = ({ "de", "german", "deutsch" });
 constant _aliases = ({ "de", "deu", "deutsch", "german" });
 
 constant months = ({

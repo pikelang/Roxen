@@ -13,8 +13,8 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: hungarian.pike,v 1.4 2000/01/17 21:11:33 nilsson Exp $";
-constant _id = ({ "hu", "hungarian" });
+constant cvs_version = "$Id: hungarian.pike,v 1.5 2000/01/26 00:29:54 nilsson Exp $";
+constant _id = ({ "hu", "hungarian", "" });
 constant _aliases = ({ "hu", "hun", "magyar", "hungarian" });
 
 constant months = ({

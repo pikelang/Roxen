@@ -17,8 +17,8 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: czech.pike,v 1.10 2000/01/17 21:03:19 nilsson Exp $";
-constant _id = ({ "cs", "czech" });
+constant cvs_version = "$Id: czech.pike,v 1.11 2000/01/26 00:29:54 nilsson Exp $";
+constant _id = ({ "cs", "czech", "" });
 constant _aliases = ({ "cs", "cz", "cze", "czech" });
 
 constant months = ({

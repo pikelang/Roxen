@@ -1,6 +1,6 @@
 /*
 
-string cvs_version = "$Id: french.pike,v 1.9 2000/01/23 06:18:39 nilsson Exp $";
+string cvs_version = "$Id: french.pike,v 1.10 2000/01/26 00:29:54 nilsson Exp $";
 Created by:
 
 ---------------------+--------------------------------------------------
@@ -20,7 +20,7 @@ http://ftp.geog.ucl.ac.be/~patrick/
 
 inherit "abstract.pike";
 
-constant _id = ({ "fr", "french" });
+constant _id = ({ "fr", "french", "français" });
 constant _aliases = ({ "fr", "fra", "français", "french" });
 
 constant months = ({

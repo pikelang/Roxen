@@ -15,8 +15,9 @@ constant languages = ([]);
 // Array(string) with all the language's identifiers
 constant _aliases = ({});
 
-// Array(string) with language code and the language.
-constant _id = ({ "??", "Unknown language" });
+// Array(string) with language code, the language in english
+// and the native language description.
+constant _id = ({ "??", "Unknown", "Unknown" });
 
 array id()
 {

@@ -6,8 +6,10 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: english.pike,v 1.10 2000/01/17 21:03:19 nilsson Exp $";
-constant _id = ({ "en", "english" });
+constant cvs_version = "$Id: english.pike,v 1.11 2000/01/26 00:29:54 nilsson Exp $";
+
+// English is a special case, since it is also the standard language...
+constant _id = ({ "en", "standard", "english" });
 constant _aliases = ({ "en", "eng", "english" });
 
 constant months = ({

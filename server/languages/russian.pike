@@ -7,8 +7,8 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: russian.pike,v 1.5 2000/01/17 21:03:20 nilsson Exp $";
-constant _id = ({ "ru", "russian" });
+constant cvs_version = "$Id: russian.pike,v 1.6 2000/01/26 00:29:54 nilsson Exp $";
+constant _id = ({ "ru", "russian", "" });
 constant _aliases = ({ "ru", "rus", "russian", "русский" });
 
 #define error(x) throw( ({ x, backtrace() }) )
