@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.214 2004/03/11 18:26:59 grubba Exp $
+# $Id: start,v 1.215 2004/03/11 18:46:33 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -301,7 +301,7 @@ parse_args() {
   ;;
   -D*|-M*|-I*|-P*)
     # Argument passed along to Pike.
-    DEFINES="$DEFINES $1"
+    DEFINES="$DEFINES \"$1\""
   ;;
   '--version')
    if [ "x$passhelp" = "x1" ] ; then
@@ -855,7 +855,7 @@ if [ -z "$once" ] ; then
   fi
   if [ -f "bin/setup_nsr.pike" ]; then
     # Setup .nsr (Networker) files for the logfile directories.
-    $pike $DEFINES bin/setup_nsr.pike --logdir="$LOGDIR" --debugdir="$DEBUGDIR"
+    eval "\"$pike\" $DEFINES bin/setup_nsr.pike --logdir=\"$LOGDIR\" --debugdir=\"$DEBUGDIR\""
   fi
   if [ $verbose -gt 0 ]; then
     dp "Using configuration from $DIR"
