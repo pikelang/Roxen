@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.0 1999/05/19 17:50:58 grubba Exp $
+ * $Id: ftp.pike,v 2.1 1999/05/19 18:57:30 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1738,7 +1738,7 @@ class FTPSession
 
     session->file = file;
 
-    if (!file || (file->error && (file->error > 200))) {
+    if (!file || (file->error && (file->error >= 300))) {
       DWRITE(sprintf("FTP: open_file(\"%s\") failed: %O\n", fname, file));
       send_error(cmd, fname, file, session);
       return 0;
