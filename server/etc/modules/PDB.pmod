@@ -1,5 +1,5 @@
 /*
- * $Id: PDB.pmod,v 1.24 1998/03/18 16:53:26 noring Exp $
+ * $Id: PDB.pmod,v 1.25 1998/03/20 01:34:19 noring Exp $
  */
 
 #if constant(thread_create)
@@ -443,7 +443,7 @@ class db
 				     ({ "\203", "\n" }),
 				     ({ "\203\203", "\203n" })));
 
-      if((rc = safe_write(logfile, entry, "log"))==1)
+      if((rc = safe_write(logfile, entry, "log"))!=1)
 	return PDB_ERR("Failed to write log: "+(rc<0? strerror(logfile->errno()):
 						"Disk full (probably)"));
     }
