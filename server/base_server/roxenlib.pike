@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.106 1999/06/11 13:35:58 mast Exp $
+// $Id: roxenlib.pike,v 1.107 1999/07/06 19:32:40 wellhard Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1076,7 +1076,7 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 		      object id )
 {
   string quote = args->quote || "#";
-  mapping other_vars;
+  mapping other_vars = id->misc->variables;
   string new_contents = "", unparsed_contents = "";
   int first;
 
@@ -1180,7 +1180,6 @@ string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 	id->variables[var] = val;
       }
 
-    other_vars = id->misc->variables;
     id->misc->variables = vars;
 
     if (!args->replace || lower_case( args->replace ) != "no")
