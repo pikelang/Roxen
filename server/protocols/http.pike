@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.287 2000/11/16 11:51:48 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.288 2000/11/22 07:11:26 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1635,7 +1635,7 @@ void send_result(mapping|void result)
         array fstat;
         if(arrayp(fstat = file->stat))
         {
-          if(file->file && !file->len)
+          if( !file->len )
             file->len = fstat[1];
 
           if (fstat[ST_MTIME] > misc->last_modified) {
@@ -1750,11 +1750,13 @@ void send_result(mapping|void result)
           }
         }
 	if(file->rettext || !errors[file->error])
-	  head_string = sprintf("%s %d %s\r\n", prot, file->error, file->rettext ||
-				(errors[file->error] ? errors[file->error][4..] : ""));
+	  head_string = sprintf("%s %d %s\r\n",
+				prot, file->error, file->rettext ||
+				(errors[file->error]?
+				 errors[file->error][4..] : ""));
 	else
 	  head_string = sprintf("%s %s\r\n", prot, errors[file->error]);
-        if( file->len > 0 )
+        if( file->len > 0 || (file->error != 200) )
 	  heads["Content-Length"] = (string)file->len;
 
         // Some browsers, e.g. Netscape 4.7, doesn't trust a zero
