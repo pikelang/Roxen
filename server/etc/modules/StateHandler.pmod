@@ -1,7 +1,7 @@
 // This is the Roxen WebServer state mechanism.
-// Copyright © 1999 - 2000, Roxen IS.
+// Copyright © 1999 - 2003, Roxen IS.
 //
-// $Id: StateHandler.pmod,v 1.9 2002/01/24 01:22:12 mast Exp $
+// $Id: StateHandler.pmod,v 1.10 2003/06/17 15:15:59 mast Exp $
 
 #ifdef STATE_HANDLER_DEBUG
 # define STATE_WERR(X) werror("State: "+X+"\n")
@@ -278,7 +278,9 @@ class Page_state {
     }
     else other_vars = "";
 
-    return id->url_base() + id->not_query[1..] +
+    // Use a relative url. It's shorter and doesn't give problems when
+    // result p-code is replicated.
+    return (id->not_query / "/")[-1] +
       "?" + (var || "__state") + "=" + uri_encode (value, key) + other_vars;
   }
 }
