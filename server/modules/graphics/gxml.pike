@@ -8,10 +8,10 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.2 2001/04/02 10:26:32 per Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.3 2001/04/02 12:35:46 per Exp $";
 constant module_type = MODULE_TAG;
 
-LocaleString module_name = _(0,"Graphics: GXML Image processing tags");
+LocaleString module_name = _(0,"Graphics: GXML tag");
 LocaleString module_doc  = _(0,"Provides the tag <tt>&lt;gxml&gt;</tt>.");
 
 roxen.ImageCache the_cache;
@@ -40,7 +40,8 @@ string status() {
 mapping(string:LazyImage.LazyImage) images = ([]);
 array(Image.Layer) generate_image( mapping a, string hash, RequestID id )
 {
-  if( images[hash] )
+  werror( "Render %O\n",hash );
+  if( images[ hash ] )
     return m_delete(images,hash)->run( );
   else
     error( "Oops! This was not what we expected.\n" );
@@ -59,6 +60,11 @@ array(RXML.Tag) gxml_find_builtin_tags(  )
 
 
 
+#define STACK_PUSH(X) id->misc->gxml_stack->push( X )
+#define STACK_POP()   id->misc->gxml_stack->pop( )
+#define TMP_PUSH(X) id->misc->gxml_tmp_stack->push( X )
+#define TMP_POP()   id->misc->gxml_tmp_stack->pop( )
+
 #define SIMPLE_LI( X )   						\
 class GXML##X								\
 {									\
@@ -70,9 +76,7 @@ class GXML##X								\
     inherit RXML.Frame;							\
     array do_return( RequestID id )					\
     {									\
-        id->misc->gxml_image = LazyImage.new(LazyImage.X,		\
-					     id->misc->gxml_image,	\
-					     args );			\
+      STACK_PUSH(LazyImage.new(LazyImage.X,STACK_POP(), args ) );       \
     }									\
   }									\
 }
@@ -89,12 +93,11 @@ class GXML##X								\
     array do_return( RequestID id )					\
     {									\
       args->Y = content;                                                \
-      id->misc->gxml_image = LazyImage.new(LazyImage.X,		        \
-					     id->misc->gxml_image,	\
-					     args );			\
+      STACK_PUSH( LazyImage.new(LazyImage.X,STACK_POP(), args ) );      \
     }									\
   }									\
 }
+
 
 class GXMLPush
 {
@@ -106,49 +109,57 @@ class GXMLPush
     inherit RXML.Frame;
     array do_enter( RequestID id )
     {
-      id->misc->gxml_stack->push( id->misc->gxml_image );
-      id->misc->gxml_image = 0;
+      TMP_PUSH( STACK_POP() );
+      STACK_PUSH(0);
     }
+
     array do_return( RequestID id )
     {
-      LazyImage.LazyImage i = id->misc->gxml_stack->pop();
-      if( id->misc->gxml_image )
-	id->misc->gxml_stack->push( id->misc->gxml_image->ref() );
-      else
-	id->misc->gxml_stack->push( i->ref() );
-      id->misc->gxml_image = i;
+      LazyImage.LazyImage i = TMP_POP();
+      LazyImage.LazyImage ii = STACK_POP();
+      STACK_PUSH( (ii||i)->ref() );
+      STACK_PUSH( i );
     }
   }
 }
 
-class GXMLDup
+class GXMLStackDup
 {
   inherit RXML.Tag;
-  constant name = "dup";
+  constant name = "stack-dup";
 
   class Frame
   {
     inherit RXML.Frame;
     array do_return( RequestID id )
     {
-      LazyImage.LazyImage i = id->misc->gxml_stack->pop();
-      id->misc->gxml_stack->push( i );
-      id->misc->gxml_stack->push( i );
+      catch {
+	LazyImage.LazyImage i = STACK_POP();
+	STACK_PUSH( i );
+	STACK_PUSH( i );
+      };
+      parse_error("Too few elements on stack\n");
     }
   }
 }
 
-class GXMLClear
+class GXMLStackSwap
 {
   inherit RXML.Tag;
-  constant name = "clear";
+  constant name = "stack-swap";
 
   class Frame
   {
     inherit RXML.Frame;
     array do_return( RequestID id )
     {
-      id->misc->gxml_image = 0;
+      catch {
+	LazyImage.LazyImage i = STACK_POP();
+	LazyImage.LazyImage j = STACK_POP();
+	STACK_PUSH( i );
+	STACK_PUSH( j );
+      };
+      parse_error("Too few elements on stack, need 2 to run stack-swap\n");
     }
   }
 }
@@ -156,14 +167,17 @@ class GXMLClear
 class GXMLClearStack
 {
   inherit RXML.Tag;
-  constant name = "clear-stack";
+  constant name = "stack-clear";
 
   class Frame
   {
     inherit RXML.Frame;
     array do_return( RequestID id )
     {
+      LazyImage.LazyImage i;
+      catch( i = STACK_POP() );
       id->misc->gxml_stack->reset();
+      STACK_PUSH( i );
     }
   }
 }
@@ -181,18 +195,20 @@ class GXMLPop
     {
       catch
       {
-	LazyImage.LazyImage i = id->misc->gxml_image ;
-	id->misc->gxml_image  = id->misc->gxml_stack->pop();
-	id->misc->gxml_stack->push( i );
+	TMP_PUSH( STACK_POP() );
 	return 0;
       };
-      RXML.parse_error("Popping beyond end of stack\n");
+      parse_error("Popping beyond end of stack\n");
     }
     
     array do_return( RequestID id )
     {
-      LazyImage.LazyImage b = id->misc->gxml_stack->pop();
-      id->misc->gxml_image = LazyImage.join_images(b,id->misc->gxml_image);
+      LazyImage.LazyImage a = TMP_POP();
+      LazyImage.LazyImage b = STACK_POP();
+      if( a && b )
+	STACK_PUSH( LazyImage.join_images( a, b ) );
+      else
+	STACK_PUSH( a||b );
       return 0;
     }
   }
@@ -211,19 +227,22 @@ class GXMLPopDup
     {
       catch
       {
-	LazyImage.LazyImage i = id->misc->gxml_image;
-	id->misc->gxml_image  = id->misc->gxml_stack->pop();
-	id->misc->gxml_stack->push( id->misc->gxml_image );
-	id->misc->gxml_stack->push( i );
+	TMP_PUSH( STACK_POP() );
+	LazyImage.LazyImage b = STACK_POP();
+	STACK_PUSH( b ); STACK_PUSH( b );
 	return 0;
       };
-      RXML.parse_error("Popping beyond end of stack\n");
+      parse_error("Popping beyond end of stack\n");
     }
     
     array do_return( RequestID id )
     {
-      LazyImage.LazyImage b = id->misc->gxml_stack->pop();
-      id->misc->gxml_image = LazyImage.join_images(b,id->misc->gxml_image);
+      LazyImage.LazyImage a = TMP_POP();
+      LazyImage.LazyImage b = STACK_POP();
+      if( a && b )
+	STACK_PUSH( LazyImage.join_images( a->ref(), b ) );
+      else
+	STACK_PUSH( a||b );
       return 0;
     }
   }
@@ -241,10 +260,10 @@ class GXMLPopReplace
     {
       catch
       {
-	id->misc->gxml_image = id->misc->gxml_stack->pop();
+	STACK_POP();
 	return 0;
       };
-      RXML.parse_error("Popping beyond end of stack\n");
+      parse_error("Popping beyond end of stack\n");
     }
   }
 }
@@ -314,19 +333,26 @@ class TagGXML
 
     array do_enter( RequestID id )
     {
-      if( id->misc->gxml_image )
-	RXML.parse_error("Recursive gxml tags not supported\n" );
+      if( id->misc->gxml_stack )
+	parse_error("Recursive gxml tags not supported\n" );
+      LazyImage.clear_cache();
       id->misc->gxml_stack = ADT.Stack();
+      id->misc->gxml_stack->push( 0 );
+      id->misc->gxml_tmp_stack = ADT.Stack();
     }
 
     array do_return( RequestID id )
     {
-      // The image is now in id->misc->gxml_image, hopefully.
-      LazyImage.LazyImage i = id->misc->gxml_image;
+      // The image is now in the top of id->misc->gxml_stack, hopefully.
+      LazyImage.LazyImage i;
+      if( catch( i = STACK_POP() ) )
+	parse_error("Popping out of stack\n");
 
-      werror("%O\n", i->run() );
+      if( !catch( STACK_POP() ) )
+	tag_debug("Elements left on stack after end of rendering.\n");
       
-      if( !i ) RXML.parse_error( "No image\n");
+      if( !i )
+	parse_error( "No image\n");
 
       mapping aa = args;
       string ind;
@@ -337,25 +363,27 @@ class TagGXML
       m_delete( a2, "border" );
       aa->src = query_internal_location()+
 	(ind=the_cache->store(({a2,i->hash()}),id));
-      images[ i->hash() ] = i;
 
       a2 = ([]);
       a2->src = aa->src;
       if( aa->align )  a2->align = aa->align;
       if( aa->border ) a2->border = aa->border;
 
+      images[ i->hash() ] = i;
       if( mapping size = the_cache->metadata( ind, id ) )
       {
 	aa->width = size->xsize;
 	aa->height = size->ysize;
       }
+      m_delete(images,i->hash()); 
+
       if( !args->url )
 	result = Roxen.make_tag( "img", a2, 1 );
       else
 	result = a2->src;
-
       m_delete( id->misc, "gxml_stack" );
-      m_delete( id->misc, "gxml_image" );
+      m_delete( id->misc, "gxml_tmp_stack" );
+      LazyImage.clear_cache();
     }
   }
 }
