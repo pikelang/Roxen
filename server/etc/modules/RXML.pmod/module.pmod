@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.325 2004/02/20 19:47:31 mast Exp $
+// $Id: module.pmod,v 1.326 2004/03/30 20:09:16 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2061,8 +2061,8 @@ class Context
   //!
   //! @note
   //! The "_internal_" scope is currently hidden by default by
-  //! @[list_scope] but otherwise there's no access restriction on it.
-  //! Therefore an end user can get at the variables in that scope
+  //! @[list_scope] but otherwise there are no access restrictions on
+  //! it. Therefore an end user can get at the variables in that scope
   //! directly. On the other hand there's no guarantee that that will
   //! remain possible in the future, so no end user RXML code should
   //! use the "_internal_" scope.
@@ -5341,7 +5341,7 @@ class Parser
   optional mixed read();
   //! Define to allow streaming operation. Returns the evaluated
   //! result so far, but does not do any more evaluation. Returns
-  //! RXML.nil if there's no data.
+  //! @[RXML.nil] if there's no data.
 
   mixed eval (void|int eval_piece);
   //! Evaluates the data fed so far and returns the result. The result
@@ -5951,9 +5951,10 @@ class Type
   //!   data is only split between (sensibly defined) atomic elements.
   //! @endul
 
-  //! @decl constant mixed empty_value;
+  //! @decl optional constant mixed empty_value;
   //!
-  //! The empty value, i.e. what eval ("") would produce.
+  //! The empty value, i.e. what eval ("") would produce. Must be
+  //! defined for every sequential type.
 
   Type supertype;
   //! The supertype for this type.
@@ -5968,9 +5969,9 @@ class Type
   //! There are however exceptions to the rule above about information
   //! preservation, since it's impossible to satisfy it for
   //! sufficiently generic types. E.g. the type @[RXML.t_any] cannot
-  //! express hardly any value (except @[RXML.nil]) without loss of
-  //! information, but still it should be used as the supertype as the
-  //! last resort if no better alternative exists.
+  //! express any value without loss of information, but still it
+  //! should be used as the supertype as the last resort if no better
+  //! alternative exists.
 
   Type conversion_type;
   //! The type to use as middlestep in indirect conversions. Required
@@ -6216,9 +6217,10 @@ TAny t_any = TAny();
 //! subtype of this one.
 //!
 //! This type is also special in that any value can be converted to
-//! and from this type without the value getting changed in any way,
-//! which means that the meaning of a value might change when this
-//! type is used as a middle step.
+//! and from this type without the value getting changed in any way
+//! (provided it's representable in the target type), which means that
+//! the meaning of a value might change when this type is used as a
+//! middle step.
 //!
 //! E.g if @tt{"<foo>"@} of type @[RXML.t_text] is converted directly
 //! to @[RXML.t_xml], it's quoted to @tt{"&lt;foo&gt;"@}, since
@@ -6248,9 +6250,43 @@ class TAny
   }
 }
 
+TBottom t_bottom = TBottom();
+//! A sequential type accepting no values. This type is by definition
+//! a subtype of every other type except @[RXML.t_nil].
+//!
+//! Supertype: @[RXML.t_any]
+
+static class TBottom
+{
+  inherit Type;
+  constant name = "bottom";
+  Type supertype = t_any;
+  Type conversion_type = 0;
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    type_check_error (msg, args, "This type does not accept any value.\n");
+  }
+
+  Nil encode (mixed val, void|Type from)
+  {
+    type_check (val);
+  }
+
+  int subtype_of (Type other)
+  {
+    return other->name != "nil";
+  }
+
+  string _sprintf()
+  {
+    return "RXML.t_bottom(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT;
+  }
+}
+
 TNil t_nil = TNil();
-//! A sequential type accepting only the value nil. This type is by
-//! definition a subtype of every other type.
+//! Type version of @[RXML.nil], i.e. the type that signifies no value
+//! at all (not even the empty value of some type).
 //!
 //! Supertype: @[RXML.t_any]
 
@@ -6258,28 +6294,18 @@ static class TNil
 {
   inherit Type;
   constant name = "nil";
-  constant sequential = 1;
-  Nil empty_value = nil;
   Type supertype = t_any;
   Type conversion_type = 0;
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
-    if (val != nil)
-      type_check_error (msg, args, "Expected nil, got %t.\n", val);
+    type_check_error (msg, args, "This type can not be used for storage.\n");
   }
 
   Nil encode (mixed val, void|Type from)
   {
-    if (from && from != local::name)
-      val = indirect_convert (val, from);
-#ifdef MODULE_DEBUG
     type_check (val);
-#endif
-    return nil;
   }
-
-  int subtype_of (Type other) {return 1;}
 
   string _sprintf()
   {
@@ -6313,7 +6339,6 @@ static class TType
   inherit Type;
   constant name = "type";
   constant sequential = 0;
-  Nil empty_value = nil;
   Type supertype = t_any;
   Type conversion_type = 0;
   constant handle_literals = 1;
@@ -6360,7 +6385,6 @@ static class TParser
   inherit Type;
   constant name = "parser";
   constant sequential = 0;
-  Nil empty_value = nil;
   Type supertype = t_any;
   Type conversion_type = 0;
   constant handle_literals = 1;
@@ -6411,7 +6435,6 @@ class TScalar
   inherit Type;
   constant name = "scalar";
   constant sequential = 0;
-  Nil empty_value = nil;
   Type supertype = t_any;
   Type conversion_type = 0;
   constant handle_literals = 1;
@@ -8349,7 +8372,7 @@ class PCode
       return intro + ")" + OBJ_COUNT;
   }
 
-  constant P_CODE_VERSION = 5.1;
+  constant P_CODE_VERSION = 5.2;
   // Version spec encoded with the p-code, so we can detect and reject
   // incompatible p-code dumps even when the encoded format hasn't
   // changed in an obvious way.
@@ -8604,6 +8627,7 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
       ENCODE_MSG ("objectof (%O)\n", what);
       switch (what) {
 	case "nil": ENCODE_DEBUG_RETURN (nil);
+	case "empty": ENCODE_DEBUG_RETURN (empty);
 	case "RXML": ENCODE_DEBUG_RETURN (rxml_module);
 	case "utils": ENCODE_DEBUG_RETURN (utils);
 	case "xtp": ENCODE_DEBUG_RETURN (xml_tag_parser);
@@ -8716,6 +8740,8 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 
       else if(what == nil)
 	ENCODE_DEBUG_RETURN ("nil");
+      else if(what == empty)
+	ENCODE_DEBUG_RETURN ("empty");
       else if (what == rxml_module)
 	ENCODE_DEBUG_RETURN ("RXML");
       else if(what == utils)
@@ -8879,19 +8905,21 @@ ignored; it will disappear the next time the page is evaluated.\n";
 
 // Some parser tools:
 
-Nil nil = Nil();
-//! An object representing the empty value. Works as initializer for
-//! sequences, since nil + anything == anything + nil == anything. It
-//! can cast itself to the empty value for the basic Pike types. It
-//! also evaluates to false in a boolean context, but it's not equal
-//! to 0.
+Empty empty = Empty();
+//! An object representing the empty value for @[RXML.t_any]. It works
+//! as initializer for sequences since @[RXML.empty] + anything ==
+//! anything + @[RXML.empty] == anything. It can also cast itself to
+//! the empty value for the basic Pike types.
+//!
+//! @note
+//! As opposed to @[RXML.nil], it's not false in a boolean context.
 
-static class Nil
+static class Empty
 {
   mixed `+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
   mixed ``+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
-  int `!() {return 1;}
-  string _sprintf() {return "RXML.nil";}
+  string _sprintf() {return "RXML.empty";}
+
   mixed cast(string type)
   {
     switch(type)
@@ -8909,10 +8937,34 @@ static class Nil
     case "mapping":
       return ([]);
     default:
-      fatal_error ("Cannot cast RXML.nil to "+type+".\n");
+      fatal_error ("Cannot cast %O to %s.\n", this, type);
     }
   }
-};
+}
+
+Nil nil = Nil();
+//! An object representing no value. It evaluates to false in a
+//! boolean context, but it's not equal to 0. There's no semantic
+//! difference between assigning this to a variable and removing the
+//! variable binding altogether.
+//!
+//! Like @[RXML.empty], it holds that nil + anything == anything + nil
+//! == anything, on the principle that the @code{+@} operator in
+//! essence is called with one argument in those cases. This avoids
+//! special handling of tags that return no result in sequential
+//! types.
+//!
+//! For compatibility, @[RXML.nil] can be cast to the empty value for
+//! the basic Pike types.
+static class Nil
+{
+  // Only inherit implementation; there's no type-wise significance
+  // whatsoever of this inherit.
+  inherit Empty;
+
+  int `!() {return 1;}
+  string _sprintf() {return "RXML.nil";}
+}
 
 Nil Void = nil;			// Compatibility.
 
@@ -8920,7 +8972,7 @@ mixed add_to_value (Type type, mixed value, mixed piece)
 //! Adds @[piece] to @[value] according to @[type]. If @[type] is
 //! sequential, they're concatenated with @[`+]. If @[type] is
 //! nonsequential, either @[value] or @[piece] is returned if the
-//! other is @[RXML.nil] and an error is thrown if neither are nil.
+//! other is @[RXML.nil] and an error is thrown if neither is nil.
 {
   if (type->sequential)
     return value + piece;
@@ -8990,7 +9042,7 @@ class ScanStream
   }
 
   mixed read()
-  //! Returns the next token, or RXML.nil if there's no more data.
+  //! Returns the next token, or @[RXML.nil] if there's no more data.
   {
     while (head->next)
       if (next_token >= sizeof (head->data)) {
