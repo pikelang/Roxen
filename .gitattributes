@@ -31,6 +31,8 @@ urw_itc_avant_garde-demi-r binary
 # changes to these files.
 /Makefile foreign_ident
 /configure.in foreign_ident
+/examples/ldap/lsd3.pike foreign_ident
+/examples/ldap/searchuser.pike foreign_ident
 /extern/acconfig.h foreign_ident
 /extern/cgi.c foreign_ident
 /extern/configure.in foreign_ident
