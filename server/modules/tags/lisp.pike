@@ -1,23 +1,17 @@
 #if constant(Languages)
 #define error(X) throw( ({ (X), backtrace() }) )
-constant cvs_version = "$Id: lisp.pike,v 1.14 2000/01/23 21:41:26 nilsson Exp $";
+constant cvs_version = "$Id: lisp.pike,v 1.15 2000/02/10 07:13:28 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
 
 constant thread_safe=1;
-#endif // constant(Languages)
 
-array register_module()
-{
-#if constant(Languages)
-  return ({ MODULE_PARSER, "Lisp tag module", 
-	    "This module defines a new tag, "
-	    "&lt;lisp [context=foo]&gt;&lt;/lisp&gt;", 0, ({}) });
-#endif // constant(Languages)
-}
+constant module_type = MODULE_PARSER;
+constant module_name = "Lisp tag module";
+constant module_doc  = "This module defines a new tag, "
+  "&lt;lisp [context=foo]&gt;&lt;/lisp&gt;";
 
-#if constant(Languages)
 void create()
 {
   defvar("max-eval-time", 10000, "Max eval time", TYPE_INT);
@@ -223,9 +217,6 @@ object lisp_compile(string s)
 string tag_lisp(string t, mapping m, string c, 
 		object id, object f, mapping defines)
 {
-  if(m->help)
-    return register_module()[2];
-
 //   NOCACHE();
   
   string context = (query("enable_context") && m->context)

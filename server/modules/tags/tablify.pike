@@ -1,21 +1,16 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: tablify.pike,v 1.41 1999/12/07 12:12:52 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.42 2000/02/10 07:13:28 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 inherit "state";
 
-array register_module()
-{
-  return ({ 
-    MODULE_PARSER,
-    "Tablify", 
-    "This tag generates tables.<p>"
-    "<tt>&lt;tablify help&gt;&lt;/tablify&gt;</tt> gives help.\n\n<p>",
-    0, 1, });
-}
+constant module_type = MODULE_PARSER;
+constant module_name = "Tablify";
+constant module_doc  = "This tag generates tables.<p>"
+  "<tt>&lt;tablify help&gt;&lt;/tablify&gt;</tt> gives help.\n\n</p>";
 
 TAGDOCUMENTATION
 #ifdef manual
@@ -228,8 +223,6 @@ string container_tablify(string tag, mapping m, string q, RequestID id)
 {
   array rows, res;
   string sep;
-
-  if(m->help) return register_module()[2];
 
   q = parse_html(q, ([]), (["fields":_fields]), m);
 

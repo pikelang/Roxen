@@ -4,7 +4,7 @@
 // defaults and a new variable, to make it possible to use Frontpage
 // with Roxen when using virtual hosting.
 
-constant cvs_version = "$Id: fpscript.pike,v 1.7 1999/11/24 15:05:42 per Exp $";
+constant cvs_version = "$Id: fpscript.pike,v 1.8 2000/02/10 06:59:23 nilsson Exp $";
 
 // #define FPSCRIPT_DEBUG
 
@@ -60,27 +60,20 @@ void create(object c)
   variables->Enhancements = allocate(8);
 }
 
-
-mixed *register_module()
-{
-  return ({ 
-    MODULE_LOCATION,
-    "Frontpage Script support", 
-    "This module is an extension to the normal CGI module. The main "
-    "differences are that this module is mainly a MODULE_FIRST. The reason "
-    "for this is that otherwise you most likely would have to fight with "
-    "priority levels to make it work correctly. It's there to make the setup "
-    "procedure easier. Also this module's default mountpoint is <tt>/</tt>. "
-    "The "
-    "reason for this is that we need to be able to handle Frontpage sub-webs. "
-    "<p>Another feature is that you easily can modify the value of the "
-    "environment variable SERVER_PORT. The reason for doing that is that "
-    "Frontpage uses it to figure out which configuration file to use. "
-    "Without it you wouldn't be able to use Frontpage and Roxen when doing "
-    "virtual hosting (where many servers will have the same port number).",
-    ({}), 1
-  });
-}
+constant module_type = MODULE_LOCATION;
+constant module_name = "Frontpage Script support";
+constant module_doc  = "This module is an extension to the normal CGI module. The main "
+  "differences are that this module is mainly a MODULE_FIRST. The reason "
+  "for this is that otherwise you most likely would have to fight with "
+  "priority levels to make it work correctly. It's there to make the setup "
+  "procedure easier. Also this module's default mountpoint is <tt>/</tt>. "
+  "The "
+  "reason for this is that we need to be able to handle Frontpage sub-webs. "
+  "<p>Another feature is that you easily can modify the value of the "
+  "environment variable SERVER_PORT. The reason for doing that is that "
+  "Frontpage uses it to figure out which configuration file to use. "
+  "Without it you wouldn't be able to use Frontpage and Roxen when doing "
+  "virtual hosting (where many servers will have the same port number).</p>";
 
 string query_name() 
 { 

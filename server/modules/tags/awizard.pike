@@ -3,16 +3,11 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version="$Id: awizard.pike,v 1.14 2000/02/07 17:02:24 kuntri Exp $";
-constant thread_safe=1;
-
-array register_module()
-{
-  return ({ MODULE_PARSER,
-	    "Advanced wizards",
-	    "Generic wizard module",
-	    0, 1 });
-}
+constant cvs_version = "$Id: awizard.pike,v 1.15 2000/02/10 07:13:28 nilsson Exp $";
+constant thread_safe = 1;
+constant module_type = MODULE_PARSER;
+constant module_name = "Advanced wizards";
+constant module_doc  = "Generic wizard module";
 
 mapping cache = ([]);
 int nid=1;

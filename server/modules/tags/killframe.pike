@@ -12,7 +12,7 @@
  * Chris Burgess <chris@ibex.co.nz>
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.25 1999/12/08 14:13:03 nilsson Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.26 2000/02/10 07:13:28 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -26,17 +26,13 @@ void create()
 	  "the end of the URL, leaving only a slash." );
 }
 
-constant module_desc="This module defines a the tag &lt;killframe&gt; that "
+constant module_type = MODULE_PARSER;
+constant module_name = "Killframe tag";
+constant module_doc  = "This module defines a the tag &lt;killframe&gt; that "
   "adds some java script that will prevent others "
   "from putting your page in a frame. It can "
   "also strip any occurrences of 'indexfiles' "
   "from the end of the URL.";
-
-
-mixed register_module()
-{
-  return ({ MODULE_PARSER, "Killframe tag", module_desc, 0, 1 });
-}
 
 TAGDOCUMENTATION
 #ifdef manual

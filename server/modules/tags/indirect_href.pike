@@ -6,7 +6,7 @@
  * made by Mattias Wingstedt <peter@idonex.se> -96
  */
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.10 1999/12/09 21:40:56 nilsson Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.11 2000/02/10 07:13:28 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -33,20 +33,19 @@ void create()
 	  "namechange to take effect)" );
 }
 
-array (mixed) register_module()
-{
-  return ({ MODULE_PARSER, "Indirect href",
-	    "Indirect href. Adds a new container <tt>&lt;ai&gt;</tt>"
-	    ", with a single argument, "
-	    "name=string. It then uses the name to index a database of "
-	    "URLs, and inserts a &lt;a href=...&gt; tag instead. This can "
-	    "be very useful, since you can move all links to a document at "
-	    "once. It also allows the special case 'name=random'. If this "
-	    "is used, a random link will be selected from the database. "
-	    "Example:<pre>"
-	    "   roxen=http://www.roxen.com/\n"
-	    "   idonex=http://www.idonex.se/</pre>", });
-}
+constant module_type = MODULE_PARSER;
+constant module_name = "Indirect href";
+constant module_doc  =
+  "Indirect href. Adds a new container <tt>&lt;ai&gt;</tt>"
+  ", with a single argument, "
+  "name=string. It then uses the name to index a database of "
+  "URLs, and inserts a &lt;a href=...&gt; tag instead. This can "
+  "be very useful, since you can move all links to a document at "
+  "once. It also allows the special case 'name=random'. If this "
+  "is used, a random link will be selected from the database. "
+  "Example:<pre>"
+  "   roxen=http://www.roxen.com/\n"
+  "   idonex=http://www.idonex.se/</pre>";
 
 // Dynamic tagname, hence dynamic documentation.
 mapping tagdocumentation() {

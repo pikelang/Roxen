@@ -36,7 +36,7 @@
 // 
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.4 1999/12/08 19:27:22 nilsson Exp $";
+constant cvs_version = "$Id: sed.pike,v 1.5 2000/02/10 07:13:28 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -49,21 +49,9 @@ mapping flcache=([]);
 int flno=1;
 
 #define GC_LOOP_TIME QUERY(gc_time)
-void create()
-{
-}
 
-
-array (mixed) register_module()
-{
-  return ({ MODULE_PARSER, "SED tag", 
-	    "",
-	    ({}),1 });
-}
-
-void start()
-{
-}
+constant module_type = MODULE_PARSER;
+constant moudke_name = "SED tag";
 
 array sedreplace(string s,object re,string with,
 		 array whatin,int first,int lastmod,
@@ -306,7 +294,7 @@ array execute_sed(array(string) e,array(string) in,int suppress)
    return print;
 }
 
-string tag_sed(string tag,mapping m,string cont,object id)
+string container_sed(string tag,mapping m,string cont,object id)
 {
    mapping c=(["e":({})]);
    string|array d;
@@ -373,11 +361,3 @@ string tag_sed(string tag,mapping m,string cont,object id)
    
    return "";
 }
-
-mapping query_tag_callers() { return ([]); }
-
-mapping query_container_callers()
-{
-  return ([ "sed" : tag_sed ]);
-}
-

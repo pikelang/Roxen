@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.56 2000/02/04 15:39:40 grubba Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.57 2000/02/10 06:59:23 nilsson Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -16,19 +16,14 @@ inherit "roxenlib";
 #include <config.h>
 #include <module.h>
 
-array register_module()
-{
-  return ({ 
-    MODULE_FILE_EXTENSION,
-    "Pike script support", 
-    "Support for user Pike-scripts, like CGI, but handled internally in the"
-    " server, and thus much faster, but blocking, and less secure.\n"
-    "<br><img src=/image/err_2.gif align=left alt=\"\">"
-    "NOTE: This module should not be enabled if you allow anonymous PUT!<br>\n"
-    "NOTE: Enabling this module is the same thing as letting your users run"
-    " programs with the same right as the server!"
-  });
-}
+constant module_type = MODULE_FILE_EXTENSION;
+constant module_name = "Pike script support";
+constant module_doc  = "Support for user Pike-scripts, like CGI, but handled internally in the"
+  " server, and thus much faster, but blocking, and less secure.\n"
+  "<br><img src=\"internal-roxen-err_2\" align=\"left\" alt=\"Warning\">"
+  "NOTE: This module should not be enabled if you allow anonymous PUT!<br>\n"
+  "NOTE: Enabling this module is the same thing as letting your users run"
+  " programs with the same right as the server!";
 
 #if constant(__builtin.security)
 // EXPERIMENTAL: Try using the credential system.

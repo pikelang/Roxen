@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.2 1999/12/21 16:48:31 per Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.3 2000/02/10 06:59:23 nilsson Exp $";
 constant thread_safe=1;
 
 inherit "roxenlib";
@@ -18,8 +18,8 @@ constant module_type = MODULE_PARSER;
 constant module_name = "Pike tag";
 constant module_doc = 
 #"This module adds a new tag, &lt;pike&gt;&lt;/pike&gt;. It makes it
-possible to insert some pike code directly in the document.  <br><img
-src=/image/err_2.gif align=left alt=\"\"> <br>NOTE: Enabling this
+possible to insert some pike code directly in the document.  <br>
+<img src=\"internal-roxen-err_2\" align=\"left\" alt=\"Warning\"> <br>NOTE: Enabling this
 module is the same thing as letting your users run programs with the
 same right as the server!  Example:<p><pre> &lt;pike&gt; return
 \"Hello world!\\n\"; &lt;/pike&gt;\n</pre> <p>Arguments: Any, all

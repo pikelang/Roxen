@@ -3,18 +3,15 @@
  * made by Per Hedbor
  */
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.22 2000/02/08 15:56:02 wellhard Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.23 2000/02/10 07:13:28 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
 inherit "wizard";
 
-mixed *register_module()
-{
-  return ({MODULE_PARSER,"Wizard generator",
-          "Generates wizards<p>See &lt;wizard help&gt; for more information\n",
-          ({}),1,});
-}
+constant module_type = MODULE_PARSER;
+constant module_name = "Wizard generator";
+constant module_doc  = "Generates wizards<p>See &lt;wizard help&gt; for more information\n";
 
 string internal_verify(string t, mapping args, string contents, int l, int ol,
 		       mapping m)
@@ -163,7 +160,3 @@ mapping query_container_callers()
   return ([ "wizard" : tag_wizard ]);
 }
 
-void start()
-{
-  
-} 
