@@ -5,7 +5,7 @@
 
 import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.22 1998/01/14 20:19:53 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.23 1998/01/15 16:55:13 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -392,6 +392,11 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
   if((!(st = file_stat(groupfile))) || (st[1] == -4) ||
      (!(f->open(groupfile, "r"))))
   {
+    if (st && (st[1] == -4)) {
+      report_error(sprintf("HTACCESS: The groupfile \"%s\" is a device!\n"
+			   "userfile: \"%s\"\n"
+			   "query: \"%s\"\n", groupfile, userfile, id->query));
+    }
 #ifdef HTACCESS_DEBUG
     werror("HTACCESS: The groupfile "+groupfile+" cannot be opened.\n");
 #endif
@@ -617,8 +622,14 @@ array rec_find_htaccess_file(object id, string vpath)
       {
 	o = open(path, "r");
 	if(o)  return ({ path, o });
-      } else if(QUERY(cache_all))
-	return 0;
+      } else {
+	if (st && (st[1] == -4)) {
+	  report_error(sprintf("HTACCESS: The htaccess-file in \"%s\" is a device!\n"
+			       "query: \"%s\"\n", path, id->query));
+	}
+	if(QUERY(cache_all))
+	  return 0;
+      }
     }
   } /* Not found in cache... */
 
@@ -635,6 +646,10 @@ array rec_find_htaccess_file(object id, string vpath)
 #endif
       cache_set_path_of_htaccess(vpath, path+ query("file"),id);
       return ({ path + query("file"), f });
+    }
+    if (st && (st[1] == -4)) {
+      report_error(sprintf("HTACCESS: The htaccess-file in \"%s\" is a device!\n"
+			   "query: \"%s\"\n", path, id->query));
     }
   } 
   array res;
