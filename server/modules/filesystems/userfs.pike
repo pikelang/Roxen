@@ -20,7 +20,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.51 2000/03/16 18:44:38 nilsson Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.52 2000/03/21 15:28:10 jhs Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "User Filesystem";
 constant module_doc  = "User filesystem. Uses the userdatabase (and thus the system passwd "
@@ -133,7 +133,7 @@ void start()
   // This is needed to override the inherited filesystem module start().
 }
 
-static array(string) find_user(string f, object id)
+static array(string) find_user(string f, RequestID id)
 {
   string of = f;
   string u;
@@ -149,7 +149,7 @@ static array(string) find_user(string f, object id)
     }
   } else {
     if((<"", "/", ".">)[f])
-      return 0;
+      return ({ 0, 0 });
 
     switch(sscanf(f, "%*[/]%s/%s", u, f)) {
     case 1:
@@ -167,86 +167,97 @@ static array(string) find_user(string f, object id)
     }
   }
 
-  USERFS_WERR(sprintf("find_user(%O, X) => u:%O, f:%O", of, u, f));
+  USERFS_WERR(sprintf("find_user(%O) => u:%O, f:%O", of, u, f));
 
-  return({ u, f });
+  return ({ u, f });
 }
 
-mixed find_file(string f, object got)
+int|mapping|Stdio.File find_file(string f, RequestID id)
 {
-  string u, of;
-  of=f;
+  string u, of = f;
 
-  USERFS_WERR(sprintf("USERFS: find_file(%O, X)", f));
+  USERFS_WERR(sprintf("find_file(%O)", f));
 
-  array a = find_user(f, got);
+  [u, f] = find_user(f, id);
 
-  if (!a) {
+  if(!u)
     return -1;
-  }
-  u = a[0];
-  f = a[1];
 
-  if(u)
+  array(string) us;
+  array(int) stat;
+
+  if(!dude_ok[ u ] || f == "")
   {
-    array(string) us;
-    array st;
-    if(!dude_ok[ u ] || f == "")
-    {
-      us = got->conf->userinfo( u, got );
-      // No user, or access denied.
-      if(!us || BAD_PASSWORD(us) || banish_list[u])
+    us = id->conf->userinfo( u, id );
+
+    USERFS_WERR(sprintf("checking out %O: %O", u, us));
+
+    if(!us || BAD_PASSWORD(us) || banish_list[u])
+    { // No user, or access denied.
+      USERFS_WERR(sprintf("Bad password: %O? Banished? %O", BAD_PASSWORD(us), !!banish_list[u]));
+      if(!banish_reported[u])
       {
-	if (!banish_reported[u]) {
-	  banish_reported[u] = 1;
-	  report_debug(sprintf("User %s banished (%O)...\n", u, us));
-	}
+	banish_reported[u] = 1;
+	report_debug(sprintf("User %s banished (%O)...\n", u, us));
+      }
+      return 0;
+    }
+    if((f == "") && (strlen(of) && of[-1] != '/'))
+    {
+      redirects++;
+      return http_redirect(id->not_query+"/",id);
+    }
+
+    string dir;
+
+    if(QUERY(homedir))
+      dir = us[ 5 ] + "/" + QUERY(pdir) + "/";
+    else
+      dir = QUERY(searchpath) + "/" + u + "/";
+
+    dir = replace(dir, "//", "/");
+
+    // If public dir does not exist, or is not a directory
+    stat = filesystem::stat_file(dir, id);
+    if(!stat || stat[1] != -2)
+    {
+      USERFS_WERR(sprintf("Directory %O not found! (stat: %O)", dir, stat));
+      return 0;	// File not found.
+    }
+    dude_ok[u] = dir;	// Always '/' terminated.
+  }
+
+  f = dude_ok[u] + f;
+
+  if(QUERY(own))
+  {
+    if(!us)
+    {
+      us = id->conf->userinfo( u, id );
+      if(!us)
+      {
+	USERFS_WERR(sprintf("No userinfo for %O!", u));
 	return 0;
       }
-      if((f == "") && (strlen(of) && of[-1] != '/'))
-      {
-	redirects++;
-	return http_redirect(got->not_query+"/",got);
-      }
-
-      string dir;
-
-      if (QUERY(homedir))
-	dir =  us[ 5 ] + "/" + QUERY(pdir) + "/";
-      else
-	dir = QUERY(searchpath) + "/" + u + "/";
-
-      dir = replace(dir, "//", "/");
-
-      // If public dir does not exist, or is not a directory
-      st = filesystem::stat_file(dir, got);
-      if(!st || st[1] != -2) {
-	return 0;	// File not found.
-      }
-      dude_ok[u] = dir;	// Always '/' terminated.
     }
-    f = dude_ok[u] + f;
-    if(QUERY(own))
+
+    stat = filesystem::stat_file(f, id);
+
+    if(!stat || (stat[5] != (int)(us[2])))
     {
-      if (!us) {
-	us = got->conf->userinfo( u, got );
-
-	if (!us) return 0;
-      }
-
-      st = filesystem::stat_file(f, got);
-
-      if(!st || (st[5] != (int)(us[2])))
-        return 0;
+      USERFS_WERR(sprintf("File not owned by user.", u));
+      return 0;
     }
-    if(QUERY(useuserid))
-      got->misc->is_user = f;
-    return filesystem::find_file( f, got );
   }
-  return 0;
+
+  if(QUERY(useuserid))
+    id->misc->is_user = f;
+
+  USERFS_WERR(sprintf("Forwarding request to inherited filesystem.", u));
+  return filesystem::find_file( f, id );
 }
 
-string real_file( mixed f, mixed id )
+string real_file(string f, RequestID id)
 {
   string u;
 
@@ -268,9 +279,8 @@ string real_file( mixed f, mixed id )
     {
       array(string) us;
       us = id->conf->userinfo( u, id );
-      if ((!us) || BAD_PASSWORD(us) || banish_list[u]) {
+      if((!us) || BAD_PASSWORD(us) || banish_list[u])
 	return 0;
-      }
       if(us[5][-1] != '/')
 	f = us[ 5 ] + "/" + QUERY(pdir) + f;
       else
@@ -289,16 +299,16 @@ string real_file( mixed f, mixed id )
   return 0;
 }
 
-mapping|array find_dir(string f, object got)
+mapping|array find_dir(string f, RequestID id)
 {
   USERFS_WERR(sprintf("find_dir(%O, X)", f));
 
-  array a = find_user(f, got);
+  array a = find_user(f, id);
 
   if (!a) {
     if (QUERY(user_listing)) {
       array l;
-      l = got->conf->userlist(got);
+      l = id->conf->userlist(id);
 
       if(l) return(l - QUERY(banish_list));
     }
@@ -313,8 +323,9 @@ mapping|array find_dir(string f, object got)
     if(query("homedir"))
     {
       array(string) us;
-      us = got->conf->userinfo( u, got );
-      if((!us) || BAD_PASSWORD(us)) return 0;
+      us = id->conf->userinfo( u, id );
+      if((!us) || BAD_PASSWORD(us))
+	return 0;
       // FIXME: Use the banish multiset.
       if(search(QUERY(banish_list), u) != -1)             return 0;
       if(us[5][-1] != '/')
@@ -324,17 +335,17 @@ mapping|array find_dir(string f, object got)
     }
     else
       f = QUERY(searchpath) + u + "/" + f;
-    array dir = filesystem::find_dir(f, got);
+    array dir = filesystem::find_dir(f, id);
     if(QUERY(virtual_hosting) && arrayp(dir))
       return ([ "files": dir ]);
     return dir;
   }
-  return (got->conf->userlist(got) - QUERY(banish_list));
+  return id->conf->userlist(id) - QUERY(banish_list);
 }
 
-mixed stat_file( mixed f, mixed id )
+array(int) stat_file(string f, RequestID id)
 {
-  USERFS_WERR(sprintf("stat_file(%O, X)", f));
+  USERFS_WERR(sprintf("stat_file(%O)", f));
 
   array a = find_user(f, id);
 
@@ -351,7 +362,8 @@ mixed stat_file( mixed f, mixed id )
     us = id->conf->userinfo( u, id );
     if(query("homedir"))
     {
-      if((!us) || BAD_PASSWORD(us)) return 0;
+      if((!us) || BAD_PASSWORD(us))
+	return 0;
       // FIXME: Use the banish multiset.
       if(search(QUERY(banish_list), u) != -1) return 0;
       if(us[5][-1] != '/')
@@ -370,8 +382,8 @@ mixed stat_file( mixed f, mixed id )
 
 string query_name()
 {
-  return ("Location: <i>" + QUERY(mountpoint) + "</i>, " +
-	  (QUERY(homedir)
-	   ? "Pubdir: <i>" + QUERY(pdir) +"</i>"
-	   : "mounted from: <i>" + QUERY(searchpath) + "</i>"));
+  return "Location: <i>" + QUERY(mountpoint) + "</i>, " +
+	 (QUERY(homedir)
+	  ? "Pubdir: <i>" + QUERY(pdir) +"</i>"
+	  : "mounted from: <i>" + QUERY(searchpath) + "</i>");
 }
