@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.345 1999/06/06 20:22:26 peter Exp $
+ * $Id: roxen.pike,v 1.346 1999/06/07 00:08:11 mast Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.345 1999/06/06 20:22:26 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.346 1999/06/07 00:08:11 mast Exp $";
 
 object backend_thread;
 object argcache;
@@ -2411,7 +2411,7 @@ private void define_global_variables( int argc, array (string) argv )
   /// End of cache variables..
   
   globvar("docurl2", "http://www.roxen.com/documentation/context.pike?page=",
-	  "Documentation URL", TYPE_STRING|VAR_MORE,
+	  "Documentation URL", TYPE_STRING|VAR_MORE|VAR_EXPERT,
 	  "The URL to prepend to all documentation urls throughout the "
 	  "server. This URL should _not_ end with a '/'.");
 
@@ -2525,7 +2525,8 @@ private void define_global_variables( int argc, array (string) argv )
 	  "What do the different clients support?\n<br>"
 	  "The default information is normally fetched from the file "+
 	  getcwd()+"etc/supports, and the format is:<pre>"
-	  "<a href=$docurl/configuration/regexp.html>regular-expression</a>"
+	  //"<a href=$docurl/configuration/regexp.html>regular-expression</a>"
+	  "regular-expression"
 	  " feature, -feature, ...\n"
 	  "</pre>"
 	  "If '-' is prepended to the name of the feature, it will be removed"

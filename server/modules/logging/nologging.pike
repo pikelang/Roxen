@@ -2,7 +2,7 @@
 // This module can be used to turn off logging for some files.
 
 
-constant cvs_version = "$Id: nologging.pike,v 1.6 1998/03/11 19:42:38 neotron Exp $";
+constant cvs_version = "$Id: nologging.pike,v 1.7 1999/06/07 00:11:05 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -13,8 +13,8 @@ array register_module()
   return ({ MODULE_LOGGER,
 	      "Logging disabler",
 	      "This module can be used to turn off logging for some files. "
-	      "It is based on <a href=$docurl/regexp.html>Regular"
-	      " expressions</a>",
+	      "It is based on "/*"<a href=$docurl/regexp.html>"*/"Regular"
+	      " expressions"/*"</a>"*/,
 	      });
 }
 
