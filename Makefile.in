@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.in,v 1.101 1999/12/02 20:44:39 per Exp $
+# $Id: Makefile.in,v 1.102 1999/12/28 02:36:00 grubba Exp $
 #
 
 # @configure_input@
@@ -266,23 +266,23 @@ bump_version: bump_version.stamp
 	      echo Done with $$d.); \
 	  else :; fi; \
 	done
-	@(cd $(SRCDIR)/server/base_server; \
+	@(cd $(SRCDIR)/server/etc/include; \
 	  echo Bumping Roxen version...; \
-	  build=`sed <roxen.pike -e'/__roxen_build__/s/[^0-9]*//gp' -ed|head -1`; \
+	  build=`sed <version.h -e'/__roxen_build__/s/[^0-9]*//gp' -ed|head -1`; \
 	  newbuild=`echo $$build 1+p|dc`; \
-	  sed <roxen.pike -e"/__roxen_build__/s/$$build/$$newbuild/" >roxen.pike.new; \
-	  checkbuild=`sed <roxen.pike.new -e'/__roxen_build__/s/[^0-9]*//gp' -ed|head -1`; \
+	  sed <roxen.pike -e"/__roxen_build__/s/$$build/$$newbuild/" >version.h.new; \
+	  checkbuild=`sed <version.h.new -e'/__roxen_build__/s/[^0-9]*//gp' -ed|head -1`; \
 	  if test "x$$newbuild" = "x$$checkbuild"; then \
-	    mv -f roxen.pike.new roxen.pike || exit 1; \
+	    mv -f version.h.new version.h || exit 1; \
 	    echo "Successfull bump to build $$newbuild."; \
 	  else \
 	    echo "Version bump failed: $$newbuild != $$checkbuild."; \
 	    exit 1; \
 	  fi; \
-	  version=`sed <roxen.pike -e'/__roxen_version__/s/[^.0-9]*//gp' -ed|head -1`; \
-	  cvs ci -m "Version bumped to $$version.$$newbuild by bump_version." roxen.pike || exit 1; \
-	  echo "Roxen $$version.$$newbuild" >../../VERSION; \
-	  cat ../../VERSION; \
+	  version=`sed <version.h -e'/__roxen_version__/s/[^.0-9]*//gp' -ed|head -1`; \
+	  cvs ci -m "Version bumped to $$version.$$newbuild by bump_version." version.h || exit 1; \
+	  echo "Roxen $$version.$$newbuild" >$(SRCDIR)/VERSION; \
+	  cat $(SRCDIR)/VERSION; \
 	)
 	@(cd $(SRCDIR); \
 	  echo Tagging...; \
