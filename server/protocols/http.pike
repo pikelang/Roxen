@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.138 1999/07/02 20:50:03 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.139 1999/07/04 18:32:20 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1124,6 +1124,7 @@ class MultiRangeWrapper
     string out = stored_data;
     int rlen, total = num_bytes;
     num_bytes -= strlen(out);
+    stored_data = "";
     foreach(ranges, array range)
     {
       rlen = range_info[0][0] - current_pos;
@@ -1158,8 +1159,9 @@ class MultiRangeWrapper
 	return out[..total-1];
       }
     }
-    if(separator != 2) {
-      // End boundary. Only write once.
+    if(!sizeof(ranges) && separator != 2) {
+      // End boundary. Only write once and only when
+      // no more ranges remain.
       separator = 2;
       out += "\r\n--" BOUND "--\r\n";
     }  
@@ -1169,7 +1171,6 @@ class MultiRangeWrapper
       stored_data = out[total..];
       return out[..total-1];
     }
-    stored_data = ""; // Very important. Ia.
     return out ; // We are finally done.
   }
   
@@ -1181,6 +1182,9 @@ class MultiRangeWrapper
      case "set_nonblocking":
       return 0;
 
+    case "query_fd":
+      return lambda() { return 0; };
+      
      default:
       return file[what];
     }
