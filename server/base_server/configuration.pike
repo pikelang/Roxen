@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.497 2001/11/27 18:06:44 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.498 2002/01/29 21:17:34 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -496,7 +496,7 @@ array(mixed) map_providers(string provides, string fun, mixed ... args)
 //! Maps the function "fun" over all matching provider modules.
 {
   array (RoxenModule) prov = get_providers(provides);
-  array error;
+  mixed error;
   array a=({ });
   mixed m;
   foreach(prov, RoxenModule mod)
@@ -505,9 +505,8 @@ array(mixed) map_providers(string provides, string fun, mixed ... args)
       continue;
     if(functionp(mod[fun]))
       error = catch(m=mod[fun](@args));
-    if(arrayp(error)) {
-      error[0] = "Error in map_providers(): "+error[0];
-      report_debug(describe_backtrace(error));
+    if(error) {
+      report_debug("Error in map_providers(): " + describe_backtrace(error));
     }
     else
       a += ({ m });
@@ -2585,11 +2584,14 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 
   if(module[id] && module[id] != me)
   {
-    if( module[id]->stop )
-      catch( module[id]->stop() );
-//     if( err = catch( disable_module( modname+"#"+id ) ) )
-//       report_error(LOCALE->error_disabling_module(moduleinfo->get_name(),
-//                                                   describe_backtrace(err)));
+    if( module[id]->stop ) {
+      if (err = catch( module[id]->stop() )) {
+	string bt=describe_backtrace(err);
+	report_error("disable_module(): " +
+		     LOC_M(44, "Error while disabling module %s%s"),
+		     descr, (bt ? ":\n"+bt : "\n"));
+      }
+    }
   }
 
   me->set_configuration( this_object() );
@@ -3194,7 +3196,7 @@ void low_init(void|int modules_already_enabled)
     array modules_to_process = indices( enabled_modules );
     string tmp_string;
 
-    array err;
+    mixed err;
     forcibly_added = ([]);
     enable_module_batch_msgs = 1;
     foreach( modules_to_process, tmp_string )
