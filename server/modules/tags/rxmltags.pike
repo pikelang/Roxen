@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.474 2004/12/07 15:04:17 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.475 2005/01/26 17:28:58 stewa Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2319,7 +2319,23 @@ class TagReplace
 	{
 	  case "word":
 	  default:
-	    result = replace(content,args->from,(args->to?args->to:""));
+	    if(args->first || args->last) {
+	      string res="";
+	      int first = (int)args->first;
+	      int last = (int)args->last;
+	      array a = content / args->from;
+	      for(int i=0; i< sizeof(a); i++) {
+		res += a[i];
+		if(i != sizeof(a)-1) {
+		  if((first && (i+i) <= first) || (last && sizeof(a)-i-1 <= last))
+		    res += (args->to || "");
+		  else
+		    res += args->from;
+		}
+	      }
+	      result = res;
+	    } else
+	      result = replace(content,args->from,(args->to?args->to:""));
 	    break;
 
 	  case "words":
@@ -7322,6 +7338,14 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  the remaining ones in the \"from\" list will be replaced with the
  empty string. All replacements are done in parallel, i.e. the result
  of one replacement is not replaced again with another.</p>
+</attr>
+
+<attr name='first' value='integer'>
+ <p>If specified, only replace the first number of specified occurances. Works only together with type='word'</p>
+</attr>
+
+<attr name='last' value='integer'>
+ <p>If specified, only replace the last number of specified occurances. Works only together with type='word'</p>
 </attr>
 
 <attr name='type' value='word|words' default='word'>
