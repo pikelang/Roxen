@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.46 2000/12/04 18:44:22 stewa Exp $
+ * $Id: Roxen.pmod,v 1.47 2000/12/04 22:49:26 nilsson Exp $
  *
  * Various helper functions.
  *
@@ -852,6 +852,8 @@ class ScopeRoxen {
      case "locale":
        NOCACHE(c->id);
        return roxenp()->locale->get();
+     case "path":
+       return c->id->misc->site_prefix_path || "";
      default:
        return RXML.nil;
     }
@@ -862,8 +864,8 @@ class ScopeRoxen {
     return ({"uptime", "uptime-days", "uptime-hours", "uptime-minutes",
 	     "hits-per-minute", "hits", "sent-mb", "sent",
              "sent-per-minute", "sent-kbit-per-second", "ssl-strength",
-              "pike-version", "version", "time", "server", "domain",
-	     "locale"});
+	     "pike-version", "version", "time", "server", "domain",
+	     "locale", "path"});
   }
 
   string _sprintf() { return "RXML.Scope(roxen)"; }
