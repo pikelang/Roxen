@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.64 1998/03/25 00:09:13 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.65 1998/03/25 01:26:35 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -563,7 +563,7 @@ private int parse_got(string s)
 void disconnect()
 {
   file = 0;
-  werror("DND\n");
+//   werror("DND\n");
   if(do_not_disconnect) {
     return;
   }
