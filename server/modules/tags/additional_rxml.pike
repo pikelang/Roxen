@@ -4,7 +4,9 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.23 2004/06/30 16:59:23 mast Exp $";
+#define _ok RXML_CONTEXT->misc[" _ok"]
+
+constant cvs_version = "$Id: additional_rxml.pike,v 1.24 2004/08/27 14:33:23 stewa Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -18,6 +20,140 @@ void create() {
 	 "blocked while it fetches the web page.");
 }
 
+#ifdef THREADS
+
+class AsyncHTTPClient {
+  int status;
+  object con;
+  Standards.URI url;
+  string path, query, req_data,method;
+  mapping request_headers;
+
+  Thread.Queue queue = Thread.Queue();
+
+  void do_method(string _method,
+		 string|Standards.URI _url,
+		 void|mapping query_variables,
+		 void|mapping _request_headers,
+		 void|Protocols.HTTP.Query _con, void|string _data)
+  {
+    if(!_con) {
+      con = Protocols.HTTP.Query();
+    }
+    else
+      con = _con;
+
+    method = _method;
+
+    if(!_request_headers)
+      request_headers = ([]);
+    else
+      request_headers = _request_headers;
+
+    req_data = _data;
+
+    if(stringp(_url))
+      url=Standards.URI(_url);
+    else
+      url = _url;
+
+#if constant(SSL.sslfile) 	
+    if(url->scheme!="http" && url->scheme!="https")
+      error("Protocols.HTTP can't handle %O or any other protocols than HTTP or HTTPS\n",
+	    url->scheme);
+    
+    con->https= (url->scheme=="https")? 1 : 0;
+#else
+    if(url->scheme!="http"	)
+      error("Protocols.HTTP can't handle %O or any other protocol than HTTP\n",
+	    url->scheme);
+    
+#endif
+    
+    if(!request_headers)
+      request_headers = ([]);
+    mapping default_headers = ([
+      "user-agent" : "Mozilla/4.0 compatible (Pike HTTP client)",
+      "host" : url->host ]);
+    
+    if(url->user || url->passwd)
+      default_headers->authorization = "Basic "
+	+ MIME.encode_base64(url->user + ":" +
+			     (url->password || ""));
+    request_headers = default_headers | request_headers;
+    
+    query=url->query;
+    if(query_variables && sizeof(query_variables))
+      {
+	if(query)
+	  query+="&"+Protocols.HTTP.http_encode_query(query_variables);
+	else
+	  query=Protocols.HTTP.http_encode_query(query_variables);
+      }
+    
+    path=url->path;
+    if(path=="") path="/";
+  }
+
+
+  string data() {
+    if(!con->ok)
+      return 0;
+    return con->data();
+  }
+ 
+  void req_ok() {
+    status = con->status;
+    // Wake up handler thread
+    queue->write("@");
+  }
+  
+  void req_fail() {
+    //werror("Insert HREF request failed or timed out.\n");
+    status = 0;
+    // Wake up handler thread
+    queue->write("@");
+  }
+
+
+  void run() {
+    /*
+    con->sync_request(url->host,url->port,
+		      method+" "+path+(query?("?"+query):"")+" HTTP/1.0",
+		      request_headers, req_data);
+    
+    */
+    con->set_callbacks(req_ok, req_fail);
+    con->async_request(url->host,url->port,
+		       method+" "+path+(query?("?"+query):"")+" HTTP/1.0",
+		       request_headers, req_data);
+    status = con->status;
+    queue->read();
+  }
+
+  void create(string method, mapping args) {
+    if(method == "POST") {
+      mapping vars = ([ ]);
+#if constant(roxen)
+      foreach( (args["post-variables"] || "") / ",", string var) {
+	array a = var / "=";
+	if(sizeof(a) == 2)
+	  vars[String.trim_whites(a[0])] = RXML.user_get_var(String.trim_whites(a[1]));
+      }
+#endif
+      do_method("POST", args->href, vars);
+    }
+    else
+      do_method("GET", args->href);
+
+    if(args->timeout)
+      con->timeout = (int) args->timeout;
+    
+  }
+  
+}
+#endif
+
 class TagInsertHref {
   inherit RXML.Tag;
   constant name = "insert";
@@ -30,11 +166,40 @@ class TagInsertHref {
       NOCACHE();
     else
       CACHE(60);
-    Protocols.HTTP q=Protocols.HTTP.get_url(args->href);
+
+    string method = "GET";
+    if(args->method && lower_case(args->method) == "post")
+      method = "POST";
+
+    object /*Protocols.HTTP|AsyncHTTPClient*/ q;
+
+#ifdef THREADS
+    q = AsyncHTTPClient(method, args);
+    q->run();
+#else
+    if(method == "POST") {
+      mapping vars = ([ ]);
+      foreach( (args["post-variables"] || "") / ",", string var) {
+	array a = var / "=";
+	if(sizeof(a) == 2)
+	  vars[String.trim_whites(a[0])] = RXML.user_get_var(String.trim_whites(a[1]));
+      }
+      q=Protocols.HTTP.post_url(args->href, vars);
+    }
+    else
+      q=Protocols.HTTP.get_url(args->href);
+#endif
+    
+    _ok = 1;
+    
     if(q && q->status>0 && q->status<400)
       return q->data();
+    
+    _ok = 0;
 
-    RXML.run_error(q ? q->status_desc + "\n": "No server response\n");
+    if(!args->silent)
+      RXML.run_error(q ? q->status_desc + "\n": "No server response\n");
+    return "";
   }
 }
 
@@ -255,7 +420,35 @@ constant tagdoc=([
  If provided the resulting page will get a zero cache time in the RAM cache.
  The default time is up to 60 seconds depending on the cache limit imposed by
  other RXML tags on the same page.</p>
-</attr>",
+</attr>
+
+<attr name='method' value='string' default='GET'><p>
+ Method to use when requesting the page. GET or POST.</p>
+</attr>
+
+<attr name='silent' value='string' ><p>
+ Do not print any error messages.</p>
+</attr>
+
+<attr name='timeout' value='int' ><p>
+ Timeout for the request in seconds. This is not available if your run the server without threads.</p>
+<ex-box>
+<insert href='http://www.somesite.com/news/' silent='silent' timeout='10' />
+<else>
+   Site did not respond within 10 seconds. Try again later.
+</else>
+</ex-box>
+</attr>
+
+<attr name='post-variables' value='\"variable=rxml variable[,variable2=rxml variable2,...]\"'><p>
+ Comma separated list of variables to send in a POST request.</p>
+<ex-box>
+<insert href='http://www.somesite.com/news/' 
+         method='POST' post-variables='action=var.action,data=form.data' />
+</ex-box> 
+</attr>
+
+",
 
 "sscanf":#"<desc type='cont'><p><short>
  Extract parts of a string and put them in other variables.</short> Refer to
