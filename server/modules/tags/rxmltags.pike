@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.403 2002/10/14 15:50:38 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.404 2002/10/15 09:21:31 wellhard Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5465,6 +5465,11 @@ constant tagdoc=([
 
 "&page.virtroot;":#"<desc type='entity'><p>
  The root of the present virtual filesystem, usually \"/\".
+</p></desc>",
+
+"&page.mountpoint;":#"<desc type='entity'><p>
+ The root of the present virtual filesystem without the ending slash,
+ usually \"\".
 </p></desc>",
 
 //  &page.virtfile; is same as &page.path; but deprecated since we want to

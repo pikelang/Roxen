@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.145 2002/09/24 15:54:18 mast Exp $
+// $Id: Roxen.pmod,v 1.146 2002/10/15 09:21:31 wellhard Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3075,6 +3075,9 @@ class ScopePage {
       case "pathinfo": return ENCODE_RXML_TEXT(c->id->misc->path_info, type);
       case "realfile": return ENCODE_RXML_TEXT(c->id->realfile, type);
       case "virtroot": return ENCODE_RXML_TEXT(c->id->virtfile, type);
+      case "mountpoint":
+	string s = c->id->virtfile || "";
+	return ENCODE_RXML_TEXT(s[sizeof(s)-1..sizeof(s)-1] == "/"? s[..sizeof(s)-2]: s, type); 
       case "virtfile": // Fallthrough from deprecated name.
       case "path": return ENCODE_RXML_TEXT(c->id->not_query, type);
       case "query": return ENCODE_RXML_TEXT(c->id->query, type);
@@ -3118,7 +3121,7 @@ class ScopePage {
   array(string) _indices(void|RXML.Context c) {
     if (!c) c = RXML_CONTEXT;
     array ind=indices(c->misc->scope_page) +
-      ({ "pathinfo", "realfile", "virtroot", "virtfile", "path", "query",
+      ({ "pathinfo", "realfile", "virtroot", "mountpoint", "virtfile", "path", "query",
 	 "url", "last-true", "language", "scope", "filesize", "self",
 	 "ssl-strength", "dir", "counter" });
     foreach(indices(converter), string def)
