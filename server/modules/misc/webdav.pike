@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.9 2004/03/16 13:58:37 grubba Exp $
+// $Id: webdav.pike,v 1.10 2004/03/23 16:48:48 mast Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.9 2004/03/16 13:58:37 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.10 2004/03/23 16:48:48 mast Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -75,7 +75,15 @@ class PatchPropertySetCmd
 
   mapping(string:mixed) execute(PropertySet context)
   {
-    return context->set_property(property_name, value);
+#ifdef REQUEST_TRACE
+    RequestID id = context->id;
+    SIMPLE_TRACE_ENTER (0, "Setting property %O to %O", property_name, value);
+#endif
+    mapping(string:mixed) res = context->set_property(property_name, value);
+    SIMPLE_TRACE_LEAVE (res ?
+			sprintf ("Got status %d: %O", res->error, res->rettext) :
+			"");
+    return res;
   }
 }
 
@@ -86,7 +94,15 @@ class PatchPropertyRemoveCmd(string property_name)
 
   mapping(string:mixed) execute(PropertySet context)
   {
-    return context->remove_property(property_name);
+#ifdef REQUEST_TRACE
+    RequestID id = context->id;
+    SIMPLE_TRACE_ENTER (0, "Removing property %O", property_name);
+#endif
+    mapping(string:mixed) res = context->remove_property(property_name);
+    SIMPLE_TRACE_LEAVE (res ?
+			sprintf ("Got status %d: %O", res->error, res->rettext) :
+			"");
+    return res;
   }
 }
 
@@ -100,11 +116,11 @@ mapping|int(-1..0) handle_webdav(RequestID id)
     //   If a server receives ill-formed XML in a request it MUST reject
     //   the entire request with a 400 (Bad Request).
     TRACE_LEAVE("Malformed XML.");
-    return Roxen.http_low_answer(400, "Malformed XML data.");
+    return Roxen.http_status(400, "Malformed XML data.");
   }
   if (!(<"COPY", "DELETE", "PROPFIND", "PROPPATCH">)[id->method]) {
     TRACE_LEAVE("Not implemented.");
-    return Roxen.http_low_answer(501, "Not implemented.");
+    return Roxen.http_status(501, "Not implemented.");
   }
 
   // RFC 2518 9.2:
@@ -118,7 +134,7 @@ mapping|int(-1..0) handle_webdav(RequestID id)
     if (zero_type(depth)) {
       TRACE_LEAVE(sprintf("Bad depth header: %O.",
 			  id->request_headers->depth));
-      return Roxen.http_low_answer(400, "Unsupported depth.");
+      return Roxen.http_status(400, "Unsupported depth.");
     }
   } else if (id->request_headers->depth) {
     // Depth header not supported in this case.
@@ -141,26 +157,26 @@ mapping|int(-1..0) handle_webdav(RequestID id)
   switch(id->method) {
   case "COPY":
     if (!id->request_headers->destination) {
-      return Roxen.http_low_answer(400, "COPY: Missing destination header.");
+      return Roxen.http_status(400, "COPY: Missing destination header.");
     }
     // Check that destination is on this virtual server.
     Standards.URI dest_uri;
     if (catch {
 	dest_uri = Standards.URI(id->request_headers->destination);
       }) {
-      return Roxen.http_low_answer(400,
-				   sprintf("COPY: Bad destination header:%O.",
-					   id->request_headers->destination));
+      return Roxen.http_status(400,
+			       sprintf("COPY: Bad destination header:%O.",
+				       id->request_headers->destination));
     }
     if ((dest_uri->scheme != id->port_obj->prot_name) ||
 	!(<id->misc->host, id->port_obj->ip, gethostname()>)[dest_uri->host] ||
 	dest_uri->port != id->port_obj->port) {
-      return Roxen.http_low_answer(400,
-				   sprintf("COPY: Bad destination:%O != %s://%s:%d/.",
-					   id->request_headers->destination,
-					   id->port_obj->prot_name,
-					   id->port_obj->ip,
-					   id->port_obj->port));
+      return Roxen.http_status(400,
+			       sprintf("COPY: Bad destination:%O != %s://%s:%d/.",
+				       id->request_headers->destination,
+				       id->port_obj->prot_name,
+				       id->port_obj->ip,
+				       id->port_obj->port));
     }
     extras = ({ dest_uri->path });
     if (xml_data) {
@@ -178,7 +194,7 @@ mapping|int(-1..0) handle_webdav(RequestID id)
       Parser.XML.Tree.Node prop_behav_node =
 	xml_data->get_first_element("DAV:propertybehavior", 1);
       if (!prop_behav_node) {
-	return Roxen.http_low_answer(400, "Missing DAV:propertybehavior.");
+	return Roxen.http_status(400, "Missing DAV:propertybehavior.");
       }
       /* Valid children of <DAV:propertybehavior> are
        *   <DAV:keepalive>	(12.12.1)
@@ -189,7 +205,7 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 	switch(n->get_full_name()) {
 	case "DAV:omit":
 	  if (propertybehavior[0] > 0) {
-	    return Roxen.http_low_answer(400, "Conflicting DAV:propertybehavior.");
+	    return Roxen.http_status(400, "Conflicting DAV:propertybehavior.");
 	  }
 	  propertybehavior[0] = -1;
 	  break;
@@ -199,10 +215,10 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 	      propertybehavior[href->value_of_node()] = 1;
 	    } else if (href->mNodeType == Parser.XML.Tree.XML_TEXT) {
 	      if (href->get_text() != "*"){
-		return Roxen.http_low_answer(400, "Syntax error in DAV:keepalive.");
+		return Roxen.http_status(400, "Syntax error in DAV:keepalive.");
 	      }
 	      if (propertybehavior[0] < 0) {
-		return Roxen.http_low_answer(400, "Conflicting DAV:propertybehavior.");
+		return Roxen.http_status(400, "Conflicting DAV:propertybehavior.");
 	      }
 	      propertybehavior[0] = 1;
 	    }
@@ -230,14 +246,14 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 		   return 0;
 		 };
     // The multi status will be empty if everything went well.
-    empty_result = http_result(204);
+    empty_result = Roxen.http_status(204);
     break;
   case "PROPFIND":	// Get meta data.
     if (xml_data) {
       Parser.XML.Tree.Node propfind =
 	xml_data->get_first_element("DAV:propfind", 1);
       if (!propfind) {
-	return Roxen.http_low_answer(400, "Missing DAV:propfind.");
+	return Roxen.http_status(400, "Missing DAV:propfind.");
       }
       /* Valid children of <DAV:propfind> are
        *   <DAV:propname />
@@ -250,7 +266,7 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 	switch(prop->get_full_name()) {
 	case "DAV:propname":
 	  if (recur_func)
-	    return Roxen.http_low_answer(400, "Bad DAV request (23.3.2.1).");
+	    return Roxen.http_status(400, "Bad DAV request (23.3.2.1).");
 	  recur_func = lambda(string path, string ignored, int d,
 			      RoxenModule module,
 			      MultiStatus stat, RequestID id) {
@@ -262,7 +278,7 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 	  break;
 	case "DAV:allprop":
 	  if (recur_func)
-	    return Roxen.http_low_answer(400, "Bad DAV request (23.3.2.1).");
+	    return Roxen.http_status(400, "Bad DAV request (23.3.2.1).");
 	  recur_func = lambda(string path, string ignored, int d,
 			      RoxenModule module,
 			      MultiStatus stat, RequestID id,
@@ -276,7 +292,7 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 	  break;
 	case "DAV:prop":
 	  if (recur_func)
-	    return Roxen.http_low_answer(400, "Bad DAV request (23.3.2.1).");
+	    return Roxen.http_status(400, "Bad DAV request (23.3.2.1).");
 	  recur_func = lambda(string path, string ignored, int d,
 			      RoxenModule module,
 			      MultiStatus stat, RequestID id,
@@ -325,7 +341,7 @@ mapping|int(-1..0) handle_webdav(RequestID id)
     Parser.XML.Tree.Node propupdate =
       xml_data->get_first_element("DAV:propertyupdate", 1);
     if (!propupdate) {
-      return Roxen.http_low_answer(400, "Missing DAV:propertyupdate.");
+      return Roxen.http_status(400, "Missing DAV:propertyupdate.");
     }
     /* Valid children of <DAV:propertyupdate> are any combinations of
      *   <DAV:set><DAV:prop>{propertylist}*</DAV:prop></DAV:set>
@@ -345,7 +361,7 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 	  cmd->get_first_element("DAV:prop", 1);
 	if (!prop) {
 	  TRACE_LEAVE("Bad DAV request.");
-	  return Roxen.http_low_answer(400, "Bad DAV request (no properties specified).");
+	  return Roxen.http_status(400, "Bad DAV request (no properties specified).");
 	}
 	if (cmd->get_full_name() == "DAV:set") {
 	  instructions += map(prop->get_children(), PatchPropertySetCmd);
@@ -362,7 +378,7 @@ mapping|int(-1..0) handle_webdav(RequestID id)
     }
     if (!sizeof(instructions)) {
       TRACE_LEAVE("Bad DAV request.");
-      return Roxen.http_low_answer(400, "Bad DAV request (23.3.2.2).");
+      return Roxen.http_status(400, "Bad DAV request (23.3.2.2).");
     }
     recur_func = lambda(string path, string ignored, int d, RoxenModule module,
 			MultiStatus stat, RequestID id,
@@ -379,7 +395,7 @@ mapping|int(-1..0) handle_webdav(RequestID id)
   }
   if (!recur_func) {
     TRACE_LEAVE("Bad DAV request.");
-    return Roxen.http_low_answer(400, "Bad DAV request (23.3.2.2).");
+    return Roxen.http_status(400, "Bad DAV request (23.3.2.2).");
   }
   // FIXME: Security, DoS, etc...
   MultiStatus result = MultiStatus();
@@ -448,7 +464,7 @@ mapping|int(-1..0) handle_webdav(RequestID id)
   }
   TRACE_LEAVE("DAV request done.");
   if (result->is_empty()) {
-    return empty_result || http_result(404);
+    return empty_result || Roxen.http_status(404);
   }
   return result->http_answer();
 }
