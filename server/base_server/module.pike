@@ -1,4 +1,6 @@
-/* $Id: module.pike,v 1.79 2000/02/14 09:20:00 per Exp $ */
+/* $Id: module.pike,v 1.80 2000/02/16 07:09:55 per Exp $ */
+
+#include <module_constants.h>
 #include <module.h>
 #include <request_trace.h>
 
@@ -11,6 +13,19 @@ constant module_type   = MODULE_ZERO;
 constant module_name   = "Unnamed module";
 constant module_doc    = "Undocumented";
 constant module_unique = 1;
+
+/* These functions exists in here because otherwise the messages in
+ * the event log does not always end up in the correct
+ * module/configuration.  And the reason for that is that if the
+ * messages are logged from subclasses in the module, the DWIM in
+ * roxenlib.pike cannot see that they are logged from a module. This
+ * solution is not really all that beatiful, but it works. :-)
+ */
+void report_fatal( mixed ... args )  { predef::report_fatal( @args );  }
+void report_error( mixed ... args )  { predef::report_error( @args );  }
+void report_notice( mixed ... args ) { predef::report_notice( @args ); }
+void report_debug( mixed ... args )  { predef::report_debug( @args );  }
+
 
 private string _module_identifier;
 string module_identifier()
