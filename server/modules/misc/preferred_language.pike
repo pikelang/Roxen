@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.21 2001/10/09 08:35:55 jhs Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.22 2002/08/12 13:32:36 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -140,10 +140,12 @@ class TagEmitLanguages {
     else
       langs=defaults;
 
-    function(string:string) localized=
-      [function(string:string)]language_low( ([object(PrefLang)]id
-					      ->misc->pref_languages)
-					     ->get_language()||"eng" )->language;
+    object locale_obj =
+      language_low(( [object(PrefLang)] id->misc->pref_languages)
+		   ->get_language() || "eng");
+    function(string:string) localized =
+      locale_obj && [function(string:string)] locale_obj->language;
+    
 
     string url=Roxen.strip_prestate(Roxen.strip_config(id->raw_url));
     array(string) conf_langs=Array.map(indices(id->config) & languages,
@@ -151,13 +153,16 @@ class TagEmitLanguages {
 
     array res=({});
     foreach(langs, string lang) {
-      array(string) lid=[array(string)]([object]roxen->language_low(lang))->id();
+      array(string) lid =
+	(locale_obj && [array(string)] locale_obj->id()) ||
+	({ lang, "Unknown", "Unknown" });
+      
       res+=({ (["code":lid[0],
 		"en":lid[1],
 		"local":lid[2],
 		"preurl":Roxen.add_pre_state(url, id->prestate-aggregate_multiset(@languages)+(<lang>)),
 		"confurl":Roxen.add_config(url, conf_langs+({lang}), id->prestate),
-		"localized":localized(lang) ]) });
+		"localized": (localized && localized(lang)) || "Unknown" ]) });
     }
     return res;
   }
