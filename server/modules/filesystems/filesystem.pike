@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.133 2004/05/10 13:53:10 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.134 2004/05/10 14:46:39 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1212,31 +1212,12 @@ mixed find_file( string f, RequestID id )
                                 "<h1>Permission to 'MOVE' files denied</h1>");
     }
 
-    // FIXME: Ought to be done in the protocol module.
-    string new_uri = id->request_headers->destination ||
-      id->misc["new-uri"] || "";
-
+    string new_uri = id->misc["new-uri"] || "";
     if (new_uri == "") {
       id->misc->error_code = 405;
       errors++;
       TRACE_LEAVE("MOVE: No dest file");
       return 0;
-    }
-    int div = search(new_uri, "/");
-    if ((div > 0) && (new_uri[div-1] == ':')) {
-      // Protocol specification present.
-      new_uri = new_uri[div..];
-    }
-    if (has_prefix(new_uri, "//")) {
-      // Address specification present.
-      div = search(new_uri, "/", 2);
-      if (div > 0) {
-	new_uri = new_uri[div..];
-      } else {
-	new_uri = "/";
-      }
-    } else {
-      new_uri = combine_path(URI + "/../", new_uri);
     }
 
     // FIXME: The code below doesn't allow for this module being overloaded.
@@ -1252,22 +1233,6 @@ mixed find_file( string f, RequestID id )
 	FILTER_INTERNAL_FILE (moveto, id)) {
       id->misc->error_code = 405;
       TRACE_LEAVE("MOVE to or from internal file is disallowed");
-      return 0;
-    }
-
-    size = _file_size(moveto,id);
-
-    if(!query("delete") && size != -1)
-    {
-      id->misc->error_code = 405;
-      TRACE_LEAVE("MOVE disallowed (DELE disabled, can't overwrite file)");
-      return 0;
-    }
-
-    if(size < -1)
-    {
-      id->misc->error_code = 405;
-      TRACE_LEAVE("MOVE: Cannot overwrite directory");
       return 0;
     }
 
@@ -1287,7 +1252,46 @@ mixed find_file( string f, RequestID id )
       return ret;
     }
 
+    size = _file_size(moveto,id);
+
     SETUID_TRACE("Moving file", 0);
+
+    if (size != -1) {
+      // Destination exists.
+
+      Overwrite overwrite =
+	id->request_headers->overwrite?
+	(lower_case(id->request_headers->overwrite) == "t"?
+	 DO_OVERWRITE:NEVER_OVERWRITE):MAYBE_OVERWRITE;
+      if (overwrite == NEVER_OVERWRITE) {
+	privs = 0;
+	TRACE_LEAVE("MOVE disallowed (overwrite header:F).");
+	return Roxen.http_status(412);
+      }
+      if(!query("delete"))
+      {
+	privs = 0;
+	id->misc->error_code = 405;
+	TRACE_LEAVE("MOVE disallowed (DELE disabled)");
+	return 0;
+      }
+      
+      if ((overwrite == DO_OVERWRITE) || (size > -1)) {
+	int code = recurse_delete_files(new_uri,
+					id->get_multi_status()->
+					prefix(id->url_base() +
+					       mountpoint[1..]), id);
+	if (code > 1) {
+	  privs = 0;
+	  TRACE_LEAVE("MOVE: Recursive delete failed.");
+	  return Roxen.http_status(412);
+	}
+      } else {
+	privs = 0;
+	TRACE_LEAVE("MOVE: Cannot overwrite directory");
+	return Roxen.http_status(412);
+      }
+    }
 
     code = mv(f, decode_path(moveto));
     privs = 0;
@@ -1305,14 +1309,14 @@ mixed find_file( string f, RequestID id )
     if(!code)
     {
       id->misc->error_code = 403;
-      TRACE_LEAVE("MOVE: Move failed");
+      SIMPLE_TRACE_LEAVE("MOVE: Move failed (errno: %d)", errno());
       TRACE_LEAVE("Failure");
       return 0;
     }
     TRACE_LEAVE("MOVE: Success");
     TRACE_LEAVE("Success");
-    return Roxen.http_string_answer("Ok");
-
+    if (size != -1) return Roxen.http_status(204);
+    return Roxen.http_status(201);
 
   case "DELETE":
     if (size==-1) {
