@@ -893,11 +893,14 @@ class List
       }
     if( do_goto )
     {
-      id->misc->moreheads = ([
-        "Location":id->raw_url+"?random="+random(4949494)+"#"+path(),
-      ]);
-      if( id->misc->defines )
-        id->misc->defines[ " _error" ] = 302;
+      if( !id->misc->do_not_goto )
+      {
+        id->misc->moreheads = ([
+          "Location":id->raw_url+"?random="+random(4949494)+"#"+path(),
+        ]);
+        if( id->misc->defines )
+          id->misc->defines[ " _error" ] = 302;
+      }
     }
     set( l ); // We are done. :-)
   }
