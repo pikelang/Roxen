@@ -267,6 +267,7 @@ worldmap binary
 /server/modules/tags/emit_timerange.pike foreign_ident
 /server/modules/tags/foldlist.pike foreign_ident
 /server/modules/tags/html_wash.pike foreign_ident
+/server/modules/tags/id3tag.pike foreign_ident
 /server/modules/tags/indirect_href.pike foreign_ident
 /server/modules/tags/javascript_support/javascript_support.pike foreign_ident
 /server/modules/tags/killframe.pike foreign_ident
