@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.94 2000/07/12 18:57:34 mast Exp $
+//! $Id: module.pmod,v 1.95 2000/08/04 15:57:53 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -225,11 +225,12 @@ class Tag
       else frame = `() (args, Void);
     else frame = `() (args, Void);
 
-    if (!zero_type (frame->raw_tag_text))
+    if (!zero_type (frame->raw_tag_text)) {
       if (splice_args)
 	frame->raw_tag_text =
-	  t_xml->format_tag (parser->tag_name(), args, content, flags);
+	  t_xml->format_tag (parser->tag_name(), args, content, flags | FLAG_RAW_ARGS);
       else frame->raw_tag_text = parser->current_input();
+    }
 
     mixed err = catch {
       frame->_eval (parser, args, content);
@@ -1292,6 +1293,15 @@ constant FLAG_UNPARSED		= 0x00001000;
 //! never be set in Tag.flags, but it's useful when creating frames
 //! directly.
 
+constant FLAG_RAW_ARGS		= 0x00002000;
+//! Special flag to TXml.format_tag(); only defined here as a
+//! placeholder. When this is given to TXml.format_tag(), it only
+//! encodes the argument quote character with the "Roxen encoding"
+//! when writing argument values, instead of encoding with entity
+//! references. It's intended for reformatting a tag which has been
+//! parsed by Parser.HTML() (or parse_html()) but hasn't been
+//! processed further.
+
 //! The following flags specifies whether certain conditions must be
 //! met for a cached frame to be considered (if RXML.Frame.is_valid()
 //! is defined). They may be read directly after do_return() returns.
@@ -1619,7 +1629,7 @@ class Frame
 	  fatal_error ("raw_tag_text must have a string value.\n");
 	if (mixed err = catch {
 #endif
-	  return t_text (PEnt)->eval (this_object()->raw_tag_text, ctx, empty_tag_set);
+	  return t_xml (PEnt)->eval (this_object()->raw_tag_text, ctx, empty_tag_set);
 #ifdef MODULE_DEBUG
 	}) {
 	  if (objectp (err) && ([object] err)->thrown_at_unwind)
@@ -3086,15 +3096,20 @@ static class TXml
 		     void|string content, void|int flags)
   //! Returns a formatted XML tag. If tag is a Tag object, the flags
   //! FLAG_COMPAT_PARSE and FLAG_EMPTY_ELEMENT are heeded when
-  //! formatting empty element tags.
+  //! formatting empty element tags. The special flag FLAG_RAW_ARGS
+  //! are used to decide the formatting of arguments.
   {
     string tagname;
     if (objectp (tag)) tagname = tag->name, flags = tag->flags;
     else tagname = tag;
     string res = "<" + tagname;
     if (args)
-      foreach (indices (args), string arg)
-	res += " " + arg + "=\"" + Roxen->html_encode_string (args[arg]) + "\"";
+      if (flags & FLAG_RAW_ARGS)
+	foreach (indices (args), string arg)
+	  res += " " + arg + "=\"" + replace (args[arg], "\"", "\"'\"'\"") + "\"";
+      else
+	foreach (indices (args), string arg)
+	  res += " " + arg + "=" + Roxen->html_encode_tag_value (args[arg]);
     if (content)
       res += ">" + content + "</" + tag->name + ">";
     else
