@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.23 2000/09/28 03:33:57 mast Exp $
+// $Id: module.pmod,v 1.24 2000/09/28 03:40:33 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -209,7 +209,10 @@ class Variable
   void add_warning( string to )
   //! Like set_warning, but adds to the current warning, if any.
   {
-    set_warning( (get_warnings()||"") + to );
+    if(!to)
+      set_warning( 0 );
+    else
+      set_warning( (get_warnings()||"") + to );
   }
 
   int set( mixed to )
