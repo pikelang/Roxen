@@ -2,7 +2,11 @@ AC_REVISION("$Id")
 
 AC_INIT(Makefile.in)
 
+AC_CONFIG_HEADER(config.h)
+
 AC_PROG_CC
+
+AC_CHECK_HEADERS(unistd.h)
 
 AC_CHECK_FUNCS(crypt)
 
