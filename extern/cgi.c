@@ -1,5 +1,5 @@
 /*
- * $Id: cgi.c,v 1.35 1998/12/08 19:44:07 grubba Exp $
+ * $Id: cgi.c,v 1.36 1998/12/08 20:55:30 grubba Exp $
  *
  * CGI-wrapper for Roxen.
  *
@@ -547,7 +547,11 @@ int main(int argc, char **argv)
     if(re <= 0)
     {
 #ifdef DEBUG
-      perror("read failed");
+      if (re < 0) {
+	perror("read failed");
+      } else {
+	fprintf(stderr, "read EOF\n");
+      }
 #endif
       if(!raw) parse_and_send_headers(NULL);
       kill(pid, 9);
