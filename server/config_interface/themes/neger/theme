@@ -1,0 +1,34 @@
+<!-- -*- html -*- -->
+
+<theme-set what=selected-indicator to=neger-pyssling.gif themefile />
+
+<theme-set what=logo      to='roxenlogo-neger.gif' themefile />
+
+<theme-set what=fgcolor	  to='#000000'/>
+<theme-set what=bgcolor	  to='#8B4513'/>
+<theme-set what=fade1	  to='#FF7F24'/> <!-- content-bg -->
+<theme-set what=fade2	  to='#8B2323'/> <!-- subtabs-dimcolor -->
+<theme-set what=fade3	  to='#CD661D'/> <!-- toptabs-bgcolor -->
+<theme-set what=fade4	  to='#000000'/> <!-- top-fgcolor -->
+<theme-set what=linkcolor to='#A52A2A'/>
+<theme-set what=toptabs-dimtextcolor to='#501010'/>
+<theme-set what=subtabs-dimtextcolor to='#501010'/>
+
+<!-- <theme-set what=toptabs-selcolor     to='#'/> -->
+<!-- <theme-set what=toptabs-seltextcolor to='#'/> -->
+<!-- <theme-set what=toptabs-dimtextcolor to='#'/> -->
+<!-- <theme-set what=obox-titlefg         to='#'/> -->
+<!-- <theme-set what=obox-bodybg          to='#'/> -->
+<!-- <theme-set what=obox-bodyfg          to='#'/> -->
+<!-- <theme-set what=subtabs-bgcolor      to='#'/> -->
+<!-- <theme-set what=subtabs-seltextcolor to='#'/> -->
+<!-- <theme-set what=subtabs-dimtextcolor to='#'/> -->
+<!-- <theme-set what=content-titlebg      to='#'/> -->
+<!-- <theme-set what=content-titlefg      to='#'/> -->
+
+<define preparse variable=var.neger><random
+>neger-mellan
+guran-kjol
+guran-anim-trans</random>.gif</define>
+
+<theme-set what=left-image to='&var.neger;' themefile />
