@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.10 1999/08/08 14:17:53 grubba Exp $
+ * $Id: ftp.pike,v 2.11 1999/10/08 18:23:54 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -87,7 +87,7 @@
 
 #define FTP2_TIMEOUT	(5*60)
 
-#define Query(X) conf->variables[X][VAR_VALUE]
+// #define Query(X) conf->variables[X][VAR_VALUE]
 
 #ifdef FTP2_DEBUG
 
@@ -1439,13 +1439,18 @@ class FTPSession
   string local_addr;
   int local_port;
 
+  // The listen port object
+  object port_obj;
+
   /*
    * Misc
    */
 
   static private int check_shell(string shell)
   {
-    if (Query("shells") != "") {
+    // FIXME: Should the shell database be protocol specific or
+    // virtual-server specific?
+    if (port_obj->query_option("shells") != "") {
       // FIXME: Hmm, the cache will probably be empty almost always
       // since it's part of the FTPsession object.
       // Oh, well, shouldn't matter much unless you have *lots* of
@@ -1454,7 +1459,7 @@ class FTPSession
       if (!allowed_shells) {
 	object(Stdio.File) file = Stdio.File();
 
-	if (file->open(Query("shells"), "r")) {
+	if (file->open(port_obj->query_option("shells"), "r")) {
 	  allowed_shells =
 	    aggregate_multiset(@(Array.map(file->read(0x7fffffff)/"\n",
 					   lambda(string line) {
@@ -1466,7 +1471,7 @@ class FTPSession
 #endif /* FTP2_DEBUG */
 	} else {
 	  perror(sprintf("ftp.pike: Failed to open shell database (\"%s\")\n",
-			 Query("shells")));
+			 port_obj->query_option("shells")));
 	  return(0);
 	}
       }
@@ -2364,10 +2369,10 @@ class FTPSession
 
   void ftp_REIN(string|int args)
   {
-    if (user && Query("ftp_user_session_limit") > 0) {
+    if (user && port_obj->query_option("ftp_user_session_limit") > 0) {
       // Logging out...
       DWRITE(sprintf("FTP2: Decreasing # of sessions for user %O\n", user));
-      conf->misc->ftp_sessions[user]--;
+      port_obj->ftp_sessions[user]--;
     }
 
     master_session->auth = 0;
@@ -2392,10 +2397,10 @@ class FTPSession
 
   void ftp_USER(string args)
   {
-    if (user && Query("ftp_user_session_limit") > 0) {
+    if (user && port_obj->query_option("ftp_user_session_limit") > 0) {
       // Logging out...
       DWRITE(sprintf("FTP2: Decreasing # of sessions for user %O\n", user));
-      conf->misc->ftp_sessions[user]--;
+      port_obj->ftp_sessions[user]--;
     }
     auth = 0;
     user = args;
@@ -2406,7 +2411,7 @@ class FTPSession
     if ((< 0, "ftp", "anonymous" >)[user]) {
       master_session->not_query = "Anonymous";
       user = 0;
-      if (Query("anonymous_ftp")) {
+      if (port_obj->query_option("anonymous_ftp")) {
 	logged_in = -1;
 #if 0
 	send(200, ({ "Anonymous ftp, at your service" }));
@@ -2421,22 +2426,22 @@ class FTPSession
 	conf->log(([ "error":403 ]), master_session);
       }
     } else {
-      if (Query("ftp_user_session_limit") > 0) {
-	if (!conf->misc->ftp_sessions) {
-	  conf->misc->ftp_sessions = ([]);
+      if (port_obj->query_option("ftp_user_session_limit") > 0) {
+	if (!port_obj->ftp_sessions) {
+	  port_obj->ftp_sessions = ([]);
 	}
 	DWRITE(sprintf("FTP2: Increasing # of sessions for user %O\n", user));
-	if (conf->misc->ftp_sessions[user]++ >=
-	    Query("ftp_user_session_limit")) {
+	if (port_obj->ftp_sessions[user]++ >=
+	    port_obj->query_option("ftp_user_session_limit")) {
 	  // Session limit exceeded.
 	  send(530, ({
 	    sprintf("Concurrent session limit (%d) exceeded for user \"%s\".",
-		    Query("ftp_user_session_limit"), user)
+		    port_obj->query_option("ftp_user_session_limit"), user)
 	  }));
 	  conf->log(([ "error":403 ]), master_session);
 
 	  DWRITE(sprintf("FTP2: Increasing # of sessions for user %O\n",user));
-	  conf->misc->ftp_sessions[user]--;
+	  port_obj->ftp_sessions[user]--;
 
 	  user = 0;	  
 	  return;
@@ -2452,7 +2457,7 @@ class FTPSession
   void ftp_PASS(string args)
   {
     if (!user) {
-      if (Query("anonymous_ftp")) {
+      if (port_obj->query_option("anonymous_ftp")) {
 	send(230, ({ "Guest login ok, access restrictions apply." }));
 	master_session->method = "LOGIN";
 	master_session->not_query = "Anonymous User:"+args;
@@ -2489,7 +2494,7 @@ class FTPSession
 
     if (!master_session->auth ||
 	(master_session->auth[0] != 1)) {
-      if (!Query("guest_ftp")) {
+      if (!port_obj->query_option("guest_ftp")) {
 	send(530, ({ sprintf("User %s access denied.", user) }));
 	conf->log(([ "error":401 ]), master_session);
 	master_session->auth = 0;
@@ -2504,7 +2509,7 @@ class FTPSession
 
     // Authentication successful
 
-    if (!Query("named_ftp") ||
+    if (!port_obj->query_option("named_ftp") ||
 	!check_shell(master_session->misc->shell)) {
       send(530, ({ "You are not allowed to use named-ftp.",
 		   "Try using anonymous, or check /etc/shells" }));
@@ -3339,11 +3344,11 @@ class FTPSession
 
   void destroy()
   {
-    if (Query("ftp_user_session_limit") > 0) {
+    if (port_obj->query_option("ftp_user_session_limit") > 0) {
       if (user) {
 	// Logging out...
 	DWRITE(sprintf("FTP2: Decreasing # of sessions for user %O\n", user));
-	conf->misc->ftp_sessions[user]--;
+	port_obj->ftp_sessions[user]--;
       } else {
 	DWRITE("Exiting with no user.\n");
       }
@@ -3355,11 +3360,18 @@ class FTPSession
 
   void create(object fd, object c)
   {
-    conf = c;
+    port_obj = c;
+
+    // FIXME: Only supports one configuration!
+    conf = port_obj->urls[port_obj->sorted_urls[0]]->conf;
+
+    werror("FTP: conf:%O\n"
+	   "FTP:urls:%O\n",
+	   mkmapping(indices(conf), values(conf)), port_obj->urls);
 
     master_session = RequestID2();
     master_session->remoteaddr = (fd->query_address()/" ")[0];
-    master_session->conf = c;
+    master_session->conf = conf;
     master_session->my_fd = fd;
     ::create(fd, got_command, 0, con_closed, ([]));
 
@@ -3369,11 +3381,22 @@ class FTPSession
 
     call_out(timeout, FTP2_TIMEOUT);
 
-    string s = replace(Query("FTPWelcome"),
-		       ({ "$roxen_version", "$roxen_build", "$full_version",
-			  "$pike_version", "$ident", }),
-		       ({ roxen->__roxen_version__, roxen->__roxen_build__,
-			  roxen->real_version, version(), roxen->version() }));
+    string s = c->query_option("FTPWelcome");
+
+    if (!s) {
+      s =
+	"              +-------------------------------------------------\n"
+	"              +-- Welcome to the Roxen Challenger FTP server ---\n"
+	"              +-------------------------------------------------\n";
+      werror("FTP: Setting the default welcome message for ftp to:\n" + s);
+      port_obj->set_option_default("FTPWelcome", s);
+    }
+
+    s = replace(s,
+		({ "$roxen_version", "$roxen_build", "$full_version",
+		   "$pike_version", "$ident", }),
+		({ roxen->__roxen_version__, roxen->__roxen_build__,
+		   roxen->real_version, version(), roxen->version() }));
 
     send(220, s/"\n", 1);
   }
@@ -3382,17 +3405,9 @@ class FTPSession
 void create(object f, object c)
 {
   if (f) {
-    if (!c->variables["ftp_user_session_limit"]) {
-      // Backward compatibility...
-      c->variables["ftp_user_session_limit"] = ([]);
-    }
-    if (!c->extra_statistics->ftp) {
-      c->extra_statistics->ftp = ([ "sessions":1 ]);
-    } else {
-      c->extra_statistics->ftp->sessions++;
-    }
-    c->misc->ftp_users++;
-    c->misc->ftp_users_now++;
+    c->sessions++;
+    c->ftp_users++;
+    c->ftp_users_now++;
     FTPSession(f, c);
   }
 }
