@@ -40,7 +40,8 @@ Tvns Böker		The German language-module.
 
 Francesco Chemolli	The Postgres and Msql database modules and
 			the Italian language-module.
-
+			ABS - Anti-Block-System
+			
 Janne Edelman		The Finnish language-module.
 
 Kai Garlipp		ISO-8859-1 entity support for the graphical text
