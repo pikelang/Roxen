@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.392 2000/01/18 04:42:31 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.393 2000/01/20 18:13:25 grubba Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -3087,31 +3087,37 @@ array(int) parse_since(string date)
   sscanf(lower_case(date+"; length="), "%*s, %s; length=%d", dat, length);
 
   if(!(t=since_cache[dat])) {
-    int day, year, month, hour, minute, second, length;
+    int day, year = -1, month, hour, minute, second;
     string m;
     if(sscanf(dat, "%d-%s-%d %d:%d:%d", day, m, year, hour, minute, second)>2)
     {
       month=months[m];
     } else if(dat[2]==',') { // I bet a buck that this never happens
       sscanf(dat, "%*s, %d %s %d %d:%d:%d", day, m, year, hour, minute, second);
-      if(year >= 1900) year -= 1900;
       month=months[m];
     } else if(!(int)dat) {
       sscanf(dat, "%*[^ ] %s %d %d:%d:%d %d", m, day, hour, minute, second, year);
       month=months[m];
-      year -= 1900;
     } else {
       sscanf(dat, "%d %s %d %d:%d:%d", day, m, year, hour, minute, second);
       month=months[m];
-      if(year >= 1900) year -= 1900;
     }
 
-    if(year)
+    if(year >= 0) {
+      // Fugde year to be localtime et al compatible.
+      if (year < 60) {
+	// Assume year 0 - 59 is really year 2000 - 2059.
+	// Can't people stop using two digit years?
+	year += 100;
+      } else if (year >= 1900) {
+	year -= 1900;
+      }
       catch {
 	t = mktime(second, minute, hour, day, month, year, -1, 0);
       };
-    else
+    } else {
       report_debug("Could not parse \""+date+"\" to a time int.");
+    }
 
     if (sizeof(since_cache) > MAX_SINCE_CACHE)
       since_cache = ([]);
