@@ -7,27 +7,27 @@
 #endif
 #endif
 #ifndef IN_INSTALL
-// string cvs_version = "$Id: newdecode.pike,v 1.17 1999/12/13 04:23:00 mast Exp $";
+// string cvs_version = "$Id: newdecode.pike,v 1.18 1999/12/27 20:55:58 mast Exp $";
 #endif
 
 #include <roxen.h>
 
 #define ENC_ADD(X)do{if(arrayp(res->res))res->res+=({(X)});else res->res=(X); return "foo";}while(0)
-#define SIMPLE_DECODE(X,Y) private string X(string foo, mapping m, string s, mapping res) { ENC_ADD( Y );}
+#define SIMPLE_DECODE(X,Y) private string X(Parser.HTML p, mapping m, string s, mapping res) { ENC_ADD( Y );}
 
 SIMPLE_DECODE(decode_int, (int)s );
 SIMPLE_DECODE(decode_module, s );
 SIMPLE_DECODE(decode_float, (float)s );
 SIMPLE_DECODE(decode_string, http_decode_string(s));
 
-private string decode_list(string foo, mapping m, string s, mapping res)
+private string decode_list(Parser.HTML p, mapping m, string s, mapping res)
 {
   mapping myres = ([ "res":({}) ]);
   parse(s, myres);
   ENC_ADD( mkmultiset(myres->res) );
 }
 
-private string decode_array(string foo, mapping m, string s, mapping res)
+private string decode_array(Parser.HTML p, mapping m, string s, mapping res)
 {
   mapping myres = ([ "res":({}) ]);
   parse(s, myres); 
@@ -35,14 +35,14 @@ private string decode_array(string foo, mapping m, string s, mapping res)
 }
 
 
-private string decode_mapping(string foo, mapping m, string s, mapping res)
+private string decode_mapping(Parser.HTML p, mapping m, string s, mapping res)
 {
   mapping myres = ([ "res":({ }) ]);
   parse(s, myres);
   ENC_ADD( aggregate_mapping(@myres->res) );
 }
 
-private string decode_variable(string foo, mapping m, string s, mapping res)
+private string decode_variable(Parser.HTML p, mapping m, string s, mapping res)
 {
   mapping mr;
   mr = ([ "res":0 ]);
@@ -71,7 +71,7 @@ void parse(string s, mapping mr)
     ->finish (s);
 }
 
-string decode_config_region(string foo, mapping mr, string s, mapping res2)
+string decode_config_region(Parser.HTML p, mapping mr, string s, mapping res2)
 {
   mapping res = ([ ]);
   Parser.HTML()
