@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.71 2000/03/03 03:31:38 mast Exp $
+//! $Id: module.pmod,v 1.72 2000/03/03 11:02:07 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -900,11 +900,11 @@ class Context
 	while (evaluator) {
 	  if (evaluator->report_error && evaluator->type->free_text) {
 	    string msg = (err->type == "run" ?
-			  ([function(Backtrace,Type,RequestID:string)]
+			  ([function(Backtrace,Type:string)]
 			   ([object] id->conf)->handle_run_error) :
-			  ([function(Backtrace,Type,RequestID:string)]
+			  ([function(Backtrace,Type:string)]
 			   ([object] id->conf)->handle_parse_error)
-			 ) ([object(Backtrace)] err, evaluator->type, id);
+			 ) ([object(Backtrace)] err, evaluator->type);
 	    if (evaluator->report_error (msg))
 	      break;
 	  }
