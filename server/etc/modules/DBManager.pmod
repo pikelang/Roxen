@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.37 2001/09/03 18:05:14 per Exp $
+// $Id: DBManager.pmod,v 1.38 2001/09/05 20:56:15 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -11,15 +11,6 @@
 #define CN(X) string_to_utf8( X )
 #define NC(X) utf8_to_string( X )
 
-
-// Not private since we use these variables for debugging purposes.
-#ifdef THREADS
-mapping(object:mapping(string:Sql.Sql)) sql_cache = ([]);
-mapping(object:mapping(string:Sql.Sql)) dead_sql_cache = ([]);
-#else
-mapping(string:Sql.Sql) sql_cache = ([]);
-mapping(string:Sql.Sql) dead_sql_cache = ([]);
-#endif
 
 constant NONE  = 0;
 //! No permissions. Used in @[set_permission] and @[get_permission_map]
@@ -58,32 +49,9 @@ private
      *
      * Perform the rotation first, to avoid thread-races.
      */
-#ifdef THREADS
-    sql_cache_size = 0;
-    mapping(object:mapping(string:Sql.Sql)) really_dead_sql_cache =
-      dead_sql_cache;
-#else /* !THREADS */
-    mapping(string:Sql.Sql) really_dead_sql_cache = dead_sql_cache;
-#endif /* THREADS */
-    dead_sql_cache = sql_cache;
-    sql_cache = ([]);
-#ifdef THREADS
-    foreach( values( really_dead_sql_cache ), mapping q )
-      foreach( values( q ), Sql.Sql s )
-#else
-    foreach( values( really_dead_sql_cache ), Sql.Sql s )
-#endif
-      {
-	if( s->master_sql )
-	  destruct( s->master_sql );
-	destruct( s );
-      }
-
+    sql_url_cache = ([]);
+    connection_user_cache = ([]);
     clear_connect_to_my_mysql_cache();
-
-    // No need to forcefully close the connection cache entries,
-    // since they are the same as the sql_cache and my_mysql_cache entries.
-    connection_cache = ([]);
     gc( );
   }
   
@@ -194,71 +162,55 @@ private
     }
   }
 
+  mapping(string:mapping(string:string)) sql_url_cache = ([]);
   Sql.Sql low_get( string user, string db )
   {
     mixed res;
-    array(mapping(string:mixed)) d =
-      query("SELECT path,local FROM dbs WHERE name=%s", db );
-
-    if( !sizeof( d ) )
-      return 0;
-
-    if( (int)d[0]["local"] )
+    mapping(string:mixed) d = sql_url_cache[ db ];
+    if( !d )
     {
-      return connect_to_my_mysql( user, db );
+      res = query("SELECT path,local FROM dbs WHERE name=%s", db );
+      if( !sizeof( res ) )
+	return 0;
+      sql_url_cache[db] = d = res[0];
     }
+
+    if( (int)d->local )
+      return connect_to_my_mysql( user, db );
+
     // Otherwise it's a tad more complex...  
     if( user[strlen(user)-2..] == "ro" )
-      // Avoid type-warnings and errors.
-      //
       // The ROWrapper object really has all member functions Sql.Sql
       // has, but they are hidden behind an overloaded index operator.
       // Thus, we have to fool the typechecker.
-      return [object(Sql.Sql)](object)ROWrapper( sql_cache_get( d[0]->path ) );
-
-    return sql_cache_get( d[0]->path );
+      return [object(Sql.Sql)](object)ROWrapper( sql_cache_get( d->path ) );
+    return sql_cache_get( d->path );
   }
 };
 
-
-  
-
-// Note: we cannot use Thread.Local here, since we want to reset
-// this when the list of databases or the permissions is changed,
-// and using Thread.Local would cause the old connections to leak.
-//
-// Bad luck. :-)
-#ifdef THREADS
-static int sql_cache_size = 0;
-
-Sql.Sql sql_cache_get(string what)
+mixed sql_cache_get(string what)
 {
-  mapping m = sql_cache[ this_thread() ] || ([]);
-
-  if( m[ what ] )
-    return m[ what ];
-
-  sql_cache_size++;
-  if( sql_cache_size > 30 )
+  mixed res;  
+  string i = replace(what,":",";")+":-";
+  if( roxenloader->sql_free_list[ i ] )
   {
-    clear_sql_caches();
-    sql_cache[ this_thread() ] = m = ([]);
-  }
-  m[ what ] =  Sql.Sql( what );
-  sql_cache[ this_thread() ] = m;    
-  return m[ what ]; 
-}
-#else
-Sql.Sql sql_cache_get(string what)
-//! Roxen 1.3 compatibility function
-{
-  if(sql_cache[ what ] )
-    return sql_cache[ what ];
-  if( sizeof( sql_cache ) > 40 )
-    clear_sql_caches();
-  return sql_cache[ what ] =  Sql.Sql( what );
-}
+#ifdef DB_DEBUG
+    werror("%O found in free list\n", i );
 #endif
+    res = roxenloader->sql_free_list[i][0];
+    if( sizeof( roxenloader->sql_free_list[ i ] ) > 1)
+      roxenloader->sql_free_list[ i ] = roxenloader->sql_free_list[i][1..];
+    else
+      m_delete( roxenloader->sql_free_list, i );
+    roxenloader->sql_active_list[i]++;
+    return roxenloader.MySQLKey( res, i );
+  }
+  if( res = Sql.Sql( what ) )
+  {
+    roxenloader->sql_active_list[i]++;
+    return roxenloader.MySQLKey( res, i );
+  }
+}
 
 void add_dblist_changed_callback( function(void:void) callback )
 //! Add a function to be called when the database list has been
@@ -396,73 +348,38 @@ string db_url( string name,
   return d[0]->path;
 }
 
+static mapping connection_user_cache  = ([]);
+string get_db_user( string name, Configuration c, int ro )
+{
+  string key = name+"|"+(c&&c->name)+"|"+ro;
+  if( !zero_type( connection_user_cache[ key ] ) )
+    return connection_user_cache[ key ];
+
+  array(mapping(string:mixed)) res;
+  if( c )
+  {
+    res = query( "SELECT permission FROM db_permissions "
+                 "WHERE db=%s AND config=%s",  name, CN(c->name));
+    if( sizeof( res ) && res[0]->permission != "none" )
+      return connection_user_cache[ key ]=short(c->name) +
+	((ro || res[0]->permission!="write")?"_ro":"_rw");
+    return connection_user_cache[ key ] = 0;
+  }
+  return connection_user_cache[ key ] = ro?"ro":"rw";
+}
+
 Sql.Sql get( string name, void|Configuration c, int|void ro )
 //! Get the database @[name]. If the configuration @[c] is specified,
 //! only return the database if the configuration has at least read
 //! access.
 {
-  array(mapping(string:mixed)) res;
-  if( c )
-  {
-    res = query( "SELECT permission FROM db_permissions "
-                 "WHERE db=%s AND config=%s",
-                 name,CN(c->name));
-    if( sizeof( res ) )
-    {
-      if( res[0]->permission == "none" )
-	return 0;
-      else
-	return low_get( short(c->name) +
-			((ro || res[0]->permission!="write")?"_ro":"_rw"),
-			name );
-    }
-    return 0;
-  }
-  return low_get( (ro?"ro":"rw"), name );
+  return low_get( get_db_user( name,c,ro ), name );
 }
-
-#ifdef THREADS
-// Note: we cannot use Thread.Local here, since we want to reset this
-// when the list of databases or the permissions is changed.
-//
-// Bad luck. :-)
-static mapping(Thread.Thread:mapping(string:Sql.Sql))
-  connection_cache = ([]);
 
 Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
-//! Identical to get(), but the authentication verification and
-//! mapping database name <--> DB-url mapping is cached between
-//! requests.
 {
-  string key = name+"|"+(c&&c->name)+"|"+ro;
-
-  mapping cm = connection_cache[ this_thread() ] || ([]);
-
-  Sql.Sql res;
-
-  if( res = cm[key] )
-  {
-    return res;
-  }
-
-  res = get( name, c, ro );
-
-  if( res )
-  {
-    cm[key]=res;
-    connection_cache[ this_thread() ] = cm;
-  }
-  return res;
+  return low_get( get_db_user( name,c,ro ), name );
 }
-#else
-static mapping connection_cache  = ([]);
-Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
-{
-  string key = name+"|"+(c&&c->name)+"|"+ro;
-  mixed res = connection_cache[key]||(connection_cache[key]=get( name, c, ro ));
-  return res;
-}
-#endif
 
 void drop_db( string name )
 //! Drop the database @[name]. If the database is internal, the actual

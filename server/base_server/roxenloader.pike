@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.284 2001/09/04 18:12:27 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.285 2001/09/05 20:55:47 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -56,56 +56,6 @@ mapping uname()
 }
 #endif
 #endif
-
-// static mapping used = ([ ]);
-// class MyMysql( Sql.Sql real, mixed ro, string name )
-// {
-//   mixed `!( )
-//   {
-//     return !real;
-//   }
-
-//   mixed `[]( string what )
-//   {
-//     return `->(what);
-//   }
-
-//   function nouse_query( function rq )
-//   {
-//     return lambda( string q, mixed ... args )
-//     {
-//       int t = gethrtime();
-//       if( has_prefix( lower_case(q), "USE ") )
-// 	error("USE is not supported\n");
-//       if( used[ real ] != name )
-//       {
-// 	if( catch(real->query( "USE "+name )) )
-// 	{
-// 	  real->query( "CREATE DATABASE "+name );
-// 	  real->query( "USE "+name );
-// 	}
-// 	used[ real ] = name;
-//       }
-//       return rq( q, @args );
-//     };
-//   }
-
-//   mixed `->(string what )
-//   {
-//     if( !real || !real->master_sql ) // closed
-//       real = low_connect_to_my_mysql( ro, name );
-//     if( what == "name" )       return name;
-//     if( what == "query" )      return nouse_query( real->query );
-//     if( what == "big_query" )  return nouse_query( real->big_query );
-// //     werror(name+"\n");
-//     return real[what];
-//   }
-
-//   string _sprintf( int c )
-//   {
-//     return sprintf( sprintf( "%%%c", c ), real );
-//   }
-// }
 
 
 mapping(int:string) pwn=([]);
@@ -1259,12 +1209,25 @@ void clear_connect_to_my_mysql_cache( )
 mapping sql_free_list = ([ ]);
 mapping sql_active_list = ([ ]);
 
+#ifdef DB_DEBUG
+static int sql_keynum;
+
+mapping(int:string) my_mysql_last_user = ([]);
+#endif /* DB_DEBUG */
+
 class MySQLKey( object real, string name )
 {
+#ifdef DB_DEBUG
+  static int num = sql_keynum++;
+  static string bt = my_mysql_last_user[num] = describe_backtrace(backtrace());
+#endif /* DB_DEBUG */
+
   void destroy()
   {
 #ifdef DB_DEBUG
-    werror("%O added to free list\n", name );
+    werror("%O:%d added to free list\n", name, num );
+
+    m_delete(my_mysql_last_user, num);
 #endif
     sql_active_list[name]--;
     sql_free_list[ name ] += ({ real });
@@ -1287,12 +1250,16 @@ class MySQLKey( object real, string name )
     return real[what];
   }
 
-  string _sprintf( )
+  string _sprintf(int type)
   {
+#ifdef DB_DEBUG
+    if (type == 'd') return (string)num;
+    return sprintf( "MySQL( %O:%d )", name, num );
+#else
     return sprintf( "MySQL( %O )", name );
+#endif /* DB_DEBUG */
   }
 }
-
 
 //! @appears connect_to_my_mysql
 mixed connect_to_my_mysql( string|int ro, void|string db )

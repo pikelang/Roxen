@@ -35,29 +35,9 @@ string parse( RequestID id )
     }
     res += "</td></tr>\n";
   }
-//   res += "<tr><td><b>Connection:</b></td><td>"+
-//       sql->master_sql->host_info()+"</td></tr>\n";
   
   res += "</table>";
   mapping connections = roxenloader->sql_active_list+([]);
-  foreach( indices( roxenloader->sql_free_list ), string name )
-    connections[name]=sizeof(roxenloader->sql_free_list[name]);
-
-#ifdef THREADS
-  foreach( indices( DBManager->sql_cache ), object t )
-    foreach( indices( DBManager->sql_cache[t] ), string name )
-#else
-    foreach( indices( DBManager->sql_cache ), string name )
-#endif
-      connections[replace(name,":",";")+":rw"]++;
-
-#ifdef THREADS
-  foreach( indices( DBManager->dead_sql_cache ), object t )
-    foreach( indices( DBManager->dead_sql_cache[t] ), string name )
-#else
-    foreach( indices( DBManager->dead_sql_cache ), string name )
-#endif
-      connections[replace(name,":",";")+":rw"]++;
 
   res += "<h2>Active connections</h2>";
   
@@ -70,6 +50,35 @@ string parse( RequestID id )
   int total;
   foreach( sort(indices( connections ) ), string c )
   {
+    if (connections[c]) {
+      array(string) t = c/":";
+      res += "<tr><td>"+Roxen.html_encode_string(replace(t[0],";",":"))+"</td><td>"+
+	Roxen.html_encode_string(t[1])+"</td><td align=right>"+
+	connections[c]+"</td></tr>\n";
+      total += connections[c];
+    }
+  }
+  res += "<tr><td></td><td></td><td align=right>"+total+"</td></tr>";
+  res += "</table>";
+
+  // Inactive connections.
+
+  connections = ([]);
+
+  foreach( indices( roxenloader->sql_free_list ), string name )
+    connections[name]=sizeof(roxenloader->sql_free_list[name]);
+
+  res += "<h2>Inactive connections</h2>";
+  
+  res +=
+    "<table>"
+    "<tr><td><b>"+_(463,"Database")+"</b></td><td><b>"+
+    _(206,"User")+"</b></td><td><b>"+_(464,"Connections")+
+    "</b></td></tr>\n";
+
+  total = 0;
+  foreach( sort(indices( connections ) ), string c )
+  {
     array(string) t = c/":";
     res += "<tr><td>"+Roxen.html_encode_string(replace(t[0],";",":"))+"</td><td>"+
       Roxen.html_encode_string(t[1])+"</td><td align=right>"+
@@ -78,6 +87,14 @@ string parse( RequestID id )
   }
   res += "<tr><td></td><td></td><td align=right>"+total+"</td></tr>";
   res += "</table>";
+
+#ifdef DB_DEBUG
+  res += sprintf("<h2>Live connections</h2>"
+		 "<pre>\n"
+		 "%{%s\n\n\n%}"
+		 "</pre>\n",
+		 values(roxenloader->my_mysql_last_user));
+#endif /* DB_DEBUG */
 
   return res;
 }
