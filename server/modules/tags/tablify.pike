@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.50 2000/06/08 20:02:39 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.51 2000/07/17 15:55:19 kuntri Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -75,14 +75,14 @@ constant tagdoc=(["tablify":({#"<desc cont><short>Transforms texts into tables.<
    All fields except text overrides the cellvalign attribute.</desc>
 
 
-  <attr name=separator value=string>Defines the field type separator.</attr>
+  <attr name=separator value=string>Defines the field type separator.
 
   The fields types are separated by
-  <ol>
+  <ul>
   <li>The value given in the separator attribute to fields.</li>
   <li>The value given in the cellseparator attribute to tablify.</li>
   <li>Tab.</li>
-  </ol>"])
+  </ul></attr>"])
 })]);
 #endif
 
