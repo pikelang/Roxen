@@ -46,7 +46,7 @@ string do_describe_error( mixed err )
 
 void report_test_failure( mixed err, function cb, array args, int st )
 {
-  report_error("FAILED\n");
+  report_error(" FAILED\n");
   if( err ) report_error( do_describe_error( err ) );
   tests_failed++;
 }
@@ -55,7 +55,10 @@ void report_test_failure( mixed err, function cb, array args, int st )
 void report_test_ok( mixed err, function cb, array args, int st )
 {
   int tt = (gethrtime()-st);
-  report_debug(" %4dms\n", tt/1000);
+  if( tt > 200000 )
+    report_debug(" %4dms\n", tt/1000);
+  else
+    report_debug( "   PASS\n" );
 //   if( err ) report_error( do_describe_error( err ) );
 }
 

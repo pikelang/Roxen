@@ -1,5 +1,110 @@
 inherit "pike_test_common.pike";
 
+void verify_logged_data( array logged, int min )
+{
+  if( sizeof( logged ) != 18 )
+    throw( sprintf("Got the log-array size, expected 18, got %d\n",
+		   sizeof(logged)));
+  
+  if( "194.52.182.122" != logged[0] )
+    throw( sprintf("Illegal IP field, expected 194.52.182.122, got %O\n",
+		   logged[0] ) );
+  if( sprintf( "%c%c%c%c", 194,52,182,122 ) != logged[1] )
+    throw( sprintf( "Illegal bin-ip field, expected "
+		    "\d194\d52\d182\d122, got %O\n", logged[1] ) );
+
+  // logged[2] is cern data. Should probably verify that as well...
+
+  int t;
+  sscanf( logged[3], "%4c", t );
+  if( (time()-t) > 10  )
+    throw( sprintf( "Did not get the expected time in bin-date\n") );
+  
+  if( logged[4] != "GET" )
+    throw( sprintf( "Did not get the expected method, got %O expected %O\n",
+		    logged[4], "GET" ) );
+
+  if( min )
+  {
+    if( logged[5] != "/the/requested/file" )
+      throw(sprintf( "Got the wrong URL, got %O\n", logged[5] ));
+  }
+  else
+    if( logged[5] != "/the/requested/file?foo%20bar=hi%20there" )
+      throw( "Got the wrong URL\n" );
+
+  if( logged[6] != logged[5] )
+    throw( "Full resource differes from resource\n" );
+  
+  if( logged[7] != "INTERNAL/1.0" )
+    throw( sprintf("The protocol is wrong, expected INTERNAL/1.0, got %O\n",
+		   logged[7] ) );
+
+  if( logged[8] != "200" )
+    throw( sprintf( "The result code is wrong, expected 200, got %s\n",
+		    logged[8] ) );
+
+  if( logged[9] != "\0\310" )
+    throw( sprintf("The binary result code is wrong, expected \0\310, got %O\n"
+		   ,logged[9] ) );
+
+  if( logged[10] != "3611" )
+    throw( sprintf( "The length is wrong, expected 3611, got %s\n",
+		    logged[10] ) );
+    
+  if( logged[11] != sprintf( "%4c", 3611 ) )
+    throw( sprintf( "The binary length is wrong, expected %O, got %O\n",
+		    sprintf( "%4c", 4711 ), logged[11] ) );
+
+  if( min )
+  {
+    if( logged[12] != "-" )
+      throw( sprintf( "The referer is wrong, expected %O got %O\n",
+		      "-", logged[12] ) );
+  }
+  else
+    if( logged[12] != "http://foo.bar/" )
+      throw( sprintf( "The referer is wrong, expected %O got %O\n",
+		      "http://foo.bar/", logged[12] ) );
+
+  if( min )
+  {
+    if( logged[13] != "-" )
+      throw( sprintf( "The user-agent is wrong, expected %O got %O\n",
+		      "-", logged[13] ) );
+  }
+  else
+    if( logged[13] != "Internal%201.0" )
+      throw( sprintf( "The user-agent is wrong, expected %O got %O\n",
+		      "Internal%201.0", logged[13] ) );
+
+  if( logged[14] != "foo" )
+    throw( sprintf( "The user is wrong, expected %O got %O\n",
+		    "foo", logged[14] ) );
+
+  if( min )
+  {
+    if( logged[15] != "0" )
+      throw( sprintf( "The user-id is wrong, expected %O got %O\n",
+		      "0", logged[15] ) );
+  }
+  else
+    if( logged[15] != "iieff1934" )
+      throw( sprintf( "The user-id is wrong, expected %O got %O\n",
+		      "iieff1934", logged[15] ) );
+
+  // 16 is the time the request took, in seconds, as a float.
+  // Should be < 10.0. :-)
+  if( (float)logged[16] > 10.0 )
+    throw( sprintf("Odd request-taken time, got %O, expected < 10.0\n",
+		   (float)logged[16] ) );
+  
+  if( logged[17] != "\n" )
+    throw( sprintf( "The EOL marker is wrong, expected \\n, got %O\n",
+		    logged[17] ) );
+  
+}
+
 
 array(int) run_tests( Configuration c )
 {
@@ -72,5 +177,60 @@ array(int) run_tests( Configuration c )
 #endif
 
 
+  // Test logging functions.
+
+  class FakeID(
+    // Optional variables. Can be missing from some protocols.
+    mapping cookies,
+    array referer,
+    array client,
+    string raw_url
+  )
+  {
+    // Invariants -- must be supported by all protocols or bad things
+    // will happen.
+    int    time       = predef::time();
+    string remoteaddr = "194.52.182.122";
+    string method     = "GET";
+
+    string not_query  = "/the/requested/file";
+    string prot       = "INTERNAL/1.0";
+    string realauth   = "foo:bar";
+  };
+
+  FakeID http_id = FakeID(([ "RoxenUserID":"iieff1934"]),
+			  ({ "http://foo.bar/"  }),
+			  ({ "Internal", "1.0" }),
+			  "/the/requested/file?foo%20bar=hi%20there");
+  FakeID minimum_id = FakeID(0,0,0,0);
+
+  mapping fake_response = ([
+    "error":200,
+    "len":3611,
+  ]);
+
+  function format1 = 
+    do_test( check_true, roxen.compile_log_format,
+	    ({
+	      "$ip_number",  "$bin-ip_number",  "$cern_date",  "$bin-date",
+	      "$method",     "$resource",  "$full_resource", "$protocol",
+	      "$response", "$bin-response", "$length", "$bin-length",
+	      "$referer", "$user_agent", "$user", "$user_id", "$request-time"
+	    }) * "$char(9999)"  + "$char(9999)");
+
+
+  array(string) logged;
+  void do_log( string what ) {  logged = what/"\23417";  };
+  
+  time();
+  do_test( 0, format1, do_log, http_id, fake_response );
+
+  do_test( 0, verify_logged_data, logged, 0 );
+
+
+  do_test( 0, format1, do_log, minimum_id, fake_response );
+
+  do_test( 0, verify_logged_data, logged, 1 );
+  
   return ({ current_test, tests_failed });
 }
