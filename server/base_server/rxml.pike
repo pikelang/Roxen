@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.36 1999/11/23 09:43:44 per Exp $
+ * $Id: rxml.pike,v 1.37 1999/11/24 01:59:04 per Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -147,6 +147,7 @@ string do_parse(string to_parse, RequestID id, object file, mapping defines,
   parser->set_extra( 0, id, file, defines, my_fd );
   to_parse = parser->finish( to_parse )->read();
   id->misc->_parser_obj = 0;
+  destruct( parser );
 #endif
 
   for(int i = 1; i<sizeof(tag_callers); i++)
