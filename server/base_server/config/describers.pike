@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.55 1998/06/01 13:37:36 grubba Exp $ */
+/* $Id: describers.pike,v 1.56 1998/07/07 17:03:20 grubba Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -23,9 +23,10 @@ string describe_holder(object node)
   o=node->down;
   while(o)
   {
-    if(!((functionp(o->data[VAR_CONFIGURABLE])&&o->data[VAR_CONFIGURABLE]())
-       ||((o->data[VAR_CONFIGURABLE]==VAR_EXPERT)&&!this_object()->expert_mode)
-       ||((o->data[VAR_CONFIGURABLE]==VAR_MORE)&&!this_object()->more_mode)))
+    if(!((functionp(o->data[VAR_CONFIGURABLE]) && o->data[VAR_CONFIGURABLE]()) ||
+	 (intp(o->data[VAR_CONFIGURABLE]) && 
+	  (((o->data[VAR_CONFIGURABLE] & VAR_EXPERT) && !this_object()->expert_mode) ||
+	   ((o->data[VAR_CONFIGURABLE] & VAR_MORE) && !this_object()->more_mode)))))
     {
       num++;
       foo=o;
@@ -239,12 +240,14 @@ array|string describe_module_variable(object node)
 {
   string res, err;
 
-  if((node->data[VAR_CONFIGURABLE] == VAR_EXPERT)&&!this_object()->expert_mode)
-    return 0;
-  if((node->data[VAR_CONFIGURABLE] == VAR_MORE)&&!this_object()->more_mode)
-    return 0;
   if(functionp(node->data[VAR_CONFIGURABLE]) && node->data[VAR_CONFIGURABLE]())
     return 0;
+  else if (intp(node->data[VAR_CONFIGURABLE])) {
+    if((node->data[VAR_CONFIGURABLE] & VAR_EXPERT) && !this_object()->expert_mode)
+      return 0;
+    if((node->data[VAR_CONFIGURABLE] & VAR_MORE) && !this_object()->more_mode)
+      return 0;
+  }
     
   if(node->folded)
     if(node->error)
