@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.156 2002/11/14 22:30:27 agehall Exp $
+// $Id: Roxen.pmod,v 1.157 2002/11/14 23:38:14 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2903,7 +2903,8 @@ class ScopeRoxen {
      case "hits-per-minute":
        CACHE(c->id,2);
        // FIXME: Use float here instead?
-       return ENCODE_RXML_INT(c->id->conf->requests / ((time(1)-roxenp()->start_time)/60 + 1),
+       return ENCODE_RXML_INT(c->id->conf->requests /
+			      ((time(1)-roxenp()->start_time)/60 + 1),
 			      type);
      case "hits":
        NOCACHE(c->id);
@@ -2911,19 +2912,22 @@ class ScopeRoxen {
      case "sent-mb":
        CACHE(c->id,10);
        // FIXME: Use float here instead?
-       return ENCODE_RXML_TEXT(sprintf("%1.2f",c->id->conf->sent / (1024.0*1024.0)), type);
+       return ENCODE_RXML_TEXT(sprintf("%1.2f",c->id->conf->sent /
+				       (1024.0*1024.0)), type);
      case "sent":
        NOCACHE(c->id);
        return ENCODE_RXML_INT(c->id->conf->sent, type);
      case "sent-per-minute":
        CACHE(c->id,2);
-       return ENCODE_RXML_INT(c->id->conf->sent / ((time(1)-roxenp()->start_time)/60 || 1),
+       return ENCODE_RXML_INT(c->id->conf->sent /
+			      ((time(1)-roxenp()->start_time)/60 || 1),
 			      type);
      case "sent-kbit-per-second":
        CACHE(c->id,2);
        // FIXME: Use float here instead?
-       return ENCODE_RXML_TEXT(sprintf("%1.2f",((c->id->conf->sent*8)/1024.0/
-						(time(1)-roxenp()->start_time || 1))),
+       return ENCODE_RXML_TEXT(sprintf("%1.2f",
+				       ((c->id->conf->sent*8)/1024.0/
+					(time(1)-roxenp()->start_time || 1))),
 			       type);
      case "ssl-strength":
        return ENCODE_RXML_INT(ssl_strength, type);
@@ -2937,14 +2941,14 @@ class ScopeRoxen {
        return ENCODE_RXML_TEXT(__roxen_build__, type);
      case "dist-version":
        return ENCODE_RXML_TEXT(roxen_dist_version, type);
-     case "product-name":
-       return ENCODE_RXML_TEXT(roxen_product_name, type);     
      case "time":
        CACHE(c->id,1);
        return ENCODE_RXML_INT(time(),  type);
      case "server":
+       NOCACE(c->id);
        return ENCODE_RXML_TEXT (c->id->url_base(), type);
      case "domain":
+       NOCACHE(c->id);
        sscanf(c->id->url_base(), "%*s://%[^:/]", string tmp);
        return ENCODE_RXML_TEXT(tmp, type);
      case "locale":
@@ -2953,6 +2957,7 @@ class ScopeRoxen {
      case "path":
        return ENCODE_RXML_TEXT(c->id->misc->site_prefix_path, type);
      case "unique-id":
+       NOCACHE(c->id);
        return ENCODE_RXML_TEXT(roxenp()->create_unique_id(), type);
     }
     mixed val = c->misc->scope_roxen[var];
