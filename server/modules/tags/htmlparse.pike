@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.100 1998/05/14 04:37:49 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.101 1998/05/18 22:01:44 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2553,11 +2553,16 @@ string tag_default( string tag_name, mapping args, string contents,
     return contents;
 }
 
+string tag_noparse(string t, mapping m, string c)
+{
+  return ({ c });
+}
 
 mapping query_container_callers()
 {
   return (["comment":lambda(){ return ""; },
 	   "source":tag_source,
+	   "noparse":tag_noparse,
 	   "doc":tag_source2,
 	   "autoformat":tag_autoformat,
 	   "random":tag_random,
@@ -2735,7 +2740,6 @@ void define_API_functions()
   add_api_function("query_variable", api_query_variable, ({ "string", }));
   add_api_function("query_cookie", api_query_cookie, ({ "string", }));
   add_api_function("query_modified", api_query_modified, ({ "string", }));
-  add_api_function("read_file", api_read_file, ({ "string", 0,"int"}));
 
   add_api_function("read_file", api_read_file, ({ "string", 0,"int"}));
   add_api_function("add_header", api_add_header, ({"string", "string"}));
