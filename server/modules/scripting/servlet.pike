@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_version = "$Id: servlet.pike,v 1.1 1999/04/24 16:38:07 js Exp $";
+string cvs_version = "$Id: servlet.pike,v 1.2 1999/04/30 11:29:05 js Exp $";
 int thread_safe=1;
 
 inherit "module";
@@ -8,6 +8,7 @@ static inherit "http";
 
 object servlet;
 
+string status_info="";
 
 array register_module()
 {
@@ -44,15 +45,25 @@ void start(int x, object conf)
   else if(x != 0)
     return;
 
-  if((servlet = Servlet.servlet(QUERY(classname), QUERY(codebase))))
-    servlet->init(Servlet.conf_context(conf), make_initparam_mapping());
+  mixed exc = catch(servlet = Servlet.servlet(QUERY(classname),
+					      QUERY(codebase)));
+  status_info="";
+  if(exc)
+  {
+    werror(exc[0]);
+    status_info=sprintf("<pre>%s</pre>",exc[0]);
+  }
+  else
+    if(servlet)
+      servlet->init(Servlet.conf_context(conf), make_initparam_mapping());
 }
 
 string status()
 {
   return (servlet?
 	  servlet->info() || "<i>No servlet information available</i>" :
-	  "<font color=red>Servlet not loaded</font>");
+	  "<font color=red>Servlet not loaded</font>"+"<br>"+
+	  status_info);
 }
 
 string query_location()
@@ -88,8 +99,10 @@ void create()
 mixed find_file( string f, object id )
 {
   if(!servlet)
-    return 0;
-
+  {
+    string res = sprintf("<h1>Servlet loading failed</h1>%s",status_info);
+    return http_string_answer(res);
+  }
   id->my_fd->set_read_callback(0);
   id->my_fd->set_close_callback(0);
   id->my_fd->set_blocking();
