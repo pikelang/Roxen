@@ -1,14 +1,14 @@
 #!bin/pike -m lib/pike/master.pike
 
-/* buildenv.pike -- build an environment setup file for Roxen.
+/* buildenv.pike -- build an environment setup file for ChiliMoon.
  *
  *    This script tries to build an environment setup file for
- *    Roxen, making sure Roxen has LD_LIBRARY_PATH and other
- *    essential variables set, to keep dynamic libraries and
- *    various other external stuff happy.
+ *    ChiliMoon, making sure ChiliMoon has LD_LIBRARY_PATH and
+ *    other essential variables set, to keep dynamic libraries
+ *    and various other external stuff happy.
  */
  
-string cvs_version = "$Id: buildenv.pike,v 1.8 2002/06/05 10:14:23 nilsson Exp $";
+string cvs_version = "$Id: buildenv.pike,v 1.9 2002/11/04 18:53:42 mani Exp $";
 
 class Environment
 {
@@ -152,9 +152,9 @@ class Environment
 
 }
 
-void config_env(object(Environment) env)
+void config_env(Environment env)
 {
-  string dir = "data/env.d";
+  string dir = "bin/env.d";
   program p;
   object eo;
 
@@ -179,7 +179,7 @@ void main(int argc, array argv)
   if (Stdio.file_size("../local") != -2)
   { if (Stdio.file_size("bin") != -2 || Stdio.file_size("modules") != -2)
     { write("   "+argv[0]+": "
-	    "should be run in the Roxen 'server' directory.\n");
+	    "should be run in the ChiliMoon 'server' directory.\n");
       exit(1);
     }
     if (!mkdir("../local", 0775))
