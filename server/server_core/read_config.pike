@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: read_config.pike,v 1.70 2002/11/17 14:30:57 agehall Exp $
+// $Id: read_config.pike,v 1.71 2002/11/17 16:38:59 mani Exp $
 
 #include <module.h>
 #include <module_constants.h>
@@ -12,8 +12,8 @@ inherit "newdecode";
 #define COPY( X ) ((X||([])) + ([]))
 
 constant IGNORE_NAMES = ({ "CVS", "Global_Variables", "Global Variables",
-			   "global_variables", "global variables", "server_version",
-			   "server version", "_",
+			   "global_variables", "global variables",
+			   "server_version", "server version",
 			   });
 
 mapping (string:array(int)) config_stat_cache = ([]);
@@ -36,7 +36,7 @@ array(string) list_all_configurations()
   fii -= IGNORE_NAMES;
 
   return replace(utf8_to_string(filter(fii, lambda(string s){
-					      return (s[-1]!='~' && s[0]!='#' && s[0]!='.');
+					      return (s[-1]!='~' && s[0]!='#' && s[0]!='.' && s[0]!='_');
 					    })[*]), "_", " ");
 }
 
