@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.442 2004/06/08 13:09:05 noring Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.443 2004/06/17 16:12:41 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5254,8 +5254,8 @@ class TagEmitValues {
     if(mappingp(m->values))
       return map( indices(m->values),
 		  lambda(mixed ind) {
-		    mixed val = m->values[ind];
-		    if(m->trimwhites) val=String.trim_all_whites((string)val);
+		    mixed val = (string)m->values[ind];
+		    if(m->trimwhites) val=String.trim_all_whites(val);
 		    if(m->case=="upper") val=upper_case(val);
 		    else if(m->case=="lower") val=lower_case(val);
 		    return (["index":ind,"value":val]);
@@ -5264,7 +5264,8 @@ class TagEmitValues {
     if(arrayp(m->values))
       return map( m->values,
 		  lambda(mixed val) {
-		    if(m->trimwhites) val=String.trim_all_whites((string)val);
+		    val = (string)val;
+		    if(m->trimwhites) val=String.trim_all_whites(val);
 		    if(m->case=="upper") val=upper_case(val);
 		    else if(m->case=="lower") val=lower_case(val);
 		    return (["value":val]);
