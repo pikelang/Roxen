@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.166 1999/10/25 18:02:18 grubba Exp $
+// $Id: http.pike,v 1.167 1999/11/02 01:37:07 per Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.166 1999/10/25 18:02:18 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.167 1999/11/02 01:37:07 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1734,4 +1734,9 @@ void chain(object f, object c, string le)
       f->set_read_callback(got_data);
     }
   }
+}
+
+string _sprintf( )
+{
+  return "RequestID()";
 }
