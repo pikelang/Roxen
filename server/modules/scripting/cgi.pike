@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.47 1997/10/13 12:03:28 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.48 1997/10/13 12:06:30 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -411,13 +411,13 @@ class spawn_cgi
 	seteuid(uid);
 
 #ifdef DEBUG
-	if (getuid() != (geteuid() || 65534)) {
-	  roxen_perror("CGI: Failed to change uid! uid:%d euid:%d\n",
-		       getuid(), geteuid());
+	if (getuid() != uid) {
+	  roxen_perror("CGI: Failed to change uid! uid:%d target uid:%d\n",
+		       getuid(), uid);
 	}
-	if (getgid() != (getegid() || 65534)) {
-	  roxen_perror("CGI: Failed to change gid! gid:%d egid:%d\n",
-		       getgid(), getegid());
+	if (getgid() != gid) {
+	  roxen_perror("CGI: Failed to change gid! gid:%d target gid:%d\n",
+		       getgid(), gid);
 	}
 #endif /* DEBUG */
 	
