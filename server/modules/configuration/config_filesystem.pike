@@ -12,7 +12,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.32 2000/03/28 20:58:43 jhs Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.33 2000/04/05 22:36:11 js Exp $";
 
 constant path = "config_interface/";
 
@@ -134,7 +134,6 @@ mixed find_file( string f, object id )
 
   if( !id->misc->config_user )
     return http_auth_required( "Roxen configuration" );
-
   if( (f == "") && !id->misc->pathinfo )
     return http_redirect(fix_relative( "/standard/", id ), id );
 
@@ -166,6 +165,7 @@ mixed find_file( string f, object id )
   }
   id->realfile = realfile;
 
+
   mixed retval = Stdio.File( realfile, "r" );
 
   if( id->variables["content-type"] )
@@ -190,7 +190,8 @@ mixed find_file( string f, object id )
      string tmpl = (template_for(locale+"/"+f,id) ||
                     template_for("standard/"+f,id));
 
-     data = sprintf(base,tmpl,title,data);
+     if(tmpl)
+       data = sprintf(base,tmpl,title,data);
 
      if( !id->misc->stat )
        id->misc->stat = allocate(10);
