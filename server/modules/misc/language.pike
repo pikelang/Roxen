@@ -1,7 +1,7 @@
 #include <module.h>
 inherit "modules/directories/directories";
 
-string cvs_version = "$Id: language.pike,v 1.16 1998/10/19 04:37:43 peter Exp $";
+string cvs_version = "$Id: language.pike,v 1.17 1999/01/17 13:51:39 peter Exp $";
 /* Is threadsafe. */
 
 #if DEBUG_LEVEL > 20
@@ -115,8 +115,10 @@ void create()
   defvar( "textonly", 0, "Text only", TYPE_FLAG,
 	  "If set the tags type argument will default to txt instead of img" );
   
+/* Who came up with this idea?
   defvar( "borderwidth", 0, "Border width", TYPE_INT,
 	  "The width of the border around selectable flags." );
+*/
 
   ::create();
 }
@@ -162,8 +164,10 @@ void start()
     language_data[ tmp ][ LANGUAGE_DATA_NEXT_LANGUAGE ] &= indices( language_list );
   default_language = query( "default_language" );
   textonly = query( "textonly" );
-  borderwidth = query( "borderwidth" );
-  
+  /* Really...   /Peter
+    borderwidth = query( "borderwidth" );
+  */
+
   ::start();
 }
 
