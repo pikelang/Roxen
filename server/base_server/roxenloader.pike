@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.178 2000/06/23 16:09:20 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.179 2000/06/29 05:49:41 noring Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -478,13 +478,18 @@ object spawne(string s, array(string) args, mapping|array env, object stdin,
 object spawn_pike(array(string) args, void|string wd, object|void stdin,
 		  object|void stdout, object|void stderr)
 {
-  string cwd = getcwd();
-  return Process.create_process(({cwd+"/start","--cd",wd,
-				  "--quiet","--program"})+args,
-				(["toggle_uid":1,
-				 "stdin":stdin,
-				 "stdout":stdout,
-				 "stderr":stderr]));
+  return Process.create_process(
+#ifndef __NT__
+    ({getcwd()+"/start",
+#else /* __NT__ */
+    ({getcwd()+"/bin/roxen.exe","-console","-silent",
+#endif /* __NT__ */
+      "--cd",wd,
+      "--quiet","--program"})+args,
+      (["toggle_uid":1,
+	"stdin":stdin,
+	"stdout":stdout,
+	"stderr":stderr]));
 }
 
 
