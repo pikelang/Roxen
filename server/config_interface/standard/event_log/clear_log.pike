@@ -6,5 +6,5 @@ mapping parse( RequestID id )
   roxen->error_log = ([]);
   report_notice( "Event log cleared by "+USER( id ) + " from "+ HOST( id )+
                  "\n" );
-  return Roxen.http_redirect( "/standard/event_log", id );
+  return Roxen.http_redirect( "index.html", id );
 }
