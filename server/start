@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.163 2001/06/20 11:53:12 noring Exp $
+# $Id: start,v 1.164 2001/06/26 18:41:20 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -240,7 +240,7 @@ parse_args() {
     once=1
     shift
   ;;
-  --debug-without=*|-r*|-d*|-t*|-l*|-w*|-a*|-p*)
+  --debug-without=*|-r*|-d*|-t*|-l*|-w*|-a*|-p*|--*-debug*)
     # Argument passed along to Pike.
     ARGS="$ARGS $1"
   ;;
