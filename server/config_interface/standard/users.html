@@ -12,10 +12,10 @@ string parse( RequestID id )
   return "";
 }
 </pike>
+<!-- /* -->
 
 <topmenu  selected=home>
 
-<!-- */ -->
 
 <content>
 <cv-startpage>
@@ -34,6 +34,7 @@ string parse( RequestID id )
           gbutton-align_icon=right page=delete_user>
 <br>
 
+<!-- */ -->
 <pike>
 string parse( RequestID id )
 {
@@ -51,20 +52,24 @@ string parse( RequestID id )
   return res;
 }
 </pike>
+<!-- /* -->
 </page>
  
 <page name=create_user>
 <table><tr><td>User ID:</td><td><input name=user_name></td><td><dbutton page=top gbutton_title=" Create User "></td></tr></table>
+<!-- */ -->
 <pike>
   if( !strlen(id->variables->user_name) ) 
     return "<error>Too short user name</error>";
   id->misc->create_new_config_user(   id->variables->user_name );
 </pike>
+<!-- /* -->
 </dbutton>
 </table>
 </page>
 
 <page name=delete_user>
+<!-- */ -->
 <pike>
   string res="";
   while( id->misc->orig ) id = id->misc->orig;
@@ -83,6 +88,7 @@ string parse( RequestID id )
   }
   return res;
 </pike>
+<!-- /* -->
 <p>
  <button gbutton_title=" <cf-locale width=300 get=cancel> " page=top gbutton-preparse>
 </page>
@@ -90,3 +96,4 @@ string parse( RequestID id )
 </awizard>
 </cv-startpage>
 </content>
+<!-- */ -->
