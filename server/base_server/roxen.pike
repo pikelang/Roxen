@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.155 1997/12/20 16:12:05 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.156 1998/01/16 21:23:14 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -79,7 +79,7 @@ int privs_level;
 
 // Fork, and then do a 'slow-quit' in the forked copy. Exit the
 // original copy, after all listen ports are closed.
-// Then the forked copy finish all current connections.
+// Then the forked copy can finish all current connections.
 private static void fork_or_quit()
 {
   int i;
@@ -91,7 +91,10 @@ private static void fork_or_quit()
   perror("SOCKETS: fork_or_quit()\n                 Bye!\n");
 #endif
   if(fork()) 
-    exit(0);
+    exit(-1);	// Restart.
+  // Now we're running in the forked copy.
+
+  // FIXME: This probably doesn't work correctly on threaded servers.
 #if efun(_pipe_debug)
   call_out(lambda() {  // Wait for all connections to finish
     call_out(Simulate.this_function(), 20);
@@ -623,7 +626,7 @@ public multiset find_supports(string from)
   string v;
   array f;
   
-  if(from != "unknown")
+  if(!(< "unknown", "" >)[from])
   {
     foreach(indices(supports), v)
     {
@@ -644,7 +647,7 @@ public multiset find_supports(string from)
     {
       sup = default_supports;
 #ifdef DEBUG
-      perror("Unknown client: "+from+"\n");
+      perror("Unknown client: \""+from+"\"\n");
 #endif
     }
   } else {
@@ -890,7 +893,7 @@ void stop_all_modules()
 mapping restart() 
 { 
   stop_all_modules();
-  call_out(fork_or_quit, 5);
+  call_out(fork_or_quit, 5, -1);
   return ([ "data": replace(Stdio.read_bytes("etc/restart.html"),
 			    ({"$docurl", "$PWD"}), ({roxen->docurl, getcwd()})),
 		  "type":"text/html" ]);
@@ -920,6 +923,9 @@ void kill_me()
     catch(map(configuration_ports, destruct));
   
     perror("Shutting down Roxen.\n");
+
+#ifdef USE_SHUTDOWN_FILE
+
     // Fallback for systems without geteuid, Roxen will (probably)
     // not be able to kill the start-script if this is the case.
     rm("/tmp/Roxen_Shutdown_"+startpid);
@@ -939,8 +945,10 @@ void kill_me()
       kill(getppid(), signum("SIGHUP"));
 //	kill(startpid, signum("SIGKILL"));
     }
+
+#endif /* USE_SHUTDOWN_FILE */
   }
-  // Die.
+  // Die nicely (we're shutting down).
   call_out(exit, 2, 0);
 }
 
@@ -1823,7 +1831,7 @@ void initiate_configuration_port( int|void first )
       report_error("No configuration ports could be created.\n"
 		   "Is roxen already running?\n");
       if(first)
-	exit( 0 );
+	exit( -1 );	// Restart.
     }
   } else {
     perror("No configuration port. I hope this is what you want.\n"
@@ -2205,9 +2213,9 @@ void exit_when_done()
   {
     werror("Exiting roxen (spurious signals received).\n");
     stop_all_modules();
-    exit(0);
-    kill(getpid(), 9);
-    kill(0, -9);
+    exit(-1);	// Restart.
+    // kill(getpid(), 9);
+    // kill(0, -9);
   }
 
   // First kill off all listening sockets.. 
@@ -2221,23 +2229,23 @@ void exit_when_done()
     {
       werror("Exiting roxen (all connections closed).\n");
       stop_all_modules();
-      exit(0);
+      exit(-1);	// Restart.
       perror("Odd. I am not dead yet.\n");
     }
   }, 0.1);
   call_out(lambda(){
     werror("Exiting roxen (timeout).\n");
     stop_all_modules();
-    exit(0);
+    exit(0); // Restart.
   }, 600, 0); // Slow buggers..
 }
 
 void exit_it()
 {
   perror("Recursive signals.\n");
-  exit(0);
-  kill(getpid(), 9);
-  kill(0, -9);
+  exit(-1);	// Restart.
+  // kill(getpid(), 9);
+  // kill(0, -9);
 }
 
 // REMOVE ME
@@ -2333,10 +2341,14 @@ varargs int main(int argc, array (string) argv)
   init_shuffler(); 
 #endif
 
+  // Signals which cause a restart (exitcode != 0)
   foreach( ({ "SIGUSR1", "SIGUSR2", "SIGHUP", "SIGINT" }), string sig) {
     catch { signal(signum(sig), exit_when_done); };
   }
-
+  // Signals which cause a shutdown (exitcode == 0)
+  foreach( ({ "SIGQUIT" }), string sig) {
+    catch { signal(signum(sig), kill_me); };
+  }
 
   report_notice("Roxen started in "+(time()-start_time)+" seconds.\n");
 
