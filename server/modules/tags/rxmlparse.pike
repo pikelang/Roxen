@@ -9,7 +9,7 @@
 #define _extra_heads id->misc->defines[" _extra_heads"]
 #define _rettext id->misc->defines[" _rettext"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.41 2000/02/24 03:38:49 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.42 2000/02/29 12:41:37 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -22,7 +22,7 @@ inherit "roxenlib";
 
 // ------------- Module registration and configuration. ---------------
 
-constant module_type = MODULE_FILE_EXTENSION;
+constant module_type = MODULE_FILE_EXTENSION | MODULE_PROVIDER;
 constant module_name = "RXML 2.0 parser";
 constant module_doc  = "This module handles rxml parsing of HTML pages. It is recommended to also "
   "add the \"RXML 2.0 tags\" module so that this modules gets some tags to parse. "
@@ -53,6 +53,13 @@ void create()
 	 "If set, files with the exec bit set will be parsed. If not set, "
 	 "and the 'Require exec bit on files for parsing' flag is set, no "
 	 "parsing will occur.");
+
+  defvar("logerrors", 1, "Log RXML errors", TYPE_FLAG,
+	 "If set, all RXML errors will be logged in the debug log.");
+
+  defvar("quiet", 0, "Quiet RXML errors", TYPE_FLAG,
+	 "If set, RXML errors will not be shown unless debug has been turned "
+	 "on with &lt;debug on&gt; or with the (debug) prestate.");
 }
 
 
@@ -68,6 +75,8 @@ array(string) query_file_extensions()
 {
   return query("toparse");
 }
+
+multiset query_provides() { return (< "RXMLRunError", "RXMLParseError" >); }
 
 
 // ------------------- RXML Parsing -------------------
@@ -112,6 +121,35 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 
 
   return http_rxml_answer(data,id,file,file2type(id->realfile||id->no_query||"index.html") );
+}
+
+
+// ------------------ Error handling -------------------
+
+string rxml_run_error(RXML.Backtrace err, RXML.Type type, RequestID id) {
+  if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml)) {
+    if(query("logerrors"))
+      report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
+    id->misc->defines[" _ok"]=0;
+    if(query("quiet") && !id->misc->debug && !id->prestate->debug)
+      return "";
+    return "<br clear=\"all\" />\n<pre>" +
+      html_encode_string (describe_error (err)) + "</pre>\n";
+  }
+  return 0;
+}
+
+string rxml_parse_error(RXML.Backtrace err, RXML.Type type, RequestID id) {
+  if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml)) {
+    if(query("logerrors"))
+      report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
+    id->misc->defines[" _ok"]=0;
+    if(query("quiet") && !id->misc->debug && !id->prestate->debug)
+      return "";
+    return "<br clear=\"all\" />\n<pre>" +
+      html_encode_string (describe_error (err)) + "</pre>\n";
+  }
+  return 0;
 }
 
 
