@@ -89,7 +89,8 @@ class FTFont
 
   static mixed do_write_char( int c )
   {
-    catch{ return face->write_char( c ); };
+    if (mixed err = catch{ return face->write_char( c ); })
+      werror (describe_error (err));
     return 0;
   }
 
@@ -177,7 +178,7 @@ class FTFont
       return Image.Image( 1,height() );
 
     // nbsp -> ""
-    what = map( (array(string))what, replace, " ", "" );
+    what = map( (array(string))what, replace, "\240", "" );
 
     if( encoder )
       what = Array.map(what, lambda(string s) {
