@@ -1,6 +1,6 @@
+#include <config.h>
 #include <roxen.h>
 #define LOCALE	LOW_LOCALE->config_interface
-
 
 int __lt;
 string describe_time(int t)

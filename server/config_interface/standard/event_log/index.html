@@ -11,11 +11,8 @@
 
 <topmenu base="../" selected=event_log>
 
-<path>
-  <seg href=/ name=root />
-  <seg href="" name="Event Log" />
-</path>
-
 <content>
-  <insert file=/standard/event_log/log.pike nocache>
+<debug>
+  <insert file=log.pike nocache>
+  <!--#include virtual=log.pike nocache>
 </content>
