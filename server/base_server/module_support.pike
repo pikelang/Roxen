@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.104 2001/10/04 14:45:31 per Exp $
+// $Id: module_support.pike,v 1.105 2001/11/05 12:44:14 grubba Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -183,6 +183,18 @@ class FakeModuleInfo( string sname )
 	"The module "+sname+"  could not be found in the module path.",
 	0,1
       });
+    }
+    string query_location()
+    {
+      return 0;
+    }
+    object query_tag_set()
+    {
+      return 0;
+    }
+    array(string)|multiset(string)|string query_provides()
+    {
+      return 0;
     }
   }
 
