@@ -1,5 +1,5 @@
 // Global variables
-var isNav4, isIE4;
+var isNav4 = false, isIE4 = false;
 var insideWindowWidth;
 var range = "";
 var styleObj = "";
