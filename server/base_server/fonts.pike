@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.48 2000/03/13 06:11:12 per Exp $
+// $Id: fonts.pike,v 1.49 2000/03/16 15:25:38 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -219,20 +219,24 @@ class TTFWrapper
     string encoding;
     real = r;
     size = s;
-    real->set_height( size );
+    real->set_height( size*2 );
+
     if(r_file_stat(fn+".properties"))
       parse_html(open(fn+".properties","r")->read(), ([]),
 		 (["encoding":lambda(string tag, mapping m, string enc) {
 				encoding = enc;
 			      }]));
+
     if(encoding)
       encoder = Locale.Charset.encoder(encoding, "");
+
     real_write = (encoder? write_encoded : real->write);
   }
 
   Image.Image write( string ... what )
   {
-    return real_write(@Array.map( (array(string))what,replace," ",""));
+    return real_write(@Array.map( (array(string))what,replace," ",""))
+           ->scale(0.5);
   }
 }
 #endif
