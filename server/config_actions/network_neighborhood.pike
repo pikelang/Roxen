@@ -1,5 +1,7 @@
-/* $Id: network_neighborhood.pike,v 1.17 1997/09/06 13:07:20 per Exp $ */
-
+/* $Id: network_neighborhood.pike,v 1.18 1997/10/09 01:01:28 grubba Exp $ */
+#ifndef ENABLE_NEIGHBOURHOOD
+constant action_disabled = 1;
+#else /* ENABLE_NEIGHBOURHOOD */
 inherit "wizard";
 
 string name = "Neighbourhood//Roxen Neighbourhood...";
@@ -89,3 +91,4 @@ mixed handle(object id)
 {
   return wizard_for(id,0);
 }
+#endif /* ENABLE_NEIGHBOURHOOD */
