@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.72 1998/03/26 08:26:05 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.73 1998/03/26 08:35:42 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -657,7 +657,7 @@ string get_id(string from)
     string id;
     id = f->read(200);
     if(sscanf(id, "%*s$"+"Id: %*s,v %s ", id) == 3)
-      return " (version "+(last_id=id)+")";
+      return last_id=" (version "+id+")";
   };
   last_id = "";
   return "";
@@ -665,7 +665,9 @@ string get_id(string from)
 
 void add_id(array to)
 {
-  foreach(to, array q) q[0]+=add_id(q[0]);
+  foreach(to[1], array q)
+    if(stringp(q[0]))
+      q[0]+=get_id(q[0]);
 }
 
 string format_backtrace(array bt)
@@ -716,12 +718,12 @@ string format_backtrace(array bt)
 string generate_bugreport(array from)
 {
   add_id(from);
-  return ("Roxen version: "+version()+
+  return ("<pre>"+html_encode_string("Roxen version: "+version()+
 	  (roxen->real_version != version()?" ("+roxen->real_version+")":"")+
 	  "\nRequested URL: "+not_query+(query?"?"+query:"")+"\n"
 	  "\nError: "+
 	  describe_backtrace(from)-(getcwd()+"/")+
-	  "\n\nRequest data:\n"+raw);
+	  "\n\nRequest data:\n"+raw));
 }
 
 void internal_error(array err)
@@ -729,9 +731,7 @@ void internal_error(array err)
   if(QUERY(show_internals)) {
     if(prestate->plain) 
     {
-      mapping q = http_low_answer(500,generate_bugreport(err));
-      q->extra_heads = ([ "Content-Type":"text/plain" ]);
-      file=q;
+      file =  http_low_answer(500,generate_bugreport(err));
       return;
     }
     array(string) bt = (describe_backtrace(err)/"\n") - ({""});
