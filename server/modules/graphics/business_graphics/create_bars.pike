@@ -1,16 +1,6 @@
 #!NOMODULE
 
-#define max(i, j) (((i)>(j)) ? (i) : (j))
-#define min(i, j) (((i)<(j)) ? (i) : (j))
-#define abs(arg) ((arg)*(1-2*((arg)<0)))
-
-#define PI 3.14159265358979
-#define VOIDSYMBOL "\n"
-#define SEP "\t"
-
-constant LITET = 1.0e-38;
-constant STORTLITET = 1.0e-30;
-constant STORT = 1.0e30;
+#include "diagram.h"
 
 import Image;
 import Array;
@@ -19,7 +9,7 @@ import Stdio;
 inherit "polyline.pike";
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.71 1998/06/24 02:10:42 js Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.72 1998/11/04 20:13:38 peter Exp $";
 
 /*
  * name = "BG: Create bars";
@@ -30,8 +20,6 @@ constant cvs_version = "$Id: create_bars.pike,v 1.71 1998/06/24 02:10:42 js Exp 
 These functions were written by Henrik "Hedda" Wallin (hedda@idonex.se)
 Create_bars can draw normal bars, sumbars and normalized sumbars.
 */ 
-
-#define GETFONT(WHATFONT) object notext=resolve_font(diagram_data->WHATFONT||diagram_data->font);
 
 mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 {
@@ -229,7 +217,8 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
     GETFONT(xaxisfont);
     if ((label!="")&&(label!=0))
       labelimg=notext
-	->write(label)->scale(0,diagram_data["labelsize"]);
+	->write(UNICODE(label,diagram_data["encoding"]))
+	->scale(0,diagram_data["labelsize"]);
     else
       labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
 

@@ -1,16 +1,6 @@
 #!NOMODULE
 
-#define max(i, j) (((i)>(j)) ? (i) : (j))
-#define min(i, j) (((i)<(j)) ? (i) : (j))
-#define abs(arg) ((arg)*(1-2*((arg)<0)))
-
-#define PI 3.14159265358979
-#define VOIDSYMBOL "\n"
-#define SEP "\t"
-
-constant LITET = 1.0e-38;
-constant STORTLITET = 1.0e-30;
-constant STORT = 1.0e30;
+#include "diagram.h"
 
 import Image;
 import Array;
@@ -20,7 +10,7 @@ inherit "polyline.pike";
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.44 1998/06/24 02:10:45 js Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.45 1998/11/04 20:13:40 peter Exp $";
 
 /*
  * name = "BG: Create pies";
@@ -36,8 +26,6 @@ The data is taken from the diagram_data-mapping which is described in doc/diagra
 
 */ 
 
-
-#define GETFONT(WHATFONT) object notext=resolve_font(diagram_data->WHATFONT||diagram_data->font);
 
 mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 {
@@ -122,7 +110,8 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
       for(int i=0; i<sizeof(names); i++)
 	{
 	  if ((names[i]!=0) && (names[i]!=""))
-	    text[i]=notext->write((string)(names[i]))
+	    text[i]=notext
+	      ->write(UNICODE((string)(names[i]),diagram_data["encoding"]))
 	      ->scale(0,diagram_data["fontsize"]);
 	  else
 	    text[i]=image(diagram_data["fontsize"],diagram_data["fontsize"]);

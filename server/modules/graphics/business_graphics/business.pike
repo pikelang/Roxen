@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.108 1998/10/11 00:51:03 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.109 1998/11/04 20:13:37 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -617,6 +617,8 @@ string tag_diagram(string tag, mapping m, string contents,
       res->namesize=(int)m->namesize;
     if (m->namecolor)
       res->namecolor=parse_color(m->namecolor);
+    else
+      res->namecolor=parse_color(defines->fg);
   }
 
   res->voidsep = m->voidseparator || m->voidsep;
@@ -713,13 +715,14 @@ string tag_diagram(string tag, mapping m, string contents,
   if(m->eng) res->eng=1;
   if(m->neng) res->neng=1;
 
+  res->encoding       = m->encoding || "iso-8859-1";
   res->fontsize       = (int)m->fontsize || 16;
   res->legendfontsize = (int)m->legendfontsize || res->fontsize;
   res->labelsize      = (int)m->labelsize || res->fontsize;
 
-  if(m->labelcolor) res->labelcolor = parse_color(m->labelcolor);
-  res->axcolor   = m->axcolor?parse_color(m->axcolor):({0,0,0});
-  res->gridcolor = m->gridcolor?parse_color(m->gridcolor):({0,0,0});
+  if(m->labelcolor) res->labelcolor=parse_color(m->labelcolor || defines->fg);
+  res->axcolor   = parse_color(m->axcolor || defines->fg);
+  res->gridcolor = parse_color(m->gridcolor || defines->fg);
   res->linewidth = m->linewidth || "2.2";
   res->axwidth   = m->axwidth || "2.2";
 
@@ -943,7 +946,7 @@ mapping find_file(string f, object id)
     /* Image was not found or broken */
     if(res->image == 1) 
     {
-      res->image=get_font("avant_garde", 24, 0, 0,"left", 0, 0);
+      res->image=get_font(0, 24, 0, 0,"left", 0, 0);
       if (!(res->image))
 	throw(({"Missing font or similar error!\n", backtrace() }));
       res->image=res->image->

@@ -1,16 +1,6 @@
 #!NOMODULE
 
-#define max(i, j) (((i)>(j)) ? (i) : (j))
-#define min(i, j) (((i)<(j)) ? (i) : (j))
-#define abs(arg) ((arg)*(1-2*((arg)<0)))
-
-#define PI 3.14159265358979
-#define VOIDSYMBOL "\n"
-#define SEP "\t"
-
-constant LITET = 1.0e-38;
-constant STORTLITET = 1.0e-30;
-constant STORT = 1.0e30;
+#include "diagram.h"
 
 import Image;
 import Array;
@@ -18,7 +8,7 @@ import Stdio;
 
 inherit "polyline.pike";
 
-constant cvs_version = "$Id: create_graph.pike,v 1.104 1998/06/24 02:10:43 js Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.105 1998/11/04 20:13:39 peter Exp $";
 
 /*
  * name = "BG: Create graphs";
@@ -30,10 +20,6 @@ These functions were written by Henrik "Hedda" Wallin (hedda@idonex.se)
 Create_graph draws a graph but there are also some other functions
 used by create_pie and create_bars.
 */ 
-
-#define GETFONT(WHATFONT) object notext=resolve_font(diagram_data->WHATFONT||diagram_data->font);
-
-
 
 //Denna funktion ritar text-bilderna, initierar max, fixar till bk-bilder
 //och allt annat som är gemensamt för alla sorters diagram.
@@ -133,9 +119,6 @@ void draw(object(image) img, float h, array(float|string) coords,
 
 mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
 {
-  if (!diagram_data->font)
-    diagram_data->font="avant_garde";
-
   //diagram_data["datasize"]=0;
   foreach(diagram_data["data"], mixed* fo)
     if (sizeof(fo)>diagram_data["datasize"])
@@ -504,8 +487,9 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
 	    || (diagram_data["values_for_xnames"][i]<-LITET))
 	   && ((diagram_data["xnames"][i])
 	       && sizeof(diagram_data["xnames"][i])))
-	diagram_data["xnamesimg"][i]=notext->write(diagram_data["xnames"][i])
-	  -> scale(0,diagram_data["fontsize"]);
+	diagram_data["xnamesimg"][i]=notext
+	  ->write(UNICODE(diagram_data["xnames"][i],diagram_data["encoding"]))
+	  ->scale(0,diagram_data["fontsize"]);
       else
 	diagram_data["xnamesimg"][i]=
 	  image(diagram_data["fontsize"],diagram_data["fontsize"]);
@@ -526,7 +510,9 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
 	{
 	  if (diagram_data["ynames"][i]=="-0")
 	    diagram_data["ynames"][i]="0";
-	  diagram_data["ynamesimg"][i]=notext->write(diagram_data["ynames"][i])
+	  diagram_data["ynamesimg"][i]=notext
+	    ->write(UNICODE(diagram_data["ynames"][i],
+			    diagram_data["encoding"]))
 	    ->scale(0,diagram_data["fontsize"]);
 	}
 	else
@@ -544,7 +530,9 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
 	     || (diagram_data["values_for_ynames"][i]<-LITET))
 	    && ((diagram_data["ynames"][i])
 		&& (sizeof(diagram_data["ynames"][i]))))
-	  diagram_data["ynamesimg"][i]=notext->write(diagram_data["ynames"][i])
+	  diagram_data["ynamesimg"][i]=notext
+	    ->write(UNICODE(diagram_data["ynames"][i],
+			    diagram_data["encoding"]))
 	    ->scale(0,diagram_data["fontsize"]);
 	else
 	  diagram_data["ynamesimg"][i]=
@@ -769,7 +757,9 @@ mapping set_legend_size(mapping diagram_data)
 	{
 	  if (diagram_data["legend_texts"][i]
 	      && (sizeof(diagram_data["legend_texts"][i])))
-	    texts[i]=notext->write(diagram_data["legend_texts"][i])
+	    texts[i]=notext
+	      ->write(UNICODE(diagram_data["legend_texts"][i],
+			      diagram_data["encoding"]))
 	      ->scale(0,diagram_data["legendfontsize"]);
 	  else
 	    texts[i]=
@@ -946,8 +936,9 @@ int write_name(mapping diagram_data)
   else
     y=diagram_data["fontsize"];
   
-  text=notext->write(diagram_data["name"])->scale(0,y);
-  
+  text=notext->write(UNICODE(diagram_data["name"],diagram_data["encoding"]))
+    ->scale(0,y);
+
   if (text->xsize()>=diagram_data["xsize"])
     text->scale(diagram_data["xsize"]-1,0);
   
@@ -1589,7 +1580,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
     else
       label=diagram_data["labels"][1];
     if ((label!="")&&(label!=0))
-      labelimg=notext->write(label)
+      labelimg=notext->write(UNICODE(label,diagram_data["encoding"]))
 	-> scale(0,diagram_data["labelsize"]);
     else
       labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
