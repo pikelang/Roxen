@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.109 1998/09/30 17:38:17 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.110 1998/10/12 22:13:09 per Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -114,6 +114,26 @@ class Node {
     return res*"";
   }
   
+
+  object module_object()
+  {
+    object node;
+    node = this_object();
+    while(node)
+    {
+      if(node->type == NODE_MODULE_COPY ||
+	 node->type == NODE_MODULE_MASTER_COPY)
+      {
+	if( objectp( node->data ) )
+	  return node->data;
+	return node->data->master;
+      }
+      if(node->type == NODE_CONFIGURATION)
+	return node->data;
+      node = node->up;
+    }
+    return roxen;
+  }
   
   object config()
   {

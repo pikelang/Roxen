@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.25 1998/06/09 12:13:56 grubba Exp $ */
+/* $Id: low_describers.pike,v 1.26 1998/10/12 22:13:15 per Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
@@ -407,8 +407,7 @@ int module_wanted(mapping mod_info, object module, function check)
   return check(module, mod_info);
 }
 
-string describe_variable_low(mixed *var, mixed path, int really_short,
-			     string|void name)
+string describe_variable_low(mixed *var, mixed path, string name, object node)
 {
   string res;
   
@@ -560,13 +559,17 @@ string describe_variable_low(mixed *var, mixed path, int really_short,
 	  + ":" + (var[ VAR_VALUE ] & 255) 
 	  + ">"+"<input type=submit value=Ok>";
   }
-  if(really_short) return res;
-
   /* Now in res: <input ...> */
+
+  object module = node->module_object();
   
-  res = (name||var[VAR_NAME]) + "<br><dd>" + res;
+  res = (name||
+	 roxen->locale->module_doc_string(module,var[VAR_SHORTNAME],0)) 
+    + "<br><dd>" + res;
   if(roxen->QUERY(DOC))
-    return res + "<br>" + "<p>" + var[VAR_DOC_STR] + "<p>" 
+    return res + "<br>" + "<p>" + 
+      roxen->locale->module_doc_string( module, var[VAR_SHORTNAME], 1 )
+      + "<p>" 
       + describe_type(var[VAR_TYPE], var[VAR_MISC]) + "<p>";
   return res;
 }

@@ -1,4 +1,4 @@
-/* $Id: builders.pike,v 1.15 1998/03/05 03:15:39 mast Exp $ */
+/* $Id: builders.pike,v 1.16 1998/10/12 22:13:12 per Exp $ */
 
 #include <module.h>
 #include <confignode.h>
@@ -21,7 +21,12 @@ void low_build_variables(object node, mapping from)
   perror("low_build_variables()\n");
 #endif
 
-  m = values(from);
+  m = copy_value(values(from));
+
+  foreach(m, array q)
+    q[VAR_NAME] = roxen->locale->module_doc_string(node->module_object(),
+						   q[VAR_SHORTNAME],0);
+
   sort(column(m,VAR_NAME),m);
   
   for(i=0; i<sizeof(m); i++)

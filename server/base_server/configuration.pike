@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.160 1998/10/11 21:32:21 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.161 1998/10/12 22:13:07 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -119,6 +119,9 @@ int defvar(string var, mixed value, string name, int type,
   variables[var][ VAR_NAME ]         = name;
   variables[var][ VAR_MISC ]         = misc;
   
+  Locale.Roxen.standard
+    ->register_module_doc( this_object(), var, name, doc_str );
+
   type &= ~VAR_TYPE_MASK;		// Probably not needed, but...
   type &= (VAR_EXPERT | VAR_MORE);
   if (functionp(not_in_config)) {
@@ -134,6 +137,18 @@ int defvar(string var, mixed value, string name, int type,
   }
 
   variables[var][ VAR_SHORTNAME ] = var;
+}
+
+void deflocaledoc( string locale, string variable, 
+		   string name, string doc )
+{
+  // Locale stuff!
+  // Här blir vi farliga...
+  if( !Locale.Roxen[locale] )
+    report_debug("Invalid locale: "+locale+". Ignoring.\n");
+  else
+    Locale.Roxen[locale]
+      ->register_module_doc( this_object(), variable, name, doc );
 }
 
 int definvisvar(string var, mixed value, int type)
@@ -2374,6 +2389,11 @@ object enable_module( string modname )
 	       " Modules with the same priority can be assumed to be "
 	       "called in random order", 
 	       ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
+
+    me->deflocaledoc("svenska", "_priority", "Prioritet",
+		     "Modulens prioritet, 9 är högst och 0 är"
+		     " lägst. Moduler med samma prioritet anropas i "
+		     "mer eller mindre slumpmässig ordning.");
       
     if(module->type != MODULE_LOGGER &&
        module->type != MODULE_PROVIDER)
@@ -2384,6 +2404,14 @@ object enable_module( string modname )
 		   "The realm to use when requesting password from the "
 		   "client. Usually used as an informative message to the "
 		   "user.");
+
+	me->deflocaledoc("svenska", "_sec_group", "Säkerhet: Grupp",
+			 "Gruppnamnet som används när klienten bes"
+			 " ange lösenord. I de flesta klienter visas den "
+			 " här informationen för användaren i"
+			 "lösenordsdialogen.");
+
+
 	me->defvar("_seclvl",  0, "Security: Security level", TYPE_INT, 
 		   "The modules security level is used to determine if a "
 		   " request should be handled by the module."
@@ -2417,6 +2445,47 @@ object enable_module( string modname )
 		   "\n<p>On the other hand, a request handled by the the"
 		   " \"Filsystem module\" could later be handled by the"
 		   " \"CGI module\".");
+	me->deflocaledoc("svenska", "_seclvl", "Säkerhet: Säkerhetsnivå",
+			 "Modulens säkerhetsnivå används för att avgöra om "
+			 " en specifik request ska få hanteras av  modulen. "
+			 "\n<p><h2>Säkerhetsnivå och pålitlighetsnivå</h2>"
+			 " Varje modul har en konfigurerbar "
+			 "<i>säkerhtesnivå</i>. "
+			 "Varje request har en <i>pålitlighetsnivå</i>.<p>"
+			 "Högre <i>pålitlighetsnivåer</i> ger "
+			 " requesten tillgång till moduler med högre "
+			 "<i>säkerhetsnivå</i>. <p>\n"
+			 "\n<p><h2>Defenitioner</h2><ul>"
+			 " <li>En requests initialpålitlighetsnivå är "
+			 " oändligt hög."
+			 " <li> En request hanteras bara av moduler om "
+			 "dess <i>pålitlighetsnivå</i> är högre eller "
+			 " lika hög som modulens <i>säkerhetsnivå</i>"
+			 " <li> Varje gång en request hanteras av en"
+			 " modul så sätts dess <i>pålitlighetsnivå</i> "
+			 "till modulens <i>säkerhetsnivå</i> om "
+			 " modulen har en <i>säkerhetsnivå</i> som är "
+			 "skiljd from noll. "
+			 " </ul>"
+			 "\n<p><h2>Ett exempel</h2>"
+			 " Moduler:<ul>"
+			 " <li>  Användarfilsystem, <i>säkerhetsnivå</i> 1"
+			 " <li>  Filesystem, <i>säkerhetsnivå</i> 3"
+			 " <li>  CGI modul, <i>säkerhetsnivå</i> 2"
+			 " </ul>"
+			 "\n<p>En request hanterad av "
+			 " <i>Användarfilsystemet</i> får ett "
+			 "som <i>pålitlighetsnivå</i>. Den här"
+			 " requesten kan därför inte skickas vidare "
+			 "till <i>CGI modulen</i> eftersom den har"
+			 " en <i>säkerhetsnivå</i> som är högre än"
+			 " requestens <i>pålitlighetsnivå</i>.<p>"
+			 "  Å andra sidan så kan en request som "
+			 " hanteras av <i>Filsystem</i> modulen "
+			 " skickas vidare till <i>CGI modulen</i>.");
+
+
+
 
 	me->defvar("_seclevels", "", "Security: Patterns", TYPE_TEXT_FIELD,
 		   "This is the 'security level=value' list.<br>"
@@ -2437,6 +2506,28 @@ object enable_module( string modname )
 		   " or auth-module. The default (used when _no_ "
 		   "entries are present) is 'allow ip=*', allowing"
 		   " everyone to access the module");
+
+	me->deflocaledoc("svenska", "_seclevels", 
+			 "Säkerhet: Behörighetsregler",
+			 "Det här är en lista av behörighetsregler.<p>"
+			 "Varje behörighetsregler måste följa någon av de "
+			 " här mönstren: "
+			 "<hr noshade>"
+			 "allow ip=<i>IP-nummer</i>/<i>antal nätmaskbittar</i><br>"
+			 "allow ip=<i>IP-nummer</i>:<i>nätmask</i><br>"
+			 "allow ip=<i>globmönster</i><br>"
+			 "allow user=<i>användarnamn</i>,...<br>"
+			 "deny ip=<i>IP-nummer</i>/<i>antal nätmaskbittar</i><br>"
+			 "deny ip=<i>IP-nummer</i>:<i>nätmask</i><br>"
+			 "deny ip=<i>globmönster</i><br>"
+			 "<hr noshade>"
+			 "I globmänster betyer '*' ett eller flera "
+			 "godtyckliga tecken, och '?' betyder exekt "
+			 "ett godtyckligt tecken.<p> "
+			 "Användnamnet 'any' kan användas för att ange "
+			 "att vilken giltig användare som helst ska "
+			 " kunna få använda modulen.");
+
 	  
       } else {
 	me->definvisvar("_seclvl", -10, TYPE_INT); /* A very low one */
@@ -2445,6 +2536,14 @@ object enable_module( string modname )
 		   "The realm to use when requesting password from the "
 		   "client. Usually used as an informative message to the "
 		   "user.");
+	me->deflocaledoc("svenska", "_sec_group", "Säkerhet: Grupp",
+			 "Gruppnamnet som används när klienten bes"
+			 " ange lösenord. I de flesta klienter visas den "
+			 " här informationen för användaren i"
+			 "lösenordsdialogen.");
+
+
+
 	me->defvar("_seclevels", "", "Proxy security: Patterns",
 		   TYPE_TEXT_FIELD,
 		   "This is the 'security level=value' list.<br>"
@@ -2460,6 +2559,29 @@ object enable_module( string modname )
 		   "In username: 'any' stands for any valid account"
 		   " (from .htaccess"
 		   " or auth-module. The default is 'deny ip=*'");
+
+	me->deflocaledoc("svenska", "_seclevels", 
+			 "Säkerhet: Behörighetsregler",
+			 "Det här är en lista av behörighetsregler.<p>"
+			 "Varje behörighetsregler måste följa någon av de "
+			 " här mönstren: "
+			 "<hr noshade>"
+			 "allow ip=<i>IP-nummer</i>/<i>antal nätmaskbittar</i><br>"
+			 "allow ip=<i>IP-nummer</i>:<i>nätmask</i><br>"
+			 "allow ip=<i>globmönster</i><br>"
+			 "allow user=<i>användarnamn</i>,...<br>"
+			 "deny ip=<i>IP-nummer</i>/<i>antal nätmaskbittar</i><br>"
+			 "deny ip=<i>IP-nummer</i>:<i>nätmask</i><br>"
+			 "deny ip=<i>globmönster</i><br>"
+			 "<hr noshade>"
+			 "I globmänster betyer '*' ett eller flera "
+			 "godtyckliga tecken, och '?' betyder exekt "
+			 "ett godtyckligt tecken.<p> "
+			 "Användnamnet 'any' kan användas för att ange "
+			 "att vilken giltig användare som helst ska "
+			 " kunna få använda modulen.");
+
+
       }
     }
   } else {
@@ -2471,9 +2593,22 @@ object enable_module( string modname )
 	     "is only a text field for comments that the administrator "
 	     "might have (why the module are here, etc.)");
 
+  me->deflocaledoc("svenska", "_comment", 
+		   "Kommentar",
+		   "En kommentar. Den här kommentaren påverkar inte "
+		   " funktionaliteten hos modulen på något sätt, den "
+		   " syns bara i konfigurationsinterfacet.");
+
+
+
   me->defvar("_name", "", " Module name", TYPE_STRING|VAR_MORE,
 	     "An optional name. Set to something to remaind you what "
 	     "the module really does.");
+
+  me->deflocaledoc("svenska", "_name", "Namn",
+		   "Modulens namn. Om den här variablen är satt så "
+		   "används dess värde istället för modulens riktiga namn "
+		   "i konfigurationsinterfacet.");
 
   me->setvars(retrieve(modname + "#" + id, this));
 

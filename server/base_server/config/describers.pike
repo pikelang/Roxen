@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.56 1998/07/07 17:03:20 grubba Exp $ */
+/* $Id: describers.pike,v 1.57 1998/10/12 22:13:13 per Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -259,7 +259,8 @@ array|string describe_module_variable(object node)
   if(node->error)
     err = "<font size=\"+1\"><b>"+node->error+"</b></font><br>";
 
-  res = describe_variable_low(node->data, node->path(1),0,module_var_name(node));
+  res = describe_variable_low(node->data, node->path(1),
+			      module_var_name(node), node);
 
   if(res)
     return ({ "<form method=post action=/(set)"+node->path(1)+">" 

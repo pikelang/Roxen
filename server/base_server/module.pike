@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.34 1998/07/24 05:44:43 mast Exp $ */
+/* $Id: module.pike,v 1.35 1998/10/12 22:13:10 per Exp $ */
 
 #include <module.h>
 
@@ -122,7 +122,7 @@ void defvar(string|void var, mixed|void value, string|void name,
   
   if (!stringp(doc_str))
     doc_str = "No documentation";
-  
+
   switch (type & VAR_TYPE_MASK)
   {
   case TYPE_NODE:
@@ -252,6 +252,13 @@ void defvar(string|void var, mixed|void value, string|void name,
     break;
   }
 
+
+  // Locale stuff!
+  // Här blir vi farliga...
+  Locale.Roxen.standard
+    ->register_module_doc( this_object(), var, name, doc_str );
+
+
   variables[var]=allocate( VAR_SIZE );
   if(!variables[var])
     error("Out of memory in defvar.\n");
@@ -278,6 +285,17 @@ void defvar(string|void var, mixed|void value, string|void name,
   variables[var][ VAR_SHORTNAME ]= var;
 }
 
+void deflocaledoc( string locale, string variable, 
+		   string name, string doc )
+{
+  // Locale stuff!
+  // Här blir vi farliga...
+  if(!Locale.Roxen[locale])
+    report_debug("Invalid locale: "+locale+". Ignoring.\n");
+  else
+    Locale.Roxen[locale]
+      ->register_module_doc( this_object(), variable, name, doc );
+}
 
 // Convenience function, define an invissible variable, this variable
 // will be saved, but it won't be vissible in the configuration interface.
