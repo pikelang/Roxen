@@ -34,5 +34,5 @@ mixed handle(object id, object mc)
     return http_redirect(roxen->config_url()+"(shutdown)/Actions/");
   if(id->variables->how == "reset")
     return http_redirect(roxen->config_url()+"(restart)/Actions/");
-  return http_redirect(roxen->config_url()+"Actions/");
+  return http_redirect(roxen->config_url()+"Actions/?"+time());
 }

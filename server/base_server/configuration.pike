@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.53 1997/08/13 19:22:20 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.54 1997/08/13 21:37:30 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -2349,7 +2349,7 @@ string desc()
       prt += port[2];
     else
       prt += (gethostname()/".")[0] + "." + QUERY(Domain);
- prt += ":"+port[0]+"/";
+    prt += ":"+port[0]+"/";
     if(port_open( port ))
       res += "<a target=server_view href=\""+prt+"\">"+prt+"</a>\n<br>";
     else
@@ -2358,7 +2358,6 @@ string desc()
   }
   return res+"<p>";
 }
-
 
 
 
@@ -2375,11 +2374,30 @@ private string get_my_url()
   return "http://" + s + "/";
 }
 
-void create(string config)
+void enable_all_modules()
 {
-  array modules_to_process;
+  array modules_to_process = sort_array(indices(retrieve("EnabledModules",this)));
   string tmp_string;
 
+
+  // Always enable the user database module first.
+  if(search(modules_to_process, "userdb#0")>-1)
+    modules_to_process = (({"userdb#0"})+(modules_to_process-({"userdb#0"})));
+
+
+  array err;
+  foreach( modules_to_process, tmp_string )
+    if(err = catch( enable_module( tmp_string ) ))
+      report_error("Failed to enable the module "+tmp_string+". Skipping\n"
+#ifdef MODULE_DEBUG
+                    +describe_backtrace(err)+"\n"
+#endif
+	);
+  roxen->current_configuration = 0;
+}
+
+void create(string config)
+{
   roxen->current_configuration = this;
   name=config;
 
@@ -2524,23 +2542,7 @@ void create(string config)
   }
     
   set("_v", CONFIGURATION_FILE_LEVEL);
-  
-  modules_to_process = sort_array(indices(retrieve("EnabledModules",this)));
-
-  // Always enable the user database module first.
-  if(search(modules_to_process, "userdb#0")>-1)
-    modules_to_process = (({"userdb#0"})+(modules_to_process-({"userdb#0"})));
-
-
-  array err;
-  foreach( modules_to_process, tmp_string )
-    if(err = catch( enable_module( tmp_string ) ))
-      report_error("Failed to enable the module "+tmp_string+". Skipping\n"
-#ifdef MODULE_DEBUG
-                    +describe_backtrace(err)+"\n"
-#endif
-	);
-  roxen->current_configuration = 0;
+  enable_all_modules();
 }
 
 

@@ -7,5 +7,5 @@ constant doc = ("Change the configuration interface username and/or password. "
 
 mixed handle(object id, object mc)
 {
-  return http_redirect(roxen->config_url()+"(changepass)/Actions/");
+  return http_redirect(roxen->config_url()+"(changepass)/Actions/?"+time());
 }

@@ -4,7 +4,7 @@ import Array;
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-string cvs_version = "$Id: read_config.pike,v 1.11 1997/06/04 20:23:53 grubba Exp $";
+string cvs_version = "$Id: read_config.pike,v 1.12 1997/08/13 21:37:33 per Exp $";
 
 #else
 import spider;
@@ -15,7 +15,7 @@ import spider;
 import Array;
 import Stdio;
 
-private mapping (string:mapping) configs = ([ ]);
+mapping (string:mapping) configs = ([ ]);
 
 string configuration_dir; // Set by Roxen.
 

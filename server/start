@@ -41,6 +41,7 @@ fi
 
 pike=pike
 if [ -x bin/pike ] ; then pike=bin/pike; fi
+if [ -x bin/roxen ] ; then pike=bin/roxen; fi
 
 rotate () {
   b=5;

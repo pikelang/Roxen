@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.35 1997/08/13 02:58:33 neotron Exp $ */
+/* $Id: describers.pike,v 1.36 1997/08/13 21:37:36 per Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -46,9 +46,20 @@ string describe_builtin_variables(object node)
   return link("<b>Builtin variables (security, comments etc.)</b>");
 }
 
+int __lt;
 string describe_time(int t)
 {
-  return capitalize(roxen->language("en","date")(t));
+  int full;
+  if(localtime(__lt)->yday != localtime(t)->yday)
+  {
+    __lt = t;
+    full=1;
+  }
+
+  if(full)
+    return capitalize(roxen->language("en","date")(t));
+  else
+    return sprintf("%02d:%02d",localtime(t)->hour,localtime(t)->min);
 }
 
 string describe_interval(int i)
@@ -66,7 +77,7 @@ string describe_interval(int i)
 
 string describe_times(array (int) times)
 {
-  
+  __lt=0;
   if(sizeof(times) < 6)
     return implode_nicely(map(times, describe_time));
 
@@ -127,7 +138,7 @@ mixed describe_actions(object node, object id)
 	if(act[0]!='#' && act[-1]=='e')
 	  if(!get_action(act)->more || this_object()->more_mode)
 	    acts+=({"<!-- "+get_action(act)->name+" --><dt><font size=\"+2\">"
-		      "<a href=\"/Actions/?action="+act+"\">"+
+		      "<a href=\"/Actions/?action="+act+"&unique="+(zonk++)+"\">"+
 		      get_action(act)->name+"</a></font><dd>"+
 		      (get_action(act)->doc||"") });
       };
@@ -185,7 +196,7 @@ array|string describe_module_variable(object node)
   res = describe_variable_low(node->data, node->path(1));
 
   if(res)
-    return ({ "<form action=/(set)"+node->path(1)+">" 
+    return ({ "<form method=post action=/(set)"+node->path(1)+">" 
 		, (err?err:"")+res+"</form>" });
 
 }

@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.64 1997/08/13 06:51:37 neotron Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.65 1997/08/13 21:37:32 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -148,8 +148,21 @@ class Node {
   }
 }
 
+int restore_more_mode()
+{
+  return !!file_stat(".more_mode");
+}
+
 object root=Node();
-int expert_mode, more_mode;
+int expert_mode, more_mode=restore_more_mode();
+
+void save_more_mode()
+{
+  if(more_mode)
+    open(".more_mode", "wct");
+  else
+    rm(".more_mode");
+}
 
 
 void create()
@@ -160,11 +173,6 @@ void create()
 }
 
 #define BUTTON(ACTION,TEXT,ALIGN) do{PUSH("<a href=\"/(ACTION)"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=\"/auto/button/"+(lm?"lm/":"")+replace(TEXT," ","%20")+"\" alt=\""+(lm?"/ ":" ")+TEXT+" /\""+(("ALIGN"-" ")=="left"?"":" align="+("ALIGN"-" "))+"></a>");lm=0;}while(0)
-
-inline string shutdown_restart(string save, int compact,void|object o)
-{
-  return /*"<br clear=all>"*/"";
-}
 
 string default_head(string h, string|void save)
 {
@@ -547,7 +555,7 @@ string describe_config_modules(array mods)
 
 string configuration_docs()
 {
-  string res;
+  string res="";
   foreach(get_dir("server_templates"), string c)
   {
     catch {
@@ -819,7 +827,9 @@ mapping new_configuration(object id)
 {
   if(!sizeof(id->variables))
     return stores(new_configuration_form());
-
+  if(id->variables->no)
+    return http_redirect(roxen->config_url()+id->not_query[1..]+"?"+bar++);
+  
   if(!id->variables->name)
     return stores(default_head("Bad luck")+
 		  "<blockquote><h1>No configuration name?</h1>"
@@ -1142,7 +1152,7 @@ string describe_node_path(object node)
     if(cnt>0)
     {
 //      werror("q="+q+"\n");
-      res += ("<b><font size=+1><a href=\""+q+"\">"+
+      res += ("<b><font size=+1><a href=\""+q+"?"+bar+++"\">"+
 	      dn(find_node(http_decode_string(q[..strlen(q)-2])))+
 	      "</a></font></b> -&gt; ");
     }
@@ -1236,8 +1246,8 @@ mapping configuration_parse(object id)
     case "expert":   expert_mode = 1;  break;
     case "noexpert": expert_mode = 0;  break;
 
-    case "morevars":   more_mode = 1;  break;
-    case "nomorevars": more_mode = 0;  break;
+    case "morevars":   more_mode = 1; save_more_mode(); break;
+    case "nomorevars": more_mode = 0; save_more_mode(); break;
       
       // Fold and unfold nodes, this is _very_ simple, once all the
       // supporting code was writte.
@@ -1640,7 +1650,8 @@ mapping configuration_parse(object id)
      || o->type == NODE_MODULE_COPY_VARIABLES)
   {
     BUTTON(delete, "Delete module", left);
-    BUTTON(refresh, "Reload module", left);
+    if(more_mode)
+      BUTTON(refresh, "Reload module", left);
   }
   
   if(o->type == NODE_CONFIGURATION)
@@ -1675,7 +1686,7 @@ mapping configuration_parse(object id)
 //  BUTTON(shutdown,"Shutdown", left);
 
   PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=\"/auto/button/rm/%20\">");
-  PUSH("<br clear=all>");
+//  PUSH("<br clear=all>");
 //  PUSH("<p align=right><font size=-1 color=blue><a href=\"$docurl\"><font color=blue>"+roxen->real_version +"</font></a></font></p>");
 //  PUSH("</table>");
   PUSH("</body>\n");

@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.98 1997/08/13 15:11:48 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.99 1997/08/13 21:37:34 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -308,13 +308,13 @@ object configuration_interface()
   {
     perror("Loading configuration interface.\n");
     loading_config_interface = 1;
-    
-
-    configuration_interface_obj= ( (program) "mainconfig" )();
+    catch {
+      configuration_interface_obj=((program)"mainconfig")();
+    };
     root = configuration_interface_obj->root;
   }
   if(!configuration_interface_obj)
-    perror("Failed to load the configuration interface!\n");
+    report_error("Failed to load the configuration interface!\n");
   loading_config_interface = 0;
   return configuration_interface_obj;
 }
@@ -2170,6 +2170,7 @@ varargs int main(int argc, array (string) argv)
   
   define_global_variables(argc, argv);
 
+
   create_pid_file(QUERY(pidfile));
 
 #if efun(syslog)
@@ -2180,6 +2181,7 @@ varargs int main(int argc, array (string) argv)
   initiate_supports();
   initiate_languages();
   
+  initiate_configuration_port( 1 );
   enable_configurations();
 #if 0
   restore_current_user_id_number();
@@ -2217,7 +2219,7 @@ varargs int main(int argc, array (string) argv)
     catch { signal(signum(sig), exit_when_done); };
   }
 
-  initiate_configuration_port( 1 );
+
   report_notice("Roxen started in "+(time()-start_time)+" seconds.\n");
   perror("-------------------------------------\n\n");
 
