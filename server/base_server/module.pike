@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.90 2000/03/30 13:37:33 nilsson Exp $
+// $Id: module.pike,v 1.91 2000/06/23 16:07:20 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -679,7 +679,7 @@ mapping query_simpletag_callers()
   return m;
 }
 
-private RXML.TagSet module_tag_set;
+RXML.TagSet module_tag_set;
 
 RXML.TagSet query_tag_set()
 {
