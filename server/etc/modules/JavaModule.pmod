@@ -112,6 +112,15 @@ static mapping(object:object) jotoconf = set_weak_flag( ([]), 1 );
 static mapping(object:object) conftojo = set_weak_flag( ([]), 1 );
 static mapping(object:object) jotoid = set_weak_flag( ([]), 1 );
 
+#if constant(thread_create)
+#define LOCK() object _key=mutex->lock()
+#define UNLOCK() destruct(_key)
+static object mutex=Thread.Mutex();
+#else
+#define LOCK() 0
+#define UNLOCK() 0
+#endif
+
 
 static void check_exception()
 {
@@ -250,6 +259,8 @@ class ReaderFile
 
 class ModuleWrapper
 {
+  int thread_safe=1;
+
   class JavaSimpleTag
   {
     static object caller;
@@ -282,11 +293,18 @@ class ModuleWrapper
       return 0;
     if(conftojo[conf])
       return conftojo[conf];
-    object ob = conf_class->alloc();
-    conf_init->call_nonvirtual(ob);
-    check_exception();
-    jotoconf[ob] = conf;
-    conftojo[conf] = ob;
+
+    LOCK();
+    object ob = conftojo[conf];
+    if(!ob) {
+      ob = conf_class->alloc();
+      conf_init->call_nonvirtual(ob);
+      check_exception();
+      jotoconf[ob] = conf;
+      conftojo[conf] = ob;
+    }
+    UNLOCK();
+
     return ob;
   }
 
@@ -417,7 +435,7 @@ class ModuleWrapper
     return l && valify(l);
   }
 
-  mapping query_simple_tag_callers()
+  mapping query_simpletag_callers()
   {
     mapping res = ([ ]);
     object callers = _query_tag_callers(modobj);
