@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2001, Roxen IS.
+// This is a ChiliMoon module. Copyright © 2001, Roxen IS.
 //
 
 #define _error id->misc->defines[" _error"]
@@ -7,11 +7,13 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.17 2003/01/23 17:03:19 mani Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.18 2004/05/23 02:29:27 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Session tag module";
-constant module_doc  = "This module provides the session tag";
+constant module_doc  = #"\
++This module provides the session tag which provides a variable scope
++where user session data can be stored.";
 
 
 // --- &client.session; ----------------------------------------
@@ -114,13 +116,16 @@ class TagForceSessionID {
 				     return has_prefix(in, "RoxenUserID");
 				   } ));
 
+      string path_info = id->misc->path_info || "";
+
       // If there is no ID cooke nor prestate, redirect to the same page
       // but with a session id prestate set.
       if(!id->cookies->RoxenUserID && !prestate) {
 	multiset orig_prestate = id->prestate;
 	id->prestate += (< "RoxenUserID=" + roxen.create_unique_id() >);
 
-	mapping r = Roxen.http_redirect(id->not_query, id, 0, id->real_variables);
+	mapping r = Roxen.http_redirect(id->not_query + path_info, id, 0,
+					id->real_variables);
 	if (r->error)
 	  RXML_CONTEXT->set_misc (" _error", r->error);
 	if (r->extra_heads)
@@ -144,12 +149,13 @@ class TagForceSessionID {
 			      lambda(string in) {
 				return !has_prefix(in, "RoxenUserID");
 			      } );
-	mapping r = Roxen.http_redirect(id->not_query, id, 0, id->real_variables);
+	mapping r = Roxen.http_redirect(id->not_query + path_info, id, 0,
+					id->real_variables);
 	id->prestate = orig_prestate;
 	if (r->error)
 	  RXML_CONTEXT->set_misc (" _error", r->error);
 	if (r->extra_heads)
-	  RXML_CONTEXT->extend_scope ("headers", r->extra_heads);
+	  RXML_CONTEXT->extend_scope ("header", r->extra_heads);
 	return 0;
       }
     }
