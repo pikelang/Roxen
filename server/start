@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.112 2000/05/17 15:26:38 nilsson Exp $
+# $Id: start,v 1.113 2001/07/31 07:38:42 per Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -139,6 +139,9 @@ parse_args() {
   '--without-debug')
     debug=-1
   ;;
+  '--strip-backslash'|'--without-backslash'|'--strip-back-slash')
+    DEFINES="-DSTRIP_BSLASH $DEFINES"
+  ;;
   '--fd-debug'|'--with-fd-debug'|'--enable-fd-debug')
     DEFINES="-DFD_DEBUG $DEFINES"
   ;;
@@ -262,6 +265,8 @@ the default arguments.
       .B--without-keep-aliveB.:       Disable keep alive in the HTTP
 			          protocol module. Some clients might have
 				  problems with keep-alive.
+
+      .B--strip-backslashB.:          Replace all \\ characters in URIs with /
 
       .B--onceB.:                     Run the server only once, in the foreground.
 			   	  This is very useful when debugging.
