@@ -2,6 +2,8 @@
 <eval><insert file="../template"/></eval>
 <page title="Available fonts">
 
+<if not module="graphic_text"><b>Add the Graphic text module to see examples of the fonts.</b></if>
+
 <comment>Initialize the start value</comment>
 <if not variable="form.start"><set variable="form.start" value="0"/></if>
 <if variable="form.start < 0"><set variable="form.start" value="0"/></if>
@@ -11,7 +13,9 @@
 <table cellspacing="0" cellpadding="1" bgcolor="black" width="512">
 <tr><td>
   <table width="100%" cellspacing="0" cellpadding="2">
+  <if module="graphic_text">
   <tr><td bgcolor="white"><gtext font="&_.name;" ::="&_.style;=''">ABCabc1234</gtext></td></tr>
+  </if>
   <tr><td bgcolor="white">
   Name: &_.name;<br />
   Format: &_.format;<br />
