@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.67 1999/06/17 01:09:54 marcus Exp $
+# $Id: configure.in,v 1.68 1999/06/23 22:24:32 marcus Exp $
 #
 
 prefix=$PWD
@@ -519,9 +519,9 @@ export CC CFLAGS REALCFLAGS WARN OPTIMIZE
 
 if test "x`uname`" = "xLinux" ; then
   echo
-  echo 'Warning! Linux detected, enabling the socketpair kluge.'
+  echo 'Warning! Linux detected, CGI may not work.'
   echo
-  pike_cv_select_on_unix_sockets='yes'
+#  pike_cv_select_on_unix_sockets='yes'
 fi
 
 ###################################################################
