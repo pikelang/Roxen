@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.68 2001/01/02 15:21:40 per Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.69 2001/01/02 15:26:56 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -387,7 +387,7 @@ string status()
         "<font color=\"red\">"+
         LOCALE(7,"The default database is not connected")+
         ":</font><br />\n" +
-        replace( Roxen.html_encode_string( describe_backtrace(err) ),
+        replace( Roxen.html_encode_string( describe_error(err) ),
                  "\n", "<br />\n") +
         "<br />\n";
     }
