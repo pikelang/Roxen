@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.41 1999/09/01 15:42:32 grubba Exp $
+ * $Id: clientlayer.pike,v 1.42 1999/09/01 15:46:52 grubba Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.41 1999/09/01 15:42:32 grubba Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.42 1999/09/01 15:46:52 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -860,7 +860,7 @@ class User
 
   int allocate_quota(int amount)
   {
-    int u = get_usage() + amount;
+    int u = query_usage() + amount;
 
     if (u < 0) {
       // No negative usage...

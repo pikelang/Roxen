@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.77 1999/09/01 15:47:13 grubba Exp $
+ * $Id: smtp.pike,v 1.78 1999/09/01 15:53:18 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.77 1999/09/01 15:47:13 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.78 1999/09/01 15:53:18 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1537,7 +1537,7 @@ array(int|string) send_mail(string data, object|mapping mail, object|void smtp)
   if (sizeof(expanded)) {
     // Partial success.
 
-    if (handled == SMTP_PUT_QUOTA) {
+    if (any_handled == SMTP_PUT_QUOTA) {
       // Out of quota.
 #ifdef SMTP_DEBUG
       report_notice("SMTP: Out of quota.\n");
