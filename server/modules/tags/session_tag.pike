@@ -7,10 +7,10 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.15 2002/01/30 00:19:44 mast Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.16 2002/09/10 16:37:37 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
-constant module_name = "Session tag module";
+constant module_name = "Tags: Session tag module";
 constant module_doc  = "This module provides the session tag";
 
 
@@ -120,7 +120,7 @@ class TagForceSessionID {
 	multiset orig_prestate = id->prestate;
 	id->prestate += (< "RoxenUserID=" + roxen.create_unique_id() >);
 
-	mapping r = Roxen.http_redirect(id->not_query, id);
+	mapping r = Roxen.http_redirect(id->not_query, id, 0, id->real_variables);
 	if (r->error)
 	  RXML_CONTEXT->set_misc (" _error", r->error);
 	if (r->extra_heads)
@@ -144,7 +144,7 @@ class TagForceSessionID {
 			      lambda(string in) {
 				return !has_prefix(in, "RoxenUserID");
 			      } );
-	mapping r = Roxen.http_redirect(id->not_query, id);
+	mapping r = Roxen.http_redirect(id->not_query, id, 0, id->real_variables);
 	id->prestate = orig_prestate;
 	if (r->error)
 	  RXML_CONTEXT->set_misc (" _error", r->error);
