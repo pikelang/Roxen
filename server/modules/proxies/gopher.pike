@@ -2,7 +2,7 @@
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.16 1999/12/18 14:48:55 nilsson Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.17 1999/12/28 04:31:16 nilsson Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -19,11 +19,15 @@ constant thread_safe=1;
 # endif
 #endif
 
+#ifdef GOPHER_DEBUG
+# define GOPHER_WERR(X) werror("GOPHER: "+X+"\n")
+#else
+# define GOPHER_WERR(X)
+#endif
+
 inherit "module";
 inherit "socket";
 inherit "roxenlib";
-
-import Array;
 
 #include <module.h>
 #include <proxyauth.pike>
@@ -51,9 +55,9 @@ string make_html_line(string *s)
 {
   if(s)
     return sprintf("<a href=\"%s\"> <img hspace=5 border=0 "
-		   "src=\"%s\"> %s</a><br>\n", 
+		   "src=\"%s\"> %s</a><br>\n",
 		   replace(s[1], " ", "%20"), s[0], replace(s[2], "_", " "));
-  else 
+  else
     return "<p>";
 }
 
@@ -96,9 +100,7 @@ void done_dir_data(array in)
 
   if(dirl[0] && dirl[0][0] != '<')
   {
-#ifdef GOPHER_DEBUG
-    werror("GOPHER: Done with dir data.\n");
-#endif
+    GOPHER_WERR("Done with dir data.");
     dirl -= ({ ".", "" });
     for(i=0; i < sizeof(dirl); i++)
     {
@@ -119,7 +121,7 @@ void done_dir_data(array in)
 	dirl[i] = ({ "internal-gopher-index", "gopher://"+URL, a[0] });
 	break;
 	
-       case '3': /* Error? */ 
+       case '3': /* Error? */
 	dirl[i] = ({ "internal-gopher-binary", "gopher://"+URL, a[0] });
 	break;
 	
@@ -142,7 +144,7 @@ void done_dir_data(array in)
 	dirl[i] = ({ "internal-gopher-telnet", "tn3270://"+URL, a[0] });
 	break;
 	
-       case '+': 
+       case '+':
 	dirl[i] = ({ "internal-gopher-menu", "gopher://"+URL, a[0] });
 	break;
 	
@@ -159,15 +161,11 @@ void done_dir_data(array in)
       }
 #undef URL
     }
-#ifdef GOPHER_DEBUG
-    werror("GOPHER: Sending dir data to client.\n");
-#endif
-    write_to_client_and_cache(to, map(dirl, make_html_line)*"" +"<hr>",
+    GOPHER_WERR("Sending dir data to client.");
+    write_to_client_and_cache(to, Array.map(dirl, make_html_line)*"" +"<hr>",
 			      in[-1]);
   } else {
-#ifdef GOPHER_DEBUG
-    werror("GOPHER: Sending cached dir data to client.\n");
-#endif
+    GOPHER_WERR("Sending cached dir data to client.");
     write_to_client_and_cache(to, dirl*"\n", 0);
   }
   destruct(to);
@@ -175,9 +173,7 @@ void done_dir_data(array in)
 
 void got_dir_data(array i, string s)
 {
-#ifdef GOPHER_DEBUG
-    werror("GOPHER: Got some dir data.\n");
-#endif
+  GOPHER_WERR("Got some dir data.");
   i[0] += s;
   if(i[0][-1] == '.' && i[0][-2]=='\n')
     done_dir_data(i);
@@ -188,14 +184,12 @@ void gopher_done(object id)
   id->end();
 }
 
-void connected(object ok, string file, object send_to, string query, 
+void connected(object ok, string file, object send_to, string query,
 	       string key)
 {
   string type;
 
-#ifdef GOPHER_DEBUG
-  werror("GOPHER: Connected\n");
-#endif
+  GOPHER_WERR("Connected");
 
   if(!send_to)
   {
@@ -218,16 +212,12 @@ void connected(object ok, string file, object send_to, string query,
     file=file[1..strlen(file)-1];
   }
 
-#ifdef GOPHER_DEBUG
-  werror("GOPHER: Requesting file\n");
-#endif
+  GOPHER_WERR("Requesting file");
 
   switch(type)
   {
    case "1": /* Directory, must be parsed. */
-#ifdef GOPHER_DEBUG
-    werror("GOPHER: Is a menu\n");
-#endif
+     GOPHER_WERR("Is a menu");
     ok->write(file + "\n");
     ok->set_id(({ "", send_to, ok, key}));
     ok->set_nonblocking(got_dir_data, lambda(){}, done_dir_data);
@@ -245,7 +235,7 @@ void connected(object ok, string file, object send_to, string query,
 			  "screen near you\n"
 			  "Content-Type: application/mac-binhex\n\n");
     break;
-    
+
    case "5": /* Dos binary (of all types...) */
     ok->write(file + "\n");
     send_to->my_fd->write("HTTP/1.0 200 Yo!\n"
@@ -263,7 +253,7 @@ void connected(object ok, string file, object send_to, string query,
     send_to->my_fd->write("HTTP/1.0 200 Yo!\n"
 			  "Content-Type: application/binary\n\n");
     break;
-    
+
    case "g": /* Gif image */
     ok->write(file + "\n");
     send_to->my_fd->write("HTTP/1.0 200 Gopher data\n"
@@ -292,18 +282,18 @@ void connected(object ok, string file, object send_to, string query,
 		   "<h1>Gopher Search</h1>"
 		   "<isindex prompt=\"Gopher search:  \">");
     ok->write(file + "	" + query + "\n");
-    ok->set_id(({ "", send_to, ok})); 
+    ok->set_id(({ "", send_to, ok}));
     ok->set_nonblocking(got_dir_data, lambda(){}, done_dir_data);
     return;
 
    case "T": /* Tn 3270, shouldn't be here */
    case "+": /* Extra server, shouldn't be here */
    case "8": /* Shouldn't be here... */
-   default:   
+   default:
     ok->write(file + "\n");
     send_to->my_fd->write("HTTP/1.0 200 Yo! Gopher data comming soon to a "
 			  "screen near you\nContent-Type: text/plain\n\n");
-    
+
   }
   async_pipe(send_to->my_fd, ok, 0, 0, "gopher", key);
   send_to->disconnect();
@@ -316,9 +306,7 @@ mapping find_file(string fi, object id)
   mixed tmp;
   string h, f, q;
   int p;
-#ifdef GOPHER_DEBUG
-  werror("GOPHER: find_file()\n");
-#endif
+  GOPHER_WERR("find_file()");
 
   if(tmp = proxy_auth_needed(id))
     return tmp;
@@ -327,9 +315,7 @@ mapping find_file(string fi, object id)
   if(!f)  f="";
   sscanf(h, "%s:%d", h, p);
   if(!p)  p=70;
-#ifdef GOPHER_DEBUG
-  werror("GOPHER: host = "+h+"\nfile = "+f+"\nport = "+p+"\n");  
-#endif
+  GOPHER_WERR("host = "+h+"\nfile = "+f+"\nport = "+p);
   sscanf(id->raw_url, "%*s?%s", q);
   if(id->pragma["no-cache"] || id->method != "GET")
   {
@@ -338,11 +324,11 @@ mapping find_file(string fi, object id)
     async_cache_connect(h, p, "gopher", h+":"+p+"/"+f,
 			connected, f, id, q, h+":"+p+"/"+f);
   }
-  id->do_not_disconnect = 1;  
+  id->do_not_disconnect = 1;
   return http_pipe_in_progress();
 }
 
 string info()
-{ 
-  return "This is a simple gopher proxy, useful for firewall sites."; 
+{
+  return "This is a simple gopher proxy, useful for firewall sites.";
 }
