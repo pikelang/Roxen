@@ -4,7 +4,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version="$Id: autoreg.pike,v 1.1 1998/08/25 16:58:20 js Exp $";
+constant cvs_version="$Id: autoreg.pike,v 1.2 1998/08/26 00:21:23 js Exp $";
 
 
 mapping engines =
@@ -20,7 +20,8 @@ mapping engines =
 				"pg":"URL.html",
 				"CAT":"Add/Update URL" ]),
 		     "url_var":"url" ]),
-     "Hotbot":    ([ "url":"http://www.hotbot.com/addurl.asp",
+     "Hotbot":    ([ "host":"www.hotbot.com",
+		     "path":"/addurl.asp",
 		     "vars": ([ "MM":"1",
 				"success_page":"http://www.hotbot.com/addurl.asp",
 				"failure_page":"http://www.hotbot.com/oops.asp",
@@ -30,10 +31,12 @@ mapping engines =
 				"redirect":"http://www.hotbot.com/addurl2.html",
 				"email":"autoreg@idonex.se" ]),
 		     "url_var":"newurl" ]),
-     "Webcrawler":([ "url":"http://webcrawler.com/cgi-bin/addURL.cgi",
+     "Webcrawler":([ "host":"webcrawler.com",
+		     "path":"/cgi-bin/addURL.cgi",
 		     "vars": (["action":"add"]),
 		     "url_var":"url" ]), // METHOD=POST
-     "Lycos":     ([ "url":"http://www.lycos.com/cgi-bin/spider_now.pl",
+     "Lycos":     ([ "host":"www.lycos.com",
+		     "path":"/cgi-bin/spider_now.pl",
 		     "vars": (["email":"autoreg@idonex.se"]),
 		     "url_var":"query" ]),
   ]);
@@ -49,8 +52,10 @@ array register_module()
 void connect_and_send_query(string host, string path)
 {
   object o=Stdio.File();
+//  werror(host+": "+path+"\n");
   o->connect(host,80);
   o->write("GET "+path+" HTTP/1.0\r\n\r\n");
+//  Stdio.write_file("/home/js/AutoSite/"+host+".html",o->read());
   o->close();
 }
 
@@ -58,12 +63,12 @@ string tag_register(string tag_name, mapping args, object id)
 {
   foreach(indices(engines), string engine)
   {
-    string rest="";
+    string rest="?";
     foreach(indices(engines[engine]->vars),string var)
       rest+=http_encode_string(var)+"="+http_encode_string(engines[engine]->vars[var])+"&";
     rest+=http_encode_string(engines[engine]->url_var)+"="+
-      http_encode_string(engines[engine]->vars[engines[engine]->url_var]);
-    create_thread(connect_and_send_query,engines[engine]->host,engines[engine]->path+rest);
+      http_encode_string(args->url);
+    thread_create(connect_and_send_query,engines[engine]->host,engines[engine]->path+rest);
   }
   return "<b>Registered: "+indices(engines)*", "+".</b>";
 }
