@@ -83,6 +83,7 @@ nn binary
 /server/config_interface/standard/actions/requeststatus.pike foreign_ident
 /server/config_interface/standard/actions/resolv.pike foreign_ident
 /server/config_interface/standard/actions/restart.pike foreign_ident
+/server/config_interface/standard/actions/ssl_common.pike foreign_ident
 /server/config_interface/standard/user_form.pike foreign_ident
 /server/etc/extensions foreign_ident
 /server/etc/include/config.h foreign_ident
