@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.890 2005/02/01 12:37:48 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.891 2005/02/10 17:50:00 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1565,14 +1565,19 @@ class Protocol
   {
     if (bound) return;
     if (!port_obj) port_obj = Stdio.Port();
+    Privs privs = Privs (sprintf ("Binding %s://%s:%d/",
+				  (string) name, ip || "*", (int) port));
     if (port_obj->bind(port, got_connection, ip))
     {
+      privs = 0;
       bound = 1;
       return;
     }
-    report_error(LOC_M(6, "Failed to bind %s://%s:%d/ (%s)")+"\n", 
+    privs = 0;
+    report_error(LOC_M(6, "Failed to bind %s://%s:%d/ (%s)")+"\n",
 		 (string)name, (ip||"*"), (int)port,
 		 strerror(port_obj->errno()));
+    werror (describe_backtrace (backtrace()));
 #if constant(System.EADDRINUSE) || constant(system.EADDRINUSE)
     if (
 #if constant(System.EADDRINUSE)
