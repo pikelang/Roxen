@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.140 2003/06/17 12:41:55 grubba Exp $
+// $Id: module.pike,v 1.141 2003/07/07 17:44:58 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -304,7 +304,6 @@ multiset(string) query_all_properties(string path, RequestID id)
   Stat st = stat_file(path, id);
   if (!st) return (<>);
   multiset(string) res = (<
-    "DAV:creationdate",		// 13.1
     "DAV:displayname",		// 13.2
     "DAV:getlastmodified",	// 13.7
     "DAV:resourcetype",		// 13.9
@@ -331,8 +330,6 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
   Stat st = stat_file(path, id);
   if (!st) return Roxen.http_low_answer(404, "No such file or directory.");
   switch(prop_name) {
-  case "DAV:creationdate":	// 13.1
-    return iso8601_date_time(st->ctime);
   case "DAV:displayname":	// 13.2
     return combine_path(query_location(), path);
   case "DAV:getcontentlength":	// 13.4
@@ -412,7 +409,6 @@ mapping(string:mixed) set_property(string path, string prop_name,
   case "http://apache.org/dav/props/executable":
     // FIXME: Could probably be implemented R/W.
     // FALL_THROUGH
-  case "DAV:creationdate":	// 13.1
   case "DAV:displayname":	// 13.2
   case "DAV:getcontentlength":	// 13.4
   case "DAV:getcontenttype":	// 13.5
@@ -464,7 +460,6 @@ mapping(string:mixed) remove_property(string path, string prop_name,
 				      RequestID id)
 {
   switch(prop_name) {
-  case "DAV:creationdate":	// 13.1
   case "DAV:displayname":	// 13.2
   case "DAV:getcontentlength":	// 13.4
   case "DAV:getcontenttype":	// 13.5
