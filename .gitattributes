@@ -152,6 +152,8 @@ urw_itc_avant_garde-demi-r binary
 /server/languages/slovenian.pike foreign_ident
 /server/languages/spanish.pike foreign_ident
 /server/languages/swedish.pike foreign_ident
+/server/modules/compat/configtablist.pike foreign_ident
+/server/modules/compat/ximg.pike foreign_ident
 /server/modules/configuration/config_filesystem.pike foreign_ident
 /server/modules/directories/directories.pike foreign_ident
 /server/modules/directories/directories2.pike foreign_ident
@@ -216,7 +218,6 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/tags/accessed.pike foreign_ident
 /server/modules/tags/awizard.pike foreign_ident
 /server/modules/tags/check_spelling.pike foreign_ident
-/server/modules/tags/configtablist.pike foreign_ident
 /server/modules/tags/countdown.pike foreign_ident
 /server/modules/tags/flik.pike foreign_ident
 /server/modules/tags/foldlist.pike foreign_ident
@@ -232,7 +233,6 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/tags/tablify.pike foreign_ident
 /server/modules/tags/tablist.pike foreign_ident
 /server/modules/tags/wizard_tag.pike foreign_ident
-/server/modules/tags/ximg.pike foreign_ident
 /server/modules/throttling/baseline_throttling.pike foreign_ident
 /server/modules/throttling/throttlelib.pike foreign_ident
 /server/modules/throttling/throttletags.pike foreign_ident

@@ -1,7 +1,7 @@
 // Config tablist look-a-like module. Copyright © 1999, Idonex AB.
 //
 
-constant cvs_version="$Id: configtablist.pike,v 1.20 1999/11/03 22:56:45 nilsson Exp $";
+constant cvs_version="$Id: configtablist.pike,v 1.1 1999/11/27 12:18:34 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
