@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.163 1999/01/24 23:38:38 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.164 1999/02/12 00:31:44 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -723,6 +723,15 @@ void print_colors(array from)
 
 int number=0;
 
+#ifdef THREADS
+object number_lock = Threads.Mutex();
+#define NUMBER_LOCK()	do { object __key = number_lock->lock()
+#define NUMBER_UNLOCK()	if (__key) destruct(__key); } while(0)
+#else /* !THREADS */
+#define NUMBER_LOCK()
+#define NUMBER_UNLOCK()
+#endif /* THREADS */
+
 mapping find_cached_args(int num);
 
 
@@ -1041,21 +1050,20 @@ void restore_cached_args()
 	cached_args |= decode_value(data);
       };
     }
+    NUMBER_LOCK();
     if (cached_args && sizeof(cached_args)) {
       number = sort(indices(cached_args))[-1]+1;
     } else {
       cached_args = ([]);
       number = 0;
     }
+    NUMBER_UNLOCK();
   }
 }
 
 void save_cached_args()
 {
-  int on;
-  on = number;
-  if(!args_restored) restore_cached_args();
-  if(on > number) number=on;
+  restore_cached_args();
   object o = open(ARGHASH, "wct");
   if(o)
   {
@@ -1108,12 +1116,15 @@ int find_or_insert(mapping find)
   if(res = cached_args[ q ])
     return res;
 
+  NUMBER_LOCK();
   cached_args[ number ] = f2;
   cached_args[ q ] = number;
+  int n = number++;
+  NUMBER_UNLOCK();
 
   remove_call_out(save_cached_args);
   call_out(save_cached_args, 10);
-  return number++;
+  return n;
 }
 
 
