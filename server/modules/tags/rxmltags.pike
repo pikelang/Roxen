@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.189 2000/11/09 18:19:13 kuntri Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.190 2000/11/15 12:23:26 stewa Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -342,7 +342,7 @@ class TagExpireTime {
 
     array do_return(RequestID id) {
       int t,t2;
-      t=t2==time(1);
+      t=t2=time(1);
       if(!args->now) {
 	t+=Roxen.time_dequantifier(args);
 	CACHE(max(t-t2,0));
