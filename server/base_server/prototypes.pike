@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.40 2001/09/04 22:31:57 nilsson Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.41 2001/09/13 21:27:58 nilsson Exp $";
 
 class Variable
 {
@@ -239,7 +239,7 @@ class Configuration
   int|string try_get_file(string s, RequestID id,
                           int|void status, int|void nocache,
                           int|void not_internal);
-  int(0..1) is_file(string virt_path, RequestID id);
+  int(0..1) is_file(string virt_path, RequestID id, int(0..1)|void internal);
   void start(int num);
   void save_me();
   int save_one( RoxenModule o );
