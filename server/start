@@ -1,9 +1,8 @@
 #!/bin/sh
 #
-# $Id: start,v 1.54 1998/11/18 04:53:30 per Exp $
+# $Id: start,v 1.55 1998/11/22 17:05:43 per Exp $
 
 cd `dirname $0`
-
 VERSION=202; BETA=.b;
 
 # Can be set with '--config-dir=DIR'
@@ -32,15 +31,15 @@ umask 022
 if [ "x$PIKE_MASTER" = "x" ]; then
   if [ -d share/pike ]; then
     # This is used with localinstall
-    DEFINES="$DEFINES -I$roxendir/share/pike/include"
-    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:$roxendir/share/pike/modules"
+    DEFINES="$DEFINES -Ishare/pike/include"
+    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:share/pike/modules"
   fi
   if [ -f lib/master.pike ]; then
-    DEFINES="$DEFINES -m$roxendir/lib/master.pike -I$roxendir/lib/include"
-    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:$roxendir/lib/modules"
+    DEFINES="$DEFINES -mlib/master.pike -Ilib/include"
+    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/modules:share/modules"
   elif [ -f lib/pike/master.pike ]; then
-    DEFINES="$DEFINES -m$roxendir/lib/pike/master.pike -I$roxendir/lib/pike/include"
-    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:$roxendir/lib/pike/modules"
+    DEFINES="$DEFINES -mlib/pike/master.pike -Ilib/pike/include"
+    PIKE_MODULE_PATH="$PIKE_MODULE_PATH:lib/pike/modules:share/pike/modules"
   fi
   export PIKE_MODULE_PATH
 else
@@ -74,16 +73,16 @@ DEFINES="$DEFINES -P`pwd`"
 if [ -d ../local/etc/. ]; then
   # Extra module-path
   if [ -d ../local/etc/modules/. ]; then
-    DEFINES="$DEFINES -M$roxendir/../local/etc/modules"
+    DEFINES="$DEFINES -M../local/etc/modules"
   fi
 
   # Extra include-path
   if [ -d ../local/etc/include ]; then
-    DEFINES="$DEFINES -I$roxendir/../local/etc/include"
+    DEFINES="$DEFINES -I../local/etc/include"
   fi
 
   # Extra program-path
-  DEFINES="$DEFINES -P$roxendir/../local/etc"
+  DEFINES="$DEFINES -P../local/etc"
 fi
 
 # Extra kludge for HPUX
@@ -261,10 +260,12 @@ the default arguments.
 
   .BEnvironment variables:B.
 
+     .BLANGB.:                        Used to determine the default locale 
+                                  in the configuration interface and logs.
      .BROXEN_CONFIGDIRB.:             Same as .B--config-dir=... B.
      .BROXEN_PID_FILEB.:              Same as .B--pid-file=... B.
      .BROXEN_LANGB.:                  The default language for all language
-				  related tags. Defaults to 'en' for english.
+		                  related tags. Defaults to 'en' for english.
 
 EOF
     tput 'rmso' 2>/dev/null
@@ -372,16 +373,9 @@ oo
       # Signal death.
       echo $$: "Roxen died of signal $exitcode. Restarting..."
     else
-      # Restart. Do not sleep a few seconds before restarting.
-      echo $$: Roxen died. Restarting...
-      # sleep 1
+      echo $$: Roxen down. Restarting.
     fi
-  done
-    
-  echo $$: Not Reached "famous last words"
-
-  ) < /dev/null > $LOGDIR/debug/start_$FILES.output 2>&1 &
-
+  done) < /dev/null > $LOGDIR/debug/start_$FILES.output 2>&1 &
 else
   echo $$: "Server restart at `date`"
   start_roxen $extra_args
