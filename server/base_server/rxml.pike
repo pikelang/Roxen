@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.15 1999/07/27 19:00:04 neotron Exp $
+ * $Id: rxml.pike,v 1.16 1999/07/27 22:12:51 neotron Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -1203,6 +1203,12 @@ int if_group( string u, RequestID id, mapping m)
           && group_member(id->auth, m->group, m->groupfile, id));
 }
 
+int if_exists( string u, RequestID id, mapping m)
+{
+  CACHE(10); 
+  return id->conf->is_file(fix_relative(m->exists,id), id);
+}
+
 mapping query_if_callers()
 {
   return ([
@@ -1215,6 +1221,7 @@ mapping query_if_callers()
     "date":if_date,
     "defined":IfIs( "defines", 1, 1 ),
     "domain":IfMatch( "host", 0 ),
+    "exists":if_exists,
     "group":if_group,
     "host":IfMatch( "remoteaddr", 0 ),
     "ip":IfMatch( "remoteaddr", 0 ),
