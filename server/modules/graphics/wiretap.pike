@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Idonex AB.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.8 2000/02/10 10:17:39 nilsson Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.9 2000/03/14 04:33:11 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -75,7 +75,7 @@ int|array tag_body(string t, mapping args, RequestID id)
   FIX(alink,  "#ff0000","alink");
   FIX(vlink,  "#551a8b","vlink");
 
-  if(search(id->client_var->fullname||"","windows")!=-1)
+  if(has_value(id->client_var->fullname||"","windows"))
   {
     FIX(bgcolor,"#c0c0c0","bgcolor");
   } else {
@@ -135,7 +135,7 @@ string|array pop_color(string tagname, mapping args, RequestID id)
 }
 
 
-// --------------- tag and container registration ----------------------
+// --------------- Tag and container registration ----------------------
 
 mapping query_tag_callers()
 {
@@ -153,4 +153,36 @@ mapping query_tag_callers()
     }
   }
   return tags;
+}
+
+
+// --------------------- Wiretap countermeasure --------------------
+
+class TagColorScope {
+  inherit RXML.Tag;
+  constant name = "colorscope";
+
+  class Frame {
+    inherit RXML.Frame;
+    string link, alink, vlink;
+
+#define LOCAL_PUSH(X) if(args->X) { X=id->misc->defines->X; id->misc->defines->X=args->X; }
+    array do_enter(RequestID id) {
+      push_color("colorscope",args,id);
+      LOCAL_PUSH(link);
+      LOCAL_PUSH(alink);
+      LOCAL_PUSH(vlink);
+      return 0;
+    }
+
+#define LOCAL_POP(X) if(X) id->misc->defines->X=X
+    array do_return(RequestID id) {
+      pop_color("/colorscope",0,id);
+      LOCAL_POP(link);
+      LOCAL_POP(alink);
+      LOCAL_POP(vlink);
+      result=content;
+      return 0;
+    }
+  }
 }
