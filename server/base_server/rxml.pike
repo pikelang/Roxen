@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.117 2000/02/10 04:13:39 nilsson Exp $
+ * $Id: rxml.pike,v 1.118 2000/02/11 01:10:34 mast Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -55,24 +55,6 @@ void old_rxml_warning(RequestID id, string no, string yes) {
   rxml_warning_cache->old_rxml_warning(id, no, yes);
 }
 #endif
-
-// A note on tag overriding: It's possible for old style tags to
-// propagate their results to the tags they have overridden. This is
-// done by an extension to the return value:
-//
-// If an array of the form
-//
-// ({int 1, string name, mapping(string:string) args, void|string content})
-//
-// is returned, the tag function with the given name is called with
-// these arguments. If the name is the same as the current tag, the
-// overridden tag function is called. If there's no overridden
-// function, the tag is generated in the output. Any argument may be
-// left out to default to its value in the current tag. ({1, 0, 0}) or
-// ({1, 0, 0, 0}) may be shortened to ({1}).
-//
-// Note that there's no other way to handle tag overriding -- the page
-// is no longer parsed multiple times.
 
 
 // ----------------------- Default scopes -------------------------
@@ -270,6 +252,24 @@ class BacktraceFrame
   }
 }
 
+// A note on tag overriding: It's possible for old style tags to
+// propagate their results to the tags they have overridden. This is
+// done by an extension to the return value:
+//
+// If an array of the form
+//
+// ({int 1, string name, mapping(string:string) args, void|string content})
+//
+// is returned, the tag function with the given name is called with
+// these arguments. If the name is the same as the current tag, the
+// overridden tag function is called. If there's no overridden
+// function, the tag is generated in the output. Any argument may be
+// left out to default to its value in the current tag. ({1, 0, 0}) or
+// ({1, 0, 0, 0}) may be shortened to ({1}).
+//
+// Note that there's no other way to handle tag overriding -- the page
+// is no longer parsed multiple times.
+
 array|string call_overridden (array call_to, RXML.PHtml parser,
 			      string name, mapping(string:string) args,
 			      string content, RequestID id)
@@ -313,13 +313,6 @@ array|string call_overridden (array call_to, RXML.PHtml parser,
     else if (sizeof (call_to) == 4)
       result = ({make_container (call_to[1] || name, call_to[2] || args,
 				 call_to[3] || content)});
-    else
-      // No changes to args or content, but we can't return 0 because
-      // we might have parsed entities in the args mapping.
-      if (content)
-	result = ({make_container (name, args, content)});
-      else
-	result = ({make_tag (name, args)});
 
   m_delete (id->misc, "__tag_overrider_def");
   return result;
@@ -356,6 +349,12 @@ array|string call_tag(RXML.PHtml parser, mapping args, string|function rf)
   RXML.Frame orig_frame = ctx->frame;
   ctx->frame = BacktraceFrame (orig_frame, tag, args);
   mixed err = catch {
+    if (string splice_args = args["::"]) {
+      // Somewhat kludgy solution for the time being.
+      splice_args = default_arg_type->eval (splice_args, 0, rxml_tag_set, parser, 1);
+      m_delete (args, "::");
+      args += parser->parse_tag_args (splice_args);
+    }
     foreach (indices (args), string arg)
       // Parse variable entities in arguments.
       args[arg] = default_arg_type->eval (args[arg], 0, rxml_tag_set, parser, 1);
@@ -413,6 +412,12 @@ array(string)|string call_container(RXML.PHtml parser, mapping args,
   RXML.Frame orig_frame = ctx->frame;
   ctx->frame = BacktraceFrame (orig_frame, tag, args);
   mixed err = catch {
+    if (string splice_args = args["::"]) {
+      // Somewhat kludgy solution for the time being.
+      splice_args = default_arg_type->eval (splice_args, 0, rxml_tag_set, parser, 1);
+      m_delete (args, "::");
+      args += parser->parse_tag_args (splice_args);
+    }
     foreach (indices (args), string arg)
       // Parse variable entities in arguments.
       args[arg] = default_arg_type->eval (args[arg], 0, rxml_tag_set, parser, 1);
