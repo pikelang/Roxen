@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.103 2000/08/17 14:59:38 mast Exp $
+//! $Id: module.pmod,v 1.104 2000/08/21 01:02:01 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -3433,11 +3433,11 @@ static class TXml
 	  res += " " + arg + "=" + Roxen->html_encode_tag_value (args[arg]);
 
     if (content)
-      res += ">" + content + "</" + tag->name + ">";
+      res += ">" + content + "</" + tagname + ">";
     else
       if (flags & FLAG_COMPAT_PARSE)
 	if (flags & FLAG_EMPTY_ELEMENT) res += ">";
-	else res += "></" + tag->name + ">";
+	else res += "></" + tagname + ">";
       else
 	res += " />";
 
