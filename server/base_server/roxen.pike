@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.803 2002/09/20 10:52:56 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.804 2002/09/25 18:04:05 mast Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -4176,7 +4176,8 @@ void describe_all_threads()
   threads = 0;
   threads_disabled = 0;
 #else
-  report_debug("Describing single thread:\n%s\n", backtrace());
+  report_debug("Describing single thread:\n%s\n",
+	       describe_backtrace (backtrace()));
 #endif
 }
 
