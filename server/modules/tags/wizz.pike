@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: wizz.pike,v 1.6 2001/10/08 12:32:57 anders Exp $";
+constant cvs_version = "$Id: wizz.pike,v 1.7 2001/11/23 21:29:35 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Really advanced wizard";
@@ -200,9 +200,10 @@ class TagWizard {
 	mapping r = Roxen.http_redirect(id->variables["__done-url"] ||
 					id->variables["__cancel-url"], id);
 	if (r->error)
-	  id->misc->defines[" _error"] = r->error;
+	  RXML_CONTEXT->set_misc (" _error", r->error);
 	if (r->extra_heads)
-	  id->misc->defines[" _extra_heads"] += r->extra_heads;
+	  RXML_CONTEXT->set_misc (
+	    " _extra_heads", RXML_CONTEXT->misc[" _extra_heads"] + r->extra_heads);
 	return 0;
       }
 
