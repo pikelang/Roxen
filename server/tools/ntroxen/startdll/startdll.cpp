@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.1 2001/05/29 14:35:42 tomas Exp $
+// $Id: startdll.cpp,v 1.2 2001/06/12 09:26:08 tomas Exp $
 //
 
 
@@ -186,7 +186,7 @@ inline BOOL CServiceModule::Install()
     SC_HANDLE hService = ::CreateService(
         hSCM, m_szServiceName, m_szServiceName,
         SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
-        SERVICE_DEMAND_START, SERVICE_ERROR_NORMAL,
+        SERVICE_AUTO_START, SERVICE_ERROR_NORMAL,
         szFilePath, NULL, NULL, _T("RPCSS\0"), NULL, NULL);
 
     if (hService == NULL)
