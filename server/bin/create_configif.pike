@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.27 2000/08/31 12:32:56 noring Exp $
+ * $Id: create_configif.pike,v 1.28 2000/09/01 09:07:10 noring Exp $
  *
  * Create an initial administration interface server.
  */
@@ -232,18 +232,22 @@ int main(int argc, array argv)
       {
         do
         {
-	  if(community_password)
-	    write("\n   Please select a password with one or more characters.\n\n");
+	  if(passwd2 && community_password)
+	    write("\n   Please type a password with one or more characters. "
+		  "You will\n   be asked to type the password twice for "
+		  "verification.\n\n");
           rl->get_input_controller()->dumb=1;
           community_password = read_string(rl, "Roxen Community password:", 0,
 					   batch->community_password);
+          passwd2 = read_string(rl, "Roxen Community password (again):", 0,
+				batch->community_password);
           rl->get_input_controller()->dumb=0;
 	  if(batch->community_password)
 	    m_delete(batch, "community_password");
 	  else
 	    write("\n");
           community_userpassword=community_user+":"+community_password;
-        } while(!strlen(community_password));
+        } while(!strlen(community_password) || (community_password != passwd2));
       }
       
       if((strlen( passwd2 = read_string(rl, "Do you want to access the update "
