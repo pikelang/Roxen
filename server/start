@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.189 2001/11/21 10:06:56 mast Exp $
+# $Id: start,v 1.190 2001/11/21 22:35:14 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -655,6 +655,13 @@ exit_fail() {
   exitcode=1
 }
 
+# This is a trick to get $ROXEN_PID and arguments containing spaces
+# correct at the same time.
+fork_roxen() {
+  "$@" &
+  ROXEN_PID=$!
+}
+
 start_roxen() {
   check_owner
   raise_limit
@@ -680,8 +687,7 @@ start_roxen() {
     fi
 
     if [ "x$once" = "x" ]; then
-      eval "\"$pike\" $args" 2>>"${DEBUGLOG}.1" 1>&2 &
-      ROXEN_PID=$!
+      eval "fork_roxen \"$pike\" $args 2>>\"${DEBUGLOG}.1\" 1>&2"
       dp "Roxen WebServer server pid $ROXEN_PID."
       wait $ROXEN_PID 2>/dev/null 1>&2
       exitcode="$?"
@@ -689,8 +695,7 @@ start_roxen() {
     else
       if [ "x$do_pipe" = "x" ] ; then
         if [ "x$once" = "x1" ]; then
-	  eval "\"$pike\" $args" 2>&1 &
-	  ROXEN_PID=$!
+	  eval "fork_roxen \"$pike\" $args 2>&1"
 	  wait $ROXEN_PID 2>/dev/null 1>&2
 	  exitcode="$?"
 	  ROXEN_PID=""
