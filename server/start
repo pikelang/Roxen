@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.164 2001/06/26 18:41:20 mast Exp $
+# $Id: start,v 1.165 2001/06/27 18:58:47 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -579,6 +579,15 @@ signal_exit() {
     kill $ROXEN_PID 2>/dev/null && wait $ROXEN_PID 2>/dev/null
     dp "Roxen WebServer shutdown."
   fi
+  if [ -f $DIR/_mysql/mysql_pid ] ; then
+    dp "Shutting down mysql"
+    kill `cat $DIR/_mysql/mysql_pid`
+    sleep 2
+    if [ -f $DIR/_mysql/mysql_pid ] ; then
+      kill -9 `cat $DIR/_mysql/mysql_pid` 2>/dev/null
+    fi
+    rm -f $DIR/_mysql/mysql_pid 2>/dev/null
+  fi
   exit 0
 }
 
@@ -646,6 +655,9 @@ start_roxen() {
       gdb $pike
     fi
     rm .gdbinit
+  fi
+  if [ x$once = x1 ] ; then 
+   signal_exit
   fi
 }
 
