@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.45 1999/09/15 22:21:23 grubba Exp $
+ * $Id: clientlayer.pike,v 1.46 1999/09/15 22:22:37 grubba Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.45 1999/09/15 22:21:23 grubba Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.46 1999/09/15 22:22:37 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -377,9 +377,9 @@ class Common
 
     // FIXME: Should probably use UPDATE instead.
     squery("delete from %s where id='%s' and variable='%s'", table, 
-	   id, name);
+	   (string)id, name);
     squery("insert into %s values ('%s','%s','%s')", table, 
-	   id, name, enc);
+	   (string)id, name, enc);
 
     return cached_misc[name]=to;
   }
