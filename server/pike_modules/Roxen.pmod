@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.176 2004/05/16 21:51:05 mani Exp $
+// $Id: Roxen.pmod,v 1.177 2004/05/16 21:51:54 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -298,20 +298,59 @@ int _match(string w, array (string) a)
 
 // --- From the old 'http' file ---------------------------------
 
-mapping http_low_answer( int errno, string data )
-//! Return a result mapping with the error and data specified. The
-//! error is infact the status response, so '200' is HTTP Document
-//! follows, and 500 Internal Server error, etc.
+mapping(string:mixed) http_low_answer( int status_code, string data )
+//! Return a result mapping with the specified HTTP status code and
+//! data. @[data] is sent as the content of the response and is
+//! tagged as text/html.
+//!
+//! @note
+//! The constants in @[Protocols.HTTP] can be used for status codes.
 {
   if(!data) data="";
-  HTTP_WERR("Return code "+errno+" ("+data+")");
+  HTTP_WERR("Return code "+status_code+" ("+data+")");
   return
     ([
-      "error" : errno,
+      "error" : status_code,
       "data"  : data,
       "len"   : strlen( data ),
       "type"  : "text/html",
       ]);
+}
+
+mapping(string:mixed) http_status (int status_code,
+				   void|string message, mixed... args)
+//! Return a response mapping with the specified HTTP status code and
+//! optional message. As opposed to @[http_low_answer], the message is
+//! raw text which can be included in more types of responses, e.g.
+//! inside multistatus responses in WebDAV. The message may contain
+//! line feeds ('\n') and ISO-8859-1 characters in the ranges 32..126
+//! and 128..255. Line feeds is converted to space if the response
+//! format doesn't allow them.
+//!
+//! If @[args] is given, @[message] is taken as an @[sprintf] style
+//! format which is applied to them.
+{
+  if (message) {
+    if (sizeof (args)) message = sprintf (message, @args);
+    HTTP_WERR ("Return status " + status_code + " " + message);
+    return (["error": status_code, "rettext": message]);
+  }
+  else {
+    HTTP_WERR ("Return status " + status_code);
+    return (["error": status_code]);
+  }
+}
+
+mapping(string:mixed) http_method_not_allowed (
+  string allowed_methods, void|string message, mixed... args)
+//! Make a HTTP 405 method not allowed response with the required
+//! Allow header containing @[allowed_methods], which is a comma
+//! separated list of HTTP methods, e.g. @code{"GET, HEAD"@}.
+{
+  mapping(string:mixed) response =
+    http_status (Protocols.HTTP.HTTP_METHOD_INVALID, message, @args);
+  response->extra_heads = (["allow": allowed_methods]);
+  return response;
 }
 
 //! Returns a response mapping indicating that the module or script
@@ -324,15 +363,15 @@ mapping http_low_answer( int errno, string data )
 //! want to glue together request headers and close the socket on your
 //! own, you are free to do so. The method @[RequestID.connection()]
 //! gives you the Stdio.File object for the current client connection.
-mapping http_pipe_in_progress()
+  mapping(string:mixed) http_pipe_in_progress()
 {
   HTTP_WERR("Pipe in progress");
   return ([ "file":-1, "pipe":1, ]);
 }
 
-mapping http_rxml_answer( string rxml, RequestID id,
-                          void|Stdio.File file,
-                          void|string type )
+mapping(string:mixed) http_rxml_answer( string rxml, RequestID id,
+					void|Stdio.File file,
+					void|string type )
 //! Convenience functions to use in Roxen modules. When you just want
 //! to return a string of data, with an optional type, this is the
 //! easiest way to do it if you don't want to worry about the internal
@@ -352,7 +391,7 @@ mapping http_rxml_answer( string rxml, RequestID id,
 }
 
 
-mapping http_try_again( float delay )
+mapping(string:mixed) http_try_again( float delay )
 //! Causes the request to be retried in @[delay] seconds.
 {
   return ([ "try_again_later":delay ]);
@@ -411,7 +450,7 @@ array(object|mapping) http_try_resume( RequestID id, float|void max_delay )
   return ({delay, ([ "try_again":delay ]) });
 }
 
-mapping http_string_answer(string text, string|void type)
+mapping(string:mixed) http_string_answer(string text, string|void type)
 //! Generates a result mapping with the given text as the request body
 //! with a content type of `type' (or "text/html" if none was given).
 {
@@ -419,7 +458,8 @@ mapping http_string_answer(string text, string|void type)
   return ([ "data":text, "type":(type||"text/html") ]);
 }
 
-mapping http_file_answer(Stdio.File text, string|void type, void|int len)
+mapping(string:mixed) http_file_answer(Stdio.File text,
+				       string|void type, void|int len)
 //! Generate a result mapping with the given (open) file object as the
 //! request body, the content type defaults to text/html if none is
 //! given, and the length to the length of the file object.
