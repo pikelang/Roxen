@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.484 2005/03/17 09:41:42 noring Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.485 2005/03/17 12:08:44 noring Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6074,6 +6074,10 @@ constant tagdoc=([
 <attr name='from' value='string'>
  <p>The name of another variable that the value should be copied
  from.</p>
+</attr>
+
+<attr name='type' value='string'>
+ <p>If type is 'array', the resulting value will be an array.</p>
 </attr>",
 
 //----------------------------------------------------------------------
