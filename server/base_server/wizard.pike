@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.53 1998/02/24 22:29:42 per Exp $
+/* $Id: wizard.pike,v 1.54 1998/02/27 07:12:23 per Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -274,7 +274,7 @@ int num_pages(string wiz_name)
 }
 #define Q(X) replace(X,({"<",">","&","\""}),({"&lt;","&gt;","&amp;","&quote;"}))
 
-#define PAGE Q((this_object()->page_label?this_object()->page_label:"Page"))
+#define PAGE Q((this_object()->page_label?this_object()->page_label:"Page "))
 #define OK Q((this_object()->ok_label?this_object()->ok_label:"Ok"))
 #define CANCEL Q((this_object()->cancel_label?this_object()->cancel_label:"Cancel"))
 #define NEXT Q((this_object()->next_label?this_object()->next_label:"Next ->"))
