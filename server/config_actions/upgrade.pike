@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.31 1997/12/16 18:43:28 grubba Exp $
+ * $Id: upgrade.pike,v 1.32 1997/12/23 18:49:22 neotron Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -343,7 +343,7 @@ string page_3(object id)
 	  rm[s]->fname,
 	  rm[s]->version,
 	  (comps[s]?comps[s]->version:"New"),
-	  ({"<font size=-1>"+doc+"</font>"}),
+	  ({"<font size=-1>"+rm[s]->doc+"</font>"}),
 	  })});
     }
   }
