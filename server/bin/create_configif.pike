@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.31 2000/09/06 12:24:13 noring Exp $
+ * $Id: create_configif.pike,v 1.32 2000/09/19 06:46:31 nilsson Exp $
  *
  * Create an initial administration interface server.
  */
@@ -277,6 +277,10 @@ int main(int argc, array argv)
 
 <region name='pikescript#0'>
   <var name='trusted'><int>1</int></var>
+</region>
+
+<region name='graphic_text#0'>
+  <var name='colorparse'>        <int>1</int> </var>
 </region>
 
 <region name='update#0'>
