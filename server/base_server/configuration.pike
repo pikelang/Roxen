@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.552 2004/04/13 18:59:03 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.553 2004/04/17 16:04:59 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3816,51 +3816,67 @@ also set 'URLs'."));
   
   defvar("ZNoSuchFile", NoSuchFileOverride() );
 
-  defvar("404-message", #"<html><head>
-<title>404 - Page not found</title>
+  defvar("404-message", #"<html>
+<head>
+  <title>404 - Page Not Found</title>
+  <style>
+    .msg  { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      12px;
+            line-height:    160% }
+    .url  { font-family:    georgia, times, serif;
+            font-size:      18px;
+            padding-top:    6px;
+            padding-bottom: 20px }
+    .info { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      10px;
+            color:          #999999 }
+  </style>
 </head>
-<body alink=\"#000000\" bgcolor=\"#ffffff\" bottommargin=\"0\" leftmargin=\"0\" link=\"#ce5c00\" marginheight=\"2\" marginwidth=\"0\" rightmargin=\"0\" text=\"#333333\" topmargin=\"2\" vlink=\"#ce5c00\">
+<body bgcolor='#f2f1eb' vlink='#2331d1' alink='#f6f6ff'
+      leftmargin='0' rightmargin='0' topmargin='0' bottommargin='0'
+      style='margin: 0; padding: 0'>
 
-<if nserious=''><set variable='var.404' value='-sorry' /></if>
-
-<table width=\"100%\"  border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
+<table border='0' cellspacing='0' cellpadding='0'>
   <tr>
-    <td><img src=\"/internal-roxen-page-not-found&var.404;\" border=\"0\" alt=\"Page not found\" width=\"404\" hspace=\"2\" /></td>
-    <td>&nbsp;</td>
-    <td align=\"right\"><font face=\"lucida,helvetica,arial\">
-      <if variable='roxen.product-name is Roxen CMS'>
-        <b>Roxen CMS&nbsp;</b>
-      </if>
-      <else>
-        <b>Roxen WebServer &roxen.base-version;&nbsp;</b>
-      </else>
-    </font></td>
-  </tr>
-  <tr>
-    <td width=\"100%\" height=\"21\" colspan=\"3\" background=\"/internal-roxen-tile\"><img src=\"/internal-roxen-unit\" alt=\"\" /></td>
+    <td><img src='/internal-roxen-unit' height='30' /></td>
+  </tr><tr>
+    <td></td>
+    <td><img src='/internal-roxen-404' /></td>
+    <td><img src='/internal-roxen-unit' width='30' /></td>
+    <td valign='bottom'><img src='/internal-roxen-page-not-found-2' /></td>
+  </tr><tr>
+    <td><img src='/internal-roxen-unit' height='30' /></td>
+  </tr><tr>
+    <td colspan='3'></td>
+    <td>
+      <div class='msg'>Unable to retrieve</div>
+      <div class='url'>&page.virtfile;</div>
+      <div class='msg'>
+        If you feel this is a configuration error, please contact<br />
+        the administrators of this server or the author of the<br />
+        <if referrer=''>
+          <a href='&client.referrer;'>referring page</a>.
+        </if><else>
+          referring page.
+        </else>
+      </div>
+    </td>
   </tr>
 </table>
 
-<font face=\"lucida,helvetica,arial\">
-<h2>&nbsp;Unable to retrieve &page.virtfile;.</h2>
-<br /><br />
-<blockquote>
+<table border='0' cellspacing='0' cellpadding='0'
+       style='position: absolute; left: 202px; bottom: 35px'>
+  <tr>
+    <td><img src='/internal-roxen-roxen-mini.gif' /></td>
+    <td class='info'>
+      &nbsp;&nbsp;<b>&roxen.product-name;</b> <font color='#ffbe00'>|</font>
+      version &roxen.dist-version;
+    </td>
+  </tr>
+</table>
 
-If you feel that this is a configuration error,
-please contact the administrators of this
-webserver or the author of the
-<if referrer=''>
-<a href=\"&client.referrer;\">referring</a>
-</if><else>
-referring
-</else>
-page.
-
-</blockquote>
-</font>
 </body>
-</html>
-",
+</html>",
 	 DLOCALE(58, "No such file message"),
 	 TYPE_TEXT_FIELD|VAR_PUBLIC,
 	 DLOCALE(59, "What to return when there is no resource or file "
