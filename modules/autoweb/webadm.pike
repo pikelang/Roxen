@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.22 1998/08/21 20:04:09 wellhard Exp $
+ * $Id: webadm.pike,v 1.23 1998/08/27 20:29:55 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.22 1998/08/21 20:04:09 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.23 1998/08/27 20:29:55 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -135,6 +135,7 @@ string update_template(string tag_name, mapping args, object id)
     if(variable->type == "font")
       to = replace(to, " ", "_");
     template = replace(template, from, to);
+    //    werror("Replace from '"+from+"' to '"+to+"'\n");
   }
 
   // Insert files (eg navigation template)
@@ -177,12 +178,49 @@ string tag_as_meta(string tag_name, mapping args, object id)
   return value;
 }
 
+string container_as_color(string tag_name, mapping args, string contents,
+			  object id)
+{
+  int r, g, b;
+  array a;
+  a = parse_color(contents);
+  if(!a) {
+    werror("'"+contents+"' is not a valid color.\n");
+    return "";
+  }
+  r=a[0]; g=a[1]; b=a[2];
+  if(args->diffrent) {
+    if(((r+g+b)/3)>128) {
+      r--; g--; b--;
+      if(r<0) r=0;
+      if(g<0) g=0;
+      if(b<0) b=0;
+    } else{
+      r++; g++; b++;
+      if(r>255) r=255;
+      if(g>255) g=255;
+      if(b>255) b=255;
+    }
+  }
+  if(args->var) {
+    id->variables[args->var]=sprintf("#%2x%2x%2x", r, g, b);
+    return "";
+  }
+  return sprintf("#%2x%2x%2x", r, g, b);
+}
+
 mapping query_tag_callers()
 {
   return ([ "autosite-webadm-update" : tag_update,
             "autosite-webadm-customername" : customer_name,
 	    "autosite-webadm-update-template" : update_template,
 	    "as-meta" : tag_as_meta
+  ]);
+}
+
+mapping query_container_callers()
+{
+  return ([ "as-color" : container_as_color
   ]);
 }
 
