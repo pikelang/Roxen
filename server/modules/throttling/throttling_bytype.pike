@@ -6,7 +6,7 @@
  * a "library" program plus a tiny imlpementation module
  */
 
-constant cvs_version="$Id";
+constant cvs_version="$Id: throttling_bytype.pike,v 1.2 1999/09/05 16:01:08 grubba Exp $";
 
 #include <module.h>
 inherit "module";

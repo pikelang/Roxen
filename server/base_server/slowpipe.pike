@@ -9,7 +9,7 @@
  * performance. We'll see.
  */
 
-constant cvs_version="$Id";
+constant cvs_version="$Id: slowpipe.pike,v 1.2 1999/09/05 15:51:41 grubba Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
