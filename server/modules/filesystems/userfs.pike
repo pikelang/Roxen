@@ -14,10 +14,13 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.42 1998/10/13 12:30:32 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.43 1998/10/13 13:47:41 grubba Exp $";
 
 // import Array;
 // import Stdio;
+
+#define BAD_PASSWORD(us)	(QUERY(only_password) && \
+                                 ((us[1] == "") || (us[1][0] == '*')))
 
 int uid_was_zero()
 {
@@ -192,9 +195,7 @@ mixed find_file(string f, object got)
     {
       us = got->conf->userinfo( u, got );
       // No user, or access denied.
-      if(!us ||
-	 (QUERY(only_password) && ((us[1] == "") || (us[1][0] == '*'))) ||
-	 banish_list[u])
+      if(!us || BAD_PASSWORD(us) || banish_list[u])
       {
 	if (!banish_reported[u]) {
 	  banish_reported[u] = 1;
@@ -267,9 +268,7 @@ string real_file( mixed f, mixed id )
     {
       string *us;
       us = id->conf->userinfo( u, id );
-      if ((!us) ||
-	  (QUERY(only_password) && (<"","*">)[us[ 1 ]]) ||
-	  (banish_list[u])) {
+      if ((!us) || BAD_PASSWORD(us) || banish_list[u]) {
 	return 0;
       }
       if(us[5][-1] != '/')
@@ -318,8 +317,8 @@ mapping|array find_dir(string f, object got)
     {
       array(string) us;
       us = got->conf->userinfo( u, got );
-      if(!us) return 0;
-      if(QUERY(only_password) && (<"","*">)[us[ 1 ]])     return 0;
+      if((!us) || BAD_PASSWORD(us)) return 0;
+      // FIXME: Use the banish multiset.
       if(search(QUERY(banish_list), u) != -1)             return 0;
       if(us[5][-1] != '/')
 	f = us[ 5 ] + "/" + QUERY(pdir) + f;
@@ -357,8 +356,8 @@ mixed stat_file( mixed f, mixed id )
     us = id->conf->userinfo( u, id );
     if(query("homedir"))
     {
-      if(!us) return 0;
-      if(QUERY(only_password) && (<"","*">)[us[ 1 ]])     return 0;
+      if((!us) || BAD_PASSWORD(us)) return 0;
+      // FIXME: Use the banish multiset.
       if(search(QUERY(banish_list), u) != -1)             return 0;
       if(us[5][-1] != '/')
 	f = us[ 5 ] + "/" + QUERY(pdir) + f;
