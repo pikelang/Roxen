@@ -8,21 +8,6 @@ inherit "../logutil.pike";
 
 //<locale-token project="roxen_config">LOCALE</locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
-
-string module_global_page( RequestID id, string conf )
-{
-  if( config_perm("Add Module") )
-    return sprintf("<gbutton preparse='' "
-                   "href='../../../add_module.pike?config=%s'> "+
-                   LOCALE(251, "Add Module")+"</gbutton>",
-                   Roxen.http_encode_string( conf ) )+
-           sprintf("<gbutton preparse='' "
-                   "href='../../../drop_module.pike?config=%s'> "+
-                   LOCALE(252, "Drop Module")+"</gbutton>",
-                   Roxen.http_encode_string( conf ) );
-  return "";
-}
-
 #define TRANSLATE( X ) _translate( (X), id )
 
 string _translate( mixed what, RequestID id )
@@ -380,16 +365,16 @@ string initial_vars( RequestID id, string conf, array(string) modules )
     rets+=({ "Initial variables for "+ EC(TRANSLATE(m->register_module()[1])) + ":<br /><br />" +
  #"<nooutput>
   This is necessary to update all the variables before showing them.
-  <configif-output source=module-variables configuration=\""+
+  <emit source=module-variables configuration=\""+
    conf+"\" section=\"&form.section;\" module=\""+module+#"\">
-   </configif-output>
+   </emit>
 </nooutput>
 <table>
-  <configif-output source=module-variables configuration=\""+
+  <emit source=module-variables configuration=\""+
    conf+"\" section=\"&form.section;\" module=\""+module+#"\">
-    <tr><td width=20%><b>#name#</b></td><td>#form:quote=none#</td></tr>
-    <tr><td colspan=2>#doc:quote=none#<p>#type_hint#</td></tr>
-  </configif-output>
+    <tr><td width=20%><b>&_.name;</b></td><td>&_.form:none;</td></tr>
+    <tr><td colspan=2>&_.doc:none;<p>&_.type_hint;</td></tr>
+  </emit>
 </table>" });
   }
 
@@ -414,22 +399,21 @@ string module_page( RequestID id, string conf, string module )
     return "<blockquote>"+find_module_doc( conf, module, id )+"</blockquote>";
 
   return #"
- <input type=\"hidden\" name=\"section\" value=\"&form.section;\">
+ <input type=\"hidden\" name=\"section\" value=\"&form.section;\" />
  <cf-save what='Module'/><br clear=\"all\" />
 <nooutput>
   This is necessary to update all the variables before showing them.
-  <configif-output source=module-variables configuration=\""+
-   conf+"\" section=\"&form.section;\" module=\""+module+#"\">
-   </configif-output>
+  <emit source='module-variables' configuration=\""+conf+#"\" 
+        section=\"&form.section;\" module=\""+module+#"\"/>
 </nooutput>
 <table>
-  <configif-output source=module-variables configuration=\""+
-   conf+"\" section=\"&form.section;\" module=\""+module+#"\">
-    <tr><td width=20%><b>#name#</b></td><td>#form:quote=none#</td></tr>
-    <tr><td colspan=2>#doc:quote=none#<p>#type_hint#</td></tr>
-   </configif-output>
+  <emit source='module-variables' configuration=\""+conf+#"\" 
+        section=\"&form.section;\" module=\""+module+#"\">
+    <tr><td width='20%'><b>&_.name;</b></td><td>&_.form:none;</td></tr>
+    <tr><td colspan='2'>&_.doc:none;<p>&_.type_hint;</td></tr>
+   </emit>
   </table>
-    <cf-save what='Module'/>";
+ <cf-save what='Module'/>";
 }
 
 string port_for( string url )
@@ -523,25 +507,25 @@ string parse( RequestID id )
     {
      case "settings":
        return
-	 "<configif-output source='config-variables' configuration=\""+
-	 path[ 0 ]+"\" section=\"&form.section;\"></configif-output>\n"+
+	 "<emit source='config-variables' configuration=\""+path[ 0 ]+"\""
+         " section=\"&form.section;\"></emit>\n"
+         ""
 	 "<input type=\"hidden\" name=\"section\" value=\"&form.section;\"/>\n"
 	 "<table>\n"
-	 "  <configif-output source='config-variables' configuration=\""+
-	 path[ 0 ]+"\" section=\"&form.section;\">\n"
-	 "    <tr><td width='20%'><b>#name#</b></td><td>#form:quote=none#</td></tr>\n"
-	 "    <tr><td colspan='2'>#doc:quote=none#<p>#type_hint#</td></tr>\n"
-	 "   </configif-output>\n"
+	 "  <emit source='config-variables' configuration=\""+path[ 0 ]+"\"\n"
+         "        section=\"&form.section;\">\n"
+         ""
+	 "    <tr><td width='20%'><b>&_.name;</b></td><td>&_.form:none;</td></tr>\n"
+	 "    <tr><td colspan='2'>&_.doc:none;<p>&_.type_hint;</p></td></tr>\n"
+	 "   </emit>\n"
 	 "  </table>\n"
 	 "   <cf-save what='Site'/>";
        break;
 
-     case "modules":
-       if(id->variables->initial) return initial_vars( id, path[0], id->variables->mod/"," );
-       if( sizeof( path ) == 2 )
-         return module_global_page( id, path[0] );
-       else
-         return module_page( id, path[0], path[2] );
+     default:
+       if(id->variables->initial) 
+         return initial_vars( id, path[0], id->variables->mod/"," );
+       return module_page( id, path[0], path[1] );
     }
   }
   return "";

@@ -5,11 +5,11 @@
     </if>
    ></item>
 
-  <configif-output source=global-variables-sections>
-    <item href="?section=#section#"
-          title="#section:quote=dtag#"
-    <if variable="section is #section#">selected</if>></item>
-  </configif-output>
+  <emit source='global-variables-sections'>
+    <item href="?section=&_.section;"
+          title="&_.section;"
+    <if variable="section is &_.section;">selected</if>></item>
+  </emit>
 </left-menu>
 
 <topmenu base="../" selected=globals>
@@ -22,9 +22,9 @@
 <content>
   <input type=hidden name=section value="&form.section;">
   <table>
-   <configif-output source=global-variables section="&form.section;">
-    <tr><td width=20%><b>#name#</b></td><td>#form:quote=none#</td></tr>
-    <tr><td colspan=2>#doc:quote=none#<p>#type_hint#</td></tr>
+   <emit source=global-variables section="&form.section;">
+    <tr><td width=20%><b>&_.name;</b></td><td>&_.form:none;</td></tr>
+    <tr><td colspan=2>&_.doc:none;<p>&_.type_hint;</td></tr>
    </configif-output>
   </table>
   <input type=submit value=" Apply " name=action>

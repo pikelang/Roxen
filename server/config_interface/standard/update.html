@@ -1,23 +1,21 @@
 <topmenu selected="home"/>
 
-<content>
 <cv-leftside>
   <img src="internal-roxen-unit" height="26" />
   <br />
   <update-sidemenu/>
 </cv-leftside>
 
-<cv-startpage><br />
 
 
 <define tag="package-box">
   <rul>
   <update-package-output type="&_.name;">
     <rli>#title# <a href="update.html?details=#id#">[Details...]</a></rli>
-    <cset variable="_&_.name;">foo</cset>
+    <cset variable="var._&_.name;">foo</cset>
   </update-package-output>
   </rul>
-  <if not variable="_&_.name;">
+  <if not variable="var._&_.name;">
      <p>Currently no packages in this category</p>
   </if>
 </define>
@@ -25,7 +23,7 @@
 <define container="headline">
 <table bgcolor="&usr.obox-titlebg;" width=100%>
   <tr>
-    <td><font size=+1 color="&usr.obox-titlefg;"><b><contents></b></font></td>
+    <td><font size=+1 color="&usr.obox-titlefg;"><b><contents/></b></font></td>
   </tr>
 </table>
 </define>
@@ -33,58 +31,63 @@
 
 <define tag="cat-list">
   <br />
-  <headline>&title;</headline>
+  <headline>&_.title;</headline>
   <rul>
-  <update-package-output type="&name;" limit="5">
+  <update-package-output type="&_.name;" limit="5">
     <rli>#title# <a href="update.html?details=#id#">[Details...]</a></rli>
-    <cset variable="_&name;">foo</cset>
+    <set variable="var._&_.name;" value='foo'/>
   </update-package-output>
   </rul>
-  <if not variable="_&name;">
+  <if not variable="var._&_.name;">
      Currently no packages in this category.<br />
   </if>
   <else>
-    <a href="update.html?category=&name;">[More..]</a><br />
+    <a href="update.html?category=&_.name;">[More..]</a><br />
   </else>
   &nbsp;
 </define>
 
 
+
+
+
+<content>
+<cv-startpage><br />
+      
 <if not variable="form.category">
 <if not variable="form.install">
 <if not variable="form.details">
-  <cset variable="form.category"></cset>
+  <set variable="form.category" value=''/>
 </if>
 </if>
 </if>
 
 <define tag=item>
   <tr valign=top>
-    <td align="right"><b>&title;:</b></td>
-    <if match="&type; is pre">
-      <td><pre>#&name;#</pre></td>
+    <td align="right"><b>&_.title;:</b></td>
+    <if match="&_.type; is pre">
+      <td><pre>#&_.name;#</pre></td>
     </if>
     <else>
-      <td>#&name;#</td>
+      <td>#&_.name;#</td>
     </else>
   </tr>
 </define>
 
-<comment> ================ Show uninstall page ================== </comment>
-<if variable=form.uninstall>
+<?comment ================ Show uninstall page ================== ?>
 
+<if variable=form.uninstall>
   Installed packages:
   <rul>
   <update-package-output installed>
     <rli>#title# <a href="update.html?details=#id#">[Details...]</a></rli>
-    <cset variable="_&_.name;">foo</cset>
+    <cset variable="var._&_.name;">foo</cset>
   </update-package-output>
   </rul>
-
 </if>
 <else>
 
-<comment> ================ Show details page ================== </comment>
+<?comment ================ Show details page ================== ?>
 <if variable="form.details">
   <if variable="form.download">
     <update-start-download package="&form.details;" />
@@ -123,7 +126,7 @@
 </else>
 </if>
 
-<comment> ================ Show start page ================== </comment>
+<?comment ================ Show start page ================== ?>
 
 <update-show-backtrace/>
 <if variable="form.category is ">

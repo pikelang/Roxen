@@ -1,10 +1,9 @@
-<topmenu base="../" selected=globals>
+<topmenu base="../" selected=globals />
 
 
 Set all variables....
 
-   <configif-output source=global-variables section="¤section:quote=dtag¤">
-   </configif-output>
+   <emit source=global-variables section="&form.section;"></emit>
 
 Then the page...
 
@@ -12,20 +11,19 @@ Then the page...
 <cv-split>
 <subtablist width='100%'>
  <st-tabs>
-  <configif-output source=global-variables-sections>
-    <tab
-         #selected#
-         href="?section=#section:quote=url#">#section#</tab>
-  </configif-output>
+  <emit source='global-variables-sections'>
+    <tab ::='&_.selected;'
+         href="?section=&_.section:url;">&_.section;</tab>
+  </emit>
  </st-tabs>
  <st-page>
   <input type=hidden name=section value="&form.section;">
   <cf-save/><br clear="all" />
   <table>
-   <configif-output source=global-variables noset='' section="&form.section;">
-    <tr><td width='30%' valign='top'><b>#name#</b></td><td valign='top'>#form:quote=none#</td></tr>
-    <tr><td></td><td>#doc:quote=none#<p>#type_hint#</td></tr>
-   </configif-output>
+   <emit source=global-variables noset='' section="&form.section;">
+    <tr><td width='30%' valign='top'><b>&_.name;</b></td><td valign='top'>&_.form:none;</td></tr>
+    <tr><td></td><td>&_.doc:none;<p>&_.type_hint;</td></tr>
+   </emit>
   </table>
   <cf-save/>
  </st-page>

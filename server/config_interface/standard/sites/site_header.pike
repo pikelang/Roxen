@@ -79,11 +79,8 @@ string parse( RequestID id )
        ({ "", path[0], "", "config-variables" }) );
        break;
 
-     case "modules":
-       if( sizeof( path ) == 2 )
-         return module_global_page( id, path[0] );
-       else
-         return module_page( id, path[0], path[2] );
+     default:
+       return module_page( id, path[0], path[1] );
     }
   }
 }

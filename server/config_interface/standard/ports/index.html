@@ -1,4 +1,4 @@
-<topmenu base="../" selected=ports>
+<topmenu base="../" selected=ports />
 
 <content>
 <cv-split>
@@ -8,37 +8,37 @@
  <st-page>
   <table>
    <input type=hidden name=port value='&form.port;'>
-   <configif-output source=ports>
+   <emit source='ports' scope='port'>
     <tr><td bgcolor="&usr.content-titlebg;" colspan=2>
       <table border=0 cellpadding=0 cellspacing=0>
       <tr width=100%>
        <td width=100%>
-    <font color=&usr.content-titlefg;><if variable="port is #port#"><img src=&usr.selected-indicator;></if><else>&nbsp;</else>&nbsp;<a href='?port=#port:quote=dtag#'><b><font size=+2>#name#</font></a></font>
+    <font color=&usr.content-titlefg;><if variable="form.port is &_.port;"><img src=&usr.selected-indicator;></if><else>&nbsp;</else>&nbsp;<a href='?port=&_.port;'><b><font size=+2>&_.name;</font></a></font>
        </td>
         <td align=right>
-    <if variable="port is #port#"><cf-save></if>
+    <if variable="form.port is &_.port;"><cf-save></if>
         </td>
       </tr>
      </table>
       <tr>
         <td colspan=2>
           <table>
-          <configif-output source=port-urls quote=½ port="#port:quote=dtag#">
+          <emit source='port-urls' port="&port.port;">
            <tr>
-               <td> ½url½ </td>
-               <td> <a href='../sites/site.html/½conf:quote=dtag½/'>½confname½</a> </td>
+               <td> &_.url; </td>
+               <td> <a href='../sites/site.html/&_.conf;/'>&_.confname;</a> </td>
            </tr>
-          </configif-output>
+          </emit>
           </table>
         </td>
       </tr>
-    <if variable="port is #port#">
-       <configif-output source='port-variables' quote='½' port="#port:quote=dtag#">
-       <tr><td width=30%><b>½name½</b></td><td>½form:quote=none½</td></tr>
-        <tr><td></td><td>½doc:quote=none½<p>½type_hint½</td></tr>
-       </configif-output><br />
+    <if variable="form.port is &port.port;">
+       <emit source='port-variables' port="&port.port;">
+       <tr><td width=30%><b>&_.name;</b></td><td>&_.form:none;</td></tr>
+        <tr><td></td><td>&_.doc:none;<p>&_.type_hint;</td></tr>
+       </emit><br />
      </if>
-     </configif-output>
+     </emit>
    </table>
  </st-page>
 </subtablist>

@@ -21,18 +21,6 @@ constant module_name = "Administration interface RXML tags";
  */
 constant thread_safe = 1;
 
-#ifdef OLD_RXML_COMPAT
-void start(int num, Configuration conf)
-{
-  if (!num) conf->old_rxml_compat++;
-}
-
-void stop()
-{
-  my_configuration()->old_rxml_compat--;
-}
-#endif
-
 void create()
 {
   query_tag_set()->prepare_context=set_entities;
@@ -82,7 +70,7 @@ class Scope_usr
   inherit RXML.Scope;
 
 #define ALIAS( X ) `[](X,c,scope)
-#define QALIAS( X ) (`[](X,c,scope)?"\""+roxen_encode(`[](X,c,scope), "html")+"\"":0)
+#define QALIAS( X ) (`[](X,c,scope)?"\""+roxen_encode(`[](X,c,scope),"html")+"\"":0)
   mixed `[]  (string var, void|RXML.Context c, void|string scope)
   {
     object id = c->id;
@@ -387,7 +375,7 @@ mapping get_variable_map( string s, object mod, object id, int noset )
     "name": (var->name()/":")[-1],
     "value":var->query(),
     "type": var->type,
-    "type_hint":(config_setting2( "docs" )?var->type_hint( ):""),
+    "type_hint":(config_setting2( "docs" )?(var->type_hint( )||""):""),
     "form": get_var_form( s, var, mod, id, noset ),
   ]);
 }
@@ -514,127 +502,194 @@ mapping get_url_map( string u, mapping ub )
   ]);
 }
 
-string container_configif_output(string t, mapping m, string c, object id)
+class TagConfigSettingsplugin
 {
-  array(mapping) variables;
-  switch( m->source )
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "config-settings";
+  
+  array get_dataset( mapping m, RequestID id )
   {
-   case "config-settings":
-     variables = get_variable_maps( id->misc->config_settings, m, id,
-                                    !!m->noset);
-     break;
+    return get_variable_maps( id->misc->config_settings, m, id, !!m->noset);
+  }
+}
 
-   case "locales":
+class TagLocaleplugin
+{
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "locales";
+  
+  array get_dataset( mapping m, RequestID id )
+  {
 #if constant(Locale.list_languages)
      array(string) langs=Locale.list_languages("roxen_config");
 #else
      array(string) langs=RoxenLocale.list_languages("roxen_config");
 #endif
-     variables = map( sort(langs),
-                      lambda( string l )
-                      {
-                        string q = id->not_query;
-                        string tmp;
-                        sscanf( q, "/%[^/]/%s", tmp, q );
-                        string active = roxen.locale->get();
+     return map( sort(langs),
+                 lambda( string l )
+                 {
+                   string q = id->not_query;
+                   string tmp;
+                   sscanf( q, "/%[^/]/%s", tmp, q );
+                   string active = roxen.locale->get();
 
-                        return ([
-                          "name":l,
-                          "latin1-name":
+                   return ([
+                     "name":l,
+                     "latin1-name":
 #if constant(Standards.ISO639_2)
-			  Standards.ISO639_2.get_language(l),
+                     Standards.ISO639_2.get_language(l),
 #else
-			  RoxenLocale.ISO639_2.get_language(l),
+                     RoxenLocale.ISO639_2.get_language(l),
 #endif
-                          "path":fix_relative( "/"+l+"/"+ q +
-					       (id->misc->path_info?
-						id->misc->path_info:"")+
-					       (id->query&&sizeof(id->query)?
-						"?" +id->query:""),
-					       id),
-			  "selected":( l==active ? "selected": "" ),
-			  "-selected":( l==active ? "-selected": "" ),
-			  "selected-int":( l==active ? "1": "0" ),
-                        ]);
-                      } ) - ({ 0 });
-     break;
+                     "path":fix_relative( "/"+l+"/"+ q +
+                                          (id->misc->path_info?
+                                           id->misc->path_info:"")+
+                                          (id->query&&sizeof(id->query)?
+                                           "?" +id->query:""),
+                                          id),
+                     "selected":( l==active ? "selected": "" ),
+                     "-selected":( l==active ? "-selected": "" ),
+                     "selected-int":( l==active ? "1": "0" ),
+                   ]);
+                 } ) - ({ 0 });
+  }
+}
 
-   case "global-modules":
-     break;
+class TagConfigModulesplugin
+{
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "config-modules";
 
-   case "config-modules":
+  array get_dataset(mapping m, RequestID id)
+  {
+    object conf = find_config_or_error( m->configuration );
+    
+    array variables = ({ });
+    foreach( values(conf->otomod), string q )
+    {
+      object mi = roxen->find_module((q/"#")[0]);
+      array variables =
+                ({
+                  ([
+                    "sname":replace(q, "#", "!"),
+                    "name":mi->get_name()+((int)reverse(q)?
+                                           " # "+ (q/"#")[1]:""),
+                    "doc":mi->get_description(),
+                  ]),
+                });
+    }
+    sort( variables->name, variables );
+    return variables;
+  }
+}
+
+
+class TagConfigVariablesplugin
+{
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "config-variables";
+  
+  array get_dataset(mapping m, RequestID id)
+  {
+    return get_variable_maps( find_config_or_error( m->configuration ), 
+                              m, id, !!m->noset);
+  }
+}
+
+
+class TagConfigPortsplugin
+{
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "ports";
+
+  array get_dataset(mapping m, RequestID id)
+  {
+    array pos = roxen->all_ports();
+    sort( pos->get_key(), pos );
+    pos = map( pos, get_port_map );
+    foreach( pos, mapping v )
+      if( v->port == id->variables->port )
+        v->selected = "selected";
+    return pos;
+  }
+}
+
+class TagPortVariablesplugin
+{
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "port-variables";
+
+  array get_dataset(mapping m, RequestID id)
+  {
+    return get_variable_maps( roxen->find_port( m->port ), ([]),
+                              id, !!m->noset);
+  }
+}
+
+class TagPortURLsplugin
+{
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "port-urls";
+
+  array get_dataset(mapping m, RequestID id)
+  {
+    mapping u = roxen->find_port( m->port )->urls;
+    return map(sort(indices(u)),get_url_map,u);
+  }
+}
+
+class TagConfigVariablesSectionsplugin
+{
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "config-variables-sections";
+  
+  array get_dataset(mapping m, RequestID id)
+  {
+    array v = get_variable_sections( find_config_or_error( m->configuration ),
+                                     m, id );
+    v[0]->last = "last";
+    v[-1]->first = "first";
+    return v;
+  }
+}
+
+class TagModuleVariablesplugin
+{
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "module-variables";
+
+  array get_dataset(mapping m, RequestID id)
+  {
+    object mod = find_config_or_error( m->configuration )
+           ->find_module( replace( m->module, "!", "#" ) );
+    if( !mod )
+      RXML.run_error("Unknown module "+ m->module +"\n");
+    return get_variable_maps( mod, m, id, !!m->noset);
+  }
+}
+
+class TagModuleVariablesSectionsplugin
+{
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "module-variables-sections";
+  
+  array get_dataset(mapping m, RequestID id)
+  {
+    array variables;
      object conf = find_config_or_error( m->configuration );
-
-     variables = ({ });
-     foreach( values(conf->otomod), string q )
-     {
-       object mi = roxen->find_module((q/"#")[0]);
-       variables +=
-       ({
-         ([
-           "sname":replace(q, "#", "!"),
-           "name":mi->get_name()+((int)reverse(q)?" # "+ (q/"#")[1]:""),
-           "doc":mi->get_description(),
-         ]),
-       });
-     }
-     sort( variables->name, variables );
-     break;
-
-   case "config-variables":
-     object conf = find_config_or_error( m->configuration );
-
-     variables = get_variable_maps( conf, m, id, !!m->noset);
-     break;
-
-   case "ports":
-     array pos = roxen->all_ports();
-     sort( pos->get_key(), pos );
-     variables = map( pos, get_port_map );
-     int sel;
-     foreach( variables, mapping v )
-       if( v->port == id->variables->port )
-       {
-         v->selected = "selected";
-         sel=1;
-       }
-     break;
-
-   case "port-variables":
-     catch {
-       variables = get_variable_maps( roxen->find_port( m->port ), ([]), id,
-                                      !!m->noset);
-     };
-     break;
-
-   case "port-urls":
-     mapping u = roxen->find_port( m->port )->urls;
-     variables = map(indices(u),get_url_map,u);
-     break;
-
-   case "config-variables-sections":
-     object conf = find_config_or_error( m->configuration );
-
-     variables = get_variable_sections( conf, m, id );
-     break;
-
-   case "urls":
-     break;
-
-   case "module-variables":
-     object conf = find_config_or_error( m->configuration );
-
      object mod = conf->find_module( replace( m->module, "!", "#" ) );
      if( !mod )
-       error("Unknown module "+ m->module +"\n");
-     variables = get_variable_maps( mod, m, id, !!m->noset);
-     break;
-
-   case "module-variables-sections":
-     object conf = find_config_or_error( m->configuration );
-     object mod = conf->find_module( replace( m->module, "!", "#" ) );
-     if( !mod )
-       error("Unknown module "+ m->module +"\n");
+       RXML.run_error("Unknown module: "+m->module+"\n");
      variables =get_variable_sections( mod, m, id )|  ({ ([
        "section":"Information",
        "selected":
@@ -660,7 +715,7 @@ string container_configif_output(string t, mapping m, string c, object id)
          hassel = strlen(q->selected);
      }
      hassel=0;
-     foreach( reverse(variables), mapping q )
+     foreach( variables, mapping q )
      {
        if( q->selected == "selected")
        {
@@ -673,21 +728,46 @@ string container_configif_output(string t, mapping m, string c, object id)
      variables = reverse(variables);
      variables[0]->first = " first ";
      variables[-1]->last = " last=30 ";
-     break;
-
-   case "global-variables-sections":
-     variables = get_variable_sections( roxen, m, id );
-     variables[0]->last = "last";
-     variables[-1]->first = "first";
-     break;
-
-   case "global-variables":
-     variables = get_variable_maps( roxen, m, id, !!m->noset);
-     break;
+     return variables;
+  }
+}
 
 
-   case "configurations":
-     variables = map( roxen->configurations,
+
+class TagGlobalVariablesSectionsplugin
+{
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "global-variables-sections";
+  
+  array get_dataset(mapping m, RequestID id)
+  {
+    array v = get_variable_sections( roxen, m, id );
+    v[0]->last = "last";
+    v[-1]->first = "first";
+    return v;
+  }
+}
+
+class TagGlobalVariablesplugin
+{
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "global-variables";
+  array get_dataset(mapping m, RequestID id)
+  {
+    return get_variable_maps( roxen, m, id, !!m->noset);
+  }
+}
+
+class TagConfigurationsplugin
+{
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "configurations";
+  array get_dataset(mapping m, RequestID id)
+  {
+    array variables = map( roxen->configurations,
                       lambda(object o ) {
                         return ([
                           "name":o->query_name(),
@@ -698,30 +778,27 @@ string container_configif_output(string t, mapping m, string c, object id)
                       } );
 
      sort(variables->name, variables);
-     break;
-
-   default:
-     RXML.parse_error("Invalid output source: "+m->source+"\n");
+     return variables;
   }
-  m_delete( m, "source" );
-
-#ifdef NSERIOUS
-  return replace(do_output_tag( m, variables, c, id ), "Default Theme", "Toxic Orange");
-#endif
-
-  return do_output_tag( m, variables, c, id );
 }
 
-string container_theme_path( string t, mapping m, string c, object id )
+string simpletag_configif_output(string t, mapping m, string c, object id)
+{
+  RXML.run_error("configif-output removed.\n");
+}
+
+string simpletag_theme_path( string tag, mapping m, string s, RequestID id  )
 {
   while( id->misc->orig ) id = id->misc->orig;
   if( glob( "*"+m->match, id->not_query ) )
-    return c;
+    return s;
   return "";
 }
 
-string tag_theme_set( string t, mapping m, object id )
+string simpletag_theme_set( string tag, mapping m, string s, RequestID id  )
 {
+  if( strlen( s ) )
+    RXML.parse_error("&lt;theme-set/&gt; does not support contents\n" );
   if( !id->misc->cf_theme )
     id->misc->cf_theme = ([]);
   if( m->themefile )
@@ -732,26 +809,26 @@ string tag_theme_set( string t, mapping m, object id )
   return "";
 }
 
-string container_rli( string t, mapping m, string c, object id )
+string simpletag_rli( string t, mapping m, string c, object id )
 {
   return "<tr>"
-         "<td valign=top><img src=&usr.count-"+(++id->misc->_rul_cnt&3)+
-         ";></td><td valign=top>"+ c+"</td></tr>\n";
+         "<td valign=top><img src='&usr.count-"+(++id->misc->_rul_cnt&3)+
+         ";'></td><td valign='top'>"+c+"</td></tr>\n";
 }
 
-string container_rul( string t, mapping m, string c, object id )
+string simpletag_rul( string t, mapping m, string c, object id )
 {
   id->misc->_rul_cnt = -1;
   return "<table>"+c+"</table>";
 }
 
-string container_cf_perm( string t, mapping m, string c, RequestID id )
+string simpletag_cf_perm( string t, mapping m, string c, RequestID id )
 {
   if( !id->misc->config_user ) return "";
   return CU_AUTH( m->perm )==!m->not ? c : "";
 }
 
-string container_cf_userwants( string t, mapping m, string c, RequestID id )
+string simpletag_cf_userwants( string t, mapping m, string c, RequestID id )
 {
   return config_setting2( m->option ) ? c : "";
 }

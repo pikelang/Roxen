@@ -7,9 +7,10 @@
 <gbutton frame-image=&usr.left-buttonframe; width=150 
  bgcolor=&usr.left-selbuttonbg; icon_src=&usr.selected-indicator; 
  icon_align=left href=''><translate id="213">Sites</translate></gbutton><br><br>
-<configif-output source=configurations>
- <gbutton frame-image=&usr.left-buttonframe; bgcolor=&usr.left-buttonbg; href='site.html/#sname:quote=stag#/' width=150>#name#</gbutton><br>
-</configif-output>
+
+  <emit source='configurations'>
+    <gbutton frame-image=&usr.left-buttonframe; bgcolor=&usr.left-buttonbg; href='site.html/&_.sname;/' width=150>&_.name;</gbutton><br>
+  </emit>
 </cv-leftside>
 
 <br /><p>
@@ -18,10 +19,10 @@
   <cf-perm perm="Create Site">
        <h1><translate id="249">Drop old site</translate></h1> 
     <blockquote>
-       <configif-output source=configurations>
-          <gbutton width=300 href='drop_site.pike?site=#sname#' icon_src=/internal-roxen-next align_icon=right hspace=5 vspace=5> #name# </gbutton><br/>
-      </configif-output><p>
-     <insert file=drop_site_warning.txt nocache>
+       <emit source=configurations>
+          <gbutton width=300 href='drop_site.pike?site=&_.sname;' icon_src=/internal-roxen-next align_icon=right hspace=5 vspace=5> &_.name; </gbutton><br/>
+      </emit><p>
+     <insert file='drop_site_warning.txt' nocache>
     </blockquote>
   </cf-perm><br />
   </st-page></subtablist>

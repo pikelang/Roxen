@@ -40,18 +40,26 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
                 c->query_name()+"</gbutton><br><br>");
 
   array sub = ({ ({ "settings", LOCALE(256, "Settings") }),
-		 ({ "modules",  LOCALE(257, "Modules") }),
+ 		 ({ "",  LOCALE(257, "Modules") }),
               });
 //   if( subsel == "modules" )
 //     sub = reverse(sub);
 
+  string noendslash( string what )
+  {
+    while( strlen( what ) && what[ -1 ] == '/' )
+      what = what[..strlen(what)-2];
+    return what;
+  };
+
   foreach( sub, array q )
   {
-    if( subsel == q[0] )
+    if( subsel == q[0]  || (q[0] == "" && (search(subsel,"!")!=-1)))
     {
-      pre += ("<gbutton frame-image='&usr.left-buttonframe;' icon_src='&usr.selected-indicator;' align_icon='left' "
+      pre += ("<gbutton frame-image='&usr.left-buttonframe;' "
+              "icon_src='&usr.selected-indicator;' align_icon='left' "
               "width='150' preparse='' bgcolor='&usr.left-selbuttonbg;'"
-              " href='"+DOTDOT(3)+q[0]+"/'>"
+              " href='"+(noendslash(DOTDOT(3)+q[0]))+"/'>"
               +q[1]+"</gbutton><br />\n");
 
       string url = id->not_query + id->misc->path_info;
@@ -63,7 +71,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
        case "settings":
          break;
 
-       case "modules":
+       default:
 	 string tmp="";
 	 sscanf(id->not_query, "%ssite.html", tmp);
          string qurl = url;
@@ -123,7 +131,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
     } else
       pre += ("<gbutton frame-image='&usr.left-buttonframe;' preparse='' "
               "bgcolor='&usr.left-buttonbg;' width='150' "
-              "href='"+DOTDOT(3)+q[0]+"/'>"
+              "href='"+noendslash(DOTDOT(3)+q[0])+"/'>"
               +q[1]+"</gbutton><br />");
   }
   pre += "</item>";
@@ -138,5 +146,5 @@ string parse( RequestID id )
   array(string) path = ((id->misc->path_info||"")/"/")-({""});
 
   return selected_item( site, roxen.find_configuration( site ), id,
- 			(sizeof(path)>=3)?path[2]:"");
+ 			(sizeof(path)>=2)?path[1]:"");
 }

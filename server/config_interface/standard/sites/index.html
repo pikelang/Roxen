@@ -1,5 +1,5 @@
 
-<topmenu base="../" selected=sites>
+<topmenu base="../" selected='sites' />
 
 <content>
 
@@ -14,11 +14,12 @@
          href=''><translate id="213">Sites</translate></gbutton>
 <br />
 <br />
-<configif-output source=configurations>
+<emit source='configurations'>
  <gbutton frame-image='&usr.left-buttonframe;' 
           bgcolor='&usr.left-buttonbg;' 
-          href='site.html/#sname:quote=stag#/' 
-          width='150'>#name#</gbutton><br /></configif-output>
+          href='site.html/&_.sname;/' 
+          width='150'>&_.name;</gbutton><br />
+</emit>
 </cv-leftside>
 
 <cv-split>

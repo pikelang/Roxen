@@ -136,12 +136,12 @@
            </td>
            <td>
              <font color="&usr.fgcolor;">
-              <configif-output quote="¤" source="locales">
-                <a href="¤path¤"
-                  ><img src="/internal-roxen-flag-¤name¤¤-selected¤.gif"
-                       alt="¤latin1-name¤" border="0" height="16"
+              <emit source="locales">
+                <a href="&_.path;"
+                  ><img src="/internal-roxen-flag-&_.name;&_.-selected;.gif"
+                       alt="&_.latin1-name;" border="0" height="16"
                 /></a>
-              </configif-output>
+              </emit>
              </font>
            </td>
           </tr>

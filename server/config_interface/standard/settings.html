@@ -1,5 +1,5 @@
 <!-- Don't ask... -->
-<title><configif-output source="config-settings"></configif-output></title>
+<title><emit source="config-settings"></emit></title>
 
 <topmenu selected="home"/>
 
@@ -7,10 +7,10 @@
 <cv-startpage>
 <table>
   <submit-gbutton align="right"> <translate id="bA">Save</translate> </submit-gbutton><br clear="all" />
-  <configif-output source="config-settings">
-    <tr><td width="20%"><b>#name#</b></td><td>#form:quote=none#</td></tr>
-    <tr><td colspan="2">#doc:quote=none#<p>#type_hint#</td></tr>
-  </configif-output>
+  <emit source="config-settings">
+    <tr><td width="20%"><b>&_.name;</b></td><td>&_.form:none;</td></tr>
+    <tr><td colspan="2">&_.doc:none;<p>&_.type_hint;</td></tr>
+  </emit>
 </table>
   <submit-gbutton align="right"> <translate id="bA">Save</translate> </submit-gbutton>
 </cv-startpage>

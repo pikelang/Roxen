@@ -6,80 +6,134 @@
 <blockquote>
 <rul>
 <define container="new-feature">
-  <rli><dl><dt><b><font size=+1>&_.name;</font></b></dt>
-  <dd>&_.contents:none;</dd>
-  </dl>
+  <eval><rli>
+   <dl><dt><b><font size='+1'>&_.name;</font></b></dt>
+      <dd>&_.contents:none;</dd>
+   </dl>
+   </rli></eval>
 </define>
 
-<new-feature name="Java module interface">
-It is now possible to write Roxen-modules in Java.
+
+<new-feature name='Configuration Variables'>
+ Configuration variables are now widgets in their own right, and it is
+ easy for module developers to develop their own type of variables.
 </new-feature>
 
-<new-feature name="Java servlet interface">
-The Java Servlet interface has been updated to be compliant with the
-latest specification.
+
+<new-feature name='Pike tag module'>
+<ul>
+  <li> &lt;?pike ... ?&gt;  XML compliant processing instruction for pike-code.
+  <li> Pike tags can now inherit/include from the virtual filesystem in roxen
+  <li> //X text-here   parses the text as if it was RXML
+  <li> //O text-here   returns the text as if it was HTML
+  <li> scope.variable is handled like &amp;scope.variable; in RXML
+  <li> #inherit will inherit a file from the roxen filesystem, and
+       #include will include one.
+  <li> The magic with parse() functions and whatnot is removed
+</ul>
+Small example:
+
+<pre>
+&lt;?pike
+
+ //O &lt;pre&gt;
+ int first = 1; 
+ for( var.counter=100; var.counter&gt;1; var.counter--,first=0 )
+ {
+   if( !first )
+   {
+     //X &amp;var.counter; bottles of beer on the wall
+     //X
+   }
+   //X &amp;var.counter; bottles of beer on the wall
+   //X &amp;var.counter; bottles of beer
+   //X take one down, pass it around
+ }
+ //O one bottle of beer on the wall
+ //O one bottle of beer
+ //O take it down, pass it around
+ //O no bottles of beer on the wall
+ //O &lt;/pre&gt;
+
+?&gt;    
+</pre>
 </new-feature>
 
-<new-feature name="New administration interface">
- There is, as you have probably noted, a brand new configuration
- interface in roxen 2.0. It supports multiple users, multiple
- languages, and themes.
-<p>
- The event log has been enhanced as well, and now includes information
- about which module in which configuration generated the message.
- There are also configuration and module local event logs.
-</p>
-<p>
- The administration interface is written mostly in RXML, and can be
- found in the 'configuration_interface' directory in your roxen
- installation.
-</p>
+<new-feature name='Perl module'>
+ A module for embedded perl<br />
+ &lt;?perl ... ?&gt; and &lt;perl&gt;&lt;/perl&gt; in RXML pages<br />
+ .pl pages for CGI-like interface that is much faster than CGI
 </new-feature>
 
-<new-feature name="New upgrade system">
-
+<new-feature name='Processing instructions in the low-level RXML parser'>
+  &lt;?... ?&gt; tags can now be registered
 </new-feature>
 
-<new-feature name="Full-fledged Unicode support">
+<new-feature name='New locale system'>
+ Completely new locale/translation system with XML-based language files
+ (in server/translations)
 </new-feature>
 
-<new-feature name="New RXML parser">
-The new RXML parser is XML compliant.
+<new-feature name='New and changed tags'>
+<ul>
+<li> &lt;wash-html&gt;...&lt;/wash-html&gt;    do some common text-&gt;html tasks
+<li> &lt;?comment ..... ?&gt;
+<li> &lt;if sizeof=.../&gt;
+<li> &lt;sprintf [split=separator] format=...&gt;values,...&lt;/sprintf&gt;
+<li> &lt;sscanf variables=a,b,... format=...&gt;data&lt;/sscanf&gt;
+<li> &amp;_.scopename;  will be the name of the default scope, if scopename is not used as a variable in that scope
+<li> &lt;dice type='3D6+D4'&gt;
+<li> &lt;fsize&gt; now prints the size in a somwhat less user-unfriendly way
+<li> &lt;gbutton&gt; can now have images above or below the text (for toolbar style images)
+<li> &lt;cimg&gt; checks mtime on the source file (if any)
+<li> &lt;date strftime=format&gt;
+</ul>
 </new-feature>
 
-<new-feature name="Support for Sybase, Oracle and ODBC">
-  Support for commercial databases is now included in the GPL Roxen
-  version.
+<new-feature name='Servlets'>
+<ul>
+<li> File extension servlets added, as an example, for .jsp pages
+<li> Better classpath handling
+</ul>
 </new-feature>
 
-<new-feature name="PHP4 / Zend">
-  PHP4 / Zend now supports Roxen WebServer, thanks to work done by <a
-  href=http://david.hedbor.org>David Hedbor</a>.
+<new-feature name='The directory module'>
+<ul>
+<li>The Directory module now uses a template and normal RXML (using
+    emit sources directory and path) to generate the lists.
+
+<li> The directory and path emit sources can also be used to generate
+     other directory lists, such as image listings with thumbnails.
+</ul>
 </new-feature>
 
-<new-feature name="Bandwidth Throttling and fast HTTP">
-  The normal HTTP module can now throttle the bandwidth, both for
-  requests and per virtual server.
-<p>
-  There is also an alternative HTTP module (called 'fhttp') that
-  provides the maximum possible performance, mostly useful for
-  <em>very</em> busy sites, or benchmarking. Speeds of over 20.000
-  requests/second has been clocked on normal x86 hardware.<p>
-  The normal HTTP protocol module has also been performance tuned, and
-  is now approximately 10% faster than before.</p>
+<new-feature name='Emit'>
+<ul>
+<li> <b>New sources</b>
+<ul>
+<li> fonts - A list of all fonts available
+<li> directory - directory listings
+<li> path - Separate a path on '/'
+</ul>
+<li> Emit can now sort the result
+<li> You can now select a sub-range of the result
+<li> remainderinfo=variablename (number of lines after current selected range)
+</ul>
+</new-feature>
+
+<new-feature name='HTTP protocol module'>
+<ul>
+<li> The module is greatly optimized. For a 100Kb file it went from
+     112 to 640 req/seconds.
+<li> There is now a memory cache that can be used to optimize the
+     server. For a 10Kb file, the performance went from 240 to 1490
+     req/second. The cache can be configured on the Settings page for
+     each Site.
+</ul>
 </new-feature>
 
 
 </rul>
-<comment>
-  ASP (klart?)
-  Perl/Python (?)
-  Mac OS X (coming RSN)
-  Online-manual (synkad med tryckta)
-  Multiple frontend (ev. enbart SiteBuilder)
-  RSA-krypto + fri stark krypto-source
-  Branding! Pike7, Roxen 2.0 osv...
-</comment>
 
 </blockquote><br />
 </cv-startpage>
