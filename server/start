@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.207 2002/11/17 18:40:19 mani Exp $
+# $Id: start,v 1.208 2003/01/14 22:12:56 mani Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -773,7 +773,7 @@ LS="`ls -lL \"$pike\" 2>/dev/null`"
 LS="$LS `cd pike_modules && find . -ls 2>/dev/null`"
 LS="$LS `cd server_core && find . -ls 2>/dev/null`"
 LS="$LS `cd data/include && find . -ls 2>/dev/null`"
-LS="$LS `cd plugins && find . -ls 2>/dev/null`"
+# LS="$LS `cd plugins && find . -ls 2>/dev/null`"
 
 VERSION_DATA="$PIKEVERSION   $DEFINES   $LS  `uname -m` `uname -r`"
 
