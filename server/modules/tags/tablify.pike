@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: tablify.pike,v 1.26 1999/08/05 18:00:43 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.27 1999/08/05 19:59:20 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -20,13 +20,14 @@ mixed *register_module()
 
 string html_nice_table(array subtitles, array table, mapping opt)
 {
-  string r = "";
+  string r = "",type;
 
   int m = (int)opt->modulo || 1;
-  r += "<table bgcolor=\""+(opt->bordercolor||"#000000")+"\" border=\"0\" "
+  if(opt->nice || opt->nicer)
+    r+="<table bgcolor=\""+(opt->bordercolor||"#000000")+"\" border=\"0\" "
        "cellspacing=\"0\" cellpadding=\"1\">\n"
        "<tr><td>\n"
-       "<table border=\"0\" cellspacing=\"0\" cellpadding=\"4\">\n";
+       "<table border=\""+(opt->border||"0")+"\" cellspacing=\"0\" cellpadding=\"4\">\n";
 
   int cols=0;
   if (subtitles) {
@@ -43,43 +44,79 @@ string html_nice_table(array subtitles, array table, mapping opt)
     }
     r += "</tr>\n";
   }
-  
+
   for(int i = 0; i < sizeof(table); i++) {
-    r += "<tr bgcolor=\""+((i/m)%2?opt->evenbgcolor||"#ddeeff":
-			      opt->oddbgcolor||"#ffffff")+"\">";
+    if(opt->nice || opt->nicer)
+      r+="<tr bgcolor=\""+((i/m)%2?opt->evenbgcolor||"#ddeeff":opt->oddbgcolor||"#ffffff")+"\">";
+    else
+      r+="<tr>";
+
     for(int j = 0; j < sizeof(table[i]); j++) {
       mixed s = table[i][j];
-      switch(arrayp(opt->fields) && j<sizeof(opt->fields)?opt->fields[j]:"text") {
-      case "num":
-	array a = s/".";
-	r += "<td align=\"right\">";
-        if(opt->nicer) r+="<font color=\""+(opt->textcolor||"#000000")+"\" size=\""+(opt->size||"2")+
-          "\" face=\""+(opt->face||"helvetica,arial")+"\">";
+      type=arrayp(opt->fields) && j<sizeof(opt->fields)?opt->fields[j]:"text";
+      switch(type){
 
-	if(sizeof(a) > 1) {
-	  r += (format_numeric(a[0])+"."+
-	       reverse(format_numeric(reverse(a[1]), ";psbn&")));
-	} else
-	  r += format_numeric(s, "&nbsp;");
-        if(opt->nicer) r+="</font>";
+      case "economic-float":
+      case "float":
+	array a = s/".";
+        string font="",nofont="";
+        if(opt->nicer || type=="economic-float"){
+          font="<font color=\""+
+            (type=="economic-float"?((int)a[0]<0?"#ff0000":"#000000"):(opt->textcolor||"#000000"))+
+            "\""+(opt->nicer?(" size=\""+(opt->size||"2")+
+            "\" face=\""+(opt->face||"helvetica,arial")+"\">"):">");
+          nofont="</font>";
+	}
+
+        //The right way<tm> is to preparse the whole column and find the longest string of
+        //decimals and use that to calculate the maximum with of the decimal cell, insted
+        //of just saying widht=30, which easily produces an ugly result.
+        r+="<td align=\"right\"><table border=0 cellpadding=0 cellspacing=0><tr><td align=right>"+
+          font+a[0]+nofont+"</td><td>"+font+"."+nofont+"</td><td align=\"left\" width=30>"+font+
+          (sizeof(a)>1?a[1]:"0")+nofont;
+
+        r += "</td></tr></table>";
 	break;
+
+      case "num":
+      case "economic-int":
+      case "int":
+        string font="",nofont="";
+        if(opt->nicer || type=="economic-int"){
+          font="<font color=\""+
+            (type=="economic-int"?((int)a[0]<0?"#ff0000":"#000000"):(opt->textcolor||"#000000"))+
+            "\""+(opt->nicer?(" size=\""+(opt->size||"2")+
+            "\" face=\""+(opt->face||"helvetica,arial")+"\">"):">");
+          nofont="</font>";
+	}
+
+        r+="<td align=\"right\">"+font+(string)(int)round((float)s)+nofont;
+	break;
+
       case "text":
+      case "left":
+      case "right":
+      case "center":
       default:
-        r += "<td align=\""+(opt->cellalign||"left")+"\">";
+        r += "<td align=\""+(type!="text"?type:(opt->cellalign||"left"))+"\" valign=\""+(opt->valign||"top")+"\">";
 	if(opt->nicer) r += "<font color=\""+(opt->textcolor||"#000000")+"\" size=\""+(opt->size||"2")+
           "\" face=\""+(opt->face||"helvetica,arial")+"\">";
-        r += s;
+        r += s+(opt->nice||opt->nicer?"&nbsp;&nbsp;":"");
         if(opt->nicer) r+="</font>";
       }
 
-      r += "&nbsp;&nbsp;</td>";
+      r += "</td>";
     }
     if(sizeof(table[i])<cols) r+="<td colspan=\""+(cols-sizeof(table[i]))+"\">&nbsp;</td>";
     r += "</tr>\n";
   }
-  r += "</table></td></tr>\n";
-  r += "</table>"+(opt->noxml?"<br>":"<br />")+"\n";
-  return r;
+
+  if(opt->nice || opt->nicer)
+    return r+"</table></td></tr>\n</table>"+(opt->noxml?"<br>":"<br />")+"\n";
+
+  m_delete(opt, "cellalign");
+  m_delete(opt, "valign");
+  return make_container("table",opt,r);
 }
 
 string container_fields(string name, mapping arg, string q, mapping m, mapping arg_list)
@@ -148,12 +185,7 @@ string tag_tablify(string tag, mapping m, string q, object id)
   
   rows = Array.map(rows,lambda(string r, string s){return r/s;}, sep);
 
-  if(m->nice || m->nicer) return html_nice_table(title, rows, m + arg_list);
-
-  for(int i=0; i<sizeof(rows); i++)
-    rows[i] = "<td align=\""+m->cellalign+"\">" + rows[i] * ("</td><td align=\""+m->cellalign+"\">") + "</td>";
-
-  return make_container("table", m, "<tr>"+rows*"</tr>\n<tr>"+"</tr>\n");
+  return html_nice_table(title, rows, m + arg_list);
 }
 
 mapping query_container_callers()
