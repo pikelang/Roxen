@@ -13,7 +13,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.48 2000/08/05 21:57:41 mast Exp $
+//! $Id: PXml.pike,v 1.49 2000/08/12 04:49:25 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -243,18 +243,18 @@ mixed read()
   else {
     array seq = [array] low_parser::read();
     if (type->sequential) {
-      if (!(seq && sizeof (seq))) return RXML.Void;
+      if (!(seq && sizeof (seq))) return RXML.nil;
       else if (sizeof (seq) <= 10000) return `+(@seq);
       else {
-	mixed res = RXML.Void;
+	mixed res = RXML.nil;
 	foreach (seq / 10000.0, array slice) res += `+(@slice);
 	return res;
       }
     }
     else {
       for (int i = seq && sizeof (seq); --i >= 0;)
-	if (seq[i] != RXML.Void) return seq[i];
-      return RXML.Void;
+	if (seq[i] != RXML.nil) return seq[i];
+      return RXML.nil;
     }
   }
   // Not reached.
