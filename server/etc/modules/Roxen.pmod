@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.96 2001/06/19 00:22:55 mast Exp $
+// $Id: Roxen.pmod,v 1.97 2001/06/20 23:29:09 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -751,6 +751,29 @@ string parse_rxml(string what, RequestID id )
 {
   if(!objectp(id)) error("No id passed to parse_rxml\n");
   return id->conf->parse_rxml( what, id );
+}
+
+array(string|RXML.PCode) compile_rxml (string what, RequestID id)
+//! Evaluates and compiles the given string as RXML. Returns an array
+//! where the first element is the result of the evaluation and the
+//! second is the p-code object that contains the compiled RXML tree.
+//! It can be re-evaluated by e.g. @[Roxen.eval_p_code]. This function
+//! initiates a new context for the evaluation, so it won't recurse in
+//! the currently ongoing RXML evaluation, if any.
+{
+  RXML.Parser parser = get_rxml_parser (id, 0, 1);
+  parser->write_end (what);
+  array(string|RXML.PCode) res = ({parser->eval(), parser->p_code});
+  parser->type->give_back (parser); // Not necessary, but enables parser object reuse.
+  return res;
+}
+
+mixed eval_p_code (RXML.PCode p_code, RequestID id)
+//! Evaluates the given p-code object and returns the result. This
+//! function initiates a new context for the evaluation, so it won't
+//! recurse in the currently ongoing RXML evaluation, if any.
+{
+  return p_code->eval (p_code->new_context (id));
 }
 
 RXML.Parser get_rxml_parser (RequestID id, void|RXML.Type type, void|int make_p_code)
@@ -3255,7 +3278,7 @@ static string trace_msg (RequestID id, string msg, string name)
   if (lines[-1] == "") lines = lines[..sizeof (lines) - 2];
 
   if (sizeof (lines))
-    report_debug ("%s%s%-40s %s\n",
+    report_debug ("%s%s%-40s  %s\n",
 		  map (lines[..sizeof (lines) - 2],
 		       lambda (string s) {
 			 return sprintf ("%s%*s%s\n", id->misc->trace_id_prefix,
