@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.61 2004/05/24 23:22:47 _cvs_stephen Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.62 2004/05/26 05:11:55 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "ChiliMoon self test module";
@@ -556,7 +556,7 @@ void run_xml_tests(string data) {
 
   int test_tags = 0;
 
-  Roxen.get_xml_parser()->add_quote_tag ("!--", "", "--")
+  Parser.get_xml_parser()->add_quote_tag ("!--", "", "--")
 			->add_tags ((["test": lambda () {test_tags++;},
 				      "tag-test": lambda () {test_tags++;}]))
 			->finish (data);
