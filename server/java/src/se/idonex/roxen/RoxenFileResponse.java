@@ -1,11 +1,22 @@
 /*
- * $Id: RoxenFileResponse.java,v 1.1 1999/12/21 00:05:45 marcus Exp $
+ * $Id: RoxenFileResponse.java,v 1.2 2000/02/06 02:10:12 marcus Exp $
  *
  */
 
 package se.idonex.roxen;
 
 import java.io.Reader;
+
+/**
+ * A class of responses using a file as their source.
+ * Use the methods in the {@link HTTP} class to create
+ * objects of this class.
+ *
+ * @see RoxenLib
+ *
+ * @version	$Version$
+ * @author	marcus
+ */
 
 public class RoxenFileResponse extends RoxenResponse {
 

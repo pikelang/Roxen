@@ -1,5 +1,5 @@
 /*
- * $Id: RoxenLib.java,v 1.3 2000/01/09 21:01:02 marcus Exp $
+ * $Id: RoxenLib.java,v 1.4 2000/02/06 02:10:12 marcus Exp $
  *
  */
 
@@ -10,6 +10,14 @@ import java.util.TreeMap;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.StringTokenizer;
+
+/**
+ * A support class containing useful methods for interpreting
+ * requests and synthesizing responses.
+ *
+ * @version	$Version$
+ * @author	marcus
+ */
 
 public class RoxenLib extends HTTP {
 
