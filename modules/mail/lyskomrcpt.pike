@@ -1,5 +1,5 @@
 /*
- * $Id: lyskomrcpt.pike,v 1.1 1999/01/29 01:12:23 js Exp $
+ * $Id: lyskomrcpt.pike,v 1.2 1999/01/29 03:04:23 js Exp $
  *
  * A LysKOM module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: lyskomrcpt.pike,v 1.1 1999/01/29 01:12:23 js Exp $";
+constant cvs_version = "$Id: lyskomrcpt.pike,v 1.2 1999/01/29 03:04:23 js Exp $";
 
 /*
  * Roxen glue
@@ -30,6 +30,8 @@ object conf;
 
 void create()
 {
+  defvar("handledomain", "kom.idonex.se",
+	 "Handle this domain" ,TYPE_STRING,"");
   defvar("komserver", "kom.idonex.se",
 	 "LysKOM server hostname" ,TYPE_STRING,"");
   defvar("komport", 4894,
@@ -44,8 +46,11 @@ void create()
 object session;
 void start(int i, object c)
 {
+  werror("i: %d\n",i);
   if (c) {
     conf = c;
+    if(!i)
+    {
      werror("LysKOM: Session(): %O\n",(session=LysKOM.Session(query("komserver"),query("komport"))));
      array(object) myids=session->lookup_person(query("komuser"));
      if(sizeof(myids)==1)
@@ -57,9 +62,15 @@ void start(int i, object c)
 	 werror("LysKOM: login: %O\n",session->login(myids[0],query("kompassword")));
        }
      }
-   }
+    }
+  }
 }
 
+void stop()
+{
+  if(session)
+    session->close();
+}
 array(string)|multiset(string)|string query_provides()
 {
   return (< "smtp_rcpt","automail_rcpt" >);
@@ -95,7 +106,14 @@ static string get_addr(string addr)
       }
     }
   }
-  return(a*"");
+  return a*"";
+}
+
+string remove_trailing_dot(string in)
+{
+  if(in[-1]=='.')
+    in=in[..sizeof(in)-2];
+  return in;
 }
 
 /*
@@ -105,19 +123,33 @@ static string get_addr(string addr)
 string|multiset(string) expn(string addr, object o)
 {
   roxen_perror("AutoMail RCPT: expn(%O, X)\n", addr);
+  addr=remove_trailing_dot(addr);
 
-  array(object) conferences = session->lookup_conferance(replace(addr/"@","."," "),1);
-  return (< @(conferences->realname) >);
+  if(sscanf(addr,sprintf("c%%*d@%s",query("handledomain"))))
+    return addr;
+  
+  array(object) conferences = session->lookup_conference(replace((addr/"@")[0],
+								 "."," "),1);
+  return (< @Array.map(conferences->conf_no,lambda(int conf_no, string handledomain)
+					    {
+					      return sprintf("c%d@%s",conf_no,handledomain);
+					    },query("handledomain"))
+  >);
 }
 
 string desc(string addr, object o)
 {
   roxen_perror("AutoMail RCPT: desc(%O)\n", addr);
+  addr=remove_trailing_dot(addr);
+  int conf_no;
+  if(!sscanf(addr,"c%d@",conf_no))
+    return 0;
 
-  addr = get_addr(addr);
-
-  foreach( session->lookup_conferance(replace(addr/"@","."," "),1), object conference )
-    return conference->realname;
+  object conference=LysKOM.Abstract.Conferences(session)[conf_no];
+  if(conference)
+    return conference->name;
+  else
+    return "hej";
 }
 
 
@@ -173,13 +205,21 @@ int put(string sender, string user, string domain,
 
   string in_reply_to=headers["in-reply-to"];
   int comment_to;
-  sscanf(in_reply_to,"<%*d.%d@",comment_to);
+  if(in_reply_to)
+    sscanf(in_reply_to,"<%*d.%d@",comment_to);
+  int conf_no;
+  sscanf(user,"c%d",conf_no);
+  object conference=LysKOM.Abstract.Conferences(session)[conf_no];
+
   session->create_text(sprintf("[%s] %s",
-			       headers->from,
-			       headers->subject),
-		       get_real_body(msg),
-		       get_confs(headers->to),
-		       get_confs(headers->cc),
+			       headers->from||"",
+			       headers->subject||""),
+		       get_real_body(msg)-"\r",
+		       conference,
+		       ({ }),
+// 		       get_confs(headers->to),
+// 		       get_confs(headers->cc),
+		       
 		       comment_to,
 		       0,
 		       0);
@@ -188,9 +228,7 @@ int put(string sender, string user, string domain,
 
 multiset(string) query_domain()
 {
-  foreach(conf->get_providers("automail_clientlayer")||({}), object o) {
-    return(o->list_domains());
-  }
+  return (< query("handledomain") >);
 }
 
 // AutoMail Admin callbacks
