@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.45 1997/08/29 14:16:56 grubba Exp $
+ * $Id: ftp.pike,v 1.46 1997/08/29 16:24:35 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -23,7 +23,6 @@
 
 /* TODO
  *
- * ls -R	Some mirror-scripts use this (or rather "ls -lRat").
  * REST		Restart session (need to find RFC).
  */
 
@@ -61,7 +60,8 @@ string username="";
 #define LS_FLAG_F	16
 #define LS_FLAG_l	32
 #define LS_FLAG_r	128
-#define LS_FLAG_t	256
+#define LS_FLAG_R	256
+#define LS_FLAG_t	512
 
 constant decode_flags =
 ([
@@ -72,6 +72,7 @@ constant decode_flags =
   "F":LS_FLAG_F,
   "l":LS_FLAG_l,
   "r":LS_FLAG_r,
+  "R":LS_FLAG_R,
   "t":LS_FLAG_t
 ]);
 
@@ -524,9 +525,22 @@ string my_combine_path(string base, string part)
   }
 }
 
+mapping(string:array) stat_cache = ([]);
+
+array my_stat_file(string f, string|void d)
+{
+  if (d) {
+    f = combine_path(d, f);
+  }
+  array st;
+  if (!(st = stat_cache[f])) {
+    st = stat_cache[f] = roxen->stat_file(f, this_object());
+  }
+  return(st);
+}
+
 string list_files(array(string) files, string dir,
 		  mapping(string:string) comb_path,
-		  mapping(string:array) stat_cache,
 		  int flags)
 {
   array(int) times = allocate(sizeof(files));
@@ -536,10 +550,7 @@ string list_files(array(string) files, string dir,
     if (!(long = comb_path[files[i]])) {
       long = comb_path[files[i]] = combine_path(dir, files[i]);
     }
-    array st;
-    if (!(st = stat_cache[long])) {
-      st = stat_cache[long] = roxen->stat_file(long, this_object());
-    }
+    array st = my_stat_file(long);
     if (st) {
       times[i] = st[-4];
     } else {
@@ -564,7 +575,7 @@ string list_files(array(string) files, string dir,
   string res = "";
   foreach(files, string short) {
     string long = comb_path[short];
-    array st = stat_cache[long];
+    array st = my_stat_file(long);
     if (flags & LS_FLAG_F) {
       if (st[1] < 0) {
 	// directory
@@ -684,7 +695,6 @@ varargs int|string list_file(string arg, int flags)
     comb_path[f] = combine_path(cwd, f);	// NOTE: Ordinary comb_path.
   }
 
-  mapping(string:array) stat_cache=([]);
   mapping(string:int) dirs=([]);
   mapping(string:int) files=([]);
 
@@ -692,9 +702,8 @@ varargs int|string list_file(string arg, int flags)
 
   foreach(indices(comb_path), string short) {
     this_object()->not_query = comb_path[short];
-    st = roxen->stat_file(comb_path[short], this_object());
+    st = my_stat_file(comb_path[short]);
     if (st) {
-      stat_cache[comb_path[short]] = st;
       if (st[1] > -2) {
 	files[short] = 1;
       } else {
@@ -715,19 +724,34 @@ varargs int|string list_file(string arg, int flags)
   if (flags & LS_FLAG_d) {
     files += dirs;
     dirs = ([]);
+    flags &= ~LS_FLAG_R;	// -d overrides -R
   }
 
   string|array(string) res = ({});
   if (sizeof(files)) {
-    string s = list_files(indices(files), cwd, comb_path, stat_cache, flags);
+    string s = list_files(indices(files), cwd, comb_path, flags);
     if (s) {
       res += ({ s });
     } else {
       files = ([]);	// To get correct output.
     }
   }
-  foreach(sort(indices(dirs)), string short) {
-    array(string) dir = roxen->find_dir(comb_path[short]+"/", this_object());
+  object(Stack.stack) dir_stack = Stack.stack();
+  string short;
+  foreach(reverse(sort(indices(dirs))), short) {
+    dir_stack->push(short);
+  }
+  int name_directories;
+  if ((dir_stack->ptr > 1) || (sizeof(files))) {
+    name_directories = 1;
+  }
+  while (dir_stack->ptr) {
+    short = dir_stack->pop();
+    string long = comb_path[short];
+    if (!long) {
+      long = comb_path[short] = combine_path(cwd, short);
+    }
+    array(string) dir = roxen->find_dir(long+"/", this_object());
     if ((flags & LS_FLAG_a) &&
 	(comb_path[short] != "") &&
 	(comb_path[short] != "/")) {
@@ -744,12 +768,28 @@ varargs int|string list_file(string arg, int flags)
       } else if (!(flags & LS_FLAG_a)) {
 	dir = filter(dir, lambda(string f){return((f-".") != "");});
       }
+      if (flags & LS_FLAG_R) {
+	foreach(dir, string d) {
+	  if (!((<".","..">)[d])) {
+	    array st = my_stat_file(d, comb_path[short]+"/");
+	    if (st && (st[1] < 0)) {
+	      if (short[-1] != '/') {
+		d = short + "/" + d;
+	      } else {
+		d = short + d;
+	      }
+	      name_directories=1;
+	      dir_stack->push(d);
+	    }
+	  }
+	}
+      }
       if (sizeof(dir)) {
 	s = list_files(dir, comb_path[short]+"/",
-		       comb_path, stat_cache, flags) || "";
+		       comb_path, flags) || "";
       }
     }
-    if (sizeof(files) || (sizeof(dirs) > 1)) {
+    if (name_directories) {
       s = short + ":\n" + s;
     }
     res += ({ s });
@@ -787,7 +827,7 @@ int open_file(string arg, int|void noport)
     foreach(conf->first_modules(), function funp)
       if(file = funp( this_object())) break;
     if (!file) {
-      st = roxen->stat_file(not_query, this_object());
+      st = my_stat_file(not_query);
       if(st && st[1] < 0)
 	file = -1;
       else if(catch(file = roxen->get_file(this_object())))
@@ -921,6 +961,7 @@ void got_data(mixed fooid, string s)
       rawauth = 0;
       auth = 0;
       cwd = "/";
+      stat_cache=([]);
       break;
     case "user":
       if(!arg || arg == "ftp" || arg == "anonymous") {
@@ -932,10 +973,12 @@ void got_data(mixed fooid, string s)
 	session_auth = 0;
 	rawauth = 0;
 	auth = 0;
+	stat_cache=([]);
       } else {
 	session_auth = 0;
 	rawauth = username = arg;
 	auth = 0;
+	stat_cache=([]);
 	if (Query("anonymous_ftp")) {
 	  reply("331 Give me a password, then!\n");
 	} else {
@@ -956,6 +999,7 @@ void got_data(mixed fooid, string s)
 	method="LOGIN";
 	y = ({ "Basic", username+":"+arg});
 	realauth = y[1];
+	stat_cache=([]);
 	if(conf && conf->auth_module) {
 	  y = conf->auth_module->auth( y, this_object() );
 
@@ -981,7 +1025,7 @@ void got_data(mixed fooid, string s)
 	    if ((misc->home == "") || (misc->home[-1] != '/')) {
 	      misc->home += "/";
 	    }
-	    array(int) st = roxen->stat_file(misc->home, this_object());
+	    array(int) st = my_stat_file(misc->home);
 	    if (st && (st[1] < 0)) {
 	      cwd = misc->home;
 	    }
@@ -1033,7 +1077,7 @@ void got_data(mixed fooid, string s)
       // Restore auth-info
       auth = session_auth;
 
-      st = roxen->stat_file(ncwd, this_object());
+      st = my_stat_file(ncwd);
 
       if(!st) {
 	reply("550 "+arg+": No such file or directory, or access denied.\n");
@@ -1055,7 +1099,7 @@ void got_data(mixed fooid, string s)
 	    message = roxen->try_get_file(cwd + f, this_object()) ||"";
 	  if(f[0..5] == "README")
 	  {
-	    if(st = roxen->stat_file(cwd + f, this_object()))
+	    if(st = my_stat_file(cwd + f))
 	      readme += ({ sprintf("Please read the file %s\n  it was last "
 				   "modified on %s - %d days ago\n", 
 				   f, ctime(st[-4]) - "\n", 
@@ -1143,7 +1187,7 @@ void got_data(mixed fooid, string s)
 
       // This is needed to get .htaccess to be read from the correct directory
       if (file_arg[-1] != '/') {
-	array st = roxen->stat_file(file_arg, this_object());
+	array st = my_stat_file(file_arg);
 	if (st && (st[1]<0)) {
 	  file_arg+="/";
 	}
@@ -1237,7 +1281,7 @@ void got_data(mixed fooid, string s)
       not_query = fname = combine_path(cwd, arg);
       foreach(conf->first_modules(), function funp)
 	if(f = funp( this_object())) break;
-      array st = roxen->stat_file(fname, this_object());
+      array st = my_stat_file(fname);
       if (st) {
 	mapping m = localtime(st[3]);
 	reply(sprintf("213 %04d%02d%02d%02d%02d%02d\n",
