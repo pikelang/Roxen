@@ -32,9 +32,9 @@ gdbm: force
 zlib: force
 	-@(cd zlib;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" libz.a)
 
-commercial_modules: force
-	@if test -d commercial_modules/. ; then \
-	  (cd commercial_modules/;$(MAKE)) \
+platform: force
+	@if test -d platform/. ; then \
+	  (cd platform/;$(MAKE)) \
 	else :; fi; \
 
 force:
@@ -185,9 +185,9 @@ install_only:
 	  sed <$(SRCDIR)/pike-roxen.in -e 's!#prefix#!$(prefix)!' >$(prefix)/bin/pike-roxen || exit 1; \
 	  chmod a+rx $(prefix)/bin/pike-roxen; \
 	fi
-	@if test -f commercial_modules/Makefile ; then \
-	  echo "Installing supplied commercial modules..."; \
-	  (cd commercial_modules; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" install); \
+	@if test -f platform/Makefile ; then \
+	  echo "Installing supplied Roxen Platform parts..."; \
+	  (cd platform; $(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" install); \
 	else :; fi
 	@echo "Roxen installed."
 
@@ -403,7 +403,7 @@ dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	    type="no_pike"; \
 	  fi ; \
 	fi; \
-	if test -d $$version/commercial_modules/. ; then \
+	if test -d $$version/platform/. ; then \
 	  type="platform-$$type"; \
 	else :; fi; \
 	echo Type $$type.; \
