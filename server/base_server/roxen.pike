@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.187 1998/04/11 13:39:06 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.188 1998/04/11 13:47:06 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1130,7 +1130,7 @@ void create()
 
 
 // Get the current domain. This is not as easy as one could think.
-private string get_domain(int|void l)
+string get_domain(int|void l)
 {
   array f;
   string t, s;
