@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.100 1999/11/26 19:51:54 grubba Exp $
+/* $Id: wizard.pike,v 1.101 1999/11/28 07:18:46 per Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -343,8 +343,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 			({"\\,", "\\:"}), 
 			({"__CoMma__", "__CoLon__"}));
 
-     return make_container("select", m2, Array.map(m->choices/",",
-						   lambda(string s, string c, mapping m) {
+     return make_container("select", m2, map(m->choices/",",
+                                             lambda(string s, string c, mapping m) {
         string t;
         if(sscanf(s, "%s:%s", s, t) != 2)
 	  t = s;
@@ -371,7 +371,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 		       ({"\\,", "\\:"}), 
 		       ({"__CoMma__", "__CoLon__"}));
 
-    return make_container("select", m2, Array.map(m->choices/",",
+    return make_container("select", m2, map(m->choices/",",
 				 lambda(string s, array c, mapping m) {
       string t;
       if(sscanf(s, "%s:%s", s, t) != 2)
@@ -391,7 +391,8 @@ mapping decompress_state(string from)
 {
   if(!from) return ([]);
   from = MIME.decode_base64(from);
-  catch {
+  catch 
+  {
     object gz = Gz;
     if(sizeof(indices(gz)))
       from = gz->inflate()->inflate(from);
@@ -415,10 +416,7 @@ string compress_state(mapping state)
   string from = encode_value(state);
   object gz = Gz;
   if(sizeof(indices(gz)))
-  {
-    string from2 = gz->deflate()->deflate(from);
-    /*if(strlen(from2)<strlen(from))*/ from=from2;
-  }
+    from = gz->deflate()->deflate(from);
   return MIME.encode_base64( from );
 }
 
