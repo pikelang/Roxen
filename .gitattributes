@@ -4,7 +4,6 @@
 *.dsp eol=crlf
 *.dsw eol=crlf
 *.gif binary
-*.gz binary
 *.ico binary
 *.jar binary
 *.jpg binary
