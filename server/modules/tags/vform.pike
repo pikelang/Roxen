@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.38 2002/05/23 14:14:27 wellhard Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.39 2003/09/25 11:00:32 anders Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -12,7 +12,7 @@ constant module_name = "Tags: Verified form";
 constant module_doc  = "Creates a self verifying form.";
 
 // maxlength is excluded so that it gets exported.
-constant ARGS=(< "type", "min", "max", "scope", "min", "max", "trim"
+constant ARGS=(< "type", "min", "max", "scope", "min", "max", "trim",
 		 "regexp", "glob", "minlength", "case",
 		 "mode", "fail-if-failed", "ignore-if-false",
 		 "ignore-if-failed", "ignore-if-verified", "optional" >);
