@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.319 2000/07/10 22:41:24 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.320 2000/07/11 01:49:54 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -23,12 +23,9 @@ mapping profile_map = ([]);
 
 // Locale support...
 //<locale-token project="base_server">LOCALE</locale-token>
-
-#if constant(Locale.translate)
-# define LOCALE(X,Y)   Locale.translate(roxen.locale->get()->base_server, X, Y)
-#else
-# define LOCALE(X,Y)   RoxenLocale.translate(roxen.locale->get()->base_server, X, Y)
-#endif
+#define LOCALE(X,Y)  _STR_LOCALE(base_server,X,Y)
+LOCALE_PROJECT(base_server);
+#define DLOCALE(X,Y) _DEF_LOCALE(X,Y)
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -2371,8 +2368,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     if(module_type != MODULE_CONFIG)
     {
       if (err = catch {
-	me->defvar("_priority", 5, LOCALE("", "Priority"), TYPE_INT_LIST,
-		   LOCALE("", "The priority of the module. 9 is highest and 0 is lowest."
+	me->defvar("_priority", 5, DLOCALE("", "Priority"), TYPE_INT_LIST,
+		   DLOCALE("", "The priority of the module. 9 is highest and 0 is lowest."
 		   " Modules with the same priority can be assumed to be "
 		   "called in random order"),
 		   ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
@@ -2385,13 +2382,13 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     {
       if(!(module_type & MODULE_PROXY))
       {
-	me->defvar("_sec_group", "user", LOCALE("", "Security: Realm"), TYPE_STRING,
-		   LOCALE("", "The realm to use when requesting password from the "
+	me->defvar("_sec_group", "user", DLOCALE("", "Security: Realm"), TYPE_STRING,
+		   DLOCALE("", "The realm to use when requesting password from the "
 		   "client. Usually used as an informative message to the "
 		   "user."));
 
-	me->defvar("_seclvl",  0, LOCALE("", "Security: Security level"), TYPE_INT,
-		   LOCALE("", "The modules security level is used to determine if a "
+	me->defvar("_seclvl",  0, DLOCALE("", "Security: Security level"), TYPE_INT,
+		   DLOCALE("", "The modules security level is used to determine if a "
 		   " request should be handled by the module."
 		   "\n<p><h2>Security level vs Trust level</h2>"
 		   " Each module has a configurable <i>security level</i>."
@@ -2424,8 +2421,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 		   " \"Filsystem module\" could later be handled by the"
 		   " \"CGI module\".</p>"));
 
-	me->defvar("_seclevels", "", LOCALE("", "Security: Patterns"), TYPE_TEXT_FIELD,
-		   LOCALE("", "This is the 'security level=value' list.<br />"
+	me->defvar("_seclevels", "", DLOCALE("", "Security: Patterns"), TYPE_TEXT_FIELD,
+		   DLOCALE("", "This is the 'security level=value' list.<br />"
 		   "Each security level can be any or more from this list:"
 		   "<hr noshade=\"noshade\" />"
 		   "allow ip=<i>IP</i>/<i>bits</i><br />"
@@ -2446,14 +2443,14 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
       } else {
 	me->definvisvar("_seclvl", -10, TYPE_INT); /* A very low one */
 
-	me->defvar("_sec_group", "user", LOCALE("", "Security: Realm"), TYPE_STRING,
-		   LOCALE("", "The realm to use when requesting password from the "
+	me->defvar("_sec_group", "user", DLOCALE("", "Security: Realm"), TYPE_STRING,
+		   DLOCALE("", "The realm to use when requesting password from the "
 		   "client. Usually used as an informative message to the "
 		   "user."));
 
-	me->defvar("_seclevels", "", LOCALE("", "Security: Patterns"),
+	me->defvar("_seclevels", "", DLOCALE("", "Security: Patterns"),
 		   TYPE_TEXT_FIELD,
-		   LOCALE("", "This is the 'security level=value' list.<br />"
+		   DLOCALE("", "This is the 'security level=value' list.<br />"
 		   "Each security level can be any or more from "
 		   "this list:<br />"
 		   "<hr noshade=\"noshade\" />"
@@ -2954,21 +2951,21 @@ void create(string config)
 {
   name=config;
 
-  defvar("default_server", 0, LOCALE("", "Default site"),
+  defvar("default_server", 0, DLOCALE("", "Default site"),
 	 TYPE_FLAG,
-	 LOCALE("", "If true, this site will be selected in preference of "
+	 DLOCALE("", "If true, this site will be selected in preference of "
 	 "other sites when virtual hosting is used and no host "
 	 "header is supplied, or the supplied host header does not "
 	 "match the address of any of the other servers.") );
 
-  defvar("comment", "", LOCALE("", "Virtual server comment"),
+  defvar("comment", "", DLOCALE("", "Virtual server comment"),
 	 TYPE_TEXT_FIELD|VAR_MORE,
-	 LOCALE("", "This text will be visible in the administration interface, it "
+	 DLOCALE("", "This text will be visible in the administration interface, it "
 	 " can be quite useful to use as a memory helper."));
 
-  defvar("name", "", LOCALE("", "Virtual server name"),
+  defvar("name", "", DLOCALE("", "Virtual server name"),
 	 TYPE_STRING|VAR_MORE,
-	 LOCALE("", "This is the name that will be used in the configuration "
+	 DLOCALE("", "This is the name that will be used in the configuration "
 	 "interface. If this is left empty, the actual name of the "
 	 "virtual server will be used."));
 
@@ -2976,10 +2973,10 @@ void create(string config)
 	 "404: $host $referer - [$cern_date] \"$method $resource $protocol\" 404 -\n"
 	 "500: $host $referer ERROR [$cern_date] \"$method $resource $protocol\" 500 -\n"
 	 "*: $host - - [$cern_date] \"$method $resource $protocol\" $response $length",
-	 LOCALE("", "Logging: Format"),
+	 DLOCALE("", "Logging: Format"),
 	 TYPE_TEXT_FIELD|VAR_MORE,
 
-	 LOCALE("", "What format to use for logging. The syntax is:\n"
+	 DLOCALE("", "What format to use for logging. The syntax is:\n"
 	 "<pre>"
 	 "response-code or *: Log format for that response acode\n\n"
 	 "Log format is normal characters, or one or more of the "
@@ -3013,12 +3010,12 @@ void create(string config)
 	 "                  by the client, otherwise '0'\n"
 	 "</pre>"), 0, lambda(){ return !query("Log");});
 
-  defvar("Log", 1, LOCALE("", "Logging: Enabled"), TYPE_FLAG, LOCALE("", "Log requests"));
+  defvar("Log", 1, DLOCALE("", "Logging: Enabled"), TYPE_FLAG, DLOCALE("", "Log requests"));
 
   // FIXME: Mention it is relative to getcwd(). Can not be localized in pike 7.0.
   defvar("LogFile", "$LOGDIR/"+Roxen.short_name(name)+"/Log",
-	 LOCALE("", "Logging: Log file"), TYPE_FILE,
-	 LOCALE("", "The log file. "
+	 DLOCALE("", "Logging: Log file"), TYPE_FILE,
+	 DLOCALE("", "The log file. "
 	 ""
 	 "A file name. Some substitutions will be done:"
 	 "<pre>"
@@ -3031,33 +3028,33 @@ void create(string config)
 	 ,0, lambda(){ return !query("Log");});
 
   defvar("NoLog", ({ }),
-	 LOCALE("", "Logging: No Logging for"), TYPE_STRING_LIST|VAR_MORE,
-         LOCALE("", "Don't log requests from hosts with an IP number which matches any "
+	 DLOCALE("", "Logging: No Logging for"), TYPE_STRING_LIST|VAR_MORE,
+         DLOCALE("", "Don't log requests from hosts with an IP number which matches any "
 	 "of the patterns in this list. This also affects the access counter "
 	 "log."), 0, lambda(){ return !query("Log");});
 
-  defvar("Domain", roxen->get_domain(), LOCALE("", "Domain"), TYPE_STRING,
-	 LOCALE("", "The domainname of the server. The domainname is used "
+  defvar("Domain", roxen->get_domain(), DLOCALE("", "Domain"), TYPE_STRING,
+	 DLOCALE("", "The domainname of the server. The domainname is used "
 	 " to generate default URLs, and to gererate email addresses."));
 
   defvar("MyWorldLocation", "http://"+gethostname()+"/", 
-         LOCALE("", "Primary Server URL"), TYPE_URL,
-	 LOCALE("", "This is the main server URL, where your start page is located. "
+         DLOCALE("", "Primary Server URL"), TYPE_URL,
+	 DLOCALE("", "This is the main server URL, where your start page is located. "
          "Please note that you also have to configure the 'URLs' variable."));
 
   defvar("URLs", 
          Variable.PortList( ({"http://*/"}), VAR_INITIAL,
-                            LOCALE("", "URLs"), 
-         LOCALE("", "Bind to these URLs. You can use '*' and '?' to perform globbing "
+                            DLOCALE("", "URLs"), 
+         DLOCALE("", "Bind to these URLs. You can use '*' and '?' to perform globbing "
          "(using any of these will default to binding to all IP-numbers on "
          "your machine).  The possible protocols are http, fhttp (a faster "
          "version of the normal HTTP protocol, but not 100% compatible with "
          "all modules) https, ftp, ftps, gopher and tetris.")));
 
   defvar("InternalLoc", "/_internal/",
-	 LOCALE("", "Internal module resource mountpoint"),
+	 DLOCALE("", "Internal module resource mountpoint"),
          TYPE_LOCATION|VAR_MORE|VAR_DEVELOPER,
-         LOCALE("", "Some modules may want to create links to internal resources.  "
+         DLOCALE("", "Some modules may want to create links to internal resources.  "
 	 "This setting configures an internally handled location that can "
 	 "be used for such purposes.  Simply select a location that you are "
 	 "not likely to use for regular resources."));
@@ -3066,8 +3063,8 @@ void create(string config)
   // Throttling-related variables
 
   defvar("throttle", 0,
-         LOCALE("", "Bandwidth Throttling: Server: Enabled"),TYPE_FLAG,
-	 LOCALE("", "If set, per-server bandwidth throttling will be enabled. "
+         DLOCALE("", "Bandwidth Throttling: Server: Enabled"),TYPE_FLAG,
+	 DLOCALE("", "If set, per-server bandwidth throttling will be enabled. "
 		"It will allow you to limit the total available bandwidth for "
 		"this Virtual Server.<br />Bandwidth is assigned using a Token Bucket. "
 		"The principle under which it works is: for each byte we send we use a token. "
@@ -3076,30 +3073,30 @@ void create(string config)
   //TODO: move this explanation somewhere on the website and just put a link.
 
   defvar("throttle_fill_rate", 102400,
-         LOCALE("", "Bandwidth Throttling: Server: Average available bandwidth"),
+         DLOCALE("", "Bandwidth Throttling: Server: Average available bandwidth"),
          TYPE_INT,
-	 LOCALE("", "This is the average bandwidth available to this Virtual Server in "
+	 DLOCALE("", "This is the average bandwidth available to this Virtual Server in "
 		"bytes/sec (the bucket \"fill rate\")."),
          0, arent_we_throttling_server);
 
   defvar("throttle_bucket_depth", 1024000,
-         LOCALE("", "Bandwidth Throttling: Server: Bucket Depth"), TYPE_INT,
-	 LOCALE("", "This is the maximum depth of the bucket. After a long enough period "
+         DLOCALE("", "Bandwidth Throttling: Server: Bucket Depth"), TYPE_INT,
+	 DLOCALE("", "This is the maximum depth of the bucket. After a long enough period "
 		"of inactivity, a request will get this many unthrottled bytes of data, before "
 		"throttling kicks back in.<br>Set equal to the Fill Rate in order not to allow "
 		"any data bursts. This value determines the length of the time over which the "
 		"bandwidth is averaged."), 0, arent_we_throttling_server);
 
   defvar("throttle_min_grant", 1300,
-         LOCALE("", "Bandwidth Throttling: Server: Minimum Grant"), TYPE_INT,
-	 LOCALE("", "When the bandwidth availability is below this value, connections will "
+         DLOCALE("", "Bandwidth Throttling: Server: Minimum Grant"), TYPE_INT,
+	 DLOCALE("", "When the bandwidth availability is below this value, connections will "
 		"be delayed rather than granted minimal amounts of bandwidth. The purpose "
 		"is to avoid sending too small packets (which would increase the IP overhead)."),
          0, arent_we_throttling_server);
 
   defvar("throttle_max_grant", 14900,
-         LOCALE("", "Bandwidth Throttling: Server: Maximum Grant"), TYPE_INT,
-	 LOCALE("", "This is the maximum number of bytes assigned in a single request "
+         DLOCALE("", "Bandwidth Throttling: Server: Maximum Grant"), TYPE_INT,
+	 DLOCALE("", "This is the maximum number of bytes assigned in a single request "
 		"to a connection. Keeping this number low will share bandwidth more evenly "
 		"among the pending connections, but keeping it too low will increase IP "
 		"overhead and (marginally) CPU usage. You'll want to set it just a tiny "
@@ -3107,23 +3104,23 @@ void create(string config)
 		"for ethernet)."), 0, arent_we_throttling_server);
 
   defvar("req_throttle", 0,
-         LOCALE("", "Bandwidth Throttling: Request: Enabled"), TYPE_FLAG,
-	 LOCALE("", "If set, per-request bandwidth throttling will be enabled.")
+         DLOCALE("", "Bandwidth Throttling: Request: Enabled"), TYPE_FLAG,
+	 DLOCALE("", "If set, per-request bandwidth throttling will be enabled.")
          );
 
   defvar("req_throttle_min", 1024,
-         LOCALE("", "Bandwidth Throttling: Request: Minimum guarranteed bandwidth"),
+         DLOCALE("", "Bandwidth Throttling: Request: Minimum guarranteed bandwidth"),
          TYPE_INT,
-	 LOCALE("", "The maximum bandwidth each connection (in bytes/sec) can use is determined "
+	 DLOCALE("", "The maximum bandwidth each connection (in bytes/sec) can use is determined "
 		"combining a number of modules. But doing so can lead to too small "
 		"or even negative bandwidths for particularly unlucky requests. This variable "
 		"guarantees a minimum bandwidth for each request."),
          0, arent_we_throttling_request);
 
   defvar("req_throttle_depth_mult", 60.0,
-         LOCALE("", "Bandwidth Throttling: Request: Bucket Depth Multiplier"),
+         DLOCALE("", "Bandwidth Throttling: Request: Bucket Depth Multiplier"),
          TYPE_FLOAT,
-	 LOCALE("", "The average bandwidth available for each request will be determined by "
+	 DLOCALE("", "The average bandwidth available for each request will be determined by "
 		"the modules combination. The bucket depth will be determined multiplying "
 		"the rate by this factor."),
          0, arent_we_throttling_request);
@@ -3165,8 +3162,8 @@ page.
 </font>
 </body>
 ",
-	 LOCALE("", "Messages: No such file"),TYPE_TEXT_FIELD,
-	 LOCALE("", "What to return when there is no resource or file available "
+	 DLOCALE("", "Messages: No such file"),TYPE_TEXT_FIELD,
+	 DLOCALE("", "What to return when there is no resource or file available "
 	 "at a certain location."));
 
   definvisvar( "no_delayed_load", 0, TYPE_FLAG );
