@@ -78,10 +78,12 @@
 <result>AA</result>
 </test>
 
+<!-- The following is only valid in 2.1 compat mode.
 <test>
 <rxml><case>aA</case></rxml>
 <result>aA</result>
 </test>
+-->
 
 <test>
 <rxml><case case=capitalize>aaAa</case></rxml>
