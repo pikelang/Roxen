@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.417 2003/12/29 11:22:51 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.418 2004/01/19 15:54:48 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1859,12 +1859,13 @@ void handle_request( )
   if(e= catch(result = conf->handle_request( this_object() )))
     INTERNAL_ERROR( e );
 
-  if (result && result->pipe)
-    // Could be destructed here already since handle_request might
-    // have handed over us to another thread that finished quickly.
-    return;
-
-  file = result;
+  else {
+    if (result && result->pipe)
+      // Could be destructed here already since handle_request might
+      // have handed over us to another thread that finished quickly.
+      return;
+    file = result;
+  }
 
   if( file && file->try_again_later )
   {
@@ -2291,6 +2292,7 @@ static void create(object f, object c, object cc)
 #endif
       f->set_nonblocking(got_data, f->query_write_callback(), end);
     my_fd = f;
+    CHECK_FD_SAFE_USE;
     MARK_FD("HTTP connection");
     if( c ) port_obj = c;
     if( cc ) conf = cc;
