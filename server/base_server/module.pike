@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.123 2001/08/13 18:20:10 per Exp $
+// $Id: module.pike,v 1.124 2001/08/14 15:11:26 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -401,11 +401,23 @@ object sql_big_query_ro( string query, mixed ... args )
   return get_my_sql(1)->big_query( replace( query, __my_tables ), @args );
 }
 
-static void create_sql_tables( mapping(string:array(string)) defenitions )
+static void create_sql_tables( mapping(string:array(string)) defenitions,
+			       string|void comment,
+			       int no_unique_names )
 //! Create multiple tables in one go. See @[get_my_table]
 {
-  foreach( indices( defenitions ), string t )
-    get_my_table( t, defenitions[t] );
+  if( !no_unique_names )
+    foreach( indices( defenitions ), string t )
+      get_my_table( t, defenitions[t], comment );
+  else
+  {
+    Sql.Sql sql = get_my_sql();
+    foreach( indices( defenitions ), string t )
+    {
+      sql->query("CREATE TABLE IF NOT EXISTS "+t+" ("+defenitions[t]*","+")" );
+      DBManager.is_module_table( this_object(), my_db, t, comment );
+    }
+  }
 }
 
 static string sql_table_exists( string name )
