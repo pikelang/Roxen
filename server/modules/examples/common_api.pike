@@ -1,7 +1,7 @@
 inherit "module";
 // All roxen modules must inherit module.pike
 
-constant cvs_version = "$Id: common_api.pike,v 1.2 2000/08/24 10:56:10 jhs Exp $";
+constant cvs_version = "$Id: common_api.pike,v 1.3 2000/08/25 17:44:18 jhs Exp $";
 //! This string (filtered to remove some ugly cvs id markup) shows up in
 //! the roxen administration interface when handling module parameters in
 //! developer mode (configured under "User Settings" below the Admin tab).
@@ -57,7 +57,7 @@ void create(Configuration|void conf)
 //! first time, when the `conf' argument passed is 0. Se also
 //! <ref>start</ref>.
 {
-  report_debug("tamagotchi(%O)\n", conf); // Ends up in the debug log
+  //report_debug("tamaroxchi(%O)\n", conf); // Ends up in the debug log
   set_module_creator("Johan Sundström <jhs@roxen.com>");
   set_module_url("https://jhs.user.roxen.com/examples/common_api.html");
 }
