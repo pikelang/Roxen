@@ -68,6 +68,8 @@ private string ex_cont(string t, mapping m, string c, string rt, void|object id)
   c=replace(c, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) );
 
   switch(m->type) {
+  case "box":
+    return "<br>"+mktable( ({ ({ c }) }) );
   case "hr":
     return c+"<hr>"+parsed;
   case "vert":
@@ -126,20 +128,32 @@ private string parse_mapping(mapping doc, void|object id) {
 
 // --------------------- Find documentation --------------
 
+// Remember a tag documentation for 15 minutes.
+#define CACHE_TIMEOUT 900 
+
 mapping call_tagdocumentation(RoxenModule o) {
   mapping doc;
+  string name;
+  if(o->is_configuration)
+    name="RXML Core";
+  else
+    name=o->register_module()[1];
+
+  if(doc=cache_lookup("tagdoc", name))
+    return doc;
 #ifdef RXMLHELP_DEBUG
   doc=o->tagdocumentation();
 #else
   catch { doc=o->tagdocumentation(); };
 #endif
   RXMLHELP_WERR(sprintf("tagdocumentation() returned %t.",doc));
-  if(!doc || !mappingp(doc)) return 0;
+  if(!doc || !mappingp(doc)) {
+    cache_set("tagdoc", name, 0, CACHE_TIMEOUT);
+    return 0;
+  }
+  cache_set("tagdoc", name, doc, CACHE_TIMEOUT);
   return doc;
 }
-
-// Remember a tag documentation for 15 minutes.
-#define CACHE_TIMEOUT 900 
 
 private int generation;
 multiset undocumented_tags=(<>);
@@ -148,9 +162,6 @@ string find_tag_doc(string name, void|object id) {
   RXML.TagSet tag_set=RXML.get_context()->tag_set;
   string doc;
   int new_gen=tag_set->generation;
-
-  if((doc=cache_lookup("tagdoc",name)) && generation==new_gen)
-    return parse_doc(doc, name, id);
 
   if(generation!=new_gen) {
     undocumented_tags=(<>);
@@ -178,7 +189,6 @@ string find_tag_doc(string name, void|object id) {
 
     mapping tagdoc=call_tagdocumentation(tag);
     if(!tagdoc || !tagdoc[name]) continue;
-    cache_set("tagdoc", name, tagdoc[name], CACHE_TIMEOUT);
     return parse_doc(tagdoc[name], name, id);
   }
 
