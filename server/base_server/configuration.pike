@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.168 1999/03/23 22:24:42 mast Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.169 1999/03/24 12:05:25 js Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2730,6 +2730,21 @@ int log_is_not_enabled()
 
 // Get the current domain. This is not as easy as one could think.
 
+#ifdef __NT__
+  string get_tcpip_param(string val)
+    {
+      foreach(({
+	"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters",
+	  "SYSTEM\\CurrentControlSet\\Services\\VxD\\MSTCP"
+	  }),string key)
+	{
+	  catch {
+	    return RegGetValue(HKEY_LOCAL_MACHINE, key, val);
+	  };
+	}
+    }
+#endif
+
 private string get_domain(int|void l)
 {
   array f;
@@ -2770,7 +2785,7 @@ private string get_domain(int|void l)
 #endif
 #endif
 #if __NT__
-  s="";
+  s=get_tcpip_param("Domain")||"";
 #else
   if(!s) {
     t = Stdio.read_bytes("/etc/resolv.conf");

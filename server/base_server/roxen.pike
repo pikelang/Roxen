@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.313 1999/03/23 22:24:46 mast Exp $
+ * $Id: roxen.pike,v 1.314 1999/03/24 12:05:27 js Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.313 1999/03/23 22:24:46 mast Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.314 1999/03/24 12:05:27 js Exp $";
 
 
 // Some headerfiles
@@ -1253,52 +1253,6 @@ void create()
   (object)"fonts.pike";
   Configuration = (program)"configuration";
   call_out(post_create,1); //we just want to delay some things a little
-}
-
-
-// Get the current domain. This is not as easy as one could think.
-string get_domain(int|void l)
-{
-  array f;
-  string t, s;
-
-//  ConfigurationURL is set by the 'install' script.
-  if(!(!l && sscanf(QUERY(ConfigurationURL), "http://%s:%*s", s)))
-  {
-#if efun(gethostbyname)
-#if efun(gethostname)
-    f = gethostbyname(gethostname()); // First try..
-    if(f)
-      foreach(f, f) if (arrayp(f)) { 
-	foreach(f, t) if(search(t, ".") != -1 && !(int)t)
-	  if(!s || strlen(s) < strlen(t))
-	    s=t;
-      }
-#endif
-#endif
-    if(!s)
-    {
-      t = Stdio.read_bytes("/etc/resolv.conf");
-      if(t) 
-      {
-	if(!sscanf(t, "domain %s\n", s))
-	  if(!sscanf(t, "search %s%*[ \t\n]", s))
-	    s="nowhere";
-      } else {
-	s="nowhere";
-      }
-      s = "host."+s;
-    }
-  }
-  sscanf(s, "%*s.%s", s);
-  if(s && strlen(s))
-  {
-    if(s[-1] == '.') s=s[..strlen(s)-2];
-    if(s[0] == '.') s=s[1..];
-  } else {
-    s="unknown"; 
-  }
-  return s;
 }
 
 
