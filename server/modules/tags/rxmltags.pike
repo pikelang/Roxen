@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.230 2001/05/22 18:16:47 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.231 2001/05/22 20:40:13 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1362,11 +1362,13 @@ class TagMaketag {
 	break;
       case "container":
 	if(!args->name) parse_error("Type 'container' requires a name attribute.\n");
-	result = RXML.t_xml->format_tag(args->name, id->misc->makeargs, content);
+	result = RXML.t_xml->format_tag(args->name, id->misc->makeargs, content, RXML.FLAG_RAW_ARGS);
 	break;
       case "tag":
 	if(!args->name) parse_error("Type 'tag' requires a name attribute.\n");
-	result = Roxen.make_tag(args->name, id->misc->makeargs, !args->noxml);
+	result = RXML.t_xml->format_tag(args->name, id->misc->makeargs, 0,
+					(args->noxml?RXML.FLAG_COMPAT_PARSE:0)|
+					RXML.FLAG_EMPTY_ELEMENT|RXML.FLAG_RAW_ARGS);
 	break;
       case "comment":
 	result = "<!--" + content + "-->";
