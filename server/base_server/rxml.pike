@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.20 1999/08/13 15:14:34 nilsson Exp $
+ * $Id: rxml.pike,v 1.21 1999/08/15 23:24:42 neotron Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -548,10 +548,10 @@ array tag_use(string tag, mapping m, string c, RequestID id)
     m_delete(res->defines, "line");
     cache_set("macrofiles:"+name, (m->file || ("pkg!"+m->package)), res);
   }
-  id->misc->tags += res->tags;
+  id->misc->tags += copy_value(res->tags);
   id->misc->containers += res->containers;
   id->misc->defaults += res->defaults;
-  id->misc->defines += res->defines;
+  id->misc->defines += copy_value(res->defines);
   id->misc->_tags += res->_tags;
   id->misc->_containers += res->_containers;
   id->misc->_ifs += res->_ifs;
@@ -1061,7 +1061,7 @@ class IfIs
     array arr=value/" ";
     var = misc? id->misc[index][arr[0]] : id[index][arr[0]];
     if(sizeof(arr)<2 || !var) return !!var;
-    var = lower_case( var );
+    var = lower_case( (var+"") );
     if(sizeof(arr)==1) return !!var;
     is=lower_case(arr[2..]*" ");
     if(arr[1]=="==" || arr[1]=="=" || arr[1]=="is")
