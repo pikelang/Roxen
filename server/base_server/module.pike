@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.103 2001/01/04 07:30:37 nilsson Exp $
+// $Id: module.pike,v 1.104 2001/01/19 16:37:43 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -10,10 +10,10 @@ inherit "basic_defvar";
 mapping(string:array(int)) error_log=([]);
 
 constant is_module = 1;
-constant module_type   = MODULE_ZERO;
-constant module_name   = "Unnamed module";
-constant module_doc    = "Undocumented";
-constant module_unique = 1;
+// constant module_type = MODULE_ZERO;
+// constant module_name    = "Unnamed module";
+// constant module_doc     = "Undocumented";
+constant module_unique  = 1;
 
 
 private string _module_identifier;
@@ -49,7 +49,7 @@ string module_identifier()
     _module_identifier = sprintf ("%s,%s",
 				  name
 				  || this_object()->module_name_locale
-				  || module_name, cname);
+				  || this_object()->module_name, cname);
   }
   return _module_identifier;
 }
@@ -63,9 +63,9 @@ string _sprintf()
 array register_module()
 {
   return ({
-    module_type,
-    this_object()->module_name_locale || module_name,
-    this_object()->module_doc_locale || module_doc,
+    this_object()->module_type,
+    this_object()->module_name_locale || this_object()->module_name,
+    this_object()->module_doc_locale  || this_object()->module_doc,
     0,
     module_unique,
   });
@@ -162,10 +162,15 @@ string info(Configuration conf)
  return (this_object()->register_module()[2]);
 }
 
+string sname( )
+{
+  return my_configuration()->otomod[ this_object() ];
+}
+
 ModuleInfo my_moduleinfo( )
 //! Returns the associated @ref{ModuleInfo} object
 {
-  string f = my_configuration()->otomod[ this_object() ];
+  string f = sname();
   if( f ) return roxen.find_module( (f/"#")[0] );
 }
 
@@ -531,4 +536,20 @@ mixed get_value_from_file(string path, string index, void|string pre)
     return compile_string((pre||"")+file->read())[index[..sizeof(index)-3]]();
   }
   return compile_string((pre||"")+file->read())[index];
+}
+
+
+
+string get_my_table( string defenition )
+{
+  string res = replace(sname(),"#","_");
+  if( catch(get_my_sql()->query( "SELECT * FROM "+res+" LIMIT 1" )) )
+    get_my_sql()->query( "CREATE TABLE "+res+" ("+defenition+")" );
+  return res;
+}
+
+
+Sql.Sql get_my_sql()
+{
+  return connect_to_my_mysql( 0, "roxen" );
 }
