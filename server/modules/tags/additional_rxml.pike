@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.11 2001/03/08 14:35:45 per Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.12 2001/03/15 15:06:25 kuntri Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -296,8 +296,10 @@ format='%4d%2d%2d'>19771003</sscanf>
 
 "emit#known-langs":({ #"<desc plugin='plugin'><p><short>
  Outputs all languages partially supported by roxen for writing
+ numbers, weekdays et c.</short>
+ Outputs all languages partially supported by roxen for writing
  numbers, weekdays et c (for example for the number and date tags).
-</short></p>
+ </p>
 </desc>
 
  <ex type='vert'><emit source='known-langs' sort='englishname'>
