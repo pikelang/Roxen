@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.22 2004/08/06 12:58:14 noring Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.23 2004/08/06 14:04:50 noring Exp $";
 
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Spell checker";
@@ -217,11 +217,16 @@ string run_spellcheck(string|array(string) words, void|string dict)
                          (dict           ? ({ "-d", dict }) : ({})),
                          ([ "stdin":file2,"stdout":file4 ]));
 
-  file1->write(stringp(words) ?
+  string text = stringp(words) ?
                " "+words /* Extra space to ignore aspell commands
                             (potential security problem), compensated
                             below. */ :
-               " "+words*"\n "+"\n" /* Compatibility mode. */);
+               " "+words*"\n "+"\n" /* Compatibility mode. */;
+
+  // FIXME: Aspell can be fed with other charsets.
+  text = Locale.Charset.encoder("iso-8859-1", "\xa0")->feed(text)->drain();
+
+  file1->write(text);
   file1->close();
   file2->close();
   file4->close();
