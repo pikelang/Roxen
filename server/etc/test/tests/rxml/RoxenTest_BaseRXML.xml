@@ -1447,6 +1447,8 @@ cd</rxml>
 <result>&</result>
 </test>
 
+<comment>Quoting tests missing</comment>
+
 
 <!-- ............................................................ -->
 <comment>Form scope</comment>
@@ -1454,6 +1456,58 @@ cd</rxml>
 <rxml>&form.no-such-variable;</rxml>
 <result></result>
 </test>
+
+<test>
+<rxml><set variable="form.foo" value="a,b" split=","/>&form.foo;</rxml>
+<glob>a&#0;b</glob>
+</test>
+
+<test>
+<rxml><set variable="form.foo" value="x"/>&form.foo;</rxml>
+<result>x</result>
+</test>
+
+<test>
+<add what="variable" name="bar" value="q"/>
+<rxml>&form.bar;</rxml>
+<result>q</result>
+</test>
+
+<!-- Ensuring id->variables integrity -->
+<test>
+<rxml>&form.bar;</rxml>
+<result></result>
+</test>
+
+<test>
+<add what="rvariable" name="bar" value="r"/>
+<rxml>&form.bar;</rxml>
+<result>r</result>
+</test>
+
+<!-- Ensuring id->real_variables integrity -->
+<test>
+<rxml>&form.bar;</rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><set variable="form.x" value="y"/>&form.x.1;</rxml>
+<result>y</result>
+</test>
+
+<test>
+<add what="rvariable" name="bar" value="s,t" split=","/>
+<rxml>&form.bar; &form.bar.1; &form.bar.2;</rxml>
+<result>s&#0;t s t</result>
+</test>
+
+<!-- Should fail
+<test>
+<add what="rvariable" name="bar" value="s,t"/>
+<rxml>&form.bar.2;</rxml>
+</test>
+-->
 
 <test>
 <rxml><insert variables="full" scope="form"/> Checking for backtrace</rxml>
@@ -1469,6 +1523,11 @@ cd</rxml>
 </test>
 
 <test>
+<rxml><set variable="var.foo" value="bork"/>&var.foo;</rxml>
+<result>bork</result>
+</test>
+
+<test>
 <rxml><insert variables="full" scope="var"/> Checking for backtrace</rxml>
 <glob>*</glob>
 </test>
@@ -1479,6 +1538,155 @@ cd</rxml>
 <test>
 <rxml>&page.no-such-variable;</rxml>
 <result></result>
+</test>
+
+<test>
+<rxml>&page.pathinfo;</rxml>
+<result></result>
+</test>
+
+<test>
+<add what="misc" name="path_info" value="blarg"/>
+<rxml>&page.pathinfo;</rxml>
+<result>blarg</result>
+</test>
+
+<test>
+<rxml>&page.realfile;</rxml>
+<result>etc/roxen_test/filesystem/index.html</result>
+</test>
+
+<!-- This should probably be initialized also -->
+<test>
+<rxml>&page.virtroot;</rxml>
+<result></result>
+</test>
+
+<test>
+<rxml>&page.virtfile;</rxml>
+<result>/index.html</result>
+</test>
+
+<test>
+<rxml>&page.path;</rxml>
+<result>/index.html</result>
+</test>
+
+<!-- This should probably be initialized also -->
+<test>
+<rxml>&page.query;</rxml>
+<result></result>
+</test>
+
+<test>
+<rxml>&page.url;</rxml>
+<result>/index.html</result>
+</test>
+
+<test>
+<rxml>&page.last-true;<false/>&page.last-true;</rxml>
+<result>10</result>
+</test>
+
+<test>
+<rxml>&page.language;</rxml>
+<result></result>
+</test>
+
+<test>
+<rxml>&page.scope;</rxml>
+<result></result>
+</test>
+
+<test>
+<rxml><emit source="values" values="a">&page.scope;</emit></rxml>
+<result>values</result>
+</test>
+
+<test>
+<rxml>&page.filesize;</rxml>
+<result>5</result>
+</test>
+
+<test>
+<rxml>&page.self;</rxml>
+<result>index.html</result>
+</test>
+
+<test>
+<rxml>&page.ssl-strength;</rxml>
+<result>0</result>
+</test>
+
+<test>
+<rxml>&page.dir;</rxml>
+<result>/</result>
+</test>
+
+<test>
+<add what="not_query" value="/hej/och/hopp.html"/>
+<rxml>&page.dir;</rxml>
+<result>/hej/och/</result>
+</test>
+
+<test>
+<rxml>&page.fgcolor;</rxml>
+<result></result>
+</test>
+
+<test>
+<add what="define" name="fgcolor" value="#000000"/>
+<rxml>&page.fgcolor;</rxml>
+<result>#000000</result>
+</test>
+
+<test>
+<rxml>&page.bgcolor;</rxml>
+<result></result>
+</test>
+
+<test>
+<add what="define" name="bgcolor" value="#ffffff"/>
+<rxml>&page.bgcolor;</rxml>
+<result>#ffffff</result>
+</test>
+
+<test>
+<rxml>&page.theme-bgcolor;</rxml>
+<result></result>
+</test>
+
+<test>
+<add what="define" name="theme_bgcolor" value="#ffffaa"/>
+<rxml>&page.theme-bgcolor;</rxml>
+<result>#ffffaa</result>
+</test>
+
+<test>
+<rxml>&page.theme-fgcolor;</rxml>
+<result></result>
+</test>
+
+<test>
+<add what="define" name="theme_fgcolor" value="#ff8c00"/>
+<rxml>&page.theme-fgcolor;</rxml>
+<result>#ff8c00</result>
+</test>
+
+<test>
+<rxml>&page.theme-language;</rxml>
+<result></result>
+</test>
+
+<test>
+<add what="define" name="theme_language" value="swe"/>
+<rxml>&page.theme-language;</rxml>
+<result>swe</result>
+</test>
+
+<test>
+<rxml><set variable="var.foo" value="borkason"/>&var.foo;</rxml>
+<result>borkason</result>
 </test>
 
 <test>
