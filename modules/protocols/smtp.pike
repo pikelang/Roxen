@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.29 1998/09/12 19:22:33 grubba Exp $
+ * $Id: smtp.pike,v 1.30 1998/09/12 21:03:34 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.29 1998/09/12 19:22:33 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.30 1998/09/12 21:03:34 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -240,6 +240,14 @@ static class Smtp_Connection {
     function f;
     if (f = this_object()["smtp_"+cmd]) {
       f(cmd, arg);
+    } else if (command_help[cmd]) {
+      // NOTE: RFC 821 4.3 states that 502 is not a legal reply
+      //       to the following commands:
+      //   HELO, MAIL, RCPT, DATA, RSET, NOOP, QUIT
+      // But RFC 821 4.5.1 requires them to be implemented, so
+      // they won't show up here anyway.
+      roxen_perror(sprintf("SMTP: Command not implemented: %O\n", cmd));
+      send(502, ({ sprintf("'%s': Command not implemented.", cmd) }));
     } else {
       roxen_perror(sprintf("SMTP: Unknown command: %O\n", cmd));
       send(500, ({ sprintf("'%s': Unknown command.", cmd) }));
