@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.71 2001/10/10 14:32:51 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.72 2002/01/07 10:34:30 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -577,7 +577,9 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
       case "economic-int":
       case "float":
       case "economic-float":
-        rows = map(rows, lambda(array a, int c) { return ({ (float)a[c] })+a; }, sortcol);
+	rows = map(rows, lambda(array a, int c) {
+			   return ({ sizeof (a) > c ? (float)a[c] : -1e99 })+a;
+			 }, sortcol);
         sortcol=0;
         num=1;
       }
