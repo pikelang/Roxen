@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.19 2001/09/06 00:28:12 nilsson Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.20 2001/09/06 12:52:17 per Exp $";
 #include <request_trace.h>
 #include <module.h>
 inherit "module";
@@ -44,6 +44,8 @@ class Combo( string file, RequestID id )
     id2->misc->sizer_in_progress++;
     id2->not_query = file;
     res = id->conf->get_file( id2 );
+    if(!res)
+      error("Failed to fetch %s\n", file );
   }
 
   int ok( )
@@ -107,7 +109,9 @@ class Combo( string file, RequestID id )
 
 Combo do_read_file( string file, RequestID id )
 {
-  return Combo( file, id );
+  Combo res = Combo( file, id );
+  res->ok();
+  return res;
 }
 
 array size_file( string page, RequestID id )
@@ -122,9 +126,10 @@ array size_file( string page, RequestID id )
   files = ({ page });
   if( strlen( page ) && page[0] == '/' )
   {
-    Combo res = do_read_file( page, id );
+    Combo res;
+    catch(  res = do_read_file( page, id ) );
 
-    if( !res->ok() )
+    if( !res || !res->ok() )
       messages += ERR("Failed to read '"+Roxen.html_encode_string(page)+"'\n");
 
     function follow( string i ) {
