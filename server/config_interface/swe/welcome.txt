@@ -1,4 +1,4 @@
-<h1>Välkommen till Roxen WebServer 2.1</h1>    
+<h1>Välkommen till Roxen WebServer &roxen.base-version; bygg nummer &roxen.build;</h1>
     
 <blockquote>
 Om dina fonter är alldeles för stora (eller för små, beroende på tycke),

@@ -1,11 +1,12 @@
 /*
- * $Id: Roxen.pmod,v 1.36 2000/09/05 20:47:31 mast Exp $
+ * $Id: Roxen.pmod,v 1.37 2000/09/12 14:11:37 per Exp $
  *
  * Various helper functions.
  *
  * Henrik Grubbström 1999-05-03
  */
 #include <config.h>
+#include <version.h>
 inherit "roxenlib";
 
 // Low-level C-roxen optimization functions.
@@ -816,6 +817,10 @@ class ScopeRoxen {
        return pike_version;
      case "version":
        return roxenp()->version();
+     case "base-version":
+       return __roxen_version__;
+     case "build":
+       return __roxen_build__;
      case "time":
        c->id->misc->cacheable=1;
        return time(1);
