@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.336 1999/10/10 17:29:18 grubba Exp $
+ * $Id: roxen.pike,v 1.337 1999/10/10 19:14:57 marcus Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.336 1999/10/10 17:29:18 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.337 1999/10/10 19:14:57 marcus Exp $";
 
 object backend_thread;
 object argcache;
@@ -1142,10 +1142,7 @@ array(string) find_ips_for( string what )
                   ", that host is unknown. "
                   "Substituting with ANY\n");
   else
-    return Array.uniq(res[1][0] + Array.filter(res[2],
-				    lambda(string ip) {
-      return is_ip( what );
-    }));
+    return Array.uniq(res[1]);
 }
 
 void unregister_url( string url ) 
