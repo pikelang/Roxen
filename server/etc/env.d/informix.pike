@@ -2,7 +2,7 @@
 void run(object env)
 {
   string infdir;
-  write("Checking for Informix...");
+  write("  Checking for Informix...");
   if(!(infdir=getenv("INFORMIXDIR")))
     foreach(({"/opt/informix","/usr/opt/informix","/usr/informix",
 	      "/usr/local/informix","/mp/informix"}), string dir)
@@ -13,7 +13,7 @@ void run(object env)
   if(!infdir)
     infdir = env->get("INFORMIXDIR");
   if(!infdir) {
-    write("no\n");
+    write(" not found\n");
     return;
   }
   write("\n  => INFORMIXDIR="+infdir+"\n");

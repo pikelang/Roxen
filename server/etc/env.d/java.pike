@@ -38,13 +38,13 @@ static string findjre()
 void run(object env)
 {
   string jrehome, arch, threads_type="native_threads";
-  write("Checking for Java 2 (TM)...");
+  write("  Checking for Java 2 (TM)...");
   if(!(jrehome=getenv("JREHOME")))
     jrehome=findjre();
   if(!jrehome)
     jrehome = env->get("JREHOME");
   if(!jrehome) {
-    write("no\n");
+    write(" not found\n");
     return;
   }
   write("\n  => JREHOME="+jrehome+"\n");

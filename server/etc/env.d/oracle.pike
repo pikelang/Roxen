@@ -4,7 +4,7 @@ void run(object env)
   object f = Stdio.File();
   array(string) oracles = ({});
   string sid, home, bootstart;
-  write("Checking for Oracle...");
+  write("  Checking for Oracle...");
   if((sid = getenv("ORACLE_SID")) && (home = getenv("ORACLE_HOME")))
     oracles += ({ ({ sid, home }) });
   foreach(({"/var/opt/oracle/oratab", "/etc/oratab"}), string oratab)
@@ -21,17 +21,17 @@ void run(object env)
      (sid=env->get("ORACLE_SID")) && (home=env->get("ORACLE_HOME")))
     oracles += ({ ({ sid, home }) });
   if(!sizeof(oracles)) {
-    write("no\n");
+    write(" not found\n");
     return;
   }
   write("\n");
   while(sizeof(oracles)>1) {
-    write("Multiple Oracle instances found.  Please select your"
-	  " preffered one:\n");
+    write("  Multiple Oracle instances found.  Please select the "
+	  "  preferred one:\n");
     foreach(indices(oracles), int i)
-      write(sprintf("%2d) %s (in %s)\n", i+1, @oracles[i]));
-    write("Enter preference (or 0 to skip this step) > ");
-    string in = gets();
+      write(sprintf("     %2d) %s (in %s)\n", i+1, @oracles[i]));
+    write("  Enter preference (or 0 to skip this step) > ");
+    string in = Stdio.stdin.gets();
     int x;
     if(1==sscanf(in, "%d", x) && x>=0 && x<=sizeof(oracles))
       if(x==0)
@@ -39,7 +39,7 @@ void run(object env)
       else
 	oracles = ({ oracles[x-1] });
     else
-      write("Invalid selection.\n");
+      write("  Please enter a number in range 0--" + sizeof(oracles) + ".\n");
   }
   write(sprintf("  => ORACLE_SID=%s, ORACLE_HOME=%s\n", @oracles[0]));
   env->set("ORACLE_SID", oracles[0][0]);
