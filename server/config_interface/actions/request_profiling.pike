@@ -1,5 +1,5 @@
 /*
- * $Id: request_profiling.pike,v 1.1 2004/05/19 13:07:24 grubba Exp $
+ * $Id: request_profiling.pike,v 1.2 2004/05/19 13:23:30 grubba Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -20,7 +20,6 @@ int no_reload()
   return creation_date > file_stat( __FILE__ )[ST_MTIME];
 }
 
-#ifdef PROFILE
 mixed page_0(object id)
 {
   string res = "";
@@ -47,7 +46,6 @@ mixed page_0(object id)
   }
   return res;
 }
-#endif /* PROFILE */
 
 mixed parse( RequestID id )
 {
