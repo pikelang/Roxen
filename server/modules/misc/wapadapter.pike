@@ -4,7 +4,7 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wapadapter.pike,v 1.3 2000/05/06 13:57:02 nilsson Exp $";
+constant cvs_version = "$Id: wapadapter.pike,v 1.4 2000/08/10 07:59:01 jhs Exp $";
 
 constant module_type = MODULE_FIRST|MODULE_FILTER;
 constant module_name = "WAP Adapter";
@@ -17,7 +17,8 @@ void create() {
 	 "your pages to WML 1.0 when needed.");
 }
 
-RequestID first_try(RequestID id) {
+void first_try(RequestID id)
+{
   if(!id->request_headers->accept) id->request_headers->accept="";
 
   if(has_value(id->request_headers->accept,"image/vnd.wap.wbmp") ||
@@ -33,8 +34,6 @@ RequestID first_try(RequestID id) {
     id->supports["wap1.1"]=1;
     id->supports->wbmp0=1;
   }
-
-  return id;
 }
 
 mixed filter(mixed result, RequestID id) {
