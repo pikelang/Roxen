@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999, Idonex AB.
-// $Id: foldlist.pike,v 1.3 1999/08/07 16:46:49 nilsson Exp $
+// $Id: foldlist.pike,v 1.4 1999/08/11 00:53:46 nilsson Exp $
 
-constant cvs_version = "$Id: foldlist.pike,v 1.3 1999/08/07 16:46:49 nilsson Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.4 1999/08/11 00:53:46 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -90,8 +90,10 @@ string tag_foldlist(string tag, mapping m, string c, object id) {
   //Register ourselfs as state consumers and incorporate our initial state.
   string fl_name = (m->name || "fl")+fds+(id->misc->defines[" fl "]!=""?":"+id->misc->defines[" fl "]:"");
   string state_id = register_state_consumer(fl_name, id);
+  string error="";
   if(id->variables->state)
-    decode_state(replace(id->variables->state,({"-","!","*"}),({"+","/","="})), id);
+    if(!decode_state(replace(id->variables->state,({"-","!","*"}),({"+","/","="})), id))
+      error=rxml_error(tag, "Error in state.", id);
 
   //Get our real state
   array new=(get_state(state_id,id)||"")/"";
@@ -104,7 +106,7 @@ string tag_foldlist(string tag, mapping m, string c, object id) {
   c=parse_html(c,([]),(["ft":tag_ft]),id,state_id,fl);
   id->misc->defines[" fl "]=fl->inh;
 
-  return (id->misc->debug?"<!-- "+state_id+" -->":"")+"<dl>"+c+"</dl>\n";
+  return (id->misc->debug?"<!-- "+state_id+" -->":"")+"<dl>"+c+"</dl>"+error+"\n";
 }
 
 mapping query_tag_callers() { return ([]); }
