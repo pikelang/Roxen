@@ -1,12 +1,12 @@
 /*
- * $Id: configtablist.pike,v 1.15 1999/07/25 01:23:40 nilsson Exp $
+ * $Id: tablist.pike,v 1.16 1999/08/05 01:00:22 nilsson Exp $
  *
  * Makes a tab-list like the one in the config-interface.
  *
  * $Author: nilsson $
  */
 
-constant cvs_version="$Id: configtablist.pike,v 1.15 1999/07/25 01:23:40 nilsson Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.16 1999/08/05 01:00:22 nilsson Exp $";
 constant thread_safe=1;
 
 #define old_rxml_compat 1
@@ -31,7 +31,7 @@ mapping(string:string) gif_cache = ([]);
 
 array register_module()
 {
-  return(({ MODULE_PARSER, "Config tab-list", 
+  return(({ MODULE_PARSER, "Tab-list", 
 	      "Adds some tags for making a config-interface "
 	      "look-alike tab-list.<br>\n"
 	      "Usage:<br>\n"
@@ -61,7 +61,7 @@ void create()
 {
 }
 
-string tag_config_tab(string t, mapping a, string contents, mapping d)
+string tag_tab(string t, mapping a, string contents, mapping d)
 {
   string dir = "u/";
   mapping img_attrs = ([]);
@@ -117,7 +117,7 @@ int my_hash(mixed o)
   }
 }
 
-string tag_config_tablist(string t, mapping a, string contents)
+string tag_tablist(string t, mapping a, string contents)
 {
 #if use_contents_cache  
   object md5 = Crypto.md5();
@@ -126,7 +126,7 @@ string tag_config_tablist(string t, mapping a, string contents)
   if(contents_cache[key])
     return contents_cache[key];
 #endif
-  string res=replace(parse_html(contents, ([]), (["tab":tag_config_tab]), a),
+  string res=replace(parse_html(contents, ([]), (["tab":tag_tab]), a),
 		 ({ "\n", "\r" }), ({ "", "" }));
 #if use_contents_cache  
   contents_cache[key]=res;
@@ -138,11 +138,12 @@ mapping query_tag_callers()
 {
   return ([]);
 }
-  mapping query_container_callers()
+
+mapping query_container_callers()
 {
-  return ([ "tablist":tag_config_tablist 
+  return ([ "tablist":tag_tablist 
 #if old_rxml_compat
-	    ,"config_tablist":tag_config_tablist
+	    ,"config_tablist":tag_tablist
 #endif
   ]);
 }
@@ -169,7 +170,7 @@ mapping find_internal(string f, object id)
 #if use_gif_cache
   if(s=gif_cache[f])
   {
-//    werror("Configtablist: "+f+" found in cache.\n");
+//    report_debug("Tablist: "+f+" found in cache.\n");
     return http_string_answer(s,"image/gif");
   }
 #endif  

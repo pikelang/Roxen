@@ -221,7 +221,6 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/scripting/pikescript.pike foreign_ident
 /server/modules/tags/accessed.pike foreign_ident
 /server/modules/tags/check_spelling.pike foreign_ident
-/server/modules/tags/configtablist.pike foreign_ident
 /server/modules/tags/countdown.pike foreign_ident
 /server/modules/tags/flik.pike foreign_ident
 /server/modules/tags/foldlist.pike foreign_ident
@@ -236,6 +235,7 @@ urw_itc_avant_garde-demi-r binary
 /server/modules/tags/sed.pike foreign_ident
 /server/modules/tags/sqltag.pike foreign_ident
 /server/modules/tags/tablify.pike foreign_ident
+/server/modules/tags/tablist.pike foreign_ident
 /server/modules/tags/wizard_tag.pike foreign_ident
 /server/modules/tags/ximg.pike foreign_ident
 /server/more_modules/bofh.pike foreign_ident
