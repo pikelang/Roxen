@@ -4,7 +4,7 @@
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *
- * $Id: language.pike,v 1.14 1999/08/06 04:00:45 per Exp $
+ * $Id: language.pike,v 1.15 1999/08/30 09:33:43 per Exp $
  * This file is included by roxen.pike. Not very nice to have a
  * cvs_version variable here.
  *
@@ -16,6 +16,7 @@
 #include <roxen.h>
 
 mapping languages = ([ ]);
+object codec = master()->Codec();
 
 void initiate_languages()
 {
@@ -29,7 +30,7 @@ void initiate_languages()
     return 0;
   }
   report_debug( "Adding languages:\n");
-  foreach(langs, lang)
+  foreach(glob("*.pike",langs), lang)
   {
     if(lang[-1] == 'e')
     {
@@ -40,18 +41,17 @@ void initiate_languages()
       report_debug("     "+
                     String.capitalize(lang[0..search(lang, ".")-1])+": ");
       if (err = catch {
-	l = compile_file("languages/"+lang)();
+        l = (object)("languages/"+lang);
+        roxenp()->dump( "languages/"+lang );
 	if(tmp=l->aliases()) {
 	  foreach(tmp, alias) 
           {
             report_debug( alias+" " );
 	    languages[alias] = ([ "month":l->month,
 				  "ordered":l->ordered,
-				   "date":l->date,
-			           "day":l->day,
-			           "number":l->number,
-			           "\000":l, /* Bug in Pike force this, as of
-					      * 96-04-15. Probably fixed. */
+                                  "date":l->date,
+                                  "day":l->day,
+                                  "number":l->number,
 			       ]);
 	  }
           report_debug( "\n" );
