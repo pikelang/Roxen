@@ -302,7 +302,7 @@ object request(object context, mapping(string:string)|object id,
       t = t2 = "";
 
       while(1) {
-	t2 = roxen->real_file(path_info, id);
+	t2 = id->conf->real_file(path_info, id);
 	if(t2) {
 	  pathtrans = t2 + t;
 	  break;
