@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.301 2001/02/01 12:21:15 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.302 2001/02/05 11:52:58 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -85,7 +85,7 @@ string raw_url;
 int do_not_disconnect;
 
 mapping(string:mixed) real_variables = ([]);
-mapping(string:string) variables = ([]);
+FakedVariables variables = FakedVariables( real_variables );
 
 mapping (string:mixed)  misc            =
 ([
@@ -293,10 +293,10 @@ void decode_charset_encoding( string|function(string:string) decoder )
   if( misc->request_charset_decoded )
     return;
 
+  misc->request_charset_decoded = 1;
+
   if( !decoder )
     return;
-
-  misc->request_charset_decoded = 1;
 
   string safe_decoder(string s) {
     catch { return decoder(s); };
@@ -700,14 +700,6 @@ void things_to_do_when_not_sending_from_cache( )
 
   if( mixed q = real_variables->magic_roxen_automatic_charset_variable )
     decode_charset_encoding(Roxen.get_client_charset_decoder(q[0],this_object()));
-
-  make_variables_from_real_variables();
-}
-
-static void make_variables_from_real_variables( )
-{
-  foreach( indices( real_variables ), string q )
-    variables[ q ] = real_variables[ q ]*"\0";
 }
 
 static Roxen.HeaderParser hp = Roxen.HeaderParser();
@@ -2093,8 +2085,9 @@ object clone_me()
   c->conf = conf;
   c->time = time;
   c->raw_url = raw_url;
-  c->variables = copy_value(variables);
-  c->real_variables = copy_value(real_variables);
+
+  c->real_variables = copy_value( real_variables );
+  c->variables = FakedVariables( c->real_variables );
   c->misc = copy_value( misc );
   c->misc->orig = t;
 

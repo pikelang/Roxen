@@ -41,8 +41,8 @@ class Connection
       prot = "HILFE";
       method = "GET";
 
-      variables = ([]);
       real_variables = ([]);
+      variables = FakedVariables( real_variables );
       misc = ([]);
       cookies = ([]);
       throttle = ([]);
