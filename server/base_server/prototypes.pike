@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.106 2004/05/06 14:00:46 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.107 2004/05/06 15:22:48 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -790,7 +790,7 @@ class RequestID
   string host;
   //! The client's hostname, if resolved.
 
-  multiset(string) cache_status;
+  multiset(string) cache_status = (<>);
   //! Contains the caches that was hit when the request was served.
   //! See the docstring for @tt{$cache-status@} in the @tt{LogFormat@}
   //! global variable for known values, but note that the multiset
@@ -1105,7 +1105,7 @@ class RequestID
 
   //  Charset handling
   
-  array(string) output_charset;
+  array(string) output_charset = ({});
   string input_charset;
 
   void set_output_charset( string|function to, int|void mode )
@@ -1113,10 +1113,10 @@ class RequestID
     if (object/*(RXML.Context)*/ ctx = RXML_CONTEXT)
       ctx->add_p_code_callback ("set_output_charset", to, mode);
 
-    if( output_charset && search( output_charset, to ) != -1 ) // Already done.
+    if( search( output_charset, to ) != -1 ) // Already done.
       return;
 
-    switch( output_charset && mode )
+    switch( mode )
     {
       case 0: // Really set.
 	output_charset = ({ to });
@@ -1203,7 +1203,7 @@ class RequestID
 	if (upper_case(force_charset) == "ISO-8859-1")
 	  return ({ "ISO-8859-1", what });
       } else {
-	if (output_charset && sizeof(output_charset) == 1 &&
+	if (sizeof(output_charset) == 1 &&
 	    upper_case(output_charset[0]) == "ISO-8859-1")
 	  return ({ "ISO-8859-1", what });
       }
@@ -1213,7 +1213,7 @@ class RequestID
       string charset;
       function encoder;
       
-      foreach( output_charset || ({}), string|function f )
+      foreach( output_charset, string|function f )
 	[charset,encoder] = join_charset(charset, f, encoder, allow_entities);
       if (!encoder)
 	if (String.width(what) > 8) {
@@ -1309,7 +1309,7 @@ class RequestID
       string charset="";
       if( stringp(file->data) )
       {
-	if ((output_charset && sizeof (output_charset)) ||
+	if (sizeof (output_charset) ||
 	    has_prefix (file->type, "text/") ||
 	    (String.width(file->data) > 8))
 	{

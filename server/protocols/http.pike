@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.439 2004/05/06 13:59:50 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.440 2004/05/06 15:22:50 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -62,8 +62,6 @@ private static int wanted_data, have_data;
 private static object(String.Buffer) data_buffer;
 
 private static multiset(string) none_match;
-
-multiset(string) cache_status = (<>);
 
 int kept_alive;
 
