@@ -14,7 +14,7 @@ inherit "module";
 inherit "roxenlib";
 
 string cvs_version =
-       "$Id: perl.pike,v 2.22 2001/11/01 15:00:09 grubba Exp $";
+       "$Id: perl.pike,v 2.23 2002/01/30 00:19:42 mast Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
@@ -196,9 +196,8 @@ static void add_headers(string headers, object id)
           case "Content-Languages":
             // Might require special treatment in the future?
             ;
-          default:
-            Roxen.add_http_header(id->misc->defines[" _extra_heads"],
-                                     name, value);
+	  default:
+	    id->add_response_header (name, value);
         }
     }
 }

@@ -3,11 +3,11 @@
 
 #define _stat RXML_CONTEXT->misc[" _stat"]
 #define _error RXML_CONTEXT->misc[" _error"]
-#define _extra_heads RXML_CONTEXT->misc[" _extra_heads"]
+//#define _extra_heads RXML_CONTEXT->misc[" _extra_heads"]
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.337 2002/01/08 17:42:31 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.338 2002/01/30 00:19:44 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -328,11 +328,10 @@ class TagAuthRequired {
       if (hdrs->error)
 	RXML_CONTEXT->set_misc (" _error", hdrs->error);
       if (hdrs->extra_heads)
-	RXML_CONTEXT->set_misc (" _extra_heads",
-				_extra_heads + hdrs->extra_heads);
+	RXML_CONTEXT->extend_scope ("header", hdrs->extra_heads);
       // We do not need this as long as hdrs only contains strings and numbers
       //   foreach(indices(hdrs->extra_heads), string tmp)
-      //      Roxen.add_http_header(_extra_heads, tmp, hdrs->extra_heads[tmp]);
+      //      id->add_response_header(tmp, hdrs->extra_heads[tmp]);
       if (hdrs->text)
 	RXML_CONTEXT->set_misc (" _rettext", hdrs->text);
       result = hdrs->data || args->message ||
@@ -359,11 +358,11 @@ class TagExpireTime {
       }
       if(t==t2) {
 	NOCACHE();
-	Roxen.add_http_header(_extra_heads, "Pragma", "no-cache");
-	Roxen.add_http_header(_extra_heads, "Cache-Control", "no-cache");
+	id->add_response_header("Pragma", "no-cache");
+	id->add_response_header("Cache-Control", "no-cache");
       }
 
-      Roxen.add_http_header(_extra_heads, "Expires", Roxen.http_date(t));
+      id->add_response_header("Expires", Roxen.http_date(t));
       return 0;
     }
   }
@@ -391,7 +390,7 @@ class TagHeader {
       } else if(args->name=="URI")
 	args->value = "<" + args->value + ">";
 
-      Roxen.add_http_header(_extra_heads, args->name, args->value);
+      id->add_response_header(args->name, args->value);
       return 0;
     }
   }
@@ -438,10 +437,10 @@ class TagRedirect {
       if (r->error)
 	RXML_CONTEXT->set_misc (" _error", r->error);
       if (r->extra_heads)
-	RXML_CONTEXT->set_misc (" _extra_heads", _extra_heads + r->extra_heads);
+	RXML_CONTEXT->extend_scope ("header", r->extra_heads);
       // We do not need this as long as r only contains strings and numbers
       //    foreach(indices(r->extra_heads), string tmp)
-      //      Roxen.add_http_header(_extra_heads, tmp, r->extra_heads[tmp]);
+      //      id->add_response_header(tmp, r->extra_heads[tmp]);
       if (args->text)
 	RXML_CONTEXT->set_misc (" _rettext", args->text);
 
@@ -2302,7 +2301,7 @@ class TagUse {
     parser->eval();
 
     return ({
-      parser->context->misc,
+      parser->context->misc - ([" _extra_heads": 1, " _error": 1, " _stat": 1]),
       parser->context->get_scope ("form"),
       parser->context->get_scope ("var")
     });
@@ -2367,10 +2366,8 @@ class TagUse {
 	mixed def = ctx->misc[defname] = newdefs[defname];
 	if (has_prefix (defname, "tag\0")) ctx->add_runtime_tag (def[3]);
       }
-      foreach(indices(formvars), string var)
-	ctx->set_var(var, formvars[var], "form");
-      foreach(indices(varvars), string var)
-	ctx->set_var(var, varvars[var], "var");
+      ctx->extend_scope ("form", formvars);
+      ctx->extend_scope ("var", varvars);
 
       return 0;
     }

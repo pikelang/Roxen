@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: wizz.pike,v 1.7 2001/11/23 21:29:42 mast Exp $";
+constant cvs_version = "$Id: wizz.pike,v 1.8 2002/01/30 00:19:44 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Really advanced wizard";
@@ -202,8 +202,7 @@ class TagWizard {
 	if (r->error)
 	  RXML_CONTEXT->set_misc (" _error", r->error);
 	if (r->extra_heads)
-	  RXML_CONTEXT->set_misc (
-	    " _extra_heads", RXML_CONTEXT->misc[" _extra_heads"] + r->extra_heads);
+	  RXML_CONTEXT->extend_scope ("header", r->extra_heads);
 	return 0;
       }
 

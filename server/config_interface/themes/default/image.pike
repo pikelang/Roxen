@@ -20,7 +20,6 @@ mapping parse( RequestID id )
     Image.PNG.encode( Image._decode( images[random(sizeof(images))] )
 		      ->img->scale( 162,112 ) ),
 		      "image/jpeg" );
-  rv["extra_heads"] = ([]);
-  rv["extra_heads"]->Expires = Roxen.http_date( time(1) );
+  id->set_response_header ("Expires", Roxen.http_date( time(1) ));
   return rv;
 }

@@ -2,7 +2,7 @@
 // Released under GPL
 // made by Per Hedbor
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.31 2001/11/23 21:29:42 mast Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.32 2002/01/30 00:19:44 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -148,7 +148,7 @@ string tag_wizard(string t, mapping args, string contents, object id,
   if(mappingp(res))
   {
     RXML_CONTEXT->set_misc (" _error", res->error);
-    RXML_CONTEXT->set_misc (" _extra_heads", res->extra_heads);
+    RXML_CONTEXT->extend_scope ("header", res->extra_heads);
     return res->data||(res->file&&res->file->read())||"";
   }
   return res;

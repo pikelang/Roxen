@@ -2,12 +2,12 @@
 //
 
 #define _error id->misc->defines[" _error"]
-#define _extra_heads id->misc->defines[" _extra_heads"]
+//#define _extra_heads id->misc->defines[" _extra_heads"]
 
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.14 2001/11/23 21:29:42 mast Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.15 2002/01/30 00:19:44 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Session tag module";
@@ -124,13 +124,12 @@ class TagForceSessionID {
 	if (r->error)
 	  RXML_CONTEXT->set_misc (" _error", r->error);
 	if (r->extra_heads)
-	  RXML_CONTEXT->set_misc (" _extra_heads", _extra_heads + r->extra_heads);
+	  RXML_CONTEXT->extend_scope ("header", r->extra_heads);
 
 	// Don't trust that the user cookie setting is turned on. The effect
 	// might be that the RoxenUserID cookie is set twice, but that is
 	// not a problem for us.
-	Roxen.add_http_header( _extra_heads, "Set-Cookie",
-			       Roxen.http_roxen_id_cookie() );
+	id->add_response_header( "Set-Cookie", Roxen.http_roxen_id_cookie() );
 	id->prestate = orig_prestate;
 	return 0;
       }
@@ -150,7 +149,7 @@ class TagForceSessionID {
 	if (r->error)
 	  RXML_CONTEXT->set_misc (" _error", r->error);
 	if (r->extra_heads)
-	  RXML_CONTEXT->set_misc (" _extra_heads", _extra_heads + r->extra_heads);
+	  RXML_CONTEXT->extend_scope ("headers", r->extra_heads);
 	return 0;
       }
     }

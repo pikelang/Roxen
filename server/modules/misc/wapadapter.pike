@@ -5,13 +5,13 @@
 #define _context_misc ([mapping(string:mixed)] RXML_CONTEXT->misc)
 #define _stat _context_misc[" _stat"]
 #define _error _context_misc[" _error"]
-#define _extra_heads _context_misc[" _extra_heads"]
+//#define _extra_heads _context_misc[" _extra_heads"]
 #define _rettext _context_misc[" _rettext"]
 
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wapadapter.pike,v 1.10 2001/09/25 19:59:18 nilsson Exp $";
+constant cvs_version = "$Id: wapadapter.pike,v 1.11 2002/01/30 00:19:41 mast Exp $";
 
 constant module_type = MODULE_FIRST|MODULE_FILE_EXTENSION|MODULE_TAG;
 constant module_name = "WAP Adapter";

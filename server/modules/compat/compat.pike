@@ -7,7 +7,7 @@ inherit "roxenlib";
 
 #define _stat id->misc->defines[" _stat"]
 #define _error id->misc->defines[" _error"]
-#define _extra_heads id->misc->defines[" _extra_heads"]
+//#define _extra_heads id->misc->defines[" _extra_heads"]
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
@@ -190,8 +190,7 @@ string|array tag_redirect(string tag, mapping m, RequestID id)
     RXML_CONTEXT->set_misc (" _error", r->error);
   if (r->extra_heads) {
     foreach(indices(r->extra_heads), string tmp)
-      add_http_header(_extra_heads, tmp, r->extra_heads[tmp]);
-    RXML_CONTEXT->set_misc (" _extra_heads", _extra_heads);
+      id->add_response_header(tmp, r->extra_heads[tmp]);
   }
   if (m->text)
     RXML_CONTEXT->set_misc (" _rettext", m->text);

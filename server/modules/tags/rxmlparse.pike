@@ -11,11 +11,11 @@
 #define _context_misc ([mapping(string:mixed)] RXML_CONTEXT->misc)
 #define _stat _context_misc[" _stat"]
 #define _error _context_misc[" _error"]
-#define _extra_heads _context_misc[" _extra_heads"]
+//#define _extra_heads _context_misc[" _extra_heads"]
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.69 2001/12/14 17:45:25 mast Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.70 2002/01/30 00:19:43 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -312,7 +312,7 @@ string api_query_cookie(RequestID id, string f)
 
 void api_add_header(RequestID id, string h, string v)
 {
-  Roxen.add_http_header([mapping(string:string)]_extra_heads, h, v);
+  id->add_response_header(h, v);
 }
 
 int api_set_cookie(RequestID id, string c, string v, void|string p)
