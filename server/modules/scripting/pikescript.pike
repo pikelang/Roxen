@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.66 2000/08/16 02:59:52 per Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.67 2000/09/04 08:39:09 per Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -166,6 +166,8 @@ mapping handle_file_extension(object f, string e, object got)
   if(!(mode & (int)query("exec-mask")) || (mode & (int)query("noexec-mask")))
     return 0;  // permissions does not match.
 
+  // do it before the script is processes, so the script can change the value.
+  got->misc->cacheable=0; 
 
   string file="";
   string s;
@@ -241,7 +243,7 @@ mapping handle_file_extension(object f, string e, object got)
       return Roxen.http_string_answer("<h1>No string parse(object id) "
                                 "function in pike-script</h1>\n");
   }
-  got->misc->cacheable=0;
+
   err=call_script(fun, got, f);
   if (mappingp(err)) return err;
   if(arrayp(err))
