@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.84 2004/02/17 20:15:40 mast Exp $
+// $Id: module.pmod,v 1.85 2004/06/09 08:47:17 grubba Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1343,9 +1343,14 @@ class List
     foreach( indices( vl ), string vv )
       if( sscanf( vv, ".set.%d", rn ) && (vv == ".set."+rn) )
       {
-        m_delete( id->variables, path()+vv );
-        l[rn] = transform_from_form( vl[vv], vl );
-        m_delete( vl, vv );
+	if ((rn >= 0) && (rn < sizeof(l))) {
+	  m_delete( id->variables, path()+vv );
+	  l[rn] = transform_from_form( vl[vv], vl );
+	  m_delete( vl, vv );
+	} else {
+	  report_debug("set_from_form(%O): vv:%O sizeof(l):%d\n",
+		       id, vv, sizeof(l));
+	}
       }
     // then the move...
     foreach( indices(vl), string vv )
