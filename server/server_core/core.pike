@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.851 2003/03/11 22:39:07 mani Exp $";
+constant cvs_version="$Id: core.pike,v 1.852 2004/01/25 18:29:21 norrby Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1711,7 +1711,7 @@ class SSLProtocol
 	dsa->use_random(r);
 	ctx->dsa = dsa;
 	/* Use default DH parameters */
-	ctx->dh_params = SSL.cipher.dh_parameters();
+	ctx->dh_params = SSL.Cipher.DHParameters();
 
 	ctx->dhe_dss_mode();
 
