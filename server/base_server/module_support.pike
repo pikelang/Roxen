@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module_support.pike,v 1.67 2000/04/04 16:40:27 per Exp $
+// $Id: module_support.pike,v 1.68 2000/04/05 23:41:22 per Exp $
 
 #include <roxen.h>
 #include <module_constants.h>
@@ -320,6 +320,31 @@ class ModuleInfo
              ]) );
   }
 
+
+  void update_with( object mod, string what )
+  {
+    if(!what)
+      what = filename;
+    array data = mod->register_module();
+    if(!arrayp(data))
+      throw(sprintf("register_module returned %O for %s (%s)\n", data, sname,
+                    what));
+    if( sizeof(data) < 3 )
+      throw("register_module returned a too small array for "+sname+
+            " ("+what+")\n");
+    type = data[0];
+    if( data[ 1 ] )
+      name = data[1];
+    if( data[ 2 ] )
+      description = data[2];
+    if( sizeof( data ) > 4 )
+      multiple_copies = !data[4];
+    else
+      multiple_copies = 1;
+    last_checked = file_stat( filename )[ ST_MTIME ];
+    save();
+  }
+
   int init_module( string what )
   {
     filename = what;
@@ -331,26 +356,7 @@ class ModuleInfo
       if(!mod->register_module)
         throw(sprintf("The module %s (%s) has no register_module function\n",
                       sname, what ));
-      array data = mod->register_module();
-      if(!arrayp(data))
-        throw(sprintf("register_module returned %O for %s (%s)\n", data, sname,
-                      what));
-      if( sizeof(data) < 3 )
-        throw("register_module returned a too small array for "+sname+
-              " ("+what+")\n");
-      type = data[0];
-      if( data[ 1 ] )
-        name = data[1];
-      if( data[ 2 ] )
-        description = data[2];
-      if( sizeof( data ) > 4 )
-        multiple_copies = !data[4];
-      else
-        multiple_copies = 1;
-
-      last_checked = file_stat( filename )[ ST_MTIME ];
-
-      save();
+      update_with( mod, what );
       destruct( mod );
       return 1;
     };
@@ -510,6 +516,9 @@ array(ModuleInfo) all_modules_cache;
 void clear_all_modules_cache()
 {
   all_modules_cache = 0;
+  foreach( values( modules ), object o )
+    if( !o || !o->check() )
+      m_delete( modules, search( modules, o ) );
 }
 
 array(ModuleInfo) all_modules()
