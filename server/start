@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.116 2000/06/26 18:46:31 sigge Exp $
+# $Id: start,v 1.117 2000/07/10 19:53:28 grubba Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -49,7 +49,8 @@ if [ -x bin/roxen ] ; then  pike=$roxendir/bin/roxen; fi
 if [ -x $LOCALDIR/bin/pike ] ; then pike=$LOCALDIR/bin/pike; fi
 if [ -x $LOCALDIR/bin/roxen ] ; then pike=$LOCALDIR/bin/roxen; fi
 if [ "x$PIKE" = "x" ]; then :; else
-  if [ -x "$PIKE" ]; then pike="$PIKE"; fi
+  if [ -x "$PIKE" ]; then pike="$PIKE";
+  else echo "$PIKE is not executable."; fi
 fi
 
 
