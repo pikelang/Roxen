@@ -1,11 +1,16 @@
 /*
- * $Id: roxenloader.pike,v 1.82 1999/02/15 23:22:12 per Exp $
+ * $Id: roxenloader.pike,v 1.83 1999/03/27 19:13:31 grubba Exp $
  *
  * Roxen bootstrap program.
  *
  */
 
 // Sets up the roxen environment. Including custom functions like spawne().
+
+// Roxen 1.4 requires Pike 0.7 or later.
+#if __VERSION__ < 0.7
+#error Roxen 1.4 requires Pike 0.7 or later.
+#endif /* __VERSION__ < 0.7 */
 
 //
 // NOTE:
@@ -15,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.82 1999/02/15 23:22:12 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.83 1999/03/27 19:13:31 grubba Exp $";
 
 // Macro to throw errors
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -582,6 +587,175 @@ string make_path(string ... from)
   }, getcwd())*":";
 }
 
+#if constant(fork)
+class getpw_kluge
+{
+  object pin;
+  object pout;
+
+#if constant(thread_create)
+  object lock = Thread.Mutex();
+#endif /* constant(thread_create) */
+
+  constant replace_tab = ({ "getpwnam", "getpwent", "setpwent", "setpwnam",
+			    "endpwent", "get_all_users", "get_groups_for_user",
+  });
+
+  void send_msg(string tag, mixed val)
+  {
+    string msg = encode_value(({ tag, val }));
+    msg = sprintf("%4c%s", sizeof(msg), msg);
+
+    int bytes;
+
+    while(sizeof(msg)) {
+      bytes = pout->write(msg);
+
+      if (bytes <= 0) {
+	// Connection probably closed!
+	throw(({ "Remote connection closed!\n", backtrace() }));
+      }
+      if (bytes == sizeof(msg)) {
+	return;
+      }
+      msg = msg[bytes..];
+    }
+  }
+
+  string expect(int len)
+  {
+    string msg = pin->read(len);
+
+    if (sizeof(msg) != len) {
+      throw(({ "Received short message!\n", backtrace() }));
+    }
+    return msg;
+  }
+
+  array(mixed) get_msg()
+  {
+    string msg = expect(4);
+
+    int bytes;
+    sscanf(msg, "%4c", bytes);
+
+    msg = expect(bytes);
+
+    return decode_value(msg);
+  }
+
+  mixed do_call(string fun, array(mixed) args)
+  {
+#if constant(thread_create)
+    mixed key = lock->lock();
+#endif /* constant(thread_create) */
+
+    send_msg(fun, args);
+
+    array(mixed) res = get_msg();
+
+#if constant(thread_create)
+    if (key) {
+      destruct(key);
+    }
+#endif /* constant(thread_create) */
+
+    if (res[0] == "throw") {
+      if (arrayp(res[1]) && (sizeof(res[1]) > 1) &&
+	  stringp(res[1][0]) && arrayp(res[1][1])) {
+	// Looks like a backtrace...
+	res[1][1] = backtrace() + res[1][1];
+      }
+      throw(res[1]);
+    }
+
+    return(res[1]);
+  }
+
+  void server()
+  {
+    mapping constants = all_constants();
+
+    while (1) {
+      array(mixed) call = get_msg();
+
+      function fun = constants[call[0]];
+
+      int got_res;
+      mixed res;
+      mixed err = catch {
+	res = fun(@call[1]);
+
+	got_res = 1;
+      };
+      if (got_res) {
+	send_msg("return", res);
+      } else {
+	send_msg("throw", err);
+      }
+    }
+  }
+
+  void do_replace(string fun)
+  {
+    add_constant(fun, lambda(mixed ... args) {
+			return do_call(fun, args);
+		      });
+  }
+
+  void init_error(string msg)
+  {
+    roxen_perror(sprintf("Error in bootstrap code: %s\n"
+			 "getpw_kluge not enabled.\n", msg));
+  }
+
+  void create()
+  {
+#if constant(thread_create)
+    if (sizeof(all_threads()) > 1) {
+      init_error("Threads are already active!");
+      return;
+    }
+#endif /* constant(thread_create) */
+    object pipe1 = Stdio.File();
+    object pipe2 = Stdio.File();
+    object pipe3 = pipe1 && pipe1->pipe();
+    object pipe4 = pipe2 && pipe2->pipe();
+    if (!pipe3 || !pipe4) {
+      init_error("Failed to open pipes.");
+      foreach(({ pipe1, pipe2, pipe3, pipe4 }), object p) {
+	p && p->close();
+      }
+      return;
+    }
+    mixed pid;
+    if (catch { pid = fork(); }) {
+      init_error("fork() failed!");
+      return;
+    }
+    if (pid) {
+      // Parent process
+      pin = pipe1;
+      pout = pipe4;
+      pipe2->close();
+      pipe3->close();
+
+      foreach(replace_tab, string fun_name) {
+	do_replace(fun_name);
+      }
+    } else {
+      // Child process
+      pin = pipe2;
+      pout = pipe3;
+      pipe1->close();
+      pipe4->close();
+      server();
+      throw(1);		// Tell main() we're now in the child.
+    }
+  }
+};
+#endif /* constant(fork) */
+
 // Roxen bootstrap code.
 int main(mixed ... args)
 {
@@ -595,6 +769,13 @@ int main(mixed ... args)
     add_include_path(p);
     add_program_path(p);
   }
+
+#if 0 && constant(fork)
+  if (catch { getpw_kluge(); }) {
+    /* We're in the kluge process, and it's time to die... */
+    exit(0);
+  }
+#endif /* constant(fork) */
 
   replace_master(new_master=(((program)"etc/roxen_master.pike")()));
 
