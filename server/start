@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.204 2003/07/11 15:47:16 jonasw Exp $
+# $Id: start,v 1.205 2003/09/18 17:56:47 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -743,6 +743,8 @@ start_roxen() {
       echo >>.gdbinit handle SIG38 nostop noprint pass
       echo >>.gdbinit handle SIG39 nostop noprint pass
     fi
+    echo >>.gdbinit break debug_fatal
+    echo >>.gdbinit break pike_gdb_breakpoint
     firstline=`head -1 "$pike" 2>/dev/null`
     if expr "x$firstline" : 'x#! */.*' >/dev/null; then
       # Looks like a script. gdb will not grok it, so we try passing
