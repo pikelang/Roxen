@@ -1077,6 +1077,26 @@ hej</result>
   <rxml type="string">
     <cache>
       &test.pass;
+      <cache propagate variable="var.foo"/>
+    </cache>
+  </rxml>
+  <result>1</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache shared>
+      &test.pass;
+      <cache propagate variable="var.foo"/>
+    </cache>
+  </rxml>
+  <result>1</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      &test.pass;
       <cache nocache>&test.pass;</cache>
     </cache>
   </rxml>
