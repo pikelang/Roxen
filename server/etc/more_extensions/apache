@@ -1,7 +1,6 @@
-# $Id: apache,v 1.1 1999/09/23 23:40:03 nilsson Exp $
-# name="Apache extension database";
-# doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
+# $Id: apache,v 1.2 2000/09/16 19:40:38 nilsson Exp $
 
+# --- Apache extension database ---
 # These are the MIME types from the mime.types file from Apache 1.3.6.
 
 ez	application/andrew-inset

@@ -1,10 +1,11 @@
-# $Id: extensions,v 1.44 2000/05/21 20:25:13 grubba Exp $
-# name="Extension database";
-# doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
+# $Id: extensions,v 1.45 2000/09/16 19:38:35 nilsson Exp $
 #
-# Lines are commented with ## to resolve name conflicts (same extension mapping to several
-# MIME-types). Up to date with IANA MIME-type listing 03-SEP-1999. Chemical/* is not included
-# since they collide with quite a few other mime types. They can be found in the file
+# ---- Extension database ----
+# The database used by the content typ module to map from extension to mime-type
+# (example: *.gif to image/gif). Lines are commented with ## to resolve name
+# conflicts (same extension mapping to several MIME-types). Up to date with IANA
+# MIME-type listing 03-SEP-1999. Chemical/* is not included since they collide with
+# quite a few other mime types. They can be found in the file
 # more_extensions/chemical.
 
 

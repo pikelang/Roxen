@@ -1,8 +1,6 @@
-# $Id: chemical,v 1.2 1999/11/15 14:05:25 nilsson Exp $
-# name="Chemical extension database";
-# doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
-#
+# $Id: chemical,v 1.3 2000/09/16 19:40:39 nilsson Exp $
 
+# --- Chemical extension database ---
 # Some mad scientists in the dark has made their own MIME class...
 # http://www.ch.ic.ac.uk/chemime/
 

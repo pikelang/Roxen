@@ -1,12 +1,8 @@
 /*
- * Roxen master
+ * Roxen's customized master.
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.100 2000/09/03 02:34:30 per Exp $";
 
-/*
- * name = "Roxen Master";
- * doc = "Roxen's customized master.";
- */
+constant cvs_version = "$Id: roxen_master.pike,v 1.101 2000/09/16 19:38:49 nilsson Exp $";
 
 // Disable the precompiled file is out of date warning.
 #ifndef OUT_OF_DATE_WARNING

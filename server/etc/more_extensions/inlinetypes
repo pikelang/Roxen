@@ -1,8 +1,6 @@
-# $Id: inlinetypes,v 1.1 1999/11/14 03:26:42 nilsson Exp $
-# name="Browser inline types database";
-# doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
-#
+# $Id: inlinetypes,v 1.2 2000/09/16 19:40:39 nilsson Exp $
 
+# --- Browser inline types database ---
 # This file provides extensions for files used for online publication.
 # It should be sufficient for most sites with non-downloadable contents.
 
