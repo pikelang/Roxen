@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.228 1999/11/23 11:00:43 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.229 1999/11/23 15:03:57 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -227,8 +227,8 @@ private mapping (string:string) log_format = ([]);
 private array (object) pri = allocate_pris();
 
 // All enabled modules in this virtual server.
-// The format is "module":([ "copies":([ num:instance, ... ]) ])
-public mapping (string:mapping(string:mixed)) modules = ([]);
+// The format is "module":{ "copies":([ num:instance, ... ]) }
+public mapping modules = ([]);
 
 // A mapping from objects to module names
 public mapping (object:string) otomod = ([]);
@@ -709,9 +709,6 @@ public string status()
   float tmp;
   string res="";
   float dt = (float)(time(1) - roxen->start_time + 1);
-
-  if(!sent||!received||!hsent)
-    return LOCALE->status_bignum_gone();
 
   res = "<table>";
   res += LOCALE->config_status(sent/(1024.0*1024.0), 
@@ -2160,31 +2157,30 @@ int save_one( object o )
   return 1;
 }
 
-object reload_module( string modname )
+void reload_module( string modname )
 {
-  werror( "reloading " + modname + "\n");
-  foreach( Program.inherit_list(object_program(find_module( modname ))), 
-           program p )
-  {
-    while( string ind = search( master()->programs, p ) )
-    {
-      roxen->old_programs[ p ] = ind;
-      m_delete( master()->programs, ind );
-    }
-  }
-  string ind = search( master()->programs, 
-                       object_program(find_module(modname)));
-  m_delete( master()->programs, ind );
-  rm( ind+".o" );
-  return enable_module( modname );
+  object old_module = find_module( modname );
+
+  if( !old_module )
+    return;
+
+  if( enable_module( modname ) == old_module )
+    return;
+
+  catch( disable_module( modname ) );
+
+  if( enable_module( modname ) == 0 )
+    enable_module( modname, old_module );
+
+  foreach( Program.inherit_list(object_program(old_module)), program p )
+    roxen.dump( master()->program_name( p ) );
 }
 
-object enable_module( string modname )
+object enable_module( string modname, object|void me )
 {
   int id;
   object moduleinfo;
-  mapping module;
-  object me;
+  object module;
   int pr;
   mixed err;
   int module_type;
@@ -2200,7 +2196,7 @@ object enable_module( string modname )
   if (!moduleinfo)
   {
 #ifdef MODULE_DEBUG
-    report_warning(" Failed to load %s\n", modname);
+    report_warning("Failed to load %s\n", modname);
 #endif
     return 0;
   }
@@ -2215,30 +2211,26 @@ object enable_module( string modname )
   module = modules[ module ];
 
   if(!module)
-    modules[ modname ] = module = ([ ]);
+    modules[ modname ] = module = class{ mapping copies = ([]); }();
 
-
-  if( !module->copies )
-    module->copies = ([]);
-
-  if(err = catch(me = moduleinfo->instance(this_object())))
+  if( !me )
   {
-    report_debug("ERROR\n");
-    report_error(LOCALE->
-		 error_initializing_module_copy(moduleinfo->get_name(),
-						describe_backtrace(err)));
-    return module->copies[id];
+    if(err = catch(me = moduleinfo->instance(this_object())))
+    {
+      report_debug("ERROR\n");
+      report_error(LOCALE->
+                   error_initializing_module_copy(moduleinfo->get_name(),
+                                                  describe_backtrace(err)));
+      return module->copies[id];
+    }
   }
 
-  if(module->copies[id]) 
+  if(module->copies[id] && module->copies[id] != me)
   {
-    if (err = catch{
-      module->copies[ id ]->stop();
-    }) {
-      report_error(LOCALE->error_disabling_module(moduleinfo->get_name(),
-                                                  describe_backtrace(err)));
-    }
-    catch(destruct(module->copies[id]));
+    module->copies[id]->stop();
+//     if( err = catch( disable_module( modname+"#"+id ) ) )
+//       report_error(LOCALE->error_disabling_module(moduleinfo->get_name(),
+//                                                   describe_backtrace(err)));
   }
 
   me->set_configuration( this_object() );
