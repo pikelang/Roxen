@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.88 1999/08/06 04:00:40 per Exp $
+ * $Id: roxenloader.pike,v 1.89 1999/08/09 19:47:52 grubba Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.88 1999/08/06 04:00:40 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.89 1999/08/09 19:47:52 grubba Exp $";
 
 #define perror roxen_perror
 private static int perror_status_reported=0;
@@ -117,9 +117,28 @@ string short_time()
 
 int last_was_nl;
 // Used to print error/debug messages
-void roxen_perror(string format,mixed ... args)
+void roxen_perror(string format, mixed ... args)
 {
   int t = time();
+
+  spider;
+
+  if(sizeof(args)) 
+    format=sprintf(format,@args);
+
+  if (!last_was_nl && (format != "")) {
+    // Continuation line.
+    int i = search(format, "\n");
+
+    if (i == -1) {
+      stderr->write(format);
+      format = "";
+    } else {
+      stderr->write(format[..i]);
+      format = format[i+1..];
+      last_was_nl = 1;
+    }
+  }
 
   if (perror_status_reported < t) 
   {
@@ -132,10 +151,7 @@ void roxen_perror(string format,mixed ... args)
   }
 
   string s;
-  spider;
 
-  if(sizeof(args)) 
-    format=sprintf(format,@args);
   if (format=="") 
     return;
 
@@ -145,18 +161,17 @@ void roxen_perror(string format,mixed ... args)
       syslog(LOG_DEBUG, replace(message+"\n", "%", "%%"));
 #endif
 
-  if( search( format, "\n" ) == -1 )
-    stderr->write( (last_was_nl?short_time():"") + format ); 
-  else if( search( format, "\n" ) == strlen(format)-1 )
-    stderr->write( (last_was_nl?short_time():"") + format ); 
-  else 
-  {
-    stderr->write( (last_was_nl?short_time():"") + 
-                   replace(format[..strlen(format)-2], "\n", 
-                           "\n"+("         : ") ));
-    stderr->write( format[strlen(format)-1..strlen(format)-1] );
-  }
   last_was_nl = format[-1] == '\n';
+
+  array(string) a = format/"\n";
+  int i;
+
+  for(i=0; i < sizeof(a)-1; i++) {
+    stderr->write(short_time() + a[i] + "\n");
+  }
+  if (!last_was_nl) {
+    stderr->write(short_time() + a[-1]);
+  }
 }
 
 // Make a directory hierachy
