@@ -5,7 +5,7 @@ void create()
   ._fix_module_ref ("PHtml", RXML.PHtml);
   ._fix_module_ref ("PExpr", RXML.PExpr);
   ._fix_module_ref (
-    "empty_tagset",
+    "empty_tag_set",
     class {
       inherit RXML.TagSet;
       void create() {}

@@ -133,10 +133,10 @@ static array entity_cb (Parser.HTML ignored, string str)
     _set_data_callback (lambda (object this, string str) {return ({});});
 }
 
-this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tagset)
+this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
 {
   this_program clone =
-    [object(this_program)] low_parser::clone (ctx, type, tagset, overridden,
+    [object(this_program)] low_parser::clone (ctx, type, tag_set, overridden,
 #ifdef TAGMAP_COMPAT
 					      tagmap_tags, tagmap_containers,
 #endif
@@ -145,7 +145,7 @@ this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tagset)
   return clone;
 }
 
-static void create (RXML.Context ctx, RXML.Type type, RXML.TagSet tagset,
+static void create (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set,
 		    void|mapping(string:array(TagDef)) orig_overridden,
 #ifdef TAGMAP_COMPAT
 		    void|mapping(string:TAG_TYPE) orig_tagmap_tags,
@@ -153,7 +153,7 @@ static void create (RXML.Context ctx, RXML.Type type, RXML.TagSet tagset,
 #endif
 		   )
 {
-  TagSetParser::create (ctx, type, tagset);
+  TagSetParser::create (ctx, type, tag_set);
 
   if (orig_overridden) {	// We're cloned.
     overridden = orig_overridden;
@@ -180,8 +180,8 @@ static void create (RXML.Context ctx, RXML.Type type, RXML.TagSet tagset,
   case_insensitive_tag (1);
   ignore_unknown (1);
 
-  array(RXML.TagSet) list = ({tagset});
-  array(string) plist = ({tagset->prefix});
+  array(RXML.TagSet) list = ({tag_set});
+  array(string) plist = ({tag_set->prefix});
   mapping(string:TagDef) tagdefs = ([]);
 
   for (int i = 0; i < sizeof (list); i++) {
@@ -337,11 +337,11 @@ local void add_runtime_tag (RXML.Tag tag)
 {
   remove_runtime_tag (tag);
   if (!rt_tag_names) rt_tag_names = ([]);
-  if (!tagset->prefix_required)
+  if (!tag_set->prefix_required)
     rt_replace_tag (rt_tag_names[tag] = [string] tag->name, tag);
-  if (string prefix = tagset->prefix) {
+  if (string prefix = tag_set->prefix) {
     rt_tag_names[tag] = prefix + "\0" + [string] tag->name;
-    rt_replace_tag (tagset->prefix + [string] tag->name, tag);
+    rt_replace_tag (tag_set->prefix + [string] tag->name, tag);
   }
 }
 

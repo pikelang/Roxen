@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.62 2000/01/05 17:29:53 mast Exp $ */
+/* $Id: module.pike,v 1.63 2000/01/07 02:32:41 mast Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -656,7 +656,7 @@ mapping query_if_callers()
   return m;
 }
 
-RXML.TagSet query_tagset()
+RXML.TagSet query_tag_set()
 {
   return RXML.TagSet (module_identifier(),
 		      filter (rows (this_object(),

@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.51 2000/01/05 19:38:12 mast Exp $
+ * $Id: rxml.pike,v 1.52 2000/01/07 02:32:41 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -49,10 +49,10 @@ string handle_help(string file, string tag, mapping args)
 // Note that there's no other way to handle tag overriding -- the page
 // is no longer parsed multiple times.
 
-RXML.TagSet rxml_tagset = RXML.TagSet ("rxml_tagset");
-mapping(RoxenModule:RXML.TagSet) module_tagsets = ([]);
+RXML.TagSet rxml_tag_set = RXML.TagSet ("rxml_tag_set");
+mapping(RoxenModule:RXML.TagSet) module_tag_sets = ([]);
 
-RXML.TagSet rxml_last_tagset = class
+RXML.TagSet rxml_last_tag_set = class
 {
   inherit RXML.TagSet;
 
@@ -64,7 +64,7 @@ RXML.TagSet rxml_last_tagset = class
     "nbsp": "\0240",
     // FIXME: More...
   ]);
-} ("rxml_last_tagset");
+} ("rxml_last_tag_set");
 
 array|string call_tag(RXML.PHtml parser, mapping args, string|function rf,
 		      RequestID id, Stdio.File file, mapping defines,
@@ -143,7 +143,7 @@ string do_parse(string to_parse, RequestID id,
                 Stdio.File file, mapping defines,
 		Stdio.File my_fd)
 {
-  RXML.PHtml parser = rxml_tagset (RXML.t_text (RXML.PHtml), id);
+  RXML.PHtml parser = rxml_tag_set (RXML.t_text (RXML.PHtml), id);
   parser->set_extra (id, file, defines, my_fd);
   parser->parse_entities (0);	// Disabled for now.. FIXME
 
@@ -166,7 +166,7 @@ string do_parse(string to_parse, RequestID id,
 
 void build_callers()
 {
-  mapping(RoxenModule:RXML.TagSet) tagsets = ([]);
+  mapping(RoxenModule:RXML.TagSet) tag_sets = ([]);
   array(RXML.TagSet) ts_list = ({});
   array(int) ts_priorities = ({});
   real_if_callers=([]);
@@ -174,35 +174,35 @@ void build_callers()
   parse_modules-=({0});
 
   foreach (parse_modules, RoxenModule mod) {
-    RXML.TagSet tagset =
-      mod->query_tagset ? mod->query_tagset() :
+    RXML.TagSet tag_set =
+      mod->query_tag_set ? mod->query_tag_set() :
       RXML.TagSet (sprintf ("%O", mod));
 
     mapping(string:mixed) defs;
     if (mod->query_tag_callers &&
 	mappingp (defs = mod->query_tag_callers()) &&
 	sizeof (defs)) {
-      tagset->low_tags =
+      tag_set->low_tags =
 	mkmapping (indices (defs),
 		   Array.transpose (({({call_tag}) * sizeof (defs),
 				      values (defs)})));
-      tagset->changed();
+      tag_set->changed();
     }
 
     if (mod->query_container_callers &&
 	mappingp (defs = mod->query_container_callers()) &&
 	sizeof (defs)) {
-      tagset->low_containers =
+      tag_set->low_containers =
 	mkmapping (indices (defs),
 		   Array.transpose (({({call_container}) * sizeof (defs),
 				      values (defs)})));
-      tagset->changed();
+      tag_set->changed();
     }
 
-    if (sizeof (tagset->get_local_tags()) || sizeof (tagset->imported) ||
-	tagset->low_tags || tagset->low_containers) {
-      tagsets[mod] = tagset;
-      ts_list += ({tagset});
+    if (sizeof (tag_set->get_local_tags()) || sizeof (tag_set->imported) ||
+	tag_set->low_tags || tag_set->low_containers) {
+      tag_sets[mod] = tag_set;
+      ts_list += ({tag_set});
       ts_priorities += ({mod->query("_priority", 1) || 4});
     }
 
@@ -214,9 +214,9 @@ void build_callers()
 
   sort (ts_priorities, ts_list);
   reverse (ts_list);
-  ts_list += ({rxml_last_tagset});
-  rxml_tagset->imported = ts_list;
-  module_tagsets = tagsets;
+  ts_list += ({rxml_last_tag_set});
+  rxml_tag_set->imported = ts_list;
+  module_tag_sets = tag_sets;
 }
 
 void add_parse_module(RoxenModule o)
@@ -387,14 +387,14 @@ string tag_list_tags( string t, mapping args, RequestID id, Stdio.File f )
   mapping(int:mapping(string:mixed)) tag_callers = ([]);
   mapping(int:mapping(string:mixed)) container_callers = ([]);
 
-  foreach (indices (module_tagsets), RoxenModule mod) {
+  foreach (indices (module_tag_sets), RoxenModule mod) {
     int priority = mod->query ("_priority", 1) || 4;
     if (!tag_callers[priority]) tag_callers[priority] = ([]);
     if (!container_callers[priority]) container_callers[priority] = ([]);
-    RXML.TagSet tagset = module_tagsets[mod];
-    if (tagset->low_tags) tag_callers[priority] += tagset->low_tags;
-    if (tagset->low_containers) container_callers[priority] += tagset->low_containers;
-    foreach (reverse (tagset->get_all_tags()), RXML.Tag tag)
+    RXML.TagSet tag_set = module_tag_sets[mod];
+    if (tag_set->low_tags) tag_callers[priority] += tag_set->low_tags;
+    if (tag_set->low_containers) container_callers[priority] += tag_set->low_containers;
+    foreach (reverse (tag_set->get_all_tags()), RXML.Tag tag)
       if (tag->flags & RXML.FLAG_CONTAINER)
 	container_callers[priority][tag->name] = tag;
       else
