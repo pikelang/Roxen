@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.88 1998/01/08 18:03:23 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.89 1998/01/21 21:34:17 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -73,8 +73,9 @@ void killvar(string name)
   m_delete(variables, name);
 }
 
-varargs int defvar(string var, mixed value, string name, int type,
-		   string doc_str, mixed misc, int|function not_in_config)
+int defvar(string var, mixed value, string name, int type,
+	   string|void doc_str, mixed|void misc,
+	   int|function|void not_in_config)
 {
   variables[var]                = allocate( VAR_SIZE );
   variables[var][ VAR_VALUE ]        = value;
@@ -262,7 +263,7 @@ void stop()
   for(int i=0; i<10; i++) catch { pri[i]->stop(); };
 }
 
-public varargs string type_from_filename( string file, int to )
+public string type_from_filename( string file, int|void to )
 {
   mixed tmp;
   object current_configuration;

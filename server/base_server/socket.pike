@@ -1,5 +1,5 @@
 // This code has to work both in 'roxen.pike' and all modules
-string _cvs_version = "$Id: socket.pike,v 1.8 1997/09/14 18:07:12 grubba Exp $";
+string _cvs_version = "$Id: socket.pike,v 1.9 1998/01/21 21:34:23 grubba Exp $";
 
 #if !efun(roxen)
 #define roxen roxenp()
@@ -69,8 +69,8 @@ private void got_host_name(string host, string oh, int port,
   }
 }
 
-varargs void async_connect(string host, int port, function callback,
-			   mixed ... args)
+void async_connect(string host, int port, function|void callback,
+		   mixed ... args)
 {
 #ifdef SOCKET_DEBUG
   perror("SOCKETS: async_connect requested to "+host+":"+port+"\n");
@@ -134,9 +134,9 @@ void async_pipe(object to, object from, function|void callback,
   pipe->output(to);
 }
 
-varargs void async_cache_connect(string host, int port, string cl, 
-				 string entry, function callback,
-				 mixed ... args)
+void async_cache_connect(string host, int port, string cl, 
+			 string entry, function|void callback,
+			 mixed ... args)
 {
   object cache;
 #ifdef SOCKET_DEBUG

@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.158 1998/01/21 04:33:51 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.159 1998/01/21 21:34:22 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -808,7 +808,7 @@ private object find_configuration_for(object bar)
 }
 
 // FIXME  
-public varargs array|string type_from_filename( string file, int to )
+public array|string type_from_filename( string|void file, int|void to )
 {
   mixed tmp;
   object current_configuration;
@@ -2272,7 +2272,7 @@ object neighborhood;
 
 // And then we have the main function, this is the oldest function in
 // Roxen :) It has not changed all that much since Spider 2.0.
-varargs int main(int argc, array (string) argv)
+int main(int|void argc, array (string)|void argv)
 {
   initiate_languages();
   mixed tmp;

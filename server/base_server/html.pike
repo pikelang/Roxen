@@ -1,7 +1,7 @@
-string cvs_version = "$Id: html.pike,v 1.2 1996/12/01 19:18:29 per Exp $";
+string cvs_version = "$Id: html.pike,v 1.3 1998/01/21 21:34:18 grubba Exp $";
 #define __replace(X) (X)
 
-varargs string input(string name, string val, int t)
+string input(string name, string|void val, int|void t)
 {
   if(!t)
     return sprintf("<input type=hidden name=\"%s\" value=\"%O\">", name, val);
@@ -15,8 +15,8 @@ string pre(string f)
 }
 
 
-varargs string table(string t, int|void cellspacing, int|void cellpadding,
-		     int|void border, int|void width)
+string table(string|void t, int|void cellspacing, int|void cellpadding,
+	     int|void border, int|void width)
 {
   string d="";
   int ds, dp;
@@ -38,7 +38,7 @@ varargs string table(string t, int|void cellspacing, int|void cellpadding,
   return "<table"+d+">\n"+__replace(t)+"</table>\n\n";
 }
 
-varargs string tr(string data, int rows)
+string tr(string data, int|void rows)
 {
   if(rows) 
     return "<tr rowspan="+rows+">\n" + __replace(data) + "</tr><p>";
@@ -47,7 +47,7 @@ varargs string tr(string data, int rows)
 }
 
 
-varargs string td(string t, string align, int rows, int cols)
+string td(string t, string|void align, int|void rows, int|void cols)
 {
   string q="";
   if(align) q+=" align="+align; 
@@ -56,13 +56,13 @@ varargs string td(string t, string align, int rows, int cols)
   return "<td"+q+">\n" + __replace(t) +"</td>\n";
 }
 
-varargs string bf(string s, int i)
+string bf(string|void s, int|void i)
 {
   return "<font size=+"+(i+1)+"><b>"+s+"</b></font>";
 }
 
-varargs string th(string t, string|void align, int|void rows, 
-		  int|void cols)
+string th(string t, string|void align, int|void rows, 
+	  int|void cols)
 {
   string q="";
   if(align) q+=" align="+align; 

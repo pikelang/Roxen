@@ -1,4 +1,4 @@
-string cvs_version = "$Id: module_support.pike,v 1.13 1997/08/12 19:45:39 per Exp $";
+string cvs_version = "$Id: module_support.pike,v 1.14 1998/01/21 21:34:21 grubba Exp $";
 #include <roxen.h>
 #include <module.h>
 
@@ -21,8 +21,9 @@ int setvars( mapping (string:mixed) vars )
   return 1;
 }
 
-varargs int globvar(string var, mixed value, string name, int type,
-		    string doc_str, mixed misc, int|function not_in_config)
+int globvar(string var, mixed value, string name, int type,
+	    string|void doc_str, mixed|void misc,
+	    int|function|void not_in_config)
 {
   variables[var]                     = allocate( VAR_SIZE );
   variables[var][ VAR_VALUE ]        = value;

@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.26 1997/10/22 19:47:40 grubba Exp $ */
+/* $Id: module.pike,v 1.27 1998/01/21 21:34:21 grubba Exp $ */
 
 #include <module.h>
 
@@ -77,8 +77,9 @@ string info(object conf)
 }
 
 // Define a variable, with more than a little error checking...
-varargs void defvar(string var, mixed value, string name, int type,
-		    string doc_str, mixed misc, int|function not_in_config)
+void defvar(string|void var, mixed|void value, string|void name,
+	    int|void type, string|void doc_str, mixed|void misc,
+	    int|function|void not_in_config)
 {
   if(!strlen(var))
     error("No name for variable!\n");
@@ -261,13 +262,14 @@ string check_variable( string s, mixed value )
   return 0;
 }
 
-varargs mixed query(string var, int ok)
+mixed query(string|void var, int|void ok)
 {
-  if(var)
+  if(var) {
     if(variables[var])
       return variables[var][VAR_VALUE];
     else if(!ok)
       error("Querying undefined variable.\n");
+  }
 
   return variables;
 }
