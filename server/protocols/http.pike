@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.124 1999/05/27 20:32:24 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.125 1999/05/27 20:36:30 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -686,7 +686,6 @@ static void do_timeout()
   } else {
     // premature call_out... *¤#!"
     call_out(do_timeout, 10);
-    time = _time(1);
     MARK_FD("HTTP premature timeout");
   }
 }
