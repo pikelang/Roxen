@@ -1,12 +1,12 @@
 /*
- * $Id: intraseek_helper.pike,v 1.3 1998/09/15 12:50:53 js Exp $
+ * $Id: intraseek_helper.pike,v 1.4 1998/09/16 12:46:21 js Exp $
  *
  * AutoSeek, Intraseek helper module
  *
  * Johan Schön 1998-07-08
  */
 
-constant cvs_version = "$Id: intraseek_helper.pike,v 1.3 1998/09/15 12:50:53 js Exp $";
+constant cvs_version = "$Id: intraseek_helper.pike,v 1.4 1998/09/16 12:46:21 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -65,7 +65,7 @@ string tag_delete(string tag_name, mapping args, object id)
   object o=id->conf->get_provider("intraseek");
   if(!o)
     return "Intraseek not present.";
-  o->remove_profile(args->id);
+  o->profile_handler->remove_profile(args->id);
   o->profile_handler->save_profiles(o->query("profilespath"));
   return "Intraseek profile deleted.";
 }
@@ -82,9 +82,23 @@ string tag_launch(string tag_name, mapping args, object id)
   return "Intraseek profile launched.";
 }
 
+string tag_search(string tag_name, mapping args, object id)
+{
+  if(!sizeof(id->conf->get_provider("sql")->sql_object(id)->
+	     query("select feature from features where customer_id="+
+		   id->variables->customer_id+" and feature='Intraseek'")))
+    return "Intraseek not enabled for this host. ("+id->variables->customer_id+")";
+  else 
+    return 
+      "<intraseek_form lang=en ids="+id->misc->customer_id+" default_id="+
+      id->misc->customer_id+"><intraseek_results lang=en>";
+}
+
 mapping query_tag_callers()
 {
   return ([ "autosite-intraseek-create" : tag_create,
 	    "autosite-intraseek-delete" : tag_delete,
-	    "autosite-intraseek-launch" : tag_launch ]);
+	    "autosite-intraseek-launch" : tag_launch,
+	    "search": tag_search
+  ]);
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: mailadmin.pike,v 1.6 1998/09/10 18:48:32 js Exp $
+ * $Id: mailadmin.pike,v 1.7 1998/09/16 12:49:21 js Exp $
  *
  * A general administration module for Roxen AutoMail
  * Johan Schön, September 1998
@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version="$Id: mailadmin.pike,v 1.6 1998/09/10 18:48:32 js Exp $";
+constant cvs_version="$Id: mailadmin.pike,v 1.7 1998/09/16 12:49:21 js Exp $";
 constant thread_safe=1;
 
 mapping sql_objs=([]);
@@ -107,9 +107,13 @@ string tag_matrix(string tag_name, mapping args, object id)
   if(!customer)
     return "No customer id supplied.";
   object db=get_sql();
+
+  array titles=id->conf->map_providers("automail_rcpt","query_automail_title");
+  array names= id->conf->map_providers("automail_rcpt","query_automail_name");
+  sort(titles,names);
+
   array cols=Array.transpose(
-    ({ id->conf->map_providers("automail_rcpt","query_automail_title"),
-       id->conf->map_providers("automail_rcpt","query_automail_name") }));
+    ({ titles, names }) );
 
   mapping rcpt_name_to_object=mkmapping(
     id->conf->map_providers("automail_rcpt","query_automail_name"),
@@ -143,9 +147,10 @@ string tag_matrix(string tag_name, mapping args, object id)
 	db->query("update admin_status set status='"+(1-status)+"' where user_id='"+
 		  user_id+"' and rcpt_name='"+name+"'");
       }
-      if(!status && (sizeof(rcpt_name_to_object[name]->query_automail_variables()) !=
-	 sizeof(db->query("select name from admin_variables where user_id='"+user_id+
-			  "' and rcpt_name='"+name+"'"))))
+      if(status==0 &&
+	 (sizeof(rcpt_name_to_object[name]->query_automail_variables()) !=
+	  sizeof(db->query("select name from admin_variables where user_id='"+user_id+
+			   "' and rcpt_name='"+name+"'"))))
 	return set_variables(id,name,user_id,rcpt_name_to_object);
       else
       {
@@ -280,7 +285,10 @@ string tag_adduser(string tag_name, mapping args, object id)
     (id->variables->password_again||"")+"' size=20></td></tr></table>";
 
   s+="<h1>Module variables</h1>";
-  foreach(id->conf->get_providers("automail_rcpt"), object rcpt)
+  array rcpts=id->conf->get_providers("automail_rcpt");
+  array tmp=rcpts->query_automail_title();
+  sort(tmp,rcpts);
+  foreach(rcpts, object rcpt)
   {
     array vars=rcpt->query_automail_variables();
     if(sizeof(vars))

@@ -1,12 +1,12 @@
 /*
- * $Id: admin.pike,v 1.8 1998/09/11 07:03:29 js Exp $
+ * $Id: admin.pike,v 1.9 1998/09/16 12:46:20 js Exp $
  *
  * AutoAdmin, administration interface
  *
  * Johan Schön 1998-07-08
  */
 
-constant cvs_version = "$Id: admin.pike,v 1.8 1998/09/11 07:03:29 js Exp $";
+constant cvs_version = "$Id: admin.pike,v 1.9 1998/09/16 12:46:20 js Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -100,7 +100,6 @@ mixed find_file(string f, object id)
 		   "data":"<title>Access Denied</title>"
 		   "<h2 align=center>Access forbidden</h2>"
     ]);
-  
   sscanf(f, "%s/%s/%s", customer, tab, sub);
   id->variables->customer=customer;
   res =

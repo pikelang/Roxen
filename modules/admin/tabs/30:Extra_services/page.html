@@ -3,8 +3,8 @@
 	 return "";
       </pike>
 
-<comment> <autosite-intraseek-create id=6 host=www.ultraviking.se name=Ultraviking>
-<autosite-intraseek-launch id=6>
+<comment> 
+
 </comment>
 
 <formoutput quote='¤'>
@@ -17,6 +17,15 @@
   <sqloutput quote='#' query="select feature from features where customer_id='¤customer:quote=mysql¤'">
     <cset variable=#feature#>1</cset>
   </sqloutput>
+
+  <if variable="enable is Intraseek">
+    <sqloutput quote='@'
+     query="select distinct domain from dns where customer_id=¤customer:quote=mysql¤">
+      <autosite-intraseek-delete id=¤customer¤>
+      <autosite-intraseek-create id=¤customer¤ host='www.@domain:quote=mysql@' name=¤customer¤>
+      <autosite-intraseek-launch id=¤customer¤>
+    </sqloutput>
+  </if>
 
   <sqloutput quote='£' query="select feature from features_list order by feature">
     <obox title='£feature£'>
@@ -39,20 +48,11 @@
     </td>
     <td>
     <if variable=£feature£>
-      <pike>
-         return "";//sprintf("<pre>%O</pre>",id->misc->defines);
-      </pike>
       <gtext xspacing=12 yspacing=3 notrans nfont=helvetica scale=0.35 bold
     	xsize=200 bevel=5 talign=center fg=#606060 bg=#a0a0a0>Enable</gtext>
-      <pike>
-         return "";//sprintf("<pre>%O</pre>",id->defines);
-      </pike>
        <gtext xspacing=12 yspacing=3 notrans nfont=helvetica scale=0.35 bold
         xsize=200 bevel=5 talign=center fg=#ffffff bg=#113377
 	magic_fg=#000000 magic_bg=#88ccaa magic href='./?disable=£feature£'>Disable</gtext>
-      <pike>
-         return "";//sprintf("<pre>%O</pre>",id->defines);
-      </pike>
     </if>
     <else>
       <gtext xspacing=12 yspacing=3 notrans nfont=helvetica scale=0.35 bold
