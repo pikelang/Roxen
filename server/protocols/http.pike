@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.176 1999/12/21 00:03:14 marcus Exp $
+// $Id: http.pike,v 1.177 1999/12/26 18:18:48 jhs Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.176 1999/12/21 00:03:14 marcus Exp $";
+constant cvs_version = "$Id: http.pike,v 1.177 1999/12/26 18:18:48 jhs Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -832,7 +832,7 @@ void end(string|void s, int|void keepit)
      && my_fd)
   {
     // Now.. Transfer control to a new http-object. Reset all variables etc..
-    object o = object_program(this_object())();
+    object o = object_program(this_object())(my_fd, port_obj);
     o->remoteaddr = remoteaddr;
     o->supports = supports;
     o->host = host;
@@ -1719,7 +1719,7 @@ void got_data(mixed fooid, string s)
 object clone_me()
 {
   object c,t;
-  c=object_program(t=this_object())();
+  c=object_program(t=this_object())(0, port_obj);
 
 // c->first = first;
   c->port_obj = port_obj;
