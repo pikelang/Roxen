@@ -4,9 +4,13 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.485 2000/05/17 17:41:00 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.486 2000/05/26 22:19:22 per Exp $";
 
+// Used when running threaded to find out which thread is the backend thread,
+// for debug purposes only.
 object backend_thread;
+
+// The argument cache. Used by the image cache.
 ArgCache argcache;
 
 // Some headerfiles
@@ -157,8 +161,9 @@ Thread.Mutex euid_egid_lock = Thread.Mutex();
 #endif /* THREADS */
 
 /*
- * The privilege changer.
- *
+ * The privilege changer. Works like a mutex lock, but changes the UID/GID
+ * while held. Blocks all threads.
+ * 
  * Based on privs.pike,v 1.36.
  */
 int privs_level;
@@ -407,6 +412,7 @@ static object PRIVS(string r, int|string|void u, int|string|void g)
 }
 
 #ifndef THREADS
+// Emultades a thread_local() object.
 class container
 {
   mixed value;
@@ -421,9 +427,17 @@ class container
 }
 #endif
 
-// Locale support
-RoxenLocale.standard default_locale=RoxenLocale.standard;
+// font cache and loading.
+// 
+// This will be changed to a list of server global modules, to make it
+// easier to implement new types of fonts (such as PPM color fonts, as
+// an example)
 object fonts;
+
+
+// Locale support. Work in progress. The API is not fixed
+RoxenLocale.standard default_locale=RoxenLocale.standard;
+
 #if constant( thread_local )
 object locale = thread_local();
 #else
@@ -432,20 +446,24 @@ object locale = container();
 
 #define LOCALE	LOW_LOCALE->base_server
 
+// For prototype reasons.
 program Configuration;	/*set in create*/
 
+// No way to write array(Configuration) here, since the program
+// is not loaded yet.
 array configurations = ({});
 
-int die_die_die;
+// When true, roxen will shut down as soon as possible.
+local static int die_die_die;
 
 // Function that actually shuts down Roxen. (see low_shutdown).
 private static void really_low_shutdown(int exit_code)
 {
-  // Die nicely.
+  // Die nicely. Catch for paranoia reasons
 #ifdef THREADS
   catch( stop_handler_threads() );
 #endif /* THREADS */
-  exit(exit_code);		// Now we die...
+  exit( exit_code );		// Now we die...
 }
 
 
@@ -465,17 +483,20 @@ private static void low_shutdown(int exit_code)
       // exit(0);
     }
   };
-  call_out(really_low_shutdown, 0.01, exit_code);
+  call_out(really_low_shutdown, 0.1, exit_code);
 }
 
 // Perhaps somewhat misnamed, really...  This function will close all
 // listen ports and then quit.  The 'start' script should then start a
 // new copy of roxen automatically.
 void restart(float|void i)
+//. Restart roxen, if the start script is running
 {
   call_out(low_shutdown, i, -1);
 }
+
 void shutdown(float|void i)
+//. Shut down roxen
 {
   call_out(low_shutdown, i, 0);
 }
@@ -486,7 +507,7 @@ void shutdown(float|void i)
 
 #ifndef THREADS
 // handle function used when THREADS is not enabled.
-void unthreaded_handle(function f, mixed ... args)
+local static void unthreaded_handle(function f, mixed ... args)
 {
   f(@args);
 }
@@ -512,10 +533,10 @@ object do_thread_create(string id, function f, mixed ... args)
 // Shamelessly uses facts about pikes preemting algorithm.
 // Might have to be fixed in the future.
 class Queue 
+//. Thread.Queue lookalike, which uses some archaic and less
+//. known features of the preempting algorithm in pike to optimize the
+//. read function.
 {
-#if 0
-  inherit Thread.Queue;
-#else
   inherit Thread.Condition : r_cond;
   array buffer=allocate(8);
   int r_ptr, w_ptr;
@@ -544,17 +565,20 @@ class Queue
     buffer[w_ptr++]=v;
     r_cond::signal();
   }
-#endif
 }
 
-// Queue of things to handle.
-// An entry consists of an array(function fp, array args)
-static Queue handle_queue = Queue();
+local static Queue handle_queue = Queue();
+//. Queue of things to handle.
+//. An entry consists of an array(function fp, array args)
 
-// Number of handler threads that are alive.
-static int thread_reap_cnt;
+local static int thread_reap_cnt;
+//. Number of handler threads that are alive.
 
-void handler_thread(int id)
+local static void handler_thread(int id)
+//. The actual handling function. This functions read function and
+//. parameters from the queue, calls it, then reads another one. There
+//. is a lot of error handling to ensure that nothing serious happens if
+//. the handler function throws an error.
 {
   array (mixed) h, q;
   while(!die_die_die)
@@ -572,9 +596,7 @@ void handler_thread(int id)
 	  // Roxen is shutting down.
 	  report_debug("Handle thread ["+id+"] stopped\n");
 	  thread_reap_cnt--;
-#ifdef NSERIOUS
 	  if(!thread_reap_cnt) report_debug("+++ATH\n");
-#endif
 	  return;
 	}
       } while(1);
@@ -596,13 +618,16 @@ void handler_thread(int id)
   }
 }
 
-void threaded_handle(function f, mixed ... args)
+local static void threaded_handle(function f, mixed ... args)
 {
   handle_queue->write(({f, args }));
 }
 
 int number_of_threads;
+//. The number of handler threads to run.
 static array(object) handler_threads = ({});
+//. The handler threads, the list is kept for debug reasons.
+
 void start_handler_threads()
 {
   if (QUERY(numthreads) <= 1) {
@@ -622,6 +647,7 @@ void start_handler_threads()
 }
 
 void stop_handler_threads()
+//. Stop all the handler threads, bug give up if it takes too long.
 {
   int timeout=10;
 #if constant(_reset_dmalloc)
@@ -647,11 +673,15 @@ void stop_handler_threads()
 
 
 mapping get_port_options( string key )
+//. Get the options for the key 'key'.
+//. The intepretation of the options is protocol specific.
 {
   return (query( "port_options" )[ key ] || ([]));
 }
 
 void set_port_options( string key, mapping value )
+//. Set the options for the key 'key'.
+//. The intepretation of the options is protocol specific.
 {
   mapping q = query("port_options");
   q[ key ] = value;
@@ -661,27 +691,45 @@ void set_port_options( string key, mapping value )
 
 
 class Protocol
+//. The basic protocol.  
+//. Implements reference handling, finding Configuration objects 
+//. for URLs, and the bind/accept handling.
 {
   inherit Stdio.Port: port;
   inherit "basic_defvar";
 
   constant name = "unknown";
   constant supports_ipless = 0;
+  //. If true, the protocol handles ip-less virtual hosting
   constant requesthandlerfile = "";
+  //. Filename of a by-connection handling class. It is also possible
+  //. to set the 'requesthandler' class member in a overloaded create
+  //. function.
+ 
   constant default_port = 4711;
-
+  //. If no port is specified in the URL, use this one
 
   int port;
-  int refs;
+  //. The currently bound portnumber
   string ip;
+  //. The IP-number (0 for ANY) this port is bound to
+  int refs;
+  //. The number of references to this port
   program requesthandler;
+  //. The per-connection request handling class
   array(string) sorted_urls = ({});
+  //. Sorted by length, longest first
   mapping(string:mapping) urls = ([]);
+  //. .. url -> ([ "conf":.., ... ])
 
   void ref(string name, mapping data)
+  //. Add a ref for the URL 'name' with the data 'data'
   {
     if(urls[name])
-      return;
+    {
+      urls[name] = data;
+      return; // only ref once per URL
+    }
 
     refs++;
     urls[name] = data;
@@ -691,8 +739,9 @@ class Protocol
   }
 
   void unref(string name)
+  //. Remove a ref for the URL 'name'
   {
-    if(!urls[name])
+    if(!urls[name]) // only unref once
       return;
     m_delete(urls, name);
     sorted_urls -= ({name});
@@ -700,22 +749,28 @@ class Protocol
       destruct( ); // Close the port.
   }
 
-  void got_connection()
+  static void got_connection()
   {
     object q = accept( );
-    if( !q )
-      ;// .. errno stuff here ..
-    else {
-      // FIXME: Add support for ANY => specific IP here.
-
+    if( q )
       requesthandler( q, this_object() );
-    }
   }
+
+  local function sp_fcfu;
+
 
   object find_configuration_for_url( string url, RequestID id, 
                                      int|void no_default )
+  //. Given a url and requestid, try to locate a suitable configuration
+  //. (virtual site) for the request. 
+  //. This interface is not at all set in stone, and might change at 
+  //. any time.
   {
+    url = lower_case( url );
     object c;
+    // The URLs are sorted from longest to shortest, so that short
+    // urls (such as http://*/) will not match before more complete
+    // ones (such as http://*.roxen.com/)
     foreach( sorted_urls, string in )
     {
       if( glob( in+"*", url ) )
@@ -729,37 +784,69 @@ class Protocol
 	return c;
       }
     }
-
-    // Ouch. Default to '*' first...
+    
+    if( no_default )
+      return 0;
+    
+    // No host matched, or no host header was included in the request.
+    // Is the port in the '*' ports?
     mixed i;
-    if( ip 
-        && ( i=open_ports[ name ][ 0 ] ) 
-        && ( i=i[ port ] ) 
-        && ( i != this_object())
-        && (i = i->find_configuration_for_url( url, id, 1 )))
+    if( !functionp(sp_fcfu)
+	&& ( i=open_ports[ name ][ 0 ][ port ] ) )
+      sp_fcfu = i->find_configuration_for_url;
+    
+    if( sp_fcfu
+	&& (sp_fcfu != find_configuration_for_url)
+	&& (i = sp_fcfu( url, id, 1 )))
       return i;
-
-    if( !no_default )
+    
+    // No. We have to default to one of the other ports.
+    // It might be that one of the servers is tagged as a default server.
+    multiset choices = (< >);
+    foreach( configurations, object c )
+      if( c->query( "default_server" ) )
+	choices |= (< c >);
+    
+    if( sizeof( choices ) )
     {
-      // .. then grab the first configuration that is available at all.
-      if(!(c = urls[sorted_urls[0]]->conf)->inited) c->enable_all_modules();
-      id->misc->defaulted=1;
-      return c;
+      // First pick default servers bound to this port
+      foreach( values(urls), mapping c )
+	if( choices[ c->conf ] )
+	{
+	  id->not_query = id->not_query[strlen(c->path)..];
+	  id->misc->site_prefix_path = c->path;
+	  if(c->conf->inited) 
+	    c->conf->enable_all_modules();
+	  return c->conf;
+	}
+      // if there is no such servers, pick the first default server
+      // available.
+      return ((array)choices)[0];
     }
-    return 0;
+
+
+    // if we end up here, there is no default port at all available
+    // so grab the first configuration that is available at all.
+    if(!(c = urls[sorted_urls[0]]->conf)->inited)
+      c->enable_all_modules();
+    id->misc->defaulted=1;
+    return c;
   }
 
   mixed query_option( string x )
+  //. Query the port-option 'x' for this port. 
   {
     return query( x );
   }
 
   string get_key()
+  //. Return he key used for this port (protocol:ip:portno)
   {
     return name+":"+ip+":"+port;
   }
 
   void save()
+  //. Save all port options
   {
     set_port_options( get_key(),
                       mkmapping( indices(variables),
@@ -767,12 +854,14 @@ class Protocol
   }
 
   void restore()
+  //. Restore all port options from saved values
   {
     foreach( (array)get_port_options( get_key() ),  array kv )
       set( kv[0], kv[1] );
   }
 
-  void create( int pn, string i )
+  static void create( int pn, string i )
+  //. Constructor. Bind to the port 'pn' ip 'i'
   {
     port = pn;
     ip = i;
@@ -786,17 +875,17 @@ class Protocol
     {
       report_error("Failed to bind %s://%s:%d/ (%s)\n", (string)name,
                    (ip||"*"), (int)port, strerror( errno() ));
-      destruct();
     }
   }
 
-  string _sprintf( )
+  static string _sprintf( )
   {
-    return "Protocol("+name+"://"+ip+":"+port+")";
+   return "Protocol("+name+"://"+ip+":"+port+")";
   }
 }
 
 class SSLProtocol
+//. Base protocol for SSL ports. Exactly like Port, but uses SSL.
 {
   inherit Protocol;
 
@@ -1526,6 +1615,7 @@ array(string) find_ips_for( string what )
 
 void unregister_url( string url )
 {
+  url = lower_case( url );
   report_debug("Unregister "+url+"\n");
   if( urls[ url ] && urls[ url ]->port )
   {
@@ -1555,6 +1645,7 @@ void sort_urls()
 
 int register_url( string url, object conf )
 {
+  url = lower_case( url );
   if (!sizeof (url - " " - "\t")) return 1;
   string protocol;
   string host;
@@ -1612,19 +1703,32 @@ int register_url( string url, object conf )
 
   array(string) required_hosts;
 
-  if (is_ip(host)) {
+  if (is_ip(host))
     required_hosts = ({ host });
-  } else {
-    /*  if( !prot->supports_ipless )*/
-      required_hosts = find_ips_for( host );
+  else
+    required_hosts = find_ips_for( host );
 
-    if (!required_hosts)
-      required_hosts = ({ 0 });	// ANY
-  }
+  if (!required_hosts)
+    required_hosts = ({ 0 });	// ANY
 
   mapping m;
   if( !( m = open_ports[ protocol ] ) )
-    m = open_ports[ protocol ] = ([]);
+    // always add 'ANY' (0) here, as an empty mapping, for speed reasons.
+    // There is now no need to check for both open_ports[prot][0] and
+    // open_ports[prot][0][port], we can go directly to the latter
+    // test.
+    m = open_ports[ protocol ] = ([ 0:([]) ]); 
+
+  if( sizeof( required_hosts - ({ 0 }) ) // not ANY
+      && m[ 0 ][ port ]
+      && prot->supports_ipless )
+    // The ANY port is already open for this port, and since this
+    // protocol supports IP-less virtual hosting, there is no need to
+    // open yet another port, that would mosts probably only conflict
+    // with the ANY port anyway. (this is true on most OSes, it works
+    // on Solaris, but fails on linux)
+    required_hosts = ({ 0 });
+
 
   urls[ url ] = ([ "conf":conf, "path":path ]);
   sorted_urls += ({ url });
