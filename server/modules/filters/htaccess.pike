@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-// .htaccess compability by David Hedbor, neotron@idonex.se 
+// .htaccess compability by David Hedbor, neotron@idonex.se
 //   Changed into module by Per Hedbor, per@idonex.se
 
-constant cvs_version = "$Id: htaccess.pike,v 1.56 2000/02/17 12:44:10 nilsson Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.57 2000/03/01 16:57:27 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -45,15 +45,15 @@ void create()
     );
   defvar("file", ".htaccess", "Htaccess file name", TYPE_STRING|VAR_MORE);
   defvar("denyhtlist", ({".htaccess", ".htpasswd", ".htgroup"}),
-	 "Deny file list", TYPE_STRING_LIST, 
+	 "Deny file list", TYPE_STRING_LIST,
 	 "Always deny access to these files. This is useful to protect "
 	 "htaccess related files.");
-  
+
 }
 
 
 /* Parse the 'limit' tag. This function is called via the builtin
- * SGML parser. 
+ * SGML parser.
  */
 
 string parse_limit(string tag, mapping m, string s, mapping id, mapping access)
@@ -63,7 +63,7 @@ string parse_limit(string tag, mapping m, string s, mapping id, mapping access)
   mapping tmpmap = ([]);
   if(!sizeof(m))
     m = ([ "all": 1 ]);
-  
+
   foreach(replace(s, "\r", "\n") / "\n", line) {
     tmp = 0;
 
@@ -97,7 +97,7 @@ string parse_limit(string tag, mapping m, string s, mapping id, mapping access)
 	data = 1;
       else if(!search(data, "mutual-failure"))
 	data = -1;
-      else 
+      else
       	data = 0;
       tmpmap->order = data;
     } else if(tmp) {
@@ -120,7 +120,7 @@ string parse_limit(string tag, mapping m, string s, mapping id, mapping access)
   foreach(indices(m), tmp)
     if(!access[tmp])
       access[tmp] = tmpmap;
-    else 
+    else
       foreach(indices(tmpmap), data)
 	if(access[tmp][data])
 	  access[tmp][data] += tmpmap[data];
@@ -138,7 +138,7 @@ mapping|int parse_htaccess(Stdio.File f, RequestID id, string rht)
   array|int in_cache;
   mapping access = ([ ]);
   cache_key = "htaccess:" + id->conf->name;
-    
+
 
   s = (array(int))f->stat();
 
@@ -146,13 +146,13 @@ mapping|int parse_htaccess(Stdio.File f, RequestID id, string rht)
     return in_cache[1];
 
   htaccess = f->read(0x7fffffff);
-  
+
   if(!htaccess || !strlen(htaccess))
     return 0;
 
   htaccess = replace(htaccess, "\\\n", " ");
 
-  access = ([]); 
+  access = ([]);
 
   htaccess = parse_html(htaccess - "\r",
 			([]), (["limit": parse_limit ]), id, access);
@@ -171,13 +171,13 @@ mapping|int parse_htaccess(Stdio.File f, RequestID id, string rht)
 
     if(!strlen(line))
       continue;
-    
+
     if(line[0]==' ')
       line=line[1..];
 
     sscanf(line, "%[^ ] %s", cmd, rest);
 
-    cmd = lower_case(cmd);    
+    cmd = lower_case(cmd);
 
     switch(cmd) {
     case "redirecttemp":
@@ -191,14 +191,14 @@ mapping|int parse_htaccess(Stdio.File f, RequestID id, string rht)
     case "authname":
     case "authgroupfile":
     case "redirect":
-    case "errorfile": 
+    case "errorfile":
       access[cmd] = rest;
       break;
 
     default:
       HT_WERR("Unsupported command in "+cache_key+": "+ cmd);
     }
-    HT_WERR(sprintf("Result of .htaccess file parsing -> %O\n", 
+    HT_WERR(sprintf("Result of .htaccess file parsing -> %O\n",
 			   access));
   }
   cache_set(cache_key, rht, ({s[3], access}));
@@ -236,13 +236,13 @@ int allowed(multiset allow, string hname, string ip, int def)
       {
 	for(i = 0; i < sizeof(tmp1); i++)
 	  if(tmp1[i] != tmp2[a+i])
-	  { 
+	  {
 	    ok = -1;
 	    break;
-	  } 
+	  }
 	if(!ok)
 	  ok = 1;
-	else 
+	else
 	  ok = 0;
       }
 #ifdef HTACCESS_DEBUG
@@ -252,22 +252,22 @@ int allowed(multiset allow, string hname, string ip, int def)
 		"("+s+" -> "+ip+" || "+hname")");
       }
 #endif
-      
+
     }
     if(!ok)
     {
-      tmp2 = ip / "." - ({""});      
+      tmp2 = ip / "." - ({""});
       if(sizeof(tmp2) >= sizeof(tmp1))
       {
 	for(i = 0; i < sizeof(tmp1); i++)
 	  if(tmp1[i] != tmp2[i])
-	  { 
+	  {
 	    ok = -1;
 	    break;
-	  } 
+	  }
 	if(!ok)
 	  ok = 1;
-	else 
+	else
 	  ok = 0;
       }
 #ifdef HTACCESS_DEBUG
@@ -276,7 +276,7 @@ int allowed(multiset allow, string hname, string ip, int def)
 		"("+s+" -> "+ip+" || "+hname")");
       }
 #endif
-      
+
     }
     if(ok)
       break;
@@ -325,7 +325,7 @@ int validate_user(int|multiset users, array auth, string userfile, RequestID id)
     }
   }
   if(!userfile)
-  { 
+  {
     if(id->auth)
       return id->auth[0];
     return 0;
@@ -424,7 +424,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
   mark_fd(f->query_fd(), ".htaccess groupfile ("+groupfile+")\n");
 #endif
   s = (array(int))f->stat();
-  
+
   if((in_cache = cache_lookup(cache_key, groupfile))
      && (s[3] == in_cache[0]))
     g = in_cache[1];
@@ -437,7 +437,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
     {
       if(sscanf(s2, "%s:%s", grp, members) == 2)
       {
-	foreach(replace(members, ({",", "\t"}), ({" ", " "})) / 
+	foreach(replace(members, ({",", "\t"}), ({" ", " "})) /
 		" " - ({""}), user)
 	{
 	  if(!multisetp(g[grp]))
@@ -523,7 +523,7 @@ mapping|string|int htaccess(mapping access, RequestID id)
       TRACE_LEAVE("Method GET not specified!");
       TRACE_LEAVE("Assumed OK");
       return 0;
-      
+
     case "mv":
     case "chmod":
     case "mkdir":
@@ -540,10 +540,10 @@ mapping|string|int htaccess(mapping access, RequestID id)
   }
 
   TRACE_LEAVE("Method to use:"+method);
-  
+
   if(!access[method]->allow && !access[method]->deny)
     hok = 1;
-  else 
+  else
   {
     if(access[method]->order == 1) {
       if(allowed(access[method]->allow, id->remoteaddr, id->remoteaddr, 0))
@@ -555,21 +555,21 @@ mapping|string|int htaccess(mapping access, RequestID id)
 	hok = 0;
       if(allowed(access[method]->allow, id->remoteaddr, id->remoteaddr, 0))
 	hok = 1;
-    } else 
+    } else
       hok = (allowed(access[method]->allow, id->remoteaddr,
-		     id->remoteaddr, 0) && 
-	     allowed(access[method]->deny, id->remoteaddr, 
+		     id->remoteaddr, 0) &&
+	     allowed(access[method]->deny, id->remoteaddr,
 		     id->remoteaddr, 1));
 
     if(!hok)
     {
       if(id->remoteaddr)
       {
-	if(!((hname=roxen->quick_ip_to_host(id->remoteaddr)) && 
+	if(!((hname=roxen->quick_ip_to_host(id->remoteaddr)) &&
 	     hname != id->remoteaddr))
 	  hname = roxen->blocking_ip_to_host(id->remoteaddr);
       }
-    
+
       if(!hname)
 	hname = id->remoteaddr;
       if(access[method]->order == 1) {
@@ -582,8 +582,8 @@ mapping|string|int htaccess(mapping access, RequestID id)
 	  hok = 0;
 	if(allowed(access[method]->allow, hname, id->remoteaddr, 0))
 	  hok = 1;
-      } else 
-	hok = (allowed(access[method]->allow, hname, id->remoteaddr, 0) && 
+      } else
+	hok = (allowed(access[method]->allow, hname, id->remoteaddr, 0) &&
 	       allowed(access[method]->deny, hname, id->remoteaddr, 1));
     }
   }
@@ -603,7 +603,7 @@ mapping|string|int htaccess(mapping access, RequestID id)
   if(hok) HT_WERR("Host based access verified and granted.");
 #endif
 
-  if(access[method]->user || access[method]["valid-user"] 
+  if(access[method]->user || access[method]["valid-user"]
      || access[method]->group)
   {
     HT_WERR("Verifying user access.");
@@ -614,15 +614,15 @@ mapping|string|int htaccess(mapping access, RequestID id)
       return validate(aname);
     } else {
       array(string) auth;
-      
+
       auth = id->realauth/":";
 
-      if((access[method]->user && 
+      if((access[method]->user &&
 	  validate_user(access[method]->user, auth, userfile, id)) ||
 	 (access[method]["valid-user"] &&
 	  validate_user(1, auth, userfile, id)) ||
 	 (access[method]->group &&
-	  validate_group(access[method]->group, auth, 
+	  validate_group(access[method]->group, auth,
 			 groupfile, userfile, id)))
       {
 	HT_WERR("User access ok!");
@@ -669,8 +669,8 @@ void cache_set_path_of_htaccess(string path, string|int htaccess_file, RequestID
   cache_set("htaccess_files:"+id->conf->name, path, htaccess_file);
 }
 
-// This function traverse the virtual filepath to see if there are any 
-// .htaccess files hiding anywhere. When (and if) if finds one, it returns 
+// This function traverse the virtual filepath to see if there are any
+// .htaccess files hiding anywhere. When (and if) if finds one, it returns
 // the full path to it _and_ the actual open file (modified by Per)
 
 array rec_find_htaccess_file(RequestID id, string vpath)
@@ -721,7 +721,7 @@ array rec_find_htaccess_file(RequestID id, string vpath)
 			   "vpath: \"%s\"\n"
 			   "query: \"%s\"\n", path, vpath, id->query + ""));
     }
-  } 
+  }
   array res;
   if(res = rec_find_htaccess_file(id, dot_dot(vpath)))
   {
@@ -744,7 +744,7 @@ array find_htaccess_file(RequestID id)
   // affected is directory listings, but that might be sensitive as well.
   // This is only because of the call to dot_dot below :-)
 
-  if(vpath[-1] == '/') vpath += "gazonk"; 
+  if(vpath[-1] == '/') vpath += "gazonk";
 
   return rec_find_htaccess_file( id, dot_dot(vpath) );
 }
@@ -818,11 +818,11 @@ mapping try_htaccess(RequestID id)
 
 	TRACE_LEAVE("Access Denied (1)");
 
-	return http_low_answer(403, file || 
+	return http_low_answer(403, file ||
 			       ("<title>Access Denied</title>"
 				"<h2 align=center>Access Denied</h2>"));
       }
-      
+
 
       else if(ret == 2) {
 	id->misc->error_code = 403;
@@ -859,9 +859,9 @@ mapping try_htaccess(RequestID id)
 
 	TRACE_LEAVE("Access Denied (mapping)");
 
-	return  (["data":file || 
+	return  (["data":file ||
 		 ("<title>Access Denied</title>"
-		  "<h2 align=center>Access forbidden by user</h2>") ]) 
+		  "<h2 align=center>Access forbidden by user</h2>") ])
 	  | ret; /*Mix the returned mapping with the default message :-)*/
       }
     } else

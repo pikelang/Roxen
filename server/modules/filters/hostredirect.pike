@@ -1,5 +1,4 @@
-
-// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
 // This module redirects requests to different places, depending on the
 // hostname that was used to access the server. It can be used as a
@@ -8,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.19 2000/02/10 04:54:17 nilsson Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.20 2000/03/01 16:57:27 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -17,7 +16,7 @@ inherit "roxenlib";
 
 void create()
 {
-  defvar("hostredirect", "", "Redirect rules", TYPE_TEXT_FIELD, 
+  defvar("hostredirect", "", "Redirect rules", TYPE_TEXT_FIELD,
          "Syntax:<pre>"
          "    ab.domain.com             /ab/\n"
          "    bc.domain.com             /bc/\n"
@@ -72,7 +71,7 @@ void start()
 constant module_type = MODULE_FIRST;
 constant module_name = "Host Redirect, v2";
 constant module_doc  = "This module redirects requests to different places, "
-  "depending on the hostname that was used to access the " 
+  "depending on the hostname that was used to access the "
   "server. It can be used as a cheap way (IP number wise) "
   "to do virtual hosting. <i>Note that this won't work with "
   "all clients.</i>"
@@ -86,16 +85,16 @@ int|mapping first_try(RequestID id)
   if(id->misc->host_redirected || !sizeof(patterns))
   {
     return 0;
-  }  
+  }
 
   id->misc->host_redirected = 1;
   if(!((id->misc->host && (host = lower_case(id->misc->host))) ||
        (id->my_fd && id->my_fd->query_address &&
 	(host = replace(id->my_fd->query_address(1)," ",":")))))
     return 0;
-  
+
   host = (host / ":")[0]; // Remove port number
-  
+
   if(!patterns[host])
   {
     host = "default";
@@ -117,15 +116,15 @@ int|mapping first_try(RequestID id)
     }
     // this is some magic here: in order to allow pictures in the defaultpage
     // they need to be referenced beginning with the same url
-    // as the redirection: 
+    // as the redirection:
     // thus if we redirect default to /servers/ pictures must be referenced as
     // /servers/...
-    // respetively if we redirect to /servers.html, pictures would have to 
+    // respetively if we redirect to /servers.html, pictures would have to
     // be referenced with /servers.html... which obviously doesn't work
-    // to get around this restriction we could compare the 
+    // to get around this restriction we could compare the
     // protocoll://host:port of the referer
     // with the ones of this request, and then assume that the referer
-    // has already been redirected, which eliminates the need to redirect 
+    // has already been redirected, which eliminates the need to redirect
     // this as well
     // however i don't know if this may bring up other problems,
     // this doesn't work if the client doesn't send a referer
@@ -144,31 +143,31 @@ int|mapping first_try(RequestID id)
   {
     to = replace(to, "/%p", "%p");   // maybe there is a better way
     if (id->not_query[-1] == '/')    // to remove double slashes
-      to = replace(to, "%p/", "%p"); // 
+      to = replace(to, "%p/", "%p"); //
 
     to = replace(to, "%p", id->not_query);
     path = 1;
   }
-  
+
   if(search(id->not_query, to) == 0) {
     // Already have the correct beginning...
     return 0;
   }
 
-  if((strlen(to) > 6 && 
-      (to[3]==':' || to[4]==':' || 
+  if((strlen(to) > 6 &&
+      (to[3]==':' || to[4]==':' ||
        to[5]==':' || to[6]==':')))
   {
      to=replace(to, ({ "\000", " " }), ({"%00", "%20" }));
-     return http_low_answer( 302, "") 
+     return http_low_answer( 302, "")
         + ([ "extra_heads":([ "Location":to ]) ]);
   } else {
-    //  if the default file contains images, they will not be found, 
+    //  if the default file contains images, they will not be found,
     //  because they will be redirected just like the original request
     //  without id->not_query. maybe it's possible to check the referer
     //  and if it matches patterns["default"] add the id->not_query after all.
     if(to[0] != '/')
-      to = "/"+ to; 
+      to = "/"+ to;
     if(host != "default" && strlen(to) > 1 && to[-1] == '/')
       to = to[0..strlen(to)-2];
     if((host != "default") && !path )
@@ -176,9 +175,9 @@ int|mapping first_try(RequestID id)
 
     id->not_query = id->scan_for_query( to );
     id->raw_url = http_encode_string(to);
-    //if we internally redirect to the proxy, 
-    //the proxy checks the raw_url for the place toget, 
-    //so we have to update the raw_url here too, or 
+    //if we internally redirect to the proxy,
+    //the proxy checks the raw_url for the place toget,
+    //so we have to update the raw_url here too, or
     //we need to patch the proxy-module
     return 0;
   }

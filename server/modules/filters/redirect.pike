@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
 // The redirect module. Redirects requests from one filename to
 // another. This can be done using "internal" redirects (much like a
 // symbolik link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.15 2000/02/06 20:21:32 nilsson Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.16 2000/03/01 16:57:27 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -15,7 +15,7 @@ private int redirs = 0;
 
 void create()
 {
-  defvar("fileredirect", "", "Redirect patterns", TYPE_TEXT_FIELD, 
+  defvar("fileredirect", "", "Redirect patterns", TYPE_TEXT_FIELD,
 	 "Redirect one file to another. The syntax is 'regexp to_URL',"
 	 "or 'prefix to_URL', or 'exact file_name to_URL<p>Some examples:'"
 	 "<pre>"
@@ -38,8 +38,8 @@ void create()
 
 
 	 "<p>You can use '(' and ')' in the regular expression to "
-	 "separate parts of the from-pattern when using regular expressions." 
-	 " The parts can then be insterted into the 'to' string with " 
+	 "separate parts of the from-pattern when using regular expressions."
+	 " The parts can then be insterted into the 'to' string with "
 	 " $1, $2 etc.\n" " <p>More examples:<pre>"
 	 ".*/SE/liu/lysator/(.*)\.class    /java/classes/SE/liu/lysator/$1.class\n"
 	 "/(.*).en.html                   /(en)/$1.html\n"
@@ -52,7 +52,7 @@ void create()
 	 "For speed reasons: If the from pattern does _not_ contain"
 	 "any '*' characters, it will not be treated like an regular"
 	 "expression, instead it will be treated as a prefix that must "
-	 "match exactly." ); 
+	 "match exactly." );
 }
 
 mapping redirect_patterns = ([]);
@@ -85,7 +85,7 @@ constant module_desc = "The redirect module. Redirects requests from one filenam
 
 string status()
 {
-  return sprintf("Number of patterns: %d+%d=%d, Redirects so far: %d", 
+  return sprintf("Number of patterns: %d+%d=%d, Redirects so far: %d",
 		 sizeof(redirect_patterns),sizeof(exact_patterns),
 		 sizeof(redirect_patterns)+sizeof(exact_patterns),
 		 redirs);
@@ -131,7 +131,7 @@ mixed first_try(object id)
 	    split = Regexp("^"+f)->split;
 	  else
 	    split = Regexp(f)->split;
-	  
+	
 	  if((foo=split(m)))
 	  {
 	    array bar = Array.map(foo, lambda(string s, mapping f) {
@@ -150,7 +150,7 @@ mixed first_try(object id)
 
   if(!to)
     return 0;
-  
+
   string url = id->conf->query("MyWorldLocation");
   url=url[..strlen(url)-2];
   to = replace(to, "%u", url);
@@ -160,13 +160,13 @@ mixed first_try(object id)
   id->misc->is_redirected = 1; // Prevent recursive internal redirects
 
   redirs++;
-  if((strlen(to) > 6 && 
-      (to[3]==':' || to[4]==':' || 
+  if((strlen(to) > 6 &&
+      (to[3]==':' || to[4]==':' ||
        to[5]==':' || to[6]==':')))
   {
      to=replace(to, ({ "\000", " " }), ({"%00", "%20" }));
 
-     return http_low_answer( 302, "") 
+     return http_low_answer( 302, "")
 	+ ([ "extra_heads":([ "Location":to ]) ]);
   } else {
      id->variables = ([]);
