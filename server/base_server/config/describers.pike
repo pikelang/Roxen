@@ -43,11 +43,10 @@ string describe_builtin_variables(object node)
 
 string describe_errors(object node)
 {
-  string err;
-  array report = ({ });
+  array(string) report = ({ });
 
-  foreach(indices(node->data), err)
-    report += ({ (node->data[err]>1?(node->data[err] + " times:<br>"):"") 
+  foreach(indices(node->data), string err)
+    report += ({ ((!intp(node->data[err])||(node->data[err]>1))?(node->data[err] + " times:<br>"):"")
 		   + err + "<hr noshade size=1>" });
 
   if(node->folded)
