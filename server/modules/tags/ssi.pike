@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.41 2001/06/28 21:33:57 nilsson Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.42 2001/06/28 22:22:47 nilsson Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -418,11 +418,16 @@ array(string) simpletag_printenv(string t, mapping m, string c, RequestID id) {
 }
 
 string fix_var(string s, RequestID id) {
-  s=replace(s||"",({"\000","\\$"}),({"","\000"}));
+  s=replace(s||"",({"\0","\\$"}),({"","\0"}));
   int size=sizeof(s);
   if(size>2 && s[size-2..]=="--") s=s[..size-3];
-  if(sizeof(s) && s[0]=='$' && s[1]!='{') return get_var(s[1..], id)||"";
-  return s; //FIXME: No in-string-substitution yet.
+
+  string a,var,b;
+  while( sscanf(s, "%s${%s}%s", a, var, b)==3 )
+    s = a + ((get_var(var, id)-"\0")||"") + b;
+  replace(s, "\0", "$");
+
+  return s;
 }
 
 array(string) simpletag_config(string tag, mapping m, string c, RequestID id)
