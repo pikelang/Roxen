@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.73 1999/08/30 22:06:51 grubba Exp $
+ * $Id: smtp.pike,v 1.74 1999/08/30 22:09:01 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.73 1999/08/30 22:06:51 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.74 1999/08/30 22:09:01 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -275,7 +275,7 @@ static class Smtp_Connection {
 	f(cmd, arg);
       }) {
 	report_error(sprintf("SMTP: %s: Internal error:\n"
-			     "%s\n", cmd, describe_backtrace()));
+			     "%s\n", cmd, describe_backtrace(err)));
 	send(554, ({ sprintf("'%s': Internal error.", cmd) }));
       }
     } else if (command_help[cmd]) {
