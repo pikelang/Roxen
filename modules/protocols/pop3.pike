@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.15 1998/09/28 15:03:57 grubba Exp $
+ * $Id: pop3.pike,v 1.16 1998/09/28 15:07:45 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.15 1998/09/28 15:03:57 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.16 1998/09/28 15:07:45 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -143,7 +143,7 @@ static class Pop_Session
 	return;
       }
 
-      send_ok(sprintf("%s %s", n, mail->get_size()));
+      send_ok(sprintf("%d %d", n, mail->get_size()));
       return;
     }
 
