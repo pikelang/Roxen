@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.364 2002/11/17 18:39:00 mani Exp $
+// $Id: loader.pike,v 1.365 2002/11/18 00:10:22 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -29,7 +29,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.364 2002/11/17 18:39:00 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.365 2002/11/18 00:10:22 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -143,7 +143,7 @@ void add_cvs_ids(mixed to)
   // backtrace_frame is both objectp and arrayp but
   // does not work with foreach. FIXME: Remove this
   // kludge when backtrace_frames is foreach-compatible.
-  if(objectp(to)) return;
+  if(objectp(to)) to=(array)to;
   foreach([array]to, mixed q)
     if(arrayp (q) && sizeof([array]q) && stringp(([array]q)[0])) {
       string id = get_cvs_id(([array(string)]q)[0]);
@@ -154,7 +154,7 @@ void add_cvs_ids(mixed to)
 string describe_backtrace (mixed err, void|int linewidth)
 {
   add_cvs_ids (err);
-  return predef::describe_backtrace (err, 999999);
+  return predef::describe_backtrace (err, linewidth);
 }
 
 static int(0..5) last_was_change;
@@ -274,27 +274,9 @@ void roxen_perror(string format, mixed ... args)
 //! Make a directory hierachy. Path variables will be expanded.
 int mkdirhier(string from, int|void mode)
 {
-  from = roxen_path( from + "x" ); // "x" keeps roxen_path from stripping trailing '/'.
+  from = roxen_path( from );
   from = combine_path(getcwd(), from);
-  array(string) f = from/"/";
-  string b="";
-
-  foreach(f[0..sizeof(f)-2], string a)
-  {
-    if (query_num_arg() > 1) {
-      mkdir(b+a, mode);
-#if constant(chmod)
-      Stdio.Stat stat = file_stat (b + a, 1);
-      if (stat && stat[0] & ~mode)
-	// Race here. Not much we can do about it at this point. :/
-	catch (chmod (b+a, [int]stat[0] & mode));
-#endif
-    }
-    else
-      mkdir(b+a);
-    b+=a+"/";
-  }
-  return (file_stat(b)||({0,0}))[1] == -2;
+  return Stdio.mkdirhier(from, mode);
 }
 
 // --- Prototypes
@@ -756,8 +738,6 @@ Core really_load_core()
   report_debug("\bDone [%.1fms]\n",
 	       (gethrtime()-start_time)/1000.0);
 
-  res->start_time = start_time;
-  res->boot_time = start_time;
   nwrite = res->nwrite;
   return res;
 }
