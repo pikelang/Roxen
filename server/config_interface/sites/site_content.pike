@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.131 2001/11/07 14:00:58 grubba Exp $
+// $Id: site_content.pike,v 1.132 2002/01/11 11:01:19 grubba Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -412,8 +412,16 @@ string module_page( RequestID id, string conf, string module )
 
 string port_for( string url, int settings )
 {
-  url = (url/"#")[0];
-  if(!roxen->urls[url] ) return "";
+  string ourl = (url/"#")[0];
+  url = roxen->normalize_url(url);
+  if(!roxen->urls[url]) {
+    report_debug(sprintf("site_content.pike:port_for(): URL %O not found!\n",
+			 ourl));
+    report_debug(sprintf("Known URLS are:\n"
+			 "%{  %O\n%}\n",
+			 indices(roxen->urls)));
+    return "";
+  }
   Protocol p = roxen->urls[url]->port;
   if(!p) return "<font color='&usr.warncolor;'>Not open</font>";
   string res =(settings?"<table border=0 cellspacing=0 cellpadding=2>":"")+
