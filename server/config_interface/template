@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.109 2002/05/07 14:03:05 jonasw Exp $ -->
+<!-- $Id: template,v 1.110 2002/05/15 15:47:32 jonasw Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -179,7 +179,7 @@
     <div align="right">
       <font size="-1">
   	<if variable="roxen.product-name is Roxen CMS">
-  	  <font color="#bbbbbb">
+  	  <font color="#999999">
 	    <b>Roxen CMS</b>
 	    <font color="#ffbe00">|</font>
 	    version &roxen.dist-version;
