@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.24 2000/02/08 22:55:15 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.25 2000/02/09 14:43:29 nilsson Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -151,16 +151,17 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   if( args->border_image )
   {
     array layers = roxen.load_layers(args->border_image, id);
-    foreach( layers, object l )
-    {
-      ll[l->get_misc_value( "name" )] = l;
-      switch( lower_case((l->get_misc_value( "name" )/" ")[0]) )
+    if(layers)
+      foreach( layers, object l )
       {
-       case "background": background = l; break;
-       case "frame":      frame = l;     break;
-       case "mask":       mask = l;     break;
+        ll[l->get_misc_value( "name" )] = l;
+	switch( lower_case((l->get_misc_value( "name" )/" ")[0]) )
+	{
+	case "background": background = l; break;
+	case "frame":      frame = l;     break;
+	case "mask":       mask = l;     break;
+	}
       }
-    }
   }
 
   //  otherwise load default images
