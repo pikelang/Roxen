@@ -277,7 +277,7 @@ bump_version: bump_version.stamp
 	      fi; \
 	      cvs ci -m "Pike release bumped to $$newbuild by bump_version." src/version.c || exit 1; \
 	      echo "Tagging Pike in $$d..."; \
-	      cvs tag `sed -e '/push_text/s/.*"\(.*\)".*/\1/p' -ed|tr 'A-Z. ' 'a-z__'|head -1`||exit 1; \
+	      cvs tag `sed <src/version.c -e '/push_text/s/.*"\(.*\)".*/\1/p' -ed|tr 'A-Z. ' 'a-z__'|head -1`||exit 1; \
 	      echo Done with $$d.); \
 	  else :; fi; \
 	done
