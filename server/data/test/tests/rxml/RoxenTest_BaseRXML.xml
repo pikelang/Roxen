@@ -2706,7 +2706,7 @@ cd</rxml>
 
 <test>
   <rxml type="string">
-    <define name="fgcolor">#000000</define>
+    <define tag="fgcolor">#000000</define>
     &page.fgcolor;
   </rxml>
   <result>#000000</result>
@@ -2719,7 +2719,7 @@ cd</rxml>
 
 <test>
   <rxml type="string">
-    <define name="bgcolor">#ffffff</define>
+    <define tag="bgcolor">#ffffff</define>
     &page.bgcolor;
   </rxml>
   <result>#ffffff</result>
@@ -2732,7 +2732,7 @@ cd</rxml>
 
 <test>
   <rxml type="string">
-    <define name="theme_bgcolor">#ffffaa</define>
+    <define tag="theme_bgcolor">#ffffaa</define>
     &page.theme-bgcolor;
   </rxml>
   <result>#ffffaa</result>
@@ -2745,7 +2745,7 @@ cd</rxml>
 
 <test>
   <rxml type="string">
-    <define name="theme_fgcolor">#ff8c00</define>
+    <define tag="theme_fgcolor">#ff8c00</define>
     &page.theme-fgcolor;
   </rxml>
   <result>#ff8c00</result>
@@ -2758,7 +2758,7 @@ cd</rxml>
 
 <test>
   <rxml type="string">
-    <define name="theme_language">swe</define>
+    <define tag="theme_language">swe</define>
     &page.theme-language;
   </rxml>
   <result>swe</result>
