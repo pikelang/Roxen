@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.89 2003/10/21 18:42:08 grubba Exp $
+ * $Id: ftp.pike,v 2.90 2004/02/24 15:49:47 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1736,13 +1736,18 @@ class FTPSession
 
     f->set_nonblocking(lambda(mixed ignored, string data) {
 			 DWRITE("FTP: async_connect ok. Got data.\n");
-			 f->set_nonblocking(0,0,0);
+			 f->set_nonblocking(0,0,0,0,0);
 			 fun(f, data, @args);
 		       },
 		       lambda(mixed ignored) {
 			 DWRITE("FTP: async_connect ok.\n");
-			 f->set_nonblocking(0,0,0);
+			 f->set_nonblocking(0,0,0,0,0);
 			 fun(f, "", @args);
+		       },
+		       lambda(mixed ignored) {
+			 DWRITE("FTP: connect_and_send failed\n");
+			 destruct(f);
+			 fun(0, 0, @args);
 		       },
 		       lambda(mixed ignored) {
 			 DWRITE("FTP: connect_and_send failed\n");
@@ -2799,7 +2804,9 @@ class FTPSession
       // Compatibility...
       master_session->misc->home = home;
 
-      array(int)|object st = conf->stat_file(home, master_session);
+      object session = RequestID2(master_session);
+      session->method = "STAT";
+      array(int)|object st = conf->stat_file(home, session);
 
       if (st && (st[1] < 0)) {
 	cwd = home;
