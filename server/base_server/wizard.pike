@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.51 1998/02/20 11:16:36 per Exp $
+/* $Id: wizard.pike,v 1.52 1998/02/21 22:25:03 js Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -437,7 +437,7 @@ object get_wizard(string act, string dir, mixed ... args)
 }
 
 int zonk=time();
-mapping get_actions(string base,string dir, array args)
+mapping get_actions(object id, string base,string dir, array args)
 {
   mapping acts = ([  ]);
   foreach(get_dir(dir), string act)
@@ -451,9 +451,15 @@ mapping get_actions(string base,string dir, array args)
 	string sm,rn = (get_wizard(act,dir,@args)->name||act), name;
 	if(sscanf(rn, "%*s:%s", name) != 2) name = rn;
 	sscanf(name, "%s//%s", sm, name);
-	if(!acts[sm]) acts[sm] = ({ });
-	acts[sm]+=
-	  ({"<!-- "+rn+" --><dt><font size=\"+2\">"
+	if(!acts[sm]) acts[sm] = ({ ([]) });
+
+	if(id->misc->raw_wizard_actions)
+ 	  acts[sm][0][name]=
+ 	    ({ name, base, (["action":act,"unique":(string)(zonk++) ]),
+ 		  (get_wizard(act,dir,@args)->doc||"") });
+ 	else
+	  acts[sm]+=
+	    ({"<!-- "+rn+" --><dt><font size=\"+2\">"
 	      "<a href=\""+base+"?action="+act+"&unique="+(zonk++)+"\">"+
 	      name+"</a></font><dd>"+(get_wizard(act,dir,@args)->doc||"")});
       }
@@ -490,7 +496,9 @@ mixed wizard_menu(object id, string dir, string base, mixed ... args)
   {
     mixed wizbug;
     wizbug = catch {
-      mapping acts = get_actions(base, dir, args);
+      mapping acts = get_actions(id, base, dir, args);
+      if(id->misc->raw_wizard_actions)
+	return acts[id->variables->sm];
       string res;
       res= ("<table cellpadding=3><tr><td valign=top bgcolor=#eeeeee>"+
 	    act_describe_submenues(indices(acts),base,id->variables->sm)+
