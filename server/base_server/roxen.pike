@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.88 1997/08/04 12:57:38 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.89 1997/08/05 03:32:25 mast Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -2133,7 +2133,7 @@ varargs int main(int argc, array (string) argv)
 			       ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }),
 			       "../configurations");
 
-  if(configuration_dir[-1] != "/")
+  if(configuration_dir[-1] != '/')
     configuration_dir += "/";
 
 
