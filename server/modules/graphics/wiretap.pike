@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.11 2000/03/16 17:32:33 nilsson Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.12 2000/03/21 21:47:05 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -186,3 +186,45 @@ class TagColorScope {
     }
   }
 }
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+  "colorscope":#"<desc cont>Makes it possible to change the autodetected
+colors within the tag. Useful when out-of-order parsing occurs, e.g.
+<ex type=box>
+<define tag=\"hello\">
+  <colorscope bgcolor=\"red\">
+    <gtext>Hello</gtext>
+  </colorscope>
+</define>
+
+<table><tr>
+  <td bgcolor=\"red\">
+    <hello/>
+  </td>
+</tr></table>
+</ex>
+</desc>
+
+<attr name=text value=color>
+ Set the text color within the scope.
+</attr>
+
+<attr name=bgcolor value=color>
+ Set the background color within the scope.
+</attr>
+
+<attr name=link value=color>
+ Set the link color within the scope.
+</attr>
+
+<attr name=alink value=color>
+ Set the active link color within the scope.
+</attr>
+
+<attr name=vlink value=color>
+ Set the visited link color within the scope.
+</attr>"
+]);
+#endif
