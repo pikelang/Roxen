@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.51 1998/05/25 20:50:29 neotron Exp $
+ * $Id: ftp2.pike,v 1.52 1998/06/04 21:09:43 neotron Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -350,7 +350,7 @@ class PutFileWrapper
 
   static mixed my_read_callback(mixed id, string data)
   {
-    DWRITE(sprintf("FTP: PUT: my_read_callback(X, \"%s\")\n", data||""));
+    DWRITE(sprintf("FTP: PUT: my_read_callback(X, \"%s\")\n", data||""));   
     ftpsession->touch_me();
     if(stringp(data))
       recvd += sizeof(data);
@@ -1237,6 +1237,7 @@ class FTPSession
 
   static private constant site_help = ([
     "CHMOD":"<sp> mode <sp> file",
+    "UMASK":"<sp> mode",
     "PRESTATE":"<sp> prestate",
   ]);
   
@@ -2978,6 +2979,38 @@ class FTPSession
     }
   }
   
+  void ftp_SITE_UMASK(array(string) args)
+  {
+    if (sizeof(args) < 1) {
+      send(501, ({ sprintf("'SITE UMASK %s': incorrect arguments",
+			   args*" ") }));
+      return;
+    }
+    
+    int mode;
+    foreach(args[0] / "", string m)
+      // We do this loop, instead of using a sscanf or cast to be able
+      // to catch arguments which aren't an octal number like 0891.
+    {
+      mode *= 010;
+      if(m[0] < '0' || m[0] > '7')
+      {
+	// This is not an octal number...
+	mode = -1;
+	break;
+      }
+      mode += (int)("0"+m);
+    }
+    if(mode == -1 || mode > 0777)
+    {
+      send(501, ({ "SITE UMASK: mode should be between 0 and 0777" }));
+      return;
+    }
+
+    master_session->misc->umask = mode;
+    send(250, ({ sprintf("Umask set to 0%o.", mode) }));
+  }
+
   void ftp_SITE_PRESTATE(array(string) args)
   {
     if (!sizeof(args)) {

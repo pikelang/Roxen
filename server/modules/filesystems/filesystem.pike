@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.41 1998/05/26 08:41:08 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.42 1998/06/04 21:09:45 neotron Exp $";
 constant thread_safe=1;
 
 
@@ -429,6 +429,7 @@ mixed find_file( string f, object id )
 
     privs = 0;
     if (code) {
+      chmod(f, 0777 & ~(id->misc->umask || 022));
       TRACE_LEAVE("MKDIR: Success");
       TRACE_LEAVE("Success");
       return http_string_answer("Ok");
@@ -483,7 +484,7 @@ mixed find_file( string f, object id )
     }
 
     object to = open(f, "wc");
-
+    
     privs = 0;
 
     if(!to)
@@ -493,7 +494,7 @@ mixed find_file( string f, object id )
       TRACE_LEAVE("Failure");
       return 0;
     }
-
+    chmod(f, 0666 & ~(id->misc->umask || 022));
     putting[id->my_fd]=id->misc->len;
     if(id->data && strlen(id->data))
     {
