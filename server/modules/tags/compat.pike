@@ -24,7 +24,7 @@ array register_module()
 void create(object c)
 {
   defvar("logold", 0, "Log all old RXML calls in the event log.",
-         TYPE_FLAG|VAR_MORE,
+         TYPE_FLAG,
          "If set, all calls though the backward compatibility code will be"
          "logged in the event log, enabeling you to upgrade those RXML tags.");
 }
