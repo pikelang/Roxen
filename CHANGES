@@ -5,6 +5,49 @@ o Added option to create FTP servers.
 
 o Reenabled the "Roxen is alive!" output even if DEBUG isn't defined.
 
+o Added option to attempt setting of the RoxenUserID cookie only once.
+  Thanks to Francesco 'Kinkie' Chemolli <kinkie@kame.usr.dsi.unimi.it>.
+
+o Added option to disable sym-link following to the normal filesystem.
+
+o Added language modules for Croatian and Slovenian.
+
+o cgi.c now compiles on HPUX again.
+
+o Pike updated to 0.5b9.
+
+o SSL3 speeded up.
+
+o color.pike rgb_to_hsv() fixed for grayscales.
+
+o Module-level security now supports combinations of allow ip and allow user.
+
+o Some patches to the disk-cache.
+
+o Support for several font directories added.
+
+o roxen_hostname now started as root.
+
+o language-modules are now initialized in a sfer way.
+
+o privs.pike now contains a default-entry for the root user.
+
+o MIME.decode_base64() now used to decode HTTP-passwords.
+
+o Now gets updates from www.roxen.com instead of roxen.com.
+
+o Reloading of the "New module" page now only recompiles the modified modules.
+
+o Some fixes to parse_rxml().
+
+o Some fixes to the relay-module.
+
+o Gtext-module now supports scroll.
+
+o Fixed CGI-bug.
+
+o Fixed FTP security bug.
+
 
 Changes since Roxen Challenger 1.2 alpha 5
 -----------------------------------------------
