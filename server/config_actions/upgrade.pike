@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.30 1997/09/18 01:42:33 grubba Exp $
+ * $Id: upgrade.pike,v 1.31 1997/12/16 18:43:28 grubba Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -151,7 +151,11 @@ mapping extract_module_info(array from)
       {
 	sscanf(mod, "%*s$Id: %*s.pike,v %s ", version);
 #ifdef DEBUG
-	werror("Version: " + version + "\n");
+	if (version) {
+	  werror(fname + " Version: " + version + "\n");
+	} else {
+	  werror("No version info in \"" + fname + "\"\n");
+	}
 #endif
       }
     }
