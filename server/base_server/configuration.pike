@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.302 2000/04/11 04:53:44 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.303 2000/04/12 19:42:52 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2580,7 +2580,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
       } else {
 	me->definvisvar("_seclvl", -10, TYPE_INT); /* A very low one */
 
-	me->defvar("_sec_group", "user", "Proxy Security: Realm", TYPE_STRING,
+	me->defvar("_sec_group", "user", "Security: Realm", TYPE_STRING,
 		   "The realm to use when requesting password from the "
 		   "client. Usually used as an informative message to the "
 		   "user.");
@@ -2598,7 +2598,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 
 
 
-	me->defvar("_seclevels", "", "Proxy security: Patterns",
+	me->defvar("_seclevels", "", "Security: Patterns",
 		   TYPE_TEXT_FIELD,
 		   "This is the 'security level=value' list.<br>"
 		   "Each security level can be any or more from "
@@ -2666,35 +2666,35 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     me->defvar("_priority", 0, "", TYPE_INT, "", 0, 1);
   }
 
-  me->defvar("_comment", "", " Comment", TYPE_TEXT_FIELD|VAR_MORE,
-	     "An optional comment. This has no effect on the module, it "
-	     "is only a text field for comments that the administrator "
-	     "might have (why the module are here, etc.)");
+//   me->defvar("_comment", "", " Comment", TYPE_TEXT_FIELD|VAR_MORE,
+// 	     "An optional comment. This has no effect on the module, it "
+// 	     "is only a text field for comments that the administrator "
+// 	     "might have (why the module are here, etc.)");
 
-  me->deflocaledoc("deutsch", "_comment",
-                   "Kommentar",
-                   "Ein Kommentar, der keinen technischen Einfluss "
-                   "auf das Modul hat, sondern lediglich ein Textfeld "
-                   "für Kommentare seitens des Administrators ist.");
-  me->deflocaledoc("svenska", "_comment",
-		   "Kommentar",
-		   "En kommentar. Den här kommentaren påverkar inte "
-		   " funktionaliteten hos modulen på något sätt, den "
-		   " syns bara i konfigurationsinterfacet.");
+//   me->deflocaledoc("deutsch", "_comment",
+//                    "Kommentar",
+//                    "Ein Kommentar, der keinen technischen Einfluss "
+//                    "auf das Modul hat, sondern lediglich ein Textfeld "
+//                    "für Kommentare seitens des Administrators ist.");
+//   me->deflocaledoc("svenska", "_comment",
+// 		   "Kommentar",
+// 		   "En kommentar. Den här kommentaren påverkar inte "
+// 		   " funktionaliteten hos modulen på något sätt, den "
+// 		   " syns bara i konfigurationsinterfacet.");
 
 
 
-  me->defvar("_name", "", " Module name", TYPE_STRING|VAR_MORE,
-	     "An optional name. You can set it to something to remind you what "
-	     "the module really does.");
+//   me->defvar("_name", "", "Module name", TYPE_STRING|VAR_MORE,
+// 	     "An optional name. You can set it to something to remind you what "
+// 	     "the module really does.");
 
-  me->deflocaledoc("deutsch", "_name", "Modul-Name",
-		   "Modul-Name.  Hier kann ein beliebiger Wert eingetragen "
-                   "werden, um die Funktionsweise des Moduls zu beschreiben.");
-  me->deflocaledoc("svenska", "_name", "Namn",
-		   "Modulens namn. Om den här variablen är satt så "
-		   "används dess värde istället för modulens riktiga namn "
-		   "i konfigurationsinterfacet.");
+//   me->deflocaledoc("deutsch", "_name", "Modul-Name",
+// 		   "Modul-Name.  Hier kann ein beliebiger Wert eingetragen "
+//                    "werden, um die Funktionsweise des Moduls zu beschreiben.");
+//   me->deflocaledoc("svenska", "_name", "Namn",
+// 		   "Modulens namn. Om den här variablen är satt så "
+// 		   "används dess värde istället för modulens riktiga namn "
+// 		   "i konfigurationsinterfacet.");
 
   mapping(string:mixed) stored_vars = retrieve(modname + "#" + id, this_object());
   int has_stored_vars = sizeof (stored_vars); // A little ugly, but it suffices.
