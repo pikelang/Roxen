@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.29 1998/03/20 03:51:53 per Exp $
+# $Id: start,v 1.30 1998/03/26 07:35:00 per Exp $
 
 VERSION=201; BETA=.a;
 
@@ -97,6 +97,9 @@ parse_args() {
   ;;
   '--debug')
     debug=1
+  ;;
+  '--fd-debug')
+    DEFINES="-DFD_DEBUG $DEFINES"
   ;;
   '--threads')
     DEFINES="-DENABLE_THREADS $DEFINES"
