@@ -1,6 +1,6 @@
 // Some debug tools.
 //
-// $Id: RoxenDebug.pmod,v 1.9 2004/09/20 18:08:31 mast Exp $
+// $Id: RoxenDebug.pmod,v 1.10 2004/09/28 11:56:39 mast Exp $
 
 
 //! Helper to locate leaking objects. Use a line like this to mark a
@@ -111,6 +111,8 @@ class ObjectMarker
 //!
 string report_leaks (void|int clear)
 {
+  if (!sizeof (object_markers))
+    return "";
   string res = "leaks: " +
     sort (map (indices (object_markers),
 	       lambda (string id) {
