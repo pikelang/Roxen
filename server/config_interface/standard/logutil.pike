@@ -102,7 +102,7 @@ string describe_error(string err, array (int) times,
 
 
 // Returns ({ URL to module config page, human-readable (full) module name })
-array(string) get_conf_url_to_module(string|object(RoxenModule) m, string lang)
+array(string) get_conf_url_to_module(string|object(RoxenModule) m, string|void lang)
 { // module is either a RoxenModule object or a string as returned by
   // get_modname(some RoxenModule), eg "ConfigInterface/piketag#0"
   RoxenModule module = stringp(m) ? get_module(m) : m;
