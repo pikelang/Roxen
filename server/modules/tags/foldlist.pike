@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1999 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.36 2004/05/27 16:19:36 _cvs_stephen Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.37 2004/05/27 18:28:44 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -171,7 +171,7 @@ class TagFoldlist {
 	states[index]=!show+1;
 	result="<dt><a target=\"_self\" href=\""+
 	  encode_url(states, id)+
-	  "\"><img src=\""+
+	  "\"><imgs src=\""+
 	  (args[(show?"un":"")+"foldedsrc"]||id->misc->foldlist[(show?"u":"")+"fsrc"])+
 	  "\" border=\"0\" alt=\""+({ "+", "-" })[show]+"\" /></a>"+
 	  content+"</dt>";

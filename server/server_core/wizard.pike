@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.153 2004/05/27 16:19:38 _cvs_stephen Exp $
+// $Id: wizard.pike,v 1.154 2004/05/27 18:28:45 _cvs_stephen Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -301,7 +301,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
             "width='128' height='128' border='0'></td>\n"
       "  </table>\n"
       "</td>\n"
-      "<td width='8' rowspan='2'><imgs src='/%01/unit' width='8' />"
+      "<td width='8' rowspan='2'><img src='/%01/unit' width='8' />"
       "</td>\n"
       "<td width='18' rowspan='2'>\n"
       "  <table bgcolor='#000000' cellpadding='1' border='0' cellspacing='0'>"
@@ -311,7 +311,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
             "name='"+m->name+".bar' width='16' height='128' border='0'></td>\n"
       "  </table>\n"
       "</td>\n"
-      "<td width='8' rowspan='2'><imgs src='/%01/unit' width='8' />"
+      "<td width='8' rowspan='2'><img src='/%01/unit' width='8' />"
       "</td>\n"
       "<td>\n"
       "  <table bgcolor='#000000' width='64' border='3' "
@@ -392,7 +392,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "             width='128' height='128' style='cursor: crosshair'"
        "             onClick='PREFIX_colsel_click(event, 0); return false;'"
        "        /></td>"
-       "      <td><imgs id='PREFIX_colorbar' width='16' height='128'"
+       "      <td><img id='PREFIX_colorbar' width='16' height='128'"
        " src='/%01/colorbar-small:" + h + "," + v + ",-1'"
        "               style='cursor: pointer'"
        "               onClick='PREFIX_colsel_click(event, 1); return false;'"

@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.300 2004/05/24 23:12:56 mani Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.301 2004/05/27 18:28:42 _cvs_stephen Exp $";
 
 #include <module.h>
 inherit "module";
@@ -314,7 +314,7 @@ shadow=\"40,2\">&lt;gtext shadow=40,2&gt;</gtext></ex>
  Place the text centered in a box of the given color below the image
  area. Useful together with background to make captions for images.</p>
  <ex>
-<img src=\"/%01/chili-small-white\" /> &nbsp;
+<imgs src=\"/%01/chili-small-white\" /> &nbsp;
 <gtext scale=\"0.5\" background=\"/%01/chili-small-white\"
 textbelow=\"#c0c0c0\">ChiliMoon</gtext>
  </ex>
@@ -523,7 +523,7 @@ magic-glow=\"red\" magic-fg=\"white\">Mouse me!</gtext></ex>
 <gtext-id font='FranklinGothicDemi' fgcolor='blue'/>
 </define>
 
-<img src='&var.id;Please type some text here:'
+<imgs src='&var.id;Please type some text here:'
      alt='' name='banner' width='468' height='60' />
 
 <script language='javascript'>

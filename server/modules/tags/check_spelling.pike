@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.18 2001/09/21 15:58:14 jhs Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.19 2004/05/27 18:28:44 _cvs_stephen Exp $";
 
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Spell checker";
@@ -81,7 +81,7 @@ string do_spell(string q, mapping args, string content,RequestID id)
 
   if(args->report||query("report")=="popup") {
     if(!sizeof(result))
-      return "<img src=\""+query_absolute_internal_location(id)+"green.gif\">"+content;
+      return "<imgs src=\""+query_absolute_internal_location(id)+"green.gif\" />"+content;
 
     if(!id->misc->__checkspelling) {
       id->misc->__checkspelling=1;
@@ -169,7 +169,7 @@ function checkPopupCoord(e)
     ret+="<style>#"+popupid+" {position:absolute; left:0; top:0; visibility:hidden}</style>";
     ret+="<div id=\""+popupid+"\">"+render_table(result)+"</div>";
 
-    ret+= "<a href=\"\" onMouseOver='if(isNav4) showPopup(\""+popupid+"\",event);else showPopup(\""+popupid+"\");'><img border=0 src=\""+query_absolute_internal_location(id)+"red.gif\"></a>"+content;
+    ret+= "<a href=\"\" onMouseOver='if(isNav4) showPopup(\""+popupid+"\",event);else showPopup(\""+popupid+"\");'><imgs border=0 src=\""+query_absolute_internal_location(id)+"red.gif\" /></a>"+content;
 
     id->misc->__checkspelling++;
     return ret;

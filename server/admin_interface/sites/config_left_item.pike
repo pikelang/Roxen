@@ -59,7 +59,7 @@ string selected_item( string q, Configuration c, RequestID id,
      "width='&usr.left-buttonwidth;' bgcolor='&usr.left-buttonbg;' "
      "icon_src='&usr.selected-indicator;' "
      "align_icon='left'>Sites</gbutton><br />"
-     "<imgs src='/%01/unit' width='1' height='1'/><br />"
+     "<img src='/%01/unit' width='1' height='1'/><br />"
      "<gbutton frame-image='&usr.left-buttonframe;' "
      "width='&usr.left-buttonwidth;' "+
      (module == "" ?
@@ -257,7 +257,7 @@ string selected_item( string q, Configuration c, RequestID id,
       else
         pre +=
           "<tr><td>"
-	  "<imgs src='/%01/unit' width=1 height=3 /></td></tr>\n"
+	  "<img src='/%01/unit' width=1 height=3 /></td></tr>\n"
           "<tr><td valign='top' width='0%'>"
           "<imgs src='&usr." + (unfolded&&fold ? "unfolded" : sel) + ";' "
 	  "      vspace='1' hspace='4' alt='' /></td>"

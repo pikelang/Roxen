@@ -9,7 +9,7 @@
 //  o Add readme support
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.99 2002/11/07 15:54:39 mani Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.100 2004/05/27 18:28:42 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 constant default_template= #"
@@ -36,7 +36,7 @@ constant default_template= #"
          <if variable='form.reverse'>
           <cset variable='var.doreverse'>sort-reverse</cset>
           <if match='&form.sort; is &_.order;'>
-            <img src='/%01/up' />
+            <imgs src='/%01/up' />
           </if>
           <else>
             <font size='-1'>&nbsp;</font>
@@ -45,7 +45,7 @@ constant default_template= #"
          </if>
          <else>
          <if match='&form.sort; is &_.order;'>
-          <img src='/%01/down' />
+          <imgs src='/%01/down' />
           <a href='?sort=&_.order;&reverse=1'><font color='black'>&_.title;</font></a> &nbsp;
         </if>
         <else>
@@ -73,7 +73,7 @@ constant default_template= #"
             sort-order='&form.sort;'
             ::='&var.doreverse;'>
         <tr bgcolor='#909090'>
-          <td align='left'><a href='&_.name:url;'><img src='/&_.type-img;' border='0' /></a></td>
+          <td align='left'><a href='&_.name:url;'><imgs src='/&_.type-img;' border='0' /></a></td>
           <td align='left'><a href='&_.name:url;'>&_.name;</a> &nbsp;</td>
           <td align='right'>&_.size; &nbsp;</td>
           <td align='right'>&_.type; &nbsp;</td>

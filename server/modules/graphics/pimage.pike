@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
 
-string cvs_version="$Id: pimage.pike,v 1.32 2004/05/23 14:14:37 _cvs_dirix Exp $";
+string cvs_version="$Id: pimage.pike,v 1.33 2004/05/27 18:28:43 _cvs_stephen Exp $";
 
 #include <module.h>
 inherit "module";
@@ -130,7 +130,7 @@ class Constructors
     string tag(mapping m)
     {
       if(m->notrans) bg=0;
-      if(!image) return "<img src=\"$BASE\" alt=\"\" "
+      if(!image) return "<imgs src=\"$BASE\" alt=\"\" "
 		   "align=\""+(m->align||"baseline")+"\" />";
       return ("<img src=\"$BASE\" alt=\"\" width="+
 	      image->xsize()+" height="+image->ysize()+" align=\""

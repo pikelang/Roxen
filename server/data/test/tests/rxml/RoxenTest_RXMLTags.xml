@@ -7,7 +7,7 @@
 
 <test>
 <rxml><configimage src="unit" noxml=''/></rxml>
-<result><img alt="unit" border="0" src="/%01/unit"></result>
+<result><img alt="unit" border="0" src="/%01/unit" /></result>
 </test>
 
 <test>
@@ -25,7 +25,7 @@
 
 <test>
 <rxml><imgs src="/%01/unit" noxml=''/></rxml>
-<result><img alt="Unit" height="1" src="/%01/unit" width="1"></result>
+<result><img alt="Unit" height="1" src="/%01/unit" width="1" /></result>
 </test>
 
 

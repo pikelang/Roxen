@@ -7,7 +7,7 @@
 
 <table width="100%"  border="0" cellspacing="0" cellpadding="0">
   <tr>
-    <td><img src="/%01/chilimoon-white" border="0" alt="ChiliMoon" hspace="2" /></td>
+    <td><imgs src="/%01/chilimoon-white" border="0" alt="ChiliMoon" hspace="2" /></td>
     <td>&nbsp;</td>
     <td align="right"><b>&roxen.version;</b></td>
   </tr>

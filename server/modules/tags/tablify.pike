@@ -1,6 +1,6 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.74 2004/05/23 02:39:59 _cvs_stephen Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.75 2004/05/27 18:28:44 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -382,7 +382,7 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
         r+="<font color=\""+(opt->titlecolor||"#ffffff")+"\">"+s+"</font>";
       else
         r+=s;
-      r+=(opt["interactive-sort"]?(abs(opt->sortcol||0)==col?"<img hspace=\"5\" src=\"internal-roxen-sort-"+
+      r+=(opt["interactive-sort"]?(abs(opt->sortcol||0)==col?"<imgs hspace=\"5\" src=\"internal-roxen-sort-"+
         (opt->sortcol<0?"asc":"desc")+"\" border=\"0\">":"")+
         "</a>":"")+"&nbsp;</th>";
     }

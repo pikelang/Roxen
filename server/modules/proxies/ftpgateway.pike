@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 // This module implements an ftp proxy
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.42 2004/05/23 14:14:39 _cvs_dirix Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.43 2004/05/27 18:28:43 _cvs_stephen Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -36,7 +36,7 @@ Content-type: text/html\r\n
 <font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+"</a></font>";
 
 string INFOSTRING="<font size=\"-2\"><a href=\"http://www.roxen.com/\">"+roxen->version()+
-                  "</a> FTP Gateway "+("$Revision: 1.42 $"-"$")+"</font>";
+                  "</a> FTP Gateway "+("$Revision: 1.43 $"-"$")+"</font>";
 
 #define _ERROR_MESSAGE(XXXX) ("HTTP/1.0 500 FTP gateway error\r\nContent-type: text/html\r\n\r\n<title>Ftp gateway error</title>\n<h2>FTP Gateway failed:</h2><hr><font size=+1>"XXXX"</font><hr>"+INFOSTRING)
 
@@ -193,18 +193,18 @@ class Request {
     if (effect=="inline")
     {
       if (master->query("icons")=="Yes")
-	return sprintf("<a href=\"%s\"><img src=%s border=0 alt=\"\"> %-*s"
-		       "</a>%12s %s %s\n<a href=\"%s\"><img src=%s></a>\n",
+	return sprintf("<a href=\"%s\"><imgs src=%s border=0 alt=\"\" /> %-*s"
+		       "</a>%12s %s %s\n<a href=\"%s\"><imgs src=%s /></a>\n",
 		       href,icon,spacelen,filename,size?(string)size:"",date,
 		       desc?sprintf(" %-15s %s", type, desc): type,href,href);
       else
 	return sprintf("<a href=\"%s\">%-*s</a>%12s %s %s\n<a href=\"%s\">"
-		       "<img src=%s></a>\n",
+		       "<imgs src=%s /></a>\n",
 		       href,spacelen,filename,size?(string)size:"",date,
 		       desc?sprintf(" %-15s %s", type, desc): type,href,href);
     }
     if (master->query("icons")=="Yes"&& effect!="noicons")
-      return sprintf("<a href=\"%s\"><img src=%s border=0 alt=\"\"> %-*s</a>"
+      return sprintf("<a href=\"%s\"><imgs src=%s border=0 alt=\"\" /> %-*s</a>"
 		     "%12s %s %s \n",
 		     href,icon,spacelen,filename,size?(string)size:"",
 		     date, desc?sprintf(" %-15s %s", type, desc): type);
