@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.28 1998/09/12 19:14:40 grubba Exp $
+ * $Id: smtp.pike,v 1.29 1998/09/12 19:22:33 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.28 1998/09/12 19:14:40 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.29 1998/09/12 19:22:33 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -712,7 +712,7 @@ static class Smtp_Connection {
 	roxen_perror(sprintf("SMTP: RCPT:%O\n", recipient));
 #endif /* SMTP_DEBUG */
 	if (sizeof(recipient)) {
-	  recipient = lower_case(recipient);
+	  recipient = lower_case(do_parse_address(recipient)[0]);
 	  foreach(conf->get_providers("smtp_filter")||({}), object o) {
 	    // roxen_perror("Got SMTP filter\n");
 	    if (functionp(o->verify_recipient) &&
