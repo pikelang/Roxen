@@ -13,7 +13,7 @@ static int check_jre_dir(string dir)
 static string findjre()
 {
   string dir =
-    (Process.popen("java -verbose 2>&1 | /bin/sed -n -e 's/^[^/]*//' -e "
+    (Process.popen("java -verbose 2>&1 | sed -n -e 's/^[^/]*//' -e "
 		   "'s:/lib/rt.jar .*$::' -e p -e q")||"")-"\n";  
   if(check_jre_dir(dir))
     return dir;
