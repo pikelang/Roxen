@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.148 2000/02/23 01:35:35 mast Exp $
+// $Id: rxml.pike,v 1.149 2000/02/24 04:07:53 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -25,34 +25,46 @@ inherit "rxmlhelp";
 
 // ----------------------- Error handling -------------------------
 
-string rxml_error(string tag, string error, RequestID id) {
-  return (id->misc->debug?sprintf("(%s: %s)",capitalize(tag),error):"")+"<false>";
-}
-
-string handle_run_error (RXML.Backtrace err, RXML.Type type)
+function _run_error;
+string handle_run_error (RXML.Backtrace err, RXML.Type type, RequestID id)
 // This is used to report thrown RXML run errors. See
 // RXML.run_error().
 {
+  if(id->conf->get_provider("RXMLRunError")) {
+    if(!_run_error)
+      _run_error=id->conf->get_provider("RXMLRunError")->rxml_run_error;
+    string res=_run_error(err, type, id);
+    if(res) return res;
+  }
+  string where=sprintf("Error in %s.\n",id->raw_url);
 #ifdef MODULE_DEBUG
   // FIXME: Make this a user option.
-  report_notice (describe_error (err));
+  report_notice (where + describe_error (err));
 #endif
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml))
-    return "<br clear=all />\n<pre>" +
+    return "<br clear=\"all\" />\n<pre>" +
       html_encode_string (describe_error (err)) + "</pre>\n";
   else return describe_error (err);
 }
 
-string handle_parse_error (RXML.Backtrace err, RXML.Type type)
+function _parse_error;
+string handle_parse_error (RXML.Backtrace err, RXML.Type type, RequestID id)
 // This is used to report thrown RXML parse errors. See
 // RXML.parse_error().
 {
+  if(id->conf->get_provider("RXMLParseError")) {
+    if(!_parse_error)
+      _parse_error=id->conf->get_provider("RXMLParseError")->rxml_parse_error;
+    string res=_parse_error(err, type, id);
+    if(res) return res;
+  }
+  string where=sprintf("Error in %s.\n",id->raw_url);
 #ifdef MODULE_DEBUG
   // FIXME: Make this a user option.
-  report_notice (describe_error (err));
+  report_notice (where + describe_error (err));
 #endif
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml))
-    return "<br clear=all />\n<pre>" +
+    return "<br clear=\"all\" />\n<pre>" +
       html_encode_string (describe_error (err)) + "</pre>\n";
   else return describe_error (err);
 }
@@ -103,7 +115,18 @@ class ScopeRoxen {
      case "time":
        return time(1);
      case "server":
-       return c->id->conf->query("MyWorldLocation");
+       //FIXME: Does this code always work?
+       string world_url = c->id->conf->query("MyWorldLocation");
+       if (world_url == "") world_url = 0;
+       array(string) urls = c->id->conf->query("URLs");
+       string hostname = gethostname();
+       for (int i = 0; i < sizeof (urls); i++) {
+	 if (world_url && glob (urls[i], world_url)) urls[i] = 0;
+	 else if (sizeof (urls[i]/"*") == 2)
+	   urls[i] = replace(urls[i], "*", hostname);
+       }
+       if (world_url) urls = ({world_url}) | (urls - ({0}));
+       return urls*"";
     }
     :: `[] (var, c, scope);
   }
