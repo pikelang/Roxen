@@ -3,11 +3,12 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.326 2002/10/02 23:00:07 mast Exp $
+// $Id: rxml.pike,v 1.327 2002/10/23 16:49:14 mast Exp $
 
 
 inherit "rxmlhelp";
 #include <config.h>
+#include <request_trace.h>
 
 
 // ------------------------- RXML Parser ------------------------------
@@ -81,7 +82,14 @@ RXML.TagSet rxml_tag_set = class
     // that uses id->misc->defines after the rxml evaluation.
     if (mapping defines = id->misc->defines) {
       if (defines != misc) {
-	if (defines->rxml_misc) ctx->id_defines = defines;
+	if (defines->rxml_misc) {
+	  SIMPLE_TRACE_ENTER (owner, "Preparing for nested RXML parse - "
+			      "moving away existing id->misc->defines");
+	  ctx->id_defines = defines;
+	}
+	else
+	  SIMPLE_TRACE_ENTER (owner, "Preparing for top level RXML parse - "
+			      "replacing id->misc->defines");
 
 	// These settings ought to be in id->misc but are in this
 	// mapping for historical reasons.
@@ -90,9 +98,17 @@ RXML.TagSet rxml_tag_set = class
 
 	id->misc->defines = misc;
       }
+      else
+	SIMPLE_TRACE_ENTER (owner, "Preparing for %s RXML parse - "
+			    "id->misc->defines is already the same as "
+			    "RXML_CONTEXT->misc",
+			    defines->rxml_misc ? "nested" : "top level");
     }
-    else
+    else {
+      SIMPLE_TRACE_ENTER (owner, "Preparing for top level RXML parse - "
+			  "initializing id->misc->defines");
       id->misc->defines = misc;
+    }
     misc->rxml_misc = 1;
 
 #if ROXEN_COMPAT <= 1.3
@@ -131,10 +147,18 @@ RXML.TagSet rxml_tag_set = class
 	id->misc->moreheads = extra_heads;
 
     if (mapping orig_defines = ctx->id_defines) {
+      SIMPLE_TRACE_LEAVE ("Finishing nested RXML parse - "
+			  "restoring old id->misc->defines");
+
       // Somehow it seems like these values are stored in the wrong place.. :P
       if (int v = misc[" _error"]) orig_defines[" _error"] = v;
       if (string v = misc[" _rettext"]) orig_defines[" _rettext"] = v;
       id->misc->defines = orig_defines;
+    }
+    else {
+      SIMPLE_TRACE_LEAVE ("Finishing top level RXML parse - "
+			  "leaving id->misc->defines");
+      m_delete (misc, "rxml_misc");
     }
 
     PROF_LEAVE( "rxml", "overhead" );
