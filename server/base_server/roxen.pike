@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.771 2001/12/19 15:18:51 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.772 2002/01/11 10:56:20 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1722,31 +1722,25 @@ array(string) find_ips_for( string what )
     return Array.uniq(res[1]);
 }
 
-void unregister_url(string url, Configuration conf)
+string normalize_url(string url)
 {
-  string ourl = url;
+  if (!sizeof (url - " " - "\t")) return "";
+
   url = lower_case( url );
-  string host, path, protocol;
-  int port;
-  if (!sizeof (url - " " - "\t")) return;
-  mapping opts = ([]);
-  string a, b;
   Standards.URI ui = Standards.URI(url);
-  foreach( (ui->fragment||"")/";", string x )
-  {
-    sscanf( x, "%s=%s", a, b );
-    opts[a]=b;
-  }
   ui->fragment = 0;
   url = (string)ui;
-
   url = replace( url, "/ANY", "/*" );
   url = replace( url, "/any", "/*" );
   
-  sscanf( url, "%[^:]://%[^/]%s", protocol, host, path );
-  if (!host || !stringp(host))   return;
-  if( !protocols[ protocol ] )    return;
+  string host, path, protocol;
 
+  sscanf( url, "%[^:]://%[^/]%s", protocol, host, path );
+
+  if (!host || !stringp(host)) return "";
+  if (!protocols[ protocol ]) return "";
+
+  int port;
   sscanf(host, "%[^:]:%d", host, port);
 
   if( !port )
@@ -1754,6 +1748,13 @@ void unregister_url(string url, Configuration conf)
     port = protocols[ protocol ]->default_port;
     url = protocol+"://"+host+":"+port+path;
   }
+  return url;
+}
+
+void unregister_url(string url, Configuration conf)
+{
+  string ourl = url;
+  if (!sizeof(url = normalize_url(url))) return;
 
   report_debug("Unregister "+url+"\n");
 
@@ -1906,7 +1907,6 @@ int register_url( string url, Configuration conf )
     // with the ANY port anyway. (this is true on most OSes, it works
     // on Solaris, but fails on linux)
     required_hosts = ({ 0 });
-
 
   urls[ url ] = ([ "conf":conf, "path":path, "hostname": host ]);
   urls[ ourl ] = urls[url] + ([]);
