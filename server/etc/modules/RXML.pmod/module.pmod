@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.240 2001/08/27 11:24:39 grubba Exp $
+// $Id: module.pmod,v 1.241 2001/08/27 20:07:27 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7087,12 +7087,12 @@ class PCode
 	     type, recover_errors, encode_p_code});
   }
 
-  void _decode(array v)
+  void _decode(array v, int check_hash)
   {
     [tag_set, string tag_set_hash, type, recover_errors, exec] = v;
     length = sizeof (exec);
     if (tag_set) {
-      if (tag_set->get_hash() != tag_set_hash)
+      if (check_hash && tag_set->get_hash() != tag_set_hash)
 	error ("P-code is stale; the tag set has changed since it was encoded.\n");
       generation = tag_set->generation;
     }
@@ -7165,9 +7165,9 @@ class RenewablePCode
     return ({::_encode(), source});
   }
 
-  void _decode (array encoded)
+  void _decode (array encoded, int check_hash)
   {
-    ::_decode (encoded[0]);
+    ::_decode (encoded[0], check_hash);
     source = encoded[1];
   }
 
@@ -7197,7 +7197,7 @@ string _sprintf() {return "RXML.pmod";}
 constant is_RXML_encodable = 1;
 static object rxml_module = this_object();
 
-class PCodec (Configuration default_config)
+class PCodec (Configuration default_config, int check_tag_set_hash)
 {
   object objectof(string|array what)
   {
@@ -7469,12 +7469,18 @@ class PCodec (Configuration default_config)
   void decode_object (object x, mixed data)
   {
     ENCODE_MSG ("decode_object (%O)\n", x);
-    if (x->_decode) x->_decode (data);
+    if (x->is_RXML_PCode) x->_decode (data, check_tag_set_hash);
+    else if (x->_decode) x->_decode (data);
     else error("Cannot decode object %O without _decode().\n", x);
+  }
+
+  string _sprintf()
+  {
+    return sprintf ("RXML.PCodec(%O,%d)", default_config, check_tag_set_hash);
   }
 }
 
-static mapping(Configuration:PCodec) p_codecs = ([]);
+static mapping(Configuration:array(PCodec)) p_codecs = ([]);
 
 string p_code_to_string (PCode p_code, void|Configuration default_config)
 //! Encodes the @[PCode] object @[p_code] to a string which can be
@@ -7487,13 +7493,15 @@ string p_code_to_string (PCode p_code, void|Configuration default_config)
 //! are replaced with references to the corresponding default
 //! configuration given to @[p_code_to_string].
 {
+  array(PCodec) codecs =
+    p_codecs[default_config] || (p_codecs[default_config] = ({0, 0}));
   PCodec codec =
-    p_codecs[default_config] ||
-    (p_codecs[default_config] = PCodec (default_config));
+    codecs[0] || (codecs[0] = PCodec (default_config, 0));
   return encode_value(p_code, codec);
 }
 
-PCode string_to_p_code (string str, void|Configuration default_config)
+PCode string_to_p_code (string str, void|Configuration default_config,
+			void|int ignore_tag_set_hash)
 //! Decodes a @[PCode] object from the string @[str] encoded by
 //! @[p_code_to_string].
 //!
@@ -7501,15 +7509,25 @@ PCode string_to_p_code (string str, void|Configuration default_config)
 //! specified, then @[default_config] should be set to the
 //! configuration you wish to map that one to.
 //!
+//! If @[ignore_tag_set_hash] is nonzero, the check of the tag set
+//! hash in the p-code against the actual tag set is disabled. That
+//! check is done to ensure that the p-code isn't used when previously
+//! unparsed tags become parsed, but it can be useful to disable it to
+//! avoid the need for the tag sets to be completely equivalent
+//! between the encoding and the decoding server. The decode will
+//! still fail if there are references to tags that doesn't exist.
+//!
 //! The decode can fail for many reasons, e.g. because some tag, tag
-//! set or module doesn't exist or because it was encoded with a
+//! set or module doesn't exist, or because it was encoded with a
 //! different Pike version, or because the coding format has changed.
 //! All such errors are thrown as exceptions. The caller should thus
 //! catch all errors and fall back to RXML evaluation from source.
 {
+  array(PCodec) codecs =
+    p_codecs[default_config] || (p_codecs[default_config] = ({0, 0}));
   PCodec codec =
-    p_codecs[default_config] ||
-    (p_codecs[default_config] = PCodec (default_config));
+    codecs[!ignore_tag_set_hash] ||
+    (codecs[!ignore_tag_set_hash] = PCodec (default_config, !ignore_tag_set_hash));
   mixed err = catch {
     return [object(PCode)]decode_value(str, codec);
   };
