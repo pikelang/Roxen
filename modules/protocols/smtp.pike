@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.60 1998/09/21 21:36:03 grubba Exp $
+ * $Id: smtp.pike,v 1.61 1998/09/27 12:29:52 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.60 1998/09/21 21:36:03 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.61 1998/09/27 12:29:52 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -728,15 +728,20 @@ static class Smtp_Connection {
       }
     }
 
-    float szfactor = parent->query_size_factor();
+    {
+      // New scope to keep these variables local.
+      float szfactor = parent->query_size_factor();
 
-    if (fss->bavail * szfactor <= (limit / (fss->blocksize || 512))) {
-      if (fss->blocks * szfactor <= (limit / (fss->blocksize || 512))) {
-	limit = (int)((fss->blocksize || 512) * fss->blocks * szfactor);
-	hard = 1;
-      } else {
-	limit = (int)((fss->blocksize || 512) * fss->bavail * szfactor);
-	hard = 0;
+      int bsize = (fss->blocksize || 512);
+
+      if (fss->bavail * szfactor <= (limit / bsize)) {
+	if (fss->blocks * szfactor <= (limit / bsize)) {
+	  limit = (int)(bsize * fss->blocks * szfactor);
+	  hard = 1;
+	} else {
+	  limit = (int)(bsize * fss->bavail * szfactor);
+	  hard = 0;
+	}
       }
     }
 		  
