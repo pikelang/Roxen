@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.19 1998/09/22 23:38:30 js Exp $
+ * $Id: clientlayer.pike,v 1.20 1998/09/24 19:00:17 per Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.19 1998/09/22 23:38:30 js Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.20 1998/09/24 19:00:17 per Exp $";
 constant thread_safe=1;
 
 
@@ -369,6 +369,16 @@ class Mailbox
   object user;
   string name;
   int _unread = -1;
+
+  mixed get(string var)
+  {
+    return misc_get("mailbox_misc", var);
+  }
+
+  mixed set(string name, mixed to)
+  {
+    return misc_set("mailbox_misc", name, to);
+  }
 
   void modify()
   {

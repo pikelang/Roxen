@@ -30,6 +30,9 @@ class Mailbox
   void delete();
   string query_name(int force);
 
+  mixed set(string name, mixed to);
+  mixed get(string var);
+
   int num_unread();
 
   array(Mail) mail();
