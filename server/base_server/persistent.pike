@@ -1,6 +1,6 @@
 // static private inherit "db";
 
-/* $Id: persistent.pike,v 1.12 1997/02/25 04:53:11 per Exp $ */
+/* $Id: persistent.pike,v 1.13 1997/02/27 07:59:03 neotron Exp $ */
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
 * Variables and callouts are saved between restarts.          *
@@ -87,7 +87,7 @@ nomask public void persist(mixed id)
     this_object()->persisted();
 }
   
-nomask public void save()
+public void save()
 {
   if(!___destructed)
   {
