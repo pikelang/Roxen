@@ -1,97 +1,7 @@
-// string cvs_version = "$Id: module_support.pike,v 1.39 1999/11/24 02:18:32 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.40 1999/11/24 15:01:14 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
-
-class Codec
-{
-  program p;
-  string nameof(mixed x)
-  {
-    if(p!=x)
-      if(mixed tmp=search(all_constants(),x))
-	return "efun:"+tmp;
-
-    switch(sprintf("%t",x))
-    {
-      case "program":
-	if(p!=x)
-	{
-          mixed tmp;
-	  if(tmp=search(master()->programs,x))
-	    return tmp;
-
-	  if((tmp=search(values(_static_modules), x))!=-1)
-	    return "_static_modules."+(indices(_static_modules)[tmp]);
-	}
-	break;
-
-      case "object":
-	if(mixed tmp=search(master()->objects,x))
-	{
-	  if(tmp=search(master()->programs,tmp))
-	  {
-	    return tmp;
-	  }
-	}
-	break;
-    }
-
-    return ([])[0];
-  }
-
-  function functionof(string x)
-  {
-    if(sscanf(x,"efun:%s",x))
-      return all_constants()[x];
-
-    werror("Failed to decode %s\n",x);
-    return 0;
-  }
-
-
-  object objectof(string x)
-  {
-    if(sscanf(x,"efun:%s",x))
-      return all_constants()[x];
-
-    if(object tmp=(object)x) return tmp;
-    werror("Failed to decode %s\n",x);
-    return 0;
-    
-  }
-
-  program programof(string x)
-  {
-    if(sscanf(x,"efun:%s",x))
-      return all_constants()[x];
-
-    if(sscanf(x,"_static_modules.%s",x))
-    {
-      return (program)_static_modules[x];
-    }
-
-    if(program tmp=(program)x) return tmp;
-    werror("Failed to decode %s\n",x);
-    return 0;
-  }
-
-  mixed encode_object(object x)
-  {
-    error("Cannot encode objects yet.\n");
-  }
-
-  mixed decode_object(object x)
-  {
-    error("Cannot encode objects yet.\n");
-  }
-
-  void create( program q )
-  {
-    p = q;
-  }
-}
-
 
 /* Set later on to something better in roxen.pike::main() */
 mapping (string:array) variables=([]); 
@@ -228,7 +138,7 @@ int remove_dumped_mark = lambda ()
 
 program my_compile_file(string file)
 {
-  string ofile = file + ".o";
+  string ofile = master()->make_ofilename( file );
   if (file_stat (ofile) &&
       file_stat (ofile)[ST_MTIME] < remove_dumped_mark)
     rm (ofile);
@@ -245,23 +155,18 @@ program my_compile_file(string file)
 
   if( !p )
   {
-    report_error("Failed to compile module %s:\n%s", file, q);
+    if( strlen( q ) )
+      report_error("Failed to compile module %s:\n%s", file, q);
     throw( "" ); 
   }
-  if ( q && sizeof(q) )
+  if ( strlen(q) )
   {
     report_debug(sprintf("Warnings during compilation of module %O:\n"
 			 "%s", file, q));
   }
   if( !file_stat( ofile ) ||
-      file_stat(ofile)[ST_MTIME] <
-      file_stat(file)[ST_MTIME] )
-    if( catch 
-    {
-      string data = encode_value( p, Codec(p) );
-      if( strlen( data ) )
-        Stdio.File( ofile, "wct" )->write( data );
-    } )
+      file_stat(ofile)[ST_MTIME] < file_stat(file)[ST_MTIME] )
+    if( catch ( master()->dump_program( file, p ) ) )
     {
 #ifdef MODULE_DEBUG
       werror(" [nodump] ");

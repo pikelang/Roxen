@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.356 1999/11/23 11:01:26 per Exp $
+ * $Id: roxen.pike,v 1.357 1999/11/24 15:01:23 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.356 1999/11/23 11:01:26 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.357 1999/11/24 15:01:23 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -2143,11 +2143,7 @@ void create()
       file_stat("base_server/rxml.pike")[ST_MTIME])
     rm ("base_server/configuration.pike.o");
   Configuration = (program)"configuration";
-  if(!file_stat( "base_server/configuration.pike.o" ))
-  {
-    Stdio.write_file( "base_server/configuration.pike.o", 
-                      encode_value( Configuration, Codec( Configuration ) ) );
-  }
+  dump( "base_server/configuration.pike" );
   add_constant("Configuration", Configuration );
 
   call_out(post_create,1); //we just want to delay some things a little
@@ -2753,6 +2749,7 @@ void dump( string file )
                    
   program p = master()->programs[ replace(file, "//", "/" ) ];
   array q;
+
   if(!p)
   {
 #ifdef DUMP_DEBUG
@@ -2761,16 +2758,16 @@ void dump( string file )
     return;
   }
 
-  if(!file_stat( file+".o" ) ||
-     (file_stat(file+".o")[ST_MTIME] < file_stat(file)[ST_MTIME]))
+  string ofile = master()->make_ofilename( replace(file, "//", "/") );
+  if(!file_stat( ofile ) ||
+     (file_stat( ofile )[ ST_MTIME ] < file_stat(file)[ ST_MTIME ]))
   {
-    if(q=catch{
-      Stdio.write_file(file+".o",encode_value(p,Codec(p)));
+    if(q=catch( master()->dump_program( replace(file, "//", "/"), p ) ) )
+      report_debug("** Cannot encode "+file+": "+describe_backtrace(q)+"\n");
 #ifdef DUMP_DEBUG
+    else
       report_debug( file+" dumped successfully to "+file+".o\n" );
 #endif
-    })
-      report_debug("** Cannot encode "+file+": "+describe_backtrace(q)+"\n");
   }
 #ifdef DUMP_DEBUG
   else
@@ -2780,17 +2777,14 @@ void dump( string file )
 
 int main(int argc, array argv)
 {
-//   dump( "base_server/disk_cache.pike");
-// cannot encode this one yet...
-
+  mkdir( "precompiled" );
+  
   call_out( lambda() {
               ((program)"fastpipe"),
               ((program)"slowpipe"),
-
               dump( "protocols/http.pike");
               dump( "protocols/ftp.pike");
               dump( "protocols/https.pike");
-
               dump( "base_server/state.pike" );
               dump( "base_server/struct/node.pike" );
               dump( "base_server/highlight_pike.pike");
