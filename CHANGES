@@ -7,6 +7,31 @@ o Added a new module. <pimage></pimage>. This tag has the same security
 
   Examples of usage are in the (new) examples directory.
 
+o Added threading to the ftp protocol-module at last.
+
+o The ftp protocol-modules built-in ls now has support for several more flags.
+
+o Several configure-script fixes.
+
+o The <if> tag in combination with the <else> tag now work as people have
+  assumed them to.
+
+o The sql-tags can now be used together with the <else> tag.
+
+o Applied CGI fix by Eric Lammerts <eric@scintilla.utwente.nl>.
+
+o CGI's are now forked from the backend thread to avoid confusing some OS's.
+
+o Fixed several race-conditions when running with THREADS enabled.
+
+o Removed several arbitrary limits.
+
+o Some neighbourhood fixes.
+
+o Some internal security fixes.
+
+o Applied hostredirect fix by Martin Baehr <mbaehr@email.archlab.tuwien.ac.at>.
+
 
 Changes since Roxen Challenger 1.2 alpha 11
 -----------------------------------------------
