@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.209 2000/07/26 14:04:00 kuntri Exp $
+// $Id: rxml.pike,v 1.210 2000/07/26 14:07:35 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2105,10 +2105,10 @@ scope created within the define tag.
 
  <ex type='box'>
   <if variable='var.foo > 0' not=''>
-    &var.foo; <= 0
+    &var.foo; &lt;= 0
   </if>
   <else>
-    &var.foo; > 0
+    &var.foo; &gt; 0
   </else>
  </ex>
 
