@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.26 1999/08/22 13:38:54 nilsson Exp $
+ * $Id: rxml.pike,v 1.27 1999/09/09 23:38:09 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -572,10 +572,15 @@ array tag_use(string tag, mapping m, string c, RequestID id)
 string tag_define(string tag, mapping m, string str, RequestID id, 
                   object file, mapping defines)
 { 
-  if (m->name) 
-    defines[m->name]=str;
-  else if(m->variable)
+  if(m->variable)
     id->variables[m->variable] = str;
+#if old_rxml_compat
+  else if (m->name) {
+    defines[m->name]=str;
+    if(id->conf->api_functions()->old_rxml_warning)
+      id->conf->api_functions()->old_rxml_warning[0](id, "attempt to define name ","variable");
+  }
+#endif
   else if (m->tag) 
   {
     m->tag = lower_case(m->tag);
@@ -607,7 +612,11 @@ string tag_define(string tag, mapping m, string str, RequestID id,
       }
     ]),0,id,file,defines);
 
-    id->misc->tags[n] = replace( str, indices(m), values(m) ); // The replace is not part of RXML 1.4
+#if old_rxml_compat
+    id->misc->tags[n] = replace( str, indices(m), values(m) );
+#else
+    id->misc->tags[n] = str;
+#endif
     id->misc->_tags[n] = call_user_tag;
   }
   else if (m->container) 
@@ -640,7 +649,11 @@ string tag_define(string tag, mapping m, string str, RequestID id,
       }
     ]),0,id,file,defines);
 
-    id->misc->containers[n] = replace( str, indices(m), values(m) ); // The replace is not part of RXML 1.4
+#if old_rxml_compat
+    id->misc->containers[n] = replace( str, indices(m), values(m) );
+#else
+    id->misc->containers[n] = str;
+#endif
     id->misc->_containers[n] = call_user_container;
   }
   else if (m["if"])
@@ -654,10 +667,12 @@ string tag_define(string tag, mapping m, string str, RequestID id,
 string tag_undefine(string tag, mapping m, RequestID id, object file,
 		    mapping defines)
 { 
-  if (m->name) 
-    m_delete(defines,m->name);
-  else if(m->variable)
+  if(m->variable)
     m_delete(id->variables,m->variable);
+#if old_rxml_compat
+  else if (m->name) 
+    m_delete(defines,m->name);
+#endif
   else if (m->tag) 
   {
     m_delete(id->misc->tags,m->tag);
@@ -858,8 +873,6 @@ string tag_foreach(string t, mapping args, string c, RequestID id)
   return res;
 }
 
-
-
 array(string) tag_noparse(string t, mapping m, string c)
 {
   return ({ c });
@@ -875,7 +888,6 @@ string tag_strlen(string t, mapping m, string c, RequestID id)
 {
   return (string)strlen(c);
 }
-
 
 string tag_case(string t, mapping m, string c, RequestID id)
 {
@@ -1009,7 +1021,7 @@ mapping query_container_callers()
     "nooutput":tag_nooutput,
     "case":tag_case,
     "cond":tag_cond,
-    "strlen":tag_nooutput,
+    "strlen":tag_strlen,
     "define":tag_define,
     "for":tag_for,
     "foreach":tag_foreach,
@@ -1160,7 +1172,7 @@ int if_time( string ti, RequestID id, mapping m )
   c=localtime(time());
   
   b=(int)sprintf("%02d%02d", c->hour, c->min);
-  a=(int)ti;
+  a=(int)replace(ti,":","");
 
   if(m->until) {
     d = (int)m->until;
