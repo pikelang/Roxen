@@ -554,6 +554,7 @@ object enable_module( string modname )
     current_configuration->unvalidate_cache();
     return me;
   }
+  return 0;
 }
 
 int load_module(string module_file)
