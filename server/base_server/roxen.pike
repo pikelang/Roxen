@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.759 2001/11/22 15:41:43 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.760 2001/11/23 13:42:27 anders Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2117,6 +2117,7 @@ string create_unique_id()
 static int abs_started;
 
 void restart_if_stuck (int force)
+//! @note Must be called from the backend thread due to Linux peculiarities.
 {
   remove_call_out(restart_if_stuck);
   if (!(query("abs_engage") || force))
@@ -2127,6 +2128,8 @@ void restart_if_stuck (int force)
     report_debug("Anti-Block System Enabled.\n");
   }
   call_out (restart_if_stuck,10);
+//    werror("call_out_info %O\n", filter(call_out_info(), lambda(array a) {
+//  							 return a[2] == restart_if_stuck; }));
   signal(signum("SIGALRM"),
 	 lambda( int n ) {
 	   if (!query("abs_engage")) {
@@ -2146,7 +2149,8 @@ void restart_if_stuck (int force)
 	   _exit(1); 	// It might now quit correctly otherwise, if it's
 	   //  locked up
 	 });
-  alarm (60*query("abs_timeout")+20);
+  int t = alarm (60*query("abs_timeout")+20);
+  // werror("alarm: %d seconds left, set to %d\n", t, 60*query("abs_timeout")+20);
 }
 #endif
 
@@ -4197,7 +4201,8 @@ string check_variable(string name, mixed value)
 #ifndef __NT__
    case "abs_engage":
     if (value)
-      restart_if_stuck(1);
+      // Make sure restart_if_stuck is called from the backend thread.
+      call_out(restart_if_stuck, 0, 1);
     else
       remove_call_out(restart_if_stuck);
     break;
