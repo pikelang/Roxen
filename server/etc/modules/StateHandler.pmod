@@ -1,7 +1,13 @@
 // This is the Roxen WebServer state mechanism.
 // Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: StateHandler.pmod,v 1.2 2001/01/25 23:21:39 nilsson Exp $
+// $Id: StateHandler.pmod,v 1.3 2001/02/10 22:42:23 nilsson Exp $
+
+#ifdef STATE_HANDLER_DEBUG
+# define STATE_WERR(X) werror("State: "+X+"\n")
+#else
+# define STATE_WERR(X)
+#endif
 
 // This file defines a page state mechanism, i.e. a pike 
 // object in which the "objects" on a page can register
@@ -124,8 +130,10 @@ class Page_state {
       int chksum=0;
       for(int i=1; i<sizeof(from); i++)
         chksum+=from[i];
-      if(from[0] != CHKSPACE[chksum%64])
+      if(from[0] != CHKSPACE[chksum%64]) {
+	report_fatal("Error in state checksum.");
         return 0;
+      }
       from=from[1..];
     }
 
@@ -140,11 +148,16 @@ class Page_state {
       object gz = Gz;
       from = gz->inflate()->inflate(from);
     };
-    if(error) return 0;
+    if(error) {
+      report_fatal("Error in state compression/transport encoding.");
+      return 0;
+    }
 
     mapping new_state;
-    if( catch(new_state=decode_value(from)) )
+    if( catch(new_state=decode_value(from)) ) {
+      report_fatal("Error in state decode value.");
       return 0;
+    }
     if(!new_state) return 1;
     if(!mappingp(new_state)) return 0;
 
