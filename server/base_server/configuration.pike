@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.570 2004/05/07 17:32:23 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.571 2004/05/07 19:45:49 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1373,34 +1373,40 @@ multiset(DAVLock) find_locks(string path, int(0..1) recursive,
 }
 
 //! Check if there are any applicable locks for this user on @[path].
-int(0..3)|DAVLock check_locks(string path, int(0..1) recursive, RequestID id)
+DAVLock|LockFlag check_locks(string path, int(0..1) recursive, RequestID id)
 {
-  int state = 0;
+  LockFlag state = 0;
   foreach(location_module_cache||location_modules(),
 	  [string loc, function func])
   {
     string subpath;
+    int check_above;
     if (has_prefix(path, loc)) {
       // path == loc + subpath.
       subpath = path[sizeof(loc)..];
     } else if (recursive && has_prefix(loc, path)) {
       // loc == path + ignored.
-      subpath = "/";
+      subpath = "";
+      check_above = 1;
     } else {
       // Does not apply to this location module.
       continue;
     }
-    int(0..3)|DAVLock lock_info =
+    int/*LockFlag*/|DAVLock lock_info =
       function_object(func)->check_locks(subpath, recursive, id);
     if (objectp(lock_info)) {
-      if (has_prefix(path, loc)) {
+      if (!check_above) {
 	return lock_info;
       } else {
-	lock_info = 2;	// We have a lock on some subpath.
+	lock_info = LOCK_OWN_BELOW; // We have a lock on some subpath.
       }
     }
+    else
+      if (check_above && (lock_info & 1))
+	// Convert LOCK_*_AT to LOCK_*_BELOW.
+	lock_info &= ~1;
     if (lock_info > state) state = lock_info;
-    if (state == 3) return 3;
+    if (state == LOCK_EXCL_AT) return LOCK_EXCL_AT; // Doesn't get any worse.
   }
   return state;
 }
@@ -1464,13 +1470,14 @@ mapping(string:mixed)|DAVLock lock_file(string path,
 
   // First check if there's already some lock on path that prevents
   // us from locking it.
-  int(0..3)|DAVLock lock_info = check_locks(path, recursive, id);
+  int/*LockFlag*/|DAVLock lock_info = check_locks(path, recursive, id);
 
   if (!intp(lock_info)) {
     // We already hold a lock that prevents us.
     return Roxen.http_status(412, "Precondition Failed");
-  } else if ((lock_info & 1) ||
-	     ((lock_info == 2) && (lockscope == "DAV:exclusive"))) {
+  } else if (lockscope == "DAV:exclusive" ?
+	     lock_info >= LOCK_SHARED_BELOW :
+	     lock_info >= LOCK_OWN_BELOW) {
     // Some other lock prevents us.
     return Roxen.http_status(423, "Locked");
   }
