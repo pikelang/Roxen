@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.22 2001/07/21 08:27:30 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.23 2001/07/21 09:10:02 mast Exp $";
 
 class Variable
 {
@@ -582,6 +582,52 @@ class RequestID
 
   static void create(Stdio.File fd, Protocol port, Configuration conf){}
   void send(string|object what, int|void len){}
+
+  static string cached_url_base;
+
+  string url_base()
+  //! Returns the base part of the URL, i.e. what should be added in
+  //! front of a path in the virtual filesystem to get the absolute
+  //! URL to the page. The returned string ends with a "/".
+  //!
+  //! This function gets the correct host for protocols that handles
+  //! IP-less hosts.
+  {
+    // Note: Code duplication in protocols/http.pike.
+
+    if (!cached_url_base) {
+      string tmp;
+
+      // First try the hostname in port × configuration.
+      if (port_obj && (tmp = port_obj->conf_data[conf]->hostname) && tmp != "*") {
+	cached_url_base = port_obj->name + "://" + tmp;
+	if (port_obj->port != port_obj->default_port)
+	  cached_url_base += ":" + port_obj->port;
+      }
+
+      // Then try MyWorldLocation.
+      else if (conf && sizeof (tmp = conf->query ("MyWorldLocation"))) {
+	if (has_suffix (tmp, "/"))
+	  cached_url_base = tmp[..sizeof (tmp) - 2];
+	else
+	  cached_url_base = tmp;
+      }
+
+      // Then use the numeric ip in the port.
+      else if (port_obj) {
+	cached_url_base = port_obj->name + "://" + port_obj->ip;
+	if (port_obj->port != port_obj->default_port)
+	  cached_url_base += ":" + port_obj->port;
+      }
+
+      // Lastly use a pathetic fallback.
+      else cached_url_base = "?";
+
+      if (string p = misc->site_prefix_path) cached_url_base += p;
+      cached_url_base += "/";
+    }
+    return cached_url_base;
+  }
 
   string scan_for_query( string f )
   {

@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.320 2001/07/15 23:59:48 nilsson Exp $";
+constant cvs_version = "$Id: http.pike,v 1.321 2001/07/21 09:10:01 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -879,7 +879,7 @@ private int parse_got( string new_data )
        break;
 
 
-     case "host": 
+     case "host":
      case "connection":
      case "content-type":
        misc[linename] = lower_case(contents);
@@ -1884,6 +1884,71 @@ void adjust_for_config_path( string p )
   if( not_query )  not_query = not_query[ strlen(p).. ];
   raw_url = raw_url[ strlen(p).. ];
   misc->site_prefix_path = p;
+}
+
+static string cached_url_base;
+
+string url_base()
+{
+  // Note: Code duplication in base_server/prototypes.pike.
+
+  if (!cached_url_base) {
+    string tmp;
+//     werror ("port_obj->default_port: %O\n"
+// 	    "port_obj->port: %O\n"
+// 	    "port_obj->name: %O\n"
+// 	    "port_obj->conf_data[conf]: %O\n"
+// 	    "port_obj->ip: %O\n"
+// 	    "misc->host: %O\n"
+// 	    "misc->site_prefix_path: %O\n"
+// 	    "conf->query (\"MyWorldLocation\"): %O\n",
+// 	    port_obj->default_port,
+// 	    port_obj->port,
+// 	    port_obj->name,
+// 	    port_obj->conf_data[conf],
+// 	    port_obj->ip,
+// 	    misc->host,
+// 	    misc->site_prefix_path,
+// 	    conf->query ("MyWorldLocation"));
+
+    // First look at the host header in the request.
+    if ((tmp = misc->host)) {
+      string default_port = ":" + port_obj->default_port;
+      if (has_suffix (tmp, default_port))
+	// Remove redundant port number.
+	cached_url_base = port_obj->name + "://" +
+	  tmp[..sizeof (tmp) - sizeof (default_port) - 1];
+      else
+	cached_url_base = port_obj->name + "://" + tmp;
+    }
+
+    // Then try the hostname in the port setting.
+    else if ((tmp = port_obj->conf_data[conf]->hostname) && tmp != "*") {
+      cached_url_base = port_obj->name + "://" + tmp;
+      if (port_obj->port != port_obj->default_port)
+	cached_url_base += ":" + port_obj->port;
+    }
+
+    // Then try MyWorldLocation.
+    else if (sizeof (tmp = conf->query ("MyWorldLocation"))) {
+      if (has_suffix (tmp, "/"))
+	cached_url_base = tmp[..sizeof (tmp) - 2];
+      else
+	cached_url_base = tmp;
+    }
+
+    // Last fall back to the numeric ip.
+    else {
+      cached_url_base = port_obj->name + "://" + port_obj->ip;
+      if (port_obj->port != port_obj->default_port)
+	cached_url_base += ":" + port_obj->port;
+    }
+
+    if (string p = misc->site_prefix_path) cached_url_base += p;
+    cached_url_base += "/";
+//     werror ("url_base: %O\n", cached_url_base);
+  }
+  return cached_url_base;
 }
 
 /* We got some data on a socket.
