@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.121 1998/03/29 00:14:16 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.122 1998/04/17 17:49:07 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -709,8 +709,14 @@ void clean_cache_dir()
   if(!sizeof(to_clean))
     to_clean = get_dir(query("cache_dir"));
   if(!sizeof(to_clean)) return;
-  int md = file_stat(query("cache_dir")+to_clean[0])[ST_ATIME];
-  
+  array st = file_stat(query("cache_dir")+to_clean[0]);
+  int md;
+  if (st) {
+    md = st[ST_ATIME];
+  }
+
+  /* NOTE: We assume that time() is larger than query("cache_age")*3600 */
+
   if((time() - md) > (query("cache_age")*3600))
     rm(query("cache_dir")+to_clean[0]);
   
