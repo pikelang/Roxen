@@ -180,42 +180,42 @@
 
 Log format is normal characters, or one or more of the variables below:
 
-\n \t \r       -- As in C, newline, tab and linefeed
-$char(int)     -- Insert the (1 byte) character specified by the integer.
-$wchar(int)    -- Insert the (2 byte) word specified by the integer.
-$int(int)      -- Insert the (4 byte) word specified by the integer.
-$^             -- Supress newline at the end of the logentry
-$host          -- The remote host name, or ip number.
-$vhost         -- The Host request-header sent by the client, or - if none
-$ip_number     -- The remote ip number.
-$bin-ip_number -- The remote host id as a binary integer number.
-$cern_date     -- Cern Common Log file format date.
-$bin-date      -- Time, but as an 32 bit integer in network byteorder
-$method        -- Request method
-$resource      -- Resource identifier
-$full_resource -- Full requested resource, including any query fields
-$protocol      -- The protocol used (normally HTTP/1.0)
-$response      -- The response code sent
-$bin-response  -- The response code sent as a binary short number
-$length        -- The length of the data section of the reply
-$bin-length    -- Same, but as an 32 bit integer in network byteorder
-$request-time  -- The time the request took (seconds)
-$referer       -- the header 'referer' from the request, or '-'.
-$user_agent    -- the header 'User-Agent' from the request, or '-'.
-
-$user          -- the name of the auth user used, if any
-$user_id       -- A unique user ID, if cookies are supported,
-                  by the client, otherwise '0'
-$cache-status  -- A comma separated list of words (containing no
-                  whitespace) that describes which cache(s) the page
-                  was delivered from:
-                  protcache -- The low-level cache in the HTTP
-                               protocol module.
-                  xsltcache -- The XSLT cache.
-                  pcoderam  -- RXML parse tree RAM cache.
-                  pcodedisk -- RXML parse tree persistent cache.
-                  cachetag  -- No RXML &amp;lt;cache&amp;gt; tag misses.
-                  nocache   -- No hit in any known cache.
+\n \t \r        -- As in C, newline, tab and linefeed
+$char(int)      -- Insert the (1 byte) character specified by the integer.
+$wchar(int)     -- Insert the (2 byte) word specified by the integer.
+$int(int)       -- Insert the (4 byte) word specified by the integer.
+$^              -- Supress newline at the end of the logentry
+$host           -- The remote host name, or ip number.
+$vhost          -- The Host request-header sent by the client, or - if none
+$ip_number      -- The remote ip number.
+$bin-ip_number  -- The remote host id as a binary integer number.
+$cern_date      -- Cern Common Log file format date.
+$bin-date       -- Time, but as an 32 bit integer in network byteorder
+$method         -- Request method
+$resource       -- Resource identifier
+$full_resource  -- Full requested resource, including any query fields
+$protocol       -- The protocol used (normally HTTP/1.0)
+$response       -- The response code sent
+$bin-response   -- The response code sent as a binary short number
+$length         -- The length of the data section of the reply
+$bin-length     -- Same, but as an 32 bit integer in network byteorder
+$request-time   -- The time the request took (seconds)
+$referer        -- The header 'referer' from the request, or '-'.
+$user_agent     -- The header 'User-Agent' from the request, or '-'.
+$user_agent_raw -- Same, but spaces in the name are not encoded to %20.
+$user           -- the name of the auth user used, if any
+$user_id        -- A unique user ID, if cookies are supported,
+                   by the client, otherwise '0'
+$cache-status   -- A comma separated list of words (containing no
+                   whitespace) that describes which cache(s) the page
+                   was delivered from:
+                   protcache -- The low-level cache in the HTTP
+                                protocol module.
+                   xsltcache -- The XSLT cache.
+                   pcoderam  -- RXML parse tree RAM cache.
+                   pcodedisk -- RXML parse tree persistent cache.
+                   cachetag  -- No RXML &amp;lt;cache&amp;gt; tag misses.
+                   nocache   -- No hit in any known cache.
 &lt;/pre&gt;</o>
 <t></t>
 </str>
@@ -426,7 +426,7 @@ also set 'URLs'.</o>
 
 <str id="61">
 <new/>
-<o>The text shown to the user on connect</o>
+<o>The text shown to the user on connect.</o>
 <t></t>
 </str>
 
@@ -450,7 +450,7 @@ also set 'URLs'.</o>
 
 <str id="65">
 <new/>
-<o>If yes, non-anonymous users can connect</o>
+<o>If yes, non-anonymous users can connect.</o>
 <t></t>
 </str>
 
@@ -474,7 +474,7 @@ also set 'URLs'.</o>
 
 <str id="69">
 <new/>
-<o>If yes, anonymous users is allowed to connect.</o>
+<o>If yes, anonymous users are allowed to connect.</o>
 <t></t>
 </str>
 
@@ -486,7 +486,7 @@ also set 'URLs'.</o>
 
 <str id="71">
 <new/>
-<o>If this string is set to anything but the empty string, it should point to a file containing a list of valid shells. Users with shells that does not figure in this list will not be allowed to log in.</o>
+<o>If this string is set to anything but the empty string, it should specify a file containing a list of valid shells. Users with shells that are not in this list will not be allowed to log in.</o>
 <t></t>
 </str>
 
@@ -534,7 +534,7 @@ also set 'URLs'.</o>
 
 <str id="87">
 <new/>
-<o>The SSL certificate file to use. The path is relative to %s</o>
+<o>The SSL certificate file to use. The path is relative to %s.</o>
 <t></t>
 </str>
 
@@ -546,7 +546,7 @@ also set 'URLs'.</o>
 
 <str id="89">
 <new/>
-<o>The SSL key file to use. The path is relative to %s, you do not have to specify a key file, leave this field empty to use the certificate file only</o>
+<o>The SSL key file to use. The path is relative to %s, you do not have to specify a key file, leave this field empty to use the certificate file only.</o>
 <t></t>
 </str>
 
@@ -558,7 +558,7 @@ also set 'URLs'.</o>
 
 <str id="91">
 <new/>
-<o>If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will still be correct.</o>
+<o>If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will still be correct.&lt;/p&gt;</o>
 <t></t>
 </str>
 
@@ -654,7 +654,7 @@ also set 'URLs'.</o>
 
 <str id="107">
 <new/>
-<o>How many cache files (inodes) may be on disk before a garbage collect is done ? May be left zero to disable this check.</o>
+<o>How many cache files (inodes) may be on disk before a garbage collect is done? May be left at zero to disable this check.</o>
 <t></t>
 </str>
 
@@ -666,7 +666,7 @@ also set 'URLs'.</o>
 
 <str id="109">
 <new/>
-<o>How file size should be treated during garbage collect. Each X bytes counts as a second, so that larger files will be removed first.</o>
+<o>How file size should be treated during garbage collect. Each X bytes count as a second, so that larger files will be removed first.</o>
 <t></t>
 </str>
 
@@ -678,7 +678,7 @@ also set 'URLs'.</o>
 
 <str id="111">
 <new/>
-<o>This is the base directory where cached files will reside. To avoid mishaps, 'roxen_cache/' is always prepended to this variable.</o>
+<o>This is the base directory where cached files will reside. To avoid mishaps, 'roxen_cache/' is always appended to this variable.</o>
 <t></t>
 </str>
 
@@ -690,7 +690,7 @@ also set 'URLs'.</o>
 
 <str id="113">
 <new/>
-<o>This is the number of directories to hash the contents of the disk cache into.  Changing this value currently invalidates the whole cache, since the cache cannot find the old files.  In the future, the cache will be recalculated when this value is changed.</o>
+<o>This is the number of directories to hash the contents of the disk cache into. Changing this value currently invalidates the whole cache, since the cache cannot find the old files. In the future, the cache will be recalculated when this value is changed.</o>
 <t></t>
 </str>
 
@@ -781,8 +781,8 @@ be used. The syntax is user[:group].
 
 &lt;p&gt;A server restart is necessary for a change of this variable to take
 effect. Note that it also can lead to file permission errors if the
-Roxen process no longer can read files it previously has written,
-although the start script fixes this for the standard file locations.</o>
+Roxen process no longer can read files it previously has written.
+The start script attempts to fix this for the standard file locations.&lt;/p&gt;</o>
 <t></t>
 </str>
 
@@ -965,7 +965,7 @@ although the start script fixes this for the standard file locations.</o>
 
 <str id="161">
 <new/>
-<o>If set, Roxen will automatically restart after a configurable number of days. Since Roxen uses a monolith, non-forking server model the process tends to grow in size over time. This is mainly due to heap fragmentation but also because of memory leaks.</o>
+<o>If set, Roxen will automatically restart after a configurable number of days. Since Roxen uses a monolith, non-forking server model the process tends to grow in size over time. This is mainly due to heap fragmentation but may also sometimes be because of memory leaks.</o>
 <t></t>
 </str>
 
@@ -1629,19 +1629,13 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 
 <str id="310">
 <new/>
-<o>If yes, require a user with the hilfe permission set, otherwise, any configuration interface user will work,  even one with only the view settings permission</o>
+<o>If yes, require a user with the hilfe permission set, otherwise, any configuration interface user will be allowed, even one with only the view settings permission.</o>
 <t></t>
 </str>
 
 <str id="311">
 <new/>
 <o>Site event log for '%s' cleared by %s (%s) from %s</o>
-<t></t>
-</str>
-
-<str id="312">
-<new/>
-<o>Could not interpret the date</o>
 <t></t>
 </str>
 
@@ -1819,41 +1813,11 @@ As an example, if the file /foo/bar/not_there.html is wanted, and this list cont
 <t></t>
 </str>
 
-<str id="352">
-<new/>
-<o>Found trailing data after the date. </o>
-<t></t>
-</str>
 
-<str id="353">
-<new/>
-<o>Month must be at least 1. </o>
-<t></t>
-</str>
 
-<str id="354">
-<new/>
-<o>Month must be 12 or less. </o>
-<t></t>
-</str>
 
-<str id="355">
-<new/>
-<o>Day must be at least 1.</o>
-<t></t>
-</str>
 
-<str id="356">
-<new/>
-<o>%s does not appear to be a valid date.</o>
-<t></t>
-</str>
 
-<str id="357">
-<new/>
-<o>Day must be %d or less.</o>
-<t></t>
-</str>
 
 <str id="5">
 <new/>
@@ -2113,7 +2077,7 @@ as the name of its log file directory.
 
 <str id="9">
 <new/>
-<o>The server secret is a string used in some cryptographic functions, such as calculating unique, non-guessable session id's. Change this value into something that is hard to guess, unless you are satisfied with what your computers random generator has produced</o>
+<o>The server secret is a string used in some cryptographic functions, such as calculating unique, non-guessable session id's. Change this value into something that is hard to guess, unless you are satisfied with what your computers random generator has produced.</o>
 <t></t>
 </str>
 
@@ -2421,12 +2385,6 @@ This variable may be changed manually, but it's advisable to test the site caref
 <t></t>
 </str>
 
-<str id="390">
-<new/>
-<o>Release notes</o>
-<t></t>
-</str>
-
 <str id="391">
 <new/>
 <o>Web Site Creator</o>
@@ -2625,7 +2583,7 @@ Substituting with %s</o>
 
 <str id="424">
 <new/>
-<o>The database %s was deleted by b%s</o>
+<o>The database %s was deleted by %s</o>
 <t></t>
 </str>
 
@@ -3170,7 +3128,7 @@ server must be a MySQL server, nothing else will work.
 
 <str id="337">
 <new/>
-<o>If enabled, Roxen will enable various replication systems needed to set up multiple frontend systems. You will need a database named 'replicate' that recides in a shared mysql server for this to work. Also, all servers has to have this flag set. Roxen must be restarted before changes to this variable takes effect </o>
+<o>If enabled, Roxen will enable various replication systems needed to set up multiple frontend systems. You will need a database named 'replicate' that recides in a shared mysql server for this to work. Also, all servers has to have this flag set. Roxen must be restarted before changes to this variable takes effect.</o>
 <t></t>
 </str>
 
@@ -3261,5 +3219,77 @@ server must be a MySQL server, nothing else will work.
 <str id="510">
 <new/>
 <o>Bind this port: </o>
+<t></t>
+</str>
+
+<str id="39">
+<new/>
+<o>License file</o>
+<t></t>
+</str>
+
+<str id="336">
+<new/>
+<o>The license file for this configuration.</o>
+<t></t>
+</str>
+
+<str id="511">
+<new/>
+<o> The module is locked and not part of the license. To enable this module please select a valid license and restart the server.</o>
+<t></t>
+</str>
+
+<str id="512">
+<new/>
+<o>Content Editor (Instant Edition)</o>
+<t></t>
+</str>
+
+<str id="513">
+<new/>
+<o>Content Editor (Advanced Edition)</o>
+<t></t>
+</str>
+
+<str id="514">
+<new/>
+<o>Web Developer</o>
+<t></t>
+</str>
+
+<str id="515">
+<new/>
+<o>System Developer</o>
+<t></t>
+</str>
+
+<str id="516">
+<new/>
+<o>Administrator</o>
+<t></t>
+</str>
+
+<str id="517">
+<new/>
+<o>Forms And Response Module</o>
+<t></t>
+</str>
+
+<str id="518">
+<new/>
+<o>Categorization Module</o>
+<t></t>
+</str>
+
+<str id="519">
+<new/>
+<o>Tutorials</o>
+<t></t>
+</str>
+
+<str id="520">
+<new/>
+<o>Refresh</o>
 <t></t>
 </str>

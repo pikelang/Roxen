@@ -109,7 +109,7 @@ Check that your password database is correct for user %s(%d),
 </str>
 
 <str id="24">
-<o>It is only possible to change uid and gid if the server is running as root.</o>
+<o>It is possible to change uid and gid only if the server is running as root.</o>
 <t></t>
 </str>
 

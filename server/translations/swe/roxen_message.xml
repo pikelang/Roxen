@@ -111,7 +111,8 @@ Kontrollera att gruppdatabasen stämmer, och att lösenordsdatabasen för användare
 </str>
 
 <str id="24">
-<o>It is only possible to change uid and gid if the server is running as root.</o>
+<changed from="It is only possible to change uid and gid if the server is running as root."/>
+<o>It is possible to change uid and gid only if the server is running as root.</o>
 <t>Det går endast att ändra användar-/grupp-id om servern körs av root.</t>
 </str>
 

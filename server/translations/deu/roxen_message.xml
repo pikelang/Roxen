@@ -112,7 +112,8 @@ und dass die Gruppen-Datenbank korrekt ist.
 </str>
 
 <str id="24">
-<o>It is only possible to change uid and gid if the server is running as root.</o>
+<changed from="It is only possible to change uid and gid if the server is running as root."/>
+<o>It is possible to change uid and gid only if the server is running as root.</o>
 <t>uid und gid können nur gewechselt werden, wenn der Server unter der root-Kennung läuft.</t>
 </str>
 

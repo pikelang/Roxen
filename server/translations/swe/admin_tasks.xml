@@ -284,7 +284,7 @@ processen försvinner efter senast 15 minuter.</t>
 
 <str id="38">
 <changed from="Main thread"/>
-<o>Backend thread</o>
+<o>backend thread</o>
 <t>Huvudtråden</t>
 </str>
 
@@ -942,5 +942,17 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 <str id="153">
 <new/>
 <o>Ok</o>
+<t></t>
+</str>
+
+<str id="154">
+<new/>
+<o>Note that the server will be automatically restarted with the new version.</o>
+<t></t>
+</str>
+
+<str id="155">
+<new/>
+<o>Failed to write CSR to %s.</o>
 <t></t>
 </str>

@@ -758,12 +758,16 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 </str>
 
 <str id="41">
-<o>Change roxen version...</o>
+<changed from="Change roxen version..."/>
+<o>Change Roxen version...</o>
 <t>Roxen-Version wechseln...</t>
 </str>
 
 <str id="42">
-<o>If you have more than one roxen version installed
+<changed from="If you have more than one roxen version installed
+in the same location, you can use this action to
+change the currently running version."/>
+<o>If you have more than one Roxen version installed
 in the same location, you can use this action to
 change the currently running version.</o>
 <t>Wenn mehr als eine Roxen-Version im gleichen Verzeichnis installiert
@@ -906,12 +910,14 @@ ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 <t>Ok</t>
 </str>
 
-<str id="296">
+<str id="154">
+<new/>
 <o>Note that the server will be automatically restarted with the new version.</o>
-<t>Hinweis: Der Server wird automatisch mit der neuen Version neugestartet.</t>
+<t></t>
 </str>
 
-<str id="297">
+<str id="155">
+<new/>
 <o>Failed to write CSR to %s.</o>
-<t>Fehler beim Schreiben des CSR nach %s.</t>
+<t></t>
 </str>

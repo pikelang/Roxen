@@ -293,7 +293,7 @@
 
 <str id="38">
 <new/>
-<o>Backend thread</o>
+<o>backend thread</o>
 <t></t>
 </str>
 
@@ -838,13 +838,13 @@ Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, 
 
 <str id="41">
 <new/>
-<o>Change roxen version...</o>
+<o>Change Roxen version...</o>
 <t></t>
 </str>
 
 <str id="42">
 <changed from="Indeed"/>
-<o>If you have more than one roxen version installed
+<o>If you have more than one Roxen version installed
 in the same location, you can use this action to
 change the currently running version.</o>
 <t>Souhlasím</t>
@@ -999,5 +999,17 @@ change the currently running version.</o>
 <str id="153">
 <new/>
 <o>Ok</o>
+<t></t>
+</str>
+
+<str id="154">
+<new/>
+<o>Note that the server will be automatically restarted with the new version.</o>
+<t></t>
+</str>
+
+<str id="155">
+<new/>
+<o>Failed to write CSR to %s.</o>
 <t></t>
 </str>
