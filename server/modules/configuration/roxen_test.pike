@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.13 2001/02/01 04:32:30 per Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.14 2001/02/01 06:56:37 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -68,7 +68,7 @@ string canon_html(string in) {
       xml=1;
       args=args[..sizeof(args)-2];
     }
-    args=sort(args);
+    sort(map(args,lower_case),args);
     ut+="<"+name;
     if(sizeof(args)) ut+=" "+(args*" ");
     if(xml) ut+=" /";
@@ -137,6 +137,7 @@ void xml_test(string t, mapping args, string c) {
   };
   
   RequestID id = get_id();
+  int no_canon;
   Parser.HTML parser =
     Parser.HTML()->
     add_containers( ([ "rxml" :
@@ -152,9 +153,13 @@ void xml_test(string t, mapping args, string c) {
 			 }
 			 if(!args["no-canon"])
 			   res = canon_html(res);
+			 else
+			   no_canon = 1;
 		       },
 		       "result" :
 		       lambda(string t, mapping m, string c) {
+			 if( !no_canon )
+			   c = canon_html( c );
 			 if(res != c) {
 			   if(m->not) return;
 			   test_error("Failed (%O != %O)\n", res, c);
