@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.20 1998/09/30 19:28:08 grubba Exp $
+ * $Id: pop3.pike,v 1.21 1998/10/05 23:14:28 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.20 1998/09/30 19:28:08 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.21 1998/10/05 23:14:28 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -115,26 +115,33 @@ static class Pop_Session
     }
   }
 
+  static int timeout_sent;
   static void do_timeout()
   {
-    catch {
-      send_error("POP timeout");
-    };
-    user = 0;
-    catch {
-      send_ok(sprintf("%s POP3 server signing off.", gethostname()));
-    };
-    catch {
-      disconnect();
-    };
-    log("TIMEOUT", "", 200);
+    if (!timeout_sent) {
+      catch {
+	send_error("POP timeout");
+      };
+      user = 0;
+      catch {
+	send_ok(sprintf("%s POP3 server signing off.", gethostname()));
+      };
+      catch {
+	disconnect();
+      };
+      timeout_sent = 1;
+      log("TIMEOUT", "", 200);
 
-    touch_time();	// We want to send the timeout message...
-    _timeout_cb();	// Restart the timeout timer.
+      touch_time();	// We want to send the timeout message...
+      _timeout_cb();	// Restart the timeout timer.
 
-    // Force disconnection in timeout/2 time
-    // if the other end doesn't read any data.
-    call_out(::do_timeout, timeout/2);
+      // Force disconnection in timeout/2 time
+      // if the other end doesn't read any data.
+      call_out(::do_timeout, timeout/2);
+    } else {
+      // No need to do anything...
+      // We will be disconnected soon anyway by the ::do_timeout() call_out.
+    }
   }
 
   // Commands:
