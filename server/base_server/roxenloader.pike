@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.80 1998/11/18 04:53:53 per Exp $
+ * $Id: roxenloader.pike,v 1.81 1998/12/11 22:33:48 noring Exp $
  *
  * Roxen bootstrap program.
  *
@@ -15,7 +15,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.80 1998/11/18 04:53:53 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.81 1998/12/11 22:33:48 noring Exp $";
 
 // Macro to throw errors
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -371,7 +371,8 @@ object spawn_pike(array(string) args, void|string wd, object|void stdin,
 		  object|void stdout, object|void stderr)
 {
   string cwd = getcwd();
-  return Process.create_process(({cwd+"/start","--cd",wd,"--program"})+args,
+  return Process.create_process(({cwd+"/start","--cd",wd,
+				  "--quiet","--program"})+args,
 				(["toggle_uid":1,
 				 "stdin":stdin,
 				 "stdout":stdout,
