@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.324 2002/05/21 10:07:26 grubba Exp $
+// $Id: roxenloader.pike,v 1.325 2002/05/23 10:04:04 jonasw Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.324 2002/05/21 10:07:26 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.325 2002/05/23 10:04:04 jonasw Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -285,7 +285,6 @@ int mkdirhier(string from, int|void mode)
 #endif
     }
     else mkdir(b+a);
-    werror("mkdir(%O)\n", b+a);
     b+=a+"/";
   }
   if(!r)
