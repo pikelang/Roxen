@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.2 2002/02/26 15:31:04 wellhard Exp $
+// $Id: License.pmod,v 1.3 2002/02/26 17:19:44 wellhard Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -99,11 +99,23 @@ class Key
   string hostname()     { return content->hostname; }
   static string enterprise()     { return content->enterprise; }
   
-  int|mapping(string:int|string) is_module_unlocked(string m, string|void mode)
+  int is_module_unlocked(string m, string|void mode)
+  //! Returns true if the module @[m] with optional mode @[mode] is
+  //! unlocked in the license file.
   {
     if(mode)
       m += "::"+mode;
     return !!content->modules[m];
+  }
+
+  mixed get_module_feature(string m, string feature, string|void mode)
+  //! Returns the feature @[feature] for module @[m] with optional
+  //! mode @[mode]. Returns false if the module/feature don't exists in the
+  //! license file.
+  {
+    if(mode)
+      m += "::"+mode;
+    return mappingp(content->modules[m]) && content->modules[m]->feature;
   }
 
 #ifdef INSIDE_ROXEN
