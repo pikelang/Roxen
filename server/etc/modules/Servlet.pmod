@@ -225,17 +225,6 @@ class context {
     ctx=0;
   }
 
-
-  object get_servlet(string name)
-  {
-    return 0;
-  }
-
-  array(string) get_servlet_list()
-  {
-    return ({});
-  }
-
   void log(string msg)
   {
     werror(msg+"\n");
@@ -243,22 +232,19 @@ class context {
 
   string get_real_path(string path)
   {
+    // FIXME
     return 0;
   }
 
   string get_mime_type(string file)
   {
+    // FIXME
     return 0;
   }
 
   string get_server_info()
   {
     return roxen->version();
-  }
-
-  object get_attribute(string name)
-  {
-    return 0;
   }
 
 };
@@ -369,15 +355,6 @@ object response(object file)
   return r;
 }
 
-static object native_getServlet(object ctx, object name)
-{
-  return ctx_object(ctx)->get_servlet((string)name);
-}
-
-static array(string) native_getServletList(object ctx)
-{
-  return ctx_object(ctx)->get_servlet_list();
-}
 
 static void native_log(object ctx, object msg)
 {
@@ -397,11 +374,6 @@ static string native_getMimeType(object ctx, object file)
 static string native_getServerInfo(object ctx)
 {
   return ctx_object(ctx)->get_server_info();
-}
-
-static object native_getAttribute(object ctx, object name)
-{
-  return ctx_object(ctx)->get_attribute((string)name);
 }
 
 static void native_forgetfd(object str)
@@ -445,18 +417,12 @@ static string native_blockingIPToHost(object n)
 void create()
 {
   natives_bind1 = context_class->register_natives(({
-    ({"getServlet", "(Ljava/lang/String;)Ljavax/servlet/Servlet;",
-      native_getServlet}),
-    ({"getServletList", "()[Ljava/lang/String;", native_getServletList}),
     ({"log", "(Ljava/lang/String;)V", native_log}),
     ({"getRealPath", "(Ljava/lang/String;)Ljava/lang/String;",
       native_getRealPath}),
     ({"getMimeType", "(Ljava/lang/String;)Ljava/lang/String;",
       native_getMimeType}),
-    ({"getServerInfo", "()Ljava/lang/String;", native_getServerInfo}),
-    ({"getAttribute", "(Ljava/lang/String;)Ljava/lang/Object;",
-      native_getAttribute})}));
-
+    ({"getServerInfo", "()Ljava/lang/String;", native_getServerInfo})}));
   natives_bind2 = stream_class->register_natives(({
     ({"close", "()V", native_close}),
     ({"write", "(I)V", native_writei}),

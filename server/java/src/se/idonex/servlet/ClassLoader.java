@@ -3,6 +3,8 @@ package se.idonex.servlet;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URL;
+import java.net.MalformedURLException;
 
 class ClassLoader extends java.lang.ClassLoader
 {
@@ -17,6 +19,18 @@ class ClassLoader extends java.lang.ClassLoader
       return defineClass(name, b, 0, new FileInputStream(f).read(b));
     } catch(IOException ex) {
       throw new ClassNotFoundException(name);
+    }
+  }
+
+  protected URL findResource(String name)
+  {
+    File f = new File(dir, name);
+    if(!f.isFile())
+      return null;
+    try {
+      return f.toURL();
+    } catch(MalformedURLException e) {
+      return null;
     }
   }
 

@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Enumeration;
+import java.util.Locale;
 
 
 class ServletResponse implements javax.servlet.http.HttpServletResponse
@@ -21,6 +22,7 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
   Dictionary headers = null;
   int status = 200;
   String statusmsg = null;
+  Locale locale = Locale.getDefault();
 
   static Dictionary statusTexts = new Hashtable();
 
@@ -60,7 +62,7 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
   {
     if(contentType == null) {
       contentType = type;
-      /* get encoding */
+      // FIXME: get encoding
     }
   }
 
@@ -107,8 +109,9 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
     if(encoding == null) {
       if(contentType == null)
 	contentType = "text/plain";
-      contentType += "; charset=iso-8559-1";
-      encoding = "8859_1";
+      // FIXME  Use Locale?
+      encoding = "iso-8859-1";
+      contentType += "; charset="+encoding;
     }
     return encoding;
   }
@@ -174,6 +177,13 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
     return headers != null && headers.get(name.toLowerCase()) != null;
   }
 
+  /**
+   * @deprecated  As of version 2.1, due to ambiguous meaning of the
+   *              message parameter. To set a status code use
+   *              setStatus(int), to send an error with a description
+   *              use sendError(int, String).  Sets the status code
+   *              and message for this response.
+   */
   public void setStatus(int sc, String sm)
   {
     statusmsg = "<body>"+sm+"</body>\r\n";
@@ -224,12 +234,28 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
     sendError(302);
   }
 
+  /**
+   * @deprecated  As of version 2.1, use encodeURL(String url) instead
+   */
   public String encodeUrl(String url)
+  {
+    return encodeURL(url);
+  }
+
+  /**
+   * @deprecated  As of version 2.1, use encodeRedirectURL(String url) instead
+   */
+  public String encodeRedirectUrl(String url)
+  {
+    return encodeRedirectURL(url);
+  }
+
+  public String encodeURL(String url)
   {
     return url;
   }
 
-  public String encodeRedirectUrl(String url)
+  public String encodeRedirectURL(String url)
   {
     return url;
   }
@@ -244,6 +270,60 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
   ServletResponse(ServletOutputStream sos)
   {
     pikeStream = sos;
+  }
+
+  // 2.2 stuff follows
+
+  public void setBufferSize(int size)
+  {
+    // FIXME
+  }
+
+  public int getBufferSize()
+  {
+    // FIXME
+    return 0;
+  }
+
+  public void reset()
+  {
+    // FIXME
+  }
+  
+  public boolean isCommitted()
+  {
+    // FIXME
+    return true;
+  }
+
+  public void flushBuffer() throws IOException
+  {
+    // FIXME
+  }
+
+  public void setLocale(Locale loc)
+  {
+    locale = loc;
+  }
+
+  public Locale getLocale()
+  {
+    return locale;
+  }
+
+  public void addHeader(String name, String value)
+  {
+    // FIXME
+  }
+
+  public void addDateHeader(String name, long date)
+  {
+    addHeader(name, RoxenServletContext.dateformat.format(new Date(date)));
+  }
+
+  public void addIntHeader(String name, int value)
+  {
+    addHeader(name, Integer.toString(value));
   }
 
 }

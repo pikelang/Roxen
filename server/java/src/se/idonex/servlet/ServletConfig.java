@@ -29,4 +29,13 @@ class ServletConfig implements javax.servlet.ServletConfig
   {
     context = ctx;
   }
+
+  // 2.2 stuff follows
+
+  public String getServletName()
+  {
+    // FIXME
+    return null;
+  }
+
 }

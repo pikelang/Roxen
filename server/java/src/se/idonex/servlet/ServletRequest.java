@@ -2,6 +2,7 @@ package se.idonex.servlet;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletContext;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Cookie;
 import java.io.IOException;
@@ -11,7 +12,9 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Enumeration;
 import java.util.Vector;
+import java.util.Locale;
 import java.text.ParseException;
+import java.security.Principal;
 
 
 class ServletRequest implements javax.servlet.http.HttpServletRequest
@@ -76,6 +79,11 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     return remoteHost;
   }
 
+  /**
+   * @deprecated  As of Version 2.1 of the Java Servlet API, use
+   *              {@link ServletContext.getRealPath(java.lang.String)}
+   *              instead
+   */
   public String getRealPath(String path)
   {
     return context.getRealPath(path);
@@ -88,9 +96,6 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     return inputStream;
   }
 
-  /**
-   * @deprecated  Please use getParameterValues
-   */
   public String getParameter(String name)
   {
     String[] pv = getParameterValues(name);
@@ -125,6 +130,16 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
   public Object getAttribute(String name)
   {
     return attributes.get(name);
+  }
+
+  public void setAttribute(String name, Object object)
+  {
+    attributes.put(name, object);
+  }
+
+  public Enumeration getAttributeNames()
+  {
+    return attributes.keys();
   }
 
   public BufferedReader getReader() throws IOException
@@ -317,6 +332,11 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     return null;
   }
 
+  public HttpSession getSession()
+  {
+    return getSession(true);
+  }
+
   public String getRequestedSessionId()
   {
     // FIXME
@@ -335,7 +355,17 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     return false;
   }
   
+  /**
+   * @deprecated  As of Version 2.1 of the Java Servlet API, use
+   *              {@link isRequestedSessionIdFromURL()}
+   *              instead.
+   */
   public boolean isRequestedSessionIdFromUrl()
+  {
+    return isRequestedSessionIdFromURL();
+  }
+
+  public boolean isRequestedSessionIdFromURL()
   {
     // FIXME
     return false;
@@ -364,4 +394,65 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     queryString = q;
     pathTranslated = pt;
   }
+
+  // 2.2 stuff follows
+
+  public void removeAttribute(String name)
+  {
+    attributes.remove(name);
+  }
+
+  public Locale getLocale()
+  {
+    // FIXME
+    return null;
+  }
+
+  public Enumeration getLocales()
+  {
+    // FIXME
+    return null;
+  }
+  
+  public boolean isSecure()
+  {
+    return "https".equalsIgnoreCase(protocol);
+  }
+
+  public RequestDispatcher getRequestDispatcher(String path)
+  {
+    // FIXME
+    return null;
+  }
+
+  public Enumeration getHeaders(String name)
+  {
+    // FIXME
+    if(headers == null)
+      return null;
+    String hdr = (String)headers.get(name.toLowerCase());
+    if(hdr == null)
+      return null;
+    else
+      return new java.util.StringTokenizer(hdr, "\0");
+  }
+
+  public String getContextPath()
+  {
+    // FIXME
+    return null;
+  }
+
+  public boolean isUserInRole(String role)
+  {
+    // FIXME
+    return false;
+  }
+
+  public Principal getUserPrincipal()
+  {
+    // FIXME
+    return null;
+  }
+
 }

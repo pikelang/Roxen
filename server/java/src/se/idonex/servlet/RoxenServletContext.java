@@ -5,15 +5,21 @@ import java.util.NoSuchElementException;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.Hashtable;
 import java.io.StringWriter;
 import java.io.PrintWriter;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.MalformedURLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import javax.servlet.Servlet;
 import javax.servlet.ServletException;
+import javax.servlet.ServletContext;
+import javax.servlet.RequestDispatcher;
 
 
-class RoxenServletContext implements javax.servlet.ServletContext
+class RoxenServletContext implements ServletContext
 {
   final int id;
 
@@ -24,27 +30,33 @@ class RoxenServletContext implements javax.servlet.ServletContext
 						Locale.US));
   }
 
-  public native Servlet getServlet(String name) throws ServletException;
-  private native String[] getServletList();
+  Hashtable attributes = new Hashtable();
 
+
+  /**
+   * @deprecated  As of Java Servlet API 2.1, with no direct replacement. 
+   */
+  public Servlet getServlet(String name) throws ServletException
+  {
+    return null;
+  }
+
+  /**
+   * @deprecated  As of Java Servlet API 2.1, with no replacement. 
+   */
   public Enumeration getServletNames()
   {
 
     return new Enumeration() {
 
-      String[] servlets = getServletList();
-      int pos = 0;
-
       public boolean hasMoreElements()
       {
-	return pos<servlets.length;
+	return false;
       }
 
       public Object nextElement()
       {
-	if(pos>=servlets.length)
-	  throw new NoSuchElementException();
-	return servlets[pos++];
+	throw new NoSuchElementException();
       }
 
     };
@@ -52,26 +64,20 @@ class RoxenServletContext implements javax.servlet.ServletContext
   }
 
   /**
-   * @deprecated  Please use getServletNames in conjunction with getServlet
+   * @deprecated  As of Java Servlet API 2.0, with no replacement. 
    */
   public Enumeration getServlets()
   {
     return new Enumeration() {
 
-      Enumeration parent = getServletNames();
-
       public boolean hasMoreElements()
       {
-	return parent.hasMoreElements();
+	return false;
       }
 
       public Object nextElement()
       {
-	try {
-	  return getServlet((String)parent.nextElement());
-	} catch(ServletException se) {
-	  return null;
-	}
+	throw new NoSuchElementException();
       }
 
     };
@@ -79,22 +85,105 @@ class RoxenServletContext implements javax.servlet.ServletContext
 
   public native void log(String msg);
 
+  /**
+   * @deprecated  As of Java Servlet API 2.1, use
+   * 		  {@link log(String message, Throwable throwable)} 
+   *		  instead.
+   */
   public void log(Exception exception, String msg)
   {
+    log(msg, exception);
+  }
+
+  public void log(String message, Throwable throwable)
+  {
     StringWriter sw = new StringWriter();
-    exception.printStackTrace(new PrintWriter(sw));
-    sw.write(msg);
+    throwable.printStackTrace(new PrintWriter(sw));
+    sw.write(message);
     log(sw.toString());
   }
 
   public native String getRealPath(String path);
   public native String getMimeType(String file);
   public native String getServerInfo();
-  public native Object getAttribute(String name);
+
+  public Object getAttribute(String name)
+  {
+    return attributes.get(name);
+  }
+
+  public void setAttribute(String name, Object object)
+  {
+    attributes.put(name, object);
+  }
+
+  public void removeAttribute(String name)
+  {
+    attributes.remove(name);
+  }
+
+  public Enumeration getAttributeNames()
+  {
+    return attributes.keys();
+  }
+
+  public ServletContext getContext(String uripath)
+  {
+    // FIXME
+    return null;
+  }
+
+  public RequestDispatcher getRequestDispatcher(String path)
+  {
+    // FIXME
+    return null;
+  }
+
+  public URL getResource(String path) throws MalformedURLException
+  {
+    // FIXME
+    return null;
+  }
+
+  public InputStream getResourceAsStream(String path)
+  {
+    // FIXME
+    return null;
+  }
+
+  public int getMajorVersion()
+  {
+    return 2;
+  }
+
+  public int getMinorVersion()
+  {
+    return 2;
+  }
 
   RoxenServletContext(int id)
   {
     this.id = id;
+  }
+
+  // 2.2 stuff follows
+
+  public RequestDispatcher getNamedDispatcher(String name)
+  {
+    // FIXME
+    return null;
+  }
+
+  public String getInitParameter(String name)
+  {
+    // FIXME
+    return null;
+  }
+
+  public Enumeration getInitParameterNames()
+  {
+    // FIXME
+    return null;
   }
 
 }

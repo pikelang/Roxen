@@ -1,5 +1,5 @@
 
-CLASSPATH = ../../etc/classes/jsdk.jar
+CLASSPATH = servlet.jar
 
 JAVAFLAGS = -deprecation -encoding iso-8859-1
 
