@@ -115,6 +115,7 @@ mapping call_tagdocumentation(RoxenModule o) {
 private int generation;
 multiset undocumented_tags=(<>);
 string find_tag_doc(string name, void|object id) {
+  RXMLHELP_WERR("Help for tag "+name+" requested.");
   RXML.TagSet tag_set=RXML.get_context()->tag_set;
   string doc;
   int new_gen=tag_set->generation;
@@ -159,11 +160,12 @@ string find_tag_doc(string name, void|object id) {
 
 string find_module_doc( string cn, string mn, RequestID id )
 {
+  RXMLHELP_WERR("Help for module "+mn+" requested.");
   object c = roxen.find_configuration( cn );
   if(!c) return "";
 
   RoxenModule o = c->find_module( replace(mn,"!","#") );
-  if(!0) return "";
+  if(!o) return "";
 
   return parse_mapping(o->tagdocumentation());
 }
