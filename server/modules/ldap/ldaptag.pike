@@ -1,5 +1,5 @@
 /*
- * $Id: ldaptag.pike,v 1.4 2000/02/10 05:40:34 nilsson Exp $
+ * $Id: ldaptag.pike,v 1.5 2000/04/05 17:41:07 kuntri Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <LDAP>, <LDAPOUTPUT> (with subtag <LDAPFOREACH>) and <LDAPELSE>
@@ -36,7 +36,7 @@
 
  */
 
-constant cvs_version="$Id: ldaptag.pike,v 1.4 2000/02/10 05:40:34 nilsson Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 1.5 2000/04/05 17:41:07 kuntri Exp $";
 //constant thread_safe=0;
 #include <module.h>
 
@@ -763,3 +763,150 @@ string status()
   return("<p><font color=red>Zero connections.</font><br>\n");
 }
 
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+"ldap":#:"<desc tag><short>
+ Executes a LDAP operation, but doesn't do anything with the
+ result.</short>The <tag>ldap</tag> tag is mostly used for LDAP
+ operation that change the contents of the directory, for example
+ <i>add</i> or<i>modify</i>.</desc>
+
+<attr name='host' value='hostname'>
+ Host name of server on which directory server will connect to. If
+ omitted the default host name will be used.
+</attr>
+
+<attr name='name' value='username'>
+ User name for connection to the directory server. If omitted the
+ default user name will be used.
+</attr>
+
+<attr name='password' value='password'>
+ User password for connection to the directory server. If omitted the
+ default will be used.
+ </attr>
+
+<attr name='dn' value='distinguished name'>
+ Distinguished name of object. Required.
+</attr>
+
+<attr name='op' value=add,delete,modify,replace>
+ The actual LDAP operation. Required.
+ <p>Note that <tt>op='modify'</tt> will change only the attributes
+ given by the <i>attr</i> attribute.
+</attr>
+
+<attr name='attr' value=''attribute_name1':[('attribute_value1'[,... ])][,'attribute_name2',...]'>
+ The actual values of attributes.
+  <p> for example:
+ (sn:'Zappa'),(mail:'hello@nowhere.org','athell@pandemonium.com')</p>
+</attr>
+
+<attr name='quiet'>
+ In case of the operation fails, no error messages will show on the page. Error description can be returned by <tag>ldapelse</tag>.
+</attr>
+
+<attr name='parser'>
+ If specified, the query will be parsed by the RXML parser. This is useful if the operation is to be built dynamically.
+ </attr>",
+
+"ldapelse":#"<desc cont><short>Displays the last error message.</short>
+
+ The <tag>ldapelse</tag> tag is executed only if an error occured
+ within the last <tag>ldap</tag> or <tag>ldapoutput</tag> tag. The
+ content is parsed and the variable #ldaperror# is replaced with the
+ last error message.</desc>
+
+<attr name='ldaperror'>
+ Returns an error message.
+</attr>",
+
+"ldapfor":#"<desc cont><short>
+
+ Repeats the content for a multiple attribute values.</short> <p>Note
+ that the <tag>ldapfor</tag> tag only works within the
+ <tag>ldapoutput</tag> container tag!</p>.
+
+ <p>By default anything within #'s will be interpreted as a variable.
+ Thus #attribute_name# will be replaced by the attribute value. ##
+ will be replaced by a #.</p> </desc>
+
+<attr name='attr' value='attribute name'>
+ The attribute name. Required.
+</attr>
+
+<attr name='index' value='initial value'>
+ The initial value for index. If omitted the <i>index=1</i> will be
+ used.
+</attr>
+
+<attr name='step' value='increment'>
+ The increment for index. If omitted the <i>step=1</i> will be used.
+</attr>
+
+<attr name='max' value='value'>
+ The restriction for returned values. If omitted all values will be
+ returned.
+</attr>",
+
+"ldapoutput":#"<desc cont>short>
+ Insert the results of a LDAP search into HTML or RXML.</short>
+
+ The <tag>ldapoutput</tag> tag works like the old <i>output</i> tags.
+ By default anything within #'s will be interpreted as a variable.
+ Thus #attribute_name# will be replaced by the attribute value. ##
+ will be replaced by a #.
+
+ <p>As the attribute can contains multiple values the #attribute_name#
+ expression returns first value only. Second, third ... values can be
+ specified by suffix before # (i.e second email value is written as
+ #mail:2#). Obviously this isn't more often usable. Better solution is
+ the subcontainer <tag>ldapfor</tag>.
+
+ <p>The <tag>ldapoutput</tag> tag will copy its contents and replace
+ the named attribute for each row in the result. If the result is
+ empty, the <tag>ldapoutput</tag> tag will not return anything.
+ </desc>
+
+<attr name='host' value='hostname'>
+ Hostname of server on which directory server will connect to. If
+ omitted the default hostname will be used.
+</attr>
+
+<attribute name='name' value='username'>
+ User name for connection to the directory server. If omitted the
+ default user name will be used.
+</attr>
+
+<attribute name='password' value='user password'>
+ User password for connection to the directory server. If omitted the
+ default will be used.
+</attribute>
+
+<attr name='basedn' value='base DN'>
+ Base DN of an object where is started search of
+ directory. Required.
+</attr>
+
+<attr name='scope' value='base,onelevel,subtree'>
+  The scope of search directory.
+ <p>Note: The default value is <i>base</i>.</p>
+</attr>
+
+<attr name='sortby' value='attribute name'>
+ The attribute name used for sorting output.
+
+ <p>Note: Only one attribute name can be used.</p>
+</attr>
+
+<attr name='quiet'>
+ Do not show any errors in the page, in case the query fails.
+</attr>
+
+<attr name='parse'>
+ If specified, the content will be parsed by the RXML parser.
+</attr>",
+
+]);
+#endif
