@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.83 2001/04/17 08:00:31 per Exp $
+// $Id: Roxen.pmod,v 1.84 2001/04/18 05:45:58 per Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2873,7 +2873,11 @@ class FormScope( mapping variables )
 
   mixed `[]=( string index, mixed newval )
   {
-    return variables[ index ] = newval;
+    if( arrayp( newval ) )
+      variables[ index ] = newval;
+    else
+      variables[ index ] = ({ newval });
+    return newval;
   }
 
   mixed `[] (string what, void|RXML.Context ctx,
