@@ -1,12 +1,101 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.56 1999/11/24 02:18:10 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.57 1999/11/24 15:02:12 per Exp $";
 
 /*
  * name = "Roxen Master";
  * doc = "Roxen's customized master.";
  */
+
+class MyCodec
+{
+  program p;
+  string nameof(mixed x)
+  {
+    if(p!=x)
+      if(mixed tmp=search(all_constants(),x))
+	return "efun:"+tmp;
+
+    switch(sprintf("%t",x))
+    {
+      case "program":
+	if(p!=x)
+	{
+          mixed tmp;
+	  if(tmp=search(master()->programs,x))
+	    return tmp;
+
+	  if((tmp=search(values(_static_modules), x))!=-1)
+	    return "_static_modules."+(indices(_static_modules)[tmp]);
+	}
+	break;
+
+      case "object":
+	if(mixed tmp=search(master()->objects,x))
+	{
+	  if(tmp=search(master()->programs,tmp))
+	  {
+	    return tmp;
+	  }
+	}
+	break;
+    }
+
+    return ([])[0];
+  }
+
+  function functionof(string x)
+  {
+    if(sscanf(x,"efun:%s",x))
+      return all_constants()[x];
+
+    werror("Failed to decode %s\n",x);
+    return 0;
+  }
+
+
+  object objectof(string x)
+  {
+    if(sscanf(x,"efun:%s",x))
+      return all_constants()[x];
+
+    if(object tmp=(object)x) return tmp;
+    werror("Failed to decode %s\n",x);
+    return 0;
+    
+  }
+
+  program programof(string x)
+  {
+    if(sscanf(x,"efun:%s",x))
+      return all_constants()[x];
+
+    if(sscanf(x,"_static_modules.%s",x))
+    {
+      return (program)_static_modules[x];
+    }
+
+    if(program tmp=(program)x) return tmp;
+    werror("Failed to decode %s\n",x);
+    return 0;
+  }
+
+  mixed encode_object(object x)
+  {
+    error("Cannot encode objects yet.\n");
+  }
+
+  mixed decode_object(object x)
+  {
+    error("Cannot encode objects yet.\n");
+  }
+
+  void create( program q )
+  {
+    p = q;
+  }
+}
 
 
 object mm=(object)"/master";
@@ -14,6 +103,22 @@ inherit "/master";
 
 
 mapping handled = ([]);
+
+string make_ofilename( string from )
+{
+  return "precompiled/"+
+         (hash(from)+""+
+          hash(reverse(from))+""+
+          hash(from[strlen(from)/2..]))
+         +".o";
+}
+
+void dump_program( string pname, program what )
+{
+  string outfile = make_ofilename( pname );
+  string data = encode_value( what, MyCodec( what ) );
+  _static_modules.files()->Fd(outfile,"wct")->write(data);
+} 
 
 program low_findprog(string pname, string ext, object|void handler)
 {
@@ -31,19 +136,20 @@ program low_findprog(string pname, string ext, object|void handler)
     {
     case "":
     case ".pike":
-      if(array s2=master_file_stat(fname+".o"))
-      {	
-	if(s2[1]>=0 && s2[3]>=s[3])
-	{
-	  mixed err=catch 
+      foreach( ({ make_ofilename( fname ), fname+".o" }), string ofile )
+        if(array s2=master_file_stat( ofile ))
+        {	
+          if(s2[1]>0 && s2[3]>=s[3])
           {
-            load_time[ fname ] = time();
-	    return programs[fname]=
-                   decode_value(_static_modules.files()->
-                                Fd(fname+".o","r")->read(),Codec());
-	  };
-	}
-      }
+            catch 
+            {
+              load_time[ fname ] = time();
+              return programs[fname]=
+                     decode_value(_static_modules.files()->
+                                  Fd(ofile,"r")->read(),Codec());
+            };
+          }
+        }
       
       if ( mixed e=catch { ret=compile_file(fname); } )
       {
