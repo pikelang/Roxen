@@ -1,5 +1,5 @@
 #define LOCALE	roxenp()->locale->get()->config_interface
-//string cvs_version = "$Id: cache.pike,v 1.28 1999/11/29 22:05:49 per Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.29 1999/12/15 07:59:33 per Exp $";
 #include <roxen.h>
 #include <config.h>
 
@@ -182,10 +182,7 @@ void cache_clear(string in)
 void cache_clean()
 {
   remove_call_out(cache_clean);
-  remove_call_out(cache_clean);
   call_out(cache_clean, CACHE_TIME_OUT);
-  call_out(cache_clean, CACHE_TIME_OUT);
-  gc();
   string a, b;
   int cache_time_out=CACHE_TIME_OUT;
 #ifdef CACHE_DEBUG
@@ -236,7 +233,6 @@ void cache_clean()
       }
     }
   }
-  gc();
 }
 
 void create()
