@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.20 1997/08/20 14:23:49 per Exp $
+/* $Id: wizard.pike,v 1.21 1997/08/20 19:09:54 noring Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -51,6 +51,16 @@ string wizard_tag_var(string n, mapping m, object id)
     if(!m->cols)m->cols="40";
     return make_container("textarea", m, html_encode_string(current||""));
 
+   case "radio":
+    m_delete(m,"default");
+    return make_tag("input "+((!id->variables[m->name] && current) ||
+			      (current==m->value)?" checked":""), m);
+
+   case "checkbox":
+    m_delete(m,"default");
+    m_delete(m, m->name);
+    m_delete(id->variables, m->name);
+    return make_tag("input "+(current?" checked":""), m);
 
    case "int":
     m->type = "number";
@@ -171,7 +181,7 @@ string parse_wizard_page(string form, object id, string wiz_name)
 	  (id->conf?"/internal-roxen-help":"/image/help.gif")+
 	  " border=0 value=\"Help\"></font>":"")
 	 +"</td>\n"
-	 " </tr><tr><td colspan=3><table cellpadding=0 cellspacing=0 border=0 width=100%><tr  bgcolor=#113377><td><img src="+
+	 " </tr><tr><td colspan=3><table cellpadding=0 cellspacing=0 border=0 width=100%><tr  bgcolor=#000000><td><img src="+
 	 (id->conf?"/internal-roxen-unit":"/image/unit.gif")+
 	 " width=1 height=1></td></tr></table></td></tr>\n"
 	 "  </table><table cellpadding=6><tr><td>\n"
@@ -336,16 +346,16 @@ string html_table(array(string) subtitles, array(array(string)) table)
 {
   string r = "";
 
-  r += "<table border=0 cellspacing=0 cellpadding=4>";
-  r += "<tr bgcolor=#113377>";
+  r += "<table border=0 cellspacing=0 cellpadding=4>\n";
+  r += "<tr bgcolor=#113377>\n";
   foreach(subtitles, string s)
-    r += "<th nowrap align=left><font color=#ffffff><b>"+s+
-         "</b></font></th>\n";
+    r += "<th nowrap align=left><font color=#ffffff>"+s+" &nbsp; </font></th>";
   r += "</tr>";
   for(int i = 0; i < sizeof(table); i++) {
     r += "<tr bgcolor="+(i%2?"#ddeeff":"#ffffff")+">";
-    foreach(table[i], string s)
-      r += "<td nowrap>"+(sizeof(s)?s:"")+"&nbsp; </td>";
+    foreach(table[i], string s) {
+      r += "<td nowrap>"+s+"&nbsp;&nbsp;</td>";
+    }
     r += "</tr>\n";
   }
   r += "</table><br>\n";
