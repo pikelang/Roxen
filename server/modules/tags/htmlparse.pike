@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.14 1997/01/07 03:35:11 neotron Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.15 1997/01/15 00:47:53 law Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -282,7 +282,7 @@ string *query_file_extensions()
 // can be threaded.
 array (int) stat;
 int error;
-mapping extra_heads = ([]);
+mapping extra_heads;
 string rettext;
 
 mapping handle_file_extension( object file, string e, object id)
@@ -576,7 +576,6 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
   if(m->cgi)
   {
     m->file = m->cgi;
-    got->misc->ssi_env = build_ssi_env_vars(got);
     m_delete(m, "cgi");
     return tag_insert(tag, m, got, file, defines);
   }
@@ -597,7 +596,6 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
       string addr=got->remoteaddr || "Internal";
       return popen(m->cmd,
 		   environment
-		   | build_ssi_env_vars(got)
 		   | build_roxen_env_vars(got)
 		   | build_env_vars(got->not_query, got, 0));
 
@@ -632,19 +630,16 @@ string tag_compat_include(string tag,mapping m,object got,object file,
   if(m->file)
   {
     mixed tmp;
-    string file;
     if(m->file[0] != '/')
     {
       if(got->not_query[-1] == '/')
-	file = got->not_query + m->file;
+	m->file = got->not_query + m->file;
       else
-	file = ((tmp = got->not_query / "/")[0..sizeof(tmp)-2] +
+	m->file = ((tmp = got->not_query / "/")[0..sizeof(tmp)-2] +
 		   ({ m->file }))*"/";
-      file = roxen->real_file(file, got);
+      m->file = roxen->real_file(m->file, got);
     }
-    if(!file)
-      return "<!-- No such file: "+m->file+" -->";
-    return read_bytes(file) || "<!-- No such file: "+m->file+" -->";
+    return read_bytes(m->file) || "<!-- No such file: "+m->file+"-->";
   }
   return "<!-- What? -->";
 }
@@ -665,13 +660,7 @@ string tag_compat_echo(string tag,mapping m,object got,object file,
      case "timefmt": case "errmsg":
       return "&lt;unimplemented&gt;";
       
-     case "DOCUMENT_NAME": 
-      mixed tmp;
-      if(sizeof(tmp = got->not_query/"/" - ({""})))
-	return tmp[-1];
-      return "";
-
-     case "PATH_TRANSLATED":
+     case "DOCUMENT_NAME": case "PATH_TRANSLATED":
       return roxen->real_file(got->not_query, got);
 
      case "DOCUMENT_URI":
@@ -1498,6 +1487,20 @@ string tag_header(string tag, mapping m, object got, object file)
   return "";
 }
 
+string tag_expire_time(string tag, mapping m, object got, object file)
+{
+  int t=time();
+  if (m->hours) t+=((int)(m->hours))*3600;
+  if (m->minutes) t+=((int)(m->hours))*60;
+  if (m->seconds) t+=((int)(m->hours));
+  if (m->days) t+=((int)(m->hours))*(24*3600);
+  if (m->weeks) t+=((int)(m->hours))*(24*3600*7);
+  if (m->months) t+=((int)(m->hours))*(24*3600*30+37800); /* 30.46d */
+  if (m->years) t+=((int)(m->hours))*(3600*(24*365+6));   /* 365.25d */
+  add_header(extra_heads, "Expires", http_date(t));
+  return "";
+}
+
 string tag_file(string tag, mapping m, object got)
 {
   if(m->raw)
@@ -1558,6 +1561,7 @@ mapping query_tag_callers()
 	    "realfile":tag_realfile,
 	    "vfs":tag_vfs,
 	    "header":tag_header,
+	    "expire_time":tag_expire_time,
 	    "signature":tag_signature,
 	    "user":tag_user,
  	    "quote":tag_quote,
