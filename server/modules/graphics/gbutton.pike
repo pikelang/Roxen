@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.32 2000/02/22 00:10:38 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.33 2000/02/22 00:14:32 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -456,7 +456,8 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
     if( sizeof( l ) )
     {
       object q = Image.lay( l );
-      q->set_offset( mask->xsize(),0);
+      q->set_offset( button_layers[0]->xsize()+
+                     button_layers[0]->xoffset(),0);
       button_layers += ({ q });
     }
   }
