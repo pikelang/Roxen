@@ -1,6 +1,18 @@
 Changes since Roxen 1.1 alpha 3
 -----------------------------------------------
 
+o Fixed support for <form method=POST enctype=multipart/form-data>.
+  It is now decoded just like any form-request (that is, from pike
+  you will get id->variables->variable_name variables, with the
+  contents of the uploaded file (or normal variable).
+
+  Example: <input accept=* type=file name=filett> results in the
+  variables id->variables["filett"] and
+  id->variables["filett.filename"]. Please note that Roxen will try to
+  pass the contents of the file as an environment variable to CGI
+  scripts.  This might not be the smartest thing in the world to do,
+  but it seems to work quite well.
+
 o Trust levels should really work as they are supposed to now.
 
 o The spacy background image (and the <blockquote> that was needed for
