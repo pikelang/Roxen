@@ -13,10 +13,9 @@
  * or should have been shipped along with the module.
  */
 
-constant cvs_version="$Id: SQLuserdb.pike,v 1.19 2000/04/10 10:43:48 grubba Exp $";
+constant cvs_version="$Id: SQLuserdb.pike,v 1.20 2000/05/03 16:33:50 nilsson Exp $";
 
 #include <module.h>
-inherit "roxenlib";
 inherit "module";
 
 #ifdef SQLAUTHDEBUG
@@ -25,8 +24,8 @@ inherit "module";
 #define DEBUGLOG(X)
 #endif
 
-int att=0, succ=0, nouser=0, db_accesses=0, last_db_access=0;
-object db=0;
+int att, succ, nouser, db_accesses, last_db_access;
+object db;
 
 /*
  * Object management and configuration variables definitions
@@ -36,7 +35,7 @@ void create()
   defvar ("sqlserver", "localhost", "Database URL",
 	  TYPE_STRING,
 	  "This database to connect to as a database URL in the format"
-	  "<br><tt>driver://user name:password@host:port/database</tt>.");
+	  "<br /><tt>driver://user name:password@host:port/database</tt>.");
 
   defvar ("crypted",1,"Passwords are crypted",
           TYPE_FLAG|VAR_MORE,
