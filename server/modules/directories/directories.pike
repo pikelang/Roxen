@@ -10,7 +10,7 @@
 //  o More stuff in the emit variables
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.82 2000/09/19 08:38:52 per Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.83 2000/09/25 12:53:21 per Exp $";
 constant thread_safe = 1;
 
 #include <stat.h>
@@ -180,7 +180,7 @@ mapping parse_directory(RequestID id)
   if(f[-1]!='/' && f[-1]!='.')
     return Roxen.http_redirect(f+"/", id);
 
-  if(f[-1]=='.' && override)
+  if(f[-1]=='.' && !override)
     return Roxen.http_redirect(f[..sizeof(f)-2], id);
 
   // If the pathname ends with '.', and the 'override' variable
