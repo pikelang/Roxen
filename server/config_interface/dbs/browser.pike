@@ -4,6 +4,52 @@
 //<locale-token project="roxen_config">_</locale-token>
 #define _(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
+mapping actions = ([
+  "move":   ({  _(0,"Move database"),        move_db,   }),
+  "delete": ({  _(0,"Delete this database"), delete_db, }),
+  "clear":  ({  _(0,"Delete all tables"),    clear_db,  }),
+]);
+
+#define VERIFY(X) do {								\
+  if( !id->variables["yes.x"] )							\
+  {										\
+    return									\
+      ("<table><tr><td colspan='2'>\n"+						\
+       sprintf((string)(X), db)+						\
+       "</td><tr><td><input type=hidden name=action value='&form.action;' />"   \
+       "<submit-gbutton2 name='yes'>"+_(0,"Yes")+"</submit-gbutton2></td>\n"	\
+       "<td align=right><a href="+Roxen.html_encode_string(id->not_query)+"?db="+\
+       Roxen.html_encode_string(id->variables->db)+"><gbutton> "+		\
+       _(0,"No")+" </gbutton></a></td>\n</table>\n");				\
+  }										\
+} while(0)
+
+
+mixed move_db( string db, RequestID id )
+{
+  return "Not finished yet";
+}
+
+mixed delete_db( string db, RequestID id )
+{
+  VERIFY(_(0,"Are you sure you want to delete the database %s?"));
+  report_notice( _(0,"The database %s was deleted by %s")+"\n",
+		 db, id->misc->authenticated_user->name() );
+  DBManager.drop_db( db );
+  werror("%O\n", Roxen.http_redirect( "../../", id ) );
+  return Roxen.http_redirect( "../../", id );
+}
+
+mixed clear_db( string db, RequestID id )
+{
+  VERIFY(_(0,"Are you sure you want to delete all tables in %s?"));
+  Sql.Sql sq = DBManager.get( db );
+  foreach( sq->query( "show tables" ), mapping r )
+    sq->query( "drop table "+values(r)[0] );
+  return 0;
+}
+
+
 mapping images = ([]);
 int image_id = time() ^ gethrtime();
 
@@ -20,7 +66,7 @@ string is_image( string x )
 
 int is_encode_value( string what )
 {
-  return !search( what, "¶ke0" );
+  return !search( what, "¶ke" );
 }
 
 string format_decode_value( string what )
@@ -58,8 +104,26 @@ string store_image( string x )
 
 mapping|string parse( RequestID id )
 {
+  string res =
+    "<use file='/template'/><tmpl>"
+    "<topmenu base='../' selected='dbs'/>"
+    "<content><cv-split><subtablist width='100%'><st-tabs>"
+    "<!--<insert file='subtabs.pike'/>--></st-tabs><st-page>"
+    "<input type=hidden name='db' value='&form.db:http;' />\n";
   if( id->variables->image )
     return m_delete( images, id->variables->image );
+
+  if( !id->variables->db )
+    return Roxen.http_redirect( "../", id );
+
+  if( id->variables->action && actions[ id->variables->action ])
+  {
+    mixed tmp = actions[ id->variables->action ][1]( id->variables->db, id );
+    if( stringp( tmp ) )
+      return res+tmp+"\n</st-page></content></tmpl>";
+    if( res )
+      return res;
+  }
 
   Sql.Sql db = DBManager.get( id->variables->db );
   string url = DBManager.db_url( id->variables->db );
@@ -182,12 +246,6 @@ mapping|string parse( RequestID id )
     }
   }
 
-  string res =
-    "<use file='/template'/><tmpl>"
-    "<topmenu base='../' selected='dbs'/>"
-    "<content><cv-split><subtablist width='100%'><st-tabs>"
-    "<!--<insert file='subtabs.pike'/>--></st-tabs><st-page>"
-    "<input type=hidden name='db' value='&form.db:http;' />\n";
 
   if( id->variables->table )
     res += "<input type=hidden name='table' value='&form.table:http;' />\n";
@@ -325,11 +383,23 @@ mapping|string parse( RequestID id )
 
 
   res += qres;
+
+#define ADD_ACTION(X) 								\
+   res += sprintf("<a href='%s?db=%s&action=%s'><gbutton>%s</gbutton></a>\n",	\
+		  id->not_query, id->variables->db, X, actions[X][0] )
   
-  // TODO: actions:
-  //    move
-  //    rename ( !(local || shared) )
-  //    delete ( !(local || shared) )
-  //    clear
-      return res+"</st-page></subtablist></cv-split></content></tmpl>";
+  switch( id->variables->db )
+  {
+    case "local":
+    case "shared":
+      foreach( ({ "move" }), string x )
+	ADD_ACTION( x );
+      break;
+      
+    default:
+      foreach( indices( actions ), string x )
+	ADD_ACTION( x );
+      break;
+  }  
+  return res+"</st-page></subtablist></cv-split></content></tmpl>";
 }
