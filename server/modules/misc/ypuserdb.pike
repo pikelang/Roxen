@@ -3,7 +3,7 @@
 // YP User database. Reads the system password database and use it to
 // authentificate users.
 
-string cvs_version = "$Id: ypuserdb.pike,v 1.2 1997/06/09 18:49:07 grubba Exp $";
+string cvs_version = "$Id: ypuserdb.pike,v 1.3 1997/06/09 18:51:49 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -16,7 +16,7 @@ import Yp;
 /*
  * Globals
  */
-object(YpDomain) domain;
+object(Domain) domain;
 
 /*
  * Statistics
@@ -126,7 +126,7 @@ array register_module()
 void start(int i)
 {
   if (!domain) {
-    domain = YpDomain();
+    domain = Domain();
   }
 }
 
