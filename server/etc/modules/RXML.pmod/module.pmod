@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.219 2001/08/13 15:58:22 mast Exp $
+// $Id: module.pmod,v 1.220 2001/08/13 23:02:42 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7246,15 +7246,17 @@ class PCodec
   }
 }
 
+static PCodec p_codec = PCodec();
+
 string p_code_to_string(PCode p_code)
 {
-  return encode_value(p_code, PCodec());
+  return encode_value(p_code, p_codec);
 }
 
 PCode string_to_p_code(string str)
 {
   mixed err = catch {
-    return [object(PCode)]decode_value(str, PCodec());
+    return [object(PCode)]decode_value(str, p_codec);
   };
   // Try to explain the error a bit.
   catch {
