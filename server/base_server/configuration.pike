@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.454 2001/07/21 11:19:57 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.455 2001/07/21 14:22:26 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3085,8 +3085,11 @@ void fix_my_url()
   my_url = query ("MyWorldLocation");
   if (!sizeof (my_url) &&
       !(my_url = Roxen.get_world (query ("URLs"))))
-    my_url = "http://localhost/"; // Probably no port configured.
-  if (!has_suffix (my_url, "/")) my_url += "/";
+    // Probably no port configured. The empty string is used as a
+    // flag; there shouldn't be any bad fallback here.
+    my_url = "";
+  else
+    if (!has_suffix (my_url, "/")) my_url += "/";
 }
 
 string get_url() {return my_url;}
