@@ -2,7 +2,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version="$Id: awizard.pike,v 1.4 1999/11/15 12:35:28 per Exp $";
+constant cvs_version="$Id: awizard.pike,v 1.5 1999/11/15 16:43:12 per Exp $";
 constant thread_safe=1;
 
 array register_module()
@@ -84,6 +84,14 @@ class Page
             "</table>");
   }
 
+  mapping make_gbutton_args( mapping from )
+  {
+    mapping res = ([]);
+    foreach( glob( "gbutton-*", indices(from) ), string f )
+      res[ f[8..] ] = from[ f ];
+    return res;
+  }
+
   string tag_button(string t, mapping m, int q, int w, object id)
   {
     mapping args = ([]);
@@ -104,11 +112,17 @@ class Page
       args->name  = "goto_prev_page/"+m->id;
     } else 
       args->name = "goto_current_page/"+m->id;
-    if(m->image) {
+    if(m->image || m->gbutton_title) 
+    {
       args->type = "image";
-      args->alt  = m->title||m->alt||m->page||"[ "+m->image+" ]";
+      args->alt  = m->title||m->gbutton_title||m->alt||m->page||"[ "+m->image+" ]";
       args->border="0";
-      args->src = replace(m->image, ({" ","?"}), ({"%20", "%3f"}));
+      if( !m->gbutton_title )
+        args->src = replace(m->image, ({" ","?"}), ({"%20", "%3f"}));
+      else
+        args->src = parse_rxml(  make_container( "gbutton-url",
+                                                 make_gbutton_args( m ),
+                                                 m->gbutton_title ), id );
     } else {
       args->type  = "submit";
       args->value  = m->title||m->page;
@@ -140,10 +154,16 @@ class Page
       args->name  = "goto_prev_page/"+m->id;
     } else 
       args->name = "goto_current_page/"+m->id;
-    if(m->image) {
+    if(m->image || m->gbutton_title) 
+    {
       args->type = "image";
       args->border="0";
-      args->src = replace(m->image, ({" ","?"}), ({"%20", "%3f"}));
+      if( m->gbutton_title )
+        args->src = parse_rxml(  make_container( "gbutton-url",
+                                                 make_gbutton_args( m ),
+                                                 m->gbutton_title ), id );
+      else
+        args->src = replace(m->image, ({" ","?"}), ({"%20", "%3f"}));
     } else {
       args->type  = "submit";
       args->value  = m->title||m->page;
@@ -227,7 +247,7 @@ class Page
     {
       if(!fun) 
         return "";
-      return fun(parser->tag_name(), args, @extra);
+      return fun(parser->tag_name(), args, 0,@extra);
     }
                    
     void create( function f )
@@ -244,7 +264,7 @@ class Page
     {
       if(!fun) 
         return "";
-      return fun(parser->tag_name(), args, c, @extra);
+      return fun(parser->tag_name(), args, c, 0,0, @extra);
     }
                    
     void create( function f )
