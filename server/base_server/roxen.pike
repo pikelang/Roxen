@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.138 1997/10/03 17:16:48 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.139 1997/10/05 03:35:58 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -177,27 +177,7 @@ function handle = unthreaded_handle;
 
 #ifdef THREADS
 #define THREAD_DEBUG
-#if 0
-class Queue
-{
-  mixed *buffer=({});
-  
-  int size() {  return sizeof(buffer);  }
 
-  mixed read()
-  {
-    while(!sizeof(buffer)) sleep(0.1);
-    mixed q = buffer[0];
-    buffer = buffer[1..];
-    return q;
-  }
-
-  void write(mixed what)
-  {
-    buffer += ({ what });
-  }
-};
-#endif
 object (Queue) handle_queue = Queue();
 
 void handler_thread(int id)
