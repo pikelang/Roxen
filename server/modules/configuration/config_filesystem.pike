@@ -17,7 +17,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.57 2000/09/19 12:59:01 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.58 2000/09/19 13:09:43 per Exp $";
 
 constant path = "config_interface/";
 object charset_decoder;
@@ -216,7 +216,7 @@ mixed find_file( string f, object id )
       sscanf( data, "%*s<br clear=\"all\">%s", data );
       sscanf( data, "%s</body>", data );
       retval = "<topmenu selected=\"docs\"/ base='"+
-             query_location()+locale+"/'>"
+             query_location()+locale+"/'/>"
              "<content>"+data+"</content>";
       if( title )
         retval="<title>: Docs "+html_encode_string(title)+"</title>" + retval;
