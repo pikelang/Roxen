@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.97 1998/05/11 21:57:43 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.98 1998/05/12 12:20:30 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -733,17 +733,17 @@ string format_backtrace(array bt, int eid)
   foreach(bt[1..], string line)
   {
     string fun, args, where, fo;
-    if(sscanf(html_encode_string(line), "%s(%s) in %s", fun, args, where) == 3)
-    {
-      sscanf(where, "%*s in %s", fo);
+    if((sscanf(html_encode_string(line), "%s(%s) in %s",
+	       fun, args, where) == 3) &&
+       (sscanf(where, "%*s in %s", fo) && fo) {
       line += get_id( fo );
       res += ("<li value="+(q--)+"> "+
-	      (replace(line, (string)fo,
-		       link_to(line,eid,sizeof(bt)-q-1)+fo+"</a>")
+	      (replace(line, fo, link_to(line,eid,sizeof(bt)-q-1)+fo+"</a>")
 	       -(getcwd()+"/"))+"<p>\n");
-    } else
+    } else {
       res += "<li value="+(q--)+"> <b><font color=darkgreen>"+
 	line+"</font></b><p>\n";
+    }
   }
   res += ("</ul><p><b><a href=\"/(old_error,plain)/error?error="+eid+"\">"
 	  "Generate text-only version of this error message, for bug reports"+
