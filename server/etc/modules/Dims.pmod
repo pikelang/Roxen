@@ -1,4 +1,4 @@
-//   $Id: Dims.pmod,v 1.6 1998/03/02 15:23:53 js Exp $
+//   $Id: Dims.pmod,v 1.7 1999/11/02 21:43:15 neotron Exp $
 //
 //   Imagedimensionreadermodule for Pike.
 //   Created by Johan Schön, <js@idonex.se>.
@@ -200,8 +200,10 @@ class dims
   {
     if(stringp(fn))
       f=Stdio.File(fn,"r");
-    else //if(objectp(fn))
+    else 
       f=fn;
+    if(!f->tell)
+      return 0; // Not a file object
     int offset=f->tell();
     array a;
     catch {
