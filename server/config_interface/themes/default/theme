@@ -170,16 +170,18 @@
 <theme-set what=err-2 to="err_2.gif" themefile/>
 <theme-set what=err-3 to="err_3.gif" themefile/>
 
+<theme-set what="database-small" to="left-images/database-small.gif" themefile/>
+
 <theme-path match='/settings.html*'>
-  <theme-set what=left-image to=left-images/access.gif themefile />
+  <theme-set what=left-image to="left-images/lock.gif" themefile />
 </theme-path>
 
 <theme-path match='/users.html*'>
-  <theme-set what=left-image to=left-images/access.gif themefile />
+  <theme-set what=left-image to="left-images/lock.gif" themefile />
 </theme-path>
 
 <theme-path match='/global_settings/*'>
-  <theme-set what=left-image to="left-images/edit.gif" themefile />
+  <theme-set what=left-image to="left-images/earth2.gif" themefile />
 </theme-path>
 
 <theme-path match='/actions/*'>
@@ -187,7 +189,7 @@
 </theme-path>
 
 <theme-path match='/dbs/*'>
-  <theme-set what=left-image to="&usr.database-small;" themefile />
+  <theme-set what=left-image to="left-images/database.gif" themefile />
 </theme-path>
 
 <theme-path match='/sites/*'>
