@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.443 2004/02/03 15:53:41 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.444 2004/02/04 14:14:50 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4501,8 +4501,11 @@ class IfIs
     }
 
     int(0..1) recurse_check(array var, array arr, RequestID id) {
-      foreach(var, mixed val) {
-	if(arrayp(val)) {
+      foreach(arrayp (var) ? var :
+	      mappingp (var) ? values (var) :
+	      indices (var),
+	      mixed val) {
+	if(arrayp(val) || mappingp (val) || multisetp (val)) {
 	  if(recurse_check(val, arr, id)) return 1;
 	  continue;
 	}
