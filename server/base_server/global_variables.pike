@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: global_variables.pike,v 1.64 2001/03/05 18:15:00 nilsson Exp $
+// $Id: global_variables.pike,v 1.65 2001/03/05 18:18:41 per Exp $
 
 /*
 #pragma strict_types
@@ -559,6 +559,10 @@ void define_global_variables(  )
 		"value into something that is hard to guess, unless "
 		"you are satisfied with what your computers random "
 		"generator has produced") );
+
+  secret = Crypto.md5()->update(""+time(1)+random(100000)+"x"+gethrtime())
+    ->digest();
+  definvisvar("argcache_secret",secret,TYPE_STRING);
 
   defvar("suicide_engage", 0,
 	 LOCALE(160, "Auto Restart: Enable Automatic Restart"),

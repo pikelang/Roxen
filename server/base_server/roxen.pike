@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.639 2001/03/01 20:52:52 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.640 2001/03/05 18:18:41 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -554,7 +554,7 @@ local static void handler_thread(int id)
 		       "Client will not get any response from Roxen.\n"),*/
 		     describe_backtrace(q));
 	if (q = catch {h = 0;}) {
-	  report_error(LOC_M(5, "Uncaught error in handler thread: %s Client"
+	  report_error(LOC_M(5, "Uncaught error in1942 handler thread: %s Client"
 			     "will not get any response from Roxen.")+"\n",
 		       describe_backtrace(q));
 	}
@@ -2348,7 +2348,10 @@ class ImageCache
 	case "wbf":
 	  format = "wbmp";
 	case "wbmp":
-	  data = Image.WBF.encode( reply, enc_args );
+	  Image.Colortable bw=Image.Colortable( ({ ({ 0,0,0 }), 
+						   ({ 255,255,255 }) }) );
+	  bw->floyd_steinberg();
+	  data = Image.WBF.encode( bw->map( reply ), enc_args );
 	  break;
        case "gif":
 #if constant(Image.GIF) && constant(Image.GIF.encode)
@@ -2779,12 +2782,51 @@ class ArgCache
     return (string)db->master_sql->insert_id();
   }
 
+  static int low_key_exists( string key )
+  {
+    return sizeof( db->query( "SELECT id FROM "+name+" WHERE id="+(int)key));
+  }
 
+  static string secret;
+
+  static void ensure_secret()
+  {
+    if( !secret )
+      secret = query( "argcache_secret" );
+  }
+  static string encode_id( string a, string b )
+  {
+    ensure_secret();
+    object crypto = Crypto.arcfour();
+    crypto->set_encrypt_key( secret );
+    string res = crypto->crypt( a+"×"+b );
+    res = Gmp.mpz( res, 256 )->digits( 36 );
+    return res;
+  }
+
+  static array decode_id( string a )
+  {
+    ensure_secret();
+    object crypto = Crypto.arcfour();
+    crypto->set_encrypt_key( secret );
+    a = Gmp.mpz( a, 36 )->digits( 256 );
+    a = crypto->crypt( a );
+    int i, j;
+    if( sscanf( a, "%d×%d", i, j ) != 2 )
+    {
+      // plugin decode here? 
+      return 0;
+    }
+    return ({ (string)i, (string)j });
+  }
+  
   int key_exists( string key )
   //! Does the key 'key' exist in the cache? Returns 1 if it does, 0
   //! if it was not present.
   {
-    return sizeof( db->query( "SELECT id FROM "+name+" WHERE id="+(int)key));
+    array i = decode_id( key );
+    if(!i) return 0;
+    return low_key_exists( i[0] ) && low_key_exists( i[1] );
   }
 
   string store( mapping args )
@@ -2792,18 +2834,19 @@ class ArgCache
   //! argument cache. The string returned is your key to retrieve the
   //! data later.
   {
-    array q;
-#if 1
     array b = values(args), a = sort(indices(args),b);
-    string data = encode_value(({a,b}));
-#else
-    string data = encode_value_canonic( args );
-#endif
-    if( q = cache[ data ] )
-      return q[ CACHE_SKEY ];
+    string id = encode_id( low_store( a ), low_store( b ) );
+    cache[ id ] = args+([]);
+    return id;
+  }
 
+  static string low_store( array a )
+  {
+    string data = encode_value( a );
+    if( mixed q = cache[ data ] )
+      return q[ CACHE_SKEY ];
     LOCK();
-    if( q = cache[ data ] )
+    if( mixed q = cache[ data ] )
       return q[ CACHE_SKEY ];
 
     if( sizeof( cache ) >= CACHE_SIZE )
@@ -2824,7 +2867,7 @@ class ArgCache
 
     string id = create_key( data );
     cache[ data ] = ({ 0, 0 });
-    cache[ data ][ CACHE_VALUE ] = copy_value( args );
+    cache[ data ][ CACHE_VALUE ] = copy_value( a );
     cache[ data ][ CACHE_SKEY ] = id;
     cache[ id ] = data;
     return id;
@@ -2835,19 +2878,28 @@ class ArgCache
   //! may be supplied to get an error message stating the browser name
   //! in the event of the key not being present any more in the cache.
   {
-    mixed v ;
+    if( cache[id] )  return cache[id]+([]);
+    mixed v;
+    array i = decode_id( id );
+    if( !i )
+    {
+      // ID does not belong to this server. Add system for this here.
+      return 0;
+    }
+    array a = low_lookup( i[0] );
+    array b = low_lookup( i[1] );
+    if( a && b )
+      return (cache[id] = mkmapping( a, b ))+([]);
+  }
+
+  static array low_lookup( string id )
+  {
+    mixed v;
     if( (v=cache[id]) && (v=cache[ v ]) )
       return v[CACHE_VALUE];
-
     string q = read_args( id );
-
     if(!q) error("Requesting unknown key\n");
-
     mixed data = decode_value(q);
-
-    if( !mappingp( data ) )
-      data = mkmapping( data[0],data[1] );
-     
     cache[ q ] = ({data,id});
     cache[ id ] = q;
     return data;
@@ -2856,12 +2908,17 @@ class ArgCache
   void delete( string id )
   //! Remove the data element stored under the key 'id'.
   {
-    if(cache[id])
+    m_delete( cache, id );
+    
+    foreach( decode_id( id ), string id )
     {
-      m_delete( cache, cache[id] );
-      m_delete( cache, id );
+      if(cache[id])
+      {
+	m_delete( cache, cache[id] );
+	m_delete( cache, id );
+      }
+      db->query( "DELETE FROM "+name+" WHERE id="+(int)id );
     }
-    db->query( "DELETE FROM "+name+" WHERE id="+(int)id );
   }
 }
 
