@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.248 2000/08/16 22:53:28 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.249 2000/08/17 00:38:34 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 #define RAM_CACHE
@@ -1836,6 +1836,8 @@ void send_result(mapping|void result)
                                   "hs":strlen(head_string),
                                   "len":file->len,
                                   "error":file->error,
+                                  "mtime":(file->stat && file->stat[ST_MTIME]),
+                                  "rf":realfile,
                                 ]), 
                                 misc->cacheable );
           file = ([ "data":data ]);
@@ -2076,20 +2078,28 @@ void got_data(mixed fooid, string s)
   {
     if(!leftovers) 
       leftovers = data||"";
+    
     string d = cv[ 0 ];
     file = cv[1];
-    conf->hsent += file->hs;
-    if( strlen( d ) < 4000 )
+    array st;
+    if( !file->rf || !file->mtime || 
+        ((st = file_stat( file->rf )) &&
+         st[ST_MTIME] == file->mtime ) )
     {
-      my_fd->write( d );
-      do_log();
-    } 
-    else 
-    {
-      send( d );
-      send_result();
+      conf->hsent += file->hs;
+      if( strlen( d ) < 4000 )
+      {
+        my_fd->write( d );
+        do_log();
+      } 
+      else 
+      {
+        send( d );
+        send_result();
+      }
+      return;
     }
-    return;
+    file = 0;
   }
 #endif
 
