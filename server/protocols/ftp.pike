@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.80 1998/02/28 19:55:02 grubba Exp $
+ * $Id: ftp.pike,v 1.81 1998/03/02 16:50:26 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -1184,7 +1184,7 @@ void handle_data(string s, mixed key)
   conf->received += strlen(s);
   remove_call_out(timeout);
   call_out(timeout, 3600);
-  remoteaddr = cmd_fd->query_address();
+  remoteaddr = (cmd_fd->query_address()/" ")[0];
   supports = (< "ftp", "images", "tables", >);
   prot = "FTP";
   method = "GET";
