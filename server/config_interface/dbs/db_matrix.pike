@@ -168,13 +168,18 @@ string parse( RequestID id )
       return sprintf( "%s %.1fMb", url, s->size/1024.0/1024.0 );
     };
 
-#if 1
-    res += "<td align=right width='100%' >"+
-             format_stats( DBManager.db_stats( db ),
-                           DBManager.db_url( db ) )+"</td>";
-#else
-    res += "<td width='100%'>&nbsp;</td>";
-#endif
+    array e;
+    if( mixed e = catch {
+      res += "<td align=right width='100%' >"+
+	format_stats( DBManager.db_stats( db ),
+		      DBManager.db_url( db ) )+"</td>";
+    } )
+    {
+      string em = describe_error(e);
+      sscanf( em, "%*sreconnect to SQL-server%s", em);
+      res += "<td width='100%'>"+DBManager.db_url( db )+"<br />"
+	"<font color='&usr.warncolor;'>"+em+"</font></td>";
+    }
     res += "</tr>\n";
   }
   return res+"</table>";
