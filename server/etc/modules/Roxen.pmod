@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.181 2004/06/25 16:22:07 anders Exp $
+// $Id: Roxen.pmod,v 1.182 2004/06/29 10:57:59 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -297,8 +297,6 @@ int _match(string w, array (string) a)
 }
 
 
-// --- From the old 'http' file ---------------------------------
-
 mapping(string:mixed) http_low_answer( int status_code, string data )
 //! Return a result mapping with the specified HTTP status code and
 //! data. @[data] is sent as the content of the response and is
@@ -495,6 +493,13 @@ string cern_http_date(int t)
   return(chd_lf=sprintf("%02d/%s/%04d:%02d:%02d:%02d %s%02d00",
 		 lt->mday, months[lt->mon], 1900+lt->year,
 		 lt->hour, lt->min, lt->sec, c, tzh));
+}
+
+string http_status_message (int status_code)
+//! Returns the standard message that corresponds to the given HTTP
+//! status code.
+{
+  return errors[status_code];
 }
 
 string http_date( mixed t )
