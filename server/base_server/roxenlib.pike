@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.127 1999/11/23 06:39:05 per Exp $
+// $Id: roxenlib.pike,v 1.128 1999/11/23 19:08:55 mirar Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1452,9 +1452,11 @@ string|int tagtime(int t, mapping m, object id, object language)
      case "month":
       return number2string(localtime(t)->mon+1,m,
 			   language(m->lang, sp||"month"));
+#if constant(Calendar.ISO)
      case "week":
-      return number2string(Calendar.datetime(t)->week,m,
+      return number2string(Calendar.ISO.Week()->number(),m,
                            language(m->lang, sp||"number"));
+#endif
      case "day":
      case "wday":
       return number2string(localtime(t)->wday+1,m,
@@ -1469,7 +1471,7 @@ string|int tagtime(int t, mapping m, object id, object language)
 
      case "beat":
        //FIXME This should be done inside Calendar.
-       mapping lt=Calendar.datetime(t);
+       mapping lt=Calendar.ISO.datetime(t,1);
        int secs=3600;
        secs+=lt->timezone;
        secs-=lt->DST*3600;
