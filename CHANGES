@@ -1,3 +1,10 @@
+Changes since Roxen Challenger 1.2.24 Yellow
+-----------------------------------------------
+
+o The basic filesystem now clears the old entry in the stat-cache for
+  files uploaded or deleted.
+
+
 Changes since Roxen Challenger 1.2.21 Yellow
 -----------------------------------------------
 
