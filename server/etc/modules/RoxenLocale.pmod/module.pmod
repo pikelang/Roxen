@@ -72,7 +72,7 @@ array(string) list_languages(string project) {
   }
   string s_patt;
   if(search(pattern, "/", sizeof(dirbase))==-1)
-    s_patt=pattern;
+    s_patt=pattern[sizeof(dirbase)..];
   else
     s_patt=pattern[sizeof(dirbase)..search(pattern, "/", sizeof(dirbase))-1];
   s_patt = replace(s_patt, "%L", "%3s");
@@ -100,7 +100,7 @@ class LocaleObject {
   // key:string
   private mapping(string|int:string) bindings;
   // key:function
-  private mapping(string:function) functions;
+  mapping(string:function) functions;
   int timestamp;
 
   void create(mapping(string|int:string) _bindings,
@@ -299,12 +299,12 @@ function call(string project, string lang, string name,
   LocaleObject locale_object = get_object(project, lang);
   function f;
   if(!locale_object || !(f=locale_object->is_function(name))) 
-    if(stringp(fb))
+    if(stringp(fb)) {
       locale_object = get_object(project, fb);
-  if(locale_object && f) {
-    return f;
-  }
-  return [function]fb;
+      if(!(f=locale_object->is_function(name)))
+	return 0;
+    }
+  return f || [function]fb;
 }
 
 static void clean_cache() {
