@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.93 2000/03/10 03:36:49 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.94 2000/03/10 04:20:30 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -803,7 +803,7 @@ class TagSetMaxCache {
 
 // ------------------- Containers ----------------
 
-string container_charset( string t, mapping m, string c, RequestID id )
+string simpletag_charset( string t, mapping m, string c, RequestID id )
 {
   if( m->in )
     if( catch {
@@ -944,7 +944,7 @@ class TagFor {
   }
 }
 
-string container_foreach(string t, mapping args, string c, RequestID id)
+string simpletag_foreach(string t, mapping args, string c, RequestID id)
 {
   string v = args->variable;
   array what;
@@ -970,7 +970,7 @@ string container_foreach(string t, mapping args, string c, RequestID id)
   return res;
 }
 
-string container_apre(string tag, mapping m, string q, RequestID id)
+string simpletag_apre(string tag, mapping m, string q, RequestID id)
 {
   string href, s;
   array(string) foo;
@@ -1004,8 +1004,8 @@ string container_apre(string tag, mapping m, string q, RequestID id)
   return make_container("a", m, q);
 }
 
-string|array(string) container_aconf(string tag, mapping m,
-                                     string q, RequestID id)
+string simpletag_aconf(string tag, mapping m,
+		       string q, RequestID id)
 {
   string href,s;
 
@@ -1036,7 +1036,7 @@ string|array(string) container_aconf(string tag, mapping m,
   return make_container("a", m, q);
 }
 
-string container_maketag(string tag, mapping m, string cont, RequestID id)
+string simpletag_maketag(string tag, mapping m, string cont, RequestID id)
 {
   mapping args=(!m->noxml&&m->type=="tag"?(["/":"/"]):([]));
   cont=parse_html(parse_rxml(cont,id), ([]), (["attrib":
@@ -1050,7 +1050,7 @@ string container_maketag(string tag, mapping m, string cont, RequestID id)
   return make_tag(m->name, args);
 }
 
-string container_doc(string tag, mapping m, string s)
+string simpletag_doc(string tag, mapping m, string s)
 {
   if(!m["quote"])
     if(m["pre"]) {
@@ -1071,7 +1071,7 @@ string container_doc(string tag, mapping m, string s)
       return replace(s, ({ "<", ">", "& " }), ({ "&lt;", "&gt;", "&amp; " }));
 }
 
-string container_autoformat(string tag, mapping m, string s, RequestID id)
+string simpletag_autoformat(string tag, mapping m, string s, RequestID id)
 {
   s-="\r";
 
@@ -1167,7 +1167,7 @@ class Smallcapsstr {
   }
 }
 
-string container_smallcaps(string t, mapping m, string s)
+string simpletag_smallcaps(string t, mapping m, string s)
 {
   Smallcapsstr ret;
   string spc=m->space?"&nbsp;":"";
@@ -1213,17 +1213,11 @@ string container_smallcaps(string t, mapping m, string s)
   return ret->value();
 }
 
-string container_random(string tag, mapping m, string s)
+string simpletag_random(string tag, mapping m, string s)
 {
   string|array q;
   if(!(q=m->separator || m->sep)) return (q=s/"\n")[random(sizeof(q))];
   return (q=s/q)[random(sizeof(q))];
-}
-
-array(string) container_formoutput(string tag_name, mapping args,
-                                   string contents, RequestID id)
-{
-  return ({ do_output_tag( args, ({ id->variables }), contents, id ) });
 }
 
 array(string) container_gauge(string t, mapping args, string contents, RequestID id)
@@ -1244,11 +1238,11 @@ array(string) container_gauge(string t, mapping args, string contents, RequestID
 }
 
 // Removes empty lines
-array(string) container_trimlines( string tag_name, mapping args,
+string simpletag_trimlines( string tag_name, mapping args,
                            string contents, RequestID id )
 {
-  contents = replace(parse_rxml(contents,id), ({"\r\n","\r" }), ({"\n","\n"}));
-  return ({ (contents / "\n" - ({ "" })) * "\n" });
+  contents = replace(contents, ({"\r\n","\r" }), ({"\n","\n"}));
+  return (contents / "\n" - ({ "" })) * "\n";
 }
 
 void container_throw( string t, mapping m, string c, RequestID id)
@@ -1302,20 +1296,19 @@ private int|array internal_tag_select(string t, mapping m, string c, string name
   return ({ make_container(t,m,ret) });
 }
 
-array(string) container_default( string t, mapping m, string c, RequestID id)
+string simpletag_default( string t, mapping m, string c, RequestID id)
 {
   multiset value=(<>);
   if(m->value) value=mkmultiset((m->value||"")/(m->separator||","));
   if(m->variable) value+=(<RXML.user_get_var(m->variable, m->scope)>);
-  c = parse_rxml(c, id );
-  if(value==(<>)) return ({c});
+  if(value==(<>)) return c;
 
-  return ({ parse_html(c, (["input":internal_tag_input]),
-		       (["select":internal_tag_select]),
-		       m->name, value) });
+  return parse_html(c, (["input":internal_tag_input]),
+		    (["select":internal_tag_select]),
+		    m->name, value);
 }
 
-string container_sort(string t, mapping m, string c, RequestID id)
+string simpletag_sort(string t, mapping m, string c, RequestID id)
 {
   if(!m->separator)
     m->separator = "\n";
@@ -1423,7 +1416,7 @@ string container_repeat(string tag, mapping m, string c, RequestID id)
   return ret;
 }
 
-string container_replace( string tag, mapping m, string cont, RequestID id)
+string simpletag_replace( string tag, mapping m, string cont, RequestID id)
 {
   switch(m->type)
   {
