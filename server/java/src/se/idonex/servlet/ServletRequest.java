@@ -20,6 +20,8 @@ import java.security.Principal;
 class ServletRequest implements javax.servlet.http.HttpServletRequest
 {
   ServletContext context;
+  RoxenSessionContext sessioncontext;
+  ServletResponse response = null;
   int contentLength;
   String contentType, protocol, scheme;
   String serverName;
@@ -328,8 +330,11 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
 
   public HttpSession getSession(boolean create)
   {
-    // FIXME
-    return null;
+    String id = getRequestedSessionId();
+    HttpSession session = sessioncontext.getSession(id, create);
+    if(session != null && !session.getId().equals(id) && response != null)
+      response.setSessionId(session);
+    return session;
   }
 
   public HttpSession getSession()
@@ -339,20 +344,22 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
 
   public String getRequestedSessionId()
   {
-    // FIXME
+    Cookie[] cookies = getCookies();
+    for(int i=0; i<cookies.length; i++)
+      if("JSESSIONID".equals(cookies[i].getName()))
+	return cookies[i].getValue();
     return null;
   }
 
   public boolean isRequestedSessionIdValid()
   {
-    // FIXME
-    return false;
+    HttpSession session = getSession(false);
+    return session != null;
   }
 
   public boolean isRequestedSessionIdFromCookie()
   {
-    // FIXME
-    return false;
+    return getRequestedSessionId() != null;
   }
   
   /**
@@ -367,16 +374,22 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
 
   public boolean isRequestedSessionIdFromURL()
   {
-    // FIXME
     return false;
   }
 
-  ServletRequest(ServletContext cx, int cl, String ct, String pr, String sc,
+  void setResponse(ServletResponse rp)
+  {
+    response = rp;
+  }
+
+  ServletRequest(ServletContext cx, RoxenSessionContext sx,
+		 int cl, String ct, String pr, String sc,
 		 String sn, int sp, String ra, String rh, String d,
 		 String ap, String pi, String me, String ru, String u,
 		 String q, String pt)
   {
     context = cx;
+    sessioncontext = sx;
     contentLength = cl;
     contentType = ct;
     protocol = pr;

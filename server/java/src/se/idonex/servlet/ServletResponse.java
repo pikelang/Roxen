@@ -2,6 +2,7 @@ package se.idonex.servlet;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpSession;
 import java.io.PrintWriter;
 import java.io.OutputStreamWriter;
 import java.io.IOException;
@@ -141,6 +142,16 @@ class ServletResponse implements javax.servlet.http.HttpServletResponse
       cookiehead += "; Version="+nval;
 
     setHeader("Set-Cookie", cookiehead);
+  }
+
+  void setSessionId(HttpSession session)
+  {
+    Cookie id = new Cookie("JSESSIONID", session.getId());
+    int mtim = session.getMaxInactiveInterval();
+    if(mtim>=0)
+      id.setMaxAge(mtim);
+    id.setComment("servlet session tracking");
+    addCookie(id);
   }
 
   protected static final boolean badAtomChar(char c)

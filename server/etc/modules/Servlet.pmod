@@ -15,6 +15,7 @@ static object context_class = FINDCLASS("se/idonex/servlet/RoxenServletContext")
 static object request_class = FINDCLASS("se/idonex/servlet/ServletRequest");
 static object response_class = FINDCLASS("se/idonex/servlet/ServletResponse");
 static object stream_class = FINDCLASS("se/idonex/servlet/HTTPOutputStream");
+static object session_context_class = FINDCLASS("se/idonex/servlet/RoxenSessionContext");
 static object dictionary_class = FINDCLASS("java/util/Dictionary");
 static object throwable_class = FINDCLASS("java/lang/Throwable");
 static object stringwriter_class = FINDCLASS("java/io/StringWriter");
@@ -30,12 +31,13 @@ static object servlet_service = servlet_ifc->get_method("service", "(Ljavax/serv
 static object cfg_init = config_class->get_method("<init>", "(Ljavax/servlet/ServletContext;)V");
 static object context_init = context_class->get_method("<init>", "(I)V");
 static object context_id_field = context_class->get_field("id", "I");
-static object request_init = request_class->get_method("<init>", "(Ljavax/servlet/ServletContext;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+static object request_init = request_class->get_method("<init>", "(Ljavax/servlet/ServletContext;Lse/idonex/servlet/RoxenSessionContext;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
 static object response_init = response_class->get_method("<init>", "(Ljavax/servlet/ServletOutputStream;)V");
 static object dic_field = config_class->get_field("dic", "Ljava/util/Dictionary;");
 static object params_field = request_class->get_field("parameters", "Ljava/util/Dictionary;");
 static object attrs_field = request_class->get_field("attributes", "Ljava/util/Dictionary;");
 static object headers_field = request_class->get_field("headers", "Ljava/util/Dictionary;");
+static object set_response_method = request_class->get_method("setResponse", "(Lse/idonex/servlet/ServletResponse;)V");
 static object dic_put = dictionary_class->get_method("put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
 static object stream_id_field = stream_class->get_field("id", "I");
 static object stream_init = stream_class->get_method("<init>", "(I)V");
@@ -44,6 +46,7 @@ static object stringwriter_init = stringwriter_class->get_method("<init>", "()V"
 static object printwriter_init = printwriter_class->get_method("<init>", "(Ljava/io/Writer;)V");
 static object printwriter_flush = printwriter_class->get_method("flush", "()V");
 static object wrapup_method = response_class->get_method("wrapUp", "()V");
+static object session_context_init = session_context_class->get_method("<init>", "()V");
 
 static object natives_bind1, natives_bind2, natives_bind3;
 
@@ -87,6 +90,7 @@ class servlet {
       res = response(req->my_fd);
       req = request(0, req);
     }
+    set_response_method(req, res);
 #if constant(thread_create)
     if(singlethreaded) {
       object key = lock->lock();
@@ -198,7 +202,7 @@ static object ctx_object(object ctx)
 
 class context {
 
-  object ctx, conf;
+  object ctx, sctx, conf;
   static int id;
 
   void create(object|void c)
@@ -209,6 +213,9 @@ class context {
     check_exception();
     context_init(ctx, id);
     check_exception();
+    sctx = session_context_class->alloc();
+    check_exception();
+    session_context_init(sctx);
     contexts[id] = this_object();
     if(conf) {
       if(context_for_conf[conf])
@@ -314,7 +321,7 @@ object request(object context, mapping(string:string)|object id,
   }
   object r = request_class->alloc();
   check_exception();
-  request_init(r, context->ctx, @rest);
+  request_init(r, context->ctx, context->sctx, @rest);
   check_exception();
   object pa = params_field->get(r);
   foreach(indices(id), string v)
