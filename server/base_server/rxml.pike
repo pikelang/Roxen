@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.229 2000/08/27 10:40:31 nilsson Exp $
+// $Id: rxml.pike,v 1.230 2000/08/27 14:44:36 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -1034,23 +1034,79 @@ class TagStrLen {
 class TagCase {
   inherit RXML.Tag;
   constant name = "case";
+
+  static Parser.HTML lowercaser =
+    lambda () {
+      Parser.HTML p = Parser.HTML();
+      p->_set_data_callback (
+	lambda (Parser.HTML p, string data) {
+	  return ({lower_case (data)});
+	});
+      p->_set_entity_callback (
+	lambda (Parser.HTML p, string data) {
+	  if (string char = Roxen.decode_charref (data))
+	    return ({Roxen.encode_charref (lower_case (char))});
+	  return 0;
+	});
+      return p;
+    }();
+
+  static Parser.HTML uppercaser =
+    lambda () {
+      Parser.HTML p = Parser.HTML();
+      p->_set_data_callback (
+	lambda (Parser.HTML p, string data) {
+	  return ({upper_case (data)});
+	});
+      p->_set_entity_callback (
+	lambda (Parser.HTML p, string data) {
+	  if (string char = Roxen.decode_charref (data))
+	    return ({Roxen.encode_charref (upper_case (char))});
+	  return 0;
+	});
+      return p;
+    }();
+
+  static Parser.HTML capitalizer =
+    lambda () {
+      Parser.HTML p = Parser.HTML();
+      p->_set_data_callback (
+	lambda (Parser.HTML p, string data) {
+	  p->_set_data_callback (0);
+	  p->_set_entity_callback (0);
+	  return ({String.capitalize (data)});
+	});
+      p->_set_entity_callback (
+	lambda (Parser.HTML p, string data) {
+	  p->_set_data_callback (0);
+	  p->_set_entity_callback (0);
+	  if (string char = Roxen.decode_charref (data))
+	    return ({Roxen.encode_charref (upper_case (char))});
+	  return 0;
+	});
+      return p;
+    }();
+
   class Frame {
     inherit RXML.Frame;
     int cap=0;
     array do_process(RequestID id) {
       if(args->case)
 	switch(lower_case(args->case)) {
-	case "lower": return ({ lower_case(content) });
+	case "lower":
+	  return ({content_type->encoding_type == "xml" ?
+		   lowercaser->clone()->finish (content)->read() :
+		   lower_case (content)});
 	case "upper":
-	  if( args->type=="html" )
-	    return ({ replace( upper_case(content),
-			       ({ "&AMP;", "&LT;", "&GT;" }),
-			       ({ "&amp;", "&lt;", "&gt;" }) ) });
-	  return ({ upper_case(content) });
+	  return ({content_type->encoding_type == "xml" ?
+		   uppercaser->clone()->finish (content)->read() :
+		   upper_case (content)});
 	case "capitalize":
-	  if(cap) return content;
-	  cap=1;
-	  return ({ capitalize(content) });
+	  if(cap) return ({content});
+	  if (sizeof (content)) cap=1;
+	  return ({content_type->encoding_type == "xml" ?
+		   capitalizer->clone()->finish (content)->read() :
+		   String.capitalize (content)});
 	}
 
 #ifdef OLD_RXML_COMPAT
