@@ -888,7 +888,7 @@ Click "Next" to start the installation.</Text>
         </Control>
         <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
         <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
-          <Text>{\VSI_MS_Sans_Serif16.0_1_0}BannerText</Text>
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Administration Interface Settings</Text>
         </Control>
         <Control Id="BodyText" Type="Text" X="9" Y="63" Width="354" Height="42">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Administration interface settings</Text>
@@ -981,7 +981,7 @@ Click "Next" to start the installation.</Text>
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
         </Control>
         <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
-          <Text>{\VSI_MS_Sans_Serif16.0_1_0}BannerText</Text>
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}Type of installation</Text>
         </Control>
         <Control Id="BodyText" Type="Text" X="9" Y="63" Width="354" Height="42">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Select type of installation</Text>
@@ -1090,35 +1090,39 @@ Click "Next" to start the installation.</Text>
         <Show Dialog="ProgressForm" After="FolderForm" />
       </InstallUISequence>
     </UI>
+
+    <Property Id="AdminWelcomeForm_NextArgs"><![CDATA[AdminFolderForm]]></Property>
     <Property Id="AdminFolderForm_PrevArgs"><![CDATA[AdminWelcomeForm]]></Property>
+    <Property Id="AdminFolderForm_NextArgs"><![CDATA[AdminConfirmInstallForm]]></Property>
+    <Property Id="AdminConfirmInstallForm_PrevArgs"><![CDATA[AdminFolderForm]]></Property>
+
+    <Property Id="SplashForm_NextArgs"><![CDATA[WelcomeForm]]></Property>
+    <Property Id="WelcomeForm_PrevArgs"><![CDATA[SplashForm]]></Property>
+
+    <Property Id="FolderForm_NextArgs"><![CDATA[Custom2Buttons]]></Property>
+    <Property Id="Custom2Buttons_PrevArgs"><![CDATA[FolderForm]]></Property>
+    <Property Id="Custom2Buttons_NextArgs"><![CDATA[CustomTextA]]></Property>
+    <Property Id="CustomTextA_PrevArgs"><![CDATA[Custom2Buttons]]></Property>
+    <Property Id="CustomTextA_NextArgs"><![CDATA[ConfirmInstallForm]]></Property>
+    <Property Id="ConfirmInstallForm_PrevArgs"><![CDATA[CustomTextA]]></Property>
+
     <Property Id="VSDIISMSG"><![CDATA[This setup requires Internet Information Server 4.0 or higher and Windows NT 4.0, Windows 2000, or Windows XP.  This setup cannot be installed on Windows 95, Windows 98, or Windows Me.  Please install Internet Information Server and run this setup again.]]></Property>
     <Property Id="FolderForm_AllUsersVisible"><![CDATA[1]]></Property>
-    <Property Id="FolderForm_NextArgs"><![CDATA[Custom2Buttons]]></Property>
     <Property Id="SFF_NewFldrBtn"><![CDATA[NewFldrBtn]]></Property>
     <Property Id="FolderForm_AllUsers"><![CDATA[ME]]></Property>
     <Property Id="ARPCONTACT"><![CDATA[Roxen Internet Software]]></Property>
     <Property Id="INSTALLATION_TYPE"><![CDATA[2]]></Property>
-    <Property Id="AdminWelcomeForm_NextArgs"><![CDATA[AdminFolderForm]]></Property>
-    <Property Id="Custom2Buttons_PrevArgs"><![CDATA[FolderForm]]></Property>
-    <Property Id="CustomTextA_PrevArgs"><![CDATA[ConfirmInstallForm]]></Property>
-    <Property Id="ConfirmInstallForm_NextArgs"><![CDATA[CustomTextA]]></Property>
     <Property Id="VSDNETURLMSG"><![CDATA[This setup requires the .NET Framework version [1].  Please install the .NET Framework and run this setup again.  The .NET Framework can be obtained from the web.  Would you like to do this now?]]></Property>
     <Property Id="AdminMaintenanceForm_Action"><![CDATA[Repair]]></Property>
     <Property Id="VSDVERSIONMSG"><![CDATA[Unable to install because a newer version of this product is already installed.]]></Property>
     <Property Id="MaintenanceForm_Action"><![CDATA[Repair]]></Property>
     <Property Id="EDITA1"><![CDATA[1]]></Property>
-    <Property Id="AdminFolderForm_NextArgs"><![CDATA[AdminConfirmInstallForm]]></Property>
     <Property Id="VSDUIANDADVERTISED"><![CDATA[This advertised application will not be installed because it might be unsafe. Contact your administrator to change the installation user interface option of the package to basic.]]></Property>
-    <Property Id="Custom2Buttons_NextArgs"><![CDATA[ConfirmInstallForm]]></Property>
     <Property Id="SFF_UpFldrBtn"><![CDATA[UpFldrBtn]]></Property>
-    <Property Id="WelcomeForm_PrevArgs"><![CDATA[SplashForm]]></Property>
-    <Property Id="ConfirmInstallForm_PrevArgs"><![CDATA[Custom2Buttons]]></Property>
     <Property Id="EDITA4"><![CDATA[1]]></Property>
     <Property Id="EDITA3"><![CDATA[1]]></Property>
     <Property Id="EDITA2"><![CDATA[1]]></Property>
     <Property Id="VSDNETMSG"><![CDATA[This setup requires the .NET Framework version [1].  Please install the .NET Framework and run this setup again.]]></Property>
-    <Property Id="AdminConfirmInstallForm_PrevArgs"><![CDATA[AdminFolderForm]]></Property>
-    <Property Id="SplashForm_NextArgs"><![CDATA[WelcomeForm]]></Property>
     <Property Id="VSDINVALIDURLMSG"><![CDATA[The specified path '[2]' is unavailable. The Internet Information Server might not be running or the path exists and is redirected to another machine. Please check the status of this virtual directory in the Internet Services Manager.]]></Property>
     <Property Id="NEWERPRODUCTFOUND" Secure="yes" />
     <AdminExecuteSequence>
