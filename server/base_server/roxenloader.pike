@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.132 1999/12/21 16:47:02 per Exp $
+ * $Id: roxenloader.pike,v 1.133 1999/12/29 18:46:29 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -19,7 +19,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.132 1999/12/21 16:47:02 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.133 1999/12/29 18:46:29 mast Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -517,7 +517,7 @@ class LowErrorContainer
     if (file[..sizeof(d)-1] == d) {
       file = file[sizeof(d)..];
     }
-    errors += sprintf("%s:%d\t%s\n", file, line, err);
+    errors += sprintf("%s:%s\t%s\n", file, line ? (string) line : "-", err);
   }
   void compile_error(string file, int line, string err)
   {
