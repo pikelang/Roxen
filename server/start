@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.145 2001/01/19 18:31:25 per Exp $
+# $Id: start,v 1.146 2001/01/31 04:26:18 per Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -234,7 +234,11 @@ parse_args() {
   ;;
   '--self-test')
     DEFINES="-DRUN_SELF_TEST $DEFINES"
-    rm -f "$VARDIR""test_config"/* 2>/dev/null
+    # Kill roxen mysql if it's running...
+    if [ -f ${VARDIR}test_config/_mysql/mysql_pid ] ; then
+      kill `cat ${VARDIR}test_config/_mysql/mysql_pid`
+    fi
+    rm -rf "$VARDIR""test_config"*
     cp -R etc/roxen_test/test_config $VARDIR
     cp etc/roxen_test/filesystem/test_rxml_package rxml_packages/test_rxml_package
     DIR="$VARDIR""test_config"
@@ -295,6 +299,8 @@ the default arguments.
                                   for each and every file.
 
       .B--self-testB.:                 Runs a testsuite.
+				 WARNING: This will kill any running 
+				 roxen_mysql processes
 
       .B--onceB.:                     Run the server only once, in the foreground.
 			   	  This is very useful when debugging.
