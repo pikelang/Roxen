@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.46 1999/12/21 23:51:13 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.47 1999/12/22 00:12:47 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -140,32 +140,34 @@ program my_compile_file(string file)
 {
   if( file[0] != '/' )
     file = replace(getcwd()+"/"+file, "//", "/");
+
   string ofile = master()->make_ofilename( file );
+
   if (file_stat (ofile) &&
       file_stat (ofile)[ST_MTIME] < remove_dumped_mark)
     rm (ofile);
+
   program p;
 
-//   ErrorContainer e = ErrorContainer();
-//   master()->set_inhibit_compile_errors(e);
+  ErrorContainer e = ErrorContainer();
+  master()->set_inhibit_compile_errors(e);
   catch {
     p  = (program)( file );
   };
-//   master()->set_inhibit_compile_errors(0);
+  master()->set_inhibit_compile_errors(0);
 
-//   string q = e->get();
-
+  string q = e->get();
   if( !p )
   {
-//     if( strlen( q ) )
-//       report_error("Failed to compile module %s:\n%s", file, q);
+    if( strlen( q ) )
+      report_error("Failed to compile module %s:\n%s", file, q);
     throw( "" ); 
   }
-//   if ( strlen(q) )
-//   {
-//     report_debug(sprintf("Warnings during compilation of module %O:\n"
-// 			 "%s", file, q));
-//   }
+  if ( strlen(q) )
+  {
+    report_debug(sprintf("Warnings during compilation of module %O:\n"
+			 "%s", file, q));
+  }
   if( !file_stat( ofile ) ||
       file_stat(ofile)[ST_MTIME] < file_stat(file)[ST_MTIME] )
     if( catch ( master()->dump_program( file, p ) ) )
@@ -276,8 +278,18 @@ class Module
     mixed q =catch 
     {
       object mod = instance( 0 );
+      if(!mod)
+        throw(sprintf("Failed to instance %s (%s)\n", sname,what));
+      if(!mod->register_module)
+        throw(sprintf("The module %s (%s) has no register_module function\n",
+                      sname, what ));
       array data = mod->register_module();
-
+      if(!arrayp(data))
+        throw(sprintf("register_module returned %O for %s (%s)\n", data, sname,
+                      what));
+      if( sizeof(data) < 3 )
+        throw("register_module returned a too small array for "+sname+
+              " ("+what+")\n");
       type = data[0];
       if( data[ 1 ] )
         name = data[1];
@@ -294,7 +306,10 @@ class Module
       destruct( mod );
       return 1;
     };
-    werror(describe_backtrace(q));
+    if( stringp( q ) )
+      werror( q );
+    else if( q && sizeof(q) )
+      werror(describe_backtrace(q));
     return 0;
   }
 
