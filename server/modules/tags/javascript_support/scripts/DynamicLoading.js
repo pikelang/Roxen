@@ -75,7 +75,7 @@ FileLoader.prototype.loadSafariDocument = function(url)
   this.document = null;
   var ifr = document.getElementById(this.frameName);
   if (ifr.contentDocument.body)
-    ifr.contentDocument.body.innerHTML = "";
+    ifr.contentDocument.body = 0;
   ifr.contentDocument.location.replace(url);
   if (!FileLoader.interval)
     FileLoader.interval = setInterval("checkSafariLoad()", 250);
