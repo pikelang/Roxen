@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.109 2002/02/26 16:50:29 wellhard Exp $
+// $Id: module_support.pike,v 1.110 2002/04/17 14:24:44 wellhard Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -148,6 +148,7 @@ class FakeModuleInfo( string sname )
   constant type = 0;
   constant multiple_copies = 0;
   constant locked = 0;
+  constant config_locked = ([]);
   string name, description;
   
   void save()  { }
@@ -211,6 +212,7 @@ class ModuleInfo( string sname, string filename )
   int last_checked;
   int type, multiple_copies;
   int|string locked;
+  mapping(Configuration:int) config_locked = ([]);
 
   mapping|string name;
   mapping|string description;
@@ -261,14 +263,24 @@ class ModuleInfo( string sname, string filename )
 
     array register_module()
     {
+      string locked_desc =
+	LOCALE(0," The module is locked and not part of the license. "
+	       "To enable this module please select a valid license "
+	       "and restart the server.");
       return ({
 	0, // type
 	sprintf(LOCALE(350,"Load of %s (%s) failed"),
 		sname,filename),
 	sprintf(LOCALE(351,"The module %s (%s) could not be loaded."),
 		sname, get_name()||"unknown")+
+	(sizeof(config_locked)?locked_desc:"")+
 	get_compile_errors(),0,0
       });
+    }
+    
+    string _sprintf()
+    {
+      return sprintf("LoadFailed(%s)", sname);
     }
   }
   
@@ -285,12 +297,22 @@ class ModuleInfo( string sname, string filename )
 	  filename[sizeof(filename)-4..]==".jar" )
 	return ((program)"javamodule.pike")(conf, filename);
 #endif
+      // Check if the module is locked. Throw an empty string to not
+      // generate output, this is handled later.
+      object key = conf && conf->getvar("license")->get_key();
+      if(locked && !(key && unlocked(key))) {
+	config_locked[conf] = 1;
+	throw( "" );
+      }
       return load( filename, silent )( conf );
     };
     roxenloader.pop_compile_error_handler( );
     if( err )
       if( stringp( err ) )
-	report_error(err+"\n");
+      {
+	if( sizeof( err ) )
+	  report_error(err+"\n");
+      }
       else
 	report_error( describe_backtrace( err ) );
     if( !silent )
