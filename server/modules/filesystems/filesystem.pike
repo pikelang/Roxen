@@ -4,7 +4,7 @@
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
 
-string cvs_version= "$Id: filesystem.pike,v 1.19 1997/08/12 06:32:17 per Exp $";
+string cvs_version= "$Id: filesystem.pike,v 1.20 1997/08/12 19:47:54 grubba Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -132,6 +132,14 @@ string query_location()
 
 mixed stat_file( mixed f, mixed id )
 {
+  object privs;
+
+  if (((int)id->misc->uid) && ((int)id->misc->gid) &&
+      (QUERY(access_as_user))) {
+    // NB: Root-access is prevented.
+    privs=((program)"privs")("Getting file", (int)id->misc->uid, 
+			     (int)id->misc->gid );
+  }
   if(!stat_cache)
     return file_stat(path + f); /* No security currently in this function */
   array fs;
@@ -162,8 +170,19 @@ array find_dir( string f, object id )
   mixed ret;
   array dir;
 
+  object privs;
+
+  if (((int)id->misc->uid) && ((int)id->misc->gid) &&
+      (QUERY(access_as_user))) {
+    // NB: Root-access is prevented.
+    privs=((program)"privs")("Getting file", (int)id->misc->uid, 
+			     (int)id->misc->gid );
+  }
+
   if(!(dir = get_dir( path + f )))
     return 0;
+
+  privs = 0;
 
   if(!QUERY(dir))
     // Access to this dir is allowed.
@@ -292,6 +311,7 @@ mixed find_file( string f, object id )
 
       if (((int)id->misc->uid) && ((int)id->misc->gid) &&
 	  (QUERY(access_as_user))) {
+	// NB: Root-access is prevented.
 	privs=((program)"privs")("Getting file", (int)id->misc->uid, 
 			       (int)id->misc->gid );
       }
@@ -333,6 +353,7 @@ mixed find_file( string f, object id )
     object privs;
 
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
+      // NB: Root-access is prevented.
       privs=((program)"privs")("Saving file", (int)id->misc->uid, 
 			       (int)id->misc->gid );
     }
@@ -391,6 +412,7 @@ mixed find_file( string f, object id )
     accesses++;
 
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
+      // NB: Root-access is prevented.
       privs=((program)"privs")("Deleting file", id->misc->uid, id->misc->gid );
     }
 
