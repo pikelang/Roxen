@@ -1,4 +1,4 @@
-string cvs_version = "$Id: hosts.pike,v 1.13 1997/09/12 06:14:24 per Exp $";
+string cvs_version = "$Id: hosts.pike,v 1.14 1997/10/05 03:35:30 grubba Exp $";
 #include <roxen.h>
 #include <module.h> // For VAR_VALUE define.
 #if DEBUG_LEVEL > 7
@@ -122,6 +122,8 @@ void got_one_result(object o, string res)
       cache_set("hosts", from, ({ to, time(1)+(to?3600:10) }));
     if(to && strlen(to))
       cache_set("hosts", to , ({ from, time(1)+3600 }));
+    // FIXME: Arbitrary limit to 100000 bytes?
+    //	/grubba 1997-10-03
     res=res[9+lenf+lent..100000];
   }
 }
