@@ -1,4 +1,10 @@
 #!/usr/local/bin/pike
+/*
+ * $Id: pdbi.pike,v 1.2 1997/09/17 02:07:41 grubba Exp $
+ *
+ * name = "PDB Inspector";
+ * doc = "This is a tool to inspect PDB databases.";
+ */
 
 int rowsize(object o, string table, string row)
 {
