@@ -186,7 +186,7 @@
  If width is larger than 'xsize', scale width to 'xsize' while
  keeping aspect. If width is smaller than 'xsize', extend width
  to 'xsize' by filling the new space with current background color.</p>
-<ex>
+<ex type='vert'>
 <### span-width="350" background-color='white'/>
 </ex>
 </attr>
@@ -195,7 +195,7 @@
  If height is larger than 'ysize', scale height to 'ysize' while
  keeping aspect. If height is smaller than 'ysize', extend height
  to 'ysize' by filling the new space with current background color.</p>
-<ex>
+<ex type='vert'>
 <### span-height="350" background-color='white'/>
 </ex>
 </attr>
