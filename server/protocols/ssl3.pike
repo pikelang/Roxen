@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.50 1999/05/06 03:14:30 mast Exp $
+/* $Id: ssl3.pike,v 1.51 1999/05/14 04:16:54 mast Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -123,6 +123,9 @@ array|void real_port(array port, object cfg)
   object rsa = Standards.PKCS.RSA.parse_private_key(key);
   if (!rsa)
     ({ report_error, throw }) ("ssl3: Private key not valid.\n");
+
+  if (!Standards.PKCS.Certificate.check_cert_rsa (cert, rsa))
+    ({ report_error, throw }) ("ssl3: Certificate and private key do not match.\n");
 
   function r = Crypto.randomness.reasonably_random()->read;
 
