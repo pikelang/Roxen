@@ -2,11 +2,23 @@
 # init.d script for Roxen. Set the variables below to something fitting..
 # This is only an example script.
 #############
+
+# The server directory where the 'start' script is located.
+#
 roxenhome=/usr/local/roxen/server/
-wwwuser=www
-killallwww=no
-# ':0' should be the uid.
-pidfile=/tmp/roxen_pid:0
+
+# Set this to something unique to be able to stop, reload and restart
+# with this init script. It will override the setting in the config
+# interface. '0' is typically replaced with the uid.
+#
+# pidfile=/tmp/roxen_pid:0
+
+# Set these to kill all processes owned by wwwuser on stop. Useful to
+# reap CGI scripts.
+#
+# killallwww=yes
+# wwwuser=www
+
 umask 022
 
 # If you want to start with another configuration directory:
@@ -21,6 +33,9 @@ umask 022
 
 ### You should not _have_ to change anything below here...
 
+test -n "$pidfile" && flags="$flags --pid-file=$pidfile"
+test -n "$configdir" && flags="$flags --config-dir=$configdir"
+
 case $1 in
         'start_msg')
 	  echo 'Start Roxen 1.2'
@@ -30,31 +45,51 @@ case $1 in
 	  echo 'Stop Roxen 1.2'
 	  exit 0
 	;;
+
 	'start')
-          echo Starting Roxen...
+          echo Starting Roxen in $roxenhome...
+	  if [ -z "$pidfile" ]; then
+	    echo Warning: No pid file set - cannot stop or reload.
+	  elif [ -f $pidfile ]; then
+	    read pid < $pidfile
+	    if kill -0 $pid ; then
+	      echo Roxen is already running.
+	      exit 0
+	    fi
+	    rm $pidfile
+	    if [ -f $pidfile ]; then
+	      echo Cannot remove pid file $pidfile
+	      exit 1
+	    fi
+	  fi
 	  if [ -x $roxenhome/start ]; then
  	    cd $roxenhome
-	    if [ \! "$configdir" = "" ]; then
-	      ./start $flags --config-dir=$configdir 2>/dev/null
-	    else
-	      ./start $flags 2>/dev/null
-	    fi
+	    ./start $flags 2>/dev/null
+            echo Done.
           else
             echo I cannot find the Roxen dir '('$roxenhome')'
 	  fi
-          echo Done.
 	;;
 
 	'reload')
+	  if [ -z "$pidfile" ] ; then
+	    echo "No pid file set."
+	    exit 1
+	  fi
 	  echo "Reloading configurations..."
 	  if [ -f $pidfile ] ; then
 	    read pid < $pidfile
 	    kill -HUP $pid || kill 1 $pid
 	    exit 0
 	  fi
-	  echo "Roxen doesn't seem to be running..."
+	  echo "Roxen doesn't seem to be running."
 	  ;;
+
 	'restart')
+	  if [ -z "$pidfile" ] ; then
+	    echo "No pid file set."
+	    exit 1
+	  fi
 	  echo Restarting Roxen...
 	  if [ -f $pidfile ] ; then
 	    read pid < $pidfile
@@ -63,14 +98,11 @@ case $1 in
 	    echo Done.
 	    exit 0
 	  fi
-	  echo "Roxen doesn't seem to be running. Starting a new Roxen..."
+	  echo "Roxen doesn't seem to be running."
+	  echo Starting a new Roxen in $roxenhome...
 	  if [ -x $roxenhome/start ]; then
  	    cd $roxenhome
-	    if [ \! "$configdir" = "" ]; then
-	      ./start $flags --config-dir=$configdir 2>/dev/null
-	    else
-	      ./start $flags 2>/dev/null
-	    fi
+	    ./start $flags 2>/dev/null
           else
             echo I cannot find the Roxen dir '('$roxenhome')'
 	  fi
@@ -78,17 +110,24 @@ case $1 in
 	;;
 
 	'stop')
+	   if [ -z "$pidfile" ] ; then
+	     echo "No pid file set."
+	     exit 1
+	   fi
            echo Stopping Roxen...
 	   if [ -f $pidfile ] ; then
-	     kill `cat $pidfile`
+	     if kill `cat $pidfile` ; then
+               echo Roxen stopped.
+	     fi
 	     rm $pidfile
+	   else
+	     echo "Roxen doesn't seem to be running."
            fi
            # Get all the CGI scripts... :-)
            if [ x$killallwww = xyes ] ; then
-	     echo Killing all programs running as the www user.
+	     echo Killing all programs running as the $wwwuser user.
              su $wwwuser -c "kill -9 -1"
            fi
-           echo Roxen stopped.
 	;;
 
 	*)
