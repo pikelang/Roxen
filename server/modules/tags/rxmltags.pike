@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.368 2002/04/19 13:46:52 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.369 2002/04/22 20:56:23 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1259,6 +1259,7 @@ class TagCache {
 		    RXML.FLAG_DONT_CACHE_RESULT |
 		    RXML.FLAG_CUSTOM_TRACE);
   constant cache_tag_location = "tag_cache";
+  constant disable_protocol_cache = 1;
 
   static class TimeOutEntry (
     TimeOutEntry next,
@@ -1335,7 +1336,9 @@ class TagCache {
       // cache key will depend on things it disregards. Could be
       // avoided if the cache key is on e.g. page.path, but it's so
       // unlikely it's not worth the effort to check that.
-      NOCACHE();
+      if (disable_protocol_cache) {
+	NOCACHE();
+      }
 
       overridden_keymap = 0;
       if (!args->propagate ||
@@ -4956,6 +4959,12 @@ class TagIWCache {
   //  Place all cache data in a specific cache which we can clear when
   //  the layout files are updated.
   constant cache_tag_location = "iwcache";
+
+  //  Don't disable protocol caching since our key is shared and thus
+  //  in essence only dependent on &page.path;. Aside from that the
+  //  user ID is part of the key, but all authenticated users will
+  //  fall through the protocol cache anyway.
+  constant disable_protocol_cache = 0;
   
   class Frame {
     inherit TagCache::Frame;
