@@ -1,20 +1,22 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.161 2000/03/19 16:45:21 nilsson Exp $
+// $Id: roxenlib.pike,v 1.162 2000/03/19 22:09:01 nilsson Exp $
 
 #include <roxen.h>
+#include <config.h>
+#include <stat.h>
+
 inherit "http";
 
 #define roxen roxenp()
-// This code has to work both in the roxen object, and in modules.
+
 class RequestID {};
 class RoxenModule {};
 
-#include <stat.h>
+// Functions declared as static are not reachable through Roxen.pmod.
+// These functions are to be considered deprecated.
 
-#define old_rxml_compat
-
-string gif_size(Stdio.File gif)
+static string gif_size(Stdio.File gif)
 {
   array xy=Dims.dims()->get(gif);
   return "width="+xy[0]+" height="+xy[1];
@@ -698,7 +700,7 @@ int backup_extension( string f )
 	  || (f[-1] == 'k' && sscanf(f, "%*s.bak")));
 }
 
-int ipow(int what, int how)
+static int ipow(int what, int how)
 {
   return (int)pow(what, how);
 }
@@ -1166,7 +1168,7 @@ private int compare( string a, string b )
       return 0;
 }
 
-string do_output_tag( mapping args, array (mapping) var_arr, string contents,
+static string do_output_tag( mapping args, array (mapping) var_arr, string contents,
 		      RequestID id )
   //! method for use by tags that replace variables in their content, like
   //! formoutput, sqloutput and others.
@@ -1576,42 +1578,39 @@ string tagtime(int t, mapping m, RequestID id, function language)
   return res;
 }
 
-string API_read_file(RequestID id, string file)
+string read_file(RequestID id, string file)
 {
-  file = fix_relative(file, id);
   id = id->clone_me();
+  file = fix_relative(file, id);
 
   if(id->scan_for_query)
     file = id->scan_for_query( file );
   string s = id->conf->try_get_file(file, id);
 
-  if (!s) {
+  if(s) {
+    destruct(id);
+    return s;
+  }
 
-    // Might be a PATH_INFO type URL.
-    array a = id->conf->open_file( file, "r", id );
-    if(a && a[0])
-    {
-      s = a[0]->read();
-      if(a[1]->raw)
-      {
-        s -= "\r";
-        if(!sscanf(s, "%*s\n\n%s", s))
-          sscanf(s, "%*s\n%s", s);
-      }
-      if (id->since && a[0]->stat) {
-	array(int) st = a[0]->stat();
-	if (st && (st[3] > id->misc->last_modified)) {
-	  id->misc->last_modified = st[3];
-	}
-      }
+  // Might be a PATH_INFO type URL.
+  array a = id->conf->open_file( file, "r", id );
+  if(a && a[0]) {
+    s = a[0]->read();
+    if(a[1]->raw) {
+      s -= "\r";
+      if(!sscanf(s, "%*s\n\n%s", s))
+	sscanf(s, "%*s\n%s", s);
     }
-    if(!s) {
-      destruct (id);
-      return 0;
+    if (id->since && a[0]->stat) {
+      array(int) st = a[0]->stat();
+      if (st && (st[3] > id->misc->last_modified)) {
+	id->misc->last_modified = st[3];
+      }
     }
   }
 
-  destruct (id);
+  destruct(id);
+
   return s;
 }
 
