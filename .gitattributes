@@ -293,6 +293,7 @@ worldmap binary
 /server/modules/tags/check_spelling.pike foreign_ident
 /server/modules/tags/countdown.pike foreign_ident
 /server/modules/tags/email.pike foreign_ident
+/server/modules/tags/emit_timerange.pike foreign_ident
 /server/modules/tags/foldlist.pike foreign_ident
 /server/modules/tags/html_wash.pike foreign_ident
 /server/modules/tags/indirect_href.pike foreign_ident
@@ -324,7 +325,6 @@ worldmap binary
 /server/more_modules/bofh.pike foreign_ident
 /server/more_modules/clock.pike foreign_ident
 /server/more_modules/cvsfs.pike foreign_ident
-/server/more_modules/emit_timerange.pike foreign_ident
 /server/more_modules/php4.pike foreign_ident
 /server/more_modules/tagdoc_notation.pike foreign_ident
 /server/ntroxenloader.pike foreign_ident
