@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Idonex AB.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.4 2000/01/12 20:12:24 marcus Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.5 2000/01/31 03:48:21 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -22,14 +22,15 @@ void create()
 {
   defvar("colorparsing", ({"body", "td", "layer", "ilayer", "table"}),
 	 "Tags to parse for color",
-	 TYPE_STRING_LIST,
+	 TYPE_STRING_LIST|VAR_INITIAL,
 	 "Which tags should be parsed for document colors? "
 	 "This will affect documents without gtext as well as documents "
 	 "with it, the parsing time is relative to the number of parsed "
 	 "tags in a document. You have to reload this module or restart "
 	 "roxen for changes of this variable to take effect.");
 
-  defvar("colormode", 1, "Normalize colors in parsed tags", TYPE_FLAG,
+  defvar("colormode", 1, "Normalize colors in parsed tags",
+         TYPE_FLAG|VAR_INITIAL,
 	 "If set, replace 'roxen' colors (@c,m,y,k etc) with "
 	 "'netscape' colors (#rrggbb). Setting this to off will lessen the "
 	 "performance impact of the 'Tags to parse for color' option quite"

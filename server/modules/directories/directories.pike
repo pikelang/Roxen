@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded documents.
 
-string cvs_version = "$Id: directories.pike,v 1.45 2000/01/30 21:18:16 per Exp $";
+string cvs_version = "$Id: directories.pike,v 1.46 2000/01/31 03:48:20 per Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
@@ -58,29 +58,30 @@ constant module_unique = 1;
 
 void create()
 {
-  defvar("indexfiles", ({ "index.html", "index.xml", "index.htm", "index.pike",
-			  "index.cgi", "welcome.html", "Main.html" }),
-	 "Index files", TYPE_STRING_LIST,
+  defvar("indexfiles",
+         ({ "index.html", "index.xml", "index.htm", "index.pike",
+            "index.cgi", "welcome.html", "Main.html" }),
+	 "Index files", TYPE_STRING_LIST|VAR_INITIAL,
 	 "If one of these files is present in a directory, it will "
 	 "be returned instead of the directory listing.");
 
   defvar("Readme", ({ "README.html", "README" }),
-	 "Include readme files", TYPE_STRING_LIST,
-	 "Include one of these readme files in directory listings");
+	 "Include readme files", TYPE_STRING_LIST|VAR_INITIAL,
+	 "Include one of these readme files, if present, in directory listings");
 
   defvar("nobrowse", ({ ".www_not_browsable", ".nodiraccess" }),
-	 "List prevention files", TYPE_STRING_LIST | VAR_MORE,
+	 "List prevention files", TYPE_STRING_LIST|VAR_MORE,
 	 "All directories containing any of these files will not be "
 	 "browsable.");
 
-  defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG,
+  defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG|VAR_INITIAL,
 	 "If this variable is set, you can get a listing of all files "
 	 "in a directory by appending '.' or '/' to the directory name, like "
 	 "this: <a href=http://www.roxen.com//>http://www.roxen.com//</a>"
 	 ". It is _very_ useful for debugging, but some people regard it as a "
 	 "security hole.");
 
-  defvar("spartan", 0, "Spartan listings.", TYPE_FLAG,
+  defvar("spartan", 0, "Spartan listings.", TYPE_FLAG|VAR_INITIAL,
 	 "Show minimalistic file listings.");
 
   defvar("size", 1, "Include file size", TYPE_FLAG,

@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.62 2000/01/06 22:34:11 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.63 2000/01/31 03:48:21 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -36,7 +36,7 @@ constant thread_safe=1;
 
 constant module_type = MODULE_LOCATION;
 constant module_name = "Filesystem";
-constant module_doc = 
+constant module_doc =
 ("This is a virtual filesystem, use it to make files available to "+
  "the users of your WWW-server. If you want to serve any 'normal' "
  "files from your server, you will have to have atleast one filesystem.") ;
@@ -77,19 +77,13 @@ string status()
 
 void create()
 {
-  defvar("mountpoint", "/", "Mount point", TYPE_LOCATION, 
+  defvar("mountpoint", "/", "Mount point", TYPE_LOCATION|VAR_INITIAL,
 	 "This is where the module will be inserted in the "+
 	 "namespace of your server.");
 
-  defvar("searchpath", "NONE", "Search path", TYPE_DIR,
+  defvar("searchpath", "NONE", "Search path", TYPE_DIR|VAR_INITIAL,
 	 "This is where the module will find the files in the real "+
 	 "file system");
-
-#ifdef COMPAT
-  defvar("html", 0, "All files are really HTML files", TYPE_FLAG|VAR_EXPERT,
-	 "If you set this variable, the filesystem will _know_ that all files "
-	 "are really HTML files. This might be useful now and then.");
-#endif
 
   defvar(".files", 0, "Show hidden files", TYPE_FLAG|VAR_MORE,
 	 "If set, hidden files will be shown in dirlistings and you "
@@ -105,10 +99,10 @@ void create()
 	 "If set, files ending with '~' or '#' or '.bak' will "+
 	 "be shown in directory listings");
 
-  defvar("put", 0, "Handle the PUT method", TYPE_FLAG,
+  defvar("put", 0, "Handle the PUT method", TYPE_FLAG|VAR_INITIAL,
 	 "If set, PUT can be used to upload files to the server.");
 
-  defvar("delete", 0, "Handle the DELETE method", TYPE_FLAG,
+  defvar("delete", 0, "Handle the DELETE method", TYPE_FLAG|VAR_INITIAL,
 	 "If set, DELETE can be used to delete files from the "
 	 "server.");
 
@@ -152,7 +146,7 @@ void start()
 		   "running with threads. Remove -DENABLE_THREADS from "
 		   "the start script if you really need this function\n");
 #endif
-     
+
   path = QUERY(searchpath);
   stat_cache = QUERY(stat_cache);
   FILESYSTEM_WERR("Online at "+QUERY(mountpoint)+" (path="+path+")");
@@ -193,7 +187,7 @@ mixed stat_file( mixed f, mixed id )
 
 string real_file( mixed f, mixed id )
 {
-  if(this->stat_file( f, id )) 
+  if(this->stat_file( f, id ))
 /* This filesystem might be inherited by other filesystem, therefore
    'this'  */
     return path + f;
@@ -395,13 +389,13 @@ mixed find_file( string f, object id )
    * FIXME: Should probably move path-info extraction here.
    * 	/grubba 1998-08-26
    */
-  
+
   switch(id->method)
   {
   case "GET":
   case "HEAD":
   case "POST":
-  
+
     switch(-size)
     {
     case 1:
@@ -428,7 +422,7 @@ mixed find_file( string f, object id )
 	 *   or by the protocol module if there isn't any extension module.
 	 *	/grubba 1998-08-26
 	 */
-	return 0; 
+	return 0;
 	/* Do not try redirect on top level directory */
 	if(sizeof(id->not_query) < 2)
 	  return 0;
@@ -471,7 +465,7 @@ mixed find_file( string f, object id )
       {
 	errors++;
 	report_error("Open of " + f + " failed. Permission denied.\n");
-	
+
 	TRACE_LEAVE("");
 	TRACE_LEAVE("Permission denied.");
 	return http_low_answer(403, "<h2>File exists, but access forbidden "
@@ -481,24 +475,18 @@ mixed find_file( string f, object id )
       id->realfile = f;
       TRACE_LEAVE("");
       accesses++;
-#ifdef COMPAT
-      if(QUERY(html)) {/* Not very likely, really.. */
-	TRACE_LEAVE("Compat return");
-	return ([ "type":"text/html", "file":o, ]);
-      }
-#endif
       TRACE_LEAVE("Normal return");
       return o;
     }
     break;
-  
+
   case "MKDIR":
     if(!QUERY(put))
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("MKDIR disallowed (since PUT is disallowed)");
       return 0;
-    }    
+    }
 
     if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
       TRACE_LEAVE("MKDIR: Permission denied");
@@ -548,7 +536,7 @@ mixed find_file( string f, object id )
       id->misc->error_code = 405;
       TRACE_LEAVE("PUT disallowed");
       return 0;
-    }    
+    }
 
     if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
       TRACE_LEAVE("PUT: Permission denied");
@@ -567,7 +555,7 @@ mixed find_file( string f, object id )
       return http_low_answer(413, "<h2>Out of disk quota.</h2>",
 			     "413 Out of disk quota");
     }
-    
+
     object privs;
 
 // #ifndef THREADS // Ouch. This is is _needed_. Well well...
@@ -608,7 +596,7 @@ mixed find_file( string f, object id )
     }
 
     object to = open(f, "wct");
-    
+
     privs = 0;
 
     if(!to)
@@ -657,31 +645,31 @@ mixed find_file( string f, object id )
     break;
 
    case "CHMOD":
-    // Change permission of a file. 
+    // Change permission of a file.
     // FIXME: !!
-    
+
     if(!QUERY(put))
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("CHMOD disallowed (since PUT is disallowed)");
       return 0;
-    }    
+    }
 
     if(QUERY(check_auth) && (!id->auth || !id->auth[0])) {
       TRACE_LEAVE("CHMOD: Permission denied");
       return http_auth_required("foo",
 				"<h1>Permission to 'CHMOD' files denied</h1>");
     }
-    
+
     object privs;
-    
+
 // #ifndef THREADS // Ouch. This is is _needed_. Well well...
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
       // NB: Root-access is prevented.
       privs=Privs("CHMODing file", (int)id->misc->uid, (int)id->misc->gid );
     }
     // #endif
-    
+
     if (QUERY(no_symlinks) && (contains_symlinks(path, oldf))) {
       privs = 0;
       errors++;
@@ -701,7 +689,7 @@ mixed find_file( string f, object id )
 #endif
     array err = catch(chmod(f, id->misc->mode & 0777));
     privs = 0;
-    
+
     if(err)
     {
       id->misc->error_code = 403;
@@ -712,10 +700,10 @@ mixed find_file( string f, object id )
     TRACE_LEAVE("CHMOD: Success");
     TRACE_LEAVE("Success");
     return http_string_answer("Ok");
-    
+
    case "MV":
-    // This little kluge is used by ftp2 to move files. 
-    
+    // This little kluge is used by ftp2 to move files.
+
      // FIXME: Support for quota.
 
     if(!QUERY(put))
@@ -723,7 +711,7 @@ mixed find_file( string f, object id )
       id->misc->error_code = 405;
       TRACE_LEAVE("MV disallowed (since PUT is disallowed)");
       return 0;
-    }    
+    }
     if(!QUERY(delete) && size != -1)
     {
       id->misc->error_code = 405;
@@ -752,16 +740,16 @@ mixed find_file( string f, object id )
       return 0;
     }
     moves++;
-    
+
     object privs;
-    
+
 // #ifndef THREADS // Ouch. This is is _needed_. Well well...
     if (((int)id->misc->uid) && ((int)id->misc->gid)) {
       // NB: Root-access is prevented.
       privs=Privs("Moving file", (int)id->misc->uid, (int)id->misc->gid );
     }
 // #endif
-    
+
     if (QUERY(no_symlinks) &&
 	((contains_symlinks(path, oldf)) ||
 	 (contains_symlinks(path, id->misc->move_from)))) {
@@ -804,13 +792,13 @@ mixed find_file( string f, object id )
     // This little kluge is used by NETSCAPE 4.5
 
     // FIXME: Support for quota.
-     
+
     if(!QUERY(put))
     {
       id->misc->error_code = 405;
       TRACE_LEAVE("MOVE disallowed (since PUT is disallowed)");
       return 0;
-    }    
+    }
     if(size != -1)
     {
       id->misc->error_code = 404;
@@ -824,7 +812,7 @@ mixed find_file( string f, object id )
                                 "<h1>Permission to 'MOVE' files denied</h1>");
     }
 
-    if(!sizeof(id->misc["new-uri"] || "")) { 
+    if(!sizeof(id->misc["new-uri"] || "")) {
       id->misc->error_code = 405;
       errors++;
       TRACE_LEAVE("MOVE: No dest file");
@@ -848,7 +836,7 @@ mixed find_file( string f, object id )
       TRACE_LEAVE("MOVE disallowed (DELE disabled, can't overwrite file)");
       return 0;
     }
- 
+
     if(size < -1)
     {
       id->misc->error_code = 405;
@@ -905,7 +893,7 @@ mixed find_file( string f, object id )
     TRACE_LEAVE("Success");
     return http_string_answer("Ok");
 
-   
+
   case "DELETE":
     if(!QUERY(delete) || size==-1)
     {

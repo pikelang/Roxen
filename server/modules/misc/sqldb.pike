@@ -1,9 +1,9 @@
 /*
- * $Id: sqldb.pike,v 1.1 1997/11/26 22:11:37 grubba Exp $
+ * $Id: sqldb.pike,v 1.2 2000/01/31 03:48:21 per Exp $
  *
  * Associates a name with an SQL-database.
  *
- * $Author: grubba $
+ * $Author: per $
  */
 
 #include <module.h>
@@ -18,7 +18,7 @@ array register_module()
 
 void create()
 {
-  defvar("table", "", "Table", TYPE_TEXT_FIELD,
+  defvar("table", "", "Table", TYPE_TEXT_FIELD|VAR_INITIAL,
 	 "Associates names with SQL Database URLs.<br>\n"
 	 "Format:<br>\n"
 	 "<pre>Name1\tSQLURL1\n"
@@ -88,6 +88,3 @@ string status()
   }
   return(res);
 }
-
-
-

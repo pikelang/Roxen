@@ -20,7 +20,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.47 1999/12/28 02:34:52 nilsson Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.48 2000/01/31 03:48:21 per Exp $";
 
 #define BAD_PASSWORD(us)	(QUERY(only_password) && \
                                  ((us[1] == "") || (us[1][0] == '*')))
@@ -44,7 +44,7 @@ void create()
 {
   filesystem::create();
   killvar("searchpath");
-  defvar("searchpath", "NONE", "Search path", TYPE_DIR,
+  defvar("searchpath", "NONE", "Search path", TYPE_DIR|VAR_INITIAL,
 	 "This is where the module will find the files in the real "+
 	 "file system",
 	 0, hide_searchpath);
@@ -52,10 +52,11 @@ void create()
   set("mountpoint", "/~");
 
   defvar("only_password", 1, "Password users only",
-	 TYPE_FLAG, "Only users who have a valid password can be accessed "
+	 TYPE_FLAG|VAR_INITIAL,
+         "Only users who have a valid password can be accessed "
 	 "through this module");
 
-  defvar("user_listing", 0, "Enable userlisting", TYPE_FLAG,
+  defvar("user_listing", 0, "Enable userlisting", TYPE_FLAG|VAR_INITIAL,
 	 "Enable a directory listing showing users with homepages. "
 	 "When the mountpoint is accessed.");
 
@@ -71,7 +72,7 @@ void create()
 	 "together with a project, but it will enhance security, since it "
 	 "will not be possible to link to some file the user does not own.");
 
-  defvar("virtual_hosting", 0, "Virtual User Hosting", TYPE_FLAG,
+  defvar("virtual_hosting", 0, "Virtual User Hosting", TYPE_FLAG|VAR_INITIAL,
 	 "If set, virtual user hosting is enabled. This means that "
 	 "the module will look at the \"host\" header to determine "
 	 "which users directory to access. If this is set, you access "
@@ -94,13 +95,14 @@ void create()
 	 0, uid_was_zero);
 
   defvar("pdir", "html/", "Public directory",
-	 TYPE_STRING, "This is where the public directory is located. "
+	 TYPE_STRING|VAR_INITIAL,
+         "This is where the public directory is located. "
 	 "If the module is mounted on /~, and the file /~per/foo is "
 	 "accessed, and the home-dir of per is /home/per, the module "
 	 "will try to file /home/per/&lt;Public dir&gt;/foo.",
 	 0, hide_pdir);
 
-  defvar("homedir" ,1, "Look in users homedir", TYPE_FLAG,
+  defvar("homedir" ,1, "Look in users homedir", TYPE_FLAG|VAR_INITIAL,
 	 "If set, the user's files are looked for in the home directory "
 	 "of the user, according to the <em>Public directory</em> variable. "
 	 "Otherwise, the <em>Search path</em> is used to find a directory "
