@@ -11,14 +11,12 @@
  * Make sure links work _inside_ unfolded dokuments.
  */
 
-constant cvs_version = "$Id: directories2.pike,v 1.16 1999/12/14 01:56:44 nilsson Exp $";
+constant cvs_version = "$Id: directories2.pike,v 1.17 1999/12/27 13:41:49 jhs Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
-
-import Array;
 
 void start( int num, Configuration conf )
 {
@@ -155,29 +153,30 @@ string describe_directory(string d, RequestID id)
     dir = ({});
   }
 
-  if (id->prestate->spartan_directories) {
-    return(sprintf("<html><head><title>Directory listing of %s</title></head>\n"
+  if(id->prestate->spartan_directories)
+    return sprintf("<html><head><title>Directory listing of %s</title></head>\n"
 		   "<body><h1>Directory listing of %s</h1>\n"
 		   "<pre>%s</pre></body</html>\n",
 		   d, d,
-		   map(sort(dir), lambda(string f, string d, roxen r, RequestID id) {
-		     array stats = r->stat_file(d+f, id);
-		     if (stats && stats[1]<0) {
-		       return("<a href=\""+f+"/.\">"+f+"/</a>");
-		     } else {
-		       return("<a href=\""+f+"\">"+f+"</a>");
-		     } }, d, roxen, id)*"\n"+"</pre></body></html>\n"));
-  }
+		   Array.map(sort(dir),
+			     lambda(string f, string d, object r, RequestID id)
+			     {
+			       array stats = r->stat_file(d+f, id);
+			       if(stats && stats[1]<0)
+				 return "<a href=\""+f+"/.\">"+f+"/</a>";
+			       else
+				 return "<a href=\""+f+"\">"+f+"</a>";
+			     }, d, id->conf, id)*"\n"+"</pre></body></html>\n");
 
-  if ((toplevel = !id->misc->dir_no_head)) {
+  if(toplevel = !id->misc->dir_no_head)
+  {
     id->misc->dir_no_head = 1;
 
     result += "<html><head><title>Directory listing of "+d+"</title></head>\n"
-      "<body>\n<h1>Directory listing of "+d+"</h1>\n<p>";
+	      "<body>\n<h1>Directory listing of "+d+"</h1>\n<p>";
 
-    if (QUERY(readme)) {
+    if(QUERY(readme))
       result += find_readme(d, id);
-    }
     result += "<hr noshade><pre>\n";
   }
   result += "<foldlist folded>\n";
