@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.70 2000/02/16 15:14:52 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.71 2000/02/16 15:29:56 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1422,6 +1422,7 @@ class TagCSet {
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
+      if(!content) content="";
       if( args->quote != "none" )
 	content = html_decode_string( content );
       if( !args->variable ) parse_error("Variable not specified.");
