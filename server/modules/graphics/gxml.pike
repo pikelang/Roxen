@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.8 2001/04/03 11:56:41 per Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.9 2001/04/03 15:54:40 per Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(0,"Graphics: GXML tag");
@@ -338,8 +338,14 @@ string parse_coordinates( string from )
   return res[..strlen(res)-2];
 }
 
+string parse_coordinate_system( string from )
+{
+  return from;
+}
+
 CONTENT_LI_WITH_CI(Polygone,coordinates,parse_coordinates);
 CONTENT_LI_WITH_CI(Line,coordinates,parse_coordinates);
+CONTENT_LI_WITH_CI(CoordinateSystem,data,parse_coordinate_system);
 
 CONTENT_LI(Text,text);
 
