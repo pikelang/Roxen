@@ -57,7 +57,7 @@ case $1 in
 	  echo Restarting Roxen...
 	  if [ -f $pidfile ] ; then
 	    read pid < $pidfile
-	    kill -INT $pid || kill 2 $pid
+	    kill -TERM $pid || kill $pid
 	    rm $pidfile
 	    echo Done.
 	    exit 0
@@ -79,7 +79,7 @@ case $1 in
 	'stop')
            echo Stopping Roxen...
 	   if [ -f $pidfile ] ; then
-	     kill `cat $pidfile`
+	     kill -INT `cat $pidfile` || kill 2 `cat $pidfile`
 	     rm $pidfile
            fi
            # Get all the CGI scripts... :-)
