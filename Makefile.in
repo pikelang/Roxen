@@ -34,7 +34,7 @@ zlib: force
 
 commercial_modules: force
 	@if test -d commercial_modules/. ; then \
-	  (cd commercial_modules/;$(MAKE) "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all) \
+	  (cd commercial_modules/;$(MAKE)) \
 	else :; fi; \
 
 force:
