@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: wizz.pike,v 1.10 2004/05/16 21:31:36 mani Exp $";
+constant cvs_version = "$Id: wizz.pike,v 1.11 2004/05/22 16:41:25 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Really advanced wizard";
@@ -87,7 +87,7 @@ class PageFrame {
     content_type = RXML.t_xml(RXML.PXml);
     result_type = RXML.t_xml;
     flags = RXML.FLAG_UNPARSED;
-    scope = "wizz";
+    //scope = "wizz";	      // FIXME What was this doing here?
   }
 
   array do_enter(RequestID id) {
