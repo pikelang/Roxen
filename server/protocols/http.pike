@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.293 2001/05/04 16:19:20 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.294 2001/06/06 22:08:52 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1759,9 +1759,11 @@ void send_result(mapping|void result)
         heads["Content-Type"] = file["type"]+charset;
         heads["Accept-Ranges"] = "bytes";
         heads["Server"] = replace(version(), " ", "·");
-        heads["Connection"] = (misc->connection=="close" ? "close": "keep-alive");
+        heads["Connection"] =
+	  (misc->connection=="close" ? "close": "keep-alive");
 
-        if(file->encoding) heads["Content-Encoding"] = file->encoding;
+        if(file->encoding)
+	  heads["Content-Encoding"] = file->encoding;
 
         if(!file->error)
           file->error=200;
@@ -1828,14 +1830,14 @@ void send_result(mapping|void result)
 				(errors[file->error] ? errors[file->error][4..] : ""));
 	else
 	  head_string = sprintf("%s %s\r\n", prot, errors[file->error]);
-	if( file->len > 0 || (file->error != 200) )
+
+// 	if( file->len > 0 || (file->error != 200) )
 	  heads["Content-Length"] = (string)file->len;
 
         // Some browsers, e.g. Netscape 4.7, doesn't trust a zero
         // content length when using keep-alive. So let's force a
         // close in that case.
-        if( file->error/100 == 2 
-            && file->len <= 0 )
+        if( file->error/100 == 2 && file->len <= 0 )
         {
           heads->Connection = "close";
           misc->connection = "close";
