@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.39 1998/05/18 13:16:45 grubba Exp $
+ * $Id: ftp2.pike,v 1.40 1998/05/18 15:11:44 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1495,6 +1495,10 @@ class FTPSession
       send(532, ({ sprintf("'%s': %s: Method not allowed.",
 			   cmd, f) }));
       break;
+    case 500:
+      send(451, ({ sprintf("'%s': Requested action aborted: "
+			   "local error in processing.", cmd) }));
+      break;
     default:
       if (!file) {
 	file = ([ "error":404 ]);
@@ -2551,7 +2555,7 @@ class FTPSession
       session->file->full_path = args;
       send_MLSD_response(([ args:st ]), session);
     } else {
-      send(501, ({ "File not found or permission denied." }));
+      send_error("MLST", args, session->file, session);
     }
   }
 
@@ -2574,7 +2578,10 @@ class FTPSession
       session->file->full_path = args;
       send_MLSD_response(session->conf->find_dir_stat(args, session), session);
     } else {
-      send(501, ({ "File not found or permission denied." }));
+      if (st) {
+	file->error = 405;
+      }
+      send_error("MLSD", args, session->file, session);
     }
   }
 
@@ -2947,7 +2954,15 @@ class FTPSession
       }
       if (this_object()["ftp_"+cmd]) {
 	conf->requests++;
-	this_object()["ftp_"+cmd](args);
+	mixed err;
+	if (err = catch {
+	  this_object()["ftp_"+cmd](args);
+	}) {
+	  report_error(sprintf("Internal server error in FTP2\n"
+			       "Handling command \"%s\"\n"
+			       "%s\n",
+			       line, describe_backtrace(err)));
+	}
       } else {
 	send(502, ({ sprintf("'%s' is not currently supported.", cmd) }));
       }
