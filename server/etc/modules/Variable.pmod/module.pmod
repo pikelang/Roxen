@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.58 2001/07/31 09:32:27 per Exp $
+// $Id: module.pmod,v 1.59 2001/08/01 17:10:50 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -912,7 +912,7 @@ class DatabaseChoice
   inherit StringChoice;
   constant type = "DatabaseChoice";
 
-  function(void:void|object) config = lambda() { return; };
+  function(void:void|object) config = lambda() { return 0; };
 
   DatabaseChoice set_configuration_pointer( function(void:object) configuration )
   //! Provide a function that returns a configuration object,
