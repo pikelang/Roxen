@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.33 2000/11/19 23:33:36 nilsson Exp $
+// $Id: module.pmod,v 1.34 2000/11/20 07:04:04 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -640,6 +640,16 @@ class Location
   inherit String;
   constant type = "Location";
   constant width = 50;
+
+  array verify_set( string value )
+  {
+    if( !strlen( value ) || !((<'~','/'>)[value[-1]]) )
+      return ({
+	"You most likely want an ending '/' on this variable",
+	value
+      });
+    return ::verify_set( value );
+  }
 }
 
 class URL
