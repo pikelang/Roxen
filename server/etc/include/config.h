@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.23 2000/09/21 03:57:41 per Exp $
+ * $Id: config.h,v 1.24 2001/01/04 06:27:22 nilsson Exp $
  *
  * User configurable things not accessible from the normal
  * administration interface. Not much, but there are some things..  
@@ -69,6 +69,9 @@
  */
 #define OLD_RXML_COMPAT
 
+// Define back to which Roxen version you would like to keep 
+// compatibility.
+#define ROXEN_COMPAT 1.3
 
 #if __VERSION__ > 7.0
 #define Stat _static_modules.files.Stat
