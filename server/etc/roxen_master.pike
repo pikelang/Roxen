@@ -2,7 +2,7 @@
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.101 2000/09/16 19:38:49 nilsson Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.102 2000/10/02 16:34:04 jonasw Exp $";
 
 // Disable the precompiled file is out of date warning.
 #ifndef OUT_OF_DATE_WARNING
@@ -158,7 +158,7 @@ mapping handled = ([]);
 mapping(program:string) program_names = set_weak_flag (([]), 1);
 
 string dump_path = "../var/"+roxen_version()+"/precompiled/"+
-  uname()->machine+"."+uname()->release + "/";
+  replace(uname()->machine, " ", "_") + "."+uname()->release + "/";
 
 string make_ofilename( string from )
 {
