@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.149 2002/10/23 18:11:08 nilsson Exp $
+// $Id: Roxen.pmod,v 1.150 2002/10/23 22:54:34 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -533,13 +533,20 @@ string add_pre_state( string url, multiset state )
   return base + "/(" + sort(indices(state)) * "," + ")" + url ;
 }
 
-mapping http_redirect( string url, RequestID|void id, multiset|void prestates )
+mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
+		       mapping|void variables)
 //! Simply returns a http-redirect message to the specified URL. If
 //! the url parameter is just a virtual (possibly relative) path, the
 //! current id object must be supplied to resolve the destination URL.
-//! If no prestates are provided, the current prestates in the request id
-//! object will be added to the URL, if the url is a local absolute or relative
-//! URL.
+//! If no prestates are provided, the current prestates in the request
+//! id object will be added to the URL, if the url is a local absolute
+//! or relative URL.
+//!
+//! If @[variables] is given it's a mapping containing variables that
+//! should be appended to the URL. Each index is a variable name and
+//! the value can be a string or an array, in which case a separate
+//! variable binding is added for each string in the array. That means
+//! that e.g. @[RequestID.real_variables] can be used as @[variables].
 {
   // If we don't get any URL we don't know what to do.
   // But we do!  /per
@@ -566,13 +573,32 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates )
   if(prestates && sizeof(prestates))
     url = add_pre_state (url, prestates);
 
-  HTTP_WERR("Redirect -> "+http_encode_string(url));
-
   if( String.width( url )>8 && !has_value( url, "?" ) )
     url += "?magic_roxen_automatic_charset_variable=едц";
 
-  return http_low_answer( 302, "Redirect to "+html_encode_string(url))
-    + ([ "extra_heads":([ "Location":http_encode_string( url ) ]) ]);
+  url = http_encode_string (url);
+  if (variables) {
+    string concat_char = has_value (url, "?") ? "&" : "?";
+    foreach (indices (variables), string var) {
+      var = http_encode_url (var);
+      mixed val = variables[var];
+      if (stringp (val)) {
+	url += concat_char + var + "=" + http_encode_url (val);
+	concat_char = "&";
+      }
+      else if (arrayp (val))
+	foreach (val, mixed part)
+	  if (stringp (part)) {
+	    url += concat_char + var + "=" + http_encode_url (part);
+	    concat_char = "&";
+	  }
+    }
+  }
+
+  HTTP_WERR("Redirect -> "+url);
+
+  return http_low_answer( 302, "Redirect to "+url)
+    + ([ "extra_heads":([ "Location":url ]) ]);
 }
 
 mapping http_stream(Stdio.File from)
@@ -1323,30 +1349,62 @@ string make_entity( string q )
   return "&"+q+";";
 }
 
-string make_tag_attributes(mapping(string:string) in)
+string make_tag_attributes(mapping(string:string) in,
+			   void|int preserve_roxen_entities)
 {
-  if(!in || !sizeof(in)) return "";
-  string res="";
-  foreach(indices(in), string a)
-    res+=" "+a+"=\""+html_encode_string((string)in[a])+"\"";
+  if (!in || !sizeof(in))
+    return "";
+
+  //  Special quoting which leaves Roxen entities (e.g. &page.path;)
+  //  unescaped.
+  string quote_fn(string text)
+  {
+    string out = "";
+    int pos = 0;
+    while ((pos = search(text, "&")) >= 0) {
+      if ((sscanf(text[pos..], "&%[^ <>;&];", string entity) == 1) &&
+	  search(entity, ".") >= 0) {
+	out += html_encode_string(text[..pos - 1]) + "&" + entity + ";";
+	text = text[pos + strlen(entity) + 2..];
+      } else {
+	out += html_encode_string(text[..pos]);
+	text = text[pos + 1..];
+      }
+    }
+    return out + html_encode_string(text);
+  };
+  
+  string res = "";
+  if (preserve_roxen_entities) {
+    foreach(indices(in), string a)
+      res += " " + a + "=\"" + quote_fn((string) in[a]) + "\"";
+  } else {
+    foreach(indices(in), string a)
+      res += " " + a + "=\"" + html_encode_string((string) in[a]) + "\"";
+  }
   return res;
 }
 
-string make_tag(string name, mapping(string:string) args, void|int xml)
-//! Returns an empty element tag `name', with the tag arguments dictated
-//! by the mapping `args'. If the flag xml is set, slash character will be
-//! added in the end of the tag. Use RXML.t_xml->format_tag(name, args) instead.
+string make_tag(string name, mapping(string:string) args, void|int xml,
+		void|int preserve_roxen_entities)
+//! Returns an empty element tag @[name], with the tag arguments dictated
+//! by the mapping @[args]. If the flag @[xml] is set, slash character will
+//! be added in the end of the tag. Use RXML.t_xml->format_tag(name, args)
+//! instead.
 {
-  return "<"+name+make_tag_attributes(args)+(xml?" /":"")+">";
+  string attrs = make_tag_attributes(args, preserve_roxen_entities);
+  return "<" + name + attrs + (xml ? " /" : "" ) + ">";
 }
 
-string make_container(string name, mapping(string:string) args, string content)
-//! Returns a container tag `name' encasing the string `content', with
-//! the tag arguments dictated by the mapping `args'. Use
+string make_container(string name, mapping(string:string) args, string content,
+		      void|int preserve_roxen_entities)
+//! Returns a container tag @[name] encasing the string @[content], with
+//! the tag arguments dictated by the mapping @[args]. Use
 //! RXML.t_xml->format_tag(name, args, content) instead.
 {
   if(args["/"]=="/") m_delete(args, "/");
-  return make_tag(name,args)+content+"</"+name+">";
+  return make_tag(name, args, 0,
+		  preserve_roxen_entities) + content + "</" + name + ">";
 }
 
 string add_config( string url, array config, multiset prestate )
@@ -3002,6 +3060,9 @@ class ScopePage {
       case "pathinfo": return ENCODE_RXML_TEXT(c->id->misc->path_info, type);
       case "realfile": return ENCODE_RXML_TEXT(c->id->realfile, type);
       case "virtroot": return ENCODE_RXML_TEXT(c->id->virtfile, type);
+      case "mountpoint":
+	string s = c->id->virtfile || "";
+	return ENCODE_RXML_TEXT(s[sizeof(s)-1..sizeof(s)-1] == "/"? s[..sizeof(s)-2]: s, type); 
       case "virtfile": // Fallthrough from deprecated name.
       case "path": return ENCODE_RXML_TEXT(c->id->not_query, type);
       case "query": return ENCODE_RXML_TEXT(c->id->query, type);
@@ -3045,7 +3106,7 @@ class ScopePage {
   array(string) _indices(void|RXML.Context c) {
     if (!c) c = RXML_CONTEXT;
     array ind=indices(c->misc->scope_page) +
-      ({ "pathinfo", "realfile", "virtroot", "virtfile", "path", "query",
+      ({ "pathinfo", "realfile", "virtroot", "mountpoint", "virtfile", "path", "query",
 	 "url", "last-true", "language", "scope", "filesize", "self",
 	 "ssl-strength", "dir", "counter" });
     foreach(indices(converter), string def)
@@ -3332,9 +3393,6 @@ array(int) parse_since(string date)
     string m;
     if(sscanf(dat, "%d-%s-%d %d:%d:%d", day, m, year, hour, minute, second)>2)
     {
-      month=monthnum[m];
-    } else if(dat[2]==',') { // I bet a buck that this never happens
-      sscanf(dat, "%*s, %d %s %d %d:%d:%d", day, m, year, hour, minute, second);
       month=monthnum[m];
     } else if(!(int)dat) {
       sscanf(dat, "%*[^ ] %s %d %d:%d:%d %d", m, day, hour, minute, second, year);
