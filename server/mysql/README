@@ -16,7 +16,7 @@ modify the first ln command to link that directory instead.
 If you don't have a Mysql server installed, you can get it from:
 http://www.mysql.com/
 
-Roxen currently requires at least version 2.23.49 of MySQL.
+Roxen currently requires at least version 3.23.49 of MySQL.
 
 A binary tar.gz-type MySQL distribution can be installed directly into
 this directory.
