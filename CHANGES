@@ -5,6 +5,12 @@ o Added better checks during module-initialization.
 
 o Fixed permission bug in the ftp-module.
 
+o Ftp-module now supports DELE.
+
+o Fixed file_stat() in roxen_master.pike.
+
+o Several MIME-types added.
+
 o Userdatabase module using YP (NIS) added.
 
 o POSIX_SOURCE is now defined during the configure tests.
@@ -16,6 +22,8 @@ o Now uses correct permissions when updating the etc/supports file.
 o #!NO in modules now seems to work.
 
 o Garbage-collector updated (thanks to Wilhelm Köhler).
+
+o THREADS-mode can now use multiple shuffle-threads /thanks to Wilhelm Köhler).
 
 o Some bugs in the proxies fixed.
 
