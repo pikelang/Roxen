@@ -14,7 +14,7 @@
 
 inherit "filesystem";
 
-constant cvs_version="$Id: userfs.pike,v 1.33 1998/07/06 09:26:28 neotron Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.34 1998/07/07 11:48:35 grubba Exp $";
 
 // import Array;
 // import Stdio;
@@ -148,7 +148,7 @@ mixed find_file(string f, object got)
   {
     string *us;
     array st;
-    if((f == "") && (strlen(of) && of[-1] != '/'))
+    if((f == "") && (of == "" || of[-1] != '/'))
     {
       redirects++;
       return http_redirect(got->not_query+"/",got);
@@ -267,7 +267,8 @@ array find_dir(string f, object got)
     }
     
     if(sscanf(f, "%s/%s", u, f) != 2) {
-      u=f; f="";
+      u=f;
+      f="";
     }
   }
   if(u)
@@ -308,8 +309,13 @@ mixed stat_file( mixed f, mixed id )
     
     if(!strlen(f) || f=="/")
       return ({ 0, -2, 0, 0, 0, 0, 0, 0, 0, 0 });
-    if(sscanf(f, "%s/%s", u, f) != 2)
-      u=f; f="";
+
+    // Don't forget to strip any initial /'s
+    if(sscanf(f, "%*[/]%s/%s", u, f) != 3)
+    {
+      sscanf(f, "%*[/]%s", u); 
+      f="";
+    }
   }
 
   if(u)
