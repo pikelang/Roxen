@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.228 2000/08/23 12:33:31 nilsson Exp $
+// $Id: rxml.pike,v 1.229 2000/08/27 10:40:31 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1041,7 +1041,12 @@ class TagCase {
       if(args->case)
 	switch(lower_case(args->case)) {
 	case "lower": return ({ lower_case(content) });
-	case "upper": return ({ upper_case(content) });
+	case "upper":
+	  if( args->type=="html" )
+	    return ({ replace( upper_case(content),
+			       ({ "&AMP;", "&LT;", "&GT;" }),
+			       ({ "&amp;", "&lt;", "&gt;" }) ) });
+	  return ({ upper_case(content) });
 	case "capitalize":
 	  if(cap) return content;
 	  cap=1;
