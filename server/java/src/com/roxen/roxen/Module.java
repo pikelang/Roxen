@@ -1,5 +1,5 @@
 /*
- * $Id: Module.java,v 1.9 2000/03/29 18:29:58 marcus Exp $
+ * $Id: Module.java,v 1.10 2000/10/05 19:25:51 marcus Exp $
  *
  */
 
@@ -310,7 +310,8 @@ public abstract class Module {
    */
   public int queryInt(String name)
   {
-    return ((Integer)query(name)).intValue();
+    Object n = query(name);
+    return (n==null? 0 : ((Integer)n).intValue());
   }
 
   /**
