@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.6 2001/06/13 13:48:18 per Exp $
+// $Id: DBManager.pmod,v 1.7 2001/06/13 13:48:52 per Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 #include <roxen.h>
@@ -325,7 +325,9 @@ Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
 //! Please note that using this function makes it impossible for the
 //! user to change the data on the fly in the configuration intarface.
 //!
-//! However, the performance gain is quite noticeable.
+//! However, the performance gain is quite noticeable. Using this
+//! function is preferable to doing your own database-connection
+//! caching.
 {
   string key = name+"|"+(c&&c->name)+"|"+ro;
   mapping cm = connection_cache->get() || ([]);
