@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.320 2004/01/27 18:26:42 mast Exp $
+// $Id: module.pmod,v 1.321 2004/01/27 18:30:36 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7920,11 +7920,17 @@ class PCode
 	mixed item = exec[pos];
 
       process_entry: {
+	  VariableChange var_chg = 0;
+
 	  if (objectp (item))
 	    if (item->is_RXML_p_code_frame) {
 	      exec[length++] = exec[pos++];
 	      exec[length++] = exec[pos++];
 	      break process_entry;
+	    }
+	    else if (item->is_RXML_VariableChange) {
+	      var_chg = item;
+	      exec[pos] = nil; // Ignore in the `+ below.
 	    }
 	    else if (item->is_RXML_p_code_entry)
 	      break process_entry;
@@ -7932,7 +7938,6 @@ class PCode
 	      continue;
 
 	  int end = pos + 1;
-	  VariableChange var_chg = 0;
 	  while (end < max) {
 	    item = exec[end];
 	    if (objectp (item))
