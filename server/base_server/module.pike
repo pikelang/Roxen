@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.212 2004/05/15 11:23:36 grubba Exp $
+// $Id: module.pike,v 1.213 2004/05/17 17:44:58 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -830,7 +830,7 @@ DAVLock|LockFlag check_locks(string path,
   if (DAVLock lock =
       file_locks[path] && file_locks[path][auth_user] ||
       prefix_locks[path] && prefix_locks[path][auth_user]) {
-    TRACE_LEAVE(sprintf("Found lock %O.", lock->locktoken));
+    TRACE_LEAVE(sprintf("Found own lock %O.", lock->locktoken));
     return lock;
   }
 
@@ -851,7 +851,10 @@ DAVLock|LockFlag check_locks(string path,
   foreach(prefix_locks;
 	  string prefix; mapping(mixed:DAVLock) locks) {
     if (has_prefix(path, prefix)) {
-      if (DAVLock lock = locks[auth_user]) return lock;
+      if (DAVLock lock = locks[auth_user]) {
+	SIMPLE_TRACE_LEAVE ("Found own lock %O on %O.", lock->locktoken, prefix);
+	return lock;
+      }
       if (!shared)
 	// If we've found a shared lock then we won't find an
 	// exclusive one anywhere else.
