@@ -1,6 +1,6 @@
-## $Id: supports,v 1.40 1997/09/19 08:16:13 js Exp $
+## $Id: supports,v 1.41 1997/09/19 16:10:28 grubba Exp $
 # name="Supports database";
-# doc="The database used to determine what different user-agents (browsers) supports";
+# doc="The database used to determine what different user-agents (browsers) support.";
 #
 ######################################################################
 ## -+*				WARNING				*+- ##
@@ -56,7 +56,7 @@ mozilla/1\..*	-ssl, -frames, -java, -javascript, -netscape_javascript
 mozilla.[2-9].[0-9].*	some_html3, fontcolor, pjpeginline
 mozilla.2.0b[2-9].*	-java
 
-#Old versions on Mac crash the entire mashine if you use javascript.
+#Old versions on Mac crash the entire machine if you use javascript.
 mozilla/2.*	        -javascript, -netscape_javascript
 mozilla/2.*X11		javascript
 mozilla/2.*OS/2		javascript, tcl
@@ -68,11 +68,10 @@ mozilla/3.*		tablecolor
 mozilla/4.*		stylesheets, tablecolor
 
 # BLAM BLAM BLAM BLAM
-.*compatible.*			-netscape_javascript
-.*compatible.*msie              -push, -javascript
-.*compatible.*msie.2            -java, tablecolor
-.*compatible.*msie.3            stylesheets, tablecolor, activex
-.*compatible.*msie.4            stylesheets, tablecolor, activex, javascript
+.*compatible.*			-netscape_javascript, -push, -javascript, -java
+.*compatible.*msie.[2-9]	tablecolor
+.*compatible.*msie.[3-9]	java, stylesheets, activex, javascript
+.*compatible.*msie.[4-9]	netscape_javascript
 # }
 
 
