@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.241 2001/06/18 15:48:16 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.242 2001/06/21 02:45:21 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3235,7 +3235,6 @@ class TagPIComment {
 
 class UserIf
 {
-  inherit RXML.Tag;
   constant name = "if";
   string plugin_name;
   string|RXML.PCode rxml_code;
