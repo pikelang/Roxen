@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.143 1998/09/25 13:22:58 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.144 1998/09/25 13:24:36 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -66,7 +66,7 @@ string strftime(string fmt, int t)
       break;
     case 'c':	// Date and time
       res = strftime(sprintf("%%a %%b %02d  %02d:%02d:%02d %04d",
-			     lt->mday, lt->hour, lt->min, lt->sec, 1900 + lt->year));
+			     lt->mday, lt->hour, lt->min, lt->sec, 1900 + lt->year), t);
       break;
     case 'C':	// Century number; 0-prefix
       res = sprintf("%02d", 19 + lt->year/100);
