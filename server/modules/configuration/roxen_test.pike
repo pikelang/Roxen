@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.59 2004/03/30 20:15:33 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.60 2004/06/09 11:00:28 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -737,7 +737,7 @@ void continue_find_tests( )
   {
     report_debug("\n\nDid a grand total of %d tests, %d failed.\n",
 		 tests, fails);
-    exit( fails > 127? 127: fails );
+    roxen.restart(0, fails > 127 ? 127 : fails);
   }
   else
     foreach(roxen.configurations, Configuration config)
