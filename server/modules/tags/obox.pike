@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.10 1999/01/15 12:35:03 neotron Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.11 1999/05/08 06:23:26 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -99,7 +99,7 @@ static string title(mapping args)
 		   args->outlinecolor,
 		   empty);
   case "caption":
-    return sprintf("<TR bgcolor=%s>"
+    return sprintf("<TR bgcolor=\"%s\">"
 		   "<TD>%s</TD>"
 		   "<TD%s>&nbsp;</TD>"
 		   "<TD>%s%s%s</TD>"
@@ -142,8 +142,8 @@ string container_obox(string name, mapping args,
       (args->width ? " width=" + args->width : "") + ">\n" +
       s +
       "<tr" +
-      (args->bgcolor?" bgcolor="+args->bgcolor:"") +
-      "><td bgcolor=\"" + args->outlinecolor + "\">" +
+      (args->bgcolor?" bgcolor=\""+args->bgcolor:"") +
+      "\"><td bgcolor=\"" + args->outlinecolor + "\">" +
       img_placeholder(args) + "</td>\n"
       "<td" + (args->width && !args->fixedleft && !args->fixedright ? " width=1" : "") +
       (args->aligncontents ? " align=" + args->aligncontents : "") + " colspan=3" + ">\n"
