@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.353 2002/06/24 11:29:58 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.354 2002/06/28 18:59:00 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1425,12 +1425,15 @@ class TagCache {
 	  // wants cache tainting between servers.
 	  keymap[1] = id->conf->name;
 	else {
-	  if (!content_hash)
+	  if (!content_hash) {
 	    // Include the content type in the hash since we cache the
 	    // p-code which has static type inference.
+	    if (!content) content = "";
+	    if (String.width (content) != 8) content = encode_value_canonic (content);
 	    content_hash = Crypto.md5()->update (content)
 				       ->update (content_type->name)
 				       ->digest();
+	  }
 	  keymap[1] = ({id->conf->name, content_hash});
 	}
 
