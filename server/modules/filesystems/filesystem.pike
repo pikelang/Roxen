@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.66 2000/02/16 11:06:18 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.67 2000/02/27 07:37:32 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -99,10 +99,10 @@ void create()
 	 "If set, files ending with '~' or '#' or '.bak' will "+
 	 "be shown in directory listings");
 
-  defvar("put", 0, "Handle the PUT method", TYPE_FLAG|VAR_INITIAL,
+  defvar("put", 0, "Handle the PUT method", TYPE_FLAG,
 	 "If set, PUT can be used to upload files to the server.");
 
-  defvar("delete", 0, "Handle the DELETE method", TYPE_FLAG|VAR_INITIAL,
+  defvar("delete", 0, "Handle the DELETE method", TYPE_FLAG,
 	 "If set, DELETE can be used to delete files from the "
 	 "server.");
 
