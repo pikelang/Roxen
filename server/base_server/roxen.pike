@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.816 2002/12/09 12:53:57 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.817 2003/01/16 14:06:20 mast Exp $";
 
 //! @appears roxen
 //!
@@ -986,17 +986,18 @@ void background_run (int|float delay, function func, mixed... args)
 //! seconds, to be called with the rest of the arguments as its
 //! arguments.
 //!
-//! The function might be run in the backend thread, so it should
-//! never run for a considerable time. Instead do another call to
-//! @[background_run] to queue it up again after some work has been
-//! done, or use @[BackgroundProcess].
+//! The function won't be run in the backend thread if the server is
+//! running in threaded mode. The backend thread is however still used
+//! in nonthreaded mode, so it should not run for a considerable time.
+//! Instead do another call to @[background_run] to queue it up again
+//! after some work has been done, or use @[BackgroundProcess].
 {
 #ifdef THREADS
   if (!hold_wakeup_cond)
     // stop_handler_threads is running; ignore more work.
     return;
 
-  void enqueue()
+  function enqueue = lambda()
   {
     bg_queue->write (({func, args}));
     if (bg_queue->size() == 1)
@@ -1007,6 +1008,8 @@ void background_run (int|float delay, function func, mixed... args)
     call_out (enqueue, delay);
   else
     enqueue();
+
+  enqueue = 0;			// To avoid garbage.
 
 #else
   // Can't do much better when we haven't got threads..
@@ -2431,7 +2434,7 @@ class ImageCache
 	y1 = (int)(args["y-size"]||args["height"]);
 
       array xguides, yguides;
-      void sort_guides()
+      function sort_guides = lambda()
       {
 	xguides = ({}); yguides = ({});
 	if( guides )
@@ -2498,16 +2501,17 @@ class ImageCache
 	    y1 -= y0;
 	}
       }
+      sort_guides = 0;		// To avoid garbage.
 
 #define SCALEI 1
 #define SCALEF 2
 #define SCALEA 4
 #define CROP   8
 
-      void do_scale_and_crop( int x0, int y0,
-			      int x1, int y1,
-			      int|float w,  int|float h,
-			      int type )
+      function do_scale_and_crop = lambda ( int x0, int y0,
+					    int x1, int y1,
+					    int|float w,  int|float h,
+					    int type )
       {
 	if( (type & CROP) && x1 && y1 
 	    && ((x1 != reply->xsize()) ||  (y1 != reply->ysize())
@@ -2611,6 +2615,7 @@ class ImageCache
       }
       else
 	do_scale_and_crop( x0, y0, x1, y1, 0, 0, CROP );
+      do_scale_and_crop = 0;	// To avoid garbage.
 
       if( args["span-width"] || args["span-height"] )
       {
@@ -3119,7 +3124,7 @@ class ImageCache
   //! will be called like <pi>callback( @@data, id )</pi>.
   {
     string ci, user;
-    void update_args( mapping a )
+    function update_args = lambda ( mapping a )
     {
       if (!a->format)
 	//  Make implicit format choice explicit
@@ -3148,6 +3153,7 @@ class ImageCache
       ci = map( map( data, tomapp ), argcache->store )*"$";
     } else
       ci = data;
+    update_args = 0;		// To avoid garbage.
 
     if( zero_type( uid_cache[ ci ] ) )
     {
