@@ -182,7 +182,7 @@ på alla saker du använder i mappingarna.
 
 */
 
-constant cvs_version = "$Id: business.pike,v 1.74 1998/02/24 15:02:14 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.75 1998/02/24 15:22:44 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -250,7 +250,7 @@ mixed *register_module()
        "  <b>namecolor</b>      The color of the name-text. Textcolor\n"
        "                 is used if this is not defined.\n"
        "  <b>namesize</b>       Height of the name text in pixels.\n"
-       "                 <b>fontsize</b> is used if this is undefined.\n"
+       "                 <b>Fontsize</b> is used if this is undefined.\n"
 
        "  <b>3D</b>             Render piecharts on top of a cylinder, takes"
        " the\n                 height in pixels of the cylinder as argument.\n"
