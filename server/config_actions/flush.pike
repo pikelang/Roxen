@@ -1,5 +1,5 @@
 /*
- * $Id: flush.pike,v 1.1 1997/08/24 02:20:40 peter Exp $
+ * $Id: flush.pike,v 1.2 1997/08/24 03:35:22 peter Exp $
  */
 
 inherit "wizard";
@@ -48,23 +48,51 @@ mixed page_1(object id, object mc)
   return ret;
 }
 
+string text_andify( array(string) info )
+{
+  int i=0;
+  int l=sizeof(info);
+  perror("%O\n", l);
+  string ret;
+
+  foreach( info, string item )
+  {
+    i++;
+    if(i==1) ret = item;
+    else
+      if(i==l) ret += " and "+ item;
+      else ret += ", "+ item;
+  }
+
+  return ret;
+}
+
 mixed wizard_done(object id, object mc)
 {
   gc();
 
+  array(string) info= ({ });
+  
   /* Flush the userdb. */ 
   if(id->variables->user_cache != "0")
+  {
+    info += ({ "the userdb" });
     foreach(roxen->configurations, object c)
       if(c->modules["userdb"] && c->modules["userdb"]->master)
 	c->modules["userdb"]->master->read_data();
-
+  }
+  
   /* Flush the memory cache. */ 
   if(id->variables->memory_cache != "0")
+  {
+    info += ({ "the memmory cache" });
     function_object(cache_set)->cache = ([]);
-
+  }
 
   /* Flush the dir cache. */ 
   if(id->variables->dir_cache != "0")
+  {
+    info += ({ "the directory cache" });
   foreach(roxen->configurations, object c)
     if(c->modules["directories"] && (c=c->modules["directories"]->enabled))
     {
@@ -73,13 +101,18 @@ mixed wizard_done(object id, object mc)
 	c->_root = 0;
       };
     }
-
+  }
+  
   /* Flush the module cache. */ 
   if(id->variables->module_cache != "0")
   {
+    info += ({ "the module cache" });
     roxen->allmodules=0;
     roxen->module_stat_cache=([]);
   }
+
+  if(info)
+    report_notice("Flushed "+ text_andify(info) +".");
 
   gc();
 }

@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.43 1997/08/24 02:32:30 peter Exp $ */
+/* $Id: describers.pike,v 1.44 1997/08/24 03:34:54 peter Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -381,27 +381,4 @@ string describe_configuration(object node)
   }
   return ("<font size=\"+2\">" + link(node->data->query_name()) + "</font>"+
          (node->folded?"":"<dd>"+node->data->desc()+node->data->comment()));
-}
-
-string describe_request_status(object node)
-{
-  if(node->folded)
-    return link("<font size=\"+1\">Access / request status</font>");
-  return link("<font size=\"+1\">Access / request status</font>") + "<dd>"+
-    roxen->full_status();
-}
-
-array describe_global_status(object node)
-{
-  string res;
-  int *ru, tmp, use_ru;
-
-  if(node->folded)
-    return ({"", ""});
-  
-  res =  "</dl><h2>&nbsp;Server uptime: " 
-    + roxen->msectos((time(1) - roxen->start_time)*1000)
-    + "</h2>";
-
-  return ({ "<p>", res });
 }

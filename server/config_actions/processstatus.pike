@@ -1,5 +1,5 @@
 /*
- * $Id: processstatus.pike,v 1.1 1997/08/24 02:20:47 peter Exp $
+ * $Id: processstatus.pike,v 1.2 1997/08/24 03:35:23 peter Exp $
  */
 
 inherit "wizard";
@@ -8,6 +8,12 @@ constant name= "Status//Process status";
 constant doc = ("Shows the vaious information about the pike process.");
 
 constant more=1;
+
+string describe_global_status()
+{
+  return "Server uptime             : "+
+    roxen->msectos((time(1) - roxen->start_time)*1000) +"\n";
+}
 
 #define MB (1024*1024)
 
@@ -24,7 +30,8 @@ mixed page_0(object id, object mc)
   return (/* "<font size=\"+1\"><a href=\""+ roxen->config_url()+
 	     "Actions/?action=processstatus.pike&foo="+ time(1)+
 	     "\">Process status</a></font>"+ */
-	  "<pre>"
+	  "<pre>"+
+	  describe_global_status()+
 	  "CPU-Time used             : "+roxen->msectos(ru[0]+ru[1])+
 	  " ("+tmp/10+"."+tmp%10+"%)\n"
 	  +(ru[-2]?(sprintf("Resident set size (RSS)   : %.3f Mb\n",
