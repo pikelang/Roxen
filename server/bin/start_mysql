@@ -19,7 +19,7 @@ err_log=$datadir/error_log
 if test -f $pid_file; then
   PID=`cat $pid_file`
   if /usr/bin/kill -0 $PID ; then
-    dp "A mysqld process already exists as pid $PID"
+#    dp "A mysqld process already exists as pid $PID"
     exit 0
   fi
   rm -f $pid_file
