@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.295 2001/09/06 14:05:58 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.296 2001/09/06 14:19:07 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1205,7 +1205,6 @@ void clear_connect_to_my_mysql_cache( )
   sql_free_list = ([]);
 }
 
-
 mapping sql_free_list = ([ ]);
 mapping sql_active_list = ([ ]);
 
@@ -1220,11 +1219,7 @@ class MySQLKey
   object real;
   string name;
 
-  static int `!( )
-  {
-    return !real;
-  }
-
+  static int `!( )  { return !real; }
 
   array(mapping) query( string f, mixed ... args )
   {
@@ -1256,9 +1251,7 @@ class MySQLKey
 	  error("Fatal: Internal share error: master_sql equal!\n");
     }
     all_sql_wrappers[this_object()] = 1;
-#endif
-    
-#ifdef DB_DEBUG
+
     bt=(my_mysql_last_user[num] = describe_backtrace(backtrace()));
 #endif /* DB_DEBUG */
   }
@@ -1297,8 +1290,8 @@ class MySQLKey
   {
     switch( what )
     {
-      case "real": return real;
-      case "query": return query;
+      case "real":      return real;
+      case "query":     return query;
       case "big_query": return big_query;
     }
     return real[what];
@@ -1347,7 +1340,9 @@ mixed sq_cache_set( string i, mixed res )
   }
 }
 
-//! @appears connect_to_my_mysql
+/* Not to be documented. This is a low-level function that should be
+ * avoided by normal users. 
+*/
 mixed connect_to_my_mysql( string|int ro, void|string db )
 {
 #ifdef DB_DEBUG
@@ -1987,23 +1982,16 @@ library should be enough.
   add_dump_constant = new_master->add_dump_constant;
   int t = gethrtime();
 
-  DC("Thread.Thread");
-  DC("Thread.Local");
-  DC("Thread.Mutex");
-  DC("Thread.MutexKey");
-  DC("Thread.Condition");
-  DC("thread_create");
+  DC("Thread.Thread");    DC("Thread.Local");
+  DC("Thread.Mutex");     DC("Thread.MutexKey");
+  DC("Thread.Condition"); DC("thread_create");
+  DC( "Thread.Queue" );
   
-  DC( "Protocols.HTTP" );
-  DC( "Protocols.HTTP.Query" );
+  DC( "Protocols.HTTP" ); DC( "Protocols.HTTP.Query" );
 
-  DC( "Calendar.ISO" );
-  DC( "Calendar.ISO.Second" );
+  DC( "Calendar.ISO" );   DC( "Calendar.ISO.Second" );
 
   DC( "Stdio.Stat" );
-
-  DC( "Thread.Locale" );
-  DC( "Thread.Locale" );
   
   DC( "Regexp" );
 
@@ -2016,6 +2004,13 @@ library should be enough.
 	      "AVS", "WBF", "WBMP", "XFace" }),
 	   string x )
     DC("Image."+x);
+  DC( "Image.Image" );  DC( "Image.Font" );  DC( "Image.Colortable" );
+  DC( "Image.Layer" );  DC( "Image.lay" );   DC( "Image.Color" );
+  DC( "Image.Color.Color" );DC("Image._PSD" ); DC("Image._XCF" );
+  DC( "Image._XPM" );  DC( "Image" );  
+  if( DC("Image.GIF.encode") )
+    DC( "Image.GIF.encode_trans" );
+
 
   DC( "Stdio.File" );  DC( "Stdio.UDP" );  DC( "Stdio.Port" );
 
@@ -2026,8 +2021,6 @@ library should be enough.
   DC( "Stdio.sendfile" );
 
   DC( "Stdio.stderr" );  DC( "Stdio.stdin" );  DC( "Stdio.stdout" );
-
-  DC( "Thread.Mutex" );  DC( "Thread.Condition" );  DC( "Thread.Queue" );
 
   DC( "Parser.HTML" );
 
@@ -2050,19 +2043,10 @@ library should be enough.
     DC( "Image.FreeType.Face" );
   
   DC( "Process.create_process" );
-  DC( "MIME.Message" );
-  DC( "MIME.encode_base64" );
+  DC( "MIME.Message" );  DC( "MIME.encode_base64" );
   DC( "MIME.decode_base64" );
 
-  DC( "Image.Image" );  DC( "Image.Font" );  DC( "Image.Colortable" );
-  DC( "Image.Layer" );  DC( "Image.lay" );   DC( "Image.Color" );
-  DC( "Image.Color.Color" ); DC("Image._PSD" );  DC("Image._XCF" );
-  DC( "Image._XPM" );
-
-  if( DC("Image.GIF.encode") )
-    DC( "Image.GIF.encode_trans" );
-
-  DC( "Image" );  DC( "Locale" );  DC( "Locale.Charset" );
+  DC( "Locale" );  DC( "Locale.Charset" );
 
   report_debug("\bDone [%.1fms]\n", (gethrtime()-t)/1000.0);
 
