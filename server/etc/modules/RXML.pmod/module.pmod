@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.330 2004/04/19 18:15:07 mast Exp $
+// $Id: module.pmod,v 1.331 2004/06/18 16:56:02 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2617,7 +2617,8 @@ class Backtrace
     error ("Cannot set index %O to %O.\n", i, val);
   }
 
-  string _sprintf() {return sprintf ("RXML.Backtrace(%s: %O)", type || "", msg);}
+  string _sprintf (int flag)
+    {return flag == 'O' && sprintf ("RXML.Backtrace(%s: %O)", type || "", msg);}
 }
 
 
@@ -7605,6 +7606,48 @@ static class PikeCompile
 #  define PCODE_MSG(X...) do {} while (0)
 #endif
 
+// Typed error thrown when stale p-code is decoded.
+class PCodeStaleError
+{
+  constant is_generic_error = 1;
+  constant is_p_code_stale_error = 1;
+
+  string error_message;
+  array error_backtrace;
+
+  static void create (string msg, array bt)
+  {
+    error_message = msg;
+    error_backtrace = bt;
+  }
+
+  string|array `[] (int i)
+  {
+    switch (i) {
+      case 0: return error_message;
+      case 1: return error_backtrace;
+    }
+  }
+
+  mixed `[]= (int i, mixed val)
+  {
+    switch (i) {
+      case 0: return error_message = val;
+      case 1: return error_backtrace = val;
+    }
+  }
+
+  string _sprintf (int flag)
+    {return flag == 'O' && sprintf ("RXML.PCodeStaleError(%O)", error_message);}
+}
+
+final void p_code_stale_error (string msg, mixed... args)
+{
+  if (sizeof (args)) msg = sprintf (msg, @args);
+  array bt = backtrace();
+  throw (PCodeStaleError (msg, bt[..sizeof (bt) - 2]));
+}
+
 class PCode
 //! Holds p-code and evaluates it. P-code is the intermediate form
 //! after parsing and before evaluation.
@@ -8427,11 +8470,13 @@ class PCode
     [int version, flags, tag_set, string tag_set_hash,
      type, recover_errors, exec, protocol_cache_time] = v;
     if (version != P_CODE_VERSION)
-      error ("P-code is stale; it was made with an incompatible version.\n");
+      p_code_stale_error (
+	"P-code is stale - it was made with an incompatible version.\n");
     length = sizeof (exec);
     if (tag_set) {
       if (check_hash && tag_set->get_hash() != tag_set_hash)
-	error ("P-code is stale; the tag set has changed since it was encoded.\n");
+	p_code_stale_error (
+	  "P-code is stale - the tag set has changed since it was encoded.\n");
       generation = tag_set->generation;
     }
 
@@ -8620,8 +8665,8 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 	  else if (!(config = roxen->get_configuration (what[1])))
 	    error ("Cannot find configuration %O.\n", what[1]);
 	  if (config->compat_level() != what[2])
-	    error ("P-code is stale; the compatibility level has changed "
-		   "since it was encoded.\n");
+	    p_code_stale_error ("P-code is stale - the compatibility level "
+				"has changed since it was encoded.\n");
 	  ENCODE_DEBUG_RETURN (config);
 	}
 
@@ -8814,7 +8859,7 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
     }
 
     if (programp (what))
-      error("Cannot encode program at %s.\n", Program.defined (what));
+      error ("Cannot encode program at %s.\n", Program.defined (what));
     else if (functionp (what)) {
       string s = "";
       if (object o = function_object (what)) {
@@ -8841,8 +8886,8 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
     ENCODE_MSG ("decode_object (%O)\n", x);
     if (x->is_RXML_PCode) x->_decode (data, check_tag_set_hash);
     else if (x->_decode) x->_decode (data);
-    else error("Cannot decode object %O at %s without _decode().\n",
-	       x, Program.defined (object_program (x)));
+    else error ("Cannot decode object %O at %s without _decode().\n",
+		x, Program.defined (object_program (x)));
   }
 
   string _sprintf()
@@ -8891,16 +8936,20 @@ PCode string_to_p_code (string str, void|Configuration default_config,
 //! The decode can fail for many reasons, e.g. because some tag, tag
 //! set or module doesn't exist, or because it was encoded with a
 //! different Pike version, or because the coding format has changed.
-//! All such errors are thrown as exceptions. The caller should thus
-//! catch all errors and fall back to RXML evaluation from source.
+//! All such errors are thrown as @[PCodeStaleError] exceptions. The
+//! caller should catch them and fall back to RXML evaluation from
+//! source.
 {
   array(PCodec) codecs =
     p_codecs[default_config] || (p_codecs[default_config] = ({0, 0}));
   PCodec codec =
     codecs[!ignore_tag_set_hash] ||
     (codecs[!ignore_tag_set_hash] = PCodec (default_config, !ignore_tag_set_hash));
+#if 0
   mixed err = catch {
+#endif
     return [object(PCode)]decode_value(str, codec);
+#if 0
   };
   // Try to explain the error a bit.
   catch {
@@ -8910,6 +8959,7 @@ a different set of RXML tags. In that case this error can be safely
 ignored; it will disappear the next time the page is evaluated.\n";
   };
   throw (err);
+#endif
 }
 
 // Some parser tools:
