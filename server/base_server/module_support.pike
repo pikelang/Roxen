@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.15 1998/02/10 18:36:06 per Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.16 1998/07/07 17:04:11 grubba Exp $";
 #include <roxen.h>
 #include <module.h>
 
@@ -21,6 +21,32 @@ int setvars( mapping (string:mixed) vars )
   return 1;
 }
 
+static class ConfigurableWrapper
+{
+  int mode;
+  function f;
+  object roxen;
+
+  int check()
+  {
+    if ((mode & VAR_EXPERT) &&
+	(!roxen->configuration_interface()->expert_mode)) {
+      return 1;
+    }
+    if ((mode & VAR_MORE) &&
+	(!roxen->configuration_interface()->more_mode)) {
+      return 1;
+    }
+    return(f());
+  }
+  void create(object roxen_, int mode_, function f_)
+  {
+    roxen = roxen_;
+    mode = mode_;
+    f = f_;
+  }
+};
+
 int globvar(string var, mixed value, string name, int type,
 	    string|void doc_str, mixed|void misc,
 	    int|function|void not_in_config)
@@ -32,14 +58,21 @@ int globvar(string var, mixed value, string name, int type,
   variables[var][ VAR_NAME ]         = name;
   variables[var][ VAR_MISC ]         = misc;
   
-  if((type&~VAR_TYPE_MASK) & VAR_EXPERT)
-    variables[var][ VAR_CONFIGURABLE ] = VAR_EXPERT;
-  else if((type&~VAR_TYPE_MASK) & VAR_MORE)
-    variables[var][ VAR_CONFIGURABLE ] = VAR_MORE;
-  else if(intp(not_in_config))
-    variables[var][ VAR_CONFIGURABLE ]= !not_in_config;
-  else if(functionp(not_in_config))
-    variables[var][ VAR_CONFIGURABLE ]= not_in_config;
+  type &= ~VAR_TYPE_MASK;		// Probably not needed, but...
+  type &= (VAR_EXPERT | VAR_MORE);
+  if (functionp(not_in_config)) {
+    if (type) {
+      variables[var][ VAR_CONFIGURABLE ] =
+	ConfigurableWrapper(this_object(), type, not_in_config)->check;
+    } else {
+      variables[var][ VAR_CONFIGURABLE ] = not_in_config;
+    }
+  } else if (type) {
+    variables[var][ VAR_CONFIGURABLE ] = type;
+  } else if(intp(not_in_config)) {
+    variables[var][ VAR_CONFIGURABLE ] = !not_in_config;
+  }
+
   variables[var][ VAR_SHORTNAME ] = var;
 }
 
