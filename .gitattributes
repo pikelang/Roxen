@@ -129,6 +129,7 @@ rbf binary
 /server/java/src/com/roxen/roxen/Module.java foreign_ident
 /server/java/src/com/roxen/roxen/ParserModule.java foreign_ident
 /server/java/src/com/roxen/roxen/ProviderModule.java foreign_ident
+/server/java/src/com/roxen/roxen/RXML.java foreign_ident
 /server/java/src/com/roxen/roxen/RoxenConfiguration.java foreign_ident
 /server/java/src/com/roxen/roxen/RoxenFileResponse.java foreign_ident
 /server/java/src/com/roxen/roxen/RoxenLib.java foreign_ident

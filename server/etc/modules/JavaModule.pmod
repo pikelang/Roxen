@@ -52,6 +52,7 @@ static object throwable_class = FINDCLASS("java/lang/Throwable");
 static object stringwriter_class = FINDCLASS("java/io/StringWriter");
 static object printwriter_class = FINDCLASS("java/io/PrintWriter");
 static object throwable_printstacktrace = throwable_class->get_method("printStackTrace", "(Ljava/io/PrintWriter;)V");
+static object throwable_get_message = throwable_class->get_method("getMessage", "()Ljava/lang/String;");
 static object stringwriter_init = stringwriter_class->get_method("<init>", "()V");
 static object printwriter_init = printwriter_class->get_method("<init>", "(Ljava/io/Writer;)V");
 static object printwriter_flush = printwriter_class->get_method("flush", "()V");
@@ -72,6 +73,8 @@ static object response_class = FINDCLASS("com/roxen/roxen/RoxenResponse");
 static object response2_class = FINDCLASS("com/roxen/roxen/RoxenStringResponse");
 static object response3_class = FINDCLASS("com/roxen/roxen/RoxenFileResponse");
 static object response4_class = FINDCLASS("com/roxen/roxen/RoxenRXMLResponse");
+static object rxml_class = FINDCLASS("com/roxen/roxen/RXML");
+static object backtrace_class = FINDCLASS("com/roxen/roxen/RXML$Backtrace");
 static object reqid_init = reqid_class->get_method("<init>", "(Lcom/roxen/roxen/RoxenConfiguration;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
 static object conf_init = conf_class->get_method("<init>", "()V");
 static object frame_init = frame_class->get_method("<init>", "()V");
@@ -110,8 +113,10 @@ static object _type = response_class->get_field("type", "Ljava/lang/String;");
 static object _extra_heads = response_class->get_field("extraHeads", "Ljava/util/Map;");
 static object _data = response2_class->get_field("data", "Ljava/lang/String;");
 static object _file = response3_class->get_field("file", "Ljava/io/Reader;");
+static object bt_get_type = backtrace_class->get_method("getType", "()Ljava/lang/String;");
 
-static object natives_bind1, natives_bind2, natives_bind3, natives_bind4;
+static object natives_bind1, natives_bind2, natives_bind3,
+  natives_bind4, natives_bind5;
 
 static mapping(object:object) jotomod = set_weak_flag( ([]), 1 );
 static mapping(object:object) jotoconf = set_weak_flag( ([]), 1 );
@@ -132,15 +137,23 @@ static void check_exception()
 {
   object e = jvm->exception_occurred();
   if(e) {
-    object sw = stringwriter_class->alloc();
-    stringwriter_init->call_nonvirtual(sw);
-    object pw = printwriter_class->alloc();
-    printwriter_init->call_nonvirtual(pw, sw);
-    throwable_printstacktrace(e, pw);
-    printwriter_flush(pw);
-    jvm->exception_clear();
     array bt = backtrace();
-    throw(({(string)sw, bt[..sizeof(bt)-2]}));
+    if(e->is_instance_of(backtrace_class)) {
+      object btto = bt_get_type(e);
+      object msgo = throwable_get_message(e);
+      jvm->exception_clear();
+      throw(RXML.Backtrace(btto && (string)btto, msgo && (string)msgo,
+			   0, bt[..sizeof(bt)-2]));
+    } else {
+      object sw = stringwriter_class->alloc();
+      stringwriter_init->call_nonvirtual(sw);
+      object pw = printwriter_class->alloc();
+      printwriter_init->call_nonvirtual(pw, sw);
+      throwable_printstacktrace(e, pw);
+      printwriter_flush(pw);
+      jvm->exception_clear();
+      throw(({(string)sw, bt[..sizeof(bt)-2]}));
+    }
   }
 }
 
@@ -744,6 +757,36 @@ static object native_get_providers(object conf, object provides)
     return 0;
 }
 
+static object native_user_get_var(object var, object scope)
+{
+  mixed x;
+  if(zero_type(x = RXML.user_get_var((string)var, scope&&(string)scope)))
+    return 0;
+  else if(intp(x)) {
+    object z = int_class->alloc();
+    int_init->call_nonvirtual(z, x);
+    check_exception();
+    return z;
+  } else
+    return objify(x);
+}
+
+static object native_user_set_var(object var, object val, object scope)
+{
+  RXML.user_set_var((string)var, valify(val), scope&&(string)scope);
+  return val;
+}
+
+static object native_user_delete_var(object var, object scope)
+{
+  RXML.user_delete_var((string)var, scope&&(string)scope);
+}
+
+static void native_tag_debug(object msg)
+{
+  RXML.tag_debug((string)msg);
+}
+
 void create()
 {
   natives_bind1 = module_class->register_natives(({
@@ -770,5 +813,11 @@ void create()
     ({"getPragma", "()Ljava/util/Set;", native_get_pragma}),
     ({"getPrestate", "()Ljava/util/Set;", native_get_prestate}),
     ({"cache", "(I)V", native_cache}),
+  }));
+  natives_bind5 = rxml_class->register_natives(({
+    ({"userGetVar", "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;", native_user_get_var}),
+    ({"userSetVar", "(Ljava/lang/String;Ljava/lang/Object;Ljava/lang/String;)Ljava/lang/Object;", native_user_set_var}),
+    ({"userDeleteVar", "(Ljava/lang/String;Ljava/lang/String;)V", native_user_delete_var}),
+    ({"tagDebug", "(Ljava/lang/String;)V", native_tag_debug}),
   }));
 }
