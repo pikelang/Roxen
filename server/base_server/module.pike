@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.94 2000/08/05 22:01:45 mast Exp $
+// $Id: module.pike,v 1.95 2000/08/22 02:35:37 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -53,7 +53,8 @@ string module_identifier()
 
 string _sprintf()
 {
-  return "RoxenModule(" + module_identifier() + ")";
+  return "RoxenModule(" +
+    (Roxen.get_modname (this_object()) || module_identifier()) + ")";
 }
 
 array register_module()
