@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.113 1998/07/12 21:56:38 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.114 1998/07/13 11:59:36 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -781,9 +781,11 @@ string tag_set( string tag, mapping m, object id )
       // Unset variable.
       m_delete( id->variables, m->variable );
     return("");
-  }
-  else
+  } else if (id->misc->defines) {
     return("<!-- set (line "+id->misc->defines->line+"): variable not specified -->");
+  } else {
+    return("<!-- set: variable not specified -->");
+  }
 }
 
 string tag_append( string tag, mapping m, object id )
