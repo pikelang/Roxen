@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.20 1997/10/12 21:13:57 grubba Exp $
+/* $Id: ssl3.pike,v 1.21 1997/10/13 14:09:18 grubba Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -173,6 +173,11 @@ void no_data_to_send(mixed fooid)
     to_send->file->close();
   }
   to_send->file = 0;
+  if (!to_send_buffer) {
+    // We need to wake up the sender,
+    // so that it can close the connection.
+    my_fd->set_nonblocking(0, write_more, end);
+  }
 }
 
 string get_data()
@@ -181,14 +186,14 @@ string get_data()
   if(to_send->head)
   {
     s = to_send->head;
-    to_send->head=0;
+    to_send->head = 0;
     return s;
   }
 
   if(to_send->data)
   {
     s = to_send->data;
-    to_send->data=0;
+    to_send->data = 0;
     return s;
   }
 
