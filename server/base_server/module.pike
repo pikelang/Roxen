@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.118 2001/07/31 07:42:56 per Exp $
+// $Id: module.pike,v 1.119 2001/08/01 11:07:59 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -354,8 +354,38 @@ mixed get_value_from_file(string path, string index, void|string pre)
   return compile_string((pre||"")+file->read())[index];
 }
 
-string get_my_table( string|array(string) name,
-		     void|array(string)|string defenition )
+static private mapping __my_tables = ([]);
+
+static array(mapping(string:mixed)) sql_query( string query, mixed ... args )
+//! Do a SQL-query using @[get_my_sql], the table names in the query
+//! should be written as &table; instead of table. As an example, if
+//! the tables 'meta' and 'data' have been created with create_tables
+//! or get_my_table, this query will work:
+//!
+//! SELECT &meta;.id AS id, &data;.data as DATA
+//!        FROM &data;, &meta; WHERE &my.meta;.xsize=200
+//!
+{
+  return get_my_sql()->query( replace( query, __my_tables ), @args );
+}
+
+
+static object sql_big_query( string query, mixed ... args )
+//! Identical to @[sql_query], but the @[Sql.sql()->big_query] method
+//! will be used instead of the @[Sql.sql()->query] method.
+{
+  return get_my_sql()->big_query( replace( query, __my_tables ), @args );
+}
+
+static void create_sql_tables( mapping(string:array(string)) defenitions )
+//! Create multiple tables in one go. See @[get_my_table]
+{
+  foreach( indices( defenitions ), string t )
+    get_my_table( t, defenitions[t] );
+}
+
+static string get_my_table( string|array(string) name,
+			    void|array(string)|string defenition )
 //! @decl string get_my_table( string name, array(string) types )
 //! @decl string get_my_table( string name, string defenition )
 //! @decl string get_my_table( string defenition )
@@ -364,6 +394,9 @@ string get_my_table( string|array(string) name,
 //! Returns the name of a table in the 'shared' database that is
 //! unique for this module. It is possible to select another database
 //! by using @[set_my_db] before calling this function.
+//!
+//! You can use @[create_sql_tables] instead of this function if you want
+//! to create more than one table in one go.
 //! 
 //! In the first form, @[name] is the (postfix of) the name of the
 //! table, and @[types] is an array of defenitions, as an example:
@@ -389,13 +422,14 @@ string get_my_table( string|array(string) name,
 //
 //! @note This function may not be called from create
 {
+  string oname;
   if( !defenition )
   {
     defenition = name;
-    name = "";
+    oname = name = "";
   }
   else if(strlen(name))
-    name = "_"+name;
+    name = "_"+(oname = name);
 
   Sql.Sql sql = get_my_sql();
   string res = hash(_my_configuration->name)->digits(36)
@@ -424,12 +458,9 @@ string get_my_table( string|array(string) name,
 		     describe_error( error ) );
       return 0;
     }
-    return res;
+    return __my_tables[ "&"+oname+";" ] = res;
   }
-//   // Update defenition if it has changed. For now, always update. 
-//   // This might be a tad ineffective if this function is called
-//   // often, but mysql at least seems to ignore ALTER TABLE calls
-//   // when the defenition has not changed.
+//   // Update defenition if it has changed.
 //   mixed error = 
 //     catch
 //     {
@@ -442,12 +473,15 @@ string get_my_table( string|array(string) name,
 //     report_notice( "Failed to update table defenition"+name+": "+
 // 		   describe_error( error ) );
 //   }
-  return res;
+  return __my_tables[ "&"+oname+";" ] = res;
 }
 
 
-string my_db = "shared";
-void set_my_db( string to )
+
+
+
+static string my_db = "shared";
+static void set_my_db( string to )
 //! Select the database in which tables will be created with
 //! get_my_table, and also the one that will be returned by
 //! @[get_my_sql]
@@ -455,12 +489,12 @@ void set_my_db( string to )
   my_db = to;
 }
 
-Sql.Sql get_my_sql( int|void read_only )
+static Sql.Sql get_my_sql( int|void read_only )
 //! Return a SQL-object for the database set with @[set_my_db],
 //! defaulting to the 'shared' database. If read_only is specified,
 //! the database will be opened in read_only mode.
 //! 
 //! See also @[DBManager.get]
 {
-  return DBManager.get( my_db, _my_configuration, read_only );
+  return DBManager.cached_get( my_db, _my_configuration, read_only );
 }
