@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.105 2001/01/29 05:45:50 per Exp $
+// $Id: module.pike,v 1.106 2001/01/29 09:04:22 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -162,7 +162,8 @@ string info(Configuration conf)
 
 string sname( )
 {
-  return my_configuration()->otomod[ this_object() ];
+  return (my_configuration()->name+"_"+
+	  my_configuration()->otomod[ this_object() ]);
 }
 
 ModuleInfo my_moduleinfo( )
@@ -536,12 +537,23 @@ mixed get_value_from_file(string path, string index, void|string pre)
   return compile_string((pre||"")+file->read())[index];
 }
 
-
+string my_db = "shared";
+void set_my_db( string to )
+{
+  my_db = to;
+}
 
 string get_my_table( string defenition )
 {
   string res = replace(sname(),"#","_");
-  if( catch(get_my_sql()->query( "SELECT * FROM "+res+" LIMIT 1" )) )
+  Sql.Sql sql = get_my_sql();
+  if( !sql )
+  {
+    report_error("Failed to get SQL handle, permission denied for "+my_db+"\n");
+    return 0;
+  }
+
+  if( catch(sql->query( "SELECT * FROM "+res+" LIMIT 1" )) )
     get_my_sql()->query( "CREATE TABLE "+res+" ("+defenition+")" );
   return res;
 }
@@ -549,5 +561,5 @@ string get_my_table( string defenition )
 
 Sql.Sql get_my_sql()
 {
-  return connect_to_my_mysql( 0, "roxen" );
+  return DBManager.get( my_db, _my_configuration );
 }

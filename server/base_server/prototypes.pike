@@ -1,7 +1,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.10 2001/01/29 05:48:18 per Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.11 2001/01/29 09:04:30 per Exp $";
 
 class Variable
 {
@@ -656,10 +656,12 @@ class AuthModule
   //! database.
 }
 
-static Sql.Sql user_mysql = connect_to_my_mysql( 0, "roxen" );
-
-static void create()
+static int user_sql_inited;
+static Sql.Sql user_mysql;
+static void init_user_sql()
 {
+  user_mysql = master()->resolv("DBManager.get")( "shared" );
+
   if(catch(user_mysql->query( "SELECT module FROM user_data WHERE module=''")))
     user_mysql->query( "CREATE TABLE user_data "
 		       " (module varchar(30), "
@@ -769,6 +771,7 @@ class User( UserDB database )
   //! delete it.
   {
     delete_var( module, index );
+    if( !user_sql_inited ) init_user_sql();
     int encoded;
     string mm;
     if( !module )
@@ -795,6 +798,7 @@ class User( UserDB database )
   {
     array rows;
     string mm;
+    if( !user_sql_inited ) init_user_sql();
     if( !module )
       mm = "NULL";
     else
@@ -815,6 +819,7 @@ class User( UserDB database )
   //! Delete a variable previously created with @[set_var]
   {
     string mm;
+    if( !user_sql_inited ) init_user_sql();
     if( !module )
       mm = "NULL";
     else

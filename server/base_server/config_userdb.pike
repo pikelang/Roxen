@@ -29,7 +29,7 @@ class ConfigIFCache
     else
     {
       dir = name;
-      db = connect_to_my_mysql( 0, "cache" );
+      db = master()->resolv("DBManager.get")( "local" );
       catch(db->query( "create table "+name+" ("
                        "  id varchar(80) not null primary key,"
                        "  data blob not null default ''"
