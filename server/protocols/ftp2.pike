@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.43 1998/05/20 10:41:10 grubba Exp $
+ * $Id: ftp2.pike,v 1.44 1998/05/20 10:49:08 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -873,7 +873,10 @@ class TelnetSession {
     255:"IAC",		// Interpret As Command
   ]);
 
+  // Some prototypes needed by Pike 0.5
   static private void got_data(mixed ignored, string s);
+  static private void send_data();
+  static private void got_oob(mixed ignored, string s);
 
   void set_write_callback(function(mixed|void:string) w_cb)
   {
