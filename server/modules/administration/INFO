@@ -6,6 +6,6 @@
 </standard>
 
 <svenska>
- <name>Konfigurationsinterfacemoduler</name>
- <doc>De här modulerna är enbart användbara för konfigurationsinterfacet</doc>
+ <name>Administrationsinterfacemoduler</name>
+ <doc>De här modulerna är enbart användbara för administrationsinterfacet</doc>
 </svenska>
