@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.25 2001/01/13 23:26:47 per Exp $
+ * $Id: config.h,v 1.26 2001/01/14 10:24:37 nilsson Exp $
  *
  * User configurable things not accessible from the normal
  * administration interface. Not much, but there are some things..  
@@ -16,6 +16,7 @@
 #endif /* ENABLE_THREADS */
 #endif /* !DISABLE_THREADS */
 #endif /* efun(thread_create) */
+#define add_efun add_constant
 
 /* Reply 'PONG\r\n' to the query 'PING\r\n'.
  * For performance tests...
