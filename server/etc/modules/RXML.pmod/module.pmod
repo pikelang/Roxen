@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.10 2000/01/08 03:41:49 mast Exp $
+//! $Id: module.pmod,v 1.11 2000/01/08 12:12:01 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -11,10 +11,6 @@
 //! changes.
 
 #pragma strict_types
-
-#if !constant (RequestID)
-class RequestID {}
-#endif
 
 
 class Tag
@@ -464,11 +460,13 @@ class Context
     return 0;
   }
 
+  static constant rxml_errmsg_prefix = "RXML parser error: ";
+
   void error (string msg, mixed... args)
   //! Throws an error with a dump of the parser stack.
   {
     if (sizeof (args)) msg = sprintf (msg, @args);
-    msg = "RXML parser error: " + msg;
+    msg = rxml_errmsg_prefix + msg;
     for (Frame f = frame; f; f = f->up) {
       if (f->tag) msg += "<" + f->tag->name;
       else if (!f->up) break;
@@ -485,6 +483,31 @@ class Context
     }
     array b = backtrace();
     throw (({msg, b[..sizeof (b) - 2]}));
+  }
+
+  string handle_exception (mixed err)
+  //! This function gets any exception that is catched at the top
+  //! level of the parser. The returned value is added to the result,
+  //! if possible.
+  {
+    if (arrayp (err) && sizeof ([array] err) == 2) {
+      array err = [array] err;
+      if (stringp (err[0]) &&
+	  ([string] err[0])[..sizeof (rxml_errmsg_prefix) - 1] == rxml_errmsg_prefix)
+	// An RXML error.
+	if (id && id->conf)
+	  return ([function(mixed:string)]
+		  ([object] id->conf)->report_rxml_error) (err);
+	else {
+#ifdef MODULE_DEBUG
+	  report_notice (describe_backtrace (err));
+#else
+	  report_notice (err[0]);
+#endif
+	  return [string] err[0];
+	}
+    }
+    throw (err);
   }
 
   // Internals.
@@ -1347,7 +1370,13 @@ class Parser
 	if (!context->unwind_state) context->unwind_state = ([]);
 	context->unwind_state->top = err;
       }
-      else throw (err);
+      else
+	if (context) {
+	  if (string msg = context->handle_exception (err))
+	    if (type->free_text && this_object()->write_out)
+	      ([function(string:void)] this_object()->write_out) (msg);
+	}
+	else throw (err);
     return res;
   }
 
@@ -1379,7 +1408,13 @@ class Parser
 	if (!context->unwind_state) context->unwind_state = ([]);
 	context->unwind_state->top = err;
       }
-      else throw (err);
+      else
+	if (context) {
+	  if (string msg = context->handle_exception (err))
+	    if (type->free_text && this_object()->write_out)
+	      ([function(string:void)] this_object()->write_out) (msg);
+	}
+	else throw (err);
   }
 
   //! Interface.
@@ -1609,6 +1644,7 @@ class Type
   {
     Type newtype = object_program (this_object())();
     newtype->_parser_prog = _parser_prog;
+    newtype->_parser_args = _parser_args;
     newtype->_t_obj_cache = _t_obj_cache;
     return newtype;
   }
@@ -1636,6 +1672,7 @@ class Type
     Type newtype;
     if (sizeof (parser_args)) {	// Can't cache this.
       newtype = clone();
+      newtype->_parser_prog = newparser;
       newtype->_parser_args = parser_args;
       if (newparser->tag_set_eval) newtype->_p_cache = ([]);
     }
@@ -1742,7 +1779,7 @@ class Type
   program/*(Parser)HMM*/ _parser_prog = PNone;
   // The parser to use. Should never be changed in a type object.
 
-  private array(mixed) _parser_args = ({});
+  /*private*/ array(mixed) _parser_args = ({});
 
   /*private*/ mapping(program:Type) _t_obj_cache;
   // To avoid creating new type objects all the time in `().
