@@ -10,13 +10,23 @@ modules:
 	@for a in `find ../modules/ -name '*.pike'` ; do \
 	  if grep -c '#!NO' $$a >/dev/null 2>&1; then \
 	   :;\
-          else  \
+	  else  \
 	    module='"mod_'`echo $$a|sed -e s',../modules/.*/,,' -e s',.pike,,'`'"';\
 	    if grep -c "$$module" $$a >/dev/null 2>&1; then \
 	      ./scripts/make_mod_config $$module $$a; \
 	    fi;\
 	  fi ; \
 	done
+	@for a in `find ../more_modules/ -name '*.pike'` ; do \
+	  if grep -c '#!NO' $$a >/dev/null 2>&1; then \
+	   :;\
+	  else  \
+	    module='"mod_'`echo $$a|sed -e s',../more_modules/,,' -e s',.pike,,'`'"';\
+	    if grep -c "$$module" $$a >/dev/null 2>&1; then \
+	      ./scripts/make_mod_config $$module $$a; \
+	    fi;\
+	  fi ; \
+        done
 
 xmls:
 	@echo "2. Rebuilding .xml config files"
