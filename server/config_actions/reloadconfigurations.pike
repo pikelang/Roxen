@@ -1,5 +1,5 @@
 /*
- * $Id: reloadconfigurations.pike,v 1.4 1997/08/20 14:23:53 per Exp $
+ * $Id: reloadconfigurations.pike,v 1.5 1998/06/05 19:27:21 grubba Exp $
  */
 
 inherit "roxenlib";
@@ -19,7 +19,13 @@ mixed handle(object id, object mc)
 
   foreach(roxen->configurations, object o)
   {
-    Array.map(indices(o->open_ports), o->do_dest);
+    // Closing ports...
+    if (o->server_ports) {
+      // Roxen 1.2.26 or later
+      Array.map(values(o->server_ports), o->do_dest);
+    } else {
+      Array.map(indices(o->open_ports), o->do_dest);
+    }
     report_notice("Updating old configuration "+o->name+"\n");
     o->stop();
     o->create(o->name);
