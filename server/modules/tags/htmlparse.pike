@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.134 1998/08/25 20:23:23 neotron Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.135 1998/09/11 22:21:07 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2948,11 +2948,58 @@ class Tracer
 
 }
 
+class SumTracer
+{
+  inherit Tracer;
+#if 0
+  mapping levels = ([]);
+  mapping sum = ([]);
+  void trace_enter_ol(string type, function|object module)
+  {
+    resolv="";
+    ::trace_enter_ol();
+    levels[level] = type+" "+module;
+  }
+
+  void trace_leave_ol(string mess)
+  {
+    string t = levels[level--];
+#if efun(gethrtime)
+    int delay = gethrtime()-et[type+" "+module_name(module)];
+#endif
+#if efun(gethrvtime)
+    int delay2 = +gethrvtime()-et2[t];
+#endif
+    t+=html_encode_string(mess);
+    if( sum[ t ] ) {
+      sum[ t ][ 0 ] += delay;
+#if efun(gethrvtime)
+      sum[ t ][ 1 ] += delay2;
+#endif
+    } else {
+      sum[ t ] = ({ delay, 
+#if efun(gethrvtime)
+		    delay2 
+#endif
+      });
+    }
+  }
+
+  string res()
+  {
+    foreach(indices());
+  }
+#endif
+}
+
 string tag_trace(string t, mapping args, string c , object id)
 {
   NOCACHE();
-
-  object t= Tracer();
+  object t;
+  if(args->summary)
+    t = SumTracer();
+  else
+    t = Tracer();
   function a = id->misc->trace_enter;
   function b = id->misc->trace_leave;
   id->misc->trace_enter = t->trace_enter_ol;
