@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.1 1999/05/19 18:57:30 grubba Exp $
+ * $Id: ftp.pike,v 2.2 1999/05/19 18:59:32 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -135,7 +135,7 @@ class RequestID2
       return;
     }
 
-    error("Assync sending with send_result() not supported yet.\n");
+    error("Async sending with send_result() not supported yet.\n");
   }
 
   object(RequestID2) clone_me()
