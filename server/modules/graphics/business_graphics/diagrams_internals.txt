@@ -151,6 +151,10 @@ int xsize, ysize;
 //För grapher och bars måste de vara av samma antal som antalet 
 //uppsättningar data
 
+"backdatacolors":({({int r, int g, int b}), ... }) 
+//Färgen på kontueren kring linjerna/barsen/slicerna
+//För grapher och bars måste de vara av samma antal som antalet 
+//uppsättningar data
 
 "textcolor":({int r, int g, int b})
 // färgen på texten
@@ -163,6 +167,8 @@ int xsize, ysize;
 //hor är default.
 
 "linewidth":float bredd på alla linjer
+
+"backlinewidth":float bredd på alla linjer
 
 "grindwidth":float bredd på alla linjer i grinden
 

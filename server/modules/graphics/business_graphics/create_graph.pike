@@ -61,7 +61,11 @@ mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
     }
   else
     {
-      array(int|float) numbers=diagram_data["data"][0];
+      if (diagram_data["type"]=="pie")
+	array(mixed) numbers=diagram_data["data"][0];
+      else
+	array(mixed) numbers=diagram_data["data"];
+
       int** carr=allocate(sizeof(numbers));
       int steg=128+128/(sizeof(numbers));
       if (1==sizeof(numbers))
@@ -131,7 +135,8 @@ mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
 	      carr[i]=Colors.hsv_to_rgb((i*steg)%256,190,155);
 	    }
 	}
-
+      
+      //write("carr: "+sprintf("%O", carr)+"\n");
       diagram_data["datacolors"]=carr;
       
     }
@@ -148,6 +153,23 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 {
   float xminvalue=0.0, xmaxvalue=-STORT, yminvalue=0.0, ymaxvalue=-STORT;
 
+
+
+  //Oulinecolors
+  if ((diagram_data["backdatacolors"]==0)&&
+      (diagram_data["backlinewidth"]))
+    {
+      int dcs=sizeof(diagram_data["datacolors"]);
+      diagram_data["backdatacolors"]=allocate(dcs);
+      for(int i=0; i<dcs; i++)
+	diagram_data["backdatacolors"][i]=({255-diagram_data["datacolors"][i][0],
+					    255-diagram_data["datacolors"][i][1],
+					    255-diagram_data["datacolors"][i][2]
+	});
+      
+    }
+  //diagram_data["backlinewidth"]=diagram_data["linewidth"]+1.0;
+  
   if (!(diagram_data["legendcolor"]))
     diagram_data["legendcolor"]=diagram_data["bgcolor"];
 
@@ -637,6 +659,9 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 
   string where_is_ax;
 
+  //Fixa defaultfärger!
+  setinitcolors(diagram_data);
+
   object(image) graph;
   if (diagram_data["bgcolor"])
     graph=image(diagram_data["xsize"],diagram_data["ysize"],
@@ -648,6 +673,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       diagram_data["ysize"]=diagram_data["image"]->ysize();
     }
   diagram_data["image"]=graph;
+
   set_legend_size(diagram_data);
 
   //write("ysize:"+diagram_data["ysize"]+"\n");
@@ -1129,28 +1155,6 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	}
     
   //Rita pilen
-  /*
-graph->
-    polygone(make_polygon_from_line(diagram_data["linewidth"], 
-				    ({
-				      xpos_for_yaxis-
-				      (float)si/2.0,
-				      diagram_data["linewidth"]+
-				      (float)si/2.0+
-					  diagram_data["labelsize"],
-				      
-				      xpos_for_yaxis,
-				      diagram_data["linewidth"]+
-					  diagram_data["labelsize"],
-	
-				      xpos_for_yaxis+
-				      (float)si/2.0,
-				      diagram_data["linewidth"]+
-				      (float)si/2.0+
-					  diagram_data["labelsize"]
-				    }), 
-				    1, 1)[0]);
-  */
   graph->
     polygone(
 	     ({
@@ -1187,6 +1191,7 @@ graph->
   int s=sizeof(diagram_data["xnamesimg"]);
   for(int i=0; i<s; i++)
     {
+      graph->setcolor(@diagram_data["textcolor"]);
       graph->paste_alpha_color(diagram_data["xnamesimg"][i], 
 			       @(diagram_data["textcolor"]), 
 			       (int)floor((diagram_data["values_for_xnames"][i]-
@@ -1196,6 +1201,7 @@ graph->
 					  diagram_data["xnamesimg"][i]->xsize()/2), 
 			       (int)floor(diagram_data["ysize"]-ypos_for_xaxis+
 					  si/2.0));
+      graph->setcolor(@diagram_data["axcolor"]);
       graph->
 	polygone(make_polygon_from_line(diagram_data["linewidth"], 
 					({
@@ -1218,6 +1224,7 @@ graph->
   for(int i=0; i<s; i++)
     {
       //write("\nYmaXnames:"+diagram_data["ymaxynames"]+"\n");
+      graph->setcolor(@diagram_data["textcolor"]);
       graph->paste_alpha_color(diagram_data["ynamesimg"][i], 
 			       @(diagram_data["textcolor"]), 
 			       (int)floor(xpos_for_yaxis-
@@ -1228,6 +1235,7 @@ graph->
 					  *ymore+diagram_data["ysize"]-ystart
 					  -
 					  diagram_data["ymaxynames"]/2));
+      graph->setcolor(@diagram_data["axcolor"]);
       graph->
 	polygone(make_polygon_from_line(diagram_data["linewidth"], 
 					({
@@ -1338,7 +1346,7 @@ int main(int argc, string *argv)
 		 "axcolor":({0,0,0}),
 		 "bgcolor":0,//({255,255,255}),
 		 "labelcolor":({0,0,0}),
-		 "datacolors":({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}) }),
+		 "datacolors":0,//({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}) }),
 		 "linewidth":2.2,
 		 "xsize":400,
 		 "ysize":200,

@@ -21,19 +21,23 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 {
   //Supportar bara xsize>=100
   int si=diagram_data["fontsize"];
+ 
+  //Fixa defaultfärger!
+  setinitcolors(diagram_data);
+
 
   string where_is_ax;
 
   object(image) barsdiagram;
   if (diagram_data["bgcolor"])
     barsdiagram=image(diagram_data["xsize"],diagram_data["ysize"],
-		@(diagram_data["bgcolor"]));
+		      @(diagram_data["bgcolor"]));
   else
-  {
-    barsdiagram=diagram_data["image"];
-    diagram_data["xsize"]=diagram_data["image"]->xsize();
-    diagram_data["ysize"]=diagram_data["image"]->ysize();
-  }
+    {
+      barsdiagram=diagram_data["image"];
+      diagram_data["xsize"]=diagram_data["image"]->xsize();
+      diagram_data["ysize"]=diagram_data["image"]->ysize();
+    }
   
   diagram_data["image"]=barsdiagram;
   set_legend_size(diagram_data);
@@ -151,6 +155,8 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       labely=diagram_data["labelsize"];
       labelx=labelimg->xsize();
     }
+  else
+    diagram_data["labelsize"]=0;
 
 
 
@@ -359,6 +365,14 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 		diagram_data["ysize"]-ystart;	  
 	    }
 	  
+	  //Draw Ugly outlines
+	  if ((diagram_data["backdatacolors"])&&
+	      (diagram_data["backlinewidth"]))
+	    {
+	      barsdiagram->setcolor(@(diagram_data["backdatacolors"][farg]));
+	      draw(barsdiagram, diagram_data["backlinewidth"],l);
+	    }
+
 	  barsdiagram->setcolor(@(diagram_data["datacolors"][farg++]));
 	  draw(barsdiagram, diagram_data["linewidth"],l);
 	}
@@ -628,34 +642,13 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	}
     
   //Rita pilen
-  /* barsdiagram->
-    polygone(make_polygon_from_line(diagram_data["linewidth"], 
-				    ({
-				      xpos_for_yaxis-
-				      (float)si/2.0,
-				      diagram_data["linewidth"]+
-				      (float)si/2.0+
-					  diagram_data["labelsize"],
-				      
-				      xpos_for_yaxis,
-				      diagram_data["linewidth"]+
-					  diagram_data["labelsize"],
-	
-				      xpos_for_yaxis+
-				      (float)si/2.0,
-				      diagram_data["linewidth"]+
-				      (float)si/2.0+
-					  diagram_data["labelsize"]
-				    }), 
-				    1, 1)[0]);
-  */
   barsdiagram->
     polygone(
 	     ({
 	       xpos_for_yaxis-
 	       (float)si/4.0,
 	       diagram_data["linewidth"]/2.0+
-	       (float)si/2.0+
+	       (float)si+
 	       diagram_data["labelsize"],
 				      
 	       xpos_for_yaxis,
@@ -665,7 +658,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	       xpos_for_yaxis+
 	       (float)si/4.0,
 	       diagram_data["linewidth"]/2.0+
-	       (float)si/2.0+
+	       (float)si+
 	       diagram_data["labelsize"]
 	     })); 
   
@@ -707,6 +700,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   for(int i=0; i<s; i++)
     {
       //write("\nYmaXnames:"+diagram_data["ymaxynames"]+"\n");
+      barsdiagram->setcolor(@diagram_data["textcolor"]);
       barsdiagram->paste_alpha_color(diagram_data["ynamesimg"][i], 
 			       @(diagram_data["textcolor"]), 
 			       (int)floor(xpos_for_yaxis-
@@ -717,6 +711,8 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					  *ymore+diagram_data["ysize"]-ystart
 					  -
 					  diagram_data["ymaxynames"]/2));
+
+      barsdiagram->setcolor(@diagram_data["axcolor"]);
       barsdiagram->
 	polygone(make_polygon_from_line(diagram_data["linewidth"], 
 					({
@@ -797,38 +793,45 @@ int main(int argc, string *argv)
   //write("\nRitar axlarna. Filen sparad som test.ppm\n");
 
   mapping(string:mixed) diagram_data;
-  diagram_data=(["type":"sumbars",
-		 "textcolor":({0,0,0}),
-		 "subtype":"norm",
+  diagram_data=(["type":"bars",
+		 "textcolor":({0,255,0}),
+		 "subtype":"line",
 		 "orient":"vert",
 		 "data": 
-		 ({ ({91.2, 102.3, 94.01, 100.0, 94.3, 102.0 }),
-		     ({91.2, 101.3, 91.5, 101.7,  41.0, 101.5}),
-		    ({91.2, 103.3, 41.5, 100.1, 94.3, 95.2 }),
-		    ({93.2, 13.3, 93.5, 103.7, 94.3, 41.2 }) }),
+		 ({ ({12.2, 10.3, 8.01, 9.0, 5.3, 4.0 }),
+		     ({91.2, 101.3, 91.5, 101.7,  141.0, 181.5}),
+		    ({191.2, 203.3, 241.5, 200.1, 194.3, 195.2 }),
+		    ({93.2, 113.3, 133.5, 143.7, 154.3, 141.2 }) }),
 		 "fontsize":32,
-		 "axcolor":({0,0,0}),
+		 "axcolor":({0,0,255}),
 		 "bgcolor":0,//({255,255,255}),
 		 "labelcolor":({0,0,0}),
 		 "datacolors":({({0,255,0}),({255,255,0}), ({0,255,255}), ({255,0,255}) }),
 		 "linewidth":2.2,
+		 "backlinewidth":0,
 		 "xsize":400,
 		 "ysize":200,
 		 "xnames":({"jan", "feb", "mar", "apr", "maj", "jun"}),
 		 "fontsize":16,
 		 "labels":0,//({"xstor", "ystor", "xenhet", "yenhet"}),
-		 "legendfontsize":12,
-		 "legend_texts":({"streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!" }),
+		 "legendfontsize":20,
+		 "legend_texts":({"Roxen", "Netscape", "Apache", "Microsoft" }),
 		 "labelsize":12,
 		 "xminvalue":0.1,
 		 "yminvalue":0,
 		 "horgrind": 1,
-		 "grindwidth": 0.5
+		 "grindwidth": 0.5,
+		 "backlinecolor":1.0
   ]);
+
+  diagram_data["image"]=image(2,2)->fromppm(read_file("girl.ppm"));
+  diagram_data["image"]=diagram_data["image"]->copy(10,10, diagram_data["image"]->xsize()-10,
+						    diagram_data["image"]->ysize()-10);
+
 
   object o=Stdio.File();
   o->open("test.ppm", "wtc");
-  o->write(create_bars(diagram_data)["image"]->toppm());
+  o->write(create_bars(diagram_data)["image"]->togif());
   o->close();
 
 };
