@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.285 2000/03/20 04:08:19 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.286 2000/03/20 07:05:19 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2243,10 +2243,19 @@ class ModuleCopies
   string _sprintf( ) { return "ModuleCopies()"; }
 }
 
+#ifdef THREADS
+Thread.Mutex enable_modules_mutex = Thread.Mutex();
+#define MODULE_LOCK \
+  Thread.MutexKey enable_modules_lock = enable_modules_mutex->lock (2)
+#else
+#define MODULE_LOCK
+#endif
+
 static int enable_module_batch_msgs;
 
 RoxenModule enable_module( string modname, RoxenModule|void me )
 {
+  MODULE_LOCK;
   int id;
   ModuleInfo moduleinfo;
   ModuleCopies module;
@@ -2830,6 +2839,7 @@ string check_variable(string name, mixed value)
 
 int disable_module( string modname )
 {
+  MODULE_LOCK;
   RoxenModule me;
   int id, pr;
   sscanf(modname, "%s#%d", modname, id );
@@ -3029,6 +3039,7 @@ mixed add_init_hook( mixed what )
 
 void enable_all_modules()
 {
+  MODULE_LOCK;
   int q = query( "no_delayed_load" );
   set( "no_delayed_load", 0 );
   low_init( );
