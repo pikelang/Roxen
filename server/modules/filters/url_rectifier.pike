@@ -2,9 +2,14 @@
 // This module implements an IE5/Macintosh fix; if no file is found, assume
 // the url is UTF-8 or Macintosh encoded.
 
-string cvs_version = "$Id: url_rectifier.pike,v 1.12 2000/07/03 05:14:21 nilsson Exp $";
 inherit "module";
-constant thread_safe=1;
+
+constant cvs_version = "$Id: url_rectifier.pike,v 1.13 2000/11/18 07:20:28 nilsson Exp $";
+constant thread_safe = 1;
+constant module_type = MODULE_LAST;
+constant module_name = "URL Rectifier";
+constant module_doc  = "If no file is found, assume the url is "
+  "UTF-8 or Macintosh encoded and try again.";
 
 int unsuccessful = 0;
 array(string) encodings = ({ "utf-8", "macintosh", "iso-2022" });
@@ -19,11 +24,6 @@ void start()
     else
       decoders[ enc ]= Roxen._charset_decoder(Locale.Charset.decoder(enc))->decode;
 }
-
-constant module_type = MODULE_LAST;
-constant module_name = "URL Rectifier";
-constant module_doc  = "If no file is found, assume the url is "
-  "UTF-8 or Macintosh encoded and try again.";
 
 string status()
 {
@@ -40,7 +40,7 @@ string status()
 
 #define DECODE(what, encoding) decoders[ encoding ](what)
 
-mapping last_resort(object id)
+mapping last_resort(RequestID id)
 {
   function decode;
   string iq;
