@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.11 1998/08/03 14:44:40 wellhard Exp $
+ * $Id: webadm.pike,v 1.12 1998/08/03 15:01:35 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.11 1998/08/03 14:44:40 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.12 1998/08/03 15:01:35 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -365,20 +365,6 @@ string container_md(string tag, mapping args, string contents, mapping md)
 {
   if(args->variable)
     md[args->variable] = contents;
-}
-
-mapping read_md_file(object id, string f)
-{
-  string file_name = real_path(id, f+".md");
-  string s = Stdio.read_bytes(file_name);
-  if(!s) {
-    werror("File %s does not exist.\n", file_name);
-    return 0;
-  }
-  
-  mapping md = ([]);
-  parse_html(s, ([ ]), ([ "md":container_md ]), md);
-  return md;
 }
 
 int save_md_file(object id, string f, mapping md)

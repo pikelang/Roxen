@@ -5,7 +5,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.11 1998/07/28 20:35:35 wellhard Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.12 1998/08/03 15:01:33 wellhard Exp $";
 
 mapping host_to_id;
 
@@ -94,23 +94,7 @@ mixed find_file(string f, object id)
     if(roxen->type_from_filename( f, 0 ) == "text/html")
     {
       string d = res->read( );
-      object db = id->conf->call_provider("sql","sql_object",id);
-      array menu_item =
-	db->query(
-	  "select * from customers_menu,customers_files where "
-	  "customers_menu.customer_id='"+id->misc->customer_id+"' and "
-	  "customers_menu.file_id=customers_files.id and "
-	  "customers_files.filename='/"+f+"'");
-      //werror("%O", menu_item);
-      //werror("Customer: %O, file: %O", id->misc->customer_id, f);
-      string menu = "";
-      if(sizeof(menu_item))
-	menu +=
-	  "<menuitem"+menu_item[0]->item_order+">"
-	  "<mi href="+menu_item[0]->filename+" selected>"+
-	  menu_item[0]->title+"</mi>"
-	  "</menuitem"+menu_item[0]->item_order+">\n\n";
-      d="<template>"+menu+"<content>"+d+"</content></template>";
+      d="<template><content>"+d+"</content></template>";
       res=http_string_answer(parse_rxml(d,id),"text/html");
     }
   }
