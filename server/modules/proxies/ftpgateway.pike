@@ -37,9 +37,11 @@
 // 1.6   nov 23 law
 //       new directory format (used by ftp.uwp.edu) 
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.9 1997/01/20 13:52:42 kg Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.9.2.1 1997/03/03 12:21:16 grubba Exp $";
 #include <module.h>
 #include <config.h>
+
+import Stdio;
 
 #if DEBUG_LEVEL > 21
 # ifndef PROXY_DEBUG
@@ -81,8 +83,6 @@ Content-type: text/html\r\n\
 inherit "module";
 inherit "socket";
 inherit "roxenlib";
-
-#include "base_server/proxyauth.pike"
 
 class Request {
   inherit "socket";
@@ -1174,6 +1174,7 @@ void init_proxies()
   foreach(QUERY(Proxies)/"\n", foo)
   {
     array bar;
+
     if(!strlen(foo) || foo[0] == '#')
       continue;
     
