@@ -1,5 +1,5 @@
 /*
- * $Id: listfonts.pike,v 1.18 2001/06/15 19:51:32 k%123.org Exp $
+ * $Id: listfonts.pike,v 1.19 2001/08/27 15:33:54 per Exp $
  */
 
 #include <roxen.h>
@@ -87,11 +87,12 @@ string page_1(RequestID id)
 {
   string res="";
   mapping v  = id->real_variables;
-  string txt = Roxen.html_encode_string( v->text && v->text[0] );
+  string txt = v->text && v->text[0];
   foreach(roxen.fonts.available_fonts(), string fn)
     res += Roxen.html_encode_string( fn )+":<br />\n"
-      "<gtext align='top' font='"+fn+"'>"+lower_case(txt)+"</gtext><br>"
-      "<gtext align='top' font='"+fn+"'>"+upper_case(txt)+"</gtext><p>";
+      "<gtext fontsize=16 align='top' font='"+fn+"'>"+Roxen.html_encode_string(txt)+"</gtext><br>"
+      "<gtext fontsize=32 align='top' font='"+fn+"'>"+Roxen.html_encode_string(lower_case(txt))+"</gtext><br>"
+      "<gtext fontsize=48 align='top' font='"+fn+"'>"+Roxen.html_encode_string(upper_case(txt))+"</gtext><p>";
   return res+"<br /></p><p>\n<cf-ok/></p>";
 }
 
