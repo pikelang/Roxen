@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.456 2004/06/21 08:11:07 jonasw Exp $";
+constant cvs_version = "$Id: http.pike,v 1.457 2004/06/21 13:04:13 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -277,11 +277,19 @@ void send (string|object what, int|void len)
   if(!pipe) setup_pipe();
   if(stringp(what))  {
 #ifdef CONNECTION_DEBUG
-    werror ("HTTP: Response =================================================\n"
-	    "%s\n",
-	    replace (sprintf ("%O", what),
-		     ({"\\r\\n", "\\n", "\\t"}),
-		     ({"\n",     "\n",  "\t"})));
+#define TOSTR(X)	#X
+#define TOSTR2(X)	TOSTR(X)
+
+    if (has_prefix(file->type || "", TOSTR2(CONNECTION_DEBUG))) {
+      werror ("HTTP: Response =================================================\n"
+	      "%s\n",
+	      replace (sprintf ("%O", what),
+		       ({"\\r\\n", "\\n", "\\t"}),
+		       ({"\n",     "\n",  "\t"})));
+    } else {
+      werror ("HTTP: Response =================================================\n"
+	      "string[%d]\n", sizeof(what));
+    }
 #else
     REQUEST_WERR(sprintf("HTTP: Pipe string %O", what));
 #endif
@@ -1379,11 +1387,17 @@ void timer(int start)
 string handle_error_file_request (string msg, array(string) rxml_bt, array(array) bt,
 				  string raw_bt_descr, string raw_url, string raw)
 {
-  string data = Stdio.read_bytes(variables->file);
-
+  // Check that the file is valid and is present in the backtrace.
+  string data;
+  foreach(bt, array frame) {
+    if (frame[0] == variables->file) {
+      data = Stdio.read_bytes(variables->file);
+      break;
+    }
+  }
   if(!data)
     return error_page("Source file could not be read:", variables->file, "");
-  
+
   string down;
   int next = (int) variables->off + 1;
 
