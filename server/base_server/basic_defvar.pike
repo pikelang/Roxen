@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.14 2000/07/09 18:18:58 per Exp $
+// $Id: basic_defvar.pike,v 1.15 2000/07/11 01:49:04 nilsson Exp $
 // (string:Variable.Variable) 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
@@ -61,7 +61,7 @@ void setvars( mapping (string:mixed) vars )
 Variable.Variable defvar( string sname, Variable.Variable variable )
 //! Define 'sname' to be 'variable',
 
-Variable.Variable defvar( string sname, mixed value, string name, 
+Variable.Variable defvar( string sname, mixed value, string name,
                           int type, string doc, array|void misc,
                           int|function not_in_config  )
 //! Define a new variable named sname, with the options specified in the list.
@@ -75,9 +75,9 @@ Variable.Variable defvar( string sname, mixed value, string name,
 Variable.Variable defvar(string var, mixed value, 
 
 // rest is compat, and thus optional...
-                         mapping|string|void name,
+                         mapping|string|void|object name,
                          int|void type, 
-                         mapping|string|void doc_str, 
+                         mapping|string|void|object doc_str, 
                          mixed|void misc,
                          int|function|void not_in_config,
                          mapping|void option_translations)

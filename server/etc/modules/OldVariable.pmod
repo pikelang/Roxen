@@ -40,7 +40,7 @@ class Variable
 
   static mixed _initial; // default value
   static string _path;   // used for forms
-  static string  __name, __doc;
+  static string|object  __name, __doc;
 
   void destroy()
   {
@@ -339,7 +339,7 @@ class Variable
   }
 
   static void create(mixed default_value,int flags,
-                     string std_name,string std_doc)
+                     string|object std_name,string|object std_doc)
     //! Constructor. 
     //! Flags is a bitwise or of one or more of 
     //! 
