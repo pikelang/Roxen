@@ -43,6 +43,10 @@ private string desc_cont(string t, mapping m, string c, string rt)
   m->type=m->type||"";
   if(m->tag) dt=sprintf("&lt;%s/&gt;", rt);
   if(m->cont) dt=(m->tag?dt+" and ":"")+sprintf("&lt;%s&gt;&lt;/%s&gt;", rt, rt);
+  if(m->plugin) {
+    sscanf(dt,"%*s#%s",dt);
+    dt="plugin "+dt;
+  }
   return sprintf("<h2>%s</h2><p>%s</p>",dt,c);
 }
 
@@ -170,11 +174,19 @@ string find_tag_doc(string name, void|object id) {
   }
 
   array tags=tag_set->get_overridden_tags(name);
-  if(!sizeof(tags)) return "<h4>That tag is not defined</h4>";
+  if(!sizeof(tags)) return "<h4>That tag ("+name+") is not defined</h4>";
+  string plugindoc="";
 
   foreach(tags, array|object|function tag) {
     if(objectp(tag)) {
       // FIXME: New style tag. Check for internal documentation.
+      mapping(string:RXML.Tag) plugins=tag_set->get_plugins(name);
+      if(sizeof(plugins)) {
+	plugindoc="<hr /><dl><dd>";
+	foreach(sort(indices(plugins)), string plugin)
+	  plugindoc+=find_tag_doc(name+"#"+plugin, id);
+	plugindoc+="</dd></dl>";
+      }
       tag=object_program(tag);
     }
     if(arrayp(tag)) {
@@ -189,10 +201,14 @@ string find_tag_doc(string name, void|object id) {
 
     mapping tagdoc=call_tagdocumentation(tag);
     if(!tagdoc || !tagdoc[name]) continue;
-    return parse_doc(tagdoc[name], name, id);
+    return parse_doc(tagdoc[name], name, id)+plugindoc;
   }
 
   undocumented_tags[name]=1;
+  if(has_value(name,"#")) {
+    sscanf(name,"%*s#%s", name);
+    name="plugin "+name;
+  }
   return "<h4>No documentation available for \""+name+"\".</h4>\n";
 }
 
