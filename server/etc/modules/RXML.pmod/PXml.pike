@@ -5,7 +5,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.22 2000/02/04 02:02:28 mast Exp $
+//! $Id: PXml.pike,v 1.23 2000/02/08 06:23:26 mast Exp $
 
 #pragma strict_types
 
@@ -50,12 +50,13 @@ static void _tag_set_parser_create (RXML.Context ctx, RXML.Type type,
 				    RXML.TagSet tag_set, mixed... args)
   {TagSetParser::create (ctx, type, tag_set, @args);}
 
-static void set_comment_tag_cb()
+static void set_quote_tag_cbs()
 {
-  add_quote_tag (
-    "!--",
-    type->free_text ? .utils.return_zero : .utils.return_empty_array,
-    "--");
+  add_quote_tag ("!--",
+		 type->free_text ? .utils.return_zero : .utils.return_empty_array,
+		 "--");
+  add_quote_tag ("?", .utils.return_zero, "?");
+  add_quote_tag ("![CDATA[", .utils.return_zero, "]]");
 }
 
 this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
@@ -140,13 +141,14 @@ static void create (
     if (tset->low_entities) add_entities (tset->low_entities);
   }
 
+  xml_tag_syntax (2);
   mixed_mode (!type->free_text);
   lazy_entity_end (1);
   match_tag (0);
   ignore_unknown (1);		// Temporary kludge.
   _set_entity_callback (.utils.p_html_entity_cb);
   if (!type->free_text) _set_data_callback (.utils.return_empty_array);
-  set_comment_tag_cb();
+  set_quote_tag_cbs();
 }
 
 mixed read()
