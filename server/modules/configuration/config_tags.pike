@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.176 2002/06/03 21:40:41 nilsson Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.177 2002/06/05 19:33:41 nilsson Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -80,13 +80,6 @@ class Scope_usr
     {
       string q, res;
      case "left-buttonwidth": return "150";
-
-      /* composite */
-     case "count-0": return ENCODE_RXML_TEXT("/internal-roxen-count_0", type);
-     case "count-1": return ENCODE_RXML_TEXT("/internal-roxen-count_1", type);
-     case "count-2": return ENCODE_RXML_TEXT("/internal-roxen-count_3", type);
-     case "count-3": return ENCODE_RXML_TEXT("/internal-roxen-count_2", type);
-
 
      case "toptabs-padwidth": return ENCODE_RXML_INT(50, type);
      case "leftside-padwidth": return ENCODE_RXML_INT(150, type);
@@ -995,19 +988,6 @@ string simpletag_theme_set( string tag, mapping m, string s, RequestID id  )
     m->to = (int)m->to;
   id->misc->cf_theme[ m->what ] = m->to;
   return "";
-}
-
-string simpletag_rli( string t, mapping m, string c, RequestID id )
-{
-  return "<tr>"
-         "<td valign='top'><img src='&usr.count-"+(++id->misc->_rul_cnt&3)+
-         ";' /></td><td valign='top'>"+c+"</td></tr>\n";
-}
-
-string simpletag_rul( string t, mapping m, string c, RequestID id )
-{
-  id->misc->_rul_cnt = -1;
-  return "<table>"+c+"</table>";
 }
 
 class TagCfPerm
