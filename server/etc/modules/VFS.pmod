@@ -69,7 +69,7 @@ string|array(int|string) read( string file,
     res = c->try_get_file( file, id );
   if( cache )
     cache_set( ck, file, res );
-  if( last_mtime )
+  if( last_mtime && res )
   {
     if( !mtime )
     {
