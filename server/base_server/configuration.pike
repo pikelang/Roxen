@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.425 2001/04/17 07:21:38 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.426 2001/04/18 04:25:08 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2988,7 +2988,7 @@ static void create(string config)
 //   int st = gethrtime();
   roxen.add_permission( "Site:"+config, LOC_C(306,"Site")+": "+config );
 
-  // for now only theese two. In the future there might be more variables.
+  // for now only these two. In the future there might be more variables.
   defvar( "data_cache_size", 2048, DLOCALE(274, "Cache:Cache size"),
           TYPE_INT| VAR_PUBLIC,
           DLOCALE(275, "The size of the data cache used to speed up requests "
@@ -3017,6 +3017,12 @@ static void create(string config)
 	 DLOCALE(25, "This is the name that will be used in the administration "
 	 "interface. If this is left empty, the actual name of the "
 	 "site will be used."));
+
+  defvar("compat_level", Variable.StringChoice (
+	   "", roxen.compat_levels, 0,
+	   DLOCALE(0, "Compatibility level"),
+	   DLOCALE(0, "")));
+  set ("compat_level", roxen.__roxen_version__);
 
   defvar("LogFormat",
 	 "404: $host $referer - [$cern_date] \"$method $resource $protocol\" 404 -\n"
@@ -3280,7 +3286,12 @@ page.
 
 //   report_debug("[defvar: %.1fms] ", (gethrtime()-st)/1000.0 );
 //   st = gethrtime();
-  setvars( retrieve("spider#0", this_object()) );
+
+  mapping(string:mixed) retrieved_vars = retrieve("spider#0", this_object());
+  if (sizeof (retrieved_vars) && !retrieved_vars->compat_level)
+    // Upgrading an older configuration; default to 2.1 compatibility level.
+    set ("compat_level", "2.1");
+  setvars( retrieved_vars );
 
 //   report_debug("[restore: %.1fms] ", (gethrtime()-st)/1000.0 );
   if (query("throttle"))

@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.658 2001/04/17 07:33:05 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.659 2001/04/18 04:25:08 mast Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -70,6 +70,8 @@ string filename( program|object o )
     fname = "Unknown Program";
   return fname-(getcwd()+"/");
 }
+
+array(string) compat_levels = ({"2.1", "2.2"});
 
 #ifdef THREADS
 mapping(string:string) thread_names = ([]);
@@ -3594,6 +3596,10 @@ int main(int argc, array tmp)
   dump( "base_server/slowpipe.pike" );
   dump( "base_server/fastpipe.pike" );
   dump( "base_server/throttler.pike" );
+
+  if (!has_value (compat_levels, __roxen_version__))
+    report_debug ("Warning: The current version %s does not exist in "
+		  "roxen.compat_levels.\n", __roxen_version__);
 
   add_constant( "Protocol", Protocol );
 #ifdef TIMERS
