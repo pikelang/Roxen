@@ -5,7 +5,7 @@
 
 import Stdio;
 
-string cvs_version = "$Id: htaccess.pike,v 1.10 1997/04/27 20:57:59 grubba Exp $";
+string cvs_version = "$Id: htaccess.pike,v 1.11 1997/05/26 01:13:04 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 inherit "module";
@@ -693,13 +693,15 @@ mapping try_htaccess(object id)
 	  file = read_bytes(access->errorfile);
 	  if(file) file = parse_rxml(file, id);
 	}
+	id->misc->error_code = 403;
 	return http_low_answer(403, file || 
 			       ("<title>Access Denied</title>"
 				"<h2 align=center>Access Denied</h2>"));
       }
       
 
-      else if(ret == 2)
+      else if(ret == 2) {
+	id->misc->error_code = 403;
 	return http_low_answer(403, "<title>Access Denied</title>"
 			       "<h2 align=center>Access Denied</h2>"
 			       "<h3>The server hadn't resolved your "
@@ -708,6 +710,7 @@ mapping try_htaccess(object id)
 			       "<b>You might lack a valid DNS entry. In that "
 			       "case, you will have to talk to your system "
 			       "administrator.</b>");
+      }
 
       else if(mappingp(ret))
       {
@@ -716,6 +719,7 @@ mapping try_htaccess(object id)
 	  file = read_bytes(access->errorfile);
 	  if(file) file = parse_rxml(file, id);
 	}
+	id->misc->error_code = ret->error || 403;
 	return  (["data":file || 
 		 ("<title>Access Denied</title>"
 		  "<h2 align=center>Access forbidden by user</h2>") ]) 
@@ -743,6 +747,14 @@ mapping first_try(object id)
     access_violation = try_htaccess( id );
     if(access_violation)
       return access_violation;
+    else {
+      string s = (id->not_query/"/")[-1];
+      if ((sizeof(s) >= 3) && (s[..2] == ".ht")) {
+	id->misc->error_code = 401;
+	return http_low_answer(401, "<title>Access Denied</title>"
+			       "<h2 align=center>Access Denied</h2>");
+      }
+    }
   }
 }
 
