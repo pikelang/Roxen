@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.315 2001/06/06 22:11:00 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.316 2001/06/07 04:33:52 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1612,12 +1612,16 @@ void send_result(mapping|void result)
 	  {
 	    /* ({ time, len }) */
 	    array(int) since_info = Roxen.parse_since( since );
+// 	    werror("since: %{%O, %}\n"
+// 		   "lm:    %O\n",
+// 		   since_info,
+// 		   misc->last_modified );
 	    if ( ((since_info[0] >= misc->last_modified) && 
 		  ((since_info[1] == -1) || (since_info[1] == file->len)))
 		 // actually ok, or...
-		 || ((misc->cacheable>0) 
-		     && (since_info[0] + misc->cacheable<= predef::time(1)))
-		 // cacheable, and not enough time has passed.
+// 		 || ((misc->cacheable>0) 
+// 		     && (since_info[0] + misc->cacheable<= predef::time(1))
+// 		 // cacheable, and not enough time has passed.
 	       )
 	    {
 	      file->error = 304;
@@ -1626,6 +1630,8 @@ void send_result(mapping|void result)
 	    }
 	  }
 	}
+	else // Dynamic content.
+	  heads["Expires"] = Roxen.http_date( misc->last_modified );
       }
 
       if(prot != "HTTP/0.9") 
@@ -1718,7 +1724,7 @@ void send_result(mapping|void result)
 			      file->rettext ||errors[file->error]||"");
 
 //         if( file->len > 0 || (file->error != 200) )
-	  heads["Content-Length"] = (string)file->len;
+	heads["Content-Length"] = (string)file->len;
 
         // Some browsers, e.g. Netscape 4.7, doesn't trust a zero
         // content length when using keep-alive. So let's force a
@@ -1999,7 +2005,8 @@ void got_data(mixed fooid, string s)
   TIMER_START(cache_lookup);
   array cv;
   if( prot != "HTTP/0.9" &&
-      misc->cacheable &&
+      misc->cacheable    &&
+      !since             &&
       (cv = conf->datacache->get( raw_url )) )
   {
     MY_TRACE_ENTER (sprintf ("Found %O in ram cache - checking entry", raw_url), 0);
