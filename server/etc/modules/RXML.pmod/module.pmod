@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.259 2001/11/21 13:15:49 mast Exp $
+// $Id: module.pmod,v 1.260 2001/11/23 13:59:52 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -651,21 +651,44 @@ class TagSet
   int id_number;
   //! Unique number identifying this tag set.
 
-  static void create (RoxenModule|Configuration _owner, string _name,
+  static void create (RoxenModule|Configuration owner_, string name_,
 		      void|array(Tag) _tags)
-  //! @[_owner] and @[_name] initializes @[owner] and @[name],
-  //! respectively; see those two for further details about tag set
-  //! identification issues.
+  //! @[owner_] and @[name_] initializes @[owner] and @[name],
+  //! respectively. They are used to identify the tag set and its tags
+  //! when p-code is created and stored on disk.
+  //!
+  //! @[owner_] is the object that "owns" this tag set and is
+  //! typically the @[RoxenModule] object that created it. It can also
+  //! be a @[Configuration] object or zero; see @[owner] for more
+  //! details.
+  //!
+  //! @[name_] identifies the tag set uniquely among those owned by
+  //! @[owner_]. Note that the empty string is already used for the
+  //! main tag set in Roxen tag modules. See @[name]
+  //!
+  //! @example
+  //! A tag set for local or additional tags within an RXML tag in a
+  //! Roxen tag module is typically created like this:
+  //!
+  //! @code{
+  //!   RXML.TagSet internal =
+  //!     RXML.TagSet(this_module(), "my-tag",
+  //!   	      ({MySubTag1(), MySubTag2(), ...}));
+  //! @}
+  //!
+  //! "my-tag" is the name of the tag that contains the subtags. It's
+  //! typically a good idea to use the name of that tag, since it
+  //! always is stable enough and unique within the tag set.
   {
     id_number = ++tag_set_count;
-    if (_name) {
+    if (name_) {
       Thread.MutexKey key = all_tag_sets_mutex->lock (2);
       // Allow recursive locking since we don't touch any other
       // locks in here.
-      set_name (_owner, _name);
+      set_name (owner_, name_);
       key = 0;
     }
-    else owner = _owner;
+    else owner = owner_;
     if (_tags) add_tags (_tags);
 #ifdef RXML_OBJ_DEBUG
     __object_marker->create (this_object());
@@ -7301,9 +7324,9 @@ class RenewablePCode
       int orig_make_p_code = ctx->make_p_code;
       mixed res;
       if (mixed err = catch {
-	  ctx->make_p_code = 1;
+	ctx->make_p_code = 1;
 	if (!parser) {
-	  parser = type->get_parser (ctx, tag_set, 0, this_object());
+	  parser = type->get_parser (ctx, tag_set, 0, this_object()); // Calls reset().
 	  parser->finish (source); // Might unwind.
 	}
 	else parser->finish();	// Might unwind.
