@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.53 1998/07/11 15:54:06 grubba Exp $
+# $Id: configure.in,v 1.54 1998/07/17 11:37:49 grubba Exp $
 #
 
 prefix=$PWD
@@ -303,7 +303,10 @@ if test $cflags_is_set = no; then
   AC_SYS_OS_COMPILER_FLAG(AIX,-mprototype,mprototype,WARN)
 ### Optimize for different SUN machines. If there is no working 'uname'
 ### no extra optimization will be done, but nothing should break either.
-  AC_SYS_CPU_COMPILER_FLAG(sun4c,-msparclite,sparclite,OPTIMIZE)
+
+# The -sparclite option seems to generate assembler that /bin/as doesn't
+# understand.	/grubba 1998-07-17
+#  AC_SYS_CPU_COMPILER_FLAG(sun4c,-msparclite,sparclite,OPTIMIZE)
   AC_SYS_CPU_COMPILER_FLAG(sun4m,-mv8,microsparc,OPTIMIZE)
   AC_SYS_CPU_COMPILER_FLAG(sun4d,-msupersparc,supersparc,OPTIMIZE)
   AC_SYS_CPU_COMPILER_FLAG(sun4u,-msupersparc,ultrasparc,OPTIMIZE)
