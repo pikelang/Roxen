@@ -1,4 +1,4 @@
-// $Id: roxenlib.pike,v 1.139 2000/01/03 06:45:45 nilsson Exp $
+// $Id: roxenlib.pike,v 1.140 2000/01/10 09:01:38 nilsson Exp $
 
 #include <roxen.h>
 inherit "http";
@@ -517,25 +517,19 @@ string msectos(int t)
   return sprintf("%d:%02d h:m", t/3600000, (t%3600000)/60000);
 }
 
-static Regexp extension_regexp = Regexp(".*\\.([^#~]*)");
-int|string extension( string f, RequestID|void id)
+string extension( string f, RequestID|void id) 
 {
   string ext, key;
   if(!f || !strlen(f)) return "";
   if(!id || !(ext = id->misc[key="_ext_"+f])) {
-    array split = extension_regexp->split(f);
-    if(!split||!sizeof(split))
-      ext="";
+    sscanf(reverse(f), "%s.%*s", ext);
+    if(!ext) ext = "";
     else {
-      ext = lower_case(split[0]);
-      if(ext == "bak" || ext == "old")
-	if(f[-1] == '~' || f[-1] == '#')
-	  ext = extension(f[..strlen(f)-5]);
-	else
-	  ext = extension(f[..strlen(f)-4]);
+      ext = lower_case(reverse(ext));
+      if(ext[-1] == '~' || ext[-1] == '#')
+        ext = ext[..strlen(ext)-2];
     }
-    if(id)
-      id->misc[key]=ext;
+    if(id) id->misc[key]=ext;
   }
   return ext;
 }
@@ -564,12 +558,11 @@ static int ipow(int what, int how)
 
 static string simplify_path(string file)
 {
-  string tmp;
-  int t2,t1;
-
   // Faster for most cases since "./" and "../" rarely exists.
   if(!strlen(file) || ((search(file, "./") == -1) && (file[-1] != '.')))
     return file;
+
+  int t2,t1;
 
   if(file[0] != '/')
     t2 = 1;
@@ -580,12 +573,12 @@ static string simplify_path(string file)
 	)
     t1=1;
 
-  tmp=combine_path("/", file);
+  file=combine_path("/", file);
 
-  if(t1) tmp += "/.";
-  if(t2) return tmp[1..];
+  if(t1) file += "/.";
+  if(t2) return file[1..];
 
-  return tmp;
+  return file;
 }
 
 /* Returns a short date string from a time-int
@@ -704,6 +697,7 @@ static string sizetostring( int size )
   float s = (float)size;
   size=0;
 
+  if(s<1024.0) return (int)s+" bytes";
   while( s > 1024.0 )
   {
     s /= 1024.0;
