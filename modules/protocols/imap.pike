@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.100 1999/03/02 23:30:45 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.101 1999/03/03 17:59:28 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -527,6 +527,7 @@ class imap_mail
       switch(attr->section[0])
       {
       case "text":
+      case "":
 	if (sizeof(attr->section) != 1)
 	  throw("Invalid section");
 	return body_response(msg->getdata());
