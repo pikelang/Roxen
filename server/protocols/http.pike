@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.397 2003/03/31 13:47:19 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.398 2003/04/14 16:44:31 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2233,7 +2233,7 @@ void chain(object f, object c, string le)
   MARK_FD("HTTP kept alive");
   time = predef::time(1);
 
-  if ( strlen( le ) )
+  if ( le && strlen( le ) )
     got_data( 0,le );
   else
   {
