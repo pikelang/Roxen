@@ -7,7 +7,7 @@
  * rules-based modules.
  */
 
-constant cvs_version="$Id: throttlelib.pike,v 1.7 2000/05/15 19:54:18 kinkie Exp $";
+constant cvs_version="$Id: throttlelib.pike,v 1.8 2000/05/20 16:38:59 kinkie Exp $";
 
 #include <module.h>
 inherit "module";
@@ -37,17 +37,26 @@ array(string) rulenames; //needed to keep the rules in order.
 //if there are errors, it will set the rules to a version with the offending
 //lines commented out.
 //If it returns a string, it's an error message
-string update_rules() {
+string|void update_rules(string new_rules) {
   THROTTLING_DEBUG("updating rules");
-  rules=([]);
-  rulenames=({});
+  mapping my_rules=([]);
+  array(string) my_rulenames=({});
 #ifndef IF_ONLY_COULD_CHANGE_RULES
   array(string) errors=({}); //contains the lines where parse errors occurred
   int error=0;
 #endif
   string line, cmd;
   array(string) lines, words;
-  lines=replace(QUERY(rules),"\t"," ")/"\n";
+
+  if (!new_rules || ! sizeof(new_rules)) {
+    THROTTLING_DEBUG("new rules empty, returning");
+    rules=([]);
+    rulenames=({});
+    return;
+  }
+  //  lines=replace(QUERY(rules),"\t"," ")/"\n";
+  lines=replace(new_rules,"\t"," ")/"\n";
+  THROTTLING_DEBUG((string)(sizeof(lines))+" lines to examine");
   for (int lineno=0; lineno<sizeof(lines);lineno++) {
     line=lines[lineno];
     THROTTLING_DEBUG(" examining: '"+line+"'");
@@ -110,8 +119,8 @@ string update_rules() {
         continue;
       }
     }
-    rules[words[0]]=({cmd,val,fix});
-    rulenames+=({words[0]});
+    my_rules[words[0]]=({cmd,val,fix});
+    my_rulenames+=({words[0]});
   }
 #ifdef IF_ONLY_COULD_CHANGE_RULES
   if (error) {
@@ -127,15 +136,16 @@ string update_rules() {
   }
 #endif
   THROTTLING_DEBUG(sprintf("rules are:\n%O\n",rules));
-  return 0;
+  // this guarrantees atomicity in rules setting
+  rules=my_rules;
+  rulenames=my_rulenames;
 }
 
 string|int check_variable(string name, mixed value) {
   mixed err;
   switch (name) {
   case "rules":
-    //    set(name,lower_case(value)); //broken, it will lower_case everything
-    err=update_rules();
+    err=update_rules(value);
     if (err) return err;
     return 0;
   }
@@ -143,7 +153,7 @@ string|int check_variable(string name, mixed value) {
 }
 
 void start() {
-  update_rules();
+  update_rules(QUERY(rules));
 }
 
 //looks for a rule, matching the patterns in tomatch.
@@ -164,7 +174,6 @@ array low_find_rule(string tomatch, array(string) rulenames, mapping rules) {
 
 //override this for other rules-based modules.
 //it must return a rule array or 0 if no matching rule is found
-//
 array find_rule (mapping res, object id, 
                  array(string) rulenames, mapping rules) {
   return 0;
