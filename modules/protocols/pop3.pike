@@ -1,12 +1,12 @@
 /*
- * $Id: pop3.pike,v 1.8 1998/09/28 00:36:23 grubba Exp $
+ * $Id: pop3.pike,v 1.9 1998/09/28 00:40:21 grubba Exp $
  *
  * POP3 protocols module.
  *
  * Henrik Grubbström 1998-09-27
  */
 
-constant cvs_version = "$Id: pop3.pike,v 1.8 1998/09/28 00:36:23 grubba Exp $";
+constant cvs_version = "$Id: pop3.pike,v 1.9 1998/09/28 00:40:21 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -89,7 +89,7 @@ static class Pop_Session
     if (user) {
       array(object) mail = user->get_incoming()->mail();
       foreach(mail, object m) {
-	if (m->check_flag("pop_delete")) {
+	if (m->flags()->pop_delete) {
 	  m->delete();
 	}
       }
@@ -134,7 +134,7 @@ static class Pop_Session
       return;
     }
 
-    string body = mail->get_body();
+    string body = mail->body();
     
     send_ok(sprintf("%d octets", sizeof(body)));
 
