@@ -4,8 +4,8 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.18 2001/01/25 23:25:54 nilsson Exp $";
-constant thread_safe=1;
+constant cvs_version = "$Id: vform.pike,v 1.19 2001/02/10 22:43:55 nilsson Exp $";
+constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
 constant module_name = "Verified form";
@@ -21,6 +21,21 @@ constant forbidden = ({"\\", ".", "[", "]", "^",
 		       "$", "(", ")", "*", "+", "|"});
 constant allowed = ({"\\\\", "\\.", "\\[", "\\]", "\\^",
 		     "\\$", "\\(", "\\)", "\\*", "\\+", "\\|"});
+
+Parser.HTML verified;
+Parser.HTML failed;
+
+void create() {
+  verified = Parser.HTML()->
+    add_containers( ([ "verified" : lambda(Parser.HTML p, mapping m, string c) {
+				      return c; },
+		       "failed" : "" ]) );
+
+  failed = Parser.HTML()->
+    add_containers( ([ "failed" : lambda(Parser.HTML p, mapping m, string c) {
+				      return c; },
+		       "verified" : "" ]) );
+}
 
 class VInputFrame {
   inherit RXML.Frame;
@@ -143,7 +158,7 @@ class VInputFrame {
     if(args["fail-if-failed"] && id->misc->vform_failed[args["fail-if-failed"]])
       ok=1;
 
-    if(!id->variables[args->name] ||
+    if( (!id->variables[args->name] && !id->misc->vform_objects[args->name]) ||
        (args["ignore-if-false"] && !id->misc->vform_ok) ||
        id->variables["__reload"] ||
        id->variables["__clear"] ||
@@ -175,9 +190,7 @@ class VInputFrame {
   {
     switch(args->mode||"after") {
     case "complex":
-      result = parse_html(content, ([]),
-			  ([ "verified":lambda(string t, mapping m, string c) { return c; },
-			     "failed":"" ]) );
+      result = verified->clone()->finish(content)->read();
       break;
     case "before":
     case "after":
@@ -191,9 +204,7 @@ class VInputFrame {
   {
     switch(args->mode||"after") {
     case "complex":
-      result = parse_html(content, ([]),
-			  ([ "failed":lambda(string t, mapping m, string c) { return c; },
-			     "verified":"" ]) );
+      result = failed->clone()->finish(content)->read();
       break;
     case "before":
       result = content + var->render_form(id, args);
