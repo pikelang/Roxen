@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.112 2000/09/23 02:30:25 per Exp $
+//! $Id: module.pmod,v 1.113 2000/09/25 21:49:39 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1416,7 +1416,10 @@ class Backtrace
 	      else txt += error_print_val (val);
 	    }
 	  else txt += " (no argmap)";
-	  txt += ">\n";
+	  if (f->flags & FLAG_EMPTY_ELEMENT)
+	    txt += "/>\n";
+	  else
+	    txt += ">\n";
 	}
       }
     }
@@ -2475,7 +2478,8 @@ class Frame
 		  ) {
 		if (raw_content && raw_content != "")
 		  if (flags & FLAG_EMPTY_ELEMENT)
-		    parse_error ("This tag doesn't handle content.\n");
+		    parse_error ("This tag doesn't handle content - "
+				 "it probably should end with \"/>\".\n");
 
 		  else {	// Got nested parsing to do.
 		    int finished = 0;
