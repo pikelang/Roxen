@@ -2,3 +2,4 @@ configurations
 local
 logs
 var
+*.sb
