@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.27 1999/10/19 23:20:58 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.28 1999/10/20 17:50:51 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -205,9 +205,11 @@ string tag_redirect(string tag, mapping m, RequestID id)
   return "";
 }
 
-// It is spelled referer according to the http spec,
-// but it is spelt referrer in the dictionary...
-string|array(string) tag_referrer(string tag, mapping m, RequestID id)
+array(string) tag_referer(string t, mapping m, RequestID id) {
+  return tag_referrer(t,m,id);
+}
+
+array(string) tag_referrer(string tag, mapping m, RequestID id)
 {
   NOCACHE();
 
@@ -215,8 +217,8 @@ string|array(string) tag_referrer(string tag, mapping m, RequestID id)
     return ({ "Shows from which page the client linked to this one." });
 
   return({ sizeof(id->referer) ?
-	   m->quote=="none"?id->referer:(html_encode_string(id->referer)): 
-	   m->alt || "" });
+    (m->quote=="none"?id->referer:(html_encode_string(id->referer*""))) :
+    (m->alt || "") });
 }
 
 string tag_unset(string tag, mapping m, RequestID id) {
