@@ -7,16 +7,8 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.26 2000/09/21 17:51:03 jhs Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.27 2000/09/25 08:02:51 per Exp $";
 constant thread_safe=1;
-
-
-#if constant(Parser.C)
-#define PARSER_C Parser.C
-#else
-#define PARSER_C Roxen._Parser.C
-#endif
-
 
 inherit "module";
 #include <module.h>
@@ -170,7 +162,7 @@ class HProtos
 #define PREFN "pike-tag(preamble)"
 #define POSTFN "pike-tag(postamble)"
 #define PS(X) (compile_string( "mixed foo(){ return "+(X)+";}")()->foo())
-#define SPLIT(X,FN) PARSER_C.hide_whitespaces(PARSER_C.tokenize(PARSER_C.split(X),FN))
+#define SPLIT(X,FN) Parser.Pike.hide_whitespaces(Parser.Pike.tokenize(Parser.Pike.split(X),FN))
 #define OCIP( )                                                 \
       if( cip )                                                 \
       {                                                         \
@@ -196,7 +188,7 @@ class HProtos
           flat[i]->text = flat[i]->text[3..]+"\n";              \
         }
 
-#define R(X) PARSER_C.reconstitute_with_line_numbers(X)
+#define R(X) Parser.Pike.reconstitute_with_line_numbers(X)
 
 array helpers()
 {
