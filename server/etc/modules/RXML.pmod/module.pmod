@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.151 2001/04/25 14:05:24 nilsson Exp $
+// $Id: module.pmod,v 1.152 2001/05/08 00:57:30 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -64,6 +64,8 @@ class RequestID { };
 #include <config.h>
 #include <request_trace.h>
 
+// #define PROFILE_PARSER
+
 #ifdef RXML_OBJ_DEBUG
 #  define MARK_OBJECT \
      Debug.ObjectMarker __object_marker = Debug.ObjectMarker (this_object())
@@ -90,6 +92,32 @@ class RequestID { };
 #  define OBJ_COUNT ""
 #endif
 
+#ifdef PROFILE_PARSER
+
+#define PROFILE_ENTER(ctx, what) do {					\
+  ctx->profile[what] -= gethrtime();					\
+  /* if (what == "rxml internal") trace (1); */				\
+} while (0)
+
+#define PROFILE_LEAVE(ctx, what) do {					\
+  /* if (what == "rxml internal") trace (0); */				\
+  ctx->profile[what] += gethrtime();					\
+} while (0)
+
+#define PROFILE_SWITCH(ctx, from, to) do {				\
+  /* if (from == "rxml internal") trace (0); */				\
+  int now = gethrtime();						\
+  ctx->profile[from] += now;						\
+  ctx->profile[to] -= now;						\
+  /* if (to == "rxml internal") trace (1); */				\
+} while (0)
+
+#else
+#  define PROFILE_ENTER(ctx, what) do ; while (0)
+#  define PROFILE_LEAVE(ctx, what) do ; while (0)
+#  define PROFILE_SWITCH(ctx, from, to) do ; while (0)
+#endif
+
 #ifdef DEBUG
 #  define TAG_DEBUG(frame, msg) (frame)->tag_debug ("%O: %s", (frame), (msg))
 #  define DO_IF_DEBUG(code...) code
@@ -113,11 +141,12 @@ class Tag
   //(!) Interface:
 
   //! @decl string name;
-  //!   The name of the tag. Required and considered constant.
+  //!
+  //! The name of the tag. Required and considered constant.
 
   /*extern*/ int flags;
   //! Various bit flags that affect parsing; see the FLAG_* constants.
-  //! RXML.Frame.flags is initialized from this.
+  //! @[RXML.Frame.flags] is initialized from this.
 
   mapping(string:Type) req_arg_types = ([]);
   mapping(string:Type) opt_arg_types = ([]);
@@ -127,17 +156,18 @@ class Tag
 
   Type def_arg_type = t_text (PEnt);
   //! The type used for arguments that isn't present in neither
-  //! req_arg_types nor opt_arg_types. This default is a parser that
-  //! only parses XML-style entities.
+  //! @[req_arg_types] nor @[opt_arg_types]. This default is a parser
+  //! that only parses XML-style entities.
 
   Type content_type = t_same (PXml);
   //! The handled type of the content, if the tag gets any.
   //!
-  //! This default is the special type @[RXML.t_same], which means the
-  //! type is taken from the effective type of the result. The @[PXml]
-  //! argument causes the standard XML parser to be used to read it,
-  //! which means that the content is preparsed with XML syntax. Use
-  //! no parser to get the raw text.
+  //! The default is the special type @[RXML.t_same], which means the
+  //! type is taken from the effective type of the result. The
+  //! argument to the type is @[RXML.PXml], which causes that parser,
+  //! i.e. the standard XML parser, to be used to read it. The effect
+  //! is that the content is preparsed with XML syntax. Use no parser,
+  //! or @[RXML.PNone], to get the raw text.
   //!
   //! Note: You probably want to change this to @[RXML.t_text]
   //! (without parser) if the tag is a processing instruction (see
@@ -160,42 +190,44 @@ class Tag
 
   //! @decl program Frame;
   //! @decl object(Frame) Frame();
+  //!
   //! This program/function is used to clone the objects used as
-  //! frames. A frame object must (in practice) inherit RXML.Frame.
+  //! frames. A frame object must (in practice) inherit @[RXML.Frame].
   //! (It can, of course, be any function that requires no arguments
   //! and returns a new frame object.) This is not used for plugin
   //! tags.
 
   //! @decl string plugin_name;
+  //!
   //! If this is defined, this is a so-called plugin tag. That means
-  //! it plugs in some sort of functionality in another Tag object
-  //! instead of handling the actual tags of its own. It works as
-  //! follows:
+  //! it plugs in some sort of functionality in another @[RXML.Tag]
+  //! object instead of handling the actual tags of its own. It works
+  //! as follows:
   //!
   //! @list ul
   //!  @item
   //!   Instead of installing the callbacks for this tag, the parser
-  //!   uses another registered "socket" Tag object that got the same
-  //!   name as this one. Socket tags have the FLAG_SOCKET_TAG flag
-  //!   set to signify that they accept plugins.
+  //!   uses another registered "socket" @[Tag] object that got the
+  //!   same name as this one. Socket tags have the @[FLAG_SOCKET_TAG]
+  //!   flag set to signify that they accept plugins.
   //!  @item
   //!   When the socket tag is parsed or evaluated, it can get the
-  //!   Tag objects for the registered plugins with the function
-  //!   Frame.get_plugins(). It's then up to the socket tag to use
+  //!   @[Tag] objects for the registered plugins with the function
+  //!   @[Frame.get_plugins]. It's then up to the socket tag to use
   //!   the plugins according to some API it defines.
   //!  @item
-  //!   plugin_name is the name of the plugin. It's used as index in
-  //!   the mapping that the Frame.get_plugins() returns.
+  //!   @[plugin_name] is the name of the plugin. It's used as index
+  //!   in the mapping that the @[Frame.get_plugins] returns.
   //!  @item
   //!   The plugin tag is registered in the tag set with the
-  //!   identifier @code{name + "#" + plugin_name@}.
+  //!   identifier @code{@[name] + "#" + @[plugin_name]@}.
   //!
   //!   It overrides other plugin tags with that name according to
   //!   the normal tag set rules, but, as said above, is never
   //!   registered for actual parsing at all.
   //!
   //!   It's undefined whether plugin tags override normal tags --
-  //!   '#' should never be used in normal tag names.
+  //!   @tt{#@} should never be used in normal tag names.
   //!  @item
   //!   It's not an error to register a plugin for which there is no
   //!   socket. Such plugins are simply ignored.
@@ -205,7 +237,7 @@ class Tag
 
   inline final object/*(Frame)HMM*/ `() (mapping(string:mixed) args, void|mixed content)
   //! Make an initialized frame for the tag. Typically useful when
-  //! returning generated tags from e.g. RXML.Frame.do_process(). The
+  //! returning generated tags from e.g. @[RXML.Frame.do_process]. The
   //! argument values and the content are normally not parsed.
   {
     Tag this = this_object();
@@ -220,13 +252,14 @@ class Tag
 
   int eval_args (mapping(string:mixed) args, void|int dont_throw, void|Context ctx)
   //! Parses and evaluates the tag arguments according to
-  //! req_arg_types and opt_arg_types. The args mapping contains the
-  //! unparsed arguments on entry, and they get replaced by the parsed
-  //! results. Arguments not mentioned in req_arg_types or
-  //! opt_arg_types are not touched. RXML errors, such as missing
-  //! argument, are thrown if dont_throw is zero or left out,
-  //! otherwise zero is returned for such errors. ctx specifies the
-  //! context to use; it defaults to the current context.
+  //! @[req_arg_types] and @[opt_arg_types]. The @[args] mapping
+  //! contains the unparsed arguments on entry, and they get replaced
+  //! by the parsed results. Arguments not mentioned in
+  //! @[req_arg_types] or @[opt_arg_types] are not touched. RXML
+  //! errors, such as missing argument, are thrown if @[dont_throw] is
+  //! zero or left out, otherwise zero is returned when any such error
+  //! occurs. @[ctx] specifies the context to use; it defaults to the
+  //! current context.
   {
     // Note: Code duplication in Frame._eval().
     mapping(string:Type) atypes = args & req_arg_types;
@@ -420,24 +453,30 @@ class Tag
 
 class TagSet
 //! Contains a set of tags. Tag sets can import other tag sets, and
-//! later changes are propagated. Parser instances (contexts) to parse
-//! data are created from this. TagSet objects may somewhat safely be
-//! destructed explicitly; the tags in a destructed tag set will not
-//! be active in parsers that are instantiated later, but will work in
-//! current instances. Element (i.e. non-PI) tags and PI tags have
-//! separate namespaces.
+//! later changes in them are propagated. Parser instances (contexts)
+//! to parse data are created from this. @[TagSet] objects may
+//! somewhat safely be destructed explicitly; the tags in a destructed
+//! tag set will not be active in parsers that are instantiated later,
+//! but will work in current instances. Element (i.e. non-PI) tags and
+//! PI tags have separate namespaces.
 //!
 //! @note
-//! A Tag object may not be registered in more than one tag set at the
-//! same time.
+//! An @[RXML.Tag] object may not be registered in more than one tag
+//! set at the same time.
 {
   string name;
   //! Used for identification only.
 
   string prefix;
   //! A namespace prefix that may precede the tags. If it's zero, it's
-  //! up to the importing tag set(s). A ':' is always inserted between
-  //! the prefix and the tag name.
+  //! up to the importing tag set(s). A @tt{:@} is always inserted
+  //! between the prefix and the tag name.
+  //!
+  //! @note
+  //! This namespace scheme is not compliant with the XML namespaces
+  //! standard. Since the intention is to implement XML namespaces at
+  //! some point, this way of specifying tag prefixes will probably
+  //! change.
 
   int prefix_req;
   //! The prefix must precede the tags.
@@ -449,9 +488,9 @@ class TagSet
 
   function(Context:void) prepare_context;
   //! If set, this is a function that will be called before a new
-  //! Context object is taken into use. It'll typically prepare
-  //! predefined scopes and variables. The functions will be called in
-  //! order of precedence; highest last.
+  //! @[RXML.Context] object is taken into use. It'll typically
+  //! prepare predefined scopes and variables. The functions will be
+  //! called in order of precedence; highest last.
 
   int generation = 1;
   //! A number that is increased every time something changes in this
@@ -520,10 +559,10 @@ class TagSet
   }
 
   void remove_tag (string|Tag tag, void|int proc_instr)
-  //! If tag is a Tag object, it's removed if this tag set contains
-  //! it. If tag is a string, the tag with that name is removed. In
-  //! the latter case, if proc_instr is nonzero the set of PI tags is
-  //! searched, else the set of normal element tags.
+  //! If tag is an @[RXML.Tag] object, it's removed if this tag set
+  //! contains it. If tag is a string, the tag with that name is
+  //! removed. In the latter case, if @[proc_instr] is nonzero the set
+  //! of PI tags is searched, else the set of normal element tags.
   {
     if (stringp (tag))
       if (proc_instr) {
@@ -545,15 +584,15 @@ class TagSet
   }
 
   local Tag get_local_tag (string name, void|int proc_instr)
-  //! Returns the Tag object for the given name in this tag set, if
-  //! any. If proc_instr is nonzero the set of PI tags is searched,
-  //! else the set of normal element tags.
+  //! Returns the @[RXML.Tag] object for the given name in this tag
+  //! set, if any. If @[proc_instr] is nonzero the set of PI tags is
+  //! searched, else the set of normal element tags.
   {
     return proc_instr ? proc_instrs && proc_instrs[name] : tags[name];
   }
 
   local array(Tag) get_local_tags()
-  //! Returns all the Tag objects in this tag set.
+  //! Returns all the @[RXML.Tag] objects in this tag set.
   {
     array(Tag) res = values (tags);
     if (proc_instrs) res += values (proc_instrs);
@@ -561,10 +600,10 @@ class TagSet
   }
 
   local Tag get_tag (string name, void|int proc_instr)
-  //! Returns the Tag object for the given name, if any, that's
-  //! defined by this tag set (including its imported tag sets). If
-  //! proc_instr is nonzero the set of PI tags is searched, else the
-  //! set of normal element tags.
+  //! Returns the @[RXML.Tag] object for the given name, if any,
+  //! that's defined by this tag set (including its imported tag
+  //! sets). If @[proc_instr] is nonzero the set of PI tags is
+  //! searched, else the set of normal element tags.
   {
     if (object(Tag) def = get_local_tag (name, proc_instr))
       return def;
@@ -615,8 +654,8 @@ class TagSet
   local array(Tag) get_overridden_tags (string name, void|int proc_instr)
   //! Returns all tag definitions for the given name, i.e. including
   //! the overridden ones. A tag to the left overrides one to the
-  //! right. If proc_instr is nonzero the set of PI tags is searched,
-  //! else the set of normal element tags.
+  //! right. If @[proc_instr] is nonzero the set of PI tags is
+  //! searched, else the set of normal element tags.
   {
     if (object(Tag) def = get_local_tag (name, proc_instr))
       return ({def}) + imported->get_overridden_tags (name, proc_instr) * ({});
@@ -626,8 +665,8 @@ class TagSet
 
   void add_string_entities (mapping(string:string) entities)
   //! Adds a set of entity replacements that are used foremost by the
-  //! @[PXml] parser to decode simple entities like @tt{&amp;@}. The
-  //! indices are the entity names without @tt{&@} and @tt{;@}.
+  //! @[RXML.PXml] parser to decode simple entities like @tt{&amp;@}.
+  //! The indices are the entity names without @tt{&@} and @tt{;@}.
   {
     if (string_entities) string_entities |= entities;
     else string_entities = entities + ([]);
@@ -652,10 +691,10 @@ class TagSet
   }
 
   local mapping(string:Tag) get_plugins (string name, void|int proc_instr)
-  //! Returns the registered plugins for the given tag name. Don't be
-  //! destructive on the returned mapping. If proc_instr is nonzero,
-  //! the function searches for processing instruction plugins,
-  //! otherwise it searches for plugins to normal element tags.
+  //! Returns the registered plugins for the given tag name. If
+  //! @[proc_instr] is nonzero, the function searches for processing
+  //! instruction plugins, otherwise it searches for plugins to normal
+  //! element tags. Don't be destructive on the returned mapping.
   {
     mapping(string:Tag) res;
     if (proc_instr) {
@@ -824,13 +863,13 @@ class TagSet
   {
     if (proc_instrs && proc_instrs[overrider_name] == overrider) {
       foreach (imported, TagSet tag_set)
-	if (object(Tag) overrider = tag_set->get_proc_instr (overrider_name))
+	if (object(Tag) overrider = tag_set->get_tag (overrider_name, 1))
 	  return overrider;
     }
     else {
       int found = 0;
       foreach (imported, TagSet tag_set)
-	if (object(Tag) subtag = tag_set->get_proc_instr (overrider_name))
+	if (object(Tag) subtag = tag_set->get_tag (overrider_name, 1))
 	  if (found) return subtag;
 	  else if (subtag == overrider)
 	    if ((subtag = tag_set->find_overridden_proc_instr (
@@ -895,7 +934,7 @@ class Value
   //! This is called to get the value of the variable. @[ctx], @[var]
   //! and @[scope_name] are set to where this @[Value] object was
   //! found. Note that @[scope_name] can be on the form
-  //! @tt{scope.index1.index2...@} when this object was encountered
+  //! @tt{"scope.index1.index2..."@} when this object was encountered
   //! through subindexing. Either @[RXML.nil] or the undefined value
   //! may be returned if the variable doesn't have a value.
   //!
@@ -957,7 +996,7 @@ class Scope
 //!
 //! @note
 //! The @tt{scope_name@} argument to the functions can be on the form
-//! @tt{scope.index1.index2...@} when this object was encountered
+//! @tt{"scope.index1.index2..."@} when this object was encountered
 //! through subindexing.
 {
   mixed `[] (string var, void|Context ctx,
@@ -1032,12 +1071,12 @@ class Scope
 class Context
 //! A parser context. This contains the current variable bindings and
 //! so on. The current context can always be retrieved with
-//! get_context().
+//! @[RXML.get_context].
 //!
 //! @note
 //! Don't store pointers to this object since that will likely
 //! introduce circular references. It can be retrieved easily through
-//! get_context() or parser->context.
+//! @[RXML.get_context].
 {
   Frame frame;
   //! The currently evaluating frame.
@@ -1062,29 +1101,35 @@ class Context
 
 #ifdef OLD_RXML_COMPAT
   int compatible_scope = 0;
-  //! If set, the user_*_var functions access the variables in the
-  //! scope "form" by default, and there's no subindex splitting or
-  //! ".." decoding is done (see parse_user_var).
+  //! If set, the @tt{user_*_var@} functions access the variables in
+  //! the scope "form" by default, and there's no subindex splitting
+  //! or ".." decoding is done (see @[parse_user_var]).
+  //! 
   //! @note
-  //!   This is only present when the OLD_RXML_COMPAT define is set.
+  //! This is only present when the @tt{OLD_RXML_COMPAT@} define is
+  //! set.
+#endif
+
+#ifdef PROFILE_PARSER
+  mapping(string:int) profile = ([]);
 #endif
 
   array(string|int) parse_user_var (string var, void|string|int scope_name)
   //! Parses the var string for scope and/or subindexes according to
-  //! the RXML rules, e.g. "scope.var.1.foo". Returns an array where
-  //! the first entry is the scope, and the remaining entries are the
-  //! list of indexes. If scope_name is a string, it's used as the
-  //! scope and the var string is only used for subindexes. A default
-  //! scope is chosen as appropriate if var cannot be split, unless
-  //! scope_name is a nonzero integer in which case it's returned in
-  //! the scope position in the array (useful to detect whether var
-  //! actually was splitted or not).
+  //! the RXML rules, e.g. @tt{"scope.var.1.foo"@}. Returns an array
+  //! where the first entry is the scope, and the remaining entries
+  //! are the list of indexes. If @[scope_name] is a string, it's used
+  //! as the scope and the var string is only used for subindexes. A
+  //! default scope is chosen as appropriate if var cannot be split,
+  //! unless @[scope_name] is a nonzero integer in which case it's
+  //! returned in the scope position in the array (useful to detect
+  //! whether @[var] actually was splitted or not).
   //!
-  //! A ".." in the var string quotes a literal ".", e.g.
-  //! "yow...cons..yet" is separated into "yow." and "cons.yet". Any
-  //! subindex that can be parsed as a signed integer is converted to
-  //! it. Note that it doesn't happen for the first index, since a
-  //! variable in a scope always is a string.
+  //! @tt{".."@} in the var string quotes a literal @tt{"."@}, e.g.
+  //! @tt{"yow...cons..yet"@} is separated into @tt{"yow."@} and
+  //! @tt{"cons.yet"@}. Any subindex that can be parsed as a signed
+  //! integer is converted to it. Note that it doesn't happen for the
+  //! first index, since a variable in a scope always is a string.
   {
 #ifdef OLD_RXML_COMPAT
     if (compatible_scope && !intp(scope_name))
@@ -1118,16 +1163,17 @@ class Context
 
   local mixed get_var (string|array(string|int) var, void|string scope_name,
 		       void|Type want_type)
-  //! Returns the value a variable in the specified scope, or the
-  //! current scope if none is given. Returns zero with zero_type 1 if
-  //! there's no such variable (or it's nil).
+  //! Returns the value of the given variable in the specified scope,
+  //! or the current scope if none is given. Returns undefined (zero
+  //! with zero type 1) if there's no such variable (or it's
+  //! @[RXML.nil]).
   //!
-  //! If var is an array, it's used to successively index the value to
-  //! get subvalues (see @[rxml_index()] for details).
+  //! If @[var] is an array, it's used to successively index the value
+  //! to get subvalues (see @[rxml_index] for details).
   //!
-  //! If the want_type argument is set, the result value is converted
-  //! to that type with Type.encode(). If the value can't be
-  //! converted, an RXML error is thrown.
+  //! If the @[want_type] argument is set, the result value is
+  //! converted to that type with @[Type.encode]. If the value can't
+  //! be converted, an RXML error is thrown.
   {
 #ifdef MODULE_DEBUG
     if (arrayp (var) ? !sizeof (var) : !stringp (var))
@@ -1141,9 +1187,9 @@ class Context
   }
 
   mixed user_get_var (string var, void|string scope_name, void|Type want_type)
-  //! As get_var, but parses the var string for scope and/or
-  //! subindexes, e.g. "scope.var.1.foo" (see parse_user_var for
-  //! details).
+  //! As @[get_var], but parses the var string for scope and/or
+  //! subindexes, e.g. @tt{"scope.var.1.foo"@} (see @[parse_user_var]
+  //! for details).
   {
     if(!var || !sizeof(var)) return ([])[0];
     array(string|int) splitted = parse_user_var (var, scope_name);
@@ -1152,10 +1198,10 @@ class Context
 
   local mixed set_var (string|array(string|int) var, mixed val, void|string scope_name)
   //! Sets the value of a variable in the specified scope, or the
-  //! current scope if none is given. Returns val.
+  //! current scope if none is given. Returns @[val].
   //!
-  //! If var is an array, it's used to successively index the value to
-  //! get subvalues (see @[rxml_index()] for details).
+  //! If @[var] is an array, it's used to successively index the value
+  //! to get subvalues (see @[rxml_index] for details).
   {
 #ifdef MODULE_DEBUG
     if (arrayp (var) ? !sizeof (var) : !stringp (var))
@@ -1200,9 +1246,9 @@ class Context
   }
 
   mixed user_set_var (string var, mixed val, void|string scope_name)
-  //! As set_var, but parses the var string for scope and/or
-  //! subindexes, e.g. "scope.var.1.foo" (see parse_user_var for
-  //! details).
+  //! As @[set_var], but parses the var string for scope and/or
+  //! subindexes, e.g. @tt{"scope.var.1.foo"@} (see @[parse_user_var]
+  //! for details).
   {
     if(!var || !sizeof(var)) parse_error ("No variable specified.\n");
     array(string|int) splitted = parse_user_var (var, scope_name);
@@ -1213,8 +1259,8 @@ class Context
   //! Removes a variable in the specified scope, or the current scope
   //! if none is given.
   //!
-  //! If var is an array, it's used to successively index the value to
-  //! get subvalues (see rxml_index for details).
+  //! If @[var] is an array, it's used to successively index the value
+  //! to get subvalues (see @[rxml_index] for details).
   {
 #ifdef MODULE_DEBUG
     if (arrayp (var) ? !sizeof (var) : !stringp (var))
@@ -1249,9 +1295,9 @@ class Context
   }
 
   void user_delete_var (string var, void|string scope_name)
-  //! As delete_var, but parses the var string for scope and/or
-  //! subindexes, e.g. "scope.var.1.foo" (see parse_user_var for
-  //! details).
+  //! As @[delete_var], but parses the var string for scope and/or
+  //! subindexes, e.g. @tt{"scope.var.1.foo"@} (see @[parse_user_var]
+  //! for details).
   {
     if(!var || !sizeof(var)) return;
     array(string|int) splitted = parse_user_var (var, scope_name);
@@ -1285,8 +1331,8 @@ class Context
 
   void add_scope (string scope_name, SCOPE_TYPE vars)
   //! Adds or replaces the specified scope at the global level. A
-  //! scope can be a mapping or a Scope object. A global "_" scope may
-  //! also be defined this way.
+  //! scope can be a mapping or an @[RXML.Scope] object. A global
+  //! @tt{"_"@} scope may also be defined this way.
   {
     if (scopes[scope_name])
       if (scope_name == "_") {
@@ -1376,10 +1422,11 @@ class Context
   }
 
   void remove_runtime_tag (string|Tag tag, void|int proc_instr)
-  //! If tag is a Tag object, it's removed from the set of runtime
-  //! tags. If tag is a string, the tag with that name is removed. In
-  //! the latter case, if proc_instr is nonzero the set of runtime PI
-  //! tags is searched, else the set of normal element runtime tags.
+  //! If @[tag] is an @[RXML.Tag] object, it's removed from the set of
+  //! runtime tags. If @[tag] is a string, the tag with that name is
+  //! removed. In the latter case, if @[proc_instr] is nonzero the set
+  //! of runtime PI tags is searched, else the set of normal element
+  //! runtime tags.
   {
     if (!new_runtime_tags) new_runtime_tags = NewRuntimeTags();
     if (objectp (tag)) tag = tag->name;
@@ -1689,9 +1736,11 @@ local Context get_context() {return _context;}
     if (ctx->in_use && ctx->in_use != this_thread())			\
       fatal_error ("Attempt to use context asynchronously.\n");		\
     ctx->in_use = this_thread();					\
-  }
+  }									\
+  PROFILE_ENTER (ctx, "rxml internal");
 
 #define LEAVE_CONTEXT()							\
+  PROFILE_LEAVE (get_context(), "rxml internal");			\
   if (Context ctx = get_context())					\
     if (__old_ctx != ctx) ctx->in_use = 0;				\
   set_context (__old_ctx);
@@ -1700,9 +1749,11 @@ local Context get_context() {return _context;}
 
 #define ENTER_CONTEXT(ctx)						\
   Context __old_ctx = get_context();					\
-  set_context (ctx);
+  set_context (ctx);							\
+  PROFILE_ENTER (ctx, "rxml internal");
 
 #define LEAVE_CONTEXT()							\
+  PROFILE_LEAVE (get_context(), "rxml internal");			\
   set_context (__old_ctx);
 
 #endif
@@ -1716,47 +1767,49 @@ constant FLAG_NONE		= 0x00000000;
 constant FLAG_DEBUG		= 0x40000000;
 //! Write a lot of debug during the execution of the tag, showing what
 //! type conversions are done, what callbacks are being called etc.
-//! Note that DEBUG must be defined for the debug printouts to be
-//! compiled in (normally enabled with the --debug flag to Roxen).
+//! Note that @tt{DEBUG@} must be defined for the debug printouts to
+//! be compiled in (normally enabled with the @tt{--debug@} flag to
+//! Roxen).
 
 //(!) Static flags (i.e. tested in the Tag object):
 
 constant FLAG_PROC_INSTR	= 0x00000010;
 //! Flags this as a processing instruction tag (i.e. one parsed with
-//! the <?name ... ?> syntax in XML). The string after the tag name to
-//! the ending separator constitutes the content of the tag. Arguments
-//! are not used.
-
-constant FLAG_EMPTY_ELEMENT	= 0x00000001;
-//! If set, the tag does not use any content. E.g. with an HTML parser
-//! this defines whether the tag is a container or not, and in XML
-//! parsing the parser will signal an error if the tag have anything
-//! but "" as content.
+//! the @tt{<?name ... ?>@} syntax in XML). The string after the tag
+//! name to the ending separator constitutes the content of the tag.
+//! Arguments are not used.
 
 constant FLAG_COMPAT_PARSE	= 0x00000002;
-//! Makes the PXml parser parse the tag in an HTML compatible way: If
-//! FLAG_EMPTY_ELEMENT is set and the tag doesn't end with '/>', it
-//! will be parsed as an empty element. The effect of this flag in
-//! other parsers is currently undefined.
+//! Makes the @[RXML.PXml] parser parse the tag in an HTML compatible
+//! way: If @[FLAG_EMPTY_ELEMENT] is set and the tag doesn't end with
+//! @tt{"/>"@}, it will be parsed as an empty element. The effect of
+//! this flag in other parsers is currently undefined.
 
 constant FLAG_NO_PREFIX		= 0x00000004;
 //! Never apply any prefix to this tag.
 
 constant FLAG_SOCKET_TAG	= 0x00000008;
 //! Declare the tag to be a socket tag, which accepts plugin tags (see
-//! Tag.plugin_name for details).
+//! @[RXML.Tag.plugin_name] for details).
 
 constant FLAG_DONT_PREPARSE	= 0x00000040;
-//! Don't preparse the content with the PXml parser. This is always
-//! the case for PI tags, so this flag doesn't have any effect for
-//! those. This is only used in the simple tag wrapper. Defined here
-//! as placeholder.
+//! Don't preparse the content with the @[RXML.PXml] parser. This is
+//! always the case for PI tags, so this flag doesn't have any effect
+//! for those. This is only used in the simple tag wrapper. Defined
+//! here as placeholder.
 
 constant FLAG_POSTPARSE		= 0x00000080;
-//! Postparse the result with the PXml parser. This is only used in
-//! the simple tag wrapper. Defined here as placeholder.
+//! Postparse the result with the @[RXML.PXml] parser. This is only
+//! used in the simple tag wrapper. Defined here as placeholder.
 
 //(!) The rest of the flags are dynamic (i.e. tested in the Frame object):
+
+constant FLAG_EMPTY_ELEMENT	= 0x00000001;
+//! If set, the tag does not use any content. E.g. with an HTML parser
+//! this defines whether the tag is a container or not, and in XML
+//! parsing the parser will signal an error if the tag have anything
+//! but "" as content. Should not be changed after
+//! @[RXML.Frame.do_enter] has returned.
 
 constant FLAG_PARENT_SCOPE	= 0x00000100;
 //! If set, exec arrays will be interpreted in the scope of the parent
@@ -1767,13 +1820,14 @@ constant FLAG_NO_IMPLICIT_ARGS	= 0x00000200;
 //! yet implemented.
 
 constant FLAG_STREAM_RESULT	= 0x00000400;
-//! If set, the do_process() function will be called repeatedly until
+//! If set, the @[do_process] function will be called repeatedly until
 //! it returns 0 or no more content is wanted.
 
 constant FLAG_STREAM_CONTENT	= 0x00000800;
 //! If set, the tag supports getting its content in streaming mode:
-//! do_process() will be called repeatedly with successive parts of the
-//! content then. Can't be changed from do_process().
+//! @[do_process] will be called repeatedly with successive parts of
+//! the content then. Can't be changed from @[do_process].
+//! 
 //! @note
 //! It might be obvious, but using streaming is significantly less
 //! effective than nonstreaming, so it should only be done when big
@@ -1782,10 +1836,10 @@ constant FLAG_STREAM_CONTENT	= 0x00000800;
 constant FLAG_STREAM		= FLAG_STREAM_RESULT | FLAG_STREAM_CONTENT;
 
 constant FLAG_UNPARSED		= 0x00001000;
-//! If set, args and content in the frame contain unparsed strings.
-//! The frame will be parsed before it's evaluated. This flag should
-//! never be set in Tag.flags, but it's useful when creating frames
-//! directly.
+//! If set, @[RXML.Frame.args] and @[RXML.Frame.content] contain
+//! unparsed strings. The frame will be parsed before it's evaluated.
+//! This flag should never be set in @[RXML.Tag.flags], but it's
+//! useful when creating frames directly (see @[make_unparsed_tag]).
 
 constant FLAG_DONT_RECOVER	= 0x00002000;
 //! If set, RXML errors are never recovered when parsing the content
@@ -1798,10 +1852,11 @@ constant FLAG_DONT_RECOVER	= 0x00002000;
 //! there and continues.
 //!
 //! The criteria for the frame which will handle the error recovery is
-//! that its content type has the free_text property, and that the
-//! parser that parses it has an report_error function (which e.g.
-//! RXML.PXml has). With this flag, a frame can declare that it isn't
-//! suitable to receive error reports even if it satisfies this.
+//! that its content type has the @[RXML.Type.free_text] property, and
+//! that the parser that parses it has an @[RXML.Parser.report_error]
+//! function (which e.g. @[RXML.PXml] has). With this flag, a frame
+//! can declare that it isn't suitable to receive error reports even
+//! if it satisfies this.
 
 constant FLAG_DONT_REPORT_ERRORS = FLAG_DONT_RECOVER; // For compatibility.
 
@@ -1811,7 +1866,7 @@ constant FLAG_RAW_ARGS		= 0x00004000;
 //! only encodes the argument quote character with the "Roxen
 //! encoding" when writing argument values, instead of encoding with
 //! entity references. It's intended for reformatting a tag which has
-//! been parsed by Parser.HTML() (or parse_html()) but hasn't been
+//! been parsed by @[Parser.HTML] (or @[parse_html]) but hasn't been
 //! processed further.
 
 //(!) The following flags specifies whether certain conditions must be
@@ -1823,7 +1878,7 @@ constant FLAG_RAW_ARGS		= 0x00004000;
 
 constant FLAG_CACHE_DIFF_ARGS	= 0x00010000;
 //! If set, the arguments to the tag need not be the same (using
-//! equal()) as the cached args.
+//! @[equal]) as the cached args.
 
 constant FLAG_CACHE_DIFF_CONTENT = 0x00020000;
 //! If set, the content need not be the same.
@@ -2152,48 +2207,98 @@ class Frame
   //! the tag after parsing, otherwise the raw_tag_text variable is
   //! used, which must have a string value.
   {
+#ifdef MODULE_DEBUG
+#define CHECK_RAW_TEXT							\
+    if (zero_type (this_object()->raw_tag_text))			\
+      fatal_error ("The variable raw_tag_text must be defined.\n");	\
+    if (!stringp (this_object()->raw_tag_text))				\
+      fatal_error ("raw_tag_text must have a string value.\n");
+#else
+#define CHECK_RAW_TEXT
+#endif
+    // FIXME: This assumes an xml-like parser.
+
     if (object(Tag) overridden = get_overridden_tag()) {
       Frame frame;
-      if (!args) {
-#ifdef MODULE_DEBUG
-	if (zero_type (this_object()->raw_tag_text))
-	  fatal_error ("The variable raw_tag_text must be defined.\n");
-	if (!stringp (this_object()->raw_tag_text))
-	  fatal_error ("raw_tag_text must have a string value.\n");
+      if (flags & FLAG_PROC_INSTR) {
+	if (!content) {
+	  CHECK_RAW_TEXT;
+	  if (mixed err = catch {
+	    Parser_HTML()->add_quote_tag (
+	      "?",
+	      lambda (object p, string c) {
+		sscanf (c, "%*[^ \t\n\r]%s", content);
+		throw (0);
+	      },
+	      "?")->finish (this_object()->raw_tag_text);
+	  }) throw (err);
+#ifdef DEBUG
+	  if (!stringp (content))
+	    fatal_error ("Failed to parse PI tag content for <?%s?> from %O.\n",
+			 tag->name, this_object()->raw_tag_text);
 #endif
+	}
+      }
+
+      else if (!args || !content && !(flags & FLAG_EMPTY_ELEMENT)) {
+	CHECK_RAW_TEXT;
 	if (mixed err = catch {
-	  Parser_HTML()->_set_tag_callback (lambda (object p) {
-					      args = p->tag_args();
-					      throw (0);
-					    })->finish (this_object()->raw_tag_text);
+	  Parser_HTML()->_set_tag_callback (
+	    lambda (object p, string s) {
+	      if (!args) args = p->tag_args();
+	      if (content || flags & FLAG_EMPTY_ELEMENT) throw (0);
+	      else {
+		p->_set_tag_callback (0);
+		p->add_container (p->tag_name(),
+				  lambda (object p, mapping a, string c) {
+				    content = c;
+				    throw (0);
+				  });
+		return 1;
+	      }
+	    })->finish (this_object()->raw_tag_text);
 	}) throw (err);
 #ifdef DEBUG
-	if (!mappingp (args)) fatal_error ("Failed to parse tag args from %O.\n",
-					   this_object()->raw_tag_text);
+	if (!mappingp (args))
+	  fatal_error ("Failed to parse tag args for <%s> from %O.\n",
+		       tag->name, this_object()->raw_tag_text);
+	if (!stringp (content))
+	  fatal_error ("Failed to parse tag content for <%s> from %O.\n",
+		       tag->name, this_object()->raw_tag_text);
 #endif
       }
+
       frame = overridden (args, content || "");
       frame->flags |= FLAG_UNPARSED;
       return frame;
     }
 
-    else
-      if (args) return result_type->format_tag (tag, args, content);
-      else {
-#ifdef MODULE_DEBUG
-	if (zero_type (this_object()->raw_tag_text))
-	  fatal_error ("The variable raw_tag_text must be defined.\n");
-	if (!stringp (this_object()->raw_tag_text))
-	  fatal_error ("raw_tag_text must have a string value.\n");
-#endif
-	if (flags & FLAG_PROC_INSTR)
-	  return this_object()->raw_tag_text;
+    else {
+      // Format a new tag, as like the original as possible. FIXME:
+      // When it's reformatted, the prefix (if any) won't stick, but
+      // it will when it isn't.
+
+      if (flags & FLAG_PROC_INSTR) {
+	if (content)
+	  return result_type->format_tag (tag, 0, content);
 	else {
+	  CHECK_RAW_TEXT;
+	  return this_object()->raw_tag_text;
+	}
+      }
+
+      else {
+	if (args && (content || flags & FLAG_EMPTY_ELEMENT))
+	  return result_type->format_tag (tag, args, content);
+	else {
+	  CHECK_RAW_TEXT;
+
+	  string s;
 #ifdef MODULE_DEBUG
 	  if (mixed err = catch {
 #endif
-	    return t_xml (PEnt)->eval (this_object()->raw_tag_text,
-				       get_context(), empty_tag_set);
+	    s = t_xml (PEnt)->eval (this_object()->raw_tag_text,
+				    get_context(), empty_tag_set);
 #ifdef MODULE_DEBUG
 	  }) {
 	    if (objectp (err) && ([object] err)->thrown_at_unwind)
@@ -2201,8 +2306,37 @@ class Frame
 	    throw_fatal (err);
 	  }
 #endif
+	  if (!args && !content) return s;
+
+	  if (mixed err = catch {
+	    Parser_HTML()->_set_tag_callback (
+	      lambda (object p, string s) {
+		if (!args) args = p->tag_args();
+		if (content || flags & FLAG_EMPTY_ELEMENT) throw (0);
+		else {
+		  p->_set_tag_callback (0);
+		  p->add_container (p->tag_name(),
+				    lambda (object p, mapping a, string c) {
+				      content = c;
+				      throw (0);
+				    });
+		  return 1;
+		}
+	      })->finish (this_object()->raw_tag_text);
+	  }) throw (err);
+#ifdef DEBUG
+	  if (!mappingp (args))
+	    fatal_error ("Failed to parse tag args for <%s> from %O.\n",
+			 tag->name, this_object()->raw_tag_text);
+	  if (!stringp (content))
+	    fatal_error ("Failed to parse tag content for <%s> from %O.\n",
+			 tag->name, this_object()->raw_tag_text);
+#endif
+	  return result_type->format_tag (tag, args, content);
 	}
       }
+    }
+#undef CHECK_RAW_TEXT
   }
 
   //(!) Internals:
@@ -2637,7 +2771,9 @@ class Frame
 		}
 		else {
 		  THIS_TAG_DEBUG ("Calling do_enter\n");
+		  PROFILE_SWITCH (ctx, "rxml internal", "tag:" + tag->name);
 		  exec = ([function(RequestID:array)] do_enter) (id); // Might unwind.
+		  PROFILE_SWITCH (ctx, "tag:" + tag->name, "rxml internal");
 		  THIS_TAG_DEBUG ((exec ? "Exec array" : "Zero") +
 				  " returned from do_enter\n");
 		}
@@ -2697,8 +2833,10 @@ class Frame
 		}
 		else {
 		  THIS_TAG_DEBUG ("Calling do_iterate\n");
+		  PROFILE_SWITCH (ctx, "rxml internal", "tag:" + tag->name);
 		  iter = (/*[function(RequestID:int)]HMM*/ do_iterate) (
 		    id); // Might unwind.
+		  PROFILE_SWITCH (ctx, "tag:" + tag->name, "rxml internal");
 		  THIS_TAG_DEBUG (sprintf ("%O returned from do_iterate\n", iter));
 		  if (ctx->new_runtime_tags)
 		    _handle_runtime_tags (ctx, parser);
@@ -2765,7 +2903,9 @@ class Frame
 			    if (!exec) {
 			      THIS_TAG_DEBUG (sprintf ("Iter[%d]: Calling do_process in "
 						       "streaming mode\n", debug_iter));
+			      PROFILE_SWITCH (ctx, "rxml internal", "tag:" + tag->name);
 			      exec = do_process (id, piece); // Might unwind.
+			      PROFILE_SWITCH (ctx, "tag:" + tag->name, "rxml internal");
 			      THIS_TAG_DEBUG (sprintf ("Iter[%d]: %s returned from "
 						       "do_process\n", debug_iter,
 						       exec ? "Exec array" : "Zero"));
@@ -2853,8 +2993,10 @@ class Frame
 		    else {
 		      THIS_TAG_DEBUG (sprintf ("Iter[%d]: Calling do_process\n",
 					       debug_iter));
+		      PROFILE_SWITCH (ctx, "rxml internal", "tag:" + tag->name);
 		      exec = ([function(RequestID,void|mixed:array)] do_process) (
 			id); // Might unwind.
+		      PROFILE_SWITCH (ctx, "tag:" + tag->name, "rxml internal");
 		      THIS_TAG_DEBUG (sprintf ("Iter[%d]: %s returned from do_process\n",
 					       debug_iter, exec ? "Exec array" : "Zero"));
 		    }
@@ -2910,7 +3052,9 @@ class Frame
 		}
 		else {
 		  THIS_TAG_DEBUG ("Calling do_return\n");
+		  PROFILE_SWITCH (ctx, "rxml internal", "tag:" + tag->name);
 		  exec = ([function(RequestID:array)] do_return) (id); // Might unwind.
+		  PROFILE_SWITCH (ctx, "tag:" + tag->name, "rxml internal");
 		  THIS_TAG_DEBUG ((exec ? "Exec array" : "Zero") +
 				  " returned from do_return\n");
 		}
@@ -3456,6 +3600,9 @@ class Parser
 	throw_fatal (err);
       }
     LEAVE_CONTEXT();
+#ifdef PROFILE_PARSER
+    werror ("Profile for %s: %O\n", context->id->not_query, context->profile);
+#endif
   }
 
   mixed handle_var (string varref, Type surrounding_type)
@@ -3474,10 +3621,12 @@ class Parser
 	  "No scope in variable reference.\n"
 	  "(Use ':' in front to quote a character reference containing dots.)\n");
       mixed val;
+      PROFILE_SWITCH (context, "rxml internal", "var:" + varref);
       if (zero_type (val = context->get_var ( // May throw.
 		       splitted[1..], splitted[0],
 		       encoding ? t_string : surrounding_type)))
 	val = nil;
+      PROFILE_SWITCH (context, "var:" + varref, "rxml internal");
       if (encoding && !(val = Roxen->roxen_encode (val + "", encoding)))
 	parse_error ("Unknown encoding %O.\n", encoding);
       context->current_var = 0;
