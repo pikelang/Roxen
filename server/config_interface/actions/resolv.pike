@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.18 2000/09/19 09:49:38 lange Exp $
+ * $Id: resolv.pike,v 1.19 2001/04/17 06:59:28 per Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -69,7 +69,7 @@ string anchor(string title)
   prev_level = level;
   et[(string)level]++;
 
-  array(string) anchor = allocate(level);
+  array(string) anchor = level > 0 ? allocate(level) : ({});
   for(int i=0; i<level; )
     anchor[i] = (string)et[(string)++i];
   return sprintf("<a name=\"%s\" href=\"#%s\">%s</a>", anchor*".", anchor*".", title);
