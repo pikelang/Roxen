@@ -16,7 +16,5 @@ constant modules = ({
   "rxmlparse",
   "rxmltags",
   "tablist",
-  "tablist",
-
   "filesystem",
 });
