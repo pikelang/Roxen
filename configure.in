@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.72 1999/06/11 06:38:29 mast Exp $
+# $Id: configure.in,v 1.73 1999/08/27 12:07:44 grubba Exp $
 #
 
 prefix=$PWD
@@ -78,6 +78,7 @@ case "$srcdir" in
 If this does not work, please use an absolute path to the configure script. ])
     ;;
 esac
+echo
 echo Source directory:       "$srcdir"
 
 # We also want an absolute path to the installation prefix.
