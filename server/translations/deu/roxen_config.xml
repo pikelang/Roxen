@@ -2161,55 +2161,46 @@ as the name of its log file directory.
 </str>
 
 <str id="14">
-<new/>
 <o>Module list mode</o>
-<t></t>
+<t>Modulliste Modus</t>
 </str>
 
 <str id="15">
-<new/>
 <o>The module list mode. One of &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Modules in the same group are folded&lt;/dd&gt;&lt;dt&gt;UnFolded&lt;/dt&gt;&lt;dd&gt;Like the 'old' Roxen 2.1 list&lt;/dd&gt;&lt;dt&gt;JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Like Folded, but when you move the mouse over a folded group, a menu with the folded modules will popup&lt;/dd&gt;&lt;/dl&gt;</o>
-<t></t>
+<t>Der Modullisten Modus. Kann sein: &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Module derselben Gruppe sind zusammengefaltet&lt;/dd&gt;&lt;dt&gt;UnFolded&lt;/dt&gt;&lt;dd&gt;Wie die 'alte' Roxen 2.1 Liste&lt;/dd&gt;&lt;dt&gt;JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Wie Folded, aber ein Menu mit den untergeordneten Modulen erscheint, wenn man mit der Maus drüberfährt&lt;/dd&gt;&lt;/dl&gt;</t>
 </str>
 
 <str id="17">
-<new/>
 <o>Folded with javascript popup</o>
-<t></t>
+<t>Zusammengefaltet mit Javascript Popup</t>
 </str>
 
 <str id="122">
-<new/>
 <o>Folded</o>
-<t></t>
+<t>Zusammengefaltet</t>
 </str>
 
 <str id="123">
-<new/>
 <o>Unfolded (old stype)</o>
-<t></t>
+<t>Nicht zusammengefaltet (Herkömmliches Verhalten)</t>
 </str>
 
 <str id="219">
-<new/>
 <o>Authentication method</o>
-<t></t>
+<t>Authentifizierungsmethode</t>
 </str>
 
 <str id="291">
-<new/>
 <o>The method to use to authenticate configuration interface users.</o>
-<t></t>
+<t>Die Methode, mit der Benutzer des Konfigurationinterfaces authentifiziert werden.</t>
 </str>
 
 <str id="301">
-<new/>
 <o>HTTP Basic passwords</o>
-<t></t>
+<t>HTTP Basic Passworte</t>
 </str>
 
 <str id="325">
-<new/>
 <o>HTTP Cookies</o>
-<t></t>
+<t>HTTP Cookies</t>
 </str>
