@@ -100,8 +100,8 @@ void do_update()
     return;
   }
   string fname = query("DNS File");
-  object data  = AutoSiteDB->big_query("SELECT rr_owner,rr_type,rr_value FROM domains");
-  object file  = Stdio.FILE("/tmp/new_dns_zone", "wt");
+  object data  = AutoSiteDB->big_query("SELECT rr_owner,rr_type,rr_value FROM dns");
+  object file  = Stdio.FILE("/tmp/new_dns_zone", "wct");
   object row;
 
   if (!data)
@@ -136,7 +136,7 @@ void do_update()
     }
     else if (row[1] == "MX")
     { if (row[2] == "" || row[2] == 0) row[2] = "10 " + row[0];
-      else if (sizeof(sscanf("%d %s", row[2], &dummy, &dummy)) < 2)
+      else if (sscanf("%d %s", row[2], dummy, dummy) < 2)
       { row[2] = "10 " + row[2];
       } 
     }
@@ -185,7 +185,7 @@ void start()
 
     if (AutoSiteDB)
     { database_status = "connected (" + AutoSiteDB->host_info() + ")";
-      call_out(update, 50);
+      update();
     }
     else
       database_status = "unavailable.";
