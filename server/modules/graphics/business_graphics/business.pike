@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.110 1998/11/04 20:58:00 peter Exp $";
+constant cvs_version = "$Id: business.pike,v 1.111 1999/03/11 01:27:47 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -171,6 +171,10 @@ void start(int num, object configuration)
     if (get_dir(query("cachedir")))
       foreach(get_dir(query("cachedir")), string file)
 	rm(query("cachedir")+file);
+    else
+      if (!mkdir(query("cachedir")))
+	report_warning ("BG: Cache directory "+
+			query("cachedir")+" can not be created.\n");
   }
 }
 
@@ -197,7 +201,7 @@ void create()
 	  "Maximal height of the generated image." );
   defvar( "maxstringlength", 60, "Limits:Max string length", TYPE_INT,
 	  "Maximal length of the strings used in the diagram." );
-  defvar( "cachedir", "./bgcache/", "Cache directory", TYPE_DIR|VAR_MORE,
+  defvar( "cachedir", "../bgcache/", "Cache directory", TYPE_DIR|VAR_MORE,
 	  "The directory that will be used to store diagrams." );
 }
 
@@ -545,11 +549,7 @@ string quote(mapping in)
   if (file_stat(query("cachedir")+out)) return out;
   
   //NU: Create the file <Key>
-  
-  if (!get_dir(query("cachedir")))
-    if (!mkdir(query("cachedir")))
-      throw(({query("cachedir")+"can not be created error!\n", backtrace()}));
-    
+
   Stdio.write_file(query("cachedir")+out, data);
   
   return out;
