@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
  
-constant cvs_version = "$Id: ip-less_hosts.pike,v 1.14 1998/03/13 23:25:33 neotron Exp $";
+constant cvs_version = "$Id: ip-less_hosts.pike,v 1.15 1998/03/13 23:27:32 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -21,7 +21,7 @@ array register_module()
 	      "doesn't work together with proxies. The reason is that the "
 	      "host header sent isn't the one of the proxy server, but the "
 	      "one of the requested host. We recommend having the proxies in "
-	      "their own virtual server, with a unique IP and / or port.",
+	      "their own virtual server, with a unique IP and / or port.</b>",
 	      0, 1 });
 }
 
