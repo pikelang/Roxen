@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.154 1998/09/15 16:43:36 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.155 1998/09/17 19:48:49 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2010,9 +2010,18 @@ public mixed try_get_file(string s, object id, int|void status, int|void nocache
   mapping m;
 
 
-  if(objectp(id))
+  if(objectp(id)) {
+    // id->misc->common makes it possible to pass information to
+    // the originating request.
+    if ( !id->misc )
+      id->misc = ([]);
+    if ( !id->misc->common )
+      id->misc->common = ([]);
+
     fake_id = id->clone_me();
-  else
+
+    fake_id->misc->common = id->misc->common;
+  } else
     error("No ID passed to 'try_get_file'\n");
 
   if(!id->pragma["no-cache"] && !nocache)
