@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.410 2000/02/04 01:42:53 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.411 2000/02/04 02:33:01 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1216,7 +1216,6 @@ class FHTTP
   void low_adjust_stats(mapping m)
   {
     array q = values( urls )->conf;
-  //  werror( status() );
     if( sizeof( q ) ) /* This is not exactly correct if sizeof(q)>1 */
     {
       q[0]->requests += m->num_request;
@@ -1232,7 +1231,8 @@ class FHTTP
   void adjust_stats()
   {
     call_out(adjust_stats, 2);
-    low_adjust_stats( l->cache_status() );
+werror( status() );
+//     low_adjust_stats( l->cache_status() );
   }
 
 
@@ -1318,7 +1318,7 @@ class FHTTP
 
     l = HTTPLoop.Loop( portobj, requesthandler,
                        handle_request, 0,
-                       (query_option("ram_cache")||20)*1024*1024,
+                       ((int)query_option("ram_cache")||20)*1024*1024,
                        dolog, (query_option("read_timeout")||120) );
 
     call_out(adjust_stats, 10);
