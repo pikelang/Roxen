@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.337 2002/06/15 21:03:54 nilsson Exp $
+// $Id: roxenloader.pike,v 1.338 2002/06/28 23:16:47 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.337 2002/06/15 21:03:54 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.338 2002/06/28 23:16:47 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2231,6 +2231,7 @@ void do_main( int argc, array(string) argv )
   object prototypes = (object)"base_server/prototypes.pike";
   dump( "base_server/prototypes.pike", object_program( prototypes ) );
   
+  add_constant("Prototypes",    prototypes);
   add_constant("Protocol",      prototypes->Protocol );
   add_constant("Configuration", prototypes->Configuration );
   add_constant("StringFile",    prototypes->StringFile );
