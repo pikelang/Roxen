@@ -2,7 +2,7 @@
 // This module implements an IE5/Macintosh fix; if no file is found, assume
 // the url is UTF-8 or Macintosh encoded.
 
-string cvs_version = "$Id: url_rectifier.pike,v 1.9 2000/03/01 16:56:49 nilsson Exp $";
+string cvs_version = "$Id: url_rectifier.pike,v 1.10 2000/03/20 08:21:21 nilsson Exp $";
 inherit "module";
 inherit "roxenlib";
 
@@ -27,7 +27,8 @@ constant module_doc  = "If no file is found, assume the url is "
 
 string status()
 {
-  int successful = `+(@values(redirs)), all = successful + unsuccessful;
+  int successful = sizeof(redirs)?`+(@values(redirs)):0;
+  int all = successful + unsuccessful;
   return sprintf( "<p><b>%d%%</b> (%d out of %d) of all "
 		  "potential 404:s were saved by this module.</p>"
 		  "<table><tr><th>Encoding</th><th>Caught</th></tr>\n"
