@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.77 2001/02/05 11:51:42 per Exp $";
+  "$Id: config_filesystem.pike,v 1.78 2001/02/06 22:42:53 nilsson Exp $";
 
 constant path = "config_interface/";
 
@@ -469,23 +469,12 @@ void start(int n, Configuration cfg)
 
     cfg->add_modules(({
       "config_tags", "contenttypes",    "indexfiles",
-      "gbutton",     "wiretap",         "graphic_text",    "pathinfo",
+      "gbutton",     "graphic_text",    "pathinfo",
       "pikescript",  "translation_mod", "rxmlparse",       "rxmltags",
       "tablist",     "update",          "cimg",            "auth_httpbasic"
     }));
 
     RoxenModule m;
-    if( m = cfg->find_module( "wiretap#0" ) )
-    {
-      m->set( "colorparsing", ({}) );
-      m->set( "colormode", 0 );
-      m->save(); // also forces call to start
-    }
-#ifdef DEBUG
-    else 
-      report_warning( "Failed to enable the wiretap module" );
-#endif
-    
     if( m = cfg->find_module( "pikescript#0" ) )
     {
       m->set( "autoreload", 0 );
