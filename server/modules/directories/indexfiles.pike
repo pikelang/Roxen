@@ -3,7 +3,7 @@
 // Index files only module, a directory module that will not try to
 // generate any directory listings, instead only using index files.
 
-constant cvs_version = "$Id: indexfiles.pike,v 1.18 2000/11/27 06:17:11 per Exp $";
+constant cvs_version = "$Id: indexfiles.pike,v 1.19 2001/01/29 05:41:26 per Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -16,8 +16,8 @@ inherit "module";
 //************** Generic module stuff ***************
 
 constant module_type = MODULE_DIRECTORIES;
-LocaleString module_name_locale = LOCALE(1,"Index files only");
-LocaleString module_doc_locale  =
+LocaleString module_name = LOCALE(1,"Index files only");
+LocaleString module_doc  =
   LOCALE(2,"Index files only module, a directory module that will not try "
 	 "to generate any directory listings, instead only using the  "
 	 "specified index files."

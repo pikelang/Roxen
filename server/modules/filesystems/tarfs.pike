@@ -1,31 +1,34 @@
 inherit "module";
 
-constant cvs_version= "$Id: tarfs.pike,v 1.4 2000/09/25 06:29:44 per Exp $";
+constant cvs_version= "$Id: tarfs.pike,v 1.5 2001/01/29 05:40:30 per Exp $";
 
 // The Filesystem.Tar module is not threadsafe.
 constant thread_safe=0;
 
+//<locale-token project="mod_targs">_</locale-token>
+#define _(X,Y)	_DEF_LOCALE("mod_tarfs",X,Y)
+// end of the locale related stuff
 #include <module.h>
 
 constant module_type = MODULE_LOCATION;
-constant module_name = "Tarfile system";
-constant module_doc =
-("This is a file system module that makes it possible to mount a "
+LocaleString module_name = _(0,"Tarfile system");
+LocaleString module_doc =
+_(0,"This is a file system module that makes it possible to mount a "
  "directory structure from a tar-file directly on the site. gzip compressed "
  "tar-files are not supported");
 constant module_unique = 0;
 
 void create()
 {
-  defvar( "mountpoint", "/standard/docs/", 
-          "Mount point", TYPE_LOCATION|VAR_INITIAL,
-          "Where the module will be mounted in the site's virtual file "
-          "system." );
+  defvar( "mountpoint", "/", 
+          _(0,"Mount point"), TYPE_LOCATION|VAR_INITIAL,
+          _(0,"Where the module will be mounted in the site's virtual file "
+          "system.") );
 
   defvar("tarfile", "config_interface/docs.tar", 
-         "Tar file and root path", TYPE_FILE|VAR_INITIAL,
-	 "The tarfile, and an optional root path (syntax: /tar/file.tar:/"
-         "root/dir/)" );
+         _(0,"Tar file and root path"), TYPE_FILE|VAR_INITIAL,
+	 _(0,"The tarfile, and an optional root path (syntax: /tar/file.tar:/"
+	   "root/dir/)") );
 }
 
 string mp, error_msg;
@@ -53,7 +56,7 @@ string query_location()
   return mp;
 }
 
-array|Stat stat_file( string f, RequestID id )
+Stat stat_file( string f, RequestID id )
 {
   if(!tar) return 0;
   object s = tar->stat( f );

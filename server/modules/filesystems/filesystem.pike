@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.94 2001/01/13 18:15:28 nilsson Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.95 2001/01/29 05:40:29 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -33,8 +33,8 @@ constant thread_safe=1;
 #endif
 
 constant module_type = MODULE_LOCATION;
-LocaleString module_name_locale = LOCALE(1,"File system");
-LocaleString module_doc_locale =
+LocaleString module_name = LOCALE(1,"File system");
+LocaleString module_doc =
 LOCALE(2,"This is the basic file system module that makes it possible "
        "to mount a directory structure in the virtual file system of "
        "your site.");

@@ -10,34 +10,38 @@
 
 inherit "filesystem";
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.17 2001/01/13 18:15:38 nilsson Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.18 2001/01/29 05:40:30 per Exp $";
 
 #include <module.h>
 #include <roxen.h>
 
 #include <request_trace.h>
 
-// import Array;
+//<locale-token project="mod_restrictedfs">_</locale-token>
+#define _(X,Y)	_DEF_LOCALE("mod_restrictedfs",X,Y)
+// end of the locale related stuff
 
 constant module_type = MODULE_LOCATION;
-constant module_name = "Restricted file system";
-constant module_doc  = "The restricted file system makes a users home "
-"directory available to her. Very usable for FTP sites.";
+LocaleString module_name = _(0,"Restricted file system");
+LocaleString module_doc  =
+  _(0,"The restricted file system makes a users home "
+    "directory available to her. Very usable for FTP sites.");
 constant module_unique = 0;
 
 void create()
 {
   ::create();
-  defvar("remap_home", 0, "Hide path to the home directory",
+  defvar("remap_home", 0,
+	 _(0,"Hide path to the home directory"),
 	 TYPE_FLAG|VAR_INITIAL,
-	 "If set, the user's home directory will be available "
-	 "as the root of this file system. If not set the user's home "
-	 "directory will be available as its normal path, just as on an "
-	 "ordinary FTP site."
-	 "<p>If the users home directory is <tt>/home/me/</tt> and the "
-	 "restricted file system is mounted on <tt>/ftp/</tt> the home "
-	 "directory will be available as <tt>/ftp/</tt> if this option is "
-	 "set and as <tt>/ftp/home/me/</tt> if it is not set.");
+	 _(0,"If set, the user's home directory will be available "
+	  "as the root of this file system. If not set the user's home "
+	  "directory will be available as its normal path, just as on an "
+	  "ordinary FTP site."
+	  "<p>If the users home directory is <tt>/home/me/</tt> and the "
+	  "restricted file system is mounted on <tt>/ftp/</tt> the home "
+	  "directory will be available as <tt>/ftp/</tt> if this option is "
+	  "set and as <tt>/ftp/home/me/</tt> if it is not set."));
 }
 
 string fix_slashes (string s)

@@ -9,10 +9,10 @@ inherit "module";
 // end of the locale related stuff
 
 
-constant cvs_version = "$Id: auth.pike,v 1.5 2000/12/02 19:26:10 per Exp $";
+constant cvs_version = "$Id: auth.pike,v 1.6 2001/01/29 05:40:30 per Exp $";
 constant module_type = MODULE_AUTH;
-LocaleString module_name_locale = LOCALE(1,"RefDoc for MODULE_AUTH");
-LocaleString module_doc_locale =
+LocaleString module_name = LOCALE(1,"RefDoc for MODULE_AUTH");
+LocaleString module_doc =
   LOCALE(2,"This module does nothing, but its inlined documentation "
 	 "gets imported into the roxen programmer manual. You definetely "
 	 "don't want to use this module in your virtual servers, since "

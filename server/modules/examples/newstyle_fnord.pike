@@ -8,7 +8,7 @@
 // See fnord.pike for more information of what this tag does.
 
 // This variable is shown in the configinterface as the version of the module.
-constant cvs_version = "$Id: newstyle_fnord.pike,v 1.10 2000/11/27 06:17:14 per Exp $";
+constant cvs_version = "$Id: newstyle_fnord.pike,v 1.11 2001/01/29 05:40:31 per Exp $";
 
 // Tell Roxen that this module is threadsafe.
 constant thread_safe=1;
@@ -73,8 +73,8 @@ class TagFnord {
 // Some constants to register the module in the RXML parser.
 
 constant module_type = MODULE_TAG;
-LocaleString module_name_locale = LOCALE(3,"Newstyle Fnord!");
-LocaleString module_doc_locale  =
+LocaleString module_name = LOCALE(3,"Newstyle Fnord!");
+LocaleString module_doc  =
   LOCALE(4,"Adds an extra container tag, &lt;fnord&gt; that's supposed "
 	 "to make things invisible unless the \"fnord\" prestate is present."
 	 "<p>This module is here as an example of how to write a "

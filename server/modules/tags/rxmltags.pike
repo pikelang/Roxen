@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.196 2001/01/23 03:28:50 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.197 2001/01/29 05:40:32 per Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -891,14 +891,16 @@ class TagInsertFile {
     return RXML.t_xml;
   }
 
-  string get_data(string var, mapping args, RequestID id) {
+  string get_data(string var, mapping args, RequestID id)
+  {
     string result;
-    if(args->nocache) {
-      CACHE(0);
-      result=id->conf->try_get_file(var, id, 0, 1);
-    }
-    else result = id->conf->try_get_file(var, id);
-    if(!result) RXML.run_error("No such file ("+var+").\n");
+    if(args->nocache) // try_get_file never uses the cache any more.
+      CACHE(0);      // Should we really enforce CACHE(0) here?
+    
+    result=id->conf->try_get_file(var, id);
+
+    if( !result )
+      RXML.run_error("No such file ("+Roxen.fix_relative( var, id )+").\n");
 
 #if ROXEN_COMPAT <= 1.3
     if(id->conf->old_rxml_compat)

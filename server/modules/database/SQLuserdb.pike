@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-constant cvs_version="$Id: SQLuserdb.pike,v 1.24 2001/01/13 18:15:11 nilsson Exp $";
+constant cvs_version="$Id: SQLuserdb.pike,v 1.25 2001/01/29 05:40:31 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -329,8 +329,8 @@ string|void check_variable (string name, mixed newvalue)
 }
 
 constant module_type = MODULE_AUTH;
-LocaleString module_name_locale = LOCALE(25,"SQL user database");
-LocaleString module_doc_locale  = LOCALE(26,"This module implements user authentication via a SQL server.\n"
+LocaleString module_name = LOCALE(25,"SQL user database");
+LocaleString module_doc  = LOCALE(26,"This module implements user authentication via a SQL server.\n"
   "<p>For setup instruction, see the comments at the beginning of the module "
   "code.</p>"
   "&copy; 1997 Francesco Chemolli, distributed freely under GPL license.");

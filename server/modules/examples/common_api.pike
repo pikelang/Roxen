@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_common_api",X,Y)
 // end of the locale related stuff
 
-constant cvs_version="$Id: common_api.pike,v 1.6 2000/12/02 19:26:11 per Exp $";
+constant cvs_version="$Id: common_api.pike,v 1.7 2001/01/29 05:40:30 per Exp $";
 //! This string (filtered to remove some ugly cvs id markup) shows up in
 //! the roxen administration interface when handling module parameters in
 //! developer mode (configured under "User Settings" below the Admin tab).
@@ -17,7 +17,7 @@ constant cvs_version="$Id: common_api.pike,v 1.6 2000/12/02 19:26:11 per Exp $";
 //! the file in the inherit tree. Optional, but convenient, especially if
 //! you use cvs for version control of your code.
 
-LocaleString module_name_locale = LOCALE(1,"Tamaroxchi");
+LocaleString module_name = LOCALE(1,"Tamaroxchi");
 //! The name that will show up in the module listings when adding modules
 //! or viewing the modules of a virtual server. Keep it fairly informative
 //! and unique, since this is the only means for identification of your

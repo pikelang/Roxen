@@ -11,10 +11,10 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: sqldb.pike,v 1.2 2001/01/10 08:57:27 per Exp $";
+constant cvs_version = "$Id: sqldb.pike,v 1.3 2001/01/29 05:40:31 per Exp $";
 constant module_type = MODULE_ZERO;
-LocaleString module_name_locale = LOCALE(1,"DEPRECATED: SQL databases");
-LocaleString module_doc_locale  = 
+LocaleString module_name = LOCALE(1,"DEPRECATED: SQL databases");
+LocaleString module_doc  = 
 LOCALE(2,
 "Use the DBs tab in the configuration interface instead. This module is"
 " only kept for compatibility with old configurations.");

@@ -15,7 +15,7 @@
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_directories",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: directories.pike,v 1.90 2000/12/04 22:40:02 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.91 2001/01/29 05:41:25 per Exp $";
 constant thread_safe = 1;
 
 constant default_template= #"
@@ -106,8 +106,8 @@ string template;
 int override;
 
 constant module_type = MODULE_DIRECTORIES|MODULE_TAG;
-LocaleString module_name_locale = LOCALE(1,"Directory Listings");
-LocaleString module_doc_locale =
+LocaleString module_name = LOCALE(1,"Directory Listings");
+LocaleString module_doc =
   LOCALE(2,"This module pretty prints a list of files.");
 
 void set_template()

@@ -1,5 +1,5 @@
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.3 2000/12/13 06:42:06 per Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.4 2001/01/29 05:40:32 per Exp $";
 #include <module.h>
 inherit "module";
 
@@ -10,9 +10,9 @@ inherit "module";
   
 
 constant module_type = MODULE_TAG;
-LocaleString module_name_locale = _(1,"Page sizer");
+LocaleString module_name = _(1,"Page sizer");
 
-LocaleString module_doc_locale  =
+LocaleString module_doc  =
   _(2,"This module provides the <tt>&lt;page-size&gt;</tt> tag that "
     "calculates the size of a page, including inline images, and gives"
     " estimates of the time it will take to download the page.");
