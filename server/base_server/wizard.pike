@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.85 1999/03/22 16:20:01 grubba Exp $
+/* $Id: wizard.pike,v 1.86 1999/05/07 04:34:20 mast Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -772,7 +772,7 @@ mapping get_actions(object id, string base,string dir, array args)
     master()->set_inhibit_compile_errors((e = ErrorContainer())->got_error);
     err = catch
     {
-      if(act[0]!='#' && act[-1]=='e')
+      if(!(<'#', '_'>)[act[0]] && act[-1]=='e')
       {
 	string sm,rn = (get_wizard(act,dir,@args)->name||act), name;
 	if(sscanf(rn, "%*s:%s", name) != 2) name = rn;
