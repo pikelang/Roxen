@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.18 2004/05/06 15:23:58 grubba Exp $
+// $Id: webdav.pike,v 1.19 2004/05/06 18:25:28 mast Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.18 2004/05/06 15:23:58 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.19 2004/05/06 18:25:28 mast Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -224,7 +224,10 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	return Roxen.http_status(422, "Missing DAV:write.");
       }
       string locktype = "DAV:write";
-      Node owner_node = lock_info_node->get_first_element("DAV:owner", 1);
+
+      array(Node) owner;
+      if (Node owner_node = lock_info_node->get_first_element("DAV:owner", 1))
+	owner = owner_node->get_children();
 
       // Parameters OK, try to create a lock.
 
@@ -236,7 +239,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 			    depth != 0,
 			    lockscope,
 			    "DAV:write",
-			    owner_node->render_xml(),
+			    owner,
 			    id);
       if (mappingp(new_lock)) {
 	// Error
