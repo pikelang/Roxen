@@ -132,6 +132,16 @@ class ConfigurationSettings
 	      "svenska":"Textfärg till konfigurationsgränssnittet."
 	    ]), 0, 0 );
 
+    defvar( "linkcolor", "darkblue", TYPE_STRING,
+	    ([
+	      "english":"Link color",
+	      "svenska":"Länkfärg",
+	    ]),
+	    ([
+	      "english":"Configuration interface text color.",
+	      "svenska":"Textfärg till konfigurationsgränssnittet."
+	    ]), 0, 0 );
+
     defvar( "font", "bastard", TYPE_FONT,
 	    ([
 	      "english":"Font",
