@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.90 2001/05/21 15:39:05 nilsson Exp $
+// $Id: Roxen.pmod,v 1.91 2001/05/22 20:41:37 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1043,7 +1043,7 @@ string make_tag(string name, mapping(string:string) args, void|int xml)
 //! by the mapping `args'. If the flag xml is set, slash character will be
 //! added in the end of the tag. Use RXML.t_xml->format_tag(name, args) instead.
 {
-  return "<"+name+make_tag_attributes(args,xml)+(xml?" /":"")+">";
+  return "<"+name+make_tag_attributes(args)+(xml?" /":"")+">";
 }
 
 string make_container(string name, mapping(string:string) args, string content)
