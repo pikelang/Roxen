@@ -21,7 +21,8 @@ array get_font_list()
       perror("Odd foundry.\n");
     } else {
       res += ({ ({ "-"+fndry+"-"+fmly+"-"+wght+"-"+slant+"-normal"
-		     "-*-%d-*-*-*-"+spc+"-*-"+encoding, fmly+"_"+wght+"_"+slant,
+		     "-*-%d-*-*-*-"+spc+"-*-"+encoding,
+		     replace(fndry+"_"fmly+"-"+wght+"-"+slant," ","_"),
 		     }) });
     }
   }
