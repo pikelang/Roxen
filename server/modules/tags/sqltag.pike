@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.12 1997/10/15 18:50:36 grubba Exp $
+ * $Id: sqltag.pike,v 1.13 1997/10/15 18:59:32 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.12 1997/10/15 18:50:36 grubba Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.13 1997/10/15 18:59:32 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -68,7 +68,7 @@ array register_module()
 	     "</table></ul><p>\n"
 	     "The &lt;sqltable&gt; tag has an additional attribute "
 	     "<b>ascii</b>, which generates a tab-separated table (usefull "
-	     "for eg the &lt;diagram&gt; tag)."
+	     "with eg the &lt;diagram&gt; tag).<p>\n"
 	     "\n"
 	     "<b>NOTE</b>: Specifying passwords in the documents may prove "
 	     "to be a security hole if the module is not loaded for some "
