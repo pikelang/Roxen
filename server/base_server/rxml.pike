@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.57 2000/01/10 10:10:10 nilsson Exp $
+ * $Id: rxml.pike,v 1.58 2000/01/10 18:47:50 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -15,7 +15,6 @@ inherit "roxenlib";
 
 mapping (string:function) real_if_callers;
 array (RoxenModule) parse_modules = ({  });
-string date_doc=#string "../modules/tags/doc/date_doc";
 
 string rxml_error(string tag, string error, RequestID id) {
   return (id->misc->debug?sprintf("(%s: %s)",capitalize(tag),error):"")+"<false>";
@@ -27,12 +26,6 @@ string parse_doc(string doc, string tag)
 		 ({"&lt;", "&gt;", tag, 
 		   String.implode_nicely(sort(indices(roxen->languages)), 
 					 "and")}));
-}
-
-string handle_help(string file, string tag, mapping args)
-{
-  return parse_doc(replace(Stdio.read_bytes(file),
-			   "<date-attributes>",date_doc),tag);
 }
 
 // A note on tag overriding: It's possible for old style tags to
@@ -127,13 +120,13 @@ array|string call_tag(RXML.PHtml parser, mapping args, string|function rf,
 {
   string tag = parser->tag_name();
   id->misc->line = (string)parser->at_line();
-  if(args->help && Stdio.file_size("modules/tags/doc/"+tag) > 0)
-  {
-    TRACE_ENTER("tag &lt;"+tag+" help&gt", rf);
-    string h = handle_help("modules/tags/doc/"+tag, tag, args);
-    TRACE_LEAVE("");
-    return h;
-  }
+  //  if(args->help && Stdio.file_size("modules/tags/doc/"+tag) > 0)
+  //  {
+  //    TRACE_ENTER("tag &lt;"+tag+" help&gt", rf);
+  //    string h = handle_help("modules/tags/doc/"+tag, tag, args);
+  //    TRACE_LEAVE("");
+  //    return h;
+  //  }
   if(stringp(rf)) return rf;
   TRACE_ENTER("tag &lt;" + tag + "&gt;", rf);
 #ifdef MODULE_LEVEL_SECURITY
@@ -161,13 +154,13 @@ array(string)|string call_container(RXML.PHtml parser, mapping args,
 {
   string tag = parser->tag_name();
   id->misc->line = (string)parser->at_line();
-  if(args->help && Stdio.file_size("modules/tags/doc/"+tag) > 0)
-  {
-    TRACE_ENTER("container &lt;"+tag+" help&gt", rf);
-    string h = handle_help("modules/tags/doc/"+tag, tag, args)+contents;
-    TRACE_LEAVE("");
-    return h;
-  }
+  //  if(args->help && Stdio.file_size("modules/tags/doc/"+tag) > 0)
+  //  {
+  //    TRACE_ENTER("container &lt;"+tag+" help&gt", rf);
+  //    string h = handle_help("modules/tags/doc/"+tag, tag, args)+contents;
+  //    TRACE_LEAVE("");
+  //    return h;
+  //  }
   if(stringp(rf)) return rf;
   TRACE_ENTER("container &lt;"+tag+"&gt", rf);
   if(args->preparse) contents = parse_rxml(contents, id);
@@ -437,12 +430,12 @@ string tag_help(string t, mapping args, RequestID id)
   } else {
     help_for = replace(help_for, ({"/", "\\"}), ({"",""}));
 
-    if(Stdio.file_size("modules/tags/doc/"+help_for) > 0) {
-      string h = handle_help("modules/tags/doc/"+help_for, help_for, args);
-      return h;
-    } else {
-      return "<h3>No help available for "+help_for+".</h3>";
-    }
+    //    if(Stdio.file_size("modules/tags/doc/"+help_for) > 0) {
+    //      string h = handle_help("modules/tags/doc/"+help_for, help_for, args);
+    //      return h;
+    //    } else {
+    return "<h3>No help available for "+help_for+".</h3>";
+    //    }
   }
 }
 
