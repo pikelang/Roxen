@@ -1,9 +1,13 @@
-/* $Id: persistent.pike,v 1.32 1999/06/25 21:01:18 peter Exp $ */
+/* $Id: persistent.pike,v 1.33 1999/07/10 21:30:56 peter Exp $ */
 
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
 * Variables are saved between restarts.                       *
 '*************************************************************/
+
+//Define this to only save the database in bursts instead of every time
+//something is changed.
+#undef SAVE_IO
 
 static void _nosave(){}
 static function nosave = _nosave;
@@ -38,7 +42,7 @@ static int ___destructed = 0;
 
 public void begone()
 {
-  remove_call_out(really_save);
+  remove_call_out(really_save);   //Remove SAVE_IO call_out
   ___destructed=1;
   if(__id) open_db(__id[0])->delete(__id[1]);
   __id=0;
@@ -48,7 +52,7 @@ public void begone()
 
 void destroy()
 {
-  remove_call_out(really_save);
+  remove_call_out(really_save);   //Remove SAVE_IO call_out
 }
 
 static void compat_persist()
@@ -115,7 +119,11 @@ public void save()
   if(nosave()) return;
   if(!___destructed)
   {
+#ifdef SAVE_IO
     if(zero_type(find_call_out(really_save)))
       call_out(really_save,10);
+#else
+    really_save();
+#endif
   }
 }
