@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.10 2001/01/30 12:56:00 hop Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.11 2001/03/16 15:09:07 hop Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -94,7 +94,7 @@ constant tagdoc=([
 
 // Internal helpers
 
-mapping(string:array(mixed))|int read_attrs(string attrs, int op) {
+mapping(string:array(mixed))|int read_attrs(string attrs, string op) {
 // from string: (attname1:'val1','val2'...)(attname2:'val1',...) to
 // ADD: (["attname1":({"val1","val2"...}), ...
 // REPLACE|MODIFY: (["attname1":({op, "val1","val2"...}), ...
@@ -104,10 +104,15 @@ mapping(string:array(mixed))|int read_attrs(string attrs, int op) {
   array(mixed) tmpvals, tmparr;
   string aval;
   mapping(string:array(mixed)) rv;
-  int vcnt, ix, cnt = 0, flg = (op > 0);;
+  int vcnt, ix, cnt = 0, flg = (op == "replace" || op == "modify"), opval;
 
   if(flg)
-    flg = 1;
+    switch(op) {
+	case "replace": opval = 2;
+			break;
+	case "modify":  opval = 0; // equal to ADD attribute
+			break;
+    }
   if (sizeof(attrs / "(") < 2)
     return(0);
   atypes = allocate(sizeof(attrs / "(")-1);
@@ -126,7 +131,7 @@ mapping(string:array(mixed))|int read_attrs(string attrs, int op) {
 	tmpvals[ix+flg] = (sscanf(tmparr[ix], "'%s'", aval))? aval : "";
       }
       if(flg)
-	tmpvals[0] = op;
+	tmpvals[0] = opval;
       avals[cnt] = tmpvals;
       cnt++;
     } // if
@@ -196,7 +201,7 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
 
 
   if(op != "delete" && op != "search") {
-    attrvals = read_attrs(args->attr, (args->op == "replace") ? 2 : 0); // ldap->modify with flag 'replace'
+    attrvals = read_attrs(args->attr, args->op);
     if(intp(attrvals))
       RXML.run_error("Couldn't parse attribute values.");
   }
@@ -204,8 +209,8 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
   int ver = (int)(args->version)||query("ldap_ver");
   if(ver == 2 || ver == 3)
     con->ldap_version = ver;
-  if(con->ldap_version == 2)
-    error = catch(con->bind());
+  if(con->ldap_version == 2 || sizeof(pass))
+    error = catch(sizeof(pass) ? con->bind(args->dn, pass) : con->bind());
   if(error)
     RXML.run_error("Couldn't bind to LDAP server. "+Roxen.html_encode_string(error[0]));
 
@@ -225,6 +230,11 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
 
     case "delete":
 	error = catch(result = (con->delete(args->dn)));
+	break;
+
+    case "modify":
+    case "replace":
+	error = catch(result = (con->modify(args->dn, attrvals)));
 	break;
 
   } //switch
