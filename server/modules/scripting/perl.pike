@@ -2,19 +2,17 @@
 inherit "module";
 inherit "roxenlib";
 
-// Experimental Perl script and tag handler module.
+// Perl script and tag handler module.
 // by Leif Stensson.
 
 string cvs_version =
-       "$Id: perl.pike,v 2.15 2000/11/09 18:19:11 kuntri Exp $";
+       "$Id: perl.pike,v 2.16 2000/12/18 14:08:40 leif Exp $";
 
-constant module_type = MODULE_EXPERIMENTAL |
-            MODULE_FILE_EXTENSION | MODULE_TAG;
+constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
 constant module_name = "Perl support";
 constant module_doc =
-   "EXPERIMENTAL MODULE! This module provides a faster way of running "
-   "Perl scripts with Roxen. "
+   "This module provides a faster way of running Perl scripts with Roxen. "
    "The module also optionally provides a &lt;perl&gt;..&lt;/perl&gt; "
    "container to run Perl code from inside RXML pages."; 
 
@@ -64,8 +62,16 @@ void create()
   defvar("rxmltag", 0, "RXML-parse tag results", TYPE_FLAG,
     "Allow RXML parsing of tag results.");
 
-  defvar("bindir", "perl/bin", "Perl Helper Binaries", TYPE_DIR,
-    "Perl helper binaries directory.");
+  defvar("helper",
+#if constant(system.NetWkstaUserEnum)
+  // NT
+     "perl/bin/ntperl",
+#else
+  // Assume Unix
+     "perl/bin/perlrun",
+#endif
+       "Perl Helper", TYPE_DIR,
+    "Path to the Perl helper program used to start Perl subprocesses.");
 
   defvar("parallel", 2, "Parallel scripts", TYPE_MULTIPLE_INT,
     "Number of scripts/tags that may be evaluated in parallel. Don't set "
@@ -96,8 +102,8 @@ string status()
 #endif
 
   s += "<b>Helper script</b>: ";
-  if (Stdio.File(QUERY(bindir)+"/perlrun", "r"))
-       s += "found: " + QUERY(bindir)+"/perlrun <br />\n";
+  if (Stdio.File(QUERY(helper), "r"))
+       s += "found: " + QUERY(helper)+" <br />\n";
   else
        s += "not found.<br />\n";
 
@@ -108,7 +114,7 @@ string status()
 }
 
 static object gethandler()
-{ return ExtScript.getscripthandler(QUERY(bindir)+"/perlrun",
+{ return ExtScript.getscripthandler(QUERY(helper),
                                     QUERY(parallel), handler_settings);
 }
 
