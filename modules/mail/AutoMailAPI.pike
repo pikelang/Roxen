@@ -1,5 +1,5 @@
 // AutoSite Mail API
-// $Id: AutoMailAPI.pike,v 1.6 1998/07/23 11:28:49 leif Exp $
+// $Id: AutoMailAPI.pike,v 1.7 1998/07/25 11:38:44 leif Exp $
 // Leif Stensson, July 1998.
 
 #include <module.h>
@@ -23,7 +23,8 @@ void create()
 }
 
 string status()
-{ string s = "<B>Database</B>: " + db_status;
+{ string s = "Module version: $Revision: 1.7 $ $Date: 1998/07/25 11:38:44 $ $Author: leif $<BR>\n";
+  s += "<B>Database</B>: " + db_status;
   if (last_insert_id)
   { s += "<BR>\n<B>ID of most recent insert</B>: " + last_insert_id;
   }
@@ -40,7 +41,7 @@ array register_module()
 mixed get_mail_contents(int mail_id)
 { if (!database) return -1;
   object result = database->big_query(
-        "SELECT contents FROM mail WHERE mail_id="+mail_id);
+        "SELECT contents FROM messages WHERE id="+mail_id);
   array row = result->fetch_row();
   if (!row) return 0;
   return row[0];
@@ -49,7 +50,7 @@ mixed get_mail_contents(int mail_id)
 mixed get_mail_header(int mail_id)
 { if (!database) return -1;
   object result = database->big_query(
-        "SELECT header FROM mail WHERE mail_id="+mail_id);
+        "SELECT header FROM messages WHERE id="+mail_id);
   array row = result->fetch_row();
   if (!row) return 0;
   return row[0];
@@ -62,8 +63,8 @@ int new_mail(string from, string header, string contents)
   // or is very large. A better way of doing this is desirable.
 
   database->big_query("INSERT INTO messages (sender,header,contents) "
-                    + "VALUES (:from,:header,:contents)",
-                      ([ "from": from,
+                    + "VALUES (:sender,:header,:contents)",
+                      ([ "sender": from,
                          "header": header,
                          "contents": contents
                        ])
@@ -80,13 +81,13 @@ int find_user(string user_address)
 { array a = user_address / "@";
   if (sizeof(a[0] / " ") != 1) return -1; // space not allowed in names
   if (!database) return -1;
-  if (sizeof(a) == 2)
+  if (a[0] != "")
   { string user_name = a[0];
-    string mail_addr = a[1];
+    string mail_addr = sizeof(a)>1 ? a[1] : "";
     object result =
       database->big_query("SELECT id,username,aliasname FROM users "
-                      "WHERE username=" + user_name +
-                      "OR aliasname=" + user_name);
+                      "WHERE username='" + user_name + "' "
+                      "OR aliasname='" + user_name + "'");
     array  row;
     int    aliasmatch = -1;
     while (row = result->fetch_row())
@@ -142,7 +143,7 @@ mixed get_new_mail(int user_id, void|string folder)
 //
 { if (!database) return -1;
 
-  string request = "SELECT mail_id,from,subject,date FROM mailboxes WHERE ";
+  string request = "SELECT mail_id,from_addr,subject,date FROM mailboxes WHERE ";
   object result;
 
   if (folder) request += "folder='" + folder + "' AND ";
@@ -181,11 +182,11 @@ mixed get_all_mail_in_folder(int user_id, void|string folder)
 
   if (folder && folder != "")
     return mailbox_entries(database->big_query(
-      "SELECT mail_id,from,subject,date"
+      "SELECT mail_id,from_addr,subject,date"
       " WHERE folder='" + folder + "' AND user_id=" + user_id));
   else  
     return mailbox_entries(database->big_query(
-      "SELECT mail_id,from,subject,date"
+      "SELECT mail_id,from_addr,subject,date"
       " WHERE user_id=" + user_id));
 }
 
