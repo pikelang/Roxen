@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.208 2001/07/20 00:36:18 mast Exp $
+// $Id: module.pmod,v 1.209 2001/07/20 06:34:31 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -401,10 +401,8 @@ class Tag
     if (mixed err = catch {						\
       _res = _frame->_eval (_ctx, _parser, _type);			\
       if (PCode p_code = _parser->p_code)				\
-	p_code->add_frame (_frame, _ctx);				\
-    }) {								\
-      if (PCode p_code = _parser->p_code)				\
-	p_code->add_frame (_frame, _ctx);				\
+	p_code->add_frame (_ctx, _frame, _res);				\
+    })									\
       if (objectp (err) && ([object] err)->thrown_at_unwind) {		\
 	UNWIND_STATE ustate = _ctx->unwind_state;			\
 	if (!ustate) ustate = _ctx->unwind_state = ([]);		\
@@ -418,11 +416,10 @@ class Tag
 	throw (_parser);						\
       }									\
       else {								\
-	/* Will rethrow unknown errors. */				\
-	_ctx->handle_exception (err, _parser);				\
-	_res = nil;							\
+	if (PCode p_code = _parser->p_code)				\
+	  p_code->add_frame (_ctx, _frame, PCode);			\
+	throw (err);							\
       }									\
-    }									\
   } while (0)
 
   final mixed handle_tag (TagSetParser parser, mapping(string:string) args,
@@ -1296,7 +1293,7 @@ class Context
   //! Current evaluation recursion depth. This might be more than the
   //! number of frames in the @[frame] linked chain.
 
-  int max_frame_depth = 100;
+  constant max_frame_depth = 100;
   //! Maximum allowed evaluation recursion depth.
 
   RequestID id;
@@ -1341,7 +1338,7 @@ class Context
   //! default scope is chosen as appropriate if var cannot be split,
   //! unless @[scope_name] is a nonzero integer in which case it's
   //! returned in the scope position in the array (useful to detect
-  //! whether @[var] actually was splitted or not).
+  //! whether @[var] actually was split or not).
   //!
   //! @tt{".."@} in the var string quotes a literal @tt{"."@}, e.g.
   //! @tt{"yow...cons..yet"@} is separated into @tt{"yow."@} and
@@ -1438,12 +1435,22 @@ class Context
       if (arrayp (var))
 	if (sizeof (var) > 1) {
 	  index = var[-1];
-	  var = var[..sizeof (var) - 1];
-	  vars = rxml_index (vars, var, scope_name, this_object());
-	  scope_name += "." + (array(string)) var * ".";
+	  array(string|int) path = var[..sizeof (var) - 1];
+	  vars = rxml_index (vars, path, scope_name, this_object());
+	  scope_name += "." + (array(string)) path * ".";
+	  if (mapping(string:mixed) var_chg = misc->variable_changes)
+	    var_chg[encode_value_canonic (({scope_name}) + var, val)] = val;
 	}
-	else index = var[0];
-      else index = var;
+	else {
+	  index = var[0];
+	  if (mapping(string:mixed) var_chg = misc->variable_changes)
+	    var_chg[encode_value_canonic (({scope_name, index}))] = val;
+	}
+      else {
+	index = var;
+	if (mapping(string:mixed) var_chg = misc->variable_changes)
+	  var_chg[encode_value_canonic (({scope_name, index}))] = val;
+      }
 
       if (objectp (vars) && vars->`[]=)
 	return ([object(Scope)] vars)->`[]= (index, val, this_object(), scope_name);
@@ -1569,6 +1576,10 @@ class Context
   //! Adds or replaces the specified scope at the global level. A
   //! scope can be a mapping or an @[RXML.Scope] object. A global
   //! @tt{"_"@} scope may also be defined this way.
+  //!
+  //! @note
+  //! Does not track variable changes for caching purposes like
+  //! @[set_var] does.
   {
     if (scopes[scope_name])
       if (scope_name == "_") {
@@ -1591,6 +1602,10 @@ class Context
   int extend_scope (string scope_name, SCOPE_TYPE vars)
   //! Adds or extends the specified scope at the global level.
   //! Returns 1 on success and 0 on failure.
+  //!
+  //! @note
+  //! Does not track variable changes for caching purposes like
+  //! @[set_var] does.
   {
     if (scopes[scope_name]) {
       SCOPE_TYPE oldvars;
@@ -1623,6 +1638,10 @@ class Context
 
   void remove_scope (string scope_name)
   //! Removes the named scope from the global level, if it exists.
+  //!
+  //! @note
+  //! Does not track variable changes for caching purposes like
+  //! @[set_var] does.
   {
 #ifdef MODULE_DEBUG
     if (scope_name == "_") fatal_error ("Cannot remove current scope.\n");
@@ -1658,7 +1677,7 @@ class Context
   {
 #ifdef MODULE_DEBUG
     if (tag->plugin_name)
-      fatal_error ("Can't currently handle adding of plugin tags at runtime.\n");
+      fatal_error ("Cannot handle plugin tags added at runtime.\n");
 #endif
     if (!new_runtime_tags) new_runtime_tags = NewRuntimeTags();
     new_runtime_tags->add_tag (tag);
@@ -1710,7 +1729,7 @@ class Context
 	else
 	  if (err->target) {
 	    ctx->frame = err->cur_frame;
-	    err = catch (parse_error ("There is no surround frame %s.\n",
+	    err = catch (parse_error ("There is no surrounding frame %s.\n",
 				      stringp (err->target) ?
 				      sprintf ("with scope %O", err->target) :
 				      sprintf ("%O", err->target)));
@@ -1738,8 +1757,10 @@ class Context
 	  else
 	    msg = err->msg;
 	  if (evaluator->report_error (msg)) {
-	    if (compile_error && evaluator->p_code)
-	      evaluator->p_code->add (CompiledError (err));
+	    if (compile_error && evaluator->p_code) {
+	      CompiledError comp_err = CompiledError (err);
+	      evaluator->p_code->add (RXML_CONTEXT, comp_err, comp_err);
+	    }
 	    return;
 	  }
 	}
@@ -1750,17 +1771,22 @@ class Context
     throw_fatal (err);
   }
 
-  final array(mixed|PCode) eval_and_compile (Type type, string to_parse)
+  final array(mixed|PCode) eval_and_compile (Type type, string to_parse,
+					     void|int stale_safe)
   //! Parses and evaluates @[to_parse] with @[type] in this context.
   //! At the same time, p-code is collected to reevaluate it later. An
   //! array is returned which contains the result in the first element
-  //! and the generated @[RXML.PCode] object in the second.
+  //! and the generated @[RXML.PCode] object in the second. If
+  //! @[stale_safe] is nonzero, the p-code object will be an instance
+  //! of @[RXML.RenewablePCode] instead, which never fails due to
+  //! being stale.
   {
     mixed res;
     PCode p_code;
     int orig_make_p_code = make_p_code;
-    init_make_p_code();
-    Parser parser = type->get_parser (this_object(), tag_set, 0, 1);
+    make_p_code = 1;
+    Parser parser = type->get_parser (
+      this_object(), tag_set, 0, stale_safe ? RenewablePCode (0) : PCode (0));
     mixed err = catch {
       parser->write_end (to_parse);
       res = parser->eval();
@@ -1783,8 +1809,8 @@ class Context
 #ifdef MODULE_DEBUG
     if (in_use || frame) fatal_error ("Context already in use.\n");
 #endif
-    if ((make_p_code = _make_p_code) > 0) init_make_p_code();
-    return top_level_type->get_parser (this_object(), tag_set, 0, _make_p_code);
+    return top_level_type->get_parser (this_object(), tag_set, 0,
+				       make_p_code = _make_p_code);
   }
 
 #ifdef DEBUG
@@ -1867,12 +1893,6 @@ class Context
   PikeCompile p_code_comp;
   // The PikeCompile object for collecting any produce Pike byte code
   // during p-code compilation.
-
-  final void init_make_p_code()
-  {
-    make_p_code = 1;
-    if (!p_code_comp) p_code_comp = PikeCompile();
-  }
 
   static void create (void|TagSet _tag_set, void|RequestID _id)
   // Normally TagSet.`() should be used instead of this.
@@ -2063,6 +2083,23 @@ class Backtrace
     }
   }
 
+  mixed `[]= (int i, mixed val)
+  {
+    if (i == 0 && stringp (val)) {
+      // Try to handle additional info being set in the error message.
+      // This is very icky. The exception interface could be better.. :P
+      string oldmsg = describe_rxml_backtrace();
+      if (has_prefix (val, oldmsg))
+	msg += val[sizeof (oldmsg)..];
+      else if (has_suffix (val, oldmsg))
+	msg = val[..sizeof (val) - sizeof (oldmsg) - 1] + msg;
+      else
+	msg = val;
+      return val;
+    }
+    error ("Cannot set index %O to %O.\n", i, val);
+  }
+
   string _sprintf() {return "RXML.Backtrace(" + (type || "") + ")";}
 }
 
@@ -2165,17 +2202,6 @@ constant FLAG_POSTPARSE		= 0x00000080;
 
 // Flags tested in the Frame object:
 
-// constant FLAG_PARENT_SCOPE	= 0x00000100;
-//
-// This feature proved unnecessary and no longer exists.
-//
-// If set, exec arrays will be interpreted in the scope of the parent
-// tag, rather than in the current one.
-
-constant FLAG_NO_IMPLICIT_ARGS	= 0x00000200;
-// If set, the parser won't apply any implicit arguments. FIXME: Not
-// implemented.
-
 constant FLAG_STREAM_RESULT	= 0x00000400;
 //! If set, the @[do_process] function will be called repeatedly until
 //! it returns 0 or no more content is wanted.
@@ -2237,6 +2263,44 @@ constant FLAG_COMPILE_RESULT	= 0x00010000;
 //! destructively changed to contain the p-code. This affects strings
 //! if the result type has a parser.
 
+constant FLAG_GET_RAW_CONTENT	= 0x00020000;
+//! Puts the unparsed content of the tag into the
+//! @[RXML.Frame.content] variable when @[RXML.Frame.do_enter] is
+//! called. It's only available when the tag is actually evaluated
+//! from source, however (as opposed to @[RXML.Frame.raw_tag_text]); a
+//! cached frame won't receive it, but it will otoh contain the state
+//! from an earlier evaluation from source (see @[RXML.Frame.save] and
+//! @[RXML.Frame.restore]).
+
+constant FLAG_GET_EVALED_CONTENT = 0x00040000;
+//! When the content is evaluated, the frame will receive the result
+//! of the evaluation as p-code in @[RXML.Frame.evaled_content], with
+//! the exception of any nested tags which got
+//! @[FLAG_DONT_CACHE_RESULT] set.
+
+constant FLAG_DONT_CACHE_RESULT	= 0x00080000;
+//! Keep this frame unevaluated in the p-code produced for a
+//! surrounding frame with @[FLAG_GET_EVALED_CONTENT]. That implies
+//! that all other surrounding frames also remain unevaluated, and
+//! this flag is therefore automatically propagated by the parser into
+//! surrounding frames. The flag is tested after the first evaluation
+//! of the frame has finished.
+
+// constant FLAG_PARENT_SCOPE	= 0x00000100;
+//
+// If set, exec arrays will be interpreted in the scope of the parent
+// tag, rather than in the current one.
+//
+// This feature proved unnecessary and no longer exists.
+
+// constant FLAG_NO_IMPLICIT_ARGS = 0x00000200;
+// 
+// If set, the parser won't apply any implicit arguments.
+//
+// Not implemented since there has been no need for it. The only
+// implicit argument is "help" (see also MAGIC_HELP_ARG), and there
+// probably won't be any more.
+
 class Frame
 //! A tag instance. A new frame is normally created for every parsed
 //! tag in the source document. It might be reused both when the
@@ -2272,14 +2336,29 @@ class Frame
   //! by p-code.
 
   mapping(string:mixed)|EVAL_ARGS_FUNC args;
-  //! The (parsed and evaluated) arguments passed to the tag. Set
-  //! every time the frame is executed, before any frame callbacks are
-  //! called (unless the frame was made with the finished args mapping
-  //! directly, e.g. by @[RXML.make_tag]). Not set for processing
-  //! instruction (@[FLAG_PROC_INSTR]) tags.
+  //! A mapping with the (parsed and evaluated) arguments passed to
+  //! the tag. Set every time the frame is executed, before any frame
+  //! callbacks are called (unless the frame was made with the
+  //! finished args mapping directly, e.g. by @[RXML.make_tag]). Not
+  //! set for processing instruction (@[FLAG_PROC_INSTR]) tags.
 
   Type content_type;
-  //! The type of the content.
+  //! The type of the content. It may be changed in @[do_enter] to
+  //! affect how the content will be parsed.
+  //!
+  //! @note
+  //! This variable is assumed to be static in the sense that its
+  //! value does not depend on any information that's known only at
+  //! runtime. Practically that means that the value is assumed to
+  //! never change if the frame is compiled into p-code.
+  //!
+  //! Note that the assumption can't always be guaranteed. E.g. if the
+  //! content type can be set by an @[RXML.Type] argument to the tag,
+  //! it's always possible that it's set through a splice argument
+  //! that might change at run time. Since that seems only like a
+  //! theoretical situation, and since solving it would incur a
+  //! runtime cost, it's been left as a "known issue" for the time
+  //! being.
 
   mixed content;
   //! The content, if any. Set before @[do_process] and @[do_return]
@@ -2298,8 +2377,12 @@ class Frame
   //! is converted before being inserted into the parent content if
   //! necessary. An exception (which this frame can't catch) is thrown
   //! if conversion is impossible.
+  //!
+  //! @note
+  //! This variable is assumed to be static; see the note for
+  //! @[content_type] for further details.
 
-  mixed result = nil;
+  mixed result;
   //! The result, which is assumed to be either @[RXML.nil] or a valid
   //! value according to result_type. The exec arrays returned by e.g.
   //! @[do_return] changes this. It may also be set directly.
@@ -2314,6 +2397,14 @@ class Frame
   //!
   //! Set this to introduce a new variable scope that will be active
   //! during parsing of the content and return values.
+  //!
+  //! @note
+  //! A frame may destructively change or replace its own @[vars]
+  //! mapping to make changes in its scope. Changes from any other
+  //! place should go through @[RXML.Context.set_var] (or its
+  //! alternatives @[RXML.Context.user_set_var], @[RXML.set_var],
+  //! @[set_var] etc) so that the change is recorded properly in
+  //! caches etc.
 
   //! @decl optional string scope_name;
   //!
@@ -2340,11 +2431,8 @@ class Frame
   //! parser. The tags are not inherited by subparsers.
   //!
   //! @note
-  //! This variable may be set in the @[do_enter] callback, but it's
-  //! assumed to be static, i.e. its value should not depend on any
-  //! information that's known only at runtime. Practically that means
-  //! that the value is assumed to never change if the frame is reused
-  //! by p-code.
+  //! This variable is assumed to be static; see the note for
+  //! @[additional_tags] for further details.
 
   //! @decl optional Frame parent_frame;
   //!
@@ -2503,9 +2591,9 @@ class Frame
   //! had at the call to @[save].
   //!
   //! @note
-  //! A frame might be reused without a prior call to this function,
-  //! if the same frame object has been cached since the previous
-  //! occasion.
+  //! A frame might be reevaluated without a prior call to this
+  //! function, if it's the same frame object since the call to
+  //! @[save].
   //!
   //! @note
   //! This function is used to decode dumped p-code that's read from
@@ -2516,12 +2604,12 @@ class Frame
   //! It must never restore an invalid state which might cause errors
   //! or invalid results in later calls to the @tt{do_*@} functions.
 
-  //! @decl PCode result_p_code;
+  //! @decl PCode evaled_content;
   //!
-  //! Set this to an @[RXML.PCode] object to make this tag a p-code
-  //! cache frame. When the content is evaluated, the p-code object
-  //! will receive the result of the evaluation, with the exception of
-  //! any nested p-code cache frames which remains unevaluated.
+  //! Must exist if @[FLAG_GET_EVALED_CONTENT] is set. It will be set
+  //! to a p-code object containing the (mostly) evaluated content (in
+  //! each iteration). This variable is not automatically saved and
+  //! restored (see @[save] and @[restore]).
 
   // Services:
 
@@ -2678,7 +2766,7 @@ class Frame
 
     else {
       CHECK_RAW_TEXT;
-      // Format a new tag, as like the original as possible.
+      // Format a new tag, as close to the original as possible.
 
       if (flags & FLAG_PROC_INSTR) {
 	if (content) {
@@ -2812,7 +2900,6 @@ class Frame
 	      {
 		PCode p_code = 0;
 		if ((ctx->make_p_code = flags & FLAG_COMPILE_RESULT)) {
-		  ctx->init_make_p_code();
 		  p_code = RenewablePCode (0);
 		  p_code->source = [string] elem;
 		}
@@ -3023,9 +3110,9 @@ class Frame
   // in args. Might be destructive on raw_args.
   {
     mixed err = catch {
-      if (ctx->frame_depth >= ctx->max_frame_depth)
+      if (ctx->frame_depth >= Context.max_frame_depth)
 	_run_error ("Too deep recursion -- exceeding %d nested tags.\n",
-		    ctx->max_frame_depth);
+		    Context.max_frame_depth);
 
       EVAL_ARGS_FUNC|string func;
 
@@ -3248,7 +3335,7 @@ class Frame
     int debug_iter = 1;
 #endif
     object(Parser)|object(PCode) subevaler;
-    mixed piece = nil;
+    mixed piece;
     array exec = 0;
     TagSet orig_tag_set;	// Flags that we added additional_tags to ctx->tag_set.
     //ctx->new_runtime_tags
@@ -3323,25 +3410,25 @@ class Frame
 	    if (content && !stringp (content))
 	      fatal_error ("content is not a string in unparsed frame: %O.\n", content);
 #endif
-	    if (flags & FLAG_COMPILE_INPUT || ctx->make_p_code < 0)
-	      ctx->init_make_p_code();
 	    THIS_TAG_TOP_DEBUG ("Evaluating%s unparsed\n",
 			       ctx->make_p_code ? " and compiling" : "");
 	    if (PCode p_code = ctx->make_p_code &&
-		(evaler->is_RXML_PCode ? evaler : evaler->p_code))
+		(evaler->is_RXML_PCode ? evaler : evaler->p_code)) {
 	      // FIXME: Perhaps make a new PCode object if the evaler
 	      // doesn't provide one?
+	      if (!ctx->p_code_comp) ctx->p_code_comp = PikeCompile();
 	      in_args = _prepare (ctx, type, args && args + ([]), p_code);
+	    }
 	    else
 	      _prepare (ctx, type, args && args + ([]), 0);
 	    in_content = content;
-	    content = nil;
 	  }
 	  else {
 	    THIS_TAG_TOP_DEBUG ("Evaluating with constant arguments and content\n");
 	    _prepare (ctx, type, 0, 0);
 	  }
 
+	  result = piece = nil;
 	  eval_state = EVSTAT_BEGIN;
 	}
 
@@ -3402,8 +3489,9 @@ class Frame
 	      THIS_TAG_DEBUG_ENTER_SCOPE (ctx, this_object());
 	      ENTER_SCOPE (ctx, this_object());
 	    }
+	    if (flags & FLAG_UNPARSED) content = nil;
 	    eval_state = EVSTAT_ENTERED;
-	    /* Fall through. */
+	    // Fall through.
 
 	  case EVSTAT_ENTERED:
 	  case EVSTAT_LAST_ITER:
@@ -3442,8 +3530,13 @@ class Frame
 		  finished++;
 		  if (subevaler)
 		    finished = 0; // Continuing an unwound subevaler.
-		  else if (!in_content || in_content == "")
+		  else if (!in_content || in_content == "") {
+		    if (flags & FLAG_GET_EVALED_CONTENT) {
+		      this_object()->evaled_content = PCode (content_type);
+		      this_object()->evaled_content->finish();
+		    }
 		    break eval_content; // No content to handle.
+		  }
 		  else if (stringp (in_content)) {
 		    if (flags & FLAG_EMPTY_ELEMENT)
 		      parse_error ("This tag doesn't handle content.\n");
@@ -3451,31 +3544,44 @@ class Frame
 		      if (finished > 1)
 			// Looped once. Always compile since it's
 			// likely we'll loop again.
-			ctx->init_make_p_code();
-		      if (this_object()->local_tags) {
-			subevaler = content_type->get_parser (
-			  ctx, [object(TagSet)] this_object()->local_tags,
-			  evaler, ctx->make_p_code);
-			subevaler->_local_tag_set = 1;
-			THIS_TAG_DEBUG ("Iter[%d]: Parsing%s content %s "
-					"with %O from local_tags\n", debug_iter,
-					ctx->make_p_code ? " and compiling" : "",
-					utils->format_short (in_content), subevaler);
-		      }
-		      else {
-			subevaler = content_type->get_parser (
-			  ctx, ctx->tag_set, evaler, ctx->make_p_code);
-#ifdef DEBUG
-			if (content_type->parser_prog != PNone)
+			ctx->make_p_code = 1;
+		      {
+			PCode p_code = ctx->make_p_code && PCode (0);
+			if (flags & FLAG_GET_EVALED_CONTENT) {
+			  PCode evaled_content =
+			    this_object()->evaled_content = PCode (0, 0, ctx);
+			  if (p_code) p_code->p_code = evaled_content;
+			  else p_code = evaled_content;
+			}
+			if (this_object()->local_tags) {
+			  subevaler = content_type->get_parser (
+			    ctx, [object(TagSet)] this_object()->local_tags,
+			    evaler, p_code);
+			  subevaler->_local_tag_set = 1;
 			  THIS_TAG_DEBUG ("Iter[%d]: Parsing%s content %s "
-					  "with %O\n", debug_iter,
+					  "with %O from local_tags\n", debug_iter,
 					  ctx->make_p_code ? " and compiling" : "",
 					  utils->format_short (in_content), subevaler);
+			}
+			else {
+			  subevaler = content_type->get_parser (
+			    ctx, ctx->tag_set, evaler, p_code);
+#ifdef DEBUG
+			  if (content_type->parser_prog != PNone)
+			    THIS_TAG_DEBUG ("Iter[%d]: Parsing%s content %s "
+					    "with %O\n", debug_iter,
+					    ctx->make_p_code ? " and compiling" : "",
+					    utils->format_short (in_content), subevaler);
 #endif
-		      }
-		      if (evaler->recover_errors && !(flags & FLAG_DONT_RECOVER)) {
-			subevaler->recover_errors = 1;
-			if (PCode p_code = subevaler->p_code) p_code->recover_errors = 1;
+			}
+			if (evaler->recover_errors && !(flags & FLAG_DONT_RECOVER)) {
+			  subevaler->recover_errors = 1;
+			  if (p_code) {
+			    p_code->recover_errors = 1;
+			    if ((p_code = p_code->p_code))
+			      p_code->recover_errors = 1;
+			  }
+			}
 		      }
 		      subevaler->finish (in_content); // Might unwind.
 		      finished = 1;
@@ -3485,6 +3591,9 @@ class Frame
 		    THIS_TAG_DEBUG ("Iter[%d]: Evaluating compiled content\n",
 				    debug_iter);
 		    subevaler = in_content;
+		    if (flags & FLAG_GET_EVALED_CONTENT)
+		      subevaler->p_code = this_object()->evaled_content =
+			PCode (content_type, subevaler->tag_set, ctx);
 		  }
 
 		eval_sub:
@@ -3537,7 +3646,6 @@ class Frame
 		      }
 		    }
 
-		    if (subevaler->p_code) ctx->init_make_p_code();
 		    subevaler->finish(); // Might unwind.
 		    finished = 1;
 		  } while (1); // Only loops when an unwound subevaler has been recovered.
@@ -3557,7 +3665,7 @@ class Frame
 	      }
 	    } while (eval_state != EVSTAT_LAST_ITER);
 	    eval_state = EVSTAT_ITER_DONE;
-	    /* Fall through. */
+	    // Fall through.
 
 	  case EVSTAT_ITER_DONE:
 	    if (array|function(RequestID,void|PCode:array) do_return =
@@ -3616,6 +3724,8 @@ class Frame
 	  if (in_content) content = in_content;				\
 	  ctx->make_p_code = orig_make_p_code;				\
 	  if (orig_tag_set) ctx->tag_set = orig_tag_set;		\
+	  if (flags & FLAG_DONT_CACHE_RESULT)				\
+	    up->flags |= FLAG_DONT_CACHE_RESULT;			\
 	  ctx->frame = up;						\
 	  FRAME_DEPTH_MSG ("%*s%O frame_depth decrease line %d\n",	\
 			   ctx->frame_depth, "", this_object(),		\
@@ -3625,7 +3735,9 @@ class Frame
 
 	CLEANUP;
 
-	THIS_TAG_TOP_DEBUG ("Done\n");
+	THIS_TAG_TOP_DEBUG ("Done%s\n",
+			    flags & FLAG_DONT_CACHE_RESULT ?
+			    " (don't cache result)" : "");
 	TRACE_LEAVE ("");
 	return conv_result;
 
@@ -3716,7 +3828,9 @@ class Frame
 	    fatal_error ("Should not get here.\n");
 	  }
 
-	THIS_TAG_TOP_DEBUG ("Exception\n");
+	THIS_TAG_TOP_DEBUG ("Exception%s\n",
+			    flags & FLAG_DONT_CACHE_RESULT ?
+			    " (don't cache result)" : "");
 	TRACE_LEAVE ("exception");
 	err = catch {
 	  ctx->handle_exception (err, evaler); // Will rethrow unknown errors.
@@ -4241,6 +4355,8 @@ class Parser
 	if ((err = catch {
 	  context->handle_exception (err, this_object()); // May throw.
 	})) {
+	  FRAME_DEPTH_MSG ("%*s%O frame_depth increase line %d\n",
+			   context->frame_depth, "", varref, __LINE__);
 	  context->frame_depth--;
 	  throw (err);
 	}
@@ -4248,7 +4364,8 @@ class Parser
       }
 
       if (PCode p_code = evaler->p_code)
-	p_code->add (VarRef (splitted[0], splitted[1..], encoding, want_type));
+	p_code->add (context,
+		     VarRef (splitted[0], splitted[1..], encoding, want_type), val);
     }
     FRAME_DEPTH_MSG ("%*s%O frame_depth increase line %d\n",
 		     context->frame_depth, "", varref, __LINE__);
@@ -4516,7 +4633,7 @@ class PNone
     if (in) add (in);
     if (p_code) {
       string data = get();
-      p_code->add (data);
+      p_code->add (context, data, data);
       add (data);
     }
   }
@@ -4686,13 +4803,11 @@ class Type
   //! directly, otherwise a new object is created.
   {
     PCode p_code = 0;
-    if (make_p_code)
+    if (make_p_code) {
       if (objectp (make_p_code)) (p_code = make_p_code)->reset (this_object(), tag_set);
       else p_code = PCode (this_object(), tag_set);
-#ifdef DEBUG
-    if (make_p_code && !ctx->p_code_comp)
-      error ("Context has no p_code_comp for p-coding parser.\n");
-#endif
+      if (!ctx->p_code_comp) ctx->p_code_comp = PikeCompile();
+    }
 
     Parser p;
     if (_p_cache) {		// It's a tag set parser.
@@ -5814,21 +5929,55 @@ class VarRef (string scope, string|array(string|int) var,
 
   void delete (Context ctx) {ctx->delete_var (var, scope);}
 
-  string name() {return scope + "." + (arrayp (var) ? (array(string)) var * "." : var);}
+  string name()
+  {
+    return scope && var &&
+      map (arrayp (var) ? ({scope}) + (array(string)) var : ({scope, (string) var}),
+	   replace, ".", "..") * ".";
+  }
 
-  MARK_OBJECT;
-  string _sprintf() {return "RXML.VarRef(" + name() + ")" + OBJ_COUNT;}
-
-  mixed _encode()
+  array _encode()
   {
     return ({ scope, var, encoding, want_type });
   }
 
-  void _decode(mixed v)
+  void _decode(array v)
   {
     [scope, var, encoding, want_type] = v;
   }
 
+  MARK_OBJECT;
+  string _sprintf() {return "RXML.VarRef(" + name() + ")" + OBJ_COUNT;}
+}
+
+class ScopeChange (static mapping(string:mixed) settings)
+// A compiled-in change of some scope variables. Used when caching
+// results.
+{
+  constant is_RXML_ScopeChange = 1;
+  constant is_RXML_encodable = 1;
+  constant is_RXML_p_code_entry = 1;
+
+  mixed get (Context ctx)
+  {
+    foreach (indices (settings), string encoded_var) {
+      array var = decode_value (encoded_var);
+#ifdef DEBUG
+      if (TAG_DEBUG_TEST (ctx->frame))
+	TAG_DEBUG (ctx->frame, "    Installing cached value for %s: %s\n",
+		   map ((array(string)) var, replace, ".", "..") * ".",
+		   utils->format_short (settings[encoded_var]));
+#endif
+      ctx->set_var (var[1..], settings[encoded_var], var[0]);
+    }
+    return nil;
+  }
+
+  mapping(string:mixed) _encode() {return settings;}
+  void _decode (mapping(string:mixed) saved) {settings = saved;}
+
+  MARK_OBJECT;
+  string _sprintf() {return "RXML.ScopeChange" + OBJ_COUNT;}
 }
 
 class CompiledError
@@ -5859,12 +6008,12 @@ class CompiledError
     throw (bt);
   }
 
-  mixed _encode()
+  array _encode()
   {
     return ({type, msg, current_var});
   }
 
-  void _decode (mixed v)
+  void _decode (array v)
   {
     [type, msg, current_var] = v;
   }
@@ -6041,11 +6190,6 @@ static class PikeCompile
   string _sprintf() {return "RXML.PikeCompile" + OBJ_COUNT;}
 }
 
-class StalePCode
-{
-  constant is_RXML_StalePCode = 1;
-}
-
 class PCode
 //! Holds p-code and evaluates it. P-code is the intermediate form
 //! after parsing and before evaluation.
@@ -6063,22 +6207,31 @@ class PCode
   //! The tag set (if any) used by the parser that created this
   //! object. Used to initialize new contexts correctly.
 
-  int generation;
-  //! The generation of @[tag_set] when the p-code object was
-  //! generated. It's only valid to reevaluate as long as the
-  //! generation matches.
-
   int recover_errors;
   //! Nonzero if error recovery is allowed. Should be the same as the
   //! setting in the parser used to create this object.
+
+  PCode p_code = 0;
+  //! Another chained PCode object to update while this one is
+  //! compiled or evaluated. Typically only useful if one p-code
+  //! object collects the unevaluated data and the other the results.
+  //! It's assumed that at most one PCode object in a chain collects
+  //! results.
 
   Context new_context (void|RequestID id)
   //! Creates a new context for evaluating the p-code in this object.
   //! @[id] is put into the context if given.
   {
     Context ctx = tag_set ? tag_set->new_context (id) : Context (0, id);
-    ctx->make_p_code = -1; // Always extend the compilation to unvisited parts.
+    ctx->make_p_code = 1; // Always extend the compilation to unvisited parts.
     return ctx;
+  }
+
+  int is_stale()
+  //! Returns whether the p-code is stale or not. Should be called
+  //! before @[eval] to ensure it won't fail for that reason.
+  {
+    return tag_set && tag_set->generation != generation;
   }
 
   mixed eval (Context context, void|int eval_piece)
@@ -6088,10 +6241,10 @@ class PCode
   //! streaming/nonblocking operation. @[context->incomplete_eval]
   //! will return nonzero in that case.
   //!
-  //! This function returns an instance of @[StalePCode] if the p-code
-  //! is stale, i.e. if @[generation] no longer matches the generation
-  //! of @[tag_set]. The caller should in that case evaluate from the
-  //! source instead.
+  //! This function might throw an exception if the p-code is stale,
+  //! i.e. if @[generation] no longer matches the generation of
+  //! @[tag_set]. The caller should always check with @[is_stale] to
+  //! avoid that.
   {
     mixed res, piece;
     int eval_loop = 0;
@@ -6111,21 +6264,16 @@ class PCode
 	}
 	piece = _eval (context); // Might unwind.
       }) {
-	if (objectp (err))
-	  if (([object] err)->thrown_at_unwind) {
-	    if (!eval_piece && context->incomplete_eval()) {
-	      if (eval_loop) res = add_to_value (type, res, piece);
-	      eval_loop = 1;
-	      continue eval;
-	    }
-	    if (!context->unwind_state) context->unwind_state = ([]);
-	    context->unwind_state->top = this_object();
-	    break eval;
+	if (objectp (err) && ([object] err)->thrown_at_unwind) {
+	  if (!eval_piece && context->incomplete_eval()) {
+	    if (eval_loop) res = add_to_value (type, res, piece);
+	    eval_loop = 1;
+	    continue eval;
 	  }
-	  else if (([object] err)->is_RXML_StalePCode) {
-	    piece = err;
-	    break eval;
-	  }
+	  if (!context->unwind_state) context->unwind_state = ([]);
+	  context->unwind_state->top = this_object();
+	  break eval;
+	}
 	LEAVE_CONTEXT();
 	throw_fatal (err);
       }
@@ -6137,38 +6285,66 @@ class PCode
     return piece;
   }
 
-  //function(Context:mixed) compile();
-  // Returns a compiled function for doing the evaluation. The
-  // function will receive a context to do the evaluation in.
-
-  static void create (Type _type, void|TagSet _tag_set)
+  static void create (Type _type, void|TagSet _tag_set, void|Context collect_results)
   {
     if (_type) {		// 0 if we're being decoded.
       type = _type;
       if ((tag_set = _tag_set)) generation = _tag_set->generation;
-      p_code = allocate (16);
+      exec = allocate (16);
+    }
+    if (collect_results) {
+      // Yes, the internal interaction between create, reset, the
+      // context and CTX_ALREADY_GOT_VC is ugly.
+      flags = COLLECT_RESULTS;
+      if (collect_results->misc->variable_changes) flags |= CTX_ALREADY_GOT_VC;
+      collect_results->misc->variable_changes = ([]);
     }
   }
 
 
   // Internals:
 
-  static array p_code = 0;
+  static array exec = 0;
   static int length = 0;
-  static int fully_resolved = 0;
+
+  static int flags = 0;
+  static constant FULLY_RESOLVED = 0x1;
+  static constant COLLECT_RESULTS = 0x2;
+  static constant CTX_ALREADY_GOT_VC = 0x4; // Just as ugly as it sounds, but who cares?
+
+  static int generation;
+  // The generation of tag_set when the p-code object was generated.
+  // Known punt: We should track and check the generations of any
+  // nested tag sets so that is_stale always is reliable. But due to
+  // the extensive dependencies in the global rxml_tag_set that won't
+  // be a problem in practice, so we avoid the overhead.
 
   void reset (Type _type, void|TagSet _tag_set)
   {
     type = _type;
     if ((tag_set = _tag_set)) generation = _tag_set->generation;
-    p_code = allocate (16);
+    exec = allocate (16);
     length = 0;
+    flags &= ~FULLY_RESOLVED;
+    if (p_code) p_code->reset (_type, _tag_set);
   }
 
-  void add (mixed entry)
+  void add (Context ctx, mixed entry, mixed evaled_value)
   {
-    if (length >= sizeof (p_code)) p_code += allocate (sizeof (p_code));
-    p_code[length++] = entry;
+    if (length + 1 > sizeof (exec)) exec += allocate (sizeof (exec));
+
+    if (flags & COLLECT_RESULTS) {
+      exec[length++] = evaled_value;
+      mapping(string:mixed) var_chg = ctx->misc->variable_changes;
+      if (sizeof (var_chg)) {
+	exec[length++] = ScopeChange (var_chg);
+	ctx->misc->variable_changes = ([]);
+      }
+    }
+    else
+      exec[length++] = entry;
+
+    if (p_code) p_code->add (ctx, entry, evaled_value);
   }
 
 #define RESET_FRAME(frame) do {						\
@@ -6177,27 +6353,57 @@ class PCode
     /* Maybe zap vars too, if it exists? */				\
   } while (0)
 
-  void add_frame (Frame frame, Context ctx)
+  void add_frame (Context ctx, Frame frame, mixed evaled_value)
   {
-    if (length + 3 > sizeof (p_code)) p_code += allocate (sizeof (p_code));
-    p_code[length] = frame->tag || frame; // To make new frames from.
+  add_frame:
+    {
+    add_evaled_value:
+      if (flags & COLLECT_RESULTS && !(frame->flags & FLAG_DONT_CACHE_RESULT)) {
+	if (evaled_value == PCode) {
+	  // The PCode value is only used as an ugly magic cookie to
+	  // signify that the frame produced no result to add (i.e. it
+	  // threw an exception instead). In that case we must keep
+	  // the frame unevaluated.
+	  Frame f = frame;
+	  do
+	    f->flags |= FLAG_DONT_CACHE_RESULT;
+	  while ((f = f->up) && !(f->flags & FLAG_DONT_CACHE_RESULT));
+	  break add_evaled_value;
+	}
+	if (length + 1 >= sizeof (exec)) exec += allocate (sizeof (exec));
+	exec[length++] = evaled_value;
+	mapping(string:mixed) var_chg = ctx->misc->variable_changes;
+	if (sizeof (var_chg)) {
+	  exec[length++] = ScopeChange (var_chg);
+	  ctx->misc->variable_changes = ([]);
+	}
+	break add_frame;
+      }
+
+      if (length + 3 > sizeof (exec)) exec += allocate (sizeof (exec));
+      exec[length] = frame->tag || frame; // To make new frames from.
 #ifdef DEBUG
-    if (!stringp (frame->args) && !functionp (frame->args) && !mappingp (frame->args))
-      error ("Invalid args %s in frame about to be added to p-code.\n",
-	     utils->format_short (frame->args));
+      if (!stringp (frame->args) && !functionp (frame->args) && !mappingp (frame->args))
+	error ("Invalid args %s in frame about to be added to p-code.\n",
+	       utils->format_short (frame->args));
 #endif
-    p_code[length + 1] = frame;	// Cached for reuse.
-    array frame_state = p_code[length + 2] = frame->_save();
-    if (stringp (frame_state[0]))
-      ctx->p_code_comp->delayed_resolve (frame_state, 0);
-    RESET_FRAME (frame);
-    length += 3;
+      exec[length + 1] = frame;	// Cached for reuse.
+      array frame_state = exec[length + 2] = frame->_save();
+      if (stringp (frame_state[0]))
+	ctx->p_code_comp->delayed_resolve (frame_state, 0);
+      RESET_FRAME (frame);
+      length += 3;
+    }
+
+    if (p_code) p_code->add_frame (ctx, frame, evaled_value);
   }
 
   void finish()
   {
-    if (length != sizeof (p_code))
-      p_code = p_code[..length - 1];
+    if (length != sizeof (exec)) exec = exec[..length - 1];
+    if (p_code) p_code->finish();
+    if ((flags & (COLLECT_RESULTS|CTX_ALREADY_GOT_VC)) == COLLECT_RESULTS)
+      m_delete (RXML_CONTEXT->misc, "variable_changes");
   }
 
   mixed _eval (Context ctx)
@@ -6208,7 +6414,9 @@ class PCode
     array parts;
     int ppos = 0;
 
-    if (tag_set && tag_set->generation != generation) throw (StalePCode());
+#ifdef MODULE_DEBUG
+    if (tag_set && tag_set->generation != generation) error ("P-code is stale.\n");
+#endif
 
     if (ctx->unwind_state)
       [object ignored, pos, parts, ppos] =
@@ -6216,48 +6424,54 @@ class PCode
     else parts = allocate (length);
 
     while (1) {			// Loops only if errors are catched.
+      mixed item;
       if (mixed err = catch {
 
 #define EVAL_LOOP(RESOLVE_ARGFUNC_1, RESOLVE_ARGFUNC_2)			\
 	do for (; pos < length; pos++) {				\
-	  mixed item = p_code[pos];					\
-	  if (objectp (item))						\
-	    if (item->is_RXML_p_code_frame) {				\
-	      Frame frame;						\
-	      if ((frame = p_code[pos + 1])) {				\
-		/* Relying on the interpreter lock here. */		\
-		p_code[pos + 1] = 0;					\
-		RESOLVE_ARGFUNC_1;					\
+	  item = exec[pos];						\
+	chained_p_code_add: {						\
+	    if (objectp (item))						\
+	      if (item->is_RXML_p_code_frame) {				\
+		Frame frame;						\
+		if ((frame = exec[pos + 1])) {				\
+		  /* Relying on the interpreter lock here. */		\
+		  exec[pos + 1] = 0;					\
+		  RESOLVE_ARGFUNC_1;					\
+		}							\
+		else {							\
+		  if (item->is_RXML_Tag)				\
+		    frame = item->Frame(), frame->tag = item;		\
+		  else frame = item->_clone_empty();			\
+		  RESOLVE_ARGFUNC_2;					\
+		  frame->_restore (exec[pos + 2]);			\
+		}							\
+		item = frame->_eval (					\
+		  ctx, this_object(), type); /* Might unwind. */	\
+		if (!exec[pos + 1]) {					\
+		  RESET_FRAME (frame);					\
+		  /* Race here, but it doesn't matter much. */		\
+		  exec[pos + 1] = frame;				\
+		}							\
+		pos += 2;						\
+		if (p_code) p_code->add_frame (ctx, frame, item);	\
+		break chained_p_code_add;				\
 	      }								\
-	      else {							\
-		if (item->is_RXML_Tag)					\
-		  frame = item->Frame(), frame->tag = item;		\
-		else frame = item->_clone_empty();			\
-		RESOLVE_ARGFUNC_2;					\
-		frame->_restore (p_code[pos + 2]);			\
-	      }								\
-	      item = frame->_eval (					\
-		ctx, this_object(), type); /* Might unwind. */		\
-	      if (!p_code[pos + 1]) {					\
-		RESET_FRAME (frame);					\
-		/* Race here, but it doesn't matter much. */		\
-		p_code[pos + 1] = frame;				\
-	      }								\
-	      pos += 2;							\
-	    }								\
-	    else if (item->is_RXML_p_code_entry)			\
-	      item = item->get (ctx); /* Might unwind. */		\
+	      else if (item->is_RXML_p_code_entry)			\
+		item = item->get (ctx); /* Might unwind. */		\
+	    if (p_code) p_code->add (ctx, item, item);			\
+	  }								\
 	  if (item != nil)						\
 	    parts[ppos++] = item;					\
 	  if (string errmsgs = m_delete (ctx->misc, this_object()))	\
 	    parts[ppos++] = errmsgs;					\
 	} while (0)
 
-	if (fully_resolved)
+	if (flags & FULLY_RESOLVED)
 	  EVAL_LOOP (;, ;);
 	else
 	  EVAL_LOOP ({
-	    array frame_state = p_code[pos + 2];
+	    array frame_state = exec[pos + 2];
 	    if (stringp (frame->args))
 	      if (stringp (frame_state[0]))
 		frame->args = frame_state[0] =
@@ -6265,7 +6479,7 @@ class PCode
 	      else
 		frame->args = frame_state[0];
 	  }, {
-	    array frame_state = p_code[pos + 2];
+	    array frame_state = exec[pos + 2];
 	    if (stringp (frame_state[0]))
 	      frame_state[0] = ctx->p_code_comp->resolve (frame_state[0]);
 	  });
@@ -6287,18 +6501,32 @@ class PCode
 	  throw (this_object());
 	}
 	else {
-	  ctx->handle_exception (err, this_object()); // May throw.
-	  string msgs = m_delete (ctx->misc, this_object());
-	  if (pos >= length)
-	    return msgs || nil;
-	  else {
-	    if (msgs) parts[ppos++] = msgs;
-	    if (objectp (p_code[pos]) && p_code[pos]->is_RXML_p_code_frame)
-	      pos += 3;
-	    else
-	      pos++;
-	    continue;
+	  if (objectp (item) && item->is_RXML_p_code_frame) {
+	    // If the exception comes from a frame, handle_exception
+	    // already has been called. Thus we don't try to recover
+	    // again.
+	    if (p_code) p_code->add_frame (ctx, item, PCode);
 	  }
+	  else {
+	    if (p_code) p_code->add (ctx, item, item);
+	    err = catch {
+	      ctx->handle_exception (err, this_object()); // May throw.
+	      string msgs = m_delete (ctx->misc, this_object());
+	      if (pos >= length)
+		return msgs || nil;
+	      else {
+		if (msgs) parts[ppos++] = msgs;
+		if (objectp (exec[pos]) && exec[pos]->is_RXML_p_code_frame)
+		  pos += 3;
+		else
+		  pos++;
+		continue;
+	      }
+	    };
+	  }
+	  if (tag_set && tag_set->generation != generation)
+	    catch (err[0] += "Note: Error happened in stale p-code.\n");
+	  throw (err);
 	}
 
       error ("Should not get here.\n");
@@ -6312,8 +6540,8 @@ class PCode
   //! in a variable named @tt{ctx@} and the parent evaluator in
   //! @tt{evaler@}. It also assumes there's a mixed variable called
   //! @tt{tmp@} for temporary use. No code is added to handle
-  //! exception unwinding and rewinding or checks for staleness.
-  //! Mostly for internal use.
+  //! exception unwinding and rewinding, checks for staleness or
+  //! chained p-code. Mostly for internal use.
   {
     if (!length)
       return type->sequential ? comp->bind (type->empty_value) : "RXML.nil";
@@ -6322,23 +6550,23 @@ class PCode
     array(string) parts = allocate (length);
 
     for (int pos = 0; pos < length; pos++) {
-      mixed item = p_code[pos];
+      mixed item = exec[pos];
       if (objectp (item))
 	if (item->is_RXML_p_code_frame) {
 	  // NB: We currently don't use the cached frame in
-	  // p_code[pos+1] here.
-	  string|EVAL_ARGS_FUNC argfunc = p_code[pos + 2][0];
+	  // exec[pos+1] here.
+	  string|EVAL_ARGS_FUNC argfunc = exec[pos + 2][0];
 	  if (stringp (argfunc))
 	    // It's possible to delay this by adding code to set the
 	    // argfunc slot below.
-	    p_code[pos + 2][0] = comp->resolve (argfunc);
+	    exec[pos + 2][0] = comp->resolve (argfunc);
 	  parts[pos] = sprintf (
 	    (item->is_RXML_Tag ?
 	     "(tmp=%s.Frame(),tmp->tag=%[0]s," : "(tmp=%s._clone_empty(),") +
 	    "tmp->_restore(%s),"
 	    "tmp->_eval(ctx,evaler,%s))",
 	    comp->bind (item),
-	    comp->bind (p_code[pos + 2]),
+	    comp->bind (exec[pos + 2]),
 	    typevar);
 	  pos += 2;
 	  continue;
@@ -6347,7 +6575,7 @@ class PCode
 	  parts[pos] = sprintf ("%s.get(ctx)", comp->bind (item));
 	  continue;
 	}
-      parts[pos] = comp->bind (p_code[pos]);
+      parts[pos] = comp->bind (exec[pos]);
     }
 
     if (type->sequential)
@@ -6376,8 +6604,8 @@ class PCode
 
   mixed _encode()
   {
-    finish();
-    array encode_p_code = p_code + ({});
+    if (length != sizeof (exec)) exec = exec[..length - 1];
+    array encode_p_code = exec + ({});
     for (int pos = 0; pos < length; pos++) {
       mixed item = encode_p_code[pos];
       if (objectp (item) && item->is_RXML_p_code_frame) {
@@ -6387,10 +6615,10 @@ class PCode
 	  error ("Unresolved argument function in frame at position %d.\n"
 		 "Encoding p-code in unfinished evaluation?\n", pos);
 #endif
-	if (p_code[pos + 1]) p_code[pos + 1]->args = encode_p_code[pos + 2][0];
+	if (exec[pos + 1]) exec[pos + 1]->args = encode_p_code[pos + 2][0];
       }
     }
-    fully_resolved = 1;
+    flags |= FULLY_RESOLVED;
 
     return ({tag_set, tag_set && tag_set->get_hash(),
 	     type, recover_errors, encode_p_code});
@@ -6398,27 +6626,27 @@ class PCode
 
   void _decode(array v)
   {
-    [tag_set, string tag_set_hash, type, recover_errors, p_code] = v;
-    length = sizeof (p_code);
+    [tag_set, string tag_set_hash, type, recover_errors, exec] = v;
+    length = sizeof (exec);
     if (tag_set) {
       if (tag_set->get_hash() != tag_set_hash)
 	error ("P-code is stale; the tag set has changed since it was encoded.\n");
       generation = tag_set->generation;
     }
-    fully_resolved = 1;
+    flags |= FULLY_RESOLVED;
 
     // Instantiate the cached frames, mainly so that any errors in
     // their restore functions due to old data are triggered here and
     // not later during evaluation.
     for (int pos = 0; pos < length; pos++) {
-      mixed item = p_code[pos];
+      mixed item = exec[pos];
       if (objectp (item) && item->is_RXML_p_code_frame) {
 	Frame frame;
 	if (item->is_RXML_Tag)
-	  p_code[pos + 1] = frame = item->Frame(), frame->tag = item;
+	  exec[pos + 1] = frame = item->Frame(), frame->tag = item;
 	else
-	  p_code[pos + 1] = frame = item->_clone_empty();
-	frame->_restore (p_code[pos + 2]);
+	  exec[pos + 1] = frame = item->_clone_empty();
+	frame->_restore (exec[pos + 2]);
 	pos += 2;
       }
     }
@@ -6434,41 +6662,38 @@ class RenewablePCode
   string source;
   //! The source code or frame used to generate the p-code.
 
+  int is_stale() {return 0;}
+
 
   // Internals:
 
   mixed _eval (Context ctx)
   {
-    Parser parser = 0;
+    if (::is_stale()) {
+      Parser parser = 0;
+      if (ctx->unwind_state)
+	[parser] = m_delete (ctx->unwind_state, this_object());
 
-    if (ctx->unwind_state)
-      [parser] = m_delete (ctx->unwind_state, this_object());
-    else {
-      mixed err = catch {
-	return ::_eval (ctx);
-      };
-      if (!objectp (err) || !err->is_RXML_StalePCode)
-	throw (err);
+      mixed res;
+      if (mixed err = catch {
+	if (!parser) {
+	  parser = type->get_parser (ctx, tag_set, 0, this_object());
+	  parser->finish (source); // Might unwind.
+	}
+	else parser->finish();	// Might unwind.
+	res = parser->eval();	// Might undwind.
+      })
+	if (objectp (err) && err->thrown_at_unwind) {
+	  ctx->unwind_state[this_object()] = ({parser});
+	  throw (this_object());
+	}
+	else throw (err);
+
+      type->give_back (parser, tag_set);
+      return res;
     }
-
-    mixed res;
-    if (mixed err = catch {
-      if (!parser) {
-	ctx->init_make_p_code();
-	parser = type->get_parser (ctx, tag_set, 0, this_object());
-	parser->finish (source); // Might unwind.
-      }
-      else parser->finish();	// Might unwind.
-      res = parser->eval();	// Might undwind.
-    })
-      if (objectp (err) && err->thrown_at_unwind) {
-	ctx->unwind_state[this_object()] = ({parser});
-	throw (this_object());
-      }
-      else throw (err);
-
-    type->give_back (parser, tag_set);
-    return res;
+    else
+      return ::_eval (ctx);
   }
 
   array _encode()
@@ -6569,13 +6794,9 @@ class PCodec
 	    error ("Cannot find parser %O.\n", parser_name);
 	  ENCODE_DEBUG_RETURN (reg_types[what[1]] (parser_prog, @what[3..]));
 	}
-	case "ObjectMarker":
 #ifdef RXML_OBJ_DEBUG
+	case "ObjectMarker":
 	  ENCODE_DEBUG_RETURN (Debug.ObjectMarker (what[1]));
-#else
-	  // This at least avoids the debug printouts if an entry
-	  // encoded with RXML_OBJ_DEBUG is decoded.
-	  ENCODE_DEBUG_RETURN (Debug.ObjectMarker (0));
 #endif
       }
     }
