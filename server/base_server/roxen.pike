@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.615 2001/01/29 09:10:01 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.616 2001/01/29 09:16:41 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2258,7 +2258,16 @@ class ImageCache
     }
   }
 
-  
+
+  static void init_db( )
+  {
+    meta_cache = ([]);
+    db = master()->resolv( "DBManager.get" )( "local" );
+    if( !db )
+      report_fatal("No 'shared' database!\n");
+    catch(setup_tables());
+  }
+
   void create( string id, function draw_func )
   //! Instantiate an image cache of your own, whose image files will
   //! be stored in a table `id' in the cache mysql database,
@@ -2269,10 +2278,11 @@ class ImageCache
   //! you give the <ref>store()</ref> method, but its final argument
   //! will be the RequestID object.
   {
-    db = master()->resolv( "DBManager.get" )( "local" );
     name = id;
     draw_function = draw_func;
-    catch(setup_tables());
+    init_db();
+    // Support that the 'shared' database moves.
+    master()->resolv( "DBManager.add_dblist_changed_callback" )( init_db );
   }
 }
 
@@ -2323,14 +2333,23 @@ class ArgCache
                 "INDEX hind (hash))");
   }
 
-  void create( string _name )
+  static void init_db()
+  {
+    // Delay DBManager resolving to before the 'roxen' object is
+    // compiled.
+    cache = ([]);
+    db = master()->resolv( "DBManager.get" )( "shared" );
+    setup_table( );
+  }
+
+  static void create( string _name )
   //! Instantiates an argument cache of your own.
   {
     name = _name;
-    // Delay DBManager resolving to before the 'roxen' object is
-    // compiled.
-    db = master()->resolv( "DBManager.get" )( "shared" );
-    setup_table( );
+    init_db();
+    // Support that the 'local' database moves (not really nessesary,
+    // but it won't hurt either)
+    master()->resolv( "DBManager.add_dblist_changed_callback" )( init_db );
   }
 
   static string read_args( string id )
