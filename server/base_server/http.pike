@@ -1,7 +1,7 @@
 // HTTP convenience functions.
 // inherited by roxenlib, and thus by all files inheriting roxenlib.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: http.pike,v 1.44 2000/08/16 02:58:29 per Exp $
+// $Id: http.pike,v 1.45 2000/08/19 00:47:58 per Exp $
 
 //#pragma strict_types
 
@@ -143,21 +143,26 @@ constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 		     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
 constant days = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" });
 
+
+
+static int chd_lt;
+static string chd_lf;
 string cern_http_date(int t)
   //! Return a date, used in the common log format
 {
+  if( t == chd_lt ) return chd_lf;
+
   string c;
   mapping(string:int) lt = localtime(t);
   int tzh = lt->timezone/3600 - lt->isdst;
-
   if(tzh > 0)
     c="-";
   else {
     tzh = -tzh;
     c="+";
   }
-
-  return(sprintf("%02d/%s/%04d:%02d:%02d:%02d %s%02d00",
+  chd_lt = t;
+  return(chd_lf=sprintf("%02d/%s/%04d:%02d:%02d:%02d %s%02d00",
 		 lt->mday, months[lt->mon], 1900+lt->year,
 		 lt->hour, lt->min, lt->sec, c, tzh));
 }

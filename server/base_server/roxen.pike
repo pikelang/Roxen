@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.524 2000/08/17 01:16:30 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.525 2000/08/19 00:47:58 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -3652,3 +3652,201 @@ static string _sprintf( )
 {
   return "roxen";
 }
+
+
+
+
+// Support for logging in configurations and modules.
+
+class LogFormat
+{
+  static string host_ip_to_int(string s)
+  {
+    int a, b, c, d;
+    sscanf(s, "%d.%d.%d.%d", a, b, c, d);
+    return sprintf("%c%c%c%c",a, b, c, d);
+  }
+
+  static string extract_user(string from)
+  {
+    array tmp;
+    if (!from || sizeof(tmp = from/":")<2)
+      return "-";
+    return tmp[0];      // username only, no password
+  }
+
+  void log( function do_write, RequestID id, mapping file );
+  static void do_async_write( string host, string data, string ip, function c )
+  {
+    c( replace( data, "\4711", host||ip ) );
+  }
+}
+
+mapping(string:LogFormat) compiled_formats = ([ ]);
+
+constant formats = 
+({
+  ({ "ip_number",   "%s",   "request_id->remoteaddr",0 }),
+  ({ "bin-ip_number","%s",  "host_ip_to_int(request_id->remoteaddr)",0 }),
+  ({ "cern_date",   "%s",   "Roxen.cern_http_date( time( 1 ) )",0 }),
+  ({ "bin-date",    "%4c",  "time(1)",0 }),
+  ({ "method",      "%s",   "request_id->method",0 }),
+  ({ "resource",    "%s",   "request_id->raw_url", 0 }),
+  ({ "full_resource","%s",  "request_id->raw_url",0 }),
+  ({ "protocol",    "%s",   "request_id->prot",0 }),
+  ({ "response",    "%d",   "(file->error || 200)",0 }),
+  ({ "bin-response","%2c",  "(file->error || 200)",0 }),
+  ({ "length",      "%d",   "file->len",0 }),
+  ({ "bin-length",  "%4c",  "file->len",0 }),
+  ({ "referer",     "%s",    
+     "sizeof(request_id->referer||({}))?request_id->referer[0]:\"\"", 0 }),
+  ({ "user_agent",  "%s",    
+     "request_id->client?request_id->client*\" \":\"-\"", 0 }),
+  ({ "user",        "%s",    "extract_user( request_id->realauth )",0 }),
+  ({ "user_id",     "%s",    "request_id->cookies->RoxenUserID||\"0\"",0 }),
+  ({ "request-time","%1.2f"  "time(request_id->time )",0 }),
+  ({ "host",        "\4711",    0, 1 }), // unlikely to occur normally
+});
+
+LogFormat compile_format( string fmt )
+{
+  array parts = fmt/"$";
+  string format = parts[0];
+  array args = ({});
+  int do_it_async = 0;
+  int add_nl = 1;
+
+  string sr( string s ) { return s[1..strlen(s)-2]; };
+  // sr(replace(sprintf("%O", X), "%", "%%"))
+
+#define DO_ES(X) replace(X, ({"\\n", "\\r", "\\t", }), ({ "\n", "\r", "\t" }) )
+
+  foreach( parts[1..], string part )
+  {
+    int c, processed;
+    foreach( formats, array q )
+      if( part[..strlen(q[0])-1] == q[0])
+      {
+        format += q[1] + DO_ES(part[ strlen(q[0]) .. ]);
+        if( q[2] ) args += ({ q[2] });
+        if( q[3] ) do_it_async = 1;
+        processed=1;
+        break;
+      }
+    if( processed )
+      continue;
+    if( sscanf( part, "char(%d)%s", c, part ) )
+      format += sprintf( "%"+(c<0?"-":"")+"c", abs( c ) )+DO_ES(part);
+    else if( sscanf( part, "wchar(%d)%s", c, part ) )
+      format += sprintf( "%"+(c<0?"-":"")+"2c", abs( c ) )+DO_ES(part);
+    else if( sscanf( part, "int(%d)%s", c, part ) )
+      format += sprintf( "%"+(c<0?"-":"")+"4c", abs( c ) )+DO_ES(part);
+    else if( part[0] == '^' )
+    {
+      format += DO_ES(part[1..]);
+      add_nl = 0;
+    } else
+      format += "$"+part;
+  }
+  if( add_nl ) format += "\n";
+//   werror("Format = %O  args = %{%O,%} async = %d\n", format, args, do_it_async );
+
+  add_constant( "___LogFormat", LogFormat );
+  string code = sprintf(
+#"
+  inherit ___LogFormat;
+  void log( function callback, object request_id, mapping file )
+  {
+     string data = sprintf( %O %{, %s%} );
+", format, args );
+ 
+  if( do_it_async )
+  {
+    code += 
+#"
+     roxen.ip_to_host(request_id->remoteaddr,do_async_write,
+                      data, request_id->remoteaddr, callback );
+   }
+";
+  } else
+    code += 
+#"  
+   callback( data );
+  }
+";
+  return compile_string( code )();
+}
+
+
+
+static string cached_hostname = gethostname();
+
+class LogFile
+{
+  Stdio.File fd;
+  int opened;
+  string fname;
+  void do_open()
+  {
+    mixed parent;
+    if (catch { parent = function_object(object_program(this_object())); } ||
+	!parent) {
+      // Our parent (aka the configuration) has been destructed.
+      // Time to die.
+      remove_call_out(do_open);
+      remove_call_out(do_close);
+      destruct();
+      return;
+    }
+    string ff = fname;
+    mapping m = localtime(time(1));
+    m->year += 1900;	// Adjust for years being counted since 1900
+    m->mon++;		// Adjust for months being counted 0-11
+    if(m->mon < 10) m->mon = "0"+m->mon;
+    if(m->mday < 10) m->mday = "0"+m->mday;
+    if(m->hour < 10) m->hour = "0"+m->hour;
+    ff = replace(fname,({"%d","%m","%y","%h", "%H" }),
+		      ({ (string)m->mday, (string)(m->mon),
+			 (string)(m->year),(string)m->hour,
+			 cached_hostname,
+		      }));
+    mkdirhier( ff );
+    fd = open( ff, "wac" );
+    if(!fd) 
+    {
+      remove_call_out( do_open );
+      call_out( do_open, 120 ); 
+      report_error(LOC_M(37, "Failed to open logfile")+" "+fname+" "
+#if constant(strerror)
+                   "(" + strerror(errno()) + ")"
+#endif
+                   "\n");
+      return;
+    }
+    opened = 1;
+    remove_call_out( do_open );
+    call_out( do_open, 1800 ); 
+  }
+  
+  void do_close()
+  {
+    destruct( fd );
+    opened = 0;
+  }
+
+  int write( string what )
+  {
+    if( !opened ) do_open();
+    if( !opened ) return 0;
+    remove_call_out( do_close );
+    call_out( do_close, 10.0 );
+    return fd->write( what );
+  }
+
+  static void create( string f ) 
+  {
+    fname = f;
+    opened = 0;
+  }
+}
+

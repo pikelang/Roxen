@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.341 2000/08/16 18:55:28 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.342 2000/08/19 00:47:57 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -493,77 +493,6 @@ array(function) filter_modules(RequestID id)
 }
 
 
-static string cached_hostname = gethostname();
-
-class LogFile
-{
-  Stdio.File fd;
-  int opened;
-  string fname;
-  void do_open()
-  {
-    mixed parent;
-    if (catch { parent = function_object(object_program(this_object())); } ||
-	!parent) {
-      // Our parent (aka the configuration) has been destructed.
-      // Time to die.
-      remove_call_out(do_open);
-      remove_call_out(do_close);
-      destruct();
-      return;
-    }
-    string ff = fname;
-    mapping m = localtime(time(1));
-    m->year += 1900;	// Adjust for years being counted since 1900
-    m->mon++;		// Adjust for months being counted 0-11
-    if(m->mon < 10) m->mon = "0"+m->mon;
-    if(m->mday < 10) m->mday = "0"+m->mday;
-    if(m->hour < 10) m->hour = "0"+m->hour;
-    ff = replace(fname,({"%d","%m","%y","%h", "%H" }),
-		      ({ (string)m->mday, (string)(m->mon),
-			 (string)(m->year),(string)m->hour,
-			 cached_hostname,
-		      }));
-    mkdirhier( ff );
-    fd = open( ff, "wac" );
-    if(!fd) 
-    {
-      remove_call_out( do_open );
-      call_out( do_open, 120 ); 
-      report_error(LOC_M(37, "Failed to open logfile")+" "+fname+" "
-#if constant(strerror)
-                   "(" + strerror(errno()) + ")"
-#endif
-                   "\n");
-      return;
-    }
-    opened = 1;
-    remove_call_out( do_open );
-    call_out( do_open, 1800 ); 
-  }
-  
-  void do_close()
-  {
-    destruct( fd );
-    opened = 0;
-  }
-
-  int write( string what )
-  {
-    if( !opened ) do_open();
-    if( !opened ) return 0;
-    remove_call_out( do_close );
-    call_out( do_close, 10.0 );
-    return fd->write( what );
-  }
-
-  static void create( string f ) 
-  {
-    fname = f;
-    opened = 0;
-  }
-}
-
 void init_log_file()
 {
   if(log_function)
@@ -577,28 +506,14 @@ void init_log_file()
   {
     string logfile = query("LogFile");
     if(strlen(logfile))
-      log_function = LogFile( logfile )->write;
+      log_function = roxen.LogFile( logfile )->write;
   }
 }
 
 // Parse the logging format strings.
 private inline string fix_logging(string s)
 {
-  string pre, post, c;
-  sscanf(s, "%*[\t ]", s);
-  s = replace(s, ({"\\t", "\\n", "\\r" }), ({"\t", "\n", "\r" }));
-
-  s = String.trim_whites( s );
-  while(sscanf(s, "%s$char(%d)%s", pre, c, post)==3)
-    s=sprintf("%s%c%s", pre, c, post);
-  while(sscanf(s, "%s$wchar(%d)%s", pre, c, post)==3)
-    s=sprintf("%s%2c%s", pre, c, post);
-  while(sscanf(s, "%s$int(%d)%s", pre, c, post)==3)
-    s=sprintf("%s%4c%s", pre, c, post);
-  if(!sscanf(s, "%s$^%s", pre, post))
-    s+="\n";
-  else
-    s=pre+post;
+  sscanf(s, "%*[\t ]%s", s);
   return s;
 }
 
@@ -611,103 +526,33 @@ private void parse_log_formats()
       log_format[(b/":")[0]] = fix_logging((b/":")[1..]*":");
 }
 
-
-
-// Really write an entry to the log.
-private void write_to_log( string host, string rest, string oh, function fun )
-{
-  int s;
-  if(!host) host=oh;
-  if(!stringp(host))
-    host = "error:no_host";
-  else
-    host = (host/" ")[0];	// In case it's an IP we don't want the port.
-  if(fun) fun(replace(rest, "$host", host));
-}
-
-// Logging format support functions.
-nomask private inline string host_ip_to_int(string s)
-{
-  int a, b, c, d;
-  sscanf(s, "%d.%d.%d.%d", a, b, c, d);
-  return sprintf("%c%c%c%c",a, b, c, d);
-}
-
-nomask private inline string unsigned_to_bin(int a)
-{
-  return sprintf("%4c", a);
-}
-
-nomask private inline string unsigned_short_to_bin(int a)
-{
-  return sprintf("%2c", a);
-}
-
-nomask private inline string extract_user(string from)
-{
-  array tmp;
-  if (!from || sizeof(tmp = from/":")<2)
-    return "-";
-
-  return tmp[0];      // username only, no password
-}
-
 public void log(mapping file, RequestID request_id)
 {
-//    _debug(2);
-  string a;
   string form;
   function f;
 
-  foreach(logger_modules(request_id), f) // Call all logging functions
-    if(f(request_id,file))return;
+// Call all logging functions
+  foreach(logger_module_cache||logger_modules(request_id), f) 
+    if( f( request_id, file ) )
+      return;
 
-  if(!log_function || !request_id) return;// No file is open for logging.
+  if(!log_function || !request_id) 
+    return;// No file is open for logging.
 
 
-  if(QUERY(NoLog) && Roxen._match(request_id->remoteaddr, QUERY(NoLog)))
+  if(QUERY(NoLog) && 
+     Roxen._match(request_id->remoteaddr, QUERY(NoLog)))
     return;
 
   if(!(form=log_format[(string)file->error]))
     form = log_format["*"];
 
   if(!form) return;
-
-  form=replace(form,
-	       ({
-		 "$ip_number", "$bin-ip_number", "$cern_date",
-		 "$bin-date", "$method", "$resource", "$full_resource", "$protocol",
-		 "$response", "$bin-response", "$length", "$bin-length",
-		 "$referer", "$user_agent", "$user", "$user_id",
-		 "$request-time"
-	       }),
-               ({
-		 (string)request_id->remoteaddr,
-		 host_ip_to_int(request_id->remoteaddr),
-		 Roxen.cern_http_date(time(1)),
-		 unsigned_to_bin(time(1)),
-		 (string)request_id->method,
-		 Roxen.http_encode_string((string)request_id->not_query),
-		 Roxen.http_encode_string((string)request_id->raw_url),
-		 (string)request_id->prot,
-		 (string)(file->error||200),
-		 unsigned_short_to_bin(file->error||200),
-		 (string)(file->len>=0?file->len:"?"),
-		 unsigned_to_bin(file->len),
-		 (string)
-		 (sizeof(request_id->referer||({}))?request_id->referer[0]:"-"),
-		 Roxen.http_encode_string(sizeof(request_id->client||({}))?request_id->client*" ":"-"),
-		 extract_user(request_id->realauth),
-		 request_id->cookies->RoxenUserID||"0",
-		 (string)(time(1)-request_id->time)
-	       }));
-
-  if(search(form, "host") != -1)
-    roxen->ip_to_host(request_id->remoteaddr, write_to_log, form,
-		      request_id->remoteaddr, log_function);
-  else
-    log_function(form);
-//    _debug(0);
+  
+  roxen.LogFormat fmt;
+  if( !(fmt = roxen.compiled_formats[ form ] ) )
+    fmt = roxen.compiled_formats[ form ] = roxen.compile_format( form );
+  fmt->log( log_function, request_id, file );
 }
 
 // These are here for statistics and debug reasons only.
