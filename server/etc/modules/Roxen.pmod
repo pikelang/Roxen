@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.16 2000/04/06 17:46:31 grubba Exp $
+ * $Id: Roxen.pmod,v 1.17 2000/07/02 18:44:37 nilsson Exp $
  *
  * Various helper functions.
  *
@@ -26,7 +26,7 @@ class QuotaDB
 {
 #if constant(create_thread)
   object(Thread.Mutex) lock = Thread.Mutex();
-#define LOCK()		mixed key__; catch { _key = lock->lock(); }
+#define LOCK()		mixed key__; catch { key__ = lock->lock(); }
 #define UNLOCK()	do { if (key__) destruct(key__); } while(0)
 #else /* !constant(create_thread) */
 #define LOCK()
@@ -785,11 +785,10 @@ array(int) parse_since(string date)
 {
   if(!date || sizeof(date)<14) return({0,-1});
   int t=0, length = -1;
-  string dat;
 
 #if constant(mktime)
-  // Tue, 28 Apr 1998 13:31:29 GMT
-  sscanf(lower_case(date+"; length="), "%*s, %s; length=%d", dat, length);
+  string dat=lower_case(date);
+  sscanf(dat+"; length=", "%*s, %s; length=%d", dat, length);
 
   if(!(t=since_cache[dat])) {
     int day, year = -1, month, hour, minute, second;
