@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.74 2002/11/13 16:23:55 mani Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.75 2004/05/23 00:45:02 _cvs_stephen Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -19,10 +19,14 @@ constant module_type = MODULE_FILE_EXTENSION;
 constant module_name = "Scripting: Pike script support";
 constant module_doc  = #"Support for user Pike-scripts, like CGI, but
 handled internally in the server, and thus much faster, but blocking,
-and less secure.<br /><img src=\"/%01/err_2\" align=\"left\"
-alt=\"Warning\" />NOTE: This module should not be enabled if you allow
-anonymous PUT!<br />NOTE: Enabling this module is the same thing as
-letting your users run programs with the same right as the server!";
+and less secure.
+<br />
+<br />
+<table><tr><td valign='top'><img src=\"/%01/err_2\" alt=\"Warning\" /></td>
+<td>NOTE: This module should not be enabled if you allow anonymous PUT!<br />
+NOTE: Enabling this module is the same thing as letting your users run
+programs with the same right as the server!
+</td></tr></table>";
 
 #if constant(__builtin.security)
 // EXPERIMENTAL: Try using the credential system.
@@ -266,16 +270,16 @@ string status()
   string res="", foo;
 
 #if constant(__builtin.security)
-  res += "<hr><h1>Credential system enabled</h1>\n";
+  res += "<hr><h3>Credential system enabled</h3>\n";
 #endif /* constant(__builtin.security) */
 
   if(sizeof(scripts))
   {
-    res += "<hr><h1>Loaded scripts</h1><p>";
+    res += "<hr><h3>Loaded scripts</h3><p>";
     foreach(indices(scripts), foo )
       res += foo+"\n";
   } else {
-    return "<h1>No loaded scripts</h1>";
+    return "<h3>No loaded scripts</h3>";
   }
   res += "<hr>";
 
