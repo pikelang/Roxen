@@ -335,7 +335,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 		    (m->thread_safe ? 
 		     LOCALE("yes", "Yes") : LOCALE("no", "No")) +
 #ifdef THREADS
-		    " <small>(<a href='../../../../../actions/?action"
+		    " <small>(<a href='../../../../actions/?action"
 		    "=locks.pike&class=status'>more info</a>)</small><br />\n"
 		    "<b>Number of accesses:</b> " + my_accesses +
 #endif
