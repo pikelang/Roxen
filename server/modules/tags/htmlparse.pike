@@ -12,7 +12,7 @@
 // 
 // the only thing that should be in this file is the main parser.  
 
-constant cvs_version="$Id: htmlparse.pike,v 1.153 1998/11/18 04:54:29 per Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.154 1998/11/22 15:26:49 grubba Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -2020,7 +2020,7 @@ string tag_pr(string tagname, mapping m)
   m->height = (string)w;
   if(!m->alt) m->alt="Powered by Roxen";
   if(!m->border) m->border="0";
-  return ("<a href=http://www.roxen.com/>"+make_tag("img", m)+"</a>");
+  return ("<a href=\"http://www.roxen.com/\">"+make_tag("img", m)+"</a>");
 }
 
 string tag_number(string t, mapping args)
