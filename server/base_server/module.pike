@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.196 2004/05/10 21:37:30 mast Exp $
+// $Id: module.pike,v 1.197 2004/05/12 12:06:44 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -1143,11 +1143,15 @@ mapping(string:mixed)|int(0..1) write_access(string relative_path,
 mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
 						      RequestID id);
 
-//! Delete the file specified by @[path]. It's unspecified if it works
-//! recursively or not.
+//! Delete the file specified by @[path].
 //!
-//! @note
-//!   Should return a 204 status on success.
+//! It's unspecified if it works recursively or not, but if it does
+//! then it has to check DAV locks through @[write_access]
+//! recursively.
+//!
+//! @returns
+//!   Returns a 204 status on success, 0 if the file doesn't exist, or
+//!   an appropriate status mapping for any other error.
 //!
 //! @note
 //!   The default implementation falls back to @[find_file()].
@@ -1171,13 +1175,20 @@ mapping(string:mixed) recurse_delete_files(string path,
 					   RequestID id,
 					   void|MultiStatus.Prefixed stat)
 {
+  SIMPLE_TRACE_ENTER (this, "Deleting %O recursively", path);
   if (!stat)
     id->get_multi_status()->prefix (id->url_base() + query_location()[1..]);
 
-  mapping(string:mixed) recurse (string path)
+  Stat st = stat_file(path, id);
+  if (!st) {
+    SIMPLE_TRACE_LEAVE ("No such file or directory");
+    return 0;
+  }
+
+  mapping(string:mixed) recurse (string path, Stat st)
   {
-    Stat st = stat_file(path, id);
-    if (!st) return 0;
+    // Note: Already got an extra TRACE_ENTER level on entry here.
+
     if (st->isdir) {
       // RFC 2518 8.6.2
       //   The DELETE operation on a collection MUST act as if a
@@ -1185,24 +1196,34 @@ mapping(string:mixed) recurse_delete_files(string path,
       int fail;
       if (!has_suffix(path, "/")) path += "/";
       foreach(find_dir(path, id) || ({}), string fname) {
-	mapping(string:mixed) sub_res = recurse(path+fname);
-	// RFC 2518 8.6.2
-	//   424 (Failed Dependancy) errors SHOULD NOT be in the
-	//   207 (Multi-Status).
-	//
-	//   Additionally 204 (No Content) errors SHOULD NOT be returned
-	//   in the 207 (Multi-Status). The reason for this prohibition
-	//   is that 204 (No Content) is the default success code.
-	if (sub_res && sub_res->error != 204 && sub_res->error != 424) {
-	  stat->add_status(path+fname, sub_res->error, sub_res->rettext);
-	  if (sub_res->error >= 300) fail = 1;
+	fname = path + fname;
+	if (Stat sub_stat = stat_file (fname, id)) {
+	  SIMPLE_TRACE_ENTER (this, "Deleting %O recursively", fname);
+	  mapping(string:mixed) sub_res = recurse(fname, sub_stat);
+	  // RFC 2518 8.6.2
+	  //   424 (Failed Dependancy) errors SHOULD NOT be in the
+	  //   207 (Multi-Status).
+	  //
+	  //   Additionally 204 (No Content) errors SHOULD NOT be returned
+	  //   in the 207 (Multi-Status). The reason for this prohibition
+	  //   is that 204 (No Content) is the default success code.
+	  if (sub_res && sub_res->error != 204 && sub_res->error != 424) {
+	    stat->add_status(fname, sub_res->error, sub_res->rettext);
+	    if (sub_res->error >= 300) fail = 1;
+	  }
 	}
       }
-      if (fail) return Roxen.http_status(424);
+      if (fail) {
+	SIMPLE_TRACE_LEAVE ("Partial failure");
+	return Roxen.http_status(424);
+      }
     }
+
+    SIMPLE_TRACE_LEAVE ("");
+    return 0;
   };
 
-  return recurse (path) || delete_file(path, id) || Roxen.http_status(204);
+  return recurse(path, st) || delete_file(path, id) || Roxen.http_status(204);
 }
 
 mapping(string:mixed) make_collection(string path, RequestID id)
