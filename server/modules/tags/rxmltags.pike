@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.351 2002/03/12 11:55:56 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.352 2002/03/12 13:29:52 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1261,6 +1261,10 @@ class TagCache {
 
   static class TimeOutEntry (
     TimeOutEntry next,
+    // timeout_cache is a wrapper array to get a weak ref to the
+    // timeout_cache mapping for the frame. This way the mapping will
+    // be garbed when the frame disappears, in addition to the
+    // timeout.
     array(mapping(string:array(int|RXML.PCode))) timeout_cache)
     {}
 
@@ -1318,8 +1322,8 @@ class TagCache {
       if( args->nocache || args["not-post-method"] && id->method == "POST" ) {
 	do_iterate = 1;
 	key = 0;
-	TRACE_ENTER("tag &lt;cache&gt; no cache" +
-		    (args->nocache ? "" : " due to POST method"), tag);
+	TAG_TRACE_ENTER ("no cache due to %s",
+			 args->nocache ? "nocache argument" : "POST method");
 	id->cache_status->cachetag = 0;
 	id->misc->cache_tag_miss = 1;
 	return 0;
@@ -1387,9 +1391,10 @@ class TagCache {
 	// Updated the key, so we're done. The surrounding cache tag
 	// should do the caching.
 	do_iterate = 1;
+	TAG_TRACE_ENTER ("propagating key, is now %s",
+			 RXML.utils.format_short (keymap, 200));
 	key = keymap = 0;
 	flags &= ~RXML.FLAG_DONT_CACHE_RESULT;
-	TRACE_ENTER("tag &lt;cache&gt; propagating key", tag);
 	return 0;
       }
 
@@ -1451,8 +1456,10 @@ class TagCache {
 	    }
 	    else {
 	      do_iterate = -1;
+	      TAG_TRACE_ENTER ("cache hit (shared%s cache) for key %s",
+			       timeout ? " timeout" : "",
+			       RXML.utils.format_short (keymap, 200));
 	      key = keymap = 0;
-	      TRACE_ENTER("tag &lt;cache&gt; cache hit", tag);
 	      return ({evaled_content});
 	    }
       }
@@ -1474,8 +1481,9 @@ class TagCache {
 	      else {
 		entry[0] = time() + timeout;
 		do_iterate = -1;
+		TAG_TRACE_ENTER ("cache hit (timeout cache) for key %s",
+				 RXML.utils.format_short (keymap, 200));
 		key = keymap = 0;
-		TRACE_ENTER("tag &lt;cache&gt; cache hit", tag);
 		return ({evaled_content});
 	      }
 	    }
@@ -1492,8 +1500,9 @@ class TagCache {
 	      else {
 		if (timeout) timeout_cache[key] = time() + timeout;
 		do_iterate = -1;
+		TAG_TRACE_ENTER ("cache hit for key %s",
+				 RXML.utils.format_short (keymap, 200));
 		key = keymap = 0;
-		TRACE_ENTER("tag &lt;cache&gt; cache hit", tag);
 		return ({evaled_content});
 	      }
 	  }
@@ -1502,9 +1511,11 @@ class TagCache {
 
       keymap += ([]);
       do_iterate = 1;
-      TRACE_ENTER("tag &lt;cache&gt; cache miss" +
-		  (default_key ? " (using default dependencies)" : ""),
-		  tag);
+      TAG_TRACE_ENTER ("cache miss%s for key %s",
+		       (args->shared ?
+			(timeout ? " (shared timeout cache)" : " (shared cache)") :
+			timeout ? " (timeout cache)" : ""),
+		       RXML.utils.format_short (keymap, 200));
       id->cache_status->cachetag = 0;
       id->misc->cache_tag_miss = 1;
       return 0;
@@ -1527,21 +1538,21 @@ class TagCache {
 	}
 	if (args->shared) {
 	  cache_set("tag_cache", key, evaled_content, timeout);
-	  TRACE_LEAVE ("added shared cache entry");
+	  TAG_TRACE_LEAVE ("added shared%s cache entry", timeout ? " timeout" : "");
 	}
 	else
 	  if (timeout) {
 	    timeout_cache[key] = ({time() + timeout, evaled_content});
-	    TRACE_LEAVE ("added time limited cache entry");
+	    TAG_TRACE_LEAVE ("added timeout cache entry");
 	  }
 	  else {
 	    alternatives[key] = evaled_content;
 	    RXML_CONTEXT->state_update();
-	    TRACE_LEAVE ("added (possibly persistent) cache entry");
+	    TAG_TRACE_LEAVE ("added (possibly persistent) cache entry");
 	  }
       }
       else
-	TRACE_LEAVE ("");
+	TAG_TRACE_LEAVE ("");
       result += content;
       return 0;
     }
