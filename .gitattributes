@@ -20,7 +20,6 @@
 /server/nfonts/verdana.txt eol=crlf
 *.xcf binary
 /server/translations/deu/roxen_config.xml -text -crlf
-map binary
 nn binary
 rbf binary
 worldmap binary
