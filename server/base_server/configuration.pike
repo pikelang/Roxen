@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.74 1997/09/05 02:19:17 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.75 1997/09/05 12:14:05 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -1905,31 +1905,46 @@ private string get_domain(int|void l)
   string t, s;
 
 //  ConfigurationURL is set by the 'install' script.
-  if(!(!l && sscanf(roxen->QUERY(ConfigurationURL), "http://%s:%*s", s)))
-  {
+  if (!l) {
+    f = (roxen->QUERY(ConfigurationURL)/"://");
+    if (sizeof(f) > 1) {
+      t = (replace(f[1], ({ ":", "/" }), ({ "\0", "\0" }))/"\0")[0];
+      f = t/".";
+      if (sizeof(f) > 1) {
+	s = f[1..]*".";
+      }
+    }
+  }
 #if efun(gethostbyname) && efun(gethostname)
+  if(!s) {
     f = gethostbyname(gethostname()); // First try..
     if(f)
-      foreach(f, f) foreach(f, t) if(search(t, ".") != -1 && !(int)t)
-	if(!s || strlen(s) < strlen(t))
-	  s=t;
-#endif
-    if(!s)
-    {
-      t = Stdio.read_bytes("/etc/resolv.conf");
-      if(t) 
-      {
-	if(!sscanf(t, "domain %s\n", s))
-	  if(!sscanf(t, "search %s%*[ \t\n]", s))
-	    s="nowhere";
-      } else {
-	s="nowhere";
+      foreach(f, f) {
+	if (arrayp(f)) {
+	  foreach(f, t) {
+	    f = t/".";
+	    if ((sizeof(f) > 1) &&
+		(replace(t, ({ "0", "1", "2", "3", "4", "5",
+				 "6", "7", "8", "9", "." }),
+			 ({ "","","","","","","","","","","" })) != "")) {
+	      t = f[1..]*".";
+	      if(!s || strlen(s) < strlen(t))
+		s=t;
+	    }
+	  }
+	}
       }
+  }
+#endif
+  if(!s) {
+    t = Stdio.read_bytes("/etc/resolv.conf");
+    if(t) {
+      if(!sscanf(t, "domain %s\n", s))
+	if(!sscanf(t, "search %s%*[ \t\n]", s))
+	  s="nowhere";
     } else {
-      sscanf(s, "%*s.%s", s);
+      s="nowhere";
     }
-  } else {
-    sscanf(s, "%*s.%s", s);
   }
   if(s && strlen(s))
   {
