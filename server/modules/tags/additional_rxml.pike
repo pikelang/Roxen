@@ -6,18 +6,40 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.29 2004/12/16 10:31:09 erikd Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.30 2005/01/12 14:41:24 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
 constant module_doc  = "This module provides some more complex and not as widely used RXML tags.";
 
 void create() {
-  defvar("insert_href",0,"Allow <insert href>",
-	 TYPE_FLAG|VAR_MORE,
-         "If set, it will be possible to use <tt>&lt;insert href&gt;</tt> to "
-	 "insert pages from another web server. Note that the thread will be "
-	 "blocked while it fetches the web page.");
+  defvar("insert_href",
+#ifdef THREADS
+	 1
+#else
+	 0
+#endif
+	 , "Allow <insert href>",
+	 TYPE_FLAG, #"\
+If set, it will be possible to use <tt>&lt;insert href&gt;</tt> to
+insert pages from another web server. Note that the handler thread
+will be blocked while it fetches the web page, so if enough requests
+are made to an unresponding external web server, this server might
+also cease to respond.");
+
+  defvar ("default_timeout", 300, "Default timeout for <insert href>",
+	  TYPE_INT, #"\
+Maximum waiting time in seconds for a response from the other web
+server when <tt>&lt;insert href&gt;</tt> is used. This can be
+overridden with the <tt>timeout</tt> attribute. Set it to zero to wait
+indefinitely by default.
+
+<p>Timeout is not available if your run the server without threads."
+#ifndef THREADS
+	  " <strong>You are currently running without threads.</strong>"
+#endif
+	 );
+
   defvar("recursion_limit", 2, "Maximum recursion depth for <insert href>",
 	 TYPE_INT|VAR_MORE,
 	 "Maxumum number of nested <tt>&lt;insert href&gt;</tt>'s allowed. "
@@ -154,7 +176,12 @@ class AsyncHTTPClient {
 
     if(args->timeout)
       con->timeout = (int) args->timeout;
-    
+    else if (int t = global::query ("default_timeout"))
+      con->timeout = t;
+    else
+      // There ought to be a way to disable the timeout in
+      // Protocols.HTTP.Query.
+      con->timeout = 2147483647;
   }
   
 }
@@ -187,10 +214,15 @@ class TagInsertHref {
 
     object /*Protocols.HTTP|AsyncHTTPClient*/ q;
 
+    mapping(string:string) headers = ([ "X-Roxen-Recursion-Depth":
+					(string)recursion_depth ]);
+    if (args["request-headers"])
+      foreach (args["request-headers"] / ",", string header)
+	if (sscanf (header, "%[^=]=%s", string name, string val) == 2)
+	  headers[name] = val;
+
 #ifdef THREADS
-    q = AsyncHTTPClient(method, args,
-			([ "X-Roxen-Recursion-Depth":
-			   (string)recursion_depth ]));
+    q = AsyncHTTPClient(method, args, headers);
     q->run();
 #else
     mixed err;
@@ -202,16 +234,12 @@ class TagInsertHref {
 	  vars[String.trim_whites(a[0])] = RXML.user_get_var(String.trim_whites(a[1]));
       }
       err = catch {
-	  q = Protocols.HTTP.post_url(args->href, vars,
-				      ([ "X-Roxen-Recursion-Depth":
-					 (string)recursion_depth ]));
+	  q = Protocols.HTTP.post_url(args->href, vars, headers);
 	};
     }
     else
       err = catch {
-	  q = Protocols.HTTP.get_url(args->href, 0,
-				     ([ "X-Roxen-Recursion-Depth":
-					(string)recursion_depth ]));
+	  q = Protocols.HTTP.get_url(args->href, 0, headers);
 	};
     if (err) {
       string msg = describe_error (err);
@@ -484,6 +512,9 @@ constant tagdoc=([
 </ex-box> 
 </attr>
 
+<attr name='request-headers' value='\"header=value[,header2=value2,...]\"'><p>
+ Comma separated list of extra headers to send in the request.</p>
+</attr>
 ",
 
 "sscanf":#"<desc type='cont'><p><short>
