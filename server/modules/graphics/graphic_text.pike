@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.136 1998/08/02 01:08:05 peter Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.137 1998/08/02 01:23:05 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -57,9 +57,10 @@ void create()
   
   defvar("speedy", 0, "Avoid automatic detection of document colors in tables",
 	 TYPE_FLAG|VAR_MORE,
-	 "If this flag is set, the tags 'tr', 'td', 'font' and 'th' "
-	 " will <b>not</b> be parsed to automatically detect the colors of "
-	 " a document. You will then have to specify all colors in all calls "
+	 "If this flag is set, the tags 'table', 'th', 'tr', 'td', 'font'"
+	 " 'layer' and 'ilayer'"
+	 " will <b>not</b> be parsed to automatically detect the colors of"
+	 " a document. You will then have to specify all colors in all calls"
 	 " to &lt;gtext&gt; or in the 'body' tag");
   
   defvar("nobody", 0, "Avoid automatic detection of document colors from body",
@@ -1542,8 +1543,8 @@ mapping query_tag_callers()
 {
   return ([ "gtext-id":tag_gtext_id, ])
     | (query("nobody")?([]):
-       (["body":tag_body,
-	 "/body":pop_color]))
+       (["body":tag_body])
+       // No reson to pop the end of body	 "/body":pop_color]))
     | (query("speedy")?([]):
        (["font":tag_fix_color,
 	 "table":tag_fix_color,
