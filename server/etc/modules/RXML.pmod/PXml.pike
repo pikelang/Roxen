@@ -8,9 +8,11 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.29 2000/02/13 18:06:32 mast Exp $
+//! $Id: PXml.pike,v 1.30 2000/02/15 06:10:11 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
+
+#define OLD_RXML_COMPAT
 
 inherit Parser.HTML : low_parser;
 inherit RXML.TagSetParser : TagSetParser;
@@ -64,16 +66,36 @@ static void set_quote_tag_cbs()
 
 this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
 {
-  return [object(this_program)] low_parser::clone (ctx, type, tag_set, overridden);
+  return [object(this_program)] low_parser::clone (ctx, type, tag_set, overridden,
+#ifdef OLD_RXML_COMPAT
+						   not_compat
+#endif
+						  );
 }
+
+#ifdef OLD_RXML_COMPAT
+static int not_compat = 1;
+#endif
 
 static void create (
   RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set,
-  void|mapping(string:array(array(TAG_TYPE|CONTAINER_TYPE))) orig_overridden)
+  void|mapping(string:array(array(TAG_TYPE|CONTAINER_TYPE))) orig_overridden,
+#ifdef OLD_RXML_COMPAT
+  void|int orig_not_compat
+#endif
+)
 {
+#ifdef OLD_RXML_COMPAT
+  not_compat = !(ctx && ctx->id && ctx->id->conf->parse_html_compat);
+#endif
+
   TagSetParser::create (ctx, type, tag_set);
 
-  if (orig_overridden) { // We're cloned.
+  if (orig_overridden
+#ifdef OLD_RXML_COMPAT
+      && not_compat == orig_not_compat
+#endif
+     ) {			// We're cloned.
     overridden = orig_overridden;
     return;
   }
@@ -131,22 +153,40 @@ static void create (
       add_container (name, [CONTAINER_TYPE] tagdef[1]);
     }
 
-    if (tset->low_entities && type->quoting_scheme != "xml")
+    if (tset->low_entities && type->quoting_scheme != "xml"
+#ifdef OLD_RXML_COMPAT
+	&& not_compat
+#endif
+       )
       // Don't decode entities if we're outputting xml-like stuff.
       add_entities (tset->low_entities);
   }
 
-  xml_tag_syntax (3);
-  mixed_mode (!type->free_text);
-  lazy_entity_end (1);
-  match_tag (0);
-  splice_arg ("::");
-  _set_entity_callback (.utils.p_xml_entity_cb);
   if (!type->free_text) {
+    mixed_mode (1);
     _set_data_callback (.utils.free_text_error);
     _set_tag_callback (.utils.unknown_tag_error);
   }
-  set_quote_tag_cbs();
+  lazy_entity_end (1);
+  match_tag (0);
+  splice_arg ("::");
+
+#ifdef OLD_RXML_COMPAT
+  if (not_compat) {
+#endif
+    xml_tag_syntax (3);
+    _set_entity_callback (.utils.p_xml_entity_cb);
+    set_quote_tag_cbs();
+#ifdef OLD_RXML_COMPAT
+  }
+  else {
+    xml_tag_syntax (1);
+    case_insensitive_tag (1);
+    ignore_unknown (1);
+    ws_before_tag_name (1);
+    _set_entity_callback (.utils.p_xml_compat_entity_cb);
+  }
+#endif
 }
 
 mixed read()
