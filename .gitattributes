@@ -69,6 +69,7 @@ urw_itc_avant_garde-demi-r binary
 /server/etc/roxen_master.pike foreign_ident
 /server/etc/supports foreign_ident
 /server/languages/catala.pike foreign_ident
+/server/languages/croatian.pike foreign_ident
 /server/languages/dutch.pike foreign_ident
 /server/languages/english.pike foreign_ident
 /server/languages/finnish.pike foreign_ident
