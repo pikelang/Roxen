@@ -1,16 +1,4 @@
 argument_cache
-build
-config.cache
-config.log
-config.status
-config.h.in
 configurations
-configure
-gtext_cache
 local
 logs
-ulpc
-ChangeLog.gz
-ChangeLog.rxml.gz
-Makefile
-VERSION
