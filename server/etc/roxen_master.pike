@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.53 1999/11/23 15:12:48 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.54 1999/11/24 02:08:08 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -42,15 +42,6 @@ program low_findprog(string pname, string ext, object|void handler)
                    decode_value(_static_modules.files()->
                                 Fd(fname+".o","r")->read(),Codec());
 	  };
-	  if (handler) {
-	    handler->compile_warning(fname + ".o", 0,
-				     sprintf("Decode failed:\n"
-					     "\t%s", err[0]));
-	  } else {
-	    compile_warning(fname + ".o", 0,
-			    sprintf("Decode failed:\n"
-				    "\t%s", err[0]));
-	  }
 	}
       }
       
