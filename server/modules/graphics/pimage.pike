@@ -1,4 +1,4 @@
-string cvs_version="$Id: pimage.pike,v 1.3 1997/10/05 01:23:26 grubba Exp $";
+string cvs_version="$Id: pimage.pike,v 1.4 1997/10/08 22:04:28 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -297,7 +297,7 @@ class Constructors
     mixed g = Gz;
     if (g->inflate) {
       catch {
-	q = g.inflate()->inflate(q);
+	q = g->inflate()->inflate(q);
       };
     }
     return myimage(bg(),image()->fromppm(q));
