@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.126 2001/08/23 18:40:14 mast Exp $
+// $Id: module.pike,v 1.127 2001/08/23 21:00:53 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -414,23 +414,29 @@ object sql_big_query_ro( string query, mixed ... args )
   return get_my_sql(1)->big_query( replace( query, __my_tables ), @args );
 }
 
-static void create_sql_tables( mapping(string:array(string)) defenitions,
-			       string|void comment,
-			       int no_unique_names )
+static int create_sql_tables( mapping(string:array(string)) defenitions,
+			      string|void comment,
+			      int|void no_unique_names )
 //! Create multiple tables in one go. See @[get_my_table]
+//! Returns the number of tables that were actually created.
 {
+  int ddc;
   if( !no_unique_names )
     foreach( indices( defenitions ), string t )
-      get_my_table( t, defenitions[t], comment );
+      ddc+=get_my_table( t, defenitions[t], comment, 1 );
   else
   {
     Sql.Sql sql = get_my_sql();
     foreach( indices( defenitions ), string t )
     {
-      sql->query("CREATE TABLE IF NOT EXISTS "+t+" ("+defenitions[t]*","+")" );
+      if( !catch {
+	sql->query("CREATE TABLE "+t+" ("+defenitions[t]*","+")" );
+      } )
+	ddc++;
       DBManager.is_module_table( this_object(), my_db, t, comment );
     }
   }
+  return ddc;
 }
 
 static string sql_table_exists( string name )
@@ -446,9 +452,10 @@ static string sql_table_exists( string name )
 }
 
 
-static string get_my_table( string|array(string) name,
-			    void|array(string)|string defenition,
-			    string|void comment )
+static string|int get_my_table( string|array(string) name,
+				void|array(string)|string defenition,
+				string|void comment,
+				int|void flag )
 //! @decl string get_my_table( string name, array(string) types )
 //! @decl string get_my_table( string name, string defenition )
 //! @decl string get_my_table( string defenition )
@@ -461,9 +468,12 @@ static string get_my_table( string|array(string) name,
 //! You can use @[create_sql_tables] instead of this function if you want
 //! to create more than one table in one go.
 //! 
+//! If @[flag] is true, return 1 if a table was created, and 0 otherwise.
+//! 
 //! In the first form, @[name] is the (postfix of) the name of the
 //! table, and @[types] is an array of defenitions, as an example:
 //!
+//! 
 //! @code{
 //!   cache_table = get_my_table( "cache", ({
 //!               "id INT UNSIGNED AUTO_INCREMENT",
@@ -487,6 +497,7 @@ static string get_my_table( string|array(string) name,
 // to change this).
 {
   string oname;
+  int ddc;
   if( !defenition )
   {
     defenition = name;
@@ -510,6 +521,7 @@ static string get_my_table( string|array(string) name,
   
   if( catch(sql->query( "SELECT * FROM "+res+" LIMIT 1" )) )
   {
+    ddc++;
     mixed error =
       catch
       {
@@ -524,6 +536,11 @@ static string get_my_table( string|array(string) name,
       report_error( "Failed to create table"+name+": "+
 		    describe_error( error ) );
       return 0;
+    }
+    if( flag )
+    {
+      __my_tables[ "&"+oname+";" ] = res;
+      return ddc;
     }
     return __my_tables[ "&"+oname+";" ] = res;
   }
@@ -540,6 +557,11 @@ static string get_my_table( string|array(string) name,
 //     report_notice( "Failed to update table defenition"+name+": "+
 // 		   describe_error( error ) );
 //   }
+  if( flag )
+  {
+    __my_tables[ "&"+oname+";" ] = res;
+    return ddc;
+  }
   return __my_tables[ "&"+oname+";" ] = res;
 }
 
