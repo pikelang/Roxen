@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.257 2001/11/20 17:45:49 mast Exp $
+// $Id: module.pmod,v 1.258 2001/11/23 20:57:57 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2155,6 +2155,11 @@ class Context
   //	between Frame._exec_array() and Frame._eval().)
   // "reason": string (The reason why the state is unwound. Can
   //    currently be "streaming".)
+
+  mapping id_defines;
+  // Ugly kludge: The old id->misc->defines is stored here if it's
+  // overridden by the misc mapping above. See
+  // rxml_tag_set->prepare_context.
 
   //! @ignore
   MARK_OBJECT_ONLY;
@@ -6786,6 +6791,7 @@ class PCode
 	ctx->misc->variable_changes = ([]);
       }
     }
+
     else {
       PCODE_MSG ("adding entry %s\n", format_short (entry));
       if (length + 1 > sizeof (exec)) exec += allocate (sizeof (exec));
@@ -6847,6 +6853,7 @@ class PCode
 	       format_short (frame->args));
 #endif
       exec[length + 1] = frame;	// Cached for reuse.
+
       if (frame_state)
 	exec[length + 2] = frame_state;
       else {
