@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.121 1999/03/22 21:29:41 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.122 1999/03/22 21:56:31 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -452,10 +452,10 @@ class imap_mail
     object item;
     array(int) range;
     
-    void create(string wanted, array raw, array(int) r)
+    void create(string wanted, array options, array(int) r)
     {
       range = r;
-      item = imap_atom_options(wanted, raw, range);
+      item = imap_atom_options(wanted, options, range);
     }
 
     array(object|string) `()(string|void s)
@@ -486,7 +486,7 @@ class imap_mail
     case "body":
     case "body.peek": {
       object body_response = fetch_body_response(attr->wanted,
-						 attr->raw_options,
+						 attr->options,
 						 attr->range);
       if (!((attr->section && sizeof(attr->section)) +
 	    (attr->part && sizeof(attr->part)))) {
@@ -592,7 +592,7 @@ class imap_mail
 	case 2:
 	  return body_response(format_headers(filter & headers));
 	case 3:
-	  if (attr->section[2] == "not")
+	  if (lower_case(attr->section[2]) == "not")
 	    return body_response(format_headers(headers - filter));
 	  /* Fall through */
 	default:
