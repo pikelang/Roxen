@@ -8,7 +8,7 @@ constant modules =
 ({
   "proxy",
   "ftpgateway",
-  "gopher",
+//  "gopher",
 //   "wais",
   "connect",
 });
