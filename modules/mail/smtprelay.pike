@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.9 1998/09/15 18:13:45 grubba Exp $
+ * $Id: smtprelay.pike,v 1.10 1998/09/15 19:06:34 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.9 1998/09/15 18:13:45 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.10 1998/09/15 19:06:34 grubba Exp $";
 
 /*
  * Some globals
@@ -633,12 +633,20 @@ static void send_mail()
   check_mail(t);
 }
 
+static object send_mail_id;
 static void check_mail(int t)
 {
+#ifdef RELAY_DEBUG
+  roxen_perror(sprintf("SMTP: check_mail(%d)\n", t));
+#endif /* RELAY_DEBUG */
   if (check_interval > t) {
     check_interval = t;
+    if (send_mail_id) {
+      // Keep only one send_mail() at a time. 
+      remove_callout(send_mail_id);
+    }
     // Send mailid asynchronously.
-    call_out(send_mail, t);
+    send_mail_id = call_out(send_mail, t);
   }
 }
 
@@ -713,7 +721,8 @@ void bounce(mapping msg, string code, array(string) text)
 		      "To":msg->sender,
 		      "Date":mktimestamp(time()),
 		      "Content-Type":"multipart/report; "
-		      "report-type=delivery-status",
+		      "Report-Type=delivery-status",
+		      "Content-Transfer-Encoding":"8bit",
 		   ]),
 		   ({
 		     MIME.Message(body,
@@ -721,6 +730,7 @@ void bounce(mapping msg, string code, array(string) text)
 				     "Content-Type":
 				     "text/plain; "
 				     "charset=iso-8859-1",
+				     "Content-Transfer-Encoding":"8bit"
 				  ])),
 		     MIME.Message(oldheaders,
 				  ([ "MIME-Version":"1.0",
