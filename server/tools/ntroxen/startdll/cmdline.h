@@ -1,6 +1,6 @@
 // cmdline.h: interface for the CCmdLine class.
 //
-// $Id: cmdline.h,v 1.3 2001/06/27 16:26:45 tomas Exp $
+// $Id: cmdline.h,v 1.4 2001/08/06 14:18:45 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -23,7 +23,9 @@ public:
   virtual ~CArgList();
 
   BOOL Add(char *item);
+  BOOL AddIfNew(char *item);
   BOOL Remove(char *item);
+  BOOL Exists(char *item);
 
   tData * GetList() { return m_pData; }
 

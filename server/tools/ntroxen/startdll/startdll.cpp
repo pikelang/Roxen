@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.5 2001/06/27 16:26:46 tomas Exp $
+// $Id: startdll.cpp,v 1.6 2001/08/06 14:18:45 tomas Exp $
 //
 
 
@@ -354,6 +354,8 @@ inline void CServiceModule::ServiceMain(DWORD dwArgc, LPTSTR* lpszArgv)
         LogEvent("ServiceMain::argv[%d] = '%s'", i, lpszArgv[i]);
     }
 */
+
+    m_Cmdline.Parse(dwArgc, lpszArgv);
 
     // Register the control request handler
     m_status.dwCurrentState = SERVICE_START_PENDING;

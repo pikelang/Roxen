@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.4 2001/06/27 16:26:45 tomas Exp $
+// $Id: cmdline.cpp,v 1.5 2001/08/06 14:18:44 tomas Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -128,6 +128,24 @@ BOOL CArgList::ReSize(int diff)
 }
 
 
+BOOL CArgList::Exists(char *item)
+{
+  int ret = FALSE;
+  int i;
+
+  for (i=0; i<m_Count; i++)
+  {
+    if (strcmp(m_pData[i], item) == 0)
+    {
+      ret = TRUE;
+      break;
+    }
+  }
+
+  return ret;
+}
+
+
 BOOL CArgList::Add(char *item)
 {
   ReSize(1);
@@ -139,6 +157,15 @@ BOOL CArgList::Add(char *item)
   m_pData[m_Count++] = p;
 
   return TRUE;
+}
+
+
+BOOL CArgList::AddIfNew(char *item)
+{
+  if (Exists(item))
+    return TRUE;
+
+  return Add(item);
 }
 
 
@@ -1280,17 +1307,17 @@ BOOL CCmdLine::Parse(int argc, char *argv[])
   //esac
   if (m_iDebug == 0)
   {
-    m_saPikeDefines.Add("-DMODULE_DEBUG");
-    m_saPikeArgs.Add("-w");
+    m_saPikeDefines.AddIfNew("-DMODULE_DEBUG");
+    m_saPikeArgs.AddIfNew("-w");
   }
   else if (m_iDebug == -1)
   {
   }
   else if (m_iDebug == 1)
   {
-    m_saPikeDefines.Add("-DDEBUG");
-    m_saPikeDefines.Add("-DMODULE_DEBUG");
-    m_saPikeArgs.Add("-w");
+    m_saPikeDefines.AddIfNew("-DDEBUG");
+    m_saPikeDefines.AddIfNew("-DMODULE_DEBUG");
+    m_saPikeArgs.AddIfNew("-w");
   }
 
   return ret;
