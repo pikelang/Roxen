@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.15 1997/01/15 00:47:53 law Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.16 1997/01/15 18:30:17 grubba Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -969,7 +969,7 @@ string tag_signature(string tag, mapping m, object got)
   return "<right><address>"+tag_user(tag, m, got)+"</address></right>";
 }
 
-string tag_user(string tag, mapping m, object got)
+string tag_user(string tag, mapping m, object got, object file)
 {
   string *u;
   string b, dom;
@@ -977,8 +977,9 @@ string tag_user(string tag, mapping m, object got)
   if(!got->conf->auth_module)
     return "<!-- user requires an user database! -->\n";
 
-
-  b=m->name;
+  if (!(b=m->name)) {
+    return(tag_modified("modified", m | ([ "by":"by" ]), got, file));
+  }
 
   dom=roxen->query("Domain");
   if(dom[-1]=='.')
