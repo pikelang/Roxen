@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.111 2001/08/16 14:37:59 per Exp $
+// $Id: Roxen.pmod,v 1.112 2001/08/17 16:16:57 per Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -196,10 +196,83 @@ mapping add_http_header(mapping to, string name, string value)
   return to;
 }
 
-string short_name(string long_name)
+int is_mysql_keyword( string name )
+//! Return true if the argument is a mysql keyword.
+//! Not in DBManager due to recursive module dependencies.
 {
-  long_name = replace(long_name, " ", "_");
-  return lower_case(long_name);
+  return (<
+      "action", "add", "aggregate", "all", "alter", "after", "and", "as",
+      "asc", "avg", "avg_row_length", "auto_increment", "between", "bigint",
+      "bit", "binary", "blob", "bool", "both", "by", "cascade", "case",
+      "char", "character", "change", "check", "checksum", "column",
+      "columns", "comment", "constraint", "create", "cross", "current_date",
+      "current_time", "current_timestamp", "data", "database", "databases",
+      "date", "datetime", "day", "day_hour", "day_minute", "day_second",
+      "dayofmonth", "dayofweek", "dayofyear", "dec", "decimal", "default",
+      "delayed", "delay_key_write", "delete", "desc", "describe", "distinct",
+      "distinctrow", "double", "drop", "end", "else", "escape", "escaped",
+      "enclosed", "enum", "explain", "exists", "fields", "file", "first",
+      "float", "float4", "float8", "flush", "foreign", "from", "for", "full",
+      "function", "global", "grant", "grants", "group", "having", "heap",
+      "high_priority", "hour", "hour_minute", "hour_second", "hosts",
+      "identified", "ignore", "in", "index", "infile", "inner", "insert",
+      "insert_id", "int", "integer", "interval", "int1", "int2", "int3",
+      "int4", "int8", "into", "if", "is", "isam", "join", "key", "keys",
+      "kill", "last_insert_id", "leading", "left", "length", "like",
+      "lines", "limit", "load", "local", "lock", "logs", "long", "longblob",
+      "longtext", "low_priority", "max", "max_rows", "match", "mediumblob",
+      "mediumtext", "mediumint", "middleint", "min_rows", "minute",
+      "minute_second", "modify", "month", "monthname", "myisam", "natural",
+      "numeric", "no", "not", "null", "on", "optimize", "option",
+      "optionally", "or", "order", "outer", "outfile", "pack_keys",
+      "partial", "password", "precision", "primary", "procedure", "process",
+      "processlist", "privileges", "read", "real", "references", "reload",
+      "regexp", "rename", "replace", "restrict", "returns", "revoke",
+      "rlike", "row", "rows", "second", "select", "set", "show", "shutdown",
+      "smallint", "soname", "sql_big_tables", "sql_big_selects",
+      "sql_low_priority_updates", "sql_log_off", "sql_log_update",
+      "sql_select_limit", "sql_small_result", "sql_big_result",
+      "sql_warnings", "straight_join", "starting", "status", "string",
+      "table", "tables", "temporary", "terminated", "text", "then", "time",
+      "timestamp", "tinyblob", "tinytext", "tinyint", "trailing", "to",
+      "type", "use", "using", "unique", "unlock", "unsigned", "update",
+      "usage", "values", "varchar", "variables", "varying", "varbinary",
+      "with", "write", "when", "where", "year", "year_month", "zerofill",      
+  >)[ name ];
+}
+
+string short_name(string|Configuration long_name)
+//! Given either a long name or a Configuration object, return a short
+//! (no longer than 20 characters) identifier.
+//!
+//! This function also does Unicode normalization and removes all
+//! 'non-character' characters from the name. The string is then
+//! utf8-encoded.
+{
+  string id;
+  if( objectp( long_name ) )
+  {
+    if( !long_name->name )
+      error("Illegal first argument to short_name.\n"
+	    "Expected Configuration object or string\n");
+    long_name = long_name->name+hash(long_name->name)->digits(36);
+  }
+
+  id = Unicode.split_words_and_normalize( lower_case(long_name) )*"_";
+  
+  if( strlen( id ) > 20 )
+    id = (id[..16]+"_"+hash(id)->digits(36))[..19];
+
+  if( !strlen( id ) )
+    id = hash(long_name)->digits(36);
+
+  if( is_mysql_keyword( id ) )
+    return "x"+id[..19];
+
+  while( strlen(string_to_utf8( id )) > 20 )
+    id = id[..strlen(id)-1];
+
+  return string_to_utf8( id );
 }
 
 int _match(string w, array (string) a)

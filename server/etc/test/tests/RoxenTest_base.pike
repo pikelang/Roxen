@@ -198,6 +198,10 @@ void run_tests( Configuration c )
   }
 #endif
 
+  test_equal( "foo", Roxen.short_name, "foo" );
+  test_equal( "1_2", Roxen.short_name, "½" );
+  test_equal( "foo_bar", Roxen.short_name, "Foo/Bar" );
+  test_equal( "foo_bar_1_2", Roxen.short_name, "Foo/Bar§½" );
 
   // Test logging functions.
 
@@ -248,7 +252,6 @@ void run_tests( Configuration c )
   test( format1, do_log, http_id, fake_response );
 
   test( verify_logged_data, logged, 0 );
-
 
   test( format1, do_log, minimum_id, fake_response );
 
