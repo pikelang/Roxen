@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.224 1999/11/19 18:07:03 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.225 1999/11/22 00:24:42 grubba Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -1991,10 +1991,13 @@ public array access(string file, object id)
   foreach(location_modules(id), tmp)
   {
     loc = tmp[0];
-    if((file+"/")==loc)
-      return file+="/";
-    if(!search(file, loc)) 
-    {
+    if((file+"/")==loc) {
+#ifdef MODULE_LEVEL_SECURITY
+      if(check_security(tmp[1], id)) continue;
+#endif
+      if(s=function_object(tmp[1])->access("", id))
+	return s;
+    } else if(!search(file, loc)) {
 #ifdef MODULE_LEVEL_SECURITY
       if(check_security(tmp[1], id)) continue;
 #endif
@@ -2002,6 +2005,7 @@ public array access(string file, object id)
 	return s;
     }
   }
+  return 0;
 }
 
 // Return the _real_ filename of a virtual file, if any.
@@ -2264,15 +2268,22 @@ object enable_module( string modname )
   {
     if(module_type != MODULE_CONFIG)
     {
-      me->defvar("_priority", 5, "Priority", TYPE_INT_LIST,
-		 "The priority of the module. 9 is highest and 0 is lowest."
-		 " Modules with the same priority can be assumed to be "
-		 "called in random order", 
-		 ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
-      me->deflocaledoc("svenska", "_priority", "Prioritet",
-		       "Modulens prioritet, 9 är högst och 0 är"
-		       " lägst. Moduler med samma prioritet anropas i "
-		       "mer eller mindre slumpmässig ordning.");
+      if (err = catch {
+	me->defvar("_priority", 5, "Priority", TYPE_INT_LIST,
+		   "The priority of the module. 9 is highest and 0 is lowest."
+		   " Modules with the same priority can be assumed to be "
+		   "called in random order", 
+		   ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
+	me->deflocaledoc("svenska", "_priority", "Prioritet",
+			 "Modulens prioritet, 9 är högst och 0 är"
+			 " lägst. Moduler med samma prioritet anropas i "
+			 "mer eller mindre slumpmässig ordning.");
+      }) {
+	report_debug(sprintf("me->defvar:%O\n"
+			     "me->deflocaledoc:%O\n",
+			     me->defvar, me->deflocaledoc));
+	throw(err);
+      }
     }
       
     if(module_type != MODULE_LOGGER && module_type != MODULE_PROVIDER)
