@@ -15,7 +15,7 @@ private static __builtin.__master new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.170 2000/06/29 05:49:43 noring Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.171 2000/08/02 18:30:10 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -482,7 +482,7 @@ object spawn_pike(array(string) args, void|string wd, object|void stdin,
 #ifndef __NT__
     ({getcwd()+"/start",
 #else /* __NT__ */
-    ({getcwd()+"/bin/roxen.exe","-console","-silent",
+    ({getcwd()+"/bin/roxen.exe","-once","-silent",
 #endif /* __NT__ */
       "--cd",wd,
       "--quiet","--program"})+args,
