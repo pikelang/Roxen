@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.56 2002/10/22 00:31:19 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.57 2002/10/23 22:43:38 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "ChiliMoon self test module";
@@ -775,8 +775,11 @@ class TagEmitTESTER {
   constant name = "emit";
   constant plugin_name = "TESTER";
 
-  array(mapping(string:string)) get_dataset(mapping m, RequestID id) {
+  array(mapping(string:mixed)) get_dataset(mapping m, RequestID id) {
     switch(m->test) {
+    case "5":
+      return ({(["v": EntityVVal ("<&>"), "c": EntityCVal ("<&>")])});
+
     case "4":
       return ({
 	([ "a":"1", "b":EntityCVal("aa"), "c":EntityVVal("ca") ]),
