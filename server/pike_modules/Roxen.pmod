@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.175 2004/05/16 21:47:47 mani Exp $
+// $Id: Roxen.pmod,v 1.176 2004/05/16 21:51:05 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2088,8 +2088,32 @@ int time_dequantifier(mapping m, void|int t )
   if (m->minutes) t+=(int)(m->minutes)*60;
   if (m->beats)   t+=(int)((float)(m->beats)*86.4);
   if (m->hours)   t+=(int)(m->hours)*3600;
-  if (m->days)    t+=(int)(m->days)*86400;
-  if (m->weeks)   t+=(int)(m->weeks)*604800;
+  if (m->days) {
+    int days = (int)m->days;
+    if(initial) {
+      if(days<0)
+	t = (Calendar.ISO.Second("unix", t) -
+	     Calendar.ISO.Day()*abs(days))->unix_time();
+      else
+	t = (Calendar.ISO.Second("unix", t) +
+	     Calendar.ISO.Day()*days)->unix_time();
+    }
+    else
+      t+=days*24*3600;
+  }
+  if (m->weeks) {
+    int weeks = (int)m->weeks;
+    if(initial) {
+      if(weeks<0)
+	t = (Calendar.ISO.Second("unix", t) -
+	     Calendar.ISO.Week()*abs(weeks))->unix_time();
+      else
+	t = (Calendar.ISO.Second("unix", t) +
+	     Calendar.ISO.Week()*weeks)->unix_time();
+    }
+    else
+      t+=weeks*604800;
+  }
   if (m->months) {
     int mon = (int)m->months;
     if(initial) {
@@ -2136,6 +2160,19 @@ function get_client_charset_decoder( string едц, RequestID|void id )
   //! encoding of the string "едц&#x829f;".
   //! See the roxen-automatic-charset-variable tag.
 {
+  //  If the first character is "%" the whole request is most likely double
+  //  encoded. We'll undo the decoding by combining the charset decoder with
+  //  http_decode_string().
+  if (has_prefix(едц, "%") && !has_prefix(едц, "%%")) {
+    report_notice("Warning: Double HTTP encoding detected: %s\n", едц);
+    function decoder = get_client_charset_decoder(http_decode_string(едц), id);
+    if (decoder) {
+      return lambda(string s) { return decoder(http_decode_string(s)); };
+    } else {
+      return http_decode_string;
+    }
+  }
+  
   // Netscape seems to send "?" for characters that can't be represented
   // by the current character set while IE encodes those characters
   // as entities, while Opera uses "\201" or "?x829f;"...
@@ -2143,11 +2180,13 @@ function get_client_charset_decoder( string едц, RequestID|void id )
 			({ "&aring;", "&#229;", "&#xe5;",
 			   "&auml;", "&#228;", "&#xe4;",
 			   "&ouml;", "&#246;", "&#xf6;",
-			   "&#33439;","&#x829f;", "\201", "?x829f;", " " }),
+			   "&#33439;","&#x829f;", "\201", "?x829f;",
+			   "\x829f" }),
 			({ "?", "?", "?",
 			   "?", "?", "?",
 			   "?", "?", "?",
-			   "?", "?", "?", "?", "?" }));
+			   "?", "?", "?", "?", "?",
+			   "?" }));
 			
   switch( test ) {
   case "edv":
