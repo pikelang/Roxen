@@ -1,4 +1,4 @@
-/* $Id: builders.pike,v 1.13 1997/08/19 07:03:27 per Exp $ */
+/* $Id: builders.pike,v 1.14 1997/08/24 02:26:40 peter Exp $ */
 
 #include <module.h>
 #include <confignode.h>
@@ -294,39 +294,6 @@ void build_root(object root, void|int nodes)
     o->data = roxen->configurations;
     o->type = NODE_CONFIGURATIONS;
     build_configurations( o );
-
-    o=root->descend("Status");
-
-    object sn;
-    o->describer = describe_global_status;
-    o->data = 1;
-
-    sn=o->descend("Request");
-    sn->describer = describe_request_status;
-
-    sn=o->descend("Process");
-    sn->describer = describe_process_status;
-
-    sn=o->descend("Pipe");
-    sn->describer = describe_pipe_status;
-
-    sn=o->descend("Strings");
-    sn->describer = describe_string_status;
-
-    sn=o->descend("Hosts");
-    sn->describer = describe_hostnames_status;
-
-    sn=o->descend("Cache");
-    sn->describer = describe_cache_system_status;
-
-    sn=o->descend("Disk");
-    sn->describer = describe_disk_cache_system_status;
-
-    sn=o->descend("Files");
-    sn->describer = describe_open_files;
-
-    sn=o->descend("Debug");
-    sn->describer = describe_global_debug;
   }
 }
 
