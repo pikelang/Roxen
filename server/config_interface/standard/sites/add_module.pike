@@ -161,14 +161,15 @@ array(int|string) class_visible_normal( string c, string d, object id )
 {
   string header = ("<tr><td colspan=2><table width=100% cellspacing=0 border=0 cellpadding=3 bgcolor=&usr.content-titlebg;><tr><td>UNFOLD</td><td width=100%>"
                    "<font color=&usr.content-titlefg; size=+2>"+c+"</font>"
-                   "<br>"+d+"</td></tr></table></td></tr>");
+                   "<br>"+d+"</td></tr></table></td></tr>\n");
   if( id->variables->unfolded == c )
-    return ({ 1, replace(header,"UNFOLD","<gbutton preparse dim> "
-                       "View </gbutton>") });
+    return ({ 1, replace(header,"UNFOLD","<a name="+http_encode_string(c)+
+                       "></a><gbutton preparse dim> View </gbutton>") });
 
   return ({ 0, replace(header,"UNFOLD","<gbutton preparse "
                        "href='add_module.pike?config=&form.config;"
-                       "&unfolded="+http_encode_string(c)+"' > "
+                       "&unfolded="+http_encode_string(c)+
+                       "#"+http_encode_string(c)+"' > "
                        "View </gbutton>") }) ;
 }
 
@@ -188,6 +189,66 @@ string page_normal( RequestID id, int|void noimage )
 string page_fast( RequestID id )
 {
   return page_normal( id, 1 );
+}
+
+string describe_module_faster( object module, object block)
+{
+  if(!block)
+  {
+return sprintf(
+#"
+    <tr><td colspan=2><table width='100%%'><td><font size=+2>%s</font></td>
+        <td align=right>%s</td></table></td></tr>
+    <tr><td valign=top><select multiple name=module_to_add>
+                       <option value='%s'>%s</option></select>
+        </td><td valign=top>%s<p>%s</td>
+    </tr>
+",
+   module->get_name(),
+   module_image(module->type),
+   module->sname,
+   module->get_name(),
+   module->get_description(),
+   "Will be loaded from: "+module->filename
+  );
+  } else {
+    if( block == module )
+      return "";
+    return "";
+  }
+}
+
+array(int|string) class_visible_faster( string c, string d, object id )
+{
+  string header = ("<tr><td colspan=2><table width=100% cellspacing=0 border=0 cellpadding=3 bgcolor=&usr.content-titlebg;><tr><td>UNFOLD</td><td width=100%>"
+                   "<font color=&usr.content-titlefg; size=+2>"+c+"</font>"
+                   "<br>"+d+"</td></tr></table></td></tr>\n");
+  if( id->variables->unfolded == c )
+    return ({ 1, replace(header,"UNFOLD","<a name="+http_encode_string(c)+
+                       "></a><gbutton preparse dim> View </gbutton>")+
+                       "<tr><td><submit-gbutton> &locale.add_module; "
+                       "</submit-gbutton></td></tr>" });
+
+  return ({ 0, replace(header,"UNFOLD","<gbutton preparse "
+                       "href='add_module.pike?config=&form.config;"
+                       "&unfolded="+http_encode_string(c)+
+                       "#"+http_encode_string(c)+"' > "
+                       "View </gbutton>") }) ;
+}
+
+string page_faster( RequestID id )
+{
+  string content = "";
+  content += "<form method=post action='add_module.pike'>"
+             "<input type=hidden name='config' value='&form.config;'>"
+             "<table>";
+  string desc, err;
+  [desc,err] = get_module_list( describe_module_faster,
+                                class_visible_faster, id );
+  content += desc;
+  content += ("</table></form>"+
+              "<pre>"+html_encode_string(err)+"</pre>");
+  return page_base( id, content );
 }
 
 int first;

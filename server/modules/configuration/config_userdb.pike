@@ -141,6 +141,7 @@ class ConfigurationSettings
 #"<dl>
 <dt>normal</dt><dd>Show module name and documentation with images.</dd>
 <dt>fast</dt><dd>Like verbose, but no type images.</dd>
+<dt>faster</dt><dd>Like verbose, but allows to select multiple modules at once.</dd>
 <dt>compact</dt><dd>Only show the names of modules, and allow
 addition/deletion of multiple modules at once.</dd>
 <dt>really compact</dt><dd>Like compact, but no module classes.</dd>
@@ -155,7 +156,7 @@ moduler på samma gång.</dd>
 <dt>kompaktare</dt><dd>Som kompakt, men utan modulkategorier.</dd>
 </dl>
 " ]),
-({ "normal","fast","compact","really compact"}),
+({ "normal","fast","faster","compact","really compact"}),
 (["svenska":([ "normal":"normal","fast":"snabb","compact":"kompakt","really compact":"kompaktare"]),
  ])
             );
