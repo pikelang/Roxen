@@ -71,6 +71,7 @@ install_data:
 	${INSTALL_DATA_R} server/data/include 		${PROG_DIR}/server/data/;
 	${INSTALL_DATA_R} server/data/maps 		${PROG_DIR}/server/data/;
 	${INSTALL_DATA_R} server/data/more_extensions	${PROG_DIR}/server/data/;
+	${INSTALL_DATA}   server/data/mysql-template.tar ${PROG_DIR}/server/data/;
 	${INSTALL_DATA_R} server/data/randomtext	${PROG_DIR}/server/data/;
 	${INSTALL_DATA_R} server/data/refdoc		${PROG_DIR}/server/data/;
 	${INSTALL_DATA}   server/data/supports		${PROG_DIR}/server/data/;
