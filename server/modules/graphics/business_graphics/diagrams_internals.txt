@@ -160,6 +160,11 @@ int xsize, ysize;
 
 "linewidth":float bredd på alla linjer
 
+"grindwidth":float bredd på alla linjer i grinden
+
+"vertgrind": int om denna är så blir det vertikala grind
+
+"horgrind": int om denna är så blir det horizontella grind
 
 "image":object(image)
 //bilden som grafen ritas i.
