@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.2 1998/09/14 19:53:30 grubba Exp $
+ * $Id: smtprelay.pike,v 1.3 1998/09/14 20:44:17 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.2 1998/09/14 19:53:30 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.3 1998/09/14 20:44:17 grubba Exp $";
 
 /*
  * Some globals
@@ -27,7 +27,7 @@ static object sql;
 
 static object dns = Protocols.DNS.async_client();
 
-static void send_mail();
+static void check_mail(int seconds);
 
 /*
  * Roxen glue
@@ -64,8 +64,8 @@ void start(int i, object c)
 
     sql = Sql.sql(QUERY(sqlurl));
 
-    /* Start delivering mail 5 seconds after everything has loaded. */
-    call_out(send_mail, 5);
+    /* Start delivering mail soon after everything has loaded. */
+    check_mail(10);
   }
 }
 
@@ -475,11 +475,15 @@ static void mail_sent(int res, mapping message)
   }
 }
 
+static int check_interval = 0x7fffffff;
+
 static void send_mail()
 {
 #ifdef RELAY_DEBUG
   roxen_perror("SMTP: send_mail()\n");
 #endif /* RELAY_DEBUG */
+
+  check_interval = 0x7fffffff;
 
 #ifdef THREADS
   mixed key = queue_mutex->lock();
@@ -494,7 +498,7 @@ static void send_mail()
     // No mail to send yet.
 
     // Try sending again in an hour.
-    call_out(send_mail, 60*60);
+    check_mail(60*60);
   }
 
   // FIXME: Add some grouping code here.
@@ -508,6 +512,79 @@ static void send_mail()
     // Send the message.
     MailSender(dns, mm, QUERY(spooldir), mail_sent, this_object());
   }
+}
+
+static void check_mail(int t)
+{
+  if (check_interval > t) {
+    check_interval = t;
+    // Send mailid asynchronously.
+    call_out(send_mail, t);
+  }
+}
+
+/*
+ * Callable from elsewhere to send message's
+ */
+void send_message(string from, array(string) rcpt,
+		  string message, string|void csum)
+{
+  roxen_perror(sprintf("SMTP: send_message(%O, %O, X)\n", from, rcpt));
+
+  if (!csum) {
+    csum = replace(MIME.encode_base64(Crypto.sha()->update(message)->
+				      digest()), "/", ".");
+  }
+
+  // Queue mail for sending.
+
+  // NOTE: We assume that an SHA checksum will never occur twice.
+
+  string fname = combine_path(QUERY(spooldir), csum);
+
+#ifdef THREADS
+  mixed key = queue_mutex->lock();
+#endif /* THREADS */
+
+  if (!file_stat(fname)) {
+    object spoolfile = Stdio.File();
+    if (!spoolfile->open(fname, "cwxa")) {
+      report_error(sprintf("SMTPRelay: Failed to open spoolfile %O!\n",
+			   fname));
+      return;
+    }
+
+    if (spoolfile->write(message) != sizeof(message)) {
+      report_error(sprintf("SMTPRelay: Failed to write spoolfile %O!\n",
+			   fname));
+      
+      rm(fname);
+
+      return;
+    }
+    spoolfile->close();
+  }
+  
+  foreach(rcpt, string to) {
+    array(string) a = to/"@";
+
+    string user = a[0];
+    string domain = (sizeof(a)>1)?(a[-1]):"localhost";
+
+    sql->query(sprintf("INSERT INTO send_q "
+		       "(sender, user, domain, mailid, send_at) "
+		       "VALUES('%s', '%s', '%s', '%s', 0)",
+		       sql->quote(from), sql->quote(user), sql->quote(domain),
+		       sql->quote(csum)));
+  }
+
+#ifdef THREADS
+  if (key) {
+    destruct(key);
+  }
+#endif /* THREADS */
+
+  check_mail(10);
 }
 
 /*
@@ -573,57 +650,7 @@ void bounce(mapping msg, string code, array(string) text)
 				     "text/rfc822-headers" ])),
 		   }));
 
-    string csum = replace(MIME.encode_base64(Crypto.sha()->update(message)->
-					     digest()), "/", ".");
-    // Queue mail for sending.
-
-    // NOTE: We assume that an SHA checksum will never occur twice.
-
-    string fname = combine_path(QUERY(spooldir), csum);
-
-#ifdef THREADS
-    mixed key = queue_mutex->lock();
-#endif /* THREADS */
-
-    if (!file_stat(fname)) {
-      object spoolfile = Stdio.File();
-      if (!spoolfile->open(fname, "cwxa")) {
-	report_error(sprintf("SMTPRelay: Failed to open spoolfile %O!\n",
-			     fname));
-	return;
-      }
-
-      if (spoolfile->write(message) != sizeof(message)) {
-	report_error(sprintf("SMTPRelay: Failed to write spoolfile %O!\n",
-			     fname));
-
-	rm(fname);
-
-	return;
-      }
-      spoolfile->close();
-    }
-  
-    array(string) a = msg->sender/"@";
-
-    string user = a[0];
-    string domain = (sizeof(a)>1)?(a[-1]):"localhost";
-
-    sql->query(sprintf("INSERT INTO send_q "
-		       "(sender, user, domain, mailid, send_at) "
-		       "VALUES('<>', '%s', '%s', '%s', 0)",
-		       sql->quote(user), sql->quote(domain),
-		       sql->quote(csum)));
-
-#ifdef THREADS
-    if (key) {
-      destruct(key);
-    }
-#endif /* THREADS */
-
-    // Send mailid asynchronously.
-
-    call_out(send_mail, 10);
+    send_message("<>", ({ msg->sender }), message);
   } else {
     roxen_perror("A bounce which bounced!\n");
   }
@@ -709,8 +736,8 @@ int relay(string from, string user, string domain,
 #endif /* THREADS */
 
   // Send mailid asynchronously.
-
-  call_out(send_mail, 2 * 60);
+  // Start in two minutes.
+  check_mail(2 * 60);
 
   return(1);
 }
