@@ -1,5 +1,5 @@
 /*
- * $Id: PDB.pmod,v 1.28 1999/06/26 01:58:03 peter Exp $
+ * $Id: PDB.pmod,v 1.29 2000/04/19 23:51:13 nilsson Exp $
  */
 
 #if constant(thread_create)
@@ -12,7 +12,7 @@
 #define UNLOCK() } while(0)
 #endif
 
-#define PDB_ERR(msg) (exceptions?throw(({ "(PDB) "+msg+"\n",backtrace() })):0)
+#define PDB_ERR(msg) (exceptions?(throw(({ "(PDB) "+msg+"\n",backtrace() })),0):0)
 #define PDB_WARN(msg) werror("(PDB Warning) "+msg+"\n")
 
 #define DISABLE_BUG 1
