@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.720 2001/08/30 04:09:18 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.721 2001/08/31 00:10:37 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -66,6 +66,12 @@ static function sol = master()->set_on_load;
 int test_euid_change;
 #endif
 
+string md5( string what )
+{
+  return Gmp.mpz(Crypto.md5()->update( what )->digest(),256)
+    ->digits(32);
+}
+  
 string query_configuration_dir()
 {
   return configuration_dir;
@@ -3119,12 +3125,6 @@ class ArgCache
     return 0;
   }
 
-  string md5( string what )
-  {
-    return Gmp.mpz(Crypto.md5()->update( what )->digest(),256)
-      ->digits(32);
-  }
-  
   int create_key( string long_key, string|void md )
   {
     if( !md )  md = md5(long_key);
@@ -3327,9 +3327,10 @@ void create()
 
   add_constant( "CFUserDBModule",config_userdb_module );
   
-  add_constant( "ArgCache", ArgCache );
+  //add_constant( "ArgCache", ArgCache );
   //add_constant( "roxen.load_image", load_image );
 
+  // simplify dumped strings.  
   add_constant( "roxen", this_object());
   //add_constant( "roxen.decode_charset", decode_charset);
 
@@ -3371,15 +3372,16 @@ void create()
     });
 
 
-  DDUMP( "etc/modules/DBManager.pmod");
   DDUMP( "base_server/roxenlib.pike");
-  DDUMP( "base_server/html.pike");
   DDUMP( "etc/modules/Dims.pmod");
   DDUMP( "config_interface/boxes/Box.pmod" );
+  dump( "base_server/html.pike");
+
   add_constant( "RoxenModule", RoxenModule);
   add_constant( "ModuleInfo", ModuleInfo );
 
   add_constant( "load",    load);
+
   add_constant( "Roxen.set_locale", set_locale );
   add_constant( "Roxen.get_locale", get_locale );
 
@@ -3935,24 +3937,30 @@ void show_timers()
 }
 #endif
 
-// void show_avg_prof()
-// {
-//   foreach(configurations, Configuration c )
-//     c->debug_write_prof( );
-//   call_out(show_avg_prof, 10 );
-// }
 
 array argv;
 int main(int argc, array tmp)
 {
   argv = tmp;
   tmp = 0;
-// #ifdef AVERAGE_PROFILING
-//   call_out(show_avg_prof, 10 );
-// #endif
+  
+  dbm_cached_get = master()->resolv( "DBManager.cached_get" );
 
+  dbm_cached_get( "local" )->
+    query( "CREATE TABLE IF NOT EXISTS "
+	   "compiled_formats ("
+	   "  md5 CHAR(32) not null primary key,"
+	   "  full BLOB not null,"
+	   "  enc BLOB not null"
+	   ")" );
+  master()->resolv( "DBManager.is_module_table" )
+    ( 0, "local", "compiled_formats",
+      "Compiled and cached log and security pattern code. ");
+  
   slowpipe = ((program)"base_server/slowpipe");
   fastpipe = ((program)"base_server/fastpipe");
+  dump( "etc/modules/DBManager.pmod" );
+  dump( "etc/modules/VFS.pmod" );
   dump( "base_server/slowpipe.pike" );
   dump( "base_server/fastpipe.pike" );
   dump( "base_server/throttler.pike" );
@@ -3972,7 +3980,12 @@ int main(int argc, array tmp)
 
   dump( "etc/modules/Variable.pmod/module.pmod" );
   dump( "etc/modules/Variable.pmod/Language.pike" );
+  dump( "etc/modules/Variable.pmod/Schedule.pike" );
 
+  foreach( glob("*.pike", get_dir( "etc/modules/Variable.pmod/"))
+	   -({"Language.pike", "Schedule.pike"}), string f )
+    DDUMP( "etc/modules/Variable.pmod/"+f );
+  
   DDUMP(  "base_server/state.pike" );
   DDUMP(  "base_server/highlight_pike.pike" );
   DDUMP(  "base_server/wizard.pike" );
@@ -3998,6 +4011,9 @@ int main(int argc, array tmp)
     report_notice( "Enabling replication support\n"
 		   "Please note that this is very much work in progress\n");
     add_constant( "REPLICATE", 1 );
+    call_out( lambda() {
+		dump("arg_cache_plugins/replicate.pike");
+	      }, 2 );
   }
 
   // Dangerous...
@@ -4052,6 +4068,8 @@ int main(int argc, array tmp)
   set_u_and_gid(); // Running with the right [e]uid:[e]gid from this point on.
 
   create_pid_file(Getopt.find_option(argv, "p", "pid-file"));
+
+  // Done before the modules are dumped.
 
 #ifdef RUN_SELF_TEST
   enable_configurations_modules();
@@ -4167,6 +4185,7 @@ static string _sprintf( )
   return "roxen";
 }
 
+function(string:Sql.Sql) dbm_cached_get;
 
 // Support for logging in configurations and modules.
 
@@ -4232,9 +4251,25 @@ void run_log_format( string fmt, function c, RequestID id, mapping file )
 
 function compile_log_format( string fmt )
 {
+  add_constant( "___LogFormat", LogFormat );
   if( compiled_formats[ fmt ] )
     return compiled_formats[ fmt ];
 
+  string kmd5 = md5( fmt );
+
+  array tmp =
+    dbm_cached_get( "local" )
+    ->query("SELECT full,enc FROM compiled_formats WHERE md5=%s", kmd5 );
+
+  if( sizeof(tmp) && (tmp[0]->full == fmt) )
+  {
+    mixed err = catch {
+      return compiled_formats[fmt] =
+	decode_value( tmp[0]->enc, master()->MyCodec() )()->log;
+    };
+    report_debug("Decoding of dumped log-format failed.\n%s\n",
+		 describe_backtrace(err));
+  }
   array parts = fmt/"$";
   string format = parts[0];
   array args = ({});
@@ -4275,7 +4310,6 @@ function compile_log_format( string fmt )
   }
   if( add_nl ) format += "\n";
 
-  add_constant( "___LogFormat", LogFormat );
   string code = sprintf(
 #"
   inherit ___LogFormat;
@@ -4299,7 +4333,16 @@ function compile_log_format( string fmt )
    callback( data );
   }
 ";
-  return compiled_formats[ fmt ] = compile_string( code )()->log;
+
+  program res = compile_string( code );
+
+  dbm_cached_get( "local" )
+    ->query("DELETE FROM compiled_formats WHERE md5=%s", kmd5 );
+  dbm_cached_get( "local" )
+    ->query("INSERT INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
+	    kmd5,fmt,encode_value( res, master()->MyCodec( res ) ) );
+  
+  return compiled_formats[ fmt ] = res()->log;
 }
 
 // This array contains the compilation information for the different
@@ -4486,6 +4529,28 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 //! 'deny' always implies a return, no futher testing is done if a
 //! 'deny' match.
 {
+  // Now, this cache is not really all that performance critical, I
+  // mostly coded it as a proof-of-concept, and because it was more
+  // fun that trying to find the bug in the image-cache at the moment.
+
+  string kmd5 = md5( pattern );
+
+  array tmp =
+    dbm_cached_get( "local" )
+    ->query("SELECT full,enc FROM compiled_formats WHERE md5=%s", kmd5 );
+
+  if( sizeof(tmp) && (tmp[0]->full == pattern) )
+  {
+    mixed err = catch {
+      return decode_value( tmp[0]->enc, master()->MyCodec() )()->log;
+    };
+    report_debug("Decoding of dumped log-format failed.\n%s\n",
+		 describe_backtrace(err));
+  }
+  
+
+
+
   string code = "";
   array variables = ({ "  object userdb_module",
 		       "  object authmethod = id->conf",
@@ -4619,6 +4684,13 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 			pattern/"\n",
 			code/"\n"));
 #endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
+   mixed res = compile_string( code );
+   
+  dbm_cached_get( "local" )
+    ->query("DELETE FROM compiled_formats WHERE md5=%s", kmd5 );
+  dbm_cached_get( "local" )
+    ->query("INSERT INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
+	    kmd5,pattern,encode_value( res, master()->MyCodec( res ) ) );
   return compile_string(code)()->f;
 }
 

@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.279 2001/08/24 17:31:01 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.280 2001/08/31 00:10:38 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -768,6 +768,16 @@ void trace_destruct(mixed x)
 }
 #endif /* TRACE_DESTRUCT */
 
+#define DC(X) add_dump_constant( X,nm_resolv(X) )
+function add_dump_constant;
+mixed nm_resolv(string x )
+{
+  catch {
+    return new_master->resolv( x );
+  };
+  return ([])[0];
+};
+  
 // Set up efuns and load Roxen.
 void load_roxen()
 {
@@ -796,6 +806,8 @@ void load_roxen()
   add_constant("parse_html", parse_html);
   add_constant("parse_html_lines", parse_html_lines);
 #endif
+
+  DC( "Roxen" );
 
   roxen = really_load_roxen();
 }
@@ -1903,16 +1915,7 @@ library should be enough.
   // These are here to allow dumping of roxen.pike to a .o file.
   report_debug("Loading pike modules ... \b");
 
-#define DC(X) add_dump_constant( X,nm_resolv(X) )
-  mixed nm_resolv(string x )
-  {
-    catch {
-      return new_master->resolv( x );
-    };
-    return ([])[0];
-  };
-  
-  function add_dump_constant = new_master->add_dump_constant;
+  add_dump_constant = new_master->add_dump_constant;
   int t = gethrtime();
 
   DC( "Protocols.HTTP" );
@@ -1942,6 +1945,7 @@ library should be enough.
 
   DC( "Stdio.read_bytes" );  DC( "Stdio.read_file" );
   DC( "Stdio.write_file" );
+
 
   DC( "Stdio.sendfile" );
 
@@ -1976,7 +1980,8 @@ library should be enough.
 
   DC( "Image.Image" );  DC( "Image.Font" );  DC( "Image.Colortable" );
   DC( "Image.Layer" );  DC( "Image.lay" );   DC( "Image.Color" );
-  DC( "Image.Color.Color" );
+  DC( "Image.Color.Color" ); DC("Image._PSD" );  DC("Image._XCF" );
+  DC( "Image._XPM" );
 
   if( DC("Image.GIF.encode") )
     DC( "Image.GIF.encode_trans" );
