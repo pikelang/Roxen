@@ -5,7 +5,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.16 1998/08/06 19:03:57 wellhard Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.17 1998/08/09 18:55:36 wellhard Exp $";
 
 mapping host_to_id;
 
@@ -69,10 +69,14 @@ string file_from_host(object id, string file)
 
 mixed find_file(string f, object id)
 {
+#if 1  
   if(!host_to_id)
     update_host_cache(id);
+#else
+  id->variables->customer_id=1;
+  id->misc->customer_id=1;
+#endif
   string file=file_from_host(id,f);
-
   id->misc->wa = this_object();
   if(!file&& (f=="" ||
 	      host_to_id[(array_sscanf(f,"%s/")+({""}))[0]]))
@@ -88,10 +92,10 @@ mixed find_file(string f, object id)
 	s+="<li><a href='/"+host+"/'>"+host+"</a>";
     return http_string_answer(parse_rxml(s,id),"text/html");
   }
-
   mixed res = filesystem::find_file(file, id);
   if(objectp(res)) {
     mapping md = .AutoWeb.MetaData(id, f)->get();
+   // werror("File: %O, md: %O", f, md);
     if(md->content_type=="text/html") {
       string d = res->read( );
       if((md->template)&&(md->template!="No template"))

@@ -154,7 +154,7 @@ class ContentTypes {
   void create()
   {
     default_content_type = "autosite/unknown";
-    string image_base = "/webadmimg/";
+    string image_base = "";
     string image_ext = ".gif";
     content_types =
     ([ "text/html" :
@@ -213,6 +213,39 @@ class ContentTypes {
     name_to_type = ([ ]);
     foreach (indices( content_types ), string ct)
       name_to_type[ content_types[ ct ]->name ] = ct;
+  }
+}
+
+class Icons {
+  inherit "roxenlib";
+  string virtual_base;
+  string fysical_base;
+  array icons;
+  mapping icons_dim;
+  
+  string tag(string icon)
+  {
+    return make_tag("img",
+		    ([ "border":"0", "src":combine_path(virtual_base, icon) ])+
+		    icons_dim[icon] );
+  }
+  
+  void create(string _fysical_base, string _virtual_base)
+  {
+    virtual_base = _virtual_base; 
+    fysical_base = _fysical_base; 
+    icons = ({ "image.gif", "sound.gif", "unknown.gif",
+	       "binary.gif", "text.gif", "binary.gif",
+	       "menu.gif", "menu-open.gif", "menu-back.gif" });
+    icons_dim = ([ ]);
+    foreach(icons, string icon)
+    {
+      array dim = Dims.dims()->get(combine_path(fysical_base, icon));
+      if(dim&&sizeof(dim)) {
+	icons_dim[icon] = ([ "width":(string)dim[0],
+			     "height":(string)dim[1] ]);
+      }
+    }
   }
 }
 
@@ -304,8 +337,8 @@ class MetaData {
       if(dims) {
 	rows += ({ "<b>Dimension</b>|||"+dims[0]+"*"+dims[1]+" pixels" });
 	rows += ({ "<b>HTML Tag</b>|||"+
-		   html_encode_string("<img src="+f+
-				      " width="+dims[0]+
+		   html_encode_string("<img src=\""+f+
+				      "\" width="+dims[0]+
 				      " height="+dims[1]+
 				      " alt=\"\">") });
       }

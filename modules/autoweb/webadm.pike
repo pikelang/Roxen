@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.17 1998/08/08 00:02:54 wellhard Exp $
+ * $Id: webadm.pike,v 1.18 1998/08/09 18:55:37 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.17 1998/08/08 00:02:54 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.18 1998/08/09 18:55:37 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -58,7 +58,7 @@ string customer_name(string tag_name, mapping args, object id)
 		  "where id='"+id->misc->customer_id+"'");
   array result = db->query(query);
   string customer_name = "Unknown";
-  if(result&&result[0])
+  if(result&&sizeof(result))
     customer_name = result[0]->name;
   return
     cache_lookup("autoweb_customer_name",id->misc->customer_id)||
@@ -147,15 +147,6 @@ string update_template(string tag_name, mapping args, object id)
   foreach(variables, mapping variable) {
     string from = "$$"+variable->name+"$$";
     string to = variable->value;
-#if 0
-    if(variable->type == "select") {
-      array options =
-	db->query("Select * from template_vars_opts where "
-		  "name='"+variable->value+"'");
-      if(sizeof(options))
-	to = options[0]->value;
-    }
-#endif
     if(variable->type == "font")
       to = replace(to, " ", "_");
     
@@ -170,7 +161,7 @@ string update_template(string tag_name, mapping args, object id)
   }
   template_file->write(template);
   template_file->close();
-  return "<b>Template updated</b>";
+  return "";
 }
 
 string tag_as_meta(string tag_name, mapping args, object id)
@@ -258,10 +249,12 @@ mixed find_file(string f, object id)
   if(!credentials)
     update_customer_cache(id);
 
-  id->misc->wa=this_object();
-
+  id->misc->wa = this_object();
+  id->misc->icons =
+    .AutoWeb.Icons(combine_path(__FILE__+"/", "../img"),
+		   "/webadmimg");
   // User validation
-#if 0
+#if 1
   if(!validate_admin(id)&&!validate_customer(id))
     return (["type":"text/html",
 	     "error":401,

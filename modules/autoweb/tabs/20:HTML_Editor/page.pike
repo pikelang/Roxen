@@ -94,15 +94,16 @@ string|mapping navigate(object id, string f, string base_url)
     wanted_buttons=br;
 
     // Show info about the file;
-    res += "<img src='"+contenttypes->img_from_type(md->content_type)+
-	   "'>&nbsp;&nbsp;";
+    res += id->misc->icons->tag(contenttypes->img_from_type(md->content_type))+
+	   "&nbsp;&nbsp;";
     res += "<b>"+html_encode_string(f)+"</b><br>\n";
     
     res += MetaData(id, f)->display();
   }
   else  // it's a directory
   {
-    res += "<img src='/webadmimg/menu-open.gif'>&nbsp;&nbsp;<b>"+f+"</b><br>";
+    res += id->misc->icons->tag("menu-open.gif")+
+      "&nbsp;&nbsp;<b>"+f+"</b><br>";
     wanted_buttons =
     ({ ({ "Create File", ([ "path": f ]) }),
        ({ "Upload File", ([ "path": f ]) }),
@@ -123,13 +124,11 @@ string|mapping navigate(object id, string f, string base_url)
 	else 
 	  files += ({ file });
     
-    res += "<filelistning><table>";
+    res += "<filelistning><table cellpadding=2>";
     // Display directories.
     foreach(sort(dirs), string item) {
       string href = "<a href='"+encode_url(base_url, "go", f+item+"/")+"'>";
-      //      res += href+"<img src='/internal-gopher-menu' border=0></a>";
-      res += ("<tr><td>"+href+
-	      "<img src='/webadmimg/menu.gif' border=0></a></td>");
+      res += ("<tr><td>"+href+id->misc->icons->tag("menu.gif")+"</a></td>");
       res += "<td>"+href+"<tt>"+
 	     html_encode_string(item+"/")+"</tt></a></td></tr>\n";
     }
@@ -139,7 +138,7 @@ string|mapping navigate(object id, string f, string base_url)
       mapping md = MetaData(id, f+item)->get();
       string img = contenttypes->img_from_type(md->content_type);
       string href = "<a href='"+encode_url(base_url, "go", f+item)+"'>";
-      res += "<tr><td>"+href+"<img src='"+img+"' border=0></a></td>";
+      res += "<tr><td>"+href+id->misc->icons->tag(img)+"</a></td>";
       res += "<td>"+href+"<tt>"+html_encode_string(item)+"</tt></a></td>";
       res += "<td>";
       if(md->title)
@@ -155,7 +154,7 @@ string|mapping navigate(object id, string f, string base_url)
   if(sizeof(f)>1) {
     string href = "<a href='"+encode_url(base_url,
 					 "go", combine_path(f, "../"))+"'>";
-    res = (href+"<img src='/webadmimg/menu-back.gif' border=0>"+"</a>"
+    res = (href+id->misc->icons->tag("menu-back.gif")+"</a>"
 	   "&nbsp;&nbsp;"+href+
 	   "Up to parent directory</a><br>\n<br>\n"+res);
   }
