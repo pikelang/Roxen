@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.25 2004/05/10 17:17:22 grubba Exp $
+// $Id: webdav.pike,v 1.26 2004/05/10 18:40:32 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.25 2004/05/10 17:17:22 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.26 2004/05/10 18:40:32 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -397,7 +397,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     if (xml_data) {
       SimpleNode propfind = xml_data->get_first_element("DAV:propfind", 1);
       if (!propfind) {
-	TRACE_LEAVE("COPY: No DAV:propfind.");
+	TRACE_LEAVE("PROPFIND: No DAV:propfind.");
 	return Roxen.http_status(400, "Missing DAV:propfind.");
       }
       /* Valid children of <DAV:propfind> are
