@@ -1,5 +1,5 @@
 /*
- * $Id: debug_summary.pike,v 1.6 2002/06/05 20:16:40 nilsson Exp $
+ * $Id: debug_summary.pike,v 1.7 2002/06/11 17:07:42 nilsson Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -75,6 +75,7 @@ string make_headline(string title)
 string make_environment_summary()
 {
   string res = make_headline("Environment");
+  res+=sprintf("  %-30s %s\n", "Pike:", version());
   res+=sprintf("  %-30s %s\n", "Version:", roxen_version());
   res+=sprintf("  %-30s %s", "Time:", ctime(time()));
   res+=sprintf("  %-30s %s\n", "Host:", gethostname());
