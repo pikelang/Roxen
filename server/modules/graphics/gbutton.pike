@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.98 2003/06/30 16:49:14 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.99 2003/07/04 12:07:42 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -244,6 +244,10 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
 
   mapping ll = ([]);
 
+  //  Photoshop layers: don't let individual layers expand the image
+  //  beyond the bounds of the overall image.
+  mapping opts = ([ "crop_to_bounds" : 1 ]);
+
   void set_image( array layers )
   {
     foreach( layers||({}), object l )
@@ -269,12 +273,12 @@ array(Image.Layer)|mapping draw_button(mapping args, string text, object id)
     //  Let SiteBuilder get a chance to decode its argument data
     if (Sitebuilder.sb_start_use_imagecache) {
       Sitebuilder.sb_start_use_imagecache(args, id);
-      tmp = roxen.load_layers(args->border_image, id);
+      tmp = roxen.load_layers(args->border_image, id, opts);
       Sitebuilder.sb_end_use_imagecache(args, id);
     } else
 #endif
     {
-      tmp = roxen.load_layers(args->border_image, id);
+      tmp = roxen.load_layers(args->border_image, id, opts);
     }
     
     if (mappingp(tmp))
