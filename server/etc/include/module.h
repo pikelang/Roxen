@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.29 1999/12/28 02:17:25 nilsson Exp $
+// $Id: module.h,v 1.30 2000/01/10 09:03:36 nilsson Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 #define SERIOUS
@@ -67,6 +67,7 @@
 #define GLOBVAR(x) roxen->variables[ #x ][VAR_VALUE]
 #endif /* IN_ROXEN */
 
+#define MODULE_ZERO              0
 #define MODULE_EXTENSION         (1<<0)
 #define MODULE_LOCATION          (1<<1)
 #define MODULE_URL	         (1<<2)
