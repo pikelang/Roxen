@@ -4,6 +4,8 @@ Changes since Roxen Challenger 1.2.29 Red
 o SSL3 has been updated to not be vulnerable to the Bleichenbacher
   PKCS#1 attack.
 
+o Applied ftpgateway patch by Wilhelm Koehler <wk@cs.tu-berlin.de>.
+
 o Added check for libm, since Raphsosy doesn't have libm.
 
 o Added kluge to support clients based on SSLeay 0.9.
