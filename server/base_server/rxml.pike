@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.262 2000/12/05 23:06:17 nilsson Exp $
+// $Id: rxml.pike,v 1.263 2000/12/05 23:23:15 nilsson Exp $
 
 
 inherit "rxmlhelp";
@@ -1646,6 +1646,9 @@ class TagEmitValues {
     if(stringp(m->values)) {
       if(m->advanced) {
 	switch(m->advanced) {
+	case "chars":
+	  m->split="";
+	  break;
 	case "lines":
 	  m->values = replace(m->values, ({ "\n\r", "\r\n", "\r" }),
 			      ({ "\n", "\n", "\n" }));
@@ -3009,8 +3012,9 @@ An array or the string to be splitted into an array.
 <attr name=split value=string default=NULL>
 The string the values string is splitted with.
 </attr>
-<attr name=advanced value=lines|words>
-If the input is a string it can be splitted into separate lines or words by using this attribute.
+<attr name=advanced value=lines|words|chars>
+If the input is a string it can be splitted into separate lines, words or characters by
+using this attribute.
 </attr>
 <attr name=case value=upper|lower>
 Changes the case of the value.
