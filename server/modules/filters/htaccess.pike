@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.72 2001/04/24 12:25:02 per Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.73 2001/05/03 00:43:30 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -21,9 +21,40 @@ inherit "module";
 
 constant module_type = MODULE_SECURITY|MODULE_LAST|MODULE_URL|MODULE_USERDB;
 constant module_name = ".htaccess support";
-constant module_doc  = "Almost complete support for NCSA/Apache .htaccess files. See "
+constant module_doc  = "Almost complete support for NCSA/Apache "
+  ".htaccess files. See "
   "<a href=\"http://hoohoo.ncsa.uiuc.edu/docs/setup/access/Overview.html\">"
-  "http://hoohoo.ncsa.uiuc.edu/docs/setup/access/Overview.html</a> for more information.";
+  "http://hoohoo.ncsa.uiuc.edu/docs/setup/access/Overview.html</a> for more information.<br />\n"
+  "\n"
+  "Some non-standard options are supported:"
+
+  "<ul><li>"
+  "All filenames can be specified as 'locate file', which will cause the"
+  " file to be located above (closer to the root of) the currently"
+  " requested file in the virtual filesystem. This can be used to, as an"
+  " example, specify the password file as 'locate .htpasswd', in a"
+  " top-level htaccess file, then have password files located in the"
+  " subdirectories.</li>"
+  "<li>Files can be specified as files in the virtual filesystem, relative "
+  " to the path of the requested file (note: Not relative to "
+  "the .htaccess file)</li>"
+  "<li>Non-standard commands inside &lt;Limit&gt; tags:<pre>"
+  "require ip ip/bits\n"
+  "require ip ip:mask\n"
+  "require time hh:mm-hh:mm\n"
+  "require day day[,day...]   (day either english day name or number (1=monday)\n"
+  "deny ip ip/bits[,ip/bits]\n"
+  "deny ip ip:mask[,ip:mask]\n"
+  "deny ip pattern\n"
+  "deny user name[,name,...]\n"
+  "deny group name[,name,...]\n"
+  "deny dns pattern\n"
+  "deny day day[,day...]\n"
+  "deny time HH:MM-HH:MM\n"
+  "deny referer pattern\n</pre>"
+  "<li> All methods used by HTTP, and also the methods used by FTP, "
+  "can be used to specify when the &lt;Limit&gt; tag will take effect.</ul>"
+  ;
 
 void create()
 {
@@ -217,6 +248,8 @@ mapping parse_and_find_htaccess( RequestID id )
 	  roxen_allow += "allow ip=*\n";
       else if(sscanf(line, "require %s %s", ent, data) == 2)
 	roxen_allow += "allow "+ent+"="+data+"\n";
+      else if(sscanf(line, "deny %s %s", ent, data) == 2)
+	roxen_deny += "deny "+ent+"="+data+"\n";
       else if(sscanf(line, "satisfy %s", data))
 	if(data == "all")
 	  any_ok = 1;
