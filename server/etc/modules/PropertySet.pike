@@ -551,8 +551,6 @@ mapping(string:mixed) remove_property(string prop_name)
 //! RFC 2518 PROPFIND implementation for a single resource (i.e. not
 //! recursive).
 //!
-//! @param path
-//!   @[query_location()]-relative path.
 //! @param mode
 //!   Query mode. Currently one of
 //!   @string mode
@@ -564,12 +562,13 @@ mapping(string:mixed) remove_property(string prop_name)
 //!       Query properties specified by @[filt] and their values.
 //!   @endstring
 //! @param result
-//!   Result object.
+//!   @[MultiStatus.Prefixed] object to collect the results. It has
+//!   the path to the file system as implicit prefix.
 //! @param filt
 //!   Optional multiset of requested properties. If this parameter
 //!   is @expr{0@} (zero) then all available properties are requested.
 mapping(string:mixed) find_properties(string mode,
-				      MultiStatus result,
+				      MultiStatus.Prefixed result,
 				      multiset(string)|void filt)
 {
   switch(mode) {
