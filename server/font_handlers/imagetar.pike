@@ -34,7 +34,7 @@ class myFont
 #endif
     if( c[0] == 0x120 ) return smallspacechar;
     if(!files)
-      files = mytar->get_dir( "/" ) - ({ "fontname" });
+      files = mytar->get_dir( "/" ) - ({ "fontname", "fontinfo" });
     array possible = ({ "/"+encode_char(c) })+
           glob("/"+encode_char( c )+".*", files);
     sort( map(possible,strlen), possible );
@@ -50,9 +50,9 @@ class myFont
     return nullchar;
   }
 
-  void create( string _p, int _s )
+  void create( string _p, int _s, int xpad, int ypad )
   {
-    ::create( _p, _s );
+    ::create( _p, _s, xpad, ypad );
     mytar = open_tar( _p );
   }
 }
@@ -75,7 +75,9 @@ void update_font_list()
       else if( glob( "*.tar", pd ) )
       {
         Filesystem.Tar t = open_tar( dir+pd );
-        if( Stdio.File f = t->open( "fontname", "r" ) )
+        if( Stdio.File f = t->open( "fontinfo", "r" ) )
+          font_list[font_name( f->read() )] = dir+pd;
+        else if( Stdio.File f = t->open( "fontname", "r" ) )
           font_list[font_name( f->read() )] = dir+pd;
         else
           destruct( t );
