@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.128 1999/11/23 19:08:55 mirar Exp $
+// $Id: roxenlib.pike,v 1.129 1999/11/29 21:39:27 neotron Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -166,7 +166,8 @@ static mapping build_env_vars(string f, object id, string path_info)
 
   if(id->realauth)
     new["REMOTE_USER"] = (id->realauth / ":")[0];
-    
+  if(id->auth && id->auth[0])
+    new["ROXEN_AUTHENTICATED"] = "1"; // User is valid with the Roxen userdb.
   if(id->data && strlen(id->data))
   {
     if(id->misc["content-type"])
