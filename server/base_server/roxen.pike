@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.142 1997/10/09 15:07:55 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.143 1997/10/11 03:01:22 neotron Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -726,7 +726,7 @@ public string full_status()
   res += ("<tr><td><b>Number of requests:</b></td><td>" 
 	  + sprintf("%8d", foo[4])
 	  + sprintf("</td><td>%.2f/min</td>", (float)tmp/(float)10)+
-	  "</tr><tr><td><b>Recieved data:</b></td><td>"
+	  "</tr><tr><td><b>Received data:</b></td><td>"
 	  + foo[3] +"</td>");
   
   return res +"</table>";
@@ -886,7 +886,7 @@ mapping restart()
 } 
 
 private array configuration_ports = ({  });
-int startpid;
+int startpid, roxenpid;
 
 
 
@@ -2266,7 +2266,7 @@ varargs int main(int argc, array (string) argv)
 
 
   startpid = getppid();
-  
+  roxenpid = getpid();
   create_pid_file(find_arg(argv, "p", "pid-file", "ROXEN_PID_FILE"));
 
   // Dangerous...
