@@ -418,7 +418,7 @@ object request(object context, mapping(string:array(string))|object id,
 	       mapping(string:array(string)|string)|void headers, mixed ... rest)
 {
   if(objectp(id)) {
-    string tmp = id->conf->query("MyWorldLocation");
+    string tmp = id->url_base();
     sscanf(tmp, "%*s//%s", tmp);
     sscanf(tmp, "%s:", tmp);
     sscanf(tmp, "%s/", tmp);
