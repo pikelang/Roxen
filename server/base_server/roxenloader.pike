@@ -3,7 +3,7 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.38 1997/09/01 00:00:39 peter Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.39 1997/09/06 16:08:14 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -54,7 +54,7 @@ void report_status()
 }
 
 
-void mkdirhier(string from)
+void mkdirhier(string from, int|void mode)
 {
   string a, b;
   array f;
@@ -65,6 +65,11 @@ void mkdirhier(string from)
   foreach(f[0..sizeof(f)-2], a)
   {
     mkdir(b+a);
+#if constant(chmod)
+    if (mode) {
+      catch { chmod(b+a, mode); };
+    }
+#endif /* constant(chmod) */
     b+=a+"/";
   }
 }
@@ -374,11 +379,11 @@ void load_roxen()
   nwrite = roxen->nwrite;
 }
 
-object|void open(string filename, string mode)
+object|void open(string filename, string mode, int|void perm)
 {
   object o;
   o=file();
-  if(o->open(filename, mode))
+  if(o->open(filename, mode, perm||0666))
   {
     mark_fd(o->query_fd(), filename+" (mode: "+mode+")");
     return o;
