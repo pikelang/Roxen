@@ -11,7 +11,7 @@ import Parser.XML.Tree;
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_webapp",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: webapp.pike,v 2.18 2002/06/25 16:19:19 tomas Exp $";
+constant cvs_version = "$Id: webapp.pike,v 2.19 2002/06/28 14:38:17 wellhard Exp $";
 
 constant thread_safe=1;
 constant module_unique = 0;
@@ -1576,7 +1576,7 @@ class TagServlet
           fake_id->not_query=uri;
           fake_id->method = "GET";
 
-          mapping hdrs = m->call_servlet(this_object(), id,
+          mapping hdrs = m->call_servlet(this_object(), fake_id,
                                          uri, args->name || "");
 
           CACHE( fake_id->misc->cacheable );
