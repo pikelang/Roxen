@@ -29,6 +29,8 @@ class Mailbox
   void delete();
   string query_name(int force);
 
+  int num_unread();
+
   array(Mail) mail();
   Mail add_mail(Mail m, int|void do_not_copy_the_flags);
   void remove_mail(Mail m);
