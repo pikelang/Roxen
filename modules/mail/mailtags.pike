@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit Regexp : regexp;
 
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.18 1998/09/27 16:53:46 grubba Exp $";
+"$Id: mailtags.pike,v 1.19 1998/09/28 00:35:06 per Exp $";
 
 constant thread_safe = 1;
 
@@ -2102,7 +2102,7 @@ string low_container_mail_body_parts( string tag, mapping args,
 }
 
 //
-// <debug-import-mail-from-dir dir=...>
+// <debug-import-mail-from-dir dir=... [to=mbox]>
 //  Guess. :-)
 //
 string tag_debug_import_mail_from_dir( string tag, mapping args,
@@ -2115,11 +2115,16 @@ string tag_debug_import_mail_from_dir( string tag, mapping args,
 #endif
   Mailbox incoming = UID->get_incoming();
 
+  if(args->to)
+    incoming = UID->get_or_create_mailbox( args->to );
+
   string res = "Importing from "+args->dir+"<p>\n";
   foreach(sort(((array(int))get_dir( args->dir ))-({0})), int file)
     if(file_stat( args->dir+"/"+file )[ 1 ] > 0)
     {
-      incoming->create_mail_from_fd( Stdio.File( args->dir+"/"+file, "r" ) );
+      Mail m =
+	incoming->create_mail_from_fd( Stdio.File( args->dir+"/"+file,"r" ) );
+      if(args->mark) m->set_flag( args->mark );
       res+="<br>"+file+"\n";
     }
   return res;
@@ -2175,7 +2180,8 @@ string container_get_mail( string tag, mapping args,
 #ifdef UIDPARANOIA
   if(!UID) return "";
 #endif
-  mid->set_flag( "read" );
+  if(!mid->flags()->noread)
+    mid->set_flag( "read" );
 
   if(mid && mid->user == UID)
   {

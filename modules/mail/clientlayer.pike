@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.21 1998/09/27 18:01:42 grubba Exp $
+ * $Id: clientlayer.pike,v 1.22 1998/09/28 00:34:09 per Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.21 1998/09/27 18:01:42 grubba Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.22 1998/09/28 00:34:09 per Exp $";
 constant thread_safe=1;
 
 
@@ -246,6 +246,8 @@ class Mail
   object user;
   object mailbox;
 
+  int _size;
+  mapping _dh;
   mapping _headers;
   static multiset _flags;
 
@@ -258,6 +260,7 @@ class Mail
 
   mixed change( MIME.Message to )
   {
+    _size=0;
     new_body( headers()->body_id )->write( (string)to );
     squery("update messages set sender='%s', "
 	   "subject='%s', headers='%s' WHERE id=%s",
@@ -298,7 +301,12 @@ class Mail
     return body_fd()->read();
   }
 
-  mapping _dh;
+  int get_size( )
+  {
+    if(_size) return _size;
+    return (_size = body_fd()->stat()[ 1 ]);
+  }
+
   mapping decoded_headers(int|void force)
   {
     if(_dh && !force)
@@ -454,6 +462,18 @@ class Mailbox
     return name||(name=get_mailbox_name( id ));
   }
 
+  Mail get_mail_by_id( string id )
+  {
+    Mail m;
+
+    if(m = get_cache_obj( Mail, id ))
+      return m;
+
+    foreach(mail(), m)
+      if(m->id == id) 
+	return m;
+  }
+  
   array(Mail) mail(int|void force)
   {
     if(!force && _mail)
