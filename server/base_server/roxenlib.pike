@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.115 1999/10/08 12:41:23 nilsson Exp $
+// $Id: roxenlib.pike,v 1.116 1999/10/08 16:13:25 nilsson Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -10,7 +10,7 @@ inherit "http";
 #include <stat.h>
 
 #define ipaddr(x,y) (((x)/" ")[y])
-
+#define old_rxml_compat 1
 
 string gif_size(object gif)
 {
@@ -1441,6 +1441,114 @@ string trim( string what )
   return what;
 }
 
+string|int tagtime(int t, mapping m, object id, object language)
+{
+  string s;
+  mixed eris;
+  string res;
+
+  if (m->adjust) t+=(int)m->adjust;
+
+  if (m["int"]) return (string)t;
+
+  if (m->part)
+  {
+    string sp;
+    if(m->type == "ordered")
+    {
+      m->type="string";
+      sp = "ordered";
+    }
+
+    switch (m->part)
+    {
+     case "year":
+      return number2string((int)(localtime(t)->year+1900),m,
+			   language(m->lang, sp||"number"));
+     case "month":
+      return number2string((int)(localtime(t)->mon+1),m,
+			   language(m->lang, sp||"month"));
+     case "day":
+     case "wday":
+      return number2string((int)(localtime(t)->wday+1),m,
+			   language(m->lang, sp||"day"));
+     case "date":
+     case "mday":
+      return number2string((int)(localtime(t)->mday),m,
+			   language(m->lang, sp||"number"));
+     case "hour":
+      return number2string((int)(localtime(t)->hour),m,
+			   language(m->lang, sp||"number"));
+    case "min":  // Not part of RXML 1.4
+     case "minute":
+      return number2string((int)(localtime(t)->min),m,
+			   language(m->lang, sp||"number"));
+    case "sec":  // Not part of RXML 1.4
+     case "second":
+      return number2string((int)(localtime(t)->sec),m,
+			   language(m->lang, sp||"number"));
+     case "yday":
+      return number2string((int)(localtime(t)->yday),m,
+			   language(m->lang, sp||"number"));
+     default: return "";
+    }
+  } else if(m->type) {
+    switch(m->type)
+    {
+     case "iso":
+      eris=localtime(t);
+      return sprintf("%d-%02d-%02d", (eris->year+1900),
+		     eris->mon+1, eris->mday);
+
+     case "discordian":
+#if efun(discdate)
+      eris=discdate(t);
+      res=eris[0];
+      if(m->year)
+	res += " in the YOLD of "+eris[1];
+      if(m->holiday && eris[2])
+	res += ". Celebrate "+eris[2];
+      return res;
+#else
+      return "Discordian date support disabled";
+#endif
+     case "stardate":
+#if efun(stardate)
+      return (string)stardate(t, (int)m->prec||1);
+#else
+      return "Stardate support disabled";
+#endif
+    }
+  }
+  s=language(m->lang, "date")(t,m);
+
+  if(m["case"])
+    switch(lower_case(m["case"])) {
+    case "upper": return upper_case(s);
+    case "lower": return lower_case(s);
+    case "capitalize": return capitalize(s);
+    }
+
+#if old_rxml_compat
+  // Not part of RXML 1.4
+  if (m->upper) {
+    s=upper_case(s);
+    report_warning("Old RXML in "+(id->query||id->not_query)+
+      ", contains upper attribute in a tag. Use case=\"upper\" instead.");
+  }
+  if (m->lower) {
+    s=lower_case(s);
+    report_warning("Old RXML in "+(id->query||id->not_query)+
+      ", contains lower attribute in a tag. Use case=\"lower\" instead.");
+  }
+  if (m->cap||m->capitalize) {
+    s=capitalize(s);
+    report_warning("Old RXML in "+(id->query||id->not_query)+
+      ", contains capitalize or cap attribute in a tag. Use case=\"capitalize\" instead.");
+  }
+  return s;
+#endif
+}
 
 string|int API_read_file(object id, string file)
 {
