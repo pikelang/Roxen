@@ -274,7 +274,7 @@ mixed do_it( RequestID id )
     id->variables->config = decode_site_name( id->variables->config );
 
   object conf = roxen.find_configuration( id->variables->config );
-  string last_module;
+  string last_module = "";
   int got_initial = 0;
   if(!conf)
     return "Configuration gone!\n";
@@ -290,7 +290,7 @@ mixed do_it( RequestID id )
 	foreach (indices (m->variables), string var)
 	  roxen.change_configurable (m->variables[var], VAR_INITIAL, 0);
 	foreach (id->variables->init_var / "\0", string var) {
-	  array(string) split = array_sscanf (var, "%s/%s");
+	  array(string) split = array_sscanf (replace (var, "!", "#"), "%s/%s");
 	  if (sizeof (split) == 2 && split[0] == mod && m->variables[split[1]]) {
 	    roxen.change_configurable (m->variables[split[1]], VAR_INITIAL, VAR_INITIAL);
 	    got_initial = 1;

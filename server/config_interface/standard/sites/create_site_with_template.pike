@@ -59,6 +59,11 @@ mixed parse( RequestID id )
              encode_site_name(id->variables->name));
         foreach( id->misc->modules_to_add, string mod )
           q += "&module_to_add="+http_encode_string(mod);
+	if (id->misc->module_initial_vars) {
+	  q += "&mod_init_vars=1";
+	  foreach (id->misc->module_initial_vars || ({}), string var)
+	    q += "&init_var=" + http_encode_string (replace (var, "#", "!"));
+	}
         call_out( c->save, 1, 1 );
         return http_redirect( q, id );
       }
