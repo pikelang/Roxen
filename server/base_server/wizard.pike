@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.59 1998/03/21 14:01:51 js Exp $
+/* $Id: wizard.pike,v 1.60 1998/05/14 18:30:36 grubba Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -677,7 +677,10 @@ string html_border(string what, int|void width, int|void ww,
 
 void filter_checkbox_variables(mapping v)
 {
-  foreach(indices(v), string s)
-    if(v[s]=="0")   m_delete(v,s);
-    else            v[s]-="\00";
+  foreach(indices(v), string s) {
+    if(!v[s] || (v[s]=="0"))
+      m_delete(v,s);
+    else 
+      v[s]-="\00";
+  }
 }
