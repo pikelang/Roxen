@@ -1,4 +1,4 @@
-string cvs_version="$Id: pimage.pike,v 1.16 1999/07/21 23:49:44 nilsson Exp $";
+string cvs_version="$Id: pimage.pike,v 1.17 1999/11/10 04:53:26 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -198,7 +198,7 @@ class Constructors
       if(percent != old_progress)
       {
 	old_progress=percent;
-	object image = Image.image(302,24,  255, 255, 255), i2;
+	object image = Image.Image(302,24,  255, 255, 255), i2;
 	object text = (get_font("lucida",32,0,0,0,0.0,0.0)->
 		       write(percent==100?"Done":percent+"%")
 		       ->scale(0.5));
@@ -207,7 +207,7 @@ class Constructors
 				       (image->xsize()/2-text->xsize()/2),
 				       (image->ysize()/2-text->ysize()/2));
 	
-	i2 = Image.image(3*percent+3, 28, 0x11,0x33,0x77);
+	i2 = Image.Image(3*percent+3, 28, 0x11,0x33,0x77);
 	i2= i2->paste_alpha_color(text,255,255,255,
 				  (image->xsize()/2-text->xsize()/2),
 				  (image->ysize()/2-text->ysize()/2));
@@ -236,7 +236,7 @@ class Constructors
     {
       float w=len*2.0, h=len/5.0, mp, h2, w2;
       if(hour) w*=0.7;
-      object c = Image.image((int)w,(int)h);
+      object c = Image.Image((int)w,(int)h);
       mp = (w2 = w/2.0)+w2/2.0; h2 = h/2.0;
       c->setcolor( 255, 255, 255 );
       c->polygone( ({ w2,h2-2, mp,0, w,h2, mp,h, w2, h2+2, w2-8, h2}));
@@ -309,9 +309,14 @@ class Constructors
 
   object Text(string font, string text, mixed fg, mixed bg)
   {
-    object m = get_font(font, 32, 0, 0, 0, 0, 0, 0)->write(text);
-    return myimage(bg(),Image.image(m->xsize(),m->ysize(),@bg)
+    object m = resolve_font( font )->write(text);
+    return myimage(bg(),Image.Image(m->xsize(),m->ysize(),@bg)
 		   ->paste_alpha_color(m,@to_color(fg)));
+  }
+
+  object load( string fname )
+  {
+    return myimage( bg(), roxen.load_image( fname, id) );
   }
 
   object PPM(string fname)
@@ -319,28 +324,30 @@ class Constructors
     string q = Stdio.read_bytes(fname);
     if(!q) q = id->conf->try_get_file(dirname(id->not_query)+fname,id);
     if(!q) throw("Unknown PPM image '"+fname+"'");
+#if constant(Gz)
     mixed g = Gz;
     if (g->inflate) {
       catch {
 	q = g->inflate()->inflate(q);
       };
     }
-    return myimage(bg(),Image.PNM.decode(q));
+#endif
+    return myimage(bg(),Image.ANY.decode(q));
   }
 
   object Roxen( )
   {
-    return PPM( "roxen-images/roxen.ppm" );
+    return load( "roxen-images/roxen.png" );
   }
 
   object Dial( )
   {
-    return PPM( "roxen-images/urtavla.ppm" );
+    return load( "roxen-images/urtavla.png" );
   }
   
   object PImage(int xs, int ys, mixed bgc)
   {
-    return myimage(bg(),Image.image(xs,ys,@to_color(bgc)));
+    return myimage(bg(),Image.Image(xs,ys,@to_color(bgc)));
   }
   
 }
@@ -358,7 +365,8 @@ array register_module()
 	      "in pimage: <p>"
 	      "Clock( delay, time_offset, background_image ); Animated clock-gif.<br>"
 	      "Progress( callback_function ); Animated progress bar.<br>"
-	      "PPM( \"file_name\" ); Loads a PPM file.<br>"
+	      "load( \"file_name\" ); Loads an image file.<br>"
+	      "PPM( \"file_name\" ); Loads an image file (compat).<br>"
 	      "PImage(xs,ys, bg_color ); Simple (cleared) image<br>"
 	      "Text( \"font\", \"string\", fg_color, bg_color ); <br>"
 	      "Draws some text..<br>", 0, 1 });
@@ -425,7 +433,7 @@ string tag_glock(string t, mapping m, object rid)
      case "default":  face = "Dial()";  break;
      case "roxen":  face = "Roxen()";  break;
      default:
-       face = "PPM(\""+replace(m->face,DANGEROUS_FROM,DANGEROUS_TO)+"\")";
+       face = "load(\""+replace(m->face,DANGEROUS_FROM,DANGEROUS_TO)+"\")";
     }
   }
   m_delete(m, "face");
