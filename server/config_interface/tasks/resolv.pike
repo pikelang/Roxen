@@ -1,10 +1,10 @@
 /*
- * $Id: resolv.pike,v 1.24 2002/06/12 23:47:05 nilsson Exp $
+ * $Id: resolv.pike,v 1.25 2002/06/13 00:18:10 nilsson Exp $
  */
 inherit "wizard";
 inherit "../logutil";
 
-constant action = "debug_info";
+constant task = "debug_info";
 constant name = "Resolve path...";
 constant doc  = "Check which modules handles the path you enter in the form";
 
@@ -196,7 +196,7 @@ string parse( RequestID id )
 {
 
   string res = "";  //"<nobr>Allow Cache <input type=checkbox></nobr>\n";
-  res += "<input type='hidden' name='action' value='resolv.pike' />\n"
+  res += "<input type='hidden' name='task' value='resolv.pike' />\n"
     "<font size='+2'>"+ name + "</font><br />\n"
     "<table cellpadding='0' cellspacing='10' border='0'>\n"
     "<tr><td align='left'>URL: </td><td align='left'>"

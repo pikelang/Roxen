@@ -1,9 +1,9 @@
 /*
- * $Id: debug_info.pike,v 1.23 2002/06/12 23:47:04 nilsson Exp $
+ * $Id: debug_info.pike,v 1.24 2002/06/13 00:18:09 nilsson Exp $
  */
 #include <stat.h>
 
-constant action = "debug_info";
+constant task = "debug_info";
 constant name = "Pike memory usage information";
 constant doc  = ("Show some information about how pike is using the "
 		 "memory it has allocated. Mostly useful for developers.");

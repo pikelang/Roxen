@@ -1,7 +1,7 @@
 #include <config.h>
 #if constant(all_threads)
 
-constant action="debug_info";
+constant task="debug_info";
 constant name = "Thread backtrace";
 constant doc  = ("Shows a backtrace (stack) for each and every "
 		 "thread in Roxen.");

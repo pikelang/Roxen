@@ -1,5 +1,5 @@
 
-constant action = "status";
+constant task = "status";
 constant name = "Active connection";
 constant doc  = "All currently active connection";
 
@@ -87,7 +87,7 @@ string parse( RequestID id )
       res += "</table>";
     }
   }
-  res += "<input type=hidden name=action value='connections.pike' />"
+  res += "<input type='hidden' name='task' value='connections.pike' />"
     "<submit-gbutton>Refresh</submit-gbutton>";
   return res;
 }

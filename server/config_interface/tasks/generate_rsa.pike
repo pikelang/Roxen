@@ -1,5 +1,5 @@
 /*
- * $Id: generate_rsa.pike,v 1.6 2002/06/12 23:47:04 nilsson Exp $
+ * $Id: generate_rsa.pike,v 1.7 2002/06/13 00:18:09 nilsson Exp $
  */
 
 #if constant(_Crypto) && constant(Crypto.rsa)
@@ -7,7 +7,7 @@
 inherit "ssl_common.pike";
 inherit "wizard";
 
-constant action = "SSL";
+constant task = "SSL";
 constant name = "Generate a new RSA key pair...";
 constant  doc = (doc_string_start + doc_string_end_a +
 		 "Note that it is possible to have more than one "

@@ -12,13 +12,13 @@ string parse( RequestID id )
     object q;
     catch
     {
-      if( (q = ((program)f)()) && q->action &&
+      if( (q = ((program)f)()) && q->task &&
 	  (!config_setting2("group_tasks")
-	   || (q->action == (id->variables->class||"status") )) )
+	   || (q->task == (id->variables->class||"status") )) )
       {
-        res += ({("<action name='" + 
+        res += ({("<task name='" +
 		  replace((string)q->name, ({"\"", "'"}), ({"&#34;", "&#39;"})) + 
-		  "' fname="+f+" >" + q->doc + "</action>")});
+		  "' fname="+f+" >" + q->doc + "</task>")});
       }
     };
   }

@@ -1,5 +1,5 @@
 
-constant action = "status";
+constant task = "status";
 constant name = "Cache status";
 constant doc  = "Show information about the main memory cache in Roxen";
 

@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.133 2002/04/17 14:14:30 wellhard Exp $
+// $Id: site_content.pike,v 1.134 2002/06/13 00:18:09 nilsson Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -332,7 +332,7 @@ string find_module_doc( string cn, string mn, RequestID id )
       "</pre></font>";
   return
     replace( "<br /><b><font size='+2'>" +
-	     Roxen.html_encode_string(EC(TRANSLATE(m->register_module()[1])))
+	     Roxen.html_encode_string((string)EC(TRANSLATE(m->register_module()[1])))
 	     + "</font></b><br />"
                   + EC(TRANSLATE(m->info(id)||"")) + "</p><p>"
                   + EC(TRANSLATE(m->status()||"")) + "</p><p>"
@@ -345,7 +345,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 		    (m->thread_safe ? 
 		     LOCALE("yes", "Yes") : LOCALE("no", "No")) +
 #ifdef THREADS
-		    " <small>(<a href='../../../../../actions/?action"
+		    " <small>(<a href='../../../../../tasks/?task"
 		    "=locks.pike&class=status'>more info</a>)</small><br />\n"
 		    "<b>Number of accesses:</b> " + my_accesses +
 #endif

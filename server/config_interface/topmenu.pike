@@ -14,7 +14,7 @@ array selections =
   ({ LOCALE(214, "Globals"), "globals",   "global_settings/","View Settings"}),
 //({ LOCALE(215, "Ports"),   "ports",     "ports/",          "View Settings"}),
 //({ LOCALE(216, "Events"),  "event_log", "event_log/",      "View Settings"}),
-  ({ LOCALE(196, "Tasks"),   "actions",   "actions/",        "Tasks" }),
+  ({ LOCALE(196, "Tasks"),   "tasks",     "tasks/",          "Tasks" }),
   ({ LOCALE(218, "DBs"),     "dbs",       "dbs/",            "View Settings"}),
   ({ LOCALE(217, "Docs"),    "docs",      "docs/",           0 }),
 });

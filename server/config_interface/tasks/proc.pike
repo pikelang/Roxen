@@ -1,10 +1,10 @@
 /*
- * $Id: proc.pike,v 1.10 2002/06/12 23:47:05 nilsson Exp $
+ * $Id: proc.pike,v 1.11 2002/06/13 00:18:10 nilsson Exp $
  */
 
 inherit "wizard";
 
-constant action="status";
+constant task="status";
 constant name = "Extended process status";
 constant doc  = "Shows detailed process status on Solaris 2.5 and later.";
 
@@ -84,7 +84,7 @@ string format_proc_line(string in, int ipid)
   if(strlen(pre))pre=" "+pre[1..];
   if(search(in,"/proc/")==-1)
     return (pre+
-	    "<a href=?class=&form.class;&action=proc.pike&pid="+pid+"&unique="+time()+">"+
+	    "<a href='?class=&form.class;&task=proc.pike&pid="+pid+"&unique="+time()+"'>"+
 	    (ipid==pid?"<b>":"")+
 	    html_encode_string(in)+
 	    (ipid==pid?"</b>":"")+

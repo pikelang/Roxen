@@ -1,9 +1,9 @@
 /*
- * $Id: debug_summary.pike,v 1.8 2002/06/12 23:47:04 nilsson Exp $
+ * $Id: debug_summary.pike,v 1.9 2002/06/13 00:18:09 nilsson Exp $
  */
 #include <stat.h>
 
-constant action = "debug_info";
+constant task = "debug_info";
 constant name = "Debug Summary";
 constant doc  = ("Shows a text file containing a configuration summary, suitable "
 		 "for support purposes.");

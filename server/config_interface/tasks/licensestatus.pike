@@ -1,8 +1,8 @@
 /*
- * $Id: licensestatus.pike,v 1.11 2002/06/12 23:47:04 nilsson Exp $
+ * $Id: licensestatus.pike,v 1.12 2002/06/13 00:18:09 nilsson Exp $
  */
 
-constant action = "status";
+constant task = "status";
 constant name = "License status";
 constant doc  = "Show information about the installed licenses and there usage.";
 
@@ -11,7 +11,7 @@ mixed parse( RequestID id )
   string txt = #"
   <font size='+1'>Installed Licenses</font>
   <blockquote>Click on a license for more information.</blockquote>
-  <input type='hidden' name='action' value='&form.action;'/>
+  <input type='hidden' name='task' value='&form.task;'/>
   <input type='hidden' name='class' value='&form.class;'/>
   <table cellspacing='0' cellpadding='3' border='0'>
     <tr>
@@ -41,7 +41,7 @@ mixed parse( RequestID id )
               <b>&_.filename;</b>
             </if>
             <else>
-              <a href='?action=&form.action;&amp;class=&form.class;&amp;license=&_.filename;'>&_.filename;</a></else>
+              <a href='?task=&form.task;&amp;class=&form.class;&amp;license=&_.filename;'>&_.filename;</a></else>
             &nbsp;&nbsp;</if>
           <else>&_.filename;&nbsp;&nbsp;&nbsp;</else>
         </td>

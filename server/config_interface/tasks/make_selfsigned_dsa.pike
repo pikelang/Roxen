@@ -1,8 +1,8 @@
 /*
- * $Id: make_selfsigned_rsa.pike,v 1.7 2002/06/12 23:47:05 nilsson Exp $
+ * $Id: make_selfsigned_dsa.pike,v 1.8 2002/06/13 00:18:09 nilsson Exp $
  */
 
-#if constant(_Crypto) && constant(Crypto.rsa)
+#if constant(_Crypto) && constant(Crypto.dsa)
 
 inherit "ssl_common.pike";
 inherit "wizard";
@@ -10,17 +10,77 @@ inherit "wizard";
 import Standards.PKCS;
 import Standards.ASN1.Types;
 
-constant action = "SSL";
-constant name = "Generate an RSA key and a Self Signed Certificate...";
+#if 0
+#define WERROR werror
+#else
+#define WERROR(x)
+#endif
+
+constant task = "SSL";
+constant name = "Generate an DSA key and a Self Signed Certificate...";
 constant doc  = doc_string_start + doc_string_end_b;
 
+mixed page_0(object id, object mc)
+{
+  return
+    ssl_errors(id) +
+    "<p><font size='+1'>" + key_size_question + "</font></p>\n"
+    "<b>Key size</b><br />"
+    "<var name='key_size' type='select' default='1024' "
+    "choices='512,576,640,704,768,832,896,960,1024'/><br />\n"
+    "<blockquote><p>"+generic_key_size_string+"</p></blockquote>"
+    + key_file_form("my_dsa_key.pem");
+}
 
-/* In ssl_common.pike:
- *
- * mixed page_0(object id, object mc)
- * mixed verify_0(object id, object mc)
- */
+mixed verify_0(object id, object mc)
+{
+  int key_size = (int) id->variables->key_size;
+  if ( (key_size < 512) || (key_size > 1024) || (key_size % 64))
+  {
+    id->variables->_error = "Invalid key size.";
+    return 1;
+  }
+  object file;
+  object privs = Privs("Storing private DSA key.");
+  if (!(file = lopen(id->variables->key_file, "wct", 0600)))
+  {
+    id->variables->_error =
+      "Could not open file: "
+      + (strerror(errno()) || (string) errno())
+      + ".";
+    privs = 0;
+    return 1;
+  }
 
+  privs = 0;
+
+  object dsa = Crypto.dsa();
+  dsa->use_random(Crypto.randomness.reasonably_random()->read);
+  dsa->generate_parameters(key_size);
+  dsa->generate_key();
+
+  string key = Tools.PEM.simple_build_pem
+    ("DSA PRIVATE KEY",
+     Standards.PKCS.DSA.private_key(dsa));
+  WERROR(key);
+
+  if (strlen(key) != file->write(key))
+  {
+    id->variables->_error =
+      "Write failed: "
+      + (strerror(file->errno()) || (string) file->errno())
+      + ".";
+    return 1;
+  }
+  destruct(file);
+
+  if (!file_stat(id->variables->key_file))
+  {
+    id->variables->_error = "File not found.";
+    return 1;
+  }
+  return 0;
+}
 
 mixed page_1(mixed id, mixed mc)
 {
@@ -47,7 +107,7 @@ mixed page_3(object id, object mc)
 {
   object file;
 
-  object privs = Privs("Reading private RSA key");
+  object privs = Privs("Reading private DSA key");
   if (!(file = lopen(id->variables->key_file, "r")))
   {
     privs = 0;
@@ -58,19 +118,21 @@ mixed page_3(object id, object mc)
   privs = 0;
   string s = file->read(0x10000);
   if (!s)
-    return "<font color=red>Could not read private key: "
+    return "<font color='red'>Could not read private key: "
       + strerror(file->errno()) + "\n</font>";
 
   object msg = Tools.PEM.pem_msg()->init(s);
-  object part = msg->parts["RSA PRIVATE KEY"];
+  object part = msg->parts["DSA PRIVATE KEY"];
 
   if (!part)
     return "<font color='red'>Key file not formatted properly.\n</font>";
 
-  object rsa = RSA.parse_private_key(part->decoded_body());
+  object dsa = DSA.parse_private_key(part->decoded_body());
 
-  if (!rsa)
+  if (!dsa)
     return "<font color='red'>Invalid key.\n</font>";
+
+  dsa->use_random(Crypto.randomness.reasonably_random()->read);
 
   mapping attrs = ([]);
   string attr;
@@ -105,8 +167,8 @@ mixed page_3(object id, object mc)
   }
 
   /* Create a plain X.509 v1 certificate, without any extensions */
-  string cert = Tools.X509.make_selfsigned_rsa_certificate
-    (rsa, 24 * 3600 * (int) id->variables->ttl, name);
+  string cert = Tools.X509.make_selfsigned_dsa_certificate
+    (dsa, 24 * 3600 * (int) id->variables->ttl, name);
 
   string res=("<font size='+2'>This is your Certificate.</font>"
 	      "<textarea name='certificate' cols='80' rows='12'>");
@@ -115,7 +177,7 @@ mixed page_3(object id, object mc)
 
   res += "</textarea>";
 
-  res += save_certificate_form("cert_file", "my_rsa_certificate.pem");
+  res += save_certificate_form("cert_file", "my_dsa_certificate.pem");
 
   return res;
 }
@@ -160,4 +222,4 @@ mixed wizard_done(object id, object mc)
 mixed parse( RequestID id ) { return wizard_for(id,0); }
 
 
-#endif /* constant(_Crypto) && constant(Crypto.rsa) */
+#endif /* constant(_Crypto) && constant(Crypto.dsa) */

@@ -1,5 +1,5 @@
 /*
- * $Id: make_site_template.pike,v 1.7 2002/06/12 23:47:05 nilsson Exp $
+ * $Id: make_site_template.pike,v 1.8 2002/06/13 00:18:10 nilsson Exp $
  *
  * Make a site-template from a virtual server configuration.
  *
@@ -8,7 +8,7 @@
 
 #include <config_interface.h>
 
-constant action = "maintenance";
+constant task = "maintenance";
 constant name = "Create site template";
 constant doc  = "Create a site template from a site configuration";
 
@@ -62,7 +62,7 @@ string parse(RequestID id)
 				   Roxen.html_encode_string(n) });
 		       }));
   } else {
-    res += sprintf("<input type=hidden name='conf' value='%s' />\n",
+    res += sprintf("<input type='hidden' name='conf' value='%s' />\n",
 		   conf_name);
     if (!id->variables->fname || !sizeof(id->variables->fname)) {
       // Page 2
@@ -82,7 +82,7 @@ string parse(RequestID id)
       // Page 3
       //
       // Create the site template.
-      res += sprintf("<input type=hidden name='fname' value='%s' />\n",
+      res += sprintf("<input type='hidden' name='fname' value='%s' />\n",
 		     Roxen.http_encode_string(id->variables->fname));
 
       conf->enable_all_modules();
@@ -207,7 +207,7 @@ string parse(RequestID id)
   }
   if (!done) {
     res +=
-      "<input type=hidden name='action' value='make_site_template.pike' />";
+      "<input type='hidden' name='task' value='make_site_template.pike' />";
   }
 
   return res;

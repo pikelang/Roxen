@@ -1,8 +1,8 @@
 /*
- * $Id: upload_license.pike,v 1.4 2002/06/12 23:47:05 nilsson Exp $
+ * $Id: upload_license.pike,v 1.5 2002/06/13 00:18:10 nilsson Exp $
  */
 
-constant action = "maintenance";
+constant task = "maintenance";
 constant name = "Upload license";
 constant doc  = "Upload a new roxen license file.";
 
@@ -18,7 +18,7 @@ mixed parse( RequestID id )
       <set variable='var.ok' value='ok'/>
     </if>
     <elseif license='&var.filename;'>
-      <input type='hidden' name='action' value='&form.action;'/>
+      <input type='hidden' name='task' value='&form.task;'/>
       <input type='hidden' name='file' value='&form.file;'/>
       <input type='hidden' name='file.filename' value='&var.filename;'/>
       Warning the license file <b>&var.filename;</b> does already exists.
@@ -37,7 +37,7 @@ mixed parse( RequestID id )
     </if>
   </if>
   <else>
-    <input type='hidden' name='action' value='&form.action;'/>
+    <input type='hidden' name='task' value='&form.task;'/>
     Select local file to upload: <br />
     <input type='file' name='file'/>
     <input type='hidden' name='fixedfilename' value='' />

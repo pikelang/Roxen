@@ -1,8 +1,8 @@
 /*
- * $Id: reloadconfigurations.pike,v 1.5 2002/06/12 23:47:05 nilsson Exp $
+ * $Id: reloadconfigurations.pike,v 1.6 2002/06/13 00:18:10 nilsson Exp $
  */
 
-constant action = "maintenance";
+constant task = "maintenance";
 constant name = "Reload configurations from disk";
 constant doc  = ("Force a reload of all configuration information from "
 		 "the configuration files.");

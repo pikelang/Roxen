@@ -1,8 +1,8 @@
 
-constant action = "maintenance";
+constant task = "maintenance";
 constant name = "Change Roxen version...";
 constant doc  = ("If you have more than one Roxen version installed\n"
-		 "in the same location, you can use this action to\n"
+		 "in the same location, you can use this task to\n"
 		 "change the currently running version.");
 
 class Server(string dir,
@@ -103,7 +103,7 @@ string parse( RequestID id )
     return "Changing roxen version";
   }
 
-  res += "<input type=hidden name='action' value='change_version.pike' />";
+  res += "<input type='hidden' name='task' value='change_version.pike' />";
   
   res += "<table><tr><td><b>Version</b></td><td></td>"
     "<td><b>Release date</b></td>"

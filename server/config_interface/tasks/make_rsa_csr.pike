@@ -1,5 +1,5 @@
 /*
- * $Id: make_rsa_csr.pike,v 1.8 2002/06/12 23:47:05 nilsson Exp $
+ * $Id: make_rsa_csr.pike,v 1.9 2002/06/13 00:18:09 nilsson Exp $
  */
 
 #if constant(_Crypto) && constant(Crypto.rsa)
@@ -10,7 +10,7 @@ inherit "wizard";
 import Standards.PKCS;
 import Standards.ASN1.Types;
 
-constant action = "SSL";
+constant task = "SSL";
 constant name = "Generate a Certificate Signing Request and an RSA key...";
 constant doc  = doc_string_start + doc_string_end_a;
 

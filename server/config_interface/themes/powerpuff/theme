@@ -17,7 +17,7 @@
   <theme-set what=linkcolor to=darkgreen />
 </theme-path>
 
-<theme-path match='/actions/*'>
+<theme-path match='/tasks/*'>
   <theme-set what=left-image to=utonium.gif themefile />
   <theme-set what=bgcolor to=pink       />
   <theme-set what=linkcolor to=darkred  />

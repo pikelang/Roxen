@@ -1,11 +1,11 @@
-/* $Id: ftpstatus.pike,v 1.4 2002/06/12 23:47:04 nilsson Exp $ */
+/* $Id: ftpstatus.pike,v 1.5 2002/06/13 00:18:09 nilsson Exp $ */
 
 /* Disabled for now. (Was originally written for ftp mk I). */
 #if 0
 
 inherit "wizard";
 
-constant action = "status";
+constant task = "status";
 constant name = "Current FTP sessions";
 constant doc  = ("List all active FTP sessions and what files they are "
 		 "currently transferring.");

@@ -3,7 +3,7 @@
  project="roxen_config">Tasks</translate>
 <left-menu title="&var.tasks_title;"/>
 
-<topmenu base="../" selected="actions"/>
+<topmenu base="../" selected="tasks"/>
 
 <content>
 <cv-split>
@@ -12,18 +12,18 @@
   <st-page><blockquote><br />
     <if not="" variable="form.class"><set variable="form.class" value="status"/></if>
     <if not variable="form.cancel">
-      <if variable="form.action">
+      <if variable="form.task">
 	<input type="hidden" name="class" value="&form.class;" />
-	<eval><insert file="&form.action;" nocache="" /></eval>
-	<set variable="var.doing-action" value="yes"/>
+	<eval><insert file="&form.task;" nocache="" /></eval>
+	<set variable="var.doing-task" value="yes"/>
       </if>
     </if>
-    <if not variable="var.doing-action">
-      <define container="action">
-	<font size="+1"><a href="?action=&_.fname;&amp;class=&form.class;">&_.name;</a></font><br /><blockquote>
+    <if not variable="var.doing-task">
+      <define container="task">
+	<font size="+1"><a href="?task=&_.fname;&amp;class=&form.class;">&_.name;</a></font><br /><blockquote>
 	<contents/></blockquote>
       </define>
-      <eval><insert file="list_actions.pike" nocache="" /></eval>
+      <eval><insert file="list_tasks.pike" nocache="" /></eval>
     </else>
   </blockquote></st-page>
 </subtablist>

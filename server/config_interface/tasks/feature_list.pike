@@ -1,6 +1,6 @@
 inherit "wizard";
 
-constant action = "debug_info";
+constant task = "debug_info";
 constant name = "Pike module list";
 constant doc  = ("Show information about which features and modules are "
 		 "available in the Pike this Roxen is using.");
