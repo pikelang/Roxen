@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 2001, Roxen IS.
 
 inherit "module";
-constant cvs_version="$Id: icecast.pike,v 1.12 2002/11/11 01:54:01 mani Exp $";
+constant cvs_version="$Id: icecast.pike,v 1.13 2002/11/19 00:56:27 _cvs_hop Exp $";
 constant thread_safe=1;
 
 #define BSIZE 16384
@@ -112,7 +112,7 @@ class MPEGStream
 #if constant(Parser.MP3)
   Parser.MP3.File parser;
 #else
-  Audio.MP3.decode parser;
+  Audio.Format.MP3 parser;
 #endif
   Playlist playlist;
   string cmd;
@@ -212,7 +212,8 @@ class MPEGStream
 #if constant(Parser.MP3)
         parser = Parser.MP3.File(fd);
 #else
-        parser = Audio.MP3.decode(fd);
+        parser = Audio.Format.MP3();
+	parser->buffer = Audio.Format.vbuffer(fd);
 #endif
       frame = parser->get_frame();
       while( !frame )
@@ -223,7 +224,8 @@ class MPEGStream
 #if constant(Parser.MP3)
 	parser = Parser.MP3.File(fd);
 #else
-	parser = Audio.MP3.decode(fd);
+	parser = Audio.Format.MP3();
+	parser->buffer = Audio.Format.vbuffer(fd);
 #endif
 	frame = parser->get_frame();
       }
