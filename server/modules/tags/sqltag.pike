@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.16 1997/11/26 22:12:27 grubba Exp $
+ * $Id: sqltag.pike,v 1.17 1997/11/29 22:25:03 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.16 1997/11/26 22:12:27 grubba Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.17 1997/11/29 22:25:03 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -65,6 +65,9 @@ array register_module()
 	     "<td>The name of the user to access the database with.</td></tr>\n"
 	     "<tr><td valign=top><b>password</b></td>"
 	     "<td>The password to access the database.</td></tr>\n"
+	     "<tr><td valign=top><b>parse</b></td>"
+	     "<td>If specified, the query will be parsed by the "
+	     "RXML-parser</td></tr>"
 	     "</table></ul><p>\n"
 	     "The &lt;sqltable&gt; tag has an additional attribute "
 	     "<b>ascii</b>, which generates a tab-separated table (usefull "
@@ -72,7 +75,9 @@ array register_module()
 	     "\n"
 	     "<b>NOTE</b>: Specifying passwords in the documents may prove "
 	     "to be a security hole if the module is not loaded for some "
-	     "reason.<br>\n",
+	     "reason.<br>\n"
+	     "<b>SEE ALSO</b>: The &lt;FORMOUTPUT&gt; tag can be "
+	     "usefull to generate the queries.<br>\n",
 	     0,
 	     1 }) );
 }
@@ -82,9 +87,15 @@ array register_module()
  */
 
 string sqloutput_tag(string tag_name, mapping args, string contents,
-		     object request_id, mapping defines)
+		     object request_id, object f,
+		     mapping defines, object fd)
 {
   if (args->query) {
+
+    if (args->parse) {
+      args->query = parse_rxml(args->query, request_id, f, defines, fd);
+    }
+
     string host = query("hostname");
 #ifdef SQL_TAG_COMPAT
     string database = query("database");
@@ -170,9 +181,15 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
 }
 
 string sqlquery_tag(string tag_name, mapping args,
-		    object request_id, mapping defines)
+		    object request_id, object f,
+		    mapping defines, object fd)
 {
   if (args->query) {
+
+    if (args->parse) {
+      args->query = parse_rxml(args->query, request_id, f, defines, fd);
+    }
+
     string host = query("hostname");
 #ifdef SQL_TAG_COMPAT
     string database = query("database");
@@ -226,7 +243,8 @@ string sqlquery_tag(string tag_name, mapping args,
 }
 
 string sqltable_tag(string tag_name, mapping args,
-		    object request_id, mapping defines)
+		    object request_id, object f,
+		    mapping defines, object fd)
 {
   int ascii;
 
@@ -236,6 +254,11 @@ string sqltable_tag(string tag_name, mapping args,
   }
 
   if (args->query) {
+
+    if (args->parse) {
+      args->query = parse_rxml(args->query, request_id, f, defines, fd);
+    }
+
     string host = query("hostname");
 #ifdef SQL_TAG_COMPAT
     string database = query("database");
