@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.48 1997/10/07 21:08:06 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.49 1997/10/14 19:35:59 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -672,6 +672,22 @@ inline string do_replace(string s, mapping (string:string) m)
   return replace(s, indices(m), values(m));
 }
 
+string tag_set(string tag, mapping m, object got)
+{
+  if (m->variable) {
+    if (m->value) {
+      // Set variable to value.
+      got->variables[m->variable] = m->value;
+    } else {
+      // Unset variable.
+      m_delete(got->variables, m->variable);
+    }
+    return("");
+  } else {
+    return("<!-- set: variable not specified -->");
+  }
+}
+
 string tag_define(string tag,mapping m, string str, object got,object file,
 		  mapping defines)
 { 
@@ -688,13 +704,13 @@ string tag_insert(string tag,mapping m,object got,object file,mapping defines)
   if (n=m->name) 
   {
     m_delete(m, "name");
-    return do_replace(defines[n]||"<!--no such define: "+n+"-->", m);
+    return do_replace(defines[n]||"<!-- No such define: "+n+" -->", m);
   }
 
   if (n=m->variable) 
   {
     m_delete(m, "variable");
-    return do_replace(got->variables[n]||"<!--no such variable: "+n+"-->", m);
+    return do_replace(got->variables[n]||"<!-- No such variable: "+n+" -->", m);
   }
 
   if (n=m->variables) 
@@ -718,21 +734,28 @@ string tag_insert(string tag,mapping m,object got,object file,mapping defines)
   if (n=m->cookie) 
   {
     m_delete(m, "cookie");
-    return do_replace(got->cookies[n]||"<!--no such variable: "+n+"-->", m);
+    return do_replace(got->cookies[n]||"<!-- No such variable: "+n+" -->", m);
   }
 
   if (m->file) 
   {
     string s;
     string f;
-    f=fix_relative(m->file, got);
+    f = fix_relative(m->file, got);
 
     if(m->nocache) got->pragma["no-cache"] = 1;
 
-    s=roxen->try_get_file(f, got);
+    s = roxen->try_get_file(f, got);
 
-    if(!s)
-      return "<!-- No such file: "+f+"! -->";
+    if(!s) {
+      if ((sizeof(f)>2) && (f[sizeof(f)-2..] == "--")) {
+	// Might be a compat insert.
+	s = roxen->try_get_file(f[..sizeof(f)-3], got);
+      }
+      if (!s) {
+	return "<!-- No such file: "+f+"! -->";
+      }
+    }
 
     m_delete(m, "file");
 
@@ -808,6 +831,8 @@ string tag_compat_include(string tag,mapping m,object got,object file,
   if(m->file)
   {
     mixed tmp;
+    string fname1 = m->file;
+    string fname2;
     if(m->file[0] != '/')
     {
       if(got->not_query[-1] == '/')
@@ -815,10 +840,18 @@ string tag_compat_include(string tag,mapping m,object got,object file,
       else
 	m->file = ((tmp = got->not_query / "/")[0..sizeof(tmp)-2] +
 		   ({ m->file }))*"/";
-      m->file = roxen->real_file(m->file, got);
+      fname1 = got->conf->real_file(m->file, got);
+      if ((sizeof(m->file) > 2) && (m->file[sizeof(m->file)-2..] == "--")) {
+	fname2 = got->conf->real_file(m->file[..sizeof(m->file)-3], got);
+      }
+    } else if ((sizeof(fname1) > 2) && (fname1[sizeof(fname1)-2..] == "--")) {
+      fname2 = fname1[..sizeof(fname1)-3];
     }
-    return (m->file && read_bytes(m->file)) ||
-      "<!-- No such file: "+m->file+"-->";
+    return((fname1 && read_bytes(fname1)) ||
+	   (fname2 && read_bytes(fname2)) ||
+	   ("<!-- No such file: " +
+	    (fname1 || fname2 || m->file) +
+	    "! -->"));
   }
   return "<!-- What? -->";
 }
@@ -1815,6 +1848,7 @@ mapping query_tag_callers()
 	    "pr":tag_pr,
 	    "imgs":tag_ximage,
 	    "version":tag_version,
+	    "set":tag_set,
  	    "set_cookie":tag_add_cookie,
  	    "remove_cookie":tag_remove_cookie,
 	    "clientname":tag_clientname,
