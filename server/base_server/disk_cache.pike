@@ -1,4 +1,4 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.12.2.1 1997/03/02 19:12:51 grubba Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.12.2.2 1997/03/13 22:01:44 grubba Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -180,7 +180,8 @@ class Cache {
     /* Child */
     lcs->dup2( files.file ("stdin") );
     object privs = ((program)"privs")("Starting the garbage collector");
-    exec("bin/pike", "-m", "etc/master.pike", "bin/garbagecollector.pike");
+    exec("bin/pike", "-m", "lib/master.pike", "-I", "etc/include",
+	 "-M", "etc/modules", "bin/garbagecollector.pike");
     perror("Failed to start garbage collector (exec failed)!\n");
 #if efun(real_perror)
     perror("bin/pike: ");real_perror();
