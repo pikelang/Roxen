@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.307 2004/05/21 23:30:01 mani Exp $
+// $Id: module.pmod,v 1.308 2004/05/22 01:49:40 _cvs_stephen Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1498,7 +1498,7 @@ class Context
   //! Current evaluation recursion depth. This might be more than the
   //! number of frames in the @[frame] linked chain.
 
-  constant max_frame_depth = 100;
+  constant max_frame_depth = 1000;
   //! Maximum allowed evaluation recursion depth.
 
   RequestID id;
