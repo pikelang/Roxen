@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.119 2000/05/02 20:21:00 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.120 2000/05/05 15:56:31 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1293,14 +1293,22 @@ array split_on_option( string what, Regexp r )
 private int|array internal_tag_select(string t, mapping m, string c, string name, multiset(string) value)
 {
   if(m->name!=name) return ({ Roxen.make_container(t,m,c) });
+
+  // Split indata into an array with the layout
+  // ({ "option", option_args, stuff_before_next_option })*n
+  // e.g. "fox<OPtioN foo='bar'>gazink</option>" will yield
+  // tmp=({ "OPtioN", " foo='bar'", "gazink</option>" }) and
+  // ret="fox"
   Regexp r = Regexp( "(.*)<([Oo][Pp][Tt][Ii][Oo][Nn])([^>]*)>(.*)" );
   array(string) tmp=split_on_option(c,r);
   string ret=tmp[0],nvalue;
   int selected,stop;
   tmp=tmp[1..];
+
   while(sizeof(tmp)>2) {
     stop=search(tmp[2],"<");
     if(sscanf(lower_case(tmp[1]),"%*svalue=%s%*[ >]",nvalue)!=3) nvalue=tmp[2][..stop==-1?sizeof(tmp[2]):stop];
+    if(!sscanf(nvalue, "\"%s\"", nvalue)) sscanf(nvalue, "'%s'", nvalue);
     selected=Regexp(".*[Ss][Ee][Ll][Ee][Cc][Tt][Ee][Dd].*")->match(tmp[1]);
     ret+="<"+tmp[0]+tmp[1];
     if(value[nvalue] && !selected) ret+=" selected=\"selected\"";
