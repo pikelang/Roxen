@@ -24,8 +24,8 @@ extern: force
 	@(cd extern;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all)
 
 sb_cvs: force
-	if test -d $$version/commercial_modules/sitebuilder/. ; then \
-	  @(cd commercial_modules/sitebuilder;$(MAKE) "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all) \
+	@if test -d commercial_modules/sitebuilder/. ; then \
+	  (cd commercial_modules/sitebuilder;$(MAKE) "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all) \
 	else :; fi; \
 
 gmp: force
