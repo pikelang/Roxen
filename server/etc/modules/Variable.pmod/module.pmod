@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.65 2001/08/28 04:42:42 nilsson Exp $
+// $Id: module.pmod,v 1.66 2001/09/12 23:37:42 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1512,7 +1512,7 @@ class PortList
 
     res += "://<input type=string name='"+prefix+"host' value='"+
            Roxen.html_encode_string(split->host)+"' />";
-    res += ":<input type=string size=5 name='"+prefix+"port' value='"+
+    res += ":<input type=string size=6 name='"+prefix+"port' value='"+
              split->port+"' />";
 
     res += "/<input type=string name='"+prefix+"path' value='"+
