@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.42 1998/08/26 12:00:06 nisse Exp $
+/* $Id: ssl3.pike,v 1.43 1998/11/25 23:33:04 grubba Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -322,6 +322,10 @@ static void write_more_file()
 }
 
 #if 1
+void _force_destruct()
+{
+}
+
 void send_result(mapping|void result)
 {
   array err;
@@ -465,6 +469,8 @@ void send_result(mapping|void result)
     }
   }
 
+  // FIXME: Delayed destruct of thiso?
+  _force_destruct();
   if(thiso && conf) conf->log(file, thiso);
 }
 #endif /* 1 */
