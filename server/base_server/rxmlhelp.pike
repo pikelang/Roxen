@@ -3,6 +3,14 @@
 // Martin Nilsson
 //
 
+//#define RXMLHELP_DEBUG
+
+#ifdef RXMLHELP_DEBUG
+# define RXMLHELP_WERR(X) werror("RXML help: %s\n", X);
+#else
+# define RXMLHELP_WERR(X)
+#endif
+
 // --------------------- Help Layout --------------------
 
 private string desc_cont(string t, mapping m, string c, string rt)
@@ -94,7 +102,12 @@ private string parse_mapping(mapping doc, void|object id) {
 
 mapping call_tagdocumentation(RoxenModule o) {
   mapping doc;
+#ifdef RXMLHELP_DEBUG
+  doc=o->tagdocumentation();
+#else
   catch { doc=o->tagdocumentation(); };
+#endif
+  RXMLHELP_WERR(sprintf("tagdocumentation() returned %t.",doc));
   if(!doc || !mappingp(doc)) return 0;
   return doc;
 }
@@ -131,6 +144,7 @@ string find_tag_doc(string name, void|object id) {
     }
     tag=function_object(tag);
     if(!objectp(tag)) continue;
+    RXMLHELP_WERR(sprintf("Tag defined in module %O", tag));
 
     mapping tagdoc=call_tagdocumentation(tag);
     if(!tagdoc || !tagdoc[name]) continue;
@@ -143,19 +157,13 @@ string find_tag_doc(string name, void|object id) {
   return "<h4>No documentation available for \""+name+"\".</h4>\n";
 }
 
-/*
-string find_module_doc( string cn, string mn, object id )
+string find_module_doc( string cn, string mn, RequestID id )
 {
   object c = roxen.find_configuration( cn );
+  if(!c) return "";
 
-  if(!c)
-    return "";
+  RoxenModule o = c->find_module( replace(mn,"!","#") );
+  if(!0) return "";
 
-  object m = c->find_module( replace(mn,"!","#") );
-
-  if(!m)
-    return "";
-
-  return parse_mapping(m->tagdocumentation());
+  return parse_mapping(o->tagdocumentation());
 }
-*/
