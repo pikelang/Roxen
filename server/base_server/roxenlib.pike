@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: roxenlib.pike,v 1.211 2000/12/11 04:08:20 nilsson Exp $
+// $Id: roxenlib.pike,v 1.212 2001/02/05 21:30:42 mast Exp $
 
 //#pragma strict_types
 
@@ -164,7 +164,8 @@ static int compare( string a, string b )
       return 0;
 }
 
-static string do_output_tag( mapping(string:string) args, array(mapping(string:string)) var_arr,
+static string do_output_tag( mapping(string:string) args,
+			     array(mapping(string:string)|object) var_arr,
 			     string contents, RequestID id )
 //! Method for use by tags that replace variables in their content,
 //! like formoutput, sqloutput and others.
@@ -203,8 +204,8 @@ static string do_output_tag( mapping(string:string) args, array(mapping(string:s
   {
     array(string) order = args->sort / "," - ({ "" });
     var_arr = Array.sort_array( var_arr,
-				lambda (mapping(string:string) m1,
-					mapping(string:string) m2)
+				lambda (mapping(string:string)|object m1,
+					mapping(string:string)|object m2)
 				{
 				  int tmp;
 
@@ -260,7 +261,7 @@ static string do_output_tag( mapping(string:string) args, array(mapping(string:s
   }
 
   first = 1;
-  foreach (var_arr, mapping(string:string) vars)
+  foreach (var_arr, mapping(string:string)|object vars)
   {
     if (args->set)
       foreach (indices (vars), string var) {
