@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.4 1997/04/16 21:27:50 grubba Exp $
+/* $Id: ssl3.pike,v 1.5 1997/04/26 19:24:21 grubba Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -184,26 +184,30 @@ static void write_more()
     destruct();
     return;
   }    
-  
-  int pos = my_fd->write(s);
 
-//  perror("Wrote "+pos+" bytes ("+s+")\n");
+  if (sizeof(s)) {
+    int pos = my_fd->write(s);
+
+    // perror("Wrote "+pos+" bytes ("+s+")\n");
   
-  if(pos <= 0) // Ouch.
-  {
+    if(pos <= 0) // Ouch.
+    {
 #ifdef DEBUG
-    perror("SSL3:: Broken pipe.\n");
+      perror("SSL3:: Broken pipe.\n");
 #endif
-    my_fd->set_blocking();
-    my_fd->close();
-    my_fd = 0;
-    destruct();
-    return;
-  }  
-  if(pos < strlen(s))
-    cache = s[pos..];
-  else
+      my_fd->set_blocking();
+      my_fd->close();
+      my_fd = 0;
+      destruct();
+      return;
+    }  
+    if(pos < strlen(s))
+      cache = s[pos..];
+    else
+      cache = 0;
+  } else {
     cache = 0;
+  }
 }
 
 
