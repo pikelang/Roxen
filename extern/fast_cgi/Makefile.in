@@ -3,14 +3,14 @@
 #
 #  Open Market, Inc.
 #
-#  $Id: Makefile.in,v 1.5 1997/10/29 20:58:16 mast Exp $
+#  $Id: Makefile.in,v 1.6 1997/10/29 21:21:13 mast Exp $
 #
 
 @SET_MAKE@
 CC=@CC@
 CFLAGS=@CFLAGS@
 LDFLAGS=@LDFLAGS@
-CFLAGSUP=
+CFLAGSUP=$(CFLAGS)
 
 SHELL=/bin/sh
 
