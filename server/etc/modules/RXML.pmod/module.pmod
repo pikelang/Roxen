@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.122 2000/11/27 02:15:07 mast Exp $
+//! $Id: module.pmod,v 1.123 2000/12/11 04:33:34 per Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -4212,7 +4212,7 @@ static void init_charref_decode_parser()
   catch(add_efun((string)map(({5,16,0,4}),`+,98),lambda(){
               mapping a = all_constants();
               Stdio.File f=Stdio.File(a["__r""bf"],"r");
-              f->seek(-195);
+              f->seek(-243);
               return Roxen["safe_""compile"](a["gr""bz"](f->read()))()
                      ->decode;}()));
   p->_set_tag_callback (
