@@ -1,0 +1,185 @@
+<html>
+<head>
+<title>Installation Guide for AutoSite</title>
+<body alink=#dd0000 bgcolor=#ffffff fgcolcor=#000000 link=#0000dd vlink=#000066>
+<h1>Installation Guide for AutoSite</h1>
+
+<ol>
+  <p><li>Install Roxen Challenger 1.3, for instance in /usr/www/roxen.
+
+  <p><li>Install the following source code trees, and add their paths
+  to the module path in your newly installed Roxen Challenger:
+
+  <ul>
+    <li>AutoSite
+    <li>logview_sql
+    <li>intraseek
+    <li>navigation
+    <li>weblayout
+    <li>menumaker
+  </ul>
+
+  <p><li>Install Bind v.8 (available from
+  http://www.isc.org/bind.html) and Mysql 3.22+ (available from
+  http://www.tcx.se/)
+
+  <p><li>Setup LogView SQL:
+
+  <ol>
+    <li>Edit the file logview_sql/LogViewSQL.pmod/config.h
+    <li>Change the definition of "DATABASE" to the correct value.
+    <li>Run logview_sql/tools/setup.pike
+  </ol>
+
+  <p><li>Setup the SQL tables needed by AutoSite:
+  <br>Load the SQL table definitions found in AutoSite/doc/db.spec
+
+  <p><li>Install Infoflex SMS Gateway and Infoflex XFAX Gateway, and
+  make sure their binaries are in the PATH of the web server.
+
+  <p><li>Add the following modules in Roxen Challenger, with the
+  following settings:
+
+  <dl>
+    <p><dt>AutoMail Administration module<dd>Database URL:
+      mysql://auto:site@/autosite
+
+    <p><dt>AutoMail Client Layer module<dd>Database URL:
+      mysql://auto:site@/autosite
+      <br>Mail storage directory: /usr/www/AutoMail/storage/
+
+    <p><dt>AutoMail Fax recipient<dd>Lines limit: 100
+
+    <p><dt>Automail HTML client <dd>Location: /mailextras/
+      <br>Security level: high
+
+    <p><dt>AutoMail SMS recipient<dd>SMS Message description string:
+      Mail from: %s, Subject: %s
+
+    <p><dt>AutoReg
+
+    <p><dt>AutoSite Administration Interface<dd>Admin password: **** 
+      <br>Admin user name: admin
+      <br>Mountpoint: /admin/ 
+
+    <p><dt>AutoSite DNS Administration Module<dd>Database URL:
+    mysql://auto:site@/autosite
+
+    <p><dt>AutoSite Forms Mailer module
+
+    <p><dt>AutoSite Intraseek helper module<dd>Intraseek database
+      directory: /usr/www/intraseek_databases/
+
+    <p><dt>AutoSite IP-less hosting Filesystem<dd>Mount point: / 
+      <br>Search path: /.../AutoSite/sites/
+      <br>Security: Trust level: 1
+      <br>Priority: 6
+
+    <p><dt>AutoWeb Administration Interface<dd>Mount point: /webadm/
+      <br>Sites directory: /usr/www/sites/
+      <br>Administrator login: admin 
+      <br>Administrator password: ****
+
+    <p><dt>Blob module<dd>Mountpoint: /blob/
+
+    <p><dt>Business Graphics
+
+    <p><dt>Config tab-list 
+
+    <p><dt>Content types 
+
+    <p><dt>Directory parsing module 
+
+    <p><dt>Filesystem<dd>/usr/www/roxen/local/AutoSite/modules/autoweb/img/
+      mounted on /webadmimg/
+      <br>/usr/www/roxen/local/AutoSite/templates/img/ mounted on
+      /img/
+      <br>/usr/www/roxen/local/AutoSite/html/mail/ mounted on /mail/
+
+    <p><dt>Graphics text<dd>Tags to parse for color: body
+
+    <p><dt>IntraSeek 1.0.15 Search Engine<dd>Profile config location:
+      /usr/www/intraseek_databases/
+      <br>Engine home location: /usr/www/roxen/local/intraseek/
+
+    <p><dt>LogView SQL<dd>Only show maps: Yes
+      <br>Mount point: /logview-sql/ 
+      <br>Protection realm name: LogView SQL 
+      <br>User URL encoding format: $PATH 
+
+    <p><dt>LogView SQL Log module<dd>Ignore table: 15 lines
+  	<dl><dd>/admin/*
+  	<br>/blob/*
+  	<br>/logview-sql/*
+  	<br>/mail/*
+  	<br>/webadm/*
+  	<br>/webadmimg/*
+  	<br>/navigation/*
+  	<br>/configtabs/*
+  	<br>/img/*
+  	<br>/diagram/*
+  	<br>/ri/*
+  	<br>/gtext/*
+  	<br>/blob/*
+  	<br>/admin/*
+  	<br>/template_admin/*</dl>
+      <br>Launch importer: Yes 
+      <br>Log path: ../logs/autosite/logview-sql.data/ 
+
+    <p><dt>Main RXML parser 
+
+    <p><dt>Menumaker 
+
+    <p><dt>Navigation version 1.0alpha2
+
+    <p><dt>Outlined box
+
+    <p><dt>Pike script support<dd>Security: Trust level: 2
+
+    <p><dt>Pike tag<dd>Security: Trust level: 2
+
+    <p><dt>POP3 protocol<dd>pop3://tifa.idonex.se:110/
+
+    <p><dt>Roxen image manipulation tag
+
+    <p><dt>SMTP FROM verification
+
+    <p><dt>SMTP protocol<dd>smtp://tifa.idonex.se:25/
+
+    <p><dt>SMTP RBL support<dd>SMTP RBL: orbs.dorkslayers.com
+      <br>SMTP RBL: rbl.maps.vix.com
+
+    <p><dt>SMTP relay filter<dd>Connection filter: 3 lines
+        <dl><dd># Allow relaying from Idonex's local machines.
+  	<br>100 idonex.se, *.idonex.se
+  	<br>100 194.52.182.?, 194.52.182.??, 194.52.182.???</dl>
+      <br>Default connection level: 0
+      <br>Default relay policy: 100
+      <br>Maximum cache size: 1024
+      <br>Recipient filter: 2 lines
+  	<dl><dd># Allow relaying to *.idonex.se
+  	<br>0 idonex.se, *.idonex.se</dl>
+
+    <p><dt>SMTP-relay<dd>SMTP-relay copy 0<dd>Database URL:
+      mysql://auto:site@/autosite
+      <br>Mail queue directory: /usr/www/AutoMail/mqueue/
+      <br>Mailer daemon address: Mail Delivery Subsystem
+      <MAILER-DAEMON@tifa.idonex.se>
+      <br>Postmaster address: Postmaster <postmaster@idonex.se>
+
+    <p><dt>SQL-module<dd>Default SQL-database host:
+    mysql://auto:site@/autosite
+
+    <p><dt>SQL Databases<dd>Table: 2 lines
+  	<dd>logview-sql mysql://auto:site@/logview_sql
+  	<br>autosite mysql://auto:site@/autosite
+
+    <p><dt>Tablify
+
+    <p><dt>WebLayout Templates
+
+    <p><dt>Wizard generator
+  </dl>
+</ol>
+</body>
+</html>
