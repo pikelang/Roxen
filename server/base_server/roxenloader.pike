@@ -3,7 +3,7 @@
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.59 1998/02/14 17:33:17 noring Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.60 1998/02/23 07:49:31 neotron Exp $";
 
 #define perror roxen_perror
 
@@ -311,7 +311,9 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
       p->dup2(Stdio.File("stdout"));
       // p->close();
       // p2->close();
+#if constant(_verify_internals)
       _verify_internals();
+#endif
       if(uid || gid)
       {
 	object privs = Privs("Executing script as non-www user");
