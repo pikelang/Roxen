@@ -1,6 +1,6 @@
 // This Isg a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.65 2001/04/24 01:17:34 nilsson Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.66 2001/04/24 01:22:39 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -408,6 +408,7 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
 		    return t;
 		  }, sep);
 
+  if(!sizeof(rows)) return "";
   if(sizeof(rows[-1])==1 && !sizeof(String.trim_all_whites(rows[-1][0])))
     rows = rows[..sizeof(rows)-2];
 
