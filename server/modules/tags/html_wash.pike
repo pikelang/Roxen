@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.17 2001/09/03 18:52:19 nilsson Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.18 2001/09/03 20:40:00 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";
@@ -193,13 +193,14 @@ constant tagdoc=([
  keep-tags and keep-containers. This attribute is useful together with
  the attributes <att>unparagraphify</att> and <att>unlink</att>.</p>
 
-<ex type='vert'>
-<wash-html keep-all=''>
-  Some text, <i>italic</i>, <b>bold</b>, <i><b>bold italic</b></i>.
+<ex-src>
+<wash-html keep-all='1'>
+  Some text, <i>italic</i>, <b>bold</b>,
+  <i><b>bold italic</b></i>.
 
   <hr>A little image:<img src='/internal-roxen-next'>.
 </wash-html>
-</ex>
+</ex-src>
 </attr>
 
 <attr name='keep-tags' value='list'><p>
@@ -208,13 +209,14 @@ constant tagdoc=([
  \"&gt;\" and \"&amp;\" to \"&amp;lt;\", \"&amp;gt;\" and
  \"&amp;amp;\".</p>
 
-<ex type='vert'>
+<ex-src>
 <wash-html keep-tags='hr'>
-  Some text, <i>italic</i>, <b>bold</b>, <i><b>bold italic</b></i>.
+  Some text, <i>italic</i>, <b>bold</b>,
+  <i><b>bold italic</b></i>.
 
   <hr />A litle image:<img src='/internal-roxen-next'>.
 </wash-html>
-</ex>
+</ex-src>
 </attr>
 
 <attr name='keep-containers' value='list'><p>
@@ -223,13 +225,14 @@ constant tagdoc=([
  \"&gt;\" and \"&amp;\" to \"&amp;lt;\", \"&amp;gt;\" and
  \"&amp;amp;\".</p>
 
-<ex type='vert'>
+<ex-src>
 <wash-html keep-containers='b'>
-  Some text, <i>italic</i>, <b>bold</b>, <i><b>bold italic</b></i>.
+  Some text, <i>italic</i>, <b>bold</b>,
+  <i><b>bold italic</b></i>.
 
   <hr>A little image:<img src='/internal-roxen-next'>.
 </wash-html>
-</ex>
+</ex-src>
 </attr>
 
 <attr name='linkify'><p>
@@ -238,25 +241,25 @@ constant tagdoc=([
  \"http://\", \"https://\", \"ftp://\", \"www.\" or \"http.\" will be
  converted to a clickable link with the text as the link label.</p>
 
-<ex type='vert'>
-<wash-html linkify='' keep-containers='a' keep-tags='br'>
+<ex-src>
+<wash-html linkify='a' keep-containers='a' keep-tags='br'>
   <a href=\"http://docs.roxen.com\">Roxen docs</a><br />
   http://pike.roxen.com<br />
   www.roxen.com
 </wash-html>
-</ex>
+</ex-src>
 </attr>
 
 <attr name='unlinkify'><p>
  Undo a linkify-conversion. Only the links that has the same label as
  address will be converted to plain text.</p>
 
-<ex type='vert'>
-<wash-html unlinkify='' keep-tags='br' keep-containers='a'>
+<ex-src>
+<wash-html unlinkify='1' keep-tags='br' keep-containers='a'>
   <a href=\"http://www.roxen.com\">http://www.roxen.com</a><br />
   <a href=\"http://www.roxen.com\">Roxen IS</a>
 </wash-html>
-</ex>
+</ex-src>
 </attr>
 
 <attr name='paragraphify'><p>
@@ -264,27 +267,27 @@ constant tagdoc=([
  attribute automatically makes the next text element into a
  paragraph.</p>
 
-<ex type='vert'>
-<wash-html paragraphify=''>
+<ex-src>
+<wash-html paragraphify='1'>
 A Paragraph
 
 An other paragraph.
 And some more text to the same paragraph.
 </wash-html>
-</ex>
+</ex-src>
 </attr>
 
 <attr name='unparagraphify'><p>
  Turn paragraph breaks into double newlines instead.</p>
 
-<ex type='vert'>
-<pre><wash-html unparagraphify=''>
+<ex-src>
+<pre><wash-html unparagraphify='1'>
 <p>A Paragraph<p>
 
 <p>An other paragraph.
 And some more text to the same paragraph.</p>
 </wash-html></pre>
-</ex><p>
+</ex-src><p>
  The <tag>pre</tag> is only used in the example for layout-purposes.</p>
 </attr>
 
