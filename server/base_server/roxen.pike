@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.411 2000/02/04 02:33:01 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.412 2000/02/04 02:48:23 per Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1231,8 +1231,8 @@ class FHTTP
   void adjust_stats()
   {
     call_out(adjust_stats, 2);
-werror( status() );
-//     low_adjust_stats( l->cache_status() );
+// werror( status() );
+     low_adjust_stats( l->cache_status() );
   }
 
 
