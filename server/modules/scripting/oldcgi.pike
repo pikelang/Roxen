@@ -1270,7 +1270,7 @@ mapping handle_file_extension(object o, string e, object id)
     // This is done by setting the cgi-bin dir to the path of the 
     // script, and then calling the location dependant code.
     //
-    // This isn't thread-safe (discovered by Wilhelm Khler), so send
+    // This isn't thread-safe (discovered by Wilhelm Köhler), so send
     // the path to be used directly to find_file() instead.
     destruct( o );
     o = 0;
