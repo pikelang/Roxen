@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.230 2000/06/03 04:10:56 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.231 2000/08/15 20:16:07 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -979,14 +979,14 @@ array(string) simpletag_anfang(string t, mapping m, string c, RequestID id) {
 
 mapping query_simpletag_callers() {
   return ([ "gtext-id" : ({ RXML.FLAG_EMPTY_ELEMENT, simpletag_gtext_id }),
-	    "gtext-url" : ({ 0, simpletag_gtext_url }),
-	    "anfang" : ({ 0, simpletag_anfang }),
-	    "gh1" : ({ 0, simpletag_gh }),
-	    "gh2" : ({ 0, simpletag_gh }),
-	    "gh3" : ({ 0, simpletag_gh }),
-	    "gh4" : ({ 0, simpletag_gh }),
-	    "gh5" : ({ 0, simpletag_gh }),
-	    "gh6" : ({ 0, simpletag_gh }),
-	    "gtext" : ({ 0, simpletag_gtext }),
+	    "gtext-url" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_gtext_url }),
+	    "anfang" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_anfang }),
+	    "gh1" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_gh }),
+	    "gh2" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_gh }),
+	    "gh3" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_gh }),
+	    "gh4" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_gh }),
+	    "gh5" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_gh }),
+	    "gh6" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_gh }),
+	    "gtext" : ({ RXML.FLAG_DONT_REPORT_ERRORS, simpletag_gtext }),
   ]);
 }
