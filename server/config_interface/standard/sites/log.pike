@@ -2,7 +2,7 @@ inherit "../logutil.pike";
 #include <config.h>
 #include <roxen.h>
 //<locale-token project="config_interface">LOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE(config_interface,X,Y)
+#define LOCALE(X,Y)	_STR_LOCALE("config_interface",X,Y)
 
 string parse(RequestID id)
 {
