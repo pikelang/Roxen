@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: roxenlib.pike,v 1.214 2001/08/23 20:14:50 nilsson Exp $
+// $Id: roxenlib.pike,v 1.215 2002/06/03 20:07:35 nilsson Exp $
 
 //#pragma strict_types
 
@@ -128,10 +128,10 @@ static string http_res_to_string( mapping file, RequestID id )
 
 //! Returns the dimensions of the file @[gif] as
 //! a string like "width=17 height=42". Use
-//! @[Dims] instead.
+//! @[Image.Dims] instead.
 static string gif_size(Stdio.File gif)
 {
-  array(int) xy=Dims.dims()->get(gif);
+  array(int) xy=Image.Dims.get(gif);
   return "width="+xy[0]+" height="+xy[1];
 }
 
