@@ -1,4 +1,4 @@
-string cvs_version="$Id: pimage.pike,v 1.15 1999/07/21 23:00:51 nilsson Exp $";
+string cvs_version="$Id: pimage.pike,v 1.16 1999/07/21 23:49:44 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -325,7 +325,7 @@ class Constructors
 	q = g->inflate()->inflate(q);
       };
     }
-    return myimage(bg(),Image.image()->fromppm(q));
+    return myimage(bg(),Image.PNM.decode(q));
   }
 
   object Roxen( )
