@@ -2,7 +2,7 @@
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *
- * $Id: language.pike,v 1.21 2000/01/10 09:05:55 nilsson Exp $
+ * $Id: language.pike,v 1.22 2000/01/17 16:55:23 nilsson Exp $
  * This file is included by roxen.pike. Not very nice to have a
  * cvs_version variable here.
  *
@@ -11,51 +11,34 @@
  * language.
  */
 
-#include <roxen.h>
-
 mapping languages = ([ ]);
 
 void initiate_languages()
 {
-  string lang, *langs, p;
-  langs = get_dir("languages");
+  array(string) langs = get_dir("languages")-({"abstract.pike"});
+
   if(!langs)
   {
     report_fatal("No languages available!\n"+
 		 "This is a serious error.\n"
-		 "Most RXML tags will not work as expected!\n");
+		 "Many RXML tags will not work as expected!\n");
     return 0;
   }
   report_debug( "Adding languages ... ");
   int start = gethrtime();
-  foreach(glob("*.pike",langs), lang)
+  foreach(glob("*.pike",langs), string lang)
   {
-    if(lang[-1] == 'e')
-    {
-      array tmp;
-      string alias;
-      object l;
-      mixed err;
-      if (err = catch {
-        l = (object)("languages/"+lang);
-        roxenp()->dump( "languages/"+lang );
-	if(tmp=l->aliases()) 
-        {
-	  foreach(tmp, alias) 
-          {
-	    languages[alias] = ([ "month":l->month,
-				  "ordered":l->ordered,
-                                  "date":l->date,
-                                  "day":l->day,
-                                  "number":l->number,
-				  "language":l->language
-			       ]);
-	  }
-	} 
-      }) {
-	report_error(sprintf("Initialization of language %s failed:%s\n",
-			     lang, describe_backtrace(err)));
-      }
+    array tmp;
+    mixed err;
+    if (err = catch {
+      object l = (object)("languages/"+lang);
+      roxenp()->dump( "languages/"+lang );
+      if(tmp=l->aliases()) 
+	foreach(tmp, string alias)
+	  languages[alias] = l;
+    }) {
+      report_error(sprintf("Initialization of language %s failed:%s\n",
+			   lang, describe_backtrace(err)));
     }
   }
   
@@ -69,7 +52,6 @@ private string nil()
 #endif
   return "No such function in that language, or no such language.";
 }
-
 
 string default_language = getenv("ROXEN_LANG")||"en";
 
@@ -87,8 +69,8 @@ public function language(string what, string func)
 	return languages->en[func];
     else
       return languages[default_language][func];
-  else
-    return languages[what][func] || nil;
+
+  return languages[what][func] || nil;
 }
 
 
