@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.85 1998/05/09 17:32:31 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.86 1998/05/19 11:04:04 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -471,8 +471,19 @@ class spawn_cgi
     pipe3->close();
 
     if (err) {
-      roxen_perror("CGI: create_process() failed:\n" +
-		   describe_backtrace(err));
+      int e = errno();
+#if constant(strerror)
+      report_error(sprintf("CGI: create_process() failed:\n"
+			   "errno: %d: %s\n"
+			   "%s\n",
+			   e, strerror(e),
+			   describe_backtrace(err)));
+#else /* !constant(strerror) */
+      report_error(sprintf("CGI: create_process() failed:\n"
+			   "errno: %d\n"
+			   "%s\n",
+			   e, describe_backtrace(err)));
+#endif /* constant(strerror) */
     }
 
     if(proc && kill_call_out) {
@@ -568,7 +579,14 @@ class spawn_cgi
       exit(0);
     } else if (pid == -1) {
       // fork() failed!
-      report_error(sprintf("CGI: fork() failed. No more processes?\n"));
+      int e = errno();
+#if constant(strerror)
+      report_error(sprintf("CGI: fork() failed. No more processes?\n"
+			   "errno: %d: %s\n", e, strerror(e)));
+#else /* !constant(strerror) */
+      report_error(sprintf("CGI: fork() failed. No more processes?\n"
+			   "errno: %d\n", e));
+#endif /* constant(strerror) */
       pipe1->write("HTTP/1.0 500 No more processes\r\n"
 		   "\r\n"
 		   "<title>CGI failed: No more processes</title>\n"
@@ -712,16 +730,32 @@ mixed low_find_file(string f, object id, string path)
 
   wd = dirname(f);
   if ((!(pipe1=Stdio.File())) || (!(pipe2=pipe1->pipe()))) {
+    int e = errno();
+#if constant(strerror)
     report_error(sprintf("cgi->find_file(\"%s\"): Can't open pipe "
-			 "-- Out of fd's?\n", f));
+			 "-- Out of fd's?\n"
+			 "errno: %d: %s\n", f, e, strerror(e)));
+#else /* !constant(strerror) */
+    report_error(sprintf("cgi->find_file(\"%s\"): Can't open pipe "
+			 "-- Out of fd's?\n"
+			 "errno: %d\n", f, e));
+#endif /* constant(strerror) */
     return(0);
   }
   pipe2->set_blocking(); pipe1->set_blocking();
   pipe2->set_id(pipe2);
 
   if ((!(pipe3=Stdio.File())) || (!(pipe4=pipe3->pipe()))) {
+    int e = errno();
+#if constant(strerror)
     report_error(sprintf("cgi->find_file(\"%s\"): Can't open input pipe "
-			 "-- Out of fd's?\n", f));
+			 "-- Out of fd's?\n"
+			 "errno: %d: %s\n", f, e, strerror(e)));
+#else /* !constant(strerror) */
+    report_error(sprintf("cgi->find_file(\"%s\"): Can't open input pipe "
+			 "-- Out of fd's?\n"
+			 "errno: %d\n", f, e));
+#endif /* constant(strerror) */
     return(0);
   }
   pipe4->set_blocking(); pipe3->set_blocking();
