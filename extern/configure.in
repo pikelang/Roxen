@@ -94,22 +94,19 @@ AC_PATH_PROG(uname_prog,uname,no)
 
 AC_MSG_CHECKING(Data shuffler)
 
-AC_CACHE_VAL(lpc_cv_shuffle,
-[
-if test "$uname_prog" != "no"; then
-  lpc_cv_shuffle="`uname`"
-
-  if test "$lpc_cv_shuffle" = "SunOS"; then
-    case "`uname -r`" in
-      5.*) lpc_cv_shuffle="shuffle" ;;
-      *)   lpc_cv_shuffle="none"     ;;
-    esac
-  else
-    lpc_cv_shuffle="none"
-  fi
-else
+AC_CACHE_VAL(lpc_cv_shuffle, [
   lpc_cv_shuffle="none"
-fi
+  if test "$uname_prog" != "no"; then
+    if test "`uname`" = "SunOS"; then
+      case "`uname -m`" in
+        sun4*)
+	  case "`uname -r`" in
+	    5.*) lpc_cv_shuffle="shuffle" ;;
+	  esac
+        ;;
+      esac
+    fi
+  fi
 ])
 
 AC_MSG_RESULT($lpc_cv_shuffle)
