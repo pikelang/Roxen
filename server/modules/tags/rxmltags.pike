@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.247 2001/06/25 19:19:21 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.248 2001/06/25 22:02:37 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1210,22 +1210,34 @@ class TagCache {
 
   class Frame {
     inherit RXML.Frame;
+
     array do_return(RequestID id) {
-#define HASH(x) (x+id->not_query+id->query+id->realauth+id->conf->query("MyWorldLocation"))
+
+      if( args["not-post-method"] && id->method == "POST" )
+	return ({ Roxen.parse_rxml(content, id) });
+
       string key="";
       if(!args->nohash) {
 	object md5 = Crypto.md5();
-	md5->update(HASH(content));
+	string form_vars;
+	if(id->method == "POST")
+	  form_vars = encode_value_canonic(id->real_variables);
+	else
+	  form_vars = id->query;
+	md5->update(content + id->not_query + form_vars +
+		    id->conf->query("MyWorldLocation"));
 	key=md5->digest();
       }
       if(args->key)
 	key += args->key;
-      result = cache_lookup("tag_cache", key);
+
+      if( !(args["flush-on-no-cache"] && id->pragma["no-cache"]) )
+	result = cache_lookup("tag_cache", key);
+
       if(!result) {
 	result = Roxen.parse_rxml(content, id);
 	cache_set("tag_cache", key, result, Roxen.time_dequantifier(args));
       }
-#undef HASH
       return 0;
     }
   }
@@ -4407,7 +4419,7 @@ using the pre tag.
  This simple tag RXML parse its contents and cache them using the
  normal Roxen memory cache.</short> They key used to store the cached
  contents is the MD5 hash sum of the contents, the accessed file name,
- the query string, the server URL and the authentication information,
+ the query variables, the server URL and the authentication information,
  if available. This should create an unique key. The time during which the
  entry should be considered valid can set with one or several time attributes.
  If not provided the entry will be removed from the cache when it has
@@ -4421,6 +4433,19 @@ using the pre tag.
 
 <attr name=nohash>
  <p>The cached entry will use only the provided key as cache key.</p>
+</attr>
+
+<attr name='not-post-method'>
+ <p>By adding this attribute all HTTP requests using the POST method will
+ be unaffected by the caching. The result will be calculated every time,
+ and the result will not be stored in the cache. The contents of the cache
+ will however remain unaffected by the POST request.</p>
+</attr>
+
+<attr name='flush-on-no-cache'>
+ <p>If this attribute is used the cache will be flushed every time a client
+ sends a pragma no-cache header to the server. These are e.g. sent when
+ shift+reload is pressed in Netscape Navigator.</p>
 </attr>
 
 <attr name=years value=number>
