@@ -82,7 +82,7 @@ static string noex_cont(string t, mapping m, string c) {
 static string ex_cont(string t, mapping m, string c, string rt, void|object id)
 {
   c=Parser.HTML()->add_container("ent", lambda(string t, mapping m, string c) {
-					  return "&"+c+";"; 
+					  return "&amp;"+c+";"; 
 					} )
     ->feed(c)->read();
   string quoted="<pre>"+replace(c, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
@@ -167,7 +167,7 @@ static string format_doc(string|mapping doc, string name, void|object id)
       doc=doc->standard;
   }
 
-  name=replace(name, ({ "<", ">" }), ({ "&lt;", "&gt;" }) );
+  name=replace(name, ({ "<", ">", "&" }), ({ "&lt;", "&gt;", "&amp;" }) );
 
   return Parser.HTML()->
          add_tag( "lang",lambda() { return available_languages(id); } )->

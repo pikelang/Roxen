@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.133 2001/01/29 07:01:40 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.134 2001/01/29 09:48:57 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -798,13 +798,19 @@ class TagModuleVariablesSectionsplugin
     if( !mod )
       RXML.run_error("Unknown module: "+m->module+"\n");
 
-    variables = get_variable_sections( mod, m, id )|  ({ ([
+    variables = get_variable_sections( mod, m, id ) +  ({ ([
        "section":"Information",
        "sectionname":LOCALE(299,"Information"),
-       "selected":
-       ((section=="Information" || !section)?"selected":""),
+       "selected":((section=="Information" || !section)?"selected":""),
      ]) });
 
+    if( mod->module_full_doc || (mod->module_type & MODULE_TAG ) )
+      variables +=({ ([
+       "section":"Docs",
+       "sectionname":LOCALE(0,"Documentation"),
+       "selected":((section=="Docs")?"selected":""),
+     ])});
+    
      if( sizeof( variables ) == 1 )
      {
        while( id->misc->orig )

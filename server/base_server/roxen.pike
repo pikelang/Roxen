@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.616 2001/01/29 09:16:41 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.617 2001/01/29 09:48:54 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2343,7 +2343,6 @@ class ArgCache
   }
 
   static void create( string _name )
-  //! Instantiates an argument cache of your own.
   {
     name = _name;
     init_db();

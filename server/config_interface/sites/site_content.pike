@@ -368,6 +368,33 @@ string find_module_doc( string cn, string mn, RequestID id )
                   ({ "/image/", }), ({ "/internal-roxen-" }));
 }
 
+string find_module_documentation( string conf, string mn, RequestID id )
+{
+  Configuration c = roxen.find_configuration( conf );
+
+  if(!c) return "";
+  RoxenModule m = c->find_module( replace(mn,"!","#") );
+  ModuleInfo mi = roxen.find_module( (mn/"!")[0] );
+
+  if(!m) return "";
+  if(!m->register_module) return "";
+
+  LocaleString full_doc    = m->module_full_doc;
+  if( !full_doc ) full_doc = m->module_doc;
+  if( !full_doc ) full_doc = m->register_module()[2];
+  if( !full_doc ) full_doc = m->register_module()[1];
+    
+  if( mi->type & MODULE_TAG )
+  {
+    RXML.TagSet tags=m->query_tag_set();
+    if(!tags) return "";
+    foreach(sort(indices(tags->get_tag_names())), string name)
+      full_doc += "<p>"+c->find_tag_doc( name, id )+"</p>";
+  }
+
+  return full_doc;
+}
+
 string module_page( RequestID id, string conf, string module )
 {
   while( id->misc->orig )
@@ -379,6 +406,12 @@ string module_page( RequestID id, string conf, string module )
       || RXML.get_var( "info_section_is_it", "form" ) )
     return "<blockquote>"+find_module_doc( conf, module, id )+"</blockquote>";
 
+  if( section == "Docs" )
+    return
+      "<blockquote>"+
+         find_module_documentation( conf, module, id )+
+      "</blockquote>";
+  
   return "<cfg-variables source='module-variables' configuration='"+conf+"' "
           "section='&form.section;' module='"+module+"'/>";
 }
