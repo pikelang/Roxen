@@ -107,7 +107,7 @@ function loadLayer(e, layer_name, src, properties, parent)
 
   if(!properties.stay_put)
     clearToPopup(parent);
-  else    
+  else if(popups.length)
     popups.length--;
 
   if(isNav4)
