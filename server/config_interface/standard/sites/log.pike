@@ -15,5 +15,5 @@ string parse(object id)
   sort(r2,report);
   for(int i=0;i<sizeof(report);i++) 
      report[i] = describe_error(report[i], log[report[i]]);
-  return "</dl>"+(sizeof(report)?(report*""):LOCALE->empty)+"<dl>";
+  return (sizeof(report)?(report*""):LOCALE->empty);
 }

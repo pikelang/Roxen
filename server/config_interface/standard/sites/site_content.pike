@@ -1,5 +1,6 @@
 inherit "roxenlib";
 inherit "../inheritinfo.pike";
+inherit "../logutil.pike";
 #include <module.h>
 
 string module_global_page( RequestID id, Configuration conf )
@@ -96,11 +97,44 @@ do                                                                      \
 
 string devel_buttons( object c, string mn, object id )
 {
+  object mod = c->find_module( replace( mn,"!","#" ) );
   if( sizeof( glob( "*.x", indices( id->variables ) ) ) )
-    c->reload_module( replace(mn,"!","#" ) );
+  {
+    string a = glob( "*.x", indices( id->variables ) )[0]-".x";
+    if( a == parse_rxml( "<cf-locale get=reload>",id ) )
+      c->reload_module( replace(mn,"!","#" ) );
+    else if( a == parse_rxml( "<cf-locale get=clear_log>",id ) )
+    {
+      mod->error_log = ([
+        "2,Event log cleared by "+id->misc->config_user->real_name+
+        " ("+id->misc->config_user->name+") from "+
+        id->misc->config_settings->host:({ time() }),
+      ]);
+    }
+  }
   return "<input type=hidden name=section value='"+id->variables->section+"'>"
-         "<submit-gbutton preparse><cf-locale get=reload>"
-         "</submit-gbutton>";
+         "<submit-gbutton preparse><cf-locale get=reload></submit-gbutton>"+
+         (sizeof( mod->error_log ) ?
+         "<submit-gbutton preparse><cf-locale get=clear_log></submit-gbutton>":
+          "");
+;
+}
+
+string get_eventlog( object o, RequestID id )
+{
+  mapping log = o->error_log;
+  if(!sizeof(log)) return "";
+
+  array report = indices(log), r2;
+
+  last_time=0;
+  r2 = map(values(log),lambda(array a){
+     return id->variables->reversed?-a[-1]:a[0];
+  });
+  sort(r2,report);
+  for(int i=0;i<sizeof(report);i++) 
+     report[i] = describe_error(report[i], log[report[i]]);
+  return "<h2><cf-locale get=eventlog></h2>"+(report*"");
 }
 
 string find_module_doc( string cn, string mn, object id )
@@ -112,7 +146,7 @@ string find_module_doc( string cn, string mn, object id )
 
   string dbuttons;
   if( id->misc->config_settings->query( "devel_mode" ) )
-    dbuttons = devel_buttons( c, mn, id );
+    dbuttons = "<h2><cf-locale get=actions></h2>"+devel_buttons( c, mn, id );
   else
     dbuttons="";
 
@@ -123,13 +157,18 @@ string find_module_doc( string cn, string mn, object id )
 
   roxen.Module mi = roxen.find_module( (mn/"!")[0] );
 
-  return replace( "<p><b><font size=+2>"
-                  + translate(m->register_module()[1]) + "</font></b><br>"
-                  + dbuttons+"<br clear=all>"
+  string eventlog = get_eventlog( m,id );
+  
+
+  return replace( "<br><b><font size=+2>"
+                  + translate(m->register_module()[1]) + 
+                  "</font></b><br>"
                   + translate(m->info()) + "<p>"
-                  + translate(m->status()||"") +"<p>"+
+                  + translate(m->status()||"") +"<p>"
+                  + eventlog
+                  + dbuttons+"<br clear=all>"+
                   ( id->misc->config_settings->query( "devel_mode" ) ?
-                    "<hr noshade size=1><h2>Developer information</h2>"+
+                    "<h2>Developer information</h2>"+
                     "<b>Identifier:</b> " + mi->sname+" <br>"
                     "<table><tr><td valign=top><b>Type:</b></td><td valign=top>"+describe_type( m,mi->type )+"</td></table><br>"+
                     translate(m->file_name_and_stuff())+ "<dl>"+
