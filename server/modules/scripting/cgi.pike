@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.108 1999/03/25 20:09:07 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.109 1999/03/25 20:27:30 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -682,8 +682,11 @@ class spawn_cgi
       if(closed) {
         if(buffer)
         {
-          string s = buffer;
-          buffer = 0;
+          string s = buffer[..nbytes-1];
+          buffer = buffer[nbytes..];
+	  if (buffer == "") {
+	    buffer = 0;
+	  }
           return s;
         }
         return 0;
