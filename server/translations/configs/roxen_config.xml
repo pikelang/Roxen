@@ -5,6 +5,7 @@
 <baselang>eng</baselang>
 <xmlpath>../translations/%L/roxen_config.xml</xmlpath>
 
+  <file>../admin_interface/sites/drop_site.html</file>
   <file>../pike_modules/Variable.pmod/Date.pike</file>
   <file>../pike_modules/Variable.pmod/Email.pike</file>
   <file>../pike_modules/Variable.pmod/Image.pike</file>

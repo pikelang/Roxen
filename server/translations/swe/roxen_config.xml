@@ -2,6 +2,7 @@
 <locale version="1.0"/>
 <project>roxen_config</project>
 <language>swe</language>
+<file>../admin_interface/sites/drop_site.html</file>
 <file>../pike_modules/Variable.pmod/Date.pike</file>
 <file>../pike_modules/Variable.pmod/Email.pike</file>
 <file>../pike_modules/Variable.pmod/Image.pike</file>

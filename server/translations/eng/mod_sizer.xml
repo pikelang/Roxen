@@ -98,3 +98,8 @@
 <o>Could not decode/encode GIF image. This server lacks LZW support.</o>
 <t></t>
 </str>
+
+<str id="22">
+<o>Could not decode/encode JPEG image. This server lacks JPEG support.</o>
+<t></t>
+</str>
