@@ -1,13 +1,12 @@
 // This is a roxen module. Copyright © 1999-2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.19 2000/04/14 23:03:48 kuntri Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.20 2000/05/01 02:52:29 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 
 inherit "module";
-inherit "roxenlib";
 inherit "state";
 
 constant module_type = MODULE_PARSER;
@@ -71,7 +70,10 @@ string encode_url(array states, object state, RequestID id){
 //It seems like the fold/unfold images are mixed up.
 private string tag_ft(string tag, mapping m, string cont, RequestID id, object state, mapping fl) {
     int index=fl->cnt++;
+    while(sizeof(fl->states)-1 < index)
+      fl->states+=({ fl->def });
     array states=copy_value(fl->states);
+
     if((m->unfolded && states[index]==-1) ||
       states[index]==1) {
         fl->txt="";
@@ -85,7 +87,7 @@ private string tag_ft(string tag, mapping m, string cont, RequestID id, object s
 	       "alt=\"-\" /></a>"+
                parse_html(cont,([]),(["fd":
 				      lambda(string tag, mapping m, string cont) {
-					fl->txt+=parse_rxml(cont,id);
+					fl->txt+=Roxen.parse_rxml(cont,id);
 					return "";
 				      }
 	       ]))+"</dt><dd>"+fl->txt+"</dd>";
@@ -107,12 +109,19 @@ string container_foldlist(string tag, mapping m, string c, RequestID id) {
     id->misc->foldlist_id="";
 
   //Make an initial guess of what should be folded and what should not.
-  if(m->unfolded)
+  int def;
+  if(m->unfolded) {
     states=allocate(fds,1);  //All unfolded
-  else if(m->folded)
+    def=1;
+  }
+  else if(m->folded) {
     states=allocate(fds,0);  //All folded
-  else
+    def=0;
+  }
+  else {
     states=allocate(fds,-1); //All unknown
+    def=-1;
+  }
 
   //Register ourselfs as state consumers and incorporate our initial state.
   string fl_name = (m->name || "fl")+fds+(id->misc->foldlist_id!=""?":"+id->misc->foldlist_id:"");
@@ -130,6 +139,7 @@ string container_foldlist(string tag, mapping m, string c, RequestID id) {
                "cnt":0,
                "inh":id->misc->foldlist_id,
                "txt":"",
+	       "def":def,
                "fsrc":m->foldedsrc||"/internal-roxen-unfold",
                "ufsrc":m->unfoldedsrc||"/internal-roxen-fold"]);
 
