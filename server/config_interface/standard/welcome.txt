@@ -1,4 +1,4 @@
-<h1>Welcome to Roxen WebServer 2.0</h1>
+<h1>Welcome to Roxen WebServer 2.1</h1>
 <blockquote>
  If your fonts are way too large (or small, depending on personal
  preferences), please adjust the unicode font size in your
