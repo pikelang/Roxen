@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.102 2004/05/05 15:45:06 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.103 2004/05/05 16:59:13 wellhard Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -546,6 +546,11 @@ class PrefLanguages
   array(string) languages=({});
   array(float) qualities=({});
 
+  static string _sprintf(int c, mapping|void attrs)
+  {
+    return sprintf("PrefLanguages(%O)", get_languages());
+  }
+  
   array(string) get_languages() {
     sort_lang();
     return languages;
