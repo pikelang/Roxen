@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.11 2000/09/14 13:01:37 wellhard Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.12 2000/09/14 19:06:18 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "HTML washer";
@@ -137,7 +137,7 @@ class TagWashHtml
       if(args->unparagraphify)
 	result = unparagraphify(result);
 
-      if(args["unlink-dwim"] || args["unlinkify"])
+      if(args["unlinkify"])
 	result = unlinkify(result);
 
       if(!args["keep-all"])
@@ -149,7 +149,7 @@ class TagWashHtml
       if(args->paragraphify)
 	result = paragraphify(result);
 
-      if(args["link-dwim"] || args["linkify"])
+      if(args["linkify"])
 	result = linkify(result);
 
       return 0;
