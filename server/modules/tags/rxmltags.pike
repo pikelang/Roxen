@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.439 2003/10/06 17:23:17 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.440 2003/11/13 17:17:50 wellhard Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4096,7 +4096,8 @@ class TagEmit {
       if(objectp(res))
 	if(args->sort ||
 	   (args->skiprows<0) ||
-	   args->rowinfo )
+	   args->rowinfo ||
+	   args->remainderinfo )
 	  // Expand the object into an array of mappings if sort,
 	  // negative skiprows or rowinfo is used. These arguments
 	  // should be intercepted, dealt with and removed by the
