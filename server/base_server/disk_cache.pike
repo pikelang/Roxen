@@ -1,7 +1,12 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.12.2.2 1997/03/13 22:01:44 grubba Exp $";
+string cvs_version = "$Id: disk_cache.pike,v 1.12.2.3 1997/03/20 16:09:06 grubba Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
+#include <stat.h>
+
+
+// Still experimental
+#define CACHE_DEBUG
 
 inherit "roxenlib";
 object this = this_object();
@@ -31,7 +36,7 @@ string file_name(string what)
 class CacheStream 
 {
   inherit "socket";
-  string fname;
+  string fname, rfile, rfiledone;
   object file;
   function done_callback;
   int new;
@@ -45,32 +50,48 @@ class CacheStream
     sscanf(upper_case(from), "HTTP/%*s %d", i);
     return i;
   }
+
+#define ROXEN_HEAD_VERS 2
+#define ROXEN_HEAD_SIZE 512
   
-  void parse_headers()
+  int parse_headers()
   {
-    object(FILE) cf = FILE();
     string line, name, value;
-    if(!cf->open(QUERY(cachedir)+fname,"r"))
+    int ret;
+
+    if((ret=file->seek(ROXEN_HEAD_SIZE))!=ROXEN_HEAD_SIZE)
     {
-      perror("open failed: "+QUERY(cachedir)+fname+"\n");
-      return;
+#ifdef CACHE_DEBUG
+      perror("parse_headers seek failed("+ret+")\n");
+#endif
+      return 0;
     }
-    headers[" returncode"] = get_code(((cf->gets()||"")-"\r")-"\n");
-    while(strlen( (line = ((cf->gets()||"")-"\r")-"\n")))
+
+    headers->head_vers = ROXEN_HEAD_VERS;
+    headers->headers_size = headers->head_size = ROXEN_HEAD_SIZE;
+    
+    line = ((file->gets()||"")-"\r")-"\n";
+    headers->headers_size += sizeof(line);
+    if(!(headers[" returncode"] = get_code(line)))
+      return 0;
+
+    while(strlen( (line = ((file->gets()||"")-"\r")-"\n")))
     {
+      headers->headers_size += sizeof(line);
       if(sscanf(line, "%s:%s", name, value) == 2)
       {
 	sscanf(value, "%*[ \t]%s", value);
 	headers[lower_case(name-" ")] = value;
       }
     }
-    destruct(cf);
+    return 1;
   }
   
-  void load_headers()
+  int load_headers_compat()
   {
     string file;
     string head;
+
     if(!sscanf(fname, "%s.done", file))
       file = fname;
     if(head = read_bytes(QUERY(cachedir)+file+".head"))
@@ -78,18 +99,91 @@ class CacheStream
       headers = decode_value(head);
 //      perror(sprintf("Extracted %d bytes of headers from %s (%O)\n",
 //		     strlen(head), fname, headers));
+      return 1;
     }
+    return 0;
   }
 
-  void save_headers()
+  int load_headers()
   {
-    string head;
-    head = encode_value(headers);
-//    perror("Writing heders to "+fname+".head\n");
-    rm(QUERY(cachedir)+fname+".head");
-    write_file(QUERY(cachedir)+fname+".head", head);
+    string head, roxenhead;
+    mixed err;
+    int size;
+
+     // no initial seek needed if load_headers is called first after open
+    
+    if(!(head = file->read(ROXEN_HEAD_SIZE)))
+    {
+#ifdef CACHE_DEBUG
+      perror("load_headers - read failed\n");
+#endif
+      return 0;
+    }
+    
+    err=catch(headers = decode_value(head));
+    if(err)
+    {
+      if(file->seek(0)!=0)
+      {
+#ifdef CACHE_DEBUG
+	perror("load_headers - compat seek failed\n");
+#endif
+	return 0;
+      }
+      if(load_headers_compat())
+	return 1;
+      
+#ifdef CACHE_DEBUG
+      perror("load_headers ("+QUERY(cachedir)+fname+"): "+err[0]+"\n");
+#endif
+      return 0;
+    }
+    
+    if(headers->head_vers != ROXEN_HEAD_VERS)
+    {
+#ifdef CACHE_DEBUG
+      perror("load_headers - check head_vers failed\n");
+#endif
+      return 0;
+    }
+    if(file->seek(headers->head_size) != headers->head_size)
+    {
+#ifdef CACHE_DEBUG
+      perror("load_headers - final seek failed\n");
+#endif
+      return 0;
+    }
+    return 1;
   }
-  
+
+  int save_headers()
+  {
+    if(headers->head_vers != ROXEN_HEAD_VERS)
+    {
+      headers->headers_size += ROXEN_HEAD_SIZE;
+      headers->head_vers = ROXEN_HEAD_VERS;
+      headers->head_size = ROXEN_HEAD_SIZE;
+    }
+
+    string head = encode_value(headers);
+
+    if(sizeof(head) > ROXEN_HEAD_SIZE)
+    {
+#ifdef CACHE_DEBUG
+      perror("save_headers - header does not fit: "+headers->name+"\n");
+#endif
+      return 0;
+    }
+    
+    if(!((file->seek(0) == 0) &&
+	 file->write(head)))
+    {
+      perror("save headers - failed\n");
+      return 0;
+    }
+    return 1;
+  }
+
   void create(object a, string s, int n)
   {
 //    perror("Create cache-stream for "+s+"\n");
@@ -100,10 +194,12 @@ class CacheStream
 
   void destroy()
   {
-//   perror("Destroy cache-stream for "+fname+" ("+new+")\n" 
-//	  +(describe_backtrace(backtrace())));
-    catch(destruct(file)); // 'file' might be gone
-    if(new) catch(rm(QUERY(cachedir)+fname)); // roxen might be gone
+    if(objectp(file))
+    {
+      if(new)
+	catch(rm(rfile)); // roxen might be gone
+      catch(destruct(file)); // 'file' might be gone
+    }
   }
 }
 
@@ -113,6 +209,7 @@ class Cache {
   object this = this_object();
   string cd;
   object command_stream = files.file();
+  int last_ressort;
 
   string to_send="";
 
@@ -144,7 +241,9 @@ class Cache {
   void reinit(string basename)
   {
     command("create", QUERY(cachedir), basename,
-	    QUERY(garb_min_garb), QUERY(cache_size) );
+	    QUERY(garb_min_garb), QUERY(cache_size),
+	    QUERY(cache_max_num_files), QUERY(cache_minimum_left),
+	    QUERY(cache_gc_logfile));
   }
   
   /*
@@ -180,6 +279,11 @@ class Cache {
     /* Child */
     lcs->dup2( files.file ("stdin") );
     object privs = ((program)"privs")("Starting the garbage collector");
+    // start garbagecollector niced as possible to reduce I/O-Load  12-Nov-96-wk
+    exec("/usr/bin/nice", "-19",
+	 "bin/pike", "-m", "lib/master.pike", "-I", "etc/include",
+	 "-M", "etc/modules", "bin/garbagecollector.pike");
+    perror("Failed to start niced garbage collector - retry without nice\n");
     exec("bin/pike", "-m", "lib/master.pike", "-I", "etc/include",
 	 "-M", "etc/modules", "bin/garbagecollector.pike");
     perror("Failed to start garbage collector (exec failed)!\n");
@@ -236,7 +340,6 @@ public void reinit_garber()
 {
   if(!QUERY(cache)) return;
 
-  
   if(!sscanf(QUERY(cachedir), "%*s/roxen_cache"))
     QUERY(cachedir)+="roxen_cache/";
   
@@ -252,6 +355,11 @@ public void reinit_garber()
     cache->reinit(QUERY(cachedir)+"logs/");
   else
     cache = Cache (QUERY(cachedir)+"logs/");
+
+#define DAY (60*60*24)
+  if(QUERY(cache_last_ressort))
+    cache->last_ressort = QUERY(cache_last_ressort) * DAY;
+// WK has a #endif here
 }
 
 public void init_garber()
@@ -274,113 +382,247 @@ object new_cache_stream(object fp, string fn)
   return res;
 }
 
+/* Heuristic&Co
+ * 
+ *  (this should be more configurable per proxy module)
+ *
+ *  - used info
+ *
+ *     header:
+ *             expires
+ *             last-modified
+ *             transmitted
+ *
+ *     cache object:
+ *             arrival
+ *
+ *     access time:
+ *             now
+ *
+ *     configured:
+ *             last-ressort
+ *
+ *  - checks if header is present
+ *
+ *     if expires
+ *     then
+ *             if expires < now
+ *             then
+ *                     refresh
+ *     else if last-modified
+ *     then
+ *             if (arrival - last-modified) < (now - arrival)
+ *             then
+ *                     try refresh
+ *     else if (transmitted + last-ressort) > now
+ *     then
+ *             refresh
+ *
+ */
+
+// as long as is_modified does not handle timezone
+int tz = timezone();
+#ifdef CACHE_DEBUG
+string age(int x)
+{
+  int y = time() - x;
+  return sprintf("age: %d+%02d:%02d:%02d (%d)", y/(DAY), (y%DAY)/(60*60), (y%(60*60))/60, y%60, y);
+}
+#endif
+
 object cache_file(string cl, string entry)
 {
   if(!QUERY(cache)) return 0;
-  string name = cl+"/"+file_name( entry )+".done";
-  if(file_size( QUERY(cachedir)+name ) > 0)
+  string name = cl+"/"+file_name(entry)+".done";
+  object cf = files.file();
+
+  if(!cf->open(QUERY(cachedir)+name, "r"))
+    return 0;
+
+  cf=new_cache_stream(cf, name);
+  cf->done_callback = 0;
+  
+  array (int) stat = cf->file->stat();
+
+  if(stat[ST_SIZE]<=0)
   {
-    object cf;
+    destruct(cf);
+    return 0;
+  }
 
-    cf = open(QUERY(cachedir)+name, "rw");
+  if(!cf->load_headers())
+  {
+    destruct(cf);
+    return 0;
+  }
 
-    if(!cf)
-    {
-      perror("Cannot open old cachefile "+QUERY(cachedir)+name+"\n");
-      rm(QUERY(cachedir)+name);
-      return 0;
-    }
-    
-    cf=new_cache_stream(cf, name);
-    cf->new = 0;
-    
-    cf->load_headers();
+  if(!cf->headers[" returncode"])
+  {
+    destruct(cf);
+    return 0;
+  }
 
-//#define CACHE_DEBUG
-    
-    if(cf->headers->name != entry)
+  if(cf->headers->name != entry)
+  {
+#ifdef CACHE_DEBUG
+    perror("hashmatch: "+name+", cached: "+cf->headers->name+", wanted: "+entry+"\n");
+    if(file_name(cf->headers->name)!=file_name(entry))
+      perror("hash function changed\n");
+#endif
+    destruct(cf);
+    return 0;
+  }
+
+  cf->new = 0;
+
+  if(!cf->headers[" returncode"])
+    return cf;
+
+  // get rid of cache files which have not been checked for content-length in 1.1
+  if((((int)cf->headers["content-length"] <= 0) &&
+      (cf->headers[" returncode"]/100 == 2)) ||
+     ((int)cf->headers["content-length"] > (stat[ST_SIZE] - cf->headers->headers_size)))
+  {
+#ifdef CACHE_DEBUG
+    perror(name+": low content-length="+cf->headers["content-length"]+
+	   ", headers_size="+cf->headers->headers_size+
+	   ", ST_SIZE="+stat[ST_SIZE]+
+	   ", returncode="+cf->headers[" returncode"]+"\n");
+#endif
+    destruct(cf);
+    return 0;
+  }
+
+  if(cf->headers["expires"])
+  {
+    if(!is_modified(cf->headers["expires"], time() + tz))
     {
 #ifdef CACHE_DEBUG
-      perror("CACHE DEBUG: Cache miss");
+      perror("refresh(expired): "+name+
+	     ", " + age(stat[ST_CTIME])+
+	     ", expires: "+cf->headers["expires"]+"\n");
 #endif
-      cf->new = 1;
       destruct(cf);
       return 0;
     }
-
-    if(cf->headers->expire)
-      if(!is_modified(cf->headers->expire, time())) // Expired!
-      {
+  }
+  else if(cf->headers["last-modified"])
+  {
+    if(QUERY(cache_check_last_modified) &&
+       is_modified(cf->headers["last-modified"],
+		   stat[ST_CTIME] - time() + stat[ST_CTIME] + tz))
+    {
 #ifdef CACHE_DEBUG
-	perror("CACHE DEBUG: Cache file expired");
+      perror("refresh(last-modified): "+name+
+	     ", " + age(stat[ST_CTIME])+
+	     ", last-modified: "+cf->headers["last-modified"]+"\n");
 #endif
-	cf->new = 1;
-	destruct(cf);
-	return 0;
-      }
-	
+      destruct(cf);
+      return 0;
+    }
+  }
+  else if(QUERY(cache_last_ressort))
+  {
+    if((stat[ST_CTIME] + cache->last_ressort) < time())
+    {
 #ifdef CACHE_DEBUG
-    perror("CACHE DEBUG: Cache hit\n");
+      perror("refresh(last ressort="+cache->last_ressort+"): "+name+
+	     ", " + age(stat[ST_CTIME])+"\n");
 #endif
-    cache->accessed( name,
-		     (cf->file->stat()[1])/QUERY(bytes_per_second) );
-    return cf;
-  }  
-  return 0;
-}
+      destruct(cf);
+      return 0;
+    }
+  }
+  else
+  {
+    destruct(cf);
+    return 0;
+  }
 
-void rmold(string name)
-{
-  int len;
-   
-  len = file_size(QUERY(cachedir)+name+".done");
-  if(rm(QUERY(cachedir)+name+".done")&& (len > 0))
-    cache->check(-len);
-   
-  len = file_size(QUERY(cachedir)+name+".head");
-  if(rm(QUERY(cachedir)+name+".head")&& (len > 0))
-    cache->check(-len);
+  /* Accessed info is handled during garbage collection via the
+   * accesstime of the cachefile
+   *
+   * cache->accessed(name, 0);
+   */
+
+  return cf;
 }
 
 object create_cache_file(string cl, string entry)
 {
   if(!QUERY(cache)) return 0;
-  string name = cl+"/"+file_name( entry );
-  int len;
-  object cf;
+  string name = cl+"/"+file_name(entry);
+  string rfile = QUERY(cachedir)+name;
+  string rfiledone = rfile+".done";
+  object cf = FILE();
+  int i;
 
   // to reduce IO-load try open before making directories 14-Nov-96-wk
-  if(!(cf = open(QUERY(cachedir)+name, "rwc")))
+  if(!(cf = open(rfile, "rwcx")))
   {
-    mkdirhier(QUERY(cachedir)+name);
-    cf = open(QUERY(cachedir)+name, "rwc");
+    mkdirhier(rfile);
+
+    for(i=10; i>=0; i--) {
+      if(cf->open(rfile, "rwcx"))
+	break;
+      
+      if(i>1) {
+	rfile = rfile + "+";
+#ifdef CACHE_DEBUG
+	perror("Retry open new cachefile "+rfile+"\n");
+#endif
+      } else {
+#ifdef CACHE_DEBUG
+	perror("Open new cachefile failed: "+rfile+"\n");
+#endif
+	destruct(cf);
+	return 0;
+      }
+    }
   }
-  
-  if(!cf)
-  {
-    perror("Cannot open new cachefile "+QUERY(cachedir)+name+"\n");
-    return 0;
-  }
-  cache->accessed( name, time() ); // This file _will_ be removed first.
+
+  cache->accessed(name, 0);
   cf=new_cache_stream(cf, name);
   cf->headers->name = entry;
+
+  cf->rfile = rfile;
+  cf->rfiledone = rfiledone;
+  
+  // create roxenheader
+  
+  if(cf->file->seek(ROXEN_HEAD_SIZE) != ROXEN_HEAD_SIZE) {
+    destruct(cf);
+    return 0;
+  }
   return cf;
 }
 
+void rmold(string fname)
+{
+  int len;
+ 
+  len = file_size(fname);
+  if((len>=0) && rm(fname) && (len > 0))
+    cache->check(-len);
+}
+  
 void default_check_cache_file(object stream)
 {
-  string file = QUERY(cachedir)+stream->fname;
-  if(QUERY(cache))
-  {
+  if (QUERY(cache)) {
     int s;
-    s=file_size(file);
-    stream->save_headers();
-    mv(file, file+".done");
-    cache->accessed( stream->fname+".done", s/QUERY(bytes_per_second) );
-    cache->accessed( file+".head", 1024 );
-    cache->check(s+1024);
-  } else
-    rm(file);
+    array (int) stat = stream->file->stat();
+
+    rmold(stream->rfiledone);
+
+    if(!stream->save_headers()) {
+      destruct(stream);
+      return;
+    }
+    stream->file->close();
+    mv(stream->rfile, stream->rfiledone);
+    cache->accessed(stream->fname+".done", stat[ST_SIZE]);
+    stream->new = 0;
+  }
   destruct(stream);
 }
 
@@ -389,17 +631,12 @@ string get_garb_info()
   return "<pre>"+cache->status()+"</pre>";
 }
 
-
-
-#define DELETE_AND_RETURN(){rmold(rfile);if(cachef){cachef->new=1;destruct(cachef);}return;}
+#define DELETE_AND_RETURN(){rmold(cachef->rfiledone);if(cachef){cachef->new=1;destruct(cachef);}return;}
 #define RETURN() {if(cachef){destruct(cachef);}return;}
-
-#include <stat.h>
 
 void http_check_cache_file(object cachef)
 {
   if(!cachef->file) RETURN();
-  string rfile = QUERY(cachedir)+cachef->fname;
   array (int) stat = cachef->file->stat();
   int i;
   /*  soo..  Lets check if this is a file we want to keep. */
@@ -410,14 +647,38 @@ void http_check_cache_file(object cachef)
      (float)QUERY(cache_size)*1024.0*1024.0)
     DELETE_AND_RETURN();
 
-  cachef->parse_headers();
+  if(!cachef->parse_headers())
+    DELETE_AND_RETURN();
+
 // keep 404 also                                              4-Dec-96-wk
   if((cachef->headers[" returncode"]/100 != 2) &&
+     (cachef->headers[" returncode"] != 302) &&
      (cachef->headers[" returncode"] != 404) &&
      (cachef->headers[" returncode"]/2 != 150))
     DELETE_AND_RETURN();
-  
-  if(!is_modified(cachef->headers["expire"], time()))
+
+  if(cachef->headers[" returncode"]/100 == 2) {
+    if(cachef->headers["content-length"]) {
+      if((int)cachef->headers["content-length"] <=0)
+	DELETE_AND_RETURN();
+    } else if(!QUERY(cache_keep_without_content_length)) {
+      if(cachef->headers["content-type"] != "text/html")
+	DELETE_AND_RETURN();
+      
+      string tocheck = lower_case(cachef->file->read(500000));
+      
+      if((search(tocheck, "<html>") == -1) ||
+	 ((search(tocheck, "</html>") == -1) &&
+	  (search(tocheck, "</body>") == -1)))
+	DELETE_AND_RETURN();
+    }
+  }
+  if(!cachef->headers["content-length"])
+    cachef->headers["content-length"] =
+      stat[ST_SIZE] - cachef->headers->headers_size;
+
+  if(cachef->headers["expires"]&&
+     !is_modified(cachef->headers["expires"], time() + tz))
     DELETE_AND_RETURN();
 
   if(cachef->headers["pragma"] &&
@@ -427,17 +688,27 @@ void http_check_cache_file(object cachef)
   if(cachef->headers["set-cookie"])
     DELETE_AND_RETURN();
 
-  if((int)cachef->headers["content-length"] > stat[ST_SIZE]) 
+  if((int)cachef->headers["content-length"] >
+     (stat[ST_SIZE] - cachef->headers->headers_size)) {
+#ifdef CACHE_DEBUG
+    perror(cachef->rfile+": low content-length="+cachef->headers["content-length"]+
+	   ", headers_size="+cachef->headers->headers_size+
+	   ", ST_SIZE="+stat[ST_SIZE]+"\n");
+#endif
+    DELETE_AND_RETURN();
+  }
+
+  int len;
+  if((len = file_size(cachef->rfiledone)) > 0)
+    cache->check(-len);
+
+  if(!cachef->save_headers())
     DELETE_AND_RETURN();
 
-  cachef->save_headers();
+  mv(cachef->rfile, cachef->rfiledone);
+  cache->accessed(cachef->fname+".done", stat[ST_SIZE]);
+  cachef->file->close();
 
-  mv(rfile, rfile+".done");
-
-  cache->accessed( cachef->fname+".done", stat[1]/QUERY(bytes_per_second) );
-  cache->accessed( cachef->fname+".head", stat[1]/QUERY(bytes_per_second) );
-  cache->check( stat[ST_SIZE] );
-
-  destruct(cachef);
+  cachef->new = 0;
 }
 

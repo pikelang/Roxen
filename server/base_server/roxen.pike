@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.31.2.8 1997/03/17 10:02:52 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.31.2.9 1997/03/20 16:09:01 grubba Exp $";
 
 #define IN_ROXEN
 #include <module.h>
@@ -2560,16 +2560,21 @@ private void define_global_variables( int argc, array (string) argv )
 	 "Minimum number of Megabytes removed when a garbage collect is done",
 	  0, cache_disabled_p);
 
-#if 0 // TBD 
   globvar("cache_minimum_left", 5, "Proxy disk cache: Minimum "
-	  "available free space", TYPE_INT,
-	  "If less than this amount of disk space (in MB) is left, "
-	  "the cache will remove a few files",
+	  "available free space and inodes (in %)", TYPE_INT,
+	  "If less than this amount of disk space or inodes (in %) is left, "
+	  "the cache will remove a few files. This check may work half hearted "
+	  "if the diskcache is spread over several filesystems.",
 	  0, cache_disabled_p);
-#endif
   
   globvar("cache_size", 25, "Proxy disk cache: Size", TYPE_INT,
         "How many MB may the cache grow to before a garbage collect is done?",
+	  0, cache_disabled_p);
+
+  globvar("cache_max_num_files", 0, "Proxy disk cache: Maximum number "
+	  "of files", TYPE_INT, "How many cache files (inodes) may "
+	  "be on disk before a garbage collect is done ? May be left "
+	  "zero to disable this check.",
 	  0, cache_disabled_p);
   
   globvar("bytes_per_second", 50, "Proxy disk cache: Bytes per second", 
@@ -2596,6 +2601,32 @@ private void define_global_variables( int argc, array (string) argv )
 	  " the cache will be recalculated when this value is changed.",
 	  0, cache_disabled_p); 
   
+  globvar("cache_keep_without_content_length", 1, "Proxy disk cache: "
+	  "Keep without Content-Length", TYPE_FLAG, "Keep files "
+	  "without Content-Length header information in the cache ?",
+	  0, cache_disabled_p);
+
+  globvar("cache_check_last_modified", 0, "Proxy disk cache: "
+	  "Refresh on Last-Modified", TYPE_FLAG, "Refresh files without "
+	  "Expires header information after they stayed in the cache "
+	  "as long as they were old when they got cached ? "
+	  "This may be useful for some regularly updated docs as in "
+	  "online newpapers.",
+	  0, cache_disabled_p);
+
+  globvar("cache_last_ressort", 0, "Proxy disk cache: "
+	  "Last ressort (in days)", TYPE_INT, "How many days "
+	  "shall files without Expires and without Last-Modified header "
+	  "information be kept ?",
+	  0, cache_disabled_p);
+
+  globvar("cache_gc_logfile",  "",
+	  "Proxy disk cache: "
+	  "Garbage collector logfile", TYPE_FILE,
+	  "Information about garbage collector runs, removed and refreshed "
+	  "files, cache and disk status goes here.",
+	  0, cache_disabled_p || log_is_not_enabled);
+
   /// End of cache variables..
   
   globvar("docurl", "http://roxen.com", "Documentation URL",
