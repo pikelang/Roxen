@@ -43,6 +43,10 @@ module in pike.
           Scale to this font, mostly useful in the <tt>{gtext}</tt>
           tag, will not work at all in the <tt>{gh<i>[number]</i>}</tt>
           tags.
+<dt><b>rescale</b><dd>
+	  Rescale the background to fill resulting image.
+<dt><b>textbelow</b>=<tt>color</tt><dd>
+	  Place text in a box colored with <tt>color</tt> below the image.
 <dt><b>2</b>, <b>3</b>, <b>4</b>, <b>5</b>, <b>6</b><dd>
           Short for <tt>scale</tt>=1.0/([number]*0.6).
 <dt><b>notrans</b><dd>
