@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.58 2003/09/08 14:07:49 anders Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.59 2003/09/15 12:05:07 jonasw Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -252,8 +252,8 @@ mapping get_my_args( mapping args, RequestID id )
     "data":args->data,
   ]);
 
-  if( args->src )
-    catch 
+  if( args->src ) {
+    mixed err = catch 
     {
       a->src = Roxen.fix_relative( args->src, id );
       array(int)|Stat st = (id->conf->try_stat_file(a->src, id) ||
@@ -274,6 +274,12 @@ mapping get_my_args( mapping args, RequestID id )
 #endif
       }
     };
+#ifdef DEBUG
+    if (err)
+      report_error("<cimg> or <emit#cimg>: error in get_my_args(): %s\n",
+		   describe_backtrace(err));
+#endif
+  }
 
   a["background-color"] = id->misc->defines->bgcolor || "#eeeeee";
 
@@ -306,7 +312,7 @@ class TagCimgplugin
     mapping res = ([ ]);
     mapping a = get_my_args( check_args( args ), id );
     string data;
-    catch // This code will fail if the image does not exist.
+    mixed err = catch // This code will fail if the image does not exist.
     {
       res->src=(query_absolute_internal_location(id)+the_cache->store( a,id ));
       if(do_ext)
@@ -318,6 +324,10 @@ class TagCimgplugin
       res |= the_cache->metadata( a, id, 0 ); // enforce generation
       return ({ res });
     };
+#ifdef DEBUG
+    report_error("<emit#cimg> error in get_dataset(): %s\n",
+		 describe_backtrace(err));
+#endif
     RXML.parse_error( "Illegal arguments or image\n" );
     return ({});
   }
