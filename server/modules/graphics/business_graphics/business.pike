@@ -12,7 +12,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.136 2000/12/05 00:40:40 nilsson Exp $";
+constant cvs_version = "$Id: business.pike,v 1.137 2000/12/30 08:35:41 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Business graphics";
@@ -71,7 +71,7 @@ void create()
 string status() {
   array s=image_cache->status();
   return sprintf("<b>Images in cache:</b> %d images<br />\n<b>Cache size:</b> %s",
-		 s[0]/2, Roxen.sizetostring(s[1]));
+		 s[0], Roxen.sizetostring(s[1]));
 }
 
 mapping(string:function) query_action_buttons() {
