@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.47 2000/02/08 21:24:56 nilsson Exp $
+//! $Id: module.pmod,v 1.48 2000/02/11 01:08:25 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -172,6 +172,14 @@ class Tag
   {
     Context ctx = parser->context;
     // FIXME: P-code generation.
+
+    if (string splice_args = args["::"]) {
+      // Somewhat kludgy solution for the time being.
+      splice_args = t_text (PEnt)->eval (splice_args, ctx, 0, parser, 1);
+      m_delete (args, "::");
+      args += parser->parse_tag_args (splice_args);
+    }
+
     object/*(Frame)HMM*/ frame;
     if (mapping(string:mixed)|mapping(object:array) ustate = ctx->unwind_state)
       if (ustate[parser]) {
@@ -529,12 +537,9 @@ class Value
     return val;
   }
 
-  mixed rxml_const_eval (Context ctx, string var, string scope_name, void|Type type)
+  mixed rxml_const_eval (Context ctx, string var, string scope_name, void|Type type);
   //! If the variable value is the same throughout the life of the context,
   //! this method could be used instead of rxml_var_eval.
-  {
-    return 0;
-  }
 
   string _sprintf() {return "RXML.Value";}
 }
