@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.166 1999/02/15 01:02:56 peter Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.167 1999/04/22 05:39:31 neotron Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -388,9 +388,10 @@ array(mixed) map_providers(string provides, string fun, mixed ... args)
       continue;
     if(functionp(mod[fun])) 
       error = catch(m=mod[fun](@args));
-    if(arrayp(error))
-      roxen_perror(describe_backtrace(error+({ "Error in map_providers:"})));
-    else
+    if(arrayp(error)) {
+      error[0] = "Error in map_providers(): "+error[0];
+      roxen_perror(describe_backtrace(error));
+    } else
       a += ({ m });
     error = 0;
   }
@@ -411,7 +412,8 @@ mixed call_provider(string provides, string fun, mixed ... args)
 	  return(ret);
 	}
       })) {
-	throw(error + ({ "Error in call_provider:"}));
+	error[0] = "Error in call_provider: "+error[0];
+	throw(error);
       }
     }
   }
