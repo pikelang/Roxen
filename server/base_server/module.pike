@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.65 2000/01/10 09:05:55 nilsson Exp $ */
+/* $Id: module.pike,v 1.66 2000/01/14 05:11:03 mast Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -657,11 +657,13 @@ mapping query_if_callers()
 
 RXML.TagSet query_tag_set()
 {
-  return RXML.TagSet (module_identifier(),
-		      filter (rows (this_object(),
-				    glob ("Tag*",
-					  indices (this_object()))),
-			      functionp)());
+  return
+    my_configuration()->module_tag_sets[this_object()] ||
+    RXML.TagSet (module_identifier(),
+		 filter (rows (this_object(),
+			       glob ("Tag*",
+				     indices (this_object()))),
+			 functionp)());
 }
 
 mixed get_value_from_file(string path, string index, void|string pre)
