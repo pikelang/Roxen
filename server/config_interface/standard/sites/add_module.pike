@@ -16,6 +16,8 @@ array(string) class_description( string d, object id )
           "</"+id->misc->config_locale+">", n );
   sscanf( n, "%*s<name>%s</name>", name  );
   sscanf( n, "%*s<doc>%s</doc>", doc  );
+  if( search(n, "<noshow/>" ) != -1 )
+    return ({ "", "" });
 
   if(!name)
     return ({"Local modules", "" });
@@ -102,6 +104,8 @@ array(string) get_module_list( function describe_module,
   foreach( sort(indices(classes)), string c )
   {
     mixed r;
+    if( c == "" )
+      continue;
     if( (r = class_visible( c, classes[c]->doc, id )) && r[0] )
     {
       res += r[1];
