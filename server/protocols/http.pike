@@ -2,9 +2,11 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.236 2000/08/09 02:36:09 per Exp $";
-
+constant cvs_version = "$Id: http.pike,v 1.237 2000/08/12 06:16:22 per Exp $";
+// #define REQUEST_DEBUG
 #define MAGIC_ERROR
+
+#undef OLD_RXML_COMPAT
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
@@ -231,7 +233,7 @@ void decode_map( mapping what, function decoder )
 void decode_charset_encoding( string|function(string:string) decoder )
 {
   if(stringp(decoder))
-    decoder = Roxen._charset_decoder( Locale.Charset.decoder(decoder) )->decode;
+    decoder = Roxen._charset_decoder(Locale.Charset.decoder(decoder))->decode;
 
   if( misc->request_charset_decoded )
     return;
@@ -385,7 +387,7 @@ string scan_for_query( string f )
   return f;
 }
 
-
+#ifdef OLD_RXML_COMPAT
 private int really_set_config(array mod_config)
 {
   string url, m;
@@ -454,6 +456,7 @@ private int really_set_config(array mod_config)
   }
   return 2;
 }
+#endif
 
 private static mixed f, line;
 private static int hstart;
@@ -527,14 +530,40 @@ class PrefLanguages {
     sorted=1;
   }
 }
+#if constant(Roxen.HeaderParser)
+static Roxen.HeaderParser hp = Roxen.HeaderParser();
+#endif
 int last;
-private int parse_got()
+private int parse_got( string new_data )
 {
   multiset (string) sup;
+#ifdef OLD_RXML_COMPAT
   array mod_config;
-  string a, b, s="", linename, contents;
   int config_in_url;
+#endif
+  string a, b, s="", linename, contents;
+  mapping header_mapping = ([]);
 
+#if constant(Roxen.HeaderParser)
+  if( !method )
+  {
+    array res;
+    if( catch { res  = hp->feed( new_data ); } )
+      return 1;
+    if( !res )
+      return 0; // Not enough data;
+    /* now in res:
+
+    leftovers/data
+     
+    first line
+    headers 
+    */
+    data = res[0];
+    line = res[1];
+    header_mapping = res[2];
+  }
+#else
   REQUEST_WERR(sprintf("HTTP: parse_got(%O)", raw));
   if (!method) {  // Haven't parsed the first line yet.
     int start;
@@ -579,8 +608,9 @@ private int parse_got()
       REQUEST_WERR(sprintf("HTTP: parse_got(%O): Malformed request.", raw));
       return 1;
     }
-
+#endif
     string trailer, trailer_trailer;
+
     switch(sscanf(line+" ", "%s %s %s %s %s",
 		  method, f, clientprot, trailer, trailer_trailer))
     {
@@ -652,7 +682,10 @@ private int parse_got()
       // Too many or too few entries ->  Hum.
       return 1;
     }
-  } else {
+#if !constant(Roxen.HeaderParser)
+  } 
+  else 
+  {
     // HTTP/1.0 or later
     // Check that the request is complete
     int end;
@@ -666,12 +699,13 @@ private int parse_got()
     data = raw[end+4..];
     s = raw[sizeof(line)+2..end-1];
   }
+#endif
   if(method == "PING") {
     my_fd->write("PONG\r\n");
     return 2;
   }
   REQUEST_WERR(sprintf("***** req line: %O", line));
-  REQUEST_WERR(sprintf("***** headers:  %O", data));
+  REQUEST_WERR(sprintf("***** headers:  %O", s));
   REQUEST_WERR(sprintf("***** data:     %O", data));
   raw_url    = f;
   time       = _time(1);
@@ -700,12 +734,14 @@ private int parse_got()
 
   f = http_decode_string( f );
   string prf = f[1..1];
+#ifdef OLD_RXML_COMPAT
   if (prf == "<" && sscanf(f, "/<%s>/%s", a, f)==2)
   {
     config_in_url = 1;
     mod_config = (a/",");
     f = "/"+f;
   }
+#endif
 
   REQUEST_WERR(sprintf("After cookie scan:%O", f));
 
@@ -725,6 +761,9 @@ private int parse_got()
 
   misc->pref_languages=PrefLanguages();
 
+#if constant(Roxen.HeaderParser)
+  foreach( (array)header_mapping, [string linename,contents] )
+#else
   if(sizeof(s)) {
     //    sscanf(s, "%s\r\n\r\n%s", s, data);
     //     s = replace(s, "\n\t", ", ") - "\r";
@@ -735,222 +774,228 @@ private int parse_got()
       //      linename=contents=0;
 
       if(sscanf(line, "%s:%*[ \t]%s", linename, contents) == 3)
+#endif
       {
       	REQUEST_WERR(sprintf("Header-sscanf :%s", linename));
+#if !constant(Roxen.HeaderParser)
       	linename=lower_case(linename);
       	REQUEST_WERR(sprintf("lower-case :%s", linename));
-
-	// FIXME: Multiple headers?
-      	request_headers[linename] = contents;
-	if(strlen(contents))
-	{
-	  switch (linename) {
-	  case "content-length":
-	    misc->len = (int)contents;
-	    break;
-
-	  case "authorization":
-	    rawauth = contents;
-	    break;
-
-	  case "proxy-authorization":
-	    array y;
-	    y = contents / " ";
-	    if(sizeof(y) < 2)
-	      break;
-	    y[1] = decode(y[1]);
-	    misc->proxyauth=y;
-	    break;
-
-	  case "pragma":
-	    pragma|=aggregate_multiset(@replace(contents, " ", "")/ ",");
-	    break;
-
-	  case "user-agent":
-	    if(!client || !client_var->Fullname)
-	    {
-	      sscanf(contents, "%s via", contents);
-	      client_var->Fullname=contents;
-	      client = contents/" " - ({ "" });
-	    }
-	    break;
-
-	  case "referer":
-	    referer = contents/" ";
-	    break;
-
-	  case "extension":
-#ifdef DEBUG
-          werror("Client extension: "+contents+"\n");
 #endif
-	  case "request-range":
-	    contents = lower_case(contents-" ");
-	    if(!search(contents, "bytes"))
-	      // Only care about "byte" ranges.
-	      misc->range = contents[6..];
-	    break;
 
-	  case "range":
-	    contents = lower_case(contents-" ");
-	    if(!misc->range && !search(contents, "bytes"))
-	      // Only care about "byte" ranges. Also the Request-Range header
-	      // has precedence since Stupid Netscape (TM) sends both but can't
-	      // handle multipart/byteranges but only multipart/x-byteranges.
-	      // Duh!!!
-	      misc->range = contents[6..];
-	    break;
+      	request_headers[linename] = contents;
+        if( arrayp( contents ) ) contents *= ", ";
+        switch (linename) 
+        {
+         case "content-length":
+           misc->len = (int)contents;
+           break;
 
-	  case "connection":
-	  case "content-type":
-	    misc[linename] = lower_case(contents);
-	    break;
+         case "authorization":
+           rawauth = contents;
+           break;
 
-	  case "accept-encoding":
-	    foreach((contents-" ")/",", string e) {
-	      if (lower_case(e) == "gzip") {
-		supports["autogunzip"] = 1;
-	      }
-	    }
-	  case "accept":
-	  case "accept-charset":
-	  case "session-id":
-	  case "message-id":
-	  case "from":
-	    if(misc[linename])
-	      misc[linename] += (contents-" ") / ",";
-	    else
-	      misc[linename] = (contents-" ") / ",";
-	    break;
+         case "proxy-authorization":
+           array y;
+           y = contents / " ";
+           if(sizeof(y) < 2)
+             break;
+           y[1] = decode(y[1]);
+           misc->proxyauth=y;
+           break;
 
-	  case "accept-language":
-	    array alang=(contents-" ") / ",";
-	    if(misc["accept-language"])
-	      misc["accept-language"] += alang;
-	    else
-	      misc["accept-language"] = alang;
-	    misc->pref_languages->languages=misc["accept-language"];
-	    break;
+         case "pragma":
+           pragma|=aggregate_multiset(@replace(contents, " ", "")/ ",");
+           break;
 
-	  case "cookie": /* This header is quite heavily parsed */
-	    string c;
-	    misc->cookies = contents;
-	    if (!sizeof(contents)) {
-	      // Needed for the new Pike 0.6
-	      break;
-	    }
-	    foreach(((contents/";") - ({""})), c)
-	    {
-	      string name, value;
-	      while(sizeof(c) && c[0]==' ') c=c[1..];
-	      if(sscanf(c, "%s=%s", name, value) == 2)
-	      {
-		value=http_decode_string(value);
-		name=http_decode_string(name);
-		cookies[ name ]=value;
-		if(name == "RoxenConfig" && strlen(value))
-		{
-		  array tmpconfig = value/"," + ({ });
-		  string m;
+         case "user-agent":
+           if(!client || !client_var->Fullname)
+           {
+             sscanf(contents, "%s via", contents);
+             client_var->Fullname=contents;
+             client = contents/" " - ({ "" });
+           }
+           break;
 
-		  if(mod_config && sizeof(mod_config))
-		    foreach(mod_config, m)
-		      if(!strlen(m))
-		      { continue; } /* Bug in parser force { and } */
-		      else if(m[0]=='-')
-			tmpconfig -= ({ m[1..] });
-		      else
-			tmpconfig |= ({ m });
-		  mod_config = 0;
-		  config = aggregate_multiset(@tmpconfig);
-		}
-	      }
-	    }
-	    break;
+         case "referer":
+           referer = contents/" ";
+           break;
 
-	  case "host":
-	  case "proxy-connection":
-	  case "security-scheme":
-	  case "via":
-	  case "cache-control":
-	  case "negotiate":
-	  case "forwarded":
-	  case "new-uri":
-	    misc[linename]=contents;
-	    break;
+         case "extension":
+#ifdef DEBUG
+           werror("Client extension: "+contents+"\n");
+#endif
+         case "request-range":
+           contents = lower_case(contents-" ");
+           if(!search(contents, "bytes"))
+             // Only care about "byte" ranges.
+             misc->range = contents[6..];
+           break;
 
-	  case "proxy-by":
-	  case "proxy-maintainer":
-	  case "proxy-software":
-	  case "mime-version":
-	    break;
+         case "range":
+           contents = lower_case(contents-" ");
+           if(!misc->range && !search(contents, "bytes"))
+             // Only care about "byte" ranges. Also the Request-Range header
+             // has precedence since Stupid Netscape (TM) sends both but can't
+             // handle multipart/byteranges but only multipart/x-byteranges.
+             // Duh!!!
+             misc->range = contents[6..];
+           break;
 
-	  case "if-modified-since":
-	    since=contents;
-	    break;
-	  }
-	}
+         case "connection":
+         case "content-type":
+           misc[linename] = lower_case(contents);
+           break;
+
+         case "accept-encoding":
+           foreach((contents-" ")/",", string e) {
+             if (lower_case(e) == "gzip") {
+               supports["autogunzip"] = 1;
+             }
+           }
+         case "accept":
+         case "accept-charset":
+         case "session-id":
+         case "message-id":
+         case "from":
+           if(misc[linename])
+             misc[linename] += (contents-" ") / ",";
+           else
+             misc[linename] = (contents-" ") / ",";
+           break;
+
+         case "accept-language":
+           array alang=(contents-" ") / ",";
+           if(misc["accept-language"])
+             misc["accept-language"] += alang;
+           else
+             misc["accept-language"] = alang;
+           misc->pref_languages->languages=misc["accept-language"];
+           break;
+
+         case "cookie": /* This header is quite heavily parsed */
+           string c;
+           misc->cookies = contents;
+           if (!sizeof(contents)) {
+             // Needed for the new Pike 0.6
+             break;
+           }
+           foreach(((contents/";") - ({""})), c)
+           {
+             string name, value;
+             while(sizeof(c) && c[0]==' ') c=c[1..];
+             if(sscanf(c, "%s=%s", name, value) == 2)
+             {
+               value=http_decode_string(value);
+               name=http_decode_string(name);
+               cookies[ name ]=value;
+#ifdef OLD_RXML_CONFIG
+               if(name == "RoxenConfig" && strlen(value))
+               {
+                 array tmpconfig = value/"," + ({ });
+                 string m;
+
+                 if(mod_config && sizeof(mod_config))
+                   foreach(mod_config, m)
+                     if(!strlen(m))
+                     { continue; } /* Bug in parser force { and } */
+                     else if(m[0]=='-')
+                       tmpconfig -= ({ m[1..] });
+                     else
+                       tmpconfig |= ({ m });
+                 mod_config = 0;
+                 config = aggregate_multiset(@tmpconfig);
+               }
+#endif
+             }
+           }
+           break;
+
+         case "host":
+         case "proxy-connection":
+         case "security-scheme":
+         case "via":
+         case "cache-control":
+         case "negotiate":
+         case "forwarded":
+         case "new-uri":
+           misc[linename]=contents;
+           break;
+
+         case "proxy-by":
+         case "proxy-maintainer":
+         case "proxy-software":
+         case "mime-version":
+           break;
+
+         case "if-modified-since":
+           since=contents;
+           break;
+        }
+      }
+#if !constant(Roxen.HeaderParser)
+    }
+#endif
+    if(misc->len && method == "POST")
+    {
+      if(!data) data="";
+      int l = misc->len;
+      wanted_data=l;
+      have_data=strlen(data);
+	
+      if(strlen(data) < l)
+      {
+        REQUEST_WERR("HTTP: parse_request(): More data needed in POST.");
+        return 0;
+      }
+      leftovers = data[l+2..];
+      data = data[..l+1];
+	
+      switch(lower_case((((misc["content-type"]||"")+";")/";")[0]-" "))
+      {
+       default: // Normal form data.
+         string v;
+         if(l < 200000)
+         {
+           foreach(replace(data,
+                           ({ "\n", "\r", "+" }),
+                           ({ "", "", " "}))/"&", v)
+             if(sscanf(v, "%s=%s", a, b) == 2)
+             {
+               a = http_decode_string( a );
+               b = http_decode_string( b );
+		      
+               if(variables[ a ])
+                 variables[ a ] +=  "\0" + b;
+               else
+                 variables[ a ] = b;
+             }
+         }
+         break;
+	    
+       case "multipart/form-data":
+         object messg = MIME.Message(data, misc);
+         foreach(messg->body_parts, object part) {
+           if(part->disp_params->filename) {
+             variables[part->disp_params->name]=part->getdata();
+             variables[part->disp_params->name+".filename"]=
+               part->disp_params->filename;
+             if(!misc->files)
+               misc->files = ({ part->disp_params->name });
+             else
+               misc->files += ({ part->disp_params->name });
+           } else {
+             if(variables[part->disp_params->name])
+               variables[part->disp_params->name] += "\0" + part->getdata();
+             else
+               variables[part->disp_params->name] = part->getdata();
+           }
+         }
+         break;
       }
     }
-    if(misc->len && method == "POST")
-      {
-	if(!data) data="";
-	int l = misc->len;
-	wanted_data=l;
-	have_data=strlen(data);
-	
-	if(strlen(data) < l)
-	  {
-	    REQUEST_WERR("HTTP: parse_request(): More data needed in POST.");
-	    return 0;
-	  }
-	leftovers = data[l+2..];
-	data = data[..l+1];
-	
-	switch(lower_case((((misc["content-type"]||"")+";")/";")[0]-" "))
-	  {
-	  default: // Normal form data.
-	    string v;
-	    if(l < 200000)
-	      {
-		foreach(replace(data,
-				({ "\n", "\r", "+" }),
-				({ "", "", " "}))/"&", v)
-		  if(sscanf(v, "%s=%s", a, b) == 2)
-		    {
-		      a = http_decode_string( a );
-		      b = http_decode_string( b );
-		      
-		      if(variables[ a ])
-			variables[ a ] +=  "\0" + b;
-		      else
-			variables[ a ] = b;
-		    }
-	      }
-	    break;
-	    
-	  case "multipart/form-data":
-	    object messg = MIME.Message(data, misc);
-	    foreach(messg->body_parts, object part) {
-	      if(part->disp_params->filename) {
-		variables[part->disp_params->name]=part->getdata();
-		variables[part->disp_params->name+".filename"]=
-		  part->disp_params->filename;
-		if(!misc->files)
-		  misc->files = ({ part->disp_params->name });
-		else
-		  misc->files += ({ part->disp_params->name });
-	      } else {
-		if(variables[part->disp_params->name])
-		  variables[part->disp_params->name] += "\0" + part->getdata();
-		else
-		  variables[part->disp_params->name] = part->getdata();
-	      }
-	    }
-	    break;
-	  }
-      }
+#if !constant(Roxen.HeaderParser)
   }
-
+#endif
   REQUEST_WERR("HTTP: parse_got(): after header scan");
 #ifndef DISABLE_SUPPORTS
   if(!client) {
@@ -988,10 +1033,12 @@ private int parse_got()
     }
     raw = tmp2 * "\n";
   }
+#ifdef OLD_RXML_COMPAT
   if(config_in_url) {
     REQUEST_WERR("HTTP: parse_got(): config_in_url");
     return really_set_config( mod_config );
   }
+#endif
   if(!supports->cookies)
     config = prestate;
   else
@@ -1049,7 +1096,7 @@ void end(string|void s, int|void keepit)
      && my_fd)
   {
     // Now.. Transfer control to a new http-object. Reset all variables etc..
-    object o = object_program(this_object())(my_fd, port_obj);
+    object o = object_program(this_object())(my_fd, port_obj, conf);
     o->remoteaddr = remoteaddr;
     o->supports = supports;
     o->host = host;
@@ -1627,7 +1674,7 @@ void send_result(mapping|void result)
   if(!file->raw)
   {
     heads = ([]);
-    if(!file->len)
+    if( !file->len )
     {
       if(objectp(file->file))
 	if(!file->stat && !(file->stat=misc->stat))
@@ -1642,13 +1689,14 @@ void send_result(mapping|void result)
 	  misc->last_modified = fstat[3];
 	}
 
-	if(prot != "HTTP/0.9") {
-	  heads["Last-Modified"] = Roxen.http_date(misc->last_modified);
+	if(prot != "HTTP/0.9" && !misc->is_dynamic) 
+        {
+          heads["Last-Modified"] = Roxen.http_date(misc->last_modified);
 
 	  if(since)
 	  {
 	    /* ({ time, len }) */
-	    array(int) since_info = Roxen.parse_since(since);
+	    array(int) since_info = Roxen.parse_since( since );
             if ( ((since_info[0] >= misc->last_modified) && 
                   ((since_info[1] == -1) || (since_info[1] == file->len)))
                  // actually ok, or...
@@ -1665,7 +1713,8 @@ void send_result(mapping|void result)
 	}
       }
     }
-    if(prot != "HTTP/0.9") {
+    if(prot != "HTTP/0.9") 
+    {
       string h, charset="";
 
       if( stringp(file->data) )
@@ -1681,20 +1730,11 @@ void send_result(mapping|void result)
         if(stringp(file->data))
           file->len = strlen(file->data);
       }
-
-      heads |= ([
-	"MIME-Version" 	: (file["mime-version"] || "1.0"),
-	"Content-type" 	: file["type"]+charset,
-	"Accept-Ranges" 	: "bytes",
-	"Server" 		: replace(version(), " ", "·"),
-#ifdef KEEP_ALIVE
-	"Connection": (misc->connection == "close" ? "close": "Keep-Alive"),
-#else
-	"Connection"	: "close",
-#endif
-	"Date"		: Roxen.http_date(time)
-      ]);
-
+      heads["Content-type"] = file["type"]+charset;
+      heads["Accept-Ranges"] = "bytes";
+      heads["Server"] = replace(version(), " ", "·");
+      heads["Connection"] = (misc->connection=="close" ? "close": "keep-alive");
+//       heads["Date"] = Roxen.http_date(time),
 
       if(file->encoding)
 	heads["Content-Encoding"] = file->encoding;
@@ -1758,29 +1798,20 @@ void send_result(mapping|void result)
 	  }
 	}
       }
-
       head_string = prot+" "+(file->rettext||errors[file->error])+"\r\n";
-
+      if( file->len > 0 )  heads["Content-Length"] = (string)file->len;
+      if( file->len <= 0 ) misc->connection = "close";
+#if constant( Roxen.make_http_headers )
+      head_string += Roxen.make_http_headers( heads );
+#else
       foreach(indices(heads), h)
 	if(arrayp(heads[h]))
 	  foreach(heads[h], tmp)
 	    head_string += h+": "+tmp+"\r\n";
 	else
           head_string += h+": "+heads[h]+"\r\n";
-
-      if(file->len > -1) {
-	head_string += "Content-Length: "+ file->len +"\r\n";
-	if (file->len == 0)
-	  // Some browsers, e.g. Netscape 4.7, doesn't trust a zero
-	  // content length when using keep-alive. So let's force a
-	  // close in that case.
-	  misc->connection = "close";
-      }
-      else
-	misc->connection = "close";
-
       head_string += "\r\n";
-
+#endif
       if(conf) conf->hsent += strlen(head_string);
     }
   }
@@ -1797,13 +1828,13 @@ void send_result(mapping|void result)
     // No data for these two...
   {
     if(my_fd->query_fd && my_fd->query_fd() >= 0 &&
-       file->len > 0 && file->len < 2000)
+       file->len > 0 && file->len < 4000)
     {
       // Ordinary connection, and a short file.
       // Just do a blocking write().
-      my_fd->write(head_string+
-                   (file->file?file->file->read(file->len):
-                    (file->data[..file->len-1])));
+      my_fd->write(head_string);
+      my_fd->write(file->file?file->file->read(file->len):
+                   (file->data[..file->len-1]));
       do_log();
       return;
     }
@@ -1876,7 +1907,15 @@ void handle_request( )
   array e;
   if(e= catch(file = conf->handle_request( this_object() )))
     INTERNAL_ERROR( e );
-  if( !file || !file->pipe )
+  
+  if( !file )
+    INTERNAL_ERROR(({"No data returned from handle_request\n",backtrace()}));
+  else if( file->try_again_later )
+  {
+    call_out( handle_request, file->try_again_later );
+    return;
+  }
+  if( !file->pipe )
     send_result();
 }
 
@@ -1915,7 +1954,7 @@ void got_data(mixed fooid, string s)
 
   // If the request starts with newlines, it's a broken request. Really!
   //  sscanf(s, "%*[\n\r]%s", s);
-  if(strlen(raw)) tmp = parse_got();
+  if(strlen(raw)) tmp = parse_got( s );
   switch(tmp)
   {
    case 0:
@@ -1941,27 +1980,31 @@ void got_data(mixed fooid, string s)
   if( input_charset )
     decode_charset_encoding( input_charset );
 
-  if (misc->host)
+  if( !conf )
   {
-    // FIXME: port_obj->name & port_obj->default_port are constant
-    // consider caching them?
-    conf =
-      port_obj->find_configuration_for_url(port_obj->name + "://" +
-					   misc->host +
-					   (search(misc->host, ":")<0?
-					    (":"+port_obj->default_port):"") +
-					   not_query,
-					   this_object());
-  }
-  else
-  {
-    // No host header.
-    // Fallback to using the first configuration bound to this port.
-    conf = port_obj->urls[port_obj->sorted_urls[0]]->conf;
-    misc->defaulted = 1;
-    // Support delayed loading in this case too.
-    if (!conf->inited) {
-      conf->enable_all_modules();
+    if (misc->host)
+    {
+      // FIXME: port_obj->name & port_obj->default_port are constant
+      // consider caching them?
+      conf = 
+           port_obj->find_configuration_for_url(port_obj->name + "://" +
+                                                misc->host +
+                                                (search(misc->host, ":")<0?
+                                                 (":"+port_obj->default_port):"") +
+                                                not_query,
+                                                this_object());
+    }
+    else
+    {
+      // No host header.
+      // Fallback to using the first configuration bound to this port.
+      conf = port_obj->mu || 
+           (port_obj->mu = port_obj->urls[port_obj->sorted_urls[0]]->conf);
+      misc->defaulted = 1;
+      // Support delayed loading in this case too.
+      if (!conf->inited) {
+        conf->enable_all_modules();
+      }
     }
   }
 
@@ -2002,7 +2045,7 @@ void got_data(mixed fooid, string s)
   my_fd->set_close_callback(0);
   my_fd->set_read_callback(0);
   processed=1;
-  roxen.handle(this_object()->handle_request);
+  roxen.handle(handle_request);
 
   })
   {
@@ -2019,7 +2062,7 @@ void got_data(mixed fooid, string s)
 object clone_me()
 {
   object c,t;
-  c=object_program(t=this_object())(0, port_obj);
+  c=object_program(t=this_object())(0, port_obj, conf);
 #ifdef ID_OBJ_DEBUG
   werror ("clone %O -> %O\n", t, c);
 #endif
@@ -2074,15 +2117,15 @@ void clean()
     end();
 }
 
-static void create(object f, object c)
+static void create(object f, object c, object cc)
 {
   if(f)
   {
     MARK_FD("HTTP connection");
     f->set_nonblocking(got_data, 0, end);
     my_fd = f;
-    if( c )
-      port_obj = c;
+    if( c ) port_obj = c;
+    if( cc ) conf = cc;
     call_out(do_timeout, 30);
     time = _time(1);
   }
