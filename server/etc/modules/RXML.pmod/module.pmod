@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.281 2002/04/17 00:44:04 mast Exp $
+// $Id: module.pmod,v 1.282 2002/04/17 12:57:03 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -4314,6 +4314,7 @@ class Frame
 			    !(flags & FLAG_MAY_CACHE_RESULT) ?
 			    " (don't cache result for now)" : "");
 	TRACE_LEAVE ("exception");
+	err = catch (throw_fatal (err));
 	CLEANUP;
 	result = nil;
 	throw (err);
@@ -4408,16 +4409,21 @@ final void fatal_error (string msg, mixed... args)
   throw_fatal (({msg, bt[..sizeof (bt) - 2]}));
 }
 
-final void throw_fatal (mixed err)
+final void throw_fatal (mixed err, void|string current_var)
 //! Mainly used internally to throw an error that includes the RXML
 //! frame backtrace.
 {
-  if (arrayp (err) && sizeof (err) == 2 ||
-      objectp (err) && !err->is_RXML_Backtrace && err->is_generic_error) {
+  if (objectp (err) && err->is_RXML_Backtrace) {
+    if (!err->current_var) err->current_var = current_var;
+  }
+  else if (arrayp (err) && sizeof (err) == 2 ||
+	   objectp (err) && err->is_generic_error) {
     string msg;
     if (catch (msg = err[0])) throw (err);
     if (stringp (msg) && !has_value (msg, "\nRXML frame backtrace:\n")) {
-      string descr = Backtrace (0, 0)->describe_rxml_backtrace (1);
+      Backtrace rxml_bt = Backtrace();
+      rxml_bt->current_var = current_var;
+      string descr = rxml_bt->describe_rxml_backtrace (1);
       if (sizeof (descr)) {
 	if (sizeof (msg) && msg[-1] != '\n') msg += "\n";
 	msg += "RXML frame backtrace:\n" + descr;
@@ -4605,13 +4611,13 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
     return val;
 
   }) {
-    if (objectp (err) && ([object] err)->is_RXML_Backtrace &&
-	val_obj && val_obj->format_rxml_backtrace_frame)
+    string current_var;
+    if (val_obj && val_obj->format_rxml_backtrace_frame)
       if (mixed err2 = catch {
-	err->current_var = val_obj->format_rxml_backtrace_frame (ctx, index, scope_name);
-      })
+	  current_var = val_obj->format_rxml_backtrace_frame (ctx, index, scope_name);
+	})
 	master()->handle_error (err2);
-    throw (err);
+    throw_fatal (err, current_var);
   }
 }
 
@@ -4861,8 +4867,11 @@ class Parser
 #endif
 
       }) {
-	if (objectp (err) && err->is_RXML_Backtrace && !err->current_var)
-	  err->current_var = "&" + varref + ";";
+	string current_var;
+	if (objectp (err) && err->is_RXML_Backtrace)
+	  if (err->current_var) current_var = err->current_var;
+	  else current_var = err->current_var = "&" + varref + ";";
+	else current_var = "&" + varref + ";";
 	if ((err = catch {
 	  context->handle_exception (err, this_object()); // May throw.
 	})) {
@@ -4871,7 +4880,7 @@ class Parser
 	  FRAME_DEPTH_MSG ("%*s%O frame_depth increase line %d\n",
 			   context->frame_depth, "", varref, __LINE__);
 	  context->frame_depth--;
-	  throw (err);
+	  throw_fatal (err, current_var);
 	}
 	val = nil;
       }
@@ -6503,12 +6512,10 @@ class VarRef (string scope, string|array(string|int) var,
       return val;
     };
 
-    if (objectp (err) && err->is_RXML_Backtrace)
-      err->current_var = "&" + VAR_STRING + ";";
     FRAME_DEPTH_MSG ("%*s%O frame_depth decrease line %d\n",
 		     ctx->frame_depth, "", this_object(), __LINE__);
     ctx->frame_depth--;
-    throw (err);
+    throw_fatal (err, "&" + VAR_STRING + ";");
   }
 
   mixed set (Context ctx, mixed val) {return ctx->set_var (var, val, scope);}
