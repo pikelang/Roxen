@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.113 2001/08/20 13:28:53 nilsson Exp $
+// $Id: Roxen.pmod,v 1.114 2001/08/23 16:35:26 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -255,7 +255,7 @@ string short_name(string|Configuration long_name)
     if( !long_name->name )
       error("Illegal first argument to short_name.\n"
 	    "Expected Configuration object or string\n");
-    long_name = long_name->name+hash(long_name->name)->digits(36);
+    long_name = long_name->name;
   }
 
   id = Unicode.split_words_and_normalize( lower_case(long_name) )*"_";
