@@ -1,17 +1,14 @@
 // The Tab lists tag module.
 // Developed by Fredrik Noring <noring@infovav.se>, ask him for more info
-string cvs_version = "$Id: tablist.pike,v 1.3 1996/11/27 13:48:19 per Exp $";
+string cvs_version = "$Id: tablist.pike,v 1.4 1996/11/27 14:05:29 per Exp $";
 #include <module.h>
 
 inherit "module";
 inherit "roxenlib";
 
-string cvs_version = "$Id: tablist.pike,v 1.3 1996/11/27 13:48:19 per Exp $";
 #define DEFAULT_FONT "utopia_medium_r"
-string cvs_version = "$Id: tablist.pike,v 1.3 1996/11/27 13:48:19 per Exp $";
 #define DEFAULT_PATH "fonts/16/"
 
-string cvs_version = "$Id: tablist.pike,v 1.3 1996/11/27 13:48:19 per Exp $";
 #define DEBUG_TABLIST 0
 
 string *from=map_array(indices(allocate(256)),lambda(int l) { return sprintf("%c",l); });
@@ -142,20 +139,16 @@ object tab(string name, int select, int n, int last, string font,
   object fnt, txt, img, tmp;
   int width, height;
 
-string cvs_version = "$Id: tablist.pike,v 1.3 1996/11/27 13:48:19 per Exp $";
 #if DEBUG_TABLIST
   perror("Creating tab \"" + name + (select==n?"\" (selected)\n":"\"\n"));
-string cvs_version = "$Id: tablist.pike,v 1.3 1996/11/27 13:48:19 per Exp $";
 #endif
 
   fnt = Font();
   if (!fnt->load(font))
      perror("Could not load font \"" + font + "\"\n");
    txt = fnt->write(name)->scale(2.0);
-string cvs_version = "$Id: tablist.pike,v 1.3 1996/11/27 13:48:19 per Exp $";
 #if DEBUG_TABLIST
   perror((sprintf("Font image size: %d × %d\n",txt->xsize(),txt->ysize())));
-string cvs_version = "$Id: tablist.pike,v 1.3 1996/11/27 13:48:19 per Exp $";
 #endif
   width = txt->xsize() + w_spacing;
   height = txt->ysize() + h_spacing;

@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 // A quite complex directory module. Generates macintosh like listings.
-string cvs_version = "$Id: directories.pike,v 1.4 1996/11/27 13:47:57 per Exp $";
+string cvs_version = "$Id: directories.pike,v 1.5 1996/11/27 14:05:15 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -17,9 +17,7 @@ program dirnode_program = class {
   array stat;
   inherit "struct/node";
 
-string cvs_version = "$Id: directories.pike,v 1.4 1996/11/27 13:47:57 per Exp $";
 #define configurl(f) ("/internal-roxen-"+f)
-string cvs_version = "$Id: directories.pike,v 1.4 1996/11/27 13:47:57 per Exp $";
 #define image(f) ("<img border=0 src="+(f)+" alt=\"\">")
 
   inline string configimage(string f) 
@@ -72,11 +70,9 @@ string cvs_version = "$Id: directories.pike,v 1.4 1996/11/27 13:47:57 per Exp $"
 
     if(describer)
       tmp = describer(this_object());
-string cvs_version = "$Id: directories.pike,v 1.4 1996/11/27 13:47:57 per Exp $";
 #ifdef NODE_DEBUG
     else
       perror("No describer in node "+path(1)+"\n");
-string cvs_version = "$Id: directories.pike,v 1.4 1996/11/27 13:47:57 per Exp $";
 #endif
     if(!tmp) return "";
 
@@ -133,7 +129,6 @@ void create()
   defvar("readme", 1, "Include readme files", TYPE_FLAG,
 	 "If set, include readme files in directory listings");
   
-string cvs_version = "$Id: directories.pike,v 1.4 1996/11/27 13:47:57 per Exp $";
 #if 0
   defvar("date", 1, "Include date", TYPE_FLAG,
 	 "If set, include the last modification date in directory "
@@ -142,7 +137,6 @@ string cvs_version = "$Id: directories.pike,v 1.4 1996/11/27 13:47:57 per Exp $"
   defvar("user", 0, "Include file user", TYPE_FLAG,
 	 "If set, include the last user who modified the file in "
 	 "directory listings. This requires a user database module.");
-string cvs_version = "$Id: directories.pike,v 1.4 1996/11/27 13:47:57 per Exp $";
 #endif
 
   defvar("override", 1, "Allow directory index file overrides", TYPE_FLAG,
@@ -208,9 +202,7 @@ string foot_dir_mac()
   return "</dl><hr noshade></pre>";
 }
 
-string cvs_version = "$Id: directories.pike,v 1.4 1996/11/27 13:47:57 per Exp $";
 #define TYPE_MP  "    Module location"
-string cvs_version = "$Id: directories.pike,v 1.4 1996/11/27 13:47:57 per Exp $";
 #define TYPE_DIR "    Directory"
 
 array|string describe_dir_node_mac(object node)

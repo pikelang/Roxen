@@ -3,11 +3,10 @@
 // Support for the FastCGI interface, using an external fast-cgi
 // wrapper. This should be handled internally.
 
-string cvs_version = "$Id: fcgi.pike,v 1.3 1996/11/27 13:48:14 per Exp $";
+string cvs_version = "$Id: fcgi.pike,v 1.4 1996/11/27 14:05:25 per Exp $";
 #include <module.h>
 inherit "modules/scripting/cgi";
 
-string cvs_version = "$Id: fcgi.pike,v 1.3 1996/11/27 13:48:14 per Exp $";
 #define ipaddr(x,y) (((x)/" ")[y])
 
 void create()
@@ -87,10 +86,8 @@ mixed find_file(string f, object id)
   } else
     path_info = id->misc->path_info;
 
-string cvs_version = "$Id: fcgi.pike,v 1.3 1996/11/27 13:48:14 per Exp $";
 #ifdef CGI_DEBUG
   perror("FCGI: Starting '"+f+"'...\n");
-string cvs_version = "$Id: fcgi.pike,v 1.3 1996/11/27 13:48:14 per Exp $";
 #endif
     
   pipe1=File();
@@ -109,11 +106,9 @@ string cvs_version = "$Id: fcgi.pike,v 1.3 1996/11/27 13:48:14 per Exp $";
       uid = ({ 65535, 65535 });
   }
 
-string cvs_version = "$Id: fcgi.pike,v 1.3 1996/11/27 13:48:14 per Exp $";
 #ifdef CGI_DEBUG
   perror("Starting '"+cwd()+"/bin/fcgi -connect "+make_pipe_name(f)+" "+ f +
 	 " "+QUERY(numsimul)+"\n");
-string cvs_version = "$Id: fcgi.pike,v 1.3 1996/11/27 13:48:14 per Exp $";
 #endif
   
   spawne(getcwd()+"/bin/fcgi", ({"-connect", make_pipe_name(f), f,

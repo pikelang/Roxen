@@ -3,7 +3,7 @@
 // ISMAP image map support. Quite over-complex, really.  An example is
 // the support for index images, and chromatic distances.
 
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
+string cvs_version = "$Id: ismap.pike,v 1.4 1996/11/27 14:05:19 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -108,29 +108,18 @@ mapping find_colors(array lines, int color)
   return res;
 }
 
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 #define TYPE_RECTANGLE	0
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 #define TYPE_CIRCLE	1
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 #define TYPE_DEFAULT	2
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 #define TYPE_POINT      3
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 #define TYPE_POLY       4
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 #define TYPE_NCSA_CIRCLE    5
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 #define TYPE_VOID           6
 
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 #define TYPE_IMAGE       256
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 #define TYPE_IMAGE_COLOR 512
 
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 #define TYPE_PPM_IMAGE (TYPE_IMAGE|TYPE_IMAGE_COLOR)
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 #define TYPE_PGM_IMAGE TYPE_IMAGE
 
 mixed parse_roxen_map_line(string line)
@@ -400,9 +389,7 @@ mixed do_color_match(string file, mapping cols, int x, int y, int color)
   return 0;
 }
 
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 #define X 0
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 #define Y 1
 int ncsa_circle(mixed coords, int x, int y)
 {
@@ -468,9 +455,7 @@ int polygon(mixed points, int tx, int ty)
   }
   return c&1;
 }
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 #undef Y
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 #undef X
 
 /* Find the URL for the coordinate (x,y) in the file (map_file_name) */
@@ -555,10 +540,8 @@ int req;
 
 mapping thevoid()
 {
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 #ifndef FUN
   return 0;
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 #else
   return http_string_answer("<html><head><title>The Void!</title></head>"
 			    "<body bgcolor=#000000 text=#ff0000>"
@@ -575,7 +558,6 @@ string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 			    "A unicorn.<br>"
 			    "A rope.<br>"
 			    "</h2></body></html>");
-string cvs_version = "$Id: ismap.pike,v 1.3 1996/11/27 13:48:07 per Exp $";
 #endif
 } 
 

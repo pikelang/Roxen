@@ -4,7 +4,7 @@
 // mapping. Given the file 'foo.html', it will per default
 // set the contenttype to 'text/html'
 
-string cvs_version = "$Id: contenttypes.pike,v 1.3 1996/11/27 13:48:06 per Exp $";
+string cvs_version = "$Id: contenttypes.pike,v 1.4 1996/11/27 14:05:18 per Exp $";
 #include <module.h>
 inherit "module";
 
@@ -14,14 +14,10 @@ mapping  (string:int) accessed=([]);
 void create()
 {
   defvar("exts", "\
-string cvs_version = "$Id: contenttypes.pike,v 1.3 1996/11/27 13:48:06 per Exp $";
 # This will include the defaults from a file.\
-string cvs_version = "$Id: contenttypes.pike,v 1.3 1996/11/27 13:48:06 per Exp $";
 # Feel free to add to this, but do it after the #include line if\
-string cvs_version = "$Id: contenttypes.pike,v 1.3 1996/11/27 13:48:06 per Exp $";
 # you want to override any defaults\
 \
-string cvs_version = "$Id: contenttypes.pike,v 1.3 1996/11/27 13:48:06 per Exp $";
 #include <etc/extensions>\
 ", "Extensions", 
 	 TYPE_TEXT_FIELD, 

@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@infovav.se 
 //   Changed into module by Per Hedbor, per@infovav.se
 
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
+string cvs_version = "$Id: htaccess.pike,v 1.5 1996/11/27 14:05:17 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -26,12 +26,10 @@ void create()
 	 " This should be set if you have a busy site! It does have at least "
 	 " one disadvantage: The user have to press reload to get the new "
 	 ".htaccess file parsed."
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifndef SERIOUS
 	 " Since the poor user is quite used to reloading,"
 	 " that is not usually a problem. Just blame the client-side cache. "
 	 ":-)"
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
     );
 }
@@ -180,17 +178,13 @@ mapping|int parse_htaccess(object f, object id, string rht)
       break;
 
      default:
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
       perror(".htaccess: Unsupported command: "+ cmd +"\n");
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
     }
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
     perror(sprintf("HTACCESS: Result of .htaccess file parsing -> %O\n", 
 		   access));
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
   }
   cache_set(cache_key, rht, ({s[3], access}));
@@ -210,21 +204,17 @@ int allowed(multiset allow, string hname, string ip, int def)
     if(s == "all" || s == ip || s == hname)
     {
       ok = 1;
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
       perror(sprintf("HTACCESS: IP/hostname access deny/allow exact match:\n"
 		     "HTACCESS: (%s -> %s || %s)\n", s, ip, hname));
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
     }
     if(!ok && (int)s && (ip/".")[0] == s)
     {
       ok = 1;
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
       perror(sprintf("HTACCESS: IP/hostname access deny/allow ip match:\n"
 		     "HTACCESS: (%s -> %s || %s)\n", s, ip, hname));
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
     }
     if(!ok)
@@ -245,13 +235,11 @@ string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 	else 
 	  ok = 0;
       }
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
       if(ok)
 	perror(sprintf("HTACCESS: IP/hostname access deny/allow hostname/"
 		       "domain match:\n"
 		       "HTACCESS: (%s -> %s || %s)\n", s, ip, hname));
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
       
     }
@@ -271,12 +259,10 @@ string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 	else 
 	  ok = 0;
       }
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
       if(ok)
 	perror(sprintf("HTACCESS: IP/hostname access deny/allow ip-number "
 		       "match:\nHTACCESS: (%s -> %s || %s)\n", s, ip, hname));
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
       
     }
@@ -312,28 +298,22 @@ int match_passwd(string org, string try)
 int validate_user(int|multiset users, array auth, string userfile, object id)
 {
   string passwd, line;
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
   perror(sprintf("HTACCESS: Validating user %s.\n", auth[0]));
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
 
   if(!users) {
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
     perror("HTACCESS: Warning. No users are allowed to see this page.\n");
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
     return 0;
   } else {
     if(multisetp(users) && !users[auth[0]])
     {
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
       perror(sprintf("HTACCESS: Failed auth. User %s not among the "
 		     "valid users.\n", auth[0]));
       perror(sprintf("HTACCESS: Valid users -> %O\n", users));
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
       return 0;
     }
@@ -347,11 +327,9 @@ string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 
   if(!(passwd = read_bytes(userfile)))
   {
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
     perror(sprintf("HTACCESS: Failed to read password file (%s)\n", 
 		   userfile));
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif    
     return 0;
   }
@@ -364,15 +342,12 @@ string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
       if((users == 1 || users[user]) && (user == auth[0]) &&
 	 match_passwd(pass, auth[1]))
       {
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
 	perror("HTACCESS: Successful auth.\n");
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif      
 	return 1;
       }
     }
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
     else {
       if(user && pass)
@@ -385,7 +360,6 @@ string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 	}
       }
     }
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif      
   }
   return 0;
@@ -406,18 +380,14 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
   f = File();
   if(!(f->open(groupfile, "r")))
   {
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
     perror("HTACCESS: The groupfile "+groupfile+" cannot be opened.\n");
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
     return 0;
   }
 
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef DEBUG
   mark_fd(f->query_fd(), ".htaccess groupfile ("+groupfile+")\n");
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
   s = (int *)f->stat();
   
@@ -446,11 +416,9 @@ string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
   destruct(f);
   foreach(indices(grps), grp)
   {
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
     perror("HTACCESS: Checking for group "+grp+" ... "
 	   +(g[grp]?"Existant":"Nope")+"\n");
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
     if(g[grp])
       if(validate_user(g[grp], auth, userfile, id))
@@ -488,10 +456,8 @@ mapping|string|int htaccess(mapping access, object id)
   aname      = access->authname || "authorization";
   userfile   = access->authuserfile;
   groupfile  = access->authgroupfile;
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
   perror("HTACCESS: Verifying access.\n");
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
 
   if(!access[method = lower_case(id->method)])
@@ -531,26 +497,20 @@ string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
   } else if(hok && access[method]->all == -1) {
     return 0;
   }
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
   perror("HTACCESS: Host based access verified and granted.\n");
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
 
   if(access[method]->user || access[method]["valid-user"] 
      || (groupfile && access[method]->group))
   {
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
     perror("HTACCESS: Verifying user access.\n");
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
     if(!id->realauth)
     {
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
       perror("HTACCESS: No authification string from client.\n");
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
       return validate(aname);
     } else {
@@ -566,18 +526,14 @@ string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 	  validate_group(access[method]->group, auth, 
 			 groupfile, userfile, id)))
       {
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
 	perror("HTACCESS: User access ok!\n");
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
 	id->auth = ({ 1, auth[0] });
 	return 0;
       } else {
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
 	perror("HTACCESS: User access denied, invalid user.\n");
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
 	id->auth = ({ 0, auth[0]+":"+auth[1] });
 	return validate(aname);
@@ -596,7 +552,6 @@ string|int cache_path_of_htaccess(string path, object id)
 {
   mixed f;
   f = cache_lookup("htaccess_files:"+id->conf->name, path);
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
   if(f==0)
     perror("HTACCESS: Location of .htaccess file for "+path+" not cached.\n");
@@ -604,18 +559,15 @@ string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
     perror("HTACCESS: Non-existant .htaccess file cached: "+path+"\n");
   else if(f)
     perror("HTACCESS: Existant .htaccess file cached: "+path+"\n");
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
   return f;
 }
 
 void cache_set_path_of_htaccess(string path, string|int htaccess_file, object id)
 {
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
   perror("HTACCESS: Setting cached location for "
 	 +path+" to "+htaccess_file+"\n");
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif  
   cache_set("htaccess_files:"+id->conf->name, path, htaccess_file);
 }
@@ -649,10 +601,8 @@ array rec_find_htaccess_file(object id, string vpath)
     object f;
     if(f=open(path +".htaccess", "r"))
     {
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef DEBUG
       mark_fd(f->query_fd(), ".htaccess file in "+path);
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
       cache_set_path_of_htaccess(vpath, path+".htaccess",id);
       return ({ path +".htaccess", f });
@@ -716,10 +666,8 @@ mapping try_htaccess(object id)
 
   if(!(tmp = find_htaccess_file(id)))
   {
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #ifdef HTACCESS_DEBUG
     perror("HTACCESS: No htaccess file for "+id->not_query+"\n");
-string cvs_version = "$Id: htaccess.pike,v 1.4 1996/11/27 13:48:02 per Exp $";
 #endif
     return 0;
   }

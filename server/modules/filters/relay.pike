@@ -7,14 +7,13 @@
 // caching. This module is therefore quite obsolete, really.  But
 // since it is so small, I have left it here.
 
-string cvs_version = "$Id: relay.pike,v 1.3 1996/11/27 13:48:03 per Exp $";
+string cvs_version = "$Id: relay.pike,v 1.4 1996/11/27 14:05:18 per Exp $";
 #include <module.h>
 
 inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-string cvs_version = "$Id: relay.pike,v 1.3 1996/11/27 13:48:03 per Exp $";
 #define CONN_REFUSED "\
 505 Connection Refused by relay server\r\n\
 Content-type: text/html\r\n\

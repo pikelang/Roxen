@@ -3,12 +3,11 @@
 // This module is written by Mattias Wingstedt <wing@infovav.se>,
 // please direct further questsions to him.
 
-string cvs_version = "$Id: header.pike,v 1.3 1996/11/27 13:48:15 per Exp $";
+string cvs_version = "$Id: header.pike,v 1.4 1996/11/27 14:05:26 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
-string cvs_version = "$Id: header.pike,v 1.3 1996/11/27 13:48:15 per Exp $";
 #define WATCH(b,a) (perror( sprintf( b + ":%O\n", (a) ) ), (a))
 
 void create()

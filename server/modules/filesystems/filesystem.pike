@@ -3,18 +3,13 @@
 // This is a virtual "file-system".
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
+string cvs_version = "$Id: filesystem.pike,v 1.5 1996/11/27 14:05:17 per Exp $";
 #include <module.h>
 
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #if DEBUG_LEVEL > 20
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 # ifndef FILESYSTEM_DEBUG
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #  define FILESYSTEM_DEBUG
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 # endif
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #endif
 
 inherit "module";
@@ -49,12 +44,10 @@ void create()
 	 "This is where the module will find the files in the real "+
 	 "file system");
 
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #ifdef COMPAT
   defvar("html", 0, "All files are really HTML files", TYPE_FLAG|VAR_EXPERT,
 	 "If you set this variable, the filesystem will _know_ that all files "
 	 "are really HTML files. This might be useful now and then.");
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #endif
 
   defvar(".files", 0, "Show hidden files", TYPE_FLAG,
@@ -100,10 +93,8 @@ string path;
 void start()
 {
   path = QUERY(searchpath);
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #ifdef FILESYSTEM_DEBUG
   perror("FILESYSTEM: Online at "+QUERY(mountpoint)+" (path="+path+")\n");
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #endif
 }
 
@@ -195,10 +186,8 @@ mixed find_file( string f, object id )
   object o;
   int size;
   string tmp;
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #ifdef FILESYSTEM_DEBUG
   perror("FILESYSTEM: Request for "+f+"\n");
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #endif
 
   size = file_size( f = path + f );
@@ -241,11 +230,9 @@ string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 
       id->realfile = f;
       accesses++;
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #ifdef COMPAT
       if(QUERY(html)) /* Not very likely, really.. */
 	return ([ "type":"text/html", "file":o, ]);
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #endif
       return o;
     }
@@ -260,13 +247,10 @@ string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
     
     puts++;
     
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #if 0
     perror("PUT "+id->not_query+" ; "+id->misc->len+" bytes for "+
 	   id->misc->gecos+" (uid="+id->misc->uid+"; gid="+id->misc->gid+")\n");
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #endif
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #if efun(geteuid)
     int ouid, ogid, dosetuid;
     if(id->misc->uid && !getuid()) // We want to create the files
@@ -275,34 +259,27 @@ string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
       dosetuid = 1; ouid = geteuid(); ogid = getegid();
       seteuid(getuid());
       setegid( (int)id->misc->gid );
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #if efun(initgroups)
       initgroups( id->auth[1], (int)id->misc->gid );
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #endif
       seteuid( (int)id->misc->uid );
     }
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #endif
     rm( f );
     mkdirhier( f );
     object to = open(f, "wc");
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #if efun(geteuid)
     if(dosetuid)
     {
       array ou;
       ou = roxen->user_from_uid( ouid, id );
       seteuid(0);
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #if efun(initgroups)
       if(ou) initgroups( ou[0], ogid );
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #endif
       seteuid( ouid );
       setegid( ogid );
     }
-string cvs_version = "$Id: filesystem.pike,v 1.4 1996/11/27 13:48:00 per Exp $";
 #endif
 
     if(!to)

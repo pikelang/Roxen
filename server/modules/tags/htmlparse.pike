@@ -12,12 +12,10 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.6 1996/11/27 13:48:16 per Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.7 1996/11/27 14:05:27 per Exp $";
 #pragma all_inline 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.6 1996/11/27 13:48:16 per Exp $";
 #include <config.h>
-string cvs_version = "$Id: htmlparse.pike,v 1.6 1996/11/27 13:48:16 per Exp $";
 #include <module.h>
 
 inherit "module";
@@ -298,10 +296,8 @@ mapping handle_file_extension( object file, string e, object id)
     return 0;
   }
   
-string cvs_version = "$Id: htmlparse.pike,v 1.6 1996/11/27 13:48:16 per Exp $";
 #if efun(set_start_quote)
   set_start_quote(set_end_quote(0));
-string cvs_version = "$Id: htmlparse.pike,v 1.6 1996/11/27 13:48:16 per Exp $";
 #endif
 
   ook=ok;
@@ -438,7 +434,6 @@ string tagtime(int t,mapping m)
 
      case "discordian":
      case "disc":
-string cvs_version = "$Id: htmlparse.pike,v 1.6 1996/11/27 13:48:16 per Exp $";
 #if efun(discdate)
       eris=discdate(t);
       res=eris[0];
@@ -447,15 +442,12 @@ string cvs_version = "$Id: htmlparse.pike,v 1.6 1996/11/27 13:48:16 per Exp $";
       if(m->holiday && eris[2])
 	res += ". Celebrate "+eris[2];
       return res;
-string cvs_version = "$Id: htmlparse.pike,v 1.6 1996/11/27 13:48:16 per Exp $";
 #endif
       return "Discordian date support disabled";
      case "stardate":
      case "star":
-string cvs_version = "$Id: htmlparse.pike,v 1.6 1996/11/27 13:48:16 per Exp $";
 #if efun(stardate)
       return (string)stardate(t, (int)m->prec||1);
-string cvs_version = "$Id: htmlparse.pike,v 1.6 1996/11/27 13:48:16 per Exp $";
 #endif
       return "Stardate support disabled";
      default:
@@ -1051,11 +1043,9 @@ string tag_deny(string a,  mapping b, string c, object d, object e,
 		mapping f, object g);
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.6 1996/11/27 13:48:16 per Exp $";
 #define TEST(X)\
 do { if(X) if(m->or) return s; else ok=1; else if(!m->or) return ""; } while(0)
 
-string cvs_version = "$Id: htmlparse.pike,v 1.6 1996/11/27 13:48:16 per Exp $";
 #define IS_TEST(X, Y) do                		\
 {							\
   if(m->X)						\
@@ -1523,13 +1513,11 @@ string tag_language(string tag, mapping m, object got)
 
 string tag_quote(string tagname, mapping m)
 {
-string cvs_version = "$Id: htmlparse.pike,v 1.6 1996/11/27 13:48:16 per Exp $";
 #if efun(set_start_quote)
   if(m->start && strlen(m->start))
     set_start_quote(m->start[0]);
   if(m->end && strlen(m->end))
     set_end_quote(m->end[0]);
-string cvs_version = "$Id: htmlparse.pike,v 1.6 1996/11/27 13:48:16 per Exp $";
 #endif
   return "";
 }
