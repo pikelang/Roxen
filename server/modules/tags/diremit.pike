@@ -2,8 +2,9 @@
 #include <stat.h>
 inherit "module";
 constant module_type = MODULE_TAG;
-constant module_name = "Dir emit source";
-constant module_doc = "This module provies the 'dir' emit source.";
+constant module_name = "Tags: Dir emit source";
+constant module_doc = "This module provies the 'dir' emit source. It "
+  "or anoter compatible module is required by the Directory Listings module";
 
 class TagDirectoryplugin
 {

@@ -1,14 +1,14 @@
 // This is a roxen module. Copyright © 1999-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.28 2001/03/07 13:42:11 kuntri Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.29 2001/03/08 14:35:46 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
 inherit "module";
 
 constant module_type = MODULE_TAG;
-constant module_name = "Folding lists";
+constant module_name = "Tags: Folding lists";
 constant module_doc  = "Provides the &lt;foldlist&gt; tag, which is used to "
 "build folding lists. The folding lists work like <tt>&lt;dl&gt;</tt> lists "
 "where each item can be folded or unfolded.";

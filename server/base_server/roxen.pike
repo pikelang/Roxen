@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.643 2001/03/06 13:38:15 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.644 2001/03/08 14:35:40 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -554,7 +554,7 @@ local static void handler_thread(int id)
 		       "Client will not get any response from Roxen.\n"),*/
 		     describe_backtrace(q));
 	if (q = catch {h = 0;}) {
-	  report_error(LOC_M(5, "Uncaught error in1942 handler thread: %s Client"
+	  report_error(LOC_M(5, "Uncaught error in handler thread: %s Client"
 			     "will not get any response from Roxen.")+"\n",
 		       describe_backtrace(q));
 	}
@@ -3846,6 +3846,219 @@ function compile_log_format( string fmt )
   return compiled_formats[ fmt ] = compile_string( code )()->log;
 }
 
+
+array security_checks = ({
+  "ip=%s:%s",2,({
+    lambda( string a, string b ){
+      int net  = Roxen.ip_to_int( a );
+      int mask = Roxen.ip_to_int( b );
+      net &= mask;
+      return ({ net, sprintf("%c",mask)[0] });
+    },
+    "  if( (Roxen.ip_to_int( id->remoteaddr ) & %[1]d) == %[0]d ) ",
+  }),
+  "ip=%s/%d",2,({
+    lambda( string a, int b ){
+      int net  = Roxen.ip_to_int( a );
+      int mask = ((~0<<(32-b))&0xffffffff);
+      net &= mask;
+      return ({ net, sprintf("%c",mask)[0] });
+    },
+    "  if( (Roxen.ip_to_int( id->remoteaddr ) & %[1]d) == %[0]d ) ",
+  }),
+  "ip=%s",1,({
+    "  if( glob( %[0]O, id->remoteaddr ) ) ",
+  }),
+  "user=%s",1,({
+    1,
+    lambda( string x ) {
+      return ({sprintf("(< %{%O, %}>)", x/"," )});
+    },
+    "  if( (user || (user = authmethod->authenticate( id, userdb_module )))\n"
+    "      && ((%[0]s->any) || (%[0]s[user->name()])) ) ",
+    (<  "  User user" >),
+  }),
+  "group=%s",1,({
+    1,
+    lambda( string x ) {
+      return ({sprintf("(< %{%O, %}>)", x/"," )});
+    },
+    "  if( (user || (user = authmethod->authenticate( id, userdb_module )))\n"
+    "      && ((%[0]s->any) || sizeof(mkmultiset(user->groups())&%[0]s)))",
+    (<"  User user" >),
+  }),
+  "dns=%s",1,({
+  }),
+  "time=%d:%d-%d:%d",4,({
+  }),
+});
+
+
+function(RequestID:mapping|int) compile_security_pattern( string pattern,
+							  RoxenModule m )
+//. Parse a security pattern and return a function that when called
+//. will do the checks required by the format.
+//.
+//. The syntax is:
+//. 
+//.  userdb userdatabase module
+//.  authmethod authentication module
+//.  realm realm name
+//.
+//.  Below, CMD is one of 'allow' and 'deny'
+//. 
+//.  CMD ip=ip/bits[,ip/bits]  [return]
+//.  CMD ip=ip:mask[,ip:mask]  [return]
+//.  CMD ip=pattern            [return]
+//. 
+//.  CMD user=name[,name,...]  [return]
+//.  CMD group=name[,name,...] [return]
+//. 
+//.  CMD dns=pattern           [return]
+//. 
+//.  CMD time=<start>-<stop>   [return]
+//.       times in HH:mm format
+//.
+//.  pattern is a glob pattern.
+//.
+//.  return means that reaching this command results in immediate
+//.  return, only useful for 'allow'.
+//. 
+//. 'deny' always implies a return, no futher testing is done if a
+//. 'deny' match.
+{
+  string code = "";
+  multiset variables = (< "  object userdb_module",
+			  "  object authmethod = id->conf",
+			  "  string realm = \"User\"",
+			  "  int|mapping fail">);
+  int shorted, patterns, cmd;
+#define DENY  0
+#define ALLOW 1
+
+  foreach( pattern / "\n", string line )
+  {
+    line = String.trim_all_whites( line );
+    if( !strlen(line) || line[0] == '#' )
+      continue;
+    sscanf( line, "%[^#]#", line );
+
+    if( sscanf( line, "allow %s", line ) )
+      cmd = ALLOW;
+    else if( sscanf( line, "deny %s", line ) )
+      cmd = DENY;
+    else if( sscanf( line, "userdb %s", line ) )
+    {
+      line = String.trim_all_whites( line );
+      if( line == "config_userdb" )
+	code += "  userdb_module = roxen.config_userdb_module;\n";
+      else if( line == "all" )
+	code += "  userdb_module = 0;\n";
+      else if( !m->my_configuration()->find_user_database( line ) )
+	m->report_notice( LOC_M( 0,"Syntax error in security patterns: "
+				 "Cannot find the user database '"+
+				 line+"'\n" ));
+      else
+	code +=
+	  sprintf("  userdb_module = id->conf->find_user_database( %O );\n",
+		  line);
+      continue;
+    } 
+    else if( sscanf( line, "authmethod %s", line ) )
+    {
+      line = String.trim_all_whites( line );
+      if( line == "all" )
+	code += "  authmethod = id->conf;\n";
+      else if( !m->my_configuration()->find_auth_module( line ) )
+	m->report_notice( LOC_M( 0,"Syntax error in security patterns: "
+				 "Cannot find the auth method '"+
+				 line+"'\n" ));
+      else
+	code +=
+	  sprintf("  authmethod = id->conf->find_auth_module( %O );\n",
+		  line);
+      continue;
+    }
+    else if( sscanf( line, "realm %s", line ) )
+    {
+      line = String.trim_all_whites( line );
+      code += sprintf( "  realm = %O;\n", line );
+    }
+    else
+      m->report_notice( LOC_M( 0,"Syntax error in security patterns: "
+			       "Expected 'allow' or 'deny'\n" ));
+    shorted = sscanf( line, "%s return", line );
+
+
+    for( int i = 0; i<sizeof(  security_checks ); i+=3 )
+    {
+      string check = security_checks[i];
+      array args;      
+      if( sizeof( args = array_sscanf( line, check ) )
+	  == security_checks[i+1] )
+      {
+	patterns++;
+	int thr;
+	// run instructions.
+	foreach( security_checks[ i+2 ], mixed instr )
+	{
+	  if( functionp( instr ) )
+	    args = instr( @args );
+	  else if( multisetp( instr ) )
+	    variables |= instr;
+	  else if( intp( instr ) )
+	    thr = instr;
+	  else if( stringp( instr ) )
+	  {
+	    code += sprintf( instr, @args )+"\n";
+	    if( cmd == DENY )
+	    {
+	      if( thr )
+		code += "    return authmethod->authenticate_throw( id, realm );\n";
+	      else
+		code += "    return 1;\n";
+	    }
+	    else
+	    {
+	      if( shorted )
+	      {
+		code += "    return fail;\n";
+		code += "  else\n";
+		if( thr )
+		  code += "    return authmethod->authenticate_throw( id, realm );\n";
+		else
+		  code += "    return fail || 1;\n";
+	      }
+	      else
+	      {
+		code += "    ;\n";
+		code += "  else\n";
+		if( thr )
+		  code += "    fail=authmethod->authenticate_throw( id, realm );\n";
+		else
+		  code += "    if( !fail ) fail=1;\n";
+	      }
+	    }
+	  }
+	}
+	break;
+      }
+    }
+  }
+  if( !patterns )
+    return 0;
+
+  code =
+    "int|mapping f( RequestID id )\n"
+    "{\n" + sort( indices( variables ) )*";\n" + ";\n"
+    "" +  code + "  return fail;\n}\n";
+    
+  werror( "Da Code:\n%s\n", code );
+
+  return compile_string( code )()->f;
+#undef DENY
+#undef ALLOW
+}
 
 
 static string cached_hostname = gethostname();

@@ -1,13 +1,13 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.62 2001/03/07 13:42:14 kuntri Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.63 2001/03/08 14:35:48 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
 inherit "module";
 
 constant module_type = MODULE_TAG;
-constant module_name = "Tablify";
+constant module_name = "Tags: Tablify";
 constant module_doc  = 
 #"This module provides the <tt>&lt;tablify&gt;</tt> tag that is used to
 generate nice tables.";

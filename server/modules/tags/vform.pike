@@ -4,11 +4,11 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.21 2001/03/07 13:42:14 kuntri Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.22 2001/03/08 14:35:48 per Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
-constant module_name = "Verified form";
+constant module_name = "Tags: Verified form";
 constant module_doc  = "Creates a self verifying form.";
 
 // maxlength is excluded so that it gets exported.

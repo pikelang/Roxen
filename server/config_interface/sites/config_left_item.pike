@@ -21,7 +21,7 @@ mapping group( array(string) w )
     if( sscanf( (string)i->get_name(), "%s:%s", g, s ) == 2 )
       groups[ g ] += ({ n });
     else
-      groups[ "misc" ] += ({ n });
+      groups[ "_misc" ] += ({ n });
   }
   return groups;
 }
@@ -97,24 +97,30 @@ string selected_item( string q, Configuration c, RequestID id,
 
   foreach( module_groups, array gd )
   {
-    int onlysel;
+    int onlysel,fin;
     string group_name = gd[0];
-    if( (sizeof( gd[1] ) > 1) && (group_name != "misc")  )
+    if( (group_name != "_misc")  )
     {
+      fin = 1;
       if( group_name != module_group )
       {
-	onlysel = 1;
+	if(sizeof( gd[1] ) > 1)
+	  onlysel = 1;
 	pre += ("\n<tr><td valign='top'><img src=\"&usr.item-indicator;\" width='12' height='12' alt='' /></td>"
 		"<td><a href=\""+quoted_url+
 		Roxen.http_encode_string(group_name)+
 		"!0/"+module+"/\">"+Roxen.html_encode_string(group_name)+
-		": ...</a></td></tr>\n");
+		": ...</a><br />\n");
+	pre += "<table cellspacing='0' cellpadding='0'>\n";
       }
       else
+      {
 	pre += ("\n<tr><td valign='top'>"
 		"<img src=\"&usr.selected-indicator;\" width='12'"
 		" height='12' alt='' /></td>"
-		"<td>"+Roxen.html_encode_string(group_name)+":</td></tr>\n");
+		"<td>"+Roxen.html_encode_string(group_name)+":<br />\n");
+	pre += "<table cellspacing='0' cellpadding='0'>\n";
+      }
     }
     foreach( gd[1], mapping data )
     {
@@ -135,6 +141,8 @@ string selected_item( string q, Configuration c, RequestID id,
 		"<td><b>" + Roxen.html_encode_string(data->name) +
 		"</b></td></tr>\n");
     }
+    if( fin )
+      pre += "</table></td></tr>";
   }
   pre += "</table>\n";
 

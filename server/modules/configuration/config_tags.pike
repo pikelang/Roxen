@@ -12,9 +12,9 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.140 2001/03/05 20:02:13 nilsson Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.141 2001/03/08 14:35:42 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
-constant module_name = "Administration interface RXML tags";
+constant module_name = "Tags: Administration interface tags";
 
 /* Not exactly true, but the config filesystem forbids parallell
  * accesses anyway so there is no need for an extra lock here..

@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.71 2001/03/01 03:14:46 mast Exp $
+// $Id: Roxen.pmod,v 1.72 2001/03/08 14:35:41 per Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -16,6 +16,13 @@
 # define HTTP_WERR(X)
 #endif
 
+int ip_to_int(string ip)
+{
+  int res;
+  foreach(((ip/".") + ({ "0", "0", "0" }))[..3], string num)
+    res = (res<<8) | (int)num;
+  return res;
+}
 
 string http_roxen_config_cookie(string from)
 {

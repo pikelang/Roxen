@@ -11,10 +11,10 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.139 2001/03/07 13:40:43 kuntri Exp $";
+constant cvs_version = "$Id: business.pike,v 1.140 2001/03/08 14:35:43 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
-constant module_name = "Business graphics";
+constant module_name = "Graphics: Business graphics";
 constant module_doc  = 
 #"Provides the <tt>&lt;diagram&gt;</tt> tag that draws bar charts, line charts,
 pie charts or graphs.";

@@ -6,10 +6,10 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version = "$Id: awizard.pike,v 1.21 2001/02/08 13:19:39 nilsson Exp $";
+constant cvs_version = "$Id: awizard.pike,v 1.22 2001/03/08 14:35:45 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
-constant module_name = "Advanced wizards";
+constant module_name = "Tags: Advanced wizards";
 constant module_doc  = 
 #"Provides the <tt>&lt;awizard&gt;</tt> tag that is used to
 create wizard like user interfaces. Each wizard can contain several pages 

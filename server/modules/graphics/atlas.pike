@@ -6,10 +6,10 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.3 2001/03/07 13:40:43 kuntri Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.4 2001/03/08 14:35:43 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
-constant module_name = "Atlas";
+constant module_name = "Graphics: Atlas";
 constant module_doc  = 
 #"Provides the <tt>&lt;atlas&gt;</tt> tag that creates a world map. It is
 possible to highlight countries on the generated world map.";

@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.75 2001/03/07 13:39:05 kuntri Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.76 2001/03/08 14:35:42 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -21,7 +21,7 @@ inherit "module";
 // Module interface functions
 
 constant module_type=MODULE_TAG|MODULE_PROVIDER;
-LocaleString module_name=LOCALE(1,"SQL tags");
+LocaleString module_name=LOCALE(1,"Tags: SQL tags");
 LocaleString module_doc =
 LOCALE(2,
        "The SQL tags module provides the tags <tt>&lt;sqlquery&gt;</tt> and"

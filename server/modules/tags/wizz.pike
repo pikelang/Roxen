@@ -4,10 +4,10 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: wizz.pike,v 1.1 2001/01/06 01:55:42 nilsson Exp $";
+constant cvs_version = "$Id: wizz.pike,v 1.2 2001/03/08 14:35:49 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
-constant module_name = "Really advanced wizard";
+constant module_name = "Tags: Really advanced wizard";
 constant module_doc  = "...";
 
 #define LOCALE(X,Y) (Y)

@@ -1,5 +1,5 @@
 constant cvs_version =
-  "$Id: auth_httpcookie.pike,v 1.4 2001/01/29 05:40:32 per Exp $";
+  "$Id: auth_httpcookie.pike,v 1.5 2001/03/08 14:35:45 per Exp $";
 inherit AuthModule;
 inherit "module";
 
@@ -13,7 +13,7 @@ constant name = "cookie";
 #include <module.h>
 
 LocaleString module_name =
-  _(1,"HTTP Cookie authentication");
+  _(1,"Authentication: HTTP Cookie");
 
 LocaleString module_doc =
   _(2,"Authenticate users using a cookie.");

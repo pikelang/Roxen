@@ -7,7 +7,7 @@
 
 #pragma strict_types
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.25 2001/03/07 13:42:11 kuntri Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.26 2001/03/08 14:35:46 per Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -26,7 +26,7 @@ void create()
 }
 
 constant module_type = MODULE_TAG;
-constant module_name = "Indirect href";
+constant module_name = "Tags: Indirect href";
 //constant module_unique = 0;
 constant module_doc  =
 #"Indirect href. Adds a new tag <tt>&lt;ai&nbsp;name=\"\"&gt;&lt;/ai&gt;</tt> that works like 

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.23 2001/02/06 22:39:56 nilsson Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.24 2001/03/08 14:35:44 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -10,7 +10,7 @@ inherit "module";
 //---------------------- Module Registration --------------------------------
 
 constant module_type   = MODULE_TAG;
-constant module_name   = "HTML color wiretap";
+constant module_name   = "Tags: HTML color wiretap";
 constant module_doc    = 
 #"Parses HTML tags and tries to determine the text and background colors 
 all over the page. This information can be used to let graphical modules

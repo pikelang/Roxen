@@ -9,7 +9,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.5 2001/03/07 13:42:11 kuntri Exp $";
+constant cvs_version = "$Id: email.pike,v 1.6 2001/03/08 14:35:46 per Exp $";
 
 constant thread_safe=1;
 
@@ -434,7 +434,7 @@ string status() {
 // Some constants to register the module in the RXML parser.
 
 constant module_type = MODULE_PARSER;
-constant module_name = "E-mail module";
+constant module_name = "Tags: E-mail module";
 constant module_doc  = "Adds an extra container tag &lt;email&gt; "
   " &lt;/email&gt;  and subtags &lt;attachment/&gt, &lt; header /&gt; "
   " and &lt;signature /&gt; that are supposed to send MIME compliant"

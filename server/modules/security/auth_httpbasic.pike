@@ -1,5 +1,5 @@
 constant cvs_version =
-  "$Id: auth_httpbasic.pike,v 1.4 2001/01/29 05:40:31 per Exp $";
+  "$Id: auth_httpbasic.pike,v 1.5 2001/03/08 14:35:45 per Exp $";
 inherit AuthModule;
 inherit "module";
 
@@ -11,7 +11,7 @@ constant name = "basic";
 #include <module.h>
 
 LocaleString module_name =
-  _(1,"Password authentication");
+  _(1,"Authentication: Password");
 
 LocaleString module_doc =
   _(2,"Authenticate users using basic username/password authentication.");

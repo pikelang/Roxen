@@ -1,14 +1,14 @@
 // This is a roxen module. Copyright © 1997-2000, Roxen IS.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.51 2001/03/07 13:40:46 kuntri Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.52 2001/03/08 14:35:44 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "module";
 
 constant module_type = MODULE_TAG;
-constant module_name = "Tab list";
+constant module_name = "Graphics: Tab list";
 constant module_doc = 
 #"Provides the <tt>&lt;tablist&gt;</tt> tag that is used to draw tab lists.
 It requires the <i>GButton</i> module.";

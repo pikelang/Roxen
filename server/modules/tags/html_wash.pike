@@ -4,10 +4,10 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.14 2001/03/07 13:42:11 kuntri Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.15 2001/03/08 14:35:46 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
-constant module_name = "HTML washer";
+constant module_name = "Tags: HTML washer";
 constant module_doc  =
 #"<p>This module provides a &lt;wash-html&gt; tag that is perhaps most
 useful for turning user freetext input from a form into HTML

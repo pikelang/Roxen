@@ -6,10 +6,10 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.15 2001/03/07 13:42:10 kuntri Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.16 2001/03/08 14:35:46 per Exp $";
 
 constant module_type = MODULE_TAG;
-constant module_name = "Spell checker";
+constant module_name = "Tags: Spell checker";
 constant module_doc = 
 #"Checks for misspelled words inside the <tt>&lt;spell&gt;</tt> tag.";
 

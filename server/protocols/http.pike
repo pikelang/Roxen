@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.306 2001/02/27 02:54:17 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.307 2001/03/08 14:35:49 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -40,7 +40,7 @@ int footime, bartime;
 #ifdef FD_DEBUG
 #define MARK_FD(X) catch{REQUEST_WERR(X); mark_fd(my_fd->query_fd(), (X)+" "+remoteaddr);}
 #else
-#define MARK_FD(X) REQUEST_WERR(X)
+#define MARK_FD(X)
 #endif
 
 #ifdef THROTTLING_DEBUG
@@ -66,8 +66,6 @@ Protocol port_obj;
 #include <variables.h>
 
 int time;
-
-int do_set_cookie;
 
 string raw_url;
 int do_not_disconnect;
@@ -682,7 +680,7 @@ void things_to_do_when_not_sending_from_cache( )
   if(!supports->cookies)
     config = prestate;
   else
-    if( do_set_cookie
+    if( port_obj->set_cookie
        && !cookies->RoxenUserID && strlen(not_query)
        && not_query[0]=='/' && method!="PUT")
     {
@@ -984,6 +982,7 @@ void end(int|void keepit)
     MARK_FD("HTTP closed");
     catch 
     {
+      my_fd->set_blocking();
       my_fd->close();
       destruct(my_fd);
     };
@@ -1885,12 +1884,13 @@ void got_data(mixed fooid, string s)
   if(!raw) raw = s; else raw += s;
 
 
-  // The port has been closed, but old (probably keep-alive
+  // The port has been closed, but old (probably keep-alive)
   // connections remain.  Close those connections.
   if( !port_obj ) 
   {
     catch  // paranoia
     {
+      my_fd->set_blocking();
       my_fd->close();
       destruct( my_fd );
       destruct( );
@@ -2070,6 +2070,7 @@ void got_data(mixed fooid, string s)
   })
   {
     report_error("Internal server error: " + describe_backtrace(err));
+    my_fd->set_blocking();
     my_fd->close();
     destruct( my_fd );
     disconnect();
@@ -2145,7 +2146,6 @@ static void create(object f, object c, object cc)
   if(f)
   {
 //     f->set_blocking();
-    do_set_cookie = c->set_cookie;
     MARK_FD("HTTP connection");
     f->set_read_callback(got_data);
     f->set_close_callback(end);
@@ -2162,8 +2162,9 @@ static void create(object f, object c, object cc)
 void chain(object f, object c, string le)
 {
   my_fd = f;
+  f->set_read_callback(0);
+  f->set_close_callback(end);
   port_obj = c;
-  do_set_cookie = c->set_cookie;
   processed = 0;
   do_not_disconnect=-1;		// Block destruction until we return.
   MARK_FD("Kept alive");
@@ -2192,7 +2193,8 @@ void chain(object f, object c, string le)
       do_not_disconnect = 0;
     if(!processed)
     {
-      f->set_nonblocking(got_data, 0, end);
+      f->set_read_callback(got_data);
+      f->set_close_callback(end);
     }
   }
 }

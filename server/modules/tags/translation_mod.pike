@@ -8,10 +8,10 @@ inherit "module";
 // ---------------- Module registration stuff ----------------
 
 constant module_type = MODULE_TAG;
-constant module_name = "Translation module";
+constant module_name = "Tags: Translation module";
 constant module_doc  = "This module provides an RXML API to the Pike localization system.";
 constant thread_safe = 1;
-constant cvs_version = "$Id: translation_mod.pike,v 1.9 2001/03/07 13:42:14 kuntri Exp $";
+constant cvs_version = "$Id: translation_mod.pike,v 1.10 2001/03/08 14:35:48 per Exp $";
 
 
 

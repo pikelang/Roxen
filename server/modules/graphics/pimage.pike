@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
 
-string cvs_version="$Id: pimage.pike,v 1.24 2001/01/22 17:20:32 anders Exp $";
+string cvs_version="$Id: pimage.pike,v 1.25 2001/03/08 14:35:44 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -378,7 +378,7 @@ class Constructors
 mapping compiled = ([]);
 
 constant module_type = MODULE_TAG;
-constant module_name = "Pike image generator";
+constant module_name = "Graphics: Pike image generator";
 constant module_doc  = 
 #"Provides two tags, <tt>&lt;gclock&gt;</tt> and <tt>&lt;pimage&gt;</tt>.
 <tt>&lt;gclock&gt;</tt> draws animated clocks, while &lt;pimage&gt; draws 

@@ -16,9 +16,9 @@ void start( int num, Configuration conf )
   module_dependencies (conf, ({ "accessed", "graphic_text" }));
 }
 
-constant cvs_version = "$Id: counter.pike,v 1.39 2001/01/04 06:35:36 nilsson Exp $";
+constant cvs_version = "$Id: counter.pike,v 1.40 2001/03/08 14:35:43 per Exp $";
 constant module_type = MODULE_TAG;
-constant module_name = "Graphical Counter";
+constant module_name = "Graphics: Counter";
 constant thread_safe = 1;
 constant module_doc  = "Generates graphical counters. This module is really only "
   "a wrapper kept for compatibility. It creates a gtext tag with an accessed tag inside."

@@ -2,14 +2,14 @@
 // Released under GPL
 // made by Per Hedbor
 
-constant cvs_version = "$Id: wizard_tag.pike,v 1.28 2000/09/10 16:35:08 nilsson Exp $";
+constant cvs_version = "$Id: wizard_tag.pike,v 1.29 2001/03/08 14:35:49 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
 inherit "wizard";
 
 constant module_type = MODULE_TAG;
-constant module_name = "Wizard generator";
+constant module_name = "Tags: Wizard generator";
 constant module_doc  = 
 #"Provides the <tt>&lt;wizard&gt;</tt> tag that is used to create wizard
 like user interface. Each wizard can contain several pages with form. The

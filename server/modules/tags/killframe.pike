@@ -12,7 +12,7 @@
  * Chris Burgess <chris@ibex.co.nz>
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.32 2001/03/07 13:42:11 kuntri Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.33 2001/03/08 14:35:47 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -27,7 +27,7 @@ void create()
 }
 
 constant module_type = MODULE_TAG;
-constant module_name = "Kill frame";
+constant module_name = "Tags: Kill frame";
 constant module_doc  = "This module defines a the tag &lt;killframe&gt; that "
   "adds some JavaScript that will prevent others "
   "from putting the page in a frame. It can "

@@ -197,11 +197,35 @@ mapping|string parse( RequestID id )
 
   res += "</table></td></tr></table>";
 
+  class QueryHistory
+  {
+    inherit Variable.Variable;
+    constant type = "QueryHistory";
+
+    void create()
+    {
+      ::create( ([]), 65535 );
+    }
+  };
+  
+  object user = id->misc->config_user;
+  QueryHistory hs;
+  if( !(hs = user->settings->getvar( "db_history" ) ) )
+  {
+    user->settings->defvar( "db_history", (hs = QueryHistory( )) );
+    user->settings->restore();
+  }
   if( !id->variables->query || id->variables["clear_q.x"] )
-    if( id->variables->table )
+  {
+    mapping h = hs->query();
+
+    if( h[id->variables->db+"."+id->variables->table] )
+      id->variables->query = h[id->variables->db+"."+id->variables->table];
+    else if( id->variables->table )
       id->variables->query = "SELECT "+(sel_t_columns*", ")+" FROM "+id->variables->table;
     else
       id->variables->query = "SHOW TABLES";
+  }    
 
   res +=
     "<table><tr><td valign=top><font size=-1>"
@@ -214,6 +238,10 @@ mapping|string parse( RequestID id )
 
   if( id->variables["run_q.x"] )
   {
+    hs->query()[ id->variables->db+"."+id->variables->table ]
+      = id->variables->query-"\r";
+    user->settings->save();
+
     string query = "";
     // 1: Normalize.
     foreach( replace((id->variables->query-"\r"),"\t"," ")/"\n", string q )

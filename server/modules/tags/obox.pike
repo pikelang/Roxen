@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.34 2001/03/07 13:42:12 kuntri Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.35 2001/03/08 14:35:47 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -21,7 +21,7 @@ inherit "module";
   
 
 constant module_type = MODULE_TAG;
-LocaleString module_name = LOCALE(1,"Outlined box");
+LocaleString module_name = LOCALE(1,"Tags: Outlined box");
 
 LocaleString module_doc  =
   LOCALE(2,"This module provides the <tt>&lt;obox&gt;</tt> tag that "

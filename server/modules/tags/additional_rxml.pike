@@ -4,10 +4,10 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.10 2001/03/07 13:42:10 kuntri Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.11 2001/03/08 14:35:45 per Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
-constant module_name = "Additional RXML tags";
+constant module_name = "Tags: Additional RXML tags";
 constant module_doc  = "This module provides some more complex and not as widely used RXML tags.";
 
 void create() {

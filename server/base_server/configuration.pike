@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.419 2001/03/05 04:43:10 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.420 2001/03/08 14:35:38 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -827,10 +827,7 @@ private mapping misc_cache=([]);
 int|mapping check_security(function|RoxenModule a, RequestID id,
 			   void|int slevel)
 {
-  array level;
   array seclevels;
-  int ip_ok = 0;	// Unknown
-  int auth_ok = 0;	// Unknown
   // NOTE:
   //   ip_ok and auth_ok are three-state variables.
   //   Valid contents for them are:
@@ -838,116 +835,32 @@ int|mapping check_security(function|RoxenModule a, RequestID id,
   //     1  May be bad -- Restriction encountered, and test failed.
   //    ~0  OK -- Test passed.
 
-  if(!(seclevels = misc_cache[ a ])) {
+  if(!(seclevels = misc_cache[ a ]))
+  {
     RoxenModule mod = Roxen.get_owning_module (a);
     if(mod && mod->query_seclevels)
       misc_cache[ a ] = seclevels = ({
 	mod->query_seclevels(),
 	mod->query("_seclvl"),
-	mod->query("_sec_group")
       });
     else
-    {
-      misc_cache[ a ] = seclevels = ({({}),0,"foo" });
-    }
+      misc_cache[ a ] = seclevels = ({0,0});
   }
 
-// werror("check_security %O %d <-> %d%s\n", a, slevel, seclevels[1],
-//        (seclevels[-1]=="foo"?"  (No module found)":""));
-
-if(slevel && (seclevels[1] > slevel)) // "Trustlevel" to low.
+  if(slevel && (seclevels[1] > slevel)) // "Trustlevel" to low.
     return 1;
-
-  if(!sizeof(seclevels[0]))
-    return 0; // Ok if there are no patterns.
 
   mixed err;
-  err = catch {
-    foreach(seclevels[0], level) {
-      switch(level[0]) {
-      case MOD_ALLOW: // allow ip=...
-	if(level[1](id->remoteaddr)) {
-	  ip_ok = ~0;	// Match. It's ok.
-	} else {
-	  ip_ok |= 1;	// IP may be bad.
-	}
-	break;
+  if( function(RequestID:int|mapping) f = seclevels[0] )
+    err=catch { return f( id ); };
+  else
+    return 0; // Ok if there are no patterns.
 
-      case MOD_DENY: // deny ip=...
+  report_error("check_security(): %s:\n%s\n",
+	       LOC_M(39, "Error during module security check"),
+	       describe_backtrace(err));
 
-	if(level[1](id->remoteaddr))
-	  return Roxen.http_low_answer(403, "<h2> Access forbidden </h2>");
-	break;
-
-      case MOD_USER: // allow user=...
-	if(id->auth && id->auth[0] && level[1](id->auth[1])) {
-	  auth_ok = ~0;	// Match. It's ok.
-	} else {
-	  auth_ok |= 1;	// Auth may be bad.
-	}
-	break;
-
-      case MOD_PROXY_USER: // allow user=...
-	if (ip_ok != 1) {
-	  // IP is OK as of yet.
-	  if(id->misc->proxyauth && id->misc->proxyauth[0] &&
-	     level[1](id->misc->proxyauth[1])) return 0;
-	  return Roxen.http_proxy_auth_required(seclevels[2]);
-	} else {
-	  // Bad IP.
-	  return 1;
-	}
-        break;
-
-      case MOD_ACCEPT: // accept ip=...
-	// Short-circuit version on allow.
-	if(level[1](id->remoteaddr)) {
-	  // Match. It's ok.
-	  return 0;
-	} else {
-	  ip_ok |= 1;	// IP may be bad.
-	}
-	break;
-
-      case MOD_ACCEPT_USER: // accept user=...
-	// Short-circuit version on allow.
-	if(id->auth && id->auth[0] && level[1](id->auth[1])) {
-	  // Match. It's ok.
-	  return 0;
-	} else {
-	  if (id->auth) {
-	    auth_ok |= 1;	// Auth may be bad.
-	  } else {
-	    // No auth yet, get some.
-	    return Roxen.http_auth_required(seclevels[2]);
-	  }
-	}
-	break;
-      }
-    }
-  };
-
-  if (err) {
-    report_error("check_security(): %s:\n%s\n",
-		 LOC_M(39, "Error during module security check"),
-		 describe_backtrace(err));
-    return 1;
-  }
-
-  if (ip_ok == 1) {
-    // Bad IP.
-    return 1;
-  } else {
-    // IP OK, or no IP restrictions.
-    if (auth_ok == 1) {
-      // Bad authentification.
-      // Query for authentification.
-      return Roxen.http_auth_required(seclevels[2]);
-    } else {
-      // No auth required, or authentification OK.
-      return 0;
-    }
-  }
+  return 1;
 }
 #endif
 // Empty all the caches above.
@@ -964,8 +877,7 @@ void invalidate_cache()
   file_extension_module_cache = ([]);
   provider_module_cache = ([]);
 #ifdef MODULE_LEVEL_SECURITY
-  if(misc_cache)
-    misc_cache = ([ ]);
+  misc_cache = ([ ]);
 #endif
 }
 
@@ -2441,11 +2353,11 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 #ifdef MODULE_LEVEL_SECURITY
     if( (module_type & ~(MODULE_LOGGER|MODULE_PROVIDER)) != 0 )
     {
-      me->defvar("_sec_group", "user", DLOCALE(14, "Security: Realm"), 
-		 TYPE_STRING,
-		 DLOCALE(15, "The realm to use when requesting password from the "
-			 "client. Usually used as an informative message to the "
-			 "user."));
+//       me->defvar("_sec_group", "user", DLOCALE(14, "Security: Realm"), 
+// 		 TYPE_STRING,
+// 		 DLOCALE(15, "The realm to use when requesting password from the "
+// 			 "client. Usually used as an informative message to the "
+// 			 "user."));
       
       me->defvar("_seclevels", "", DLOCALE(16, "Security: Patterns"), 
 		 TYPE_TEXT_FIELD,
