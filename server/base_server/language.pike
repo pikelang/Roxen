@@ -1,11 +1,10 @@
 // Roxen Locale Support
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: language.pike,v 1.40 2002/09/26 22:11:23 nilsson Exp $
+// $Id: language.pike,v 1.41 2002/10/01 22:26:50 nilsson Exp $
 
 #pragma strict_types
 
 #include <roxen.h>
-#define PROJECT "languages"
 
 string default_locale;
 //! Contains the default locale for the entire roxen server.
@@ -113,56 +112,46 @@ void set_default_locale(string def_loc)
     default_page_locale = default_locale;
 
 #ifdef LANGUAGE_DEBUG
-  report_debug("Default locale set to %O. ", default_locale);
+  report_debug("Default locale set to %O.\n", default_locale);
 #endif
 }
 
 void initiate_languages(string def_loc)
 {
-  report_debug( "Adding languages ... \b");
-  int start = gethrtime();
-
   set_default_locale(def_loc);
-
-  Locale.register_project(PROJECT, "languages/_xml_glue/%L.xml");
-
-  // Atleast read the default_locale, to make sure that fallback is ok.
-  if(!Locale.get_object(PROJECT, default_locale))
-    report_fatal("\n* The default language %O is not available!\n"
-		 "* This is a serious error.\n"
-		 "* Several RXML tags might not work as expected!\n",
-		 default_locale);
-
-  report_debug( "\bDone [%4.2fms]\n", (gethrtime()-start)/1000.0 );
+  language_list = filter(indices(Locale.Language),
+			 lambda(string in) {
+			   return sizeof(in)==3;
+			 } );
 }
-
 
 
 // ------------- The language functions ------------
 
-static string nil()
-{
-#ifdef LANGUAGE_DEBUG
-  report_debug("Cannot find that one in %O.\n", list_languages());
-#endif
-  return "No such function in that language, or no such language.";
+static string nil_l() {
+  return "No such language.";
+}
+
+static string nil_f() {
+  return "No such function in that language.";
 }
 
 /* Return a pointer to an language-specific conversion function. */
 public function language(string lang, string func, object|void id)
 {
 #ifdef LANGUAGE_DEBUG
-  report_debug("Function: '" + func + "' in "+ verify_locale(lang) +"\n");
+  report_debug("Function: %O in %O (%O)\n", func, verify_locale(lang), lang);
 #endif
-  return Locale.call(PROJECT, verify_locale(lang), 
-		     func, default_page_locale) || nil;  
+  lang  = verify_locale(lang);
+  if(!lang) return nil_l;
+  return [function]([object]Locale.Language[lang])[func] || nil_f;
 }
 
+static array(string) language_list;
 array(string) list_languages() {
-  return Locale.list_languages(PROJECT);
+  return language_list+({});
 }
 
 object language_low(string lang) {
-  object locale_obj = Locale.get_object(PROJECT, verify_locale(lang));
-  return locale_obj && [object] locale_obj->functions;
+  return [object]Locale.Language[verify_locale(lang)];
 }
