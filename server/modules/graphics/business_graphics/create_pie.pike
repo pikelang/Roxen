@@ -15,7 +15,7 @@ constant STORT = 1.0e40;
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.36 1998/03/05 17:08:38 hedda Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.37 1998/03/05 18:04:03 hedda Exp $";
 
 /*
  * name = "BG: Create pies";
@@ -234,6 +234,9 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 
   if (!twoD)
     {
+      array arrfoo=copy_value(arr2);
+      for(int i=201; i<604; i+=2)
+	arrfoo[i]=arr2[i]+diagram_data["3Ddepth"];
       for(int i=0; i<401; i++)
 	{
 	  arrplus[2*i]=xc+(xr+w)*sin((i*2.0*PI/400.0)+FI);
@@ -244,11 +247,51 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	  
 	  
 	}
+      object skugg;
+      skugg=Image.image(piediagram->xsize(),piediagram->ysize(), 255,255,255);
+      object foo;
+      foo=Image.image(piediagram->xsize(),piediagram->ysize(), 255,255,255);
+      skugg->tuned_box(xc,yc-yr-1,xc+xr+1,1+yc+yr+diagram_data["3Ddepth"],  
+		       ({			 
+			 ({255,255,255}),
+			 ({100,100,100}),
+			 ({255,255,255}),
+			 ({100,100,100})		      
+		       }));
+      skugg->tuned_box(xc-xr-1,yc-yr-1,xc,1+yc+yr+diagram_data["3Ddepth"],  
+		       ({			 
+			 ({100,100,100}),
+			 ({255,255,255}),
+			 ({100,100,100}),
+			 ({255,255,255})
+		       }));
+      skugg->polyfill(({0,0,xc,0})
+		      +
+		      arr2[200..401]);
+      skugg->polyfill(
+		      arr2[..201]
+		      +
+		      ({piediagram->xsize()-1,0,xc,0})
+		      );
+      skugg->polyfill(
+		      arrfoo[200..401]
+		      +
+		      ({xc,piediagram->ysize()-1,
+			piediagram->xsize()-1,piediagram->ysize()-1})
+		      );
+      skugg->polyfill(
+		      arrfoo[400..601]+
+		      ({0,piediagram->ysize()-1,xc,piediagram->ysize()-1
+		      })
+		      );
       
       edge_nr=0;
       for(i=0; i<t; i++)
 	{
-	  piediagram->setcolor(@diagram_data["datacolors"][i]);
+	  piediagram->setcolor(
+			       @diagram_data["datacolors"][i]
+			       );
+	  
 	  if (pnumbers[i])
 	    {
 	      piediagram->
@@ -261,9 +304,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	    }
 	  edge_nr+=pnumbers[i];
 	}
-      array arrfoo=copy_value(arr2);
-      for(int i=201; i<604; i+=2)
-	arrfoo[i]=arr2[i]+diagram_data["3Ddepth"];
+      piediagram=piediagram*skugg;
 
       piediagram->setcolor(0,0,0);
       piediagram->polyfill(
