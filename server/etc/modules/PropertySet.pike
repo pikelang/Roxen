@@ -246,17 +246,21 @@ private constant all_properties_dir = all_properties_common;
 //!   @tt{DAV:getlastmodified@}.
 multiset(string) query_all_properties()
 {
-  multiset(string) props =
-    (get_stat()->isreg ? all_properties_file : all_properties_dir) + (<>);
+  Stat st = get_stat();
+  if (st) {
+    multiset(string) props =
+      (get_stat()->isreg ? all_properties_file : all_properties_dir) + (<>);
 
-  // This isn't necessary for the Content-Length and Content-Type
-  // headers since RequestID.make_response_headers always sets those.
-  mapping(string:string) hdrs = get_response_headers();
-  if (hdrs["Content-Language"]) props["DAV:getcontentlanguage"] = 1;
-  if (hdrs->ETag)               props["DAV:getetag"] = 1;
-  if (hdrs["Last-Modified"])    props["DAV:getlastmodified"] = 1;
-
-  return props;
+    // This isn't necessary for the Content-Length and Content-Type
+    // headers since RequestID.make_response_headers always sets those.
+    mapping(string:string) hdrs = get_response_headers();
+    if (hdrs["Content-Language"]) props["DAV:getcontentlanguage"] = 1;
+    if (hdrs->ETag)               props["DAV:getetag"] = 1;
+    if (hdrs["Last-Modified"])    props["DAV:getlastmodified"] = 1;
+    return props;
+  }
+  // Null resource.
+  return all_properties_common + (<>);
 }
 
 //! Returns the value of the specified property, or an error code
@@ -277,10 +281,13 @@ string|array(SimpleNode)|mapping(string:mixed)
     // style file system.
   case "DAV:creationdate":	// RFC2518 13.1
     Stdio.Stat stat = get_stat();
-    int t = stat->ctime;
-    if (t > stat->atime) t = stat->atime;
-    if (t > stat->mtime) t = stat->mtime;
-    return Roxen.iso8601_date_time(t);	// MS kludge.
+    if (stat) {
+      int t = stat->ctime;
+      if (t > stat->atime) t = stat->atime;
+      if (t > stat->mtime) t = stat->mtime;
+      return Roxen.iso8601_date_time(t);	// MS kludge.
+    }
+    break;
 #endif
 
   case "DAV:displayname":	// RFC2518 13.2
@@ -307,7 +314,7 @@ string|array(SimpleNode)|mapping(string:mixed)
     return indices(id->conf->find_locks(abs_path, 0, 0, id))->get_xml();
 
   case "DAV:resourcetype":	// RFC2518 13.9
-    if (get_stat()->isdir) {
+    if ((get_stat()||([]))->isdir) {
       return ({
 	SimpleElementNode("DAV:collection", ([])),	// 12.2
       });
@@ -344,7 +351,7 @@ string|array(SimpleNode)|mapping(string:mixed)
     //
     //		This property is not defined on collections.
     Stdio.Stat stat = get_stat();
-    if (stat->isreg) {
+    if (stat && stat->isreg) {
       if (stat->mode & 0111) return "T";
       return "F";
     }
@@ -367,7 +374,7 @@ string|array(SimpleNode)|mapping(string:mixed)
 
   case "DAV:iscollection":	// draft-ietf-dasl-protocol-00 5.18
   case "DAV:isfolder":	// draft-hopmann-collection-props-00 1.5
-    if (get_stat()->isdir) {
+    if ((get_stat()||([]))->isdir) {
       return "1";
     }
     return "0";
@@ -376,7 +383,7 @@ string|array(SimpleNode)|mapping(string:mixed)
     // The following are properties in the DAV namespace
     // that Microsoft has stolen.
   case "DAV:isreadonly":	// MS
-    if (!(get_stat()->mode & 0222)) {
+    if (!((get_stat()||(["mode":0222]))->mode & 0222)) {
       return "1";
     }
     return "0";
@@ -384,7 +391,7 @@ string|array(SimpleNode)|mapping(string:mixed)
     if (path == "") return "1";
     return "0";
   case "DAV:lastaccessed":	// MS
-    return Roxen.iso8601_date_time(get_stat()->atime);
+    return Roxen.iso8601_date_time((get_stat()||([]))->atime);
   case "DAV:href":		// MS
     return id->url_base() + abs_path[1..];
   case "DAV:contentclass":	// MS
