@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.244 1999/12/27 19:03:34 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.245 1999/12/27 20:36:02 mast Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2252,6 +2252,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me )
 #endif
       report_error(LOCALE->
                    error_initializing_module_copy(moduleinfo->get_name(),
+						  err != "" &&
                                                   describe_backtrace(err)));
       return module[id];
     }
@@ -2868,9 +2869,6 @@ void enable_all_modules()
 {
   enabled_modules = retrieve("EnabledModules", this_object());
 
-  object ec = roxenloader.LowErrorContainer();
-  roxenloader.push_compile_error_handler( ec );
-
   array modules_to_process = indices( enabled_modules );
   string tmp_string;
 
@@ -2889,15 +2887,18 @@ void enable_all_modules()
   forcibly_added = (<>);
   foreach( modules_to_process, tmp_string )
   {
-    if( !forcibly_added[ tmp_string ] )
+    if( !forcibly_added[ tmp_string ] ) {
+      object ec = roxenloader.LowErrorContainer();
+      roxenloader.push_compile_error_handler( ec );
       if(err = catch( enable_module( tmp_string )))
         report_error(LOCALE->enable_module_failed(tmp_string, 
                                                   describe_backtrace(err)));
+      roxenloader.pop_compile_error_handler();
+      if( strlen( ec->get() ) )
+	report_error( "While enabling module "+tmp_string+":\n"+ec->get() );
+    }
   }
-  roxenloader.pop_compile_error_handler();
-  if( strlen( ec->get() ) )
-    report_error( "While enabling modules in "+name+":\n"+ec->get() );
-  report_notice("All modules for %s enabled in %3.1f seconds\n\n", 
+  report_notice("All modules for %s enabled in %3.1f seconds\n\n",
                 query_name(),(gethrtime()-start_time)/1000000.0);
 }
 
