@@ -1,12 +1,22 @@
 inherit Variable.Variable;
 inherit "html";
 
+//! This class implements a scheduler widget with three main states,
+//! never index, index every n:th hour or index every n:th x-day at y
+//! o'clock. In the "index every n:th hour" case the range is 1 to 23.
+//! In the "index every n:th x-day at y o'clock" the n-range is
+//! 1 to 9, the units are day and all the weekdays. The time range for
+//! y is all hours in a day.
+
 // Locale macros
 //<locale-token project="roxen_config"> LOCALE </locale-token>
 
 #define LOCALE(X,Y)    \
   ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
 
+//! Transforms the form variables given in the @[vl] attribute
+//! to the internal time representation as follows.
+//!
 //! @array
 //!   @elem int(0..2) sort
 //!     @int
@@ -18,7 +28,9 @@ inherit "html";
 //!         Every x y at z
 //!     @endint
 //!   @elem int(1..23) hour
+//!
 //!   @elem int(1..9) everynth
+//!
 //!   @elem int(0..7) day
 //!     @int
 //!       @value 0
@@ -28,7 +40,7 @@ inherit "html";
 //!       @value 2..7
 //!         Rest of weekdays
 //!     @endint
-//!   @elem int(0.23) time
+//!   @elem int(0..23) time
 //! @endarray
 array transform_from_form( string what, void|mapping vl )
 {
@@ -85,8 +97,17 @@ private mapping next_time(mapping from, int hour, void|int delta)
 }
 
 int get_next( int last )
-//! Get the next time that matches this schedule, starting with @[last].
-//! If last is 0, time(1) will be used instead.
+//! Get the next time that matches this schedule, starting from the
+//! posix time @[last]. If last is 0, time(1) will be used instead.
+//!
+//! @returns
+//!  When the next scheduled event is, represented by a posix time integer.
+//!  Note that the returnes time may already have occured, so all return
+//!  values < time() essentially means go ahead and do it right away.
+//!  Minutes and seconds are cleared in the return value, so if the scheduler
+//!  is set to every day at 5 o'clock, and this method is called at 5:42 it
+//!  will return the posix time representing 5:00, unless of course @[last]
+//!  was set to a posix time >= 5:00.
 {
   array vals = query();
   if( !vals[0] )
