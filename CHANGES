@@ -135,7 +135,7 @@ o Emit
     o fonts - A list of all fonts available. 
     o directory - Directory listings. 
     o path - Separate a path on '/'. 
-    o foreach - Traverse a list, e.g. the response from a multivalue select. 
+    o values - Traverse a list, e.g. the response from a multivalue select. 
     o cimg - Like the <cimg> tag, but entity based. 
       Includes &_.type;, &_.src;, &_.file-size;, &_.xsize;, &_.ysize;
                and &_.data; 
