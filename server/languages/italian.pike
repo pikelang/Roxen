@@ -1,6 +1,7 @@
 /*
  *	This code is copyrighted by Francesco Chemolli (kinkie@comedia.it)
- *	It is free for use in the Roxen WWW server.
+ *	It is free for use in the Roxen WWW server, under the terms of the
+ *	GNU General Public License.
  *	Feel free to change it in any way, except removing my name from it.
  *	This code is provided AS IS, without any warranty of any kind, implicit
  *	or explicit.
@@ -8,7 +9,7 @@
  *	would be rude, wouldn't it? ^_^
  */
 
-string cvs_version = "$Id: italian.pike,v 1.3 1997/01/09 14:39:07 grubba Exp $";
+string cvs_version = "$Id: italian.pike,v 1.4 1997/05/19 18:58:32 grubba Exp $";
 
 inline string month(int num)
 {
@@ -17,53 +18,11 @@ inline string month(int num)
 	    "Novembre", "Dicembre" })[ num - 1 ];
 }
 
-string ordered(int i)
-{
-  if (!i)
-    return "errore";
-  return i+"º";
-  // I know you prefer to use ISO latin-1, but I just can't type it :P
-  // Fixed. BTW, what is the problem typing 282 in emacs? /grubba
-}
-
-string date(int timestamp, mapping|void m)
-{
-  mapping t1=localtime(timestamp);
-  mapping t2=localtime(time(0));
-
-  if(!m) m=([]);
-
-  if(!(m["full"] || m["date"] || m["time"]))
-  {
-    if(t1["yday"] == t2["yday"] && t1["year"] == t2["year"])
-      return "oggi, alle "+ ctime(timestamp)[11..15];
-  
-    if(t1["yday"]+1 == t2["yday"] && t1["year"] == t2["year"])
-      return "ieri, alle "+ ctime(timestamp)[11..15];
-  
-    if(t1["yday"]-1 == t2["yday"] && t1["year"] == t2["year"])
-      return "domani, alle "+ ctime(timestamp)[11..15];
-  
-    if(t1["year"] != t2["year"])
-      return (t1["mday"]+ " " +
-				month(t1["mon"]+1) + " " + (string)(1900+(int)t1["year"]));
-    return (t1["mday"]+ " " + month(t1["mon"]+1));
-  }
-  if (m["full"])
-    return ctime(timestamp)[11..15]+", il "+t1["mday"]+" "+month(t1["mon"])+
-      " "+(string)(1900+(int)t1["year"]);
-  if(m["date"])
-    return t1["mday"]+" "+month(t1["mon"])+" "+(string)(1900+(int)t1["year"]);
-  if(m["time"])
-    return ctime(timestamp)[11..15];
-}
-
 string number (int num)
 {
   if (num<0)
     return "meno "+number(-num);
   string tmp;
-  werror ("got: \""+num+"\"\n");
   switch (num)
     {
     case 0:  return "";
@@ -128,6 +87,60 @@ string number (int num)
   return ("error");
 }
 
+string ordered(int i)
+{
+  if (!i)
+    return "errore";
+  return i+"º";
+  // I know you prefer to use ISO latin-1, but I just can't type it :P
+  // Fixed. BTW, what is the problem typing ^Q282 in emacs? /grubba
+	// Maybe I don't use emacs? /kinkie
+}
+
+string gendered_num (int num) {
+	switch (number(num)[..0]) {
+		case "a": case "e": case "i": case "o": case "u":
+							return "l'"+num;
+		default: return "il "+num;
+	}
+	return (string)num;
+}
+
+string date(int timestamp, mapping|void m)
+{
+  mapping t1=localtime(timestamp);
+  mapping t2=localtime(time(0));
+
+  if(!m) m=([]);
+
+  if(!(m["full"] || m["date"] || m["time"]))
+  {
+    if(t1["yday"] == t2["yday"] && t1["year"] == t2["year"])
+      return "oggi, alle "+ ctime(timestamp)[11..15];
+  
+    if(t1["yday"]+1 == t2["yday"] && t1["year"] == t2["year"])
+      return "ieri, alle "+ ctime(timestamp)[11..15];
+  
+    if(t1["yday"]-1 == t2["yday"] && t1["year"] == t2["year"])
+      return "domani, alle "+ ctime(timestamp)[11..15];
+  
+    if(t1["year"] != t2["year"])
+      return gendered_num(t1["mday"])+ " " +
+				month(t1["mon"]+1) + " " + (string)(1900+(int)t1["year"]);
+    return gendered_num(t1["mday"])+ " " + month(t1["mon"]+1);
+  }
+
+  if (m["full"])
+    return "alle "+ ctime(timestamp)[11..15]+", "+
+			gendered_num(t1["mday"])+
+			" "+month(t1["mon"])+ " "+(string)(1900+(int)t2["year"]);
+  if(m["date"])
+    return gendered_num(t1["mday"])+
+			" "+month(t1["mon"])+" "+(string)(1900+(int)t2["year"]);
+  if(m["time"])
+    return ctime(timestamp)[11..15];
+}
+
 string day(int num)
 {
   return ({ "domenica","lunedì","martedì","mercoledì",
@@ -138,4 +151,3 @@ array aliases()
 {
   return ({ "it", "ita", "italiano", "italian" });
 }
-
