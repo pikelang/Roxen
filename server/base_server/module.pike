@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.50 1999/11/02 01:37:22 per Exp $ */
+/* $Id: module.pike,v 1.51 1999/11/05 07:17:05 per Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -308,6 +308,11 @@ void deflocaledoc( string locale, string variable,
     report_debug("Invalid locale: "+locale+". Ignoring.\n");
   else
     locs[locale]( this_object(), variable, name, doc, translate );
+}
+
+void save()
+{
+  my_configuration()->save_one( this_object() );
 }
 
 // Convenience function, define an invisible variable, this variable

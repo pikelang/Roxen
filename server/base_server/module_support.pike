@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: module_support.pike,v 1.31 1999/11/04 18:51:25 grubba Exp $";
+// string cvs_version = "$Id: module_support.pike,v 1.32 1999/11/05 07:17:05 per Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <stat.h>
@@ -199,6 +199,11 @@ public mixed query(void|string var)
   return 0;
 }
 
+mixed save()
+{
+  roxenp()->store( "Variables", variables, 0, 0 );
+}
+
 mixed set(string var, mixed val)
 {
 #if DEBUG_LEVEL > 30
@@ -343,6 +348,7 @@ class Module
 
   object instance( object conf )
   {
+//     werror("Instantiate %O for %O.\n", this_object(), conf );
     return load( filename )( conf );
   }
 
@@ -372,21 +378,27 @@ class Module
       if( data[ 2 ] )
         description = data[2];
       if( sizeof( data ) > 4 )
-        multiple_copies = !!data[4];
+        multiple_copies = !data[4];
+      else
+        multiple_copies = 1;
+
+      last_checked = file_stat( filename )[ ST_MTIME ];
+
       save();
       destruct( mod );
       return 1;
     };
-    if( q )
-      werror( describe_backtrace( q ) );
     return 0;
   }
 
   int rec_find_module( string what, string dir )
   {
     array dirlist = (get_dir(dir) || ({})) - ({"CVS"});
-    if( search( dirlist, ".nomodules" ) != -1)
+
+    if( (search( dirlist, ".nomodules" ) != -1) ||
+        (search( dirlist, ".no_modules" ) != -1) )
       return 0;
+
     foreach( dirlist, string file )
       catch 
       {
@@ -399,7 +411,7 @@ class Module
 
         if( strlen( file ) < 3 )
           continue;
-        if( file[-1] == '~' ) 
+        if( file[-1] == '~' )
           continue;
         if( file[-1] == 'o' && file[-2] == '.') 
           continue;
@@ -439,7 +451,7 @@ class Module
         if(!(stat = file_stat( filename ) ))
           filename=0;
         else
-          if( last_checked == stat[ ST_MTIME ] )
+          if( data->last_checked == stat[ ST_MTIME ] )
           {
             last_checked = stat[ ST_MTIME ];
             type = data->type;
@@ -448,6 +460,8 @@ class Module
             description = data->description;
             return 1;
           }
+          else
+            last_checked = stat[ ST_MTIME ];
       }
     }
     if( filename )
@@ -476,29 +490,40 @@ string strip_extention( string from )
   return from;
 }
 
+string extension( string from )
+{
+  from = reverse(from);
+  sscanf(from, "%[^.].", from );
+  from = reverse(from);
+  return from||"";
+}
+
 mapping(string:Module) modules;
 array rec_find_all_modules( string dir )
 {
-  array dirlist = get_dir( dir ) - ({"CVS"});
   array modules = ({});
+  catch
+  {
+    array dirlist = get_dir( dir ) - ({"CVS"});
 
-  if( search( dirlist, ".nomodules" )  != -1)
-    return ({});
+    if( search( dirlist, ".nomodules" )  != -1)
+      return ({});
 
-  foreach( dirlist, string file )
-    catch 
-    {
-      if( file[-1] == '~' ) continue;
-      if( (search( file, ".pike" ) == strlen(file)-5 ) ||
-          (search( file, ".so" ) == strlen(file)-3 ) )
+    foreach( dirlist, string file )
+      catch 
       {
-        Stdio.File f = Stdio.File( dir+file, "r" );
-        if( (f->read( 4 ) != "#!NO" ) )
-          modules |= ({ strip_extention( file ) });
-      }
-      if( file_stat( file )[ ST_SIZE ] == -2 )
-        modules |= rec_find_all_modules( dir+file+"/" );
-    };
+        if( file[0] == '.' ) continue;
+        if( file[-1] == '~' ) continue;
+        if( (< "so", "pike" >)[ extension( file ) ] )
+        {
+          Stdio.File f = Stdio.File( dir+file, "r" );
+          if( (f->read( 4 ) != "#!NO" ) )
+            modules |= ({ strip_extention( file ) });
+        } 
+        else if( file_stat( dir+file )[ ST_SIZE ] == -2 )
+          modules |= rec_find_all_modules( dir+file+"/" );
+      };
+  };
   return modules;
 }
 
@@ -507,8 +532,10 @@ array(Module) all_modules()
   array possible = ({});
   foreach( roxenp()->query( "ModuleDirs" ), string dir )
     possible |= rec_find_all_modules( dir );
+
   foreach( possible, string p )
-    modules[ p ] = Module( p );
+    modules[ p ] = find_module( p );
+
   array(Module) tmp = values( modules ) - ({ 0 });
   sort( tmp->get_name(), tmp );
   return tmp;

@@ -439,9 +439,23 @@ string set_variable( string v, object in, mixed to, object id )
   else
     var[ VAR_VALUE ] = val;
 
-  remove_call_out( in->save );
-  call_out( in->save, 1 );
-
+  if( in->save_me )
+  {
+    remove_call_out( in->save_me );
+    call_out( in->save_me, 1 );
+  } 
+  else if( in->save )
+  {
+    remove_call_out( in->save );
+    call_out( in->save, 1 );
+  } else {
+    if( in->my_configuration )
+    {
+      in = in->my_configuration();
+      remove_call_out( in->save );
+      call_out( in->save, 1 );
+    }
+  }
   return warning;
 }
 

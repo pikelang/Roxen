@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.216 1999/11/02 01:37:21 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.217 1999/11/05 07:17:04 per Exp $";
 #include <module.h>
 #include <roxen.h>
 #include <request_trace.h>
@@ -2144,6 +2144,11 @@ void start(int num)
 
 // Save this configuration. If all is included, save all configuration
 // global variables as well, otherwise only all module variables.
+void save_me()
+{
+  save_one( 0 );
+}
+
 void save(int|void all)
 {
   mapping mod;
@@ -2201,7 +2206,9 @@ object enable_module( string modname )
   mixed err;
   int module_type;
 
-  sscanf(modname, "%s#%d", modname, id );
+  if( sscanf(modname, "%s#%d", modname, id ) != 2 )
+    /* here we go again... */
+    while( modules[modname] && modules[modname]->copies[id++] );
 
 #if constant(gethrtime)
   int start_time = gethrtime();

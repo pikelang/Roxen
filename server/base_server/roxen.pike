@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.343 1999/11/02 10:12:26 per Exp $
+ * $Id: roxen.pike,v 1.344 1999/11/05 07:17:05 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.343 1999/11/02 10:12:26 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.344 1999/11/05 07:17:05 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -1162,6 +1162,7 @@ array(string) find_ips_for( string what )
 
 void unregister_url( string url ) 
 {
+  report_debug("Unregister "+url+"\n");
   if( urls[ url ] && urls[ url ]->port )
   {
     urls[ url ]->port->unref(url);
@@ -1557,8 +1558,8 @@ class ImageCache
       if( args["true-alpha"] )
         true_alpha = 1;
 
-      if( args["background"] )
-        bgcolor = Image.Color( args["background"] );
+      if( args["background"] || args["background-color"])
+        bgcolor = Image.Color( (args["background"]||args["background-color"]) );
 
       if( args["opaque-value"] )
       {
@@ -1597,9 +1598,11 @@ class ImageCache
         }
       }
 
-      if( args->maxwidth || args->maxheight )
+      if( args->maxwidth || args->maxheight || 
+          args["max-width"] || args["max-height"])
       {
-        int x = (int)args->maxwidth, y = (int)args->maxheight;
+        int x = (int)args->maxwidth||(int)args["max-width"];
+        int y = (int)args->maxheight||(int)args["max-height"];
         if( x && reply->xsize() > x )
         {
           reply = reply->scale( x, 0 );
@@ -1612,6 +1615,13 @@ class ImageCache
           if( alpha )
             alpha = alpha->scale( 0, y );
         }
+      }
+
+      if( bgcolor && alpha )
+      {
+        reply = Image.Image( reply->xsize(),
+                             reply->ysize(), bgcolor )
+              ->paste_mask( reply, alpha );
       }
 
       if( quant || (format=="gif") )
@@ -1636,13 +1646,6 @@ class ImageCache
         enc_args->colortable = ct;
       if( alpha )
         enc_args->alpha = alpha;
-
-      if( bgcolor && alpha )
-      {
-        reply = Image.Image( reply->xsize(),
-                             reply->ysize(), bgcolor )
-              ->paste_mask( reply, alpha );
-      }
 
       foreach( glob( "*-*", indices(args)), string n )
         if(sscanf(n, "%*[^-]-%s", string opt ) == 2)
