@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.46 2000/09/10 16:47:48 nilsson Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.47 2000/09/12 11:26:32 per Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -730,7 +730,14 @@ class CGIScript
 	  options->gid = 65534;
 	}
       }
-      options->setgroups = extra_gids;
+
+      // this is not really 100% correct, since it will keep the group list
+      // of roxen when starting a script as a different user when that user
+      // should really have no extra groups at all, but on Linux this fails
+      // for some reason. So, when the extra group list is empty, ignore it
+      if( sizeof( extra_gids ) ) 
+        options->setgroups = extra_gids;
+
       if( !uid && query("warn_root_cgi") )
         report_warning( "CGI: Running "+command+" as root (as per request)" );
     }
