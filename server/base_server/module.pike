@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.36 1998/11/18 04:53:48 per Exp $ */
+/* $Id: module.pike,v 1.37 1998/11/22 17:07:26 per Exp $ */
 
 #include <module.h>
 
@@ -315,8 +315,9 @@ mixed query(string|void var, int|void ok)
   if(var) {
     if(variables[var])
       return variables[var][VAR_VALUE];
-    else if(!ok)
+    else if(!ok && var[0] != '_')
       error("Querying undefined variable.\n");
+    return 0;
   }
 
   return variables;
