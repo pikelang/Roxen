@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.81 1999/02/22 16:05:47 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.82 1999/02/22 16:33:16 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -396,6 +396,9 @@ class imap_mail
 
     array(object|mixed) `()(mixed response)
     {
+      if (stringp(response)) {
+	return ({ wanted, sprintf("{%d}\r\n", sizeof(response)), response });
+      }
       return ({ wanted, response });
     }
   }
