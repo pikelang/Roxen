@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.253 2000/08/22 02:34:14 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.254 2000/08/22 19:17:43 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -301,9 +301,6 @@ void decode_charset_encoding( string|function(string:string) decoder )
 // Parse a HTTP/1.1 HTTP/1.0 or 0.9 request, including form data and
 // state variables.  Return 0 if more is expected, 1 if done, and -1
 // if fatal error.
-
-void end(string|void a,int|void b);
-
 object pipe;
 
 //used values: throttle->doit=0|1 to enable it
@@ -1046,14 +1043,15 @@ void disconnect()
 {
   file = 0;
 #ifdef REQUEST_DEBUG
-  if (my_fd) MARK_FD("my_fd in HTTP disconnected?");
+  if (my_fd) 
+    MARK_FD("my_fd in HTTP disconnected?");
 #endif
   if(do_not_disconnect)
     return;
   destruct();
 }
 
-void end(string|void s, int|void keepit)
+void end(int|void keepit)
 {
 #ifdef PROFILE
   float elapsed = SECHR(HRTIME()-req_time);
@@ -1073,7 +1071,7 @@ void end(string|void s, int|void keepit)
 #endif
 
   if(keepit
-     && !file->raw  
+     && !file->raw
      && (misc->connection == "keep-alive" ||
          (prot == "HTTP/1.1" && misc->connection != "close"))
      && my_fd)
@@ -1376,7 +1374,7 @@ void do_log()
       conf->log(file, this_object());
     }
   }
-  end(0,1);
+  end(1);
   return;
 }
 
@@ -1979,7 +1977,9 @@ void got_data(mixed fooid, string s)
 
    case 1:
     REQUEST_WERR("HTTP: Stupid Client Error");
-    end((prot||"HTTP/1.0")+" 500 Stupid Client Error\r\nContent-Length: 0\r\n\r\n");
+    my_fd->write((prot||"HTTP/1.0")+" 500 Stupid Client Error\r\n"
+              "Content-Length: 0\r\n\r\n");
+    end();
     return;			// Stupid request.
 
    case 2:
