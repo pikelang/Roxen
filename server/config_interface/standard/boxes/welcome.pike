@@ -15,5 +15,6 @@ String box_doc  = _(0,"Roxen welcome message and news");
 
 string parse( RequestID id )
 {
+  // Ok. I am lazy. This could be optimized. :-)
   return "<eval><insert file=\"welcome.txt\" /></eval>";
 }
