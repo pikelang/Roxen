@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.87 2001/08/03 12:06:22 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.88 2001/08/23 11:45:15 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -699,12 +699,13 @@ int get_file_stat( string f, RequestID id  )
 {
   int res;
 
-  //  -1 is used to cache negative results
-  if( __stat_cache[ f ] ) {
-    res = __stat_cache[f];
-    return (res > 0) && res;
-  }
-
+  //  -1 is used to cache negative results. When SiteBuilder crawler runs
+  //  we must let the stat_file() run unconditionally to register
+  //  dependencies properly.
+  if (!id->misc->persistent_cache_crawler)
+    if (res = __stat_cache[f])
+      return (res > 0) && res;
+  
   call_out( m_delete, 10, __stat_cache, f );
   res = __stat_cache[ f ] = (id->conf->stat_file( f,id )
 			     || file_stat( f )
