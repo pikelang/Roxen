@@ -10,7 +10,7 @@
 #define old_rxml_compat 1
 #define old_rxml_warning id->conf->api_functions()->old_rxml_warning[0]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.4 1999/08/17 14:50:40 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.5 1999/09/10 22:29:54 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -167,7 +167,7 @@ string tag_realfile(string tag, mapping m, object id)
 
 string tag_redirect(string tag, mapping m, object id)
 {
-  if (!m->to)
+  if (!(m->to && sizeof (m->to)))
     return rxml_error(tag, "Requires attribute \"to\".", id);
 
   multiset(string) orig_prestate = id->prestate;

@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.184 1999/08/25 20:50:53 leif Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.185 1999/09/10 22:29:36 mast Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -1442,7 +1442,7 @@ string tag_header(string tag, mapping m, object id, object file,
 string tag_redirect(string tag, mapping m, object id, object file,
 		    mapping defines)
 {
-  if (!m->to) {
+  if (!(m->to && sizeof (m->to))) {
     return(id->misc->debug?"Redirect requires attribute \"to\".":"");
   }
 
