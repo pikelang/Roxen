@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.55 1997/08/13 23:25:49 neotron Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.56 1997/08/15 02:03:03 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -395,12 +395,22 @@ array (function) first_modules(object id)
     for(i=9; i>=0; i--)
     {
       object *d, p;
-      if(d=pri[i]->first_modules)
-	foreach(d, p)
-	  if(p->first_try)
+      if(d=pri[i]->first_modules) {
+	perror("d: %O\n", d);
+	foreach(d, p) {
+	  perror("Trying %O... ", p);
+	  if(p->first_try) {
+	    perror("OK, adding %O\n", p->first_try);
 	    first_module_cache += ({ p->first_try });
+	  } else {
+	    perror("No first_try function!\n");
+	  }
+	}
+      }
     }
   }
+  perror("first_modules() returns: %O\n", first_module_cache);
+
   return first_module_cache;
 }
 
@@ -905,19 +915,20 @@ mapping|int low_get_file(object id, int|void no_magic)
   // quite unreadable, but, you cannot win them all.. 
 
 #ifdef URL_MODULES
-  // Map URL-modules.
+  // Map URL-modules
+  perror("url_modules: %O\n", url_modules(id));
   foreach(url_modules(id), funp)
   {
     LOCK(funp);
     tmp=funp( id, file );
     UNLOCK();
     
-    if(tmp && mappingp( tmp ) || objectp( tmp ))
+    if(mappingp(tmp)) 
+      return tmp;
+    if(objectp( tmp ))
     {
       array err;
 
-      if(tmp->error) 
-	return tmp;
       nest ++;
       err = catch {
 	if( nest < 20 )
@@ -1081,6 +1092,44 @@ public array find_dir(string file, object id)
   if(file[0] != '/')
     file = "/" + file;
 
+#ifdef URL_MODULES
+  // Map URL-modules
+  perror("url_modules: %O\n", url_modules(id));
+  foreach(url_modules(id), function funp)
+  {
+    string of = id->not_query;
+    id->not_query = file;
+    LOCK(funp);
+    tmp=funp( id, file );
+    UNLOCK();
+
+    if(mappingp( tmp ))
+    {
+      id->not_query=of;
+      return 0;
+    }
+    if(objectp( tmp ))
+    {
+      array err;
+      nest ++;
+      
+      file = id->not_query;
+      err = catch {
+	if( nest < 20 )
+	  tmp = (id->conf || this_object())->find_dir( file, id );
+	else
+	  error("Too deep recursion in roxen::find_dir() while mapping "
+		+file+".\n");
+      };
+      nest = 0;
+      if(err)
+	throw(err);
+      return tmp;
+    }
+    id->not_query=of;
+  }
+#endif
+
   foreach(location_modules(id), tmp)
   {
     loc = tmp[0];
@@ -1114,6 +1163,44 @@ public array stat_file(string file, object id)
   array s, tmp;
   
   file=replace(file, "//", "/"); // "//" is really "/" here...
+
+#ifdef URL_MODULES
+  // Map URL-modules
+  perror("url_modules: %O\n", url_modules(id));
+  foreach(url_modules(id), function funp)
+  {
+    string of = id->not_query;
+    id->not_query = file;
+
+    LOCK(funp);
+    tmp=funp( id, file );
+    UNLOCK();
+
+    if(mappingp( tmp )) {
+      id->not_query = of;
+      return 0;
+    }
+    if(objectp( tmp ))
+    {
+      file = id->not_query;
+
+      array err;
+      nest ++;
+      err = catch {
+	if( nest < 20 )
+	  tmp = (id->conf || this_object())->stat_file( file, id );
+	else
+	  error("Too deep recursion in roxen::stat_file() while mapping "
+		+file+".\n");
+      };
+      nest = 0;
+      if(err)
+	throw(err);
+      return tmp;
+    }
+    id->not_query = of;
+  }
+#endif
     
   // Map location-modules.
   foreach(location_modules(id), tmp)
@@ -1672,8 +1759,10 @@ object enable_module( string modname )
     if(module->type & MODULE_FILTER)
       pri[pr]->filter_modules += ({ me });
 
-    if(module->type & MODULE_FIRST)
+    if(module->type & MODULE_FIRST) {
+      perror("MODULE_FIRST added: %O\n", me);
       pri[pr]->first_modules += ({ me });
+    }
 
     if(module->copies)
       module->copies[(int)id] = me;
@@ -2102,9 +2191,11 @@ int disable_module( string modname )
     for(pr=0; pr<10; pr++)
       pri[pr]->filter_modules -= ({ me });
 
-  if( module->type & MODULE_FIRST )
+  if( module->type & MODULE_FIRST ) {
+    perror("Removing MODULE_FIRST: %O\n", me);
     for(pr=0; pr<10; pr++)
       pri[pr]->first_modules -= ({ me });
+  }
 
   if( module->type & MODULE_LOGGER )
     for(pr=0; pr<10; pr++)
