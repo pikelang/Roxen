@@ -102,6 +102,15 @@ Paragraph 2</result>
 
 
 <test no-canon="t">
+<rxml><wash-html unparagraphify="t"><p>Paragraph 1</p>
+<p>Paragraph 2</p></wash-html></rxml>
+<result>Paragraph 1
+
+Paragraph 2</result>
+</test>
+
+
+<test no-canon="t">
 <rxml><wash-html unparagraphify="t"><P>Paragraph 1</P>
 <p>Paragraph 2</p></wash-html></rxml>
 <result>Paragraph 1
