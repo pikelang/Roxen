@@ -19,13 +19,20 @@
      (where "Roxen-archive-name" is the name of the Roxen archive
      file.).
 
-  3. Type "cd Roxen_1.2" to change to the new directory. This directory
-     should contain at the very least four directories: 
-     server (Roxen server source), pike (the Pike intepreter), 
-     extern (misc. programs used by Roxen) and tools (misc tools). See
-     README for more information about the directory structure.
+  3. Type "cd roxen_version" to change to the new directory. This
+     directory should contain at the very least four directories:
+     server (Roxen server source), pike (the Pike intepreter), extern
+     (misc. programs used by Roxen) and tools (misc tools). See README
+     for more information about the directory structure.
 
-  4. Type ./configure --prefix=<wanted_base_path_for_roxen>
+     (Where roxen_version is the name of the unarchived Roxen directory.)
+
+ 4a. Type "make install" to install Roxen Challenger in /usr/local/roxen.
+
+ 4b. (This is an alternative method if you want to install Roxen somewhere
+      else than /usr/local/roxen, or if method 4a fails.)
+
+     Type ./configure --prefix=<wanted_base_path_for_roxen>
      (defaults to /usr/local, thus placing Roxen in /usr/local/roxen/)
      followed by make and make install to build the binaries and copy them 
      to the correct place.
@@ -36,6 +43,9 @@
      
   5. If everything worked fine and the compilation is done, type 
      cd <dir>/server.
+
+     (Where <dir> is /usr/local/roxen following 4a, or
+      <wanted_base_path_for_roxen> if you used 4b.)
 
   6. Start the install script by typing ./install.
 
@@ -52,10 +62,10 @@
  http://www.roxen.com/
 
 ----------------------------------------------------------------------------
-Example installation session:
+Example installation session using 4b:
 
-bash$ tar xzf Roxen_1.2.tar.gz
-bash$ cd Roxen_1.2
+bash$ tar xzf roxen_1.2.tar.gz
+bash$ cd roxen_1.2
 bash$ mkdir solaris
 bash$ cd solaris
 bash$ ../configure --prefix=/usr/www
