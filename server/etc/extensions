@@ -1,62 +1,172 @@
-# $Id: extensions,v 1.37 1999/09/09 23:09:38 nilsson Exp $
+# $Id: extensions,v 1.38 1999/11/07 17:21:29 nilsson Exp $
 # name="Extension database";
 # doc="The database used to map from extension to mime-type (example: *.gif to image/gif)";
 #
+# Lines are commented with ## to resolve name conflicts (same extension mapping to several
+# MIME-types).
 
+
+# -------------------- Audio ---------------------
+
+# IANA registered
+
+au	audio/basic
+snd	audio/basic
+# audio/32kadpcm
+# audio/vnd.qcelp
+# audio/vnd.digital-winds
+# audio/vnd.lucent.voice
+# audio/vnd.octel.sbc
+# audio/vnd.rhetorex.32kadpcm
+# audio/vnd.vmx.cvsd
+# audio/vnd.nortel.vbk
+# audio/vnd.cns.anp1
+# audio/vnd.cns.inf1
+# audio/L16
+
+# Other
+
+abs	audio/x-mpeg
 aif	audio/x-aiff
 aifc	audio/x-aiff
 aiff	audio/x-aiff
-au	audio/basic
-m3u 	audio/x-mpegurl
+cht	audio/x-dspeech
+dus	audio/x-dspeech
+es	audio/echospeech
+gsm	audio/gsm
+la      audio/x-nspaudio
+lma     audio/x-nspaudio
+m3u	audio/x-mpegurl
 mid	audio/midi
-midi    audio/midi 
+midi	audio/midi
 mod	audio/x-mod
 mp2	audio/x-mpeg
-mp3 	audio/x-mpeg
+mp3	audio/x-mpeg
 mp3url	audio/x-mpegurl
-mpa	audio/x-mpeg
+##mpa	audio/x-mpeg
+mpega	audio/x-mpeg
+pls	audio/x-mpegurl
 psid	audio/x-psid
-# This is the standard extension used by the RealVideo 5.0 encoder
-rm	audio/x-pn-realaudio
 ra	audio/x-pn-realaudio
 ram	audio/x-pn-realaudio
-rpm 	audio/x-pn-realaudio-plugin
+rmi	audio/midi
+rmm	audio/x-pn-realaudio
+rmf	audio/rmf
+rpm	audio/x-pn-realaudio-plugin
+sd2	audio/x-sd2
 sid	audio/x-psid
-snd	audio/basic
-vqf     audio/x-twinvq
-vqe     audio/x-twinvq-plugin
-vql     audio/x-twinvq
-vox     audio/voxware 
+tsi	audio/tsplayer
+vqf	audio/x-twinvq
+vqe	audio/x-twinvq-plugin
+vql	audio/x-twinvq
+vox	audio/voxware
 wav	audio/x-wav
+wtx	audio/x-wtx
 
-fif     image/fif 
-gif	image/gif
-ief	image/ief
-iff	image/ilbm
-ilbm	image/ilbm
+
+# -------------------- Image ---------------------
+
+# IANA registered
+
+jfif	image/jpeg
 jpe	image/jpeg
 jpeg	image/jpeg
 jpg	image/jpeg
-pbm	image/x-portable-bitmap
-pgm	image/x-portable-graymap
-pict  	image/pict
-pjpg    image/jpeg
-png	image/png
-pnm	image/x-portable-anymap
-ppm	image/x-portable-pixmap
-ras	image/x-cmu-raster
-rgb	image/x-rgb
-rs	image/x-sun-raster
-tga	image/x-targa
+pjp	image/jpeg
+pjpg	image/jpeg
+gif	image/gif
+ief	image/ief
+# image/g3fax
 tif	image/tiff
 tiff	image/tiff
+# image/cgm
+# image/naplps
+# image/vnd.dwg
+# image/vnd.svf
+# image/vnd.dxf
+png	image/png
+fpx	image/vnd.fpx
+# Also known as image/x-fpx and image/net-fpx
+# image/vnd.xiff
+# image/prs.btif
+# image/vnd.fastbidsheet
+wbmp    image/vnd.wap.wbmp
+# Also known as image/x-wap.wbmp
+# image/prs.pti
+# image/vnd.cns.inf2
+# image/vnd.mix
+
+# Other
+
+bmp	image/x-MS-bmp
+cmx	image/x-cmx
+clp	image/x-clp
+cod	image/cis-cod
+cpi	image/cpi
+cut	image/x-halo-cut
+dsf	image/x-mgx-dsf
+emf	image/x-emf
+etf	image/x-etf
+fh	image/x-freehand
+fh4	image/x-freehand
+fh5	image/x-freehand
+fh7	image/x-freehand
+fhc	image/x-freehand
+fif	image/fif
+iff	image/ilbm
+ilbm	image/ilbm
+jps	image/x-jps
+mac	image/x-macpaint
+mcf	image/vasa
+pbm	image/x-portable-bitmap
+pct	image/pict
+pcd	image/x-photo-cd
+pgm	image/x-portable-graymap
+pic	image/pict
+pict	image/pict
+pnm	image/x-portable-anymap
+pntg	image/x-macpaint
+ppm	image/x-portable-pixmap
+qif	image/x-quicktime
+qti	image/x-quicktime
+qtif	image/x-quicktime
+ras	image/x-cmu-raster
+rf	image/vnd.rn-realflash
+rgb	image/x-rgb
+rip	image/rip
+rp	image/vnd.rn-realpix
+rs	image/x-sun-raster
+svh	image/svh
+tga	image/x-targa
+wi	image/wavelet
 xbm	image/x-xbitmap
 xpm	image/x-xpixmap
 xwd	image/x-xwindowdump
 
-# AutoCad (AutoDesk)
-dwf	drawing/x-dwf
 
+# -------------------- Video ---------------------
+
+# IANA registered
+
+m1v	video/mpeg
+mpa	video/mpeg
+mpe	video/mpeg
+mpeg	video/mpeg
+mpegv	video/mpeg
+mpg	video/mpeg
+mpv	video/mpeg
+vbs	video/mpeg
+moov	video/quicktime
+mov	video/quicktime
+qt	video/quicktime
+viv     video/vnd.vivo
+vivo    video/vnd.vivo
+# video/vnd.motorola.video
+# video/vnd.motorola.videop
+
+# Other
+
+afl	video/animaflex
 anim3	video/x-anim
 anim5	video/x-anim
 anim7	video/x-anim
@@ -64,193 +174,439 @@ anim8	video/x-anim
 asf	video/x-ms-asf
 asx	video/x-ms-asf
 avi	video/x-msvideo
+dif	video/x-dv
+dv	video/x-dv
 fli	video/x-fli
-mov	video/quicktime
+ivf	video/x-ivf
+lsf	video/x-ms-asf
+lsx	video/x-ms-asx
+mng	video/mng
 movie	video/x-sgi-movie
-mpe	video/mpeg
-mpeg	video/mpeg
-mpg	video/mpeg
-qt	video/quicktime
-viv     video/vnd.vivo
-vivo    video/vnd.vivo
+mp2v	video/x-mpeg2
+mpv2	video/x-mpeg2
+rv	video/vnd.rn-realvideo
+vgm	video/x-videogram
+vgp	video/x-videogram-plugin
+vgx	video/x-videogram
 vos	video/vosaic
+xdr	video/x-videogram
+
+
+# -------------------- Text ---------------------
+
+# IANA registered
+
+bat	text/plain
+java	text/plain
+text	text/plain
+txt	text/plain
+rtx	text/richtext
+# text/enriched
+tsv	text/tab-separated-values
+htm	text/html
+html	text/html
+htp	text/html
+shtml	text/html
+sgm	text/sgml
+sgml	text/sgml
+# text/vnd.latex-z
+# text/vnd.fmi.flexstor
+# text/uri-list
+# text/vnd.abc
+# text/rfc822-headers
+# text/vnd.in3d.3dml
+# text/prs.lines.tag
+# text/vnd.in3d.spot
+css	text/css
+xml	text/xml
+rtf	text/rtf
+# text/directory
+# text/calendar
+wml	text/vnd.wap.wml
+# Also known as text/x-wap.wml
+wmls	text/vnd.wap.wmlscript
+# text/vnd.motorola.reflex
+# text/vnd.fly
+
+# Other
 
 c	text/x-c-code
 cc	text/x-c++-code
-css	text/css
+cpp	text/x-c++-code
 etx	text/x-setext
 h	text/x-include-file
-htm	text/html
-html	text/html
-java	text/plain
-rtx	text/richtext
+hdml	text/x-hdml
+htt	text/webviewhtml
+pgr	text/parsnegar-document
+rt	text/vnd.rn-realtext
 rxml	text/roxencode
-sgm     text/x-sgml
-sgml    text/x-sgml
-shtml	text/html
-spider  text/spidercode 
+spider	text/spidercode
 spml	text/spinnercode
-spml    text/spidercode 
-tsv     text/tab-separated-values
-txt	text/plain
-vcf     text/x-vcard
-vcs     text/x-vcal
+##spml	text/spidercode
+##src	text/speech
+##talk	text/speech
+vcf	text/x-vcard
+vcs	text/x-vcal
 
-aab 	application/x-authorware-bin
-aam 	application/x-authorware-map
-aas 	application/x-authorware-seg
+
+# -------------------- Application ---------------------
+
+123	application/vnd.lotus-1-2-3
+aab	application/x-authorware-bin
+aam	application/x-authorware-map
+aas	application/x-authorware-seg
+adr	application/x-msaddr
 ai	application/postscript
+alt	application/x-up-alert
+aos	application/x-nokia-9000-communicator-add-on-software
+apr	application/vnd.lotus-approach
 arj	application/octet-stream
-asn     application/astound
-asp     application/x-asap 
+asd	application/astound
+asn	application/astound
+asp	application/x-asap
+asz	application/astound
+axs	application/olescript
 bcpio	application/x-bcpio
 bin	application/octet-stream
 cairn	application/x-cairn
+ca_cert application/x-x509-ca-cert
 cert	application/x-x509-ca-cert
 cer	application/x-x509-ca-cert
 cdf	application/x-netcdf
+##cdf	application/x-cdf	This is what IE thinks
 cdr	application/x-coreldraw
-cdrw    application/x-coreldraw
+cdrw	application/x-coreldraw
 chat	application/x-chat
+che	application/x-up-cacheop
+ckl	application/x-fortezza-ckl
 class	application/x-java-vm
+cnc	application/x-cnc
+coda	application/x-coda
 com	application/octet-stream
+con	application/x-connector
 cpio	application/x-cpio
+crl	application/x-pkcs7-crl
+crt	application/x-x509-ca-cert
 csh	application/x-csh
+csm	application/x-cu-seeme
+cu	application/x-cu-seeme
+dcr	application/x-director
+der	application/x-x509-ca-cert
+dir	application/x-director
 dll	application/octet-stream
-dnt     application/donut
-# Too general, but also too common to not be defined.
+dms	application/x-diskmasher
+dnt	application/donut
 doc	application/msword
-donut   application/donut
+donut	application/donut
+dot	application/msword
 drv	application/octet-stream
+dst	application/tajima
 dvi	application/x-dvi
+dxr	application/x-director
+enc	application/pre-encrypted
 eps	application/postscript
-evy     application/x-envoy 
+erf	application/x-hsp-erf
+evy	application/x-envoy
 exe	application/octet-stream
+fdf     application/vnd.fdf
+##fif	application/fractals
+fml	application/fml
+frl	application/freeloader
+fs	application/X-FSRecipe
 gtar	application/x-gtar
 hdf	application/x-hdf
+hpf	application/x-icq
 hqx	application/mac-binhex40
+ica	application/x-ica
+ins	application/x-internet-signup
+#ins	application/x-NET-install
 ips	application/x-ipscript
 ipx	application/x-ipix
-iw      application/iconauthor 
-iwm     application/iconauthor 
+isp	application/x-internet-signup
+iw	application/iconauthor
+iwm	application/iconauthor
 jar	application/x-java-archive
 js	application/x-javascript
+jsc	application/x-javascript-config
 latex	application/x-latex
 lha	application/lha
+ltx	application/x-latex
+lwp	application/vnd.lotus-wordpro
 lzh	application/lha
+mad	application/vnd.ms-access
+maf	application/vnd.ms-access
 man	application/x-troff-man
+mam	application/vnd.ms-access
 map	application/x-imagemap
+maq	application/vnd.ms-access
+mar	application/vnd.ms-access
+mat	application/vnd.ms-access
+mbd	application/mbdlet
+mda	application/vnd.ms-access
+mdb	application/vnd.ms-access
+mde	application/vnd.ms-access
+mdn	application/vnd.ms-access
+mdt	application/vnd.ms-access
+mdw	application/vnd.ms-access
+mdz	application/vnd.ms-access
 me	application/x-troff-me
+mfp	application/mirage
 mif	application/x-mif
-mm      application/x-meme 
+mm	application/x-meme
+mocha	application/x-javascript
+mpire	application/x-mpire
+mpl	application/x-mpire
 ms	application/x-troff-ms
-msw     application/binary 
+msw	application/binary
 mw	application/math
+n2p	application/n2p
 nc	application/x-netcdf
+npx	application/x-netfpx
+nsc	application/x-nschat
+nspc	application/x-ns-proxy-autoconfig
 oda	application/oda
+ofml	application/ofml
+or2	application/vnd.lotus-organizer
+or3	application/vnd.lotus-organizer
+org	application/vnd.lotus-organizer
+p7c	application/x-pkcs7-mime
+p7m	application/x-pkcs7-mime
+p7s	application/x-pkcs7-signature
+pac	application/x-ns-proxy-autoconfig
+page	application/x-coda
+pdb	application/vnd.powerbuilder6
 pdf	application/pdf
 pfr	application/font-tdpfr
 pics	application/pics-service
 pl	application/x-perl
-# Oracle plug-ins
 po	application/x-form
-pot	application/mspowerpoint
-ppt	application/mspowerpoint
-ppz	application/mspowerpoint
-pps	application/mspowerpoint
+ppa	application/vnd.ms-powerpoint
+pot	application/vnd.ms-powerpoint
+ppt	application/vnd.ms-powerpoint
+pps	application/vnd.ms-powerpoint
+pqf     application/x-cprplayer
+pqi	application/cprplayer
+pre	application/vnd.lotus-freelance
+prz	application/vnd.lotus-freelance
 ps	application/postscript
+psr	application/datawindow
+ptlk	application/listenup
+pwz	application/vnd.ms-powerpoint
 qrt	application/quest
 quake	application/x-qplug-plugin
+rm	application/vnd.rn-realmedia
+rnx	application/vnd.rn-realplayer
 roff	application/x-troff
-rp	application/x-pn-realmedia
-rtf	application/rtf
+##rp	application/x-pn-realmedia
+rrf	application/x-InstallFromTheWeb
+rtc	application/rtc
+#rtf	application/rtf
+sam	application/vnd.lotus-wordpro
+sca	application/x-supercard
+sc2	application/vnd.ms-schedule
+scd	application/vnd.ms-schedule
+sch	application/vnd.ms-schedule
+scm	application/vnd.lotus-screencam
+#scm	application/x-icq
 sdp	application/sdp
 sh	application/x-sh
 shar	application/x-shar
+shw	application/presentations
 sit	application/x-stuffit
+skd	application/x-koan
+skm	application/x-koan
+skp	application/x-koan
+skt	application/x-koan
 smi	application/smil
 smil	application/smil
+sml	application/smil
+smp	application/studiom
 so	application/octet-stream
-spl     application/futuresplash 
-spr     application/x-sprite 
-sprite  application/x-sprite 
+spl	application/futuresplash
+spr	application/x-sprite
+sprite	application/x-sprite
 src	application/x-wais-source
-sv4cpic application/x-sv4cpio
+ssm	application/streamingmedia
+stk	application/hstu
+sv4cpic	application/x-sv4cpio
 sv4crc	application/x-sv4crc
+swa	application/x-director
 swf	application/x-shockwave-flash
 t	application/x-troff
 tar	application/unix-tar
+talk	application/talker
 tbk	application/toolbook
 tcl	application/x-tcl
 tex	application/x-tex
 texi	application/x-texinfo
-texinfo application/x-texinfo
+texinfo	application/x-texinfo
 tgz	application/unix-tar	x-gzip
+tmv	application/x-Parable-Thing
 tr	application/x-troff
-tsp	application/dsptype            
+tsp	application/dsptype
+txi	application/x-texinfo
+uin	application/x-icq
 user	application/x-x509-user-cert
 usr	application/x-x509-user-cert
 ustar	application/x-ustar
+vbd	application/activexdocument
 vcd	application/x-cdlink
-vmd 	application/vocaltec-media-desc
-vmf 	application/vocaltec-media-file
-wpc     application/wpc 
-xcf	application/x-gimp
-xls	application/vnd.ms-excel
-zip	application/zip
-
-
-# WML - Wireless Markup Language
-
-# http://www1.wapforum.org/what/technical/PROP-WML-19990815.pdf
-# WML source
-wml	text/vnd.wap.wml
-# Compiled WML
+vew	application/vnd.lotus-approach
+vmd	application/vocaltec-media-desc
+vmf	application/vocaltec-media-file
+wbxml	application/vnd.wap.wbxml
 wmlc	application/vnd.wap.wmlc
-
-# http://www1.wapforum.org/what/technical/PROP-WBXML-19990815.pdf
-wbxml   application/vnd.wap.wbxml
-
-# http://www1.wapforum.org/what/technical/PROP-WMLScript-19990815.pdf
-# WMLScript source
-wmls	text/vnd.wap.wmlscript
-# Compiled WMLScript
 wmlsc	application/vnd.wap.wmlscriptc
+wid	application/x-DemoShield
+wis	application/x-InstallShield
+wk1	application/vnd.lotus-1-2-3
+wk3	application/vnd.lotus-1-2-3
+wk4	application/vnd.lotus-1-2-3
+wlt	application/x-mswallet
+wpc	application/wpc
+wpd	application/wordperfect5.1
+wp6	application/wordperfect5.1
+wri	application/x-write
+xcf	application/x-gimp
+xla	application/vnd.ms-excel
+xlb	application/vnd.ms-excel
+xlc	application/vnd.ms-excel
+xld	application/vnd.ms-excel
+xll	application/vnd.ms-excel
+xlm	application/vnd.ms-excel
+xls	application/vnd.ms-excel
+xlt	application/vnd.ms-excel
+xlw	application/vnd.ms-excel
+zip	application/zip
+zpa	application/pcphoto
 
-# http://www1.wapforum.org/what/technical/PROP-WAESpec-19990815.pdf
-# WAP image
-wbmp    image/vnd.wap.wbmp
 
+# -------------------- Model ---------------------
 
-# This one hasn't been registred with IANA yet, but is added anyway.
-# LivePicture PhotoVista RealSpace
-ivr	i-world/i-vrml
+# IANA registered
 
+# model/iges
 vrml	model/vrml
 wrl	model/vrml
 wrml    model/vrml
+# model/mesh
+# model/vnd.dwf
+# model/vnd.gtw
+# model/vnd.flatland.3dml
 
-talk    plugin/talker 
 
-# Diskmasher -- Amiga thingie
-dms	application/x-diskmasher
+# ------------------ Chemistry -------------------
 
-# Windows Write
-wri     application/x-write
+# Some mad scientists in the dark has made their own MIME class...
+# http://www.ch.ic.ac.uk/chemime/
+
+alc	chemical/x-alchemy
+cdx	chemical/x-cdx
+cif	chemical/x-cif
+mcif	chemical/x-mmcif
+c3d	chemical/x-chem3d
+cmdf	chemical/x-cmdf
+cml	chemical/x-cml
+csml	chemical/x-csml
+##csm	chemical/x-csml
+spc	chemical/x-galactic-spc
+inp	chemical/x-gamess-input
+gam	chemical/x-gamess-input
+gau	chemical/x-gaussian-input
+fch	chemical/x-gaussian-checkpoint
+fchk	chemical/x-gaussian-checkpoint
+cub	chemical/x-gaussian-cube
+istr	chemical/x-isostar
+ist	chemical/x-isostar
+jdx	chemical/x-jcamp-dx
+dx	chemical/x-jcamp-dx
+rv3	chemical/x-jjc-review-surface
+xyb	chemical/x-jjc-review-xyz
+rv2	chemical/x-jjc-review-vib
+vib	chemical/x-jjc-review-vib
+kin	chemical/x-kinemage
+mol	chemical/x-mdl-molfile
+rxn	chemical/x-mdl-rxnfile
+tgf	chemical/x-mdl-tgf
+mcm	chemical/x-macmolecule
+mmd	chemical/x-macromodel-input
+mmod	chemical/x-macromodel-input
+mop	chemical/x-mopac-input
+gpt	chemical/x-mopac-graph
+##pdb	chemical/x-pdb
+xyz	chemical/x-xyz
+##vmd	chemical/x-vmd
+vms	chemical/x-vamas-iso14976
+mm2	chemical/x-macmolecule2
+
+# Types from National Center for Biotechnology Information
+# http://www.ncbi.nlm.nih.gov/Structure/mimetype.html
+
+aa	chemical/seq-aa-fasta
+na	chemical/seq-na-fasta
+gb	chemical/seq-na-genbank
+gp	chemical/seq-aa-genpept
+##asn	chemical/ncbi-asn1-spec
+prt	chemical/ncbi-asn1-ascii
+ent	chemical/ncbi-asn1-ascii
+val	chemical/ncbi-asn1-binary
+aso	chemical/ncbi-asn1-binary
+
+# draft-rzepa-chemical-mime-01.txt
+# http://www.ch.ic.ac.uk/chemime2.html
+
+#cxf	chemical/cxf
+#mif	chemical/mif
+#pdb	chemical/pdb
+#cif	chemical/cif
+#mol	chemical/mdl-molfile
+#sdf	chemical/mdl-sdf
+#rdf	chemical/mdl-rdf
+#rxn	chemical/mdl-rxn
+#emb	chemical/embl-dl-nucleotide
+#embl	chemical/embl-dl-nucleotide
+#gen	chemical/genbank
+#asn	chemical/ncbi-asn1
+#gcg	chemical/gcg8-sequence
+#smi	chemical/daylight-smiles
+#ros	chemical/rosdal
+#mmd	chemical/macromodel-input
+#mmod	chemical/macromodel-input
+#mop	chemical/mopac-input
+#gau	chemical/gaussian-input
+#jdx	chemical/jcamp-dx
+#kin	chemical/kinemage
+
+
+# -------------------- Other ---------------------
+
+# AutoCad (AutoDesk)
+dwf	drawing/x-dwf
+
+# LivePicture PhotoVista RealSpace
+ivr	i-world/i-vrml
+
+3dm	x-world/x-3dmf
+3dmf	x-world/x-3dmf
+qd3	x-world/x-3dmf
+qd3d	x-world/x-3dmf
+svr	x-world/x-svr
+vrt	x-world/x-vrt
+wrz	x-world/x-vrml
+
+##talk    plugin/talker 
+wan	plugin/wanimate
+waf	plugin/wanimate
+
+vts	workbook/formulaone
+vtts	workbook/formulaone
+
+u98     urdu/urdu98
+
+dig	multipart/mixed
+push	multipart/x-mixed-replace
 
 ice     x-conference/x-cooltalk
-
-# MacroMedia Director (http://www.macromedia.com/)
-dcr	application/x-director
-dir	application/x-director
-dxr	application/x-director
-
-# Netscape proxy config files.
-nspc    application/x-ns-proxy-autoconfig
-pac     application/x-ns-proxy-autoconfig
-
-# Certificate Authority Certificate (recognized at least by Netscape)
-ca_cert application/x-x509-ca-cert
 
 # This is supposed to be just 'gzip' and 'compress', but Netscape
 # barfs.. Fixed in Netscape 3.*, but quite a lot of people still run 2.*
