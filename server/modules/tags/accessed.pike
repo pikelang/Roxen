@@ -5,7 +5,7 @@
 // by this module.
 //
 
-constant cvs_version="$Id: accessed.pike,v 1.25 2000/03/03 15:31:59 kuntri Exp $";
+constant cvs_version="$Id: accessed.pike,v 1.26 2000/03/13 06:25:12 per Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -31,9 +31,7 @@ string status()
 
 void create(Configuration c)
 {
-  defvar("Accesslog",
-	 GLOBVAR(logdirprefix)+
-	 short_name(c?c->name:".")+"/Accessed",
+  defvar("Accesslog","$LOGDIR/"+short_name(c?c->name:".")+"/Accessed",
 	 "Access log file", TYPE_FILE|VAR_MORE,
 	 "In this file all accesses to files using the &lt;accessed&gt;"
 	 " tag will be logged.");
