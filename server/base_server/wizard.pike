@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.33 1997/08/24 00:47:21 per Exp $
+/* $Id: wizard.pike,v 1.34 1997/08/24 00:50:12 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -435,8 +435,10 @@ string html_error(string notice, object id)
         +"err_3.gif\"></td><td valign=top>"+notice+"</td></tr></table>");
 }
 
-string html_border(string what, int|void width)
+string html_border(string what, int|void width, int|void ww)
 {
   return ("<table border=0 cellpadding="+(width+1)+" cellspacing=0 "
-	  "bgcolor=black><tr><td>"+what+"</table>");
+	  "bgcolor=black><tr><td><table border=0 cellpadding="+(ww)+
+	  " cellspacing=0 bgcolor=white><tr><td>"+what+"</tr></td></table>"
+	   "</td></tr></table>");
 }
