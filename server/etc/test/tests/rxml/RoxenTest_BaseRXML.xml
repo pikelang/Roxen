@@ -1000,6 +1000,42 @@ b</strlen></rxml>
 </test>
 
 <test>
+<rxml><set variable="var.date"><date strftime="%Y-%m-%d"/></set><if date="&var.date;"
+ after="1">X</if>Y</rxml>
+<result>Y</result>
+</test>
+
+<test>
+<rxml><set variable="var.date"><date strftime="%Y-%m-%d"/></set><if date="&var.date;"
+ after="1" inclusive="1">X</if>Y</rxml>
+<result>XY</result>
+</test>
+
+<test>
+<rxml><set variable="var.date"><date strftime="%Y-%m-%d"/></set><if date="&var.date;"
+ before="1">X</if>Y</rxml>
+<result>Y</result>
+</test>
+
+<test>
+<rxml><set variable="var.date"><date strftime="%Y-%m-%d"/></set><if date="&var.date;"
+ before="1" inclusive="1">X</if>Y</rxml>
+<result>XY</result>
+</test>
+
+<test>
+<rxml><set variable="var.date"><date strftime="%Y-%m-%d" days="-1"/></set><if date="&var.date;"
+ after="1">X</if>Y</rxml>
+<result>XY</result>
+</test>
+
+<test>
+<rxml><set variable="var.date"><date strftime="%Y-%m-%d" days="1"/></set><if date="&var.date;"
+ before="1">X</if>Y</rxml>
+<result>XY</result>
+</test>
+
+<test>
 <rxml><set variable="var.time"><date strftime="%H%M"/></set><if time="&var.time;"
  after="1">X</if>Y</rxml>
 <result>Y</result>
