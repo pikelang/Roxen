@@ -4,8 +4,8 @@ Roxen 1.2 - source version
 Copyright 
 ---------
 
-Roxen is Copyright © Idonex AB, 1994 - 1997
-Pike is Copyright © to Fredrik Hübinette, 1994 - 1997
+Roxen is Copyright © Idonex AB, 1994 - 1998
+Pike is Copyright © to Fredrik Hübinette, 1994 - 1998
 
 This software is distributed under GPL, see the file COPYING for
 more details.
@@ -21,29 +21,29 @@ The directories
 ---------------
 
 extern/   	A few programs used by Roxen or it's scripts.
-		 o fast_cgi -- The CGI/Fast CGI gateway, rewritten
-		   	       somewhat for Roxen.
-		 o cgi      -- The roxen/CGI filter.
+		 o fast_cgi         -- The CGI/Fast CGI gateway, rewritten
+		   	               somewhat for Roxen.
+		 o cgi              -- The roxen/CGI wrapper.
 
 tools/ 		Misc tools.
-                 o htpasswd source, used to make password files for .htaccess
-		 o backlog_bumper -- for Solaris 2.4 and up.
-		 o xdumpfont -- dumps an X font to a Roxen font
-		 o init.d_roxen -- /etc/init.d script starting point.
-		   Stop does not work correctly.
+                 o htpasswd         -- makes password files for .htaccess
+		 o backlog_bumper   -- for Solaris 2.4 and up.
+		 o xdumpfont        -- dumps an X font to a Roxen font
+		 o init.d_roxen     -- /etc/init.d script starting point.
+		                       Stop does not work correctly.
 
 server/         The pike objects, all modules and other misc source that is
 		the core of the Roxen software.
                 Important subdirs:
-		o base_server  -- Core server sources
-		o languages    -- Language modules
-		o protocols    -- Protocol modules
-		o modules      -- Roxen core modules, in subdirs
-	        o etc          -- Misc. files
-		o config_actions - Plugins for the configuration interface
-		o server_templates Server template files for the 'add a new
-				   virtual server' action in the 
- 				   configuration interface.
+		 o base_server      -- Core server sources
+		 o languages        -- Language modules
+		 o protocols        -- Protocol modules
+		 o modules          -- Roxen core modules, in subdirs
+	         o etc              -- Misc. files
+		 o config_actions   -- Plugins for the configuration interface
+		 o server_templates -- Server template files for the 'add a new
+				       virtual server' action in the 
+ 				       configuration interface.
 
-pike/	  	The source to the language used (Pike, object
-		oriented C-like language). Written by Fredrik
+pike/	  	The source to the language used (Pike, object-oriented
+		C-like language). Written by Fredrik Hübinette.
