@@ -61,6 +61,7 @@ urw_itc_avant_garde-demi-r binary
 /server/base_server/struct/node.pike foreign_ident
 /server/bin/garbagecollector.pike foreign_ident
 /server/bin/install.pike foreign_ident
+/server/etc/extensions foreign_ident
 /server/etc/roxen_master.pike foreign_ident
 /server/etc/supports foreign_ident
 /server/languages/catala.pike foreign_ident

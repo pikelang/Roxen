@@ -1,3 +1,5 @@
+# $Id: extensions,v 1.9 1997/06/10 18:48:24 grubba Exp $
+
 aif	audio/x-aiff
 aifc	audio/x-aiff
 aiff	audio/x-aiff
