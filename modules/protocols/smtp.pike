@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.37 1998/09/17 15:16:41 grubba Exp $
+ * $Id: smtp.pike,v 1.38 1998/09/17 20:02:40 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.37 1998/09/17 15:16:41 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.38 1998/09/17 20:02:40 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -804,7 +804,7 @@ static class Smtp_Connection {
     call_out(::do_timeout, timeout);
   }
 
-  static void classify_connection(object con_)
+  static void classify_connection(object con_, function cb, mixed ... args)
   {
     foreach(conf->get_providers("smtp_filter") ||({}), object o) {
       // roxen_perror("Got SMTP filter\n");
@@ -816,20 +816,64 @@ static class Smtp_Connection {
 #ifdef SMTP_DEBUG
 	  roxen_perror("Refuse connection.\n");
 #endif /* SMTP_DEBUG */
-	  con_->close();
-	  destruct();
+	  cb(({ "Connection Refused" }), @args);
 	  return;
 	} else if (!connection_class) {
 	  connection_class = c;
 	}
       }
     }
-    
-    ::create(con_, parent->query_timeout());
 
-    send(220, ({ sprintf("%s ESMTP %s; %s",
-			 gethostname(), roxen->version(),
-			 mktimestamp(time())) }));
+    // No problem detected here...
+    cb(0, @args);
+  }
+
+  static array(string) disconnect_reason = ({});
+  static int bad_con;
+  static int num_async;
+  static void con_class_done(int|string status, object con)
+  {
+    if (status) {
+      if (arrayp(status)) {
+	disconnect_reason += status;
+      }
+      bad_con = 1;
+    }
+    if (!(--num_async)) {
+      // All of the async lookups have returned.
+
+      if (bad_con) {
+	if (sizeof(disconnect_reason)) {
+	  // Give a reason why we disconnect
+	  ::create(con, parent->query_timeout());
+	  send(550, ({
+	    sprintf("%s ESMTP %s; %s",
+			   gethostname(), roxen->version(),
+		    mktimestamp(time())),
+	  }) + disconnect_reason);
+	  disconnect();
+	  // They have 30 seconds to read the message...
+	  call_out(destruct, 30, this_object());
+	} else {
+	  // Immediate disconnect
+	  con->close();
+	  destruct();
+	}
+	return;
+      }
+
+      ::create(con, parent->query_timeout());
+
+      send(220, ({ sprintf("%s ESMTP %s; %s",
+			   gethostname(), roxen->version(),
+			   mktimestamp(time())) }));
+    }
+  }
+
+  static void async_lookup_host(object con, mapping con_info,
+				function cb, mixed ... args)
+  {
+    roxen->ip_to_host(con_info->remoteip, got_remotehost, cb, 0, @args);
   }
 
   void create(object con_, object parent_, object conf_)
@@ -842,11 +886,26 @@ static class Smtp_Connection {
     remoteip = remote[0];
     remoteport = (remote[1..])*" ";
 
-    // Start two assynchronous lookups...
-    roxen->ip_to_host(remoteip, got_remotehost, classify_connection, con_);
+    mapping con_info = ([
+      "remoteip":remoteip,
+      "remoteport":remoteport,
+    ]);
 
-    Protocols.Ident->lookup_async(con_, got_remoteident,
-				  check_delayed_answer);
+    array con_classifiers = ({
+      async_lookup_host,
+    }) + Array.map(conf->get_providers("smtp_filter")||({}),
+		   lambda(object o) {
+		     return(o->async_classify_connection);
+		   }) - ({ 0 });
+
+    num_async = sizeof(con_classifiers);
+
+    // Start the asynchronous lookups...
+    foreach(con_classifiers, function f) {
+      f(con_, con_info, con_class_done, con_);
+    }
+
+    Protocols.Ident->lookup_async(con_, got_remoteident, check_delayed_answer);
   }
 }
 
