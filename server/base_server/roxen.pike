@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.75 1997/06/12 20:46:27 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.76 1997/06/12 23:41:07 grubba Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -52,7 +52,7 @@ int shuffle_fd;
 
 // This is the real Roxen version. It should be changed before each
 // release
-string real_version = "Roxen Challenger/1.2alpha6"; 
+string real_version = "Roxen Challenger/1.2alpha7"; 
 
 // A mapping from ports (objects, that is) to an array of information
 // about that port.
