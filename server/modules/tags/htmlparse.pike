@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.145 1998/09/25 14:01:30 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.146 1998/09/26 14:28:12 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -175,6 +175,14 @@ string strftime(string fmt, int t)
   return(a*"");
 }
 #endif /* !constant(strftime) */
+
+mapping get_cgi_env(object id)
+{
+  if (id->misc->cgi_env) {
+    return id->misc->cgi_env;
+  }
+  mapping low_env = my_build_env_vars(id->not_query, id, id->misc->path_info);
+}
 
 // If the string 'w' match any of the patterns in 'a', return 1, else 0.
 int _match(string w, array (string) a)
@@ -1163,6 +1171,7 @@ string tag_define(string tag, mapping m, string str, object id, object file,
       id->misc->tags = ([]);
     if(!id->misc->defaults)
       id->misc->defaults = ([]);
+    m->tag = lower_case(m->tag);
     if(!id->misc->defaults[m->tag])
       id->misc->defaults[m->tag] = ([]);
 
