@@ -35,7 +35,7 @@ function tomArrej() {
 
 arrej = new tomArrej();
 colors = new tomArrej();
-colors[0] = "white";
+colors[0] = "grey";
 colors[1] = "blue";
 colors[2] = "green";
 colors[3] = "yellow";
@@ -58,13 +58,15 @@ function send() {
 
 </script>
 
-<table border="0"><tr valign="bottom"><td>Make your guess -></td><td>
-<table border="1" cellspacing="0" cellpadding="1">
+<table border="0" bgcolor="&usr.content-bg;" cellspacing="0" cellpadding="4" width="500">
+<tr><td colspan="3"><gtext href="&page.self;" font="yikes!" hspace="20" vspace="4" fontsize="24">Mastermind</gtext></td></tr>
+<tr valign="bottom" align="right" ><td>Make your guess <img src="&usr.next;"/></td><td align="center">
+<table border="0" cellspacing="0" cellpadding="1">
 <tr><td></td><td></td><td></td><td></td><td></td><td></td> <td width="10"></td> <td></tr></tr>
 
 <?comment draw the previous guesses ?>
 <if variable="form.turn > 0">
-<define tag="square"><td><img src="/internal-roxen-pixel-&_.color;" width="20" height="20" /></td></define>
+<define tag="square"><td><img src="/internal-roxen-pixel-&_.color;" width="20" height="20" border="0" /></td></define>
 <set variable="var.qs" split="">&var.q;</set>
 <for variable="var.i" from="1" to="&form.turn;">
   <tr>
@@ -76,7 +78,7 @@ function send() {
   <emit source="values" values="&var.r;" advanced="chars">
     <inc variable="var.i"/>
     <cond>
-      <case variable="value = 0"><square color="white"/></case>
+      <case variable="value = 0"><square color="grey"/></case>
       <case variable="value = 1"><square color="blue"/></case>
       <case variable="value = 2"><square color="green"/></case>
       <case variable="value = 3"><square color="yellow"/></case>
@@ -92,7 +94,15 @@ function send() {
       <inc variable="var.silver"/>
     </if>
   </emit>
-  <td></td><td>G:&var.gold; S:&var.silver;</td></tr>
+  <td></td>
+  <td><font style="font-size: 4px">
+    <for variable="var.j" from="1" to="&var.gold;">
+      <img src="/internal-roxen-pixel-green" width="5" height="5" hspace="1" vspace="1" border="1"/>
+    </for><br />
+    <for variable="var.j" from="1" to="&var.silver;">
+      <img src="/internal-roxen-pixel-yellow" width="5" height="5" hspace="1" vspace="1" border="1"/>
+    </for>
+  </font></td></tr>
 </for>
 </if>
 
@@ -105,12 +115,28 @@ function send() {
 <else>
 <tr><for variable="var.i" from="1" to="6">
   <td><a href="javascript:shiftColor(&var.i;)">
-  <img src="/internal-roxen-pixel-white" width="20" height="20" border="0" name="&var.i;" /></a></td>
+  <img src="/internal-roxen-pixel-grey" width="20" height="20" border="0" name="&var.i;" /></a></td>
 </for><td></td><td>&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;</td></tr>
 </else>
 
 </table></td>
-<td><if not="1" variable="var.win = 1"><a href="javascript:send()">Done</a></if></td>
-</tr></table>
+<td align="left"><if not="1" variable="var.win = 1"><gbutton href="javascript:send()">Done</gbutton></if></td>
+</tr>
+<tr><td colspan="3" align="center">
+<table width="400"><tr><td>
+<if not="1" prestate="!help">
+<font size="-1"><p>The goal with mastermind is to figure out the colors the computer has choosen. The
+computer chooses one color out of grey, blue, green, yellow, purple and red for every of the six positions
+represented by the squares above. In total this gives 46656 possible combinations. You enter your guess by
+clicking the squares until the represent your guess and press the Done button.</p>
+<p>The computer will compare your guess with its choosen colors and will score your guess. You'll get one green marker
+for every square that has the right color. You'll also be awared one yellow marker for every right color that is in the
+wrong square.</p></font>
+<apre add="!help"><gbutton>Hide help</gbutton></a>
+</if><else>
+<apre drop="!help"><gbutton>Show help</gbutton></a>
+</else>
+</td></tr></table>
+</table>
 
 </center></content>
