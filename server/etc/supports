@@ -1,4 +1,4 @@
-## $Id: supports,v 1.39 1997/08/30 15:57:45 peter Exp $
+## $Id: supports,v 1.40 1997/09/19 08:16:13 js Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) supports";
 #
@@ -72,6 +72,7 @@ mozilla/4.*		stylesheets, tablecolor
 .*compatible.*msie              -push, -javascript
 .*compatible.*msie.2            -java, tablecolor
 .*compatible.*msie.3            stylesheets, tablecolor, activex
+.*compatible.*msie.4            stylesheets, tablecolor, activex, javascript
 # }
 
 
