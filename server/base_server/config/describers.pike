@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.49 1997/09/10 12:48:49 grubba Exp $ */
+/* $Id: describers.pike,v 1.50 1997/10/09 00:52:10 grubba Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -125,7 +125,12 @@ string describe_error(string err, array (int) times)
 mapping actions = ([]);
 object get_action(string act,string dir)
 {
-  if(!actions[act]) actions[act]=compile_file(dir+act)();
+  if(!actions[act]) {
+    object o = compile_file(dir+act)();
+    if (o && !o->action_disabled) {
+      actions[act]=o;
+    }
+  }
   return actions[act];
 }
 
