@@ -217,6 +217,7 @@ class TagDirectoryplugin
             break;
           }
       }
+    res = tmp;
     }
     res = Array.sort_array( res, sortfun );
     if( args["sort-reverse"] )
