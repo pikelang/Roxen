@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.14 1998/04/26 17:18:54 per Exp $
+ * $Id: config.h,v 1.15 1999/08/04 19:01:03 neotron Exp $
  *
  * User configurable things not accessible from the normal
  * configuration interface. Not much, but there are some things..  
@@ -86,9 +86,20 @@
 # define MODULE_LEVEL_SECURITY
 #endif
 
+
+/* If this is disabled, the server won't parse the supports string. This might
+ * make the server somewhat faster. If you don't need this feature but need the
+ * most speed you can get, it might be a good idea to disable supports.
+ */
+
+// #define DISABLE_SUPPORTS
+
+
 /* Roxen neighbourhood
  *
  * Experimental. Currently does not work on all Operating Systems.
+ * *** WARNING *** There are reports of this not working at all. It's
+ * not supported, not maintained and CAN LOCK UP YOUR SERVER!
  */
 // #define ENABLE_NEIGHBOURHOOD
 

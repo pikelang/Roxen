@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.130 1999/07/04 18:52:24 neotron Exp $";
+constant cvs_version = "$Id: http.pike,v 1.131 1999/08/04 19:01:03 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -488,15 +488,27 @@ private int parse_got(string s)
 #ifdef DEBUG
 	    perror("Client extension: "+contents+"\n");
 #endif
-	   case "range":
+	  case "request-range":
 	    if(GLOBVAR(EnableRangeHandling)) {
 	      contents = lower_case(contents-" ");
-	      if(!search(contents, "bytes"))
+	      if(!search(contents, "bytes")) 
 		// Only care about "byte" ranges.
 		misc->range = contents[6..];
 	    }
 	    break;
 	    
+	  case "range":
+	    if(GLOBVAR(EnableRangeHandling)) {
+	      contents = lower_case(contents-" ");
+	      if(!misc->range && !search(contents, "bytes"))
+		// Only care about "byte" ranges. Also the Request-Range header
+		// has precedence since Stupid Netscape (TM) sends both but can't
+		// handle multipart/byteranges but only multipart/x-byteranges.
+		// Duh!!!
+		misc->range = contents[6..];
+	    }
+	    break;
+
 	   case "connection":
 	    contents = lower_case(contents);
 	    
@@ -582,8 +594,17 @@ private int parse_got(string s)
       }
     } 
   }
-  if(!client) client = ({ "unknown" });
-  supports = find_supports(lower_case(client*" "), supports);
+
+#ifndef DISABLE_SUPPORTS    
+  if(!client) {
+    client = ({ "unknown" });
+    supports = find_supports("", supports); // This makes it somewhat faster.
+  } else 
+    supports = find_supports(lower_case(client*" "), supports);
+#else
+  supports = (< "images", "gifinline", "forms", "mailto">);
+#endif
+
   if(!referer) referer = ({ });
   if(misc->proxyauth) {
     // The Proxy-authorization header should be removed... So there.
@@ -651,7 +672,8 @@ void end(string|void s, int|void keepit)
 #ifdef KEEP_ALIVE
   if(keepit &&
      (!(file->raw || file->len <= 0))
-     && (misc->connection || (prot == "HTTP/1.1"))
+     && (misc->connection == "keep-alive" ||
+	 (prot == "HTTP/1.1" && misc->connection != "close"))
      && my_fd)
   {
     // Now.. Transfer control to a new http-object. Reset all variables etc..
@@ -1004,7 +1026,7 @@ class MultiRangeWrapper
   array range_info = ({});
   string type;
   string stored_data = "";
-  void create(mapping _file, mapping heads, array _ranges)
+  void create(mapping _file, mapping heads, array _ranges, object id)
   {
     //    werror("MultiRangeWrapper\n");
     file = _file->file;
@@ -1023,12 +1045,15 @@ class MultiRangeWrapper
 	  m_delete(heads, h);
 	}
       }
-      heads["Content-Type"] = "multipart/byteranges; boundary=" BOUND;
+      if(id->request_headers["request-range"])
+	heads["Content-Type"] = "multipart/x-byteranges; boundary=" BOUND;
+      else
+	heads["Content-Type"] = "multipart/byteranges; boundary=" BOUND;
       foreach(ranges, array range) {
 	int rlen = 1+ range[1] - range[0];
-	string sep =  sprintf("\r\n--%s\r\nContent-Type: %O\r\n"
+	string sep =  sprintf("\r\n--" BOUND "\r\nContent-Type: %O\r\n"
 			      "Content-Range: bytes %d-%d/%d\r\n\r\n",
-			      BOUND, type, @range, len);
+			      type, @range, len);
 	clen += rlen + strlen(sep);
 	range_info += ({ ({ rlen, sep }) });
       }
@@ -1203,25 +1228,9 @@ void send_result(mapping|void result)
     else if(!file->type)     file->type="text/plain";
   }
   
-  if(!file->raw && prot != "HTTP/0.9")
+  if(!file->raw)
   {
-    string h;
-    heads=
-      (["MIME-Version":(file["mime-version"] || "1.0"),
-	"Content-type":file["type"],
-	"Accept-Ranges": "bytes",
-	"Server":replace(version(), " ", "·"),
-	"Date":http_date(time) ]);    
-
-    if(file->encoding)
-      heads["Content-Encoding"] = file->encoding;
-    
-    if(!file->error) 
-      file->error=200;
-    
-    if(file->expires)
-      heads->Expires = http_date(file->expires);
-
+    heads = ([]);
     if(!file->len)
     {
       if(objectp(file->file))
@@ -1232,99 +1241,119 @@ void send_result(mapping|void result)
       {
 	if(file->file && !file->len)
 	  file->len = fstat[1];
-    
-    
-	heads["Last-Modified"] = http_date(fstat[3]);
-	
-	if(since)
+    	
+	if(prot != "HTTP/0.9")
 	{
-	  if(is_modified(since, fstat[3], fstat[1]))
+	  heads["Last-Modified"] = http_date(fstat[3]);
+	  if(since)
 	  {
-	    file->error = 304;
-	    file->file = 0;
-	    file->data="";
-// 	    method="";
+	    if(is_modified(since, fstat[3], fstat[1]))
+	    {
+	      file->error = 304;
+	      file->file = 0;
+	      file->data="";
+	      // 	    method="";
+	    }
 	  }
 	}
-      }
-      if(stringp(file->data)) 
-	file->len += strlen(file->data);
-    }
-    
-    if(mappingp(file->extra_heads)) {
-      heads |= file->extra_heads;
-    }
-
-    if(mappingp(misc->moreheads)) {
-      heads |= misc->moreheads;
-    }
-
-    if(misc->range && file->len && objectp(file->file) && !file->data &&
-       file->error == 200 && (method == "GET" || method == "HEAD"))
-      // Plain and simple file and a Range header. Let's play.
-      // Also we only bother with 200-requests. Anything else should be
-      // nicely and completely ignored. Also this is only used for GET and
-      // HEAD requests.
-    {
-      // split the range header. If no valid ranges are found, ignore it.
-      // If one is found, send that range. If many are found we need to
-      // use a wrapper and send a multi-part message. 
-      array ranges = parse_range_header(file->len);
-      if(ranges) // No incorrect syntax...
-      { 
-	if(sizeof(ranges)) // And we have valid ranges as well.
-	{
-	  file->error = 206; // 206 Partial Content
-	  if(sizeof(ranges) == 1)
-	  {
-	    heads["Content-Range"] = sprintf("bytes %d-%d/%d",
-					     @ranges[0], file->len);
-	    if(ranges[0][1] == (file->len - 1) &&
-	       GLOBVAR(RestoreConnLogFull))
-	      // Log continuations (ie REST in FTP), 'range XXX-'
-	      // using the entire length of the file, not just the
-	      // "sent" part. Ie add the "start" byte location when logging
-	      misc->_log_cheat_addition = ranges[0][0];
-	    file->file = MultiRangeWrapper(file, heads, ranges);
-	  } else {
-	    // Multiple ranges. Multipart reply and stuff needed.
-	    // We do this by replacing the file object with a wrapper.
-	    // Nice and handy.
-	    file->file = MultiRangeWrapper(file, heads, ranges);
-	  }
-	} else {
-	  // Got the header, but the specified ranges was out of bounds.
-	  // Reply with a 416 Requested Range not satisfiable.
-	  file->error = 416;
-	  heads["Content-Range"] = "*/"+file->len;
-	  if(method == "GET") {
-	    file->data = "The requested byte range is out-of-bounds. Sorry.";
-	    file->len = strlen(file->data);
-	    file->file = 0;
-	  }
-	}
+	if(stringp(file->data)) 
+	  file->len += strlen(file->data);
       }
     }
-    
-    array myheads = ({prot+" "+(file->rettext||errors[file->error])});
-    foreach(indices(heads), h)
-      if(arrayp(heads[h]))
-	foreach(heads[h], tmp)
-	  myheads += ({ `+(h,": ", tmp)});
-      else
-	myheads +=  ({ `+(h, ": ", heads[h])});
-    
-
-    if(file->len > -1)
-      myheads += ({"Content-length: " + file->len });
+    if(prot != "HTTP/0.9") {
+      string h;
+      heads +=
+      (["MIME-Version":(file["mime-version"] || "1.0"),
+	"Content-type":file["type"],
+	"Accept-Ranges": "bytes",
 #ifdef KEEP_ALIVE
-    myheads += ({ "Connection: Keep-Alive" });
+	"Connection": (misc->connection == "close" ? "close": "Keep-Alive"),
+#else
+	"Connection"	: "close",
 #endif
-    head_string = (myheads+({"",""}))*"\r\n";
-    
-    if(conf) conf->hsent+=strlen(head_string||"");
-  }
+	"Server":replace(version(), " ", "·"),
+	"Date":http_date(time) ]);    
 
+      if(file->encoding)
+	heads["Content-Encoding"] = file->encoding;
+    
+      if(!file->error) 
+	file->error=200;
+    
+      if(file->expires)
+	heads->Expires = http_date(file->expires);
+    
+      if(mappingp(file->extra_heads)) {
+	heads |= file->extra_heads;
+      }
+
+      if(mappingp(misc->moreheads)) {
+	heads |= misc->moreheads;
+      }
+
+      if(misc->range && file->len && objectp(file->file) && !file->data &&
+	 file->error == 200 && (method == "GET" || method == "HEAD"))
+	// Plain and simple file and a Range header. Let's play.
+	// Also we only bother with 200-requests. Anything else should be
+	// nicely and completely ignored. Also this is only used for GET and
+	// HEAD requests.
+      {
+	// split the range header. If no valid ranges are found, ignore it.
+	// If one is found, send that range. If many are found we need to
+	// use a wrapper and send a multi-part message. 
+	array ranges = parse_range_header(file->len);
+	if(ranges) // No incorrect syntax...
+	{ 
+	  if(sizeof(ranges)) // And we have valid ranges as well.
+	  {
+	    file->error = 206; // 206 Partial Content
+	    if(sizeof(ranges) == 1)
+	    {
+	      heads["Content-Range"] = sprintf("bytes %d-%d/%d",
+					       @ranges[0], file->len);
+	      if(ranges[0][1] == (file->len - 1) &&
+		 GLOBVAR(RestoreConnLogFull))
+		// Log continuations (ie REST in FTP), 'range XXX-'
+		// using the entire length of the file, not just the
+		// "sent" part. Ie add the "start" byte location when logging
+		misc->_log_cheat_addition = ranges[0][0];
+	      file->file = MultiRangeWrapper(file, heads, ranges, this_object());
+	    } else {
+	      // Multiple ranges. Multipart reply and stuff needed.
+	      // We do this by replacing the file object with a wrapper.
+	      // Nice and handy.
+	      file->file = MultiRangeWrapper(file, heads, ranges, this_object());
+	    }
+	  } else {
+	    // Got the header, but the specified ranges was out of bounds.
+	    // Reply with a 416 Requested Range not satisfiable.
+	    file->error = 416;
+	    heads["Content-Range"] = "*/"+file->len;
+	    if(method == "GET") {
+	      file->data = "The requested byte range is out-of-bounds. Sorry.";
+	      file->len = strlen(file->data);
+	      file->file = 0;
+	    }
+	  }
+	}
+      }
+    
+      array myheads = ({prot+" "+(file->rettext||errors[file->error])});
+      foreach(indices(heads), h)
+	if(arrayp(heads[h]))
+	  foreach(heads[h], tmp)
+	    myheads += ({ `+(h,": ", tmp)});
+	else
+	  myheads +=  ({ `+(h, ": ", heads[h])});
+    
+
+      if(file->len > -1)
+	myheads += ({"Content-length: " + file->len });
+      head_string = (myheads+({"",""}))*"\r\n";
+    
+      if(conf) conf->hsent+=strlen(head_string||"");
+    }
+  }
 #ifdef REQUEST_DEBUG
   roxen_perror(sprintf("Sending result for prot:%O, method:%O file:%O\n",
 		       prot, method, file));
@@ -1491,6 +1520,7 @@ void got_data(mixed fooid, string s)
     s = cache*""+s; 
     cache = 0;
   }
+  // A request can't start with newlines, but oh well.
   sscanf(s, "%*[\n\r]%s", s);
   if(strlen(s)) tmp = parse_got(s);
 
