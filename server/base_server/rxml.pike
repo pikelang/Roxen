@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.257 2000/11/06 22:11:29 per Exp $
+// $Id: rxml.pike,v 1.258 2000/11/06 22:49:53 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -301,7 +301,10 @@ class CompatTag
       id->misc->line = "0";	// No working system for this yet.
 
       if (stringp (fn)) return ({fn});
-      if (!fn) return ({propagate_tag()});
+      if (!fn) {
+	result_type = result_type (RXML.PNone);
+	return ({propagate_tag()});
+      }
 
       Stdio.File source_file;
       mapping defines;
@@ -335,7 +338,10 @@ class CompatTag
 	if (args->noparse) result_type = result_type (RXML.PNone);
 	return ({result});
       }
-      else return ({propagate_tag()});
+      else {
+	result_type = result_type (RXML.PNone);
+	return ({propagate_tag()});
+      }
     }
   }
 }
