@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.289 2000/03/24 21:21:48 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.290 2000/03/25 23:49:26 nilsson Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -3335,7 +3335,7 @@ Standard-URLs und Email-Adressen verwendet wird");
 epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
 
 
-  defvar("MyWorldLocation", "", "Server URL", TYPE_STRING,
+  defvar("MyWorldLocation", "http://"+gethostname()+"/", "Server URL", TYPE_STRING,
 	 "This is the main server URL, where your start page is located.");
 
   deflocaledoc( "deutsch", "MyWorldLocation",
