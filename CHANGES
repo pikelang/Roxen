@@ -24,6 +24,8 @@ o CGI's are now forked from the backend thread to avoid confusing some OS's.
 
 o Fixed several race-conditions when running with THREADS enabled.
 
+o Updated supplied gmp to gmp-2.0.2-ssh-2.
+
 o Removed several arbitrary limits.
 
 o Some neighbourhood fixes.
