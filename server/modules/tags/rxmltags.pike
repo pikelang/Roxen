@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.251 2001/07/08 19:49:58 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.252 2001/07/09 04:08:09 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1384,7 +1384,7 @@ class TagMaketag {
   }
 
   RXML.TagSet internal =
-    RXML.TagSet(module_identifier() + "/maketag", ({ TagAttrib() }) );
+    RXML.shared_tag_set ("/rxmltags/maketag", ({ TagAttrib() }) );
 
   class Frame {
     inherit RXML.Frame;
@@ -2061,29 +2061,37 @@ class UserTagContents
   {
     inherit RXML.Frame;
     constant is_user_tag_contents = 1;
+    RXML.Frame frame;
+
     array do_return()
     {
-      int nest = 1;
-      RXML.Frame frame = up;
-      for (; frame; frame = frame->up)
-	if (frame->is_user_tag) {
-	  if (!--nest) break;
-	}
-	else if (frame->is_user_tag_contents) nest++;
-      if (!frame)
+      RXML.Frame upframe;
+      if (frame) upframe = frame->up;
+      else {
+	int nest = 1;
+	upframe = up;
+	for (; upframe; frame = upframe, upframe = upframe->up)
+	  if (upframe->is_user_tag) {
+	    if (!--nest) break;
+	  }
+	  else if (upframe->is_user_tag_contents) nest++;
+      }
+      if (!upframe)
 	parse_error ("No associated defined tag to get contents from.\n");
-      return ({frame->user_tag_contents || ""});
+
+      if (upframe->compile) flags |= RXML.FLAG_COMPILE_RESULT;
+      return upframe->user_tag_contents;
     }
   }
 }
 
 private RXML.TagSet user_tag_contents_tag_set =
-  RXML.TagSet (module_identifier() + "/user_tag", ({UserTagContents()}));
+  RXML.shared_tag_set ("/rxmltags/user_tag", ({UserTagContents()}));
 
 class UserTag {
   inherit RXML.Tag;
   string name, lookup_name;
-  int flags = 0;
+  int flags = RXML.FLAG_COMPILE_RESULT;
   RXML.Type content_type = RXML.t_xml;
   array(RXML.Type) result_types = ({ RXML.t_any(RXML.PXml) });
 
@@ -2095,77 +2103,98 @@ class UserTag {
   // changes in loops etc.
 
   void create(string _name, int tag) {
-    name=_name;
-    lookup_name = "tag\0" + name;
-    if(tag) flags |= RXML.FLAG_EMPTY_ELEMENT;
+    if (_name) {
+      name=_name;
+      lookup_name = "tag\0" + name;
+      if(tag) flags |= RXML.FLAG_EMPTY_ELEMENT;
+    }
   }
 
   mixed _encode()
   {
-    return ({ name, lookup_name, flags });
+    return ({ name, flags });
   }
 
   void _decode(mixed v)
   {
-    [name, lookup_name, flags] = v;
+    [name, flags] = v;
+    lookup_name = "tag\0" + name;
   }
 
   class Frame {
     inherit RXML.Frame;
     RXML.TagSet additional_tags = user_tag_contents_tag_set;
     mapping vars;
-    string content;
-    string def;
-    mapping defaults;
-    string def_scope_name, scope_name;
+    string content_text;
+    string raw_tag_text;
+    array tagdef;
+    string scope_name;
     constant is_user_tag = 1;
-    string user_tag_contents;
+    array(string|RXML.PCode) user_tag_contents;
+    int do_iterate;
+    int compile;
 
     array do_enter (RequestID id)
     {
-      if (array tagdef = RXML_CONTEXT->misc[lookup_name])
-	[def, defaults, def_scope_name, UserTag ignored] = tagdef;
-      else
-	def = 0;
-      return 0;
+      if ((tagdef = RXML_CONTEXT->misc[lookup_name]) && tagdef[0]) {
+	do_iterate = content_text ? -1 : 1;
+	return 0;
+      }
+      do_iterate = -1;
+      return ({propagate_tag()});
     }
 
     array do_return(RequestID id) {
-      if (!def) return ({propagate_tag()});
-
-      mapping nargs = defaults+args;
-      id->misc->last_tag_args = nargs;
+      [array(string|RXML.PCode) def, mapping defaults,
+       string def_scope_name, UserTag ignored] = tagdef;
+      id->misc->last_tag_args = vars = defaults+args;
       scope_name = def_scope_name || name;
-      vars = nargs;
 
-      if(content && args->trimwhites)
-	content = String.trim_all_whites(content);
+      if (content_text)
+	// A previously evaluated tag was restored.
+	content = content_text;
+      else {
+	if(content && args->trimwhites)
+	  content = String.trim_all_whites(content);
 
+	if (stringp (def[0])) {
 #if ROXEN_COMPAT <= 1.3
-      if(id->conf->old_rxml_compat) {
-	array replace_from, replace_to;
-	if (flags & RXML.FLAG_EMPTY_ELEMENT) {
-	  replace_from = map(indices(nargs),Roxen.make_entity)+({"#args#"});
-	  replace_to = values(nargs)+({ Roxen.make_tag_attributes(nargs)[1..] });
-	}
-	else {
-	  replace_from = map(indices(nargs),Roxen.make_entity)+({"#args#", "<contents>"});
-	  replace_to = values(nargs)+({ Roxen.make_tag_attributes(nargs)[1..], content });
-	}
-	string c2;
-	c2 = replace(def, replace_from, replace_to);
-	if(c2!=def) {
-	  vars=([]);
-	  return ({c2});
-	}
-      }
+	  if(id->conf->old_rxml_compat) {
+	    array replace_from, replace_to;
+	    if (flags & RXML.FLAG_EMPTY_ELEMENT) {
+	      replace_from = map(indices(vars),Roxen.make_entity)+
+		({"#args#"});
+	      replace_to = values(vars)+
+		({ Roxen.make_tag_attributes(vars)[1..] });
+	    }
+	    else {
+	      replace_from = map(indices(vars),Roxen.make_entity)+
+		({"#args#", "<contents>"});
+	      replace_to = values(vars)+
+		({ Roxen.make_tag_attributes(vars)[1..], content });
+	    }
+	    string c2;
+	    c2 = replace(def[0], replace_from, replace_to);
+	    if(c2!=def[0]) {
+	      vars=([]);
+	      return ({c2});
+	    }
+	  }
 #endif
+	}
+	content_text = content;
+	user_tag_contents = ({content || ""});
+	compile = RXML_CONTEXT->make_p_code;
+      }
 
-      vars->args = Roxen.make_tag_attributes(nargs)[1..];
+      vars->args = Roxen.make_tag_attributes(vars)[1..];
       vars["rest-args"] = Roxen.make_tag_attributes(args - defaults)[1..];
-      user_tag_contents = vars->contents = content;
-      return ({ def });
+      vars->contents = content_text;
+      return def;
     }
+
+    array save() {return ({content_text, user_tag_contents});}
+    void restore (array saved) {[content_text, user_tag_contents] = saved;}
   }
 }
 
@@ -2178,12 +2207,21 @@ class TagDefine {
 
   class Frame {
     inherit RXML.Frame;
+    array(string|RXML.PCode) def;
+    mapping defaults;
+    int do_iterate;
 
     array do_enter(RequestID id) {
-      if(args->preparse)
-	m_delete(args, "preparse");
-      else
-	content_type = RXML.t_xml;
+      if (def)
+	// A previously evaluated tag was restored.
+	do_iterate = -1;
+      else {
+	do_iterate = 1;
+	if(args->preparse)
+	  m_delete(args, "preparse");
+	else
+	  content_type = RXML.t_xml;
+      }
       return 0;
     }
 
@@ -2208,12 +2246,13 @@ class TagDefine {
 	} else
 	  m_delete(args, "container");
 
-	mapping defaults=([]);
+	if (!def) {
+	  defaults=([]);
 
 #if ROXEN_COMPAT <= 1.3
-	if(id->conf->old_rxml_compat)
-	  foreach( indices(args), string arg )
-	    if( arg[..7] == "default_" )
+	  if(id->conf->old_rxml_compat)
+	    foreach( indices(args), string arg )
+	      if( arg[..7] == "default_" )
 	      {
 		defaults[arg[8..]] = args[arg];
 		old_rxml_warning(id, "define attribute "+arg,"attrib container");
@@ -2221,52 +2260,55 @@ class TagDefine {
 	      }
 #endif
 
-	if(!content) content = "";
+	  if(!content) content = "";
 
-	string add_default(Parser.HTML p, mapping m, string c) {
-	  if(m->name) defaults[m->name]=Roxen.parse_rxml(c, id);
-	  return "";
-	};
-
-	if( compat_level > "2.1" ) {
-	  Parser.HTML p = Roxen.get_xml_parser();
-	  p->add_container ("attrib", add_default);
-	  array no_more_attrib (Parser.HTML p, void|string ignored)
-	  {
-	    p->add_container ("attrib", 0);
-	    p->_set_tag_callback (0);
-	    p->_set_data_callback (0);
-	    p->add_quote_tag ("?", 0, "?");
-	    p->add_quote_tag ("![CDATA[", 0, "]]");
-	    return 0;
+	  string add_default(Parser.HTML p, mapping m, string c) {
+	    if(m->name) defaults[m->name]=Roxen.parse_rxml(c, id);
+	    return "";
 	  };
-	  // Stop parsing for attrib tags when we reach something else
-	  // than whitespace and comments.
-	  p->_set_tag_callback (no_more_attrib);
-	  p->_set_data_callback (lambda (Parser.HTML p, string d) {
-				   sscanf (d, "%[ \t\n\r]", string ws);
-				   if (d != ws) no_more_attrib (p);
-				   return 0;
-				 });
-	  p->add_quote_tag ("?", no_more_attrib, "?");
-	  p->add_quote_tag ("![CDATA[", no_more_attrib, "]]");
-	  content = p->finish (content)->read();
-	}
-	else
-	  content = Parser.HTML()->add_container("attrib", add_default)->
-	    finish(content)->read();
 
-	if(args->trimwhites) {
-	  content=String.trim_all_whites(content);
-	  m_delete (args, "trimwhites");
-	}
+	  if( compat_level > "2.1" ) {
+	    Parser.HTML p = Roxen.get_xml_parser();
+	    p->add_container ("attrib", add_default);
+	    array no_more_attrib (Parser.HTML p, void|string ignored)
+	    {
+	      p->add_container ("attrib", 0);
+	      p->_set_tag_callback (0);
+	      p->_set_data_callback (0);
+	      p->add_quote_tag ("?", 0, "?");
+	      p->add_quote_tag ("![CDATA[", 0, "]]");
+	      return 0;
+	    };
+	    // Stop parsing for attrib tags when we reach something else
+	    // than whitespace and comments.
+	    p->_set_tag_callback (no_more_attrib);
+	    p->_set_data_callback (lambda (Parser.HTML p, string d) {
+				     sscanf (d, "%[ \t\n\r]", string ws);
+				     if (d != ws) no_more_attrib (p);
+				     return 0;
+				   });
+	    p->add_quote_tag ("?", no_more_attrib, "?");
+	    p->add_quote_tag ("![CDATA[", no_more_attrib, "]]");
+	    content = p->finish (content)->read();
+	  }
+	  else
+	    content = Parser.HTML()->add_container("attrib", add_default)->
+	      finish(content)->read();
+
+	  if(args->trimwhites) {
+	    content=String.trim_all_whites(content);
+	    m_delete (args, "trimwhites");
+	  }
 
 #if ROXEN_COMPAT <= 1.3
-	if(id->conf->old_rxml_compat) content = replace( content, indices(args), values(args) );
+	  if(id->conf->old_rxml_compat)
+	    content = replace( content, indices(args), values(args) );
 #endif
+	  def = ({content});
+	}
 
 	UserTag user_tag = UserTag (n, tag);
-	ctx->misc["tag\0" + n] = ({content, defaults, args->scope, user_tag});
+	ctx->misc["tag\0" + n] = ({def, defaults, args->scope, user_tag});
 	ctx->add_runtime_tag(user_tag);
 	return 0;
       }
@@ -2284,6 +2326,9 @@ class TagDefine {
 
       parse_error("No tag, variable, if or container specified.\n");
     }
+
+    array save() {return ({def, defaults});}
+    void restore (array saved) {[def, defaults] = saved;}
   }
 }
 
@@ -2781,7 +2826,7 @@ class TagCond
     class Frame
     {
       inherit RXML.Frame;
-      int do_iterate = 1;
+      int do_iterate;
 
       array do_enter()
       {
@@ -2789,6 +2834,7 @@ class TagCond
 	  do_iterate = -1;
 	  return 0;
 	}
+	do_iterate = 1;
 	content_type = up->result_type (RXML.PNone);
 	return 0;
       }
@@ -2802,7 +2848,7 @@ class TagCond
   }
 
   RXML.TagSet cond_tags =
-    RXML.TagSet (module_identifier() + "/cond", ({TagCase(), TagDefault()}));
+    RXML.shared_tag_set ("/rxmltags/cond", ({TagCase(), TagDefault()}));
 
   class Frame
   {
@@ -2894,7 +2940,7 @@ class TagEmit {
   }
 
   RXML.TagSet internal =
-    RXML.TagSet(module_identifier() + "/emit", ({ TagDelimiter() }) );
+    RXML.shared_tag_set ("/rxmltags/emit", ({ TagDelimiter() }) );
 
   // A slightly modified Array.dwim_sort_func
   // used as emits sort function.
