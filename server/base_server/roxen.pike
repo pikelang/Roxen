@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.30 1997/01/06 18:42:49 kg Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.31 1997/01/09 20:45:55 grubba Exp $";
 #define IN_ROXEN
 #include <module.h>
 #include <variables.h>
@@ -1760,7 +1760,7 @@ private string get_domain(int|void l)
 //  ConfigurationURL is set by the 'install' script.
   if(!(!l && sscanf(QUERY(ConfigurationURL), "http://%s:%*s", s)))
   {
-#if efun(gethostbynme) && efun(gethostname)
+#if efun(gethostbyname) && efun(gethostname)
     f = gethostbyname(gethostname()); // First try..
     if(f)
       foreach(f, f) foreach(f, t) if(search(t, ".") != -1 && !(int)t)
