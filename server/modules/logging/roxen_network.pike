@@ -7,7 +7,7 @@ inherit "module";
 
 // ---------------- Module registration stuff ----------------
 
-constant cvs_version = "$Id: roxen_network.pike,v 1.1 2000/12/02 16:17:54 nilsson Exp $";
+constant cvs_version = "$Id: roxen_network.pike,v 1.2 2000/12/02 17:00:47 nilsson Exp $";
 constant module_type = MODULE_ZERO;
 constant thread_safe = 1;
 constant module_name = "Roxen Network module";
@@ -37,7 +37,8 @@ void create(Configuration _conf) {
 
   defvar("webmaster",
 	 Variable.Email("", 0, "Webmaster e-mail",
-			"E-mail addres to the webmaster"));
+			"E-mail addres to the webmaster"))
+    -> may_be_empty(1);
 
   var = defvar("location",
 	       Variable.MapLocation(0, internal_location, 0,
