@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: roxenlib.pike,v 1.217 2002/12/02 15:57:03 grubba Exp $
+// $Id: roxenlib.pike,v 1.218 2004/03/03 15:32:29 mast Exp $
 
 //#pragma strict_types
 
@@ -102,7 +102,8 @@ static string http_res_to_string( mapping file, RequestID id )
   if(mappingp(([mapping(string:mixed)]id->misc)->moreheads))
     heads |= ([mapping(string:mixed)]id->misc)->moreheads;
 
-  array myheads=({id->prot+" "+(file->rettext||errors[file->error])});
+  array myheads=({id->prot+" "+
+		  replace (file->rettext||errors[file->error], "\n", " ")});
   foreach(indices(heads), string h)
     if(arrayp(heads[h]))
       foreach([array(string)]heads[h], string tmp)
