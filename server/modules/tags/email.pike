@@ -1,15 +1,13 @@
 // This is a roxen module. Copyright © 2000 - 2001, Roxen IS.
 
 // Todo:
-//	- checking 'valid' email addresses
 //	- multiple Bcc recipients
 //	- Docs
 //	- more debug coloring :)
-//
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.15 2001/09/21 15:58:15 jhs Exp $";
+constant cvs_version = "$Id: email.pike,v 1.16 2002/01/04 07:44:39 hop Exp $";
 
 constant thread_safe=1;
 
@@ -89,7 +87,7 @@ void create()
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.15 $"/" ")[1];
+string revision = ("$Revision: 1.16 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -234,11 +232,9 @@ class TagEmail {
 	if(query("CI_qmail_spec"))
 	  body = (Array.map(body / "\r\n", lambda(string el1) { return (replace(el1, "\n", "\r\n")); }))*"\r\n";
 
-	aname = sizeof(aname) ? (args->mimetype||"text/plain")+"; name=\"" + aname + "\"": (args->mimetype||"text/plain");
 	error = catch(
 	m=MIME.Message(body, ([ 
-			     //"content-type":(sizeof(aname) ? "text/plain; name=\"" + aname + "\"": "text/plain"),
-			     "content-type":aname,
+			     "content-type":(sizeof(aname) ? (args->mimetype||"text/plain")+"; name=\"" + aname + "\"": (args->mimetype||"text/plain")),
 			     "content-transfer-encoding":"8bit",
 			     "content-disposition":(sizeof(aname)? "attachment; filename=\"" + aname + "\"": "attachment")
 			   ]))
@@ -355,7 +351,8 @@ class TagEmail {
 
      if (arrayp(id->misc->_email_atts_) && sizeof(id->misc->_email_atts_)) {
        m=MIME.Message(body, ([ "MIME-Version":"1.0",
-			     "content-type":"text/plain" + chs,
+			     "content-type":(args->mimetype||"text/plain")
+				+ chs,
 			     "content-transfer-encoding":"8bit",
 			   ]));
        error = catch(
@@ -367,12 +364,14 @@ class TagEmail {
 			   ]) + headers,
 			({ m }) + id->misc->_email_atts_
          ));
+       m_delete(id->misc,"_email_atts_");
      } else
      error = catch(
        m=MIME.Message(body, ([ "MIME-Version":"1.0", "subject":subject,
 			     "from":fromx,
 			     "to":replace(tox, split, ","),
-			     "content-type":"text/plain" + chs,
+			     "content-type":(args->mimetype||"text/plain")
+				+ chs,
 			     "content-transfer-encoding":"8bit",
 			     "x-mailer":"Roxen's email, r"+revision
 			   ]) + headers)
@@ -477,6 +476,11 @@ value=''><p>
 
 <attr name='separator' value='' default=','><p>
  The separator character for the recipient list.
+</p>
+</attr>
+
+<attr name='mimetype' value='MIME type'><p>
+ Overrides the MIME type of the body.
 </p>
 </attr>
 
