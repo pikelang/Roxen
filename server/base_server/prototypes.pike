@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.137 2004/05/25 19:11:29 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.138 2004/06/01 13:04:09 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -749,9 +749,9 @@ class CacheKey
       cb (this, @args);
   }
 
-  void activate()
+  int activate()
   //! Activate the cache key. This must be called when the key is
-  //! stored in a cache.
+  //! stored in a cache. Return nonzero if any callbacks got called.
   {
     // Relying on the interpreter lock here.
     if (array(array(CacheActivationCB|array)) cbs = activation_cbs) {
@@ -759,7 +759,9 @@ class CacheKey
       activation_cbs = 0;
       foreach (cbs, [CacheActivationCB cb, array args])
 	cb (this, @args);
+      return sizeof (cbs);
     }
+    return 0;
   }
 
   int activated()
@@ -769,21 +771,26 @@ class CacheKey
     return !activation_cbs;
   }
 
-  void call_activation_cbs_only()
-  // Call the collected activation callbacks without activating the
-  // key. This is a kludge to play safe in situations early in the
-  // request path where we don't want to activate the key and where
-  // there aren't any outstanding callbacks in the common case with a
-  // direct request but might still be in the recursive case. Ignore
-  // if you can.
+  int activate_if_necessary()
+  // Activate the key only if any activation cbs are installed. This
+  // is a kludge to play safe in situations early in the request path
+  // where we don't want to activate the key and where there aren't
+  // any outstanding callbacks in the common case with a direct
+  // request but might still be in the recursive case. Ignore if you
+  // can.
   {
     // Relying on the interpreter lock here.
     if (array(array(CacheActivationCB|array)) cbs = activation_cbs) {
-      // Relying on the interpreter lock here too.
-      activation_cbs = ({});
-      foreach (cbs, [CacheActivationCB cb, array args])
-	cb (this, @args);
+      if (sizeof (cbs)) {
+	if (this)
+	  // Relying on the interpreter lock here.
+	  activation_cbs = 0;
+	foreach (cbs, [CacheActivationCB cb, array args])
+	  cb (this, @args);
+	return 1;
+      }
     }
+    return 0;
   }
 
   string _sprintf (int flag)
