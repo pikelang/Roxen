@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 2000 - 2001, Roxen IS.
-// $Id: basic_defvar.pike,v 1.34 2002/10/22 00:06:12 nilsson Exp $
+// $Id: basic_defvar.pike,v 1.35 2003/01/19 18:33:01 mani Exp $
 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
@@ -50,7 +50,7 @@ int killvar(string var)
 void setvars( mapping (string:mixed) vars )
 //! Set the variables from the mapping, which should be on the form
 //! ([ "variable name":value, ... ]). 
-//! Used by roxen internals, not all that useful for the module
+//! Used by ChiliMoon internals, not all that useful for the module
 //! programmer.
 {
   Variable.Variable q;

@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.25 2002/11/04 20:46:36 mani Exp $
+ * $Id: snmpagent.pike,v 1.26 2003/01/19 18:33:02 mani Exp $
  *
  * The ChiliMoon SNMP agent
  * Copyright © 2001, Honza Petrous, hop@unibase.cz
@@ -35,7 +35,7 @@ Developer notes:
  Todos:
 
 	- module reloading
-	- Roxen.module API for registering MIB subtree
+	- module API for registering MIB subtree
 
 	- SNMP v3 
 	- security (DES?)
@@ -762,7 +762,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("ChiliMoon SNMP agent v"+("$Revision: 1.25 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("ChiliMoon SNMP agent v"+("$Revision: 1.26 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'

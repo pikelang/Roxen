@@ -1,13 +1,13 @@
-// Roxen Locale Support
+// ChiliMoon Locale Support
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: language.pike,v 1.41 2002/10/01 22:26:50 nilsson Exp $
+// $Id: language.pike,v 1.42 2003/01/19 18:33:02 mani Exp $
 
 #pragma strict_types
 
 #include <roxen.h>
 
 string default_locale;
-//! Contains the default locale for the entire roxen server.
+//! Contains the default locale for the entire ChiliMoon server.
 
 string default_page_locale;
 //! Contains the default locale for web pages.

@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.847 2003/01/14 19:43:11 jhs Exp $";
+constant cvs_version="$Id: core.pike,v 1.848 2003/01/19 18:33:01 mani Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -341,9 +341,7 @@ static class Privs
 		   "%s\n",
 		   gid, new_gid, describe_backtrace(backtrace()));
     }
-#endif /* PRIVS_DEBUG */
-
-    seteuid(0);
+#endif /* PRIVS_DEBUG */    seteuid(0);
     array u = getpwuid(saved_uid);
 #if efun(cleargroups)
     catch { cleargroups(); };
@@ -410,7 +408,7 @@ private void low_shutdown(int exit_code)
 {
   if(_recurse >= 4)
   {
-    catch (report_notice("Exiting roxen (spurious signals received).\n"));
+    catch (report_notice("Exiting ChiliMoon (spurious signals received).\n"));
     catch (stop_all_configurations());
     destruct(cache);
 #ifdef THREADS
@@ -434,15 +432,15 @@ private void low_shutdown(int exit_code)
 
 // Perhaps somewhat misnamed, really...  This function will close all
 // listen ports and then quit.  The 'start' script should then start a
-// new copy of roxen automatically.
+// new copy of ChiliMoon automatically.
 void restart(float|void i, void|int exit_code)
-//! Restart roxen, if the start script is running
+//! Restart ChiliMMoon, if the start script is running.
 {
   call_out(low_shutdown, i, exit_code || -1);
 }
 
 void shutdown(float|void i)
-//! Shut down roxen
+//! Shut down ChiliMoon.
 {
   call_out(low_shutdown, i, 0);
 }
@@ -1407,7 +1405,7 @@ class Protocol
     url = lower_case( url );
     // The URLs are sorted from longest to shortest, so that short
     // urls (such as http://*/) will not match before more complete
-    // ones (such as http://*.roxen.com/)
+    // ones (such as http://*.chilimoon.com/)
     foreach( sorted_urls, string in )
     {
       if( glob( in+"*", url ) )
@@ -2262,7 +2260,7 @@ void restart_if_stuck (int force)
 	     // Catch for paranoia reasons.
 	     describe_all_threads();
 	   };
-	   report_debug("**** %s: ABS exiting roxen!\n\n",
+	   report_debug("**** %s: ABS exiting ChiliMoon!\n\n",
 			ctime(time()));
 	   _exit(1); 	// It might now quit correctly otherwise, if it's
 	   //  locked up
@@ -3181,11 +3179,6 @@ class ImageCache
       werror("Creating image-cache tables for '"+name+"'\n");
       catch(QUERY("DROP TABLE "+name));
 
-      // The old tables. This is only useful for people who have run
-      // Roxen 2.2 from cvs before
-      catch(QUERY("DROP TABLE "+name+"_data"));
-
-
       master()->resolv("DBManager.is_module_table")
 	( 0,"local",name,"Image cache for "+name);
       
@@ -3297,7 +3290,7 @@ class ArgCache
 
   static void init_db()
   {
-    // Delay DBManager resolving to before the 'roxen' object is
+    // Delay DBManager resolving to before the 'core' object is
     // compiled.
     cache = ([]);
     db = dbm_cached_get("local");
@@ -3735,7 +3728,7 @@ int set_u_and_gid (void|int from_handler_thread)
 //! Set the uid and gid to the ones requested by the user. If the
 //! sete* functions are available, and the define SET_EFFECTIVE is
 //! enabled, the euid and egid is set. This might be a minor security
-//! hole, but it will enable roxen to start CGI scripts with the
+//! hole, but it will enable ChiliMoon to start CGI scripts with the
 //! correct permissions (the ones the owner of that script have).
 {
 #ifndef __NT__
@@ -4131,7 +4124,7 @@ Image.Image load_image(string f, RequestID id)
 }
 
 // do the chroot() call. This is not currently recommended, since
-// roxen dynamically loads modules, all module files must be
+// ChiliMoon dynamically loads modules, all module files must be
 // available at the new location.
 
 private void fix_root(string to)

@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.125 2002/11/07 14:13:41 mani Exp $
+// $Id: module_support.pike,v 1.126 2003/01/19 18:33:02 mani Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>
@@ -537,7 +537,7 @@ array(ModuleInfo) all_modules()
     add_module_path( d );
   report_debug("\bDone [%dms]\n", (gethrtime()-t)/1000 );
 
-  report_debug("Searching for roxen modules ... \b");
+  report_debug("Searching for ChiliMoon modules ... \b");
   t = gethrtime();
   if( !modules )
   {

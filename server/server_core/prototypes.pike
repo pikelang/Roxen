@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.62 2002/11/07 14:13:41 mani Exp $
+// $Id: prototypes.pike,v 1.63 2003/01/19 18:33:02 mani Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -504,9 +504,7 @@ class RequestID
   multiset(string) prestate;
   //! A multiset of all prestates harvested from the URL. Prestates are boolean
   //! flags, who are introduced in an extra leading path segment of the URL
-  //! path put within parentheses, as in <a
-  //! href="http://docs.roxen.com/(tables)/">docs://www.roxen.com/(tables)/</a>,
-  //! this rendering a prestate multiset <pi>(&lt; "tables" &gt;)</pi>.
+  //! path put within parentheses.
   //!
   //! Prestates are mostly useful for debugging purposes, since prestates
   //! generally lead to multiple URLs for identical documents resulting in

@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: disk_cache.pike,v 1.65 2002/10/22 00:06:12 nilsson Exp $
+// $Id: disk_cache.pike,v 1.66 2003/01/19 18:33:02 mani Exp $
 
 #include <config.h>
 #include <module_constants.h>
@@ -123,7 +123,7 @@ class CacheStream ( Stdio.File file, string fname, int new )
 
   int load_headers()
   {
-    string head, roxenhead;
+    string head;
     mixed err;
     int size;
 
@@ -599,8 +599,6 @@ CacheStream create_cache_file(string cl, string entry)
 
   cf->rfile = rfile;
   cf->rfiledone = rfiledone;
-
-  // create roxenheader
 
   if(cf->file->seek(ROXEN_HEAD_SIZE) != ROXEN_HEAD_SIZE) {
     destruct(cf);

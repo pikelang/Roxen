@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.102 2003/01/14 22:07:53 mani Exp $
+// $Id: global_variables.pike,v 1.103 2003/01/19 18:33:02 mani Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 
@@ -509,7 +509,7 @@ The start script attempts to fix this for the standard file locations.</p>");
 			   Locale.list_languages("roxen_""config"),
 			   0, "Default language",
 			   ("Locale, used to localize some "
-			    "messages in Roxen. Standard means using "
+			    "messages in ChiliMoon. Standard means using "
 			    "the default locale, which varies "
 			    "according to the value of "
 			    "the 'LANG' environment variable.")))

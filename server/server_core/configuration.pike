@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.548 2003/01/19 18:02:36 mani Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.549 2003/01/19 18:33:01 mani Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1293,8 +1293,8 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 //! The function that actually tries to find the data requested. All
 //! modules except last and filter type modules are mapped, in order,
 //! and the first one that returns a suitable response is used. If
-//! `no_magic' is set to one, the internal magic roxen images and the
-//! <ref>find_internal()</ref> callbacks will be ignored.
+//! `no_magic' is set to one, the internal magic images and the
+//! @[find_internal()] callbacks will be ignored.
 //!
 //! The return values 0 (no such file) and -1 (the data is a
 //! directory) are only returned when `no_magic' was set to 1;
@@ -1341,7 +1341,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	//  authenticated (which normally disables protocol-level caching).
 	id->misc->cacheable = 9999;
 	
-	TRACE_LEAVE("Magic internal roxen image");
+	TRACE_LEAVE("Magic internal image");
         if(loc=="unit" || loc=="pixel-of-destiny")
 	{
 	  TIMER_END(internal_magic);
@@ -2440,7 +2440,7 @@ void start(int num)
 	       query("URLs"));
 #endif /* 0 */
 
-  // Note: This is run as root if roxen is started as root
+  // Note: This is run as root if ChiliMoon is started as root
   foreach( (registered_urls-query("URLs"))+failed_urls, string url )
   {
     registered_urls -= ({ url });
