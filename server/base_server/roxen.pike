@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.777 2002/02/06 09:27:55 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.778 2002/02/06 11:55:45 grubba Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -3301,14 +3301,23 @@ class ArgCache
       return 0; // Not very likely to work...
     object crypto = Crypto.arcfour();
     crypto->set_encrypt_key(key);
-    a = crypto->crypt(a);
+    string msg = crypto->crypt(a);
     // Fix the high-order bit altered by encode_id().
-    a[0] &= 0x7f;
+    msg[0] &= 0x7f;
     int i, j;
-    if((sscanf(a, "%d\327%d", i, j) == 2) &&
-       (a == i + "\327" + j)) {
+    if((sscanf(msg, "%d\327%d", i, j) == 2) &&
+       (msg == i + "\327" + j)) {
       return ({ i, j });
     }
+#ifndef NO_BROKEN_ARGCACHE_FALLBACK
+    // Fallback -- Check if it's an old broken key.
+    crypto->set_encrypt_key(key);
+    msg = crypto->crypt("\0"+a);
+    if((sscanf(msg, "%d\327%d", i, j) == 2) &&
+       (msg == i + "\327" + j)) {
+      return ({ i, j });
+    }
+#endif /* !NO_BROKEN_ARGCACHE_FALLBACK */
     return 0;
   }
 
