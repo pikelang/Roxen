@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.44 1999/01/14 02:29:13 neotron Exp $
+/* $Id: ssl3.pike,v 1.45 1999/03/11 22:13:27 mast Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -322,10 +322,6 @@ static void write_more_file()
 }
 
 #if 1
-void _force_destruct()
-{
-}
-
 void send_result(mapping|void result)
 {
   array err;
@@ -438,12 +434,14 @@ void send_result(mapping|void result)
   }
 
   
-  if(conf)
+  if(conf) {
     conf->sent+=(file->len>0 ? file->len : 1000);
+    conf->log(file, thiso);
+  }
 
   file->head = head_string;
   to_send = copy_value(file);
-  
+
   if (objectp(to_send->file)) {
     array st = to_send->file->stat && to_send->file->stat();
     if (st && (st[1] >= 0)) {
@@ -466,10 +464,6 @@ void send_result(mapping|void result)
       my_fd->set_nonblocking(0, write_more, end);
     }
   }
-
-  // FIXME: Delayed destruct of thiso?
-  _force_destruct();
-  if(thiso && conf) conf->log(file, thiso);
 }
 #endif /* 1 */
 
