@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.147 2000/02/21 20:23:09 nilsson Exp $
+// $Id: rxml.pike,v 1.148 2000/02/23 01:35:35 mast Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -782,7 +782,7 @@ class TagUse {
       }
 
       if(!args->file && !args->package)
-	parse_error("No file or package selected.");
+	parse_error("No file or package selected.\n");
 
 
       array res;
@@ -801,7 +801,7 @@ class TagUse {
 	  file = read_package( args->package );
 
 	if(!file)
-	  run_error("Failed to fetch "+(args->file||args->package)+".");
+	  run_error("Failed to fetch "+(args->file||args->package)+".\n");
 
 	if( args->info )
 	  return ({"<dl>"+use_file_doc( args->file || args->package, file )+"</dl>"});
@@ -991,7 +991,7 @@ class TagDefine {
       }
 #endif
 
-      parse_error("No tag, variable, if or container specified.");
+      parse_error("No tag, variable, if or container specified.\n");
     }
   }
 }
@@ -1027,7 +1027,7 @@ class TagUndefine {
       }
 #endif
 
-      parse_error("No tag, variable, if or container specified.");
+      parse_error("No tag, variable, if or container specified.\n");
     }
   }
 }
@@ -1454,7 +1454,7 @@ class TagEmit {
 
     array do_enter(RequestID id) {
       if(!(plugin=get_plugins()[args->source]))
-	parse_error("Source not present.");
+	parse_error("Source not present.\n");
       scope_name=args->scope||args->source;
       res=plugin->get_dataset(args, id);
       if(arrayp(res)) {
@@ -1469,7 +1469,7 @@ class TagEmit {
 	LAST_IF_TRUE = 1;
 	return 0;
       }
-      parse_error("Wrong return type from emit source plugin.");
+      parse_error("Wrong return type from emit source plugin.\n");
     }
 
     function do_iterate;
