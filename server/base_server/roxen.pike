@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.604 2001/01/02 15:50:22 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.605 2001/01/03 05:59:52 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2949,61 +2949,7 @@ void describe_all_threads()
   }
 }
 
-int dump( string file, program|void p )
-{
-  if( file[0] != '/' )
-    file = getcwd() +"/"+ file;
-#ifdef __NT__
-  file = normalize_path( file );
-#endif
-  if(!p)
-    p = master()->programs[ replace(file, "//", "/" ) ];
-#ifdef __NT__
-  if( !p )
-  {
-    if( sscanf( file, "%*s:/%s", file ) )
-    {
-      file = "/"+file;
-      p = master()->programs[ replace(file, "//", "/" ) ];
-    }
-  }
-#endif
-    
-  array q;
-#ifdef MUCHU_DUMP_DEBUG
-# define DUMP_DEBUG
-#endif
-  if(!p)
-  {
-#ifdef DUMP_DEBUG
-    werror(file+" not loaded, and thus cannot be dumped.\n");
-#endif
-    return 0;
-  }
-
-  if( master()->has_set_on_load[ file ] == 1 )
-  {
-    if( q = catch( master()->dump_program( file, p ) ) )
-    {
-#ifdef DUMP_DEBUG
-      report_debug("** Cannot encode "+file+": "+describe_backtrace(q)+"\n");
-#else
-      array parts = replace(file, "//", "/") / "/";
-      if (sizeof(parts) > 3) parts = parts[sizeof(parts)-3..];
-      report_debug("Notice: Dumping failed for " + parts*"/"+" (not a bug)\n");
-#endif
-      return -1;
-    }
-#ifdef DUMP_DEBUG
-    werror( file+" dumped successfully\n" );
-#endif
-    return 1;
-  }
-#ifdef MUCHO_DUMP_DEBUG
-  werror(file+" already dumped (and up to date)\n");
-#endif
-  return 0;
-}
+constant dump = roxenloader.dump;
 
 program slowpipe, fastpipe;
 
