@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.19 2000/11/08 13:11:51 stewa Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.20 2000/12/29 23:24:44 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -49,6 +49,17 @@ RequestID first_try(RequestID id) {
   array(string) lang = (pre&languages) + (config&languages);
 
   lang+=([object(PrefLang)]id->misc->pref_languages)->get_languages();
+
+  // Array.uniq that preserves the order, which the one in pike
+  // 7.0 doesn't.
+  multiset exists = (<>);
+  array tmp = ({});
+  foreach( lang, string l )
+    if(!exists[l]) {
+      exists[l]=1;
+      tmp += ({ l });
+    }
+  lang = tmp;
 
   if(sizeof(defaults))
     lang=lang&defaults;
