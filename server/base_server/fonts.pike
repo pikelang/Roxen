@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.51 2000/05/26 21:50:46 per Exp $
+// $Id: fonts.pike,v 1.52 2000/08/19 09:20:48 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -219,7 +219,7 @@ class TTFWrapper
     string encoding;
     real = r;
     size = s;
-    real->set_height( size*2 );
+    real->set_height( (int)(size*64/34.5) ); // aproximate to pixels
 
     if(r_file_stat(fn+".properties"))
       parse_html(open(fn+".properties","r")->read(), ([]),
@@ -235,8 +235,11 @@ class TTFWrapper
 
   Image.Image write( string ... what )
   {
-    return real_write(@Array.map( (array(string))what,replace," ",""))
+    object i = 
+           real_write(@Array.map( (array(string))what,replace," ",""))
            ->scale(0.5);
+ werror("ttffont["+size+"]->write -> image %dx%d\n", i->xsize(), i->ysize());
+ return i;
   }
 }
 #endif
@@ -247,6 +250,7 @@ object get_font(string f, int size, int bold, int italic,
   object fnt;
   string key, name, of;
   mixed err;
+// werror("get_font "+f+"\n");
   f = replace( f, " ", "_" );
   of = f;
   key = f+size+bold+italic+justification+xspace+yspace;
@@ -369,7 +373,9 @@ object resolve_font(string f, string|void justification)
     justification="right";
   }
   int size=32;
-  sscanf(f, "%s %d", f, size);
+  string nf;
+  if( sscanf(f, "%s %d", nf, size) == 2 )
+    f = nf;
   object fn;
   fn = get_font(f, size, bold, italic,
 	      justification||"left",xspace, 0.0);
