@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.101 2000/02/06 21:47:58 nilsson Exp $
+ * $Id: rxml.pike,v 1.102 2000/02/07 00:13:32 mast Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -415,6 +415,8 @@ array(string)|string call_container(RXML.PHtml parser, mapping args,
 
   return result || ({make_container (tag, args, contents)});
 }
+
+int do_parse_depth;
 
 string do_parse(string to_parse, RequestID id,
                 Stdio.File file, mapping defines)
@@ -1225,7 +1227,7 @@ class TagEmit {
   inherit RXML.Tag;
   constant name = "emit";
   constant flags = RXML.FLAG_CONTAINER | RXML.FLAG_SOCKET_TAG;
-  constant req_arg_types = (["source":RXML.t_text]);
+  mapping(string:RXML.Type) req_arg_types = (["source":RXML.t_text]);
 
   class Frame {
     inherit RXML.Frame;
@@ -1715,7 +1717,7 @@ class TagIfVariable {
   string source(RequestID id, string s) {
     mixed var=RXML.get_context()->user_get_var(s);
     if(zero_type(var)) return 0;
-    return (string)var;
+    return RXML.t_text->convert (var);
   }
 }
 
