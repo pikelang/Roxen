@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.41 1997/08/31 03:47:25 peter Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.42 1997/09/08 20:19:51 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -135,20 +135,42 @@ inline void open_names_file()
   names_file_callout_id = call_out(destruct, 1, names_file);
 }
 
+#ifdef THREADS
+object db_lock = Thread.Mutex();
+#endif /* THREADS */
+
+static void close_db_file(object db)
+{
+#ifdef THREADS
+  mixed key = db_lock->lock();
+#endif /* THREADS */
+  if (db) {
+    destruct(db);
+  }
+}
 
 static mixed db_file_callout_id;
-inline void open_db_file()
+inline mixed open_db_file()
 {
-  if(objectp(database)) return;
+  mixed key;
+#ifdef THREADS
+  catch { key = db_lock->lock(); };
+#endif /* THREADS */
+  if(objectp(database)) return key;
   if(!database)
   {
     if(db_file_callout_id) remove_call_out(db_file_callout_id);
     object privs = ((program)"privs")("Opening Access-log database file");
     database=open(QUERY(Accesslog)+".db", "wrc");
+    if (!database) {
+      throw(({ sprintf("Failed to open \"%s.db\". Out of fd's?\n",
+		       QUERY(Accesslog)), backtrace() }));
+    }
     if (QUERY(close_db)) {
-      db_file_callout_id = call_out(destruct, 9, database);
+      db_file_callout_id = call_out(close_db_file, 9, database);
     }
   }
+  return key;
 }
 
 void start()
@@ -197,7 +219,7 @@ int main_database_created()
 
   if(!mdc)
   {
-    open_db_file();
+    mixed key = open_db_file();
     database->seek(0);
     sscanf(database->read(4), "%4c", mdc);
     return mdc;
@@ -213,7 +235,7 @@ int database_set_created(string file, void|int t)
 
   p=fton[file];
   if(!p) return 0;
-  open_db_file();
+  mixed key = open_db_file();
   database->seek((p*8)+4);
   return database->write(sprintf("%4c", t||time(1)));
 }
@@ -226,7 +248,7 @@ int database_created(string file)
 
   p=fton[file];
   if(!p) return main_database_created();
-  open_db_file();
+  mixed key = open_db_file();
   database->seek((p*8)+4);
   sscanf(database->read(4), "%4c", w);
   if(!w)
@@ -245,7 +267,7 @@ int query_num(string file, int count)
 
   if(!QUERY(ac)) return -1;
 
-  open_db_file();
+  mixed key = open_db_file();
 
   // if(lock) lock->aquire();
   
