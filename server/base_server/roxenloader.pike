@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.144 2000/02/16 14:21:47 per Exp $
+ * $Id: roxenloader.pike,v 1.145 2000/02/17 05:28:27 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -18,7 +18,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.144 2000/02/16 14:21:47 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.145 2000/02/17 05:28:27 per Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -243,7 +243,7 @@ int mkdirhier(string from, int|void mode)
 
 
 // Help function used by low_spawne()
-mapping make_mapping(string *f)
+mapping make_mapping(array(string) f)
 {
   mapping foo=([ ]);
   string s, a, b;
@@ -441,7 +441,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
 }
 
 // Create a process
-object spawne(string s,string *args, mapping|array env, object stdin,
+object spawne(string s, array(string) args, mapping|array env, object stdin,
 	      object stdout, object stderr, void|string wd,
 	      void|array (int) uid)
 {
