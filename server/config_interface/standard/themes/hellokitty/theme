@@ -16,6 +16,6 @@
 
 <theme-set what=logo to=kittylogo.gif themefile />
 
-<theme-path match='/upgrade*'>
+<theme-path match='/update*'>
   <theme-set what=left-image to=a-kitty.gif themefile />
 </theme-path>
