@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded dokuments.
 
-constant cvs_version = "$Id: directories.pike,v 1.32 1999/12/27 23:26:22 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.33 1999/12/28 02:43:15 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -24,7 +24,7 @@ string OUT_FORM;
 void start( int num, Configuration conf )
 {
   DIRLISTING=query("dirlisting");
-  README=query("readme");
+  README=query("Readme");
   OUT_FORM="<img border=\"0\" src=\"%s\" alt=\"\"> "
     "<a href=\"%s\">%-40s</a>"+
     (query("size")?"   %11s":"%.0s")+
@@ -59,7 +59,7 @@ void create()
 	 "If disabled, a file not found error will be generated "
 	 "instead.<br>\n");
 
-  defvar("readme", ({ "README.html", "README" }),
+  defvar("Readme", ({ "README.html", "README" }),
 	 "Include readme files", TYPE_STRING_LIST,
 	 "Include one of these readme files in directory listings",
 	 0, !DIRLISTING);
@@ -119,7 +119,7 @@ string tag_directory_insert(string t, mapping m, RequestID id)
 
 string find_readme(string d, RequestID id)
 {
-  foreach(query("readme"), string f) {
+  foreach(query("Readme"), string f) {
     string readme = id->conf->try_get_file(d+f, id);
 
     if (readme) {
