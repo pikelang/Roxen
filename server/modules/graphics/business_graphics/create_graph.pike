@@ -327,6 +327,15 @@ object get_font(string j, int p, int t, int h, string fdg, int s, int hd)
 //ta ut xmaxynames, ymaxynames xmaxxnames ymaxxnames
 mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
 {
+  int tobig=1;
+  int xmaxynames=0, ymaxynames=0, xmaxxnames=0, ymaxxnames=0;
+  while(tobig)
+    {
+      if (tobig>9)
+	throw( ({"Very bad error while trying to resize the textfont!\n",
+		 backtrace()}));
+
+
   object notext=get_font("avant_garde", diagram_data["fontsize"], 0, 0, "left",0,0);
   int j;
   diagram_data["xnamesimg"]=allocate(j=sizeof(diagram_data["xnames"]));
@@ -351,13 +360,14 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
       diagram_data["ynamesimg"][i]=
 	image(diagram_data["fontsize"],diagram_data["fontsize"]);
   
-
+  write("fontsize:" +diagram_data["fontsize"]+"\n");
 
   if (diagram_data["orient"]=="vert")
     for(int i; i<sizeof(diagram_data["xnamesimg"]); i++)
       diagram_data["xnamesimg"][i]=diagram_data["xnamesimg"][i]->rotate_ccw();
 
-  int xmaxynames=0, ymaxynames=0, xmaxxnames=0, ymaxxnames=0;
+
+  xmaxynames=0, ymaxynames=0, xmaxxnames=0, ymaxxnames=0;
   
   foreach(diagram_data["xnamesimg"], object img)
     if (img->ysize()>ymaxxnames) 
@@ -380,6 +390,36 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
   diagram_data["ymaxynames"]=ymaxynames;
   diagram_data["xmaxynames"]=xmaxynames;
 
+  if (ymaxxnames+xmaxynames>diagram_data["ysize"]/2)
+    {
+      tobig++;
+      diagram_data["fontsize"]=diagram_data["fontsize"]*diagram_data["ysize"]/2/(ymaxxnames+xmaxynames);
+    }
+  
+  if (ymaxynames>diagram_data["ysize"]/3)
+    {
+      tobig++;
+      diagram_data["fontsize"]=diagram_data["fontsize"]*diagram_data["ysize"]/3/ymaxynames;
+    }
+
+  if (xmaxynames>diagram_data["xsize"]/2)
+    {
+      tobig++;
+      diagram_data["fontsize"]=diagram_data["fontsize"]*diagram_data["xsize"]/2/xmaxynames;
+    }
+
+  if (xmaxxnames>diagram_data["xsize"]/3)
+    {
+      tobig++;
+      diagram_data["fontsize"]=diagram_data["fontsize"]*diagram_data["xsize"]/3/xmaxxnames;
+    }
+  
+  if (tobig==1)
+    tobig=0;
+  else
+    tobig--;
+
+    }
 
 }
 
@@ -459,19 +499,35 @@ mapping set_legend_size(mapping diagram_data)
 {
   if (!(diagram_data["legendfontsize"]))
     diagram_data["legendfontsize"]=diagram_data["fontsize"];
+  int raws;
+  //Check if the font is to big:
+  
+  int tobig=1;
+  int j=0;
+  int xmax=0, ymax=0;
+  int b;
+  int columnnr;
+  array(object(image)) texts;
+  array(mixed) plupps; //Det som ska ritas ut före texterna
+  object notext;
+
+
+  while(tobig)
+    {
+      if (tobig>3)
+	throw( ({"Very bad error while trying to resize the legendfonts!\n",
+		 backtrace()}));
+      
 
   if (diagram_data["legend_texts"])
     {
-      array(object(image)) texts;
-      //array(object(image)) plupps; //Det som ska ritas ut före texterna
-      array(mixed) plupps; //Det som ska ritas ut före texterna
       texts=allocate(sizeof(diagram_data["legend_texts"]));
       plupps=allocate(sizeof(diagram_data["legend_texts"]));
       
-      object notext=get_font("avant_garde",diagram_data["legendfontsize"], 0, 0, 
+      notext=get_font("avant_garde",diagram_data["legendfontsize"], 0, 0, 
 			     "left",0,0);
 
-      int j=sizeof(texts);
+      j=sizeof(texts);
       if (!diagram_data["legendcolor"])
 	diagram_data["legendcolor"]=diagram_data["bgcolor"];
       for(int i=0; i<j; i++)
@@ -484,7 +540,7 @@ mapping set_legend_size(mapping diagram_data)
 	    image(diagram_data["legendfontsize"],diagram_data["legendfontsize"]);
 
 
-      int xmax=0, ymax=0;
+      xmax=0, ymax=0;
   
       foreach(texts, object img)
 	{
@@ -535,8 +591,8 @@ mapping set_legend_size(mapping diagram_data)
 		 backtrace()}));
 
       //Ta redapå hur många kolumner vi kan ha:
-      int b;
-      int columnnr=(diagram_data["image"]->xsize()-4)/
+      b;
+      columnnr=(diagram_data["image"]->xsize()-4)/
 	(b=xmax+2*diagram_data["legendfontsize"]);
       
       if (columnnr==0)
@@ -554,10 +610,28 @@ mapping set_legend_size(mapping diagram_data)
 	  columnnr=1;
 	}
 
-      int raws=(j+columnnr-1)/columnnr;
+      raws=(j+columnnr-1)/columnnr;
       diagram_data["legend_size"]=raws*diagram_data["legendfontsize"];
 
+
+      if (diagram_data["image"]->ysize()/2>=raws*diagram_data["legendfontsize"])
+	tobig=0;
+      else
+	{
+	  tobig++;
+	  if (tobig==2)
+	    diagram_data["legendfontsize"]=diagram_data["image"]->ysize()/raws;
+	  else
+	    diagram_data["legendfontsize"]=diagram_data["image"]->ysize()/2/raws;
+	}
+    }
+
+    }
+
       //placera ut bilder och text.
+
+  if (diagram_data["legend_texts"])
+    {
       for(int i=0; i<j; i++)
 	{
 	  diagram_data["image"]->paste_alpha_color(plupps[i], 
@@ -597,9 +671,8 @@ mapping set_legend_size(mapping diagram_data)
 	}
     }
   else
-    diagram_data["legend_size"]=0;
+      diagram_data["legend_size"]=0;
 
-  
 
 
 }
@@ -719,6 +792,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   //rita bilderna för texten
   //ta ut xmaxynames, ymaxynames xmaxxnames ymaxxnames
   create_text(diagram_data);
+  si=diagram_data["fontsize"];
 
   //Skapa labelstexten för xaxlen
   object labelimg;

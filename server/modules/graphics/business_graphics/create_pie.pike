@@ -92,26 +92,13 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
   int edge_nr=0;
 
 
-  /*  if (names!=0)
-    if (sizeof(names)!=sizeof(numbers))
-      names=0;
-  if (colors)
-    {
-      if (sizeof(colors)<sizeof(numbers))
-	colors=0;
-      else
-	foreach( colors, mixed color)
-	  if (sizeof(color)!=3)
-	    colors=0;
-    }
-  if (!(size))
-    size=400;
-  */
 
   //create the text objects
   if (names)
     text=allocate(sizeof(names));
    
+  if (diagram_data["3Ddepth"]>diagram_data["ysize"]/5)
+    diagram_data["3Ddepth"]=diagram_data["ysize"]/5;
 
   if (names)
     if (notext=get_font("avant_garde", diagram_data["fontsize"], 0, 0, "left",0,0))
@@ -122,6 +109,13 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	  text[i]=notext->write((string)(names[i]))
 ->scale(0,diagram_data["fontsize"])
 ;
+	  if (text[i]->xsize()>diagram_data["xsize"]/5+diagram_data["3Ddepth"])
+	    text[i]=text[i]->scale((int)diagram_data["xsize"]/5, 0);
+
+	  if (text[i]->ysize()>diagram_data["ysize"]/5-diagram_data["3Ddepth"])
+	    text[i]=text[i]->scale(0, (int)diagram_data["ysize"]/5-
+				   diagram_data["3Ddepth"]);
+	  
 	  if (xmaxtext<(text[i]->xsize()))
 	    xmaxtext=text[i]->xsize();
 	  if (ymaxtext<(text[i]->ysize()))
@@ -479,7 +473,7 @@ int main(int argc, string *argv)
 		     ({91.2, 101.3, 91.5, 101.7,  -91.0, 101.5}),
 		    ({91.2, 103.3, -91.5, 100.1, 94.3, 95.2 }),
 		    ({93.2, -103.3, 93.5, 103.7, 94.3, -91.2 }) */}),
-		 "fontsize":16,
+		 "fontsize":66,
 		 "axcolor":({0,0,0}),
 		 "bgcolor":0, //({255,255,255}),
 		 "labelcolor":({0,0,0}),
@@ -487,7 +481,7 @@ int main(int argc, string *argv)
 		 "linewidth":2.2,
 		 "xsize":300,
 		 "ysize":300,
-		 "xnames":({"jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug"//, "sep"
+		 "xnames":({"jan", "feb", "mar", "aprfgh", "j", "jungd", "jul", "aug"//, "sep"
 		 }),
 		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
 		 //"legendfontsize":12,
@@ -495,7 +489,7 @@ int main(int argc, string *argv)
 		 "labelsize":12,
 		 "xminvalue":0.1,
 		 "yminvalue":0,
-		 "3Ddepth":30,
+		 "3Ddepth":10,
 		 "drawtype": "3D",
 		 "tone":0,
 		 "center":9,

@@ -33,12 +33,16 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
     barsdiagram=image(diagram_data["xsize"],diagram_data["ysize"],
 		      @(diagram_data["bgcolor"]));
   else
-    {
-      barsdiagram=diagram_data["image"];
-      diagram_data["xsize"]=diagram_data["image"]->xsize();
-      diagram_data["ysize"]=diagram_data["image"]->ysize();
-    }
-  
+    if (diagram_data["image"])
+      {
+	barsdiagram=diagram_data["image"];
+	diagram_data["xsize"]=diagram_data["image"]->xsize();
+	diagram_data["ysize"]=diagram_data["image"]->ysize();
+      }
+    else
+      barsdiagram=image(diagram_data["xsize"],diagram_data["ysize"],
+			255,255,255);
+
   diagram_data["image"]=barsdiagram;
   set_legend_size(diagram_data);
 
@@ -132,6 +136,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   //rita bilderna för texten
   //ta ut xmaxynames, ymaxynames xmaxxnames ymaxxnames
   create_text(diagram_data);
+  si=diagram_data["fontsize"];
 
   //Skapa labelstexten för xaxlen
   object labelimg;
@@ -140,9 +145,6 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
   int labely=0;
   if (diagram_data["labels"])
     {
-      //      if (diagram_data["labels"][2] && sizeof(diagram_data["labels"][2]))
-      //label=diagram_data["labels"][0]+" ["+diagram_data["labels"][2]+"]"; //Xstorhet
-      //else
       label=diagram_data["labels"][0];
       if ((label!="")&&(label!=0))
 	labelimg=get_font("avant_garde", diagram_data["labelsize"], 0, 0, "left",0,0)->
@@ -177,7 +179,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	(diagram_data["ymaxvalue"]-diagram_data["yminvalue"])+diagram_data["ystart"];
       
       int minpos;
-      minpos=max(labely, diagram_data["ymaxxnames"])+si*2;
+      minpos=max(labely, diagram_data["ymaxxnames"])+si/2.0;
       if (minpos>ypos_for_xaxis)
 	{
 	  ypos_for_xaxis=minpos;
@@ -189,7 +191,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	{
 	  int maxpos;
 	  maxpos=diagram_data["ysize"]-
-	    (int)ceil(diagram_data["linewidth"]+si*2)-
+	    (int)ceil(diagram_data["linewidth"]+si*2.0)-
 	    diagram_data["labelsize"];
 	  if (maxpos<ypos_for_xaxis)
 	    {
@@ -206,7 +208,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	// sätt x-axeln längst ner och diagram_data["ystart"] på samma ställe.
 	diagram_data["ystop"]=diagram_data["ysize"]-
 	  (int)ceil(diagram_data["linewidth"]+si)-diagram_data["labelsize"];
-	ypos_for_xaxis=max(labely, diagram_data["ymaxxnames"])+si*2;
+	ypos_for_xaxis=max(labely, diagram_data["ymaxxnames"])+si/2.0;
 	diagram_data["ystart"]=ypos_for_xaxis;
       }
     else
@@ -214,7 +216,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	//sätt x-axeln längst ner och diagram_data["ystart"] en aning högre
 	diagram_data["ystop"]=diagram_data["ysize"]-
 	  (int)ceil(diagram_data["linewidth"]+si)-diagram_data["labelsize"];
-	ypos_for_xaxis=max(labely, diagram_data["ymaxxnames"])+si*2;
+	ypos_for_xaxis=max(labely, diagram_data["ymaxxnames"])+si/2.0;
 	diagram_data["ystart"]=ypos_for_xaxis+si*2;
       }
   
@@ -237,7 +239,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	(diagram_data["xmaxvalue"]-diagram_data["xminvalue"])+diagram_data["xstart"];
       
       int minpos;
-      minpos=diagram_data["xmaxynames"]+si*2;
+      minpos=diagram_data["xmaxynames"]+si/2.0;
       if (minpos>xpos_for_yaxis)
 	{
 	  xpos_for_yaxis=minpos;
@@ -249,7 +251,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	{
 	  int maxpos;
 	  maxpos=diagram_data["xsize"]-
-	    (int)ceil(diagram_data["linewidth"]+si*2)-
+	    (int)ceil(diagram_data["linewidth"]+si*2.0)-
 	    labelx/2;
 	  if (maxpos<xpos_for_yaxis)
 	    {
@@ -268,7 +270,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 	
 	diagram_data["xstop"]=diagram_data["xsize"]-
 	  (int)ceil(diagram_data["linewidth"]+si)-labelx/2;
-	xpos_for_yaxis=diagram_data["xmaxynames"]+si*2;
+	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2.0;
 	diagram_data["xstart"]=xpos_for_yaxis;
       }
     else
@@ -278,7 +280,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 
 	diagram_data["xstop"]=diagram_data["xsize"]-
 	  (int)ceil(diagram_data["linewidth"]+si)-labelx/2;
-	xpos_for_yaxis=diagram_data["xmaxynames"]+si*2;
+	xpos_for_yaxis=diagram_data["xmaxynames"]+si/2.0;
 	diagram_data["xstart"]=xpos_for_yaxis+si*2;
       }
   
@@ -630,7 +632,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
 					  -
 					  diagram_data["xnamesimg"][i]->xsize()/2), 
 			       (int)floor(diagram_data["ysize"]-ypos_for_xaxis+
-					  si/2.0));
+					  si/4.0));
     }
 
   //Placera ut texten på Y-axeln
@@ -642,7 +644,7 @@ mapping(string:mixed) create_bars(mapping(string:mixed) diagram_data)
       barsdiagram->paste_alpha_color(diagram_data["ynamesimg"][i], 
 			       @(diagram_data["textcolor"]), 
 			       (int)floor(xpos_for_yaxis-
-					  si/2.0-diagram_data["linewidth"]*2-
+					  si/4.0-diagram_data["linewidth"]*2-
 					  diagram_data["ynamesimg"][i]->xsize()),
 			       (int)floor(-(diagram_data["values_for_ynames"][i]-
 					    diagram_data["yminvalue"])
@@ -732,13 +734,12 @@ int main(int argc, string *argv)
   diagram_data=(["type":"bars",
 		 "textcolor":({0,255,0}),
 		 "subtype":"box",
-		 "orient":"vert",
+		 "orient":"hor",
 		 "data": 
 		 ({ ({12.2, 10.3, 8.01, 9.0, 5.3, 4.0 }),
 		     ({91.2, 101.3, 91.5, 101.7,  141.0, 181.5}),
 		    ({191.2, 203.3, 241.5, 200.1, 194.3, 195.2 }),
 		    ({93.2, 113.3, 133.5, 143.7, 154.3, 400}) }),
-		 "fontsize":32,
 		 "axcolor":({0,0,255}),
 		 "bgcolor":0,//({255,255,255}),
 		 "labelcolor":({0,0,0}),
@@ -749,11 +750,11 @@ int main(int argc, string *argv)
 		 "ysize":200,
 		 "xnames":({"jan", "feb", "mar", "apr", "maj"//, "jun"
 }),
-		 "fontsize":16,
+		 "fontsize":42,
 		 "labels":0,//({"xstor", "ystor", "xenhet", "yenhet"}),
-		 "legendfontsize":20,
+		 "legendfontsize":25, 
 		 "legend_texts":({"Roxen", "Netscape", "Apache", "Microsoft" }),
-		 "labelsize":12,
+		 "labelsize":22,
 		 "xminvalue":0.1,
 		 "yminvalue":0,
 		 "horgrind": 1,
@@ -763,9 +764,9 @@ int main(int argc, string *argv)
 		 "xnames":({"hej", "olle"})
   ]);
 
-  diagram_data["image"]=image(2,2)->fromppm(read_file("girl.ppm"));
-  diagram_data["image"]=diagram_data["image"]->copy(10,10, diagram_data["image"]->xsize()-10,
-						    diagram_data["image"]->ysize()-10);
+  //  diagram_data["image"]=image(2,2)->fromppm(read_file("girl.ppm"));
+  //diagram_data["image"]=diagram_data["image"]->copy(10,10, diagram_data["image"]->xsize()-10,
+  //diagram_data["image"]->ysize()-10);
 
 
   object o=Stdio.File();
