@@ -3,11 +3,12 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.5 2000/11/20 12:59:14 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.6 2000/12/10 02:24:14 nilsson Exp $";
 constant thread_safe = 1;
-constant module_type = MODULE_ZERO;
+constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
 constant module_doc  = "Tests Roxen WebServer.";
+constant is_roxen_tester_module = 1;
 
 Configuration conf;
 Stdio.File index_file;
@@ -157,6 +158,13 @@ void run_xml_tests(string data) {
   report_debug("Did %d tests, failed on %d.\n", ltests, lfails);
 }
 
+void run_pike_tests(object test, string path) {
+  if(!test)
+    return;
+  if(test->run_tests)
+    catch( test->run_tests(conf) );
+}
+
 
 // --- Mission control ------------------------
 
@@ -169,14 +177,21 @@ void find_tests(string path) {
       report_debug("\nFound test file %s\n",path+file);
       if(glob("*.xml",file))
 	run_xml_tests(Stdio.read_file(path+file));
+      /*
+      if(glob("*.pike",file))
+	catch( run_pike_tests
+	       ( compile_string(Stdio.read_file(path+file))(), path+file ) );
+      */
     }
 }
 
 int die;
 void do_tests() {
 
-  if(roxen->start_time - time() < 2)
+  if(time() - roxen->start_time < 2) {
     call_out( do_tests, 2 );
+    return;
+  }
 
   if(die) return;
   die=1;
@@ -184,4 +199,22 @@ void do_tests() {
   report_debug("\n\nDid a grand total of %d tests, %d failed.\n", tests, fails);
 
   roxen->shutdown(1.0);
+}
+
+
+// --- Some tags used in the RXML tests ---------------
+
+class TagEmitTESTER {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "TESTER";
+
+  array(mapping(string:string)) get_dataset(mapping m, RequestID id) {
+    return ({
+      ([ "a":"kex", "b":"foo", "c":"1", "d":"12foo" ]),
+      ([ "a":"kex", "b":"boo", "c":"2", "d":"foo" ]),
+      ([ "a":"krut", "b":"gazonk", "c":"3", "d":"5foo33a" ]),
+      ([ "a":"kox", "c":"4", "d":"5foo4a" ])
+    });
+  }
 }
