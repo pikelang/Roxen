@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.9 1997/01/07 03:35:10 neotron Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.9.2.1 1997/02/24 18:39:40 grubba Exp $";
 #include <module.h>
 
 inherit "module";
@@ -175,7 +175,9 @@ void start()
 
   if(roxen->userlist() && (us = roxen->userinfo( QUERY(runuser) )))
     runuser = ({ (int)us[2], (int)us[3] });
-  else if((int)QUERY(runuser))
+  else if (sizeof(us = (QUERY(runuser)/":")) == 2) {
+    runuser = ({ (int)us[0], (int)us[1] });
+  } else if((int)QUERY(runuser))
     runuser = ({ (int)QUERY(runuser), (int)QUERY(runuser) });
 
   tmp=roxen->query("MyWorldLocation");
