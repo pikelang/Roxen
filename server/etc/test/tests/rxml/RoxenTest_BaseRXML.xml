@@ -1450,7 +1450,7 @@ cd</rxml>
 </test>
 
 <test>
-<rxml>&client.authentucated;</rxml>
+<rxml>&client.authenticated;</rxml>
 <result>0</result>
 </test>
 
