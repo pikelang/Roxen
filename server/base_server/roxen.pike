@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.867 2004/05/03 16:07:30 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.868 2004/05/03 16:11:38 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2175,7 +2175,7 @@ Configuration find_configuration( string name )
 }
 
 static int last_hrtime = gethrtime(1)/100;
-static int clock_sequence = random(0x0fffffff);
+static int clock_sequence = random(0x3fff);
 // Generate an uuid string.
 string new_uuid_string()
 {
@@ -2198,7 +2198,7 @@ string new_uuid_string()
   now &= 0x0fffffffffffffff;
   now |= 0x1000000000000000;	// DCE version 1.
   clock_sequence &= 0x3fff;
-  clock_sequence |= 0x8000;
+  clock_sequence |= 0x8000;	// DCE variant of UUIDs.
   return sprintf("%08x-%04x-%04x-%04x-%s",
 		 now & 0xffffffff,
 		 (now >> 32) & 0xffff,
