@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.136 2003/02/04 15:54:32 anders Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.137 2003/06/02 14:19:23 mast Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -680,7 +680,8 @@ void set_on_load( string f, function cb )
   has_set_on_load[ f ] = cb;
 }
 
-program low_findprog(string pname, string ext, object|void handler)
+program low_findprog(string pname, string ext,
+		     object|void handler, void|int mkobj)
 {
   program ret;
   array s;
@@ -769,7 +770,17 @@ program low_findprog(string pname, string ext, object|void handler)
 #ifdef DUMP_DEBUG
       int t = gethrtime();
 #endif
-      if ( mixed e=catch { ret=compile_file(fname); } )
+      load_time[fname] = time();
+#if constant (__empty_program)
+      programs[fname]=ret=__empty_program(0, fname);
+#endif
+      if ( mixed e=catch {
+	  ret=compile_file(fname, handler,
+#if constant (__empty_program)
+			   ret, mkobj ? (objects[ret] = __null_program()) : 0
+#endif
+			  );
+	} )
       {
 	// load_time[fname] = time(); not here, no.... reload breaks miserably
 	//
@@ -778,8 +789,7 @@ program low_findprog(string pname, string ext, object|void handler)
 	// places? This also avoids the dreaded infinite loop during
 	// compilation that could occur with misspelled identifiers in
 	// pike modules. /mast
-	load_time[fname] = time();
-	programs[fname]=0;
+	ret=programs[fname]=0;
         if(arrayp(e) && sizeof(e) &&
 	   (<"Compilation failed.\n", "Cpp() failed\n">)[e[0]])
           e[1]=({});
@@ -802,8 +812,7 @@ program low_findprog(string pname, string ext, object|void handler)
 #endif
     }
     program_names[ret] = fname;
-    if( ret )
-      load_time[fname] = time();
+    if( !ret ) m_delete (load_time, fname);
     return programs[fname] = ret;
   }
   return 0;
