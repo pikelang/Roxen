@@ -4,7 +4,7 @@
 inherit "module";
 
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.11 2004/05/22 23:39:59 _cvs_dirix Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.12 2004/05/23 01:02:20 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -348,12 +348,12 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
     string reached;
     foreach((scope/".")[1..] + (var ? ({ var }) : ({})), string index)
       if(!mappingp(result))
-      RXML.run_error("Can't sub-index %O with %O.\n", reached || "", index);
-	else if(!(result = result[ index ]))
+	RXML.run_error("Can't sub-index %O with %O.\n", reached || "", index);
+      else if(!(result = result[ index ]))
       {
-	DEBUG("\b => ([])[0] (no such scope:%O%s)\n",
+	DEBUG("\b => UNDEFINED (no such scope:%O%s)\n",
 	      scope, (zero_type(var) ? "" : sprintf(", var:%O combo", var)));
-	return ([])[0];
+	return UNDEFINED;
       }
       else
 	reached = (reached ? reached + "." : "") + index;
@@ -383,7 +383,7 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
 
     string|mapping|function what;
     if(!(what = dig_out(scope, var)))
-      return ([])[0]; // conserve zero_type
+      return UNDEFINED;
     //report_debug("scope: %O, var: %O, what: %t\n", scope, var, what);
     if(functionp( what )) // it's a temporal method to render us a new TimeRange
     {
@@ -424,13 +424,13 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
     mixed what, result;
     if(!(what  = dig_out(scope, var)))
     {
-      DEBUG("\b => ([])[0] (what conserved)\n");
-      return ([])[0]; // conserve zero_type
+      DEBUG("\b => UNDEFINED (what conserved)\n");
+      return UNDEFINED;
     }
     if(mappingp( what ) && !(result = what[""])) // may use this scope as a leaf
     { // this probably only occurs if the layout mapping is incorrectly set up:
-      DEBUG("\b => ([])[0] (what:%O)\n", what);
-      return ([])[0];
+      DEBUG("\b => UNDEFINED (what:%O)\n", what);
+      return UNDEFINED;
     }
     return fetch_and_quote_value(result || what, want_type);
   }
@@ -526,8 +526,8 @@ class TagEmitTimeZones
     if(!(time = get_date("", args, cal)))
       time = cal->Second();
     if(!zones[region])
-    RXML.parse_error("Unknown timezone region %O.\n", region);
-     next_shift = zones[region] && zones[region]->next_shift;
+      RXML.parse_error("Unknown timezone region %O.\n", region);
+    next_shift = zones[region] && zones[region]->next_shift;
     if(next_shift && time > next_shift)
       refresh_zones(time, region);
     return map(sort(indices(zones[region]) - ({ "next_shift" })),
@@ -697,7 +697,7 @@ class TagEmitTimeRange
                        "is needed together with the attribute query!\n");
 
       string host = m_delete(args,"host");
-      //werror(sprintf("QUERY : %O HOST: %O\n",sqlquery,host));
+      //werror("QUERY : %O HOST: %O\n",sqlquery,host);
 
       array(mapping) rs = db_query(sqlquery,host||query("db_name")||"none");
       if(sizeof(rs) > 0)
@@ -729,8 +729,8 @@ class TagEmitTimeRange
     args = args - emit->req_arg_types - emit->opt_arg_types;
     if(sizeof( args ))
       RXML.parse_error("Unknown attribute%s %s.\n",
-			       (sizeof(args)==1 ? "" : "s"),
-			       String.implode_nicely(indices(args)));
+		       (sizeof(args)==1 ? "" : "s"),
+		       String.implode_nicely(indices(args)));
 #endif
 
   array(mapping) res;
@@ -741,9 +741,9 @@ class TagEmitTimeRange
       {
         if(arrayp(dset[i]))
           {
-            //werror(sprintf("dset[%O][0]: %O\n",i,dset[i][0]));
+            //werror("dset[%O][0]: %O\n",i,dset[i][0]);
             res += ({ scopify(dset[i][0], output_unit) + dset[i][1] });
-            //werror(sprintf("dset[%O][1]: %O\n",i,dset[i..]));
+            //werror("dset[%O][1]: %O\n",i,dset[i..]);
           }
         else
           res += ({ scopify(dset[i], output_unit) });
@@ -780,14 +780,14 @@ Calendar.TimeRange get_date(string name, mapping args, Calendar calendar)
   {
     if(catch(date = cal->dwim_time( what )))
       if(catch(date = cal->dwim_day( what )) || !date)
-	RXML.run_error(sprintf("Illegal %stime %O.\n", name, what));
+	RXML.run_error("Illegal %stime %O.\n", name, what);
       else
 	date = date->second();
   }
   else if(what = m_delete(args, name + "date"))
   {
     if(catch(date = cal->dwim_day( what )))
-      RXML.run_error(sprintf("Illegal %sdate %O.\n", name, what));
+      RXML.run_error("Illegal %sdate %O.\n", name, what);
   }
   else if(what = m_delete(args, name + "year"))
     date = cal->Year( (int)what );
