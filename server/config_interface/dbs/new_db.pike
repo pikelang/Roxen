@@ -122,10 +122,14 @@ ERROR
 			   "</font>", id->variables->name );
 	 else
 	 {
-	   really_do_create( id );
-	   RXML.user_set_var( "var.go-on", "<redirect to=''/>" );
+	   if( mixed err = catch {
+	     really_do_create( id );
+	     RXML.user_set_var( "var.go-on", "<redirect to=''/>" );
+	     return "";
+	   } )
+	     error = ("<font color='&usr.warncolor;'>"+
+		      describe_error(err)+"</font>");
 	 }
-         return "";
       }
   }
   return replace( form, "ERROR", error );

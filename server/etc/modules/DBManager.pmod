@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.49 2001/10/08 13:58:20 wellhard Exp $
+// $Id: DBManager.pmod,v 1.50 2001/10/08 15:03:53 per Exp $
 
 //! Manages database aliases and permissions
 
@@ -774,8 +774,10 @@ void create_db( string name, string path, int is_internal,
 {
   if( get( name ) )
     error("The database "+name+" already exists\n");
-  if( has_value( name, " " ) )
-    error("Please do not use space in the database names\n");
+  if( sizeof((array)name & ({ '@', ' ', '-', '&', '%', '\t',
+			      '\n', '\r', '\\', '/', '\'', '"',
+			      '(', ')', '*', '+', }) ) )
+    error("Please do not use any of the characters @, -, &, /, \\ or %% in database names.\nAlso avoid whitespace characters\n");
   if( has_value( name, "-" ) )
     name = replace( name, "-", "_" );
   if( group )
@@ -969,6 +971,18 @@ CREATE TABLE db_permissions (
 	}
       }, 0 );
   }
+
+  if( !get("docs") )
+  {
+    if( catch{
+      
+      query("INSERT INTO db_backups (db,tbl,directory,whn) "
+	    "VALUES ('docs','docs','"+getcwd()+"/etc','"+time()+"')");
+    } )
+      werror("Failed to create docs database backup reference\n");
+  }
+    
+  
   return;
   };
 
