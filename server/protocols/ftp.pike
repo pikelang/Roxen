@@ -1,5 +1,5 @@
 /* Roxen FTP protocol. Written by Pontus Hagland
-string cvs_version = "$Id: ftp.pike,v 1.9 1997/04/07 23:14:19 marcus Exp $";
+string cvs_version = "$Id: ftp.pike,v 1.10 1997/04/08 23:46:49 marcus Exp $";
    (law@lysator.liu.se) and David Hedbor (neotron@infovav.se).
 
    Some of the features: 
@@ -27,6 +27,7 @@ import Array;
 
 string dataport_addr, cwd ="/";
 int controlport_port, dataport_port;
+object cmd_fd;
 int GRUK = random(_time(1));
 #undef QUERY
 #define QUERY(X) roxen->variables->X[VAR_VALUE]
@@ -35,7 +36,11 @@ int GRUK = random(_time(1));
 /********************************/
 /* private functions            */
 
-#define reply(X) do { conf->hsent += strlen(X); my_fd->write(replace(X, "\n","\r\n")); } while(0)
+void reply(string X)
+{
+  conf->hsent += strlen(X);
+  cmd_fd->write(replace(X, "\n","\r\n"));
+}
 
 private string reply_enumerate(string s,string num)
 {
@@ -84,17 +89,17 @@ void disconnect()
 {
   if(objectp(pipe) && pipe != Simulate.previous_object()) 
     destruct(pipe);
-  my_fd = 0;
+  cmd_fd = 0;
   destruct(this_object());
 }
 
 void end(string|void s)
 {
-  if(objectp(my_fd))
+  if(objectp(cmd_fd))
   {
     if(s)
-      my_fd->write(s);
-    destruct(my_fd);
+      cmd_fd->write(s);
+    destruct(cmd_fd);
   }
   disconnect();
 }
@@ -108,7 +113,7 @@ mapping internal_error(array err)
 {
   roxen->nwrite("Internal server error: " +
 		  describe_backtrace(err) + "\n");
-  my_fd->write(reply_enumerate("Internal server error: "+
+  cmd_fd->write(reply_enumerate("Internal server error: "+
 			       describe_backtrace(err)+"\n"+
 			       "Service not available, please try again","421"));
 }
@@ -211,10 +216,10 @@ void done_callback(object fd)
     destruct(fd);
   }
   reply("226 Transfer complete.\n");
-  my_fd->set_read_callback(got_data);
-  my_fd->set_write_callback(lambda(){});
-  my_fd->set_close_callback(end);
-  mark_fd(my_fd->query_fd(), GRUK+" cmd channel not sending data");
+  cmd_fd->set_read_callback(got_data);
+  cmd_fd->set_write_callback(lambda(){});
+  cmd_fd->set_close_callback(end);
+  mark_fd(cmd_fd->query_fd(), GRUK+" cmd channel not sending data");
 }
 
 void connected_to_send(object fd,mapping file)
@@ -242,12 +247,8 @@ void connected_to_send(object fd,mapping file)
 }
 
 inherit "socket";
-void connect_and_send(mapping file)
+void ftp_async_connect(function(object,mixed:void) fun, mixed arg)
 {
-#if 0
-  //  my_fd->set_blocking();
-  async_connect(dataport_addr,dataport_port, connected_to_send, file);
-#else
   // More or less copied from socket.pike
   
   object(files.file) f = files.file();
@@ -263,7 +264,7 @@ void connect_and_send(mapping file)
 #ifdef FTP_DEBUG
       perror("ftp: socket() failed. Out of sockets?\n");
 #endif
-      connected_to_send(0, file);
+      fun(0, arg);
       destruct(f);
       return;
     }
@@ -284,7 +285,7 @@ void connect_and_send(mapping file)
     destruct(args[2]);
     args[0](0, @args[1]);
   });
-  f->set_id( ({ connected_to_send, ({ file }), f }) );
+  f->set_id( ({ fun, ({ arg }), f }) );
 
   mark_fd(f->query_fd(),
 	  "ftp communication: -> "+dataport_addr+":"+dataport_port);
@@ -294,11 +295,106 @@ void connect_and_send(mapping file)
 #ifdef FTP_DEBUG
     perror("ftp: Illegal internet address in connect in async comm.\n");
 #endif
-    connected_to_send(0, file);
+    fun(0, arg);
     destruct(f);
     return;
+  }  
+}
+
+void connect_and_send(mapping file)
+{
+  ftp_async_connect(connected_to_send, file);
+}
+
+class put_file_wrapper {
+
+  inherit files.file;
+
+  object id;
+  string response;
+  string gotdata;
+  int done;
+
+  int close(string|void how)
+  {
+    if(how != "w" && !done) {
+      id->reply(response);
+      done = 1;
+      id->file = 0;
+    }
+    return (how? ::close(how) : ::close());
   }
-#endif /* 0 */
+
+  int write(string data)
+  {
+    int n, code;
+    string msg;
+    gotdata += data;
+    while((n=search(gotdata, "\n"))>=0) {
+      if(3==sscanf(gotdata[..n], "HTTP/%*s %d %[^\r\n]", code, msg)
+	 && code>199) {
+	if(code < 300)
+	  code = 200;
+	else
+	  code = 550;
+	response = code + " " + msg + "\n";
+      }
+      gotdata = gotdata[n+1..];
+    }
+    return strlen(data);
+  }
+
+  void create(object i, object f)
+  {
+    id = i;
+    assign(f);
+    response = "200 Stored.\n";
+    gotdata = "";
+    done = 0;
+  }
+
+}
+
+int open_file(string arg);
+
+void connected_to_receive(object fd, string arg)
+{
+  if(fd)
+  {
+    reply(sprintf("150 Opening BINARY mode data connection for %s.\n", arg));
+  }
+  else
+  {
+    reply("425 Can't build data connect: Connection refused.\n"); 
+    return;
+  }
+
+  method = "PUT";
+  my_fd = put_file_wrapper(this_object(), fd);
+  data = 0;
+  misc->len = 0x7fffffff;
+
+  if(open_file(arg)) {
+    if(!(file->pipe)) {
+      fd->close();
+      switch(file->error) {
+      case 401:
+	reply("532 "+arg+": Need account for storing files.\n");
+	break;
+      case 501:
+	reply("502 "+arg+": Command not implemented.\n");
+	break;
+      default:
+	reply("550 "+arg+": Error opening file.\n");
+      }
+    }
+  } else
+    fd->close();
+}
+
+void connect_and_receive(string arg)
+{
+  ftp_async_connect(connected_to_receive, arg);
 }
 
 varargs int|string list_file(string arg, int srt, int short, int column, 
@@ -409,16 +505,22 @@ int open_file(string arg)
     foreach(conf->first_modules(), function funp)
       if(file = funp( this_object())) break;
     if (!file) {
-      if(st = roxen->stat_file(not_query, this_object()))
-	if(st[1] < 0)
-	  file = -1;
-	else if(catch(file = roxen->get_file(this_object())))
-	  file = 1;
+      st = roxen->stat_file(not_query, this_object());
+      if(st && st[1] < 0)
+	file = -1;
+      else if(catch(file = roxen->get_file(this_object())))
+	file = 1;
     }
   }
   if(!file)
   {
-    reply("550 "+arg+": No such file or directory.\n");
+    switch(misc->error_code) {
+    case 405:
+      reply("553 "+arg+": Method not allowed.\n");
+      break;
+    default:
+      reply("550 "+arg+": No such file or directory.\n");
+    }
     return 0;
   } else if(file == -1) {
     reply("550 "+arg+": not a plain file.\n");
@@ -434,7 +536,7 @@ int open_file(string arg)
   if(!file->len)
   {
     if(file->data)   file->len = strlen(file->data);
-    if(file->file)   file->len += file->file->stat()[1];
+    if(objectp(file->file))   file->len += file->file->stat()[1];
   }
   if(file->len > 0)
     conf->sent += file->len;
@@ -457,12 +559,12 @@ void got_data(mixed fooid, string s)
 {
   string cmdlin;
   time = _time(1);
-  if (!objectp(my_fd)) return;
+  if (!objectp(cmd_fd)) return;
   array y;
   conf->received += strlen(s);
   remove_call_out(end);
   call_out(end, 3600);
-  remoteaddr = my_fd->query_address();
+  remoteaddr = cmd_fd->query_address();
   supports = (< "ftp", "images", "tables", >);
   prot = "FTP";
   method = "GET";
@@ -731,41 +833,15 @@ void got_data(mixed fooid, string s)
       reply("213 "+ file->len +"\n");
       break;
     case "stor": // Store file..
-      // Does NOT work!
-      //
-      // Needs to check conf->first_modules().
       string f;
       if(!arg || !strlen(arg))
       {
 	reply("501 'STOR': Missing argument\n");
 	break;
       }
-      method = "PUT";
-      object fd;
-
-      fd = files.file();
-      if(catch {
-	if(!fd->connect(dataport_addr, dataport_port))
-	  throw("noconnect");
-      })
-	reply("425 Can't build data connection: Connection refused.\n"); 
-      else {
-	object ofd;
-	mapping file;
-	
-	ofd = my_fd;
-	my_fd = fd;
-	
-	file = roxen->get_file( this_object() );
-	if(file && file->leave_me==1)
-	  reply("200 Stored.\n");
-	else
-	  reply("425 Permission denied.\n");
-
-	my_fd = ofd;
-      }
+      connect_and_receive(arg);
       break;
-      
+
      default:
       reply("502 command '"+ cmd +"' unimplemented.\n");
     }
@@ -778,17 +854,17 @@ void create(object f, object c)
   {
     string fi;
     conf = c;
-    my_fd = f;
-    my_fd->set_id(0);
+    cmd_fd = f;
+    cmd_fd->set_id(0);
 
-    my_fd->set_read_callback(got_data);
-    my_fd->set_write_callback(lambda(){});
-    my_fd->set_close_callback(end);
+    cmd_fd->set_read_callback(got_data);
+    cmd_fd->set_write_callback(lambda(){});
+    cmd_fd->set_close_callback(end);
 
-    if(2 != sscanf(my_fd->query_address(17)||"", "%*s %d", controlport_port))
+    if(2 != sscanf(cmd_fd->query_address(17)||"", "%*s %d", controlport_port))
       controlport_port = 21;
 
-    sscanf(my_fd->query_address()||"", "%s %d", dataport_addr, dataport_port);
+    sscanf(cmd_fd->query_address()||"", "%s %d", dataport_addr, dataport_port);
 
     not_query = "/welcome.msg";
     call_out(end, 3600);
