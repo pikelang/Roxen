@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.68 2000/01/18 10:51:46 nilsson Exp $
+ * $Id: rxml.pike,v 1.69 2000/01/18 18:12:31 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -13,7 +13,7 @@ inherit "rxmlhelp";
 #define OLD_RXML_COMPAT
 #define TAGMAP_COMPAT
 
-#define RXML_NAMESPACE "rx" + ":"
+#define RXML_NAMESPACE "rxml"
 
 mapping (string:function) real_if_callers;
 array (RoxenModule) parse_modules = ({  });
@@ -29,7 +29,7 @@ string handle_rxml_error (mixed err, RXML.Type type)
   // FIXME: Make this a user option.
   report_notice (describe_error (err));
 #endif
-  if (type == RXML.t_html)
+  if (type->subtype_of (RXML.t_html))
     return "<br clear=all>\n<pre>" + html_encode_string (describe_error (err)) + "</pre>";
   else return describe_error (err);
 }
@@ -89,6 +89,7 @@ RXML.TagSet rxml_tag_set = lambda ()
   tag_set->prepare_context = global_entities;
   return tag_set;
 }();
+
 mapping(RoxenModule:RXML.TagSet) module_tag_sets = ([]);
 int parse_html_compat;
 
@@ -541,7 +542,7 @@ class TagLine
   inherit RXML.Tag;
   constant name = "line";
   constant flags = 0;
-  class frame
+  class Frame
   {
     inherit RXML.Frame;
     array do_return (RequestID id)
