@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.152 1999/09/04 22:40:45 kinkie Exp $
+// $Id: http.pike,v 1.153 1999/09/05 01:42:22 per Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.152 1999/09/04 22:40:45 kinkie Exp $";
+constant cvs_version = "$Id: http.pike,v 1.153 1999/09/05 01:42:22 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -43,7 +43,6 @@ constant decode        = MIME.decode_base64;
 constant find_supports = roxen.find_supports;
 constant version       = roxen.version;
 constant _query        = roxen.query;
-//constant thepipe       = roxen.pipe; //can be removed
 constant _time         = predef::time;
 
 private static array(string) cache;
