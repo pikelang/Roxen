@@ -1,0 +1,77 @@
+Stand alone settings (nothing else is based on these):
+
+  ---------------------------------------------------------
+  setting                       default
+  ---------------------------------------------------------
+  background		        none
+  background-content	        none
+  background-leftside	        none
+  background-top		none
+  background-toptabs	        none
+  err-1                		/internal-roxen-err_1
+  err-2                		/internal-roxen-err_2
+  err-3                		/internal-roxen-err_3
+  left-image           		/internal-roxen-unit
+  logo                 		/internal-roxen-roxen
+  obox-titlefont		helvetica,arial
+  selected-indicator   		/internal-roxen-next
+  ---------------------------------------------------------
+
+Base settings:
+  ---------------------------------------------------------
+  setting              default
+  ---------------------------------------------------------
+  fgcolor              user
+  bgcolor              user
+  font                 user
+  tab-frame-image      /internal-roxen-tabframe
+  gbutton-frame-image  /internal-roxen-gbutton
+  ---------------------------------------------------------
+
+
+Second level settings, by default derived from base settings:
+
+  ---------------------------------------
+  setting             derived from
+  ---------------------------------------
+  fade1                bgcolor
+  fade2                bgcolor
+  fade3                bgcolor
+  fade4                bgcolor
+  toptabs-frame        tab-frame-image
+  subtabs-frame        tab-frame-image
+  left-buttonframe     gbutton-frame-image
+  gbutton-font         font
+  tabs-font            font
+  toptabs-selcolor     bgcolor
+  toptabs-seltextcolor fgcolor
+  toptabs-dimtextcolor bgcolor
+  obox-titlefg         bgcolor
+  obox-bodybg          bgcolor
+  obox-bodyfg          fgcolor
+  subtabs-bgcolor      bgcolor
+  subtabs-seltextcolor fgcolor
+  subtabs-dimtextcolor bgcolor
+  content-titlebg      bgcolor
+  content-titlefg      fgcolor
+  ---------------------------------------
+
+
+Third level settings, by default derived from second level settings:
+
+  ---------------------------------------
+  setting             	derived from
+  ---------------------------------------
+  content-bg    	fade1
+  left-buttonbg    	fade1
+  left-selbuttonbg    	fade3
+  obox-titlebg    	fade2
+  subtabs-dimcolor    	fade2
+  subtabs-font    	tabs-font
+  subtabs-selcolor    	fade1
+  top-bgcolor    	fade3
+  top-fgcolor    	fade4
+  toptabs-bgcolor    	fade3
+  toptabs-dimcolor    	fade2
+  toptabs-font    	tabs-font
+  ---------------------------------------
