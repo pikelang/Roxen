@@ -8,3 +8,10 @@
 #define perror	roxen_perror
 
 #define CONFIGURATION_FILE_LEVEL 6
+
+#if DEBUG_LEVEL > 7
+#ifndef HOST_NAME_DEBUG
+# define HOST_NAME_DEBUG
+#endif
+#endif
+
