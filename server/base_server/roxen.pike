@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.882 2004/09/28 11:57:28 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.883 2004/10/11 14:42:36 wellhard Exp $";
 
 //! @appears roxen
 //!
@@ -959,7 +959,7 @@ static int bg_process_running;
 // the queue runs, the max waiting time will shrink towards the
 // minimum.
 static constant bg_time_buffer_max = 30;
-static constant bg_time_buffer_min = 0.5;
+static constant bg_time_buffer_min = 0;
 static int bg_last_busy = 0;
 
 static void bg_process_queue()
@@ -987,7 +987,7 @@ static void bg_process_queue()
       }
 
 #ifdef DEBUG_BACKGROUND_RUN
-      report_debug ("background_run run %s (%s)\n",
+      report_debug ("background_run run %s (%s) [%d jobs left in queue]\n",
 		    functionp (task[0]) ?
 		    sprintf ("%s: %s", Function.defined (task[0]),
 			     master()->describe_function (task[0])) :
@@ -996,12 +996,18 @@ static void bg_process_queue()
 			     master()->describe_program (task[0])) :
 		    sprintf ("%O", task[0]),
 		    map (task[1], lambda (mixed arg)
-				    {return sprintf ("%O", arg);}) * ", ");
+				  {return sprintf ("%O", arg);}) * ", ",
+		    bg_queue->size());
+      float task_time = gauge {
 #endif
-      if (task[0])		// Ignore things that have become destructed.
-	// Note: BackgroundProcess.repeat assumes that there are
-	// exactly two refs to task[0] during the call below.
-	task[0] (@task[1]);
+	  if (task[0])		// Ignore things that have become destructed.
+	  // Note: BackgroundProcess.repeat assumes that there are
+	  // exactly two refs to task[0] during the call below.
+	    task[0] (@task[1]);
+#ifdef DEBUG_BACKGROUND_RUN
+	};
+      report_debug ("background_run done, took %f sec\n", task_time);
+#endif
 
       if (busy_threads > 1) bg_last_busy = time();
     }
@@ -1030,7 +1036,7 @@ void background_run (int|float delay, function func, mixed... args)
 //! done, or use @[BackgroundProcess].
 {
 #ifdef DEBUG_BACKGROUND_RUN
-  report_debug ("background_run enqueue %s (%s)\n",
+  report_debug ("background_run enqueue %s (%s) [%d jobs in queue]\n",
 		functionp (func) ?
 		sprintf ("%s: %s", Function.defined (func),
 			 master()->describe_function (func)) :
@@ -1039,7 +1045,8 @@ void background_run (int|float delay, function func, mixed... args)
 			 master()->describe_program (func)) :
 		sprintf ("%O", func),
 		map (args, lambda (mixed arg)
-			     {return sprintf ("%O", arg);}) * ", ");
+			   {return sprintf ("%O", arg);}) * ", ",
+		bg_queue->size());
 #endif
 
 #ifdef THREADS
