@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.48 2000/11/03 14:48:57 leif Exp $
+ * $Id: Roxen.pmod,v 1.49 2000/11/06 22:10:27 per Exp $
  *
  * Various helper functions.
  *
@@ -1055,9 +1055,9 @@ class ScopeModVar
       if( (mod = (int)what) )
 	if( (mod = module[ mod-1 ]) )
 	  return ModVars( module[mod-1] );
-	else
-	  RXML.parse_error("The module copy #"+mod+
-			   " does not exist for this module\n");
+// 	else
+// 	  RXML.parse_error("The module copy #"+mod+
+// 			   " does not exist for this module\n");
       return ModVars( values( module )[0] )[ what ];
     }
   }
