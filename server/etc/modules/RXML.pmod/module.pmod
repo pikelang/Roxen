@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.41 2000/02/04 21:31:08 mast Exp $
+//! $Id: module.pmod,v 1.42 2000/02/05 04:09:14 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -52,7 +52,7 @@ class Tag
   //! req_arg_types nor opt_arg_types. This default is a parser that
   //! only parses HTML-style entities.
 
-  Type content_type = t_text (PHtml);
+  Type content_type = t_xml (PHtml);
   //! The handled type of the content, if the tag is used as a
   //! container. It's taken from the actual result type if set to
   //! zero.
@@ -518,7 +518,12 @@ class Value
 //! Interface for objects used as variable values that are evaluated
 //! when referenced.
 {
-  mixed rxml_var_eval (Context ctx, string var, string scope_name);
+  mixed rxml_var_eval (Context ctx, string var, string scope_name, void|Type want_type);
+  //! This is called to get the value of the variable. ctx, var and
+  //! scope_name are set to where this Value object was found. If
+  //! want_type is given, it hints the type the return value should
+  //! have. However, the caller has no guarantee that the hint will be
+  //! heeded.
 
   string _sprintf() {return "RXML.Value";}
 }
@@ -593,10 +598,15 @@ class Context
     return ({ scope_name, splitted[-1] });
   }
 
-  local mixed get_var (string var, void|string scope_name)
+  local mixed get_var (string var, void|string scope_name, void|Type want_type)
   //! Returns the value a variable in the specified scope, or the
   //! current scope if none is given. Returns zero with zero_type 1 if
   //! there's no such variable.
+  //!
+  //! If want_type is set, it's taken as a hint for the type the
+  //! caller wants in return. It's only effect is that if the variable
+  //! value is a Value object, want_type is propagated to its
+  //! rxml_var_eval() function.
   {
     if (SCOPE_TYPE vars = scopes[scope_name || "_"]) {
       mixed val;
@@ -606,15 +616,17 @@ class Context
       }
       else if (zero_type (val = vars[var])) return ([])[0];
       if (objectp (val) && ([object] val)->rxml_var_eval)
-	return ([object(Value)] val)->
-	  rxml_var_eval (this_object(), var, scope_name || "_");
+	return
+	  zero_type (val = ([object(Value)] val)->rxml_var_eval (
+		       this_object(), var, scope_name || "_", want_type)) ||
+	  val == Void ? ([])[0] : val;
       else return val;
     }
     else if (scope_name) rxml_fatal ("Unknown scope %O.\n", scope_name);
     else rxml_fatal ("No current scope.\n");
   }
 
-  mixed user_get_var (string var, void|string scope_name)
+  mixed user_get_var (string var, void|string scope_name, void|Type want_type)
   //! As get_var, but can handle cases where the variable also
   //! contains the scope, e.g. "scope.var".
   {
@@ -625,7 +637,7 @@ class Context
       scope_name=splitted[0];
     else
       scope_name = scope_name || "_";
-    return get_var(splitted[-1], scope_name);
+    return get_var(splitted[-1], scope_name, want_type);
   }
 
   local mixed set_var (string var, mixed val, void|string scope_name)
@@ -1094,7 +1106,7 @@ Frame make_tag (string name, mapping(string:mixed) args, void|mixed content)
   object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) tag = tag_set->get_tag (name);
   if (arrayp (tag))
     error ("Getting frames for low level tags are currently not implemented.\n");
-  return tag (args, content, tag_set);
+  return tag (args, content);
 }
 
 Frame make_unparsed_tag (string name, mapping(string:string) args, void|string content)
@@ -1107,7 +1119,7 @@ Frame make_unparsed_tag (string name, mapping(string:string) args, void|string c
   object(Tag)|array(LOW_TAG_TYPE|LOW_CONTAINER_TYPE) tag = tag_set->get_tag (name);
   if (arrayp (tag))
     error ("Getting frames for low level tags are currently not implemented.\n");
-  Frame frame = tag (args, content, tag_set);
+  Frame frame = tag (args, content);
   frame->flags |= FLAG_UNPARSED;
   return frame;
 }
@@ -1982,14 +1994,20 @@ class Parser
     array(string) split = varref / ".";
     if (sizeof (split) == 2)
       if (mixed err = catch {
+	sscanf (split[1], "%[^:]:%s", split[1], string encoding);
 	context->current_var = varref;
 	mixed val;
-	if (zero_type (val = context->get_var (split[1], split[0]))) { // May throw.
+	if (zero_type (val = context->get_var (split[1], split[0], type))) { // May throw.
 	  context->current_var = 0;
 	  return ({});
 	}
 	context->current_var = 0;
-	if (type->free_text) val = (string) val;
+	if (encoding) {
+	  if (mixed err = catch (val = (string) val))
+	    rxml_error ("Couldn't convert value to text: " + describe_error (err) + "\n");
+	  val = roxen->roxen_encode (val, encoding);
+	}
+	else val = type->encode (val);
 	return val == Void ? ({}) : ({val});
       }) {
 	context->current_var = 0;
@@ -2233,6 +2251,17 @@ class Type
   //! Checks whether the given value is a valid one of this type. Type
   //! errors are thrown with RXML.rxml_fatal().
 
+  mixed encode (mixed val, void|Type from);
+  //! Encodes the given value as appropriate for this type. If the
+  //! from type is given, it's the type of the value. That's often not
+  //! known, however, so this function should try to do something
+  //! sensible based on the primitive pike type. If the type can't be
+  //! reasonably converted, an RXML error should be thrown.
+  //!
+  //! For types that are typically evaluated in some way, such as
+  //! markup or programming languages, this function should ensure
+  //! that the result is interpreted as a pure literal.
+
   Type clone()
   //! Returns a copy of the type.
   {
@@ -2404,6 +2433,9 @@ static class TAny
 {
   inherit Type;
   constant name = "*";
+
+  mixed encode (mixed val) {return val;}
+
   string _sprintf() {return "RXML.t_any" + PAREN_CNT (__count);}
 }
 TAny t_any = TAny();
@@ -2416,14 +2448,53 @@ static class TText
   constant sequential = 1;
   constant empty_value = "";
   constant free_text = 1;
+
+  string encode (mixed val)
+  {
+    if (mixed err = catch {return (string) val;})
+      rxml_error ("Couldn't convert value to text: " + describe_error (err));
+  }
+
   string _sprintf() {return "RXML.t_text" + PAREN_CNT (__count);}
 }
 TText t_text = TText();
 
-static class THtml
-//! The standard type for generic document text.
+static class TXml
+//! The type for XML and similar markup.
 {
   inherit TText;
+  constant name = "text/xml";
+
+  string encode (mixed val)
+  {
+    string txt;
+    if (mixed err = catch {txt = (string) val;})
+      rxml_error ("Couldn't convert value to text: " + describe_error (err));
+    return replace (
+      txt,
+      // FIXME: This ignores the invalid Unicode character blocks.
+      ({"&", "<", ">", "\"", "\'",
+	"\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
+	"\010",                 "\013", "\014",         "\016", "\017",
+	"\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
+	"\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
+      }),
+      ({"&amp;", "&lt;", "&gt;", "&quot;", /*"&apos;"*/ "&#39;",
+	"&#0;",  "&#1;",  "&#2;",  "&#3;",  "&#4;",  "&#5;",  "&#6;",  "&#7;",
+	"&#8;",                    "&#11;", "&#12;",          "&#14;", "&#15;",
+	"&#16;", "&#17;", "&#18;", "&#19;", "&#20;", "&#21;", "&#22;", "&#23;",
+	"&#24;", "&#25;", "&#26;", "&#27;", "&#28;", "&#29;", "&#30;", "&#31;",
+      }));
+  }
+
+  string _sprintf() {return "RXML.t_xml" + PAREN_CNT (__count);}
+}
+THtml t_xml = TXml();
+
+static class THtml
+//! Identical to t_xml, but tags it as "text/html".
+{
+  inherit TXml;
   constant name = "text/html";
   string _sprintf() {return "RXML.t_html" + PAREN_CNT (__count);}
 }
