@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.80 1999/09/09 16:02:13 grubba Exp $
+ * $Id: smtp.pike,v 1.81 1999/09/14 14:45:04 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.80 1999/09/09 16:02:13 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.81 1999/09/14 14:45:04 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -211,6 +211,8 @@ static class Smtp_Connection {
 
   string localhost = gethostname();
   int connection_class;
+  string localip;		// IP of the local end of the connection.
+  string localport;		// port number of the local end (usually 25).
   string remoteident;		// User according to ident.
   string remoteip;		// IP
   string remoteport;		// PORT
@@ -1242,7 +1244,14 @@ static class Smtp_Connection {
     remoteip = remote[0];
     remoteport = (remote[1..])*" ";
 
+    array(string) local = con->query_address(1)/" ";
+
+    localip = local[0];
+    localport = local[1];
+
     mapping con_info = ([
+      "localip":localip,
+      "localport":localport,
       "remoteip":remoteip,
       "remoteport":remoteport,
     ]);
