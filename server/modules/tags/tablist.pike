@@ -1,12 +1,12 @@
 /*
- * $Id: tablist.pike,v 1.19 1999/11/03 18:36:49 jonasw Exp $
+ * $Id: tablist.pike,v 1.20 1999/11/04 10:35:05 jonasw Exp $
  *
  * Makes a tab list like the one in the config interface.
  *
  * $Author: jonasw $
  */
 
-constant cvs_version="$Id: tablist.pike,v 1.19 1999/11/03 18:36:49 jonasw Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.20 1999/11/04 10:35:05 jonasw Exp $";
 constant thread_safe=1;
 
 #define use_contents_cache 0
@@ -74,12 +74,14 @@ string tag_tab(string t, mapping a, string contents, mapping d)
     return register_module()[2];
 
   //  Encode arguments in string
-  mapping args = ([ "sel" : a->selected,
-		    "bg"  : a->bgcolor || d->bgcolor || "white",
-		    "fg"  : a->selcolor || d->selcolor || "white",
-		    "dim" : a->dimcolor || d->dimcolor || "#003366",
-		    "txt" : a->textcolor || d->textcolor ||
-		            (a->selected ? "black" : "white") ]);
+  mapping args = ([
+    "sel" : a->selected,
+    "bg"  : parse_color(a->bgcolor || d->bgcolor || "white"),
+    "fg"  : parse_color(a->selcolor || d->selcolor || "white"),
+    "dim" : parse_color(a->dimcolor || d->dimcolor || "#003366"),
+    "txt" : parse_color(a->textcolor || d->textcolor ||
+			(a->selected ? "black" : "white"))
+  ]);
   string dir = (MIME.encode_base64(encode_value(args)) - "\r" - "\n") + "|";
   m_delete(a, "selected");
   
@@ -179,28 +181,28 @@ object button_font = resolve_font("haru 32");
 
 Image.image draw_tab(object text, mapping args)
 {
-  text = text->scale(0, frame_image->ysize());
-  object frame_mirror = frame_image->mirrorx();
-  
   //  Create image with proper background
+  text = text->scale(0, frame_image->ysize());
   object i = Image.image(frame_image->xsize() * 2 + text->xsize(),
 			 frame_image->ysize(),
-			 parse_color(args->sel ? args->fg : args->dim));
+			 args->sel ? args->fg : args->dim);
   
   //  Add outside corners
-  i->paste_alpha_color(mask_image, parse_color(args->bg));
-  i->paste_alpha_color(mask_image->mirrorx(), parse_color(args->bg),
+  i->paste_alpha_color(mask_image, args->bg);
+  i->paste_alpha_color(mask_image->mirrorx(), args->bg,
 		       i->xsize() - mask_image->xsize(), 0);
   
-  //  Add tab frame
-  i = i->paste_mask(frame_image, frame_image->invert());
-  i = i->paste_mask(frame_mirror, frame_mirror->invert(),
-		    i->xsize() - frame_image->xsize(), 0);
+  //  Add tab frame. We compose the corners in a separate buffer where we
+  //  draw the sides using a mult() operation to preserve antialiasing.
+  object corner = i->copy(0, 0,
+			  frame_image->xsize() - 1, frame_image->ysize() - 1);
+  corner *= frame_image;
+  i->paste(corner);
+  i->paste(corner->mirrorx(), i->xsize() - corner->xsize(), 0);
   
-  //  Add text. We'll draw it twice if the color is weak
-  for (int loop = (parse_color(args->txt)[0] > 0x80 ? 2 : 1); loop; loop--)
-    i->paste_alpha_color(text, parse_color(args->txt),
-			 frame_image->xsize(), 0);
+  //  Add text which is drawn it twice if the color is bleak
+  for (int loop = (`+(@args->txt) / 3 > 200 ? 2 : 1); loop; loop--)
+    i->paste_alpha_color(text, args->txt, frame_image->xsize(), 0);
   
   //  Create line on top of tab, and also at bottom if not selected
   i->line(frame_image->xsize() - 1, 0, i->xsize() - frame_image->xsize(), 0,
