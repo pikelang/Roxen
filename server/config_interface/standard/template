@@ -83,8 +83,9 @@
 
 <define container="submit-gbutton">
 <attrib name="align">baseline</attrib>
-  <cset variable="var.url"><gbutton-url font="&usr.gbutton-font;" preparse=""><contents/></gbutton-url></cset>
-   <input align="&_.align;" type="image" name="&_.contents;" value="&_.contents;" src="&var.url;" border="0" />
+  <cset variable="var.contents"><contents/></cset>
+  <cset variable="var.url"><gbutton-url font="&usr.gbutton-font;" preparse="">&var.contents;</gbutton-url></cset>
+   <input align="&_.align;" type="image" name="&var.contents;" value="&var.contents;" src="&var.url;" border="0" />
 </define>
 
 <define tag="cf-save"> <submit-gbutton align="right"> &locale.save; </submit-gbutton> </define>
