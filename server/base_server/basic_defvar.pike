@@ -1,12 +1,16 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.19 2000/10/12 22:58:22 nilsson Exp $
+// $Id: basic_defvar.pike,v 1.20 2000/11/02 16:46:51 per Exp $
 // (string:Variable.Variable) 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
 //! defvar, killvar, getvar, query and set
 
 #include <module.h>
+mapping(string:Variable.Variable) getvars( )
+{
+  return variables + ([]);
+}
 
 Variable.Variable getvar( string name )
 //! Return the variable object associated with the specified variable
