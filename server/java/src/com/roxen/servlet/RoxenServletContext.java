@@ -134,10 +134,11 @@ class RoxenServletContext implements ServletContext
     return this;
   }
 
+  native RequestDispatcher getRequestDispatcher(String path1, String path2);
+
   public RequestDispatcher getRequestDispatcher(String path)
   {
-    // FIXME
-    return null;
+    return getRequestDispatcher("", path);
   }
 
   private native String getResourceURL(String path);
@@ -180,7 +181,6 @@ class RoxenServletContext implements ServletContext
 
   public RequestDispatcher getNamedDispatcher(String name)
   {
-    // FIXME
     return null;
   }
 

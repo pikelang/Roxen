@@ -38,7 +38,7 @@ static object cfg_init = config_class->get_method("<init>", "(Ljavax/servlet/Ser
 static object context_init = context_class->get_method("<init>", "(ILjava/lang/String;)V");
 static object context_id_field = context_class->get_field("id", "I");
 static object context_initpars_field = context_class->get_field("initparameters", "Ljava/util/Hashtable;");
-static object request_init = request_class->get_method("<init>", "(Ljavax/servlet/ServletContext;Lcom/roxen/servlet/RoxenSessionContext;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+static object request_init = request_class->get_method("<init>", "(Lcom/roxen/servlet/RoxenServletContext;Lcom/roxen/servlet/RoxenSessionContext;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
 static object response_init = response_class->get_method("<init>", "(Lcom/roxen/servlet/HTTPOutputStream;)V");
 static object dic_field = config_class->get_field("dic", "Ljava/util/Dictionary;");
 static object params_field = request_class->get_field("parameters", "Ljava/util/Dictionary;");
@@ -289,6 +289,12 @@ class context {
     return roxen->version();
   }
 
+  object get_request_dispatcher(string path)
+  {
+    // FIXME
+    return 0;
+  }
+
   string get_resource(string path)
   {
     return 0;
@@ -440,6 +446,12 @@ static string native_getServerInfo(object ctx)
   return ctx_object(ctx)->get_server_info();
 }
 
+static object native_getRequestDispatcher(object ctx, object path1, object path2)
+{
+  return ctx_object(ctx)->get_request_dispatcher(combine_path((string)path1,
+							      (string)path2));
+}
+
 static string native_getResourceURL(object ctx, object path)
 {
   return ctx_object(ctx)->get_resource((string)path);
@@ -485,6 +497,7 @@ void create()
     ({"getMimeType", "(Ljava/lang/String;)Ljava/lang/String;",
       native_getMimeType}),
     ({"getServerInfo", "()Ljava/lang/String;", native_getServerInfo}),
+    ({"getRequestDispatcher", "(Ljava/lang/String;Ljava/lang/String;)Ljavax/servlet/RequestDispatcher;", native_getRequestDispatcher}),
     ({"getResourceURL", "(Ljava/lang/String;)Ljava/lang/String;", native_getResourceURL})}));
   natives_bind2 = stream_class->register_natives(({
     ({"close", "()V", native_close}),

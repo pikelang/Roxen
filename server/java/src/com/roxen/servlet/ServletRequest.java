@@ -1,7 +1,6 @@
 package com.roxen.servlet;
 
 import javax.servlet.ServletInputStream;
-import javax.servlet.ServletContext;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Cookie;
@@ -20,7 +19,7 @@ import java.security.Principal;
 
 class ServletRequest implements javax.servlet.http.HttpServletRequest
 {
-  ServletContext context;
+  RoxenServletContext context;
   RoxenSessionContext sessioncontext;
   ServletResponse response = null;
   int contentLength;
@@ -324,7 +323,7 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
     response = rp;
   }
 
-  ServletRequest(ServletContext cx, RoxenSessionContext sx,
+  ServletRequest(RoxenServletContext cx, RoxenSessionContext sx,
 		 int cl, String ct, String pr, String sc,
 		 String sn, int sp, String ra, String rh, String d,
 		 String ap, String pi, String me, String ru, String u,
@@ -416,8 +415,7 @@ class ServletRequest implements javax.servlet.http.HttpServletRequest
 
   public RequestDispatcher getRequestDispatcher(String path)
   {
-    // FIXME
-    return null;
+    return context.getRequestDispatcher(servletPath+pathInfo+"x/..", path);
   }
 
   public Enumeration getHeaders(String name)
