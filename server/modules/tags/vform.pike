@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.39 2002/09/11 15:43:23 mast Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.40 2002/12/17 21:47:00 anders Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -163,7 +163,7 @@ class VInputFrame {
     if(args["fail-if-failed"] && id->misc->vform_failed[args["fail-if-failed"]])
       ok=1;
 
-    if(!id->real_variables[args->name] ||
+    if((!id->real_variables[args->name] && !args["ignore-if-gone"]) ||
        (args["ignore-if-false"] && !id->misc->vform_ok) ||
        id->real_variables["__reload"] ||
        id->real_variables["__clear"] ||
@@ -579,6 +579,13 @@ constant tagdoc=([
 
 <attr name='ignore-if-failed' value='name'><p>
   Don't verify if the verification of a named variable failed.</p>
+</attr>
+
+<attr name='ignore-if-gone'><p>
+  Don't verify if the variable is missing from the form scope.
+  This is useful if the widget might be disabled. Be careful not to
+  set this flag on all input fields since this would cause the form
+  to verify upon first request to the page.</p>
 </attr>
 
 <attr name='ignore-if-verified' value='name'><p>
