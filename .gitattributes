@@ -15,6 +15,7 @@
 /doc/db.spec foreign_ident
 /modules/admin/actions/20:Add_customer/wizards/edit.pike foreign_ident
 /modules/admin/admin.pike foreign_ident
+/modules/admin/intraseek_helper.pike foreign_ident
 /modules/autoreg/autoreg.pike foreign_ident
 /modules/autoweb/autositefs.pike foreign_ident
 /modules/autoweb/webadm.pike foreign_ident
