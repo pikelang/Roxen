@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.142 2000/07/17 15:15:25 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.143 2000/07/20 23:39:46 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1603,8 +1603,8 @@ documentation for that module.</desc>",
 "apre":#"<desc cont><short>
  Creates a link that can modify prestates.</short>
  Prestate options are simple
- toggles, and are added to the URL of the page. Use <tag>if</tag>
- prestate=...<tag>/if</tag> to test for the presence of a prestate.
+ toggles, and are added to the URL of the page. Use <tag>if
+ prestate='...'</tag> ... <tag>/if</tag> to test for the presence of a prestate.
  <tag>apre</tag> works just like the <tag>a href=...</tag> container,
  but if no \"href\" attribute is specified, the current page is used.
 </desc>
@@ -2710,7 +2710,10 @@ Sets a variable.</short>
  Evaluates expressions.</short> It is not possible to use regexp's.
  The following characters may be used: \"1, 2, 3, 4, 5, 6, 7, 8, 9, x,
  a, b, c, d, e, f, i, n, t, \, X. A, B, C, D, E, F, l, o, &lt;, &gt;,
- =, 0, -, +, *, /, %, &, |, (, ) and .\". </desc>",
-
+ =, 0, -, +, *, /, %, &, |, (, ) and .\". Expr is an <i>Eval</i> plugin.
+</desc>
+<attr name='expr' value='expression'>
+ Choose what expression to test.
+</attr>",
     ]);
 #endif
