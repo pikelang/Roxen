@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.70 1997/06/09 21:47:31 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.71 1997/06/11 22:34:53 grubba Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -222,6 +222,13 @@ private static void accept_callback( object port )
   }
 }
 
+void unthreaded_handle(function f, mixed ... args)
+{
+  f(@args);
+}
+
+function handle = unthreaded_handle;
+
 #ifdef THREADS
 #define THREAD_DEBUG
 
@@ -252,15 +259,19 @@ void handler_thread(int id)
   }
 }
 
+void threaded_handle(function f, mixed ... args)
+{
+  handle_queue->write(({f, args }));
+}
+
 int number_of_threads;
 void start_handler_threads()
 {
   perror("Starting "+QUERY(numthreads)+" threads to handle requests.\n");
-#if efun(thread_set_concurrency)
-  thread_set_concurrency(QUERY(numthreads)+1);
-#endif
   for(; number_of_threads < QUERY(numthreads); number_of_threads++)
     thread_create( handler_thread, number_of_threads );
+  if(number_of_threads > 0)
+    handle = threaded_handle;
 }
 #endif /* THREADS */
 
@@ -1356,7 +1367,13 @@ private void define_global_variables( int argc, array (string) argv )
 	  "If less than this amount of disk space or inodes (in %) is left, "
 	  "the cache will remove a few files. This check may work half hearted "
 	  "if the diskcache is spread over several filesystems.",
-	  0, cache_disabled_p);
+	  0,
+#if efun(filesystem_stat)
+	  cache_disabled_p
+#else
+	  1
+#endif /* filesystem_stat */
+	  );
   
   globvar("cache_size", 25, "Proxy disk cache: Size", TYPE_INT,
         "How many MB may the cache grow to before a garbage collect is done?",
@@ -1591,11 +1608,18 @@ private void define_global_variables( int argc, array (string) argv )
 #endif
 
 #ifdef THREADS
+  globvar("numshufflethreads", 1,
+	  "Number of shuffler threads to run", TYPE_INT,
+	  "The number of simultaneous threads roxen will use "
+	  "to shuffle data, using a select loop based system.\n"
+	  "<i>This is quite useful if you have more than one CPU in "
+	  "your machine, or if you have a quite a lot of proxy requests.</i>");
+
   globvar("numthreads", 5, "Number of threads to run", TYPE_INT,
 	  "The number of simultaneous threads roxen will use.\n"
 	  "<p>Please note that even if this is one, Roxen will still "
-	  " be able to serve multiple requests, using a select loop bases "
-	  " system.\n"
+	  "be able to serve multiple requests, using a select loop based "
+	  "system.\n"
 	  "<i>This is quite useful if you have more than one CPU in "
 	  "your machine, or if you have a lot of slow NFS accesses.</i>");
 #endif
@@ -1960,7 +1984,7 @@ void _shuffle(object from, object to,
 #endif /* send_fd */
   // Fallback, when there is no external shuffler.
   object p = Pipe.pipe();
-  p->input(from);
+  // p->input(from);
   p->output(to);
   if (to2) {
     p->output(to2);
@@ -1975,10 +1999,10 @@ void _shuffle(object from, object to,
 #ifdef THREADS
 object shuffle_queue = Queue();
 
-void shuffle_thread()
+void shuffle_thread(int id)
 {
 #ifdef THREAD_DEBUG
-  perror("Starting shuffle_thread\n");
+  perror("Starting shuffle_thread "+id+" started.\n");
 #endif
   while(mixed s=shuffle_queue->read())
     _shuffle(@s);
@@ -1992,10 +2016,17 @@ function shuffle = _shuffle;
 #endif /* THREADS */
 
 #ifdef THREADS
-object st=thread_create(shuffle_thread);
-#endif
+int number_of_shuffler_threads;
+void start_shuffler_threads()
+{
+  perror("Starting "+QUERY(numshufflethreads)+" threads to shuffle data.\n");
+  for(int i = number_of_shuffler_threads; i < QUERY(numshufflethreads); i++) {
+    thread_create( shuffle_thread, i );
+  }
+  number_of_shuffler_threads = i;
+}
+#endif /* THREADS */
 
-  
 #if efun(send_fd)
 object shuffler;
 void init_shuffler()
@@ -2017,7 +2048,7 @@ void init_shuffler()
   }
 }
 #endif /* send_fd */
-#endif	// FIXME: Is this one needed?
+
 static private int _recurse;
 
 void exit_when_done()
@@ -2144,8 +2175,12 @@ varargs int main(int argc, array (string) argv)
     perror("Setting UID and GID ...\n");
 
 #ifdef THREADS
+  start_shuffler_threads();
   start_handler_threads();
+#if efun(thread_set_concurrency)
+  thread_set_concurrency(QUERY(numthreads)+QUERY(numshufflethreads)+1);
 #endif
+#endif /* THREADS */
 #if efun(send_fd)
   init_shuffler(); // No locking here.. Each process need one on it's own.
 #endif
