@@ -260,8 +260,19 @@ string page_really_compact( RequestID id )
                    );
 }
 
+string decode_site_name( string what )
+{
+  if( (int)what ) 
+    return (string)((array(int))(what/","-({""})));
+  return what;
+}
+
 mixed do_it( RequestID id )
 {
+
+  if( id->variables->encoded )
+    id->variables->config = decode_site_name( id->variables->config );
+
   object conf = roxen.find_configuration( id->variables->config );
   string last_module;
   int got_initial = 0;

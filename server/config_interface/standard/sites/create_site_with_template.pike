@@ -6,11 +6,25 @@ constant base = #"
 <tmpl>
 <topmenu base='../' selected=sites>
 <content><cv-split><subtablist><st-page>
- <input type=hidden name=name value=&form.name;>
- <input type=hidden name=site_template value=&form.site_template;>
+ <input type=hidden name=name value='&form.name;'>
+ <input type=hidden name=site_template value='&form.site_template;'>
  %s
 </st-page></subtablist></cv-split></content></tmpl>
 ";
+
+string decode_site_name( string what )
+{
+  if( (int)what ) return (string)((array(int))(what/","-({""})));
+  return what;
+}
+
+string encode_site_name( string what )
+{
+  return map( (array(int))what, 
+              lambda( int i ) {
+                return ((string)i)+",";
+              } ) * "";
+}
 
 mixed parse( RequestID id )
 {
@@ -18,6 +32,9 @@ mixed parse( RequestID id )
     error("No permission, dude!\n"); // This should not happen, really.
   if( !id->variables->name )
     error("No name for the site!\n"); // This should not happen either.
+
+
+  id->variables->name = decode_site_name( id->variables->name );
 
   foreach( glob( SITE_TEMPLATES "*.x",
                  indices(id->variables) ), string t )
@@ -38,15 +55,19 @@ mixed parse( RequestID id )
       if( arrayp(id->misc->modules_to_add) &&
           sizeof(id->misc->modules_to_add) )
       {
-        q = ("add_module.pike?config="+
-             http_encode_string(id->variables->name));
+        q = ("add_module.pike?encoded=1&config="+
+             encode_site_name(id->variables->name));
         foreach( id->misc->modules_to_add, string mod )
           q += "&module_to_add="+http_encode_string(mod);
+        call_out( c->save, 1, 1 );
         return http_redirect( q, id );
       }
       else
+      {
+        call_out( c->save, 1, 1 );
         return http_redirect("site.html/"+
                              http_encode_string(id->variables->name)+"/",id);
+      }
     }
     return sprintf(base,q);
   }

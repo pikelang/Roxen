@@ -45,7 +45,8 @@
    </page>
 
    <page name=new_with_template>
-     <goto href='create_site_with_template.pike?name=&form.name;'>
+     <insert file=fixsitename.pike nocache>
+     <goto href='create_site_with_template.pike?name=&form.name:none;'>
    </page>
 </awizard>
 </blockquote>
