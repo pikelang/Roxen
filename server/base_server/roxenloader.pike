@@ -1,10 +1,9 @@
 import files;
 import spider;
-
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen enviornment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.23 1997/05/13 17:07:02 marcus Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.24 1997/05/15 23:39:56 neotron Exp $";
 
 #define perror roxen_perror
 
@@ -424,8 +423,6 @@ object|void open(string filename, string mode)
   destruct(o);
 }
 
-
-
 string make_path(string ... from)
 {
   return Array.map(from, lambda(string a, string b) {
@@ -433,7 +430,6 @@ string make_path(string ... from)
     //return combine_path(b,a);
   }, getcwd())*":";
 }
-
 void main(mixed ... args)
 {
   object mm;
@@ -442,6 +438,7 @@ void main(mixed ... args)
   perror("Roxen loader version "+cvs_version+"\n");
   master()->putenv("PIKE_INCLUDE_PATH", path);
   master()->pike_include_path = path/":";
+
   replace_master(mm=(((program)"etc/roxen_master.pike")()));
 
   add_constant("open_db", open_db);

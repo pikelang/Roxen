@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.56 1997/05/15 18:30:51 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.57 1997/05/15 23:39:56 neotron Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -19,6 +19,12 @@ inherit "hosts";
 inherit "socket";
 inherit "disk_cache";
 inherit "language";
+
+#if _DEBUG_HTTP_OBJECTS
+mapping httpobjects = ([]);
+static int idcount;
+int new_id(){ return idcount++; }
+#endif
 
 import Array;
 import spider;

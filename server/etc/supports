@@ -1,4 +1,4 @@
-## $Id: supports,v 1.28 1997/05/06 16:02:20 peter Exp $
+## $Id: supports,v 1.29 1997/05/15 23:39:57 neotron Exp $
 
 ######################################################################
 ## -+*				WARNING				*+- ##
@@ -254,6 +254,10 @@ cern.*linemode.*           nothing
 
 #section freeseek {
 .*		robot	passagen
+# }
+
+#section intraseek {
+.*		robot	infovav
 # }
 
 #section webcrawler {
