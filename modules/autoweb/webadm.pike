@@ -1,12 +1,12 @@
 /*
- * $Id: webadm.pike,v 1.5 1998/07/27 17:13:30 wellhard Exp $
+ * $Id: webadm.pike,v 1.6 1998/07/28 20:35:37 wellhard Exp $
  *
  * AutoWeb administration interface
  *
  * Johan Schön, Marcus Wellhardh 1998-07-23
  */
 
-constant cvs_version = "$Id: webadm.pike,v 1.5 1998/07/27 17:13:30 wellhard Exp $";
+constant cvs_version = "$Id: webadm.pike,v 1.6 1998/07/28 20:35:37 wellhard Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -73,7 +73,7 @@ string|int get_variable_value(object db, string customer_id, string variable)
 	      "template_vars.name='"+variable+"' and "
 	      "customers_preferences.variable_id=template_vars.id and "
 	      "customers_preferences.value=template_vars_opts.name");
-  werror("%O\n", query_result);
+  //werror("%O\n", query_result);
   if(!sizeof(query_result)) {
     werror("No such customer '%s' or variable '%s' is undefined.\n",
 	   customer_id, variable);
@@ -233,6 +233,8 @@ mixed find_file(string f, object id)
   if(!credentials)
     update_customer_cache(id);
 
+  id->misc->wa=this_object();
+
   // User validation
 #if 1
   if(!validate_customer(id)&&!validate_admin(id))
@@ -304,4 +306,40 @@ void create()
   defvar("admin_pass", "www", "Administrator password" ,TYPE_PASSWORD,
 	 "This password grants full access to all customers in"
 	 "AutoWeb.");
+}
+
+
+
+// Tab functions
+
+mapping get_md(object id, string f)
+{
+  mapping md = ([ ]);
+  if(sscanf(f, "%*s.html")>0)
+    md += ([ "content_type":"text/html" ]);
+  return md;
+}
+
+string real_path(object id, string filename)
+{
+  return query("sites_location")+id->misc->customer_id+
+    (sizeof(filename)?(filename[0]=='/'?filename:"/"+filename):"/");
+}
+
+string read_file(object id, string f)
+{
+  return Stdio.read_bytes(real_path(id, f));
+}
+
+int save_file(object id, string f, string s)
+{
+  werror("Saving file '%s' in %s\n", f, real_path(id, f));
+  object file = Stdio.File(real_path(id, f), "cwt");
+  if(!objectp(file)) {
+    werror("Can not save file %s", f);
+    return 0;
+  }
+  file->write(s);
+  file->close;
+  return 1;
 }

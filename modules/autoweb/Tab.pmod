@@ -36,7 +36,7 @@ class tab
 
   string buttonrow_submitbuttons(array brow)
   {
-    werror("brow: %O\n",brow);
+    //werror("brow: %O\n",brow);
     string s="";
 
     s+="<table><tr>";
@@ -65,6 +65,7 @@ class tab
   }
 
   function buttonrow=buttonrow_submitbuttons;
+  // function buttonrow=buttonrow_gtext;
   
   array fixbuttons(mapping wiz, array wanted)
   {
@@ -85,7 +86,7 @@ class tab
 	else
 	  a+=({ ({ }) });
 
-    werror("fixedbuttons: %O\n",a);
+    //werror("fixedbuttons: %O\n",a);
     return a;
   }
 
@@ -155,7 +156,7 @@ class tab
 	tmp = wizard_menu(id, 
 			   dir+"/wizards/",
 			   parent->query_location()+tab+"/wizard/");
-	werror("%O",tmp);
+	//werror("%O",tmp);
 	if(arrayp(tmp))
 	  return res+page+buttonrow(fixbuttons(tmp[0],wanted_buttons));
       };

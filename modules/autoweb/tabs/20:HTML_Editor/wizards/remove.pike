@@ -5,11 +5,12 @@ constant name = "Remove File";
 
 string page_0( object id )
 {
-  return "hej";
+  return "Remove file '"+id->variables->path+"'";
 }
 
 mixed wizard_done( object id )
 {
+  rm(id->misc->wa->real_path(id, id->variables->path));
 }
 
 

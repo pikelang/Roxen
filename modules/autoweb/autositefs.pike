@@ -5,7 +5,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.10 1998/07/27 17:13:29 wellhard Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.11 1998/07/28 20:35:35 wellhard Exp $";
 
 mapping host_to_id;
 
@@ -101,14 +101,16 @@ mixed find_file(string f, object id)
 	  "customers_menu.customer_id='"+id->misc->customer_id+"' and "
 	  "customers_menu.file_id=customers_files.id and "
 	  "customers_files.filename='/"+f+"'");
-      werror("%O", menu_item);
-      werror("Customer: %O, file: %O", id->misc->customer_id, f);
+      //werror("%O", menu_item);
+      //werror("Customer: %O, file: %O", id->misc->customer_id, f);
+      string menu = "";
       if(sizeof(menu_item))
-	d = "<menuitem"+menu_item[0]->item_order+">"
-            "<mi href="+menu_item[0]->filename+" selected>"+
-	    menu_item[0]->title+"</mi>"
-	    "</menuitem"+menu_item[0]->item_order+">\n\n"+d;
-      d="<template><content>"+d+"</content></template>";
+	menu +=
+	  "<menuitem"+menu_item[0]->item_order+">"
+	  "<mi href="+menu_item[0]->filename+" selected>"+
+	  menu_item[0]->title+"</mi>"
+	  "</menuitem"+menu_item[0]->item_order+">\n\n";
+      d="<template>"+menu+"<content>"+d+"</content></template>";
       res=http_string_answer(parse_rxml(d,id),"text/html");
     }
   }
