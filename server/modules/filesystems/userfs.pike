@@ -14,7 +14,7 @@
 
 inherit "filesystem";
 
-constant cvs_version="$Id: userfs.pike,v 1.29 1998/07/01 20:12:41 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.30 1998/07/02 07:47:58 neotron Exp $";
 
 // import Array;
 // import Stdio;
@@ -60,7 +60,16 @@ void create()
 	 "filesystem. This can be a problem if many users are working "
 	 "together with a project, but it will enhance security, since it "
 	 "will not be possible to link to some file the user does not own.");
-  
+
+  defvar("virtual_hosting", 0, "Virtual User Hosting", TYPE_FLAG, 
+	 "If set, virtual user hosting is enabled. This means that "
+	 "the module will look at the \"host\" header to determine "
+	 "which users directory to access. If this is set, you access "
+	 "the users directory with http://user.domain.com/<mountpath> "
+	 "instead of http://user.domain.com/<mountpath>user. To set this up "
+	 "you need to add CNAME entries for all your users pointing to the "
+	 "IP(s) of this virtual server.");
+
   defvar("useuserid", 1, "Run user scripts as the owner of the script",
 	 TYPE_FLAG|VAR_MORE,
 	 "If set, users cgi and pike scripts will be run as the user who "
@@ -86,7 +95,7 @@ void create()
 
 multiset banish_list;
 mapping dude_ok;
-mapping banish_reported = ([]);
+multiset banish_reported = (<>);
 
 void start()
 {
@@ -118,18 +127,27 @@ mixed find_file(string f, object got)
   string u, of;
   of=f;
 
-  if((<"","/">)[f]) return -1;
   
-  if(sscanf(f, "%s/%s", u, f) != 2)
-  {
-    u=f; f="";
+  if(QUERY(virtual_hosting)) {
+    if(got->misc->host)
+    {
+      string host = (got->misc->host / ":")[0];
+      if(search(host, ".") != -1)
+	sscanf(host, "%s.%*s", u);
+      else 
+	u = host;
+      werror(sprintf("find_file: %O\n", u));
+    }
+  } else {
+    if((<"","/">)[f]) return -1;
+    if(sscanf(f, "%s/%s", u, f) != 2)
+      u=f; f="";
   }
-
   if(u)
   {
     string *us;
     array st;
-    if((f == "") && (of[-1] != '/'))
+    if((f == "") && (strlen(of) && of[-1] != '/'))
     {
       redirects++;
       return http_redirect(got->not_query+"/",got);
@@ -228,19 +246,29 @@ array find_dir(string f, object got)
 {
   string u, of;
   array l;
+  
+  if(QUERY(virtual_hosting)) {
+    if(got->misc->host)
+    {
+      string host = (got->misc->host / ":")[0];
+      if(search(host, ".") != -1)
+	sscanf(host, "%s.%*s", u);
+      else 
+	u = host;
+      werror(sprintf("get_dir: %O\n", u));
+    }
+  } else {
 
-  if(!strlen(f) || f=="/")
-  {
-    l=got->conf->userlist(got);
-    if(l) return (l - QUERY(banish_list));
-    return 0;
+    if(!strlen(f) || f=="/")
+    {
+      l=got->conf->userlist(got);
+      if(l) return (l - QUERY(banish_list));
+      return 0;
+    }
+    
+    if(sscanf(f, "%s/%s", u, f) != 2)
+      u=f; f="";
   }
-
-  if(sscanf(f, "%s/%s", u, f) != 2)
-  {
-    u=f; f="";
-  }
-
   if(u)
   {
     if(query("homedir"))
@@ -266,14 +294,22 @@ mixed stat_file( mixed f, mixed id )
 {
   string u, of;
 
-  if(!strlen(f) || f=="/")
-    return ({ 0, -2, 0, 0, 0, 0, 0, 0, 0, 0 });
-
-  // Don't forget to strip any initial /'s
-  if(sscanf(f, "%*[/]%s/%s", u, f) != 3)
-  {
-    sscanf(f, "%*[/]%s", u); 
-    f="";
+  if(QUERY(virtual_hosting)) {
+    if(id->misc->host)
+    {
+      string host = (id->misc->host / ":")[0];
+      if(search(host, ".") != -1)
+	sscanf(host, "%s.%*s", u);
+      else 
+	u = host;
+      werror(sprintf("get_dir: %O\n", u));
+    }
+  } else {
+    
+    if(!strlen(f) || f=="/")
+      return ({ 0, -2, 0, 0, 0, 0, 0, 0, 0, 0 });
+    if(sscanf(f, "%s/%s", u, f) != 2)
+      u=f; f="";
   }
 
   if(u)
