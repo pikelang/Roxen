@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.347 1999/06/07 22:24:28 marcus Exp $
+ * $Id: roxen.pike,v 1.348 1999/06/10 23:03:22 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.347 1999/06/07 22:24:28 marcus Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.348 1999/06/10 23:03:22 peter Exp $";
 
 object backend_thread;
 object argcache;
@@ -2699,7 +2699,7 @@ private void define_global_variables( int argc, array (string) argv )
 	  variables[c][VAR_VALUE]=compile_string(
 				      "mixed f(){ return"+v+";}")()->f();
       else
-	perror("Unknown variable: "+c+"\n");
+	perror("Unknown global variable: "+c+"\n");
   }
   docurl=QUERY(docurl2);
 
