@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.66 1997/06/01 19:51:26 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.67 1997/06/04 00:37:07 grubba Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -551,6 +551,7 @@ void done_with_roxen_com()
   if(old != new) {
     perror("Got new supports data from roxen.com\n");
     perror("Replacing old file with new data.\n");
+    object privs=((program)"privs")("Replacing etc/supports");
     mv("etc/supports", "etc/supports~");
     Stdio.write_file("etc/supports", new);
     old = Stdio.read_bytes( "etc/supports" );
@@ -558,8 +559,11 @@ void done_with_roxen_com()
     {
       perror("FAILED to update the supports file.\n");
       mv("etc/supports~", "etc/supports");
-    } else
+      privs = 0;
+    } else {
+      privs = 0;
       initiate_supports();
+    }
   }
 #ifdef DEBUG
   else
