@@ -1,5 +1,5 @@
 /*
- * $Id: mk_wxs.pike,v 1.14 2004/11/23 17:14:14 grubba Exp $
+ * $Id: mk_wxs.pike,v 1.15 2004/11/24 09:45:02 grubba Exp $
  *
  * Make a Windows Installer XML Source file (wxs) suitable
  * for a Roxen installer.
@@ -39,7 +39,7 @@ int main(int argc, array(string) argv)
       if (stringp(opt[1])) {
 	version_str = opt[1];
       } else {
-	werror("$Id: mk_wxs.pike,v 1.14 2004/11/23 17:14:14 grubba Exp $\n");
+	werror("$Id: mk_wxs.pike,v 1.15 2004/11/24 09:45:02 grubba Exp $\n");
 	exit(0);
       }
       break;
@@ -126,10 +126,10 @@ int main(int argc, array(string) argv)
   Directory sub_menu = start_menu->low_add_path(({"Programs", title}),
 						  "START_MENU");
   sub_menu->low_add_shortcut("Roxen Administration", "START_MENU", 0,
-			     "[BROWSER]", 0,
+			     "[BROWSER]",
 			     "[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/");
   sub_menu->low_add_shortcut("Roxen Documentation", "START_MENU", 0,
-			     "[BROWSER]", 0,
+			     "[BROWSER]",
 			     "[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/docs/");
   sub_menu->low_add_shortcut("Start Roxen (log to file)", "START_MENU", 0,
 			     "[TARGETDIR]ntstart",
