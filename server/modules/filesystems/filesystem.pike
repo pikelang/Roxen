@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.85 2000/08/13 04:03:07 per Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.86 2000/08/23 18:53:09 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -376,6 +376,9 @@ string decode_path( string p )
 #ifndef __NT__
   if( String.width( p ) != 8 )
     p = string_to_utf8( p );
+#else
+  while( strlen(p) && p[-1] == '/' )
+    p = p[..strlen(p)-2];
 #endif
   return p;
 }
@@ -433,13 +436,13 @@ mixed find_file( string f, RequestID id )
   /* only used for the quota system, thus rather unessesary to do for
      each request....
   */
-#define uri combine_path(mountpoint + "/" + f, ".")
+#define URI combine_path(mountpoint + "/" + f, ".")
 
   f = path + f;
 
-#ifdef __NT__
-  if(f[-1]=='/') f = f[..strlen(f)-2];
-#endif
+// #ifdef __NT__ // fixed in decode_path
+//   if(f[-1]=='/') f = f[..strlen(f)-2];
+// #endif
   size = _file_size( f, id );
 
   /*
@@ -601,7 +604,7 @@ mixed find_file( string f, RequestID id )
 
     QUOTA_WERR("Checking quota.\n");
     if (id->misc->quota_obj && (id->misc->len > 0) &&
-	!id->misc->quota_obj->check_quota(uri, id->misc->len)) {
+	!id->misc->quota_obj->check_quota(URI, id->misc->len)) {
       errors++;
       report_warning("Creation of " + f + " failed. Out of quota.\n");
       TRACE_LEAVE("PUT: Out of quota.");
@@ -631,7 +634,7 @@ mixed find_file( string f, RequestID id )
       QUOTA_WERR("Checking if the file already exists.");
       if (size > 0) {
 	QUOTA_WERR("Deallocating " + size + "bytes.");
-	id->misc->quota_obj->deallocate(uri, size);
+	id->misc->quota_obj->deallocate(URI, size);
       }
       if (size) {
 	QUOTA_WERR("Deleting old file.");
@@ -687,7 +690,7 @@ mixed find_file( string f, RequestID id )
     if(id->clientprot == "HTTP/1.1") {
       id->my_fd->write("HTTP/1.1 100 Continue\r\n");
     }
-    id->my_fd->set_id( ({ to, id->my_fd, id, uri }) );
+    id->my_fd->set_id( ({ to, id->my_fd, id, URI }) );
     id->my_fd->set_nonblocking(got_put_data, 0, done_with_put);
     TRACE_LEAVE("PUT: Pipe in progress");
     TRACE_LEAVE("PUT: Success so far");
@@ -869,7 +872,7 @@ mixed find_file( string f, RequestID id )
       TRACE_LEAVE("MOVE: No dest file");
       return 0;
     }
-    string new_uri = combine_path(uri + "/../",
+    string new_uri = combine_path(URI + "/../",
 				  id->misc["new-uri"]);
 
     if (new_uri[..sizeof(mountpoint)-1] != mountpoint) {
