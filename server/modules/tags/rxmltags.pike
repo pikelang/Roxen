@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.246 2001/06/25 19:08:04 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.247 2001/06/25 19:19:21 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2596,7 +2596,8 @@ class FrameIf {
 
     int ifval=0;
     foreach(indices (args), string s)
-      if (RXML.Tag plugin = plugins[s] || defs["if\0" + s]) {
+      if (object(RXML.Tag)|object(UserIf) plugin =
+	  plugins[s] || defs["if\0" + s]) {
 	ifval = plugin->eval( args[s], id, args, and, s );
 	if(ifval) {
 	  if(!and) {
