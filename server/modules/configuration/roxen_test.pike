@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.51 2001/11/07 12:13:56 grubba Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.52 2001/11/21 13:19:10 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -169,9 +169,12 @@ RequestID get_id()
   return id;
 }
 
+static string ignore_errors = 0;
+
 string rxml_error(RXML.Backtrace err, RXML.Type type) {
   //  if(verbose)
   //  werror(describe_backtrace(err)+"\n");
+  if (ignore_errors && ignore_errors == err->type) return "";
   return sprintf("[Error (%s): %s]", err->type,
 		 String.trim_all_whites(replace(err->msg, "\n", "")));
 }
@@ -277,6 +280,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 		       lambda(object t, mapping m, string c) {
 			 test_test( c );
 			 mixed err = catch {
+			   ignore_errors = m["ignore-errors"];
 			   if (!p_code) {
 			     RXML.Type type = m->type ?
 			       RXML.t_type->encode (m->type) (
@@ -297,10 +301,12 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			     res = p_code->eval (ctx);
 			   }
 			 };
-			 if(err)
+			 ignore_errors = 0;
+			 if(err && (!m["ignore-errors"] ||
+				    !objectp (err) || !err->is_RXML_Backtrace ||
+				    err->type != m["ignore-errors"]))
 			 {
-			   test_error("Failed (backtrace)\n");
-			   test_error("%s\n",describe_backtrace(err));
+			   test_error("Failed (backtrace): %s",describe_backtrace(err));
 			   throw(1);
 			 }
 			 if(!args["no-canon"])
@@ -686,7 +692,7 @@ void continue_find_tests( )
 	      object test;
 	      mixed error;
 	      if( error=catch( test=compile_file(file)( verbose ) ) )
-		report_error("Failed to compile %s\n%s\n", file,
+		report_error("Failed to compile %s:\n%s", file,
 			     describe_backtrace(error));
 	      else
 	      {
@@ -856,6 +862,21 @@ class TagTestMisc
       else if (args["get-prog"])
 	return ({RXML_CONTEXT->misc[TagTestMisc]});
       return ({});
+    }
+  }
+}
+
+class TagRunError
+{
+  inherit RXML.Tag;
+  constant name = "run-error";
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    array do_return()
+    {
+      run_error (args->message || "A test run error");
     }
   }
 }
