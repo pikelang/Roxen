@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.537 2003/08/13 15:25:55 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.538 2003/08/26 16:15:36 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1817,9 +1817,10 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 	  if (recur_func)
 	    return Roxen.http_low_answer(400, "Bad DAV request (23.3.2.1).");
 	  recur_func = lambda(string path, int d, RoxenModule module,
-			      MultiStatus stat, RequestID id) {
+			      MultiStatus stat, RequestID id,
+			      multiset(string)|void filt) {
 			 module->recurse_find_properties(path, "DAV:allprop", d,
-							 stat, id);
+							 stat, id, filt);
 		       };
 	  break;
 	case "DAV:prop":
@@ -1831,9 +1832,20 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 			 module->recurse_find_properties(path, "DAV:prop", d,
 							 stat, id, filt);
 		       };
-	  extras = ({
-	    (multiset)(prop->get_children()->get_full_name() - ({ "" }))
-	  });
+	  // FALL_THROUGH
+	case "http://sapportals.com/xmlns/cm/webdavinclude":
+	  // Support for draft-reschke-webdav-allprop-include-04
+	  // FIXME: Should we check that
+	  //        http://sapportals.com/xmlns/cm/webdavinclude only
+	  //        occurrs in the DAV:allprop case? 
+	  multiset(string) props =
+	    (multiset(string))(prop->get_children()->get_full_name() -
+			       ({ "" }));
+	  if (extras) {
+	    extras[0] |= props;
+	  } else {
+	    extras = ({ props });
+	  }
 	  break;
 	default:
 	  break;
