@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.34 2001/08/31 09:11:37 noring Exp $
+ * $Id: create_configif.pike,v 1.35 2001/10/16 01:28:37 nilsson Exp $
  *
  * Create an initial administration interface server.
  */
@@ -88,6 +88,52 @@ int main(int argc, array argv)
 #else
   string def_port = "http://*:"+(random(20000)+10000)+"/";
 #endif
+
+  if(has_value(argv, "--help")) {
+    write(#"
+Creates and initializes a Roxen WebServer configuration
+interface. Arguments:
+
+ -d dir   The location of the configuration interface.
+          Defaults to \"../configurations\".
+ -a       Only create a new administration user.
+          Useful when the administration password is
+          lost.
+ --help   Displays this text.
+ --batch  Create a configuration interface in batch mode.
+          The --batch argument should be followed by a
+          list of value pairs, each pair representing the
+          name of a question field and the value to be
+          filled into it. Available fields:
+      server_name    The name of the server. Defaults to
+                     \"Administration Interface\".
+      server_url     The server url, e.g.
+                     \"http://*:1234/\".
+      user           The name of the administrator.
+                     Defaults to \"administrator\".
+      password       The administrator password.
+      ok             Disable user confirmation of the
+                     above information with the value
+                     pair \"ok y\".
+      update         Enable update system (y/n).
+      community_user The name of the community user that
+                     should be used when downloading
+                     updates.
+      community_password  The password for the above
+                     community user.
+      community_proxy  Use proxy when connecting to the
+                     community site.
+      proxy_host     The proxy host.
+      proxy_port     The proxy port.
+
+Example of a batch installation:
+
+ ./create_configinterface --help server_name Admin server_url
+ http://*:8080/ ok y user admin update n
+
+");
+    return 0;
+  }
 
   configdir =
    Getopt.find_option(argv, "d",({"config-dir","configuration-directory" }),
