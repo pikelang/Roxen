@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.22 2003/02/07 13:19:48 jonasw Exp $
+// $Id: License.pmod,v 1.23 2003/03/05 10:55:00 anders Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -131,6 +131,11 @@ class Key
   {
     array(mapping(string:string)) res = values(warnings)->to_mapping();
     return sort(res, res->time);
+  }
+  
+  mapping(string:string) get_warning(string type)
+  {
+    return warnings[type] && warnings[type]->to_mapping();
   }
   
   static array(Gmp.mpz) read_public_key()
