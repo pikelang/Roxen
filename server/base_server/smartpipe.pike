@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.16 1998/03/29 01:16:04 neotron Exp $
+ * $Id: smartpipe.pike,v 1.17 1998/03/29 01:33:12 neotron Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -119,7 +119,7 @@ void next_input()
 
   if(stringp(current_input))
   {
-    outfd->set_nonblocking(0, write_more, finish);
+    outfd->set_nonblocking(lambda() {}, write_more, finish);
     return;
   }
   if(outfd->query_fd()>0 && current_input->query_fd()>0)
