@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 // The main RXML parser. If this module is not added to a configuration,
 // no RXML parsing will be done at all for .html files.
@@ -9,7 +9,7 @@
 #define _extra_heads id->misc->defines[" _extra_heads"]
 #define _rettext id->misc->defines[" _rettext"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.40 2000/02/17 23:38:05 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.41 2000/02/24 03:38:49 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -247,7 +247,7 @@ string api_html_quote_attr(RequestID id, string value)
 }
 
 string api_read_file(RequestID id, string file) {
-  return API_read_file(id,file)||rxml_error("insert", "No such file ("+file+").", id);
+  return API_read_file(id,file);
 }
 
 void add_api_function(string name, function f, void|array(string) types)
