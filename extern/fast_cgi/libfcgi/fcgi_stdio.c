@@ -12,7 +12,7 @@
  */
 
 #ifndef lint
-static const char rcsid[] = "$Id: fcgi_stdio.c,v 1.3 1999/05/24 01:00:04 peter Exp $";
+static const char rcsid[] = "$Id: fcgi_stdio.c,v 1.4 1999/05/26 00:32:53 peter Exp $";
 #endif /* not lint */
 
 #define NO_FCGI_DEFINES
@@ -21,6 +21,12 @@ static const char rcsid[] = "$Id: fcgi_stdio.c,v 1.3 1999/05/24 01:00:04 peter E
 
 #include <errno.h>
     /* for errno */
+#ifdef HAVE_SYS_TYPES_H
+/* Stupid Redhat 6.0 has a broken <stdarg.h> which requires <sys/types.h>
+ * but doesn't include it itself.
+ */
+#include <sys/types.h>
+#endif /* HAVE_SYS_TYPES_H */
 #include <stdarg.h>
     /* for va_arg */
 #include <stdlib.h>
@@ -42,7 +48,8 @@ static const char rcsid[] = "$Id: fcgi_stdio.c,v 1.3 1999/05/24 01:00:04 peter E
 
 #ifdef USE_GCC_CONSTRUCTOR_ATTR
 FCGI_FILE _fcgi_sF[3];
-static void _init_fcgi_sF(void) __attribute__((constructor))
+static void _init_fcgi_sF(void) __attribute__((constructor));
+static void _init_fcgi_sF(void)
 {
   _fcgi_sF[0].stdio_stream = stdin;
   _fcgi_sF[0].fcgx_stream = NULL;
