@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.26 2004/02/10 13:33:35 wellhard Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.27 2004/02/10 17:16:03 wellhard Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -510,7 +510,9 @@ class TagGXML
 	my_args[n] = args[n];
 
       mapping res_args = args - my_args;
-      string key = the_cache->store( ({ my_args, i->encode() }), id);
+      mapping node_tree = i->encode();
+      // werror("Node tree: %O\n", node_tree);
+      string key = the_cache->store( ({ my_args, node_tree }), id);
       res_args->src = query_internal_location() + key;
       int no_draw = !id->misc->generate_images;
       if( mapping size = the_cache->metadata( key, id, no_draw ) )
