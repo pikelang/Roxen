@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.545 2000/09/12 14:05:53 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.546 2000/09/12 21:25:33 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2216,12 +2216,14 @@ class ImageCache
       mapping enc_args = ([]);
       if( ct )
         enc_args->colortable = ct;
+
       if( alpha )
         enc_args->alpha = alpha;
 
       foreach( glob( "*-*", indices(args)), string n )
         if(sscanf(n, "%*[^-]-%s", string opt ) == 2)
-          enc_args[opt] = (int)args[n];
+          if( opt != "alpha" )
+            enc_args[opt] = (int)args[n];
 
       switch(format)
       {
