@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.541 2002/10/23 20:41:18 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.542 2002/10/24 03:58:36 nilsson Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2358,11 +2358,11 @@ int(0..1) is_file(string virt_path, RequestID id, int(0..1)|void internal)
       m_delete(id->misc, "internal_get");
     return res;
   }
-  if(stat_file(virt_path, id) ||
-     has_suffix(virt_path, "/internal-roxen-unit"))
+  if(stat_file(virt_path, id) || virt_path=="/%01/unit")
     return 1;
   string f = (virt_path/"/")[-1];
-  if( sscanf(f, "internal-roxen-%s", f) ) {
+  if( has_prefix(virt_path, "/%01/") ||
+      sscanf(f, "internal-roxen-%s", f) ) {
     if(internal_roxen_image(f, id) ||
        has_prefix(f, "pixel-"))
       return 1;
