@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.16 2000/12/19 14:39:49 nilsson Exp $";
+constant cvs_version="$Id: vform.pike,v 1.17 2001/01/06 01:56:51 nilsson Exp $";
 constant thread_safe=1;
 
 constant module_type = MODULE_TAG;
@@ -211,17 +211,40 @@ class VInput {
   }
 }
 
-/*
 class TagWizzVInput {
-  inherit VInput;
+  inherit RXML.Tag;
   constant name="wizz";
   constant plugin_name="vinput";
 
-  class Frame {
-    inherit VInputFrame;
+  RXML.Tag get_tag() {
+    return TagVInput();
+  }
+
+  class TagVInput {
+    inherit VInput;
+    class Frame {
+      inherit VInputFrame;
+
+      array do_enter(RequestID id) {
+	id->misc->vform_ok = id->misc->wizard->verify?id->misc->wizard->verify_ok:1;
+	if(!id->misc->vform_verified) {
+	  id->misc->vform_verified=(<>);
+	  id->misc->vform_failed=(<>);
+	  id->misc->vform_xml = !args->noxml;
+	}
+
+	::do_enter(id);
+	return 0;
+      }
+
+      array do_return(RequestID id) {
+	::do_return(id);
+	id->misc->wizard->verify_ok = id->misc->vform_ok;
+	return 0;
+      }
+    }
   }
 }
-*/
 
 class TagVForm {
   inherit RXML.Tag;
