@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.54 1999/11/24 02:08:08 per Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.55 1999/11/24 02:16:49 per Exp $";
 
 /*
  * name = "Roxen Master";
@@ -64,6 +64,15 @@ program low_findprog(string pname, string ext, object|void handler)
   if( programs[ fname ] ) 
     return programs[ fname ];
   return UNDEFINED;
+}
+
+mapping resolv_cache = ([]);
+mixed resolv(string a, string b)
+{
+  if( resolv_cache[a] )
+    return resolv_cache[a]->value;
+  resolv_cache[a] = ([ "value":(::resolv(a,b)) ]);
+  return resolv_cache[a]->value;
 }
 
 int refresh( program p )
