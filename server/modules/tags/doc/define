@@ -47,5 +47,6 @@ new tags that are more or less only an alias for old ones:<br>
 <dd>The definition of 'argument' in the last called 'tagname', or the
 previous definition of 'argument'. Useful in tags that use other
 userdefined tags.
+</dl>
 <p>
 <b>See also:</b> {set help} {insert help} {use help}

@@ -1,7 +1,8 @@
 <b>Syntax:</b><br>
-<kbd>
+<pre>
 {use file=file-to-use-macros-from}
-</kbd>
+{use package=rxml-package}
+</pre>
 <p>
 <b>Attributes</b>
 <dl>
@@ -10,12 +11,19 @@
 
 <p> This file will be fetched just as if someone had tried to fetch it
     with an HTTP request. This makes it possible to use Pike script
-
-<p> results and other dynamic documents. <b>But:</b> beware: The
+ results and other dynamic documents. <b>But:</b> beware: The
     results of the parsing is heavily cached for performance reasons,
     if you do not want this cache use <nobr><kbd>{insert
     file=... nocache}</kbd></nobr> insead of <nobr><kbd>{use
     file=...}</kbd></nobr>.  
+<p><dt><kbd><b>package=name</b></kbd>
+
+<dd>Read all macros and tag/container definitions from the package
+    'file'. Packages are files located in {roxen-dir}/rxml_packages/.
+
+<p><b>Available packages:</b><p>
+<use packageinfo>
+<p>
 </dl>
 
 <p>
