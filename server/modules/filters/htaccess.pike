@@ -5,7 +5,7 @@
 
 import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.25 1998/01/15 17:13:19 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.26 1998/01/15 18:20:10 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -340,7 +340,7 @@ int validate_user(int|multiset users, array auth, string userfile, object id)
   {
     if (st && (st[1] == -4)) {
       report_error(sprintf("HTACCESS: Userfile \"%s\" is a device!\n"
-			   "query: \"%s\"\n", userfile, id->query));
+			   "query: \"%s\"\n", userfile, id->query + ""));
     }
 #ifdef HTACCESS_DEBUG
     werror(sprintf("HTACCESS: Failed to read password file (%s)\n", 
@@ -401,7 +401,7 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
     if (st && (st[1] == -4)) {
       report_error(sprintf("HTACCESS: The groupfile \"%s\" is a device!\n"
 			   "userfile: \"%s\"\n"
-			   "query: \"%s\"\n", groupfile, userfile, id->query));
+			   "query: \"%s\"\n", groupfile, userfile, id->query + ""));
     }
 #ifdef HTACCESS_DEBUG
     werror("HTACCESS: The groupfile "+groupfile+" cannot be opened.\n");
@@ -631,7 +631,8 @@ array rec_find_htaccess_file(object id, string vpath)
       } else {
 	if (st && (st[1] == -4)) {
 	  report_error(sprintf("HTACCESS: The htaccess-file in \"%s\" is a device!\n"
-			       "query: \"%s\"\n", path, id->query));
+			       "vpath: \"%s\"\n"
+			       "query: \"%s\"\n", path, vpath, id->query + ""));
 	}
 	if(QUERY(cache_all))
 	  return 0;
@@ -655,7 +656,8 @@ array rec_find_htaccess_file(object id, string vpath)
     }
     if (st && (st[1] == -4)) {
       report_error(sprintf("HTACCESS: The htaccess-file in \"%s\" is a device!\n"
-			   "query: \"%s\"\n", path, id->query));
+			   "vpath: \"%s\"\n"
+			   "query: \"%s\"\n", path, vpath, id->query + ""));
     }
   } 
   array res;
@@ -707,7 +709,7 @@ mapping htaccess_no_file(object id)
     }
     if (st && (st[1] == -4)) {
       report_error(sprintf("HTACCESS: Nofile \"%s\" is a device!\n"
-			   "query: \"%s\"\n", file, id->query));
+			   "query: \"%s\"\n", file, id->query + ""));
     }
   }
   return 0;
@@ -748,7 +750,7 @@ mapping try_htaccess(object id)
 	    file = parse_rxml(file, id);
 	  } else if (st && (st[1] == -4)) {
 	    report_error(sprintf("HTACCESS: Errorfile \"%s\" is a device!\n"
-				 "query: \"%s\"\n", access->errorfile, id->query));
+				 "query: \"%s\"\n", access->errorfile, id->query + ""));
 	  }
 	}
 	id->misc->error_code = 403;
@@ -781,7 +783,7 @@ mapping try_htaccess(object id)
 	    file = parse_rxml(file, id);
 	  } else if (st && (st[1] == -4)) {
 	    report_error(sprintf("HTACCESS: Errorfile \"%s\" is a device!\n"
-				 "query: \"%s\"\n", access->errorfile, id->query));
+				 "query: \"%s\"\n", access->errorfile, id->query + ""));
 	  }
 	}
 	id->misc->error_code = ret->error || 403;
