@@ -3,7 +3,7 @@
 //
 // A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.441 2001/06/24 03:51:31 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.442 2001/06/26 09:41:06 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -633,6 +633,13 @@ array (function) first_modules()
   }
 
   return first_module_cache;
+}
+
+void set_userdb_module_cache( array to )
+// Used by the config_filesystem.pike module to enforce the usage of
+// the config userdb module, for now.
+{
+  userdb_module_cache = to;	
 }
 
 array(UserDB) user_databases()
