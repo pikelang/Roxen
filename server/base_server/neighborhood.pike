@@ -1,4 +1,4 @@
-// $Id: neighborhood.pike,v 1.32 1998/04/21 19:06:36 grubba Exp $
+// $Id: neighborhood.pike,v 1.33 1998/06/03 13:27:04 grubba Exp $
 #define DELAY 20
 // #define NEIGH_DEBUG
 mapping neighborhood = ([ ]);
@@ -309,7 +309,7 @@ void create()
   }
   if(!master)
   {
-    master = files.port();
+    master = Stdio.Port();
     master->set_id(master);
     if(!master->bind(51521,got_connection))
     {
