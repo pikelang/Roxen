@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.130 1998/05/09 17:06:51 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.131 1998/05/18 21:24:48 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -1150,8 +1150,9 @@ mapping|int low_get_file(object id, int|void no_magic)
   {
 #ifndef NO_INTERNAL_HACK 
     // No, this is not beautiful... :) 
-    if(sizeof(id->not_query) && (id->not_query[0] == '/') &&
-       sscanf(id->not_query, "%*s/internal-%s", loc))
+
+    if(sizeof(file) && (file[0] == '/') &&
+       sscanf(file, "%*s/internal-%s", loc))
     {
       if(sscanf(loc, "gopher-%[^/]", loc))    // The directory icons.
       {
@@ -1270,7 +1271,7 @@ mapping|int low_get_file(object id, int|void no_magic)
       if(tmp2 = check_security(tmp[1], id, slevel))
 	if(intp(tmp2))
 	{
-	  TRACE_LEAVE("Persmission to access module denied");
+	  TRACE_LEAVE("Permission to access module denied");
 	  continue;
 	} else {
 	  TRACE_LEAVE("Request denied.");
@@ -1954,10 +1955,13 @@ public int is_file(string what, object id)
   return !!stat_file(what, id);
 }
 
-mapping (object:array) open_ports = ([]);
+static mapping(string:object) server_ports = ([]);
+#define MKPORTKEY(P)	((P)[1]+"://"+(P)[2]+":"+(P)[0])
+
 int ports_changed = 1;
 void start(int num)
 {
+  string server_name = query_name();
   array port;
   int err=0;
   object lf;
@@ -1966,70 +1970,111 @@ void start(int num)
   parse_log_formats();
   init_log_file();
 
-  if(ports_changed)
-  {
-    ports_changed=0;
-    perror("Opening ports for "+query_name()+"... ");
-    foreach(query("Ports"), port ) {
-      int already_open;
-      foreach(values(open_ports), array op)
-	if(equal(op,port)) { already_open=1;break; }
-      if(already_open) continue;
+#if 0
+  // Doesn't seem to be set correctly.
+  //	/grubba 1998-05-18
+  if (!ports_changed) {
+    return;
+  }
+#endif /* 0 */
+
+  ports_changed = 0;
+
+  // First find out if we have any new ports.
+  mapping(string:array(string)) new_ports = ([]);
+  foreach(query("Ports"), port) {
+    string key = MKPORTKEY(port);
+    if (!server_ports[key]) {
+      report_notice(sprintf("%s: New port: %s\n", server_name, key));
+      new_ports[key] = port;
+    } else {
+      // This is needed not to delete old unchanged ports.
+      new_ports[key] = 0;
+    }
+  }
+
+  // Then disable the old ones that are no more.
+  foreach(indices(server_ports), string key) {
+    if (zero_type(new_ports[key])) {
+      report_notice(sprintf("%s: Disabling port: %s...\n", server_name, key));
+      object o = server_ports[key];
+      m_delete(server_ports, key);
+      mixed err;
+      if (err = catch{
+        destruct(o);
+      }) {
+        report_warning(sprintf("%s: Error disabling port: %s:\n"
+                               "%s\n",
+			       server_name, key, describe_backtrace(err)));
+      }
+      o = 0;    // Be sure that there are no references left...
+    }
+  }
+
+  // Now we can create the new ports.
+  roxen_perror(sprintf("Opening ports for %s... \n", server_name));
+  foreach(indices(new_ports), string key) {
+    port = new_ports[key];
+    if (port) {
       array old = port;
       mixed erro;
       erro = catch {
-	array tmp;
-	function rp;
-	object o;
-    
 	if ((< "ssl", "ssleay" >)[port[1]]) {
 	  // Obsolete versions of the SSL protocol.
-	  report_warning("Obsolete SSL protocol-module \""+port[1]+"\".\n"
-			 "Converted to SSL3.\n");
+	  report_warning(sprintf("%s: Obsolete SSL protocol-module \"%s\".\n"
+				 "Converted to SSL3.\n",
+				 server_name, port[1]));
 	  // Note: Change in-place.
 	  port[1] = "ssl3";
 	  // FIXME: Should probably mark node as changed.
 	}
-	perror(port[0]+" "+port[2]+" ("+port[1]+")... ");
-	if(rp = ((object)("protocols/"+port[1]))->real_port) {
-	  if(tmp = rp(port, this_object()))
-	    port = tmp;
-	}
-	object privs;
-	if(port[0] < 1024)
-	  privs = Privs("Opening listen port below 1024");
-	if(!(o=create_listen_socket(port[0], this, port[2],
-				    (program)("protocols/"+port[1]))))
-	{
-	  report_error("I failed to open the port "+old[0]+" at "+old[2]+
-		       " ("+old[1]+")\n");
-	  err++;
-	} else
-	  open_ports[o]=old;
+	program requestprogram = (program)(getcwd()+"/protocols/"+port[1]);
+        function rp;
+        array tmp;
+        if(!requestprogram) {
+          report_error(sprintf("%s: No request program for %s\n",
+			       server_name, port[1]));
+          continue;
+        }
+        if(rp = requestprogram()->real_port)
+          if(tmp = rp(port, this_object()))
+            port = tmp;
+
+	// FIXME: For SSL3 we might need to be root to read our
+        // secret files.
+        object privs;
+        if(port[0] < 1024)
+          privs = Privs("Opening listen port below 1024");
+
+	object o;
+        if(o=create_listen_socket(port[0], this_object(), port[2],
+				  requestprogram, port)) {
+          report_notice(sprintf("%s: Opening port: %s\n", server_name, key));
+          server_ports[key] = o;
+        } else {
+          report_error(sprintf("%s: The port %s could not be opened\n",
+			       server_name, key));
+        }
 	if (privs) {
 	  destruct(privs);	// Paranoia.
 	}
       };
-      if(erro) {
-	report_error("Failed to open port "+old[0]+" at "+old[2]+
-		     " ("+old[1]+"): "+
-		     (stringp(erro)?erro:describe_backtrace(erro)));
+      if (erro) {
+        report_error(sprintf("%s: Failed to open port %s:\n"
+                             "%s\n", server_name, key,
+                             (stringp(erro)?erro:describe_backtrace(erro))));
       }
-      perror("\n");
     }
   }
-  if(!num && sizeof(query("Ports")))
-  {
-    if(err == sizeof(query("Ports")))
-    {
-      report_error("No ports available for "+name+"\n"
-		    "Tried:\n"
-		    "Port  Protocol   IP-Number \n"
-		    "---------------------------\n"
-		    + Array.map(query("Ports"), lambda(array p) {
-		      return sprintf("%5d %-10s %-20s\n", @p);
-		    })*"");
-    }
+  if (sizeof(query("Ports")) && !sizeof(server_ports)) {
+    report_error("No ports available for "+name+"\n"
+		 "Tried:\n"
+		 "Port  Protocol   IP-Number \n"
+		 "---------------------------\n"
+		 + Array.map(query("Ports"),
+			     lambda(array p) {
+			       return sprintf("%5d %-10s %-20s\n", @p);
+			     })*"");
   }
 }
 
@@ -2941,10 +2986,7 @@ int unload_module(string module_file)
 
 int port_open(array prt)
 {
-  array v;
-  foreach(values(open_ports), v)
-    if(equal(v, prt)) return 1;
-  return 0;
+  return(server_ports[MKPORTKEY(prt)] != 0);
 }
 
 
