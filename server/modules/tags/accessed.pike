@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.32 2000/04/30 04:30:55 nilsson Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.33 2000/04/30 18:58:06 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER | MODULE_LOGGER;
 constant module_name = "Accessed counter";
@@ -39,6 +39,9 @@ void create(Configuration c) {
 
   defvar("database", "mysql://localhost", "SQL Database", TYPE_STRING, 
 	 "What database to use for the database backend.");
+
+  defvar("restrict", 1, "Restrict reset", TYPE_FLAG, "Restrict the attribute reset "
+	 "so that the resetted file is in the same directory or below.");
 }
 
 TAGDOCUMENTATION
@@ -354,15 +357,14 @@ class FileCounter {
 
 class SQLCounter {
   // SQL backend counter.
-  // FIXME: Quality SQL queries.
 
   Sql.sql db;
 
   void create() {
     db=Sql.sql(QUERY(database));
     catch {
-      db->query("CREATE TABLE accessed (path VARCHAR(255) NOT NULL, hits INT UNSIGNED DEFAULT 0,"
-		" made INT UNSIGNED, PRIMARY KEY (path))");
+      db->query("CREATE TABLE accessed (path VARCHAR(255) PRIMARY KEY, hits INT UNSIGNED DEFAULT 0,"
+		" made INT UNSIGNED)");
       db->query("INSERT INTO accessed (path,made) VALUES ('///',"+time(1)+")" );
     };
   }
@@ -374,7 +376,9 @@ class SQLCounter {
   }
 
   private void create_entry(string file) {
+    if(cache_lookup("access_entry", file)) return;
     catch(db->query("INSERT INTO accessed (path,made) VALUES ('"+file+"',"+time(1)+")" ));
+    cache_set("access_entry", file, 1);
   }
 
   private string fix_file(string file) {
@@ -470,15 +474,12 @@ string tag_accessed(string tag, mapping m, RequestID id)
 {
   NOCACHE();
 
-  if(m->reset)
-  {
-    // FIXME: There are a few cases where users can avoid this.
-    // FIXME: Is this code working at all?
-    if( !search( (dirname(m->file)+"/")-"//",
-		 (dirname(id->not_query)+"/")-"//" ) )
+  if(m->reset) {
+    if( !query("restrict") || !search( (dirname(Roxen.fix_relative(m->file, id))+"/")-"//",
+		 (dirname(Roxen.fix_relative(id->not_query, id))+"/")-"//" ) )
     {
       counter->reset(m->file);
-      return "Number of counts for "+m->file+" is now 0.<br>";
+      return "Number of counts for "+m->file+" is now 0.<br />";
     }
     else
       // On a web hotell you don't want the guests to be alowed to reset
@@ -561,9 +562,9 @@ string tag_accessed(string tag, mapping m, RequestID id)
   int prec, q;
   if(prec=(int)m->prec)
   {
-    int n=(int)pow(10, prec);
+    int n=10->pow(prec);
     while(counts>n) { counts=(counts+5)/10; q++; }
-    counts*=(int)pow(10, q);
+    counts*=10->pow(q);
   }
 
   string res;
@@ -572,7 +573,7 @@ string tag_accessed(string tag, mapping m, RequestID id)
   case "mcdonalds":
     q=0;
     while(counts>10) { counts/=10; q++; }
-    res="More than "+language("eng", "number", id)(counts*(int)pow(10, q))
+    res="More than "+language("eng", "number", id)(counts*10->pow(q))
         + " served.";
     break;
 
