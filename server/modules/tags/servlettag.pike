@@ -12,7 +12,7 @@ inherit "module";
 array register_module()
 {
   return ({ MODULE_PARSER,
-	    "Servlet tag", 
+	    "Java Servlet tag", 
 	    "This module adds a new tag, &lt;servlet&gt;&lt;/pike&gt;. It makes"
 	    " it possible to use Java Servlets directly in RXML."
 	    "NOTE: This module should not be enabled if you allow anonymous"
@@ -20,9 +20,9 @@ array register_module()
 	    "NOTE: Enabling this module is the same thing as letting your"
 	    " users run programs with the same right as the server!"
 	    "<p>Example:<p><pre>"
-	    " &lt;pike&gt; "
-	    "   return \"Hello world!\\n\";"
-	    " &lt;/pike&gt;\n</pre>"
+	    " &lt;servlet code=MyLittleServlet initparam_foo=bar&gt;\n "
+	    "   <param name=\"foo\" value=\"bar\">"
+	    " &lt;/servlet&gt;\n</pre>",
 	    ({}), 1 });
 }
 
@@ -39,8 +39,8 @@ void create()
 	 "</ul>\n",
 	 ({"Off", "Log", "HTML comment", "HTML text"}));
 
-  defvar("basedir","", "Base directory", TYPE_DIR,
-	 "Where to look for Servlet classes");	  
+  defvar("codebase","", "Code base", TYPE_STRING,
+	 "This can either be a directory or an URL.");	  
 }
 
 string reporterr (string header, string dump)
@@ -67,7 +67,7 @@ string|object get_servlet(string classfile, string codebase,
 {
   array|string temp = servlet_cache[codebase+classfile];
 
-  if(temp && equal(temp[0],initargs))
+  if(temp && equal(temp[0],initparams))
     return temp[1];
 
   if(temp)
@@ -101,14 +101,20 @@ void start(int x, object conf)
 string tag_servlet(string tag, mapping m, string s, object id,
 		   object file, mapping defs)
 {
-  array|string servlet=get_servlet(m->classname, m->codebase||query("basedir"),
-				   m-(["classname":0,"codebase":0]),id->conf);
+  mapping params=([]);
+  parse_html(s,(["param":lambda(string tag, mapping args, mapping params)
+			 {
+			   if(args->name && args->value)
+			     params[args->name]=args->value;
+			 } ]),
+	     ([]),params);
+  array|string servlet=get_servlet(m->code, m->codebase||query("codebase"),
+				   m-(["code":0,"codebase":0]),id->conf);
   if(stringp(servlet))
     return reporterr("Servlet loading failed",servlet);
+
   
 }
-
-
 
 mapping query_container_callers()
 {
