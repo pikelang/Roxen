@@ -14,19 +14,19 @@ LDFLAGS=@LDFLAGS@
 all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ pike extern
 
 pike: force
-	@(cd pike/src;$(MAKE))
+	@(cd pike/src;$(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)")
 
 exterm: force
-	@(cd extern;$(MAKE) all)
+	@(cd extern;$(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all)
 
 gmp: force
-	-@(cd gmp;$(MAKE) all)
+	-@(cd gmp;$(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all)
 
 gdbm: force
-	-@(cd gdbm;$(MAKE) all)
+	-@(cd gdbm;$(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" all)
 
 zlib: force
-	-@(cd zlib;$(MAKE) libz.a)
+	-@(cd zlib;$(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" libz.a)
 
 force:
 
@@ -35,37 +35,37 @@ easy: all
 hard: all
 
 depend:
-	@(cd pike/src;$(MAKE) depend)
+	@(cd pike/src;$(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" depend)
 	echo "You need to run configure once again."
 
 verify: all verify_other
-	@(cd pike/src;$(MAKE) verify)
+	@(cd pike/src;$(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verify)
 
 verbose_verify: all verify_other
-	@(cd pike/src;$(MAKE) verbose_verify)
+	@(cd pike/src;$(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verbose_verify)
 
 verify_other:
 	@if test "@MAKE_ZLIB@" = "zlib"; then \
-	  $(MAKE) verify_zlib; \
+	  $(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verify_zlib; \
 	fi
 	@if test "@MAKE_GMP@" = "gmp"; then \
-	  $(MAKE) verify_gmp; \
+	  $(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" verify_gmp; \
 	fi
 
 verify_zlib:
-	@(cd zlib;$(MAKE) test)
+	@(cd zlib;$(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" test)
 
 verify_gmp:
-	@(cd gmp;$(MAKE) check)
+	@(cd gmp;$(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" check)
 
 new_peep_engine:
-	@(cd pike/src;$(MAKE) new_peep_engine)
+	@(cd pike/src;$(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" new_peep_engine)
 
 check: verify
 
 clean:
-	@(cd pike/src;$(MAKE) clean)
-	@(cd extern;$(MAKE) clean)
+	@(cd pike/src;$(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" clean)
+	@(cd extern;$(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" clean)
 
 install_all: install_pike install
 
@@ -112,17 +112,17 @@ install: all
 	@echo Roxen installed.
 
 install_pike: all
-	@(cd pike/src;$(MAKE) install)
+	@(cd pike/src;$(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" install)
 
 localinstall: all
 	cp pike/src/pike $(SRCDIR)/server/bin/
 	-@rm -f $(SRCDIR)/server/bin/roxen
 	ln $(SRCDIR)/server/bin/pike $(SRCDIR)/server/bin/roxen
-	(cd extern; $(MAKE) localinstall)
+	(cd extern; $(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" localinstall)
 
 spotless:  clean
-	@(cd extern;$(MAKE) spotless)
-	@(cd pike/src;$(MAKE) spotless)
+	@(cd extern;$(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" spotless)
+	@(cd pike/src;$(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" spotless)
 	rm -f server/bin/selfdir server/bin/roxen_hostname pike/src/pike\
 	pike/src/pike.old server/bin/proxygarb 
 	find . '(' -name '#*#' -o -name '*~' -o -name '.*~' -o -name '*.bak'\
@@ -134,4 +134,4 @@ spotless:  clean
 
 
 distribute:	spotless
-	@(cd extern; $(MAKE) distribute)
+	@(cd extern; $(MAKE) "prefix=$(PREFIX)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS)" distribute)
