@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.104 2000/08/22 10:15:09 lange Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.105 2000/08/22 10:29:31 lange Exp $";
 constant module_type = MODULE_PARSER|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -391,13 +391,11 @@ mapping get_variable_section( string s, object mod, object id )
   s = (string)var->name();
   if( !s ) return 0;
   if( sscanf( s, "%s:%*s", s ) ) 
-    {
     return ([
       "section":s,
       "sectionname":s,
       "selected":(id->variables->section==s?"selected":"")
     ]);
-}
   else
     return ([
       "section":"Settings",
