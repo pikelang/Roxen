@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.98 2000/02/06 18:36:58 nilsson Exp $
+ * $Id: rxml.pike,v 1.99 2000/02/06 20:02:11 nilsson Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -77,7 +77,7 @@ void old_rxml_warning(RequestID id, string no, string yes) {
 
 // ----------------------- Default scopes -------------------------
 
-class Scope_roxen {
+class ScopeRoxen {
   inherit RXML.Scope;
 
   string|int `[] (string var, void|RXML.Context c, void|string scope) {
@@ -126,7 +126,7 @@ class Scope_roxen {
   string _sprintf() { return "RXML.Scope(roxen)"; }
 }
 
-class Scope_page {
+class ScopePage {
   inherit RXML.Scope;
   constant converter=(["fgcolor":"fgcolor", "bgcolor":"bgcolor",
 		       "theme-bgcolor":"theme_bgcolor", "theme-fgcolor":"theme_fgcolor",
@@ -168,8 +168,8 @@ class Scope_page {
   string _sprintf() { return "RXML.Scope(page)"; }
 }
 
-RXML.Scope scope_roxen=Scope_roxen();
-RXML.Scope scope_page=Scope_page();
+RXML.Scope scope_roxen=ScopeRoxen();
+RXML.Scope scope_page=ScopePage();
 
 
 // ------------------------- RXML Parser ------------------------------
@@ -182,11 +182,11 @@ RXML.TagSet entities_tag_set = class
   void prepare_context (RXML.Context c) {
     c->add_scope("roxen",scope_roxen);
     c->id->misc->page=([]);
-    c->extend_scope("page",scope_page);
-    c->extend_scope("cookie" ,c->id->cookies);
-    c->extend_scope("form", c->id->variables);
-    c->extend_scope("client", c->id->client_var);
-    c->extend_scope("var", ([]) );
+    c->add_scope("page",scope_page);
+    c->add_scope("cookie" ,c->id->cookies);
+    c->add_scope("form", c->id->variables);
+    c->add_scope("client", c->id->client_var);
+    c->add_scope("var", ([]) );
   }
 
   // These are only used in new style tags.
@@ -1405,7 +1405,7 @@ class IfMatch
   }
 }
 
-class TagIfdate {
+class TagIfDate {
   inherit RXML.Tag;
   constant name = "if";
   constant plugin_name = "date";
@@ -1428,7 +1428,7 @@ class TagIfdate {
   }
 }
 
-class TagIftime {
+class TagIfTime {
   inherit RXML.Tag;
   constant name = "if";
   constant plugin_name = "time";
@@ -1461,7 +1461,7 @@ class TagIftime {
   }
 }
 
-class TagIfuser {
+class TagIfUser {
   inherit RXML.Tag;
   constant name = "if";
   constant plugin_name = "user";
@@ -1511,7 +1511,7 @@ class TagIfuser {
   }
 }
 
-class TagIfgroup {
+class TagIfGroup {
   inherit RXML.Tag;
   constant name = "if";
   constant plugin_name = "group";
@@ -1552,7 +1552,7 @@ class TagIfgroup {
   }
 }
 
-class TagIfexists {
+class TagIfExists {
   inherit RXML.Tag;
   constant name = "if";
   constant plugin_name = "exists";
@@ -1563,7 +1563,7 @@ class TagIfexists {
   }
 }
 
-class TagIftrue {
+class TagIfTrue {
   inherit RXML.Tag;
   constant name = "if";
   constant plugin_name = "true";
@@ -1573,7 +1573,7 @@ class TagIftrue {
   }
 }
 
-class TagIffalse {
+class TagIfFalse {
   inherit RXML.Tag;
   constant name = "if";
   constant plugin_name = "false";
@@ -1583,7 +1583,7 @@ class TagIffalse {
   }
 }
 
-class TagIfaccept {
+class TagIfAccept {
   inherit IfMatch;
   constant plugin_name = "accept";
   array source(RequestID id) {
@@ -1591,7 +1591,7 @@ class TagIfaccept {
   }
 }
 
-class TagIfconfig {
+class TagIfConfig {
   inherit IfIs;
   constant plugin_name = "config";
   string source(RequestID id, string s) {
@@ -1599,7 +1599,7 @@ class TagIfconfig {
   }
 }
 
-class TagIfcookie {
+class TagIfCookie {
   inherit IfIs;
   constant plugin_name = "cookie";
   string source(RequestID id, string s) {
@@ -1607,7 +1607,7 @@ class TagIfcookie {
   }
 }
 
-class TagIfclient {
+class TagIfClient {
   inherit IfMatch;
   constant plugin_name = "client";
   array source(RequestID id) {
@@ -1615,7 +1615,7 @@ class TagIfclient {
   }
 }
 
-class TagIfdefined {
+class TagIfDefined {
   inherit IfIs;
   constant plugin_name = "defined";
   constant cache = 1;
@@ -1624,7 +1624,7 @@ class TagIfdefined {
   }
 }
 
-class TagIfdomain {
+class TagIfDomain {
   inherit IfMatch;
   constant plugin_name = "domain";
   string source(RequestID id) {
@@ -1632,7 +1632,7 @@ class TagIfdomain {
   }
 }
 
-class TagIfhost {
+class TagIfHost {
   inherit IfMatch;
   constant plugin_name = "host";
   string source(RequestID id) {
@@ -1640,7 +1640,7 @@ class TagIfhost {
   }
 }
 
-class TagIfip {
+class TagIfIP {
   inherit IfMatch;
   constant plugin_name = "ip";
   string source(RequestID id) {
@@ -1656,7 +1656,7 @@ class TagIfLanguage {
   }
 }
 
-class TagIfmatch {
+class TagIfMatch {
   inherit IfIs;
   constant plugin_name = "match";
   string source(RequestID id, string s) {
@@ -1664,12 +1664,12 @@ class TagIfmatch {
   }
 }
 
-class TagIfname {
-  inherit TagIfclient;
+class TagIfName {
+  inherit TagIfClient;
   constant plugin_name = "name";
 }
 
-class TagIfpragma {
+class TagIfPragma {
   inherit IfIs;
   constant plugin_name = "pragma";
   string source(RequestID id, string s) {
@@ -1677,7 +1677,7 @@ class TagIfpragma {
   }
 }
 
-class TagIfprestate {
+class TagIfPrestate {
   inherit IfIs;
   constant plugin_name = "prestate";
   constant cache = 1;
@@ -1686,7 +1686,7 @@ class TagIfprestate {
   }
 }
 
-class TagIfreferrer {
+class TagIfReferrer {
   inherit IfMatch;
   constant plugin_name = "referrer";
   array source(RequestID id) {
@@ -1694,7 +1694,7 @@ class TagIfreferrer {
   }
 }
 
-class TagIfsupports {
+class TagIfSupports {
   inherit IfIs;
   constant plugin_name = "supports";
   string source(RequestID id, string s) {
@@ -1702,7 +1702,7 @@ class TagIfsupports {
   }
 }
 
-class TagIfvariable {
+class TagIfVariable {
   inherit IfIs;
   constant plugin_name = "variable";
   constant cache = 1;
@@ -1711,7 +1711,7 @@ class TagIfvariable {
   }
 }
 
-class TagIfclientvar {
+class TagIfClientvar {
   inherit IfIs;
   constant plugin_name = "clientvar";
   string source(RequestID id, string s) {
