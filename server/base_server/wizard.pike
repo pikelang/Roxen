@@ -1,7 +1,7 @@
 /* Copyright © 1997, 1998, Idonex AB.
  * Some modifications by Francesco Chemolli
  *
- * $Id: wizard.pike,v 1.80 1999/01/10 06:21:32 mast Exp $
+ * $Id: wizard.pike,v 1.81 1999/05/07 04:34:07 mast Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  * 
@@ -781,7 +781,7 @@ mapping get_actions(object id, string base,string dir, array args)
     master()->set_inhibit_compile_errors(0);
     err = catch
     {
-      if(act[0]!='#' && act[-1]=='e')
+      if(!(<'#', '_'>)[act[0]] && act[-1]=='e')
       {
 	string sm,rn = (get_wizard(act,dir,@args)->name||act), name;
 	if(sscanf(rn, "%*s:%s", name) != 2) name = rn;
