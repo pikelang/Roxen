@@ -4,7 +4,7 @@
  * doc = "Handles the conversion of numbers and dates to Swedish. You have to restart the server for updates to take effect.";
  */
 
-string cvs_version = "$Id: swedish.pike,v 1.8 1997/08/19 06:38:20 per Exp $";
+string cvs_version = "$Id: swedish.pike,v 1.9 1997/08/22 04:15:02 nisse Exp $";
 string month(int num)
 {
   return ({ "januari", "februari", "mars", "april", "maj",
@@ -99,7 +99,7 @@ string _number(int num)
     return _number((num/10)*10)+_number(num%10);
    case 100..999: return _number(num/100)+"hundra"+_number(num%100);
    case 1000..1999:
-    return _number(num/1000)+"usen"+_number(num%1000);
+    return _number(num/1000)+"tusen"+_number(num%1000);
    case 2000..999999: return _number(num/1000)+"tusen"+_number(num%1000);
    case 1000000..1999999: 
     return "en miljon"+_number(num%1000000);
@@ -123,6 +123,6 @@ string number(int num)
 
 array aliases()
 {
-  return ({ "sv", "se", "swe", "swedish", "svenska" });
+  return ({ "sv", "se", "sve", "swe", "swedish", "svenska" });
 }
 
