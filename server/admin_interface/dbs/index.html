@@ -1,27 +1,25 @@
 <topmenu base="../" selected=dbs />
 
 <content>
-  <cv-split>
-    <subtablist width="100%">
-      <st-tabs>
-         <insert file="subtabs.pike"/> 
-      </st-tabs>
+  <subtablist width="100%">
+    <st-tabs>
+       <insert file="subtabs.pike"/> 
+    </st-tabs>
 
-      <st-page>
-          <eval><insert file="db_matrix.pike"/></eval>
-          <p>
+    <st-page>
+        <eval><insert file="db_matrix.pike"/></eval>
+        <p>
 
-         <blockquote>
-          The <i>local</i> database contains data that should not
-          be shared. The <i>docs</i> database contains all
-          documentation.
-         </blockquote> <br />
+       <blockquote>
+        The <i>local</i> database contains data that should not
+        be shared. The <i>docs</i> database contains all
+        documentation.
+       </blockquote> <br />
 	  
-         <cf-perm perm="Edit Global Variables">
-           <a href='create_db.html'><gbutton>Create new database</gbutton></a>
-           <a href='create_group.html'><gbutton>Create new group</gbutton></a>
-         </cf-perm>
-      </st-page>
-    </subtablist>
-  </cv-split>
+       <cf-perm perm="Edit Global Variables">
+         <a href='create_db.html'><gbutton>Create new database</gbutton></a>
+         <a href='create_group.html'><gbutton>Create new group</gbutton></a>
+       </cf-perm>
+    </st-page>
+  </subtablist>
 </content>
