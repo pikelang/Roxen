@@ -1,6 +1,8 @@
 /*
- * $Id: sitebuilder.pike,v 1.3 1998/11/22 17:13:38 mast Exp $
+ * $Id: sitebuilder.pike,v 1.4 1998/11/24 21:44:33 mast Exp $
  */
+
+#include <module.h>
 
 constant selected = 0;
 constant name = "SiteBuilder server";
@@ -22,7 +24,23 @@ void enable(object config)
 
 void post(object node)
 {
-  object o,o2;
+  object o, o2;
+
+  if (o = node->descend ("Global", 1)) {
+    if (o2 = o->descend ("named_ftp", 1)) {
+      o2->data[VAR_VALUE] = 1;
+      o2->change (1);
+    }
+    else report_warning ("Couldn't turn on named FTP\n");
+    if (o2 = o->descend ("shells", 1)) {
+      o2->data[VAR_VALUE] = "";
+      o2->change (1);
+    }
+    else report_warning ("Couldn't deactivate shells database check\n");
+    o->save();
+  }
+  else report_warning ("Couldn't initialize in server variables section\n");
+
   if (o = node->descend("SiteBuilder", 1)) {
     o->folded = 0;
     if (o2 = o->descend("storage", 1)) {
@@ -30,4 +48,5 @@ void post(object node)
       o2->change(1);
     }
   }
+  else report_warning ("Couldn't find SiteBuilder module\n");
 }
