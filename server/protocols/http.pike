@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.167 1999/11/02 01:37:07 per Exp $
+// $Id: http.pike,v 1.168 1999/11/16 14:53:11 grubba Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.167 1999/11/02 01:37:07 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.168 1999/11/16 14:53:11 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -676,6 +676,13 @@ private int parse_got()
     supports = find_supports("", supports); // This makes it somewhat faster.
   } else 
     supports = find_supports(lower_case(client*" "), supports);
+
+  // MSIE 5.0 sends all requests UTF8-encoded.
+  if (supports->requests_are_utf8_encoded) {
+    catch {
+      f = utf8_to_string(f);
+    };
+  }
 #else
   supports = (< "images", "gifinline", "forms", "mailto">);
 #endif
