@@ -1322,6 +1322,21 @@ hej</result>
   <result>1718</result>
 </test>
 
+<!-- Note: This one failed due to the phase of the moon since the
+     mapping order when the variable changes are installed is relevant. -->
+<test>
+  <rxml type="string">
+    <cache>
+      <scope scope="tag">
+	<set variable="tag.foo" value="1"/>
+	<charset out="iso-8859-2"/>
+	&_.foo;
+      </scope>
+    </cache>
+  </rxml>
+  <result>1</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Random tests</comment>
