@@ -2,7 +2,7 @@
  *
  * Based on the service example code from Microsoft.
  *
- * $Id: roxen.c,v 1.7 2000/08/09 14:51:01 mast Exp $
+ * $Id: roxen.c,v 1.8 2004/06/02 13:22:02 grubba Exp $
  */
 
 // THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
@@ -71,7 +71,7 @@ void _CRTAPI1 main(int argc, char **argv)
     {
 	if ( _stricmp( "install", argv[1]+1 ) == 0 )
 	{
-	    CmdRemoveService (1);
+	  //CmdRemoveService (1);
 	    CmdInstallService();
 	}
 	else if ( _stricmp( "remove", argv[1]+1 ) == 0 )
@@ -332,6 +332,30 @@ VOID AddToMessageLog(LPTSTR lpszMsg)
 //  The following code handles service installation and removal
 //
 
+void stop_service(SC_HANDLE schService)
+{
+  if ( ControlService( schService, SERVICE_CONTROL_STOP, &ssStatus ) )
+  {
+    _tprintf(TEXT("Stopping %s."), TEXT(SZSERVICEDISPLAYNAME));
+    Sleep( 1000 );
+
+    while( QueryServiceStatus( schService, &ssStatus ) )
+    {
+      if ( ssStatus.dwCurrentState == SERVICE_STOP_PENDING )
+      {
+	_tprintf(TEXT("."));
+	Sleep( 1000 );
+      }
+      else
+	break;
+    }
+
+    if ( ssStatus.dwCurrentState == SERVICE_STOPPED )
+      _tprintf(TEXT("\n%s stopped.\n"), TEXT(SZSERVICEDISPLAYNAME) );
+    else
+      _tprintf(TEXT("\n%s failed to stop.\n"), TEXT(SZSERVICEDISPLAYNAME) );
+  }
+}
 
 //
 //  FUNCTION: CmdInstallService()
@@ -366,7 +390,41 @@ void CmdInstallService()
 			);
     if ( schSCManager )
     {
-	schService = CreateService(
+      	schService =
+	  OpenService(schSCManager, TEXT(SZSERVICENAME), SERVICE_ALL_ACCESS);
+
+	if (schService)
+	{
+	  BOOL err;
+	  // Already installed.
+	  // Stop the old server.
+	  stop_service(schService);
+
+	  // Update the old entry.
+	  err =
+	    ChangeServiceConfig(schService,
+	      SERVICE_WIN32_OWN_PROCESS,  // service type
+	      SERVICE_AUTO_START,         // start type
+	      SERVICE_ERROR_NORMAL,       // error control type
+	      szPath,                     // service's binary
+	      NULL,                       // no load ordering group
+	      NULL,                       // no tag identifier
+	      TEXT(SZDEPENDENCIES),       // dependencies
+	      NULL,                       // LocalSystem account
+	      NULL,                       // no password
+	      TEXT(SZSERVICEDISPLAYNAME));// name to display
+	  if (!err) {
+	    _tprintf(TEXT("ChangeServiceConfig failed - %s\n"),
+		     GetLastErrorText(szErr, 256));
+	  }
+
+	  // FIXME: Do I need to restart the service here?
+
+	  CloseServiceHandle(schService);
+	} else {
+	  // Fresh install.
+
+	  schService = CreateService(
 	    schSCManager,               // SCManager database
 	    TEXT(SZSERVICENAME),        // name of service
 	    TEXT(SZSERVICEDISPLAYNAME), // name to display
@@ -381,16 +439,16 @@ void CmdInstallService()
 	    NULL,                       // LocalSystem account
 	    NULL);                      // no password
 
-	if ( schService )
-	{
+	  if ( schService )
+	  {
 	    _tprintf(TEXT("%s installed.\n"), TEXT(SZSERVICEDISPLAYNAME) );
 	    CloseServiceHandle(schService);
-	}
-	else
-	{
+	  }
+	  else
+	  {
 	    _tprintf(TEXT("CreateService failed - %s\n"), GetLastErrorText(szErr, 256));
+	  }
 	}
-
 	CloseServiceHandle(schSCManager);
     }
     else
@@ -429,28 +487,7 @@ void CmdRemoveService (int ignore_missing)
 	if (schService)
 	{
 	    // try to stop the service
-	    if ( ControlService( schService, SERVICE_CONTROL_STOP, &ssStatus ) )
-	    {
-		_tprintf(TEXT("Stopping %s."), TEXT(SZSERVICEDISPLAYNAME));
-		Sleep( 1000 );
-
-		while( QueryServiceStatus( schService, &ssStatus ) )
-		{
-		    if ( ssStatus.dwCurrentState == SERVICE_STOP_PENDING )
-		    {
-			_tprintf(TEXT("."));
-			Sleep( 1000 );
-		    }
-		    else
-			break;
-		}
-
-		if ( ssStatus.dwCurrentState == SERVICE_STOPPED )
-		    _tprintf(TEXT("\n%s stopped.\n"), TEXT(SZSERVICEDISPLAYNAME) );
-		else
-		    _tprintf(TEXT("\n%s failed to stop.\n"), TEXT(SZSERVICEDISPLAYNAME) );
-
-	    }
+	    stop_service(schService);
 
 	    // now remove the service
 	    if( DeleteService(schService) )
