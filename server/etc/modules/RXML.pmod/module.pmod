@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.82 2000/03/18 03:32:31 mast Exp $
+//! $Id: module.pmod,v 1.83 2000/03/18 04:03:55 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -3085,8 +3085,13 @@ private class Link
 
 static int tag_set_count = 0;
 
-mapping(int|string:TagSet) local_tag_set_cache = set_weak_flag (([]), 1);
+mapping(int|string:TagSet) garb_local_tag_set_cache()
+{
+  call_out (garb_local_tag_set_cache, 30*60);
+  return local_tag_set_cache = ([]);
+}
 
+mapping(int|string:TagSet) local_tag_set_cache = garb_local_tag_set_cache();
 
 // Various internal kludges.
 
