@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.14 1997/08/06 03:21:21 grubba Exp $
+# $Id: extensions,v 1.15 1997/08/21 03:14:47 nisse Exp $
 
 aif	audio/x-aiff
 aifc	audio/x-aiff
@@ -184,6 +184,9 @@ dxr	application/x-director
 # Netscape proxy config files.
 nspc    application/x-ns-proxy-autoconfig
 pac     application/x-ns-proxy-autoconfig
+
+# Certificate Authority Certificate (recognizes at least by Netscape)
+ca_cert application/x-x509-ca-cert
 
 # This is supposed to be just 'gzip' and 'compress', but Netscape
 # barfs.. Fixed in Netscape 3.*, but quite a lot of people still run 2.*
