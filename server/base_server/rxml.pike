@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.183 2000/03/31 04:44:58 nilsson Exp $
+// $Id: rxml.pike,v 1.184 2000/04/01 22:14:13 nilsson Exp $
 
 inherit "rxmlhelp";
 #include <request_trace.h>
@@ -833,7 +833,9 @@ class TagDefine {
       }
 
       if (n=args->tag||args->container) {
-	n = lower_case(n);
+#ifdef OLD_RXML_COMPAT
+	n = old_rxml_compat?lower_case(n):n;
+#endif
 	int tag=0;
 	if(args->tag) {
 	  tag=1;
