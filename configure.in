@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.66 1999/05/21 00:14:12 grubba Exp $
+# $Id: configure.in,v 1.67 1999/05/21 00:14:53 grubba Exp $
 #
 
 prefix=$PWD
@@ -46,7 +46,7 @@ AC_ARG_WITH(rtldebug,             [  --with-rtldebug                  Enable run
   if test "$with_debug" = "yes"; then
     with_rtldebug="yes";
   else
-    with_rtldebug=no;
+    with_rtldebug="no";
   fi
 ])
 AC_ARG_WITH(ssleay,               [  --with-ssleay                    Enable the ssleay-module])
