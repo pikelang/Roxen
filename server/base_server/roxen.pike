@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.529 2000/08/22 22:05:21 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.530 2000/08/22 22:30:15 mast Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -3605,7 +3605,7 @@ void fix_configuration_auth()
   configuration_auth -= ({0});
 }
 
-void add_permission(string name, mapping desc)
+void add_permission(string name, string desc)
 {
   fix_configuration_auth();
   configuration_perm[ name ]=desc;
