@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.295 2001/09/03 18:42:10 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.296 2001/09/03 23:49:03 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5218,7 +5218,10 @@ using the pre tag.
 
 "date":#"<desc tag='tag'><p><short>
  Inserts the time and date.</short> Does not require attributes.
-</p></desc>
+</p>
+
+<ex><date/></ex>
+</desc>
 
 <attr name=unix-time value=number of seconds>
  <p>Display this time instead of the current. This attribute uses the
@@ -5848,19 +5851,19 @@ using the pre tag.
  <xref href='user.tag' />. This attribute requires a userdatabase.
  </p>
 
- <ex-box>This page was last modified by <modified by=''
- realname=''/>.</ex-box>
+ <ex-box>This page was last modified by <modified by='1'
+ realname='1'/>.</ex-box>
 </attr>
 
 <attr name=date>
     <p>Print the modification date. Takes all the date attributes in <xref href='date.tag' />.</p>
 
  <ex-box>This page was last modified on
-<modified date='' case='lower' type='string'/>.</ex-box>
+<modified date='1' case='lower' type='string'/>.</ex-box>
 </attr>
 
 <attr name=file value=path>
- <p>Get information from this file rather than the current page.</p>
+ <p>Get information about this file rather than the current page.</p>
 </attr>
 
 <attr name=realfile value=path>
@@ -6319,7 +6322,7 @@ just got zapped?
 
 <attr name=email>
  <p>Only print the e-mail address of the user, with no link.</p>
- <ex-box>Email: <user name='foo' email=''/></ex-box>
+ <ex-box>Email: <user name='foo' email='1'/></ex-box>
 </attr>
 
 <attr name=link>
@@ -6342,7 +6345,7 @@ just got zapped?
 
 <attr name=realname>
  <p>Only print the full name of the user, with no link.</p>
-<ex-box><user name='foo' realname=''/></ex-box>
+<ex-box><user name='foo' realname='1'/></ex-box>
 </attr>",
 
 //----------------------------------------------------------------------

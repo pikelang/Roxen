@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.44 2001/09/03 18:52:18 nilsson Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.45 2001/09/03 23:48:50 nilsson Exp $";
 #include <module.h>
 inherit "module";
 
@@ -19,14 +19,17 @@ or time.</short> It can also give the time to or from a few special
 events. See below for a full list.</p></desc>
 
 <p>Time:</p>
-<attr name='year' value='number'><p>Sets the year.</p></attr>
-<attr name='month' value='number|month_name'><p>Sets the month.</p></attr>
-<attr name='day' value='number|day_name'><p>Sets the weekday.</p></attr>
-<attr name='mday' value='number'><p>Sets the day of the month.</p></attr>
-<attr name='hour' value='number'><p>Sets the hour.</p></attr>
-<attr name='minute' value='number'><p>Sets the minute.</p></attr>
-<attr name='second' value='number'><p>Sets the second.</p></attr>
-<attr name='iso' value='year-month-day'><p>Sets the year, month and day all at once. (YYYY-MM-DD, YYYYMMDD or YYYY-MMM-DD).</p>
+<attr name='year' value='number'><p>Sets the year to count down to.</p></attr>
+<attr name='month' value='number|month_name'><p>Sets the month to count down to. If given as a
+  number January is 1.</p></attr>
+<attr name='day' value='number|day_name'><p>Sets the weekday to count down to. If given as
+  a number Sunday is 1.</p></attr>
+<attr name='mday' value='number'><p>Sets the day of the month to count down to.</p></attr>
+<attr name='hour' value='number'><p>Sets the hour to count down to.</p></attr>
+<attr name='minute' value='number'><p>Sets the minute to count down to.</p></attr>
+<attr name='second' value='number'><p>Sets the second to count down to.</p></attr>
+<attr name='iso' value='year-month-day'><p>Sets the year, month and day to count down to.
+  (YYYY-MM-DD, YYYYMMDD or YYYY-MMM-DD).</p>
 <ex><countdown iso='2020-FEB-12'/></ex>
 </attr>
 <attr name='event' value='easter,gregorian-easter,julian-easter,christmas,christmas-day,christmas-eve'><p>
@@ -42,15 +45,13 @@ Sets the time of an event to count down to.</p></attr>
 <attr name='seconds' value='number'><p>Add this number of seconds to the result.</p></attr>
 <attr name='now' value='year-month-day'><p>Sets the 'present' time, if other than really present time. (YYYY-MM-DD, YYYYMMDD or YYYY-MMM-DD)</p>
 
-
-
 <ex><countdown now=\"1999-12-24\" year=\"2000\" display=\"days\"/></ex>
 </attr>
 
 
 <p>Presentation:</p>
 
-<attr name='display' value='when|years|months|weeks|days|hours|beats|minutes|seconds|combined|dogyears|boolean>
+<attr name='display' value='when|years|months|weeks|days|hours|beats|minutes|seconds|combined|dogyears|boolean'>
 <xtable>
 <row><c><i>display=when</i></c><c>Shows when the time will occur.
                          All arguments that are valid in
