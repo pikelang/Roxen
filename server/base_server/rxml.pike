@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.269 2001/03/13 10:14:19 kuntri Exp $
+// $Id: rxml.pike,v 1.270 2001/03/30 14:35:13 jenny Exp $
 
 
 inherit "rxmlhelp";
@@ -2248,7 +2248,7 @@ Kibibits.
 
 <ex><case upper=''>upper</case></ex>
 <ex><case lower=''>lower</case></ex>
-<ex><case capitalize=''>captalize</case></ex>
+<ex><case capitalize=''>capitalize</case></ex>
 </attr>",
 
 "cond":({ #"<desc cont='cont'><p><short>
@@ -2642,9 +2642,9 @@ Kibibits.
 </attr>",
 
 "if#defined":#"<desc plugin='plugin'><p><short>
- </short> Tests if a certain RXML define is defined by use of the
- <xref href='../variable/define.tag' /> tag. Defined is a <i>State</i>
- plugin. </p>
+  Tests if a certain RXML define is defined by use of the <xref
+ href='../variable/define.tag' /> tag.</short> Defined is a
+ <i>State</i> plugin. </p>
 </desc>
 
 <attr name='defined' value='define' required='required'><p>
@@ -2916,7 +2916,7 @@ Kibibits.
  The language to use.</p>
  <lang/>
  <ex type='vert'>Mitt favoritnummer är <number num='11' language='sv'/>.</ex>
- <ex type='vert'>Il mio numero preferito <ent>egrave</ent><number num='15' language='it'/>.</ex>
+ <ex type='vert'>Il mio numero preferito <ent>egrave</ent> <number num='15' language='it'/>.</ex>
 </attr>
 
 <attr name='type' value='number|ordered|roman|memory' default='number'><p>
@@ -2930,7 +2930,7 @@ Kibibits.
 "strlen":#"<desc cont='cont'><p><short>
  Returns the length of the contents.</short></p>
 
- <ex type='vert'>There is <strlen>foo bar gazonk</strlen> characters
+ <ex type='vert'>There are <strlen>foo bar gazonk</strlen> characters
  inside the tag.</ex>
 </desc>",
 
