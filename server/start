@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.205 2003/09/18 17:56:47 mast Exp $
+# $Id: start,v 1.206 2003/09/24 10:57:04 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -834,6 +834,10 @@ if [ -z "$once" ] ; then
       dp "Failed to create log directory $DEBUGDIR."
       exit 1
     fi
+  fi
+  if [ -f "bin/setup_nsr.pike" ]; then
+    # Setup .nsr (Networker) files for the logfile directories.
+    $pike bin/setup_nsr.pike --logdir="$LOGDIR" --debugdir="$DEBUGDIR"
   fi
   if [ $verbose -gt 0 ]; then
     dp "Using configuration from $DIR"
