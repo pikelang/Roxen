@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.419 2003/03/05 13:48:45 mattias Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.420 2003/03/20 14:00:52 wellhard Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1243,6 +1243,36 @@ class TagCharset
       result_type = result_type (RXML.PXml);
       result="";
       return ({content});
+    }
+  }
+}
+
+class TagRecode
+{
+  inherit RXML.Tag;
+  constant name="recode";
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "from" : RXML.t_text(RXML.PEnt),
+    "to"   : RXML.t_text(RXML.PEnt),
+  ]);
+  RXML.Type content_type = RXML.t_same(RXML.PXml);
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    array do_return( RequestID id )
+    {
+      if( args->from && catch {
+	content=Locale.Charset.decoder( args->from )->feed( content )->drain();
+      })
+	RXML.run_error("Illegal charset, or unable to decode data: %s\n",
+		       args->from );
+      if( args->to && catch {
+	content=Locale.Charset.encoder( args->to )->feed( content )->drain();
+      })
+	RXML.run_error("Illegal charset, or unable to encode data: %s\n",
+		       args->to );
+      return ({ content });
     }
   }
 }
@@ -6099,22 +6129,46 @@ using the pre tag.
 //----------------------------------------------------------------------
 
 "charset":#"<desc type='both'><p>
- <short>Converts between character sets.</short> The tag can be used both
- to decode texts encoded in strange character encoding schemas, but also
- to decide upon the final encoding of the resulting page. All character
- sets listed in <a href='http://rfc.roxen.com/1345'>RFC 1345</a> are
- supported.
+ <short>Set output character sets.</short>
+ The tag can be used to decide upon the final encoding of the resulting page.
+ All character sets listed in <a href='http://rfc.roxen.com/1345'>RFC 1345</a>
+ are supported.
 </p>
 </desc>
-
-<attr name='in' value='Character set'><p>
- Converts the contents of the charset tag from the character set indicated
- by this attribute to the internal text representation.</p>
-</attr>
 
 <attr name='out' value='Character set'><p>
  Sets the output conversion character set of the current request. The page
  will be sent encoded with the indicated character set.</p>
+</attr>
+",
+
+// <attr name='in' value='Character set'><p>
+//  Converts the contents of the charset tag from the character set indicated
+//  by this attribute to the internal text representation.</p>
+// </attr>
+
+
+//----------------------------------------------------------------------
+
+"recode":#"<desc type='both'><p>
+ <short>Converts between character sets.</short>
+ The tag can be used both to decode texts encoded in strange character
+ encoding schemas, and encode internal data to a specified encoding
+ scheme. All character sets listed in <a
+ href='http://rfc.roxen.com/1345'>RFC 1345</a> are supported.
+</p>
+</desc>
+
+<attr name='from' value='Character set'><p>
+ Converts the contents of the charset tag from the character set indicated
+ by this attribute to the internal text representation. Useful for decoding
+ data stored in a database.</p>
+</attr>
+
+<attr name='to' value='Character set'><p>
+ Converts the contents of the charset tag from the internal representation
+ to the character set indicated by this attribute. Useful for encoding data
+ before storing it into a database.</p>
 </attr>
 ",
 
