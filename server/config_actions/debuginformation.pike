@@ -1,5 +1,5 @@
 /*
- * $Id: debuginformation.pike,v 1.13 1998/06/23 14:37:34 grubba Exp $
+ * $Id: debuginformation.pike,v 1.14 1998/10/10 00:37:17 per Exp $
  */
 
 inherit "wizard";
@@ -64,6 +64,7 @@ array get_prof_info(string|void foo)
   return res;
 }
 
+#if !constant(ADT.Table)
 string mktable(array titles, array data)
 {
   string fmt = "";
@@ -78,6 +79,7 @@ string mktable(array titles, array data)
   return "<pre><b>"+sprintf(fmt, @head)+"</b>\n"+
     (data*"\n")+"</pre>";
 }
+#endif
 
 mixed page_1(object id, object mc)
 {
@@ -86,8 +88,15 @@ mixed page_1(object id, object mc)
 		" time of child functions. No callgraph is available yet.<br>"
 		"Function glob: <var type=string name=subnode><br>");
 
-    return res+mktable(({"Function",-60,"Time",7,"Calls",6,"Time/Call",10}),
-		       get_prof_info(id->variables->subnode));
+#if constant(ADT.Table)
+  object t = ADT.Table->table(get_prof_info(id->variables->subnode),
+			      ({ "Function", "Time", "Calls",
+				 "Time/Call"}));
+  return res + "\n\n<pre>"+ADT.Table.ASCII.encode( t )+"</pre>";
+#else
+  return res+mktable(({"Function",-70,"Time",7,"Calls",6,"Time/Call",10}),
+		     get_prof_info(id->variables->subnode));
+#endif
 }
 #endif
 
