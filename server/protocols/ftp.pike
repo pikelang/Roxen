@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.51 1997/09/02 23:32:02 grubba Exp $
+ * $Id: ftp.pike,v 1.52 1997/09/07 19:14:19 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -391,87 +391,91 @@ class ls_program {
 
   void do_assynch_dir_ls()
   {
-    if (dir_stack->ptr) {
-      string short = dir_stack->pop();
-      string long = combine_path(id->cwd, short);
-      array(string) dir = roxen->find_dir(long+"/", id);
-      if ((flags & LS_FLAG_a) &&
-	  (long != "/")) {
-	if (dir) {
-	  dir = ({ ".." }) + dir;
-	} else {
-	  dir = ({ ".." });
+    if (output) {
+      if (dir_stack->ptr) {
+	string short = dir_stack->pop();
+	string long = combine_path(id->cwd, short);
+	array(string) dir = roxen->find_dir(long+"/", id);
+	if ((flags & LS_FLAG_a) &&
+	    (long != "/")) {
+	  if (dir) {
+	    dir = ({ ".." }) + dir;
+	  } else {
+	    dir = ({ ".." });
+	  }
 	}
-      }
-      string s = "";
-      if (dir && sizeof(dir)) {
-	if (!(flags & LS_FLAG_A)) {
-	  dir = Array.filter(dir, lambda(string f){return(f[0] != '.');});
-	} else if (!(flags & LS_FLAG_a)) {
-	  dir = Array.filter(dir, lambda(string f){return((f-".") != "");});
-	}
-	if (flags & LS_FLAG_R) {
-	  foreach(dir, string d) {
-	    if (!((<".","..">)[d])) {
-	      array st = id->my_stat_file(d, combine_path(id->cwd, short)+"/");
-	      if (st && (st[1] < 0)) {
-		if (short[-1] != '/') {
-		  d = short + "/" + d;
-		} else {
-		  d = short + d;
+	string s = "";
+	if (dir && sizeof(dir)) {
+	  if (!(flags & LS_FLAG_A)) {
+	    dir = Array.filter(dir, lambda(string f){return(f[0] != '.');});
+	  } else if (!(flags & LS_FLAG_a)) {
+	    dir = Array.filter(dir, lambda(string f){return((f-".") != "");});
+	  }
+	  if (flags & LS_FLAG_R) {
+	    foreach(dir, string d) {
+	      if (!((<".","..">)[d])) {
+		array st = id->my_stat_file(d, combine_path(id->cwd, short)+"/");
+		if (st && (st[1] < 0)) {
+		  if (short[-1] != '/') {
+		    d = short + "/" + d;
+		  } else {
+		    d = short + d;
+		  }
+		  name_directories=1;
+		  dir_stack->push(d);
 		}
-		name_directories=1;
-		dir_stack->push(d);
 	      }
 	    }
 	  }
+	  if (sizeof(dir)) {
+	    s = list_files(dir, combine_path(id->cwd, short)+"/", flags) || "\n";
+	  }
 	}
-	if (sizeof(dir)) {
-	  s = list_files(dir, combine_path(id->cwd, short)+"/", flags) || "\n";
+	if (name_directories) {
+	  s = "\n" + short + ":\n" + s;
 	}
-      }
-      if (name_directories) {
-	s = "\n" + short + ":\n" + s;
-      }
-      output->write(s);
+	output->write(s);
 
-      call_out(do_assynch_dir_ls, 0);
-    } else {
-      output->write(0);
+	call_out(do_assynch_dir_ls, 0);
+      } else {
+	output->write(0);
+      }
     }
   }
 
   void do_ls(mapping(string:mixed) args)
   {
-    foreach(indices(args), string short) {
-      array st = id->my_stat_file(id->not_query =
-				  combine_path(id->cwd, short));
-      if (st && (st[1] < -1)) {
-	// Directory
-	if (!(flags & LS_FLAG_d)) {
-	  dir_stack->push(short);
+    if (output) {
+      foreach(indices(args), string short) {
+	array st = id->my_stat_file(id->not_query =
+				    combine_path(id->cwd, short));
+	if (st && (st[1] < -1)) {
+	  // Directory
+	  if (!(flags & LS_FLAG_d)) {
+	    dir_stack->push(short);
+	    m_delete(args, short);
+	  }
+	} else if (!st || (st[1] == -1)) {
+	  // Not found
+	  output->write(short + " not found");
 	  m_delete(args, short);
 	}
-      } else if (!st || (st[1] == -1)) {
-	// Not found
-	output->write(short + " not found");
-	m_delete(args, short);
       }
-    }
 
-    if ((dir_stack->ptr > 1) || (dir_stack->ptr && sizeof(args))) {
-      name_directories = 1;
-    }
+      if ((dir_stack->ptr > 1) || (dir_stack->ptr && sizeof(args))) {
+	name_directories = 1;
+      }
+      
+      if (sizeof(args)) {
+	output->write(list_files(indices(args), id->cwd, flags));
+      }
+      int name_directories;
+      if ((dir_stack->ptr > 1) || (sizeof(files))) {
+	name_directories = 1;
+      }
 
-    if (sizeof(args)) {
-      output->write(list_files(indices(args), id->cwd, flags));
+      call_out(do_assynch_dir_ls, 0);
     }
-    int name_directories;
-    if ((dir_stack->ptr > 1) || (sizeof(files))) {
-      name_directories = 1;
-    }
-
-    call_out(do_assynch_dir_ls, 0);
   }
 
   array(string) glob_expand_command_line(string arg)
