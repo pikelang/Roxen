@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.62 2004/05/26 05:11:55 _cvs_stephen Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.63 2004/05/27 21:26:54 mani Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "ChiliMoon self test module";
@@ -74,6 +74,8 @@ void start(int n, Configuration c)
 {
   conf=c;
   index_file = Stdio.File();
+
+  query_tag_set()->prepare_context=set_entities;
 
   if(is_ready_to_start())
   {
@@ -855,4 +857,24 @@ class TagRunError
       run_error (args->message || "A test run error");
     }
   }
+}
+
+
+// --- Stand alone entities --------------
+
+class EntityTM {
+  inherit RXML.Value;
+  mixed rxml_var_eval(RXML.Context c, string var, string scope_name,
+		      void|RXML.Type type) {
+    c->id->misc->cacheable=0;
+    return ENCODE_RXML_XML("&lt;TM&gt;", type);
+  }
+}
+
+mapping client_scope = ([
+  "tm" : EntityTM(),
+]);
+
+void set_entities(RXML.Context ctx) {
+  ctx->extend_scope("client", client_scope);
 }
