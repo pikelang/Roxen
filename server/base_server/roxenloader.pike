@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.93 1999/09/02 18:33:17 per Exp $
+ * $Id: roxenloader.pike,v 1.94 1999/09/05 01:41:32 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.93 1999/09/02 18:33:17 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.94 1999/09/05 01:41:32 per Exp $";
 
 #define perror roxen_perror
 private static int perror_status_reported=0;
@@ -92,24 +92,25 @@ int last_was_change;
 int roxen_started = time();
 string short_time()
 {
-  time();
-  time(1);
-  time(time());
-  mapping l = localtime( time( ) );
-  string ct =  sprintf("%2d:%02d:%02d : ", l->hour, l->min, l->sec );
-  int i;
-  if( (last_was_change>0) || (ct==oct))
+  if( last_was_change>0 )
     switch( last_was_change-- )
     {
      default:
-       return "         : ";
-     case 1:
-      return sprintf( "%2d:%02d:%02d : ",
-                      (time()-roxen_started)/216000,
-                      (((time()-roxen_started)/3600)%24),
-                      ((time()-roxen_started)/60)%60);
+       return "          : ";
+     case 5:
+       float up = time(roxen_started);
+       if( up > 3600 )
+       {
+         return sprintf( "%2dd%2dh%2dm : ",
+                       (int)up/216000,
+                       (((int)up/3600)%24),
+                       ((int)up/60)%60);
+       }
+       return sprintf( "%2dm%4.1fs  : ",((int)up/60)%60, up%60 );
     }
-  last_was_change=1;
+  mapping l = localtime( time( ) );
+  string ct =  sprintf("%2d:%02d:%02d  : ", l->hour, l->min, l->sec );
+  last_was_change=5;
   oct = ct;
   return ct;
 }
@@ -119,7 +120,6 @@ int last_was_nl;
 void roxen_perror(string format, mixed ... args)
 {
   int t = time();
-
   spider;
 
   if(sizeof(args)) 
@@ -302,7 +302,7 @@ void init_logger()
 
   closelog();
   openlog(query("LogNA"), (query("LogSP")*LOG_PID)|(query("LogCO")*LOG_CONS),
-	  res); 
+          res); 
 #endif
 }
 
@@ -455,13 +455,17 @@ static private void initiate_cache()
 {
   object cache;
   cache=((program)"base_server/cache")();
+
+  add_constant( "Stdio.File", Stdio.File );
+  
   add_constant("cache_set", cache->cache_set);
   add_constant("cache_lookup", cache->cache_lookup);
   add_constant("cache_remove", cache->cache_remove);
   add_constant("cache_clear", cache->cache_clear);
   add_constant("cache_expire", cache->cache_expire);
   add_constant("cache", cache);
-  add_constant("capitalize", lambda(string s){return upper_case(s[0..0])+s[1..];});
+  add_constant("capitalize", 
+               lambda(string s){return upper_case(s[0..0])+s[1..];});
 }
 
 // Don't allow cd() unless we are in a forked child.
@@ -804,7 +808,7 @@ void write_current_time()
 }
 
 // Roxen bootstrap code.
-int main(mixed ... args)
+int main(int argc, array argv)
 {
   int start_time = gethrtime();
   string path = make_path("base_server", "etc/include", ".");
@@ -860,7 +864,7 @@ int main(mixed ... args)
 
   initiate_cache();
   load_roxen();
-  int retval = roxen->main(@args);
+  int retval = roxen->main(argc,argv);
   perror_status_reported = 0;
   roxen_perror("\n-- Total boot time %2.1f seconds ---------------------------\n\n",
 	       (gethrtime()-start_time)/1000000.0);
