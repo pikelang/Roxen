@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.488 2000/06/03 00:01:28 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.489 2000/06/21 03:00:41 neotron Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -3293,10 +3293,12 @@ int main(int argc, array tmp)
   dump( "languages/abstract.pike" );
   mixed tmp;
 
+#if constant(mark_fd)
   mark_fd(0, "Stdin");
   mark_fd(1, "Stdout");
   mark_fd(2, "Stderr");
-
+#endif
+  
   configuration_dir =
     Getopt.find_option(argv, "d",({"config-dir","configuration-directory" }),
 	     ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }), "../configurations");
