@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.193 2000/12/04 17:57:22 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.194 2000/12/12 07:16:32 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -890,9 +890,10 @@ class TagInsertFile {
   string get_data(string var, mapping args, RequestID id) {
     string result;
     if(args->nocache) {
+      CACHE(0);
       int nocache=id->pragma["no-cache"];
       id->pragma["no-cache"] = 1;
-      result=id->conf->try_get_file(var, id);
+      result=id->conf->try_get_file(var, id, 0, 1);
       id->pragma["no-cache"] = nocache;
     }
     else result = id->conf->try_get_file(var, id);
