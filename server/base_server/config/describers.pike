@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.45 1997/08/25 16:48:40 grubba Exp $ */
+/* $Id: describers.pike,v 1.46 1997/08/25 16:50:47 grubba Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -264,7 +264,8 @@ string describe_module_copy_status(object node)
     if (err = catch {
       q=node->data();
     }) {
-      q = describe_backtrace(err);
+      q = "<font color=red><pre>"+html_encode_string(describe_backtrace(err))+
+	"</pre></font>";
     }
   }
 
