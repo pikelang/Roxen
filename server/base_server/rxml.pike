@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.203 2000/07/20 23:33:30 kuntri Exp $
+// $Id: rxml.pike,v 1.204 2000/07/20 23:35:43 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2478,7 +2478,7 @@ Available variables are:",
 </desc>",
 
 "then":#"<desc cont><short>
- Shows its content if the truth-value is true.</short>
+ Shows its content if the truth value is true.</short>
 </desc>",
 
 "trace":#"<desc cont><short>
