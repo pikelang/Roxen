@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.176 2001/08/10 14:44:43 jonasw Exp $
+# $Id: start,v 1.177 2001/08/13 21:47:38 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -226,13 +226,13 @@ parse_args() {
   ;;
 
   '--once')
-    once=1
+    once=${once:-1}
     debug=0
   ;;
 # Misspelling --once might give undesirable results, so let's accept
 # some "creative" spellings...  :-)
   '--onve'|'--onec'|'--onev'|'--ocne')
-    once=1
+    once=${once:-1}
     debug=0
   ;;
   '--keep-mysql')
@@ -240,12 +240,12 @@ parse_args() {
   ;;
   '--gdb')
     gdb=gdb
-    once=1
+    once=2
     debug=0
   ;;
   '--program')
     program="$2"
-    once=1
+    once=2
     passhelp=1
     shift
   ;;
@@ -253,7 +253,7 @@ parse_args() {
     cd_to="$2"
     # Use the absolute path...
     roxendir="`pwd`"
-    once=1
+    once=${once:-1}
     shift
   ;;
   --debug-without=*|-r*|-d*|-t*|-l*|-w*|-a*|-p*|--*-debug*)
@@ -604,6 +604,7 @@ cleanup_pid_file() {
 }
 
 signal_exit() {
+  dp "Start script terminating."
   trap "" 2 15
   if [ "x$ROXEN_PID" != "x" ]; then
     kill $ROXEN_PID 2>/dev/null && wait $ROXEN_PID 2>/dev/null
@@ -611,7 +612,7 @@ signal_exit() {
   fi
   if [ "x$keep_mysql" = "x" ] ; then
     if [ -f $DIR/_mysql/mysql_pid ] ; then
-      dp "Shutting down mysql"
+      dp "Shutting down mysql."
       kill `cat $DIR/_mysql/mysql_pid` 2>/dev/null
       sleep 2
       if [ -f $DIR/_mysql/mysql_pid ] ; then
@@ -656,13 +657,22 @@ start_roxen() {
       "$pike" $args 2>>"${DEBUGLOG}.1" 1>&2 &
       ROXEN_PID=$!
       dp "Roxen WebServer server pid $ROXEN_PID."
-      wait $! 2>/dev/null 1>&2
+      wait $ROXEN_PID 2>/dev/null 1>&2
       exitcode="$?"
       ROXEN_PID=""
     else
       if [ "x$do_pipe" = "x" ] ; then
-        "$pike" $args 2>&1
-        exitcode="$?"
+        if [ "x$once" = "x1" ]; then
+	  "$pike" $args 2>&1 &
+	  ROXEN_PID=$!
+	  dp "Roxen WebServer server pid $ROXEN_PID."
+	  wait $ROXEN_PID 2>/dev/null 1>&2
+	  exitcode="$?"
+	  ROXEN_PID=""
+	else
+	  "$pike" $args 2>&1
+	  exitcode="$?"
+	fi
       else
         trap exit_fail 1
         eval "($pike $args || kill -1 $$) 2>&1  $do_pipe"
