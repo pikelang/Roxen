@@ -685,6 +685,21 @@ c</result>
 </test>
 
 <test>
+<rxml><date unix-time='87654321' type='iso' date years='5' months='4' days='2'/></rxml>
+<result>1978-02-13</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' type='iso' date years='-1' months='-4' days='-2'/></rxml>
+<result>1971-06-09</result>
+</test>
+
+<test>
+<rxml><date unix-time='87654321' type='iso' date weeks='2'/></rxml>
+<result>1972-10-25</result>
+</test>
+
+<test>
 <rxml><date unix-time='87654321' type='unix'/></rxml>
 <result>87654321</result>
 </test>
