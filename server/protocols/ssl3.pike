@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.5 1997/04/26 19:24:21 grubba Exp $
+/* $Id: ssl3.pike,v 1.6 1997/05/16 15:58:40 nisse Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -378,6 +378,11 @@ void create(object f, object c)
     port = values(conf->open_ports)[0];
 #endif
     ctx = get_context(c);
+    if (!ctx)
+    {
+      roxen_perror("ssl3.pike: No SSL context!\n");
+      throw( ({ "ssl3.pike: No SSL context!\n", backtrace() }) );
+    }
     // http::create(SSL.sslfile(f, ctx), c);
     my_fd = SSL.sslfile(f, ctx);
     conf = c;
