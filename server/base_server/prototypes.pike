@@ -1,7 +1,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.6 2001/01/19 16:38:24 per Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.7 2001/01/19 18:34:44 per Exp $";
 
 class Variable
 {
@@ -206,10 +206,8 @@ class Configuration
 
   object      throttler;
   RoxenModule types_module;
-  RoxenModule auth_module;
   RoxenModule dir_module;
   function    types_fun;
-  function    auth_fun;
 
   string name;
   int inited;
@@ -288,6 +286,17 @@ class Configuration
   void remove_parse_module (RoxenModule mod);
 
   string real_file(string a, RequestID b);
+
+
+  mapping authenticate_throw( RequestID id, string realm,
+			      UserDB|void database,
+			      AuthModule|void method);
+  User authenticate( RequestID id,
+		     UserDB|void database,
+		     AuthModule|void method );
+
+  array(AuthModule) auth_modules();
+  array(UserDB) user_databases();
 
   static string _sprintf( )
   {
@@ -471,7 +480,6 @@ class RequestID
   //! The raw request body, containing non-decoded post variables et cetera.
 
   string leftovers;
-  array (int|string) auth;
   string rawauth;
   string realauth;
   string since;
@@ -546,7 +554,6 @@ class RequestID
     c->clientprot = clientprot;
     c->method = method;
 
-    // realfile virtfile   // Should not be copied.
     c->rest_query = rest_query;
     c->raw = raw;
     c->query = query;
@@ -554,7 +561,6 @@ class RequestID
     c->data = data;
     c->extra_extension = extra_extension;
 
-    c->auth = auth;
     c->realauth = realauth;
     c->rawauth = rawauth;
     c->since = since;

@@ -18,7 +18,7 @@ LocaleString module_doc_locale =
   LOCALE(0,"This filesystem serves the administration interface");
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.69 2001/01/19 16:41:51 per Exp $";
+  "$Id: config_filesystem.pike,v 1.70 2001/01/19 18:34:45 per Exp $";
 
 constant path = "config_interface/";
 
@@ -392,7 +392,7 @@ void start(int n, Configuration cfg)
       "config_tags", "contenttypes",    "indexfiles",
       "gbutton",     "wiretap",         "graphic_text",    "pathinfo",
       "pikescript",  "translation_mod", "rxmlparse",       "rxmltags",
-      "tablist",     "update",          "cimg",            "auth_httpcookie"
+      "tablist",     "update",          "cimg",            "auth_httpbasic"
     }));
   }
   call_out( zap_old_modules, 0 );

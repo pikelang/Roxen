@@ -1,6 +1,6 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
-constant cvs_version = "$Id: configuration.pike,v 1.410 2001/01/19 16:38:16 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.411 2001/01/19 18:34:44 per Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -209,9 +209,6 @@ void stop()
   CATCH("stopping type modules",
         types_module && types_module->stop && types_module->stop());
   allmods[types_module] = 0;
-//   CATCH("stopping auth module",
-//         auth_module && auth_module->stop && auth_module->stop());
-//   allmods[auth_module] = 0;
   CATCH("stopping directory module",
         dir_module && dir_module->stop && dir_module->stop());
   allmods[dir_module] = 0;
@@ -2502,13 +2499,6 @@ void call_low_start_callbacks( RoxenModule me,
   if(module_type & MODULE_TAG)
     add_parse_module( me );
 
-
-  if(module_type & MODULE_AUTH)
-  {
-    auth_module = me;
-    auth_fun = me->auth;
-  }
-
   if(module_type & MODULE_DIRECTORIES)
     if (me->parse_directory)
       dir_module = me;
@@ -2608,12 +2598,6 @@ void clean_up_for_module( ModuleInfo moduleinfo,
 
   if(moduleinfo->type & MODULE_TAG)
     remove_parse_module( me );
-
-  if( moduleinfo->type & MODULE_AUTH )
-  {
-    auth_module = 0;
-    auth_fun = 0;
-  }
 
   if( moduleinfo->type & MODULE_DIRECTORIES )
     dir_module = 0;
