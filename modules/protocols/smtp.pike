@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.4 1998/07/08 21:44:08 grubba Exp $
+ * $Id: smtp.pike,v 1.5 1998/07/16 18:46:59 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.4 1998/07/08 21:44:08 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.5 1998/07/16 18:46:59 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -61,11 +61,19 @@ class Server {
     ]);
 
     string localhost = gethostname();
-    string remotehost;
-    string remoteip;
-    string remotename;
+    int connection_class;
+    string remoteip;		// IP
+    string remoteport;		// PORT
+    string remotehost;		// Name from the IP.
+    string remotename;		// Name given in HELO or EHLO.
+    array(string) ident;
     object conf;
     string prot = "SMTP";
+    function delayed_answer;
+
+    constant weekdays = ({ "Sun", "Mon", "Tue", "Wed", "Thr", "Fri", "Sat" });
+    constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+			 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
 
     static string mktimestamp()
     {
@@ -88,6 +96,32 @@ class Server {
 		     weekdays[lt->wday], lt->mday, months[lt->mon],
 		     1900 + lt->year, lt->hour, lt->min, lt->sec,
 		     off/60, off%60, tz));
+    }
+
+    static void got_remotehost(string h,
+			       function|void callback, mixed ... args)
+    {
+      remotehost = h;
+      if (callback) {
+	callback(@args);
+      }
+    }
+
+    static void got_remoteident(array(string) i,
+				function|void callback, mixed ... args)
+    {
+      ident = i;
+      if (callback) {
+	callback(@args);
+      }
+    }
+
+    static void check_delayed_answer()
+    {
+      if (functionp(delayed_answer)) {
+	delayed_answer();
+      }
+      delayed_answer = 0;
     }
 
     static void handle_command(string data)
@@ -142,16 +176,16 @@ class Server {
       send(214, res);
     }
 
-    void ident_HELO(array(string) ident, string args)
+    void ident_HELO()
     {
       array(string) res;
       if (((ident[0] - " ") == "ERROR") || (sizeof(ident) < 3)) {
 	res = ({ sprintf("%s Hello %s [%s], pleased to meet you",
-			 gethostname(), args,
+			 gethostname(), remotehost,
 			 (con->query_address()/" ")*":") });
       } else {
 	res = ({ sprintf("%s Hello %s@%s [%s], pleased to meet you",
-			 gethostname(), ident[2], args,
+			 gethostname(), ident[2], remotehost,
 			 (con->query_address()/" ")*":") });
       }
       if (prot == "ESMTP") {
@@ -163,8 +197,12 @@ class Server {
     void smtp_HELO(string helo, string args)
     {
       remotename = args;
-      remoteip = con->query_address();
-      Protocols.Ident->lookup_async(con, ident_HELO, args);
+
+      // NB: Race-condition...
+      if (ident)
+	ident_HELO();
+      else
+	delayed_answer = ident_HELO;
     }
 
     void smtp_EHLO(string ehlo, string args)
@@ -299,32 +337,45 @@ class Server {
 
       roxen_perror(sprintf("GOT: %O\n", data));
 
-      object mess = MIME.Message(data, 0, 0, 1);
+      array spooler;
 
-      string received = sprintf("from %s (%s [%s]) by %s with %s id %s; %s",
-				remotename, remotehost||"", remoteip,
-				localhost, prot, "NONE", mktimestamp());
-
-      roxen_perror(sprintf("Received: %O\n", received));
-
-      if (mess->headers["received"]) {
-      } else {
-	mess->headers["received"] = ({ received });
-      }
-
-      foreach(indices(recipients), string r) {
-	foreach(conf->get_provider("smtp_recipient")||({}), object o) {
-	  if (functionp(o->receive)) {
-	    if (o->receive(mess, sender, r)) {
-	      // Received.
-	      recipients[r] = 0;
-	      break;
-	    }
-	  }
+      foreach(conf->get_proviers("spooler")||({}), object o) {
+	string id;
+	if ((id = o->reserve_spool_id())) {
+	  spooler = ({ o, id });
+	  break;
 	}
       }
 
-      send(250);
+      if (!spooler) {
+	send(550);
+	report_error("SMTP: No spooler found!\n");
+	break;
+      }
+
+      string received = sprintf("from %s (%s [%s]) by %s with %s id %s; %s",
+				remotename, remotehost||"", remoteip,
+				localhost, prot, spooler[1], mktimestamp());
+
+      data = "Received: " + received + "\r\n" + data;
+
+      roxen_perror(sprintf("Received: %O\n", received));
+
+      object mess = MIME.Message(data, 0, 0, 1);
+
+      mixed res;
+      res = spooler[0]->spool(({ sender, recipients, mess }), spooler[1]);
+
+      if (!res) {
+	send(452);
+	report_error("SMTP: Spooler failed.\n");
+      } else if (res == spooler[1]) {
+	send(250);
+	report_notice("SMTP: Mail spooled OK.\n");
+      } else {
+	send(451);
+	report_error("SMTP: Internal spooler error.\n");
+      }
     }
 
     void smtp_DATA(string data, string args)
@@ -337,29 +388,31 @@ class Server {
 	send(503, ({ "Need recipient list (RCPT TO)" }));
 	return;
       }
+
+      // Handling of 8BITMIME?
       
       send(354);
       handle_data = handle_DATA;
     }
 
-    constant weekdays = ({ "Sun", "Mon", "Tue", "Wed", "Thr", "Fri", "Sat" });
-    constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-			 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
-
-    void create(object con_, object conf_)
+    static void classify_connection(object con_)
     {
-      conf = conf_;
-
       foreach(conf->get_providers("smtp_filter") ||({}), object o) {
 	// roxen_perror("Got SMTP filter\n");
-	if (functionp(o->verify_connection) &&
-	    o->verify_connection(con_)) {
-	  // Refuse connection.
+	if (functionp(o->classify_connection)) {
+	  int c = o->classify_connection(remoteip, remoteport, remotehost);
+
+	  if (c < 0) {
+	    // Refuse connection.
 #ifdef SMTP_DEBUG
-	  roxen_perror("Refuse connection.\n");
+	    roxen_perror("Refuse connection.\n");
 #endif /* SMTP_DEBUG */
-	  con->close();
-	  return;
+	    con_->close();
+	    destruct();
+	    return;
+	  } else if (!connection_class) {
+	    connection_class = c;
+	  }
 	}
       }
 
@@ -368,6 +421,22 @@ class Server {
       mapping lt = localtime(time());
       send(220, ({ sprintf("%s ESMTP %s; %s",
 			   gethostname(), roxen->version(), mktimestamp()) }));
+    }
+
+    void create(object con_, object conf_)
+    {
+      conf = conf_;
+
+      array(string) remote = con_->query_address()/" ";
+
+      remoteip = remote[0];
+      remoteport = (remote[1..])*" ";
+
+      // Start two assynchronous lookups...
+      roxen->ip_to_host(remoteip, got_remotehost, classify_connection, con_);
+
+      Protocols.Ident->lookup_async(con_, got_remoteident,
+				    check_delayed_answer);
     }
   }
 
