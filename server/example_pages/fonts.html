@@ -1,0 +1,39 @@
+<comment>Load the template file</comment>
+<eval><insert file="template"/></eval>
+<page title="Available fonts">
+
+<comment>Initialize the start value</comment>
+<if not variable="form.start"><set variable="form.start" value="0"/></if>
+<if variable="form.start < 0"><set variable="form.start" value="0"/></if>
+
+<comment>Output the fonts</comment>
+<emit source="fonts" sort="name" skiprows="&form.start;" maxrows="4" remainderinfo="var.rem">
+<table cellspacing="0" cellpadding="1" bgcolor="black" width="512">
+<tr><td>
+  <table width="100%" cellspacing="0" cellpadding="2">
+  <tr><td bgcolor="white"><gtext font="&_.name;" ::="&_.style;=''">ABCabc1234</gtext></td></tr>
+  <tr><td bgcolor="white">
+  Name: &_.name;<br />
+  Format: &_.format;<br />
+  <if variable="_.full">Fullname: &_.full;<br /></if>
+  <if variable="_.style">Style: &_.style;<br /></if>
+  <if variable="_.version">Version: &_.version;<br /></if>
+  <if variable="_.copyright">Copyright: &_.copyright;<br /></if>
+  </td></tr></table>
+</td></tr></table>
+</emit>
+
+<comment>Create page navigation</comment>
+<table border="0" width="512"><tr><td align="left">
+<if variable="form.start > 0">
+  <set variable="var.prev" expr="(int)&form.start;-4" />
+  <a href="fonts.html?start=&var.prev;">Previuos four fonts</a>
+</if>
+</td><td align="right">
+<if variable="var.rem > 0">
+  <set variable="var.next" expr="4+(int)&form.start;" />
+  <a href="fonts.html?start=&var.next;">Next four fonts</a>
+</if>
+</td></tr></table>
+
+</page>
