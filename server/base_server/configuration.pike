@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.40 1997/07/22 17:05:19 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.41 1997/07/31 20:50:10 marcus Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -2180,7 +2180,7 @@ int load_module(string module_file)
     switch (sizeof( module_data ))
     {
      case 5:
-      foo=1;
+      foo=module_data[4];
       module_data=module_data[0..3];
      case 4:
       if (module_data[3] && !arrayp( module_data[3] ))
