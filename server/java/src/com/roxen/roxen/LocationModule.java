@@ -1,9 +1,9 @@
 /*
- * $Id: LocationModule.java,v 1.8 2004/05/31 23:01:48 _cvs_stephen Exp $
+ * $Id: LocationModule.java,v 1.9 2004/06/01 07:37:35 _cvs_stephen Exp $
  *
  */
 
-package com.core.roxen;
+package com.roxen.roxen;
 
 /**
  * The interface for modules which have a specific URL path in the

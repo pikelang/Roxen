@@ -17,7 +17,7 @@
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
 constant cvs_version =
- "$Id: roxenwebserver.pike,v 1.6 2004/05/31 16:09:26 _cvs_stephen Exp $";
+ "$Id: roxenwebserver.pike,v 1.7 2004/06/01 07:37:36 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_unique = 1;
 
@@ -373,8 +373,8 @@ string api_query_modified(RequestID id, string f, int|void by)
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"&server.":#"<desc type='scope'><p><short>
- Obsoleted by the &amp;system. scope.</short>
+"&roxen.":#"<desc type='scope'><p><short>
+ Obsoleted by the &amp;server. scope.</short>
  </p>
 </desc>",
 

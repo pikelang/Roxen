@@ -1,4 +1,4 @@
-package com.core.roxen;
+package com.roxen.roxen;
 
 import java.net.URL;
 import java.net.URLClassLoader;

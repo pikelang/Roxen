@@ -1,4 +1,4 @@
-package com.core.roxen;
+package com.roxen.roxen;
 
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipEntry;

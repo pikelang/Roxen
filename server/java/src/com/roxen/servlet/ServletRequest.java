@@ -1,4 +1,4 @@
-package com.core.servlet;
+package com.roxen.servlet;
 
 import javax.servlet.ServletInputStream;
 import javax.servlet.RequestDispatcher;

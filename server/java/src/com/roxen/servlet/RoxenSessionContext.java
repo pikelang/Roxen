@@ -1,4 +1,4 @@
-package com.core.servlet;
+package com.roxen.servlet;
 
 import javax.servlet.http.HttpSession;
 import java.util.Hashtable;

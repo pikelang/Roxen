@@ -1,9 +1,9 @@
 /*
- * $Id: HTTP.java,v 1.9 2004/05/31 23:01:48 _cvs_stephen Exp $
+ * $Id: HTTP.java,v 1.10 2004/06/01 07:37:35 _cvs_stephen Exp $
  *
  */
 
-package com.core.roxen;
+package com.roxen.roxen;
 
 import java.io.Reader;
 import java.io.InputStream;
