@@ -5,7 +5,7 @@
 // interface</a> (and more, the documented interface does _not_ cover
 // the current implementation in NCSA/Apache)
 
-string cvs_version = "$Id: cgi.pike,v 1.101 1998/08/17 15:46:49 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.102 1998/08/25 20:09:22 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -1093,6 +1093,10 @@ mapping last_resort(object id)
     {
       if(strlen(e) && sscanf(id->not_query, "%s."+e+"%s", a, b))
       {
+#ifdef CGI_DEBUG
+	roxen_perror(sprintf("CGI: %O has extension %O with a:%O and b:%O\n",
+			     id->not_query, e, a, b));
+#endif /* CGI_DEBUG */
 	if (sizeof(b) && !((<'?','/'>)[b[0]])) {
 	  continue;
 	}
