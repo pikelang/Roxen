@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.27 2004/08/31 12:41:08 grubba Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.28 2004/11/30 18:23:52 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -56,8 +56,10 @@ class AsyncHTTPClient {
 
     req_data = _data;
 
-    if(stringp(_url))
-      url=Standards.URI(_url);
+    if(stringp(_url)) {
+      if (mixed err = catch (url=Standards.URI(_url)))
+	RXML.parse_error ("Invalid URL: %s\n", describe_error (err));
+    }
     else
       url = _url;
 
@@ -191,6 +193,7 @@ class TagInsertHref {
 			   (string)recursion_depth ]));
     q->run();
 #else
+    mixed err;
     if(method == "POST") {
       mapping vars = ([ ]);
       foreach( (args["post-variables"] || "") / ",", string var) {
@@ -198,14 +201,23 @@ class TagInsertHref {
 	if(sizeof(a) == 2)
 	  vars[String.trim_whites(a[0])] = RXML.user_get_var(String.trim_whites(a[1]));
       }
-      q = Protocols.HTTP.post_url(args->href, vars,
-				  ([ "X-Roxen-Recursion-Depth":
-				     (string)recursion_depth ]));
+      err = catch {
+	  q = Protocols.HTTP.post_url(args->href, vars,
+				      ([ "X-Roxen-Recursion-Depth":
+					 (string)recursion_depth ]));
+	};
     }
     else
-      q = Protocols.HTTP.get_url(args->href, 0,
-			       ([ "X-Roxen-Recursion-Depth":
-				  (string)recursion_depth ]));
+      err = catch {
+	  q = Protocols.HTTP.get_url(args->href, 0,
+				     ([ "X-Roxen-Recursion-Depth":
+					(string)recursion_depth ]));
+	};
+    if (err) {
+      string msg = describe_error (err);
+      if (has_prefix (msg, "Standards.URI:"))
+	RXML.parse_error ("Invalid URL: %s\n", msg);
+    }
 #endif
     
     _ok = 1;
