@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.465 2000/03/24 20:55:25 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.466 2000/03/26 23:01:17 nilsson Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -24,12 +24,8 @@ inherit "disk_cache";
 inherit "language";
 inherit "supports";
 
-// --- Debug defines ---
 
-// #define SSL3_DEBUG
-// #define PRIVS_DEBUG
-// #define THREAD_DEBUG
-// #define DUMP_DEBUG
+// --- Debug defines ---
 
 #ifdef SSL3_DEBUG
 # define SSL3_WERR(X) werror("SSL3: "+X+"\n")
@@ -3324,6 +3320,7 @@ string configuration_authenticate(RequestID id, string what)
   RoxenModule o;
   foreach(configuration_auth, o)
   {
+    if(!o->auth || !functionp(o->auth)) continue;
     auth=o->auth( ({"",id->realauth}), id);
     if(auth) break;
   }
