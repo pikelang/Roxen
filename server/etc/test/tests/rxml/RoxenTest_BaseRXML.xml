@@ -39,6 +39,20 @@
 
 
 <!-- ............................................................ -->
+<comment>Basic syntax</comment>
+
+<test>
+  <rxml>&:amp;</rxml>
+  <result>&amp;</result>
+</test>
+
+<test>
+  <rxml>&:var.foo;</rxml>
+  <result>&var.foo;</result>
+</test>
+
+
+<!-- ............................................................ -->
 <comment>True/False/Else/Then</comment>
 <test>
 <rxml><true/><then>1</then><else>0</else></rxml>
