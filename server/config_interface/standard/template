@@ -11,7 +11,7 @@
     <emit ::='&_.args;' noset=''>
       <cond>
         <case variable='usr.changemark is not'>
-          <tr><td width="20%"><b>&_.name;</b></td><td><eval>&_.form:none;</eval></td></tr>
+          <tr><td width="20%" valign="top"><b>&_.name;</b></td><td><eval>&_.form:none;</eval></td></tr>
           <tr><td colspan="2">&_.doc:none;<p>&_.type_hint;</p></td></tr>
         </case>
     
