@@ -1,5 +1,5 @@
 /*
- * $Id: locks.pike,v 1.10 2002/06/13 00:18:09 nilsson Exp $
+ * $Id: locks.pike,v 1.11 2002/06/13 00:28:52 nilsson Exp $
  */
 
 #include <config.h>
@@ -8,7 +8,7 @@
 inherit "wizard";
 inherit "../logutil";
 
-constant task="debug_info";
+constant task = "debug_info";
 constant name = "Module lock status";
 constant doc  = "Shows various information about the module thread locks in Roxen.";
 

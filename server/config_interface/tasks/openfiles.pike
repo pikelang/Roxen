@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.11 2002/06/13 00:18:10 nilsson Exp $
+ * $Id: openfiles.pike,v 1.12 2002/06/13 00:28:52 nilsson Exp $
  */
 inherit "wizard";
 
@@ -8,7 +8,7 @@ import spider;
 
 #include <stat.h>
 
-constant task="debug_info";
+constant task = "debug_info";
 constant name = "Open files";
 constant doc  = "Show a list of all open files and network connections.";
 

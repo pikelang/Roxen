@@ -1,10 +1,10 @@
 /*
- * $Id: proc.pike,v 1.11 2002/06/13 00:18:10 nilsson Exp $
+ * $Id: proc.pike,v 1.12 2002/06/13 00:28:52 nilsson Exp $
  */
 
 inherit "wizard";
 
-constant task="status";
+constant task = "status";
 constant name = "Extended process status";
 constant doc  = "Shows detailed process status on Solaris 2.5 and later.";
 
