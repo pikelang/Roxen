@@ -206,6 +206,7 @@ worldmap binary
 /server/modules/graphics/counter.pike foreign_ident
 /server/modules/graphics/gbutton.pike foreign_ident
 /server/modules/graphics/graphic_text.pike foreign_ident
+/server/modules/graphics/gxml.pike foreign_ident
 /server/modules/graphics/pimage.pike foreign_ident
 /server/modules/graphics/tablist.pike foreign_ident
 /server/modules/graphics/wiretap.pike foreign_ident
