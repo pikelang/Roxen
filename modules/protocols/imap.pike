@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.8 1998/10/20 22:49:29 nisse Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.9 1998/10/21 01:09:21 nisse Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -128,6 +128,8 @@ class imap_mail
 		     // NOTE: The MIME module decodes any transfer encoding
 		     "binary",  // msg->transfer_encoding, 
 		     imap_number(strlen(data)) });
+	
+	// FIXME: Type specific fields, for text/* and message/rfc822 messages
 	if (extension_data)
 	  a += ({ Crypto.md5()->update(data)->digest(),
 		  // Disposition,
@@ -392,6 +394,7 @@ class imap_mail
 
       case "internaldate":
 	// FIXME: Where can a suitable date be found?
+	// Use mail->headers()->incoming_date
 	throw("Not implemented");
 
       case "rfc822":
