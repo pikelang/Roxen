@@ -111,6 +111,7 @@ class ConfigIFCache
 
 static mapping settings_cache = ([ ]);
 ConfigIFCache config_settings;
+ConfigIFCache config_settings2;
 
 class ConfigurationSettings
 {
@@ -159,14 +160,14 @@ class ConfigurationSettings
 
   mapping trim_variables( mapping m )
   {
-    mapping q = (config_settings->get( name ) || ([]));
+    mapping q = (config_settings2->get( name ) || ([]));
     foreach( indices( m ), string v )  q[v] = m[v]->query( );
     return q;
   }
 
   void save()
   {
-    config_settings->set( name, trim_variables(variables) );
+    config_settings2->set( name, trim_variables(variables) );
   }
 
   static string _sprintf()
@@ -176,7 +177,7 @@ class ConfigurationSettings
 
   void restore()
   {
-    mapping vv = config_settings->get( name );
+    mapping vv = config_settings2->get( name );
     if( vv ) 
       foreach( indices( vv ), string i )
         if( variables[i] )
@@ -661,6 +662,7 @@ void add_permission( string perm, LocaleString text )
 void init_configuserdb()
 {
   config_settings = ConfigIFCache( "settings",1 );
+  config_settings2 =ConfigIFCache( "settings",0 );
   add_constant( "AdminUser", AdminUser );
   add_permission( "Everything", LOCALE(191, "All Permissions"));
 }
@@ -684,7 +686,7 @@ AdminUser create_admin_user( string s )
 void delete_admin_user( string s )
 {
   m_delete( admin_users,  s );
-  config_settings->delete( s );
+  config_settings2->delete( s );
   config_settings->delete( s+"_uid" );
 }
 
