@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.141 1999/03/29 02:29:28 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.142 1999/03/30 20:44:39 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1069,14 +1069,41 @@ class backend
   
   object clientlayer;
 
-  void create(object conf)
+  object conf;
+
+  void create(object c)
   {
-    clientlayer = conf->get_provider("automail_clientlayer");
+    conf = c;
+
+    clientlayer = c->get_provider("automail_clientlayer");
     if (!clientlayer)
       throw( ({ "imap.pike: No clientlayer found\n", backtrace() }) );
   }
 
-  array(string) capabilities(object|mapping session)
+  void connected(object|mapping(string:mixed) session, object con)
+  {
+    session->log_id = ([
+      "prot":"IMAP4",
+      "remoteaddr":(con->query_address()/" ")[0],
+      "cookies":([]),
+    ]);
+  }
+
+  void log(object|mapping(string:mixed) session,
+	   string cmd, string arg, int errcode, int|void size)
+  {
+    mixed err = {
+      conf->log(([ "error":errcode, "len":size ]), session->log_id +
+		([ "method":cmd, "not_query":arg, "time":time(1) ]));
+    };
+    if (err) {
+      report_error(sprintf("IMAP: backend->log():\n"
+			   "%s\n",
+			   describe_backtrace(err)));
+    }
+  }
+
+  array(string) capabilities(object|mapping(string:mixed) session)
   {
 #ifdef IMAP_DEBUG
     werror("imap.pike: capabilities\n");
