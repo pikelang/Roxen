@@ -9,12 +9,46 @@ if [ ! -f base_server/roxen.pike ] ; then
   exit
 fi
 
+# Pike default Master-program
+if [ -f lib/pike/master.pike ]; then
+  DEFINES="$DEFINES -mlib/pike/master.pike"
+else
+  # This is used with localinstall
+  if [ -f ../pike/src/lib/master.pike ]; then
+    DEFINES="$DEFINES -m../pike/src/lib/master.pike"
+  fi
+fi
+
+# Extra module-path
+if [ -d etc/modules ]; then
+  DEFINES="$DEFINES -Metc/modules"
+fi
+
+# Extra include-path
+if [ -d etc/include ]; then
+  DEFINES="$DEFINES -Ietc/include"
+fi
+
+# Extra include-path (2)
+if [ -d base_server ]; then
+  DEFINES="$DEFINES -Ibase_server"
+fi
+
+pike=pike
+if [ -x bin/pike ] ; then pike=bin/pike; fi
 
 cat > /tmp/roxen$$.pike  << "____________________"
-#12 "roxenvar"
-string report_error(string s) 
+#42 "configvar"
+import Stdio;
+
+void report_error(string s) 
 {
   werror(s);
+}
+
+void roxen_perror(mixed ... args)
+{
+  werror(sprintf(@args));
 }
 
 object roxenp() 
@@ -45,6 +79,15 @@ void mkdirhier(string from)
     b+=a+"/";
   }
 }
+
+class fake_config_object
+{
+  string name;
+  void create(string s)
+  {
+    name = s;
+  }
+};
 
 #define IN_INSTALL
 #define VAR_VALUE 0
@@ -122,7 +165,7 @@ string find_arg(array argv, array|string shortform,
   return def;
 }
 
-mapping current_configuration;
+object current_configuration;
 
 mixed my_decode(string from)
 {
@@ -134,6 +177,11 @@ void main(int argc, string *argv)
   int query_only, quiet;
   string region;
   string file;
+
+  add_constant("roxen", 0);
+  add_constant("perror", roxen_perror);
+  add_constant("perror", roxen_perror);
+  
 
   if(find_arg(argv, "?", "help"))
   {
@@ -164,7 +212,7 @@ void main(int argc, string *argv)
   region = find_arg(argv, "r", "region", 0, "Variables");
   file   = find_arg(argv, "c", "configuration", 0, "Global_Variables");
 
-  current_configuration = ([ "name":file ]);
+  current_configuration = fake_config_object( file );
 
   configuration_dir = find_arg(argv, "d", "config-dir", 0,"../configurations");
 
@@ -178,7 +226,7 @@ void main(int argc, string *argv)
   mapping vars;
   int save_needed;
 
-  vars = retrieve(region);
+  vars = retrieve(region, current_configuration);
 
   foreach(argv[1..1000], tmp)
   {
@@ -223,7 +271,7 @@ void main(int argc, string *argv)
   {
     if(!quiet) 
       perror("Saving file.\n");
-    store(region, vars, 1);
+    store(region, vars, 1, current_configuration);
   }
 }
 
@@ -233,5 +281,5 @@ void main(int argc, string *argv)
 // The line below _must_ be there.. 
 ____________________
 
-bin/pike -m etc/master.pike /tmp/roxen$$.pike "$@"
+$pike $DEFINES /tmp/roxen$$.pike "$@"
 /bin/rm /tmp/roxen$$.pike
