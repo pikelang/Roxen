@@ -2,7 +2,7 @@
 
 inherit "chili-module:cgi": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.15 2004/06/04 08:29:25 _cvs_stephen Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.16 2004/06/09 23:35:16 _cvs_stephen Exp $";
 
 #include <roxen.h>
 #include <module.h>
@@ -123,7 +123,7 @@ class FCGIChannel
 	  Thread.MutexKey lock = cond_mutex->lock();
 	  if (!sizeof (wbuffer))
 	    cond->wait (lock);
-	  lock = 0;
+	  destruct(lock);
         }
       };
       catch(fd->close());
@@ -146,7 +146,7 @@ class FCGIChannel
       Thread.MutexKey lock = cond_mutex->lock();
       wbuffer += what;
       cond->signal();
-      lock = 0;
+      destruct(lock);
     }
 #else
     void write( string what )
