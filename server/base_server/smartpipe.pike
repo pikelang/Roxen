@@ -1,5 +1,5 @@
 /*
- * $Id: smartpipe.pike,v 1.6 1998/03/02 18:26:06 grubba Exp $
+ * $Id: smartpipe.pike,v 1.7 1998/03/07 03:06:01 neotron Exp $
  *
  * A somewhat more optimized Pipe.pipe...
  */
@@ -91,7 +91,7 @@ void next_input()
   }
 
   current_input = to_send[0][0];
-  current_input_len = to_send[0][1] || 0x7fffffff;
+  current_input_len = to_send[0][1] > 0 ? to_send[0][1] : 0x7fffffff;
   to_send = to_send[1..];
 
   if(current_input_len < 8192)
