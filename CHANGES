@@ -1,3 +1,39 @@
+Changes since Roxen Challenger 1.2 alpha 11
+-----------------------------------------------
+
+o The start-script now sets the umask to 022, to be certain it can read
+  the files Roxen creates.
+
+o Some fixes to the neigbourhood system.
+
+o The mutex-code in pike/src/treads.c rewritten, optimized and bugfixed.
+  The need for mutex_kluge has been removed.
+  Locking an unlocked mutex now doesn't involve any thread-operations at all.
+  Several race-conditions removed.
+
+o The compiler-option -sopt for IRIX-cc has been disabled since it caused the
+  compiler to hang on interpret.c
+
+o Improved tests for the Gz-module.
+
+o Several fixes to support stupid C preprocessors.
+
+o Fixes to the UDP code.
+
+o The supplied version of gmp now compiles on Solaris 2.6 x86.
+
+o ((program)"privs") assigned to a constant (Privs) to improve efficiency.
+
+o Now opens all ports at the beginning of the boot-sequence to keep
+  "Connection refused" time to a minimum.
+
+o The log-file filename can now contain the current date and time.
+
+o Removed some race-conditions.
+
+o Now possible to select server to upgrade from.
+
+
 Changes since Roxen Challenger 1.2 alpha 10
 -----------------------------------------------
 
