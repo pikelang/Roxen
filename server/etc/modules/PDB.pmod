@@ -76,6 +76,7 @@ class Bucket
     {
       int b = free_blocks[0];
       free_blocks = free_blocks[1..];
+      save_free_blocks();
       return b;
     }
     last_block++;
