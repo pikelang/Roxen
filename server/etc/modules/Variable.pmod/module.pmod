@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.80 2003/02/17 10:12:23 tomas Exp $
+// $Id: module.pmod,v 1.81 2003/03/05 12:44:20 mattias Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1330,7 +1330,7 @@ class List
   int(0..1) set_from_form(RequestID id)
   {
     int rn, do_goto;
-    array l = query();
+    array l = copy_value(query());
     mapping vl = get_form_vars(id);
     // first do the assign...
     if( (int)vl[".count"] != _current_count )
