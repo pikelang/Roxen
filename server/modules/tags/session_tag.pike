@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.2 2001/04/22 23:41:06 nilsson Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.3 2001/04/25 13:42:48 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Session tag module";
@@ -21,6 +21,7 @@ class TagSession {
     string scope_name;
 
     array do_enter(RequestID id) {
+      NOCACHE();
       vars = cache.get_session_data(args->id) || ([]);
       scope_name = args->scope || "session";
     }
@@ -44,6 +45,7 @@ class TagClearSession {
     inherit RXML.Frame;
 
     array do_enter(RequestID id) {
+      NOCACHE();
       cache.clear_session(args->id);
     }
   }
