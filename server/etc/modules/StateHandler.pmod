@@ -1,7 +1,7 @@
 // This is the Roxen WebServer state mechanism.
 // Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: StateHandler.pmod,v 1.5 2001/06/25 17:17:18 wellhard Exp $
+// $Id: StateHandler.pmod,v 1.6 2001/08/09 13:13:21 nilsson Exp $
 
 #ifdef STATE_HANDLER_DEBUG
 # define STATE_WERR(X) werror("State: "+X+"\n")
@@ -9,68 +9,74 @@
 # define STATE_WERR(X)
 #endif
 
-// This file defines a page state mechanism, i.e. a pike 
-// object in which the "objects" on a page can register
-// their state. If the state in one object is altered the
-// state in the others are not lost, as would be the case
-// if all "objects" on the page made their own
-// <a href="page.html?variable=value"> links.
-//
-// The first thing your (tag) module would have to do,
-// once it has created a state object, is to register
-// itself in the page state object. This is done by
-// providing a suggested id, typically the name of the
-// tag. The registration method then returns the given id,
-// which may be a different one than the suggested id.
-//
-//   string state_id = "my-tag";
-//   object state = Page_state(id);
-//   state_id = state->register_consumer(state_id, id);
-//
-// The it is a good idea to update the state object with
-// the current page state, as given in the encoded state
-// variable. This variable is typically URI-encoded and
-// sent in a forms variable between pages.
-//
-//   if(id->variables->state &&
-//      !state->uri_decode(id->variables->state))
-//     RXML.run_error("Error in state.\n");
-//
-// It is now possible to retrieve the state associated
-// with your page object by calling the get method in the
-// state object.
-//
-// Typically you do not set or alter values in the page
-// state, since the state of the page is only altered by
-// user action, which happens upon page loads. Instead you
-// predict, for each action your object provides, what the
-// resulting state would be and use the encode or
-// uri_encode methods to get a representation of that state
-// that is somehow transfered to the next page. I.e. if
-// your object has two states, 1 and 2, the following code
-// would calculate the proper way to alter the state.
-//
-//   string get_actions(string uri, int current_state,
-//                      object state) {
-//     return "<a href='" + uri + "?state=" +
-//            state->uri_encode(1) + "'>1</a><br />"
-//            "<a href='" + uri + "?state=" +
-//            state->uri_encode(2) + "'>2</a>";
-//   }
-//
+//! This module defines a page state mechanism, i.e. a pike
+//! object in which the "objects" on a page can register
+//! their state. If the state in one object is altered the
+//! state in the others are not lost, as would be the case
+//! if all "objects" on the page made their own
+//! <a href="page.html?variable=value"> links.
+//!
+//! The first thing your (tag) module would have to do,
+//! once it has created a state object, is to register
+//! itself in the page state object. This is done by
+//! providing a suggested id, typically the name of the
+//! tag. The registration method then returns the given id,
+//! which may be a different one than the suggested id.
+//!
+//! @code{
+//!   string state_id = "my-tag";
+//!   object state = Page_state(id);
+//!   state_id = state->register_consumer(state_id, id);
+//! @}
+//!
+//! The it is a good idea to update the state object with
+//! the current page state, as given in the encoded state
+//! variable. This variable is typically URI-encoded and
+//! sent in a forms variable between pages.
+//!
+//! @code{
+//!   if(id->variables->state &&
+//!      !state->uri_decode(id->variables->state))
+//!     RXML.run_error("Error in state.\n");
+//! @}
+//!
+//! It is now possible to retrieve the state associated
+//! with your page object by calling the get method in the
+//! state object.
+//!
+//! Typically you do not set or alter values in the page
+//! state, since the state of the page is only altered by
+//! user action, which happens upon page loads. Instead you
+//! predict, for each action your object provides, what the
+//! resulting state would be and use the encode or
+//! uri_encode methods to get a representation of that state
+//! that is somehow transfered to the next page. I.e. if
+//! your object has two states, 1 and 2, the following code
+//! would calculate the proper way to alter the state.
+//!
+//! @code{
+//!   string get_actions(string uri, int current_state,
+//!                      object state) {
+//!     return "<a href='" + uri + "?state=" +
+//!            state->uri_encode(1) + "'>1</a><br />"
+//!            "<a href='" + uri + "?state=" +
+//!            state->uri_encode(2) + "'>2</a>";
+//!   }
+//! @}
 
 
 // --- State code -------------------------------------------
 
 #define CHKSPACE "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+/"
 
+//!
 class Page_state {
 
   RequestID id;
   int use_checksum=1;
   string stateid="";
 
-  // Initialize the state object
+  //! Initialize the state object
   void create(RequestID in) {
     id=in;
     if(!id->misc->state)
