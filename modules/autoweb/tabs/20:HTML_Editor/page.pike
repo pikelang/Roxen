@@ -136,7 +136,7 @@ string|mapping navigate(object id, string f, string base_url)
     array dirs = ({ });
 
     // Scan directory for files and directories.
-    foreach(AutoFile(id, f)->get_dir(), string file)
+    foreach(AutoFile(id, f)->get_dir() || ({}), string file)
       if(AutoFile(id, file)->visiblep())
 	if(AutoFile(id, f+file)->type()=="Directory")
 	  dirs += ({ file });
