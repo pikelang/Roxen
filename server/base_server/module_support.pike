@@ -1,6 +1,6 @@
 inherit "read_config";
 
-string cvs_version = "$Id: module_support.pike,v 1.7.2.1 1997/03/02 19:14:15 grubba Exp $";
+string cvs_version = "$Id: module_support.pike,v 1.7.2.2 1997/03/09 13:32:09 grubba Exp $";
 #include <roxen.h>
 #include <module.h>
 #include <config.h>
@@ -87,7 +87,7 @@ varargs int globvar(string var, mixed value, string name, int type,
   variables[var][ VAR_SHORTNAME ] = var;
 }
 
-public mixed query(string var)
+public mixed query(void|string var)
 {
   if(!current_configuration)
     if(var)
