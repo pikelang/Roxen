@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.111 1998/07/04 21:59:58 per Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.112 1998/07/12 21:26:44 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1180,7 +1180,7 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
       return popen(m->cmd,
 		   getenv()
 		   | build_roxen_env_vars(got)
-		   | build_env_vars(got->not_query, got, 0));
+		   | build_env_vars(got->not_query, got, 0), -2, -2);
     }
     else
       return " <b>execute command support disabled</b> ";
