@@ -8,7 +8,7 @@
 
 // This is an extension module.
 
-constant cvs_version = "$Id: pikescript.pike,v 1.39 1999/11/10 04:53:38 per Exp $";
+constant cvs_version = "$Id: pikescript.pike,v 1.40 1999/11/15 16:42:59 per Exp $";
 constant thread_safe=1;
 
 mapping scripts=([]);
@@ -324,12 +324,6 @@ mapping handle_file_extension(object f, string e, object got)
     else
       err=catch(p=compile_string(file));
     master()->set_inhibit_compile_errors(0);
-    if(strlen(e->get()))
-    {
-      werror(e->get());
-      return http_string_answer("<h1>Error compiling pike script</h1><p>"+
-				html_encode_string(e->get()));
-    }
 #ifndef __NT__
 #if efun(setegid)
     add_constant("setegid", ban[0]);
@@ -341,12 +335,15 @@ mapping handle_file_extension(object f, string e, object got)
 #endif
     add_constant("cd", ban[5]);
 
-    if(err) 
-      my_error(err, got->not_query+":\n"+(s?s+"\n\n":"\n"), 
-	       "Error while compiling pike script:<br>\n\n");
-
+    if(strlen(e->get()))
+    {
+      werror(e->get());
+      return http_string_answer("<h1>Error compiling pike script</h1><p>"+
+				html_encode_string(e->get()));
+    } 
     if(!p) 
-      return http_string_answer("<h1>While compiling pike script</h1>\n"+s);
+      return 
+        http_string_answer("<h1>Error while compiling pike script</h1>\n");
 
 #if constant(__builtin.security)
     luser_creds->apply(p);
