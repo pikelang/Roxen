@@ -1,6 +1,10 @@
-// $Id: dates.pike,v 1.2 1998/03/02 18:25:38 grubba Exp $
+// $Id: dates.pike,v 1.3 1999/05/31 18:08:59 marcus Exp $
 
 // Misc date functionality. To be inherited by functions that need it.
+
+// Or rather, not to be inherited at all until someone fixes it.
+// This code does not work.  Period.
+
 
 class Date 
 {
