@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.86 2000/03/14 05:10:37 nilsson Exp $
+// $Id: module.pike,v 1.87 2000/03/18 02:59:18 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -35,7 +35,11 @@ string module_identifier()
   if (!_module_identifier) {
     string|mapping name = register_module()[1];
     if (mappingp (name)) name = name->standard;
-    _module_identifier = sprintf ("%s,%O", name || module_name, my_configuration());
+    string cname = sprintf ("%O", my_configuration());
+    if (sscanf (cname, "Configuration(%s", cname) == 1 &&
+	sizeof (cname) && cname[-1] == ')')
+      cname = cname[..sizeof (cname) - 2];
+    _module_identifier = sprintf ("%s,%s", name || module_name, cname);
   }
   return _module_identifier;
 }
