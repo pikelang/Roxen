@@ -3,8 +3,6 @@
 //
 // Roxen bootstrap program.
 
-//! @ignore
-
 #define LocaleString Locale.DeferredLocale|string
 
 // #pragma strict_types
@@ -28,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.278 2001/08/24 14:25:35 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.279 2001/08/24 17:31:01 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -204,6 +202,12 @@ string possibly_encode( string what )
   return what;
 }
 
+//! @decl void werror(string format, mixed ... args)
+//! @appears werror
+
+//! @decl void roxen_perror(string format, mixed ... args)
+//! @appears roxen_perror
+
 static int last_was_nl;
 // Used to print error/debug messages
 void roxen_perror(string format, mixed ... args)
@@ -272,7 +276,8 @@ void roxen_perror(string format, mixed ... args)
   if (delayed_nl) last_was_nl = -1;
 }
 
-// Make a directory hierachy
+//! @appears mkdirhier
+//! Make a directory hierachy
 int mkdirhier(string from, int|void mode)
 {
   int r = 1;
@@ -302,10 +307,12 @@ int mkdirhier(string from, int|void mode)
 
 // Roxen itself
 
+//! @ignore
 class Roxen {
   mixed query(string);
   void nwrite(string, int|void, int|void, void|mixed ...);
 }
+//! @endignore
 
 Roxen roxen;
 
@@ -368,8 +375,9 @@ void init_logger()
 }
 
 void report_debug(string message, mixed ... foo)
+//! @appears report_debug
 //! Print a debug message in the server's debug log.
-//! Shares argument prototype with <ref>sprintf()</ref>.
+//! Shares argument prototype with @[sprintf()].
 {
   if( sizeof( foo ) )
     message = sprintf((string)message, @foo );
@@ -405,9 +413,10 @@ array(object) find_module_and_conf_for_log( array(array) q )
 #define MC @find_module_and_conf_for_log(backtrace())
 
 void report_warning(LocaleString message, mixed ... foo)
+//! @appears report_warning
 //! Report a warning message, that will show up in the server's debug log and
 //! in the event logs, along with the yellow exclamation mark warning sign.
-//! Shares argument prototype with <ref>sprintf()</ref>.
+//! Shares argument prototype with @[sprintf()].
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite([string]message,0,2,MC);
@@ -419,9 +428,10 @@ void report_warning(LocaleString message, mixed ... foo)
 }
 
 void report_notice(LocaleString message, mixed ... foo)
+//! @appears report_notice
 //! Report a status message of some sort for the server's debug log and event
 //! logs, along with the blue informational notification sign. Shares argument
-//! prototype with <ref>sprintf()</ref>.
+//! prototype with @[sprintf()].
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite([string]message,0,1,MC);
@@ -433,9 +443,10 @@ void report_notice(LocaleString message, mixed ... foo)
 }
 
 void report_error(LocaleString message, mixed ... foo)
+//! @appears report_error
 //! Report an error message, that will show up in the server's debug log and
 //! in the event logs, along with the red exclamation mark sign. Shares
-//! argument prototype with <ref>sprintf()</ref>.
+//! argument prototype with @[sprintf()].
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite([string]message,0,3,MC);
@@ -446,8 +457,9 @@ void report_error(LocaleString message, mixed ... foo)
 #endif
 }
 
-// Print a fatal error message
 void report_fatal(string message, mixed ... foo)
+//! @appears report_fatal
+//! Print a fatal error message.
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite(message,0,3,MC);
@@ -471,6 +483,7 @@ static void garb_sparsely_dont_log()
 }
 
 void report_warning_sparsely (LocaleString message, mixed ... args)
+//! @appears report_warning_sparsely
 //! Like @[report_warning], but doesn't repeat the same message if
 //! it's been logged in the last ten minutes. Useful in situations
 //! where an error can cause a warning message to be logged rapidly.
@@ -488,6 +501,7 @@ void report_warning_sparsely (LocaleString message, mixed ... args)
 }
 
 void report_error_sparsely (LocaleString message, mixed... args)
+//! @appears report_error_sparsely
 //! Like @[report_error], but doesn't repeat the same message if it's
 //! been logged in the last ten minutes. Useful in situations where an
 //! error can cause an error message to be logged rapidly.
@@ -504,9 +518,10 @@ void report_error_sparsely (LocaleString message, mixed... args)
 #endif
 }
 
-// popen, starts the specified process and returns a string
-// with the result. Mostly a compatibility functions, uses
-// Process.create_process
+//! @appears popen
+//! Starts the specified process and returns a string
+//! with the result. Mostly a compatibility functions, uses
+//! Process.create_process
 string popen(string s, void|mapping env, int|void uid, int|void gid)
 {
   Stdio.File f = Stdio.File(), p = f->pipe(Stdio.PROP_IPC);
@@ -545,7 +560,8 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
   return 0;
 }
 
-// Create a process
+//! @appears spawne
+//! Create a process
 Process.Process spawne(string s, array(string) args, mapping|array env,
 		       Stdio.File stdin, Stdio.File stdout, Stdio.File stderr,
 		       void|string wd, void|array(int) uid)
@@ -567,11 +583,13 @@ Process.Process spawne(string s, array(string) args, mapping|array env,
   ]));
 }
 
-// Start a new Pike process with the same configuration as the current one
+//! @appears spawn_pike
+//! Start a new Pike process with the same configuration as the current one
 Process.Process spawn_pike(array(string) args, void|string wd,
 			   Stdio.File|void stdin, Stdio.File|void stdout,
 			   Stdio.File|void stderr)
 {
+  //! @ignore
   return Process.create_process(
 #ifndef __NT__
     ({getcwd()+"/start",
@@ -584,8 +602,8 @@ Process.Process spawn_pike(array(string) args, void|string wd,
 	"stdin":stdin,
 	"stdout":stdout,
 	"stderr":stderr]));
+  //! @endignore
 }
-
 
 // Add a few cache control related efuns
 static private object initiate_cache()
@@ -670,6 +688,7 @@ class LowErrorContainer
   }
 }
 
+//! @appears ErrorContainer
 class ErrorContainer
 {
   inherit LowErrorContainer;
@@ -688,7 +707,11 @@ class ErrorContainer
   }
 }
 
-// Don't allow cd() unless we are in a forked child.
+//! @decl int cd(string path)
+//! @appears cd
+//! Overloads the Pike cd function.
+//! Doesn't allow cd() unless we are in a forked child.
+
 class restricted_cd
 {
   int locked_pid = getpid();
@@ -734,6 +757,10 @@ Roxen really_load_roxen()
 // Debug function to trace calls to destruct().
 #ifdef TRACE_DESTRUCT
 void trace_destruct(mixed x)
+//! @appears destruct
+//! Overloads the Pike destruct function. If the webserver is
+//! started with the TRACE_DESTRUCT define set, all destruct
+//! calls will be logged in the debug log.
 {
   report_debug("DESTRUCT(%O)\n%s\n",
                x, describe_backtrace(backtrace())):
@@ -890,6 +917,8 @@ string parse_html_lines (string data, mapping tags, mapping containers,
 #endif
 
 static local mapping fd_marks = ([]);
+
+//! @appears mark_fd
 mixed mark_fd( int fd, string|void with )
 {
   if(!with)
@@ -938,10 +967,31 @@ constant mf = Stdio.File;
 
 #include "../etc/include/version.h"
 string roxen_version()
+//! @appears roxen_version
 {
   return __roxen_version__+"."+__roxen_build__;
 }
 
+//! @appears roxen_path
+//!
+//! Buhu
+//!
+//! @string
+//!   @value "$LOCALDIR"
+//!     The local directory of the webserver, Normally "../local",
+//!     but it can be changed in by setting the environment
+//!     variable LOCALDIR.
+//!   @value "$LOGDIR"
+//!     The log directory of the webserver. Normally "../logs",
+//!     but it can be changed in the configuration interface under
+//!     global settings.
+//!   @value "$VARDIR"
+//!     The webservers var directory. Normally "../var", but it can
+//!     be changed by setting the environment variable VARDIR.
+//!   @value "$VVARDIR"
+//!     Same as $VARDIR, but with a server version specific subdirectory
+//!     prepended.
+//! @endstring
 string roxen_path( string filename )
 {
   filename = replace( filename, ({"$VVARDIR","$LOCALDIR"}),
@@ -982,6 +1032,7 @@ Stdio.Stat file_stat( string filename, int|void slinks )
   return predef::file_stat( roxen_path(filename), slinks );
 }
 
+//! @appears open
 object|void open(string filename, string mode, int|void perm)
 {
 #ifdef FD_DEBUG
@@ -1012,6 +1063,7 @@ object|void open(string filename, string mode, int|void perm)
   return o;
 }
 
+//! @appears lopen
 object|void lopen(string filename, string mode, int|void perm)
 {
   Stdio.File o;
@@ -1031,6 +1083,9 @@ string make_path(string ... from)
   }, getcwd())*":";
 }
 
+//! @appears isodate
+//! Returns a string with the given posix time @[t] formated as
+//! YYYY-MM-DD.
 string isodate( int t )
 {
   mapping lt = localtime(t);
@@ -1056,6 +1111,10 @@ void write_current_time()
   call_out( write_current_time, 3600 - t % 3600 );
 }
 
+//! @appears throw
+//! Overloads Pikes throw function.
+//! @fixme
+//!    What is the purpose of this?
 void paranoia_throw(mixed err)
 {
   if ((arrayp(err) && ((sizeof([array]err) < 2) || !stringp(([array]err)[0]) ||
@@ -1180,6 +1239,7 @@ string query_configuration_dir()
   return configuration_dir;
 }
 
+//! @appears clear_connect_to_my_mysql_cache
 void clear_connect_to_my_mysql_cache( )
 {
 #ifdef THREADS
@@ -1197,6 +1257,7 @@ void clear_connect_to_my_mysql_cache( )
   my_mysql_cache = ([]);
 }
 
+//! @appears connect_to_my_mysql
 mixed connect_to_my_mysql( string|int ro, void|string db )
 {
   mixed res = low_connect_to_my_mysql( ro, db );
@@ -1794,8 +1855,7 @@ and recompile pike, after removing the file 'config.cache'
   add_constant("popen",popen);
   add_constant("roxen_popen",popen);
   add_constant("init_logger", init_logger);
-  add_constant("capitalize",
-               lambda(string s){return upper_case(s[0..0])+s[1..];});
+  add_constant("capitalize", String.capitalize);
 
   // It's currently tricky to test for Image.TTF correctly with a
   // preprocessor directive, so let's add a constant for it.
@@ -1964,4 +2024,47 @@ library should be enough.
   return;
 }
 
-//! @endignore
+//! @decl int(0..1) callablep(mixed f)
+//! @appears callablep
+
+//! @decl roxen roxenp()
+//! @appears roxenp
+
+//! @decl int(0..1) r_rm(string f)
+//! @appears r_rm
+//! Alias for rm.
+
+//! @decl int(0..1) r_mv(string from, string to)
+//! @appears r_mv
+//! Alias for mv.
+
+//! @decl array(string) r_get_dir(string dirname)
+//! @appears r_get_dir
+//! Alias for get_dir.
+
+//! @decl Stdio.Stat r_file_stat(string path, void|int(0..1) symlink)
+//! @appears r_file_stat
+//! Alias for file_stat.
+
+//! @decl string capitalize(string text)
+//! @appears capitalize
+//! Alias for String.capitalize.
+
+//! @decl array(int) hsv_to_rgb(array(int) hsv)
+//! @decl array(int) hsv_to_rgb(int h, int s, int v)
+//! @appears hsv_to_rgb
+//! Alias for Colors.hsv_to_rgb.
+
+//! @decl array(int) rgb_to_hsv(array(int) rgb)
+//! @decl array(int) rgb_to_hsv(int r, int g, int b)
+//! @appears rgb_to_hsv
+//! Alias for Colors.rgb_to_hsv
+
+//! @decl array(int) parse_color(string name)
+//! @appears parse_color
+//! Alias for Colors.parse_color
+
+// @module colors
+// @appears colors
+// Alias for Colors
+// @endmodule
