@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.240 1999/12/11 20:44:06 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.241 1999/12/12 23:23:16 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2882,7 +2882,7 @@ void enable_all_modules()
 
 void create(string config)
 {
-  add_parse_module( this_object() );
+  add_parse_module( (object)this_object() );
   name=config;
 
   defvar("ZNoSuchFile", "<title>Sorry. I cannot find this resource</title>\n"
