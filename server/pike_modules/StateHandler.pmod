@@ -1,7 +1,7 @@
 // This is the ChiliMoon state mechanism.
 // Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: StateHandler.pmod,v 1.11 2002/11/10 02:58:02 mani Exp $
+// $Id: StateHandler.pmod,v 1.12 2003/01/26 02:21:45 mani Exp $
 
 #ifdef STATE_HANDLER_DEBUG
 # define STATE_WERR(X) werror("State: "+X+"\n")
@@ -105,7 +105,7 @@ class Page_state {
   string use_session(void|string new_session_id) {
     new_session_id = new_session_id ||
       id->misc->state->session ||
-      roxenp()->create_unique_id();
+      get_core()->create_unique_id();
 
     id->misc->state->session = new_session_id;
 

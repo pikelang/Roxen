@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: roxenlib.pike,v 1.218 2003/01/21 23:46:26 mani Exp $
+// $Id: roxenlib.pike,v 1.219 2003/01/26 02:10:47 mani Exp $
 
 //#pragma strict_types
 
@@ -14,8 +14,6 @@ inherit Roxen;
 //! The old Roxen standard library. Everything defined in this class,
 //! i.e. not the inherited, are to be considered deprecated. The
 //! inherited functions is available directly from @[Roxen] instead.
-
-#define roxen roxenp()
 
 //! Converted the integer @[color] into a six character hexadecimal
 //! value prepended with "#", e.g. "#FF8C00". Does the same thing as

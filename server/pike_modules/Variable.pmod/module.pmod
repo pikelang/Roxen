@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.81 2002/10/01 22:52:06 nilsson Exp $
+// $Id: module.pmod,v 1.82 2003/01/26 02:21:45 mani Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -7,7 +7,7 @@
 //<locale-token project="roxen_config"> LOCALE </locale-token>
 
 #define LOCALE(X,Y)    \
-  ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
+  ([string](mixed)Locale.translate("roxen_config",get_core()->locale->get(),X,Y))
 
 // Increased for each variable, used to index the mappings below. The unique
 // prefix is needed to avoid clobbering variables after server restart.
@@ -1178,7 +1178,7 @@ class FontChoice
   }
   array get_choice_list()
   {
-    return roxenp()->fonts->available_fonts();
+    return get_core()->fonts->available_fonts();
   }
 
   static void create(mixed default_value, void|int flags,
@@ -1584,7 +1584,7 @@ class PortList
     Standards.URI split = Standards.URI( val );
 
     res += "<select name='"+prefix+"prot'>";
-    foreach( sort(indices( roxenp()->protocols )), string p )
+    foreach( sort(indices( get_core()->protocols )), string p )
     {
       if( p == split->scheme )
 	res += "<option selected='t'>"+p+"</option>";
@@ -1754,8 +1754,8 @@ static array(string) verify_port( string port )
 #endif
   int pno;
   if( sscanf( host, "%s:%d", host, pno ) == 2)
-    if( roxenp()->protocols[ lower_case( protocol ) ] 
-        && (pno == roxenp()->protocols[ lower_case( protocol ) ]->default_port ))
+    if( get_core()->protocols[ lower_case( protocol ) ] 
+        && (pno == get_core()->protocols[ lower_case( protocol ) ]->default_port ))
         warning += sprintf(LOCALE(341,"Removed the default port number "
 				  "(%d) from %s"),pno,port)+"\n";
     else
@@ -1764,7 +1764,7 @@ static array(string) verify_port( string port )
 
   port = protocol+"://"+host+path;
 
-  if( !roxenp()->protocols[ protocol ] )
+  if( !get_core()->protocols[ protocol ] )
     warning += sprintf(LOCALE(342,"Warning: The protocol %s is not known "
 			      "by roxen"),protocol)+"\n";
   return ({ (strlen(warning)?warning:0), port });

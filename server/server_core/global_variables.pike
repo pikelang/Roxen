@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.103 2003/01/19 18:33:02 mani Exp $
+// $Id: global_variables.pike,v 1.104 2003/01/26 02:10:46 mani Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 
@@ -30,7 +30,7 @@ private int(0..1) ident_disabled_p() { return [int(0..1)]query("default_ident");
 #ifdef SNMP_AGENT
 private int(0..1) snmp_disabled() { return !query("snmp_agent"); }
 private string snmp_get_cif_domain() {
-  //return(Standards.URI(roxenp()->configurations[0]->get_url()||"http://0.0.0.0")->host);
+  //return(Standards.URI(get_core()->configurations[0]->get_url()||"http://0.0.0.0")->host);
   return("");
 }
 #endif
@@ -414,7 +414,7 @@ The start script attempts to fix this for the standard file locations.</p>");
 			 "The default information is normally fetched from the file "
 			 "server/data/supports in your ChiliMoon directory.") ) )
     -> add_changed_callback( lambda(Variable.Text s) {
-                               roxenp()->initiate_supports();
+                               get_core()->initiate_supports();
                                cache.cache_expire("supports");
                              } );
 
@@ -514,8 +514,8 @@ The start script attempts to fix this for the standard file locations.</p>");
 			    "according to the value of "
 			    "the 'LANG' environment variable.")))
     ->set_changed_callback( lambda(Variable.Variable s) {
-			      roxenp()->set_default_locale(query("locale"));
-			      roxenp()->set_locale();
+			      get_core()->set_default_locale(query("locale"));
+			      get_core()->set_locale();
 			    } );
 
   string secret=Crypto.md5()->update(""+time(1)+random(100000))->digest();

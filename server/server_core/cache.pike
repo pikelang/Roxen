@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.86 2002/11/02 20:33:05 mani Exp $
+// $Id: cache.pike,v 1.87 2003/01/26 02:10:46 mani Exp $
 
 // #pragma strict_types
 
@@ -153,7 +153,8 @@ mixed cache_set(string cache, mixed key, mixed val, int|void tm)
 //! Clean the cache.
 void cache_clean()
 {
-  int gc_time=[int](([function(string:mixed)]roxenp()->query)("mem_cache_gc"));
+  int gc_time=[int](([function(string:mixed)]get_core()->
+		     query)("mem_cache_gc"));
   string a, b;
   array c;
   mapping(string:array) cache;
@@ -191,7 +192,7 @@ void cache_clean()
       }
     }
   }
-  roxenp()->background_run (gc_time, cache_clean);
+  get_core()->background_run (gc_time, cache_clean);
 }
 
 
@@ -297,7 +298,7 @@ private void session_cache_handler() {
   }
 
   session_buckets = ({ ([]) }) + session_buckets[..SESSION_BUCKETS-2];
-  roxenp()->background_run(SESSION_SHIFT_TIME, session_cache_handler);
+  get_core()->background_run(SESSION_SHIFT_TIME, session_cache_handler);
 }
 
 // Stores all sessions that should be persistent in the database.
@@ -364,7 +365,7 @@ mixed get_session_data(string id) {
 //!   get_session_data, clear_session
 string set_session_data(mixed data, void|string id, void|int persistence,
 			void|int(0..1) store) {
-  if(!id) id = ([function(void:string)]roxenp()->create_unique_id)();
+  if(!id) id = ([function(void:string)]get_core()->create_unique_id)();
   session_persistence[id] = persistence;
   session_buckets[0][id] = data;
   max_persistence = max(max_persistence, persistence);
@@ -393,8 +394,8 @@ void init()
   setup_tables();
 
   // Init call outs
-  roxenp()->background_run(60, cache_clean);
-  roxenp()->background_run(SESSION_SHIFT_TIME, session_cache_handler);
+  get_core()->background_run(60, cache_clean);
+  get_core()->background_run(SESSION_SHIFT_TIME, session_cache_handler);
 
   CACHE_WERR("Cache garb call outs installed.\n");
 }

@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.26 2003/01/19 18:33:02 mani Exp $
+ * $Id: snmpagent.pike,v 1.27 2003/01/26 02:10:47 mani Exp $
  *
  * The ChiliMoon SNMP agent
  * Copyright © 2001, Honza Petrous, hop@unibase.cz
@@ -44,8 +44,9 @@ Developer notes:
  */
 
 inherit "global_variables";
+// NGSERVER: We shouldn't inherit Roxen here (gets into core object)...
 inherit Roxen;
-#define roxen roxenp()
+#define core get_core()
 
 
 
@@ -160,7 +161,7 @@ class SNMPagent {
 
   array get_virtserv() { return OBJ_COUNT(sizeof(vsdb)); }
 
-  int get_uptime() { return (time(1) - roxen->start_time)*100; }
+  int get_uptime() { return (time(1) - core->start_time)*100; }
 
   void create() {
     vsdb = ([]);
@@ -309,7 +310,7 @@ class SNMPagent {
   //! Returns domain name of the config. int. virtual server
   private string get_cif_domain() {
 
-    return(Standards.URI(roxen->configurations[0]->get_url()||"http://0.0.0.0")->host);
+    return(Standards.URI(core->configurations[0]->get_url()||"http://0.0.0.0")->host);
   }
 
   //! Opens the SNMP port. Then waits for the requests. 
@@ -494,8 +495,8 @@ class SNMPagent {
 
     if(zero_type(vsdb[vsid])) {
       report_debug("SNMPagent: added server %O(#%d)\n",
-		   roxen->configurations[vsid]->name, vsid);
-	  vsdb += ([vsid: roxen->configurations[vsid]]);
+		   core->configurations[vsid]->name, vsid);
+	  vsdb += ([vsid: core->configurations[vsid]]);
      }
 
     // some tabulars handlers ...
@@ -508,42 +509,42 @@ class SNMPagent {
   string get_virtservname(int vsid) {
     if(zero_type(vsdb[vsid]))
       return 0; // bad index number
-    return (roxen->configurations[vsid]->name);
+    return (core->configurations[vsid]->name);
   }
 
   //! Returns description of the virtual server
   string get_virtservdesc(int vsid) {
     if(zero_type(vsdb[vsid]))
       return 0; // bad index number
-    return "blahblah!"; //(roxen->configurations[vsid]->name);
+    return "blahblah!"; //(core->configurations[vsid]->name);
   }
 
   //! Returns send data statistics of the virtual server
   int get_virtservsdata(int vsid) {
     if(zero_type(vsdb[vsid]))
       return -1; // bad index number
-    return (roxen->configurations[vsid]->sent);
+    return (core->configurations[vsid]->sent);
   }
 
   //! Returns received data statistics of the virtual server
   int get_virtservrdata(int vsid) {
     if(zero_type(vsdb[vsid]))
       return -1; // bad index number
-    return (roxen->configurations[vsid]->received);
+    return (core->configurations[vsid]->received);
   }
 
   //! Returns send headers statistics of the virtual server
   int get_virtservshdrs(int vsid) {
     if(zero_type(vsdb[vsid]))
       return -1; // bad index number
-    return (roxen->configurations[vsid]->hsent);
+    return (core->configurations[vsid]->hsent);
   }
 
   //! Returns request statistics of the virtual server
   int get_virtservreqs(int vsid) {
     if(zero_type(vsdb[vsid]))
       return -1; // bad index number
-    return (roxen->configurations[vsid]->requests);
+    return (core->configurations[vsid]->requests);
   }
 
 
@@ -552,7 +553,7 @@ class SNMPagent {
 
     if(!zero_type(vsdb[vsid])) {
       report_debug("SNMPagent: deleted server %O(#%d)\n",
-		   roxen->configurations[vsid]->name, vsid);
+		   core->configurations[vsid]->name, vsid);
 	  vsdb -= ([ vsid: 0 ]);
 	}
 
@@ -762,7 +763,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("ChiliMoon SNMP agent v"+("$Revision: 1.26 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("ChiliMoon SNMP agent v"+("$Revision: 1.27 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
@@ -772,7 +773,7 @@ array get_sysoid() {
 
 //! External function for MIB object 'system.sysUpTime'
 array get_sysuptime() {
-  return OBJ_TICK((time(1) - roxen->start_time)*100);
+  return OBJ_TICK((time(1) - core->start_time)*100);
 }
 
 //! External function for MIB object 'system.sysContact'
@@ -952,8 +953,8 @@ class SubMIBRoxenVS {
 	          rdata["1.3.6.1.2.1.1.3.0"] += ({"tick", get_uptime() });
 		  if(attrval == 1 || attrval == 2) {
 		    report_warning("SNMPagent: Initiated " + ((attrval==1)?"restart":"shutdown") + " from snmp://" + pdata[msgid]->community + "@" + pdata[msgid]->ip + "/\n");
-	  	    if (attrval == 1) roxen->restart(0.5);
-	  	    if (attrval == 2) roxen->shutdown(0.5);
+	  	    if (attrval == 1) core->restart(0.5);
+	  	    if (attrval == 2) core->shutdown(0.5);
 		  }
 	        } else
 	          snmpbadcommuses++;
@@ -1184,8 +1185,8 @@ class SubMIBRoxenBoot {
       setflg = 1;
       if(val == 1 || val == 2) {
 	report_warning("SNMPagent: Initiated " + ((val==1)?"restart":"shutdown") + " from snmp://" + pkt->community + "@" + pkt->ip + "/\n");
-	if (val == 1) roxen->restart(0.5);
-	if (val == 2) roxen->shutdown(0.5);
+	if (val == 1) core->restart(0.5);
+	if (val == 2) core->shutdown(0.5);
       }
     }
     return ({ setflg, "" });

@@ -2,7 +2,7 @@
 // Copyright © 1999 - 2001, Roxen IS.
 //
 // Handles supports
-// $Id: supports.pike,v 1.28 2002/10/22 00:06:13 nilsson Exp $
+// $Id: supports.pike,v 1.29 2003/01/26 02:10:47 mani Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -116,7 +116,7 @@ public void initiate_supports()
   supports = ([ 0:({ }) ]);
   default_supports = (< >);
   default_client_var = ([ ]);
-  parse_supports_string([string]roxenp()->query("Supports"), 0, ([]) );
+  parse_supports_string([string]get_core()->query("Supports"), 0, ([]) );
 }
 
 private array(multiset(string)|mapping(string:string)) lookup_supports(string from)

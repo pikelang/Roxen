@@ -1,8 +1,8 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: socket.pike,v 1.25 2002/10/22 00:06:13 nilsson Exp $
+// $Id: socket.pike,v 1.26 2003/01/26 02:10:47 mani Exp $
 
-#define roxen roxenp()
+#define core get_core()
 
 #ifdef SOCKET_DEBUG
 # define SOCKET_WERR(X) report_debug("SOCKETS: "+X+"\n");
@@ -88,7 +88,7 @@ void async_connect(string host, int port, function|void callback,
 		   mixed ... args)
 {
   SOCKET_WERR("async_connect requested to "+host+":"+port);
-  roxen->host_to_ip(host, got_host_name, host, port, callback, @args);
+  core->host_to_ip(host, got_host_name, host, port, callback, @args);
 }
 
 
@@ -114,7 +114,7 @@ void async_pipe(Stdio.File to, Stdio.File from,
   if(callback)
     pipe->set_done_callback(callback, id);
   else if(cl) {
-    cache = roxen->cache_file(cl, file);
+    cache = core->cache_file(cl, file);
     if(cache)
     {
       SOCKET_WERR("Using normal pipe with done callback.");
@@ -125,7 +125,7 @@ void async_pipe(Stdio.File to, Stdio.File from,
       pipe->start();
       return;
     }
-    if(cache = roxen->create_cache_file(cl, file))
+    if(cache = core->create_cache_file(cl, file))
     {
       SOCKET_WERR("Using normal pipe with cache.");
       pipe->output(cache->file);
@@ -146,7 +146,7 @@ void async_cache_connect(string host, int port, string cl,
 {
   object cache;
   SOCKET_WERR("async_cache_connect requested to "+host+":"+port);
-  cache = roxen->cache_file(cl, entry);
+  cache = core->cache_file(cl, entry);
   if(cache)
   {
     object f;
@@ -156,5 +156,5 @@ void async_cache_connect(string host, int port, string cl,
     destruct(cache);
     return callback(f, @args);
   }
-  roxen->host_to_ip(host, got_host_name, host, port, callback, @args);
+  core->host_to_ip(host, got_host_name, host, port, callback, @args);
 }

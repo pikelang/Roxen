@@ -176,7 +176,7 @@ void run_tests( Configuration c )
   // Test globally added functions that are added from roxen and
   // loader.
 
-  test_equal( roxen, roxenp );
+  test_equal( core, get_core );
   
 #ifndef __NT__
   // Note: Assumes writable /tmp, won't work on NT

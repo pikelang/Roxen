@@ -12,7 +12,7 @@ inherit "html";
 //<locale-token project="roxen_config"> LOCALE </locale-token>
 
 #define LOCALE(X,Y)    \
-  ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
+  ([string](mixed)Locale.translate("roxen_config",get_core()->locale->get(),X,Y))
 
 //! Transforms the form variables given in the @[vl] attribute
 //! to the internal time representation as follows.

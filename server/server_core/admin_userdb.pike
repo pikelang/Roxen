@@ -455,7 +455,7 @@ class ConfigurationSettings
 //			     LOCALE(19, "Select the Administration interface "
 //				    "language.")))
 //    ->set_changed_callback( lambda(Variable.Variable s) {
-//				roxenp()->set_locale();
+//				get_core()->set_locale();
 //			      } );
 
 

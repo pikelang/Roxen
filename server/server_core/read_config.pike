@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: read_config.pike,v 1.71 2002/11/17 16:38:59 mani Exp $
+// $Id: read_config.pike,v 1.72 2003/01/26 02:10:47 mani Exp $
 
 #include <module.h>
 #include <module_constants.h>
@@ -79,8 +79,8 @@ void really_save_it( string cl, mapping data, int counter )
   mixed err = catch 
   {
     Configuration config;
-#if constant( roxenp )
-    config = roxenp();
+#if constant( get_core )
+    config = get_core();
     foreach(config->configurations||({}), Configuration c)
       if(c->name == cl)
       {

@@ -4,7 +4,7 @@
 // ChiliMoon bootstrap program. Sets up the environment,
 // replces the master, adds custom functions and starts core.pike.
 
-// $Id: loader.pike,v 1.370 2003/01/21 23:28:40 mani Exp $
+// $Id: loader.pike,v 1.371 2003/01/26 02:10:46 mani Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -29,7 +29,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: loader.pike,v 1.370 2003/01/21 23:28:40 mani Exp $";
+constant cvs_version="$Id: loader.pike,v 1.371 2003/01/26 02:10:46 mani Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2103,7 +2103,10 @@ void do_main( int argc, array(string) argv )
   add_constant("werror",        roxen_perror);
   add_constant("perror",        roxen_perror); // For compatibility.
   add_constant("roxen_perror",  roxen_perror);
+  // NGSERVER: Remove roxenp
   add_constant("roxenp",        lambda() { return core; });
+  add_constant("get_core",      lambda() { return core; });
+  // NGSERVER: Remove these three
   add_constant("ST_MTIME",      ST_MTIME );
   add_constant("ST_CTIME",      ST_CTIME );
   add_constant("ST_SIZE",       ST_SIZE );
@@ -2322,8 +2325,11 @@ void do_main( int argc, array(string) argv )
   return;
 }
 
-//! @decl object roxenp()
-//! @appears roxenp
+//! @decl object get_core()
+//! @appears get_core
+//! Returns the server core object, normally availabe through
+//! @tt{core@}. Only used in code compiled before the core is
+//! compiled.
 
 //! @decl string capitalize(string text)
 //! @appears capitalize

@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.161 2003/01/15 23:23:40 marcus Exp $
+// $Id: Roxen.pmod,v 1.162 2003/01/26 02:21:45 mani Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -8,7 +8,6 @@
 #include <module.h>
 #include <variables.h>
 #include <stat.h>
-#define roxen roxenp()
 
 #ifdef HTTP_DEBUG
 # define HTTP_WERR(X) report_debug("HTTP: "+X+"\n");
@@ -121,13 +120,13 @@ int ip_to_int(string ip)
 string http_roxen_config_cookie(string from)
 {
   return "RoxenConfig="+http_encode_cookie(from)
-    +"; expires=" + http_date (3600*24*365*2 + time (1)) + "; path=/";
+    +"; expires=" + http_date(3600*24*365*2 + time (1)) + "; path=/";
 }
 
 string http_roxen_id_cookie()
 {
-  return "RoxenUserID=" + roxen->create_unique_id() + "; expires=" +
-    http_date (3600*24*365*2 + time (1)) + "; path=/";
+  return "RoxenUserID=" + get_core()->create_unique_id() + "; expires=" +
+    http_date(3600*24*365*2 + time (1)) + "; path=/";
 }
 
 
@@ -372,7 +371,7 @@ static class Delayer
     resumed = 1;
     if( !id )
       error("Cannot resume request -- connection close\n");
-    roxenp()->handle( id->handle_request );
+    get_core()->handle( id->handle_request );
     id = 0; // free the reference.
   }
 
@@ -830,8 +829,8 @@ mapping build_env_vars(string f, RequestID id, string path_info)
 
   new["REMOTE_ADDR"]=addr;
 
-  if(roxen->quick_ip_to_host(addr) != addr)
-    new["REMOTE_HOST"]=roxen->quick_ip_to_host(addr);
+  if(get_core()->quick_ip_to_host(addr) != addr)
+    new["REMOTE_HOST"]=get_core()->quick_ip_to_host(addr);
 
   catch {
     if(id->my_fd)
@@ -1701,7 +1700,7 @@ RoxenModule get_module (string modname)
       !sizeof (cname) || !sizeof(mname)) return 0;
   sscanf (mname, "%s#%d", mname, mid);
 
-  if (Configuration conf = roxen->get_configuration (cname))
+  if (Configuration conf = get_core()->get_configuration (cname))
     if (mapping moddata = conf->modules[mname])
       return moddata->copies[mid];
 
@@ -2767,7 +2766,7 @@ class SRestore
   {
     foreach( indices( osc ), string o ) 
       add_constant( o, osc[o] );
-    add_constant( "roxen", roxenp() );
+    add_constant( "roxen", get_core() );
   }
 }
 
@@ -2874,21 +2873,21 @@ class ScopeRoxen {
     {
      case "uptime":
        CACHE(c->id,1);
-       return ENCODE_RXML_INT(time(1)-roxenp()->start_time, type);
+       return ENCODE_RXML_INT(time(1)-get_core()->start_time, type);
      case "uptime-days":
        CACHE(c->id,3600*2);
-       return ENCODE_RXML_INT((time(1)-roxenp()->start_time)/3600/24, type);
+       return ENCODE_RXML_INT((time(1)-get_core()->start_time)/3600/24, type);
      case "uptime-hours":
        CACHE(c->id,1800);
-       return ENCODE_RXML_INT((time(1)-roxenp()->start_time)/3600, type);
+       return ENCODE_RXML_INT((time(1)-get_core()->start_time)/3600, type);
      case "uptime-minutes":
        CACHE(c->id,60);
-       return ENCODE_RXML_INT((time(1)-roxenp()->start_time)/60, type);
+       return ENCODE_RXML_INT((time(1)-get_core()->start_time)/60, type);
      case "hits-per-minute":
        CACHE(c->id,2);
        // FIXME: Use float here instead?
        return ENCODE_RXML_INT(c->id->conf->requests /
-			      ((time(1)-roxenp()->start_time)/60 + 1),
+			      ((time(1)-get_core()->start_time)/60 + 1),
 			      type);
      case "hits":
        NOCACHE(c->id);
@@ -2904,21 +2903,22 @@ class ScopeRoxen {
      case "sent-per-minute":
        CACHE(c->id,2);
        return ENCODE_RXML_INT(c->id->conf->sent /
-			      ((time(1)-roxenp()->start_time)/60 || 1),
+			      ((time(1)-get_core()->start_time)/60 || 1),
 			      type);
      case "sent-kbit-per-second":
        CACHE(c->id,2);
        // FIXME: Use float here instead?
        return ENCODE_RXML_TEXT(sprintf("%1.2f",
 				       ((c->id->conf->sent*8)/1024.0/
-					(time(1)-roxenp()->start_time || 1))),
+					(time(1)-get_core()->
+					 start_time || 1))),
 			       type);
      case "ssl-strength":
        return ENCODE_RXML_INT(ssl_strength, type);
      case "pike-version":
        return ENCODE_RXML_TEXT(pike_version, type);
      case "version":
-       return ENCODE_RXML_TEXT(roxenp()->version(), type);
+       return ENCODE_RXML_TEXT(get_core()->version(), type);
      case "base-version":
        return ENCODE_RXML_TEXT(__roxen_version__, type);
      case "build":
@@ -2937,12 +2937,12 @@ class ScopeRoxen {
        return ENCODE_RXML_TEXT(tmp, type);
      case "locale":
        NOCACHE(c->id);
-       return ENCODE_RXML_TEXT(roxenp()->locale->get(), type);
+       return ENCODE_RXML_TEXT(get_core()->locale->get(), type);
      case "path":
        return ENCODE_RXML_TEXT(c->id->misc->site_prefix_path, type);
      case "unique-id":
        NOCACHE(c->id);
-       return ENCODE_RXML_TEXT(roxenp()->create_unique_id(), type);
+       return ENCODE_RXML_TEXT(get_core()->create_unique_id(), type);
     }
     mixed val = c->misc->scope_roxen[var];
     if (zero_type(val)) return RXML.nil;
@@ -3147,8 +3147,8 @@ class ScopeModVar
 	switch( type )
 	{
 	  case "string":
-	    return roxenp()->find_module( sname ) ?
-	      roxenp()->find_module( sname )->get_name() : sname;
+	    return get_core()->find_module( sname ) ?
+	      get_core()->find_module( sname )->get_name() : sname;
 	}
       }
 
@@ -3181,8 +3181,8 @@ class ScopeModVar
       switch( type )
       {
 	case "string":
-	  return roxenp()->find_module( sname ) ?
-	    roxenp()->find_module( sname )->get_name() : sname;
+	  return get_core()->find_module( sname ) ?
+	    get_core()->find_module( sname )->get_name() : sname;
       }
     }
 
@@ -3208,7 +3208,7 @@ class ScopeModVar
   mixed `[]( string what, void|RXML.Context ctx )
   {
     if( what == "global" )
-      return Modules( ([ 0:roxenp() ]), "roxen" );
+      return Modules( ([ 0:get_core() ]), "roxen" );
     if (!ctx) ctx = RXML_CONTEXT;
     if( what == "site" )
       return Modules( ([ 0: ctx->id->conf ]), "site" );

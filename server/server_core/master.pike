@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
   return connect_to_my_mysql( 0, "local" )->query( q, @e );
 }
 
-constant cvs_version = "$Id: master.pike,v 1.133 2003/01/21 23:28:41 mani Exp $";
+constant cvs_version = "$Id: master.pike,v 1.134 2003/01/26 02:10:46 mani Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -749,7 +749,7 @@ program handle_inherit (string pname, string current_file, object|void handler)
 {
   if (has_prefix (pname, "chili-module:")) {
     pname = pname[sizeof ("chili-module:")..];
-    if (object modinfo = roxenp()->find_module (pname))
+    if (object modinfo = get_core()->find_module (pname))
       if (program ret = cast_to_program (modinfo->filename, current_file,
 					 handler))
 	return ret;
@@ -759,7 +759,7 @@ program handle_inherit (string pname, string current_file, object|void handler)
   // NGSERVER: Remove this
   if (has_prefix (pname, "roxen-module://")) {
     pname = pname[sizeof ("roxen-module://")..];
-    if (object modinfo = roxenp()->find_module (pname))
+    if (object modinfo = get_core()->find_module (pname))
       if (program ret = cast_to_program (modinfo->filename, current_file,
 					 handler))
 	return ret;

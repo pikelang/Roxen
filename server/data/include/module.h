@@ -1,6 +1,6 @@
 // -*- pike -*-
 //
-// $Id: module.h,v 1.58 2003/01/23 17:37:29 mani Exp $
+// $Id: module.h,v 1.59 2003/01/26 02:20:59 mani Exp $
 
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
@@ -14,7 +14,7 @@
 #ifdef IN_ROXEN
 #define GLOBVAR(x) query( #x )
 #else /* !IN_ROXEN */
-#define GLOBVAR(x) roxenp()->query(#x)
+#define GLOBVAR(x) core->query(#x)
 #endif /* IN_ROXEN */
 
 #define CACHE(seconds) ([mapping(string:mixed)]id->misc)->cacheable=min(([mapping(string:mixed)]id->misc)->cacheable,seconds)

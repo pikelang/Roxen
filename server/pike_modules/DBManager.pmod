@@ -1,6 +1,6 @@
 // Symbolic DB handling.
 //
-// $Id: DBManager.pmod,v 1.62 2003/01/23 17:36:35 mani Exp $
+// $Id: DBManager.pmod,v 1.63 2003/01/26 02:21:45 mani Exp $
 
 //! Manages database aliases and permissions
 
@@ -323,7 +323,7 @@ mapping(string:mapping(string:int)) get_permission_map( )
       res[n] = ([]);
   }
   foreach( indices(res), string q )
-    foreach( roxenp()->configurations, Configuration c )
+    foreach( get_core()->configurations, Configuration c )
       if( zero_type( res[q][c->name] ) )
         res[q][c->name] = 0;
   return res;
@@ -610,7 +610,7 @@ void copy_db_md( string oname, string nname )
 {
   mapping m = get_permission_map( )[oname];
   foreach( indices( m ), string s )
-    if( Configuration c = roxenp()->find_configuration( s ) )
+    if( Configuration c = get_core()->find_configuration( s ) )
       set_permission( nname, c, m[s] );
   changed();
 }
@@ -1083,7 +1083,7 @@ CREATE TABLE db_permissions (
     // roxen)
     call_out(
       lambda(){
-	foreach( roxenp()->configurations, object c )
+	foreach( get_core()->configurations, object c )
 	{
 	  set_permission( "local", c, WRITE );
 	}

@@ -5,7 +5,7 @@ inherit Variable.String;
 // Locale macros
 //<locale-token project="roxen_config"> LOCALE </locale-token>
 #define LOCALE(X,Y)    \
-   ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
+   ([string](mixed)Locale.translate("roxen_config",get_core()->locale->get(),X,Y))
 
 constant type = "Date";
 string date_type = "%Y-%M-%D";

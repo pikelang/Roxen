@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: disk_cache.pike,v 1.66 2003/01/19 18:33:02 mani Exp $
+// $Id: disk_cache.pike,v 1.67 2003/01/26 02:10:46 mani Exp $
 
 #include <config.h>
 #include <module_constants.h>
@@ -18,8 +18,8 @@
 #endif
 
 #undef QUERY
-#define QUERY(x) roxenp()->query(#x)
-#define SET(x,Y) roxenp()->set(#x, Y)
+#define QUERY(x) get_core()->query(#x)
+#define SET(x,Y) get_core()->set(#x, Y)
 
 string file_name_r(string what, int nd, int hv)
 {

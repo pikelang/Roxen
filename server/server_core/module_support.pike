@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.127 2003/01/21 23:28:41 mani Exp $
+// $Id: module_support.pike,v 1.128 2003/01/26 02:10:47 mani Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>
@@ -100,7 +100,7 @@ class BasicModule
   static string _module_local_identifier;
   static string _module_identifier =
     lambda() {
-      mixed init_info = roxenp()->bootstrap_info->get();
+      mixed init_info = get_core()->bootstrap_info->get();
       if (arrayp (init_info)) {
 	[_my_configuration, _module_local_identifier] = init_info;
 	return _my_configuration->name + "/" + _module_local_identifier;
@@ -220,7 +220,7 @@ class ModuleInfo( string sname, string filename )
     if( mappingp( name ) )
     {
       string q;
-      if( q = name[ roxenp()->locale->get() ] )
+      if( q = name[ get_core()->locale->get() ] )
         return q;
       return name[ "standard" ];
     }
@@ -233,7 +233,7 @@ class ModuleInfo( string sname, string filename )
     if( mappingp( description ) )
     {
       string q;
-      if( q = description[ roxenp()->locale->get() ] )
+      if( q = description[ get_core()->locale->get() ] )
         return q;
       return description[ "standard" ];
     }
@@ -412,7 +412,7 @@ class ModuleInfo( string sname, string filename )
 
   int find_module( string sn )
   {
-    foreach( roxenp()->query( "ModuleDirs" ), string dir )
+    foreach( get_core()->query( "ModuleDirs" ), string dir )
       if( rec_find_module( sn, dir ) )
         return 1;
   }
@@ -539,12 +539,12 @@ array(ModuleInfo) all_modules()
   if( !modules )
   {
     modules = ([]);
-    module_cache = roxenp()->AdminIFCache( "modules" );
+    module_cache = get_core()->AdminIFCache( "modules" );
   }
 
   array(string) possible = ({});
 
-  foreach( roxenp()->query( "ModuleDirs" ), string dir )
+  foreach( get_core()->query( "ModuleDirs" ), string dir )
     possible |= rec_find_all_modules( dir );
 
   map( possible, find_module, 1 );
@@ -575,7 +575,7 @@ array(string) find_all_pike_module_directories()
   };
 
   all_pike_module_cache = ({});
-  foreach( roxenp()->query( "ModuleDirs" ), string dir )
+  foreach( get_core()->query( "ModuleDirs" ), string dir )
     all_pike_module_cache += recurse( dir );
   return all_pike_module_cache;
 }
@@ -590,7 +590,7 @@ ModuleInfo find_module( string name, int|void noforce )
   if( !modules )
   {
     modules = ([]);
-    module_cache = roxenp()->AdminIFCache( "modules" );
+    module_cache = get_core()->AdminIFCache( "modules" );
   }
 
   if( modules[ name ] )

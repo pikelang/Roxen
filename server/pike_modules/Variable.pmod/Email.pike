@@ -10,7 +10,7 @@ static int _may_be_empty=0;
 //<locale-token project="roxen_config"> LOCALE </locale-token>
 
 #define LOCALE(X,Y)    \
-  ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
+  ([string](mixed)Locale.translate("roxen_config",get_core()->locale->get(),X,Y))
 
 
 array(string) verify_set( string new_value ) {

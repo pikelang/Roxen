@@ -1,12 +1,10 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: newdecode.pike,v 1.35 2003/01/21 23:46:26 mani Exp $
+// $Id: newdecode.pike,v 1.36 2003/01/26 02:10:47 mani Exp $
 
 // The magic below is for the 'install' program
-#ifndef roxenp
-# if !efun(roxenp)
-#  define roxenp this_object
-# endif
+# if !efun(get_core)
+#  define get_core this_object
 #endif
 
 #include <roxen.h>
@@ -206,7 +204,7 @@ string encode_config_region(mapping m, string reg, Configuration c,
       string cmt;
       if (comments)
 	if( catch {
-	  string|mapping name=roxenp()->find_module( (q/"#")[0] )->name;
+	  string|mapping name=get_core()->find_module( (q/"#")[0] )->name;
 	  if(mappingp(name)) name=name->standard;
 	  cmt = " <!-- " + replace(replace(name, "--", "- -" ), "--", "- -" ) + " -->";
 	})
@@ -264,7 +262,7 @@ string encode_regions(mapping r, Configuration c)
 {
   string v;
   string res = (xml_header + "\n\n");
-  int comments = roxenp()->query ("config_file_comments");
+  int comments = get_core()->query ("config_file_comments");
   foreach(r->EnabledModules ?
 	  ({"EnabledModules"}) + sort(indices(r) - ({"EnabledModules"})) :
 	  sort(indices(r)), v)
