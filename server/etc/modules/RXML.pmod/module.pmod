@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.121 2001/02/17 17:57:35 mast Exp $
+//! $Id: module.pmod,v 1.122 2001/03/26 16:37:08 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1943,13 +1943,12 @@ class Frame
 	if (!stringp (this_object()->raw_tag_text))
 	  fatal_error ("raw_tag_text must have a string value.\n");
 #endif
-	sscanf (this_object()->raw_tag_text, "%*[^ \t\n\r]%s", string str);
-#ifdef DEBUG
-	if (!str || !sizeof (str) || str[-1] != '>')
-	  fatal_error ("Failed to parse tag args from %O.\n",
-		       this_object()->raw_tag_text);
-#endif
-	args = Parser_HTML()->parse_tag_args (str);
+	if (mixed err = catch {
+	  Parser_HTML()->_set_tag_callback (lambda (object p) {
+					      args = p->tag_args();
+					      throw (0);
+					    })->finish (this_object()->raw_tag_text);
+	}) throw (err);
 #ifdef DEBUG
 	if (!mappingp (args)) fatal_error ("Failed to parse tag args from %O.\n",
 					   this_object()->raw_tag_text);
