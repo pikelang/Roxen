@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.125 2002/05/02 17:54:03 mast Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.126 2002/05/06 15:14:38 mast Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -292,6 +292,16 @@ void init_security()
 
 mapping dump_constants = ([]), dump_constants_rev = ([]);
 
+// These reverse mapping are not only for speed; we use mapping
+// lookups to avoid calling the clever `== that objects might contain.
+// E.g. Image.Color.black thinks it's equal to 0, which means that
+// search (all_constants(), Image.Color.black) == "UNDEFINED".
+static mapping(mixed:string) all_constants_rev = ([]);
+static mapping(mixed:string) __builtin_rev =
+  mkmapping (values (__builtin), indices (__builtin));
+static mapping(mixed:string) _static_modules_rev =
+  mkmapping (values (_static_modules), indices (_static_modules));
+static mapping(object:program) objects_rev = ([]);
 
 mixed add_dump_constant( string f, mixed what )
 {
@@ -327,35 +337,40 @@ class MyCodec
   {
 #ifdef DUMP_DEBUG
     if (objectp (x))
-      DUMP_DEBUG_ENTER ("nameof (object %s)\n", Program.defined (object_program (x)));
-    if (programp (x))
+      DUMP_DEBUG_ENTER ("nameof (object %s: %O)\n",
+			Program.defined (object_program (x)), x);
+    else if (functionp (x))
+      DUMP_DEBUG_ENTER ("nameof (function %s in object %s: %O)\n",
+			Function.defined (x) || "?",
+			function_object (x) &&
+			Program.defined (object_program (function_object (x))) || "?",
+			function_object (x));
+    else if (programp (x))
       DUMP_DEBUG_ENTER ("nameof (program %s)\n", Program.defined (x));
     else
       DUMP_DEBUG_ENTER ("nameof (%O)\n", x);
 #endif
 
-    if(zero_type(x)) DUMP_DEBUG_RETURN (([])[0]);
-    if( x == 0 )     DUMP_DEBUG_RETURN (0);
-
     if(p!=x)
     {
-      mixed tmp;
-
       if( string n = dump_constants_rev[ x ] )
 	DUMP_DEBUG_RETURN ("defun:"+n);
 
-      if(tmp=search(all_constants(),x))
-	DUMP_DEBUG_RETURN ("efun:"+tmp);
+      if (sizeof (all_constants()) != sizeof (all_constants_rev))
+	// We assume that all_constants() doesn't shrink.
+	all_constants_rev =
+	  mkmapping (values (all_constants()), indices (all_constants()));
 
-      if((tmp=search(values(__builtin), x))!=-1)
-	DUMP_DEBUG_RETURN ("resolv:__builtin."+(indices(__builtin)[tmp]));
-
-      if((tmp=search(values(_static_modules), x))!=-1)
-	DUMP_DEBUG_RETURN ("resolv:_static_modules."+(indices(_static_modules)[tmp]));
+      if (string name = all_constants_rev[x])
+	DUMP_DEBUG_RETURN ("efun:" + name);
+      if (string name = __builtin_rev[x])
+	DUMP_DEBUG_RETURN ("resolv:__builtin." + name);
+      if (string name = _static_modules_rev[x])
+	DUMP_DEBUG_RETURN ("resolv:_static_modules." + name);
 
       if ( programp (x) )
       {
-	if(tmp=search(programs,x))
+	if(mixed tmp=search(programs,x))
 	  DUMP_DEBUG_RETURN (tmp);
 
 	if( (program)x != x )
@@ -380,9 +395,14 @@ class MyCodec
         if(resolv(dirname) == x)
 	  DUMP_DEBUG_RETURN ("resolv:"+dirname);
       }
-      while (1) 
+
+      while (1)
       {
-	if(mixed tmp=search(objects,x))
+	if (sizeof (objects) != sizeof (objects_rev))
+	  // We assume that objects doesn't shrink.
+	  objects_rev = mkmapping (values (objects), indices (objects));
+
+	if(mixed tmp=objects_rev[x])
 	{
 	  if(tmp=search(programs,tmp))
 	  {
@@ -390,18 +410,23 @@ class MyCodec
 	    else DUMP_DEBUG_RETURN (tmp);
 	  }
 	}
+
 	object parent;
 	if (!catch (parent = function_object (object_program (x))) && parent) {
-	  array ind = indices (parent), val = values (parent);
-	  int i = search (val, x);
-	  if (i > -1) {
+	  mapping(mixed:string) rev = mkmapping (values (parent), indices (parent));
+	  // Use a mapping since objects with tricky `== can fool
+	  // search(). (Objects with tricky __hash are a bit more
+	  // uncommon and less prone to consider the object to be
+	  // equal to a string or an integer or whatnot.)
+	  if (string id = rev[x]) {
 	    x = parent;
-	    ids = ({ind[i]}) + ids;
+	    ids = ({id}) + ids;
 	    continue;
 	  }
 	}
 	break;
       }
+
       if( x == mm )
 	DUMP_DEBUG_RETURN ("/master");
     }
@@ -414,74 +439,72 @@ class MyCodec
   function functionof(string x)
   {
     DUMP_DEBUG_ENTER ("functionof (%O)\n", x);
-    if(!stringp(x))
-      DUMP_DEBUG_RETURN (lambda(){});
-    if( sscanf(x,"defun:%s",x) )
-      DUMP_DEBUG_RETURN (dump_constants[x]);
-    if( sscanf(x,"efun:%s",x) )
-      DUMP_DEBUG_RETURN (all_constants()[x]);
-    if(sscanf(x,"resolv:%s",x)) 
-      DUMP_DEBUG_RETURN (resolv(x));
+    string s;
+    if (sscanf(x,"defun:%s",s)) {
+      if (function v = dump_constants[s])
+	DUMP_DEBUG_RETURN (v);
+    }
+    else if (sscanf(x,"efun:%s",s)) {
+      if (function v = all_constants()[s])
+	DUMP_DEBUG_RETURN (v);
+    }
+    else if (sscanf(x,"resolv:%s",s)) {
+      if (function v = resolv(s))
+	DUMP_DEBUG_RETURN (v);
+    }
     error("Failed to decode function %s\n",x);
   }
-
 
   object objectof(string x)
   {
     DUMP_DEBUG_ENTER ("objectof (%O)\n", x);
-    if(!stringp(x))
-      DUMP_DEBUG_RETURN (class{}());
-    if( sscanf(x,"defun:%s",x) )
-      DUMP_DEBUG_RETURN (dump_constants[x]);
-    if(sscanf(x,"efun:%s",x))
-    {
-#ifdef DUMP_DEBUG
-      if( !objectp( all_constants()[x] ) )
-        error("Failed to decode object efun:%s\n", x );
-#endif
-      DUMP_DEBUG_RETURN (all_constants()[x]);
+    if (sscanf (x, "defun:%s", string s)) {
+      if (object v = dump_constants[s])
+	DUMP_DEBUG_RETURN (v);
     }
-    if(sscanf(x,"resolv:%s",x)) 
-      DUMP_DEBUG_RETURN (resolv(x));
-    sscanf (x, "%s//%s", x, string ids);
-    object tmp;
-    if(objectp(tmp=(object)x)) {
-      if (ids)
-	foreach (ids / ".", string id)
-	  if (!objectp (tmp = tmp[id]))
-	    error("Failed to decode object %s\n", x );
-      DUMP_DEBUG_RETURN (tmp);
+    else if (sscanf (x, "efun:%s", string s)) {
+      if (object v = all_constants()[s])
+	DUMP_DEBUG_RETURN (v);
     }
-    DUMP_DEBUG_RETURN (0);
+    else if (sscanf (x, "resolv:%s", string s)) {
+      if (object v = resolv(s))
+	DUMP_DEBUG_RETURN (v);
+    }
+    else {
+      sscanf (x, "%s//%s", string s, string ids);
+      object tmp;
+      if(objectp(tmp=(object)(s || x))) {
+	if (ids)
+	  foreach (ids / ".", string id)
+	    if (!objectp (tmp = tmp[id]))
+	      error("Failed to decode object %s\n", x );
+	DUMP_DEBUG_RETURN (tmp);
+      }
+    }
+    error("Failed to decode object %s\n", x );
   }
 
   program programof(string x)
   {
     DUMP_DEBUG_ENTER ("programof (%O)\n", x);
-    if( sscanf(x,"defun:%s",x) )
-#ifdef DUMP_DEBUG
-      if( !programp(dump_constants[x] ) )
-	werror("%O is not a program, from dc:%O\n", dump_constants[x],x );
-      else
-#endif
-	DUMP_DEBUG_RETURN (dump_constants[x]);
-    if(sscanf(x,"efun:%s",x))
-#ifdef DUMP_DEBUG
-      if( !programp(all_constants()[x] ) )
-	werror("%O is not a program, from efun:%O\n", all_constants()[x],x );
-      else
-#endif
-	DUMP_DEBUG_RETURN ((program)all_constants()[x]);
-    if(sscanf(x,"_static_modules.%s",x))
-      DUMP_DEBUG_RETURN ((program)_static_modules[x]);
-    if(sscanf(x,"resolv:%s",x))
-#ifdef DUMP_DEBUG
-      if( !programp(resolv(x) ) )
-	werror("%O is not a program, from resolv:%O\n", resolv(x),x );
-      else
-#endif
-	DUMP_DEBUG_RETURN (resolv(x));
-    if(program tmp=(program)x)
+    string s;
+    if (sscanf(x,"defun:%s",s)) {
+      if (program v = dump_constants[s])
+	DUMP_DEBUG_RETURN (v);
+    }
+    else if (sscanf(x,"efun:%s",s)) {
+      if (program v = all_constants()[s])
+	DUMP_DEBUG_RETURN (v);
+    }
+    else if (sscanf(x,"_static_modules.%s",s)) {
+      if (program v = (program)_static_modules[s])
+	DUMP_DEBUG_RETURN (v);
+    }
+    else if (sscanf(x,"resolv:%s",s)) {
+      if (program v = resolv(s))
+	DUMP_DEBUG_RETURN ((program) v);
+    }
+    else if(program tmp=(program)x)
       DUMP_DEBUG_RETURN (tmp);
     error("Failed to decode program %s\n", x );
   }
@@ -539,8 +562,12 @@ void dump_program( string pname, program what )
   string data;
 #ifdef DUMP_DEBUG
   MyCodec cd;
+  int test_decode = 0;
   mixed err;
-  if (!(err = catch (data = encode_value( what, (cd = MyCodec( what )) ) )))
+  if (!(err = catch (data = encode_value( what, (cd = MyCodec( what )) ) )) &&
+      !(cd->log->add ("****** Encode ok, testing decode:\n"),
+	test_decode = 1,
+	err = catch (decode_value (data, cd))))
 #else
   data = encode_value( what, MyCodec( what ) );
 #endif
@@ -548,26 +575,25 @@ void dump_program( string pname, program what )
     sql_query( "DELETE FROM precompiled_files WHERE id=%s",index );
     sql_query( "INSERT INTO precompiled_files values (%s,%s,%d)",
 	       index, data, time(1) );
+#ifdef DUMP_DEBUG
+    werror ("Stored in sql with timestamp %d: %O\n", time(1), index);
+#endif
   }
 #ifdef DUMP_DEBUG
   else
   {
     array parts = pname / "/";
     if (sizeof(parts) > 3) parts = parts[sizeof(parts)-3..];
-    werror("Couldn't dump " + parts * "/" + "\n");
-    werror("Error: %s", describe_error(err));
+    if (test_decode)
+      werror ("Couldn't decode dump of " + parts * "/" + " \n");
+    else
+      werror("Couldn't dump " + parts * "/" + "\n");
     werror("Codec log:\n%s", cd->log->get());
-    werror("Last attempted: %O\n", cd->last_failed );
+    werror("Last recursively encoded: %O\n", cd->last_failed );
     mixed w = Describer()->describe( cd->last_failed,10000 );
     if( w == "program" ) w = _typeof( cd->last_failed );
     werror( "  Type: %O\n",w);
-    mixed e = catch {
-      object q = cd->last_failed();
-      if (objectp (q) || programp (q))
-	werror("%O\n", mkmapping( indices(q), values(q) ) );
-    };
-    if( e )
-      werror( describe_error( e )+"\n");
+    werror("Error: %s", describe_backtrace(err));
     werror("\n");
   }
 #endif
@@ -645,6 +671,7 @@ program low_findprog(string pname, string ext, object|void handler)
 #define DUMP_WARNING(f,e)
 #define DDEBUG( X... )
 #endif
+
 #define LOAD_DATA( DATA )                                                    \
       do {                                                                   \
         mixed err = catch                                                    \
@@ -658,9 +685,15 @@ program low_findprog(string pname, string ext, object|void handler)
         }; DUMP_WARNING(fname,err)                                           \
       } while(0)
       if(sizeof(q=sql_query( "SELECT data,mtime FROM precompiled_files WHERE id=%s",
-			     make_ofilename( fname ))))
-        if( (int)q[0]->mtime > s[3] )
-          LOAD_DATA( q[0]->data );
+			     make_ofilename( fname )))) {
+	if( (int)q[0]->mtime > s[3] ) {
+	  DDEBUG ("Loading dump from sql: %O\n", make_ofilename( fname ));
+	  LOAD_DATA( q[0]->data );
+	}
+	else
+	  DDEBUG ("Ignored stale dump in sql, timestamp %d vs %d: %O\n",
+		  (int)q[0]->mtime, s[3], make_ofilename( fname ));
+      }
 
       foreach(query_precompiled_names(fname), string ofile )
         if(array s2=master_file_stat( ofile ))
