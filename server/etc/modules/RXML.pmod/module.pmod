@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.178 2001/06/27 19:24:05 jonasw Exp $
+// $Id: module.pmod,v 1.179 2001/06/28 00:24:40 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -5784,13 +5784,13 @@ class PCode
 
   void add (mixed entry)
   {
-    if (sizeof (p_code) == length) p_code += allocate (sizeof (p_code));
+    if (length >= sizeof (p_code)) p_code += allocate (sizeof (p_code));
     p_code[length++] = entry;
   }
 
   void add_frame (Frame frame, EVAL_ARGS_FUNC|string argfunc, PCode content)
   {
-    if (sizeof (p_code) + 3 > length) p_code += allocate (sizeof (p_code));
+    if (length + 3 > sizeof (p_code)) p_code += allocate (sizeof (p_code));
     p_code[length] = frame;
     p_code[length + 1] = argfunc;
     p_code[length + 2] = content;
@@ -5963,10 +5963,11 @@ class PCode
 	pos++;
       }
     }
+    finish();
 
     return (["tag_set":tag_set&&tag_set->id_string, "type":type,
 	     "recover_errors":recover_errors,
-	     "p_code":p_code[..length - 1]]);
+	     "p_code":p_code]);
   }
 
   void _decode(mapping v)
@@ -6062,6 +6063,7 @@ static class PCodec
       else if(what->is_RXML_Frame && saved_id[what])
 	return "f:"+saved_id[what];
 
+#ifdef DEBUG
       if (!what->is_RXML_dynamic_program &&
 	  !what->is_RXML_Frame &&
 	  !what->is_RXML_Tag) {
@@ -6069,16 +6071,21 @@ static class PCodec
 	      master()->program_name(what), ::nameof(what));
       }
       else
+#endif
 	return ([ ])[0];
     }
 #ifdef RXML_ENCODE_DEBUG
     werror("nameof(%O) failed.\n", what);
 #endif
+#ifdef DEBUG
     string res = ::nameof(what);
     if (res || zero_type(res))
       return res;
     else 
       error("PCodec::nameof(%O) failed!\n", what);
+#else
+    return ::nameof (what);
+#endif
   }
 }
 
