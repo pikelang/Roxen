@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.73 1997/09/03 05:26:10 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.74 1997/09/05 02:19:17 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -1907,7 +1907,7 @@ private string get_domain(int|void l)
 //  ConfigurationURL is set by the 'install' script.
   if(!(!l && sscanf(roxen->QUERY(ConfigurationURL), "http://%s:%*s", s)))
   {
-#if efun(gethostbynme) && efun(gethostname)
+#if efun(gethostbyname) && efun(gethostname)
     f = gethostbyname(gethostname()); // First try..
     if(f)
       foreach(f, f) foreach(f, t) if(search(t, ".") != -1 && !(int)t)
@@ -1925,10 +1925,12 @@ private string get_domain(int|void l)
       } else {
 	s="nowhere";
       }
-      s = "host."+s;
+    } else {
+      sscanf(s, "%*s.%s", s);
     }
+  } else {
+    sscanf(s, "%*s.%s", s);
   }
-  sscanf(s, "%*s.%s", s);
   if(s && strlen(s))
   {
     if(s[-1] == '.') s=s[..strlen(s)-2];
@@ -2465,7 +2467,7 @@ void create(string config)
   
   defvar("Domain", get_domain(), "Domain", TYPE_STRING, 
 	 "Your domainname, should be set automatically, if not, "
-	 "enter the real domain name here, and send a bug report to "
+	 "enter the correct domain name here, and send a bug report to "
 	 "<a href=\"mailto:roxen-bugs@infovav.se\">roxen-bugs@infovav.se"
 	 "</a>");
   
@@ -2494,7 +2496,7 @@ void create(string config)
 	 "Allow ftp to normal user-accounts (requires auth-module).\n");
 
   defvar("anonymous_ftp", 1, "Allow anonymous FTP", TYPE_FLAG|VAR_MORE,
-	 "Allow anonymous ftp.\n");
+	 "Allows anonymous ftp.\n");
 
   defvar("shells", "/etc/shells", "Shell database", TYPE_FILE|VAR_MORE,
 	 "File which contains a list of all valid shells.\n"
