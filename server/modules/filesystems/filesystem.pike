@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.113 2001/09/27 17:53:43 nilsson Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.114 2001/11/26 15:18:38 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1094,5 +1094,9 @@ mixed find_file( string f, RequestID id )
 
 string query_name()
 {
+  if (sizeof(path) > 20) {
+    return sprintf((string)LOCALE(50,"%s from %s...%s"),
+		   mountpoint, path[..7], path[sizeof(path)-8..]);
+  }
   return sprintf((string)LOCALE(50,"%s from %s"), mountpoint, path);
 }
