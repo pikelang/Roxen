@@ -6,7 +6,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.11 2000/09/19 06:32:23 nilsson Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.12 2000/12/29 23:26:45 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_PARSER;
 constant module_name = "Preferred Language Analyzer";
@@ -37,6 +37,17 @@ RequestID first_try(RequestID id) {
   array lang = (pre&languages) + (config&languages);
 
   lang+=id->misc->pref_languages->get_languages();
+
+  // Array.uniq that preserves the order, which the one in pike
+  // 7.0 doesn't.
+  multiset exists = (<>);
+  array tmp = ({});
+  foreach( lang, string l )
+    if(!exists[l]) {
+      exists[l]=1;
+      tmp += ({ l });
+    }
+  lang = tmp;
 
   if(sizeof(defaults))
     lang=lang&defaults;
