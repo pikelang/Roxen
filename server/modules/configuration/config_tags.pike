@@ -465,6 +465,13 @@ string set_variable( string v, object in, mixed to, object id )
      return "";
   }
 
+  if (in->check_variable) {
+    string err = in->check_variable(v, val);
+    if (err) {
+      warning += "<font color=darkred>"+err+"</font>";
+    }
+  }
+
   if( equal( var[ VAR_VALUE ], val ) )
     return "";
 
