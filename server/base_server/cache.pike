@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.81 2002/06/19 23:40:38 nilsson Exp $
+// $Id: cache.pike,v 1.82 2002/06/19 23:42:53 nilsson Exp $
 
 // #pragma strict_types
 
@@ -36,6 +36,7 @@ static mapping(string:mapping(string:array)) caches;
 static mapping(string:int) hits=([]), all=([]);
 
 // NGSERVER: Remove the possibility to specify cache.
+//! Empties the memory cache from entries.
 void flush_memory_cache (void|string cache) {
   if (cache) {
     m_delete (caches, cache);
@@ -57,7 +58,7 @@ void cache_expire(string cache)
   m_delete(caches, cache);
 }
 
-//! Lookup an entry in a cache
+//! Lookup an entry in a cache.
 mixed cache_lookup(string cache, mixed key)
 {
   CACHE_WERR(sprintf("cache_lookup(\"%s\",\"%s\")  ->  ", cache, key));
@@ -81,7 +82,7 @@ mixed cache_lookup(string cache, mixed key)
   return UNDEFINED;
 }
 
-// Return all indices used by a given cache or indices of available caches
+//! Return all indices used by a given cache or indices of available caches
 array(string) cache_indices(string|void cache)
 {
   if (cache)
@@ -90,7 +91,7 @@ array(string) cache_indices(string|void cache)
     return indices(caches);
 }
 
-// Return some fancy cache statistics.
+//! Return some fancy cache statistics.
 mapping(string:array(int)) status()
 {
   mapping(string:array(int)) ret = ([ ]);
@@ -113,8 +114,8 @@ mapping(string:array(int)) status()
   return ret;
 }
 
-// Remove an entry from the cache. Removes the entire cache if no
-// entry key is given.
+//! Remove an entry from the cache. Removes the entire cache if no
+//! entry key is given.
 void cache_remove(string cache, void|mixed key)
 {
   CACHE_WERR(sprintf("cache_remove(\"%s\",\"%O\")", cache, key));
@@ -128,7 +129,7 @@ void cache_remove(string cache, void|mixed key)
       m_delete(caches[cache], key);
 }
 
-// Add an entry to a cache
+//! Add an entry to a cache
 mixed cache_set(string cache, mixed key, mixed val, int|void tm)
 {
 #if MORE_CACHE_DEBUG
@@ -149,7 +150,7 @@ mixed cache_set(string cache, mixed key, mixed val, int|void tm)
   return val;
 }
 
-// Clean the cache.
+//! Clean the cache.
 void cache_clean()
 {
   int gc_time=[int](([function(string:mixed)]roxenp()->query)("mem_cache_gc"));
