@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.60 1998/06/30 20:25:36 grubba Exp $
+ * $Id: ftp2.pike,v 1.61 1998/07/23 16:38:17 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -1584,8 +1584,12 @@ class FTPSession
     switch(file && file->error) {
     case 301:
     case 302:
-      send(504, ({ sprintf("'%s': %s: Redirect to %s.",
-			   cmd, f, file->location) }));
+      if (file->extra_heads && file->extra_heads->Location) {
+	send(504, ({ sprintf("'%s': %s: Redirect to %O.",
+			     cmd, f, file->extra_heads->Location) }));
+      } else {
+	send(504, ({ sprintf("'%s': %s: Redirect.", cmd, f) }));
+      }
       break;
     case 401:
     case 403:
