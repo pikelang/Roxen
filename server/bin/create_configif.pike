@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.35 2001/10/16 01:28:37 nilsson Exp $
+ * $Id: create_configif.pike,v 1.36 2001/11/07 12:52:40 grubba Exp $
  *
  * Create an initial administration interface server.
  */
@@ -89,6 +89,8 @@ int main(int argc, array argv)
   string def_port = "http://*:"+(random(20000)+10000)+"/";
 #endif
 
+  //werror("Argv: ({%{%O, %}})\n", argv);
+
   if(has_value(argv, "--help")) {
     write(#"
 Creates and initializes a Roxen WebServer configuration
@@ -140,6 +142,9 @@ Example of a batch installation:
   	              ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }),
                       "../configurations");
   int admin = has_value(argv, "-a");
+
+  werror("Admin mode: %O\n"
+	 "Argv: ({%{%O, %}})\n", admin, argv);
 
   int batch_args = search(argv, "--batch");
   if(batch_args>=0)
@@ -361,7 +366,7 @@ ent text/html
 <region name='spider#0'>
   <var name='Domain'> <str></str> </var>
   <var name='MyWorldLocation'><str></str></var>
-  <var name='URLs'> <a> <str>$URL$</str></a> </var>
+  <var name='URLs'> <a> <str>$URL$#ip=;nobind=0;</str></a> </var>
 
   <var name='comment'>
     <str>Automatically created by create_configuration</str>
