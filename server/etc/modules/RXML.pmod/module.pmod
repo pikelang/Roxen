@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.4 1999/12/27 15:29:04 grubba Exp $
+//! $Id: module.pmod,v 1.5 1999/12/30 01:42:24 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -90,7 +90,7 @@ class Tag
     // FIXME: P-code generation.
     Frame frame;
     if (mapping(string:mixed)|mapping(object:array) ustate = ctx->unwind_state)
-      if (ustate[parser]) frame = ustate[parser][0];
+      if (ustate[parser]) frame = [object(Frame)] ustate[parser][0];
       else frame = `() (args, Void);
     else frame = `() (args, Void);
 
@@ -300,8 +300,7 @@ class Context
 
   int tag_set_is_local;
   //! Nonzero if tag_set is a copy local to this context. A local tag
-  //! set that imports the old tag_set might be created whenever
-  //! needed.
+  //! set that imports the old tag_set is created whenever need be.
 
   mixed get_var (string var, void|string scope_name)
   //! Returns the value a variable in the specified scope, or the
@@ -924,7 +923,7 @@ class Frame
 
     // Unwind state data.
     int|function(RequestID:int|function) fn, iter;
-    //string raw_content;
+    //string raw_content;	// Already declared.
     Parser subparser;
     mixed piece;
     array exec;
@@ -1039,9 +1038,9 @@ class Frame
 		if (content_type->sequential) piece = res + piece;
 		else if (piece == Void) piece = res;
 		if (piece != Void) {
-		  array|function(RequestID,mixed:array) do_return;
+		  array|function(RequestID,void|mixed:array) do_return;
 		  if ((do_return =
-		       [array|function(RequestID,mixed:array)] this->do_return) &&
+		       [array|function(RequestID,void|mixed:array)] this->do_return) &&
 		      !arrayp (do_return)) {
 		    if (!exec) exec = do_return (ctx->id, piece); // Might unwind.
 		    if (exec) {
@@ -1084,11 +1083,12 @@ class Frame
 	    subparser = 0;
 	  }
 
-	  if (array|function(RequestID,mixed:array) do_return =
-	      [array|function(RequestID,mixed:array)] this->do_return) {
+	  if (array|function(RequestID,void|mixed:array) do_return =
+	      [array|function(RequestID,void|mixed:array)] this->do_return) {
 	    if (!exec)
 	      exec = arrayp (do_return) ?
-		[array] do_return : do_return (ctx->id); // Might unwind.
+		[array] do_return :
+		([function(RequestID,void|mixed:array)] do_return) (ctx->id);// Might unw.
 	    if (exec) {
 	      mixed res = _exec_array (ctx, exec); // Might unwind.
 	      if (flags & FLAG_STREAM_RESULT) {
@@ -1687,7 +1687,7 @@ static class VoidType
   mixed `+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
   mixed ``+ (mixed val) {return val;}
   int `!() {return 1;}
-  string _sprintf (int flag) {return (flag == 'O') && "Void";}
+  string _sprintf() {return "Void";}
 };
 VoidType Void = VoidType();
 //! An object representing the void value. Works as initializer for
