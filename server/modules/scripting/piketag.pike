@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.3 2000/02/10 06:59:23 nilsson Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.4 2000/02/12 15:54:53 nilsson Exp $";
 constant thread_safe=1;
 
 inherit "roxenlib";
@@ -140,7 +140,6 @@ string container_pike(string tag, mapping m, string s, RequestID request_id,
   object o;
   string res;
   mixed err;
-  if(m->help) return register_module()[2];
 
   request_id->misc->cacheable=0;
 
