@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.91 2003/01/15 16:38:17 grubba Exp $
+// $Id: global_variables.pike,v 1.92 2003/11/26 12:17:24 grubba Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -71,7 +71,10 @@ void set_up_ftp_variables( Protocol o )
           " 0 means unlimited.") );
 
   defvar( "named_ftp", 1,  LOCALE(64, "Allow named ftp"), TYPE_FLAG,
-          LOCALE(65, "If yes, non-anonymous users can connect.") );
+          LOCALE(65, "If yes, non-anonymous users can connect. "
+		 "Note that for password authentication to be performed "
+		 "you will need to have the \"Authentication: Password\" "
+		 "module in your site.") );
 
   defvar( "guest_ftp", 1, 
 	  LOCALE(66, "Allow login with incorrect password/user"), 
