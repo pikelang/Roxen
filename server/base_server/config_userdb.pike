@@ -538,21 +538,30 @@ class AdminUser
       +"</pre></td>"
       "<td><img src=\"/internal-roxen-unit\" height=\"5\" /><br />\n\n";
 
+    int is_me = this_object() == id->misc->config_user;
+
     foreach( possible_permissions, string perm )
     {
-      int dim;
+      int dim, noclick;
       if( perm != "Everything" && permissions->Everything )
         dim = 1;
+
+      if( is_me && (perm == "Everything") )
+	dim = noclick = 1;
+
       if( permissions[ perm ] )
       {
         string s = Roxen.parse_rxml( "<gbutton-url "+(dim?"dim":"")+
 				     "    icon_src=/img/selected.gif "
 				     "    font=&usr.font; "
-				     "    width=180>"+permission_translations[ perm ]+
+				     "    width=180>"+
+				     permission_translations[ perm ]+
 				     "</gbutton-url>", id );
-
-        form += sprintf( "<input border=0 type=image name='PPPremove_%s'"
-                         " src='%s'>\n", perm, s );
+	if( noclick )
+	  form += sprintf("<img src='%s' />", s);
+	else
+	  form += sprintf( "<input border=0 type=image name='PPPremove_%s'"
+			   " src='%s'>\n", perm, s );
       }
       else
       {
