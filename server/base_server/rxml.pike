@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.152 2000/02/29 12:42:43 nilsson Exp $
+// $Id: rxml.pike,v 1.153 2000/03/01 11:38:07 kuntri Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -1986,6 +1986,27 @@ private int format_support(string t, mapping m, string c, mapping doc) {
 
 #ifdef manual
 constant tagdoc=([
+"&roxen;":({ #"<desc scope>
+This scope contains information specific to this Roxen WebServer.
+</desc>",
+
+	   (["hits":#"<desc ent>The number of hits, i.e. requests the webserver has accumulated since it was last started.</desc>",
+	     "hits-per-minute":#"<desc ent>The number of hits per minute, in average.</desc>",
+	     "pike-version":#"<desc ent>Which version of Pike the webserver is using.</desc>",
+	     "sent":#"<desc ent>The total amount of data the webserver has sent. </desc>",
+             "sent-kbit-per-second":#"<desc ent>The average amount of data the webserver has sent, in Kibibits.??</desc>",
+	     "sent-mb":#"<desc ent>The total amount of data the webserver has sent, in Mibibits.??</desc>",
+	     "sent-per-minute":#"<desc ent></desc>",
+	     "server":#"<desc ent>The URL of the webserver.</desc>",
+	     "time":#"<desc ent></desc>",
+	     "uptime":#"<desc ent>The total uptime of the webserver, in seconds.</desc>",
+	     "uptime-days":#"<desc ent>The total uptime of the webserver, in days.</desc>",
+	     "uptime-hours":#"<desc ent>The total uptime of the webserver, in hours.</desc>",
+	     "uptime-minutes":#"<desc ent>The total uptime of the webserver, in minutes.</desc>",
+	     "version":#"<desc ent>Which version of Roxen WebServer the webserver is running.</desc>"])
+	  }),
+
+
 "case":#"<desc cont>
  Alters the case of the contents.
 </desc>
@@ -2052,7 +2073,7 @@ scope created within the define tag.
  arguments, given to the tag.</desc>",
 	      "&_.rest-args;":#"<desc ent>A list of the attributes, and their
  arguments, given to the tag, excluding attributes with default values defined.</desc>",
-	      "&_.contents;":"<desc ent>The containers contents.</desc>"
+	      "&_.contents;":#"<desc ent>The containers contents.</desc>"
 	    ])
 
 }),
@@ -2198,7 +2219,7 @@ scope created within the define tag.
 
 "if#group":#"<desc plugin>
  Checks if the current user is a member of the group according
- the groupfile.
+ the groupfile. Syntax is groupfile=path.
 </desc>",
 
 "if#ip":#"<desc plugin>

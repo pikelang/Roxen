@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.83 2000/02/29 20:07:44 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.84 2000/03/01 11:33:42 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1454,7 +1454,39 @@ string api_query_modified(RequestID id, string f, int|void by)
 
 TAGDOCUMENTATION;
 #ifdef manual
-constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
+constant tagdoc=([
+"&client;":({ #"<desc scope>
+ This scope contains information specific to the client/browser that
+ is accessing this page.
+</desc>",
+	      (["ip":#"<desc ent>The client is located on this IP-address.</desc>",
+		"name":#"<desc ent>The name of the client, i.e. Mozilla/4.7. </desc>",
+		"full-name":#"<desc ent>The full name of the client and additional info like; operating system, type of computer, etc. I.e. Mozilla/4.7 [en] (X11; I; SunOS 5.7 i86pc). </desc>",
+		"referrer":#"<desc ent>Prints the URL of the page on which the user followed a link that brought her to this page. The information comes from the referrer header sent by the browser.
+</desc>",
+		"accept-language":#"<desc ent>The client prefers to have the page contents presented in this language.</desc>",
+		"accept-languages":#"<desc ent>The client prefers to have the page contents presented in this language but these additional languages are accepted as well.</desc>",
+		"language":#"<desc ent></desc>",
+		"languages":#"<desc ent></desc>"])
+	   }),
+
+"&page;":({ #"<desc scope>
+ This scope contains information specific to this page.
+</desc>",
+
+	    (["realfile":#"<desc ent>Path to this file in the file system.</desc>",
+	      "virtroot":#"<desc ent></desc>",
+	      "virtfile":#"<desc ent>Path to this file in the virtual file systme.</desc>",
+	      "query":#"<desc ent></desc>",
+	      "url":#"<desc ent>The URL to this file, from the web server's root or point of view.</desc>",
+	      "last-true":#"<desc ent></desc>",
+	      "language":#"<desc ent>What language the contens of this file is written in. The language must be given as metadata to be found.</desc>",
+	      "scope":#"<desc ent></desc>",
+	      "filesize":#"<desc ent>This file's size, in bytes.</desc>",
+	      "self":#"<desc ent>The name of this file.</desc>"])
+	 }),
+
+"roxen_automatic_charset_variable":#"<desc tag>
  Internal Roxen tag. Not yet documented.
 </desc>",
 
@@ -2089,17 +2121,24 @@ constant tagdoc=(["roxen_automatic_charset_variable":#"<desc tag>
  state toggles have no effect.",
 
 "remove-cookie":#"<desc tag><short>
- Removes a cookie.</short>
+ Sets the expire-time of a cookie to a date that has already occured.
+ This forces the browser to remove it.</short>
+ This tag won't remove the cookie, only set it to the empty string, or
+ what is specified in the </attr>value</attr> attribute and change
+ it's expire-time to a date that already has occured. This is
+ unfortunutaly the only way as there is no command in HTTP for
+ removing cookies. We have to give a hint to the browser and let it
+ remove the cookie.
 </desc>
 
 <attr name=name>
- Name of the cookie to remove.
+ Name of the cookie the browser should remove.
 </attr>
 
 <attr name=value value=text>
  Even though the cookie has been marked as expired some browsers
  will not remove the cookie until it is shut down. The text provided
- with this attribute will be the cookies intemediate value.
+ with this attribute will be the cookies intermediate value.
 </attr>
 
 Note that removing a cookie won't take effect until the next page

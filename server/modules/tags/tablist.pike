@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-2000, Roxen IS.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.40 2000/02/24 05:15:45 nilsson Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.41 2000/03/01 11:36:41 kuntri Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -19,38 +19,13 @@ constant module_doc = ("Adds some tags for making tab lists."
 
 TAGDOCUMENTATION
 #ifdef manual
-constant tagdoc=(["tablist":({ "<desc cont>Tab list</desc>", (["tab":"<desc cont>Tab</desc>"]) }) ]);
-/*
-	      "<ul><pre>&lt;tablist&gt;\n"
-	      "&lt;tab href=\"/tab1/\"&gt;Some text&lt;/tab&gt;\n"
-	      "&lt;tab href=\"/tab2/\"&gt;Some more text&lt;/tab&gt;\n"
-	      "&lt;tab href=\"a/strange/place/\"&gt;Tab 3&lt;/tab&gt;\n"
-	      "&lt;/tablist&gt;\n"
-	      "</pre></ul>Attributes for the &lt;tab&gt; tag:<br>\n"
-	      "<ul><table border=0>\n"
-	      "<tr><td><b>selected</b></td><td>Whether the tab is selected "
-	      "or not.</td></tr>\n"
-	      "<tr><td><b>bgcolor</b></td><td>What color to use as "
-	      "background (behind the tab). Defaults to white.</td></tr>\n"
-	      "<tr><td><b>selcolor</b></td><td>What color to use as "
-	      "background for selected tab. Defaults to white.</td></tr>\n"
-	      "<tr><td><b>dimcolor</b></td><td>What color to use as "
-	      "background for unselected tab. Defaults to grayish.</td></tr>\n"
-	      "<tr><td><b>textcolor</b></td><td>What color to use as "
-	      "text color. Defaults to black for selected tabs and white "
-	      "otherwise.</td></tr>\n"
-	      "<tr><td><b>alt</b></td><td>Alt-text for the image (default: "
-	      "\"_/\" + text + \"\\_\").</td></tr>\n"
-	      "<tr><td><b>border</b></td><td>Border for the image (default: "
-	      "0).</td></tr>\n"
-              "<tr><td><b>noxml</b></td><td>Images will not be terminated "
-	      "with a slash if this attribute is provided.</td></tr>\n"
-	      "</table></ul>\n"
-              "<br>The bgcolor, selcolor, dimcolor, textcolor and noxml "
-	      "attribute can also be given in the tablist tag as global "
-	      "attributes. Using color arguments in a tab tag will overide "
-	      "the global setting."
- */
+constant tagdoc=(["tablist":({ #"
+<desc cont>
+
+Tablist is used in the Roxen products configurationinterfaces.
+
+</desc>", (["tab":#"<desc cont>Tab</desc>"]) }) ]);
+
 #endif
 
 void start(int num, Configuration conf)

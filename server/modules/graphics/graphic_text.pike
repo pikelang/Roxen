@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.207 2000/02/29 23:14:05 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.208 2000/03/01 11:39:04 kuntri Exp $";
 
 #include <module.h>
 inherit "module";
@@ -35,18 +35,418 @@ void create()
 
 TAGDOCUMENTATION;
 #ifdef manual
-constant gtextargs="";
-constant tagdoc=(["gtext":"<desc cont></desc>"+gtextargs,
-		  "gtext-id":"<desc tag></desc>"+gtextargs,
-		  "anfang":"<desc cont></desc>"+gtextargs,
-		  "gtext-url":"<desc cont></desc>"+gtextargs,
-		  "gh":"<desc cont></desc>"+gtextargs,
-		  "gh1":"<desc cont></desc>"+gtextargs,
-		  "gh2":"<desc cont></desc>"+gtextargs,
-		  "gh3":"<desc cont></desc>"+gtextargs,
-		  "gh4":"<desc cont></desc>"+gtextargs,
-		  "gh5":"<desc cont></desc>"+gtextargs,
-		  "gh6":"<desc cont></desc>"+gtextargs]);
+constant gtextargs=#"
+<attr name=afont>
+ <ex>
+  <gtext afont>foo</gtext>
+ </ex>
+</attr>
+
+<attr name=alpha value=path>
+ Use the specified image as an alpha channel, together with the
+ background attribute.
+ <ex>
+  <gtext
+</attr>
+
+<attr name=background value=path>
+ Specifies the image to use as background.
+</attr>
+
+<attr name=bevel value=width>
+ Draws a bevel box.
+</attr>
+
+<attr name=bgcolor value=color>
+ Sets the background color. Normally taken from the normal HTML tags
+ in your document (Currently: body, table, tr or td).
+
+ <p>If you set the background color, it is probably best to add the
+ notrans attribute as well.</p>
+<ex type=vert>
+ <gtext notrans bgcolor=pink>Pink</gtext>
+ <gtext notrans bgcolor=red>Red</gtext>
+ <gtext notrans bgcolor=%50,0,100,0>%50,0,100,0</gtext>
+</ex>
+</attr>
+
+<attr name=bgturbulence value=frequency,color;frequency,color;frequency,color>
+ Apply a turbulence effect.
+</attr>
+
+<attr name=black>
+ Use a black, or heavy, version of the font, if available.
+</attr>
+
+<attr name=bold>
+ Use a bold version of the font, if available.
+</attr>
+
+<attr name=bshadow value=distance>
+ Draw a blured black drop-shadow behind the text. Using 0 as distance
+ does not currently place the shadow directly below the text. Using
+ negative values for distance is possible, but you might have to add
+ 'spacing'.
+ <ex type=vert>
+  <gtext scale=0.8 fgcolor=darkblue quant=200 bshadow=1>&lt;gtext quant=100 bshadow=1&gt;</gtext><br>
+  <gtext scale=0.8 fgcolor=darkblue quant=200 bshadow=2>&lt;gtext quant=100 bshadow=2&gt;</gtext>
+ </ex>
+</attr>
+
+<attr name=chisel>
+ Make the text look like it has been cut into the background.
+ <ex type=vert>
+  <gtext bold quant=200 ypad=-40% xpad=-20% chisel talign=center
+  opaque=70 fgcolor=gold bevel=2 background=tiles.jpg> Chisel
+  opaque=70</gtext>
+ </ex>
+</attr>
+
+<attr name=crop>
+ Remove all white-space around the image
+</attr>
+
+<attr name=encoding>
+
+</attr>
+
+<attr name=fadein value=blur,steps,delay,initialdelay>
+ Generates an animated GIF file of a fade-in effect.
+</attr>
+
+<attr name=fgcolor value=color>
+ Sets the text color.
+
+ <ex type=vert>
+  <gtext fgcolor=#0080FF>#0080FF</gtext>
+ </ex>
+</attr>
+
+<attr name=font>
+
+</attr>
+
+<attr name=font_size>
+
+</attr>
+
+<attr name=format>
+
+</attr>
+
+<attr name=fs>
+ Apply floyd-steinberg dithering to the resulting image. Most of the
+ time it is much better to increase the number of colors, instead of
+ dithering the image, but sometimes when using very complex background
+ images dithering is O.K.
+</attr>
+
+<attr name=fuzz value=color>
+ Apply a glow effect.
+ <ex type=vert>
+  <gtext fuzz=pink>fuzz=pink</gtext>
+ </ex>
+</attr>
+
+<attr name=ghost value=dist,blur,color>
+ Apply a ghost effect. Cannot be used together with shadow or magic
+ coloring.
+ <ex type=vert>
+  <gtext spacing=2 crop quant=200 ghost=1,1,red>ghost=1,1,red</gtext>
+  <gtext spacing=2 crop quant=200 ghost=1,3,blue>ghost=1,3,blue</gtext>
+  <gtext spacing=2 crop bshadow=1 opaque=90 ghost=-1,1,yellow>ghost=-1,1,yellow opaque=90 bshadow=1</gtext>
+ </ex>
+</attr>
+
+<attr name=glow value=color>
+ Apply a 'glow' filter to the image. Quite a CPU eater. Looks much
+ better on a dark background, where a real 'glow' effect can be
+ achieved.
+ <ex type=vert>
+  <gtext quant=200 glow=red>&lt;gtext glow=red&gt;</gtext>
+ </ex>
+</attr>
+
+<attr name=italic>
+ Use an italic version of the font, if available.
+</attr>
+
+<attr name=light>
+ Use a light version of the font, if available.
+</attr>
+
+<attr name=maxlen value=number>
+ Sets the maximum length of the text that will be rendered into an
+ image, by default 300.
+</attr>
+
+<attr name=mirrortile>
+ Tiles the background and foreground images around x-axis and y-axis
+ for odd frames, creating seamless textures.
+</attr>
+
+<attr name=move value=x,y>
+ Moves the text relative to the upper left corner of the background
+ image. This will not change the size of the image.
+</attr>
+
+<attr name=narrow>
+
+</attr>
+
+<attr name=nfont value=fontname>
+ Select a font using somewhat more memonic font-names. You can get a
+ font-list by accessing the configuration interface.
+
+ <p>There are several modifiers available: bold, italic, black and light.
+ If the requested version of the font is available, it will be used to
+ render the text, otherwise the closest match will be used.</p>
+
+ <ex type=vert>
+  <gtext nfont=futura light       >Light</gtext>
+  <gtext nfont=futura light italic>Italic</gtext>
+  <gtext nfont=futura             >Normal</gtext>
+  <gtext nfont=futura italic      >Italic</gtext>
+  <gtext nfont=futura bold        >Bold</gtext>
+  <gtext nfont=futura bold italic >Italic</gtext>
+  <gtext nfont=futura black       >Black</gtext>
+  <gtext nfont=futura black italic>Italic</gtext>
+ </ex>
+</attr>
+
+<attr name=notrans>
+ Do not make the background transparent. Useful when making 'boxes' of
+ color around the text.
+ <ex type=vert>
+  <gtext bgcolor=red>&lt;gtext bgcolor=red&gt;</gtext>
+  <gtext bgcolor=red notrans>&lt;gtext bgcolor=red notrans&gt;</gtext>
+ </ex>
+</attr>
+
+<attr name=nowhitespace>
+
+</attr>
+
+<attr name=opaque value=percentage>
+ Generate text with this amount of opaqueness. 100% is default.
+ <ex>
+  <gtext fgcolor=blue opaque=50>Opaque</gtext>
+ </ex>
+</attr>
+
+<attr name=outline>
+
+</attr>
+
+<attr name=pressed>
+ Inverts the direction of the bevel box, to make it look like a button
+ that is pressed down.
+</attr>
+
+<attr name=quant value=number>
+ Use this number of colors in the generated image. For GIF images,
+ fewer colors implies smaller images but also aliasing effects. It is
+ advisable to use powers of 2 to optimize the palette allocation.
+</attr>
+
+<attr name=rescale>
+ Rescale the background to fill the whole image.
+</attr>
+
+<attr name=rotate value=angle>
+ Rotates the image this number of degrees counter-clockwise.
+</attr>
+
+<attr name=scale value=number>
+ Sets the scale of the image. Larger than 1.0 is enlargement. 
+ <ex type=vert>
+  <gtext scale=1.0>&lt;gtext scale=1.0&gt;</gtext>
+  <gtext scale=0.5>&lt;gtext scale=0.5&gt;</gtext>
+ </ex>
+</attr>
+
+<attr name=scolor value=color>
+ Use this color for the shadow. Used with the shadow attribute.
+</attr>
+
+<attr name=scroll value=width,steps,delay>
+ Generate an animated GIF image of the text scrolling.
+</attr>
+
+<attr name=shadow value=intensity,distance>
+ Draw a drop-shadow with the specified intensity and distance. The
+ intensity is specified as a percentage.
+</attr>
+
+<attr name=size value=width,height>
+ Set the size of the image.
+</attr>
+
+<attr name=spacing value=number>
+ Add space around the text.
+</attr>
+
+<attr name=talign value=left,right,center>
+ Adjust the alignment of the text.
+</attr>
+
+<attr name=textbelow value=color>
+ Place the text in a colored box.
+</attr>
+
+<attr name=textbox value=opaque,color>
+ Draw a box with an opaque value below the text of the specified color.
+</attr>
+
+<attr name=texture value=path>
+ Uses the specified images as a field texture.
+</attr>
+
+<attr name=tile>
+ Tiles the background and foreground images if they are smaller than
+ the actual image.
+</attr>
+
+<attr name=verbatim>
+ Allows the gtext parser to not be typographically correct.
+</attr>
+
+<attr name=xpad value=percentage>
+ Increases padding between characters.
+</attr>
+
+<attr name=xsize value=number>
+ Sets the width.
+</attr>
+
+<attr name=xspacing value=number>
+ Sets the horizontal spacing.
+</attr>
+
+<attr name=ypad>
+
+</attr>
+
+<attr name=ysize value=number>
+ Sets the height.
+</attr>
+
+<attr name=yspacing value=number>
+ Sets the vertical spacing.
+</attr>";
+constant tagdoc=([
+"anfang":#"<desc cont></desc>"+gtextargs,
+
+"gh":#"<desc cont></desc>"+gtextargs,
+
+"gh1":#"<desc cont></desc>"+gtextargs,
+
+"gh2":#"<desc cont></desc>"+gtextargs,
+
+"gh3":#"<desc cont></desc>"+gtextargs,
+
+"gh4":#"<desc cont></desc>"+gtextargs,
+
+"gh5":#"<desc cont></desc>"+gtextargs,
+
+"gh6":#"<desc cont></desc>"+gtextargs,
+
+"gtext":#"<desc cont>
+ Renders a GIF image of the contents.
+
+ <p>Note: If the background and text colors are not set in the
+ <tag>body</tag>> tag of the page, the bg and fg attributes must be
+ set, otherwise the <tag>gtext</tag>> tag will only render a \"Please
+ reload this page\" message.</p>
+</desc>
+
+<attr name=alt value=string>
+ Sets the alt attribute of the generated <tag>img</tag> tag. By
+ default the alt attribute will be set to the contents of the
+ <tag>gtext</tag> tag.
+ <ex type=vert>
+  <gtext fgcolor=blue alt=\"Hello!\">Point your mouse here</gtext>
+ </ex>
+</attr>
+
+<attr name=border value=width,color>
+ Draws a border around the text of the specified width and color.
+ <ex type=vert>
+  <gtext fgcolor=blue border=1,pink>Pink border</gtext>
+ </ex>
+</attr>
+
+<attr name=href value=URL>
+ Link the image to the specified URL. The link color of the document
+ will be used as the default foreground rather than the foreground
+ color.
+</attr>
+
+<attr name=magic value=message>
+ Used together with the href attribute to generate a JavaScript that
+ will highlight the image when the mouse is moved over it. The message
+ is shown in the browser's status bar.
+ <ex type=vert>
+  <gtext href=http://www.roxen.com magic=HERE!>www.roxen.com</gtext>
+ </ex>
+</attr>
+
+<attr name=magic_attribute value=value> Same as for any
+ <tag>gtext</tag> attribute, except for the highlighted image.
+ <ex type=vert>
+  <gtext fgcolor=blue>Magic_attribute</gtext>
+ </ex>
+</attr>
+
+<attr name=magicbg value=color,path>
+ Same as the background attribute, except for the highlighted image.
+</attr>
+
+<attr name=noxml>
+
+</attr>
+
+<attr name=split>
+ <gtext scale=0.4 split>Make each word into a separate gif image.
+ Useful if you are writing a large text, and word wrap at the edges of
+ the display is desired. This text is an example (try resisizing your
+ browser window, the images should move just like normal text
+ would)</gtext>
+
+ <p>This will allow the browser to word-wrap the text, but will disable certain attributes like magic.</p>
+
+ <ex type=vert>
+  <gtext scale=0.4 split>Make each word..</gtext>
+ </ex>
+</attr>
+
+<attr name=submit>
+ Creates a submit-button for forms. Does not work together with split
+ or magic arguments.
+</attr>",
+
+"gtext-id":#"<desc tag></desc>
+<attr name=href value=URL>
+ Link the image to the specified URL. The link color of the document
+ will be used as the default foreground rather than the foreground
+ color.
+</attr>
+
+<attr name=short>
+
+</attr>",
+
+"gtext-url":#"<desc cont></desc>
+
+<attr name=href value=URL>
+ Link the image to the specified URL. The link color of the document
+ will be used as the default foreground rather than the foreground
+ color.
+</attr>
+
+<attr name=short>
+
+</attr>",]);
 #endif
 
 
