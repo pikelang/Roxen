@@ -20,7 +20,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.62 2001/06/09 20:21:18 grubba Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.63 2003/05/15 16:51:12 anders Exp $";
 constant module_type = MODULE_LOCATION;
 constant module_name = "User file system";
 constant module_doc  = 
@@ -313,7 +313,7 @@ mapping|array find_dir(string f, RequestID id)
 
   array a = find_user(f, id);
 
-  if (!a) {
+  if (!a[0]) {
     if (QUERY(user_listing)) {
       array l;
       l = id->conf->userlist(id);
