@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.56 2000/08/28 05:31:50 per Exp $
+// $Id: fonts.pike,v 1.57 2000/09/02 13:42:31 nilsson Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -66,39 +66,49 @@ array available_font_versions(string name, int size)
   int ttffound;
   int ttffontschanged;
 
-   if(ttf_font_names_cache[ name ])
-     return indices(ttf_font_names_cache[ name ]);
-  foreach(roxen->query("font_dirs"), dir)
-  {
+  if(ttf_font_names_cache[ name ])
+    return indices(ttf_font_names_cache[ name ]);
+
+  void traverse_font_dir( string dir ) {
     foreach(r_get_dir( dir )||({}), string fname)
     {
-      catch
+      string path=combine_path(dir+"/",fname);
+      if(!ttf_done[path]++)
       {
-	if(!ttf_done[combine_path(dir+"/",fname)]++)
-	{
-//   werror("Trying TTF: "+combine_path(dir+"/",fname)+"\n");
-	  Image.TTF ttf = Image.TTF( combine_path(dir+"/",fname) );
-	  if(ttf)
-	  {
-	    mapping n = ttf->names();
-//        werror("okiedokie! "+n->family+"\n");
-	    ttffontschanged++;
-	    string f = lower_case(trimttfname(n->family));
-	    if(!ttf_font_names_cache[f])
-	      ttf_font_names_cache[f] = ([]);
-	    ttf_font_names_cache[f][ translate_ttf_style(n->style) ]
-	      = combine_path(dir+"/",fname);
-	    if(f == lower_case( name ))  ttffound++;
-	  }
+	Stat a=file_stat(path);
+	if(a && a[1]==-2) {
+	  traverse_font_dir( path );
+	  continue;
 	}
-      };
+	// Here is a good place to impose the artificial restraint that
+	// the file must match *.ttf
+	Image.TTF ttf;
+	if(catch(ttf = Image.TTF( combine_path(dir+"/",fname) )))
+	  continue;
+	if(ttf)
+        {
+	  mapping n = ttf->names();
+	  ttffontschanged++;
+	  string f = lower_case(trimttfname(n->family));
+	  if(!ttf_font_names_cache[f])
+	    ttf_font_names_cache[f] = ([]);
+	  ttf_font_names_cache[f][ translate_ttf_style(n->style) ]
+	    = combine_path(dir+"/",fname);
+	  if(f == lower_case( name ))  ttffound++;
+	}
+      }
     }
-  }
+  };
+
+  foreach(roxen->query("font_dirs"), dir)
+    traverse_font_dir(dir);
+
   if(ttffontschanged)
     catch{
       open("$VVARDIR/ttffontcache","wct")
         ->write(encode_value(ttf_font_names_cache));
     };
+
   if(ttffound)
     return  indices(ttf_font_names_cache[ lower_case(name) ]);
 #endif
@@ -248,7 +258,6 @@ object get_font(string f, int size, int bold, int italic,
   object fnt;
   string key, name, of;
   mixed err;
-// werror("get_font "+f+"\n");
   f = replace( f, " ", "_" );
   of = f;
   key = f+size+bold+italic+justification+xspace+yspace;
@@ -262,14 +271,14 @@ object get_font(string f, int size, int bold, int italic,
     if(ttf_font_names_cache[ lower_case(f) ])
     {
       f = lower_case(f);
-      if( ttf_font_names_cache[ lower_case(f) ][ (name/"/")[1] ] )
+      if( ttf_font_names_cache[ f ][ (name/"/")[1] ] )
       {
-	object fo = Image.TTF( roxen_path(f = ttf_font_names_cache[ lower_case(f) ][(name/"/")[1]] ));
+	object fo = Image.TTF( roxen_path(f = ttf_font_names_cache[ f ][(name/"/")[1]] ));
 	fo = TTFWrapper( fo(), size, f );
 	cache_set("fonts", key, fo);
 	return fo;
       }
-      object fo = Image.TTF( roxen_path(f = values(ttf_font_names_cache[ lower_case(f) ])[0]));
+      object fo = Image.TTF( roxen_path(f = values(ttf_font_names_cache[ f ])[0]));
       return TTFWrapper( fo(), size, f );
     } else if( search( lower_case(f), ".ttf" ) != -1 ) {
       catch {
@@ -403,14 +412,63 @@ array available_fonts( )
       {
 	if(f=="CVS") continue;
 	Stat a;
-	if((a=r_file_stat(dir+f)) && (a[1]==-2))
-	  res |= ({ replace(f,"_"," ") });
+	if((a=r_file_stat(dir+f)) && (a[1]==-2)) {
+	  array d=r_get_dir(dir+f);
+	  foreach( ({ "nn", "ni", "li", "ln", "Bi", "Bn", "bi", "bn" }),
+		   string style)
+	    if(has_value(d, style)) {
+	      res |= ({ replace(f,"_"," ") });
+	      continue;
+	    }
+	}
       }
     }
   }
   return sort(res|indices(ttf_font_names_cache));
 }
 
+array get_font_information(void|int ttf_only) {
+
+  array res=({});
+  foreach(indices(ttf_font_names_cache), string name) {
+    mapping fm=([ "name":name, "ttf":"yes" ]);
+    object fo = Image.TTF( roxen_path(name = values(ttf_font_names_cache[ name ])[0]));
+    fm->path=name;
+    fm+=fo->names(); // Adding copyright, expose, family, full, postscript, style, version, trademark
+    res+=({ fm });
+  }
+  if(ttf_only)
+    return res;
+
+  foreach(roxen->query("font_dirs"), string dir)
+  {
+    dir+="32/";
+    array d;
+    if(array d = r_get_dir(dir))
+    {
+      foreach(d,string f)
+      {
+        if(f=="CVS") continue;
+        Stat a;
+        if((a=r_file_stat(dir+f)) && (a[1]==-2)) {
+	  int styles;
+	  array d=r_get_dir(dir+f);
+	  foreach( ({ "nn", "ni", "li", "ln", "Bi", "Bn", "bi", "bn" }),
+		   string style)
+	    if(has_value(d, style)) styles++;
+
+	  if(!styles) continue;
+	  res+=({ ([ "name":replace(f,"_"," "),
+		     "path":dir+f,
+		     "styles":styles,
+		     "ttf":"no" ]) });
+	}
+      }
+    }
+  }
+
+  return res;
+}
 
 void create()
 {
