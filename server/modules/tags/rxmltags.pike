@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.195 2001/01/04 07:28:13 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.196 2001/01/23 03:28:50 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -31,7 +31,7 @@ string query_provides() {
   return "modified";
 }
 
-constant permitted = "123456789.xabcdefint\"XABCDEFlo<>=0-*+/%&|()"/"";
+constant permitted = "123456789.xabcdefint\"XABCDEFlo<>=0-*+/%&|()^"/1;
 
 string sexpr_eval(string what)
 {
@@ -469,8 +469,10 @@ class TagSet {
     array do_return(RequestID id) {
       if (args->value) {
 	// Set an entity variable to a value.
-	if(args->split) RXML.user_set_var(args->variable, args->value/args->split, args->scope);
-	RXML.user_set_var(args->variable, args->value, args->scope);
+	if(args->split)
+	  RXML.user_set_var(args->variable, args->value/args->split, args->scope);
+	else
+	  RXML.user_set_var(args->variable, args->value, args->scope);
 	return 0;
       }
       if (args->expr) {
@@ -489,8 +491,8 @@ class TagSet {
 	return 0;
       }
 
-      RXML.user_set_var(args->variable, content, args->scope);
-      return 0;
+      args->value=content;
+      return do_return(id);
     }
   }
 }
