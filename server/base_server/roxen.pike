@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.211 1998/06/13 18:18:57 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.212 1998/06/13 19:11:27 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -446,6 +446,7 @@ void nwrite(string s, int|void perr, int|void type)
 }
 
 // When was Roxen started?
+int boot_time;
 int start_time;
 
 string version()
@@ -794,13 +795,28 @@ public string full_status()
       foo[tmp] = sprintf("%.2f GB", foo[tmp]/1024.0);
   }
 
-  res = sprintf("<table><tr><td><b>Sent data:</b></td><td>%s"
+  int uptime = time()-start_time;
+  int days = uptime/(24*60*60);
+  int hrs = uptime/(60*60);
+  int min = uptime/60 - hrs*60;
+  hrs -= days*24;
+
+  res = sprintf("<table>"
+		"<tr><td><b>Booted on:</b></td><td colspan=2>%s</td></tr>\n"
+		"<tr><td><b>Time to boot:</b></td>"
+		"<td>%d sec</td></tr>\n"
+		"<tr><td><b>Uptime:</b></td>"
+		"<td colspan=2>%d day%s, %02d:%02d:%02d</td></tr>\n"
+		"<tr><td colspan=3>&nbsp;</td></tr>\n"
+		"<tr><td><b>Sent data:</b></td><td>%s"
 		"</td><td>%.2f Kbit/sec</td></tr><tr>\n",
+		ctime(boot_time), start_time-boot_time,
+		days, (days==1?"":"s"), hrs, min, uptime%60,
 		foo[1], foo[0] * 8192.0);
   
   res += "<td><b>Sent headers:</b></td><td>"+ foo[2] +"</td></tr>\n";
 	    
-  tmp=(int)(foo[4]*600.0)/((time(1)-start_time)+1);
+  tmp=(int)(foo[4]*600.0)/(uptime+1);
 
   res += (sprintf("<tr><td><b>Number of requests:</b></td>"
 		  "<td>%8d</td><td>%.2f/min</td></tr>\n"
@@ -2354,7 +2370,7 @@ int main(int|void argc, array (string)|void argv)
   initiate_languages();
   mixed tmp;
 
-  start_time=time();
+  start_time = boot_time = time();
 
   add_constant("write", perror);
 
