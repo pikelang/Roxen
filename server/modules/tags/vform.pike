@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.25 2001/08/21 20:48:09 mast Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.26 2001/08/22 12:55:07 mast Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -229,7 +229,6 @@ class TagWizzVInput {
   inherit RXML.Tag;
   constant name="wizz";
   constant plugin_name="vinput";
-  constant flags = RXML.FLAG_DONT_CACHE_RESULT;
 
   RXML.Tag get_tag() {
     return TagVInput();
@@ -266,9 +265,12 @@ class TagVForm {
   inherit RXML.Tag;
   constant name = "vform";
 
-  // Can't be cached due to the use of id->misc. That's no big deal
-  // however, since form stuff like this hardly can be cached anyway.
-  constant flags = RXML.FLAG_DONT_CACHE_RESULT;
+  // Should disable caching since this module make heavy use of
+  // id->misc, which isn't intercepted by the cache system. But then
+  // again, disabling the cache can be just as bad, so we let it be a
+  // known misfeature that some combinations of vform and the <cache>
+  // tag fails (just as it always has been, btw).
+  //constant flags = RXML.FLAG_DONT_CACHE_RESULT;
 
   class TagVInput {
     inherit VInput;
