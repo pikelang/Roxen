@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 // A quite complex directory module. Generates macintosh like listings.
-string cvs_version = "$Id: directories.pike,v 1.14 1997/08/19 05:50:42 peter Exp $";
+string cvs_version = "$Id: directories.pike,v 1.15 1997/08/22 23:15:28 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -260,7 +260,7 @@ string foot_dir_mac()
 
 #define TYPE_MP  "    Module location"
 #define TYPE_DIR "    Directory"
-
+object gid;
 array|string describe_dir_node_mac(object node)
 {
   string type, filename, icon;
@@ -268,7 +268,7 @@ array|string describe_dir_node_mac(object node)
   
   filename = node->data;
   
-  if(node->stat)
+  if(node->stat = roxen->stat_file( filename, gid ))
   {
     switch(-(len=node->stat[1]))
     {
@@ -293,7 +293,8 @@ array|string describe_dir_node_mac(object node)
       if(tmp[1])  type += " " + tmp[1];
     }
   } else {
-    return ({ "<dt>", "Unknown" });
+    node->dest();
+    return 0;
   }  
   /* Now we have
    * o The name of the file
@@ -392,7 +393,6 @@ mapping parse_directory(object id)
   object node;
   string f;
   mixed tmp;
-
   f=id->not_query;
 
 // If this prestate is set, do some folding/unfolding.
@@ -448,10 +448,9 @@ mapping parse_directory(object id)
 
   if(id->prestate->diract) return 0; // This should not happend
   
-  f=node->folded;
-  if(f) node->folded=0;
+  f=node->folded;node->folded=0;gid=id;
   tmp=http_string_answer(head(node,id)+node->describe(1)+foot(node,id));
-  node->folded = f;
+  gid=0;node->folded = f;
   
   return tmp;
 }
