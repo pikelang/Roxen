@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1998, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.66 1998/03/25 05:34:40 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.67 1998/03/25 06:09:48 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -682,11 +682,25 @@ string format_backtrace(array bt)
   return res+"</body>";
 }
 
+array add_id(array from)
+{
+  foreach(from[1], array q)
+  catch {
+    int id;
+    if(sscanf(Stdio.read_bytes(q[0]), "%*s$Id: http.pike,v 1.67 1998/03/25 06:09:48 per Exp $", id) == 4)
+      q[0] += "  ("+id+")";
+  };
+  return from;
+}
+
 string generate_bugreport(array from)
 {
-  return ("Roxen version: "+version()+" ("+roxen->real_version+")\n"
-	  "Error: "+
-	  describe_backtrace(from)-(getcwd()+"/"));
+  return ("Roxen version: "+version()+
+	  (roxen->real_version != version()?" ("+roxen->real_version+")":"")+
+	  "\nRequested URL: "+not_query+(query?"?"+query:"")+"\n"
+	  "\nError: "+
+	  describe_backtrace(add_id(from))-(getcwd()+"/")+
+	  "\n\nRequest data:\n"+raw);
 }
 
 void internal_error(array err)
