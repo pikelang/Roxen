@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.294 2000/04/03 15:56:57 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.295 2000/04/03 16:15:41 grubba Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -224,8 +224,10 @@ void stop()
   for(int i=0; i<10; i++)
     CATCH("stopping priority group",
           (pri[i] && pri[i]->stop && pri[i]->stop()));
-  catch("stopping the logger",
-	log_function && destruct(function_object(log_function)));
+  CATCH("stopping the logger",
+	log_function && lambda(mixed m){
+			  destruct(m);
+			}(function_object(log_function)));
   foreach( registered_urls, string url )
     roxen->unregister_url(url);
 }
