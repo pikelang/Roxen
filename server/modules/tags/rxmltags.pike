@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.450 2004/03/02 15:13:01 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.451 2004/03/03 20:29:18 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -49,47 +49,75 @@ multiset query_provides() {
   return (< "modified", "rxmltags" >);
 }
 
-private object compile_handler = class {
-    mapping(string:mixed) get_default_module() {
-      return ([ "this_program":0,
+private mapping(string:mixed) sexpr_constants = ([
+  "this_program":0,
 
-		"`+":`+,
-		"`-":`-,
-		"`*":`*,
-		"`/":`/,
-		"`%":`%,
+  "`+":`+,
+  "`-":`-,
+  "`*":`*,
+  "`/":`/,
+  "`%":`%,
 
-		"`!":`!,
-		"`!=":`!=,
-		"`&":`&,
-		"`|":`|,
-		"`^":`^,
+  "`!":`!,
+  "`!=":`!=,
+  "`&":`&,
+  "`|":`|,
+  "`^":`^,
 
-		"`<":`<,
-		"`>":`>,
-		"`==":`==,
-		"`<=":`<=,
-		"`>=":`>=,
+  "`<":`<,
+  "`>":`>,
+  "`==":`==,
+  "`<=":`<=,
+  "`>=":`>=,
 
-		"INT":lambda(void|mixed x){ return (int)x; },
-		"FLOAT":lambda(void|mixed x){ return (float)x; },
-      ]);
-    }
+  "sizeof": sizeof,
 
-    mixed resolv(string id, void|string fn, void|string ch) {
-      throw( ({ sprintf("The symbol %O is forbidden.\n", id),
-		backtrace() }) );
-    }
-  }();
+  "INT":lambda(void|mixed x) {
+	  return intp (x) || floatp (x) || stringp (x) ? (int) x : 0;
+	},
+  "FLOAT":lambda(void|mixed x) {
+	    return intp (x) || floatp (x) || stringp (x) ? (float) x : 0;
+	  },
+]);
 
+private class SExprCompileHandler
+{
+  string errmsg;
+
+  mapping(string:mixed) get_default_module() {
+    return sexpr_constants;
+  }
+
+  mixed resolv(string id, void|string fn, void|string ch) {
+    if (mapping|object scope = RXML_CONTEXT->get_scope (id))
+      return scope;
+    error ("Unknown identifier %O.\n", id);
+  }
+
+  void compile_error (string a, int b, string c)
+  {
+    if (!errmsg) errmsg = c;
+  }
+
+  int compile_exception (mixed err)
+  {
+    return 0;
+  }
+}
 
 string|int|float sexpr_eval(string what)
 {
   what -= "lambda";
   what -= "\"";
   what -= ";";
-  int|float res = compile_string( "int|float foo=" + what + ";",
-				  0, compile_handler )()->foo;
+  SExprCompileHandler handler = SExprCompileHandler();
+  string|int|float res;
+  if (mixed err = catch {
+      res = compile_string( "int|string|float foo=(" + what + ");",
+			    0, handler )()->foo;
+    })
+    RXML.parse_error ("Error in expr attribute: %s\n",
+		      handler->errmsg || describe_error (err));
   if (compat_level < 2.2) return (string) res;
   else return res;
 }
@@ -508,9 +536,7 @@ class TagSet {
       else {
 	if (args->expr) {
 	  // Set an entity variable to an evaluated expression.
-	  mixed val;
-	  if(catch(val=sexpr_eval(args->expr)))
-	    parse_error("Error in expr attribute.\n");
+	  mixed val=sexpr_eval(args->expr);
 	  RXML.user_set_var(args->variable, val, args->scope);
 	  return 0;
 	}
@@ -5125,7 +5151,8 @@ class TagIfExpr {
   constant name = "if";
   constant plugin_name = "expr";
   int eval(string u) {
-    return (int)sexpr_eval(u);
+    int|float|string res = sexpr_eval(u);
+    return res && res != 0.0;
   }
 }
 
@@ -7216,6 +7243,39 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
 <attr name='expr' value='string'>
  <p>An expression whose evaluated value the variable should have.</p>
+
+ <p>Available arithmetic operators are +, -, *, / and % (modulo).
+ Available relational operators are &lt;, &gt;, ==, !=, &lt;= and
+ &gt;=. Available bitwise operators are &amp;, | and ^, representing
+ AND, OR and XOR. Available boolean operators are &amp;&amp; and ||,
+ working as the pike AND and OR. Subexpressions can be surrounded by (
+ and ).</p>
+
+ <p>The size of a string or array may be retrieved with
+ sizeof(var.something).</p>
+
+ <p>Numbers can be represented as decimal integers when numbers
+ are written out as normal, e.g. \"42\". Numbers can also be written
+ as hexadecimal numbers when precedeed with \"0x\", as octal numbers
+ when precedeed with \"0\" and as binary number when precedeed with
+ \"0b\". Numbers can also be represented as floating point numbers,
+ e.g. \"1.45\" or \"1.6E5\". Numbers can be converted between floats
+ and integers by using the cast operators \"(float)\" and \"(int)\".</p>
+
+ <ex-box>(int)3.14</ex-box>
+
+ <p>RXML variables may be referenced with the syntax \"scope.name\".
+ Note that they are not written as entity references (i.e. without the
+ surrounding &amp; and ;). If they are written that way then their
+ values will be substituted into the expression before it is parsed,
+ which can lead to strange parsing effects.</p>
+
+ <p>A common problem when dealing with variables from forms is that a
+ variable might be empty or a non-numeric string. To ensure that a
+ value is produced the special functions INT and FLOAT may be used. In
+ the expression \"INT(form.num)+1\" the INT-function will produce some
+ integer regardless what the form variable contains, thereby
+ preventing errors in the expression.</p>
 </attr>
 
 <attr name='from' value='string'>
@@ -7488,33 +7548,13 @@ just got zapped?
 //----------------------------------------------------------------------
 
 "if#expr":#"<desc type='plugin'><p><short>
- This plugin evaluates a string as a pike expression.</short>
- Available arithmetic operators are +, -, *, / and % (modulo).
- Available relational operators are &lt;, &gt;, ==, !=, &lt;= and
- &gt;=. Available bitwise operators are &amp;, | and ^, representing
- AND, OR and XOR. Available boolean operators are &amp;&amp; and ||,
- working as the pike AND and OR.</p>
-
- <p>Numbers can be represented as decimal integers when numbers
- are written out as normal, e.g. \"42\". Numbers can also be written
- as hexadecimal numbers when precedeed with \"0x\", as octal numbers
- when precedeed with \"0\" and as binary number when precedeed with
- \"0b\". Numbers can also be represented as floating point numbers,
- e.g. \"1.45\" or \"1.6E5\". Numbers can be converted between floats
- and integers by using the cast operators \"(float)\" and \"(int)\".</p>
-
- <ex-box>(int)3.14</ex-box>
-
- <p>A common problem when dealing with variables from forms is that
- a variable might be a number or be empty. To ensure that a value is
- produced the special functions INT and FLOAT may be used. In the
- expression \"INT(&form.num;)+1\" the INT-function will produce 0 if
- the form variable is empty, hence preventing the incorrect expression
- \"+1\" to be produced.</p>
+ This plugin evaluates an expression and returns true if the result is
+ anything but an integer or floating point zero.</short></p>
 </desc>
 
 <attr name='expr' value='expression'>
- <p>Choose what expression to test.</p>
+ <p>The expression to test. See the expr attribute to <xref href='set.tag'/>
+ for a description of the syntax.</p>
 </attr>",
 
 //----------------------------------------------------------------------
