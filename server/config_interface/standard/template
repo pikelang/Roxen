@@ -149,13 +149,13 @@
            <td align="right">
              <font color="&usr.top-fgcolor;">
               <gbutton preparse="1"
-                 href="/standard/change_user.pike?uid=&form.config_user_uid;"
+                 href="/standard/change_user.pike?uid=&usr.user-uid;"
                   align="right" textcolor="&usr.top-fgcolor;"
                   width="70"> <translate id="206">User</translate>: </gbutton>
             </td>
             <td>
                <font color="&usr.top-fgcolor;">
-                &form.config_user_name; (&form.config_user_uid;)
+                &usr.user-name; (&usr.user-uid;)
                </font>
             </td>
          </tr>

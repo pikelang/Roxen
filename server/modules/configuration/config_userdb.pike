@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: config_userdb.pike,v 1.54 2000/09/12 14:05:52 per Exp $
+// $Id: config_userdb.pike,v 1.55 2000/09/12 14:47:44 per Exp $
 
 inherit "module";
 #include <config_interface.h>
@@ -66,11 +66,14 @@ array auth( array auth_, RequestID id, void|int silent )
 	report_notice( "Failed login attempt %s from %s\n", u, host);
       return ({ 0, u, p });
     }
-
-    id->variables->config_user_uid = u;
-    id->variables->config_user_name = uo->real_name;
+    if( !id->misc->cf_theme )
+      id->misc->cf_theme = ([]);
+    id->misc->cf_theme["user-uid"] = u;
+    id->misc->cf_theme["user-name"] = uo->real_name;
 
     /* Compatibility. Will probably be removed soon */
+    id->variables->config_user_uid = u;
+    id->variables->config_user_name = uo->real_name;
     id->misc->create_new_config_user = roxen.create_admin_user;
     id->misc->delete_old_config_user = roxen.delete_admin_user;
     id->misc->list_config_users = roxen.list_admin_users;
