@@ -21,19 +21,6 @@ BIN_TRUE=":"
 all:	@MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_PLATFORM@ pike extern
 	-@$(BIN_TRUE)
 
-strip_manual: force
-	@cd $(SRCDIR); \
-	  test -d platform/. || \
-	    if test -d server/manual/.; then \
-	      echo "Removing excess manual"; \
-	      rm -rf server/manual/unparsed/*1.0; \
-	      grep -v 1.0 server/manual/unparsed/CVS/Entries > e.tmp; \
-	      mv -f e.tmp server/manual/unparsed/CVS/Entries; \
-	      rm -rf server/manual/parsed/*1.0; \
-	      grep -v 1.0 server/manual/parsed/CVS/Entries > e.tmp; \
-	      mv -f e.tmp server/manual/parsed/CVS/Entries; \
-	    else :; fi;
-
 pike: force
 	@(cd pike/$(PIKEVERSION)/src;$(MAKE) "prefix=$(prefix)" "CC=$(CC)" "LDFLAGS=$(LDFLAGS) @LINKFORSHARED@")
 
