@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.34 1997/06/11 18:50:08 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.35 1997/06/20 15:05:36 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -408,7 +408,7 @@ array location_modules(object id)
       object *d, p;
       if(d=pri[i]->location_modules)
 	foreach(d, p)
-	  if(p->find_file)
+	  if(p->find_file && p->query_location())
 	    location_module_cache+=({({ p->query_location(), 
 					  p->find_file })});
     }
