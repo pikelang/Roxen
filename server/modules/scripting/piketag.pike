@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.21 2000/09/10 16:47:49 nilsson Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.22 2000/09/15 11:19:41 jhs Exp $";
 constant thread_safe=1;
 
 
@@ -24,18 +24,18 @@ inherit "module";
 constant module_type = MODULE_TAG;
 constant module_name = "Pike tag";
 constant module_doc =  #"
-This module adds a processing instruction tag, <code>&lt;?pike ...
-?&gt;</code>, for evaluating Pike code directly in the document.
+<p>This module adds a processing instruction tag, <code>&lt;?pike ...
+?&gt;</code>, for evaluating Pike code directly in the document.</p>
 
 <p><img src=\"internal-roxen-err_2\" align=\"left\" alt=\"Warning\">
 NOTE: Enabling this module is the same thing as letting your users
-run programs with the same right as the server!
+run programs with the same right as the server!</p>
 
-<p>Example:
+<p>Example:</p>
 
-<p><pre>&lt;?pike write (\"Hello world!\\n\"); ?&gt;\n</pre>
+<pre>&lt;?pike write (\"Hello world!\\n\"); ?&gt;\n</pre>
 
-<p>There are a few helper functions available:
+<p>There are a few helper functions available:</p>
 
 <dl>
   <dt><code>write(string fmt, mixed ... args)</code></dt>
@@ -52,9 +52,9 @@ run programs with the same right as the server!
 </dl>
 
 <p>When the pike tag returns, the contents of the output buffer is
-inserted into the page. It is not reparsed with the RXML parser.
+inserted into the page. It is not reparsed with the RXML parser.</p>
 
-<p>These special constructs are also recognized:
+<p>These special constructs are also recognized:</p>
 
 <dl>
   <dt><code>//O ... </code> or <code>/*O ... */</code></dt>
@@ -79,10 +79,12 @@ inserted into the page. It is not reparsed with the RXML parser.
 
 <p>When files are included or inherited, they will be read from the
 virtual filesystem in Roxen, relative to the location during whose
-parsing the pike tag was encountered.
+parsing the pike tag was encountered. Entities and scopes are
+available as variables named like the entity/scope itself. The
+RequestID object is available as <code>id</code>.</p>
 
 <p>Note that every RXML fragment is parsed by itself, so you can't
-have unmatched RXML tags in them. E.g. the following does not work:
+have unmatched RXML tags in them. E.g. the following does not work:</p>
 
 <p><pre>&lt;?pike
   //X &lt;gtext&gt;
@@ -91,9 +93,9 @@ have unmatched RXML tags in them. E.g. the following does not work:
 ?&gt;\n</pre>
 
 <p>Adjacent 'X' comments are concatenated however, so the following
-works:
+works:</p>
 
-<p><pre>&lt;?pike
+<pre>&lt;?pike
   //X &lt;gtext&gt;
   //X Foo
   //X &lt;/gtext&gt;
@@ -102,7 +104,7 @@ works:
 <p>For compatibility this module also adds the Pike container tag,
 <code>&lt;pike&gt;...&lt;/pike&gt;</code>. It behaves exactly as it
 did in Roxen 2.0 and earlier and the functionality mentioned above
-does not apply to it. The use of the container tag is deprecated.";
+does not apply to it. The use of the container tag is deprecated.</p>";
 
 void create()
 {
@@ -509,14 +511,14 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
 "<?pike":#"<desc pi><short hide>
- Pike processing instruction tag.</short>This processing intruction
- tag allows for evaluating Pike code directly in the document.
+ <p>Pike processing instruction tag.</short>This processing intruction
+ tag allows for evaluating Pike code directly in the document.</p>
 
  <p>Note: With this tag, users are able to run programs with the same
  right as the server. This is a serious security hasard.</p>
 
  <p>When the pike tag returns, the contents of the output buffer is
- inserted into the page. It is not reparsed with the RXML parser.
+ inserted into the page. It is not reparsed with the RXML parser.</p>
 </desc>
 
 <attr name='write' value='(string fmt, mixed ... args)'>
@@ -533,8 +535,6 @@ constant tagdoc=([
 
 <attr name='rxml' value='(string rxmlcode)'>
  rxml() is a helper function. It parses the string with the RXML parser.
-</attr>
-
-",
+</attr>",
     ]);
 #endif
