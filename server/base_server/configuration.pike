@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.213 1999/10/12 13:19:17 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.214 1999/10/18 21:13:20 per Exp $";
 #include <module.h>
 #include <roxen.h>
 #include <request_trace.h>
@@ -2117,17 +2117,6 @@ int(0..1) is_file(string what, object id)
   return !!stat_file(what, id);
 }
 
-string MKPORTKEY(array(string) p)
-{
-  if (sizeof(p[3])) {
-    return sprintf("%s://%s:%s/(%s)",
-		   p[1], p[2], (string)p[0],
-		   replace(p[3], ({"\n", "\r"}), ({ " ", " " })));
-  } else {
-    return sprintf("%s://%s:%s/",
-		   p[1], p[2], (string)p[0]);
-  }
-}
 array registered_urls = ({});
 void start(int num)
 {
@@ -2204,7 +2193,6 @@ object enable_module( string modname )
   int module_type;
 
   sscanf(modname, "%s#%d", modname, id );
-
 
 #if constant(gethrtime)
   int start_time = gethrtime();
@@ -2764,16 +2752,19 @@ object|string find_module(string name)
   return 0;
 }
 
-int add_modules (array(string) mods)
+multiset forcibly_added = (<>);
+int add_modules( array(string) mods, int|void now )
 {
   int wr;
   foreach (mods, string mod)
-    if( !enabled_modules[ mod+"#0" ] )
+    if( (now && !modules[ mod ]) 
+        || !enabled_modules[ mod+"#0" ] )
 #ifdef MODULE_DEBUG
     {
       if( !wr++ )
         report_debug("[ adding required modules\n");
 #endif
+      forcibly_added[ mod+"#0" ] = 1;
       enable_module( mod+"#0" );
 #ifdef MODULE_DEBUG
     }
@@ -2847,10 +2838,15 @@ void enable_all_modules()
     modules_to_process = (({"userdb#0"})+(modules_to_process-({"userdb#0"})));
 
   array err;
+  forcibly_added = (<>);
   foreach( modules_to_process, tmp_string )
-    if(err = catch( enable_module( tmp_string )))
-      report_error(LOCALE->enable_module_failed(tmp_string, 
-						describe_backtrace(err)));
+  {
+    if( !forcibly_added[ tmp_string ] )
+      if(err = catch( enable_module( tmp_string )))
+        report_error(LOCALE->enable_module_failed(tmp_string, 
+                                                  describe_backtrace(err)));
+  }
+
   report_debug("All modules for %s enabled in %4.3f seconds\n\n", query_name(),
                (gethrtime()-start_time)/1000000.0);
 }

@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.48 1999/10/12 13:19:17 per Exp $ */
+/* $Id: module.pike,v 1.49 1999/10/18 21:13:20 per Exp $ */
 #include <module.h>
 #include <request_trace.h>
 
@@ -28,9 +28,11 @@ string fix_cvs(string from)
   return from;
 }
 
-int module_dependencies(object configuration, array (string) modules)
+int module_dependencies(object configuration, 
+                        array (string) modules,
+                        int|void now)
 {
-  if(configuration) configuration->add_modules (modules);
+  if(configuration) configuration->add_modules( modules, now );
   mixed err;
   if (err = catch (_do_call_outs()))
     report_error ("Error doing call outs:\n" + describe_backtrace (err));
