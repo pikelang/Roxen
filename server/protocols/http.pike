@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.466 2005/01/19 15:21:30 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.467 2005/02/07 18:58:51 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -974,7 +974,8 @@ static void close_cb()
   data_buffer = 0;
   pipe = 0;
 
-  // Already closed - simply drop the fd.
+  // Avoid that the fd is closed by disconnect() - the write direction
+  // might still want to use it. We rely on refcount garbing instead.
   my_fd = 0;
 
   disconnect();
