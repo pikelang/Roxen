@@ -20,14 +20,14 @@ Then the page...
  </st-tabs>
  <st-page>
   <input type=hidden name=section value="&form.section;">
-  <cf-save><br clear="all" />
+  <cf-save/><br clear="all" />
   <table>
-   <configif-output source=global-variables section="&form.section;">
-    <tr><td width=30%><b>#name#</b></td><td>#form:quote=none#</td></tr>
+   <configif-output source=global-variables noset='' section="&form.section;">
+    <tr><td width='30%' valign='top'><b>#name#</b></td><td valign='top'>#form:quote=none#</td></tr>
     <tr><td></td><td>#doc:quote=none#<p>#type_hint#</td></tr>
    </configif-output>
   </table>
-  <cf-save>
+  <cf-save/>
  </st-page>
 </subtablist>
 </cv-split>
