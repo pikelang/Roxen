@@ -4,28 +4,56 @@ inherit "../logutil.pike";
 
 string module_global_page( RequestID id, Configuration conf )
 {
+  if( id->misc->needs_reload )
+    return #"
+ Needs reload
+<header name=Refresh value=0>
+";
   return 
-#"<awizard>
-  <page>
-     <button page=add_module gbutton_title='Add module'>
-     <button page=delete_module gbutton_title='Drop module'>
+#"<awizard debug=1>
+  <page name=top>
+    <button page=add_module gbutton_title='Add module'>
+    <button page=delete_module gbutton_title='Drop module'>
   </page>
+
   <page name=add_module>
     <insert file=add_module.inc>
-    <button page=final_add_module title=' OK '>
+    <dbutton page=return gbutton_title=' Add selected modules '>
+      <pike>
+       id->variables[\"cf_goto_.x\"] = \"10\";
+       array modules = id->variables->_add_new_modules/\"\\0\";
+       id->variables->_add_new_modules = \"\";
+       modules = indices(mkmapping(modules,modules))-({\"\"});
+       foreach( modules, string module )
+       {
+         werror(\"Enabling \"+module+\"\\n\");
+         id->misc->current_configuration->enable_module( module );
+       }
+       return \"<header name=Refresh value=0>\";
+      </pike>
+    </dbutton>
   </page>
 
-  <page name=final_add_module>
-    <pike>
-     foreach( id->variables->_add_new_modules/\"\\0\", string module )
-       id->misc->current_configuration->enable_module( module );
-     return \"\";
-    </pike>
-    <goto href=../>
+  <page name=return>
+    <pike>id->misc->needs_reload=1;id->variables=([]);return \"\"</pike>
   </page>
+  
+   <page name=delete_module>
+     <configif-output source=config-modules
+                      configuration='"+conf->name+#"'>
+       <dbutton gbutton_title=' Drop #name#'>
+         <pike> 
+           id->misc->current_configuration->
+               disable_module( replace(\"#sname#\",\"!\",\"##\") ); 
+           id->variables[\"cf_goto_.x\"] = \"10\";
+           return \"\";
+         </pike>
+       </dbutton><br>
+     </configif-output><p>
+   <button page=return gbutton_title=' Done '>
+   </page>
 </awizard>";
 }
-
 
 #define translate( X ) _translate( (X), id )
 

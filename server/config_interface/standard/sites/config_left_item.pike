@@ -25,7 +25,8 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
 
   sscanf( id->misc->path_info, "/"+q+"/%[^/]", subsel );
 
-  string pre = ("<gbutton href='/standard/sites' width=150 icon_src=/internal-roxen-next "
+  string pre = ("<gbutton href='/"+id->misc->cf_locale+"/sites' "
+                "width=150 icon_src=/internal-roxen-next "
                 "align_icon=left preparse><cf-locale get=servers></gbutton><br>"
                 "<gbutton width=150 "+(subsel == ""?"bgcolor=d9dee7":
 			      "href='"+id->not_query+"/"+replace(c->name, " ", "%20" )+"/' ")+
@@ -41,7 +42,7 @@ string selected_item( string q, roxen.Configuration c, RequestID id, string modu
     if( subsel == q )
     {
       pre += ("<gbutton icon_src=/internal-roxen-next align_icon=right "
-              "width=150 preparse bgcolor=d9dee7>"
+              "width=150 preparse bgcolor=d9dee7 href='"+DOTDOT(3)+q+"/'>"
               "<cf-locale get="+q+"></gbutton><br>");
 
       string url = id->not_query + id->misc->path_info;
