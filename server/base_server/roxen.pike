@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.65 1997/06/01 02:59:43 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.66 1997/06/01 19:51:26 grubba Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -1751,7 +1751,7 @@ void scan_module_dir(string d)
 	     
 	    if (catch(p = compile_file(file)) || (!p)) {
 	      MD_PERROR((" compilation failed"));
-	      throw("Compilation of failed.\n");
+	      throw("Compilation failed.\n");
 	    }
 
 	    array err = catch(o =  p());
