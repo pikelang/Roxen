@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.405 2002/10/15 12:59:45 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.406 2002/10/25 17:57:57 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -691,13 +691,14 @@ class TagRoxen {
 class TagDebug {
   inherit RXML.Tag;
   constant name = "debug";
-  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  constant flags = RXML.FLAG_EMPTY_ELEMENT|RXML.FLAG_CUSTOM_TRACE;
 
   class Frame {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
       if (args->showid) {
+	TAG_TRACE_ENTER("");
 	array path=lower_case(args->showid)/"->";
 	if(path[0]!="id" || sizeof(path)==1) RXML.parse_error("Can only show parts of the id object.");
 	mixed obj=id;
@@ -706,6 +707,7 @@ class TagDebug {
 	  obj=obj[tmp];
 	}
 	result = "<pre>"+Roxen.html_encode_string(sprintf("%O",obj))+"</pre>";
+	TAG_TRACE_LEAVE("");
 	return 0;
       }
       if (args->werror) {
@@ -713,7 +715,10 @@ class TagDebug {
 		     "<debug>: ",
 		     id->conf->query_name()+":"+id->not_query+"\n"+
 		     replace(args->werror,"\\n","\n") );
+	TAG_TRACE_ENTER ("message: %s", args->werror);
       }
+      else
+	TAG_TRACE_ENTER ("");
       if (args->off)
 	id->misc->debug = 0;
       else if (args->toggle)
@@ -721,6 +726,7 @@ class TagDebug {
       else
 	id->misc->debug = 1;
       result = "<!-- Debug is "+(id->misc->debug?"enabled":"disabled")+" -->";
+      TAG_TRACE_LEAVE ("");
       return 0;
     }
   }
@@ -6384,6 +6390,10 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
   <ex-box><debug werror='File &page.url; not found!
 (linked from &client.referrer;)'/></ex-box>
+
+  <p>The message is also shown the request trace, e.g. when
+  \"Tasks\"/\"Debug information\"/\"Resolve path...\" is used in the
+  configuration interface.</p>
 </attr>",
 
 //----------------------------------------------------------------------
