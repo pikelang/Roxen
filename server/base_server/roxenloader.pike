@@ -3,7 +3,7 @@
 program Privs;
 
 // Set up the roxen environment. Including custom functions like spawne().
-constant cvs_version="$Id: roxenloader.pike,v 1.69 1998/05/01 21:20:53 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.70 1998/05/07 22:15:29 grubba Exp $";
 
 #define perror roxen_perror
 
@@ -302,7 +302,9 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
   if(!fork())
   {
     array (int) olduid = ({ -1, -1 });
-    catch {
+    mixed err;
+
+    err = catch {
       if(p->query_fd() < 0)
       {
 	perror("File to dup2 to closed!\n");
@@ -327,6 +329,14 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
       }
       catch(exece("/bin/sh", ({ "-c", s }), (env||getenv())));
     };
+    catch {
+      if (err) {
+	werror(sprintf("Error in popen():\n"
+		       "%s\n", describe_backtrace(err)));
+      } else {
+	werror(sprintf("popen(%O) failed\n", s));
+      }
+    }
     exit(69);
   }else{
     string t;
