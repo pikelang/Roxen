@@ -60,7 +60,11 @@ string myclass;
 object server = files.file();
 
 int nolock = 0;
+#if efun(thread_create)
 object lock = Thread.Mutex();
+#else
+object lock = 0;
+#endif
 
 mixed `->(string id)
 {
