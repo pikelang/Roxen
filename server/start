@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.177 2001/08/13 21:47:38 mast Exp $
+# $Id: start,v 1.178 2001/08/13 22:50:18 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -665,7 +665,6 @@ start_roxen() {
         if [ "x$once" = "x1" ]; then
 	  "$pike" $args 2>&1 &
 	  ROXEN_PID=$!
-	  dp "Roxen WebServer server pid $ROXEN_PID."
 	  wait $ROXEN_PID 2>/dev/null 1>&2
 	  exitcode="$?"
 	  ROXEN_PID=""
