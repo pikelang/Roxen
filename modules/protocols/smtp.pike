@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.64 1998/09/29 18:34:25 grubba Exp $
+ * $Id: smtp.pike,v 1.65 1998/11/30 00:37:04 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.64 1998/09/29 18:34:25 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.65 1998/11/30 00:37:04 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1324,7 +1324,13 @@ void update_domains(int|void force)
     multiset(string) domains = (<>);
     foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
       if (o->query_domain) {
-	domains |= o->query_domain();
+	string|multiset d = o->query_domain();
+	if (d) {
+	  if (stringp(d)) {
+	    d = (< d >);
+	  }
+	  domains |= d;
+	}
       }
     }
 
