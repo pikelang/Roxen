@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.188 2001/06/30 16:50:40 per Exp $
+// $Id: module.pmod,v 1.189 2001/07/02 16:44:11 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -551,21 +551,7 @@ class TagSet
   //!
   {
     id_number = ++tag_set_count;
-    if (_name) {
-      if (zero_type (all_tagsets[_name]) ||
-	  (all_tagsets[_name] && gc() && zero_type (all_tagsets[_name])))
-	// Have to try to gc here to remove the old tag set object in
-	// case the only ref left to it is through all_tagsets.
-	all_tagsets[name = _name] = this_object();
-      else {
-	report_warning ("The tag set name %O is not unique - ignoring it.\n", _name);
-	if (TagSet other = all_tagsets[_name]) {
-	  // The already registered name is ambigious anyway.
-	  other->name = 0;
-	  all_tagsets[_name] = 0;
-	}
-      }
-    }
+    set_name (_name);
     if (_tags) add_tags (_tags);
 #ifdef RXML_OBJ_DEBUG
     __object_marker->create (this_object());
@@ -785,7 +771,7 @@ class TagSet
     switch (var) {
       case "name":
 	if (name) m_delete (all_tagsets, name);
-	if (val) all_tagsets[name = val] = this_object();
+	set_name (val);
 	break;
       case "imported":
 	if (!val) return val;	// Pike can call us with 0 as part of an optimization.
@@ -888,6 +874,26 @@ class TagSet
   {
     catch (changed());
     if (name) m_delete (all_tagsets, name);
+  }
+
+  static void set_name (string new_name)
+  {
+    if (new_name) {
+      if (zero_type (all_tagsets[new_name]) ||
+	  (all_tagsets[new_name] && gc() && zero_type (all_tagsets[new_name])))
+	// Have to try to gc here to remove the old tag set object in
+	// case the only ref left to it is through all_tagsets.
+	all_tagsets[name = new_name] = this_object();
+      else {
+	report_warning ("The tag set name %O is not unique - ignoring it.\n",
+			new_name);
+	if (TagSet other = all_tagsets[new_name]) {
+	  // The already registered name is ambigious anyway.
+	  other->name = 0;
+	  all_tagsets[new_name] = 0;
+	}
+      }
+    }
   }
 
   static mapping(string:Tag) tags = ([]), proc_instrs;
@@ -4200,9 +4206,6 @@ class Parser
   // The parent parser if this one is nested. This is only used to
   // register runtime tags.
 
-  Stdio.File _source_file;
-  // This is a compatibility kludge for use with parse_rxml().
-
   MARK_OBJECT_ONLY;
 
   string _sprintf()
@@ -5379,7 +5382,6 @@ static class TXml
     } )
       parse_error ("Cannot convert %s to %s: %s",
  		   utils->format_short (val), name, describe_error (err));
-
   }
 
   string decode (mixed val)

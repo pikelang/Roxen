@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.306 2001/06/30 15:44:05 mast Exp $
+// $Id: rxml.pike,v 1.307 2001/07/02 16:44:09 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -69,6 +69,9 @@ RXML.TagSet rxml_tag_set = class
     PROF_ENTER( "rxml", "overhead" );
 
     id->misc->defines = ctx->misc; // Mostly for compatibility.
+#if ROXEN_COMPAT <= 1.3
+    if (old_rxml_compat) ctx->compatible_scope = 1;
+#endif
 
     ctx->misc[" _ok"] = 1;
     ctx->misc[" _error"] = 200;
@@ -121,24 +124,16 @@ string parse_rxml(string what, RequestID id,
 // rxml parse session. The RXML module provides several different ways
 // to accomplish that.
 {
-  RXML.PXml parent_parser = id->misc->_parser; // Don't count on that this exists.
   RXML.PXml parser;
-  RXML.Context ctx;
+  RXML.Context ctx = RXML_CONTEXT;
 
-  if (parent_parser && (ctx = parent_parser->context) && ctx->id == id) {
-    parser = default_content_type->get_parser (ctx, 0, parent_parser);
-    parser->recover_errors = parent_parser->recover_errors;
-  }
+  if (ctx && ctx->id == id)
+    parser = default_content_type->get_parser (ctx, 0, 0);
   else {
     parser = rxml_tag_set->get_parser (default_content_type, id);
-    parser->recover_errors = 1;
-    parent_parser = 0;
     ctx = parser->context;
-#if ROXEN_COMPAT <= 1.3
-    if (old_rxml_compat) parser->context->compatible_scope = 1;
-#endif
   }
-  id->misc->_parser = parser;
+  parser->recover_errors = 1;
 
   if (defines) {
     ctx->misc = id->misc->defines = defines;
@@ -155,16 +150,15 @@ string parse_rxml(string what, RequestID id,
   if (file) {
     if (!defines[" _stat"])
       defines[" _stat"] = file->stat();
-    parser->_source_file = file;
+    defines["_source file"] = file;
   }
 
   if (mixed err = catch {
-    if (parent_parser && ctx == RXML_CONTEXT)
+    if (ctx == RXML_CONTEXT)
       parser->finish (what);	// Skip the unnecessary work in write_end. DDTAH.
     else
       parser->write_end (what);
     what = parser->eval();
-    id->misc->_parser = parent_parser;
   }) {
 #ifdef DEBUG
     if (!parser) {
@@ -175,13 +169,14 @@ string parse_rxml(string what, RequestID id,
       error("Parser destructed!\n");
     }
 #endif
-    id->misc->_parser = parent_parser;
+    if (file) m_delete (defines, "_source file");
     if (objectp (err) && err->thrown_at_unwind)
       error ("Can't handle RXML parser unwinding in "
 	     "compatibility mode (error=%O).\n", err);
     else throw (err);
   }
 
+  if (file) m_delete (defines, "_source file");
   return what;
 }
 
@@ -233,12 +228,8 @@ class CompatTag
 	return ({propagate_tag()});
       }
 
-      Stdio.File source_file;
-      mapping defines;
-      if (id->misc->_parser) {
-	source_file = id->misc->_parser->_source_file;
-	defines = id->misc->defines;
-      }
+      mapping defines = RXML_CONTEXT->misc;
+      Stdio.File source_file = defines["_source file"];
 
       string|array(string) result;
       if (flags & RXML.FLAG_EMPTY_ELEMENT)
