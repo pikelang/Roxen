@@ -1,5 +1,5 @@
 /*
- * $Id: cgi.c,v 1.32 1998/05/20 19:21:17 grubba Exp $
+ * $Id: cgi.c,v 1.33 1998/06/05 13:15:30 grubba Exp $
  *
  * CGI-wrapper for Roxen.
  *
@@ -213,10 +213,20 @@ int start_program(char **argv)
 
   if (!raw) {
 #ifdef HAVE_PIPE
-    pipe(fds);
+    if (pipe(fds) != 0) {
+#ifdef DEBUG
+      perror("CGI: pipe() failed");
+#endif /* DEBUG */
+      exit(1);
+    }
 #else
 #ifdef HAVE_SOCKETPAIR
-    socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) != 0) {
+#ifdef DEBUG
+      perror("CGI: socketpair() failed");
+#endif /* DEBUG */
+      exit(1);
+    }
 #else
 #error Bad luck.
 #endif
