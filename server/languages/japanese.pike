@@ -1,3 +1,4 @@
+#charset iso-2022
 /* name="Japanese (Was Kanji) language plugin"; */
 /* doc="Adds support for japanese";
  * Bugs by Marcus Comstedt <marcus@idonex.se> */
@@ -6,7 +7,7 @@
  *      on the page since Netscape caches charsets.
  */
 
-string cvs_version = "$Id: japanese.pike,v 1.8 1998/03/11 19:42:34 neotron Exp $";
+string cvs_version = "$Id: japanese.pike,v 1.9 1999/02/28 18:10:11 grubba Exp $";
 string month(int num);
 
 /* The following function is correct for -10**12 < n < 10**12 (I think...) */
@@ -15,44 +16,44 @@ string mknumber(int n)
 {
   array(string) digit;
   string r;
-  digit = ({ "", "0l", "Fs", ";0", ";M", "8^", "O;", "<7", "H,", "6e" }); 
+  digit = ({ "", "$(B0l(B", "$(BFs(B", "$(B;0(B", "$(B;M(B", "$(B8^(B", "$(BO;(B", "$(B<7(B", "$(BH,(B", "$(B6e(B" }); 
 
-  if(!n) return "%<%m";
+  if(!n) return "$(B%<%m(B";
 
-  if(n<0) return "Ii"+mknumber(-n);
+  if(n<0) return "$(BIi(B"+mknumber(-n);
 
   if(n>=200000000)
-    return mknumber(n/100000000)+"2/"+mknumber(n%100000000);
+    return mknumber(n/100000000)+"$(B2/(B"+mknumber(n%100000000);
   else if(n>100000000)
-    return "2/"+mknumber(n%100000000);
+    return "$(B2/(B"+mknumber(n%100000000);
   else if(n==100000000)
-    return "2/";
+    return "$(B2/(B";
 
   if(n>=20000)
-    return mknumber(n/10000)+"K|"+mknumber(n%10000);
+    return mknumber(n/10000)+"$(BK|(B"+mknumber(n%10000);
   else if(n>10000)
-    return "K|"+mknumber(n%10000);
+    return "$(BK|(B"+mknumber(n%10000);
   else if(n==10000)
-    return "K|";
+    return "$(BK|(B";
 
   r = "";
 
   if(n>=2000)
-    r += digit[n/1000]+"@i";
+    r += digit[n/1000]+"$(B@i(B";
   else if(n>=1000)
-    r += "@i";
+    r += "$(B@i(B";
 
   n %= 1000;
   if(n>=200)
-    r += digit[n/100]+"I4";
+    r += digit[n/100]+"$(BI4(B";
   else if(n>=100)
-    r += "I4";
+    r += "$(BI4(B";
 
   n %= 100;
   if(n>=20)
-    r += digit[n/10]+"==";
+    r += digit[n/10]+"$(B==(B";
   else if(n>=10)
-    r += "==";
+    r += "$(B==(B";
 
   return r + digit[n%10];
 }
@@ -60,7 +61,7 @@ string mknumber(int n)
 
 string ordered(int i)
 {
-  return "\033$B"+mknumber(i)+"HV\033(B";
+  return mknumber(i)+"$(BHV(B";
 }
 
 string date(int timestamp, mapping|void m)
@@ -73,26 +74,26 @@ string date(int timestamp, mapping|void m)
   if(!(m["full"] || m["date"] || m["time"]))
   {
     if(t1["yday"] == t2["yday"] && t1["year"] == t2["year"])
-      return "\033$B:#F|\033(B";
+      return "$(B:#F|(B";
   
     if(t1["yday"]+1 == t2["yday"] && t1["year"] == t2["year"])
-      return "\033$B:rF|\033(B";
+      return "$(B:rF|(B";
   
     if(t1["yday"]-1 == t2["yday"] && t1["year"] == t2["year"])
-      return "\033$BL@F|\033(B";
+      return "$(BL@F|(B";
   
     if(t1["year"] != t2["year"])
-      return "\033$B"+mknumber(t1["year"]+1900)+"G/"+mknumber(t1["mon"]+1)+
-         "7n"+mknumber(t1["mday"])+"F|\033(B";
-    return "\033$B"+mknumber(t1["mon"]+1)+"7n"+mknumber(t1["mday"])+"F|\033(B";
+      return mknumber(t1["year"]+1900)+"$(BG/(B"+mknumber(t1["mon"]+1)+
+         "$(B7n(B"+mknumber(t1["mday"])+"$(BF|(B";
+    return mknumber(t1["mon"]+1)+"$(B7n(B"+mknumber(t1["mday"])+"$(BF|(B";
   }
   if(m["full"])
     return ctime(timestamp)[11..15]+
-      "\033$B"+mknumber(t1["year"]+1900)+"G/"+mknumber(t1["mon"]+1)+
-       "7n"+mknumber(t1["mday"])+"F|\033(B";
+      mknumber(t1["year"]+1900)+"$(BG/(B"+mknumber(t1["mon"]+1)+
+       "$(B7n(B"+mknumber(t1["mday"])+"$(BF|(B";
   if(m["date"])
-    return "\033$B"+mknumber(t1["year"]+1900)+"G/"+mknumber(t1["mon"]+1)+
-       "7n"+mknumber(t1["mday"])+"F|\033(B";
+    return mknumber(t1["year"]+1900)+"$(BG/(B"+mknumber(t1["mon"]+1)+
+       "$(B7n(B"+mknumber(t1["mday"])+"$(BF|(B";
   if(m["time"])
     return ctime(timestamp)[11..15];
 }
@@ -100,23 +101,25 @@ string date(int timestamp, mapping|void m)
 
 string number(int num)
 {
-  return "\033$B"+mknumber(num)+"\033(B";
+  return mknumber(num);
 }
 
 string month(int num)
 {
-  return "\033$B"+mknumber(num)+"7n\033(B";
+  return mknumber(num)+"$(B7n(B";
 }
 
 string day(int num)
 {
-  return "\033$B"+({ "F|", "7n", "2P", "?e", "LZ", "6b", "EZ" })[ num - 1 ]+
-	    "MKF|\033(B";
+  return ({ "$(BF|(B", "$(B7n(B", "$(B2P(B", "$(B?e(B", "$(BLZ(B", "$(B6b(B", "$(BEZ(B" })[ num - 1 ]+
+	    "$(BMKF|(B";
 }
 
 array aliases()
 {
   return ({ "kj", "kanji", /* For backward compatibility */
-	    "jp", "japanese", "nihongo" /* To keep Peter Evans happy */});
+	    "jp", "japanese", "nihongo" /* To keep Peter Evans happy */,
+	    "$(BF|K\8l(B"
+  });
 }
 

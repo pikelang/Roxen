@@ -1,3 +1,4 @@
+#charset iso-8859-2
 /* name="Czech language support for Roxen";
    doc="Author: Jan Petrous 16.10.1997<br>"
    "Based on Slovenian language module by Iztok Umek<br>"
@@ -12,7 +13,7 @@
              		(First letter must be lower case)
 
 */
-string cvs_version = "$Id: czech.pike,v 1.5 1998/11/30 19:17:07 grubba Exp $";
+string cvs_version = "$Id: czech.pike,v 1.6 1999/02/28 18:10:32 grubba Exp $";
 string month(int num)
 {
   return ({ "ledna", "únor", "bøezna", "dubna", "kvìtna",
