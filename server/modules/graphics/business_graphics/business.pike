@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.104 1998/06/24 10:57:11 wellhard Exp $";
+constant cvs_version = "$Id: business.pike,v 1.105 1998/06/24 12:21:53 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -28,16 +28,7 @@ function create_pie, create_bars, create_graph;
 
 //FIXME (Inte alltid VOID!
 #define VOIDCODE \
-if(m->voidseparator) \
-    voidsep=m->voidseparator; \
-  else\
-    if(m->voidsep)\
-      voidsep=m->voidsep;\
-    else\
-      if (res->voidsep)\
-	voidsep=res->voidsep;\
-      else\
-	voidsep="VOID"
+  do { voidsep = m->voidseparator||m->voidsep||res->voidsep||"VOID"; } while(0)
 
 int loaded;
 
@@ -88,7 +79,7 @@ mixed *register_module()
        "  <b>3D</b>             Render piecharts on top of a cylinder, takes"
        " the\n                 height in pixels of the cylinder as argument.\n"
        /* " tone         Do nasty stuff to the background.\n"
-	  " Requires dark background to be visable.\n" */
+	  " Requires dark background to be visible.\n" */
        "  <b>eng</b>            If present, numbers are shown like 1.2M.\n"
        "  <b>neng</b>           As above but 0.1-1.0 is written 0.xxx .\n"
        "  <b>tonedbox</b>       Creates a background shading between the\n"
@@ -172,10 +163,12 @@ mixed *register_module()
 
 void start(int num, object configuration)
 {
-  loaded = 1;
-  create_pie   = ((program)"create_pie")()->create_pie;
-  create_bars  = ((program)"create_bars")()->create_bars;
-  create_graph = ((program)"create_graph")()->create_graph;
+  if (!loaded) {
+    loaded = 1;
+    create_pie   = ((program)"create_pie")()->create_pie;
+    create_bars  = ((program)"create_bars")()->create_bars;
+    create_graph = ((program)"create_graph")()->create_graph;
+  }
 }
 
 void stop()
@@ -185,6 +178,7 @@ void stop()
   foreach(glob(combine_path(roxen->filename(this),"../*"), indices(progs)),
           string to_delete)
     m_delete(progs, to_delete);
+  loaded = 0;
 }
 
 void create()
@@ -205,11 +199,8 @@ string itag_xaxis(string tag, mapping m, mapping res)
   bg_timers->xaxis = gauge {
 #endif
   int l=query("maxstringlength")-1;
-  if(m->font)
-    res->xaxisfont=m->font;
-  else
-    if(m->nfont)
-      res->xaxisfont=m->nfont;
+
+  res->xaxisfont = m->font || m->nfont || res->xaxisfont;
 
   if(m->name) res->xname = m->name[..l];  
   if(m->start) 
@@ -233,11 +224,8 @@ string itag_yaxis(string tag, mapping m, mapping res)
   bg_timers->yaxis = gauge {
 #endif
   int l=query("maxstringlength")-1;
-  if(m->font)
-    res->yaxisfont=m->font;
-  else
-    if(m->nfont)
-      res->yaxisfont=m->nfont;
+
+  res->yaxisfont = m->font || m->nfont || res->yaxisfont;
 
   if(m->name) res->yname = m->name[..l];
   if(m->start) 
@@ -263,12 +251,11 @@ string itag_names(string tag, mapping m, string contents,
   bg_timers->names += gauge {
 #endif
   int l=query("maxstringlength")-1;
-  string sep=SEP;
+
   if(!m->noparse)
     contents = parse_rxml( contents, id );
 
-  if(m->separator)
-    sep=m->separator;
+  string sep = m->separator || SEP;
 
   string voidsep;
   VOIDCODE;
@@ -279,11 +266,8 @@ string itag_names(string tag, mapping m, string contents,
   {
     if(tag=="xnames")
     {
-      if(m->font)
-	res->xnamesfont=m->font;
-      else
-	if(m->nfont)
-	  res->xnamesfont=m->nfont;
+      res->xnamesfont = m->font || m->nfont || res->xnamesfont;
+
       foo=res->xnames = contents/sep;
       if(m->orient) 
 	if (m->orient[0..3] == "vert")
@@ -292,14 +276,11 @@ string itag_names(string tag, mapping m, string contents,
 	  res->orientation="hor";
     }
     else
-      {
-	foo=res->ynames = contents/sep;
-        if(m->font)
-	  res->ynamesfont=m->font;
-	else
-	  if(m->nfont)
-	    res->ynamesfont=m->nfont;
-      }
+    {
+      foo=res->ynames = contents/sep;
+      
+      res->ynamesfont = m->font || m->nfont || res->ynamesfont;
+    }
   }
   else
      return "";
@@ -331,16 +312,14 @@ string itag_values(string tag, mapping m, string contents,
 #ifdef BG_DEBUG
   bg_timers->values += gauge {
 #endif
-  string sep=SEP;
-  string voidsep;
 
+  string voidsep;
   VOIDCODE;
 
   if(!m->noparse)
     contents = parse_rxml( contents, id );
 
-  if(m->separator)
-    sep=m->separator;
+  string sep = m->separator || SEP;
   
   if( contents-" " != "" )
   {
@@ -362,20 +341,16 @@ string itag_data(mapping tag, mapping m, string contents,
 #ifdef BG_DEBUG
   bg_timers->data += gauge {
 #endif
-  string sep=SEP;
-  string voidsep;
 
+  string voidsep;
   VOIDCODE;
 
-  if(m->separator)
-    sep=m->separator; 
+  string sep = m->separator || SEP;
 
   if (sep=="")
     sep=SEP;
 
-  string linesep="\n";
-  if(m->lineseparator)
-    linesep=m->lineseparator; 
+  string linesep = m->lineseparator || "\n";
 
   if (linesep=="")
     linesep="\n";
@@ -495,11 +470,10 @@ string itag_data(mapping tag, mapping m, string contents,
 string itag_colors(mapping tag, mapping m, string contents,
 		   mapping res, object id)
 {
-  string sep=SEP;
   if(!m->noparse)
     contents = parse_rxml( contents, id );
 
-  if(m->separator) sep=m->separator;
+  string sep = m->separator || SEP;
   
   res->colors = map(contents/sep, parse_color); 
 
@@ -509,33 +483,27 @@ string itag_colors(mapping tag, mapping m, string contents,
 string itag_legendtext(mapping tag, mapping m, string contents,
 		       mapping res, object id)
 {
-  int l=query("maxstringlength")-1;
-  string sep=SEP;
-  string voidsep;
+  int maxlen = query("maxstringlength")-1;
 
+  string voidsep;
   VOIDCODE;
 
   if(!m->noparse)
     contents = parse_rxml( contents, id );
 
-  if(m->separator)
-    sep=m->separator;
+  string sep = m->separator || SEP;
 
-  if(m->font)
-    res->legendfont=m->font;
-  else
-    if(m->nfont)
-      res->legendfont=m->nfont;
+  res->legendfont = m->font || m->nfont || res->legendfont;
 
   res->legend_texts = contents/sep;
 
-  array foo=res->legend_texts;
+  array foo = res->legend_texts;
 
   for(int i=0; i<sizeof(foo); i++)
-    if (voidsep==foo[i])
+    if (voidsep == foo[i])
       foo[i]=" ";
     else
-      foo[i]=foo[i][..l];
+      foo[i]=foo[i][..maxlen];
 
   return "";
 }
@@ -618,25 +586,18 @@ string tag_diagram(string tag, mapping m, string contents,
       combine_path( dirname(id->not_query), (string)m->background);
 
   if (m->name)
-    {
-      res->name=m->name[..l];
-      if (m->namesize)
-	res->namesize=(int)m->namesize;
-      if (m->namecolor)
-	res->namecolor=parse_color(m->namecolor);
-    }
+  {
+    res->name=m->name[..l];
+    if (m->namesize)
+      res->namesize=(int)m->namesize;
+    if (m->namecolor)
+      res->namecolor=parse_color(m->namecolor);
+  }
 
-  if(m->voidseparator)
-    res->voidsep=m->voidseparator;
-  else
-    if(m->voidsep)
-      res->voidsep=m->voidsep;
+  res->voidsep = m->voidseparator || m->voidsep;
 
-  if(m->font)
-    res->font=m->font;
-  else
-    if(m->nfont)
-      res->font=m->nfont;
+  res->font = m->font || m->nfont;
+
   if(m->namefont)
     res->namefont=m->namefont;
 
@@ -652,10 +613,10 @@ string tag_diagram(string tag, mapping m, string contents,
     res->colorbg=parse_color(m->colorbg);
   
   if ((m->bgcolor)&&(m->notrans))
-    {
-      res->colorbg=parse_color(m->bgcolor);
-      m_delete(m, "bgcolor");
-    }
+  {
+    res->colorbg=parse_color(m->bgcolor);
+    m_delete(m, "bgcolor");
+  }
   else
     if (m->notrans)
       res->colorbg=parse_color("white");
