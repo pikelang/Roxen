@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.418 2003/01/29 16:46:03 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.419 2003/03/05 13:48:45 mattias Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4078,6 +4078,7 @@ class TagEmit {
 	    string name;
 	    int order;
 	    function compare;
+	    function lcase;
 	  };
 
 	  array(FieldData) fields = allocate (sizeof (raw_fields));
@@ -4102,8 +4103,14 @@ class TagEmit {
 		  if (compat_level > 2.2) {
 		    if (field->compare) break field_flag_scan;
 		    field->compare = strict_compare;
-		    break;
 		  }
+		  break;
+ 	        case '^':
+		  if (compat_level > 3.3) {
+		    if (field->lcase) break field_flag_scan;
+		    field->lcase = lower_case;
+		  }
+		  break;
 		  // Fall through.
 		default:
 		  break field_flag_scan;
@@ -4116,6 +4123,8 @@ class TagEmit {
 	      else
 		field->compare = strict_compare;
 	    }
+	    if (!field->lcase)
+	      field->lcase = lambda(mixed m){return m;};
 	  }
 
 	  res = Array.sort_array(
@@ -4129,12 +4138,14 @@ class TagEmit {
 		int tmp;
 		switch (field->order) {
 		  case '-':
-		    tmp = field->compare (m2[field->name], m1[field->name],
+		    tmp = field->compare (field->lcase(m2[field->name]),
+					  field->lcase(m1[field->name]),
 					  field->name);
 		    break;
 		  default:
 		  case '+':
-		    tmp = field->compare (m1[field->name], m2[field->name],
+		    tmp = field->compare (field->lcase(m1[field->name]),
+					  field->lcase(m2[field->name]),
 					  field->name);
 		}
 
@@ -8705,6 +8716,9 @@ just got zapped?
   be sorted on, in prioritized order, e.g. \"lastname,firstname\".
   By adding a \"-\" sign in front of a name, that entry will be
   sorted in the reversed order.</p>
+
+  <p>The sort order is case sensitive, but by adding \"^\" in front of
+  the variable name the order will be case insensitive.</p>
 
   <p>The sort algorithm will treat numbers as complete numbers and not
   digits in a string, hence \"foo8bar\" will be sorted before
