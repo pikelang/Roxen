@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.76 1997/08/21 14:10:26 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.77 1997/08/24 02:26:01 peter Exp $";
 //inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -996,7 +996,6 @@ mapping (string:string) selected_nodes =
 ([
   "Configurations":"/Configurations",
   "Globals":"/Globals",
-  "Status":"/Status",
   "Errors":"/Errors",
   "Actions":"/Actions",
 ]);
@@ -1004,7 +1003,6 @@ mapping (string:string) selected_nodes =
 array tabs = ({
   "Configurations",
   "Globals",
-  "Status",
   "Errors",
   "Actions",
 });
@@ -1012,7 +1010,6 @@ array tabs = ({
 array tab_names = ({
  "Virtual Servers",
  "Global Variables",
- "Status",
  "Event Log",
  "Actions",
 });
@@ -1022,12 +1019,8 @@ string display_tabular_header(object node)
 {
   string p, s;
   
-  array links = ({
-    selected_nodes[tabs[0]]+"?"+(bar++),
-    selected_nodes[tabs[1]]+"?"+(bar++),
-    selected_nodes[tabs[2]]+"?"+(bar++),
-    selected_nodes[tabs[3]]+"?"+(bar++),
-    selected_nodes[tabs[4]]+"?"+(bar++),
+  array links = Array.map(tabs, lambda(string q) {
+    return selected_nodes[q]+"?"+(bar++);
   });
 
   if(node != root)
