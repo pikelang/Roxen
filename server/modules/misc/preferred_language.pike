@@ -6,7 +6,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.8 2000/03/16 18:57:14 nilsson Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.9 2000/03/25 02:31:00 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_PARSER;
 constant module_name = "Preferred Language Analyzer";
@@ -86,6 +86,19 @@ class TagEmitLanguages {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-  "emit#languages":"<desc plugin>Outputs language descriptions</desc>"
+  "emit#languages":({ "<desc plugin>Outputs language descriptions</desc>",
+		      ([
+			"&_.code;":"<desc ent>The language code.</desc>",
+			"&_.en;":"<desc ent>The language name in english.</desc>",
+			"&_.local;":"<desc ent>The language name as written in the language itself.</desc>",
+			"&_.preurl;":#"<desc ent>A URL which makes this language the used one by altering
+prestates.</desc>",
+			"&_.confurl;":#"<desc ent>A URL which makes the language the used one by altering
+the roxen cookie.</desc>",
+			"&_.localized;":#"<desc ent>The language name as written in the currently
+selected language.</desc>"
+		      ])
+  })
+
 ]);
 #endif
