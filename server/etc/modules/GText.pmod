@@ -4,17 +4,13 @@ static private mapping (int:array(array(int))) matrixes = ([]);
 array (array(int)) make_matrix(int size)
 {
   if(matrixes[size]) return matrixes[size];
-  array res;
-  int i;
-  int j;
-  res = allocate(size, allocate)(size);
-  for(i=0; i<size; i++)
-    for(j=0; j<size; j++)
+  array res = allocate(size, allocate)(size);
+  for(int i=0; i<size; i++)
+    for(int j=0; j<size; j++)
       res[i][j] = (int)max((float)size/2.0-sqrt((size/2-i)*(size/2-i) + (size/2-j)*(size/2-j)),0);
   return matrixes[size] = res;
 }
 #endif
-
 
 string fix_relative(string file, string bd)
 {
@@ -47,7 +43,6 @@ array white = ({ 255,255,255 });
 array lgrey = ({ 200,200,200 });
 array grey = ({ 128,128,128 });
 array black = ({ 0,0,0 });
-array wwwb = ({ lgrey,lgrey,grey,black });
 
 Image.Image bevel(Image.Image in, int width, int|void invert)
 {
@@ -102,40 +97,28 @@ object open(string file, string mode)
 }
 #endif
 
+
+#if constant(roxen)
 object last_image;      // Cache the last image for a while.
 string last_image_name;
 object load_image(string f,string bd, object|void id)
 {
   if(last_image_name == f && last_image) return last_image->copy();
   string data;
-  object file;
-  object img
-#if !constant(Image.PNM)
-  =Image.image()
-#endif
-    ;
-#if constant(roxen)  
-  if(!(data=roxen->try_get_file(fix_relative(f, bd),id)))
-#endif
-    if(!(file=open(fix_relative(f,bd),"r")) || (!(data=file->read())))
-      return 0;
-//  werror("Read "+strlen(data)+" bytes.\n");
-#if constant(Image.PNM.decode)
-  catch { if(!img) img = Image.PNM.decode( data ); };
-#endif
-#if constant(Image.GIF.decode)
-  catch { if(!img) img = Image.GIF.decode( data ); };
-#endif
-#if constant(Image.JPEG.decode)
-  catch { if(!img) img = Image.JPEG.decode( data ); };
-#endif
-#if !constant(Image.PNM.decode)
-  if (catch { if(!img->frompnm(data)) return 0;}) return 0;
-#endif
+  Stdio.File file;
+  Image.image img=Image.image();
+
+  if(!(file=open(fix_relative(f,bd),"r")) || (!(data=file->read())))
+    return 0;
+
+  //Image._decode( data ) here
+
   if(!img) return 0;
   last_image = img; last_image_name = f;
   return img->copy();
 }
+#endif /* constant(roxen) */
+
 
 Image.Image make_text_image(mapping args, Image.Font font, string text, RequestID id)
 {
@@ -380,10 +363,10 @@ Image.Image make_text_image(mapping args, Image.Font font, string text, RequestI
       background = background->scale(xs, ys);
   }
 
-  if(args->turbulence)
+  if(args->bgturbulence)
   {
     array (float|array(int)) arg=({});
-    foreach((args->turbulence/";"),  string s)
+    foreach((args->bgturbulence/";"),  string s)
     {
       array q= s/",";
       if(sizeof(q)<2) args+=({ ((float)s)||0.2, ({ 255,255,255 }) });
@@ -478,9 +461,10 @@ Image.Image make_text_image(mapping args, Image.Font font, string text, RequestI
 			  ({parse_color(c1),parse_color(c2),parse_color(c3),
 			      parse_color(c4)}));
   }
-  if(args->outline)
+  if(args->outline) {
     outline(background, text_alpha, parse_color((args->outline/",")[0]),
 	    ((int)(args->outline/",")[-1])+1, xoffset, yoffset);
+  }
 
   if(args->textbelow)
   {
