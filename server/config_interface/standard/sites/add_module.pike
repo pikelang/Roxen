@@ -198,7 +198,8 @@ array(int|string) class_visible_compact( string c, string d, object id )
 string describe_module_compact( object module, object block )
 {
   if(!block)
-    return "<option value='"+module->sname+"'>"+module->get_name();
+    return "<option value='"+module->sname+"'>"+module->get_name()+"</option>";
+  return "";
 }
 
 string page_compact( RequestID id )
