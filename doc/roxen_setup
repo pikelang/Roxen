@@ -5,6 +5,14 @@ logview_sql
 menumaker
 sitebuilder
 
+
+Database setup from scratch for Mysql
+-------------------------------------
+A. LogView SQL: 1. Edit the file logview_sql/LogViewSQL.pmod/config.h
+                2. Change the definition of "DATABASE" to the correct value.
+                3. Run logview_sql/tools/setup.pike
+
+
 Roxen modules needed by AutoSite
 --------------------------------
   AutoMail Database API Module
