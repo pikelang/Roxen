@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<locale version="1.0"/>
+<project>roxen_message</project>
+<language>nld</language>
+<file>../server_core/wizard.pike</file>
+
+<str id="16">
+<o>Remove</o>
+<t>Verwijderen</t>
+</str>
+
+<str id="18">
+<o>Add</o>
+<t>Toevoegen</t>
+</str>
+
+<str id="38">
+<o>Ok</o>
+<t>OK</t>
+</str>
+
+<str id="47">
+<o>Example</o>
+<t>Voorbeeld</t>
+</str>
+
+<str id="48">
+<o>Example Text</o>
+<t>Voorbeeldtekst</t>
+</str>
+
+<str id="49">
+<o>Yes</o>
+<t>Ja</t>
+</str>
+
+<str id="50">
+<o>No</o>
+<t>Nee</t>
+</str>
+
+<str id="51">
+<o>No name</o>
+<t>Geen Naam</t>
+</str>
+
+<str id="52">
+<o>Completed</o>
+<t>Beeindigd</t>
+</str>
+
+<str id="53">
+<o>Page </o>
+<t>Pagina </t>
+</str>
+
+<str id="54">
+<o>&amp;lt;- Previous</o>
+<t>&amp;lt;- Terug</t>
+</str>
+
+<str id="55">
+<o>OK</o>
+<t>OK</t>
+</str>
+
+<str id="56">
+<o>Cancel</o>
+<t>Afbreken</t>
+</str>
+
+<str id="57">
+<o>Next -&amp;gt;</o>
+<t>Verder -&amp;gt;</t>
+</str>
