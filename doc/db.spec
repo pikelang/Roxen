@@ -1,11 +1,18 @@
-# $Id: db.spec,v 1.29 1998/09/16 21:13:00 wellhard Exp $
+# $Id: db.spec,v 1.30 1998/09/17 14:04:15 js Exp $
 
+drop table mail_misc;
+drop table user_misc;
+drop table message_body_id;
 drop table messages;
 drop table mail;
 drop table mailboxes;
 drop table send_q;
 drop table users;
+drop table flags;
+drop table admin_status;
+drop table admin_variables;
 drop table customers;
+drop table features;
 drop table dns;
 drop table template_wizards;
 drop table template_wizards_pages;
@@ -22,14 +29,15 @@ drop table customers_schemes_vars;
 create table mail_misc (
              id                bigint not null,
              variable          varchar(16) not null,
-             qwerty            varchar(255) not null
-         
- );
+             qwerty            blob not null,
+	     PRIMARY KEY(id,variable)
+  );
 
 create table user_misc (
              id                 bigint not null,
              variable           varchar(16) not null,
-             qwerty             varchar(255) not null
+             qwerty             blob not null,
+	     PRIMARY KEY(id,variable)
  )
 
 
@@ -50,7 +58,8 @@ create table messages (
 create table mail (
              id	                     bigint auto_increment primary key,
 	     mailbox_id		     int,
-             message_id		     bigint
+             message_id		     bigint,
+	     INDEX mail_index (mailbox_id)
      );
 
      
@@ -79,7 +88,7 @@ create table users (
              customer_id	     int
      );
 
-create table flags (
+create table flags ( 
              mail_id                 int,
 	     name                    varchar(16)
      );
@@ -108,7 +117,7 @@ create table customers (
 	     password		     varchar(64) not null,
 	     name		     varchar(255) not null,
              registration_date       timestamp,
-             template_scheme_id      int not null default 1,
+             template_scheme_id      int not null default 1
      );
 
 create table dns (
@@ -119,7 +128,18 @@ create table dns (
              rr_type		     varchar(8),
              rr_value		     varchar(255)
      );
-	    
+
+create table features (
+             customer_id             int not null,
+	     feature		     varchar(64) not null,
+	     PRIMARY KEY(customer_id,feature)
+     );
+  
+create table features_list (
+	     feature		     varchar(64)
+     );
+  
+
 # AutoWeb
 
 # Template wizards
