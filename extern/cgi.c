@@ -83,7 +83,7 @@ int start_program(char **argv)
     {
       int n;
       limit=-1;
-      n = sscanf(more_options, "%[a-z_]=%d;%s", p, &limit, more_options);
+      n = sscanf(more_options, "%[a-z_]:%d;%s", p, &limit, more_options);
       if(n==2) more_options="";
       rl.rlim_cur = limit;
       rl.rlim_max = limit;
