@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.147 1999/07/31 18:43:52 js Exp $";
+constant cvs_version = "$Id: http.pike,v 1.148 1999/08/04 18:59:39 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -360,7 +360,7 @@ private int parse_got()
       }
 
       // Do we have all the headers?
-      if (!sscanf(s, "%s\r\n\r\n%s", s, data)) {
+      if (!sscanf(raw, "%s\r\n\r\n%s", s, data)) {
 	// No, we need more data.
 	DPERROR("HTTP: parse_got(): Request is not complete.");
 	return 0;
