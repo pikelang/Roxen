@@ -1,5 +1,7 @@
-/* $Id: listfonts.pike,v 1.4 2000/02/04 14:38:50 jhs Exp $ */
-#if constant(available_font_versions)
+/*
+ * $Id: listfonts.pike,v 1.5 2000/02/08 17:43:22 grubba Exp $
+ */
+
 constant action = "maintenance";
 constant name= "List Available Fonts";
 constant doc = "List all available fonts";
@@ -8,6 +10,7 @@ string versions(string font)
 {
   array res=({ });
   array b = available_font_versions(font,32);
+  if (!b || !sizeof(b)) return "<b>Not available.</b>"; // FIXME: locale?
   array a = map(b,describe_font_type);
   mapping m = mkmapping(b,a);
   foreach(sort(indices(m)), string t)
@@ -28,6 +31,7 @@ string page_0(object id)
               "<font size=+1>All available fonts</font><p>");
   foreach(roxen->fonts->available_fonts(1), string font)
   res+=list_font(font);
+  // FIXME: locale?
   res += ("<p>Example text: <font size=-1><input name=text size=46 value='"
           "<cf-locale get=font_test_string>'><p>"
 	  "<table width='70%'><tr><td align=left>"
@@ -51,6 +55,3 @@ mixed parse(object id)
     return page_1( id );
   return page_0( id );
 }
-#else
-#error Only available under roxen 1.2a11 or newer
-#endif
