@@ -1,5 +1,5 @@
 /*
- * $Id: sqltag.pike,v 1.8 1997/09/23 11:05:05 grubba Exp $
+ * $Id: sqltag.pike,v 1.9 1997/09/28 17:25:16 grubba Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <SQLQUERY> and <SQLOUTPUT>.
@@ -7,7 +7,7 @@
  * Henrik Grubbström 1997-01-12
  */
 
-constant cvs_version="$Id: sqltag.pike,v 1.8 1997/09/23 11:05:05 grubba Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.9 1997/09/28 17:25:16 grubba Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -26,7 +26,7 @@ array register_module()
   return( ({ MODULE_PARSER,
 	       "SQL-module",
 	       "This module gives the three tags &lt;SQLQUERY&gt;, "
-	       "&lt;SQLOUTPUT&gt; and &lt;SQLTABLE&gt;.<br>\n"
+	       "&lt;SQLOUTPUT&gt;, &lt;SQLELSE&gt; and &lt;SQLTABLE&gt;.<br>\n"
 	       "Usage:<ul>\n"
 	       "<table border=0>\n"
 	       "<tr><td valign=top><b>&lt;sqloutput&gt;</b></td>"
@@ -108,13 +108,11 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
     
     if (error = catch(con = sql(host, database, user, password))) {
       contents = "<h1>Couldn't connect to SQL-server</h1><br>\n" +
-	((master()->describe_backtrace(error)/"\n")*"<br>\n") +
-	contents;
+	((master()->describe_backtrace(error)/"\n")*"<br>\n");
     } else if (error = catch(result = con->query(args->query))) {
       contents = "<h1>Query \"" + args->query + "\" failed: " +
 	con->error() + "</h1>\n" +
-	((master()->describe_backtrace(error)/"\n")*"<br>\n") +
-	contents;
+	((master()->describe_backtrace(error)/"\n")*"<br>\n");
     } else if (result) {
       string nullvalue="";
       array(string) content_array = contents/"#";
@@ -145,6 +143,9 @@ string sqloutput_tag(string tag_name, mapping args, string contents,
 	}
       }
       contents = res_array * "";
+      request_id->misc->sqlelse = 0;
+    } else {
+      request_id->misc->sqlelse = 1;
     }
   } else {
     contents = "<!-- No query! -->" + contents;
@@ -162,6 +163,7 @@ string sqlquery_tag(string tag_name, mapping args,
     string password = query("password");
     object(sql) con;
     mixed error;
+    array(mapping(string:mixed)) res;
 
     if (args->host) {
       host = args->host;
@@ -185,11 +187,12 @@ string sqlquery_tag(string tag_name, mapping args,
     if (error = catch(con = sql(host, database, user, password))) {
       return("<h1>Couldn't connect to SQL-server</h1><br>\n" +
 	     ((master()->describe_backtrace(error)/"\n")*"<br>\n"));
-    } else if (error = catch(con->query(args->query))) {
+    } else if (error = catch(res = con->query(args->query))) {
       return("<h1>Query \"" + args->query + "\" failed: " +
 	     con->error() + "</h1>\n" +
 	     ((master()->describe_backtrace(error)/"\n")*"<br>\n"));
     }
+    request_id->misc->sqlelse = !res;
   } else {
     return("<!-- No query! -->");
   }
@@ -263,6 +266,7 @@ string sqltable_tag(string tag_name, mapping args,
 	res += "<th>"+name+"</th>";
       }
       res += "</tr>\n";
+
       while (row = result->fetch_row()) {
 	res += "<tr>";
 	foreach(row, mixed value) {
@@ -273,13 +277,24 @@ string sqltable_tag(string tag_name, mapping args,
       }
       res += "</table>";
 
+      request_id->misc->sqlelse = 0;
       return(res);
     } else {
+      request_id->misc->sqlelse = 1;
       return("<!-- No result from query -->");
     }
   } else {
     return("<!-- No query! -->");
   }
+}
+
+string sqlelse_tag(string tag_name, mapping args, string contents,
+		   object request_id, mapping defines)
+{
+  if (request_id->misc->sqlelse) {
+    return(contents);
+  }
+  return("");
 }
 
 string dumpid_tag(string tag_name, mapping args,
@@ -301,7 +316,7 @@ mapping query_tag_callers()
 
 mapping query_container_callers()
 {
-  return( ([ "sqloutput":sqloutput_tag ]) );
+  return( ([ "sqloutput":sqloutput_tag, "sqlelse":sqlelse_tag ]) );
 }
 
 /*
