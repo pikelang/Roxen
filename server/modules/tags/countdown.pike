@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: countdown.pike,v 1.33 2000/05/02 16:44:02 kuntri Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.34 2000/05/02 20:01:15 kuntri Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -86,7 +86,7 @@ Sets the time of an evet to count down to.</attr>
 <attr name=lang value=langcodes>The language in which the result should be written if the type is string.
 <lang/>
 
-<ex type='vert'>Heute ist <countdown event='christmas' display='months' type='string' lang='de'/> monaten zu Weinacht. OBS ändra!!!</ex>
+<ex type='vert'>Heute ist es ungefähr <countdown event='christmas' display='months' type='string' lang='de'/> Monate bis Weinachten.</ex>
 </attr>
 <attr name=since>Negate the period of time.
 <ex type='vert'>I am <countdown iso='1980-06-28' since='' display='years' type='string'/> years old.</ex>
