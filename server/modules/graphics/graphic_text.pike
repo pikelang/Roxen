@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.209 2000/03/02 04:18:37 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.210 2000/03/14 00:32:23 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -553,7 +553,7 @@ mixed draw_callback(mapping args, string text, RequestID id)
           (args->afont||args->font||args->nfont)+ ")!\n");
 
   // Fonts and such are now initialized.
-  img = GText.make_text_image(args, font, text, id);
+  [img, Image.Image alpha] = GText.make_text_image(args, font, text, id);
 
   // Now we have the image in 'img'.
 
@@ -561,10 +561,6 @@ mixed draw_callback(mapping args, string text, RequestID id)
   {
     if(!args->notrans)
     {
-      array (int) bgcolor = parse_color(args->bgcolor);
-      Image.Image alpha;
-      alpha = img->distancesq( @bgcolor );
-      alpha->gamma( 8 );
       return ([ "img":img, "alpha":alpha ]);
     }
     return img;

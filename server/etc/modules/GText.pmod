@@ -120,7 +120,8 @@ object load_image(string f,string bd, object|void id)
 #endif /* constant(roxen) */
 
 
-Image.Image make_text_image(mapping args, Image.Font font, string text, RequestID id)
+array(Image.Image) make_text_image(
+  mapping args, Image.Font font, string text, RequestID id)
 {
   if( args->encoding )
     text = roxen.decode_charset(args->encoding,text);
@@ -483,7 +484,7 @@ Image.Image make_text_image(mapping args, Image.Font font, string text, RequestI
   } else
     background->paste_mask(foreground, text_alpha, xoffset, yoffset);
 
-  foreground = text_alpha = 0;
+  foreground = 0;
 
   if(args->rotate)
   {
@@ -493,8 +494,13 @@ Image.Image make_text_image(mapping args, Image.Font font, string text, RequestI
     else
        background->setcolor(@bgcolor);
     background = background->rotate((float)args->rotate);
+    text_alpha = text_alpha->rotate((float)args->rotate);
   }
 
-  if(args->crop) background = background->autocrop();
-  return background;
+  if(args->crop) {
+    mixed dims = background->find_autocrop();
+    background = background->copy (@dims);
+    text_alpha = text_alpha->copy (@dims);
+  }
+  return ({background, text_alpha});
 }
