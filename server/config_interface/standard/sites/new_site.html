@@ -1,18 +1,35 @@
-<topmenu base="../" selected=sites>
+<topmenu base="../" selected='sites'/>
 
 <content>
+<cv-leftside></cv-leftside>
 <cv-split>
-<subtablist>
-<st-page>
+<subtablist><st-page>
 <br />
 <blockquote>
-<awizard>
-   <page name=select_name>
-       <b><translate id="269">Site name:</translate></b> 
-       <var name=name default=""><br />
 
-<blockquote>
-<translate id="270">
+<if variable="form.name">
+  <define variable=var.error preparse><insert file='verify_site_name.pike' nocache='' /></define>
+   <if not variable='var.error is error'>
+ ... create the site ..
+     <if variable='form.new_with_template..x'>
+        <redirect to='create_site_with_template.pike?name=&form.name:http;'/>
+     </if>
+     <if variable='form.new..x'>
+        <insert file='create_site.pike'/>
+        <redirect to='site.html/&form.name:http;/'/>
+     </if>
+     <true/>
+   </if>
+</if>
+<if variable='var.error is error'><cset variable=var.error><translate id="">Illegal site name</translate></cset><set variable=var.go value='1'></if>
+<if not variable='form.name'><set variable=var.go value='1'></if>
+<if variable='var.go'>
+
+<font color='&usr.warncolor;'>&var.error;<br /></font>
+  <b><translate id="269">Site name:</translate></b> 
+   <input name=name value="&form.name;" /><br />
+  <blockquote>
+    <translate id="270">
 The name of the configuration must contain characters
 other than space and tab, it should not end with
 ~, and it must not be 'CVS', 'Global Variables' or
@@ -25,48 +42,24 @@ as the name of its log file directory.
 </translate>
 </blockquote>
 
-<table width=80%>
-<tr>
-<td>
 <translate id="202" variable="var.cancel_txt">Cancel</translate>
 <translate id="248" variable="var.create_txt">Create new site</translate>
 <translate id="271" variable="var.template_txt">with template</translate>
-       <dbutton gbutton-preparse  gbutton-width=230
-                gbutton-align_icon=right
-                gbutton-icon_src=/internal-roxen-next
-                gbutton_title="&var.create_txt; &var.template_txt;"
-                page=new_with_template>
-         <insert file=verify_site_name.pike nocache>
-       </dbutton><br />
-       <dbutton
-          gbutton-preparse gbutton-width=230
-          gbutton-icon_src=/internal-roxen-next
-          gbutton-align_icon=right
-          gbutton_title="&var.create_txt;"
-          page=final_create>
-         <insert file=verify_site_name.pike nocache>
-       </dbutton>
-</td><td align=right valign=top>
-       <button gbutton-preparse
-               gbutton_title=" &var.cancel_txt; "
-               href="../sites/">
-</td></tr></table>
-   </page>
 
+<submit-gbutton2 width='230' align_icon='right' icon_src='/internal-roxen-next'
+name=new_with_template>&var.create_txt; &var.template_txt;</submit-gbutton2>
 
-   <page name=final_create>
-     <insert file=create_site.pike nocache>
-     <goto href="site.html/&form.name;/">
-   </page>
+<submit-gbutton2 width='230' align_icon='right' icon_src='/internal-roxen-next'
+name=new>&var.create_txt;</submit-gbutton2>
 
-   <page name=new_with_template>
-     <insert file=fixsitename.pike nocache>
-     <goto href='create_site_with_template.pike?name=&form.name:none;'>
-   </page>
-</awizard>
-</blockquote>
+<a href="">
+  <gbutton width='230' align_icon='right' 
+           icon_src='/internal-roxen-next'>&var.cancel_txt;</gbutton>
+</a>
+
+</if>
+
 </st-page>
 </subtablist>
 </cv-split>
-
 </content>

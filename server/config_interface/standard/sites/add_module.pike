@@ -441,7 +441,8 @@ mixed do_it( RequestID id )
   if( strlen( last_module ) )
     if (got_initial)
       return Roxen.http_redirect( site_url( id, id->variables->config )+
-			    "?initial=1&mod="+Array.uniq(initial_modules)*",", 
+			    last_module+
+                           "?initial=1&mod="+Array.uniq(initial_modules)*",", 
                                   id );
     else
       return Roxen.http_redirect( site_url( id, id->variables->config )+

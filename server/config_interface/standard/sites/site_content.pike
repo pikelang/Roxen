@@ -214,7 +214,8 @@ string buttons( Configuration c, string mn, RequestID id )
   array(string) path = ((id->misc->path_info||"")/"/")-({""});
 
   string buttons = (current_compile_errors[ mn ] ?
-		    "<font color='&usr.warncolor;'><pre>"+current_compile_errors[ mn ]+
+		    "<font color='&usr.warncolor;'><pre>"+
+                    current_compile_errors[ mn ]+
 		    "</pre></font>" : "" )
     + "<input type=hidden name=section value='" +
     (id->variables->section||"Information") + "'>" +
@@ -226,8 +227,9 @@ string buttons( Configuration c, string mn, RequestID id )
     foreach( indices(mod->query_action_buttons("standard")), string title )
       buttons += "<submit-gbutton>"+title+"</submit-gbutton>";
 
-  return buttons + "<a href='../../../drop_module.pike?config="+path[0]+"&drop="+mn+
-    "'><gbutton preparse>"+LOCALE(252, "Drop Module")+"</gbutton></a>";
+  return buttons + "<a href='../../../drop_module.pike?config="+
+         path[0]+"&drop="+mn+"'><gbutton preparse>"+
+         LOCALE(252, "Drop Module")+"</gbutton></a>";
 }
 
 string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )

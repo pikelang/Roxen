@@ -8,7 +8,7 @@ constant doc  = "Standard roxen site, with most of the commonly used modules. "
 		"template.";
 
 constant modules = ({
-  "awizard",
+//"awizard",
 //"cgi",
   "contenttypes",
   "directories",
