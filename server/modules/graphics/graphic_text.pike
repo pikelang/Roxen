@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.159 1998/11/19 10:47:47 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.160 1998/11/22 17:03:18 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1374,11 +1374,18 @@ string tag_graphicstext(string t, mapping arg, string contents,
 	res += ({"\n"});
       } else {
 	array size = write_text(num,word,1,id);
-	res += ({ "<img border=0 alt=\"" +
+	if(input)
+	  res += ({"<input type=image name=\""+na+"\" border=0 alt=\""+
+		   (arg->alt?arg->alt:replace(gt,"\"","'"))+
+		   "\" src=\""+query_location()+num+"/"+quote(word)+gif+
+		   "\""
+		   " width="+size[0]+" height="+size[1]+">" });
+	else
+	  res += ({ "<img border=0 alt=\"" +
 		    replace(arg->alt || word, "\"", "'") +
 		    "\" src=\"" + pre + quote(word) + gif + "\" width=" +
-  		     size[0] + " height=" + size[1] + " " + ea + ">\n"
-		    });
+		    size[0] + " height=" + size[1] + " " + ea + ">\n"
+	  });
       }
     }
     if(lp) res += ({ "</a>"+post });
