@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.37 1998/04/07 20:36:58 grubba Exp $
+# $Id: Makefile,v 1.38 1998/04/15 16:17:09 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -163,7 +163,7 @@ keep_dbapi:
 	  echo "DBAPI already censored."; \
 	  exit 1; \
 	else \
-	  tar cf dbapi.tar $dirs; \
+	  tar cf dbapi.tar $$dirs; \
 	fi
 
 censor : censor_crypto censor_dbapi dist_clean
