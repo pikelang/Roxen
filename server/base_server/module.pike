@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.180 2004/05/06 15:32:55 grubba Exp $
+// $Id: module.pike,v 1.181 2004/05/06 16:50:16 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -293,9 +293,9 @@ class DefaultPropertySet
 
   static Stat stat;
 
-  static void create (string path, RequestID id, Stat stat)
+  static void create (string path, string abs_path, RequestID id, Stat stat)
   {
-    ::create (path, id);
+    ::create (path, abs_path, id);
     this_program::stat = stat;
   }
 
@@ -358,7 +358,7 @@ PropertySet|mapping(string:mixed) query_properties(string path, RequestID id)
     return 0;
   }
 
-  PropertySet res = DefaultPropertySet(path, id, st);
+  PropertySet res = DefaultPropertySet(path, query_location()+path, id, st);
   SIMPLE_TRACE_LEAVE ("");
   return res;
 }
@@ -1031,9 +1031,9 @@ mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
 mapping(string:mixed) delete_file(string path, RequestID id)
 {
   // Fall back to find_file().
-  RequestID tmp_id = id->close_me();
+  RequestID tmp_id = id->clone_me();
   tmp_id->not_query = query_location() + path;
-  tmp_id->method = "DELELE";
+  tmp_id->method = "DELETE";
   // FIXME: Logging?
   return find_file(path, id) || Roxen.http_status(404);
 }
