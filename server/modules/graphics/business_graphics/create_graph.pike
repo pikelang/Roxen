@@ -1144,9 +1144,11 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	    (float)si-labelx/2, 
 	    diagram_data["ysize"]-ypos_for_xaxis-
 	    (float)si/4.0,
+
 	    diagram_data["xsize"]-
 	    diagram_data["linewidth"]/2-labelx/2, 
 	    diagram_data["ysize"]-ypos_for_xaxis,
+
 	    diagram_data["xsize"]-
 	    diagram_data["linewidth"]/2-
 	    (float)si-labelx/2, 
