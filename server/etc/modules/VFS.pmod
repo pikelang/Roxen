@@ -99,6 +99,10 @@ array(string) find_above_read( string above,
 //! The return value is ({ filename, file-contents, mtime||0 })
 //! If no file is found, 0 is returned.
 {
+#ifdef HTACCESS_DEBUG
+  werror("find_above_read(%O, %O, %O, %O, %O)...\n",
+         above, name, id, cache, do_mtime);
+#endif /* HTACCESS_DEBUG */
   while( strlen( above ) )
   {
     int last_mtime;
