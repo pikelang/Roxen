@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.82 2002/10/01 23:55:33 nilsson Exp $
+ * $Id: ftp.pike,v 2.83 2002/10/24 00:11:28 nilsson Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -184,7 +184,8 @@ class RequestID2
                 "__INIT", "clone_me", "end", "ready_to_receive",
 		"send", "scan_for_query", "send_result", "misc",
 		"url_base", "set_response_header",
-		"add_response_header",
+		"add_response_header", "set_output_charset",
+		"adjust_for_config_path",
 		"destroy", "_num", "__num">)[var]) {
 #ifdef FTP2_DEBUG
 	  if (catch {
@@ -1536,7 +1537,7 @@ class FTPSession
   static private string cwd = "/";
 
   static private User auth_user;
-  //! Authenticated user.
+  // Authenticated user.
 
   static private string user;
   static private string password;
