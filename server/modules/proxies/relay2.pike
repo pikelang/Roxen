@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.29 2002/11/11 01:56:04 mani Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.30 2004/05/23 00:40:03 _cvs_stephen Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -128,7 +128,7 @@ class Relay
 
 
     
-    if( !options->cache ) NOCACHE();
+    if( !options->cache ) NO_PROTO_CACHE();
 
     if( sscanf( buffer, "%s\r\n\r\n%s", headers, data ) != 2 )
       sscanf( buffer, "%s\n\n%s", headers, data );
@@ -155,7 +155,12 @@ class Relay
              type = b;
              break;
            default:
-             h[a] = b;
+	     if (h[a]) {
+	       if (arrayp(h[a])) h[a] += ({ b });
+	       else h[a] = ({ h[a], b });
+	     }
+	     else
+	       h[a] = b;
           }
         } else 
           status = header;
@@ -289,7 +294,7 @@ class Relay
       mapping headers = ([]);
       headers = make_headers( id, options->trimheaders );
 
-      request_data = (id->method+" /"+Roxen.http_encode_string(file)+" HTTP/1.0\r\n"+
+      request_data = (id->method+" /"+file+" HTTP/1.0\r\n"+
                       encode_headers( headers ) +
                       "\r\n" + id->data );
 
@@ -303,14 +308,16 @@ class Relay
     werror("RELAY: Connecting to "+host+":"+port+"\n");
 #endif
 
-#if 1
+    // Kludge for bug 3127.
+    if (linux) {
+      if( fd->connect( host, port ) )
+	connected( 1 );
+      else
+	connected( 0 );
+      return;
+    }
+
     fd->async_connect( host, port, connected );
-#else
-    if( fd->connect( host, port ) )
-      connected( 1 );
-    else
-      connected( 0 );
-#endif
   }
 }
 
@@ -335,7 +342,7 @@ class Relayer
     return url;
   }
 
-  Relay relay( object id )
+  int(0..1) relay( object id )
   {
     string file = id->not_query;
 
@@ -345,7 +352,8 @@ class Relayer
     if( r->match( file ) )
     {
       stats[ pattern ]++;
-      return Relay( id, do_replace( file ), options );
+      Relay( id, do_replace( file ), options );
+      return 1;
     }
   }
 
@@ -422,8 +430,12 @@ string status()
   return res + "</table>\n";
 }
 
+int linux;
+
 void start( int i, Configuration c )
 {
+  if (uname()->sysname == "Linux")
+    linux = 1;
   if( c )
   {
     relays = ({});
