@@ -1,6 +1,6 @@
-// This file is part of Roxen WebServer. Copyright © 2001, Roxen IS.
-
 #!NO MODULE
+
+// This file is part of Roxen WebServer. Copyright © 2001, Roxen IS.
 static array md_callbacks = ({});
 static mapping md; // ID3 etc.
 
