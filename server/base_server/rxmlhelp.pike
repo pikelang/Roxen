@@ -82,8 +82,14 @@ private string format_doc(string|mapping doc, string name, void|object id) {
   if(mappingp(doc)) {
     if(id && id->misc->pref_languages) {
       object lang=roxen->languages[id->misc->pref_languages[0]];
-      if(lang && doc[lang->id()[1]])
-	doc=doc[lang->id()[1]];
+      array lang_id;
+      if(lang) {
+	lang_id=lang->id();
+	if(doc[lang_id[2]])
+	  doc=doc[lang_id[2]];
+	else if(doc[lang_id[1]])
+	  doc=doc[lang_id[1]];
+      }
       else
 	doc=doc["standard"];
     }
