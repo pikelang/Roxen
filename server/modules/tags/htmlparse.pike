@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.168 1999/03/30 23:40:30 neotron Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.169 1999/04/13 00:18:13 mast Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -337,7 +337,8 @@ inline mixed open_db_file()
     if(db_file_callout_id) remove_call_out(db_file_callout_id);
     database=open(QUERY(Accesslog)+".db", "wrc");
     if (!database) {
-      throw(({ sprintf("Failed to open \"%s.db\". Out of fd's?\n",
+      throw(({ sprintf("Failed to open \"%s.db\". "
+		       "Insufficient permissions or out of fd's?\n",
 		       QUERY(Accesslog)), backtrace() }));
     }
     if (QUERY(close_db)) {
