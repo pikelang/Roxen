@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.205 2001/07/16 21:33:21 mast Exp $
+// $Id: module.pmod,v 1.206 2001/07/19 00:05:27 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -67,6 +67,7 @@ class RequestID { };
 // #define RXML_ENCODE_DEBUG
 // #define TYPE_OBJ_DEBUG
 // #define PARSER_OBJ_DEBUG
+// #define FRAME_DEPTH_DEBUG
 
 
 #ifdef RXML_OBJ_DEBUG
@@ -117,6 +118,12 @@ class RequestID { };
 #  define DO_IF_MODULE_DEBUG(code...) code
 #else
 #  define DO_IF_MODULE_DEBUG(code...)
+#endif
+
+#ifdef FRAME_DEPTH_DEBUG
+#  define FRAME_DEPTH_MSG(msg...) report_debug (msg)
+#else
+#  define FRAME_DEPTH_MSG(msg...)
 #endif
 
 #define _LITERAL(X) #X
@@ -1781,19 +1788,18 @@ class Context
 
 #ifdef DEBUG
   private int eval_finished = 0;
-  private mixed foo;
 #endif
 
   final void eval_finish()
   // Called at the end of the evaluation in this context.
   {
-    if (!frame_depth && tag_set) {
+    FRAME_DEPTH_MSG ("%*s%O eval_finish\n", frame_depth, "", this_object());
+    if (!frame_depth) {
 #ifdef DEBUG
-      if (eval_finished) fatal_error ("Context already finished.\n" + foo);
+      if (eval_finished) fatal_error ("Context already finished.\n");
       eval_finished = 1;
-      foo = describe_backtrace (backtrace());
 #endif
-      tag_set->call_eval_finish_funs (this_object());
+      if (tag_set) tag_set->call_eval_finish_funs (this_object());
       if (p_code_comp) p_code_comp->compile(); // Fix all delayed resolves.
     }
   }
@@ -3267,6 +3273,8 @@ class Frame
     up = ctx->frame;
     ctx->frame = this_object();
     ctx->frame_depth++;
+    FRAME_DEPTH_MSG ("%*s%O frame_depth increase line %d\n",
+		     ctx->frame_depth, "", this_object(), __LINE__);
 
   process_tag:
     while (1) {			// Looping only when continuing in streaming mode.
@@ -3602,20 +3610,19 @@ class Frame
 	if (ctx->new_runtime_tags)
 	  _handle_runtime_tags (ctx, evaler);
 
-#define CLEANUP_1 do {							\
+#define CLEANUP do {							\
 	  if (in_args) args = in_args;					\
 	  if (in_content) content = in_content;				\
-	} while (0)
-
-#define CLEANUP_2 do {							\
 	  ctx->make_p_code = orig_make_p_code;				\
 	  if (orig_tag_set) ctx->tag_set = orig_tag_set;		\
 	  ctx->frame = up;						\
+	  FRAME_DEPTH_MSG ("%*s%O frame_depth decrease line %d\n",	\
+			   ctx->frame_depth, "", this_object(),		\
+			   __LINE__);					\
 	  ctx->frame_depth--;						\
 	} while (0)
 
-	CLEANUP_1;
-	CLEANUP_2;
+	CLEANUP;
 
 	THIS_TAG_TOP_DEBUG ("Done\n");
 	TRACE_LEAVE ("");
@@ -3710,9 +3717,11 @@ class Frame
 
 	THIS_TAG_TOP_DEBUG ("Exception\n");
 	TRACE_LEAVE ("exception");
-	CLEANUP_1;
-	ctx->handle_exception (err, evaler); // Will rethrow unknown errors.
-	CLEANUP_2;
+	err = catch {
+	  ctx->handle_exception (err, evaler); // Will rethrow unknown errors.
+	};
+	CLEANUP;
+	if (err) throw (err);
 	return result = nil;
       }
       fatal_error ("Should not get here.\n");
@@ -4182,6 +4191,8 @@ class Parser
     // variable names containing ':' are thus not accessible this way.
     sscanf (varref, "%[^:]:%s", varref, encoding);
     context->frame_depth++;
+    FRAME_DEPTH_MSG ("%*s%O frame_depth increase line %d\n",
+		     context->frame_depth, "", varref, __LINE__);
 
     splitted = context->parse_user_var (varref, 1);
     if (splitted[0] == 1) {
@@ -4226,13 +4237,20 @@ class Parser
 
       }) {
 	if (objectp (err) && err->is_RXML_Backtrace) err->current_var = varref;
-	context->handle_exception (err, this_object()); // May throw.
+	if ((err = catch {
+	  context->handle_exception (err, this_object()); // May throw.
+	})) {
+	  context->frame_depth--;
+	  throw (err);
+	}
 	val = nil;
       }
 
       if (PCode p_code = evaler->p_code)
 	p_code->add (VarRef (splitted[0], splitted[1..], encoding, want_type));
     }
+    FRAME_DEPTH_MSG ("%*s%O frame_depth increase line %d\n",
+		     context->frame_depth, "", varref, __LINE__);
     context->frame_depth--;
     return val;
   }
@@ -5743,6 +5761,8 @@ class VarRef (string scope, string|array(string|int) var,
     // Note: Parser.handle_var more or less duplicates this.
 
     ctx->frame_depth++;
+    FRAME_DEPTH_MSG ("%*s%O frame_depth increase line %d\n",
+		     ctx->frame_depth, "", this_object(), __LINE__);
 
     mixed err = catch {
 #ifdef DEBUG
@@ -5775,11 +5795,15 @@ class VarRef (string scope, string|array(string|int) var,
 	  TAG_DEBUG (ctx->frame, "    Got value %s\n", utils->format_short (val));
 #endif
 
+      FRAME_DEPTH_MSG ("%*s%O frame_depth decrease line %d\n",
+		       ctx->frame_depth, "", this_object(), __LINE__);
       ctx->frame_depth--;
       return val;
     };
 
     if (objectp (err) && err->is_RXML_Backtrace) err->current_var = VAR_STRING;
+    FRAME_DEPTH_MSG ("%*s%O frame_depth decrease line %d\n",
+		     ctx->frame_depth, "", this_object(), __LINE__);
     ctx->frame_depth--;
     throw (err);
   }
@@ -5867,7 +5891,6 @@ static class PikeCompile
     string id = "b" + idnr++;
     COMP_MSG ("%O bind %O to %s\n", this_object(), val, id);
     bindings[id] = val;
-    cur_ids[id] = 1;
     return id;
   }
 
