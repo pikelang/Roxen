@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 2.6 1999/04/30 21:36:25 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.7 1999/05/02 19:53:10 neotron Exp $";
 
 
 array register_module()
@@ -357,7 +357,7 @@ class CGIWrapper
        ((skip=2) && ((pos=search( headers, "\n\n" )) != -1)))
     {
       output( handle_headers( headers[..pos-1] ) );
-      output( headers[pos+skip+1..] );
+      output( headers[pos+skip..] );
       headers="";
       return "";
     }
@@ -656,7 +656,12 @@ int|object(Stdio.File)|mapping find_file( string f, RequestID id )
   }
 #endif
   if(stat[1] < 0)
-    return -1;
+    if(!QUERY(ls))
+      return http_low_answer(403, "<title>CGI Directory Listing "
+			     "Disabled</title><h1>Listing of CGI directories "
+			     "is disabled.</h1>");
+    else
+      return -1;
   if(!strlen(f) || f[-1] == '/')
     // Make foo.cgi/ be handled using PATH_INFO
     return 0;
@@ -782,7 +787,7 @@ void create(object conf)
 #endif
          );
 #if UNIX
-  defvar("noexec", 0, "Treat non-executable files as ordinary files",
+  defvar("noexec", 1, "Treat non-executable files as ordinary files",
 	 TYPE_FLAG,
 	 "If this flag is set, non-executable files will be returned "
 	 "as normal files to the client. Otherwise an error message "
