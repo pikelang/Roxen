@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.25 1998/02/04 16:10:34 per Exp $
+# $Id: start,v 1.26 1998/03/01 02:42:58 per Exp $
 
 VERSION=201; BETA=.a;
 
@@ -8,6 +8,15 @@ VERSION=201; BETA=.a;
 DIR=../configurations/
 LOGDIR=../logs/
 FILES="default"
+
+# Enable threads (if available) on Solaris.
+# Most other OS's have thread bugs that cause them or Roxen to crash.
+if uname | grep 'SunOS' >/dev/null 2>&1; then
+  if uname -r | grep '5\.[5-9]' >/dev/null 2>&1; then
+    echo 'Solaris 2.5 or later detected. Enabling threads (if available).'
+    DEFINES="$DEFINES -DENABLE_THREADS"
+  fi
+fi
 
 # Roxen will create files as the initial user,
 # which it expects to be able to read as the run-time user.
@@ -50,15 +59,6 @@ if uname | grep 'HP-UX' >/dev/null 2>&1; then
   DEFINES="$DEFINES -DHPUX_KLUDGE"
 fi
 
-# Enable threads (if available) on Solaris.
-# Most other OS's have thread bugs that cause them or Roxen to crash.
-if uname | grep 'SunOS' >/dev/null 2>&1; then
-  if uname -r | grep '5\.[5-9]' >/dev/null 2>&1; then
-    echo 'Solaris 2.5 or later detected. Enabling threads (if available).'
-    DEFINES="$DEFINES -DENABLE_THREADS"
-  fi
-fi
-
 pike=pike
 if [ -x bin/pike ] ; then pike=bin/pike; fi
 if [ -x bin/roxen ] ; then pike=bin/roxen; fi
@@ -95,6 +95,18 @@ parse_args() {
   '--debug')
     debug=1
   ;;
+  '--threads')
+    DEFINES="-DENABLE_THREADS $DEFINES"
+  ;;
+  '--no-threads')
+    DEFINES="`echo $DEFINES | sed -e 's/-DENABLE_THREADS//'`"
+  ;;
+  '--profile')
+    DEFINES="-DPROFILE $DEFINES"
+  ;;
+  '--keep-alive')
+    DEFINES="-DKEEP_ALIVE $DEFINES"
+  ;;
   '--once')
     once=1
   ;;
@@ -105,8 +117,8 @@ parse_args() {
   '--help'|'-?')
   tput 'bold' 2>/dev/null
   cat << EOF
-Syntax: $0 [--version] [--config-dir=DIR] [--log-dir=DIR] [-DDEFINE]
-This command will start the Roxen server.
+Syntax: $0 [--version] [--config-dir=DIR] [--log-dir=DIR] [-DDEFINE] [--threads] [--no-threads] [--profile] [--keep-alive]
+This command will start the Roxen server. 
 If the configuration dir is set, a different set of debuglogfiles
 will be used.
 
