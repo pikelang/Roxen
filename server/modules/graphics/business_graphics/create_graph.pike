@@ -179,14 +179,17 @@ string no_end_zeros(string f)
   return f;
 }
 
+
+//Denna funktion skriver också ut infon i Legenden
 mapping set_legend_size(mapping diagram_data)
 {
   if (diagram_data["legend_texts"])
     {
       array(object(image)) texts;
-      array(object(image)) plupps; //Det som ska ritas ut före texterna
-      texts=allocate(diagram_data["legend_texts"]);
-      plupps=allocate(diagram_data["legend_texts"]);
+      //array(object(image)) plupps; //Det som ska ritas ut före texterna
+      array(mixed) plupps; //Det som ska ritas ut före texterna
+      texts=allocate(sizeof(diagram_data["legend_texts"]));
+      plupps=allocate(sizeof(diagram_data["legend_texts"]));
       
       object notext=get_font("avant_garde", 32, 0, 0, "left",0,0);
 
@@ -196,7 +199,7 @@ mapping set_legend_size(mapping diagram_data)
 	  texts[i]=notext->write(diagram_data["legend_texts"][i])->
 	    scale(0,diagram_data["legendfontsize"]);
       	else
-	  tests[i]=
+	  texts[i]=
 	    image(diagram_data["legendfontsize"],diagram_data["legendfontsize"]);
 
 
@@ -214,18 +217,61 @@ mapping set_legend_size(mapping diagram_data)
 	}
       
       //Skapa strecket för graph/boxen för bars.
-     
+      write("J:"+j+"\n");
       if (diagram_data["type"]=="graph")
-	{
-	  
+	for(int i=0; i<j; i++)
+	  {
+	    write("diagram_data[\"legendfontsize\"]"+diagram_data["legendfontsize"]+"\n");
 
-	}
+	    plupps[i]=image(diagram_data["legendfontsize"],diagram_data["legendfontsize"],
+			    @(diagram_data["legendcolor"]));
+	    //write("plupps[i]->xsize()-2"+(plupps[i]->xsize()-2)+"\n");
+	    
+	    if (diagram_data["linewidth"]*1.5<diagram_data["legendfontsize"])
+	      plupps[i]->polygone(make_polygon_from_line(diagram_data["linewidth"], 
+							 ({
+							   diagram_data["linewidth"]/2+1,
+							   diagram_data["ysize"]-
+							   diagram_data["linewidth"]/2-2,
+							   diagram_data["xsize"]-
+							   diagram_data["linewidth"]/2-2,
+							   diagram_data["linewidth"]/2+1
+							 }), 
+							 1, 1)[0]);
+	      else
+		plupps[i]->polygone(1,
+				    1,
+				    plupps[i]->xsize()-2,
+				    plupps[i]->ysize()-2
+				    
+				    );
+	  }
+      //else FIXME
 
+      //Ta reda på hur många kolumner vi kan ha:
+      int b;
+      int columnnr=(diagram_data["image"]->xsize()-4)/(b=xmax+diagram_data["legendfontsize"]);
 
+      diagram_data["legend_size"]=((j-1)/columnnr+1)*diagram_data["legendfontsize"];
       
+      write("diagram_data[\"legend_size\"]:"+diagram_data["legend_size"]+"\n");
+
+      //placera ut bilder och text.
+      for(int i; i<j; i++)
+	diagram_data["image"]->paste_alpha_color(plupps[i], 
+						 @(diagram_data["textcolor"]), 
+						 (i%columnnr)*b,
+						 (i/columnnr)*diagram_data["legendfontsize"]+
+						 diagram_data["image"]->ysize()-diagram_data["legend_size"]
+						 
+						 );
     }
   else
     diagram_data["legend_size"]=0;
+
+  
+
+
 }
 
 mapping(string:mixed) create_graph(mapping diagram_data)
@@ -242,6 +288,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   else
     graph=diagram_data["image"];
 
+  diagram_data["image"]=graph;
   set_legend_size(diagram_data);
   diagram_data["ysize"]-=diagram_data["legend_size"];
   
@@ -624,7 +671,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       }
     else
       if (diagram_data["yminvalue"]>LITET)
-	{
+	{/*
 	  write("\n\n"+sprintf("%O",make_polygon_from_line(diagram_data["linewidth"], 
 					    ({
 					      xpos_for_yaxis,
@@ -652,7 +699,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 					      
 					    }), 
 					    1, 1)[0])+
-		"\n\n");
+					    "\n\n");*/
 	  graph->
 	    polygone(make_polygon_from_line(diagram_data["linewidth"], 
 					    ({
@@ -848,7 +895,7 @@ int main(int argc, string *argv)
   write("\nRitar axlarna. Filen sparad som test.ppm\n");
 
   mapping(string:mixed) diagram_data;
-  diagram_data=(["typ":"graph",
+  diagram_data=(["type":"graph",
 		 "textcolor":({0,0,0}),
 		 "subtyp":"",
 		 "orient":"vert",
@@ -869,6 +916,7 @@ int main(int argc, string *argv)
 		 "fontsize":16,
 		 "labels":({"xstor", "ystor", "xenhet", "yenhet"}),
 		 "legendfontsize":12,
+		 "legend_texts":({"streck 1", "streck 2", "foo", "bar" }),
 		 "labelsize":0//,
 		 //"xminvalue":0.1,
 		 ,"yminvalue":0.1
