@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.280 1999/05/18 06:20:02 per Exp $
+ * $Id: roxen.pike,v 1.281 1999/05/18 10:50:23 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.280 1999/05/18 06:20:02 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.281 1999/05/18 10:50:23 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -2120,6 +2120,7 @@ class ImageCache
       draw( na, id );
       return restore_meta( na );
     }
+    return restore_meta( na );
   }
 
   string store( string|mapping data, RequestID id )
