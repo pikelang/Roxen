@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.95 1999/03/29 15:54:05 grubba Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.96 1999/04/22 09:30:01 per Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1337,4 +1337,40 @@ string fix_relative(string file, object id)
   else
     file = dirname(id->not_query) + "/" +  file;
   return simplify_path(file);
+}
+
+Stdio.File open_log_file( string logfile )
+{
+  mapping m = localtime(time());
+  m->year += 1900;	/* Adjust for years being counted since 1900 */
+  m->mon++;		/* Adjust for months being counted 0-11 */
+  if(m->mon < 10) m->mon = "0"+m->mon;
+  if(m->mday < 10) m->mday = "0"+m->mday;
+  if(m->hour < 10) m->hour = "0"+m->hour;
+  logfile = replace(logfile,({"%d","%m","%y","%h" }),
+                    ({ (string)m->mday, (string)(m->mon),
+                       (string)(m->year),(string)m->hour,}));
+  if(strlen(logfile))
+  {
+    object lf=Stdio.File( logfile, "wac");
+    if(!lf) 
+    {
+      mkdirhier(logfile);
+      if(!(lf=Stdio.File( logfile, "wac")))
+      {
+        report_error("Failed to open logfile. ("+logfile+"): "
+                     + strerror( errno() )+"\n");
+        return 0;
+      }
+    }
+    return lf;
+  }
+  return Stdio.stderr;
+}
+
+string trim( string what )
+{
+  sscanf(what, "%*[ \t]%s", what); what = reverse(what);
+  sscanf(what, "%*[ \t]%s", what); what = reverse(what);
+  return what;
 }
