@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.21 2000/04/12 19:09:20 js Exp $
+ * $Id: create_configif.pike,v 1.22 2000/06/14 00:01:40 nilsson Exp $
  *
  * Create an initial administration interface server.
  */
@@ -52,9 +52,12 @@ int main(int argc, array argv)
       {
         werror("There is already an administration interface present in "
                "this server.\nNo new will be created\n");
-        exit( 0 );
+        if(!admin++) exit( 0 );
       }
     };
+  if(admin==1)
+    werror("No administration interface was found.\n"
+	   "A new one will be created.");
   if(configdir[-1] != '/')
     configdir+="/";
   if(admin)
