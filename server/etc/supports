@@ -1,4 +1,4 @@
-## $Id: supports,v 1.66 1999/11/07 16:08:47 nilsson Exp $
+## $Id: supports,v 1.67 1999/11/11 11:38:06 nilsson Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -170,7 +170,7 @@ netsurfer.2\.[0-9].*	align, pjpeginline, tables, frames, java, font,\
 # OmniWeb is another popular commercial Web browser for NEXTSTEP
 # for more info, contact info@omnigroup.com
 .*			basic, center, jpeginline
-omniweb.2\.[0-9].*	backgrounds, font, frames, tables, align, bigsmall,\
+omniweb.[2-9]\.[0-9].*	backgrounds, font, frames, tables, align, bigsmall,\
 			fontcolor, imagealign, pjpeginline, pnginline,\
 			supsub, ssl, epsinline, cookies
 # }
@@ -356,15 +356,15 @@ nokia.7110.*	wml1.1, wbmp0
 # }
 
 #section infoseek {
-.*		html, robot, *robot=infoseek
+.*		html, robot, *robot=infoseek, infoseek
 # }
 
 #section intraseek {
-.*		html, robot, *robot=intraseek
+.*		html, robot, *robot=intraseek, intraseek
 # }
 
 #section lycos {
-.*		html, robot, *robot=lycos
+.*		html, robot, *robot=lycos, lycos
 # }
 
 #section momspider {
@@ -376,7 +376,7 @@ nokia.7110.*	wml1.1, wbmp0
 # }
 
 #section scooter {
-.*		html, robot, *robot=altavista
+.*		html, robot, *robot=altavista, altavista
 # }
 
 #section scoutget {
@@ -384,7 +384,7 @@ nokia.7110.*	wml1.1, wbmp0
 # }
 
 #section slurp {
-.*		html, robot, *robot=hotbot
+.*		html, robot, *robot=hotbot, hotbot
 # }
 
 #section url {
@@ -405,7 +405,7 @@ nokia.7110.*	wml1.1, wbmp0
 # }
 
 #section yahoo {
-.*		html, robot, *robot=yahoo
+.*		html, robot, *robot=yahoo, yahoo
 # }
 
 
