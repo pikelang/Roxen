@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
+// This is a roxen module. Copyright © 1996 - 2000, Idonex AB.
 //
 // The main RXML parser. If this module is not added to a configuration,
 // no RXML parsing will be done at all for .html files.
@@ -9,7 +9,7 @@
 #define _extra_heads id->misc->defines[" _extra_heads"]
 #define _rettext id->misc->defines[" _rettext"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.35 1999/12/18 14:14:25 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.36 2000/01/16 17:13:24 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -21,6 +21,14 @@ inherit "roxenlib";
 
 
 // ------------- Module registration and configuration. ---------------
+
+constant module_type = MODULE_FILE_EXTENSION;
+constant module_name = "RXML 1.4 parser";
+constant module_doc  = "This module handles rxml parsing of HTML pages. It is recommended to also "
+  "add the \"RXML 1.4 tags\" module so that this modules gets some tags to parse. "
+  "Some bare bones logic tags are already provided by this module (case, cond, "
+  "comment, define, elif, else, elseif, false, help, if, line, "
+  "nooutput, noparse, number, strlen, then, trace, true, undefine and use).";
 
 string status()
 {
@@ -54,18 +62,6 @@ void start(int q, Configuration c)
   define_API_functions();
   require_exec=QUERY(require_exec);
   parse_exec=QUERY(parse_exec);
-}
-
-array register_module()
-{
-  return ({ MODULE_FILE_EXTENSION,
-	    "RXML 1.4 parser",
-	    "This module handles rxml parsing of HTML pages. It is recommended to also "
-            "add the \"RXML 1.4 tags\" module so that this modules gets some tags to parse. "
-            "Some bare bones logic tags are already provided by this module (case, cond, "
-            "comment, define, elif, else, elseif, false, help, if, line, list-tags, "
-            "nooutput, noparse, number, strlen, then, trace, true, undefine and use)."
-            , 0, 1 });
 }
 
 array(string) query_file_extensions()
