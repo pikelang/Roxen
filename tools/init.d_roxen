@@ -79,7 +79,7 @@ case $1 in
 	'stop')
            echo Stopping Roxen...
 	   if [ -f $pidfile ] ; then
-	     kill -QUIT `cat $pidfile` || kill -QIT `cat $pidfile` || kill 3 `cat $pidfile`
+	     kill -QUIT `cat $pidfile` || kill -QIT `cat $pidfile` || kill -3 `cat $pidfile`
 	     rm $pidfile
            fi
            # Get all the CGI scripts... :-)
