@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.564 2004/05/27 21:24:40 _cvs_stephen Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.565 2004/05/29 21:00:29 _cvs_stephen Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4003,34 +4003,87 @@ also set 'URLs'.</p>");
   
   defvar("ZNoSuchFile", NoSuchFileOverride() );
 
-  defvar("404-message", #"<html><head><title>404 - Page not Found</title>
-<style type='text/css'>
-td {font: 12px Helvetica, Arial; font-weight: bold}
-</style>
-</head><body bgcolor='black' text='#505050'
- link='#bf2626' vlink='#bf2626' alink='#ff2626'>
+  defvar("404-message", #"<html>
+<head>
+  <title>404 - Page Not Found</title>
+  <style>
+    .msg  { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      12px;
+            line-height:    160% }
+    .url  { font-family:    georgia, times, serif;
+            font-size:      18px;
+            padding-top:    6px;
+            padding-bottom: 20px }
+    .info { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      10px;
+            color:          #999999 }
+  </style>
+</head>
+<body bgcolor='#f2f1eb' vlink='#2331d1' alink='#f6f6ff'
+      leftmargin='0' rightmargin='0' topmargin='0' bottommargin='0'
+      style='margin: 0; padding: 0'>
 
-<table width='99%' height='99%'>
-<tr height='10%'></tr>
-<tr height='65%'><td align='center'>
-<imgs src='/*/chili-large-black' alt='ChiliMoon' title='ChiliMoon' />
-<table><tr><td><h1>Requested file not found</h1>
-<emit source='path'>
-<if exists='&_.path;/'><a href='&_.path;'>&_.name;</a> </if>
-<else>&_.name;</else>
-<delimiter>/</delimiter>
-</emit>
-</td></tr></table>
-</td></tr>
-<tr height='25%'><td valign='bottom' align='right'>&roxen.version;</td></tr>
+<table border='0' cellspacing='0' cellpadding='0' height='100%'>
+  <colgroup>
+    <col span='3' />
+    <col width='356' />
+    <col width='0*' />
+  </colgroup>
+  <tr>
+    <td><img src='/*/unit' height='30' /></td>
+  </tr><tr>
+    <td></td>
+    <td><img src='/*/404' /></td>
+    <td><img src='/*/unit' width='30' /></td>
+    <td valign='bottom'><img src='/*/page-not-found-2' /></td>
+    <td></td>
+  </tr><tr>
+    <td><img src='/*/unit' height='30' /></td>
+  </tr><tr>
+    <td colspan='3'></td>
+    <td colspan='2'>
+      <div class='msg'>Unable to retrieve</div>
+      <div class='url'>&page.virtfile;</div>
+    </td>
+  </tr><tr>
+    <td colspan='3'></td>
+    <td width='356'>
+      <div class='msg'>
+        If you feel this is a configuration error, please contact
+        the administrators of this server or the author of the
+        <if referrer=''>
+          <a href='&client.referrer;'>referring page</a>.
+        </if><else>
+          referring page.
+        </else>
+      </div>
+    </td>
+    <td>&nbsp;</td>
+  </tr><tr valign='bottom' height='100%'>
+    <td colspan='3'></td>
+    <td>
+      <img src='/*/unit' height='20' />
+      <table border='0' cellspacing='0' cellpadding='0'>
+        <tr>
+          <td><img src='/*/chili-small-white.gif' /></td>
+          <td class='info'>
+            &nbsp;&nbsp;<b>ChiliMoon</b> <font color='#ffbe00'>|</font>
+            version &roxen.dist-version;
+          </td>
+        </tr>
+      </table>
+      <img src='/*/unit' height='20' />
+    </td>
+    <td></td>
+  </tr>
 </table>
 
-</body></html>
-",
+</body>
+</html>",
 	 "No such file message",
 	 TYPE_TEXT_FIELD|VAR_PUBLIC,
-	 ("What to return when there is no resource or file "
-	  "available at a certain location."));
+	 "What to return when there is no resource or file "
+		 "available at a certain location.");
 
 #ifdef SNMP_AGENT
   // SNMP stuffs
