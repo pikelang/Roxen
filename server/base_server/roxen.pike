@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.415 2000/02/04 14:16:43 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.416 2000/02/04 23:55:56 grubba Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1641,15 +1641,25 @@ int register_url( string url, object conf )
   foreach(required_hosts, string required_host) {
     if( m[ required_host ] && m[ required_host ][ port ] )
     {
-      m[ required_host ][ port ]->ref(url, urls[url]);
-      urls[ url ]->port = prot;
+      m[required_host][port]->ref(url, urls[url]);
+      urls[url]->port = m[required_host][port];
       continue;    /* No need to open a new port */
     }
 
     if( !m[ required_host ] )
       m[ required_host ] = ([ ]);
 
-    m[ required_host ][ port ] = prot( port, required_host );
+    mixed err;
+    if (err = catch {
+      m[ required_host ][ port ] = prot( port, required_host );
+    }) {
+      failures++;
+      report_error(sprintf("Initializing the port handler for URL " +
+			   url + " failed!\n"
+			   "%s\n",
+			   describe_backtrace(err)));
+      continue;
+    }
     if( !( m[ required_host ][ port ] ) )
     {
       m_delete( m[ required_host ], port );
@@ -3293,7 +3303,7 @@ array(int) parse_since(string date)
     }
 
     if(year >= 0) {
-      // Fugde year to be localtime et al compatible.
+      // Fudge year to be localtime et al compatible.
       if (year < 60) {
 	// Assume year 0 - 59 is really year 2000 - 2059.
 	// Can't people stop using two digit years?
