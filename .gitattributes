@@ -1,6 +1,7 @@
 [attr]binary -text -crlf -diff -ident
 * text ident
 *.bat eol=crlf
+/tools/service/roxen_service.c -text -crlf
 *.cpp -text -crlf
 *.dsp eol=crlf
 *.dsw eol=crlf
