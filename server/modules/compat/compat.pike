@@ -431,6 +431,91 @@ string tag_echo(string t, mapping m, RequestID id) {
   return make_tag("!--#echo",m);  
 }
 
+string|int container_gtext(string t, mapping|int m, string c, RequestID id) {
+  m=gtext_compat(m,id);
+  if(!m) return 0;
+  return make_container(t,m,c);
+}
+
+string|int tag_gtext_id(string t, int|mapping m, RequestID id) {
+  m=gtext_compat(m,id);
+  if(!m) return 0;
+  return make_tag(t,m);
+}
+
+mapping|int gtext_compat(mapping m, RequestID id) {
+  int ch=0;
+  foreach(glob("magic_*", indices(m)), string q) {
+    m["magic-"+q[6..]]=m[q];
+    m_delete(m, q);
+    old_rxml_warning(id, "gtext attribute "+q,"magic-"+q[6..]);
+    ch++;
+  }
+  if(m->fg) {
+    m->fgcolor=m->fg;
+    m_delete(m, "fg");
+    old_rxml_warning(id, "gtext attribute fg","fgcolor");
+    ch++;
+  }
+  if(m->bg) {
+    m->bgcolor=m->bg;
+    m_delete(m, "bg");
+    old_rxml_warning(id, "gtext attribute bg","bgcolor");
+    ch++;
+  }
+  if(m->fuzz) {
+    m["magic-glow"]=m->fuzz=="fuzz"?m->fgcolor+",1":m->fuzz;
+    m_delete(m, "fuzz");
+    old_rxml_warning(id, "gtext attribute fuzz","magic-glow");
+    ch++;
+  }
+  if(m->magicbg) {
+    m["magic-background"]=m->magicbg;
+    m_delete(m, "magicbg");
+    old_rxml_warning(id, "gtext attribute magicbg","magic-background");
+    ch++;
+  }
+  if(!ch) return 0;
+  return m;
+}
+
+mapping query_tag_callers() {
+  return (["echo":tag_echo,
+	   "countdown":tag_countdown,
+	   "configimage":tag_configimage,
+	   "insert":tag_insert,
+	   "date":tag_date,
+	   "pr":tag_pr,
+	   "refferrer":tag_refferrer,
+	   "set":tag_set,
+	   "redirect":tag_redirect,
+	   "append":tag_append,
+	   "gtext-id":tag_gtext_id
+  ]);
+}
+
+mapping query_container_callers() {
+  return (["tablify":container_tablify,
+	   "source":container_source,
+	   "recursive-output":container_recursive_output,
+	   "default":container_default,
+	   "autoformat":container_autoformat,
+	   "aconf":container_aconf,
+	   "apre":container_apre,
+	   "preparse":container_preparse,
+	   "gtext":container_gtext,
+	   "gh":container_gtext,
+	   "gh1":container_gtext,
+	   "gh2":container_gtext,
+	   "gh3":container_gtext,
+	   "gh4":container_gtext,
+	   "gh5":container_gtext,
+	   "gh6":container_gtext,
+	   "anfang":container_gtext,
+	   "gtext-url":container_gtext
+  ]);
+}
+
 mapping query_if_callers()
 {
   return ([
