@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.46 1999/12/18 13:14:22 nilsson Exp $
+ * $Id: rxml.pike,v 1.47 1999/12/18 13:23:28 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -970,6 +970,7 @@ mapping query_tag_callers()
     "undefine":tag_undefine,
     "help": tag_help,
     "line":tag_line,
+    "version":lambda() { return ({ roxen.version() }); }
   ]);
 }
 
