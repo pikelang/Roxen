@@ -1,4 +1,4 @@
-constant cvs_version="$Id: countdown.pike,v 1.7 1998/06/08 17:24:17 grubba Exp $";
+constant cvs_version="$Id: countdown.pike,v 1.8 1998/07/05 12:39:49 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -314,9 +314,17 @@ string tag_countdown(string t, mapping m)
     when = mktime(time_args);
   })
     return "Invalid time.";
-  if(!zero_type(time_args->wday))
+  if(!zero_type(time_args->wday)) {
+    int weeks = time_args->wday/7;
+    if (time_args->wday < 0) {
+      weeks--;
+    }
+    weeks *= 7;
+    when += weeks * 3600*24;
+    time_args->wday -= weeks;
     while((localtime(when)->wday) != (time_args->wday))
       when += 3600*24;
+  }
   if(m->prec) prec = m->prec; // Must be done after the above test for events.
   switch(prec)
   {
