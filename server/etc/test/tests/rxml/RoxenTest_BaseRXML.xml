@@ -635,6 +635,15 @@ b</strlen></rxml>
 
 
 <!-- ............................................................ -->
+<comment>Cond</comment>
+
+<test>
+  <rxml><cond><default>x</default></cond></rxml>
+  <result>x</result>
+</test>
+
+
+<!-- ............................................................ -->
 <comment>Loops (for)</comment>
 <test>
 <rxml><for variable=var.i from=3 to=3><insert variable=var.i></for></rxml>
