@@ -11,7 +11,7 @@
 // assumption. Per? Grubba?
 //
 
-constant cvs_version="$Id: throttler.pike,v 1.9 2002/03/27 20:07:18 per-bash Exp $";
+constant cvs_version="$Id: throttler.pike,v 1.10 2002/03/28 03:05:10 per-bash Exp $";
 
 #define DEFAULT_MINGRANT 1300
 #define DEFAULT_MAXGRANT 65000
@@ -33,7 +33,8 @@ private int max_grant=0;    //maximum granted size for a single request
 
 ADT.Queue requests_queue; //lazily instantiated.
 
-//request format: ({ int howmuch, function callback, array(mixed) extra_args })
+//request format: ({ int howmuch, function callback, string host,
+//                   array(mixed) extra_args })
 
 //start throttling, given rate, depth, initial fillup, and min grant
 //if not supplied, mingrant is set to DEFAULT_MINGRANT by default
@@ -45,11 +46,15 @@ void throttle (int r, int d, int|void initial,
                    ", maxgrant="+maxgrant);
   fill_rate=r;
   depth=max(d,r);
-  bucket=initial;
+  if( initial )
+    bucket=initial;
   min_grant=(zero_type(mingrant)?DEFAULT_MINGRANT:mingrant);
   max_grant=(zero_type(maxgrant)?DEFAULT_MAXGRANT:maxgrant);
-  last_fill=time(1);
-  requests_queue=ADT.Queue();
+  if( !requests_queue ) // First time.
+  {
+    last_fill=time(1);
+    requests_queue=ADT.Queue();
+  }
   remove_call_out(safety_net);
   call_out(safety_net,1);
 }
