@@ -1,6 +1,6 @@
 inherit "http";
 
-string _cvs_version = "$Id: roxenlib.pike,v 1.9.2.3 1997/03/02 19:16:59 grubba Exp $";
+string _cvs_version = "$Id: roxenlib.pike,v 1.9.2.4 1997/03/05 16:07:43 grubba Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -631,6 +631,7 @@ string image_from_type( string t )
     sscanf(t, "%s/%*s", t);
     switch(t)
     {
+     case "audio":
      case "sound":
       return "internal-gopher-sound";
      case "image":
