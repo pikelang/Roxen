@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.31 1998/09/18 14:06:37 per Exp $
+# $Id: db.spec,v 1.32 1998/09/20 23:25:27 grubba Exp $
 
 drop table mail_misc;
 drop table user_misc;
@@ -78,7 +78,10 @@ create table send_q (
              mailid                  varchar(32) not null,
              received_at             int not null,
              send_at                 int not null,
-             times                   int not null
+             times                   int not null,
+	     remoteident	     varchar(255) not null,
+	     remoteip		     varchar(32) not null,
+	     remotename		     varchar(255) not null
      );
  
 create table users (
