@@ -1,5 +1,5 @@
 #define error(X) throw( ({ (X), backtrace() }) )
-constant cvs_version = "$Id: lisp.pike,v 1.8 1998/03/08 13:48:55 per Exp $";
+constant cvs_version = "$Id: lisp.pike,v 1.9 1998/05/18 22:02:03 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -362,7 +362,6 @@ object f_write(object arglist, object env, object globals)
   return Number( len );
 }
 
-#if 0
 object f_format(object arglist, object env, object globals)
 {
   string f = arglist->car->value;
@@ -380,6 +379,7 @@ object f_format(object arglist, object env, object globals)
   return String( sprintf(f, @args) );
 }
 
+#if 0
 object f_line_break(object arglist, object env, object globals)
 {
   string f = arglist->car->print();
@@ -396,7 +396,7 @@ object f_line_break(object arglist, object env, object globals)
 
 void init_roxen_functions(object environment, object conf)
 {
-  // environment->extend(make_symbol("format"), Builtin(f_format));
+  environment->extend(make_symbol("format"), Builtin(f_format));
 
   environment->extend(make_symbol("r-get-string"), Builtin(f_get));
   environment->extend(make_symbol("r-get-int"), Builtin(f_getint));
