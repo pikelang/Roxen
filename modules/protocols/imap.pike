@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.17 1999/02/03 19:58:27 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.18 1999/02/03 20:03:06 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -222,8 +222,6 @@ class imap_mail
   
   // array collect(mixed ...args) { return args; }
   
-  // FIXME: This function is called below with a mapping as
-  //        the only argument.
   array fetch(array attrs)
   {
     return ({ "FETCH", 
@@ -699,7 +697,8 @@ class imap_mailbox
 			 return Array.map(attrs,
 					  lambda(mixed attr, int i)
 					  {
-					    return contents[i-1]->fetch(attr);
+					    return contents[i-1]->
+					      fetch_attr(attr);
 					  },
 					  i);
 		       },
