@@ -153,7 +153,7 @@ string parse( RequestID id )
 
     string format_stats( mapping s, string url )
     {
-      if( search( url , "://" ) == -1 )
+      if( !url )
         url = "internal";
       else
       {
