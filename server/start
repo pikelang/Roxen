@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.61 1998/11/28 21:27:37 grubba Exp $
+# $Id: start,v 1.62 1998/11/28 21:36:46 grubba Exp $
 
 cd `dirname $0`
 
@@ -113,11 +113,15 @@ the default arguments.
 
       .B--versionB.:                  Output version information.
 
-      .B--help -?B.:                  This information
+      .B--help -?B.:                  This information.
+
+      .B--verbose -vB.:               Enable more verbose messages.
+
+      .B--quiet -qB.:                 Disable most of the messages.
 
       .B--log-dir=DIRB.:              Set the log directory. Defaults to .B../logsB..
 
-      .B--config-dir=DIRB.:           Use an alternate configuration directory
+      .B--config-dir=DIRB.:           Use an alternate configuration directory.
 				  Defaults to .B../configurationB..
 
       .B--with-threadsB.:             If threads are available, use them.
