@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.39 2000/11/02 12:46:00 kuntri Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.40 2000/11/02 22:44:27 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Accessed counter";
@@ -212,6 +212,7 @@ void start() {
 
 class Entity_page_accessed {
   int rxml_var_eval(RXML.Context c) {
+    c->id->misc->cacheable=0;
     if(!c->id->misc->accessed) {
       counter->add(c->id->not_query, 1);
       c->id->misc->accessed=1;
