@@ -551,374 +551,312 @@ verzoeken wordt het oude proces gestopt.</t>
 </str>
 
 <str id="88">
-<new/>
 <o>The other part should be submitted to a certificate authority, such as Thawte or VeriSign. The certificate authority will return the signed certificate that need to run a secure server.</o>
-<t></t>
+<t>Het andere gedeelte moet worden verstuurd naar een 'certificate authority' zoals Thawte of Verisign. Deze zal het certificaat dan getekend terugsturen. Dit certificaat heeft u nodig voor een server die versleutelde verbindingen ondersteund. </t>
 </str>
 
 <str id="89">
-<new/>
 <o>The other part is used to create a certificate. You can create a certificate yourself; this is not the recommended way to use SSL, and browsers will complain about not recognizing the entity that has signed the key (i.e. you). But a self-signed certificate is a lot better than nothing.</o>
-<t></t>
+<t>Het andere gedeelte wordt gebruik om een certificaat te maken. U kunt zelf een certificaat maken maar dit heeft niet de voorkeur: browsers geven dan een melding dat de organisatie die het certificaat heeft getekend (uzelf dus) niet herkennen. Maar een eigen certificaat is nog altijd beter dan niets.</t>
 </str>
 
 <str id="90">
-<new/>
 <o>Keys smaller than %d bits are ridiculous.</o>
-<t></t>
+<t>Sleutels kleiner dan %d bits hebben geen nut.</t>
 </str>
 
 <str id="91">
-<new/>
 <o>Keys larger than %d bits would take too long to generate.</o>
-<t></t>
+<t>Sleutels groter dan %d kosten te veel tijd om te genereren.</t>
 </str>
 
 <str id="92">
-<new/>
 <o>How large key do you want to generate?</o>
-<t></t>
+<t>Hoe groot moet de sleutel zijn?</t>
 </str>
 
 <str id="93">
-<new/>
 <o>The desired key size. This is a security parameter; larger keys gives better security, but it also makes connecting to the server a little slower.</o>
-<t></t>
+<t>De gewenste sleutelgrootte. Dit is een beveiligingskeuze; grotere sleutels bieden een betere beveiliging maar maakt verbindingen naar de server wel langzamer.</t>
 </str>
 
 <str id="94">
-<new/>
 <o>Key size</o>
-<t></t>
+<t>Sleutelgrootte</t>
 </str>
 
 <str id="95">
-<new/>
 <o>The largest key that is publicly known to have been broken was 155 decimal digits, or 512 bits large. This effort required approximately 8000 MIPS-years.&lt;p&gt;A key 1024 bits large should be secure enough for most applications, but of course you can you use an even larger key if you so wish.</o>
-<t></t>
+<t>De grootste sleutel waarvan bekend is dat hij gekraakt kon worden was 155 decimalen, of 512 bits. Deze onderneming kostte ongeveer 8000 MIPS-jaar. &lt;p&gt Een 1024 bits sleutel zou veilig genoeg moet zijn voor de meeste toepassingen, maar u kunt een grotere sleutel kiezen als u dat wilt.</t>
 </str>
 
 <str id="96">
-<new/>
 <o>Key file</o>
-<t></t>
+<t>Sleutelbestand</t>
 </str>
 
 <str id="97">
-<new/>
 <o>Where to store the file, may be relative to %s.</o>
-<t></t>
+<t>De locatie van het sleutelbestand, mag relatief ten opzichte van %s</t>
 </str>
 
 <str id="98">
-<new/>
 <o>A filename in the real filesystem, where the secret key should be stored. This is the filename you enter in the 'Key file'-field when you configure an SSL listen port.</o>
-<t></t>
+<t>Een betanndsnaan in het bestandssysteem op de server, waar de geheime sleutel moet worden opgeslagen. Dit is de bestandsnaam die u invult in het 'Sleutelbestand'-veld als u een SSL poort configureert.</t>
 </str>
 
 <str id="99">
-<new/>
+<!-- fixme vertalen? -->
 <o>Your Distinguished Name?</o>
-<t></t>
+<t>Uw 'Distinguished Name'?</t>
 </str>
 
 <str id="100">
-<new/>
-<o>Your X.501 Distinguished Name consists of a chain of attributes and values, where each link in the chain defines more precisely who you are. Which attributes are necessary or useful depends on what you will use the certificate for, and which Certificate Authority you use. This page lets you specify the most useful attributes. If you leave a field blank, that attribute will be omitted from your name.&lt;p&gt;
-Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, it can't be counted on. To be on the safe side, use only US-ASCII.</o>
-<t></t>
+<o>Your X.501 Distinguished Name consists of a chain of attributes and values, where each link in the chain defines more precisely who you are. Which attributes are necessary or useful depends on what you will use the certificate for, and which Certificate Authority you use. This page lets you specify the most useful attributes. If you leave a field blank, that attribute will be omitted from your name.&lt;p&gt; Although most browsers will accept 8 bit ISO 8859-1 characters in these fields, it can't be counted on. To be on the safe side, use only US-ASCII.</o>
+<t>Uw X.501 'Distinguished Name' bestaat uit een rij van parameters en waarden waarbij elke verwijzing in de rij nauwkeuriger definieert wie u bent. Welke paramters nodig of nuttig zijn hangt van waarvoor u het certficaat wilt gebruiken en welke 'Certificate Authority' u gebruikt. Deze pagina laat u de meeste gebruikelijke parameters invoeren. Als u een veld niet invuld wordt deze parameter niet toegevoegd. &lt;p&gt; Alhoewel de meeste browsers 8 bits ISO 8859-1 karakters in deze parameters acceptern kunt u er niet van uitgaan. Gebruikt u om zeker te zijn alleen US-ASCII (dus geen accenten e.d.) </t>
 </str>
 
 <str id="101">
-<new/>
 <o>Your country code</o>
-<t></t>
+<t>Uw landscode</t>
 </str>
 
 <str id="102">
-<new/>
 <o>Your two-letter country code, for example GB (United Kingdom). This attribute is required.</o>
-<t></t>
+<t>Uw tweeletterige landscode. Bijvoorbeeld NL (Nederland). Dit veld is vereist.</t>
 </str>
 
 <str id="103">
-<new/>
 <o>State/Province</o>
-<t></t>
+<t>Staat/Provincie</t>
 </str>
 
 <str id="104">
-<new/>
 <o>The state where you are operating. VeriSign requires this attribute to be present for US and Canadian customers. Do not abbreviate.</o>
-<t></t>
+<t>De staat/provincie waar u bent gevestigd. Verisign vereist dit veld voor Amerikaanse en Canadese klanten. De naam niet afkorten.</t>
 </str>
 
 <str id="105">
-<new/>
 <o>City/Locality</o>
-<t></t>
+<t>Plaats</t>
 </str>
 
 <str id="106">
-<new/>
 <o>The city or locality where you are registered. VeriSign requires that at least one of the locality and the state attributes are present. Do not abbreviate.</o>
-<t></t>
+<t>De plaats waar u bent gevestigd. Verisign vereist dat tenminste &eacute;&eacute; van de plaats en staat/provincie velden aanwezig zijn. De naam niet afkorten.</t>
 </str>
 
 <str id="107">
-<new/>
 <o>Organization/Company</o>
-<t></t>
+<t>Organisatie/Bedrijf</t>
 </str>
 
 <str id="108">
-<new/>
 <o>The organization name under which you are registered with some national or regional authority.</o>
-<t></t>
+<t>De organisatie- of bedrijfsnaam waaronder u bent geregistreerd.</t>
 </str>
 
 <str id="109">
-<new/>
 <o>Organizational unit</o>
-<t></t>
+<t>Divisie/Bedrijfsonderdeel</t>
 </str>
 
 <str id="110">
-<new/>
 <o>This attribute is optional, and there are no specific requirements on the value of this attribute.</o>
-<t></t>
+<t>Dit veld is optioneel en er zijn geen speciale eisen voor de inhoud ervan.</t>
 </str>
 
 <str id="111">
-<new/>
 <o>Common Name</o>
-<t></t>
+<t>'Common Name'</t>
 </str>
 
 <str id="112">
-<new/>
 <o>This is the DNS name of your server (i.e. the host part of the URL).&lt;p&gt;Browsers will compare the URL they are connecting to with the Common Name in the server's certificate, and warn the user if they don't match.&lt;p&gt;Some Certificate Authorities allow wild cards in the Common Name. This means that you can have a certificate for &lt;tt&gt;*.roxen.com&lt;/tt&gt; which will match all servers at Roxen.Thawte allows wild card certificates, while VeriSign does not.</o>
-<t></t>
+<t>Dit is de DNS naam van uw server. (d.wz. het 'host' gedeelte van de URL) &lt;p&gt; Browsers vergelijken de URL waar naartoe ze verbinden met de 'Common Name' in het certificaat van de server en waarschuwen de gebruiker als ze niet overeenkomen. &lt;p&gt; Sommige 'Certificate uthorities' staan wildcards to in de common name. Dit houdt in dat u een certificaat kan hebben voor bijv. &lt;tt&gt;*.roxen.com&lt;/tt&gt; welke geldig is alle servers bij Roxen. Thawte ondersteund deze wild cards, Verisign niet. </t>
 </str>
 
 <str id="113">
-<new/>
 <o>For how long should the certificate be valid?</o>
-<t></t>
+<t>Tot hoe lang moet het certificaat geldig blijven?</t>
 </str>
 
 <str id="114">
-<new/>
 <o>Certificate lifetime, in days</o>
-<t></t>
+<t>Tijdsduur certificaat in dagen </t>
 </str>
 
 <str id="115">
-<new/>
 <o>A certificate includes a validity period. How many days, from now, do you want the certificate to be valid?</o>
-<t></t>
+<t>Elk certificaat heeft een geldigheidsduur. Hoeveel dagen wilt u dat het certificaat geldig is, gerekend vanaf nu?</t>
 </str>
 
 <str id="116">
-<new/>
 <o>Save the request in a file:</o>
-<t></t>
+<t>Bewaar het verzoek in een bestand:</t>
 </str>
 
 <str id="117">
-<new/>
 <o>Filename</o>
-<t></t>
+<t>Bestandnaam</t>
 </str>
 
 <str id="118">
-<new/>
 <o>Generate a new RSA key pair...</o>
-<t></t>
+<t>Genereer een nieuw RSA sleutelpaar...</t>
 </str>
 
 <str id="119">
-<new/>
 <o>Note that it is possible to have more than one certificate for the same key.</o>
-<t></t>
+<t>Merk op dat het mogelijk is meerdere certificaten te hebben met dezelfde sleutel.</t>
 </str>
 
 <str id="120">
-<new/>
 <o>Wrote %d-bit key in %s</o>
-<t></t>
+<t>%d-bits sleutel weggeschreven in %s</t>
 </str>
 
 <str id="121">
-<new/>
 <o>Generate a Certificate Signing Request and an RSA key...</o>
-<t></t>
+<t>Genereeer een 'Certificate Signing Request' en een RSA-sleutel...</t>
 </str>
 
 <str id="122">
-<new/>
 <o>Certificate Attributes?</o>
-<t></t>
+<t>Certifcaat parameters?</t>
 </str>
 
 <str id="123">
-<new/>
 <o>An X.509 certificate associates a Common Name with a public key. Some certificate authorities support "extended certificates", defined in PKCS#10. An extended certificate may contain other useful information associated with the name and the key. This information is signed by the CA, together with the X.509 certificate.</o>
-<t></t>
+<t>Een X.509 certificaat verbind een 'Common Name' met een publieke sleutel. Sommige 'Certificate Authorities ondersteunen uitgebreide certificaten, gedefinieerd volgens PKCS#10. Een uitgebreid certificaat kan andere nuttige informatie bevatten die gerelateerd is aan de naam en de sleutel. Deze informatie wordt getekend door de CA, samen met het X.509 certificaat.</t>
 </str>
 
 <str id="124">
-<new/>
 <o>Email address</o>
-<t></t>
+<t>Email adres</t>
 </str>
 
 <str id="125">
-<new/>
 <o>An email address to be embedded in the certificate.</o>
-<t></t>
+<t>Een email adres dat in het certificaat komt te staan.</t>
 </str>
 
 <str id="126">
-<new/>
 <o>CSR Attributes?</o>
-<t></t>
+<t>CSR parameters?</t>
 </str>
 
 <str id="127">
-<new/>
 <o>At last, you can add attributes to the Certificate Signing Request, which are meant for the Certificate Authority and are not included in the issued Certificate.</o>
-<t></t>
+<t>Tot slot kunt u parameters aan het 'Certificate Signing Request' toevagen die alleen zijn bedoeld voor de 'Certificate Authority' maar niet in het certificaat komen.</t>
 </str>
 
 <str id="128">
-<new/>
 <o>Challenge Password</o>
-<t></t>
+<t>Challenge wachtwoord</t>
 </str>
 
 <str id="129">
-<new/>
 <o>This password could be used if you ever want to revoke your certificate. Of course, this depends on the policy of your Certificate Authority.</o>
-<t></t>
+<t>Dit wachtwoord kan gebruikt worden als u uw certificaat wilt intrekken. Dit hangt natuurlijk af van het beleid van uw 'Certificate Authority'.</t>
 </str>
 
 <str id="130">
-<new/>
 <o>This is your Certificate Signing Request.</o>
-<t></t>
+<t>Dit is uw 'Certificate Signing Request'.</t>
 </str>
 
 <str id="131">
-<new/>
 <o>Wrote %d bytes to %s.</o>
-<t></t>
+<t>%d bytes weggeschreven naar %s.</t>
 </str>
 
 <str id="132">
-<new/>
 <o>Generate an RSA key and a Self Signed Certificate...</o>
-<t></t>
+<t>Genereer een RSA sleutel en een zelf ondertekend certificaat...</t>
 </str>
 
 <str id="133">
-<new/>
 <o>This is your Certificate.</o>
-<t></t>
+<t>Dit is uw certificaat.</t>
 </str>
 
 <str id="134">
-<new/>
 <o>Generate an DSA key and a Self Signed Certificate...</o>
-<t></t>
+<t>Genereer een DSA sleutel en een zelf ondertekend certificaat...</t>
 </str>
 
 <str id="135">
-<new/>
 <o>Invalid key size.</o>
-<t></t>
+<t>Ongeldige sleutelgrootte</t>
 </str>
 
 <str id="40">
-<new/>
 <o>In order to use the SSL on your server, you first have to create a random key pair. One part of the key is kept secret. </o>
-<t></t>
+<t>Om SSL op uw server te gebruiken moet u eerst een willekeurig sleutelpaar genereren. Een gedeelte van de sleutel wordt geheim gehouden.</t>
 </str>
 
 <str id="41">
-<new/>
 <o>Change roxen version...</o>
-<t></t>
+<t>Wijzig de versie van Roxen...</t>
 </str>
 
 <str id="42">
-<new/>
 <o>Indeed</o>
-<t></t>
+<t>Inderdaad</t>
 </str>
 
 <str id="43">
-<new/>
 <o>1 month</o>
-<t></t>
+<t>1 maand</t>
 </str>
 
 <str id="44">
-<new/>
 <o>%d months</o>
-<t></t>
+<t>%d maanden</t>
 </str>
 
 <str id="45">
-<new/>
 <o>%d days</o>
-<t></t>
+<t>%d dagen</t>
 </str>
 
 <str id="46">
-<new/>
 <o>Change Roxen version</o>
-<t></t>
+<t>Wijzig de versie van Roxen...</t>
 </str>
 
 <str id="47">
-<new/>
 <o>Changing roxen version</o>
-<t></t>
+<t>Versie van Roxen aan het wijzigen</t>
 </str>
 
 <str id="48">
-<new/>
 <o>Version</o>
-<t></t>
+<t>Versie</t>
 </str>
 
 <str id="85">
-<new/>
 <o>Release date</o>
-<t></t>
+<t>Release datum</t>
 </str>
 
 <str id="86">
-<new/>
 <o>Age</o>
-<t></t>
+<t>Leeftijd</t>
 </str>
 
 <str id="136">
-<new/>
 <o>Directory</o>
-<t></t>
+<t>Directory</t>
 </str>
 
 <str id="137">
-<new/>
 <o>If you change to one these roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again</o>
-<t></t>
+<t>Als u naar een van deze Roxen versies wijzigt kunt u niet meer in versie  teruggaan vanaf de administratie interface. U moet dan het bestand %O handmatig wijzigen, de server stoppen en %O weer uitvoeren.</t>
 </str>
 
 <str id="138">
-<new/>
 <o>Change version</o>
-<t></t>
+<t>Wijzig versie</t>
 </str>
