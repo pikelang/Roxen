@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.4 1998/09/14 20:50:35 grubba Exp $
+ * $Id: smtprelay.pike,v 1.5 1998/09/14 21:10:05 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.4 1998/09/14 20:50:35 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.5 1998/09/14 21:10:05 grubba Exp $";
 
 /*
  * Some globals
@@ -275,19 +275,22 @@ class MailSender
     ([ "250":send_mail_from, "5":send_bounce, ]),
     ([ "25":"DATA", "55":bad_address, ]),
     ([ "354":send_body, "":send_bounce, ]),
-    ([ "250":send_ok, ]),
+    ([ "250":send_ok, "":send_bounce, ]),
     ([]),
   });
 
   static mixed find_next(mapping(string:mixed) machine,
 			 string code, mixed def)
   {
+    mixed res;
     int i;
     for (i=sizeof(code); i--; ) {
-      mixed res;
       if (!zero_type(res = machine[code[..i]])) {
 	return res;
       }
+    }
+    if (!zero_type(res = machine[""])) {
+      return res;
     }
     return def;
   }
