@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.75 1998/01/17 02:57:32 grubba Exp $
+ * $Id: ftp.pike,v 1.76 1998/01/21 04:36:41 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -235,11 +235,11 @@ string file_ls(array (int) st, string file, int flags)
   if (flags & LS_FLAG_G) {
     // No group.
     return sprintf("%s   1 %-10s %12d %s %s %s\n", perm*"",
-		   ((flags & LS_FLAG_n)?(string)st[-2]:name_from_uid(st[-2])),
+		   (string)((flags & LS_FLAG_n)?st[-2]:name_from_uid(st[-2])),
 		   (st[1]<0? 512:st[1]), ct[4..9], ct[11..15], file);
   } else {
     return sprintf("%s   1 %-10s %-6d%12d %s %s %s\n", perm*"",
-		   ((flags & LS_FLAG_n)?(string)st[-2]:name_from_uid(st[-2])),
+		   (string)((flags & LS_FLAG_n)?st[-2]:name_from_uid(st[-2])),
 		   st[-1], (st[1]<0? 512:st[1]), ct[4..9], ct[11..15], file);
   }
 }
