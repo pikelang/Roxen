@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.38 2001/09/05 20:56:15 grubba Exp $
+// $Id: DBManager.pmod,v 1.39 2001/09/06 09:46:56 per Exp $
 
 //! Manages database aliases and permissions
 
@@ -190,26 +190,10 @@ private
 
 mixed sql_cache_get(string what)
 {
-  mixed res;  
+  mixed key = roxenloader.sq_cache_lock();  
   string i = replace(what,":",";")+":-";
-  if( roxenloader->sql_free_list[ i ] )
-  {
-#ifdef DB_DEBUG
-    werror("%O found in free list\n", i );
-#endif
-    res = roxenloader->sql_free_list[i][0];
-    if( sizeof( roxenloader->sql_free_list[ i ] ) > 1)
-      roxenloader->sql_free_list[ i ] = roxenloader->sql_free_list[i][1..];
-    else
-      m_delete( roxenloader->sql_free_list, i );
-    roxenloader->sql_active_list[i]++;
-    return roxenloader.MySQLKey( res, i );
-  }
-  if( res = Sql.Sql( what ) )
-  {
-    roxenloader->sql_active_list[i]++;
-    return roxenloader.MySQLKey( res, i );
-  }
+  return roxenloader.sq_cache_get( i ) ||
+         roxenloader.sq_cache_set( i, Sql.Sql( what ) );
 }
 
 void add_dblist_changed_callback( function(void:void) callback )
