@@ -1,3 +1,11 @@
+#include <config_interface.h>
+#include <config.h>
+#include <roxen.h>
+//<locale-token project="roxen_config">_</locale-token>
+#define _(X,Y)	_STR_LOCALE("roxen_config",X,Y)
+
+
+
 string get_conf_name( string c )
 {
   Configuration cfg = roxen.find_configuration( c );
@@ -145,10 +153,16 @@ string parse( RequestID id )
 
     string format_stats( mapping s, string url )
     {
-//       if( search( url , "://" ) == -1 )
-        url = "";
-//       else
-//         url += "<br />";
+      if( search( url , "://" ) == -1 )
+        url = "internal";
+      else
+      {
+	if( catch( DBManager.get( db )->query("select 1") ) )
+	  url="<font color='&usr.warncolor;'>"+
+	    _(0,"Failed to connect")+"</font>";
+	else
+	  url = "remote";
+      }
       if( !s )
         return url;
       return sprintf( "%s %.1fMb", url, s->size/1024.0/1024.0 );
