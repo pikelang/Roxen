@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.307 2001/12/04 18:44:37 mast Exp $
+// $Id: roxenloader.pike,v 1.308 2001/12/19 10:01:47 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.307 2001/12/04 18:44:37 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.308 2001/12/19 10:01:47 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -532,7 +532,11 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
     }
   }
   opts->noinitgroups = 1;
-  Process.Process proc = Process.Process( s, opts );
+#if defined(__NT__) || defined(__amigaos__)
+  Process.Process proc = Process.Process(Process.split_quoted_string(s), opts);
+#else /* !__NT||__amigaos__ */
+  Process.Process proc = Process.Process(({"/bin/sh", "-c", s}), opts);
+#endif /* __NT__ || __amigaos__ */
   p->close();
 
   if( proc )
