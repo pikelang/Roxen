@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.315 2000/07/04 09:51:04 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.316 2000/07/09 14:10:46 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -65,7 +65,6 @@ int get_config_id() {
     if(roxen->configurations[--i]->name==name) return config_id=i;
 }
 
-#if 0
 string get_doc_for( string region, string variable )
 {
   RoxenModule module;
@@ -76,14 +75,13 @@ string get_doc_for( string region, string variable )
   if(module = find_module( region ))
   {
     if(module->variables[variable])
-      return module->variables[variable][VAR_NAME]+
-        "\n"+module->variables[ variable ][ VAR_DOC_STR ];
+      return module->variables[variable]->name()+
+        "\n"+module->variables[ variable ]->doc();
   }
   if(variables[ variable ])
-    return variables[variable][VAR_NAME]+
-      "\n"+variables[ variable ][ VAR_DOC_STR ];
+    return variables[variable]->name()+
+      "\n"+variables[ variable ]->doc();
 }
-#endif
 
 string query_internal_location(RoxenModule|void mod)
 {
