@@ -3,7 +3,7 @@ inherit "roxenlib";
 
 string get_id(string from)
 {
-  catch 
+  catch
   {
     object f = open(from,"r");
     string id;
@@ -19,7 +19,7 @@ object find_module( string foo )
   string mod;
   object cfg;
 
-  if( !foo || !strlen(foo)) 
+  if( !foo || !strlen(foo))
     return 0;
   if( foo[0] == '/' ) foo = foo[1..];
   sscanf( foo, "%[^/]/%s", foo, mod );
@@ -36,38 +36,27 @@ string program_name_version( program what )
   string file = roxen.filename( what );
   string ofile;
   string name = file, warning="";
-  string color = "black";
   array(int) ofs, fs;
 
-  catch 
+  catch
   {
     if( file )
       ofile = master()->make_ofilename( master()->program_name( what ) );
   };
   if(!ofile)
-    ofile = "No .o file!";
+    ofile = "No .o file";
   if( !(fs = file_stat( file )) )
-  {
-    color = "red";
     warning="<blink>Source file gone!</blink>";
-  }
   else if( (ofs = file_stat( ofile )) && ofs[ST_SIZE] )
   {
-    color = "darkgreen";
     if( ofs[ ST_MTIME ] < fs[ ST_MTIME ] )
-    {
-      color = "red";
       warning = "(<i>Precompiled file out of date</i>)";
-    }
   } else
     warning = "(<i>No precompiled file available</i>)";
 
   if( (fs && (fs[ ST_MTIME ] > master()->loaded_at( what ) )) )
-  {
-    color = "red";
     warning = "(<i>Needs reloading</i>)";
-  }
-  return "<font color="+color+">"+name+" "+get_id( file )+"</font> "+warning;
+  return name+" "+get_id( file )+" "+warning;
 }
 
 string program_info( program what )
