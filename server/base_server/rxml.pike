@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.109 2000/02/08 00:33:02 mast Exp $
+ * $Id: rxml.pike,v 1.110 2000/02/08 01:30:40 nilsson Exp $
  *
  * The Roxen RXML Parser.
  *
@@ -136,7 +136,7 @@ class ScopePage {
   mixed `[] (string var, void|RXML.Context c, void|string scope) {
     if(in_defines[var])
       return c->id->misc->defines[converter[var]];
-    if(objectp(c->id->misc->page[var])) return c->id->misc->page[var]->rxml_var_eval(c);
+    if(objectp(c->id->misc->page[var])) return c->id->misc->page[var]->rxml_var_eval(c, var, "page");
     return c->id->misc->page[var];
   }
 
