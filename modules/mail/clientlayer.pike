@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.32 1999/01/28 20:03:36 grubba Exp $
+ * $Id: clientlayer.pike,v 1.33 1999/02/04 20:39:35 grubba Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module" : module;
 
-constant cvs_version="$Id: clientlayer.pike,v 1.32 1999/01/28 20:03:36 grubba Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.33 1999/02/04 20:39:35 grubba Exp $";
 constant thread_safe=1;
 
 
@@ -586,7 +586,7 @@ class Mailbox
 
   Mail create_mail_from_data( string data )
   {
-    return create_mail( MIME.Message( data ) );
+    return create_mail( MIME.Message( data, 0, 0, 1 ) );
   }
 
   Mail create_mail( MIME.Message m )
