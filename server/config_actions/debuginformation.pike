@@ -1,5 +1,5 @@
 /*
- * $Id: debuginformation.pike,v 1.12 1998/04/24 08:42:19 per Exp $
+ * $Id: debuginformation.pike,v 1.13 1998/06/23 14:37:34 grubba Exp $
  */
 
 inherit "wizard";
@@ -50,7 +50,7 @@ array get_prof_info(string|void foo)
   {
     mapping g = tmp[c][1];
     foreach(indices(g), string f) 
-      if(!foo || glob(foo,c+"->"+f))
+      if(!foo || !sizeof(foo) || glob(foo,c+"->"+f))
 	as_functions[c+"->"+f] = ({ g[f][1],g[f][0] });
   }
   array q = indices(as_functions);
