@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.42 1999/12/07 22:48:42 grubba Exp $
+ * $Id: rxml.pike,v 1.43 1999/12/08 02:31:53 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -610,8 +610,7 @@ string tag_define(string tag, mapping m, string str, RequestID id,
       id->misc->tags = ([]);
     if(!id->misc->defaults)
       id->misc->defaults = ([]);
-    if(!id->misc->defaults[n])
-      id->misc->defaults[n] = ([]);
+    id->misc->defaults[n] = ([]);
 
 #if old_rxml_compat
     // This is not part of RXML 1.4
@@ -647,8 +646,7 @@ string tag_define(string tag, mapping m, string str, RequestID id,
       id->misc->containers = ([]);
     if(!id->misc->defaults)
       id->misc->defaults = ([]);
-    if(!id->misc->defaults[n])
-      id->misc->defaults[n] = ([]);
+    id->misc->defaults[n] = ([]);
 
 #if old_rxml_compat
     // This is not part of RXML 1.4
