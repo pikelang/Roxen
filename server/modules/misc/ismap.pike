@@ -3,7 +3,7 @@
 // ISMAP image map support. Quite over-complex, really.  An example is
 // the support for index images, and chromatic distances.
 
-string cvs_version = "$Id: ismap.pike,v 1.7 1997/04/05 01:26:15 per Exp $";
+string cvs_version = "$Id: ismap.pike,v 1.8 1997/05/13 15:54:44 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -463,11 +463,12 @@ int polygon(mixed points, int tx, int ty)
 #undef X
 
 /* Find the URL for the coordinate (x,y) in the file (map_file_name) */
-string map_get_filename( int x, int y, string map_file_name, object o )
+string map_get_filename( int x, int y, string map_file_name, object o, object id )
 {
   int c, *s;
   string cache_key;
-  cache_key = "mapfile:" +roxen->current_configuration->name;
+//  cache_key = "mapfile:" +roxen->current_configuration->name;
+  cache_key = "mapfile:" + id->conf->name;
   mixed in_cache;
 
   s = (int *)o->stat();
@@ -579,7 +580,7 @@ mapping|string handle_file_extension(object file, string ext, object id)
   
   req++;
 
-  map_file_name=map_get_filename(x, y, id->not_query, file);
+  map_file_name=map_get_filename(x, y, id->not_query, file, id);
   destruct(file);
   if(stringp(map_file_name) && strlen(map_file_name))
   {
