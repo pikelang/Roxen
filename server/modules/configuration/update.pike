@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.20 2000/09/03 00:40:10 nilsson Exp $
+ * $Id: update.pike,v 1.21 2000/09/03 00:52:14 nilsson Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -109,7 +109,6 @@ void stop()
 
 void create()
 {
-  query_tag_set()->prepare_context=set_entities;
   defvar("yabudir", "$VVARDIR/update_data/", "Database directory",
 	 TYPE_DIR, ""); 
   defvar("pkgdir", "$LOCALDIR/packages/", "Database directory",
@@ -143,31 +142,6 @@ static string describe_time_period( int amnt )
   return amnt+" years";
 }
 
-class Scope_update
-{
-  inherit RXML.Scope;
-
-  mixed `[]  (string var, void|RXML.Context c, void|string scope)
-  {
-    if(var=="last_updated")
-    {
-      int t;
-      if(catch(t=misc["last_updated"]) || t==0)
-	return "infinitely long";
-      return describe_time_period(time(1)-t);
-    }
-  }
-
-  string _sprintf() { return "RXML.Scope(update)"; }
-}
-
-RXML.Scope update_scope=Scope_update();
-
-void set_entities(RXML.Context c)
-{
-  c->extend_scope("update", update_scope);
-}
-
 class TagUpdateShowBacktrace {
   inherit RXML.Tag;
   constant name = "update-show-backtrace";
@@ -177,6 +151,13 @@ class TagUpdateShowBacktrace {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
+
+      int t;
+      if(catch(t=misc["last_updated"]) || t==0)
+	RXML.set_var("last_updated", "infinitely long", "var");
+      else
+	RXML.set_var("last_updated", describe_time_period(time(1)-t), "var");
+
       if(init_error)
       {
 	string s="<font color='darkred'><h1>Update client initialization error</h1></font>";
