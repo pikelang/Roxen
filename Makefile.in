@@ -502,7 +502,7 @@ tar_dist:
 	rm -rf 40bit-nda; \
 	(mkdir 40bit; cd 40bit; gzip -cd < ../$$version-$$type.tar.gz | tar xf -; cd $$version; make censor_strong_crypto || exit 1; make censor_pro || exit 1); \
 	echo "Removing Pro manual and restoring Challenger manual..."; \
-	rm $$version/server/manual/*parsed*.tar . || exit 1; \
+	rm $$version/server/manual/*parsed*.tar || exit 1; \
 	cp unparsed_challenger.tar $$version/server/manual/unparsed.tar \
 	 || exit 1; \
 	cp parsed_challenger.tar $$version/server/manual/parsed.tar \
