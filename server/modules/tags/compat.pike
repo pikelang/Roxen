@@ -18,22 +18,9 @@ array register_module()
 string tag_preparse( string tag_name, mapping args, string contents,
 		     object id )
 {
+  id->conf->api_functions()->old_rxml_warning[0](id, "preparse tag","preparse attribute");
   return make_container( args->tag, args - ([ "tag" : 1 ]),
 			 parse_rxml( contents, id ) );
-}
-
-string tag_signature(string tag, mapping m, object id, object file,
-		     mapping defines)
-{
-  return "<right><address>"+make_tag("user", m)+"</address></right>";
-}
-
-
-mapping query_tag_callers()
-{
-  return ([
-    "signature":tag_signature
-  ]);
 }
 
 mapping query_container_callers()
