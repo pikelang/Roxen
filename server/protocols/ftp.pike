@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.25 1997/06/10 18:17:36 grubba Exp $
+ * $Id: ftp.pike,v 1.26 1997/06/11 22:29:31 marcus Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -407,7 +407,7 @@ class put_file_wrapper {
 
 }
 
-int open_file(string arg);
+int open_file(string arg, int|void noport);
 
 void connected_to_receive(object fd, string arg)
 {
@@ -545,14 +545,15 @@ varargs int|string list_file(string arg, int srt, int short, int column,
   }
 }
 
-int open_file(string arg)
+int open_file(string arg, int|void noport)
 {
   array (int) st;
-  if(!dataport_addr || !dataport_port)
-  {
-    reply("425 Can't build data connect: Connection refused.\n"); 
-    return 0;
-  }
+  if(!noport)
+    if(!dataport_addr || !dataport_port)
+    {
+      reply("425 Can't build data connect: Connection refused.\n"); 
+      return 0;
+    }
   
   if(arg[0] == '~')
     this_object()->not_query = combine_path("/", arg);
@@ -592,7 +593,7 @@ int open_file(string arg)
       reply("550 "+arg+": Access denied.\n");
       break;
     case 405:
-      reply("553 "+arg+": Method not allowed.\n");
+      reply("550 "+arg+": Method not allowed.\n");
       break;
     default:
       reply("550 "+arg+": No such file or directory.\n");
@@ -950,6 +951,24 @@ void got_data(mixed fooid, string s)
       auth = session_auth;
 
       connect_and_receive(arg);
+      break;
+
+    case "dele":
+      if(!arg || !strlen(arg))
+      {
+	reply("501 'DELE': Missing argument\n");
+	break;
+      }
+
+      // Restore auth-info
+      auth = session_auth;
+
+      method = "DELETE";
+      data = 0;
+      misc->len = 0;
+      if(open_file(arg, 1))
+	reply("254 Delete completed\n");
+
       break;
 
     case "pasv":
