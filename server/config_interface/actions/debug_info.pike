@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.28 2003/03/04 17:51:46 anders Exp $
+ * $Id: debug_info.pike,v 1.29 2003/03/06 10:31:27 jonasw Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -10,7 +10,7 @@ constant action = "debug_info";
 
 LocaleString name= LOCALE(1,"Pike memory usage information");
 LocaleString doc = LOCALE(2,
-		    "Show some information about how pike is using the "
+		    "Show some information about how Pike is using the "
 		    "memory it has allocated. Mostly useful for developers.");
 
 int creation_date = time();

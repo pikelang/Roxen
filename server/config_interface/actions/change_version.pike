@@ -107,7 +107,7 @@ string parse( RequestID id )
 				   "server_version"),
 		      id->variables->server );
        roxen->shutdown(0.5);
-    return (string)_(47,"Shutting down and changing roxen version");
+    return (string)_(47,"Shutting down and changing Roxen version");
   }
 
   res += "<input type=hidden name='action' value='change_version.pike' />";
@@ -143,7 +143,7 @@ string parse( RequestID id )
       "<img src='&usr.err-2;' alt='#' /></td>\n"
       "<td>"+
       sprintf((string)
-      _(137,"If you change to one these roxen versions, you will not be "
+      _(137,"If you change to one these Roxen versions, you will not be "
 	"able to change back from the administration interface, you will "
 	"instead have to edit the file %O manually, shutdown the server, "
 	"and execute %O again"),

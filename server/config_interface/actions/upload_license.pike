@@ -1,5 +1,5 @@
 /*
- * $Id: upload_license.pike,v 1.8 2002/12/05 12:59:20 stewa Exp $
+ * $Id: upload_license.pike,v 1.9 2003/03/06 10:31:27 jonasw Exp $
  */
 
 #include <roxen.h>
@@ -9,7 +9,7 @@
 constant action = "maintenance";
 
 string name= LOCALE(167, "Upload license");
-string doc = LOCALE(168, "Upload a new roxen license file.");
+string doc = LOCALE(168, "Upload a new Roxen license file.");
 
 
 int enabled()

@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.340 2003/03/05 15:51:51 mast Exp $
+// $Id: roxenloader.pike,v 1.341 2003/03/06 10:31:19 jonasw Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.340 2003/03/05 15:51:51 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.341 2003/03/06 10:31:19 jonasw Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -730,7 +730,7 @@ int getgid(){ return 42; }
 Roxen really_load_roxen()
 {
   int start_time = gethrtime();
-  report_debug("Loading roxen ... \b");
+  report_debug("Loading Roxen ... \b");
   Roxen res;
   mixed err = catch {
     res = ((program)"base_server/roxen.pike")();

@@ -111,7 +111,7 @@ mixed move_db( string db, RequestID id )
 	default:
 	 if( Roxen.is_mysql_keyword( id->variables->name ) )
 	   warning = sprintf("<font color='&usr.warncolor;'>"+
-			     _(410,"%s is a mysql keyword, used by mysql."
+			     _(410,"%s is a MySQL keyword, used by MySQL."
 			       "Please select another name")+
 			     "</font>", id->variables->name );
 	 break;

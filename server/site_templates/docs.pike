@@ -1,7 +1,7 @@
 inherit "common";
 constant site_template = 1;
 constant name = "Documentation site";
-constant doc  = "A site with the online roxen documentation.";
+constant doc  = "A site with the online Roxen documentation.";
 
 constant silent_modules = 
 ({

@@ -59,8 +59,8 @@ ERROR
    <td valign=top colspan='2' width='100%'>
 
         <i>"+_(443,"The database type. Internal means that it will be created"
-	       " in the roxen mysql database, and the permissions of the"
-	       " database will be automatically manged by roxen. External"
+	       " in the Roxen MySQL database, and the permissions of the"
+	       " database will be automatically manged by Roxen. External"
 	       " means that the database resides in another database.")+#"</i>
    </td>
  </tr>
@@ -117,7 +117,7 @@ ERROR
        default:
 	 if( Roxen.is_mysql_keyword( id->variables->name ) )
 	   error = sprintf("<font color='&usr.warncolor;'>"+
-			   _(410,"%s is a mysql keyword, used by mysql."
+			   _(410,"%s is a MySQL keyword, used by MySQL."
 			     "Please select another name")+
 			   "</font>", id->variables->name );
 	 else
