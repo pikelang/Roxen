@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.384 2002/11/18 17:46:04 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.385 2002/11/18 18:05:51 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1953,7 +1953,9 @@ void got_data(mixed fooid, string s)
     if(strlen(s) + have_data < wanted_data)
     {
       if (!data_buffer) {
-	data_buffer = String.Buffer(wanted_data);
+	// The 16384 is some reasonable extra padding to
+	// avoid having to realloc.
+	data_buffer = String.Buffer(wanted_data + 16384);
 	data_buffer->add(data);
 	data = "";
       }
