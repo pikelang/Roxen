@@ -4,12 +4,12 @@
 // defaults and a new variable, to make it possible to use Frontpage
 // with Roxen when using virtual hosting.
 
-string cvs_version = "$Id: fpscript.pike,v 1.6 1998/11/29 23:57:23 grubba Exp $";
+constant cvs_version = "$Id: fpscript.pike,v 1.7 1999/11/24 15:05:42 per Exp $";
 
 // #define FPSCRIPT_DEBUG
 
 #include <module.h>
-inherit "modules/scripting/cgi.pike";
+inherit "modules/scripting/oldcgi.pike";
 
 mapping my_build_env_vars(string f, object id, string|void path_info)
 {
