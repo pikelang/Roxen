@@ -113,12 +113,13 @@ int find_server(char *name, int port)
 {
   unsigned int addr;
   if(!strcmp(name, "ANY"))
-    addr = INADDR_ANY;
+    addr = htonl(INADDR_ANY);
   else if((addr=inet_addr(name)) == -1)
     if(!(name = find_hostname(name))
        || ((addr=inet_addr(name))==-1))
       return 0;
 
+  MEMSET((char *)&server, 0, sizeof(struct sockaddr_in));
   server.sin_family=AF_INET;
   server.sin_addr.s_addr = addr;
   server.sin_port = htons(port);

@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.10 1996/12/08 10:33:27 neotron Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.11 1996/12/09 04:31:39 neotron Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -282,7 +282,7 @@ string *query_file_extensions()
 // can be threaded.
 array (int) stat;
 int error;
-mapping extra_heads;
+mapping extra_heads = ([]);
 string rettext;
 
 mapping handle_file_extension( object file, string e, object id)
