@@ -7,7 +7,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.22 2001/05/19 05:35:15 mast Exp $
+//! $Id: utils.pmod,v 1.23 2001/06/09 00:33:25 mast Exp $
 
 constant short_format_length = 40;
 
@@ -67,6 +67,28 @@ final string format_short (mixed val)
 
 final array return_zero (mixed... ignored) {return 0;}
 final array return_empty_array (mixed... ignored) {return ({});}
+final mapping(string:string) return_empty_mapping (mixed... ignored)
+  {return ([]);}
+final mapping(string:string) return_help_arg (mixed... ignored)
+  {return (["help": "help"]);}
+
+final mixed get_non_nil (RXML.Type type, mixed... vals)
+// Returns the single argument in vals that isn't RXML.nil, or
+// RXML.nil if all of them are that value. Throws an rxml parse error
+// if more than one argument isn't nil.
+{
+  int pos = -1;
+  do
+    if (++pos == sizeof (vals)) return RXML.nil;
+  while (vals[pos] == RXML.nil);
+  mixed res = vals[pos];
+  for (pos++; pos < sizeof (vals); pos++)
+    if (vals[pos] != RXML.nil)
+      RXML.parse_error (
+	"Cannot append another value %s to non-sequential value of type %s.\n",
+	format_short (vals[pos]), type->name);
+  return res;
+}
 
 final int(1..1)|string|array free_text_error (object/*(RMXL.PXml)*/ p, string str)
 {
@@ -168,7 +190,7 @@ final int(1..1)|string|array p_xml_entity_cb (object/*(RXML.PXml)*/ p, string st
 	  // stuff='...'"?
 	  p->html_context() == "splice_arg" ? RXML.t_string : type);
 	if (value != RXML.nil) {
-	  if (type->free_text) return ({value});
+	  if (type->free_text && !p->p_code) return ({value});
 	  p->add_value (value);
 	}
 	return ({});
@@ -196,7 +218,7 @@ final int(1..1)|string|array p_xml_compat_entity_cb (object/*(RMXL.PXml)*/ p, st
 	// stuff='...'"?
 	p->html_context() == "splice_arg" ? RXML.t_string : type);
       if (value != RXML.nil) {
-	if (type->free_text) return ({value});
+	if (type->free_text && !p->p_code) return ({value});
 	p->add_value (value);
       }
       return ({});

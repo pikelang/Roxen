@@ -13,7 +13,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.55 2001/05/18 23:04:28 mast Exp $
+//! $Id: PXml.pike,v 1.56 2001/06/09 00:33:24 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -241,8 +241,13 @@ static void create (
 #endif
 }
 
-static mixed value = RXML.nil;
-// Used to collect the value for non-free-text types.
+static void initialize (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
+{
+  TagSetParser::initialize (ctx, type, tag_set);
+  value = type->sequential ? type->empty_value : RXML.nil;
+}
+
+static mixed value;
 
 /*static*/ void add_value (mixed val)
 {
@@ -261,7 +266,7 @@ static mixed value = RXML.nil;
 {
   string literal = String.trim_all_whites (low_parser::read());
   mixed v;
-  if (sizeof (literal))
+  if (sizeof (literal)) {
     if (type->sequential)
       value += v = type->encode (literal);
     else {
@@ -271,13 +276,17 @@ static mixed value = RXML.nil;
 	  .utils.format_short (literal), type->name);
       value = v = type->encode (literal);
     }
-  if (p_code) p_code->add (v);
+    if (p_code) p_code->add (v);
+  }
 }
 
 /*static*/ void p_code_literal()
 {
   string literal = low_parser::read();
-  if (sizeof (literal)) p_code->add (literal);
+  if (sizeof (literal)) {
+    value += literal;
+    p_code->add (literal);
+  }
 }
 
 mixed read()
@@ -293,8 +302,10 @@ int report_error (string msg)
   else errmsgs = msg;
   if (low_parser::context() != "data")
     _set_data_callback (.utils.output_error_cb);
-  else
+  else {
+    // FIXME: This will get sucked into the p-code.
     low_parser::write_out (errmsgs), errmsgs = 0;
+  }
   return 1;
 }
 
