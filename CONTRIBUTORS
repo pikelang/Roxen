@@ -23,8 +23,9 @@ Various modules:
 	Fredrik Noring
 	Johan Schön
 	Martin Stjernholm
+	Johan Sundström
 	Henrik Wallin
-	Jonas Walden
+	Jonas Walldén
 
 
 The following people have made valuable contributions to Roxen & Pike:
@@ -32,7 +33,7 @@ The following people have made valuable contributions to Roxen & Pike:
 
 Ian Carr-de Avelon	Several valuable suggestions and ideas.
 
-Martin Baer		Fixes to the hostredirect and several other modules.
+Martin Bähr		Fixes to the hostredirect and several other modules.
 
 Stephen R. van den Berg	The Dutch language-module.
 
@@ -41,7 +42,7 @@ Tvns Böker		The German language-module.
 Francesco Chemolli	The Postgres and Msql database modules and
 			the Italian language-module.
 			ABS - Anti-Block-System
-			
+
 Janne Edelman		The Finnish language-module.
 
 Kai Garlipp		ISO-8859-1 entity support for the graphical text
