@@ -1,4 +1,7 @@
-constant cvs_version = "$Id: roxen.pike,v 1.217 1998/07/07 19:04:19 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.218 1998/07/12 00:22:44 neotron Exp $";
+
+// ABS and suicide systems contributed freely by Francesco Chemolli
+
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -76,6 +79,11 @@ private object root;
 // This mutex is used by privs.pike
 object euid_egid_lock = Thread.Mutex();
 #endif /* THREADS */
+
+
+//these mixed's are used by the ABS and suicide options,
+//to determine whether a call_out is active.
+static mixed abs_call_out=0, suicide_call_out=0;
 
 int privs_level;
 int die_die_die;
@@ -957,33 +965,6 @@ public mixed try_get_file(string s, object id, int|void status, int|void nocache
 #endif /* !NO_COMPAT */
 
 int config_ports_changed = 0;
-// Called from the configuration interface.
-string check_variable(string name, string value)
-{
-  switch(name)
-  {
-   case "ConfigPorts":
-     config_ports_changed = 1;
-     break;
-   case "cachedir":
-    if(!sscanf(value, "%*s/roxen_cache"))
-    {
-      object node;
-      node = (configuration_interface()->root->descend("Globals", 1)->
-	      descend("Proxy disk cache: Base Cache Dir", 1));
-      if(node && !node->changed) node->change(1);
-      mkdirhier(value+"roxen_cache/foo");
-      call_out(set, 0, "cachedir", value+"roxen_cache/");
-    }
-    break;
-
-   case "ConfigurationURL":
-   case "MyWorldLocation":
-    if(strlen(value)<7 || value[-1] != '/' ||
-       !(sscanf(value,"%*s://%*s/")==2))
-      return "The URL should follow this format: protocol://computer[:port]/";
-  }
-}
 
 void stop_all_modules()
 {
@@ -1184,6 +1165,26 @@ object load_from_dirs(array dirs, string f, object conf)
   return 0;
 }
 
+void restart_if_stuck () {
+  abs_call_out=0;
+  if (!QUERY(ABS_engage))
+    return;
+  abs_call_out=call_out (restart_if_stuck,10);
+  signal(signum("SIGALRM"),lambda( int n ) {
+			     perror ((ctime(time())-"\n")+
+				     "**** ABS engaged! Restarting. ***\n");
+			     fork_or_quit();
+			   });
+  alarm (60*QUERY(ABS_timeout)+10);
+}
+
+void post_create () {
+  if (QUERY(ABS_engage))
+    abs_call_out=call_out (restart_if_stuck,10);
+  if (QUERY(suicide_engage))
+    suicide_call_out=call_out (restart,60*60*24*QUERY(suicide_timeout));
+}
+
 void create()
 {
   catch
@@ -1197,6 +1198,7 @@ void create()
   (object)"color.pike";
   (object)"fonts.pike";
   Configuration = (program)"configuration";
+	call_out(post_create,1); //we just want to delay some things a little
 }
 
 
@@ -1525,12 +1527,12 @@ private void define_global_variables( int argc, array (string) argv )
   
   // Hidden variables (compatibility ones, or internal or too
   // dangerous
-/*  globvar("BS", 0, "Configuration interface: Compact layout",*/
-/*	  TYPE_FLAG|VAR_EXPERT,*/
-/*	  "Sick and tired of all those images? Set this variable to 'Yes'!");*/
-/*  globvar("BG", 1,  "Configuration interface: Background",*/
-/*	  TYPE_FLAG|VAR_EXPERT,*/
-/*	  "Should the background be set by the configuration interface?");*/
+  /*  globvar("BS", 0, "Configuration interface: Compact layout",*/
+  /*	  TYPE_FLAG|VAR_EXPERT,*/
+  /*	  "Sick and tired of all those images? Set this variable to 'Yes'!");*/
+  /*  globvar("BG", 1,  "Configuration interface: Background",*/
+  /*	  TYPE_FLAG|VAR_EXPERT,*/
+  /*	  "Should the background be set by the configuration interface?");*/
 
   globvar("_v", CONFIGURATION_FILE_LEVEL, 0, TYPE_INT, 0, 0, 1);
   globvar("default_font_size", 32, 0, TYPE_INT, 0, 0, 1);
@@ -1556,7 +1558,7 @@ private void define_global_variables( int argc, array (string) argv )
 	  "If set to Yes, caching will be enabled.");
   
   globvar("garb_min_garb", 1, "Proxy disk cache: Clean size", TYPE_INT,
-	 "Minimum number of Megabytes removed when a garbage collect is done",
+	  "Minimum number of Megabytes removed when a garbage collect is done",
 	  0, cache_disabled_p);
 
   globvar("cache_minimum_left", 5, "Proxy disk cache: Minimum "
@@ -1573,7 +1575,7 @@ private void define_global_variables( int argc, array (string) argv )
 	  );
   
   globvar("cache_size", 25, "Proxy disk cache: Size", TYPE_INT,
-        "How many MB may the cache grow to before a garbage collect is done?",
+	  "How many MB may the cache grow to before a garbage collect is done?",
 	  0, cache_disabled_p);
 
   globvar("cache_max_num_files", 0, "Proxy disk cache: Maximum number "
@@ -1636,8 +1638,8 @@ private void define_global_variables( int argc, array (string) argv )
   
   globvar("docurl2", "http://www.roxen.com/documentation/context.pike?page=",
 	  "Documentation URL", TYPE_STRING|VAR_MORE,
-	 "The URL to prepend to all documentation urls throughout the "
-	 "server. This URL should _not_ end with a '/'.");
+	  "The URL to prepend to all documentation urls throughout the "
+	  "server. This URL should _not_ end with a '/'.");
 
   globvar("pidfile", "/tmp/roxen_pid:$uid", "PID file",
 	  TYPE_FILE|VAR_MORE,
@@ -1830,21 +1832,21 @@ private void define_global_variables( int argc, array (string) argv )
   TYPE_STRING_LIST|VAR_MORE,
   "This is the list of direct host<-->host links to establish. "
   "The local host is always present (if the neighbourhood functionality "
-    "is at all enabled)");
+  "is at all enabled)");
 
 
   globvar("neigh_ips",  ({lambda(){
-    catch {
-      mixed foo = gethostbyname(gethostname());
-      string n = reverse(foo[1][0]);
-      sscanf(n,"%*d.%s", n);
-      n=reverse(n)+".";
-    // Currently only defaults to C-nets..
-      return n+"255";
-    };
-    return "0.0.0.0";
-  }()}), "Neighborhood: Broadcast addresses", TYPE_STRING_LIST|VAR_MORE,
-  "");
+			    catch {
+			      mixed foo = gethostbyname(gethostname());
+			      string n = reverse(foo[1][0]);
+			      sscanf(n,"%*d.%s", n);
+			      n=reverse(n)+".";
+			      // Currently only defaults to C-nets..
+			      return n+"255";
+			    };
+			    return "0.0.0.0";
+			  }()}), "Neighborhood: Broadcast addresses", TYPE_STRING_LIST|VAR_MORE,
+			  "");
 
   globvar("neigh_com", "", "Neighborhood: Server informational comment",
 	  TYPE_TEXT|VAR_MORE, "A short string describing this server");
@@ -1870,6 +1872,43 @@ private void define_global_variables( int argc, array (string) argv )
 	perror("Unknown variable: "+c+"\n");
   }
   docurl=QUERY(docurl2);
+
+  globvar("ABS_engage", 0, "Anti-Block-System: Enable", TYPE_FLAG|VAR_MORE,
+	  "If set, it will enable the anti-block-system. "
+	  "This will restart the server after a configurable number of minutes if it "
+	  "locks up. If you are running in a single threaded environment heavy calculations "
+	  "will also halt the server. In multi-threaded mode bugs as eternal loops will not "
+	  "cause the server to reboot, since only one thread is blocked. In general there is "
+	  "no harm in having this option enabled. ");
+
+  globvar("ABS_timeout", 5, "Anti-Block-System: Timeout", TYPE_INT_LIST,
+	  "If the server is unable to accept connection for this many "
+	  "minutes, it will be restarted. You need to find a balance: "
+	  "if set too low, the server will be restarted even if it's doing "
+	  "legal things (like generating many images), if set too high you will "
+	  "have long downtimes.",
+	  ({1,2,3,4,5,10,15}),
+	  lambda() {return !QUERY(ABS_engage);}
+	  );
+	
+  globvar ("suicide_engage",
+	   0,
+	   "Automatic Restart: Enable",
+	   TYPE_FLAG|VAR_MORE,
+	   "If set, Roxen will automatically restart after a configurable number "
+	   "of days. Since Roxen uses a monolith, non-forking server "
+	   "model the process tends to grow in size over time. This is mainly due to "
+	   "heap fragmentation but also because of memory leaks."
+	   );
+
+  globvar("suicide_timeout",
+	  7,
+	  "Automatic Restart: Timeout",
+	  TYPE_INT_LIST,
+	  "Automatically restart the server after this many days.",
+	  ({1,2,3,4,5,6,7,14,30}),
+	  lambda(){return !QUERY(suicide_engage);}
+	  );
 }
 
 
@@ -2478,4 +2517,57 @@ int main(int|void argc, array (string)|void argv)
 string diagnose_error(array from)
 {
 
+}
+
+// Called from the configuration interface.
+string check_variable(string name, string value)
+{
+  switch(name)
+  {
+   case "ConfigPorts":
+     config_ports_changed = 1;
+     break;
+   case "cachedir":
+    if(!sscanf(value, "%*s/roxen_cache"))
+    {
+      object node;
+      node = (configuration_interface()->root->descend("Globals", 1)->
+	      descend("Proxy disk cache: Base Cache Dir", 1));
+      if(node && !node->changed) node->change(1);
+      mkdirhier(value+"roxen_cache/foo");
+      call_out(set, 0, "cachedir", value+"roxen_cache/");
+    }
+    break;
+
+   case "ConfigurationURL":
+   case "MyWorldLocation":
+    if(strlen(value)<7 || value[-1] != '/' ||
+       !(sscanf(value,"%*s://%*s/")==2))
+      return "The URL should follow this format: protocol://computer[:port]/";
+		break;
+
+		case "ABS_engage":
+			if (value) {
+				if (!abs_call_out)
+					restart_if_stuck();
+			} else {
+				if (abs_call_out) {
+					remove_call_out(abs_call_out);
+					abs_call_out=0;
+				}
+			}
+			break;
+
+		case "suicide_engage":
+			if (value) {
+				if (!suicide_call_out)
+					suicide_call_out=call_out(restart,60*60*24*QUERY(suicide_timeout));
+			} else {
+				if (suicide_call_out) {
+						remove_call_out(suicide_call_out);
+						suicide_call_out=0;
+				}
+			}
+			break;
+  }
 }
