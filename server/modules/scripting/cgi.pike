@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.62 1998/01/21 14:44:07 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.63 1998/01/21 16:07:01 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -304,7 +304,7 @@ static inline array make_args( string rest_query )
 array stat_file(string f, object id) 
 {
 #ifdef CGI_DEBUG
-  perror("CGI: stat_file(\"" + f + "\")\n");
+  roxen_perror("CGI: stat_file(\"" + f + "\")\n");
 #endif /* CGI_DEBUG */
 
   return file_stat(path+f);
@@ -313,7 +313,7 @@ array stat_file(string f, object id)
 string real_file( mixed f, mixed id )
 {
 #ifdef CGI_DEBUG
-  perror("CGI: real_file(\"" + f + "\")\n");
+  roxen_perror("CGI: real_file(\"" + f + "\")\n");
 #endif /* CGI_DEBUG */
 
   if(stat_file( f, id )) 
@@ -323,7 +323,7 @@ string real_file( mixed f, mixed id )
 array find_dir(string f, object id) 
 {
 #ifdef CGI_DEBUG
-  perror("CGI: find_dir(\"" + f + "\")\n");
+  roxen_perror("CGI: find_dir(\"" + f + "\")\n");
 #endif /* CGI_DEBUG */
 
   if(QUERY(ls)) 
@@ -466,7 +466,7 @@ class spawn_cgi
 	if(!killed)
 	  killed = kill(pid, signum("SIGKILL"));
 	if(killed)
-	  perror("Killed CGI pid "+pid+"\n");
+	  roxen_perror("Killed CGI pid "+pid+"\n");
       }, kill_call_out * 60 , proc->pid);
     }
 #else /* !constant(Process.create_process) */
@@ -559,7 +559,7 @@ class spawn_cgi
 	if(!killed)
 	  killed = kill(pid, signum("SIGKILL"));
 	if(killed)
-	  perror("Killed CGI pid "+pid+"\n");
+	  roxen_perror("Killed CGI pid "+pid+"\n");
       }, kill_call_out * 60 , pid);
     }
 #endif /* constant(Process.create_process) */
@@ -644,7 +644,7 @@ mixed find_file(string f, object id)
   int pid;
 
 #ifdef CGI_DEBUG
-  perror("CGI: find_file(\"" + f + "\")...\n");
+  roxen_perror("CGI: find_file(\"" + f + "\")...\n");
 #endif /* CGI_DEBUG */
 
   if(id->misc->path_info && strlen(id->misc->path_info))
@@ -663,7 +663,7 @@ mixed find_file(string f, object id)
   }
   
 #ifdef CGI_DEBUG
-  perror("CGI: Starting '"+f+"'...\n");
+  roxen_perror("CGI: Starting '"+f+"'...\n");
 #endif
 
   wd = dirname(f);
@@ -797,7 +797,7 @@ mapping handle_file_extension(object o, string e, object id)
   // This could be useful when the data is not really a file, but instead
   // generated internally, or if it is a socket.
 #ifdef CGI_DEBUG
-  perror("CGI: Handling "+e+" by copying to /tmp/....\n");
+  roxen_perror("CGI: Handling "+e+" by copying to /tmp/....\n");
 #endif
   
   oldp=path;
