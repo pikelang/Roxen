@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.286 2001/11/30 20:42:58 mast Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.287 2002/01/11 09:49:50 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -939,8 +939,18 @@ private string fix_text(string c, mapping m, RequestID id) {
   m_delete(m, "noparse");
   m_delete(m, "preparse");
 
-  c=replace(c, Roxen.replace_entities+({"   ","  ", "\n\n\n", "\n\n", "\r"}),
-	    Roxen.replace_values+({" ", " ", "\n", "\n", ""}));
+  c=replace(c, Roxen.replace_entities + ({
+	      "   ", "  ",
+	      "\n\n\n", "\n\n",
+	      "\r\n\r\n\r\n", "\r\n\r\n", "\r\n",
+	      "\r\r\r", "\r\r", "\r"
+	    }),
+	    Roxen.replace_values + ({
+	      " ", " ",
+	      "\n", "\n",
+	      "\n", "\n", "\n",
+	      "\n", "\n", "\n",
+	    }));
 
   if(m->maxlen)
     c = c[..(( (int)m_delete(m,"maxlen") || query("deflen"))-1)];
