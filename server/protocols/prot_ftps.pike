@@ -1,6 +1,7 @@
 inherit SSLProtocol;
 constant supports_ipless = 0;
 constant name = "ftps";
+constant prot_name = "ftps";
 constant requesthandlerfile = "protocols/ftp.pike";
 constant default_port = 21;	/*** ???? ***/
 

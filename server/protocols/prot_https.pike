@@ -1,4 +1,4 @@
-// $Id: prot_https.pike,v 2.2 2000/12/28 19:02:38 mast Exp $
+// $Id: prot_https.pike,v 2.3 2001/07/21 10:13:31 mast Exp $
 
 // --- Debug defines ---
 
@@ -12,6 +12,7 @@ inherit SSLProtocol;
 
 constant supports_ipless = 0;
 constant name = "https";
+constant prot_name = "https";
 constant requesthandlerfile = "protocols/http.pike";
 constant default_port = 443;
 

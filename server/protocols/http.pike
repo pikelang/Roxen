@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.321 2001/07/21 09:10:01 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.322 2001/07/21 10:13:30 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1896,7 +1896,7 @@ string url_base()
     string tmp;
 //     werror ("port_obj->default_port: %O\n"
 // 	    "port_obj->port: %O\n"
-// 	    "port_obj->name: %O\n"
+// 	    "port_obj->prot_name: %O\n"
 // 	    "port_obj->conf_data[conf]: %O\n"
 // 	    "port_obj->ip: %O\n"
 // 	    "misc->host: %O\n"
@@ -1904,7 +1904,7 @@ string url_base()
 // 	    "conf->query (\"MyWorldLocation\"): %O\n",
 // 	    port_obj->default_port,
 // 	    port_obj->port,
-// 	    port_obj->name,
+// 	    port_obj->prot_name,
 // 	    port_obj->conf_data[conf],
 // 	    port_obj->ip,
 // 	    misc->host,
@@ -1916,15 +1916,15 @@ string url_base()
       string default_port = ":" + port_obj->default_port;
       if (has_suffix (tmp, default_port))
 	// Remove redundant port number.
-	cached_url_base = port_obj->name + "://" +
+	cached_url_base = port_obj->prot_name + "://" +
 	  tmp[..sizeof (tmp) - sizeof (default_port) - 1];
       else
-	cached_url_base = port_obj->name + "://" + tmp;
+	cached_url_base = port_obj->prot_name + "://" + tmp;
     }
 
     // Then try the hostname in the port setting.
     else if ((tmp = port_obj->conf_data[conf]->hostname) && tmp != "*") {
-      cached_url_base = port_obj->name + "://" + tmp;
+      cached_url_base = port_obj->prot_name + "://" + tmp;
       if (port_obj->port != port_obj->default_port)
 	cached_url_base += ":" + port_obj->port;
     }
@@ -1939,7 +1939,7 @@ string url_base()
 
     // Last fall back to the numeric ip.
     else {
-      cached_url_base = port_obj->name + "://" + port_obj->ip;
+      cached_url_base = port_obj->prot_name + "://" + port_obj->ip;
       if (port_obj->port != port_obj->default_port)
 	cached_url_base += ":" + port_obj->port;
     }

@@ -2,6 +2,7 @@ inherit Protocol;
 //   inherit Stdio.Port : port;
 constant supports_ipless=1;
 constant name = "fhttp";
+constant prot_name = "http";
 constant default_port = 80;
 
 #include <roxen.h>

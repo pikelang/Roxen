@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.23 2001/07/21 09:10:02 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.24 2001/07/21 10:13:28 mast Exp $";
 
 class Variable
 {
@@ -293,7 +293,13 @@ class Configuration
 class Protocol 
 {
   inherit BasicDefvar;
+
   constant name = "unknown";
+  //! Name used for internal identification.
+
+  constant prot_name = "unknown";
+  //! Name of the protocol as seen in the protocol part of a url.
+
   constant supports_ipless = 0;
   constant requesthandlerfile = "";
   constant default_port = 4711;
@@ -600,7 +606,7 @@ class RequestID
 
       // First try the hostname in port × configuration.
       if (port_obj && (tmp = port_obj->conf_data[conf]->hostname) && tmp != "*") {
-	cached_url_base = port_obj->name + "://" + tmp;
+	cached_url_base = port_obj->prot_name + "://" + tmp;
 	if (port_obj->port != port_obj->default_port)
 	  cached_url_base += ":" + port_obj->port;
       }
@@ -615,7 +621,7 @@ class RequestID
 
       // Then use the numeric ip in the port.
       else if (port_obj) {
-	cached_url_base = port_obj->name + "://" + port_obj->ip;
+	cached_url_base = port_obj->prot_name + "://" + port_obj->ip;
 	if (port_obj->port != port_obj->default_port)
 	  cached_url_base += ":" + port_obj->port;
       }
