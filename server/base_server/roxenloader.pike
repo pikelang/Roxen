@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.329 2002/10/28 17:23:58 jonasw Exp $
+// $Id: roxenloader.pike,v 1.330 2002/12/11 17:31:43 mattias Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.329 2002/10/28 17:23:58 jonasw Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.330 2002/12/11 17:31:43 mattias Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1669,8 +1669,8 @@ void low_start_mysql( string datadir,
   cfg_file = replace(cfg_file, "\n", "\r\n");
 #endif /* __NT__ */
 
-  rm( datadir+"/my.cfg" );
-  catch(Stdio.write_file(datadir+"/my.cfg", cfg_file));
+  if(!file_stat( datadir+"/my.cfg" ))
+    catch(Stdio.write_file(datadir+"/my.cfg", cfg_file));
 
 #ifndef __NT__
   if( uid == "root" )
