@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.119 1999/10/17 22:43:25 nilsson Exp $
+// $Id: roxenlib.pike,v 1.120 1999/10/18 23:27:30 marcus Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1043,17 +1043,8 @@ string get_modname (object module)
 
   foreach (roxen->configurations, object conf) {
     string mname = conf->otomod[module];
-    if (mname) {
-      mapping moddata = conf->modules[mname];
-      if (moddata)
-	if (moddata->copies)
-	  foreach (indices (moddata->copies), int i) {
-	    if (moddata->copies[i] == module)
-	      return conf->name + "/" + mname + "#" + i;
-	  }
-	else if (moddata->master == module || moddata->enabled == module)
-	  return conf->name + "/" + mname + "#0";
-    }
+    if(mname)
+      return conf->name + "/" + mname;
   }
 
   return 0;
