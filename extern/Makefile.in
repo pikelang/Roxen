@@ -18,9 +18,9 @@ PREFLAGS=-I. -I$(SRCDIR) -I$(SRCDIR)/../.. -I../..
 
 LDFLAGS=@LDFLAGS@
 
-all: roxen_hostname cgi fcgi
+all: cgi fcgi
 
-pure: purecgi roxen_hostname
+pure: purecgi
 
 no: 
 none:
@@ -44,9 +44,6 @@ fcgi: force
 
 force:
 
-roxen_hostname: roxen_hostname.o
-	$(CC) $(LDFLAGS) -o roxen_hostname roxen_hostname.o $(LIBS)
-
 cgi: cgi.o config.h
 	$(CC) $(LDFLAGS) -o cgi cgi.o $(LIBS)
 
@@ -68,8 +65,8 @@ shuffle-localinstall: shuffle
 	-/bin/rm -f $(SRCDIR)/../server/bin/shuffle
 	/bin/cp shuffle $(SRCDIR)/../server/bin
 
-install: roxen_hostname fcgi cgi
-	@for f in roxen_hostname fcgi cgi; do \
+install: fcgi cgi
+	@for f in fcgi cgi; do \
 		echo Installing $$f...; \
 		/bin/rm -f $(prefix)/roxen/server/bin/$$f; \
 		if /bin/cp $$f $(prefix)/roxen/server/bin/; then :; \
@@ -78,8 +75,8 @@ install: roxen_hostname fcgi cgi
 	-@ln -s $(prefix)/roxen/server/bin/cgi $(prefix)/roxen/server/bin/cgi-bin
 	@echo Done.
 
-localinstall: fcgi roxen_hostname cgi
-	@for f in fcgi roxen_hostname cgi; do \
+localinstall: fcgi cgi
+	@for f in fcgi cgi; do \
 		echo Installing $$f...; \
 		/bin/rm -f $(SRCDIR)/../server/bin/$$f; \
 		if /bin/cp $$f $(SRCDIR)/../server/bin/; then :; \
@@ -91,7 +88,7 @@ localinstall: fcgi roxen_hostname cgi
 	$(CC) -c -I. -I$(SRCDIR) $(CFLAGS) $<
 
 clean: 
-	@rm -f roxen_hostname cgi shuffle fcgi *.o  core
+	@rm -f cgi shuffle fcgi *.o  core
 	@(cd fast_cgi; $(MAKE) clean "CFLAGSUP=$(CFLAGS)" "LDFLAGS=$(LDFLAGS)" "CC=$(CC)")
 
 spotless: clean
@@ -99,8 +96,6 @@ spotless: clean
 
 distribute: spotless
 	@rm -f Makefile
-
-roxen_hostname.o : config.h
 
 cgi.o : config.h
 
