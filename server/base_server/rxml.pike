@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.254 2000/09/25 06:29:44 per Exp $
+// $Id: rxml.pike,v 1.255 2000/09/30 19:20:36 per Exp $
 
 
 inherit "rxmlhelp";
@@ -195,8 +195,6 @@ string parse_rxml(string what, RequestID id,
   }
 
   id->misc->defines = defines;
-
-  set_start_quote(set_end_quote(0));
 
   RXML.PXml parent_parser = id->misc->_parser; // Don't count on that this exists.
   RXML.PXml parser;
