@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.5 2001/06/13 13:43:07 per Exp $
+// $Id: DBManager.pmod,v 1.6 2001/06/13 13:48:18 per Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 #include <roxen.h>
@@ -316,8 +316,16 @@ Sql.Sql get( string name, void|Configuration c, int|void ro )
 }
 
 #ifdef THREADS
-static Thread.Local connection_cache = Thread.Local();
+ static Thread.Local connection_cache = Thread.Local();
 Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
+//! Identical to get(), but the authentication verification and
+//! mapping database name <--> DB-url mapping is cached between
+//! requests.
+//!
+//! Please note that using this function makes it impossible for the
+//! user to change the data on the fly in the configuration intarface.
+//!
+//! However, the performance gain is quite noticeable.
 {
   string key = name+"|"+(c&&c->name)+"|"+ro;
   mapping cm = connection_cache->get() || ([]);
