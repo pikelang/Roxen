@@ -1,11 +1,10 @@
 /* This is -*- pike -*- code */
 /* Standard roxen module header -------------------------------- */
-
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.6 1998/09/09 10:03:27 per Exp $";
+"$Id: mailtags.pike,v 1.7 1998/09/10 14:39:39 per Exp $";
 
 constant thread_safe = 1;
 
@@ -25,63 +24,9 @@ constant thread_safe = 1;
 #endif
 
 /* Prototypes ----------------------------------------------------- */
+#include "clientlayer.h"
 
-class Common
-{
-  int get_serial();
-}
-
-class Mail
-{
-  inherit Common;
-  object mailbox;
-  object user;
-  string body();
-  Stdio.File body_fd();
-  mapping headers(int force);
-  multiset flags(int force);
-  void set_flag(string name);
-  void clear_flag(string name);
-  mixed set(string name, mixed to);
-  mixed get(string name);
-}
-
-class Mailbox
-{
-  inherit Common;
-  object user;
-  int rename(string to);
-  void delete();
-  string query_name(int force);
-
-  array(Mail) mails();
-  Mail add_mail(Mail m, int|void do_not_copy_the_flags);
-  void remove_mail(Mail m);
-
-  Mail low_create_mail( string bodyid, mapping headers );
-  Mail create_mail_from_fd( Stdio.File from );
-  Mail create_mail_from_data( string from );
-  Mail create_mail( MIME.Message from );
-
-}
-
-class User
-{
-  inherit Common;
-  array(Mailbox) mailboxes();
-  mixed set( string name, mixed to );
-  mixed get( string name );
-  Mailbox get_or_create_mailbox( string name );
-  Mailbox get_incoming();
-  Mailbox get_drafts();
-}
-
-class ClientLayer
-{
-  User get_user( string username, string password );
-  object get_cache_obj( program type, int id );
-}
-
+inherit ClientInit;
 
 /* Globals ---------------------------------------------------------*/
 
@@ -136,16 +81,12 @@ string query_provides()
 
 void start(int q, roxen.Configuration c)
 {
-  array err;
   if(!c)
     return;
+  
+  if(!init_clientlayer( c ))
+    report_error("AutoMail HTML Client init failed!\n");
 
-  if( err = catch {
-    module_dependencies( c, ({ "clientlayer" }) );
-    clientlayer = conf->get_providers( "automail_clientlayer" )[ 0 ];
-  })
-    report_error("AutoMail HTML Client init failed!\n" + 
-		 describe_backtrace( err ) );
   debug = query("debug");
   
   if(debug)
