@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.48 2002/03/22 17:09:01 anders Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.49 2002/04/18 10:08:33 jhs Exp $";
 
 #include <module.h>
 inherit "module";
@@ -387,8 +387,9 @@ class TagJsDynamicPopupDiv
     array do_return(RequestID id)
     {
       if(id->supports->layer)
-	result = ("<layer id=\""+args->name+"\" "
-		  " visibility=\"hidden\" z-index:"+(args->zindex||"1")+"></layer>");
+	result = sprintf("<layer id=\"%s\" visibility=\"hidden\""
+			 " style=\"z-index:%s\"></layer>",
+			 args->name, args->zindex||"1");
       else
 	result = ("<div id=\""+args->name+"\""
 		  " style=\"position:absolute; z-index:"+(args->zindex||"1")+
