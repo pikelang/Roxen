@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.24 1996/12/10 04:40:33 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.25 1996/12/10 05:04:20 neotron Exp $";
 #define IN_ROXEN
 #include <module.h>
 #include <variables.h>
@@ -2474,7 +2474,7 @@ private void define_global_variables( int argc, array (string) argv )
   globvar("show_internals", 1, "Show the internals", TYPE_FLAG,
 	  "Show 'Internal server error' messages to the user. "
 	  "This is very useful if you are debugging your own modules "
-	  "or writing µLPC scripts.");
+	  "or writing Pike scripts.");
   
   globvar("ConfigurationIP", "ANY", "Configuration interface: Interface",
 	  TYPE_STRING,
@@ -3103,7 +3103,7 @@ void init_shuffler()
 
 
 // To avoid stack error :-)
-// This is really a bug in µLPC, that is probably fixed by now, but
+// This is really a bug in Pike, that is probably fixed by now, but
 // since I needed a catch() as well, I never did come around to
 // removing the hack. The functions below this one are here for
 // process and signal magic, it is basically the support needed

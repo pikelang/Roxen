@@ -1,8 +1,8 @@
 inherit "db";
 
-string cvs_version = "$Id: persistent.pike,v 1.2 1996/12/01 19:18:33 per Exp $";
+string cvs_version = "$Id: persistent.pike,v 1.3 1996/12/10 05:04:19 neotron Exp $";
 /*************************************************************,
-* PERSIST. An implementation of persistant objects for µLPC.  *
+* PERSIST. An implementation of persistant objects for Pike.  *
 * Variables and callouts are saved between restarts.          *
 *                                                             *
 * What is not saved?                                          *
@@ -10,7 +10,7 @@ string cvs_version = "$Id: persistent.pike,v 1.2 1996/12/01 19:18:33 per Exp $";
 * o Open files (/precompiled/file)                            *
 *                                                             *
 * This can be solved by specifying two new objects, like      *
-* persists/port and persist/file in µLPC. I leave that as an  *
+* persists/port and persist/file in Pike. I leave that as an  *
 * exercise for the reader.. :-)                               *
 *                                                             *
 * (remember to save info about seek etc.. But it is possible) *

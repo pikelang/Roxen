@@ -1,5 +1,5 @@
 /* Language support for numbers and dates. Very simple,
-string cvs_version = "$Id: language.pike,v 1.5 1996/12/01 19:18:30 per Exp $";
+string cvs_version = "$Id: language.pike,v 1.6 1996/12/10 05:04:18 neotron Exp $";
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *
@@ -40,8 +40,8 @@ void initiate_languages()
 			       "date":l->date,
 			       "day":l->day,
 			       "number":l->number,
-			      "\000":l, /* Bug in µLPC force this, as of
-					 * 96-04-15 */
+			      "\000":l, /* Bug in Pike force this, as of
+					 * 96-04-15. Probably fixed. */
 			     ]);
 	}
       } 
