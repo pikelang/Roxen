@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.133 2001/02/17 17:57:34 mast Exp $
+//! $Id: module.pmod,v 1.134 2001/03/01 03:06:00 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -292,9 +292,7 @@ class Tag
       frame->_eval (parser, args, content);
       mixed res;
       if ((res = frame->result) == nil) return ({});
-      if (frame->result_type->encoding_type ?
-	  frame->result_type->encoding_type != parser->type->encoding_type :
-	  frame->result_type != parser->type) {
+      if (frame->result_type->name != parser->type->name) {
 	TAG_DEBUG (frame, sprintf (
 		     "Converting result from %s to %s of surrounding content\n",
 		     frame->result_type->name, parser->type->name));
@@ -563,9 +561,9 @@ class TagSet
   }
 
   void add_string_entities (mapping(string:string) entities)
-  //! Adds a set of entitity replacements that are used foremost by
-  //! the PXml parser to decode simple entities like &amp;. The
-  //! indices are the entity names without & and ;.
+  //! Adds a set of entity replacements that are used foremost by the
+  //! @[PXml] parser to decode simple entities like @tt{&amp;@}. The
+  //! indices are the entity names without @tt{&@} and @tt{;@}.
   {
     if (string_entities) string_entities |= entities;
     else string_entities = entities + ([]);
@@ -833,8 +831,8 @@ class Value
   //! which is preferably optimized like this:
   //!
   //! @example
-  //!   return type && type != RXML.TText ?
-  //!          type->encode (my_string) : my_string;
+  //!   return type && type != RXML.t_text ?
+  //!          type->encode (my_string, RXML.t_text) : my_string;
   //! @endexample
   //!
   //! Also, by letting the producer know the type context of the value
@@ -842,8 +840,8 @@ class Value
   //! to adapt the value according to the context it'll be used in,
   //! e.g. to return a powerful object if no type conversion is
   //! wanted, a simple text representation of it when the type is
-  //! @[RXML.TText], and a more nicely formatted representation when
-  //! it's @[RXML.THtml].
+  //! @[RXML.t_text], and a more nicely formatted representation when
+  //! it's @[RXML.t_html].
   //!
   //! @note The @[type] argument being @tt{void|Type@} means that the
   //! caller is free to leave out that argument, not that the function
@@ -1708,8 +1706,8 @@ constant FLAG_DONT_RECOVER	= 0x00002000;
 constant FLAG_DONT_REPORT_ERRORS = FLAG_DONT_RECOVER; // For compatibility.
 
 constant FLAG_RAW_ARGS		= 0x00004000;
-//! Special flag to TXml.format_tag(); only defined here as a
-//! placeholder. When this is given to TXml.format_tag(), it only
+//! Special flag to @[t_xml.format_tag]; only defined here as a
+//! placeholder. When this is given to @[t_xml.format_tag], it only
 //! encodes the argument quote character with the "Roxen encoding"
 //! when writing argument values, instead of encoding with entity
 //! references. It's intended for reformatting a tag which has been
@@ -1896,8 +1894,8 @@ class Frame
   //! to), content is used as result if it's of a compatible type.
   //!
   //! If there is no do_return() and the result from parsing the
-  //! content is not RXML.nil, it's assigned to or added to the
-  //! content variable. Assignment is used if the content type is
+  //! content is not RXML.nil, it's assigned to or added to the result
+  //! variable. Assignment is used if the content type is
   //! nonsequential, addition otherwise. Thus earlier values are
   //! simply overridden for nonsequential types.
   //!
@@ -2220,9 +2218,7 @@ class Frame
       mapping(string:mixed)|mapping(object:array) ustate;
       if ((ustate = ctx->unwind_state) && !zero_type (ustate->stream_piece)) {
 	// Subframe wants to stream. Update stream_piece and send it on.
-	if (result_type->encoding_type ?
-	    result_type->encoding_type != parser->type->encoding_type :
-	    result_type != parser->type)
+	if (result_type->name != parser->type->name)
 	  res = parser->type->encode (res, result_type);
 	if (result_type->sequential)
 	  ustate->stream_piece = res + ustate->stream_piece;
@@ -2547,9 +2543,7 @@ class Frame
 		    fatal_error ("Internal error: Thanks, we think about how nice "
 				 "it must be to play the harmonica...\n");
 #endif
-		  if (result_type->encoding_type ?
-		      result_type->encoding_type != parser->type->encoding_type :
-		      result_type != parser->type) {
+		  if (result_type->name != parser->type->name) {
 		    THIS_TAG_DEBUG (sprintf ("Converting result from %s to %s of "
 					     "surrounding content\n",
 					     result_type->name, parser->type->name));
@@ -2674,10 +2668,7 @@ class Frame
 				  fatal_error ("Internal error: Clobbering "
 					       "unwind_state->stream_piece.\n");
 #endif
-				if (result_type->encoding_type ?
-				    result_type->encoding_type !=
-				    parser->type->encoding_type :
-				    result_type != parser->type) {
+				if (result_type->name != parser->type->name) {
 				  THIS_TAG_DEBUG (
 				    sprintf ("Iter[%d]: Converting result from %s to %s"
 					     " of surrounding content\n", debug_iter,
@@ -2767,9 +2758,7 @@ class Frame
 			fatal_error ("Internal error: Thanks, we think about how nice "
 				     "it must be to play the harmonica...\n");
 #endif
-		      if (result_type->encoding_type ?
-			  result_type->encoding_type != parser->type->encoding_type :
-			  result_type != parser->type) {
+		      if (result_type->name != parser->type->name) {
 			THIS_TAG_DEBUG (sprintf ("Iter[%d]: Converting result from "
 						 "type %s to type %s of surrounding "
 						 "content\n", debug_iter,
@@ -2819,9 +2808,7 @@ class Frame
 
 	    else if (result == nil && !(flags & FLAG_EMPTY_ELEMENT)) {
 	      if (result_type->_parser_prog == PNone) {
-		if (content_type->encoding_type ?
-		    content_type->encoding_type != result_type->encoding_type :
-		    content_type != result_type) {
+		if (content_type->name != result_type->name) {
 		  THIS_TAG_DEBUG (sprintf ("Assigning content to result after "
 					   "converting from %s to %s\n",
 					   content_type->name, result_type->name));
@@ -3092,11 +3079,22 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
     else if (val == nil)
       parse_error ("%s produced no value to index with %O.\n", scope_name, index);
     else if( objectp( val ) && val->`[] ) {
+#ifdef MODULE_DEBUG
+      Scope scope = [object(Scope)] val;
+#endif
       if (zero_type (
 	    val = ([object(Scope)] val)->`[](
 	      index, ctx, scope_name,
 	      i == sizeof (idxpath) && (scope_got_type = 1, want_type))))
 	val = nil;
+#ifdef MODULE_DEBUG
+      else if (mixed err = scope_got_type && want_type &&
+	       catch (want_type->type_check (val)))
+	if (([object] err)->is_RXML_Backtrace)
+	  error ("%O->`[] didn't return a value of the correct type:\n%s",
+		 scope, err->msg);
+	else throw (err);
+#endif
     }
     else if( mappingp( val ) || objectp (val) ) {
       if (zero_type (val = val[ index ])) val = nil;
@@ -3154,11 +3152,19 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
       error ("Cyclic rxml_var_eval chain detected in %O.\n"
 	     "All called objects:%{ %O%}\n", val, indices (called));
     called[val] = 1;
+    Value val_obj = [object(Value)] val;
 #endif
     if (zero_type (val = ([object(Value)] val)->rxml_var_eval (
 		     ctx, index, scope_name, want_type)) ||
 	val == nil)
       return ([])[0];
+#ifdef MODULE_DEBUG
+    else if (mixed err = want_type && catch (want_type->type_check (val)))
+      if (([object] err)->is_RXML_Backtrace)
+	error ("%O->rxml_var_eval didn't return a value of the correct type:\n%s",
+	       val_obj, err->msg);
+      else throw (err);
+#endif
   } while (objectp (val) && ([object] val)->rxml_var_eval);
   return val;
 }
@@ -3602,12 +3608,32 @@ class Type
 
   //! Interface.
 
-  //!string name;
-  //! Unique type identifier. Required and considered constant. Type
-  //! hierarchies are currently implemented with glob patterns, e.g.
-  //! "image/png" is a subtype of "image/*". However, this syntax will
-  //! be developed further, so for now use only characters [a-zA-Z/]
-  //! to write MIME-like types and use only * for globbing.
+  //! @decl constant string name;
+  //!
+  //! Unique type identifier. Required and considered constant.
+  //!
+  //! If it contains a "/", it's treated as a MIME type and should
+  //! then follow the rules for a MIME type with subtype (RFC 2045,
+  //! section 5.1). Among other things, that means that the valid
+  //! characters are, besides the "/", US-ASCII values 33-126 except
+  //! "(", ")", "<", ">", "@@", ",", ";", ":", "\", """, "/", "[",
+  //! "]", "?" and "=".
+  //!
+  //! If it doesn't contain a "/", it's treated as a type outside the
+  //! MIME system, e.g. "int" for an integer. Any type that can be
+  //! mapped to a MIME type should be so.
+  //!
+  //! Type hierarchies are currently implemented with glob patterns,
+  //! e.g. "image/png" is a subtype of "image/*". However, this syntax
+  //! will be developed further.
+  //!
+  //! A type in the type hierarchy should be able to express any value
+  //! that any of its subtypes can express without (or with at most
+  //! negligible) loss of information, but not necessarily on the same
+  //! form. This is different from the type tree described by
+  //! @[conversion_type], although it's always preferable if a
+  //! supertype also can be used as @[conversion_type] in its
+  //! subtypes.
 
   //!int sequential;
   //! Nonzero if data of this type is sequential, defined as:
@@ -3622,46 +3648,91 @@ class Type
   //!mixed empty_value;
   //! The empty value, i.e. what eval ("") would produce.
 
+  Type conversion_type;
+  //! The type to use as middlestep in indirect conversions. Required
+  //! and considered constant. As a last fallback, it should be set to
+  //! @[t_any] (for any type but @[t_any] itself). The
+  //! @[conversion_type] references must never produce a cycle between
+  //! types.
+  //!
+  //! It's values of the conversion type that @[decode] tries to
+  //! return, and also that @[encode] must handle without resorting to
+  //! indirect conversions. It's used as a fallback between types
+  //! which doesn't have explicit conversion functions for each other;
+  //! see @[indirect_convert].
+  //!
+  //! @note The tree described by the conversion types is not a proper
+  //! type hierarchy in the sense of value set sizes, as opposed to
+  //! the relations expressed by the glob patterns in @[name]. The
+  //! conversion type is chosen purely on pragmatic grounds for doing
+  //! indirect conversions. It's better if the conversion type is a
+  //! supertype (i.e. has a larger value set), but in lack of proper
+  //! supertypes it may also be a subtype, to make it possible to use
+  //! indirect conversion for at least a subset of the values. See the
+  //! example in @[decode].
+
   //!int free_text;
   //! Nonzero if the type keeps the free text between parsed tokens,
   //! e.g. the plain text between tags in XML. The type must be
   //! sequential and use strings.
 
-  void type_check (mixed val);
-  //! Checks whether the given value is a valid one of this type. Type
-  //! errors are thrown with RXML.parse_error().
-
-  //!string encoding_type;
-  //! A type name identifying the encoding in this type, if
-  //! applicable. Conversion between two types with identical
-  //! encoding_type is always a nop, so the call to encode() may be
-  //! skipped.
+  //! @decl optional constant mixed entity_syntax;
   //!
-  //! Types that have no encoding_type is taken to represent values in
-  //! internal "raw" form, e.g. for strings this means that they are
-  //! literals with no encoding scheme, so that every character
-  //! represents only itself.
+  //! Nonzero constant for all types with string values that use
+  //! entity syntax, like XML or HTML.
+
+  void type_check (mixed val, void|string msg, mixed... args);
+  //! Checks whether the given value is a valid one of this type.
+  //! Errors are thrown as RXML parse errors, and in that case @[msg],
+  //! if given, is prepended to the error message with ": " between
+  //! them. If there are any more arguments on the line, the prepended
+  //! message is formatted with @tt{sprintf (@[msg], @@@[args])@}.
+  //! There's a @[type_check_error] helper that can be used to handle
+  //! the message formatting and error throwing.
 
   mixed encode (mixed val, void|Type from);
-  //! Converts the given value to this type. If the from type is
-  //! given, it's the type of the value. If it's not given, the value
-  //! is assumed to be in raw form (see encoding_type) If the type
-  //! can't be converted, an RXML parse error should be thrown.
-
-  mixed decode (mixed val);
-  //! Converts the value, which is of this type, to the raw form (see
-  //! encoding_type). If the type can't be converted, an RXML parse
-  //! error should be thrown. That might happen if the value contains
-  //! markup or similar that can't be represented in raw form.
+  //! Converts the given value to this type.
   //!
-  //! E.g. when converting some XML text, the function should return a
-  //! literal string only if the text doesn't contain tags, otherwise
-  //! it should throw an error (since there currently exists no
-  //! internal representation of an XML node tree). It should never
-  //! both decode e.g. "&lt;" to "<" and just leave literal "<" in the
-  //! string. It should also not parse the value with some evaluating
-  //! parser (see get_parser) since the value should not be evaluated,
-  //! it should only change representation.
+  //! If the @[from] type isn't given, the function should try to
+  //! convert it to the required internal form for this type, using a
+  //! cast as a last resort if the type of @[val] isn't recognized. It
+  //! should then encode it, if necessary, as though it were a literal
+  //! (typically only applicable for types using strings with
+  //! encodings, like the @[t_xml] type). Any conversion error,
+  //! including in the cast, should be thrown as an RXML parse error.
+  //!
+  //! If the @[from] type is given, it's the type of the value. If the
+  //! encode function doesn't have routines to explicitly handle a
+  //! conversion from that type, then indirect conversion using
+  //! @[conversion_type] should be done. The @[indirect_convert]
+  //! function implements that. The encode function should at least be
+  //! able to convert values of @[conversion_type] to this type, or
+  //! else throw an RXML parse error if it isn't possible.
+  //!
+  //! @note Remember to override @[convertible] if this function can
+  //! convert directly from any type besides the conversion type.
+  //! Don't count on that the conversion type tree is constant so that
+  //! the default implementation would return true anyway.
+
+  optional mixed decode (mixed val);
+  //! Converts the value, which is of this type, to a value of type
+  //! @[conversion_type]. If this function isn't defined, then any
+  //! value of this type works directly in the conversion type.
+  //!
+  //! If the type can't be converted, an RXML parse error should be
+  //! thrown. That might happen if the value contains markup or
+  //! similar that can't be represented in the conversion type.
+  //!
+  //! E.g. in a type for XML markup which have @[t_text] as the
+  //! conversion type, this function should return a literal string
+  //! only if the text doesn't contain tags, otherwise it should throw
+  //! an error. It should never both decode e.g. "&lt;" to "<" and
+  //! just leave literal "<" in the string. It should also not parse
+  //! the value with some evaluating parser (see @[get_parser]) since
+  //! the value should only change representation. (This example shows
+  //! that a more fitting conversion type for XML markup would be a
+  //! DOM type that can represent XML node trees, since values
+  //! containing tags could be decoded then.)
 
   Type clone()
   //! Returns a copy of the type. Exists only for overriding purposes;
@@ -3694,16 +3765,51 @@ class Type
   //! Services.
 
   int `== (mixed other)
-  //!
+  //! Returns nonzero iff this type is the same as @[other], i.e. has
+  //! the same name. If @[other] is known to be a type, it's somewhat
+  //! faster to compare the names directly.
   {
-    return objectp (other) && ([object] other)->is_RXML_Type &&
+    return /*::`== (this_object(), other) ||*/
+      objectp (other) && ([object] other)->is_RXML_Type &&
       ([object(Type)] other)->name == this_object()->name;
   }
 
   int subtype_of (Type other)
-  //!
+  //! Returns nonzero iff this type is the same as or a subtype of
+  //! @[other], meaning that any value of this type can be expressed
+  //! by @[other] without (or with at most negligible) loss of
+  //! information.
   {
     return glob ([string] other->name, [string] this_object()->name);
+  }
+
+  int `< (mixed other)
+  //! Comparison regards a type as less than its supertypes. If
+  //! @[other] isn't a type, it's compared with @[name].
+  {
+    if (objectp (other) && ([object] other)->is_RXML_Type) {
+      if (([object(Type)] other)->name == this_object()->name) return 0;
+      return subtype_of (other);
+    }
+    return this_object()->name < other;
+  }
+
+  int convertible (Type from)
+  //! Returns nonzero iff it's possible to convert values of the type
+  //! @[from] to this type using some chain of conversions.
+  {
+    if (conversion_type->name == from->name ||
+	conversion_type->name == from->conversion_type->name ||
+	this_object()->name == from->conversion_type->name ||
+	this_object()->name == from->name)
+      return 1;
+    // The following is not terribly efficient, but most situations
+    // should be handled by the special cases above.
+    for (Type tconv = conversion_type; tconv; tconv = tconv->conversion_type)
+      for (Type fconv = from->conversion_type; fconv; fconv = fconv->conversion_type)
+	if (fconv->name == tconv->name)
+	  return 1;
+    return 0;
   }
 
   Type `() (program/*(Parser)HMM*/ newparser, mixed... parser_args)
@@ -3866,6 +3972,65 @@ class Type
     return res;
   }
 
+  static final void type_check_error (string msg1, array args1,
+				      string msg2, mixed... args2)
+  //! Helper intended to format and throw an RXML parse error in
+  //! @[type_check]. Assuming the same argument names as in the
+  //! @[type_check] declaration, use like this:
+  //!
+  //! @example
+  //!   if (value is bogus)
+  //!     type_check_error (msg, args, "My error message with %O %O.\n", foo, bar);
+  //! @end example
+  {
+    if (sizeof (args2)) msg2 = sprintf (msg2, @args2);
+    if (msg1) {
+      if (sizeof (args1)) msg1 = sprintf (msg1, @args1);
+      parse_error (msg1 + ": " + msg2);
+    }
+    else parse_error (msg2);
+  }
+
+  /*static*/ final mixed indirect_convert (mixed val, Type from)
+  //! Converts @[val], which is a value of the type @[from], to this
+  //! type. Uses indirect conversion via @[conversion_type] as
+  //! necessary. Only intended as a helper function for @[encode], so
+  //! it won't do a direct conversion from @[conversion_type] to this
+  //! type. Throws RXML parse error on any conversion error.
+  {
+    error ("test\n");
+#ifdef MODULE_DEBUG
+    if (conversion_type->name == from->name)
+      error ("Won't convert the conversion type %s to %s; "
+	     "encode() should handle that.\n");
+#endif
+    if (conversion_type->name == from->conversion_type->name)
+      return encode (from->decode ? from->decode (val) : val, conversion_type);
+    if (this_object()->name == from->conversion_type->name)
+      return from->decode ? from->decode (val) : val;
+    string name = this_object()->name;
+    if (name == from->name)
+      return val;
+    // The following is not terribly efficient, but most situations
+    // should be handled by the special cases above.
+    int levels = 1;
+    for (Type conv = from->conversion_type; conv; conv = conv->conversion_type, levels++)
+      if (conv->name == name) {
+	while (levels) {
+	  val = from->decode ? from->decode (val) : val;
+	  from = from->conversion_type;
+	}
+	return val;
+      }
+    if (conversion_type)
+      if (conversion_type->conversion_type->name == from->name)
+	return encode (conversion_type->encode (val, from), conversion_type);
+      else
+	return encode (conversion_type->indirect_convert (val, from), conversion_type);
+    else
+      parse_error ("Cannot convert type %s to %s.\n", from, this_object());
+  }
+
   // Internals.
 
   program/*(Parser)HMM*/ _parser_prog = PNone;
@@ -3885,7 +4050,7 @@ class Type
 
   MARK_OBJECT_ONLY;
 
-  string _sprintf() {return "RXML.Type" + OBJ_COUNT;}
+  string _sprintf() {return "RXML.Type(" + this_object()->name + ")" + OBJ_COUNT;}
 }
 
 static class PCacheObj
@@ -3895,20 +4060,32 @@ static class PCacheObj
   Parser free_parser;
 }
 
+// Special types.
+
 TAny t_any = TAny();
 //! A completely unspecified nonsequential type. Every type is a
-//! subtype of this one.
+//! subtype of this one, and it's also the root of the tree that
+//! @[Type.conversion_type] describes.
 
 static class TAny
 {
   inherit Type;
   constant name = "*";
+  constant conversion_type = 0;
+
+  mixed encode (mixed val, void|Type from)
+  {
+    if (from && from->name != local::name)
+      return indirect_convert (val, from);
+    return val;
+  }
+
   string _sprintf() {return "RXML.t_any" + OBJ_COUNT;}
 }
 
 TNil t_nil = TNil();
 //! A sequential type accepting only the value nil. This type is by
-//! definition a subtype of every sequential type.
+//! definition a subtype of every other type.
 
 static class TNil
 {
@@ -3916,29 +4093,29 @@ static class TNil
   constant name = "nil";
   constant sequential = 1;
   Nil empty_value = nil;
+  Type conversion_type = t_any;
 
-  void type_check (mixed val)
+  void type_check (mixed val, void|string msg, mixed... args)
   {
-    if (val != nil) parse_error ("A non-nil value is not accepted.\n");
+    if (val != nil)
+      type_check_error (msg, args, "Expected nil, got %t.\n", val);
   }
 
-  mixed encode (mixed val)
+  Nil encode (mixed val, void|Type from)
   {
+    if (from)
+      if (from->name == TAny.name)
+	type_check (val);
+      else {
+	val = indirect_convert (val, from);
 #ifdef MODULE_DEBUG
-    type_check (val);
+	type_check (val);
 #endif
+      }
     return nil;
   }
 
-  mixed decode (mixed val)
-  {
-#ifdef MODULE_DEBUG
-    type_check (val);
-#endif
-    return nil;
-  }
-
-  int subtype_of (Type other) {return other->sequential || other == t_any;}
+  int subtype_of (Type other) {return 1;}
 
   string _sprintf() {return "RXML.t_nil" + OBJ_COUNT;}
 }
@@ -3953,39 +4130,155 @@ static class TSame
   string _sprintf() {return "RXML.t_same" + OBJ_COUNT;}
 }
 
+// Basic types. Even though most of these have a `+ that fulfills
+// requirements to make them sequential, we don't want all those to be
+// treated that way. It would imply that a sequence of e.g. integers
+// are implicitly added together, which would be nonintuitive.
+
+TNum t_num = TNum();
+//! Type for any number, currently integer or float.
+//!
+//! FIXME: This is currently not labeled as a supertype for t_int and
+//! t_float, so it's only marginally useful. It's name will probably
+//! change.
+
+static class TNum
+{
+  inherit Type;
+  constant name = "number";
+  constant sequential = 0;
+  constant empty_value = 0;
+  Type conversion_type = t_any;
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    if (!intp (val) && !floatp (val))
+      type_check_error (msg, args, "Expected numeric value, got %t.\n", val);
+  }
+
+  int|float encode (mixed val, void|Type from)
+  {
+    if (from)
+      if (from->name == local::name) return [int|float] val;
+      else if (from->name == TAny.name) {type_check (val); return [int|float] val;}
+      else return [int|float] indirect_convert (val, from);
+    if (stringp (val))
+      if (sscanf (val, "%d%*c", int i) == 1) return i;
+      else if (sscanf (val, "%f%*c", float f) == 1) return f;
+      else parse_error ("String contains neither integer nor float.\n");
+    // Somewhat awkward case.
+    mixed err = catch {return (float) val;} && catch {return (int) val;};
+    parse_error ("Cannot convert value to number: " + describe_error (err));
+  }
+
+  string _sprintf() {return "RXML.t_num" + OBJ_COUNT;}
+}
+
+TInt t_int = TInt();
+//! Type for integers.
+
+static class TInt
+{
+  inherit Type;
+  constant name = "int";
+  constant sequential = 0;
+  constant empty_value = 0;
+  Type conversion_type = t_num;
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    if (!intp (val))
+      type_check_error (msg, args, "Expected integer value, got %t.\n", val);
+  }
+
+  int encode (mixed val, void|Type from)
+  {
+    if (from)
+      if (from->name == local::name) return [int] val;
+      else if (from->name == TNum.name) {type_check (val); return [int] val;}
+      else return [int] indirect_convert (val, from);
+    if (stringp (val))
+      if (sscanf (val, "%d%*c", int i) == 1) return i;
+      else parse_error ("String does not contain an integer.\n");
+    mixed err = catch {return (int) val;};
+    parse_error ("Cannot convert value to integer: " + describe_error (err));
+  }
+
+  string _sprintf() {return "RXML.t_int" + OBJ_COUNT;}
+}
+
+TFloat t_float = TFloat();
+//! Type for floats.
+
+static class TFloat
+{
+  inherit Type;
+  constant name = "float";
+  constant sequential = 0;
+  constant empty_value = 0;
+  Type conversion_type = t_num;
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    if (!floatp (val))
+      type_check_error (msg, args, "Expected float value, got %t.\n", val);
+  }
+
+  float encode (mixed val, void|Type from)
+  {
+    if (from)
+      if (from->name == local::name) return [float] val;
+      else if (from->name == TNum.name) {type_check (val); return [float] val;}
+      else return [float] indirect_convert (val, from);
+    if (stringp (val))
+      if (sscanf (val, "%f%*c", float f) == 1) return f;
+      else parse_error ("String does not contain a float.\n");
+    mixed err = catch {return (float) val;};
+    parse_error ("Cannot convert value to float: " + describe_error (err));
+  }
+
+  string _sprintf() {return "RXML.t_float" + OBJ_COUNT;}
+}
+
+// Text types.
+
 TText t_text = TText();
-//! The standard type for generic document text.
+//! The type for generic document text. Labelled "text/*" and thus
+//! acts as a supertype for all text types.
 
 static class TText
 {
   inherit Type;
-  constant name = "text/plain";
+  constant name = "text/*";
   constant sequential = 1;
   constant empty_value = "";
+  Type conversion_type = t_any;
   constant free_text = 1;
-  constant encoding_type = "none";
 
-  void type_check (mixed val)
+  void type_check (mixed val, void|string msg, mixed... args)
   {
-    if (!stringp (val)) parse_error ("The text value is not a string.\n");
+    if (!stringp (val))
+      type_check_error (msg, args, "Expected string for %s, got %t.\n", name, val);
   }
 
   string encode (mixed val, void|Type from)
   {
-    if (mixed err = catch {val = (string) val;})
-      parse_error ("Cannot convert value to text: " + describe_error (err));
-    if (from && from->encoding_type != encoding_type)
-      val = from->decode ([string] val);
-    return [string] val;
+    if (from)
+      if (from->name == local::name) return [string] val;
+      else if (from->name == TAny.name) {type_check (val); return [string] val;}
+      else return [string] indirect_convert (val, from);
+    mixed err = catch {return (string) val;};
+    parse_error ("Cannot convert value to %s: %s", name, describe_error (err));
   }
 
-  string decode (mixed val)
-  {
-#ifdef MODULE_DEBUG
-    type_check (val);
-#endif
-    return val;
-  }
+  string lower_case (string val) {return lower_case (val);}
+  //! Converts all literal uppercase characters in @[val] to lowercase.
+
+  string upper_case (string val) {return upper_case (val);}
+  //! Converts all literal lowercase characters in @[val] to uppercase.
+
+  string capitalize (string val) {return String.capitalize (val);}
+  //! Converts the first literal character in @[val] to uppercase.
 
   string _sprintf() {return "RXML.t_text" + OBJ_COUNT;}
 }
@@ -3997,16 +4290,24 @@ static class TXml
 {
   inherit TText;
   constant name = "text/xml";
-  constant encoding_type = "xml";
+  Type conversion_type = t_text;
+  constant entity_syntax = 1;
+  constant encoding_type = "xml"; // For compatibility.
+
+  // FIXME: Perhaps stricter type_check?
 
   string encode (mixed val, void|Type from)
   {
-    if (mixed err = catch {val = (string) val;})
-      parse_error ("Cannot convert value to text: " + describe_error (err));
-    if (!from) from = t_text;
-    if (from->encoding_type != encoding_type)
+    if (!from) {
+      if (mixed err = catch {val = (string) val;})
+	parse_error ("Cannot convert value to %s: %s", name, describe_error (err));
+      from = t_text;
+    }
+    if (from->name == local::name)
+      return [string] val;
+    else if (from->name == TText.name)
       return replace (
-	from->decode ([string] val),
+	[string] val,
 	// FIXME: This ignores the invalid Unicode character blocks.
 	({"&", "<", ">", "\"", "\'",
 	  "\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
@@ -4020,16 +4321,23 @@ static class TXml
 	  "&#16;", "&#17;", "&#18;", "&#19;", "&#20;", "&#21;", "&#22;", "&#23;",
 	  "&#24;", "&#25;", "&#26;", "&#27;", "&#28;", "&#29;", "&#30;", "&#31;",
 	}));
-    return [string] val;
+    else
+      return [string] indirect_convert (val, from);
   }
 
   string decode (mixed val)
   {
-#ifdef MODULE_DEBUG
-    type_check (val);
-#endif
-    return charref_decode_parser->clone()->finish (val)->read();
+    return charref_decode_parser->clone()->finish ([string] val)->read();
   }
+
+  string lower_case (string val)
+    {return lowercaser->clone()->finish (val)->read();}
+
+  string upper_case (string val)
+    {return uppercaser->clone()->finish (val)->read();}
+
+  string capitalize (string val)
+    {return capitalizer->clone()->finish (val)->read();}
 
   string format_tag (string|Tag tag, void|mapping(string:string) args,
 		     void|string content, void|int flags)
@@ -4083,6 +4391,21 @@ static class THtml
 {
   inherit TXml;
   constant name = "text/html";
+  Type conversion_type = t_xml;
+
+  string encode (mixed val, void|Type from)
+  {
+    if (from && from->name == local::name)
+      return ::encode (val, t_xml);
+    else
+      return ::encode (val, from);
+  }
+
+  string decode (mixed val)
+  {
+    return [string] val;
+  }
+
   string _sprintf() {return "RXML.t_html" + OBJ_COUNT;}
 }
 
@@ -4315,9 +4638,10 @@ mapping(int|string:TagSet) local_tag_set_cache = garb_local_tag_set_cache();
 
 // Various internal kludges.
 
-static object/*(Parser.HTML)*/ charref_decode_parser;
+static object/*(Parser.HTML)*/
+  charref_decode_parser, lowercaser, uppercaser, capitalizer;
 
-static void init_charref_decode_parser()
+static void init_parsers()
 {
   // Pretty similar to PEnt..
   object/*(Parser.HTML)*/ p = Parser_HTML();
@@ -4348,6 +4672,49 @@ static void init_charref_decode_parser()
 		   "since it contains a tag %O.\n", p->current());
     });
   charref_decode_parser = p;
+
+  p = Parser_HTML();
+  p->_set_data_callback (
+    lambda (object/*(Parser.HTML)*/ p, string data) {
+      return ({lower_case (data)});
+    });
+  p->_set_entity_callback (
+    lambda (object/*(Parser.HTML)*/ p, string data) {
+      if (string char = Roxen->decode_charref (data))
+	return ({Roxen->encode_charref (lower_case (char))});
+      return 0;
+    });
+  lowercaser = p;
+
+  p = Parser_HTML();
+  p->_set_data_callback (
+    lambda (object/*(Parser.HTML)*/ p, string data) {
+      return ({upper_case (data)});
+    });
+  p->_set_entity_callback (
+    lambda (object/*(Parser.HTML)*/ p, string data) {
+      if (string char = Roxen->decode_charref (data))
+	return ({Roxen->encode_charref (upper_case (char))});
+      return 0;
+    });
+  uppercaser = p;
+
+  p = Parser_HTML();
+  p->_set_data_callback (
+    lambda (object/*(Parser.HTML)*/ p, string data) {
+      p->_set_data_callback (0);
+      p->_set_entity_callback (0);
+      return ({String.capitalize (data)});
+    });
+  p->_set_entity_callback (
+    lambda (object/*(Parser.HTML)*/ p, string data) {
+      p->_set_data_callback (0);
+      p->_set_entity_callback (0);
+      if (string char = Roxen->decode_charref (data))
+	return ({Roxen->encode_charref (upper_case (char))});
+      return 0;
+    });
+  capitalizer = p;
 }
 
 static function(string,mixed...:void) _run_error = run_error;
@@ -4366,7 +4733,7 @@ void _fix_module_ref (string name, mixed val)
       case "PXml": PXml = [program] val; break;
       case "PEnt": PEnt = [program] val; break;
       case "PExpr": PExpr = [program] val; break;
-      case "Roxen": Roxen = [object] val; init_charref_decode_parser(); break;
+      case "Roxen": Roxen = [object] val; init_parsers(); break;
       case "empty_tag_set": empty_tag_set = [object(TagSet)] val; break;
       default: error ("Herk\n");
     }
