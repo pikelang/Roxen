@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.56 2002/12/17 13:56:03 grubba Exp $
+// $Id: DBManager.pmod,v 1.57 2003/01/20 09:59:33 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -381,6 +381,7 @@ array(string) db_tables( string name )
 //! the list.
 {
   object db = get(name);
+  if (!db) return ({});
   array(string) res;
   if( db->list_tables )
   {
