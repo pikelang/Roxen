@@ -1,5 +1,5 @@
 #
-# $Id: configure.in,v 1.65 1999/05/07 04:17:04 mast Exp $
+# $Id: configure.in,v 1.66 1999/05/21 00:14:12 grubba Exp $
 #
 
 prefix=$PWD
@@ -42,7 +42,13 @@ AC_ARG_WITH(postgres-include-dir, [  --with-postgres-include-dir=dir  Look for h
 AC_ARG_WITH(prefix,	          [  --with-prefix                    Set the installation prefix],[prefix=$with_prefix],[])
 AC_ARG_WITH(profiling,            [  --with-profiling                 Add code used to profile pike code ])
 AC_ARG_WITH(readline,             [  --without-readline               No support for command line editing])
-AC_ARG_WITH(rtldebug,             [  --with-rtldebug                  Enable run-time level debug],[],[with_rtldebug=no])
+AC_ARG_WITH(rtldebug,             [  --with-rtldebug                  Enable run-time level debug],[],[
+  if test "$with_debug" = "yes"; then
+    with_rtldebug="yes";
+  else
+    with_rtldebug=no;
+  fi
+])
 AC_ARG_WITH(ssleay,               [  --with-ssleay                    Enable the ssleay-module])
 AC_ARG_WITH(streamed_parser,      [  --with-streamed-parser           Enable the streamed-parser module])
 AC_ARG_WITH(thread-trace,         [  --with-trace-threads             Enable individual tracing of threads])
