@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.105 2001/08/16 15:18:09 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.106 2001/08/16 15:26:28 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -488,15 +488,23 @@ mixed find_file( string f, RequestID id )
     f = norm_f = NORMALIZE_PATH(f = decode_path(path + f));
 #if constant(system.normalize_path)
     if (!has_prefix(norm_f, normalized_path) &&
-	(norm_f+"/" != normalized_path)) {
+#ifdef __NT__
+	(norm_f+"/" != normalized_path)
+#else /* !__NT__ */
+	(norm_f+"/" != normalized_path)
+#endif /* __NT__ */
+	) {
       errors++;
-      report_error(LOCALE(0, "Path verification of %O failed.\n"), oldf);
+      report_error(LOCALE(0, "Path verification of %O failed:\n"
+			  "%O is not a prefix of %O\n"
+			  ), oldf, normalized_path, norm_f);
       TRACE_LEAVE("");
       TRACE_LEAVE("Permission denied.");
       return http_low_answer(403, "<h2>File exists, but access forbidden "
 			     "by user</h2>");
     }
-    
+
+    /* Adjust not_query */
     id->not_query = mountpoint + replace(norm_f[sizeof(normalized_path)..],
 					 "\\", "/");
     if (sizeof(oldf) && (oldf[-1] == '/')) {
