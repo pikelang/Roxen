@@ -5,7 +5,7 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.21 2000/04/06 14:49:22 grubba Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.22 2000/05/19 14:46:58 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -20,7 +20,7 @@ pattern for the whole module it is possible to create several patterns.
 Glob patterns are used to decide which parts of the file system each
 pattern affects.
 
-<p>The module also supports from based authentication. The same type of
+<p>The module also supports form based authentication. The same type of
 access control can be achived, in a different way, by using the 
 <i>.htaccess support</i> module.\n";
 constant module_unique = 0;
@@ -234,24 +234,10 @@ mixed find_file(string f, object id)
   if (intp(tmp2) || !query("page") || !id->cookies["httpauth"])
     return tmp2;
 
-  if (objectp(tmp2)) {
-    return ([ "file":tmp2,
-	      "extra_heads": ([
-		"Set-Cookie": "httpauth="+
-		http_encode_string(sprintf("%s:%s:%d",
-					   user||"", pass||"", time(1)))+
-		"; path=/"
-	      ]) ]);
-  } else {
-    return tmp2 +
-      ([ "extra_heads": ([
-	"Set-Cookie": "httpauth="+
-	http_encode_string(sprintf("%s:%s:%d",
-				   user||"", pass||"", time(1)))+
-	"; path=/"
-      ]) ]);
-  }
+  if (!id->misc->moreheads) id->misc->moreheads = ([]);
+  id->misc->moreheads["Set-Cookie"] =
+    "httpauth="+
+    http_encode_string(sprintf("%s:%s:%d", user||"", pass||"", time(1)))+
+    "; path=/";
+  return tmp2;
 }
-
-
-
