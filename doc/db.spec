@@ -1,4 +1,4 @@
-# $Id: db.spec,v 1.9 1998/07/22 16:58:35 js Exp $
+# $Id: db.spec,v 1.10 1998/07/23 18:52:19 wellhard Exp $
 
 drop table customers;
 drop table dns;
@@ -8,6 +8,7 @@ drop table users;
 drop table templates;
 drop table template_vars;
 drop table customers_preferences;
+drop table template_wizards;
 drop table color_schemes;
 
 
@@ -68,18 +69,24 @@ create table templates (
              filename		     varchar(255),
 	     category		     varchar(8)  # tmpl/nav
      );
-
-
     
 create table template_vars (
 	     id                      int auto_increment primary key,
              name                    varchar(64),
              title		     varchar(255),
-	     group_name              varchar(255),
+	     wizard_id               int,
              help		     blob,
-	     type		     varchar(8) # font/color/image/int
+	     type		     varchar(8), # font/color/image/int
+	     category		     varchar(8)  # tmpl/nav
      );
 
+create table template_wizards (
+             id                      int auto_increment primary key,
+             name                    varchar(64),
+             title                   varchar(255),
+             help		     blob,
+	     category		     varchar(8)  # tmpl/nav
+     );
 
 create table color_schemes (
 	     colorscheme_id	     int,
