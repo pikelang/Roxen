@@ -7,6 +7,7 @@ var isNav4 = false, isIE4 = false, isNav5 = false, isMac = false,
 var insideWindowWidth;
 var range = "";
 var styleObj = "";
+var incompatible_browser = false;
 
 // Create a dummy event variable for non navigator browsers.
 if(window.event + "" == "undefined")
@@ -34,6 +35,14 @@ if (navigator.appVersion.charAt(0) == "4") {
 isMacIE50 = isMac && navigator.appVersion.match("MSIE 5.0");
 isSafari = navigator.appVersion.match("AppleWebKit");
 
+
+function handle_incompatible_browser()
+{
+  if(!incompatible_browser) {
+    alert("Pupup error: Incompatible Browser. Contact Roxen Support.");
+    incompatible_browser = true;
+  }
+}
 
 // Convert object name string or object reference
 // into a valid object reference
@@ -209,10 +218,14 @@ function getEventX(e)
   if(isNav4||isNav5) {
     return e.pageX;
   }
-  if(isIE4) {
+  // IE6
+  if(document.documentElement && document.documentElement.scrollLeft)
+    return window.event.clientX + document.documentElement.scrollLeft;
+  // IE5
+  if(document.body)
     return window.event.clientX + document.body.scrollLeft;
-  }
-  return 0;
+
+  handle_incompatible_browser();
 }
 
 function getEventY(e)
@@ -220,9 +233,14 @@ function getEventY(e)
   if(isNav4||isNav5) {
     return e.pageY;
   }
-  if(isIE4) {
+  // IE6
+  if(document.documentElement && document.documentElement.scrollTop)
+    return window.event.clientY + document.documentElement.scrollTop;
+  // IE5
+  if(document.body)
     return window.event.clientY + document.body.scrollTop;
-  }
+
+  handle_incompatible_browser();
 }
 
 function getButton(e) {
