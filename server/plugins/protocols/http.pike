@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.377 2002/07/04 09:20:07 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.378 2002/07/04 18:47:33 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1054,9 +1054,12 @@ static string error_page_header (string title)
 
 string format_backtrace(int eid)
 {
+  array info = cache_lookup( "http_bt_error", eid);
+  if(!info)
+    return error_page_header("Unregistered Error");
   [string msg, array(string) rxml_bt, array(array) bt,
-   string raw_bt_descr, string raw_url, string raw] =
-    cache_lookup( "http_bt_error", eid);
+   string raw_bt_descr, string raw_url, string raw] = info;
+
 
   string res = error_page_header ("Internal Server Error") +
     "<h1>" + replace (Roxen.html_encode_string (msg), "\n", "<br />\n") + "</h1>\n";
@@ -1123,7 +1126,7 @@ int store_error(mixed _err)
 
   int id;
   do {
-    id = random(0xffffffff);
+    id = random( (1<<64)-1 ); // 64 bit random number
   } while(!cache_lookup("http_bt_error", id));
 
   string msg;
