@@ -25,7 +25,7 @@ class RemoteFunctionCall
     /* The server returned a pointer to an object. */
     /* Build a new RPC object and return it... */
     if(data[0]==2)
-      return object_program(master)( server, 0, data[1], !master->nolock, 1);
+      return object_program(master)( server, 0, data[1], !master->nolock, 0,1);
     /* The server returned a pointer to a program or function. */
     /* Build a new RPC function call object and return it... */
     else if(data[0]==3)
@@ -84,12 +84,12 @@ void create(string|object ip, int port, string cl,
     if(!server->connect(ip, port)) error("Failed to connect to RPC server\n");
   }
 
-  while(not_again)
+  while(!not_again)
   {
     switch(server->read(1))
     {
      case "=":
-      not_again=0;
+      not_again=1;
      case "!":
       break;
      case "?":
