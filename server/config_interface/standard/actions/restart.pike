@@ -55,7 +55,7 @@ most 15 minutes.</i> </font>";
 </cf-perm>
 
 <cf-perm perm='Shutdown'>
-  <gbutton href='?what=restart&action=restart.pike&class=maintenance' width=300  preparse
+  <gbutton href='?what=shutdown&action=restart.pike&class=maintenance' width=300  preparse
           icon_src=/internal-roxen-err_3> &locale.shutdown; </gbutton>
 </cf-perm>
 
