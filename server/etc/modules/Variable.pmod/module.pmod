@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.31 2000/11/18 17:31:26 per Exp $
+// $Id: module.pmod,v 1.32 2000/11/19 22:03:20 stewa Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -602,7 +602,7 @@ class Password
   {
     additional_args = additional_args || ([]);
     additional_args->type="password";
-    input(path(), "", 30, additional_args);
+    return input(path(), "", 30, additional_args);
   }
 }
 
