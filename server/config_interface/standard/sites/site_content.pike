@@ -1,6 +1,7 @@
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
 #include <module.h>
+#include <module_constants.h>
 #include <config_interface.h>
 #include <config.h>
 
