@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.51 2001/04/17 08:00:53 per Exp $
+ * $Id: Roxen.pmod,v 1.52 2001/06/06 21:03:29 per Exp $
  *
  * Various helper functions.
  *
@@ -842,7 +842,7 @@ class ScopeRoxen {
        CACHE(c->id,1);
        return time(1);
      case "server":
-       if( c->id->misc->host )
+       if( c->id->misc->host && c->id->port_obj->name )
          return c->id->port_obj->name+"://"+c->id->misc->host+"/";
        return c->id->conf->query("MyWorldLocation");
      case "domain":
