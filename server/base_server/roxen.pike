@@ -1,10 +1,10 @@
 // The Roxen Webserver main program.
 // Copyright © 1996 - 2000, Roxen IS.
 //
-// Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
+// Per Hedbor, Henrik Grubbstrm, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.567 2000/11/27 09:46:05 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.568 2000/12/10 02:05:35 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -3436,6 +3436,21 @@ void initiate_argcache()
   report_debug("Done [%.2fms]\n", (gethrtime()-t)/1000.0);
 }
 
+#if constant(thread_create)
+function async_sig_start( function f )
+{
+  return lambda( mixed ... args ) { thread_create( f, @args ); };
+}
+#else
+function async_sig_start( function f )
+{
+  // call_out is not really useful here, since we probably want to run
+  // the signal handler immediately, not whenever the backend thread
+  // is available. 
+  return f;
+}
+#endif
+
 int main(int argc, array tmp)
 {
   array argv = tmp;
@@ -3519,13 +3534,13 @@ int main(int argc, array tmp)
 
   // Signals which cause a restart (exitcode != 0)
   foreach( ({ "SIGINT", "SIGTERM" }), string sig)
-    catch( signal(signum(sig), exit_when_done) );
+    catch( signal(signum(sig), async_sig_start(exit_when_done)) );
 
-  catch( signal(signum("SIGHUP"), reload_all_configurations) );
+  catch(signal(signum("SIGHUP"), async_sig_start(reload_all_configurations)));
 
   // Signals which cause Roxen to dump the thread state
   foreach( ({ "SIGUSR1", "SIGUSR2", "SIGTRAP" }), string sig)
-    catch( signal(signum(sig), describe_all_threads) );
+    catch( signal(signum(sig), async_sig_start(describe_all_threads)) );
 
 #ifdef __RUN_TRACE
   trace(1);
