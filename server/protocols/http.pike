@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.225 2000/03/24 19:31:47 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.226 2000/03/25 03:23:32 mast Exp $";
 
 #define MAGIC_ERROR
 
@@ -2033,7 +2033,7 @@ void clean()
     end();
 }
 
-void create(object f, object c)
+static void create(object f, object c)
 {
   if(f)
   {
@@ -2060,6 +2060,7 @@ void chain(object f, object c, string le)
   else
   {
     // If no pipelined data is available, call out...
+    remove_call_out(do_timeout);
     call_out(do_timeout, 150);
     time = _time(1);
   }
