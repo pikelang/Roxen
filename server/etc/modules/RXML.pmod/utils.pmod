@@ -7,23 +7,62 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.21 2001/05/18 23:04:28 mast Exp $
+//! $Id: utils.pmod,v 1.22 2001/05/19 05:35:15 mast Exp $
 
+constant short_format_length = 40;
 
 final string format_short (mixed val)
+// This one belongs somewhere else..
 {
-  if (stringp (val))
-    if (sizeof (val) <= 30)
-      return sprintf ("%O", val);
-    else
-      return sprintf ("%O/.../", val[..29]);
-  else {
-    val = sprintf ("%O", val);
-    if (sizeof (val) <= 30)
-      return replace (val, "\n", " ");
-    else
-      return String.trim_whites (replace (val[..29], "\n", " ")) + "/.../";
-  }
+  string res = "";
+
+  void format_val (mixed val)
+  {
+    if (arrayp (val) || multisetp (val)) {
+      string end;
+      if (multisetp (val)) res += "(<", end = ">)", val = indices (val);
+      else res += "({", end = "})";
+      if (sizeof (res) >= short_format_length) throw (0);
+      for (int i = 0; i < sizeof (val);) {
+	res += format_val (val[i]);
+	if (++i < sizeof (val) - 1) res += ", ";
+	if (sizeof (res) >= short_format_length) throw (0);
+      }
+      res += end;
+    }
+    else if (mappingp (val)) {
+      res += "([";
+      if (sizeof (res) >= short_format_length) throw (0);
+      array ind = sort (indices (val));
+      for (int i = 0; i < sizeof (ind);) {
+	res += format_val (ind[i]) + ": ";
+	if (sizeof (res) >= short_format_length) throw (0);
+	res += format_val (val[ind[i]]);
+	if (++i < sizeof (ind) - 1) res += ", ";
+	if (sizeof (res) >= short_format_length) throw (0);
+      }
+      res += "])";
+    }
+    else {
+      if (stringp (val) && sizeof (val) > short_format_length - sizeof (res)) {
+	sscanf (val, "%[ \t\n\r]", string lead);
+	if (sizeof (lead) > sizeof ("/.../") && sizeof (lead) < sizeof (val))
+	  val = val[sizeof (lead)..], res += "/.../";
+	if (sizeof (val) > short_format_length - sizeof (res)) {
+	  res += sprintf ("%O", val[..short_format_length - sizeof (res) - 1]);
+	  throw (0);
+	}
+      }
+      res += sprintf ("%O", val);
+    }
+  };
+
+  mixed err = catch {
+    format_val (val);
+    return res;
+  };
+  if (err) throw (err);
+  return res + "/.../";
 }
 
 final array return_zero (mixed... ignored) {return 0;}
