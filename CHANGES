@@ -5,6 +5,8 @@ o GIF support disabled per default to make Unisys happy.
 
 o Updated all Roxen parts and products to work without GIF support.
 
+o All use of sendfile(2) in Stdio.sendfile() is now disabled.
+
 
 Changes since Roxen 2.1.112
 -----------------------------------------------
