@@ -1,16 +1,18 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.6 2000/03/02 12:01:58 jonasw Exp $
+// $Id: basic_defvar.pike,v 1.7 2000/03/10 01:28:12 nilsson Exp $
+
+#pragma strict_types
 
 #include <module_constants.h>
-mapping variables = ([ ]);
-local mapping locs = ([]);
+mapping(string:array) variables = ([ ]);
+local mapping(string:function(mixed,string,string,string,void|mapping:void)) locs = ([]);
 
 void deflocaledoc( string locale, string variable,
                    string name, string doc, mapping|void translate)
 {
   if(!locs[locale] )
-    locs[locale] = RoxenLocale[locale]->register_module_doc;
+    locs[locale] = [function(mixed,string,string,string,void|mapping:void)]RoxenLocale[locale]->register_module_doc;
   if(!locs[locale])
     report_debug("Invalid locale: "+locale+". Ignoring.\n");
   else
@@ -41,11 +43,12 @@ int setvars( mapping (string:mixed) vars )
 }
 
 void defvar( string v, mixed val,
-             string|mapping q, int type, string|mapping d,
+             string|mapping(string:string) q, int type,
+	     string|mapping(string:string) d,
              array|void misc, mapping|void translate )
 {
-  if( stringp( q ) )   q = ([ "standard":q ]);
-  if( stringp( d ) )   d = ([ "standard":d ]);
+  if( stringp( q ) )   q = ([ "standard":[string]q ]);
+  if( stringp( d ) )   d = ([ "standard":[string]d ]);
 
   if( translate && !mappingp( translate ) )
     translate = 0;
@@ -62,8 +65,8 @@ void defvar( string v, mixed val,
   variables[v][ VAR_MISC ]         = misc;
   type &= (VAR_EXPERT | VAR_MORE | VAR_INITIAL | VAR_DEVELOPER);
   variables[v][ VAR_CONFIGURABLE ] = type?type:1;
-  foreach( indices( q ), string l )
-    deflocaledoc( l, v, q[l], d[l], (translate?translate[l]:0));
+  foreach( indices( [mapping(string:string)]q ), string l )
+    deflocaledoc( l, v, q[l], d[l], [mapping](translate?translate[l]:0));
 }
 
 mixed query( string what )
