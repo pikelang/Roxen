@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.15 1998/07/07 10:56:15 js Exp $
+ * $Id: resolv.pike,v 1.16 1998/08/25 20:05:52 grubba Exp $
  */
 
 inherit "wizard";
@@ -108,25 +108,64 @@ string page_0(object id)
 	break;
     
     object nid = id->clone_me();
+    nid->variables = ([]);
     if(!(int)id->variables->cache)
       nid->pragma = (<"no-cache">);
     else
       nid->pragma = (<>);
 
+    resolv = "Resolving " + id->variables->path + " in " + c->query_name() +
+      "<br><hr noshade size=1 width=100%>";
+    
     if((int)id->variables->table)
     {
       nid->misc->trace_enter = trace_enter_table;
       nid->misc->trace_leave = trace_leave_table;
-      resolv = "Resolving "+id->variables->path+" in "+c->query_name()+"<hr noshade size=1 width=100%><p><table width=80% cellpadding=0 cellspacing=1>";
+      resolv += "<p><table width=80% cellpadding=0 cellspacing=1>";
     }
     else
     {
       nid->misc->trace_enter = trace_enter_ol;
       nid->misc->trace_leave = trace_leave_ol;
-      resolv = "Resolving "+id->variables->path+" in "+c->query_name()+"<hr noshade size=1 width=100%><p><ol>";
+      resolv += "<p><ol>";
     }
 
-    nid->not_query = id->variables->path;
+    nid->raw_url = id->variables->path;
+    
+    nid->misc->trace_enter(sprintf("Scanning for variables.\n"));
+    string f = nid->scan_for_query(nid->raw_url);
+    if (nid->variables && sizeof(nid->variables)) {
+      nid->misc->trace_leave(sprintf("Got %O\n", nid->variables));
+    } else {
+      nid->misc->trace_leave("No variables.\n");
+    }
+
+    string a;
+
+    nid->misc->trace_enter("Checking for cookie.\n", 0);
+    if (sscanf(f, "/<%s>/%s", a, f)==2)
+    {
+      nid->config_in_url = 1;
+      nid->mod_config = (a/",");
+      f = "/"+f;
+      nid->misc->trace_leave(sprintf("Got cookie %O.\n", a));
+    } else {
+      nid->misc->trace_leave("No cookie.\n");
+    }
+    
+    nid->misc->trace_enter("Checking for prestate.\n", 0);
+    if ((sscanf(f, "/(%s)/%s", a, f)==2) && strlen(a))
+    {
+      nid->prestate = aggregate_multiset(@(a/","-({""})));
+      f = "/"+f;
+      nid->misc->trace_leave(sprintf("Got prestate %O\n", a));
+    } else {
+      nid->misc->trace_leave("No prestate.\n");
+    }
+
+    nid->misc->trace_enter(sprintf("Simplifying path %O\n", f), 0);
+    nid->not_query = simplify_path(f);
+    nid->misc->trace_leave(sprintf("Got path %O\n", f));
     nid->conf = c;
     nid->method = "GET";
     if (id->variables->user && id->variables->user!="")
