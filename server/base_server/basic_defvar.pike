@@ -1,7 +1,7 @@
 // This file is part of Roxen Webserver.
 // Copyright © 2000, Roxen IS.
-// $Id: basic_defvar.pike,v 1.26 2001/02/23 07:06:12 per Exp $
-// (string:Variable.Variable) 
+// $Id: basic_defvar.pike,v 1.27 2001/03/11 20:24:53 nilsson Exp $
+
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
 //! defvar, killvar, getvar, query and set
@@ -53,7 +53,6 @@ void setvars( mapping (string:mixed) vars )
 //! Used by roxen internals, not all that useful for the module
 //! programmer.
 {
-//   werror("setvars: %O\n", vars );
   string v;
   Variable.Variable q;
   foreach( indices( vars ), v )
