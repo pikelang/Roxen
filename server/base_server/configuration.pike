@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.515 2002/05/29 15:18:44 anders Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.516 2002/05/29 15:35:20 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3613,7 +3613,13 @@ also set 'URLs'."));
     <td><img src=\"/internal-roxen-page-not-found&var.404;\" border=\"0\" alt=\"Page not found\" width=\"404\" hspace=\"2\" /></td>
     <td>&nbsp;</td>
     <td align=\"right\"><font face=\"lucida,helvetica,arial\">
-      <b>Roxen WebServer &roxen.base-version;&nbsp;</b></font></td>
+      <if variable='roxen.product-name is Roxen CMS'>
+        <b>Roxen CMS&nbsp;</b>
+      </if>
+      <else>
+        <b>Roxen WebServer &roxen.base-version;&nbsp;</b>
+      </else>
+    </font></td>
   </tr>
   <tr>
     <td width=\"100%\" height=\"21\" colspan=\"3\" background=\"/internal-roxen-tile\"><img src=\"/internal-roxen-unit\" alt=\"\" /></td>
