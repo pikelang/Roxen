@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-string cvs_version="$Id: SQLuserdb.pike,v 1.7 1999/05/31 22:19:31 js Exp $";
+string cvs_version="$Id: SQLuserdb.pike,v 1.8 1999/06/01 12:32:37 kinkie Exp $";
 
 //#define SQLAUTHDEBUG
 
@@ -29,25 +29,6 @@ inherit "module";
 
 int att=0, succ=0, nouser=0, db_accesses=0, last_db_access=0;
 object db=0;
-
-/*
- * Utilities
- */
-
-static int database_empty()
-{
-  return(QUERY(database) != "");
-}
-
-static int dbuser_empty()
-{
-  return(QUERY(dbuser) != "");
-}
-
-static int dbpass_empty()
-{
-  return(QUERY(dbpass) != "");
-}
 
 /*
  * Object management and configuration variables definitions
@@ -66,31 +47,16 @@ void create()
 	  "might exist: msql, mysql, odbc, oracle, postgres.\n",
 	  );
 
-  defvar ("database", "", "OBSOLETE SQL settings: Database name",
-	  TYPE_STRING,
-	  "This is the name of the authorizations database.<br>\n"
-	  "<b>OBSOLETE. Specify the database name in the SQL-URL instead.</b>",
-	  0, database_empty);
+  defvar ("crypted",1,"Passwords are crypted",
+          TYPE_FLAG|VAR_MORE,
+          "If set, passwords are to be stored in the database "
+          "encrypted with the <i>crypt(3)</i> funtion (default). "
+          "If reset, passwords are stored in clear text. "
+          "Storing clear passwords is a serious security threat, so "
+          "encrypting them is strongly encouraged."
+          );
 
-  defvar ("dbuser", "", "OBSOLETE SQL settings: Database user's username",
-	  TYPE_STRING,
-	  "This username will be used to authenticate when "
-	  "connecting to the SQL server. "
-	  "Refer to your SQL server documentation, "
-	  "this could be irrelevant.<br>\n"
-	  "<b>OBSOLETE. Specify the username in the SQL-URL instead.</b>",
-	  0, dbuser_empty);
-
-  defvar ("dbpass", "", "OBSOLETE SQL settings: Database user's password",
-	  TYPE_STRING,
-	  "This is the password used to authenticate the server "
-	  "when accessing the database. "
-	  "Refer to your SQL server documentation, "
-	  "this could be irrelevant.<br>\n"
-	  "<b>OBSOLETE. Specify the password in the SQL-URL instead.</b>",
-	  0, dbpass_empty);
-
-  defvar ("table", "passwd", "SQL server: Passwords table",
+  defvar ("table", "passwd", "Passwords table",
 	  TYPE_STRING,
 	  "This is the table containing the data. It is advisable not "
 	  "to change it once the service has been started."
@@ -180,8 +146,7 @@ void open_db() {
   if(objectp(db)) //already open
     return;
   err=catch{
-    db=Sql.sql(QUERY(sqlserver), QUERY(database),
-	       QUERY(dbuser), QUERY(dbpass));
+    db=Sql.sql(QUERY(sqlserver));
   };
   if (err) {
     perror ("SQLauth: Couldn't open authentication database!\n");
@@ -313,11 +278,18 @@ array|int auth (string *auth, object id)
 		nouser++;
 		return ({0,u,p});
 	}
-
-	if(!crypt (p,dbinfo[1])) {
-		DEBUGLOG ("password check ("+dbinfo[1]+","+p+") failed");
-		return ({0,u,p});
-	}
+  
+  if (QUERY(crypted)) {
+    if (!crypt (p,dbinfo[1])) {
+      DEBUGLOG ("password check ("+dbinfo[1]+","+p+") failed");
+      return ({0,u,p});
+    }
+  } else {
+    if (p != dbinfo[1]) {
+      DEBUGLOG ("clear password check (XXX,"+p+") failed");
+      return ({0,u,p});
+    }
+  }
 
 	DEBUGLOG (u+" positively recognized");
 	succ++;
