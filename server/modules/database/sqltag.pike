@@ -5,7 +5,7 @@
 //
 // Henrik Grubbström 1997-01-12
 
-constant cvs_version="$Id: sqltag.pike,v 1.63 2000/10/18 23:23:46 mast Exp $";
+constant cvs_version="$Id: sqltag.pike,v 1.64 2000/11/13 16:41:43 kuntri Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -29,71 +29,77 @@ TAGDOCUMENTATION
 #ifdef manual
 constant tagdoc=([
 "sqltable":#"
-<desc tag><short>
+<desc tag='tag'><p><short>
  Creates an HTML or ASCII table from the results of an SQL query.
-</short>
+</short></p>
 </desc>
 
-<attr name=ascii>
+<attr name='ascii'><p>
  Create an ASCII table rather than a HTML table. Useful for
- interacting with the <ref type=tag>diagram</ref> and <ref
- type=tag>tablify</ref> tags.
+ interacting with <xref href='../graphics/diagram.tag' /> and <xref
+ href='../text/tablify.tag' />.</p>
 </attr>
 
-<attr name=host value=database>
- Which database to connect to, usually a symbolic name set in the
- <module>SQL Databases</module> module. If omitted the default
- database will be used.
+<attr name='host' value='database'><p>
+ Which database to connect to, usually a symbolic name set in the <xref
+ href='../../administrator/installing/databases.xml'><module>SQL
+ Databases</module></xref> module. If omitted the default database will
+ be used.</p>
 </attr>
 
-<attr name=query value='SQL statement'>
- The actual SQL-statement.
+<attr name='query' value='SQL statement'><p>
+ The actual SQL-statement.</p>
 </attr>
 
-<attr name=parse>
+<attr name='parse'><p>
  If specified, the query will be parsed by the RXML parser.
- Useful if you wish to dynamically build the query.
+ Useful if you wish to dynamically build the query.</p>
 </attr>",
 
 "sqlquery":#"
-<desc tag><short>
+<desc tag='tag'><p><short>
  Executes an SQL query, but doesn't do anything with the
  result.</short> This is mostly used for SQL queries that change the
- contents of the database, for example INSERT or UPDATE.
+ contents of the database, for example INSERT or UPDATE.</p>
 </desc>
 
-<attr name=host value=database>
- Which database to connect to, usually a symbolic name set in the
- <module>SQL Databases</module> module. If omitted the default
- database will be used.
+<attr name='host' value='database'><p>
+ Which database to connect to, usually a symbolic name set in the <xref
+ href='../../administrator/installing/databases.xml'><module>SQL
+ Databases</module></xref> module. If omitted the default
+ database will be used.</p>
 </attr>
 
-<attr name=query value='SQL statement'>
- The actual SQL-statement.
+<attr name='query' value='SQL statement'><p>
+ The actual SQL-statement.</p>
 </attr>
 
-<attr name=parse>
+<attr name='parse'><p>
  If specified, the query will be parsed by the RXML parser. Useful if
- you wish to dynamically build the query.
+ you wish to dynamically build the query.</p>
 </attr>
 
-<attr name=mysql-insert-id value=form-variable>
+<attr name='mysql-insert-id' value='form-variable'><p>
  Set form-variable to the insert id used by Mysql for
- auto-incrementing columns. Note: This is only available with Mysql.
+ auto-incrementing columns. Note: This is only available with Mysql.</p>
 </attr>",
 
-"emit#sql":#"<desc plugin>Use this source to connect to and
- query SQL databases for information. The result will be available in
- variables named as the SQL columns.</desc>
+"emit#sql":#"<desc plugin='plugin'><p><short>
 
-<attr name=host value=database>
- Which database to connect to, usually a symbolic name set in the
- <module>SQL Databases</module> module. If omitted the default
- database will be used.
+ Use this source to connect to and query SQL databases for
+ information.</short> The result will be available in variables named
+ as the SQL columns.</p>
+</desc>
+
+<attr name='host' value='database'><p>
+ Which database to connect to, usually a symbolic name set in the <xref
+ href='../../administrator/installing/databases.xml'><module>SQL
+ Databases</module></xref> module. If omitted the default
+ database will be used.</p>
 </attr>
 
-<attr name=query value='SQL statement'>
- The actual SQL-statement.
+<attr name='query' value='SQL statement'><p>
+ The actual SQL-statement.</p>
 </attr>
 "
 ]);
