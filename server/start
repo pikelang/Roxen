@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.47 1998/08/27 11:48:26 grubba Exp $
+# $Id: start,v 1.48 1998/09/12 12:10:23 grubba Exp $
 
 VERSION=202; BETA=.b;
 
@@ -83,27 +83,6 @@ fi
 
 gdb=no
 
-rotate () {
-  b=5;
-  for a in 4 3 2 1 ; do mv -f $1.$a $1.$b 2> /dev/null;  b=$a; done
-}
-
-start_roxen() {
-  args="-DROXEN $DEBUG $DEFINES $pass $program --config-dir=$DIR"
-  if [ "x$gdb" = "xno" ]; then
-    echo "PIKE_MODULE_PATH=$PIKE_MODULE_PATH"
-    echo Executing $pike $args $@
-    $pike $args $@
-  else
-    echo Executing gdb $pike $args $@
-    echo >.gdbinit handle SIGPIPE nostop noprint pass
-    echo >>.gdbinit handle SIGUSR1 nostop noprint pass
-    echo >>.gdbinit handle SIGUSR2 nostop noprint pass
-    echo >>.gdbinit run $args $@
-    gdb $pike
-    rm .gdbinit
-  fi
-}
 ####### END PREAMBLE
 
 ## Parse all arguments.
@@ -288,9 +267,39 @@ else
   DEBUG="-DDEBUG -DMODULE_DEBUG"
 fi
 
-if [ "x$debug" -eq "x-1" ] ; then
+if [ "x$debug" = "x-1" ] ; then
   DEBUG="";
-fi
+else :; fi
+
+#
+# Some useful functions
+#
+
+rotate () {
+  b=5;
+  for a in 4 3 2 1 ; do mv -f $1.$a $1.$b 2> /dev/null;  b=$a; done
+}
+
+start_roxen() {
+  args="-DROXEN $DEBUG $DEFINES $pass $program --config-dir=$DIR"
+  if [ "x$gdb" = "xno" ]; then
+    echo "PIKE_MODULE_PATH=$PIKE_MODULE_PATH"
+    echo Executing $pike $args $@
+    $pike $args $@
+  else
+    echo Executing gdb $pike $args $@
+    echo >.gdbinit handle SIGPIPE nostop noprint pass
+    echo >>.gdbinit handle SIGUSR1 nostop noprint pass
+    echo >>.gdbinit handle SIGUSR2 nostop noprint pass
+    echo >>.gdbinit run $args $@
+    gdb $pike
+    rm .gdbinit
+  fi
+}
+
+#
+# Now do the stuff
+#
 
 if [ -z "$once" ] ; then
   cat << oo
