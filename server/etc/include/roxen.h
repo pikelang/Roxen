@@ -1,6 +1,6 @@
 // -*- pike -*-
 //
-// $Id: roxen.h,v 1.25 2003/03/05 15:51:53 mast Exp $
+// $Id: roxen.h,v 1.26 2003/11/25 16:00:13 anders Exp $
 
 #ifndef _ROXEN_H_
 
@@ -39,5 +39,40 @@ mixed get_locale();
 #else
 #define DO_IF_DEBUG(X...)
 #endif
+
+#ifdef DEBUG_CACHEABLE
+#  define CACHE(seconds) do {                                                 \
+  int old_cacheable = ([mapping(string:mixed)]id->misc)->cacheable;           \
+  ([mapping(string:mixed)]id->misc)->cacheable =                              \
+    min(([mapping(string:mixed)]id->misc)->cacheable,seconds);                \
+  report_debug("%s:%d lowered cacheable to %d (was: %d, now: %d)\n",          \
+               __FILE__, __LINE__, seconds, old_cacheable,                    \
+               ([mapping(string:mixed)]id->misc)->cacheable);                 \
+} while(0)
+#  define RAISE_CACHE(seconds) do {                                           \
+  int old_cacheable = ([mapping(string:mixed)]id->misc)->cacheable;           \
+  ([mapping(string:mixed)]id->misc)->cacheable =                              \
+    max(([mapping(string:mixed)]id->misc)->cacheable,seconds);                \
+  report_debug("%s:%d raised cacheable to %d (was: %d, now: %d)\n",           \
+               __FILE__, __LINE__, seconds, old_cacheable,                    \
+               ([mapping(string:mixed)]id->misc)->cacheable);                 \
+} while(0)
+#  define NOCACHE() do {                                                      \
+  int old_cacheable = ([mapping(string:mixed)]id->misc)->cacheable;           \
+  ([mapping(string:mixed)]id->misc)->cacheable = 0;                           \
+  report_debug("%s:%d set cacheable to 0 (was: %d)\n",                        \
+               __FILE__, __LINE__, old_cacheable,                             \
+               ([mapping(string:mixed)]id->misc)->cacheable);                 \
+} while(0)
+#  define NO_PROTO_CACHE() do {                                               \
+  ([mapping(string:mixed)]id->misc)->no_proto_cache = 1;                      \
+  report_debug("%s:%d disabled proto cache\n", __FILE__, __LINE__);           \
+} while(0)
+#else
+#  define CACHE(seconds) ([mapping(string:mixed)]id->misc)->cacheable=min(([mapping(string:mixed)]id->misc)->cacheable,seconds)
+#  define RAISE_CACHE(seconds) ([mapping(string:mixed)]id->misc)->cacheable=max(([mapping(string:mixed)]id->misc)->cacheable,seconds)
+#  define NOCACHE() ([mapping(string:mixed)]id->misc)->cacheable=0
+#  define NO_PROTO_CACHE() ([mapping(string:mixed)]id->misc)->no_proto_cache=1
+#endif /* DEBUG_CACHEABLE */
 
 #endif  /* !_ROXEN_H_ */
