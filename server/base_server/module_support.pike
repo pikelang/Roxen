@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.115 2003/03/18 13:47:01 mast Exp $
+// $Id: module_support.pike,v 1.116 2004/07/07 10:12:12 grubba Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -278,10 +278,10 @@ class ModuleInfo( string sname, string filename )
 
     string get_compile_errors()
     {
-      return ("<pre><font color='&usr.warncolor;'>"+
-	      Roxen.html_encode_string( ec->get()+"\n"+
-					ec->get_warnings() ) +
-	      "</font></pre>");
+      return ec?("<pre><font color='&usr.warncolor;'>"+
+		 Roxen.html_encode_string( ec->get()+"\n"+
+					   ec->get_warnings() ) +
+		 "</font></pre>"):"";
     }
 
     array register_module()
@@ -290,15 +290,26 @@ class ModuleInfo( string sname, string filename )
 	LOCALE(511," The module is locked and not part of the license. "
 	       "To enable this module please select a valid license "
 	       "and restart the server.");
-      return ({
-	0, // type
-	sprintf(LOCALE(350,"Load of %s (%s) failed"),
-		sname,filename),
-	sprintf(LOCALE(351,"The module %s (%s) could not be loaded."),
-		sname, get_name()||"unknown")+
-	(sizeof(config_locked)?locked_desc:"")+
-	get_compile_errors(),0,0
-      });
+      if (filename) {
+	return ({
+	  0, // type
+	  sprintf(LOCALE(350,"Load of %s (%s) failed"),
+		  sname,filename),
+	  sprintf(LOCALE(351,"The module %s (%s) could not be loaded."),
+		  sname, get_name()||"unknown")+
+	  (sizeof(config_locked)?locked_desc:"")+
+	  get_compile_errors(),0,0
+	});
+      } else {
+	return ({
+	  0, // type
+	  sprintf(LOCALE(0, "Load of %s failed: Module not found."), sname),
+	  sprintf(LOCALE(0, "The module %s (%s) could not be loaded."),
+		  sname, get_name()||"unknown")+
+	  (sizeof(config_locked)?locked_desc:"")+
+	  get_compile_errors(),0,0
+	});
+      }
     }
     
     string _sprintf()
@@ -311,6 +322,10 @@ class ModuleInfo( string sname, string filename )
   {
     // werror("Instance %O <%O,%O,%O,%O,%O,%O>\n", this_object(),
     //        time()-last_checked,type,multiple_copies,name,description,locked);
+    if (!filename && !find_module(sname)) {
+      // Module not found.
+      return silent?0:LoadFailed(0);
+    }
     roxenloader.ErrorContainer ec = roxenloader.ErrorContainer();
     roxenloader.push_compile_error_handler( ec );
     mixed err = catch
