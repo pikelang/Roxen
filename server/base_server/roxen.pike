@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.802 2002/10/28 19:24:52 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.803 2002/12/04 15:34:44 wellhard Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -2817,7 +2817,7 @@ class ImageCache
 
     int q;
     while(q<sizeof(ids)) {
-      string list = ids[q..q+99] * "','";
+      string list = map(ids[q..q+99], get_db()->quote) * "','";
       q+=100;
       QUERY( "DELETE FROM "+name+" WHERE id in ('"+list+"')" );
     }
