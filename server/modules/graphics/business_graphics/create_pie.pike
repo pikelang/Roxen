@@ -24,15 +24,16 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 
   string where_is_ax;
 
-  object(image) barsdiagram;
+  object(image) piediagram;
+
 
   if (diagram_data["bgcolor"])
-    barsdiagram=image(diagram_data["xsize"],diagram_data["ysize"],
+    piediagram=image(diagram_data["xsize"],diagram_data["ysize"],
 		@(diagram_data["bgcolor"]));
   else
-    barsdiagram=diagram_data["image"];
+    piediagram=diagram_data["image"];
 
-  diagram_data["image"]=barsdiagram;
+  diagram_data["image"]=piediagram;
   set_legend_size(diagram_data);
 
   write("ysize:"+diagram_data["ysize"]+"\n");
@@ -46,11 +47,388 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
   int|void  size=diagram_data["xsize"];
   array(int|float) numbers=diagram_data["data"][0];
   void | array(string) names=diagram_data["xnames"];
-  void|int twoD=
-   void|array(array(int)) colors,
-   array(int)bg, 
-   array(int)fg,
-   int tone
+  void|int twoD=diagram_data["drawtype"]=="2D";
+  void|array(array(int)) colors=diagram_data["datacolors"];
+  array(int)bg=diagram_data["bgcolor"];
+  array(int)fg=diagram_data["textcolor"];
+  int tone=diagram_data["tone"];
+
+
+
+
+
+  //////////////////////
+
+
+
+  
+  object* text;
+  object notext;
+  int ymaxtext;
+  int xmaxtext;
+
+  int imysize;
+  int imxsize;
+  float *arr=allocate(802);
+  float *arr2=allocate(802);
+
+  int yc;
+  int xc;
+  int xr;
+  int yr;
+
+  mixed sum;
+  int sum2;
+
+  int* pnumbers=allocate(sizeof(numbers));
+  int* order=indices(numbers);
+
+  int edge_nr=0;
+
+
+  if (names!=0)
+    if (sizeof(names)!=sizeof(numbers))
+      names=0;
+  if (colors)
+    {
+      if (sizeof(colors)<sizeof(numbers))
+	colors=0;
+      else
+	foreach( colors, mixed color)
+	  if (sizeof(color)!=3)
+	    colors=0;
+    }
+  if (!(size))
+    size=400;
+
+
+  //create the text objects
+  if (names)
+    text=allocate(sizeof(names));
+
+  if (names)
+    if (notext=get_font("avant_garde", diagram_data["fontsize"], 0, 0, "left",0,0)->scale(0,16))
+      for(int i=0; i<sizeof(names); i++)
+	{
+	  //if (names[i]=="")
+	    //names[i]="Fel så inåt helvete";
+	  text[i]=notext->write((string)(names[i]));
+	  if (xmaxtext<(text[i]->xsize()))
+	    xmaxtext=text[i]->xsize();
+	  if (ymaxtext<(text[i]->ysize()))
+	    ymaxtext=text[i]->ysize();
+	  
+	}
+  //skapa en array med fyra hundra koordinater
+  if (twoD)
+    yc=size/2;
+  else
+    yc=size/3;
+  xc=size/2;
+  xr=xc-5;
+  yr=yc-3;
+  yc+=ymaxtext;
+  xc+=xmaxtext+15;
+
+
+  //Initiate the piediagram!
+  for(int i=0; i<401; i++)
+    {
+      arr[2*i]=xc+xr*sin((i*2.0*PI/400.0+0.0001));
+      arr[1+2*i]=yc+yr*sin(0.0001-PI/2+i*2.0*PI/400.0);
+      arr2[2*i]=xc+(xr+4)*sin((i*2.0*PI/400.0+0.0001));
+      arr2[2*i+1]=yc+(4+yr)*sin(0.0001-PI/2+i*2.0*PI/400.0);
+    }
+
+  piediagram=image(imxsize=30+size+xmaxtext*2, 
+		   imysize=(int)(size*((twoD!=0)+2.0)/3.0+
+				 30+ymaxtext*2+1), @bg);
+  imysize
+
+
+  //write(sprintf("%O", arr));
+
+  //initiate the % for different numbers:
+  sum=`+(@ numbers);
+  for(int i=0; i<sizeof(numbers); i++)
+    {
+      float t=(float)(numbers[i]*400)/sum;
+      pnumbers[i]=(int)floor(t);
+      numbers[i]=t-floor(t);
+    }
+  //Now the rests are in the numbers-array
+  sort(numbers, order);
+  sum2=`+(@ pnumbers);
+  int i=sizeof(pnumbers);
+  while(sum2<400)
+    {
+      pnumbers[order[--i]]++;
+      sum2++;
+    }  
+
+
+  edge_nr=0;
+
+  if (colors)
+    {
+      //Colours are given!
+      for(int i=0; i<sizeof(pnumbers); i++)
+	{
+	  piediagram=piediagram->setcolor(@ colors[i]);
+	  piediagram=piediagram->polygone(({(float)xc,(float)yc})+
+			      arr[2*edge_nr..2*(edge_nr+pnumbers[i]+2)+1]);
+	  edge_nr+=pnumbers[i];
+	}
+    }
+  else
+    {
+      int** carr=allocate(sizeof(numbers));
+      int steg=128+128/(sizeof(numbers));
+      if (1==sizeof(numbers))
+	carr=({({39,155,102})});
+      else
+      if (2==sizeof(numbers))
+	carr=({({190, 180, 0}), ({39, 39, 155})});
+      else
+      if (3==sizeof(numbers))
+	carr=({({155, 39, 39}), ({39, 39, 155}), ({42, 155, 39})});
+      else
+      if (4==sizeof(numbers))
+	carr=({({155, 39, 39}), ({39, 66, 155}), ({180, 180, 0}), ({39, 155, 102})});
+      else
+      if (5==sizeof(numbers))
+	carr= ({({155, 39, 39}), ({39, 85, 155}), ({180, 180, 0}), ({129, 39, 155}), ({39, 155, 80})});
+      else
+     if (6==sizeof(numbers))
+	carr= ({({155, 39, 39}), ({39, 85, 155}), ({180, 180, 0}), ({74, 155, 39}), ({100, 39, 155}), ({39, 155, 102})});
+      else
+     if (7==sizeof(numbers))
+	carr= ({({155, 39, 39}), ({39, 85, 155}), ({180, 180, 0}), ({72, 39, 155}), ({74, 155, 39}), ({155, 39, 140}), ({39, 155, 102})});
+      else
+      if (8==sizeof(numbers))
+	carr=({({155, 39, 39}), ({39, 110, 155}), ({180, 180, 0}), ({55, 39, 155}), ({96, 155, 39}), ({142, 39, 155}), ({39, 155, 69}), ({80, 39, 155})}) ;
+      else
+      if (9==sizeof(numbers))
+	carr= ({({155, 39, 39}), ({39, 115, 155}), ({155, 115, 39}), ({39, 39, 155}), ({118, 155, 39}), ({115, 39, 155}), ({42, 155, 39}), ({155, 39, 118}), ({39, 155, 112})});
+      else
+      if (10==sizeof(numbers))
+	carr=({({155, 39, 39}), ({39, 121, 155}), ({155, 104, 39}), ({39, 55, 155}), ({140, 155, 39}), ({88, 39, 155}), ({74, 155, 39}), ({130, 24, 130}), ({39, 155, 69}), ({180, 180, 0})}) ;
+      else
+      if (11==sizeof(numbers))
+	carr=({({155, 39, 39}), ({39, 123, 155}), ({155, 99, 39}), ({39, 63, 155}), ({150, 155, 39}), ({74, 39, 155}), ({91, 155, 39}), ({134, 39, 155}), ({39, 155, 47}), ({155, 39, 115}), ({39, 155, 107})}) ;
+      else
+      if (12==sizeof(numbers))
+	carr=({({155, 39, 39}), ({39, 126, 155}), ({155, 93, 39}), ({39, 72, 155}), ({155, 148, 39}), ({61, 39, 155}), ({107, 155, 39}), ({115, 39, 155}), ({53, 155, 39}), ({155, 39, 140}), ({39, 155, 80}), ({155, 39, 85})}) ;
+      else
+	/*
+      if (3==sizeof(numbers))
+	carr= ;
+      else
+      if (3==sizeof(numbers))
+	carr= ;
+      else
+      if (3==sizeof(numbers))
+	carr= ;
+      else
+      if (3==sizeof(numbers))
+	carr= ;
+      else
+      if (3==sizeof(numbers))
+	carr= ;
+      else
+      if (3==sizeof(numbers))
+	carr= ;
+      else
+      if (3==sizeof(numbers))
+	carr= ;
+      else*/
+	{
+	  //No colours given!
+	  //Now we have the %-numbers in pnumbers
+	  //Lets create a colourarray carr
+	  for(int i=0; i<sizeof(numbers); i++)
+	    {
+	      carr[i]=Colors.hsv_to_rgb((i*steg)%256,190,155);
+	    }
+	}
+      edge_nr=0;
+      for(i=0; i<sizeof(carr); i++)
+	{
+	  piediagram=piediagram->setcolor(@ carr[i]);
+	  piediagram=piediagram->polygone(({(float)xc,(float)yc})+
+			      arr[2*edge_nr..2*(edge_nr+pnumbers[i]+2)+1]);
+	  edge_nr+=pnumbers[i];
+	}
+      
+    }
+  
+  edge_nr=pnumbers[0];
+
+
+  //black borders
+  piediagram=piediagram->setcolor(0,0,0);
+  piediagram=piediagram->polygone(({xc+(arr[2]-arr[0])/2
+			  ,yc+(arr[3]-arr[1])/2
+			  })+
+		      ({xc-(arr[2]-arr[0])/2
+			  ,yc-(arr[3]-arr[1])/2
+			  , arr[-2], arr[-1], arr[2], arr[3]}));
+		      
+			  
+  for(int i=1; i<sizeof(pnumbers); i++)
+    {
+      piediagram=piediagram->polygone(({xc+(arr[2*edge_nr+2]-arr[2*edge_nr])/2
+		 	      ,yc+(arr[2*edge_nr+3]-arr[2*edge_nr+1])/2
+			      })+
+			  ({xc-(arr[2*edge_nr+2]-arr[2*edge_nr])/2
+			      ,yc-(arr[2*edge_nr+3]-arr[2*edge_nr+1])/2
+			      })+
+			  			  
+			  arr[2*edge_nr..2*(edge_nr+1)+1]);
+      edge_nr+=pnumbers[i];
+    }
+  piediagram=piediagram->polygone(arr+arr2);
+  
+
+  piediagram=piediagram->setcolor(255,255,255);
+  
+  //And now some shading!
+  if (!twoD)
+    {
+      object below;
+      int *b=({70,70,70});
+      int *a=({0,0,0});
+      
+      
+      object tbild;
+      /*
+	tbild=image(imxsize, 1, 255, 255, 255)->
+	tuned_box(0, 0 , 1, imysize,
+	({a,a,b,b}))->scale(imxsize, imysize);
+	//400ms
+	*/
+      if(tone)
+	{
+	  tbild=image(64, imysize, 255, 255, 255)->
+	    tuned_box(0, 0 , 1, imysize,
+		      ({a,a,b,b}));
+	  tbild=tbild->paste(tbild->copy(0,0,0, imysize), 1, 0);
+	  tbild=tbild->paste(tbild->copy(0,0,1, imysize), 2, 0);
+	  tbild=tbild->paste(tbild->copy(0,0,3, imysize), 4, 0);
+	  tbild=tbild->paste(tbild->copy(0,0,7, imysize), 8, 0);
+	  tbild=tbild->paste(tbild->copy(0,0,15, imysize), 16, 0);
+	  if (imxsize>32)
+	    tbild=tbild->paste(tbild->copy(0,0,31, imysize), 32, 0);
+      
+	  if (imxsize>64)
+	    tbild=image(imxsize, imysize, 255, 255, 255)->
+	      paste(tbild->copy(0,0,63, imysize), 0, 0)->
+	      paste(tbild->copy(0,0,63, imysize), 64, 0);
+	  if (imxsize>128)
+	    tbild=tbild->paste(tbild->copy(0,0,128, imysize), 128, 0);
+	  if (imxsize>256)
+	    tbild=tbild->paste(tbild->copy(0,0,256, imysize), 256, 0);
+	  if (imxsize>512)
+	    tbild=tbild->paste(tbild->copy(0,0,512, imysize), 512, 0);
+	  piediagram+=tbild;
+	}
+      
+      float* arr3;
+      float* arr4;
+      float* arr5;
+      
+      
+      //Draw the border below.
+      arr3=arr2[200..601];
+      for(int i=1; i<402; i+=2)
+	arr3[i]+=30.0;
+
+      arr4=arr3[0..200];
+      arr5=arr3[0..200];
+      for(int  i=0; i<201; i++)
+	{
+	  arr4[i]=arr3[i*2];
+	  arr5[i]=arr3[i*2+1];
+	}
+      arr4=reverse(arr4);
+      arr5=reverse(arr5);
+      int j=0;
+
+      for(int i=0; i<201; i++)
+	{
+	  arr3[j++]=arr4[i];
+	  arr3[j++]=arr5[i];
+	}
+
+
+      below=image(imxsize, imysize, 0, 0, 0)->setcolor(255,255,255)->
+	polygone(arr3+arr2[200..601]);
+      
+      b=({155,155,155});
+      a=({0,0,0});
+      
+      object tbild;
+      
+      tbild=image(imxsize, imysize, 255, 255, 255)->
+	tuned_box(0,0, imxsize/2, 1,
+		  ({a,b,a,b}))->tuned_box(imxsize/2, 0, imxsize, 1,
+					  ({b,a,b,a}));
+		  tbild=tbild->paste(tbild->copy(0,0,imxsize, 0),0, 1);
+		  
+		  tbild=tbild->paste(tbild->copy(0,0,imxsize, 1),0, 2);
+		  tbild=tbild->paste(tbild->copy(0,0,imxsize, 3),0, 4);
+		  tbild=tbild->paste(tbild->copy(0,0,imxsize, 7),0, 8);
+		  tbild=tbild->paste(tbild->copy(0,0,imxsize, 15),0, 16);
+		  if (tbild->ysize()>32)
+		    tbild=tbild->paste(tbild->copy(0,0,imxsize, 31),0, 32);
+		  if (tbild->ysize()>64)
+		    tbild=tbild->paste(tbild->copy(0,0,imxsize, 63),0, 64);
+		  if (tbild->ysize()>128)
+		    tbild=tbild->paste(tbild->copy(0,0,imxsize, 127),0, 128);
+		  if (tbild->ysize()>256)
+		    tbild=tbild->paste(tbild->copy(0,0,imxsize, 255),0, 256);
+		  if (tbild->ysize()>512)
+		    tbild=tbild->paste(tbild->copy(0,0,imxsize, 511),0, 512);
+		  
+		  piediagram=piediagram->paste_mask(below&tbild, below);
+	
+	    
+
+    }
+
+  
+  //write the text!
+  int place;
+  sum=0;
+  if (names)
+    for(int i=0; i<sizeof(pnumbers); i++)
+      {
+	int t;
+	sum+=pnumbers[i];
+	place=sum-pnumbers[i]/2;
+	piediagram=piediagram->setcolor(255,0, 0);
+	t=(place<202)?15:-15-text[i]->xsize();
+	if (place<20) t-=7;
+	else if (place>380) t+=7;
+	else if ((place>180)&&(place<202)) t-=7;
+	else if ((place>=202)&&(place<220)) t+=7;
+	if ((place>190)&&(place<202)) t-=4;
+	if ((place>=202)&&(place<210)) t+=4;
+	if (place<10) t-=4;
+	if (place>390) t+=4;
+	
+	int yt=0;
+	if ((place>120)&&(place<280))
+	  yt=(int)(34*sin(2*PI*(float)(place-100)/400.0));
+	if ((place<=80)||(place>=320)) yt-=ymaxtext;
+	else
+	  if (!((place>=120)&&(place<=280))) yt-=ymaxtext/2;
+	
+	
+	int x=(int)(arr2[2*place]+t);
+	int y=(int)arr[2*place+1]+yt;
+	piediagram=piediagram->paste_alpha_color(text[i], @fg, x, y);
+      }
 
 
 
@@ -59,9 +437,10 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 
 
 
+  //////////////////////
 
   diagram_data["ysize"]-=diagram_data["legend_size"];
-  diagram_data["image"]=barsdiagram;
+  diagram_data["image"]=piediagram;
   return diagram_data;
 
 
@@ -73,12 +452,12 @@ int main(int argc, string *argv)
   write("\nRitar axlarna. Filen sparad som test.ppm\n");
 
   mapping(string:mixed) diagram_data;
-  diagram_data=(["type":"bars",
+  diagram_data=(["type":"pie",
 		 "textcolor":({0,0,0}),
 		 "subtype":"box",
 		 "orient":"vert",
 		 "data": 
-		 ({ ({91.2, 102.3, -94.01, 100.0, 94.3, 102.0 })/*,
+		 ({ ({91.2, 102.3, 4.01, 100.0, 94.3, 102.0 })/*,
 		     ({91.2, 101.3, 91.5, 101.7,  -91.0, 101.5}),
 		    ({91.2, 103.3, -91.5, 100.1, 94.3, 95.2 }),
 		    ({93.2, -103.3, 93.5, 103.7, 94.3, -91.2 }) */}),
@@ -196,7 +575,7 @@ int main(int argc, string *argv)
 
   object o=Stdio.File();
   o->open("test.ppm", "wtc");
-  o->write(create_bars(diagram_data)["image"]->toppm());
+  o->write(create_pie(diagram_data)["image"]->toppm());
   o->close();
 
 };

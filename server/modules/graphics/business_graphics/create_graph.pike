@@ -74,7 +74,8 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
 	      ymaxvalue=k;
 	  }
       else
-	if (diagram_data["type"]=="bars")
+	if ((diagram_data["type"]=="bars")||
+	    (diagram_data["type"]=="pie"))
 	  for(int i; i<j; i++)
 	    {
 	      float k; 
@@ -341,8 +342,6 @@ mapping set_legend_size(mapping diagram_data)
       else
 	throw( ({"\""+diagram_data["type"]+"\" is an unknown graph type!\n",
 		 backtrace()}));
-      //werror("Graph type unknown!");
-      //else FIXME
 
       //Ta reda på hur många kolumner vi kan ha:
       int b;

@@ -55,7 +55,6 @@ array(string) labels;
 array(string) xnames;
 //Innehåller en array med olika namn som ska stå längs x-axeln 
 //(t ex jan, feb).
-// Dessa namn är de som används av pie-diagramet för legenden.
 
 
 array(string) ynames;
@@ -97,6 +96,8 @@ array(froat) values_for_xnames;
 //Innehåller en array med nivåerna som ska förknippas med vissa xnames.
 //Om dessa inte anges kan de sättas ut jämt.
 //Bars sätter denna själv
+// Dessa namn är de som används av pie-diagramet för legenden.
+
 
 array(froat) values_for_ynames;
 //Innehåller en array med nivåerna som ska förknippas med vissa ynames.
