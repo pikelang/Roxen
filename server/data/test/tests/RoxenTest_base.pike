@@ -139,14 +139,14 @@ void test_spawn_pike( array args,
 
 void run_tests( Configuration c )
 {
-  // Test (some) public APIs in the 'roxen' and 'roxenloader' objects.
+  // Test (some) public APIs in the 'roxen' and 'loader' objects.
 
   // Should we really test this? I don't know, but for now (as long as
   // both functions exists) verify that they return the same value...
   test( roxen.query_configuration_dir );
-  test( roxenloader.query_configuration_dir );
+  test( loader.query_configuration_dir );
   test_equal( roxen.query_configuration_dir(),
-	      roxenloader.query_configuration_dir );
+	      loader.query_configuration_dir );
 
 
   test_spawn_pike( ({combine_path( __FILE__,"../echo.pike" )}),
@@ -170,11 +170,11 @@ void run_tests( Configuration c )
 
   test_error( cd, "/tmp/" );
 
-  test( roxenloader.dump, __FILE__, object_program( this_object() ) );
+  test( loader.dump, __FILE__, object_program( this_object() ) );
   test( roxen.dump, __FILE__, object_program( this_object() ) );
   
   // Test globally added functions that are added from roxen and
-  // roxenloader.
+  // loader.
 
   test_equal( roxen, roxenp );
   

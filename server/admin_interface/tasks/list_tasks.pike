@@ -3,10 +3,10 @@
 string parse( RequestID id )
 {
   array res = ({});
-  object ce = roxenloader.LowErrorContainer();
+  object ce = loader.LowErrorContainer();
   master()->set_inhibit_compile_errors( ce );
 
-  roxenloader.push_compile_error_handler( ce );
+  loader.push_compile_error_handler( ce );
   foreach( glob( "*.pike", get_dir( dirname( __FILE__ ) ) ), string f )
   {
     object q;
@@ -22,7 +22,7 @@ string parse( RequestID id )
       }
     };
   }
-  roxenloader.pop_compile_error_handler( );
+  loader.pop_compile_error_handler( );
   master()->set_inhibit_compile_errors( 0 );
 
   if( config_setting( "devel_mode" ) && strlen( ce->get() ) )
