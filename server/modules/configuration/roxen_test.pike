@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.31 2001/07/02 00:50:13 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.32 2001/07/02 01:47:19 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Roxen self test module";
@@ -337,7 +337,6 @@ ADT.Stack file_stack = ADT.Stack();
 
 void continue_find_tests( )
 {
-  gc();
   while( string file = file_stack->pop() )
   {
     if( Stdio.Stat st = file_stat( file ) )
