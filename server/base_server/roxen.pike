@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.69 1997/06/06 16:52:24 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.70 1997/06/09 21:47:31 grubba Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -391,23 +391,17 @@ mixed configuration_parse(mixed ... args)
 
 mapping(string:array(int)) error_log=([]);
 
+string last_error="";
+
 // Write a string to the configuration interface error log and to stderr.
 void nwrite(string s, int|void perr)
 {
-#if 0
-  if(root && root->descend("Errors", 1))
-  {
-    mapping e = root->descend("Errors", 1)->data;
-    if(!e[s]) e[s]=({ time(1) });
-    else e[s] += ({ time(1) });
-  }
-#else
+  last_error = s;
   if (!error_log[s]) {
     error_log[s] = ({ time(1) });
   } else {
     error_log[s] += ({ time(1) });
   }
-#endif /* 0 */
   roxen_perror(s);
 }
  
