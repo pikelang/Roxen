@@ -1,12 +1,12 @@
 /*
- * $Id: directories2.pike,v 1.2 1997/04/05 01:26:02 per Exp $
+ * $Id: directories2.pike,v 1.3 1997/08/13 17:57:10 grubba Exp $
  *
  * Directory listings mark 2
  *
  * Henrik Grubbström 1997-02-13
  */
 
-string cvs_version = "$Id: directories2.pike,v 1.2 1997/04/05 01:26:02 per Exp $";
+constant cvs_version = "$Id: directories2.pike,v 1.3 1997/08/13 17:57:10 grubba Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -40,8 +40,8 @@ void create()
   
   defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG,
 	 "If this variable is set, you can get a listing of all files "
-	 "in a directory by prepending '.' or '/' to the directory name, like this: "
-	 "<a href=http://roxen.com//>http://roxen.com//</a>"
+	 "in a directory by prepending '.' or '/' to the directory name, like "
+	 "this: <a href=http://roxen.com//>http://roxen.com//</a>"
 	 ". It is _very_ useful for debugging, but some people regard it as a "
 	 "security hole.");
   
