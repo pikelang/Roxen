@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.187 1999/09/26 00:35:56 mast Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.188 1999/10/04 15:01:01 per Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -200,8 +200,8 @@ void start(int q, object c)
 {
   mixed tmp;
   if(!c) return;
-  call_user_container = c->parse_module->call_user_container;
-  call_user_tag = c->parse_module->call_user_tag;
+  call_user_container = c->call_user_container;
+  call_user_tag = c->call_user_tag;
   define_API_functions();
   
   if(!QUERY(ac))
