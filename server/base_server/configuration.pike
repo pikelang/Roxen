@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.546 2004/02/20 17:34:32 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.547 2004/03/03 16:04:11 anders Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1441,7 +1441,9 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	    {
 #ifdef MODULE_LEVEL_SECURITY
 	      int oslevel = slevel;
-	      slevel = security_level_cache[ Roxen.get_owning_module (find_internal) ][1];
+	      array slca;
+	      if(slca = security_level_cache[ Roxen.get_owning_module (find_internal) ])
+		slevel = slca[1];
 	      // security_level_cache from
 	      // check_security
 	      id->misc->seclevel = slevel;
@@ -1563,7 +1565,9 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  {
 #ifdef MODULE_LEVEL_SECURITY
 	    int oslevel = slevel;
-	    slevel = security_level_cache[ Roxen.get_owning_module (tmp[1]) ][1];
+	    array slca;
+	    if(slca = security_level_cache[ Roxen.get_owning_module (tmp[1]) ])
+	      slevel = slca[1];
 	    // security_level_cache from
 	    // check_security
 	    id->misc->seclevel = slevel;
