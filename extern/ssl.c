@@ -250,7 +250,7 @@ void got_connection(int s, int server_fd)
       }
     } else {
       amount = SSL_read(con, read_buffer, BUFFER);
-      if(amount <= 0)
+      if(amount < 0)
       {
 	switch(errno)
 	{
@@ -259,6 +259,8 @@ void got_connection(int s, int server_fd)
 	 default:
 	  break;
 	}
+      } else if (!amount) {
+	exit(0);
       }
       while((written = write(server_fd, read_buffer, amount)) == -1)
       {
@@ -515,19 +517,21 @@ int main(int nargs, char *args[])
     if(!(nfd = next_accept(fd, &addr))) /* addr will be sent to server. */
       return 0;
 
-    if(!(sfd = connect_to_server()))
-      return 0;
-
-    if(!fork()) /* I do not like this either. */
-    {
-      write(sfd, addr, strlen(addr)+1); /* The \0 _should_ be sent. */
-      /* The peer info should be sent in the 'got_connection' function.. */
-      /* Not currently done. */
-      got_connection(nfd, sfd);
-      return 0;
-    } else {
+    if(!(sfd = connect_to_server())) {
       close(nfd);
-      close(sfd);
+    } else {
+
+      if(!fork()) /* I do not like this either. */
+      {
+	  write(sfd, addr, strlen(addr)+1); /* The \0 _should_ be sent. */
+	  /* The peer info should be sent in the 'got_connection' function.. */
+	  /* Not currently done. */
+	  got_connection(nfd, sfd);
+	  return 0;
+      } else {
+	close(nfd);
+	close(sfd);
+      }
     }
   }
 }
