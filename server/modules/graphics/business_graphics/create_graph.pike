@@ -8,7 +8,7 @@ import Stdio;
 
 inherit "polyline.pike";
 
-constant cvs_version = "$Id: create_graph.pike,v 1.106 1999/05/03 12:04:16 marcus Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.107 2000/02/20 14:32:48 noring Exp $";
 
 /*
  * name = "BG: Create graphs";
@@ -120,7 +120,7 @@ void draw(object(image) img, float h, array(float|string) coords,
 mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
 {
   //diagram_data["datasize"]=0;
-  foreach(diagram_data["data"], mixed* fo)
+  foreach(diagram_data["data"], array fo)
     if (sizeof(fo)>diagram_data["datasize"])
       diagram_data["datasize"]=sizeof(fo);
   
@@ -170,7 +170,7 @@ mapping(string:mixed) setinitcolors(mapping(string:mixed) diagram_data)
     else
       numbers=sizeof(diagram_data["data"]);
     
-    int** carr=allocate(numbers);
+    array(array(int)) carr=allocate(numbers);
     int steg=128+128/(numbers);
 
     switch( numbers ) {
