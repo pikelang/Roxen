@@ -19,7 +19,7 @@ string parse( RequestID id )
 	{
 	  rows += ({
 	    ([
-	      "start":(q[i]->start || i->time),
+	      "start":(/* FIXME q[i]->start ||*/ i->time),
 	      "written":(int)q[i]->written,
 	      "host":i->remoteaddr,
 	      "closed":((!i->my_fd&&2) || !!catch(i->my_fd->query_address())),
@@ -27,7 +27,7 @@ string parse( RequestID id )
 	      "file":i->not_query || "?",
 	      "len":q[i]->len,
 	      "stat":(i->file && i->file->stat) || (i->misc && i->misc->stat),
-	      "hoststart":i->remoteaddr+sprintf("%010d",(time()-(q[i]->start || i->time))),
+	      "hoststart":i->remoteaddr+sprintf("%010d",(time()-(/* FIXME q[i]->start || */ i->time))),
 	      ])
 	  });
 	}
