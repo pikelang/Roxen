@@ -4,7 +4,7 @@
 // It will be located somewhere in the name-space of the server.
 // Also inherited by some of the other filesystems.
 
-string cvs_version= "$Id: filesystem.pike,v 1.12 1997/04/05 01:26:04 per Exp $";
+string cvs_version= "$Id: filesystem.pike,v 1.13 1997/04/08 23:46:09 marcus Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -291,7 +291,8 @@ mixed find_file( string f, object id )
     object privs;
 
     if(id->misc->uid)
-      privs=((program)"privs")("Saving file", id->misc->uid, id->misc->gid );
+      privs=((program)"privs")("Saving file", (int)id->misc->uid, 
+			       (int)id->misc->gid );
 
     rm( f );
     mkdirhier( f );

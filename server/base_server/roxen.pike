@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.48 1997/04/07 23:23:41 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.49 1997/04/08 23:45:39 marcus Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -743,7 +743,6 @@ public string *userlist(void|object id)
 public string *user_from_uid(int u, void|object id)
 {
   if(id) current_configuration = id->conf;
-  current_configuration = id->conf;
   if(current_configuration->auth_module)
     return current_configuration->auth_module->user_from_uid(u);
 }
