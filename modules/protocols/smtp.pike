@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.52 1998/09/19 19:01:00 grubba Exp $
+ * $Id: smtp.pike,v 1.53 1998/09/19 23:07:35 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.52 1998/09/19 19:01:00 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.53 1998/09/19 23:07:35 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -31,9 +31,6 @@ inherit "module";
 /*
  * Provider module interface:
  *
- * automail_clientlayer:
- *	int check_size(int sz);
- *
  * smtp_rcpt:
  *	string|multiset(string) expn(string addr, object o);
  * 	string desc(string addr, object o);
@@ -42,6 +39,7 @@ inherit "module";
  * 	        object spoolfile, string csum, object o);
  *
  * smtp_filter:
+ *	int check_size(object|mapping mail);
  *	int verify_sender(string sender);
  *	void async_verify_sender(string sender, function cb, mixed ... args);
  * 	int verify_recipient(string sender, string recipient, object o);
@@ -373,7 +371,8 @@ static class Smtp_Connection {
       return;
     }
 
-    multiset m = parent->do_expn((<@do_parse_address(args)>), this_object());
+    multiset orig = (<@do_parse_address(args)>);
+    multiset m = parent->do_expn(orig, this_object());
 
     array result = ({});
 
@@ -381,6 +380,8 @@ static class Smtp_Connection {
 			       lambda(object o) { return(o->desc); });
 
     parent->update_domains();
+
+    int forced_update;
 
     foreach(indices(m), string addr) {
       array a = addr/"@";
@@ -394,8 +395,15 @@ static class Smtp_Connection {
 	user = addr;
       }
 
-      int handled = 0;
-      if ((!domain) || (parent->handled_domains[domain])) {
+      int handled;
+      int local_addr = !domain || parent->handled_domains[domain];
+      if (!local_addr && !forced_update) {
+	// Check if it's a new domain.
+	forced_update = 1;
+	parent->update_domains(1);
+	local_addr = parent->handled_domains[domain];
+      }
+      if (local_addr) {
 	// Local address.
 	if (domain) {
 	  foreach(rcpts, object o) {
@@ -415,10 +423,19 @@ static class Smtp_Connection {
 	    }
 	  }
 	}
-      }
-      if (!handled) {
-	// Default.
-	result += ({ "<" + addr + ">" });
+	if (!handled) {
+	  send(550, ({ sprintf("<%s>... User unknown", addr) }));
+	  return;
+	}
+      } else {
+	if (orig[addr]) {
+	  // Relayed address.
+	  // FIXME: Should check if relaying is allowed.
+	  result += ({ "<" + addr + ">" });
+	} else {
+	  // Alias to remote account.
+	  result += ({ "<" + addr + ">" });
+	}
       }
     }
 
@@ -564,166 +581,184 @@ static class Smtp_Connection {
     
     current_mail = Mail();
 
+    // Do some syntax checks first.
+
     int i = search(args, ":");
-    if (i >= 0) {
-      string from_colon = args[..i];
-      sscanf("%*[ ]%s", from_colon, from_colon);
-      if (upper_case(from_colon) == "FROM:") {
-	array a = (args[i+1..]/" ") - ({ "" });
+    if (i < 0) {
+      send(501);
+      do_RSET();
+      return;
+    }
+
+    string from_colon = args[..i];
+    sscanf("%*[ ]%s", from_colon, from_colon);
+    if (upper_case(from_colon) != "FROM:") {
+      send(501);
+      do_RSET();
+      return;
+    }
+
+    array a = (args[i+1..]/" ") - ({ "" });
 	
-	if (sizeof(a)) {
-	  current_mail->set_from(@do_parse_address(a[0]));
+    if (!sizeof(a)) {
+      send(501);
+      do_RSET();
+      return;
+    }
+
+    // a[0] is the return address.
+    // We will examine it later.
+
+    current_mail->set_from(@do_parse_address(a[0]));
 	    
-	  // Check size limits.
+    // Check size limits.
 
-	  int limit = 0x7fffffff;	// MAXINT
-	  int hard = 1;			// hard limit initially.
+    int limit = 0x7fffffff;	// MAXINT
+    int hard = 1;		// hard limit initially.
 
-	  mapping fss = filesystem_stat(parent->query_spooldir());
+    mapping fss = filesystem_stat(parent->query_spooldir());
 
-	  if (!fss) {
-	    send(452, "Spooldirectory not available. Try later.");
-	    return;
-	  }
+    if (!fss) {
+      send(452, "Spooldirectory not available. Try later.");
+      do_RSET();
+      return;
+    }
 
-	  if (fss->favail < 10) {
-	    send(452, "Out of inodes. Try later.");
-	    return;
-	  }
+    if (!zero_type(fss->favail) && (fss->favail < 10)) {
+      send(452, "Out of inodes. Try later.");
+      do_RSET();
+      return;
+    }
 
-	  foreach(conf->get_providers("smtp_filter")||({}), object o) {
-	    if (o->check_size) {
-	      int l = o->check_size(current_mail);
-	      if (l) {
-		if (l < 0) {
-		  // Negative: Soft limit.
-		  l = -l;
-		  if (l < limit) {
-		    hard = 0;
-		    limit = l;
-		  }
-		} else {
-		  // Positive: Hard limit.
-		  if (l < limit) {
-		    hard = 1;
-		    limit = l;
-		  }
-		}
-	      }
-	    }
-	  }
-
-	  float szfactor = parent->query_size_factor();
-
-	  if (fss->bfree * szfactor <= (limit / (fss->blocksize || 512))) {
-	    if (fss->blocks * szfactor <= (limit / (fss->blocksize || 512))) {
-	      limit = (fss->blocksize || 512) * fss->blocks * szfactor;
-	      hard = 1;
-	    } else {
-	      limit = (fss->blocksize || 512) * fss->bfree * szfactor;
+    foreach(conf->get_providers("smtp_filter")||({}), object o) {
+      if (o->check_size) {
+	int l = o->check_size(current_mail);
+	if (l) {
+	  if (l < 0) {
+	    // Negative: Soft limit.
+	    l = -l;
+	    if (l < limit) {
 	      hard = 0;
+	      limit = l;
+	    }
+	  } else {
+	    // Positive: Hard limit.
+	    if (l < limit) {
+	      hard = 1;
+	      limit = l;
 	    }
 	  }
+	}
+      }
+    }
+
+    float szfactor = parent->query_size_factor();
+
+    if (fss->bfree * szfactor <= (limit / (fss->blocksize || 512))) {
+      if (fss->blocks * szfactor <= (limit / (fss->blocksize || 512))) {
+	limit = (fss->blocksize || 512) * fss->blocks * szfactor;
+	hard = 1;
+      } else {
+	limit = (fss->blocksize || 512) * fss->bfree * szfactor;
+	hard = 0;
+      }
+    }
 		  
-	  current_mail->set_limit(limit);
+    current_mail->set_limit(limit);
 
-	  // Limit checks done.
+    // Limit checks done.
 
-	  // Now check if there were any extensions.
+    // Now check if there were any extensions.
 
-	  a = a[1..];
+    a = a[1..];
 
-	  if (sizeof(a)) {
-	    mapping extensions = ([]);
-	    foreach(a, string ext) {
-	      array b = ext/"=";
-	      if (sizeof(b) > 1) {
-		extensions[upper_case(b[0])] = b[1..]*"=";
+    if (sizeof(a)) {
+      mapping extensions = ([]);
+      foreach(a, string ext) {
+	array b = ext/"=";
+	if (sizeof(b) > 1) {
+	  extensions[upper_case(b[0])] = b[1..]*"=";
+	} else {
+	  extensions[upper_case(ext)] = 1;
+	}
+      }
+
+      current_mail->set_extensions(extensions);
+
+      // Check extensions here.
+
+      foreach(indices(extensions), string ext) {
+	switch(ext) {
+	case "SIZE":
+	  // The message will be approx this size.
+	  // We can reply with 452 (temporary limit, try later)
+	  // or 552 (hard limit).
+	  
+	  if (stringp(extensions->SIZE)) {
+	    // FIXME: 32bit wraparound.
+	    int sz = (int)extensions->SIZE;
+		  
+	    if (sz > limit) {
+	      if (hard) {
+		send(552, sprintf("Size %d exceeds hard limit %d.\n",
+				  sz, limit));
 	      } else {
-		extensions[upper_case(ext)] = 1;
+		send(452, sprintf("Size %d exceeds soft limit %d.\n",
+				  sz, limit));
 	      }
-	    }
-
-	    current_mail->set_extensions(extensions);
-
-	    // Check extensions here.
-
-	    foreach(indices(extensions), string ext) {
-	      switch(ext) {
-	      case "SIZE":
-		// The message will be approx this size.
-		// We can reply with 452 (temporary limit, try later)
-		// or 552 (hard limit).
-
-		if (stringp(extensions->SIZE)) {
-		  // FIXME: 32bit wraparound.
-		  int sz = (int)extensions->SIZE;
-
-		  if (sz > limit) {
-		    if (hard) {
-		      send(552, sprintf("Size %d exceeds hard limit %d.\n",
-					sz, limit));
-		    } else {
-		      send(452, sprintf("Size %d exceeds soft limit %d.\n",
-					sz, limit));
-		    }
-		    return;
-		  }
-		}
-
-		break;
-	      case "BODY":
-		switch(extensions->BODY) {
-		case "8BITMIME":
-		  // We always support 8bit.
-		  break;
-		default:
-		  // FIXME: Should we have a warning here?
-		  break;
-		}
-		break;
-	      default:
-		break;
-	      }
-	    }
-	  }
-
-	  foreach(conf->get_providers("smtp_filter")||({}), object o) {
-	    // roxen_perror("Got SMTP filter\n");
-	    if (functionp(o->verify_sender) &&
-		o->verify_sender(current_mail->from)) {
-	      // Refuse connection.
-#ifdef SMTP_DEBUG
-	      roxen_perror("Refuse sender.\n");
-#endif /* SMTP_DEBUG */
-	      do_RSET();
-	      send(550);
 	      return;
 	    }
 	  }
 
-	  parent->update_domains();
-
-	  do_multi_async(Array.map(conf->get_providers("smtp_filter")||({}),
-				   lambda(object o) {
-				     return(o->async_verify_sender);
-				   }) - ({ 0 }),
-			 ({ current_mail->from }),
-			 lambda(array res) {
-			   roxen_perror("do_multi_async_cb()\n");
-			   if (sizeof(res)) {
-			     do_RSET();
-			     send(550, res);
-			   } else {
-			     send(250);
-			   }
-			 });
-
-	  return;
+	  break;
+	case "BODY":
+	  switch(extensions->BODY) {
+	  case "8BITMIME":
+	    // We always support 8bit.
+	    break;
+	  default:
+	    // FIXME: Should we have a warning here?
+	    break;
+	  }
+	  break;
+	default:
+	  break;
 	}
       }
     }
-    send(501);
+
+    // Now it's time to examine the return address.
+
+    foreach(conf->get_providers("smtp_filter")||({}), object o) {
+      // roxen_perror("Got SMTP filter\n");
+      if (functionp(o->verify_sender) &&
+	  o->verify_sender(current_mail->from)) {
+	// Refuse connection.
+#ifdef SMTP_DEBUG
+	roxen_perror("Refuse sender.\n");
+#endif /* SMTP_DEBUG */
+	do_RSET();
+	send(550);
+	return;
+      }
+    }
+
+    parent->update_domains();
+
+    do_multi_async(Array.map(conf->get_providers("smtp_filter")||({}),
+			     lambda(object o) {
+			       return(o->async_verify_sender);
+			     }) - ({ 0 }),
+		   ({ current_mail->from }),
+		   lambda(array res) {
+		     roxen_perror("do_multi_async_cb()\n");
+		     if (sizeof(res)) {
+		       do_RSET();
+		       send(550, res);
+		     } else {
+		       send(250);
+		     }
+		   });
   }
 
   void smtp_RCPT(string rcpt, string args)
@@ -1232,6 +1267,7 @@ array(int|string) send_mail(string data, object|mapping mail, object|void smtp)
   multiset expanded = do_expn(mail->recipients, smtp);
 
   int any_handled = 0;
+  int forced_update = 0;
 
   /* Do the delivery */
   foreach(indices(expanded), string addr) {
@@ -1247,8 +1283,14 @@ array(int|string) send_mail(string data, object|mapping mail, object|void smtp)
     }
 
     int handled;
-
-    if ((!domain) || (handled_domains[domain])) {
+    int local_addr = !domain || handled_domains[domain];
+    if (!local_addr && !forced_update) {
+      // Check if it's a new domain.
+      forced_update = 1;
+      update_domains(1);
+      local_addr = handled_domains[domain];
+    }
+    if (local_addr) {
       // Local delivery.
       if (domain) {
 	// Primary delivery.
@@ -1266,6 +1308,7 @@ array(int|string) send_mail(string data, object|mapping mail, object|void smtp)
       }
     } else {
       // Remote delivery.
+      // FIXME: Check if we allow relaying.
       foreach(conf->get_providers("smtp_relay")||({}), object o) {
 	handled |= o->relay(mail->from, user, domain,
 			    spool, csum, this_object());
@@ -1290,8 +1333,9 @@ array(int|string) send_mail(string data, object|mapping mail, object|void smtp)
     roxen_perror(sprintf("The following recipients were unavailable:\n"
 			 "%s\n", String.implode_nicely(indices(expanded))));
 
-    return(({ 250, "Partial failure. See bounce for details." }));
     // FIXME: Send bounce here.
+
+    return(({ 250, "Partial failure. See bounce for details." }));
   } else {
     // Message received successfully.
     report_notice("SMTP: Mail spooled OK.\n");
