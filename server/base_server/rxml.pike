@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.204 2000/07/20 23:35:43 kuntri Exp $
+// $Id: rxml.pike,v 1.205 2000/07/26 12:35:55 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2154,10 +2154,10 @@ scope created within the define tag.
  date and time tests.</p>
 
  <ex>
-  <if time='1700' after>
+  <if time='1700' after=''>
     Are you still at work?
   </if>
-  <elseif time='0900' before>
+  <elseif time='0900' before=''>
      Wow, you work early!
   </elseif>
   <else>
@@ -2184,18 +2184,19 @@ scope created within the define tag.
 "if#true":#"<desc plugin><short>
  This will always be true if the truth value is set to be
  true.</short> Equivalent with <tag><ref type=cont>then</ref></tag>.
- True is an <i>Eval</i> plugin.
+ True is a <i>State</i> plugin.
 </desc>
 <attr name='true' required>
- Foo?
+ Show contents if truth value is false.
 </attr>",
 
 "if#false":#"<desc plugin><short>
- This will always be true if the truth value is set to be false.</short>
- Equivalent with <tag><ref type='tag'>else</ref></tag>. False is an <i>Eval</i> plugin.
+ This will always be true if the truth value is set to be
+ false.</short> Equivalent with <tag><ref type='tag'>else</ref></tag>.
+ False is a <i>State</i> plugin.
 </desc>
 <attr name='false' required>
- Foo? Vad ska stå här?
+ Show contents if truth value is true.
 </attr>",
 
 "if#accept":#"<desc plugin><short>
@@ -2281,7 +2282,7 @@ scope created within the define tag.
  Returns true if the file path exists.</short> If path does not begin
  with /, it is assumed to be a URL relative to the directory
  containing the page with the <tag><ref
- type='tag'>if</ref></tag>-statement. Exists is a <i>SiteBuilder</i>
+ type='tag'>if</ref></tag>-statement. Exists is a <i>Utils</i>
  plugin.
 </desc>
 <attr name='exists' value='path' required>
@@ -2291,7 +2292,7 @@ scope created within the define tag.
 
 "if#group":#"<desc plugin><short>
  Checks if the current user is a member of the group according
- the groupfile.</short> Group is a <i>SiteBuilder</i> plugin.
+ the groupfile.</short> Group is a <i>Utils</i> plugin.
 </desc>
 <attr name='group' value='name' required>
  Choose what group to test.
@@ -2303,7 +2304,6 @@ scope created within the define tag.
 ",
 
 "if#ip":#"<desc plugin><short>
-
  Does the users computers IP address match any of the
  patterns?</short> This plugin replaces the Host plugin of earlier
  RXML versions. Ip is a <i>Match</i> plugin.
@@ -2338,8 +2338,8 @@ scope created within the define tag.
  Choose what pragma to test.
 
 <ex>
-<if pragma='no-cache'>The page has been reloaded!</if>
-<else>Reload this page!</else>
+ <if pragma='no-cache'>The page has been reloaded!</if>
+ <else>Reload this page!</else>
 </ex>
 </attr>
 ",
@@ -2395,7 +2395,7 @@ The following features are supported:",
  Adds present time to after and before.
 
  <ex>
-  <if time='1200' before inclusive>
+  <if time='1200' before='' inclusive=''>
     ante meridiem
   </if>
   <else>
@@ -2405,15 +2405,16 @@ The following features are supported:",
 </attr>",
 
 "if#user":#"<desc plugin><short>
- Has the user been authenticated as one of these users?</short> If any is given as
- argument, any authenticated user will do.
+ Has the user been authenticated as one of these users?</short> If any
+ is given as argument, any authenticated user will do. User is a
+ <i>Utils</i> plugin.
 </desc>
 <attr name='user' value='name1[,name2,...]|any' required>
+  Specify which users to test.
 </attr>
 ",
 
 "if#variable":#"<desc plugin><short>
-
  Does the variable exist and, optionally, does it's content match the
  pattern?</short> Variable is an <i>Eval</i> plugin.
 </desc>
@@ -2549,9 +2550,8 @@ Available variables are:",
 <attr name=info>
  Show a list of all defined tags/containers and if arguments in the file
 </attr>
- The <tag><ref type='tag'>use</ref></tag> tag is much faster than the
- <tag><ref type='tag'>insert</ref></tag>, since the parsed definitions
- is cached.",
+ The <tag>use</tag> tag is much faster than the
+ <tag>insert</tag>, since the parsed definitions is cached.",
 
 "eval":#"<desc cont><short>
  Postparses its content.</short> Useful when an entity contains
@@ -2559,7 +2559,7 @@ Available variables are:",
  its content parsed.
 </desc>",
 
-"emit":#"<desc cont><short>Provides data, fetched from different sources, as
+"emit": ({#"<desc cont><short>Provides data, fetched from different sources, as
  entities</short></desc>
 
 <attr name=source value=plugin required>
@@ -2589,5 +2589,13 @@ Available variables are:",
  emit scope will be empty.
 </attr>",
 
+	  ([
+
+"&_.counter;":#"<desc ent>
+ Gives the current number of loops inside the <tag>emit</tag> tag.
+</desc>"
+
+	  ])
+	}),
 ]);
 #endif
