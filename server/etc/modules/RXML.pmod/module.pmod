@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.56 2000/02/15 02:12:08 mast Exp $
+//! $Id: module.pmod,v 1.57 2000/02/15 02:19:33 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -848,13 +848,14 @@ class Context
     new_runtime_tags->remove_tags[tag] = 1;
   }
 
-  array(Tag) get_runtime_tags()
-  //! Returns all currently active runtime tags.
+  multiset(Tag) get_runtime_tags()
+  //! Returns all currently active runtime tags. Don't be destructive
+  //! on the returned multiset.
   {
-    array(Tag) tags = runtime_tags;
+    multiset(Tag) tags = runtime_tags;
     if (new_runtime_tags) {
-      tags |= indices (new_runtime_tags->add_tags);
-      tags -= indices (new_runtime_tags->remove_tags);
+      tags |= new_runtime_tags->add_tags;
+      tags -= new_runtime_tags->remove_tags;
     }
     return tags;
   }
@@ -963,7 +964,7 @@ class Context
     }
   }
 
-  array(Tag) runtime_tags = ({});
+  multiset(Tag) runtime_tags = (<>);
 
   class NewRuntimeTags
   {
@@ -2533,7 +2534,7 @@ class Type
       }
 
       if (ctx->tag_set == tset)
-	foreach (ctx->runtime_tags, Tag tag)
+	foreach (indices (ctx->runtime_tags), Tag tag)
 	  p->add_runtime_tag (tag);
     }
 
