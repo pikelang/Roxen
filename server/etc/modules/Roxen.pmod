@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.143 2002/06/24 16:15:12 mast Exp $
+// $Id: Roxen.pmod,v 1.144 2002/09/10 16:35:46 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -533,13 +533,20 @@ string add_pre_state( string url, multiset state )
   return base + "/(" + sort(indices(state)) * "," + ")" + url ;
 }
 
-mapping http_redirect( string url, RequestID|void id, multiset|void prestates )
+mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
+		       mapping|void variables)
 //! Simply returns a http-redirect message to the specified URL. If
 //! the url parameter is just a virtual (possibly relative) path, the
 //! current id object must be supplied to resolve the destination URL.
-//! If no prestates are provided, the current prestates in the request id
-//! object will be added to the URL, if the url is a local absolute or relative
-//! URL.
+//! If no prestates are provided, the current prestates in the request
+//! id object will be added to the URL, if the url is a local absolute
+//! or relative URL.
+//!
+//! If @[variables] is given it's a mapping containing variables that
+//! should be appended to the URL. Each index is a variable name and
+//! the value can be a string or an array, in which case a separate
+//! variable binding is added for each string in the array. That means
+//! that e.g. @[RequestID.real_variables] can be used as @[variables].
 {
   // If we don't get any URL we don't know what to do.
   // But we do!  /per
@@ -566,10 +573,28 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates )
   if(prestates && sizeof(prestates))
     url = add_pre_state (url, prestates);
 
-  HTTP_WERR("Redirect -> "+http_encode_string(url));
-
   if( String.width( url )>8 && !has_value( url, "?" ) )
     url += "?magic_roxen_automatic_charset_variable=едц";
+
+  if (variables) {
+    string concat_char = has_value (url, "?") ? "&" : "?";
+    foreach (indices (variables), string var) {
+      var = http_encode_url (var);
+      mixed val = variables[var];
+      if (stringp (val)) {
+	url += concat_char + var + "=" + http_encode_url (val);
+	concat_char = "&";
+      }
+      else if (arrayp (val))
+	foreach (val, mixed part)
+	  if (stringp (part)) {
+	    url += concat_char + var + "=" + http_encode_url (part);
+	    concat_char = "&";
+	  }
+    }
+  }
+
+  HTTP_WERR("Redirect -> "+http_encode_string(url));
 
   return http_low_answer( 302, "Redirect to "+html_encode_string(url))
     + ([ "extra_heads":([ "Location":http_encode_string( url ) ]) ]);
