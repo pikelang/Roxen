@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.23 1996/12/06 15:57:24 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.24 1996/12/06 17:04:19 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -193,8 +193,8 @@ mapping stores( string s )
       "extra_heads":
       ([
 	"Title":"Roxen Challenger maintenance",
-	"Expires":http_date(time(1)+2),
-	"Pragma":"no-cache",
+//      "Expires":http_date(time(1)+2),
+//	"Pragma":"no-cache",
 	"Last-Modified":http_date(time(1)),
 	])
       ]);
