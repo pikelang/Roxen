@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.78 1999/02/19 21:15:57 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.79 1999/02/22 15:54:54 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -1204,7 +1204,7 @@ class backend
 				    array(mapping(string:mixed)) fetch_attrs)
   {
     return session->mailbox->fetch(message_set, fetch_attrs)
-      + (session->mailbox->update() || ({}));
+      /* + (session->mailbox->update() || ({}) */);
   }
 
   int copy(object|mapping(string:mixed) session,
