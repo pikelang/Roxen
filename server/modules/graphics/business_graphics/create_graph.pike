@@ -258,10 +258,10 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
   xmaxvalue=max(xmaxvalue, xminvalue+LITET);
   ymaxvalue=max(ymaxvalue, yminvalue+LITET);
 
-  write("ymaxvalue:"+ymaxvalue+"\n");
-  write("yminvalue:"+yminvalue+"\n");
-  write("xmaxvalue:"+xmaxvalue+"\n");
-  write("xminvalue:"+xminvalue+"\n");
+  //write("ymaxvalue:"+ymaxvalue+"\n");
+  //write("yminvalue:"+yminvalue+"\n");
+  //write("xmaxvalue:"+xmaxvalue+"\n");
+  //write("xminvalue:"+xminvalue+"\n");
 
   if (!(diagram_data["xminvalue"]))
     diagram_data["xminvalue"]=xminvalue;
@@ -280,10 +280,10 @@ mapping(string:mixed) init(mapping(string:mixed) diagram_data)
     else
       diagram_data["ymaxvalue"]=ymaxvalue;
 
-  write("Dymaxvalue:"+ diagram_data["ymaxvalue"]+"\n");
-  write("Dyminvalue:"+ diagram_data["yminvalue"]+"\n");
-  write("Dxmaxvalue:"+diagram_data["xmaxvalue"]+"\n");
-  write("Dxminvalue:"+ diagram_data["xminvalue"]+"\n");
+  //write("Dymaxvalue:"+ diagram_data["ymaxvalue"]+"\n");
+  //write("Dyminvalue:"+ diagram_data["yminvalue"]+"\n");
+  //write("Dxmaxvalue:"+diagram_data["xmaxvalue"]+"\n");
+  //write("Dxminvalue:"+ diagram_data["xminvalue"]+"\n");
 
   //Ge tomma namn på xnames om namnen inte finns
   //Och ge bars max och minvärde på x-axeln.
@@ -498,19 +498,19 @@ mapping set_legend_size(mapping diagram_data)
 	}
       
       //Skapa strecket för graph/boxen för bars.
-      write("J:"+j+"\n");
+      //write("J:"+j+"\n");
       if ((diagram_data["type"]=="graph") ||
 	  (diagram_data["type"]=="bars") ||
 	  (diagram_data["type"]=="sumbars") ||
 	  (diagram_data["type"]=="pie"))
 	for(int i=0; i<j; i++)
 	  {
-	    write("diagram_data[\"legendfontsize\"]"+diagram_data["legendfontsize"]+"\n");
+	    //write("diagram_data[\"legendfontsize\"]"+diagram_data["legendfontsize"]+"\n");
 
 	    plupps[i]=image(diagram_data["legendfontsize"],diagram_data["legendfontsize"]);
 	                //,@(diagram_data["legendcolor"]));
 	    //write("plupps[i]->xsize()-2"+(plupps[i]->xsize()-2)+"\n");
-	    
+	    /* 
 	    write("\n\n"+sprintf("%O",make_polygon_from_line(diagram_data["linewidth"], 
 							 ({
 							   (float)(diagram_data["linewidth"]/2+1),
@@ -528,7 +528,7 @@ mapping set_legend_size(mapping diagram_data)
 							   (float)(plupps[i]->xsize()-
 								   diagram_data["linewidth"]/2-2),
 							   (float)(diagram_data["linewidth"]/2+1)
-							 }))+"\n"); 
+							   }))+"\n"); */
 	    plupps[i]->setcolor(255,255,255);
 	    if ((diagram_data["linewidth"]*1.5<(float)diagram_data["legendfontsize"])&&
 		(diagram_data["subtype"]=="line")&&(diagram_data["drawtype"]!="level"))
@@ -544,7 +544,7 @@ mapping set_legend_size(mapping diagram_data)
 							 1, 1)[0]);
 	    else
 	      {
-		write("\nboxelibox\n\n");
+		//write("\nboxelibox\n\n");
 	      plupps[i]->box(1,
 			     1,
 			     plupps[i]->xsize()-2,
@@ -570,7 +570,7 @@ mapping set_legend_size(mapping diagram_data)
       int raws=(j+columnnr-1)/columnnr;
       diagram_data["legend_size"]=raws*diagram_data["legendfontsize"];
       
-      write("diagram_data[\"legend_size\"]:"+diagram_data["legend_size"]+"\n");
+      //write("diagram_data[\"legend_size\"]:"+diagram_data["legend_size"]+"\n");
 
       //placera ut bilder och text.
       for(int i=0; i<j; i++)
@@ -636,9 +636,9 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   diagram_data["image"]=graph;
   set_legend_size(diagram_data);
 
-  write("ysize:"+diagram_data["ysize"]+"\n");
+  //write("ysize:"+diagram_data["ysize"]+"\n");
   diagram_data["ysize"]-=diagram_data["legend_size"];
-  write("ysize:"+diagram_data["ysize"]+"\n");
+  //write("ysize:"+diagram_data["ysize"]+"\n");
   
   //Bestäm största och minsta datavärden.
   init(diagram_data);
@@ -653,7 +653,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
 	  (range<LITET))
 	range=LITET*10.0;
 
-      write("range"+range+"\n");
+      //write("range"+range+"\n");
       float space=pow(10.0, floor(log(range/3.0)/log(10.0)));
       if (range/space>5.0)
 	{
@@ -856,7 +856,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
     if (diagram_data["xminvalue"]==0.0)
       {
 	// sätt y-axeln längst ner och diagram_data["xstart"] på samma ställe.
-	write("\nNu blev xminvalue noll!\nxmaxynames:"+diagram_data["xmaxynames"]+"\n");
+	//write("\nNu blev xminvalue noll!\nxmaxynames:"+diagram_data["xmaxynames"]+"\n");
 	
 	diagram_data["xstop"]=diagram_data["xsize"]-
 	  (int)ceil(diagram_data["linewidth"]+si)-labelx/2;
@@ -866,7 +866,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
     else
       {
 	//sätt y-axeln längst ner och diagram_data["xstart"] en aning högre
-	write("\nNu blev xminvalue större än noll!\nxmaxynames:"+diagram_data["xmaxynames"]+"\n");
+	//write("\nNu blev xminvalue större än noll!\nxmaxynames:"+diagram_data["xmaxynames"]+"\n");
 
 	diagram_data["xstop"]=diagram_data["xsize"]-
 	  (int)ceil(diagram_data["linewidth"]+si)-labelx/2;
@@ -883,7 +883,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   //Rita ut axlarna
   graph->setcolor(@(diagram_data["axcolor"]));
   
-  write((string)diagram_data["xminvalue"]+"\n"+(string)diagram_data["xmaxvalue"]+"\n");
+  //write((string)diagram_data["xminvalue"]+"\n"+(string)diagram_data["xmaxvalue"]+"\n");
 
   
   //Rita xaxeln
@@ -902,7 +902,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
   else
     if (diagram_data["xmaxvalue"]<-LITET)
       {
-	write("xpos_for_yaxis"+xpos_for_yaxis+"\n");
+	//write("xpos_for_yaxis"+xpos_for_yaxis+"\n");
 
 	//diagram_data["xstop"]-=(int)ceil(4.0/3.0*(float)si);
 	graph->
@@ -1047,35 +1047,38 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       }
     else
       if (diagram_data["yminvalue"]>LITET)
-	{/*
+	{
 	  write("\n\n"+sprintf("%O",make_polygon_from_line(diagram_data["linewidth"], 
-					    ({
-					      xpos_for_yaxis,
-					      diagram_data["ysize"]-diagram_data["linewidth"],
-
-					      xpos_for_yaxis,
-					      diagram_data["ysize"]-ypos_for_xaxis-
-					      si/3.0,
-					      
-					      xpos_for_yaxis-si/2.0,
-					      diagram_data["ysize"]-ypos_for_xaxis-
-					      si/1.5,
-					    
-					      xpos_for_yaxis+si/2.0,
-					      diagram_data["ysize"]-ypos_for_xaxis-
-					      si,
-					      
-					      xpos_for_yaxis,
-					      diagram_data["ysize"]-ypos_for_xaxis-
-					      si*4.0/3.0,
-					    
-					      xpos_for_yaxis+0.0001, //FIXME!
-					      diagram_data["linewidth"]+
-					      diagram_data["labelsize"]
-					      
-					    }), 
-					    1, 1)[0])+
-					    "\n\n");*/
+							   ({
+							     xpos_for_yaxis,
+							     diagram_data["ysize"]-diagram_data["linewidth"],
+							     
+							     xpos_for_yaxis,
+							     diagram_data["ysize"]-ypos_for_xaxis-
+							     si/3.0,
+							     
+							     xpos_for_yaxis-si/2.0,
+							     diagram_data["ysize"]-ypos_for_xaxis-
+							     si/1.5,
+							     
+							     xpos_for_yaxis+si/2.0,
+							     diagram_data["ysize"]-ypos_for_xaxis-
+							     si,
+							     
+							     xpos_for_yaxis,
+							     diagram_data["ysize"]-ypos_for_xaxis-
+							     si*4.0/3.0,
+							     
+							     xpos_for_yaxis+0.0001, //FIXME!
+							     si+
+							     diagram_data["labelsize"]
+							     
+							   }), 
+							   1, 1)[0]
+							   
+			       )
+		+
+		"\n\n");
 	  graph->
 	    polygone(make_polygon_from_line(diagram_data["linewidth"], 
 					    ({
@@ -1196,7 +1199,7 @@ graph->
   s=sizeof(diagram_data["ynamesimg"]);
   for(int i=0; i<s; i++)
     {
-      write("\nYmaXnames:"+diagram_data["ymaxynames"]+"\n");
+      //write("\nYmaXnames:"+diagram_data["ymaxynames"]+"\n");
       graph->paste_alpha_color(diagram_data["ynamesimg"][i], 
 			       @(diagram_data["textcolor"]), 
 			       (int)floor(xpos_for_yaxis-
@@ -1270,8 +1273,8 @@ graph->
 
   //Rita ut datan
   int farg=0;
-  write("xstart:"+diagram_data["xstart"]+"\nystart"+diagram_data["ystart"]+"\n");
-  write("xstop:"+diagram_data["xstop"]+"\nystop"+diagram_data["ystop"]+"\n");
+  //write("xstart:"+diagram_data["xstart"]+"\nystart"+diagram_data["ystart"]+"\n");
+  //write("xstop:"+diagram_data["xstop"]+"\nystop"+diagram_data["ystop"]+"\n");
 
   foreach(diagram_data["data"], array(float) d)
     {
@@ -1297,7 +1300,7 @@ graph->
 #ifndef ROXEN
 int main(int argc, string *argv)
 {
-  write("\nRitar axlarna. Filen sparad som test.ppm\n");
+  //write("\nRitar axlarna. Filen sparad som test.ppm\n");
 
   mapping(string:mixed) diagram_data;
   diagram_data=(["type":"graph",
