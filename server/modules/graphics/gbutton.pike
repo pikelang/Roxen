@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.33 2000/02/22 00:14:32 per Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.34 2000/02/24 17:13:49 per Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -404,9 +404,9 @@ array(Image.Layer) draw_button(mapping args, string text, object id)
     Image.Layer(([
       "alpha_value":(args->dim ? 0.5 : 1.0),
       "image":text_img->color(0,0,0)->invert()->color(args->txt),
+      "alpha":text_img,
       "xoffset":txt_x,
       "yoffset":top,
-      "alpha":text_img,
     ]))
   });
 
