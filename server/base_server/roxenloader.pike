@@ -26,7 +26,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.274 2001/08/10 13:35:51 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.275 2001/08/13 18:15:46 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -57,40 +57,55 @@ mapping uname()
 #endif
 #endif
 
-mapping(object:string) used = ([]);
-class MyMysql( Sql.Sql real, mixed ro, string name )
-{
-  mixed `!( )
-  {
-    return !real;
-  }
+// static mapping used = ([ ]);
+// class MyMysql( Sql.Sql real, mixed ro, string name )
+// {
+//   mixed `!( )
+//   {
+//     return !real;
+//   }
 
-  mixed `[]( string what )
-  {
-    return `->(what);
-  }
+//   mixed `[]( string what )
+//   {
+//     return `->(what);
+//   }
 
-  mixed `->(string what )
-  {
-    if( !real || !real->master_sql ) // closed
-      real = low_connect_to_my_mysql( ro, name );
-    if( used[real] != name )
-    {
-#ifdef DB_DEBUG
-      werror("Switching databaseconnection to %O:%O from %O\n",
-	     ro, name, used[real] );
-#endif
-      real->query( "use "+name );
-      used[real] = name;
-    }
-    return real[what];
-  }
+//   function nouse_query( function rq )
+//   {
+//     return lambda( string q, mixed ... args )
+//     {
+//       int t = gethrtime();
+//       if( has_prefix( lower_case(q), "USE ") )
+// 	error("USE is not supported\n");
+//       if( used[ real ] != name )
+//       {
+// 	if( catch(real->query( "USE "+name )) )
+// 	{
+// 	  real->query( "CREATE DATABASE "+name );
+// 	  real->query( "USE "+name );
+// 	}
+// 	used[ real ] = name;
+//       }
+//       return rq( q, @args );
+//     };
+//   }
 
-  string _sprintf( int c )
-  {
-    return sprintf( sprintf( "%%%c", c ), real );
-  }
-}
+//   mixed `->(string what )
+//   {
+//     if( !real || !real->master_sql ) // closed
+//       real = low_connect_to_my_mysql( ro, name );
+//     if( what == "name" )       return name;
+//     if( what == "query" )      return nouse_query( real->query );
+//     if( what == "big_query" )  return nouse_query( real->big_query );
+// //     werror(name+"\n");
+//     return real[what];
+//   }
+
+//   string _sprintf( int c )
+//   {
+//     return sprintf( sprintf( "%%%c", c ), real );
+//   }
+// }
 
 
 mapping(int:string) pwn=([]);
@@ -1014,6 +1029,12 @@ string make_path(string ... from)
   }, getcwd())*":";
 }
 
+string isodate( int t )
+{
+  mapping lt = localtime(t);
+  return sprintf( "%d-%02d-%02d", lt->year+1900, lt->mon+1, lt->mday );
+}
+
 void write_current_time()
 {
   if( !roxen )
@@ -1177,9 +1198,9 @@ void clear_connect_to_my_mysql_cache( )
 mixed connect_to_my_mysql( string|int ro, void|string db )
 {
   mixed res = low_connect_to_my_mysql( ro, db );
-  if( res )
-    return MyMysql( res, ro, db );
-  return 0;
+//   if( res )
+//     return MyMysql( res, ro, db );
+  return res;
 }
 
 static mixed low_connect_to_my_mysql( string|int ro, void|string db )
@@ -1201,31 +1222,27 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
       m = m[ t ];
   }
 #endif
-  string i = "<all local>:"+ (intp(ro)?(ro&&"ro")||"rw":ro);
+//   string i = "<all local>:"+ (intp(ro)?(ro&&"ro")||"rw":ro);
+  string i = db+":"+(intp(ro)?(ro&&"ro")||"rw":ro);
   if( res = m[ i ] )
-    if( mixed err = catch
-    { 
-      // catch in case of lost connection.
-      res->query("use "+ db );
-      used[res] = db;
-      return res;
-    } )
-#ifdef DB_DEBUG
-      werror ("Couldn't connect to mysql as %s: %s", ro, describe_backtrace (err));
-#else
-      my_mysql_num_connections--;
-#endif
+    return res;
   
   if( mixed err = catch
   {
     if( intp( ro ) )
       ro = ro?"ro":"rw";
-    res = Sql.Sql( replace( my_mysql_path,
-			    ({"%user%", "%db%" }),
+    int t = gethrtime();
+    res = Sql.Sql( replace( my_mysql_path,({"%user%", "%db%" }),
 			    ({ ro, db })) );
+#ifdef DB_DEBUG
+    werror("Connect took %.2fms\n", (gethrtime()-t)/1000.0 );
+#endif
     if( my_mysql_num_connections++ > 40 )
       clear_connect_to_my_mysql_cache();
-    res->query( "use "+ db );
+    call_out( lambda(){
+		m_delete(m,i);
+		my_mysql_num_connections--;
+	      }, 10 );
     return m[ i ] = res;
   } )
     if( db == "mysql" )
@@ -1395,25 +1412,34 @@ void start_mysql()
   void assure_that_base_tables_exists( )
   {
     // 1: Create the 'ofiles' database.
-    if( mixed err = catch( db->query( "USE local" ) ) )
+    if( mixed err = catch( db->query( "SELECT id from local.precompiled_files WHERE id=''" ) ) )
     {
-#ifdef MYSQL_CONNECT_DEBUG
-      werror ("Error doing 'USE local': %s", describe_error (err));
-#endif
-      db->query( "CREATE DATABASE local" );
-      db->query( "USE local" );
-      db->query( "CREATE TABLE precompiled_files ("
+      db->query( "CREATE DATABASE IF NOT EXISTS local" );
+      
+      connect_to_my_mysql(0,"local")
+	->query( "CREATE TABLE precompiled_files ("
                  "id CHAR(30) NOT NULL PRIMARY KEY, "
                  "data MEDIUMBLOB NOT NULL, "
                  "mtime INT UNSIGNED NOT NULL)" );
+      
+      // At this moment new_master does not exist, and
+      // DBManager can not possibly compile. :-)
+      call_out( lambda(){
+		  new_master->resolv("DBManager.is_module_table")
+		    ( 0, "local", "precompiled_files",
+			 "Contains binary object code for .pike files. "
+			 "This information is used to shorten the "
+			 "boot time of Roxen by keeping the compiled "
+			 "data instead of recompiling it every time.");
+		}, 1 );
+
     }
     if( remove_dumped )
     {
       report_notice("Removing precompiled files\n");
       if (mixed err = catch
       {
-	db->query( "USE local" );
-	db->query( "DELETE FROM precompiled_files" );
+	db->query( "DELETE FROM local.precompiled_files" );
       }) {
 #ifdef MYSQL_CONNECT_DEBUG
 	werror ("Error removing dumped files: %s", describe_error (err));
@@ -1672,6 +1698,7 @@ Please install a newer version of Pike.
 #endif /* INTERNAL_ERROR_DEBUG */
 
   add_constant( "mark_fd", mark_fd );
+  add_constant( "isodate", isodate );
 
   add_constant( "LocaleString", typeof(da_String_type) );
   add_constant( "Stat", typeof(da_Stat_type) );
