@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.197 2001/01/29 05:40:32 per Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.198 2001/01/29 09:22:48 per Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -650,7 +650,10 @@ class TagDebug {
 	return 0;
       }
       if (args->werror) {
-	report_debug("%^s%#-1s\n", "<debug>: ", replace(args->werror,"\\n","\n") );
+	report_debug("%^s%#-1s\n",
+		     "<debug>: ",
+		     id->conf->query_name()+":"+id->not_query+"\n"+
+		     replace(args->werror,"\\n","\n") );
       }
       if (args->off)
 	id->misc->debug = 0;
