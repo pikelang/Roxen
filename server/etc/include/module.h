@@ -50,10 +50,18 @@
 #define VAR_MORE          512
 
 // Fast but unreliable.
+#if constant(cpp)
+#define QUERY(var)	variables[ #var ][VAR_VALUE]
+#else /* !constant(cpp) */
 #define QUERY(var)      variables["var"][VAR_VALUE]
+#endif /* constant(cpp) */
 
 // Like query, but for global variables.
+#if constant(cpp)
+#define GLOBVAR(x) roxen->variables[ #x ][VAR_VALUE]
+#else /* !constant(cpp) */
 #define GLOBVAR(x) roxen->variables["x"][VAR_VALUE]
+#endif /* constant(cpp) */
 
 #define MODULE_EXTENSION         (2<<0)
 #define MODULE_LOCATION          (2<<1)
