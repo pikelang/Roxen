@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.7 1997/05/16 17:36:31 grubba Exp $
+/* $Id: ssl3.pike,v 1.8 1997/05/26 22:45:07 nisse Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -117,6 +117,10 @@ array|void real_port(array port)
 #ifdef SSL3_DEBUG
   werror(sprintf("options = %O\n", options));
 #endif
+
+  if (!options["cert-file"])
+    ({ report_error, error }) ("ssl3: No argument 'cert-file'!\n");
+
   mapping(string:string) parts = parse_pem(read_file(options["cert-file"]));
 
   if (!parts || !(cert = parts["CERTIFICATE"]||parts["X509 CERTIFICATE"]))
