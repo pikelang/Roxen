@@ -1,7 +1,12 @@
 //#include <stdio.h>
 #include <simulate.h>
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.10 1997/06/15 15:09:02 grubba Exp $";
+/*
+ * name = "Proxy Garbage Collector";
+ * doc = "This is the proxy garbage collector";
+ */
+
+string cvs_version = "$Id: garbagecollector.pike,v 1.11 1997/08/19 06:17:11 per Exp $";
 
 //#define DEBUG
 

@@ -1,5 +1,11 @@
 #!bin/pike -m lib/pike/master.pike
-string cvs_version = "$Id: install.pike,v 1.13 1997/05/09 20:37:17 grubba Exp $";
+
+/*
+ * name = "Roxen Install Script ";
+ * doc = "Main part of the installscript that is run upon installation of roxen";
+ */
+
+string cvs_version = "$Id: install.pike,v 1.14 1997/08/19 06:17:12 per Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
