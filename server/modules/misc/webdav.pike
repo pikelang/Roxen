@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.5 2004/03/01 19:38:15 grubba Exp $
+// $Id: webdav.pike,v 1.6 2004/03/03 16:26:15 grubba Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.5 2004/03/01 19:38:15 grubba Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.6 2004/03/03 16:26:15 grubba Exp $";
 constant thread_safe = 1;
 constant module_name = "DAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -132,8 +132,8 @@ mapping|int(-1..0) handle_webdav(RequestID id)
   //   RoxenModule module
   //   RequestID id
   //   mixed ... extras
-  function(string,string,int,RoxenModule,MultiStatus,RequestID,mixed ...:void)
-    recur_func;
+  function(string,string,int,RoxenModule,MultiStatus,RequestID,
+	   mixed ...:mapping(string:mixed)) recur_func;
   array(mixed) extras = ({});
 
   switch(id->method) {
@@ -216,9 +216,9 @@ mapping|int(-1..0) handle_webdav(RequestID id)
     recur_func = lambda(string path, string dest, int d, RoxenModule module,
 			MultiStatus stat, RequestID id,
 			mapping(string:int(-1..1))|void behavior) {
-		   module->recurse_copy_files(path, d, 0, "",
-					      behavior||([]),
-					      stat, id);
+		   return module->recurse_copy_files(path, d, 0, "",
+						     behavior||([]),
+						     stat, id);
 		 };
     break;
   case "PROPFIND":	// Get meta data.
@@ -243,8 +243,10 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 	  recur_func = lambda(string path, string ignored, int d,
 			      RoxenModule module,
 			      MultiStatus stat, RequestID id) {
-			 module->recurse_find_properties(path, "DAV:propname", d,
-							 stat, id);
+			 module->recurse_find_properties(path,
+							 "DAV:propname",
+							 d, stat, id);
+			 return 0;
 		       };
 	  break;
 	case "DAV:allprop":
@@ -254,8 +256,11 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 			      RoxenModule module,
 			      MultiStatus stat, RequestID id,
 			      multiset(string)|void filt) {
-			 module->recurse_find_properties(path, "DAV:allprop", d,
-							 stat, id, filt);
+			 module->recurse_find_properties(path,
+							 "DAV:allprop",
+							 d, stat, id,
+							 filt);
+			 return 0;
 		       };
 	  break;
 	case "DAV:prop":
@@ -265,8 +270,11 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 			      RoxenModule module,
 			      MultiStatus stat, RequestID id,
 			      multiset(string) filt) {
-			 module->recurse_find_properties(path, "DAV:prop", d,
-							 stat, id, filt);
+			 module->recurse_find_properties(path,
+							 "DAV:prop",
+							 d, stat, id,
+							 filt);
+			 return 0;
 		       };
 	  // FALL_THROUGH
 	case "http://sapportals.com/xmlns/cm/webdavinclude":
@@ -295,8 +303,10 @@ mapping|int(-1..0) handle_webdav(RequestID id)
       recur_func = lambda(string path, string ignored, int d,
 			  RoxenModule module,
 			  MultiStatus stat, RequestID id) {
-		     module->recurse_find_properties(path, "DAV:allprop", d,
-						     stat, id);
+		     module->recurse_find_properties(path,
+						     "DAV:allprop",
+						     d, stat, id);
+		     return 0;
 		   };
     }
     break;
@@ -348,7 +358,8 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 			array(PatchPropertyCommand) instructions) {
 		   // NOTE: RFC 2518 does not support depth header
 		   //       with PROPPATCH, thus no recursion wrapper.
-		   module->patch_properties(path, instructions, stat, id);
+		   return module->patch_properties(path, instructions,
+						   stat, id);
 		 };
     extras = ({ instructions });
     break;
@@ -411,9 +422,16 @@ mapping|int(-1..0) handle_webdav(RequestID id)
 #endif
     RoxenModule c = function_object(fun);
     TRACE_ENTER("Performing the work...", c);
-    recur_func(path, dest, d, c,
-	       id->method=="COPY"?result->prefix(dest):result->prefix(loc),
-	       id, @extras);
+    mapping(string:mixed) ret =
+      recur_func(path, dest, d, c,
+		 id->method=="COPY"?result->prefix(dest):result->prefix(loc),
+		 id, @extras);
+    if (ret) {
+      TRACE_LEAVE("Short circuit return.");
+      TRACE_LEAVE("Done.");
+      TRACE_LEAVE("DAV request done.");
+      return ret;
+    }
     TRACE_LEAVE("Done.");
     TRACE_LEAVE("Done.");
   }
