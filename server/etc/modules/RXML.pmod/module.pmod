@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.315 2003/06/24 12:44:10 grubba Exp $
+// $Id: module.pmod,v 1.316 2003/08/26 15:43:56 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1655,24 +1655,41 @@ class Context
     if (!scope_name) scope_name = "_";
     if (SCOPE_TYPE vars = scopes[scope_name]) {
       string|int index;
-      if (arrayp (var))
-	if (sizeof (var) > 1) {
-	  index = var[-1];
-	  array(string|int) path = var[..sizeof (var) - 1];
-	  vars = rxml_index (vars, path, scope_name, this_object());
-	  scope_name += "." + (array(string)) path * ".";
-	  if (array rec_chgs = misc->recorded_changes)
-	    rec_chgs[-1][encode_value_canonic (({scope_name}) + var)] = val;
-	}
-	else {
-	  index = var[0];
-	  if (array rec_chgs = misc->recorded_changes)
-	    rec_chgs[-1][encode_value_canonic (({scope_name, index}))] = val;
-	}
-      else {
-	index = var;
+
+    record_change: {
+	if (arrayp (var))
+	  if (sizeof (var) > 1) {
+	    if (array rec_chgs = misc->recorded_changes)
+	      if (rec_chgs[-1][encode_value_canonic (({scope_name}))])
+		// The scope is added in the same entry. Since we can't
+		// do subindexing reliably in it we have to add another
+		// entry to ensure correct sequence.
+		misc->recorded_changes +=
+		  ({([encode_value_canonic (({scope_name}) + var): val])});
+	      else
+		rec_chgs[-1][encode_value_canonic (({scope_name}) + var)] = val;
+
+	    array(string|int) path = var[..sizeof (var) - 1];
+	    vars = rxml_index (vars, path, scope_name, this_object());
+	    scope_name += "." + (array(string)) path * ".";
+	    index = var[-1];
+	    break record_change;
+	  }
+	  else
+	    index = var[0];
+	else
+	  index = var;
+
 	if (array rec_chgs = misc->recorded_changes)
-	  rec_chgs[-1][encode_value_canonic (({scope_name, index}))] = val;
+	  if (SCOPE_TYPE scope = rec_chgs[-1][encode_value_canonic (({scope_name}))])
+	    // The scope is added in the same entry so we modify it
+	    // with the new variable setting. This is done not only as
+	    // an optimization but also to ensure that VariableChange
+	    // doesn't try to set the variable before the scope is
+	    // installed.
+	    scope[index] = val;
+	  else
+	    rec_chgs[-1][encode_value_canonic (({scope_name, index}))] = val;
       }
 
       if (objectp (vars) && vars->`[]=)
@@ -1730,23 +1747,39 @@ class Context
 
     if (!scope_name) scope_name = "_";
     if (SCOPE_TYPE vars = scopes[scope_name]) {
-      if (arrayp (var))
-	if (sizeof (var) > 1) {
-	  array(string|int) path = var[..sizeof (var) - 1];
-	  vars = rxml_index (vars, path, scope_name, this_object());
-	  scope_name += "." + (array(string)) path * ".";
-	  if (array rec_chgs = misc->recorded_changes)
-	    rec_chgs[-1][encode_value_canonic (({scope_name}) + var)] = nil;
-	  var = var[-1];
-	}
-	else {
-	  var = var[0];
-	  if (array rec_chgs = misc->recorded_changes)
-	    rec_chgs[-1][encode_value_canonic (({scope_name, var}))] = nil;
-	}
-      else {
+
+    record_change: {
+	if (arrayp (var))
+	  if (sizeof (var) > 1) {
+	    if (array rec_chgs = misc->recorded_changes)
+	      if (rec_chgs[-1][encode_value_canonic (({scope_name}))])
+		// The scope is added in the same entry. Since we can't
+		// do subindexing reliably in it we have to add another
+		// entry to ensure correct sequence.
+		misc->recorded_changes +=
+		  ({([encode_value_canonic (({scope_name}) + var): nil])});
+	      else
+		rec_chgs[-1][encode_value_canonic (({scope_name}) + var)] = nil;
+
+	    array(string|int) path = var[..sizeof (var) - 1];
+	    vars = rxml_index (vars, path, scope_name, this_object());
+	    scope_name += "." + (array(string)) path * ".";
+	    var = var[-1];
+	    break record_change;
+	  }
+	  else
+	    var = var[0];
+
 	if (array rec_chgs = misc->recorded_changes)
-	  rec_chgs[-1][encode_value_canonic (({scope_name, var}))] = nil;
+	  if (SCOPE_TYPE scope = rec_chgs[-1][encode_value_canonic (({scope_name}))])
+	    // The scope is added in the same entry so we modify it to
+	    // delete the variable. This is done not only as an
+	    // optimization but also to ensure that VariableChange
+	    // doesn't try to set the variable before the scope is
+	    // installed.
+	    m_delete (scope, var);
+	  else
+	    rec_chgs[-1][encode_value_canonic (({scope_name, var}))] = nil;
       }
 
       if (objectp (vars) && vars->_m_delete)
@@ -2254,11 +2287,18 @@ class Context
       if (!hidden[frame])
 	hidden[frame] = ({scopes["_"], scopes[scope_name]});
       scopes["_"] = scopes[scope_name] = vars;
+      if (array rec_chgs = misc->recorded_changes)
+	rec_chgs[-1][encode_value_canonic (({scope_name}))] =
+	  rec_chgs[-1][encode_value_canonic (({"_"}))] =
+	  mappingp (vars) ? vars + ([]) : vars;
     }
     else {
       if (!hidden[frame])
 	hidden[frame] = ({scopes["_"], 0});
       scopes["_"] = vars;
+      if (array rec_chgs = misc->recorded_changes)
+	rec_chgs[-1][encode_value_canonic (({"_"}))] =
+	  mappingp (vars) ? vars + ([]) : vars;
     }
   }
 
@@ -8176,7 +8216,7 @@ class PCode
       return intro + ")" + OBJ_COUNT;
   }
 
-  constant P_CODE_VERSION = 4.3;
+  constant P_CODE_VERSION = 5.0;
   // Version spec encoded with the p-code, so we can detect and reject
   // incompatible p-code dumps even when the encoded format hasn't
   // changed in an obvious way.
