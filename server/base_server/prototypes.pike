@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.55 2003/02/05 16:25:41 jonasw Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.56 2003/02/19 10:14:55 jonasw Exp $";
 
 class Variable
 {
@@ -883,6 +883,19 @@ class RequestID
   array(string) output_encode(string what, int|void allow_entities,
 			      string|void force_charset)
   {
+    //  Performance optimization for unneeded ISO-8859-1 recoding of
+    //  strings which already are narrow.
+    if (String.width(what) == 8) {
+      if (force_charset) {
+	if (upper_case(force_charset) == "ISO-8859-1")
+	  return ({ "ISO-8859-1", what });
+      } else {
+	if (sizeof(output_charset) == 1 &&
+	    upper_case(output_charset[0]) == "ISO-8859-1")
+	  return ({ "ISO-8859-1", what });
+      }
+    }
+    
     if (!force_charset) {
       string charset;
       function encoder;
