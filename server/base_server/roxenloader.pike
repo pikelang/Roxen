@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.81 1999/01/17 13:03:25 neotron Exp $
+ * $Id: roxenloader.pike,v 1.82 1999/01/17 13:51:05 neotron Exp $
  *
  * Roxen bootstrap program.
  *
@@ -15,7 +15,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.81 1999/01/17 13:03:25 neotron Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.82 1999/01/17 13:51:05 neotron Exp $";
 
 // Macro to throw errors
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
@@ -312,6 +312,7 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
   if(!p) 
     error("Popen failed. (couldn't create pipe)\n");
 
+#if constant(Process.create_process)
   mapping opts = ([
     "env": (env || getenv()),
     "stdout":p,
@@ -338,19 +339,76 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
     destruct(f);
     return t;
   }
-  f->close();
+  p->close();
   destruct(f);
   return 0;
+#else
+  if(!fork())
+  {
+    mixed err;
+
+    err = catch {
+      if(p->query_fd() < 0)
+      {
+	perror("File to dup2 to closed!\n");
+	exit(99);
+      }
+      p->dup2(Stdio.File("stdout"));
+      // p->close();
+      // p2->close();
+#if constant(_verify_internals)
+      _verify_internals();
+#endif
+      object privs;
+      if (!getuid()) {
+	array(int) olduid = ({ geteuid() || -2, getegid() || -2 });
+	if(uid) {
+	  olduid[0] = uid;
+	}
+	if (gid) {
+	  olduid[1] = gid;
+	}
+	privs = Privs("Executing script as non-www user");
+#if efun(initgroups)
+	array pw = getpwuid((int)uid);
+	if(pw) initgroups(pw[0], (int)olduid[0]);
+#endif
+	setgid(olduid[1]);
+	setuid(olduid[0]);
+      }
+      catch(exece("/bin/sh", ({ "-c", s }), (env||getenv())));
+    };
+    catch {
+      if (err) {
+	report_error(sprintf("Error in popen():\n"
+			     "%s\n", describe_backtrace(err)));
+      } else {
+	report_error(sprintf("popen(%O) failed\n", s));
+      }
+    };
+    exit(69);
+  }else{
+    string t;
+    // p->close();
+    destruct(p);
+    t=f->read(0x7fffffff);
+    destruct(f);
+    return t;
+  }
+#endif
+=======
+>>>>>>> 1.81
 }
 
 // Create a process
-object spawne(string s,string *args, mapping|array env, object stdin, 
+int spawne(string s,string *args, mapping|array env, object stdin, 
 	      object stdout, object stderr, void|string wd, 
 	      void|array (int) uid)
 {
   int pid, *olduid = allocate(2, "int");
   object privs;
 
+#if constant(Process.create_process)
   int u, g;
   if(uid) { u = uid[0]; g = uid[1]; } else
 #if efun(geteuid)
@@ -358,7 +416,7 @@ object spawne(string s,string *args, mapping|array env, object stdin,
 #else
   ;
 #endif
-  return Process.create_process(({ s }) + (args || ({})), ([
+  object proc =  Process.create_process(({ s }) + (args || ({})), ([
     "toggle_uid":1,
     "stdin":stdin,
     "stdout":stdout,
@@ -368,19 +426,71 @@ object spawne(string s,string *args, mapping|array env, object stdin,
     "uid":u,
     "gid":g,
   ]));
+  if (proc) {
+    return(proc->pid());
+  }
+  return(-1);
+#else /* !constant(Process.create_process) */
+  if(pid=fork()) return pid;
+  
+  if(arrayp(uid) && sizeof(uid) == 2)
+  {
+    privs = Privs("Executing program as non-www user (outside roxen)");
+    setgid(uid[1]);
+    setuid(uid[0]);
+  } 
+  catch(low_spawne(s, args, env, stdin, stdout, stderr, wd));
+  exit(99); 
+#endif /* constant(Process.create_process) */
 }
 
 // Start a new Pike process with the same configuration as the current one
-object spawn_pike(array(string) args, void|string wd, object|void stdin,
+int spawn_pike(array(string) args, void|string wd, object|void stdin,
 		  object|void stdout, object|void stderr)
 {
   string cwd = getcwd();
-  return Process.create_process(({cwd+"/start","--cd",wd,
-				  "--quiet","--program"})+args,
-				(["toggle_uid":1,
-				 "stdin":stdin,
-				 "stdout":stdout,
-				 "stderr":stderr]));
+  string pikebin = combine_path(cwd, new_master->_pike_file_name ||
+				"bin/pike");
+  string mast = combine_path(cwd, new_master->_master_file_name ||
+			     "../pike/src/lib/master.pike");
+  array preargs = ({ });
+
+  if (file_stat(mast))
+    preargs += ({ "-m"+mast });
+  foreach(new_master->pike_include_path, string s)
+    preargs += ({ "-I"+s });
+  foreach(new_master->pike_module_path, string s)
+    preargs += ({ "-M"+s });
+  foreach(new_master->pike_program_path, string s)
+    preargs += ({ "-P"+s });
+#if constant(Process.create_process)
+  object proc = Process.create_process(({ pikebin }) + preargs + args, ([
+    "toggle_uid":1,
+    "stdin":stdin,
+    "stdout":stdout,
+    "stderr":stderr,
+    "cwd":wd,
+    "env":getenv()
+  ]));
+
+  if (proc) {
+    return(proc->pid());
+  }
+  return -1;
+
+#else /* !constant(Process.create_process) */
+  if ((pid = fork()) == 0) {
+    stdin && stdin->dup2(Stdio.File("stdin"));
+    stdout && stdout->dup2(Stdio.File("stdout"));
+    stderr && stderr->dup2(Stdio.File("stderr"));
+    if(wd)
+      cd(wd);
+    exece(pikebin, preargs+args, getenv());
+    perror(sprintf("Spawn_pike: Failed to exece %s\n", pikebin));
+    exit(-1);
+  }
+  return pid;
+#endif /* constant(Process.create_process) */
 }
 
 
@@ -596,26 +706,16 @@ int main(mixed ... args)
   master()->putenv("PIKE_INCLUDE_PATH", path);
   foreach(path/":", string p) {
     add_include_path(p);
-    add_program_path(p);
+    //    add_program_path(p);
   }
 
   replace_master(new_master=(((program)"etc/roxen_master.pike")()));
 
   add_constant("open_db", open_db);
-  add_constant("ErrorContainer", class 
-  {
-    string errors="";
-    string get()
-    {
-      return errors;
-    }
-    void got_error(string file, int line, string err)
-    {
-       string e = sprintf("%s:%d\t%s\n", file-getcwd(), line, err);
-//       werror(e);
-      errors += e;
-    }
-  });
+  add_constant("do_destruct", lambda(object o) {
+				if(o&&objectp(o))  destruct(o);
+			      });				
+  add_constant("error", lambda(string s){error(s);});
   add_constant("spawne",spawne);
   add_constant("spawn_pike",spawn_pike);
   add_constant("perror",perror);
