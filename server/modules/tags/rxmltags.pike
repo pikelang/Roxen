@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.152 2000/08/12 18:17:39 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.153 2000/08/14 13:39:31 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -429,8 +429,9 @@ class TagInc {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      string res=inc(args, id);
-      if(res) parse_error(res);
+      int val=(int)args->value;
+      if(!val && !args->value) val=1;
+      inc(args, val, id);
       return 0;
     }
   }
@@ -446,27 +447,20 @@ class TagDec {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      string res=dec(args, id);
-      if(res) parse_error(res);
+      int val=-(int)args->value;
+      if(!val && !args->value) val=-1;
+      inc(args, val, id);
       return 0;
     }
   }
 }
 
-private string inc(mapping m, RequestID id)
+static void inc(mapping m, int val, RequestID id)
 {
   RXML.Context context=RXML.get_context();
   array entity=context->parse_user_var(m->variable, m->scope);
-  if(!context->exist_scope(entity[0])) RXML.run_error("Scope "+entity[0]+" does not exist.\n");
-  int val=(int)m->value||1;
+  if(!context->exist_scope(entity[0])) RXML.parse_error("Scope "+entity[0]+" does not exist.\n");
   context->user_set_var(m->variable, (int)context->user_get_var(m->variable, m->scope)+val, m->scope);
-  return 0;
-}
-
-private string dec(mapping m, RequestID id)
-{
-  m->value=-(int)m->value||-1;
-  return inc(m, id);
 }
 
 string|array(string) tag_imgs(string tag, mapping m, RequestID id)
