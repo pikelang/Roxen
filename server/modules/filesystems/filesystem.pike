@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.128 2004/05/06 13:34:37 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.129 2004/05/08 14:57:03 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -581,11 +581,9 @@ int _file_size(string X, RequestID id)
 
 int contains_symlinks(string root, string path)
 {
-  array arr = path/"/";
-  Stat rr;
-
-  foreach(arr - ({ "" }), path) {
+  foreach(path/"/" - ({ "" }), path) {
     root += "/" + path;
+    Stat rr;
     if (rr = file_stat(decode_path(root), 1)) {
       if (rr[1] == -3) {
 	return(1);
@@ -667,7 +665,7 @@ mapping make_collection(string coll, RequestID id)
     TRACE_LEAVE(sprintf("%s: Success", id->method));
     TRACE_LEAVE(sprintf("%s: Success", id->method));
     if (id->method == "MKCOL") {
-      return http_low_answer(201, "Created");
+      return Roxen.http_low_answer(201, "Created");
     }
     return Roxen.http_string_answer("Ok");
   }
@@ -684,7 +682,7 @@ mapping make_collection(string coll, RequestID id)
 #endif
       ) {
     TRACE_LEAVE(sprintf("%s: Missing intermediate.", id->method));
-    id->misc->error_code = 409;
+    return Roxen.http_low_answer(409, "Missing intermediate.");
   } else {
     TRACE_LEAVE(sprintf("%s: Failed.", id->method));
   }
@@ -741,6 +739,7 @@ mixed find_file( string f, RequestID id )
 #endif /* constant(system.normalize_path) */
   };
 
+  // NOTE: Sets id->misc->stat.
   size = _file_size( f, id );
 
   FILESYSTEM_WERR(sprintf("_file_size(%O, %O) ==> %d\n", f, id, size));
@@ -898,7 +897,7 @@ mixed find_file( string f, RequestID id )
       }
       return Roxen.http_string_answer("Ok");
     } else {
-      TRACE_LEAVE(sprintf("%s: Failed", id->method));
+      SIMPLE_TRACE_LEAVE("%s: Failed (errcode:%d)", id->method, errcode);
       TRACE_LEAVE("Failure");
       if (id->method == "MKCOL") {
 	if (err_code ==
@@ -940,7 +939,7 @@ mixed find_file( string f, RequestID id )
 				"<h1>Permission to 'PUT' files denied</h1>");
     }
 
-    if (mapping(string:mixed) ret = write_access(f, 0, id)) {
+    if (mapping(string:mixed) ret = write_access(oldf, 0, id)) {
       TRACE_LEAVE("PUT: Locked");
       return ret;
     }
@@ -1061,7 +1060,7 @@ mixed find_file( string f, RequestID id )
 				"<h1>Permission to 'CHMOD' files denied</h1>");
     }
 
-    if (mapping(string:mixed) ret = write_access(f, 0, id)) {
+    if (mapping(string:mixed) ret = write_access(oldf, 0, id)) {
       TRACE_LEAVE("PUT: Locked");
       return ret;
     }
@@ -1129,12 +1128,15 @@ mixed find_file( string f, RequestID id )
     }
     string movefrom;
     if(!id->misc->move_from ||
+       !has_prefix(id->misc->move_from, mountpoint) ||
        !(movefrom = id->conf->real_file(id->misc->move_from, id))) {
       id->misc->error_code = 405;
       errors++;
       TRACE_LEAVE("MV: No source file");
       return 0;
     }
+
+    string relative_from = id->misc->move_from[sizeof(mountpoint)..];
 
     if (FILTER_INTERNAL_FILE (movefrom, id) ||
 	FILTER_INTERNAL_FILE (f, id)) {
@@ -1143,23 +1145,22 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
+    if (query("no_symlinks") &&
+	((contains_symlinks(path, oldf)) ||
+	 (contains_symlinks(path, id->misc->move_from)))) {
+      errors++;
+      TRACE_LEAVE("MV: Contains symlinks. Permission denied");
+      return http_low_answer(403, "<h2>Permission denied.</h2>");
+    }
+
     // FIXME: What about moving of directories containing locked files?
-    if (mapping(string:mixed) ret = write_access(f, 0, id) ||
-	write_access(id->misc->move_from, 0, id)) {
+    if (mapping(string:mixed) ret = write_access(oldf, 0, id) ||
+	write_access(relative_from, 0, id)) {
       TRACE_LEAVE("MV: Locked");
       return ret;
     }
 
     SETUID_TRACE("Moving file", 0);
-
-    if (query("no_symlinks") &&
-	((contains_symlinks(path, oldf)) ||
-	 (contains_symlinks(path, id->misc->move_from)))) {
-      privs = 0;
-      errors++;
-      TRACE_LEAVE("MV: Contains symlinks. Permission denied");
-      return http_low_answer(403, "<h2>Permission denied.</h2>");
-    }
 
     code = mv(movefrom, f);
     privs = 0;
@@ -1237,12 +1238,13 @@ mixed find_file( string f, RequestID id )
     }
 
     // FIXME: The code below doesn't allow for this module being overloaded.
-    if (new_uri[..sizeof(mountpoint)-1] != mountpoint) {
+    if (!has_prefix(new_uri, mountpoint)) {
       id->misc->error_code = 405;
       TRACE_LEAVE("MOVE: Dest file on other filesystem.");
       return(0);
     }
-    string moveto = path + "/" + new_uri[sizeof(mountpoint)..];
+    new_uri = new_uri[sizeof(mountpoint)..];
+    string moveto = path + "/" + new_uri;
 
     if (FILTER_INTERNAL_FILE (f, id) ||
 	FILTER_INTERNAL_FILE (moveto, id)) {
@@ -1267,15 +1269,6 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if (mapping(string:mixed) ret =
-	write_access(moveto, 0, id) ||
-	write_access(f, 0, id)) {
-      TRACE_LEAVE("MOVE: Locked");
-      return ret;
-    }
-
-    SETUID_TRACE("Moving file", 0);
-
     if (query("no_symlinks") &&
         ((contains_symlinks(path, f)) ||
          (contains_symlinks(path, moveto)))) {
@@ -1284,6 +1277,15 @@ mixed find_file( string f, RequestID id )
       TRACE_LEAVE("MOVE: Contains symlinks. Permission denied");
       return http_low_answer(403, "<h2>Permission denied.</h2>");
     }
+
+    if (mapping(string:mixed) ret =
+	write_access(new_uri, 0, id) ||
+	write_access(oldf, 0, id)) {
+      TRACE_LEAVE("MOVE: Locked");
+      return ret;
+    }
+
+    SETUID_TRACE("Moving file", 0);
 
     code = mv(f, decode_path(moveto));
     privs = 0;
@@ -1351,6 +1353,8 @@ mixed find_file( string f, RequestID id )
 			  id->request_headers->depth));
       return http_low_answer(400, "<h2>Unsupported depth.</h2>");
     }
+
+    // FIXME: write_access().
 
     if (size < 0) {
       report_notice(LOCALE(64,"DELETING the directory %s.\n"), f);
@@ -1420,7 +1424,7 @@ mixed find_file( string f, RequestID id )
 
 mapping copy_file(string path, string dest, int(-1..1) behavior, RequestID id)
 {
-  TRACE_ENTER("COPY: Copy %O to %O.", this_object());
+  SIMPLE_TRACE_ENTER(this, "COPY: Copy %O to %O.", path, dest);
   Stat source_st = stat_file(path, id);
   if (!source_st) {
     TRACE_LEAVE("COPY: Source doesn't exist.");
@@ -1499,6 +1503,9 @@ mapping copy_file(string path, string dest, int(-1..1) behavior, RequestID id)
 	return http_low_answer(507, "Failed.");
       }
     }
+  } else {
+    TRACE_LEAVE("COPY: is file. Not supported yet.");
+    return Roxen.http_status(Protocols.HTTP.HTTP_NOT_IMPL);
   }
 }
 
