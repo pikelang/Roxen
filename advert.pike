@@ -220,7 +220,7 @@ mixed clickthrough(object id)
   if (!v->ad || !v->run || !v->group || !v->url)
     return 0;
 
-  .Advert.Ad.log_clickthrough((int)v->impression, (int)v->ad,
+  Advert.Ad.log_clickthrough((int)v->impression, (int)v->ad,
 	(int)v->run,(int)v->group, 
 	id->remoteaddr, (int)id->cookies->RoxenUserID,
 	id->conf->sql_connect(database));
@@ -298,36 +298,36 @@ string get_ad(string group, object id)
 
   db = id->conf->sql_connect(database);
 
-  if (!(gid = .Advert.Group.get_gid(group, db)))
+  if (!(gid = Advert.Group.get_gid(group, db)))
     return "<!-- unknown ad group -->";
 
   // returns ads in this group with an active run
   // (start date before now and end date after now)
   // and remaining hourly impressions left, and that
-  ads = .Advert.Group.get_active_ads(gid, db);
+  ads = Advert.Group.get_active_ads(gid, db);
 
   // filter ads by targeting dimensions
   // they are ordered from less computationaly expensive to most
 
   // filter by last seen ad
   if (target_last_ad) 
-    ads = .Advert.Ad.target_last_ad(ads, id);
+    ads = Advert.Ad.target_last_ad(ads, id);
 
   // filter by page ads
   if (target_page_ads)
-    ads = .Advert.Ad.target_page_ads(ads, id);
+    ads = Advert.Ad.target_page_ads(ads, id);
 
   // filter by competitors
-  ads = .Advert.Ad.target_competitors(ads, id);
+  ads = Advert.Ad.target_competitors(ads, id);
 
   // filter by domain
-  ads = .Advert.Ad.target_domain(ads, id, db);
+  ads = Advert.Ad.target_domain(ads, id, db);
 
   // filter by browser and os
-  ads = .Advert.Ad.target_browser_and_os(ads, id);
+  ads = Advert.Ad.target_browser_and_os(ads, id);
 
   // filter by user exposure
-  ads = .Advert.Ad.target_exposure(ads, id, db);
+  ads = Advert.Ad.target_exposure(ads, id, db);
 
   // no more ads scheduled for this group
   // try a default ad
@@ -335,7 +335,7 @@ string get_ad(string group, object id)
   {
 //    perror("Advert: no active ads, trying defaults.\n");
 
-    ads = .Advert.Group.get_default_ads(gid, db);
+    ads = Advert.Group.get_default_ads(gid, db);
 
     if (sizeof(ads) == 0)
     {
@@ -357,7 +357,7 @@ string get_ad(string group, object id)
   save_page_state(ad, id);
   ad->location = location;
   ad->gid = gid;
-  return .Advert.Ad.view(ad, gid, id->remoteaddr, 
+  return Advert.Ad.view(ad, gid, id->remoteaddr, 
 			(int)id->cookies->RoxenUserID, db);
 }
 
@@ -401,7 +401,7 @@ void update_weights(object conf)
 	  "ON r.id=i.run WHERE r.startd <= NOW() GROUP BY r.id";
   result = db->big_query(query);
   while(row = result->fetch_row())
-    .Advert.Run.do_update_weight(db, row[1], row[0]);
+    Advert.Run.do_update_weight(db, row[1], row[0]);
 
   remove_call_out(update_weights);
   call_out(update_weights, 60*60, conf);
