@@ -231,7 +231,7 @@ class User
            report_notice( "Permission "+v+" added to "+real_name+
                           " ("+name+") by "+
                           id->misc->config_user->real_name+
-                          " ("+name+") from "+
+                          " ("+id->misc->config_user->name+") from "+
                           id->misc->remote_config_host+"\n");
            permissions[v] = 1;
          }
@@ -240,7 +240,7 @@ class User
            report_notice( "Permission "+v+" removed from "+real_name+
                           " ("+name+") by "+
                           id->misc->config_user->real_name+
-                          " ("+name+") from "+
+                          " ("+id->misc->config_user->name+") from "+
                           id->misc->remote_config_host+"\n");
            permissions[v] = 0;
          }
