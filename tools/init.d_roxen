@@ -22,11 +22,11 @@ pidfile=/tmp/roxen_pid:0
 
 case $1 in
         'start_msg')
-	  echo 'Start Roxen 1.2'
+	  echo 'Start Roxen 1.4'
 	  exit 0
 	;;
 	'stop_msg')
-	  echo 'Stop Roxen 1.2'
+	  echo 'Stop Roxen 1.4'
 	  exit 0
 	;;
 	'start')
