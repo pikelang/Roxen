@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.421 2003/03/20 16:38:20 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.422 2003/03/20 16:50:37 wellhard Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1259,13 +1259,14 @@ class TagRecode
     "from" : RXML.t_text(RXML.PEnt),
     "to"   : RXML.t_text(RXML.PEnt),
   ]);
-  RXML.Type content_type = RXML.t_same(RXML.PXml);
 
   class Frame
   {
     inherit RXML.Frame;
     array do_return( RequestID id )
     {
+      if( !content ) content = "";
+
       if( args->from && catch {
 	content=Locale.Charset.decoder( args->from )->feed( content )->drain();
       })
@@ -6133,12 +6134,18 @@ using the pre tag.
 //----------------------------------------------------------------------
 
 "charset":#"<desc type='both'><p>
- <short>Set output character sets.</short>
+ <short>Set output character set.</short>
  The tag can be used to decide upon the final encoding of the resulting page.
  All character sets listed in <a href='http://rfc.roxen.com/1345'>RFC 1345</a>
  are supported.
 </p>
 </desc>
+
+<attr name='in' value='Character set'><p>
+ Converts the contents of the charset tag from the character set indicated
+ by this attribute to the internal text representation. Note, this attribute
+ is depricated, use &lt;recode from=\"\"&gt...&lt;/recode&gt; instead</p>
+</attr>
 
 <attr name='out' value='Character set'><p>
  Sets the output conversion character set of the current request. The page
@@ -6146,15 +6153,11 @@ using the pre tag.
 </attr>
 ",
 
-// <attr name='in' value='Character set'><p>
-//  Converts the contents of the charset tag from the character set indicated
-//  by this attribute to the internal text representation.</p>
-// </attr>
 
 
 //----------------------------------------------------------------------
 
-"recode":#"<desc type='both'><p>
+"recode":#"<desc type='cont'><p>
  <short>Converts between character sets.</short>
  The tag can be used both to decode texts encoded in strange character
  encoding schemas, and encode internal data to a specified encoding
