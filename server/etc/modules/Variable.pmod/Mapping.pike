@@ -124,30 +124,33 @@ string render_form( RequestID id, void|mapping additional_args )
   string prefix = path()+".";
   int i;
 
+#define BUTTON(X,Y) ("<submit-gbutton2 name='"+X+"'>"+Y+"</submit-gbutton2>")
   string res = "<a name='"+path()+"'>\n</a><table>\n"
     "<input type='hidden' name='"+prefix+"count' value='"+_current_count+"' />\n";
 
-  res += "<tr><th align='left'>"+LOCALE(0,"Name")+"</th><th align='left'>"+LOCALE(0,"Value")+"</tr>";
-
   mapping val = query();
-  foreach( sort(indices(val)), mixed var )
-  {
-    res += "<tr>\n<td><font size='-1'>"+
-      render_row(prefix+"set."+i,
-		 ({ var,transform_to_form(val[var]) }) ,
-		 width) * "</td><td>"
-      + "</font></td>\n";
-#define BUTTON(X,Y) ("<submit-gbutton2 name='"+X+"'>"+Y+"</submit-gbutton2>")
-    res += "\n<td>"+
-      BUTTON(prefix+"delete."+i, LOCALE(227, "Delete") )
-      +"</td>";
-    "</tr>";
-    i++;
+
+  if(sizeof(val)) {
+    res += "<tr><th align='left'>"+LOCALE(0,"Name")+"</th>"
+      "<th align='left'>"+LOCALE(0,"Value")+"</th></tr>";
+
+    foreach( sort(indices(val)), mixed var ) {
+      res += "<tr>\n<td><font size='-1'>"+
+	render_row(prefix+"set."+i,
+		   ({ var,transform_to_form(val[var]) }) ,
+		   width) * "</font></td><td><font size='-1'>"
+	+ "</font></td>\n";
+      res += "\n<td>"+
+	BUTTON(prefix+"delete."+i, LOCALE(227, "Delete") )
+	+"</td>";
+      "</tr>";
+      i++;
+    }
   }
-  res +=
-    "\n<tr><td colspan='3'>"+
-    BUTTON(prefix+"new", LOCALE(297, "New row") )+
-    "</td></tr></table>\n\n";
+
+  res += "\n<tr><td colspan='3'>" +
+     BUTTON(prefix+"new", LOCALE(297, "New row") )+
+     "</td></tr></table>\n\n";
 
   return res;
 }
