@@ -1,5 +1,5 @@
 /*
- * $Id: Roxen.pmod,v 1.24 2000/08/10 16:21:00 per Exp $
+ * $Id: Roxen.pmod,v 1.25 2000/08/12 06:15:36 per Exp $
  *
  * Various helper functions.
  *
@@ -8,6 +8,11 @@
 
 #include <config.h>
 inherit "roxenlib";
+
+// Low-level C-roxen optimization functions.
+#if constant( _Roxen )
+inherit _Roxen;
+#endif
 
 /*
  * TODO:
