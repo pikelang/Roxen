@@ -1,13 +1,14 @@
 // This is a ChiliMoon module. Copyright © 2000 - 2001, Roxen IS.
 
-inherit "module";
 
-constant cvs_version = "$Id: tarfs.pike,v 1.14 2004/07/17 23:01:37 _cvs_stephen Exp $";
+constant cvs_version = "$Id: tarfs.pike,v 1.15 2005/02/10 23:12:00 _cvs_dirix Exp $";
 
 // The Filesystem.Tar module is not threadsafe.
-constant thread_safe = 0;
 
 #include <module.h>
+inherit "module";
+
+constant thread_safe = 0;
 
 constant module_type = MODULE_LOCATION;
 constant module_name = "File systems: Tar File";
@@ -61,9 +62,9 @@ string query_location()
 Stat stat_file( string f, RequestID id )
 {
   if(!tar) return 0;
-  object s = tar->stat( f );
-  if( s )
-    return ({ s->mode, s->size, s->atime, s->mtime, s->ctime, s->uid, s->gid });
+  Stdio.Stat s = tar->stat( f );
+  if( !s ) return 0;
+  return s;
 }
 
 string real_file( string f, RequestID id )
@@ -77,12 +78,13 @@ array find_dir( string f, RequestID id )
   return tar->get_dir( f );
 }
 
-mixed find_file( string f, RequestID id )
+int|Stdio.FakeFile find_file( string f, RequestID id )
 {
   if(!tar) return 0;
-  object s = tar->stat( f );
+  Stdio.Stat s = tar->stat( f );
   if( !s ) return 0;
   if( s->isdir() ) return -1;
-  return Stdio.FakeFile( tar->open( f, "r" )->read(), 
-		     stat_file( f, id ));
+  string content = tar->open( f, "r" )->read();
+  Stdio.FakeFile res = Stdio.FakeFile( content , "r" );
+  return res;
 }

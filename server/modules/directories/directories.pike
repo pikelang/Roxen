@@ -9,7 +9,7 @@
 //  o Add readme support
 //
 
-constant cvs_version = "$Id: directories.pike,v 1.107 2004/07/01 08:00:20 _cvs_dirix Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.108 2005/02/10 23:11:59 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 constant default_template= #"
@@ -188,8 +188,8 @@ mapping parse_directory(RequestID id)
   {
     foreach(indexfiles, string file)
     {
-      array s;
-      if((s = id->conf->stat_file(f+file, id)) && (s[ST_SIZE] >= 0))
+      Stdio.Stat s;
+      if((s = id->conf->stat_file(f+file, id)) && (s->size >= 0))
       {
 	id->not_query = f + file;
 	mixed got = id->conf->handle_request(id);
