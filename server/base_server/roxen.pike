@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.49 1997/04/08 23:45:39 marcus Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.50 1997/04/09 06:56:59 grubba Exp $";
 #define IN_ROXEN
 #ifdef THREADS
 #include <fifo.h>
@@ -1721,7 +1721,15 @@ void scan_module_dir(string d)
 	  if (!(err=catch( module_info = lambda ( string file ) {
 	    array foo;
 	    object o;
-	    o =  (compile_file(file))();
+	    program p = compile_file(file);
+#ifdef MODULE_DEBUG
+	    if (!p) {
+	      perror(" compilation failed\n");
+	      throw(({"Compilation of module \""+file+"\" failed\n",
+			backtrace()}));
+	    }
+#endif
+	    o =  p();
 #ifdef MODULE_DEBUG
 	    perror(" load ok - ");
 #endif
