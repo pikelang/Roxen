@@ -15,7 +15,7 @@ constant STORT = 1.0e40;
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.28 1997/11/30 05:05:59 hedda Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.29 1997/12/03 23:02:00 hedda Exp $";
 
 /*
 These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
@@ -226,8 +226,9 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
   for(i=0; i<t; i++)
     {
       piediagram=piediagram->setcolor(@diagram_data["datacolors"][i]);
-      piediagram=piediagram->polygone(({(float)xc,(float)yc})+
-				      arr[2*edge_nr..2*(edge_nr+pnumbers[i]+2)+1]);
+      if (pnumbers[i])
+	piediagram=piediagram->polygone(({(float)xc,(float)yc})+
+					arr[2*edge_nr..2*(edge_nr+pnumbers[i]+2)+1]);
       edge_nr+=pnumbers[i];
     }
   
