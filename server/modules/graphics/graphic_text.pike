@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.258 2000/12/05 00:25:57 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.259 2001/01/30 23:48:46 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -412,8 +412,9 @@ constant tagdoc=([
 <noex>"+gtextargs+"</noex>",
 
 "gtext":#"<desc cont='cont'><p><short>
- Creates graphical texts.</short> Renders a GIF image of the
- contents.</p>
+ Creates an image with the tag content texts.</short> It is possible to pass
+ attributes, such as the target attribute, to the resulting tags by including
+ them in the gtext tag.</p>
 </desc>
 
 <attr name='alt' value='string'><p>
