@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.603 2001/01/02 15:21:38 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.604 2001/01/02 15:50:22 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1936,8 +1936,9 @@ class ImageCache
         error("Invalid reply mapping.\n"
               "Should be ([ \"meta\": ([metadata]), \"data\":\"data\" ])\n");
     }
-    store_meta( name, meta );
-    store_data( name, data );
+    // Avoid throwing and error if the same image is rendered twice.
+    catch(store_meta( name, meta ));
+    catch(store_data( name, data ));
   }
 
 
