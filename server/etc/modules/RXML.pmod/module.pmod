@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.120 2000/11/04 21:05:34 mast Exp $
+//! $Id: module.pmod,v 1.121 2000/11/06 20:28:15 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -798,7 +798,9 @@ class Value
 {
   mixed rxml_var_eval (Context ctx, string var, string scope_name, void|Type type)
   //! This is called to get the value of the variable. ctx, var and
-  //! scope_name are set to where this Value object was found.
+  //! scope_name are set to where this Value object was found. Note
+  //! that scope_name can be on the form scope.index1.index2... when
+  //! this object was encountered through subindexing.
   //!
   //! If the type argument is given, it's the type the returned value
   //! should have. If the value can't be converted to that type, an
@@ -820,6 +822,10 @@ class Value
 
 class Scope
 //! Interface for objects that emulates a scope mapping.
+//!
+//! Note that the scope_name argument to the functions can be on the
+//! form scope.index1.index2... when this object was encountered
+//! through subindexing.
 {
   mixed `[] (string var, void|Context ctx, void|string scope_name)
     {parse_error ("Cannot query variable" + _in_the_scope (scope_name) + ".\n");}
@@ -878,201 +884,189 @@ class Context
 
 #ifdef OLD_RXML_COMPAT
   int compatible_scope = 0;
-  //! If set, the default scope is form, otherwise it is the present
-  //! scope.
+  //! If set, the user_*_var functions access the variables in the
+  //! scope "form" by default, and there's no subindex splitting or
+  //! ".." decoding is done (see parse_user_var).
 #endif
 
-  array parse_user_var (string var, void|string scope_name)
-  //! Tries to decide what variable and scope to use. Handles cases
-  //! where the variable also contains the scope, e.g. "scope.var".
+  array(string|int) parse_user_var (string var, void|string scope_name)
+  //! Parses the var string for scope and/or subindexes according to
+  //! the RXML rules, e.g. "scope.var.1.foo". If scope_name is given,
+  //! it's used as the scope and the var string is only parsed for
+  //! subindexes. If var cannot be split a default scope is chosen as
+  //! appropriate. Returns an array where the first entry is the
+  //! scope, and the remaining entries are the list of indexes. Note
+  //! that the array contains only one entry if var is the empty
+  //! string.
+  //!
+  //! A ".." in the var string quotes a literal ".", e.g.
+  //! "yow...cons..yet" is separated into "yow." and "cons.yet". Any
+  //! subindex that can be parsed as a signed integer is converted to
+  //! it. Note that it doesn't happen for the first index, since a
+  //! variable in a scope always is a string.
   {
-    if(!var || !sizeof(var)) return ([])[0];
-    if(scope_name) return ({ scope_name, var });
-    array(string) splitted = Array.map( replace(var, "..", ";") / ".",
-					lambda(string in) { return replace(in, ";", "."); });
-    if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
-    if(sizeof(splitted)==2)
-      scope_name=splitted[0];
 #ifdef OLD_RXML_COMPAT
-    else if (compatible_scope)
-      scope_name = scope_name || "form";
+    if (compatible_scope)
+      return ({scope_name || "form", var});
 #endif
-    return ({ scope_name, splitted[-1] });
+
+    array(string|int) splitted = sizeof (var) ?
+      Array.map(
+	replace(var, ({"..", "\0"}), ({"\0p", "\0\0"})) / ".",
+	lambda(string in) { return replace(in, ({"\0p", "\0\0"}), ({".", "\0"})); }) :
+      ({});
+
+    if (scope_name)
+      splitted = ({scope_name}) + splitted;
+    else if (sizeof (splitted) < 2)
+      splitted = ({"_"}) + splitted;
+
+    for (int i = 2; i < sizeof (splitted); i++)
+      if (sscanf (splitted[i], "%d%*c", int d) == 1) splitted[i] = d;
+
+    return splitted;
   }
 
-  local mixed get_var (string var, void|string scope_name, void|Type want_type)
+  local mixed get_var (string|array(string|int) var, void|string scope_name,
+		       void|Type want_type)
   //! Returns the value a variable in the specified scope, or the
   //! current scope if none is given. Returns zero with zero_type 1 if
-  //! there's no such variable.
+  //! there's no such variable (or it's nil).
   //!
-  //! If the type argument is set, the value is converted to that type
-  //! with Type.encode(). If the value can't be converted, an RXML
-  //! error is thrown.
+  //! If var is an array, it's used to successively index the value to
+  //! get subvalues (see rxml_index for details).
+  //!
+  //! If the want_type argument is set, the result value is converted
+  //! to that type with Type.encode(). If the value can't be
+  //! converted, an RXML error is thrown.
   {
-    if (SCOPE_TYPE vars = scopes[scope_name || "_"]) {
-      mixed val;
-      if (objectp (vars)) {
-	if (zero_type (val = ([object(Scope)] vars)->`[] (
-			 var, this_object(), scope_name || "_")) ||
-	    val == nil)
-	  return ([])[0];
-      }
-      else
-	if (zero_type (val = vars[var]))
-	  return ([])[0];
-      if (objectp (val) && ([object] val)->rxml_var_eval) {
-	return
-	  zero_type (val = ([object(Value)] val)->rxml_var_eval (
-		       this_object(), var, scope_name || "_", want_type)) ||
-	  val == nil ? ([])[0] : val;
-      }
-      else
-	if (want_type)
-	  return
-	    // FIXME: Some system to find out the source type?
-	    zero_type (val = want_type->encode (val)) ||
-	    val == nil ? ([])[0] : val;
-	else
-	  return val;
-    }
-    else if ((<0, "_">)[scope_name]) parse_error ("No current scope.\n");
-#ifdef OLD_RXML_COMPAT
-    if(compatible_scope && scope_name && scope_name!="form")
-      return get_var(scope_name+"."+var, "form", want_type);
+#ifdef MODULE_DEBUG
+    if (arrayp (var) ? !sizeof (var) : !stringp (var))
+      error ("Invalid variable specifier.\n");
 #endif
-    parse_error ("Unknown scope %O.\n", scope_name);
+    if (!scope_name) scope_name = "_";
+    if (SCOPE_TYPE vars = scopes[scope_name])
+      return rxml_index (vars, var, scope_name, this_object(), want_type);
+    else if (scope_name == "_") parse_error ("No current scope.\n");
+    else parse_error ("Unknown scope %O.\n", scope_name);
   }
 
   mixed user_get_var (string var, void|string scope_name, void|Type want_type)
-  //! As get_var, but can handle cases where the variable also
-  //! contains the scope, e.g. "scope.var".
+  //! As get_var, but parses the var string for scope and/or
+  //! subindexes, e.g. "scope.var.1.foo" (see parse_user_var for
+  //! details).
   {
     if(!var || !sizeof(var)) return ([])[0];
-    if(scope_name) return get_var(var, scope_name, want_type);
-    array(string) splitted = Array.map( replace(var, "..", ";") / ".",
-					lambda(string in) { return replace(in, ";", "."); });
-
-    //     if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
-
-    if(sizeof(splitted)>1)
-      scope_name = splitted[0];
-#ifdef OLD_RXML_COMPAT
-    else if (compatible_scope)
-      scope_name = scope_name || "form";
-#endif
-    mixed var = get_var( splitted[1], scope_name,
-			 (sizeof( splitted )<3 ? want_type : 0) );
-    foreach( splitted[2..], string index )
-    {
-      // This should be at the top, so it's not done for the last index.
-      scope_name = (scope_name||"_")+"."+index;
-      if( objectp(var) && ([object]var)->rxml_var_eval )
-	var = var->rxml_var_eval( this_object(), var, scope_name, 0);
-
- // stringp was not really a good idea.
-      if( arrayp( var ) /*|| stringp( var )*/ )
-	if( int ind = (int)index )
-	  if( (ind > sizeof( var ))
-	      || ((ind < 0) && (-ind > sizeof( var ) )) )
-	    parse_error( "Array not big enough for index %d.\n", ind );
-	  else if( ind < 0 )
-	    var = var[ind];
-	  else
-	    var = var[ind-1];
-	else
-	  parse_error( "Cannot index array with %O\n", ind );
-      else if( objectp( var ) && var->`[] )
-	var=var->`[](index, this_object(), scope_name);
-      else if( mappingp( var ) || multisetp( var ) )
-	var = var[ index ];
-      else 
-	if( index == splitted[-1] )
-	  // one level of illegal index is OK with this code. 
-	  // basically: <if variable='form.foo.1'> There is really no
-	  // other way to check if the variable 'foo' in the form
-	  // scope is an array or only has a single value.
-	  var = nil;
-    }
-
-    if (sizeof( splitted ) > 2 && want_type )
-    {
-      if( objectp(var) && ([object]var)->rxml_var_eval )
-	return var->rxml_var_eval( this_object(), var, scope_name, want_type );
-      return
-	// FIXME: Some system to find out the source type?
-	zero_type (var = want_type->encode (var)) ||
-	var == nil ? ([])[0] : var;
-    }
-    return var;
+    array(string|int) splitted = parse_user_var (var, scope_name);
+    return get_var (splitted[1..], splitted[0], want_type);
   }
 
-  local mixed set_var (string var, mixed val, void|string scope_name)
+  local mixed set_var (string|array(string|int) var, mixed val, void|string scope_name)
   //! Sets the value of a variable in the specified scope, or the
   //! current scope if none is given. Returns val.
+  //!
+  //! If var is an array, it's used to successively index the value to
+  //! get subvalues (see rxml_index for details).
   {
-    if (SCOPE_TYPE vars = scopes[scope_name || "_"])
-      if (objectp (vars))
-	return ([object(Scope)] vars)->`[]= (var, val, this_object(), scope_name || "_");
-      else
-	return vars[var] = val;
-    else if ((<0, "_">)[scope_name]) parse_error ("No current scope.\n");
-#ifdef OLD_RXML_COMPAT
-    if(compatible_scope && scope_name && scope_name!="form")
-      return set_var(scope_name+"."+var, val, "form");
+#ifdef MODULE_DEBUG
+    if (arrayp (var) ? !sizeof (var) : !stringp (var))
+      error ("Invalid variable specifier.\n");
 #endif
-    parse_error ("Unknown scope %O.\n", scope_name);
+
+    if (!scope_name) scope_name = "_";
+    if (SCOPE_TYPE vars = scopes[scope_name]) {
+      string|int index;
+      if (arrayp (var))
+	if (sizeof (var) > 1) {
+	  index = var[-1];
+	  var = var[..sizeof (var) - 1];
+	  vars = rxml_index (vars, var, scope_name, this_object());
+	  scope_name += "." + (array(string)) var * ".";
+	}
+	else index = var[0];
+      else index = var;
+
+      if (objectp (vars) && vars->`[]=)
+	return ([object(Scope)] vars)->`[]= (index, val, this_object(), scope_name);
+      else if (mappingp (vars) || multisetp (vars))
+	return vars[index] = val;
+      else if (arrayp (vars))
+	if (intp (index) && index)
+	  if ((index < 0 ? -index : index) > sizeof (vars))
+	    parse_error( "Index %d out of range for array of size %d in %s.\n",
+			 index, sizeof (val), scope_name );
+	  else if (index < 0)
+	    return vars[index] = val;
+	  else
+	    return vars[index - 1] = val;
+	else
+	  parse_error( "Cannot index the array in %s with %O.\n", scope_name, index );
+      else
+	parse_error ("%s is %O which cannot be indexed with %O.\n",
+		     scope_name, vars, index);
+    }
+
+    else if (scope_name == "_") parse_error ("No current scope.\n");
+    else parse_error ("Unknown scope %O.\n", scope_name);
   }
 
   mixed user_set_var (string var, mixed val, void|string scope_name)
-  //! As set_var, but can handle cases where the variable also
-  //! contains the scope, e.g. "scope.var".
+  //! As set_var, but parses the var string for scope and/or
+  //! subindexes, e.g. "scope.var.1.foo" (see parse_user_var for
+  //! details).
   {
     if(!var || !sizeof(var)) parse_error ("No variable specified.\n");
-    if(scope_name) return set_var(var, val, scope_name);
-    array(string) splitted = Array.map( replace(var, "..", ";") / ".",
-					lambda(string in) { return replace(in, ";", "."); });
-//     if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
-    if(sizeof(splitted)==2)
-      scope_name=splitted[0];
-#ifdef OLD_RXML_COMPAT
-    else if (compatible_scope)
-      scope_name = scope_name || "form";
-#endif
-    return set_var(splitted[-1], val, scope_name);
+    array(string|int) splitted = parse_user_var (var, scope_name);
+    return set_var(splitted[1..], val, splitted[0]);
   }
 
-  local void delete_var (string var, void|string scope_name)
+  local void delete_var (string|array(string|int) var, void|string scope_name)
   //! Removes a variable in the specified scope, or the current scope
   //! if none is given.
+  //!
+  //! If var is an array, it's used to successively index the value to
+  //! get subvalues (see rxml_index for details).
   {
-    if (SCOPE_TYPE vars = scopes[scope_name || "_"])
-      if (objectp (vars))
-	([object(Scope)] vars)->m_delete (var, this_object(), scope_name || "_");
-      else
+#ifdef MODULE_DEBUG
+    if (arrayp (var) ? !sizeof (var) : !stringp (var))
+      error ("Invalid variable specifier.\n");
+#endif
+
+    if (!scope_name) scope_name = "_";
+    if (SCOPE_TYPE vars = scopes[scope_name]) {
+      if (arrayp (var))
+	if (sizeof (var) > 1) {
+	  string|int last = var[-1];
+	  var = var[..sizeof (var) - 1];
+	  vars = rxml_index (vars, var, scope_name, this_object());
+	  scope_name += "." + (array(string)) var * ".";
+	  var = last;
+	}
+	else var = var[0];
+
+      if (objectp (vars) && vars->m_delete)
+	([object(Scope)] vars)->m_delete (var, this_object(), scope_name);
+      else if (mappingp (vars))
 	m_delete ([mapping(string:mixed)] vars, var);
-    else if ((<0, "_">)[scope_name]) parse_error ("No current scope.\n");
+      else if (multisetp (vars))
+	vars[var] = 0;
+      else
+	parse_error ("Cannot remove the index %O from the %t in %s.\n",
+		     var, vars, scope_name);
+    }
+
+    else if (scope_name == "_") parse_error ("No current scope.\n");
     else parse_error ("Unknown scope %O.\n", scope_name);
   }
 
   void user_delete_var (string var, void|string scope_name)
-  //! As delete_var, but can handle cases where the variable also
-  //! contains the scope, e.g. "scope.var".
+  //! As delete_var, but parses the var string for scope and/or
+  //! subindexes, e.g. "scope.var.1.foo" (see parse_user_var for
+  //! details).
   {
     if(!var || !sizeof(var)) return;
-    if(scope_name) {
-      delete_var(var, scope_name);
-      return;
-    }
-    array(string) splitted = Array.map( replace(var, "..", ";") / ".",
-					lambda(string in) { return replace(in, ";", "."); });
-    if(sizeof(splitted)>2) splitted[-1] = splitted[1..]*".";
-    if(sizeof(splitted)==2)
-      scope_name=splitted[0];
-#ifdef OLD_RXML_COMPAT
-    else if (compatible_scope)
-      scope_name = scope_name || "form";
-#endif
-    delete_var(splitted[-1], scope_name);
+    array(string|int) splitted = parse_user_var (var, scope_name);
+    delete_var(splitted[1..], splitted[0]);
   }
 
   array(string) list_var (void|string scope_name)
@@ -1483,7 +1477,7 @@ class Backtrace
 //! It's set before any function in RXML.Tag or RXML.Frame is called.
 
 #if constant (thread_create)
-private Thread.Local _context = thread_local();
+private Thread.Local _context = Thread.Local();
 local void set_context (Context ctx) {_context->set (ctx);}
 local Context get_context() {return [object(Context)] _context->get();}
 #else
@@ -2937,7 +2931,117 @@ void throw_fatal (mixed err)
   throw (err);
 }
 
-local void tag_debug (string msg, mixed... args)
+final mixed rxml_index (mixed val, string|int|array(string|int) index,
+			string scope_name, Context ctx, void|Type want_type)
+//! Index the value according to RXML type rules and returns the
+//! result. Throws RXML exceptions on any errors. If index is an
+//! array, its elements are used to successively subindex the value,
+//! e.g. ({"a", 2, "b"}) corresponds to val["a"][2]["c"]. scope_name
+//! is used to identify the context for the indexing.
+//!
+//! The special RXML index rules are:
+//!
+//! o  Arrays are indexed with 1 for the first element, or
+//!    alternatively -1 for the last. Indexing an array of size n with
+//!    0, n+1 or greater, -n-1 or less, or with a non-integer is an
+//!    error.
+//! o  Strings, along with integers and floats, are treated as simple
+//!    scalar types which aren't really indexable. If a scalar type is
+//!    indexed with 1 or -1, it produces itself instead of generating
+//!    an error. (This is a convenience to avoid many special cases
+//!    when treating both arrays and scalar types.)
+//! o  If a value is an object which has an rxml_var_eval identifier,
+//!    it's treated as a Value object and the rxml_var_eval function
+//!    is called to produce its value.
+//! o  If a value which is about to be indexed is an object which has
+//!    a `[] function, it's called as a Scope object.
+//! o  Both the special value nil and a zero with zero_type 1 may be
+//!    used to signify no value at all, and both will be returned as a
+//!    zero with zero_type 1.
+//!
+//! If the want_type argument is set, the result value is converted to
+//! that type with Type.encode(). If the value can't be converted, an
+//! RXML error is thrown.
+//!
+//! This function is mainly for internal use; you commonly want to use
+//! get_var, set_var, user_get_var or user_set_var instead.
+{
+#ifdef MODULE_DEBUG
+  if (arrayp (index) ? !sizeof (index) : !(stringp (index) || intp (index)))
+    error ("Invalid index specifier.\n");
+#endif
+
+  array(string|int) idxpath;
+  if (arrayp (index)) idxpath = index[1..], index = index[0];
+  else idxpath = ({});
+
+  if (objectp (val) ?
+      zero_type (val = ([object(Scope)] val)->`[] (index, ctx, scope_name)) :
+      zero_type (val = val[index]))
+    val = nil;
+
+  foreach (idxpath, string|int subindex) {
+    scope_name += "." + index;
+    index = subindex;
+
+    while (objectp (val) && ([object] val)->rxml_var_eval)
+      if (zero_type (val = ([object(Value)] val)->rxml_var_eval (
+		       ctx, index, scope_name, 0))) {
+	val = nil;
+	break;
+      }
+
+    // stringp was not really a good idea.
+    if( arrayp( val ) /*|| stringp( val )*/ )
+      if (intp (index) && index)
+	if( (index > sizeof( val ))
+	    || ((index < 0) && (-index > sizeof( val ) )) )
+	  parse_error( "Index %d out of range for array of size %d in %s.\n",
+		       index, sizeof (val), scope_name );
+	else if( index < 0 )
+	  val = val[index];
+	else
+	  val = val[index-1];
+      else
+	parse_error( "Cannot index the array in %s with %O.\n", scope_name, index );
+    else if (val == nil)
+      parse_error ("%s produced no value to index with %O.\n", scope_name, index);
+    else if( objectp( val ) && val->`[] ) {
+      if (zero_type (
+	    val = ([object(Scope)] val)->`[](index, ctx, scope_name)))
+	val = nil;
+    }
+    else if( mappingp( val ) || objectp (val) ) {
+      if (zero_type (val = val[ index ])) val = nil;
+    }
+    else if (multisetp (val)) {
+      if (!val[index]) val = nil;
+    }
+    else if (!(<1, -1>)[index])
+      parse_error ("%s is %O which cannot be indexed with %O.\n",
+		   scope_name, val, index);
+  }
+
+  if (val == nil)
+    return ([])[0];
+  else if (!objectp (val) || !([object] val)->rxml_var_eval)
+    if (want_type)
+      return
+	// FIXME: Some system to find out the source type?
+	zero_type (val = want_type->encode (val)) || val == nil ? ([])[0] : val;
+    else
+      return val;
+
+  do {
+    if (zero_type (val = ([object(Value)] val)->rxml_var_eval (
+		     ctx, index, scope_name, want_type)) ||
+	val == nil)
+      return ([])[0];
+  } while (objectp (val) && ([object] val)->rxml_var_eval);
+  return val;
+}
+
+final void tag_debug (string msg, mixed... args)
 //! Writes the message to the debug log if the innermost tag being
 //! executed has FLAG_DEBUG set.
 {
@@ -3100,34 +3204,27 @@ class Parser
   // appropriate error handling.
   {
     // We're always evaluating here, so context is always set.
-    if(varref[0]==':') return ({ "&"+varref[1..]+";" });
-//     array(string) split = Array.map( replace(varref, "..", ";") / ".",
-// 				     lambda(string in) { return replace(in, ";", "."); });
-//     if (sizeof (split) == 2)
-    if (mixed err = catch {
-      string encoding;
-      if( (sscanf (reverse(varref), "%[^:]:%s", encoding, varref) == 2)
-	  && strlen(encoding) )
-      {
-	encoding = reverse( encoding );
-	varref = reverse( varref );
-      }
-      else
-	encoding = 0;
-      context->current_var = varref;
-      mixed val;
-      if (zero_type (val = context->user_get_var ( // May throw.
-		       varref,0,encoding?t_text:surrounding_type))) {
+    if(varref[0]==':') return type->format_entity (varref[1..]);
+    if (has_value (varref, "."))
+      if (mixed err = catch {
+	// It's intentional that we split on the first ':' for now, to
+	// allow for future enhancements of this syntax. ':' is thus
+	// not allowed in scope or variable names.
+	sscanf (varref, "%[^:]:%s", varref, string encoding);
+	context->current_var = varref;
+	mixed val;
+	if (zero_type (val = context->user_get_var ( // May throw.
+			 varref, 0, encoding ? t_text : surrounding_type))) {
+	  context->current_var = 0;
+	  return ({});
+	}
 	context->current_var = 0;
+	return encoding ? ({Roxen->roxen_encode (val, encoding)}) : ({val});
+      }) {
+	context->current_var = 0;
+	context->handle_exception (err, this_object()); // May throw.
 	return ({});
       }
-      context->current_var = 0;
-      return encoding ? ({Roxen->roxen_encode (val, encoding)}) : ({val});
-    }) {
-      context->current_var = 0;
-      context->handle_exception (err, this_object()); // May throw.
-      return ({});
-    }
     if (!surrounding_type->free_text)
       parse_error ("Unknown variable reference &%s; not allowed in this "
 		   "context.\n", varref);
