@@ -1,5 +1,5 @@
 /*
- * $Id: rbl.pike,v 1.1 1998/09/18 15:07:38 grubba Exp $
+ * $Id: rbl.pike,v 1.2 1999/10/10 19:28:41 grubba Exp $
  *
  * Support for RBL (Real-time Blackhole List).
  *
@@ -9,7 +9,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: rbl.pike,v 1.1 1998/09/18 15:07:38 grubba Exp $";
+constant cvs_version="$Id: rbl.pike,v 1.2 1999/10/10 19:28:41 grubba Exp $";
 constant thread_safe=1;
 
 // #define RBL_DEBUG
@@ -34,7 +34,9 @@ array register_module()
 	   "SMTP RBL support",
 	   "Support for the Real-time Blackhole List.<br>\n"
 	   "See <a href=\"http://maps.vix.com/rbl/\">"
-	   "MAPS RBL</a> for more information.\n"
+	   "MAPS RBL</a> and <a "
+	   "href=\"http://www.ling.helsinki.fi/users/reriksso/rbl/rbl.html\">"
+	   "RBL-Type Services</a> for more information.\n"
   });
 }
 
@@ -48,7 +50,7 @@ void create()
   defvar("server", "rbl.maps.vix.com", "RBL server", TYPE_STRING,
 	 "RBL server to use.<br>\n"
 	 "Examples are <tt>rbl.maps.vix.com</tt> and "
-	 "<tt>orbs.dorkslayers.com</tt>.");
+	 "<tt>relays.orbs.org</tt>.");
 }
 
 string query_name()
@@ -102,6 +104,14 @@ void async_classify_connection(object con, mapping con_info,
   // con_info->remoteip = "127.0.0.2";
 
   total++;
+
+  string server = QUERY(server);
+  if (server == "orbs.dorkslayers.com") {
+    report_warning("RBL: orbs.dorkslayers.com is obsolete. "
+		   "Replaced by relays.orbs.org.\n");
+    // FIXME: How to mark as modified?
+    server = QUERY(server) = "relays.orbs.org";
+  }
 
   string nodename = reverse(con_info->remoteip/".")*"."+"."+QUERY(server);
 
