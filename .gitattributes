@@ -16,4 +16,5 @@
 /modules/autoweb/webadm.pike foreign_ident
 /modules/dns/AutoDNS.pike foreign_ident
 /modules/mail/AutoMailAPI.pike foreign_ident
+/modules/mail/MailReader.pike foreign_ident
 /modules/protocols/smtp.pike foreign_ident
