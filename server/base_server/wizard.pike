@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.16 1997/08/20 10:31:43 per Exp $
+/* $Id: wizard.pike,v 1.17 1997/08/20 11:31:40 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -222,33 +222,62 @@ object get_wizard(string act, string dir, mixed ... args)
   if(!wizards[dir+act]) wizards[dir+act]=compile_file(dir+act)(@args);
   return wizards[dir+act];
 }
-
-int zonk;
-mapping|string wizard_menu(object id, string dir, string base, mixed ... args)
+int zonk=time();
+mapping get_actions(string base,string dir, array args)
 {
+  mapping acts = ([  ]);
+  foreach(get_dir(dir), string act)
+  {
+    mixed err;
+    err = catch
+    {
+      if(act[0]!='#' && act[-1]=='e')
+      {
+	string sm,rn = (get_wizard(act,dir,@args)->name||act), name;
+
+	if(sscanf(rn, "%*s:%s", name) != 2) name = rn;
+	sscanf(name, "%s//%s", sm, name);
+	if(!acts[sm]) acts[sm] = ({ });
+	acts[sm]+=
+	  ({"<!-- "+rn+" --><dt><font size=\"+2\">"
+	      "<a href=\""+base+"?action="+act+"&unique="+(zonk++)+"\">"+
+	      name+"</a></font><dd>"+(get_wizard(act,dir,@args)->doc||"")});
+      }
+    };
+//  if(err) report_error(describe_backtrace(err));
+  }
+  return acts;
+}
+
+string act_describe_submenues(array menues, string base)
+{
+  if(sizeof(menues)==1) return "";
+  string res = "<font size=+3><b>";
+  foreach(sort(menues), string s)
+    res+="<a href=\""+base+"?sm="+
+      replace(s||"Misc"," ","%20")+"&uniq="+(++zonk)+"\">"+
+      (s||"Misc")+"</a><br>";
+  return res + "</b></font>";
+}
+
+string focused_wizard_menu;
+mixed wizard_menu(object id, string dir, string base, mixed ... args)
+{
+  mapping acts;
   if(id->pragma["no-cache"]) wizards=([]);
+
+  if(!id->variables->sm)
+    id->variables->sm = focused_wizard_menu;
+  else
+    focused_wizard_menu = id->variables->sm=="0"?0:id->variables->sm;
+  
   if(!id->variables->action)
   {
-    string res="<dl>";
-    array acts = ({});
-    foreach(get_dir(dir), string act)
-    {
-      mixed err;
-      err = catch {
-	if(act[0]!='#' && act[-1]=='e')
-	{
-	  string rn = (get_wizard(act,dir,@args)->name||act), name;
-	  if(sscanf(rn, "%*s:%s", name) != 2)
-	    name = rn;
-	  acts+=({"<!-- "+rn+" --><dt><font size=\"+2\">"
-		    "<a href=\""+base+"?action="+act+"&unique="+(zonk++)+"\">"+
-		    name+"</a></font><dd>"+(get_wizard(act,dir)->doc||"") });
-	}
-      };
-      if(err)
-	report_error(describe_backtrace(err));
-    }
-    return res+(sort(acts)*"\n")+"</dl>";
+    mapping acts = get_actions(base, dir, args);
+    return "<table cellpadding=10><tr><td valign=top bgcolor=#e0f0ff>"+
+      act_describe_submenues(indices(acts),base)+
+      "</td>\n\n<td valign=top><dl>"+
+      (sort(acts[id->variables->sm]||({}))*"\n")+"</dl></td></tr></table>";
   }
   return get_wizard(id->variables->action,dir)->wizard_for(id,base,0,@args);
 }
