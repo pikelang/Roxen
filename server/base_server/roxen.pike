@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.598 2000/12/31 05:51:48 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.599 2000/12/31 21:51:27 nilsson Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1984,55 +1984,70 @@ class ImageCache
 
   void flush(int|void age)
   //! Flush the cache. If an age (an integer as returned by
-  //! <pi>time()</pi>) is provided, only images generated earlier than
-  //! that are flushed.
+  //! <pi>time()</pi>) is provided, only images with their latest access before
+  //! that time are flushed.
   {
-    db->query( "select GET_LOCK('"+name+"',10)" );
+    db->query( "LOCK TABLES "+name+" WRITE, "+name+"_data WRITE, "+name+"_meta WRITE" );
+
     report_debug("Flushing "+name+" image cache.\n");
     if( !age )
     {
       db->query( "DELETE FROM "+name+"_data" );
       db->query( "DELETE FROM "+name+"_meta" );
       db->query( "DELETE FROM "+name );
+      db->query( "UNLOCK TABLES" );
+      return;
     }
-    else
-    {
-      array ids = db->query( "SELECT id FROM "+name+" WHERE ctime < "+age)->id;
-      foreach( ids, string q )
-      {
-        db->query( "DELETE FROM "+name+"_data WHERE id='"+q+"'" );
-        db->query( "DELETE FROM "+name+"_meta WHERE id='"+q+"'" );
-        db->query( "DELETE FROM "+name+     " WHERE id='"+q+"'" );
-      }
+
+    array(string) ids = db->query( "SELECT id FROM "+name+" WHERE atime < "+age)->id;
+
+    int q;
+    while(q<sizeof(ids)) {
+      string list = ids[q..q+100] * "','";
+      q+=100;
+
+      db->query( "DELETE FROM "+name+"_data WHERE id in ('"+list+"')" );
+      db->query( "DELETE FROM "+name+"_meta WHERE id in ('"+list+"')" );
+      db->query( "DELETE FROM "+name+     " WHERE id in ('"+list+"')" );
     }
+
+    // OPTIMIZE TABLE has a lock of its own.
+    db->query( "UNLOCK TABLES" );
     catch
     {
       // Old versions of Mysql lacks OPTIMIZE. Not that we support
       // them, really, but it might be nice not to throw an error, at
       // least.
-      db->query( "OPTIMIZE TABLE "+name+"_data\n");
-      db->query( "OPTIMIZE TABLE "+name+"_meta\n");
+      db->query( "OPTIMIZE TABLE "+name+"_data" );
+      db->query( "OPTIMIZE TABLE "+name+"_meta" );
+      db->query( "OPTIMIZE TABLE "+name );
     };
-    db->query( "select RELEASE_LOCK('"+name+"')" );
   }
 
   array(int) status(int|void age)
   //! Return the total number of images in the cache, their cumulative
   //! sizes in bytes and, if an age time_t was supplied, the number of
-  //! images generated earlier than that (see <ref>flush()</ref>).
-  //! (These three integers are returned regardless of whether an age
-  //! parameter was given.)
+  //! images that has not been accessed after that time is returned
+  //!  (see <ref>flush()</ref>). (Three integers are returned
+  //! regardless of whether an age parameter was given.)
   {
-    int files=0, size=0, aged=0;
-    array q;
+    int imgs=0, size=0, aged=0;
+    array(mapping(string:string)) q;
 
     q=db->query("select SUM(size) as size,COUNT(*) as num from "+name);
-    files = (int)q[0]->num;
+    imgs = (int)q[0]->num;
     size = (int)q[0]->size;
 
-    q=db->query("select SUM(1) as num from "+name+" where ctime < "+age);
+    q=db->query("select SUM(LENGTH(data)) as size from "+name+"_meta");
+    size += (int)q[0]->size;
+
+    // Add, for each image, the size of three ids, one int, two bigints
+    // and the overhead of two mediumblobs.
+    size += imgs * ( 64 + 64 + 64 + 4 + 8 + 8 + 3 + 3 );
+
+    q=db->query("select SUM(1) as num from "+name+" where atime < "+age);
     aged = (int)q[0]->num;
-    return ({files, size, aged});
+    return ({ imgs, size, aged });
   }
 
   static mapping restore( string id )
