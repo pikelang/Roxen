@@ -1,5 +1,5 @@
 // Roxen AutoMail POP3 Server
-// $Id: pop3.pike,v 1.4 1998/09/23 18:07:01 leif Exp $
+// $Id: pop3.pike,v 1.5 1998/09/24 11:34:03 js Exp $
 // Leif Stensson, September 1998.
 
 #include <module.h>
@@ -143,9 +143,10 @@ void retrieve_mail(mixed id, int msgno, int lines)
       mixed s;
       id->clientport->write("+OK Mail data follows.\r\n");
       while ((s = f->gets()) != 0)
-      { s += "\n";
-        if (stringp(s) && sizeof(s) > 0 && s[0] == ".")
-            id->clientport->write(".");
+      {
+	s += "\n";
+        if (sizeof(s) > 0 && s[0] == '.')
+            s="."+s;
         id->clientport->write(s);
         if (sizeof(s) < 2 || s[sizeof(s)-2..] != "\r\n")
             id->clientport->write("\r\n");
@@ -154,8 +155,8 @@ void retrieve_mail(mixed id, int msgno, int lines)
       while ((s = f->gets()) != 0 && (--lines != -1))
       {
         s+="\n";
-	if (stringp(s) && sizeof(s) > 0 && s[0] == ".")
-            id->clientport->write(".");
+	if (sizeof(s) > 0 && s[0] == '.')
+            s="."+s;
         id->clientport->write(s);
         if (sizeof(s) < 2 || s[sizeof(s)-2..] != "\r\n")
             id->clientport->write("\r\n");
