@@ -11,7 +11,7 @@
 //
 // Make sure links work _inside_ unfolded documents.
 
-constant cvs_version = "$Id: directories.pike,v 1.49 2000/02/24 04:02:39 nilsson Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.50 2000/02/29 23:40:54 nilsson Exp $";
 constant thread_safe=1;
 
 //#define DIRECTORIES_DEBUG
@@ -35,7 +35,7 @@ string output_format(array(string) filenames)
       if(i>w)
 	w = i;
 
-  return sprintf("<img border=\"0\" src=\"%%s\" alt=\"\"> "
+  return sprintf("<img border=\"0\" src=\"%%s\" alt=\"\" /> "
 		 "<a href=\"%%s\">%%%s-%ds</a>%s%s   %%s\n",
 		 (query("truncate")?":":""), w,
 		 (query("size") ? "   %11s" : "%.0s" ),
@@ -177,7 +177,7 @@ string describe_directory(string d, RequestID id)
 
     if(sizeof(readme))
       result += find_readme(d, id);
-    result += "<hr noshade><pre>\n";
+    result += "<hr noshade=\"noshade\" /><pre>\n";
   }
   else {
     DIRS_WERR("Looking for lock file in "+d);
@@ -260,7 +260,7 @@ string describe_directory(string d, RequestID id)
       }
       break;
     case "image":
-      extras = "<img src=\""+ replace( d, "//", "/" ) + file +"\" border=\"0\">";
+      extras = "<img src=\""+ replace( d, "//", "/" ) + file +"\" border=\"0\" />";
       break;
     case "Directory":
     case "Module location":
