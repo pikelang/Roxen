@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.73 2002/02/04 17:28:52 jonasw Exp $
+ * $Id: ftp.pike,v 2.74 2002/02/06 17:06:34 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -155,14 +155,6 @@ class RequestID2
   }
 
   void end()
-  {
-  }
-
-  //  Response header functions may get called but needn't do anything
-  void add_response_header(string name, string value)
-  {
-  }
-  void set_response_header(string name, string value)
   {
   }
 
