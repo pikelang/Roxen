@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.98 1999/09/23 17:17:28 mast Exp $
+ * $Id: roxenloader.pike,v 1.99 1999/09/23 18:26:59 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.98 1999/09/23 17:17:28 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.99 1999/09/23 18:26:59 mast Exp $";
 
 #define perror roxen_perror
 private static int perror_status_reported=0;
@@ -87,6 +87,7 @@ int use_syslog, loggingfield;
  * Some efuns used by Roxen
  */
 
+string oct;
 int last_was_change;
 int roxen_started = time();
 string short_time()
@@ -110,6 +111,7 @@ string short_time()
   mapping l = localtime( time( ) );
   string ct =  sprintf("%2d:%02d:%02d  : ", l->hour, l->min, l->sec );
   last_was_change=5;
+  oct = ct;
   return ct;
 }
 
@@ -139,13 +141,11 @@ void roxen_perror(string format, mixed ... args)
 
   if ((perror_status_reported < t) && last_was_nl)
   {
-    string date = ctime(time());
-    stderr->write(short_time()+"** "+ date[0..10] + date[20..23] +
-		  "   pid: "+pid+"  ppid: "+getppid()+
+    stderr->write(short_time()+"   pid: "+pid+"   ppid: "+getppid()+
 #if efun(geteuid)
-		  (geteuid()!=getuid()?"  euid: "+pw_name(geteuid()):"")+
+		  (geteuid()!=getuid()?"   euid: "+pw_name(geteuid()):"")+
 #endif
-		  "  uid: "+pw_name(getuid())+"\n");
+		  "   uid: "+pw_name(getuid())+"\n");
     perror_status_reported = t + 60;	// 60s delay.
   }
 
