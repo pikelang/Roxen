@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.48 2001/05/22 20:08:12 nilsson Exp $
+// $Id: module.pmod,v 1.49 2001/05/24 16:40:50 nilsson Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -326,7 +326,7 @@ class Variable
     if( sizeof( val = get_form_vars(id)) && val[""])
     {
       val = transform_from_form( val[""] );
-      if( !force && val != query() )
+      if( !force && val == query() )
 	return;
       array b;
       mixed q = catch( b = verify_set_from_form( val ) );
