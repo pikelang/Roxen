@@ -58,7 +58,7 @@
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.22 2001/01/20 23:03:29 hop Exp $";
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.23 2001/01/23 14:50:10 hop Exp $";
 constant thread_safe=0;
 
 #include <module.h>
@@ -561,8 +561,9 @@ array|int auth (array(string) auth, object id)
     if(pw == "{x-hop}*")  // !!!! HACK
 	pw = p;
     if(p != pw) {
-	// Digests {CRYPT}, {SH1} and {MD5}
+	// Digests {CRYPT}, {SH1}, {SSHA}, {MD5} and {SMD5}
 	int pok = 0;
+	string sv, salt;
 	if (sizeof(pw) > 6)
 	    switch (upper_case(pw[..4])) {
 		case "{SHA}" :
@@ -570,14 +571,32 @@ array|int auth (array(string) auth, object id)
 		    DEBUGLOG ("Trying SHA digest ...");
 		    break;
 
+		case "{SSHA" :
+		    if (sizeof(pw) > 7 && pw[5] == '}') {
+			if(sscanf(MIME.decode_base64(pw[6..]),"%20s%s",sv,salt) != 2 || sizeof(sv) != 20 || sizeof(salt) < 4)
+			  break;
+	 		pok = (pw[6..] == MIME.encode_base64(Crypto.sha()->update(p+salt)->digest()+salt));
+			DEBUGLOG ("Trying SSHA digest ...");
+		    }
+		    break;
+
 		case "{MD5}" :
 		    pok = (pw[5..] == MIME.encode_base64(Crypto.md5()->update(p)->digest()));
 		    DEBUGLOG ("Trying MD5 digest ...");
 		    break;
 
+		case "{SMD5" :
+		    if (sizeof(pw) > 7 && pw[5] == '}') {
+			if(sscanf(MIME.decode_base64(pw[6..]),"%16s%s",sv,salt) != 2 || sizeof(sv) != 16 || sizeof(salt) < 4)
+			  break;
+	 		pok = (pw[6..] == MIME.encode_base64(Crypto.md5()->update(p+salt)->digest()+salt));
+			DEBUGLOG ("Trying SMD5 digest ...");
+		    }
+		    break;
+
 		case "{CRYP" :
-		    if (sizeof(pw) > 7 && pw[5..6] == "T}") {
-			pok = !crypt(p,pw[7..]);
+		    if (sizeof(pw) > 7 && pw[5..7] == "T}") {
+			pok = !crypt(p,pw[8..]);
 			DEBUGLOG ("Trying CRYPT digest ...");
 		    }
 		    break;
@@ -649,5 +668,8 @@ array|int auth (array(string) auth, object id)
 constant module_type = MODULE_AUTH || MODULE_EXPERIMENTAL;
 constant module_name = "LDAP directory authorization";
 constant module_doc  = "Module for LDAP user authorization using "
-  "Pike's internal Ldap directory interface.";
+  "Pike's internal Ldap directory interface." +
+  "<br />" +
+  "Note: In <i>guest</i> mode are supported passwords hashed by " +
+  "{CRYPT}, {SHA}, {SSHA}, {MD5} and {SMD5} schemas.";
 
