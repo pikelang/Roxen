@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.330 2002/06/10 14:53:33 nilsson Exp $
+// $Id: roxenloader.pike,v 1.331 2002/06/11 00:42:18 nilsson Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.330 2002/06/10 14:53:33 nilsson Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.331 2002/06/11 00:42:18 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1925,6 +1925,14 @@ int dump( string file, program|void p )
   return 0;
 }
 
+static void feature_warn(string type, array(string) msg) {
+  string out = "\n\n\n";
+  out += "------ " + type + " " + "-"*(57-sizeof(type)) + "\n";
+  out += sprintf("%-=65s", msg[*])*"\n\n";
+  out += "\n" + "-"*65;
+  report_debug( out+"\n" );
+}
+
 object(Stdio.Stat)|array(int) da_Stat_type;
 LocaleString da_String_type;
 void do_main( int argc, array(string) argv )
@@ -1935,80 +1943,62 @@ void do_main( int argc, array(string) argv )
   add_constant( "connect_to_my_mysql", connect_to_my_mysql );
   add_constant( "clear_connect_to_my_mysql_cache",
 		clear_connect_to_my_mysql_cache );  
+
+  //
+  // Test Pike for required capabilities.
+  //
+
 #ifdef SECURITY
 #if !constant(__builtin.security.Creds)
-  report_debug(
-#"
------- FATAL ----------------------------------------------------
-SECURITY defined (the internal security system in roxen), but
-the pike binary has not been compiled --with-security. This makes
-it impossible for roxen to have any internal security at all.
------------------------------------------------------------------
-");
+  feature_warn("FATAL", ({
+    "SECURITY defined (the internal security system in roxen), but the pike "
+    "binary has not been compiled --with-security. This makes it impossible "
+    "for roxen to have any internal security at all." }) );
   exit(-1);
-#endif
-#endif
+#endif // !constant(__builtin.security.Creds)
+#endif // SECURITY
 
   if( (-1&0xffffffff) < 0 )
-  {
-    report_debug(
-#"
-------- WARNING -----------------------------------------------
-Roxen 2.4 requires bignum support in pike.
-Please recompile pike with gmp / bignum support to run Roxen.
-
-It might still be possible to start roxen, but the 
-functionality will be affected, and stange errors might occurr.
----------------------------------------------------------------
-
-");
-  }
+    feature_warn("WARNING", ({
+      "Roxen 2.4 requires bignum support in pike. "
+      "Please recompile pike with gmp / bignum support to run Roxen.",
+      "It might still be possible to start roxen, but the "
+      "functionality will be affected, and stange errors might occur." }) );
 
 #ifdef NOT_INSTALLED
-    report_debug(
-#"
-------- WARNING -----------------------------------------------
-You are running with an un-installed pike binary.
-
-Please note that this is unsupported, and might stop working at
-any time, since some things are done differently in uninstalled
-pikes, as an example the module search paths are different, and
-some environment variables are ignored.
----------------------------------------------------------------
-
-");
-#endif
+  feature_warn("WARNING", ({
+    "You are running with an un-installed pike binary.",
+    "Please note that this is unsupported, and might stop working at "
+    "any time, since some things are done differently in uninstalled "
+    "pikes, as an example the module search paths are different, and "
+    "some environment variables are ignored." }) );
+#endif // NOT_INSTALLED
 
 #if __VERSION__ < 7.3
-  report_debug(
-#"
-
-
-******************************************************
-Roxen 2.4 requires pike 7.3.
-Please install a newer version of Pike.
-******************************************************
-
-
-");
-  _exit(0); /* 0 means stop start script looping */
-#endif /* __VERSION__ < 7.3 */
+  feature_warn("FATAL", ({
+    "Roxen 2.4 requires pike 7.3. "
+    "Please install a newer version of Pike." }) );
+  _exit(0); // 0 means stop start script looping
+#endif // __VERSION__ < 7.3
 
 #if !constant (Mysql.mysql)
-  report_debug (#"
-
-
-******************************************************
-Roxen 2.4 requires MySQL support in Pike.
-Your Pike has been compiled without support for MySQL.
-Please install MySQL client libraries and reconfigure
-and rebuild Pike from scratch.
-******************************************************
-
-
-");
+  feature_warn("FATAL", ({
+    "Roxen 2.4 requires MySQL support in Pike. "
+    "Your Pike has been compiled without support for MySQL. "
+    "Please install MySQL client libraries and reconfigure "
+    "and rebuild Pike from scratch." }) );
   _exit(0); // 0 means stop start script looping
 #endif // !constant (Mysql.mysql)
+
+#if !constant( Gz.inflate )
+  feature_warn("FATAL", ({
+    "The Gz (zlib) module is not available. "
+    "Various parts for Roxen WebServer will not function correctly "
+    "without Gz support, e.g. the state handler and the built in font.",
+    "To get zlib support, install zlib from "
+    "ftp://ftp.freesoftware.com/pub/infozip/zlib/zlib.html "
+    "and recompile pike, after removing the file 'config.cache'." }) );
+#endif
 
   int start_time = gethrtime();
   last_was_nl = 1;
@@ -2084,30 +2074,13 @@ and rebuild Pike from scratch.
     exit(1);
   }
 
-
-#if constant( Gz.inflate )
-  add_constant("grbz",lambda(string d){return Gz.inflate()->inflate(d);});
-#else
-  add_constant("grbz",lambda(string d){return d;});
-  report_debug(
-#"
-------- WARNING -----------------------------------------
-The Gz (zlib) module is not available.
-The default builtin font will not be available.
-To get zlib support, install zlib from
-ftp://ftp.freesoftware.com/pub/infozip/zlib/zlib.html
-and recompile pike, after removing the file 'config.cache'
-----------------------------------------------------------
-
-");
-#endif
-
   add_constant("spawne",spawne);
   add_constant("spawn_pike",spawn_pike);
   add_constant("popen",popen);
   add_constant("roxen_popen",popen);
   add_constant("init_logger", init_logger);
   add_constant("capitalize", String.capitalize);
+  add_constant("grbz",lambda(string d){return Gz.inflate()->inflate(d);});
 
   // It's currently tricky to test for Image.TTF correctly with a
   // preprocessor directive, so let's add a constant for it.
@@ -2124,23 +2097,16 @@ and recompile pike, after removing the file 'config.cache'
   // We can load the builtin font.
   add_constant("__rbf", "font_handlers/rbf" );
 #else
-  report_debug(
-#"
-------- WARNING ----------------------------------------------
-The Image.TTF (freeetype) module is not available.
-True Type fonts and the default font  will not be available.
-To get TTF support, download a Freetype 1 package from
-
-http://freetype.sourceforge.net/download.html#freetype1
-
-Install it, and then remove config.cache in pike and recompile.
-If this was a binary release of Roxen, there should be no need
-to recompile the pike binary, since the one included should
-already have the FreeType interface module, installing the 
-library should be enough.
---------------------------------------------------------------
-
-" );
+  feature_warn("WARNING", ({
+    "The Image.TTF (freeetype) module is not available. "
+    "True Type fonts and the default font  will not be available. "
+    "To get TTF support, download a Freetype 1 package from",
+    "http://freetype.sourceforge.net/download.html#freetype1",
+    "Install it, and then remove config.cache in pike and recompile. "
+    "If this was a binary release of Roxen, there should be no need "
+    "to recompile the pike binary, since the one included should "
+    "already have the FreeType interface module, installing the  "
+    "library should be enough." }) );
 #endif
 #endif
 
