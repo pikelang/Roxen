@@ -9,6 +9,8 @@
 inherit "module";
 inherit "roxenlib";
 
+#define old_rxml_compat 1
+
 /* maximum size of the header before sending and error message and
  * killing the script.
  */
@@ -37,7 +39,7 @@ the headers and the body). Please notify the author of the script of this\n\
 problem.\n"
 
 
-constant cvs_version = "$Id: cgi.pike,v 2.24 1999/07/27 23:21:40 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.25 1999/08/12 12:54:35 nilsson Exp $";
 
 #ifdef CGI_DEBUG
 #define DWERROR(X)	report_debug(X)
@@ -958,7 +960,7 @@ void create(object conf)
 	 "If set, the variable REMOTE_PASSWORD will be set to the decoded "
 	 "password value.");
 
-  defvar( "cgi_tag", 1, "Provide the &lt;cgi&gt; tag", TYPE_FLAG,
+  defvar( "cgi_tag", 1, "Provide the &lt;cgi&gt; and &lt;runcgi&gt; tags", TYPE_FLAG,
            "If set, the &lt;cgi&gt; tag will be available" );
 
   defvar("priority", "normal", "Limits: Priority", TYPE_STRING_LIST,
@@ -1060,16 +1062,16 @@ int|string tag_runcgi( string tag, mapping args, string cont, RequestID id )
     return 0;
 
   cont=parse_html(cont, ([]), (["attrib":
-    lambda(string tag, mapping m, string cont, mapping c, object id) {
+    lambda(string tag, mapping m, string cont, object id) {
        id->variables[m->attrib]=cont;
        return "";
-    }]),([]),id);
+    }]),id);
 
   return parse_html(cont, (["cgi":
-    lambda(string tag, mapping m, mapping c, object id) {
+    lambda(string tag, mapping m, object id) {
       return tag_cgi(tag, m, id);
     }
-  ]),([]),([]),id);
+  ]),([]),id);
 }
 
 int|string tag_cgi( string tag, mapping args, RequestID id )
@@ -1094,8 +1096,10 @@ int|string tag_cgi( string tag, mapping args, RequestID id )
   string file = args->script;
   m_delete(args, "script");
   if(!file)
-    return "No 'script' argument to the CGI tag";
+    return rxml_error(tag,"No \"script\" argument to the CGI tag.", id);
   fid->not_query = fix_relative( file, id );
+
+#if old_rxml_compat
   foreach(indices(args), string arg )
   {
     if(arg[..7] == "default-")
@@ -1106,6 +1110,8 @@ int|string tag_cgi( string tag, mapping args, RequestID id )
     else
       fid->variables[arg] = args[arg];
   }
+#endif
+
   fid->realfile=0;
   fid->method = "GET";
   mixed e = catch 
