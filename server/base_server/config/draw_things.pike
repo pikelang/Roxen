@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.2 1996/12/02 16:31:32 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.3 1996/12/03 00:51:47 per Exp $";
 
 object (Image) bevel(object (Image) in, int width)
 {
@@ -100,21 +100,127 @@ object (Image) draw_module_header(string name, int type, object font)
   return result;
 }
 
+#define R 0x00
+#define G 0x30
+#define B 0x70
+
+#define dR 0x00
+#define dG 0x20
+#define dB 0x50
+
+
+#define bR 0x00
+#define bG 0x30
+#define bB 0x70
+
+#define btR 0xff
+#define btG 0xff
+#define btB 0xee
+
+#define bhR 0x00
+#define bhG 0xaa
+#define bhB 0xff
+
+#define tR 0xff
+#define tG 0xff
+#define tB 0xff
+
+#define hR 0
+#define hG 0x20
+#define hB 0xff
+
 object (Image) draw_config_button(string name, object font)
 {
-  if(!strlen(name)) return Image(1,15,0xff/2, 0xee/2, 0xaa/2);
+  if(!strlen(name)) return Image(1,15,dR, dG, dB);
 
   object txt = font->write(name)->scale(0.5);
-  object ruta = Image(txt->xsize()+25, 20, 0xff/2, 0xee/2, 0xaa/2);
-  object linje = Image(2,30, 255,255,255);
+  object ruta = Image(txt->xsize()+25, 20, bR, bG, bB);
+  object linje = Image(2,30, bhR,bhG,bhB);
 
   linje=linje->setcolor(0,0,0)->line(0,0,0,30);
-
-  linje=linje->setcolor(0xff/2, 0xee/2, 0xaa/2)->rotate(-25)->copy(0,3,29,28);
+  linje=linje->setcolor(bR,bG,bB)->rotate(-25)->copy(0,3,29,28);
 
   ruta=ruta->paste_alpha(linje, 50);
-  ruta=ruta->paste_mask(Image(txt->xsize(),20), txt, 22, 0);
+  ruta=ruta->paste_mask(Image(txt->xsize(),20,btR,btG,btB), txt, 22, 0);
 
   txt=linje=0;
   return ruta->scale(0,15);
+}
+
+object (Image) draw_unselected_button(string name, object font)
+{
+  if(!strlen(name)) return Image(1,15, R,G,B);
+
+  object txt = font->write(name)->scale(0.5);
+  object ruta = Image(txt->xsize()+40, 20, R, G, B), s;
+  object linje = Image(2,30, hR,hG,hB);
+  object linje_mask = Image(2,30, 128,128,128);
+
+  linje_mask=linje_mask->setcolor(0,0,0)->rotate(-25)->copy(0,3,29,28);
+  
+  ruta=ruta->paste_mask(Image(txt->xsize(),20,tR,tG,tB), txt, 20, 0);
+  ruta=ruta->paste_mask(Image(30,20,hR,hG,hB), linje_mask);
+  s=ruta->select_from(0,0);
+  ruta->paste_mask(Image(40,40,dR,dG,dB), s);
+  linje_mask = linje_mask->mirrory()->color(196,196,196);
+  ruta->paste_mask(Image(20,20,0,0,0), linje_mask,txt->xsize()+27,0);
+  s=ruta->select_from(txt->xsize()+34,0);
+  ruta->paste_mask(Image(400,40,dR,dG,dB), s);
+  txt=linje=0;
+  ruta = ruta->line(0,ruta->ysize()-2,ruta->xsize(),ruta->ysize()-2,R,G,B);
+  ruta = ruta->line(0,ruta->ysize()-1,ruta->xsize(),ruta->ysize()-1,0x0,0x0,0xff);
+  return ruta->scale(0,15);
+}
+
+object (Image) draw_selected_button(string name, object font)
+{
+  if(!strlen(name)) return Image(1,15, dR, dG, dB);
+
+  object txt = font->write(name)->scale(0.5);
+  object ruta = Image(txt->xsize()+40, 20, dR, dG, dB), s;
+  object linje = Image(2,30, hR,hG,hB);
+  object linje_mask = Image(2,30, 128,128,128);
+
+  linje_mask=linje_mask->setcolor(0,0,0)->rotate(-25)->copy(0,3,29,28);
+  
+  ruta=ruta->paste_mask(Image(txt->xsize(),20,tR,tG,tB), txt, 20, 0);
+  ruta=ruta->paste_mask(Image(30,20,hR,hG,hB), linje_mask);
+  linje_mask = linje_mask->mirrory()->color(128,128,128);
+  ruta->paste_mask(Image(20,20,0,0,10), linje_mask,txt->xsize()+27,0);
+  txt=linje=0;
+  return ruta->scale(0,15);
+}
+
+
+object draw_unfold(int c)
+{
+  object f=Image(50,50,dR,dG,dB);
+  f->setcolor(c?255:0,255,c?0:255);
+  for(int i=1; i<25; i++)
+    f->line(25-i,i,25+i,i);
+  f->setcolor(dR,dG,dB);
+  return f->rotate(-90)->scale(12,0);
+}
+
+object draw_fold(int c)
+{
+  object f=Image(50,50,dR,dG,dB);
+  f->setcolor(c?255:0,255,c?0:255);
+  for(int i=1; i<25; i++) f=f->line(25-i,i,25+i,i);
+  f->setcolor(dR,dG,dB);
+  return f->rotate(180)->scale(12,0);
+}
+
+object draw_back(int c)
+{
+  object f=Image(50,50,dR,dG,dB);
+  f->setcolor(c?255:0,255,c?0:255);
+  for(int i=1; i<25; i++) f=f->line(25-i,i,25+i,i);
+  for(i=0; i<10; i++){
+    f=f->line(25-i,24,25-i,50);
+    f=f->line(25+i,24,25+i,50);
+  }
+  f->setcolor(dR,dG,dB);
+  f=f->rotate(45)->autocrop()->scale(12,0)->autocrop(5, 0,1,0,0, dR,dG,dB);
+  return f;
 }

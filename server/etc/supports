@@ -31,8 +31,6 @@
 #  clientname from the patterns, the 'name' _must_ be first in the
 #  clientname for the patterns in the 'section' to be checked).
 
-#define rcsid "$Id: supports,v 1.2 1996/11/30 11:03:46 kg Exp $"
-
 #define basic	        images, forms, gifinline, mailto
 #define some_html3	divisions, div, supsub, bigsmall, align
 

@@ -2,9 +2,9 @@
 * text ident
 *.gif binary
 *.gz binary
-*.jpg binary
 /server/modules/proxies/gopher.pike -text -crlf
 *.ppm binary
+font binary
 
 # Handling of foreign (ie CVS) identifiers.
 #
@@ -49,7 +49,6 @@
 /server/bin/garbagecollector.pike foreign_ident
 /server/bin/install.pike foreign_ident
 /server/etc/roxen_master.pike foreign_ident
-/server/etc/supports foreign_ident
 /server/languages/catala.pike foreign_ident
 /server/languages/dutch.pike foreign_ident
 /server/languages/english.pike foreign_ident

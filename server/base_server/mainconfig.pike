@@ -1,13 +1,21 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.12 1996/12/02 16:31:31 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.13 1996/12/03 00:51:46 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
 #include <confignode.h>
 #include <module.h>
 
-#define BODY (roxen->variables->BG[VAR_VALUE]?"<body background=/image/background.jpg bgcolor=#f0e0a0 text=#000000 link=#0000f0 vlink=#0000f0 alink=#00f000>":"<body>")
-//#define BODY "<body bgcolor=#ffeeaa text=#000000 link=#0000f0 vlink=#0000f0 alink=#00f000>"
+#define dR "00"
+#define dG "20"
+#define dB "ff"
+
+#define bdR "00"
+#define bdG "30"
+#define bdB "70"
+
+
+#define BODY "<body bgcolor=#002050 text=#ffffff link=#ffffaa vlink=#ffffaa alink=#f0e0f0>"
 
 #define TABLEP(x, y) (id->supports->tables ? x : y)
 
@@ -36,14 +44,14 @@ program Node = class {
     if(folded)
       return ("<a name=\""+name+"\">"
 	      "<a href=\"/(unfold)/" + name + "?"+(bar++)+
-	      "\"><img border=0 src=/image/unfold"
-	      +(changed?"2":"")+".gif alt="+(changed?"*-":"--")+">"
+	      "\"><img border=0 align=baseline src=/auto/unfold"
+	      +(changed?"2":"")+" alt="+(changed?"*-":"--")+">"
 	      "</a> "+s);
     else
       return ("<a name=\""+name+"\">"
 	      "<a href=\"/(fold)/" + name + "?"+(bar++)+
-	      "\"><img border=0 src=/image/fold"+(changed?"2":"")
-	      +".gif  align=top alt="+(changed?"**":"\"\\/\"")+">"
+	      "\"><img border=0 src=/auto/fold"+(changed?"2":"")
+	      +"  alt="+(changed?"**":"\"\\/\"")+">"
 	      "</a> "+s);
   }
 
@@ -139,34 +147,16 @@ void create()
 }
 
 #define PUSH(X) do{res+=({(X)});}while(0)
-#define BUTTON(ACTION,TEXT,ALIGN) PUSH("<a href=\"/(ACTION)"+(o?o->path(1):"")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=/auto/button/"+replace(TEXT," ","%20")+" alt=\""+TEXT+"\""+(("ALIGN"-" ")=="left"?"":" align="+("ALIGN"-" "))+"></a>")
+#define BUTTON(ACTION,TEXT,ALIGN) PUSH("<a href=\"/(ACTION)"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=/auto/button/"+replace(TEXT," ","%20")+" alt=\""+TEXT+"\""+(("ALIGN"-" ")=="left"?"":" align="+("ALIGN"-" "))+"></a>")
 
 inline string shutdown_restart(string save, int compact,void|object o)
 {
-  array res = ({});
-
-
-  PUSH("<br clear=all><table width=100%><tr><td bgcolor=#7f7755>");
-  
-  if(save)
-    BUTTON(save, "Save current configuration", left);
-  BUTTON(restart, "Restart Roxen", left);
-  BUTTON(shutdown,"Shutdown Roxen", left);
-  PUSH("<img src=/auto/button/%20>");
-  PUSH("</table>");
-  return res*"";
+  return /*"<br clear=all>"*/"";
 }
 
 string default_head(string h, string|void save)
 {
-  return ("<title>"+h+"</title>"
-	  + BODY 
-	  + (roxen->variables->BS[VAR_VALUE]?
-	     ("<h2 align=center>"+shutdown_restart(save, 1)+h+"</h2>"):
-	     ("<h1 align=center><img align=left alt=\""
-	      +h+"\" src=/image/roxen.gif></h1>"
-              +shutdown_restart(save, 0)))
-	  + "<br clear=all>");
+  return ("<title>"+h+"</title>"+ BODY);
 }
 
 object find_node(string l)
@@ -777,14 +767,6 @@ mapping initial_configuration(object id)
       n2->data[VAR_VALUE] = roxen->QUERY(ConfigurationUser);
       n2->change(1);	
 	
-      
-      if(strlen(id->variables->pattern))
-      {
-	node = node->descend("Configuration interface", 1)->descend("IP-Pattern", 1);
-	node->folded=0;
-	node->data[VAR_VALUE] = id->variables->pattern;
-	node->change(1);
-      }
       root->save();
       return std_redirect(root, id);
     }
@@ -826,8 +808,25 @@ object module_of(object node)
 
 string extract_almost_top(object node)
 {
-  for(;node->up!=root;node=node->up);
+  if(!node) return "";
+  for(;node && (node->up!=root);node=node->up);
+  if(!node) return "";
   return node->path(1);
+}
+
+
+
+
+string tablist(array(string) nodes, array(string) links, int selected)
+{
+  array res = ({});
+  for(int i=0; i<sizeof(nodes); i++)
+    if(i!=selected)
+      PUSH("<a href=\""+links[i]+"\"><img alt=\""+nodes[i]+"  \" src=/auto/unselected/"+replace(nodes[i]," ","%20")+" border=0></a>");
+    else
+      PUSH("<a href=\""+links[i]+"\"><img alt=\""+nodes[i]+"  \" src=/auto/selected/"+replace(nodes[i]," ","%20")+" border=0></a>");
+  PUSH("<br>");
+  return res*"";
 }
 
 mapping (string:string) selected_nodes =
@@ -836,38 +835,37 @@ mapping (string:string) selected_nodes =
   "Globals":"/Globals",
   "Status":"/Status",
   "Errors":"/Errors",
-   ]);
+]);
 
-array tabs = ({
-  ({ "Configurations", read_bytes("etc/tablists/1.html") }),
-  ({ "Globals",  read_bytes("etc/tablists/2.html") }),
-  ({ "Status",  read_bytes("etc/tablists/3.html") }),
-  ({ "Errors",  read_bytes("etc/tablists/4.html") }),
+constant tabs = ({
+  "Configurations",
+  "Globals",
+  "Status",
+  "Errors",
 });
 
+constant tab_names = ({
+ "Virtual servers", 
+ "Global variables",
+ "Status info",
+ "Error log",
+});
 		
 
 string display_tabular_header(object node)
 {
   string p, s;
-  int i;
   
-  s = extract_almost_top(node);
-  s-="/";
-  string sel = root->descend(s, 1)->path(1)+"?"+(bar++);
+  s = extract_almost_top(node) - "/";
   selected_nodes[s] = node->path(1);
 
-  for(i=0;i<sizeof(tabs);i++)
-    if(s==tabs[i][0])
-      return replace(tabs[i][1],
-		     ({"@servers", "@globals", "@status", "@debug" }),
-		     ({
-		       (i==0?sel:selected_nodes["Configurations"]+"?"+bar++),
-		       (i==1?sel:selected_nodes["Globals"]+"?"+bar++),
-		       (i==2?sel:selected_nodes["Status"]+"?"+bar++),
-		       (i==3?sel:selected_nodes["Errors"]+"?"+bar++),
-		     }));
-  return ("");
+  array links = ({
+    selected_nodes[tabs[0]]+"?"+(bar++),
+    selected_nodes[tabs[1]]+"?"+(bar++),
+    selected_nodes[tabs[2]]+"?"+(bar++),
+    selected_nodes[tabs[3]]+"?"+(bar++),
+  });
+  return tablist(tab_names, links, search(tabs,s));
 }
 
 // Return the number of unfolded nodes on the level directly below the passed
@@ -882,42 +880,60 @@ int nunfolded(object o)
 }
 
 
-object module_font = Font()->load("fonts/32/urw_itc_avant_garde-demi-r");
+object module_font = Font()->load("fonts/32/configuration_font");
 object button_font = module_font;
 
 mapping auto_image(string in, object id)
 {
   string key, value;
+  array trans = ({ (int)("0x"+dR),(int)("0x"+dG),(int)("0x"+dB) });
   mapping r;
   mixed e;
-  sscanf(in, "%s/%s", key, value);
+  object i;
+
+  if(!id->pragma["no-cache"] && (r=cache_lookup("config_images", in)))
+    return r;
+  if(!sscanf(in, "%s/%s", key, value))
+    key=in;
+
   switch(key)
   {
    case "module":
-    if(!id->pragma["no-cache"] && (r=cache_lookup("module_images", value)))
-      return r;
-    if(e=catch {
-      r = http_string_answer(draw_module_header(roxen->allmodules[value][0],
-						roxen->allmodules[value][2],
-						module_font)
-			     ->togif(64), "image/gif");
-    })
-      perror("While drawing auto-image: \n"+describe_backtrace(e)+"\n");
-    cache_set("module_images", value, r);
-    return r;
-
+    i = draw_module_header(roxen->allmodules[value][0],
+			   roxen->allmodules[value][2],
+			   module_font);
+    break;
+    
    case "button":
-    if(!id->pragma["no-cache"] && (r=cache_lookup("config_button_image", value)))
-      return r;
-    if(e=catch {
-      r = http_string_answer(draw_config_button(value,button_font)->togif(32),
-			     "image/gif");
-    })
-      perror("While drawing auto-image: \n"+describe_backtrace(e)+"\n");
-    cache_set("config_button_image", value, r);
-    return r;
+    i=draw_config_button(value,button_font);
+    break;
 
+   case "fold":
+   case "fold2":
+    i = draw_fold((int)reverse(key));
+    break;
+    
+   case "unfold":
+   case "unfold2":
+    i = draw_unfold((int)reverse(key));
+    break;
+
+   case "back":
+    i = draw_back((int)reverse(key));
+    break;
+    
+   case "selected":
+    i=draw_selected_button(value,button_font);
+    break;
+
+   case "unselected":
+    i=draw_unselected_button(value,button_font);
+    break;
   }
+  if(i) r = http_string_answer(i->togif(128,@trans),"image/gif");
+  i=0;
+  cache_set("config_images", in, r);
+  return r;
 }
 
 
@@ -970,8 +986,7 @@ mapping configuration_parse(object id)
     // The URL is http://config-url/, not one of the top nodes, but
     // _above_ them. This is supposed to be some nice introductory
     // text about the configuration interface...
-    return stores(replace(read_bytes("etc/config.html"),"rand()",
-			  (string)time()));
+    return http_string_answer(default_head("")+display_tabular_header(root)+read_bytes("etc/config.html"),"text/html");
   }
   
   if(sizeof(id->prestate))
@@ -1084,7 +1099,7 @@ mapping configuration_parse(object id)
 
     case "delete":	
      PUSH(default_head("Roxen Configuration"));
-     PUSH("<hr noshade>");
+//     PUSH("<hr noshade>");
       
       switch(o->type)
       {
@@ -1306,19 +1321,22 @@ mapping configuration_parse(object id)
   
   PUSH(default_head("Roxen server configuration", root->changed?o->path(1):0));
   PUSH("\n"+display_tabular_header( o )+"\n<br>\n");
+//  PUSH("<img src=/image/roxen-rotated.gif alt=\"\"  align=right>");
+
   PUSH("<dl>\n");
 
   if(o->up != root && o->up)
     PUSH("<a href=\""+ o->up->path(1)+"?"+(bar++)+"\">"
-	 "<img src=/image/up.gif alt='[Up]' align=left hspace=0 border=0></a> ");
+	 "<img src=/auto/back alt='[Up]' align=left hspace=0 border=0></a> ");
 
   if(i=o->folded) o->folded=0;
   PUSH(o->describe(1));
   o->folded=i;
   
-  PUSH("</dl>\n\n<p>");
+  PUSH("</dl>");
 //  PUSH("<nobr><img height=15 src=/auto/button/ width=100% align=right>");
-  PUSH("<table width=100%><tr><td bgcolor=#7f7755>");
+  PUSH("<br clear=all>");
+  PUSH("<table width=100%><tr><td bgcolor=#"+bdR+bdG+bdB+">");
   PUSH("<img src=/auto/button/>");
   
   if(o->type == NODE_CONFIGURATIONS)
@@ -1329,17 +1347,17 @@ mapping configuration_parse(object id)
   
   if(o->type == NODE_MODULE)
   {
-    BUTTON(delete, "Delete module and copies", left);
+    BUTTON(delete, "Delete", left);
     if(o->data->copies)
-      BUTTON(newmodulecopy, "New module copy", left);
+      BUTTON(newmodulecopy, "Copy module", left);
   }
 
   i=0;
   if(o->type == NODE_MODULE_MASTER_COPY || o->type == NODE_MODULE_COPY 
      || o->type == NODE_MODULE_COPY_VARIABLES)
   {
-    BUTTON(delete, "Delete module", left);
-    BUTTON(refresh, "Reload module", left);
+    BUTTON(delete, "Delete", left);
+    BUTTON(refresh, "Reload", left);
   }
   
   if(o->type == NODE_CONFIGURATION)
@@ -1350,6 +1368,12 @@ mapping configuration_parse(object id)
   if(o->changed)
     BUTTON(unfoldmodified, "Open all modified", left);
 
+  if((o->changed||root->changed))
+    BUTTON(save, "Save changes", left);
+  BUTTON(restart, "Restart", left);
+  BUTTON(shutdown,"Shutdown", left);
+
+  
   PUSH("<img src=/auto/button/%20>");
   PUSH("</nobr><br clear=all>");
   PUSH("</td></tr></table>");
