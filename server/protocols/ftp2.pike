@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.19 1998/05/01 15:26:47 grubba Exp $
+ * $Id: ftp2.pike,v 1.20 1998/05/01 15:32:43 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -2026,6 +2026,7 @@ class FTPSession
     }
 
     password = args||"";
+    args = "CENSORED_PASSWORD";	// Censored in case of backtrace.
     master_session->method = "LOGIN";
     master_session->realauth = user + ":" + password;
     master_session->auth = ({ 0, master_session->realauth, -1 });
@@ -2625,6 +2626,12 @@ class FTPSession
       args = line[i+1..];
     }
     cmd = upper_case(cmd);
+
+    if ((< "PASS" >)[cmd]) {
+      // Censor line, so that the password doesn't show
+      // in backtraces.
+      line = cmd + " CENSORED_PASSWORD";
+    }
 
     if (!conf->extra_statistics->ftp) {
       conf->extra_statistics->ftp = (["commands":([ cmd:1 ])]);
