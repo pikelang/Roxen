@@ -4,16 +4,16 @@
 // defaults and a new variable, to make it possible to use Frontpage
 // with Roxen when using virtual hosting.
 
-string cvs_version = "$Id: fpscript.pike,v 1.4 1998/07/19 02:46:20 neotron Exp $";
-
 // #define FPSCRIPT_DEBUG
 
 #include <module.h>
 inherit "modules/scripting/cgi.pike";
 
-mapping my_build_env_vars(string f, object id, string|void path_info)
+constant cvs_version = "$Id: fpscript.pike,v 1.5 1999/04/24 23:40:57 marcus Exp $";
+
+mapping build_env_vars(string f, object id, string|void path_info)
 {
-  mapping new = ::my_build_env_vars(f, id, path_info);
+  mapping new = ::build_env_vars(f, id, path_info);
 #ifdef FPSCRIPT_DEBUG
   werror(sprintf("%O\n", new));
 #endif /* FPSCRIPT_DEBUG */
@@ -25,14 +25,14 @@ mapping my_build_env_vars(string f, object id, string|void path_info)
 }
 
 
-void create()
+void create(object conf)
 {
-  ::create();
+  ::create(conf);
 
   defvar("FrontPagePort", 0, "Frontpage: Server Port", TYPE_INT,
 	 "If this variable is set (ie not zero) ");
-  killvar("mountpoint");
-  defvar("mountpoint", "/", "Frontpage: Root Mountpoint", TYPE_LOCATION, 
+  killvar("location");
+  defvar("location", "/", "Frontpage: Root Mountpoint", TYPE_LOCATION, 
 	 "This is where the module will be inserted in the "
 	 "namespace of your server. In most cases this should be the root "
 	 "file system. This module will only answer to requests if the "
@@ -53,11 +53,6 @@ void create()
 
   killvar("ex");
   killvar("ext");
-
-  // We don't need these, and they might confuse poor Frontpage. Might
-  // as well disable completely.
-  killvar("Enhancements");
-  variables->Enhancements = allocate(8);
 }
 
 
@@ -84,7 +79,7 @@ mixed *register_module()
 string query_name() 
 { 
   return sprintf("FPScript mounted on <i>%s</i>, Search Path: <i>%s</i>",
-		 QUERY(mountpoint), QUERY(searchpath));
+		 QUERY(location), QUERY(searchpath));
 }
 
 mixed find_file(string f, object id)
