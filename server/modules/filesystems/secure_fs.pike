@@ -5,7 +5,7 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.9 1998/03/11 19:42:36 neotron Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.10 1998/04/17 11:08:53 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -203,7 +203,7 @@ mixed find_file(string f, object id)
 
   if (query("page")) {
     int last;
-    sscanf(id->cookies["httpauth"],"%s:%s:%d", user, pass, last);
+    sscanf(id->cookies["httpauth"]||"","%s:%s:%d", user, pass, last);
     if(!last || (last+query("expire") < time(1)))
       m_delete(id->cookies,"httpauth");
     if(id->variables["httpuser"]&&id->variables["httppass"])
