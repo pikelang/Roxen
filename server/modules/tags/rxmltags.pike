@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.142 2000/07/25 15:24:14 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.143 2000/07/25 16:22:36 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -22,16 +22,6 @@ inherit "module";
 constant module_type = MODULE_PARSER | MODULE_PROVIDER;
 constant module_name = "RXML 2.0 tags";
 constant module_doc  = "This module provides the common RXML tags.";
-
-void create()
-{
-  defvar("insert_href",0,"Allow <insert href>",
-	 TYPE_FLAG|VAR_MORE,
-         "If set, it will be possible to use <tt>&lt;insert href&gt;</tt> to "
-	 "insert pages from another web server. This could use a some "
-	 "resources, especially when used to insert pages from a slow web "
-	 "server.");
-}
 
 void start()
 {
@@ -742,7 +732,7 @@ class TagInsert {
 	if(plugin->get_type(args, result)==RXML.t_text)
 	  result=Roxen.html_encode_string(result);
       }
-      else if(args->quote="none")
+      else if(args->quote=="none")
 	;
       else
 	result=Roxen.html_encode_string(result);
@@ -825,6 +815,12 @@ class TagInsertFile {
   constant name = "insert";
   constant plugin_name = "file";
 
+  RXML.Type get_type(mapping args) {
+    if (args->quote=="html")
+      return RXML.t_text;
+    return RXML.t_xml;
+  }
+
   string get_data(string var, mapping args, RequestID id) {
     if(args["sb-search"] && id->misc->wa)
     {
@@ -858,23 +854,17 @@ class TagInsertFile {
   }
 }
 
-class TagInsertHref {
+class TagInsertRealfile {
   inherit RXML.Tag;
   constant name = "insert";
-  constant plugin_name = "href";
+  constant plugin_name = "realfile";
 
   string get_data(string var, mapping args, RequestID id) {
-    if(!query("insert_href")) return "";
-
-    if(args->nocache)
-      NOCACHE();
-    else
-      CACHE(60);
-    Protocols.HTTP q=Protocols.HTTP.get_url(args->href);
-    if(q && q->status>0 && q->status<400)
-      return q->data();
-
-    RXML.run_error(q ? q->status_desc + "\n": "No server response\n");
+    string filename=id->conf->real_file(Roxen.fix_relative(var, id), id);
+    Stdio.File file=Stdio.File(filename, "r");
+    if(file)
+      return file->read();
+    RXML.run_error("Could not open the file %s.\n", Roxen.fix_relative(var, id));
   }
 }
 
@@ -1608,51 +1598,6 @@ string simpletag_sort(string t, mapping m, string c, RequestID id)
   lines=sort(lines);
 
   return pre + (m->reverse?reverse(lines):lines)*m->separator + post;
-}
-
-array(string)|string container_recursive_output (string tagname, mapping args,
-                                  string contents, RequestID id)
-{
-  int limit;
-  array(string) inside, outside;
-  if (id->misc->recout_limit)
-  {
-    limit = id->misc->recout_limit - 1;
-    inside = id->misc->recout_outside, outside = id->misc->recout_inside;
-  }
-  else
-  {
-    limit = (int) args->limit || 100;
-    inside = args->inside ? args->inside / (args->separator || ",") : ({});
-    outside = args->outside ? args->outside / (args->separator || ",") : ({});
-    if (sizeof (inside) != sizeof (outside))
-      RXML.parse_error("'inside' and 'outside' replacement sequences "
-		       "aren't of same length.\n");
-  }
-
-  if (limit <= 0) return contents;
-
-  int save_limit = id->misc->recout_limit;
-  string save_inside = id->misc->recout_inside, save_outside = id->misc->recout_outside;
-
-  id->misc->recout_limit = limit;
-  id->misc->recout_inside = inside;
-  id->misc->recout_outside = outside;
-
-  string res = Roxen.parse_rxml (
-    parse_html (
-      contents,
-      (["recurse": lambda (string t, mapping a, string c) {return ({c});}]),
-      ([]),
-      "<" + tagname + ">" + replace (contents, inside, outside) +
-      "</" + tagname + ">"),
-    id);
-
-  id->misc->recout_limit = save_limit;
-  id->misc->recout_inside = save_inside;
-  id->misc->recout_outside = save_outside;
-
-  return ({res});
 }
 
 string simpletag_replace( string tag, mapping m, string cont, RequestID id)
