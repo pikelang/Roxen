@@ -75,6 +75,26 @@
 </test>
 
 <test>
+<rxml><true/><then>a<false/></then>b<else>c</else></rxml>
+<result>ab</result>
+</test>
+
+<test>
+<rxml><true/><then>a<false/></then>b<then>c</then></rxml>
+<result>abc</result>
+</test>
+
+<test>
+<rxml><false/><else>a<true/></else>b<then>c</then></rxml>
+<result>abc</result>
+</test>
+
+<test>
+<rxml><false/><else>a<true/></else>b<else>c</else></rxml>
+<result>ab</result>
+</test>
+
+<test>
 <rxml><set variable='var.x' value='2'/><true/><else>x<set variable='var.x' value='3'/></else>&var.x;</rxml>
 <result>2</result>
 </test>
