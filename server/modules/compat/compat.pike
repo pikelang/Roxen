@@ -504,7 +504,7 @@ string container_source(string tag, mapping m, string s, RequestID id)
     +"</pre>"+sep+s;
 }
 
-array tag_countdown(string tag, mapping m, string c, RequestID id)
+array tag_countdown(string tag, mapping m, RequestID id)
 {
   foreach( ({
     ({"min","minute"}),
@@ -547,7 +547,7 @@ array tag_countdown(string tag, mapping m, string c, RequestID id)
       }
   }
 
-  return ({1, tag, m, c});
+  return ({1, tag, m});
 }
 
 array container_tablify(string tag, mapping m, string q, RequestID id)
