@@ -81,8 +81,7 @@
           <table>
          <cf-userwants option=devel_mode>
           <tr><td align=right>
-          <gbutton align=right dim bgcolor=#d9dee7 fg=#48546c 
-                   talign=right width=70>Language:</gbutton>
+            <gtext font=haru scale=0.45 hspace=3>Language:</gtext>
           </td><td>
           <configif-output quote=¤ source=locales>
             <a href="¤path¤"><img
