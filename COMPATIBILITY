@@ -107,7 +107,7 @@ and Roxen WebServer 4.0.
 
    In the compatibility module:	 	  Should become in ChiliMoon:
     /internal-roxen-			   /*/
-    &roxen.;	  			   &system.;
+    &roxen.;	  			   &server.;
     <combine-path />
     <fsize />				   <emit source=dir />
     <modified />

@@ -9,7 +9,7 @@
   <tr>
     <td><imgs src="/*/chilimoon-white" border="0" alt="ChiliMoon" hspace="2" /></td>
     <td>&nbsp;</td>
-    <td align="right"><b>&system.version;</b></td>
+    <td align="right"><b>&server.version;</b></td>
   </tr>
   <tr>
     <td width="100%" height="21" colspan="3" background="/*/tile"><img src="/*/unit" alt="" /></td>

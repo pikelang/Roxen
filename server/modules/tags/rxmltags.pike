@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.424 2004/05/31 14:42:34 _cvs_stephen Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.425 2004/05/31 16:09:27 _cvs_stephen Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -2622,45 +2622,45 @@ constant tagdoc=([
  It is not possible to write any information to this scope.
 </p></desc>",
 
-"&system.domain;":#"<desc type='entity'><p>
+"&server.domain;":#"<desc type='entity'><p>
  The domain name of this site. The information is taken from the
  client request, so a request to \"http://www.chilimoon.org/\" would
  give this entity the value \"www.chilimoon.org\", while a request
  for \"http://www/\" would give the entity value \"www\".
 </p></desc>",
 
-"&system.hits;":#"<desc type='entity'><p>
+"&server.hits;":#"<desc type='entity'><p>
  The number of hits, i.e. requests the webserver has accumulated since
  it was last started.
 </p></desc>",
 
-"&system.hits-per-minute;":#"<desc type='entity'><p>
+"&server.hits-per-minute;":#"<desc type='entity'><p>
  The average number of requests per minute since the webserver last
  started.
 </p></desc>",
 
-"&system.pike-version;":#"<desc type='entity'><p>
+"&server.pike-version;":#"<desc type='entity'><p>
  The version of Pike the webserver is using, e.g. \"Pike v7.2 release 140\".
 </p></desc>",
 
-"&system.sent;":#"<desc type='entity'><p>
+"&server.sent;":#"<desc type='entity'><p>
  The total amount of data the webserver has sent since it last started.
 </p></desc>",
 
-"&system.sent-kbit-per-second;":#"<desc type='entity'><p>
+"&server.sent-kbit-per-second;":#"<desc type='entity'><p>
  The average amount of data the webserver has sent, in Kibibits.
 </p></desc>",
 
-"&system.sent-mb;":#"<desc type='entity'><p>
+"&server.sent-mb;":#"<desc type='entity'><p>
  The total amount of data the webserver has sent, in Mebibits.
 </p></desc>",
 
-"&system.sent-per-minute;":#"<desc type='entity'><p>
+"&server.sent-per-minute;":#"<desc type='entity'><p>
  The average number of bytes that the webserver sends during a
  minute. Based on the sent amount of data and uptime since last server start.
 </p></desc>",
 
-"&system.server;":#"<desc type='entity'><p>
+"&server.server;":#"<desc type='entity'><p>
  The URL of the webserver. The information is taken from the client request,
  so a request to \"http://www.chilimoon.org/index.html\" would give this
  entity the value \"http://www.chilimoon.org/\", while a request for
@@ -2668,17 +2668,17 @@ constant tagdoc=([
  \"http://www/\".
 </p></desc>",
 
-"&system.ssl-strength;":#"<desc type='entity'><p>
+"&server.ssl-strength;":#"<desc type='entity'><p>
  Contains the maximum number of bits encryption strength that the SSL is capable of.
  Note that this is the server side capability, not the client capability.
  Possible values are 0, 40, 128 or 168.
 </p></desc>",
 
-"&system.time;":#"<desc type='entity'><p>
+"&server.time;":#"<desc type='entity'><p>
  The current posix time. An example output: \"244742740\".
 </p></desc>",
 
-"&system.unique-id;":#"<desc type='entity'><p>
+"&server.unique-id;":#"<desc type='entity'><p>
  Returns a unique id that can be used for e.g. session
  identification. An example output: \"7fcda35e1f9c3f7092db331780db9392\".
  Note that a new id will be generated every time this entity is used,
@@ -2686,19 +2686,19 @@ constant tagdoc=([
  to use it more than once.
 </p></desc>",
 
-"&system.uptime;":#"<desc type='entity'><p>
+"&server.uptime;":#"<desc type='entity'><p>
  The total uptime of the webserver since last start, in seconds.
 </p></desc>",
 
-"&system.uptime-days;":#"<desc type='entity'><p>
+"&server.uptime-days;":#"<desc type='entity'><p>
  The total uptime of the webserver since last start, in days.
 </p></desc>",
 
-"&system.uptime-hours;":#"<desc type='entity'><p>
+"&server.uptime-hours;":#"<desc type='entity'><p>
  The total uptime of the webserver since last start, in hours.
 </p></desc>",
 
-"&system.uptime-minutes;":#"<desc type='entity'><p>
+"&server.uptime-minutes;":#"<desc type='entity'><p>
  The total uptime of the webserver since last start, in minutes.
 </p></desc>",
 

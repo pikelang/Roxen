@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.128 2004/05/30 21:13:33 _cvs_dirix Exp $ -->
+<!-- $Id: template,v 1.129 2004/05/31 16:09:23 _cvs_stephen Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -167,7 +167,7 @@
   <define name="font" preparse="1">&usr.font;</define>
   <expire-time now="1"/>
 </nooutput><html><head>
-<title>&system.version; Administration Interface<eval>&_.title:none;</eval></title>
+<title>&server.version; Administration Interface<eval>&_.title:none;</eval></title>
 <link rel="shortcut icon" href="/themes/&usr.theme;/favicon.ico" />
 <if exists="/themes/&usr.theme;/stylesheet.css">
 <link rel="stylesheet" type="text/css" href="/themes/&usr.theme;/stylesheet.css" />
@@ -209,7 +209,7 @@
    </else>
     <div align="right" class="bottom-div">
       <font size="-1">
-  	<b>&system.version; / &system.pike-version;</b><br />
+  	<b>&server.version; / &server.pike-version;</b><br />
         <if debug=yes >
           <set variable=var.time-ms expr='(int)(&var.time-spent; * 1000)'/>
           Total render time: &var.time-ms;ms <br />
