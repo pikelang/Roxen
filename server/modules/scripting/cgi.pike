@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 2.3 1999/04/28 14:35:37 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.4 1999/04/28 18:42:00 neotron Exp $";
 
 
 array register_module()
@@ -583,6 +583,7 @@ class CGIScript
 mapping(string:string) global_env = ([]);
 void start(int n, object conf)
 {
+  module_dependencies(conf, ({ "pathinfo" }));
   if(conf)
   {
     string tmp=conf->query("MyWorldLocation");
@@ -616,8 +617,17 @@ mapping handle_file_extension(object o, string e, object id)
 {
   if(!QUERY(ex))
     return 0;
-  if(QUERY(noexec) && o && !(o->stat()[0]&0111))
-    return 0;
+#ifdef UNIX
+  if(o && !(o->stat()[0]&0111))
+    if(QUERY(noexec))
+      return 0;
+    else
+      return http_low_answer(500, "<title>CGI - File Not Executable</title>"
+			     "<h1>CGI Error - File Not Executable</h1> <b>"
+			     "The script you tried to run is not executable."
+			     "Please contact the server administrator about "
+			     "this problem.</b>");
+#endif
   return http_stream( CGIScript( id )->run()->get_fd() );
 }
 
@@ -631,15 +641,24 @@ int|object(Stdio.File)|mapping find_file( string f, RequestID id )
 {
   array stat=stat_file(f,id);
   if(!stat) return 0;
+#ifdef UNIX
   if(!(stat[0]&0111))
   {
     if(QUERY(noexec))
-      return Stdio.File(f, "r");
+      return Stdio.File(real_file(f, id), "r");
     report_notice( "CGI: "+real_file(f,id)+" is not executable\n");
-    return 0;
+    return http_low_answer(500, "<title>CGI Error - Script Not Executable</title>"
+			   "<h1>CGI Error - Script Not Executable</h1> <b>"
+			   "The script you tried to run is not executable. "
+			   "Please contact the server administrator about "
+			   "this problem.</b>");
   }
+#endif
   if(stat[1] < 0)
     return -1;
+  if(!strlen(f) || f[-1] == '/')
+    // Make foo.cgi/ be handled using PATH_INFO
+    return 0;
   id->realfile = real_file( f,id );
   return http_stream( CGIScript( id )->run()->get_fd() );
 }
@@ -762,9 +781,11 @@ void create(object conf)
 #endif
          );
 #if UNIX
-  defvar("noexec", 1, "Ignore non-executable files", TYPE_FLAG,
+  defvar("noexec", 0, "Treat non-executable files as ordinary files",
+	 TYPE_FLAG,
 	 "If this flag is set, non-executable files will be returned "
-	 "as normal files to the client.");
+	 "as normal files to the client. Otherwise an error message "
+	 "will be returned.");
 
   defvar("warn_root_cgi", 1, "Warn for CGIs executing as root", TYPE_FLAG,
 	 "If this flag is set, a warning will be issued to the event and "
