@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.427 2000/02/14 10:43:04 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.428 2000/02/15 00:51:23 leif Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -1507,7 +1507,13 @@ int register_url( string url, object conf )
   url = replace( url, "/any", "/*" );
 
   sscanf( url, "%[^:]://%[^/]%s", protocol, host, path );
-  sscanf( host, "%[^:]:%d", host, port );
+  if (!host || !stringp(host))
+  {
+    report_error("Bad URL `" + url + "' for server `" +
+                    conf->query_name() + "'\n");
+    return 1;
+  }
+  sscanf(host, "%[^:]:%d", host, port);
 
   if( strlen( path ) && ( path[-1] == '/' ) )
     path = path[..strlen(path)-2];
