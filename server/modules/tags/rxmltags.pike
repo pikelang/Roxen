@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.185 2000/10/17 20:19:51 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.186 2000/10/20 22:02:37 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -969,7 +969,7 @@ class TagRemoveCookie {
 //       /Per
 
       if(!id->cookies[args->name])
-        RXML.run_error("That cookie does not exists.\n");
+        RXML.run_error("That cookie does not exist.\n");
       Roxen.remove_cookie( id, args->name, 
                            (args->value||id->cookies[args->name]||""), 
                            args->domain, args->path );
@@ -986,7 +986,7 @@ string tag_modified(string tag, mapping m, RequestID id, Stdio.File file)
     // FIXME: The auth module should probably not be used in this case.
     if(!id->conf->auth_module)
       RXML.run_error("Modified by requires a user database.\n");
-    // FIXME: The next row is defunct. last_modified_by does not exists.
+    // FIXME: The next row is defunct. last_modified_by does not exist.
     m->name = id->conf->last_modified_by(file, id);
     CACHE(10);
     return tag_user(tag, m, id);
