@@ -278,7 +278,7 @@ string module_image( int type )
 }
 string strip_leading( string what )
 {
-  sscanf( (string)what, "%*s:%s", what );
+  sscanf( (string)[mixed]what, "%*s:%s", what );
   return what;
 }
 
