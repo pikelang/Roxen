@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.3 1999/05/19 19:00:24 grubba Exp $
+ * $Id: ftp.pike,v 2.4 1999/05/20 14:22:08 per Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -156,8 +156,7 @@ class RequestID2
       object o = this_object();
       foreach(indices(m_rid), string var) {
 	if (!(< "create", "__INIT", "clone_me", "end", "ready_to_receive",
-		"clientprot", "prot", "send", "scan_for_query",
-		"send_result", >)[var]) {
+		"send", "scan_for_query", "send_result", >)[var]) {
 	  o[var] = m_rid[var];
 	}
       }
