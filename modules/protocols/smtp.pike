@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.15 1998/09/07 18:43:20 grubba Exp $
+ * $Id: smtp.pike,v 1.16 1998/09/07 18:49:20 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.15 1998/09/07 18:43:20 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.16 1998/09/07 18:49:20 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -548,6 +548,14 @@ class Server {
     void handle_DATA(string data)
     {
       roxen_perror(sprintf("GOT: %O\n", data));
+
+      // Dequote the lines...
+      // ie delete any initial period ('.') signs.
+      // RFC 821 4.5.2.2
+      data = replace(data, "\n.", "\n");
+      if (data[0] == '.') {
+	data = data[1..];
+      }
 
       array spooler;
 
