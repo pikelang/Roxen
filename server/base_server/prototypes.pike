@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.107 2004/05/06 15:22:48 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.108 2004/05/06 18:24:50 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -166,13 +166,6 @@ static constant HeaderNode = Parser.XML.Tree.HeaderNode;
 static constant TextNode = Parser.XML.Tree.TextNode;
 static constant ElementNode = Parser.XML.Tree.ElementNode;
 
-class DAVLock(string locktoken,
-	      string path,
-	      int(0..1) recursive,
-	      string|Node lockscope,
-	      string|Node locktype,
-	      void|string owner,
-	     )
 //! Container for information about an outstanding DAV lock. No field
 //! except @[owner] may change after the object has been created since
 //! filesystem modules might store this info persistently.
@@ -180,26 +173,23 @@ class DAVLock(string locktoken,
 //! @note
 //! @[DAVLock] objects might be shared between filesystems but not
 //! between configurations.
-{
-  //! @decl string locktoken;
-  //!
+class DAVLock(
+
+  string locktoken,
   //! The lock token given to the client. It may be zero in case there
   //! only is knowledge that a lock exists but the lock instance has
   //! been forgotten. This can happen in a filesystem that has some
   //! way of recording locks but doesn't store the DAV lock tokens.
 
-  //! @decl string path;
-  //!
+  string path,
   //! Canonical absolute path to the locked resource. Always ends with
   //! a @expr{"/"@}.
 
-  //! @decl int(0..1) recursive;
-  //!
+  int(0..1) recursive,
   //! @expr{1@} if the lock applies to all resources under @[path],
   //! @expr{0@} if it applies to @[path] only.
 
-  //! @decl string|Node lockscope;
-  //!
+  string|Node lockscope,
   //! The lock scope (RFC 2518 12.7). As a special case, if it only is
   //! an empty element without attributes then the element name is
   //! stored as a string.
@@ -208,8 +198,7 @@ class DAVLock(string locktoken,
   //! RFC 2518 specifies the lock scopes @expr{"DAV:exclusive"@} and
   //! @expr{"DAV:shared"@}.
 
-  //! @decl string|Node locktype;
-  //!
+  string|Node locktype,
   //! The lock type (RFC 2518 12.8). As a special case, if it only is
   //! an empty element without attributes then the element name is
   //! stored as a string.
@@ -217,13 +206,15 @@ class DAVLock(string locktoken,
   //! @note
   //! RFC 2518 only specifies the lock type @expr{"DAV:write"@}.
 
-  //! @decl string owner;
-  //!
+  void|array(Node) owner,
   //! The owner identification (RFC 2518 12.10), or zero if unknown.
-  //! The content is XML in string form.
+  //! More precisely, it's the children of the @expr{"DAV:owner"@}
+  //! element.
   //!
   //! @[RoxenModule.lock_file] may set this if it's zero, otherwise
   //! it shouldn't change.
+)
+{
 
   //! Returns a DAV:activelock @[Parser.XML.Tree.Node] structure
   //! describing the lock.
@@ -238,12 +229,10 @@ class DAVLock(string locktoken,
     res->add_child(tmp = ElementNode("DAV:depth", ([])));
     tmp->add_child(recursive?TextNode("Infinity"):TextNode("0"));
 
-#if 0
     if (owner) {
       res->add_child(tmp = ElementNode("DAV:owner", ([])));
-      tmp->add_child(owner);	// FIXME: How?
+      tmp->replace_children (owner);
     }
-#endif /* 0 */
 
     // FIXME: <DAV:timeout>.
 
@@ -1499,7 +1488,25 @@ class MultiStatusPropStat
 {
   constant is_prop_stat = 1;
 
-  mapping(string:string|array(Node)|Node|MultiStatusStatus) properties = ([]);
+  mapping(string:string|Node|array(Node)|MultiStatusStatus) properties = ([]);
+  //! The property settings. Indexed on property name (with complete
+  //! XML namespace). Values are:
+  //!
+  //! @mixed
+  //!   @type array(Node)
+  //!     The property value as a sequence of XML nodes. These nodes
+  //!     are used as children to the property nodes in the DAV
+  //!     protocol.
+  //!   @type Node
+  //!     Same as an array containing only this node.
+  //!   @type string
+  //!     Same as a single @[Parser.XML.Tree.TextNode] with this value.
+  //!   @type int(0..0)
+  //!     The property exists but has no value.
+  //!   @type MultiStatusStatus
+  //!     There was an error querying the property and this is the
+  //!     status it generated instead of a value.
+  //! @endmixed
 
   void build_response (ElementNode response_node)
   {
@@ -1507,7 +1514,7 @@ class MultiStatusPropStat
     mapping(MultiStatusStatus:Node) prop_nodes = ([]);
 
     foreach (properties;
-	     string prop_name; string|array(Node)|Node|MultiStatusStatus value) {
+	     string prop_name; string|Node|array(Node)|MultiStatusStatus value) {
       if (objectp (value) && value->is_status) {
 	// Group together failed properties according to status codes.
 	Node prop_node = prop_nodes[value];
@@ -1640,7 +1647,7 @@ class MultiStatus
   //!   @mixed prop_value
   //!     @type void|int(0..0)
   //!       Operation performed ok, no value.
-  //!     @type string|array(Node)|Node
+  //!     @type string|Node|array(Node)
   //!       Property has value @[prop_value].
   //!     @type MultiStatusStatus
   //!     @type mapping(string:mixed)
