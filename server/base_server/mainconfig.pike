@@ -800,8 +800,7 @@ mapping initial_configuration(object id)
   
   res = default_head("Welcome to Roxen Challenger") + "<hr noshade>";
 
-  res += read_file("etc/welcome.html");
-  
+  res += read_bytes("etc/welcome.html");
   if(error && strlen(error))
     res += "\n<p><b>"+error+"</b>";
   
