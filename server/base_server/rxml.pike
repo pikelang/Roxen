@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.83 2000/01/25 20:17:23 nilsson Exp $
+ * $Id: rxml.pike,v 1.84 2000/01/25 20:40:47 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -22,7 +22,21 @@ string rxml_error(string tag, string error, RequestID id) {
 }
 
 string handle_rxml_error (mixed err, RXML.Type type)
-// This is used for RXML errors thrown in the new parser.
+// This is used for RXML errors thrown in the new parser. See
+// RXML.Context.rxml_error().
+{
+#ifdef MODULE_DEBUG
+  // FIXME: Make this a user option.
+  report_notice (describe_error (err));
+#endif
+  if (type->subtype_of (RXML.t_html))
+    return "<br clear=all>\n<pre>" + html_encode_string (describe_error (err)) + "</pre>";
+  else return describe_error (err);
+}
+
+string handle_rxml_fatal (mixed err, RXML.Type type)
+// This is used for RXML fatal errors thrown in the new parser. See
+// RXML.Context.rxml_fatal().
 {
 #ifdef MODULE_DEBUG
   // FIXME: Make this a user option.
