@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.130 2000/02/15 07:55:10 mast Exp $
+ * $Id: rxml.pike,v 1.131 2000/02/15 10:26:53 nilsson Exp $
  *
  * The Roxen RXML Parser. See also the RXML Pike module.
  *
@@ -833,7 +833,7 @@ class UserTag {
 
 #ifdef OLD_RXML_COMPAT
       array replace_from = map(indices(nargs),make_entity)+({"#args#", "<contents>"});
-      array replace_to = values(nargs)+({ make_tag_attributes(args), content||"" });
+      array replace_to = values(nargs)+({ make_tag_attributes(nargs), content||"" });
       string c2;
       c2 = replace(c, replace_from, replace_to);
       if(c2!=c) {
@@ -843,6 +843,7 @@ class UserTag {
 #endif
 
       vars->args = make_tag_attributes(nargs);
+      vars["rest-args"] = make_tag_attributes(args - defaults);
       vars->contents = content||"";
       return ({ c });
     }
@@ -1091,7 +1092,13 @@ class TagStrLen {
 
   class Frame {
     inherit RXML.Frame;
-    array do_return() { result = (string)strlen(content); }
+    array do_return() {
+      if(!stringp(content)) {
+	result="0";
+	return 0;
+      }
+      result = (string)strlen(content);
+    }
   }
 }
 
