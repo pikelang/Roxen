@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-constant cvs_version = "$Id: userdb.pike,v 1.20 1997/12/16 16:47:21 grubba Exp $";
+constant cvs_version = "$Id: userdb.pike,v 1.21 1997/12/17 17:58:38 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -245,6 +245,9 @@ void read_data()
   case "niscat":
     data=popen("niscat "+query("args")+" passwd.org_dir");
     break;
+  }
+  if (objectp(privs)) {
+    destruct(privs);
   }
   privs = 0;
 
