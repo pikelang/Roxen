@@ -1,16 +1,14 @@
 #include <module.h>
 inherit "modules/directories/directories";
 
-string cvs_version = "$Id: language.pike,v 1.20 1999/07/24 21:17:10 nilsson Exp $";
-/* Is threadsafe. */
+string cvs_version = "$Id: language.pike,v 1.21 1999/12/18 15:07:50 nilsson Exp $";
+int thread_safe=1;
 
 #if DEBUG_LEVEL > 20
 # ifndef LANGUAGE_DEBUG
 #  define LANGUAGE_DEBUG
 # endif
 #endif
-
-#define old_rxml_compat 1
 
 array register_module()
 {
@@ -34,8 +32,7 @@ array register_module()
 	      "the user wanted, if the page was not available in that "
 	      "language. "
 	      "<p>All tags take the argument type={txt,img}. ",
-	    ({ }), 
-	    1
+	    0, 1
          });
 }
 
@@ -116,18 +113,7 @@ void create()
   defvar( "textonly", 0, "Text only", TYPE_FLAG,
 	  "If set the tags type argument will default to txt instead of img" );
   
-  
-/* Who came up with this idea?
-  defvar( "borderwidth", 0, "Border width", TYPE_INT,
-	  "The width of the border around selectable flags." );
-*/
-
   ::create();
-}
-
-mapping parse_directory( object id )
-{
-  return ::parse_directory( id );
 }
 
 
@@ -140,12 +126,8 @@ array (string) language_order = ({ });
 multiset (string) language_list;
 string default_language, flag_dir;
 int textonly;
-int borderwidth;
 
-mixed fnord(mixed what) { return what; }
-
-
-void start(int n, object c)
+void start(int n, Configuration c)
 {
   string tmp;
   array (string) tmpl;
@@ -166,14 +148,11 @@ void start(int n, object c)
     language_data[ tmp ][ LANGUAGE_DATA_NEXT_LANGUAGE ] &= indices( language_list );
   default_language = query( "default_language" );
   textonly = query( "textonly" );
-  /* Really...   /Peter
-     borderwidth = query( "borderwidth" );
-  */
 
   ::start(n, c);
 }
 
-multiset (string) find_files( string url, object id )
+multiset (string) find_files( string url, RequestID id )
 {
   string filename, basename, extension;
   multiset (string) files = (< >);
@@ -193,7 +172,7 @@ multiset (string) find_files( string url, object id )
   return result;
 }
 
-mixed remap_url( object id, string url )
+mixed remap_url( RequestID id, string url )
 {
   string chosen_language, prestate_language, extension;
   string found_language;
@@ -243,13 +222,13 @@ mixed remap_url( object id, string url )
       accept_language = ({ });
 
 #ifdef LANGUAGE_DEBUG  
-  perror("Wish:%O", accept_language);
+  werror("Wish:%O", accept_language);
 #endif
   // This looks funny, but it's nessesary to keep the order of the languages.
   accept_language = accept_language -
     ( accept_language - indices(language_list) );
 #ifdef LANGUAGE_DEBUG  
-  perror("Negotiated:%O\n", accept_language);
+  werror("Negotiated:%O\n", accept_language);
 #endif
 
   if (query( "configp" ))
@@ -259,7 +238,7 @@ mixed remap_url( object id, string url )
 
 #ifdef LANGUAGE_DEBUG
   if( sizeof(accept_language) )
-    perror("Header-choosen language: %O\n", accept_language[0]);
+    werror("Header-choosen language: %O\n", accept_language[0]);
 #endif
   
   if (sizeof( lang_tmp ))
@@ -270,7 +249,7 @@ mixed remap_url( object id, string url )
     chosen_language = default_language;
 
 #ifdef LANGUAGE_DEBUG
-  perror("Presented language: %O\n", chosen_language);
+  werror("Presented language: %O\n", chosen_language);
 #endif
   
   if (found_languages[ chosen_language ])
@@ -279,9 +258,9 @@ mixed remap_url( object id, string url )
     found_language = chosen_language
       = (accept_language & indices( found_languages ))[0];
   else if (prestate_language 
-	   && sizeof( fnord(language_data[ prestate_language ]
+	   && sizeof( language_data[ prestate_language ]
 		     [ LANGUAGE_DATA_NEXT_LANGUAGE ]
-		      & indices( fnord(found_languages) ) )))
+		      & indices( found_languages ) ))
     found_language
       = (language_data[ prestate_language ][ LANGUAGE_DATA_NEXT_LANGUAGE ]
 	 & indices( found_languages ))[0];
@@ -316,7 +295,7 @@ mixed remap_url( object id, string url )
   return id;
 }
 
-string tag_unavailable_language( string tag, mapping m, object id )
+string tag_unavailable_language( string tag, mapping m, RequestID id )
 {
   if (!id->misc[ "chosen_language" ] || !id->misc[ "language" ]
       || !id->misc[ "language_data" ])
@@ -332,7 +311,7 @@ string tag_unavailable_language( string tag, mapping m, object id )
             + "\">";
 }
 
-string tag_language( string tag, mapping m, object id )
+string tag_language( string tag, mapping m, RequestID id )
 {
   if (!id->misc[ "language" ] || !id->misc[ "language_data" ]
       || !id->misc[ "language_list" ])
@@ -346,7 +325,7 @@ string tag_language( string tag, mapping m, object id )
             + "\">";
 }
 
-string tag_available_languages( string tag, mapping m, object id )
+string tag_available_languages( string tag, mapping m, RequestID id )
 {
   string result, lang;
   int c;
@@ -378,7 +357,7 @@ string tag_available_languages( string tag, mapping m, object id )
       result += "<img src=" + query( "flag_dir" ) + available_languages[c] +
 	".available.gif alt=\"" +
 	id->misc[ "language_data" ][ available_languages[c] ][0] +
-	"\" " + sprintf("border=%d", borderwidth) + ">";
+	"\" " + "border=0" + ">";
 	
     if (query( "configp" ))
       result += "</aconf>\n";
@@ -386,17 +365,4 @@ string tag_available_languages( string tag, mapping m, object id )
       result += "</apre>\n";
     }
   return result;
-}
-
-mapping query_tag_callers()
-{
-  return ([ "unavailable-language" : tag_unavailable_language,
-            "language" : tag_language,
-            "available-languages" : tag_available_languages,
-#if old_rxml_compat
-            "available_language" : tag_available_languages,
-            "available_languages" : tag_available_languages,
-            "unavailable_languages" : tag_available_languages,
-#endif
-  ]);
 }
