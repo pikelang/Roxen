@@ -6,7 +6,7 @@
 // the current implementation in NCSA/Apache)
 
 
-string cvs_version = "$Id: cgi.pike,v 1.58 1998/01/12 19:18:25 grubba Exp $";
+string cvs_version = "$Id: cgi.pike,v 1.59 1998/01/15 16:38:25 grubba Exp $";
 int thread_safe=1;
 
 #include <module.h>
@@ -686,10 +686,12 @@ mixed find_file(string f, object id)
 	  // Symlink or device encountered.
 	  // Don't allow symlinks from directories not owned by the
 	  // same user as the file itself.
-	  if (!b || (b[5] != us[5]) || !QUERY(allow_symlinks)) {
+	  if (!a || (a[1] == -4) || !b || (b[5] != us[5]) || !QUERY(allow_symlinks)) {
+	    roxen_notice(sprintf("CGI: Bad symlink or device encountered: \"%s\"\n", fname));
 	    fname = 0;
 	    break;
 	  }
+	  a = file_stat(fname);		// Get the permissions from the directory.
 	}
 	b = a;
       }
