@@ -7,7 +7,12 @@ inherit "freetype";
 #else
 inherit "ttf";
 #endif
-constant cvs_version = "$Id: builtin.pike,v 1.15 2002/10/22 00:15:24 nilsson Exp $";
+
+#if constant(__rbf) && constant(grbf)
+#define rbuiltin
+#endif
+
+constant cvs_version = "$Id: builtin.pike,v 1.16 2002/10/24 02:21:19 nilsson Exp $";
 
 constant name = "Builtin fonts";
 constant doc =  "Fonts included in pike (and roxen)";
@@ -16,15 +21,19 @@ inherit FontHandler;
 
 array available_fonts()
 {
-  return ({ "pike builtin", "roxen builtin" });
+  return ({ "pike builtin",
+#if rbuiltin
+	    "roxen builtin"
+#endif
+  });
 }
 
 array(mapping) font_information( string fnt )
 {
   switch( replace(lower_case(fnt)," ","_")-"_" )
   {
+#if rbuiltin
    case "roxenbuiltin":
-#if constant(__rbf) && constant(grbf)
      return ({
               ([
                 "name":"roxen builtin",
@@ -54,8 +63,10 @@ array has_font( string name, int size )
   {
    case "pikebuiltin":
      return ({ "nn" });
+#if rbuiltin
    case "roxenbuiltin":
      return ({ "nn", "bn", "bi" });
+#endif
   }
   return 0;
 }
@@ -68,8 +79,8 @@ Font open( string name, int size, int bold, int italic )
 {
   switch( replace(lower_case(name)," ","_")-"_" )
   {
+#if rbuiltin
    case "roxenbuiltin":
-#if constant(__rbf) && constant(grbf)
 #ifdef THREADS
      object key = lock->lock();
 #endif
@@ -87,7 +98,7 @@ Font open( string name, int size, int bold, int italic )
 #else
        return TTFWrapper( roxenbuiltin(), size, "-", bold, italic);
 #endif
-#endif
+#endif // rbuiltin
    case "pikebuiltin":
      return Image.Font();
   }
