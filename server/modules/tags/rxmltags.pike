@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.298 2001/09/10 15:27:59 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.299 2001/09/10 16:10:38 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -232,7 +232,7 @@ mapping client_scope = ([
 void set_entities(RXML.Context c) {
   c->extend_scope("client", client_scope);
   if (!c->id->misc->cache_tag_miss)
-    c->id->cache_status["cachetag"] = 1;
+    c->id->cache_status->cachetag = 1;
 }
 
 
@@ -1278,16 +1278,19 @@ class TagCache {
     inherit RXML.Frame;
 
     int do_iterate;
-    mapping(string|int:mixed) keymap;
+    mapping(string|int:mixed) keymap, overridden_keymap;
     string key;
     RXML.PCode evaled_content;
     int timeout;
+
+    // FIXME: This cache ought to be shared between concurrently
+    // evaluating tag instances, but it still shouldn't be persistent.
+    mapping(string:array(int|RXML.PCode)) timeout_cache;
 
     // The following are retained for frame reuse.
     string content_hash;
     array(string|int) subvariables;
     mapping(string:RXML.PCode) alternatives;
-    mapping(string:array(int|RXML.PCode)) timeout_cache;
 
     array do_enter (RequestID id)
     {
@@ -1296,18 +1299,21 @@ class TagCache {
 	key = 0;
 	TRACE_ENTER("tag &lt;cache&gt; no cache" +
 		    (args->nocache ? "" : " due to POST method"), tag);
+	id->cache_status->cachetag = 0;
+	id->misc->cache_tag_miss = 1;
 	return 0;
       }
 
       RXML.Context ctx = RXML_CONTEXT;
       int default_key = compat_level < 2.2;
 
-      if (args->propagate) {
-	if (!(keymap = ctx->misc->cache_key)) m_delete (args, "propagate");
+      overridden_keymap = 0;
+      if (!args->propagate ||
+	  (!(keymap = ctx->misc->cache_key) &&
+	   (m_delete (args, "propagate"), 1))) {
+	overridden_keymap = ctx->misc->cache_key;
+	keymap = ctx->misc->cache_key = ([]);
       }
-      else keymap = ctx->misc->cache_key = ([]);
-
-      if(args->key) keymap[0] += ({args->key});
 
       if (args->variable) {
 	if (args->variable != "")
@@ -1349,6 +1355,8 @@ class TagCache {
       }
 
       if (args->propagate) {
+	if (args->key)
+	  parse_error ("Argument \"key\" cannot be used together with \"propagate\".");
 	// Updated the key, so we're done. The surrounding cache tag
 	// should do the caching.
 	do_iterate = 1;
@@ -1357,6 +1365,8 @@ class TagCache {
 	TRACE_ENTER("tag &lt;cache&gt; propagating key", tag);
 	return 0;
       }
+
+      if(args->key) keymap[0] += ({args->key});
 
       if (default_key) {
 	// Include the form variables and the page path by default.
@@ -1468,7 +1478,7 @@ class TagCache {
       TRACE_ENTER("tag &lt;cache&gt; cache miss" +
 		  (default_key ? " (using default dependencies)" : ""),
 		  tag);
-      id->cache_status["cachetag"] = 0;
+      id->cache_status->cachetag = 0;
       id->misc->cache_tag_miss = 1;
       return 0;
     }
@@ -1477,11 +1487,16 @@ class TagCache {
     {
       if (key) {
 	mapping(string|int:mixed) subkeymap = RXML_CONTEXT->misc->cache_key;
-	if (sizeof (subkeymap) > sizeof (keymap)) {
-	  // The test above assumes that no subtag remove entries in
-	  // RXML_CONTEXT->misc->cache_key.
+	if (subkeymap != keymap) {
+	  // The test above assumes that all subtags change the
+	  // mapping directly.
+	  m_delete (subkeymap, 0);
 	  subvariables = indices (subkeymap - keymap);
 	  RXML_CONTEXT->state_update();
+	}
+	if (overridden_keymap) {
+	  RXML_CONTEXT->misc->cache_key = overridden_keymap;
+	  overridden_keymap = 0;
 	}
 	if (args->shared) {
 	  cache_set("tag_cache", key, evaled_content, timeout);
@@ -5018,8 +5033,14 @@ using the pre tag.
 </attr>
 
 <attr name=key value=string>
- <p>Use the value of this attribute directly in the key. The variable
- attribute is the preferred way to add depends to the cache.</p>
+ <p>Use the value of this attribute directly in the key. This
+ attribute mainly exist for compatibility; it's better to use the
+ \"variable\" attribute instead.</p>
+
+ <p>It is an error to use \"key\" together with \"propagate\", since
+ it wouldn't do what you'd expect: The value for \"key\" would not be
+ reevaluated when an entry is chosen from the cache, since the nested,
+ propagating <tag>cache</tag> isn't reached at all then.</p>
 </attr>
 
 <attr name=profile value=string>
