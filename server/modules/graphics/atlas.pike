@@ -1,4 +1,4 @@
-// The Atlas module. Copyright © 1999 - 2000, Roxen IS.
+// The Atlas module. Copyright © 1999 - 2001, Roxen IS.
 //
 // Please note: The map is incomplete and incorrect in details.  Countries
 // and territories are missing.
@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.7 2001/08/23 23:34:46 mast Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.8 2001/08/24 21:57:41 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";
@@ -205,18 +205,18 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
 "emit#atlas": ({ #"<desc plugin='plugin'><p><short>
- Lists altas stuff.</short></p>
+ Lists regions and countries defined in the atlas tag map.</short></p>
 </desc>
 
 <attr name='list' value='regions|countries'><p>
- Select what to list.</p>
+ Select what type of objects to list.</p>
 
 <ex type='vert'>
+<b>Available regions</b><br />
 <emit source='atlas' list='regions'>
 <ent>_.name</ent><br />
 </emit>
 </ex>
-<p>Available regions</p>
 </attr>",
 
 ([
@@ -229,15 +229,24 @@ constant tagdoc=([
 "atlas":({ #"<desc cont='cont'><p><short>
 
  Draws a map.</short> The map shows either the world, regions (Africa, Europe,
- etc) or countries. </p>
+ etc) or countries. It's a known bug that the map is not entierly up to date.</p>
 
+<ex type='vert'><atlas/></ex>
+
+<ex type='vert'><atlas fgcolor='#425A84' bgcolor='#dee2eb'>
+<country domain='se' color='orange'/>
+<country domain='jp' color='orange'/>
+<marker x='100' y='90'/>
+</atlas>
+</ex>
 </desc>
 
 <attr name='region' value='name' default='The World'><p>
  Which map to show. The value may be any of the listed region values
- that <xref href='../output/emit.tag'><tag>emit source='atlas'
- list='regions'</tag><ent>_.name</ent><tag>/emit</tag></xref>
+ that emit plugin <xref href='../output/emit_atlas.tag'>atlas</xref>
  returns.</p>
+
+<ex type='vert'><atlas region='europe' width='200'/></ex>
 </attr>
 
 <attr name='width' value='number'><p>
@@ -248,17 +257,17 @@ constant tagdoc=([
  The height of the image.</p>
 </attr>
 
-<attr name='fgcolor' value='color'><p>
+<attr name='fgcolor' value='color' default='white'><p>
  The color of the unselected land areas.</p>
 </attr>
 
-<attr name='bgcolor' value='color'><p>
- The color of the sea.</p>
+<attr name='bgcolor' value='color' default='#101040'><p>
+ The color of the sea areas.</p>
 </attr>",
 
 ([
 "country" : #"<desc tag='tag'><p><short>
- A region that should be highlighted.</short></p>
+ A region that should be highlighted with a different color on the map.</short></p>
 </desc>
 
 <attr name='domain' value='name'><p>
@@ -266,9 +275,11 @@ constant tagdoc=([
 </attr>
 
 <attr name='name' value='name'><p>
- The name of the country that should be highlighted.</p></attr>
+ The name of the country that should be highlighted. A list of available
+ names can be aquired from the <xref href='../output/emit_atlas.tag'>atlas</xref>
+ emit plugin.</p></attr>
 
-<attr name='color' value='color'><p>
+<attr name='color' value='color' default='#e0c080'><p>
  The color that should be used for highlighting.</p>
 </attr>",
 
@@ -288,11 +299,17 @@ constant tagdoc=([
   The color of the marker</p>
 </attr>
 
-<attr name='style' value='box|diamond' default='diamond'>
+<attr name='style' value='box|diamond' default='diamond'><p>
   The type of marker.</p>
+
+<ex><atlas region='europe' width='150'>
+<marker x='100' y='30' style='diamond' />
+<marker x='125' y='30' style='box' />
+</atlas>
+</ex>
 </attr>
 
-<attr name='size' value='number' default='4'>
+<attr name='size' value='number' default='4'><p>
   The size of the marker.</p>
 </attr>"
 	       ])
