@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.389 2003/01/07 13:37:38 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.390 2003/02/03 14:54:38 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -60,6 +60,8 @@ constant _query          = roxen.query;
 private static array(string) cache;
 private static int wanted_data, have_data;
 private static object(String.Buffer) data_buffer;
+
+int kept_alive;
 
 #include <roxen.h>
 #include <module.h>
@@ -931,6 +933,7 @@ void end(int|void keepit)
     o->host = host;
     o->conf = conf;
     o->pipe = pipe;
+    o->kept_alive = kept_alive+1;
     MARK_FD("HTTP kept alive");
     object fd = my_fd;
     my_fd=0;
@@ -1799,9 +1802,13 @@ void send_result(mapping|void result)
         }
       }
 #endif
-      if( file->len > 0 && file->len < 4000 )
+      if(!kept_alive &&
+	 (file->len > 0) &&
+	 ((sizeof(head_string) + file->len) < (HTTP_BLOCKING_SIZE_THRESHOLD)))
       {
-        // Just do a blocking write().
+	// The first time we get a request, the output buffers will
+	// be empty. We can thus just do a single blocking write()
+	// if the data will fit in the output buffer (usually 4KB).
         int s;
 	TIMER_END(send_result);
 	TIMER_START(blocking_write);
