@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997-1999, Idonex AB.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.34 2000/02/03 20:07:22 wellhard Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.35 2000/02/07 02:36:02 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -14,17 +14,8 @@ roxen.ImageCache the_cache;
  * Functions
  */
 
-Image.Image mask_image;
-Image.Image frame_image;
-int         height;
-int         width;
-
 void start()
 {
-  mask_image = Image.load("roxen-images/tab_mask.png");
-  frame_image = Image.load("roxen-images/tab_frame.png");
-  height = frame_image->ysize();
-  width = frame_image->xsize();
   the_cache = roxen.ImageCache( "tablist", draw_tab );
   find_internal = the_cache->http_file_answer;
 }
@@ -76,8 +67,22 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
   if (a->help)
     return register_module()[2];
 
-  //  Encode arguments in string
+  string fimage;
+  int rf;
+  if(a["frame-image"])
+    fimage = fix_relative( a["frame-image"], id );
+  else if(d["frame-image"])
+    fimage = fix_relative( d["frame-image"], id );
+  else if(id->misc->defines["tab-frame-image"])
+    fimage = fix_relative( id->misc->defines["tab-frame-image"], id );
+  else
+  {
+    fimage = getcwd()+"/roxen-images/tab_frame.xcf";
+    rf = 1;
+  }
   mapping args = ([
+"text_height": (a["font-size"] || d["font-size"] ||
+                id->misc->defines["tab-font-size"] ),
   "dither": a->dither || d->dither  || 0,
    "quant": a->quant  || d->quant   || "250",
    "gamma": a->gamma  || d->gamma   || 0,
@@ -94,7 +99,9 @@ string internal_tag_tab(string t, mapping a, string contents, mapping d,
     "dim" : parse_color(a->dimcolor || d->dimcolor || "#003366"),
     "txt" : parse_color((a->selected?(a->seltextcolor||d->seltextcolor):0)
                         || a->textcolor || d->textcolor ||
-			(a->selected ? "black" : "white"))
+			(a->selected ? "black" : "white")),
+  "frame_image": fimage,
+  "frame_rf":rf,
   ]);
 
   foreach( glob( "*-*", indices(d)), string n )   args[n] = d[n];
@@ -142,24 +149,46 @@ string container_tablist(string t, mapping a, string contents, RequestID id)
   return a->result;
 }
 
-Image.Image draw_tab(mapping args, string txt)
+Image.Image draw_tab(mapping args, string txt, object id)
 {
-  object      button_font = resolve_font( args->font );
-  if (!button_font) {
-    error(sprintf("Tablist: Font %O not found.\n", args->font));
-  }
-  Image.Image text = button_font->write( txt );
-  text = text->scale(0, height);
+  int width, height;
+  object  button_font = resolve_font( args->font );
+  mapping m;
 
+  if(args->frame_rf )
+    m = Image._load( args->frame_image );
+  else
+    m = roxen.low_load_image( args->frame_image, id );
+
+  if (!m)
+    error(sprintf("Tablist: Image %O not found.\n", args->frame_image));
+
+  if(!m->alpha)
+    error(sprintf("Tablist: Image %O has no alpha channel.\n",
+                  args->frame_image));
+
+  object frame_image = m->img;
+  object mask_image  = m->alpha->invert();
+
+  frame_image->paste_alpha_color( mask_image->threshold(254), ({255,255,255}));
+
+  if (!button_font)
+    error(sprintf("Tablist: Font %O not found.\n", args->font));
+
+  height = frame_image->ysize();
+  width = frame_image->xsize();
+  int text_height = (int)args->text_height;
+  if( !text_height )
+    text_height = height;
+
+  Image.Image text = button_font->write( txt )->scale(0,text_height);
   //  Create image with proper background
   Image.Image i = Image.Image(width * 2 + text->xsize(),
-                              height, args->sel ? args->fg : args->dim);
-  //  Add outside corners
-  i->paste_alpha_color(mask_image, args->bg);
+                              height,
+                              (args->sel ? args->fg : args->dim));
 
-
-  i->paste_alpha_color(mask_image->mirrorx(), args->bg,
-                       i->xsize() - mask_image->xsize(), 0);
+  //  Add outside corner
+  i = i->paste_alpha_color(mask_image, args->bg);
 
   //  Add tab frame. We compose the corners in a separate buffer where we
   //  draw the sides using a mult() operation to preserve antialiasing.
@@ -170,12 +199,36 @@ Image.Image draw_tab(mapping args, string txt)
 
   //  Add text which is drawn it twice if the color is bleak
   for (int loop = (`+(@args->txt) / 3 > 200 ? 2 : 1); loop; loop--)
-    i->paste_alpha_color(text, args->txt, width, 0);
+    i->paste_alpha_color(text, args->txt, width, i->ysize()-text_height);
 
-  //  Create line on top of tab, and also at bottom if not selected
-  i->line(width - 1, 0, i->xsize() - width, 0,
-	  0, 0, 0);
+  //  Create line on top of tab (by copying last pixel in frame..)
 
+  object s,q = frame_image->copy( width-1, 0, width-1, height-1);
+  object q2 = Image.image(  8,q->ysize() );
+  object q3 = Image.image( 64,q->ysize() );
+
+  for( int x = 0; x<8; x++ )    q2->paste( q, x, 0 );
+  for( int x = 0; x<8; x++ )    q3->paste( q2, x*8, 0 );
+
+  int x = width;
+
+  for(; (x%8) && (x<i->xsize()-width); x++ )
+    i->paste( i->copy( x,0,x,height-1 )*q, x, 0);
+
+  for(; (x%64) && ((x+8)<(i->xsize()-width)); x+=8 )
+    i->paste( i->copy( x,0,x+7,height-1 )*q2, x, 0);
+
+  for(; (x+64)<(i->xsize()-width); x+=64 )
+    i->paste( i->copy( x,0,x+63,height-1 )*q3, x, 0);
+
+  for(; (x+8)<(i->xsize()-width); x+=8 )
+    i->paste( i->copy( x,0,x+7,height-1 )*q2, x, 0);
+
+  for(; x<i->xsize()-width; x++ )
+    i->paste( i->copy( x,0,x,height-1 )*q, x, 0);
+
+
+  // and also at bottom if not selected
   if (!args->sel)
     i->line(0, i->ysize() - 1, i->xsize(), i->ysize() - 1, 0, 0, 0);
 
