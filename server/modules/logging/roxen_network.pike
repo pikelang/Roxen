@@ -8,7 +8,7 @@ inherit "module";
 
 // ---------------- Module registration stuff ----------------
 
-constant cvs_version = "$Id: roxen_network.pike,v 1.11 2002/10/22 00:32:40 nilsson Exp $";
+constant cvs_version = "$Id: roxen_network.pike,v 1.12 2004/04/22 15:09:09 mani Exp $";
 constant module_type = MODULE_ZERO;
 constant thread_safe = 1;
 constant module_name = "Roxen Network module";
@@ -54,7 +54,7 @@ void create(Configuration _conf) {
 			"E-mail addres to the webmaster"))
     -> may_be_empty(1);
 
-  var = defvar("location",
+  var = [object(PositionAccess)]defvar("location",
 	       PositionAccess(0, internal_location, 0,
 			      "Geographical location",
 			      "The physical location of the server."));
