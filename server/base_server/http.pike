@@ -1,7 +1,7 @@
 // HTTP convenience functions.
 // inherited by roxenlib, and thus by all files inheriting roxenlib.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: http.pike,v 1.45 2000/08/19 00:47:58 per Exp $
+// $Id: http.pike,v 1.46 2000/08/21 10:02:59 jhs Exp $
 
 //#pragma strict_types
 
@@ -82,9 +82,9 @@ string http_res_to_string( mapping file, RequestID id )
 }
 
 mapping http_low_answer( int errno, string data )
-  //! Return a filled out struct with the error and data specified.  The
-  //! error is infact the status response, so '200' is HTTP Document
-  //! follows, and 500 Internal Server error, etc.
+//! Return a result mapping with the error and data specified. The
+//! error is infact the status response, so '200' is HTTP Document
+//! follows, and 500 Internal Server error, etc.
 {
   if(!data) data="";
   HTTP_WERR("Return code "+errno+" ("+data+")");
@@ -106,10 +106,10 @@ mapping http_pipe_in_progress()
 mapping http_rxml_answer( string rxml, RequestID id,
                           void|Stdio.File file,
                           void|string type )
-  //! Convenience functions to use in Roxen modules. When you just want
-  //! to return a string of data, with an optional type, this is the
-  //! easiest way to do it if you don't want to worry about the internal
-  //! roxen structures.
+//! Convenience functions to use in Roxen modules. When you just want
+//! to return a string of data, with an optional type, this is the
+//! easiest way to do it if you don't want to worry about the internal
+//! roxen structures.
 {
   rxml = ([function(string, RequestID, Stdio.File:string)]id->conf->parse_rxml)(rxml, id, file);
   HTTP_WERR("RXML answer ("+(type||"text/html")+")");
@@ -128,6 +128,8 @@ mapping http_try_again( float delay )
 }
 
 mapping http_string_answer(string text, string|void type)
+//! Generates a result mapping with the given text as the request body
+//! with a content type of `type' (or "text/html" if none was given).
 {
   HTTP_WERR("String answer ("+(type||"text/html")+")");
   return ([ "data":text, "type":(type||"text/html") ]);
@@ -148,7 +150,7 @@ constant days = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" });
 static int chd_lt;
 static string chd_lf;
 string cern_http_date(int t)
-  //! Return a date, used in the common log format
+//! Return a date, used in the common log format
 {
   if( t == chd_lt ) return chd_lf;
 
@@ -168,9 +170,9 @@ string cern_http_date(int t)
 }
 
 string http_date(int t)
-  //! Returns a http_date, as specified by the HTTP-protocol standard.
-  //! This is used for logging as well as the Last-Modified and Time
-  //! heads in the reply.
+//! Returns a http_date, as specified by the HTTP-protocol standard.
+//! This is used for logging as well as the Last-Modified and Time
+//! heads in the reply.
 {
   mapping(string:int) l = gmtime( t );
   return(sprintf("%s, %02d %s %04d %02d:%02d:%02d GMT",
