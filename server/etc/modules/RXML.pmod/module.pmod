@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.190 2001/07/09 04:02:15 mast Exp $
+// $Id: module.pmod,v 1.191 2001/07/09 23:05:42 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3240,7 +3240,6 @@ class Frame
 	      else if (frame->tag == tag) nest++;
 	    THIS_TAG_DEBUG ("Setting parent_frame to %O from additional_tags\n", frame);
 	    this_object()->parent_frame = frame;
-	    break;
 	  }
 
 #ifdef MAGIC_HELP_ARG
