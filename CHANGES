@@ -8,6 +8,9 @@ o Copying of configurations now works again.
 o The htaccess module is now a MODULE_URL module, which improves the internal
   security in Roxen.
 
+o The start-script now uses the pike named "roxen" if it exists, so that
+  Roxen shows up as "roxen" instead of as "pike" in process-listings.
+
 
 Changes since Roxen Challenger 1.2 alpha 8
 -----------------------------------------------
