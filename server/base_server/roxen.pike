@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.860 2004/02/05 15:32:20 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.861 2004/02/09 16:51:40 wellhard Exp $";
 
 //! @appears roxen
 //!
@@ -3128,10 +3128,13 @@ class ImageCache
       })) {
 	// File not found.
 	if(arrayp(err) && sizeof(err) && stringp(err[0]) &&
-	   err[0][0..21] == "Requesting unknown key")
-	  report_debug("Requesting unknown key %O from %O\n",
+	   sscanf(err[0], "Requesting unknown key %s\n", string message) == 1)
+	{
+	  report_debug("Requesting unknown key %s %O from %O\n",
+		       message,
 		       id->not_query,
 		       (sizeof(id->referer)?id->referer[0]:"unknown page"));
+	}
 	else
 	  report_debug("Error in draw: %s\n", describe_backtrace(err));
 	return 0;
@@ -3221,12 +3224,11 @@ class ImageCache
     if( zero_type( uid_cache[ ci ] ) )
     {
       uid_cache[ci] = user;
-      if( catch(QUERY( "UPDATE "+name+" SET uid=%s WHERE id=%s",
-		       user||"", ci )) )
-	QUERY("INSERT INTO "+name+" "
-	      "(id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP())",
-	      ci, user||"");
-
+      if( catch(QUERY("INSERT INTO "+name+" "
+		      "(id,uid,atime) VALUES (%s,%s,UNIX_TIMESTAMP())",
+		      ci, user||"")) )
+	QUERY( "UPDATE "+name+" SET uid=%s WHERE id=%s",
+	       user||"", ci );
     }
 
 #ifndef NO_ARG_CACHE_SB_REPLICATE
@@ -3583,13 +3585,18 @@ class ArgCache
       return cache[id]+([]);
     array i = decode_id( id );
     if( !i )
-      error("Requesting unknown key\n");
+      error("Requesting unknown key (decode failed)\n");
     array a = low_lookup( i[0] );
     array b = low_lookup( i[1] );
     if (!arrayp (a) || !arrayp (b) || sizeof (a) != sizeof (b))
+    {
       // Got lookup with ids from an old cache which has been zapped,
       // and the entries are now used for something else.
-      error("Requesting unknown key\n");
+#ifdef ARG_CACHE_DEBUG
+      werror("lookup(%O) a: %O, b: %O\n", id, a, b);
+#endif
+      error("Requesting unknown key (size missmatch)\n");
+    }
     return (cache[id] = mkmapping( a, b ))+([]);
   }
 
@@ -3600,7 +3607,7 @@ class ArgCache
       return v;
     string q = read_args( id );
     if( !q )
-      error("Requesting unknown key\n");
+      error("Requesting unknown key (not found in db)\n");
     mixed data = decode_value(q);
     string hl = Crypto.md5()->update( q )->digest();
     cache[ hl ] = id;
@@ -3706,7 +3713,7 @@ class ArgCache
   {
     array i = decode_id( id );
     if( !i )
-      error("Requesting unknown key\n");
+      error("Requesting unknown key (decode failed)\n");
     LOCK();
     QUERY("UPDATE "+name+" SET atime='"+time(1)+"' WHERE id="+i[0]);
     QUERY("UPDATE "+name+" SET atime='"+time(1)+"' WHERE id="+i[1]);
