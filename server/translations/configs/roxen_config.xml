@@ -43,14 +43,14 @@
   <file>../config_interface/standard/boxes/crunch.pike</file>
   <file>../config_interface/standard/boxes/ris_news.pike</file>
   <file>../config_interface/standard/boxes/slashdot.pike</file>
-  <file>../config_interface/standard/boxes/welcome.pike</file>
   <file>../config_interface/standard/boxes/doclinks.pike</file>
+  <file>../config_interface/standard/boxes/welcome.pike</file>
   <file>../etc/modules/Variable.pmod/Date.pike</file>
   <file>../etc/modules/Variable.pmod/Email.pike</file>
   <file>../etc/modules/Variable.pmod/VerifiedString.pike</file>
   <file>../etc/modules/Variable.pmod/module.pmod</file>
-  <file>../etc/modules/Variable.pmod/Upload.pike</file>
   <file>../etc/modules/Variable.pmod/Image.pike</file>
+  <file>../etc/modules/Variable.pmod/Upload.pike</file>
   <file>../modules/configuration/config_filesystem.pike</file>
   <file>../modules/configuration/config_tags.pike</file>
   <file>../modules/configuration/config_userdb.pike</file>
