@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.16 2000/06/23 16:58:39 mast Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.17 2000/07/10 17:59:51 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -84,6 +84,14 @@ static int init_wiretap_stack (mapping(string:string) args, RequestID id)
 
   id->misc->wiretap_stack = ({});
 
+#ifdef WIRETAP_TRACE
+  werror ("Init wiretap stack for %O: "
+	  "fgcolor=%O, bgcolor=%O, link=%O, alink=%O, vlink=%O\n",
+	  id, id->misc->defines->fgcolor, id->misc->defines->bgcolor,
+	  id->misc->defines->alink, id->misc->defines->alink,
+	  id->misc->defines->vlink);
+#endif
+
   return changed;
 }
 
@@ -110,6 +118,12 @@ static int push_color (string tagname, mapping(string:string) args, RequestID id
   FIX(text,fgcolor);
 #undef FIX
 
+#ifdef WIRETAP_TRACE
+  werror ("%*sPush wiretap stack for %O: tag=%O, fgcolor=%O, bgcolor=%O\n",
+	  sizeof (id->misc->wiretap_stack) * 2, "", id, tagname,
+	  id->misc->defines->fgcolor, id->misc->defines->bgcolor);
+#endif
+
   return changed;
 }
 
@@ -128,6 +142,12 @@ static void pop_color (string tagname, RequestID id)
       }
 
     id->misc->wiretap_stack = c[..sizeof(c)-i-2];
+
+#ifdef WIRETAP_TRACE
+  werror ("%*sPop wiretap stack for %O: tag=%O, fgcolor=%O, bgcolor=%O\n",
+	  sizeof (c) * 2, "", id, tagname,
+	  id->misc->defines->fgcolor, id->misc->defines->bgcolor);
+#endif
   }
 }
 
@@ -172,8 +192,6 @@ class TagPushColor
     array do_return (RequestID id)
     {
       args = mkmapping (map (indices (args), lower_case), values (args));
-//       werror ("push " + name + " %O\n", args);
-//       werror ("raw_tag_text: %O\n", raw_tag_text);
       if(push_color (name, args, id) && QUERY(colormode))
 	return ({propagate_tag (args)});
       return ({propagate_tag()});
@@ -184,10 +202,10 @@ class TagPushColor
 class TagPopColor
 {
   inherit RXML.Tag;
-  string name;
+  string name, tagname;
   constant flags = RXML.FLAG_EMPTY_ELEMENT|RXML.FLAG_COMPAT_PARSE|RXML.FLAG_NO_PREFIX;
 
-  void create (string _name) {name = "/" + _name;}
+  void create (string _name) {tagname = _name, name = "/" + _name;}
 
   class Frame
   {
@@ -196,8 +214,7 @@ class TagPopColor
 
     array do_return (RequestID id)
     {
-//       werror ("pop " + name + "\n");
-//       werror ("raw_tag_text: %O\n", raw_tag_text);
+      pop_color (tagname, id);
       return ({propagate_tag()});
     }
   }
