@@ -6,7 +6,7 @@
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.145 1999/07/16 13:24:27 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.146 1999/07/28 21:56:54 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -585,10 +585,20 @@ private int parse_got()
 #ifdef DEBUG
 	    perror("Client extension: "+contents+"\n");
 #endif
+	  case "request-range":
+	    contents = lower_case(contents-" ");
+	    if(!search(contents, "bytes")) 
+	      // Only care about "byte" ranges.
+	      misc->range = contents[6..];
+	    break;
+	    
 	  case "range":
 	    contents = lower_case(contents-" ");
-	    if(!search(contents, "bytes"))
-	      // Only care about "byte" ranges.
+	    if(!misc->range && !search(contents, "bytes"))
+	      // Only care about "byte" ranges. Also the Request-Range header
+	      // has precedence since Stupid Netscape (TM) sends both but can't
+	      // handle multipart/byteranges but only multipart/x-byteranges.
+	      // Duh!!!
 	      misc->range = contents[6..];
 	    break;
 	      
@@ -1108,7 +1118,7 @@ class MultiRangeWrapper
   array range_info = ({});
   string type;
   string stored_data = "";
-  void create(mapping _file, mapping heads, array _ranges)
+  void create(mapping _file, mapping heads, array _ranges, object id)
   {
     file = _file->file;
     len = _file->len;
@@ -1119,15 +1129,19 @@ class MultiRangeWrapper
 	m_delete(heads, h);
       }
     }
-    heads["Content-Type"] = "multipart/byteranges; boundary=" BOUND;
+    if(id->request_headers["request-range"])
+      heads["Content-Type"] = "multipart/x-byteranges; boundary=" BOUND;
+    else
+      heads["Content-Type"] = "multipart/byteranges; boundary=" BOUND;
     ranges = _ranges;
     int clen;
     foreach(ranges, array range)
     {
       int rlen = 1+ range[1] - range[0];
-      string sep =  sprintf("\r\n--%s\r\nContent-Type: %O\r\n"
+      string sep =  sprintf("\r\n--" BOUND "\r\nContent-Type: %s\r\n"
 			    "Content-Range: bytes %d-%d/%d\r\n\r\n",
-			    BOUND, type, @range, len);
+			    type||"application/octet-stream",
+			    @range, len);
       clen += rlen + strlen(sep);
       range_info += ({ ({ rlen, sep }) });
     }
@@ -1394,7 +1408,7 @@ void send_result(mapping|void result)
 	      // Multiple ranges. Multipart reply and stuff needed.
 	      // We do this by replacing the file object with a wrapper.
 	      // Nice and handy.
-	      file->file = MultiRangeWrapper(file, heads, ranges);
+	      file->file = MultiRangeWrapper(file, heads, ranges, this_object());
 	    }
 	  } else {
 	    // Got the header, but the specified ranges was out of bounds.
