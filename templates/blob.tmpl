@@ -11,15 +11,10 @@
 </head>
 <body bgcolor=$$bg_color$$ text=$$text_color$$ link=$$link_color$$
       vlink=$$vlink_color$$ alink=$$alink_color$$ £bg_image£>
-<div align=right>
-  <gtext bg=$$bg_color$$ fg=$$title_color$$
-    scale=$$title_size$$
-    £title_shadow£ $$title_font_style$$
-    nfont='$$title_font$$'><as-meta var=title></gtext>
-</div>
-<table cellpadding=0 cellspacing=0 border=1>
+
+<table cellpadding=0 cellspacing=0 border=0>
   <tr>
-    <td align=left bgcolor=$$text_bg_color$$ £text_bg_image£>
+    <td colspan=2 align=left bgcolor=$$text_bg_color$$ £text_bg_image£>
       <blob size=$$corner_1_size$$ corner=2 transparent=$$text_bg_color$$
         bg=$$bg_color$$ fg=$$text_bg_color$$></td>
     <td colspan=3 align=right bgcolor=$$text_bg_color$$ £text_bg_image£>
@@ -27,41 +22,61 @@
         bg=$$bg_color$$ fg=$$text_bg_color$$></td>
   </tr>
   <tr>
-    <td bgcolor=$$text_bg_color$$ £text_bg_image£ align=left
-      valign=bottom height=15>
-      <blob size=$$corner_2_size$$ corner=1 transparent=$$text_bg_color$$
-        bg=$$bg_color$$ fg=$$text_bg_color$$></td>
-    <td rowspan=7 bgcolor=$$text_bg_color$$ £text_bg_image£>
+    <td width=15 bgcolor=$$text_bg_color$$ £text_bg_image£>
       <img src=/internal-roxen-unit width=15 height=1 alt=""></td>
-    <td rowspan=5 bgcolor=$$text_bg_color$$ £text_bg_image£>
+    <td bgcolor=$$text_bg_color$$ £text_bg_image£>
+    <if not match='$$logo_position$$ is '>
+      <img src=/logo.gif alt=""></if><else>
+      <img src=/internal-roxen-unit width=1 height=1></else></td>
+    <td rowspan=4 bgcolor=$$text_bg_color$$ £text_bg_image£>
+      <img src=/internal-roxen-unit width=15 height=1 alt=""></td>
+    <td align=$$title_align$$ bgcolor=$$text_bg_color$$ £text_bg_image£>
+      <gtext bg=$$bg_color$$ fg=$$title_color$$
+        scale=$$title_size$$
+        £title_shadow£ $$title_font_style$$
+        nfont='$$title_font$$'><as-meta var=title></gtext></td>
+    <td rowspan=4 bgcolor=$$text_bg_color$$ £text_bg_image£>
+      <img src=/internal-roxen-unit width=15 height=1 alt=""></td>
+  </tr>
+  <tr>
+    <td colspan=2 valign=top bgcolor=$$text_bg_color$$ £text_bg_image£>
+      <table width=100% border=0 cellpadding=0 cellspacing=0>
+        <tr>
+          <td bgcolor=$$text_bg_color$$ £text_bg_image£ align=left
+            valign=bottom>
+            <blob size=$$corner_2_size$$ corner=1 transparent=$$text_bg_color$$
+              bg=$$bg_color$$ fg=$$text_bg_color$$></td>
+        </tr>
+        <tr>
+          <td align=right valign=top bgcolor=$$bg_color$$ £bg_image£>
+            <blob size=$$corner_2_size$$ corner=3 transparent=$$bg_color$$
+              fg=$$bg_color$$ bg=$$text_bg_color$$></td>
+        </tr>
+        <tr>
+          <td bgcolor=$$bg_color$$ £bg_image£><comment><--  Nav  --></comment>
+            <include file='$$nav_name$$'>
+          </td>
+        </tr>
+        <tr>
+          <td align=right valign=bottom bgcolor=$$bg_color$$ £bg_image£>
+            <blob size=$$corner_2_size$$ corner=0 transparent=$$bg_color$$
+              fg=$$bg_color$$ bg=$$text_bg_color$$></td>
+        </tr>
+        <tr>
+          <td bgcolor=$$text_bg_color$$ £text_bg_image£
+            align=left valign=top>
+            <blob size=$$corner_2_size$$ corner=2 transparent=$$text_bg_color$$
+               bg=$$bg_color$$ fg=$$text_bg_color$$></td>
+        </tr>
+      </table>
+    </td>
+    <td bgcolor=$$text_bg_color$$ £text_bg_image£ valign=top>
       <comment><--  Content  --></comment>
       <tmplinsert tag=content>
     </td>
-    <td rowspan=7 bgcolor=$$text_bg_color$$ £text_bg_image£>
-      <img src=/internal-roxen-unit width=15 height=1 alt=""></td>
   </tr>
   <tr>
-    <td align=right valign=top>
-      <blob size=$$corner_2_size$$ corner=3 transparent=$$bg_color$$
-        fg=$$bg_color$$ bg=$$text_bg_color$$></td>
-  </tr>
-  <tr>
-    <td><comment><--  Nav  --></comment>
-      <include file='$$nav_name$$'>
-    </td>
-  </tr>
-  <tr>
-    <td align=right valign=bottom>
-    <blob size=$$corner_2_size$$ corner=0 transparent=$$bg_color$$
-        fg=$$bg_color$$ bg=$$text_bg_color$$></td>
-  </tr>
-  <tr>
-    <td bgcolor=$$text_bg_color$$ £text_bg_image£ align=left valign=top>
-      <blob size=$$corner_2_size$$ corner=2 transparent=$$text_bg_color$$
-        bg=$$bg_color$$ fg=$$text_bg_color$$></td>
-  </tr>
-  <tr>
-    <td rowspan=2 bgcolor=$$text_bg_color$$ £text_bg_image£>
+    <td colspan=2 rowspan=2 bgcolor=$$text_bg_color$$ £text_bg_image£>
       <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
     <td height=20 bgcolor=$$text_bg_color$$ £text_bg_image£>
       <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
@@ -71,7 +86,7 @@
       <insert file=/footer.html></td>
   </tr>
   <tr>
-    <td bgcolor=$$text_bg_color$$ £text_bg_image£ align=left>
+    <td colspan=2 bgcolor=$$text_bg_color$$ £text_bg_image£ align=left>
       <blob size=$$corner_1_size$$ corner=1 transparent=$$text_bg_color$$
         bg=$$bg_color$$ fg=$$text_bg_color$$></td>
     <td colspan=3 bgcolor=$$text_bg_color$$ £text_bg_image£ align=right>
