@@ -20,7 +20,7 @@ constant s = spider;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.209 2000/10/10 18:46:33 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.210 2000/10/16 23:52:31 nilsson Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -97,10 +97,9 @@ int use_syslog, loggingfield;
  * Some efuns used by Roxen
  */
 
-string oct;
-int last_was_change;
+static int last_was_change;
 int roxen_started = time();
-float roxen_started_flt = (float)time(time()); //Kludge for bug in type inference
+float roxen_started_flt = time(time());
 string short_time()
 {
   if( last_was_change>0 )
@@ -122,7 +121,6 @@ string short_time()
   mapping l = localtime( time( ) );
   string ct =  sprintf("%2d:%02d:%02d  : ", l->hour, l->min, l->sec );
   last_was_change=5;
-  oct = ct;
   return ct;
 }
 
@@ -136,7 +134,7 @@ string possibly_encode( string what )
   return what;
 }
 
-int last_was_nl;
+static int last_was_nl;
 // Used to print error/debug messages
 void roxen_perror(string format, mixed ... args)
 {
@@ -369,13 +367,13 @@ class ModuleCopies
   {
     return copies[q]=w;
   }
-  mixed _indices()
+  array _indices()
   {
-    return(indices(copies));
+    return indices(copies);
   }
-  mixed _values()
+  array _values()
   {
-    return(values(copies));
+    return values(copies);
   }
   string _sprintf( ) { return "ModuleCopies()"; }
 }
@@ -1482,12 +1480,7 @@ int mv( string f1, string f2 )
 
 Stat file_stat( string filename, int|void slinks )
 {
-  mixed k;
-  if( slinks )
-    return predef::file_stat( roxen_path(filename), slinks );
-  else
-    return predef::file_stat( roxen_path(filename) );
-  return 0;
+  return predef::file_stat( roxen_path(filename), slinks );
 }
 
 object|void open(string filename, string mode, int|void perm)
@@ -1570,8 +1563,6 @@ void paranoia_throw(mixed err)
   }
   throw(err);
 }
-
-int global_count;
 
 // Roxen bootstrap code.
 int main(int argc, array(string) argv)
