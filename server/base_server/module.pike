@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.125 2001/08/23 18:05:05 nilsson Exp $
+// $Id: module.pike,v 1.126 2001/08/23 18:40:14 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -19,12 +19,13 @@ constant module_unique  = 1;
 
 
 private Configuration _my_configuration;
+private string _module_local_identifier;
 private string _module_identifier =
   lambda() {
     mixed init_info = roxen->bootstrap_info->get();
     if (arrayp (init_info)) {
-      [_my_configuration, string modname] = init_info;
-      return _my_configuration->name + "/" + modname;
+      [_my_configuration, _module_local_identifier] = init_info;
+      return _my_configuration->name + "/" + _module_local_identifier;
     }
   }();
 static mapping _api_functions = ([]);
@@ -47,6 +48,9 @@ void report_debug( mixed ... args )  { predef::report_debug( @args );  }
 
 
 string module_identifier()
+//! Returns a string that uniquely identifies this module instance
+//! within the server. The identifier is the same as
+//! @[Roxen.get_module] and @[Roxen.get_modname] handles.
 {
 #if 1
   return _module_identifier;
@@ -63,6 +67,15 @@ string module_identifier()
   }
   return _module_identifier;
 #endif
+}
+
+string module_local_id()
+//! Returns a string that uniquely identifies this module instance
+//! within the configuration. The returned string is the same as the
+//! part after the first '/' in the one returned from
+//! @[module_identifier].
+{
+  return _module_local_identifier;
 }
 
 RoxenModule this_module()
