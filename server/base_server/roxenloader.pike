@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.241 2001/02/01 10:00:55 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.242 2001/02/01 10:29:49 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1013,31 +1013,37 @@ string query_mysql_dir()
 }
 
 mapping my_mysql_cache = ([]);
+string  my_mysql_path;
 
 string query_configuration_dir()
 {
   return configuration_dir;
 }
 
-string my_mysql_path;
-
-
 Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
 {
+  object res;
+#ifdef THREADS
   Thread.Local tl;
-  if( !db ) db = "mysql";
+#else
+  string i = ro+db;
+#endif
   
-  if( !my_mysql_cache[ro] )
-    my_mysql_cache[ ro ] = ([]);
- 
- if( !( tl = my_mysql_cache[ro][db] ) )
-    tl = my_mysql_cache[ ro ][ db ] = Thread.Local();
+  if( !db )
+    db = "mysql";
+  
+#ifdef THREADS
+  if( !( tl = my_mysql_cache[ ro + db ] ) )
+    tl = my_mysql_cache[ ro + db ] = Thread.Local();
 
-  if( tl->get() ) 
-  {
-    tl->get()->query("USE "+db);
-    return tl->get();
-  }
+  if( res = tl->get() )
+#else
+  if( res = my_mysql_cache[ i ] )
+#endif
+    catch { // catch in case of lost connection.
+      res->query("USE "+db);
+      return res;
+    };
 
   if( mixed err = catch
   {
@@ -1046,13 +1052,18 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
     Sql.Sql sql = Sql.Sql( replace( my_mysql_path,
 				    ({"%user%", "%db%" }),
 				    ({ ro, db })) );
-    sql->query("USE "+db);
+    sql->query( "USE "+db );
+#ifdef THREADS
     return tl->set( sql );
+#else
+    return my_mysql_cache[ i ] = sql;
+#endif
   } )
     if( db == "mysql" )
       throw( err );
 
-  connect_to_my_mysql( 0, "mysql" )->query( "CREATE DATABASE "+db );
+  connect_to_my_mysql( 0, "mysql" )
+    ->query( "CREATE DATABASE "+db );
   return connect_to_my_mysql( ro, db );
 }
 
