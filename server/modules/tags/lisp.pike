@@ -1,6 +1,6 @@
 #if constant(Languages)
 #define error(X) throw( ({ (X), backtrace() }) )
-constant cvs_version = "$Id: lisp.pike,v 1.13 1999/05/20 03:26:20 neotron Exp $";
+constant cvs_version = "$Id: lisp.pike,v 1.14 2000/01/23 21:41:26 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -129,13 +129,13 @@ class API_Function
 
       array args = ({ });
       int i = 0;
-      int optional;
+      int opt;
       
       while(arglist != Lempty)
       {
 	if (i == sizeof(types))
 	{
-	  if (!optional)
+	  if (!opt)
 	    return 0;
 	  else
 	    break;
@@ -144,7 +144,7 @@ class API_Function
 	switch(types[i])
 	{
 	case 0: /* Any arguments left are optional */
-	  optional = 1;
+	  opt = 1;
 	  i++;
 	  break;
 	case "string":
