@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.13 1999/05/25 00:42:21 neotron Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.14 1999/07/26 13:15:01 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -26,8 +26,8 @@ static string img_placeholder (mapping args)
 {
   int width=((int)args->outlinewidth)||1;
 
-  return sprintf("<img src=\"%s\" alt=\"\" width=%d height=%d>",
-		 unit_gif, width, width);
+  return sprintf("<img src=\"%s\" alt=\"\" width=\"%d\" height=\"%d\"%s>",
+		 unit_gif, width, width, (args->noxml?"":" /"));
 }
 
 static string handle_title(string name, mapping junk_args,
@@ -40,7 +40,7 @@ static string handle_title(string name, mapping junk_args,
 static string horiz_line(mapping args)
 {
   args->fixedleft="";
-  return sprintf("<tr><td colspan=5 bgcolor=\"%s\">\n"
+  return sprintf("<tr><td colspan=\"5\" bgcolor=\"%s\">\n"
 		 "%s</td></tr>\n",
 		 args->outlinecolor,
 		 img_placeholder(args));
@@ -60,21 +60,21 @@ static string title(mapping args)
     args->right = args->width || "20";
   switch (args->style) {
    case "groupbox":
-    return sprintf("<tr><td colspan=2><font size=-3>&nbsp;</font></td>\n"
-		   "<td rowspan=3%s nowrap>&nbsp;<b>"		/* bgcolor */
+    return sprintf("<tr><td colspan=\"2\"><font size=\"-3\">&nbsp;</font></td>\n"
+		   "<td rowspan=\"3\"%s nowrap=\"nowrap\">&nbsp;<b>"		/* bgcolor */
 		   "%s%s%s"                 /* titlecolor, title, titlecolor */
 		   "</b>&nbsp;</td>\n"
-		   "<td colspan=2><font size=-3>&nbsp;</font></td></tr>\n"
+		   "<td colspan=\"2\"><font size=\"-3\">&nbsp;</font></td></tr>\n"
 		   "<tr%s>"				/* bgcolor */
-		   "<td bgcolor=\"%s\" colspan=2>\n"	/* outlinecolor */
+		   "<td bgcolor=\"%s\" colspan=\"2\">\n"	/* outlinecolor */
 		   "%s</td>\n"				/* empty */
-		   "<td bgcolor=\"%s\" colspan=2>\n"
+		   "<td bgcolor=\"%s\" colspan=\"2\">\n"
 		   "%s</td></tr>\n"			/* empty */
 
 		   "<tr%s><td bgcolor=\"%s\">"      /* bgcolor, outlinecolor */
 		   "%s</td>\n"				/* empty */
-		   "<td%s><font size=-3>%s</font></td>" /* left, fixedleft */
-		   "<td%s><font size=-3>%s</font></td>\n" /* right, fixedright */
+		   "<td%s><font size=\"-3\">%s</font></td>" /* left, fixedleft */
+		   "<td%s><font size=\"-3\">%s</font></td>\n" /* right, fixedright */
 		   "<td bgcolor=\"%s\">"		/* outlinecolor */
 		   "%s</td></tr>\n"			/* empty */
 		   ,
@@ -99,21 +99,21 @@ static string title(mapping args)
 		   args->outlinecolor,
 		   empty);
    case "caption":
-    return sprintf("<tr%s><td colspan=2><font size=-3>&nbsp;</font></td>\n"
-		   "<td rowspan=3 nowrap>&nbsp;<b>"		/* bgcolor */
+    return sprintf("<tr%s><td colspan=\"2\"><font size=\"-3\">&nbsp;</font></td>\n"
+		   "<td rowspan=\"3\" nowrap=\"nowrap\">&nbsp;<b>"		/* bgcolor */
 		   "%s%s%s"                 /* titlecolor, title, titlecolor */
 		   "</b>&nbsp;</td>\n"
-		   "<td colspan=2><font size=-3>&nbsp;</font></td></tr>\n"
+		   "<td colspan=\"2\"><font size=\"-3\">&nbsp;</font></td></tr>\n"
 		   "<tr bgcolor=\"%s\">"		/* outlinecolor */
-		   "<td colspan=2>\n"	
+		   "<td colspan=\"2\">\n"	
 		   "%s</td>\n"				/* empty */
-		   "<td colspan=2>\n"
+		   "<td colspan=\"2\">\n"
 		   "%s</td></tr>\n"			/* empty */
 
 		   "<tr bgcolor=\"%s\"><td>"      /*  outlinecolor */
 		   "%s</td>\n"				/* empty */
-		   "<td%s><font size=-3>%s</font></td>" /* left, fixedleft */
-		   "<td%s><font size=-3>%s</font></td>\n" /* right, fixedright */
+		   "<td%s><font size=\"-3\">%s</font></td>" /* left, fixedleft */
+		   "<td%s><font size=\"-3\">%s</font></td>\n" /* right, fixedright */
 		   "<td bgcolor=\"%s\">"		/* outlinecolor */
 		   "%s</td></tr>\n"			/* empty */
 		   ,
@@ -158,18 +158,18 @@ string container_obox(string name, mapping args,
   switch (name) {
   case "obox":
     s = title(args);
-    s = "<table border=0 cellpadding=0 cellspacing=0" +
-      (args->align?" align="+args->align:"") +
-      (args->width ? " width=" + args->width : "") + ">\n" +
+    s = "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\"" +
+      (args->align?" align=\""+args->align+"\"":"") +
+      (args->width ? " width=\"" + args->width+"\"" : "") + ">\n" +
       s +
       "<tr" +
       (args->bgcolor?" bgcolor=\""+args->bgcolor+"\"":"") +
       "><td bgcolor=\"" + args->outlinecolor + "\">" +
       img_placeholder(args) + "</td>\n"
-      "<td" + (args->width && !args->fixedleft && !args->fixedright ? " width=1" : "") +
-      (args->aligncontents ? " align=" + args->aligncontents : "") + " colspan=3" + ">\n"
-      "<table border=0 cellspacing=0 cellpadding=" + (args->padding || "5") +
-      (args->spacing?" width="+(string)args->spacing:"")+">"
+      "<td" + (args->width && !args->fixedleft && !args->fixedright ? " width=\"1\"" : "") +
+      (args->aligncontents ? " align=" + args->aligncontents : "") + " colspan=\"3\"" + ">\n"
+      "<table border=\"0\" cellspacing=\"0\" cellpadding=\"" + (args->padding || "5") + "\""+
+      (args->spacing?" width=\""+(string)args->spacing+"\"":"")+">"
       "<tr><td>\n";
 
       if (args->textcolor) {
