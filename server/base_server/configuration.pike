@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.85 1997/11/09 18:23:37 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.86 1997/11/26 22:07:25 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -2506,7 +2506,20 @@ string desc()
 }
 
 
+// BEGIN SQL
 
+mapping(string:string) sql_urls = ([]);
+
+object sql_connect(string db)
+{
+  if (sql_urls[db]) {
+    return(Sql.sql(sql_urls[db]));
+  } else {
+    return(Sql.sql(db));
+  }
+}
+
+// END SQL
 
 // This is the most likely URL for a virtual server.
 
