@@ -74,7 +74,7 @@
 
 #define MODULE_SECURITY          (2<<14)
 
-#define MODULE_IPP		 (2<<15)
+#define MODULE_PROVIDER		 (2<<15)
 
 #define MOD_ALLOW   1
 #define MOD_USER    2
