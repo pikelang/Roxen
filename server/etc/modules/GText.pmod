@@ -171,8 +171,8 @@ array(Image.Image) make_text_image(
 
   if(args->bshadow)
   {
-    xsize+=(int)args->bshadow+3;
-    ysize+=(int)args->bshadow+3;
+    xsize+=(int)args->bshadow+6;
+    ysize+=(int)args->bshadow+5;
   }
 
   if(args->fadein)
