@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.20 2004/06/04 08:29:27 _cvs_stephen Exp $
+// $Id: ExtScript.pmod,v 1.21 2004/06/23 00:35:33 _cvs_stephen Exp $
 
 // 
 
@@ -176,7 +176,7 @@ class Handler
     if (!proc || proc->status() != 0)
     {
       pipe = Stdio.File();
-      Stdio.File pipe_other = pipe->pipe(); // Stdio.PROP_IPC);
+      Stdio.File pipe_other = pipe->pipe(Stdio.PROP_IPC);
 
       DEBUGMSG("(L1)");
 

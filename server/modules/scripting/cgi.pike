@@ -1,7 +1,7 @@
 // This is a ChiliMoon module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.66 2004/06/04 08:29:25 _cvs_stephen Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.67 2004/06/23 00:35:33 _cvs_stephen Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -307,7 +307,7 @@ class Wrapper
     mid = _m;
     done_cb = _done_cb;
     tofdremote = Stdio.File( );
-    tofd = tofdremote->pipe( ); // Stdio.PROP_NONBLOCK
+    tofd = tofdremote->pipe(Stdio.PROP_NONBLOCK|Stdio.PROP_BIDIRECTIONAL);
 
     if (!tofd) {
       error("Failed to create pipe. errno: %s\n", strerror(errno()));
@@ -732,13 +732,13 @@ class CGIScript
 
     mapping options = ([
       "stdin":stdin,
-      "stdout":(t=stdout->pipe(/*Stdio.PROP_IPC|Stdio.PROP_NONBLOCK*/)),
+      "stdout":(t=stdout->pipe(Stdio.PROP_IPC|Stdio.PROP_NONBLOCK)),
       "stderr":(stderr==stdout?t:stderr),
       "cwd":dirname( command ),
       "env":environment,
       "noinitgroups":1,
     ]);
-    stdin = stdin->pipe(/*Stdio.PROP_IPC|Stdio.PROP_NONBLOCK*/);
+    stdin = stdin->pipe(Stdio.PROP_IPC|Stdio.PROP_NONBLOCK);
 
 #if UNIX
     ;{ string s;
