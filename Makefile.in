@@ -22,8 +22,8 @@ all:	strip_manual @MAKE_GMP@ @MAKE_GDBM@ @MAKE_ZLIB@ @MAKE_PLATFORM@ pike extern
 	-@$(BIN_TRUE)
 
 strip_manual: force
-	@cd $(SRCDIR) && \
-	  test -d plaform/. || \
+	@cd $(SRCDIR); \
+	  test -d platform/. || \
 	    if test -d server/manual/.; then \
 	      echo "Removing excess manual"; \
 	      rm -rf server/manual/unparsed/*1.0; \
@@ -53,7 +53,7 @@ zlib: force
 #platform: force
 #	@if test -d platform/. ; then \
 #	  (cd platform/;$(MAKE)) \
-#	else :; fi; \
+#	else :; fi;
 
 force:
 	-@$(BIN_TRUE)
