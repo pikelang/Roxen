@@ -545,7 +545,7 @@ array initial_form( RequestID id, Configuration conf, array modules )
       {
         num++;
         res += "<tr><td colspan='3'><h2>"
-        +LOCALE("","Initial variables for ")+
+        +LOCALE(1,"Initial variables for ")+
             mi->get_name()+"</h2></td></tr>"
         "<emit source=module-variables configuration=\""+conf->name+"\""
         " module=\""+mod+#"\">

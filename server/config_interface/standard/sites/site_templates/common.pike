@@ -29,7 +29,7 @@ string initial_form( RequestID id )
 	{
 	  res += 
 	    "<tr><td colspan='3'><h2>"
-	    +LOCALE("","Initial variables for ")+
+	    +LOCALE(1,"Initial variables for ")+
 	    mi->get_name()+"</h2></td></tr>"
 	    "<emit source=module-variables configuration=\""+conf->name+"\""
 	    " module=\""+mod+#"\">
@@ -129,7 +129,7 @@ mixed parse( RequestID id, mapping|void opt )
     return "<done/>";
   }
   return "<h2>"+
-         LOCALE("","Initial variables for the site")+
+         LOCALE(190,"Initial variables for the site")+
          "</h2><table>" + cf_form + initial_form( id ) + 
          ((opt||([]))->no_end_table?"":"</table><p>")+
          ((opt||([]))->no_ok?"":"<cf-ok />");

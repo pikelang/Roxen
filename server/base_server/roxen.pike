@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.543 2000/09/09 03:26:12 lange Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.544 2000/09/09 04:06:06 lange Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -1568,7 +1568,7 @@ array(string) find_ips_for( string what )
 
   array res = gethostbyname( what );
   if( !res || !sizeof( res[1] ) )
-    report_error(LOC_M(0, "Cannot possibly bind to %O, that host is "
+    report_error(LOC_M(46, "Cannot possibly bind to %O, that host is "
 		       "unknown. Substituting with ANY")+"\n", what);
   else
     return Array.uniq(res[1]);
