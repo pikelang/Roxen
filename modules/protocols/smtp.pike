@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.14 1998/09/04 20:28:41 grubba Exp $
+ * $Id: smtp.pike,v 1.15 1998/09/07 18:43:20 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.14 1998/09/04 20:28:41 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.15 1998/09/07 18:43:20 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -20,6 +20,7 @@ class Server {
     inherit Protocols.Line.smtp_style;
 
     constant errorcodes = ([
+      // From RFC 788 and RFC 821:
       211:"System status",
       214:"Help message",
       220:"Service ready",
@@ -41,23 +42,30 @@ class Server {
       552:"Requested action aborted: exceeded storage allocation",
       553:"Requested action not taken: mailbox name not allowed",
       554:"Transaction failed",
+      // From RFC 1123:
+      252:"Cannot VRFY user, "
+      "but will take message for this user and attempt delivery",
     ]);      
 
     constant command_help = ([
       // SMTP Commands in the order from RFC 788
-      "HELO":"<sp> <host>",
-      "MAIL":"<sp> FROM:<reverse-path>",
-      "RCPT":"<sp> TO:<forward-path>",
-      "DATA":"",
-      "RSET":"",
-      "SEND":"<sp> FROM:<reverse-path>",
-      "SOML":"<sp> FROM:<reverse-path>",
-      "SAML":"<sp> FROM:<reverse-path>",
-      "VRFY":"<sp> <string>",
-      "EXPN":"<sp> <string>",
-      "HELP":"[<sp> <string>]",
-      "NOOP":"",
-      "QUIT":"",
+      "HELO":"<sp> <host> (Hello)",
+      "MAIL":"<sp> FROM:<reverse-path> (Mail)",
+      "RCPT":"<sp> TO:<forward-path> (Recipient)",
+      "DATA":"(Data follows)",
+      "RSET":"(Reset)",
+      "SEND":"<sp> FROM:<reverse-path> (Send to terminal)",
+      "SOML":"<sp> FROM:<reverse-path> (Send or mail)",
+      "SAML":"<sp> FROM:<reverse-path> (Send and mail)",
+      "VRFY":"<sp> <string> (Verify)",
+      "EXPN":"<sp> <string> (Expand alias)",
+      "HELP":"[<sp> <string>] (Help)",
+      "NOOP":"(No operation)",
+      "QUIT":"(Quit)",
+      // Added in RFC 822:
+      "TURN":"(Turn into client mode)",
+      // Added in RFC 1651 (obsoleted by RFC 1869):
+      "EHLO":"<sp> <host> (Extended hello)",
     ]);
 
     string localhost = gethostname();
@@ -242,7 +250,9 @@ class Server {
       if (!sizeof(args)) {
 	res = ({ "This is " + roxen->version(),
 		 "Commands:",
-		 @(sprintf(" %#70s", sort(indices(command_help))*"\n")/"\n") });
+		 @(sprintf(" %#70s", sort(indices(command_help))*"\n")/"\n"),
+		 "Use \"HELP <command>\" for more help.",
+	});
       } else if (command_help[upper_case(args)]) {
 	res = ({ upper_case(args) + " " + command_help[upper_case(args)] });
       } else {
@@ -376,10 +386,15 @@ class Server {
     string sender = "";
     multiset(string) recipients = (<>);
 
-    void smtp_MAIL(string mail, string args)
+    void smtp_RSET(string rset, string args)
     {
       sender = "";
       recipients = (<>);
+    }
+
+    void smtp_MAIL(string mail, string args)
+    {
+      smtp_RSET(mail, args);
 
       int i = search(args, ":");
       if (i >= 0) {
@@ -435,7 +450,7 @@ class Server {
 		    // We always support 8bit.
 		    break;
 		  default:
-		    // Should we have a warning here?
+		    // FIXME: Should we have a warning here?
 		    break;
 		  }
 		  break;
@@ -491,7 +506,7 @@ class Server {
 #ifdef SMTP_DEBUG
 		roxen_perror("Refuse recipient.\n");
 #endif /* SMTP_DEBUG */
-		send(550);
+		send(550, sprintf("%s... Recipient refused", recipient));
 		return;
 	      }
 	    }
@@ -515,12 +530,12 @@ class Server {
 #ifdef SMTP_DEBUG
 	      roxen_perror("Unhandled recipient.\n");
 #endif /* SMTP_DEBUG */
-	      send(450);
+	      send(550, sprintf("%s... Unhandled recipient.", recipient));
 	      return;
 	    }
 
 	    recipients += (< recipient >);
-	    send(250);
+	    send(250, sprintf("%s... Recipient ok.", recipient));
 	    return;
 	  }
 	}
@@ -545,7 +560,7 @@ class Server {
       }
 
       if (!spooler) {
-	send(550);
+	send(550, "No spooler available");
 	report_error("SMTP: No spooler found!\n");
 	return;
       }
@@ -581,6 +596,8 @@ class Server {
       foreach(conf->get_providers("smtp_rcpt")||({}), object o) {
 	o->put(expanded, spooler[1]);
       }
+
+      smtp_RSET("RSET", "");
     }
 
     void smtp_DATA(string data, string args)
