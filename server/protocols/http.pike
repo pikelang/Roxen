@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.215 2000/03/07 22:42:13 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.216 2000/03/10 17:16:50 grubba Exp $";
 
 #define MAGIC_ERROR
 
@@ -1852,6 +1852,11 @@ void got_data(mixed fooid, string s)
     // No host header.
     // Fallback to using the first configuration bound to this port.
     conf = port_obj->urls[port_obj->sorted_urls[0]]->conf;
+    id->misc->defaulted = 1;
+    // Support delayed loading in this case too.
+    if (!conf->inited) {
+      conf->enable_all_modules();
+    }
   }
 
   if (rawauth)
