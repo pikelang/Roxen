@@ -77,6 +77,7 @@ urw_itc_avant_garde-demi-r binary
 /server/config_actions/changepass.pike foreign_ident
 /server/config_actions/clearlog.pike foreign_ident
 /server/config_actions/debuginformation.pike foreign_ident
+/server/config_actions/feature_list.pike foreign_ident
 /server/config_actions/flush.pike foreign_ident
 /server/config_actions/ftpstatus.pike foreign_ident
 /server/config_actions/hostnames.pike foreign_ident
