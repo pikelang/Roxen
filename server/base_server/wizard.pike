@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.84 1999/02/26 16:40:38 grubba Exp $
+/* $Id: wizard.pike,v 1.85 1999/03/22 16:20:01 grubba Exp $
  *  name="Wizard generator";
  *  doc="This file generats all the nice wizards";
  */
@@ -934,6 +934,15 @@ string html_table(array(string) subtitles, array(array(string)) table,
 		  reverse(format_numeric(reverse(a[1]), ";psbn&")));
 	  } else
 	    r += format_numeric(s, "&nbsp;");
+	  break;
+	case "right":
+	  r += "<td align=right>"+s;
+	  break;
+	case "center":
+	  r += "<td align=center>"+s;
+	  break;
+	case "left":
+	  r += "<td align=left>"+s;
 	  break;
 	case "text":
 	default:
