@@ -12,7 +12,7 @@
 // the only thing that should be in this file is the main parser.  
 string date_doc=Stdio.read_bytes("modules/tags/doc/date_doc");
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.114 1998/07/13 11:59:36 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.115 1998/07/13 14:06:54 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -111,13 +111,19 @@ void create()
 	 "will accept NCSA / Apache &lt;!--#exec cmd=\"XXX\" --&gt;.",
 	 ssi_is_not_set);
 
-  defvar("execuid", -2, "SSI support: execute command uid",
+#if constant(getpwnam)
+  array nobody = getpwnam("nobody") || ({ "nobody", "x", 65534, 65534 });
+#else /* !constant(getpwnam) */
+  array nobody = ({ "nobody", "x", 65534, 65534 });
+#endif /* constant(getpwnam) */
+
+  defvar("execuid", nobody[2] || 65534, "SSI support: execute command uid",
 	 TYPE_INT,
 	 "UID to run NCSA / Apache &lt;!--#exec cmd=\"XXX\" --&gt; "
 	 "commands with.",
 	 ssi_is_not_set);
 
-  defvar("execgid", -2, "SSI support: execute command gid",
+  defvar("execgid", nobody[3] || 65534, "SSI support: execute command gid",
 	 TYPE_INT,
 	 "GID to run NCSA / Apache &lt;!--#exec cmd=\"XXX\" --&gt; "
 	 "commands with.",
