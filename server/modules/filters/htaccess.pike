@@ -5,7 +5,7 @@
 
 import Stdio;
 
-constant cvs_version = "$Id: htaccess.pike,v 1.27 1998/01/28 01:52:10 grubba Exp $";
+constant cvs_version = "$Id: htaccess.pike,v 1.28 1998/02/10 17:20:19 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -380,12 +380,49 @@ int validate_group(multiset grps, array auth, string groupfile, string userfile,
 
   cache_key = "groupfile:" + id->conf->name;
 
+  if (!groupfile) {
+#ifdef HTACCESS_DEBUG
+    roxen_perror(sprintf("HTACCESS: !groupfile\n"));
+#endif
+    if(!validate_user(1, auth, userfile, id))
+      return 0;
+
+    foreach(indices(grps), grp) {
+      array gr = getgrnam(grp);
+#ifdef HTACCESS_DEBUG
+      werror("HTACCESS: Checking for unix group "+grp+" ... "
+	     +(gr&&gr[3]?"Existant":"Nope")+"\n");
+#endif
+      if(!gr || !gr[3])
+	continue;
+      if(!userfile && roxen->userlist(id)){
+#ifdef HTACCESS_DEBUG
+	werror("HTACCESS: Checking login group for user "+auth[0]
+	       +"("+roxen->userinfo(auth[0],id)[3]+") against gid("+gr[2]+")\n");
+#endif
+	if((int)roxen->userinfo(auth[0],id)[3]==gr[2])
+	  return 1;
+      }
+      int gr_i;
+      foreach(indices(gr[3]), gr_i){
+#ifdef HTACCESS_DEBUG
+	werror("HTACCESS: Checking for user "+auth[0]+" in group "+grp+
+	       " ("+gr[3][gr_i]+") ... "+
+	       (gr[3][gr_i]&&gr[3][gr_i]==auth[0]?"Yes":"Nope")+"\n");
+#endif
+	if(gr[3][gr_i]&&gr[3][gr_i]==auth[0])
+	  return 1;
+      }
+    }
+    return 0;
+  }
+
   array st;
 
   f = files.file();
+
   if((!(st = file_stat(groupfile))) || (st[1] == -4) ||
-     (!(f->open(groupfile, "r"))))
-  {
+     (!(f->open(groupfile, "r")))) {
     if (st && (st[1] == -4)) {
       report_error(sprintf("HTACCESS: The groupfile \"%s\" is a device!\n"
 			   "userfile: \"%s\"\n"
@@ -525,7 +562,7 @@ mapping|string|int htaccess(mapping access, object id)
 #endif
 
   if(access[method]->user || access[method]["valid-user"] 
-     || (groupfile && access[method]->group))
+     || access[method]->group)
   {
 #ifdef HTACCESS_DEBUG
     werror("HTACCESS: Verifying user access.\n");
