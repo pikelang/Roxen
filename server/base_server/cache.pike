@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.46 2000/03/13 18:27:42 nilsson Exp $
+// $Id: cache.pike,v 1.47 2000/04/18 21:20:57 nilsson Exp $
 
 #pragma strict_types
 
@@ -67,10 +67,6 @@ int get_size(mixed x, void|int iter)
   return svalsize; // base
 }
 
-#ifdef THREADS
-Thread.Mutex cleaning_lock = Thread.Mutex();
-#endif /* THREADS */
-
 void cache_expire(string in)
 {
   m_delete(cache, in);
@@ -80,15 +76,16 @@ mixed cache_lookup(string in, string what)
 {
   CACHE_WERR(sprintf("cache_lookup(\"%s\",\"%s\")  ->  ", in, what));
   all[in]++;
-  if(array entry = cache[in] && cache[in][what])
-    if (entry[TIMEOUT] && entry[TIMEOUT] < time(1)) {
-      CACHE_WERR("Timed out");
+  int t=time(1);
+  if(array entry = (cache[in] && cache[in][what]) )
+    if (entry[TIMEOUT] && entry[TIMEOUT] < t) {
       m_delete (cache[in], what);
+      CACHE_WERR("Timed out");
     }
     else {
+      cache[in][what][TIMESTAMP]=t;
       CACHE_WERR("Hit");
       hits[in]++;
-      cache[in][what][TIMESTAMP]=time(1);
       return entry[DATA];
     }
   else CACHE_WERR("Miss");
@@ -180,12 +177,13 @@ mixed cache_set(string in, string what, mixed to, int|void tm)
   CACHE_WERR(sprintf("cache_set(\"%s\", \"%s\", %t)\n",
 		     in, what, to));
 #endif
+  int t=time(1);
   if(!cache[in])
     cache[in]=([ ]);
   cache[in][what] = allocate(ENTRY_SIZE);
   cache[in][what][DATA] = to;
-  if(tm) cache[in][what][TIMEOUT] = time(1) + tm;
-  cache[in][what][TIMESTAMP] = time(1);
+  if(tm) cache[in][what][TIMEOUT] = t + tm;
+  cache[in][what][TIMESTAMP] = t;
   return to;
 }
 
