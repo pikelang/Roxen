@@ -4,7 +4,7 @@
 inherit "module";
 inherit "roxenlib";
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.8 1998/09/10 14:46:40 per Exp $";
+"$Id: mailtags.pike,v 1.9 1998/09/12 12:55:57 per Exp $";
 
 constant thread_safe = 1;
 
@@ -40,8 +40,8 @@ static int debug, secure;
 void create()
 {
   defvar("debug", 0, "Debug", TYPE_FLAG, 
-	 "If this flag is set, debugging output might be added for some tags. "
-	 "Also, more sanity checks will be done");
+	 "If this flag is set, debugging output might be added for some"
+	 " tags. Also, more sanity checks will be done");
 
   defvar("security_level", "high", "Security level", TYPE_STRING_LIST|VAR_MORE,
 	 "The level of security verification to do.<p>"
