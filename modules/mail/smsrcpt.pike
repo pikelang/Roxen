@@ -1,5 +1,5 @@
 /*
- * $Id: smsrcpt.pike,v 1.7 2000/10/04 12:15:54 grubba Exp $
+ * $Id: smsrcpt.pike,v 1.8 2000/10/04 12:23:58 grubba Exp $
  *
  * A SMS module for the AutoMail system.
  *
@@ -13,7 +13,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: smsrcpt.pike,v 1.7 2000/10/04 12:15:54 grubba Exp $";
+constant cvs_version = "$Id: smsrcpt.pike,v 1.8 2000/10/04 12:23:58 grubba Exp $";
 
 /*
  * Roxen glue
@@ -157,7 +157,6 @@ int put(string sender, string user, string domain,
     object msg=MIME.Message(mail->read());
     mapping headers=decoded_headers(msg->headers);
     werror("sms: headers: %O\n",headers);
-    int res;
     object u = clientlayer->get_user_from_address(user+"@"+domain);
     object a = conf->get_provider("automail_admin");
   
@@ -185,7 +184,7 @@ int put(string sender, string user, string domain,
     roxen_perror(sprintf("AutoMail SMS RCPT: Failure: %s\n",
 			 describe_backtrace(err)));
   }
-  return res;
+  return 0;
 }
 
 multiset(string) query_domain()
