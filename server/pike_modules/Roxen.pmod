@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.179 2004/05/20 22:32:04 _cvs_stephen Exp $
+// $Id: Roxen.pmod,v 1.180 2004/05/20 22:33:15 _cvs_stephen Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1911,6 +1911,23 @@ string roxen_encode( string val, string encoding )
      return replace (val,
 		    ({ "'", "\"" }),
 		    ({ "''", "\"'\"'\"" }) );
+
+   case "bytea":
+     return replace (val,
+                   ({ "'", "\\", "\0", "&" }),
+                   ({ "\\'", "\\\\\\\\", "\\\\000","\\\\046" }) );
+
+   case "mysql-rxml":
+     return replace (val,
+                   ({ "\"", "'", "\\", "&" }),
+                   ({ "\\\"" , "\\'", "\\\\", "\\046" }) );
+
+   case "csv":
+     return sizeof(val)
+      &&(val[0]==' '||val[0]=='\t'||val[-1]==' '||val[-1]=='\t'
+       ||search(val,",")>=0||search(val,"\"")>=0||search(val,"\n")>=0)
+       ?"\""+replace(val,"\"","\"\"")+"\""
+       :val;
 
    default:
      // Unknown encoding. Let the caller decide what to do with it.
