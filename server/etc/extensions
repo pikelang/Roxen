@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.52 2004/07/15 17:25:57 grubba Exp $
+# $Id: extensions,v 1.53 2004/12/13 09:41:21 grubba Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -566,6 +566,7 @@ asd	application/astound
 asn	application/astound
 asp	application/x-asap
 asz	application/astound
+atom	application/atom+xml
 axs	application/olescript
 bcpio	application/x-bcpio
 bld	application/bld
@@ -674,6 +675,7 @@ rnx	application/vnd.rn-realplayer
 roff	application/x-troff
 ##rp	application/x-pn-realmedia
 rrf	application/x-InstallFromTheWeb
+rss	application/rss+xml
 rtc	application/rtc
 sca	application/x-supercard
 sc2	application/vnd.ms-schedule
