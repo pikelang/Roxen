@@ -1,4 +1,4 @@
-// $Id: SloppyDOM.pmod,v 1.6 2002/08/05 13:24:48 nilsson Exp $
+// $Id: SloppyDOM.pmod,v 1.7 2002/10/23 22:56:04 nilsson Exp $
 
 //! A somewhat DOM-like library that implements lazy generation of the
 //! node tree, i.e. it's generated from the data upon lookup. There's
@@ -38,6 +38,7 @@ Document parse (string source, void|int raw_values)
 //class NamedNodeMap {}
 
 class Node
+//!  Basic node.
 {
   // NodeType
   constant ELEMENT_NODE                 = 1;
@@ -291,6 +292,7 @@ static class NodeWithChildren
 static int last_used_id = 0;
 
 static class NodeWithChildElements
+//!  Node with child elements.
 {
   inherit NodeWithChildren;
 
