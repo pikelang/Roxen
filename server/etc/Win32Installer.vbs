@@ -1,5 +1,5 @@
 '
-' $Id: Win32Installer.vbs,v 1.1 2004/11/29 16:47:55 grubba Exp $
+' $Id: Win32Installer.vbs,v 1.2 2004/11/29 17:43:09 grubba Exp $
 '
 ' Companion file to RoxenUI.wxs with custom actions.
 '
@@ -15,8 +15,8 @@ Function CreatePikeLocation()
 
     serverdir = Session.Property("SERVERDIR")
 
-    Set tf = fso.CreateTextFile(serverdir &amp; "pikelocation.txt", True)
-    tf.WriteLine(serverdir &amp; "pike\bin\pike")
+    Set tf = fso.CreateTextFile(serverdir & "pikelocation.txt", True)
+    tf.WriteLine(serverdir & "pike\bin\pike")
     tf.Close
 
     CreatePikeLocation = 1
