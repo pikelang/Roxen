@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000, Idonex AB.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.9 2000/03/14 04:33:11 nilsson Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.10 2000/03/16 00:51:58 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -46,7 +46,7 @@ inline string ns_color(array (int) col)
   return sprintf("#%02x%02x%02x", col[0],col[1],col[2]);
 }
 
-int|array tag_body(string t, mapping args, RequestID id)
+array(int|string) tag_body(string t, mapping args, RequestID id)
 {
   int changed=0;
   int cols=(args->bgcolor||args->text||args->link||args->alink||args->vlink);
@@ -87,13 +87,13 @@ int|array tag_body(string t, mapping args, RequestID id)
   return ({1});
 }
 
-string|array push_color(string tagname, mapping args, RequestID id)
+array(int|string) push_color(string tagname, mapping args, RequestID id)
 {
   int changed;
   if(!id->misc->wiretap_stack)
-    id->misc->wiretap_stack = ({ ({ tagname, id->misc->defines->fgcolor, id->misc->defines->bgcolor }) });
-  else
-    id->misc->wiretap_stack += ({ ({ tagname, id->misc->defines->fgcolor, id->misc->defines->bgcolor }) });
+    tag_body("body", ([]), id);
+
+  id->misc->wiretap_stack += ({ ({ tagname, id->misc->defines->fgcolor, id->misc->defines->bgcolor }) });
 
 #undef FIX
 #define FIX(X,Y) if(args->X && args->X!=""){ \
@@ -114,7 +114,7 @@ string|array push_color(string tagname, mapping args, RequestID id)
   return ({1});
 }
 
-string|array pop_color(string tagname, mapping args, RequestID id)
+array(int) pop_color(string tagname, mapping args, RequestID id)
 {
   array c = id->misc->wiretap_stack;
   if(c && sizeof(c)) {
