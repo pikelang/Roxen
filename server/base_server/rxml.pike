@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.316 2001/10/01 16:07:10 mast Exp $
+// $Id: rxml.pike,v 1.317 2001/10/01 16:13:06 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -76,9 +76,10 @@ RXML.TagSet rxml_tag_set = class
     // Mostly for compatibility.
     if (id->misc->defines && id->misc->defines != ctx->misc) {
       ctx->misc->old_defines = id->misc->defines;
-      // The language setting ought to be in id->misc but is in this
+      // These settings ought to be in id->misc but are in this
       // mapping for historical reasons.
       ctx->misc->language = id->misc->defines->language;
+      ctx->misc->present_languages = id->misc->defines->present_languages;
     }
     id->misc->defines = ctx->misc;
 
