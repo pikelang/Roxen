@@ -1,4 +1,4 @@
-/* This is a Roxen module. Copyright © 1996, 1997, 1998, Idonex AB.
+/* This is a Roxen module. Copyright © 1996-1999 Idonex AB.
  *
  * This module makes it possible to write symbolic names instead of
  * absoulte hrefs.
@@ -6,7 +6,7 @@
  * made by Mattias Wingstedt <peter@idonex.se> -96
  */
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.9 1999/05/20 03:26:19 neotron Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.10 1999/12/09 21:40:56 nilsson Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -48,34 +48,38 @@ array (mixed) register_module()
 	    "   idonex=http://www.idonex.se/</pre>", });
 }
 
+// Dynamic tagname, hence dynamic documentation.
+mapping tagdocumentation() {
+  return ([tagname:"<desc cont>ai</desc>"]);
+}
+
 void start()
 {
-  array (string) lines, foo;
-  string line;
+  array (string) lines;
   string variable, value;
-  string dir = "";
   mapping all = ([ ]);
 
   hrefs = ([ ]);
-  if (lines = query( "hrefs" ) /"\n")
-    foreach (lines, line)
+  if (lines = (query( "hrefs" )-" "-"\t") /"\n")
+    foreach (lines, string line)
       if (sscanf( line, "%s=%s", variable, value ) >= 2)
-	hrefs[ variable - " " - "\t" ] = value - " " - "\t";
+	hrefs[ variable ] = value;
   tagname = query( "tagname" );
 }
 
-string tag_newa( string tag, mapping m, string q, mapping got )
+string tag_newa(string tag, mapping m, string q)
 {
-  if (m[ "name" ] && hrefs[ m[ "name" ] ])
-    return "<a href=" + hrefs[ m[ "name" ] ] + ">" + q + "</a>";
-  else if (m[ "random" ])
-    return "<a href=" + values( hrefs )[ random( sizeof( hrefs ) ) ] + ">"
-      + q + "</a>";
-  else
-    return q;
+  if(!m->name && !m->random) return q;
+  if(m->name) {
+    m->href=hrefs[m->name];
+    m_delete(m, "name");
+  }
+  if(m->random) {
+    m->href=values(hrefs)[random(sizeof(hrefs))];
+    m_delete(m, "random");
+  }
+  return make_container("a",m,q);
 }
-
-mapping query_tag_callers() { return ([]); }
 
 mapping query_container_callers()
 {
