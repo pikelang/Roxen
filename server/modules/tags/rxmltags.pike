@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.155 2000/08/14 14:29:30 mast Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.156 2000/08/14 14:30:46 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -450,14 +450,15 @@ class TagInc {
   inherit RXML.Tag;
   constant name = "inc";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text ]);
 
   class Frame {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      string res=inc(args, id);
-      if(res) parse_error(res);
+      int val=(int)args->value;
+      if(!val && !args->value) val=1;
+      inc(args, val, id);
       return 0;
     }
   }
@@ -467,34 +468,26 @@ class TagDec {
   inherit RXML.Tag;
   constant name = "dec";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text ]);
 
   class Frame {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      string res=dec(args, id);
-      if(res) parse_error(res);
+      int val=-(int)args->value;
+      if(!val && !args->value) val=-1;
+      inc(args, val, id);
       return 0;
     }
   }
 }
 
-private string inc(mapping m, RequestID id)
+static void inc(mapping m, int val, RequestID id)
 {
   RXML.Context context=RXML.get_context();
   array entity=context->parse_user_var(m->variable, m->scope);
-  if(!context->exist_scope(entity[0])) RXML.run_error("Scope "+entity[0]+" does not exist.\n");
-  int val=(int)m->value;
-  if(!val && !m->value) val=1;
+  if(!context->exist_scope(entity[0])) RXML.parse_error("Scope "+entity[0]+" does not exist.\n");
   context->user_set_var(m->variable, (int)context->user_get_var(m->variable, m->scope)+val, m->scope);
-  return 0;
-}
-
-private string dec(mapping m, RequestID id)
-{
-  m->value=-(int)m->value||-1;
-  return inc(m, id);
 }
 
 class TagImgs {
