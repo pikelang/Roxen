@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.42 1998/08/26 12:00:06 nisse Exp $
+/* $Id: ssl3.pike,v 1.43 1998/11/25 23:35:30 grubba Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -321,7 +321,11 @@ static void write_more_file()
   }
 }
 
-#if 1
+void _force_destruct()
+{
+}
+
+// Send the result.
 void send_result(mapping|void result)
 {
   array err;
@@ -440,7 +444,7 @@ void send_result(mapping|void result)
     conf->sent+=(file->len>0 ? file->len : 1000);
 
   file->head = head_string;
-  to_send = copy_value(file);
+  to_send = copy_value(file);	// Why make a copy?
   
   if (objectp(to_send->file)) {
     array st = to_send->file->stat && to_send->file->stat();
@@ -465,9 +469,10 @@ void send_result(mapping|void result)
     }
   }
 
+  // FIXME: Delayed destruct of thiso?
+  _force_destruct();
   if(thiso && conf) conf->log(file, thiso);
 }
-#endif /* 1 */
 
 class fallback_redirect_request {
   string in = "";
