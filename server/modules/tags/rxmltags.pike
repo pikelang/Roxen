@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.203 2001/02/11 04:06:17 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.204 2001/02/11 06:51:07 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -217,30 +217,35 @@ class EntityClientHost {
 
 class EntityClientAuthenticated {
   inherit RXML.Value;
-  int rxml_const_eval(RXML.Context c) {
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
     c->id->misc->cacheable=0;
-    return c->id->auth&&c->id->auth[0]&&c->id->auth[1];
+    int auth = c->id->auth&&c->id->auth[0]&&c->id->auth[1];
+    if(type) return type->encode(auth);
+    return auth;
   }
 }
 
 class EntityClientUser {
   inherit RXML.Value;
-  string rxml_const_eval(RXML.Context c) {
+  string|object rxml_const_eval(RXML.Context c) {
     c->id->misc->cacheable=0;
-    return c->id->realauth&&(c->id->realauth/":")[0];
+    if(!c->id->realauth) return RXML.nil;
+    return (c->id->realauth/":")[0];
   }
 }
 
 class EntityClientPassword {
   inherit RXML.Value;
-  string rxml_const_eval(RXML.Context c) {
+  string|object rxml_const_eval(RXML.Context c) {
     array tmp;
     c->id->misc->cacheable=0;
-    return (c->id->auth 
-	    && !c->id->auth[0] 
-	    && c->id->realauth
-	    && (sizeof(tmp = c->id->realauth/":") > 1) 
-	    && tmp[1..]*":");
+    if(c->id->auth 
+       && !c->id->auth[0] 
+       && c->id->realauth
+       && (sizeof(tmp = c->id->realauth/":") > 1) )
+      return tmp[1..]*":";
+    else
+      return RXML.nil;
   }
 }
 
