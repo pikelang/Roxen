@@ -7,19 +7,247 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.24 2004/06/05 15:19:47 _cvs_dirix Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.25 2004/08/17 17:13:29 _cvs_stenitzer Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
 constant module_doc  = "Determine the clients preferred language based on \"accept-language\", prestates and cookies.";
 
+
+array action_list(string prefs) {
+  return map(prefs/"\n", `/, "\t");
+}
+
+string encode_action_list(array l) {
+  return map(l, `*, "\t")*"\n";
+}
+
+
+class LanguagePrefs 
+{
+  inherit Variable.Variable;
+  constant type="LanguagePrefs";
+
+  static void create() {
+    set_flags( VAR_INITIAL );
+    _initial = "prestate\nroxen-config\naccept-language";
+    __name = "Language sources";
+    __doc = 
+#"List of sources used for building the list of preferred languages.
+Languages added from sources on top of the list will have a higher priority.<br />
+<b>Accept-Language header</b> will add languages from the browser settings.<br />
+<b>Presate</b> will add languages from prestates.<br />
+<b>Cookie</b> will add languages from a specified cookie.<br />
+<b>Variable</b> will add languages from a specified variable.<br />
+<b>Match host name</b> will add a specified list of langauges if the host name
+matches a given pattern. This can be used to select lanaguges based on the URL, 
+such as using Swedish for chilimoon.se and English for chilimoon.com.<br />
+<br />
+The &lt;emit source=\"languages\"&gt; tag can be used to easily build a language
+selector which will change prestates and the config cookie.<br />
+Note that the \"Valid 'Prestate' and 'Config cookie' languages\" setting determines
+which prestates and which entries in the Roxen config cookie that are actually treated
+as language settings.";
+  }
+
+  string make_input_tag(string name, string value, int size) {
+    string res = "<input name=\""+name+"\" size=\""+size+"\"";
+    res += " value=";
+    if(!has_value(value, "\"")) res += "\""+value+"\"";
+    else if(!has_value(value, "'")) res += "'"+value+"'";
+    else res += "\""+replace(value, "'", "&#39;")+"\"";
+    return res + " />";
+  }
+
+  static int _current_count = time()*100+(gethrtime()/10000);
+  void set_from_form(RequestID id)
+  {
+    int rn, do_goto;
+    array l = action_list(query());
+    mapping vl = get_form_vars(id);
+    // first do the assign...
+    if( (int)vl[".count"] != _current_count )
+      return;
+    _current_count++;
+
+    foreach( indices( vl ), string vv ) {
+
+      if( sscanf( vv, ".set.%d.arg1%*s", rn ) == 2 )
+      {
+        m_delete( id->variables, path()+vv );
+        l[rn][1] = vl[vv];
+        m_delete( vl, vv );
+      }
+      if( sscanf( vv, ".set.%d.arg2%*s", rn ) == 2 )
+      {
+        m_delete( id->variables, path()+vv );
+        l[rn][2] = vl[vv];
+        m_delete( vl, vv );
+      }
+
+
+    }
+    // then the move...
+    foreach( indices(vl), string vv )
+      if( sscanf( vv, ".up.%d.x%*s", rn ) == 2 )
+      {
+        do_goto = 1;
+        m_delete( id->variables, path()+vv );
+        m_delete( vl, vv );
+        l = l[..rn-2] + l[rn..rn] + l[rn-1..rn-1] + l[rn+1..];
+      }
+      else  if( sscanf( vv, ".down.%d.x%*s", rn )==2 )
+      {
+        do_goto = 1;
+        m_delete( id->variables, path()+vv );
+        l = l[..rn-1] + l[rn+1..rn+1] + l[rn..rn] + l[rn+2..];
+      }
+    // then the possible add.
+    if( vl[".new.x"] )
+    {
+      do_goto = 1;
+      m_delete( id->variables, path()+".new.x" );
+      switch(vl[".newtype"]) {
+      case "accept-language":
+	 l += ({ ({ "accept-language" }) });
+	 break;
+      case "prestate":
+	 l += ({ ({ "prestate" }) });
+	 break;
+      case "roxen-config":
+	l += ({ ({ "roxen-config" }) });
+	break;
+      case "cookie":
+	l += ({ ({ "cookie","Language" }) });
+	break;
+      case "variable":
+	l += ({ ({ "variable","Language" }) });
+	break;
+      case "hostmatch":
+	l += ({ ({ "hostmatch","*.se","sv" }) });
+	break;
+      }
+    }
+
+    // .. and delete ..
+    foreach( indices(vl), string vv )
+      if( sscanf( vv, ".delete.%d.x%*s", rn )==2 )
+      {
+        do_goto = 1;
+        m_delete( id->variables, path()+vv );
+        l = l[..rn-1] + l[rn+1..];
+      }
+    if( do_goto )
+    {
+      if( !id->misc->do_not_goto )
+      {
+        id->misc->moreheads = ([
+          "Location":Roxen.http_encode_string(id->raw_url+"?random="+
+                                              random(4949494)+
+                                              "&section="+
+                                              id->variables->section+
+                                              "#"+path()),
+        ]);
+        if( id->misc->defines )
+          id->misc->defines[ " _error" ] = 302;
+      }
+    }
+    set( encode_action_list(l) );
+  }
+
+  string render_form( RequestID id, void|mapping additional_args )
+  {
+    string prefix = path()+".";
+    int i;
+
+    string res = "<a name='"+path()+"'>\n</a><table>\n"
+    "<input type='hidden' name='"+prefix+"count' value='"+_current_count+"' />\n";
+
+
+    foreach( action_list(query()) , array _action )
+    {
+      string action = _action[0];
+
+      res += "<tr>\n<td><font size='-1'>";
+
+       switch(action) {
+       case "accept-language":
+	 res+= "<b>Use Accept-Language header</b>";
+	 break;
+       case "prestate":
+	 res+= "<b>Use prestates</b>";
+	 break;
+       case "roxen-config":
+	 res+= "<b>Use config cookie</b>";
+	 break;
+       case "cookie":
+	 res+= "<b>Use cookie:</b> " + make_input_tag(prefix+"set."+i+".arg1",_action[1] ,8);
+	 break;
+       case "variable":
+	 res+= "<b>Use variable:</b> " + make_input_tag(prefix+"set."+i+".arg1",_action[1],8);
+	 break;
+       case "hostmatch":
+	 res+= "<b>Add languages:</b> " + make_input_tag(prefix+"set."+i+".arg2",_action[2],8) +
+	   " if host matches glob: " + make_input_tag(prefix+"set."+i+".arg1",_action[1],8);
+	 break;
+      }
+       
+       res += "</font></td>\n";
+
+#define BUTTON(X,Y) ("<submit-gbutton2 name='"+X+"'>"+Y+"</submit-gbutton2>")
+#define REORDER(X,Y) ("<submit-gbutton2 name='"+X+"' icon-src='"+Y+"'></submit-gbutton2>")
+      if( i )
+        res += "\n<td>"+
+            REORDER(prefix+"up."+i, "/$/up")+
+            "</td>";
+      else
+        res += "\n<td></td>";
+      if( i != sizeof( query()/"\n")- 1 )
+        res += "\n<td>"+
+            REORDER(prefix+"down."+i, "/$/down")
+            +"</td>";
+      else
+        res += "\n<td></td>";
+      res += "\n<td>"+
+            BUTTON(prefix+"delete."+i, "Delete" )
+          +"</td>";
+          "</tr>";
+
+      i++;
+    }
+    res += 
+      "\n<tr><td colspan='2'>"+
+      "<select name=\""+prefix+"newtype\">\n"+
+      "<option value=\"accept-language\">Accept-Language header</option>\n"+
+      "<option value=\"roxen-config\">Config cookie</option>\n"+
+      "<option value=\"prestate\">Prestate</option>\n"+
+      "<option value=\"cookie\">Cookie</option>\n"+
+      "<option value=\"variable\">Variable</option>\n"+
+      "<option value=\"hostmatch\">Match host name</option>\n"+
+      "</select> "+
+      BUTTON(prefix+"new", "Add")+
+      "</td></tr></table>\n\n";
+
+    return res;
+  }
+}
+
 void create() {
+  defvar("actionlist", LanguagePrefs() );
   defvar( "propagate", 0, "Propagate language", TYPE_FLAG,
 	  "Should the most preferred language be propagated into the page.theme_language variable, "
 	  "which in turn will control the default language of all multilingual RXML tags." );
 
   defvar( "defaults", ({}), "Present Languages", TYPE_STRING_LIST,
 	  "A list of all languages present on the server. An empty list means no restrictions." );
+
+  defvar("iso639", Variable.StringChoice("ISO 639", ({ "ISO 639", "Starting with $" }), 0,
+	 "Valid 'Prestate' and 'Config cookie' languages", 
+	 "When ISO 639 is selected, prestates and the Config cookie entries mathing valid "
+	 "ISO 639 language codes are considered to be language settings. Otherwise entries "
+	 "starting with $ are used for selecting language. Note that this option affects which "
+	 "prestates and config cookie entries that are removed when using "
+         "&lt;emit source=\"languages\"&gt; to switch langauge.\n"));
 }
 
 class PrefLang {
@@ -44,6 +272,7 @@ constant alias = ({
   "fi",
   "finnish",
   "fr",
+  "fr-be",
   "français",
   "french",
   "hr",
@@ -66,6 +295,7 @@ constant alias = ({
   "maaori",
   "du",
   "nl",
+  "nl-be",
   "ned",
   "dutch",
   "no",
@@ -99,23 +329,68 @@ constant alias = ({
 constant language_low=core->language_low;
 array(string) languages;
 array(string) defaults;
+int iso639;
+array compose_list_script = ({ });
 void start() {
   languages =
     core->list_languages() + alias  +
     indices(Standards.ISO639_2.list_languages()) +
     indices(Standards.ISO639_2.list_639_1());
   defaults=[array(string)]query("defaults")&languages;
+  iso639 = (query("iso639") == "ISO 639");
+  compose_list_script = action_list(query("actionlist"));
+}
+
+array(string) get_config_langs(RequestID id) {
+  array config = indices([multiset(string)]id->config);
+  if(iso639)
+    return config & languages;
+  return map(config & Array.filter(config, lambda(string s) { return s[0..0] == "$";}),
+	     lambda(string s) {return s[1..];});
+}
+
+array(string) get_prestate_langs(RequestID id) {
+  array prestate =  indices([multiset(string)]id->prestate);
+  if(iso639)
+    return prestate & languages;
+  return map(prestate & Array.filter(prestate, lambda(string s) { return s[0..0] == "$";}),
+	     lambda(string s) {return s[1..];});
 }
 
 RequestID first_try(RequestID id) {
-  array(string) config = indices([multiset(string)]id->config);
-  array(string) pre = indices([multiset(string)]id->prestate);
+  array(string) lang = ({ });
 
-  array(string) lang = (pre&languages) + (config&languages);
+  array accept_languages = ([object(PrefLang)]id->misc->pref_languages)->get_languages();
 
-  lang+=([object(PrefLang)]id->misc->pref_languages)->get_languages();
+  foreach(compose_list_script, array action) {
+    switch(action[0]) {
+    case "accept-language":
+      lang += accept_languages;
+      break;
+    case "prestate":
+      lang += get_prestate_langs(id);
+      break;
+    case "roxen-config":
+      lang += get_config_langs(id);
+      break;
+    case "cookie":
+      if(sizeof(action) > 1)
+	lang += ({ id->cookies[action[1]] || "" });
+      break;
+    case "variable":
+      if(sizeof(action) > 1)
+	lang += ({ (id->real_variables[action[1]]  || ({ "" }) ) [0] });
+      break;
+    case "hostmatch":
+      if(sizeof(action) > 2)
+	if(glob(action[1], id->misc->host || ""))
+	  lang+= map(action[2]/",",String.trim_all_whites);
+      break;
+    }
+  }
 
   lang = Array.uniq(lang);
+  lang -= ({ "" });
 
   if(sizeof(defaults))
     lang=lang&defaults;
@@ -136,8 +411,11 @@ class TagEmitLanguages {
 
   array get_dataset(mapping m, RequestID id) {
     array(string) langs;
-    if(m->langs)
-      langs=([string]m->langs/",")&languages;
+    if(m->langs) {
+      langs=([string]m->langs/",");
+      if(iso639) 
+	langs &= languages;
+    }
     else if( ([mapping(string:mixed)]id->misc->defines)->present_languages )
       langs=indices( [multiset(string)]([mapping(string:mixed)]id->misc->defines)->present_languages );
     else
@@ -150,8 +428,8 @@ class TagEmitLanguages {
       locale_obj && [function(string:string)] locale_obj->language;
     
     string url=Roxen.strip_prestate(Roxen.strip_config(id->raw_url));
-    array(string) conf_langs=Array.map(indices(id->config) & languages,
-			       lambda(string lang) { return "-"+lang; } );
+    array(string) conf_langs=Array.map(get_config_langs(id),
+			       lambda(string lang) { return "-"+(iso639?"":"$")+lang; } );
 
     array res=({});
     foreach(langs, string lang) {
@@ -163,8 +441,11 @@ class TagEmitLanguages {
       res+=({ (["code":lid[0],
 		"en":lid[1],
 		"local":lid[2],
-		"preurl":Roxen.add_pre_state(url, id->prestate-aggregate_multiset(@languages)+(<lang>)),
-		"confurl":Roxen.add_config(url, conf_langs+({lang}), id->prestate),
+		"preurl":Roxen.add_pre_state(url, id->prestate - 
+					     (iso639 ? aggregate_multiset(@languages) : 
+					      (multiset)map(get_prestate_langs(id), lambda(string s) {return "$"+s;})) + 
+					     (< (iso639?"":"$")+lang>)),
+		"confurl":Roxen.add_config(url, conf_langs+({ (iso639?"":"$")+lang}), id->prestate),
 		"localized": (localized && localized(lang)) || "Unknown" ]) });
     }
     return res;
@@ -185,23 +466,22 @@ will be used.</p></desc>
 
 <attr name='langs'><p>Should be a comma seperated list of language codes. The
 languages associated with these codes will be emitted in that order.</p></attr>",
-		      ([
-			"&_.code;":"<desc type='entity'><p>The language "
-			           "code.</p></desc>",
-			"&_.en;":"<desc type='entity'><p>The language name in "
-				   "english.</p></desc>",
-			"&_.local;":"<desc type='entity'><p>The language name "
-				"as written in the language itself.</p></desc>",
-			"&_.preurl;":#"<desc type='entity'><p>A URL which "
-				      "makes this language the used one by "
-				      "altering prestates.</p></desc>",
-			"&_.confurl;":#"<desc type='entity'><p>A URL which "
-				       "makes the language the used one by "
-				       "altering the roxen cookie.</p></desc>",
-			"&_.localized;":#"<desc type='entity'><p>The language "
-				         "name as written in the currently "
-				         "selected language.</p></desc>"
-		      ])
+([
+  "&_.code;"      : "<desc type='entity'><p>The language code.</p></desc>",
+  "&_.en;"        : "<desc type='entity'><p>The language name in english.</p>"
+                    "</desc>",
+  "&_.local;"     : "<desc type='entity'><p>The language name as written in "
+                    "the language itself.</p></desc>",
+  "&_.preurl;"    : "<desc type='entity'><p>A URL which makes this language "
+                    "the used one by altering prestates.</p></desc>",
+  "&_.confurl;"   : "<desc type='entity'><p>A URL which makes the language "
+                    "the used one by altering the config cookie.</p>"
+                    "<note><p>The <tag>emit</tag> statement must be enclosed "
+                    "in <tag>nocache</tag> to work correctly when this "
+                    "entity is used.</p></note></desc>",
+  "&_.localized;" : "<desc type='entity'><p>The language name as written in "
+                    "the currently selected language.</p></desc>"
+])
   })
 
 ]);
