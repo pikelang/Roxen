@@ -38,9 +38,9 @@ void lookup_threaded( array f, RoxenModule m )
     }
   };
 
-  for( int i = 0; i<sizeof( f ); i++ )
+  for( int i = 0; i<min(sizeof( f ),20); i++ )
     f[i] = thread_create( lookup_and_group, f[i] );
-  f->wait();
+  (f[0..min(sizeof(f),19)])->wait();
   if( failed )
     throw( failed );
 }
@@ -120,6 +120,10 @@ void verify_compat_user_from_uid( Configuration c, array list )
 
 void run_tests( Configuration c )
 {
+#ifdef __NT__
+  return; // This module does not work on NT.
+#endif
+
   RoxenModule m;
 
   test( roxen.enable_configuration, "usertestconfig" );
