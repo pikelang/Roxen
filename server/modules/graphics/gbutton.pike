@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.27 2000/02/10 10:57:50 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.28 2000/02/11 10:46:05 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -181,10 +181,11 @@ object(Image.Image)|mapping draw_button(mapping args, string text, object id)
   array x = ({});
   array y = ({});
   foreach( frame->get_misc_value( "image_guides" ), object g )
-    if( g->vertical )
-      x += ({ g->pos });
-    else
-      y += ({ g->pos });
+    if( g->pos < 4096 )
+      if( g->vertical )
+	x += ({ g->pos });
+      else
+	y += ({ g->pos });
 
   sort( y ); sort( x );
   if(sizeof( x ) < 2)
