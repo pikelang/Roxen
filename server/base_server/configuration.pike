@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.77 1997/09/12 06:14:21 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.78 1997/09/14 20:02:40 neotron Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -1535,7 +1535,7 @@ object enable_module( string modname )
     array err;
 
 #ifdef MODULE_DEBUG
-    perror(name+" (modules): Enabling "+module->name+" # "+id+" ... ");
+    perror("Modules: Enabling "+module->name+" # "+id+" ... ");
 #endif
 
     if(module->copies)
