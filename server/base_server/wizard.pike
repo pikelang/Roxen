@@ -1,7 +1,7 @@
 // Wizard generator
 // This file generats all the nice wizards
 // Copyright © 1997 - 2000, Roxen IS.
-// $Id: wizard.pike,v 1.126 2001/02/05 11:44:56 per Exp $
+// $Id: wizard.pike,v 1.127 2001/02/10 18:15:25 stewa Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -576,7 +576,7 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
 			  @(id->conf?({id}):({})));
 
   mapping å = id->real_variables;
-  foreach(indices(å), string q)
+  foreach(indices(s), string q)
      å[q] = å[q]||s[q];
 
   FakedVariables v=id->variables;
