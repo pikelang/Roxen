@@ -1,4 +1,4 @@
-//string cvs_version = "$Id: cache.pike,v 1.40 2000/02/18 11:10:01 nilsson Exp $";
+//string cvs_version = "$Id: cache.pike,v 1.41 2000/02/20 05:37:17 mast Exp $";
 
 #define LOCALE	roxenp()->locale->get()->config_interface
 #include <roxen.h>
@@ -92,12 +92,12 @@ string status()
   string res, a;
   res = "<table cellpadding=\"3\" cellspacing=\"0\" border=\"0\">"
       #"<tr bgcolor=\"&usr.fade3;\">
-<td><cf-locale get=class_></td>
-<td align=\"right\"><cf-locale get=entries></td>
-<td align=\"right\"><cf-locale get=size></td>
-<td align=\"right\"><cf-locale get=hits></td>
-<td align=\"right\"><cf-locale get=misses></td>
-<td align=\"right\"><cf-locale get=hitpct></td>
+<td>&locale.class_;</td>
+<td align=\"right\">&locale.entries;</td>
+<td align=\"right\">&locale.size;</td>
+<td align=\"right\">&locale.hits;</td>
+<td align=\"right\">&locale.misses;</td>
+<td align=\"right\">&locale.hitpct;</td>
 ";
   array c, b;
   mapping ca = ([]), cb=([]), ch=([]), ct=([]);
