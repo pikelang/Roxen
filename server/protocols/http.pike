@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.317 2001/06/08 20:13:07 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.318 2001/06/22 03:00:36 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2065,7 +2065,7 @@ void got_data(mixed fooid, string s)
           {
             string a, b;
             if( sscanf( headers, "%sDate: %*s\n%s", a, b ) == 3 )
-              return a+"Date: "+Roxen.http_date( predef::time(1) ) +"\n"+b;
+              return a+"Date: "+Roxen.http_date( predef::time(1) ) +"\r\n"+b;
             return headers;
           };
 
