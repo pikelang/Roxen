@@ -1,4 +1,4 @@
-// $Id: module.h,v 1.30 2000/01/10 09:03:36 nilsson Exp $
+// $Id: module.h,v 1.31 2000/02/04 01:37:26 per Exp $
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
 #define SERIOUS
@@ -18,24 +18,28 @@
 #define TYPE_FLAG             7
 #define TYPE_TOGGLE           7
 
-#define TYPE_ERROR            8
+/* #define TYPE_ERROR            8 */
+
 #define TYPE_DIR_LIST	      9
 #define TYPE_FILE_LIST       10
 #define TYPE_LOCATION        11
-#define TYPE_COLOR	     12
+/* #define TYPE_COLOR	     12  */
 #define TYPE_TEXT_FIELD      13
 #define TYPE_TEXT            13
 #define TYPE_PASSWORD        14
 #define TYPE_FLOAT           15
-#define TYPE_PORTS           16
+
+/* #define TYPE_PORTS           16 */
+
 #define TYPE_MODULE          17
-#define TYPE_MODULE_LIST     18 /* somewhat buggy.. */
-#define TYPE_MULTIPLE_MODULE 18 /* somewhat buggy.. */
+/*#define TYPE_MODULE_LIST     18 somewhat buggy.. */
+/*#define TYPE_MULTIPLE_MODULE 18 somewhat buggy.. */
 
 #define TYPE_FONT            19
 
 #define TYPE_CUSTOM          20
-#define TYPE_NODE            21
+
+/* #define TYPE_NODE            21 */
 
 
 /* Variable indexes */
@@ -110,7 +114,7 @@
 #define MOD_ACCEPT_USER	        6
 #define MOD_ACCEPT_PROXY_USER	7
 
-#define DEFFONT(X,Y,Z,Q) 
+#define DEFFONT(X,Y,Z,Q)
 
 #define CACHE(seconds) id->misc->cacheable=min(id->misc->cacheable,seconds)
 #define NOCACHE() id->misc->cacheable=0
