@@ -1,6 +1,6 @@
 inherit "http";
 
-// static string _cvs_version = "$Id: roxenlib.pike,v 1.66 1998/07/14 21:26:53 grubba Exp $";
+// static string _cvs_version = "$Id: roxenlib.pike,v 1.67 1998/07/14 21:58:06 grubba Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -87,30 +87,54 @@ static mapping build_env_vars(string f, object id, string path_info)
   else if(new["PATH_INFO"][-1] != '/' && new["PATH_TRANSLATED"][-1] == '/')
     new["PATH_TRANSLATED"] = 
       new["PATH_TRANSLATED"][0..strlen(new["PATH_TRANSLATED"])-2];
-    
-  if(id->misc->host)
-    new["HTTP_HOST"]=id->misc->host;
-  else if(objectp(id->my_fd) && id->my_fd->query_address(1))
-    new["HTTP_HOST"]=replace(id->my_fd->query_address(1)," ",":");
-  if(id->misc["proxy-connection"])
-    new["HTTP_PROXY_CONNECTION"]=id->misc["proxy-connection"];
-  if(id->misc->accept) {
-    if (arrayp(id->misc->accept)) {
-      new["HTTP_ACCEPT"]=id->misc->accept*", ";
-    } else {
-      new["HTTP_ACCEPT"]=(string)id->misc->accept;
+
+  // HTTP_ style variables:
+
+  mapping hdrs;
+
+  if ((hdrs = id->request_headers)) {
+    foreach(indices(hdrs) - ({ "authorization", "proxy-authorization",
+			       "security-scheme", }), string h) {
+      string hh = "HTTP_" + replace(upper_case(h),
+				    ({ " ", "-", "\0", "=" }),
+				    ({ "_", "_", "", "_" }));
+
+      new[hh] = replace(hdrs[h], ({ "\0" }), ({ "" }));
     }
+    if (!new["HTTP_HOST"]) {
+      if(objectp(id->my_fd) && id->my_fd->query_address(1))
+	new["HTTP_HOST"] = replace(id->my_fd->query_address(1)," ",":");
+    }
+  } else {
+    if(id->misc->host)
+      new["HTTP_HOST"]=id->misc->host;
+    else if(objectp(id->my_fd) && id->my_fd->query_address(1))
+      new["HTTP_HOST"]=replace(id->my_fd->query_address(1)," ",":");
+    if(id->misc["proxy-connection"])
+      new["HTTP_PROXY_CONNECTION"]=id->misc["proxy-connection"];
+    if(id->misc->accept) {
+      if (arrayp(id->misc->accept)) {
+	new["HTTP_ACCEPT"]=id->misc->accept*", ";
+      } else {
+	new["HTTP_ACCEPT"]=(string)id->misc->accept;
+      }
+    }
+
+    if(id->misc->cookies)
+      new["HTTP_COOKIE"] = id->misc->cookies;
+  
+    if(sizeof(id->pragma))
+      new["HTTP_PRAGMA"]=sprintf("%O", indices(id->pragma)*", ");
+
+    if(stringp(id->misc->connection))
+      new["HTTP_CONNECTION"]=id->misc->connection;
+    
+    new["HTTP_USER_AGENT"] = id->client*" "; 
+    
+    if(id->referer && sizeof(id->referer))
+      new["HTTP_REFERER"] = id->referer*""; 
   }
 
-  if(id->misc->cookies)
-    new["HTTP_COOKIE"] = id->misc->cookies;
-  
-  if(sizeof(id->pragma))
-    new["HTTP_PRAGMA"]=sprintf("%O", indices(id->pragma)*", ");
-
-  if(stringp(id->misc->connection))
-    new["HTTP_CONNECTION"]=id->misc->connection;
-    
   new["REMOTE_ADDR"]=addr;
     
   if(roxen->quick_ip_to_host(addr) != addr)
@@ -121,11 +145,6 @@ static mapping build_env_vars(string f, object id, string path_info)
       new["REMOTE_PORT"] = ipaddr(id->my_fd->query_address(), 1);
     }
   };
-    
-  new["HTTP_USER_AGENT"] = id->client*" "; 
-    
-  if(id->referer && sizeof(id->referer))
-    new["HTTP_REFERER"] = id->referer*""; 
     
   new["QUERY_STRING"] = extract_query(id->raw);
     
