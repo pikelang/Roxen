@@ -1,5 +1,6 @@
 <theme-set what=favicon		     to="/%01/chili-icon-white" />
 <theme-set what=logo                 to="logo.gif" themefile />
+<theme-set what=css                  to="theme.css" themefile />
 <theme-set what=top-bgcolor          to="none" />
 <theme-set what=toptabs-bgcolor      to="none" />
 
