@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: module.pike,v 1.84 2000/02/24 04:48:52 nilsson Exp $
+// $Id: module.pike,v 1.85 2000/03/06 12:34:19 jonasw Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -399,7 +399,7 @@ array(string) location_urls()
     error("Please do not call this function from create()!\n");
   string world_url = _my_configuration->query("MyWorldLocation");
   if (world_url == "") world_url = 0;
-  array(string) urls = _my_configuration->query("URLs");
+  array(string) urls = copy_value(_my_configuration->query("URLs"));
   string hostname = gethostname();
   for (int i = 0; i < sizeof (urls); i++) {
     if (world_url && glob (urls[i], world_url)) urls[i] = 0;
