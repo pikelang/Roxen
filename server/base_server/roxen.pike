@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.105 1997/08/20 07:49:23 per Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.106 1997/08/20 08:59:20 per Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1736,6 +1736,10 @@ void scan_module_dir(string d)
   mixed err;
   array q  = (get_dir( d )||({})) - ({".","..","CVS","RCS" });
   if(!sizeof(q)) {
+    MD_PERROR(("No modules in here. Continuing elsewhere"));
+    return;
+  }
+  if(search(q, ".no_modules")!=-1) {
     MD_PERROR(("No modules in here. Continuing elsewhere"));
     return;
   }
