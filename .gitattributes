@@ -113,6 +113,7 @@ worldmap binary
 /server/config_interface/user_form.pike foreign_ident
 /server/etc/Makefile foreign_ident
 /server/etc/Makefile.in foreign_ident
+/server/etc/env.d/nptl.pike foreign_ident
 /server/etc/extensions foreign_ident
 /server/etc/include/config.h foreign_ident
 /server/etc/include/module.h foreign_ident
