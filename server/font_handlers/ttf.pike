@@ -4,7 +4,7 @@
 #if !constant(Image.FreeType.Face)
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.9 2001/08/21 14:26:51 per Exp $";
+constant cvs_version = "$Id: ttf.pike,v 1.10 2001/09/27 21:51:23 per Exp $";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader. Uses freetype to render text.";
@@ -147,8 +147,9 @@ class TTFWrapper
 	  r2->paste_alpha_color( r3,  255, 255, 255, i, j );
       rr = r2->paste_alpha_color( rr, 255,255,255, 1,1 );
     }
+    rr->setcolor( 0,0,0 );
     if( fake_italic )
-      rr = rr->skewx( -(rr->ysize()/3), Image.Color.black );
+      rr = rr->skewx( -(rr->ysize()/3) );
     return rr;
 
   }
