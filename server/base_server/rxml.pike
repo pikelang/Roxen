@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.312 2001/08/21 18:04:51 mast Exp $
+// $Id: rxml.pike,v 1.313 2001/08/22 14:14:25 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -143,10 +143,13 @@ string parse_rxml(string what, RequestID id,
   RXML.PXml parser;
   RXML.Context ctx = RXML_CONTEXT;
   int orig_state_updated = -1;
+  int orig_dont_cache_result;
 
   if (ctx && ctx->id == id) {
     parser = default_content_type->get_parser (ctx, ctx->tag_set, 0);
     orig_state_updated = ctx->state_updated;
+    if (ctx->frame)
+      orig_dont_cache_result = ctx->frame->flags & RXML.FLAG_DONT_CACHE_RESULT;
 #ifdef RXML_PCODE_UPDATE_DEBUG
     report_debug ("%O: Saved p-code update count %d before parse_rxml "
 		  "with inherited context\n",
@@ -193,6 +196,8 @@ string parse_rxml(string what, RequestID id,
 		  ctx, ctx->state_updated, orig_state_updated);
 #endif
     ctx->state_updated = orig_state_updated;
+    if (ctx->frame && !orig_dont_cache_result)
+      ctx->frame->flags &= ~RXML.FLAG_DONT_CACHE_RESULT;
   }
 
   if (err) {

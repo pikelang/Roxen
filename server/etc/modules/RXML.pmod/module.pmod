@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.230 2001/08/22 13:01:40 mast Exp $
+// $Id: module.pmod,v 1.231 2001/08/22 14:14:27 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1898,31 +1898,34 @@ class Context
   //! of @[RXML.RenewablePCode] instead, which never fails due to
   //! being stale.
   {
-    mixed res;
-    PCode p_code;
     int orig_make_p_code = make_p_code, orig_state_updated = state_updated;
+    int orig_top_frame_flags = frame && frame->flags;
     PCODE_UPDATE_MSG ("%O: Saved p-code update count %d before eval_and_compile\n",
 		      this_object(), orig_state_updated);
     make_p_code = 1;
     Parser parser = type->get_parser (
       this_object(), tag_set, 0, stale_safe ? RenewablePCode (0) : PCode (0));
+
+    mixed res;
+    PCode p_code;
     mixed err = catch {
       parser->write_end (to_parse);
       res = parser->eval();
       p_code = parser->p_code;
-      type->give_back (parser, tag_set);
-      PCODE_UPDATE_MSG ("%O: Restoring p-code update count from %d to %d "
-			"after eval_and_compile\n",
-			this_object(), state_updated, orig_state_updated);
-      make_p_code = orig_make_p_code, state_updated = orig_state_updated;
-      return ({res, p_code});
     };
+
     type->give_back (parser, tag_set);
     PCODE_UPDATE_MSG ("%O: Restoring p-code update count from %d to %d "
 		      "after eval_and_compile\n",
 		      this_object(), state_updated, orig_state_updated);
     make_p_code = orig_make_p_code, state_updated = orig_state_updated;
-    throw (err);
+    if (frame && !(orig_top_frame_flags & FLAG_DONT_CACHE_RESULT))
+      // Don't let the subevaluation propagate the cache disabling
+      // flag since it's not the same cache.
+      frame->flags &= ~FLAG_DONT_CACHE_RESULT;
+
+    if (err) throw (err);
+    return ({res, p_code});
   }
 
   // Internals:
@@ -6691,10 +6694,7 @@ class PCode
 	    // signify that the frame produced no result to add (i.e. it
 	    // threw an exception instead). In that case we must keep
 	    // the frame unevaluated.
-	    Frame f = frame;
-	    do
-	      f->flags |= FLAG_DONT_CACHE_RESULT;
-	    while ((f = f->up) && !(f->flags & FLAG_DONT_CACHE_RESULT));
+	    frame->flags |= FLAG_DONT_CACHE_RESULT;
 	    PCODE_MSG ("frame %O not result cached due to exception\n", frame);
 	    break add_evaled_value;
 	  }
