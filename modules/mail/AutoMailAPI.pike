@@ -2,23 +2,27 @@
 inherit "module";
 inherit "roxen";
 
-#define DBSERV   "AutoMail Database Server Machine"
-#define DBNAME   "AutoMail Database Name"
+#define DBURL    "Database URL"
 
 object database;
+string db_status = "not connected yet";
 
 void create()
-{ defvar(DBSERV, "automail.idonex.se",
-         DBSERV, TYPE_TEXT_FIELD,
-         "The address of the machine running the MySQL database server.");
+{ defvar(DBURL, "mysql://auto:site@kopparorm.idonex.se/autosite",
+         DBURL, TYPE_STRING,
+         "The URL of the database holding the tables 'users', "
+         "'mailboxes' and 'messages'."
+        );
 
-  defvar(DBNAME, "AutoMailDB",
-         DBNAME, TYPE_TEXT_FIELD,
-         "The name for the AutoMail database in the MySQL database server.");
+  roxen->set_var("AutoMailAPI_hook", this_object());
 }
 
+string status()
+{ return "<B>Database</B>: " + db_status;
+}        
+
 array register_module()
-{ return ({ 0, "AutoMail DBAPI Module", "", 0, 1 });
+{ return ({ 0, "AutoMail Database API Module", "", 0, 1 });
 }
 
 int new_mail(string from, string header, string contents)
@@ -55,9 +59,9 @@ int find_user(string user_address)
     int    aliasmatch = -1;
     while (row = result->fetch_row())
     { if (row[1] == user_name)
-         return i;
+         return row[0];
       if (row[2] == user_name)
-         aliasmatch = i;
+         aliasmatch = row[0];
     }
     if (aliasmatch != -1) return aliasmatch;
   }
@@ -67,7 +71,7 @@ int find_user(string user_address)
   return -1;
 }
 
-mixed add_receiver(mail_id, user_id, folder)
+mixed add_receiver(int mail_id, int user_id, string folder)
 { if (!database) return "unable to access AutoMail database";
 
   database->big_query("INSERT user_id,message_id,folder INTO mailboxes "
@@ -83,7 +87,8 @@ mixed add_receiver(mail_id, user_id, folder)
 
 int start()
 { if (!database)
-  { database = MySQL.mysql(query(DBSERV), query(DBNAME));
-    if (!database) dbstat = "no connection to database";
+  { database = Sql.sql(query(DBURL));
+    if (!database) db_status = "not connected";
+              else db_status = "connected (" + database->host_info() + ")";
   }
 }
