@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.347 2003/09/15 14:48:17 mast Exp $
+// $Id: roxenloader.pike,v 1.348 2003/09/15 15:13:46 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.347 2003/09/15 14:48:17 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.348 2003/09/15 15:13:46 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -766,6 +766,17 @@ void trace_destruct(mixed x)
 }
 #endif /* TRACE_DESTRUCT */
 
+void trace_exit (int exitcode)
+{
+  catch (report_notice ("Exiting Roxen - exit(%d) called.\n", exitcode));
+#ifdef TRACE_EXIT
+  catch (report_debug (describe_backtrace (backtrace())));
+#endif
+  exit (exitcode);
+}
+
+constant real_exit = exit;
+
 #define DC(X) add_dump_constant( X,nm_resolv(X) )
 function add_dump_constant;
 mixed nm_resolv(string x )
@@ -785,6 +796,7 @@ void load_roxen()
 		lambda(mixed f){return functionp(f)||programp(f);});
 #endif
   add_constant("cd", restricted_cd());
+  add_constant ("exit", trace_exit);
 #ifdef TRACE_DESTRUCT
   add_constant("destruct", trace_destruct);
 #endif /* TRACE_DESTRUCT */
@@ -1238,7 +1250,7 @@ void do_main_wrapper(int argc, array(string) argv)
                      "%s\n", describe_backtrace(err)));
     }
   };
-  exit(1);
+  trace_exit(1);
 }
 
 string query_mysql_dir()
@@ -2335,7 +2347,7 @@ library should be enough.
 	       (gethrtime()-start_time)/1000000.0);
   write_current_time();
   if( retval > -1 )
-    exit( retval );
+    trace_exit( retval );
   return;
 }
 
