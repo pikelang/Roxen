@@ -2,12 +2,9 @@ inherit "wizard";
 
 constant name = "Create File";
 
-#define ERROR (id->variables->error?"<error>"+\
-	       id->variables->error+"</error>":"")
-
 string page_0( object id )
 {
-  return ERROR+"<b>Select filename:</b>"
+  return AutoWeb.Error(id)->get()+"<b>Select filename:</b>"
     "<var name=filename type=string "
     "size=40 default=\""+
     replace((id->variables->path||"/")+"/", "//", "/") + "\">";
@@ -33,50 +30,29 @@ int verify_0(object id)
   string path;
   sscanf(reverse(id->variables->filename), "%*s/%s", path);
   path = reverse(path);
-  array f_stat = file_stat(id->misc->wa->real_path(id, path));
-  if (!f_stat||(f_stat[2]==-2))
+  if (AutoWeb.AutoFile(id, path)->type()!="Directory")
   {
-    id->variables->error = "Directory " + path + "/ does not exist";
+    AutoWeb.Error(id)->set("Directory <b>" + path + "/</b> does not exist");
     return 1;
   }
-  if (file_stat(id->misc->wa->real_path(id, id->variables->filename)))
-  {
-    id->variables->error = "File " + id->variables->filename + " exists";
+  if (AutoWeb.AutoFile(id, id->variables->filename)->type()=="File")
+    {
+    AutoWeb.Error(id)->set("File <b>" + id->variables->filename +
+			   "</b> exists");
     return 1;
   }
-  m_delete(id->variables, "error");
+  AutoWeb.Error(id)->reset();
 }
-
-#include "edit_md.h"
 
 string page_1(object id)
 {
-  return ERROR
-    + page_editmetadata( id, id->variables->filename,
-			 id->misc->wa->
-			 get_md_from_html(id->variables->filename, ""));
+  return AutoWeb.Error(id)->get()
+    + AutoWeb.EditMetaData()->page(id, id->variables->filename,
+			   AutoWeb.MetaData(id, id->variables->filename)->
+			   get_from_html(""));
 }
 
 mixed wizard_done( object id )
 {
-  object wa = id->misc->wa;
-  string f;
-  mapping md = ([ ]);
-  f = id->variables->filename;
-  if (file_stat(wa->real_path(id, f)))
-  {
-    id->variables->error = "File exists.";
-    return -1;
-  }
-
-  foreach (glob( "meta_*", indices( id->variables )), string s)
-    md[ s-"meta_" ] = id->variables[ s ];
-  md[ "content_type" ] = wa->name_to_type[ md[ "content_type" ] ];
-  if (md[ "template" ] == "No template")
-    m_delete( md, "template" );
-  wa->save_md_file(id, id->variables->filename, md);
-  
-  wa->save_file(id, id->variables->filename, "");
+  return AutoWeb.EditMetaData()->done(id);
 }
-
-

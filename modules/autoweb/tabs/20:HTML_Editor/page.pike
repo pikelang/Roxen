@@ -80,13 +80,13 @@ string|mapping navigate(object id, string f, string base_url)
     int t;
     
     mapping md = wa->get_md(id, f);
-    br += ({ ({ "View",  "'"+http_encode_string(f)+"'"
+    br += ({ ({ "View",  "'"+http_encode_string(f)+"'"+
 		  " target='_autosite_show_real'" }) });
     //werror("%O\n", md);
     if(md->content_type=="text/html")
       br += ({ ({ "Edit File", (["filename":f ]) }) });
     br += ({ ({ "Edit Metadata", ([ "path":f ]) }),
-	     ({ "Download File", encode_url(base_url, "dl", f) }),
+	     ({ "Download File", "'"+encode_url(base_url, "dl", f)+"'" }),
 	     ({ "Move File", ([ "path":f ]) }),
 	     ({ "Remove File", ([ "path":f ]) })
     });

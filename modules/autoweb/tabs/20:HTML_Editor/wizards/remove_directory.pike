@@ -5,21 +5,23 @@ constant doc = "";
 
 string page_0( object id )
 {
-  if (sizeof(get_dir(id->misc->wa->real_path(id, id->variables->path)))) {
-    id->variables->dir = "empty";
-    return "Directory is not empty";
+  return AutoWeb.Error(id)->get()+
+    "Remove directory <b>" + id->variables->path+"</b> ?";
+}
+
+int verify_0( object id )
+{
+  array dir = AutoWeb.AutoFile(id, id->variables->path)->get_dir();
+  if (!dir||sizeof(dir)) {
+    AutoWeb.Error(id)->set("Directory is not empty");
+    return 1;
   }
-  return "Remove directory " + id->variables->path+" ?";
+  AutoWeb.Error(id)->reset();
+  return 0;
 }
 
-string verify_0( object id )
+mixed wizard_done(object id)
 {
-  if (id->variables->dir == "empty")
-    return 0;
+  AutoWeb.AutoFile(id, id->variables->path)->rm();
   // FIX ME redirect to ../
-}
-
-void wizard_done(object id)
-{
-  rm(id->misc->wa->real_path(id, id->variables->path));
 }

@@ -47,6 +47,11 @@ class AutoFile {
     return "";
   }
 
+  array get_dir()
+  {
+    return predef::get_dir(real_path(filename));
+  }
+  
   int move(string dest)
   {
     return mv(real_path(filename), real_path(dest));

@@ -4,8 +4,8 @@
   <textstyle center scale=$$nav_size$$ xspacing=5 yspacing=5
              font='$$nav_font$$'>
 
-  <boxstyle left top bg=white width=10 alpha=alpha.pnm alphainvert>
-  <boxstyle middle top bg=white alpha=255 alphainvert height=10>
+  <boxstyle left top bg=$$bg_color$$ width=10 alpha=alpha.pnm alphainvert>
+  <boxstyle middle top bg=$$bg_color$$ alpha=255 alphainvert height=10>
 
   <boxstyle middle text bg=lightblue fg=white alpha=100>
   <boxstyle middle text selected bg=red fg=yellow alpha=120>
@@ -15,13 +15,14 @@
   <boxstyle left text selected bg=green alpha=90>
   <boxstyle left text mouseover bg=yellow bgsrc=plupp.pnm alpha=0>
 
-  <boxstyle left delimit bg=white alpha=30>
+  <boxstyle left delimit bg=$$bg_color$$ alpha=30>
   <boxstyle middle delimit height=2 bg=yellow alpha=30>
 
-  <boxstyle left bottom bg=white height=10 rot=270 alpha=alpha.pnm alphainvert>
+  <boxstyle left bottom bg=$$bg_color$$ height=10 rot=270 alpha=alpha.pnm
+            alphainvert>
   <boxstyle middle bottom bg=black> 
-  <boxstyle right bottom bg=white rot=180 alpha=alpha.pnm alphainvert> 
+  <boxstyle right bottom bg=$$bg_color$$cd rot=180 alpha=alpha.pnm alphainvert> 
 
-  <insertmenuitems>
+  <menumaker menu=top>
 
 </navigation>

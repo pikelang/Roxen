@@ -42,14 +42,15 @@ class tab
       if(sizeof(a))
 	if (stringp(a[1]))
 	{
-	  s+="<td><form method=get action="+a[1]+
-	    "><input type=submit name=\""+a[0]+"\" value=\""+a[0]+"\">";
+	  s+="<td><form method=get action="
+	     +(sizeof(a)>2?"'"+a[1]+"'":a[1])+
+             "><input type=submit name=\""+a[0]+"\" value=\""+a[0]+"\">";
 	  if(sizeof(a)>2)
 	  {
 	    a[2]=(["cancel_url":id->not_query])+a[2]||([]);
 	    foreach(indices(a[2]), string input_hidden)
 	      s+="<input type=hidden name=\""+input_hidden+
-       "\" value=\""+a[2][input_hidden]+"\">";
+                 "\" value=\""+a[2][input_hidden]+"\">";
 	  }
 	  s+="</form></td>\n";
 	}
