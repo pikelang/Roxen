@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.17 1997/09/20 15:02:06 grubba Exp $";
+string cvs_version = "$Id: install.pike,v 1.18 1997/09/20 15:04:13 grubba Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -33,11 +33,11 @@ object roxenp()
   return this_object();
 }
 
-object|void open(string filename, string mode)
+object|void open(string filename, string mode, int|void perm)
 {
   object o;
   o=File();
-  if(o->open(filename, mode)) {
+  if(o->open(filename, mode, perm || 0666)) {
     return o;
   }
   destruct(o);
