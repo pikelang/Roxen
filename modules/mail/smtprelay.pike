@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.22 1998/09/17 18:06:52 grubba Exp $
+ * $Id: smtprelay.pike,v 1.23 1998/09/20 00:24:18 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.22 1998/09/17 18:06:52 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.23 1998/09/20 00:24:18 grubba Exp $";
 
 /*
  * Some globals
@@ -339,6 +339,15 @@ class MailSender
     send_command("QUIT");
   }
 
+  static void send_bounce_and_stop(string code, array(string) text)
+  {
+    // Stop sending the message, since it won't be possible to
+    // deliver it.
+    result = -2;
+
+    send_bounce(code, text);
+  }
+
   static void bad_address(string code, array(string) text)
   {
     // Permanently bad address.
@@ -394,7 +403,7 @@ class MailSender
   static array(mapping) state_actions = ({
     ([ "220":send_ehlo, ]),
     ([ "250":send_mail_from, "":send_helo, ]),
-    ([ "250":send_rcpt_to, "5":send_bounce, ]),
+    ([ "250":send_rcpt_to, "5":send_bounce_and_stop, ]),
     ([ "250":send_mail_from, "5":send_bounce, ]),
     ([ "25":"DATA", "55":bad_address, ]),
     ([ "354":send_body, "":send_bounce, ]),
@@ -714,8 +723,7 @@ static void check_mail(int t)
 /*
  * Callable from elsewhere to send message's
  */
-void send_message(string from, multiset(string) rcpt,
-		  string message, string|void csum)
+void send_message(string from, multiset(string) rcpt, string message)
 {
   roxen_perror(sprintf("SMTP: send_message(%O, %O, X)\n", from, rcpt));
 
