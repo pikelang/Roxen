@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.79 2003/03/04 13:41:51 grubba Exp $
+// $Id: cache.pike,v 1.80 2003/03/04 13:44:31 grubba Exp $
 
 // #pragma strict_types
 
@@ -172,7 +172,7 @@ void cache_clean()
 	if(!c[SIZE]) {
 	  // Perform a size calculation.
 	  c[SIZE] = sizeof(encode_value(b));
-	  if (catch{ c[SIZE] += sizeof(encode_value(c[DATA]))}) {
+	  if (catch{ c[SIZE] += sizeof(encode_value(c[DATA]));}) {
 	    // encode_value() failed,
 	    // probably because some object is in there...
 
