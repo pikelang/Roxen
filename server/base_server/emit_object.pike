@@ -2,7 +2,7 @@
 
 class EmitObject {
 
-  private mapping(string:mixed) next_row;
+  mapping(string:mixed) next_row;
 
   //! Returns a new set of variables to be used in
   //! the emit loop.
