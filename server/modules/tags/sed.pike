@@ -36,7 +36,7 @@
 //
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.6 2000/02/24 05:20:11 nilsson Exp $";
+constant cvs_version = "$Id: sed.pike,v 1.7 2000/02/28 03:35:18 peter Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -51,7 +51,7 @@ int flno=1;
 #define GC_LOOP_TIME QUERY(gc_time)
 
 constant module_type = MODULE_PARSER;
-constant moudke_name = "SED tag";
+constant module_name = "SED tag";
 
 array sedreplace(string s,object re,string with,
 		 array whatin,int first,int lastmod,
