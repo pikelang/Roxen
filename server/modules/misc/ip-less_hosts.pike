@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: ip-less_hosts.pike,v 1.2 1997/08/18 00:39:06 per Exp $";
+string cvs_version = "$Id: ip-less_hosts.pike,v 1.3 1997/08/19 02:32:00 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -43,4 +43,14 @@ mapping first_try(object id)
 void start()
 {
   config_cache = ([]);
+}
+inherit "http";
+string status()
+{
+  string res="<table><tr bgcolor=lightblue><td>Host</td><td>Server</td></tr>";
+  foreach(sort(indices(config_cache)), string s)
+    res+="<tr><td>"+s+"</td><td><a href=/Configurations/"+
+      http_encode_string(config_cache[s]->name)+">"+
+      (config_cache[s]->name)+"</a></td></tr>";
+  return res+"</table>";
 }

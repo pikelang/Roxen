@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.14 1997/08/13 10:24:04 grubba Exp $
+/* $Id: ssl3.pike,v 1.15 1997/08/19 02:32:09 per Exp $
  *
  * © 1997 Informationsvävarna AB
  *
@@ -246,7 +246,12 @@ void handle_request( )
   if(conf)
   {
 //  perror("Handle request, got conf.\n");
-    foreach(conf->first_modules(), funp) if(file = funp( thiso)) break;
+    object oc = conf;
+    foreach(conf->first_modules(), funp) {
+      if(file = funp( thiso)) break;
+      if(conf != oc) {handle_request();return;}
+    }
+
     
     if(!file) err=catch(file = conf->get_file(thiso));
 

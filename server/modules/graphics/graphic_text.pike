@@ -1,4 +1,4 @@
-string cvs_version="$Id: graphic_text.pike,v 1.53 1997/08/19 00:37:18 grubba Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.54 1997/08/19 02:31:58 per Exp $";
 
 #include <module.h>
 inherit "module";
@@ -585,19 +585,21 @@ void print_colors(array from)
 }
 #endif
 
-int number=(time(1)/10) % 1000, _start=time(1)/10 % 1000;
+int number=0;
+
+mapping find_cached_args(int num);
 
 array(int)|string write_text(int _args, string text, int size,
 			     object id)
 {
   object img;
-  mapping args = cached_args[_args];
+  mapping args = find_cached_args(_args);
   if(!args) {
     args=(["fg":"black","bg":"white"]);
     text="Please reload this page";
   }
 
-  string key = base_key+(_args-_start);
+  string key = base_key+_args;
 
   text = replace(text, ({ "&lt;", "&gt;", "&amp;" }), ({ "<", ">", "&" }));
 
@@ -716,21 +718,63 @@ string quote(string in)
   return res;
 }
 
+int args_restored = 0;
+void restore_cached_args()
+{
+  args_restored = 1;
+  object o = open(".gtext_args", "r");
+  if(o)
+  {
+    string data = o->read();
+    catch {
+      if(sizeof(indices(Gz)))
+	data=Gz->inflate()->inflate(data);
+    };
+    catch {
+      cached_args |= decode_value(data);
+    };
+  }
+}
+
+void save_cached_args()
+{
+  restore_cached_args();
+  object o = open(".gtext_args", "wct");
+  string data=encode_value(cached_args);
+  catch {
+    if(sizeof(indices(Gz)))
+      data=Gz->deflate()->deflate(data);
+  };
+  o->write(data);
+}
+
+mapping find_cached_args(int num)
+{
+  if(!args_restored) restore_cached_args();
+  if(cached_args[num]) return cached_args[num];
+
+  // This is a very unlikely event...
+  restore_cached_args();
+  if(cached_args[num]) return cached_args[num];
+  return 0;
+}
+
+
 
 int find_or_insert(mapping find)
 {
+  if(!args_restored) restore_cached_args();
   array a = indices(cached_args);
   array b = values(cached_args);
   int i;
   for(i=0; i<sizeof(a); i++)
     if(equal(find, b[i])) {
-//    perror("Found old args..\n");
       return a[i];
     }
 
-//  perror("Using new args..\n%O\n", find);
-
   cached_args[number]=find;
+  remove_call_out(save_cached_args);
+  call_out(save_cached_args, 10);
   return number++;
 }
 

@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.37 1997/08/12 06:32:33 per Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.38 1997/08/19 02:32:05 per Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -76,7 +76,8 @@ void create()
 {
   defvar("Accesslog", 
 	 GLOBVAR(logdirprefix)+
-	 short_name(roxen->current_configuration->name)+"/Accessed", 
+	 short_name(roxen->current_configuration?
+		    roxen->current_configuration->name:".")+"/Accessed", 
 	 "Access log file", TYPE_FILE|VAR_MORE,
 	 "In this file all accesses to files using the &lt;accessd&gt;"
 	 " tag will be logged.", 0, ac_is_not_set);

@@ -39,7 +39,7 @@
 // 1.12  may '97
 //       Applied some patches from  Wilhelm Koehler <wk@cs.tu-berlin.de>
 
-string cvs_version = "$Id: ftpgateway.pike,v 1.15 1997/08/14 22:18:54 grubba Exp $";
+string cvs_version = "$Id: ftpgateway.pike,v 1.16 1997/08/19 02:32:03 per Exp $";
 #include <module.h>
 #include <config.h>
 
@@ -1220,7 +1220,7 @@ string check_variable(string name, mixed value)
 void create()
 {         
   defvar("logfile", GLOBVAR(logdirprefix)+
-	 short_name(roxen->current_configuration->name)+"/ftp_proxy_log",
+	 short_name(roxen->current_configuration?roxen->current_configuration->name:".")+"/ftp_proxy_log",
 	 "Logfile", TYPE_FILE,  "Empty the field for no log at all");
   
   defvar("mountpoint", "ftp:/", "Location", TYPE_LOCATION|VAR_MORE,
@@ -1231,7 +1231,8 @@ void create()
 	 " accesses to local WWW-servers through a firewall.<p>"
 	 "Please consider security, though.");
   
-  defvar("Proxies", "", "Remote gateway regular expressions", TYPE_TEXT_FIELD|VAR_MORE,
+  defvar("Proxies", "", "Remote gateway regular expressions",
+	 TYPE_TEXT_FIELD|VAR_MORE,
 	 "Here you can add redirects to remote gateways. If a file is "
 	 "requested from a host matching a pattern, the gateway will query the "
 	 "Ftp gateway server at the host and port specified.<p> "
