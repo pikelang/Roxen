@@ -61,40 +61,6 @@ class tab
     return s;
   }
   
-#if 0  
-  string buttonrow_submitbuttons(array brow, object id)
-  {
-    string s="";
-    s+="<table><tr>\n";
-    foreach(brow, array a)
-      if(sizeof(a))
-	if (stringp(a[1]))
-	{
-	  s+="<td><form method=get action="
-	     +(sizeof(a)>2?"'"+a[1]+"'":a[1])+
-             "><input type=submit name=\""+a[0]+"\" value=\""+a[0]+"\">";
-	  if(sizeof(a)>2)
-	  {
-	    a[2]=(["cancel_url":id->not_query])+a[2]||([]);
-	    foreach(indices(a[2]), string input_hidden)
-	      s+="<input type=hidden name=\""+input_hidden+
-                 "\" value=\""+a[2][input_hidden]+"\">";
-	  }
-	  s+="</form></td>\n";
-	}
-	else
-	{
-	  s+="<td>internal server error<br>"+
-	    "<tt>"+sprintf("%O",a)+"</tt><br>"
-	    __FILE__":"+__LINE__+"</td>";
-	}
-      else
-	s+="</tr></table><table><tr>";
-    s+="</tr></table>";
-    return s;
-  }
-#endif
-
   function buttonrow=buttonrow_toolbar;
   // function buttonrow=buttonrow_gtext;
   

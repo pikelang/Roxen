@@ -9,5 +9,5 @@ void create (object content_editor)
 
 mapping|string handle (string sub, object id)
 {
-  return "Nothing here yet...";
+  return "<automail-admin customer="+id->variables->customer+">";
 }

@@ -2,6 +2,12 @@ inherit "roxenlib";
 
 object wa;
 
+int visible(object id)
+{
+  return 0;
+}
+
+
 void create (object webadm)
 {
   wa = webadm;

@@ -1,5 +1,5 @@
 /*
- * $Id: clientlayer.pike,v 1.6 1998/09/01 19:28:20 js Exp $
+ * $Id: clientlayer.pike,v 1.7 1998/09/08 21:32:14 js Exp $
  *
  * A module for Roxen AutoMail, which provides functions for
  * clients.
@@ -10,7 +10,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: clientlayer.pike,v 1.6 1998/09/01 19:28:20 js Exp $";
+constant cvs_version="$Id: clientlayer.pike,v 1.7 1998/09/08 21:32:14 js Exp $";
 constant thread_safe=1;
 
 mapping sql_objs=([]);
@@ -119,7 +119,7 @@ mapping(string:mixed) get_mail(int mail_id)
   if(!sizeof(a))
     return 0;
   mapping mail=a[0];
-  mail->body=load_body(mail->body_id);
+  mail->body=load_body_get_obj(mail->body_id);
   return mail;
 }
 
