@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.246 2000/08/15 11:48:46 jhs Exp $";
+constant cvs_version = "$Id: http.pike,v 1.247 2000/08/16 18:55:29 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 #define RAM_CACHE
@@ -819,7 +819,7 @@ private int parse_got( string new_data )
            break;
 
          case "user-agent":
-           if(!client || !client_var->Fullname)
+           if( !client )
            {
              sscanf(contents, "%s via", contents);
              client_var->Fullname=contents;
@@ -827,14 +827,8 @@ private int parse_got( string new_data )
            }
            break;
 
-         case "referer":
-           referer = contents/" ";
-           break;
+         case "referer": referer = ({contents}); break;
 
-         case "extension":
-#ifdef DEBUG
-           werror("Client extension: "+contents+"\n");
-#endif
          case "request-range":
            contents = lower_case(contents-" ");
            if(!search(contents, "bytes"))
@@ -865,9 +859,6 @@ private int parse_got( string new_data )
            }
          case "accept":
          case "accept-charset":
-         case "session-id":
-         case "message-id":
-         case "from":
            if(misc[linename])
              misc[linename] += (contents-" ") / ",";
            else
@@ -921,26 +912,8 @@ private int parse_got( string new_data )
            }
            break;
 
-         case "host":
-         case "proxy-connection":
-         case "security-scheme":
-         case "via":
-         case "cache-control":
-         case "negotiate":
-         case "forwarded":
-         case "new-uri":
-           misc[linename]=contents;
-           break;
-
-         case "proxy-by":
-         case "proxy-maintainer":
-         case "proxy-software":
-         case "mime-version":
-           break;
-
-         case "if-modified-since":
-           since=contents;
-           break;
+         case "host": misc[linename]=contents; break;
+         case "if-modified-since": since=contents; break;
         }
       }
 #if !constant(Roxen.HeaderParser)
@@ -1110,6 +1083,7 @@ void end(string|void s, int|void keepit)
     // Now.. Transfer control to a new http-object. Reset all variables etc..
     object o = object_program(this_object())(0, 0, 0);
     o->remoteaddr = remoteaddr;
+    o->client = client;
     o->supports = supports;
     o->client_var = client_var;
     o->host = host;
@@ -1703,11 +1677,11 @@ void send_result(mapping|void result)
           if(file->file && !file->len)
             file->len = fstat[1];
 
-          if (fstat[3] > misc->last_modified) {
-            misc->last_modified = fstat[3];
+          if (fstat[ST_MTIME] > misc->last_modified) {
+            misc->last_modified = fstat[ST_MTIME];
           }
 
-          if(prot != "HTTP/0.9" && !misc->is_dynamic) 
+          if(prot != "HTTP/0.9" && misc->cacheable) 
           {
             heads["Last-Modified"] = Roxen.http_date(misc->last_modified);
 
@@ -2009,7 +1983,8 @@ void got_data(mixed fooid, string s)
 
   TIMER("charset");
 
-  if( !conf || !conf->path[port_obj] )
+  string path;
+  if( !conf || !(path = port_obj->path[ conf ] ) )
   {
     // FIXME: port_obj->name & port_obj->default_port are constant
     // consider caching them?
@@ -2035,8 +2010,7 @@ void got_data(mixed fooid, string s)
   }
   else
   {
-    string path;
-    if(strlen(path = conf->path[ port_obj ]))
+    if( strlen(path) )
     {
       not_query = not_query[strlen(path)..];
       misc->site_prefix_path = path;

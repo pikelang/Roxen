@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.340 2000/08/16 02:58:11 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.341 2000/08/16 18:55:28 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -18,11 +18,6 @@ mapping profile_map = ([]);
 #endif
 
 #define CATCH(P,X) do{mixed e;if(e=catch{X;})report_error("While "+P+"\n"+describe_backtrace(e));}while(0)
-
-mapping(object:string) path = ([]);
-// set for optimization reasons on a per-port basis if there is not
-// multiple mountpoints for this configuration within the same port
-
 
 // --- Locale defines ---
 //<locale-token project="roxen_start">   LOC_S  </locale-token>

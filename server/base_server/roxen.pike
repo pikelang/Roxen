@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.522 2000/08/16 01:14:39 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.523 2000/08/16 18:55:28 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -612,6 +612,7 @@ class Protocol
   inherit Stdio.Port: port;
   inherit "basic_defvar";
 
+  mapping path = ([]);
   constant name = "unknown";
   constant supports_ipless = 0;
   //! If true, the protocol handles ip-less virtual hosting
@@ -644,10 +645,9 @@ class Protocol
       urls[name] = data;
       return; // only ref once per URL
     }
-    if( !zero_type( data->conf->path[ this_object() ] ) )
-      data->conf->path[ this_object() ] = 0;
-    else
-      data->conf->path[ this_object() ] = data->path || "";
+    path[ data->conf ] = data->path||"";
+    if( !sizeof( Array.uniq( values( path ) ) ) > 1)
+      path = ([0:1]);
     refs++;
     urls[name] = data;
     sorted_urls = Array.sort_array(indices(urls), lambda(string a, string b) {
@@ -660,8 +660,10 @@ class Protocol
   {
     if(!urls[name]) // only unref once
       return;
-    m_delete( urls[name]->conf->path, this_object() );
+    m_delete(path, urls[name]->conf );
     m_delete(urls, name);
+    if( sizeof( path ) < 3 && path[0] )
+      path = ([]);
     sorted_urls -= ({name});
     if( !--refs )
       destruct( ); // Close the port.
