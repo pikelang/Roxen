@@ -1,9 +1,13 @@
-string cvs_version="$Id: graphic_text.pike,v 1.35 1997/02/27 04:14:02 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.36 1997/02/27 04:38:20 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
+#if efun(_static_modules)
 import Image;
+#else
+# define image Image
+#endif
 
 array register_module()
 {
@@ -172,18 +176,38 @@ array (array(int)) make_matrix(int size)
   return matrixes[size] = res;
 }
 
+string fix_relative(string file, object got)
+{
+  string other;
+  if(file != "" && file[0] == '/')
+    return file;
+  other=got->not_query;
+  if(file != "" && file[0] == '#')
+    file = got->not_query+  file;
+  else
+    file = dirname(got->not_query) + "/" +  file;
+  return simplify_path(replace(file, ({ "//", "..."}), ({"./..", "//"})));
+}
 
 object last_image;
 string last_image_name;
-object (image) load_image(string f)
+object (image) load_image(string f,object id)
 {
   if(last_image_name==f) return last_image;
-  object file = files.file();
   string data;
+  object file;
   object img = image();
 
-  if(!file->open(f,"r")) return 0;
-  if(!(data=file->read(0x7fffffff))) return 0;
+  if(file=open(f,"r"))
+  {
+    if(!(data=file->read(0x7fffffff)))
+      return 0;
+  } else {
+    f = fix_relative(f, id);
+    if(!(data=roxen->try_get_file(f,id)))
+      return 0;
+  }
+  
   if(!img->frompnm(data) && !img->fromgif(data)) return 0;
 
 //  last_image_name=f;
@@ -265,7 +289,7 @@ object (image) bevel(object (image) in, int width, int|void invert)
 }
 
 
-object (image) make_text_image(mapping args, object font, string text)
+object (image) make_text_image(mapping args, object font, string text,object id)
 {
   object (image) text_alpha=font->write(@(text/"\n"));
   int xoffset=0, yoffset=0;
@@ -349,11 +373,11 @@ object (image) make_text_image(mapping args, object font, string text)
   object background,foreground;
 
 
-  if(args->texture)    foreground = load_image(args->texture);
+  if(args->texture)    foreground = load_image(args->texture,id);
 
   if(args->background)
   {
-    background = load_image(args->background);
+    background = load_image(args->background,id);
     xsize = background->xsize();
     ysize = background->ysize();
     switch(lower_case(args->talign||"left"))
@@ -551,7 +575,7 @@ array(int)|string write_text(int _args, string text, int size,
 
   // Fonts and such are now initialized.
 
-  img = make_text_image(args,data,text);
+  img = make_text_image(args,data,text,id);
 
   // Now we have the image in 'img', or nothing.
 
@@ -711,8 +735,13 @@ string tag_graphicstext(string t, mapping arg, string contents,
 			object id, object foo, mapping defines)
 {
 // Allow <accessed> and others inside <gtext>.
-  contents = parse_rxml(contents, id, foo, defines);
   
+#if efun(_static_modules)
+  contents = parse_rxml(contents, id, foo, defines);
+#else
+  contents = parse_rxml(contents, id, foo);
+#endif
+
   string pre, post, defalign, gt, rest, magic;
   int i, split;
 
