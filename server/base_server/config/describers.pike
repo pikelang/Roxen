@@ -1,7 +1,7 @@
 #include <module.h>
 
 int zonk;
-#define link(d) ("<a href=\""+node->path(1)+"?"+(zonk++)+"\">"+(d)+"</a>")
+#define link(d) ("<a href=\""+node->path(1)+"?"+(zonk++)+"\">\n"+(d)+"\n</a>\n")
 
 inherit "config/low_describers";
 

@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.16 1996/12/04 06:06:32 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.17 1996/12/04 09:40:04 per Exp $";
 #define IN_ROXEN
 #include <module.h>
 #include <variables.h>
@@ -1832,7 +1832,7 @@ int set_u_and_gid()
 private program Configuration = (program)"configuration";
 
 
-mapping __vars = ([ ]);
+static mapping __vars = ([ ]);
 
 // These two should be documented somewhere. They are to be used to
 // set global, but non-persistent, variables in Roxen. By using

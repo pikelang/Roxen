@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.18 1996/12/04 07:38:23 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.19 1996/12/04 09:40:03 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -18,10 +18,11 @@ inherit "config/draw_things";
 #define BODY "<body bgcolor=#002050 text=#ffffff link=#ffffaa vlink=#ffffaa alink=#f0e0f0>"
 
 #define TABLEP(x, y) (id->supports->tables ? x : y)
+#define PUSH(X) do{res+=({(X)});}while(0)
 
 int bar=time(1);
 
-program Node = class {
+class Node {
   inherit "struct/node";
 
   mixed original;
@@ -42,22 +43,22 @@ program Node = class {
   {
     string name=path(1);
     if(folded)
-      return ("<a name=\""+name+"\">"
-	      "<a href=\"/(unfold)/" + name + "?"+(bar++)+
-	      "\"><img border=0 align=baseline src=/auto/unfold"
-	      +(changed?"2":"")+" alt="+(changed?"*-":"--")+">"
-	      "</a> "+s);
+      return ("<a name=\""+name+"\">\n"
+	      "<a href=\"/(unfold)" + name + "?"+(bar++)+
+	      "\">\n<img border=0 align=baseline src=/auto/unfold"
+	      +(changed?"2":"")+" alt=\""+(changed?"*-":"--")+"\">"
+	      "</a>\n "+s+"\n");
     else
-      return ("<a name=\""+name+"\">"
-	      "<a href=\"/(fold)/" + name + "?"+(bar++)+
-	      "\"><img border=0 src=/auto/fold"+(changed?"2":"")
+      return ("<a name=\""+name+"\">\n"
+	      "<a href=\"/(fold)" + name + "?"+(bar++)+
+	      "\">\n<img border=0 src=/auto/fold"+(changed?"2":"")
 	      +"  alt="+(changed?"**":"\"\\/\"")+">"
-	      "</a> "+s);
+	      "</a>\n "+s+"\n");
   }
 
   string describe(int i)
   {
-    string res="";
+    array (string) res=({""});
     object node,prevnode;
     mixed tmp;
 
@@ -68,26 +69,17 @@ program Node = class {
       perror("No describer in node "+path(1)+"\n");
 #endif
     if(arrayp(tmp) && sizeof(tmp))
-      res += tmp[0] + "<dt>" + (!i?show_me(tmp[1]):tmp[1]) + "\n\n";
+      PUSH(tmp[0] +  (!i?"<dt>"+show_me(tmp[1]):tmp[1]) + "\n");
     else if(stringp(tmp) && strlen(tmp))
-      res += "<dt>" + (i?tmp:show_me(tmp)) + "\n\n";
+      PUSH((i?tmp:"<dt>"+show_me(tmp)) + "\n");
     else if(!tmp)
       return "";
-
-    if(!i && strlen(res))
-      res += "<dd>";
-    else if(strlen(res))
-      res += "<p>";
 
     if(!folded)
     {
       int sdl = 0; /* Add slash-dl to the end.. */
-      
-      if(!i && strlen(res))
-      {
-	sdl = 1;
-	res += "<dl>\n\n";
-      }
+
+      PUSH("<dl><dd>\n");
       node = down;
       while(node)
       {
@@ -100,12 +92,12 @@ program Node = class {
 	}
 	prevnode = node;
 	node = node->next;
-	res += prevnode->describe();
+	PUSH(prevnode->describe());
+//	PUSH("<br>");
       }
-      if(sdl)
-	res += "</dl>\n\n";
+      PUSH("</dl>\n\n");
     }
-    return res;
+    return res*"";
   }
   
   
@@ -133,7 +125,7 @@ program Node = class {
     }
     if(saver) saver(this_object());
   }
-};
+}
 
 object root=Node();
 int expert_mode;
@@ -146,8 +138,7 @@ void create()
   call_out(init_ip_list, 0);
 }
 
-#define PUSH(X) do{res+=({(X)});}while(0)
-#define BUTTON(ACTION,TEXT,ALIGN) do{PUSH("<a href=\"/(ACTION)"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=/auto/button/"+(lm?"lm/":"")+replace(TEXT," ","%20")+" alt=\""+TEXT+"\""+(("ALIGN"-" ")=="left"?"":" align="+("ALIGN"-" "))+"></a>");lm=0;}while(0)
+#define BUTTON(ACTION,TEXT,ALIGN) do{PUSH("<a href=\"/(ACTION)"+(o?o->path(1):"/")+"?"+(bar++)+"\"><img border=0 hspacing=0 vspacing=0 src=/auto/button/"+(lm?"lm/":"")+replace(TEXT," ","%20")+" alt=\""+(lm?"/ ":" ")+TEXT+" /\""+(("ALIGN"-" ")=="left"?"":" align="+("ALIGN"-" "))+"></a>");lm=0;}while(0)
 
 inline string shutdown_restart(string save, int compact,void|object o)
 {
@@ -156,7 +147,7 @@ inline string shutdown_restart(string save, int compact,void|object o)
 
 string default_head(string h, string|void save)
 {
-  return ("<title>"+h+"</title>"+ BODY);
+  return ("<head><title>"+h+"</title></head>\n"+ BODY+"\n");
 }
 
 object find_node(string l)
@@ -430,8 +421,7 @@ string new_configuration_form()
 {
   return replace(default_head("")+read_bytes("etc/newconfig.html"), ({"$COPIES","$configurl"}), 
 		 ({configuration_list(),CONFIG_URL})) +
-    "\n\n<hr noshade><p align=right><a href=http://www.roxen.com/>"+
-    roxen->real_version +"</a></body>";
+    "\n\n</body>";
 }
 
 mapping module_nomore(string name, int type, object conf)
@@ -821,9 +811,9 @@ string tablist(array(string) nodes, array(string) links, int selected)
   array res = ({});
   for(int i=0; i<sizeof(nodes); i++)
     if(i!=selected)
-      PUSH("<a href=\""+links[i]+"\"><img alt=\""+nodes[i]+"  \" src=/auto/unselected/"+replace(nodes[i]," ","%20")+" border=0></a>");
+      PUSH("<a href=\""+links[i]+"\"><img alt=\"/"+nodes[i][1..strlen(nodes[i])-2]+"\\_\" src=/auto/unselected/"+replace(nodes[i]," ","%20")+" border=0></a>");
     else
-      PUSH("<a href=\""+links[i]+"\"><img alt=\""+nodes[i]+"  \" src=/auto/selected/"+replace(nodes[i]," ","%20")+" border=0></a>");
+      PUSH("<a href=\""+links[i]+"\"><b><img alt=\"/"+nodes[i][1..strlen(nodes[i])-2]+"\\_\" src=/auto/selected/"+replace(nodes[i]," ","%20")+" border=0></b></a>");
   PUSH("<br>");
   return res*"";
 }
@@ -936,6 +926,12 @@ mapping auto_image(string in, object id)
   i=0;
   cache_set("config_images", in, r);
   return r;
+}
+
+
+string remove_font(string t, mapping m, string c)
+{
+  return "<b>"+c+"</b>";
 }
 
 
@@ -1323,22 +1319,19 @@ mapping configuration_parse(object id)
   
   PUSH(default_head("Roxen server configuration", root->changed?o->path(1):0));
   PUSH("\n"+display_tabular_header( o )+"\n<br>\n");
-//  PUSH("<img src=/image/roxen-rotated.gif alt=\"\"  align=right>");
-
-  PUSH("<dl>\n");
 
   if(o->up != root && o->up)
     PUSH("<a href=\""+ o->up->path(1)+"?"+(bar++)+"\">"
-	 "<img src=/auto/back alt='[Up]' align=left hspace=0 border=0></a> ");
+	 "<img src=/auto/back alt='[Up]' align=left hspace=0 border=0></a>\n");
 
   if(i=o->folded) o->folded=0;
-  PUSH(o->describe(1));
+  string tmp = o->describe(1);
+  if(!id->supports->font)
+    tmp = parse_html(tmp, ([]),(["font":remove_font, ]));
+  PUSH(tmp);
   o->folded=i;
   
-  PUSH("</dl>");
-//  PUSH("<nobr><img height=15 src=/auto/button/ width=100% align=right>");
-  PUSH("<br clear=all>");
-//  PUSH("<table width=100%><tr><td bgcolor=#"+bdR+bdG+bdB+">");
+  PUSH("<br clear=all>\n");
 
   int lm=1;
   
@@ -1377,11 +1370,10 @@ mapping configuration_parse(object id)
   BUTTON(shutdown,"Shutdown", left);
 
   
-  PUSH("<img border=0 hspacing=0 vspacing=0 src=/auto/button/rm/%20>");
-
+  PUSH("<img border=0 alt=\"\" hspacing=0 vspacing=0 src=/auto/button/rm/%20>");
   PUSH("</nobr><br clear=all>");
-//  PUSH("</td></tr></table>");
-  PUSH("<p align=right><a href=$docurl>"+roxen->real_version +"</a></body>");
+//  PUSH("<a href=$docurl>"+roxen->real_version +"</a>"
+  PUSH("</body>\n");
   return stores(res*"");
 }
 
