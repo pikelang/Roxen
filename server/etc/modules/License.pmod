@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.6 2002/03/06 10:15:29 wellhard Exp $
+// $Id: License.pmod,v 1.7 2002/03/06 16:24:02 wellhard Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -159,8 +159,8 @@ class Key
 
   string|void verify(object /*Configuration*/|void configuration)
   {
+#if 0  // Disable config test.
     // verify configuration integrity.
-#ifdef INSIDE_ROXEN
     if(configuration && !enterprise()) {
       Configuration conf = used_in(configuration);
       if(conf)
