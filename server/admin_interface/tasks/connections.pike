@@ -11,19 +11,15 @@ string parse( RequestID id )
     mapping q = c->connection_get();
     if( sizeof( q ) )
     {
-      res += "<h2>"+c->query_name();
+      res += "<font size='+1'><b>"+c->query_name()+"</b></font>";
       array rows = ({});
       foreach( indices( q ), RequestID i )
       {
 	if( i && q[i] )
 	{
-	  int starttime;
-	  if (q[i]->start && intp(q[i]->start))
-	    starttime = q[i]->start;
-	  else starttime = i->time;
 	  rows += ({
 	    ([
-	      "start":starttime,
+	      "start":(q[i]->start || i->time),
 	      "written":(int)q[i]->written,
 	      "host":i->remoteaddr,
 	      "closed":((!i->my_fd&&2) || !!catch(i->my_fd->query_address())),
@@ -31,20 +27,23 @@ string parse( RequestID id )
 	      "file":i->not_query || "?",
 	      "len":q[i]->len,
 	      "stat":(i->file && i->file->stat) || (i->misc && i->misc->stat),
-	      "hoststart":i->remoteaddr+sprintf("%010d",(time()-starttime)),
+	      "hoststart":i->remoteaddr+sprintf("%010d",(time()-(q[i]->start || i->time))),
 	      ])
 	  });
 	}
       }
       sort( column(rows,"hoststart"), rows );
       
-      res += "<table cellspacing=0 border=0 cellpadding=2 width=100% >";
-      res += "<tr bgcolor='&usr.fade2;'>"
+      res +=
+	"<box-frame width='100%' iwidth='100%' bodybg='&usr.content-bg;' "
+	"           box-frame='yes' padding='0'>\n"
+	"<table cellspacing=0 border=0 cellpadding=2 width='100%' >\n"
+	"<tr bgcolor='&usr.obox-titlebg;'>"
 	"<td><b>File</b></td>"
 	"<td align=right><b>Time</b></td>"
 	"<td align=right><b>Sent (Mib)</b></td>"
 	"<td align=right><b>Kibyte/s</b></td>"
-	"</tr>";
+	"</tr>\n";
       float total_bw = 0.0, host_bw;
       string oh;
       foreach( rows, mapping r )
@@ -52,7 +51,7 @@ string parse( RequestID id )
 	if( r->host != oh )
 	{
 	  if( oh )
-	    res += sprintf("<tr bgcolor='&usr.fade2;'><td colspan=3>"
+	    res += sprintf("<tr bgcolor='&usr.fade1;'><td colspan=3>"
 			   + roxen.quick_ip_to_host(oh)+
 			   "</td><td align=right>%.1f</td>"
 			   "</tr><tr><td>&nbsp;</td></tr>", host_bw);
@@ -60,11 +59,12 @@ string parse( RequestID id )
 	  host_bw = 0.0;
 	}
 	res += sprintf(
+	  "<tr>"
 	  "<td>%s</td>"      // file
 	  "<td align=right>%2dm %02ds</td>"     // time (min)
 	  "<td align=right>%.1f / %s</td>" // sent
 	  "<td align=right>%.1f</td>" // bw
-          "</tr>",
+          "</tr>\n",
 	  r->file,
 	  (time(1)-r->start)/60, (time(1)-r->start)%60,
           (r->written/1024.0/1024.0),
@@ -79,19 +79,20 @@ string parse( RequestID id )
 	}
       }
       if( oh )
-	res += sprintf("<tr bgcolor='&usr.fade2;'><td colspan=3>"
+	res += sprintf("<tr bgcolor='&usr.fade1;'><td colspan=3>"
 		       + roxen.quick_ip_to_host(oh)+
 		       "</td><td align=right>%.1f</td></tr>"
-		       "<tr><td>&nbsp;</td></tr>", host_bw);
+		       "<tr><td>&nbsp;</td></tr>\n", host_bw);
       res +=
-	sprintf("<tr bgcolor='&usr.fade2;'>"
-		"<td colspan=3>Total bandwidth</td>"
-		"<td align=right>%.1f</td></tr>",
+	sprintf("<tr bgcolor='&usr.fade2;'><td colspan=3>"
+		+"Total bandwidth</td>"
+		"<td align=right>%.1f</td></tr>\n",
 		total_bw );
-      res += "</table>";
+      res += "</table>\n</box-frame>\n<br clear='all' />";
     }
   }
-  res += "<input type='hidden' name='action' value='connections.pike' />"
-    "<submit-gbutton>Refresh</submit-gbutton>";
+  res += "<input type=hidden name=action value='connections.pike' />"
+    "<br />"
+    "<cf-ok-button href='./'/> <cf-refresh/>";
   return res;
 }

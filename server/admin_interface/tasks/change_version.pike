@@ -90,7 +90,10 @@ string nice_relative_date( object t )
 
 string parse( RequestID id )
 {
-  string res = "<gtext fgcolor='&usr.fgcolor;'>Change ChiliMoon version</gtext>";
+ string res =
+   "<font size='+1'><b>Change ChiliMoon version")+"</b></font>\n"
+   "<br />\n"
+   "<p>";
   int warn;
 
   if( id->variables->server )
@@ -106,10 +109,21 @@ string parse( RequestID id )
 
   res += "<input type='hidden' name='task' value='change_version.pike' />";
   
-  res += "<table><tr><td><b>Version</b></td><td></td>"
-    "<td><b>Release date</b></td>"
-    "<td><b>Age</b></td>"
-    "<td><b>Directory</b></td></tr>\n";
+  res +=
+    "<box-frame iwidth='100%' bodybg='&usr.content-bg;' "
+    "           box-frame='yes' padding='0'>"
+    "<table cellpadding=2 cellspacing=0 border=0>"
+    "<tr bgcolor='&usr.obox-titlebg;'>"
+    "<th></th>"
+    "<th align='left'>Version</th>"
+    "<th></th>"
+    "<th><img src='/internal-roxen-unit' width=10 height=1 /></th>"
+    "<th align='left'>Release date</th>"
+    "<th><img src='/internal-roxen-unit' width=10 height=1 /></th>"
+    "<th align='left'>Age</th>"
+    "<th><img src='/internal-roxen-unit' width=10 height=1 /></th>"
+    "<th align='left'>Directory</th>"
+    "</tr>\n";
   foreach( available_versions(), Server f )
   {
     res += "<tr><td>";
@@ -117,19 +131,30 @@ string parse( RequestID id )
       res += "<input type='radio' name='server' value='"+f->dir+"' /> ";
     else
       res += "";
+    res += "</td>";
 
     Calendar.Day d = f->reldate();
     Calendar.Day diff = d->distance( Calendar.now() );
 
     warn += f->cannot_change_back;
-    res += f->version+"</td><td>"+
-      (f->cannot_change_back?"<imgs alt='#' src='&usr.err-2;' />":"")+
-      "</td><td>"+d->set_language( roxen.get_locale()+"_UNICODE" )
-      ->format_ext_ymd() + "</td>"
+    res +=
+      "<td>"+f->version+"</td>"
+      "<td>"+(f->cannot_change_back?"<img alt='#' src='&usr.err-2;' />":"")+
+      "</td>"
+      "<td></td>"
+      "<td>"+(d->set_language( roxen.get_locale()+"_UNICODE" )
+	      ->format_ext_ymd())+
+      "</td>"
+      "<td></td>"
       "<td>"+nice_relative_date( diff )+"</td>"
+      "<td></td>"
       "<td>"+f->dir+"</td></tr>\n";
   }
-  res += "</table>";
+  res +=
+    "</table>\n"
+    "</box-frame>\n"
+    "<br clear='all'/>\n"
+    "<br />\n";
   
 
   if( warn )
@@ -150,9 +175,12 @@ string parse( RequestID id )
     "<imgs src='&usr.err-2;' alt='#' /></td>\n"
     "<td>Note that you will have to start the new server manually because you "
     "may have to answer a few questions for the new environment file.</td>\n"
-    "</tr></table>\n";
+    "</tr></table>\n"
+    "<br clear='all'/>\n"
+    "<br />";
   
-  res += "<submit-gbutton>Change version</submit-gbutton>";
+  res += "<submit-gbutton>Change version</submit-gbutton> "
+    "<cf-cancel href='./?class="+task+"'/>";
 	      
   return res;
 }
