@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.61 1998/09/27 12:29:52 grubba Exp $
+ * $Id: smtp.pike,v 1.62 1998/09/27 12:44:29 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.61 1998/09/27 12:29:52 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.62 1998/09/27 12:44:29 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -262,7 +262,8 @@ static class Smtp_Connection {
       // Client is required to be polite.
       report_warning(sprintf("SMTP: Got command %O %O before EHLO or HELO "
 			     "from %s@%s [%s]\n",
-			     cmd, arg, remoteident, remotehost, remoteip));
+			     cmd, arg,
+			     remoteident||"UNKNOWN", remotehost, remoteip));
       send(503, ({ "Expected EHLO or HELO command." }));
       return;
     }

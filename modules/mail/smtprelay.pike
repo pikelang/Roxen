@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.29 1998/09/23 23:30:54 grubba Exp $
+ * $Id: smtprelay.pike,v 1.30 1998/09/27 12:36:06 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.29 1998/09/23 23:30:54 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.30 1998/09/27 12:36:06 grubba Exp $";
 
 /*
  * Some globals
@@ -1023,7 +1023,8 @@ int relay(string from, string user, string domain,
 		       "'%s', '%s', '%s')",
 		       sql->quote(from), sql->quote(user),
 		       sql->quote(domain), sql->quote(csum), time(),
-		       smtp->remoteident, smtp->remoteip, smtp->remotename));
+		       smtp->remoteident || "UNKNOWN", smtp->remoteip,
+		       smtp->remotename));
   } else {
     sql->query(sprintf("INSERT INTO send_q "
 		       "(sender, user, domain, mailid, received_at, send_at, "
