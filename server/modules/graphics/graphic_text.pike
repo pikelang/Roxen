@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.131 1998/07/04 03:19:51 peter Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.132 1998/07/04 21:57:38 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -975,23 +975,30 @@ array find_dir(string f, object rid)
 mapping find_file(string f, object rid)
 {
   int id;
-  if(rid->method != "GET") return 0;
-  sscanf(f,"%d/%s", id, f);
+#if constant(Gz)
+  object g;
+#endif
 
-  if( query("gif") )             //Remove .gif
+  if((rid->method != "GET") 
+     || (sscanf(f,"%d/%s", id, f) != 2))
+    return 0;
+
+  if( query("gif") && f[strlen(f)-4..]==".gif") // Remove .gif
     f = f[..strlen(f)-5];
-    
-  if (sizeof(f)) {
-    object g;
-    if (f[0] == '$') {	// Illegal in BASE64
-      f = f[1..];
-    } else if (sizeof(indices(g=Gz))) {
-      catch(f = g->inflate()->inflate(MIME.decode_base64(f)));
-    } else if (sizeof(f)) {
-      catch(f = MIME.decode_base64(f));
-    }
-  }
 
+  if(!sizeof(f))   // No string to write.
+    return 0;
+
+  if (f[0] == '$') // Illegal in BASE64
+    f = f[1..];
+#if constant(Gz)
+  else if (sizeof(indices(g=Gz)))
+    catch(f = g->inflate()->inflate(MIME.decode_base64(f)));
+#endif
+  else
+    catch(f = MIME.decode_base64(f));
+
+  // Generate the image.
   return http_string_answer(write_text(id,f,0,rid), "image/gif");
 }
 mapping url_cache = ([]);
