@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.63 2000/01/12 14:30:01 mast Exp $
+ * $Id: rxml.pike,v 1.64 2000/01/13 00:33:52 nilsson Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -11,8 +11,9 @@ inherit "rxmlhelp";
 #include <request_trace.h>
 
 #define OLD_RXML_COMPAT
-
 #define TAGMAP_COMPAT
+
+#define RXML_NAMESPACE "rx" + ":"
 
 mapping (string:function) real_if_callers;
 array (RoxenModule) parse_modules = ({  });
@@ -39,10 +40,25 @@ string rxml_error(string tag, string error, RequestID id) {
 // Note that there's no other way to handle tag overriding -- the page
 // is no longer parsed multiple times.
 
+class Entity_roxen_time {
+  string rxml_var_eval() { return (string)time(1); }
+}
+
+class Entity_roxen_server {
+  string rxml_var_eval(object c) { return c->id->conf->query("MyWorldLocation"); }
+}
+
+void global_entities(object c) {
+  c->add_scope("roxen",(["version":roxen.version(),
+			 "time":Entity_roxen_time(),
+			 "server":Entity_roxen_server() ])  );
+}
+
 RXML.TagSet rxml_tag_set = lambda ()
 {
   RXML.TagSet tag_set = RXML.TagSet ("rxml_tag_set");
-  tag_set->prefix = "rx:";
+  tag_set->prefix = RXML_NAMESPACE;
+  tag_set->prepare_context = global_entities;
   return tag_set;
 }();
 mapping(RoxenModule:RXML.TagSet) module_tag_sets = ([]);
@@ -188,6 +204,10 @@ array(string)|string call_container(RXML.PHtml parser, mapping args,
   return result;
 }
 
+class Entity_var_truth {
+  string rxml_var_eval(RXML.Context c) { return (string)c->id->misc->defines[" _ok"]; }
+}
+
 string do_parse(string to_parse, RequestID id,
                 Stdio.File file, mapping defines)
 {
@@ -201,6 +221,14 @@ string do_parse(string to_parse, RequestID id,
   parser->parse_html_compat (parse_html_compat);
   parser->set_extra (id, file, defines);
   id->misc->_parser = parser;
+
+  parser->context->add_scope("cookie" ,id->cookies);
+  parser->context->add_scope("form", id->variables);
+  parser->context->add_scope("var", ([]) );
+  parser->context->add_scope("page",(["realfile":id->realfile,
+				      "vfs":id->virtfile,
+				      "uri":id->raw_url,
+				      "truth":Entity_var_truth ]) );
 
 #ifdef TAGMAP_COMPAT
   if (id->misc->_tags) {
@@ -442,7 +470,7 @@ string tag_help(string t, mapping args, RequestID id)
 	char=tag[0..0];
 	tag_links=({});
       }
-      if(tag[0..2]!="rx:") tag_links += ({ sprintf("<a href=\""+id->not_query+"?_r_t_h=%s\">%s</a>\n", tag, tag) });
+      if(tag[0..2]!=RXML_NAMESPACE) tag_links += ({ sprintf("<a href=\""+id->not_query+"?_r_t_h=%s\">%s</a>\n", tag, tag) });
     }
 
     return ret + "<h3>"+upper_case(char)+"</h3>\n<p>"+String.implode_nicely(tag_links)+"</p>";
