@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.127 2000/02/15 03:10:44 nilsson Exp $
+ * $Id: rxml.pike,v 1.128 2000/02/15 04:36:29 nilsson Exp $
  *
  * The Roxen RXML Parser. See also the RXML Pike module.
  *
@@ -741,47 +741,62 @@ private string use_file_doc(string f, string data)
   return res;
 }
 
-string|array tag_use(string tag, mapping m, string c, RequestID id)
-{
-  mapping res = ([]);
-  if(!id->misc->_ifs) id->misc->_ifs=([]);
+class TagUse {
+  inherit RXML.Tag;
+  constant name = "use";
+  constant flags = RXML.FLAG_NONCONTAINER;
 
-  if(m->packageinfo)
-  {
-    string res ="<dl>";
-    foreach(list_packages(), string f)
-      res += use_file_doc(f, read_package( f ));
-    return ({ res+"</dl>" });
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id) {
+      if(args->packageinfo) {
+	string res ="<dl>";
+	foreach(list_packages(), string f)
+	  res += use_file_doc(f, read_package( f ));
+	return ({ res+"</dl>" });
+      }
+
+      if(!args->file && !args->package)
+	parse_error("No file or package selected.");
+
+
+      array res;
+      if(!id->misc->_ifs) id->misc->_ifs=([]);
+      string name=args->file||("pkg!"+args->package);
+      RXML.Context ctx=RXML.get_context();
+
+      if(args->info || id->pragma["no-cache"] ||
+	 !(res=cache_lookup("macrofiles",name)) ) {
+	res = ({ ([]), ({}) });
+
+	string file;
+	if(args->file)
+	  file = try_get_file( fix_relative(args->file, id), id );
+	else
+	  file = read_package( args->package );
+
+	if(!file)
+	  run_error("Failed to fetch "+(args->file||args->package)+".");
+
+	if( args->info )
+	  return ({"<dl>"+use_file_doc( args->file || args->package, file )+"</dl>"});
+
+	multiset before=ctx->get_runtime_tags();
+	parse_rxml( file, id );
+
+	res[0] = id->misc->_ifs - id->misc->_ifs;
+	res[1]=indices(RXML.get_context()->get_runtime_tags()-before);
+	cache_set("macrofiles", name, res);
+      }
+
+      id->misc->_ifs += res[0];
+      foreach(res[1], RXML.Tag tag)
+	ctx->add_runtime_tag(tag);
+
+      return 0;
+    }
   }
-
-  if(!m->file && !m->package)
-    return "<use help>";
-
-  if(!m->info || id->pragma["no-cache"] ||
-     !(res=cache_lookup("macrofiles:"+name,(m->file||("pkg!"+m->package)))))
-  {
-    res = ([]);
-    string foo;
-    if(m->file)
-      foo = try_get_file( fix_relative(m->file, id), id );
-    else
-      foo = read_package( m->package );
-
-    if(!foo)
-      return ({ rxml_error(tag, "Failed to fetch "+(m->file||m->package)+".", id)-"<false>" });
-
-    if( m->info )
-      return ({"<dl>"+use_file_doc( m->file || m->package, foo )+"</dl>"});
-
-    parse_rxml( foo, id );
-
-    res->_ifs = id->misc->_ifs - id->misc->_ifs;
-    //    cache_set("macrofiles:"+name, (m->file || ("pkg!"+m->package)), res);
-  }
-  id->misc->_ifs += res->_ifs;
-
-  c = parse_rxml( c, id );
-  return ({ c });
 }
 
 class UserTag {
@@ -806,10 +821,10 @@ class UserTag {
     string scope_name;
 
     array do_return(RequestID id) {
-      args=defaults+args;
-      id->misc->last_tag_args = args;
+      mapping nargs=defaults+args;
+      id->misc->last_tag_args = nargs;
       scope_name=args->scope||name;
-      vars = args;
+      vars = nargs;
       m_delete(args, "scope");
 
       if(!(RXML.FLAG_NONCONTAINER&flags) && args->trimwhites) {
@@ -820,8 +835,8 @@ class UserTag {
       }
 
 #ifdef OLD_RXML_COMPAT
-      array replace_from = map(indices(args),make_entity)+({"#args#", "<contents>"});
-      array replace_to = values(args)+({ make_tag_attributes(args), content||"" });
+      array replace_from = map(indices(nargs),make_entity)+({"#args#", "<contents>"});
+      array replace_to = values(nargs)+({ make_tag_attributes(args), content||"" });
       string c2;
       c2 = replace(c, replace_from, replace_to);
       if(c2!=c) {
@@ -830,7 +845,7 @@ class UserTag {
       }
 #endif
 
-      vars->args = make_tag_attributes(args);
+      vars->args = make_tag_attributes(nargs);
       vars->contents = content||"";
       return ({ c });
     }
@@ -911,7 +926,7 @@ class TagDefine {
       }
 #endif
 
-      //    rxml_parse_error("No tag, variable, if or container specified.");
+      parse_error("No tag, variable, if or container specified.");
     }
   }
 }
@@ -946,7 +961,7 @@ class TagUndefine {
       }
 #endif
 
-      //      rxml_parse_error("No tag, variable, if or container specified.");
+      parse_error("No tag, variable, if or container specified.");
     }
   }
 }
@@ -1174,17 +1189,26 @@ class TagElse {
   constant flags = 0;
   class Frame {
     inherit RXML.Frame;
+    int do_iterate=1;
     array do_enter(RequestID id) {
-      if(LAST_IF_TRUE) return ({""});
+      if(LAST_IF_TRUE) do_iterate=-1;
       return 0;
     }
   }
 }
 
-string tag_then( string t, mapping m, string c, RequestID id )
-{
-  if(LAST_IF_TRUE) return c;
-  return "";
+class TagThen {
+  inherit RXML.Tag;
+  constant name = "then";
+  constant flags = 0;
+  class Frame {
+    inherit RXML.Frame;
+    int do_iterate=1;
+    array do_enter(RequestID id) {
+      if(!LAST_IF_TRUE) do_iterate=-1;
+      return 0;
+    }
+  }
 }
 
 string|array tag_elseif( string t, mapping m, string c, RequestID id )
@@ -1350,12 +1374,10 @@ mapping query_container_callers()
   return ([
     "comment":lambda(){ return ""; },
     "noparse":tag_noparse,
-    "then":tag_then,
     "elseif":tag_elseif,
     "elif":tag_elseif,
     "case":tag_case,
     "trace":tag_trace,
-    "use":tag_use,
   ]);
 }
 
