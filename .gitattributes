@@ -251,5 +251,6 @@ urw_itc_avant_garde-demi-r binary
 /server/unfinishedmodules/hedbor.pike foreign_ident
 /server/unfinishedmodules/mountserver.pike foreign_ident
 /server/unfinishedmodules/whois++.pike foreign_ident
+/tools/addfp98.pike foreign_ident
 /tools/convert_accessed.pike foreign_ident
 /tools/roxenstarter/roxenstarter.cpp foreign_ident
