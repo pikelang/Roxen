@@ -2,13 +2,9 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.375 2002/07/03 14:52:10 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.376 2002/07/03 19:23:57 nilsson Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
-
-#ifdef MAGIC_ERROR
-inherit "highlight_pike";
-#endif
 
 // HTTP protocol module.
 #include <config.h>
@@ -1059,7 +1055,7 @@ string format_backtrace(int eid)
 {
   [string msg, array(string) rxml_bt, array(array) bt,
    string raw_bt_descr, string raw_url, string raw] =
-    roxen.query_var ("errors")[eid];
+    cache_lookup( "http_bt_error", eid);
 
   string res = error_page_header ("Internal Server Error") +
     "<h1>" + replace (Roxen.html_encode_string (msg), "\n", "<br />\n") + "</h1>\n";
@@ -1123,12 +1119,11 @@ int store_error(mixed _err)
 {
   mixed err = _err;
   _err = 0; // hide in backtrace, they are bad enough anyway...
-  mapping e = roxen.query_var("errors");
-  if(!e) roxen.set_var("errors", ([]));
-  e = roxen.query_var("errors"); /* threads... */
 
-  int id = ++e[0];
-  if(id>1024) id = 1;
+  int id;
+  do {
+    id = random(0xffffffff);
+  } while(!cache_lookup("http_bt_error", id));
 
   string msg;
   array(string) rxml_bt;
@@ -1196,15 +1191,13 @@ int store_error(mixed _err)
   }
 
   add_cvs_ids (err);
-  e[id] = ({msg,rxml_bt,bt,describe_backtrace (err),raw_url,censor(raw)});
+  cache_set( "http_bt_error", id, ({msg,rxml_bt,bt,describe_backtrace (err),raw_url,censor(raw)}) );
   return id;
 }
 
 array get_error(string eid)
 {
-  mapping e = roxen.query_var("errors");
-  if(e) return e[(int)eid];
-  return 0;
+  return cache_lookup( "http_bt_error", (int)eid );
 }
 
 
@@ -1333,8 +1326,6 @@ string handle_error_file_request (string msg, array(string) rxml_bt, array(array
   }
   int end = (int)variables->line+50;
 
-  // The highlighting doesn't work well enough on recent pike code.
-  //lines=highlight_pike("foo", ([ "nopre":1 ]), lines[start..end]*"\n")/"\n";
   lines = map (lines[start..end], Roxen.html_encode_string);
 
   if(sizeof(lines)>off) {
