@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.30 1997/06/11 23:19:36 grubba Exp $";
+string cvs_version = "$Id: http.pike,v 1.31 1997/07/06 16:00:56 grubba Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -590,7 +590,12 @@ private int parse_got(string s)
 #ifdef DEBUG
       perror("Setting unique ID.\n");
 #endif
-      misc->moreheads = ([ "Set-Cookie":http_roxen_id_cookie(), ]);
+      if (!(QUERY(set_cookie_only_once) &&
+	    cache_lookup("hosts_for_cookie",remoteaddr))) {
+	misc->moreheads = ([ "Set-Cookie":http_roxen_id_cookie(), ]);
+      }
+      if (QUERY(set_cookie_only_once))
+	cache_set("hosts_for_cookie",remoteaddr,1);
     }
 #ifdef DEBUG
 #if DEBUG_LEVEL > 30
@@ -618,8 +623,14 @@ void disconnect()
 #ifdef REQUEST_DEBUG
     perror("REQUEST: Disconnecting...\n");
 #endif
-    if(mappingp(file) && objectp(file->file))   
-      destruct(file->file);
+    if(mappingp(file) && objectp(file->file)) {
+      if (file->file->context) {
+	// sslfile, object will be closed on return.
+	file->file = 0;
+      } else {
+	destruct(file->file);
+      }
+    }
 #if _DEBUG_HTTP_OBJECTS
     roxen->httpobjects[my_id] += " - disconnect";  
 #endif

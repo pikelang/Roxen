@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.79 1997/07/03 02:15:17 grubba Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.80 1997/07/06 16:01:17 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1314,6 +1314,13 @@ private void define_global_variables( int argc, array (string) argv )
 	  "If set, all users of your server whose clients supports "
 	  "cookies will get a unique 'user-id-cookie', this can then be "
 	  "used in the log and in scripts to track individual users.");
+
+  globvar("set_cookie_only_once",0,"Set ID cookies only once",TYPE_FLAG,
+	  "If set, Roxen will attempt to set unique user ID cookies only "
+	  "upon receiving the first request (and again after some minutes). "
+	  "Thus, if the user doesn't allow the cookie to be set, he won't be "
+	  "bothered with multiple requests",0,
+	  lambda() {return !QUERY(set_cookie);});
 
   globvar("show_internals", 1, "Show the internals", TYPE_FLAG,
 	  "Show 'Internal server error' messages to the user. "
