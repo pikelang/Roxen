@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.169 1998/11/26 19:37:57 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.170 1998/11/30 00:44:59 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -777,7 +777,8 @@ public void log(mapping file, object request_id)
 		 unsigned_to_bin(time(1)),
 		 (string)request_id->method,
 		 http_encode_string((string)request_id->not_query +
-				    (request_id->misc->path_info || "")),
+				    ((request_id->misc &&
+				      request_id->misc->path_info) || "")),
 		 (string)request_id->prot,
 		 (string)(file->error||200),
 		 unsigned_short_to_bin(file->error||200),
