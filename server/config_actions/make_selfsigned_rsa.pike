@@ -1,5 +1,5 @@
 /*
- * $Id: make_selfsigned_rsa.pike,v 1.2 1999/03/02 17:57:53 nisse Exp $
+ * $Id: make_selfsigned_rsa.pike,v 1.3 1999/03/09 15:19:24 nisse Exp $
  */
 
 inherit "wizard";
@@ -103,7 +103,7 @@ mixed verify_0(object id, object mc)
 
   string key = Tools.PEM.simple_build_pem
     ("RSA PRIVATE KEY",
-     Standards.PKCS.RSA.rsa_private_key(rsa));
+     Standards.PKCS.RSA.private_key(rsa));
   WERROR(key);
   
   if (strlen(key) != file->write(key))
@@ -212,7 +212,7 @@ mixed page_2(object id, object mc)
 	  "</blockquote>"
 #if 0
 	  "<b>Certificate file</b><br>"
-	  "<var name=cert_file type=string default=my_cert.pem><br>\n"
+	  "<var name=cert_file type=string default=my_rsa_cert.pem><br>\n"
 	  "<blockquote>"
 	  "A filename in the real filesystem, where the new "
 	  "certificate should be stored."
@@ -309,7 +309,7 @@ mixed page_3(object id, object mc)
 	  "<var type=checkbox name=save checked></font>"
           "<b>Save the request in a file:</b><br>"
           "<blockquote><b>Filename</b><br>"
-	  "<var type=string name=cert_file default=my_certificate.pem>"
+	  "<var type=string name=cert_file default=my_rsa_certificate.pem>"
 	  "</blockquote>");
 
   return res;
