@@ -16,11 +16,13 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.50 2000/09/05 21:04:44 mast Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.51 2000/09/13 14:15:44 per Exp $";
 
 constant path = "config_interface/";
 string encoding = "iso-8859-1";         // charset for pages
 object charset_decoder;
+
+Filesystem.Tar tar;
 
 string template_for( string f, object id )
 {
@@ -73,11 +75,13 @@ string real_file( mixed f, mixed id )
 
   sscanf(f, "%[^/]/%s", locale, rest);
 
+  if( tar && rest && (sscanf( rest, "docs/%s", rest ) ))
+    return 0;
   array(string|array) stat_info = low_stat_file(locale, rest, id);
   return stat_info && stat_info[0];
 }
 
-Stat stat_file( string f, object id )
+array(int)|Stat stat_file( string f, object id )
 {
   while( strlen( f ) && (f[0] == '/' ))
     f = f[1..];
@@ -88,6 +92,13 @@ Stat stat_file( string f, object id )
   string rest;
 
   sscanf(f, "%[^/]/%s", locale, rest);
+
+  if( tar && rest && (sscanf( rest, "docs/%s", rest ) ))
+  {
+    object s = tar->stat( rest );
+    if( s )
+      return ({ s->mode, s->size, s->atime, s->mtime, s->ctime, s->uid, s->gid });
+  }
 
   array(string|Stat) ret = low_stat_file(locale, rest, id);
   return ret && (ret[1]);
@@ -112,6 +123,11 @@ mixed find_dir( string f, object id )
   string rest;
 
   sscanf(f, "%[^/]/%s", locale, rest);
+
+  if( tar && rest && (sscanf( rest, "docs/%s", rest ) ))
+  {
+    return tar->get_dir( rest );
+  }
 
   multiset languages;
 #if constant(Locale.list_languages)
@@ -173,30 +189,41 @@ mixed find_file( string f, object id )
 
   id->misc->cf_locale = locale;
 
-#ifdef __NT__
-  if(strlen(rest) && rest[-1]=='/') 
-    rest = rest[..strlen(rest)-2];
-#endif
-  array(string|array) stat_info = low_stat_file( locale, rest, id );
-  if( !stat_info ) // No such luck...
-    return 0;
-  [string realfile, array stat] = stat_info;
-  switch( stat[ ST_SIZE ] )
+  string df;
+  mixed retval;
+  if( tar && rest && (sscanf( rest, "docs/%s", df ) ))
   {
-   case -1:
-   case -3:
-   case -4:
-     return 0; /* Not suitable (device or no file) */
-   case -2: /* directory */
-     return -1;
-   default:
-     if (f[-1] == '/')
-       return 0;	/* Let the PATH_INFO module handle it */
+    object s = tar->stat( df );
+    if( !s ) return 0;
+    if( s->isdir() ) return -1;
+    retval = id->conf->StringFile( tar->open( df, "r" )->read(), 
+                                   stat_file( f, id ));
   }
-  id->realfile = realfile;
-
-
-  mixed retval = Stdio.File( realfile, "r" );
+  else
+  {
+#ifdef __NT__
+    if(strlen(rest) && rest[-1]=='/') 
+      rest = rest[..strlen(rest)-2];
+#endif
+    array(string|array) stat_info = low_stat_file( locale, rest, id );
+    if( !stat_info ) // No such luck...
+      return 0;
+    [string realfile, array stat] = stat_info;
+    switch( stat[ ST_SIZE ] )
+    {
+     case -1:
+     case -3:
+     case -4:
+       return 0; /* Not suitable (device or no file) */
+     case -2: /* directory */
+       return -1;
+     default:
+       if (f[-1] == '/')
+         return 0;	/* Let the PATH_INFO module handle it */
+    }
+    id->realfile = realfile;
+    retval = Stdio.File( realfile, "r" );
+  }
 
   if( id->variables["content-type"] )
     return http_file_answer( retval, id->variables["content-type"] );
@@ -248,6 +275,10 @@ mixed find_file( string f, object id )
 void start(int n, Configuration cfg)
 {
   encoding = query( "encoding" );
+  catch(tar = Filesystem.Tar( "config_interface/docs.tar" ));
+  if(!tar)
+    report_notice( "Failed to open documentation tar-file. "
+                   "Documentation will not be available." ); 
   if( cfg )
   {
     charset_decoder = 0;
