@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.169 1999/05/12 09:59:51 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.170 1999/05/18 02:32:56 peter Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -12,6 +12,7 @@ inherit "roxenlib";
 #endif /* VAR_MORE */
 
 static private int loaded;
+int args_restored = 0;
 
 static private string doc()
 {
@@ -27,7 +28,7 @@ array register_module()
 	    "See <tt>&lt;gtext help&gt;&lt;/gtext&gt;</tt> for "
 	    "more information.\n<p>"+doc(),
 	    0, 1
-  });
+         });
 }
 
 
@@ -44,13 +45,6 @@ array (string) list_fonts()
 
 void create()
 {
-  defvar("allowgenericurls", 1, 
-         "Allow generation of images with text from the URL",
-         TYPE_FLAG,
-         "If set, it will be possible to generate gtext images with the "
-         "actual text in the URL. Use &lt;gtext-id&gt; to get the URL-prefix "
-         "to use to generate images, then prepend the actual text");
-
   defvar("cache_dir", "../gtext_cache", "Cache directory for gtext images",
 	 TYPE_DIR,
 	 "The gtext tag saves images when they are calculated in this "
@@ -102,12 +96,67 @@ void create()
   defvar("gif", 0, "Append .gif to all images", TYPE_FLAG|VAR_MORE,
 	 "Append .gif to all images made by gtext. Normally this will "
 	 "only waste bandwidth");
+
+
+#ifdef TYPE_FONT
+  // compatibility variables...
+  defvar("default_size", 32, 0, TYPE_INT,0,0,1);
+  defvar("default_font", "urw_itc_avant_garde-demi-r",0,TYPE_STRING,0,0,1);
+#else
+  defvar("default_size", 32, "Default font size", TYPE_INT_LIST,
+	 "The default size for the font. This is used for the 'base' size, "
+	 "and can be scaled up or down in the tags.",
+	 ({ 16, 32, 64 }));
+  
+  defvar("default_font", "urw_itc_avant_garde-demi-r", "Default font",
+	 TYPE_STRING_LIST,
+	 "The default font. The 'font dir' will be prepended to the path",
+	 list_fonts());
+#endif
 }
+
+string query_location() { return query("location"); }
+
+object load_font(string name, string justification, int xs, int ys)
+{
+  object fnt = Image.font();
+
+  if ((!name)||(name == ""))
+  {
+    return get_font("default",32,0,0,lower_case(justification||"left"),
+		    (float)xs, (float)ys);
+  } else if(sscanf(name, "%*s/%*s") != 2) {
+    name=QUERY(default_size)+"/"+name;
+  }
+
+  name = "fonts/" + name;
+
+  if(!fnt->load( name ))
+  {
+    report_debug("Failed to load the compatibility font "+name+
+		 ", using the default font.\n");
+    return get_font("default",32,0,0,lower_case(justification||"left"),
+		    (float)xs, (float)ys);
+  }
+  catch
+  {
+    if(justification=="right") fnt->right();
+    if(justification=="center") fnt->center();
+    if(xs)fnt->set_x_spacing((100.0+(float)xs)/100.0);
+    if(ys)fnt->set_y_spacing((100.0+(float)ys)/100.0);
+  };
+  return fnt;
+}
+
+static private mapping cached_args = ([ ]);
 
 #define MAX(a,b) ((a)<(b)?(b):(a))
 
+#if !efun(make_matrix)
+static private mapping (int:array(array(int))) matrixes = ([]);
 array (array(int)) make_matrix(int size)
 {
+  if(matrixes[size]) return matrixes[size];
   array res;
   int i;
   int j;
@@ -117,30 +166,22 @@ array (array(int)) make_matrix(int size)
   for(i=0; i<size; i++)
     for(j=0; j<size; j++)
       res[i][j] = (int)MAX((float)size/2.0-sqrt((size/2-i)*(size/2-i) + (size/2-j)*(size/2-j)),0);
-  return res;
+  return matrixes[size] = res;
 }
+#endif
 
-string fix_relative(string file, object id)
-{
-  if(file != "" && file[0] == '/') return file;
-  file = combine_path(dirname(id->not_query) + "/",  file);
-  return file;
-}
-
-object blur(object img, int amnt)
+object  blur(object img, int amnt)
 {
   img->setcolor(0,0,0);
   img = img->autocrop(amnt, 0,0,0,0, 0,0,0);
 
   for(int i=0; i<amnt; i++) 
-    img = img->apply_matrix( ({  ({ 0, 1, 0 }),
-				 ({ 1, 2, 1 }),
-				 ({ 0, 1, 0 }) }) );
+    img = img->apply_matrix( make_matrix((int)sqrt(img->ysize()+20)));
   return img;
 }
 
-object outline(object  on, object  with,
-               array (int) color, int radie, int x, int y)
+object  outline(object  on, object  with,
+		       array (int) color, int radie, int x, int y)
 {
   int steps=10;
   for(int j=0; j<=steps; j++)
@@ -150,12 +191,13 @@ object outline(object  on, object  with,
   return on;
 }
 
-constant white = ({ 255,255,255 });
-constant lgrey = ({ 200,200,200 });
-constant grey = ({ 128,128,128 });
-constant black = ({ 0,0,0 });
+array white = ({ 255,255,255 });
+array lgrey = ({ 200,200,200 });
+array grey = ({ 128,128,128 });
+array black = ({ 0,0,0 });
 
-object bevel(object  in, int width, int|void invert)
+array wwwb = ({ lgrey,lgrey,grey,black });
+object  bevel(object  in, int width, int|void invert)
 {
   int h=in->ysize();
   int w=in->xsize();
@@ -201,10 +243,7 @@ object bevel(object  in, int width, int|void invert)
 
 object make_text_image(mapping args, object font, string text,object id)
 {
-  object text_alpha=font->write(@(args->encoding?
-				  (Locale.Charset.decoder(args->encoding)->
-				   feed(text)->drain())/"\n" :
-				  text/"\n"));
+  object text_alpha=font->write(@(text/"\n"));
   int xoffset=0, yoffset=0;
 
   if(!text_alpha->xsize() || !text_alpha->ysize())
@@ -245,12 +284,6 @@ object make_text_image(mapping args, object font, string text,object id)
     ysize += ((int)args->yspacing)*2;
   }
 
-  if(args->xspacing)
-  {
-    xoffset += (int)args->xspacing;
-    xsize += ((int)args->xspacing)*2;
-  }
-
   if(args->shadow)
   {
     xsize+=((int)(args->shadow/",")[-1])+2;
@@ -287,6 +320,12 @@ object make_text_image(mapping args, object font, string text,object id)
     ysize+=howmuch*2+10;
   }
 
+  if(args->xspacing)
+  {
+    xoffset += (int)args->xspacing;
+    xsize += ((int)args->xspacing)*2;
+  }
+
   if(args->border)
   {
     xoffset += (int)args->border;
@@ -302,41 +341,47 @@ object make_text_image(mapping args, object font, string text,object id)
   object background,foreground;
 
 
-  if(args->texture) {
-    foreground = roxen.load_image(args->texture,id);
-    if(args->tile)
+  if(args->texture)
+  {
+    object t = roxen.load_image(args->texture,id);
+    if( t )
     {
-      object b2 = Image.image(xsize,ysize);
-      for(int x=0; x<xsize; x+=foreground->xsize())
-	for(int y=0; y<ysize; y+=foreground->ysize())
-	  b2->paste(foreground, x, y);
-      foreground = b2;
-    } else if(args->mirrortile) {
-      object b2 = Image.image(xsize,ysize);
-      object b3 = Image.image(foreground->xsize()*2,foreground->ysize()*2);
-      b3->paste(foreground,0,0);
-      b3->paste(foreground->mirrorx(),foreground->xsize(),0);
-      b3->paste(foreground->mirrory(),0,foreground->ysize());
-      b3->paste(foreground->mirrorx()->mirrory(),foreground->xsize(),
-		foreground->ysize());
-      foreground = b3;
-      for(int x=0; x<xsize; x+=foreground->xsize())
+      foreground = t;
+      if(args->tile)
       {
-	for(int y=0; y<ysize; y+=foreground->ysize())
-	  if(y%2)
-	    b2->paste(foreground->mirrory(), x, y);
-	  else
+	object b2 = Image.image(xsize,ysize);
+	for(int x=0; x<xsize; x+=foreground->xsize())
+	  for(int y=0; y<ysize; y+=foreground->ysize())
 	    b2->paste(foreground, x, y);
-	foreground = foreground->mirrorx();
+	foreground = b2;
+      } else if(args->mirrortile) {
+	object b2 = Image.image(xsize,ysize);
+	object b3 = Image.image(foreground->xsize()*2,foreground->ysize()*2);
+	b3->paste(foreground,0,0);
+	b3->paste(foreground->mirrorx(),foreground->xsize(),0);
+	b3->paste(foreground->mirrory(),0,foreground->ysize());
+	b3->paste(foreground->mirrorx()->mirrory(),foreground->xsize(),
+		  foreground->ysize());
+	foreground = b3;
+	for(int x=0; x<xsize; x+=foreground->xsize())
+	{
+	  for(int y=0; y<ysize; y+=foreground->ysize())
+	    if(y%2)
+	      b2->paste(foreground->mirrory(), x, y);
+	    else
+	      b2->paste(foreground, x, y);
+	  foreground = foreground->mirrorx();
+	}
+	foreground = b2;
       }
-      foreground = b2;
-    }
+    } else
+      werror("Failed to load image for "+args->texture+"\n");
   }
   int background_is_color;
   if(args->background &&
      ((background = roxen.load_image(args->background, id)) ||
-      ((background=Image.image(xsize,ysize,
-			       @(parse_color(args->background))))
+      (sizeof(args->background)>1 &&
+       (background=Image.image(xsize,ysize, @(parse_color(args->background[1..]))))
        && (background_is_color=1))))
   {
     object alpha;
@@ -344,11 +389,12 @@ object make_text_image(mapping args, object font, string text,object id)
     {
       xsize=MAX(xsize,alpha->xsize());
       ysize=MAX(ysize,alpha->ysize());
-      if((float)args->scale && (float)args->scale != 1.0)
+      if((float)args->scale)
 	alpha=alpha->scale(1/(float)args->scale);
+      background=Image.image(xsize,ysize, @(parse_color(args->background[1..])));
     }
       
-    if(!args->nobgscale && (float)args->scale >= 0.1)
+    if((float)args->scale >= 0.1 && !alpha)
       background = background->scale(1.0/(float)args->scale);
     
     if(args->tile)
@@ -382,7 +428,7 @@ object make_text_image(mapping args, object font, string text,object id)
     ysize = MAX(ysize,background->ysize());
  
     if(alpha)
-      background = background->paste_alpha_color(alpha->invert(),@bgcolor);
+      background->paste_alpha_color(alpha->invert(),@bgcolor);
 
     switch(lower_case(args->talign||"left")) {
     case "center":
@@ -430,17 +476,6 @@ object make_text_image(mapping args, object font, string text,object id)
     else
       background = background->scale(xs, ys);
   }
-
-
-  if(args->bgscale)
-  {
-    string c1="black",c2="black",c3="black",c4="black";
-    sscanf(args->bgscale, "%s,%s,%s,%s", c1, c2, c3, c4);
-    background->tuned_box(0,0, background->xsize()-1,background->ysize()-1,
-			  ({parse_color(c1),parse_color(c2),parse_color(c3),
-			      parse_color(c4)}));
-  }
-
 
   if(args->turbulence)
   {
@@ -513,7 +548,7 @@ object make_text_image(mapping args, object font, string text,object id)
     array sc = parse_color(args->scolor||"black");
 
     ta->paste_alpha_color(text_alpha,255,255,255,sdist,sdist);
-    ta = blur(ta, MIN((sdist/2),1))->color(255,255,255);
+    ta = blur(ta, MIN((sdist/2),1))->color(256,256,256);
 
     background->paste_alpha_color(ta,sc[0],sc[1],sc[2],
 				  xoffset+sdist,yoffset+sdist);
@@ -544,7 +579,6 @@ object make_text_image(mapping args, object font, string text,object id)
 			  ({parse_color(c1),parse_color(c2),parse_color(c3),
 			      parse_color(c4)}));
   }
-
   if(args->outline)
     outline(background, text_alpha, parse_color((args->outline/",")[0]),
 	    ((int)(args->outline/",")[-1])+1, xoffset, yoffset);
@@ -618,28 +652,27 @@ void clean_cache_dir()
     call_out(clean_cache_dir, 3600);
 }
 
-string error_status;
 void start(int|void val, object|void conf)
 {
   loaded = 1;
 
   if(conf)
   {
-    int id;
-    string cp = query( "cache_dir" ), na = "args";
     mkdirhier( query( "cache_dir" )+"/.foo" );
     remove_call_out(clean_cache_dir);
     call_out(clean_cache_dir, 10);
     mc = conf;
-    base_key = "gtext:";
+    base_key = "gtext:"+(conf?conf->name:roxen->current_configuration->name);
   }
 }
 
 #ifdef QUANT_DEBUG
 void print_colors(array from)
 {
+#if efun(color_name)
   for(int i=0; i<sizeof(from); i++)
     perror("%d: %s\n", i, color_name(from[i]));
+#endif
 }
 #endif
 
@@ -647,12 +680,46 @@ int number=0;
 
 #ifdef THREADS
 object number_lock = Thread.Mutex();
-#define NUMBER_LOCK()	do { object __key = number_lock->lock()
-#define NUMBER_UNLOCK()	if (__key) destruct(__key); } while(0)
+#define NUMBER_LOCK() do { object __key = number_lock->lock()
+#define NUMBER_UNLOCK()       if (__key) destruct(__key); } while(0)
 #else /* !THREADS */
 #define NUMBER_LOCK()
 #define NUMBER_UNLOCK()
 #endif /* THREADS */
+
+mapping find_cached_args(int num);
+
+
+#if !constant(iso88591)
+constant iso88591
+=([ "&nbsp;":   " ",  "&iexcl;":  "¡",  "&cent;":   "¢",  "&pound;":  "£",
+    "&curren;": "¤",  "&yen;":    "¥",  "&brvbar;": "¦",  "&sect;":   "§",
+    "&uml;":    "¨",  "&copy;":   "©",  "&ordf;":   "ª",  "&laquo;":  "«",
+    "&not;":    "¬",  "&shy;":    "­",  "&reg;":    "®",  "&macr;":   "¯",
+    "&deg;":    "°",  "&plusmn;": "±",  "&sup2;":   "²",  "&sup3;":   "³",
+    "&acute;":  "´",  "&micro;":  "µ",  "&para;":   "¶",  "&middot;": "·",
+    "&cedil;":  "¸",  "&sup1;":   "¹",  "&ordm;":   "º",  "&raquo;":  "»",
+    "&frac14;": "¼",  "&frac12;": "½",  "&frac34;": "¾",  "&iquest;": "¿",
+    "&Agrave;": "À",  "&Aacute;": "Á",  "&Acirc;":  "Â",  "&Atilde;": "Ã",
+    "&Auml;":   "Ä",  "&Aring;":  "Å",  "&AElig;":  "Æ",  "&Ccedil;": "Ç",
+    "&Egrave;": "È",  "&Eacute;": "É",  "&Ecirc;":  "Ê",  "&Euml;":   "Ë",
+    "&Igrave;": "Ì",  "&Iacute;": "Í",  "&Icirc;":  "Î",  "&Iuml;":   "Ï",
+    "&ETH;":    "Ð",  "&Ntilde;": "Ñ",  "&Ograve;": "Ò",  "&Oacute;": "Ó",
+    "&Ocirc;":  "Ô",  "&Otilde;": "Õ",  "&Ouml;":   "Ö",  "&times;":  "×",
+    "&Oslash;": "Ø",  "&Ugrave;": "Ù",  "&Uacute;": "Ú",  "&Ucirc;":  "Û",
+    "&Uuml;":   "Ü",  "&Yacute;": "Ý",  "&THORN;":  "Þ",  "&szlig;":  "ß",
+    "&agrave;": "à",  "&aacute;": "á",  "&acirc;":  "â",  "&atilde;": "ã",
+    "&auml;":   "ä",  "&aring;":  "å",  "&aelig;":  "æ",  "&ccedil;": "ç",
+    "&egrave;": "è",  "&eacute;": "é",  "&ecirc;":  "ê",  "&euml;":   "ë",
+    "&igrave;": "ì",  "&iacute;": "í",  "&icirc;":  "î",  "&iuml;":   "ï",
+    "&eth;":    "ð",  "&ntilde;": "ñ",  "&ograve;": "ò",  "&oacute;": "ó",
+    "&ocirc;":  "ô",  "&otilde;": "õ",  "&ouml;":   "ö",  "&divide;": "÷",
+    "&oslash;": "ø",  "&ugrave;": "ù",  "&uacute;": "ú",  "&ucirc;":  "û",
+    "&uuml;":   "ü",  "&yacute;": "ý",  "&thorn;":  "þ",  "&yuml;":   "ÿ",
+]);
+#endif
+
+
 
 constant nbsp = iso88591["&nbsp;"];
 
@@ -663,14 +730,7 @@ constant replace_to   = values( iso88591 ) + ({ nbsp, "<", ">", "&", });
 
 #define CACHE_SIZE 2048
 
-string FNAME(string a,string b) 
-{
-  string base=query("cache_dir");
-  base += (cvs_version/" ")[2]-".";
-  base += sprintf("-%x%x-", hash(a),hash(b));
-  base += sprintf("%x%x", hash(b+a),hash(reverse(b)+reverse(a)));
-  return base;
-}
+#define FNAME(a,b) (query("cache_dir")+sprintf("%x",hash(reverse(a[6..])))+sprintf("%x",hash(b))+sprintf("%x",hash(reverse(b-" ")))+sprintf("%x",hash(b[12..])))
 
 array get_cache_file(string a, string b)
 {
@@ -685,26 +745,21 @@ array get_cache_file(string a, string b)
 void store_cache_file(string a, string b, array data)
 {
   object fd = open(FNAME(a,b), "wct");
-#if constant(chmod)
-  // FIXME: Should this error be propagated?
-  catch { chmod( FNAME(a,b), 0666 ); };
-#endif
   if(!fd) return;
   fd->write(encode_value(({a,b,data})));
   destruct(fd);
 }
 
 
-array(int)|string write_text(string _args, string text, int size, object id)
+array(int)|string write_text(int _args, string text, int size, object id)
 {
-  string key = base_key+(cvs_version/" ")[2]+_args;
+  string key = base_key+_args;
   array err;
   string orig_text = text;
   mixed data;
-  int elapsed;
-  mapping args = roxen.argcache.lookup( _args ) || ([]);
+  mapping args = find_cached_args(_args) || ([]);
 
-  if(data=cache_lookup(key, text))
+  if(data = cache_lookup(key, text))
   {
     if(args->nocache) // Remove from cache. Very useful for access counters
       cache_remove(key, text);
@@ -715,9 +770,11 @@ array(int)|string write_text(string _args, string text, int size, object id)
     if(size) return data[1];
     return data[0];
   }
+  //werror("Not cached: %O -> %O\n", key, text);
+  //werror("In cache: %O\n", sort(indices(cache->cache)));
 
   // So. We have to actually draw the thing...
-  elapsed = gethrtime();
+
   err = catch
   {
     object img;
@@ -763,24 +820,42 @@ array(int)|string write_text(string _args, string text, int size, object id)
 
 //  cache_set(key, text, "rendering");
 
+#if efun(resolve_font)
     if(args->afont)
-      data = resolve_font(args->afont+" "+(args->font_size||32));
-    else
     {
-      if(!args->nfont) args->nfont = args->font;
+      data = resolve_font(args->afont);
+    } 
+    else 
+#endif
+      if(args->nfont)
+    {
       int bold, italic;
       if(args->bold) bold=1;
       if(args->light) bold=-1;
-      if(args->black) bold=2;
       if(args->italic) italic=1;
-      data = get_font(args->nfont||"default",
-		      (int)args->font_size||32,bold,italic,
+      if(args->black) bold=2;
+      data = get_font(args->nfont,(int)args->font_size||32,bold,italic,
 		      lower_case(args->talign||"left"),
 		      (float)(int)args->xpad, (float)(int)args->ypad);
-    } 
-
-    if (!data) 
+    }
+    else if(args->font)
     {
+      data = resolve_font(args->font);
+      if(!data)
+	data = load_font(args->font, lower_case(args->talign||"left"),
+			 (int)args->xpad,(int)args->ypad);
+    } else {
+      int bold, italic;
+      if(args->bold) bold=1;
+      if(args->light) bold=-1;
+      if(args->italic) italic=1;
+      if(args->black) bold=2;
+      data = get_font(roxen->QUERY(default_font),32,bold,italic,
+		      lower_case(args->talign||"left"),
+		      (float)(int)args->xpad, (float)(int)args->ypad);
+    }
+
+    if (!data) {
       roxen_perror("gtext: No font!\n");
 //       werror("no font found! < "+_args+" <"+text+">\n");
 //       cache_set(key, orig_text, 0);
@@ -797,22 +872,26 @@ array(int)|string write_text(string _args, string text, int size, object id)
       return 0;
     }
   
-// Quantify
-    int q=(int)args->quant||(args->background||args->texture?250:QUERY(cols));
+    int q = (int)args->quant||(args->background||args->texture?250:QUERY(cols));
 
     if(q>255) q=255;
     if(q<3) q=3;
 
+// Quantify
     if(!args->fs)
-      img = img->map_closest(img->select_colors(q-1)+
-			     ({parse_color(args->bg)}));
+    {
+#ifdef QUANT_DEBUG
+      print_colors(img->select_colors(q-1)+({parse_color(args->bg)}));
+#endif
+      img = img->map_closest(img->select_colors(q-1)+({parse_color(args->bg)}));
+    }
 
     if(!args->scroll)
       if(args->fadein)
       {
 	int amount=2, steps=10, delay=10, initialdelay=0, ox;
 	string res = img->gif_begin();
-	sscanf(args->fadein,"%d,%d,%d,%d", amount, steps, delay, initialdelay);
+	sscanf(args->fadein, "%d,%d,%d,%d", amount, steps, delay, initialdelay);
 	if(initialdelay)
 	{
 	  object foo=Image.image(img->xsize(),img->ysize(),@parse_color(args->bg));
@@ -837,31 +916,27 @@ array(int)|string write_text(string _args, string text, int size, object id)
 	  data=({ img->togif(@(args->notrans?({}):parse_color(args->bg))),
 		  ({img->xsize(),img->ysize()})});
 	img=0;
-      } 
-    else 
-    {
-      int len=100, steps=30, delay=5, ox;
-      string res = img->gif_begin() + img->gif_netscape_loop();
-      sscanf(args->scroll, "%d,%d,%d", len, steps, delay);
-      img=img->copy(0,0,(ox=img->xsize())+len-1,img->ysize()-1);
-      img->paste(img, ox, 0);
-      for(int i = 0; i<steps; i++)
-      {
-	int xp = i*ox/steps;
-	res += img->copy(xp, 0, xp+len, img->ysize(),
-			 @parse_color(args->bg))->gif_add(0,0,delay);
-      }
-      res += img->gif_end();
-      data = ({ res, ({ len, img->ysize() }) });
+      } else {
+	int len=100, steps=30, delay=5, ox;
+	string res = img->gif_begin() + img->gif_netscape_loop();
+	sscanf(args->scroll, "%d,%d,%d", len, steps, delay);
+	img=img->copy(0,0,(ox=img->xsize())+len-1,img->ysize()-1);
+	img->paste(img, ox, 0);
+	for(int i = 0; i<steps; i++)
+	{
+	  int xp = i*ox/steps;
+	  res += img->copy(xp, 0, xp+len, img->ysize(),
+			   @parse_color(args->bg))->gif_add(0,0,delay);
+	}
+	res += img->gif_end();
+	data = ({ res, ({ len, img->ysize() }) });
     }
 
-    elapsed = gethrtime()-elapsed;
-    werror("elapsed: %d\n", elapsed);
 // place in caches, as a gif image.
-    if(elapsed > 100*1000 && !args->nocache)
+    if(!args->nocache)
       store_cache_file( key, orig_text, data );
     cache_set(key, orig_text, data);
-//  werror("Cache set:  %O -> %O\n", key, orig_text);
+    //  werror("Cache set:  %O -> %O\n", key, orig_text);
     if(size) return data[1];
     return data[0];
   };
@@ -885,13 +960,24 @@ array stat_file(string f, object rid)
 
 array find_dir(string f, object rid)
 {
+  if(!strlen(f))
+  {
+    if(!args_restored) restore_cached_args();
+    return Array.map(indices(cached_args), lambda(mixed m){return (string)m;});
+  }
+  return ({"Example"});
 }
 
+  
 mapping find_file(string f, object rid)
 {
-  string id;
+  int id;
+#if constant(Gz)
+  object g;
+#endif
 
-  if((rid->method != "GET") || (sscanf(f,"%[^/]/%s", id, f) != 2))
+  if((rid->method != "GET") 
+     || (sscanf(f,"%d/%s", id, f) != 2))
     return 0;
 
   if( query("gif") && f[strlen(f)-4..]==".gif") // Remove .gif
@@ -900,28 +986,145 @@ mapping find_file(string f, object rid)
   if(!sizeof(f))   // No string to write.
     return 0;
 
-  if(f[0] != '^')
-  {
-    mapping t = roxen.argcache.lookup( f );
-    if(!t)
-      error("Invalid text identifier. Aborting\n");
-    f = t->t;
-  } else {
-    if(QUERY(allowgenericurls))
-      f = f[1..];
-  }
+  if (f[0] == '$') // Illegal in BASE64
+    f = f[1..];
+#if constant(Gz)
+  else if (sizeof(indices(g=Gz)))
+    catch(f = g->inflate()->inflate(MIME.decode_base64(f)));
+#endif
+  else
+    catch(f = MIME.decode_base64(f));
+
   // Generate the image.
   return http_string_answer(write_text(id,f,0,rid), "image/gif");
 }
-
+mapping url_cache = ([]);
 string quote(string in)
 {
-  string id;
-  werror("quote "+in+" -> ");
-  id = roxen.argcache.store( ([ "t":in ]) );
-  werror("'"+id+"'\n");
-  return id;
+  string option;
+  if(option = url_cache[in]) return option;
+  object g;
+  if (sizeof(indices(g=Gz))) {
+    option=MIME.encode_base64(g->deflate()->deflate(in));
+  } else {
+    option=MIME.encode_base64(in);
+  }
+  if(search(in,"/")!=-1) return url_cache[in]=option;
+  string res="$";	// Illegal in BASE64
+  for(int i=0; i<strlen(in); i++)
+    switch(in[i])
+    {
+     case 'a'..'z':
+     case 'A'..'Z':
+     case '0'..'9':
+     case '.': case ',': case '!':
+      res += in[i..i];
+      break;
+     default:
+      res += sprintf("%%%02x", in[i]);
+    }
+  if(strlen(res) < strlen(option)) return url_cache[in]=res;
+  return url_cache[in]=option;
 }
+
+#define ARGHASH query("cache_dir")+"ARGS_"+hash(mc->name)
+
+int last_argstat;
+
+void restore_cached_args()
+{
+  args_restored = 1;
+  array a = file_stat(ARGHASH);
+  if(a && (a[ST_MTIME] > last_argstat))
+  {
+    last_argstat = a[ST_MTIME];
+    object o = open(ARGHASH, "r");
+    if(o)
+    {
+      string data = o->read();
+      catch {
+	object q;
+	if(sizeof(indices(q=Gz)))
+	  data=q->inflate()->inflate(data);
+      };
+      catch {
+	cached_args |= decode_value(data);
+      };
+    }
+    NUMBER_LOCK();
+    if (cached_args && sizeof(cached_args)) {
+      number = sort(indices(cached_args))[-1]+1;
+    } else {
+      cached_args = ([]);
+      number = 0;
+    }
+    NUMBER_UNLOCK();
+  }
+}
+
+void save_cached_args()
+{
+  restore_cached_args();
+  object o = open(ARGHASH, "wct");
+  if(o)
+  {
+    string data=encode_value(cached_args);
+    catch {
+      object q;
+      if(sizeof(indices(q=Gz)))
+	data=q->deflate()->deflate(data);
+    };
+    o->write(data);
+  }
+}
+
+mapping find_cached_args(int num)
+{
+  if(!args_restored) restore_cached_args();
+  if(cached_args[num]) return cached_args[num];
+  restore_cached_args(); /* Not slow anymore, checks with stat... */
+  if(cached_args[num]) return cached_args[num];
+  return 0;
+}
+
+
+
+int find_or_insert(mapping find)
+{
+  mapping f2 = copy_value(find);
+  int res;
+  string q;
+
+  foreach(glob("magic_*", indices(f2)), q) 
+    m_delete(f2,q);
+
+  if(!args_restored)
+    restore_cached_args( );
+
+  array a=indices(f2),b=values(f2);
+  sort(a,b);
+  q = a*""+Array.map(b, lambda(mixed x) { return (string)x; })*"";
+
+  if(res = cached_args[ q ])
+    return res;
+
+  restore_cached_args(); /* Not slow now, checks with stat.. */
+
+  if(res = cached_args[ q ])
+    return res;
+
+  int n;
+  NUMBER_LOCK();
+  cached_args[ number ] = f2;
+  cached_args[ q ] = number;
+  n = number++;
+  NUMBER_UNLOCK();
+
+  remove_call_out(save_cached_args);
+  call_out(save_cached_args, 10);
+  return n;
+}
+
 
 string magic_javascript_header(object id)
 {
@@ -934,24 +1137,20 @@ string magic_javascript_header(object id)
      "  setTimeout(\"top.window.status = '\"+txt+\"'\", 100);\n"
      "}\n"
      "</script>\n");
+
 }
 
 
 string magic_image(string url, int xs, int ys, string sn,
 		   string image_1, string image_2, string alt,
-		   string mess,object id,string input, 
-		   string extra_args,string lp)
+		   string mess,object id,string input,string extra_args,string lp)
 {
   if(!id->supports->images) return (lp?lp:"")+alt+(lp?"</a>":"");
   if(!id->supports->netscape_javascript)
     return (!input)?
        ("<a "+extra_args+"href=\""+url+"\"><img src=\""+image_1+"\" name="+sn+" border=0 "+
        "alt=\""+alt+"\"></a>"):
-    ("<input border=0 type=image "+extra_args+" src=\""+image_1+"\" name=\""+input+"\">");
-
-  if(input)
-    return 
-      "<input border=0 type=image "+extra_args+" src=\""+image_1+"\" name=\""+input+"\">";
+    ("<input type=image "+extra_args+" src=\""+image_1+"\" name="+input+">");
 
   return
     ("<script>\n"
@@ -960,7 +1159,7 @@ string magic_image(string url, int xs, int ys, string sn,
      "</script>\n"+
      ("<a "+extra_args+"href=\""+url+"\" "+
       (input?"onClick='document.forms[0].submit();' ":"")
-      +" onMouseover=\"i('"+sn+"',"+sn+"h,'"+(mess||url)+"'); return true;\"\n"
+      +"onMouseover=\"i('"+sn+"',"+sn+"h,'"+(mess||url)+"'); return true;\"\n"
       "onMouseout=\"top.window.status='';document.images['"+sn+"'].src = "+sn+"l.src;\"><img "
       "width="+xs+" height="+ys+" src=\""+image_1+"\" name="+sn+
       " border=0 alt=\""+alt+"\" ></a>"));
@@ -1000,6 +1199,7 @@ string tag_gtext_id(string t, mapping arg,
   if(defines->bg && !arg->bg) arg->bg=defines->bg;
   if(defines->nfont && !arg->nfont) arg->nfont=defines->nfont;
   if(defines->afont && !arg->afont) arg->afont=defines->afont;
+  if(defines->font &&  !arg->font) arg->font=defines->font;
 
   if(arg->background) 
     arg->background = fix_relative(arg->background,id);
@@ -1014,12 +1214,12 @@ string tag_gtext_id(string t, mapping arg,
   if(arg->alpha) 
     arg->alpha = fix_relative(arg->alpha,id);
 
-  string id = roxen.argcache.store( arg );
+  int num = find_or_insert( arg );
 
   if(!short)
-    return query_location()+id+"/^";
+    return query_location()+num+"/";
   else
-    return id;
+    return (string)num;
 }
 
 string tag_graphicstext(string t, mapping arg, string contents,
@@ -1027,14 +1227,6 @@ string tag_graphicstext(string t, mapping arg, string contents,
 {
   if((contents-" ")=="") 
     return "";
-  
-  if(id->prestate->noimages)
-  {
-    contents = replace(contents, "&ss;", "");
-    if(arg->submit)
-      return "<input type=submit name='"+arg->name+"' value='"+contents+"'>";
-    return contents;
-  }
 //Allow <accessed> and others inside <gtext>.
   if(arg->nowhitespace)
   {
@@ -1042,12 +1234,10 @@ string tag_graphicstext(string t, mapping arg, string contents,
     sscanf(reverse(contents),"%*[ \n\r\t]%s",contents);
     contents=reverse(contents);
   }
-  if(arg->help)
-  {
-    if(t == "gtext")
-      return doc();
+  if(t=="gtext" && arg->help)
+    return doc();
+  else if(arg->help)
     return "This tag calls &lt;gtext&gt; with different default values.";
-  }
   if(arg->background) 
     arg->background = fix_relative(arg->background,id);
   if(arg->texture) 
@@ -1065,7 +1255,11 @@ string tag_graphicstext(string t, mapping arg, string contents,
   string gif="";
   if(query("gif")) gif=".gif";
   
+#if efun(_static_modules)
   contents = parse_rxml(contents, id, foo, defines);
+#else
+  contents = parse_rxml(contents, id, foo);
+#endif
 
   string lp, url, ea;
   string pre, post, defalign, gt, rest, magic;
@@ -1104,7 +1298,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
   if(defines->bg && !arg->bg) arg->bg=defines->bg;
   if(defines->nfont && !arg->nfont) arg->nfont=defines->nfont;
   if(defines->afont && !arg->afont) arg->afont=defines->afont;
-  if(defines->font &&  !arg->nfont) arg->font=defines->font;
+  if(defines->font &&  !arg->font) arg->font=defines->font;
   if(defines->bold && !arg->bold) arg->bold=defines->bold;
   if(defines->italic && !arg->italic) arg->italic=defines->italic;
   if(defines->black && !arg->black) arg->black=defines->black;
@@ -1133,8 +1327,8 @@ string tag_graphicstext(string t, mapping arg, string contents,
   string na = arg->name, al=arg->align;
   m_delete(arg, "name"); m_delete(arg, "align");
 
-  // Now the 'arg' mapping is modified enough..
-  string num = roxen.argcache.store( arg );
+  // Now the 'args' mapping is modified enough..
+  int num = find_or_insert( arg );
 
   gt=contents;
   rest="";
@@ -1183,18 +1377,11 @@ string tag_graphicstext(string t, mapping arg, string contents,
 	res += ({"\n"});
       } else {
 	array size = write_text(num,word,1,id);
-	if(input)
-	  res += ({"<input type=image name=\""+na+"\" border=0 alt=\""+
-		   (arg->alt?arg->alt:replace(gt,"\"","'"))+
-		   "\" src=\""+query_location()+num+"/"+quote(word)+gif+
-		   "\""
-		   " width="+size[0]+" height="+size[1]+">" });
-	else
-	  res += ({ "<img border=0 alt=\"" +
+	res += ({ "<img border=0 alt=\"" +
 		    replace(arg->alt || word, "\"", "'") +
 		    "\" src=\"" + pre + quote(word) + gif + "\" width=" +
 		    size[0] + " height=" + size[1] + " " + ea + ">\n"
-	  });
+		    });
       }
     }
     if(lp) res += ({ "</a>"+post });
@@ -1226,7 +1413,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
       m_delete(arg, q);
     }
     
-    string num2 = roxen.argcache.store( arg );
+    int num2 = find_or_insert(arg);
     array size = write_text(num2,gt,1,id);
 
     if(!defines->magic_java) res = magic_javascript_header(id);
@@ -1286,7 +1473,7 @@ string|array (string) tag_body(string t, mapping args, object id, object file,
      ||args->background||args->vlink)
     cols=1;
 
-#define FIX(Y,Z,X) do{if(!args->Y || args->Y==""){if(cols){defines->X=Z;args->Y=Z;changed=1;}}else{defines->X=args->Y;catch{if(QUERY(colormode)&&args->Y[0]!='#'){args->Y=ns_color(parse_color(args->Y));changed=1;}};}}while(0)
+#define FIX(Y,Z,X) do{if(!args->Y || args->Y==""){if(cols){defines->X=Z;args->Y=Z;changed=1;}}else{defines->X=args->Y;if(QUERY(colormode)&&args->Y[0]!='#'){args->Y=ns_color(parse_color(args->Y));changed=1;}}}while(0)
 
   if(!search((id->client||({}))*"","Mosaic"))
   {
@@ -1331,10 +1518,9 @@ string|array(string) tag_fix_color(string tagname, mapping args, object id,
 }
 
 string|void pop_color(string tagname,mapping args,object id,object file,
-		      mapping defines)
+		 mapping defines)
 {
-  if(args->help) 
-    return "This end-tag is parsed by &lt;gtext&gt; to get the document colors.";
+  if(args->help) return "This end-tag is parsed by &lt;gtext&gt; to get the document colors.";
   array c = id->misc->colors;
   if(!c ||!sizeof(c)) 
     return;
@@ -1349,7 +1535,8 @@ string|void pop_color(string tagname,mapping args,object id,object file,
       defines->bg = c[-i-1][1];
       break;
     }
-  id->misc->colors = c[..sizeof(c)-i-2];
+  c = c[..sizeof(c)-i-2];
+  id->misc->colors = c;
 }
 
 mapping query_tag_callers()
