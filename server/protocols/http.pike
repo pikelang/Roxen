@@ -1,14 +1,14 @@
 // This is a roxen module.
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 1998, Idonex AB.
-// $Id: http.pike,v 1.158 1999/10/04 19:12:45 per Exp $
+// $Id: http.pike,v 1.159 1999/10/04 19:14:00 marcus Exp $
 
 #define MAGIC_ERROR
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
 #endif
-constant cvs_version = "$Id: http.pike,v 1.158 1999/10/04 19:12:45 per Exp $";
+constant cvs_version = "$Id: http.pike,v 1.159 1999/10/04 19:14:00 marcus Exp $";
 // HTTP protocol module.
 #include <config.h>
 private inherit "roxenlib";
@@ -1594,9 +1594,9 @@ void got_data(mixed fooid, string s)
     /* Need to authenticate with the configuration */
     if (sizeof(misc->proxyauth) >= 2) 
     {
-      misc->proxyauth[1] = MIME.decode_base64(misc->proxyauth[1]);
+      //    misc->proxyauth[1] = MIME.decode_base64(misc->proxyauth[1]);
       if (conf->auth_module) 
-        misc->proxyauthy
+        misc->proxyauth
           = conf->auth_module->auth(misc->proxyauth,this_object() );
     }
   }
