@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.665 2001/05/16 01:16:17 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.666 2001/05/16 07:58:00 per Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -1442,7 +1442,7 @@ mapping(string:Protocol) build_protocols_mapping()
 {
   mapping protocols = ([]);
   int st = gethrtime();
-  report_notice("Protocol handlers ... ");
+  report_debug("Protocol handlers ... ");
 #ifndef DEBUG
   class lazy_load( string prog, string name )
   {
@@ -1483,7 +1483,7 @@ mapping(string:Protocol) build_protocols_mapping()
 #if !constant(HTTPLoop.prog)
     if( s == "fhttp" ) continue;
 #endif
-    report_notice( s+" " );
+    report_debug( s+" " );
 
     catch
     {
@@ -1505,7 +1505,7 @@ mapping(string:Protocol) build_protocols_mapping()
 	continue;
     }
 #endif
-    report_notice( s+" " );
+    report_debug( s+" " );
     catch {
 #ifdef DEBUG
       protocols[ s ] = (program)("../local/protocols/prot_"+s+".pike");
@@ -1514,7 +1514,7 @@ mapping(string:Protocol) build_protocols_mapping()
 #endif
     };
   }
-  report_notice(" [%.1fms]\n", (gethrtime()-st)/1000.0 );
+  report_debug(" [%.1fms]\n", (gethrtime()-st)/1000.0 );
   return protocols;
 }
 
