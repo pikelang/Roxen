@@ -12,7 +12,7 @@
  * Chris Burgess <chris@ibex.co.nz>
  */
 
-constant cvs_version = "$Id: killframe.pike,v 1.35 2001/09/21 15:58:16 jhs Exp $";
+constant cvs_version = "$Id: killframe.pike,v 1.36 2004/05/24 23:14:51 mani Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -51,8 +51,6 @@ constant tagdoc=(["killframe":#"<desc tag='tag'><p><short>
 string tag_killframe( string tag, mapping m, object id )
 {
   NOCACHE();
-
-  if( !id->supports->javascript ) return "";
 
   string javascript;
 
@@ -93,8 +91,8 @@ string tag_killframe( string tag, mapping m, object id )
   if(id->query)
     my_url += "?"+ id->query;
 
-  //top.location = self.location breaks some versions of IE.
-  //Mozilla 3 on Solaris cows with top.frames.length
+  // top.location = self.location breaks some versions of IE.
+  // Mozilla 3 on Solaris cows with top.frames.length
   if( id->client && id->client[0][..8] == "Mozilla/3" )
     javascript = ( "   if(top.location != \""+ my_url  +"\")\n"
 		   "     top.location = \""+ my_url  +"\";\n" );

@@ -3,7 +3,7 @@
 // ISMAP image map support. Quite over-complex, really.  An example is
 // the support for index images, and chromatic distances.
 
-constant cvs_version = "$Id: ismap.pike,v 1.19 2001/09/03 18:31:04 nilsson Exp $";
+constant cvs_version = "$Id: ismap.pike,v 1.20 2004/05/24 23:13:23 mani Exp $";
 
 #include <module.h>
 inherit "module";
@@ -553,9 +553,6 @@ mapping|string handle_file_extension(Stdio.File file, string ext, RequestID id)
   if(id->query)
     sscanf(id->query, "%d,%d", x, y);
 
-  if(!id->supports->images)
-    x = y = -1;
-  
   req++;
 
   map_file_name=map_get_filename(x, y, id->not_query, file, id->conf);
