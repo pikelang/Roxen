@@ -11,42 +11,32 @@
  * Make sure links work _inside_ unfolded dokuments.
  */
 
-constant cvs_version = "$Id: directories2.pike,v 1.17 1999/12/27 13:41:49 jhs Exp $";
+constant cvs_version = "$Id: directories2.pike,v 1.18 1999/12/27 20:23:03 nilsson Exp $";
 constant thread_safe=1;
 
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
+int DIRLISTING;
+array README;
 void start( int num, Configuration conf )
 {
-  module_dependencies (conf, ({ "foldlist", "rxmltags" }));
+  module_dependencies (conf, ({ "foldlist" }));
+  DIRLISTING=query("dirlisting");
+  README=query("readme");
 }
 
 array register_module()
 {
   return ({ MODULE_DIRECTORIES | MODULE_PARSER,
-	      "Enhanced directory listings",
-	      "This module is an experimental directory parsing module. "
-	      "It pretty prints a list of files much like the ordinary "
-	      "directory parsing module. "
-	      "The difference is that this one uses the flik-module "
-	      "for the fold/unfolding, and uses relative URL's with "
-	      "the help of some new tags: "
-	      "&lt;rel&gt;, &lt;arel&gt; and &lt;insert-quoted&gt;.",
+	    "Enhanced directory listings",
+	    "This module is an experimental directory parsing module. "
+	    "It pretty prints a list of files much like the ordinary "
+	    "directory parsing module. "
+	    "The difference is that this one uses the flik-module "
+	    "for the fold/unfolding, and uses relative URL's.",
 	      0, 1 });
-}
-
-TAGDOCUMENTATION
-#ifdef manual
-constant tagdoc=(["rel":"<desc cont></desc>",
-		  "arel":"<desc cont></desc>",
-		  "insert-quoted":"<desc tag></desc>"]);
-#endif
-
-int dirlisting_not_set()
-{
-  return(!QUERY(dirlisting));
 }
 
 void create()
@@ -63,9 +53,10 @@ void create()
 	 "If disabled, a file not found error will be generated "
 	 "instead.<br>\n");
 
-  defvar("readme", 1, "Include readme files", TYPE_FLAG,
-	 "If set, include readme files in directory listings",
-	 0, dirlisting_not_set);
+  defvar("readme", ({ "README.html", "README" }),
+	 "Include readme files", TYPE_STRING_LIST,
+	 "Include one of these readme files in directory listings",
+	 0, !DIRLISTING);
 
   defvar("override", 0, "Allow directory index file overrides", TYPE_FLAG,
 	 "If this variable is set, you can get a listing of all files "
@@ -73,55 +64,44 @@ void create()
 	 "this: <a href=http://www.roxen.com//>http://www.roxen.com//</a>"
 	 ". It is _very_ useful for debugging, but some people regard it as a "
 	 "security hole.",
-	 0, dirlisting_not_set);
+	 0, !DIRLISTING);
 
   defvar("size", 1, "Include file size", TYPE_FLAG,
 	 "If set, include the size of the file in the listing.",
-	 0, dirlisting_not_set);
+	 0, !DIRLISTING);
 }
 
-array(string) container_rel(string t, mapping args, string contents, RequestID id)
+string container_arel(string t, mapping m, string contents, RequestID id)
 {
-  string old_base="";
-  string res;
+  if (id->misc->rel_base)
+    m->href = id->misc->rel_base+m->href;
 
-  if (id->misc->rel_base) {
-    old_base = id->misc->rel_base;
-  } else {
-    old_base = "";
-  }
-  id->misc->rel_base = old_base + args->base;
-
-  res = parse_rxml(contents, id);
-
-  id->misc->rel_base = old_base;
-  return ({res});
+  return make_container("a", m, contents);
 }
 
-string container_arel(string t, mapping args, string contents, RequestID id)
+string tag_directory_insert(string t, mapping m, RequestID id)
 {
-  if (id->misc->rel_base) {
-    args->href = id->misc->rel_base+args->href;
+  if(!m->file) return rxml_error(t, "File not specified.", id);
+  if(m->dir) {
+    string old_base=id->misc->rel_base||"";
+    id->misc->rel_base=old_base+m->file;
+    string ret=describe_directory(m->file, id);
+    id->misc->rel_base=old_base;
+    return ret;
+  }
+  Stdio.File f;
+  if(f=open(fix_relative(m->file, id), "r")) {
+    string s=f->read();
+    if(s && m->quote=="none") return s;
+    if(s) return html_encode_string(s);
   }
 
-  return make_container("a", args, contents);
-}
-
-string tag_insert_quoted(string t, mapping args, RequestID id)
-{
-  if (args->file) {
-    string s = id->conf->try_get_file(args->file, id);
-
-    if (s) return html_encode_string(s);
-
-    return rxml_error(t, "Couldn't open file \""+args->file+"\".", id);
-  }
-  return rxml_error(t, "File not specified.", id);
+  return rxml_error(t, "Couldn't open file \""+m->file+"\".", id);
 }
 
 string find_readme(string d, RequestID id)
 {
-  foreach(({ "README.html", "README"}), string f) {
+  foreach(query("readme"), string f) {
     string readme = id->conf->try_get_file(d+f, id);
 
     if (readme) {
@@ -137,21 +117,16 @@ string find_readme(string d, RequestID id)
 string describe_directory(string d, RequestID id)
 {
   array(string) path = d/"/" - ({ "" });
-  array(string) dir;
-  int override = (path[-1] == ".");
-  string result = "";
-  int toplevel;
 
   path -= ({ "." });
   d = "/"+path*"/" + "/";
 
-  dir = id->conf->find_dir(d, id);
+  array(string) dir = id->conf->find_dir(d, id);
 
-  if (dir && sizeof(dir)) {
+  if (dir && sizeof(dir))
     dir = sort(dir);
-  } else {
+  else
     dir = ({});
-  }
 
   if(id->prestate->spartan_directories)
     return sprintf("<html><head><title>Directory listing of %s</title></head>\n"
@@ -168,17 +143,18 @@ string describe_directory(string d, RequestID id)
 				 return "<a href=\""+f+"\">"+f+"</a>";
 			     }, d, id->conf, id)*"\n"+"</pre></body></html>\n");
 
-  if(toplevel = !id->misc->dir_no_head)
+  string result="";
+  int level=id->misc->dir_no_head++;
+  if(!level)
   {
-    id->misc->dir_no_head = 1;
+    result = "<html><head><title>Directory listing of "+d+"</title></head>\n"
+	     "<body><debug on>\n<h1>Directory listing of "+d+"</h1>\n<p>";
 
-    result += "<html><head><title>Directory listing of "+d+"</title></head>\n"
-	      "<body>\n<h1>Directory listing of "+d+"</h1>\n<p>";
-
-    if(QUERY(readme))
+    if(sizeof(README))
       result += find_readme(d, id);
     result += "<hr noshade><pre>\n";
   }
+
   result += "<foldlist folded>\n";
 
   foreach(sort(dir), string file) {
@@ -210,8 +186,8 @@ string describe_directory(string d, RequestID id)
       break;
     }
     result += sprintf("<ft><img border=\"0\" src=\"%s\" alt=\"\"> "
-		      "<arel href=\"%s\">%-40s</arel> %8s %-20s\n",
-		      icon, file, file, sizetostring(len), type);
+		      "<a href=\"%s\">%-40s</a> %8s %-20s\n",
+		      icon, id->misc->rel_base+file, file, sizetostring(len), type);
 
     array(string) split_type = type/"/";
     string extras = "Not supported for this file type";
@@ -221,10 +197,10 @@ string describe_directory(string d, RequestID id)
       if (sizeof(split_type) > 1) {
 	switch(split_type[1]) {
 	case "html":
-	  extras = "</pre>\n<insert file=\""+d+file+"\"><pre>";
+	  extras = "</pre>\n<directory-insert quote=none file=\""+d+file+"\"><pre>";
 	  break;
 	case "plain":
-	  extras = "<insert-quoted file=\""+d+file+"\">";
+          extras = "<directory-insert file=\""+d+file+"\">";
 	  break;
 	}
       }
@@ -234,7 +210,7 @@ string describe_directory(string d, RequestID id)
 	switch(split_type[1]) {
 	case "x-include-file":
 	case "x-c-code":
-	  extras = "<insert-quoted file=\""+d+file+"\">";
+	  extras = "<directory-insert file=\""+d+file+"\">";
 	  break;
 	}
       }
@@ -244,8 +220,7 @@ string describe_directory(string d, RequestID id)
       break;
     case "   Directory":
     case "   Module location":
-      extras = "<rel base=\""+file+"\">"
-	"<insert nocache file=\""+d+file+".\"></rel>";
+      extras = "<directory-insert nocache file=\""+d+file+"\" dir>";
       break;
     case "Unknown":
       switch(lower_case(file)) {
@@ -260,7 +235,7 @@ string describe_directory(string d, RequestID id)
       case "makefile":
       case "makefile.in":
       case "readme":
-	extras = "<insert-quoted file=\""+d+file+"\">";
+	extras = "<directory-insert file=\""+d+file+"\">";
 	break;
       }
       break;
@@ -268,11 +243,11 @@ string describe_directory(string d, RequestID id)
     result += "<fd>"+extras+"</fd></ft>\n";
   }
   result += "</foldlist>\n";
-  if (toplevel) {
+  if (!level) {
     result +="</pre></body></html>\n";
   }
 
-  return(result);
+  return result;
 }
 
 string|mapping parse_directory(RequestID id)
@@ -295,7 +270,7 @@ string|mapping parse_directory(RequestID id)
    * indexfile.
    */
   if(!(sizeof(f)>1 && f[-2]=='/' && f[-1]=='.' &&
-       QUERY(dirlisting) && QUERY(override))) {
+       DIRLISTING && QUERY(override))) {
     /* Handle indexfiles */
     string file, old_file;
     string old_not_query;
@@ -309,11 +284,12 @@ string|mapping parse_directory(RequestID id)
     }
     id->not_query = old_not_query;
   }
-  if (!QUERY(dirlisting)) {
+  if (!DIRLISTING) {
     return 0;
   }
   if (f[-1] != '.') {
     f += ".";
   }
+  id->misc->rel_base="";
   return http_string_answer(parse_rxml(describe_directory(f, id), id));
 }
