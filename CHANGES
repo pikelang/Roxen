@@ -15,10 +15,9 @@ o You can now use path's like /cvs:/roxen_src/server/modules as a module
 
   So normal pike-scripts can also take advantage of this.
 
-
 o The somewhat annoying 'Roxen is alive!' message will no longer be 
-  written to the log once per minute unless something else is always 
-  written to it.
+  written to the log once per minute unless something else is written
+  to the log.
 
 o Root execution of CGI scripts disabled.
 
