@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.34 2004/06/04 08:33:19 _cvs_stephen Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.35 2004/06/07 10:59:27 _cvs_stephen Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -627,41 +627,6 @@ string simpletag_aconf(string tag, mapping m,
   return RXML.t_xml->format_tag("a", m, q);
 }
 
-class TagPathplugin
-{
-  inherit RXML.Tag;
-  constant name = "emit";
-  constant plugin_name = "path";
-
-  array get_dataset(mapping m, RequestID id)
-  {
-    string fp = "";
-    array res = ({});
-    string p = m->path || id->not_query;
-    if( m->trim )
-      sscanf( p, "%s"+m->trim, p );
-    if( has_suffix(p, "/") )
-      p = p[..sizeof(p)-2];
-    array q = p / "/";
-    if( m->skip )
-      q = q[(int)m->skip..];
-    if( m["skip-end"] )
-      q = q[..sizeof(q)-((int)m["skip-end"]+1)];
-    foreach( q, string elem )
-    {
-      fp += "/" + elem;
-      fp = replace( fp, "//", "/" );
-      res += ({
-        ([
-          "name":elem,
-          "path":fp
-        ])
-      });
-    }
-    return res;
-  }
-}
-
 class TagInsertVariable {
   inherit RXML.Tag;
   constant name = "insert";
@@ -1082,42 +1047,6 @@ using the pre tag.
 
  <p>All other attributes will be inherited by the generated <tag>a</tag> tag.</p>
 </attr>",
-
-//----------------------------------------------------------------------
-
-"emit#path":({ #"<desc type='plugin'><p><short>
- Prints paths.</short> This plugin traverses over all directories in
- the path from the root up to the current one.</p>
-</desc>
-
-<attr name='path' value='string'><p>
-   Use this path instead of the document path</p>
-</attr>
-
-<attr name='trim' value='string'><p>
- Removes all of the remaining path after and including the specified
- string.</p>
-</attr>
-
-<attr name='skip' value='number'><p>
- Skips the 'number' of slashes ('/') specified, with beginning from
- the root.</p>
-</attr>
-
-<attr name='skip-end' value='number'><p>
- Skips the 'number' of slashes ('/') specified, with beginning from
- the end.</p>
-</attr>",
-	       ([
-"&_.name;":#"<desc type='entity'><p>
- Returns the name of the most recently traversed directory.</p>
-</desc>",
-
-"&_.path;":#"<desc type='entity'><p>
- Returns the path to the most recently traversed directory.</p>
-</desc>"
-	       ])
-}),
 
 //----------------------------------------------------------------------
 
