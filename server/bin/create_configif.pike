@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.14 2000/03/28 16:27:41 grubba Exp $
+ * $Id: create_configif.pike,v 1.15 2000/03/30 23:32:26 nilsson Exp $
  *
  * Create an initial administration interface server.
  */
@@ -46,7 +46,8 @@ int main(int argc, array argv)
   foreach( get_dir( configdir )||({}), string cf )
     catch 
     {
-      if( search( Stdio.read_file( configdir+"/"+cf ), 
+      if( cf[-1]!='~' &&
+	  search( Stdio.read_file( configdir+"/"+cf ), 
                   "'config_filesystem#0'" ) != -1 )
       {
         werror("There is already an administration interface present in "
