@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.272 1999/05/08 19:36:02 grubba Exp $
+ * $Id: roxen.pike,v 1.273 1999/05/12 08:02:49 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.272 1999/05/08 19:36:02 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.273 1999/05/12 08:02:49 per Exp $";
 
 object backend_thread;
 
@@ -1796,15 +1796,20 @@ void enable_configurations()
       perror("Error while loading configuration "+config+":\n"+
 	     describe_backtrace(err)+"\n");
   };
+  enabling_configurations = 0;
+}
+
+
+void enable_configurations_modules()
+{
   foreach(configurations, object config)
   {
+    array err;
     if(err=catch { config->enable_all_modules();  })
       perror("Error while loading modules in configuration "+config->name+":\n"+
 	     describe_backtrace(err)+"\n");
   };
-  enabling_configurations = 0;
 }
-
 
 // return the URL of the configuration interface. This is not as easy
 // as it sounds, unless the administrator has entered it somewhere.
@@ -2932,11 +2937,16 @@ int main(int|void argc, array (string)|void argv)
   
   initiate_configuration_port( 1 );
   enable_configurations();
+  if(set_u_and_gid())
+    roxen_perror("Setting UID and GID ...\n");
+
+  enable_configurations_modules();
+
+  
 // Rebuild the configuration interface tree if the interface was
 // loaded before the configurations was enabled (a configuration is a
 // virtual server, perhaps the name should be changed internally as
 // well.. :-)
-  
   if(root)
   {
     destruct(configuration_interface());
@@ -2946,9 +2956,6 @@ int main(int|void argc, array (string)|void argv)
   call_out(update_supports_from_roxen_com,
 	   QUERY(next_supports_update)-time());
   
-  if(set_u_and_gid())
-    roxen_perror("Setting UID and GID ...\n");
-
 #ifdef THREADS
   start_handler_threads();
   catch( this_thread()->set_name("Backend") );
