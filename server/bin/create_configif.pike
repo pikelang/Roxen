@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.7 2000/03/07 18:56:46 grubba Exp $
+ * $Id: create_configif.pike,v 1.8 2000/03/07 19:28:56 grubba Exp $
  *
  * Create an initial configuration interface server.
  */
@@ -63,7 +63,7 @@ int main(int argc, array argv)
 
     do {
       user = rl->read( "Administrator user name [administrator]: ");
-    } while(((search(user, "/") != -1) || (search(user, "\\"))) &&
+    } while(((search(user, "/") != -1) || (search(user, "\\") != -1)) &&
 	    write("User name may not contain slashes.\n"));
     if( !strlen(user-" ") )
       user = "administrator";
