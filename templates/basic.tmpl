@@ -1,4 +1,4 @@
-<include file=gtext_headers.inc>
+<include file=gtext_headers.inc bg_color=$$text_bg_color$$>
 <include file=bg_image.inc>
 
 <formoutput quote='£'>
@@ -6,28 +6,31 @@
 <head><title><as-meta var=title></title></head>
 <body bgcolor='$$bg_color$$' text='$$text_color$$' link='$$link_color$$'
       vlink='$$vlink_color$$' alink='$$alink_color$$' £bg_image£>
-  <table>
+  <table border=0 cellpadding=5 cellspacing=0>
     <tr>
-      <td colspan=2></td>
-      <td align=$$title_align$$>
+      <td><img src=/loga.gif alt="">
+        <img src=/internal-roxen-unit width=1 height=1 alt=""></td>
+      <td align=$$title_align$$ valign=bottom>
         <gtext bg=$$bg_color$$ fg=$$title_color$$
 	       scale=$$title_size$$
 	       £title_shadow£ $$title_font_style$$
                nfont=$$title_font$$><as-meta var=title></gtext></td>
     </tr>
     <tr>
-      <td valign=top><img src="/internal-roxen-unit" height=30 width=1>
+      <td rowspan=3 valign=top>
         <include file='$$nav_name$$'>
       </td>
-      <td width=5%></td>
-      <td valign=top>
+      <td valign=top bgcolor=$$text_bg_color$$ £text_bg_image£>
         <tmplinsert tag=content>
       </td>
     </tr>
     <tr>
-      <td></td>
-      <td></td>
-      <td align=$$footer_align$$><insert file=/footer.html</td> 
+      <td height=20 bgcolor=$$text_bg_color$$ £text_bg_image£>
+        <img src=/internal-roxen-unit width=1 height=1 alt=""></td> 
+    </tr>
+    <tr>
+      <td align=$$footer_align$$ bgcolor=$$text_bg_color$$ £text_bg_image£>
+        <insert file=/footer.html></td> 
     </tr>
   </table>
 </body>
