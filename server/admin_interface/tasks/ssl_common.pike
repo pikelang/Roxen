@@ -1,8 +1,8 @@
 /*
- * $Id: ssl_common.pike,v 1.8 2002/11/06 01:19:38 mani Exp $
+ * $Id: ssl_common.pike,v 1.9 2004/05/28 19:21:48 _cvs_stephen Exp $
  */
 
-#if constant(_Crypto) 
+#if constant(Crypto) 
 
 #if 0
 #define WERROR werror
@@ -41,7 +41,7 @@ mixed page_0(object id, object mc)
 }
 
 
-#if constant(Crypto.rsa)
+#if constant(Crypto.RSA)
 mixed verify_0(object id, object mc)
 {
   int key_size = (int) id->variables->key_size;
@@ -73,7 +73,7 @@ mixed verify_0(object id, object mc)
 
   privs = 0;
 
-  object rsa = Crypto.rsa();
+  object rsa = Crypto.RSA();
   rsa->generate_key(key_size, Crypto.randomness.reasonably_random()->read);
 
   string key = Tools.PEM.simple_build_pem
@@ -93,7 +93,7 @@ mixed verify_0(object id, object mc)
 
   return 0;
 }
-#endif /* constant(Crypto.rsa) */
+#endif /* constant(Crypto.RSA) */
 
 
 string ssl_errors (RequestID id) {
@@ -219,4 +219,4 @@ string save_certificate_form (string name, string filename)
 }
 
 
-#endif /* constant(_Crypto) */
+#endif /* constant(Crypto) */

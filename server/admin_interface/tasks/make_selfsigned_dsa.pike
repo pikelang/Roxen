@@ -1,8 +1,8 @@
 /*
- * $Id: make_selfsigned_dsa.pike,v 1.8 2002/06/13 00:18:09 nilsson Exp $
+ * $Id: make_selfsigned_dsa.pike,v 1.9 2004/05/28 19:21:48 _cvs_stephen Exp $
  */
 
-#if constant(_Crypto) && constant(Crypto.dsa)
+#if constant(Crypto) && constant(Crypto.DSA)
 
 inherit "ssl_common.pike";
 inherit "wizard";
@@ -54,7 +54,7 @@ mixed verify_0(object id, object mc)
 
   privs = 0;
 
-  object dsa = Crypto.dsa();
+  object dsa = Crypto.DSA();
   dsa->use_random(Crypto.randomness.reasonably_random()->read);
   dsa->generate_parameters(key_size);
   dsa->generate_key();
@@ -222,4 +222,4 @@ mixed wizard_done(object id, object mc)
 mixed parse( RequestID id ) { return wizard_for(id,0); }
 
 
-#endif /* constant(_Crypto) && constant(Crypto.dsa) */
+#endif /* constant(Crypto) && constant(Crypto.DSA) */

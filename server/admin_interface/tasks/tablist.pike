@@ -4,7 +4,7 @@ array pages =
 ({
   ({ "status",       "Tasks",  0, "Status"            }),
   ({ "maintenance",  "Tasks",  0, "Maintenance"       }),
-#if constant(_Crypto) && constant(Crypto.rsa)
+#if constant(Crypto) && constant(Crypto.RSA)
   ({ ({"SSL"}),       "Tasks", 0, "SSL"               }),
 #endif
 /*({ "developer",     "Tasks", "devel_mode"  }),*/
