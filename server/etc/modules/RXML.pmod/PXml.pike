@@ -13,7 +13,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.62 2001/08/13 16:00:00 mast Exp $
+//! $Id: PXml.pike,v 1.63 2002/04/03 12:02:03 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -319,7 +319,7 @@ void drain_output()
 	  }
 	  if (p_code) p_code->add (context, newval, newval);
 	}
-      }) context->handle_exception (err, this_object(), 1);
+      }) context->handle_exception (err, this_object(), p_code);
       break;
 
     case NO_LITERALS:
@@ -330,7 +330,8 @@ void drain_output()
 	context->handle_exception (
 	  catch (RXML.parse_error (
 		   "Free text %s is not allowed in context of type %s.\n",
-		   .utils.format_short (literal), type->name)), this_object(), 1);
+		   .utils.format_short (literal), type->name)),
+	  this_object(), p_code);
       break;
     }
 
