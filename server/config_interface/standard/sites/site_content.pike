@@ -284,6 +284,7 @@ string module_page( RequestID id, string conf, string module )
 
 string port_for( string url )
 {
+  if(!roxen->urls[url] ) return "";
   object p = roxen->urls[url]->port;
   if(!p)
     return "";

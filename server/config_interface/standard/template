@@ -113,7 +113,7 @@
           <table>
          <cf-userwants option=devel_mode>
           <tr><td align=right>
-            <gtext bgcolor="&usr.fade3;" font='&usr.font;' fgcolor='&usr.fgcolor;' scale=0.45 hspace=3>Language:</gtext>
+            <gtext preparse bgcolor="&usr.fade3;" font='&usr.font;' fgcolor='&usr.fgcolor;' scale=0.45 hspace=3><cf-locale get=language>:</gtext>
           </td><td><font color=black>
           <configif-output quote=¤ source=locales>
             <a href="¤path¤"><img
@@ -124,8 +124,8 @@
           </tr>
          </cf-userwants>
          <tr><td align=right><font color=&usr.fgcolor;>
-         <gbutton font="&usr.font;" href='/standard/change_user.pike?uid=&form.config_user_uid;'
-                  align=right textcolor=&usr.fgcolor; bgcolor='&usr.fade3;' width=70>User:</gbutton>
+         <gbutton font="&usr.font;" preparse href='/standard/change_user.pike?uid=&form.config_user_uid;'
+                  align=right textcolor=&usr.fgcolor; bgcolor='&usr.fade3;' width=70> <cf-locale get=user>: </gbutton>
           </td><td>
             <font color=&usr.fade4;>
                &form.config_user_name; (&form.config_user_uid;)
