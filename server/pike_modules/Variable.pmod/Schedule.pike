@@ -42,7 +42,7 @@ inherit "html";
 //!       @value 2..7
 //!         Rest of weekdays
 //!     @endint
-//!   @elem int(0..23) time (z)
+//!   @elem int(0..23) time
 //!     Time at which to restart.
 //! @endarray
 array transform_from_form( string what, mapping vl )
