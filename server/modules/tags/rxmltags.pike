@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.383 2002/06/25 11:19:16 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.384 2002/06/27 21:22:00 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -35,6 +35,14 @@ void start()
   add_api_function("query_modified", api_query_modified, ({ "string" }));
   query_tag_set()->prepare_context=set_entities;
   compat_level = (float) my_configuration()->query("compat_level");
+}
+
+int cache_static_in_2_4()
+{
+  if (compat_level == 0.0) {
+    compat_level = (float) my_configuration()->query("compat_level");
+  }
+  return compat_level >= 2.4 && RXML.FLAG_IS_CACHE_STATIC;
 }
 
 multiset query_provides() {
@@ -2234,8 +2242,10 @@ class TagHelp {
 	      tag_links += ({ tag });
 	    else
 	      tag_links += ({ sprintf("<a href=\"%s?_r_t_h=%s\">%s</a>\n",
-				      id->not_query, Roxen.http_encode_url(enc), tag) });
-	    }
+				      id->url_base() + id->not_query[1..],
+				      Roxen.http_encode_url(enc), tag) });
+
+	  }
 	}
 
 	ret+="<h3>"+upper_case(char)+"</h3>\n<p>"+String.implode_nicely(tag_links)+"</p>";
@@ -3484,7 +3494,7 @@ class FrameIf {
 class TagIf {
   inherit RXML.Tag;
   constant name = "if";
-  constant flags = RXML.FLAG_SOCKET_TAG;
+  int flags = RXML.FLAG_SOCKET_TAG | cache_static_in_2_4();
   array(RXML.Type) result_types = ({RXML.t_any});
   program Frame = FrameIf;
 }
@@ -3492,7 +3502,7 @@ class TagIf {
 class TagElse {
   inherit RXML.Tag;
   constant name = "else";
-  constant flags = 0;
+  int flags = cache_static_in_2_4();
   array(RXML.Type) result_types = ({RXML.t_any});
   class Frame {
     inherit RXML.Frame;
@@ -3507,7 +3517,7 @@ class TagElse {
 class TagThen {
   inherit RXML.Tag;
   constant name = "then";
-  constant flags = 0;
+  int flags = cache_static_in_2_4();
   array(RXML.Type) result_types = ({RXML.t_any});
   class Frame {
     inherit RXML.Frame;
@@ -3522,6 +3532,7 @@ class TagThen {
 class TagElseif {
   inherit RXML.Tag;
   constant name = "elseif";
+  int flags = cache_static_in_2_4();
   array(RXML.Type) result_types = ({RXML.t_any});
 
   class Frame {
@@ -3675,7 +3686,7 @@ class TagCond
 class TagEmit {
   inherit RXML.Tag;
   constant name = "emit";
-  constant flags = RXML.FLAG_SOCKET_TAG;
+  int flags = RXML.FLAG_SOCKET_TAG | cache_static_in_2_4();
   mapping(string:RXML.Type) req_arg_types = ([ "source":RXML.t_text(RXML.PEnt) ]);
   mapping(string:RXML.Type) opt_arg_types = ([ "scope":RXML.t_text(RXML.PEnt),
 					       "maxrows":RXML.t_int(RXML.PEnt),
@@ -5671,11 +5682,12 @@ using the pre tag.
  or completely disable caching of a certain part of the content inside
  a <tag>cache</tag> tag.</p>
  
- <note><p>This implies that any RXML tags that surrounds the inner
+ <note><p>This implies that many RXML tags that surrounds the inner
  <tag>cache</tag> tag(s) won't be cached. The reason is that those
  surrounding tags use the result of the inner <tag>cache</tag> tag(s),
  which can only be established when the actual context in each request
- is compared to the cache parameters.</p></note>
+ is compared to the cache parameters. See the section below about
+ cache static tags, though.</p></note>
 
  <p>Besides the value produced by the content, all assignments to RXML
  variables in any scope are cached. I.e. an RXML code block which
@@ -5694,6 +5706,8 @@ using the pre tag.
  fairly short cache time, since it's otherwise easy to fill up the
  memory on the server simply by making many requests with random
  variables.</p></note>
+
+ <h3>Shared caches</h3>
 
  <p>The cache can be shared between all <tag>cache</tag> tags with
  identical content, which is typically useful in <tag>cache</tag> tags
@@ -5729,12 +5743,52 @@ using the pre tag.
  documentation for details about how to control RXML p-code
  caching.</p></note>
 
- <p>Compatibility note: If the compatibility level of the site is
- lower than 2.2 and there is no \"variable\" or \"profile\" attribute,
- the cache depends on the contents of the form scope and the path of
- the current page (i.e. <ent>page.path</ent>). This is often a bad
- policy since it's easy for a client to generate many cache
- entries.</p>
+ <h3>Cache static tags</h3>
+
+ <p>Some common tags, e.g. <tag>if</tag> and <tag>emit</tag>, are
+ \"cache static\". That means that they are cached even though there
+ are nested <tag>cache</tag> tag(s). That can be done since they
+ simply let their content pass through (repeated zero or more
+ times).</p>
+
+ <p>Cache static tags are always evaluated when the surrounding
+ <tag>cache</tag> generates a new entry. Other tags are evaluated when
+ the entry is used, providing they contain or might contain nested
+ <tag>cache</tag> or <tag>nocache</tag>. This can give side effects;
+ consider this example:</p>
+
+ <p><pre>
+   &lt;cache&gt;
+     &lt;registered-user&gt;
+       &lt;nocache&gt;Your name is &registered-user.name;&lt;/nocache&gt;
+     &lt;/registered-user&gt;
+   &lt;/cache&gt;
+ </pre></p>
+
+ <p>Assume the tag <tag>registered-user</tag> is a custom tag that
+ ignores its content whenever the user isn't registered. If it isn't
+ cache static, the nested <tag>nocache</tag> tag causes it to stay
+ unevaluated in the surrounding cache, and the test of the user is
+ therefore kept dynamic. If it on the other hand is cache static, that
+ test is cached and the cache entry will either contain the
+ <tag>nocache</tag> block and a cached assignment to
+ <ent>registered-user.name</ent>, or none of the content inside
+ <tag>registered-user</tag>. The dependencies of the outer cache must
+ then include the user for it to work correctly.</p>
+
+ <p>Because of this, it's important to know whether a tag is cache
+ static or not, and it's noted in the doc for all such tags.</p>
+
+ <h3>Compatibility</h3>
+
+ <p>If the compatibility level of the site is lower than 2.2 and there
+ is no \"variable\" or \"profile\" attribute, the cache depends on the
+ contents of the form scope and the path of the current page (i.e.
+ <ent>page.path</ent>). This is often a bad policy since it's easy for
+ a client to generate many cache entries.</p>
+
+ <p>There are no cache static tags if the compatibility level is lower
+ than 2.4.</p>
 </desc>
 
 <attr name='variable' value='string'>
@@ -7494,6 +7548,9 @@ just got zapped?
  <p>The result is undefined if there has been no <xref href='if.tag'/>,
  <xref href='true.tag'/>, <xref href='false.tag' /> or other tag that
  touches the page's truth value earlier in the page.</p>
+
+ <note><p>This tag is cache static (see the <tag>cache</tag> tag)
+ unless the compatibility level is set to 2.2 or earlier.</p></note>
 </desc>",
 
 //----------------------------------------------------------------------
@@ -7501,6 +7558,9 @@ just got zapped?
 "elseif":#"<desc type='cont'><p><short>
  Same as the <xref href='if.tag' />, but it will only evaluate if the
  previous <tag>if</tag> returned false.</short></p>
+
+ <note><p>This tag is cache static (see the <tag>cache</tag> tag)
+ unless the compatibility level is set to 2.2 or earlier.</p></note>
 </desc>",
 
 //----------------------------------------------------------------------
@@ -7614,6 +7674,9 @@ just got zapped?
  <p>SiteBuilder plugins requires a Roxen Platform SiteBuilder
  installed to work. They are adding test capabilities to web pages
  contained in a SiteBuilder administrated site.</p>
+
+ <note><p>This tag is cache static (see the <tag>cache</tag> tag)
+ unless the compatibility level is set to 2.2 or earlier.</p></note>
 </desc>
 
 <attr name='not'><p>
@@ -8118,6 +8181,9 @@ just got zapped?
  conjunction with tags that leave status data there, such as the <xref
  href='../output/emit.tag'/> or <xref href='../programming/crypt.tag'/>
  tags.</p>
+
+ <note><p>This tag is cache static (see the <tag>cache</tag> tag)
+ unless the compatibility level is set to 2.2 or earlier.</p></note>
 </desc>",
 
 //----------------------------------------------------------------------
@@ -8326,6 +8392,9 @@ just got zapped?
  that page is set to <i>false</i>. By using <xref
  href='../if/else.tag' /> afterwards it's possible to detect when an
  <tag>emit</tag> operation fails.</p>
+
+ <note><p>This tag is cache static (see the <tag>cache</tag> tag)
+ unless the compatibility level is set to 2.2 or earlier.</p></note>
 </desc>
 
 <attr name='source' value='plugin' required='required'><p>
