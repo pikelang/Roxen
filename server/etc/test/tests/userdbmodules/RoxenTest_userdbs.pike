@@ -38,9 +38,9 @@ void lookup_threaded( array f, RoxenModule m )
     }
   };
 
-  for( int i = 0; i<sizeof( f ); i++ )
+  for( int i = 0; i<min(sizeof( f ),20); i++ )
     f[i] = thread_create( lookup_and_group, f[i] );
-  f->wait();
+  (f[0..min(sizeof(f),19)])->wait();
   if( failed )
     throw( failed );
 }
