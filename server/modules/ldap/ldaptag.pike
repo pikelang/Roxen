@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.7 2000/11/15 12:17:29 hop Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.8 2000/11/19 21:32:56 kuntri Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -35,15 +35,15 @@ constant tagdoc=([
  Executes a LDAP operation, but doesn't do anything with the
  result.</short>The <tag>ldap</tag> tag is mostly used for LDAP
  operation that change the contents of the directory, for example
- <i>add</i> or<i>modify</i>.</p>
+ <i>add</i> or <i>modify</i>.</p>
 </desc>
 
-<attr name='server' value='LDAP URL' default='Server URL'></p>
+<attr name='server' value='LDAP URL' default='Server URL'><p>
  Connection LDAP URL. If omitted the <i>Default server URL</i>
  will be used.</p>
 </attr>
 
-<attr name='password' value='password'></p>
+<attr name='password' value='password'><p>
  User password for connection to the directory server. If omitted the
  default will be used.</p>
  </attr>

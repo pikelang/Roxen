@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.64 2000/11/17 15:56:30 anders Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.65 2000/11/19 21:32:54 kuntri Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -134,12 +134,14 @@ constant gbuttonattr=#"
 <attr name='align-icon' value='left|center-before|center-after|right'><p>
  Set icon alignment.</p>
 
-<table>
-<tr><td>left</td><td>Place icon on the left side of the text.</td></tr>
-<tr><td>center-before</td><td>Center the icon before the text.Requires the <att>align='center'</att> attribute.</td></tr>
-<tr><td>center-after</td><td>Center the icon after the text. Requires the <att>align='center'</att> attribute.</td></tr>
-<tr><td>right</td><td>Place icon on the right side of the text.</td></tr>
-</table>
+<xtable>
+<row><c>left</c><c>Place icon on the left side of the text.</c></row>
+<row><c>center-before</c><c>Center the icon before the text.Requires the <att>align='center'</att> attribute.</c></row>
+<row><c>center-after</c><c>Center the icon after the text. Requires the <att>align='center'</att> attribute.</c></row>
+<row><c>right</c><c>Place icon on the right side of the text.</c></row>
+</xtable>
+
+<p></p>
 
 <ex>
 <gbutton width='150' align-icon='center-before' icon-src='internal-roxen-help'>Roxen 2.0</gbutton>

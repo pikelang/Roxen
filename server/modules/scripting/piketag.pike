@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.29 2000/11/15 09:40:40 per Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.30 2000/11/19 21:32:57 kuntri Exp $";
 constant thread_safe=1;
 
 
@@ -533,44 +533,44 @@ constant tagdoc=([
  are only available within the <tag>?pike ?</tag> tag.</p>
 </desc>
 
-<attr name='write'>
+<attr name='write'><p>
  write(string fmt, mixed ... args) is a helper function. It formats a
  string in the same way as printf and appends it to the output buffer.
  If given only one string argument, it's written directly to the
- output buffer without being interpreted as a format specifier.
+ output buffer without being interpreted as a format specifier.</p>
 </attr>
 
-<attr name='flush'>
+<attr name='flush'><p>
  flush() is a helper function. It returns the contents of the output
- buffer and resets it.
+ buffer and resets it.</p>
 </attr>
 
-<attr name='rxml'>
+<attr name='rxml'><p>
  rxml(string rxmlcode) is a helper function. It parses the string with
- the RXML parser.
+ the RXML parser.</p>
 </attr>
 
 
-<attr name='\"//O ...\" or \"/*O ... */\"'>
+<attr name='\"//O ...\" or \"/*O ... */\"'><p>
  Pike comment with an 'O' (the letter, not the number) as the very
  first character treats the rest of the text in the comment as output
- text that's written directly to the output buffer.
+ text that's written directly to the output buffer.</p>
 </attr>
 
-<attr name='\"//X ...\" or \"/*X ... */\"'>
+<attr name='\"//X ...\" or \"/*X ... */\"'><p>
  A Pike comment with an 'X' as the very first character treats the
  rest of the text in the comment as RXML code that's executed by the
- RXML parser and then written to the output buffer.
+ RXML parser and then written to the output buffer.</p>
 </attr>
 
-<attr name='#include \"...\"'>
- An #include preprocessor directive includes the specified file.
+<attr name='#include \"...\"'><p>
+ An #include preprocessor directive includes the specified file.</p>
 </attr>
 
-<attr name='#inherit \"...\"'>
+<attr name='#inherit \"...\"'><p>
  An #inherit preprocessor directive puts a corresponding inherit
  declaration in the class that's generated to contain the Pike code in
- the tag, i.e. it inherits a specified file from the Roxen filesystem.
+ the tag, i.e. it inherits a specified file from the Roxen filesystem.</p>
 
  <ex type='box'>
 

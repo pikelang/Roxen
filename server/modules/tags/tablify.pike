@@ -1,6 +1,6 @@
 // This Isg a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.60 2000/11/06 11:37:25 kuntri Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.61 2000/11/19 21:32:59 kuntri Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -185,18 +185,18 @@ Finland, 5 158 372
 (["fields":#"<desc cont='cont'><p>
  The container 'fields' may be used inside the tablify container to
  describe the type of contents the fields in a column has. Available
- fields are</p>
+ fields are:</p>
 
    <list type='ul'>
-   <item>text (default)</item>
-   <item>left</item>
-   <item>center</item>
-   <item>right</item>
-   <item>num</item>
-   <item>int</item>
-   <item>economic-int</item>
-   <item>float</item>
-   <item>economic-float</item>
+   <item><p>text (default)</p></item>
+   <item><p>left</p></item>
+   <item><p>center</p></item>
+   <item><p>right</p></item>
+   <item><p>num</p></item>
+   <item><p>int</p></item>
+   <item><p>economic-int</p></item>
+   <item><p>float</p></item>
+   <item><p>economic-float</p></item>
    </list>
 
    <p>All fields except text overrides the cellvalign attribute.</p>
@@ -208,9 +208,9 @@ Finland, 5 158 372
 
  <p>The fields types are separated by</p>
   <list type='ol'>
-  <item>The value given in the separator attribute to fields.</item>
-  <item>The value given in the cellseparator attribute to tablify.</item>
-  <item>Tab.</item>
+  <item><p>The value given in the separator attribute to fields.</p></item>
+  <item><p>The value given in the cellseparator attribute to tablify.</p></item>
+  <item><p>Tab.</p></item>
   </list>
 </attr>"])
 			    }),

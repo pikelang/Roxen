@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.261 2000/11/09 18:19:10 kuntri Exp $
+// $Id: rxml.pike,v 1.262 2000/11/19 21:32:52 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2386,7 +2386,7 @@ Kibibits.
 </desc>
 
  <attr name='name' value='name'><p>
-  The name of the attribute which default value is to be set.
+  The name of the attribute which default value is to be set.</p>
  </attr>",
 
 "&_.args;":#"<desc ent='ent'><p>
@@ -2419,7 +2419,7 @@ Kibibits.
 
 "elseif":#"<desc cont='cont'><p><short>
  Same as the <xref href='if.tag' />, but it will only evaluate if the
- previous <tag>if</if> returned false.</short></p>
+ previous <tag>if</tag> returned false.</short></p>
 </desc>",
 
 "false":#"<desc tag='tag'><p><short>
@@ -2448,8 +2448,8 @@ Kibibits.
 "if":#"<desc cont='cont'><p><short hide='hide'>
  <tag>if</tag> is used to conditionally show its contents.</short>The
  <tag>if</tag> tag is used to conditionally show its contents. <xref
- href='else.tag'/>, <xref href='elif.tag'/> or <xref href='elseif.tag'
- /> can be used to suggest alternative content.</p>
+ href='else.tag'/> or <xref href='elseif.tag' /> can be used to
+ suggest alternative content.</p>
 
  <p>It is possible to use glob patterns in almost all attributes,
  where * means match zero or more characters while ? matches one
@@ -2730,11 +2730,43 @@ Kibibits.
 ",
 
 "if#match":#"<desc plugin='plugin'><p><short>
- Evaluates patterns.</short> Match is an <i>Eval</i> plugin.
-</p></desc>
+ Evaluates patterns.</short> More information can be found in the
+ <xref href='../../tutorial/if_tags/plugins.xml'>If tags
+ tutorial</xref>. Match is an <i>Eval</i> plugin. </p></desc>
 
 <attr name='match' value='pattern' required='required'><p>
- Choose what pattern to test.</p>
+ Choose what pattern to test. The pattern could be any expression.
+ Note!: The pattern content is treated as strings:</p>
+
+<ex type='vert'>
+ <set variable='var.hepp' value='10' />
+
+ <if match='var.hepp is 10'>
+  true
+ </if>
+ <else>
+  false
+ </else>
+</ex>
+
+ <p>This example shows how the plugin treats \"var.hepp\" and \"10\"
+ as strings. Hence when evaluating a variable as part of the pattern,
+ the entity associated with the variable should be used, i.e.
+ <ent>var.hepp</ent> instead of var.hepp. A correct example would be:</p>
+
+<ex type='vert'>
+<set variable='var.hepp' value='10' />
+
+ <if match='&var.hepp; is 10'>
+  true
+ </if>
+ <else>
+  false
+ </else>
+</ex>
+
+ <p>Here, <ent>var.hepp</ent> is treated as an entity and parsed
+ correctly, letting the plugin test the contents of the entity.</p>
 </attr>
 ",
 

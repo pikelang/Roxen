@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.190 2000/11/15 12:23:26 stewa Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.191 2000/11/19 21:32:57 kuntri Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2094,13 +2094,13 @@ using the pre tag.
 //----------------------------------------------------------------------
 
 "configurl":#"<desc tag='tag'><p><short>
- <p>Returns a URL to the administration interface.</short>
+ Returns a URL to the administration interface.</short>
 </p></desc>",
 
 //----------------------------------------------------------------------
 
 "cset":#"<desc cont='cont'><p>
- <p>Sets a variable with its content.</p>
+ Sets a variable with its content.</p>
 </desc>
 
 <attr name=variable value=name>
@@ -2136,7 +2136,7 @@ using the pre tag.
 //----------------------------------------------------------------------
 
 "date":#"<desc tag='tag'><p><short>
- Inserts the time and date.</short> Does not require attributes.</p>
+ Inserts the time and date.</short> Does not require attributes.
 </p></desc>
 
 <attr name=unix-time value=number of seconds>
@@ -2393,7 +2393,7 @@ tags.</p>
  \"&amp;lt;\", \"&amp;gt;\" and \"&amp;amp;\". No attributes required.
 </p></desc>
 
-<attr name=quote>
+<attr name='quote'>
  <p>Instead of replacing with \"{\" and \"}\", \"&lt;\" and \"&gt;\"
  is replaced with \"&amp;lt;\" and \"&amp;gt;\".</p>
 
@@ -2408,8 +2408,9 @@ tags.</p>
 </ex>
 </attr>
 
-<attr name=pre>
- The result is encapsulated within a <tag>pre</tag> container.
+<attr name='pre'><p>
+ The result is encapsulated within a <tag>pre</tag> container.</p>
+
 <ex><doc pre=''>
 {table}
  {tr}
@@ -2549,7 +2550,7 @@ tags.</p>
 //----------------------------------------------------------------------
 
 "imgs":#"<desc tag='tag'><p><short>
- <p>Generates a image tag with proper dimensions.</short>
+ Generates a image tag with proper dimensions.</short>
 </p></desc>
 
 <attr name=src value=string required='required'>
@@ -2894,7 +2895,7 @@ load.</p>
 //----------------------------------------------------------------------
 
 "roxen":#"<desc tag='tag'><p><short>
- <p>Returns a nice Roxen logo.</short>
+ Returns a nice Roxen logo.</short>
 </p></desc>
 
 <attr name=size value=small|medium|large default=medium>
@@ -3049,8 +3050,8 @@ load.</p>
  caches.</short></p>
 
  <p>Default is to get this time from the other tags in the document
- (as an example, <xref href='if_supports.tag' /> sets the time to 0 seconds since
- the result of the test depends on the client used.</p>
+ (as an example, <xref href='../if/if_supports.tag' /> sets the time to
+ 0 seconds since the result of the test depends on the client used.</p>
 
  <p>You must do this at the end of the document, since many of the
  normal tags will override this value.</p>
@@ -3181,7 +3182,7 @@ load.</p>
 //----------------------------------------------------------------------
 
 "trimlines":#"<desc cont='cont'><p><short>
- <p>Removes all empty lines from the contents.</short></p>
+ Removes all empty lines from the contents.</short></p>
 
   <ex>
   <trimlines>
@@ -3277,20 +3278,20 @@ load.</p>
  </ex>
 
  <p>Conversion between int and float may be done through the operators
- \"(int)\" and \"(float)\". The operators \"&\"(bitwise and),
- \"|\"((pipe)bitwise or), \"&&\"(logical and) and \"||\"((double
+ \"(int)\" and \"(float)\". The operators \"&amp;\"(bitwise and),
+ \"|\"((pipe)bitwise or), \"&amp;&amp;\"(logical and) and \"||\"((double
  pipe)logical or) may also be used in expressions. To set
  prioritizations within expressions the characters \"( and )\" are
  included. General prioritization rules are:</p>
 
  <list type='ol'>
- <item>(int), (float)</item>
- <item>*, /, %</item>
- <item>+, -</item>
- <item>&lt;, &gt;, &lt;=, &gt;=\</item>
- <item>==</item>
- <item>&, |</item>
- <item>&&, ||</item>
+ <item><p>(int), (float)</p></item>
+ <item><p>*, /, %</p></item>
+ <item><p>+, -</p></item>
+ <item><p>&lt;, &gt;, &lt;=, &gt;=\</p></item>
+ <item><p>==</p></item>
+ <item><p>&amp;, |</p></item>
+ <item><p>&amp;&amp;, ||</p></item>
  </list>
 
  <ex type='box'>

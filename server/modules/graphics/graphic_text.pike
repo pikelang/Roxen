@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.256 2000/11/09 23:15:57 kuntri Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.257 2000/11/19 21:32:55 kuntri Exp $";
 
 #include <module.h>
 inherit "module";
@@ -49,6 +49,16 @@ constant gtextargs=#"
 
 <attr name='background' value='path'><p>
  Specifies the image to use as background.</p>
+</attr>
+
+<attr name='tile'><p>
+ Tiles the background and foreground images if they are smaller than
+ the actual image.</p>
+</attr>
+
+<attr name='mirrortile'><p>
+ Tiles the background and foreground images around x-axis and y-axis
+ for odd frames, creating seamless textures.</p>
 </attr>
 
 <attr name='bevel' value='width'><p>
@@ -150,7 +160,7 @@ opaque=70</gtext>
 </attr>
 
 <attr name='format' value='string'><p>
- Set the image format, e.g. \"png\".
+ Set the image format, e.g. \"png\".</p>
 </attr>
 
 <attr name='fs'><p>
@@ -184,17 +194,12 @@ opaque=70</gtext>
  image, by default 300.</p>
 </attr>
 
-<attr name='mirrortile'><p>
- Tiles the background and foreground images around x-axis and y-axis
- for odd frames, creating seamless textures.</p>
-</attr>
-
 <attr name='move' value='x,y'><p>
  Moves the text relative to the upper left corner of the background
  image. This will not change the size of the image.</p>
 </attr>
 
-<attr name='narrow>
+<attr name='narrow><p>
  Use a narroe version of the font, if available.</p>
 </attr>
 
@@ -326,11 +331,6 @@ opaque=70</gtext>
 </ex>
 </attr>
 
-<attr name='tile'><p>
- Tiles the background and foreground images if they are smaller than
- the actual image.</p>
-</attr>
-
 <attr name='verbatim'><p>
  Allows the gtext parser to not be typographically correct.</p>
 </attr>
@@ -411,7 +411,7 @@ constant tagdoc=([
 "gh6":#"<desc cont='cont'></desc>
 <noex>"+gtextargs+"</noex>",
 
-"gtext":#"<desc cont='cont''><p><short>
+"gtext":#"<desc cont='cont'><p><short>
  Creates graphical texts.</short> Renders a GIF image of the
  contents.</p>
 </desc>
@@ -420,13 +420,15 @@ constant tagdoc=([
  Sets the alt attribute of the generated <tag>img</tag> tag. By
  default the alt attribute will be set to the contents of the
  <tag>gtext</tag> tag.</p>
+
  <ex type=vert>
-<gtext fgcolor=\"blue\" alt=\"Hello!\">Welcome!</gtext>
+  <gtext fgcolor=\"blue\" alt=\"Hello!\">Welcome!</gtext>
  </ex>
 </attr>
 
 <attr name='border' value='width,color'><p>
  Draws a border around the text of the specified width and color.</p>
+
  <ex type=vert>
 <gtext fgcolor=\"blue\" border=\"2,red\">Red border</gtext>
  </ex>
@@ -442,6 +444,7 @@ constant tagdoc=([
  Used together with the href attribute to generate a JavaScript that
  will highlight the image when the mouse is moved over it. The message
  is shown in the browser's status bar.</p>
+
  <ex type=vert>
 <gtext href=\"http://www.roxen.com\" magic=\"Roxen\">www.roxen.com</gtext>
  </ex>
@@ -452,7 +455,6 @@ constant tagdoc=([
  highlighted image.</p>
 
 <ex type=vert>
-
 <gtext fgcolor=\"blue\" magic-glow=\"yellow\" magic=\"\">Magic attribute</gtext>
  </ex>
 </attr>
@@ -461,26 +463,33 @@ constant tagdoc=([
  Do not terminate the image tag with \"/\".</p>
 </attr>
 
-<attr name='split'><p>
- <gtext scale='0.4' split='split'></p>
- Make each word into a separate gif image. Useful if you are writing a
- large text, and word wrap at the edges of the display is desired.
- This text is an example (try resisizing your browser window, the
- images should move just like normal text would).</gtext></p>
+<attr name='split'>
+ <p>Make each word into a separate gif image. Useful if you are
+ writing a large text, and word wrap at the edges of the display is
+ desired. This text is an example (try resisizing your browser window,
+ the images should move just like normal text would).</p>
+
+<ex type='vert'>
+ <gtext scale='0.4' split='split'>
+ Useful if you are writing a large text, and word wrap at the edges
+ of the display is desired. This text is an example (try resisizing
+ your browser window, the images should move just like normal text
+ would).
+ </gtext>
+</ex>
 
  <p>This will allow the browser to word-wrap the text, but will
- disable certain attributes like magic.</p>
+ disable certain attributes like <att>magic</att>.</p>
 
- <ex type=vert'><p>
+ <ex type='vert'>
 <gtext scale=\"0.4\" split=\"\">Make each word..</gtext>
  </ex>
 </attr>
 
 <attr name='submit'><p>
- Creates a submit-button for forms. Does not work together with split
- or magic arguments.</p>
-</attr>"
-+gtextargs,
+ Creates a submit-button for forms. Does not work together with
+ <att>split</att> or <att>magic</att> attributes.</p>
+</attr>"+gtextargs,
 
 "gtext-id":#"<desc tag='tag'><p><short>
 
@@ -496,8 +505,7 @@ constant tagdoc=([
 
 <attr name='short'><p></p>
 
-</attr>"
-+gtextargs,
+</attr>"+gtextargs,
 
 "gtext-url":#"<desc cont='cont'><p><short>
 

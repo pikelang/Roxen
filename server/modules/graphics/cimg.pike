@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.34 2000/11/09 23:15:57 kuntri Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.35 2000/11/19 21:32:54 kuntri Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -74,8 +74,8 @@ constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
 </attr>",
 
 "emit#cimg":({ #"<desc plugin='plugin'><p><short>
- Entitybased version of <xref href='cimg.tag' />.</short> Takes the
- same attributes as <tag>cimg</tag>.</p>
+ Entitybased version of <xref href='../graphics/cimg.tag' />.</short>
+ Takes the same attributes as <tag>cimg</tag>.</p>
 </desc>",
 
 ([

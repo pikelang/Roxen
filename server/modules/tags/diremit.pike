@@ -251,7 +251,7 @@ resolve the image's height and width.</c></row>
 
 <attr name='thumbnail-format' value='imageformat'><p>
  Set the output format for the thumbnail. Default is <ext>png</ext>.
- All imageformats that <xref href='../graphics/cimg.tag' > handles can
+ All imageformats that <xref href='../graphics/cimg.tag' /> handles can
  be used to produce thumbnails. This attribute can only be used
  together with the <att>option=\"thumbnail\"</att> attribute.</p>
 </attr>
@@ -274,13 +274,13 @@ resolve the image's height and width.</c></row>
 
 <attr name='sort-order' value='alpha|dwim|modified|size|type' default='dwim'><p>
  Sort the files and directories by this method.</p>
-<table>
-<tr><td>alpha</td><td>Sort files and directories alphabetically.</td></tr>
-<tr><td>dwim</td><td>Sort files and directories by \"Do What I (want) Method\". In many methods numeriacal sorts fail as the number '10' often appears before '2'. This method sorts numerical characters first then alphabetically, e.g. 1foo.html, 2foo.html, 10foo.html, foo1.html, foo2.html, foo10.html.</td></tr>
-<tr><td>modified</td><td>Sort files by modification date.</td></tr>
-<tr><td>size</td><td>Sort files by size.</td></tr>
-<tr><td>type</td><td>Sort files by content-type.</td></tr>
-</table>
+<xtable>
+<row><c>alpha</c><c>Sort files and directories alphabetically.</c></row>
+<row><c>dwim</c><c>Sort files and directories by \"Do What I (want) Method\". In many methods numeriacal sorts fail as the number '10' often appears before '2'. This method sorts numerical characters first then alphabetically, e.g. 1foo.html, 2foo.html, 10foo.html, foo1.html, foo2.html, foo10.html.</c></row>
+<row><c>modified</c><c>Sort files by modification date.</c></row>
+<row><c>size</c><c>Sort files by size.</c></row>
+<row><c>type</c><c>Sort files by content-type.</c></row>
+</xtable>
 </attr>
 
 <attr name='sort-reversed'><p>
