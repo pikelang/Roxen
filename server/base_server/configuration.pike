@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.159 1998/10/10 23:10:08 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.160 1998/10/11 11:37:27 peter Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -8,9 +8,6 @@ mapping profile_map = ([]);
 #endif
 
 #define CATCH(X)	do { mixed err; if(err = catch{X;}) report_error(describe_backtrace(err)); } while(0)
-
-// Locale support...
-#define LOCALE	roxen->locale->base_server
 
 
 /* A configuration.. */
@@ -630,7 +627,7 @@ void init_log_file()
     {
       do {
 #ifndef THREADS
-	object privs = Privs(LOCALE->opening_logfile(logfile));
+	object privs = Privs("Opening logfile \""+logfile+"\"");
 #endif
 	object lf=open( logfile, "wac");
 #if efun(chmod)
@@ -641,7 +638,8 @@ void init_log_file()
 	if(!lf) {
 	  mkdirhier(logfile);
 	  if(!(lf=open( logfile, "wac"))) {
-	    report_error(LOCALE->failed_to_open_logfile(logfile));
+	    report_error("Failed to open logfile. ("+logfile+")\n" +
+			 "No logging will take place!\n");
 	    log_function=0;
 	    break;
 	  }
@@ -793,31 +791,47 @@ public string status()
 {
   float tmp;
   string res="";
-  float dt = (float)(time(1) - roxen->start_time + 1);
 
   if(!sent||!received||!hsent)
-    return(LOCALE->status_bignum_gone());
+    return "Fatal error in status(): Bignum object gone.\n";
 
-  res = "<table>";
-  res += LOCALE->config_status(sent->mb(), (sent->mb()/dt) * 8192.0,
-			       hsent->mb(), requests,
-			       (((float)requests * 60.0)/dt), received->mb());
+  tmp = (sent->mb()/(float)(time(1)-roxen->start_time+1));
+  res = sprintf("<table><tr align=right><td><b>Sent data:</b></td><td>%.2fMB"
+		"</td><td>%.2f Kbit/sec</td>",
+		sent->mb(),tmp * 8192.0);
+  
+  res += sprintf("<td><b>Sent headers:</b></td><td>%.2fMB</td></tr>\n",
+		 hsent->mb());
+  
+  tmp=(((float)requests*(float)600)/
+       (float)((time(1)-roxen->start_time)+1));
+
+  res += sprintf("<tr align=right><td><b>Number of requests:</b></td>"
+		 "<td>%8d</td><td>%.2f/min</td>"
+		 "<td><b>Received data:</b></td><td>%.2fMB</td></tr>\n",
+		 requests, (float)tmp/(float)10, received->mb());
 
   if (!zero_type(misc->ftp_users)) {
-    res += LOCALE->ftp_status(misc->ftp_users,
-			      (((float)misc->ftp_users*(float)60.0)/dt),
-			      misc->ftp_users_now);
+    tmp = (((float)misc->ftp_users*(float)600)/
+	   (float)((time(1)-roxen->start_time)+1));
+
+    res += sprintf("<tr align=right><td><b>FTP users (total):</b></td>"
+		   "<td>%8d</td><td>%.2f/min</td>"
+		   "<td><b>FTP users (now):</b></td><td>%d</td></tr>\n",
+		   misc->ftp_users, (float)tmp/(float)10, misc->ftp_users_now);
   }
   res += "</table><p>\n\n";
 
   if ((roxen->configuration_interface()->more_mode) &&
       (extra_statistics->ftp) && (extra_statistics->ftp->commands)) {
     // FTP statistics.
-    res += LOCALE->ftp_statistics() + "<br>\n"
+    res += "<b>FTP statistics:</b><br>\n"
       "<ul><table>\n";
     foreach(sort(indices(extra_statistics->ftp->commands)), string cmd) {
-      res += LOCALE->ftp_stat_line(upper_case(cmd),
-				   extra_statistics->ftp->commands[cmd]);
+      res += sprintf("<tr align=right><td><b>%s</b></td>"
+		     "<td align=right>%d</td><td> time%s</td></tr>\n",
+		     upper_case(cmd), extra_statistics->ftp->commands[cmd],
+		     (extra_statistics->ftp->commands[cmd] == 1)?"":"s");
     }
     res += "</table></ul>\n";
   }
@@ -828,29 +842,23 @@ public string status()
 public string *userinfo(string u, object|void id)
 {
   if(auth_module) return auth_module->userinfo(u);
-  else report_warning(sprintf("userinfo(): %s\n"
-			      "%s\n",
-			      LOCALE->no_auth_module(),
-			      describe_backtrace(backtrace())));
+  else report_warning(sprintf("userinfo(): No authorization module\n"
+			      "%s\n", describe_backtrace(backtrace())));
 }
 
 public string *userlist(object|void id)
 {
   if(auth_module) return auth_module->userlist();
-  else report_warning(sprintf("userlist(): %s\n"
-			      "%s\n",
-			      LOCALE->no_auth_module(),
-			      describe_backtrace(backtrace())));
+  else report_warning(sprintf("userlist(): No authorization module\n"
+			      "%s\n", describe_backtrace(backtrace())));
 }
 
 public string *user_from_uid(int u, object|void id)
 {
   if(auth_module)
     return auth_module->user_from_uid(u);
-  else report_warning(sprintf("user_from_uid(): %s\n"
-			      "%s\n",
-			      LOCALE->no_auth_module(),
-			      describe_backtrace(backtrace())));
+  else report_warning(sprintf("user_from_uid(): No authorization module\n"
+			      "%s\n", describe_backtrace(backtrace())));
 }
 
 
@@ -913,8 +921,6 @@ int|mapping check_security(function a, object id, void|int slevel)
 	break;
 	
       case MOD_DENY: // deny ip=...
-
-	// FIXME: LOCALE?
 	if(level[1](id->remoteaddr))
 	  return http_low_answer(403, "<h2>Access forbidden</h2>");
 	break;
@@ -968,7 +974,8 @@ int|mapping check_security(function a, object id, void|int slevel)
   };
 
   if (err) {
-    report_error(LOCALE->module_security_error(describe_backtrace(err)));
+    report_error(sprintf("Error during module security check:\n"
+			 "%s\n", describe_backtrace(err)));
     return(1);
   }
 
@@ -1016,9 +1023,9 @@ void clear_memory_caches()
 	m->clear_memory_caches();
       };
       if (err) {
-	report_error(LOCALE->
-		     clear_memory_cache_error(otomod[m],
-					      describe_backtrace(err)));
+	report_error(sprintf("clear_memory_caches() failed for module %O:\n"
+			     "%s\n",
+			     otomod[m], describe_backtrace(err)));
       }
     }
   }
@@ -1149,48 +1156,57 @@ string examine_return_mapping(mapping m)
       case 302: // redirect
 	 if (m->extra_heads && 
 	     (m->extra_heads->location))
-	   res = LOCALE->returned_redirect_to(m->extra_heads->location);
+	    res 
+	       = "Returned <i><b>redirect</b></i>;<br>&nbsp;&nbsp;&nbsp;to "
+	       "<a href="+(m->extra_heads->location)+">"
+	       "<font color=darkgreen><tt>"+
+	       (m->extra_heads->location)+
+	       "</tt></font></a><br>";
 	 else
-	   res = LOCALE->returned_redirect_no_location();
+	    res = "Returned redirect, but no location header\n";
 	 break;
 
       case 401:
 	 if (m->extra_heads["www-authenticate"])
-	   res = LOCALE->
-	     returned_authenticate(m->extra_heads["www-authenticate"]);
+	    res
+	       = "Returned <i><b>authentication failed</b></i>;"
+	       "<br>&nbsp;&nbsp;&nbsp;<tt>"+
+	       m->extra_heads["www-authenticate"]+"</tt><br>";
 	 else
-	   res = LOCALE->returned_auth_failed();
+	    res 
+	       = "Returned <i><b>authentication failed</b></i>.<br>";
 	 break;
 
       case 200:
-	 res = LOCALE->returned_ok();
+	 res
+	    = "Returned <i><b>ok</b></i><br>\n";
 	 break;
 	 
       default:
-	 res = LOCALE->returned_error(m->error);
+	 res
+	    = "Returned <b><tt>"+m->error+"</tt></b>.<br>\n";
    }
 
    if (!zero_type(m->len))
       if (m->len<0)
-	 res += LOCALE->returned_no_data();
+	 res+="No data ";
       else
-	 res += LOCALE->returned_bytes(m->len);
+	 res+=m->len+" bytes ";
    else if (stringp(m->data))
-      res += LOCALE->returned_bytes(strlen(m->data));
+      res+=strlen(m->data)+" bytes";
    else if (objectp(m->file))
       if (catch {
 	 array a=m->file->stat();
-	 res += LOCALE->returned_bytes(a[1]-m->file->tell());
-      })
-	res += LOCALE->returned_unknown_bytes();
+	 res+=(a[1]-m->file->tell())+" bytes ";
+      }) res+="? bytes";
 
-   if (m->data) res += LOCALE->returned_static_data();
-   else if (m->file) res += LOCALE->returned_open_file;
+   if (m->data) res+=" (static)";
+   else if (m->file) res+="(open file)";
 
-   if (stringp(m->extra_heads["http-content-type"]) ||
-       stringp(m->type)) {
-      res += LOCALE->returned_type(m->type);
-   }
+   if (stringp(m->extra_heads["http-content-type"]))
+      res+=" of <tt>"+m->type+"</tt>\n";
+   else if (stringp(m->type))
+      res+=" of <tt>"+m->type+"</tt>\n";
 
    res+="<br>";
 
@@ -1206,7 +1222,7 @@ mapping|int low_get_file(object id, int|void no_magic)
 #ifdef THREADS
   object key;
 #endif
-  TRACE_ENTER(LOCALE->request_for(id->not_query), 0);
+  TRACE_ENTER("Request for "+id->not_query, 0);
 
   string file=id->not_query;
   string loc;
@@ -1225,13 +1241,13 @@ mapping|int low_get_file(object id, int|void no_magic)
     {
       if(sscanf(loc, "gopher-%[^/]", loc))    // The directory icons.
       {
-	TRACE_LEAVE(LOCALE->magic_internal_gopher());
+	TRACE_LEAVE("Magic internal gopher image");
 	return internal_gopher_image(loc);
       }
       if(sscanf(loc, "spinner-%[^/]", loc)  // Configuration interface images.
 	 ||sscanf(loc, "roxen-%[^/]", loc)) // Try /internal-roxen-power
       {
-	TRACE_LEAVE(LOCALE->magic_internal_roxen());
+	TRACE_LEAVE("Magic internal roxen image");
 	return internal_roxen_image(loc);
       }
     }
@@ -1240,13 +1256,13 @@ mapping|int low_get_file(object id, int|void no_magic)
     if(id->prestate->diract && dir_module)
     {
       LOCK(dir_module);
-      TRACE_ENTER(LOCALE->directory_module(), dir_module);
+      TRACE_ENTER("Directory module", dir_module);
       tmp = dir_module->parse_directory(id);
       UNLOCK();
       if(mappingp(tmp)) 
       {
 	TRACE_LEAVE("");
-	TRACE_LEAVE(LOCALE->returning_data());
+	TRACE_LEAVE("Returning data");
 	return tmp;
       }
       TRACE_LEAVE("");
@@ -1260,14 +1276,14 @@ mapping|int low_get_file(object id, int|void no_magic)
   foreach(url_modules(id), funp)
   {
     LOCK(funp);
-    TRACE_ENTER(LOCALE->url_module(), funp);
+    TRACE_ENTER("URL Module", funp);
     tmp=funp( id, file );
     UNLOCK();
     
     if(mappingp(tmp)) 
     {
       TRACE_LEAVE("");
-      TRACE_LEAVE(LOCALE->returning_data());
+      TRACE_LEAVE("Returning data");
       return tmp;
     }
     if(objectp( tmp ))
@@ -1280,7 +1296,7 @@ mapping|int low_get_file(object id, int|void no_magic)
 	  tmp = (id->conf || this_object())->low_get_file( tmp, no_magic );
 	else
 	{
-	  TRACE_LEAVE(LOCALE->too_deep_recursion());
+	  TRACE_LEAVE("Too deep recursion");
 	  error("Too deep recursion in roxen::get_file() while mapping "
 		+file+".\n");
 	}
@@ -1288,7 +1304,7 @@ mapping|int low_get_file(object id, int|void no_magic)
       nest = 0;
       if(err) throw(err);
       TRACE_LEAVE("");
-      TRACE_LEAVE(LOCALE->returning_data());
+      TRACE_LEAVE("Returned data");
       return tmp;
     }
     TRACE_LEAVE("");
@@ -1299,7 +1315,7 @@ mapping|int low_get_file(object id, int|void no_magic)
   {
     foreach(tmp, funp)
     {
-      TRACE_ENTER(LOCALE->extension_module(loc), funp);
+      TRACE_ENTER("Extension Module ["+loc+"] ", funp);
       LOCK(funp);
       tmp=funp(loc, id);
       UNLOCK();
@@ -1307,17 +1323,17 @@ mapping|int low_get_file(object id, int|void no_magic)
       {
 	if(!objectp(tmp)) 
 	{
-	  TRACE_LEAVE(LOCALE->returning_data());
+	  TRACE_LEAVE("Returing data");
 	  return tmp;
 	}
 	fid = tmp;
 #ifdef MODULE_LEVEL_SECURITY
 	slevel = function_object(funp)->query("_seclvl");
 #endif
-	TRACE_LEAVE(LOCALE->returned_fd()
+	TRACE_LEAVE("Retured open filedescriptor."
 #ifdef MODULE_LEVEL_SECURITY
 		    +(slevel != id->misc->seclevel?
-		    LOCALE->seclevel_is_now(slevel):"")
+		    ". The security level is now "+slevel:"")
 #endif
 		    );
 #ifdef MODULE_LEVEL_SECURITY
@@ -1335,23 +1351,23 @@ mapping|int low_get_file(object id, int|void no_magic)
     loc = tmp[0];
     if(!search(file, loc)) 
     {
-      TRACE_ENTER(LOCALE->location_module(loc), tmp[1]);
+      TRACE_ENTER("Location Module ["+loc+"] ", tmp[1]);
 #ifdef MODULE_LEVEL_SECURITY
       if(tmp2 = check_security(tmp[1], id, slevel))
 	if(intp(tmp2))
 	{
-	  TRACE_LEAVE(LOCALE->module_access_denied());
+	  TRACE_LEAVE("Permission to access module denied");
 	  continue;
 	} else {
-	  TRACE_LEAVE(LOCALE->request_denied());
+	  TRACE_LEAVE("Request denied.");
 	  return tmp2;
 	}
 #endif
-      TRACE_ENTER(LOCALE->calling_find_file(), 0);
+      TRACE_ENTER("Calling find_file()...", 0);
       LOCK(tmp[1]);
       fid=tmp[1]( file[ strlen(loc) .. ] + id->extra_extension, id);
       UNLOCK();
-      TRACE_LEAVE(LOCALE->find_file_returned(fid));
+      TRACE_LEAVE(sprintf("find_file has returned %O", fid));
       if(fid)
       {
 	id->virtfile = loc;
@@ -1372,18 +1388,18 @@ mapping|int low_get_file(object id, int|void no_magic)
 	  id->misc->seclevel = slevel;
 #endif
 	  if(objectp(fid))
-	    TRACE_LEAVE(LOCALE->returned_fd()
+	    TRACE_LEAVE("Returned open file"
 #ifdef MODULE_LEVEL_SECURITY
 			+(slevel != oslevel?
-			  LOCALE->seclevel_is_now(slevel):"")
+			  ". The security level is now "+slevel:"")
 #endif
 			
 			+".");
 	  else
-	    TRACE_LEAVE(LOCALE->returned_directory_indicator()
+	    TRACE_LEAVE("Returned directory indicator"
 #ifdef MODULE_LEVEL_SECURITY
 			+(oslevel != slevel?
-			  LOCALE->seclevel_is_now(slevel):"")
+			  ". The security level is now "+slevel:"")
 #endif
 			);
 	  break;
@@ -1395,8 +1411,8 @@ mapping|int low_get_file(object id, int|void no_magic)
       // the mountpoint is /local/. It will slow things down, but...
       if(file+"/" == loc) 
       {
-	TRACE_ENTER(LOCALE->automatic_redirect_to_location(), tmp[1]);
-	TRACE_LEAVE(LOCALE->returning_data());
+	TRACE_ENTER("Automatic redirect to location module", tmp[1]);
+	TRACE_LEAVE("Returning data");
 	return http_redirect(id->not_query + "/", id);
       }
     }
@@ -1406,24 +1422,24 @@ mapping|int low_get_file(object id, int|void no_magic)
   {
     if(no_magic)
     {
-      TRACE_LEAVE(LOCALE->no_magic());
+      TRACE_LEAVE("No magic requested. Returning -1");
       return -1;
     }
     if(dir_module)
     {
       LOCK(dir_module);
-      TRACE_ENTER(LOCALE->directory_module(), dir_module);
+      TRACE_ENTER("Directory module", dir_module);
       fid = dir_module->parse_directory(id);
       UNLOCK();
     }
     else
     {
-      TRACE_LEAVE(LOCALE->no_directory_module());
+      TRACE_LEAVE("No directory module. Returning 'no such file'");
       return 0;
     }
     if(mappingp(fid)) 
     {
-      TRACE_LEAVE(LOCALE->returning_data());
+      TRACE_LEAVE("Returned data");
       return (mapping)fid;
     }
   }
@@ -1433,18 +1449,18 @@ mapping|int low_get_file(object id, int|void no_magic)
      (tmp=file_extension_modules(loc=extension(id->not_query), id)))
     foreach(tmp, funp)
     {
-      TRACE_ENTER(LOCALE->extension_module(loc), funp);
+      TRACE_ENTER("Extension module", funp);
 #ifdef MODULE_LEVEL_SECURITY
       if(tmp=check_security(funp, id, slevel))
 	if(intp(tmp))
 	{
-	  TRACE_LEAVE(LOCALE->module_access_denied());
+	  TRACE_LEAVE("Permission to access module denied");
 	  continue;
 	}
 	else
 	{
 	  TRACE_LEAVE("");
-	  TRACE_LEAVE(LOCALE->permission_denied());
+	  TRACE_LEAVE("Permission denied");
 	  return tmp;
 	}
 #endif
@@ -1456,12 +1472,12 @@ mapping|int low_get_file(object id, int|void no_magic)
 	if(!objectp(tmp))
 	{
 	  TRACE_LEAVE("");
-	  TRACE_LEAVE(LOCALE->returning_data());
+	  TRACE_LEAVE("Returning data");
 	  return tmp;
 	}
 	if(fid)
           destruct(fid);
-	TRACE_LEAVE(LOCALE->returned_new_open_file());
+	TRACE_LEAVE("Returned new open file");
 	fid = tmp;
 	break;
       } else
@@ -1474,10 +1490,9 @@ mapping|int low_get_file(object id, int|void no_magic)
       id->not_query += id->extension;
 
 
-    TRACE_ENTER(LOCALE->content_type_module(), types_module);
+    TRACE_ENTER("Content-type mapping module", types_module);
     tmp=type_from_filename(id->not_query, 1);
-    TRACE_LEAVE(tmp?LOCALE->returned_mime_type(tmp[0],tmp[1]):
-		LOCALE->missing_type());
+    TRACE_LEAVE(tmp?"Returned type "+tmp[0]+" "+tmp[1]:"Missing");
     if(tmp)
     {
       TRACE_LEAVE("");
@@ -1487,9 +1502,9 @@ mapping|int low_get_file(object id, int|void no_magic)
     return ([ "file":fid, ]);
   }
   if(!fid)
-    TRACE_LEAVE(LOCALE->returned_not_found());
+    TRACE_LEAVE("Returning 'no such file'");
   else
-    TRACE_LEAVE(LOCALE->returning_data());
+    TRACE_LEAVE("Returning data");
   return fid;
 }
 

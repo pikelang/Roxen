@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.245 1998/10/11 06:09:10 peter Exp $
+ * $Id: roxen.pike,v 1.246 1998/10/11 11:41:04 peter Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.245 1998/10/11 06:09:10 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.246 1998/10/11 11:41:04 peter Exp $";
 
 
 // Some headerfiles
@@ -79,11 +79,6 @@ int new_id(){ return idcount++; }
 // pids of the start-script and ourselves.
 int startpid, roxenpid;
 object roxen=this_object(), current_configuration;
-
-// Locale support
-object locale = Locale.Roxen.standard;
-#define LOCALE	locale->base_server
-
 
 program Configuration;	/*set in create*/
 
@@ -293,14 +288,13 @@ private static void accept_callback( object port )
  	return;
 
        case 24:
-	report_fatal(LOCALE->out_of_sockets());
+	report_fatal("Out of sockets. Restarting server gracefully.\n");
 	low_shutdown(-1);
 	return;
       }
     }
 #ifdef FD_DEBUG
-    mark_fd( file->query_fd(),
-	     LOCALE->out_of_sockets(file->query_address()));
+    mark_fd( file->query_fd(), "Connection from "+file->query_address());
 #endif
     pn[-1](file,pn[1]);
 #ifdef SOCKET_DEBUG
@@ -357,10 +351,13 @@ void handler_thread(int id)
 	}
       } while(1);
     }) {
-      report_error(LOCALE->uncaught_error(describe_backtrace(q)));
+      report_error("Uncaught error in handler thread: " +
+		   describe_backtrace(q) +
+		   "Client will not get any response from Roxen.\n");
       if (q = catch {h = 0;}) {
-	report_error(LOCALE->
-		     uncaught_error(describe_backtrace(q)));
+	report_error("Uncaught error in handler thread: " +
+		     describe_backtrace(q) +
+		     "Client will not get any response from Roxen.\n");
       }
     }
   }
@@ -457,8 +454,10 @@ object create_listen_socket(mixed port_no, object conf,
   {
     port = Stdio.Port( "stdin", accept_callback );
     port->set_id(port);
-    if(port->errno()) {
-      report_error(LOCALE->stdin_is_quiet(port->errno()));
+    if(port->errno())
+    {
+      report_error("Cannot listen to stdin.\n"
+		   "Errno is "+port->errno()+"\n");
     }
   } else {
     port = Stdio.Port();
@@ -476,9 +475,9 @@ object create_listen_socket(mixed port_no, object conf,
 #ifdef SOCKET_DEBUG
       perror("SOCKETS:    -> Failed.\n");
 #endif
-      report_warning(LOCALE->
-		     socket_already_bound_retry(ether, port_no,
-						port->errno()));
+      report_warning("Failed to open socket on "+ether+":"+port_no+
+		     " (already bound?)\nErrno is: "+ port->errno()+"\n"
+		     "Retrying...\n");
       sleep(1);
 #if defined(THREADS) && 0
       if(!port->bind(port_no, 0, ether))
@@ -486,8 +485,8 @@ object create_listen_socket(mixed port_no, object conf,
       if(!port->bind(port_no, accept_callback, ether))
 #endif
       {
-	report_warning(LOCALE->
-		       socket_already_bound(ether, port_no, port->errno()));
+	report_error("Failed to open socket on "+ether+":"+port_no+
+		     " (already bound?)\nErrno is: "+ port->errno()+"\n");
 	return 0;
       }
     }
@@ -531,8 +530,8 @@ object configuration_interface()
     };
     loading_config_interface = 0;
     if(!configuration_interface_obj) {
-      report_error(LOCALE->
-		   configuration_interface_failed(describe_backtrace(err)));
+      report_error(sprintf("Failed to load the configuration interface!\n%s\n",
+			   describe_backtrace(err)));
     }
   }
   return configuration_interface_obj;
@@ -541,7 +540,7 @@ object configuration_interface()
 // Unload the configuration interface
 void unload_configuration_interface()
 {
-  report_notice(LOCALE->unload_configuration_interface());
+  report_notice("Unloading the configuration interface\n");
 
   configuration_interface_obj = 0;
   loading_config_interface = 0;
@@ -653,7 +652,7 @@ private void parse_supports_string(string what)
 	if(foo=Stdio.read_bytes(file))
 	  parse_supports_string(foo);
 	else
-	  report_error(LOCALE->supports_bad_include(file));
+	  report_error("Supports: Cannot include file "+file+"\n");
       } else if(sscanf(foo, "#define %[^ ] %s", name, to)) {
 	name -= "\t";
 	foo_defines[name] = to;
@@ -707,7 +706,8 @@ private void parse_supports_string(string what)
 		     aggregate_multiset(@negative_supports(gazonk)),
 	    })});
 	}) {
-	  report_error(LOCALE->supports_bad_regexp(describe_backtrace(err)));
+	  report_error(sprintf("Failed to parse supports regexp:\n%s\n",
+			       describe_backtrace(err)));
 	}
       }
     }
@@ -739,7 +739,7 @@ void done_with_roxen_com()
     perror("Got new supports data from www.roxen.com\n");
     perror("Replacing old file with new data.\n");
 #ifndef THREADS
-    object privs=Privs(LOCALE->replacing_supports());
+    object privs=Privs("Replacing etc/supports");
 #endif
     mv("etc/supports", "etc/supports~");
     Stdio.write_file("etc/supports", new);
@@ -891,7 +891,7 @@ private void restore_current_user_id_number()
   perror("Restoring unique user ID information. (" + current_user_id_number 
 	 + ")\n");
 #ifdef FD_DEBUG
-  mark_fd(current_user_id_file->query_fd(), LOCALE->unique_uid_logfile());
+  mark_fd(current_user_id_file->query_fd(), "Unique user ID logfile.\n");
 #endif
 }
 
@@ -919,7 +919,7 @@ public string full_status()
   string res="";
   array foo = ({0.0, 0.0, 0.0, 0.0, 0});
   if(!sizeof(configurations))
-    return LOCALE->no_servers_enabled();
+    return "<B>No virtual servers enabled</B>\n";
   
   foreach(configurations, object conf)
   {
@@ -936,8 +936,6 @@ public string full_status()
 
   for(tmp = 1; tmp < 4; tmp ++)
   {
-    // FIXME: LOCALE?
-
     if(foo[tmp] < 1024.0)     
       foo[tmp] = sprintf("%.2f MB", foo[tmp]);
     else
@@ -950,12 +948,31 @@ public string full_status()
   int min = uptime/60 - hrs*60;
   hrs -= days*24;
 
+  res = sprintf("<table>"
+		"<tr><td><b>Version:</b></td><td colspan=2>%s</td></tr>\n"
+		"<tr><td><b>Booted on:</b></td><td colspan=2>%s</td></tr>\n"
+		"<tr><td><b>Time to boot:</b></td>"
+		"<td>%d sec</td></tr>\n"
+		"<tr><td><b>Uptime:</b></td>"
+		"<td colspan=2>%d day%s, %02d:%02d:%02d</td></tr>\n"
+		"<tr><td colspan=3>&nbsp;</td></tr>\n"
+		"<tr><td><b>Sent data:</b></td><td>%s"
+		"</td><td>%.2f Kbit/sec</td></tr><tr>\n",
+		real_version, ctime(boot_time), start_time-boot_time,
+		days, (days==1?"":"s"), hrs, min, uptime%60,
+		foo[1], foo[0] * 8192.0);
+  
+  res += "<td><b>Sent headers:</b></td><td>"+ foo[2] +"</td></tr>\n";
+	    
   tmp=(int)((foo[4]*600.0)/(uptime+1));
 
-  return(LOCALE->full_status(real_version, boot_time, start_time-boot_time,
-			     days, hrs, min, uptime%60,
-			     foo[1], foo[0] * 8192.0, foo[2],
-			     foo[4], (float)tmp/(float)10, foo[3]));
+  res += (sprintf("<tr><td><b>Number of requests:</b></td>"
+		  "<td>%8d</td><td>%.2f/min</td></tr>\n"
+		  "<tr><td><b>Received data:</b></td>"
+		  "<td>%s</td></tr>\n",
+		  foo[4], (float)tmp/(float)10, foo[3]));
+  
+  return res +"</table>";
 }
 
 
@@ -1004,11 +1021,11 @@ public string last_modified_by(object file, object id)
   mixed *u;
   
   if(objectp(file)) s=file->stat();
-  if(!s || sizeof(s)<5) return LOCALE->anonymous_user();
+  if(!s || sizeof(s)<5) return "A. Nonymous";
   uid=s[5];
   u=user_from_uid(uid, id);
   if(u) return u[0];
-  return LOCALE->anonymous_user();
+  return "A. Nonymous";
 }
 
 #endif /* !NO_COMPAT */
@@ -1354,7 +1371,7 @@ int set_u_and_gid()
 	setgid((int)g);
 #endif
 	setuid((int)u);
-	report_notice(LOCALE->setting_uid_gid_permanently((int)u, (int)g));
+	report_notice("Setting UID permanently to "+u+" and GID to "+g+"\n");
       } else {
 #endif
 #if efun(setegid) && defined(SET_EFFECTIVE)
@@ -1367,7 +1384,7 @@ int set_u_and_gid()
 #else
 	setuid((int)u);
 #endif
-	report_notice(LOCALE->setting_uid_gid((int)u, (int)g));
+	report_notice("Setting UID to "+u+" and GID to "+g+"\n");
 	return 1;
 #if efun(setuid)
       }
@@ -1402,7 +1419,7 @@ void reload_all_configurations()
   //  werror(sprintf("%O\n", roxen->config_stat_cache));
   int modified;
 
-  report_notice(LOCALE->reloading_config_interface());
+  report_notice("Reloading configuration files from disk\n");
   roxen->configs = ([]);
   roxen->setvars(roxen->retrieve("Variables", 0));
   roxen->initiate_configuration_port( 0 );
@@ -1444,9 +1461,8 @@ void reload_all_configurations()
       {
 	conf = roxen->enable_configuration(config);
       }) {
-	report_error(LOCALE->
-		     error_enabling_configuration(config,
-						  describe_backtrace(err)));
+	report_error("Error while enabling configuration "+config+":\n"+
+		     describe_backtrace(err)+"\n");
 	continue;
       }
     }
@@ -1455,9 +1471,8 @@ void reload_all_configurations()
       conf->start();
       conf->enable_all_modules();
     }) {
-      report_error(LOCALE->
-		   error_enabling_configuration(config,
-						describe_backtrace(err)));
+      report_error("Error while enabling configuration "+config+":\n"+
+		   describe_backtrace(err)+"\n");
       continue;
     }
     new_confs += ({ conf });
@@ -1466,7 +1481,7 @@ void reload_all_configurations()
   foreach(roxen->configurations - new_confs, conf)
   {
     modified = 1;
-    report_notice(LOCALE->disabling_configuration(conf->name));
+    report_notice("Disabling old configuration "+conf->name+"\n");
     if (conf->server_ports) {
       // Roxen 1.2.26 or later
       Array.map(values(conf->server_ports), conf->do_dest);
@@ -1488,7 +1503,7 @@ object enable_configuration(string name)
   object cf = Configuration(name);
   configurations += ({ cf });
   current_configuration = cf;
-  report_notice(LOCALE->enabled_server(name));
+  report_notice("Enabled the virtual server \""+name+"\".\n");
   
   return cf;
 }
@@ -1588,9 +1603,6 @@ private int ident_disabled_p() { return QUERY(default_ident); }
 private void define_global_variables( int argc, array (string) argv )
 {
   int p;
-
-  // FIXME: LOCALE!
-
   globvar("set_cookie", 0, "Set unique user id cookies", TYPE_FLAG,
 	  "If set to Yes, all users of your server whose clients support "
 	  "cookies will get a unique 'user-id-cookie', this can then be "
@@ -2047,12 +2059,13 @@ void initiate_configuration_port( int|void first )
   foreach(QUERY(ConfigPorts), port) {
     if ((< "ssl", "ssleay" >)[port[1]]) {
       // Obsolete versions of the SSL protocol.
-      report_warning(LOCALE->obsolete_ssl(port[1]));
+      report_warning("Obsolete SSL protocol-module \""+port[1]+"\".\n"
+		     "Converted to SSL3.\n");
       port[1] = "ssl3";
     }
     string key = MKPORTKEY(port);
     if (!configuration_ports[key]) {
-      report_notice(LOCALE->new_config_port(key));
+      report_notice(sprintf("New configuration port: %s\n", key));
       new_ports[key] = port;
     } else {
       // This is needed not to delete old unchanged ports.
@@ -2063,7 +2076,7 @@ void initiate_configuration_port( int|void first )
   // Then disable the old ones that are no more.
   foreach(indices(configuration_ports), string key) {
     if (zero_type(new_ports[key])) {
-      report_notice(LOCALE->disable_config_port(key));
+      report_notice(sprintf("Disabling configuration port: %s...\n", key));
       object o = configuration_ports[key];
       if (main_configuration_port == o) {
 	main_configuration_port = 0;
@@ -2073,9 +2086,8 @@ void initiate_configuration_port( int|void first )
       if (err = catch{
 	destruct(o);
       }) {
-	report_warning(LOCALE->
-		       error_disabling_config_port(key,
-						   describe_backtrace(err)));
+	report_warning(sprintf("Error disabling configuration port: %s:\n"
+			       "%s\n", key, describe_backtrace(err)));
       }
       o = 0;	// Be sure that there are no references left...
     }
@@ -2095,7 +2107,7 @@ void initiate_configuration_port( int|void first )
 	function rp;
 	array tmp;
 	if(!requestprogram) {
-	  report_error(LOCALE->no_request_program(port[1]));
+	  report_error("No request program for "+port[1]+"\n");
 	  continue;
 	}
 	if(rp = requestprogram()->real_port)
@@ -2106,26 +2118,29 @@ void initiate_configuration_port( int|void first )
 	// secret files.
 	object privs;
 	if(port[0] < 1024)
-	  privs = Privs(LOCALE->opening_low_port());
+	  privs = Privs("Opening listen port below 1024");
 	if(o=create_listen_socket(port[0],0,port[2],requestprogram,port)) {
-	  report_notice(LOCALE->opening_config_port(key));
+	  report_notice(sprintf("Opening configuration port: %s\n", key));
 	  if (!main_configuration_port) {
 	    main_configuration_port = o;
 	  }
 	  configuration_ports[key] = o;
 	} else {
-	  report_error(LOCALE->could_not_open_config_port(key));
+	  report_error(sprintf("The configuration port %s "
+			       "could not be opened\n", key));
 	}
       };
       if (erro) {
-	report_error(LOCALE->open_config_port_failed(key,
+	report_error(sprintf("Failed to open configuration port %s:\n"
+			     "%s\n", key,
 			     (stringp(erro)?erro:describe_backtrace(erro))));
       }
     }
   }
   if(!main_configuration_port)
   {
-    report_error(LOCALE->no_config_port());
+    report_error("No configuration ports could be created.\n"
+		 "Is roxen already running?\n");
     if(first)
       exit( -1 );	// Restart.
   }
@@ -2222,7 +2237,7 @@ void scan_module_dir(string d)
 
 	    foo = o->register_module();
 	    if (!foo) {
-	      MD_PERROR(("registration failed.\n"));
+	      MD_PERROR(("registration failed"));
 	      return 0;
 	    } else {
 	      MD_PERROR(("registered."));
@@ -2237,7 +2252,7 @@ void scan_module_dir(string d)
 	      allmodules[ file-("."+extension(file)) ] = module_info;
 	    } else {
 	      // Disabled module.
-	      report_notice(LOCALE->disabled_module(path+file));
+	      report_notice(sprintf("Module %O is disabled.\n", path+file));
 	    }
 	  } else {
 	    // Load failed.
@@ -2255,7 +2270,8 @@ void scan_module_dir(string d)
       }
     }
     if(strlen(_master->errors)) {
-      report_debug(LOCALE->module_compilation_errors(d, _master->errors));
+      report_debug("Compilation errors found while scanning modules in "+
+		    d+":\n"+ _master->errors+"\n");
     }
     _master->set_inhibit_compile_errors(0);
   }
@@ -2265,7 +2281,7 @@ void rescan_modules()
 {
   string file, path;
   mixed err;
-  report_notice(LOCALE->scanning_for_modules());
+  report_notice("Scanning module directories for modules");
   if (!allmodules) {
     allmodules=copy_value(somemodules);
   }
@@ -2275,7 +2291,8 @@ void rescan_modules()
     array err;
     err = catch(scan_module_dir( path ));
     if(err) {
-      report_error(LOCALE->module_scan_error(path, describe_backtrace(err)));
+      report_error("While scanning module dir (\""+path+"\"): " +
+		   describe_backtrace(err) + "\n");
     }
   }
   catch {
@@ -2284,7 +2301,8 @@ void rescan_modules()
     Stdio.write_file(".module_stat_cache", encode_value(module_stat_cache));
     Stdio.write_file(".allmodules", encode_value(allmodules));
   };
-  report_notice(LOCALE->module_scan_done(sizeof(allmodules)));
+  report_notice("Done with module directory scan. Found "+
+		sizeof(allmodules)+" modules.\n");
 }
 
 // ================================================= 
@@ -2436,7 +2454,7 @@ void exit_when_done()
 {
   object o;
   int i;
-  roxen_perror("Interrupt request received. Exiting,\n");
+  perror("Interrupt request received. Exiting,\n");
   die_die_die=1;
 //   trace(9);
   if(++_recurse > 4)
@@ -2476,7 +2494,7 @@ void exit_when_done()
 #endif /* THREADS */
       add_constant("roxen", 0);	// Paranoia...
       exit(-1);	// Restart.
-      roxen_perror("Odd. I am not dead yet.\n");
+      perror("Odd. I am not dead yet.\n");
     }
   }, 0.1);
   call_out(lambda(){
@@ -2512,7 +2530,7 @@ int main(int|void argc, array (string)|void argv)
 
   add_constant("write", perror);
 
-  report_notice(LOCALE->starting_roxen());
+  report_notice("Starting roxen\n");
   
 #ifdef FD_DEBUG  
   mark_fd(0, "Stdin");
@@ -2538,7 +2556,7 @@ int main(int|void argc, array (string)|void argv)
   argv -= ({ 0 });
   argc = sizeof(argv);
 
-  roxen_perror("Restart initiated at "+ctime(time())); 
+  perror("Restart initiated at "+ctime(time())); 
 
   define_global_variables(argc, argv);
 #ifdef ENABLE_NEIGHBOURHOOD
@@ -2574,7 +2592,7 @@ int main(int|void argc, array (string)|void argv)
 	   QUERY(next_supports_update)-time());
   
   if(set_u_and_gid())
-    roxen_perror("Setting UID and GID ...\n");
+    perror("Setting UID and GID ...\n");
 
 #ifdef THREADS
   start_handler_threads();
@@ -2595,7 +2613,7 @@ int main(int|void argc, array (string)|void argv)
     catch { signal(signum(sig), shutdown); };
   }
 
-  report_notice(LOCALE->roxen_started(time()-start_time));
+  report_notice("Roxen started in "+(time()-start_time)+" seconds.\n");
 #ifdef __RUN_TRACE
   trace(1);
 #endif
@@ -2619,7 +2637,6 @@ string check_variable(string name, mixed value)
    case "cachedir":
     if(!sscanf(value, "%*s/roxen_cache"))
     {
-      // FIXME: LOCALE?
       object node;
       node = (configuration_interface()->root->descend("Globals", 1)->
 	      descend("Proxy disk cache: Base Cache Dir", 1));
@@ -2633,7 +2650,7 @@ string check_variable(string name, mixed value)
    case "MyWorldLocation":
     if(strlen(value)<7 || value[-1] != '/' ||
        !(sscanf(value,"%*s://%*s/")==2))
-      return(LOCALE->url_format());
+      return "The URL should follow this format: protocol://computer[:port]/";
     break;
 
    case "abs_engage":
