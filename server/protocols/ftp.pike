@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.59 2001/06/28 13:49:08 wellhard Exp $
+ * $Id: ftp.pike,v 2.60 2001/08/03 14:32:35 wing Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -164,7 +164,8 @@ class RequestID2
       foreach(indices(m_rid), string var) {
 	if (!(< "create", "connection", "configuration",
                 "__INIT", "clone_me", "end", "ready_to_receive",
-		"send", "scan_for_query", "send_result", "misc" >)[var]) {
+		"send", "scan_for_query", "send_result", "misc",
+		"url_base" >)[var]) {
 #ifdef FTP2_DEBUG
 	  if (catch {
 #endif /* FTP2_DEBUG */
