@@ -1,15 +1,13 @@
 /*
- * $Id: tablist.pike,v 1.17 1999/09/28 15:46:51 mast Exp $
+ * $Id: tablist.pike,v 1.18 1999/09/29 10:27:05 nilsson Exp $
  *
  * Makes a tab list like the one in the config interface.
  *
- * $Author: mast $
+ * $Author: nilsson $
  */
 
-constant cvs_version="$Id: tablist.pike,v 1.17 1999/09/28 15:46:51 mast Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.18 1999/09/29 10:27:05 nilsson Exp $";
 constant thread_safe=1;
-
-#define old_rxml_compat 1
 
 #define use_contents_cache 0
 #define use_gif_cache      1
@@ -141,11 +139,7 @@ mapping query_tag_callers()
 
 mapping query_container_callers()
 {
-  return ([ "tablist":tag_tablist
-#if old_rxml_compat
-	    ,"config_tablist":tag_tablist
-#endif
-  ]);
+  return ([ "tablist":tag_tablist ]);
 }
 
 #if constant(thread_create)
