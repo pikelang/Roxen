@@ -20,6 +20,7 @@
 #define TYPE_LOCATION        11
 #define TYPE_COLOR	     12
 #define TYPE_TEXT_FIELD      13
+#define TYPE_TEXT            13
 #define TYPE_PASSWORD        14
 #define TYPE_FLOAT           15
 #define TYPE_PORTS           16
