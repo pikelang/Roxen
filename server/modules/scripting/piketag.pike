@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.22 2000/09/15 11:19:41 jhs Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.23 2000/09/18 15:29:07 kuntri Exp $";
 constant thread_safe=1;
 
 
@@ -519,22 +519,85 @@ constant tagdoc=([
 
  <p>When the pike tag returns, the contents of the output buffer is
  inserted into the page. It is not reparsed with the RXML parser.</p>
+
+ <p>Use entities within the Pike code, scope.variable is handled like
+ <ent>scope.variable</ent> in RXML.</p>
+
+ <p>Note: It is still possible to use the
+ <tag>pike</tag>...<tag>/pike</tag> container tag, though it behaves
+ exactly as it did in Roxen 2.0 and earlier and the functionality
+ mentioned below does not apply to it. The use of the container tag is
+ deprecated.</p>
+
+ <p>Below is a list of special helper functions and constructs which
+ are only available within the <tag>?pike ?</tag> tag.</p>
 </desc>
 
-<attr name='write' value='(string fmt, mixed ... args)'>
- write() is a helper function. It formats a string in the same way as
- printf and appends it to the output buffer. If given only one string
- argument, it's written directly to the output buffer without being
- interpreted as a format specifier.
+<attr name='write'>
+ write(string fmt, mixed ... args) is a helper function. It formats a
+ string in the same way as printf and appends it to the output buffer.
+ If given only one string argument, it's written directly to the
+ output buffer without being interpreted as a format specifier.
 </attr>
 
-<attr name='flush' value='()'>
+<attr name='flush'>
  flush() is a helper function. It returns the contents of the output
  buffer and resets it.
 </attr>
 
-<attr name='rxml' value='(string rxmlcode)'>
- rxml() is a helper function. It parses the string with the RXML parser.
+<attr name='rxml'>
+ rxml(string rxmlcode) is a helper function. It parses the string with
+ the RXML parser.
+</attr>
+
+
+<attr name='\"//O ...\" or \"/*O ... */\"'>
+ Pike comment with an 'O' (the letter, not the number) as the very
+ first character treats the rest of the text in the comment as output
+ text that's written directly to the output buffer.
+</attr>
+
+<attr name='\"//X ...\" or \"/*X ... */\"'>
+ A Pike comment with an 'X' as the very first character treats the
+ rest of the text in the comment as RXML code that's executed by the
+ RXML parser and then written to the output buffer.
+</attr>
+
+<attr name='#include \"...\"'>
+ An #include preprocessor directive includes the specified file.
+</attr>
+
+<attr name='#inherit \"...\"'>
+ An #inherit preprocessor directive puts a corresponding inherit
+ declaration in the class that's generated to contain the Pike code in
+ the tag, i.e. it inherits a specified file from the Roxen filesystem.
+
+ <ex type='box'>
+
+  <?pike
+
+    //O <pre>
+    int first = 1;
+    for( var.counter=100; var.counter>1; var.counter--,first=0 )
+    {
+      if( !first )
+      {
+        //X &var.counter; bottles of beer on the wall
+        //O
+      }
+      //X &var.counter; bottles of beer on the wall
+      //X &var.counter; bottles of beer
+      //O take one down, pass it around
+    }
+    //O one bottle of beer on the wall
+    //O one bottle of beer
+    //O take it down, pass it around
+    //O no bottles of beer on the wall
+    //O </pre>
+
+  ?>
+ </ex>
 </attr>",
+
     ]);
 #endif
