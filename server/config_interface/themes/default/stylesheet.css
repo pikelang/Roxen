@@ -151,3 +151,10 @@ table.module-sub-list
 .doc li {
        list-style-image: inherit;
 }
+
+.th_top    { border-top: solid 2px #d5d5db; 
+             border-bottom: solid 1px #d5d5db;
+             background: #f5f5fb;
+             text-align: left; }
+.td_top    { padding-right: 10px; border-top: solid 1px #d5d5db; }
+.td_bottom { padding-right: 10px; border-bottom: solid 1px #d5d5db; }
