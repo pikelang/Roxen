@@ -1,5 +1,5 @@
 /*
- * $Id: proc.pike,v 1.6 2000/09/08 22:28:39 lange Exp $
+ * $Id: proc.pike,v 1.7 2000/09/19 15:45:05 lange Exp $
  */
 
 inherit "wizard";
@@ -140,11 +140,12 @@ mixed parse(object id)
 			  (int)id->variables->pid||getpid())*"";
 
   return ("<font size='+1'>"+ 
-	  sprintf(LOCALE(80,"Process Tree for %s"),
-		  id->variables->pid||getpid())+"</font><pre>\n"+
+	  sprintf(LOCALE(80,"Process Tree for %d"),
+		  (int)id->variables->pid||getpid())+"</font><pre>\n"+
 	  tree+
 	  "</pre><font size='+1'>"+
-	  sprintf(LOCALE(81,"Misc status for %s"), id->variables->pid||getpid())+
+	  sprintf(LOCALE(81,"Misc status for %d"), 
+		  (int)id->variables->pid||getpid())+
 	  "</font><pre>"+LOCALE(82,"Memory Usage:")+" "+map+"\n\n"+
 	  LOCALE(83,"Credentials:")+"<br />"+cred(id)+"\n"+
 	  LOCALE(84,"Current working directory:")+" "+
