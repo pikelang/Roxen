@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.29 1999/02/04 21:02:33 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.30 1999/02/04 21:13:31 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -205,25 +205,29 @@ class imap_mail
     }
   
   // FIXME: Handle multiple headers... 
-  object make_envelope(mapping(string:string) h)
-    {
-      object|string from = address_list_to_imap(first_header(h->from));
-      object|string sender = (h->sender
-			      ? address_list_to_imap(first_header(h->sender))
+  object make_envelope(mapping(string:string|array(string)) h)
+  {
+    object|string from = address_list_to_imap(first_header(h->from));
+    object|string sender = (h->sender
+			    ? address_list_to_imap(first_header(h->sender))
+			    : from);
+    object|string reply_to = (h["reply-to"]
+			      ? address_list_to_imap(first_header(h["reply-to"]))
 			      : from);
-      object|string reply_to = (h["reply-to"]
-				? address_list_to_imap(first_header(h["reply-to"]))
-				: from);
-      
-      imap_list( ({ string_to_imap(h->date),
-		    string_to_imap(h->subject),
-		    from, sender, reply_to,
-		    address_list_to_imap(first_header(h->to)),
-		    address_list_to_imap(first_header(h->cc)),
-		    address_list_to_imap(first_header(h->bcc)),
-		    string_to_imap(h["in-reply-to"]),
-		    string_to_imap(h["message-id"]) }) );
-    }
+
+#ifdef IMAP_DEBUG
+    werror("make_envelope(%O)\n", h);
+#endif /* IMAP_DEBUG */
+    
+    imap_list( ({ string_to_imap(h->date),
+		  string_to_imap(h->subject),
+		  from, sender, reply_to,
+		  address_list_to_imap(first_header(h->to)),
+		  address_list_to_imap(first_header(h->cc)),
+		  address_list_to_imap(first_header(h->bcc)),
+		  string_to_imap(h["in-reply-to"]),
+		  string_to_imap(h["message-id"]) }) );
+  }
   
   // array collect(mixed ...args) { return args; }
   
