@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.206 1999/09/04 22:40:43 kinkie Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.207 1999/09/05 01:35:36 per Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -2928,7 +2928,7 @@ object enable_module( string modname )
   invalidate_cache();
 #ifdef MODULE_DEBUG
 #if constant(gethrtime)
-  perror(" Done (%3.3f seconds).\n", (gethrtime()-start_time)/1000000.0);
+  perror(" Done (%3.2fms).\n", (gethrtime()-start_time)/1000.0);
 #else
   perror(" Done.\n");
 #endif
@@ -3174,7 +3174,7 @@ int load_module(string module_file)
       report_error(LOCALE->module_compilation_errors(module_file, e->get()));
       return(0);
     }
-    prog = roxen->last_loaded();
+    prog = object_program( obj );
   }
 
   if (err) {
@@ -3280,7 +3280,7 @@ int load_module(string module_file)
   ({ tmpp->name, tmpp->doc, module_data[0] });
 #ifdef MODULE_DEBUG
 #if efun(gethrtime)
-  perror(" Done (%3.3f seconds).\n", (gethrtime()-start_time)/1000000.0);
+  perror(" Done (%3.2fms).\n", (gethrtime()-start_time)/1000.0);
 #else
   perror(" Done.\n");
 #endif
