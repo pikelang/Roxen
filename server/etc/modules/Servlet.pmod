@@ -418,7 +418,6 @@ static void native_close(object str)
   if(f) {
     m_delete(streams, id);
     f->close();
-    destruct(f);
   }
 }
 
