@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.469 2004/10/27 14:43:35 wellhard Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.470 2004/12/01 17:00:04 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -7991,10 +7991,26 @@ the respective attributes below for further information.</p></desc>
    nodes in the content, i.e. the whole content.</p></item>
  </list>
 
- <p>A step may be followed by \'<tt>[<i>n</i>]</tt>\' to choose
- the nth item in the selected set. The index n may be negative to
- select an element in reverse order, i.e. -1 selects the last element,
- -2 the second-to-last, etc.</p>
+ <p>A step may be followed by \'<tt>[<i>test</i>]</tt>\' to filter the
+ selected set in various ways. The test may be any of the
+ following:</p>
+
+ <list type=\"ul\">
+   <item>If <i>test</i> is an integer then the item on that position
+   in the set is selected. The index n may be negative to select an
+   element in reverse order, i.e. -1 selects the last element, -2 the
+   second-to-last, etc.</item>
+
+   <item>If <i>test</i> is on the form \'<tt>@<i>name</i></tt>\' then
+   only the elements that have an attribute with the given name are
+   selected.</item>
+
+   <item>If <i>test</i> is on the form
+   \'<tt>@<i>name</i>=<i>value</i></tt>\' then only the elements that
+   have an attribute with the given name and value are selected.
+   <i>value</i> is a string literal delimited by either <tt>\"</tt> or
+   <tt>\'</tt>.</item>
+ </list>
 
  <p>An example: The expression \'<tt>p/*[2]/@href</tt>\' first
  selects all <tag>p</tag> elements in the content. In the content of
