@@ -665,9 +665,12 @@ class Tracer
   {
     if(!m)return "";
     if(functionp(m)) m = function_object(m);
-    return (strlen(m->query("_name")) ? m->query("_name") :
-	    (m->query_name&&m->query_name()&&strlen(m->query_name()))?
-	    m->query_name():m->register_module()[1]);
+    catch {
+      return (strlen(m->query("_name")) ? m->query("_name") :
+              (m->query_name&&m->query_name()&&strlen(m->query_name()))?
+              m->query_name():m->register_module()[1]);
+    };
+    return "Internal RXML tag";
   }
 
   void trace_enter_ol(string type, function|object module)
@@ -842,20 +845,24 @@ string tag_if( string t, mapping m, string c, RequestID id )
   if(m->or)  { and = 0; m_delete( m, "or" ); }
   if(m->and) { and = 1; m_delete( m, "and" ); }
   array possible = indices(m) & indices(real_if_callers);
+
+  LAST_IF_TRUE=0;
   foreach(possible, string s)
   {
     res = real_if_callers[ s ]( m[s], id, m, and, s );
-    if( res && !and )
+    LAST_IF_TRUE=res;
+    if(res)
     {
-      LAST_IF_TRUE = 1;
-      return c+"<true>";
-    } else if( !res && and ) {
-      LAST_IF_TRUE = 0;
-      return "<false>";
+      if(!and) 
+        return c+"<true>";
+    }
+    else 
+    {
+      if(and) 
+        return "<false>";
     }
   }
-  LAST_IF_TRUE = and;
-  if(and)
+  if( LAST_IF_TRUE )
     return c+"<true>";
   return "<false>";
 }
@@ -989,7 +996,8 @@ class IfIs
     if(!is) return strlen(value);
     value = lower_case( value );
     is = lower_case( is );
-    return (glob(is,value)||sizeof(Array.filter( is/",", glob, value )));
+    return ((is==value)||glob(is,value)||
+            sizeof(Array.filter( is/",", glob, value )));
   }
 
   int match_in_map( string value, RequestID id )
@@ -1001,7 +1009,8 @@ class IfIs
     if(!is || !value) return !!value;
     value = lower_case( value );
     is = lower_case( is );
-    return (glob(is,value)||sizeof(Array.filter( is/",", glob, value )));
+    return ((is==value)||glob(is,value)||
+            sizeof(Array.filter( is/",", glob, value )));
   }
 }
 
@@ -1162,6 +1171,8 @@ int if_group( string u, RequestID id, mapping m)
 mapping query_if_callers()
 {
   return ([
+    "successful":lambda(string u, RequestID id){ return LAST_IF_TRUE; },
+    "failed":lambda(string u, RequestID id){ return !LAST_IF_TRUE; },
     "accept":IfMatch( "accept", 0, 1),
     "config":IfIs( "config", 0 ),
     "cookie":IfIs( "cookies", 0 ),
