@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.245 2001/02/05 21:12:36 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.246 2001/02/05 21:27:24 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1554,6 +1554,8 @@ Please install a newer version of Pike.
   add_constant("report_warning",report_warning);
   add_constant("report_error",  report_error);
   add_constant("report_fatal",  report_fatal);
+  add_constant("report_warning_sparsely", report_warning_sparsely);
+  add_constant("report_error_sparsely", report_error_sparsely);
   add_constant("werror",        roxen_perror);
   add_constant("roxen_perror",  roxen_perror);
   add_constant("roxenp",        lambda() { return roxen; });
