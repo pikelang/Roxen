@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2001, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.157 2004/05/27 23:18:50 _cvs_stephen Exp $
+// $Id: wizard.pike,v 1.158 2004/05/29 02:10:05 _cvs_stephen Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -552,7 +552,7 @@ string compress_state(mapping state)
   m_delete(state,"prev_page.x");
   m_delete(state,"prev_page.y");
   m_delete(state,"help");
-  m_delete(state,"action");
+  m_delete(state,"task");
   m_delete(state,"unique");
 
   foreach(glob("!_*", indices(state)), string s)
@@ -622,13 +622,13 @@ string parse_wizard_page(string form, RequestID id, string wiz_name,
 		    ([ "cvar":wizard_tag_var,
 		       "help":parse_wizard_help]), id, foo );
 
-  // We commonly feed the action variable both from the URL with
-  // "...?action=foo.pike" and with an <input> tag from the previous
+  // We commonly feed the task variable both from the URL with
+  // "...?task=foo.pike" and with an <input> tag from the previous
   // page. Netscape ignores one of them, but IE sends both. Thus we
   // have to discard the extra value in the IE case. (We simply assume
   // both values are the same here; maybe it could be done better.)
-  if (stringp (id->variables->action))
-    id->variables->action = (id->variables->action/"\0")[0];
+  if (stringp (id->variables->task))
+    id->variables->task = (id->variables->task/"\0")[0];
 
   //  Use custom method if caller doesn't like GET or perhaps wants other
   //  attributes included.
@@ -645,8 +645,8 @@ string parse_wizard_page(string form, RequestID id, string wiz_name,
   
   res = ("\n<!--Wizard-->\n"
          "<form " + method + ">\n" +
-	 (stringp (id->variables->action) ?
-	  "<input type='hidden' name='action' value='"+id->variables->action +
+	 (stringp (id->variables->task) ?
+	  "<input type='hidden' name='task' value='"+id->variables->task +
 	  "' />\n" : "") +
 	 "<input type='hidden' name='_page' value='"+page+"' />\n"
 	 +state_form+
@@ -1016,12 +1016,12 @@ mapping get_actions(RequestID id, string base,string dir, array args)
 
 	if(id->misc->raw_wizard_actions)
  	  acts[sm][0][name]=
- 	    ({ name, base, (["action":act,"unique":(string)(zonk++) ]),
+ 	    ({ name, base, (["task":act,"unique":(string)(zonk++) ]),
  		  (get_wizard(act,dir,@args)->doc||"") });
  	else
 	  acts[sm]+=
 	    ({"<!-- "+rn+" --><dt><font size='+2'>"
-	      "<a href='"+base+"?action="+act+"&unique="+(zonk++)+"'>"+
+	      "<a href='"+base+"?task="+act+"&unique="+(zonk++)+"'>"+
 	      name+"</a></font><dd>"+(get_wizard(act,dir,@args)->doc||"")});
       }
     };
@@ -1063,7 +1063,7 @@ mixed wizard_menu(RequestID id, string dir, string base, mixed ... args)
   else
     focused_wizard_menu = id->variables->sm=="0"?0:id->variables->sm;
 
-  if(!id->variables->action)
+  if(!id->variables->task)
   {
     mixed wizbug;
     wizbug = catch {
@@ -1090,14 +1090,14 @@ mixed wizard_menu(RequestID id, string dir, string base, mixed ... args)
       return res;
     }
   } else {
-    // We commonly feed the action variable both from the URL with
-    // "...?action=foo.pike" and with an <input> tag from the previous
+    // We commonly feed the task variable both from the URL with
+    // "...?task=foo.pike" and with an <input> tag from the previous
     // page. Netscape ignores one of them, but IE sends both. Thus we
     // have to discard the extra value in the IE case. (We simply assume
     // both values are the same here; maybe it could be done better.)
-    id->variables->action = (id->variables->action/"\0")[0];
+    id->variables->task = (id->variables->task/"\0")[0];
 
-    object o = get_wizard(id->variables->action,dir);
+    object o = get_wizard(id->variables->task,dir);
     if(!o) {
       mixed res = "<pre>"+err+"</pre>";
       err="";
