@@ -1,13 +1,10 @@
 /* This is a roxen module. (c) Informationsvävarna AB 1997.
- * $Id: killframe.pike,v 1.3 1997/05/24 13:51:36 grubba Exp $
+ * $Id: killframe.pike,v 1.4 1997/06/09 18:28:28 peter Exp $
  *
  * Adds some java script that will prevent others from putting
  * your page in a frame.
  * 
- * Will also strip any occurences of the string 'index.html' 
- * from the URL. Currently this is done a bit clumsy, making
- * URLs like http://www.roxen.com/index.html/foo.html break,
- * this should be fixed.
+ * Will also remove occuranses of "index.html" at the end of the URL.
  * 
  * made by Peter Bortas <peter@infovav.se> Januari -97
  */
@@ -28,7 +25,7 @@ mixed *register_module()
        "&lt;killframe&gt;: Adds some java script that will prevent others\n"
        "             from putting your page in a frame.\n\n"
        "             Will also strip any occurences of the string\n"
-       "             'index.html' from the URL."
+       "             'index.html' from the end of the URL."
        "</pre>"
        ), ({}), 1,
     });
@@ -37,8 +34,12 @@ mixed *register_module()
 string tag_killframe( string tag, mapping m, object id )
 {
   // Links to index.html are ugly.
-  string my_url = id->conf->query("MyWorldLocation") + id->raw_url[1..] -
-    "index.html";
+  string my_url = roxen->query("MyWorldLocation") + id->raw_url[1..];
+
+  string flip = reverse(my_url);
+    
+  if( flip[0..9] == reverse("index.html") )
+    my_url = reverse(flip[10..]);
 
   if (id->supports->javascript)
     string head = "<script language=javascript>\n"
