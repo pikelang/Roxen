@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.102 1998/04/09 15:18:40 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.103 1998/04/15 14:44:20 grubba Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -1041,7 +1041,9 @@ mapping (string:string) selected_nodes =
   "Globals":"/Globals",
   "Errors":"/Errors",
   "Actions":"/Actions",
+#ifdef ENABLE_MANUAL
   "Docs":"/Docs"
+#endif /* ENABLE_MANUAL */
 ]);
 
 array tabs = ({
@@ -1049,7 +1051,9 @@ array tabs = ({
   "Globals",
   "Errors",
   "Actions",
+#ifdef ENABLE_MANUAL
   "Docs",
+#endif /* ENABLE_MANUAL */
 });
 
 array tab_names = ({
@@ -1057,7 +1061,9 @@ array tab_names = ({
  "Global Variables",
  "Event Log",
  "Actions",
+#ifdef ENABLE_MANUAL
  "Manual",
+#endif /* ENABLE_MANUAL */
 });
 		
 
