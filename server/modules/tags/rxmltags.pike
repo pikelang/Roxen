@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.358 2002/03/25 16:56:27 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.359 2002/03/27 21:38:40 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2403,15 +2403,26 @@ class UserTagContents
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
   array(RXML.Type) result_types = ({RXML.t_any (RXML.PXml)});
 
+  class IdentityVar (string self)
+  {
+    mixed rxml_var_eval (RXML.Context ctx, string var, string scope_name,
+			 void|RXML.Type type)
+    {
+      return ENCODE_RXML_XML (self, type);
+    }
+  }
+
+  // Got two frame types in this tag: First the normal frame which is
+  // created when <contents/> is parsed. Second the ExpansionFrame
+  // which is made by the normal frame with the actual content the
+  // UserTag frame got.
+
   class Frame
   {
     inherit RXML.Frame;
     constant is_user_tag_contents_tag = 1;
 
     string scope;
-    array exec;
-    string select_path;
-    mapping(string:string) save_args;
 
     local RXML.Frame get_upframe()
     {
@@ -2428,108 +2439,47 @@ class UserTagContents
       parse_error ("No associated defined tag to get contents from.\n");
     }
 
-    local string|RXML.PCode get_content (RXML.Frame upframe, mapping(string:string) args)
-    {
-      if (string expr = args["copy-of"] || args["value-of"]) {
-	if (args["copy-of"] && args["value-of"])
-	  parse_error ("Attributes copy-of and value-of are mutually exclusive.\n");
-	string insert_type = args["copy-of"] ? "copy-of" : "value-of";
-
-	mapping(string:string|RXML.PCode) subs = upframe->user_tag_subcontents;
-	if (!subs) subs = upframe->user_tag_subcontents = ([]);
-
-	select_path = "v" + expr;
-	string|RXML.PCode value = subs[select_path];
-	if (!value || objectp (value) && value->is_stale()) {
-
-	  if (sscanf (expr, "%*[ \t\n\r]@%*[ \t\n\r]%s", expr) == 3) {
-	    // Special treatment to select attributes at the top level.
-	    sscanf (expr, "%[^][ \t\n\r/@(){}:.,]%*[ \t\n\r]%s", expr, string rest);
-	    if (!sizeof (expr))
-	      parse_error ("Error in %s attribute: No attribute name after @.\n",
-			   insert_type);
-	    if (sizeof (rest))
-	      parse_error ("Error in %s attribute: "
-			   "Unexpected subpath %O after attribute %s.\n",
-			   insert_type, rest, expr);
-	    if (expr == "*") {
-	      if (insert_type == "copy-of")
-		value = upframe->vars->args;
-	      else
-		foreach (indices (upframe->vars), string var)
-		  if (!(<"args", "rest-args", "contents">)[var] &&
-		      !has_prefix (var, "__contents__")) {
-		    value = upframe->vars[var];
-		    break;
-		  }
-	    }
-	    else if (!(<"args", "rest-args", "contents">)[expr] &&
-		     !has_prefix (expr, "__contents__"))
-	      if (string val = upframe->vars[expr])
-		if (insert_type == "copy-of")
-		  value = Roxen.make_tag_attributes (([expr: val]))[1..];
-		else
-		  value = val;
-	  }
-
-	  else {
-	    string|SloppyDOM.Document doc = upframe->content_text;
-	    if (stringp (doc))
-	      doc = upframe->content_text = SloppyDOM.parse (doc, 1);
-	    mixed res = 0;
-	    if (mixed err = catch (
-		  res = doc->simple_path (expr, insert_type == "copy-of")))
-	      // Assume that the error is some parse error regarding the expression.
-	      parse_error ("Error in %s attribute: %s", insert_type,
-			   describe_error (err));
-
-	    if (insert_type == "copy-of")
-	      value = res;
-	    else {
-	      if (arrayp (res)) res = sizeof (res) && res[0];
-	      if (objectp (res))
-		value = res->get_text_content();
-	      else if (mappingp (res) && sizeof (res))
-		value = values (res)[0];
-	      else
-		value = "";
-	    }
-	  }
-
-	  subs[select_path] = value;
-	}
-	return value;
-      }
-
-      else {
-	string|RXML.PCode value = upframe->user_tag_contents;
-	if (value && (stringp (value) || !value->is_stale()))
-	  return value;
-	if (objectp (value = upframe->content_text))
-	  return value->xml_format();
-	else
-	  return value;
-      }
-    }
+    // Note: The ExpansionFrame instances aren't saved and restored
+    // here for p-code use, since they can't be shared between
+    // evaluations (due to e.g. orig_ctx_scopes).
 
     array do_return()
     {
+      if (args["copy-of"] && args["value-of"])
+	parse_error ("Attributes copy-of and value-of are mutually exclusive.\n");
+
       scope = args->scope;
       RXML.Frame upframe = get_upframe();
+
+      if (compat_level < 2.4 && !args["copy-of"] && !args["value-of"])
+	// Must reevaluate the contents each time it's inserted to be
+	// compatible in old <contents/> tags without copy-of or
+	// value-of arguments.
+	args->eval = "";
+
+      // Note that args will be parsed again in the ExpansionFrame.
 
       if (upframe->is_define_tag) {
 	// If upframe is a <define> tag and not the user tag then
 	// we're being preparsed. Output an entity on the form
-	// &_.__contents__n; and register a magic entity value for the
-	// corresponding __contents__n variable which will do the
-	// evaluation in the postparse fill-in pass. This way it works
-	// if the preparsing makes a <contents> tag end up in an
-	// attribute value.
-	if (mapping(string:RXML.Value) ctags = upframe->preparsed_contents_tags) {
-	  string var = "__contents__" + ++upframe->last_contents_id;
-	  save_args = args;	// args is zeroed after do_return, so save it elsewhere.
-	  ctags[var] = this_object();
-	  return ({"&_." + var + ";"});
+	// &_internal_.4711; so that we can find it again after the
+	// preparse.
+	if (mapping(string:ExpansionFrame) ctag = upframe->preparsed_contents_tags) {
+	  RXML.Context ctx = RXML_CONTEXT;
+	  string var = ctx->alloc_internal_var();
+	  ctag[var] = ExpansionFrame (
+	    0,
+	    args["copy-of"] || args["value-of"] ?
+	    RXML.t_xml (content_type->parser_prog) : content_type,
+	    args);
+	  // Install a value for &_internal_.4711; that expands to
+	  // itself, in case something evaluates it during preparse.
+	  // Don't use the proper ctx->set_var since these assigments
+	  // doesn't need to be registered if p-code is created;
+	  // they're only used temporarily during the preparse.
+	  ctx->scopes->_internal_[var] = IdentityVar ("&_internal_." + var + ";");
+	  result_type = result_type (RXML.PNone);
+	  return ({"&_internal_." + var + ";"});
 	}
 	else
 	  parse_error ("This tag is currently only supported in "
@@ -2537,90 +2487,241 @@ class UserTagContents
       }
 
       else {
-	RXML.Context ctx = RXML_CONTEXT;
-	array ret;
+	ExpansionFrame exp_frame =
+	  ExpansionFrame (upframe,
+			  args["copy-of"] || args["value-of"] ?
+			  RXML.t_xml (content_type->parser_prog) : content_type,
+			  args);
+#ifdef DEBUG
+	if (flags & RXML.FLAG_DEBUG) exp_frame->flags |= RXML.FLAG_DEBUG;
+#endif
+	return ({exp_frame});
+      }
+    }
+  }
 
-	if (ctx->scopes == upframe->saved_scopes)
-	  ret = ({get_content (upframe, args)});
-	else {
-	  // This is poking in the internals; there ought to be some
-	  // sort of interface here.
-	  ret = ({get_content (upframe, args),
-		  lambda (mapping(string:mixed) old_scopes,
-			  mapping(RXML.Frame:array) old_hidden)
-		  {
-		    // Wrap this in a lambda to avoid getting all the
-		    // locals in do_return in the dynamic frame.
-		    return lambda()
-			   {
-			     RXML_CONTEXT->scopes = old_scopes;
-			     RXML_CONTEXT->hidden = old_hidden;
-			     return RXML.nil;
-			   };
-		  } (ctx->scopes, ctx->hidden)});
-	  ctx->scopes = upframe->saved_scopes;
-	  ctx->hidden = upframe->saved_hidden;
-	}
+  class ExpansionFrame
+  {
+    inherit RXML.Frame;
+    int do_iterate;
 
-	if (upframe->compile) {
-	  flags |= RXML.FLAG_COMPILE_RESULT;
-	  exec = stringp (ret[0]) && ret;
+    RXML.Frame upframe;
+
+    static void create (void|RXML.Frame upframe_,
+			void|RXML.Type type, void|mapping contents_args)
+    {
+      if (type) {		// Might be created from decode or _clone_empty.
+	content_type = type, result_type = type (RXML.PNone);
+	args = contents_args;
+	if (args["copy-of"] || args["value-of"])
+	  // If there's an error it'll typically be completely lost if
+	  // we use copy-of or value-of, so propagate it instead.
+	  flags |= RXML.FLAG_DONT_RECOVER;
+	if ((upframe = upframe_)) {
+	  // upframe is zero if we're called during preparse.
+	  if (upframe->compiled_content && !upframe->compiled_content->is_stale()) {
+	    content = upframe->compiled_content;
+	    // The internal way to flag a compiled but unevaluated
+	    // flag is to set args to a function returning the
+	    // argument mapping. It'd be prettier with a flag for
+	    // this.
+	    args = (mixed) lambda (mapping args) {
+			     return lambda() {return args;};
+			   } (args);
+	  }
+	  else {
+	    content = upframe->content_text;
+	    flags |= RXML.FLAG_UNPARSED;
+	  }
+	  if (upframe->compile) flags |= RXML.FLAG_COMPILE_INPUT;
 	}
-	return ret;
       }
     }
 
-    // The frame might be used as a variable value if preparsing is in
-    // use (see the is_define_tag stuff in do_return).
-    mixed rxml_var_eval (RXML.Context ctx, string var, string scope_name,
-			 void|RXML.Type type)
+    local mixed get_content()
     {
-      RXML.Frame upframe = ctx->frame;
+      if (string expr = args["copy-of"] || args["value-of"]) {
+	string insert_type = args["copy-of"] ? "copy-of" : "value-of";
+
+	string value;
+	if (sscanf (expr, "%*[ \t\n\r]@%*[ \t\n\r]%s", expr) == 3) {
+	  // Special treatment to select attributes at the top level.
+	  sscanf (expr, "%[^][ \t\n\r/@(){}:.,]%*[ \t\n\r]%s", expr, string rest);
+	  if (!sizeof (expr))
+	    parse_error ("Error in %s attribute: No attribute name after @.\n",
+			 insert_type);
+	  if (sizeof (rest))
+	    parse_error ("Error in %s attribute: "
+			 "Unexpected subpath %O after attribute %s.\n",
+			 insert_type, rest, expr);
+	  if (expr == "*") {
+	    if (insert_type == "copy-of")
+	      value = upframe->vars->args;
+	    else
+	      foreach (indices (upframe->vars), string var)
+		if (!(<"args", "rest-args", "contents">)[var] &&
+		    !has_prefix (var, "__contents__")) {
+		  value = upframe->vars[var];
+		  break;
+		}
+	  }
+	  else if (!(<"args", "rest-args", "contents">)[expr] &&
+		   !has_prefix (expr, "__contents__"))
+	    if (string val = upframe->vars[expr])
+	      if (insert_type == "copy-of")
+		value = Roxen.make_tag_attributes (([expr: val]));
+	      else
+		value = val;
+	}
+
+	else {
+	  if (!objectp (content) || content->node_type != SloppyDOM.Node.DOCUMENT_NODE)
+	    content = upframe->content_result = SloppyDOM.parse ((string) content, 1);
+
+	  mixed res = 0;
+	  if (mixed err = catch (
+		res = content->simple_path (expr, insert_type == "copy-of")))
+	    // We're sloppy and assume that the error is some parse
+	    // error regarding the expression.
+	    parse_error ("Error in %s attribute: %s", insert_type,
+			 describe_error (err));
+
+	  if (insert_type == "copy-of")
+	    value = res;
+	  else {
+	    if (arrayp (res)) res = sizeof (res) && res[0];
+	    if (objectp (res))
+	      value = res->get_text_content();
+	    else if (mappingp (res) && sizeof (res))
+	      value = values (res)[0];
+	    else
+	      value = "";
+	  }
+	}
+
 #ifdef DEBUG
-      if (!upframe || !upframe->is_user_tag)
-	error ("Expected current frame to be UserTag, but it's %O.\n", upframe);
+	if (TAG_DEBUG_TEST (flags & RXML.FLAG_DEBUG))
+	  tag_debug ("%O:   Did %s %O in %s: %s\n", this_object(),
+		     insert_type, expr,
+		     RXML.utils.format_short (
+		       objectp (content) ? content->xml_format() : content),
+		     RXML.utils.format_short (value));
 #endif
-      string|RXML.PCode value = get_content (upframe, save_args);
-      string res;
-      if (objectp (value))
-	res = value->eval (ctx);
-      else {
-	[res, value] =
-	  ctx->eval_and_compile ((type || RXML.t_html) (RXML.PXml), value);
-	if (select_path)
-	  upframe->user_tag_subcontents[select_path] = value;
-	else
-	  upframe->user_tag_contents = value;
+	return value;
       }
-      return ENCODE_RXML_XML (res, type);
+
+      else
+	if (objectp (content) &&
+	    content->node_type == SloppyDOM.Node.DOCUMENT_NODE &&
+	    result_type->empty_value == "")
+	  // The content has been parsed into a SloppyDOM.Document by
+	  // the code above in an earlier <contents/>. Format it again
+	  // if the result type is string-like.
+	  return content->xml_format();
+	else
+	  return content;
+    }
+
+    mapping(string:mixed) orig_ctx_scopes;
+    mapping(RXML.Frame:array) orig_ctx_hidden;
+
+    array do_enter()
+    {
+      if (!upframe->got_content_result || args->eval) {
+	do_iterate = 1;
+	// Switch to the set of scopes that were defined at entry of
+	// the UserTag frame, to get static variable binding in the
+	// content. This is poking in the internals; there ought to be
+	// some sort of interface here.
+	RXML.Context ctx = RXML_CONTEXT;
+	orig_ctx_scopes = ctx->scopes, ctx->scopes = upframe->saved_scopes;
+	orig_ctx_hidden = ctx->hidden, ctx->hidden = upframe->saved_hidden;
+      }
+      else
+	// Already have the result of the content evaluation.
+	do_iterate = -1;
+      return 0;
+    }
+
+    array do_return()
+    {
+      if (do_iterate >= 0) {
+	// Switch back the set of scopes. This is poking in the
+	// internals; there ought to be some sort of interface here.
+	RXML.Context ctx = RXML_CONTEXT;
+	ctx->scopes = orig_ctx_scopes, orig_ctx_scopes = 0;
+	ctx->hidden = orig_ctx_hidden, orig_ctx_hidden = 0;
+	upframe->content_result = content;
+	upframe->got_content_result = 1;
+      }
+      else
+	content = upframe->content_result;
+
+      result = get_content();
+      return 0;
     }
 
     int save()
     {
-      if (exec) {
-	RXML.Frame upframe = get_upframe();
-	if (select_path)
-	  upframe->user_tag_subcontents[select_path] = exec[0];
-	else
-	  upframe->user_tag_contents = exec[0];
-      }
+      if (objectp (content)) upframe->compiled_content = content;
       return 0;
     }
 
-    // Can be dumped if we're preparsed and inserted into
-    // UserTag.Frame.preparsed_contents_tags. All we need to know is
-    // in the saved argument mapping then.
-    mapping _encode() {return save_args;}
-    void _decode (mixed data)
+    // The frame might be used as a variable value if preparsing is in
+    // use (see the is_define_tag stuff in Frame.do_return).
+    mixed rxml_var_eval (RXML.Context ctx, string var, string scope_name,
+			 void|RXML.Type type)
     {
-      if (!mappingp (data)) error ("Invalid dump of UserTagContents.Frame.\n");
-      save_args = data;
+      upframe = ctx->frame;
+#ifdef DEBUG
+      if (!upframe || !upframe->is_user_tag)
+	error ("Expected current frame to be UserTag, but it's %O.\n", upframe);
+#endif
+
+      // Fake a tag by calling the callbacks and so on. (This is
+      // actually pretty much what the horrendous RXML.Frame._eval
+      // does, when all the hairy special cases is removed.)
+      do_enter();
+      if (do_iterate >= 0) {
+	if (upframe->compiled_content && !upframe->compiled_content->is_stale())
+	  content = upframe->compiled_content->eval (ctx);
+	else if (upframe->compile)
+	  [content, upframe->compiled_content] =
+	    ctx->eval_and_compile (content_type, upframe->content_text);
+	else
+	  content = content_type->eval (upframe->content_text);
+      }
+      do_return();
+
+      // Note: result_type == content_type (except for the parser).
+      mixed ret = type && type != result_type ?
+	type->encode (result, result_type) : result;
+      result = content = 0;
+      return ret;
     }
+
+    array _encode() {return ({content_type, upframe, args});}
+    void _decode (array data) {create (@data);}
+
+    string format_rxml_backtrace_frame (void|RXML.Context ctx)
+    {
+      if (ctx)
+	// Used as an RXML.Value.
+	return "<contents" + Roxen.make_tag_attributes (args) + ">";
+      else
+	// Used as a frame. The real contents frame is just above, so
+	// suppress this one.
+	return "";
+    }
+
+    string _sprintf() {return "UserTagContents.ExpansionFrame()";}
   }
 }
 
+// This tag set can't be shared since we look at compat_level in
+// UserTagContents.
 RXML.TagSet user_tag_contents_tag_set =
-  RXML.shared_tag_set (0, "/rxmltags/user_tag", ({UserTagContents()}));
+  RXML.TagSet (this_module(), "_user_tag", ({UserTagContents()}));
 
 class UserTag {
   inherit RXML.Tag;
@@ -2666,9 +2767,10 @@ class UserTag {
 
     constant is_user_tag = 1;
     constant is_contents_nest_tag = 1;
-    string|SloppyDOM.Document content_text;
-    string|RXML.PCode user_tag_contents;
-    mapping(string:string|RXML.PCode) user_tag_subcontents;
+    string content_text;
+    RXML.PCode compiled_content;
+    mixed content_result;
+    int got_content_result;
     mapping(string:mixed) saved_scopes;
     mapping(RXML.Frame:array) saved_hidden;
     int compile;
@@ -2697,13 +2799,13 @@ class UserTag {
 
       [array(string|RXML.PCode) def, mapping defaults,
        string def_scope_name, UserTag ignored,
-       mapping(string:RXML.Value) preparsed_contents_tags] = tagdef;
+       mapping(string:UserTagContents.ExpansionFrame) preparsed_contents_tags] = tagdef;
       vars = defaults+args;
       scope_name = def_scope_name || name;
 
       if (content_text)
 	// A previously evaluated tag was restored.
-	content = objectp (content_text) ? content_text->xml_format() : content_text;
+	content = content_text;
       else {
 	if(content && args->trimwhites)
 	  content = String.trim_all_whites(content);
@@ -2735,7 +2837,6 @@ class UserTag {
 	}
 
 	content_text = content || "";
-	user_tag_contents = user_tag_subcontents = 0;
 	compile = ctx->make_p_code;
       }
 
@@ -2744,6 +2845,7 @@ class UserTag {
       vars->contents = content;
       if (preparsed_contents_tags) vars += preparsed_contents_tags;
       id->misc->last_tag_args = vars;
+      got_content_result = 0;
 
       if (compat_level > 2.1) {
 	// Save the scope state so that we can switch back in
@@ -2753,23 +2855,16 @@ class UserTag {
 	saved_scopes = ctx->scopes + ([]);
 	saved_hidden = ctx->hidden + ([]);
       }
-      else saved_scopes = ctx->scopes; // Makes the test in UserTagContents always true.
+      else {
+	saved_scopes = ctx->scopes;
+	saved_hidden = ctx->hidden;
+      }
 
       return def;
     }
 
-    array save()
-    {
-      return ({
-	objectp (content_text) ? content_text->xml_format() : content_text,
-	user_tag_contents,
-	user_tag_subcontents
-      });
-    }
-    void restore (array saved)
-    {
-      [content_text, user_tag_contents, user_tag_subcontents] = saved;
-    }
+    array save() {return ({content_text, compiled_content});}
+    void restore (array saved) {[content_text, compiled_content] = saved;}
 
     string _sprintf() {return sprintf ("UserTag.Frame(%O)", name);}
   }
@@ -2789,7 +2884,7 @@ class IdentityVars
     // Note: The fallback for scope_name here is not necessarily
     // correct, but this is typically only called from the rxml
     // parser, which always sets it.
-    return ENCODE_RXML_XML ("&_." + var + ";", type);
+    return ENCODE_RXML_XML ("&" + (scope_name || "_") + "." + var + ";", type);
   }
 };
 IdentityVars identity_vars = IdentityVars();
@@ -2808,14 +2903,13 @@ class TagDefine {
     constant is_define_tag = 1;
     constant is_contents_nest_tag = 1;
     array(string|RXML.PCode) def;
-    int last_contents_id;
-    mapping(string:RXML.Value) preparsed_contents_tags;
     mapping defaults;
     int do_iterate;
 
     // Used when we preparse.
     RXML.Scope|mapping vars;
     string scope_name;
+    mapping(string:UserTagContents.ExpansionFrame) preparsed_contents_tags;
 
     array do_enter(RequestID id) {
       if (def)
@@ -2892,8 +2986,9 @@ class TagDefine {
 	    return "";
 	  };
 
+	  Parser.HTML p;
 	  if( compat_level > 2.1 ) {
-	    Parser.HTML p = Roxen.get_xml_parser();
+	    p = Roxen.get_xml_parser();
 	    p->add_container ("attrib", add_default);
 	    array no_more_attrib (Parser.HTML p, void|string ignored)
 	    {
@@ -2914,11 +3009,28 @@ class TagDefine {
 				   });
 	    p->add_quote_tag ("?", no_more_attrib, "?");
 	    p->add_quote_tag ("![CDATA[", no_more_attrib, "]]");
-	    content = p->finish (content)->read();
 	  }
 	  else
-	    content = Parser.HTML()->add_container("attrib", add_default)->
-	      finish(content)->read();
+	    p = Parser.HTML()->add_container("attrib", add_default);
+
+	  if (preparsed_contents_tags) {
+	    // Translate the &_internal_.4711; references to
+	    // &_.__contents__17;. This is necessary since the numbers
+	    // in the _internal_ scope is only unique within the
+	    // current parse context. Otoh it isn't safe to use
+	    // &_.__contents__17; during preparse since the current
+	    // scope varies.
+	    int id = 0;
+	    foreach (indices (preparsed_contents_tags), string var) {
+	      preparsed_contents_tags["__contents__" + ++id] =
+		preparsed_contents_tags[var];
+	      m_delete (preparsed_contents_tags, var);
+	      p->add_entity ("_internal_." + var, "&_.__contents__" + id + ";");
+	      m_delete (ctx->scopes->_internal_, var);
+	    }
+	  }
+
+	  content = p->finish (content)->read();
 
 	  if(args->trimwhites) {
 	    content=String.trim_all_whites(content);
@@ -6996,10 +7108,11 @@ just got zapped?
 
  <p>Compatibility notes: If the compatibility level is 2.2 or earlier,
  the result from the RXML parse is parsed again when the defined tag
- is used, which can be a potential security problem. Also, the
- <tag>define</tag> tag does not set up a local scope during the
- preparse pass, which means that the enclosed code will still use the
- closest surrounding '_' scope.</p>
+ is used, which can be a potential security problem. Also, if the
+ compatibility level is 2.2 or earlier, the <tag>define</tag> tag does
+ not set up a local scope during the preparse pass, which means that
+ the enclosed code will still use the closest surrounding \'_\'
+ scope.</p>
 </attr>",
 
 	    ([
@@ -7025,26 +7138,39 @@ just got zapped?
 </p></desc>",
 
 "&_.contents;":#"<desc type='entity'><p>
- The whole contents of the container.
+ The unevaluated contents of the container.
 </p></desc>",
 
 "contents":#"<desc type='tag'><p>
- Selects the whole or some part of the content of the container,
- evaluates it, and inserts the result.</p>
+ Inserts the whole or some part of the arguments or the contents
+ passed to the defined tag or container.</p>
+
+ <p>The passed contents are RXML evaluated in the first encountered
+ <tag>contents</tag>; the later ones reuses the result of that.
+ (However, if it should be compatible with 2.2 or earlier then it\'s
+ reevaluated each time unless there\'s a \'copy-of\' or \'value-of\'
+ attribute.)</p>
 
  <p>Note that when the preparse attribute is used, this tag is
  converted to a special variable reference on the form
- \'<ent>_.__contents__<i>n</i></ent>\', which is then substituted
- with the real value when the tag is used. It\'s that way to make the
- expansion work when the preparsed code puts it in an attribute value.
- (This is mostly an internal implementation detail, but it can be good
- to know since the variable name can show up in e.g. RXML backtraces.)
+ \'<ent>_.__contents__<i>n</i></ent>\', which is then substituted with
+ the real value when the defined tag is used. It\'s that way to make
+ the expansion work when the preparsed code puts it in an attribute
+ value. (This is mostly an internal implementation detail, but it can
+ be good to know since the variable name might show up.)
 </p></desc>
 
 <attr name='scope' value='scope'><p>
  Associate this <tag>contents</tag> tag with the innermost
  <tag>define</tag> container with the given scope. The default is to
  associate it with the innermost <tag>define</tag>.</p>
+</attr>
+
+<attr name='eval'><p>
+ When this attribute exists, the passed content is (re)evaluated
+ unconditionally before being inserted. Normally the evaluated content
+ from the preceding <tag>contents</tag> tag is reused, and it\'s only
+ evaluated if this is the first encountered <tag>contents</tag>.</p>
 </attr>
 
 <attr name='copy-of' value='expression'><p>
