@@ -111,10 +111,10 @@ do                                                                      \
 {                                                                       \
    if(t&X)                                                              \
      if( Y )                                                            \
-       res += ("<table border=0 cellspacing=0 cellpadding=0><tr><td valign=top>|<b>" + #X + "</b>(</td>"     \
+       res += ("<table border=0 cellspacing=0 cellpadding=0><tr><td valign=top><b>" + #X + "</b>(</td>"     \
                "<td valign=top>"+Y(m,Z)+")</td></tr></table>");         \
      else                                                               \
-       res += "|<b>" + #X + "</b><br>";                                 \
+       res += "<b>" + #X + "</b><br>";                                 \
 } while(0)
 
   T(MODULE_EXTENSION,      describe_exts,       "query_extensions");
