@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.152 2004/03/01 19:26:42 grubba Exp $
+// $Id: module.pike,v 1.153 2004/03/01 20:21:05 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -607,6 +607,9 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
 //!   The case of an array of a single text node is special cased,
 //!   and is sent as a @expr{string@}.
 //!
+//! @param context
+//!   The value returned by @[patch_property_start()].
+//!
 //! @returns
 //!   Returns a result mapping. May return @expr{0@} (zero) on success.
 //!
@@ -616,12 +619,22 @@ string|array(Parser.XML.Tree.Node)|mapping(string:mixed)
 //!   when @[patch_property_unroll()] is called.
 //!
 //! @note
-//!   Overloaded variants should only set live properties;
-//!   setting of dead properties should be done throuh
-//!   overloading of @[set_dead_property()].
+//!   Overloaded variants should only set the live properties they can
+//!   handle and call the inherited implementation for all others.
+//!   Setting of dead properties should be done through overloading of
+//!   @[set_dead_property()]. This way, the live properties handled on
+//!   any level in the inherit hierachy take precedence over dead
+//!   properties.
+//!
+//! @note
+//!   RFC 2518: Live property - A property whose semantics and syntax
+//!   are enforced by the server. For example, the live
+//!   "getcontentlength" property has its value, the length of the
+//!   entity returned by a GET request, automatically calculated by
+//!   the server.
 mapping(string:mixed) set_property(string path, string prop_name,
 				   string|array(Parser.XML.Tree.Node) value,
-				   RequestID id)
+				   RequestID id, mixed context)
 {
   switch(prop_name) {
   case "http://apache.org/dav/props/executable":
@@ -634,10 +647,13 @@ mapping(string:mixed) set_property(string path, string prop_name,
     return Roxen.http_low_answer(409,
 				 "Attempt to set read-only property.");    
   }
-  return set_dead_property(path, prop_name, value, id);
+  return set_dead_property(path, prop_name, value, id, context);
 }
 
 //! Attempt to set dead property @[prop_name] for @[path] to @[value].
+//!
+//! @param context
+//!   The value returned by @[patch_property_start()].
 //!
 //! @returns
 //!   Returns a result mapping. May return @expr{0@} (zero) on success.
@@ -654,15 +670,25 @@ mapping(string:mixed) set_property(string path, string prop_name,
 //! @note
 //!   The default implementation currently does not support setting
 //!   of dead properties, and will return an error code.
+//!
+//! @note
+//!    RFC 2518: Dead Property - A property whose semantics and syntax
+//!    are not enforced by the server. The server only records the
+//!    value of a dead property; the client is responsible for
+//!    maintaining the consistency of the syntax and semantics of a
+//!    dead property.
 mapping(string:mixed) set_dead_property(string path, string prop_name,
 					array(Parser.XML.Tree.Node) value,
-					RequestID id)
+					RequestID id, mixed context)
 {
   return Roxen.http_low_answer(405,
 			       "Setting of dead properties is not supported.");
 }
 
 //! Attempt to remove the property @[prop_name] for @[path].
+//!
+//! @param context
+//!   The value returned by @[patch_property_start()].
 //!
 //! @note
 //!   Actual removal of the property should be done first
@@ -675,7 +701,7 @@ mapping(string:mixed) set_dead_property(string path, string prop_name,
 //! @note
 //!   The default implementation does not support deletion.
 mapping(string:mixed) remove_property(string path, string prop_name,
-				      RequestID id)
+				      RequestID id, mixed context)
 {
   switch(prop_name) {
   case "http://apache.org/dav/props/executable":
@@ -812,9 +838,6 @@ void patch_properties(string path, array(PatchPropertyCommand) instructions,
       results = instructions->execute(path, this_object(), id, context);
     };
   if (err) {
-    foreach(instructions, PatchPropertyCommand instr) {
-      result->add_property(path, instr->property_name, answer);
-    }
     patch_property_unroll(path, id, context);
     throw (err);
   } else {
@@ -848,6 +871,40 @@ void patch_properties(string path, array(PatchPropertyCommand) instructions,
       patch_property_commit(path, id, context);
     }
   }
+}
+
+//! Convenience variant of @[set_property] that sets a single
+//! property: The default implementation calls
+//! @[patch_property_start], @[set_property], @[patch_property_unroll]
+//! and @[patch_property_commit] as appropriate.
+mapping(string:mixed) set_single_property (string path, string prop_name,
+					   string|array(Parser.XML.Tree.Node) value,
+					   RequestID id)
+{
+  mixed context = patch_property_start(path, id);
+  mapping(string:mixed) result = set_property (path, prop_name, value, id, context);
+  if (result && result->error >= 300)
+    patch_property_unroll (path, id, context);
+  else
+    patch_property_commit (path, id, context);
+  return result;
+}
+
+//! Convenience variant of @[remove_property] that removes a single
+//! property: The default implementation calls
+//! @[patch_property_start], @[remove_property],
+//! @[patch_property_unroll] and @[patch_property_commit] as
+//! appropriate.
+mapping(string:mixed) remove_single_property (string path, string prop_name,
+					      RequestID id)
+{
+  mixed context = patch_property_start(path, id);
+  mapping(string:mixed) result = remove_property (path, prop_name, id, context);
+  if (result && result->error >= 300)
+    patch_property_unroll (path, id, context);
+  else
+    patch_property_commit (path, id, context);
+  return result;
 }
 
 mapping copy_file(string path, string dest, int(-1..1) behavior, RequestID id)
