@@ -1,7 +1,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp2.pike,v 1.61.2.1 1999/05/19 18:33:02 grubba Exp $
+ * $Id: ftp2.pike,v 1.61.2.2 1999/05/19 18:42:19 grubba Exp $
  *
  * Henrik Grubbström <grubba@idonex.se>
  */
@@ -105,7 +105,7 @@
 #define BACKEND_CLOSE(FD)	do { DWRITE("close\n"); FD->set_blocking(); FD->close(); FD = 0; } while(0)
 #endif /* constant(thread_create) */
 
-class RequestID
+class RequestID2
 {
   array client = ({ "ftp" });
   constant prot = "FTP";
@@ -159,14 +159,14 @@ class RequestID
   }
 #endif /* FTP2_DEBUG */
 
-  void read_to_receive()
+  void ready_to_receive()
   {
     // FIXME: Should hook the STOR reply to this function.
   }
 
   void send_result(mapping|void result)
   {
-    error("Asynch sending with send_result() not supported yet.\n");
+    error("Async sending with send_result() not supported yet.\n");
   }
 
   object clone_me()
@@ -525,7 +525,7 @@ class LS_L
     string user = (string)st[5];
     string group = (string)st[6];
     if (!(flags & LS_FLAG_n)) {
-      // Use symbolic names for uid & gid;
+      // Use symbolic names for uid and gid.
       if (!stringp(st[5])) {
 	user = name_from_uid(st[5]);
       }
@@ -553,7 +553,7 @@ class LS_L
 		     user, (st[1]<0? 512:st[1]),
 		     ts, file);
     } else {
-      return sprintf("%s   1 %-10s %-6d%12d %s %s\n", perm*"",
+      return sprintf("%s   1 %-10s %-6s %12d %s %s\n", perm*"",
 		     user, group, (st[1]<0? 512:st[1]),
 		     ts, file);
     }
@@ -585,7 +585,7 @@ class LSFile
     array st = stat_cache[long];
     if (zero_type(st)) {
       if (!session) {
-	session = RequestID(master_session);
+	session = RequestID2(master_session);
 	session->method = "DIR";
       }
       st = session->conf->stat_file(long, session);
@@ -738,7 +738,7 @@ class LSFile
       if ((!sizeof(long)) || (long[-1] != '/')) {
 	long += "/";
       }
-      object session = RequestID(master_session);
+      object session = RequestID2(master_session);
       session->method = "DIR";
       mapping(string:array) dir = session->conf->find_dir_stat(long, session);
 
@@ -806,13 +806,13 @@ class LSFile
       if (listing != "") {
 	output(listing);
       }
-      session = RequestID(master_session);
+      session = RequestID2(master_session);
       session->method = "LIST";
       session->not_query = long;
       session->conf->log(([ "error":200, "len":sizeof(listing) ]), session);
     }
     if (!dir_stack->ptr) {
-      output(0);	// End marker.
+      output(0);		// End marker.
     } else {
       name_directories = 1;
     }
@@ -860,7 +860,7 @@ class LSFile
       return s;
     } else {
       // EOF
-      master_session->file = 0;		// Avoid extra log-entry.
+      master_session->file = 0;	// Avoid extra log-entry.
       return "";
     }
   }
@@ -882,7 +882,7 @@ class LSFile
     int n_files;
 
     foreach(argv, string short) {
-      object session = RequestID(master_session);
+      object session = RequestID2(master_session);
       session->method = "LIST";
       string long = fix_path(short);
       array st = stat_file(long, session);
@@ -909,7 +909,7 @@ class LSFile
       }
       string s = list_files(files, cwd);	// May modify dir_stack (-R)
       output(s);
-      object session = RequestID(master_session);
+      object session = RequestID2(master_session);
       session->not_query = Array.map(files, fix_path) * " ";
       session->method = "LIST";
       session->conf->log(([ "error":200, "len":sizeof(s) ]), session);
@@ -1597,7 +1597,7 @@ class FTPSession
     mapping file;
 
     if (!session) {
-      session = RequestID(master_session);
+      session = RequestID2(master_session);
       session->method = "STAT";
     }
 
@@ -1811,7 +1811,7 @@ class FTPSession
       break;
     }
 
-    object session = RequestID(master_session);
+    object session = RequestID2(master_session);
     session->method = "PUT";
     session->my_fd = PutFileWrapper(fd, session, this_object());
     session->misc->len = 0x7fffffff;
@@ -1944,7 +1944,7 @@ class FTPSession
             array(array(string)) new_matches = ({});
             foreach(matches, array(string) path) {
               array(string) dir;
-	      object id = RequestID(master_session);
+	      object id = RequestID2(master_session);
 	      id->method = "LIST";
               dir = id->conf->find_dir(combine_path(cwd, path*"/")+"/", id);
               if (dir && sizeof(dir)) {
@@ -1993,7 +1993,7 @@ class FTPSession
           matches = Array.filter(matches,
 				 lambda(string short, string cwd,
 					object m_id) {
-				   object id = RequestID(m_id);
+				   object id = RequestID2(m_id);
 				   id->method = "LIST";
 				   id->not_query = combine_path(cwd, short);
 				   return(id->conf->stat_file(id->not_query,
@@ -2125,7 +2125,7 @@ class FTPSession
       argv += ({ "./" });
     }
 
-    object session = RequestID(master_session);
+    object session = RequestID2(master_session);
     session->method = "LIST";
     // For logging purposes...
     session->not_query = Array.map(argv[1..], fix_path)*" ";
@@ -2414,7 +2414,7 @@ class FTPSession
       ncwd += "/";
     }
 
-    object session = RequestID(master_session);
+    object session = RequestID2(master_session);
     session->method = "CWD";
     session->not_query = ncwd;
 
@@ -2573,7 +2573,7 @@ class FTPSession
 
     args = fix_path(args);
 
-    object session = RequestID(master_session);
+    object session = RequestID2(master_session);
 
     session->method = "GET";
     session->not_query = args;
@@ -2659,7 +2659,7 @@ class FTPSession
     }
     args = fix_path(args);
     
-    object session = RequestID(master_session);
+    object session = RequestID2(master_session);
     
     session->method = "STAT";
 
@@ -2682,7 +2682,7 @@ class FTPSession
     }
     args = fix_path(args);
     
-    object session = RequestID(master_session);
+    object session = RequestID2(master_session);
     
     session->method = "MV";
     session->misc->move_from = rename_from;
@@ -2715,7 +2715,7 @@ class FTPSession
   {
     args = fix_path(args || ".");
 
-    object session = RequestID(master_session);
+    object session = RequestID2(master_session);
 
     session->method = "DIR";
 
@@ -2734,7 +2734,7 @@ class FTPSession
   {
     args = fix_path(args || ".");
     
-    object session = RequestID(master_session);
+    object session = RequestID2(master_session);
 
     session->method = "DIR";
 
@@ -2764,7 +2764,7 @@ class FTPSession
 
     args = fix_path(args);
 
-    object session = RequestID(master_session);
+    object session = RequestID2(master_session);
 
     session->data = 0;
     session->misc->len = 0;
@@ -2785,7 +2785,7 @@ class FTPSession
 
     args = fix_path(args);
 
-    object session = RequestID(master_session);
+    object session = RequestID2(master_session);
 
     session->data = 0;
     session->misc->len = 0;
@@ -2827,7 +2827,7 @@ class FTPSession
 
     args = fix_path(args);
 
-    object session = RequestID(master_session);
+    object session = RequestID2(master_session);
 
     session->method = "MKDIR";
     session->data = 0;
@@ -2884,7 +2884,7 @@ class FTPSession
       return;
     }
     args = fix_path(args);
-    object session = RequestID(master_session);
+    object session = RequestID2(master_session);
     session->method = "STAT";
     mapping|array st = stat_file(args, session);
 
@@ -2902,7 +2902,7 @@ class FTPSession
     }
     args = fix_path(args);
 
-    object session = RequestID(master_session);
+    object session = RequestID2(master_session);
     session->method = "STAT";
     mapping|array st = stat_file(args, session);
 
@@ -2927,7 +2927,7 @@ class FTPSession
       return;
     }
     string long = fix_path(args);
-    object session = RequestID(master_session);
+    object session = RequestID2(master_session);
     session->method = "STAT";
     mapping|array st = stat_file(long);
 
@@ -3042,7 +3042,7 @@ class FTPSession
     }
 
     string fname = fix_path(args[1..]*" ");
-    object session = RequestID(master_session);
+    object session = RequestID2(master_session);
     
     session->method = "CHMOD";
     session->misc->mode = mode;
@@ -3220,7 +3220,7 @@ class FTPSession
   {
     conf = c;
 
-    master_session = RequestID();
+    master_session = RequestID2();
     master_session->remoteaddr = (fd->query_address()/" ")[0];
     master_session->conf = c;
     master_session->my_fd = fd;
