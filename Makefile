@@ -1,5 +1,5 @@
 #
-# $Id: Makefile,v 1.19 1997/11/03 23:29:42 mast Exp $
+# $Id: Makefile,v 1.20 1997/12/14 23:35:58 grubba Exp $
 #
 # Bootstrap Makefile
 #
@@ -140,17 +140,16 @@ dist_clean :
 	@echo "Clearing the build-tree..."
 	-@rm -rf build || true
 
-censor : censor_crypto censor_dbapi censor_tetris dist_clean
+censor : censor_crypto censor_dbapi dist_clean
 	@echo "Censoring complete."
 
 censor_crypto :
+	@if test -d pike/src/modules/_Crypto/. ; then \
+	  (cd pike/src/modules/_Crypto; ./.build_lobotomized_crypto); \
+	fi
 	@echo "Censoring the Crypto implementation..."
-	-@rm -rf pike/src/modules/_Crypto pike/lib/modules/Crypto* pike/lib/modules/SSL3.pmod server/protocols/ssl3.pike pike/src/modules/Ssleay || true
+	-@rm -rf pike/src/modules/_Crypto pike/lib/modules/Crypto/rsa.pike pike/lib/modules/SSL3.pmod server/protocols/ssl3.pike pike/src/modules/Ssleay || true
 
 censor_dbapi :
 	@echo "Censoring the DBAPI..."
 	-@rm -rf pike/src/modules/Oracle pike/src/modules/Odbc || true
-
-censor_tetris :
-	@echo "Censoring the Tetris..."
-	-@rm -f server/protocols/tetris.pike || true
