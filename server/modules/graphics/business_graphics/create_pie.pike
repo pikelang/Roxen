@@ -12,7 +12,7 @@ inherit "polyline.pike";
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.49 2000/03/02 04:18:38 nilsson Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.50 2000/03/16 17:26:46 nilsson Exp $";
 
 /*
  * name = "BG: Create pies";
@@ -20,7 +20,7 @@ constant cvs_version = "$Id: create_pie.pike,v 1.49 2000/03/02 04:18:38 nilsson 
  */
 
 /*
-These functions were written by Henrik "Hedda" Wallin (hedda@idonex.se)
+These functions were written by Henrik "Hedda" Wallin (hedda@roxen.com)
 Create_pie can draw pie charts in different forms.
 
 The data is taken from the diagram_data-mapping which is described in doc/diagram_internals.txt

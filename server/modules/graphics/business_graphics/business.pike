@@ -2,7 +2,7 @@
  *
  * Draws diagrams pleasing to the eye.
  *
- * Made by Peter Bortas <peter@idonex.se> and Henrik Wallin <hedda@idonex.se>
+ * Made by Peter Bortas <peter@roxen.com> and Henrik Wallin <hedda@roxen.com>
  * in October 1997
  */
 
@@ -12,7 +12,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: business.pike,v 1.123 2000/03/02 04:18:38 nilsson Exp $";
+constant cvs_version = "$Id: business.pike,v 1.124 2000/03/16 17:26:46 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_PARSER|MODULE_LOCATION;
 constant module_name = "Business Graphics";

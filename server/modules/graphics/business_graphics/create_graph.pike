@@ -10,7 +10,7 @@ import Stdio;
 
 inherit "polyline.pike";
 
-constant cvs_version = "$Id: create_graph.pike,v 1.108 2000/03/02 04:18:38 nilsson Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.109 2000/03/16 17:26:46 nilsson Exp $";
 
 /*
  * name = "BG: Create graphs";
@@ -18,7 +18,7 @@ constant cvs_version = "$Id: create_graph.pike,v 1.108 2000/03/02 04:18:38 nilss
  */
 
 /*
-These functions were written by Henrik "Hedda" Wallin (hedda@idonex.se)
+These functions were written by Henrik "Hedda" Wallin (hedda@roxen.com)
 Create_graph draws a graph but there are also some other functions
 used by create_pie and create_bars.
 */
@@ -30,7 +30,7 @@ used by create_pie and create_bars.
 
 object tileimage(object img, int xs, int ys)
 {
-  //written by js@idonex.se
+  //written by js@roxen.com
 
   object dest=image(xs,ys);
   int srcx=img->xsize();

@@ -1,17 +1,15 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-// .htaccess compability by David Hedbor, neotron@idonex.se
-//   Changed into module by Per Hedbor, per@idonex.se
+// .htaccess compability by David Hedbor, neotron@roxen.com
+//   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version = "$Id: htaccess.pike,v 1.57 2000/03/01 16:57:27 nilsson Exp $";
-constant thread_safe=1;
+constant cvs_version = "$Id: htaccess.pike,v 1.58 2000/03/16 17:23:34 nilsson Exp $";
+constant thread_safe = 1;
 
 #include <module.h>
 #include <roxen.h>
 inherit "module";
 inherit "roxenlib";
-
-//#define HTACCESS_DEBUG
 
 #ifdef HTACCESS_DEBUG
 # include <request_trace.h>
@@ -911,5 +909,3 @@ mapping remap_url(RequestID id)
   }
   TRACE_LEAVE("OK");
 }
-
-

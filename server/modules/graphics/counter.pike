@@ -2,7 +2,7 @@
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 // Modifications  1 OCT 1997 by Bill Welliver <hww3@riverweb.com>
 // Optimizations 22 FEB 1998 by David Hedbor <david@hedbor.org>
-// Optimizations 11 DEC 1999 by Martin Nilsson <nilsson@idonex.se>
+// Optimizations 11 DEC 1999 by Martin Nilsson <nilsson@roxen.com>
 //
 // -----------------------------------------------------------------------
 //
@@ -23,7 +23,7 @@
 // -----------------------------------------------------------------------
 //
 
-constant cvs_version = "$Id: counter.pike,v 1.30 2000/02/17 08:42:43 per Exp $";
+constant cvs_version = "$Id: counter.pike,v 1.31 2000/03/16 17:29:53 nilsson Exp $";
 
 constant copyright = ("<br>Copyright 1997-1999 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</a> and "
