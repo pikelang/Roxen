@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.85 1997/12/15 01:25:53 grubba Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.86 1997/12/15 02:04:49 peter Exp $";
 //inherit "roxenlib";
 import Image;
 
@@ -537,9 +537,11 @@ mapping std_redirect(object o, object id)
 string configuration_list()
 {
   string res="";
+  /* FIXME
   object o;
   foreach(roxen->configurations, o)
     res += "<option>Copy of '"+o->name+"'\n";
+  */
   return res;
 }
 
@@ -614,12 +616,15 @@ string new_configuration_form()
 	  "<p>The only thing the type change is the initial "
 	  "configuration of the server.\n"
 	  "<p>The types are:<dl>\n" + configuration_docs() +
+	  /* FIXME
 	  "<dt><b>Copy of ...</b>:\n"
 	  "<dd>Make an exact copy of the mentioned virtual server.\n"
 	  "You should change at least the listen ports.<p>\n"
 	  "This can be very useful, since you can make 'template' virtual "
 	  "servers (servers without any open ports), that you can copy later "
-	  "on.\n</dl>\n</body>\n");
+	  "on.\n"
+	  */
+	  "</dl>\n</body>\n");
 }
 
 
