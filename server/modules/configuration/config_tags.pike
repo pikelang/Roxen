@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.154 2001/08/01 19:34:10 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.155 2001/08/13 18:17:06 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -224,7 +224,7 @@ class Scope_usr
 
     if( var != "bgcolor" )
     {
-      c1 = Image.Color( ALIAS("bgcolor") );
+      c1 = Image.Color.guess( ALIAS("bgcolor") );
       if(!c1)
         c1 = Image.Color.black;
     }

@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.91 2001/08/10 13:35:08 per Exp $";
+  "$Id: config_filesystem.pike,v 1.92 2001/08/13 18:17:06 per Exp $";
 
 constant path = "config_interface/";
 
@@ -462,6 +462,9 @@ void start(int n, Configuration cfg)
           catch(docs->query( "DROP TABLE docs" ));
           docs->query( "CREATE TABLE docs "
                      "(name VARCHAR(80) PRIMARY KEY,contents MEDIUMBLOB)");
+	  DBManager.is_module_table( this_object(), "docs", "docs",
+				     "The Roxen documentation.");
+	  
           void rec_process( string dir )
           {
             foreach( T->get_dir( dir ), string f )
@@ -494,9 +497,9 @@ void start(int n, Configuration cfg)
 	cfg->enable_module( s+"#0" );
     }
 #ifndef AVERAGE_PROFILING
-	m_delete( cfg->enabled_modules, "avg_profiling#0" );
-	if( cfg->find_module( "avg_profiling#0" ) )
-	  cfg->disable_module( "avg_profiling#0" );
+    m_delete( cfg->enabled_modules, "avg_profiling#0" );
+    if( cfg->find_module( "avg_profiling#0" ) )
+      cfg->disable_module( "avg_profiling#0" );
 #endif
     cfg->add_modules(({
       "config_tags", "contenttypes",    "indexfiles",

@@ -1,5 +1,5 @@
 constant cvs_version =
-  "$Id: auth_httpcookie.pike,v 1.6 2001/03/15 23:31:26 per Exp $";
+  "$Id: auth_httpcookie.pike,v 1.7 2001/08/13 18:17:16 per Exp $";
 inherit AuthModule;
 inherit "module";
 
@@ -27,7 +27,6 @@ static User low_authenticate( RequestID id,
       return u;
 }
 
-static Sql.Sql sql;
 static string table;
 
 static string encode_pw(string p)
@@ -43,7 +42,7 @@ static string decode_pw( string p )
 static array(string) low_lookup_cookie( string cookie )
 {
   array r = 
-    sql->query( "SELECT name,password FROM "+
+    get_my_sql()->query( "SELECT name,password FROM "+
 		table+" WHERE cookie=%s", cookie );
   if( !sizeof( r ) )
     return ({0,0});
@@ -65,7 +64,7 @@ static string create_cookie( string u, string p )
 {
   int i = (((hash(u) << 32) | hash(p)) << 32) | hash(u+p);
   string c = i->digits(16);
-  catch(sql->query( "INSERT INTO "+table+" "
+  catch(get_my_sql()->query( "INSERT INTO "+table+" "
 		    "(cookie,name,password) VALUES "
 		    "(%s,%s,%s)", c, encode_pw(u), encode_pw(p) ));
   return c;
@@ -134,12 +133,15 @@ mapping authenticate_throw( RequestID id, string realm, UserDB db )
 
 void start()
 {
-  sql = get_my_sql();
-  table = get_my_table(
-    "cookie varchar(40) PRIMARY KEY NOT NULL, "
-    "password varchar(40) NOT NULL, "
-    "name varchar(40) NOT NULL"
-  );
+  table =
+    get_my_table("",
+		 ({
+		   "cookie varchar(40) PRIMARY KEY NOT NULL",
+		   "password varchar(40) NOT NULL",
+		   "name varchar(40) NOT NULL"
+		 }),
+		 "Used to store the information nessesary to "
+		 "authenticate roxen users" );
 }
 
 static void create()

@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.31 2001/08/09 13:30:36 per Exp $
+ * $Id: update.pike,v 1.32 2001/08/13 18:17:07 per Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -62,6 +62,9 @@ class SqlMapping
   {
     db=_db;
     table=_table;
+    DBManager.is_module_table( this_module(), "local", table,
+			       "Information used by the update "
+			       "client system.");
     catch(db()->query("create table "+table+
 		    " ( name varchar(255) primary key ,"
 		    "  value mediumblob)"));
