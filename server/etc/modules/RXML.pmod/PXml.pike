@@ -3,7 +3,7 @@
 //! Parses tags and entities. Entities on the form &scope.variable;
 //! are replaced by variable references.
 //!
-//! $Id: PXml.pike,v 1.10 2000/01/08 03:44:57 mast Exp $
+//! $Id: PXml.pike,v 1.11 2000/01/08 06:54:59 mast Exp $
 
 #pragma strict_types
 
@@ -101,8 +101,9 @@ static array entity_cb (Parser.HTML ignored, string str)
     if (entity[0] == '#') {
       if (!type->free_text) return ({});
       string out;
-      if ((<"#x", "#X">)[entity[..1]])
+      if ((<"#x", "#X">)[entity[..1]]) {
 	if (sscanf (entity, "%*2s%x%*c", int c) == 2) out = (string) ({c});
+      }
       else
 	if (sscanf (entity, "%*c%d%*c", int c) == 2) out = (string) ({c});
       return out ? ({out}) : ({str});
