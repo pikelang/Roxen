@@ -1,11 +1,11 @@
 // This is a roxen module. Copyright © 2001, Roxen IS.
 
 inherit "module";
-constant cvs_version="$Id: icecast.pike,v 1.9 2001/09/03 18:16:56 nilsson Exp $";
+constant cvs_version="$Id: icecast.pike,v 1.10 2002/06/12 05:06:30 hop Exp $";
 constant thread_safe=1;
 
-#define BSIZE 8192
-#define METAINTERVAL 4192
+#define BSIZE 16384
+#define METAINTERVAL 8192
 
 #include <module.h>
 #include <roxen.h>
@@ -15,12 +15,80 @@ constant thread_safe=1;
 //<locale-token project="mod_icecast">LOCALE</locale-token>
 #define _(X,Y)	_DEF_LOCALE("mod_icecast",X,Y)
 
-constant     module_type = MODULE_LOCATION;
+constant     module_type = MODULE_LOCATION | MODULE_TAG;
 LocaleString module_name = _(0,"Icecast: Server");
 LocaleString  module_doc = _(0, "Supports the ICY and Audio-cast protocols "
 			     "for streaming MPEG sound. Relies on other "
 			     "modules for the actual mpeg streams." );
 constant   module_unique = 0;
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+"emit#mp3-stream": ({ #"<desc type='plugin'><p><short>
+Use this source to retrieve information about currently configured
+MP3 streams.</short></p>
+<p>Playlist for given stream can be reached by RXML or by http query
+with '?playlist' or '?playlist?=maxlines', where maxlines is maximum
+number of returned items.</p>
+</desc>
+
+<attr name='name' value='name of stream'><p>
+Name of configured stream.</p>
+</attr>",
+([
+"&_.name;":#"<desc type='name'><p>
+  The name of the stream.
+  </p></desc>",
+
+"&_.current-song;":#"<desc type='current-song'><p>
+  The filename of current streamed song.
+  </p></desc>",
+
+"&_.next-song;":#"<desc type='next-song'><p>
+  The filename of next streamed song.
+  </p></desc>",
+
+"&_.real-dir;":#"<desc type='real-dir'><p>
+  The name base directory from real filesystem.
+  </p></desc>",
+
+"&_.accessed;":#"<desc type='accessed'><p>
+  The number of accessed connections.
+  </p></desc>",
+
+"&_.denied;":#"<desc type='denied'><p>
+  The number of denied connections.
+  </p></desc>",
+
+"&_.connections;":#"<desc type='connections'><p>
+  The number of current connections.
+  </p></desc>",
+
+"&_.avg-listen-time;":#"<desc type='avg-listen-time'><p>
+  The avarage of listen time.
+  </p></desc>",
+
+"&_.max-listen-time;":#"<desc type='max-listen-time'><p>
+  The maximum of listen time.
+  </p></desc>",
+
+#if 0
+"&_.con;":#"<desc type='con'><p>
+  Array of current connections.
+  </p></desc>"
+
+"&_.playlist;":#"<desc type='playlist'><p>
+  Playlist arranged in array of songs.
+  </p></desc>"
+#endif
+])
+
+})
+
+]);
+#endif
+
 
 class Playlist
 {
@@ -30,18 +98,45 @@ class Playlist
   mapping    metadata();
   void       add_md_callback( function(mapping:void) f );
   void       remove_md_callback( function(mapping:void) f );
+
+#if 0
+  mixed `->(string index) {
+#endif
+
 };
 
-class MPEGStream( Playlist playlist )
+class MPEGStream
 {  
   array(function) callbacks = ({});
   int bitrate; // bits/second
   int stream_start=realtime(), stream_position; // µSeconds
   Stdio.File fd;
+#if constant(Parser.MP3)
+  Parser.MP3.File parser;
+#else
+  Audio.MP3.decode parser;
+#endif
+  Playlist playlist;
+  string cmd;
+
+  mixed get_playlist() {
+    if(!playlist || zero_type(playlist["current_file"])) {
+      // playlist object is lost
+      werror("DEB: playlist %O is lost!\n", "???");
+      return 0;
+    }
+    return playlist;
+  }
+
+  void create(Playlist plist) {
+    playlist = plist;
+    fd = playlist->next_file();
+
+  }
 
   string status()
   {
-    return ""+playlist->status()+"<br />"+
+    return ""+get_playlist()->status()+"<br />"+
       sprintf( "Stream position: %.1fs   Bitrate: %dKbit/sec",
 	       stream_position/1000000.0,
 	       bitrate/1000 );
@@ -94,23 +189,50 @@ class MPEGStream( Playlist playlist )
   
   void feeder_thread( )
   {
+    if(cmd) {
+      switch(cmd) {
+        case "forward":
+	  if(fd = get_playlist()->cmd_next_file()) {
+	    stream_position = 0;
+	    parser = 0;
+	  }
+	  break;
+        case "back":
+	  if(fd = get_playlist()->cmd_prev_file()) {
+	    stream_position = 0;
+	    parser = 0;
+	  }
+	  break;
+      }
+      cmd = 0;
+    }
     while( sizeof(callbacks) &&
 	   ((realtime()-stream_start) > stream_position) )
     {
-      string frame = get_frame();
+      mapping frame;
+      if(!parser)
+#if constant(Parser.MP3)
+        parser = Parser.MP3.File(fd);
+#else
+        parser = Audio.MP3.decode(fd);
+#endif
+      frame = parser->get_frame();
       while( !frame )
       {
 	fd->set_blocking();
 	fd->close();
-	fd = playlist->next_file();
-	buffer = 0;
-	bpos = 0;
-	frame = get_frame();
+	fd = get_playlist()->next_file();
+#if constant(Parser.MP3)
+	parser = Parser.MP3.File(fd);
+#else
+	parser = Audio.MP3.decode(fd);
+#endif
+	frame = parser->get_frame();
       }
       // Actually, this is supposed to be quite constant, but not all
       // frames are the same size.
-      stream_position += strlen(frame)*8000000 / bitrate;
-      call_callbacks( frame );
+      stream_position += strlen(frame->data)*8000000 / frame->bitrate;
+      call_callbacks( frame->data );
     }
     if(!sizeof(callbacks))
     {
@@ -125,149 +247,6 @@ class MPEGStream( Playlist playlist )
     feeder_thread( ); // not actually a thread right now.
   }
   
-  // Low level code.
-  static string buffer;
-  static int    bpos;
-
-  static string|int getbytes( int n, int|void s )
-  {
-    if( !fd )
-      fd = playlist->next_file();
-    if( !fd )
-      return s?0:-1;
-    
-    if( !buffer || !strlen(buffer) )
-    {
-      bpos = 0;
-      buffer = fd->read( BSIZE );
-    }
-    if( !strlen(buffer) )
-      return s?0:-1;
-    if( s )
-    {
-      if( strlen(buffer) - bpos > n )
-      {
-	string d = buffer[bpos..bpos+n-1];
-	buffer = buffer[bpos+n..];
-	bpos=0;
-	return d;
-      }
-      else
-      {
-	buffer = buffer[bpos..];
-	bpos=0;
-	string t = fd->read( BSIZE );
-	if( !t || !strlen(t) )
-	  return -1;
-	buffer+=t;
-	return getbytes(n,1);
-      }
-    }
-    int res=0;
-    while( n-- )
-    {
-      res<<=8;
-      res|=buffer[ bpos++ ];
-      if( bpos == strlen(buffer) )
-      {
-	bpos = 0;
-	buffer = fd->read( BSIZE );
-	if( !buffer || !strlen( buffer ) )
-	  return -1;
-      }
-    }
-    return res;
-  }
-
-  static int rate_of(int r)
-  {
-    switch(r)
-    {
-      case 0: return 44100;
-      case 1: return 48000;
-      case 2: return 32000;
-      default:return 44100;
-    }
-  }
-
-  static array(array(int)) bitrates =
-  ({
-    ({0,32,64,96,128,160,192,224,256,288,320,352,384,416,448}),
-    ({0,32,48,56,64,80,96,112,128,160,192,224,256,320,384}),
-    ({0,32,40,48,56,64,80,96,112,128,160,192,224,256,320}),
-  });
-
-  static string get_frame()
-  {
-    string data;
-    /* Find header */
-    int trate = 0;
-    int patt = 0;
-    int by, p=0, sw=0;
-    while( (by = getbytes( 1  )) > 0  )
-    {
-      patt <<= 8;
-      patt |= by;
-      p++;
-      if( (patt & 0xfff0) == 0xfff0 )
-      {
-	int srate, channels, layer, ID, pad, blen;
-	int header = ((patt&0xffff)<<16);
-	if( (by = getbytes( 2 )) < 0 )
-	  break;
-	header |= by;
-
-	string data = sprintf("%4c",header);
-	patt=0;
-	header <<= 12;
-
-	int getbits( int n )
-	{
-	  int res = 0;
-	  while( n-- )
-	  {
-	    res <<= 1;
-	    if( header&(1<<31) )  res |= 1;
-	    header<<=1;
-	  }
-	  return res;
-	};
-	ID = getbits(1); // version
-	if(!ID) /* not MPEG1 */
-	  continue;
-	layer = (4-getbits(2));
-
-	header<<=1; /* getbits(1); // error protection */
-
-	bitrate = getbits(4); 
-	srate = getbits(2);
-      
-	if((layer>3) || (layer<2) ||  (bitrate>14) || (srate>2))
-	  continue;
-      
-	pad = getbits(1);
-	bitrate = bitrates[ layer-1 ][ bitrate ] * 1000;
-	srate = rate_of( srate );
-
-	switch( layer )
-	{
-	  case 1:
-	    blen = (int)(12 * bitrate / (float)srate + (pad?4:0))-4;
-	    break;
-	  case 2:
-	  case 3:
-	    blen = (int)(144 * bitrate / (float)srate + pad )-4;
-	    break;
-	}
-
-	string q = getbytes( blen,1 );
-	if(!q)
-	  return 0;
-	return data + q;
-      }
-    }
-    return 0;
-  }
 } 
 
 class Location( string location,
@@ -296,9 +275,9 @@ class Location( string location,
     }
 
     if( !stream->fd )
-      stream->fd = stream->playlist->next_file();
+      stream->fd = stream->get_playlist()->next_file();
     
-    mapping meta = stream->playlist->metadata();
+    mapping meta = stream->get_playlist()->metadata();
     if( !meta )
     {
       denied++;
@@ -309,24 +288,32 @@ class Location( string location,
     int use_metadata;
     string i, metahd="";
     string protocol = "ICY";
+    int client_udp;
 
-    werror("%O\n", id->request_headers );
-    if( 0 && id->request_headers[ "icy-metadata" ] )
+    werror("Client: %O\n", id->request_headers );
+    if(id->request_headers[ "icy-metadata" ] )
     {
       use_metadata = (int)id->request_headers[ "icy-metadata" ];
       if( use_metadata )
 	metahd = "icy-metaint:"+METAINTERVAL+"\r\n";
     }
-    
+
     if( id->request_headers[ "x-audiocast-udpport" ] )
     {
       protocol = "AudioCast";
+      if(id->request_headers[ "icy-metadata" ] &&
+         query("udpmeta") ) {
+        metahd = "x-audiocast-udpport: " + query("udpmeta") + "\r\n";
+        client_udp = (int)id->request_headers[ "x-audiocast-udpport" ] ;
+	use_metadata = 0;
+      }
+
       i = ("HTTP/1.0 200 OK\r\n"
 	   "Server: "+roxen.version()+"\r\n"
 	   "Content-type: audio/mpeg\r\n"
 	   "x-audiocast-gengre:"+(meta->gengre||"unknown")+"\r\n"
 	   +((meta->url||url)?"x-audiocast-url:"+(meta->url||url)+"\r\n":"")+
-	   "x-audiocast-name:"+(meta->name||name||meta->path)+"\r\n"
+	   "x-audiocast-name:"+name+"\r\n"
 	   "x-audiocast-streamid:1\r\n"+metahd+
 	   "x-audiocast-public:1\r\n"
 	   "x-audiocast-bitrate:"+(stream->bitrate/1000)+"\r\n"
@@ -335,17 +322,26 @@ class Location( string location,
     }
     else
     {
-      i = ("ICY 200 OK\r\n"
+      if( id->request_headers[ "icy-metadata" ] )
+        i = ("ICY 200 OK\r\n"
 	   "Server: "+roxen.version()+"\r\n"
 	   "Content-type: audio/mpeg\r\n"
 	   "icy-notice1:This stream requires a shoutcast compatible player.\r\n"
 	   "icy-notice2:Roxen mod_mp3\r\n"+metahd+
-	   "icy-name:"+(meta->name||name||meta->path)+"\r\n"
+	   "icy-name:"+name+"\r\n"
 	   "icy-gengre:"+(meta->gengre||"unknown")+"\r\n"
 	   +((meta->url||url)?"icy-url:"+(meta->url||url)+"\r\n":"")+
 	   "icy-pub:1\r\n"
 	   "icy-br:"+(stream->bitrate/1000)+"\r\n"
 	   "\r\n" );
+      else {
+    werror("MS Player?\n");
+        protocol = "AudioCast";
+        i = ("HTTP/1.0 200 OK\r\n"
+	   "Server: "+roxen.version()+"\r\n"
+	   "Content-type: audio/mpeg\r\n"
+	   "Content-Length: 9999999999\r\n" );
+      }
     }
     if( initial )
       i += initial;
@@ -360,7 +356,7 @@ class Location( string location,
 			       max_time = pt;
 			     successful++;
 			     connections--;
-			   } ) });
+			   }, client_udp ) });
     return Roxen.http_pipe_in_progress( );
   }
 
@@ -415,6 +411,9 @@ mapping(string:Location) locations = ([]);
 
 int __id=1;
 
+Stdio.UDP udpstream;
+int q_playlist;
+
 class Connection
 {
   Stdio.File fd;
@@ -429,6 +428,8 @@ class Connection
   string current_block;
   function _ccb;
   mapping current_md;
+  int cudp;
+  string claddr;
   
   int connected = time();
   
@@ -437,30 +438,43 @@ class Connection
     if(!fd)
       return "Closed stream\n";
     return sprintf( "%d. %s Time: %ds  Remote: %s  "
-		    "%d sent, %d skipped<br />",id,protocol,
+		    "%d sent, %d skipped, meta: %s<br />",id,protocol,
 		    time()-connected,
-		    (fd->query_address()/" ")[0],
-		    sent, skipped );
+		    claddr,
+		    sent, skipped,
+		    cudp ? "UDP" : (do_meta ? "inline" : ""));
   }
 
   string old_mdkey;
   string gen_metadata( )
   {
-    string s = " ";
+    string s = "";
     if( !current_md )
-      current_md = stream->playlist->metadata();
+      current_md = stream->get_playlist()->metadata();
     if( (current_md->name||current_md->path)+current_md->url != old_mdkey )
     {
       old_mdkey = (current_md->name||current_md->path)+current_md->url;
-      s = sprintf( " StreamTitle='%s';StreamUrl='%s';",
-		   current_md->name || current_md->path,
-		   current_md->url || location->url );
+      s = sprintf( "StreamTitle='%s';StreamUrl='%s';",
+		   get_streamtitle(),
+		   location->url || current_md->url );
     }
     while( strlen(s) & 15 )
       s+= "\0";
-    s[ 0 ]=strlen(s)/16;
-    werror("%O\n", s );
+    s = " " + s;
+    s[ 0 ]=(strlen(s)-1)/16;
+    //if(s[0])
+    //  werror("MD: %O\n", s );
     return s;
+  }
+
+  void send_udptitle() {
+    if(!current_md) {
+      werror("No metadata found.\n");
+      return;
+    }
+    //udp->send("192.168.1.3", 10003, "x-audiocast-udpseqnr: 1\r\nx-audiocast-streamtitle: hop - xxx\r\nx-audiocast-streamurl: http://mepege.unibase.cz/strm/en\r\nx-audiocast-streamleght: 3222111");
+    udpstream->send(claddr, cudp,
+		  "x-audiocast-streamtitle: "+get_streamtitle()+"\r\n");
   }
   
   static void callback( string frame )
@@ -479,6 +493,46 @@ class Connection
   }
 
   int headers_done;
+
+/*
+
+http://www.xiph.org/archives/icecast-dev/0060.html
+
+There are updates every interval. Please notice the 'justnull' 
+variable. Apparently you haven't fully understood the format of the 
+metadata: the first byte of metadata is a length byte. Multiply it by 
+16 to determine how much text to extract from the stream as 
+metadata. If the first byte is null, then you extract 0 bytes and 
+continue to use the metadata you already have. Every 4096 bytes you 
+either get new metadata if the udpseqnr doesn't match between source 
+and client, or you get a 'null' length byte. You can't just omit the 
+data without causing skipping problems - valid mp3 data would be 
+interpreted as a length byte and that amount of data would be removed 
+from the stream.
+
+*/
+
+/*
+
+http://www.radiotoolbox.com/forums/viewtopic.php?t=76
+
+I tried hosting PLS files with my web host and it didn't work, the files just got displayed as text files, why did this happen? 
+Simply because your web servers MIME types were not setup properly to handle PLS files, in this case you must add them to your MIME types file. The proper entry is: 
+
+Code: 
+audio/x-scpls           pls  
+
+
+or if 
+you are using M3U files 
+
+Code: 
+audio/x-mpegurl       m3u  
+
+
+If your web host does not allow you to access your mime types, you can request that it be added or, if your web host supports it, you can use the .htaccess file to add the mime type to the server.
+
+*/
   
   static void send_more()
   {
@@ -494,17 +548,18 @@ class Connection
 	meta_cnt += strlen( current_block );
 	if( meta_cnt >= METAINTERVAL )
 	{
-	  string meta;
+	  string meta = gen_metadata();
 	  meta_cnt -= METAINTERVAL;
 	  int rest = strlen(current_block)-meta_cnt-1;
-	  sent_meta += strlen(meta = gen_metadata());
-	  current_block = current_block[..rest]+meta+current_block[rest];
+	  sent_meta += strlen(meta);
+	  current_block = current_block[..rest]+meta+current_block[rest+1..];
 	}
       }
       buffer = buffer[1..];
       sent++;
     }
-    int n = fd->write( current_block );
+    int n = -1;
+    catch( n = fd->write( current_block ));
     if( n > 0 )
     {
       if( headers_done )
@@ -515,17 +570,30 @@ class Connection
       closed();
   }
 
+  string get_streamtitle() {
+    string title = query("mdtitle");
+    title = replace(title, "%title%", current_md->title||"");
+    title = replace(title, "%artist%", current_md->artist||"");
+    title = replace(title, "%album%", current_md->album||"");
+    title = replace(title, "%track%", current_md->track||"");
+    title = replace(title, "%year%", (""+current_md->year) == "0" ? "" :
+					current_md->year );
+    return title;
+  }
+
   static void md_callback( mapping metadata )
   {
     current_md = metadata;
+    if(cudp && udpstream)
+      send_udptitle();
   }
   
   static void closed( )
   {
-    fd->set_blocking( );
+    catch(fd->set_blocking( )); //hop@: zachyceno. BTW: nejspis je zbytecne?
     fd = 0;
     stream->remove_callback( callback );
-    stream->playlist->remove_md_callback( md_callback );
+    stream->get_playlist()->remove_md_callback( md_callback );
     _ccb( this_object() );
     werror("Closed from client side\n");
 //     destruct( this_object() );
@@ -533,7 +601,7 @@ class Connection
   
   static void create( Stdio.File _fd, string buffer, 
 		      string prot, int _meta,  MPEGStream _stream,
-		      Location _loc,   function _closed )
+		      Location _loc,   function _closed, int _cudp )
   {
     location = _loc;
     protocol = prot;
@@ -541,12 +609,16 @@ class Connection
     do_meta = _meta;
     stream = _stream;
     _ccb = _closed;
+    cudp = _cudp;
+    claddr = (fd->query_address()/" ")[0];
     current_block = buffer;
     fd->set_nonblocking( lambda(){}, send_more, closed );
     if( stream ) 
       stream->add_callback( callback );
-    if( stream->playlist )
-      stream->playlist->add_md_callback( md_callback );
+    if( stream->get_playlist() ) {
+      md_callback(stream->get_playlist()->metadata());
+      stream->get_playlist()->add_md_callback( md_callback );
+    }
   }
 }
 
@@ -633,10 +705,41 @@ void create()
 {
   defvar( "streams", VarStreams( ({}), 0, _(0,"Streams"),
 				 _(0,"All the streams") ) );
+
   defvar("location", "/strm/",
 	 _(0,"Mount point"), TYPE_LOCATION|VAR_INITIAL,
 	 _(0,"Where the module will be mounted in the site's virtual "
    	     "file system."));
+
+  defvar("udpmeta", 0,
+	 _(0,"UDP port"), TYPE_INT|VAR_MORE,
+	 _(0,"Port number for out of band metadata exchange. Note: Works only "
+   	     "for Audiocast clients (like FreeAmp). "
+	     "<br /><b>Zero disables support</b>."));
+
+  defvar("mdtitle", "%artist%: %album% [%year%]: %title%",
+	 _(0,"Stream title"), TYPE_STRING|VAR_MORE,
+	 _(0,"The template for title of stream<br />"
+	     "Usable macros are:"
+	     "<ul>"
+	     "<li>%artist%<br />"
+	     "Performer(s)/Soloist(s) <i>(TPE1 in v2.3+)</i><br /></li>"
+	     "<li>%album%<br />"
+	     "Album/Movie/Show title <i>(TALB in v2.3+)</i><br /></li>"
+	     "<li>%title%<br />"
+	     "Title/songname/content description "
+	     	"<i>(TIT2 in v2.3+)</i><br /></li>"
+	     "<li>%track%<br />"
+	     "Album/Movie/Show title <i>(TRCK in v2.3+)</i><br /></li>"
+	     "<li>%year%<br />"
+	     "A year of the recording<i>(TYER in v2.3+)</i><br /></li>"
+	     "</ul>"
+   	     "."));
+
+  defvar("pllen", 0,
+	 _(0,"Playlist lenght"), TYPE_INT|VAR_MORE,
+	 _(0,"Max. lenght of returned playlist. Useful for long playlists."
+	     "<br /><b>Zero means full lenght</b>."));
 }
 
 mapping playlists(int s)
@@ -662,6 +765,7 @@ void st2()
   {
     MPEGStream mps;
 
+werror("DEB: strm: %O\n", strm);
     if( strm->playlist && pl[ strm->playlist ] )
       if( !(mps = streams[ pl[strm->playlist] ]) )
       {
@@ -683,13 +787,60 @@ void st2()
   }
 }
 
-void start()
+void start(int occasion, Configuration conf)
 {
-  call_out( st2, 0.5 );
+  call_out( st2, 1 );
+  
+  // udpstreaming
+  if(udpstream)
+    udpstream = 0;
+  if(query("udpmeta")) {
+      udpstream = Stdio.UDP();
+      mixed err = catch( udpstream->bind(query("udpmeta"),
+      			Standards.URI(conf->query("MyWorldLocation"))->host) );
+      if(err) {
+        udpstream = 0;
+        werror("UDP title streaming is disabled. Reason: "+err[0]+"\n");
+      } else
+        werror("UDP title streaming port [%s] is opened.\n", (udpstream->query_address()/" ")*":");
+  }
+
 }
 
 mapping find_file( string f, RequestID id )
 {
+
+  if(id->query && stringp(id->query) && sizeof(id->query)) {
+    array qs = id->query / "?"; // note: only first will be used
+    switch((qs[0]/"=")[0]) {
+      case "playlist": // playlist request
+        string pls;
+	int len;
+	if(sizeof(qs[0]/"=") > 1)
+	  len = (int)((qs[0]/"=")[1]);
+	else
+	  len = query("pllen");
+	if(len)
+	  pls = locations[f]->stream->get_playlist()->list[..len-1] * "\r\n";
+	else
+	  pls = locations[f]->stream->get_playlist()->list * "\r\n";
+	q_playlist++;
+#if 1
+        return Roxen.http_string_answer(pls, "text/plain");
+#else
+        return Roxen.http_string_answer(pls, "audio/x-mpegurl");
+#endif
+	break;
+      case "cmd-next": // forward request
+	locations[f]->stream->cmd = "forward";
+	break;
+      case "cmd-prev": // back request
+	locations[f]->stream->cmd = "back";
+	break;
+    }
+    return 0;
+  }
+  
   if( locations[f] )
     return locations[f]->handle( id );
   return 0;
@@ -698,11 +849,54 @@ mapping find_file( string f, RequestID id )
 
 string status()
 {
-  string res = "<table>";
+  string res = udpstream ? "<p>UDP title streaming port: " +
+  		  query("udpmeta") + "</p>\n" : "";
+  res += "<p>Playlist queries: " + q_playlist + "</p>\n";
+  res += "<h3>Streams</h3><table>";
   foreach( indices( locations ), string loc )
   {
     res += "<tr><td valign=top>"+loc+"</td><td valign=top>"+
       locations[loc]->status()+"</td></tr>";
   }
   return res+"</table>";
+}
+
+// -hop@
+
+class TagEmitKnownMP3streams
+{
+  inherit RXML.Tag;
+  constant name = "emit", plugin_name = "mp3-stream";
+  array get_dataset(mapping m, RequestID id)
+  {
+    if(m->name)
+      if(locations[m->name])
+        return ({ loc_description(m->name, (int)m->listmax, m->delimiter) });
+      else
+        return 0;
+    return map(indices(locations), loc_description);
+  }
+
+  private mapping loc_description(string loc, int maxlist, string delim) {
+    return (["name": loc,
+	"accessed": locations[loc]->accessed,
+	"denied": locations[loc]->denied,
+	"connections": locations[loc]->connections,
+	"avg-listen-time": locations[loc]->avg_listen_time(),
+	"longest-listen-time": locations[loc]->longest_listen_time(),
+	"real-dir": locations[loc]->stream->get_playlist()->real_dir(),
+	"current-song":
+	  locations[loc]->stream->get_playlist()->current_filename() || "",
+	"next-song":
+	  locations[loc]->stream->get_playlist()->peek_next() || "",
+#if 0
+	"conn":
+	  map(locations[loc]->fd->query_address()/" ")[0]
+#endif
+	"playlist": 
+	  maxlist ?
+	  locations[loc]->stream->get_playlist()->list[..maxlist-1] * (delim || "\0")
+	  : locations[loc]->stream->get_playlist()->list * (delim || "\0")
+	]);
+  }
 }

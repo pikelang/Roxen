@@ -2,7 +2,7 @@
 
 // This file is part of Roxen WebServer. Copyright © 2001, Roxen IS.
 static array md_callbacks = ({});
-static mapping md; // ID3 etc.
+static mapping md = ([]); // ID3 etc.
 
 string codec   = "null";
 string decoder = "null";
@@ -129,11 +129,10 @@ void call_md_callbacks( )
       md_callbacks -= ({f});
 }
 
-void fix_metadata( string path,
+void fix_metadata( mapping|int mdadd,
 		   Stdio.File fd )
 {
-  md = ([]);
-  if( path ) md->path = path;
-  // FIXME
+  if(mappingp(mdadd))
+    md += mdadd;
   call_md_callbacks(  );
 }

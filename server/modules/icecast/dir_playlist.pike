@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2001, Roxen IS.
 
 inherit "module";
-constant cvs_version="$Id: dir_playlist.pike,v 1.4 2001/12/18 18:39:31 grubba Exp $";
+constant cvs_version="$Id: dir_playlist.pike,v 1.5 2002/06/12 05:06:30 hop Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -30,8 +30,6 @@ Stdio.File next_file()
 {
   if(!sizeof( list ) )   return 0;
 
-  werror("stream next song\n");
-
   Stdio.File fd;
   while( string f = list[0] )
   {
@@ -40,7 +38,16 @@ Stdio.File next_file()
     if( fd->open( f, "r" ) )
     {
       current_file = f;
-      fix_metadata( f,fd );
+      werror("Next song: "+current_filename()+"\n");
+#if 1
+      int lsn = fd->tell();
+      mapping lmd;
+      catch(lmd = Standards.ID3.Tag(fd)->friendly_values());
+      fd->seek(lsn);
+      fix_metadata( (["name": f, "url": "[none]"]) + (lmd || ([])), fd );
+#else
+      fix_metadata( f, fd );
+#endif
       return recode( fd, query( "bitrate" ) );
     }
   }
@@ -69,17 +76,26 @@ void start()
 
 string peek_next()
 {
-  return sizeof(list) && list[0];
+  return sizeof(list) && list[0][strlen(query("dir"))..];
 }
 
 string status()
 {
   if( !current_file ) return "Nothing is playing\n";
   return sprintf("Currently playing %s <br />\n"
-  		 "Next song is %s\n", current_file[strlen(query("dir"))..],
-		 peek_next()[strlen(query("dir"))..] );
+  		 "Next song is %s\n", current_filename(),
+		 peek_next());
 }
 
+string current_filename()
+{
+  return current_file && current_file[strlen(query("dir"))..];
+}
+
+string real_dir()
+{
+  return query("dir");
+}
 
 void create()
 {
