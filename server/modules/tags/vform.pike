@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: vform.pike,v 1.1 2000/05/16 16:33:03 nilsson Exp $";
+constant cvs_version="$Id: vform.pike,v 1.2 2000/07/17 12:22:53 nilsson Exp $";
 constant thread_safe=1;
 
 constant module_type = MODULE_PARSER;
@@ -25,7 +25,7 @@ class TagVForm {
   class TagVInput {
     inherit RXML.Tag;
     constant name = "vinput";
-    mapping(string:RXML.Type) req_arg_types = ([ "name":RXML.t_text ]);
+    mapping(string:RXML.Type) req_arg_types = ([ "name":RXML.t_text(RXML.PEnt) ]);
 
     constant ARGS=({ "minlength", "maxlength", "trim", "is", "glob",
 		     "ignore-if-false", "ignore-if-failed", "ignore-if-verified",
@@ -227,7 +227,7 @@ class TagVForm {
   class TagVerify {
     inherit RXML.Tag;
     constant name = "vselect";
-    mapping(string:RXML.Type) req_arg_types = ([ "name":RXML.t_text ]);
+    mapping(string:RXML.Type) req_arg_types = ([ "name":RXML.t_text(RXML.PEnt) ]);
 
     class Frame {
       inherit RXML.Frame;

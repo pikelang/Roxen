@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.137 2000/07/14 15:02:43 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.138 2000/07/17 12:22:15 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -247,7 +247,7 @@ class TagAppend {
   inherit RXML.Tag;
   constant name = "append";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "variable" : RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "variable" : RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -426,7 +426,7 @@ class TagSet {
   inherit RXML.Tag;
   constant name = "set";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "variable": RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "variable": RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -458,7 +458,7 @@ class TagInc {
   inherit RXML.Tag;
   constant name = "inc";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -475,7 +475,7 @@ class TagDec {
   inherit RXML.Tag;
   constant name = "dec";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -632,7 +632,7 @@ class TagFSize {
   constant name = "fsize";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  mapping(string:RXML.Type) req_arg_types = ([ "file" : RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "file" : RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -680,7 +680,7 @@ class TagConfigImage {
   constant name = "configimage";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  mapping(string:RXML.Type) req_arg_types = ([ "src" : RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "src" : RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -853,7 +853,7 @@ class TagSetCookie {
   constant name = "set-cookie";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  mapping(string:RXML.Type) req_arg_types = ([ "name" : RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "name" : RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -892,8 +892,8 @@ class TagRemoveCookie {
   constant name = "remove-cookie";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  mapping(string:RXML.Type) req_arg_types = ([ "name" : RXML.t_text ]);
-  mapping(string:RXML.Type) opt_arg_types = ([ "value" : RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "name" : RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) opt_arg_types = ([ "value" : RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -1047,7 +1047,7 @@ class TagScope {
   inherit RXML.Tag;
 
   constant name = "scope";
-  mapping(string:RXML.Type) opt_arg_types = ([ "extend" : RXML.t_text ]);
+  mapping(string:RXML.Type) opt_arg_types = ([ "extend" : RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;

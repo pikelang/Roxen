@@ -19,8 +19,8 @@ class TagTranslationRegistration {
   constant name = "trans-reg";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  mapping(string:RXML.Type) req_arg_types = ([ "project":RXML.t_text,
-					       "path":RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "project":RXML.t_text(RXML.PEnt),
+					       "path":RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -44,10 +44,10 @@ class TagTranslate {
   inherit RXML.Tag;
   constant name = "translate";
 
-  mapping(string:RXML.Type) req_arg_types = ([ "id":RXML.t_text ]);
-  mapping(string:RXML.Type) opt_arg_types = ([ "project":RXML.t_text,
-					       "variable":RXML.t_text,
-					       "scope":RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "id":RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) opt_arg_types = ([ "project":RXML.t_text(RXML.PEnt),
+					       "variable":RXML.t_text(RXML.PEnt),
+					       "scope":RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;

@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.22 2000/07/07 10:49:24 grubba Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.23 2000/07/17 12:23:10 nilsson Exp $";
 constant module_type = MODULE_PARSER;
 constant module_name = "Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -142,7 +142,7 @@ class TagCImg {
   inherit RXML.Tag;
   constant name = "cimg";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "src" : RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "src" : RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;
@@ -167,7 +167,7 @@ class TagCImgURL {
   inherit RXML.Tag;
   constant name = "cimg-url";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "src" : RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "src" : RXML.t_text(RXML.PEnt) ]);
 
   class Frame {
     inherit RXML.Frame;

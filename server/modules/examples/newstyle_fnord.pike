@@ -8,7 +8,7 @@
 // See fnord.pike for more information of what this tag does.
 
 // This variable is shown in the configinterface as the version of the module.
-constant cvs_version = "$Id: newstyle_fnord.pike,v 1.5 2000/07/02 16:47:14 nilsson Exp $";
+constant cvs_version = "$Id: newstyle_fnord.pike,v 1.6 2000/07/17 12:23:56 nilsson Exp $";
 
 // Tell Roxen that this module is threadsafe.
 constant thread_safe=1;
@@ -29,7 +29,7 @@ class TagFnord {
   // Declare the type of the attribute, which happens to be optional.
   // Since we declare it to be text, we really don't need this line to
   // get things to work.
-  mapping(string:RXML.Type) opt_arg_types = ([ "alt" : RXML.t_text ]);
+  mapping(string:RXML.Type) opt_arg_types = ([ "alt" : RXML.t_text(RXML.PEnt) ]);
 
   // This class is where all the action are.
   class Frame {
