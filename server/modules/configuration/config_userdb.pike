@@ -104,7 +104,7 @@ class ConfigurationSettings
 	      "svenska":"Textfärg till konfigurationsgränssnittet."
 	    ]), 0, 0 );
 
-    defvar( "font", "bastard",
+    defvar( "font", "franklin gothic demi",
 	    ([
 	      "english":"Font",
 	      "svenska":"Typsnitt",
