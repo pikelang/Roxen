@@ -62,32 +62,37 @@ pureshuffle:	shuffle.o
 	purify $(CC) -O $(ARGS) -o shuffle shuffle.o -lthread -lsocket
 
 shuffle-install: shuffle
-	/bin/cp -f shuffle $(prefix)/roxen/server/bin
+	-/bin/rm -f $(prefix)/roxen/server/bin/shuffle
+	/bin/cp shuffle $(prefix)/roxen/server/bin
 
 shuffle-localinstall: shuffle
-	/bin/cp -f shuffle $(SRCDIR)/../server/bin
+	-/bin/rm -f $(SRCDIR)/../server/bin/shuffle
+	/bin/cp shuffle $(SRCDIR)/../server/bin
 
 ssl-install:	ssl
-	/bin/cp -f ssl $(prefix)/roxen/server/bin
+	-/bin/rm -f $(prefix)/roxen/server/bin/ssl
+	/bin/cp ssl $(prefix)/roxen/server/bin
 
 ssl-localinstall:	ssl
-	/bin/cp -f ssl $(SRCDIR)/../server/bin
+	-/bin/rm -f $(SRCDIR)/../server/bin/ssl
+	/bin/cp ssl $(SRCDIR)/../server/bin
 
 install: roxen_hostname fcgi cgi $(HAVE_SSL)-install $(HAVE_SHUFFLE)-install
 	@for f in roxen_hostname fcgi cgi; do \
-		if [ -f $f ]; then \
-			echo Installing $f; \
-			/bin/rm -f $(prefix)/roxen/server/bin/$f; \
-			if /bin/cp $f $(prefix)/roxen/server/bin/ then :; \
-			else exit 1; fi; \
-		else \
-			echo $f was not successfully compiled; \
-		fi \
+		echo Installing $f...; \
+		/bin/rm -f $(prefix)/roxen/server/bin/$f; \
+		if /bin/cp $f $(prefix)/roxen/server/bin/ then :; \
+		else exit 1; fi; \
 	done
 	@echo Done.
 
 localinstall: fcgi roxen_hostname cgi $(HAVE_SSL)-localinstall $(HAVE_SHUFFLE)-localinstall
-	/bin/cp -f fcgi roxen_hostname cgi $(SRCDIR)/../server/bin
+	@for f in fcgi roxen_hostname cgi; do \
+		echo Installing $f...; \
+		/bin/rm -f $(SRCDIR)/../server/bin/$f; \
+		if /bin/cp $f $(SRCDIR)/../server/bin/ then :; \
+		else exit 1; fi; \
+	done
 	@echo Done.
 
 .c.o:
