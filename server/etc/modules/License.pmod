@@ -2,13 +2,14 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.23 2003/03/05 10:55:00 anders Exp $
+// $Id: License.pmod,v 1.24 2003/09/18 09:13:51 wellhard Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
 #endif
 
 int is_active(string license_dir)
+// Returns true if the license system is enabled.
 {
   return Stdio.is_dir(license_dir);
 }
@@ -228,7 +229,9 @@ class Key
   string type()         { return content->type; }
   string expires()      { return content->expires; }
   string hostname()     { return content->hostname; }
-  static string enterprise()     { return content->enterprise; }
+  string sites()        { return type() == "evaluation"? "*":(content->sites || "1"); }
+  int is_enterprise()   { return sites() == "*"; }
+  int sites_i()         { return is_enterprise()? 100000: (int)sites(); }
   
   string created()      { return content->created; }
   string creator()      { return content->creator; }
@@ -292,25 +295,38 @@ class Key
 
   string|void verify(int verify_mode, object /*Configuration*/|void configuration,
 		     int|void time, string|void _hostname)
+  // Verifies if the license complies with the current setup. Returns
+  // an error message if a breach was found.
+
+  // verify_mode: Only return error messages if set.
+  // configuration: The configuration to verify the license for.
+  // time: The time to verify license expiration for.
+  // hostname: The hostname to verify the license for.
+    
   {
     array(object /*Configuration*/) confs =
       get_configurations_for_license(this_object());
-    if(configuration)
+    
+    if(!is_enterprise())
     {
+      array conflicting_confs = (confs | ({ configuration }));
       // verify configuration integrity.
-      if(sizeof(confs - ({ configuration })) && type() != "evaluation") {
-	report_warning("Configuration",
-		       sprintf("License used in multiple configurations: "
-			       "%s.", String.
-			       implode_nicely((confs | ({ configuration }))->name)));
+      if(sizeof(conflicting_confs) > sites_i()) {
+	if(verify_mode)
+	  return sprintf("The license "+filename()+" is already used in the following "
+			 "configurations: %s. License permits only "
+			 "%d concurrent sites.",
+			 String.implode_nicely((conflicting_confs -
+						({ configuration }))->name),
+			 sites_i());
+	else
+	  report_warning("Configuration",
+			 sprintf("License used in too many configurations: %s. "
+				 "License permits only %d concurrent sites.",
+				 String.implode_nicely((conflicting_confs - ({ 0 }))
+						       ->name), sites_i()));
       }
-    } else if(verify_mode && sizeof(confs) && type() != "evaluation")
-      return sprintf("The license "+filename()+" is already used in "
-		     "configuration: %s.",
-		     String.implode_nicely(confs->name));
-    
-
-    
+    }
     
     if(time)
     {
