@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.392 2001/07/31 07:41:03 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.393 2001/09/03 18:48:49 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -673,6 +673,7 @@ int|mapping check_security(function|object a, RequestID id, void|int slevel)
     foreach(seclevels[0], level) {
       switch(level[0]) {
       case MOD_ALLOW: // allow ip=...
+	NOCACHE();
 	if(level[1](id->remoteaddr)) {
 	  ip_ok = ~0;	// Match. It's ok.
 	} else {
@@ -681,7 +682,7 @@ int|mapping check_security(function|object a, RequestID id, void|int slevel)
 	break;
 
       case MOD_DENY: // deny ip=...
-
+	NOCACHE();
 	if(level[1](id->remoteaddr))
 	  return Roxen.http_low_answer(403, "<h2> Access forbidden </h2>");
 	break;
@@ -695,6 +696,7 @@ int|mapping check_security(function|object a, RequestID id, void|int slevel)
 	break;
 
       case MOD_PROXY_USER: // allow user=...
+	NOCACHE();
 	if (ip_ok != 1) {
 	  // IP is OK as of yet.
 	  if(id->misc->proxyauth && id->misc->proxyauth[0] &&
@@ -708,6 +710,7 @@ int|mapping check_security(function|object a, RequestID id, void|int slevel)
 
       case MOD_ACCEPT: // accept ip=...
 	// Short-circuit version on allow.
+	NOCACHE();
 	if(level[1](id->remoteaddr)) {
 	  // Match. It's ok.
 	  return 0;
