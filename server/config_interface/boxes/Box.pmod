@@ -99,7 +99,13 @@ class Fetcher
     remove_call_out( start );
     call_out( start, 3600 );
     query = Protocols.HTTP.Query( )->set_callbacks( done, fail );
-    query->async_request( h, p, q, ([ "Host":h+":"+p ]) );
+    query->async_request( h, p, q,
+			  ([ "Host":h+":"+p,
+			     "User-Agent": (roxen.query("default_ident") ?
+					    (roxen_product_name + "/" +
+					     roxen_dist_version) :
+					    roxen.version()),
+			  ]) );
   }
   
   void create( function _cb, string _h, int _p, string _q,
