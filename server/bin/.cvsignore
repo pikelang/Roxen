@@ -1,6 +1,7 @@
 cgi
 fcgi
 pike
+roxen
 roxen_hostname
 shuffle
 ssl
