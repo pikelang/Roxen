@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.237 2001/06/09 15:08:56 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.238 2001/06/11 13:57:34 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2836,19 +2836,29 @@ class TagEmit {
 
   // A slightly modified Array.dwim_sort_func
   // used as emits sort function.
-  static int compare(string|object a0,string|object b0, string v) {
+  static int compare(mixed a0, mixed b0, string v) {
     RXML.Context ctx;
-    if(objectp(a0)) {
+
+    if(objectp(a0) && a0->rxml_var_eval) {
       if(!ctx) ctx = RXML.get_context();
       a0 = a0->rxml_const_eval ? a0->rxml_const_eval(ctx, v, "", RXML.t_text) :
 	a0->rxml_var_eval(ctx, v, "", RXML.t_text);
     }
-    if(objectp(b0)) {
+    else
+      a0 = (string)a0;
+
+    if(objectp(b0) && b0->rxml_var_eval) {
       if(!ctx) ctx = RXML.get_context();
       b0 = b0->rxml_const_eval ? b0->rxml_const_eval(ctx, v, "", RXML.t_text) :
 	b0->rxml_var_eval(ctx, v, "", RXML.t_text);
     }
+    else
+      b0 = (string)b0;
 
+    return compare_iter(a0, b0);
+  }
+
+  static int compare_iter(string a0,string b0) {
     if (!a0) {
       if (b0)
 	return -1;
@@ -2867,7 +2877,7 @@ class TagEmit {
     if (a1>b1) return 1;
     if (a1<b1) return -1;
     if (a2==b2) return 0;
-    return compare(a2,b2,v);
+    return compare_iter(a2,b2);
   }
 
   class Frame {
@@ -2962,8 +2972,8 @@ class TagEmit {
 	{
 	  array(string) order = (args->sort - " ")/"," - ({ "" });
 	  res = Array.sort_array( res,
-				  lambda (mapping(string:string) m1,
-					  mapping(string:string) m2)
+				  lambda (mapping(string:mixed) m1,
+					  mapping(string:mixed) m2)
 				  {
 				    foreach (order, string field)
 				    {
