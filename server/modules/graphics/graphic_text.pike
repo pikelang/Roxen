@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.210 2000/03/14 00:32:23 mast Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.211 2000/03/15 20:35:08 wellhard Exp $";
 
 #include <module.h>
 inherit "module";
@@ -867,7 +867,7 @@ string container_gtext(string t, mapping arg, string c, RequestID id)
     if(!id->supports->images) return sprintf(lp,arg->alt);
 
     string sn="i"+id->misc->gtext_mi++;
-    if(!id->supports->netscape_javascript) {
+    if(!id->supports->js_image_object) {
       return (!input)?
         ("<a "+ea+"href=\""+url+"\">"+make_tag("img",arg+(["name":sn]))+"</a>"):
         make_tag("input",arg+(["type":"image"]));

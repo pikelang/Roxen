@@ -1,4 +1,4 @@
-## $Id: supports,v 1.77 2000/03/14 20:31:43 wellhard Exp $
+## $Id: supports,v 1.78 2000/03/15 20:35:07 wellhard Exp $
 # name="Supports database";
 # doc="The database used to determine what different user-agents (browsers) support.";
 #
@@ -67,7 +67,9 @@
 #! mailto - The browser supports mailto URLs.
 #! math - The <math> tag is correctly displayed by the browser.
 #! msie - This is a Microsoft Internet Explorer browser.
-#! netscape_javascript - The browser needs netscape styled javascript.
+#! js_image_object - The browser supports the javascript image object.
+#! js_global_event - The browser supports a global event object e.g. netscape 4.
+#! layer - The browser supports the layer tag.
 #! phone - The client is a phone.
 #! pjpeginline - The browser can handle progressive JPEG images, .pjpeg, inline.
 #! pnginline - The browser can handle PNG images inlined.
@@ -107,29 +109,30 @@
 
 .*		basic, tables, jpeginline, font, imagealign,\
 		cookies, push, pull, backgrounds, ssl,\
-		java, frames, autogunzip, netscape_javascript, javascript, align,\
+		java, frames, autogunzip, js_image_object, javascript, align,\
 		center, images
 
 mozilla/0\..*		-tables, -backgrounds, -ssl, -frames, -java, -javascript,\
-			-netscape_javascript, -align, -center, -font, -imagealign,\
+			-js_image_object, -align, -center, -font, -imagealign,\
 			-images
 mozilla/1.[01].*	-tables, -backgrounds, -ssl, -frames, -java, -javascript,\
-			-netscape_javascript
-mozilla/1\..*		-ssl, -frames, -java, -javascript, -netscape_javascript,\
+			-js_image_object
+mozilla/1\..*		-ssl, -frames, -java, -javascript, -js_image_object,\
 			bigsmall, supsub
 mozilla.[2-9].[0-9].*	some_html3, fontcolor, pjpeginline, fontcolor
 mozilla.2.0b[2-9].*	-java
 
 #Old versions on Mac crash the entire machine if you use javascript.
-mozilla/2.*		-netscape_javascript, *javascript=1.0
+mozilla/2.*		-js_image_object, *javascript=1.0
 mozilla/2.*X11		javascript
 mozilla/2.*OS/2		javascript
 mozilla/2.*Win16	-java, javascript
 mozilla/2.*Macintosh	-java
 
+mozilla/[2-9].*		js_global_event
 mozilla/[3-9].*		javascript, tablecolor, *javascript=1.1
 
-mozilla/[4-9].*		stylesheets, tableimages, *javascript=1.1
+mozilla/[4-9].*		stylesheets, tableimages, *javascript=1.1, layer
 mozilla/4\.0[4-9].*	pnginline
 mozilla/4\.0[5-9].*     *javascript=1.2
 mozilla/4\.[5-9].*	pnginline, *javascript=1.2
@@ -145,12 +148,12 @@ mozilla/[5-9].*		pnginline, *javascript=1.3
 .*compatible.*opera.[3-9].*	-java, javascript, fontcolor, tablecolor, *javascript=1.1
 
 # BLAM BLAM BLAM BLAM
-.*compatible.*			-push
+.*compatible.*			-push, -layer, -js_global_event
 .*compatible.*msie		msie
 .*compatible.*msie.1		-javascript, -tables
 .*compatible.*msie.[1-2]	-java, -bigsmall, -div, -divisions, fontcolor,\
 				-frames, -supsub
-.*compatible.*msie.[1-9]	-netscape_javascript
+.*compatible.*msie.[1-3]	-js_image_object
 
 .*compatible.*msie.[2-9]	tablecolor, fontcolor
 .*compatible.*msie.[3-9]	activex, tableimages, javascript, *javascript=1.0
