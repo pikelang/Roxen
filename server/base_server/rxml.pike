@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.194 2000/05/10 17:13:14 nilsson Exp $
+// $Id: rxml.pike,v 1.195 2000/06/09 13:37:42 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -1920,9 +1920,13 @@ constant tagdoc=([
  Alters the case of the contents.</short>
 </desc>
 
-<attr name=case value=upper|lower|capitalize required>
+<attr name='case' value='upper|lower|capitalize' required>
  Changes all characters to upper or lower case letters, or
  capitalizes the first letter in the content.
+
+<ex><case upper=''>upper</case></ex>
+<ex><case lower=''>lower</case></ex>
+<ex><case capitalize=''>captalize</case></ex>
 </attr>",
 
 "cond":({ #"<desc cont><short hide>This tag makes a boolean test on a specified list of cases.</short>
@@ -1939,10 +1943,10 @@ constant tagdoc=([
  tag is parsed.</desc>
 
 <ex type=vert>
-<set variable=\"var.foo\" value=\"17\"/>
+<set variable='var.foo' value='17'/>
 <cond>
-  <case true>&var.foo;<set variable=\"var.foo\" expr=\"&var.foo;+1\"/></case>
-  <default>&var.foo;<set variable=\"var.foo\" expr=\"&var.foo;+2\"/></default>
+  <case true>&var.foo;<set variable='var.foo' expr='&var.foo;+1'/></case>
+  <default>&var.foo;<set variable='var.foo' expr='&var.foo;+2'/></default>
 </cond>
 &var.foo;
 </ex>",
@@ -1979,7 +1983,7 @@ constant tagdoc=([
 "comment":#"<desc cont><short>
  The enclosed text will be removed from the document.</short> The difference
  from a normal SGML (HTML/XML) comment is that the text is removed
- from the document, and can not be seen even with view source. Another
+ from the document, and can not be seen even with <i>view source</i> in the browser. Another
  difference is that any RXML tags inside this container will not be
  parsed.
 </desc>",
@@ -2282,6 +2286,8 @@ The following features are supported:
 
 "strlen":#"<desc cont><short>
  Returns the length of the contents.</short>
+
+<ex>There is <strlen>foo bar gazonk</strlen> characters inside the tag.</ex>
 </desc>",
 
 "then":#"<desc cont><short>
