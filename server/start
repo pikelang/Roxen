@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.86 1999/12/19 00:34:12 marcus Exp $
+# $Id: start,v 1.87 1999/12/21 16:48:14 per Exp $
 
 pre="`echo \" $$             \" | sed -e 's/\(.........\)\(.*\)/\1/g'` :"
 
@@ -423,7 +423,7 @@ fi
 
 case "x$debug" in
   "x")
-    DEBUG="-DMODULE_DEBUG -rt"
+    DEBUG="-DMODULE_DEBUG "
     ARGS="$ARGS -w"
     ;;
   "x-1")
