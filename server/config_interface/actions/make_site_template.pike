@@ -1,5 +1,5 @@
 /*
- * $Id: make_site_template.pike,v 1.4 2002/01/17 15:52:34 grubba Exp $
+ * $Id: make_site_template.pike,v 1.5 2002/01/17 16:07:46 grubba Exp $
  *
  * Make a site-template from a virtual server configuration.
  *
@@ -115,7 +115,11 @@ string parse(RequestID id)
 		Calendar.Second()->format_smtp(),
 		conf_name,
 		conf_name,
-		indices(conf->modules));
+		map(indices(conf->modules),
+		    lambda(string modname) {
+		      return ({ modname })*
+			sizeof(indices(conf->modules[modname]));
+		    })*({}));
       // First find modified globals.
       array(array) globvars = filter((array)conf->variables,
 				     lambda(array pair) {
