@@ -6,12 +6,13 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.19 2004/06/30 16:59:24 mast Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.20 2004/08/05 12:03:54 noring Exp $";
 
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Spell checker";
 constant module_doc = 
-#"Checks for misspelled words inside the <tt>&lt;spell&gt;</tt> tag.";
+#"Checks for misspelled words using the <tt>&lt;emit#spellcheck&gt;</tt> or
+<tt>&lt;spell&gt;</tt> tags.";
 
 mapping find_internal(string f, RequestID id)
 {
@@ -26,19 +27,22 @@ mapping find_internal(string f, RequestID id)
 }
 
 void create() {
-  defvar("spellchecker","/usr/bin/ispell",
+  defvar("spellchecker","/usr/bin/aspell",
 	 "Spell checker", TYPE_STRING,
          "Spell checker program to use.");
 
   defvar("dictionary", "american", "Default dictionary", TYPE_STRING,
-         "The default dictionary used, when not specified in the tag.");
+         "The default dictionary used, when not specified in the "
+	 "&lt;spell&gt; tag.");
 
   defvar("report", "popup", "Default report type", TYPE_STRING_LIST,
-         "The default report type used, when not specified in the tag.",
+         "The default report type used, when not specified in the "
+	 "&lt;spell&gt; tag.",
          ({ "popup","table" }) );
 
   defvar("prestate", "", "Prestate",TYPE_STRING,
-         "If specified, only check spelling when this prestate is present.");
+         "If specified, only check spelling in the &lt;spell&gt; tag "
+	 "when this prestate is present.");
 
 }
 
@@ -198,26 +202,38 @@ class TagSpell {
   }
 }
 
-array spellcheck(array(string) words,string dict) {
-  array res=({ });
-
+string run_spellcheck(string|array(string) words, void|string dict)
+{
   object file1=Stdio.File();
   object file2=file1->pipe();
   object file3=Stdio.File();
   object file4=file3->pipe();
   string spell_res;
 
-  Process.create_process( ({ query("spellchecker"),"-a","-d",dict }) ,(["stdin":file2,"stdout":file4 ]) );
+  Process.create_process(({ query("spellchecker"), "-a" }) +
+                         (stringp(words) ? ({ "-H" })       : ({})) +
+                         (dict           ? ({ "-d", dict }) : ({})),
+                         ([ "stdin":file2,"stdout":file4 ]));
 
-
-  file1->write(" "+words*"\n "+"\n");
+  file1->write(stringp(words) ?
+               " "+words /* Extra space to ignore aspell commands
+                            (potential secyurity problem), compensated
+                            below. */ :
+               " "+words*"\n "+"\n" /* Compatibility mode. */);
   file1->close();
   file2->close();
   file4->close();
   spell_res=file3->read();
   file3->close();
 
-  array ispell_data=spell_res/"\n";
+  return spell_res;
+}
+
+array spellcheck(array(string) words,string dict)
+{
+  array res=({ });
+
+  array ispell_data = run_spellcheck(words, dict)/"\n";
 
   if(sizeof(ispell_data)>1) {
     int i,row=0,pos=0,pos2;
@@ -246,10 +262,70 @@ array spellcheck(array(string) words,string dict) {
   }
 }
 
+class TagEmitSpellcheck {
+  inherit RXML.Tag;
+  constant name = "emit";
+  constant plugin_name = "spellcheck";
+
+  mapping(string:RXML.Type) req_arg_types = ([
+      "text" : RXML.t_text(RXML.PEnt),
+    ]);
+  
+  array get_dataset(mapping args, RequestID id)
+  {
+    array(mapping(string:string)) entries = ({});
+
+    string dict = args["dict"];
+    string text = args["text"];
+    if(text)
+      foreach(run_spellcheck(replace(text, "\n", " "), dict)/"\n", string line)
+      {
+	if(!sizeof(line))
+	  continue;
+
+	switch(line[0])
+	{
+	  case '*':
+	    // FIXME: Optimisation: Make aspell not send this!
+	    continue;
+	    
+	  case '&':
+	    if(sscanf(line, "& %s %*d %d: %s", string word, int offset, string suggestions) == 4)
+	      entries += ({ ([ "word":word,
+			       "offset":offset-1 /* For extra space (see above)! */,
+			       "suggestions":suggestions ]) });
+	    
+	  case '#':
+	    if(sscanf(line, "# %s %d", string word, int offset) == 2)
+	      entries += ({ ([ "word":word,
+			       "offset":offset-1 /* For extra space (see above)! */ ]) });
+	}
+      }
+
+    return entries;
+  }
+}
+
 
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
+"emit#spellcheck":({ #"<desc type='plugin'><p><short>
+  Lists from a text words that are not found in a
+  dictionary using aspell.</short></p>
+</desc>
+
+<attr name='text' value='string'><p>The text to be spell checked. Tags are allowed in the text.</p></attr>
+
+<attr name='dict' value='string'><p>Optionally select a dictionary.</p></attr>
+",
+ ([
+   "&_.word;":#"<desc type='entity'><p>The word not found in the dictionary.</p></desc>",
+   "&_.offset;":#"<desc type='entity'><p>Character offset to the word in the text.</p></desc>",
+   "&_.suggestions;":#"<desc type='entity'><p>If present, a comma and space separated list of suggested word replacements.</p></desc>"
+ ])
+}),
+
 "spell":#"<desc type='cont'><p><short>
  Checks words for spelling problems.</short> The spellchecker uses the ispell dictionary.
 </p></desc>
