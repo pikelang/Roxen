@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.11 2000/07/20 17:41:24 jhs Exp $
+ * $Id: resolv.pike,v 1.12 2000/08/14 18:55:18 mast Exp $
  */
 
 inherit "wizard";
@@ -21,28 +21,12 @@ string link_configuration(Configuration c)
 
 string module_name(function|RoxenModule|RXML.Tag m)
 {
-  if(!m)
-    return "";
-  if(functionp(m)) m = function_object(m);
-  if (!m->is_module)		// Might be an RXML.Tag.
-    if (RoxenModule mm = function_object (object_program (m)))
-      m = mm;
-  if (!m->is_module) return "";
+  m = Roxen.get_owning_module (m);
+  if(!m) return "";
 
   string name;
-  mixed error=catch{
-    name=(string)m->query("_name");
-  };
-
-  if(error || !strlen(name))
-  {
-    if(m->query_name&&m->query_name()&&strlen(m->query_name()))
-      name = m->query_name();
-    else if(m->register_module && sizeof(m->register_module()))
-      name = m->register_module()[1];
-    else
-      return "<font color=red>Unavailable</font>";
-  }
+  catch (name = Roxen.get_modfullname (m));
+  if (!name) return "<font color=red>Unavailable</font>";
 
   Configuration c;
   if(functionp(m->my_configuration) && (c = m->my_configuration()))
