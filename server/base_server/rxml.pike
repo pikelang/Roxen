@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.31 1999/10/18 21:13:40 per Exp $
+ * $Id: rxml.pike,v 1.32 1999/11/11 05:25:06 mast Exp $
  *
  * The Roxen Challenger RXML Parser.
  *
@@ -128,24 +128,19 @@ string do_parse(string to_parse, RequestID id, object file, mapping defines,
     }(0);
   parser->add_tags (map (
     id->misc->_tags,
-    lambda (function fn)
-    {
-      return lambda (object parser, mapping args, mixed... extra)
-	     {
-	       return fn (parser->tag_name(), args,
-			  parser->at_line(), @extra);
-	     };
+    lambda (function|string what) {
+      return stringp (what) ? what :
+	lambda (object parser, mapping args, mixed... extra) {
+	  return what (parser->tag_name(), args, parser->at_line(), @extra);
+	};
     }));
   parser->add_containers (map (
     id->misc->_containers,
-    lambda (function fn)
-    {
-      return lambda (object parser, mapping args, string contents,
-		     mixed... extra)
-	     {
-	       return fn (parser->tag_name(), args, contents,
-			  parser->at_line(), @extra);
-	     };
+    lambda (function|string what) {
+      return stringp (what) ? what :
+	lambda (object parser, mapping args, string contents, mixed... extra) {
+	  return what (parser->tag_name(), args, contents, parser->at_line(), @extra);
+	};
     }));
   parser->_set_tag_callback (
     lambda (object parser, string str) {

@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.107 1999/11/06 08:25:51 per Exp $
+ * $Id: roxenloader.pike,v 1.108 1999/11/11 05:25:06 mast Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.107 1999/11/06 08:25:51 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.108 1999/11/11 05:25:06 mast Exp $";
 
 #define perror roxen_perror
 
@@ -593,24 +593,19 @@ string parse_html (string data, mapping tags, mapping containers,
   Parser.HTML parser = Parser.HTML();
   parser->add_tags (map (
     tags,
-    lambda (function fn)
-    {
-      return lambda (object parser, mapping args, mixed... extra)
-	     {
-	       return fn (parser->tag_name(), args,
-			  @extra);
-	     };
+    lambda (function|string what) {
+      return stringp (what) ? what :
+	lambda (object parser, mapping args, mixed... extra) {
+	  return what (parser->tag_name(), args, @extra);
+	};
     }));
   parser->add_containers (map (
     containers,
-    lambda (function fn)
-    {
-      return lambda (object parser, mapping args, string contents,
-		     mixed... extra)
-	     {
-	       return fn (parser->tag_name(), args, contents,
-			  @extra);
-	     };
+    lambda (function|string what) {
+      return stringp (what) ? what :
+	lambda (object parser, mapping args, string contents, mixed... extra) {
+	  return what (parser->tag_name(), args, contents, @extra);
+	};
     }));
   parser->_set_tag_callback (
     lambda (object parser, string str) {
@@ -627,24 +622,19 @@ string parse_html_lines (string data, mapping tags, mapping containers,
   Parser.HTML parser = Parser.HTML();
   parser->add_tags (map (
     tags,
-    lambda (function fn)
-    {
-      return lambda (object parser, mapping args, mixed... extra)
-	     {
-	       return fn (parser->tag_name(), args,
-			  parser->at_line(), @extra);
-	     };
+    lambda (function|string what) {
+      return stringp (what) ? what :
+	lambda (object parser, mapping args, mixed... extra) {
+	  return what (parser->tag_name(), args, parser->at_line(), @extra);
+	};
     }));
   parser->add_containers (map (
     containers,
-    lambda (function fn)
-    {
-      return lambda (object parser, mapping args, string contents,
-		     mixed... extra)
-	     {
-	       return fn (parser->tag_name(), args, contents,
-			  parser->at_line(), @extra);
-	     };
+    lambda (function|string what) {
+      return stringp (what) ? what :
+	lambda (object parser, mapping args, string contents, mixed... extra) {
+	  return what (parser->tag_name(), args, contents, parser->at_line(), @extra);
+	};
     }));
   parser->_set_tag_callback (
     lambda (object parser, string str) {
