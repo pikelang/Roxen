@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: newdecode.pike,v 1.22 2000/03/01 15:14:32 grubba Exp $
+// $Id: newdecode.pike,v 1.23 2000/03/01 19:04:30 per Exp $
 
 // The magic below is for the 'install' program
 #ifndef roxenp
@@ -40,7 +40,7 @@ private string decode_mapping(Parser.HTML p, mapping m, string s, mapping res)
   ENC_ADD( aggregate_mapping(@myres->res) );
 }
 
-private string decode_variable(Parser.HTML p, mapping m, string s, mapping res)
+string decode_variable(Parser.HTML p, mapping m, string s, mapping res)
 {
   mapping mr;
   mr = ([ "res":0 ]);
@@ -109,7 +109,7 @@ mapping decode_config_file(string s)
   return res;
 }
 
-private string encode_mixed(mixed from, object c)
+string encode_mixed(mixed from, object c)
 {
   switch(sprintf("%t", from))
   {
@@ -122,19 +122,19 @@ private string encode_mixed(mixed from, object c)
    case "float":
      return "<flt>"+from+"</flt>";
    case "array":
-    return "<a>\n    "+Array.map(from, encode_mixed, c)*"\n    "
-          +"\n  </a>\n";
+    return "\n      <a>\n      "+Array.map(from, encode_mixed, c)*"\n      "
+          +"\n    </a>";
    case "multiset":
     return "<lst>\n    "
       +Array.map(indices(from),encode_mixed, c)*"\n    "+"\n  </lst>\n";
    case "object":
     return "<mod>"+name_of_module(from,c)+"</mod>";
    case "mapping":
-    string res="<map>";
+    string res="<map>\n";
     mixed i;
     foreach(indices(from), i)
       res += "    " + encode_mixed(i, c) + " : " + encode_mixed(from[i],c)+"\n";
-    return res + "  </map>\n";
+    return res + "</map>\n";
    default:
      report_debug("I do not know how to encode "+
 		  sprintf("%t (%O)\n", from, from)+"\n");
