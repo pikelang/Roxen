@@ -1,7 +1,0 @@
-AC_REVISION("$Id: configure.in,v 1.22 1999/05/24 00:48:05 peter Exp $")
-AC_INIT(Makefile.in)
-AC_PROG_CC
-AC_SET_MAKE
-AC_CONFIG_SUBDIRS(fast_cgi)
-AC_OUTPUT(Makefile,echo FOO >stamp-h )
-

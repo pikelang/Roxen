@@ -1,7 +1,0 @@
-In this directory, files used more or less inderectly by roxen recides.
-
-fast_cgi/*
-++++++++++
-   Slightly rehacked version of the cgi to fast-cgi program
-
-

@@ -6,12 +6,8 @@
 *.gif binary
 *.gz binary
 *.ico binary
-/extern/cgi.testsuite/test3.in eol=crlf
-/extern/cgi.testsuite/test4.in -text -crlf
 *.jar binary
 *.jpg binary
-*.out -text -crlf
-/extern/cgi.testsuite/test3.out eol=crlf
 /server/modules/proxies/gopher.pike -text -crlf
 *.png binary
 *.ppm binary
@@ -21,7 +17,6 @@ bn binary
 map binary
 ni binary
 nn binary
-urw_itc_avant_garde-demi-r binary
 
 # Handling of foreign (ie CVS) identifiers.
 #
@@ -29,24 +24,6 @@ urw_itc_avant_garde-demi-r binary
 # Files containing CVS ids follow.
 # Remove the corresponding line before committing
 # changes to these files.
-/Makefile foreign_ident
-/Makefile.in foreign_ident
-/configure.in foreign_ident
-/extern/configure.in foreign_ident
-/extern/fast_cgi/Makefile.in foreign_ident
-/extern/fast_cgi/README foreign_ident
-/extern/fast_cgi/cgi-fcgi/Makefile.in foreign_ident
-/extern/fast_cgi/cgi-fcgi/cgi-fcgi.c foreign_ident
-/extern/fast_cgi/configure.in foreign_ident
-/extern/fast_cgi/include/fastcgi.h foreign_ident
-/extern/fast_cgi/include/fcgi_stdio.h foreign_ident
-/extern/fast_cgi/include/fcgiapp.h foreign_ident
-/extern/fast_cgi/include/fcgiappmisc.h foreign_ident
-/extern/fast_cgi/include/fcgimisc.h foreign_ident
-/extern/fast_cgi/libfcgi/Makefile.in foreign_ident
-/extern/fast_cgi/libfcgi/fcgi_stdio.c foreign_ident
-/extern/fast_cgi/libfcgi/fcgiapp.c foreign_ident
-/extern/fast_cgi/libfcgi/strerror.c foreign_ident
 /mkdir foreign_ident
 /pike-roxen.in foreign_ident
 /rxml_packages/gtext_headers foreign_ident

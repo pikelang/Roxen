@@ -1,5 +1,0 @@
-HTTP/1.0 302 Redirect
-Content-type: text/html
-Set-Cookie: oreo=70;
-Location: http://www.customer.com/cgi-bin/random.cgi?70
-
