@@ -326,6 +326,9 @@ void main(int argc, string *argv)
   if(strlen(tmp))
     log_dir = tmp;
 
+  if (log_dir[-1] != '/')
+    log_dir += "/";
+
   if(log_dir != "../logs" && log_dir != "../logs/")
     logdir_changed = 1;
 
