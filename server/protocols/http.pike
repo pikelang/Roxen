@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.343 2001/10/25 13:58:47 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.344 2001/11/05 12:59:40 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -909,7 +909,7 @@ private final int parse_got_2( )
 
 	// Ok.. This might seem somewhat odd, but IE seems to add a
 	// (spurious) \r\n to the end of the data, and some versions of
-	// opera seems to add (spurious) \r\n to the start of the data.
+	// opera seem to add (spurious) \r\n to the start of the data.
 	//
 	// Oh, the joy of supporting all webbrowsers is endless.
 	data = String.trim_all_whites( data );
@@ -940,6 +940,18 @@ private final int parse_got_2( )
 	}
 	break;
       }
+    }
+  }
+  if (!(< "HTTP/1.0", "HTTP/0.9" >)[clientprot]) {
+    if (!misc->host) {
+      // RFC 2616 requires this behaviour.
+      REQUEST_WERR("HTTP: HTTP/1.1 request without a host header.");
+      my_fd->write((prot||"HTTP/1.1") +
+		   " 400 Bad request (missing host header).\r\n"
+		   "Content-Length: 0\r\n"
+		   "Date: "+Roxen.http_date(predef::time())+"\r\n"
+		   "\r\n");
+      return 2;
     }
   }
   TIMER_END(parse_got);
