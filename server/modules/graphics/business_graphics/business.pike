@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.107 1998/10/10 19:23:44 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.108 1998/10/11 00:51:03 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -892,7 +892,11 @@ mapping http_img_answer( string msg )
 mapping unquote( string f )
 {
   //NU: Load the file f
-  return decode_value(Stdio.read_file(query("cachedir")+f));
+
+  if (catch {
+    return decode_value(Stdio.read_file(query("cachedir")+f));
+  })
+    return 0;
   
   //  return cache[ f ];
 }
