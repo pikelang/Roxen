@@ -1,6 +1,6 @@
 /* Roxen FTP protocol.
  *
- * $Id: ftp.pike,v 1.70 1997/11/27 21:30:44 grubba Exp $
+ * $Id: ftp.pike,v 1.71 1997/12/09 14:32:23 grubba Exp $
  *
  * Written by:
  *	Pontus Hagland <law@lysator.liu.se>,
@@ -431,7 +431,7 @@ class ls_program {
     }
     void close()
     {
-      _verify_internals();
+      // _verify_internals();
       DWRITE("list_stream->close()\n");
       catch { id->ls_session = 0; };
       if (this_object()) {
