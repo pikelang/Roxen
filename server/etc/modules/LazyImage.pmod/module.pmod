@@ -21,7 +21,7 @@ mapping(string:int) layers_extents( Layers layers )
   foreach( layers, Image.Layer l )
   {
     if( l->xoffset() < x0 )  x0 = l->xoffset();
-    if( l->yoffset() < y0 )  y0 = l->xoffset();
+    if( l->yoffset() < y0 )  y0 = l->yoffset();
     if( l->xsize()+l->xoffset() > x )  x = l->xsize()+l->xoffset();
     if( l->ysize()+l->yoffset() > y )  y = l->ysize()+l->yoffset();
   }
@@ -1001,10 +1001,13 @@ class Shadow
       Layers q = layers;
       if( args->layers )       q = find_layers( args->layers, layers );
       if( args["layers-id"] )  q = find_layers_id( args["layers-id"], layers );
+      int grow = (int)args->soft; // How much can the image really grow?
+      int xoffset = args->xoffset ? (int)args->xoffset : 2;
+      int yoffset = args->yoffset ? (int)args->yoffset : 2;
 
       // Now, generate the shadow image.
       mapping e = layers_extents( q );
-      Image.Image shadow = Image.Image( e->w+10, e->h+10 );
+      Image.Image shadow = Image.Image( e->w+grow*2, e->h+grow*2 );
 
       if( !sizeof( q ) )
 	return layers;
@@ -1013,18 +1016,18 @@ class Shadow
 	shadow->paste_alpha_color( (l->alpha() ||
 				    l->image()->copy()->clear(255,255,255)),
 				   255,255,255,
-				   l->xoffset()-e->x0+5,
-				   l->yoffset()-e->y0+5 );
+				   l->xoffset()-e->x0+grow,
+				   l->yoffset()-e->y0+grow );
       // Blur, if wanted.
 
       if( args->soft )
-	shadow = shadow->grey_blur( 1+(int)args->soft );
+	shadow = shadow->grey_blur( (int)args->soft );
 
       Image.Layer sl = Image.Layer( shadow->copy()
 				    ->clear( translate_color( args->color ) ),
 				    shadow );
-      sl->set_offset( e->x0 + ((int)args->xoffset||2) - 5,
-		      e->y0 + ((int)args->yoffset||2) - 5 );
+      sl->set_offset( e->x0 + xoffset - grow,
+		      e->y0 + yoffset - grow );
       sl->set_misc_value( "name", (args->name ||
 				   q[0]->get_misc_value("name")+".shadow"));
       return (layers-q) + ({sl}) + q;
@@ -1270,7 +1273,7 @@ class Scale
   static {
     Layers process( Layers layers )
     {
-      int|float width, height;
+      int|float width, height, max_width, max_height;
       if( args->mode == "relative" )
       {
 	width = translate_coordinate_f( args->width, 0 ) / 100.0;
@@ -1281,13 +1284,31 @@ class Scale
 	width = translate_coordinate( args->width, 0 );
 	height = translate_coordinate( args->height, 0 );
       }
+      if (args["max-width"])
+	max_width = translate_coordinate( args["max-width"], 0 );
+      if (args["max-height"])
+	max_height = translate_coordinate( args["max-height"], 0 );
+      
       foreach( layers, Image.Layer l )
       {
+	if( max_width || max_height )
+	{
+	  if (max_width && max_height)
+	  {
+	    if ( max_width / (float)l->xsize() < max_height / (float)l->ysize() )
+	      max_height = 0;
+	    else
+	      max_width = 0;
+	  }
+	  max_width = min( max_width, l->xsize() );
+	  max_height = min( max_height, l->ysize() );
+	}
+
 	Image.Image i = l->image(), a = l->alpha();
 	if( i )
-	  i = i->scale( width, height );
+	  i = i->scale( max_width||width, max_height||height );
 	if( a )
-	  a = a->scale( width, height );
+	  a = a->scale( max_width||width, max_height||height );
 	l->set_image( i, a );
       }
       return layers;
@@ -1295,7 +1316,8 @@ class Scale
 
     Arguments check_args( Arguments args )
     {
-      if( !args->width && !args->height )
+      if( !args->width && !args->height &&
+	  !args["max-width"] && !args["max-height"] )
 	RXML.parse_error("Either 'width' or 'height' arguments "
 			 "must be specified\n" );
       if( !parent )
