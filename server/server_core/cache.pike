@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: cache.pike,v 1.88 2004/05/16 23:38:18 mani Exp $
+// $Id: cache.pike,v 1.89 2004/05/29 21:14:59 _cvs_stephen Exp $
 
 // #pragma strict_types
 
@@ -133,7 +133,7 @@ void cache_remove(string cache, void|mixed key)
 mixed cache_set(string cache, mixed key, mixed val, int|void tm)
 {
 #if MORE_CACHE_DEBUG
-  CACHE_WERR("cache_set(%O, %O, %O)\n", cache, key, val);
+  CACHE_WERR("cache_set(%O, %O, %O)\n", cache, key, /* val */ _typeof(val));
 #else
   CACHE_WERR("cache_set(%O, %O, %t)\n", cache, key, val);
 #endif
