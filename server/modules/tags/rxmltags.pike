@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.113 2000/04/13 21:55:11 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.114 2000/04/14 23:05:57 kuntri Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1584,8 +1584,8 @@ documentation for that module.</desc>",
  Returns a message if a login failed or cancelled.
 </attr>",
 
-"autoformat":#"<desc cont><short>
- Replaces newlines with <tag>br /</tag>:s.</short>
+"autoformat":#"<desc cont><short hide>
+ Replaces newlines with <br/>:s'.</short>Replaces newlines with <tagbr/</tag>:s'.
 </desc>
 
 <attr name=nobr>
