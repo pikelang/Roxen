@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: roxen.pike,v 1.186 1998/04/09 13:30:11 grubba Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.187 1998/04/11 13:39:06 grubba Exp $";
 #define IN_ROXEN
 #include <roxen.h>
 #include <config.h>
@@ -1017,7 +1017,7 @@ mapping shutdown()
 	    "type":"text/html" ]);
 } 
 
-private string docurl;
+string docurl;
 
 // I will remove this in a future version of roxen.
 private program __p;
