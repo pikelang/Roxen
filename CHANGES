@@ -1,5 +1,5 @@
-Changes since Roxen 1.0 final buggy ;-)
-------------------------------------------------------
+Changes since Roxen 1.0 
+-----------------------------------------------
 o Moved all foo.lpc files to foo.pike (phew..)
 
 o New global variable: Log directory prefix. The directory to prepend

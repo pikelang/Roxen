@@ -268,8 +268,7 @@ void main(int argc, string *argv)
   log_dir = find_arg(argv, "l", ({ "log-dir",
 				     "log-directory", }),
 		     ({ "ROXEN_CONFIGDIR", "CONFIGURATIONS" }),
-		     "../logs");
-  
+		     "../logs/");
   write(popen("clear"));
 
   host=gethostname()+"."+get_domain();
@@ -325,11 +324,10 @@ void main(int argc, string *argv)
   tmp = gets();
   if(strlen(tmp))
     log_dir = tmp;
-
-  if (log_dir[-1] != '/')
+  if(log_dir[-1] != '/')
     log_dir += "/";
-
-  if(log_dir != "../logs" && log_dir != "../logs/")
+      
+  if(log_dir != "../logs/")
     logdir_changed = 1;
 
   if(configuration_dir != "../configurations" && 
