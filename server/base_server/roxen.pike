@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.635 2001/02/23 07:06:55 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.636 2001/02/23 07:13:37 mast Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -521,8 +521,10 @@ local static void handler_thread(int id)
 	  THREAD_WERR(sprintf("Handle thread [%O] calling %O(%{%O, %})",
 				id, h[0], h[1] / 1));
 	  set_locale();
+	  busy_threads++;
 	  h[0](@h[1]);
 	  h=0;
+	  busy_threads--;
 	} else if(!h) {
 	  // Roxen is shutting down.
 	  report_debug("Handle thread ["+id+"] stopped.\n");
@@ -573,6 +575,10 @@ local static void handler_thread(int id)
 
 int number_of_threads;
 //! The number of handler threads to run.
+
+int busy_threads;
+//! The number of currently busy threads.
+
 static array(object) handler_threads = ({});
 //! The handler threads, the list is kept for debug reasons.
 
@@ -580,7 +586,7 @@ void start_handler_threads()
 {
   if (query("numthreads") <= 1) {
     set( "numthreads", 1 );
-    report_notice (LOC_S(1, "Starting one thread to handle requests.")+"\n");
+    report_warning (LOC_S(1, "Starting one thread to handle requests.")+"\n");
   } else { 
     report_notice (LOC_S(2, "Starting %d threads to handle requests.")+"\n",
 		   query("numthreads") );
@@ -798,6 +804,107 @@ function async_sig_start( function f, int really )
   return SignalAsyncVerifier( f )->call;
 }
 #endif /* THREADS */
+
+#ifdef THREADS
+static Queue bg_queue = Queue();
+static int bg_process_running;
+
+static void bg_process_queue()
+{
+  if (bg_process_running) return;
+  // Relying on the interpreter lock here.
+  bg_process_running = 1;
+  if (mixed err = catch {
+    while (array task = bg_queue->tryread()) {
+      // Don't run if something else is already running.
+      while (busy_threads > 1) sleep (0.02);
+#if 0
+      werror ("background run %O (%{%O, %})\n", task[0], task[1] / 1);
+#endif
+      task[0] (@task[1]);
+    }
+  }) {
+    bg_process_running = 0;
+    handle (bg_process_queue);
+    throw (err);
+  }
+  bg_process_running = 0;
+}
+#endif
+
+void background_run (int|float delay, function func, mixed... args)
+//! Enqueue a task to run in the background in a way that makes as
+//! little impact as possible on the incoming requests. No matter how
+//! many tasks are queued to run in the background, only one is run at
+//! a time.
+//!
+//! The function @[func] will be enqueued after approximately @[delay]
+//! seconds, to be called with the rest of the arguments as its
+//! arguments.
+//!
+//! The function might be run in the backend thread, so it should
+//! never run for a considerable time. Instead do another call to
+//! @[background_run] to queue it up again after some work has been
+//! done, or use @[BackgroundProcess].
+{
+#ifdef THREADS
+  if (!hold_wakeup_cond)
+    // stop_handler_threads is running; ignore more work.
+    return;
+
+  void enqueue()
+  {
+    bg_queue->write (({func, args}));
+    if (bg_queue->size() == 1)
+      handle (bg_process_queue);
+  };
+
+  if (delay)
+    call_out (enqueue, delay);
+  else
+    enqueue();
+
+#else
+  // Can't do much better when we haven't got threads..
+  call_out (func, delay, @args);
+#endif
+}
+
+class BackgroundProcess
+//! A class to do a task repeatedly in the background, in a way that
+//! makes as little impact as possible on the incoming requests (using
+//! @[background_run]).
+{
+  int|float period;
+  int stopping = 0;
+
+  static void repeat (function func, mixed args)
+  {
+    if (stopping) return;
+    func (@args);
+    background_run (period, repeat, func, args);
+  }
+
+  //! @decl static void create (int|float period, function func, mixed... args);
+  //!
+  //! The function @[func] will be called with the following arguments
+  //! after approximately @[period] seconds, and then kept being
+  //! called with approximately that amount of time between each call.
+  //!
+  //! The repetition will stop if @[stop] is called, or if @[func]
+  //! throws an error.
+  static void create (int|float period_, function func, mixed... args)
+  {
+    period = period_;
+    background_run (period, repeat, func, args);
+  }
+
+  void stop()
+  //! Sets a flag to stop the succession of calls.
+  {
+    stopping = 1;
+  }
+}
 
 
 mapping get_port_options( string key )
