@@ -222,7 +222,7 @@ void create()
                   ([
                     "svenska":"Editera modulinställingar"
                   ]));
-  add_permission( "Actions",
+  add_permission( "Tasks",
                   ([
                     "svenska":"Funktioner"
                   ]));
@@ -310,7 +310,7 @@ class User
       }
       m_delete( id->variables, rp );
     }
-    string set_src =  parse_rxml( "<gbutton-url width=180 bgcolor=ddeedd> Set </gbutton-url>", id );
+    string set_src =  parse_rxml( "<gbutton-url width=180 preparse> <cf-locale get=save> </gbutton-url>", id );
     string form = error+
 #"
 <table>
