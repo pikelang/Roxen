@@ -18,7 +18,7 @@
 #define _rettext defines[" _rettext"]
 #define _ok     defines[" _ok"]
 
-constant cvs_version="$Id: htmlparse.pike,v 1.156 1998/12/14 11:32:52 peter Exp $";
+constant cvs_version="$Id: htmlparse.pike,v 1.157 1999/01/16 10:21:34 neotron Exp $";
 constant thread_safe=1;
 
 function call_user_tag, call_user_container;
@@ -626,22 +626,21 @@ string tag_echo(string tag,mapping m,object id,object file,
       return "<!-- Que? -->";
   } else if(tag == "insert")
     return "";
-      
-  string addr=id->remoteaddr || "Internal";
-  switch(lower_case(replace(m->var, " ", "_")))
+  if(tag == "!--#echo" && id->misc->ssi_variables &&
+     id->misc->ssi_variables[m->var])
+    // Variables set with !--#set.
+    return id->misc->ssi_variables[m->var];
+
+  mapping myenv =  build_env_vars(0,  id, 0);
+  m->var = lower_case(replace(m->var, " ", "_"));
+  switch(m->var)
   {
    case "sizefmt":
-    return defines->sizefmt;
+   case "errmsg":
+    return defines[m->var] || "";
+   case "timefmt":
+    return defines[m->var] || "%c";
     
-   case "timefmt": case "errmsg":
-    return "&lt;unimplemented&gt;";
-      
-   case "document_name": case "path_translated":
-    return id->conf->real_file(id->not_query, id);
-
-   case "document_uri":
-    return id->not_query;
-
    case "date_local":
     NOCACHE();
     return strftime(defines->timefmt || "%c", time(1));
@@ -674,31 +673,11 @@ string tag_echo(string tag,mapping m,object id,object file,
    case "server_protocol":
     return "HTTP/1.0";
       
-   case "server_port":
-    tmp = objectp(id->my_fd) && id->my_fd->query_address(1);
-    if(tmp)
-      return (tmp/" ")[1];
-    return "Internal";
-
    case "request_method":
     return id->method;
-      
-   case "remote_host":
-    NOCACHE();
-    return roxen->quick_ip_to_host(addr);
-
-   case "remote_addr":
-    NOCACHE();
-    return addr;
 
    case "auth_type":
     return "Basic";
-      
-   case "remote_user":
-    NOCACHE();
-    if(id->auth && id->auth[0])
-      return id->auth[1];
-    return "Unknown";
       
    case "http_cookie": case "cookie":
     NOCACHE();
@@ -720,6 +699,11 @@ string tag_echo(string tag,mapping m,object id,object file,
       id->referer*", ": "Unknown";
       
    default:
+    m->var = upper_case(m->var);
+    if(myenv[m->var]) {
+      NOCACHE();
+      return myenv[m->var];
+    }
     if(tag == "insert")
       return "";
     return "<i>Unknown variable</i>: '"+m->var+"'";
@@ -878,11 +862,11 @@ string tag_compat_config(string tag,mapping m,object id,object file,
     }
   }
   if (m->errmsg) {
-    // FIXME: Not used yet.
+    // FIXME: Not used yet. What would it be used for, really?
     defines->errmsg = m->errmsg;
   }
   if (m->timefmt) {
-    // FIXME: Not used yet.
+    // now used by echo tag and last modified
     defines->timefmt = m->timefmt;
   }
   return "";
@@ -936,6 +920,20 @@ string tag_compat_echo(string tag,mapping m,object id,object file,
   if(!QUERY(ssi))
     return "SSI support disabled. Use &lt;echo var=name&gt; instead.";
   return tag_echo(tag, m, id, file, defines);
+}
+
+string tag_compat_set(string tag,mapping m,object id,object file,
+			  mapping defines)
+{
+  if(!QUERY(ssi))
+    return "SSI support disabled. Use &lt;set variable=name value=value&gt; instead.";
+  if(m->var && m->value)
+  {
+    if(!id->misc->ssi_variables)
+      id->misc->ssi_variables = ([]);
+    id->misc->ssi_variables[m->var] = m->value;
+  }
+  return "";
 }
 
 string tag_compat_fsize(string tag,mapping m,object id,object file,
@@ -1165,7 +1163,13 @@ string tag_modified(string tag, mapping m, object id, object file,
   CACHE(10);
   if(!s) s = _stat;
   if(!s) s = id->conf->stat_file( id->not_query, id );
-  return s ? tagtime(s[3], m) : "Error: Cannot stat file";
+  if(s)
+    if(tag[..2] == "!--")
+      return strftime(defines->timefmt || "%c", s[3]);
+    else
+      return tagtime(s[3], m);
+  else
+    return "Error: Cannot stat file";
 }
 
 function tag_version = roxen.version;
@@ -2101,6 +2105,7 @@ mapping query_tag_callers()
 	    "!--#exec":tag_compat_exec,           /* NCSA/Apache Server */
 	    "!--#flastmod":tag_compat_fsize,      /* Side includes.     */
 	    "!--#fsize":tag_compat_fsize, 
+	    "!--#set":tag_compat_set, 
 	    "!--#include":tag_compat_include, 
 	    "!--#config":tag_compat_config,
 	    "debug" : tag_debug,
