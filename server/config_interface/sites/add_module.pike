@@ -276,9 +276,11 @@ string module_image( int type )
 {
   return "";
 }
-string strip_leading( string what )
+
+string strip_leading( LocaleString what )
 {
-  sscanf( (string)[mixed]what, "%*s:%s", what );
+  if( !what ) return 0;
+  sscanf( (string)what, "%*s:%s", what );
   return what;
 }
 
