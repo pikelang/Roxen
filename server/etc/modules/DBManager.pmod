@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.59 2003/10/20 13:31:57 anders Exp $
+// $Id: DBManager.pmod,v 1.60 2004/07/05 09:34:04 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -129,14 +129,18 @@ private
       db->query("INSERT INTO db (Host,Db,User,Select_priv) "
                 "VALUES (%s, %s, %s, 'Y')",
                 host, name, short(c->name)+"_ro");
-      if( level > 1 )
-        db->query("INSERT INTO db VALUES (%s, %s, %s,"
+      if( level > 1 ) {
+	// FIXME: Is this correct for Mysql 4.0.18?
+        db->query("INSERT INTO db (Host,Db,User,Select_priv,Insert_priv,"
+		  "Update_priv,Delete_priv,Create_priv,Drop_priv,Grant_priv,"
+		  "References_priv,Index_priv,Alter_priv) VALUES (%s, %s, %s,"
                   "'Y','Y','Y','Y','Y','Y','N','Y','Y','Y')",
                   host, name, short(c->name)+"_rw");
-      else 
-        db->query("INSERT INTO db  (Host,Db,User,Select_priv) "
+      } else {
+        db->query("INSERT INTO db (Host,Db,User,Select_priv) "
                   "VALUES (%s, %s, %s, 'Y')",
                   host, name, short(c->name)+"_rw");
+      }
     }
     db->query( "FLUSH PRIVILEGES" );
   }
@@ -875,7 +879,7 @@ void create_db( string name, string path, int is_internal,
     query("INSERT INTO db_groups (db,groupn) VALUES (%s,%s)",
 	  name, "internal" );
 
-  query( "INSERT INTO dbs values (%s,%s,%s)", name,
+  query( "INSERT INTO dbs (name,path,local) VALUES (%s,%s,%s)", name,
 	 (is_internal?name:path), (is_internal?"1":"0") );
   if( is_internal )
     catch(query( "CREATE DATABASE `"+name+"`"));
@@ -958,7 +962,8 @@ int set_permission( string name, Configuration c, int level )
   query( "DELETE FROM db_permissions WHERE db=%s AND config=%s",
          name,CN(c->name) );
 
-  query( "INSERT INTO db_permissions VALUES (%s,%s,%s)", name,CN(c->name),
+  query( "INSERT INTO db_permissions (db,config,permission) "
+	 "VALUES (%s,%s,%s)", name,CN(c->name),
 	 (level?level==2?"write":"read":"none") );
   
   if( (int)d[0]["local"] )
