@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.27 2000/09/25 08:02:51 per Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.28 2000/10/18 01:50:38 mast Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -239,8 +239,13 @@ string simple_pi_tag_pike( string tag, mapping m, string s,RequestID id  )
   
   if(err = catch{
     (o=p())->parse(id);
-  })
-    RXML.run_error ("Error in Pike code: %s\n", describe_error (err));
+  }) {
+    catch {
+      err = ({err[0], err[1][sizeof (backtrace())..]});
+      err[1][0] = ({"top level", err[1][0][1]});
+    };
+    RXML.run_error ("Error in Pike code: %s", describe_backtrace (err));
+  }
 
   res = (o && o->flush() || "");
 
