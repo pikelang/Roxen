@@ -1,6 +1,6 @@
 #include <module.h>
 
-string cvs_verison = "$Id: draw_things.pike,v 1.7 1996/12/03 02:24:05 per Exp $";
+string cvs_verison = "$Id: draw_things.pike,v 1.8 1996/12/04 07:15:12 per Exp $";
 
 object (Image) bevel(object (Image) in, int width)
 {
@@ -36,17 +36,24 @@ object (Image) load_image(string f)
     return 0;
   }
   if(!(data=file->read(0x7fffffff))) return 0;
-  if(img->frompnm(data)) return img;
+  if(img->frompnm(data))
+    return img->modify_by_intensity(0,1,0,
+				    ({0,0,20 }),({0,1,40 }),({0,2,60 }),
+				    ({0,8,80 }),({0,16,100 }),({0,32,120 }),
+				    ({0,64,140 }),({0,128,160 }),({8,128,160 }),
+				    ({16,128,180}),({32,168,200}),({64,188,220}),
+				    ({128,208,240}),({200,228,256}));
+
   if(img->fromgif(data)) return img;
 //  werror("Failed to parse image file.\n");
   return 0;
 }
 
 #define PASTE(X,Y) do{\
-  if(X){knappar->paste(X,cxp,0);cxp+=X->xsize()-3;}\
+  if(X){knappar->paste(X,cxp,0);cxp+=X->xsize();}\
   if(strlen(Y)) {\
-    object f = font->write(Y)->scale(0.4);\
-    knappar->paste_mask(Image(f->xsize(),f->ysize()),f,cxp-f->xsize()-4,1);\
+    object f = font->write(Y)->scale(0.45);\
+    knappar->paste_mask(Image(f->xsize(),f->ysize()),f,cxp-f->xsize()-4,-1);\
   }}while(0)
 
 object first_filter = load_image("1stfilt.ppm");
@@ -84,16 +91,11 @@ object (Image) draw_module_header(string name, int type, object font)
 
   knappar = knappar->autocrop();
 
-#if 0
-  result->paste(knappar,(result->xsize()/2)-(knappar->xsize()/2),text->ysize());
-  result->paste_mask(Image(100,60,0,0,0), text, knappar->xsize(),0);
-#else
   result->paste(knappar,result->xsize()-knappar->xsize(),0);
-//  result->paste_mask(Image(600,60,0,0,0), text, 0,5);
-  result->paste(text,6,5);
+  result->paste(text,6,3);
   knappar = 0;
   text=0;
-#endif
+
 //  result = result->autocrop(10,0,0,1,1);
 //  result = bevel(result, 4);
   result = result->scale(0.5);

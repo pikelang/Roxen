@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.16 1996/12/03 02:04:06 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.17 1996/12/04 07:15:11 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
 
@@ -930,7 +930,7 @@ mapping auto_image(string in, object id)
     i=draw_unselected_button(value,button_font);
     break;
   }
-  i->map_closest(i->select_colors(31)+({trans}));
+  i->map_closest(i->select_colors(64)+({trans}));
   if(i) r = http_string_answer(i->togif(@trans),"image/gif");
   i=0;
   cache_set("config_images", in, r);
