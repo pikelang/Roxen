@@ -95,7 +95,6 @@ string selected_item( string q, Configuration c, RequestID id,
 	    ([
 	      "sname":q+"!"+i,
 	      "name":name,
-	      "locked":mi->config_locked[c]
 	    ]),
 	  });
       }
@@ -164,15 +163,13 @@ string selected_item( string q, Configuration c, RequestID id,
 		  "<td><a href=\""+quoted_url+
 		  Roxen.http_encode_string(group_name)+"!0/"+data->sname+
 		  "/\">"+Roxen.html_encode_string(data->name)+
-		  "</a>"+(data->locked?" <img src='internal-roxen-padlock'/>":
-			               "")+"</td></tr>\n");
+		  "</a></td></tr>\n");
 	else
 	  pre += ("\n<tr><td valign='top'>"
 		  "<img src=\"&usr.selected-indicator;\" width='12' "
 		  "height='12' alt='' /></td>"
 		  "<td><b>" + Roxen.html_encode_string(data->name) +
-		  "</b>"+(data->locked?" <img src='internal-roxen-padlock'/>":
-			               "")+"</td></tr>\n");
+		  "</b></td></tr>\n");
       }
     else
     {
@@ -194,8 +191,7 @@ string selected_item( string q, Configuration c, RequestID id,
 		  "<a href=\""+quoted_url+
 		  Roxen.http_encode_string(group_name)+"!0/"+data->sname+
 		  "/\">"+Roxen.html_encode_string(data->name)+
-		  "</a>"+(data->locked?" <img src='internal-roxen-padlock'/>":
-			               "")+"<br />");
+		  "</a><br />");
 	pre += "</td>\n</tr></table></td>\n</tr>\n</table>";
 	pre += "\n</js-popup>\n";
       }

@@ -1,6 +1,6 @@
 // This file is part of ChiliMoon.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.134 2002/10/22 00:06:12 nilsson Exp $
+// $Id: module.pike,v 1.135 2002/11/07 17:56:45 mani Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -96,7 +96,6 @@ array register_module()
     this_object()->module_doc,
     0,
     module_unique,
-    this_object()->module_locked,
   });
 }
 
