@@ -119,6 +119,7 @@ nn binary
 /server/etc/roxen_master.pike foreign_ident
 /server/etc/supports foreign_ident
 /server/etc/upgrade_servers foreign_ident
+/server/font_handlers/builtin.pike foreign_ident
 /server/font_handlers/imagedir.pike foreign_ident
 /server/font_handlers/old.pike foreign_ident
 /server/font_handlers/ttf.pike foreign_ident
