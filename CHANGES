@@ -1,6 +1,8 @@
 Changes since Roxen Challenger 1.2 alpha 4
 -----------------------------------------------
 
+o Reenabled the config-interface error-log.
+
 o You can now use path's like /cvs:/roxen_src/server/modules as a module
   directory. Not really all that useful (the modules will be read from 
   CVS automatically, thus ensuring that the latest version is used), but 
