@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.231 2001/05/22 20:40:13 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.232 2001/05/30 17:22:37 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -182,7 +182,7 @@ class EntityClientPassword {
   }
 }
 
-mapping client_scope=([
+mapping client_scope = ([
   "ip":EntityClientIP(),
   "name":EntityClientName(),
   "referrer":EntityClientReferrer(),
@@ -275,7 +275,7 @@ class TagAuthRequired {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      mapping hdrs = Roxen.http_auth_required (args->realm, args->message);
+      mapping hdrs = Roxen.http_auth_required (args->realm||"document access", args->message);
       if (hdrs->error) _error = hdrs->error;
       if (hdrs->extra_heads)
 	_extra_heads += hdrs->extra_heads;
@@ -4253,7 +4253,7 @@ Kibibits.
  be prompted to login.
 </p></desc>
 
-<attr name=realm value=string>
+<attr name=realm value=string default='document access'>
  <p>The realm you are logging on to, i.e \"Demolabs Intranet\".</p>
 </attr>
 
