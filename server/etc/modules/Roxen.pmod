@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.80 2001/03/22 15:23:11 mast Exp $
+// $Id: Roxen.pmod,v 1.81 2001/03/24 01:40:36 nilsson Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2535,9 +2535,6 @@ string encode_charref (string char)
 
 // RXML complementary stuff shared between configurations.
 
-#define ENCODE(value, is_type, type) \
-  (type && type != RXML.is_type ? type->encode ((value), RXML.is_type) : (value))
-
 class ScopeRoxen {
   inherit RXML.Scope;
 
@@ -2561,72 +2558,71 @@ class ScopeRoxen {
     {
      case "uptime":
        CACHE(c->id,1);
-       return ENCODE(time(1)-roxenp()->start_time, t_int, type);
+       return ENCODE_RXML_INT(time(1)-roxenp()->start_time, type);
      case "uptime-days":
        CACHE(c->id,3600*2);
-       return ENCODE((time(1)-roxenp()->start_time)/3600/24, t_int, type);
+       return ENCODE_RXML_INT((time(1)-roxenp()->start_time)/3600/24, type);
      case "uptime-hours":
        CACHE(c->id,1800);
-       return ENCODE((time(1)-roxenp()->start_time)/3600, t_int, type);
+       return ENCODE_RXML_INT((time(1)-roxenp()->start_time)/3600, type);
      case "uptime-minutes":
        CACHE(c->id,60);
-       return ENCODE((time(1)-roxenp()->start_time)/60, t_int, type);
+       return ENCODE_RXML_INT((time(1)-roxenp()->start_time)/60, type);
      case "hits-per-minute":
        CACHE(c->id,2);
        // FIXME: Use float here instead?
-       return ENCODE(c->id->conf->requests / ((time(1)-roxenp()->start_time)/60 + 1),
-		     t_int, type);
+       return ENCODE_RXML_INT(c->id->conf->requests / ((time(1)-roxenp()->start_time)/60 + 1),
+			      type);
      case "hits":
        NOCACHE(c->id);
-       return ENCODE(c->id->conf->requests, t_int, type);
+       return ENCODE_RXML_INT(c->id->conf->requests, type);
      case "sent-mb":
        CACHE(c->id,10);
        // FIXME: Use float here instead?
-       return ENCODE(sprintf("%1.2f",c->id->conf->sent / (1024.0*1024.0)),
-		     t_text, type);
+       return ENCODE_RXML_TEXT(sprintf("%1.2f",c->id->conf->sent / (1024.0*1024.0)), type);
      case "sent":
        NOCACHE(c->id);
-       return ENCODE(c->id->conf->sent, t_int, type);
+       return ENCODE_RXML_INT(c->id->conf->sent, type);
      case "sent-per-minute":
        CACHE(c->id,2);
-       return ENCODE(c->id->conf->sent / ((time(1)-roxenp()->start_time)/60 || 1),
-		     t_int, type);
+       return ENCODE_RXML_INT(c->id->conf->sent / ((time(1)-roxenp()->start_time)/60 || 1),
+			      type);
      case "sent-kbit-per-second":
        CACHE(c->id,2);
        // FIXME: Use float here instead?
-       return ENCODE(sprintf("%1.2f",((c->id->conf->sent*8)/1024.0/
-				      (time(1)-roxenp()->start_time || 1))),
-		     t_text, type);
+       return ENCODE_RXML_TEXT(sprintf("%1.2f",((c->id->conf->sent*8)/1024.0/
+						(time(1)-roxenp()->start_time || 1))),
+			       type);
      case "ssl-strength":
-       return ENCODE(ssl_strength, t_int, type);
+       return ENCODE_RXML_INT(ssl_strength, type);
      case "pike-version":
-       return ENCODE(pike_version, t_text, type);
+       return ENCODE_RXML_TEXT(pike_version, type);
      case "version":
-       return ENCODE(roxenp()->version(), t_text, type);
+       return ENCODE_RXML_TEXT(roxenp()->version(), type);
      case "base-version":
-       return ENCODE(__roxen_version__, t_text, type);
+       return ENCODE_RXML_TEXT(__roxen_version__, type);
      case "build":
-       return ENCODE(__roxen_build__, t_text, type);
+       return ENCODE_RXML_TEXT(__roxen_build__, type);
      case "time":
        CACHE(c->id,1);
-       return ENCODE(time(1), t_int, type);
+       return ENCODE_RXML_INT(time(1),  type);
      case "server":
        if( c->id->misc->host )
-         return ENCODE(c->id->port_obj->name+"://"+c->id->misc->host+"/", t_text, type);
-       return ENCODE(c->id->conf->query("MyWorldLocation") || "", t_text, type);
+         return ENCODE_RXML_TEXT(c->id->port_obj->name+"://"+c->id->misc->host+"/", type);
+       return ENCODE_RXML_TEXT(c->id->conf->query("MyWorldLocation"), type);
      case "domain":
        if( c->id->misc->host )
-         return ENCODE((c->id->misc->host/":")[0], t_text, type);
+         return ENCODE_RXML_TEXT((c->id->misc->host/":")[0], type);
        string tmp=c->id->conf->query("MyWorldLocation");
        sscanf(tmp, "%*s//%s", tmp);
        sscanf(tmp, "%s:", tmp);
        sscanf(tmp, "%s/", tmp);
-       return ENCODE(tmp, t_text, type);
+       return ENCODE_RXML_TEXT(tmp, type);
      case "locale":
        NOCACHE(c->id);
-       return ENCODE(roxenp()->locale->get(), t_text, type);
+       return ENCODE_RXML_TEXT(roxenp()->locale->get(), type);
      case "path":
-       return ENCODE(c->id->misc->site_prefix_path || "", t_text, type);
+       return ENCODE_RXML_TEXT(c->id->misc->site_prefix_path, type);
      default:
        return RXML.nil;
     }
@@ -2652,15 +2648,16 @@ class ScopePage {
 
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
     switch (var) {
-      case "pathinfo": return ENCODE(c->id->misc->path_info, t_text, type);
+      case "pathinfo": return ENCODE_RXML_TEXT(c->id->misc->path_info, type);
     }
     mixed val;
     if(converter[var])
       val = c->id->misc->defines[converter[var]];
     else
       val = c->id->misc->scope_page[var];
+    if( zero_type(val) ) return RXML.nil;
     if (objectp (val) && val->rxml_var_eval) return val;
-    return type ? type->encode (val) : val;
+    return ENCODE_RXML_TEXT(val, type);
   }
 
   mixed `[]= (string var, mixed val, void|RXML.Context c, void|string scope_name) {
@@ -2706,7 +2703,7 @@ class ScopeCookie {
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
     if(!c) return RXML.nil;
     NOCACHE(c->id);
-    return ENCODE(c->id->cookies[var], t_text, type);
+    return ENCODE_RXML_TEXT(c->id->cookies[var], type);
   }
 
   mixed `[]= (string var, mixed val, void|RXML.Context c, void|string scope_name) {
@@ -2880,6 +2877,7 @@ class FormScope( mapping variables )
   mixed `[] (string what, void|RXML.Context ctx,
 	     void|string scope_name, void|RXML.Type type)
   {
+    if( zero_type(variables[what]) ) return RXML.nil;
     mixed q = variables[ what ];
     if( arrayp(q) && sizeof( q ) == 1 )
       q = q[0];
