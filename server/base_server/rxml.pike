@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.249 2000/09/19 22:01:31 kuntri Exp $
+// $Id: rxml.pike,v 1.250 2000/09/19 23:33:43 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2242,7 +2242,7 @@ constant tagdoc=([
 </attr>",
 
 
-"?comment":#"<desc pi><short>
+"<?comment":#"<desc pi><short>
  Processing instruction tag for comments.</short> This tag is similar
  to the RXML <ref type='tag'><tag>comment</tag> tag but should be used
  when commenting arbitrary text that doesn't contain '?&gt;'.
