@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.166 2000/03/13 15:35:47 nilsson Exp $
+// $Id: rxml.pike,v 1.167 2000/03/13 15:41:34 stewa Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -1742,7 +1742,7 @@ class TagIfDefined {
   constant plugin_name = "defined";
   constant cache = 1;
   string source(RequestID id, string s) {
-    return id->misc[s];
+    return id->misc->defines && id->misc->defines[s];
   }
 }
 
