@@ -1,4 +1,4 @@
-/* $Id: listfonts.pike,v 1.3 1999/08/27 19:45:57 grubba Exp $ */
+/* $Id: listfonts.pike,v 1.4 1999/10/11 12:37:26 peter Exp $ */
 #if constant(available_font_versions)
 inherit "wizard";
 
@@ -35,7 +35,7 @@ string page_0(object id)
   string res="<font size=+1>All available fonts</font><p>";
   foreach(
 #if constant(available_fonts)
-	  available_fonts(1),
+	  available_fonts(),
 #else /* !constant(available_fonts) */
 	  roxen->available_fonts(1),
 #endif /* constant(available_fonts) */
