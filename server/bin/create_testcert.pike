@@ -1,6 +1,6 @@
 #!bin/pike
 
-// $Id: create_testcert.pike,v 1.2 2002/06/05 17:15:06 nilsson Exp $
+// $Id: create_testcert.pike,v 1.3 2004/10/05 15:09:27 _cvs_dirix Exp $
 
 import Standards.ASN1.Types;
 
@@ -35,9 +35,9 @@ int main(int argc, array(string) argv)
 		    (attrs[attr]) ]) });
   }
 
-  object rsa = Crypto.rsa();
+  object rsa = Crypto.RSA();
   rsa->generate_key( key_size,
-                     Crypto.randomness.reasonably_random()->read );
+                     Crypto.Random.random_string );
   /* Create a plain X.509 v1 certificate, without any extensions */
   string cert = Tools.X509
     .make_selfsigned_rsa_certificate(rsa, 24 * 3600 * ttl,name);
