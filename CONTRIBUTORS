@@ -60,6 +60,8 @@ Morten Hol Møller	The Norwegian language-module.
 
 Goran Opacic		The Serbian language-module.
 
+Stephen R. van den Berg	The Dutch language-module.
+
 Jason Rumney		The Maaori language-module, and some fixes.
 
 Celso J. Sawaia		The Portuguese language-module.
@@ -69,6 +71,8 @@ Iztok Umek		The Slovenian language-module.
 Zsolt Varga		Valuable ideas.
 
 Bill Welliver		Fixes to the SQL module.
+
+The people at Real	For valuable bugreports and fixes.
 
 The Roxen Alphatesters	Several valuable bugreports and fixes.
 
