@@ -26,7 +26,7 @@ static string    var_dir = "../var/";
 
 #define werror roxen_werror
 
-constant cvs_version="$Id: loader.pike,v 1.394 2004/07/18 00:59:23 _cvs_stephen Exp $";
+constant cvs_version="$Id: loader.pike,v 1.395 2004/10/31 19:38:19 _cvs_dirix Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1535,19 +1535,7 @@ void low_start_mysql( string datadir,
   rm( datadir+"/my.cfg" );
   catch(Stdio.write_file(datadir+"/my.cfg", cfg_file));
 
-#ifdef __NT__
-  string binary = "bin/chili_mysql.exe";
-#else
-  string binary = "bin/chili_mysql";
-#endif
-  rm( binary );
-#if constant(hardlink)
-  if( catch(hardlink( bindir+mysqld, binary )) )
-#endif
-    if( !Stdio.cp( bindir+mysqld, binary ) ||
-	catch(chmod( binary, 0500 )) )
-      binary = bindir+mysqld;
-
+string binary = bindir+mysqld;
   args = ({ binary }) + args;
 
   Stdio.File  devnull
