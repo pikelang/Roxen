@@ -1,4 +1,4 @@
-/* $Id: module.pike,v 1.18 1997/08/12 06:32:02 per Exp $ */
+/* $Id: module.pike,v 1.19 1997/08/13 10:31:09 grubba Exp $ */
 
 #include <module.h>
 
@@ -337,7 +337,7 @@ array query_seclevels()
     string type, value;
     if(sscanf(sl, "%s=%s", type, value)==2)
     {
-      value = replace(value, ({ "?", ".", "*" }), ({ ".", "\.", ".*" }));
+      value = replace(value, ({ "?", ".", "*" }), ({ ".", "\\.", ".*" }));
       switch(lower_case(type))
       {
       case "allowip":
