@@ -1,3 +1,15 @@
+Changes since Roxen Challenger 1.2.77 Yellow
+-----------------------------------------------
+
+o Fixed problems with limits in tar by archiving the manual separately.
+
+o Fixed old bug in roxenlib where the id object wasn't properly
+  copied. This has affected several parts of Roxen, among other
+  things possibly resuling in broken gtexts.
+
+o Fixed race in gtext.
+
+
 Changes since Roxen Challenger 1.2.76 Yellow
 -----------------------------------------------
 
