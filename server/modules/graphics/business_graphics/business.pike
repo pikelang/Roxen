@@ -6,7 +6,7 @@
  * in October 1997
  */
 
-constant cvs_version = "$Id: business.pike,v 1.93 1998/03/08 18:56:33 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.94 1998/03/08 20:17:01 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -100,7 +100,9 @@ mixed *register_module()
        "                 instead of VOID (This option can also\n"
        "                 be given i <b>xnames</b> and so on)\n"
        "  <b>bgcolor</b>        Use this background color for antialias.\n"
-       "  <b>colorbg</b>        Sets the color for the background\n"
+       "  <b>notrans</b>        If given, the bgcolor will not be opaque.\n"
+       
+       // Not supported any more!     "  <b>colorbg</b>        Sets the color for the background\n"
        "  <b>textcolor</b>      Sets the color for all text\n"
        "                 (Can be overrided)\n"
        "  <b>labelcolor</b>     Sets the color for the labels of the axis\n"
@@ -548,7 +550,7 @@ constant _diagram_args =
    "xnames", "xvalues", "ynames", "yvalues", "axcolor", "gridcolor",
    "gridwidth", "vertgrid", "labels", "labelsize", "legendfontsize",
    "legend_texts", "labelcolor", "axwidth", "linewidth", "center",
-   "rotate", "image", "bw", "eng", "neng", "xmin", "ymin", "turn" });
+   "rotate", "image", "bw", "eng", "neng", "xmin", "ymin", "turn", "notrans" });
 constant diagram_args = mkmapping(_diagram_args,_diagram_args);
 
 constant _shuffle_args = 
@@ -617,6 +619,15 @@ string tag_diagram(string tag, mapping m, string contents,
   }
   else if (m->colorbg)
     res->colorbg=parse_color(m->colorbg);
+  
+  if ((m->bgcolor)&&(m->notrans))
+    {
+      res->colorbg=parse_color(m->bgcolor);
+      m_delete(m, "bgcolor");
+    }
+  else
+    if (m->notrans)
+      res->colorbg=parse_color("white");
   
   res->drawtype="linear";
 
@@ -887,8 +898,8 @@ mapping find_file(string f, object id)
   
   mapping(string:mixed) diagram_data;
 
-  array back;
-  if(res->bgcolor)
+  array back=0;
+  if (res->bgcolor)
     back = res->bgcolor;
 
   if(res->background)
@@ -918,9 +929,16 @@ mapping find_file(string f, object id)
   }
   else if (res->colorbg)
   {
+    back=res->bgcolor;
     m_delete( res, "bgcolor" );
     res->image = image(res->xsize, res->ysize, @res->colorbg);
-  }
+  } 
+  /*else if (res->notrans)
+    {
+      res->image = image(res->xsize, res->ysize, @res->bgcolor);
+      m_delete( res, "bgcolor" );
+    }
+  */
   
   diagram_data = res;
 
