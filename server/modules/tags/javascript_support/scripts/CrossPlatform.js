@@ -237,7 +237,7 @@ function getButton(e) {
 
 function getTarget(e)
 {
-  if(isNav4){
+  if(isNav4||isNav5){
     return e.target;
   }
   if(isIE4){
@@ -265,8 +265,17 @@ function getTargetX(e)
     return e.target.x;
   }
   if(isNav5){
-    if(e)
-      return e.target.offsetLeft;
+    if (e.target.offsetParent == null)
+      // Betst we can do?
+      return e.pageX;
+    elt = e.target;
+    x = 0;
+    while (elt.offsetParent != null) {
+      x += elt.offsetLeft;
+      elt = elt.offsetParent;
+    }
+    x += elt.offsetLeft;
+    return x;
   }
   if(isIE4){
     return getRecursiveLeft(window.event.srcElement);
@@ -279,7 +288,18 @@ function getTargetY(e)
     return e.target.y;
   }
   if(isNav5){
-    return e.target.offsetTop;
+    if (e.target.offsetParent == null)
+      // Betst we can do?
+      return e.pageY;
+    elt = e.target;
+    x = 0;
+    while (elt.offsetParent != null) {
+      x += elt.offsetTop;
+      elt = elt.offsetParent;
+    }
+    x += elt.offsetTop;
+    return x;
+    // return e.target.offsetTop;
   }
   if(isIE4){
     return getRecursiveTop(window.event.srcElement);
