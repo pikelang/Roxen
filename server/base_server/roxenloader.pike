@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.135 2000/01/21 22:26:15 mast Exp $
+ * $Id: roxenloader.pike,v 1.136 2000/01/25 04:03:17 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -19,7 +19,7 @@ private static object new_master;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.135 2000/01/21 22:26:15 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.136 2000/01/25 04:03:17 per Exp $";
 
 int pid = getpid();
 object stderr = Stdio.File("stderr");
@@ -1062,7 +1062,7 @@ int global_count;
 // Roxen bootstrap code.
 int main(int argc, array argv)
 {
-  mixed err = 
+  mixed err =
   catch{
 #ifdef NOT_INSTALLED
 report_debug(
@@ -1147,7 +1147,7 @@ Please install a newer pike version
   add_constant( "ST_CTIME", ST_CTIME );
   add_constant( "ST_SIZE",  ST_SIZE );
 
-  
+
   if( search( argv, "--long-error-file-names" ) != -1 )
   {
     argv -= ({ "--long-error-file-names" });
