@@ -181,3 +181,7 @@ int xsize, ysize;
 
 "rotate": int|float 
 //How much the pie should be rotated in degres (0-360).
+
+"center": int
+//If center==0 no centration takes place.
+//Else the slice number center-1 will be in the topp.

@@ -146,8 +146,43 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
       xr=min(xc-xmaxtext-ymaxtext-1, yc+diagram_data["3Ddepth"]-2*ymaxtext-1);
     }
   float w=diagram_data["linewidth"];
+
+
+  //initiate the 0.25*% for different numbers:
+  sum=`+(@ numbers);
+  for(int i=0; i<sizeof(numbers); i++)
+    {
+      float t=(float)(numbers[i]*400)/sum;
+      pnumbers[i]=(int)floor(t);
+      numbers[i]=t-floor(t);
+    }
+
+
+  //Now the rests are in the numbers-array
+  sort(numbers, order);
+  sum2=`+(@ pnumbers);
+  int i=sizeof(pnumbers);
+  while(sum2<400)
+    {
+      pnumbers[order[--i]]++;
+      sum2++;
+    }  
+
+
+
+
   //Initiate the piediagram!
-  float FI=(float)(diagram_data["rotate"])*2.0*PI/360.0;
+  float FI=0;
+  if (diagram_data["center"])
+    if (diagram_data["center"]>sizeof(numbers))
+      throw( ({"To great center integer is given! Center can not be greater than sizeof(data[0]).\n",
+	       backtrace()}));
+    else
+      FI=(400-`+(0,@pnumbers[0..diagram_data["center"]-2])
+	-pnumbers[diagram_data["center"]-1]*0.5)*2.0*PI/400.0;
+  else
+    if (diagram_data["rotate"])
+      FI=((float)(diagram_data["rotate"])*2.0*PI/360.0)%(2*PI);
   float most_down=yc+yr+w;
   float most_right=xc+xr+w;
   float most_left=xc-xr-w;
@@ -159,32 +194,6 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
       arr2[2*i]=xc+(xr+w)*sin((i*2.0*PI/400.0+0.0001));
       arr2[2*i+1]=yc+(w+yr)*sin(0.0001-PI/2+i*2.0*PI/400.0);
     }
-
-  /*piediagram=image(imxsize=30+size+xmaxtext*2, 
-		   imysize=(int)(size*((twoD!=0)+2.0)/3.0+
-		   30+ymaxtext*2+1), @bg);*/
-
-
-  //write(sprintf("%O", arr));
-
-  //initiate the 0.25*% for different numbers:
-  sum=`+(@ numbers);
-  for(int i=0; i<sizeof(numbers); i++)
-    {
-      float t=(float)(numbers[i]*400)/sum;
-      pnumbers[i]=(int)floor(t);
-      numbers[i]=t-floor(t);
-    }
-  //Now the rests are in the numbers-array
-  sort(numbers, order);
-  sum2=`+(@ pnumbers);
-  int i=sizeof(pnumbers);
-  while(sum2<400)
-    {
-      pnumbers[order[--i]]++;
-      sum2++;
-    }  
-
 
   //Draw the slices
   int t=sizeof(diagram_data["data"][0]);
@@ -489,6 +498,7 @@ int main(int argc, string *argv)
 		 "3Ddepth":30,
 		 "drawtype": "3D",
 		 "tone":0,
+		 "center":10,
 		 "rotate":30
 
   ]);
