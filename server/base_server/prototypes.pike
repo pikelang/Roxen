@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.60 2003/06/02 12:05:31 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.61 2003/06/11 15:46:41 grubba Exp $";
 
 class Variable
 {
@@ -694,6 +694,7 @@ class RequestID
 
   Parser.XML.Tree.Node get_xml_data()
   {
+    if (!sizeof(data)) return 0;
     if (xml_data) return xml_data;
     // FIXME: Probably ought to check that the content-type for
     //        the request is text/xml.
@@ -1052,7 +1053,7 @@ class XMLPropStatNode
 
   static constant Node = Parser.XML.Tree.Node;
 
-  static mapping(string:string|Node) properties = ([]);
+  static mapping(string:string|array(Node)|Node) properties = ([]);
   static multiset(string) descriptions = (<>);
 
   array(Node) get_children()
@@ -1067,7 +1068,8 @@ class XMLPropStatNode
     prop_node->
       replace_children(map(indices(properties),
 			   lambda(string prop_name) {
-			     string|Node value = properties[prop_name];
+			     string|array(Node)|Node value =
+			       properties[prop_name];
 			     if (stringp(value)) {
 			       value = Node(Parser.XML.Tree.XML_TEXT,
 					    "", 0, value);
@@ -1075,7 +1077,11 @@ class XMLPropStatNode
 			     Node n = Node(Parser.XML.Tree.XML_ELEMENT,
 					   prop_name, ([]), "", prop_name);
 			     if (value) {
-			       n->replace_children(({ value }));
+			       if (arrayp(value)) {
+				 n->replace_children(value);
+			       } else {
+				 n->replace_children(({ value }));
+			       }
 			     }
 			     return n;
 			   }));
@@ -1090,7 +1096,7 @@ class XMLPropStatNode
     return ::get_children();
   }
 
-  void add_property(string prop_name, string|Node value)
+  void add_property(string prop_name, string|array(Node)|Node value)
   {
     properties[prop_name] = value;
   }
@@ -1138,14 +1144,14 @@ class MultiStatus
   //!   @mixed prop_value
   //!     @type void|int(0..0)
   //!       Operation performed ok, no value.
-  //!     @type string|Node
+  //!     @type string|array(Node)|Node
   //!       Property has value @[prop_value].
   //!     @type mapping(string:mixed)
   //!       Operation failed as described by the mapping.
   //!   @endmixed
   void add_property(string href, string prop_name,
-		    void|int(0..0)|string|Node|mapping(string:mixed)
-		    prop_value)
+		    void|int(0..0)|string|array(Node)|Node|
+		    mapping(string:mixed) prop_value)
   {
     array(XMLStatusNode) stat_nodes;
     XMLStatusNode stat_node;
