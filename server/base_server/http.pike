@@ -1,5 +1,5 @@
 /* Roxen WWW-server version 1.0.
-string cvs_version = "$Id: http.pike,v 1.14 1998/02/24 22:27:49 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.15 1998/03/09 19:01:18 grubba Exp $";
  * http.pike: HTTP convenience functions.
  * inherited by roxenlib, and thus by all files inheriting roxenlib.
  */
@@ -125,11 +125,16 @@ mapping http_file_answer(object text, string|void type, void|int len)
   return ([ "file":text, "type":(type||"text/html"), "len":len ]);
 }
 
+constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+		     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
+constant days = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" });
+
 /* Return a date, used in the common log format */
 string cern_http_date(int t)
 {
-  string s, c, tz;
-  int tzh = localtime(t)->timezone/3600 - localtime(t)->isdst;
+  string c;
+  mapping lt = localtime(t);
+  int tzh = lt->timezone/3600 - lt->isdst;
 
   if(tzh > 0)
     c="-";
@@ -138,10 +143,16 @@ string cern_http_date(int t)
     c="+";
   }
 
-  s = ctime(t);
+#if 1
+  return(sprintf("%02d/%s/%04d:%02d:%02d:%02d %s%02d00",
+		 lt->mday, months[lt->mon], 1900+lt->year,
+		 lt->hour, lt->min, lt->sec, c, tzh));
+#else
+  string s = ctime(t);
   
   return sprintf("%02d/%s/%s:%s %s%02d00", (int)s[8..9], s[4..6], s[20..23], 
 		 s[11..18], c ,tzh);
+#endif /* 1 */
 }
 
 /* Returns a http_date, as specified by the HTTP-protocol standard. 
@@ -150,12 +161,23 @@ string cern_http_date(int t)
 
 string http_date(int t)
 {
-  string s;
   mapping l = localtime(t);
-  s=ctime(t + l->timezone - 3600*l->isdst);
+
+#if 1
+
+  t += l->timezone - 3600*l->isdst;
+  l = localtime(t);
+
+  return(sprintf("%s, %02d %s %04d %02d:%02d:%02d GMT",
+		 days[l->wday], l->mday, months[l->mon], 1900+l->year,
+		 l->hour, l->min, l->sec));
+
+#else
+  string s=ctime(t + l->timezone - 3600*l->isdst);
   return (s[0..2] + sprintf(", %02d ", (int)s[8..9])
 	  + s[4..6]+" "+(1900+l->year)
 	  + s[10..18]+" GMT"); 
+#endif /* 1 */
 }
 
 
