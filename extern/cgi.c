@@ -1,5 +1,5 @@
 /*
- * $Id: cgi.c,v 1.25 1998/04/15 15:59:35 grubba Exp $
+ * $Id: cgi.c,v 1.26 1998/05/07 23:45:28 grubba Exp $
  *
  * CGI-wrapper for Roxen.
  *
@@ -405,8 +405,10 @@ int parse_and_send_headers(char *header_end)
       free(headers);
       return 1;
     }
-    if((pointer = strstr(headers, "Location:") && (pointer < header_end)) ||
-       (pointer = strstr(headers, "location:") && (pointer < header_end)))
+    if((pointer = strstr(headers, "Location:") &&
+	(!header_end || (pointer < header_end))) ||
+       (pointer = strstr(headers, "location:") &&
+	(!header_end || (pointer < header_end))))
       error = "HTTP/1.0 302 Document Found\r\n";
     else
       error = "HTTP/1.0 200 Ok\r\n";
