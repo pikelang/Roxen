@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.263 2001/07/20 13:19:29 jhs Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.264 2001/07/20 15:23:32 jhs Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5608,7 +5608,10 @@ load.</p>
  is given to the tag, it will live until the end of the current browser
  session. Otherwise, the cookie will be persistent, and the next time
  the user visits  the site, she will bring the cookie with her.
-</p></desc>
+</p>
+
+<p>Note that the change of a cookie will not take effect until the
+ next page load.</p></desc>
 
 <attr name=name value=string>
  <p>The name of the cookie.</p>
@@ -5659,10 +5662,7 @@ load.</p>
  the path argument from the sent cookie, thus making the cookie valid only
  for the present directory and below.</p>
 </attr>
-
- <p>Note that the change of a cookie will not take effect until the
- next page load.</p>
-</attr>",
+",
 
 //----------------------------------------------------------------------
 
