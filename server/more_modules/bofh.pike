@@ -1,38 +1,28 @@
-string cvs_version = "$Id: bofh.pike,v 1.2 1996/12/01 19:18:47 per Exp $";
+constant cvs_version = "$Id: bofh.pike,v 1.3 2000/01/12 04:39:40 nilsson Exp $";
 #include <module.h>
 inherit "module";
 
-string *excuses = ({
-"clock speed ",
-"solar flares ",
-"electromagnetic radiation from satellite debris ",
-"static from nylon underwear ",
-"static from plastic slide rules ",
-"global warming ",
-"poor power conditioning ",
-"static buildup ",
-"doppler effect ",
-"hardware stress fractures "});
+constant excuses = ({
+  "clock speed ",
+  "solar flares ",
+  "electromagnetic radiation from satellite debris ",
+  "static from nylon underwear ",
+  "static from plastic slide rules ",
+  "global warming ",
+  "poor power conditioning ",
+  "static buildup ",
+  "doppler effect ",
+  "hardware stress fractures "});
+constant size = sizeof(excuses);
 
-array register_module()
+constant module_type = MODULE_PARSER;
+constant module_name = "BOFH Module";
+constant module_doc  = "Adds the tag &lt;bofh&gt;, which generates an excuse reason.";
+constant module_unique = 1;
+
+string tag_bofh()
 {
-  return ({ MODULE_PARSER,
-            "BOFH  Module",
-            "Adds an extra tag, 'bofh'.", ({}), 1
-            });
+  return excuses[random(size)];
 }
-
-
-string bofh_excuse(string tag, mapping m)
-{
-  return excuses[random(sizeof(excuses))];
-}
-
-string info() { return bofh_excuse("", ([])); }
-
-mapping query_tag_callers() { return (["bofh":bofh_excuse,]); }
-
-mapping query_container_callers() { return ([]); }
-
 
 
