@@ -6,7 +6,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: swedish.pike,v 1.16 2000/11/27 14:09:15 per Exp $";
+constant cvs_version = "$Id: swedish.pike,v 1.17 2001/09/27 20:17:12 nilsson Exp $";
 constant _id = ({ "sv", "swedish", "svenska" });
 constant _aliases = ({ "sv", "se", "sve", "swe", "swedish", "svenska" });
 
@@ -92,7 +92,7 @@ string _number(int num)
   switch(num)
   {
    case 0:  return "";
-   case 1:  return "en";
+   case 1:  return "ett;
    case 2:  return "två";
    case 3:  return "tre";
    case 4:  return "fyra";
