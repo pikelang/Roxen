@@ -1,5 +1,5 @@
 /*
- * $Id: PDB.pmod,v 1.23 1998/03/16 15:52:17 marcus Exp $
+ * $Id: PDB.pmod,v 1.24 1998/03/18 16:53:26 noring Exp $
  */
 
 #if constant(thread_create)
@@ -94,9 +94,9 @@ class Bucket
   static function db_log;
   int size;
 
-  static void log(int subtype, mixed arg)
+  static int log(int subtype, mixed arg)
   {
-    db_log('B', subtype, size, arg);
+    return db_log('B', subtype, size, arg);
   }
 
   static int write_at(int offset, string to)
@@ -151,16 +151,18 @@ class Bucket
     } else
       b = last_block++;
     dirty = 1;
-    log('A', b);
+    if(!log('A', b))
+      return -1;
     UNLOCK();
     return b;
   }
 
-  void sync()
+  int sync()
   {
     LOCK();
     if(dirty)
       save_free_blocks();
+    return !dirty;
     UNLOCK();
   }
 
@@ -245,18 +247,19 @@ class Table
   static int dirty;
   static function db_log;
 
-  static void log(int subtype, mixed ... arg)
+  static int log(int subtype, mixed ... arg)
   {
-    db_log('T', subtype, name, @arg);
+    return db_log('T', subtype, name, @arg);
   }
 
-  void sync()
+  int sync()
   {
     LOCK();
     if(dirty) {
       if(write_file(dir+".INDEX", index))
 	dirty = 0;
     }
+    return !dirty;
     UNLOCK();
   }
 
@@ -298,20 +301,15 @@ class Table
       };
     LOCK();
     object bucket = get_bucket(scheme(strlen(ts)));
-    if(index[in] && index[in][0] == bucket->size) {
-      log('D', in);
-      if(bucket->set_entry(index[in][1], ts))
-	log('C', in, index[in]);
-      else
-	to = 0;
-      return to;
-    }
     int of = bucket->allocate_entry();
-    if(bucket->set_entry(of, ts)) {
-      delete(in);
-      index[in]=({ bucket->size, of });
-      dirty = 1;
-      log('C', in, index[in]);
+    if(of>=0 && bucket->set_entry(of, ts)) {
+      array new_entry = ({ bucket->size, of });
+      if(log('C', in, new_entry)) {
+	delete(in);
+	index[in]=new_entry;
+	dirty = 1;
+      } else
+	to = 0;
     } else
       to = 0;
     UNLOCK();
@@ -435,7 +433,7 @@ class db
   static mapping (string:object(Table)) tables = ([]);
   static object(Stdio.File) logfile;
 
-  static void log(int major, int minor, mixed ... args)
+  static int log(int major, int minor, mixed ... args)
   {
     LOCK();
     if(logfile) {
@@ -446,10 +444,11 @@ class db
 				     ({ "\203\203", "\203n" })));
 
       if((rc = safe_write(logfile, entry, "log"))==1)
-	PDB_ERR("Failed to write log: "+(rc<0? strerror(logfile->errno()):
-					 "Disk full (probably)"));
+	return PDB_ERR("Failed to write log: "+(rc<0? strerror(logfile->errno()):
+						"Disk full (probably)"));
     }
     UNLOCK();
+    return 1;
   }
 
   static object(Bucket) get_bucket(int s)
@@ -513,22 +512,29 @@ class db
     logfile->open(dir+"log.1", "cwta");
   }
 
-  void sync()
+  int sync()
   {
     array b, t;
+    int rc, ok=1;
     LOCK();
-    log('D', '1');
+    rc = log('D', '1');
     b = values(buckets);
     t = values(tables);
     UNLOCK();
-    foreach(b+t, object o)
-      catch{o->sync();};
-    LOCK();
-    log('D', '2');
-    rotate_logs();
-    UNLOCK();
+    if(rc) {
+      foreach(b+t, object o)
+	if(catch{if(!o->sync()) ok=0;}) ok=0;
+      if(ok) {
+	LOCK();
+	if(log('D', '2'))
+	  rotate_logs();
+	else ok=0;
+	UNLOCK();
+      }
+    } else ok=0;
     remove_call_out(sync);
     call_out(sync, 200);
+    return ok;
   }
 
   // Remove maximum one level of directories and files
