@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 1.11 1998/09/15 19:08:11 grubba Exp $
+ * $Id: smtprelay.pike,v 1.12 1998/09/15 19:17:38 grubba Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RELAY_DEBUG
 
-constant cvs_version = "$Id: smtprelay.pike,v 1.11 1998/09/15 19:08:11 grubba Exp $";
+constant cvs_version = "$Id: smtprelay.pike,v 1.12 1998/09/15 19:17:38 grubba Exp $";
 
 /*
  * Some globals
@@ -621,8 +621,11 @@ static void send_mail()
   m = sql->query("SELECT min(send_at) AS send_at FROM send_q");
 
   int t = 60*60;
-  if (m && sizeof(m)) {
+  if (m && sizeof(m) && (m[0]->send_at)) {
     t = ((int)m[0]->send_at) - time();
+#ifdef RELAY_DEBUG
+    roxen_perror(sprintf("t:%d\n", t));
+#endif /* RELAY_DEBUG */
     if (t < 10) {
       t = 10;
     } else if (t > 60*60) {
@@ -633,7 +636,7 @@ static void send_mail()
   check_mail(t);
 }
 
-static object send_mail_id;
+static mixed send_mail_id;
 static void check_mail(int t)
 {
 #ifdef RELAY_DEBUG
