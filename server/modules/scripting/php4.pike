@@ -17,7 +17,7 @@ inherit "module";
 inherit "roxenlib";
 
 
-constant cvs_version = "$Id: php4.pike,v 2.3 2000/03/10 17:56:57 nilsson Exp $";
+constant cvs_version = "$Id: php4.pike,v 2.4 2000/03/13 19:03:01 neotron Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_FILE_EXTENSION;
@@ -115,8 +115,8 @@ class PHPScript
 	  // Heavy DWIM. For persons who forget about headers altogether.
 	  continue;
 	}
-	header = trim(header);
-	value = trim(value);
+	header = String.trim_whites(header);
+	value = String.trim_whites(value);
 	switch(lower_case( header ))
 	{
 	case "status":
