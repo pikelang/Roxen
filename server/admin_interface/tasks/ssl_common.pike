@@ -1,5 +1,5 @@
 /*
- * $Id: ssl_common.pike,v 1.9 2004/05/28 19:21:48 _cvs_stephen Exp $
+ * $Id: ssl_common.pike,v 1.10 2004/05/28 23:40:37 _cvs_stephen Exp $
  */
 
 #if constant(Crypto) 
@@ -74,7 +74,7 @@ mixed verify_0(object id, object mc)
   privs = 0;
 
   object rsa = Crypto.RSA();
-  rsa->generate_key(key_size, Crypto.randomness.reasonably_random()->read);
+  rsa->generate_key(key_size);
 
   string key = Tools.PEM.simple_build_pem
     ("RSA PRIVATE KEY",

@@ -1,5 +1,5 @@
 /*
- * $Id: make_selfsigned_dsa.pike,v 1.9 2004/05/28 19:21:48 _cvs_stephen Exp $
+ * $Id: make_selfsigned_dsa.pike,v 1.10 2004/05/28 23:40:37 _cvs_stephen Exp $
  */
 
 #if constant(Crypto) && constant(Crypto.DSA)
@@ -8,7 +8,6 @@ inherit "ssl_common.pike";
 inherit "wizard";
 
 import Standards.PKCS;
-import Standards.ASN1.Types;
 
 #if 0
 #define WERROR werror
@@ -55,9 +54,7 @@ mixed verify_0(object id, object mc)
   privs = 0;
 
   object dsa = Crypto.DSA();
-  dsa->use_random(Crypto.randomness.reasonably_random()->read);
-  dsa->generate_parameters(key_size);
-  dsa->generate_key();
+  dsa->generate_key(key_size);
 
   string key = Tools.PEM.simple_build_pem
     ("DSA PRIVATE KEY",
@@ -132,8 +129,6 @@ mixed page_3(object id, object mc)
   if (!dsa)
     return "<font color='red'>Invalid key.\n</font>";
 
-  dsa->use_random(Crypto.randomness.reasonably_random()->read);
-
   mapping attrs = ([]);
   string attr;
 
@@ -148,6 +143,8 @@ mixed page_3(object id, object mc)
       if (attrs[attr] == "") m_delete (attrs, attr);
     }
   }
+
+  import Standards.ASN1.Types;
 
   array name = ({ });
   if (attrs->countryName)

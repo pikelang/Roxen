@@ -1,5 +1,5 @@
 /*
- * $Id: make_rsa_csr.pike,v 1.10 2004/05/28 19:21:48 _cvs_stephen Exp $
+ * $Id: make_rsa_csr.pike,v 1.11 2004/05/28 23:40:37 _cvs_stephen Exp $
  */
 
 #if constant(Crypto) && constant(Crypto.RSA)
@@ -8,7 +8,6 @@ inherit "ssl_common.pike";
 inherit "wizard";
 
 import Standards.PKCS;
-import Standards.ASN1.Types;
 
 constant task = "SSL";
 constant name = "Generate a Certificate Signing Request and an RSA key...";
@@ -106,6 +105,8 @@ mixed page_4(object id, object mc)
       if (attrs[attr] == "") m_delete (attrs, attr);
     }
   }
+
+  import Standards.ASN1.Types;
 
   array name = ({ });
   if (attrs->countryName)
