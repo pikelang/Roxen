@@ -1,5 +1,5 @@
 /*
- * $Id: RoxenStringResponse.java,v 1.1 1999/12/19 00:26:01 marcus Exp $
+ * $Id: RoxenStringResponse.java,v 1.2 1999/12/19 21:00:51 marcus Exp $
  *
  */
 
@@ -12,7 +12,7 @@ public class RoxenStringResponse extends RoxenResponse {
   RoxenStringResponse(int _errno, String _type, int _len, String _data)
   {
     super(_errno, _type, _len);
-    data = data;
+    data = _data;
   }
 
 }
