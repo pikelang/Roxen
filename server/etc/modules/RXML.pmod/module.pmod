@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.28 2000/01/21 22:31:35 mast Exp $
+//! $Id: module.pmod,v 1.29 2000/01/23 02:36:13 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -473,6 +473,25 @@ class Context
   //! Nonzero if tag_set is a copy local to this context. A local tag
   //! set that imports the old tag set is created whenever need be.
 
+// Needed for RXML backward compatibility.
+#define DEFAULT_SCOPE "form"
+
+  array parse_user_var (string var, void|string scope_name)
+  //! Tries to decide what variable and scope to use. Handles
+  //! cases where the variable also containes the scope,
+  //! e.g. "scope.var".
+  {
+    if(!var || !sizeof(var)) return ([])[0];
+    array splitted=var/".";
+    if(sizeof(splitted)>2) return ([])[0];
+    if(!scope_name)
+      if(sizeof(splitted)==2)
+	scope_name=splitted[0];
+      else
+	scope_name=DEFAULT_SCOPE;
+    return ({ scope_name, splitted[-1] });
+  }
+
   mixed get_var (string var, void|string scope_name)
   //! Returns the value a variable in the specified scope, or the
   //! current scope if none is given. Returns zero with zero_type 1 if
@@ -494,6 +513,21 @@ class Context
     else rxml_error ("No current scope.\n");
   }
 
+  mixed user_get_var (string var, void|string scope_name)
+  //! As get_var, but can handle cases where the variable
+  //! also containes the scope, e.g. "scope.var".
+  {
+    if(!var || !sizeof(var)) return ([])[0];
+    array splitted=var/".";
+    if(sizeof(splitted)>2) return ([])[0];
+    if(!scope_name)
+      if(sizeof(splitted)==2)
+	scope_name=splitted[0];
+      else
+	scope_name=DEFAULT_SCOPE;
+    return get_var(splitted[-1], scope_name);
+  }
+
   mixed set_var (string var, mixed val, void|string scope_name)
   //! Sets the value of a variable in the specified scope, or the
   //! current scope if none is given. Returns val.
@@ -507,6 +541,21 @@ class Context
     else rxml_error ("No current scope.\n");
   }
 
+  mixed user_set_var (string var, mixed val, void|string scope_name)
+  //! As set_var, but can handle cases where the variable
+  //! also containes the scope, e.g. "scope.var".
+  {
+    if(!var || !sizeof(var)) return ([])[0];
+    array splitted=var/".";
+    if(sizeof(splitted)>2) return ([])[0];
+    if(!scope_name)
+      if(sizeof(splitted)==2)
+	scope_name=splitted[0];
+      else
+	scope_name=DEFAULT_SCOPE;
+    return set_var(splitted[-1], val, scope_name);
+  }
+
   void delete_var (string var, void|string scope_name)
   //! Removes a variable in the specified scope, or the current scope
   //! if none is given.
@@ -518,6 +567,21 @@ class Context
 	m_delete ([mapping(string:mixed)] vars, var);
     else if (scope_name) rxml_error ("Unknown scope %O.\n", scope_name);
     else rxml_error ("No current scope.\n");
+  }
+
+  mixed user_delete_var (string var, void|string scope_name)
+  //! As delete_var, but can handle cases where the variable
+  //! also containes the scope, e.g. "scope.var".
+  {
+    if(!var || !sizeof(var)) return ([])[0];
+    array splitted=var/".";
+    if(sizeof(splitted)>2) return ([])[0];
+    if(!scope_name)
+      if(sizeof(splitted)==2)
+	scope_name=splitted[0];
+      else
+	scope_name=DEFAULT_SCOPE;
+    return set_var(splitted[-1], scope_name);
   }
 
   array(string) list_var (void|string scope_name)
