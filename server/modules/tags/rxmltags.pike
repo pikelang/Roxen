@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.360 2002/04/08 17:50:28 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.361 2002/04/11 14:59:21 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4164,9 +4164,14 @@ class IfIs
   constant case_sensitive = 0;
   string|array source (RequestID id, string s);
 
-  int(0..1) eval( string value, RequestID id )
+  int(0..1) eval( string value, RequestID id, mapping args )
   {
-    if(cache != -1) CACHE(cache);
+    if (args["expr-cache"]) {
+      CACHE((int) args["expr-cache"]);
+    } else {
+      if(cache != -1)
+	CACHE(cache);
+    }
     array arr=value/" ";
     string|array var=source(id, arr[0]);
     if(!arrayp(var)) return do_check(var, arr, id);
@@ -4233,9 +4238,14 @@ class IfMatch
   constant cache = 0;
   function source;
 
-  int eval( string is, RequestID id ) {
+  int eval( string is, RequestID id, mapping args ) {
     array|string value=source(id);
-    if(cache != -1) CACHE(cache);
+    if (args["expr-cache"]) {
+      CACHE((int) args["expr-cache"]);
+    } else {
+      if(cache != -1)
+	CACHE(cache);
+    }
     if(!value) return 0;
     if(arrayp(value)) value=value*" ";
     value = lower_case( value );
