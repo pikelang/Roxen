@@ -51,7 +51,6 @@ worldmap binary
 /server/admin_interface/tasks/flush.pike foreign_ident
 /server/admin_interface/tasks/ftpstatus.pike foreign_ident
 /server/admin_interface/tasks/generate_rsa.pike foreign_ident
-/server/admin_interface/tasks/licensestatus.pike foreign_ident
 /server/admin_interface/tasks/listfonts.pike foreign_ident
 /server/admin_interface/tasks/locks.pike foreign_ident
 /server/admin_interface/tasks/make_rsa_csr.pike foreign_ident
