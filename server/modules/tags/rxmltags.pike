@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.282 2001/08/24 20:49:44 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.283 2001/08/25 00:24:01 nilsson Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4924,7 +4924,7 @@ using the pre tag.
  <p>Propagate the cache settings to the surrounding <tag>cache</tag>
  tag, if there is any. Useful to locally add depends to a cache
  without introducing a new cache level. If there is no surrounding
- <tag>cache</tag> tag, this argument is ignored.
+ <tag>cache</tag> tag, this argument is ignored.</p>
 </attr>
 
 <attr name=nohash>
@@ -6729,13 +6729,15 @@ load.</p>
 //----------------------------------------------------------------------
 
 "if#module":#"<desc plugin='plugin'><p><short>
- Enables true if the selected module is enabled in the current
- server.</short></p>
+ Returns true if the selected module is enabled in the current
+ server. This is useful when you are developing RXML applications
+ that you plan to move to other servers, to ensure that all required
+ modules are added.</short></p>
 </desc>
 
 <attr name='module' value='name'><p>
  The \"real\" name of the module to look for, i.e. its filename
- without extension.</p>
+ without extension and without directory path.</p>
 </attr>",
 
 //----------------------------------------------------------------------
