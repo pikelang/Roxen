@@ -1,11 +1,19 @@
 /* This file is executed by Pike to bootstrap Roxen on NT.
  *
- * $Id: ntroxenloader.pike,v 1.2 2000/06/28 01:39:36 mast Exp $
+ * $Id: ntroxenloader.pike,v 1.3 2000/06/28 14:56:32 noring Exp $
  */
 
 string dir;
 string log_dir;
 string key;
+
+class Options
+{
+  int redirect = 0; // Default is not to redirect stdout with friends.
+  int verbose = 1;
+  string script;
+  string wd;
+}
 
 function werror = predef::werror;
 
@@ -69,8 +77,6 @@ string getcwd()
 
 int main(int argc, array (string) argv)
 {
-  int redirect = 0; // Default is not to redirect stdout with friends.
-
   add_constant ("getcwd", getcwd);
 
   if(argc > 1 && sizeof(argv[1]) && argv[1][0]=='+')
@@ -80,12 +86,32 @@ int main(int argc, array (string) argv)
     argc--;
   }
 
-  if(argc > 1 && argv[1] == "-silent")
-  {
-    redirect = 1;
-    argv = argv[..0] + argv[2..];
-    argc--;
-  }
+  Options opt = Options();
+   
+  foreach(Getopt.find_all_options(argv, ({
+    ({ "cd", Getopt.HAS_ARG, ({ "--cd" }) }),
+    ({ "quiet", Getopt.NO_ARG, ({ "-q", "--quiet" }) }),
+    ({ "program", Getopt.HAS_ARG, ({ "--program" }) }),
+    ({ "silent", Getopt.NO_ARG, ({ "-silent" }) })
+  })), array arg)
+    switch(arg[0])
+    {
+      case "cd":
+	opt->wd = arg[1];
+	break;
+	
+      case "quiet":
+	opt->verbose = 0;
+	break;
+	
+      case "program":
+	opt->script = arg[1];
+	break;
+	
+      case "silent":
+	opt->redirect = 1;
+	break;
+    }
 
   dir = pathcnv (combine_path(getcwd(),__FILE__ + "/.."));
   log_dir = combine_path (dir, "../logs");
@@ -109,7 +135,7 @@ int main(int argc, array (string) argv)
 
   mkdir(log_dir);
 
-  if(redirect)
+  if(opt->redirect)
   {
     mkdir(log_dir+"/debug");
 
@@ -130,17 +156,27 @@ int main(int argc, array (string) argv)
     }
   }
 
-  werror("Roxen base directory : "+dir+"\n"
-	 "Roxen log directory  : "+log_dir+"\n"
-	 "Roxen shutdown file  : "+(key || "None")+"\n"
-	 "Roxen arguments      : "+(sizeof(argv)>1?argv[1..]*" ":"None")+"\n"
+  if(opt->verbose)
+    werror("Roxen base directory : "+dir+"\n"
+	   "Roxen log directory  : "+log_dir+"\n"
+	   "Roxen shutdown file  : "+(key || "None")+"\n"
+	   "Roxen arguments      : "+(sizeof(argv)>1?argv[1..]*" ":"None")+"\n"
 #if constant(_Crypto) && constant(Crypto.rsa)
-	 "This version of Roxen has crypto algorithms available.\n"
+	   "This version of Roxen has crypto algorithms available.\n"
 #endif
-	);
+	   );
 
   call_out (write_status_file, 1);
+  
   if(key) thread_create(read_from_stdin);
-  argv[0] = dir+"/base_server/roxenloader.pike";
+
+   if(opt->script)
+     argv[0] = combine_path(dir, opt->script);
+   else
+     argv[0] = dir+"/base_server/roxenloader.pike";
+ 
+   if(opt->wd)
+     cd(opt->wd);
+  
   return ((program)(argv[0]))()->main(argc, argv);
 }
