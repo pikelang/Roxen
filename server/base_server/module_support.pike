@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module_support.pike,v 1.118 2002/07/05 12:06:49 nilsson Exp $
+// $Id: module_support.pike,v 1.119 2002/07/10 15:57:21 nilsson Exp $
 
 #define IN_ROXEN
 #include <module_constants.h>
@@ -221,8 +221,9 @@ class ModuleInfo( string sname, string filename )
 
   string get_name()
   {
+    // NGSERVER cast to string due to LocaleString
     if( !mappingp( name ) )
-      return name;
+      return (string)name;
     if( mappingp( name ) )
     {
       string q;
@@ -347,11 +348,11 @@ class ModuleInfo( string sname, string filename )
       what = filename;
     array data = mod->register_module();
     if(!arrayp(data))
-      throw(sprintf("register_module returned %O for %s (%s)\n", data, sname,
-                    what));
+      error("register_module returned %O for %s (%s)\n", data, sname,
+	    what);
     if( sizeof(data) < 3 )
-      throw("register_module returned a too small array for "+sname+
-            " ("+what+")\n");
+      error("register_module returned a too small array for %s (%s)\n",
+	    sname, what);
     type = data[0];
     if( data[ 1 ] )
       name = data[1];
@@ -374,10 +375,10 @@ class ModuleInfo( string sname, string filename )
     {
       RoxenModule mod = instance( 0, 1 );
       if(!mod)
-        throw(sprintf("Failed to instance %s (%s)\n", sname,what));
+        error("Failed to instance %s (%s)\n", sname,what);
       if(!mod->register_module)
-        throw(sprintf("The module %s (%s) has no register_module function\n",
-                      sname, what ));
+        error("The module %s (%s) has no register_module function\n",
+	      sname, what );
       update_with( mod, what );
       destruct( mod );
       return 1;
