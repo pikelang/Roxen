@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.485 2001/09/06 15:02:59 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.486 2001/09/10 16:13:31 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2458,10 +2458,10 @@ RoxenModule reload_module( string modname )
 
 #ifdef THREADS
 Thread.Mutex enable_modules_mutex = Thread.Mutex();
-#define MODULE_LOCK \
-  Thread.MutexKey enable_modules_lock = enable_modules_mutex->lock (2)
+#define MODULE_LOCK(TYPE) \
+  Thread.MutexKey enable_modules_lock = enable_modules_mutex->lock (TYPE)
 #else
-#define MODULE_LOCK
+#define MODULE_LOCK(TYPE)
 #endif
 
 static int enable_module_batch_msgs;
@@ -2470,7 +2470,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
                            ModuleInfo|void moduleinfo, 
                            int|void nostart )
 {
-  MODULE_LOCK;
+  MODULE_LOCK (2);
   int id;
   ModuleCopies module;
   int pr;
@@ -2967,7 +2967,7 @@ void clean_up_for_module( ModuleInfo moduleinfo,
 
 int disable_module( string modname, int|void nodest )
 {
-  MODULE_LOCK;
+  MODULE_LOCK (2);
   RoxenModule me;
   int id, pr;
   sscanf(modname, "%s#%d", modname, id );
@@ -3116,7 +3116,7 @@ mixed add_init_hook( mixed what )
 }
 
 static int got_no_delayed_load = 0;
-// 0 -> enabled delayed loading, 1 -> disable delayed loading,
+// 0 -> enable delayed loading, 1 -> disable delayed loading,
 // -1 -> don't change.
 
 void fix_no_delayed_load_flag()
@@ -3130,7 +3130,7 @@ void fix_no_delayed_load_flag()
 
 void enable_all_modules()
 {
-  MODULE_LOCK;
+  MODULE_LOCK (0);
   low_init( );
   fix_no_delayed_load_flag();
 }
