@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.73 2002/02/12 09:36:40 grubba Exp $
+ * $Id: ftp.pike,v 2.74 2002/02/12 15:49:18 anders Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -3702,7 +3702,7 @@ class FTPSession
 				       "Handling command %O\n%s\n",
 				       line, describe_backtrace(err));
 			}
-		      }, ({ this_object()["ftp_"+cmd], args, line }));
+		      }, this_object()["ftp_"+cmd], args, line);
       } else {
 	send(502, ({ sprintf("'%s' is not currently supported.", cmd) }));
       }
