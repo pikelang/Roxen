@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.48 2001/10/08 09:13:57 wellhard Exp $
+// $Id: DBManager.pmod,v 1.49 2001/10/08 13:58:20 wellhard Exp $
 
 //! Manages database aliases and permissions
 
@@ -304,7 +304,10 @@ array(mapping(string:mixed)) db_table_fields( string name, string table )
   Sql.Sql db = cached_get( name );
   catch {
     if( db->list_fields )
-      return db->list_fields( table );
+    {
+      mixed res = db->list_fields( table );
+      if( res ) return res;
+    }
   };
   // Now, this is slow, but very generic. :-)
   mixed err = catch {
