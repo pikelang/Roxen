@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.102 2000/08/15 20:15:30 mast Exp $
+//! $Id: module.pmod,v 1.103 2000/08/17 14:59:38 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -366,6 +366,12 @@ class TagSet
   void add_tag (Tag tag)
   //!
   {
+#ifdef MODULE_DEBUG
+    if (!stringp (tag->name))
+      error ("Trying to register a tag %O without a name.\n", tag);
+    if (!functionp (tag->Frame) && !tag->plugin_name)
+      error ("Trying to register a tag %O without a Frame class or function.\n", tag);
+#endif
     if (tag->flags & FLAG_PROC_INSTR) {
       if (!proc_instrs) proc_instrs = ([]);
       if (tag->plugin_name) proc_instrs[tag->name + "#" + tag->plugin_name] = tag;
@@ -381,6 +387,12 @@ class TagSet
   //!
   {
     foreach (_tags, Tag tag) {
+#ifdef MODULE_DEBUG
+      if (!stringp (tag->name))
+	error ("Trying to register a tag %O without a name.\n", tag);
+      if (!functionp (tag->Frame) && !tag->plugin_name)
+	error ("Trying to register a tag %O without a Frame class or function.\n", tag);
+#endif
       if (tag->flags & FLAG_PROC_INSTR) {
 	if (!proc_instrs) proc_instrs = ([]);
 	if (tag->plugin_name) proc_instrs[tag->name + "#" + tag->plugin_name] = tag;
