@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: read_config.pike,v 1.49 2000/08/28 06:24:28 per Exp $
+// $Id: read_config.pike,v 1.50 2000/09/08 17:09:29 mast Exp $
 
 #include <module.h>
 
@@ -47,8 +47,9 @@ mapping call_outs = ([]);
 void save_it(string cl, mapping data)
 {
   if( call_outs[ cl ] )
-    remove_call_out( call_outs[ cl ] );
-  call_outs[ cl ] = call_out( really_save_it, 0.5, cl, COPY(data) );
+    remove_call_out( call_outs[ cl ][0] );
+  data = COPY(data);
+  call_outs[ cl ] = ({call_out( really_save_it, 0.5, cl, data ), data});
 }
 
 void really_save_it( string cl, mapping data )
@@ -137,6 +138,9 @@ Stat config_is_modified(string cl)
 
 mapping read_it(string cl)
 {
+  if (call_outs[cl])
+    return call_outs[cl][1];
+
   mixed err;
   string try_read( string f )
   {
