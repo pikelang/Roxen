@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.65 2000/08/10 16:20:21 per Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.66 2000/08/16 02:59:52 per Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -216,11 +216,8 @@ mapping handle_file_extension(object f, string e, object got)
 
     if(!p)
     {
-      if( got->realfile ) // force reload on next access. Really.
-      {
-        m_delete( master()->programs, got->realfile );
-        m_delete( master()->load_time, got->realfile );
-      }
+      // force reload on next access. Really.
+      master()->clear_compilation_failures();
 
       if(strlen(e->get()))
       {
