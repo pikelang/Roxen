@@ -3,15 +3,20 @@
 <cv-leftside>
   <img src="internal-roxen-unit" height="26" />
   <br />
+
   <gbutton href="update.html?update_list=1" width="150" bgcolor="&usr.fade1;">Update List</gbutton>
+
   <br />
-  <set variable="var.main" value="width='150' bgcolor='&usr.fade1;'" />
+
   <if match="x&form.category;&form.uninstall;x == xx">
-    <set variable="var.main" value="bgcolor='&usr.left-selbuttonbg;' icon_src='&usr.selected-indicator;' icon_align='left'" />
+    <gbutton href="update.html" width="150" bgcolor="&usr.left-selbuttonbg;" icon_src="&usr.selected-indicator;" icon_align="left">Main</gbutton>
   </if>
+  <else>
+    <gbutton href="update.html" width="150" bgcolor="&usr.fade1;">Main</gbutton>
+  </else>
+
   <emit source="update-products"><set variable="var.cat_&_.cat;" value="width='150' bgcolor='&usr.fade1;'" /></emit>
   <set variable="var.cat_&form.category;" value="bgcolor='&usr.left-selbuttonbg;' icon_src='&usr.selected-indicator;' icon_align='left'" />
-  <gbutton href="update.html" ::="&var.main;" width="150">Main</gbutton><br />
   <emit source="update-products">
     <set variable="var.this" from="var.cat_&_.cat;" />
     <gbutton href="update.html?page=category&category=&_.cat;" ::="&var.this;" width="150">&_.name;</gbutton><br />
@@ -29,6 +34,7 @@
 
 <content>
 <cv-startpage><br />
+  <update-show-backtrace/>
   <eval>
   <if not variable="form.page"><insert file="update/index.txt" /></if>
   <else><insert file="update/&form.page;.txt" /></if>
