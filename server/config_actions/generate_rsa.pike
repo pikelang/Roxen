@@ -1,5 +1,5 @@
 /*
- * $id:$
+ * $Id: generate_rsa.pike,v 1.2 1997/12/16 18:37:16 grubba Exp $
  */
 
 inherit "wizard";

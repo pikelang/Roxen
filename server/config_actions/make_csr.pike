@@ -1,5 +1,5 @@
 /*
- * $id:$
+ * $Id: make_csr.pike,v 1.2 1997/12/16 18:37:06 grubba Exp $
  */
 
 inherit "wizard";
