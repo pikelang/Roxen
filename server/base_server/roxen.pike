@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.251 1998/10/22 00:50:39 peter Exp $
+ * $Id: roxen.pike,v 1.252 1998/11/02 06:57:21 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -8,7 +8,7 @@
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version = "$Id: roxen.pike,v 1.251 1998/10/22 00:50:39 peter Exp $";
+constant cvs_version = "$Id: roxen.pike,v 1.252 1998/11/02 06:57:21 per Exp $";
 
 
 // Some headerfiles
@@ -1224,7 +1224,9 @@ object load_from_dirs(array dirs, string f, object conf)
   return 0;
 }
 static int abs_started;
-void restart_if_stuck (int force) {
+void restart_if_stuck (int force) 
+{
+#if constant(alarm)
   remove_call_out(restart_if_stuck);
   if (!(QUERY(abs_engage) || force))
     return;
@@ -1242,6 +1244,7 @@ void restart_if_stuck (int force) {
 			     //  locked up
 			   });
   alarm (60*QUERY(abs_timeout)+10);
+#endif
 }
 
 void post_create () {
