@@ -7,31 +7,17 @@ object this = this_object();
 #undef QUERY
 #define QUERY(x) roxenp()->variables->x[VAR_VALUE]
 
-/* ------------------------------------------------------------*
- | File name functions. Feel free to add your own here. Then add 
- | an entry to the list of methods below, and mail your function
- | to me (per@infovav.se), if you think it is good enough to use
- | in the default roxen distribution, but only if you agree to
- | release the code into the public domain. This is because I'll
- | to  keep the rights to the Roxen  server if I want to sell it
- | to companies that are willing to pay for support and updates.
- * ------------------------------------------------------------*/
-
-string flat_file_name(string what)
+string hash_file_name_r(string what, int nd, int hv)
 {
-  if(what[-1] == '/') what += ".index.html";
-  return replace(what, "/", "\\");
-}
-
-string hierarchy_file_name(string what)
-{
-  if(what[-1] == '/') what += ".index.html";
-  return what;
+  if(nd)
+    return sprintf("%x/%s",(hn&511)%nd,hash_file_name_r(what, nd/512, hv/512));
+  return sprintf("%x",hv);
 }
 
 string hash_file_name(string what)
 {
-  return sprintf("%03x/%08x", hash(what,4095), hash(what, 0xffffffff));
+  int hn = hash(what,0xffffffff);
+  return hash_file_name_r(what, QUERY(hash_num_dirs), hn);
 }
 
 
