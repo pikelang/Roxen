@@ -53,13 +53,16 @@ mozilla.[2-9].[0-9]b[2-9].*           -java
 
 #Old versions on Mac crash the entire mashine if you use javascript.
 mozilla/2.*	        -javascript
-mozilla/2.*solaris	 javascript
+mozilla/2.*solaris	javascript, netscape_javascript
 
 mozilla/3.*		tablecolor
+mozilla/3.*solaris	netscape_javascript
 
 mozilla/4.*		stylesheets
+mozilla/4.*solaris	netscape_javascript
 
 # BLAM BLAM BLAM BLAM
+.*compatible.*			-netscape_javascript
 .*compatible.*msie              -push, -javascript
 .*compatible.*msie.2            -java
 .*compatible.*msie.3            stylesheets
