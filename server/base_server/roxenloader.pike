@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.86 1999/07/10 21:45:04 peter Exp $
+ * $Id: roxenloader.pike,v 1.87 1999/08/06 03:13:55 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.86 1999/07/10 21:45:04 peter Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.87 1999/08/06 03:13:55 per Exp $";
 
 #define perror roxen_perror
 private static int perror_status_reported=0;
@@ -87,33 +87,53 @@ int use_syslog, loggingfield;
  * Some efuns used by Roxen
  */
 
+string oct = "                                  ";
+string short_time()
+{
+  mapping l = localtime( time() );
+  string ct =  sprintf("%02d:%02d:%02d", l->hour, l->min, l->sec );
+  int i;
+  if( ct == oct ) return "        ";
+  oct = ct;
+  return ct;
+}
+
+int last_was_nl;
 // Used to print error/debug messages
 void roxen_perror(string format,mixed ... args)
 {
   int t = time();
 
-  if (perror_status_reported < t) {
-    stderr->write("[1mRoxen is alive!\n"
-		  "   Time: "+ctime(t)+
-		  "   pid: "+pid+"   ppid: "+getppid()+
+  if (perror_status_reported < t) 
+  {
+    stderr->write(short_time()+":   pid: "+pid+"   ppid: "+getppid()+
 #if efun(geteuid)
 		  (geteuid()!=getuid()?"   euid: "+pw_name(geteuid()):"")+
 #endif
-		  "   uid: "+pw_name(getuid())+"[0m\n");
+		  "   uid: "+pw_name(getuid())+"\n");
     perror_status_reported = t + 60;	// 60s delay.
   }
 
   string s;
   spider;
-  if(sizeof(args)) format=sprintf(format,@args);
-  if (format=="") return;
+
+  if(sizeof(args)) 
+    format=sprintf(format,@args);
+  if (format=="") 
+    return;
 
 #if efun(syslog)
   if(use_syslog && (loggingfield&LOG_DEBUG))
     foreach(format/"\n"-({""}), string message)
       syslog(LOG_DEBUG, replace(message+"\n", "%", "%%"));
 #endif
-  stderr->write(format);
+
+  string t = short_time()+": ";
+  stderr->write( (last_was_nl?t:"") + 
+                 replace(format[..strlen(format)-2], "\n", 
+                         "\n"+(last_was_nl?t:short_time()+": ") ));
+  stderr->write( format[strlen(format)-1..strlen(format)-1] );
+  last_was_nl = format[-1] == '\n';
 }
 
 // Make a directory hierachy
@@ -435,7 +455,7 @@ int gethrtime()
 object really_load_roxen()
 {
   int start_time = gethrtime();
-  werror("Loading roxen ... ");
+  roxen_perror("Loading roxen ... ");
   object res = ((program)"roxen")();
   roxen_perror("Loaded roxen in "+sprintf("%4.3fs\n", (gethrtime()-start_time)/1000000.0));
   return res;
@@ -723,12 +743,18 @@ class getpw_kluge
 };
 #endif /* constant(fork) */
 
+void write_current_time()
+{
+  call_out( write_current_time, 3600 );
+  roxen_perror("\n\nCurrent time is "+ctime(time())+"\n");
+}
+
 // Roxen bootstrap code.
 int main(mixed ... args)
 {
   int start_time = gethrtime();
   string path = make_path("base_server", "etc/include", ".");
-  roxen_perror(version()+"\n");
+  roxen_perror("\n\n"+version()+"\n");
   roxen_perror("Roxen loader version "+cvs_version+"\n");
   roxen_perror("Roxen started on "+ctime(time()));	// ctime has an lf.
   master()->putenv("PIKE_INCLUDE_PATH", path);
@@ -757,7 +783,6 @@ int main(mixed ... args)
     void got_error(string file, int line, string err)
     {
        string e = sprintf("%s:%d\t%s\n", file-getcwd(), line, err);
-//       werror(e);
       errors += e;
     }
   });
@@ -776,6 +801,8 @@ int main(mixed ... args)
   add_constant("init_logger", init_logger);
   add_constant("open", open);
   add_constant("mkdirhier", mkdirhier);
+
+  write_current_time(); 
 
   initiate_cache();
   load_roxen();
