@@ -8,12 +8,13 @@
 inherit RXML.TagSetParser;
 inherit Parser.HTML : low_parser;
 
-object clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
+this_program clone (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set)
 {
-  return low_parser::clone (ctx, type, tag_set, 1);
+  return [object(this_program)] low_parser::clone (ctx, type, tag_set, 1);
 }
 
-void create (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set, void|int is_cloned)
+static void create (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set,
+		    void|int is_cloned)
 {
   ::create (ctx, type, tag_set);
   if (is_cloned) return;
@@ -35,16 +36,25 @@ void create (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set, void|int is_
     plist = plist[1..];
 
     if (tset->prefix_required && prefix) {
-      mapping(string:string|function) m;
-      if ((m = tset->low_containers))
+      if (mapping(string:string|
+		  function(:int(1..1)|string|array)|
+		  function(object,mapping(string:string),string:
+			   int(1..1)|string|array)) m = tset->low_containers)
 	foreach (indices (m), string n) add_container (prefix + n, m[n]);
-      if ((m = tset->low_tags))
+      if (mapping(string:string|
+		  function(:int(1..1)|string|array)|
+		  function(object,mapping(string:string):
+			   int(1..1)|string|array)) m = tset->low_tags)
 	foreach (indices (m), string n) add_tag (prefix + n, m[n]);
       foreach (tlist, RXML.Tag tag)
 	if (tag->flags & RXML.FLAG_CONTAINER)
-	  add_container (prefix + tag->name, tag->handle_tag);
+	  add_container (prefix + [string] tag->name,
+			 [function(Parser.HTML,mapping(string:string),string:array)]
+			 tag->_handle_tag);
 	else
-	  add_tag (prefix + tag->name, tag->handle_tag);
+	  add_tag (prefix + [string] tag->name,
+		   [function(Parser.HTML,mapping(string:string):array)]
+		   tag->_handle_tag);
     }
 
     if (!tset->prefix_required) {
@@ -52,9 +62,13 @@ void create (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set, void|int is_
       if (tset->low_tags) add_tags (tset->low_tags);
       foreach (tlist, RXML.Tag tag)
 	if (tag->flags & RXML.FLAG_CONTAINER)
-	  add_container (tag->name, tag->handle_tag);
+	  add_container ([string] tag->name,
+			 [function(Parser.HTML,mapping(string:string),string:array)]
+			 tag->_handle_tag);
 	else
-	  add_tag (tag->name, tag->handle_tag);
+	  add_tag ([string] tag->name,
+		   [function(Parser.HTML,mapping(string:string):array)]
+		   tag->_handle_tag);
     }
 
     if (tset->low_entities) add_entities (tset->low_entities);
@@ -62,11 +76,12 @@ void create (RXML.Context ctx, RXML.Type type, RXML.TagSet tag_set, void|int is_
 
   _set_entity_callback (entity_callback);
 
+  lazy_entity_end (1);
+  match_tag (0);
+
   // parse_html() compatibility. FIXME: Some sort of old_rxml_compat
   // check here.
   case_insensitive_tag (1);
-  lazy_entity_end (1);
-  match_tag (0);
   ignore_unknown (1);
 
   if (!type->free_text)
@@ -98,12 +113,60 @@ mixed read()
   // Not reached.
 }
 
-void recheck_tags()
+mapping(RXML.Tag:string) runtime_tags;
+
+void add_runtime_tag (RXML.Tag tag)
 {
-  //HERE
+  if (!runtime_tags) runtime_tags = ([]);
+  if (!runtime_tags[tag]) {
+    if (string prefix = tag_set->prefix_required && tag_set->prefix) {
+      if (tag->flags & RXML.FLAG_CONTAINER)
+	add_container (prefix + [string] tag->name,
+		       [function(Parser.HTML,mapping(string:string),string:array)]
+		       /*[function(this_program,mapping(string:string),string:array)]*/
+		       tag->_handle_tag);
+      else
+	add_tag (prefix + [string] tag->name,
+		 [function(Parser.HTML,mapping(string:string):array)]
+		 tag->_handle_tag);
+      runtime_tags[tag] = prefix + "\0" + [string] tag->name;
+    }
+    else runtime_tags[tag] = [string] tag->name;
+    if (!tag_set->prefix_required)
+      if (tag->flags & RXML.FLAG_CONTAINER)
+	add_container ([string] tag->name,
+		       [function(Parser.HTML,mapping(string:string),string:array)]
+		       tag->_handle_tag);
+      else
+	add_tag ([string] tag->name,
+		 [function(Parser.HTML,mapping(string:string):array)]
+		 tag->_handle_tag);
+  }
 }
 
-static string|array(string) entity_callback (object this, string str)
+void remove_runtime_tag (string|RXML.Tag tag)
+{
+  if (!runtime_tags) return;
+  if (stringp (tag)) {
+    array(RXML.Tag) arr_tags = indices (runtime_tags);
+    int i = search (arr_tags->name, tag);
+    if (i < 0) return;
+    tag = arr_tags[i];
+  }
+  if (string name = runtime_tags[tag]) {
+    if (([object(RXML.Tag)] tag)->flags & RXML.FLAG_CONTAINER) {
+      add_container (name - "\0", 0);
+      add_container ((name / "\0")[-1], 0);
+    }
+    else {
+      add_tag (name - "\0", 0);
+      add_tag ((name / "\0")[-1], 0);
+    }
+    m_delete (runtime_tags, tag);
+  }
+}
+
+static array entity_callback (object this, string str)
 {
   array(string) split = str / ".";
   if (sizeof (split) == 2) {

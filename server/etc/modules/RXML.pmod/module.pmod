@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.5 1999/12/30 01:42:24 mast Exp $
+//! $Id: module.pmod,v 1.6 1999/12/31 02:55:39 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -46,7 +46,9 @@ class Tag
   //! Use t_text directly with no parser to get the raw text.
 
   array(Type) result_types = ({t_text});
-  //! The possible types of the result, in order of precedence.
+  //! The possible types of the result, in order of precedence. If a
+  //! result type has a parser, it'll be used to parse any strings
+  //! gotten from Frame.do_return (see that function for details).
 
   string scope_name;
   //! RXML.Frame.scope_name is initialized from this.
@@ -82,9 +84,11 @@ class Tag
 
   // Internals.
 
-  array handle_tag (TagSetParser parser, mapping(string:string) args, void|string content)
+  array _handle_tag (TagSetParser parser, mapping(string:string) args,
+		     void|string content)
   // Callback for tag set parsers. Returns a sequence of result values
-  // to be added to the result queue.
+  // to be added to the result queue. Note that this function handles
+  // an unwind frame for the parser.
   {
     Context ctx = parser->context;
     // FIXME: P-code generation.
@@ -147,17 +151,17 @@ class TagSet
   //! object or in some tag set it imports.
 
   mapping(string:string|
-	  function(:int(0..1)|string|array)|
-	  function(Parser,mapping(string:string):
-		   int(0..1)|string|array)) low_tags;
+	  function(:int(1..1)|string|array)|
+	  function(object,mapping(string:string):
+		   int(1..1)|string|array)) low_tags;
   mapping(string:string|
-	  function(:int(0..1)|string|array)|
-	  function(Parser,mapping(string:string),string:
-		   int(0..1)|string|array)) low_containers;
+	  function(:int(1..1)|string|array)|
+	  function(object,mapping(string:string),string:
+		   int(1..1)|string|array)) low_containers;
   mapping(string:string|
-	  function(:int(0..1)|string|array)|
-	  function(Parser,string:
-		   int(0..1)|string|array)) low_entities;
+	  function(:int(1..1)|string|array)|
+	  function(object:
+		   int(1..1)|string|array)) low_entities;
   //! Passed directly to Parser.HTML. Note: Changes in these aren't
   //! tracked; changed() must be called.
 
@@ -351,17 +355,22 @@ class Context
 
   void add_runtime_tag (Tag tag)
   //! Adds a tag that will exist from this point forward in the
-  //! current context only.
+  //! current context only. It will have effect in parent parsers up
+  //! to the point where tag_set changes.
   {
-    if (tag_set_is_local) make_tag_set_local();
-    tag_set->add_tag (tag);
+    if (!new_runtime_tags) new_runtime_tags = RuntimeTags();
+    new_runtime_tags->add_tags[tag] = 1;
+    // By doing the following, we can let remove_tags take precedence.
+    new_runtime_tags->remove_tags[tag] = 0;
+    new_runtime_tags->remove_tags[tag->name] = 0;
   }
 
   void remove_runtime_tag (string|Tag tag)
-  //! Removes a tag added by add_runtime_tag().
+  //! Removes a tag added by add_runtime_tag(). It will have effect in
+  //! parent parsers up to the point where tag_set changes.
   {
-    if (tag_set_is_local) make_tag_set_local();
-    tag_set->remove_tag (tag);
+    if (!new_runtime_tags) new_runtime_tags = RuntimeTags();
+    new_runtime_tags->remove_tags[tag] = 1;
   }
 
   array(string) list_scopes()
@@ -446,6 +455,16 @@ class Context
     else return sprintf ("%O", val);
   }
 
+  Parser new_parser (Type top_level_type)
+  // Returns a new parser object to start parsing with this context.
+  // Normally TagSet.`() should be used instead of this.
+  {
+#ifdef MODULE_DEBUG
+    if (in_use || frame) error ("Context already in use.\n");
+#endif
+    return top_level_type->get_parser (this_object());
+  }
+
   mapping(string:mapping(string:mixed)) scopes = ([]);
   // The variable mappings for every currently visible scope. A
   // special entry "" points to the current local scope.
@@ -499,15 +518,14 @@ class Context
     }
   }
 
-  Parser new_parser (Type top_level_type)
-  // Returns a new parser object to start parsing with this context.
-  // Normally TagSet.`() should be used instead of this.
+  class RuntimeTags
   {
-#ifdef MODULE_DEBUG
-    if (in_use || frame) error ("Context already in use.\n");
-#endif
-    return top_level_type->get_parser (this_object());
+    multiset(Tag) add_tags = (<>);
+    multiset(Tag|string) remove_tags = (<"foo">);
   }
+  RuntimeTags new_runtime_tags;
+  // Used to record the result of any add_runtime_tag() and
+  // remove_runtime_tag() calls since the last time the parsers ran.
 
   void create (TagSet _tag_set, void|RequestID _id)
   // Normally TagSet.`() should be used instead of this.
@@ -714,7 +732,7 @@ class Frame
   //! the content, instead of the one inherited from the surrounding
   //! parser. The tags are not inherited by subparsers.
 
-  int|function(RequestID:int|function) do_enter (RequestID id);
+  optional int|function(RequestID:int|function) do_enter (RequestID id);
   //! Called before the content (if any) is processed. This function
   //! typically only initializes vars. Return values:
   //!
@@ -788,7 +806,7 @@ class Frame
   //! called. If it returns 1, the frame is reused. FIXME: Not yet
   //! implemented.
 
-  array cached_return (Context ctx, void|mixed piece);
+  optional array cached_return (Context ctx, void|mixed piece);
   //! If defined, this will be called to get the value from a cached
   //! frame (that's still valid) instead of using the cached result.
   //! It's otherwise handled like do_return(). Note that the cached
@@ -807,7 +825,7 @@ class Frame
   //! Makes the parser abort. The data parsed so far will be returned.
   //! Does not return; throws a special exception instead.
   {
-    // FIXME
+    error ("FIXME\n");
   }
 
   void suspend()
@@ -817,21 +835,22 @@ class Frame
   //! parser is used in a place that doesn't support nonblocking, so
   //! just go ahead and block.
   {
-    // FIXME
+    error ("FIXME\n");
   }
 
   void resume()
   //! Makes the parser continue where it left off. The function that
   //! called suspend() will be called again.
   {
-    // FIXME
+    error ("FIXME\n");
   }
 
   // Internals.
 
-  mixed _exec_array (Context ctx, array exec)
+  mixed _exec_array (TagSetParser parser, array exec)
   {
     Frame this = this_object();
+    Context ctx = parser->context;
     int i = 0;
     mixed res = Void;
     Parser subparser = 0;
@@ -848,6 +867,7 @@ class Frame
 	      piece = elem;
 	    else {
 	      subparser = result_type->get_parser (ctx);
+	      subparser->_parent = parser;
 	      subparser->finish ([string] elem); // Might unwind.
 	      piece = subparser->eval(); // Might unwind.
 	      subparser = 0;
@@ -921,13 +941,14 @@ class Frame
       error ("Internal error: Calling _eval() with non-tag set parser.\n");
 #endif
 
-    // Unwind state data.
+    // Unwind state data:
+    //raw_content
     int|function(RequestID:int|function) fn, iter;
-    //string raw_content;	// Already declared.
     Parser subparser;
     mixed piece;
     array exec;
     int tags_added;		// Flag that we added additional_tags to ctx->tag_set.
+    //ctx->new_runtime_tags
 
 #define PRE_INIT_ERROR(X) (ctx->frame = this, error (X))
     if (array state = ctx->unwind_state && ctx->unwind_state[this]) {
@@ -953,8 +974,6 @@ class Frame
     }
 #undef PRE_INIT_ERROR
     ctx->frame = this;
-
-    int tag_set_gen = parser->tag_set->generation;
 
     if (raw_args) {
       args = ([]);
@@ -1026,6 +1045,7 @@ class Frame
 	    if (!subparser) {	// The nested content is not yet parsed.
 	      subparser = content_type->get_parser (
 		ctx, [object(TagSet)] this->local_tags);
+	      subparser->_parent = parser;
 	      subparser->finish (raw_content); // Might unwind.
 	      finished = 1;
 	    }
@@ -1044,7 +1064,7 @@ class Frame
 		      !arrayp (do_return)) {
 		    if (!exec) exec = do_return (ctx->id, piece); // Might unwind.
 		    if (exec) {
-		      mixed res = _exec_array (ctx, exec); // Might unwind.
+		      mixed res = _exec_array (parser, exec); // Might unwind.
 		      if (flags & FLAG_STREAM_RESULT) {
 #ifdef DEBUG
 			if (!zero_type (ctx->unwind_state->stream_piece))
@@ -1090,7 +1110,7 @@ class Frame
 		[array] do_return :
 		([function(RequestID,void|mixed:array)] do_return) (ctx->id);// Might unw.
 	    if (exec) {
-	      mixed res = _exec_array (ctx, exec); // Might unwind.
+	      mixed res = _exec_array (parser, exec); // Might unwind.
 	      if (flags & FLAG_STREAM_RESULT) {
 #ifdef DEBUG
 		if (ctx->unwind_state)
@@ -1109,12 +1129,27 @@ class Frame
 
 	}
       } while (fn);
+
+      if (ctx->new_runtime_tags) {
+	multiset(string|Tag) rem_tags = ctx->new_runtime_tags->remove_tags;
+	multiset(Tag) add_tags = ctx->new_runtime_tags->add_tags - rem_tags;
+	if (sizeof (rem_tags))
+	  foreach (indices (add_tags), Tag tag)
+	    if (rem_tags[tag->name]) add_tags[tag] = 0;
+	array(string|Tag) arr_rem_tags = (array) rem_tags;
+	array(Tag) arr_add_tags = (array) add_tags;
+	for (Parser p = parser; p; p = p->_parent)
+	  if (p->tag_set_eval) {
+	    foreach (arr_add_tags, Tag tag)
+	      ([object(TagSetParser)] p)->add_runtime_tag (tag);
+	    foreach (arr_rem_tags, string|object(Tag) tag)
+	      ([object(TagSetParser)] p)->remove_runtime_tag (tag);
+	  }
+	ctx->new_runtime_tags = 0;
+      }
     };
 
     LEAVE_SCOPE (ctx, this);
-    if (tag_set_gen != parser->tag_set->generation &&
-	ctx->tag_set == parser->tag_set)
-      parser->recheck_tags();
 
     if (err) {
       string action;
@@ -1222,6 +1257,10 @@ class Parser
     ENTER_CONTEXT (context);
     mixed err = catch {
       if (context && context->unwind_state && context->unwind_state->top) {
+#ifdef MODULE_DEBUG
+	if (context->unwind_state->top != this_object())
+	  error ("The context got an unwound state from another parser. Can't rewind.\n");
+#endif
 	m_delete (context->unwind_state, "top");
 	if (!sizeof (context->unwind_state)) context->unwind_state = 0;
       }
@@ -1231,6 +1270,10 @@ class Parser
     LEAVE_CONTEXT();
     if (err)
       if (objectp (err) && ([object] err)->thrown_at_unwind) {
+#ifdef DEBUG
+	if (err != this_object())
+	  parse_error ("Internal error: Unexpected unwind object catched.\n");
+#endif
 	if (!context->unwind_state) context->unwind_state = ([]);
 	context->unwind_state->top = err;
       }
@@ -1246,6 +1289,10 @@ class Parser
     ENTER_CONTEXT (context);
     mixed err = catch {
       if (context && context->unwind_state && context->unwind_state->top) {
+#ifdef MODULE_DEBUG
+	if (context->unwind_state->top != this_object())
+	  error ("The context got an unwound state from another parser. Can't rewind.\n");
+#endif
 	m_delete (context->unwind_state, "top");
 	if (!sizeof (context->unwind_state)) context->unwind_state = 0;
       }
@@ -1255,6 +1302,10 @@ class Parser
     LEAVE_CONTEXT();
     if (err)
       if (objectp (err) && ([object] err)->thrown_at_unwind) {
+#ifdef DEBUG
+	if (err != this_object())
+	  parse_error ("Internal error: Unexpected unwind object catched.\n");
+#endif
 	if (!context->unwind_state) context->unwind_state = ([]);
 	context->unwind_state->top = err;
       }
@@ -1293,7 +1344,7 @@ class Parser
   //! data may be given. It should work to call this on an already
   //! finished stream if no argument is given to it.
 
-  mixed read();
+  optional mixed read();
   //! Define to allow streaming operation. Returns the evaluated
   //! result so far, but does not do any evaluation. Returns Void if
   //! there's no data (for sequential types the empty value is also
@@ -1305,21 +1356,24 @@ class Parser
   //! as (part of) this return value. Returns Void if there's no data
   //! (for sequential types the empty value is also ok).
 
-  PCode p_compile();
+  optional PCode p_compile();
   //! Define this to return a p-code representation of the current
   //! stream, which always is finished.
 
-  void reset (Context ctx, Type type, mixed... args);
+  optional void reset (Context ctx, Type type, mixed... args);
   //! Define to support reuse of a parser object. It'll be called
   //! instead of making a new object for a new stream. It keeps the
-  //! static configuration, i.e. the type.
+  //! static configuration, i.e. the type. Note that this function
+  //! needs to deal with leftovers from add_runtime_tag() for
+  //! TagSetParser objects.
 
-  Parser clone (Context ctx, Type type, mixed... args);
+  optional Parser clone (Context ctx, Type type, mixed... args);
   //! Define to create new parser objects by cloning instead of
   //! creating from scratch. It returns a new instance of this parser
-  //! with the same static configuration, i.e. the type.
+  //! with the same static configuration, i.e. the type. The instance
+  //! this function is called in is never actually used for parsing.
 
-  void create (Context ctx, Type _type /*, mixed... args*/)
+  void create (Context ctx, Type _type, mixed... args)
   {
     context = ctx;
     type = _type;
@@ -1329,17 +1383,19 @@ class Parser
 
   Parser _next_free;
   // Used to link together unused parser objects for reuse.
+
+  Parser _parent;
+  // The parent parser if this one is nested.
 }
 
 
 class TagSetParser
 //! Interface class for parsers that evaluates using the tag set. It
 //! provides the evaluation and compilation functionality. The parser
-//! should call Tag.handle_tag() from feed() and finish() for every
+//! should call Tag._handle_tag() from feed() and finish() for every
 //! encountered tag, and Context.get_var() for encountered variable
-//! references. The parser must provide a result queue with
-//! write_out() and read(). It must be able to continue cleanly after
-//! throw() from Tag.handle_tag().
+//! references. It must be able to continue cleanly after throw() from
+//! Tag._handle_tag().
 {
   inherit Parser;
 
@@ -1350,9 +1406,9 @@ class TagSetParser
   TagSet tag_set;
   //! The tag set used for parsing.
 
-  void reset (Context ctx, Type type, TagSet tag_set, mixed... args);
-  Parser clone (Context ctx, Type type, TagSet tag_set, mixed... args);
-  void create (Context ctx, Type type, TagSet _tag_set /*, mixed... args*/)
+  optional void reset (Context ctx, Type type, TagSet tag_set, mixed... args);
+  optional Parser clone (Context ctx, Type type, TagSet tag_set, mixed... args);
+  void create (Context ctx, Type type, TagSet _tag_set, mixed... args)
   {
     ::create (ctx, type);
     tag_set = _tag_set;
@@ -1360,12 +1416,13 @@ class TagSetParser
   //! In addition to the type, the tag set is part of the static
   //! configuration.
 
-  void recheck_tags();
-  //! Called when the tags in tag_set have changed during the
-  //! evaluation and need to take effect immediately. Only the local
-  //! tags in tag_set needs to be checked for changes.
-}
+  void add_runtime_tag (Tag tag);
+  //! Adds a tag that will exist from this point forward in the
+  //! current parser instance only.
 
+  void remove_runtime_tag (string|Tag tag);
+  //! Removes a tag added by add_runtime_tag().
+}
 
 class PNone
 //! The identity parser. It only returns its input.
@@ -1447,6 +1504,8 @@ class Type
   //!	    eval ("da") + eval ("ta") == eval ("da" + "ta")
   //!    and
   //!	    eval ("data") + eval ("") == eval ("data")
+  //!	 provided the data is only split between (sensibly defined)
+  //!	 atomic elements.
 
   //!mixed empty_value;
   //! The empty value for sequential data types, i.e. what eval ("")
@@ -1529,13 +1588,11 @@ class Type
 	else
 	  // ^^^ Using interpreter lock to here.
 	  if (pco->clone_parser)
-	    p = [object(Parser)] pco->clone_parser->clone (
-	      ctx, this_object(), @_parser_args);
+	    p = pco->clone_parser->clone (ctx, this_object(), @_parser_args);
 	  else if ((p = _parser_prog (ctx, this_object(), @_parser_args))->clone)
 	    // pco->clone_parser might already be initialized here due
 	    // to race, but that doesn't matter.
-	    p = [object(Parser)] (pco->clone_parser = p)->clone (
-	      ctx, this_object(), @_parser_args);
+	    p = (pco->clone_parser = p)->clone (ctx, this_object(), @_parser_args);
       }
       else {
 	// ^^^ Using interpreter lock to here.
@@ -1545,8 +1602,7 @@ class Type
 	if ((p = _parser_prog (ctx, this_object(), @_parser_args))->clone)
 	  // pco->clone_parser might already be initialized here due
 	  // to race, but that doesn't matter.
-	  p = [object(Parser)] (pco->clone_parser = p)->clone (
-	    ctx, this_object(), @_parser_args);
+	  p = (pco->clone_parser = p)->clone (ctx, this_object(), @_parser_args);
       }
     }
     else {
@@ -1558,13 +1614,11 @@ class Type
       }
       else if (clone_parser)
 	// Relying on interpreter lock here.
-	p = [object(Parser)] clone_parser->clone (
-	  ctx, this_object(), @_parser_args);
+	p = clone_parser->clone (ctx, this_object(), @_parser_args);
       else if ((p = _parser_prog (ctx, this_object(), @_parser_args))->clone)
 	// clone_parser might already be initialized here due to race,
 	// but that doesn't matter.
-	p = [object(Parser)] (clone_parser = p)->clone (
-	  ctx, this_object(), @_parser_args);
+	p = (clone_parser = p)->clone (ctx, this_object(), @_parser_args);
     }
     return p;
   }
