@@ -1,9 +1,7 @@
-<h1>Global module page</h1>
-
 <awizard>
   <page>
-     <button page=add_module title='Add module'>
-     <button page=delete_module title='Delete module'>
+     <button page=add_module gbutton_title='Add module'>
+     <button page=delete_module gbutton_title='Delete module'>
   </page>
   <page name=add_module>
     <insert file=add_module.inc>
@@ -19,4 +17,5 @@
     <goto href="../">
   </page>
 </awizard>
+
 
