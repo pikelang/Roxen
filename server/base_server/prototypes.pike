@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.87 2004/04/28 16:23:46 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.88 2004/04/29 13:56:18 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1180,6 +1180,8 @@ class RequestID
 #if constant(Parser.XML.Tree.XMLNSParser)
 
 static constant Node = Parser.XML.Tree.Node;
+static constant RootNode = Parser.XML.Tree.RootNode;
+static constant HeaderNode = Parser.XML.Tree.HeaderNode;
 static constant TextNode = Parser.XML.Tree.TextNode;
 static constant ElementNode = Parser.XML.Tree.ElementNode;
 
@@ -1269,6 +1271,15 @@ class MultiStatus
 {
   static mapping(string:array(Node)) status_set = ([]);
 
+  static mapping(string:string) args = ([
+    "xmlns:DAV": "DAV:",
+    // MS namespace for data types; see comment in
+    // XMLPropStatNode.add_property. Note: The XML parser in the
+    // MS DAV client is broken and requires the break of the last
+    // word "datatypesdt" to be exactly at this point.
+    "xmlns:MS": "urn:schemas-microsoft-com:datatypes",
+  ]);
+
   int(0..1) is_empty()
   {
     return !sizeof(status_set);
@@ -1339,18 +1350,26 @@ class MultiStatus
     stat_node->add_property(prop_name, prop_value);
   }
 
+  void add_namespace (string namespace)
+  //! Add a namespace to the generated @tt{<multistatus>@} element.
+  //! Useful if several properties share a namespace.
+  {
+    int ns_count = 0;
+    string ns_name;
+    while (args[ns_name = "xmlns:NS" + ns_count]) {
+      if (args[ns_name] == namespace) return;
+      ns_count++;
+    }
+    args[ns_name] = namespace;
+  }
+
   Node get_xml_node()
   {
-    Node root =
-      Parser.XML.Tree.parse_input(
-	"<?xml version='1.0' encoding='utf-8'?>"
-	"<DAV:multistatus xmlns:DAV='DAV:' "
-	// MS namespace for data types; see comment in
-	// XMLPropStatNode.add_property. Note: The XML parser in the
-	// MS DAV client is broken and requires the break of the last
-	// word "datatypesdt" to be exactly at this point.
-	"xmlns:MS='urn:schemas-microsoft-com:datatypes'>"
-	"</DAV:multistatus>");
+    RootNode root = RootNode();
+    root->add_child (HeaderNode ((["version": "1.0", "encoding": "utf-8"])));
+    ElementNode node = ElementNode ("DAV:multistatus", args);
+    root->add_child (node);
+
     array(Node) response_xml = allocate(sizeof(status_set));
     int i;
 
@@ -1365,8 +1384,8 @@ class MultiStatus
 	ElementNode("DAV:response", ([])))->
 	  replace_children(({href_node})+responses);
     }
-    root->get_first_element("DAV:multistatus", 1)->
-      replace_children(response_xml);
+    node->replace_children(response_xml);
+
     return root;
   }
 
@@ -1394,6 +1413,10 @@ class MultiStatus
 		      prop_value)
     {
       MultiStatus::add_property(href_prefix + path, prop_name, prop_value);
+    }
+    void add_namespace (string namespace)
+    {
+      MultiStatus::add_namespace (namespace);
     }
     this_program prefix(string href_prefix) {
       return MultiStatus::prefix(this_program::href_prefix + href_prefix);
