@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.91 1997/10/27 08:32:42 per Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.92 1997/11/09 18:29:37 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -246,7 +246,7 @@ object load_image(string f,object id)
     if(!(file=open(f,"r")) || (!(data=file->read())))
       return 0;
 //werror("Read "+strlen(data)+" bytes.\n");
-  if(!img->frompnm(data)) return 0;
+  if (catch { if(!img->frompnm(data)) return 0;}) return 0;
   last_image = img; last_image_name = f;
   return img->copy();
 }
