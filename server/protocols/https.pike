@@ -1,4 +1,4 @@
-/* $Id: https.pike,v 1.7 1999/06/08 03:22:34 mast Exp $
+/* $Id: https.pike,v 1.8 1999/08/04 14:17:41 grubba Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -319,6 +319,9 @@ string get_data_file()
   }
 
   if (!s || !sizeof(s)) {
+#ifdef SSL3_DEBUG
+    roxen_perror("SSL3:get_file_data(): EOF\n");
+#endif /* SSL3_DEBUG */
     if (to_send->file) {
       to_send->file->close();
       to_send->file = 0;
