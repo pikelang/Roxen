@@ -153,6 +153,7 @@ urw_itc_avant_garde-demi-r binary
 /server/languages/spanish.pike foreign_ident
 /server/languages/swedish.pike foreign_ident
 /server/modules/compat/configtablist.pike foreign_ident
+/server/modules/compat/flik.pike foreign_ident
 /server/modules/compat/ximg.pike foreign_ident
 /server/modules/configuration/config_filesystem.pike foreign_ident
 /server/modules/directories/directories.pike foreign_ident
