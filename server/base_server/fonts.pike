@@ -1,4 +1,4 @@
-/* $Id: fonts.pike,v 1.26 1999/06/11 01:36:58 peter Exp $ */
+/* $Id: fonts.pike,v 1.27 1999/07/10 21:29:46 peter Exp $ */
 
 #include <module.h>
 
@@ -72,8 +72,8 @@ array available_font_versions(string name, int size)
   int ttffound;
   int ttffontschanged;
 
-  if(ttf_font_names_cache[ name ])
-    return indices(ttf_font_names_cache[ name ]);
+   if(ttf_font_names_cache[ name ])
+     return indices(ttf_font_names_cache[ name ]);
   foreach(roxen->query("font_dirs"), dir)
   {
     foreach(get_dir( dir )||({}), string fname)
@@ -82,12 +82,12 @@ array available_font_versions(string name, int size)
       {
 	if(!ttf_done[combine_path(dir+"/",fname)]++)
 	{
-	  //	  werror("Trying TTF: "+combine_path(dir+"/",fname)+"\n");
+//   werror("Trying TTF: "+combine_path(dir+"/",fname)+"\n");
 	  object ttf = Image.TTF( combine_path(dir+"/",fname) );
 	  if(ttf)
 	  {
 	    mapping n = ttf->names();
-	    //	    werror("okiedokie! "+n->family+"\n");
+//        werror("okiedokie! "+n->family+"\n");
 	    ttffontschanged++;
 	    string f = lower_case(trimttfname(n->family));
 	    if(!ttf_font_names_cache[f])
@@ -100,7 +100,6 @@ array available_font_versions(string name, int size)
       };
     }
   }
-
   if(ttffontschanged)
     catch{
       Stdio.File(".ttffontcache",
@@ -211,13 +210,9 @@ class TTFWrapper
     real->set_height( size );
   }
 
-  object write( string|array what )
+  object write( string ... what )
   {
-    if( arrayp( what ) )
-      what = Array.map( (array(string))what, replace, " ", "" );
-    else
-      what = replace( what, " ", "" );
-    return real->write( what );
+    return real->write(@Array.map( (array(string))what,replace," ",""));
   }
 }
 
