@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.162 1999/01/21 15:51:19 marcus Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.163 1999/01/24 23:38:38 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -548,17 +548,22 @@ object make_text_image(mapping args, object font, string text,object id)
 
   if(args->ghost)
   { // Francesco..
-    int sdist = (int)args->ghost;
-    int bl=(int)(args->ghost/",")[1];
-    array(int)clr=parse_color((args->ghost/",")[-1]);
-    int j;
-    object ta = text_alpha->copy();
-    for (j=0;j<bl;j++)
-      ta=ta->apply_matrix(({
-	({6,7,7,7,6}),({7,8,8,8,7}),({7,8,8,8,7}),({7,8,8,8,7}),({6,7,7,7,6})
-       }));
-    background->paste_alpha_color(ta,@clr,xoffset+sdist,yoffset+sdist);
-    fgcolor=bgcolor;
+    array(string) a = (args->ghost/",");
+    if (sizeof(a) < 2) {
+      // Bad argument.
+    } else {
+      int sdist = (int)(a[0]);
+      int bl=(int)(a[1]);
+      array(int)clr=parse_color(a[-1]);
+      int j;
+      object ta = text_alpha->copy();
+      for (j=0;j<bl;j++)
+	ta=ta->apply_matrix(({
+	  ({6,7,7,7,6}),({7,8,8,8,7}),({7,8,8,8,7}),({7,8,8,8,7}),({6,7,7,7,6})
+	}));
+      background->paste_alpha_color(ta,@clr,xoffset+sdist,yoffset+sdist);
+      fgcolor=bgcolor;
+    }
   }
 
   
