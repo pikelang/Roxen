@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.53 2002/06/18 10:53:27 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.54 2002/10/15 12:53:38 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -775,8 +775,11 @@ class TagEmitTESTER {
   constant name = "emit";
   constant plugin_name = "TESTER";
 
-  array(mapping(string:string)) get_dataset(mapping m, RequestID id) {
+  array(mapping(string:mixed)) get_dataset(mapping m, RequestID id) {
     switch(m->test) {
+    case "5":
+      return ({(["v": EntityVVal ("<&>"), "c": EntityCVal ("<&>")])});
+
     case "4":
       return ({
 	([ "a":"1", "b":EntityCVal("aa"), "c":EntityVVal("ca") ]),
