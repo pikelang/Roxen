@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.174 2001/08/10 09:08:25 wellhard Exp $
+# $Id: start,v 1.175 2001/08/10 14:21:29 wellhard Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -140,7 +140,7 @@ setup_for_tests() {
     cp -R $SELF_TEST_DIR/config $VARDIR/test_config
     DIR=$VARDIR/test_config
     if [ -f $SELF_TEST_DIR/scripts/setup.sh ] ; then
-      $SELF_TEST_DIR/scripts/setup.sh $SELF_TEST_DIR $VARDIR
+      $PIKE $SELF_TEST_DIR/scripts/setup.pike $SELF_TEST_DIR $VARDIR
     fi
     once=1
     remove_dumped=1
