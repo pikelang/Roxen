@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.335 2003/02/19 10:28:48 grubba Exp $
+// $Id: roxenloader.pike,v 1.336 2003/02/21 12:26:05 anders Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.335 2003/02/19 10:28:48 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.336 2003/02/21 12:26:05 anders Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1149,7 +1149,7 @@ int main(int argc, array(string) argv)
     report_debug(
 #"
 ------- FATAL -------------------------------------------------
-Roxen 2.4 or newer should be run with Pike 7.2.
+Roxen 3.4 should be run with Pike 7.2 or newer.
 ---------------------------------------------------------------
 ");
 	exit(1);
@@ -1999,7 +1999,7 @@ some environment variables are ignored.
 
 
 ******************************************************
-Roxen 2.4 or newer requires Pike 7.2.
+Roxen 3.4 requires Pike 7.2 or newer.
 Please install a newer version of Pike.
 ******************************************************
 
