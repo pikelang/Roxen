@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.119 2000/11/02 16:52:08 per Exp $
+//! $Id: module.pmod,v 1.120 2000/11/04 21:05:34 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -185,7 +185,7 @@ class Tag
 
   //! Services.
 
-  inline object/*(Frame)HMM*/ `() (mapping(string:mixed) args, void|mixed content)
+  inline final object/*(Frame)HMM*/ `() (mapping(string:mixed) args, void|mixed content)
   //! Make an initialized frame for the tag. Typically useful when
   //! returning generated tags from e.g. RXML.Frame.do_process(). The
   //! argument values and the content are normally not parsed.
@@ -813,7 +813,7 @@ class Value
 
   mixed rxml_const_eval (Context ctx, string var, string scope_name, void|Type type);
   //! If the variable value is the same throughout the life of the context,
-  //! this method could be used instead of rxml_var_eval.
+  //! this method should be used instead of rxml_var_eval.
 
   string _sprintf() {return "RXML.Value";}
 }
@@ -1866,19 +1866,19 @@ class Frame
 
   //! Services.
 
-  local mixed get_var (string var, void|string scope_name, void|Type want_type)
+  final mixed get_var (string var, void|string scope_name, void|Type want_type)
   //! A wrapper for easy access to RXML.Context.get_var().
   {
     return get_context()->get_var (var, scope_name, want_type);
   }
 
-  local mixed set_var (string var, mixed val, void|string scope_name)
+  final mixed set_var (string var, mixed val, void|string scope_name)
   //! A wrapper for easy access to RXML.Context.set_var().
   {
     return get_context()->set_var (var, val, scope_name);
   }
 
-  local void delete_var (string var, void|string scope_name)
+  final void delete_var (string var, void|string scope_name)
   //! A wrapper for easy access to RXML.Context.delete_var().
   {
     get_context()->delete_var (var, scope_name);
@@ -1941,7 +1941,7 @@ class Frame
     return get_context()->tag_set->get_plugins (tag->name, tag->flags & FLAG_PROC_INSTR);
   }
 
-  local Tag get_overridden_tag()
+  final Tag get_overridden_tag()
   //! Returns the Tag object the tag for this frame overrides, if any.
   {
     return get_context()->tag_set->get_overridden_tag (tag);
