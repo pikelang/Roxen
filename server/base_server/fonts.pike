@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.61 2000/09/04 07:24:18 per Exp $
+// $Id: fonts.pike,v 1.62 2000/09/04 07:29:04 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -188,48 +188,59 @@ object resolve_font(string f, string|void justification)
   if( !f )
     f = roxen->query("default_font");
   f = lower_case( f );
-  if(sscanf(f, "%sbold%s", a,b)==2)
+  if(sscanf(f, "%s bold%s", a,b)==2)
   {
     bold=1;
-    f = a+b;
+    f = a+" "+b;
   }
-  if(sscanf(f, "%sblack%s", a,b)==2)
+  if(sscanf(f, "%s normal%s", a,b)==2)
+  {
+    f = a+" "+b;
+  }
+  if(sscanf(f, "%s black%s", a,b)==2)
   {
     bold=2;
-    f = a+b;
+    f = a+" "+b;
   }
-  if(sscanf(f, "%slight%s", a,b)==2)
+  if(sscanf(f, "%s light%s", a,b)==2)
   {
     bold=-1;
-    f = a+b;
+    f = a+" "+b;
   }
-  if(sscanf(f, "%sitalic%s", a,b)==2)
+  if(sscanf(f, "%s italic%s", a,b)==2)
   {
     italic=1;
-    f = a+b;
+    f = a+" "+b;
   }
-  if(sscanf(f, "%sslant%s", a,b)==2)
+  if(sscanf(f, "%s slant%s", a,b)==2)
   {
     italic=-1;
-    f = a+b;
+    f = a+" "+b;
   }
-  if(sscanf(f, "%scompressed%s", a,b)==2)
+  if(sscanf(f, "%s compressed%s", a,b)==2)
   {
     xspace = -20.0;
-    f = a+b;
+    f = a+" "+b;
   }
-  if(sscanf(f, "%sspaced%s", a,b)==2)
+  if(sscanf(f, "%s spaced%s", a,b)==2)
   {
     xspace = 20.0;
-    f = a+b;
+    f = a+" "+b;
   }
-  if(sscanf(f, "%scenter%s", a, b)==2)
+  if(sscanf(f, "%s center%s", a, b)==2)
   {
     justification="center";
+    f = a+" "+b;
   }
-  if(sscanf(f, "%sright%s", a, b)==2)
+  if(sscanf(f, "%s right%s", a, b)==2)
   {
     justification="right";
+    f = a+" "+b;
+  }
+  if(sscanf(f, "%s left%s", a, b)==2)
+  {
+    justification="left";
+    f = a+" "+b;
   }
   int size=32;
   string nf;

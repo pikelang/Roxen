@@ -2,7 +2,7 @@
 // Copyright © 1996 - 2000, Roxen IS.
 
 #include <config.h>
-constant cvs_version = "$Id: old.pike,v 1.4 2000/09/04 05:09:24 per Exp $";
+constant cvs_version = "$Id: old.pike,v 1.5 2000/09/04 07:29:04 per Exp $";
 
 constant name = "Compatibility bitmap fonts";
 constant doc = "Compatibility (bitmapped) fonts for Roxen 1.3 and earlier.";
@@ -40,6 +40,8 @@ array available_fonts()
 
 array(mapping) font_information( string fnt )
 {
+  string ofnt = fnt;
+  fnt = replace(lower_case( fnt ), " ", "_");
   array font_infos=({});
   foreach(roxen->query("font_dirs"), string dir)
   {
@@ -53,15 +55,17 @@ array(mapping) font_information( string fnt )
         if(has_value(d, style)) 
         {
 	  mapping font_info = ([ "name":fnt,
-				 "family":fnt,
+				 "family":ofnt,
 				 "path":dir+fnt,
+                                 "style":"",
 				 "format":"bitmap dump" ]);
 	  switch(style[0]) {
-	  case 'l': font_info->name+="light"; break;
-	  case 'b': font_info->name+="bold"; break;
-	  case 'B': font_info->name+="black"; break;
+	  case 'l': font_info->style+="light"; break;
+	  case 'b': font_info->style+="bold"; break;
+	  case 'B': font_info->style+="black"; break;
 	  }
-	  if(style[1]=='i') font_info->name+="italic";
+	  if(style[1]=='i') font_info->style+="italic";
+	  if(style[1]=='I') font_info->style+="oblique";
 	  font_infos+=({ font_info });
         }
     }
