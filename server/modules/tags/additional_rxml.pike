@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.12 2001/03/15 15:06:25 kuntri Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.13 2001/07/25 09:46:09 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -231,7 +231,7 @@ constant tagdoc=([
   "dice":#"<desc cont='cont'><p><short>
  Simulates a D&amp;D style dice algorithm.</short></p></desc>
 
-<attr name='type' value='string default=D6'><p>
+<attr name='type' value='string' default='D6'><p>
  Describes the dices. A six sided dice is called 'D6' or '1D6', while
  two eight sided dices is called '2D8' or 'D8+D8'. Constants may also
  be used, so that a random number between 10 and 20 could be written
