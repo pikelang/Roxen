@@ -8,10 +8,8 @@
 inherit "module";
 inherit "roxenlib";
 
-#define _extra_heads id->misc->defines[" _extra_heads"]
-
-constant thread_safe=1;
-constant cvs_version = "$Id: wml.pike,v 1.4 2000/02/08 11:06:06 kuntri Exp $";
+constant thread_safe = 1;
+constant cvs_version = "$Id: wml.pike,v 1.5 2000/02/19 02:18:53 nilsson Exp $";
 
 constant module_type = MODULE_PARSER;
 constant module_name = "WAP WML module.";
@@ -319,7 +317,7 @@ array(string) container_wml(string tag, mapping m, mixed c, RequestID id) {
   //What do we have and where should we go?
   string from=m->from||"1.1";
   m_delete(m,"from");
-  correct_supports(id);
+
   string to="1.1";
   if(m->to && wap[m->to]) to=m->to;
   else if(id->supports["wap1.1"]) to="1.1";
@@ -352,24 +350,7 @@ array(string) container_wml(string tag, mapping m, mixed c, RequestID id) {
 
   if(!m->noheader) c=wap[to]->header+c;
 
-  //Set the right content type.
-  add_http_header(_extra_heads, "Content-type", m->mime||wap[to]->mime->wml);
-
   return ({c});
-}
-
-void correct_supports(object id) {
-  if(!id->request_headers->accept) id->request_headers->accept="";
-  if(search(id->request_headers->accept,"image/x-wap.wbmp")!=-1 ||
-     search(id->request_headers->accept,"image/vnd.wap.wbmp")!=-1) id->supports+=(<"wbmp0">);
-  if(id->supports["wap1.1"] || id->supports["wap1.0"]) return;
-  if(search(id->request_headers->accept,"text/vnd.wap.wml")!=-1 ||
-     search(id->request_headers->accept,"application/vnd.wap.wml")!=-1) id->supports+=(<"wap1.1">);
-  if(search(id->request_headers->accept,"text/x-wap.wml")!=-1) id->supports+=(<"wap1.0">);
-  if(id->supports->unknown){
-    id->supports+=(<"wap1.1">);
-    id->supports+=(<"wbmp0">);
-  }
 }
 
 //Here I had a nice OO model, but I gave it up for speed and efficency.
