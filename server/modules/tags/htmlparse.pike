@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.76 1998/02/11 01:21:36 nisse Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.77 1998/02/11 13:49:59 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -1292,8 +1292,14 @@ string simple_parse_users_file(string file, string u)
  string line, user, pass;
  foreach(file/"\n", line)
  {
-   if((sscanf(line, "%s:%s", user, pass) == 2) && (user==u))
-     return pass;
+   array(string) arr = line/":";
+   if (arr[0] == u) {
+     if (sizeof(arr) > 1) {
+       return(arr[1]);
+     }
+     // Malformed!
+     return 0;
+   }
  }
  return 0;
 }
@@ -1499,16 +1505,18 @@ string tag_allow(string a, mapping (string:string) m,
   
   if(m->user)
     if(m->user == "any")
-      if(m->file)
+      if(m->file) {
+	// FIXME: wwwfile attribute doesn't work.
 	TEST(match_user(got->auth,got->auth[1],fix_relative(m->file,got),
 			!!m->wwwfile, got));
-      else
+      } else
 	TEST(got->auth && got->auth[0]);
     else
-      if(m->file)
+      if(m->file) {
+	// FIXME: wwwfile attribute doesn't work.
 	TEST(match_user(got->auth,m->user,fix_relative(m->file,got),
 			!!m->wwwfile, got));
-      else
+      } else
 	TEST(got->auth && got->auth[0] && search(m->user/",", got->auth[1])
 	     != -1);
 
