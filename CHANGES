@@ -20,7 +20,18 @@ o Now installs a script to run the Roxen Pike as "$(prefix)/bin/pike-roxen".
 
 o Fixed OLD select() bug in the backend (both Pike 0.5 and 0.6).
 
+o Fixed bug in handling of the default content type.
+
+o Now strips ::$DATA and the like from the filename on NT.
+
+o Added config-interface button to clear the caches associated with
+  a virtual server.
+
 o Improved procfs test for Pike 0.5.
+
+o Support for virtual user hosting added to the userfs module.
+
+o Improved error message in case of CGI wrapper execution failure.
 
 o LARGEFILE64 support now compiles on HPUX/gcc.
 
@@ -33,6 +44,15 @@ o Fixed bug with compiling Pike 0.5 on OS's without support for
 o Fixed a few minor 8bit string bugs.
 
 o Fixed bug in file->stat().
+
+o Fixed bugs in the wizard module.
+
+o Added support for <if group=foo>.
+
+o Added support for MODULE_FIRST modules in the gopher protocol (needed on NT).
+
+o Roxen's http protocols module no longer claims to handle protocols other
+  than HTTP/0.9, HTTP/1.0 and HTTP/1.1.
 
 o Improved ASN.1 support in Pike 0.6.
 
