@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.12 2001/06/28 14:57:22 wellhard Exp $
+// $Id: DBManager.pmod,v 1.13 2001/08/01 11:08:17 per Exp $
 //! @module DBManager
 //! Manages database aliases and permissions
 #include <roxen.h>
@@ -305,7 +305,7 @@ string db_url( string name,
 	       int|void force )
 //! Returns the URL of the db, or 0 if the DB @[name] is an internal
 //! database and @[force] is not specified. If @[force] is specified,
-//! a URL is always returned.
+//! a URL is always returned unless the database does not exist.
 {
   array(mapping(string:mixed)) d =
            query("SELECT path,local FROM dbs WHERE name=%s", name );
@@ -361,13 +361,6 @@ Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
 //! Identical to get(), but the authentication verification and
 //! mapping database name <--> DB-url mapping is cached between
 //! requests.
-//!
-//! Please note that using this function makes it impossible for the
-//! user to change the data on the fly in the configuration intarface.
-//!
-//! However, the performance gain is quite noticeable. Using this
-//! function is preferable to doing your own database-connection
-//! caching.
 {
   string key = name+"|"+(c&&c->name)+"|"+ro;
 
@@ -406,6 +399,9 @@ void drop_db( string name )
 //! Drop the database @[name]. If the database is internal, the actual
 //! tables will be deleted as well.
 {
+  if( (< "shared", "local" >)[ name ] )
+    error( "Cannot drop the 'shared' or 'local' database\n" );
+
   array q = query( "SELECT name,local FROM dbs WHERE name=%s", name );
   if(!sizeof( q ) )
     error( "The database "+name+" does not exist\n" );
@@ -470,10 +466,10 @@ int set_permission( string name, Configuration c, int level )
   query( "INSERT INTO db_permissions VALUES (%s,%s,%s)", name,c->name,
 	 (level?level==2?"write":"read":"none") );
   
+  connection_cache  = ([]);
+
   if( (int)d[0]["local"] )
-  {
     set_user_permissions( c, name, level );
-  }
   return 1;
 }
 
