@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.132 2004/05/10 11:41:56 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.133 2004/05/10 13:53:10 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1437,8 +1437,8 @@ mixed find_file( string f, RequestID id )
   return 0;
 }
 
-mapping copy_file(string source, string dest, int(-1..1) behavior,
-		  RequestID id)
+mapping copy_file(string source, string dest, PropertyBehavior behavior,
+		  Overwrite overwrite, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "COPY: Copy %O to %O.", source, dest);
   Stat source_st = stat_file(source, id);
@@ -1470,12 +1470,11 @@ mapping copy_file(string source, string dest, int(-1..1) behavior,
   }
   Stat dest_st = stat_file(dest, id);
   if (dest_st) {
-    if (id->request_headers->overwrite) {
-      // Obey the overwrite header.
-      if (lower_case(id->request_headers->overwrite) != "t") {
-	TRACE_LEAVE("COPY: Destination already exists.");
-	return Roxen.http_low_answer(412, "Destination already exists.");
-      }
+    switch(overwrite) {
+    case NEVER_OVERWRITE:
+      TRACE_LEAVE("COPY: Destination already exists.");
+      return Roxen.http_low_answer(412, "Destination already exists.");
+    case DO_OVERWRITE:
       if (!query("delete")) {
 	TRACE_LEAVE("COPY: Deletion not allowed.");
 	return Roxen.http_low_answer(405, "Not allowed.");
@@ -1519,13 +1518,17 @@ mapping copy_file(string source, string dest, int(-1..1) behavior,
 	SIMPLE_TRACE_LEAVE("COPY: No need to perform deletion.");
       }
       privs = 0;
-    } else if ((source_st->isreg != dest_st->isreg) ||
-	       (source_st->isdir != dest_st->isdir)) {
-      TRACE_LEAVE("COPY: Resource types for source and destination differ.");
-      return Roxen.http_low_answer(412, "Destination and source are different resource types.");
-    } else if (source_st->isdir) {
-      TRACE_LEAVE("Already done (both are directories).");
-      return Roxen.http_low_answer(204, "Destination already existed.");
+      break;
+    case MAYBE_OVERWRITE:
+      if ((source_st->isreg != dest_st->isreg) ||
+	  (source_st->isdir != dest_st->isdir)) {
+	TRACE_LEAVE("COPY: Resource types for source and destination differ.");
+	return Roxen.http_low_answer(412, "Destination and source are different resource types.");
+      } else if (source_st->isdir) {
+	TRACE_LEAVE("Already done (both are directories).");
+	return Roxen.http_low_answer(204, "Destination already existed.");
+      }
+      break;
     }
   }
   if (source_st->isdir) {
