@@ -15,10 +15,15 @@ constant STORT = 1.0e40;
 inherit "create_graph.pike";
 inherit "create_bars.pike";
 
-constant cvs_version = "$Id: create_pie.pike,v 1.30 1997/12/20 23:48:46 hedda Exp $";
+constant cvs_version = "$Id: create_pie.pike,v 1.31 1998/01/21 16:42:45 grubba Exp $";
 
 /*
-These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
+ * name = "BG: Create pies";
+ * doc = "Business Graphics sub-module for drawing pie-charts.".
+ */
+
+/*
+These functions were written by Henrik "Hedda" Wallin (hedda@idonex.se)
 Create_pie can draw pie charts in different forms.
 
 The data is taken from the diagram_data-mapping which is described in doc/diagram_internals.txt

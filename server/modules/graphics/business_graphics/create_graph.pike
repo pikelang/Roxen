@@ -14,10 +14,15 @@ constant STORTLITET = 1.0e-30;
 constant STORT = 1.0e40;
 #define VOIDSYMBOL "\n"
 
-constant cvs_version = "$Id: create_graph.pike,v 1.89 1998/01/12 22:14:10 hedda Exp $";
+constant cvs_version = "$Id: create_graph.pike,v 1.90 1998/01/21 16:40:11 grubba Exp $";
 
 /*
-These functions are written by Henrik "Hedda" Wallin (hedda@idonex.se)
+ * name = "BG: Create graphs";
+ * doc = "Business Graphics sub-module for drawing graphs.";
+ */
+
+/*
+These functions were written by Henrik "Hedda" Wallin (hedda@idonex.se)
 Create_graph draws a graph but there are also some other functions
 used by create_pie and create_bars.
 */ 

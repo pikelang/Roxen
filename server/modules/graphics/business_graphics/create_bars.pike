@@ -14,10 +14,15 @@ constant STORT = 1.0e40;
 
 inherit "create_graph.pike";
 
-constant cvs_version = "$Id: create_bars.pike,v 1.58 1997/12/21 20:53:25 hedda Exp $";
+constant cvs_version = "$Id: create_bars.pike,v 1.59 1998/01/21 16:25:25 grubba Exp $";
 
 /*
-These functions is written by Henrik "Hedda" Wallin (hedda@idonex.se)
+ * name = "BG: Create bars";
+ * doc = "Business Graphics sub-module for drawing bars."
+ */
+
+/*
+These functions were written by Henrik "Hedda" Wallin (hedda@idonex.se)
 Create_bars can draw normal bars, sumbars and normalized sumbars.
 */ 
 
