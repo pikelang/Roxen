@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.330 2002/12/11 17:31:43 mattias Exp $
+// $Id: roxenloader.pike,v 1.331 2003/01/22 16:12:12 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.330 2002/12/11 17:31:43 mattias Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.331 2003/01/22 16:12:12 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -58,7 +58,6 @@ mapping uname()
 }
 #endif
 #endif
-
 
 mapping(int:string) pwn=([]);
 string pw_name(int uid)
@@ -135,12 +134,12 @@ string get_cvs_id(string from)
 
 void add_cvs_ids(mixed to)
 {
-  if (arrayp (to) && sizeof (to) >= 2 && arrayp (to[1]) ||
-      objectp (to) && to->is_generic_error)
+  if (arrayp(to) && sizeof(to) >= 2 && !objectp(to[1]) && arrayp(to[1]) ||
+      objectp(to) && to->is_generic_error)
     to = to[1];
-  else if (!arrayp (to)) return;
+  else if (!arrayp(to)) return;
   foreach(to, mixed q)
-    if(arrayp (q) && sizeof(q) && stringp(q[0])) {
+    if(arrayp(q) && sizeof(q) && stringp(q[0])) {
       string id = get_cvs_id(q[0]);
       catch (q[0] += id);
     }
@@ -742,6 +741,7 @@ Roxen really_load_roxen()
   res->start_time = start_time;
   res->boot_time = start_time;
   nwrite = res->nwrite;
+
   return res;
 }
 
