@@ -5,7 +5,7 @@
  * Written by Niels Möller 1997
  */
 
-static string cvs_version = "$Id: cvsfs.pike,v 1.10 1997/02/19 03:10:06 nisse Exp $";
+string cvs_version = "$Id: cvsfs.pike,v 1.11 1997/08/19 07:03:31 per Exp $";
 
 #include <module.h>
 #include <roxen.h>

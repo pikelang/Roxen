@@ -1,4 +1,4 @@
-/* $Id: builders.pike,v 1.12 1997/08/13 03:02:45 grubba Exp $ */
+/* $Id: builders.pike,v 1.13 1997/08/19 07:03:27 per Exp $ */
 
 #include <module.h>
 #include <confignode.h>
@@ -48,7 +48,6 @@ void low_build_variables(object node, mapping from)
 	else if(sscanf(m[i][VAR_NAME], "%s:%s", base, name) == 2)
 	{
 	  sscanf(name, "%*[\t ]%s", name);
-	  m[i][VAR_NAME] = name;
 	  o=node->descend(base);
 	  o->describer = describe_holder;
 	  o->data = base;

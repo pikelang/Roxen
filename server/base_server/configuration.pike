@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.60 1997/08/18 13:57:33 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.61 1997/08/19 07:03:24 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -2415,13 +2415,32 @@ string desc()
 
   if(!sizeof(QUERY(Ports)))
   {
-//    foreach(roxen->configuration_interface()
-//    foreach(roxen->configurations, object c)
-//    {
-//      if(c->modules["ip-less_hosts"])
-//	handlers += ({ http_encode_string("/Configurations/"+c->name) });
-//    }
-    res="There are no ports configured<br>\n";
+/*    array ips = roxen->configuration_interface()->ip_number_list;*/
+/*    if(!ips) roxen->configuration_interface()->init_ip_list;*/
+/*    ips = roxen->configuration_interface()->ip_number_list;*/
+/*    foreach(ips||({}), string ip)*/
+/*    {*/
+      
+/*    }*/
+
+    array handlers = ({});
+    foreach(roxen->configurations, object c)
+      if(c->modules["ip-less_hosts"])
+	handlers+=({({http_encode_string("/Configurations/"+c->name),
+			strlen(c->query("name"))?c->query("name"):c->name})});
+
+    
+    if(sizeof(handlers)==1)
+    {
+      res = "This server is handled by the ports in <a href=\""+handlers[0][0]+
+	"\">"+handlers[0][1]+"</a><br>\n";
+    } else if(sizeof(handlers)) {
+      res = "This server is handled by the ports in any of the following servers:<br>";
+      foreach(handlers, array h)
+	res += "<a href=\""+h[0]+"\">"+h[1]+"</a><br>\n";
+    } else
+      res=("There are no ports configured, and no virtual server seems "
+	   "to have support for ip-less virtual hosting enabled<br>\n");
   }
   
   foreach(QUERY(Ports), port)
@@ -2443,10 +2462,10 @@ string desc()
       prt += (gethostname()/".")[0] + "." + QUERY(Domain);
     prt += ":"+port[0]+"/";
     if(port_open( port ))
-      res += "<a target=server_view href=\""+prt+"\">"+prt+"</a>\n<br>";
+      res += "<font color=darkblue><b>Open:</b></font> <a target=server_view href=\""+prt+"\">"+prt+"</a> \n<br>";
     else
       res += "<font color=red><b>Not open:</b> <a target=server_view href=\""+
-	prt+"\">"+prt+"</a></font><br>\n";
+	prt+"\">"+prt+"</a></font> <br>\n";
   }
   return (res+"<font color=darkgreen>Server URL:</font> <a target=server_view "
 	  "href=\""+query("MyWorldLocation")+"\">"+query("MyWorldLocation")+"</a><p>");

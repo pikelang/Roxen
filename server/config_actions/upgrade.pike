@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.4 1997/08/19 05:55:41 per Exp $
+ * $Id: upgrade.pike,v 1.5 1997/08/19 07:03:30 per Exp $
  */
 
 inherit "roxenlib";
@@ -48,7 +48,8 @@ void find_modules(int mode)
   foreach(indices(modules), string mod)
   {
     mapping m = extract_module_info(modules[mod]);
-    if(m->version) rm[mod] = m;
+    if(!m->version) m->version="0.0 (Unknown)";
+    rm[mod] = m;
   }
   modules = rm;
 }
@@ -65,11 +66,11 @@ string initial_form(object id)
      "<font size=+1>What components do you want to upgrade?</font><br>\n"
      "</tr><tr><td  colspan=2>\n"
      "<input type=hidden name=action value="+id->variables->action+">\n"
-     "<input type=radio name=how value=1> All installed modules<br>\n"
-     "<input type=radio name=how checked value=0> All used modules<br>\n"
-     "<input type=radio name=how value=2> Check for new (previously "
+     "<input type=radio name=how value=1> All installed modules (all modules in your module path)<br>\n"
+     "<input type=radio name=how checked value=0> All currently enabled modules in all virtual servers <br>\n"
+     "<input type=radio name=how value=2> New (previously "
      "uninstalled) modules<br>\n"
-     "<input type=radio name=how value=3> Update actions and server templates "
+     "<input type=radio name=how value=3> Actions and server templates "
      "</tr><tr><td>"
      "<input type=submit name=ok value=\" Ok \"></form>\n"
      "</td><td align=right>"
@@ -177,15 +178,14 @@ string new_form(object id, object rpc)
   foreach(sort(indices(rm)), string s)
     if(!modules[s])
     {
-      if(Stdio.file_size(rm[s]->filename) > 0)
+/*      if(Stdio.file_size(rm[s]->filename) > 0)
 	werror("Module "+s+" present, but won't load.\n");
-      else {
+      else { */
 	num++;
 	res += ("<tr bgcolor=#f0f0ff><td><b><font size=+1><input type=checkbox name=M_"+s+"> "+
 		rm[s]->name+"</font></b></td><td><b><font size=+1>"+rm[s]->filename+"</font></b></td><td><b><font size=+1>"+
 		rm[s]->version+"</font></b></td><td></tr><tr><td colspan=3><font size=-1>"+
 		rm[s]->doc+"</font><br><p><br></td></tr>\n");
-      }
     }
   if(num)
     res += "</table>";
@@ -208,7 +208,7 @@ mapping comps=([]);
 
 mixed parse_expression(string expr)
 {
-  return compile_string("mixed e="+expr+";")()->e;
+  catch {return compile_string("mixed e="+expr+";")()->e;};
 }
 
 void recurse_one_dir(string d)
@@ -255,6 +255,8 @@ void update_comps()
   comps = ([]);
   recurse_one_dir("config_actions/");
   recurse_one_dir("server_templates/");
+  recurse_one_dir("bin/");
+  recurse_one_dir("languages/");
 }
 
 
@@ -345,7 +347,7 @@ string handle_components(object id, object rpc)
 	      rm[s]->name+"</font></b></td><td><b><font size=+1>"+
 	      rm[s]->fname+"</font></b></td><td><b><font size=+1>"+
 	      rm[s]->version+"</font></b></td><td><b><font size=+1>"+
-	      (comps[s]->version||"New")+"</font></b></td><td></tr><tr><td colspan=3><font size=-1>"+
+	      (comps[s]?comps[s]->version:"New")+"</font></b></td><td></tr><tr><td colspan=3><font size=-1>"+
 	      rm[s]->doc+"</font><br><p><br></td></tr>\n");
       }
     }
@@ -378,7 +380,6 @@ string handle(object id)
     "<td>Available version</td></tr>\n";
   int num;
 
-  
   if(id->variables->how || id->variables->go)
   {
     object rpc;
@@ -402,6 +403,7 @@ string handle(object id)
     mapping mv = rpc->module_versions( modules );
 
     foreach(sort(indices(modules)), string m)
+    {
       if(mv[m] && (is_older(modules[m]->version, mv[m])))
       {
 	num++;
@@ -412,6 +414,7 @@ string handle(object id)
 		(mv[m]?mv[m]:"?")+"</tr>"
 		"\n");
       }
+    }
     if(num)
       res += "</table>";
     else
@@ -424,7 +427,6 @@ string handle(object id)
       "<td><input type=submit name=cancel value=\" Cancel \"></table></form>\n";
     return res;
   }
-
+  
   return initial_form(id);
 }
-

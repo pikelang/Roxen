@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.38 1997/08/18 00:37:51 per Exp $ */
+/* $Id: describers.pike,v 1.39 1997/08/19 07:03:28 per Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -172,6 +172,15 @@ string describe_errors(object node)
 //+"</pre>");
 }
 
+string module_var_name(object n)
+{
+  string na = n->data[VAR_NAME];
+  if(n->up->describer==describe_holder) {
+    sscanf(na, "%*s:%*[ ]%s", na);
+  }
+  return na;
+}
+
 array|string describe_module_variable(object node)
 {
   string res, err;
@@ -185,15 +194,15 @@ array|string describe_module_variable(object node)
     
   if(node->folded)
     if(node->error)
-      return "<b>Error in:</b> "+link("<b>"+node->data[VAR_NAME]+"</b>");
+      return "<b>Error in:</b> "+link("<b>"+module_var_name(node)+"</b>");
     else
-      return link(node->data[VAR_NAME])
-	+ ": <i>" + describe_variable_as_text(node->data) + "</i>";
+      return link(module_var_name(node))+": <i>" +
+	describe_variable_as_text(node->data) + "</i>";
 
   if(node->error)
     err = "<font size=\"+1\"><b>"+node->error+"</b></font><br>";
 
-  res = describe_variable_low(node->data, node->path(1));
+  res = describe_variable_low(node->data, node->path(1),0,module_var_name(node));
 
   if(res)
     return ({ "<form method=post action=/(set)"+node->path(1)+">" 

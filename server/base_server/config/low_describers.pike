@@ -1,4 +1,4 @@
-/* $Id: low_describers.pike,v 1.11 1997/08/18 00:37:52 per Exp $ */
+/* $Id: low_describers.pike,v 1.12 1997/08/19 07:03:28 per Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
@@ -360,7 +360,8 @@ int module_wanted(mapping mod_info, object module, function check)
   return check(module, mod_info);
 }
 
-string describe_variable_low(mixed *var, mixed path, int|void really_short)
+string describe_variable_low(mixed *var, mixed path, int really_short,
+			     string|void name)
 {
   string res;
   
@@ -515,7 +516,7 @@ string describe_variable_low(mixed *var, mixed path, int|void really_short)
 
   /* Now in res: <input ...> */
   
-  res = var[VAR_NAME] + "<br><dd>" + res;
+  res = (name||var[VAR_NAME]) + "<br><dd>" + res;
   if(roxen->QUERY(DOC))
     return res + "<br>" + "<p>" + var[VAR_DOC_STR] + "<p>" 
       + describe_type(var[VAR_TYPE], var[VAR_MISC]) + "<p>";

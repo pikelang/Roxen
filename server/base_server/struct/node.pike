@@ -1,4 +1,4 @@
-/* $Id: node.pike,v 1.5 1997/08/12 16:58:36 grubba Exp $ */
+/* $Id: node.pike,v 1.6 1997/08/19 07:03:29 per Exp $ */
 int folded=1, type;
 mixed data;
 function describer;
@@ -85,6 +85,7 @@ void clear()
   object tmp;
   current=0;
   node=down;
+  below=([]);
   while(node)
   {
     tmp=node->next; 
