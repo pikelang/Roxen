@@ -1,6 +1,6 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
-string cvs_version = "$Id: http.pike,v 1.5 1996/12/05 03:01:04 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.6 1996/12/08 02:58:13 neotron Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
@@ -125,8 +125,7 @@ private int really_set_config(array mod_config)
 {
   string url, m;
   string base;
-  base = roxen->query("MyWorldLocation");
-  base = base[..strlen(base)];
+  base = roxen->query("MyWorldLocation")||"/";
   my_fd->set_blocking();
   roxen->current_configuration = conf;
 
