@@ -76,3 +76,7 @@ and Roxen WebServer <= 3.3.
  - Special code for Roxen SiteBuilder/Platform/CMS has been removed.
    If you want to run Roxen SiteBuilder/Platform/CMS you'll have to
    stick to Roxen WebServer.
+
+ - Default image format for gtext images is now PNGs with alpha
+   channels. Alter you gtext tags to use format="gif" for the old
+   behaviour.
