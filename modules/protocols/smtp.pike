@@ -1,12 +1,12 @@
 /*
- * $Id: smtp.pike,v 1.69 1999/03/12 17:56:53 grubba Exp $
+ * $Id: smtp.pike,v 1.70 1999/08/10 18:51:37 grubba Exp $
  *
  * SMTP support for Roxen.
  *
  * Henrik Grubbström 1998-07-07
  */
 
-constant cvs_version = "$Id: smtp.pike,v 1.69 1999/03/12 17:56:53 grubba Exp $";
+constant cvs_version = "$Id: smtp.pike,v 1.70 1999/08/10 18:51:37 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -951,6 +951,18 @@ static class Smtp_Connection {
 	    }
 	  } else {
 	    // Remote address.
+
+	    if (!sizeof(conf->get_providers("smtp_relay") || ({}))) {
+	      // No relay module.
+#ifdef SMTP_DEBUG
+	      report_notice(sprintf("SMTP: Relaying to address %s denied: "
+				    "No relay module.\n",
+				    recipient));
+#endif /* SMTP_DEBUG */
+	      conf->log(([ "error":405 ]), id);
+	      send(550, ({ "Relaying denied." }));
+	      return;
+	    }
 
 	    // Check if we allow relaying.
 
