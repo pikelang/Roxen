@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.115 1998/03/10 22:19:23 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.116 1998/03/10 22:23:12 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -727,7 +727,7 @@ void start(int|void val, object|void conf)
 
   if(conf)
   {
-    mkdirhier( query( "cache_dir" )+".foo" );
+    mkdirhier( query( "cache_dir" )+"/.foo" );
 #ifndef __NT__
 #if efun(chmod)
     // FIXME: Should this error be propagated?
