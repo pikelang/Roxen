@@ -12,7 +12,7 @@
 
 #define old_rxml_compat 1
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.21 1999/09/23 20:26:44 nilsson Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.22 1999/09/24 16:56:59 nilsson Exp $";
 constant thread_safe=1;
 
 constant language = roxen->language;
@@ -26,11 +26,6 @@ inherit "roxenlib";
 int bytes;  // Holds the number of bytes parsed
 
 // ------------- Module registration and configuration. ---------------
-
-string comment()
-{
-  return query("toparse")*", ";
-}
 
 string status()
 {
@@ -588,5 +583,3 @@ void define_API_functions()
   add_api_function("old_rxml_warning", api_old_rxml_warning, ({ "string", "string" }));
   add_api_function("time_quantifier", time_quantifier, ({ "mapping" }));
 }
-
-int may_disable()  { return 0; }
