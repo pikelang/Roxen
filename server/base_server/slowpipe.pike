@@ -9,7 +9,7 @@
  * performance. We'll see.
  */
 
-constant cvs_version="$Id: slowpipe.pike,v 1.7 2000/02/20 17:41:34 nilsson Exp $";
+constant cvs_version="$Id: slowpipe.pike,v 1.8 2000/11/16 11:31:13 per Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG
@@ -56,14 +56,16 @@ void output (Stdio.File fd) {
 }
 
 //add a fileobject to the write-queue
-//different semantics from smartpipe: input is read immediately and not
-//when sending the results. Will use more memory (and save FDs), we can
-//change this at a later moment
+int file_len;
+Stdio.File fd_in;
 void input (Stdio.File what, int len) {
   THROTTLING_DEBUG("adding file input: len="+len);
   if (len<=0)
-    len=0x7fffffff;
-  tosend+=what->read(len);
+    file_len=0x7fffffff;
+  else
+    file_len = len;
+  fd_in = what;
+//   tosend+=what->read(len);
 }
 
 //add a string to the write-queue
@@ -99,15 +101,28 @@ private void write_some () {
   int towrite;
   //have we finished?
 
-  THROTTLING_DEBUG("write_some: still "+strlen(tosend)+" bytes to be sent");
-  if (strlen(tosend)<=0) {
+  if( !strlen(tosend) )
+  {
+    if( fd_in )
+    {
+      catch(tosend = fd_in->read( min( file_len, 32768 ) ));
+      file_len -= strlen( tosend );
+      if( (file_len <= 0) || (strlen( tosend ) == 0) )
+      {
+	catch(fd_in->close());
+	fd_in = 0;
+      }
+      write_some();
+      return;
+    }
     finish();
     return;
   }
+  THROTTLING_DEBUG("write_some: still "+strlen(tosend)+" bytes to be sent");
 
   //are we throttling?
   if (!fill_rate) {
-    towrite=0xfffffff;
+    towrite=32768;
   } else {
     //let's fill the bucket up
     int now=time(1);
