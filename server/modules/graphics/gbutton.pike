@@ -25,7 +25,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.99 2003/07/04 12:07:36 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.100 2003/09/22 15:55:40 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -721,24 +721,26 @@ mapping find_internal(string f, RequestID id)
   return button_cache->http_file_answer( (f/".")[0], id );
 }
 
-mapping __stat_cache = ([ ]);
 int get_file_stat( string f, RequestID id  )
 {
   int res;
-
+  mapping stat_cache;
+  
   //  -1 is used to cache negative results. When SiteBuilder crawler runs
   //  we must let the stat_file() run unconditionally to register
   //  dependencies properly.
-  if (!id->misc->persistent_cache_crawler)
-    if (res = __stat_cache[f])
-      return (res > 0) && res;
+  if (stat_cache = id->misc->gbutton_statcache) {
+    if (!id->misc->persistent_cache_crawler)
+      if (res = stat_cache[f])
+	return (res > 0) && res;
+  } else
+    stat_cache = id->misc->gbutton_statcache = ([ ]);
   
-  call_out( m_delete, 10, __stat_cache, f );
   int was_internal = id->misc->internal_get;
   id->misc->internal_get = 1;
-  res = __stat_cache[ f ] = (id->conf->stat_file( f,id )
-			     || file_stat( f )
-			     || ({ 0,0,0,0 }))[ST_MTIME] || -1;
+  res = stat_cache[ f ] = (id->conf->stat_file( f,id ) ||
+			   file_stat( f ) ||
+			   ({ 0,0,0,0 }) )[ST_MTIME] || -1;
   if (!was_internal)
     m_delete(id->misc, "internal_get");
   return (res > 0) && res;
