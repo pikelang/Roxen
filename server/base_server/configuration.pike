@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.265 2000/02/20 17:41:32 nilsson Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.266 2000/02/28 06:24:01 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -3084,7 +3084,11 @@ epostadresser, samt för att generera skönskvärdet för serverurl variablen.");
   moduler för att bygga upp absoluta URLer från en relativ URL.");
 
   defvar("URLs", ({"http://*:80/"}), "URLs", TYPE_STRING_LIST|VAR_INITIAL,
-         "Bind to these URLs" );
+         "Bind to these URLs. You can use '*' and '?' to perform globbing "
+         "(using any of these will default to binding to all IP-numbers on "
+         "your machine).  The possible protocols are http, fhttp (a faster "
+         "version of the normal HTTP protocol, but not 100% compatible with "
+         "all modules) https, ftp, ftps, gopher and tetris.");
 
   defvar("InternalLoc", "/_internal/",
 	 "Internal module resource mountpoint",
