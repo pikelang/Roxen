@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.411 2003/11/03 13:52:37 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.412 2003/11/03 23:02:13 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2289,7 +2289,12 @@ static void create(object f, object c, object cc)
 {
   if(f)
   {
-    f->set_nonblocking(got_data, f->query_write_callback(), end);
+    if (f->query_accept_callback)
+      // For SSL.sslfile.
+      f->set_nonblocking(got_data, f->query_write_callback(), end, 0, 0,
+			 f->query_accept_callback());
+    else
+      f->set_nonblocking(got_data, f->query_write_callback(), end);
     my_fd = f;
     MARK_FD("HTTP connection");
     if( c ) port_obj = c;
