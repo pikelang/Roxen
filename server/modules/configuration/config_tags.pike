@@ -516,7 +516,7 @@ string get_var_form( string s, object mod, object id )
      foreach(map( select_from, replace, "_", " " ), string f)
      {
        if( search( f, "\0" ) != -1 )
-         continue; /* f -= "\0"; // Presubaly a bug in Image.TTF. */
+         continue; /* f -= "\0"; // Presumably a bug in Image.TTF. */
        if( strlen( f ) )
        {
          res += "<option"+((f == replace(var[VAR_VALUE],"_"," "))?
