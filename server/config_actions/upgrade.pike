@@ -1,5 +1,5 @@
 /*
- * $Id: upgrade.pike,v 1.25 1997/09/14 14:14:44 per Exp $
+ * $Id: upgrade.pike,v 1.26 1997/09/14 18:10:54 grubba Exp $
  */
 constant name= "Maintenance//Upgrade components from roxen.com...";
 constant doc = "Selectively upgrade Roxen components from roxen.com.";
@@ -184,12 +184,15 @@ string upgrade_server_help="";
 array (string) upgrade_server_list()
 {
   upgrade_server_help="<b>Upgrade servers</b><dl>";
-  upgrade_servers = ([]);
   array res=({});
-  foreach(Stdio.read_bytes("etc/upgrade_servers")/"\n", string l)
-  {
-    if(strlen(l) && (l[0] != '#'))
-    {
+  string|array servers = Stdio.read_bytes("etc/upgrade_servers");
+  if (servers) {
+    servers = Array.filter(servers/"\n", lambda(string l) {
+      return sizeof(l) && (l[0] != '#');
+    });
+  }
+  if (servers && sizeof(servers)) {
+    foreach(servers, string l) {
       l = ((l/"\t")-({""}))*"\t";
       string server, help, url;
       sscanf(l, "%s\t%s\t%s", server, url, help);
@@ -197,8 +200,10 @@ array (string) upgrade_server_list()
       upgrade_servers[server]=url;
       upgrade_server_help+="<dt compact><b>"+server+"</b><dd>"+help+"\n";
     }
+    upgrade_server_help += "</dl>";
+  } else {
+    return ({ "Official Server" });
   }
-  upgrade_server_help += "</dl>";
   return res;
 }
 
