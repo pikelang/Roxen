@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.137 2000/06/20 15:44:33 kuntri Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.138 2000/07/05 22:10:20 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -590,82 +590,120 @@ array(string)|string tag_configimage(string t, mapping m, RequestID id)
   return ({ Roxen.make_tag("img", m) });
 }
 
-string tag_date(string q, mapping m, RequestID id)
-{
-  int t=(int)m["unix-time"] || time(1);
-  t+=Roxen.time_dequantifier(m);
+class TagDate {
+  inherit RXML.Tag;
+  constant name = "date";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  if(!(m->brief || m->time || m->date))
-    m->full=1;
+  class Frame {
+    inherit RXML.Frame;
 
-  if(m->part=="second" || m->part=="beat")
-    NOCACHE();
-  else
-    CACHE(60); // One minute is good enough.
+    array do_return(RequestID id) {
+      int t=(int)args["unix-time"] || time(1);
+      if(args->timezone=="GMT") t += localtime(t)->timezone;
+      t+=Roxen.time_dequantifier(args);
 
-  return Roxen.tagtime(t, m, id, language);
+      if(!(args->brief || args->time || args->date))
+	args->full=1;
+
+      if(args->part=="second" || args->part=="beat" || args->strftime)
+	NOCACHE();
+      else
+	CACHE(60);
+
+      result = Roxen.tagtime(t, args, id, language);
+      return 0;
+    }
+  }
 }
 
-string|array(string) tag_insert( string tag, mapping m, RequestID id )
-{
-  string n;
+class TagInsert {
+  inherit RXML.Tag;
+  constant name = "insert";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  if(n = m->variable)
-  {
-    if(zero_type(RXML.user_get_var(n, m->scope)))
-      RXML.run_error("No such variable ("+n+").\n", id);
-    string var=(string)RXML.user_get_var(n, m->scope);
-    return m->quote=="none"?var:({ Roxen.html_encode_string(var) });
-  }
+  class Frame {
+    inherit RXML.Frame;
 
-  if(n = m->variables || m->scope) {
-    RXML.Context context=RXML.get_context();
-    if(n!="variables")
-      return ({ Roxen.html_encode_string(Array.map(sort(context->list_var(m->scope)),
-						   lambda(string s) {
-						     return sprintf("%s=%O", s, context->get_var(s, m->scope) );
-						   } ) * "\n")
-      });
-    return ({ String.implode_nicely(sort(context->list_var(m->scope))) });
-  }
+    array do_return(RequestID id) {
 
-  if(m->scopes) {
-    return ({ String.implode_nicely(sort(RXML.get_context()->list_scopes())) });
-  }
+      string n;
 
-  if(m->file)
-  {
-    if(m->nocache) {
-      int nocache=id->pragma["no-cache"];
-      id->pragma["no-cache"] = 1;
-      n=id->conf->try_get_file(Roxen.fix_relative(m->file,id),id);
-      if(!n) RXML.run_error("No such file ("+m->file+").\n");
-      id->pragma["no-cache"] = nocache;
-      return m->quote!="html"?n:({ Roxen.html_encode_string(n) });
+      if(n = args->variable) {
+	if(zero_type(RXML.user_get_var(n, args->scope)))
+	  RXML.run_error("No such variable ("+n+").\n", id);
+	result=(string)RXML.user_get_var(n, args->scope);
+	if(args->quote!="none") result=Roxen.html_encode_string(result);
+	return 0;
+      }
+
+      if(n = args->variables || args->scope) {
+	RXML.Context context=RXML.get_context();
+	if(n!="variables")
+	  result = Roxen.html_encode_string(Array.map(sort(context->list_var(args->scope)),
+						      lambda(string s) {
+							return sprintf("%s=%O", s, context->get_var(s, args->scope) );
+						      } ) * "\n");
+	else
+	  result = String.implode_nicely(sort(context->list_var(args->scope)));
+	return 0;
+      }
+
+      if(n = args->scopes) {
+	RXML.Context context=RXML.get_context();
+	if(n=="full") {
+	  result = "";
+	  foreach(sort(context->list_scopes()), string scope) {
+	    result += scope+"\n";
+	    result += Roxen.html_encode_string(Array.map(sort(context->list_var(args->scope)),
+						      lambda(string s) {
+							return sprintf("%s.%s=%O", scope, s,
+								       context->get_var(s, args->scope) );
+						      } ) * "\n");
+	    result += "\n";
+	  }
+	  return 0;
+	}
+	result = String.implode_nicely(sort(context->list_scopes()));
+	return 0;
+      }
+
+      if(args->file) {
+	if(args->nocache) {
+	  int nocache=id->pragma["no-cache"];
+	  id->pragma["no-cache"] = 1;
+	  result=id->conf->try_get_file(args->file,id);
+	  if(!result) RXML.run_error("No such file ("+args->file+").\n");
+	  id->pragma["no-cache"] = nocache;
+	}
+	else
+	  result=id->conf->try_get_file(args->file,id);
+	if(args->quote=="html") result=Roxen.html_encode_string(result);
+
+#ifdef OLD_RXML_COMPAT
+	result=Roxen.parse_rxml(result, id);
+#endif
+
+	return 0;
+      }
+
+      if(args->href && query("insert_href")) {
+	if(args->nocache)
+	  NOCACHE();
+	else
+	  CACHE(60);
+	Protocols.HTTP q=Protocols.HTTP.get_url(args->href);
+	if(q && q->status>0 && q->status<400) {
+	  result=q->data();
+	  if(args->quote!="html") result=Roxen.html_encode_string(result);
+	  return 0;
+	}
+	RXML.run_error(q ? q->status_desc + "\n": "No server response\n");
+      }
+
+      RXML.parse_error("No correct insert attribute given.\n");
     }
-    n=id->conf->try_get_file(Roxen.fix_relative(m->file,id),id);
-    if(!n) RXML.run_error("No such file ("+m->file+").\n");
-    return m->quote!="html"?n:({ Roxen.html_encode_string(n) });
   }
-
-  if(m->href && query("insert_href")) {
-    if(m->nocache)
-      NOCACHE();
-    else
-      CACHE(60);
-    Protocols.HTTP q=Protocols.HTTP.get_url(m->href);
-    if(q && q->status>0 && q->status<400)
-      return ({ m->quote!="html"?q->data():Roxen.html_encode_string(q->data()) });
-    RXML.run_error(q ? q->status_desc + "\n": "No server response\n");
-  }
-
-  if(m->var) {
-    object|array tagfunc=RXML.get_context()->tag_set->get_tag("!--#echo");
-    if(!tagfunc) RXML.run_error("No SSI module added.\n");
-    return ({ 1, "!--#echo", m});
-  }
-
-  RXML.parse_error("No correct insert attribute given.\n");
 }
 
 string tag_return(string tag, mapping m, RequestID id)
