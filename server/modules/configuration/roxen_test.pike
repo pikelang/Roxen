@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.1 2000/11/11 04:23:09 nilsson Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.2 2000/11/11 06:23:10 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_ZERO;
 constant module_name = "Roxen self test module";
@@ -33,9 +33,46 @@ class MockID(Configuration conf) {
 
   string realfile="etc/roxen_test/filesystem/index.html";
   string not_query="/index.html";
+  string raw_url="/index.html";
   string method="GET";
   string remoteaddr="10.0.1.23";
+
+  object clone_me() {
+    return MockID(conf);
+  }
+
 }
+
+string canon_html(string in) {
+  array tags=in/"<";
+  string ut=tags[0];
+  tags=tags[1..];
+
+  foreach(tags, string tag) {
+    string post="";
+    int xml;
+    if(sscanf(tag, "%s>%s", tag, post)!=2 &&
+       sscanf(tag, "%s>", tag)!=1 )
+      continue;
+
+    array args=tag/" ";
+    string name=args[0];
+    args=args[1..];
+    if(sizeof(args) && args[-1]=="/") {
+      xml=1;
+      args=args[..sizeof(args)-2];
+    }
+    args=sort(args);
+    ut+="<"+name;
+    if(sizeof(args)) ut+=" "+(args*" ");
+    if(xml) ut+=" /";
+    ut+=">"+post;
+  }
+  return ut;
+}
+
+
+// --- XML-based test files -------------------------------
 
 void xml_add_module(string t, mapping m, string c) {
   return;
@@ -61,8 +98,11 @@ void xml_test(string t, mapping m, string c) {
     fails++;
     lfails++;
     report_error("Test \"%s\"\nFailed (backtrace)\n",rxml);
+    report_error("%s\n",describe_backtrace(err));
     return;
   }
+
+  a_res = canon_html(a_res);
 
   if(a_res != w_res) {
     fails++;
@@ -86,8 +126,11 @@ void run_xml_tests(string data) {
 				    "comment": xml_comment,
   ]) )->finish(data);
   report_debug("Did %d tests, failes on %d tests.\n", ltests, lfails);
-  if(ltests<sizeof(data/"</rxml>")-1) report_warning("Possibly XML error in testsuite.\n");
+  if(ltests<sizeof(data/"</test>")-1) report_warning("Possibly XML error in testsuite.\n");
 }
+
+
+// --- Mission control ------------------------
 
 void find_tests(string path) {
   report_debug("Looking for tests in %s\n",path);
