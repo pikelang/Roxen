@@ -15,7 +15,7 @@
 #define _rettext _defines[" _rettext"]
 #define _ok _defines[" _ok"]
 
-constant cvs_version="$Id: rxmlparse.pike,v 1.47 2000/04/06 06:16:06 wing Exp $";
+constant cvs_version="$Id: rxmlparse.pike,v 1.48 2000/08/28 06:51:28 per Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -306,11 +306,11 @@ string api_read_file(RequestID id, string file) {
   return id->conf->try_get_file(Roxen.fix_relative(file,id),id);
 }
 
-void add_api_function(string name, function f, void|array(string) types)
-{
-  if(this_object()["_api_functions"])
-    this_object()["_api_functions"][name] = ({ f, types });
-}
+// void add_api_function(string name, function f, void|array(string) types)
+// {
+//   if(this_object()["_api_functions"])
+//     this_object()["_api_functions"][name] = ({ f, types });
+// }
 
 
 // Variables after 0 are optional.
