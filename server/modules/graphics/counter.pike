@@ -1,4 +1,4 @@
-// $Id: counter.pike,v 1.24 1999/01/07 08:09:20 neotron Exp $
+// $Id: counter.pike,v 1.25 1999/01/15 12:35:01 neotron Exp $
 // 
 // Roxen Graphic Counter Module	by Jordi Murgo <jordi@lleida.net>
 // Modifications  1 OCT 1997 by Bill Welliver <hww3@riverweb.com>
@@ -23,6 +23,9 @@
 // -----------------------------------------------------------------------
 //
 // $Log: counter.pike,v $
+// Revision 1.24  1999/01/07 08:09:20  neotron
+// Removed duplicate return.
+//
 // Revision 1.23  1998/12/17 22:59:46  neotron
 // Applied patch by Jan Legenhausen.
 //
@@ -127,7 +130,7 @@
 // Initial revision
 //
 
-string cvs_version = "$Id: counter.pike,v 1.24 1999/01/07 08:09:20 neotron Exp $";
+string cvs_version = "$Id: counter.pike,v 1.25 1999/01/15 12:35:01 neotron Exp $";
 
 string copyright = ("<BR>Copyright 1997 "
 		    "<a href=http://savage.apostols.org/>Jordi Murgo</A> and "
@@ -297,18 +300,6 @@ mapping ppmlist(string font, string user, string dir)
 	
   return http_string_answer( out );
 }
-
-//
-// HEX to Array Color conversion.
-//
-array (int) mkcolor(string color)
-{
-  int c = (int) ( "0x"+(color-" ") );
-  return ({ ((c >> 16) & 0xff),
-	      ((c >>  8) & 0xff),
-	      (c        & 0xff) });
-}
-
 //
 // Generation of Standard Font Counters
 //
@@ -339,19 +330,19 @@ mapping find_file_font( string f, object id )
     counter = "0" + counter;
   
   object txt  = fnt->write(counter);
-  object img  = image(txt->xsize(), txt->ysize(), @mkcolor(bg));
+  object img  = image(txt->xsize(), txt->ysize(), @parse_color(bg));
 
   if(scale != 1)
     if(rot)
-      img = img->paste_alpha_color( txt, @mkcolor(fg) )->scale(scale)
-	->rotate(rot, @mkcolor(bg));
+      img = img->paste_alpha_color( txt, @parse_color(fg) )->scale(scale)
+	->rotate(rot, @parse_color(bg));
     else
-      img = img->paste_alpha_color( txt, @mkcolor(fg) )->scale(scale);
+      img = img->paste_alpha_color( txt, @parse_color(fg) )->scale(scale);
   else if(rot)
-    img = img->paste_alpha_color( txt, @mkcolor(fg) )->rotate(rot,
-							      @mkcolor(bg));
+    img = img->paste_alpha_color( txt, @parse_color(fg) )->rotate(rot,
+							      @parse_color(bg));
   else
-    img = img->paste_alpha_color( txt, @mkcolor(fg) );
+    img = img->paste_alpha_color( txt, @parse_color(fg) );
   
 #if constant(Image.GIF)
   // Use the newer, faster encoding if available.
@@ -365,12 +356,12 @@ mapping find_file_font( string f, object id )
   }
   
   if(trans)
-    return http_string_answer(GIF.encode_trans(img, ct, @mkcolor(bg)), 
+    return http_string_answer(GIF.encode_trans(img, ct, @parse_color(bg)), 
 			      "image/gif");
   else
     return http_string_answer(GIF.encode(img, ct),"image/gif");
 #else
-  return http_string_answer(img->togif( @(trans?mkcolor(bg):({})) ),
+  return http_string_answer(img->togif( @(trans?parse_color(bg):({})) ),
 			    "image/gif" );
 #endif
 }
@@ -421,14 +412,16 @@ mapping find_file_ppm( string f, object id )
 	  || catch( digit = PNM.decode( buff ))
 	  || !digit)
       {
+#if constant(Image.GIF) && constant(Image.GIF.decode)
 	buff = Stdio.read_bytes( dir + fontname+"/"+dn+".gif" ); // Try .gif
 	if(!buff)
 	  return ppmlist( fontname, user, dir );	// Failed !!
 	mixed err;
-#if constant(Image.GIF) && constant(Image.GIF.decode)
-	err =  catch( digit = GIF.decode( buff ));
+	if(catch( digit = GIF.decode( buff )))
+	  // Failed to decode GIF.
+	  return ppmlist( fontname, user, dir );
 #endif
-	if(err || !digit)
+	if(!digit)
 	  return ppmlist( fontname, user, dir );
       }
       
@@ -443,7 +436,7 @@ mapping find_file_ppm( string f, object id )
   
 
 result = image(digits[0]->xsize()*2 * numdigits,
-		 digits[0]->ysize(), @mkcolor(bg));
+		 digits[0]->ysize(), @parse_color(bg));
   for( int dn=0; dn < numdigits; dn++ )
   {
     int c = (int)strcounter[dn];
@@ -454,11 +447,11 @@ result = image(digits[0]->xsize()*2 * numdigits,
   //
   result = result->copy(0,0,currx-1,result->ysize()-1);
   if(fg != "n" )
-    result = result->color( @mkcolor(fg) );
+    result = result->color( @parse_color(fg) );
   if(scale != 1)
     result = result->scale(scale);
   if(rot)
-    result = result->rotate(rot, @mkcolor(bg));
+    result = result->rotate(rot, @parse_color(bg));
 #if constant(Image.GIF)  
   object ct = cache_lookup("counter_coltables", fontname);
   if(!ct) {
@@ -478,12 +471,12 @@ result = image(digits[0]->xsize()*2 * numdigits,
   }
   
   if(trans)
-    return http_string_answer(GIF.encode_trans(result, ct, @mkcolor(bg)), 
+    return http_string_answer(GIF.encode_trans(result, ct, @parse_color(bg)), 
 			      "image/gif");
   else
     return http_string_answer(GIF.encode(result, ct),"image/gif");
 #else
-  return http_string_answer(result->togif(@(trans?mkcolor(bg):({}))),
+  return http_string_answer(result->togif(@(trans?parse_color(bg):({}))),
 			    "image/gif");
 #endif
 }
@@ -507,7 +500,7 @@ string tag_counter( string tagname, mapping args, object id )
   if( args->version )
     return cvs_version;
   if( args->revision )
-    return "$Revision: 1.24 $" - "$" - " " - "Revision:";
+    return "$Revision: 1.25 $" - "$" - " " - "Revision:";
 
   //
   // bypass compatible accessed attributes

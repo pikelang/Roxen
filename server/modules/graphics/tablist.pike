@@ -1,5 +1,5 @@
 // The Tab lists tag module.
-string cvs_version = "$Id: tablist.pike,v 1.11 1998/03/07 18:42:34 noring Exp $";
+string cvs_version = "$Id: tablist.pike,v 1.12 1999/01/15 12:35:02 neotron Exp $";
 #include <module.h>
 
 inherit "module";
@@ -41,14 +41,6 @@ mapping make_arguments(string filename)
   filename=replace(filename,to,from);
   
   return decode_value(filename);
-}
-
-array (int) make_color(string s)
-{
-  int c = (int) ("0x"+(s-" ")[1..]);
-  return ({ ((c >> 16) & 0xff),
-	    ((c >>  8) & 0xff),
-	     (c        & 0xff) });
 }
 
 void draw_bg(object img, array (int) bg, array (int) tc)
@@ -241,9 +233,9 @@ mapping find_file(string filename, object request_id)
 
   string font = (string) (arguments->font || query("defaultfont"));
   if (font[0] != '/') font = query("fontpath") + font;
-  array (int) bg = make_color(arguments->bg||"#c0c0c0");  // Background color
-  array (int) tc = make_color(arguments->tc||"#d6c69c");  // Tab color
-  array (int) fc = make_color(arguments->fc||"#000000");  // Font color
+  array (int) bg = parse_color(arguments->bg||"#c0c0c0");  // Background color
+  array (int) tc = parse_color(arguments->tc||"#d6c69c");  // Tab color
+  array (int) fc = parse_color(arguments->fc||"#000000");  // Font color
 
   s = tab(name, selected, n, last, font, bg, tc, fc)->scale(scale)->togif(@bg);
   cache_set("tabs", filename, s);

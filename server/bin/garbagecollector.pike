@@ -6,7 +6,7 @@
  * doc = "This is the proxy garbage collector";
  */
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.12 1998/04/21 19:08:35 grubba Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.13 1999/01/15 12:35:00 neotron Exp $";
 
 //#define DEBUG
 
@@ -28,7 +28,9 @@ string _order(int from)
 
 int _num(string from)
 {
-  return (int)("0x"+from[strlen(from)-8..]);
+  int c;
+  sscanf(from[strlen(from)-8..], "%x", c);
+  return c;
 }
 
 
@@ -481,8 +483,8 @@ static void got_command(object o, string cmd)
     
     if(strlen(cmd) < 8)  break; // More needed.
 
-    l = (int)("0x"+(cmd[..7]-" "));
-    
+    sscanf(cmd[..7]-" ", "%x", l);
+
     if(strlen(cmd) < l+8) break; // More needed
 
     cmd=cmd[8..]; // Remove the 'length' field of this command.

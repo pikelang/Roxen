@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.116 1998/11/18 04:53:47 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.117 1999/01/15 12:34:59 neotron Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -20,13 +20,13 @@ object get_template(string t);
 
 #define LOCALE	LOW_LOCALE->config_interface
 
-#define dR "ff"
-#define dG "ff"
-#define dB "ff"
+#define dR 0xff
+#define dG 0xff
+#define dB 0xff
 
-#define bdR "00"
-#define bdG "50"
-#define bdB "90"
+#define bdR 0x00
+#define bdG 0x50
+#define bdB 0x90
 
 
 #define BODY "<body bgcolor=white text=black link=darkblue vlink=black alink=red>"
@@ -1109,7 +1109,7 @@ mapping(string:object) my_colortable = ([]);
 mapping auto_image(string in, object id)
 {
   string key, value;
-  array trans = ({ (int)("0x"+dR),(int)("0x"+dG),(int)("0x"+dB) });
+  array trans = ({ dR, dG, dB });
   mapping r;
   mixed e;
   object i;

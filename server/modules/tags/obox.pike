@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.9 1998/11/22 17:02:50 per Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.10 1999/01/15 12:35:03 neotron Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -54,8 +54,12 @@ static string title(mapping args)
   switch (args->style) {
   case "groupbox":
     if (!args->left && !args->fixedleft)
-      if (args->width && !args->fixedright) args->fixedleft = "7"; else args->left = "1";
-    if (!args->right && !args->fixedright) args->right = "1";
+      if (args->width && !args->fixedright)
+	args->fixedleft = "7";
+      else
+	args->left = "1";
+    if (!args->right && !args->fixedright)
+      args->right = "1";
     return sprintf("<tr><td colspan=2><font size=-3>&nbsp;</font></td>\n"
 		   "<td rowspan=3%s>&nbsp;<b>"		/* bgcolor */
 		   "%s%s%s"                 /* titlecolor, title, titlecolor */
@@ -135,8 +139,7 @@ string container_obox(string name, mapping args,
     s = title(args);
     s = "<table border=0 cellpadding=0 cellspacing=0" +
       (args->align?" align="+args->align:"") +
-      (args->width ? " width=" + args->width :
-       (!args->fixedleft && !args->fixedright ? " width=1" : "")) + ">\n" +
+      (args->width ? " width=" + args->width : "") + ">\n" +
       s +
       "<tr" +
       (args->bgcolor?" bgcolor="+args->bgcolor:"") +

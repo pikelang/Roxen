@@ -1,4 +1,4 @@
-// string cvs_version = "$Id: disk_cache.pike,v 1.39 1998/05/22 21:25:19 grubba Exp $";
+// string cvs_version = "$Id: disk_cache.pike,v 1.40 1999/01/15 12:34:57 neotron Exp $";
 #include <module.h>
 #include <stat.h>
 
@@ -375,7 +375,9 @@ class Cache {
   int check(int howmuch, int|void f)
   {
     command( "check", howmuch );
-    if(f) return (int)("0x"+(Stdio.read_bytes(QUERY(cachedir)+"size")-" "));
+    int c;
+    sscanf(Stdio.read_bytes(QUERY(cachedir)+"size")-" ", "%x", c);
+    if(f) return c;
     return 0;
   }
 }
