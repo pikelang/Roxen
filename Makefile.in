@@ -345,7 +345,8 @@ faked_pre_dist:
 	-@$(MAKE) depend
 	-@$(MAKE) run_autoconfig
 
-dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
+dist_files_and_type:
+	$(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	@if test -f $(SRCDIR)/VERSION; then :; else \
 	  echo 'You need to make pre_dist first!'; \
 	  exit 1; \
@@ -407,6 +408,9 @@ dist: $(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	  type="platform-$$type"; \
 	else :; fi; \
 	echo Type $$type.; \
+
+
+dist:	dist_files_and_type
 	echo Building full NDA distribution...; \
 	tar cf - $$version | gzip -9 >$$version-$$type-nda-full.tar.gz; \
 	if (cd $$version; make keep_dbapi || exit 1); then \
