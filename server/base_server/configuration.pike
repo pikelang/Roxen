@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.122 1998/04/26 19:17:38 wing Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.123 1998/04/27 11:55:50 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -799,17 +799,23 @@ public string status()
 public string *userinfo(string u, object|void id)
 {
   if(auth_module) return auth_module->userinfo(u);
+  else report_warning(sprintf("userinfo(): No authorization module\n"
+			      "%s\n", describe_backtrace(backtrace())));
 }
 
 public string *userlist(object|void id)
 {
   if(auth_module) return auth_module->userlist();
+  else report_warning(sprintf("userlist(): No authorization module\n"
+			      "%s\n", describe_backtrace(backtrace())));
 }
 
 public string *user_from_uid(int u, object|void id)
 {
   if(auth_module)
     return auth_module->user_from_uid(u);
+  else report_warning(sprintf("user_from_uid(): No authorization module\n"
+			      "%s\n", describe_backtrace(backtrace())));
 }
 
 
