@@ -16,7 +16,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.43 2000/08/17 01:16:31 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.44 2000/08/19 04:06:51 per Exp $";
 
 constant path = "config_interface/";
 
@@ -261,10 +261,10 @@ void start(int n, Configuration cfg)
   {
     charset_decoder = 0;
     cfg->add_modules(({
-      "awizard",      "config_tags", "config_userdb", "contenttypes",
-      "indexfiles",   "gbutton",     "wiretap",       "graphic_text",
-      "obox",         "pathinfo",    "pikescript",    "translation_mod",
-      "rxmlparse",    "rxmltags",    "tablist",       "update"
+      "config_tags", "config_userdb", "contenttypes",    "indexfiles",   
+      "gbutton",     "wiretap",       "graphic_text",    "obox",
+      "pathinfo",    "pikescript",    "translation_mod", "rxmlparse",
+      "rxmltags",    "tablist",       "update"
     }));
     catch {
 //       charset_encoder = Locale.Charset.encoder(QUERY(encoding), "?");

@@ -14,7 +14,7 @@ mixed parse( RequestID id )
   if( v->delete_user && v->delete_user!="")
   {
     id->misc->delete_old_config_user( v->delete_user );
-    return "";
+    return Roxen.http_redirect( "users.html", id );
   }
   foreach( sort( id->misc->list_config_users() ), string uid )
   {
@@ -25,14 +25,12 @@ mixed parse( RequestID id )
 	      LOCALE(227, "Delete") +" "+ u->real_name+" ("+uid+") "
 	      "</gbutton><br />");
     else
-      res += ("<dbutton gbutton-width='300' "
-	      "gbutton-font='&usr.gbutton-font;' "
-	      "gbutton-preparse='1' gbutton_title=' " +
-	      LOCALE(227, "Delete") +" "+ u->real_name+" ("+uid+")' "
-	      "page='delete_user'>"
-	      "<insert file='user_delete.pike?delete_user="
-	      + Roxen.html_encode_string(uid) + 
-	      "'></dbutton><br />");
+      res += 
+          ("<a href='user_delete.pike?delete_user="
+           + Roxen.html_encode_string(uid) +"&page=delete_user'>"
+           + "<gbutton width='300' font='&usr.gbutton-font;'> "
+           + LOCALE(227, "Delete") +" "+ u->real_name+" ("+uid+")"
+           + "</gbutton><br />\n\n");
   }
   return res;
 }

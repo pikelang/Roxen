@@ -1,54 +1,65 @@
 
-<topmenu selected="home"/>
+<topmenu selected="home" />
 <content>
 <cv-startpage>
-<awizard>
 
-<page name="top"><cf-perm perm="Edit Users">
-  <translate id="222" variable="var.create_txt">Create new user</translate>
-  <translate id="223" variable="var.delete_txt">Delete old user</translate>
-  <table border="0" cellpadding="5" cellspacing="0"><tr><td>
-  <button gbutton_title=" &var.create_txt; "
-          gbutton-icon_src="/internal-roxen-next"  gbutton-preparse="1"
-          gbutton-font="&usr.gbutton-font;"
-          gbutton-width="200"
-          gbutton-align_icon="right" page="create_user"/>
-  <br />
-  <button gbutton_title=" &var.delete_txt; "
-          gbutton-width="200"
-          gbutton-font="&usr.gbutton-font;"
-          gbutton-icon_src="/internal-roxen-next" gbutton-preparse="1"
-          gbutton-align_icon="right" page="delete_user"/>
-  </td></tr></table>
-  <insert file=user_form.pike nocache=""/>
-</cf-perm>
-</page>
+<if not variable='form.page'>
+  <cf-perm perm="Edit Users">
+    <translate id="222" variable="var.create_txt">Create new user</translate>
+    <translate id="223" variable="var.delete_txt">Delete old user</translate>
+    <table border="0" cellpadding="5" cellspacing="0"><tr><td>
 
-<page name="create_user"><cf-perm perm="Edit Users">
-  <translate id="224" variable="var.create_txt">Create User</translate>
-  <translate id="225" variable="var.id_txt">User ID</translate>
-  <table><tr><td>&var.id_txt;:</td><td><input name="create_user_name" /></td>
-  <td><dbutton page="top" gbutton-font="&usr.gbutton-font;" 
-       gbutton_title=" &var.create_txt; ">
-  <insert file=user_create.pike nocache=""/></dbutton></td></tr></table>
-  <p>
-  <translate id="202" variable="var.cancel_txt">Cancel</translate>
-  <button gbutton-font="&usr.gbutton-font;" gbutton-preparse="1"
-   gbutton_title=" &var.cancel_txt; " page="top"/>
-  </p>
-</cf-perm>
-</page>
+     <a href='users.html?page=create_user'>
+       <gbutton icon_src="/internal-roxen-next"  preparse="1"
+                font="&usr.gbutton-font;"
+                width="200"
+                align_icon="right">&var.create_txt;</gbutton>
+     </a>
+     <br />
+     <a href='users.html?page=delete_user'>
+       <gbutton icon_src="/internal-roxen-next"  preparse="1"
+                font="&usr.gbutton-font;"
+                width="200"
+                align_icon="right">&var.delete_txt;</gbutton>
+     </a>
 
-<page name="delete_user"><cf-perm perm="Edit Users">
+     <insert file=user_form.pike nocache="" />
+    </td></tr></table>
+  </cf-perm>
+</if>
+
+<if variable='form.page is create_user'>
+ <cf-perm perm="Edit Users">
+  <if not variable='form.create_user_name'>
+    <input type='hidden' name='page' value='create_user' />
+    <translate id="224" variable="var.create_txt">Create User</translate>
+    <translate id="225" variable="var.id_txt">User ID</translate>
+    <table><tr><td>&var.id_txt;:</td><td><input name="create_user_name" /></td>
+    <td><submit-gbutton> &var.create_txt; </submit-gbutton></td></tr></table>
+    <p>
+    <translate id="202" variable="var.cancel_txt">Cancel</translate>
+    <a href='users.html'>
+      <gbutton font="&usr.gbutton-font;">&var.cancel_txt;</gbutton>
+    </a>
+    </p>
+  </if>
+  <else>
+    <insert file='user_create.pike' nocache="" />
+    <redirect to='users.html?netscape=needs_this_to_do_the_redirect' />
+  </else>
+</cf-perm></if>
+
+<if variable='form.page is delete_user'>
+  <cf-perm perm="Edit Users">
   <insert file=user_delete.pike nocache=""/>
   <p>
   <translate id="202" variable="var.cancel_txt">Cancel</translate>
-  <button gbutton-font="&usr.gbutton-font;" gbutton-preparse="1"
-   gbutton_title=" &var.cancel_txt; " page="top"/>
+  <a href=users.html>
+    <gbutton font="&usr.gbutton-font;">&var.cancel_txt;</gbutton>
+  </a>
   </p>
-</cf-perm>
+  </cf-perm>
 </page>
 
-</awizard>
 </cv-startpage>
 </content>
