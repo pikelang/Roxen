@@ -10,7 +10,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the configuration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.15 1999/11/24 11:10:59 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.16 1999/11/27 12:10:03 per Exp $";
 
 constant path = "config_interface/";
 
@@ -165,7 +165,7 @@ void start(int n, object cfg)
     charset_encoder = charset_decoder = 0;
     cfg->add_modules(({
       "awizard",      "config_tags", "config_userdb","contenttypes",
-      "directories",  "gbutton",     "graphic_text", "lpctag",
+      "directories",  "gbutton",     "graphic_text", "piketag",
       "obox",         "pathinfo",    "pikescript",   "rxmlparse",
       "rxmltags",     "tablist",
     }));
