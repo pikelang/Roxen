@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.10 2000/03/22 15:07:14 js Exp $
+ * $Id: create_configif.pike,v 1.11 2000/03/22 21:25:32 peter Exp $
  *
  * Create an initial configuration interface server.
  */
@@ -94,26 +94,29 @@ int main(int argc, array argv)
     write("additional material through the update system.\n");
     write("Press enter to skip this.\n");
     community_user=rl->read("Roxen Community Identity (your e-mail): ");
-    do
+    if(sizeof(community_user))
     {
-      rl->get_input_controller()->dumb=1;
-      community_password = rl->read( "Roxen Community Password: ");
-      passwd2 = rl->read( "Roxen Community Password (again): ");
-      rl->get_input_controller()->dumb=0;
-      write("\n");
-      community_userpassword=community_user+":"+community_password;
-    } while(!strlen(community_password) || (community_password != passwd2));
-
-      if((strlen( passwd2 = rl->read("Do you want to access the update "
-				      "server through an HTTP proxy? [n]: "))
-	   && passwd2[0]!='n' ))
+      do
       {
-	proxy_host=rl->read("Proxy host: ");
-	if(sizeof(proxy_host))
-	  proxy_port=rl->read("Proxy port: [80]");
-	if(!sizeof(proxy_port))
-	  proxy_port="80";
-      }
+	rl->get_input_controller()->dumb=1;
+	community_password = rl->read( "Roxen Community Password: ");
+	passwd2 = rl->read( "Roxen Community Password (again): ");
+	rl->get_input_controller()->dumb=0;
+	write("\n");
+	community_userpassword=community_user+":"+community_password;
+      } while(!strlen(community_password) || (community_password != passwd2));
+      
+      if((strlen( passwd2 = rl->read("Do you want to access the update "
+				     "server through an HTTP proxy? [n]: "))
+	  && passwd2[0]!='n' ))
+	{
+	  proxy_host=rl->read("Proxy host: ");
+	  if(sizeof(proxy_host))
+	    proxy_port=rl->read("Proxy port: [80]");
+	  if(!sizeof(proxy_port))
+	    proxy_port="80";
+	}
+    }
   }
 
   string ufile=(configdir+"_configinterface/settings/" + user + "_uid");
