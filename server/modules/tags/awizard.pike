@@ -6,7 +6,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version = "$Id: awizard.pike,v 1.20 2000/09/10 16:35:06 nilsson Exp $";
+constant cvs_version = "$Id: awizard.pike,v 1.21 2001/02/08 13:19:39 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Advanced wizards";
@@ -354,7 +354,7 @@ class AWizard
 
   mapping|string handle( RequestID id )
   {
-    mapping v = id->variables;
+    object|mapping v = id->variables;
     mapping s, error;
     object page, last_page;
     int new_page;
