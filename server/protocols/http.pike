@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Idonex AB.
 
-constant cvs_version = "$Id: http.pike,v 1.191 2000/01/22 21:46:12 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.192 2000/01/23 06:17:56 nilsson Exp $";
 
 #define MAGIC_ERROR
 
@@ -686,7 +686,6 @@ private int parse_got()
 	    }
 	  case "accept":
 	  case "accept-charset":
-	  case "accept-language":
 	  case "session-id":
 	  case "message-id":
 	  case "from":
@@ -694,6 +693,18 @@ private int parse_got()
 	      misc[linename] += (contents-" ") / ",";
 	    else
 	      misc[linename] = (contents-" ") / ",";
+	    break;
+
+	  case "accept-language":
+	    array alang=(contents-" ") / ",";
+	    if(misc["accept-language"])
+	      misc["accept-language"] += alang;
+	    else
+	      misc["accept-language"] = alang;
+	    if(misc->pref_languages)
+	      misc->pref_languages += alang;
+	    else
+	      misc->pref_languages = alang;
 	    break;
 
 	  case "cookie": /* This header is quite heavily parsed */
