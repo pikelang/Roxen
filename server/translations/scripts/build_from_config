@@ -15,4 +15,4 @@ EXTRACT="$3"
 #             --verbose       more informative text in xml
 #
 echo "  Rebuilding $CFGFILE"
-$EXTRACT --config=$CFGFILE > $CFGFILE.log~ 2>&1
+$EXTRACT --config=$CFGFILE --wipe --sync > $CFGFILE.log~ 2>&1
