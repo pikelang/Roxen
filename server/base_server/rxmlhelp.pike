@@ -54,8 +54,8 @@ private string attr_cont(string t, mapping m, string c)
 {
   string p="";
   if(!m->name) m->name="(Not entered)";
-  if(m->value) p=sprintf("<i>%s=%s</i><br>",m->name,attr_vals(m->value));
-  return sprintf("<p><b>%s</b><br>%s%s</p>",m->name,p,c);
+  if(m->value) p=sprintf("<i>%s=%s</i><br />",m->name,attr_vals(m->value));
+  return sprintf("<p><b>%s</b><br />%s%s</p>",m->name,p,c);
 }
 
 private string attr_vals(string v)
@@ -74,14 +74,14 @@ private string ex_cont(string t, mapping m, string c, string rt, void|object id)
 
   switch(m->type) {
   case "box":
-    return "<br>"+mktable( ({ ({ c }) }) );
+    return "<br />"+mktable( ({ ({ c }) }) );
   case "hr":
-    return c+"<hr>"+parsed;
+    return c+"<hr />"+parsed;
   case "vert":
-    return "<br>"+mktable( ({ ({ c }), ({ parsed }) }) );
+    return "<br />"+mktable( ({ ({ c }), ({ parsed }) }) );
   case "hor":
   default:
-    return "<br>"+mktable( ({ ({ c, parsed }) }) );
+    return "<br />"+mktable( ({ ({ c, parsed }) }) );
   }
 }
 
