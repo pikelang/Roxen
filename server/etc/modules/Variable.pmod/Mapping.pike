@@ -113,10 +113,10 @@ int(0..1) set_from_form(RequestID id)
 }
 
 
-string render_row(string prefix, mixed val, int width)
+array(string) render_row(string prefix, mixed val, int width)
 {
-  return Variable.input( prefix+"a", val[0], width ) +
-    Variable.input( prefix+"b", val[1], width );
+  return ({ Variable.input( prefix+"a", val[0], width ),
+	    Variable.input( prefix+"b", val[1], width ) });
 }
 
 string render_form( RequestID id, void|mapping additional_args )
@@ -127,11 +127,15 @@ string render_form( RequestID id, void|mapping additional_args )
   string res = "<a name='"+path()+"'>\n</a><table>\n"
     "<input type='hidden' name='"+prefix+"count' value='"+_current_count+"' />\n";
 
+  res += "<tr><th align='left'>"+LOCALE(0,"Name")+"</th><th align='left'>"+LOCALE(0,"Value")+"</tr>";
+
   mapping val = query();
   foreach( sort(indices(val)), mixed var )
   {
     res += "<tr>\n<td><font size='-1'>"+
-      render_row(prefix+"set."+i, ({ var,transform_to_form(val[var]) }) , width)
+      render_row(prefix+"set."+i,
+		 ({ var,transform_to_form(val[var]) }) ,
+		 width) * "</td><td>"
       + "</font></td>\n";
 #define BUTTON(X,Y) ("<submit-gbutton2 name='"+X+"'>"+Y+"</submit-gbutton2>")
     res += "\n<td>"+
@@ -141,7 +145,7 @@ string render_form( RequestID id, void|mapping additional_args )
     i++;
   }
   res +=
-    "\n<tr><td colspan='2'>"+
+    "\n<tr><td colspan='3'>"+
     BUTTON(prefix+"new", LOCALE(297, "New row") )+
     "</td></tr></table>\n\n";
 
