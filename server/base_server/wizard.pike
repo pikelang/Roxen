@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.3 1997/08/20 08:02:37 per Exp $
+/* $Id: wizard.pike,v 1.4 1997/08/20 08:07:11 per Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -22,7 +22,7 @@ string wizard_tag_var(string n, mapping m, object id)
     m_delete(m,"default");
     m->value = current||"";
     if(!m->size)m->size="40,6";
-    return make_container("textarea", m, html_encode_string(current));
+    return make_container("textarea", m, html_encode_string(current||""));
 
 
    case "int":
