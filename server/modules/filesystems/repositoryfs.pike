@@ -3,12 +3,12 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: repositoryfs.pike,v 1.3 2002/06/11 14:51:55 nilsson Exp $";
+constant cvs_version = "$Id: repositoryfs.pike,v 1.4 2002/06/13 19:43:45 nilsson Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_LOCATION;
-LocaleString module_name = "File systems: Repository fs";
-LocaleString module_doc = "Repository file system";
+constant module_name = "File systems: Repository fs";
+constant module_doc = "CVS repository file system";
 constant module_unique = 0;
 
 void create()
@@ -20,7 +20,7 @@ void create()
 
   defvar("repository", "/cvsroot",
     "Path to repository", TYPE_DIR|VAR_INITIAL,
-    "The path to the rcs repository.");
+    "The path to the CVS repository or a subdirectory in it.");
 }
 
 string mid;
