@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2001, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.282 2001/10/08 12:32:53 anders Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.283 2001/10/09 22:14:38 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -339,8 +339,8 @@ red, darkgreen</gtext>
 <attr name='texture' value='path'><p>
  Uses the specified images as a field texture.</p>
 <ex>
-<gtext font=\"\" fontsize=\"100\"
-texture=\"/internal-roxen-squares\">A</gtext>
+<gtext texture=\"/internal-roxen-squares\"
+ tile=\"1\" fontsize=\"100\">A</gtext>
 </ex>
 </attr>
 
