@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.217 2004/05/04 15:03:16 grubba Exp $
+# $Id: start,v 1.218 2004/05/14 07:37:26 noring Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -68,6 +68,10 @@ program=base_server/roxenloader.pike
 VARDIR=../var
 LOCALDIR=../local
 SELF_TEST_DIR=etc/test
+
+# Disable buggy sorting by forcing LC_COLLATE to C.
+LC_COLLATE=C
+export LC_COLLATE
 
 # Make LOCALDIR an absolute path
 if test -d $LOCALDIR/.; then
