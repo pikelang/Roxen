@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.26 2001/08/22 12:55:07 mast Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.27 2001/08/23 23:34:49 mast Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -400,7 +400,7 @@ class TagVForm {
   }
 
   // This tag set can probably be shared, but I don't know for sure. /mast
-  RXML.TagSet internal = RXML.TagSet (module_identifier() + "/TagVForm.internal",
+  RXML.TagSet internal = RXML.TagSet (this_module(), "internal",
 				      ({ TagVInput(),
 					 TagReload(),
 					 TagClear(),

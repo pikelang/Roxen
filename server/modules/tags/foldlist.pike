@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1999-2001, Roxen IS.
 //
 
-constant cvs_version = "$Id: foldlist.pike,v 1.29 2001/03/08 14:35:46 per Exp $";
+constant cvs_version = "$Id: foldlist.pike,v 1.30 2001/08/23 23:34:48 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -174,7 +174,8 @@ class TagFoldlist {
     }
   }
 
-  RXML.TagSet internal = RXML.TagSet("TagFoldlist.internal", ({ TagFT(), TagFD() }) );
+  // This tag set can probably be shared, but I don't know for sure. /mast
+  RXML.TagSet internal = RXML.TagSet(this_module(), "foldlist", ({ TagFT(), TagFD() }) );
 
   class Frame {
     inherit RXML.Frame;

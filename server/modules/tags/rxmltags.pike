@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.280 2001/08/23 21:54:42 nilsson Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.281 2001/08/23 23:34:48 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1648,7 +1648,7 @@ class TagMaketag {
   }
 
   RXML.TagSet internal =
-    RXML.shared_tag_set ("/rxmltags/maketag", ({ TagAttrib() }) );
+    RXML.shared_tag_set (0, "/rxmltags/maketag", ({ TagAttrib() }) );
 
   class Frame {
     inherit RXML.Frame;
@@ -2394,7 +2394,7 @@ class UserTagContents
 }
 
 private RXML.TagSet user_tag_contents_tag_set =
-  RXML.shared_tag_set ("/rxmltags/user_tag", ({UserTagContents()}));
+  RXML.shared_tag_set (0, "/rxmltags/user_tag", ({UserTagContents()}));
 
 class UserTag {
   inherit RXML.Tag;
@@ -3179,7 +3179,7 @@ class TagCond
   }
 
   RXML.TagSet cond_tags =
-    RXML.shared_tag_set ("/rxmltags/cond", ({TagCase(), TagDefault()}));
+    RXML.shared_tag_set (0, "/rxmltags/cond", ({TagCase(), TagDefault()}));
 
   class Frame
   {
@@ -3271,7 +3271,7 @@ class TagEmit {
   }
 
   RXML.TagSet internal =
-    RXML.shared_tag_set ("/rxmltags/emit", ({ TagDelimiter() }) );
+    RXML.shared_tag_set (0, "/rxmltags/emit", ({ TagDelimiter() }) );
 
   // A slightly modified Array.dwim_sort_func
   // used as emits sort function.

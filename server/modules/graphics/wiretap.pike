@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000-2001, Roxen IS.
 //
 
-constant cvs_version="$Id: wiretap.pike,v 1.29 2001/08/10 23:10:12 mast Exp $";
+constant cvs_version="$Id: wiretap.pike,v 1.30 2001/08/23 23:34:46 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -65,7 +65,7 @@ adding <tt>wiretap='no'</tt> to the document's <tag>body</tag> tag.</p>
 //  unlike the newer design where we require a <body> tag to enable
 //  the wiretap. In that case this is the tag set for the runtime
 //  tags.
-RXML.TagSet runtime_wiretap_tags = RXML.TagSet (module_identifier() + "/runtime");
+RXML.TagSet runtime_wiretap_tags = RXML.TagSet (this_module(), "runtime");
 
 // The currently implemented settings.
 int compat_mode, colormode;
@@ -273,7 +273,7 @@ void start()
 RXML.TagSet query_tag_set()
 {
   if (!module_tag_set) {
-    module_tag_set = RXML.TagSet (module_identifier());
+    module_tag_set = RXML.TagSet (this_module(), "");
     module_tag_set->add_tag_set_dependency (runtime_wiretap_tags);
   }
   init_tag_set (my_configuration()->query("compat_level") < "2.2",

@@ -9,7 +9,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.10 2001/08/22 18:53:16 nilsson Exp $";
+constant cvs_version = "$Id: email.pike,v 1.11 2001/08/23 23:34:48 mast Exp $";
 
 constant thread_safe=1;
 
@@ -256,7 +256,8 @@ class TagEmail {
     }
   } // TagAttachment
 
-  RXML.TagSet internal = RXML.TagSet("TagEmail.internal", ({ TagAttachment(), TagMailheader(), TagSignature() }));
+  // This tag set can probably be shared, but I don't know for sure. /mast
+  RXML.TagSet internal = RXML.TagSet(this_module(), "email", ({ TagAttachment(), TagMailheader(), TagSignature() }));
 
   class Frame {
     inherit RXML.Frame;

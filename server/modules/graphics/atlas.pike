@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.6 2001/06/22 03:25:22 nilsson Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.7 2001/08/23 23:34:46 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";
@@ -122,7 +122,8 @@ class TagAtlas {
     }
   }
 
-  RXML.TagSet internal = RXML.TagSet("TagAtlas.internal",
+  // This tag set can probably be shared, but I don't know for sure. /mast
+  RXML.TagSet internal = RXML.TagSet(this_module(), "atlas",
 				     ({ TagCountry(),
 					TagMarker() }) );
 

@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.14 2001/07/02 23:57:38 nilsson Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.15 2001/08/23 23:34:46 mast Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -430,13 +430,16 @@ class TagGXML
     ]);
 #undef V
 
+  // This tag set can probably be shared, but I don't know for sure. /mast
+  RXML.TagSet internal=RXML.TagSet(this_module(), "gxml",
+				   gxml_make_tags( get_plugins ));
+
   class Frame 
   {
     inherit RXML.Frame;
     constant scope_name = "gxml";
     mapping vars = gxml_vars;
-    RXML.TagSet additional_tags=RXML.TagSet("TagGXML.internal",
-					    gxml_make_tags( get_plugins ));
+    RXML.TagSet additional_tags=internal;
 
     array do_enter( RequestID id )
     {

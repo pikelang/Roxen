@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.114 2001/08/23 16:35:26 jonasw Exp $
+// $Id: Roxen.pmod,v 1.115 2001/08/23 23:34:43 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3195,7 +3195,7 @@ RXML.TagSet entities_tag_set = class
 
   void create()
   {
-    ::create (0);
+    ::create (0, "entities_tag_set");
     // Note: No string entities are replaced when the result type for
     // the parser is t_xml or t_html.
     add_string_entities (parser_charref_table);

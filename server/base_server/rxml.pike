@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.313 2001/08/22 14:14:25 mast Exp $
+// $Id: rxml.pike,v 1.314 2001/08/23 23:34:41 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -62,7 +62,7 @@ RXML.TagSet rxml_tag_set = class
 
   void create (object rxml_object)
   {
-    ::create (rxml_object->name + "/rxml_tag_set");
+    ::create (rxml_object, "rxml_tag_set");
     imported = ({Roxen.entities_tag_set});
     modules = ({rxml_object});
   }
@@ -357,7 +357,7 @@ class GenericPITag
 void add_parse_module (RoxenModule mod)
 {
   RXML.TagSet tag_set =
-    mod->query_tag_set ? mod->query_tag_set() : RXML.TagSet (mod->module_identifier());
+    mod->query_tag_set ? mod->query_tag_set() : RXML.TagSet (mod, "");
   mapping(string:mixed) defs;
 
   if (mod->query_tag_callers &&
