@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.201 2000/07/14 16:19:46 kuntri Exp $
+// $Id: rxml.pike,v 1.202 2000/07/17 15:38:19 kuntri Exp $
 
 
 inherit "rxmlhelp";
@@ -2029,12 +2029,11 @@ scope created within the define tag.
   The name of the attribute which default value is to be set.
  </attr>",
 
-	      "&_.args;":#"<desc ent>The full list of the attributes, and their
- arguments, given to the tag.</desc>",
+	      "&_.args;":#"<desc ent>The full list of the attributes, and their arguments, given to the tag.</desc>",
 	      "&_.rest-args;":#"<desc ent>A list of the attributes, and their
  arguments, given to the tag, excluding attributes with default values defined.</desc>",
 	      "&_.contents;":#"<desc ent>The containers contents.</desc>",
-	      "contents":"<desc tag>As the contents entity, but unquoted.</desc>"
+	      "contents":#"<desc tag>As the contents entity, but unquoted.</desc>",
 	    ])
 
 }),
@@ -2279,8 +2278,7 @@ scope created within the define tag.
 <attr name=supports'' value='feature' required required>
 </attr>
 
-<p>The following features are supported:</p>
-",
+ The following features are supported:",
 
 "if#time":#"<desc plugin><short>
  Is the time hhmm?</short> The attributes before, after and inclusive modifies
@@ -2322,8 +2320,7 @@ scope created within the define tag.
 </attr>
 
 
-<p>Available variables are:</p>
-",
+ Available variables are:",
 
 "nooutput":#"<desc cont><short>
  The contents will not be sent through to the page.</short> Side effects, for
@@ -2432,7 +2429,7 @@ scope created within the define tag.
  results and other dynamic documents. Note, however, that the results
  of the parsing are heavily cached for performance reasons. If you do
  not want this cache, use <tag><ref type='tag'>insert file=...
- nocache</ref></tag> instead.</p>
+ nocache /</ref></tag> instead.</p>
 </attr>
 
 <attr name=info>
