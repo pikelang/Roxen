@@ -1,5 +1,5 @@
 /*
- * $Id: pike_profiling.pike,v 1.2 2004/05/19 18:22:56 grubba Exp $
+ * $Id: pike_profiling.pike,v 1.3 2004/05/20 21:06:49 grubba Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -103,26 +103,26 @@ array get_prof_info(string|void foo)
     }
   }
   array q = indices(as_functions);
-//   sort(values(as_functions), q);
+  sort(column(values(as_functions), 2), q);	// Sort after total time.
   foreach(q, string i) if(as_functions[i][0])
     res += ({({i,
-	       sprintf("%d",as_functions[i][1]),
-               sprintf("%5.2f",
-                       as_functions[i][0]/1000000.0),
-               sprintf("%5.2f",
-                       as_functions[i][2]/1000000.0),
-	       sprintf("%7.3f",
-		       (as_functions[i][0]/1000.0)/as_functions[i][1]),
-	       sprintf("%7.3f",
-                       (as_functions[i][2]/1000.0)/as_functions[i][1])})});
+	       sprintf("%d",as_functions[i][1]),	// Calls
+               sprintf("%8d",				// Time
+                       as_functions[i][0]),
+               sprintf("%8d",				// +Children
+                       as_functions[i][2]),
+	       sprintf("%7.3f",				// Average
+		       ((float)as_functions[i][0])/as_functions[i][1]),
+	       sprintf("%7.3f",				// +Children
+                       ((float)as_functions[i][2])/as_functions[i][1])})});
   sort((array(float))column(res,3),res);
   return reverse(res);
 }
 
 mixed page_0(object id)
 {
-  string res = ("All times are in seconds, and real-time. Times include"
-		" time of child functions. No callgraph is available yet.<br />"
+  string res = ("All times are in milliseconds, and real-time. Times include "
+		"time of child functions. No callgraph is available yet.<br />"
 		"Function glob: <input type=text name=subnode value='"+
                 Roxen.html_encode_string(id->variables->subnode||"")
                 +"'><br />");
@@ -131,8 +131,8 @@ mixed page_0(object id)
                                             (id->variables->subnode||"")+"*"),
 			      ({ "Function",
                                  "Calls",
-                                 "Time",
-                                 "+chld",
+                                 "Time(ms)",
+                                 "+chld(ms)",
                                  "t/call(ms)",
 				 "+chld(ms)"}));
   return res + "\n\n<pre>"+ADT.Table.ASCII.encode( t )+"</pre>";
