@@ -4,7 +4,7 @@
 #include <stat.h>
 #include <config.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.42 2001/09/28 21:01:40 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.43 2001/10/09 14:57:09 per Exp $";
 
 class Variable
 {
@@ -845,19 +845,28 @@ class Group( UserDB database )
   array(string) members()
   //! All users that are members of this group. The default
   //! implementation loops over all users handled by the user database
-  //! and looks for users with the same gid as this group.
+  //! and looks for users with the same gid as this group, or who is a
+  //! member of it when the groups() method are called.
   {
     array res = ({});
     User uid;
     int id = gid();
     foreach( database->list_users(), string u )
-      if( (uid = database->find_user( u )) && (uid->gid() == id) )
+      if( (uid = database->find_user( u )) &&
+	  ((uid->gid() == id) || has_value(uid->groups(), name())))
 	res += ({ u });
     return res;
   }
   
   int gid();
   //! A numerical GID, or -1 if not applicable
+
+
+  int set_name( string new_name )  {    return 0;  }
+  int set_gid( int new_gid )  {    return 0;  }
+  int set_members( array(string) members ) {   return 0;  }
+  //! Returns 1 if it was possible to set the variable.
+  
 }
 
 #ifdef THREADS
@@ -1052,7 +1061,7 @@ class UserDB
   {
   }
   
-  User find_group_from_gid( int id )
+  Group find_group_from_gid( int id )
   //! Find a group given a GID. The default implementation loops over
   //! list_groups() and checks the gid() of each one.
   {
@@ -1075,6 +1084,14 @@ class UserDB
   User create_user( string s )
   //! Not nessesarily implemented, as an example, it's not possible to
   //! create users in the system user database from Roxen WebServer.
+  //! The default implementation returns 0.
+  {
+    return 0;
+  }
+
+  Group create_group( string s )
+  //! Not nessesarily implemented, as an example, it's not possible to
+  //! create groups in the system user database from Roxen WebServer.
   //! The default implementation returns 0.
   {
     return 0;
