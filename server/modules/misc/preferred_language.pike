@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.20 2001/09/21 15:58:12 jhs Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.21 2001/10/09 08:35:55 jhs Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -166,25 +166,33 @@ class TagEmitLanguages {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-  "emit#languages":({ #"<desc type='plugin'><short>Outputs language descriptions.</short>
-It will output information associated to languages, such as the name of the language in
-different languages. A list of languages that should be outputed can be provided with the langs
-attribute. If no such attribute is used a generated list of present languages will be used. If
-such a list could not be generated the list provided in the Preferred Language Analyzer module
-will be used.</desc>
-<attr name='langs'>Should contain comma seperated list of language codes. The languages
-associated with these codes will be emitted in this order.</attr>
-",
+
+  "emit#languages":({ #"<desc type='plugin'><p><short>Outputs language
+descriptions.</short> It will output information associated to languages, such
+as the name of the language in different languages. A list of languages that
+should be output can be provided with the langs attribute. If no such attribute
+is used a generated list of present languages will be used. If such a list could
+not be generated the list provided in the Preferred Language Analyzer module
+will be used.</p></desc>
+
+<attr name='langs'><p>Should be a comma seperated list of language codes. The
+languages associated with these codes will be emitted in that order.</p></attr>",
 		      ([
-			"&_.code;":"<desc type='entity'>The language code.</desc>",
-			"&_.en;":"<desc type='entity'>The language name in english.</desc>",
-			"&_.local;":"<desc type='entity'>The language name as written in the language itself.</desc>",
-			"&_.preurl;":#"<desc type='entity'>A URL which makes this language the used one by altering
-prestates.</desc>",
-			"&_.confurl;":#"<desc type='entity'>A URL which makes the language the used one by altering
-the roxen cookie.</desc>",
-			"&_.localized;":#"<desc type='entity'>The language name as written in the currently
-selected language.</desc>"
+			"&_.code;":"<desc type='entity'><p>The language "
+			           "code.</p></desc>",
+			"&_.en;":"<desc type='entity'><p>The language name in "
+				   "english.</p></desc>",
+			"&_.local;":"<desc type='entity'><p>The language name "
+				"as written in the language itself.</p></desc>",
+			"&_.preurl;":#"<desc type='entity'><p>A URL which "
+				      "makes this language the used one by "
+				      "altering prestates.</p></desc>",
+			"&_.confurl;":#"<desc type='entity'><p>A URL which "
+				       "makes the language the used one by "
+				       "altering the roxen cookie.</p></desc>",
+			"&_.localized;":#"<desc type='entity'><p>The language "
+				         "name as written in the currently "
+				         "selected language.</p></desc>"
 		      ])
   })
 
