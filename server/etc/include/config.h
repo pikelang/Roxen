@@ -2,7 +2,7 @@
  * User configurable things not accessible from the normal
  * configuration interface. Not much, but there are some things..  
  */
- 
+
 #ifndef _ROXEN_CONFIG_H_
 #define _ROXEN_CONFIG_H_
 
