@@ -2,9 +2,11 @@ Changes since Roxen Challenger 1.2.21 Yellow
 -----------------------------------------------
 
 o Added new module type, MODULE_PROVIDER. This is a module type which
-  enables other modules, scripts or protocols to call it very
-  simply. Function needed in the module:
+  enables other modules, scripts or protocols to call other modules
+  in a standard way. Function needed in the module:
+
   "string|array|multiset query_provides()" - Return the name of the
+
   data this module provides. One existing example is "counter"
   (which is the graphical counter module).
 
