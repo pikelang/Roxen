@@ -323,8 +323,6 @@ vom ersten Eintrag in 'URLs', wenn diese Einstellung leer bleibt.
 <t>Ports: URLs</t>
 </str>
 
-
-
 <str id="40">
 <o>Internal module resource mountpoint</o>
 <t>Interner Montagepunkt für das Modul</t>
@@ -1605,8 +1603,6 @@ Wird zum Beispiel die Datei /foo/bar/nicht_vorhanden.html angefordert und in die
 <o>%s does not conform to URL syntax</o>
 <t>%s entspricht nicht der URL-Syntax</t>
 </str>
-
-
 
 <str id="338">
 <o>Changed %s to %s</o>
@@ -2919,25 +2915,21 @@ Roxen verwaltet.&lt;/p&gt;</t>
 </str>
 
 <str id="373">
-<new/>
 <o>Bind to these URLs. You can use '*' and '?' to perform globbing (using any of these will default to binding to all IP-numbers on your machine).  If you specify a IP# in the field it will take precedence over the hostname.</o>
-<t></t>
+<t>Diese URLs binden. Man kann '*' und '?' benutzen, um mehrere IP-Adressen des Rechners zu benutzen. Wenn eine IP Nummer in diesem Feld angegeben wird, hat diese Vorrang vor Hostnamen.</t>
 </str>
 
 <str id="508">
-<new/>
 <o>Ports</o>
-<t></t>
+<t>Ports</t>
 </str>
 
 <str id="509">
-<new/>
 <o>Select site</o>
-<t></t>
+<t>Site auswählen</t>
 </str>
 
 <str id="510">
-<new/>
 <o>Bind this port: </o>
-<t></t>
+<t>Diesen Port binden: </t>
 </str>

@@ -14,6 +14,7 @@
 <file>../config_interface/actions/make_rsa_csr.pike</file>
 <file>../config_interface/actions/make_selfsigned_dsa.pike</file>
 <file>../config_interface/actions/make_selfsigned_rsa.pike</file>
+<file>../config_interface/actions/make_site_template.pike</file>
 <file>../config_interface/actions/openfiles.pike</file>
 <file>../config_interface/actions/proc.pike</file>
 <file>../config_interface/actions/reloadconfigurations.pike</file>
@@ -938,5 +939,65 @@ change the currently running version.</o>
 <str id="143">
 <new/>
 <o>Clones</o>
+<t></t>
+</str>
+
+<str id="144">
+<new/>
+<o>Create site template</o>
+<t></t>
+</str>
+
+<str id="145">
+<new/>
+<o>Create a site template from a site configuration</o>
+<t></t>
+</str>
+
+<str id="146">
+<new/>
+<o>Coundn't find configuration</o>
+<t></t>
+</str>
+
+<str id="147">
+<new/>
+<o>Select configuration to base the template on.</o>
+<t></t>
+</str>
+
+<str id="148">
+<new/>
+<o>Selected configuration</o>
+<t></t>
+</str>
+
+<str id="149">
+<new/>
+<o>Coundn't create directory</o>
+<t></t>
+</str>
+
+<str id="150">
+<new/>
+<o>Failed to create template file</o>
+<t></t>
+</str>
+
+<str id="151">
+<new/>
+<o>Failed to write template file</o>
+<t></t>
+</str>
+
+<str id="152">
+<new/>
+<o>Site template created successfully.</o>
+<t></t>
+</str>
+
+<str id="153">
+<new/>
+<o>Ok</o>
 <t></t>
 </str>

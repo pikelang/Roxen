@@ -338,8 +338,6 @@ moduler för att bygga upp absoluta URLer från en relativ URL.</t>
 <t>Portar: URLer</t>
 </str>
 
-
-
 <str id="40">
 <o>Internal module resource mountpoint</o>
 <t>Intern modulresursmonteringspunkt</t>
@@ -1693,8 +1691,6 @@ användas: /foo/bar/404.inc, /foo/404.inc eller /404.inc.</t>
 <o>%s does not conform to URL syntax</o>
 <t>%s följer inte URL-syntaxen</t>
 </str>
-
-
 
 <str id="338">
 <o>Changed %s to %s</o>
