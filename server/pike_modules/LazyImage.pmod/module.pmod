@@ -1059,7 +1059,7 @@ class SetLayerMode
       if( !args->mode )
 	RXML.parse_error( "Expected mode as an argument\n" );
       if( !parent )
-	RXML.parse_error( "move-layer cannot be the toplevel node\n" );
+	RXML.parse_error( "set-layer-mode cannot be the toplevel node\n" );
       return args;
     }
   };
