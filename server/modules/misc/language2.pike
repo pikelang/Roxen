@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: language2.pike,v 1.17 2001/10/01 14:14:08 anders Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.18 2001/10/01 16:39:15 nilsson Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_TAG;
 constant module_name = "Language module II";
@@ -19,8 +19,7 @@ constant module_doc  = "Handles documents in different languages. "
 void create() {
   defvar( "default_language", "en", "Default language", TYPE_STRING,
 	  "The default language for this server. Is used when trying to "
-	  "decide which language to send when the user hasn't selected any. "
-	  "Also the language for the files with no language-extension." );
+	  "decide which language to send when the user hasn't selected any." );
 
   defvar( "languages", ({"en","de","sv"}), "Languages", TYPE_STRING_LIST,
 	  "The languages supported by this site." );
