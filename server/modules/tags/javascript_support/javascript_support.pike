@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.56 2003/11/17 12:55:24 jonasw Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.57 2004/05/21 04:07:24 jonasw Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -315,9 +315,12 @@ class TagJSInclude {
 	 id->client_var && (float)(id->client_var->javascript) < 1.2)
 	result = "<!-- Client do not support Javascript 1.2 -->"; // Throw an run_error instead?
       else
-	result = "<script charset=\"iso-8859-1\" type=\"text/javascript\" "
-	  "language=\"javascript\" src=\"" +
-	  query_absolute_internal_location(id) + args->file + "\"></script>";
+	result =
+	  "<script charset=\"iso-8859-1\" type=\"text/javascript\" "
+	  "language=\"javascript\" " +
+	  (args->defer ? "defer='defer' " : "") +
+	  "src=\"" + query_absolute_internal_location(id) + args->file + "\">"
+          "</script>";
       return 0;
     }
   }
@@ -514,6 +517,12 @@ javascript support.</p></desc>
  <p>The component to include. May be one of <tt>CrossPlatform.js</tt>,
  <tt>DragDrop.js</tt>, <tt>DynamicLoading.js</tt>, <tt>Popup.js</tt>
  or <tt>Scroll.js</tt>.</p>
+</attr>"
+<attr name='defer'>
+ <p>Set to add the <tt>defer</tt> flag to the generated <tag>script</tag>
+    tag. It's used to tell browsers that the referenced script doesn't
+    call <tt>document.write()</tt> or similar functions while the page
+    is rendered.</p>
 </attr>",
 
 //----------------------------------------------------------------------
