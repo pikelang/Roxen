@@ -13,7 +13,7 @@
  * or should have been shipped along with the module.
  */
 
-constant cvs_version="$Id: SQLuserdb.pike,v 1.18 2000/04/09 10:58:24 kinkie Exp $";
+constant cvs_version="$Id: SQLuserdb.pike,v 1.19 2000/04/10 10:43:48 grubba Exp $";
 
 #include <module.h>
 inherit "roxenlib";
@@ -204,7 +204,6 @@ array(string) userlist() {
 		return ({});
 	mixed err;
 	array data;
-  int j;
 
 	DEBUGLOG ("userlist()");
 	open_db();
@@ -213,10 +212,7 @@ array(string) userlist() {
 		return ({});
 	}
 	data=db->query("select username from "+QUERY(table));
-  for (j=0;j<sizeof(data);j++)
-    data[j]=data[j]->username;
-  DEBUGLOG(sprintf("%O",data));
-	return data;
+	return data->username;
 }
 
 string user_from_uid (int u) 
