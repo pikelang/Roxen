@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.264 1999/04/07 18:48:13 peter Exp $
+ * $Id: roxen.pike,v 1.265 1999/04/20 01:44:25 mast Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.264 1999/04/07 18:48:13 peter Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.265 1999/04/20 01:44:25 mast Exp $";
 
 // Some headerfiles
 #define IN_ROXEN
@@ -131,6 +131,7 @@ static class Privs {
 
 #ifdef THREADS
   mixed mutex_key;	// Only one thread may modify the euid/egid at a time.
+  static object threads_disabled;
 #endif /* THREADS */
 
   int p_level;
@@ -144,7 +145,7 @@ static class Privs {
 #endif /* PRIVS_DEBUG */
 
 #ifdef THREADS
-#if constant(roxen_pid)
+#if constant(roxen_pid) && !constant(_disable_threads)
     if(getpid() == roxen_pid)
     {
       //     __disallow_threads();
@@ -160,6 +161,7 @@ static class Privs {
     if (euid_egid_lock) {
       catch { mutex_key = euid_egid_lock->lock(); };
     }
+    threads_disabled = _disable_threads();
 #endif /* THREADS */
 
     p_level = privs_level++;
@@ -300,11 +302,11 @@ static class Privs {
       catch {
 	array bt = backtrace();
 	if (sizeof(bt) >= 2) {
-	  report_notice(sprintf("Change back to uid#%d, from %s\n", saved_uid,
-				dbt(bt[-2])));
+	  report_notice(sprintf("Change back to uid#%d gid#%d, from %s\n",
+				saved_uid, saved_gid, dbt(bt[-2])));
 	} else {
-	  report_notice(sprintf("Change back to uid#%d, from backend\n",
-				saved_uid));
+	  report_notice(sprintf("Change back to uid#%d gid#%d, from backend\n",
+				saved_uid, saved_gid));
 	}
       };
     }
@@ -1599,8 +1601,9 @@ int set_u_and_gid()
 #endif
 
 #ifdef THREADS
-      object mutex_key, threads_disabled = _disable_threads();
+      object mutex_key;
       catch { mutex_key = euid_egid_lock->lock(); };
+      object threads_disabled = _disable_threads();
 #endif
 
 #if constant(seteuid)
