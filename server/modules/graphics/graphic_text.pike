@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.213 2000/03/16 00:51:22 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.214 2000/03/16 01:35:36 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -280,7 +280,8 @@ opaque=70</gtext>
 </attr>
 
 <attr name=textbelow value=color>
- Place the text in a colored box.
+ Place the text centered in a box of the given color below the image
+ area. Useful together with background to make captions for images.
 </attr>
 
 <attr name=textbox value=opaque,color>
