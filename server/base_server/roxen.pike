@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.634 2001/02/23 04:04:09 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.635 2001/02/23 07:06:55 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread.
 Thread.Thread backend_thread;
@@ -71,6 +71,21 @@ string filename( program|object o )
 }
 
 #ifdef THREADS
+mapping(string:string) thread_names = ([]);
+string thread_name( object thread )
+{
+  string tn;
+  if( thread_names[ tn=sprintf("%O",thread) ] )
+    return thread_names[tn];
+  return tn;
+}
+
+void name_thread( object thread, string name )
+{
+  catch(thread->set_name( name ));
+  thread_names[ sprintf( "%O", thread ) ] = name;
+}
+
 // This mutex is used by Privs
 Thread.Mutex euid_egid_lock = Thread.Mutex();
 #endif /* THREADS */
@@ -424,7 +439,7 @@ void shutdown(float|void i)
 Thread do_thread_create(string id, function f, mixed ... args)
 {
   Thread.Thread t = thread_create(f, @args);
-  catch(t->set_name( id ));
+  name_thread( t, id );
   return t;
 }
 
@@ -3365,7 +3380,6 @@ int main(int argc, array tmp)
 
   set_locale();
 
-
 #if efun(syslog)
   init_logger();
 #endif
@@ -3398,8 +3412,8 @@ int main(int argc, array tmp)
 
 #ifdef THREADS
   start_handler_threads();
-  catch( this_thread()->set_name("Backend") );
   backend_thread = this_thread();
+  name_thread( backend_thread, "Backend" );
 #endif /* THREADS */
 
   // Signals which cause a restart (exitcode != 0)
