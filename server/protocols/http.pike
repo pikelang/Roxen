@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.271 2000/09/05 14:45:10 jhs Exp $";
+constant cvs_version = "$Id: http.pike,v 1.272 2000/09/10 15:18:25 per Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1326,6 +1326,7 @@ array get_error(string eid)
 
 void internal_error(array _err)
 {
+  misc->cacheable = 0;
   mixed err = _err;
   _err = 0; // hide in backtrace, they are bad enough anyway...
   array err2;
