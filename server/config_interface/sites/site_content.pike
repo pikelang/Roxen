@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.132 2002/01/11 11:01:19 grubba Exp $
+// $Id: site_content.pike,v 1.133 2002/04/17 14:14:30 wellhard Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -38,7 +38,7 @@ string describe_location( RoxenModule m, RequestID id )
 string describe_tags( RoxenModule m, int q )
 {
   multiset tags=(<>), conts=(<>);
-  RXML.TagSet new=m && m->query_tag_set();
+  RXML.TagSet new=m && m->query_tag_set && m->query_tag_set();
   if(!new) return "";
 
   foreach(indices(new->get_tag_names()), string name) {
@@ -70,7 +70,9 @@ string describe_tags( RoxenModule m, int q )
 
 string describe_provides( RoxenModule m, int q )
 {
-  array(string)|multiset(string)|string provides = m && m->query_provides();
+  array(string)|multiset(string)|string provides = m &&
+						   m->query_provides &&
+						   m->query_provides();
   if (multisetp(provides))
     provides = sort((array(string))provides);
   if( arrayp(provides) )
