@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.44 2001/10/09 12:01:27 jhs Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.45 2001/10/09 12:22:20 jhs Exp $";
 
 #include <module.h>
 inherit "module";
@@ -526,6 +526,11 @@ javascript support.</p></desc>
   <p>All arguments exept those given below are also transferred to
   the link.</p>
 </desc>
+
+<attr name='href' value='url' default='javascript:void(0);'>
+  <p>If you didn't give a href argument of your own to the link, the
+  javascript \"do nothing\" statement is filled in for you.</p>
+</attr>
 
 <attr name='label' value='string'>
   <p>The link text. If omitted no link will be returned, useful in
