@@ -1,7 +1,7 @@
 //#include <stdio.h>
 #include <simulate.h>
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.9 1997/06/13 14:09:09 grubba Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.10 1997/06/15 15:09:02 grubba Exp $";
 
 //#define DEBUG
 
@@ -637,7 +637,8 @@ void init_disk_check(string dir, int minfree)
   disk_max = (int)(st->blocks * i);
   disk_used = (int)((st->blocks - st->bfree) * i);
   disk_avail = (int)(st->bavail * i);
-  disk_capacity = (disk_max - disk_avail) * 100 / disk_max;
+  // disk_capacity = (disk_max - disk_avail) * 100 / disk_max;
+  disk_capacity = disk_used * 100 / disk_max;
   disk_name = st->fsname||"";
   disk_type = st->fstype||"";
 
