@@ -12,9 +12,13 @@
 *.ppm binary
 *.rc eol=crlf
 *.ttf binary
-/server/nfonts/boomeran.txt eol=crlf
-/server/nfonts/lucida_unicode.txt eol=crlf
-/server/nfonts/verdana.txt eol=crlf
+*.txt eol=crlf
+/server/config_interface/standard/sites/drop_site_warning.txt !eol
+/server/config_interface/standard/welcome.txt !eol
+/server/config_interface/svenska/sites/drop_site_warning.txt !eol
+/server/config_interface/svenska/welcome.txt !eol
+/server/nfonts/bastard.txt !eol
+/server/nfonts/puppyface.txt !eol
 *.xcf binary
 bi binary
 bn binary
