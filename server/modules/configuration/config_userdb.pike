@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2000, Roxen IS.
 //
-// $Id: config_userdb.pike,v 1.55 2000/09/12 14:47:44 per Exp $
+// $Id: config_userdb.pike,v 1.56 2000/09/18 20:26:07 lange Exp $
 
 inherit "module";
 #include <config_interface.h>
@@ -63,7 +63,7 @@ array auth( array auth_, RequestID id, void|int silent )
     if( !uo->valid_id( id ) )
     {
       if (!silent)
-	report_notice( "Failed login attempt %s from %s\n", u, host);
+	report_notice(SLOCALE(233,"Failed login attempt %s from %s")+"\n", u, host);
       return ({ 0, u, p });
     }
     if( !id->misc->cf_theme )
@@ -84,7 +84,7 @@ array auth( array auth_, RequestID id, void|int silent )
     return ({ 1, u, 0 });
   }
   if (!silent)
-    report_notice( "Failed login attempt %s from %s\n", u, host);
+    report_notice(SLOCALE(233,"Failed login attempt %s from %s")+"\n", u, host);
   return ({ 0, u, p });
 }
 
@@ -105,8 +105,8 @@ void first_try( RequestID id )
       host = id->remoteaddr;
 
   if( (time(1) - logged_in[ u+host ]) > 1800 )
-    report_notice(SLOCALE("dt", "Administrator logged on as %s from %s.\n"),
-		  u, host+" ("+id->remoteaddr+")" );
+    report_notice(SLOCALE("dt", "Administrator logged on as %s from %s.")
+		  +"\n", u, host+" ("+id->remoteaddr+")" );
 
   logged_in[ u+host ] = time(1);
   roxen.adminrequest_get_context( u, host, id );
