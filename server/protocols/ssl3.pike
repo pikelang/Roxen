@@ -1,4 +1,4 @@
-/* $Id: ssl3.pike,v 1.30 1998/04/15 15:09:24 grubba Exp $
+/* $Id: ssl3.pike,v 1.31 1998/04/20 04:11:44 nisse Exp $
  *
  * Copyright © 1996-1998, Idonex AB
  */
@@ -80,22 +80,34 @@ array|void real_port(array port, object cfg)
   werror(sprintf("options = %O\n", options));
 #endif
 
-  if (!options["cert-file"]) {
+  if (!options["cert-file"])
+  {
     ({ report_error, throw }) ("ssl3: No 'cert-file' argument!\n");
   }
 
-  mapping(string:string) parts = SSL.pem.parse_pem(read_file(options["cert-file"]));
-
-  if (!parts || !(cert = parts["CERTIFICATE"]||parts["X509 CERTIFICATE"])) {
-    ({ report_error, throw }) ("ssl3: No certificate found.\n");
-  }
-
-  if (options["key-file"])
-    parts = SSL.pem.parse_pem(read_file(options["key-file"]));
+  string f = read_file(options["cert-file"]);
+  if (!f)
+    ({ report_error, throw }) ("ssl3: Reading cert-file failed!\n");
   
-  if (!parts || !(key = parts["RSA PRIVATE KEY"])) {
-    ({ report_error, throw }) ("ssl3: Private key not found.\n");
+  object msg = Tools.PEM.pem_msg()->init(f);
+
+  object part = msg->parts["CERTIFICATE"]
+    ||msg->parts["X509 CERTIFICATE"];
+  
+  if (!part || !(cert = part->decoded_body()))
+    ({ report_error, throw }) ("ssl3: No certificate found.\n");
+  
+  if (options["key-file"])
+  {
+    f = read_file(options["key-file"]);
+    msg = Tools.PEM.pem_msg()->init(f);
   }
+
+  part = msg->parts["RSA PRIVATE KEY"];
+  
+  if (!part || !(key = part->decoded_body()))
+    ({ report_error, throw }) ("ssl3: Private key not found.\n");
+  
   array rsa_parms = Standards.ASN1.decode(key)->get_asn1()[1];
   
   ctx->certificates = ({ cert });
