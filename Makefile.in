@@ -407,7 +407,6 @@ dist:	$(SRCDIR)/ChangeLog.gz $(SRCDIR)/ChangeLog.rxml.gz
 	  type="platform-$$type"; \
 	else :; fi; \
 	echo Type $$type.; \
-	dist_files_and_type
 	echo Building full NDA distribution...; \
 	tar cf - $$version | gzip -9 >$$version-$$type-nda-full.tar.gz; \
 	if (cd $$version; make keep_dbapi || exit 1); then \
