@@ -1,11 +1,11 @@
-/* $Id: low_describers.pike,v 1.9 1997/07/10 16:28:33 per Exp $ */
+/* $Id: low_describers.pike,v 1.10 1997/08/13 23:25:52 neotron Exp $ */
 // These do _not_ use any nodes, instead, they are called from the node
 // describers (which are called from the nodes)
 object this = this_object();
 
 #include <module.h>
 inherit "html";
-
+#define html_encode roxen->html_encode_string
 import String;
 import Array;
 import Stdio;
@@ -295,11 +295,6 @@ string all_protocols_as_selection(int id, string sel)
 	  + "</select>\n");
 }
 
-string html_encode(string from)
-{
-  return replace(from, ({ "<", ">", "&", }), ({ "&lt;", "&gt;", "&auml" }));
-}
-
 string port_buttons(array port, int id)
 {
   return ("<table cellspacing=-2 cellpadding=-2>"
@@ -315,13 +310,13 @@ string encode_one_port(array port, int id)
 {
   /* PortNo, Protocol, IP, options */
   return "<tr><td colspan=2><hr noshade size=1></td></tr><tr><td><table>\n"
-    "<tr>\n<td><input size=5,1 name=port_"+id+" value="
-    +port[0]+"></td>\n<td>"+all_protocols_as_selection(id, port[1])
-    +"</td>\n<td>"+all_ip_numbers_as_selection(id, port[2])+"</td>\n"
+    "<tr>\n<td><input size=5,1 name=port_"+id+" value="+
+    port[0]+"></td>\n<td>"+all_protocols_as_selection(id, port[1])+
+    "</td>\n<td>"+all_ip_numbers_as_selection(id, port[2])+"</td>\n"
     "</tr>\n<tr valign=center><td colspan=3>\n"
-    "<textarea cols=30 rows=3 name=arguments_"+id+">"
-    +html_encode(port[3])+"</textarea>\n</td></tr></table></td><td>"
-    +port_buttons(port,id)+"</td></tr>";
+    "<textarea cols=30 rows=3 name=arguments_"+id+">"+
+    html_encode(port[3])+"</textarea>\n</td></tr></table></td><td>"+
+    port_buttons(port,id)+"</td></tr>";
 }
 
 string encode_ports(array from)

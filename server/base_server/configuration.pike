@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.54 1997/08/13 21:37:30 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.55 1997/08/13 23:25:49 neotron Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -881,7 +881,7 @@ mapping|int low_get_file(object id, int|void no_magic)
   {
 #ifndef NO_INTERNAL_HACK 
     // No, this is not beautiful... :) 
-    if(sscanf(id->not_query, "%*s/internal-%s", loc))
+    if(id->not_query[0] == '/'&& sscanf(id->not_query, "%*s/internal-%s", loc))
     {
       if(sscanf(loc, "gopher-%[^/]", loc))    // The directory icons.
 	return internal_gopher_image(loc);

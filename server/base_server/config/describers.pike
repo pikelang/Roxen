@@ -1,4 +1,4 @@
-/* $Id: describers.pike,v 1.36 1997/08/13 21:37:36 per Exp $ */
+/* $Id: describers.pike,v 1.37 1997/08/13 23:25:51 neotron Exp $ */
 
 #include <module.h>
 int zonk=time();
@@ -345,11 +345,6 @@ string describe_configuration(object node)
 }
 
 
-string quote_html(string s)
-{
-  return(replace(s, ({ "<", ">", "&" }), ({ "&lt;", "&gt;", "&amp;" })));
-}
-
 #if efun(_memory_usage)
 mapping last_usage = ([]);
 #endif
@@ -487,11 +482,11 @@ string describe_global_debug(object node)
 	if ((line % 6)<3) {
 	  tf += sprintf("<tr bgcolor=#f0f0ff><td>&nbsp;</td><td>%s()</td>"
 			 "<td>&nbsp;</td><td align=right>%d</td></tr>\n",
-			 quote_html(fun), arr[1][fun]); 
+			 html_encode_string(fun), arr[1][fun]); 
 	} else {
 	  tf += sprintf("<tr bgcolor=white><td>&nbsp;</td><td>%s()</td>"
 			 "<td>&nbsp;</td><td align=right>%d</td></tr>\n",
-			 quote_html(fun), arr[1][fun]); 
+			 html_encode_string(fun), arr[1][fun]); 
 	}
 	line++;
       }
@@ -499,7 +494,7 @@ string describe_global_debug(object node)
     if(line && strlen(tf))
       res+=sprintf("<tr bgcolor=#e0e0ff><td colspan=2><b>%s</b></td>"
 		   "<td>&nbsp</td><td align=right><b>%d</b></td></tr>\n",
-		   quote_html(prog), arr[0]) + tf;
+		   html_encode_string(prog), arr[0]) + tf;
   }
   res += "</table>\n";
 #endif /* get_profiling_info */

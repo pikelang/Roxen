@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.34 1997/08/13 14:28:16 grubba Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.35 1997/08/13 23:25:51 neotron Exp $";
 // This code has to work both in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -709,4 +709,16 @@ string program_directory()
 {
   array(string) p = program_filename()/"/";
   return (sizeof(p)>1? p[..sizeof(p)-2]*"/" : getcwd());
+}
+
+string html_encode_string(string str)
+// Encodes str for use as a literal in html text.
+{
+  return replace(str, ({"&", "<", ">" }), ({"&amp;", "&lt;", "&gt;"}));
+}
+
+string html_encode_tag_value(string str)
+// Encodes str for use as a value in an html tag.
+{
+  return "\"" + replace(str, ({"&", "\""}), ({"&amp;", "&quot;"})) + "\"";
 }
