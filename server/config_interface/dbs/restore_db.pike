@@ -18,7 +18,7 @@ mapping|string parse( RequestID id )
 
   if( !sizeof( bks ) )
   {
-    res += _(0,"<p>No backups are currently available. To make a backup of a "
+    res += _(79,"<p>No backups are currently available. To make a backup of a "
 	     "database, focus on it in the Databases tab, and click on the "
 	     "make backup button. Please note that you can only make backups "
 	     "of databases managed by Roxen.</p>");
