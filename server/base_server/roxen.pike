@@ -1,5 +1,5 @@
 /*
- * $Id: roxen.pike,v 1.348 1999/11/15 08:35:35 per Exp $
+ * $Id: roxen.pike,v 1.349 1999/11/15 16:41:37 per Exp $
  *
  * The Roxen Challenger main program.
  *
@@ -7,7 +7,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.348 1999/11/15 08:35:35 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.349 1999/11/15 16:41:37 per Exp $";
 
 object backend_thread;
 object argcache;
@@ -1284,7 +1284,7 @@ object find_configuration( string name )
     if( (lower_case( replace( o->name - " " , "/", "-" ) ) == name) ||
         (lower_case( replace( o->query_name() - " " , "/", "-" ) ) == name) )
       return o;
-    werror(" is not '"+o->name+"'\n" );
+//     werror(" is not '"+o->name+"'\n" );
   }
 }
 
