@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.212 2000/03/16 00:32:53 nilsson Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.213 2000/03/16 00:51:22 nilsson Exp $";
 
 #include <module.h>
 inherit "module";
@@ -342,11 +342,6 @@ constant tagdoc=([
 
 "gtext":#"<desc cont>
  Renders a GIF image of the contents.
-
- <p>Note: If the background and text colors are not set in the
- <tag>body</tag>> tag of the page, the bg and fg attributes must be
- set, otherwise the <tag>gtext</tag>> tag will only render a \"Please
- reload this page\" message.</p>
 </desc>
 
 <attr name=alt value=string>
@@ -705,6 +700,9 @@ mapping mk_gtext_arg(mapping arg, RequestID id) {
     if( (id->misc->defines[tmp] || id->misc->defines["theme_"+tmp]) && !p[tmp])
       p[tmp]=id->misc->defines["theme_"+tmp] || id->misc->defines[tmp];
 
+  if(!p->fgcolor) p->fgcolor="#000000";
+  if(!p->bgcolor) p->bgcolor="#ffffff";
+
   if(id->misc->defines->nfont && !p->nfont) p->nfont=id->misc->gtext_nfont;
   if(id->misc->defines->afont && !p->afont) p->afont=id->misc->gtext_afont;
   if(id->misc->defines->bold && !p->bold) p->bold=id->misc->gtext_bold;
@@ -889,12 +887,12 @@ array(string) simpletag_gh(string t, mapping m, string c, RequestID id) {
   if(sscanf(t, "%s%d", t, i)==2 && i>1)
     m->scale = (string)(1.0 / ((float)i*0.6));
   if(!m->valign) m->valign="top";
- return ({ "<p>"+simpletag_gtext("",m,c,id)+"<br>" });
+ return ({ "<p>"+simpletag_gtext("",m,c,id)+"</p><br />" });
 }
 
 array(string) simpletag_anfang(string t, mapping m, string c, RequestID id) {
   if(!m->align) m->align="left";
-  return ({ "<br clear=\"left\">"+simpletag_gtext("",m,c[0..0],id)+c[1..] });
+  return ({ "<br clear=\"left\" />"+simpletag_gtext("",m,c[0..0],id)+c[1..] });
 }
 
 
