@@ -2,7 +2,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.128 2001/02/11 12:16:42 mast Exp $
+//! $Id: module.pmod,v 1.129 2001/02/11 12:49:43 mast Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
@@ -1007,10 +1007,10 @@ class Context
 
     array(string|int) splitted;
     if(has_value(var, ".."))
-      splitted = Array.map(replace(var, "..", "\n") / ".",
-			   lambda(string in) {
-			     return replace(in, "\n", ".");
-			   });
+      // The \0 stuff is really here for a reason: The _only_ special
+      // character is '.'.
+      splitted = map (replace (var, ({"..", "\0"}), ({"\0p", "\0\0"})) / ".",
+		      replace, ({"\0p", "\0\0"}), ({".", "\0"}));
     else
       splitted = var / ".";
 
