@@ -5,7 +5,7 @@
 //
 // made by Mattias Wingstedt
 
-constant cvs_version = "$Id: indirect_href.pike,v 1.17 2000/04/14 22:34:07 per Exp $";
+constant cvs_version = "$Id: indirect_href.pike,v 1.18 2000/04/15 01:18:19 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 
@@ -43,10 +43,6 @@ each URL will only be stored in one place and it becomes very easy to
 change it, no matter how many links use it. As an extra bonus the name 
 <tt>random</tt> will be replaces by a random URL from the list.";
 
-// Dynamic tagname, hence dynamic documentation.
-mapping tagdocumentation() {
-  return ([tagname:"<desc cont>ai</desc>"]);
-}
 
 void start()
 {
@@ -84,7 +80,7 @@ mapping query_simpletag_callers()
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-  "ai":#"<desc><short>
+  "ai":#"<desc cont><short>
  Makes it possible to use a database of links.</short> Each link is referred
  to by a symbolic name instead of the URL.
 

@@ -1,5 +1,5 @@
 /*
- * $Id: ldaptag.pike,v 1.7 2000/04/09 12:54:52 grubba Exp $
+ * $Id: ldaptag.pike,v 1.8 2000/04/15 01:18:19 per Exp $
  *
  * A module for Roxen Challenger, which gives the tags
  * <LDAP>, <LDAPOUTPUT> (with subtag <LDAPFOREACH>) and <LDAPELSE>
@@ -36,7 +36,7 @@
 
  */
 
-constant cvs_version="$Id: ldaptag.pike,v 1.7 2000/04/09 12:54:52 grubba Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 1.8 2000/04/15 01:18:19 per Exp $";
 //constant thread_safe=0;
 #include <module.h>
 
@@ -742,7 +742,7 @@ constant tagdoc=([
  returned.
 </attr>",
 
-"ldapoutput":#"<desc cont>short>
+"ldapoutput":#"<desc cont><short>
  Insert the results of a LDAP search into HTML or RXML.</short>
 
  The <tag>ldapoutput</tag> tag works like the old <i>output</i> tags.

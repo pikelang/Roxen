@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.25 2000/04/06 06:16:06 wing Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.26 2000/04/15 01:18:19 per Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -15,7 +15,7 @@ inherit "roxenlib";
 TAGDOCUMENTATION
 #ifdef manual
 constant tagdoc=(["obox":([
-  "standard":#"<desc cont>Outlined box</desc>
+  "standard":#"<desc cont><short>This tag creates an outlined box.</short></desc>
 
 <attr name=align value=left|right>
  Vertical alignment of the box.
@@ -69,11 +69,12 @@ constant tagdoc=(["obox":([
 
 <attr name=width value=number>
  Width, in pixels, of the box.
-</attr>
+
 
  Note that the left and right attributes are constrained by the width
  argument. If the title is not specified in the argument list, you can
- put it in a <tag>title</tag> container in the obox contents.",
+ put it in a <tag>title</tag> container in the obox contents.
+</attr>",
 
   "svenska":#"<desc cont>Ramlåda</desc>"]) ]);
 #endif

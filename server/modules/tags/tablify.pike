@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.47 2000/04/06 06:16:06 wing Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.48 2000/04/15 01:18:19 per Exp $";
 constant thread_safe=1;
 #include <module.h>
 inherit "module";
@@ -15,7 +15,7 @@ generate nice tables.";
 
 TAGDOCUMENTATION
 #ifdef manual
-constant tagdoc=(["tablify":({#"<desc cont>Transforms texts into tables. No attributes required.</desc>
+constant tagdoc=(["tablify":({#"<desc cont><short>Transforms texts into tables.</short> No attributes required.</desc>
 
 <attr name=rowseparator value=string>Defines the rowseparator. Default is a newline.</attr>
 <attr name=cellseparator value=string>Defines the cellseparaotr. Default is a tab.</attr>

@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.113 2000/04/14 22:12:27 per Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.114 2000/04/15 01:18:19 per Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1584,8 +1584,8 @@ documentation for that module.</desc>",
  Returns a message if a login failed or cancelled.
 </attr>",
 
-"autoformat":#"<desc cont><short>
- Replaces newlines with <tag>br /</tag>:s.</short>
+"autoformat":#"<desc cont><short hide>
+ Replaces newlines with <br/>:s'.</short>Replaces newlines with <tag>br /</tag>:s'.
 </desc>
 
 <attr name=nobr>
@@ -2415,11 +2415,11 @@ Sets a variable.</short>
 </attr>",
 
 "throw":#"<desc cont><short hide>
- Throws a text to be catched by <tag>catch</tag>.</short>
- Throws an exception, with the enclosed text as the error message.
- This tag has a close relation to <tag>catch</tag>. The RXML parsing
- will stop at the <tag>throw</tag> tag.
-</desc>",
+ Throws a text to be catched by <catch>.</short> Throws a text to be
+ catched by <tag>catch</tag>. Throws an exception, with the enclosed
+ text as the error message. This tag has a close relation to
+ <tag>catch</tag>. The RXML parsing will stop at the <tag>throw</tag>
+ tag. </desc>",
 
 "trimlines":#"<desc cont><short>
  Removes all empty lines from the contents.</short>

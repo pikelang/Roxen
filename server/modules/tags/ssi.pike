@@ -6,7 +6,7 @@ inherit "roxenlib";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.27 2000/04/06 06:16:06 wing Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.28 2000/04/15 01:18:19 per Exp $";
 
 
 constant module_type = MODULE_PARSER;
@@ -78,8 +78,8 @@ void set_entities(RXML.Context c) {
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-"!--#config":#"<desc tag>
- The config command is used to configure how things should be printed.
+"!--#config":#"<desc tag><short>
+ The config command is used to configure how things should be printed.</short>
 </desc>
 
 <attr name=errmsg value=string>
@@ -98,8 +98,8 @@ constant tagdoc=([
 </attr>",
 
 "!--#echo":#"
-<desc tag>
- Prints a variable from the server or request.
+<desc tag><short>
+ Prints a variable from the server or request.</short>
 
  <p>Some of the most useful ones are \"http referrer\" (the page
  which contained the link to the current page), \"last modified\"
@@ -208,8 +208,8 @@ constant tagdoc=([
 </attr>",
 
 "!--#exec":#"
-<desc tag>
- Executes a CGI script or shell command. This command has security
+<desc tag><short>
+ Executes a CGI script or shell command.</short> This command has security
  implications and therefore, might not be available on all web sites.
 
 </desc>
@@ -229,11 +229,12 @@ constant tagdoc=([
 </attr>",
 
 "!--#flastmod":#"
-<desc tag>
+<desc tag><short hide>
  This tag prints the last modification date of the specified file,
- subject to timefmt format specification used in the <ref
- type=tag>!--#config</ref> SSI tag.
-</desc>
+ subject to timefmt format specification used in the <!--#config> SSI
+ tag.</short> This tag prints the last modification date of the
+ specified file, subject to timefmt format specification used in the
+ <ref type=tag>!--#config</ref> SSI tag. </desc>
 
 <attr name=file value=path>
  Path to the file.
@@ -245,10 +246,13 @@ constant tagdoc=([
 </attr>",
 
 "!--#fsize":#"
-<desc tag>
+<desc tag><short hide>
+
  Prints the size of the specified file, subject to the sizefmt format
+ specification used in the <!--#config> SSI tag. </short>Prints the
+ size of the specified file, subject to the sizefmt format
  specification used in the <ref type=tag>!--#config</ref> SSI tag.
-</desc>
+ </desc>
 
 <attr name=file value=path>
  Path to the file.
@@ -260,8 +264,8 @@ constant tagdoc=([
 </attr>",
 
 "!--#include":#"
-<desc tag>
- Insert a text from another file into the page.
+<desc tag><short>
+ Insert a text from another file into the page.</short>
 </desc>
 
 <attr name=file value=path>
@@ -276,14 +280,14 @@ constant tagdoc=([
 </attr>",
 
 "!--#printenv":#"
-<desc tag>
+<desc tag><short>
  This tag outputs a listing of all existing variables and their
- values. Attributes won't be printed.
+ values.</short> Attributes won't be printed.
  <ex type=vert><pre><!--#printenv --></pre></ex>
 </desc>",
 
-"!--#set":#"<desc tag>
- Sets a value of a variable.
+"!--#set":#"<desc tag><short>
+ Sets a value of a variable.</short>
 </desc>
 
 <attr name=var value=value>
