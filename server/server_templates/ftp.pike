@@ -1,8 +1,12 @@
+/*
+ * $Id: ftp.pike,v 1.2 1997/08/13 21:50:02 grubba Exp $
+ */
+
 #include <module.h>
 
-string name = "FTP server";
-string desc = "An FTP server ";
-array modules = ({ "filesystem#0", "userdb#0", "htaccess#0", });
+constant name = "FTP server";
+constant desc = "An FTP server ";
+constant modules = ({ "filesystem#0", "userdb#0", "htaccess#0", });
 
 void enable(object config)
 {

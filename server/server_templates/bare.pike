@@ -1,6 +1,10 @@
+/*
+ * $Id: bare.pike,v 1.2 1997/08/13 21:51:06 grubba Exp $
+ */
+
 string name = "Bare bones";
 string desc = "A virtual server with _no_ modules";
-array modules = ({ });
+constant modules = ({ });
 
 void enable(object config)
 {

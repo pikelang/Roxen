@@ -1,7 +1,11 @@
-string name = "IPP Customer Server";
-string desc = "A virtual server with the most basic modules";
+/*
+ * $Id: ipp.pike,v 1.2 1997/08/13 21:50:42 grubba Exp $
+ */
 
-array modules = ({
+constant name = "IPP Customer Server";
+constant desc = "A virtual server with the most basic modules";
+
+constant modules = ({
   "contenttypes#0",
   "ismap#0",
   "htmlparse#0",
