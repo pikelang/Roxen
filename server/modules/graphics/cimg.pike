@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.39 2001/03/12 10:14:46 jhs Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.40 2001/03/30 11:35:46 jhs Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -110,6 +110,16 @@ constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
 ]);
 #endif
 
+void create()
+{
+  defvar("ext", Variable.Flag(0, VAR_MORE,
+			      "Append format to generated images",
+			      "Append the image format (.gif, .png, "
+			      ".jpg, etc) to the generated images. "
+			      "This is not necessary, but might seem "
+			      "nicer, especially to people who try "
+			      "to mirror your site."));
+}
 
 void start()
 {
@@ -175,6 +185,8 @@ array(Image.Layer) generate_image( mapping args, RequestID id )
 
 mapping find_internal( string f, RequestID id )
 {
+  if(strlen(f)>4 && query("ext") && f[-4]=='.') // Remove .ext
+    f = f[..strlen(f)-5];
   return the_cache->http_file_answer( f, id );
 }
 
@@ -241,6 +253,8 @@ class TagCimgplugin
     catch // This code will fail if the image does not exist.
     {
       res->src=(query_absolute_internal_location(id)+the_cache->store( a,id ));
+      if(query("ext"))
+	res->src += "." + (a->format || "gif");
       data = the_cache->data( a, id , 0 );
       res["file-size"] = strlen(data);
       res["file-size-kb"] = strlen(data)/1024;
@@ -259,7 +273,7 @@ class TagCImg
   constant name = "cimg";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
-  class Frame 
+  class Frame
   {
     inherit RXML.Frame;
 
@@ -267,7 +281,11 @@ class TagCImg
     {
       mapping a = get_my_args( check_args( args ), id );
       args -= a;
-      args->src=query_absolute_internal_location(id)+the_cache->store( a,id );
+      string ext = "";
+      if(query("ext"))
+	ext = "." + (a->format || "gif");
+      args->src = query_absolute_internal_location( id )
+		+ the_cache->store( a, id ) + ext;
       if( mapping size = the_cache->metadata( a, id, 1 ) )
       {
 	// image in cache (1 above prevents generation on-the-fly)
@@ -293,8 +311,9 @@ class TagCImgURL {
 
     array do_return(RequestID id)
     {
-      result = query_absolute_internal_location(id)+
-             the_cache->store(get_my_args(check_args( args ), id ),id);
+      result = query_absolute_internal_location(id)
+	     + the_cache->store(get_my_args(check_args( args ), id ), id)
+	     + (query("ext") ? "" : "." + (args->format || "gif"));
       return 0;
     }
   }
