@@ -6,7 +6,7 @@ inherit "roxenlib";
 inherit Regexp : regexp;
 
 constant cvs_version = 
-"$Id: mailtags.pike,v 1.23 1998/10/25 20:57:44 js Exp $";
+"$Id: mailtags.pike,v 1.24 1998/11/26 04:49:56 per Exp $";
 
 constant thread_safe = 1;
 
@@ -1399,7 +1399,15 @@ string tag_mail_next( string tag, mapping args, object id )
   return "NOPE";
 }
 
-//
+string tag_mail_random_number_variable( string t, mapping args, object id )
+{
+  mapping a = ([ ]);
+  a->type = "hidden";
+  a->name = args->var;
+  a->value = (abs(gethrtime())+"-"+abs(time())+"-"+random(0x7ffffffff));
+  return make_tag( "input", a );
+}
+
 //  <mail-make-hidden>
 //    returns a <input type=hidden value=""> for all variables in
 //    id->variables except a few chosen ones.
@@ -1417,6 +1425,8 @@ string tag_mail_make_hidden( string tag, mapping args, object id )
   m_delete(q, "gtextid"); m_delete(q, "gtextid&selected;"); 
   m_delete(q, "gtextidselected"); 
 //   werror("current: %O\n", q);
+  id->variables->some_number=(abs(gethrtime())+""+abs(time())+
+                              ""+random(0x7ffffffff));
   foreach( indices(q), string v )
   {
     mapping w = ([ "type":"hidden" ]);
