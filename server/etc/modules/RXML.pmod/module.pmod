@@ -2,11 +2,12 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: module.pmod,v 1.83 2000/03/18 04:03:55 mast Exp $
+//! $Id: module.pmod,v 1.84 2000/03/19 16:32:51 nilsson Exp $
 
 //! Kludge: Must use "RXML.refs" somewhere for the whole module to be
 //! loaded correctly.
 static object Roxen;
+class RequestID { };
 
 //! WARNING WARNING WARNING WARNING WARNING WARNING WARNING WARNING
 //! WARNING                                                 WARNING
