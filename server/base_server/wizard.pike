@@ -1,4 +1,4 @@
-/* $Id: wizard.pike,v 1.38 1997/10/16 12:16:26 per Exp $
+/* $Id: wizard.pike,v 1.39 1997/10/24 20:10:33 noring Exp $
  *  name="Wizard generator";
  *  doc="This plugin generats all the nice wizards";
  */
@@ -380,7 +380,7 @@ mixed wizard_menu(object id, string dir, string base, mixed ... args)
       err="";
       return res;
     };
-    if(strlen(err)) {
+    if(err && strlen(err)) {
       string res="<pre>"+err+"</pre>";
       err="";
       return res;
