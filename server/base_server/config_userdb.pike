@@ -39,10 +39,25 @@ class ConfigIFCache
     {
       dir = name;
       db = master()->resolv("DBManager.cached_get");
-      catch(query( "create table "+name+" ("
-		   "  id varchar(80) not null primary key,"
-		   "  data blob not null default ''"
-		   ")" ));
+      query( "create table if not exists "+name+" ("
+	     "  id varchar(80) not null primary key,"
+	     "  data blob not null default ''"
+	     ")" );
+      switch( name )
+      {
+	case "settings":
+	  master()->resolv("DBManager.is_module_table")
+	    (0, "local", name, "Settings for configuration user interface");
+	  break;
+	case "modules":
+	  master()->resolv("DBManager.is_module_table")
+	    (0, "local", name, "Module information cache");
+	  break;
+	default:
+	  master()->resolv("DBManager.is_module_table")
+	    (0, "local", name, "Settings");
+	  break;
+      }
     }
   }
 
@@ -51,8 +66,7 @@ class ConfigIFCache
     if( db )
     {
       query("DELETE FROM "+dir+" where id=%s", name);
-      query("INSERT INTO "+dir+" VALUES (%s,%s)",
-                name,encode_value(to));
+      query("INSERT INTO "+dir+" VALUES (%s,%s)", name, encode_value(to));
       return to;
     }
 
@@ -102,7 +116,8 @@ class ConfigIFCache
   {
     if( db )
       query("DELETE FROM "+dir+" WHERE id=%s",name);
-    r_rm( dir + replace( name, "/", "-" ) );
+    else
+      r_rm( dir + replace( name, "/", "-" ) );
   }
 }
 
