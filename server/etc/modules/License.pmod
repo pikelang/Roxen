@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.24 2003/09/18 09:13:51 wellhard Exp $
+// $Id: License.pmod,v 1.25 2004/10/28 12:05:07 wellhard Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -38,7 +38,11 @@ Key|mapping get_license(string license_dir, string filename)
     return 0;
   //werror("License.get_license(%O) ", filename);
   string path = Stdio.append_path(license_dir, filename);
-  if(!license_keys[path] || file_stat(path)->mtime > license_keys_time[path]) {
+  int mtime = file_stat(path)->mtime;
+  if(license_keys[path] && mtime > license_keys_time[path])
+    m_delete(license_keys, path);
+	      
+  if(!license_keys[path]) {
     Key key = Key(license_dir, filename);
 
     // Check if the license # has been used in a previously loaded license.
@@ -53,7 +57,7 @@ Key|mapping get_license(string license_dir, string filename)
     }
     //werror("new %O.\n", key);
     license_keys[path] = key;
-    license_keys_time[path] = time();
+    license_keys_time[path] = mtime;
   } else { 
     //werror("cached %O.\n", license_keys[path]);
   }
@@ -418,6 +422,16 @@ class LicenseVariable
       if(!key) {
 	report_debug("Error: Trying to load a nonexisting license: %s\n", new_value);
 	return ({ sprintf("License %s does not exist.\n", new_value),
+		  query() });
+      }
+      
+      if(mappingp(key)) {
+	report_debug("Error: %s Filename: %s, Reason: %s\n",
+		     key["message"], key["filename"], key["reason"]);
+	
+	return ({ sprintf("Error reading license: %O\n"
+			  "  %s Filename: %s, Reason: %s\n",
+			  new_value, key["message"], key["filename"], key["reason"]),
 		  query() });
       }
       
