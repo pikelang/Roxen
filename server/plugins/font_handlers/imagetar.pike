@@ -80,7 +80,7 @@ void update_font_list()
   {
     foreach( get_dir( dir )||({}), string pd )
     {
-      if( file_stat( dir+pd )[ ST_SIZE ] == -2 ) // isdir
+      if( Stdio.is_dir( dir+pd ) )
         rec_find_in_dir( dir+pd+"/" );
       else if( glob( "*.tar", pd ) )
       {
