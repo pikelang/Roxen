@@ -31,6 +31,18 @@ o The SSL3-module is now used in favour of the old SSL-protocol modules,
 
 o Module-level security improved again.
 
+o Two new functions in roxenlib.pike:
+  - html_encode_string -> replaces <>& with &lt;
+  - html_encode_tag_value -> encodes a string for use as a value in an
+    html tag (ie 'bar " & " ' -> '"bar &quot; &amp; &quot; "').
+
+o & was displayed as ä in some fields in configuration interface due
+  to the use of a buggy html_encode_string. 
+
+o internal-roxen-* and internal-gopher-* are not parsed if
+  id->not_query doesn't start with '/'. Before the Roxen proxy
+  "nicely" took care of them.
+
 o Added support for subnet-based IP security.
 
 o Module-variables can now be tagged as less interresting, and are then
