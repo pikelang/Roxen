@@ -4,12 +4,12 @@ AC_SET_MAKE
 
 # This is an ugly hack, but it seems to work...
 # /grubba
-old_ac_configure_args="$ac_configure_args"
-ac_configure_args="--prefix=."
-echo
-echo "NOTE: Running configure with --prefix=."
-echo "      Don't use this Pike with anything but Roxen without reconfiguring."
-echo
+# old_ac_configure_args="$ac_configure_args"
+# ac_configure_args="--prefix=."
+# echo
+# echo "NOTE: Running configure with --prefix=."
+# echo "      Don't use this Pike with anything but Roxen without reconfiguring."
+# echo
 AC_CONFIG_SUBDIRS(src)
-ac_configure_args="$old_ac_configure_args"
+# ac_configure_args="$old_ac_configure_args"
 AC_OUTPUT(Makefile)
