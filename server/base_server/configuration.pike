@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.576 2004/05/18 12:46:53 anders Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.577 2004/05/20 21:43:31 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1644,7 +1644,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
        case "roxen":
 	//  Mark all /internal-roxen-* as cacheable even though the user might be
 	//  authenticated (which normally disables protocol-level caching).
-	RAISE_CACHE(9999);
+	RAISE_CACHE(60 * 60 * 24 * 365);  //  1 year
 	PROTO_CACHE();
 	
 	TRACE_LEAVE("Magic internal roxen image");
