@@ -1,7 +1,7 @@
 #include <roxen.h>
 inherit "http";
 
-// $Id: roxenlib.pike,v 1.126 1999/11/22 16:14:00 wellhard Exp $
+// $Id: roxenlib.pike,v 1.127 1999/11/23 06:39:05 per Exp $
 // This code has to work both in the roxen object, and in modules.
 #if !efun(roxen)
 #define roxen roxenp()
@@ -1609,7 +1609,7 @@ int time_dequantifier(mapping m)
   return (int)t;
 }
 
-private static class _charset_decoder
+class _charset_decoder
 {
   object cs;
   void create( object c )
