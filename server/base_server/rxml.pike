@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.167 2000/03/13 15:41:34 stewa Exp $
+// $Id: rxml.pike,v 1.168 2000/03/13 18:30:36 nilsson Exp $
 
 inherit "roxenlib";
 inherit "rxmlhelp";
@@ -1221,6 +1221,11 @@ class TagElseif {
     array do_enter(RequestID id) {
       if(LAST_IF_TRUE) return 0;
       return ::do_enter(id);
+    }
+
+    array do_return(RequestID id) {
+      if(LAST_IF_TRUE) return 0;
+      return ::do_return(id);
     }
 
     mapping(string:RXML.Tag) get_plugins() {
