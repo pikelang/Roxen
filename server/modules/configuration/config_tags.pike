@@ -12,7 +12,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.116 2000/09/19 09:43:28 per Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.117 2000/09/19 10:07:44 per Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Administration interface RXML tags";
 
@@ -89,6 +89,8 @@ class Scope_usr
        res = "frame-image="+QALIAS("toptabs-frame");
        if( ALIAS("top-bgcolor") != "none" )
          res += " pagebgcolor="+QALIAS("top-bgcolor");
+       else
+         res += " pagebgcolor="+QALIAS("bgcolor");
        res += " bgcolor="+QALIAS("toptabs-bgcolor" );
        res += " font="+QALIAS("toptabs-font" );
        res += " dimcolor="+QALIAS("toptabs-dimcolor" );
