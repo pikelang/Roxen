@@ -8,14 +8,16 @@
 
    13.05.1998	hop	corrected one a little bug
 			All texts are now in ISO 8859-2
+   16.11.1998	hop	corrected name of months and days
+             		(First letter must be lower case)
 
 */
-string cvs_version = "$Id: czech.pike,v 1.4 1998/07/11 18:54:00 grubba Exp $";
+string cvs_version = "$Id: czech.pike,v 1.5 1998/11/30 19:17:07 grubba Exp $";
 string month(int num)
 {
-  return ({ "Leden", "Únor", "Bøezen", "Duben", "Kvìten",
-	    "Èerven", "Èervenec", "Srpen", "Záøí", "Øíjen",
-	    "Listopad", "Prosinec" })[ num - 1 ];
+  return ({ "ledna", "únor", "bøezna", "dubna", "kvìtna",
+	    "èervna", "èervence", "srpna", "záøí", "øíjna",
+	    "listopadu", "prosince" })[ num - 1 ];
 }
 
 string ordered(int i)
@@ -116,8 +118,8 @@ string number(int num)
 
 string day(int num)
 {
-  return ({ "Nedìle","Pondìlí","Úterý","Støeda",
-	    "Ètvrtek","Pátek","Sobota" })[ num - 1 ];
+  return ({ "nedìle","pondìlí","úterý","støeda",
+	    "ètvrtek","pátek","sobota" })[ num - 1 ];
 }
 
 array aliases()
