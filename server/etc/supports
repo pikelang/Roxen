@@ -1,4 +1,4 @@
-## $Id: supports,v 1.19 1997/04/11 20:30:03 grubba Exp $
+## $Id: supports,v 1.20 1997/04/11 20:31:53 grubba Exp $
 
 ######################################################################
 ## -+*				WARNING				*+- ##
@@ -113,6 +113,8 @@ ncsa.mosaic.*[2-9].[7-9]*.* pnginline
 
 # Spyglass mosaic is distributed together with Oracle 7
 # Not very interresting, but for completeness:
+#
+# Tested version: "Spyglass_Mosaic/2.11 Spyglass/11"
 #section spyglass {
 .*	backgrounds, center, font, fontcolor, forms, imagealign, images
 .*	jpeginline, mailto, pjpeginline, tables
