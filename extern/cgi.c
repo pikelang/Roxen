@@ -1,5 +1,5 @@
 /*
- * $Id: cgi.c,v 1.26 1998/05/07 23:45:28 grubba Exp $
+ * $Id: cgi.c,v 1.27 1998/05/08 13:55:16 grubba Exp $
  *
  * CGI-wrapper for Roxen.
  *
@@ -70,7 +70,7 @@
 # define MAXHEADERLEN 32769
 #endif
 
-#undef DEBUG
+/* #define DEBUG */
 
 #include <errno.h>
 
@@ -409,7 +409,7 @@ int parse_and_send_headers(char *header_end)
 	(!header_end || (pointer < header_end))) ||
        (pointer = strstr(headers, "location:") &&
 	(!header_end || (pointer < header_end))))
-      error = "HTTP/1.0 302 Document Found\r\n";
+      error = "HTTP/1.0 302 Redirect\r\n";
     else
       error = "HTTP/1.0 200 Ok\r\n";
   } else
