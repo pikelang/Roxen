@@ -1,5 +1,5 @@
 /*
- * $Id: make_selfsigned_dsa.pike,v 1.3 1999/06/07 05:11:48 mast Exp $
+ * $Id: make_selfsigned_dsa.pike,v 1.4 1999/07/19 17:29:10 mast Exp $
  */
 
 inherit "wizard";
@@ -187,7 +187,7 @@ mixed page_1(mixed id, mixed mc)
      "if they don't match.<p>"
      "Some Certificate Authorities allow wild cards in the Common "
      "Name. This means that you can have a certificate for "
-     "<tt>*.idonex.se</tt> which will match all servers at Idonex."
+     "<tt>*.idonex.se</tt> which will match all servers at Idonex. "
      "Thawte allows wild card certificates, while VeriSign does not."
      "</blockquote>");
 }
