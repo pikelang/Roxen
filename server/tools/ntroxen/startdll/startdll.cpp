@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.15 2002/10/24 03:39:18 nilsson Exp $
+// $Id: startdll.cpp,v 1.16 2002/11/05 02:26:08 mani Exp $
 //
 
 
@@ -510,20 +510,23 @@ void CServiceModule::MsgLoopCallback(int index)
   else if (exitcode == 0)
   {
     //clean shutdown
-    LogEvent("ChiliMoon shutdown.");
+    if (m_Cmdline.GetVerbose() > 0)
+      LogEvent("ChiliMoon shutdown.");
     Stop(FALSE);
   }
   else if (exitcode == 50)
   {
     //clean shutdown
-    LogEvent("Failed to open any port. Shutdown.");
+    if (m_Cmdline.GetVerbose() > 0)
+      LogEvent("Failed to open any port. Shutdown.");
     m_Cmdline.SetKeepMysql();
     Stop(FALSE);
   }
   else if (exitcode == 100)
   {
     // restart using possibly new version of ourself
-    LogEvent("Changing ChiliMoon version. Restarting...");
+    if (m_Cmdline.GetVerbose() > 0)
+      LogEvent("Changing ChiliMoon version. Restarting...");
     
     if (!m_Cmdline.IsOnce())
       // restart the new version of the server!!
@@ -533,13 +536,15 @@ void CServiceModule::MsgLoopCallback(int index)
   }
   else
   {
-    if (exitcode < 0)
-    {
-      LogEvent("ChiliMoon died of signal %d. Restarting...", exitcode);
-    }
-    else // exitcode < 0
-    {
-      LogEvent("ChiliMoon down. Restarting...");
+    if (m_Cmdline.GetVerbose() > 0) {
+      if (exitcode < 0)
+      {
+	LogEvent("ChiliMoon died of signal %d. Restarting...", exitcode);
+      }
+      else // exitcode < 0
+      {
+	LogEvent("ChiliMoon down. Restarting...");
+      }
     }
     Sleep(100);
     if (IsStopping())
