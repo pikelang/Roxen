@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.270 2002/02/15 17:11:32 mast Exp $
+// $Id: module.pmod,v 1.271 2002/02/27 15:23:34 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6457,16 +6457,16 @@ class VariableChange (/*static*/ mapping settings)
 	if (arrayp (var)) {
 	  var = map ((array(string)) var, replace, ".", "..") * ".";
 	  if (sizeof (var) == 1)
-	    if (settings[encoded_var]) ind += sprintf (", %O", var);
-	    else ind += sprintf (", del %O", var);
+	    if (settings[encoded_var]) ind += sprintf (", set: %O", var);
+	    else ind += sprintf (", del: %O", var);
 	  else
-	    if (settings[encoded_var] != nil) ind += sprintf (", %O", var);
-	    else ind += sprintf (", del %O", var);
+	    if (settings[encoded_var] != nil) ind += sprintf (", set: %O", var);
+	    else ind += sprintf (", del: %O", var);
 	  continue;
 	}
       }
       else var = encoded_var;
-      ind += sprintf (", misc %O", var);
+      ind += sprintf (", set misc: %O", var);
     }
     return "RXML.VariableChange(" + ind[2..] + ")" + OBJ_COUNT;
   }
@@ -6999,6 +6999,8 @@ class PCode
 	m_delete (RXML_CONTEXT->misc, "variable_changes");
       PCODE_MSG ("end result collection\n");
 
+      //werror ("before compact: %O\n", exec[..length - 1]);
+
       // Collapse sequences of constants. Could be done when not
       // collecting results too, but it's probably not worth the
       // bother then.
@@ -7041,19 +7043,19 @@ class PCode
 	    end++;
 	  }
 
-	  if (pos + !!var_chg < --end) {
-	    exec[length++] = `+ (@exec[pos..pos = end]);
-	    if (var_chg) exec[length++] = var_chg;
-	    continue;
-	  }
-	  if (var_chg) {
-	    exec[length++] = var_chg;
-	    continue;
-	  }
+	  if (pos + !!var_chg < --end)
+	    exec[length++] = `+ (@exec[pos..end]);
+	  else
+	    exec[length++] = exec[pos];
+	  pos = end;
+	  if (var_chg) exec[length++] = var_chg;
+	  continue;
 	}
 
 	exec[length++] = exec[pos];
       }
+
+      //werror ("after compact: %O\n", exec[..length - 1]);
     }
 
     else {
