@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.24 2000/09/11 10:49:34 lange Exp $
+ * $Id: update.pike,v 1.25 2000/09/20 04:02:07 js Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -347,7 +347,7 @@ mapping get_package_info(string dir, int package)
     return 0;
   string s=fd->read();
   fd->close();
-  Stat stat=file_stat(roxen_path(QUERY(pkgdir))+package+".tar");
+  Stat stat=file_stat(roxen_path(QUERY(pkgdir))+"/"+package+".tar");
   return parse_info_file(s) | ([ "size":stat[1] ]);    
 }
 
@@ -361,11 +361,12 @@ class TagUpdateScanLocalPackages {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      array(int) packages=sort((array(int))glob("*.tar",r_get_dir(QUERY(pkgdir))));
+      array(int) packages=sort((array(int))glob("*.tar",
+	r_get_dir(QUERY(pkgdir)+"/") ));
       foreach(packages, int package) {
 	mapping pkg=pkginfo[(string)package];
 	if(!pkg) {
-	  mapping tmp=get_package_info(roxen_path(QUERY(pkgdir)),package);
+	  mapping tmp=get_package_info(roxen_path(QUERY(pkgdir))+"/",package);
 	  if(tmp && tmp->id) {
 	    pkginfo[tmp->id]=tmp;
 	    pkginfo->sync();
@@ -391,9 +392,8 @@ class TagUpdateDownloadedPackages {
     int counter;
 
     array do_enter(RequestID id) {
-
       array(int) packages=sort((array(int))glob("*.tar",
-						r_get_dir(QUERY(pkgdir))||
+						r_get_dir(QUERY(pkgdir)+"/")||
 						({}) ));
       foreach(packages, int package) {
 	mapping pkg=pkginfo[(string)package];
@@ -511,7 +511,7 @@ class TagUpdateInstallPackage {
 
       mixed err;
       string res;
-      if(err=catch(res=unpack_tarfile(roxen_path(QUERY(pkgdir))+(int)args->package+".tar")))
+      if(err=catch(res=unpack_tarfile(roxen_path(QUERY(pkgdir))+"/"+(int)args->package+".tar")))
 	return ({ err+"<br /><br /><b>Could not install package. Fix the problems above and try again.</b>" });
 
       id->variables[args->variable]="1";
@@ -561,7 +561,7 @@ class TagUpdatePackageContents {
     array do_enter(RequestID id) {
       if(!args->package)
 	return ({ "No package argument." });
-      res=tarfile_contents(roxen_path(QUERY(pkgdir))+args->package+".tar");
+      res=tarfile_contents(roxen_path(QUERY(pkgdir))+"/"+args->package+".tar");
       return 0;
     }
 
@@ -659,7 +659,7 @@ mapping get_headers()
 
 int completely_downloaded(int num)
 {
-  Stat stat=r_file_stat(roxen_path(QUERY(pkgdir))+num+".tar");
+  Stat stat=r_file_stat(roxen_path(QUERY(pkgdir))+"/"+num+".tar");
   return (stat && (stat[1]==pkginfo[(string)num]->size));
 }
 
@@ -720,7 +720,7 @@ class GetPackage
     // FIXME: rewrite this to use a file object and stream to disk?
     Stdio.File f;
 
-    if(catch(f=Stdio.File(roxen_path(QUERY(pkgdir))+num+".tar","wc")))
+    if(catch(f=Stdio.File(roxen_path(QUERY(pkgdir))+"/"+num+".tar","wc")))
     {
       report_error("Update: Failed to open file for writing: "+
 		   roxen_path(QUERY(pkgdir))+num+".tar\n");
@@ -731,7 +731,7 @@ class GetPackage
     {
       report_error("Update: Failed to write package to file: "+
 		   roxen_path(QUERY(pkgdir))+num+".tar\n");
-      catch(r_rm(QUERY(pkgdir)+num+".tar"));
+      catch(r_rm(QUERY(pkgdir)+"/"+num+".tar"));
       catch(m_delete(package_downloads, num));
       return;
     }
