@@ -5,7 +5,7 @@
  */
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.382 2000/01/03 01:24:59 nilsson Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.383 2000/01/05 17:39:56 mast Exp $";
 
 object backend_thread;
 ArgCache argcache;
@@ -2383,6 +2383,7 @@ void create()
   dump( "base_server/fonts.pike");
   dump( "base_server/hosts.pike");
   dump( "base_server/language.pike");
+  dump( "base_server/configuration.pike" );
 
 #ifndef __NT__
   if(!getuid())
@@ -2445,15 +2446,8 @@ void create()
   add_constant( "color_name",  Colors.color_name  );
   add_constant( "colors",      Colors             );
   add_constant( "roxen.fonts", (fonts = (object)"fonts.pike") );
-  if ((file_stat("base_server/configuration.pike.o")||(<>))[ST_MTIME] <
-      file_stat("base_server/configuration.pike")[ST_MTIME] ||
-      // This since configuration.pike #includes rxml.pike.
-      (file_stat("base_server/configuration.pike.o")||(<>))[ST_MTIME] <
-      file_stat("base_server/rxml.pike")[ST_MTIME])
-    rm ("base_server/configuration.pike.o");
 
   Configuration = (program)"configuration";
-  dump( "base_server/configuration.pike" );
   add_constant( "Configuration", Configuration );
 
   call_out(post_create,1); //we just want to delay some things a little
