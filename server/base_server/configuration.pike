@@ -3,7 +3,7 @@
 //
 // German translation by Kai Voigt
 
-constant cvs_version = "$Id: configuration.pike,v 1.305 2000/05/07 21:24:47 kinkie Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.306 2000/05/08 05:52:54 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -3175,7 +3175,15 @@ void create(string config)
 {
   name=config;
 
-  defvar("comment", "", "Virtual server comment",
+  defvar("default_server", 0, "Default site",
+	 TYPE_FLAG,
+	 "If true, this site will be selected in preference of "
+	 "other sites when virtual hosting is used and no host "
+	 "header is supplied, or the supplied host header does not "
+	 "match the address of any of the other servers." );
+
+
+  defvar("comment", "", "Site comment",
 	 TYPE_TEXT_FIELD|VAR_MORE,
 	 "This text will be visible in the administration interface, it "
 	 " can be quite useful to use as a memory helper.");
@@ -3186,7 +3194,7 @@ void create(string config)
   deflocaledoc("svenska", "comment", "Kommentar",
 	       "En kommentar som syns i konfigurationsinterfacet.");
 
-  defvar("name", "", "Virtual server name",
+  defvar("name", "", "Site name",
 	 TYPE_STRING|VAR_MORE,
 	 "This is the name that will be used in the configuration "
 	 "interface. If this is left empty, the actual name of the "
