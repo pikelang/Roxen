@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 1999, Idonex AB.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.13 2000/02/12 18:45:53 wellhard Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.14 2000/02/18 00:54:13 nilsson Exp $";
 //constant thread_safe=1;
 
 #include <module.h>
@@ -9,15 +9,10 @@ inherit "roxenlib";
 
 #define INT_TAG "_js_quote"
 
-array register_module()
-{
-  return ({ 
-    MODULE_PARSER|MODULE_FILTER|MODULE_PROVIDER,
-    "Javascript Support", 
-    "This module provides some tags to support javascript development "
-    "(i.e. Javascript popup menus).",
-    0, 1, });
-}
+constant module_type = MODULE_PARSER|MODULE_FILTER|MODULE_PROVIDER;
+constant module_name = "Javascript Support";
+constant module_doc  = "This module provides some tags to support javascript development "
+  "(i.e. Javascript popup menus).";
 
 string|array(string) query_provides()
 {
