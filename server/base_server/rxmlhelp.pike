@@ -76,15 +76,16 @@ static string attr_vals(string v)
 }
 
 static string noex_cont(string t, mapping m, string c) {
-  return Parser.HTML()->add_container("ex","")->feed(c)->read();
+  return Parser.HTML()->add_container("ex","")->
+    add_quote_tag("!--","","--")->feed(c)->read();
 }
 
 static string ex_cont(string t, mapping m, string c, string rt, void|object id)
 {
   c=Parser.HTML()->add_container("ent", lambda(string t, mapping m, string c) {
 					  return "&amp;"+c+";"; 
-					} )
-    ->feed(c)->read();
+					} )->
+    add_quote_tag("!--","","--")->feed(c)->read();
   string quoted="<pre>"+replace(c, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
   if(m->type=="box")
     return "<br />"+mktable( ({ ({ quoted }) }) );
@@ -190,7 +191,8 @@ static string format_doc(string|mapping doc, string name, void|object id)
                      return m->hide?"":c; 
                    },
          ]) )->
-         set_extra(name, id)->feed(doc)->read();
+    add_quote_tag("!--","","--")->
+    set_extra(name, id)->feed(doc)->read();
 }
 
 
