@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 2001, Roxen IS.
-// $Id: prototypes.pike,v 1.55 2002/06/18 16:16:22 nilsson Exp $
+// $Id: prototypes.pike,v 1.56 2002/06/28 23:17:10 nilsson Exp $
 
 #include <stat.h>
 #include <config.h>
@@ -1162,4 +1162,35 @@ class UserDB
   {
     return 0;
   }
+}
+
+class FontHandlers
+{
+  class Font
+  {
+    Image.Image write( string ... what );
+    array(int) text_extents( string ... what );
+    int height();
+    void right();
+    void left();
+    void center();
+    void set_x_spacing();
+    void set_y_spacing();
+  };
+  class FontHandler
+  {
+    int has_font(string name, int size);
+    Font open( string name, int size, int bold, int italic );
+    void flush_caches();
+    array(string) available_fonts(int(0..1)|void force_reload);
+    array(mapping(string:mixed)) font_information(string name);
+  };
+  array available_font_versions(string name, int size);
+  string describe_font_type(string n);
+  Font get_font(string f, int size, int bold, int italic,
+		string justification, float|int xspace, float|int yspace);
+  Font resolve_font(string f, string|void justification);
+  string verify_font(string f, void|int size);
+  array(string) available_fonts(int(0..1)|void force_reload);
+  array get_font_information(void|int scalable_only);
 }
