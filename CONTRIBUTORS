@@ -1,0 +1,75 @@
+Contributors:
+-------------
+
+Roxen Core:
+	Per Hedbor and Henrik Grubbström
+
+Pike Core:
+	Fredrik Hübinette
+
+Cryptography module and SSL support:
+	Niels Möller
+
+Image module:
+	Pontus Hagland
+
+MIME support:
+	Marcus Comstedt
+
+Various modules:
+	Peter Bortas
+	Björn Ericsson
+	David Hedbor
+	Fredrik Noring
+	Johan Schön
+	Martin Stjernholm
+	Henrik Wallin
+	Jonas Walden
+
+
+The following people have made valuable contributions to Roxen & Pike:
+----------------------------------------------------------------------
+
+Ian Carr-de Avelon	Several valuable suggestions and ideas.
+
+Martin Baer		Fixes to the hostredirect and several other modules.
+
+Tvns Böker		The German language-module.
+
+Francesco Chemolli	The Postgres and Msql database modules and
+			the Italian language-module.
+
+Janne Edelman		The Finnish language-module.
+
+Kai Garlipp		ISO-8859-1 entity support for the graphical text
+			module, and several fixes.
+
+Patrick Kremer		The French language-module.
+
+Wilhelm Köhler		The disk-cache system, and several fixes.
+
+Eric Lammerts		Fixes to the CGI-module.
+
+Alistair MacDonald	Fixes to the hostredirect module.
+
+Klara Makovac		The Croatian language-module.
+
+Jordi Murgo		The Spanish language-module.
+
+Morten Hol Møller	The Norwegian language-module.
+
+Goran Opacic		The Serbian language-module.
+
+Jason Rumney		The Maaori language-module, and some fixes.
+
+Celso J. Sawaia		The Portuguese language-module.
+
+Iztok Umek		The Slovenian language-module.
+
+Zsolt Varga		Valuable ideas.
+
+Bill Welliver		Fixes to the SQL module.
+
+The Roxen Alphatesters	Several valuable bugreports and fixes.
+
+And several others.
