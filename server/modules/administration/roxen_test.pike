@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.58 2002/11/06 19:42:54 mani Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.59 2002/11/17 17:57:00 mani Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "ChiliMoon self test module";
@@ -108,7 +108,7 @@ string rxml_error(RXML.Backtrace err, RXML.Type type) {
 }
 
 string canon_html(string in) {
-  return Roxen.get_xml_parser()->_set_tag_callback (
+  return Parser.get_xml_parser()->_set_tag_callback (
     lambda (Parser.HTML p, string tag) {
       int xml = tag[-2] == '/';
       string ut = p->tag_name();
@@ -203,7 +203,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
   RequestID id = get_id();
   int no_canon;
   Parser.HTML parser =
-    Roxen.get_xml_parser()->
+    Parser.get_xml_parser()->
     add_containers( ([ "rxml" :
 		       lambda(object t, mapping m, string c) {
 			 test_test( c );
@@ -437,7 +437,7 @@ void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_co
 
   string res;
   Parser.HTML parser =
-    Roxen.get_xml_parser()->
+    Parser.get_xml_parser()->
     add_containers( ([ "rxml":
 		       lambda(object t, mapping m, string c) {
 			 tag_test_data = c;
@@ -528,7 +528,7 @@ void run_xml_tests(string data) {
 
   ltests=0;
   lfails=0;
-  Roxen.get_xml_parser()->add_containers( ([
+  Parser.get_xml_parser()->add_containers( ([
     "add-module" : xml_add_module,
     "drop-module" : xml_dummy /* xml_drop_module */,
     "use-module": xml_use_module,
@@ -540,13 +540,15 @@ void run_xml_tests(string data) {
     set_extra (p_code_cache, used_modules)->
     finish(data);
 
-  data = Roxen.get_xml_parser()->add_quote_tag("!--","","--")->finish(data)->read();
+  data = Parser.get_xml_parser()->
+    add_quote_tag("!--","","--")->
+    finish(data)->read();
   if(ltests<sizeof(data/"</test>")-1)
     report_warning("Possibly XML error in testsuite.\n");
 
   // Go through them again, evaluation from the p-code this time.
   ltests=0;
-  Roxen.get_xml_parser()->add_containers( ([
+  Parser.get_xml_parser()->add_containers( ([
     "add-module" : xml_dummy /* xml_add_module */,
     "drop-module" : xml_drop_module,
     "test" : xml_test,
