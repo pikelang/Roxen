@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.62 2000/09/04 07:29:04 per Exp $
+// $Id: fonts.pike,v 1.63 2000/09/23 00:54:15 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -297,11 +297,14 @@ void create()
       {
         FontHandler f = ((program)( roxen_path( "font_handlers/"+fh ) ))( );
         roxen.dump( roxen_path( "font_handlers/"+fh ) );
-        werror("    "+f->name+" ("+(f->scalable?"scalable":"bitmap")+")\n");
-        if( f->scalable )
-          font_handlers = ({ f }) + font_handlers;
-        else
-          font_handlers += ({ f });
+        if( f->name && f->open )
+        {
+          werror("    "+f->name+" ("+(f->scalable?"scalable":"bitmap")+")\n");
+          if( f->scalable )
+            font_handlers = ({ f }) + font_handlers;
+          else
+            font_handlers += ({ f });
+        }
       }
     };
   }
