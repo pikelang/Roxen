@@ -1,18 +1,21 @@
+<trans-reg project="update_client" path="translations/%L/update_client.xml"/>
 <cf-perm perm='Update'>
 <topmenu selected="update"/>
 <cv-leftside>
   <img src="internal-roxen-unit" height="26" />
   <br />
   <gbutton href="update.html?update_list=1" width="150"
-           bgcolor="&usr.fade1;">Update List</gbutton>
+           bgcolor="&usr.fade1;"><translate id="1">Update List</translate></gbutton>
   <br />
 
   <if match="x&form.category;&form.uninstall;x == xx">
     <gbutton href="update.html" width="150" bgcolor="&usr.left-selbuttonbg;"
-             icon_src="&usr.selected-indicator;" icon_align="left">Main</gbutton>
+             icon_src="&usr.selected-indicator;" icon_align="left"
+             ><translate id="2">Main</translate></gbutton>
   </if>
   <else>
-    <gbutton href="update.html" width="150" bgcolor="&usr.fade1;">Main</gbutton>
+    <gbutton href="update.html" width="150"
+             bgcolor="&usr.fade1;"><translate id="2">Main</translate></gbutton>
   </else>
 
   <emit source="update-products">

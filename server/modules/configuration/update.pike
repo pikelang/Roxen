@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.26 2000/11/20 13:36:36 per Exp $
+ * $Id: update.pike,v 1.27 2000/11/30 19:07:42 nilsson Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000, Roxen IS.
@@ -32,11 +32,11 @@ inherit "module";
 
 // --- Locale defines ---
 //<locale-token project="roxen_start">   LOC_S </locale-token>
-//<locale-token project="roxen_config">  LOC_C </locale-token>
-//<locale-token project="roxen_message"> LOC_M </locale-token>
+//<locale-token project="update_client"> LOC_U </locale-token>
+//<locale-token project="update_client"> LOC_UD</locale-token>
 #define LOC_S(X,Y)	_STR_LOCALE("roxen_start",X,Y)
-#define LOC_C(X,Y)	_DEF_LOCALE("roxen_config",X,Y)
-#define LOC_M(X,Y)	_STR_LOCALE("roxen_message",X,Y)
+#define LOC_U(X,Y)	_STR_LOCALE("update_client",X,Y)
+#define LOC_UD(X,Y)     _DEF_LOCALE("update_client",X,Y)
 
 
 constant module_type = MODULE_TAG|MODULE_CONFIG;
@@ -124,21 +124,22 @@ void create()
 	 TYPE_FLAG,
          "Turn this off if you're inside a firewall and/or don't want to "
 	 "reveal anything to the outside world.");
+  Locale.register_project("update_client", "translations/%L/update_client.xml");
 }
 
 static string describe_time_period( int amnt )
 {
-  if(amnt < 0) return "some time";
+  if(amnt < 0) return LOC_U(18,"some time");
   amnt/=60;
-  if(amnt < 120) return amnt+" minutes";
+  if(amnt < 120) return sprintf(LOC_U(32,"%d minutes"), amnt);
   amnt/=60;
-  if(amnt < 48) return amnt+" hours";
+  if(amnt < 48) return sprintf(LOC_U(33,"%d hours"), amnt);
   amnt/=24;
-  if(amnt < 60) return amnt+" days";
+  if(amnt < 60) return sprintf(LOC_U(34,"%d days"), amnt);
   amnt/=(365/12);
-  if(amnt < 30) return amnt+" months";
+  if(amnt < 30) return sprintf(LOC_U(35,"%d months"), amnt);
   amnt/=12;
-  return amnt+" years";
+  return sprintf(LOC_U(36,"%d years"), amnt);
 }
 
 class TagUpdateShowBacktrace {
@@ -153,24 +154,28 @@ class TagUpdateShowBacktrace {
 
       int t;
       if(catch(t=misc["last_updated"]) || t==0)
-	RXML.set_var("last_updated", "infinitely long", "var");
+	RXML.set_var("last_updated", LOC_U(37,"infinitely long"), "var");
       else
 	RXML.set_var("last_updated", describe_time_period(time(1)-t), "var");
 
       if(init_error)
       {
-	string s="<font color='darkred'><h1>Update client initialization error</h1></font>";
+	string s="<font color='darkred'><h1>"+
+	  LOC_U(38, "Update client initialization error") + "</h1></font>";
 	if(search(describe_backtrace(init_error), "Out-locked")!=-1)
 	{
-	  s+="<h>Possible causes:</h2>"
-	    "<ol><li>Yabu does not have permission to create/write/read its files. "
-	    "Solution: Change permissions on the relevant files.</li>"
-	    "<li> Yabu is out locked by another process. This indicates that several "
-	    "Roxen servers are running on the same files! Solution: Kill the offending "
-	    "Roxen processes.</li></ol><br/><br/>";
+	  s+="<h2>"+ LOC_U(39,"Possible causes:")+"</h2>"
+	    "<ol><li>" + LOC_U(40, "Yabu does not have permission to create/write/read "
+			       "its files.") + "<br />"+
+	    LOC_U(41, "Solution: Change permissions on the relevant files.") + "</li>"
+	    "<li>"+ LOC_U(42, "Yabu is out locked by another process. This indicates "
+			  "that several Roxen servers are running on the same files!") + 
+	    "<br />"+ LOC_U(43, "Solution: Kill the offending Roxen processes.") + 
+	    "</li></ol><br /><br />";
 	}
     
-	s+="<h2>Backtrace:</h2><pre>"+describe_backtrace(init_error)+"</pre>";
+	s+="<h2>"+LOC_U(44, "Backtrace:")+"</h2><pre>"+
+	  describe_backtrace(init_error)+"</pre>";
 	id->variables->category="foo";
 	return ({ s });
       }
@@ -180,10 +185,10 @@ class TagUpdateShowBacktrace {
 }
 
 array(array) products = ({
-  ({ "Products","products" }),
-  ({ "Security","security" }),
-  ({ "Bugfixes","bugfixes" }),
-  ({ "Third party","3rdpart" }),
+  ({ LOC_UD(9, "Products"), "products" }),
+  ({ LOC_UD(45, "Security"), "security" }),
+  ({ LOC_UD(46, "Bugfixes"), "bugfixes" }),
+  ({ LOC_UD(47, "Third party"), "3rdpart" }),
 });
 
 class TagEmitUpdateProducts {
@@ -192,9 +197,9 @@ class TagEmitUpdateProducts {
   constant plugin_name = "update-products";
 
   array(mapping(string:string)) get_dataset(mapping m, RequestID id) {
-    return map(products, lambda(array x) {
-			   return ([ "name":x[0], "cat":x[1] ]);
-			     });
+    return map( ({})+products, lambda(array x) {
+				 return ([ "name":x[0], "cat":x[1] ]);
+			       });
   }
 }
 
@@ -506,12 +511,14 @@ class TagUpdateInstallPackage {
 
     array do_return(RequestID id) {
       if(!completely_downloaded((int)args->package))
-	return ({ "<b>Package not completely downloaded.</b>" });
+	return ({ "<b>"+ LOC_U(48, "Package not completely downloaded.") +"</b>" });
 
       mixed err;
       string res;
       if(err=catch(res=unpack_tarfile(roxen_path(QUERY(pkgdir))+"/"+(int)args->package+".tar")))
-	return ({ err+"<br /><br /><b>Could not install package. Fix the problems above and try again.</b>" });
+	return ({ err+"<br /><br /><b>"+
+		  LOC_U(49, "Could not install package. Fix the problems above and try again.")
+		  +"</b>" });
 
       id->variables[args->variable]="1";
       installed[args->package]=1;
@@ -519,7 +526,7 @@ class TagUpdateInstallPackage {
 
       catch(Stdio.recursive_rm(roxen_path("$VVARDIR/precompiled/")));
 
-      result = res+"<br /><br /><b>Package installed completely.</b>";
+      result = res+"<br /><br /><b>"+LOC_U(50, "Package installed completely.")+"</b>";
       return 0;
     }
   }
@@ -559,7 +566,7 @@ class TagUpdatePackageContents {
 
     array do_enter(RequestID id) {
       if(!args->package)
-	return ({ "No package argument." });
+	return ({ LOC_U(51, "No package argument.") });
       res=tarfile_contents(roxen_path(QUERY(pkgdir))+"/"+args->package+".tar");
       return 0;
     }

@@ -17,7 +17,7 @@
 </if>
 <if variable="form.yes">
   <update-install-package package="&form.install;" /><br />
-  <a href="update.html">[Return]</a>
+  <a href="update.html"><translate id="23">[Return]</translate></a>
 </if>
 <else>
 
@@ -25,24 +25,31 @@
 
 <update-package package="&form.install;" scope="pkg">
 <table>
-  <item title="Description" name="description" type="pre" />
-  <item title="Organization" name="organization" />
-  <item title="Author" name="author-name" />
-  <item title="License" name="license" />
-  <item title="Date" name="date" />
+  <translate id="14" variable="var.title">Description</translate>
+  <item title="&var.title;" name="description" type="pre" />
+  <translate id="19" variable="var.title">Organization</translate>
+  <item title="&var.title;" name="organization" />
+  <translate id="20" variable="var.title">Author</translate>
+  <item title="&var.title;" name="author-name" />
+  <translate id="21" variable="var.title">License</translate>
+  <item title="&var.title;" name="license" />
+  <translate id="22" variable="var.title">Date</translate>
+  <item title="&var.title;" name="date" />
 </table>
 </update-package>
 <br />
 
 <if variable="form.show">
-  <input type=submit name="hide" value="Hide package contents"><br />
+  <translate id="24" variable="var.title">Hide package contents</translate>
+  <input type=submit name="hide" value="&var.title;"><br />
   <br />
-  <cv-obox title="The following files will be installed:">
+  <translate id="25" variable="var.title">The following files will be installed:</translate>
+  <cv-obox title="&var.title;">
   <table cellpadding="0">
     <tr>
-      <td nowrap="nowrap"><b>Size</b></td>
+      <td nowrap="nowrap"><b><translate id="15">Size</translate></b></td>
       <td>&nbsp;</td>
-      <td nowrap="nowrap"><b>Path</b></td>
+      <td nowrap="nowrap"><b><translate id="26">Path</translate></b></td>
     </tr>
     <update-package-contents package="&form.install;">
       <tr>
@@ -55,12 +62,15 @@
   </cv-obox>  
 </if>
 <else>
-  <input type="submit" name="show" value="Show package contents" />
+  <translate id="27" variable="var.title">Show package contents</translate>
+  <input type="submit" name="show" value="&var.title;" />
 </else> 
 <br />
 <br />
-<b>Do you really want to install this package?</b>
+<b><translate id="28">Do you really want to install this package?</translate></b>
 <br />
 <input type="hidden" name="install" value="&form.install;" />
-<input type="submit" name="yes" value="   Yes   " />&nbsp;&nbsp;&nbsp;
-<input type="submit" name="no" value="   No   " />
+<translate id="29" variable="var.title;">Yes</translate>
+<input type="submit" name="yes" value="   &var.title;   " />&nbsp;&nbsp;&nbsp;
+<translate id="30" variable="var.title">No</translate>
+<input type="submit" name="no" value="   &var.title;   " />

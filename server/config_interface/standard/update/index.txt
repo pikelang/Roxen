@@ -1,4 +1,3 @@
-
 <define tag="cat-list" scope="cat">
   <br />
   <table bgcolor="&usr.obox-titlebg;" width="100%">
@@ -6,15 +5,17 @@
   </table>
   <rul>
   <update-package type="&_.name;" limit="5">
-    <eval><rli>&_.title; <a href="update.html?page=details&details=&_.id;">[Details...]</a></rli></eval>
+    <eval><rli>&_.title; <a href="update.html?page=details&details=&_.id;">
+      <translate id="3">[Details...]</translate></a></rli></eval>
     <set variable="var._&cat.name;" value='foo'/>
   </update-package>
   </rul>
   <if not="1" variable="var._&_.name;">
-     &nbsp; Currently no packages in this category.<br />
+     &nbsp; <translate id="4">Currently no packages in this category.</translate><br />
   </if>
   <else>
-    <a href="update.html?page=category&category=&_.name;">[More..]</a><br />
+    <a href="update.html?page=category&category=&_.name;">
+      <translate id="5">[More..]</translate></a><br />
   </else>
   &nbsp;
 </define>
@@ -35,20 +36,25 @@
 </if>
 
 
-<h1>Roxen Update System</h1>
+<h1><translate id="6">Roxen Update System</translate></h1>
 
 <if variable="form.update_list">
   <update-update-list/>
   <update-scan-local-packages/>
-  Launched a package list update request.<br />
+  <translate id="7">Launched a package list update request.</translate><br />
 </if>
 
-This information was last synchronized with the main server &var.last_updated; ago.
+<eval><translate id="8">This information was last synchronized with the main server
+ &var.last_updated; ago.</translate></eval>
 
-<cat-list name="idonex" title="Products" />
-<cat-list name="security" title="Security fixes" />
-<cat-list name="bugfixes" title="Bug fixes" />
-<cat-list name="3rdpart" title="Third party modules" /> 
+<translate id="9" variable="var.title">Products</translate>
+<cat-list name="idonex" title="&var.title;" />
+<translate id="10" variable="var.title">Security fixes</translate>
+<cat-list name="security" title="&var.title;" />
+<translate id="11" variable="var.title">Bug fixes</translate>
+<cat-list name="bugfixes" title="&var.title;" />
+<translate id="12" variable="var.title">Thirs party modules</translate>
+<cat-list name="3rdpart" title="&var.title;" /> 
 
 
 <?comment --- Information boxes ------------------------- ?>
@@ -87,12 +93,13 @@ This information was last synchronized with the main server &var.last_updated; a
 
 <if sizeof="var.dip > 4">
 <td>
-  <cv-obox title="Downloads&nbsp;in&nbsp;progress">
+  <translate id="13" variable="var.title">Downloads&nbsp;in&nbsp;progress</translate>
+  <cv-obox title="&var.title;">
     <table cellpadding="4">
       <tr>
-	<td nowrap="nowrap"><b>Description</b></td>
-	<td nowrap="nowrap"><b>Size</b></td>
-	<td nowrap="nowrap"><b>Downloaded</b></td>
+	<td nowrap="nowrap"><b><translate id="14">Description</translate></b></td>
+	<td nowrap="nowrap"><b><translate id="15">Size</translate></b></td>
+	<td nowrap="nowrap"><b><translate id="16">Downloaded</translate></b></td>
      </tr>
      &var.dip:none;
     </table>
@@ -101,11 +108,12 @@ This information was last synchronized with the main server &var.last_updated; a
 </if>
 <if sizeof="var.dp > 4">
 <td>
-  <cv-obox title="Downloaded&nbsp;packages">
+  <translate id="17" variable="var.title">Downloaded&nbsp;packages</translate>
+  <cv-obox title="&var.title;">
     <table cellpadding="4">
       <tr>
-	<td nowrap="nowrap"><b>Description</b></td>
-	<td nowrap="nowrap"><b>Size</b></td>
+	<td nowrap="nowrap"><b><translate id="14">Description</translate></b></td>
+	<td nowrap="nowrap"><b><translate id="15">Size</translate></b></td>
 	<td nowrap="nowrap"></td>
       </tr>
       &var.dp:none;

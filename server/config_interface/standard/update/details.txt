@@ -17,12 +17,18 @@
 </update-package>
 <update-package package="&form.details;" scope="pkg">
 <table>
-  <item title="Description" name="description" type="pre" />
-  <item title="Size" name="size" />
-  <item title="Organization" name="organization" />
-  <item title="Author" name="author-name" />
-  <item title="License" name="license" />
-  <item title="Date" name="date" />
+  <translate id="14" variable="var.title">Description</translate>
+  <item title="&var.title;" name="description" type="pre" />
+  <translate id="15" variable="var.title">Size</translate>
+  <item title="&var.title;" name="size" />
+  <translate id="19" variable="var.title">Organization</translate>
+  <item title="&var.title;" name="organization" />
+  <translate id="20" variable="var.title">Author</translate>
+  <item title="&var.title;" name="author-name" />
+  <translate id="21" variable="var.title">License</translate>
+  <item title="&var.title;" name="license" />
+  <translate id="22" variable="var.title">Date</translate>
+  <item title="&var.title;" name="date" />
 </table>
 </update-package>
 
