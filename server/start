@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.72 1999/08/30 09:36:58 per Exp $
+# $Id: start,v 1.73 1999/09/02 18:30:52 per Exp $
 
 cd `dirname $0`
 
@@ -46,7 +46,7 @@ if uname | grep 'SunOS' >/dev/null 2>&1; then
     if [ $verbose -gt 0 ] ; then
       echo 'Solaris 2.5 or later detected. Enabling threads (if available).'
     fi
-    DEFINES="$DEFINES -DENABLE_THREADS"
+    DEFINES="$DEFINES -DENABLE_THREADS -DTHREADS"
     if $pike --version 2>&1|head -1|grep 0.5 ; then
        if [ $verbose -gt 0 ] ; then
          echo Pike 0.5 detected. Threads disabled
