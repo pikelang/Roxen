@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.6 2000/03/07 18:52:37 grubba Exp $
+ * $Id: create_configif.pike,v 1.7 2000/03/07 18:56:46 grubba Exp $
  *
  * Create an initial configuration interface server.
  */
@@ -103,6 +103,10 @@ replace(
 
 <region name='EnabledModules'>
   <var name='config_filesystem#0'> <int>1</int>  </var> <!-- Configration Filesystem -->
+</region>
+
+<region name='pikescript#0'>
+  <var name='trusted'><int>1</int></var>
 </region>
 
 <region name='spider#0'>
