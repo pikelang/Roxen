@@ -23,7 +23,8 @@ OS=`uname -srm|sed -e 's/ /-/g'|tr '[A-Z]' '[a-z]'|tr '/' '_'`
 all: pike_version_test
 
 
-install : all install_dirs install_data mysql make_demo_cert config_test buildenv_test
+install : all install_dirs install_data mysql make_demo_cert config_test \
+          buildenv_test
 
 	
 pike_version_test:
@@ -59,6 +60,8 @@ install_dirs:
 	${INSTALL_DIR} -dD ${PROG_DIR}/server/mysql/share;
 	${INSTALL_DIR} -dD ${PROG_DIR}/server/data;
 	${INSTALL_DIR} -dD ${PROG_DIR}/local;
+	${INSTALL_DIR} -dD ${PROG_DIR}/local/modules;
+	${INSTALL_DIR} -dD ${PROG_DIR}/local/fonts;
 
 install_data:
 	${INSTALL_DATA_R} server/admin_interface	${PROG_DIR}/server/;
@@ -120,8 +123,8 @@ selftest:
 mysql:
 	
 	cd ${PROG_DIR}/server/mysql;\
-	if [ ./lnmysql.sh; ] ; then\
-	: ;\
+	if [ -f ./lnmysql.sh ] ; then\
+	./lnmysql.sh;\
 	fi
 
 make_demo_cert:
