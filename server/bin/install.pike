@@ -5,7 +5,7 @@
  * doc = "Main part of the installscript that is run upon installation of roxen";
  */
 
-string cvs_version = "$Id: install.pike,v 1.22 1997/10/15 13:57:31 grubba Exp $";
+string cvs_version = "$Id: install.pike,v 1.23 1997/10/15 13:57:47 grubba Exp $";
 
 #include <simulate.h>
 #include <roxen.h>
@@ -399,7 +399,7 @@ void main(int argc, string *argv)
 	    "It is recommended that you change the certificate to one of your own.\n");
     }
   } else {
-    if (crypto) {
+    if (have_crypto) {
       write("[1mNo Gmp-module -- using http for the configuration-interface[0m.\n");
     } else {
       write("[1mExport version -- using http for the configuration-interface[0m.\n");
