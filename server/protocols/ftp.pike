@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.69 2001/09/11 12:11:24 grubba Exp $
+ * $Id: ftp.pike,v 2.70 2001/09/22 12:32:46 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -210,15 +210,28 @@ class RequestID2
   }
 };
 
-class FileWrapper(static private object f,
-		  static private string data,
-		  static private object ftpsession)
+class FileWrapper
 {
   static string convert(string s);
 
   static private function read_cb;
   static private function close_cb;
   static private mixed id;
+
+  static private object f;
+  static private string data;
+  static private object ftpsession;
+
+  int is_file;
+
+  static void create(object f_, string data_, object ftpsession_)
+  {
+    f = f_;
+    data = data_;
+    ftpsession = ftpsession_;
+
+    is_file = f_->is_file;
+  }
 
   static private void read_callback(mixed i, string s)
   {
@@ -395,15 +408,28 @@ class FromEBCDICWrapper
 }
 
 
-class PutFileWrapper(static object from_fd,
-		     static object session,
-		     static object ftpsession)
+class PutFileWrapper
 {
   static int response_code = 226;
   static string response = "Stored.";
   static string gotdata = "";
   static int closed, recvd;
   static function other_read_callback;
+
+  static object from_fd;
+  static object session;
+  static object ftpsession;
+
+  int is_file;
+
+  static void create(object from_fd_, object session_, object ftpsession_)
+  {
+    from_fd = from_fd_;
+    session = session_;
+    ftpsession = ftpsession_;
+
+    is_file = from_fd->is_file;
+  }
 
 #include <variables.h>
 
