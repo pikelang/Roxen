@@ -136,10 +136,7 @@ urw_itc_avant_garde-demi-r binary
 /server/protocols/ssleay.pike foreign_ident
 /server/unfinishedmodules/deepthought.pike foreign_ident
 /server/unfinishedmodules/extended_logger.pike foreign_ident
-/server/unfinishedmodules/fastcgi.pike foreign_ident
 /server/unfinishedmodules/hedbor.pike foreign_ident
-/server/unfinishedmodules/javascript.pike foreign_ident
 /server/unfinishedmodules/mountserver.pike foreign_ident
-/server/unfinishedmodules/tree.pike foreign_ident
 /server/unfinishedmodules/whois++.pike foreign_ident
 /tools/convert_accessed.pike foreign_ident
