@@ -22,8 +22,6 @@ string template_for( string f, object id )
 
 mixed stat_file( string f, object id )
 {
-//   if( sizeof(array_sscanf( f, "%[^/]/%s" )) != 2 )
-//     return 0;
   f = utf8_to_string( f );
   return ::stat_file( f, id );
 }
