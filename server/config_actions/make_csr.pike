@@ -1,5 +1,5 @@
 /*
- * $Id: make_csr.pike,v 1.5 1998/04/20 04:36:10 nisse Exp $
+ * $Id: make_csr.pike,v 1.6 1998/04/21 16:46:15 nisse Exp $
  */
 
 inherit "wizard";
@@ -128,9 +128,12 @@ mixed page_2(object id, object mc)
 {
   return ("<font size=+1>Certificate Attributes?</font><p>"
 	  "<help><blockquote>"
-	  "The primary parts of a certificate are a Common Name "
-	  "and a public key. In addition to these components, a "
-	  "certificate may contain other useful information."
+	  "An X.509 certificate associates a Common Name\n"
+	  "with a public key. Some certificate authorities support\n"
+	  "\"extended certificates\", defined in PKCS#10. An extended\n"
+	  "certificate may contain other useful information associated\n"
+	  "with the name and the key. This information is signed by the\n"
+	  "CA, together with the X.509 certificate.\n"
 	  "</blockquote></help>\n"
 
 	  "<var name=emailAddress type=string><br>Email address<br>"
@@ -222,18 +225,20 @@ mixed page_4(object id, object mc)
     if (attrs[attr])
       cert_attrs[attr] = ({ asn1_IA5_string(attrs[attr]) });
   }
-  
-  csr_attrs->extendedCertificateAttributes =
-    ({ Certificate.Attributes(Identifiers.attribute_ids,
-				 cert_attrs) });
 
+  /* Not all CA:s support extendedCertificateAttributes */
+  if (sizeof(cert_attrs))
+    csr_attrs->extendedCertificateAttributes =
+      ({ Certificate.Attributes(Identifiers.attribute_ids,
+				cert_attrs) });
+  
   object csr = CSR.build_csr(rsa,
 			     Certificate.build_distinguished_name(@name),
 			     csr_attrs);
 
-  return "<pre>"
+  return "<textarea cols=80 rows=12>"
     + Tools.PEM.simple_build_pem("CERTIFICATE REQUEST", csr->der())
-    +"</pre>";
+    +"</textarea>";
 }
 
 mixed wizard_done(object id, object mc)
