@@ -6,7 +6,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version = "$Id: awizard.pike,v 1.25 2002/01/07 16:04:14 mast Exp $";
+constant cvs_version = "$Id: awizard.pike,v 1.26 2003/08/15 08:12:55 mattias Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Advanced wizards";
@@ -21,7 +21,7 @@ int nid=1;
 
 string store( mapping what )
 {
-  call_out( m_delete, 3600*1, cache, (string)nid );
+  call_out( m_delete, 60*query("cache_timeout"), cache, (string)nid );
   cache[ (string)nid ] = what;
 //   werror("store -> "+nid+"\n");
   return (string)nid++;
@@ -465,6 +465,9 @@ class AWizard
 
 void create()
 {
+  defvar("cache_timeout", 60, "Cache timeout", TYPE_INT|VAR_MORE,
+	 "Timeout in minutes for the internal state and data cache.");
+
   defvar("debug", 0, "Debug mode", TYPE_FLAG|VAR_DEVELOPER, "");
 }
 
