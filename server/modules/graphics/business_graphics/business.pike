@@ -10,7 +10,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.64 1998/02/16 15:33:21 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.65 1998/02/16 19:53:57 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -112,6 +112,7 @@ mixed *register_module()
        "\n&lt;<b>xaxis</b>&gt; and &lt;<b>yaxis</b>&gt; (tags)\n"
        "Options:\n"
        /* " name=        Dunno what this does.\n" */
+       //I know!!! /Hedda
        "  <b>start</b>          Limit the start of the diagram at this quantity.\n"
        "                 If set to <b>min</b> the axis starts at the lowest value.\n\n"
        "  <b>stop</b>           Limit the end of the diagram at this quantity.\n"
