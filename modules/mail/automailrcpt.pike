@@ -1,5 +1,5 @@
 /*
- * $Id: automailrcpt.pike,v 1.8 1999/08/23 23:11:22 grubba Exp $
+ * $Id: automailrcpt.pike,v 1.9 1999/08/31 16:46:54 grubba Exp $
  *
  * A RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: automailrcpt.pike,v 1.8 1999/08/23 23:11:22 grubba Exp $";
+constant cvs_version = "$Id: automailrcpt.pike,v 1.9 1999/08/31 16:46:54 grubba Exp $";
 
 /*
  * Roxen glue
@@ -141,10 +141,15 @@ int put(string sender, string user, string domain,
 
     if (u && (!QUERY(automail_admin_support) ||
 	      conf->get_provider("automail_admin")->
-	      query_status(u->id,query_automail_name())))
+	      query_status(u->id, query_automail_name())))
     {
-      u->get_incoming()->create_mail_from_fd(mail);
-      res = 1;
+      if (u->get_incoming()->create_mail_from_fd(mail)) {
+	// Ok.
+	res = 1;
+      } else {
+	// Out of quota.
+	res = 2;
+      }
     }
   }
 
