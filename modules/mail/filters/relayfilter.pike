@@ -1,5 +1,5 @@
 /*
- * $Id: relayfilter.pike,v 1.2 1998/09/27 12:53:42 grubba Exp $
+ * $Id: relayfilter.pike,v 1.3 1998/09/27 13:00:03 grubba Exp $
  *
  * Support for RBL (Real-time Blackhole List).
  *
@@ -9,7 +9,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version="$Id: relayfilter.pike,v 1.2 1998/09/27 12:53:42 grubba Exp $";
+constant cvs_version="$Id: relayfilter.pike,v 1.3 1998/09/27 13:00:03 grubba Exp $";
 constant thread_safe=1;
 
 #define RELAYFILTER_DEBUG
@@ -133,10 +133,12 @@ class Checker
 	}
       }
     }
+
+    int res = parent->query(query_variable + "_default");
 #ifdef RELAYFILTER_DEBUG
-    roxen_perror(sprintf("RELAYFILTER: default\n"));
+    roxen_perror(sprintf("RELAYFILTER: default: %d\n", res));
 #endif /* RELAYFILTER_DEBUG */
-    return(parent->query(query_variable + "_default"));
+    return(res);
   }
 
   string status()
