@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.78 1997/09/14 20:02:40 neotron Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.79 1997/09/14 20:45:53 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
@@ -837,25 +837,35 @@ public mapping|int get_file(object id, int|void no_magic);
 #ifdef THREADS
 import Thread;
 
+mapping locked = ([]), thread_safe = ([]);
+
 object _lock(object|function f)
 {
   object key;
   function|int l;
+
   if (functionp(f)) {
     f = function_object(f);
   }
-  if (l = locks[f]) {
-    if (l != -1) {
+  if (l = locks[f])
+  {
+    if (l != -1)
+    {
       // Allow recursive locks.
-      catch {
+      catch
+      {
 	//perror("lock %O\n", f);
+	locked[f]++;
 	key = l();
       };
-    }
+    } else
+      thread_safe[f]++;
   } else if (f->thread_safe) {
     locks[f]=-1;
+    thread_safe[f]++;
   } else {
-    if (!locks[f]) {
+    if (!locks[f])
+    {
       // Needed to avoid race-condition.
       l = Mutex()->lock;
       if (!locks[f]) {
@@ -863,6 +873,7 @@ object _lock(object|function f)
       }
     }
     //perror("lock %O\n", f);
+    locked[f]++;
     key = l();
   }
   return key;

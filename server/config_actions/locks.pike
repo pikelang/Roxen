@@ -1,5 +1,5 @@
 /*
- * $Id: locks.pike,v 1.1 1997/09/14 20:38:45 per Exp $
+ * $Id: locks.pike,v 1.2 1997/09/14 20:45:55 per Exp $
  */
 #include <config.h>
 
@@ -36,7 +36,11 @@ mixed page_0(object id, object mc)
     L += c->thread_safe;
   }
   mapping res=([]);
-  string data="<font size=+1>Module lock status</font>";
+  string data=("<font size=+2>Module lock status</font><p>Accesses to all modules, "
+	       "Locked means that the access was done using a serializing lock since "
+	       "the module was not thread-safe, unlocked means that there was no need "
+	       "for a lock.<p>Locked accesses to a single module can be a "
+	       "quite severe performance degradation of the whole server");
   array mods = (indices(L)+indices(l));
   mods &= mods;
   foreach(mods, object q)
@@ -47,7 +51,7 @@ mixed page_0(object id, object mc)
   array rows = ({});
   foreach(sort(indices(res)), string q)
     rows += ({ ({q,(string)res[q],(string)locks[q] }) });
-  return data+html_table( ({ "Config", "File", "Locked accesses", "Unlocked" }), rows );
+  return data+html_table( ({ "Config", "File", "Locked", "Unlocked" }), rows );
 }
 
 mixed handle(object id) { return wizard_for(id,0); }
