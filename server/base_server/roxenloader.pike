@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.341 2003/03/06 10:31:19 jonasw Exp $
+// $Id: roxenloader.pike,v 1.342 2003/03/25 13:37:31 jonasw Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -28,7 +28,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.341 2003/03/06 10:31:19 jonasw Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.342 2003/03/25 13:37:31 jonasw Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2047,8 +2047,14 @@ and rebuild Pike from scratch.
   int start_time = gethrtime();
   string path = make_path("base_server", "etc/include", ".");
   last_was_nl = 1;
-  report_debug("-"*58+"\n"+version()+", Roxen WebServer "+roxen_version()+"\n");
-//   report_debug("Roxen loader version "+(cvs_version/" ")[2]+"\n");
+  mapping un = uname();
+  string hostinfo =
+    (un->sysname || "") + " " + (un->release || "") +
+    (un->machine ? (" (" + un->machine + ")") : "");
+  report_debug("-" * 65 + "\n"
+	       "Pike version:      " + version() + "\n"
+               "Product version:   " + roxen_product_name + " " + roxen_version() + "\n"
+               "Operating system:  " + hostinfo + "\n");
   master()->putenv("PIKE_INCLUDE_PATH", path);
   foreach(path/":", string p) {
     add_include_path(p);
