@@ -1,6 +1,6 @@
 // This file is part of Internet Server.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: html.pike,v 1.17 2002/07/03 20:20:32 nilsson Exp $
+// $Id: html.pike,v 1.18 2002/07/03 20:33:56 nilsson Exp $
 
 #pragma strict_types
 
@@ -105,21 +105,4 @@ string h3(string h)
   return "<h3>"+h+"</h3>\n\n";
 }
 
-string select(string name, array(string)|array(array(string)) choices,
-		  void|string selected) {
-  string ret = "<select name=\"" + name + "\">\n";
-
-  if(sizeof(choices) && arrayp(choices[0])) {
-    foreach([array(array(string))]choices, array(string) value)
-      ret += "<option value=\"" + value[0] + "\"" +
-	(value[0]==selected?" selected=\"selected\"":"") +
-	">" + value[1] + "</option>\n";
-  } else {
-    foreach([array(string)]choices, string value)
-      ret += "<option value=\"" + value + "\"" +
-	(value==selected?" selected=\"selected\"":"") +
-	">" + value + "</option>\n";
-  }
-
-  return ret + "</select>";
-}
+constant select = String.HTML.select;
