@@ -22,7 +22,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.232 2001/01/22 11:40:20 per Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.233 2001/01/22 18:36:01 per Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -996,11 +996,11 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
   if( !db ) db = "mysql";
   
   if( !my_mysql_cache[ro] )
-    my_mysql_cache[ro] = ([]);
+    my_mysql_cache[ ro ] = ([]);
   if( !( tl = my_mysql_cache[ro][db] ) )
-    tl = my_mysql_cache[ro][db] = Thread.Local();
+    tl = my_mysql_cache[ ro ][ db ] = Thread.Local();
 
-  if( tl->get() )
+  if( tl->get() ) 
   {
     tl->get()->query("USE "+db);
     return tl->get();
@@ -1016,14 +1016,13 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db )
       tl->set(Sql.Sql("mysql://ro@localhost:"+mysql_socket+"/"+db));
     else
       tl->set(Sql.Sql("mysql://rw@localhost:"+mysql_socket+"/"+db));
-  } && !ro && db=="mysql" )
-    throw( err );
-  if( catch( tl->get()->query( "USE "+db ) ) )
-  {
-    connect_to_my_mysql( 0, "mysql" )->query( "CREATE DATABASE "+db );
-    return connect_to_my_mysql( ro, db );
-  }
-  return tl->get();
+    return tl->get();
+  } )
+    if( db == "mysql" )
+      throw( err );
+
+  connect_to_my_mysql( 0, "mysql" )->query( "CREATE DATABASE "+db );
+  return connect_to_my_mysql( ro, db );
 }
 
 static mapping tailf_info = ([]);
@@ -1106,8 +1105,9 @@ void start_mysql()
                      "Please use 3.23.*\n");
 
     // 1: Create the 'ofiles' database.
-    if( !catch(db->query( "CREATE DATABASE ofiles" )) )
+    if( catch( db->query( "USE ofiles" ) ) )
     {
+      db->query( "CREATE DATABASE ofiles" );
       db->query( "USE ofiles" );
       db->query( "CREATE TABLE files ("
                  "id CHAR(30) NOT NULL PRIMARY KEY, "
@@ -1117,8 +1117,11 @@ void start_mysql()
     if( remove_dumped )
     {
       report_notice("Removing precompiled files\n");
-      db->query( "USE ofiles" );
-      db->query( "DELETE FROM files" );
+      catch
+      {
+	db->query( "USE ofiles" );
+	db->query( "DELETE FROM files" );
+      };
     }
   };
 
