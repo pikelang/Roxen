@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.347 2002/04/17 15:22:17 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.348 2002/05/16 19:56:35 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5136,7 +5136,7 @@ using the pre tag.
  currently has none.</p>
 </attr>
 
-<attr name='shared' value='string'>
+<attr name='shared'>
  <p>Share the cache between different instances of the
  <tag>cache</tag> with identical content, wherever they may appear on
  this page or some other in the same server. See the tag description
