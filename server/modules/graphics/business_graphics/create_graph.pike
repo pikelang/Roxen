@@ -350,9 +350,7 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
     if (((diagram_data["values_for_xnames"][i]>LITET)||(diagram_data["values_for_xnames"][i]<-LITET))&&
 	((diagram_data["xnames"][i]) && sizeof(diagram_data["xnames"][i])))
       diagram_data["xnamesimg"][i]=notext->write(diagram_data["xnames"][i])
-#ifndef ROXEN
 ->scale(0,diagram_data["fontsize"])
-#endif
 ;
     else
       diagram_data["xnamesimg"][i]=
@@ -362,9 +360,7 @@ mapping(string:mixed) create_text(mapping(string:mixed) diagram_data)
   for(int i=0; i<j; i++)
     if ((diagram_data["ynames"][i]) && (sizeof(diagram_data["ynames"][i])))
       diagram_data["ynamesimg"][i]=notext->write(diagram_data["ynames"][i])
-#ifndef ROXEN
 ->scale(0,diagram_data["fontsize"])
-#endif
 ;
     else
       diagram_data["ynamesimg"][i]=
@@ -507,9 +503,7 @@ mapping set_legend_size(mapping diagram_data)
       for(int i=0; i<j; i++)
 	if (diagram_data["legend_texts"][i] && (sizeof(diagram_data["legend_texts"][i])))
 	  texts[i]=notext->write(diagram_data["legend_texts"][i])
-#ifndef ROXEN
 	    ->scale(0,diagram_data["legendfontsize"])
-#endif
 ;
       	else
 	  texts[i]=
@@ -806,9 +800,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       if ((label!="")&&(label!=0))
 	labelimg=get_font("avant_garde", diagram_data["labelsize"], 0, 0, "left",0,0)->
 	  write(label)
-#ifndef ROXEN
 ->scale(0,diagram_data["labelsize"])
-#endif
 ;
       else
 	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);
@@ -1295,9 +1287,7 @@ mapping(string:mixed) create_graph(mapping diagram_data)
       if ((label!="")&&(label!=0))
 	labelimg=get_font("avant_garde", diagram_data["labelsize"], 0, 0, "left",0,0)->
 	  write(label)
-#ifndef ROXEN
 ->scale(0,diagram_data["labelsize"])
-#endif
 ;
       else
 	labelimg=image(diagram_data["labelsize"],diagram_data["labelsize"]);

@@ -120,9 +120,7 @@ mapping(string:mixed) create_pie(mapping(string:mixed) diagram_data)
 	  //if (names[i]=="")
 	    //names[i]="Fel så inåt helvete";
 	  text[i]=notext->write((string)(names[i]))
-#ifndef ROXEN
 ->scale(0,diagram_data["fontsize"])
-#endif
 ;
 	  if (xmaxtext<(text[i]->xsize()))
 	    xmaxtext=text[i]->xsize();
