@@ -463,7 +463,7 @@ class ConfigurationSettings
 	    TYPE_FLAG,
 	    "Show settings and tasks that are not normaly "
 	    "useful for non-developer users. If you develop your own "
-	    "Roxen modules, this option is for you.");
+	    "ChiliMoon modules, this option is for you.");
 
     defvar( "bgcolor", "white", "Background color",
 	    TYPE_STRING,

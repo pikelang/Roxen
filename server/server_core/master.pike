@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
   return connect_to_my_mysql( 0, "local" )->query( q, @e );
 }
 
-constant cvs_version = "$Id: master.pike,v 1.130 2002/10/27 20:24:08 nilsson Exp $";
+constant cvs_version = "$Id: master.pike,v 1.131 2002/11/04 20:13:23 mani Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -276,7 +276,7 @@ UID nobody = UID( "nobody", "Nobody", 65535,65535,  BIT_CONDITIONAL_IO, ~0 )
 
 // Default roxen user. Basically the same as the root user, but the IO bits apply.
 // More specifically, the chroot() function works.
-UID roxen = UID( "roxen", "Roxen internal user", getuid(), getgid(),
+UID roxen = UID( "roxen", "ChiliMoon internal user", getuid(), getgid(),
 		 ~BIT_SECURITY, ~BIT_DESTRUCT );
 
 // Like nobody, but cannot read files either.
