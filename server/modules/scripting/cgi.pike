@@ -9,7 +9,7 @@
 inherit "module";
 inherit "roxenlib";
 
-constant cvs_version = "$Id: cgi.pike,v 1.113 1999/04/27 19:44:41 neotron Exp $";
+constant cvs_version = "$Id: cgi.pike,v 1.114 1999/04/27 19:51:24 neotron Exp $";
 
 class Shuffle
 {
@@ -693,7 +693,7 @@ mapping handle_file_extension(object o, string e, object id)
     // Can't run directories or nonexisting files, and if the script exists
     // but the name ends with '/' we want to let it fall through for path
     // info parsing.
-    return -1;
+    return 0;
 #if UNIX
   if(QUERY(noexec) && o && !(statt[0]&0111))
     return 0;
