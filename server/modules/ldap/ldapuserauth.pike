@@ -48,10 +48,12 @@
 			  (SHA, MD5 and CRYPT)
 			- added config variable "userPassword map"
   1999-10-11 v1.12	- moved settings of 'pw' variable after checking it
+  1999-12-14 v1.13	- fixed bug in required atrribute part
+			- a litle optimalisation of cached values
 
 */
 
-constant cvs_version = "$Id: ldapuserauth.pike,v 1.6 1999/10/17 17:04:39 hop Exp $";
+constant cvs_version = "$Id: ldapuserauth.pike,v 1.13 1999/12/14 16:12:37 hop Exp $";
 constant thread_safe=0; // FIXME: ??
 
 #include <module.h>
@@ -144,16 +146,18 @@ void create()
 
 
 	// "user" access type
-        defvar ("CI_required_attr","memberOf","LDAP server: Required attribute",
+        defvar ("CI_required_attr","","LDAP server: Required attribute",
                    TYPE_STRING|VAR_MORE,
 		   "Which attribute must be present to successfully"
-		   " authenticate user (can be empty)",
+		   " authenticate user (can be empty)"
+		   "<p>For example: <br>memberOf",
 		   0,
 		   access_mode_is_user
 		   );
-        defvar ("CI_required_value","cn=KISS-PEOPLE","LDAP server: Required value",
+        defvar ("CI_required_value","","LDAP server: Required value",
                    TYPE_STRING|VAR_MORE,
-		   "Which value must be in required attribute (can be empty)",
+		   "Which value must be in required attribute (can be empty)" 
+		   "<p>For example: <br>cn=KISS-PEOPLE",
 		   0,
 		   access_mode_is_user
 		   );
@@ -364,7 +368,7 @@ string *userinfo (string u,mixed p) {
     string *dirinfo;
     object results;
     mixed err;
-    mapping(string:array(string)) tmp;
+    mapping(string:array(string)) tmp, attrsav;
 
     DEBUGLOG ("userinfo ("+u+")");
     //DEBUGLOG (sprintf("DEB:%O\n",p));
@@ -413,7 +417,8 @@ string *userinfo (string u,mixed p) {
 		get_attrval(tmp, QUERY(CI_default_attrname_gid), QUERY(CI_default_gid)),
 		get_attrval(tmp, QUERY(CI_default_attrname_gecos), QUERY(CI_default_gecos)),
 		QUERY(CI_default_addname) ? QUERY(CI_default_home)+u : get_attrval(tmp, QUERY(CI_default_attrname_homedir), ""),
-		get_attrval(tmp, QUERY(CI_default_attrname_shell), QUERY(CI_default_shell))
+		get_attrval(tmp, QUERY(CI_default_attrname_shell), QUERY(CI_default_shell)),
+		sizeof(QUERY(CI_required_attr)) && !access_mode_is_user() && !zero_type(tmp[QUERY(CI_required_attr)]) ? mkmapping(({QUERY(CI_required_attr)}),tmp[QUERY(CI_required_attr)]) : 0
 	});
     } else {
 	// Compare method is unimplemented, yet
@@ -536,7 +541,7 @@ array|int auth (string *auth, object id)
 	// Check for the Atributes
 	if(sizeof(QUERY(CI_required_attr))) {
 	    attr=QUERY(CI_required_attr);
-	    if (dirinfo[7][attr]) {
+	    if (mappingp(dirinfo[7]) && dirinfo[7][attr]) {
 		mixed d;
 		d=dirinfo[7][attr];
 		// werror("User "+u+" has attr "+attr+"\n");
@@ -552,14 +557,14 @@ array|int auth (string *auth, object id)
 		    if (found) {
 			// werror("User "+u+" has value "+value+"\n");
 		    } else {
-			werror("User "+u+" has not value "+value+"\n");
+			werror("LDAPuserauth: User "+u+" has not value "+value+"\n");
 			failed[id->remoteaddr]++;
 			roxen->quick_ip_to_host(id->remoteaddr);
 			return ({0,u,p});
 		    }
 		}
 	    } else {
-		werror("User "+u+" has no attr "+attr+"\n");
+		werror("LDAPuserauth: User "+u+" has no attr "+attr+"\n");
 		failed[id->remoteaddr]++;
 		roxen->quick_ip_to_host(id->remoteaddr);
 		return ({0,u,p});
