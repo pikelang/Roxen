@@ -1,5 +1,6 @@
 <!-- -*- html -*- -->
 <define tag='cfg-variables'>
+  <set variable='form.__redirect' value='1' />
   <if not variable='_.nosave'><cf-save/></if>
   <if variable='form.section'>
     <input type='hidden' name='section' value='&form.section;'/>

@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.80 2001/03/04 12:57:53 per Exp $";
+  "$Id: config_filesystem.pike,v 1.81 2001/04/17 11:11:05 per Exp $";
 
 constant path = "config_interface/";
 
@@ -411,6 +411,9 @@ mixed find_file( string f, RequestID id )
     }
     retval->stat = 0;
     retval->len = strlen( retval->data );
+
+    if( id->method != "GET" && id->real_variables->__redirect )
+      retval = Roxen.http_redirect( id->raw_url, id );
   }
 #ifdef CFFS_DEBUG
   werror( db_indent+"returning "+
