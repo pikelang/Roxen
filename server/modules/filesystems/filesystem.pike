@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.109 2001/09/03 18:10:23 nilsson Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.110 2001/09/11 12:12:52 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -515,6 +515,8 @@ mixed find_file( string f, RequestID id )
 
   size = _file_size( f, id );
 
+  FILESYSTEM_WERR(sprintf("_file_size(%O, %O) ==> %d\n", f, id, size));
+
   /*
    * FIXME: Should probably move path-info extraction here.
    * 	/grubba 1998-08-26
@@ -611,7 +613,7 @@ mixed find_file( string f, RequestID id )
       return 0;
     }
 
-    if (size) {
+    if (size != -1) {
       TRACE_LEAVE("MKDIR failed. Directory name already exists. ");
       return 0;
     }
