@@ -5,7 +5,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "modules/filesystems/filesystem.pike" : filesystem;
 
-constant cvs_version="$Id: autositefs.pike,v 1.4 1998/07/16 18:57:00 js Exp $";
+constant cvs_version="$Id: autositefs.pike,v 1.5 1998/07/18 03:28:03 js Exp $";
 
 mapping host_to_id;
 
@@ -27,7 +27,7 @@ string get_host(object id)
 void update_host_cache(object id)
 {
   object db=id->conf->call_provider("sql","sql_object",id);
-  array a=db->query("select customer_id,domain from dns where rr_type='A'");
+  array a=db->query("select distinct customer_id,domain from dns where rr_type='A'");
   mapping new_host_to_id=([]);
   if(!catch {
     Array.map(a,lambda(mapping entry, mapping m)
@@ -76,7 +76,8 @@ mixed find_file(string f, object id)
       "Please upgrade your browser, or access the site you want to from the "
       "list below:<p><ul>";
     foreach(indices(host_to_id), string host)
-      s+="<li><a href='/"+host+"/'>"+host+"</a>";
+      if(host[0..3]=="www.")
+	s+="<li><a href='/"+host+"/'>"+host+"</a>";
     return http_string_answer(parse_rxml(s,id),"text/html");
   }
 

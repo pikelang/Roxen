@@ -13,16 +13,10 @@ string host_ip_no;
 #define ZEXPIRE  "Zone Expire Time"
 #define DBURL    "Database URL"
 #define ZONEDIR  "Zone Dir"
-#define DNSFILE  "DNS Zone Master File"
 #define TMPFILENAME  "/tmp/new-dns-hosts"
 
 void create()
-{ defvar(DNSFILE, "/tmp/named/zonemaster",
-         DNSFILE, TYPE_STRING,
-         "The name of the file where the DNS server (typically "
-         "<TT>in.named</TT>) expects to find the DNS zone master data.");
-
-  defvar(ZONEDIR, "/tmp/named/",
+{  defvar(ZONEDIR, "/tmp/named/",
          ZONEDIR, TYPE_STRING,
          "The name of the directory where to put the zone subfiles.");
 
@@ -113,7 +107,6 @@ void do_update()
     return;
   }
   string zonedirname    = query(ZONEDIR);
-  string masterfilename = query(DNSFILE);
 
   if (file_size(zonedirname) != -2)
   { dns_update_status = "pending. Zone directory invalid.";
@@ -121,7 +114,7 @@ void do_update()
     return;
   }
 
-  object masterfile = Stdio.FILE(masterfilename, "wct");
+  object masterfile = Stdio.FILE(zonedirname+"/named.conf", "wct");
 
   if (!masterfile)
   { dns_update_status = "pending. Unable to write zonemaster file.";
@@ -130,12 +123,15 @@ void do_update()
 
   masterfile->write(
        "options {\n"
-       "    directory \"/var/named\";\n"
+       "    directory \""+zonedirname+"\";\n"
        "};\n\n"
        "logging {\n"
        "    category lame-servers { null; };\n"
        "    category cname { null; };\n"
        "};\n\n" 
+       "zone \".\" in {\n"
+       "    type hint;\n"
+       "    file \"root.cache\";\n};\n\n"
     );
 
   array row;
@@ -168,8 +164,7 @@ void do_update()
                   ";;;\n"
                   ";;; Automatically generated from the DOMAINS table\n"
                   ";;; in the AutoSite DNS database.\n");
-      file->write("@   " + ttl + " " + hostname + "." + domain + ". " + 
-                           "hostmaster." + domain + ". (");
+      file->write("@   IN    SOA  kopparorm.idonex.se. hostmaster.idonex.se. (");
       file->write("\n                    " + time() + " ;; Serial"
                   "\n                    " + query_timeunit(ZREFRESH, 2000) +
                                                  "    ;; Refresh"
@@ -178,9 +173,7 @@ void do_update()
                   "\n                    " + query_timeunit(ZEXPIRE, 500000) +
                                                  "  ;; Expire"
                   "\n                    " + ttl + " )    ;; Minimum TTL\n"
-                  "              IN NS  " + hostname + "." + domain + ".\n"
-                  "              IN MX  10 " + domain + "\n"
-                  "              IN A   " + host_ip_no + "\n\n");
+                  "              IN NS  kopparorm.idonex.se.\n\n");
 
       while (row = domain_info->fetch_row())
       { string rr_owner = row[0];
@@ -197,7 +190,7 @@ void do_update()
       }
       masterfile->write("zone \""+domain+".\" in {\n"
 			"    type master;\n"
-			"    file \"db." + domain + "\";\n");
+			"    file \"db." + domain + "\";\n\};\n\n");
     }
     else
     { ++error_count;
@@ -206,15 +199,17 @@ void do_update()
     }
   }
 
-  masterfile->write("};\n");
-
   if (error_count || domain_count == 0)
   { if (!error_count)
          dns_update_status = "no domains in database!";
     call_out(do_update, 300); // try again in 5 minutes.
     return;
   }
-
+  string s=Process.popen("/bin/sh -c 'ps -uroot|grep named'");
+  int pid;
+  sscanf(s," %d %*s",pid);
+  if(pid)
+    kill(pid,1); // SIGHUP
   dns_update_status = "complete " + ctime(time());
   last_update_time = time();
   update_scheduled = 0;

@@ -4,15 +4,18 @@
 <formoutput quote='¤'>
   <if variable=save>
     <sqlquery query="delete from dns where customer_id='¤customer¤'">
-    <sqlquery query="insert into dns values(NULL,'¤customer¤',
-	            'A','','¤domain:quote=mysql¤')">
-    <sqlquery query="insert into dns values(NULL,'¤customer¤',
-	            'MX','10 ¤domain:quote=mysql¤','¤domain:quote=mysql¤')">
+    <sqlquery query="insert into dns values(NULL,¤customer¤,
+                     '¤domain:quote=mysql¤','','A','')">
+    <sqlquery query="insert into dns values(NULL,¤customer¤,
+                     '¤domain:quote=mysql¤','www','A','')">
+    <sqlquery query="insert into dns values(NULL,¤customer¤,
+                     '¤domain:quote=mysql¤','','MX','10 ¤domain:quote=mysql¤')">
+   
     <b>Information saved.<br>
       <autosite-dns-update><br>
       <autosite-fs-update></b><p>
   </if>
-  <preparse tag=sqloutput query="select domain from dns where
+  <preparse tag=sqloutput query="select distinct domain from dns where
                                 rr_type='A' and
 				customer_id='¤customer:quote=mysql¤'">
     <preparse tag=tablify cellseparator=/// rowseparator=\\\
