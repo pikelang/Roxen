@@ -1,7 +1,7 @@
 /*
  * Roxen master
  */
-string cvs_version = "$Id: roxen_master.pike,v 1.95 2000/07/12 18:37:31 mast Exp $";
+string cvs_version = "$Id: roxen_master.pike,v 1.96 2000/08/15 01:15:33 mast Exp $";
 
 /*
  * name = "Roxen Master";
@@ -318,6 +318,12 @@ void handle_error(array(mixed)|object trace)
       return;
   };
   ::handle_error (trace);
+}
+
+void clear_compilation_failures()
+{
+  foreach (indices (programs), string fname)
+    if (!programs[fname]) m_delete (programs, fname);
 }
 
 int refresh( program p, int|void force )
