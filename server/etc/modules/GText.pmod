@@ -184,7 +184,7 @@ Image.Image make_text_image(mapping args, Image.Font font, string text, RequestI
   if(args->move)
   {
     int dx,dy;
-    if(sscanf(args->move, "%d,%d", dx, dy)==2)
+    if(sscanf(args->move, "%d,%d", dx, dy)!=2)
       m_delete(args,"move");
     else {
       xoffset += dx;
