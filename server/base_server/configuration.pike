@@ -1,7 +1,7 @@
 // A vitual server's main configuration
 // Copyright © 1996 - 2000, Roxen IS.
 
-constant cvs_version = "$Id: configuration.pike,v 1.357 2000/09/01 00:47:28 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.358 2000/09/01 13:46:42 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <module_constants.h>
@@ -1880,20 +1880,11 @@ int|string try_get_file(string s, RequestID id,
 
   s = Roxen.fix_relative (s, id);
 
-//   if(!id->pragma["no-cache"] && !nocache && (!id->auth || !id->auth[0])) {
-//     cache_key =
-//       s + "\0" +
-//       id->request_headers->cookie + "\0" +
-//       id->request_headers["user-agent"];
-//     if(res = cache_lookup("file:"+name, cache_key))
-//       return res;
-//   }
-
   if (fake_id->scan_for_query)
-    // FIXME: If we're using e.g. ftp this doesn't exist. But the
-    // right solution might be that clone_me() in an ftp id object
-    // returns a vanilla (i.e. http) id instead when this function is
-    // used.
+  // FIXME: If we're using e.g. ftp this doesn't exist. But the
+  // right solution might be that clone_me() in an ftp id object
+  // returns a vanilla (i.e. http) id instead when this function is
+  // used.
     s = fake_id->scan_for_query (s);
   fake_id->raw_url=s;
   fake_id->not_query=s;
@@ -1944,8 +1935,6 @@ int|string try_get_file(string s, RequestID id,
     if(!sscanf(res, "%*s\n\n%s", res))
       sscanf(res, "%*s\n%s", res);
   }
-//   if (cache_key)
-//     cache_set("file:"+name, cache_key, res);
   return res;
 }
 
