@@ -4,7 +4,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 
 // ABS and suicide systems contributed freely by Francesco Chemolli
-constant cvs_version="$Id: roxen.pike,v 1.539 2000/08/31 03:16:36 per Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.540 2000/09/03 02:33:17 per Exp $";
 
 // Used when running threaded to find out which thread is the backend thread,
 // for debug purposes only.
@@ -2863,13 +2863,6 @@ void create()
   add_constant( "roxen.locale", locale );
   //add_constant( "roxen.ImageCache", ImageCache );
 
-  // compatibility
-//   int s = gethrtime();
-  add_constant( "roxen.fonts",
-                (fonts = ((program)"base_server/fonts.pike")()) );
-//   report_debug( "[fonts: %.2fms] ", (gethrtime()-s)/1000.0);
-  dump( "base_server/fonts.pike" );
-
 //   int s = gethrtime();
   Configuration = (program)"configuration";
   dump( "base_server/configuration.pike" );
@@ -3397,9 +3390,9 @@ void dump( string file )
 #ifdef DUMP_DEBUG
       report_debug("** Cannot encode "+file+": "+describe_backtrace(q)+"\n");
 #else
-      array parts = replace(file, "//", "/") / "/";
-      if (sizeof(parts) > 3) parts = parts[sizeof(parts)-3..];
-      report_debug("Dumping failed for " + parts*"/" + "\n");
+//       array parts = replace(file, "//", "/") / "/";
+//       if (sizeof(parts) > 3) parts = parts[sizeof(parts)-3..];
+//       report_debug("Dumping failed for " + parts*"/" + "\n");
 #endif
     }
 #ifdef DUMP_DEBUG
@@ -3485,6 +3478,10 @@ int main(int argc, array tmp)
 
   argv -= ({ 0 });
   argc = sizeof(argv);
+
+  add_constant( "roxen.fonts",
+                (fonts = ((program)"base_server/fonts.pike")()) );
+  dump( "base_server/fonts.pike" );
 
   initiate_languages(query("locale"));
   set_locale();

@@ -1,132 +1,137 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: fonts.pike,v 1.57 2000/09/02 13:42:31 nilsson Exp $
+// $Id: fonts.pike,v 1.58 2000/09/03 02:33:00 per Exp $
 
 #include <module_constants.h>
 #include <module.h>
 
-constant Font = Image.Font;
-
-string fix_name(string in)
+class Font
 {
-  return replace(lower_case(in), ({"-"," "}), ({ "_", " " }));
-}
+  static int j_right, j_center;
+  static float x_spacing=1.0, y_spacing=1.0;
 
+  Image.Image write( string ... what );
+  //! non-breakable spaces in any of the strings in 'what' is to be
+  //! considered as width("m")/64 spaces wide characters instead of 
+  //! full-width spaces.
 
-// name:([ version:fname, version:fname, ... ])
-mapping ttf_done = ([]);
-mapping ttf_font_names_cache = ([]);
+  array(int) text_extents( string ... what );
+  //! return ({ xsize, ysize }) of the string
 
-string trimttfname( string n )
-{
-  n = lower_case(replace( n, "\t", " " ));
-  return ((n/" ")*"")-"'";
-}
+  int height();
+  //! returns the height of one row of text. Should be more or less equal 
+  //! to the size specified to open.
 
-string translate_ttf_style( string style )
-{
-  switch( lower_case( (style-"-")-" " ) )
+  void right()
+  //! Right justify
   {
-   case "normal":
-   case "regular":
-     return "nn";
-   case "italic":
-     return "ni";
-   case "oblique":
-     return "ni";
-   case "bold":
-     return "bn";
-   case "bolditalic":
-   case "italicbold":
-     return "bi";
-     return "bi";
-   case "black":
-     return "Bn";
-   case "blackitalic":
-   case "italicblack":
-     return "Bi";
-     return "Bi";
-   case "light":
-     return "ln";
-   case "lightitalic":
-   case "italiclight":
-     return "li";
+    j_right = 1;
+    j_center=0;
   }
-  if(search(lower_case(style), "oblique"))
-    return "ni"; // for now.
-  report_debug("Unknwon ttf style: "+style+"\n");
-  return "nn";
+
+  void left()
+  //! Left justify
+  {
+    j_right = j_center = 0;
+  }
+
+  void center()
+  //! Center in image
+  {
+    j_center = 1;
+    j_right = 0;
+  }
+  
+  void set_x_spacing( float delta )
+  //! Multiply real char spacing with this value for each character.
+  {
+    x_spacing = delta;
+  }
+
+  void set_y_spacing( float delta )
+  //! Multiply real row spacing with this value.
+  {
+    y_spacing = delta;
+  }
 }
+
+class FontHandler
+//! A fontname -> font object resolver.
+{
+  int has_font( string name, int size );
+  //! Return true if the font (with the specified size) 
+  //! exists in this namespace.
+
+  Font open( string name, 
+             int size,
+             int bold,
+             int italic );
+  //! Open a new font object
+
+  void flush_caches();
+  //! Flush all memory caches that are used to save some memory
+
+  array(string) available_fonts( );
+  //! return a list of all valid font names
+  
+  mapping(string:mixed) font_information( string font );
+  //! return a mapping with information about the specified font
+
+  static int|string font_style( string name, int size, int bold, int italic )
+  {
+    if( r_file_stat( name ) )
+      return -1;
+
+    string base_dir, dir;
+    mixed available = has_font( name, size );
+
+    if(!available) 
+      return 0;
+    available = mkmultiset(available);
+
+    string bc = (bold>=0?(bold==2?"B":(bold==1?"b":"n")):"l"), 
+           ic = (italic?"i":"n");
+
+    if(available[bc+ic]) return bc+ic;
+    if(bc=="l")  bc="n";
+    if(available[bc+ic]) return bc+ic;
+    if(bc=="B") bc="b";
+    if(available[bc+ic]) return bc+ic;
+    if(bc=="b") bc="n";
+    if(available[bc+ic]) return bc+ic;
+    if(ic=="i") ic="n";
+    if(available[bc+ic]) return bc+ic;
+
+    foreach(({ "n","l","b", "B", }), bc)
+      foreach(({ "n", "i" }), ic)
+        if(available[bc+ic])
+          return bc+ic;
+  }
+
+
+  static string make_font_name(string name, int size, int bold, int italic)
+  {
+    mixed style = font_style( name, size, bold, italic );
+    if( style == -1 ) return name;
+    return name+"/"+style;
+  }
+}
+
+
+
+array(FontHandler) font_handlers = ({});
+
 
 array available_font_versions(string name, int size)
 {
-  string base_dir, dir;
-  array available;
-#if constant(has_Image_TTF)
-  int ttffound;
-  int ttffontschanged;
-
-  if(ttf_font_names_cache[ name ])
-    return indices(ttf_font_names_cache[ name ]);
-
-  void traverse_font_dir( string dir ) {
-    foreach(r_get_dir( dir )||({}), string fname)
-    {
-      string path=combine_path(dir+"/",fname);
-      if(!ttf_done[path]++)
-      {
-	Stat a=file_stat(path);
-	if(a && a[1]==-2) {
-	  traverse_font_dir( path );
-	  continue;
-	}
-	// Here is a good place to impose the artificial restraint that
-	// the file must match *.ttf
-	Image.TTF ttf;
-	if(catch(ttf = Image.TTF( combine_path(dir+"/",fname) )))
-	  continue;
-	if(ttf)
-        {
-	  mapping n = ttf->names();
-	  ttffontschanged++;
-	  string f = lower_case(trimttfname(n->family));
-	  if(!ttf_font_names_cache[f])
-	    ttf_font_names_cache[f] = ([]);
-	  ttf_font_names_cache[f][ translate_ttf_style(n->style) ]
-	    = combine_path(dir+"/",fname);
-	  if(f == lower_case( name ))  ttffound++;
-	}
-      }
-    }
-  };
-
-  foreach(roxen->query("font_dirs"), dir)
-    traverse_font_dir(dir);
-
-  if(ttffontschanged)
-    catch{
-      open("$VVARDIR/ttffontcache","wct")
-        ->write(encode_value(ttf_font_names_cache));
-    };
-
-  if(ttffound)
-    return  indices(ttf_font_names_cache[ lower_case(name) ]);
-#endif
-
-  foreach(roxen->query("font_dirs"), dir)
+  array res = ({});
+  foreach( font_handlers, FontHandler a )
   {
-    base_dir = dir+size+"/"+fix_name(name);
-    if((available = r_get_dir(base_dir)))
-      break;
-    base_dir=dir+"/32/"+fix_name(name);
-    if((available = r_get_dir(base_dir)))
-      break;
-    base_dir=dir+"/32/"+roxen->query("default_font");
-    if((available = r_get_dir(base_dir)))
-      break;
+    mixed hh = a->has_font( name, size );
+    res |= hh;
   }
-  if(!available) return 0;
-  return available;
+  if( sizeof( res ) )
+    return res;
 }
 
 string describe_font_type(string n)
@@ -145,187 +150,48 @@ string describe_font_type(string n)
   return res;
 }
 
-array get_font_italic_bold(string n)
-{
-  int italic,bold;
-  if(n[1]=='i') italic = 1;
+// array get_font_italic_bold(string n)
+// {
+//   int italic,bold;
+//   if(n[1]=='i') italic = 1;
 
-  switch(n[0])
-  {
-   case 'B': bold=2; break;
-   case 'b': bold=1; break;
-   case 'l': bold=-1;  break;
-  }
-  return ({ italic, bold });
-}
-
-string make_font_name(string name, int size, int bold, int italic)
-{
-  string base_dir, dir;
-  mixed available = available_font_versions( name,size );
-  if(r_file_stat(name)) return name;
-
-  string bc=(bold>=0?(bold==2?"B":(bold==1?"b":"n")):"l"), ic=(italic?"i":"n");
-  if(available)
-    available = mkmultiset(available);
-  else
-    return name+"/nope";
-  if(available[bc+ic])
-    return name+"/"+bc+ic;
-  if(bc=="l") bc="n";
-  if(available[bc+ic])
-    return name+"/"+bc+ic;
-  if(bc=="B") bc="b";
-  if(available[bc+ic])
-    return name+"/"+bc+ic;
-  if(bc=="b") bc="n";
-  if(available[bc+ic])
-    return name+"/"+bc+ic;
-  if(ic=="i") ic="n";
-  if(available[bc+ic])
-    return name+"/"+bc+ic;
-
-  foreach(({ "n","l","b", "B", }), bc)
-    foreach(({ "n", "i" }), ic)
-      if(available[bc+ic])
-	return name+"/"+bc+ic;
-  return 0;
-}
-
-#if constant(has_Image_TTF)
-class TTFWrapper
-{
-  int size;
-  object real;
-  static object encoder;
-  static function(string ... : Image.image) real_write;
-  int height( )
-  {
-    return size;
-  }
-
-  string _sprintf()
-  {
-    return sprintf( "TTF(%O,%d)", real, size );
-  }
-
-  static Image.image write_encoded(string ... what)
-  {
-    return real->write(@(encoder?
-			 Array.map(what, lambda(string s) {
-					   return encoder->clear()->
-					     feed(s)->drain();
-					 }):what));
-  }
-
-  array text_extents( string what )
-  {
-    Image.Image o = real_write( what );
-    return ({ o->xsize(), o->ysize() });
-  }
-
-  void create(object r, int s, string fn)
-  {
-    string encoding;
-    real = r;
-    size = s;
-    real->set_height( (int)(size*64/34.5) ); // aproximate to pixels
-
-    if(r_file_stat(fn+".properties"))
-      parse_html(open(fn+".properties","r")->read(), ([]),
-		 (["encoding":lambda(string tag, mapping m, string enc) {
-				encoding = enc;
-			      }]));
-
-    if(encoding)
-      encoder = Locale.Charset.encoder(encoding, "");
-
-    real_write = (encoder? write_encoded : real->write);
-  }
-
-  Image.Image write( string ... what )
-  {
-    what = map( (array(string))what, replace, " ", "" ); // nbsp -> ""
-    what = replace( what, "", " " ); // cannot write "" with Image.TTF.
-    return real_write(@what)->scale(0.5); 
-  }
-}
-#endif
+//   switch(n[0])
+//   {
+//    case 'B': bold=2; break;
+//    case 'b': bold=1; break;
+//    case 'l': bold=-1;  break;
+//   }
+//   return ({ italic, bold });
+// }
 
 object get_font(string f, int size, int bold, int italic,
-		string justification, float xspace, float yspace)
+                string justification, float xspace, float yspace)
 {
   object fnt;
-  string key, name, of;
-  mixed err;
-  f = replace( f, " ", "_" );
-  of = f;
-  key = f+size+bold+italic+justification+xspace+yspace;
 
-  if(fnt=cache_lookup("fonts", key))
-    return fnt;
+  foreach( font_handlers, FontHandler fh )
+    if(fnt = fh->open(f,size,bold,italic))
+    {
+      if(justification=="right") fnt->right();
+      if(justification=="center") fnt->center();
+      fnt->set_x_spacing((100.0+(float)xspace)/100.0);
+      fnt->set_y_spacing((100.0+(float)yspace)/100.0);
+      return fnt;
+    }
 
-  err = catch {
-    name=make_font_name(f,size,bold,italic);
-#if constant(has_Image_TTF)
-    if(ttf_font_names_cache[ lower_case(f) ])
-    {
-      f = lower_case(f);
-      if( ttf_font_names_cache[ f ][ (name/"/")[1] ] )
-      {
-	object fo = Image.TTF( roxen_path(f = ttf_font_names_cache[ f ][(name/"/")[1]] ));
-	fo = TTFWrapper( fo(), size, f );
-	cache_set("fonts", key, fo);
-	return fo;
-      }
-      object fo = Image.TTF( roxen_path(f = values(ttf_font_names_cache[ f ])[0]));
-      return TTFWrapper( fo(), size, f );
-    } else if( search( lower_case(f), ".ttf" ) != -1 ) {
-      catch {
-	if( object fo = Image.TTF( f ) )
-	{
-	  fo = TTFWrapper( fo(), size, f );
-	  cache_set("fonts", key, fo);
-	  return fo;
-	}
-      };
-    }
-#endif
-    fnt = Font();
-    foreach(roxen->query("font_dirs"), string f)
-    {
-      name = fix_name(name);
-      if(r_file_stat( f + size + "/" + name ))
-      {
-	name = f+size+"/"+name;
-	break;
-      }
-    }
-    if(!fnt->load( roxen_path( name ) ))
-    {
-      if(of == replace(roxen->query("default_font")," ","_"))
-      {
-	report_error("Failed to load the default font ("+f+") in size " + size + ".\n");
-	return 0;
-      }
-      if( search( of, "_" ) != -1 )
-        return get_font(of-"_",
-                        size,bold,italic,justification,xspace,yspace);
-      else
-        return get_font(roxen->query("default_font"),
-                        size,bold,italic,justification,xspace,yspace);
-    }
-    if(justification=="right") fnt->right();
-    if(justification=="center") fnt->center();
-    fnt->set_x_spacing((100.0+(float)xspace)/100.0);
-    fnt->set_y_spacing((100.0+(float)yspace)/100.0);
-    cache_set("fonts", key, fnt);
-    return fnt;
-  };
-  report_error(sprintf("get_font(): Error opening font %O:\n"
-		       "%s\n", f, describe_backtrace(err)));
-  // Error if the font-file is not really a font-file...
-  return 0;
+  if( search( f, "_" ) != -1 )
+    return get_font(f-"_", size, bold, italic, justification, xspace, yspace);
+  if( search( f, " " ) != -1 )
+    return get_font(replace(f," ", "_"), 
+                    size, bold, italic, justification, xspace, yspace );
+
+  if( roxen->query("default_font") == f )
+  {
+    report_error("Failed to load the default font\n");
+    return 0;
+  }
+  return get_font(roxen->query("default_font"),
+                  size,bold,italic,justification,xspace,yspace);
 }
 
 object resolve_font(string f, string|void justification)
@@ -397,92 +263,50 @@ object resolve_font(string f, string|void justification)
 
 array available_fonts( )
 {
-  array res = ({});
-#if constant(has_Image_TTF)
-  // Populate the TTF font cache.
-  available_font_versions( "No, there is no such font as this",32 );
-#endif
-  foreach(roxen->query("font_dirs"), string dir)
-  {
-    dir+="32/";
-    array d;
-    if(array d = r_get_dir(dir))
-    {
-      foreach(d,string f)
-      {
-	if(f=="CVS") continue;
-	Stat a;
-	if((a=r_file_stat(dir+f)) && (a[1]==-2)) {
-	  array d=r_get_dir(dir+f);
-	  foreach( ({ "nn", "ni", "li", "ln", "Bi", "Bn", "bi", "bn" }),
-		   string style)
-	    if(has_value(d, style)) {
-	      res |= ({ replace(f,"_"," ") });
-	      continue;
-	    }
-	}
-      }
-    }
-  }
-  return sort(res|indices(ttf_font_names_cache));
+  return sort(`+( ({}),  @font_handlers->available_fonts() ));
 }
 
-array get_font_information(void|int ttf_only) {
-
+array get_font_information(void|int scalable_only) 
+{
   array res=({});
-  foreach(indices(ttf_font_names_cache), string name) {
-    mapping fm=([ "name":name, "ttf":"yes" ]);
-    object fo = Image.TTF( roxen_path(name = values(ttf_font_names_cache[ name ])[0]));
-    fm->path=name;
-    fm+=fo->names(); // Adding copyright, expose, family, full, postscript, style, version, trademark
-    res+=({ fm });
-  }
-  if(ttf_only)
-    return res;
 
-  foreach(roxen->query("font_dirs"), string dir)
+  foreach( font_handlers, FontHandler fh )
   {
-    dir+="32/";
-    array d;
-    if(array d = r_get_dir(dir))
-    {
-      foreach(d,string f)
-      {
-        if(f=="CVS") continue;
-        Stat a;
-        if((a=r_file_stat(dir+f)) && (a[1]==-2)) {
-	  int styles;
-	  array d=r_get_dir(dir+f);
-	  foreach( ({ "nn", "ni", "li", "ln", "Bi", "Bn", "bi", "bn" }),
-		   string style)
-	    if(has_value(d, style)) styles++;
-
-	  if(!styles) continue;
-	  res+=({ ([ "name":replace(f,"_"," "),
-		     "path":dir+f,
-		     "styles":styles,
-		     "ttf":"no" ]) });
-	}
-      }
-    }
+    if( scalable_only && !fh->scalable )
+      continue;
+    res |= map( fh->available_fonts, fh->font_information );
   }
-
   return res;
 }
 
 void create()
 {
+  add_constant( "FontHandler", FontHandler );
+  add_constant( "Font", Font );
   add_constant("get_font", get_font);
   add_constant("available_font_versions", available_font_versions);
   add_constant("describe_font_type", describe_font_type);
-  add_constant("get_font_italic_bold", get_font_italic_bold);
+//   add_constant("get_font_italic_bold", get_font_italic_bold);
   add_constant("resolve_font", resolve_font);
   add_constant("available_fonts", available_fonts);
 
-#if constant(has_Image_TTF)
-  catch {
-    ttf_font_names_cache =
-      decode_value(open("$VVARDIR/ttffontcache","r")->read());
-  };
-#endif
+
+  int h = gethrtime();
+  werror("Loading font handlers ...\n" );
+  foreach( r_get_dir( "font_handlers" ), string fh )
+  {
+    catch {
+      if( has_value( fh, ".pike" ) && fh[-1] == 'e' )
+      {
+        FontHandler f = compile_file( roxen_path( "font_handlers/"+fh ) )( );
+        werror("    "+f->name+" ("+(f->scalable?"scalable":"bitmap")+")\n");
+        if( f->scalable )
+          font_handlers = ({ f }) + font_handlers;
+        else
+          font_handlers += ({ f });
+      }
+    };
+  }
+  werror("Done [%.1fms]\n", (gethrtime()-h)/1000.0 );
+
 }

@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.11 2000/09/01 01:15:21 mast Exp $
+// $Id: module.pmod,v 1.12 2000/09/03 02:33:00 per Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -140,6 +140,19 @@ class Variable
       changed_callbacks[ _id ] = cb;
     else
       m_delete( changed_callbacks, _id );
+  }
+
+  void add_changed_callback( function(Variable:void) cb )
+  //! Add a new callback to be called when the variable is changed.
+  //! If set_changed_callback is called, callbacks added with this function
+  //! are overridden.
+  {
+    mixed oc = get_changed_callback( );
+    if( arrayp( oc ) )
+      oc += ({ cb });
+    else
+      oc = ({ oc, cb }) - ({ 0 });
+    changed_callbacks[ _id ] = oc;
   }
 
   function(RequestID,Variable:int) get_invisibility_check_callback() 
@@ -717,7 +730,7 @@ class MultipleChoice
       // Make an entry for the current value if it's not in the list,
       // so no other value appears to be selected, and to ensure that
       // the value doesn't change as a side-effect by another change.
-      res = "  " + Roxen.make_container (
+      res += "  " + Roxen.make_container (
 	"option", (["value": current, "selected": "selected"]),
 	"(keep stale value " + current + ")");
     return res + "</select>";
