@@ -1,5 +1,5 @@
 /*
- * $Id: rxml.pike,v 1.134 2000/02/16 16:21:37 mast Exp $
+ * $Id: rxml.pike,v 1.135 2000/02/16 20:02:37 mast Exp $
  *
  * The Roxen RXML Parser. See also the RXML Pike module.
  *
@@ -14,6 +14,15 @@ inherit "rxmlhelp";
 #define RXML_NAMESPACE "rxml"
 
 #ifndef manual
+
+#define _stat defines[" _stat"]
+#define _error defines[" _error"]
+#define _extra_heads defines[" _extra_heads"]
+#define _rettext defines[" _rettext"]
+#define _ok     defines[" _ok"]
+
+
+// ----------------------- Error handling -------------------------
 
 string rxml_error(string tag, string error, RequestID id) {
   return (id->misc->debug?sprintf("(%s: %s)",capitalize(tag),error):"")+"<false>";
@@ -485,6 +494,51 @@ string do_parse(string to_parse, RequestID id,
   }
 }
 
+string parse_rxml(string what, RequestID id,
+		  void|Stdio.File file,
+		  void|mapping defines )
+{
+  id->misc->_rxml_recurse++;
+#ifdef RXML_DEBUG
+  werror("parse_rxml( "+strlen(what)+" ) -> ");
+  int time = gethrtime();
+#endif
+  if(!defines)
+  {
+    defines = id->misc->defines||([]);
+    if(!_error)
+      _error=200;
+    if(!_extra_heads)
+      _extra_heads=([ ]);
+  }
+  if(!defines->sizefmt)
+  {
+    set_start_quote(set_end_quote(0));
+    defines->sizefmt = "abbrev";
+    _error=200;
+    _extra_heads=([ ]);
+    if(id->misc->stat)
+      _stat=id->misc->stat;
+    else if(file)
+      _stat=file->stat();
+  }
+  id->misc->defines = defines;
+
+  what = do_parse(what, id, file, defines);
+
+  if(sizeof(_extra_heads) && !id->misc->moreheads)
+  {
+    id->misc->moreheads= ([]);
+    id->misc->moreheads |= _extra_heads;
+  }
+  id->misc->_rxml_recurse--;
+#ifdef RXML_DEBUG
+  werror("%d (%3.3fs)\n%s", strlen(what),(gethrtime()-time)/1000000.0,
+	 ("  "*id->misc->_rxml_recurse));
+#endif
+  return what;
+}
+
 class GenericTag {
   inherit RXML.Tag;
   string name;
@@ -565,55 +619,10 @@ void remove_parse_module (RoxenModule mod)
   }
 }
 
-#define _stat defines[" _stat"]
-#define _error defines[" _error"]
-#define _extra_heads defines[" _extra_heads"]
-#define _rettext defines[" _rettext"]
-#define _ok     defines[" _ok"]
-
-string parse_rxml(string what, RequestID id,
-		  void|Stdio.File file,
-		  void|mapping defines )
+void ready_to_receive_requests (object this)
 {
-  id->misc->_rxml_recurse++;
-#ifdef RXML_DEBUG
-  werror("parse_rxml( "+strlen(what)+" ) -> ");
-  int time = gethrtime();
-#endif
-  if(!defines)
-  {
-    defines = id->misc->defines||([]);
-    if(!_error)
-      _error=200;
-    if(!_extra_heads)
-      _extra_heads=([ ]);
-  }
-  if(!defines->sizefmt)
-  {
-    set_start_quote(set_end_quote(0));
-    defines->sizefmt = "abbrev";
-    _error=200;
-    _extra_heads=([ ]);
-    if(id->misc->stat)
-      _stat=id->misc->stat;
-    else if(file)
-      _stat=file->stat();
-  }
-  id->misc->defines = defines;
-
-  what = do_parse(what, id, file, defines);
-
-  if(sizeof(_extra_heads) && !id->misc->moreheads)
-  {
-    id->misc->moreheads= ([]);
-    id->misc->moreheads |= _extra_heads;
-  }
-  id->misc->_rxml_recurse--;
-#ifdef RXML_DEBUG
-  werror("%d (%3.3fs)\n%s", strlen(what),(gethrtime()-time)/1000000.0,
-	 ("  "*id->misc->_rxml_recurse));
-#endif
-  return what;
+  remove_call_out (rxml_tag_set->sort_on_priority);
+  rxml_tag_set->sort_on_priority();
 }
 
 
