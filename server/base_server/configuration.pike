@@ -3,7 +3,7 @@
  * (C) 1996, 1999 Idonex AB.
  */
 
-constant cvs_version = "$Id: configuration.pike,v 1.222 1999/11/17 15:14:20 per Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.223 1999/11/19 02:04:16 per Exp $";
 constant is_configuration = 1;
 #include <module.h>
 #include <roxen.h>
@@ -2751,6 +2751,8 @@ int add_modules( array(string) mods, int|void now )
 {
   int wr;
   foreach (mods, string mod)
+  {
+    sscanf( mod, "%s#", mod );
     if( ((now && !modules[ mod ]) || 
          !enabled_modules[ mod+"#0" ] )
         && !forcibly_added[ mod+"#0" ])
@@ -2763,6 +2765,7 @@ int add_modules( array(string) mods, int|void now )
         enable_module( mod+"#0" );
 #ifdef MODULE_DEBUG
     }
+  }
   if( wr )
     report_debug("]\n");
 #endif
