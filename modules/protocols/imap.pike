@@ -3,7 +3,7 @@
  * imap protocol
  */
 
-constant cvs_version = "$Id: imap.pike,v 1.50 1999/02/11 21:00:51 grubba Exp $";
+constant cvs_version = "$Id: imap.pike,v 1.51 1999/02/11 21:04:40 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -933,10 +933,10 @@ class backend
     m = imap_mailbox(m);
     session->mailbox = m;
     
-    return ({ m->get_uidvalidity(),
-	      m->get_exists(),
+    return ({ m->get_exists(),
 	      m->get_recent(),
 	      m->get_unseen(),
+	      m->get_uidvalidity(),
 	      m->get_flags(),
 	      m->get_permanent_flags() });
       
