@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.15 2001/08/31 13:07:54 hop Exp $
+ * $Id: snmpagent.pike,v 1.16 2001/09/04 13:26:48 hop Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Roxen IS.
@@ -30,24 +30,14 @@ Developer notes:
 	- default value for snmpagent host/port variable in the config. int.
 	  hasn't set correctly hostname part // FIXME: how reach config.int.'s URL
 						       from define_global_variables ?
-	- cold_start trap code isn't completed
-	- tabular walking throught roxenis.app.webserver.* doesn't working
+
  Todos:
-    v1.0 todo:
-	- cold/warm start trap generation
-	- restart/stop
-	- 'basic' Roxen working variables
 
-    v1.1 todo:
-	- trap handling
 	- module reloading
-
-    v2.0 todo:
 	- Roxen.module API for registering MIB subtree
 
-    v3.0 todo:
 	- SNMP v3 
-	- security
+	- security (DES?)
 
 
  */
@@ -97,12 +87,14 @@ inherit Roxen;
 #define RISMIB_BASE_WEBSERVER_ADD		"1.1"
 // enterprises.roxenis.app.roxen
 #define RISMIB_BASE_WEBSERVER			RISMIB_BASE+"."+RISMIB_BASE_WEBSERVER_ADD
+//
 // enterprises.roxenis.app.webserver.global
 #define RISMIB_BASE_WEBSERVER_GLOBAL		RISMIB_BASE_WEBSERVER+".1"
 // enterprises.roxenis.app.webserver.global.restart
 #define RISMIB_BASE_WEBSERVER_GLOBAL_BOOT	RISMIB_BASE_WEBSERVER_GLOBAL+".1"
 // enterprises.roxenis.app.webserver.global.vsCount
 #define RISMIB_BASE_WEBSERVER_GLOBAL_VS		RISMIB_BASE_WEBSERVER_GLOBAL+".2"
+//
 // enterprises.roxenis.app.webserver.vsTable
 #define RISMIB_BASE_WEBSERVER_VS		RISMIB_BASE_WEBSERVER+".2"
 // enterprises.roxenis.app.webserver.vsTable.vsEntry.vsIndex
@@ -119,6 +111,11 @@ inherit Roxen;
 #define RISMIB_BASE_WEBSERVER_VS_SHDRS		RISMIB_BASE_WEBSERVER_VS+".1.6"
 // enterprises.roxenis.app.webserver.vsTable.vsEntry.vsRequests
 #define RISMIB_BASE_WEBSERVER_VS_REQS		RISMIB_BASE_WEBSERVER_VS+".1.7"
+//
+// enterprises.roxenis.app.webserver.trap
+#define RISMIB_BASE_WEBSERVER_TRAP		RISMIB_BASE_WEBSERVER+".3"
+// enterprises.roxenis.app.webserver.trap.vsColdTrap
+#define RISMIB_BASE_WEBSERVER_TRAP_VSCOLD	RISMIB_BASE_WEBSERVER_TRAP+".1"
 
 #define LOG_EVENT(txt, pkt) log_event(txt, pkt)
 
@@ -390,19 +387,24 @@ class SNMPagent {
     if(intp(vsarr))
 	  return;
 	foreach(vsarr, int vsid)
-	  if(vsdb[vsid] && vsdb[vsid]->variables["snmp_traphosts"] && sizeof(vsdb[vsid]->variables["snmp_traphosts"]->query())) {
+	  if(vsdb[vsid] && vsdb[vsid]->variables["snmp_traphosts"] &&
+             sizeof(vsdb[vsid]->variables["snmp_traphosts"]->query())) {
 	     SNMPAGENT_MSG(sprintf("server %O(#%d): traphosts:%O",
 			vsdb[vsid]->name, vsid,
 			vsdb[vsid]->variables["snmp_traphosts"]->query()));
 	    foreach(vsdb[vsid]->variables["snmp_traphosts"]->query(), mixed thost) {
-		  uri = Standards.URI(thost);
+		  if(catch(uri = Standards.URI(thost))) {
+		    SNMPAGENT_MSG(sprintf("Traphost is invalid: %s !", thost));
+		    continue; // FIXME: what about possibility to add some warnings?
+		  }
 		  SNMPAGENT_MSG(sprintf("Trap sent: %s", thost));
-/*
+#if 1
 		  fd->trap(
-		    ([RISMIB_BASE_WEBSERVER+".999.1.1":
-                        ({ "str", Standards.URI(vsdb[vsid]->variables["MyWorldLocation"]->query())->host}) ]),
+		    ([RISMIB_BASE_WEBSERVER_TRAP_VSCOLD:
+                        ({ "count", vsid }) ]),
+                    //({ "str", Standards.URI(vsdb[vsid]->variables["MyWorldLocation"]->query())->host}) ]),
 		    uri->host, uri->port);
-*/
+#endif
 		}
 	  } else
 	    if(vsdb[vsid])
@@ -700,7 +702,7 @@ SNMPAGENT_MSG(sprintf("DEB: idx:%O, idxnums: %O", idx, idxnums));
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.15 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.16 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
