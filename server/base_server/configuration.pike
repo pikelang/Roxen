@@ -1,4 +1,4 @@
-string cvs_version = "$Id: configuration.pike,v 1.119 1998/04/09 16:04:25 grubba Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.120 1998/04/21 19:06:09 grubba Exp $";
 #include <module.h>
 #include <roxen.h>
 
@@ -3027,6 +3027,10 @@ void enable_all_modules()
   array modules_to_process=sort(indices(retrieve("EnabledModules",this)));
   string tmp_string;
   perror("\nEnabling all modules for "+query_name()+"... \n");
+
+#if constant(_compiler_trace)
+  // _compiler_trace(1);
+#endif /* !constant(_compiler_trace) */
   
   // Always enable the user database module first.
   if(search(modules_to_process, "userdb#0")>-1)
