@@ -1,7 +1,10 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.31 1997/02/07 21:11:20 nisse Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.32 1997/02/13 13:00:57 per Exp $";
 inherit "roxenlib";
 inherit "config/draw_things";
+
+import Stdio;
+import Array;
 
 #include <confignode.h>
 #include <module.h>
@@ -244,7 +247,7 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
   switch(type)
   {
   case TYPE_MODULE_LIST:
-    return map_array(var/"\000", find_module);
+    return map(var/"\000", find_module);
 
   case TYPE_MODULE:
    return find_module(var, node->config());
@@ -289,8 +292,8 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
 
    case TYPE_DIR_LIST:
     array foo;
-    foo=map_array((var-" ")/",", lambda(string var, object node) {
-      if (!strlen( var ) || file_size( var ) != -2)
+    foo=map((var-" ")/",", lambda(string var, object node) {
+      if (!strlen( var ) || file_stat( var )[1] != -2)
       {
 	if(node->error)	
 	  node->error += ", " +var + " is not a directory";
@@ -308,7 +311,7 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
     return foo;
     
    case TYPE_DIR:
-    if (!strlen( var ) || file_size( var ) != -2)
+    if (!strlen( var ) || file_stat( var )[1] != -2)
     {
       node->error = var + " is not a directory";
       return 0;
@@ -354,7 +357,7 @@ mixed decode_form_result(string var, int type, object node, mapping allvars)
     if(node->data[VAR_MISC])
       return (int)var;
     else
-      return map_array((var-" ")/",", lambda(string s){ 
+      return map((var-" ")/",", lambda(string s){ 
 	return (int)s;
       });
     
@@ -413,7 +416,8 @@ string configuration_list()
 
 string new_configuration_form()
 {
-  return replace(default_head("")+read_bytes("etc/newconfig.html"), ({"$COPIES","$configurl"}), 
+  return replace(default_head("")+ read_bytes("etc/newconfig.html"),
+		 ({"$COPIES","$configurl"}), 
 		 ({configuration_list(),CONFIG_URL})) +
     "\n\n</body>";
 }
@@ -821,14 +825,14 @@ mapping (string:string) selected_nodes =
   "Errors":"/Errors",
 ]);
 
-constant tabs = ({
+array tabs = ({
   "Configurations",
   "Globals",
   "Status",
   "Errors",
 });
 
-constant tab_names = ({
+array tab_names = ({
  " Virtual servers ", 
  " Global variables ",
  " Status info ",
@@ -865,8 +869,8 @@ int nunfolded(object o)
 }
 
 
-object module_font = Font()->load("base_server/config/font");
-object button_font = Font()->load("base_server/config/button_font");
+object module_font = get_font("base_server/config/font",0,0,0,"left",1.0,1.0);
+object button_font = get_font("base_server/config/button_font",0,0,0,"left",1.0,1.0);
 
 mapping auto_image(string in, object id)
 {
@@ -1005,7 +1009,8 @@ mapping configuration_parse(object id)
     // _above_ them. This is supposed to be some nice introductory
     // text about the configuration interface...
     return http_string_answer(default_head("Roxen Challenger")+
-			      display_tabular_header(root)+read_bytes("etc/config.html"),"text/html");
+			      display_tabular_header(root)+
+			      read_bytes("etc/config.html"),"text/html");
   }
   
   if(sizeof(id->prestate))
@@ -1193,7 +1198,7 @@ mapping configuration_parse(object id)
 	roxen->remove_configuration(o->data->name);
 
 	if(roxen->configurations[i]->ports_open)
-	  map_array(values(roxen->configurations[i]->ports_open), destruct);
+	  map(values(roxen->configurations[i]->ports_open), destruct);
 	destruct(roxen->configurations[i]);
 	
 	roxen->configurations = 

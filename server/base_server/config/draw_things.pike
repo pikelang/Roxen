@@ -1,13 +1,16 @@
 #include <module.h>
+import Image;
 
-string cvs_verison = "$Id: draw_things.pike,v 1.16 1996/12/13 00:41:17 per Exp $";
+constant Image = image;
+
+string cvs_verison = "$Id: draw_things.pike,v 1.17 1997/02/13 13:01:04 per Exp $";
 
 
 object (Image) load_image(string f)
 {
-  object file = File();
+  object file = files.file();
   string data;
-  object img = Image();
+  object img = image();
 
 //  werror("Loading "+f+"\n");
 

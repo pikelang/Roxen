@@ -4,7 +4,7 @@
 // mapping. Given the file 'foo.html', it will per default
 // set the contenttype to 'text/html'
 
-string cvs_version = "$Id: contenttypes.pike,v 1.5 1996/12/02 04:32:42 per Exp $";
+string cvs_version = "$Id: contenttypes.pike,v 1.6 1997/02/13 13:01:10 per Exp $";
 #include <module.h>
 inherit "module";
 
@@ -58,7 +58,7 @@ void parse_ext_string(string exts)
       if(sscanf(line, "#include <%s>", file))
       {
 	string s;
-	if(s=read_bytes(file)) parse_ext_string(s);
+	if(s=Stdio.read_bytes(file)) parse_ext_string(s);
       }
     } else {
       f = (replace(line, "\t", " ")/" "-({""}));

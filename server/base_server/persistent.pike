@@ -1,6 +1,6 @@
 static private inherit "db";
 
-/* $Id: persistent.pike,v 1.4 1997/02/07 23:33:20 per Exp $ */
+/* $Id: persistent.pike,v 1.5 1997/02/13 13:00:58 per Exp $ */
 /*************************************************************,
 * PERSIST. An implementation of persistant objects for Pike.  *
 * Variables and callouts are saved between restarts.          *
@@ -32,7 +32,7 @@ PRIVATE int save_call_out_list()
 {
   array ci;
   array res = ({});
-  array old = db_get(__id, "c") || ({});
+  array old = db_get("c") || ({});
   foreach(call_out_info(), ci)
   {
     if(ci[1] == this)
@@ -47,7 +47,7 @@ PRIVATE int save_call_out_list()
     }
   }
   if((old && sizeof(old)) || sizeof(res))
-    db_set(__id, "c", res);
+    db_set( "c", res);
   return (old && sizeof(old)) || sizeof(res);
 }
 
@@ -68,13 +68,13 @@ PRIVATE void save_variables()
   else
     foreach(indices(__vars), a)
       res += ({ ({ a, this[a] }) });
-  db_set(__id, "v", res);
+  db_set("v", res);
 }
 
 PRIVATE void restore_variables()
 {
   array var;
-  if(var = db_get(__id, "v"))
+  if(var = db_get("v"))
     foreach(var, var)
       catch { this[var[0]] = var[1]; };
 }
@@ -95,7 +95,7 @@ PRIVATE void restore_call_out_list()
    * each time the object is restored.
    */
 
-  if(var = db_get(__id, "c"))
+  if(var = db_get("c"))
   {
     foreach(call_out_info(), ci)
       if(ci[1] == this)
@@ -125,7 +125,7 @@ PRIVATE void do_auto_save(int t)
 
   save_needed = save_call_out_list();
 
-  foreach(db_get(__id, "v"), v)
+  foreach(db_get("v"), v)
     if(!equal(this[ v[0] ], v[ 1 ]))
       save_needed++;
 
@@ -139,25 +139,25 @@ PRIVATE void do_auto_save(int t)
 
 
 /* Public methods! */
-static int _____destroyed = 0;
+static private int _____destroyed = 0; 
 public void begone()
 {
   _____destroyed = 1;
-  db_close(__id);
-  db_destroy(__id);
+  db_destroy();
   destruct();
 }
 
 
-public void persist(string id)
+public void persist(mixed id)
 {
   array var;
 
+  if(arrayp(id)) id=(id[0]+".class/"+id[1]);
   /* No known id. This should not really happend. */
   if(!id)  error("No known id in persist.\n");
 
   __id = id;
-
+  db_open( id );
   restore_variables();
   restore_call_out_list();
 
@@ -175,7 +175,11 @@ public void auto_save_mode(int t)
 public void save()
 {
   if(!__id)
-    __id = nameof(this_object());
+  {
+    mixed i = nameof(this_object());
+    if(arrayp(i)) __id=(i[0]+".class/"+i[1]);
+    db_open( __id );
+  }
   /* "Simply" save all global (non-static) variables and callouts. */
   save_variables();
   save_call_out_list();
@@ -193,10 +197,7 @@ public void save()
 void destroy()  
 {
   if(!_____destroyed)
-  {
     save();
-    db_close(__id);
-  }
 }
     
 

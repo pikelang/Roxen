@@ -1,4 +1,5 @@
-string cvs_version = "$Id: disk_cache.pike,v 1.12 1997/01/26 23:47:07 per Exp $";
+
+string cvs_version = "$Id: disk_cache.pike,v 1.13 1997/02/13 13:00:54 per Exp $";
 #include <stdio.h>
 #include <module.h>
 #include <simulate.h>
@@ -30,6 +31,7 @@ string file_name(string what)
 
 class CacheStream 
 {
+import Stdio;
   inherit "socket";
   string fname;
   object file;
@@ -107,10 +109,11 @@ class CacheStream
 
 
 class Cache {
+  import Stdio;
   object lock = ((program) "lock" )();
   object this = this_object();
   string cd;
-  object command_stream = File();
+  object command_stream = files.file();
 
   string to_send="";
 
@@ -173,9 +176,9 @@ class Cache {
       return;
     }
     /* Child */
-    lcs->dup2( File ("stdin") );
+    lcs->dup2( files.file ("stdin") );
     object privs = ((program)"privs")("Starting the garbage collector");
-    exec("bin/pike", "-m", "etc/master.pike", "bin/garbagecollector.pike");
+    exece("bin/pike", ({"bin/garbagecollector.pike"}));
     perror("Failed to start garbage collector (exec failed)!\n");
 #if efun(real_perror)
     perror("bin/pike: ");real_perror();

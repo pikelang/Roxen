@@ -1,9 +1,8 @@
 #include <module.h>
-
 int zonk=time();
 #define link(d) ("<a href=\""+node->path(1)+"?"+(zonk++)+"\">\n"+(d)+"\n</a>\n")
 
-inherit "config/low_describers";
+inherit "low_describers";
 
 string describe_configuration_global_variables(object node)
 {
@@ -310,7 +309,7 @@ string describe_global_debug(object node)
     if(sscanf(s,"/precompiled/%s",s)) s=capitalize(s);
     allobj[s]++;
   }
-  foreach(sort_array(indices(allobj),lambda(string a, string b, mapping allobj) {
+  foreach(Array.sort_array(indices(allobj),lambda(string a, string b, mapping allobj) {
     return allobj[a] < allobj[b];
   }, allobj), s) {
     if((search(s, "Destructed?") == -1) && allobj[s]>2)

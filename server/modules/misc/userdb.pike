@@ -3,7 +3,7 @@
 // User database. Reads the system password database and use it to
 // authentificate users.
 
-string cvs_version = "$Id: userdb.pike,v 1.8 1996/12/30 23:51:16 neotron Exp $";
+string cvs_version = "$Id: userdb.pike,v 1.9 1997/02/13 13:01:11 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -190,9 +190,7 @@ void read_data()
      tmp2 = ({ });
      setpwent();
      while(tmp = getpwent())
-       tmp2 += ({
-	 map_array(tmp, lambda(mixed s) { return (string)s; }) * ":" 
-               }); 
+       tmp2 += ({Array.map(tmp, lambda(mixed s) { return (string)s; }) * ":"}); 
      endpwent();
      data = tmp2 * "\n";
      break;
@@ -200,7 +198,7 @@ void read_data()
 
    case "file":
     fstat = file_stat(query("file"));
-    data=read_bytes(query("file"));
+    data=Stdio.read_bytes(query("file"));
     last_password_read = time();
     break;
     
@@ -209,8 +207,8 @@ void read_data()
     array pw, sh, a, b;
     mapping sh = ([]);
     fstat = file_stat(query("file"));
-    data=read_bytes(query("file"));
-    shadow = read_bytes(query("shadowfile"));
+    data=    Stdio.read_bytes(query("file"));
+    shadow = Stdio.read_bytes(query("shadowfile"));
     if(data && shadow)
     {
       foreach(shadow / "\n", shadow) {
@@ -332,7 +330,7 @@ string status()
      +", "+(string)nouser+" had the wrong username<br>\n"
      + "<p>"+
      "<h3>Failure by host</h3>" +
-     map_array(indices(failed), lambda(string s) {
+     Array.map(indices(failed), lambda(string s) {
        return roxen->quick_ip_to_host(s) + ": "+failed[s]+"<br>\n";
      }) * "" 
      + "<p>The database has "+ sizeof(users)+" entries"

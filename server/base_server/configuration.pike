@@ -1,9 +1,11 @@
-string cvs_version = "$Id: configuration.pike,v 1.12 1997/01/29 05:32:09 per Exp $";
+string cvs_version = "$Id: configuration.pike,v 1.13 1997/02/13 13:00:53 per Exp $";
 #include <module.h>
 #include <roxen.h>
 /* A configuration.. */
 
 inherit "roxenlib";
+
+import Array;
 
 
 function store = roxen->store;
@@ -452,15 +454,15 @@ void init_log_file()
   {
     if(query("LogFile") == "stdout")
     {
-      log_function=stdout->write;
+      log_function=Stdio.stdout->write;
       possfd=-1;
     } else if(query("LogFile") == "stderr") {
-      log_function=stderr->write;
+      log_function=Stdio.stderr->write;
     } else {
       if(strlen(query("LogFile")))
       {
 	int opened;
-	lf=File();
+	lf=files.file();
 	opened=lf->open( query("LogFile"), "wac");
 	if(!opened)
 	  mkdirhier(query("LogFile"));
@@ -1211,7 +1213,7 @@ void start(int num)
 
   parse_log_formats();
   init_log_file();
-  map_array(indices(open_ports), do_dest);
+  map(indices(open_ports), do_dest);
 
   erro = catch {
     perror("Opening ports for "+query_name()+" ");
@@ -1252,7 +1254,7 @@ void start(int num)
 		    "Tried:\n"
 		    "Port  Protocol   IP-Number \n"
 		    "---------------------------\n"
-		    + map_array(query("Ports"), lambda(array p) {
+		    + map(query("Ports"), lambda(array p) {
 		      return sprintf("%5d %-10s %-20s\n", @p);
 		    })*"");
     }
@@ -1511,9 +1513,9 @@ object enable_module( string modname )
     {
       parse_module = me;
       if(_toparse_modules)
-	map_array(_toparse_modules,
-		  lambda(object o, object me) 
-		  { me->add_parse_module(o); }, me);
+	map(_toparse_modules,
+	    lambda(object o, object me) 
+	    { me->add_parse_module(o); }, me);
     }
 
     if(module->type & MODULE_PARSER)
@@ -1755,7 +1757,7 @@ private void update_vars(int from)
 #endif
       }
     }
-    perr("-> "+implode_nicely(res)+"\n");
+    perr("-> "+res*","+"\n");
     
     for(i=0; i<10; i++)
     {
@@ -1845,7 +1847,7 @@ private string get_domain(int|void l)
 #endif
     if(!s)
     {
-      t = read_bytes("/etc/resolv.conf");
+      t = Stdio.read_bytes("/etc/resolv.conf");
       if(t) 
       {
 	if(!sscanf(t, "domain %s\n", s))
@@ -2053,24 +2055,17 @@ int load_module(string module_file)
   {
     string dir;
 
-    _master->set_inhibit_compile_errors(1);
+//    _master->set_inhibit_compile_errors(perror);
 
     err = catch { obj = roxen->load_from_dirs(roxen->QUERY(ModuleDirs), module_file); };
 
-    if ( _master->errors != "" )
-    {
-      report_error( "Module load failed ("+module_file+"):\n  "
-		     +(err[0]-(getcwd()+"/"))+"- "
-		     + (((_master->errors-(getcwd()+"/"))||"")/"\n"
-			-({""}))*"\n- "+"\n" );
-       return 0;
-    } if( err && obj ) {
+    if( err && obj ) {
       obj=0;
       report_error("Error while enabling module ("+module_file+"):\n"+
 		   describe_backtrace(err)+"\n");
     }
 
-    _master->set_inhibit_compile_errors(0);
+//    _master->set_inhibit_compile_errors(0);
 
     prog = roxen->last_loaded();
   }

@@ -1,5 +1,6 @@
+import String;
 /* Language support for numbers and dates. Very simple,
-string cvs_version = "$Id: language.pike,v 1.6 1996/12/10 05:04:18 neotron Exp $";
+string cvs_version = "$Id: language.pike,v 1.7 1997/02/13 13:00:56 per Exp $";
  * really. Look at one of the existing language plugins (not really
  * modules, you see..)
  *

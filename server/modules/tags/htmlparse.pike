@@ -1,3 +1,5 @@
+import Simulate;
+
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 //
 // The main RXML parser. If this module is not added to a configuration,
@@ -12,7 +14,7 @@
 // the only thing that should be in this file is the main parser.  
 
 
-string cvs_version = "$Id: htmlparse.pike,v 1.21 1997/01/29 04:59:43 per Exp $";
+string cvs_version = "$Id: htmlparse.pike,v 1.22 1997/02/13 13:01:13 per Exp $";
 #pragma all_inline 
 
 #include <config.h>
@@ -517,7 +519,7 @@ string tag_insert(string tag,mapping m,object got,object file,mapping defines)
   if (n=m->variables) 
   {
     if(n!="variables")
-      return map_array(indices(got->variables), lambda(string s, mapping m) {
+      return Array.map(indices(got->variables), lambda(string s, mapping m) {
 	return s+"="+sprintf("%O", m[s])+"\n";
       }, got->variables)*"\n";
     return implode_nicely(indices(got->variables));
@@ -526,7 +528,7 @@ string tag_insert(string tag,mapping m,object got,object file,mapping defines)
   if (n=m->cookies) 
   {
     if(n!="cookies")
-      return map_array(indices(got->cookies), lambda(string s, mapping m) {
+      return Array.map(indices(got->cookies), lambda(string s, mapping m) {
 	return s+"="+sprintf("%O", m[s])+"\n";
       }, got->cookies)*"\n";
     return implode_nicely(indices(got->cookies));
@@ -588,8 +590,9 @@ string tag_compat_exec(string tag,mapping m,object got,object file,
       if(got->auth && got->auth[0])
 	user=got->auth[1];
       string addr=got->remoteaddr || "Internal";
+      ((program)"privs")("nobody");
       return popen(m->cmd,
-		   environment
+		   getenv()
 		   | build_roxen_env_vars(got)
 		   | build_env_vars(got->not_query, got, 0));
 
@@ -1438,7 +1441,7 @@ string tag_client(string tag,mapping m, string s,object got,object file)
     isok=!!got->supports[m->support];
 
   if (!(isok && m->or) && m->name)
-    isok=_match(got->client*" ", map_array(m->name/",", 
+    isok=_match(got->client*" ", Array.map(m->name/",", 
 					   lambda(string s){return s+"*";}));
   return (isok^invert)?s:""; 
 }

@@ -1,5 +1,8 @@
 #include <module.h>
 
+import Image;
+constant Font = Image.font;
+
 string fix_name(string in)
 {
   return replace(lower_case(in), ({"-"," "}), ({ "_", "_" }));
@@ -9,6 +12,7 @@ string make_font_name(string name, int size, int bold, int italic)
 {
   string base_dir;
   mixed available;
+  if(file_stat(name)) return name;
   base_dir = roxen->QUERY(font_dir)+"/"+size+"/"+fix_name(name);
   if(!(available = get_dir(base_dir)))
   {
@@ -40,16 +44,17 @@ string make_font_name(string name, int size, int bold, int italic)
 object get_font(string f, int size, int bold, int italic,
 		string justification, float xspace, float yspace)
 {
-  object fnt = Font();
+  object fnt;
   string key, name;
 
   name=make_font_name(f,size,bold,italic);
   key=name+"/"+justification+"/"+xspace+"/"+yspace;
+
   if(fnt=cache_lookup("fonts", key))
     return fnt;
-  
+  else
+    fnt = Font();
   if(!fnt->load( name ))
-    error("Failed to load the default font\n");
   {
     perror("Failed to load the font "+name+", using the default font.\n");
     if(!fnt->load("fonts/"+roxen->QUERY(default_font_size) +"/"+
@@ -66,5 +71,5 @@ object get_font(string f, int size, int bold, int italic,
 
 void create()
 {
-  add_efun("get_font", get_font);
+  add_constant("get_font", get_font);
 }

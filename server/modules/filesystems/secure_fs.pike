@@ -3,9 +3,9 @@
 // A somewhat more secure version of the normal filesystem. This
 // module user regular expressions to regulate the access of files.
 
-string cvs_version = "$Id: secure_fs.pike,v 1.5 1996/11/27 14:05:17 per Exp $";
+string cvs_version = "$Id: secure_fs.pike,v 1.6 1997/02/13 13:01:07 per Exp $";
 #include <module.h>
-inherit "modules/filesystems/filesystem";
+inherit "filesystem";
 
 array register_module()
 {

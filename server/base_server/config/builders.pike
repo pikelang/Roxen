@@ -1,7 +1,9 @@
 #include <module.h>
 #include <confignode.h>
-inherit "config/describers";
-inherit "config/savers";
+inherit "describers";
+inherit "savers";
+
+import Array;
 
 /*#define CONFIG_DEBUG*/
 

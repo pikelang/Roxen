@@ -1,6 +1,6 @@
 inherit "http";
 
-static string _cvs_version = "$Id: roxenlib.pike,v 1.14 1997/02/11 13:54:35 per Exp $";
+static string _cvs_version = "$Id: roxenlib.pike,v 1.15 1997/02/13 13:01:01 per Exp $";
 // This code has to work booth in the roxen object, and in modules
 #if !efun(roxen)
 #define roxen roxenp()
@@ -370,8 +370,8 @@ static string parse_rxml(string what, void|object|mapping id, void|object file,
   return what;
 }
 
-static constant safe_characters = "abcdefghijkklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789Â‰ˆ≈ƒ÷"/"";
-static constant empty_strings = map(safe_characters,lambda(){return "";});
+constant safe_characters = "abcdefghijkklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789Â‰ˆ≈ƒ÷"/"";
+constant empty_strings = map(safe_characters,lambda(){return "";});
 
 static int is_safe_string(string in)
 {
@@ -465,7 +465,7 @@ static string add_config( string url, array config, multiset prestate )
   return "/<" + config * "," + ">" + add_pre_state(url, prestate);
 }
 
-static string msectos(int t)
+string msectos(int t)
 {
   if(t<1000) /* One sec. */
   {

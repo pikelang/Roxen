@@ -1,8 +1,10 @@
+import Array;
+
 #include <module.h>
 
 #ifndef IN_INSTALL
 inherit "newdecode";
-string cvs_version = "$Id: read_config.pike,v 1.7 1997/01/29 04:59:36 per Exp $";
+string cvs_version = "$Id: read_config.pike,v 1.8 1997/02/13 13:00:59 per Exp $";
 #else
 # include "base_server/newdecode.pike"
 #endif
@@ -171,7 +173,7 @@ void remove_configuration( string name )
   object privs = ((program)"privs")("Removing config file"); // Change to root user.
 
   f = configuration_dir + replace(name, " ", "_");
-  if(file_size( f )==-1)   f = configuration_dir + name;
+  if(!file_stat( f ))   f = configuration_dir + name;
   if(!rm(f))
   {
     error("Failed to remove configuration file ("+f+")! "+

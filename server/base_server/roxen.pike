@@ -1,4 +1,4 @@
-string cvs_version = "$Id: roxen.pike,v 1.35 1997/01/29 07:40:52 per Exp $";
+string cvs_version = "$Id: roxen.pike,v 1.36 1997/02/13 13:01:00 per Exp $";
 #define IN_ROXEN
 
 #include <fifo.h>
@@ -16,6 +16,9 @@ inherit "hosts";
 inherit "socket";
 inherit "disk_cache";
 inherit "language";
+
+import Array;
+import spider;
 
 object roxen=this_object(), current_configuration;
 
@@ -124,7 +127,7 @@ private static void fork_or_quit()
     exit(0);
 #if efun(_pipe_debug)
   call_out(lambda() {  // Wait for all connections to finish
-    call_out(this_function(), 20);
+    call_out(backtrace()[-1][-1], 20);
     if(!_pipe_debug()[0]) exit(0);
   }, 1);
 #endif
@@ -277,7 +280,7 @@ object create_listen_socket(mixed port_no, object conf,
 
   if(!port_no)
   {
-    port = Port ( "stdin", accept_callback );
+    port = files.port ( "stdin", accept_callback );
 
     if(port->errno())
     {
@@ -285,7 +288,7 @@ object create_listen_socket(mixed port_no, object conf,
 		   "Errno is "+port->errno()+"\n");
     }
   } else {
-    port = Port ();
+    port = files.port ();
     if(!stringp(ether) || (lower_case(ether) == "any"))
       ether=0;
     if(ether)
@@ -369,14 +372,12 @@ mixed configuration_parse(mixed ... args)
 // Write a string to the configuration interface error log and to stderr.
 void nwrite(string s, int|void perr)
 {
-  if(!root)
-    if(!configuration_interface())
-    {
-      perror("Cannot report error to configuration interface:\n"+s);
-      return ;
-    }
-  if(root->descend("Errors", 1))
-    root->descend("Errors")->data[s]++;
+  if(root && root->descend("Errors", 1))
+  {
+    mapping e = root->descend("Errors")->data;
+    if(!e[s]) e[s]=({ time(1) });
+    else e[s]+=({ time(1) });
+  }
   perror(s);
 }
  
@@ -438,7 +439,7 @@ private void parse_supports_string(string what)
       string name, to;
       if(sscanf(foo, "#include <%s>", file))
       {
-	if(foo=read_bytes(file))
+	if(foo=Stdio.read_bytes(file))
 	  parse_supports_string(foo);
 	else
 	  report_error("Supports: Cannot include file "+file+"\n");
@@ -512,7 +513,7 @@ void done_with_roxen_com()
 {
   string new, old;
   new = _new_supports * "";
-  old = read_bytes( "etc/supports" );
+  old = Stdio.read_bytes( "etc/supports" );
   
   if(strlen(new) < strlen(old)-200) // Error in transfer?
     return;
@@ -521,8 +522,8 @@ void done_with_roxen_com()
     perror("Got new supports data from roxen.com\n");
     perror("Replacing old file with new data.\n");
     mv("etc/supports", "etc/supports~");
-    write_file("etc/supports", new);
-    old = read_bytes( "etc/supports" );
+    Stdio.write_file("etc/supports", new);
+    old = Stdio.read_bytes( "etc/supports" );
     if(old != new)
     {
       perror("FAILED to update the supports file.\n");
@@ -770,7 +771,7 @@ public varargs string type_from_filename( string file, int to )
   object current_configuration;
   string ext=extension(file);
     
-  if(current_configuration = find_configuration_for(previous_object()))
+  if(current_configuration = find_configuration_for(backtrace()[-2][-1]))
     current_configuration->type_from_filename( file, to );
 }
   
@@ -834,7 +835,7 @@ mapping restart()
 { 
   stop_all_modules();
   call_out(fork_or_quit, 1);
-  return ([ "data":read_bytes("etc/restart.html"), "type":"text/html" ]);
+  return ([ "data":Stdio.read_bytes("etc/restart.html"), "type":"text/html" ]);
 } 
 
 private array configuration_ports = ({  });
@@ -847,7 +848,7 @@ int startpid;
 // of code to support this is in the 'start' script.
 mapping shutdown() 
 {
-  catch(map_array(indices(portno)), destruct);
+  catch(Array.map(indices(portno)), destruct);
 
   object privs = ((program)"privs")("Shutting down the server");
   // Change to root user.
@@ -858,7 +859,7 @@ mapping shutdown()
   {
     // Only _really_ do something in the main process.
     int pid;
-    catch(map_array(configuration_ports, destruct));
+    catch(map(configuration_ports, destruct));
   
     perror("Shutting down Roxen.\n");
     // Fallback for systems without geteuid, Roxen will (probably)
@@ -876,12 +877,14 @@ mapping shutdown()
     {
       kill(startpid, signum("SIGINTR"));
       kill(startpid, signum("SIGHUP"));
+      kill(getppid(), signum("SIGINTR"));
+      kill(getppid(), signum("SIGHUP"));
 //	kill(startpid, signum("SIGKILL"));
     }
   }
   
   call_out(exit, 1, 0);
-  return ([ "data":replace(read_bytes("etc/shutdown.html"), "$PWD", getcwd()),
+  return ([ "data":replace(Stdio.read_bytes("etc/shutdown.html"), "$PWD", getcwd()),
 	    "type":"text/html" ]);
 } 
 
@@ -899,24 +902,29 @@ string filename(object o)
 
 object load(string s)   // Should perhaps be renamed to 'reload'. 
 {
-  if(file_size(s+".pike")>0)
+  if(file_stat(s+".pike"))
+  {
     if(__p=compile_file(s+".pike"))
     {
       my_loaded[__p]=s+".pike";
       return __p();
-    }
-  if(file_size(s+".lpc")>0)
+    } else
+      perror(s+".pike exists, but compilation failed.\n");
+  }
+  if(file_stat(s+".lpc"))
     if(__p=compile_file(s+".lpc"))
     {
       my_loaded[__p]=s+".lpc";
       return __p();
-    }
-  if(file_size(s+".module")>0)
-    if(__p=compile_file(s+".module"))
+    } else
+      perror(s+".lpc exists, but compilation failed.\n");
+  if(file_stat(s+".module"))
+    if(__p=load_module(s+".so"))
     {
-      my_loaded[__p]=s+".module";
+      my_loaded[__p]=s+".so";
       return __p();
-    }
+    } else
+      perror(s+".so exists, but compilation failed.\n");
   return 0; // FAILED..
 }
 
@@ -925,9 +933,11 @@ array(string) expand_dir(string d)
   string nd;
   array(string) dirs=({d});
 
+//perror("Expand dir "+d+"\n");
+  
   foreach((get_dir(d) || ({})) - ({"CVS"}) , nd) 
-     if(file_size(d+nd)==-2)
-	dirs+=expand_dir(d+nd+"/");
+    if(file_stat(d+nd)[1]==-2)
+      dirs+=expand_dir(d+nd+"/");
 
   return dirs;
 }
@@ -942,9 +952,9 @@ object load_from_dirs(array dirs, string f)
 
   if (dirs!=last_dirs)
   {
-     last_dirs_expand=({});
-     foreach(dirs, dir)
-	last_dirs_expand+=expand_dir(dir);
+    last_dirs_expand=({});
+    foreach(dirs, dir)
+      last_dirs_expand+=expand_dir(dir);
   }
 
   foreach (last_dirs_expand,dir)
@@ -955,10 +965,8 @@ object load_from_dirs(array dirs, string f)
 
 void create()
 {
-  add_efun("roxen", this_object());
-  add_efun("spinner", this_object());
-  add_efun("load",    load);
-  (object)"color";
+  add_constant("roxen", this_object());
+  (object)"base_server/color";
   (object)"base_server/fonts";
   Configuration = (program)"configuration";
 }
@@ -1490,8 +1498,8 @@ void initiate_configuration_port( int|void first )
   object o;
   array port;
 
-  if(catch(map_array(configuration_ports, destruct)))
-    catch(map_array(configuration_ports, do_dest));
+  if(catch(map(configuration_ports, destruct)))
+    catch(map(configuration_ports, do_dest));
   
   catch(do_dest(main_configuration_port));
   
@@ -1543,7 +1551,7 @@ void scan_module_dir(string d)
   {
     if ( file[0]!='.' && !backup_extension(file) && (file[-1]!='z'))
     {
-      if(file_size(path+file) == -2)
+      if(Stdio.file_size(path+file) == -2)
       {
 	if(file!="CVS")
 	  scan_module_dir(path+file+"/");
@@ -1709,7 +1717,7 @@ void create_pid_file(string where)
 		  ({ (string)getpid(), (string)getuid() }));
 
   rm(where);
-  if(catch(write_file(where, sprintf("%d\n%d", getpid(), startpid))))
+  if(catch(Stdio.write_file(where, sprintf("%d\n%d", getpid(), getppid()))))
     perror("I cannot create the pid file ("+where+").\n");
 }
 
@@ -1732,7 +1740,7 @@ void _shuffle(object from, object to)
   p->input(from);
   p->output(to);
 #else
-  perror("Shuffle: using fallback(Ouch!)\n",from,to);
+  perror("Shuffle: using fallback(Ouch!)\n");
   // Fallback. Very unlikely.
   from->set_id(to->write);
   from->set_nonblocking(lambda(function w,string s){w(s);},lambda(){},
@@ -1766,14 +1774,14 @@ void init_shuffler()
 {
   object out;
   object out2;
-  if(file_size("bin/shuffle") > 100)
+  if(file_stat("bin/shuffle"))
   {
     if(shuffler)
       destruct(shuffler);
-    out=File();
+    out=files.file();
     out2=out->pipe();
     mark_fd(out->query_fd(), "Data shuffler local end of pipe.\n");
-    spawne("bin/shuffle", ({}), ({}), out2, stderr, stderr, 0, 0);
+    spawne("bin/shuffle", ({}), ({}), out2, Stdio.stderr, Stdio.stderr, 0, 0);
     perror("Spawning data mover. (bin/shuffle)\n"); 
     destruct(out2);
     shuffler = out;
@@ -1805,7 +1813,7 @@ void exit_when_done()
   // Then wait for all sockets, but maximum 10 minutes.. 
 #if efun(_pipe_debug)
   call_out(lambda() { 
-    call_out(this_function(), 5);
+    call_out(backtrace()[-1][-1], 5);
     if(!_pipe_debug()[0])
     {
       werror("Exiting roxen (all connections closed).\n");
@@ -1860,7 +1868,7 @@ varargs int main(int argc, array (string) argv)
 
   start_time=time(1);
 
-  add_efun("write", perror);
+  add_constant("write", perror);
   
   
   mark_fd(0, "Stdin");
@@ -1957,7 +1965,7 @@ string checkfd(object id)
      "<table width=100% cellspacing=0 cellpadding=0>\n"+
      "<tr align=right><td>fd</td><td>type</td><td>mode</td>"+
      "<td>size</td></tr>\n"+
-     (map_array(get_all_active_fd(),
+     (map(get_all_active_fd(),
 		lambda(int fd) 
 		{
 		  return ("<tr align=right><th>"+fd+"</th><td>"+

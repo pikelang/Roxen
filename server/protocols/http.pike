@@ -1,7 +1,7 @@
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 
-string cvs_version = "$Id: http.pike,v 1.17 1997/02/07 23:33:21 per Exp $";
+string cvs_version = "$Id: http.pike,v 1.18 1997/02/13 13:01:14 per Exp $";
 // HTTP protocol module.
 #include <config.h>
 inherit "roxenlib";
@@ -84,7 +84,7 @@ void end(string|void);
 private void setup_pipe(int noend)
 {
   if(!my_fd) return end();
-  if(!pipe)  pipe=((program)"/precompiled/pipe")();
+  if(!pipe)  pipe=Pipe.pipe();
 #ifdef REQUEST_DEBUG
   perror("REQUEST: Pipe setup.\n");
 #endif
@@ -377,12 +377,12 @@ private int parse_got(string s)
 	    break;
 	  
 	   case "pragma":
-	    pragma|=aggregate_multiset(@explode(replace(contents, " ", ""), ","));
+	    pragma|=aggregate_multiset(@replace(contents, " ", "")/ ",");
 	    break;
 
 	   case "user-agent":
 	    sscanf(contents, "%s via", contents);
-	    client = explode(contents, " ") - ({ "" });
+	    client = contents/" " - ({ "" });
 	    break;
 
 	   case "referer":
@@ -409,9 +409,9 @@ private int parse_got(string s)
 	   case "message-id":
 	   case "from":
 	    if(misc[linename])
-	      misc[linename] += explode(contents-" ", ",");
+	      misc[linename] += (contents-" ") / ",";
 	    else
-	      misc[linename] = explode(contents-" ", ",");
+	      misc[linename] = (contents-" ") / ",";
 	    break;
 
 	  case "cookie": /* This header is quite heavily parsed */
@@ -535,8 +535,6 @@ void disconnect()
 #endif
   if(mappingp(file) && objectp(file->file))   
     destruct(file->file);
-  if(objectp(pipe) && pipe != previous_object()) 
-    destruct(pipe);
   my_fd = 0;
   destruct();
 }
@@ -742,9 +740,9 @@ static void handle_request( )
     foreach(indices(heads), h)
       if(arrayp(heads[h]))
 	foreach(heads[h], tmp)
-	  myheads += ({ sum(h,": ", tmp)});
+	  myheads += ({ `+(h,": ", tmp)});
       else
-	myheads +=  ({ sum(h, ": ", heads[h])});
+	myheads +=  ({ `+(h, ": ", heads[h])});
     
 
     if(file->len > -1)

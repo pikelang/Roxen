@@ -1,4 +1,7 @@
-string cvs_version = "$Id: cache.pike,v 1.9 1997/02/05 22:38:26 kg Exp $";
+import Array;
+
+string cvs_version = "$Id: cache.pike,v 1.10 1997/02/13 13:00:51 per Exp $";
+
 #include <config.h>
 
 inherit "roxenlib";
@@ -48,7 +51,7 @@ string status()
   array c, b;
   mapping ca = ([]), cb=([]), ch=([]), ct=([]);
   b=indices(cache);
-  c=map_array(values(cache), get_size);
+  c=map(values(cache), get_size);
   for(int i=0; i<sizeof(b); i++)
   {
     int s = sizeof(cache[b[i]]);
@@ -189,9 +192,5 @@ void create()
   perror("CACHE: Now online.\n");
 #endif
   cache=([  ]);
-  add_efun("cache_lookup", cache_lookup);
-  add_efun("cache_set", cache_set);
-  add_efun("cache_remove", cache_remove);
-  add_efun("cache_clear", cache_clear);
   call_out(cache_clean, 10);
 }

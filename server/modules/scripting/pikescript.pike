@@ -1,3 +1,5 @@
+#include <config.h>
+
 // This is a roxen module. (c) Informationsvävarna AB 1996.
 
 // Support for user Pike-scripts, like CGI, but handled internally in
@@ -10,7 +12,7 @@ mapping scripts=([]);
 
 inherit "module";
 inherit "roxenlib";
-string cvs_version = "$Id: pikescript.pike,v 1.6 1997/01/27 00:02:30 per Exp $";
+string cvs_version = "$Id: pikescript.pike,v 1.7 1997/02/13 13:01:12 per Exp $";
 #include <module.h>
 
 mixed *register_module()
@@ -64,7 +66,7 @@ array|mapping call_script(function fun, object got, object file)
     foreach(indices(got->variables), s)
       got->variables[s] = replace(got->variables[s], "\000", " ");
   
-#if efun(thread_create)
+#ifdef THREADS
   if(!locks[fun])
     locks[fun]=Mutex();
   object key = locks[fun]->lock();
@@ -156,10 +158,10 @@ mapping handle_file_extension(object f, string e, object got)
   ban[2] = seteuid;
   ban[3] = setuid;
 
-  add_efun("setegid", 0);
-  add_efun("seteuid", 0);
-  add_efun("setgid", 0);
-  add_efun("setuid", 0);
+  add_constant("setegid", 0);
+  add_constant("seteuid", 0);
+  add_constant("setgid", 0);
+  add_constant("setuid", 0);
 
   _master->set_inhibit_compile_errors(1);
   err=catch(p=compile_string(file, "Script:"+got->not_query));
@@ -167,10 +169,10 @@ mapping handle_file_extension(object f, string e, object got)
     s=_master->errors + "\n\n" + s;
   _master->set_inhibit_compile_errors(0);
 
-  add_efun("setegid", ban[0]);
-  add_efun("seteuid", ban[2]);
-  add_efun("setgid", ban[1]);
-  add_efun("setuid", ban[3]);
+  add_constant("setegid", ban[0]);
+  add_constant("seteuid", ban[2]);
+  add_constant("setgid", ban[1]);
+  add_constant("setuid", ban[3]);
   
   if(err)
   {

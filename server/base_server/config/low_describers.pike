@@ -129,7 +129,7 @@ string describe_variable_as_text(array var, int|void verbose)
     tmp=({});
     foreach(var[VAR_VALUE], m)
       tmp += ({ name_of_module( m ) });
-    return implode_nicely(tmp);
+    return Simulate.implode_nicely(tmp);
    case TYPE_MODULE:
     name = name_of_module( var[VAR_VALUE] );
     return replace(name, ({ "<", ">", "&" }), ({ "&lt;", "&gt;", "&amp;" }));
@@ -176,7 +176,7 @@ string describe_variable_as_text(array var, int|void verbose)
     if(var[VAR_MISC])
       return (string)var[VAR_VALUE];
     if(arrayp(var[VAR_VALUE]))
-      return map_array(var[VAR_VALUE],lambda(mixed a){
+      return Array.map(var[VAR_VALUE],lambda(mixed a){
 	return replace((string)a,({"<",">","&"}),({"&lt;","&gt;","&amp;"}));
       }) * ", ";
     else 
@@ -198,7 +198,7 @@ array ip_number_list;
 string find_one(string ... of)
 {
   string s;
-  foreach(of, s) if(file_size( s ) > 0) return s;
+  foreach(of, s) if(file_stat( s )) return s;
 }
 
 #define to_hostname roxen->blocking_ip_to_host
@@ -217,7 +217,7 @@ void init_ip_list()
   // LINUX
   if(aliasesfile = find_one("/proc/net/aliases"))
   {
-    string data = read_bytes(aliasesfile);
+    string data = Stdio.read_bytes(aliasesfile);
     foreach((data/"\n")[1..], data) // Remove the header line..
     {
       if(strlen(data)) 
@@ -244,7 +244,7 @@ void init_ip_list()
     }
   }
     
-  ip_number_list = sort_array(ip_number_list);
+  sort(ip_number_list);
   
   if(sizeof(ip_number_list) == 2)
     ip_number_list = 0;
@@ -255,7 +255,7 @@ string all_ip_numbers_as_selection(int id, string sel)
 {
   if(ip_number_list && sizeof(ip_number_list))
     return ("<select name=ip_number_"+id+">\n"
-	    + (map_array(ip_number_list, lambda(string s, string q) {
+	    + (Array.map(ip_number_list, lambda(string s, string q) {
   	        return "  <option"+(q==s?" selected":"")+">"+s+"\n";
    	       }, sel)*"")
 	    + "</select>\nOther IP-number: <input type=string name=other_"
@@ -266,7 +266,7 @@ string all_ip_numbers_as_selection(int id, string sel)
 
 array protocols()
 {
-  return map_array(filter_array(get_dir("protocols"), lambda(string s) {
+  return Array.map(Array.filter(get_dir("protocols"), lambda(string s) {
     return ((search(s,".pike") == search(s,".")) &&
 	    (search(s,".")!=-1) && s[-1]!="~");
   }), lambda(string s) { return (s/".")[0]; });
@@ -275,7 +275,7 @@ array protocols()
 string all_protocols_as_selection(int id, string sel)
 {
   return ("<select name=protocol_"+id+">\n"
-	  + (map_array(protocols(), lambda(string s, string q) {
+	  + (Array.map(protocols(), lambda(string s, string q) {
 	    return "  <option"+(q==s?" selected":"")+">"+s+"\n";
 	  }, sel)*"")
 	  + "</select>\n");
@@ -449,7 +449,7 @@ string describe_variable_low(mixed *var, mixed path, int|void really_short)
 	var[VAR_VALUE]=({});
       
       res="<input name="+path+" size=30,1 value=\""+
-	(map_array(var[VAR_VALUE], lambda(mixed s){ return ""+s; })*", ")+
+	(Array.map(var[VAR_VALUE], lambda(mixed s){ return ""+s; })*", ")+
 	  "\">"+"<input type=submit value=Ok>";
     }
     break;

@@ -1,8 +1,9 @@
-string cvs_version="$Id: graphic_text.pike,v 1.25 1997/02/07 23:33:20 per Exp $";
+string cvs_version="$Id: graphic_text.pike,v 1.26 1997/02/13 13:01:09 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
 
+import Image;
 
 array register_module()
 {
@@ -126,9 +127,9 @@ string query_location() { return query("location"); }
 
 mapping (string:object) fonts = ([]);
 
-object(Font) load_font(string name, string justification, int xs, int ys)
+object(font) load_font(string name, string justification, int xs, int ys)
 {
-  object fnt = Font();
+  object fnt = font();
 
   if(sscanf(name, "%*s/%*s") != 2)
     name=QUERY(default_size)+"/"+name;
@@ -160,7 +161,7 @@ array (array(int)) make_matrix(int size)
   array res;
   int i;
   int j;
-  res = map_array(allocate(size), lambda(int s, int size){
+  res = Array.map(allocate(size), lambda(int s, int size){
     return allocate(size); }, size);
 
   for(i=0; i<size; i++)
@@ -172,12 +173,12 @@ array (array(int)) make_matrix(int size)
 
 object last_image;
 string last_image_name;
-object (Image) load_image(string f)
+object (image) load_image(string f)
 {
   if(last_image_name==f) return last_image;
-  object file = File();
+  object file = files.file();
   string data;
-  object img = Image();
+  object img = image();
 
   if(!file->open(f,"r")) return 0;
   if(!(data=file->read(0x7fffffff))) return 0;
@@ -189,7 +190,7 @@ object (Image) load_image(string f)
   return img/*->copy()*/;
 }
 
-object (Image) blur(object (Image) img, int amnt)
+object (image) blur(object (image) img, int amnt)
 {
   img->setcolor(0,0,0);
   img = img->autocrop(amnt, 0,0,0,0, 0,0,0);
@@ -199,33 +200,33 @@ object (Image) blur(object (Image) img, int amnt)
   return img;
 }
 
-object (Image) outline(object (Image) on, object (Image) with,
+object (image) outline(object (image) on, object (image) with,
 		       array (int) color, int radie, int x, int y)
 {
-  object foo = Image(with->xsize(), with->ysize(), @color);
+  object foo = image(with->xsize(), with->ysize(), @color);
   
   int steps=10;
   for(int j=0; j<=steps; j++)
-    on->paste_mask(foo, with,(int)(0.5+x-(sin((float)j/steps*PI*2)*radie)),
-		   (int)(0.5+y-(cos((float)j/steps*PI*2)*radie)));
+    on->paste_mask(foo, with,(int)(0.5+x-(sin((float)j/steps*3.145*2)*radie)),
+		   (int)(0.5+y-(cos((float)j/steps*3.145*2)*radie)));
   foo=0;
   return on;
 }
 
-constant white = ({ 255,255,255 });
-constant lgrey = ({ 200,200,200 });
-constant grey = ({ 128,128,128 });
-constant black = ({ 0,0,0 });
+array white = ({ 255,255,255 });
+array lgrey = ({ 200,200,200 });
+array grey = ({ 128,128,128 });
+array black = ({ 0,0,0 });
 
-constant wwwb = ({ lgrey,lgrey,grey,black });
-object (Image) bevel(object (Image) in, int width, int|void invert)
+array wwwb = ({ lgrey,lgrey,grey,black });
+object (image) bevel(object (image) in, int width, int|void invert)
 {
   int h=in->ysize();
   int w=in->xsize();
 
-  object corner = Image(width+1,width+1);
-  object corner2 = Image(width+1,width+1);
-  object pix = Image(1,1);
+  object corner = image(width+1,width+1);
+  object corner2 = image(width+1,width+1);
+  object pix = image(1,1);
 
   for(int i=-1; i<=width; i++) {
     corner->line(i,width-i,i,-1, @white);
@@ -235,17 +236,17 @@ object (Image) bevel(object (Image) in, int width, int|void invert)
 
   if(!invert)
   {
-    in->paste_alpha(Image(width,h-width*2,@white), 160, 0, width);
-    in->paste_alpha(Image(width,h-width*2,@black), 128, in->xsize()-width, width);
-    in->paste_alpha(Image(w-width,width,@white), 160, 0, 0);
-    in->paste_alpha(Image(w-width,width,@black), 128, width, in->ysize()-width);
+    in->paste_alpha(image(width,h-width*2,@white), 160, 0, width);
+    in->paste_alpha(image(width,h-width*2,@black), 128, in->xsize()-width, width);
+    in->paste_alpha(image(w-width,width,@white), 160, 0, 0);
+    in->paste_alpha(image(w-width,width,@black), 128, width, in->ysize()-width);
   } else  {
     corner=corner->invert();
     corner2=corner2->invert();
-    in->paste_alpha(Image(width,h-width*2,@black), 160, 0, width);
-    in->paste_alpha(Image(width,h-width*2,@white), 128, in->xsize()-width, width);
-    in->paste_alpha(Image(w-width,width,@black), 160, 0, 0);
-    in->paste_alpha(Image(w-width,width,@white), 128, width, in->ysize()-width);
+    in->paste_alpha(image(width,h-width*2,@black), 160, 0, width);
+    in->paste_alpha(image(width,h-width*2,@white), 128, in->xsize()-width, width);
+    in->paste_alpha(image(w-width,width,@black), 160, 0, 0);
+    in->paste_alpha(image(w-width,width,@white), 128, width, in->ysize()-width);
   }
 
   in->paste_mask(corner, corner->color(95,95,95), in->xsize()-width,-1);
@@ -262,13 +263,13 @@ object (Image) bevel(object (Image) in, int width, int|void invert)
 }
 
 
-object (Image) make_text_image(mapping args, object font, string text)
+object (image) make_text_image(mapping args, object font, string text)
 {
-  object (Image) text_alpha=font->write(@(text/"\n"));
+  object (image) text_alpha=font->write(@(text/"\n"));
   int xoffset=0, yoffset=0;
 
   if(!text_alpha->xsize() || !text_alpha->ysize())
-    text_alpha = Image(10,10, 0,0,0);
+    text_alpha = image(10,10, 0,0,0);
   
 //  perror("Making image of '%s', args=%O\n", text, args);
 
@@ -278,7 +279,7 @@ object (Image) make_text_image(mapping args, object font, string text)
   int txsize=text_alpha->xsize();
   int tysize=text_alpha->ysize(); // Size of the text, in pixels. 
 
-  int xsize=txsize; // Image size, in pixels
+  int xsize=txsize; // image size, in pixels
   int ysize=tysize;
 
 //  perror("Xsize=%d; ysize=%d\n",xsize,ysize);
@@ -350,7 +351,7 @@ object (Image) make_text_image(mapping args, object font, string text)
      case "left":
     }
   } else
-    background = Image(xsize, ysize, @bgcolor);
+    background = image(xsize, ysize, @bgcolor);
 
   if(args->border)
   {
@@ -406,7 +407,7 @@ object (Image) make_text_image(mapping args, object font, string text)
     string bg;
     sscanf(args->textbox, "%d,%s", alpha, bg);
     sscanf(bg,"%s,%d", bg,border);
-    background->paste_alpha(Image(txsize+border*2,tysize+border*2,
+    background->paste_alpha(image(txsize+border*2,tysize+border*2,
 				  @parse_color(bg)),
 			    255-(alpha*255/100),xoffset-border,yoffset-border);
   }
@@ -418,14 +419,14 @@ object (Image) make_text_image(mapping args, object font, string text)
     int sdist = ((int)(args->shadow/",")[-1])+2;
     object ta = text_alpha->copy();
     ta = ta->color(256-sd,256-sd,256-sd);
-    background->paste_mask(Image(txsize,tysize),ta,xoffset+sdist, yoffset+sdist);
+    background->paste_mask(image(txsize,tysize),ta,xoffset+sdist, yoffset+sdist);
   }
 
   if(args->glow)
   {
     int amnt = (int)(args->glow/",")[-1]+2;
     array (int) blurc = parse_color((args->glow/",")[0]);
-    background->paste_mask(Image(txsize+amnt*2,tysize*2, @blurc),
+    background->paste_mask(image(txsize+amnt*2,tysize*2, @blurc),
 			   blur(text_alpha, amnt),
 			   xoffset-amnt, yoffset-amnt);
   }
@@ -437,7 +438,7 @@ object (Image) make_text_image(mapping args, object font, string text)
       ->color(@fgcolor);
   
 
-  if(!foreground)  foreground=Image(txsize, tysize, @fgcolor);
+  if(!foreground)  foreground=image(txsize, tysize, @fgcolor);
   if(args->textscale)
   {
     string c1="black",c2="black",c3="black",c4="black";

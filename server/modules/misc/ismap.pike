@@ -3,7 +3,7 @@
 // ISMAP image map support. Quite over-complex, really.  An example is
 // the support for index images, and chromatic distances.
 
-string cvs_version = "$Id: ismap.pike,v 1.5 1996/12/02 04:32:43 per Exp $";
+string cvs_version = "$Id: ismap.pike,v 1.6 1997/02/13 13:01:10 per Exp $";
 #include <module.h>
 inherit "module";
 inherit "roxenlib";
@@ -328,7 +328,7 @@ mixed do_color_match(string file, mapping cols, int x, int y, int color)
   int r, g, b, i, grey;
 
 
-  if(file_size(file) < 0)
+  if(!file_stat(file))
     return 0;
 
 
