@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.124 2000/05/12 20:48:52 nilsson Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.125 2000/05/12 21:03:08 nilsson Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -646,7 +646,6 @@ string|array(string) tag_insert( string tag, mapping m, RequestID id )
       CACHE(60);
     Protocols.HTTP q=Protocols.HTTP.get_url(m->href);
     if(q && q->status>0 && q->status<400)
-      return ({ q->data() });
       return ({ m->quote!="html"?q->data():Roxen.html_encode_string(q->data()) });
     RXML.run_error(q ? q->status_desc + "\n": "No server response\n");
   }
