@@ -13,7 +13,7 @@
  * reference cache shortly.
  */
 
-constant cvs_version = "$Id: business.pike,v 1.42 1997/11/25 02:12:38 hedda Exp $";
+constant cvs_version = "$Id: business.pike,v 1.43 1997/11/25 02:14:23 hedda Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -377,7 +377,11 @@ string tag_diagram(string tag, mapping m, string contents,
 
   res->bg = parse_color(defines->bg || "#e0e0e0");
   res->fg = parse_color(defines->fg || "black"); //FIXME
-  
+  /*
+ res->bg = parse_color(m->bgcolor || defines->bg || "#e0e0e0");
+  res->fg = parse_color(m->textcolor || defines->fg || "black");
+   */
+
   if(m->center) res->center = (int)m->center;
 
   if(m["3d"])
