@@ -1,5 +1,5 @@
 /*
- * $Id: automailrcpt.pike,v 1.1 1998/09/12 18:32:29 grubba Exp $
+ * $Id: automailrcpt.pike,v 1.2 1998/09/12 19:16:22 grubba Exp $
  *
  * A RCPT module for the AutoMail system.
  *
@@ -12,7 +12,7 @@ inherit "module";
 
 #define RCPT_DEBUG
 
-constant cvs_version = "$Id: automailrcpt.pike,v 1.1 1998/09/12 18:32:29 grubba Exp $";
+constant cvs_version = "$Id: automailrcpt.pike,v 1.2 1998/09/12 19:16:22 grubba Exp $";
 
 /*
  * Roxen glue
@@ -91,6 +91,8 @@ string|multiset(string) expn(string addr, object o)
 string desc(string addr, object o)
 {
   roxen_perror("AutoMail RCPT: desc(%O)\n", addr);
+
+  addr = get_addr(addr);
 
   foreach(conf->get_providers("automail_clientlayer")||({}), object o) {
     object u = o->get_user_from_address(addr);
