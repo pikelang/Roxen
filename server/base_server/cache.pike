@@ -1,6 +1,6 @@
 // This file is part of Roxen Webserver.
 // Copyright © 1996 - 2000, Roxen IS.
-// $Id: cache.pike,v 1.60 2001/01/21 21:43:04 nilsson Exp $
+// $Id: cache.pike,v 1.61 2001/01/25 23:20:54 nilsson Exp $
 
 #pragma strict_types
 
@@ -233,7 +233,6 @@ private array(mapping(string:mixed)) session_buckets;
 
 private void session_cache_handler() {
   remove_call_out(session_cache_handler);
-  werror("Shift buckets\n");
   session_buckets = ({ ([]) }) + session_buckets[..SESSION_BUCKETS-1];
   call_out(session_cache_handler, SESSION_SHIFT_TIME);
 }
