@@ -1,5 +1,5 @@
 /*
- * $Id: roxenloader.pike,v 1.90 1999/08/09 22:22:44 grubba Exp $
+ * $Id: roxenloader.pike,v 1.91 1999/08/30 09:36:34 per Exp $
  *
  * Roxen bootstrap program.
  *
@@ -20,7 +20,7 @@
 //
 private static object new_master;
 
-constant cvs_version="$Id: roxenloader.pike,v 1.90 1999/08/09 22:22:44 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.91 1999/08/30 09:36:34 per Exp $";
 
 #define perror roxen_perror
 private static int perror_status_reported=0;
@@ -494,8 +494,11 @@ object really_load_roxen()
 {
   int start_time = gethrtime();
   roxen_perror("Loading roxen ... ");
-  object res = ((program)"roxen")();
-  roxen_perror("Loaded roxen in "+sprintf("%4.3fs\n", (gethrtime()-start_time)/1000000.0));
+  object res;
+  program p = ((program)"roxen");
+  res = p();
+  roxen_perror("Loaded roxen in %4.3fs\n",
+               (gethrtime()-start_time)/1000000.0);
   return res;
 }
 
@@ -503,8 +506,8 @@ object really_load_roxen()
 #ifdef TRACE_DESTRUCT
 void trace_destruct(mixed x)
 {
-  roxen_perror(sprintf("DESTRUCT(%O)\n%s\n",
-		       x, describe_backtrace(backtrace())));
+  roxen_perror("DESTRUCT(%O)\n%s\n",
+               x, describe_backtrace(backtrace()));
   destruct(x);
 }
 #endif /* TRACE_DESTRUCT */
@@ -612,7 +615,7 @@ string make_path(string ... from)
   }, getcwd())*":";
 }
 
-#if constant(fork)
+#if 0&&constant(fork)
 class getpw_kluge
 {
   object pin;
@@ -802,7 +805,7 @@ int main(mixed ... args)
     add_program_path(p);
   }
 
-#if 0 && constant(fork)
+#if 0&&constant(fork)
   if (catch { getpw_kluge(); }) {
     /* We're in the kluge process, and it's time to die... */
     exit(0);
