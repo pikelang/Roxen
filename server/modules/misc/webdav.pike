@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.36 2004/06/01 16:03:58 jonasw Exp $
+// $Id: webdav.pike,v 1.37 2004/06/02 21:49:34 mast Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.36 2004/06/01 16:03:58 jonasw Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.37 2004/06/02 21:49:34 mast Exp $";
 constant thread_safe = 1;
 constant module_name = "WebDAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -144,7 +144,7 @@ class PatchPropertyRemoveCmd(string property_name)
 mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 {
   SimpleNode xml_data;
-  TRACE_ENTER("Handle WEBDAV request...", 0);
+  SIMPLE_TRACE_ENTER(this, "Handle WEBDAV request %s...", id->method);
   if (catch { xml_data = id->get_xml_data(); }) {
     // RFC 2518 8:
     //   If a server receives ill-formed XML in a request it MUST reject
@@ -532,10 +532,9 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	  }
 	  recur_func = lambda(string path, string ignored, int d,
 			      RoxenModule module, RequestID id) {
-			 module->recurse_find_properties(path,
-							 "DAV:propname",
-							 d, id);
-			 return 0;
+			 return module->recurse_find_properties(path,
+								"DAV:propname",
+								d, id);
 		       };
 	  break;
 	case "DAV:allprop":
@@ -546,11 +545,10 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	  recur_func = lambda(string path, string ignored, int d,
 			      RoxenModule module, RequestID id,
 			      multiset(string)|void filt) {
-			 module->recurse_find_properties(path,
-							 "DAV:allprop",
-							 d, id,
-							 filt);
-			 return 0;
+			 return module->recurse_find_properties(path,
+								"DAV:allprop",
+								d, id,
+								filt);
 		       };
 	  break;
 	case "DAV:prop":
@@ -561,11 +559,10 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
 	  recur_func = lambda(string path, string ignored, int d,
 			      RoxenModule module, RequestID id,
 			      multiset(string) filt) {
-			 module->recurse_find_properties(path,
-							 "DAV:prop",
-							 d, id,
-							 filt);
-			 return 0;
+			 return module->recurse_find_properties(path,
+								"DAV:prop",
+								d, id,
+								filt);
 		       };
 	  // FALL_THROUGH
 	case "http://sapportals.com/xmlns/cm/webdavinclude":
@@ -593,10 +590,9 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
       //   names and values of all properties.
       recur_func = lambda(string path, string ignored, int d,
 			  RoxenModule module, RequestID id) {
-		     module->recurse_find_properties(path,
-						     "DAV:allprop",
-						     d, id);
-		     return 0;
+		     return module->recurse_find_properties(path,
+							    "DAV:allprop",
+							    d, id);
 		   };
     }
     break;
