@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: global_variables.pike,v 1.91 2002/06/13 14:17:41 nilsson Exp $
+// $Id: global_variables.pike,v 1.92 2002/06/13 22:51:37 nilsson Exp $
 
 // NGSERVER: Move protocol settings to their own files.
 
@@ -502,7 +502,7 @@ The start script attempts to fix this for the standard file locations.</p>");
   // Keep for now...
   defvar("locale",
 	 Variable.Language("Standard", ({ "Standard" }) +
-			   Locale.list_languages("roxen_config"),
+			   Locale.list_languages("roxen_""config"),
 			   0, "Default language",
 			   ("Locale, used to localize some "
 			    "messages in Roxen. Standard means using "

@@ -445,7 +445,7 @@ class ConfigurationSettings
 
 //  defvar("locale",
 //	   Variable.Language("Standard", ({ "Standard" }) +
-//			     Locale.list_languages("roxen_config"),
+//			     Locale.list_languages("roxen_""config"),
 //			     0, LOCALE(5, "Interface language"), 
 //			     LOCALE(19, "Select the Administration interface "
 //				    "language.")))
