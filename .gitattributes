@@ -86,6 +86,7 @@ urw_itc_avant_garde-demi-r binary
 /server/config_actions/requeststatus.pike foreign_ident
 /server/config_actions/shutdown.pike foreign_ident
 /server/config_actions/upgrade.pike foreign_ident
+/server/etc/config.html foreign_ident
 /server/etc/extensions foreign_ident
 /server/etc/restart.html foreign_ident
 /server/etc/roxen_master.pike foreign_ident
