@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.576 2004/07/17 23:01:38 _cvs_stephen Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.577 2005/04/02 14:02:29 _cvs_dirix Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2354,7 +2354,7 @@ array open_file(string fname, string mode, RequestID id, void|int internal_get,
 mapping(string:Stat) find_dir_stat(string file, RequestID id)
 {
   string loc;
-  mapping(string:array(mixed)) dir = ([]);
+  mapping(string:Stat) dir = ([]);
   mixed d, tmp;
 
 
