@@ -5,7 +5,7 @@
 // New parser by Martin Stjernholm
 // New RXML, scopes and entities by Martin Nilsson
 //
-// $Id: rxml.pike,v 1.181 2000/03/30 18:16:08 nilsson Exp $
+// $Id: rxml.pike,v 1.182 2000/03/31 04:15:34 nilsson Exp $
 
 inherit "rxmlhelp";
 #include <request_trace.h>
@@ -1505,7 +1505,7 @@ class IfIs
     if(arr[1]=="==" || arr[1]=="=" || arr[1]=="is")
       return ((is==var)||glob(is,var)||
             sizeof(filter( is/",", glob, var )));
-    if(arr[1]=="!=") return 1;
+    if(arr[1]=="!=") return is!=var;
 
     string trash;
     if(sscanf(var,"%f%s",float f_var,trash)==2 && trash=="" &&
