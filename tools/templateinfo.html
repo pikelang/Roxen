@@ -6,13 +6,7 @@
   <insert name="General" title="Edit general layout preferences"
           help="help" category="tmpl">
 
-  <insert name="Link colors" title="Edit link colors"
-          help="help" category="tmpl">
-
-  <insert name="Heading 1" title="Edit heading 1 preferences"
-          help="help" category="tmpl">
-
-  <insert name="Heading 2" title="Edit heading 2 preferences"
+  <insert name="Heading" title="Edit heading preferences"
           help="help" category="tmpl">
 
   <insert name="Page head text" title="Edit page head text preferences"
@@ -28,10 +22,7 @@
   <insert name="Navigation text" title="Edit navigation text preferences"
           help="help" category="nav">
 
-  <insert name="Navigation text colors" title="Edit navigation text colors"
-          help="help" category="nav">
-
-  <insert name="Navigation background colors" title="Edit navigation background colors"
+  <insert name="Navigation colors" title="Edit navigation colors"
           help="help" category="nav">
 
 </sql-insert>
@@ -44,22 +35,15 @@
   <delete all>
 
   <insert name="General p1" _wizard_name="General">
-  <insert name="General p2" _wizard_name="General">
-  <insert name="General p3" _wizard_name="General">
+  <insert name="General p2" _wizard_name="General" title="Page colors">
+  <insert name="General p3" _wizard_name="General" title="Link colors">
 
-  <insert name="Link colors p1" _wizard_name="Link colors">
-  <insert name="Link colors p2" _wizard_name="Link colors">
-  <insert name="Link colors p3" _wizard_name="Link colors">
+  <insert name="Heading p1" _wizard_name="Heading" title="Heading level 1">
 
-  <insert name="Heading 1 p1" _wizard_name="Heading 1">
-  <insert name="Heading 1 p2" _wizard_name="Heading 1">
-
-  <insert name="Heading 2 p1" _wizard_name="Heading 2">
-  <insert name="Heading 2 p2" _wizard_name="Heading 2">
+  <insert name="Heading p2" _wizard_name="Heading" title="Heading level 2">
 
   <insert name="Page head text p1" _wizard_name="Page head text">
   <insert name="Page head text p2" _wizard_name="Page head text">
-  <insert name="Page head text p3" _wizard_name="Page head text">
 
   <insert name="Page head layout p1" _wizard_name="Page head layout">
   <insert name="Page head layout p2" _wizard_name="Page head layout">
@@ -68,13 +52,8 @@
 
   <insert name="Navigation text p1" _wizard_name="Navigation text">
 
-  <insert name="Navigation text colors p1" _wizard_name="Navigation text colors">
-  <insert name="Navigation text colors p2" _wizard_name="Navigation text colors">
-  <insert name="Navigation text colors p3" _wizard_name="Navigation text colors">
-
-  <insert name="Navigation background colors p1" _wizard_name="Navigation background colors">
-  <insert name="Navigation background colors p2" _wizard_name="Navigation background colors">
-  <insert name="Navigation background colors p3" _wizard_name="Navigation background colors">
+  <insert name="Navigation colors p1" _wizard_name="Navigation colors">
+  <insert name="Navigation colors p2" _wizard_name="Navigation colors">
 
 </sql-insert>
 
@@ -118,105 +97,105 @@
           type="select" help=""
           _page_name="General p1" _option_group_name="background images">
 
-  <insert name="bg_color" title="Background color"
-          type="color" help=""
-          _page_name="General p2">
-
   <insert name="text_color" title="Text color"
-          type="color" help=""
-	  _page_name="General p3">
+          type="color-small" help=""
+	  _page_name="General p2">
+
+  <insert name="bg_color" title="Background color"
+          type="color-small" help=""
+          _page_name="General p2">
 
   <!--  Link colors  -->
   <insert name="link_color" title="Link color"
-          type="color" help=""
-	  _page_name="Link colors p1" >
+          type="color-small" help=""
+	  _page_name="General p3" >
 
   <insert name="vlink_color" title="Visited link color"
-          type="color" help=""
-	  _page_name="Link colors p2">
+          type="color-small" help=""
+	  _page_name="General p3">
 
   <insert name="alink_color" title="Active link color"
-          type="color" help=""
-	  _page_name="Link colors p3">
+          type="color-small" help=""
+	  _page_name="General p3">
 
   <!--  Heading 1  -->	  
   <insert name="h1_color" title="Color"
-          type="color" help=""
-	  _page_name="Heading 1 p1">
+          type="color-small" help=""
+	  _page_name="Heading p1">
 
   <insert name="h1_font" title="Font"
           type="font" help=""
-	  _page_name="Heading 1 p2">
+	  _page_name="Heading p1">
 
   <insert name="h1_font_style" title="Font style"
           type="select" help=""
-	  _page_name="Heading 1 p2" _option_group_name="font style">
+	  _page_name="Heading p1" _option_group_name="font style">
 
   <insert name="h1_size" title="Font size"
           type="select" help=""
-	  _page_name="Heading 1 p2" _option_group_name="font size">
+	  _page_name="Heading p1" _option_group_name="font size">
 
   <insert name="h1_align" title="Justification"
           type="select" help=""
-	  _page_name="Heading 1 p2" _option_group_name="justification">
+	  _page_name="Heading p1" _option_group_name="justification">
 
   <insert name="h1_shadow" title="Shadow"
           type="toggle" help=""
-	  _page_name="Heading 1 p2">
+	  _page_name="Heading p1">
 
   <!--  Heading 2  -->	  
   <insert name="h2_color" title="Color"
-          type="color" help=""
-	  _page_name="Heading 2 p1">
+          type="color-small" help=""
+	  _page_name="Heading p2">
 
   <insert name="h2_font" title="Font"
           type="font" help=""
-	  _page_name="Heading 2 p2">
+	  _page_name="Heading p2">
 
   <insert name="h2_font_style" title="Font style"
           type="select" help=""
-	  _page_name="Heading 2 p2"  _option_group_name="font style">
+	  _page_name="Heading p2"  _option_group_name="font style">
 
   <insert name="h2_size" title="Font size"
           type="select" help=""
-	  _page_name="Heading 2 p2" _option_group_name="font size">
+	  _page_name="Heading p2" _option_group_name="font size">
 
   <insert name="h2_align" title="Justification"
           type="select" help=""
-	  _page_name="Heading 2 p2" _option_group_name="justification">
+	  _page_name="Heading p2" _option_group_name="justification">
 
   <insert name="h2_shadow" title="Shadow"
           type="toggle" help=""
-	  _page_name="Heading 2 p2">
+	  _page_name="Heading p2">
 
   <!--  Page head text  -->
   <insert name="page_head_text" title="Text"
-          type="string" help="Här kommer lite text som egentligen borde vara en hjälpande text som beskriver vad den här variablen ska vara bra till."
+          type="string" help=""
 	  _page_name="Page head text p1">
 
   <insert name="page_head_text_color" title="Color"
-          type="color" help=""
+          type="color-small" help=""
 	  _page_name="Page head text p2">
 
   <insert name="page_head_text_font" title="Font"
           type="font" help=""
-	  _page_name="Page head text p3">
+	  _page_name="Page head text p2">
 
   <insert name="page_head_text_font_style" title="Font style"
           type="select" help=""
-	  _page_name="Page head text p3" _option_group_name="font style">
+	  _page_name="Page head text p2" _option_group_name="font style">
 
   <insert name="page_head_text_size" title="Font size"
           type="select" help=""
-	  _page_name="Page head text p3" _option_group_name="font size">
+	  _page_name="Page head text p2" _option_group_name="font size">
 
   <insert name="page_head_text_align" title="Justification"
           type="select" help=""
-	  _page_name="Page head text p3" _option_group_name="justification">
+	  _page_name="Page head text p2" _option_group_name="justification">
 
   <insert name="page_head_text_shadow" title="Shadow"
           type="toggle" help=""
-	  _page_name="Page head text p3">
+	  _page_name="Page head text p2">
 
   <!--  Page head layout  -->	  
   <insert name="page_head_image" title="Image"
@@ -228,7 +207,7 @@
 	  _page_name="Page head layout p1" _option_group_name="justification">
 
   <insert name="page_head_bar_color" title="Bar color"
-          type="color" help=""
+          type="color-small" help=""
 	  _page_name="Page head layout p2">
 
   <!--  Navigation Variables  -->
@@ -264,29 +243,29 @@
 
   <!--  Navigation Text color  -->
   <insert name="nav_text_color" title="Text color"
-          type="color" help=""
-	  _page_name="Navigation text colors p1">
+          type="color-small" help=""
+	  _page_name="Navigation colors p1">
 
   <insert name="nav_text_color_sel" title="Selected text color"
-          type="color" help=""
-	  _page_name="Navigation text colors p2">
+          type="color-small" help=""
+	  _page_name="Navigation colors p1">
 
   <insert name="nav_text_color_mouse" title="Mouseover text color"
-          type="color" help=""
-	  _page_name="Navigation text colors p3">
+          type="color-small" help=""
+	  _page_name="Navigation colors p1">
 
   <!--  Navigation Background color  -->
   <insert name="nav_bg_color" title="Background color"
-          type="color" help=""
-	  _page_name="Navigation background colors p1">
+          type="color-small" help=""
+	  _page_name="Navigation colors p2">
 
   <insert name="nav_bg_color_sel" title="Selected background color"
-          type="color" help=""
-	  _page_name="Navigation background colors p2">
+          type="color-small" help=""
+	  _page_name="Navigation colors p2">
 
   <insert name="nav_bg_color_mouse" title="Mouseover background color"
-          type="color" help=""
-	  _page_name="Navigation background colors p3">
+          type="color-small" help=""
+	  _page_name="Navigation colors p2">
 
 </sql-insert>
 
@@ -296,27 +275,55 @@
 
   <update column="example_html"
     expression='<formoutput quote=§>
-                  <if match="§variable_$h1_shadow$§ is 1"><cset
-		    variable=shadow>shadow=60,1</cset></if>
+                  <if match="§variable_$h1_shadow$§ is 1">
+		    <cset variable=shadow>shadow=60,1</cset></if>
 		</formoutput>
 		<formoutput quote=§>
-                  <gtext align=center nfont="§variable_$h1_font$§" §variable_$h1_font_style$§
+                  <gtext align=center nfont="§variable_$h1_font$§"
+		    §variable_$h1_font_style$§
                     fg=§variable_$h1_color$§ scale=§variable_$h1_size$§
 		    §shadow§ bg=lightgrey>Example Text</gtext>
 		</formoutput>'
-    where="name='Heading 1 p2'">
+    where="name='Heading p1'">
 
   <update column="example_html"
     expression='<formoutput quote=§>
-                  <if match="§variable_$h2_shadow$§ is 1"><cset
-		    variable=shadow>shadow=60,1</cset></if>
+                  <if match="§variable_$h2_shadow$§ is 1">
+		    <cset variable=shadow>shadow=60,1</cset></if>
 		</formoutput>
 		<formoutput quote=§>
-                  <gtext align=center nfont="§variable_$h2_font$§" §variable_$h2_font_style$§
+                  <gtext align=center nfont="§variable_$h2_font$§"
+		    §variable_$h2_font_style$§
                     fg=§variable_$h2_color$§ scale=§variable_$h2_size$§
 		    §shadow§ bg=lightgrey>Example Text</gtext>
 		</formoutput>'
-    where="name='Heading 2 p2'">
+    where="name='Heading p2'">
+
+  <update column="example_html"
+    expression='<formoutput quote=§>
+                  <if match="§variable_$page_head_text_shadow$§ is 1">
+		    <cset variable=shadow>shadow=60,1</cset></if>
+		</formoutput>
+		<formoutput quote=§>
+                  <gtext align=center nfont="§variable_$page_head_text_font$§"
+		    §variable_$page_head_text_font_style$§
+                    fg=§variable_$page_head_text_color$§ scale=§variable_$page_head_text_size$§
+		    §shadow§ bg=lightgrey>Example Text</gtext>
+		</formoutput>'
+    where="name='Page head text p2'">
+
+  <update column="example_html"
+    expression='<formoutput quote=§>
+                  <if match="§variable_$nav_shadow$§ is 1">
+		    <cset variable=shadow>shadow=60,1</cset></if>
+		</formoutput>
+		<formoutput quote=§>
+                  <gtext align=center nfont="§variable_$nav_font$§"
+		    §variable_$nav_font_style$§
+                    scale=§variable_$nav_size$§
+		    §shadow§ bg=lightgrey>Example Text</gtext>
+		</formoutput>'
+    where="name='Navigation text p1'">
 
 </sql-insert>
 
