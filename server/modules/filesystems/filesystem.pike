@@ -8,7 +8,7 @@ inherit "module";
 inherit "roxenlib";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.28 1998/02/24 12:06:06 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.29 1998/02/24 22:26:24 per Exp $";
 constant thread_safe=1;
 
 
@@ -144,10 +144,10 @@ mixed stat_file( mixed f, mixed id )
   array fs;
   if(stat_cache && !id->pragma["no-cache"] &&
      (fs=cache_lookup("stat_cache",path+f)))
-    return fs;
+    return fs[0];
 
-  object privs;
 #ifndef THREADS
+  object privs;
   if (((int)id->misc->uid) && ((int)id->misc->gid) &&
       (QUERY(access_as_user))) {
     // NB: Root-access is prevented.
@@ -156,10 +156,12 @@ mixed stat_file( mixed f, mixed id )
 #endif
 
   fs = file_stat(path + f);  /* No security currently in this function */
+#ifndef THREADS
   privs = 0;
+#endif
   if(!stat_cache)
     return fs;
-  cache_set("stat_cache", path+f, fs);
+  cache_set("stat_cache", path+f, ({fs}));
   return fs;
 }
 
@@ -252,15 +254,16 @@ int _file_size(string X,object id)
   array fs;
   if(!id->pragma["no-cache"]&&(fs=cache_lookup("stat_cache",(X))))
   {
-    id->misc->stat = fs;
-    return fs[ST_SIZE];
+    id->misc->stat = fs[0];
+    return fs[0]?fs[0][ST_SIZE]:-1;
   }
   if(fs = file_stat(X))
   {
     id->misc->stat = fs;
-    cache_set("stat_cache",(X),fs);
+    cache_set("stat_cache",(X),({fs}));
     return fs[ST_SIZE];
-  }
+  } else
+    cache_set("stat_cache",(X),({0}));
   return -1;
 }
 
@@ -323,9 +326,8 @@ mixed find_file( string f, object id )
 	 && tmp[0] == '.')
 	return 0;
 
-      object privs;
-
 #ifndef THREADS
+      object privs;
       if (((int)id->misc->uid) && ((int)id->misc->gid) &&
 	  (QUERY(access_as_user))) {
 	// NB: Root-access is prevented.
@@ -335,7 +337,9 @@ mixed find_file( string f, object id )
 
       o = open( f, "r" );
 
+#ifndef THREADS
       privs = 0;
+#endif
 
       if(!o || (QUERY(no_symlinks) && (contains_symlinks(path, oldf))))
       {
