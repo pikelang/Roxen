@@ -132,7 +132,7 @@ string itag_legendtext(mapping tag, mapping m, string contents,
   if(m->separator)
     sep=m->separator;
   
-  res->legend_text = contents/sep;
+  res->legend_texts = contents/sep;
 
   return "";
 }
@@ -151,6 +151,26 @@ string tag_diagram(string tag, mapping m, string contents,
   res->datacounter=0;
   if(m->help) return register_module()[2];
 
+  if(m->type) res->type = m->type;
+  else return syntax( "You must specify a type for your table" );
+
+  if(m->subtype)
+    res->subtype = (string)m->subtype;
+
+  if(res->type == "pie")
+    res->subtype="pie";
+
+  if(res->type == "bars")
+    if(res->subtype!="line")
+      res->subtype="box";
+
+  if(res->type == "graph")
+    res->subtype="line";
+  
+  if(res->type == "sumbars")
+    if(res->subtype!="norm")
+      res->subtype=0;         /* #%¤%& Hedda! Fixa ett riktigt namn! */
+
   parse_html(contents,
 	     ([ "xaxis":itag_xaxis,
 		"yaxis":itag_yaxis ]),
@@ -161,16 +181,20 @@ string tag_diagram(string tag, mapping m, string contents,
 		"legend":itag_legendtext ]), res);
 
   if(!res->colors)
-    res->colors = ({ ({0,255,0}), ({255,255,0}), ({0,255,255}),
-		     ({255,0,255}), ({0,255,0}), ({255,255,0}),
-		     ({255,0,255}), ({0,255,0}), ({255,255,0}) });
+    res->colors = 0;
 
   res->bg = parse_color(defines->bg || "#e0e0e0");
   res->fg = parse_color(defines->fg || "black");
+  
+  if(m->labelsize) res->labelsize = (int)m->labelsize;
+  else res->labelsize=16;
+
+  if(m->center) res->center = (int)m->center;
+  else res->center = 0;
 
   if(m["3d"])
   {
-    res->dimensions = "3D";
+    res->drawtype = "3D";
     //    perror("'"+m["3d"]+"'\n");
     if( lower_case(m["3d"])!="3d" )
       res->dimensionsdepth = (int)m["3d"];    
@@ -178,8 +202,9 @@ string tag_diagram(string tag, mapping m, string contents,
       res->dimensionsdepth = 20;    
   }
   else 
-    res->dimensions = "2D";
-  
+    if(res->type=="pie") res->drawtype = "2D";
+    else res->drawtype = "linear";
+      
   if(m->fontsize) res->fontsize = (int)m->fontsize;
   else res->fontsize=32;
 
@@ -200,9 +225,17 @@ string tag_diagram(string tag, mapping m, string contents,
   if(m->xsize) res->ysize = (int)m->ysize;
   else return syntax( "You must specify an ysize for the diagram" );
 
-  if(m->type) res->type = m->type;
-  else return syntax( "You must specify a type for your table" );
+  if(m->tone) res->tone = 1;
+  else res->tone = 0;
 
+  if(!res->xnames)
+    if(res->xname) res->xnames = ({ res->xname });
+    else res->xnames = ({ });
+      
+  if(!res->ynames)
+    if(res->yname) res->ynames = ({ res->yname });
+    else res->ynames = ({ });
+      
   m_delete( m, "ysize" );
   m_delete( m, "xsize" );
   m_delete( m, "size" );
@@ -210,6 +243,7 @@ string tag_diagram(string tag, mapping m, string contents,
   m_delete( m, "3d" );
   m_delete( m, "templatefontsize" );
   m_delete( m, "fontsize" );
+  m_delete( m, "tone" );
 
   m->src = query("location") + MIME.encode_base64(encode_value(res)) + ".gif";
 
@@ -227,31 +261,52 @@ mapping find_file(string f, object id)
     f = f[..sizeof(f)-5];
 
   mapping res = decode_value(MIME.decode_base64(f));    
-  array (int) bg = res->bg, fg = res->fg;
 
   /*
-  perror("f-#data: %O\n", sizeof(res->data[0]));
-  perror("f-data: %O\n", res->data[0]);
-  perror("f-#xnames: %O\n", sizeof(res->xnames));
-  perror("f-xnames: %O\n", res->xnames);
+    perror("f-#data: %O\n", sizeof(res->data[0]));
+    perror("f-data: %O\n", res->data[0]);
+    perror("f-#xnames: %O\n", sizeof(res->xnames));
+    perror("f-xnames: %O\n", res->xnames);
   */
-  perror("f-fontsize: %O\n", res->fontsize);
 
   //strap
-  //res->xnames=
-    //({"jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep" });
-  res->labels=({"xstor", "ystor", "xenhet", "yenhet"});
-  //  res->legend_texts=
-  //  ({ "streck 1", "streck 2", "foo", "bar gazonk foobar illalutta!", "lila",
-  //     "turkos" });
-  res->labelsize=16;
-  res->xminvalue=0.1;
-  res->yminvalue=0;
+  res->labels=      ({"xstor", "ystor", "xenhet", "yenhet"});
+  res->xminvalue=   0.1;
+  res->yminvalue=   0;
 
   mapping(string:mixed) diagram_data;
+  diagram_data=(["type":      res->type,
+		 "subtype":   res->subtype,
+		 "drawtype":  res->dimensions,
+		 "3Ddepth":   res->dimensionsdepth,
+		 "xsize":     res->xsize,
+		 "ysize":     res->ysize,
+		 "textcolor": res->fg,
+		 "bgcolor":   res->bg,
+		 "orient":    res->orientation,
+
+		 "data":      res->data,
+		 "datacolors":res->colors,
+		 "fontsize":  res->fontsize,
+		 "xnames":    res->xnames,
+
+		 "xminvalue": res->xminvalue,
+		 "yminvalue": res->yminvalue,
+
+		 "axcolor":   res->axiscolor,
+
+		 "labels":         res->labels,
+		 "labelsize":      res->labelsize,
+		 "legendfontsize": res->legenfontsize,
+		 "legend_texts":   res->legend_texts,
+		 "labelcolor":     res->labelcolor,
+
+		 "linewidth": res->linewidth,
+		 "tone":      res->tone
+  ]);
 
   /*
-  if(res->type == "bars")
+    if(res->type == "bars")
     diagram_data=(["type":"bars",
 		   "textcolor":  fg,
 		   "subtype":    "box",
@@ -275,7 +330,8 @@ mapping find_file(string f, object id)
     ]);
   */
 
-  if(res->type == "pie")
+  /*
+    if(res->type == "pie")
     diagram_data=(["type":      "pie",
 		   "textcolor": res->fg,
 		   "subtype":   "box",
@@ -283,7 +339,7 @@ mapping find_file(string f, object id)
 		   "data":      res->data,
 		   "fontsize":  res->fontsize,
 		   "axcolor":   res->axiscolor,
-		   "bgcolor":   bg,
+		   "bgcolor":   res->bg,
 		   "labelcolor":res->labelcolor,
 		   "datacolors":res->colors,
 		   "linewidth": res->linewidth,
@@ -300,18 +356,31 @@ mapping find_file(string f, object id)
 		   "yminvalue":0,
 		   "3Ddepth":res->dimensionsdepth,
 		   "drawtype":res->dimensions,
-		   "tone":1	   
+		   "tone":0	   
     ]);
-
+  */
 
   object(Image.image) img;
 
   //  img = create_bars(diagram_data)["image"];
-  img = create_pie(diagram_data)["image"];
-  img = img->map_closest(img->select_colors(254)+({bg}));
+  if(res->type = "pie")
+    img = create_pie(diagram_data)["image"];
+
+  /*
+  if(res->type = "bars")
+    img = create_bars(diagram_data)["image"];
+
+  if(res->type = "graph")
+    img = create_graph(diagram_data)["image"];
+
+  if(res->type = "sumbars")
+    img = create_sumbars(diagram_data)["image"];
+  */
+
+  img = img->map_closest(img->select_colors(254)+({res->bg}));
 
   perror("%O\n", res->xnames);
   perror("\n");
 
-  return http_string_answer(img->togif(@bg), "image/gif");  
+  return http_string_answer(img->togif(@res->bg), "image/gif");  
 }
