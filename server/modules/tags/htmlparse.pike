@@ -14,7 +14,7 @@ import Simulate;
 // the only thing that should be in this file is the main parser.  
 
 
-constant cvs_version = "$Id: htmlparse.pike,v 1.49 1997/10/14 19:35:59 grubba Exp $";
+constant cvs_version = "$Id: htmlparse.pike,v 1.50 1997/10/20 14:45:35 wing Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -2000,6 +2000,8 @@ string tag_formoutput(string tag_name, mapping args, string contents,
     } else if (var_value) {
       if (arrayp(var_value)) {
 	content_array[i] = var_value * multi_separator;
+      } else if (search( var_value, "\000" ) != -1 ) {
+        content_array[i] = (var_value / "\000") * multi_separator;
       } else {
 	content_array[i] = var_value;
       }
