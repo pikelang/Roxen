@@ -1,4 +1,4 @@
-constant cvs_version="$Id: graphic_text.pike,v 1.173 1999/05/18 20:20:49 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.174 1999/05/19 03:47:06 per Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -975,7 +975,7 @@ string tag_graphicstext(string t, mapping arg, string contents,
     if(!defines->magic_java) 
       res = magic_javascript_header(id);
     defines->magic_java="yes";
-
+    if(!size) size = ([ ]);
     return replace(res +
 		   magic_image(url||"", size->xsize, size->ysize, "i"+(defines->mi++),
 			       query_internal_location()+num+"/"+gif,
