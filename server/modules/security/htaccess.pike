@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.82 2001/08/30 18:41:17 grubba Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.83 2001/08/30 22:40:04 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -262,7 +262,9 @@ mapping parse_and_find_htaccess( RequestID id )
 	else
 	  roxen_allow += "allow ip=*\n";
       else if(sscanf(line, "require %s %s", ent, data) == 2)
-	roxen_allow += "allow "+ent+"="+data+"\n";
+	roxen_allow += "allow "+ent+"=" +
+	  ((replace(data, ([" ":",","\t":","]))/",") - ({""}))*"," +
+	  "\n";
       else if(sscanf(line, "deny %s %s", ent, data) == 2)
 	roxen_deny += "deny "+ent+"="+data+"\n";
       else if(sscanf(line, "satisfy %s", data))
@@ -294,9 +296,11 @@ mapping parse_and_find_htaccess( RequestID id )
     if( any_ok )
       roxen_allow = replace( roxen_allow, "\n", " return\n" );
 
-
-//     werror("Allow:\n"+roxen_allow+"\n");
-//     werror("Deny:\n"+roxen_deny+"\n");
+#ifdef HTACCESS_DEBUG
+    report_debug("limit:%{ %s%}\n", indices(m));
+    report_debug("  Allow:\n"+roxen_allow+"\n");
+    report_debug("  Deny:\n"+roxen_deny+"\n");
+#endif /* HTACCESS_DEBUG */
     
     function fun =
       allow_deny( roxen.compile_security_pattern( roxen_allow, this_object() ),
@@ -386,7 +390,7 @@ mapping parse_and_find_htaccess( RequestID id )
   if ((!access->head) && access->get)
     access->head = access->get;
 
-  if( sizeof( access ) )
+  if(!sizeof( access ) )
     parse_limit( 0, ([ "all":"all" ]), htaccess );
 
   cache_set(cache_key, file, ({mtime, access}));
@@ -503,6 +507,17 @@ class HtUser
   inherit User;
   static array pwent;
 
+#ifdef HTACCESS_DEBUG
+  int password_authenticate(string password)
+  {
+    int res = ::password_authenticate(password);
+    report_debug(sprintf("HTACCESS: password_authenticate(%O)\n"
+			 "  user:%O, crypt:%O ==> %O\n",
+			 password, name(), crypted_password(), res));
+    return res;
+  }
+#endif /* HTACCESS_DEBUG */
+
   string name()             { return pwent[0]; }
   string crypted_password() { return pwent[1]; }
   int uid()                 { return pwent[2]; }
@@ -607,13 +622,13 @@ mapping parse_userfile( string f, mapping u2g, mapping groups )
 User find_user( string s, RequestID id )
 {
   if( !id ) return 0;
-  mapping uu =   id->misc->ht_authinfo||([]);
+  mapping uu = id->misc->ht_authinfo||([]);
   mapping groups, u2g, users;
 
   [groups,u2g] = parse_groupfile(uu->groupfile);
-  users  = parse_userfile( uu->userfile, u2g, groups );
+  users = parse_userfile( uu->userfile, u2g, groups );
   if( users[ s ] )
-    return HtUser( this_object(), users[s], );
+    return HtUser(this_object(),users[s]);
 }
 
 User find_user_from_uid( int uid, RequestID id )
