@@ -3,7 +3,7 @@ import spider;
 #define error(X) do{array Y=backtrace();throw(({(X),Y[..sizeof(Y)-2]}));}while(0)
 
 // Set up the roxen environment. Including custom functions like spawne().
-string cvs_version="$Id: roxenloader.pike,v 1.31 1997/08/15 09:47:52 grubba Exp $";
+string cvs_version="$Id: roxenloader.pike,v 1.32 1997/08/16 17:11:26 noring Exp $";
 
 #define perror roxen_perror
 
@@ -256,8 +256,12 @@ int spawn_pike(array(string) args, void|string wd, object|void stdin,
 
   if (file_stat(mast))
     preargs += ({ "-m", mast });
-  preargs += ({ "-I", combine_path(cwd,"etc/include"),
-		  "-M", combine_path(cwd,"etc/modules") });
+  foreach(master()->pike_include_path, string s)
+    preargs += ({ "-I"+s });
+  foreach(master()->pike_module_path, string s)
+    preargs += ({ "-M"+s });
+  foreach(master()->pike_program_path, string s)
+    preargs += ({ "-P"+s });
   if ((pid = fork()) == 0) {
     stdin && stdin->dup2(file("stdin"));
     stdout && stdout->dup2(file("stdout"));
