@@ -16,7 +16,7 @@ constant module_type = MODULE_LOCATION;
 constant module_name = "Configuration Filesystem";
 constant module_doc = "This filesystem serves the administration interface";
 constant module_unique = 1;
-constant cvs_version = "$Id: config_filesystem.pike,v 1.45 2000/08/19 08:52:39 per Exp $";
+constant cvs_version = "$Id: config_filesystem.pike,v 1.46 2000/08/21 12:31:35 per Exp $";
 
 constant path = "config_interface/";
 string encoding = "iso-8859-1";         // charset for pages
@@ -140,13 +140,24 @@ mixed find_file( string f, object id )
 
     if( charset_decoder )
     {
+      void decode_variable( string v )
+      {
+        id->variables[v] = charset_decoder->clear()->
+                         feed(id->variables[v])->drain();
+      };
       f = charset_decoder->clear()->feed( f )->drain();
       id->not_query = charset_decoder->clear()->feed( id->not_query )->drain();
+      map( (indices)id->variables, decode_variable );
     }
     else
     {
+      void decode_variable( string v )
+      {
+        id->variables[v] = utf8_to_string( id->variables[v] );
+      };
       f = utf8_to_string( f );
       id->not_query = utf8_to_string( id->not_query );
+      map( (indices)id->variables, decode_variable );
     }
   }
 
