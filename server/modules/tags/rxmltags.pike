@@ -7,7 +7,7 @@
 #define _rettext id->misc->defines[" _rettext"]
 #define _ok id->misc->defines[" _ok"]
 
-constant cvs_version="$Id: rxmltags.pike,v 1.67 2000/02/14 09:24:09 per Exp $";
+constant cvs_version="$Id: rxmltags.pike,v 1.68 2000/02/15 14:23:05 mast Exp $";
 constant thread_safe=1;
 constant language = roxen->language;
 
@@ -1425,7 +1425,7 @@ array(string) container_cset( string t, mapping m, string c, RequestID id )
     c = html_decode_string( c );
   if( !m->variable )
     return ({rxml_error(t, "Variable not specified.", id)});
-  RXML.get_context()->set_var(m->variable, c, m->scope);
+  RXML.get_context()->user_set_var(m->variable, c, m->scope);
   return ({ "" });
 }
 
