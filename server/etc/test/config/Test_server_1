@@ -84,6 +84,7 @@
   <var name='NoLog'>             <a></a> </var>
   <var name='URLs'><a>
     <str>http://*:17369/</str>
+    <str>ftp://*:17371/</str>
   </a></var>
   <var name='ZNoSuchFile'><str>%3chtml%3e%3chead%3e
 %3ctitle%3e404 - Page not found%3c/title%3e
