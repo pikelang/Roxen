@@ -1,5 +1,5 @@
 /*
- * $Id: licensestatus.pike,v 1.13 2003/09/18 09:14:52 wellhard Exp $
+ * $Id: licensestatus.pike,v 1.14 2003/11/17 16:01:27 anders Exp $
  */
 
 #include <roxen.h>
@@ -20,12 +20,15 @@ int enabled()
 mixed parse( RequestID id )
 {
   string txt = #"
-  <font size='+1'>Installed Licenses</font>
-  <blockquote>Click on a license for more information.</blockquote>
+  <font size='+1'><b>Installed Licenses</b></font>
+  <p>
+  Click on a license for more information.
+  </p>
   <input type='hidden' name='action' value='&form.action;'/>
   <input type='hidden' name='class' value='&form.class;'/>
-  <table cellspacing='0' cellpadding='3' border='0'>
-    <tr>
+  <box-frame width='100%' iwidth='100%' bodybg='&usr.content-bg;' box-frame='yes' padding='0'>
+  <table cellspacing='0' cellpadding='3' border='0' width='100%'>
+    <tr bgcolor='&usr.obox-titlebg;'>
       <td>&nbsp;</td>
       <th align='left'>Filename</th>
       <th align='left'>#</th>
@@ -33,7 +36,7 @@ mixed parse( RequestID id )
       <th align='left'>Status</th>
       <th align='left'>Used in</th>
     </tr>
-    <set variable='var.color1'>&usr.subtabs-dimcolor;</set>
+    <set variable='var.color1'>&usr.obox-bodybg;</set>
     <set variable='var.color2'>&usr.fade1;</set>
     <set variable='var.color'>&var.color2;</set>
     <emit source='licenses'>
@@ -43,24 +46,25 @@ mixed parse( RequestID id )
         <set variable='var.color'>&var.color1;</set>
       </else>  
       <tr bgcolor='&var.color;'>
-        <td>
+        <td width='10'>
           <if variable='form.license == &_.filename;'>
-            <img src='&usr.selected-indicator;' border='0'/></if><else>&nbsp;</else></td>
+            <imgs src='&usr.selected-indicator;' border='0'/></if><else>&nbsp;</else></td>
         <td>
           <if variable='_.malformed != yes'>
             <if variable='form.license == &_.filename;'>
               <b>&_.filename;</b>
             </if>
             <else>
-              <a href='?action=&form.action;&amp;class=&form.class;&amp;license=&_.filename;'>&_.filename;</a></else>
-            &nbsp;&nbsp;</if>
-          <else>&_.filename;&nbsp;&nbsp;&nbsp;</else>
+              <a href='?action=&form.action;&amp;class=&form.class;&amp;license=&_.filename;'>&_.filename;</a>
+            </else>
+          </if>
+          <else>&_.filename;</else>
         </td>
-        <td>&_.number;&nbsp;&nbsp;&nbsp;</td>
+        <td>&_.number;</td>
         <td>
           <if variable='_.malformed == yes'>
-            <font color='darkred'>error&nbsp;&nbsp;&nbsp;</font></if>
-          <else>&_.type;&nbsp;&nbsp;&nbsp;</else>
+            <font color='darkred'>error</font></if>
+          <else>&_.type;</else>
         </td>
         <td>
           <if variable='_.malformed != yes'>
@@ -69,15 +73,16 @@ mixed parse( RequestID id )
               warning<if variable='var.warnings > 1'>s</if></if>
           </if>
           <else>&_.reason;</else>
-          &nbsp;&nbsp;&nbsp;
+          &nbsp;
         </td>
-        <td>&_.configurations;&nbsp;&nbsp;&nbsp;</td>
+        <td>&_.configurations;&nbsp;</td>
       </tr>
     </emit>
   </table>
+  </box-frame>
 
   <if variable='form.license'>
-    <br /><br /><br />
+    <br clear='all'/><br />
     <font size='+1'>License &form.license;</font>
     <br /><br />
     <license name='&form.license;'>
@@ -92,10 +97,11 @@ mixed parse( RequestID id )
         <tr><td><b>Created by:</b></td><td>&_.creator;@roxen.com</td></tr>
         <tr><td><b>Comment:</b></td><td>&_.comment;</td></tr>
       </table><br />
-      <table cellspacing='0' border='0' cellpadding='3'>
-        <tr>
+      <box-frame width='100%' iwidth='100%' bodybg='&usr.content-bg;' box-frame='yes' padding='0'>
+      <table cellspacing='0' border='0' cellpadding='3' width='100%'>
+        <tr bgcolor='&usr.obox-titlebg;'>
           <th align='left'>Module</th>
-          <th align='left'>Enabled</th>
+          <th align='center'>Enabled</th>
           <th align='left'>Features</th>
         </tr>
         <set variable='var.color'>&var.color2;</set>
@@ -116,12 +122,14 @@ mixed parse( RequestID id )
           </tr>
         </emit>
       </table>
+      </box-frame>
       <emit source='license-warnings' rowinfo='var.warnings'></emit>
       <if variable='var.warnings > 0'>
-        <br />
+        <br clear='all'/><br />
         <b>Warnings</b>
-        <table cellspacing='0' cellpadding='3' border='0'>
-          <tr>
+        <box-frame width='100%' iwidth='100%' bodybg='&usr.content-bg;' box-frame='yes' padding='0'>
+        <table cellspacing='0' cellpadding='3' border='0' width='100%'>
+          <tr bgcolor='&usr.obox-titlebg;'>
             <th align='left'>Type</th>
             <th align='left'>Warning</th>
             <th align='left'>Time</th>
@@ -134,15 +142,20 @@ mixed parse( RequestID id )
               <set variable='var.color'>&var.color1;</set>
             </else>  
             <tr bgcolor='&var.color;'>
-              <td nowrap=''>&_.type;&nbsp;&nbsp;&nbsp;</td>
-              <td nowrap=''>&_.msg;&nbsp;&nbsp;&nbsp;</td>
-              <td><date type='iso' unix-time='&_.time;'/>&nbsp;&nbsp;&nbsp;</td>
+              <td nowrap='' valign='top'>&_.type;&nbsp;&nbsp;&nbsp;</td>
+              <td valign='top'>&_.msg;&nbsp;</td>
+              <td valign='top'><date type='iso' unix-time='&_.time;'/>&nbsp;</td>
             </tr>
           </emit>
         </table>
+        </box-frame>
       </if>
     </license>
   </if>
+  <input type=hidden name=action value='licensestatus.pike' />
+  <br clear='all'/>
+  <br />
+  <cf-ok-button href='./'/>
 ";
   return txt;
 }

@@ -24,11 +24,10 @@ mapping actions = ([
        sprintf((string)(X), db)+				\
        "</td><tr><td><input type=hidden name=action value='&form.action;' />"\
        "<submit-gbutton2 name='yes'>"+_(0,"Yes")+"</submit-gbutton2></td>\n"\
-       "<td align=right><a href="+Roxen.html_encode_string(id->not_query)+\
-      "?db="+\
-       Roxen.html_encode_string(id->variables->db)+"><gbutton> "+\
-       _(0,"No")+" </gbutton></a></td>\n</table>\n");			\
-  }									\
+       "<td align=right><cf-no href="+Roxen.html_encode_string(id->not_query)+\
+      "?db="+Roxen.html_encode_string(id->variables->db)+"/>"+	\
+       "</td>\n</table>\n");					\
+  }								\
 } while(0)
 
 
@@ -64,16 +63,15 @@ mixed backup_db( string db, RequestID id )
     return 0;
   }
   return
-    "<b>"+_(405,"Directory")+":</b> <input name='dir' size='80' value='auto' /><br />"
+    "<b>"+_(405,"Directory")+":</b> <input name='dir' size='60' value='auto' /><br />"
     "<i>The directory the backup will be saved in. If you chose auto, Roxen will generate a directory name that includes the database name and todays date.</i>"
     "<table width='100%'><tr><td valign=top>"
     "<input type=hidden name=action value='&form.action;' />"
     "<submit-gbutton2 name='ok'>"+_(201,"Ok")+"</submit-gbutton2></td>\n"
-    "<td valign=top align=right><a href='"+
-    Roxen.html_encode_string(id->not_query)+
-      "?db="+
-       Roxen.html_encode_string(id->variables->db)+"'><gbutton> "+
-    _(202,"Cancel")+" </gbutton></a></td>\n</table>\n";
+    "<td valign=top align=right><cf-cancel href='"+
+      Roxen.html_encode_string(id->not_query)+
+      "?db="+Roxen.html_encode_string(id->variables->db)+"'/>"
+    "</td>\n</table>\n";
 }
 
 mixed move_db( string db, RequestID id )
@@ -309,10 +307,11 @@ mixed move_db( string db, RequestID id )
     "<table width='100%'><tr><td>"
     "<input type=hidden name=action value='&form.action;' />"
     "<submit-gbutton2 name='ok'>"+_(201,"Ok")+"</submit-gbutton2></td>\n"
-    "<td align=right><a href='"+Roxen.html_encode_string(id->not_query)+
+    "<td align=right>"
+    "<cf-cancel href='"+Roxen.html_encode_string(id->not_query)+
       "?db="+
-       Roxen.html_encode_string(id->variables->db)+"'><gbutton> "+
-    _(202,"Cancel")+" </gbutton></a></td>\n</table>\n";
+       Roxen.html_encode_string(id->variables->db)+"'/>"
+    "</td>\n</table>\n";
 }
 
 mixed delete_db( string db, RequestID id )

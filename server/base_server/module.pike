@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2001, Roxen IS.
-// $Id: module.pike,v 1.146 2003/10/06 16:11:43 grubba Exp $
+// $Id: module.pike,v 1.147 2003/11/17 16:01:23 anders Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -136,7 +136,7 @@ string file_name_and_stuff()
 {
   return ("<b>Loaded from:</b> "+(roxen->filename(this_object()))+"<br>"+
 	  (this_object()->cvs_version?
-           "<b>CVS Version: </b>"+
+           "<b>CVS Version:</b> "+
            fix_cvs(this_object()->cvs_version)+"\n":""));
 }
 

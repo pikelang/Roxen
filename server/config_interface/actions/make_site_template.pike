@@ -1,5 +1,5 @@
 /*
- * $Id: make_site_template.pike,v 1.6 2002/01/28 10:25:06 grubba Exp $
+ * $Id: make_site_template.pike,v 1.7 2003/11/17 16:01:27 anders Exp $
  *
  * Make a site-template from a virtual server configuration.
  *
@@ -13,7 +13,7 @@
 
 constant action = "maintenance";
 
-string name = LOCALE(144, "Create site template");
+string name = LOCALE(0, "Create site template")+"...";
 string doc  = LOCALE(145, "Create a site template from a site configuration");
 
 string indent(string s)
@@ -30,7 +30,8 @@ string parse(RequestID id)
   if( !config_perm( "Create Site" ) )
     error("No permission, dude!\n"); // This should not happen, really.
 
-  string res = "<gtext>"+name+"</gtext>";
+  string res = "<font size='+1'><b>"+
+    LOCALE(0, "Create site template")+"</b></font>";
 
   string conf_name;
   Configuration conf;
@@ -60,7 +61,7 @@ string parse(RequestID id)
 		     conf_name);
     }
     res += sprintf("<p>%s</p>\n"
-		   "<p>%{<submit-gbutton2 name='conf-%s'>%s</submit-gbutton2><br\>\n%}</p>\n",
+		   "<p>%{<submit-gbutton2 name='conf-%s' width='200'>%s</submit-gbutton2><br\>\n%}</p>\n",
 		   LOCALE(147, "Select configuration to base the template on."),
 		   map(roxen.configurations->name,
 		       lambda(string n) {
@@ -78,13 +79,12 @@ string parse(RequestID id)
 		     LOCALE(148, "Selected configuration"),
 		     Roxen.html_encode_string(conf_name));
 
-      res += sprintf("<p>Filename (.pike will be added):"
+      res += sprintf("<p>Filename (.pike will be added): "
 		     "<input type='text' name='fname' value='%s'></p>\n",
 		     Roxen.http_encode_string(lower_case(replace(conf_name,
 								 " ", "_"))));
 
-      res += sprintf("<p><center><submit-gbutton>%s</submit-gbutton></center></p>\n",
-		     LOCALE(153, "Ok"));
+      res += "<cf-ok/> <cf-cancel href='./?class="+action+"'/>";
     } else {
       // Page 3
       //
@@ -209,8 +209,7 @@ string parse(RequestID id)
 	} else {
 	  res += sprintf("<p>%s</p>\n",
 			 LOCALE(152, "Site template created successfully."));
-	  res += sprintf("<p><center><submit-gbutton>%s</submit-gbutton></center></p>\n",
-			 LOCALE(153, "Ok"));
+	  res += "<cf-ok/>";
 	  done = 1;
 	}
       }
@@ -219,6 +218,12 @@ string parse(RequestID id)
   if (!done) {
     res +=
       "<input type=hidden name='action' value='make_site_template.pike' />";
+  }
+
+  if (!conf) {
+    // Only on first page.
+    res += "<br clear='all'>"
+      "<cf-cancel href='./?class="+action+"'/>";
   }
 
   return res;

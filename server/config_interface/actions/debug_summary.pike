@@ -1,5 +1,5 @@
 /*
- * $Id: debug_summary.pike,v 1.8 2003/08/26 15:05:30 anders Exp $
+ * $Id: debug_summary.pike,v 1.9 2003/11/17 16:01:26 anders Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -188,7 +188,7 @@ mixed parse( RequestID id )
     return ret;
   }
   
-  res = "<h1>Debug summary</h1>\n";
+  res = "<font size='+1'><b>Debug summary</b></font>\n<p />";
   res += "<link-gbutton href='debug_summary.pike?download=summary'>Download"
     "</link-gbutton>";
   if (file_stat(debuglog))
@@ -196,7 +196,9 @@ mixed parse( RequestID id )
       "Download debug log"
     "</link-gbutton>";
 
-  res += "<pre>"+Roxen.html_encode_string(make_summary())+"</pre>";
+  res += "<pre>"+Roxen.html_encode_string(make_summary())+"</pre>"
+    "<br /><br />"
+    "<cf-ok/>";
 
   return res;
 }

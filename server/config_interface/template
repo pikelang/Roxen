@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.116 2003/04/30 09:03:46 anders Exp $ -->
+<!-- $Id: template,v 1.117 2003/11/17 16:01:24 anders Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -9,11 +9,11 @@
     <set variable='var.section' value='&form.section;'/>
   </if>
   <br clear="all" />
-  <!--<emit ::='&_.args;'/>-->
   <set variable='var.oldchanged' value='0'/>
   <table cellspacing="0" cellpadding="4">
     <eval><emit ::='&_.args;'>
       <cf-render-variable/>
+      <tr><td><img src="/internal-roxen-unit" width="1" height="10"/></td></tr>
     </emit></eval>
   </table>
   <if not variable='_.nosave'><cf-save/></if>
@@ -28,8 +28,10 @@
 <define container="st-page" scope="st-page">
   <colorscope bgcolor="&usr.content-bg;">
     <define preparse="1" variable="var.__contents">
-      <box-frame width="100%" iwidth="100%" bodybg='&usr.content-bg;' ::="&usr.content-frame;">
-        <contents scope="st-page"/>
+      <box-frame width="100%" iwidth="100%" bodybg="&usr.content-bg;" ::="&usr.content-frame;">
+        <table cellpadding="30" width="100%"><tr><td>
+          <contents scope="st-page"/>
+	</td></tr></table>
       </box-frame>
     </define>
   </colorscope>
@@ -44,16 +46,15 @@
 <define container="cv-split">
  <table ::="&usr.content-toptableargs:none;" width="100%">
    <tr>
-     <td width="10"><img src="/internal-roxen-unit" width="10" height="1" alt="" /></td>
      <td ::="&usr.left-tableargs:none;">
        <cset variable="var.left-content">&var.leftside:none;</cset>
        <if variable="var.left-content is ?*">
 	 <set variable="var.leftside-padwidth" value="&usr.leftside-padwidth;"/>
        </if>
        <else>
-	 <set variable="var.leftside-padwidth" value="1"/>
+	 <set variable="var.leftside-padwidth" value="0"/>
        </else>
-       <img src="/internal-roxen-unit" width="&var.leftside-padwidth;" height="1" alt="" /><br />
+       <img src="/internal-roxen-unit" width="&var.leftside-padwidth;" height="&usr.leftside-padheight;" alt="" align="center" /><br />
        &var.left-content:none;&var.leftimage:none;
      </td>
      <if variable="usr.split2-width is ?*">
@@ -85,9 +86,16 @@
 </nooutput>
   <table width="100%" border="0" cellpadding="0" cellspacing="0">
     <tr>
-      <td ::="&usr.subtabs-tableargs:none;"><tablist ::="&usr.subtabs-args:none;">
-        <eval>&var.__tabs:none;</eval>
-      </tablist></td>
+      <if sizeof="var.__tabs > 0">
+  	<td ::="&usr.subtabs-tableargs:none;"><tablist ::="&usr.subtabs-args:none;">
+  	  <eval>&var.__tabs:none;</eval>
+  	</tablist></td>
+      </if>
+      <else>
+        <td ::="&usr.subtabs-tableargs:none;">
+        <img src="/internal-roxen-unit" width="1" height="&usr.leftside-padheight;" />
+	</td>
+      </else>
     </tr>
     <tr>
       <td bgcolor="&usr.content-bg;" ::="&usr.content-extratableargs;">&var.__contents:none;</td>
@@ -102,33 +110,40 @@
 </define>
 
 <define container="link-gbutton" scope="link-gbutton">
-<attrib name="align">baseline</attrib>
-  <define variable="var.url" preparse="1"><gbutton-url font="&usr.gbutton-font;" preparse="">&link-gbutton.contents;</gbutton-url></define>
+<attrib name="align">center</attrib>
+  <define variable="var.url" preparse="1"><gbutton-url preparse="">&link-gbutton.contents;</gbutton-url></define>
    <a href='&_.href;'><img align="&_.align;" src="&var.url;" border="0" /></a>
 </define>
 
+<define container="disabled-gbutton" scope="disabled-gbutton">
+<attrib name="align">center</attrib>
+  <define variable="var.url" preparse="1"><gbutton-url ::='&disabled-gbutton.args;' frame-image="&usr.gbutton-disabled-frame-image;" state="disabled" preparse="">&disabled-gbutton.contents;</gbutton-url></define>
+   <img align="&_.align;" src="&var.url;" border="0" />
+</define>
 
 <define container="submit-gbutton" scope="submit-gbutton">
-<attrib name="align">baseline</attrib>
+<attrib name="align">center</attrib>
 <attrib name="name">ok</attrib>
-  <define variable="var.url" preparse="1"><gbutton-url font="&usr.gbutton-font;" preparse="">&submit-gbutton.contents;</gbutton-url></define>
+  <define variable="var.url" preparse="1"><gbutton-url preparse="">&submit-gbutton.contents;</gbutton-url></define>
    <input align="&_.align;" type="image" name="&_.contents;" value="&_.contents;" src="&var.url;" border="0" ::="&_.rest-args;"/>
 </define>
 
 <define container="submit-gbutton2" scope="submit-gbutton2">
-<attrib name="img-align">baseline</attrib>
-<define variable="var.url" preparse="1"><gbutton-url ::='&submit-gbutton2.args;' font="&usr.gbutton-font;"><contents scope="submit-gbutton2"/></gbutton-url></define>
+<attrib name="img-align">center</attrib>
+<define variable="var.url" preparse="1"><gbutton-url ::='&submit-gbutton2.args;'><contents scope="submit-gbutton2"/></gbutton-url></define>
    <set variable="contents" type="text/xml"><eval>&_.contents:none;</eval></set>
-   <input align="&_.img-align;" type="image" name="&_.name;" value="&_.contents;" src="&var.url;" border="0" />
+   <input vspace='4' align="&_.img-align;" type="image" name="&_.name;" value="&_.contents;" src="&var.url;" border="0" />
 </define>
 
-<define tag="cf-save"> <submit-gbutton2 name='save' img-align="right"> <translate id="bA">Save</translate> </submit-gbutton2> </define>
-<define tag="cf-ok"> <submit-gbutton2 name='ok'> <translate id="201">Ok</translate> </submit-gbutton2> </define>
-<define tag="cf-cancel"> <gbutton href="&_.href;"> <translate id="202">Cancel</translate> </gbutton> </define>
-<define tag="cf-refresh"> <gbutton href="&page.url;"> <translate id="520">Refresh</translate> </gbutton> </define>
+<define tag="cf-save"> <submit-gbutton2 width="&usr.gbutton-width;" align="center" name="save" img-align="right"> <translate id="bA">Save</translate> </submit-gbutton2> </define>
+<define tag="cf-ok"> <submit-gbutton2 width="&usr.gbutton-width;" align="center" name="ok"> <translate id="201">OK</translate> </submit-gbutton2> </define>
+<define tag="cf-cancel"> <gbutton href="&_.href;" width="75" align="center" vspace="4" img-align="middle"> <translate id="202">Cancel</translate> </gbutton> </define>
+<define tag="cf-no"> <gbutton href="&_.href;" width="&usr.gbutton-width;" align="center" vspace="4" img-align="middle" font="&usr.gbutton-font;"> <translate id="0">No</translate> </gbutton> </define>
+<define tag="cf-refresh"> <gbutton width="&usr.gbutton-width;" align="center" vspace='4' img-align='middle' href="&page.url;" font="&usr.gbutton-font;"> <translate id="520">Refresh</translate> </gbutton> </define>
+<define tag="cf-ok-button"> <gbutton width="&usr.gbutton-width;" align="center" vspace='4' img-align='middle' href="&_.href;" font="&usr.gbutton-font;"> <translate id="201">OK</translate> </gbutton> </define>
 
 <define tag="cf-next">
-   <submit-gbutton2 preparse="1" name="next" icon_src="&usr.next;" align_icon="right"> <translate id="203">Next</translate> </submit-gbutton2>
+   <submit-gbutton2 preparse="1" name="next" width="&usr.gbutton-width;" align="center" icon_src="&usr.next;" align_icon="right"> <translate id="203">Next</translate> </submit-gbutton2>
 </define>
 
 <define container="content"><cset quote="none" variable="var.content"><contents/></cset></define>
@@ -138,6 +153,9 @@
 <html><head>
 <title>&roxen.version; <translate id="204">Administration Interface</translate><eval>&_.title:none;</eval></title>
 <link rel="shortcut icon" href="/themes/&usr.theme;/favicon.ico" />
+<if exists="/themes/&usr.theme;/stylesheet.css">
+<link rel="stylesheet" type="text/css" href="/themes/&usr.theme;/stylesheet.css" />
+</if>
 </head>
 <gauge variable='var.time-spent' resultonly='yes'>
 <nooutput>
@@ -156,33 +174,25 @@
       <table width="100%" cellpadding="0" cellspacing="0" border="0"
              ::="&usr.top-tableargs:none;">
       <tr>
-      <td><a href="http://www.roxen.com/"><eval>&usr.logo-html:none;</eval></a></td>
+      <td valign="top"><a href="http://www.roxen.com/"><eval>&usr.logo-html:none;</eval></a></td>
       <td align="right" valign="top">
-        <table>
-         <tr>
-           <td align="right">
              <font color="&usr.top-fgcolor;"><colorscope ::=&usr.top-tableargs;>
               <gbutton href="/change_user.pike?uid=&usr.user-uid;"
-                  align="right" 
-                  width="70"> <translate id="206">User</translate>: </gbutton></colorscope>
-	     </font>
-            </td>
-            <td>
+		       align="right"
+		       icon-src="/themes/&usr.theme;/user.gif"
+                  ><translate id="206">User</translate> </gbutton></colorscope></font><br />
                <font color="&usr.top-fgcolor;">
-                &usr.user-name; (&usr.user-uid;)
+                &usr.user-name;
                </font>
-            </td>
-         </tr>
-       </table>
      </td>
    </tr>
    <tr>
      <td colspan="2" ::="&usr.toptabs-tableargs:none;" width="100%" valign="bottom"><img src="/internal-roxen-unit" width="&usr.toptabs-padwidth;" height="1" alt="" />&var._top_content:none;</td>
    </tr>
   </table>
-  <img src="/internal-roxen-unit" width="1" height="30" alt="" /><br />
+  <img src="/internal-roxen-unit" width="1" height="10" alt="" /><br />
 
-    <!-- enctype="multipart/form-data"  -->
+  <table cellpadding="10" width="100%"><tr><td>
    
    <if not variable='_.noform'>
      <if variable="form.action == upload_license.pike">
@@ -196,26 +206,27 @@
      &var.content:none;
    </else>
 </gauge>
-    <div align="right">
+    <div align="right" class="bottom-div">
       <font size="-1">
   	<if variable="roxen.product-name is Roxen CMS">
   	  <font color="#999999">
 	    <b>Roxen CMS</b>
 	    <font color="#ffbe00">|</font>
-	    version &roxen.dist-version;
+	    version &roxen.dist-version;<br />
 	  </font>
   	</if>
   	<else>
   	  <b>&roxen.version; / &roxen.pike-version;</b><br />
- 	  <if debug=yes >
- 	    <set variable=var.time-ms expr='(int)(&var.time-spent; * 1000)'/>
- 	    Total render time: &var.time-ms;ms <br />
- 	    <set variable=var.time-ms expr='(int)(&var.time-parse-spent; * 1000)'/>
- 	    Content file: &var.time-ms;ms <br />
- 	  </if>
   	</else>
+        <if debug=yes >
+          <set variable=var.time-ms expr='(int)(&var.time-spent; * 1000)'/>
+          Total render time: &var.time-ms;ms <br />
+          <set variable=var.time-ms expr='(int)(&var.time-parse-spent; * 1000)'/>
+          Content file: &var.time-ms;ms <br />
+        </if>
       </font>
     </div>
+    </td></tr></table>
   </body>
 </html>
 </define>

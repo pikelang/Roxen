@@ -143,20 +143,22 @@ string|mapping parse( RequestID id )
 	
 	string button;
 	if(q->locked && !(license->get_key() && q->unlocked(license->get_key())))
-	  button = "<gbutton width='400' "
-		   "        icon_src='internal-roxen-padlock' "
-		   "        align_icon='right'"
-		   "        textcolor='#BEC2CB'>"
-		   + Roxen.html_encode_string(name) +
-		   "</gbutton>\n";
+	  button =
+	    "<gbutton width='400' "
+	    "         icon_src='&usr.padlock;' "
+	    "         align_icon='right'"
+	    "         state='disabled'>"
+	    + Roxen.html_encode_string(name) +
+	    "</gbutton>\n";
 	else
-	  button = "<cset variable='var.url'>"
-		   "<gbutton-url width='400' "
-		   "             icon_src='&usr.next;' "
-		   "             align_icon='right'>"
-		   + Roxen.html_encode_string(name) +
-		   "</gbutton-url></cset>"
-		   "<input border='0' type='image' src='&var.url;' name='"+st+"' />\n";
+	  button =
+	    "<cset variable='var.url'>"
+	    "<gbutton-url width='400' "
+	    "             icon_src='&usr.next;' "
+	    "             align_icon='right'>"
+	    + Roxen.html_encode_string(name) +
+	    "</gbutton-url></cset>"
+	    "<input border='0' type='image' src='&var.url;' name='"+st+"' />\n";
 	
 	//  Build a sort identifier on the form "999|Group name|template name"
 	//  where 999 is a number which orders the groups. The group name is
@@ -191,6 +193,8 @@ string|mapping parse( RequestID id )
     res += q[2] + "\n\n\n";
   }
 
+  res += "<cf-cancel href='./'/>\n";
+
 
   if( strlen( e->get() ) ) {
     res += ("Compile errors:<pre>"+
@@ -214,11 +218,13 @@ string|mapping parse( RequestID id )
       pre = "";
     
     string name = var->name()+"";
-    return "<tr><td valign='top' width='20%'><b>"+
+    return "<tr><td valign='center' width='20%' nowrap=''><b>"+
       Roxen.html_encode_string(name)+"</b></td>\n"
-      "<td valign='top'>"+pre+var->render_form(id, ([ "autosubmit":1 ]))+"</td>\n"
-      "<td><cset variable='var.url'><gbutton-url>Set</gbutton-url></cset>"
-      "<input border='0' type='image' src='&var.url;' name='set_license' /></td>\n"
+      "<td valign='center' width='0'>"+pre+var->render_form(id, ([ "autosubmit":1 ]))+"</td>\n"
+      "<td align='left' width='80%'><cset variable='var.url'>"
+      "<gbutton-url>Set</gbutton-url></cset>"
+      "<input border='0' type='image' src='&var.url;' name='set_license' />"
+      "</td>\n"
       "</tr>\n"
       "<tr>\n"
       "<td colspan='3'>"+var->doc()+"</td>\n"

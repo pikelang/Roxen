@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.27 2003/10/22 13:49:33 grubba Exp $
+ * $Id: resolv.pike,v 1.28 2003/11/17 16:01:28 anders Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -215,8 +215,9 @@ string parse( RequestID id )
 {
 
   string res = "";  //"<nobr>Allow Cache <input type=checkbox></nobr>\n";
-  res += "<input type='hidden' name='action' value='resolv.pike' />\n"
-    "<font size='+2'>"+ name + "</font><br />\n"
+  res +=
+    "<input type='hidden' name='action' value='resolv.pike' />\n"
+    "<font size='+1'><b>"+ name + "</b></font><p />\n"
     "<table cellpadding='0' cellspacing='10' border='0'>\n"
     "<tr><td align='left'>" +LOCALE(29, "URL")+ ": </td><td align='left'>"
     "<input name='path' value='&form.path;' size='60' /></td></tr>\n"

@@ -78,8 +78,10 @@ string page_base( RequestID id, string content, int|void noform )
                   "<st-page>"
                   "<if not='1' variable='form.initial'>"
                   "<gbutton href='add_module.pike?config=&form.config:http;"
-                  "&reload_module_list=yes' > %s </gbutton> "
-                  "<gbutton href='site.html/&form.config;/'> %s </gbutton>"
+                  "&reload_module_list=yes' "
+		  "> %s </gbutton> "
+                  "<gbutton href='site.html/&form.config;/' "
+		  "> %s </gbutton>"
                   "<p>\n</if>%s\n</p>\n"
                   "</st-page></subtablist></td></tr></table>"
                   "</cv-split></content></tmpl>", 
@@ -172,17 +174,18 @@ string pafeaw( string errors, string warnings, array(ModuleInfo) locked_modules)
         return q[sizeof(q)-2..]*"/";
       };
 
-#define RELOAD(X) sprintf("<gbutton "                                           \
-                          "href='add_module.pike?config=&form.config:http;"     \
-                          "&random=%d&only=%s&reload_module_list=yes#"          \
-                          "errors_and_warnings'> %s </gbutton>",                \
-                          random(4711111),                                      \
-                          (X),                                                  \
+#define RELOAD(X) sprintf("<gbutton "                                         \
+			  "img-align='middle' "                               \
+                          "href='add_module.pike?config=&form.config:http;"   \
+                          "&random=%d&only=%s&reload_module_list=yes#"        \
+                          "errors_and_warnings'> %s </gbutton>",              \
+                          random(4711111),                                    \
+                          (X),                                                \
                           LOCALE(253, "Reload"))
 
       if( !header_added++ )
         da_string += 
-                  "<p><a name='errors_and_warnings'><br />"
+                  "<p><a name='errors_and_warnings'></a><br />"
                   "<font size='+2'><b><font color='&usr.warncolor;'>"
                   "Compile errors and warnings</font></b><br />"
                   "<table width=100% cellpadding='3' cellspacing='0' border='0'>";
@@ -494,7 +497,7 @@ array(int|string) class_visible_compact( string c, string d, int size,
       " </submit-gbutton> ";
   res += "<p><a name="+Roxen.http_encode_string(c)+
     "></a><font size='+2'>"+c+"</font><br />"+d+"<p>"
-    "<select size='"+size+"' multiple name='module_to_add' style='font-family: monospace'>";
+    "<select size='"+size+"' multiple name='module_to_add' class='add-module-select'>";
   return ({ 1, res });
 }
 

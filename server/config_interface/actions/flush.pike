@@ -1,5 +1,5 @@
 /*
- * $Id: flush.pike,v 1.9 2000/11/14 05:11:08 per Exp $
+ * $Id: flush.pike,v 1.10 2003/11/17 16:01:26 anders Exp $
  */
 #include <config_interface.h>
 #include <roxen.h>
@@ -47,7 +47,12 @@ mixed doit()
 
 mixed parse( RequestID id )
 {
+  string res =
+#"<font size='+1'><b>" + LOCALE(8, "Flush caches") + #"</b></font>
+<p /> 
+";
   doit();
-  return LOCALE(232,"All memory caches have been flushed.") + 
-         "<p><cf-ok/></p>";
+  res += LOCALE(232,"All memory caches have been flushed.") + 
+    "<p><cf-ok/></p>";
+  return res;
 }

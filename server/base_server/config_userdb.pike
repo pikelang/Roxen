@@ -588,19 +588,23 @@ class AdminUser
       }
       m_delete( id->variables, rp );
     }
-    string set_src =  Roxen.parse_rxml( "<gbutton-url width=120 talign=center font=&usr.font; preparse> "+SLOCALE("bA", "Save")+
+    string set_src =  Roxen.parse_rxml( "<gbutton-url width=120 talign=center "
+					"preparse> "+
+					SLOCALE("bA", "Save")+
 					" </gbutton-url>", id );
     string form = error+
 #"
 <table>
-<tr valign=\"top\"><td><pre>
-   Real name:   <input name='PPPreal_name' value='"+real_name+#"'>
-    Password:   <input type='password' name='PPPpassword' value=''>
-       Again:   <input type='password' name='PPPpassword2' value=''>
-     Crypted:   <input name='PPPc_password' value='"+password+#"'>  
-                <input type='image' border='0' alt=' Set ' value=' Set ' src='"+
-       set_src+"' />"
-      +"</pre></td>"
+<tr valign=\"top\"><td>
+  <table>
+   <tr><td align='right'><nobr>Real name:</nobr></td><td><input name='PPPreal_name' value='"+real_name+#"'></td></tr>
+   <tr><td align='right'>Password:</td><td><input type='password' name='PPPpassword' value=''></td></tr>
+   <tr><td align='right'>Again:</td><td><input type='password' name='PPPpassword2' value=''></td></tr>
+   <tr><td align='right'>Crypted:</td><td><input name='PPPc_password' value='"+password+#"'></td></tr>
+   <tr><td></td><td><input type='image' border='0' alt=' Set ' value=' Set ' src='"+
+       set_src+#"' /></td></tr>
+  </table>
+</td>"
       "<td><img src=\"/internal-roxen-unit\" height=\"5\" /><br />\n\n";
 
     int is_me = this_object() == id->misc->config_user;
@@ -616,12 +620,15 @@ class AdminUser
 
       if( permissions[ perm ] )
       {
-        string s = Roxen.parse_rxml( "<gbutton-url "+(dim?"dim":"")+
-				     "    icon_src=/img/selected.gif "
-				     "    font=&usr.font; "
-				     "    width=180>"+
-				     permission_translations[ perm ]+
-				     "</gbutton-url>", id );
+        string s = Roxen.parse_rxml(
+	  "<gbutton-url "+
+	  ( dim ? "state='disabled' "
+	    "frame-image='&usr.gbutton-disabled-frame-image;'" :
+	    "" )+
+	  "    icon_src=/img/selected.gif "
+	  "    width=180>"+
+	  permission_translations[ perm ]+
+	  "</gbutton-url>", id );
 	if( noclick )
 	  form += sprintf("<img src='%s' />\n", s);
 	else
@@ -630,12 +637,16 @@ class AdminUser
       }
       else
       {
-        string s = Roxen.parse_rxml( "<gbutton-url "+(dim?"dim":"")+
-				     "    icon_src=/img/unselected.gif "
-				     "    font=&usr.font; "
-				     "    width=180>"+
-                                     permission_translations[ perm ]+
-				     "</gbutton-url>", id );
+        string s = Roxen.parse_rxml(
+	  "<gbutton-url "+
+	  ( dim ?
+	    "state='disabled' "
+	    "frame-image='&usr.gbutton-disabled-frame-image;'" :
+	    "" )+
+	  "    icon_src=/img/unselected.gif "
+	  "    width=180>"+
+	  permission_translations[ perm ]+
+	  "</gbutton-url>", id );
         form += sprintf( "<input border=0 type=image name='PPPadd_%s'"
                          " src='%s'>\n", perm, s );
       }

@@ -12,12 +12,15 @@
     <gbutton href='users.html?page=create_user'
              icon_src="&usr.next;"
              font="&usr.gbutton-font;" width="200"
-             align_icon="right">&var.create_txt;</gbutton>
-     <br />
+	     frame="&usr.gbutton-frame-image;"
+             align_icon="right">&var.create_txt;</gbutton><br />
+     <img src="/internal-roxen-unit" width="1" height="5" /><br />
      <gbutton href='users.html?page=delete_user'
               icon_src="&usr.next;"
 	      font="&usr.gbutton-font;" width="200"
-              align_icon="right">&var.delete_txt;</gbutton>
+	      frame="&usr.gbutton-frame-image;"
+              align_icon="right">&var.delete_txt;</gbutton><br />
+     <img src="/internal-roxen-unit" width="1" height="10" />
 
      <insert file=user_form.pike nocache="1" />
     </td></tr></table>
@@ -33,8 +36,7 @@
     <table><tr><td>&var.id_txt;:</td><td><input name="create_user_name" /></td>
     <td><submit-gbutton2> &var.create_txt; </submit-gbutton2></td></tr></table>
     <p>
-    <translate id="202" variable="var.cancel_txt">Cancel</translate>
-    <gbutton href='users.html' font="&usr.gbutton-font;">&var.cancel_txt;</gbutton>
+    <cf-cancel href="users.html"/>
     </p>
   </if>
   <else>
@@ -47,8 +49,7 @@
   <cf-perm perm="Edit Users">
   <eval><insert file=user_delete.pike nocache="1"/></eval>
   <p>
-  <translate id="202" variable="var.cancel_txt">Cancel</translate>
-  <gbutton href=users.html font="&usr.gbutton-font;">&var.cancel_txt;</gbutton>
+  <cf-cancel href="users.html"/>
   </p>
   </cf-perm>
 </page>

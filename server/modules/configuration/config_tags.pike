@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.181 2003/09/18 09:15:35 wellhard Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.182 2003/11/17 16:01:36 anders Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -110,6 +110,7 @@ class Scope_usr
     {
       string q, res;
      case "left-buttonwidth": return "150";
+     case "gbutton-width": return ENCODE_RXML_INT(0, type);
 
       /* composite */
      case "count-0": return ENCODE_RXML_TEXT("/internal-roxen-count_0", type);
@@ -120,6 +121,7 @@ class Scope_usr
 
      case "toptabs-padwidth": return ENCODE_RXML_INT(50, type);
      case "leftside-padwidth": return ENCODE_RXML_INT(150, type);
+     case "leftside-padheight": return ENCODE_RXML_INT(1, type);
      case "logo-html":
        return ENCODE_RXML_XML("<imgs border=\"0\" src="+QALIAS("logo")+" />", type);
 
@@ -135,6 +137,7 @@ class Scope_usr
        res += " textcolor="+QALIAS("toptabs-dimtextcolor" );
        res += " seltextcolor="+QALIAS("toptabs-seltextcolor" );
        res += " selcolor="+QALIAS("toptabs-selcolor" );
+       res += " quant=128";
        if( stringp( q = ALIAS("toptabs-extraargs" ) ) )
          res += " "+q;
        return ENCODE_RXML_XML(res, type);
@@ -222,9 +225,11 @@ class Scope_usr
      case "err-2":                return ENCODE_RXML_TEXT("/internal-roxen-err_2", type);
      case "err-3":                return ENCODE_RXML_TEXT("/internal-roxen-err_3", type);
      case "obox-titlefont":       return ENCODE_RXML_TEXT("helvetica,arial", type);
+     case "padlock":              return ENCODE_RXML_TEXT("/internal-roxen-padlock", type);
      case "obox-titlestyle":      return ENCODE_RXML_TEXT("", type);
      case "obox-border":          return ENCODE_RXML_TEXT("black", type);
      case "content-frame":        return ENCODE_RXML_TEXT("", type);
+     case "module-list-frame":    return ENCODE_RXML_TEXT("", type);
      case "list-style-boxes":     return ENCODE_RXML_TEXT("", type);
 
 
@@ -239,6 +244,7 @@ class Scope_usr
      case "content-titlefg":      return ENCODE_RXML_TEXT( ALIAS( "fgcolor" ), type);
      case "gbutton-font":         return ENCODE_RXML_TEXT( ALIAS( "font" ), type);
      case "left-buttonframe":     return ENCODE_RXML_TEXT( ALIAS( "gbutton-frame-image" ), type);
+     case "gbutton-disabled-frame-image":  return ENCODE_RXML_TEXT( ALIAS("gbutton-frame-image"), type);
      case "obox-bodybg":          return ENCODE_RXML_TEXT( ALIAS( "bgcolor" ), type);
      case "obox-bodyfg":          return ENCODE_RXML_TEXT( ALIAS( "fgcolor" ), type);
      case "obox-titlefg":         return ENCODE_RXML_TEXT( ALIAS( "bgcolor" ), type);
@@ -451,8 +457,8 @@ mapping get_variable_map( string s, object mod, RequestID id, int noset )
     if( !res["diff-txt"] && var->diff( 1 ) )
       res->diff = 
 	"<a target=rxdiff_"+var->path()+
-	" href='"+diff_url( id, mod, var )+"'><gbutton>"+
-	LOCALE(502,"Diff")+"</gbutton></a>";
+	" href='"+diff_url( id, mod, var )+"'><link-gbutton>"+
+	LOCALE(502,"Diff")+"</link-gbutton></a>";
     if(!res["diff-txt"])
       res["diff-txt"]="";
     res->id = var->_id;
@@ -1050,8 +1056,9 @@ string simpletag_cf_obox( string t, mapping m, string c, RequestID id )
          width='"+m->width+"' align='center' bgcolor='"+
     config_setting2("obox-border")+#"'>
  <tr><td>
-  <table cellpadding='2' cellspacing='0' border='0'
-          width='"+m->iwidth+#"' align='center'>
+  <table cellpadding='"+(m->padding?m->padding:"2")+#"'
+         cellspacing='0' border='0'
+         width='"+m->iwidth+#"' align='center'>
   <tr bgcolor='"+config_setting2("obox-titlebg")+#"'>
     <th valign='top'>
       <font color='"+config_setting2( "obox-titlefg" )+#"' 
@@ -1068,15 +1075,16 @@ string simpletag_cf_obox( string t, mapping m, string c, RequestID id )
 }
 string simpletag_box_frame( string t, mapping m, string c, RequestID id )
 {
-  if (!m["content-frame"]) return c;
+  if (!m["box-frame"]) return c;
   string bodybg = m->bodybg || config_setting2("obox-bodybg");
   return
 #"<table cellpadding='1' cellspacing='0' border='0'
          width='"+m->width+"' align='left' bgcolor='"+
     config_setting2("obox-border")+#"'>
  <tr><td>
-  <table cellpadding='2' cellspacing='0' border='0'
-          width='"+m->iwidth+#"' align='center'>
+  <table cellpadding='"+(m->padding?m->padding:"2")+#"'
+         cellspacing='0' border='0'
+         width='"+m->iwidth+#"' align='center'>
 
   <tr><td bgcolor='"+bodybg+"'><font color='"+
     config_setting2("obox-bodyfg")+"'>"+c+#"</font></td></tr>
@@ -1108,9 +1116,9 @@ string simpletag_cf_render_variable( string t, mapping m,
   }
   if( chng = ((int)_("changed") == 1) )
     if( !(int)_("no-default") )
-      def = "<submit-gbutton2 name='"+_("path")+"do_default'> "+
+      def = "<br /><submit-gbutton2 name='"+_("path")+"do_default'> "+
 	LOCALE(475,"Restore default value")+" "+_("diff-txt")+
-	" </submit-gbutton2> "+_("diff")+"<br />\n";
+	" </submit-gbutton2> "+_("diff")+"\n";
   
   switch( usr( "changemark" ) )
   {
@@ -1118,7 +1126,7 @@ string simpletag_cf_render_variable( string t, mapping m,
       return
 	"<tr><td valign='top' width='20%'><b>"+
 	Roxen.html_encode_string(_("name"))+"</b></td>\n"
-	"<td valign='top'>"+_("form")+"<br />"+def+"</td></tr>\n"
+	"<td valign='top'>"+_("form")+def+"</td></tr>\n"
 	"<tr><td colspan='2'>"+dfs+_("doc")+dfe+"</td></tr>\n";
 
     default:
@@ -1127,7 +1135,7 @@ string simpletag_cf_render_variable( string t, mapping m,
       return "<tr>\n"
 	"<td valign='top' width='20%'><b>"+
 	Roxen.html_encode_string(_("name"))+"</b></td>\n"
-	"<td valign='top' "+extra+">"+_("form")+"<br />"+def+"</td>\n"
+	"<td valign='top' "+extra+">"+_("form")+def+"</td>\n"
 	"</tr>\n"
 	"<tr>\n"
 	"<td colspan='2'>"+dfs+_("doc")+dfe+"</td>\n"

@@ -9,17 +9,17 @@
          bgcolor='&usr.left-selbuttonbg;' 
          icon_src='&usr.selected-indicator;' 
          icon_align='left' 
-         href=''><translate id="213">Sites</translate></gbutton>
-<br />
+         href=''><translate id="213">Sites</translate></gbutton><br />
+<img src="/internal-roxen-unit" width="1" height="1"/><br />
 <if variable="usr.configlistmode is 1">
 <if variable='form.goto_site'>
 <if not="1" variable='form.goto_site is '>
   <redirect to='site.html/&form.goto_site;/' />
 </if>
 </if>
-<translate id="509">Select site</translate><br />
+
 <select name='goto_site' onChange='form.submit();'>
-   <option value=''> -- </option>
+   <option value=''><translate id="509">Select site</translate></option>
  <emit source='configurations'>
   <cf-perm perm="Site:&_.sname;">
    <option value='&_.sname;'>&_.name;</option>
@@ -34,8 +34,8 @@
  <emit source='configurations'>
   <cf-perm perm="Site:&_.name;">
    <gbutton frame-image='&usr.left-buttonframe;' 
-             bgcolor='&usr.left-buttonbg;' 
-             href='site.html/&_.sname;/' 
+            bgcolor='&usr.left-buttonbg;' 
+            href='site.html/&_.sname;/' 
             width='&usr.left-buttonwidth;'>&_.name;</gbutton><br />
   </cf-perm>
  </emit>
@@ -49,11 +49,14 @@
   <cf-perm perm="Create Site">
      <gbutton href='new_site.html'
               icon_src='&usr.next;' 
-              align_icon='right' 
+              align_icon='right'
+	      width='200'
               hspace='5' vspace='5'><translate id="248">Create new site</translate></gbutton>
+     <br />
      <gbutton href='drop_site.html' 
               icon_src='&usr.next;' 
               align_icon='right' 
+	      width='200'
               hspace='5' vspace='5'><translate id="249">Drop old site</translate></gbutton>
    </cf-perm>
   </st-page></subtablist>

@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.31 2003/10/19 17:00:12 mast Exp $
+ * $Id: debug_info.pike,v 1.32 2003/11/17 16:01:25 anders Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -453,6 +453,10 @@ mixed page_0( object id )
 mixed parse( RequestID id )
 {
   return
+    "<font size='+1'><b>"+
+    LOCALE(1,"Pike memory usage information")+
+    "</b></font>"
+    "<p />"
     "<input type='hidden' name='action' value='debug_info.pike' />\n"
     "<p><submit-gbutton name='refresh'> "
     "<translate id='520'>Refresh</translate> "// <cf-refresh> doesn't submit.

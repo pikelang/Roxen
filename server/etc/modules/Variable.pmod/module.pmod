@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.82 2003/10/23 15:25:32 jonasw Exp $
+// $Id: module.pmod,v 1.83 2003/11/17 16:01:36 anders Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1451,18 +1451,19 @@ class List
 	+ "</font></td>\n";
 #define BUTTON(X,Y) ("<submit-gbutton2 name='"+X+"'>"+Y+"</submit-gbutton2>")
 #define REORDER(X,Y) ("<submit-gbutton2 name='"+X+"' icon-src='"+Y+"'></submit-gbutton2>")
+#define DIMBUTTON(X) ("<disabled-gbutton icon-src='"+X+"'></disabled-gbutton>")
       if( i )
         res += "\n<td>"+
             REORDER(prefix+"up."+i, "/internal-roxen-up")+
             "</td>";
       else
-        res += "\n<td></td>";
+        res += "\n<td>"+DIMBUTTON("/internal-roxen-up")+"</td>";
       if( i != sizeof( query())- 1 )
         res += "\n<td>"+
             REORDER(prefix+"down."+i, "/internal-roxen-down")
             +"</td>";
       else
-        res += "\n<td></td>";
+        res += "\n<td>"+DIMBUTTON("/internal-roxen-down")+"</td>";
       res += "\n<td>"+
             BUTTON(prefix+"delete."+i, LOCALE(227, "Delete") )
           +"</td>";
@@ -1600,7 +1601,7 @@ class PortList
 
     res += "://<input type=text name='"+prefix+"host' value='"+
            Roxen.html_encode_string(split->host)+"' />";
-    res += ":<input type=text size=6 name='"+prefix+"port' value='"+
+    res += ":<input type=text size=5 name='"+prefix+"port' value='"+
              split->port+"' />";
 
     res += "/<input type=text name='"+prefix+"path' value='"+

@@ -1,5 +1,5 @@
 /*
- * $Id: upload_license.pike,v 1.9 2003/03/06 10:31:27 jonasw Exp $
+ * $Id: upload_license.pike,v 1.10 2003/11/17 16:01:29 anders Exp $
  */
 
 #include <roxen.h>
@@ -8,7 +8,7 @@
 
 constant action = "maintenance";
 
-string name= LOCALE(167, "Upload license");
+string name= LOCALE(0, "Upload license...");
 string doc = LOCALE(168, "Upload a new Roxen license file.");
 
 
@@ -20,7 +20,8 @@ int enabled()
 mixed parse( RequestID id )
 {
   string txt = #"
-  <h1>Upload License</h1>
+  <font size='+1'><b>Upload License</b></font>
+  <p />
   <if variable='form.file'>
     <set variable='var.filename'
       ><get-post-filename filename='&form.file..filename;'
@@ -32,30 +33,32 @@ mixed parse( RequestID id )
       <input type='hidden' name='action' value='&form.action;'/>
       <input type='hidden' name='file' value='&form.file;'/>
       <input type='hidden' name='file.filename' value='&var.filename;'/>
-      Warning the license file <b>&var.filename;</b> does already exists.
-      Do you want to overwrite the file? <br />
+      <imgs src='&usr.err-2;' alt='#' />
+      Warning: The license file <b>&var.filename;</b> does already exists.
+      Do you want to overwrite the file?<br /><br />
       <submit-gbutton>Overwrite</submit-gbutton>
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-      <cf-cancel/>
+      <cf-cancel href='./?class="+action+#"'/>
     </elseif>
     <else>
       <set variable='var.ok' value='ok'/>
     </else>
     <if variable='var.ok'>
       <upload-license filename='&var.filename;' from='form.file'/>
-      License uploaded successfully. <cf-ok/>
+      License uploaded successfully.
+      <br /><br />
+      <cf-ok/>
     </if>
   </if>
   <else>
     <input type='hidden' name='action' value='&form.action;'/>
     Select local file to upload: <br />
-    <input type='file' name='file'/>
+    <input type='file' name='file' size='40'/>
     <input type='hidden' name='fixedfilename' value='' />
     <submit-gbutton name='ok'
-      onClick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\">Ok</submit-gbutton>
+      onClick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\"><translate id=\"201\">OK</translate></submit-gbutton>
+    <br /><br />
 
-    <cf-cancel/>
+    <cf-cancel href='./?class="+action+#"'/>
   </else>
 ";
   

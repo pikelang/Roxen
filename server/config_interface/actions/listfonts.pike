@@ -1,5 +1,5 @@
 /*
- * $Id: listfonts.pike,v 1.21 2002/04/18 16:02:20 anders Exp $
+ * $Id: listfonts.pike,v 1.22 2003/11/17 16:01:27 anders Exp $
  */
 
 #include <roxen.h>
@@ -33,7 +33,7 @@ string list_font(string font)
   
   if( mapping m = info[ fn ] )
   {
-    string res = "<p><font size=+1><b>"+
+    string res = "<p><font><b>"+
            (Roxen.html_encode_string(map(replace(font,"_"," ")/" ",
                                          capitalize)*" ")+
                   "</b></font> <font size='-1'>"+versions(font)+"</font><br />"
@@ -44,7 +44,7 @@ string list_font(string font)
     res += "</table>";
     return res;
   }
-  return "<p><font size=+1><b>"+
+  return "<p><font><b>"+
          (Roxen.html_encode_string(map(replace(font,"_"," ")/" ",capitalize)*" ")+
           "</b></font> <font size='-1'>"+versions(font)+"</font><br />");
 }
@@ -55,7 +55,7 @@ string font_loaders( )
   foreach( roxen.fonts.font_handlers, FontHandler fl )
   {
     int nf =  sizeof( fl->available_fonts() );
-    res += "<b><dt><font size=+1>"+fl->name+" ("+nf
+    res += "<b><dt><font>"+fl->name+" ("+nf
         +" font"+(nf==1?"":"s")+")</font></b></dt>"
         "<dd>"+fl->doc+"</dd><p />";
   }
@@ -71,10 +71,10 @@ string page_0(RequestID id)
               "<font size='+1'><b>" +
 	      LOCALE(58,"Available font loaders") + "</b></font><p>"+
               font_loaders()+"<font size='+1'><b>" +
-	      LOCALE("dI","All available fonts") + "</b></font><p>");
+	      "<br />" + LOCALE("dI","All available fonts") + "</b></font><p>");
   foreach(sort(roxen.fonts.available_fonts(1)), string font)
     res+=list_font(font);
-  res += ("</p><p>" + LOCALE(236,"Example text") +
+  res += ("</p><p>" + LOCALE(236,"Example text") + " "
 	  "<font size=-1><input name=text size=46 value='" +
 	  LOCALE(237,"Jackdaws love my big sphinx of quartz.") +
 	  "'></p><p><table width='70%'><tr><td align='left'>"

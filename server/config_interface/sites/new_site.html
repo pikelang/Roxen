@@ -2,14 +2,13 @@
 <topmenu base="../" selected='sites'/>
 
 <content>
-<cv-leftside></cv-leftside>
 <cv-split>
 <subtablist><st-page>
-<br />
+  <h1><translate id="248">Create new site</translate></h1>
 <blockquote>
 
 <define variable='var.common'>
-<font color='&usr.warncolor;'>&var.error;<br /></font>
+  <font color='&usr.warncolor;'>&var.error;<br /></font>
   <b><translate id="269">Site name:</translate></b> 
    <input name="name" value="&form.name;" /><br />
   <blockquote>
@@ -34,6 +33,7 @@ name="new_with_template">&var.create_txt; &var.template_txt;</submit-gbutton2>
 <br />
 <submit-gbutton2 width='230' align_icon='right' icon_src='&usr.next;'
 name="new">&var.create_txt;</submit-gbutton2>
+<br />
 <br />
 <cf-cancel href="./"/>
 </define>

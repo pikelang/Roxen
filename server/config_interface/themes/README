@@ -28,7 +28,8 @@ Stand alone settings (no other settings are based on these):
   --------------------------------------------------------
   left-buttonwidth              150
   leftside-padwidth             150
-  toptabs-padwidth               50
+  leftside-padwidth             1
+  toptabs-padwidth              50
   warncolor                     darkred
   background		        none
   content-background	        none
@@ -55,6 +56,7 @@ Stand alone settings (no other settings are based on these):
   database-small                /internal-roxen-database_small
   table-small                   /internal-roxen-table_small
   item-indicator                /internal-roxen-dot
+  padlock                       /internal-roxen-padlock
   --------------------------------------------------------
 
 Base settings:
@@ -75,30 +77,31 @@ Second level settings, by default derived from base settings:
   ----------------------------------------
   setting             derived from
   ----------------------------------------
-  fade1                bgcolor
-  fade2                bgcolor
-  fade3                bgcolor
-  fade4                bgcolor
-  matrix11             bgcolor
-  matrix12             bgcolor
-  matrix21             bgcolor
-  matrix22             bgcolor
-  toptabs-frame        tab-frame-image
-  subtabs-frame        tab-frame-image
-  left-buttonframe     gbutton-frame-image
-  gbutton-font         font
-  tabs-font            font
-  toptabs-selcolor     bgcolor
-  toptabs-seltextcolor fgcolor
-  toptabs-dimtextcolor bgcolor
-  obox-titlefg         bgcolor
-  obox-bodybg          bgcolor
-  obox-bodyfg          fgcolor
-  subtabs-bgcolor      bgcolor
-  subtabs-seltextcolor fgcolor
-  subtabs-dimtextcolor bgcolor
-  content-titlebg      bgcolor
-  content-titlefg      fgcolor
+  fade1                          bgcolor
+  fade2                          bgcolor
+  fade3                          bgcolor
+  fade4                          bgcolor
+  matrix11                       bgcolor
+  matrix12                       bgcolor
+  matrix21                       bgcolor
+  matrix22                       bgcolor
+  toptabs-frame                  tab-frame-image
+  subtabs-frame                  tab-frame-image
+  left-buttonframe               gbutton-frame-image
+  gbutton-disabled-frame-image   gbutton-frame-image
+  gbutton-font                   font
+  tabs-font                      font
+  toptabs-selcolor               bgcolor
+  toptabs-seltextcolor           fgcolor
+  toptabs-dimtextcolor           bgcolor
+  obox-titlefg                   bgcolor
+  obox-bodybg                    bgcolor
+  obox-bodyfg                    fgcolor
+  subtabs-bgcolor                bgcolor
+  subtabs-seltextcolor           fgcolor
+  subtabs-dimtextcolor           bgcolor
+  content-titlebg                bgcolor
+  content-titlefg                fgcolor
   ----------------------------------------
 
 
@@ -132,13 +135,22 @@ setting		   default value
 ----------------------------------------------------------------------------
 logo-html          <img border=0 src=&usr.logo;>
 
-toptabs-args       frame-image=&usr.toptabs-frame; &usr.toptab-extraargs;
+toptabs-args       frame-image=&usr.toptabs-frame;
+                   pagebgcolor=&usr.top-bgcolor;
+		   bgcolor=&usr.toptabs-bgcolor;
+		   font=&usr.toptabs-font;
+		   dimcolor=&usr.toptabs-dimcolor;
+		   textcolor=&usr.toptabs-dimtextcolor;
+		   seltextcolor=&usr.toptabs-seltextcolor;
+		   selcolor=&usr.toptabs-selcolor;
+		   quant=&128;
+		   &usr.toptab-extraargs;
 
 subtabs-args       frame-image=&usr.subtabs-frame; &usr.subtabs-extraargs;
                    bgcolor=&usr.subtabs-bgcolor; font=&usr.subtabs-font;
                    textcolor=&usr.subtabs-dimtextcolor;
                    dimcolor=&usr.subtabs-dimcolor;
-                   seltextcolor=&usr.subtabs-selcolor;
+                   seltextcolor=&usr.subtabs-seltextcolor;
                    selcolor=&usr.subtabs-selcolor;
 
 body-args	   link=&usr.linkcolor; vlink=&usr.linkcolor;

@@ -1,5 +1,5 @@
 /*
- * $Id: restart.pike,v 1.13 2003/04/25 11:56:06 anders Exp $
+ * $Id: restart.pike,v 1.14 2003/11/17 16:01:29 anders Exp $
  */
 
 #include <config_interface.h>
@@ -10,19 +10,22 @@
 
 constant action = "maintenance";
 
-LocaleString name= LOCALE(34, "Restart or shutdown");
+LocaleString name= LOCALE(0, "Restart or shutdown")+"...";
 constant doc = "";
 
 
 mixed parse( RequestID id )
 {
+  string res = "<font size='+1'><b>" +
+    LOCALE(0, "Restart or shutdown") + "</b></font>"
+    "<p />";
   switch( id->variables->what )
   {
   case "restart":
      if( config_perm( "Restart" ) )
      {
        roxen->restart(0.5);
-       return
+       return res +
 "<input type=hidden name=action value=restart.pike>"
 "<font color='&usr.warncolor;'><h1>"+LOCALE(197,"Restart")+"</h1></font>"+
  LOCALE(233, "Roxen will restart automatically.")+
@@ -32,13 +35,13 @@ LOCALE(234, "You might see the old process for a while in the process table "
        "while for all connections to finish, the process will go away after "
        "at most 15 minutes.")+ "</i></p>";
      }
-     return LOCALE(226,"Permission denied");
+     return res + LOCALE(226,"Permission denied");
 
    case "shutdown":
      if( config_perm( "Shutdown" ) )
      {
        roxen->shutdown(0.5);
-       return
+       return res +
 "<font color='&usr.warncolor;'><h1>"+LOCALE(198,"Shutdown")+"</h1></font>"+
 LOCALE(235,"Roxen will <b>not</b> restart automatically.")+
 "\n\n<p><i>"+
@@ -47,10 +50,10 @@ LOCALE(234, "You might see the old process for a while in the process table "
        "while for all connections to finish, the process will go away after "
        "at most 15 minutes.")+ "</i></p>";
      }
-     return LOCALE(226,"Permission denied");
+     return res + LOCALE(226,"Permission denied");
 
   default:
-    return Roxen.http_string_answer(
+    return Roxen.http_string_answer(res +
 #"<blockquote><br />
 
  <cf-perm perm='Restart'>
@@ -79,7 +82,7 @@ LOCALE(234, "You might see the old process for a while in the process table "
 
 </blockquote>
 
-<br/><br/>
+<br/>
 
 <p><cf-cancel href='?class=&form.class;'/></p>" );
      }

@@ -43,9 +43,9 @@ mapping|string parse( RequestID id )
 	    ({ b->tbl }),
 	    "<a href='restore_db.pike?db="+Roxen.html_encode_string(bk)
 	    +"&dir="+Roxen.html_encode_string( b->directory )+"'>"+
-	    "<gbutton>"+_(460,"Restore")+"</gbutton></a>"
-	    "<a href='restore_db.pike?db="+Roxen.html_encode_string(bk)
-	    +"&dir="+Roxen.html_encode_string( b->directory )+"&drop=1'>"+
+	    "<gbutton>"+_(460,"Restore")+"</gbutton></a> "
+	    "<a href='restore_db.pike?db="+Roxen.html_encode_string(bk)+
+	    "&dir="+Roxen.html_encode_string( b->directory )+"&drop=1'>"+
 	    "<gbutton>"+_(227,"Delete")+"</gbutton></a>"
 	  });
 	}
@@ -132,8 +132,7 @@ mapping|string parse( RequestID id )
       
       res += "</blockquote><table width='100%'><tr><td>"
 	"<submit-gbutton2 name='ok'>"+_(201,"Ok")+"</submit-gbutton2></td>\n"
-	"<td align=right><a href=''><gbutton> "+
-	_(202,"Cancel")+" </gbutton></a></td>\n</table>\n";
+	"<td align=right><cf-cancel href=''/></td>\n</table>\n";
     }
   }
   if( !id->variables->db )
