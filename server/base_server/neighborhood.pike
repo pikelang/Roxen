@@ -12,6 +12,9 @@ class TCPNeigh {
 
   void send(string s)
   {
+#ifdef NEIGH_DEBUG
+      werror("Neighbourhood: TCP Send to "+me->query_address()+"\n");
+#endif
     return me->write(s);
   }
 
@@ -37,8 +40,7 @@ class TCPNeigh {
 #ifdef NEIGH_DEBUG
 	werror("Connection failed.\n");
 #endif
-	call_out(m->remove_neighbour,0, this_object());
-	call_out(destruct,1, this_object());
+	call_out(m->remove_neighbour, 0, this_object());
 	return;
       }
     }
@@ -69,7 +71,7 @@ class UDPNeigh
     if(!nobr)
     {
 #ifdef NEIGH_DEBUG
-      werror("Neighbourhood: Send to "+net+":"+port+"\n");
+      werror("Neighbourhood: UDP Send to "+net+":"+port+"\n");
 #endif
       return master->udp_sock->send(net,port,s);
     }
@@ -123,7 +125,7 @@ object master;
 void send_to_all(string f, object from)
 {
   foreach(indices(low_neighbours), object o)
-    if(o!=from) o->send(f);
+    if(objectp(o)) if(o!=from) o->send(f);
 }
 
 array config_info(object c)
@@ -157,15 +159,17 @@ mapping neigh_data()
   return m;
 }  
 
+void low_got_info(string data, object from);
 void broadcast()
 {
+  string data = encode_value(neigh_data());
 #ifdef NEIGH_DEBUG
-//    werror("Neighbourhood: Sending broadcast to "+
-//	   sizeof(low_neighbours)+" neighbour connections\n");
+ werror("Neighbourhood: Sending broadcast to "+
+        sizeof(low_neighbours)+" neighbour connections\n");
 #endif
   remove_call_out(broadcast);
   if(seq) call_out(broadcast,DELAY); else call_out(broadcast,1);
-  send_to_all(encode_value(neigh_data()),0);
+  low_got_info(data,0);
 }
 
 void low_got_info(string data, object from)
@@ -195,7 +199,8 @@ void low_got_info(string data, object from)
 void got_connection(object port)
 {
   object o = port->accept();
-  if(o) {
+  if(o)
+  {
 #ifdef NEIGH_DEBUG
     werror("Neighbourhood: Got TCP connection from "+o->query_address()+"\n");
 #endif
@@ -203,35 +208,21 @@ void got_connection(object port)
   }
 }
 
+void create();
 void remove_neighbour(object neigh)
 {
-  if(!master)
-  {
-    master = files.port();
-    master->set_id(master);
-    if(!master->bind(51521,got_connection))
-      master = 0;
-  }
+  remove_call_out(create);
+  call_out(create, 20);
   m_delete(low_neighbours,neigh);
-}
-
-void reinit()
-{
-  foreach(indices(low_neighbours), object o)
-  {
-    destruct(o->me);
-    destruct(o);
-  }
-  low_neighbours = ([ ]);
-  if(!master) add_neighbour(TCPNeigh(0,51521,this_object()));
-  foreach(network_numbers(), string s)
-    add_neighbour(UDPNeigh(s,51521,this_object()));
-  foreach(tcp_numbers(), string s)
-    add_neighbour(TCPNeigh(s,51521,this_object()));
 }
 
 void create()
 {
+  foreach(indices(low_neighbours), object o)
+  {
+    if(o->me) destruct(o->me);
+    destruct(o);
+  }
   if(!master)
   {
     master = files.port();
@@ -245,13 +236,15 @@ void create()
     else
       werror("Neighbourhood: Bound to ALL:51521\n");
 #endif
-    add_neighbour(UDPNeigh(0,51521,this_object()));
-    
-    foreach(tcp_numbers(), string s)
-      add_neighbour(TCPNeigh(s,51521,this_object()));
-    foreach(network_numbers(), string s)
-      add_neighbour(UDPNeigh(s,51521,this_object()));
-    if(roxen->query("neighborhood")) broadcast();
-    add_constant("neighborhood", neighborhood);
   }
+  add_neighbour(UDPNeigh(0,51521,this_object()));
+    
+  foreach(tcp_numbers(), string s)
+    add_neighbour(TCPNeigh(s,51521,this_object()));
+  foreach(network_numbers(), string s)
+    add_neighbour(UDPNeigh(s,51521,this_object()));
+  if(roxen->query("neighborhood")) broadcast();else remove_call_out(broadcast);
+  remove_call_out(create);
+  add_constant("neighborhood", neighborhood);
+  call_out(create, 1800);
 }
