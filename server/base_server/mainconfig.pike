@@ -1,5 +1,5 @@
 inherit "config/builders";
-string cvs_version = "$Id: mainconfig.pike,v 1.104 1998/04/24 08:40:14 per Exp $";
+string cvs_version = "$Id: mainconfig.pike,v 1.105 1998/07/04 13:17:10 grubba Exp $";
 //inherit "roxenlib";
 
 inherit "config/draw_things";
@@ -1482,6 +1482,7 @@ mapping configuration_parse(object id)
        return roxen->restart();
       
        /* Rename a configuration. Not Yet Used... */
+#if 0
     case "rename":
       if(o->type == NODE_CONFIGURATION)
       {
@@ -1490,9 +1491,19 @@ mapping configuration_parse(object id)
 	o->data->name=id->variables->name;
       }
       break;
+#endif /* 0 */
       
       /* This only asks "do you really want to...", it does not delete
        * the node */
+
+      /* Clear any memory caches associated with this configuration */
+    case "zapcache":
+      object c = o->config();
+      if (c && c->clear_memory_caches)
+      {
+	c->clear_memory_caches();
+      }
+      break;
 
     case "delete":	
      PUSH(default_head("Roxen Configuration")+
@@ -1803,6 +1814,10 @@ mapping configuration_parse(object id)
 //    BUTTON(unfoldall, "Unfold all", left);
 
   PUSH_BUTTONS(1);
+
+  if (more_mode) {
+    BUTTON(zapcache, "Clear module caches", left);
+  }
 
   if(!more_mode)
     BUTTON(morevars, "More options", left);
