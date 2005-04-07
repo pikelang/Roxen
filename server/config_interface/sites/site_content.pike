@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.140 2004/06/13 11:17:43 anders Exp $
+// $Id: site_content.pike,v 1.141 2005/04/07 12:05:30 jonasw Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -215,10 +215,6 @@ string buttons( Configuration c, string mn, RequestID id )
   if( sizeof( mod->error_log ) )
     buttons+="<submit-gbutton>"+LOCALE(247, "Clear Log")+"</submit-gbutton>";
 
-  if(mod->query_action_buttons)
-    foreach( indices(mod->query_action_buttons("standard")), string title )
-      buttons += "<submit-gbutton>"+title+"</submit-gbutton>";
-
   // Nor is it a good idea to drop configuration interface modules.
   // It tends to make things rather unstable.
 #ifndef YES_I_KNOW_WHAT_I_AM_DOING
@@ -227,6 +223,20 @@ string buttons( Configuration c, string mn, RequestID id )
     buttons += "<link-gbutton href='../../../../drop_module.pike?config="+
             path[0]+"&drop="+mn+"'>"+
             LOCALE(252, "Drop Module")+"</link-gbutton></a>";
+
+  //  Add action buttons produced by the module itself
+  if (mod->query_action_buttons) {
+    array(string) titles = indices(mod->query_action_buttons("standard"));
+    if (sizeof(titles)) {
+      buttons +=
+	" <img src='/internal-roxen-pixel-888888' "
+	"      width='1' height='15' hspace='5' align='center' />";
+      foreach(sort(titles), string title )
+	buttons += "<submit-gbutton>"+title+"</submit-gbutton>";
+    }
+  }
+
+
   return buttons;
 }
 
