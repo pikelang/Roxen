@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.190 2005/02/08 14:17:28 mast Exp $
+// $Id: Roxen.pmod,v 1.191 2005/04/11 13:46:21 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1850,7 +1850,7 @@ string strftime(string fmt, int t,
   mapping(string:string) m = (["type":"string"]);
 
   string my_sprintf(int prefix, string f, int arg)
-  //! Filter prefix option in format string if prefix = 0.
+  // Filter prefix option in format string if prefix = 0.
   {
     if(!prefix && sscanf(f, "%%%*d%s", string format) == 2)
       f = "%" + format;
