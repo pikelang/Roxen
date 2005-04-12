@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.589 2005/02/25 14:56:33 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.590 2005/04/12 17:05:21 anders Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2708,9 +2708,12 @@ int|string try_get_file(string s, RequestID id,
 
   m = a[1];
 
-  if (result_mapping)
+  if (result_mapping) {
     foreach(indices(m), string i)
       result_mapping[i] = m[i];
+    if (string|function(string:string) charset = fake_id->get_output_charset())
+      result_mapping->charset = charset;
+  }
 
   if(a[0]) {
     m->file = a[0];
