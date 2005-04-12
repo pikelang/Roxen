@@ -83,22 +83,16 @@ string|mapping parse( RequestID id )
       else
 	res += LOCALE(471,"If you do not want to delete one or more of these "
 		      "databases, uncheck the checkmark in front of the ones"
-		      " you want to keep");
-      res += "<table>";
+		      " you want to keep.");
+      res += "<ul>";
       int n;
       foreach( dead, string d )
       {
-	if( n & 3 )
-	  res += "</td><td>";
-	else if( n )
-	  res += "</td></tr><tr><td>\n";
-	else
-	  res += "<tr><td>";
-	n++;
-	res += "<input name='del_db_"+d+"' type=checkbox checked=checked />"+
-	  d+"<br />";
+	res += "<li style='list-style-image: none; list-style-type: none'>"
+	  "<input name='del_db_"+d+"' id='del_db_"+d+"' type=checkbox checked=checked />"
+	  "<label for='del_db_"+d+"'>"+d+"</label></li>\n";
       }
-      res += "</td></tr></table>";
+      res += "</ul>";
       res += "</blockquote>";
     }
     // 2: Tables
