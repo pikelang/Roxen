@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.145 2004/06/30 16:58:39 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.146 2005/04/12 17:04:19 anders Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1386,11 +1386,24 @@ class RequestID
 	break;
 
       case 2: // Join.
+	if (sizeof (output_charset) &&
+	    (!stringp (to) || !stringp (output_charset[0])))
+	  error ("Can't join charsets with functions (%O with %O).\n",
+		 to, output_charset[0]);
 	output_charset |= ({ to });
 	break;
     }
   }
 
+  string|function(string:string) get_output_charset()
+  {
+    string charset;
+    function(string:string) encoder;
+    foreach( output_charset, string|function f )
+      [charset,encoder] = join_charset(charset, f, encoder, 0);
+    return charset || encoder;
+  }
+  
   static string charset_name(function|string what)
   {
     switch (what) {
@@ -1447,7 +1460,12 @@ class RequestID
       return ({ old, oldcodec }); // Not really true, but how to know this?
     default:
       // Not true, but there is no easy way to add charsets yet...
+#if 1
+      // The safe choice.
+      return ({"UTF-8", string_to_utf8});
+#else
       return ({ charset_name(add), charset_function(add, allow_entities) });
+#endif
     }
   }
   
@@ -1574,6 +1592,9 @@ class RequestID
       string charset="";
       if( stringp(file->data) )
       {
+	if (file->charset)
+	  // Join to be on the safe side.
+	  set_output_charset (file->charset, 2);
 	if (sizeof (output_charset) ||
 	    has_prefix (file->type, "text/") ||
 	    (String.width(file->data) > 8))
