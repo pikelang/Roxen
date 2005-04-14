@@ -1,5 +1,5 @@
 /*
- * $Id: debug_summary.pike,v 1.11 2004/07/21 22:24:01 _cvs_dirix Exp $
+ * $Id: debug_summary.pike,v 1.12 2005/04/14 23:06:57 _cvs_dirix Exp $
  */
 #include <stat.h>
 
@@ -79,9 +79,9 @@ string make_environment_summary()
   res += "\n";
   res += make_headline("Local environment variables");
 #ifdef __NT__
-  res += indent(Stdio.read_file("/etc/chilimoon/environment.ini")||"", 1);
+  res += indent(Stdio.read_file("/usr/chilimoon/local/environment.ini")||"", 1);
 #else
-  res += indent(Stdio.read_file("/etc/chilimoon/environment")||"", 1);
+  res += indent(Stdio.read_file("/usr/chilimoon/local/environment")||"", 1);
 #endif
 
   res += "\n";

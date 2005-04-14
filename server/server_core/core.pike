@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: core.pike,v 1.875 2004/07/12 12:19:05 _cvs_stephen Exp $";
+constant cvs_version="$Id: core.pike,v 1.876 2005/04/14 23:07:00 _cvs_dirix Exp $";
 
 // The argument cache. Used by the image cache.
 ArgCache argcache;
@@ -41,9 +41,9 @@ Thread.Thread backend_thread;
 // --- Debug defines ---
 
 #ifdef SSL3_DEBUG
-# define SSL3_WERR(X) report_debug("SSL3: "+X+"\n")
+# define SSL3_WERR(X ...) werror("SSL3: " X)
 #else
-# define SSL3_WERR(X)
+# define SSL3_WERR(X ...)
 #endif
 
 #ifdef THREAD_DEBUG
@@ -1603,232 +1603,270 @@ class Protocol
 class SSLProtocol
 //! Base protocol for SSL ports. Exactly like Port, but uses SSL.
 {
-  inherit Protocol;
+  inherit Protocol; 
 
   // SSL context
-  SSL.context ctx;
-
-  // Shields SSL from destruction
-  class ProtectedSSL
+  SSL.context ctx = SSL.context();
+    
+  void certificates_changed(Variable|void ignored)
   {
-    SSL.sslfile sslfile;
+    string raw_keydata;
+    array(string) certificates = ({});
+    Variable Certificates = getvar("ssl_cert_file");
+  
+    object privs = Privs("Reading cert file");
 
-    mixed `[](string s)
-    {
-      if( s == "sslfile" )
-	return sslfile;
-      return sslfile[s];
+    foreach(map(Certificates->query(), String.trim_whites), string cert_file) {
+      string raw_cert;
+      if( catch{ raw_cert = lopen(cert_file, "r")->read(); } )
+      {
+        Certificates->add_warning("SSL3: Reading cert-file '%s' failed!",
+                                          cert_file); 
+        continue;
+      }
+ 
+      object msg = Tools.PEM.pem_msg()->init( raw_cert );
+      object part = msg->parts["CERTIFICATE"] ||
+        msg->parts["X509 CERTIFICATE"];
+      string cert;
+
+      if (msg->parts["RSA PRIVATE KEY"] ||
+          msg->parts["DSA PRIVATE KEY"]) {
+        raw_keydata = raw_cert;
+      }
+
+      if (!part || !(cert = part->decoded_body()))
+      {
+        Certificates->add_warning("SSL3: No certificate found.\n");
+        continue;
+      }
+      certificates += ({ cert });
     }
 
-    mixed `[]=(string s, mixed val)
+    Variable KeyFile = getvar("ssl_key_file");
+
+    if( strlen(KeyFile->query()) &&
+        catch{ raw_keydata = lopen(KeyFile->query(), "r")->read(); } )
     {
-      return sslfile[s] = val;
+      KeyFile->add_warning(sprintf("SSL3: Reading key-file '%s' failed!\n",
+                                   query_option("ssl_key_file")));
+      return;
     }
 
-    mixed `->(string s)
-    {
-      if( s == "sslfile" )
-	return sslfile;
-      return sslfile[s];
+    privs = 0;
+
+    if (!raw_keydata) {
+      Certificates->add_warning("SSL3: No private key found.");
+      return;
     }
 
-    mixed `->=(string s, mixed val)
+    if (!sizeof(certificates)) return;
+
+    object msg = Tools.PEM.pem_msg()->init( raw_keydata );
+
+    SSL3_WERR("key file contains: %O", indices(msg->parts));
+
+    object part;
+    if (part = msg->parts["RSA PRIVATE KEY"])
     {
-      return sslfile[s] = val;
+      string key;
+
+      if (!(key = part->decoded_body()))
+      {
+        KeyFile->add_warning("SSL3: Private rsa key not valid (PEM).\n");
+        return;
+      }
+
+      object rsa = Standards.PKCS.RSA.parse_private_key(key);
+      if (!rsa)
+      {
+        KeyFile->add_warning("SSL3: Private rsa key not valid (DER).\n");
+        return;
+      }
+
+      ctx->rsa = rsa;
+
+      SSL3_WERR("RSA key size: %d bits", rsa->rsa_size());
+
+      if (rsa->rsa_size() > 512)
+      {
+        /* Too large for export */
+#if constant(Crypto.RSA)
+        ctx->short_rsa = Crypto.RSA()->generate_key(512, ctx->random);
+#else
+        ctx->short_rsa = Crypto.rsa()->generate_key(512, ctx->random);
+#endif
+
+        // ctx->long_rsa = Crypto.rsa()->generate_key(rsa->rsa_size(), ctx->random);
+      }
+      ctx->rsa_mode();
+
+      array(int) key_matches =
+        map(certificates,
+            lambda(string cert, Variable Certificates) {
+              // FIXME: Support PKCS7
+              object tbs = Tools.X509.decode_certificate (cert);
+              if (!tbs)
+              {
+                Certificates->add_warning("SSL3: Certificate not valid (DER).");
+                return 0;
+              }
+              return tbs->public_key->rsa->public_key_equal (rsa);
+            }, Certificates);
+
+      int num_key_matches;
+      // DWIM: Make sure the main cert comes first.
+      array(string) new_certificates = allocate(sizeof(certificates));
+      int i,j;
+      for (i=0; i < sizeof(certificates); i++) {
+        if (key_matches[i]) {
+          new_certificates[j++] = certificates[i];
+          num_key_matches++;
+        }
+      }
+      for (i=0; i < sizeof(certificates); i++) {
+        if (!key_matches[i]) {
+          new_certificates[j++] = certificates[i];
+        }
+      }
+      if( !num_key_matches )
+      {
+        KeyFile->add_warning("SSL3: Certificate and private key "
+                                   "do not match.");
+        return;
+      }
+      ctx->certificates = new_certificates;
+    }
+    else if (part = msg->parts["DSA PRIVATE KEY"])
+    {
+      string key;
+
+      if (!(key = part->decoded_body()))
+      {
+        report_error("SSL3: Private dsa key not valid (PEM).\n");
+        return;
+      }
+
+      object dsa = Standards.PKCS.DSA.parse_private_key(key);
+      if (!dsa)
+      {
+        report_error("SSL3: Private dsa key not valid (DER).\n");
+        return;
+      }
+
+      SSL3_WERR(sprintf("Using DSA key."));
+
+      //dsa->use_random(ctx->random);
+      ctx->dsa = dsa;
+      /* Use default DH parameters */
+#if constant(SSL.Cipher)
+      ctx->dh_params = SSL.Cipher.DHParameters();
+#else
+      ctx->dh_params = SSL.cipher()->dh_parameters();
+#endif
+
+      ctx->dhe_dss_mode();
+
+      // FIXME: Add cert <-> private key check.
+
+      ctx->certificates = certificates;
+    }
+    else
+    {
+      KeyFile->add_warning("SSL3: No private key found.");
+      return;
     }
 
-    void destroy()
+#if EXPORT
+    ctx->export_mode();
+#endif
+  }
+
+  class CertificateListVariable
+  {
+    inherit Variable.FileList;
+
+    string doc()
     {
-      if (sslfile)
-	sslfile->close();
+      return sprintf(::doc() + "\n",
+                     combine_path(getcwd(), "../local"),
+                     getcwd());
     }
 
-    void create(object q)
+    static void create(mixed default_value, void|int flags,
+                       void|LocaleString std_name, void|LocaleString std_doc)
     {
-      sslfile = SSL.sslfile(q, ctx);
-    }
-
-    string _sprintf(int t) {
-      return t=='O' && sprintf("%O(%O)", this_program, sslfile);
+      ::create(default_value, flags, std_name, std_doc);
+      set_changed_callback(certificates_changed);
     }
   }
 
-  Stdio.File accept()
+  class KeyFileVariable
+  {
+    inherit Variable.String;
+
+    string doc()
+    {
+      return sprintf(::doc() + "\n",
+                     combine_path(getcwd(), "../local"),
+                     getcwd());
+    }
+
+    static void create(mixed default_value, void|int flags,
+                       void|LocaleString std_name, void|LocaleString std_doc)
+    {
+      ::create(default_value, flags, std_name, std_doc);
+      set_changed_callback(certificates_changed);
+    }
+  }
+
+  RoxenSSLFile accept()
   {
     Stdio.File q = ::accept();
     if (q)
-      return [object(Stdio.File)](object)ProtectedSSL(q);
+      return RoxenSSLFile (q, ctx);
     return 0;
   }
 
   void create(int pn, string i)
   {
-    ctx = SSL.context();
-    set_up_ssl_variables( this );
-    port = pn;
-    ip = i;
-
-    restore();
-    
-    object privs = Privs("Reading cert file");
-    int key_matches;
-    string f, f2;
-    ctx->certificates = ({});
-
-    foreach( map(query_option("ssl_cert_file"), String.trim_whites),
-	     string cert_file )
-    {
-      if( catch{ f = lopen(String.trim_whites(cert_file), "r")->read(); } )
-      {
-	report_error("SSL3: Reading cert-file %O failed!\n",
-		     cert_file);
-	return;
-      }
-
-      if( sizeof(query_option("ssl_key_file")) &&
-	  catch{ f2 = lopen(query_option("ssl_key_file"),"r")->read(); } )
-      {
-	report_error("SSL3: Reading key-file %O failed!\n",
-		     query_option("ssl_key_file"));
-	return;
-      }
-
-      object msg = Tools.PEM.pem_msg()->init( f );
-      object part = msg->parts["CERTIFICATE"] || msg->parts["X509 CERTIFICATE"];
-      string cert;
-
-      if (!part || !(cert = part->decoded_body())) 
-      {
-	report_error("SSL3: No certificate found.\n");
-	return;
-      }
-
-      if( f2 )
-	msg = Tools.PEM.pem_msg()->init( f2 );
-
-      function r = Crypto.Random.random_string;
-
-      SSL3_WERR(sprintf("key file contains: %O", indices(msg->parts)));
-
-      if (part = msg->parts["RSA PRIVATE KEY"])
-      {
-	string key;
-
-	if (!(key = part->decoded_body())) 
-	{
-	  report_error("SSL3: Private rsa key not valid (PEM).\n");
-	  return;
-	}
-
-	object rsa = Standards.PKCS.RSA.parse_private_key(key);
-	if (!rsa) 
-	{
-	  report_error("SSL3: Private rsa key not valid (DER).\n");
-	  return;
-	}
-
-	ctx->rsa = rsa;
-
-	SSL3_WERR(sprintf("RSA key size: %d bits", rsa->rsa_size()));
-
-	if (rsa->rsa_size() > 512)
-	{
-	  /* Too large for export */
-	  ctx->short_rsa = Crypto.RSA()->generate_key(512, r);
-
-	  // ctx->long_rsa = Crypto.RSA()->generate_key(rsa->rsa_size(), r);
-	}
-	ctx->rsa_mode();
-
-	// FIXME: Support PKCS7
-	object tbs = Tools.X509.decode_certificate (cert);
-	if (!tbs) 
-	{
-	  report_error("SSL3: Certificate not valid (DER).\n");
-	  return;
-	}
-	if (tbs->public_key->rsa->public_key_equal (rsa)) {
-	  key_matches++;
-	  // DWIM: Make sure the main cert comes first in the cert list.
-	  ctx->certificates = ({ cert }) + ctx->certificates;
-	} else {
-	  ctx->certificates += ({ cert });
-	  continue;
-	}
-      }
-      else if (part = msg->parts["DSA PRIVATE KEY"])
-      {
-	string key;
-
-	if (!(key = part->decoded_body())) 
-	{
-	  report_error("SSL3: Private dsa key not valid (PEM).\n");
-	  return;
-	}
-
-	object dsa = Standards.PKCS.DSA.parse_private_key(key);
-	if (!dsa) 
-	{
-	  report_error("SSL3: Private dsa key not valid (DER).\n");
-	  return;
-	}
-
-	SSL3_WERR("Using DSA key.");
-
-	dsa->use_random(r);
-	ctx->dsa = dsa;
-	/* Use default DH parameters */
-	ctx->dh_params = SSL.Cipher.DHParameters();
-
-	ctx->dhe_dss_mode();
-
-	// FIXME: Add cert <-> private key check.
-
-	ctx->certificates = ({ cert }) + ctx->certificates;
-      }
-      else 
-      {
-	report_error("SSL3: No private key found.\n");
-	return;
-      }
-
-      ctx->random = r;
-    }
-    if( !key_matches )
-    {
-      report_error("SSL3: Certificate and private key do not match.\n");
-      return;
-    }
-#if EXPORT
-    ctx->export_mode();
+#if constant(Crypto.Random.random_string)
+    ctx->random = Crypto.Random.random_string;
+#else
+    ctx->random = Crypto.randomness.reasonably_random()->read;
 #endif
+
+    set_up_ssl_variables( this_object() );
+
     ::create(pn, i);
+
+    certificates_changed();
   }
 
-  string _sprintf(int t) {
-    return t=='O' && sprintf("%O(%s://%s:%d)", this_program,
-			     (string)name, ip||"*", port);
+  string _sprintf( )
+  {
+    return "SSLProtocol("+name+"://"+ip+":"+port+")";
   }
+
 }
 #endif
-
 mapping(string:Protocol) build_protocols_mapping()
 {
   mapping protocols = ([]);
   int st = gethrtime();
   report_debug("Protocol handlers ... \b");
-#ifdef 1
+#ifndef DEBUG
   class lazy_load( string prog, string name )
   {
     program real;
     static void realize()
     {
       if( catch {
-	DDUMP( prog );
-	real = (program)prog;
-	protocols[name] = real;
+        DDUMP( prog );
+        real = (program)prog;
+        protocols[name] = real;
       } )
-	report_error("Failed to compile protocol handler for "+name+"\n");
+        report_error("Failed to compile protocol handler for "+name+"\n");
     }
 
     Protocol `()(mixed ... x)
@@ -1841,9 +1879,6 @@ mapping(string:Protocol) build_protocols_mapping()
       if(!real) realize();
       return predef::`->(real, x);
     }
-    string _sprintf(int t) {
-      return t=='O' && sprintf("%O(%O,%O)", this_program, prog, name);
-    }
   };
 #endif
   foreach( glob( "prot_*.pike", get_dir("plugins/protocols") ), string s )
@@ -1854,22 +1889,21 @@ mapping(string:Protocol) build_protocols_mapping()
     {
       case "https":
       case "ftps":
-	continue;
+        continue;
     }
 #endif
     report_debug( "\b%s \b", s );
 
     catch
     {
-#ifdef 1
-      protocols[ s ] = lazy_load( ("plugins/protocols/prot_"+s+".pike"),s );
-#else
+#ifdef DEBUG
       protocols[ s ] = (program)("plugins/protocols/prot_"+s+".pike");
+#else
+      protocols[ s ] = lazy_load( ("plugins/protocols/prot_"+s+".pike"),s );
 #endif
     };
   }
-
-  foreach( glob("prot_*.pike",get_dir("../local/plugins/protocols")||({})), string s )
+  foreach( glob("prot_*.pike",get_dir("../local/protocols")||({})), string s )
   {
     sscanf( s, "prot_%s.pike", s );
 #if !constant(SSL.sslfile)
@@ -1877,15 +1911,15 @@ mapping(string:Protocol) build_protocols_mapping()
     {
       case "https":
       case "ftps":
-	continue;
+        continue;
     }
 #endif
     report_debug( "\b%s \b", s );
     catch {
-#ifdef 1
-      protocols[ s ] = lazy_load( ("../local/plugins/protocols/prot_"+s+".pike"),s );
+#ifdef DEBUG
+      protocols[ s ] = (program)("../local/protocols/prot_"+s+".pike");
 #else
-      protocols[ s ] = (program)("../local/plugins/protocols/prot_"+s+".pike");
+      protocols[ s ] = lazy_load( ("../local/protocols/prot_"+s+".pike"),s );
 #endif
     };
   }

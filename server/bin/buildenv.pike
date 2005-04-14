@@ -8,7 +8,7 @@
  *    and various other external stuff happy.
  */
  
-string cvs_version = "$Id: buildenv.pike,v 1.10 2004/07/21 22:24:01 _cvs_dirix Exp $";
+string cvs_version = "$Id: buildenv.pike,v 1.11 2005/04/14 23:06:58 _cvs_dirix Exp $";
 
 class Environment
 {
@@ -189,7 +189,7 @@ void main(int argc, array argv)
     }
   }
 
-  Environment envobj = Environment("/etc/chilimoon//environment");
+  Environment envobj = Environment("/usr/chilimoon/local/environment");
 
   config_env(envobj);
   if (envobj->finalize())

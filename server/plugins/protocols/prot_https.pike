@@ -1,7 +1,7 @@
 // This is a ChiliMoon protocol module.
 // Copyright © 2001, Roxen IS.
 
-// $Id: prot_https.pike,v 2.13 2004/06/04 08:33:20 _cvs_stephen Exp $
+// $Id: prot_https.pike,v 2.14 2005/04/14 23:07:00 _cvs_dirix Exp $
 
 // --- Debug defines ---
 
@@ -48,6 +48,12 @@ class fallback_redirect_request
     }
   }
 
+  void timeout()
+  {
+    SSL3_WERR("fallback_redirect_request::timeout()");
+    die();
+  }
+
   void read_callback(mixed ignored, string s)
   {
     SSL3_WERR("fallback_redirect_request::read_callback(X, %O)\n", s);
@@ -55,9 +61,9 @@ class fallback_redirect_request
     string name;
     string prefix;
 
+    remove_call_out(timeout);
     if (has_value(in, "\r\n\r\n"))
     {
-      //      werror("request = '%s'\n", in);
       array(string) lines = in / "\r\n";
       array(string) req = replace(lines[0], "\t", " ") / " ";
       if (sizeof(req) < 2)
@@ -93,6 +99,18 @@ class fallback_redirect_request
 	     * but better safe than sorry...
 	     */
 	    string ip = (f->query_address(1)/" ")[0];
+	    /* RFC 3986 3.2.2. Host
+	     *
+	     * host       = IP-literal / IPv4address / reg-name
+	     * IP-literal = "[" ( IPv6address / IPvFuture  ) "]"
+	     * IPvFuture  = "v" 1*HEXDIG "." 1*( unreserved / sub-delims / ":" )
+	     *
+	     * IPv6address is as in RFC3513.
+	     */
+	    if (has_value(ip, ":")) {
+	      // IPv6
+	      ip = "[" + ip + "]";
+	    }
 	    prefix = "https://" + ip + ":" + port;
 	  } else if (prefix[..4] == "http:") {
 	    /* Broken MyWorldLocation -- fix. */
@@ -104,6 +122,23 @@ class fallback_redirect_request
       }
       f->set_read_callback(0);
       f->set_write_callback(write_callback);
+    } else {
+      if (sizeof(in) > 5) {
+	string q = replace(upper_case(in[..10]), "\t", " ");
+	if (!(has_prefix(q, "GET ") ||
+	      has_prefix(q, "HEAD ") ||
+	      has_prefix(q, "OPTIONS ") ||
+	      has_prefix(q, "PUT ") ||
+	      has_prefix(q, "PROPFIND "))) {
+	  // Doesn't look like a HTTP request.
+	  // Bail out.
+	  SSL3_WERR(sprintf("fallback_redirect_request->read_callback():\n"
+			    "Doesn't look like HTTP (method: %O)\n", q));
+	  die();
+	  return;
+	}
+      }
+      call_out(timeout, 30);
     }
   }
 
@@ -130,16 +165,28 @@ class http_fallback
   {
     SSL3_WERR("http_fallback(X, %O, %O)\n", n, data);
     //  trace(1);
-    if ( (my_fd->query_connection()->current_write_state->seq_num == 0)
-	 && has_value(lower_case(data), "http"))
+    if (((my_fd->current_write_state||
+    	 my_fd->query_connection()->current_write_state)->seq_num == 0) && 
+	 has_value(lower_case(data), "http"))
     {
-      Stdio.File raw_fd = my_fd->shutdown();
+     Stdio.File raw_fd;
+     if (my_fd->shutdown) {
+     raw_fd = my_fd->shutdown();
+     } else {
+      raw_fd = my_fd->socket;
+      my_fd->socket = 0;
+     }
 
       /* Redirect to a https-url */
+      
       fallback_redirect_request(raw_fd, data,
 				my_fd->config &&
 				my_fd->config->query("MyWorldLocation"),
 				port);
+      if (!my_fd->shutdown) {
+      // Old sslfile contains cyclic references.
+      destruct(my_fd);
+     }
     }
   }
 
@@ -151,7 +198,7 @@ class http_fallback
     my_fd = 0;          /* Not needed any more */
   }
 
-  void create(SSL.sslfile fd)
+  void create(SSL.sslfile|Stdio.File fd)
   {
     my_fd = fd;
     fd->set_alert_callback(ssl_alert_callback);
@@ -163,9 +210,9 @@ class http_fallback
   }
 }
 
-SSL.sslfile accept()
+Stdio.File accept()
 {
-  SSL.sslfile q = ::accept();
+  object(Stdio.File)|SSL.sslfile q = ::accept();
 
   if (q) {
     http_fallback(q);

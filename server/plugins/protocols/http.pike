@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2001, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.414 2004/07/06 09:06:56 _cvs_stephen Exp $";
+constant cvs_version = "$Id: http.pike,v 1.415 2005/04/14 23:06:59 _cvs_dirix Exp $";
 //#define REQUEST_DEBUG
 //#define CONNECTION_DEBUG
 #define MAGIC_ERROR
@@ -21,10 +21,6 @@ inherit RequestID;
 int req_time = HRTIME();
 #endif
 
-#ifdef ID_OBJ_DEBUG
-RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker(this);
-#endif
-
 #ifdef REQUEST_DEBUG
 int footime, bartime;
 #define REQUEST_WERR(X) do {bartime = gethrtime()-footime; werror("%s (%d)\n", (X), bartime);footime=gethrtime();} while (0)
@@ -33,9 +29,15 @@ int footime, bartime;
 #endif
 
 #ifdef FD_DEBUG
+#ifdef REQUEST_DEBUG
+#define FD_WERR(X)     REQUEST_WERR(X)
+#else
+#define FD_WERR(X)     werror("%s\n", (X))
+#endif
 #define MARK_FD(X) do {							\
     int _fd = my_fd && my_fd->query_fd ? my_fd->query_fd() : -1;	\
     REQUEST_WERR("FD " + (_fd == -1 ? sprintf ("%O", my_fd) : _fd) + ": " + (X)); \
+    FD_WERR("FD " + (_fd == -1 ? sprintf ("%O", my_fd) : _fd) + ": " + (X)); \
     mark_fd(_fd, (X)+" "+remoteaddr);					\
   } while (0)
 #else
@@ -68,7 +70,15 @@ int kept_alive;
 	(my_fd->query_read_callback() || my_fd->query_write_callback() || \
 	 my_fd->query_close_callback() ||				\
 	 !zero_type (find_call_out (do_timeout))))			\
-      error ("Got callbacks but not called from backend thread.\n");	\
+       error ("Got callbacks but not called from backend thread.\n"     \
+            "rcb:%O\n"                                                 \
+            "wcb:%O\n"                                                 \
+            "ccb:%O\n"                                                 \
+            "timeout:%O\n",                                            \
+            my_fd->query_read_callback(),                              \
+            my_fd->query_write_callback(),                             \
+            my_fd->query_close_callback(),                             \
+            find_call_out (do_timeout));                               \
   } while (0)
 #else
 #define CHECK_FD_SAFE_USE do {} while (0)
@@ -289,29 +299,35 @@ string scan_for_query( string f )
 private static mixed f, line;
 private static int hstart;
 
-//! Parse a cookie string.
+//! Parse a cookie strings.
 //!
 //! @param contents
-//!   HTTP transport-encoded cookie header value.
+//!   HTTP transport-encoded cookie header value or array with values.
 //!
 //! @returns
 //!   Returns the resulting current cookie mapping.
-mapping(string:string) parse_cookies( string contents )
+mapping(string:string) parse_cookies( array|string contents )
 {
   if(!contents)
     return cookies;
 
 //       misc->cookies += ({contents});
-  foreach(((contents/";") - ({""})), string c)
-  {
-    string name, value;
-    while(sizeof(c) && c[0]==' ') c=c[1..];
-    if(sscanf(c, "%s=%s", name, value) == 2)
-    {
-      value=http_decode_string(value);
-      name=http_decode_string(name);
-      cookies[ name ]=value;
-    }
+
+  array tmp = arrayp(contents) ? contents : ({ contents});
+  
+  foreach(tmp, string cookieheader) {
+    
+    foreach(((cookieheader/";") - ({""})), string c)
+      {
+       string name, value;
+       while(sizeof(c) && c[0]==' ') c=c[1..];
+       if(sscanf(c, "%s=%s", name, value) == 2)
+         {
+           value=http_decode_string(value);
+           name=http_decode_string(name);
+           cookies[ name ]=value;
+         }
+      }
   }
   return cookies;
 }
@@ -408,8 +424,8 @@ int things_to_do_when_not_sending_from_cache( )
     }
     raw = tmp2 * "\n";
   }
-  if(!supports->cookies)
-    config = prestate;
+    if(!supports->cookies && !sizeof(config))
+      config = prestate;
   else
     if( port_obj->set_cookie
        && !cookies->ChiliMoonUserID && sizeof(not_query)
@@ -692,6 +708,8 @@ private final int parse_got_2( )
 	break;
       }
     }
+  } else {
+    leftovers = data;
   }
   TIMER_END(parse_got_2_more_data);
   if (!(< "HTTP/1.0", "HTTP/0.9" >)[prot]) {
@@ -729,11 +747,15 @@ void disconnect()
   conf && conf->connection_drop( this );
   if (my_fd) {
     MARK_FD("HTTP my_fd in HTTP disconnected?");
-    catch(my_fd->close());
+    if (mixed err = catch (my_fd->close())) {
+#ifdef DEBUG
+      report_debug ("Failed to close http(s) connection: " +
+                   describe_error (err));
+ #endif
+    }
     my_fd = 0;
   }
   MERGE_TIMERS(conf);
-  if(do_not_disconnect) return;
   destruct();
 }
 
@@ -741,6 +763,7 @@ static void cleanup_request_object()
 {
   if( conf )
     conf->connection_drop( this );
+  xml_data = 0;
 }
 
 void end(int|void keepit)
@@ -783,12 +806,51 @@ void end(int|void keepit)
   disconnect();
 }
 
+static void close_cb()
+{
+#ifdef CONNECTION_DEBUG
+  werror ("HTTP: Client close ---------------------------------------------\n")
+;
+#else
+  REQUEST_WERR ("HTTP: Got remote close.");
+#endif
+
+  CHECK_FD_SAFE_USE;
+
+  cleanup_request_object();
+
+  data_buffer = 0;
+  pipe = 0;
+
+  // Avoid that the fd is closed by disconnect() - the write direction
+  // might still want to use it. We rely on refcount garbing instead.
+  my_fd = 0;
+
+  disconnect();
+}
+
 static void do_timeout()
 {
   int elapsed = predef::time(1)-time;
   if(time && elapsed >= HTTPTIMEOUT/3)
   {
-    REQUEST_WERR("HTTP: Connection timed out. Closing.");
+#ifdef CONNECTION_DEBUG
+    werror("HTTP: Connection timed out. Closing.\n"
+          "rcb:%O\n"
+          "wcb:%O\n"
+          "ccb:%O\n",
+          my_fd->query_read_callback(),
+          my_fd->query_write_callback(),
+          my_fd->query_close_callback());
+#else
+    REQUEST_WERR(sprintf("HTTP: Connection timed out. Closing.\n"
+                        "rcb:%O\n"
+                        "wcb:%O\n"
+                        "ccb:%O\n",
+                        my_fd->query_read_callback(),
+                        my_fd->query_write_callback(),
+                        my_fd->query_close_callback()));
+#endif
     MARK_FD("HTTP timeout");
     end();
   } else {
@@ -804,7 +866,6 @@ static void do_timeout()
 string link_to(string file, int line, string fun, int eid, int qq)
 {
   if (!file || !line) return "<a>";
-  if(file[0]!='/') file = combine_path(getcwd(), file);
   return ("<a href=\"/(old_error,find_file)/error/?"+
 	  "file="+Roxen.http_encode_url(file)+
 	  (fun ? "&fun="+Roxen.http_encode_url(fun) : "") +
@@ -815,18 +876,70 @@ string link_to(string file, int line, string fun, int eid, int qq)
 	  "\">");
 }
 
-static string error_page_header (string title)
+static string error_page(string line1, string title, string body)
 {
-  title = Roxen.html_encode_string (title);
-  return #"<html><head><title>" + title + #"</title></head>
-<body bgcolor='white' text='black' link='#ce5c00' vlink='#ce5c00'>
-<table width='100%'><tr>
-<td><a href='http://www.roxen.com/'><imgs border='0' src='/$/roxen-small' /></a></td>
-<td><b><font size='+1'>" + title + #"</font></b></td>
-<td align='right'><font size='+1'>ChiliMoon " + Roxen.html_encode_string (roxen_version()) + #"</font></td>
-</tr></table>
-
-";
+  return #"\
+<html><head>
+  <title>Internal Server Error</title>
+  <style>
+    .msg  { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      12px;
+            line-height:    160% }
+    .big  { font-family:    georgia, times, serif;
+            font-size:      18px;
+            padding-top:    6px;
+            padding-bottom: 20px }
+    .info { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      10px;
+            color:          #999999 }
+    .list { padding-left:   20px;
+            list-style-type:square; }
+    .code { font-family:    monaco, courier, monospace;
+            font-size:      10px;
+            color:          #404070; }
+  </style>
+</head>
+<body text='#000000' style='margin: 0; padding: 0' vlink='#2331d1' 
+      rightmargin='0' leftmargin='0' alink='#f6f6ff' link='#0000ee' 
+      bgcolor='#f2f1eb' bottommargin='0' topmargin='0'>
+<table border='0' cellspacing='0' cellpadding='0' height='99%'>
+  <tr>
+    <td><img src='/internal-roxen-unit' height='30' /></td>
+  </tr><tr>
+    <td></td>
+    <td><img src='/$/chilimoon-black' /></td>
+    <td><img src='/$/unit' width='30' /></td>
+    <td valign='bottom'><img src='/$/internal-roxen-server-error' /></td>
+  </tr><tr>
+    <td><img src='/$/unit' height='30' /></td>
+  </tr><tr>
+    <td colspan='3'></td>
+    <td>
+      <div class='msg'>" + line1 + #"</div>
+      <div class='big'>" + title + #"</div>
+    </td>
+  </tr><tr>
+    <td></td>
+    <td colspan='3'>
+      <div class='msg'>" + body + #"</div>
+    </td>
+  </tr><tr valign='bottom' height='100%'>
+    <td colspan='4' align='right'>
+      <img src='/$/unit' height='20' />
+      <table border='0' cellspacing='0' cellpadding='0'>
+        <tr>
+          <td><img src='/$/chili-small-black.gif' /></td>
+          <td class='info'>
+           &nbsp;&nbsp;<b>" + roxen_product_name + #"</b>
+           <font color='#ffbe00'>|</font> " + roxen_dist_version + #"
+          </td>
+        </tr>
+      </table>
+      <img src='/$/unit' height='15' />
+    </td>
+  </tr>
+</table>
+</body></html>";
 }
 
 static string get_err_md5(array(string|array(string)|array(array)) err_info)
@@ -857,56 +970,65 @@ string format_backtrace(int eid, string|void md5)
   array(string|array(string)|array(array)) err_info = get_err_info(eid, md5);
 
   if (!err_info) {
-    return error_page_header("Unregistred Error");
+    return error_page("Unregistered error", "", "");
   }
 
   [string msg, array(string) rxml_bt, array(array) bt,
    string raw_bt_descr, string raw_url, string raw] = err_info;
 
-  string res = error_page_header ("Internal Server Error") +
-    "<h1>" + replace (Roxen.html_encode_string (msg), "\n", "<br />\n") + "</h1>\n";
+  string title = replace(Roxen.html_encode_string(msg), "\n", "<br />\n");
+  string body = "";
 
   if (rxml_bt && sizeof (rxml_bt)) {
-    res += "<h3>RXML frame backtrace</h3>\n<ul>\n";
-    foreach (rxml_bt, string line)
-      res += "<li>" + Roxen.html_encode_string (line) + "</li>\n";
-    res += "</ul>\n\n";
+    body +=
+      "RXML frame backtrace"
+      "<ul class='list'>";
+    foreach(rxml_bt, string line)
+      body += "<li class='code'>" + Roxen.html_encode_string(line) + "</li>\n";
+    body += "</ul>\n";
   }
 
   if (bt && sizeof (bt)) {
-    res += "<h3>Pike backtrace</h3>\n<ul>\n";
+    body +=
+      "Pike backtrace"
+      "<ul class='list'>";
     int q = sizeof (bt);
     foreach(bt, [string file, int line, string func, string descr])
     {
 #if constant(PIKE_MODULE_RELOC)
       file = file && master()->relocate_module(file);
 #endif
-      res += "<li value="+(q--)+">" +
-	link_to (file, line, func, eid, q) +
-	(file ? Roxen.html_encode_string (file) : "<i>Unknown program</i>") +
+      q--;
+      body +=
+       "<li>" +
+       link_to(file, line, func, eid, q) +     //  inserts <a>
+       (file ? Roxen.html_encode_string(file) : "<i>Unknown program</i>") +
 	(line ? ":" + line : "") +
 	"</a>" + (file ? Roxen.html_encode_string (get_cvs_id (file)) : "") + ":<br />\n" +
-	replace (Roxen.html_encode_string (descr),
-		 ({"(", ")", " "}), ({"<b>(</b>", "<b>)</b>", "&nbsp;"})) +
-	"</li>\n";
+       "</a>" +
+       (file ? Roxen.html_encode_string(get_cvs_id(file)) : "") +
+       "<br /><span class='code'>" +
+       replace(Roxen.html_encode_string(descr), " ", "&nbsp;") +
+       "</span></li>\n";
     }
-    res += "</ul>\n\n";
+    body += "</ul>\n\n";
   }
 
-  res += ("<p><b><a href=\"/(old_error,plain)/error/?"
-	  "error="+eid+
-	  "&error_md5="+get_err_md5(get_err_info(eid))+
-	  "\">"
-	  "Generate text only version of this error message, for bug reports"+
-	  "</a></b></p>\n\n");
-  return res+"</body></html>";
+  body +=
+    "<p>Generate "
+    "<a href=\"/(old_error,plain)/error/?"
+    "error=" + eid +
+    "&error_md5=" + get_err_md5(get_err_info(eid)) +
+    "\">"
+    "text-only version</a> of this error message for bug reports.</p>";
+  return error_page("The server failed to fulfill your query.", title, body);
 }
 
 string generate_bugreport(string msg, array(string) rxml_bt, array(string) bt,
 			  string raw_bt_descr, string raw_url, string raw)
 {
-  return ("ChiliMoon version: "+version()+
-	  (core.real_version != version()?
+  return ("ChiliMoon version: "+core.version()+
+	  (core.real_version != core.version()?
 	   " ("+core.real_version+")":"")+
 	  "\nPike version: " + predef::version() +
 	  "\nRequested URL: "+raw_url+"\n"
@@ -1033,13 +1155,16 @@ void internal_error(array _err)
       werror("Internal server error in internal_error():\n" +
 	     describe_backtrace(err2)+"\n while processing \n"+
 	     describe_backtrace(err));
-      file = Roxen.http_low_answer(500, "<h1>Error: The server failed to "
-			     "fulfill your query, due to an "
-			     "internal error in the internal error routine.</h1>");
-    }
+      file =
+       Roxen.http_low_answer(500, error_page("The server failed to fulfill "
+                                             "your query due to an internal "
+                                             "error in the internal error "
+                                             "routine.", "", ""));
+}
   } else {
-    file = Roxen.http_low_answer(500, "<h1>Error: The server failed to "
-			   "fulfill your query, due to an internal error.</h1>");
+    file =
+      Roxen.http_low_answer(500, error_page("The server failed to fulfill "
+                                           "your query.", "", ""));
   }
   report_error("Internal server error: " +
 	       describe_backtrace(err) + "\n");
@@ -1062,10 +1187,30 @@ int wants_more()
   return !!cache;
 }
 
+static object(this_program) chained_to;
+
+// Paranoia.
+static void destroy()
+{
+  if (chained_to) {
+    werror("HTTP: Still chained in destroy!\n");
+    call_out(chained_to->my_fd_released, 0);
+    chained_to = 0;
+  }
+}
+
 void do_log(int fsent)
 {
+#ifdef CONNECTION_DEBUG
+  werror ("HTTP: Response sent ============================================\n")
+;
+#endif
   MARK_FD("HTTP logging"); // fd can be closed here
-  
+  if (chained_to) {
+    // Release the other sender.
+    call_out(chained_to->my_fd_released, 0);
+    chained_to = 0;
+  }
   TIMER_START(do_log);
   if(conf)
   {
@@ -1115,12 +1260,16 @@ void timer(int start)
 string handle_error_file_request (string msg, array(string) rxml_bt, array(array) bt,
 				  string raw_bt_descr, string raw_url, string raw)
 {
-  string data = Stdio.read_bytes(variables->file);
-
+  // Check that the file is valid and is present in the backtrace.
+  string data;
+  foreach(bt, array frame) {
+    if (frame[0] == variables->file) {
+      data = Stdio.read_bytes(variables->file);
+      break;
+    }
+  }
   if(!data)
-    return error_page_header (variables->file) +
-      "<h3><i>Source file could not be read</i></h3>\n"
-      "</body></html>";
+    return error_page("Source file could not be read:", variables->file, "");
 
   string down;
   int next = (int) variables->off + 1;
@@ -1147,13 +1296,13 @@ string handle_error_file_request (string msg, array(string) rxml_bt, array(array
   if(sizeof(lines)>off) {
     sscanf (lines[off], "%[ \t]%s", string indent, string code);
     if (!sizeof (code)) code = "&nbsp;";
-    lines[off] = indent + "<font size='+1'><b>"+down+code+"</a></b></font></a>";
+    lines[off] = indent + "<font size='+1'><b>"+down+code+"</a></b></font>";
   }
   lines[max(off-20,0)] = "<a name=here>"+lines[max(off-20,0)]+"</a>";
-
-  return error_page_header (variables->file) +
-    "<font size='-1'><pre>" + lines*"\n" + "</pre></font>\n"
-    "</body></html>";
+  return error_page("Source code for", variables->file,
+                   "<span class='code'><pre>" +
+                   (lines * "\n") +
+                   "</pre></span>");
 }
 
 // The wrapper for multiple ranges (send a multipart/byteranges reply).
@@ -1375,7 +1524,7 @@ void send_result(mapping|void result)
   {
     if((file->file == -1) || file->leave_me)
     {
-      TIMER_END(send_result);
+      TIMER_END(send_result)
       file = 0;
       pipe = 0;
       if(do_not_disconnect) 
@@ -1521,7 +1670,6 @@ void send_result(mapping|void result)
           }
 	}
       }
-
       head_string = sprintf("%s %d %s\r\n", prot, file->error,
 			    head_status || errors[file->error] || "");
 
@@ -1536,6 +1684,37 @@ void send_result(mapping|void result)
       {
 	heads->Connection = "close";
 	misc->connection = "close";
+      }
+      // Check for wide headers.
+      // FIXME: Assumes no header names are wide.
+      foreach(heads; string header_name; string content) {
+       if (String.width(content) > 8) {
+         array(array(string)|int) tokenized =
+           MIME.decode_words_tokenized(string_to_utf8(content));
+         foreach(tokenized, array(string)|int token) {
+           if (arrayp(token)) {
+             string raw = utf8_to_string(token[0]);
+             if (String.width(raw) > 8) {
+               if (token[1]) {
+                 // Should not happen in normal circumstances.
+                 catch {
+                   // Attempt to recode in UTF-8.
+                   token[0] = string_to_utf8(Locale.Charset.
+                                             decoder(token[1])->
+                                             feed(raw)->drain());
+                 };
+               }
+               token[1] = "utf-8";
+             } else {
+               token[0] = raw;
+             }
+           }
+         }
+         string q = MIME.encode_words_quoted(tokenized, "q");
+         string b = MIME.encode_words_quoted(tokenized, "b");
+         // Prefer QP to BASE-64 if they are the same length.
+         heads[header_name] = (sizeof(b)<sizeof(q))?b:q;
+       }
       }
 
 	if( mixed err = catch( head_string += Roxen.make_http_headers( heads ) ) )
@@ -1558,10 +1737,6 @@ void send_result(mapping|void result)
 	  }
 	  head_string += "\r\n";
 	}
-
-	if (sscanf (heads["Content-Type"], "; charset=%s", string charset) ||
-	    String.width( head_string ) > 8 )
-          head_string = output_encode( head_string, 0, charset )[1];
         conf->hsent += sizeof(head_string);
     }
   else
@@ -1581,10 +1756,13 @@ void send_result(mapping|void result)
       {
         if( file->len>0 && // known length.
 	    ((file->len + sizeof( head_string )) < 
-             conf->datacache->max_file_size) 
+             conf->datacache->max_file_size)
+	     // vvv Relying on the interpreter lock from here.
             && misc->cachekey )
         {
-          string data = "";
+         misc->cachekey->activate();
+         // ^^^ Relying on the interpreter lock to here.
+         string data = "";
           if( file->file )   data += file->file->read();
           if( file->data )   data += file->data;
 	  MY_TRACE_ENTER (sprintf ("Storing in ram cache, entry: %O", raw_url), 0);
@@ -1643,7 +1821,8 @@ void send_result(mapping|void result)
     }
     else 
     {
-      if( sizeof( head_string ) < (HTTP_BLOCKING_SIZE_THRESHOLD))
+      if( !kept_alive &&
+         (strlen(head_string) < (HTTP_BLOCKING_SIZE_THRESHOLD)))
       {
 #ifdef CONNECTION_DEBUG
 	werror ("HTTP: Response =================================================\n"
@@ -1779,9 +1958,8 @@ string url_base()
 /* We got some data on a socket.
  * =================================================
  */
-int processed;
 // array ccd = ({});
-void got_data(mixed fooid, string s)
+void got_data(mixed fooid, string s, void|int chained)
 {
 #ifdef CONNECTION_DEBUG
   werror ("HTTP: Request --------------------------------------------------\n"
@@ -1808,10 +1986,14 @@ void got_data(mixed fooid, string s)
       data_buffer->add(s);
       have_data += sizeof(s);
 
+      REQUEST_WERR("HTTP: We want more data.");
+
       // Reset timeout.
       remove_call_out(do_timeout);
       call_out(do_timeout, HTTPTIMEOUT);
-      REQUEST_WERR("HTTP: We want more data.");
+
+      if (chained)
+       my_fd->set_nonblocking(got_data, 0, close_cb);
       return;
     }
     if(data_buffer) {
@@ -1842,6 +2024,8 @@ void got_data(mixed fooid, string s)
     {
       case 0:
 	REQUEST_WERR("HTTP: Request needs more data.");
+	 if (chained)
+	   my_fd->set_nonblocking(got_data, 0, close_cb);
 	return;
 
       case 1:
@@ -1866,8 +2050,9 @@ void got_data(mixed fooid, string s)
     if( method == "GET" || method == "HEAD" ) {
       misc->cacheable = INITIAL_CACHEABLE; // FIXME: Make configurable.
 #ifdef DEBUG_CACHEABLE
-      report_debug("===> Request for %s initiated cacheable to %d.\n", raw_url,
-		   misc->cacheable);
+  report_debug("<=== Request for %s returned cacheable %d (proto cache %s).\n",
+              raw_url, misc->cacheable,
+              misc->no_proto_cache ? "disabled" : "enabled");
 #endif
     }
 
@@ -1953,7 +2138,6 @@ void got_data(mixed fooid, string s)
     my_fd->set_close_callback(0);
     my_fd->set_read_callback(0);
     if (my_fd->set_accept_callback) my_fd->set_accept_callback(0);
-    processed=1;
 
     remove_call_out(do_timeout);
 #ifdef RAM_CACHE
@@ -2068,9 +2252,6 @@ void got_data(mixed fooid, string s)
   })
   {
     report_error("Internal server error: " + describe_backtrace(err));
-    my_fd->set_blocking();
-    my_fd->close();
-    my_fd = 0;
     disconnect();
   }
 }
@@ -2143,6 +2324,7 @@ static void create(object f, object c, object cc)
   if(f)
   {
     f->set_nonblocking(got_data, f->query_write_callback(), end);
+    f->set_nonblocking(got_data, f->query_write_callback(), close_cb);
     my_fd = f;
     CHECK_FD_SAFE_USE;
     MARK_FD("HTTP connection");
@@ -2159,46 +2341,34 @@ static void create(object f, object c, object cc)
 void chain( object f, object c, string le )
 {
   my_fd = f;
+
+#ifdef DEBUG
+  if (this_thread() != roxen->backend_thread)
+    error ("Not called from backend\n");
+#endif
+
+  CHECK_FD_SAFE_USE;
+
   f->set_nonblocking(0, f->query_write_callback(), end);
   port_obj = c;
-  processed = 0;
-  do_not_disconnect=-1;		// Block destruction until we return.
   MARK_FD("HTTP kept alive");
   time = predef::time();
 
-  if ( le && sizeof( le ) )
-    got_data( 0,le );
+  if ( le && sizeof( le ) ) {
+#ifdef CONNECTION_DEBUG
+    werror("HTTP: Leftovers: %O\n", le);
+#else
+    REQUEST_WERR(sprintf("HTTP: %d bytes left over.\n", sizeof(le)));
+#endif
+    got_data( 0,le, 1);
+  }
   else
   {
     // If no pipelined data is available, call out...
     remove_call_out(do_timeout);
     call_out(do_timeout, HTTPTIMEOUT);
+    my_fd->set_nonblocking(got_data, 0, close_cb);
   }
-
-  if(!my_fd)
-  {
-    if(do_not_disconnect == -1)
-    {
-      do_not_disconnect=0;
-      disconnect();
-    }
-  }
-  else
-  {
-    if(do_not_disconnect == -1)
-      do_not_disconnect = 0;
-    f->set_nonblocking(!processed && got_data, f->query_write_callback(), end);
-  }
-}
-
-string _sprintf(int t)
-{
-  if(t!='O') return 0;
-  return "RequestID(" + (raw_url||"") + ")"
-#ifdef ID_OBJ_DEBUG
-    + (__marker ? "[" + __marker->count + "]" : "")
-#endif
-    ;
 }
 
 Stdio.File connection( )
