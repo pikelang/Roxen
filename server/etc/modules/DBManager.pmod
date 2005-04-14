@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.60 2004/07/05 09:34:04 grubba Exp $
+// $Id: DBManager.pmod,v 1.61 2005/04/14 15:52:33 wellhard Exp $
 
 //! Manages database aliases and permissions
 
@@ -608,7 +608,7 @@ void set_url( string db, string url, int is_internal )
 {
   query( "UPDATE dbs SET path=%s, local=%d WHERE name=%s",
 	 url, is_internal, db );
-//   changed();
+  changed();
 }
 
 void copy_db_md( string oname, string nname )
