@@ -6,7 +6,7 @@
 
 mapping actions = ([
   // name         title                      function   must be internal
-  "move":   ({  _(401,"Copy or move database"),move_db,   0 }),
+  "move":   ({  _(401,"Copy or rename database"),move_db,   0 }),
   "delete": ({  _(402,"Delete this database"), delete_db, 0 }),
   "group":  ({  _(324,"Change group for this database"), change_group, 0 }),
   "clear":  ({  _(403,"Delete all tables"),    clear_db,  0 }),
@@ -79,9 +79,10 @@ mixed backup_db( string db, RequestID id )
 mixed move_db( string db, RequestID id )
 {
   string warning="";
+  int internal = DBManager.is_internal( db );
   if( id->variables["ok.x"] )
   {
-    if( id->variables->type=="external" )
+    if( !internal )
     {
       if( !strlen(id->variables->url) )
         warning= "<font color='&usr.warncolor;'>"
@@ -116,31 +117,33 @@ mixed move_db( string db, RequestID id )
 			     _(410,"%s is a MySQL keyword, used by MySQL."
 			       "Please select another name")+
 			     "</font>", id->variables->name );
+	 if( DBManager.cached_get( id->variables->name ) &&
+	     db != id->variables->name )
+	   warning = sprintf("<font color='&usr.warncolor;'>"+
+			     _(0,"the database %s does already exist")+
+			     "</font>", id->variables->name );
+	 // FIXME: Also check if the name is a valid db name.
 	 break;
       }
     if( !strlen( warning ) )
     {
-      int ni, move_later;
       // In all cases, create the new db.
-      if( catch {
-	DBManager.create_db( id->variables->name, id->variables->url,
-			     (ni = (id->variables->type == "internal")),
-			     id->variables->group );
-      } )
-	move_later = 1;
-
-      Sql.Sql odb = DBManager.cached_get( db );
-      if( move_later )
-	DBManager.set_url( id->variables->name,
-			   id->variables->url,
-			   ni );
-      Sql.Sql ndb = DBManager.cached_get( id->variables->name );
-
-      // And copy the data...
-      if( DBManager.is_internal( db ) && ni )
+      if(!(DBManager.cached_get(id->variables->name))) {
+	DBManager.create_db(id->variables->name, id->variables->url,
+			    internal, id->variables->group);
+      } else {
+	DBManager.set_url(id->variables->name,
+			  id->variables->url,
+			  internal);
+      }
+      
+      // Intern
+      //   Copy if name has changed.
+      // Extern
+      //   Just copy the meta information.
+      if(internal)
       {
-	// Both are internal.
-	// So... Use the backup thingies.
+	// Internal db, use the backup thingies to copy the data
 	if( db != id->variables->name )
 	{
 	  DBManager.backup( db, "/tmp/tmpdb" );
@@ -148,84 +151,9 @@ mixed move_db( string db, RequestID id )
 	  DBManager.delete_backup( db, "/tmp/tmpdb" );
 	}
       }
-      else
-      {
-	foreach( DBManager.db_tables( db ), string table )
-	{
-	  // Note: This _only_ works with MySQL.
-	  mixed err;
-
-	  werror( "Copying the table "+table+" ... ");
-
-	  if( err = catch {
-	    string def;
-	    if( catch( def = 
-		   odb->query( "SHOW CREATE TABLE "+table )[0]
-		       ["Create Table"] ) )
-	    {
-	      array res = odb->query( "DESCRIBE "+table );
-	      report_warning( _(411,"While copying %s.%s: "
-				"The source database does not "
-				"support %s.\nThe copy will not "
-				"contain all metadata")+"\n",
-			      db,table,"SHOW CREATE TABLE" );
-	      def = "CREATE TABLE "+table+ "(";
-	      array defs = ({});
-	      int has_multi_pri = -1;
-	      foreach( res->Key, string p )
-		has_multi_pri += (p == "PRI");
-	      foreach( res, mapping m )
-	      {
-		// FIXME: A real keyword list with alternatives here.
-		if( m->Field == "when" )
-		{
-		  report_warning( _(412,"The source database used the string "
-				    "%s as a fieldname.\nThis is reserved in "
-				    "newer MySQL versions.\nSubstituting "
-				    "with %s")+"\n",
-				  m->Field, "whn" );
-		  m->Field = "whn";
-		}
-
-		defs +=
-		  ({
-		    (m->Field+" "+m->Type+" "
-		     +(m->Null=="YES"?"":"NOT NULL ")+
-		     ("DEFAULT "+(m->Default?"'"+m->Default+"'":"NULL")+" ")+
-		     ((has_multi_pri<1 && (m->Key == "PRI")) ?
-		      ("PRIMARY KEY") : "" )
-		     + " " +m->Extra )
-		  });
-	      }
-	      def += defs * "," + ")";
-	    }
-	    
-	    sscanf( def, "%s TYPE=%*s", def );
-	    if( catch ( ndb->query( def ) ) )
-	      ndb->query( "DELETE FROM "+table );
-	    foreach( odb->query( "SELECT * FROM "+table ), mapping row )
-	    {
-	      if( row->when )
-	      {
-		row->whn = row->when;
-		m_delete( row, "when" );
-	      }
-	      ndb->query( DBManager.insert_statement( id->variables->name,
-						      table, row ) );
-	    }
-	  })
-	  {
-	    report_error( _(413,"Failed to copy data from source table.\n")+
-			  describe_error( err )+"\n" );
-	    break;
-	  }
-	}
-      }
-
       switch( id->variables->what )
       {
-	case "copy": // move, no delete
-	case "dup":  // create new. Same as copy right now.
+	case "copy": // copy, no delete
 	  if( db != id->variables->name )
 	    DBManager.copy_db_md( db, id->variables->name );
 	  // Done.
@@ -247,64 +175,48 @@ mixed move_db( string db, RequestID id )
   if(!id->variables->name)
     id->variables->name = db;
 
-  if(!id->variables->type)
-    id->variables->type =
-      DBManager.is_internal( db ) ? "internal" : "external";
-
   if( !id->variables->url )
     id->variables->url  = DBManager.db_url( db ) || "";
 
   return
-    "<gtext scale=0.6>"+_(414,"Move or copy this database")+"</gtext><br />\n"
+    "<gtext scale=0.6>"+_(414,"Copy or rename this database")+"</gtext><br />\n"
     +warning+
     "<table>\n"
-    "<tr><td><b>"+_(415,"Action")+":</b></td>"
-    "<td><default variable='form.what'><select name=what>\n"
-//     "   <option value='copy'>"+_(0,"Move but do not delete old data")+
-//     "</option>\n"
-    "   <option value='dup'>"+_(416,"Copy the data to a new database")+
-    "</option>\n"
-    "   <option value='move'>"+_(417,"Move database")+"</option>\n"
-    "  </select></default>\n"
+    
     "  <tr>\n"
-    "    <td><b>"+ _(418,"New name")+
-    ":</b></td> <td><input name='name' value='&form.name;'/></td>\n"
-    "<td><b>"+_(419,"Type")+":</b></td> <td width='100%'>\n"
-#"   <default variable=form.type><select name=type>
-       <option value='internal'>  Internal  </option>
-       <option value='external'>  External  </option>
-     </select></default>
-    </td>
-  </tr>
-  <tr>
-  <td valign=top colspan='2'>
-    <i>"+
-    _(420,"The new name of the database. You do not have to change the "
-      "name if you change the database type from internal to external, "
-      "or change the URL of an external database. To make it easy on "
-      "your users, use all lowercaps characters, and avoid hard to type "
-      "characters")+
-    "</i>\n"
-
-    "</td>\n"
-    "<td valign=top colspan='2' width='100%'>\n"
-
-    "<i>"+
-    _(421,"The database type. Internal means that it will be stored"
-      " in the Roxen MySQL database, and the permissions of the"
-      " database will be automatically manged by Roxen. External"
-      " means that the database resides in another database.")+"</i>\n"
-    "</td>\n"
-    "</tr>\n"
-    "<tr>\n"
-    "<td><nbsp><b>URL:</b></nbsp></td>\n"
-    "<td colspan='3'><input name='url' size=50 value='&form.url;'/></td>\n"
-    "</tr>\n"
-    "<tr><td colspan='4'><i>\n"+
-    _(422,"This URL is only used for </i>External<i> databases, it is "
-      "totally ignored for databases defined internally in Roxen ")+
-    "\n</i>\n"
-    "</td></tr>\n"
+    "    <td><b>"+_(415,"Action")+":</b></td>\n"
+    "    <td><default variable='form.what'>\n"
+    "      <select name='what'>\n"
+    "        <option value='copy'>"+_(416,"Copy the data to a new database")+"</option>\n"
+    "        <option value='move'>"+_(417,"Rename database")+"</option>\n"
+    "      </select></default>\n"
+    "    </td>\n"
+    "  </tr>\n"
+    "  <tr>\n"
+    "    <td><b>"+_(418,"New name")+":</b></td>\n"
+    "    <td><input name='name' value='&form.name;'/></td>\n"
+    "  </tr>\n"
+    
+    "  <tr>\n"
+    "    <td valign=top colspan='2'>\n"
+    "      <i>"+_(0,"The new name of the database. To make it easy on "
+		  "your users, use all lowercaps characters, and avoid hard to type "
+		  "characters.")+"</i>\n"
+    "    </td>\n"
+    "  </tr>\n"+
+    
+    (internal?"":
+     " <tr>\n"
+     "   <td><nbsp><b>URL:</b></nbsp></td>\n"
+     "   <td colspan='3'><input name='url' size=50 value='&form.url;'/></td>\n"
+     " </tr>\n"
+     " <tr>"
+     "   <td colspan='4'><i>\n"+
+     "     "+_(422,"This URL is only used for </i>External<i> databases, it is "
+	       "totally ignored for databases defined internally in Roxen. ")+"\n</i>\n"
+     "   </td>"
+     " </tr>\n")+
+    
     "</table>\n"+
     "<table width='100%'><tr><td>"
     "<input type=hidden name=action value='&form.action;' />"
