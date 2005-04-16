@@ -140,6 +140,7 @@ function layerLoadHandler(file_loader)
   show(layer);
 }
 
+
 var file_loader;
 
 // loadLayer: Loads document <src> into the layer <layer_name> with the
@@ -197,7 +198,10 @@ function loadLayer(e, layer_name, src, properties, parent)
       //  Define notification function
       req.onreadystatechange = function() {
 	if (req.readyState == 4)
-	  if (req.status == 200) {
+	  //  Safari 1.3/2.0 reports "undefined" for repeated requests to
+	  //  the same URL. It's also over-cached even if the server sets
+	  //  expire headers correctly, but not much we can do about that.
+	  if (req.status == 200 || req.status == undefined) {
 	    var o = getObject(layer_name);
 	    o.innerHTML = req.responseText;
 	    boundPopup(layer_name);
