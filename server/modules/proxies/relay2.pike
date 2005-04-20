@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.33 2004/06/30 16:59:18 mast Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.34 2005/04/20 12:06:11 mast Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -331,14 +331,13 @@ class Relayer
   multiset options;
   int last;
 
-  string do_replace( string f )
+  string do_replace( array(string) to )
   {
-    array to = (array(string))r->split( f );
     array from = map( indices( to ), lambda(int q ){
                                        return "\\"+(q+1);
                                      } );
     if( sizeof( to ) )
-      return predef::replace( url, from, to );
+      return predef::replace( url, from, (array(string)) to );
     return url;
   }
 
@@ -349,10 +348,20 @@ class Relayer
     if( id->query )
       file = file+"?"+id->query;
 
-    if( r->match( file ) )
+    // Workaround widestring deficiency in the regexp module.
+    int use_utf8 = 0;//String.width (file) > 8;
+    if (use_utf8) file = string_to_utf8 (file);
+
+    if (array(string) split = r->split( file ) )
     {
+      if (use_utf8)
+	for (int i = sizeof (split); i--;)
+	  if (stringp (split[i]))
+	    // Catch errors in case the split broke apart a utf8 sequence.
+	    catch (split[i] = utf8_to_string (split[i]));
+
       stats[ pattern ]++;
-      Relay( id, do_replace( file ), options );
+      Relay( id, do_replace( split ), options );
       return 1;
     }
   }
