@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.484 2005/04/06 19:16:23 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.485 2005/04/20 08:55:57 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5461,6 +5461,13 @@ class TagEmitValues {
 	m->values=m->values / (m->split || "\000");
     }
 
+    //  Randomize output order? (Can only be applied to arrays since other
+    //  types are inherently random.)
+    if (lower_case(m->randomize || "no") == "yes") {
+      if (arrayp(m->values))
+        Array.shuffle(m->values);
+    }
+
     if(mappingp(m->values))
       return map( indices(m->values),
 		  lambda(mixed ind) {
@@ -9089,6 +9096,10 @@ the respective attributes below for further information.</p></desc>
 <attr name='trimwhites'><p>
  Trims away all leading and trailing white space charachters from the
  values.</p>
+</attr>
+
+<attr name='randomize' value='yes|no'><p>
+  Outputs the values in random order.</p>
 </attr>
 
 <attr name='from-scope' value='name'>
