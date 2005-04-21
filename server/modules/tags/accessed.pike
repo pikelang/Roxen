@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.54 2004/06/30 16:59:23 mast Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.55 2005/04/21 11:22:28 erikd Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -403,7 +403,9 @@ class SQLCounter {
   constant defs = ([
     "hits":({  "path VARCHAR(255) PRIMARY KEY",
 	       "hits INT UNSIGNED DEFAULT 0",
-	       "made INT UNSIGNED" }),  ]);
+	       "made INT UNSIGNED",
+	       "real_path BLOB",
+	   }),  ]);
   
   void create()
   {
@@ -415,6 +417,12 @@ class SQLCounter {
 			   "Hits per file database for the accessed tag "
 			   "and entities", 0 ) )
       sql_query("INSERT INTO &hits; (path,made) VALUES ('///',"+time(1)+")" );
+    if(!sizeof(sql_query("DESCRIBE &hits; real_path"))) {
+      // It is an old database definition! We have to upgrade!!
+      report_notice("Altered &hits; - accessed module table - by adding real_path column.\n");
+      sql_query("ALTER TABLE &hits; ADD real_path BLOB");
+      sql_query("ALTER TABLE &hits; ADD INDEX real_path (real_path(100)) ");
+    }
   }
 
   int creation_date(void|string file)
@@ -429,8 +437,8 @@ class SQLCounter {
   {
     if(cache_lookup("access_entry:"+my_configuration()->name, file))
       return;
-    catch(sql_query("INSERT INTO &hits; (path,made) VALUES (%s,%d)",
-		    fix_file( file ), time(1 ) ));
+    catch(sql_query("INSERT INTO &hits; (path,made,real_path) VALUES (%s,%d,%s)",
+		    fix_file( file ), time(1 ), file ));
     cache_set("access_entry:"+my_configuration()->name, file, 1);
   }
 
