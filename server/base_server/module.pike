@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module.pike,v 1.217 2004/09/19 18:07:22 grubba Exp $
+// $Id: module.pike,v 1.218 2005/04/22 18:09:16 wellhard Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -250,6 +250,70 @@ array(string) location_urls()
       urls[i] = replace(urls[i], "*", hostname);
   }
   return map (urls, `+, loc[1..]);
+}
+
+string location_url()
+//! Returns an http or https url including the modules mountpoint. The
+//! ip-number for the corresponding port will be added to the fragment
+//! of the url. An http url will be prioritized over an https url.
+{
+  string short_array(array a)
+  {
+    return "({ " + (map(a, lambda(object o) {
+			     return sprintf("%O", o);
+			   })*", ") + " })";
+  };
+  string loc = query_location();
+  if(!loc) return 0;
+  if(!_my_configuration)
+    error("Please do not call this function from create()!\n");
+  string hostname;
+  string world_url = _my_configuration->query("MyWorldLocation");
+  if(world_url)
+    sscanf(world_url, "%*s://%s%*[:/]", hostname);
+  if(!hostname)
+    hostname = gethostname();
+#ifdef LOCATION_URL_DEBUG
+  werror("  Hostname: %O\n", hostname);
+#endif
+  Standards.URI candidate_uri;
+  array(string) urls =
+    filter(_my_configuration->registered_urls, has_prefix, "http:") +
+    filter(_my_configuration->registered_urls, has_prefix, "https:");
+  foreach(urls, string url)
+  {
+#ifdef LOCATION_URL_DEBUG
+    werror("  URL: %s\n", url);
+#endif
+    mapping url_info = roxen.urls[url];
+    if(!url_info || !url_info->port || url_info->conf != _my_configuration)
+      continue;
+    Protocol p = url_info->port;
+#ifdef LOCATION_URL_DEBUG
+    werror("  Protocol: %s\n", p);
+#endif
+    Standards.URI uri = Standards.URI(url);
+    uri->fragment = "ip="+p->ip;
+    if(has_value(uri->host, "*") || has_value(uri->host, "?"))
+      if(glob(uri->host, hostname))
+	uri->host = hostname;
+      else {
+	if(!candidate_uri) {
+	  candidate_uri = uri;
+	  candidate_uri->host = hostname;
+	}
+	continue;
+      }
+    return (string)uri + loc[1..];
+  }
+  if(candidate_uri) {
+    report_warning("Warning: Could not find any suitable ports, continuing anyway. "
+		   "Please make sure that your Primary Server URL matches "
+		   "at least one port. Primary Server URL: %O, URLs: %s.\n",
+		 world_url, short_array(urls));
+    return (string)candidate_uri + loc[1..];
+  }
+  return 0;
 }
 
 /* By default, provide nothing. */
