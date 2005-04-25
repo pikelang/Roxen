@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.103 2004/08/18 17:00:45 mast Exp $
+ * $Id: ftp.pike,v 2.104 2005/04/25 08:50:17 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -3816,6 +3816,11 @@ class FTPSession
 
 	  return;
 	}
+      }
+      if (!port_obj->query_option("rfc2428_support") &&
+	  (< "EPRT", "EPSV" >)[cmd]) {
+	send(502, ({ sprintf("support for '%s' is disabled.", cmd) }));
+	return;
       }
       if (this_object()["ftp_"+cmd]) {
 	conf->requests++;
