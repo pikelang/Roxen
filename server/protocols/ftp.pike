@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.104 2005/04/25 08:50:17 grubba Exp $
+ * $Id: ftp.pike,v 2.105 2005/04/26 15:34:15 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -3006,6 +3006,8 @@ class FTPSession
 
   void ftp_EPRT(string args)
   {
+    // Specified by RFC 2428:
+    // Extensions for IPv6 and NATs.
     if (epsv_only) {
       send(530, ({ "'EPRT': Method not allowed in EPSV ALL mode." }));
       return;
@@ -3026,17 +3028,27 @@ class FTPSession
       send(501, ({ "I don't understand your parameters." }));
       return;
     }
-    if (segments[1] != "1") {
-      // FIXME: No support for IPv6 yet.
-      send(522, ({ "Network protocol not supported, use (1)" }));
+    if (!(<"1","2">)[segments[1]]) {
+      send(522, ({ "Network protocol not supported, use (1 or 2)" }));
       return;
     }
-    if ((sizeof(segments[2]/".") != 4) ||
-	sizeof(replace(segments[2], ".0123456789"/"", allocate(11, "")))) {
-      send(501, ({ sprintf("Bad IPv4 address: '%s'", segments[2]) }));
-      return;
+    if (segments[1] == "1") {
+      // IPv4.
+      if ((sizeof(segments[2]/".") != 4) ||
+	  sizeof(replace(segments[2], ".0123456789"/"", allocate(11, "")))) {
+	send(501, ({ sprintf("Bad IPv4 address: '%s'", segments[2]) }));
+	return;
+      }
+    } else {
+      // IPv6.
+      // FIXME: Improve the validation?
+      if (sizeof(replace(lower_case(segments[2]), ".:0123456789abcdef"/"",
+			 allocate(18, "")))) {
+	send(501, ({ sprintf("Bad IPv6 address: '%s'", segments[2]) }));
+	return;
+      }
     }
-    if (!((int)segments[3])) {
+    if ((((int)segments[3]) <= 0) || (((int)segments[3]) > 65535)) {
       send(501, ({ sprintf("Bad port number: '%s'", segments[3]) }));
       return;
     }
@@ -3099,13 +3111,12 @@ class FTPSession
     int min;
     int max;
 
-    if (args && args != "1") {
+    if (!(< 0, "1", "2" >)[args]) {
       if (lower_case(args) == "all") {
 	epsv_only = 1;
 	send(200, ({ "Entering EPSV ALL mode." }));
       } else {
-	// FIXME: No support for IPv6 yet.
-	send(522, ({ "Network protocol not supported, use (1)" }));
+	send(522, ({ "Network protocol not supported, use (1 or 2)" }));
       }
       return;
     }
@@ -3122,7 +3133,7 @@ class FTPSession
     max = port_obj->query_option("passive_port_max");
     if ((port < min) || (port > max)) {
       if (max > 65535) max = 65535;
-      if (min < 0) min = 0;
+      if (min < 1) min = 1;
       for (port = min; port <= max; port++) {
 	if (pasv_port->bind(port, pasv_accept_callback, local_addr)) {
 	  break;
