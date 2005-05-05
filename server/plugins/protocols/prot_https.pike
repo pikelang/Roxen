@@ -1,7 +1,7 @@
 // This is a ChiliMoon protocol module.
 // Copyright © 2001, Roxen IS.
 
-// $Id: prot_https.pike,v 2.14 2005/04/14 23:07:00 _cvs_dirix Exp $
+// $Id: prot_https.pike,v 2.15 2005/05/05 12:05:24 _cvs_dirix Exp $
 
 // --- Debug defines ---
 
@@ -132,8 +132,8 @@ class fallback_redirect_request
 	      has_prefix(q, "PROPFIND "))) {
 	  // Doesn't look like a HTTP request.
 	  // Bail out.
-	  SSL3_WERR(sprintf("fallback_redirect_request->read_callback():\n"
-			    "Doesn't look like HTTP (method: %O)\n", q));
+	  SSL3_WERR("fallback_redirect_request->read_callback():\n"
+			    "Doesn't look like HTTP (method: %O)\n", q);
 	  die();
 	  return;
 	}

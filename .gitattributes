@@ -95,7 +95,6 @@ worldmap binary
 /server/data/test/tests/ftp/RoxenTest_ftp.pike foreign_ident
 /server/data/test/tests/ftp/ftp_test.pike foreign_ident
 /server/debugstart foreign_ident
-/server/etc/modules/RoxenSSLFile.pike foreign_ident
 /server/etc/refdoc/Makefile foreign_ident
 /server/etc/refdoc/modref.xml foreign_ident
 /server/java/src/com/roxen/roxen/AbstractLocationModule.java foreign_ident
