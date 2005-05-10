@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.60 2004/10/04 09:40:56 stewa Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.61 2005/05/10 15:52:09 stewa Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -257,7 +257,7 @@ string container_js_popup(string name, mapping args, string contents, object id)
     args->props = "default_props";
   if(!largs->href) 
     largs->href = "javascript:void(0);";
-  string popupname = get_jss(id)->get_unique_id("popup");
+  string popupname = get_jss(id)->get_unique_id(args["id-prefix"] || "popup");
   string popupparent =
     (id->misc->_popupparent?id->misc->_popupparent:"none");
   if(zero_type(id->misc->_popuplevel) && args["z-index"])
@@ -563,6 +563,13 @@ javascript support.</p></desc>
 <attr name='label' value='string'>
   <p>The link text. If omitted no link will be returned, useful in
   combination with the args-variable argument.</p>
+</attr>
+
+<attr name='id-prefix' value='string'>
+  <p>The IDs of the div tags created will be prefixed by the specified string.
+   Default is 'popup'.
+   You only need to specify this to prevent name clashes
+   if you include other pages using popups in your page.</p>
 </attr>
 
 <attr name='props' value='javascript object name' default='default_props'>"+
