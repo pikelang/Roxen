@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.490 2005/04/20 08:56:01 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.491 2005/05/10 16:04:54 stewa Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5519,7 +5519,9 @@ class TagEmitValues {
 		    return (["index":ind,"value":val]);
 		  });
 
-    if(arrayp(m->values))
+    if(arrayp(m->values)) {
+      if(m->distinct)
+	m->values = Array.uniq(m->values);
       return map( m->values,
 		  lambda(mixed val) {
 		    if(m->trimwhites)
@@ -5530,6 +5532,7 @@ class TagEmitValues {
 		      val=lower_case(RXML.t_string->encode (val));
 		    return (["value":val]);
 		  } );
+    }
 
     if(multisetp(m->values))
       return map( m->values,
@@ -9169,6 +9172,10 @@ the respective attributes below for further information.</p></desc>
 
 <attr name='randomize' value='yes|no'><p>
   Outputs the values in random order.</p>
+</attr>
+
+<attr name='distinct'><p>
+  If specified, values are only output once even if they occur several times.</p>
 </attr>
 
 <attr name='from-scope' value='name'>
