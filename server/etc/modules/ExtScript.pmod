@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.19 2004/05/25 12:36:56 grubba Exp $
+// $Id: ExtScript.pmod,v 1.20 2005/05/19 15:43:11 stewa Exp $
 
 // 
 
@@ -290,6 +290,9 @@ class Handler
         }
       }
 
+      if (stringp(id->query))
+	putvar("E", "QUERY_STRING", id->query);
+      
       // Transfer explicit environment variables.
       mapping ee = id->misc->explicit_script_env;
       if (mappingp(ee))
