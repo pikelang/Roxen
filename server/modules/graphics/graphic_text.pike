@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.296 2004/08/09 15:30:53 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.297 2005/05/19 14:46:52 stewa Exp $";
 
 #include <module.h>
 inherit "module";
@@ -550,6 +550,14 @@ function alter_image(label)
 </p>
 </attr>"+gtextargs,
 
+"gtext-js":#"<desc tag='tag'><p><short>
+ Inserts javascript funcations that are used by gtext when using the magic attributes.
+ This is normally inserted at the first instance of a gtext, but it may
+ be necessary to insert the gtext using this tag if the first gtext in a page
+ may be hidden, for example if contained in an if tag.
+ </short></p>
+</desc>",
+
 "gtext-url":#"<desc type='cont'><p><short>
  Returns an internal URL to an image with the specified attributes
  applied.</short></p>
@@ -848,6 +856,20 @@ private constant theme = ({ "fgcolor", "bgcolor", "font" });
 
 private constant hreffilter = ([ "split":1, "magic":1, "noxml":1, "alt":1 ]);
 
+string gtext_javascript(RequestID id) {
+  string res="";
+  if(!id->root_id->misc->gtext_magic_java) {
+    res += "function gtext_mo(ri,hi,txt)\n"
+      "{\n"
+      "  document.images[ri].src = hi.src;\n"
+      "  if( txt != 0 )\n"
+      "    setTimeout(\"top.window.status = '\"+txt+\"'\", 100);\n"
+      "}";
+    id->root_id->misc->gtext_magic_java="yes";
+  }
+  return res;
+}
+
 private mapping mk_gtext_arg(mapping arg, RequestID id)
 {
   mapping p=([]); //Picture rendering arguments.
@@ -990,6 +1012,20 @@ class TagGTextURL {
 	return ({ query_absolute_internal_location(id) +
 		  image_cache->store( ({p,content}), id )+ext });
       return ({ "+"+image_cache->store( ({p,content}), id )+ext });
+    }
+  }
+}
+
+class TagGTextJS {
+  inherit RXML.Tag;
+  constant name = "gtext-js";
+  constant flags = RXML.FLAG_EMPTY_ELEMENT;
+ 
+  class Frame {
+    inherit RXML.Frame;
+ 
+    array do_return(RequestID id) {
+       return ({ gtext_javascript(id) });
     }
   }
 }
@@ -1138,15 +1174,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
 
     arg->name=sn;
     string res="<script type='text/javascript'>\n";
-    if(!id->root_id->misc->gtext_magic_java) {
-      res += "function gtext_mo(ri,hi,txt)\n"
-        "{\n"
-        "  document.images[ri].src = hi.src;\n"
-        "  if( txt != 0 )\n"
-        "    setTimeout(\"top.window.status = '\"+txt+\"'\", 100);\n"
-	"}";
-      id->root_id->misc->gtext_magic_java="yes";
-    }
+    res += gtext_javascript(id);
 
     return
       res+
