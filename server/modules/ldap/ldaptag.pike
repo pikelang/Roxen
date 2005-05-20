@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.29.2.1 2005/04/06 21:51:55 mast Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.29.2.2 2005/05/20 12:35:38 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -318,6 +318,7 @@ static void connection_error (ConnectionStatus status, string msg, mixed... args
 
 #if 1
 
+// FIXME: Compat.
 mapping(string:array(int|string)) read_attrs(string attrs, int op, string arg_name)
 {
   mapping(string:array(int|string)) res = ([]);
@@ -333,12 +334,12 @@ mapping(string:array(int|string)) read_attrs(string attrs, int op, string arg_na
       if (sscanf (attrs, WS"%*c") == 1)
 	break;			// At the end.
       else
-	RXML.parse_error ("Expected '(' at the start of %O in the %O value.\n",
+	RXML.parse_error ("Expected '(' at the start of %O in the %O argument.\n",
 			  EXCERPT (attrs), arg_name);
     }
     if (name == "" || fields < 5)
       RXML.parse_error ("Expected attribute name followed by ':' "
-			"at the start of %O in the %O value.\n",
+			"at the start of %O in the %O argument.\n",
 			EXCERPT (attrs), arg_name);
 
     RXML.Context ctx = RXML_CONTEXT;
@@ -356,7 +357,7 @@ mapping(string:array(int|string)) read_attrs(string attrs, int op, string arg_na
 	    string lit;
 #if __PIKE_VERSION__ >= 7.6
 	    if (sscanf (attrs, "%O"WS"%s", lit, attrs) < 3)
-	      RXML.parse_error ("String at the start of %O in the %O value isn't "
+	      RXML.parse_error ("String at the start of %O in the %O argument isn't "
 				"terminated.\n", EXCERPT (attrs), arg_name);
 #else
 	    // Older pikes doesn't have %O in sscanf.
@@ -368,7 +369,7 @@ mapping(string:array(int|string)) read_attrs(string attrs, int op, string arg_na
 	      if (sscanf (tmp, "\""WS"%s", tmp) == 2) break;
 	      int escchar;
 	      if (sscanf (tmp, "\\%c%s", escchar, tmp) != 2)
-		RXML.parse_error ("String at the start of %O in the %O value isn't "
+		RXML.parse_error ("String at the start of %O in the %O argument isn't "
 				  "terminated.\n", EXCERPT (attrs), arg_name);
 	      string char = (['\'': "'", '"': "\"", '\\': "\\", 'b': "\b",
 			      'f': "\f", 'n': "\n", 'r': "\r", 't': "\t",
@@ -377,11 +378,12 @@ mapping(string:array(int|string)) read_attrs(string attrs, int op, string arg_na
 			      '0': "", '1': "", '2': "", '3': "", '4': "",
 			      '5': "", '6': "", '7': "", '8': "", '9': "",
 			      'x': "", 'u': ""])[escchar];
-	      if (char == "")
-		RXML.parse_error ("Escape sequence at the start "
-				  "of %O in the %O value isn't "
-				  "supported in this version.\n",
-				  sprintf ("\\%c%s", escchar, tmp)[..30], arg_name);
+	      if (char == "") {
+		tmp = sprintf ("\\%c%s", escchar, tmp);
+		RXML.parse_error ("Escape sequence at the start of %O in the %O "
+				  "argument isn't supported in this version.\n",
+				  EXCERPT (tmp), arg_name);
+	      }
 	      if (char)
 		lit += char;
 	      else
@@ -396,7 +398,7 @@ mapping(string:array(int|string)) read_attrs(string attrs, int op, string arg_na
 	  case "'": {		// Oldstyle string literal.
 	    string lit;
 	    if (sscanf (attrs, "'%[^']'"WS"%s", lit, attrs) < 3)
-	      RXML.parse_error ("String at the start of %O in the %O value isn't "
+	      RXML.parse_error ("String at the start of %O in the %O argument isn't "
 				"terminated.\n", EXCERPT (attrs), arg_name);
 	    value += ({lit});
 	    break;
@@ -409,12 +411,12 @@ mapping(string:array(int|string)) read_attrs(string attrs, int op, string arg_na
 	    // Allow letters, digits, and the chars '.', '-', '_',
 	    // ':'. Since there are many letters and digits in
 	    // unicode, we instead deny only the ASCII chars outside
-	    // this range.
+	    // this set of chars.
 	    sscanf (attrs, "%[^\0-,/;-@[-^`{-\177]"WS"%s", string varref, string tmp);
 	    array(string|int) splitted = ctx->parse_user_var (varref, 1);
 	    if (splitted[0] == 1)
 	      RXML.parse_error ("Invalid attribute value "
-				"at the start of %O in the %O value.\n",
+				"at the start of %O in the %O argument.\n",
 				EXCERPT (attrs), arg_name);
 	    attrs = tmp;
 
@@ -455,7 +457,7 @@ mapping(string:array(int|string)) read_attrs(string attrs, int op, string arg_na
 	    break;
 	  default:
 	    RXML.parse_error ("Expected ',' or ')' "
-			      "at the start of %O in the %O value.\n",
+			      "at the start of %O in the %O argument.\n",
 			      EXCERPT (attrs), arg_name);
 	}
       }
@@ -616,6 +618,8 @@ int|array(mapping(string:string|array(string))) do_ldap_op (
 	  if (repl[0] != NewLDAP.MODIFY_REPLACE) error ("Oops..\n");
 #endif
 	  attrvals[attr] = ({NewLDAP.MODIFY_REPLACE}) +
+	    // NB: This doesn't use the proper equality matchers
+	    // according to the attribute syntax.
 	    (repl[1..] - delete_attrs[attr][1..]);
 	}
 	else
@@ -653,9 +657,25 @@ int|array(mapping(string:string|array(string))) do_ldap_op (
 	con->set_scope (scope);
       }
 
-      string filter = args["search-filter"];
-      if (!filter && !con->get_parsed_url()->filter)
-	RXML.parse_error ("No filter specified.\n");
+      object filter;
+      string filter_arg = args["search-filter"];
+      if (mixed error = catch {
+	    if (filter_arg)
+	      filter = con->make_filter (filter_arg);
+	    else {
+	      filter = con->get_default_filter();
+	      if (!filter)
+		RXML.parse_error ("No filter specified.\n");
+	    }
+	  }) {
+	if (objectp (error) && error->is_ldap_filter_error)
+	  RXML.parse_error ("Parse error in %s: %s\n",
+			    filter_arg ?
+			    "\"search-filter\" argument" : "default filter",
+			    error->error_message);
+	else
+	  throw (error);
+      }
 
       array(string) attr_list;
       if (args->attrs)
