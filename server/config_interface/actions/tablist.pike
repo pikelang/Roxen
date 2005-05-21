@@ -8,7 +8,7 @@ array pages =
 ({
   ({ "status",       "Tasks",  0, LOCALE(228,"Status")            }),
   ({ "maintenance",  "Tasks",  0, LOCALE(229,"Maintenance")       }),
-#if constant(_Crypto) && constant(Crypto.rsa)
+#if (constant(Nettle) || constant(_Crypto)) && constant(Crypto.rsa)
   ({ ({"SSL"}),       "Tasks", 0, LOCALE(230,"SSL")               }),
 #endif
 /*({ "developer",     "Tasks", "devel_mode"  }),*/

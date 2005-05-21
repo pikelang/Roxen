@@ -1,8 +1,8 @@
 /*
- * $Id: make_selfsigned_dsa.pike,v 1.8 2004/06/16 14:23:34 grubba Exp $
+ * $Id: make_selfsigned_dsa.pike,v 1.9 2005/05/21 09:25:01 grubba Exp $
  */
 
-#if constant(_Crypto) && constant(Crypto.dsa)
+#if (constant(Nettle) || constant(_Crypto)) && constant(Crypto.dsa)
 
 inherit "ssl_common.pike";
 inherit "wizard";
@@ -230,4 +230,4 @@ mixed wizard_done(object id, object mc)
 mixed parse( RequestID id ) { return wizard_for(id,0); }
 
 
-#endif /* constant(_Crypto) && constant(Crypto.dsa) */
+#endif /* (constant(Nettle) || constant(_Crypto)) && constant(Crypto.dsa) */

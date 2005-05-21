@@ -1,8 +1,8 @@
 /*
- * $Id: ssl_common.pike,v 1.6 2004/06/16 09:58:44 grubba Exp $
+ * $Id: ssl_common.pike,v 1.7 2005/05/21 09:25:01 grubba Exp $
  */
 
-#if constant(_Crypto) 
+#if constant(Nettle) || constant(_Crypto)
 
 #include <roxen.h>
 //<locale-token project="admin_tasks">LOCALE</locale-token>
@@ -237,4 +237,4 @@ string save_certificate_form (string name, string filename)
 }
 
 
-#endif /* constant(_Crypto) */
+#endif /* constant(Nettle) || constant(_Crypto) */

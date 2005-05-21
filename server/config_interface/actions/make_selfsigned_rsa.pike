@@ -1,8 +1,8 @@
 /*
- * $Id: make_selfsigned_rsa.pike,v 1.7 2004/06/16 09:59:59 grubba Exp $
+ * $Id: make_selfsigned_rsa.pike,v 1.8 2005/05/21 09:25:01 grubba Exp $
  */
 
-#if constant(_Crypto) && constant(Crypto.rsa)
+#if (constant(Nettle) || constant(_Crypto)) && constant(Crypto.rsa)
 
 inherit "ssl_common.pike";
 inherit "wizard";
@@ -166,4 +166,4 @@ mixed wizard_done(object id, object mc)
 mixed parse( RequestID id ) { return wizard_for(id,0); }
 
 
-#endif /* constant(_Crypto) && constant(Crypto.rsa) */
+#endif /* (constant(Nettle) || constant(_Crypto)) && constant(Crypto.rsa) */
