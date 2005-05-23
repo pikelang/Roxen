@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.888 2005/02/10 17:49:41 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.889 2005/05/23 09:47:21 anders Exp $";
 
 //! @appears roxen
 //!
@@ -4780,7 +4780,11 @@ int main(int argc, array tmp)
   catch(signal(signum("SIGHUP"),async_sig_start(reload_all_configurations,1)));
 
   // Signals which cause Roxen to dump the thread state
-  foreach( ({ "SIGBREAK", "SIGQUIT" }), string sig)
+  foreach( ({ "SIGBREAK", "SIGQUIT",
+#ifdef ENABLE_SIGWINCH
+	      "SIGWINCH",
+#endif
+  }), string sig)
     catch( signal(signum(sig),async_sig_start(describe_all_threads,-1)));
 
   start_time=time();		// Used by the "uptime" info later on.
