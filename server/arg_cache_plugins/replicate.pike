@@ -1,7 +1,7 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2001 - 2004, Roxen IS.
 
-constant cvs_version="$Id: replicate.pike,v 1.20 2004/06/30 16:58:33 mast Exp $";
+constant cvs_version="$Id: replicate.pike,v 1.21 2005/05/23 09:42:39 anders Exp $";
 
 #if constant(WS_REPLICATE)
 #define QUERY(X,Y...)    get_db()->query(X,Y)
@@ -38,12 +38,17 @@ static class Server( string secret )
   // data.
   string lookup( int id )
   {
-    catch
+    mixed err = catch
     {
       return
 	sQUERY( "SELECT dat_content FROM "+cache->name+
 		" WHERE server=%s AND id=%d", secret, id )[0]->dat_content;
     };
+    if (err) {
+#ifdef REPLICATE_DEBUG
+      werror(describe_backtrace(err));
+#endif
+    }
   }
 }
 
@@ -170,10 +175,24 @@ static int get_and_store_data_from_server( Server server, int id,
   string data = server->lookup( id );
   if( !data )
   {
+#ifdef REPLICATE_DEBUG
+    werror("get_and_store_data_from_server failed.\n");
+#endif
     off = -1;
     return -1;
   }
   return cache->create_key( data, 0, index_id );
+}
+
+Sql.Sql debug_get_sdb() {
+  Sql.Sql db;
+  if (mixed err = catch( db = get_sdb() )) {
+#ifdef REPLICATE_DEBUG
+    werror(describe_backtrace(err));
+#endif
+    return 0;
+  }
+  return db;
 }
 
 #define ENSURE_NOT_OFF(X)						\
@@ -188,7 +207,7 @@ static int get_and_store_data_from_server( Server server, int id,
     if( off )								\
       return X;								\
   } else {								\
-    if( catch( get_sdb() ) )						\
+    if( !debug_get_sdb() ) ) {						\
       off = -1;								\
     if(off)return X;							\
   }
