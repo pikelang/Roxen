@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.901 2005/05/23 09:47:15 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.902 2005/05/25 18:52:46 mast Exp $";
 
 //! @appears roxen
 //!
@@ -52,7 +52,7 @@ Thread.Thread backend_thread;
 // --- Debug defines ---
 
 #ifdef SSL3_DEBUG
-# define SSL3_WERR(X) report_debug("SSL3: "+X+"\n")
+# define SSL3_WERR(X) report_debug("TLS port %s: %s\n", get_url(), X)
 #else
 # define SSL3_WERR(X)
 #endif
@@ -1380,8 +1380,8 @@ class Protocol
       path = values (urls)[0]->path;
     sorted_urls -= ({_name});
 #ifdef PORT_DEBUG
-    report_debug("Protocol(%s://%s:%d/)->unref(%O): refs:%d\n",
-		 name, ip, port, _name, refs);
+    report_debug("Protocol(%s)->unref(%O): refs:%d\n",
+		 get_url(), _name, refs);
 #endif /* PORT_DEBUG */
     if( !--refs ) {
       if (retries) {
@@ -1548,7 +1548,18 @@ class Protocol
   string get_key()
   //! Return the key used for this port (protocol:ip:portno)
   {
-    return name+":"+ip+":"+port;
+    if (ip == "::")
+      return name + ":0:" + port;
+    else
+      return name+":"+ip+":"+port;
+  }
+
+  string get_url()
+  //! Return the port on URL form.
+  {
+    return (string) name + "://" +
+      (!ip ? "*" : has_value (ip, ":") ? "[" + ip + "]" : ip) +
+      ":" + port + "/";
   }
 
   void save()
@@ -1571,8 +1582,7 @@ class Protocol
   {
     if (bound) return;
     if (!port_obj) port_obj = Stdio.Port();
-    Privs privs = Privs (sprintf ("Binding %s://%s:%d/",
-				  (string) name, ip || "*", (int) port));
+    Privs privs = Privs (sprintf ("Binding %s", get_url()));
     if (port_obj->bind(port, got_connection, ip))
     {
       privs = 0;
@@ -1586,10 +1596,11 @@ class Protocol
       error("Invalid address " + ip);
     }
 #endif /* System.EAFNOSUPPORT */
-    report_error(LOC_M(6, "Failed to bind %s://%s:%d/ (%s)")+"\n",
-		 (string)name, (ip||"*"), (int)port,
-		 strerror(port_obj->errno()));
+    report_error(LOC_M(6, "Failed to bind %s (%s)")+"\n",
+		 get_url(), strerror(port_obj->errno()));
+#if 0
     werror (describe_backtrace (backtrace()));
+#endif
 #if constant(System.EADDRINUSE) || constant(system.EADDRINUSE)
     if (
 #if constant(System.EADDRINUSE)
@@ -1715,8 +1726,7 @@ class Protocol
     }
   }
 
-  static void create( int pn, string i )
-  //! Constructor. Bind to the port 'pn' ip 'i'
+  static void setup (int pn, string i)
   {
     port = pn;
     ip = canonical_ip(i);
@@ -1734,12 +1744,18 @@ class Protocol
     bound = 0;
     port_obj = 0;
     retries = 0;
+  }
+
+  static void create( int pn, string i )
+  //! Constructor. Bind to the port 'pn' ip 'i'
+  {
+    setup (pn, i);
     bind();
   }
 
   static string _sprintf( )
   {
-   return "Protocol("+name+"://"+ip+":"+port+")";
+    return "Protocol(" + get_url() + ")";
   }
 }
 
@@ -1752,20 +1768,55 @@ class SSLProtocol
   // SSL context
   SSL.context ctx = SSL.context();
 
+  int cert_failure;
+
+  static void cert_err_unbind()
+  {
+    if (bound) {
+      port_obj->close();
+      report_warning ("TLS port %s closed.\n", get_url());
+      bound = 0;
+    }
+  }
+
+#define CERT_WARNING(VAR, MSG, ARGS...) do {				\
+    string msg = (MSG);							\
+    array args = ({ARGS});						\
+    if (sizeof (args)) msg = sprintf (msg, @args);			\
+    report_warning ("TLS port %s: %s", get_url(), msg);			\
+    (VAR)->add_warning (msg);						\
+  } while (0)
+
+#define CERT_ERROR(VAR, MSG, ARGS...) do {				\
+    string msg = (MSG);							\
+    array args = ({ARGS});						\
+    if (sizeof (args)) msg = sprintf (msg, @args);			\
+    report_error ("TLS port %s: %s", get_url(), msg);			\
+    (VAR)->add_warning (msg);						\
+    cert_err_unbind();							\
+    cert_failure = 1;							\
+    return;								\
+  } while (0)
+
   void certificates_changed(Variable|void ignored)
   {
+    int old_cert_failure = cert_failure;
+
     string raw_keydata;
     array(string) certificates = ({});
+    array(object) decoded_certs = ({});
     Variable Certificates = getvar("ssl_cert_file");
 
     object privs = Privs("Reading cert file");
 
     foreach(map(Certificates->query(), String.trim_whites), string cert_file) {
       string raw_cert;
+      SSL3_WERR (sprintf ("Reading cert file %O", cert_file));
       if( catch{ raw_cert = lopen(cert_file, "r")->read(); } )
       {
-	Certificates->add_warning(sprintf(LOC_M(8,"SSL3: Reading cert-file '%s' failed!"),
-					  cert_file));
+	CERT_WARNING (Certificates,
+		      LOC_M(8, "Reading certificate file %O failed: %s\n"),
+		      cert_file, strerror (errno()));
 	continue;
       }
 
@@ -1781,30 +1832,47 @@ class SSLProtocol
 
       if (!part || !(cert = part->decoded_body())) 
       {
-	Certificates->add_warning(LOC_M(10, "SSL3: No certificate found.")+"\n");
+	CERT_WARNING (Certificates,
+		      LOC_M(10, "No certificate found in %O.\n"),
+		      cert_file);
 	continue;
       }
       certificates += ({ cert });
+
+      // FIXME: Support PKCS7
+      object tbs = Tools.X509.decode_certificate (cert);
+      if (!tbs) {
+	CERT_WARNING (Certificates,
+		      LOC_M(13, "Certificate not valid (DER).\n"));
+	continue;
+      }
+      decoded_certs += ({tbs});
+    }
+
+    if (!sizeof(decoded_certs)) {
+      report_error ("TLS port %s: %s", get_url(),
+		    LOC_M (0,"No certificates found.\n"));
+      cert_err_unbind();
+      cert_failure = 1;
+      return;
     }
 
     Variable KeyFile = getvar("ssl_key_file");
 
-    if( strlen(KeyFile->query()) &&
-	catch{ raw_keydata = lopen(KeyFile->query(), "r")->read(); } )
-    {
-      KeyFile->add_warning(sprintf(LOC_M(9, "SSL3: Reading key-file '%s' failed!")+"\n",
-				   query_option("ssl_key_file")));
-      return;
+    if( strlen(KeyFile->query())) {
+      SSL3_WERR (sprintf ("Reading key file %O", KeyFile->query()));
+      if (catch{ raw_keydata = lopen(KeyFile->query(), "r")->read(); } )
+	CERT_ERROR (KeyFile,
+		    LOC_M(9, "Reading key file %O failed: %s\n"),
+		    KeyFile->query(), strerror (errno()));
     }
+    else
+      KeyFile = Certificates;
 
     privs = 0;
 
-    if (!raw_keydata) {
-      Certificates->add_warning(LOC_M(17,"SSL3: No private key found."));
-      return;
-    }
-
-    if (!sizeof(certificates)) return;
+    if (!raw_keydata)
+      CERT_ERROR (KeyFile, LOC_M (17,"No private key found.\n"));
 
     object msg = Tools.PEM.pem_msg()->init( raw_keydata );
 
@@ -1815,18 +1883,14 @@ class SSLProtocol
     {
       string key;
 
-      if (!(key = part->decoded_body())) 
-      {
-	KeyFile->add_warning(LOC_M(11,"SSL3: Private rsa key not valid")+" (PEM).\n");
-	return;
-      }
+      if (!(key = part->decoded_body()))
+	CERT_ERROR (KeyFile,
+		    LOC_M(11,"Private rsa key not valid")+" (PEM).\n");
 
       object rsa = Standards.PKCS.RSA.parse_private_key(key);
-      if (!rsa) 
-      {
-	KeyFile->add_warning(LOC_M(11, "SSL3: Private rsa key not valid")+" (DER).\n");
-	return;
-      }
+      if (!rsa)
+	CERT_ERROR (KeyFile,
+		    LOC_M(11,"Private rsa key not valid")+" (DER).\n");
 
       ctx->rsa = rsa;
 
@@ -1846,17 +1910,10 @@ class SSLProtocol
       ctx->rsa_mode();
 
       array(int) key_matches =
-	map(certificates,
-	    lambda(string cert, Variable Certificates) {
-	      // FIXME: Support PKCS7
-	      object tbs = Tools.X509.decode_certificate (cert);
-	      if (!tbs) 
-	      {
-		Certificates->add_warning(LOC_M(13,"SSL3: Certificate not valid (DER)."));
-		return 0;
-	      }
+	map(decoded_certs,
+	    lambda (object tbs) {
 	      return tbs->public_key->rsa->public_key_equal (rsa);
-	    }, Certificates);
+	    });
       
       int num_key_matches;
       // DWIM: Make sure the main cert comes first.
@@ -1874,29 +1931,22 @@ class SSLProtocol
 	}
       }
       if( !num_key_matches )
-      {
-	KeyFile->add_warning(LOC_M(14, "SSL3: Certificate and private key "
-				   "do not match."));
-	return;
-      }
+	CERT_ERROR (KeyFile,
+		    LOC_M(14, "Certificate and private key do not match.\n"));
       ctx->certificates = new_certificates;
     }
     else if (part = msg->parts["DSA PRIVATE KEY"])
     {
       string key;
 
-      if (!(key = part->decoded_body())) 
-      {
-	report_error(LOC_M(15,"SSL3: Private dsa key not valid")+" (PEM).\n");
-	return;
-      }
+      if (!(key = part->decoded_body()))
+	CERT_ERROR (KeyFile,
+		    LOC_M(15,"Private dsa key not valid")+" (PEM).\n");
 
       object dsa = Standards.PKCS.DSA.parse_private_key(key);
-      if (!dsa) 
-      {
-	report_error(LOC_M(15,"SSL3: Private dsa key not valid")+" (DER).\n");
-	return;
-      }
+      if (!dsa)
+	CERT_ERROR (KeyFile,
+		    LOC_M(15,"Private dsa key not valid")+" (DER).\n");
 
       SSL3_WERR(sprintf("Using DSA key."));
 
@@ -1915,15 +1965,18 @@ class SSLProtocol
 
       ctx->certificates = certificates;
     }
-    else 
-    {
-      KeyFile->add_warning(LOC_M(17,"SSL3: No private key found."));
-      return;
-    }
+    else
+      CERT_ERROR (KeyFile, LOC_M(17,"No private key found.\n"));
 
 #if EXPORT
     ctx->export_mode();
 #endif
+
+    if (!bound) {
+      bind();
+      if (old_cert_failure && bound)
+	report_notice (LOC_M (0, "TLS port %s opened.\n"), get_url());
+    }
   }
 
   class CertificateListVariable
@@ -1935,13 +1988,6 @@ class SSLProtocol
       return sprintf(::doc() + "\n",
 		     combine_path(getcwd(), "../local"),
 		     getcwd());
-    }
-
-    static void create(mixed default_value, void|int flags,
-		       void|LocaleString std_name, void|LocaleString std_doc)
-    {
-      ::create(default_value, flags, std_name, std_doc);
-      set_changed_callback(certificates_changed);
     }
   }
 
@@ -1955,13 +2001,6 @@ class SSLProtocol
 		     combine_path(getcwd(), "../local"),
 		     getcwd());
     }
-
-    static void create(mixed default_value, void|int flags,
-		       void|LocaleString std_name, void|LocaleString std_doc)
-    {
-      ::create(default_value, flags, std_name, std_doc);
-      set_changed_callback(certificates_changed);
-    }
   }
 
   RoxenSSLFile accept()
@@ -1970,6 +2009,13 @@ class SSLProtocol
     if (q)
       return RoxenSSLFile (q, ctx);
     return 0;
+  }
+
+  static void bind()
+  {
+    // Don't bind if we don't have correct certs.
+    if (!ctx->certificates) return;
+    ::bind();
   }
 
   void create(int pn, string i)
@@ -1982,14 +2028,19 @@ class SSLProtocol
 
     set_up_ssl_variables( this_object() );
 
-    ::create(pn, i);
+    ::setup(pn, i);
 
     certificates_changed();
+
+    // Install the change callbacks here to avoid duplicate calls
+    // above.
+    getvar ("ssl_cert_file")->set_changed_callback (certificates_changed);
+    getvar ("ssl_key_file")->set_changed_callback (certificates_changed);
   }
 
   string _sprintf( )
   {
-    return "SSLProtocol("+name+"://"+ip+":"+port+")";
+    return "SSLProtocol(" + get_url() + ")";
   }
 }
 #endif
