@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.341 2005/05/27 12:31:34 mast Exp $
+// $Id: module.pmod,v 1.342 2005/05/27 12:34:23 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -300,7 +300,7 @@ class Tag
   //!   in the mapping that the @[Frame.get_plugins] returns.
   //!  @item
   //!   The plugin tag is registered in the tag set with the
-  //!   identifier @code{@[name] + "#" + @[plugin_name]@}.
+  //!   identifier @expr{@[name] + "#" + @[plugin_name]@}.
   //!
   //!   It overrides other plugin tags with that name according to
   //!   the normal tag set rules, but, as said above, is never
@@ -660,11 +660,11 @@ class TagSet
   //! A tag set for local or additional tags within an RXML tag in a
   //! Roxen tag module is typically created like this:
   //!
-  //! @code{
+  //! @code
   //!   RXML.TagSet internal =
   //!     RXML.TagSet(this_module(), "my-tag",
   //!   	      ({MySubTag1(), MySubTag2(), ...}));
-  //! @}
+  //! @endcode
   //!
   //! "my-tag" is the name of the tag that contains the subtags. It's
   //! typically a good idea to use the name of that tag, since it
@@ -1312,7 +1312,7 @@ class Value
   //! value should have. If the value can't be converted to that type,
   //! an RXML error should be thrown. If you don't want to do any
   //! special handling of this, it's enough to call
-  //! @code{@[type]->encode(value)@}, since the encode functions does
+  //! @expr{@[type]->encode(value)@}, since the encode functions does
   //! just that.
   //!
   //! Some design discussion follows to justify the last paragraph;
@@ -1331,10 +1331,10 @@ class Value
   //! is when the value is known to be an arbitrary literal string
   //! (not zero), which is preferably optimized like this:
   //!
-  //! @code{
+  //! @code
   //!   return type && type != RXML.t_text ?
   //!          type->encode (my_string, RXML.t_text) : my_string;
-  //! @}
+  //! @endcode
   //!
   //! Also, by letting the producer know the type context of the value
   //! and handle the type conversion, it's possible for the producer
@@ -5954,8 +5954,8 @@ class Type
   //!   One or more data items can be concatenated with `+.
   //!  @item
   //!   (Sane) parsers are homomorphic on the type, i.e.
-  //!   @code{eval("da") + eval("ta") == eval("da" + "ta")@} and
-  //!   @code{eval("data") + eval("") == eval("data")@} provided the
+  //!   @expr{eval("da") + eval("ta") == eval("da" + "ta")@} and
+  //!   @expr{eval("data") + eval("") == eval("data")@} provided the
   //!   data is only split between (sensibly defined) atomic elements.
   //! @endul
 
@@ -6124,10 +6124,10 @@ class Type
   //! @[type_check]. Assuming the same argument names as in the
   //! @[type_check] declaration, use like this:
   //!
-  //! @code{
+  //! @code
   //!   if (value is bogus)
   //!     type_check_error (msg, args, "My error message with %O %O.\n", foo, bar);
-  //! @}
+  //! @endcode
   {
     if (sizeof (args2)) msg2 = sprintf (msg2, @args2);
     if (msg1) {
@@ -9025,13 +9025,14 @@ Nil nil = Nil();
 //! variable binding altogether.
 //!
 //! Like @[RXML.empty], it holds that nil + anything == anything + nil
-//! == anything, on the principle that the @code{+@} operator in
+//! == anything, on the principle that the @expr{+@} operator in
 //! essence is called with one argument in those cases. This avoids
 //! special handling of tags that return no result in sequential
 //! types.
 //!
 //! For compatibility, @[RXML.nil] can be cast to the empty value for
 //! the basic Pike types.
+
 static class Nil
 {
   // Only inherit implementation; there's no type-wise significance
