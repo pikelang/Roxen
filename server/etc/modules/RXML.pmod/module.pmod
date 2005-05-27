@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.337 2005/05/27 12:35:01 mast Exp $
+// $Id: module.pmod,v 1.338 2005/05/27 12:37:36 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2339,7 +2339,8 @@ class Context
   }
 
 #define ENTER_SCOPE(ctx, frame)						\
-  (frame->vars && frame->vars != ctx->scopes["_"] &&			\
+  (frame->vars &&							\
+   (!ctx->hidden[frame] || frame->vars != ctx->scopes["_"]) &&		\
    ctx->enter_scope (frame, frame->vars))
 #define LEAVE_SCOPE(ctx, frame) \
   (frame->vars && ctx->leave_scope (frame))
