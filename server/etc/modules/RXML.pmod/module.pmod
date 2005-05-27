@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.336 2005/05/27 12:33:59 mast Exp $
+// $Id: module.pmod,v 1.337 2005/05/27 12:35:01 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -8442,7 +8442,7 @@ class PCode
       return intro + ")" + OBJ_COUNT;
   }
 
-  constant P_CODE_VERSION = 5.2;
+  constant P_CODE_VERSION = "5.3";
   // Version spec encoded with the p-code, so we can detect and reject
   // incompatible p-code dumps even when the encoded format hasn't
   // changed in an obvious way.
@@ -8485,7 +8485,7 @@ class PCode
 
   void _decode(array v, int check_hash)
   {
-    [int version, flags, tag_set, string tag_set_hash,
+    [string|int version, flags, tag_set, string tag_set_hash,
      type, recover_errors, exec, protocol_cache_time] = v;
     if (version != P_CODE_VERSION)
       p_code_stale_error (
