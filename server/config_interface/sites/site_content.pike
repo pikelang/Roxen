@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.141 2005/04/07 12:05:30 jonasw Exp $
+// $Id: site_content.pike,v 1.142 2005/05/30 12:59:01 wellhard Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -438,7 +438,7 @@ string module_page( RequestID id, string conf, string module )
           "section='&form.section;' module='"+module+"'/>";
 }
 
-string port_for( string url, int settings )
+array(Protocol|array(string)) get_port_for(string url)
 {
   string ourl = (url/"#")[0];
   url = roxen->normalize_url(url);
@@ -448,10 +448,26 @@ string port_for( string url, int settings )
     //  report_debug(sprintf("Known URLS are:\n"
     //  	       "%{  %O\n%}\n",
     //  	       indices(roxen->urls)));
-    return "";
+    return ({ 0, 0 });
   }
   Protocol p = roxen->urls[url]->port;
+  return ({ roxen->urls[url]->port, ({ url }) });
+}
+
+string port_for( string url, int settings )
+{
+  return low_port_for(get_port_for(url), settings);
+}
+
+string low_port_for(array(Protocol|array(string)) port_info, int settings)
+{
+  [ Protocol p, array(string) urls ] = port_info;
+  if(!urls) {
+    return "";
+  }
   if(!p) return "<font color='&usr.warncolor;'>Not open</font>";
+
+  string url = urls[0];	// FIXME: Report the others too.
   string res =
 #"
   <set variable='var.port' value='"+Roxen.http_encode_string(p->get_key())+
@@ -552,11 +568,22 @@ string parse( RequestID id )
 	 "<input type=hidden name='section' value='Ports' />"
 	 "<cfg-variables source='config-variables' "
 	 " configuration='"+path[0]+"' section='Ports'/><br clear='all'/>";
-       
-       foreach( conf->query( "URLs" ), string url )
-       {
-	 res += port_for( url, 1 );
+
+       array(string) urls = conf->query("URLs");
+       array(array(Protocol|array(string))) ports =
+	 map(conf->query("URLs"), get_port_for);
+       mapping(Protocol:array(Protocol|array(string))) prot_info = ([]);
+       foreach(ports, array(Protocol|array(string)) port) {
+	 array(Protocol|array(string)) prev;
+	 if (prev = prot_info[port[0]]) {
+	   prev[1] += port[1];
+	   port[0] = 0;
+	   port[1] = 0;
+	 } else {
+	   prot_info[port[0]] = port;
+	 }
        }
+       res += map(ports, low_port_for, 1)*"";
        return res+"<br /><cf-save/>\n";
        break;
 
