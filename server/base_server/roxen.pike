@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.902 2005/05/25 18:52:46 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.903 2005/05/31 12:10:49 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -1180,7 +1180,8 @@ int(0..1) host_is_local(string hostname)
 }
 
 Configuration find_configuration_for_url(Standards.URI url,
-					 void|Configuration only_this_conf)
+					 void|Configuration only_this_conf,
+					 void|array(Protocol) return_port)
 //! Tries to to determine if a request for the given url would end up
 //! in this server, and if so returns the corresponding configuration.
 //!
@@ -1188,6 +1189,8 @@ Configuration find_configuration_for_url(Standards.URI url,
 //! will be returned.
 {
   Configuration c;
+  Protocol c_portobj;
+  
   string url_with_port = sprintf("%s://%s:%d%s", url->scheme, url->host,
 				 url->port,
 				 (sizeof(url->path)?url->path:"/"));
@@ -1217,11 +1220,14 @@ Configuration find_configuration_for_url(Standards.URI url,
 	  c = 0;
 	  continue;
 	}
+	c_portobj = q->port;
 	break;
       }
     }
   }
   URL2CONF_MSG("Result: %O\n", c);
+  if (return_port)
+    return_port[0] = c_portobj;
   return c;
 }
 
@@ -1267,7 +1273,9 @@ class InternalRequestID
     raw_url = path;
     method = "GET";
     raw = "GET " + raw_url + " HTTP/1.1\r\n\r\n";
-    conf = find_configuration_for_url(uri);
+    array(Protocol) port_array = ({ 0 });
+    conf = find_configuration_for_url(uri, 0, port_array);
+    port_obj = port_array[0];
     return set_path( raw_url );
   }
 
