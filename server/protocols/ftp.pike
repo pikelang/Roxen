@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.102 2004/06/30 16:59:34 mast Exp $
+ * $Id: ftp.pike,v 2.103 2005/06/01 08:50:02 jonasw Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -191,7 +191,8 @@ class RequestID2
 		"send", "scan_for_query", "make_response_headers",
 		"send_result", "misc", "get_if_data",
 		"url_base", "set_response_header", "get_xml_data",
-		"add_response_header", "set_output_charset", "replace_charset_placeholder",
+		"add_response_header", "set_output_charset", "get_output_charset",
+		"replace_charset_placeholder",
 		"charset_name", "charset_function", "join_charset", 
 		"output_encode", "adjust_for_config_path",
 		"get_multi_status", "multi_status_size",
