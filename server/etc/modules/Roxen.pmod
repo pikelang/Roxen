@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.193 2005/02/25 15:51:16 grubba Exp $
+// $Id: Roxen.pmod,v 1.194 2005/06/01 14:36:40 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4219,4 +4219,56 @@ void pop_color (string tagname, RequestID id)
 		ctx_misc->fgcolor, ctx_misc->bgcolor);
 #endif
   }
+}
+
+class LogPipe
+//! The write end of a pipe that will log to the debug log. Use
+//! @[get_log_pipe] to create an instance.
+{
+  inherit Stdio.File;
+
+  static string prefix = "";
+  static string line_buf = "";
+
+  static void read_end_cb (mixed dummy, string data)
+  {
+    line_buf += data;
+    while (1) {
+      sscanf (line_buf, "%[^\r\n]%*[\r\n]%s", string line, line_buf);
+      if (line == "") break;
+      werror (prefix + line + "\n");
+    }
+  }
+
+  static void create (Stdio.File read_end, Stdio.File write_end)
+  {
+    read_end->set_read_callback (read_end_cb);
+    assign (write_end);
+  }
+
+  void set_prefix (string prefix)
+  //! Sets a string that will be prefixed to each line that is logged
+  //! via this pipe.
+  {
+    LogPipe::prefix = prefix;
+  }
+}
+
+LogPipe get_log_pipe()
+//! Returns a pipe suitable to bind to @expr{"stderr"@} and
+//! @expr{"stdout"@} in a @[Process.create_process] call to get the
+//! output from the created process into the debug log. The log data
+//! is line buffered to avoid mixing output from different processes
+//! on the same line.
+//!
+//! @note
+//! The standard backend is used to echo the data that arrives on the
+//! pipe. If it's hung then data that arrives on the pipe won't show
+//! in the debug log.
+{
+  Stdio.File read_end = Stdio.File();
+  Stdio.File write_end = read_end->pipe (Stdio.PROP_IPC);
+  if (!write_end) error ("Failed to create pipe: %s\n",
+			 strerror (read_end->errno()));
+  return LogPipe (read_end, write_end);
 }
