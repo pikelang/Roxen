@@ -106,6 +106,16 @@ class FTFont
       text = " ";
     array(int) tx = (array(int))text;
     array chars = map( tx, do_write_char );
+#ifdef FREETYPE_FIX_BROKEN_METRICS
+    foreach(chars, mapping c)
+      if(!c->ascender && !c->descender && !c->height) {
+	int oversampling = roxen->query("font_oversampling") ? 2 : 1;
+	c->ascender=(int)(size*0.98*oversampling);
+	c->descender=(int)(size*-0.23*oversampling);
+	c->height=(int)(size*1.39*oversampling);
+      }
+#endif
+     
     int i;
 
     for( i = 0; i<sizeof( chars ); i++ )
