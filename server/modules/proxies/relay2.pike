@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.34 2005/04/20 12:06:10 mast Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.35 2005/06/21 11:34:51 mast Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -349,7 +349,7 @@ class Relayer
       file = file+"?"+id->query;
 
     // Workaround widestring deficiency in the regexp module.
-    int use_utf8 = 0;//String.width (file) > 8;
+    int use_utf8 = String.width (file) > 8;
     if (use_utf8) file = string_to_utf8 (file);
 
     if (array(string) split = r->split( file ) )
