@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.472 2005/04/06 15:03:01 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.473 2005/06/21 11:25:34 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1875,16 +1875,17 @@ void send_result(mapping|void result)
 	misc->connection = "close";
       }
 
-      // Check for wide headers.
+      // Check for wide or 8-bit headers.
       // FIXME: Assumes no header names are wide.
       foreach(heads; string header_name; string content) {
-	if (String.width(content) > 8) {
+	string encoded;
+	if (content != (encoded = string_to_utf8(content))) {
 	  array(array(string)|int) tokenized =
-	    MIME.decode_words_tokenized(string_to_utf8(content));
+	    MIME.decode_words_tokenized(encoded);
 	  foreach(tokenized, array(string)|int token) {
 	    if (arrayp(token)) {
 	      string raw = utf8_to_string(token[0]);
-	      if (String.width(raw) > 8) {
+	      if (raw == token[0]) {
 		if (token[1]) {
 		  // Should not happen in normal circumstances.
 		  catch {
@@ -1895,8 +1896,6 @@ void send_result(mapping|void result)
 		  };
 		}
 		token[1] = "utf-8";
-	      } else {
-		token[0] = raw;
 	      }
 	    }
 	  }
