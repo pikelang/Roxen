@@ -607,6 +607,11 @@ e</result>
   </result>
 </test>
 
+<test>
+  <rxml><replace from="x" to="&lt;x>">xx</replace></rxml>
+  <result><x><x></result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Trimlines</comment>
