@@ -1458,6 +1458,16 @@ b</strlen></rxml>
 <result>13579</result>
 </test>
 
+<test>
+  <rxml><for variable='var.i' from='0' to='-1' step='1'>x</for></rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml><for variable='var.i' from='0' to='1' step='-1'>x</for></rxml>
+  <result></result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>If tests</comment>
