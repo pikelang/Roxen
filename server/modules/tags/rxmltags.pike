@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.485 2005/04/20 08:55:57 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.486 2005/06/23 12:01:26 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1847,22 +1847,29 @@ class TagFor {
       from = (int)args->from;
       to = (int)args->to;
       step = (int)args->step!=0?(int)args->step:(to<from?-1:1);
-      if((to<from && step>0)||(to>from && step<0))
+      if((to<from && step>0)||(to>from && step<0)) {
+#if 0
+	// It's common that the limits are at the wrong side of each
+	// other when no iteration should be done, so don't complain
+	// about this.
 	run_error("Step has the wrong sign.\n");
-      from-=step;
+#endif
+      }
+      else
+	from-=step;
       count=from;
       return 0;
     }
 
     int do_iterate() {
       if(!args->variable) {
-	int diff=abs(to-from);
+	int diff = (to - from) / step;
 	to=from;
-	return diff;
+	return diff > 0 && diff;
       }
       count+=step;
       RXML.user_set_var(args->variable, count, args->scope);
-      if(to<from) return count>=to;
+      if (step < 0) return count>=to;
       return count<=to;
     }
 
