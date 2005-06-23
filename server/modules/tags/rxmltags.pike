@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.492 2005/06/22 10:14:48 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.493 2005/06/23 11:59:52 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1873,9 +1873,9 @@ class TagFor {
 
     int do_iterate() {
       if(!args->variable) {
-	int diff=abs(to-from);
+	int diff = (to - from) / step;
 	to=from;
-	return diff;
+	return diff > 0 && diff;
       }
       count+=step;
       RXML.user_set_var(args->variable, count, args->scope);
