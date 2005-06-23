@@ -1459,12 +1459,48 @@ b</strlen></rxml>
 </test>
 
 <test>
+  <rxml type="string">
+    <for variable='var.i' from='0' to='3' step='2'>
+      &var.i;
+    </for>
+  </rxml>
+  <result>02</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable='var.i' value='0'/>
+    <for from='0' to='3' step='2'>
+      &var.i;
+      <inc variable='var.i'/>
+    </for>
+  </rxml>
+  <result>01</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable='var.i' value='0'/>
+    <for from='0' to='-3' step='-2'>
+      &var.i;
+      <inc variable='var.i'/>
+    </for>
+  </rxml>
+  <result>01</result>
+</test>
+
+<test>
   <rxml><for variable='var.i' from='0' to='-1' step='1'>x</for></rxml>
   <result></result>
 </test>
 
 <test>
   <rxml><for variable='var.i' from='0' to='1' step='-1'>x</for></rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml><for from='0' to='-1' step='1'>x</for></rxml>
   <result></result>
 </test>
 
