@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.590 2005/04/12 17:05:21 anders Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.591 2005/06/29 18:53:47 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3822,7 +3822,7 @@ static void create()
 		  "the cache, in KBytes."));
 
 
-  defvar("default_server", 0, DLOCALE(20, "Default site"),
+  defvar("default_server", 0, DLOCALE(20, "Ports: Default site"),
 	 TYPE_FLAG| VAR_PUBLIC,
 	 DLOCALE(21, "If true, this site will be selected in preference of "
 	 "other sites when virtual hosting is used and no host "
