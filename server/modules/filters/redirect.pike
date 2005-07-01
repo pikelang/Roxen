@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.39 2005/02/17 15:06:27 wellhard Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.40 2005/07/01 12:22:29 grubba Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -62,23 +62,42 @@ void create()
 	 "<p><b>Note 2:</b> "
 	 "Included files are not rechecked for changes automatically. You "
 	 "have to reload the module to do that." );
+  defvar("poll_interval", 60, "Poll interval", TYPE_INT,
+	 "Time in seconds between polls of the files <tt>#include</tt>d "
+	 "in the redirect pattern.");
 }
 
 array(string) redirect_from = ({});
 array(string) redirect_to = ({});
 mapping(string:string) exact_patterns = ([]);
 
-void parse_redirect_string(string what)
+//! Mapping from filename to
+//! @array
+//!   @item int poll_interval
+//!     Poll interval in seconds.
+//!   @item int last_poll
+//!     Time the file was last polled.
+//!   @item Stdio.Stat stat
+//!     Stat at the time of @[last_poll].
+//! @endarray
+mapping(string:array(int|Stdio.Stat)) dependencies = ([]);
+
+void parse_redirect_string(string what, string|void fname)
 {
   foreach(replace(what, "\t", " ")/"\n", string s)
   {
-    if (sscanf (s, "#include %*[ ]<%s>", string file) == 2) {
+    if (sscanf (s, "#include%*[\t ]<%s>", string file) == 2) {
+      dependencies[file] = ({
+	query("poll_interval"),
+	time(1),
+	file_stat(file)
+      });
       if(string contents=Stdio.read_bytes(file))
-	parse_redirect_string(contents);
+	parse_redirect_string(contents, file);
       else
 	report_warning ("Cannot read redirect patterns from "+file+".\n");
     }
-    else if (s[..0] != "#") {
+    else if (sizeof(s) && (s[0] != '#')) {
       array(string) a = s/" " - ({""});
       if(sizeof(a)>=3 && a[0]=="exact") {
 	if (exact_patterns[a[1]])
@@ -97,12 +116,50 @@ void parse_redirect_string(string what)
   }
 }
 
+mixed file_poller_co;
+
+void start_poller()
+{
+  if (sizeof(dependencies)) {
+    int next = 0x7fffffff;
+    foreach(dependencies;; array(int|Stdio.Stat) dependency) {
+      int deptime = dependency[0] + dependency[1];
+      if (deptime < next) next = deptime;
+    }
+    next -= time(1);
+    if (next < 0) next = 0;
+    file_poller_co = call_out(file_poller, next);
+  }
+}
+
+void file_poller()
+{
+  int changed;
+  foreach(dependencies; string fname; array(int|Stdio.Stat) dependency) {
+    Stdio.Stat stat = file_stat(fname);
+    if (!((!stat && !dependency[2]) ||
+	  (stat && dependency[2] && stat->mtime == dependency[2]->mtime))) {
+      // mtime for the file has changed, or it has been created or deleted
+      // since last poll.
+      changed = 1;
+    }
+    dependency[1] = time(1);
+    dependency[2] = stat;
+  }
+  if (changed) start();
+  else start_poller();
+}
+
 void start()
 {
   redirect_from = ({});
   redirect_to = ({});
   exact_patterns = ([]);
+  if (file_poller_co) remove_call_out(file_poller_co);
+  file_poller_co = 0;
+  dependencies = ([]);
   parse_redirect_string(query("fileredirect"));
+  start_poller();
 }
 
 constant module_type = MODULE_FIRST;
