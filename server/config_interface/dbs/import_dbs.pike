@@ -28,7 +28,7 @@ mapping|string parse( RequestID id )
   }
 
   
-  Sql.Sql sql = Sql.Sql( c->pattern+"mysql" );
+  Sql.Sql sql = Sql.Sql( c->pattern );
   array q = sql->query( "SHOW databases" )->Database;
 
   res += "<b><font size=+1>"+
