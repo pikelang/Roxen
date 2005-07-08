@@ -83,7 +83,8 @@ mapping|string parse( RequestID id )
   {
     if( strlen(id->variables->url) )
     {
-      if(catch(Sql.Sql( "mysql://"+id->variables->url+"/mysql" ) ))
+      id->variables->url = Stdio.append_path(id->variables->url, "/");
+      if(catch(Sql.Sql( "mysql://"+id->variables->url ) ))
 	error = sprintf( "<font color='&usr.warncolor;'>"+
 			 _(456,"Cannot connect to %s")+
 			 "</font>", "mysql://"+id->variables->url );
