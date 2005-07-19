@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.147 2004/06/30 16:58:59 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.148 2005/07/19 12:17:04 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -749,6 +749,14 @@ mapping make_collection(string coll, RequestID id)
   return errno_to_status (err_code, 1, id);
 }
 
+class CacheCallback(string f, int orig_size)
+{
+  int(0..1) `()(RequestId id, mixed key)
+  {
+    return _file_size(f, id) == orig_size;
+  }
+}
+
 mixed find_file( string f, RequestID id )
 {
   TRACE_ENTER("find_file(\""+f+"\")", 0);
@@ -867,6 +875,9 @@ mixed find_file( string f, RequestID id )
 	return Roxen.http_status(403, "File exists, but access forbidden "
 				 "by user");
       }
+
+      // Add a cache callback.
+      id->misc->_cachecallbacks += ({ CacheCallback(f, size) });
 
       id->realfile = norm_f;
       TRACE_LEAVE("");
