@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.19 2005/02/25 16:45:24 grubba Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.20 2005/07/25 16:22:39 mast Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -1048,7 +1048,7 @@ constant tagdoc = ([
   day the variables from the Resultset will be empty.
   </p>
   <p>
-  This tag is very usefull for application that needs a calendar functionality.
+  This tag is very useful for application that needs a calendar functionality.
   </p>
   <note><p>All <xref href='emit.tag'>emit</xref> attributes apply.</p></note>
 
@@ -1082,7 +1082,7 @@ constant tagdoc = ([
 
   <attr name='from-time' value='HH:MM:SS'>
     <p>
-      Two digits for hours, minutes and seconds - separated by colon. Usefull when the
+      Two digits for hours, minutes and seconds - separated by colon. Useful when the
       value of unit is hours, minutes or seconds. But it might also influence when
       used with the <att>query</att> attribute.
     </p>
@@ -1103,7 +1103,7 @@ constant tagdoc = ([
   <attr name='to-time' value='HH:MM:SS'>
     <p>
       Two digits for hours, minutes and seconds - separated by colon. 
-      Usefull when the value of unit is hours, minutes or seconds. 
+      Useful when the value of unit is hours, minutes or seconds.
       But it might also have impact when used with the query attribute.
     </p>
   </attr>
