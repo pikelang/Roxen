@@ -1,0 +1,52 @@
+#!/bin/sh
+#
+# $Id: roxen,v 1.1 2005/07/25 07:59:42 noring Exp $
+
+ROXEN_DIR=/usr/lib64/roxen-4.0.379
+
+parse_args()
+{
+    while [ ! c"$1" = "c" ]
+    do
+	case "$1" in
+	    --config-dir=*)
+		DIR=`echo "$1" | sed -e 's/--config-dir=//'`
+	    ;;
+	esac
+    
+	case "$1" in
+	    --roxen-dir=*)
+		ROXEN_DIR=`echo "$1" | sed -e 's/--roxen-dir=//'`
+	    ;;
+	esac
+    
+	shift
+    done
+}
+
+if [ ! c"$ROXEN_ARGS" = "c" ]
+then
+  parse_args $ROXEN_ARGS
+fi
+
+parse_args "$@"
+
+if [ x"$DIR" = x ]
+then
+    DIR=configurations
+fi
+
+if [ ! -d "$DIR" ]
+then
+    echo "No configuration found. Use --config-dir=<config dir>"
+    exit 1
+fi
+
+if [ -f "$DIR"/_environment ]
+then
+    . "$DIR"/_environment
+    ROXEN_LOCALDIR="$VARDIR"/local
+    export ROXEN_LOCALDIR
+fi
+
+cd "$ROXEN_DIR" && exec ./start "$@"
