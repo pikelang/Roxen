@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.362 2005/03/10 15:17:03 grubba Exp $
+// $Id: roxenloader.pike,v 1.363 2005/08/05 08:45:02 noring Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.362 2005/03/10 15:17:03 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.363 2005/08/05 08:45:02 noring Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2248,12 +2248,6 @@ library should be enough.
 #endif
 #if constant(Odbc.odbc)
   DC("Sql.odbc");
-#endif
-#if constant(Postgres.postgres)
-  DC("Sql.postgres");
-#endif
-#if constant(Msql.msql)
-  DC("Sql.msql");
 #endif
   
   DC( "_Roxen.HeaderParser" );
