@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.40 2005/07/01 12:22:29 grubba Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.41 2005/08/16 11:39:57 mast Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -116,7 +116,7 @@ void parse_redirect_string(string what, string|void fname)
   }
 }
 
-mixed file_poller_co;
+roxen.BackgroundProcess file_poller_proc;
 
 void start_poller()
 {
@@ -128,7 +128,10 @@ void start_poller()
     }
     next -= time(1);
     if (next < 0) next = 0;
-    file_poller_co = call_out(file_poller, next);
+    if (file_poller_proc)
+      file_poller_proc->set_period (next);
+    else
+      file_poller_proc = roxen.BackgroundProcess (next, file_poller);
   }
 }
 
@@ -155,8 +158,6 @@ void start()
   redirect_from = ({});
   redirect_to = ({});
   exact_patterns = ([]);
-  if (file_poller_co) remove_call_out(file_poller_co);
-  file_poller_co = 0;
   dependencies = ([]);
   parse_redirect_string(query("fileredirect"));
   start_poller();
