@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.473 2005/06/21 11:25:34 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.474 2005/08/16 14:54:25 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1875,8 +1875,13 @@ void send_result(mapping|void result)
 	misc->connection = "close";
       }
 
+#if 0
       // Check for wide or 8-bit headers.
       // FIXME: Assumes no header names are wide.
+      //
+      // This is disabled since it doesn't work for all headers. It
+      // therefore has to be the responsibility of whatever code makes
+      // the header to ensure it's correctly encoded. /mast
       foreach(heads; string header_name; string content) {
 	string encoded;
 	if (content != (encoded = string_to_utf8(content))) {
@@ -1905,6 +1910,7 @@ void send_result(mapping|void result)
 	  heads[header_name] = (sizeof(b)<sizeof(q))?b:q;
 	}
       }
+#endif
 
 	if( mixed err = catch( head_string += Roxen.make_http_headers( heads ) ) )
 	{
@@ -1913,16 +1919,19 @@ void send_result(mapping|void result)
 			describe_error (err));
 #endif
 	  foreach(heads; string x; string|array(string) val) {
-	    if (stringp(val))
-	      head_string += x+": "+val+"\r\n";
-	    else if( arrayp( val ) )
-	      foreach( val, string xx )
+	    if( !arrayp( val ) ) val = ({val});
+	    foreach( val, string xx ) {
+	      if (!stringp (xx) && catch {xx = (string) xx;})
+		report_error ("Error in request for %O:\n"
+			      "Invalid value for header %O: %O\n",
+			      raw_url, x, xx);
+	      else if (String.width (xx) > 8)
+		report_error ("Error in request for %O:\n"
+			      "Invalid widestring value for header %O: %O\n",
+			      raw_url, x, xx);
+	      else
 		head_string += x+": "+xx+"\r\n";
-	    else if( catch {
-	      head_string += x+": "+(string)val+"\r\n";
-	    } )
-	      error("Illegal value in headers array! "
-		    "Expected string or array(string)\n");
+	    }
 	  }
 	  head_string += "\r\n";
 	}
