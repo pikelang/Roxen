@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.146 2005/04/12 17:04:19 anders Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.147 2005/08/16 15:39:30 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1614,7 +1614,7 @@ class RequestID
     }
 
     heads["Accept-Ranges"] = "bytes";
-    heads["Server"] = replace(roxenp()->version(), " ", "·");
+    heads["Server"] = replace(roxenp()->version(), " ", "_");
     if (file->error == 500) {
       // Internal server error.
       // Make sure the connection is closed to resync.

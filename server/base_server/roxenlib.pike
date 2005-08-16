@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: roxenlib.pike,v 1.219 2004/06/30 16:58:40 mast Exp $
+// $Id: roxenlib.pike,v 1.220 2005/08/16 15:39:30 mast Exp $
 
 //#pragma strict_types
 
@@ -66,7 +66,7 @@ static string http_res_to_string( mapping file, RequestID id )
   mapping(string:string|array(string)) heads=
     ([
       "Content-type":[string]file["type"],
-      "Server":replace(roxen->version(), " ", "·"),
+      "Server":replace(roxen->version(), " ", "_"),
       "Date":http_date([int]id->time)
       ]);
 
