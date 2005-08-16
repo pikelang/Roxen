@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.194 2005/06/01 14:36:40 mast Exp $
+// $Id: Roxen.pmod,v 1.195 2005/08/16 15:53:11 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -558,18 +558,28 @@ string http_encode_string(string f)
 }
 
 string http_encode_invalids (string f)
-//! Encode dangerous chars to be included in an HTTP message or header
-//! field. This includes control chars, space and the quote chars '
-//! and ". Note that chars allowed in a quoted string (RFC 2616
-//! section 2.2) are not encoded. This function may be used on a
+//! Encode dangerous chars to be included as a URL in an HTTP message
+//! or header field. This includes control chars, space and the quote
+//! chars ' and ". Note that chars allowed in a quoted string (RFC
+//! 2616 section 2.2) are not encoded. This function may be used on a
 //! complete URI since it doesn't encode any URI special chars,
 //! including the escape char %.
 //!
+//! @note
+//! Eight bit chars and wider are encoded using UTF-8 followed by http
+//! escaping. This is in line with the recommendations in RFC 2718
+//! section 2.2.5, appendix B.2 in the HTML 4.01 standard
+//! (http://www.w3.org/TR/html4/appendix/notes.html#non-ascii-chars),
+//! and the IRI recommendation
+//! (http://www.w3.org/International/O-URL-and-ident.html). (It should
+//! work regardless of the charset used in the XML document the URL
+//! might be inserted into.)
+//!
 //! @seealso
-//! @[http_encode_url], @[correctly_http_encode_url]
+//! @[http_encode_url]
 {
   return replace (
-    f, ({
+    string_to_utf8 (f), ({
       // Control chars (RFC 2396 2.4.3).
       "\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
       "\010", "\011", "\012", "\013", "\014", "\015", "\016", "\017",
@@ -584,6 +594,24 @@ string http_encode_invalids (string f)
       // The single quote is valid but may be escaped without changing
       // its meaning in URI's (RFC 2396 2.3).
       "\"", "'",
+      // All eight bit chars (this is fast with the current replace()
+      // implementation).
+      "\200", "\201", "\202", "\203", "\204", "\205", "\206", "\207",
+      "\210", "\211", "\212", "\213", "\214", "\215", "\216", "\217",
+      "\220", "\221", "\222", "\223", "\224", "\225", "\226", "\227",
+      "\230", "\231", "\232", "\233", "\234", "\235", "\236", "\237",
+      "\240", "\241", "\242", "\243", "\244", "\245", "\246", "\247",
+      "\250", "\251", "\252", "\253", "\254", "\255", "\256", "\257",
+      "\260", "\261", "\262", "\263", "\264", "\265", "\266", "\267",
+      "\270", "\271", "\272", "\273", "\274", "\275", "\276", "\277",
+      "\300", "\301", "\302", "\303", "\304", "\305", "\306", "\307",
+      "\310", "\311", "\312", "\313", "\314", "\315", "\316", "\317",
+      "\320", "\321", "\322", "\323", "\324", "\325", "\326", "\327",
+      "\330", "\331", "\332", "\333", "\334", "\335", "\336", "\337",
+      "\340", "\341", "\342", "\343", "\344", "\345", "\346", "\347",
+      "\350", "\351", "\352", "\353", "\354", "\355", "\356", "\357",
+      "\360", "\361", "\362", "\363", "\364", "\365", "\366", "\367",
+      "\370", "\371", "\372", "\373", "\374", "\375", "\376", "\377",
     }),
     ({
       "%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07",
@@ -593,13 +621,37 @@ string http_encode_invalids (string f)
       "%7f",
       "%20",
       "%22", "%27",
+      "%80", "%81", "%82", "%83", "%84", "%85", "%86", "%87",
+      "%88", "%89", "%8a", "%8b", "%8c", "%8d", "%8e", "%8f",
+      "%90", "%91", "%92", "%93", "%94", "%95", "%96", "%97",
+      "%98", "%99", "%9a", "%9b", "%9c", "%9d", "%9e", "%9f",
+      "%a0", "%a1", "%a2", "%a3", "%a4", "%a5", "%a6", "%a7",
+      "%a8", "%a9", "%aa", "%ab", "%ac", "%ad", "%ae", "%af",
+      "%b0", "%b1", "%b2", "%b3", "%b4", "%b5", "%b6", "%b7",
+      "%b8", "%b9", "%ba", "%bb", "%bc", "%bd", "%be", "%bf",
+      "%c0", "%c1", "%c2", "%c3", "%c4", "%c5", "%c6", "%c7",
+      "%c8", "%c9", "%ca", "%cb", "%cc", "%cd", "%ce", "%cf",
+      "%d0", "%d1", "%d2", "%d3", "%d4", "%d5", "%d6", "%d7",
+      "%d8", "%d9", "%da", "%db", "%dc", "%dd", "%de", "%df",
+      "%e0", "%e1", "%e2", "%e3", "%e4", "%e5", "%e6", "%e7",
+      "%e8", "%e9", "%ea", "%eb", "%ec", "%ed", "%ee", "%ef",
+      "%f0", "%f1", "%f2", "%f3", "%f4", "%f5", "%f6", "%f7",
+      "%f8", "%f9", "%fa", "%fb", "%fc", "%fd", "%fe", "%ff",
     }));
 }
 
 string http_encode_cookie(string f)
 //! Encode dangerous characters in a string so that it can be used as
 //! the value string or name string in a cookie.
+//!
+//! @note
+//! This encodes with the same kind of %-escapes as
+//! @[http_encode_url], and that isn't an encoding specified by the
+//! cookie RFC 2965. It works because there is a nonstandard decoding
+//! of %-escapes in the Roxen HTTP protocol module.
 {
+  // FIXME: There are numerous invalid chars that this doesn't encode,
+  // e.g. 8 bit and wide chars.
   return replace(
     f, ({
       "\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
@@ -623,6 +675,7 @@ string http_encode_url (string f)
 //! means that all URI reserved and excluded characters are escaped,
 //! e.g. /, #, ?, &, \n, etc (see RFC 2396).
 //!
+//! @note
 //! Eight bit chars and wider are encoded using UTF-8 followed by http
 //! escaping. This is in line with the recommendations in RFC 2718
 //! section 2.2.5, appendix B.2 in the HTML 4.01 standard
@@ -631,6 +684,9 @@ string http_encode_url (string f)
 //! (http://www.w3.org/International/O-URL-and-ident.html). (It should
 //! work regardless of the charset used in the XML document the URL
 //! might be inserted into.)
+//!
+//! @seealso
+//! @[http_encode_invalids]
 {
   return replace (
     string_to_utf8 (f), ({
