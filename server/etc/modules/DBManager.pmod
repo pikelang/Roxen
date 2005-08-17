@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.61 2005/04/14 15:52:33 wellhard Exp $
+// $Id: DBManager.pmod,v 1.62 2005/08/17 12:28:19 noring Exp $
 
 //! Manages database aliases and permissions
 
@@ -239,12 +239,21 @@ private
   }
 };
 
+Sql.Sql get_sql_handler(string db_url)
+{
+#ifdef USE_EXTSQL_ORACLE
+  if(has_prefix(db_url, "oracle:"))
+    return ExtSQL.sql(db_url);
+#endif
+  return Sql.Sql(db_url);
+}
+
 mixed sql_cache_get(string what)
 {
   mixed key = roxenloader.sq_cache_lock();  
   string i = replace(what,":",";")+":-";
   mixed res = roxenloader.sq_cache_get( i ) ||
-    roxenloader.sq_cache_set( i, Sql.Sql( what ) );
+    roxenloader.sq_cache_set( i, get_sql_handler( what ) );
   // Fool the optimizer so that key is not released prematurely
   if( res )
     return res; 
