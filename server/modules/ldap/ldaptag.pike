@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.33 2005/04/04 14:36:20 mast Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.34 2005/08/19 10:34:18 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -312,12 +312,12 @@ array|object|int do_ldap_op(string op, mapping args, RequestID id)
   }
 #endif
 
-  if(op = "search" && objectp(result) && result->num_entries()) {
+  if(op == "search" && objectp(result) && result->num_entries()) {
     array res = ({});
     do
       res += ({ result->fetch() });
     while(result->next());
-    return res - ({});
+    return res;
   }
     
   return result;
