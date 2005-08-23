@@ -1,7 +1,7 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2001 - 2004, Roxen IS.
 
-constant cvs_version="$Id: replicate.pike,v 1.22 2005/05/28 09:57:14 wellhard Exp $";
+constant cvs_version="$Id: replicate.pike,v 1.23 2005/08/23 16:44:38 wellhard Exp $";
 
 #if constant(WS_REPLICATE)
 #define QUERY(X,Y...)    get_db()->query(X,Y)
@@ -77,7 +77,7 @@ static void init_replicate_db()
   if(catch {
     // Avoid the 'IF NOT EXISTS' feature here to be more compatible.
     sQUERY( "CREATE TABLE "+cache->name+" ("
-	    "   server varchar(80) not null, "
+	    "   server varchar(80) binary not null, "
 	    "   id int not null, "
 	    "   dat_content blob not null, "
 	    "   ctime int unsigned not null, "
@@ -94,7 +94,7 @@ static void init_replicate_db()
     };
   catch {
     sQUERY( "CREATE TABLE servers ("
-	    "   secret varchar(255) not null primary key"
+	    "   secret varchar(255) binary not null primary key"
 	    ")" );
   };
   catch {
@@ -148,7 +148,7 @@ static void create( object c )
   
    // local cache.
    QUERY( "CREATE TABLE IF NOT EXISTS "+cache->name+"_replicated ("
-	  " remote    VARCHAR(255) NOT NULL, "
+	  " remote    VARCHAR(255) BINARY NOT NULL, "
 	  " index_id  INT UNSIGNED NOT NULL, "
 	  " value_id  INT UNSIGNED NOT NULL, "
 	  " PRIMARY KEY (remote, index_id, value_id), "
