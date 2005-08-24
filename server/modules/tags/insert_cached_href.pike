@@ -12,7 +12,7 @@ constant module_type = MODULE_TAG;
 LocaleString module_name = LOCALE(0, "Tags: Insert cached href");
 LocaleString module_doc  = LOCALE(0, "This module contains the rxml-tags 'insert "
 				     "cached-href' and 'split-xml-data'. Useful "
-				     "when inplementing RSS syndication.");
+				     "when inplementing eg RSS syndication.");
 
 #if DEBUG_INSERT_CACHED_HREF
 #define DWRITE(x)	report_debug("INSERT_CACHED_HREF: " + x + "\n")
@@ -701,39 +701,41 @@ TAGDOCUMENTATION;
 constant tagdoc=([
 
   "insert#cached-href":#"<desc type='plugin'><p>
-This tag inserts the contents of the provided URL, read from a database. The
-database is updated repeatedly in the background by a background process that is
-initiated and run as soon as this module is loaded. If the database is empty
-when the tag is executed, the standard behavior is to fetch the data immediately.
-When providing values for the attributes fetch-interval, fresh-time, ttl, 
-update-interval or timeout, the time can either be seconds, minutes, hours or days. 
-If only a number is provided, it is interpreted as seconds, otherwise write the 
-corresponding letter or word after the number, e.g: 10 days, 10d, 10 h, 10hours, 
-5 min, 5m, 2 hours and so on. Spaces 
-between the number and the word are allowed. The values at the settings tab for 
-fetch-interval, fresh-time, ttl and timeout are the standard values that the tag 
-will be assigned if an attribute is left out. update-interval on the other hand, is
-central and common for all tags.
+This tag inserts the contents of the provided URL, as read from a database.
+The database is updated repeatedly in the background by a background process
+that is initiated and run as soon as this module is loaded. If the database
+is empty when the tag is executed, the standard behavior is to fetch the data
+immediately. When providing values for the attributes fetch-interval,
+fresh-time, ttl, update-interval or timeout, the time can either be seconds,
+minutes, hours or days. If only a number is provided, it is interpreted as
+seconds, otherwise write the corresponding letter or word after the number,
+e.g: 10 days, 10d, 10 h, 10hours, 5 min, 5m, 2 hours and so on. Spaces 
+between the number and the word are allowed. The values at the settings tab
+for fetch-interval, fresh-time, ttl and timeout are the standard values that
+the tag will be assigned if an attribute is left out. update-interval on the
+other hand, is central and common for all tags.
 </p>
 <p>
 <h4>IMPORTANT:</h4> 
 The data in the database for an URL is always shared by all tags at the
-same site. This means that when data for an URL is updated this affects all tags
-referring to this specific URL, even if the other attributes may differ. For example,
-if the same URL is referenced by one tag without the pure-db attribute and another 
-tag WITH the pure-db attribute, the only guarantee is that the tag with the 
-attribute pure-db never will generate a data fetch. The tag without the attribute still
-can. Another implication of the data being shared is for example if the same URL is 
-referenced by two tags with different fetch intervals. The data will then be updated
-at the smallest of these two fetch intervals. Providing the time-of-day attribute will
-however always make the module fetch data when that time of day occur, without 
-interference by any other tag referencing the same URL. Also important to note, is that
-since the fetching of the common data is performed centrally by the module, the timeout
-of every tag can not be used, of course. If several tags refer to the same URL but 
-is provided with different timeouts, the longest timeout will be used. However, if there
-exists no data in the database for the URL of a tag when the tag is run, and the pure-db 
-attribute is not provided, then the fetching of data will be performed for that specific 
-tag and with the specific timeout.
+same site. This means that when data for an URL is updated this affects all
+tags referring to this specific URL, even if the other attributes may differ.
+For example, if the same URL is referenced by one tag without the pure-db
+attribute and another tag WITH the pure-db attribute, the only guarantee is
+that the tag with the attribute pure-db never will generate a data fetch. The
+tag without the attribute still can. Another implication of the data being
+shared is for example if the same URL is referenced by two tags with different
+fetch intervals. The data will then be updated at the smallest of these two
+fetch intervals. Providing the time-of-day attribute will however always make
+the module fetch data when that time of day occur, without interference by any
+other tag referencing the same URL. Also important to note, is that since the
+fetching of the common data is performed centrally by the module, the timeout
+of every tag can not be used, of course. If several tags refer to the same
+URL but are provided with different timeouts, the longest timeout will be
+used. However, if there exists no data in the database for the URL of a tag
+when the tag is run, and the pure-db attribute is not provided, then the
+fetching of data will be performed for that specific tag and with the
+specified timeout.
 </p></desc>
 
 <attr name='cached-href' value='string'>
@@ -744,15 +746,16 @@ tag and with the specific timeout.
 
 <attr name='fetch-interval' value='string'>
 <p>
- States at which interval the background process will fetch the
+ States at what interval the background process will fetch the
  URL and update the database. 
 </p>
 </attr>
 
 <attr name='time-of-day' value='string'>
 <p>
- Can be provided as an alternative to fetch-interval, if a fetch should be performed once
- per day at a specific time. The provided time must be of the format hh:mm.
+ Can be provided as an alternative to fetch-interval, if a fetch should
+ be performed once per day at a specific time. The provided time must be
+ of the format hh:mm.
 </p>
 </attr>
 
@@ -764,13 +767,14 @@ tag and with the specific timeout.
 
 <attr name='ttl' value='string'>
 <p>
- States how long unrequested data will exist in the database before being removed
+ States how long unrequested data will exist in the database before being
+ removed.
 </p>
 </attr>
 
 <attr name='timeout' value='string'>
 <p>
- The timeout for the fetching of new data from a server
+ The timeout for the fetching of new data from a server.
 </p>
 </attr>
 
@@ -778,7 +782,8 @@ tag and with the specific timeout.
 <p>
  If provided, the tag will only return data stored in the database, i.e 
  never fetch data immediately if the database is empty. Instead, the 
- data will not be available until the background process has updated the database.
+ data will not be available until the background process has updated the
+ database.
 </p>
 </attr>
 
@@ -795,7 +800,7 @@ tag and with the specific timeout.
  If provided the resulting content will be decoded to the internal
  charset representation by looking at a potential BOM (Byte Order
  Mark) and the specified encoding in the XML header. Defaults to UTF-8
- in no BOM or encoding was found.
+ if no BOM or encoding was found.
 </p>
 </attr>",
 ]);
