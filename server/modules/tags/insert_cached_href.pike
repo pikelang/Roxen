@@ -515,48 +515,16 @@ class TagInsertCachedHref {
       NOCACHE();
     else
       CACHE(60);
-    
-    return href_database->get_data(Attributes(args)->get_db_args(), 
-				   (["x-roxen-recursion-depth":recursion_depth]));
+
+    string res = href_database->get_data(Attributes(args)->get_db_args(), 
+					 (["x-roxen-recursion-depth":recursion_depth]));
+    if(args["decode-xml"])
+      // Parse xml header and recode content to internal representation.
+      res = Parser.XML.Simple()->autoconvert(res);
+      
+    return res;
   }
 } 
-
-class TagSplitXMLData {
-  inherit RXML.Tag;
-  constant name = "split-xml-data";
-  constant std_xml_encoding = "utf-8";
-  
-  class Frame {
-    inherit RXML.Frame;
-    
-    array do_return(RequestID id) {
-      string temp = lower_case(args["input"][0..90]);
-      int pos = search(temp, "encoding");
-      int counter = 0;
-      string from = "";
-      string parsed_data = "";
-
-      for (int i = 0; pos != -1 && temp[(pos + 10 + i)..(pos + 10 + i)] != "\""; i++)
-	from += temp[(pos + 10 + i)..(pos + 10 + i)];
-      
-      for (int i = 0; i < sizeof(args["input"]); i++) {
-	if (args["input"][i..i] == "<") {
-	  parsed_data = args["input"][i..(sizeof(args["input"]) - 1)];
-	  break;
-	}
-      }
-      
-      RXML.user_set_var("xml", parsed_data, "var");
-      
-      if (sizeof(from)) 
-	RXML.user_set_var("from", from, "var");
-      else
-	RXML.user_set_var("from", std_xml_encoding, "var");
-      
-      return 0;
-    }
-  }
-}
 
 #ifdef THREADS
 
@@ -820,31 +788,16 @@ tag and with the specific timeout.
  The default time is up to 60 seconds depending on the cache limit imposed by
  other RXML tags on the same page.
 </p>
+</attr>
+
+<attr name='decode-xml' value='string'>
+<p>
+ If provided the resulting content will be decoded to the internal
+ charset representation by looking at a potential BOM (Byte Order
+ Mark) and the specified encoding in the XML header. Defaults to UTF-8
+ in no BOM or encoding was found.
+</p>
 </attr>",
-
-  "split-xml-data":#"<desc><p>
- This tag takes data in XML-format, removes a potential BOM (Byte Order Mark)
- and returns the data along with the encoding.
- </p></desc>
-
- <attr name='input' value='string'>
- <p>
-  The data to be parsed.
- </p> 
- </attr>
-
- <attr name='encoding' value='string'>
- <p>
-  After parsing, this attribute will contain the encoding of the data
- </p>
- </attr>
-
- <attr name='xml-data' value='string'>
- <p>
-  After parsing, this attribute will contain the data without the
-  potential BOM (Byte Order Mark)
- </p>
- </attr>"
 ]);
 #endif
 
