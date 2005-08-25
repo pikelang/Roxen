@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.147 2004/06/30 16:58:59 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.148 2005/08/25 14:01:32 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1028,7 +1028,6 @@ mixed find_file( string f, RequestID id )
 
     object to = open(f, "wct");
     int err = errno();
-    privs = 0;
 
     TRACE_ENTER("PUT: Accepted", 0);
 
@@ -1039,12 +1038,14 @@ mixed find_file( string f, RequestID id )
 
     if(!to)
     {
+      privs = 0;
       TRACE_LEAVE("PUT: Open failed");
       return errno_to_status (err, 1, id);
     }
 
     // FIXME: Race-condition.
     chmod(f, 0666 & ~(id->misc->umask || 022));
+    privs = 0;
 
     putting[id->my_fd] = id->misc->len;
     if(id->data && strlen(id->data))
