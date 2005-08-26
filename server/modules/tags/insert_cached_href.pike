@@ -10,9 +10,9 @@ inherit "module";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 LocaleString module_name = LOCALE(0, "Tags: Insert cached href");
-LocaleString module_doc  = LOCALE(0, "This module contains the rxml-tags 'insert "
-				     "cached-href' and 'split-xml-data'. Useful "
-				     "when implementing e.g. RSS syndication.");
+LocaleString module_doc  = LOCALE(0, "This module contains the rxml-tag 'insert "
+				     "cached-href'. Useful when implementing e.g."
+				     " RSS syndication.");
 
 #if DEBUG_INSERT_CACHED_HREF
 #define DWRITE(x)	report_debug("INSERT_CACHED_HREF: " + x + "\n")
