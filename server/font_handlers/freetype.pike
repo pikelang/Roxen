@@ -2,6 +2,7 @@
 // Copyright © 2000 - 2004, Roxen IS.
 
 #if constant(Image.FreeType.Face)
+#include <config.h>
 constant name = "FreeType fonts";
 constant doc = "Freetype 2.0 font loader. Uses freetype to render text from, among other formats, TrueType, OpenType and Postscript Type1 fonts.";
 constant scalable = 1;
