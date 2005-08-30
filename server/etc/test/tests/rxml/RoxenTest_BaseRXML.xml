@@ -1143,6 +1143,15 @@ a&auml; &amp; b  &gt;
 </test>
 
 <test>
+  <rxml type="string">
+    <set variable="var.n" value="4314351451313243221222"/>
+    <if variable="var.n > 4314351451313243221221">1</if>
+    <if variable="var.n &lt; 4314351451313243221223">1</if>
+  </rxml>
+  <result>11</result>
+</test>
+
+<test>
 <rxml><emit source="values" values="1,2,3" split=","><if variable="_.value = 1">&_.value;</if></emit></rxml>
 <result>1</result>
 </test>
