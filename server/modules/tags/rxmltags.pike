@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.493 2005/06/23 11:59:52 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.494 2005/08/30 16:12:56 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -996,6 +996,7 @@ class TagInsertVariable {
   string get_data(string var, mapping args, RequestID id, RXML.Frame insert_frame) {
     if(zero_type(RXML.user_get_var(var, args->scope)))
       RXML.run_error("No such variable ("+var+").\n", id);
+
     if(args->index) {
       mixed data = RXML.user_get_var(var, args->scope);
       if(intp(data) || floatp(data))
@@ -4795,11 +4796,13 @@ class IfIs
             sizeof(filter( is/",", glob, var )));
     if(arr[1]=="!=") return is!=var;
 
-    string trash;
-    if(sscanf(var,"%f%s",float f_var,trash)==2 && trash=="" &&
-       sscanf(is ,"%f%s",float f_is ,trash)==2 && trash=="") {
-      if(arr[1]=="<") return f_var<f_is;
-      if(arr[1]==">") return f_var>f_is;
+    int|float n_var, n_is;
+    if ((sscanf (var, "%d%*c", n_var) == 1 ||
+	 sscanf (var, "%f%*c", n_var) == 1) &&
+	(sscanf (is, "%d%*c", n_is) == 1 ||
+	 sscanf (is, "%f%*c", n_is) == 1)) {
+      if(arr[1]=="<") return n_var < n_is;
+      if(arr[1]==">") return n_var > n_is;
     }
     else {
       if(arr[1]=="<") return (var<is);
