@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.494 2005/08/30 16:12:56 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.495 2005/09/01 07:22:55 erikd Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2408,6 +2408,79 @@ class TagReplace
 	if (result_type->entity_syntax)
 	  result = replace (result, "\0", "&#0;");
       }
+    }
+  }
+}
+
+class TagSubstring
+{
+  inherit RXML.Tag;
+  constant name = "substring";
+  //mapping(string:RXML.Type) req_arg_types = ([ "variable" : RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "from"         : RXML.t_int(RXML.PEnt),
+    "to"           : RXML.t_int(RXML.PEnt),
+    "split"        : RXML.t_text(RXML.PEnt),
+    //"before-first" : RXML.t_text(RXML.PEnt),
+    //"before-last"  : RXML.t_text(RXML.PEnt),
+    //"after-first"  : RXML.t_text(RXML.PEnt),
+    //"after-last"   : RXML.t_text(RXML.PEnt),
+    //"index"        : RXML.t_int(RXML.PEnt),
+  ]);
+  RXML.Type content_type = RXML.t_any (RXML.PXml);
+
+  class Frame {
+    inherit RXML.Frame;
+
+    array(string) do_return(RequestID id) {
+      string|array(string) substring;
+      if(!content)
+	return 0;
+      else if(args->split) {
+	substring = (content || "") / (args->split||"");
+	substring -= ({ "" });
+	if(sizeof(substring) == 0) {
+	  return ({ "" });
+	}
+      } else {
+	substring = content;
+      }
+
+      //if(args["before-first"] || args["before-last"] ||
+      //   args["after-first"] || args["after-last"] )
+      //{
+	/* Maximum of two arguments of these are allowed
+	   it is otherwise considered a parse error. */
+      //  if(args->split) {
+      //  
+      //  } else {
+      //
+      //  }
+      //}
+
+      if( args->from || args->to )
+      {
+	int from, to;
+	from = (int)args->from || 0;
+	if( args->to && args->to != "0")
+	  to = (int)args->to;
+	to--;
+	from--;
+	if(from < 0)
+	  from = 0;
+	if( to && substring && to < sizeof(substring) && to > from ) {
+	  if(args->split)
+	    return ({ substring[from..to]*(args->split||"") });
+	  else
+	    return ({ substring[from..to] });
+	} else {
+	  if(args->split)
+	    return ({ substring[from..]*(args->split||"") });
+	  else
+	    return ({ substring[from..] });
+	}
+      }
+      return ({ "" });
     }
   }
 }
@@ -7463,6 +7536,60 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 <attr name='separator' value='string' default=','>
  <p>The separator between words in the \"from\" and \"to\" arguments.
  This is only relevant when the \"type\" argument is \"words\".</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"substring": #"
+<desc type='cont'><p><short hide='hide'>Extract part of or parts of string.</short>
+<p>The <tag>substring</tag> will extract parts of the content of the
+ tag.</p>
+<p>If you do not use the <em>split</em> attribute then each of the
+characters of the string is a list of characters from the content.
+That means that the value 'Hi, how are you?' becomes a list of values:</p>
+<ex-box>'H', 'i', ',', ' ', 'h', 'o', 'w', ' ', 'a', 'r', 'e', ' ',
+'y', 'o', 'u', '?'</ex-box>
+<p>Each character is numbered from 1 to the number of characters in
+the string. In this case 16.</p>
+<p>With the split attribute, e.g. ' ' (a space), you will get another
+list of values that contains 1 or more characters:</p>
+<ex-box>'Hi,', 'how', 'are', 'you?'</ex-box>
+<p>When the split attribute is used, the values are numbered by group
+of characters, 1 to 4 in this example.</p>
+</desc>
+
+<attr name='from' value='int'><p>The starting character(s) of the content
+the substring extraction starts with.
+</p>
+<ex>
+  <substring from='6'>Hi, how are you?</substring>
+</ex>
+</attr>
+<attr name='to' value='int'><p>
+Get the substring to the number given character of the string. </p>
+<ex>
+  <substring to='3'>Hi, how are you?</substring>
+</ex>
+<ex>
+  <substring from='5' to='7'>Hi, how are you?</substring>
+</ex>
+</attr>
+<attr name='split' value='string'><p>
+Split the content with this character or these characters. If it is an empty
+value the content will be split by every character, which is default already.</p>
+<p>Use it together with the <att>to</att> or <att>from</att> attributes.</p>
+<ex>
+  Note, there will be a space after
+  the colon:<substring from='2' split=','>Hi, how are you?</substring>
+</ex>
+<ex>
+  <substring from='2' to='3' split='/'>/path-1/path-2/path-3/index.xml</substring>
+</ex>
+<p>This case will return an empty value (the pipe characters make the empty result
+visible) since there is nothing in between the comma characters:</p>
+<ex>
+   |<substring from='1' split=','>,,,,,,,,,,,</substring>|
+</ex>
 </attr>",
 
 //----------------------------------------------------------------------
