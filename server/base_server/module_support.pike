@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module_support.pike,v 1.122 2005/09/02 15:11:43 mast Exp $
+// $Id: module_support.pike,v 1.123 2005/09/02 15:35:10 mast Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -104,32 +104,25 @@ static int check_ambiguous_module (string name, array(string) files)
 // A module can be loaded from more than one file. Report this and see
 // if it really is ambiguous.
 {
-  int code_is_different = 0;
   string module_code = master()->master_read_file (files[0]);
+
   foreach (files[1..], string file)
     if (master()->master_read_file (file) != module_code) {
-      code_is_different = 1;
-      break;
+      report_error ("Module %O occurs in several ambiguous places:\n"
+		    "%{  %s\n%}"
+		    "The content is different - "
+		    "the module is ignored.\n", name, files);
+      // NB: This can be a compat problem in really flaky installations
+      // which just happen to load the right module consistently, or if
+      // there are only insignificant differences between them.
+      return 1;
     }
 
-  if (code_is_different) {
-    report_error ("Module %O occurs in several places:\n"
+  report_warning ("Module %O occurs in several ambiguous places:\n"
 		  "%{  %s\n%}"
-		  "It is ambiguous which to use - "
-		  "the module is ignored.\n", name, files);
-    // NB: This can be a compat problem in really flaky installations
-    // which just happen to load the right module consistently, or if
-    // there are only insignificant differences between them.
-    return 1;
-  }
-
-  else {
-    report_warning ("Module %O occurs in several places:\n"
-		    "%{  %s\n%}"
-		    "The content is the same - "
-		    "one will be used at random.\n", name, files);
-    return 0;
-  }
+		  "The content is the same - "
+		  "one will be used at random.\n", name, files);
+  return 0;
 }
 
 //
@@ -525,17 +518,17 @@ class ModuleInfo( string sname, string filename )
 
   int find_module( string sn )
   {
-    multiset(string) files = (<>);
-    foreach( roxenp()->query( "ModuleDirs" ), string dir )
+    foreach( roxenp()->query( "ModuleDirs" ), string dir ) {
+      multiset(string) files = (<>);
       rec_find_module_files (sn, dir, files);
-
-    if (!sizeof (files))
-      return 0;
-    else if (sizeof (files) > 1 &&
-	     check_ambiguous_module (sn, indices (files)))
-      return 0;
-    else
-      return init_module (Multiset.Iterator (files)->index());
+      if (sizeof (files)) {
+	if (sizeof (files) > 1 &&
+	    check_ambiguous_module (sn, indices (files)))
+	  return 0;
+	else
+	  return init_module (Multiset.Iterator (files)->index());
+      }
+    }
   }
 
   int check (void|int force)
@@ -663,20 +656,24 @@ array(ModuleInfo) all_modules()
     module_cache = roxenp()->ConfigIFCache( "modules" ); 
   }
 
-  mapping(string:string) module_files = ([]);
+  array(string) possible = ({});
 
-  foreach( roxenp()->query( "ModuleDirs" ), string dir )
+  foreach( roxenp()->query( "ModuleDirs" ), string dir ) {
+    mapping(string:string) module_files = ([]);
     rec_find_all_modules( dir, module_files );
 
-  array(string) possible = Array.uniq (values (module_files));
-  if (sizeof (possible) < sizeof (module_files)) {
-    mapping(string:array(string)) inv = ([]);
-    foreach (module_files; string file; string name)
-      inv[name] += ({file});
-    foreach (inv; string name; array(string) files)
-      if (sizeof (files) > 1 && check_ambiguous_module (name, files))
-	m_delete (inv, name);
-    possible = indices (inv);
+    array(string) module_names = Array.uniq (values (module_files));
+    if (sizeof (module_names) < sizeof (module_files)) {
+      mapping(string:array(string)) inv = ([]);
+      foreach (module_files; string file; string name)
+	inv[name] += ({file});
+      foreach (inv; string name; array(string) files)
+	if (sizeof (files) > 1 && check_ambiguous_module (name, files))
+	  m_delete (inv, name);
+      module_names = indices (inv);
+    }
+
+    possible |= module_names;
   }
 
   map( possible, find_module, 1 );
