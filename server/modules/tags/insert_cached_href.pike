@@ -518,10 +518,15 @@ class TagInsertCachedHref {
 
     string res = href_database->get_data(Attributes(args)->get_db_args(), 
 					 (["x-roxen-recursion-depth":recursion_depth]));
-    if(args["decode-xml"])
+    
+    if(args["decode-xml"]) {
       // Parse xml header and recode content to internal representation.
       res = Parser.XML.Simple()->autoconvert(res);
       
+      // Remove any bytes potentially still preceeding the first '<' in the xml file
+      return res[search(res, "<")..];
+    }
+    
     return res;
   }
 } 
