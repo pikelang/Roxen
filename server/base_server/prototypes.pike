@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.148 2005/08/16 15:39:27 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.149 2005/09/02 12:26:07 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -136,7 +136,7 @@ class ModuleInfo
   string get_description();
   RoxenModule instance( object conf, void|int silent );
   void save();
-  void update_with( RoxenModule mod, string what );
+  void update_with( RoxenModule mod, string what ); // NOTE: Throws strings.
   int init_module( string what );
   int rec_find_module( string what, string dir );
   int find_module( string sn );
