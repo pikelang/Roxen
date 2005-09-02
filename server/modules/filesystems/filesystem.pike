@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.149 2005/08/25 14:00:51 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.150 2005/09/02 11:14:23 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -751,7 +751,7 @@ mapping make_collection(string coll, RequestID id)
 
 class CacheCallback(string f, int orig_size)
 {
-  int(0..1) `()(RequestId id, mixed key)
+  int(0..1) `()(RequestID id, mixed key)
   {
     return _file_size(f, id) == orig_size;
   }
