@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module_support.pike,v 1.120 2004/07/20 10:07:57 anders Exp $
+// $Id: module_support.pike,v 1.121 2005/09/02 13:53:29 mast Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -35,7 +35,8 @@ int got_java()
 
 int dump( string file, program|void p );
 
-program my_compile_file(string file, void|int silent)
+// Throws strings.
+static program my_compile_file(string file, void|int silent)
 {
   if( file[0] != '/' )
     file = combine_path(getcwd(), file);
@@ -92,7 +93,8 @@ program my_compile_file(string file, void|int silent)
   return p;
 }
 
-function|program load( string what, void|int silent )
+// Throws strings.
+static function|program load( string what, void|int silent )
 {
 //   werror("Load "+what+"\n");
   return my_compile_file( what, silent );
@@ -399,6 +401,7 @@ class ModuleInfo( string sname, string filename )
   }
 
 
+  // Throws strings.
   void update_with( RoxenModule mod, string what )
   {
     if(!what)
@@ -440,10 +443,11 @@ class ModuleInfo( string sname, string filename )
       destruct( mod );
       return 1;
     };
-    if( stringp( q ) )
-      report_debug( q );
-    else if( q && sizeof(q) )
-      report_debug(describe_backtrace(q));
+    if (q)
+      if( stringp( q ) )
+	report_debug( q );
+      else
+	report_debug(describe_backtrace(q));
     return 0;
   }
 
@@ -457,9 +461,7 @@ class ModuleInfo( string sname, string filename )
     if( !dirlist || sizeof( dirlist & ({ ".nomodules", ".no_modules" }) ) )
       return 0;
 
-    foreach( dirlist, string file )
-      catch
-      {
+    foreach( dirlist, string file ) {
 	Stdio.Stat s;
         if( file[0] != '.' &&
 	    (s=file_stat( dir+file )) && s->isdir
@@ -481,13 +483,14 @@ class ModuleInfo( string sname, string filename )
           {
             Stdio.File f = Stdio.File();
 	    if( !f->open( dir+file, "r" ) )
-	      throw( "Failed to open "+dir+file+"\n");
-            if( (f->read( 4 ) != "#!NO" ) )
+	      report_error ("Failed to open %s: %s\n",
+			    dir + file, strerror (f->errno()));
+	    else if( (f->read( 4 ) != "#!NO" ) )
               if( init_module( dir+file ) )
                 return 1;
           }
         }
-      };
+    }
   }
 
   int find_module( string sn )
@@ -562,8 +565,7 @@ mapping(string:ModuleInfo) modules;
 array(string) rec_find_all_modules( string dir )
 {
   array(string) modules = ({});
-  catch
-  {
+
     Stdio.Stat s;
     array(string) dirlist = r_get_dir( dir ) - ({"CVS"});
 
@@ -571,16 +573,17 @@ array(string) rec_find_all_modules( string dir )
         (search( dirlist, ".no_modules" ) != -1) )
       return ({});
 
-    foreach( dirlist, string file )
-      catch
-      {
+    foreach( dirlist, string file ) {
         if( file[0] == '.' ) continue;
         if( file[-1] == '~' ) continue;
 	if( (< "so", "pike">)[ extension( file ) ] ||
 	    (<"class", "jar">)[extension (file)] && got_java())
         {
-          Stdio.File f = open( dir+file, "r" );
-          if( (f->read( 4 ) != "#!NO" ) )
+	  Stdio.File f = Stdio.File();
+	  if (!f->open( dir+file, "r" ))
+	    report_warning ("Failed to open %s: %s\n",
+			    dir + file, strerror (f->errno()));
+	  else if( (f->read( 4 ) != "#!NO" ) )
             modules |= ({ strip_extention( file ) });
         }
 	else if( (s = file_stat( dir+file )) &&
@@ -588,8 +591,8 @@ array(string) rec_find_all_modules( string dir )
 		 (file != "pike-modules") &&
 		 (file != "CVS") )
           modules |= rec_find_all_modules( dir+file+"/" );
-      };
-  };
+    }
+
   return modules;
 }
 
