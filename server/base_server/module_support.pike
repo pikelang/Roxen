@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module_support.pike,v 1.120 2004/07/20 10:07:57 anders Exp $
+// $Id: module_support.pike,v 1.121 2005/09/02 17:19:21 mast Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -96,6 +96,33 @@ function|program load( string what, void|int silent )
 {
 //   werror("Load "+what+"\n");
   return my_compile_file( what, silent );
+}
+
+static int check_ambiguous_module (string name, array(string) files)
+// A module can be loaded from more than one file. Report this and see
+// if it really is ambiguous.
+{
+  string module_code = master()->master_read_file (files[0]);
+
+  foreach (files[1..], string file)
+    if (master()->master_read_file (file) != module_code) {
+      report_warning ("Module %O occurs in several ambiguous places:\n"
+		      "%{  %s\n%}"
+		      "The content is different - "
+		      "one will be used at random.\n", name, files);
+      // In 4.1 this causes the module to not be loaded at all, but
+      // here we accept it for compat reasons: In really flaky
+      // installations which just happen to load the right module
+      // consistently, or if there are only insignificant differences
+      // between them, then the site might work anyway.
+      return 0;
+    }
+
+  report_warning ("Module %O occurs in several ambiguous places:\n"
+		  "%{  %s\n%}"
+		  "The content is the same - "
+		  "one will be used at random.\n", name, files);
+  return 0;
 }
 
 //
@@ -450,12 +477,16 @@ class ModuleInfo( string sname, string filename )
 
   static constant nomods = (< "pike-modules", "CVS" >);
 
-  int rec_find_module( string what, string dir )
+  // Gone. Shouldn't be used anywhere else.
+  int rec_find_module( string what, string dir ) { }
+
+  static void rec_find_module_files (string what, string dir,
+				     multiset(string) files)
   {
     array dirlist = r_get_dir( dir );
 
     if( !dirlist || sizeof( dirlist & ({ ".nomodules", ".no_modules" }) ) )
-      return 0;
+      return;
 
     foreach( dirlist, string file )
       catch
@@ -463,11 +494,10 @@ class ModuleInfo( string sname, string filename )
 	Stdio.Stat s;
         if( file[0] != '.' &&
 	    (s=file_stat( dir+file )) && s->isdir
-	    && !nomods[file] )
-          if( rec_find_module( what, dir+file+"/" ) )
-            return 1;
-	  else
-	    continue;
+	    && !nomods[file] ) {
+	  rec_find_module_files (what, dir+file+"/", files);
+	  continue;
+	}
 
         if( strlen( file ) < 3 )
 	  continue;
@@ -482,19 +512,26 @@ class ModuleInfo( string sname, string filename )
             Stdio.File f = Stdio.File();
 	    if( !f->open( dir+file, "r" ) )
 	      throw( "Failed to open "+dir+file+"\n");
-            if( (f->read( 4 ) != "#!NO" ) )
-              if( init_module( dir+file ) )
-                return 1;
-          }
+	    if( (f->read( 4 ) != "#!NO" ) )
+	      files[dir + file] = 1;
+	  }
         }
       };
   }
 
   int find_module( string sn )
   {
-    foreach( roxenp()->query( "ModuleDirs" ), string dir )
-      if( rec_find_module( sn, dir ) )
-        return 1;
+    foreach( roxenp()->query( "ModuleDirs" ), string dir ) {
+      multiset(string) files = (<>);
+      rec_find_module_files (sn, dir, files);
+      if (sizeof (files)) {
+	if (sizeof (files) > 1 &&
+	    check_ambiguous_module (sn, indices (files)))
+	  return 0;
+	else
+	  return init_module (indices (files)[0]);
+      }
+    }
   }
 
   int check (void|int force)
@@ -559,9 +596,9 @@ string extension( string from )
 }
 
 mapping(string:ModuleInfo) modules;
-array(string) rec_find_all_modules( string dir )
+static void rec_find_all_modules( string dir,
+				  mapping(string:string) modules )
 {
-  array(string) modules = ({});
   catch
   {
     Stdio.Stat s;
@@ -569,7 +606,7 @@ array(string) rec_find_all_modules( string dir )
 
     if( (search( dirlist, ".nomodules" ) != -1) ||
         (search( dirlist, ".no_modules" ) != -1) )
-      return ({});
+      return;
 
     foreach( dirlist, string file )
       catch
@@ -581,16 +618,15 @@ array(string) rec_find_all_modules( string dir )
         {
           Stdio.File f = open( dir+file, "r" );
           if( (f->read( 4 ) != "#!NO" ) )
-            modules |= ({ strip_extention( file ) });
-        }
+	    modules[dir + file] = strip_extention (file);
+	}
 	else if( (s = file_stat( dir+file )) &&
 		 s->isdir &&
 		 (file != "pike-modules") &&
 		 (file != "CVS") )
-          modules |= rec_find_all_modules( dir+file+"/" );
+	  rec_find_all_modules( dir+file+"/", modules );
       };
   };
-  return modules;
 }
 
 array(ModuleInfo) all_modules_cache;
@@ -627,8 +663,23 @@ array(ModuleInfo) all_modules()
 
   array(string) possible = ({});
 
-  foreach( roxenp()->query( "ModuleDirs" ), string dir )
-    possible |= rec_find_all_modules( dir );
+  foreach( roxenp()->query( "ModuleDirs" ), string dir ) {
+    mapping(string:string) module_files = ([]);
+    rec_find_all_modules( dir, module_files );
+
+    array(string) module_names = Array.uniq (values (module_files));
+    if (sizeof (module_names) < sizeof (module_files)) {
+      mapping(string:array(string)) inv = ([]);
+      foreach (module_files; string file; string name)
+	inv[name] += ({file});
+      foreach (inv; string name; array(string) files)
+	if (sizeof (files) > 1 && check_ambiguous_module (name, files))
+	  m_delete (inv, name);
+      module_names = indices (inv);
+    }
+
+    possible |= module_names;
+  }
 
   map( possible, find_module, 1 );
   array(ModuleInfo) tmp = values( modules ) - ({ 0 });
