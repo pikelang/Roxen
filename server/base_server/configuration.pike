@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.591 2005/06/29 18:53:47 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.592 2005/09/02 12:25:27 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3047,7 +3047,21 @@ RoxenModule reload_module( string modname )
   disable_module( modname, 1 );
   destruct( old_module ); 
 
-  mi->update_with( nm,0 ); // This is sort of nessesary...
+  mixed err = catch {
+      mi->update_with( nm,0 ); // This is sort of nessesary...
+    };
+  if (err)
+    if (stringp (err)) {
+      // Error from the register_module call. We can't enable the old
+      // module now, and I don't dare changing the order so that
+      // register_module starts to get called before the old module is
+      // destructed. /mast
+      report_error (err);
+      report_error(LOC_C(385,"Reload failed")+"\n");
+      return 0;			// Use a placeholder module instead?
+    }
+    else
+      throw (err);
   enable_module( modname, nm, mi );
 
   foreach (old_error_log, [string msg, array(int) times])
