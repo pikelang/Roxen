@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.62 2005/08/17 12:28:35 noring Exp $
+// $Id: DBManager.pmod,v 1.63 2005/09/06 13:02:15 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -162,6 +162,8 @@ private
     static int pe;
     static array(mapping(string:mixed)) query( string query, mixed ... args )
     {
+      // Get rid of any initial whitespace.
+      query = String.trim_all_whites(query);
       if( has_prefix( lower_case(query), "select" ) ||
           has_prefix( lower_case(query), "show" ) ||
           has_prefix( lower_case(query), "describe" ))
@@ -171,6 +173,8 @@ private
     }
     static object big_query( string query, mixed ... args )
     {
+      // Get rid of any initial whitespace.
+      query = String.trim_all_whites(query);
       if( has_prefix( lower_case(query), "select" ) ||
           has_prefix( lower_case(query), "show" ) ||
           has_prefix( lower_case(query), "describe" ))
