@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.102 2004/06/30 16:58:55 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.103 2005/09/06 13:01:33 grubba Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -361,9 +361,10 @@ class TagSQLQuery {
 
       array res=do_sql_query(args, id, 0, 1);
 
+      object con = args->dbobj;
+      m_delete(args, "dbobj");
+
       if(args["mysql-insert-id"]) {
-	object con = args->dbobj;
-	m_delete(args, "dbobj");
 	if(con && con->master_sql)
 	  RXML.user_set_var(args["mysql-insert-id"],
 			    con->master_sql->insert_id());
