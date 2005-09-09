@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.486 2005/06/23 12:01:26 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.487 2005/09/09 18:00:37 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -7286,7 +7286,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 <attr name='range' value='integer'>
  <p>The random range, from 0 up to but not including the range integer.</p>
 
- <ex><random random='10'/></ex>
+ <ex><random range='10'/></ex>
 </attr>
 
 <attr name='separator' value='string'>
