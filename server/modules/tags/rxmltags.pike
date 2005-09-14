@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.495 2005/09/01 07:22:55 erikd Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.496 2005/09/14 12:02:47 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4806,16 +4806,16 @@ class IfIs
       // represented by arrays. We don't want to escalate that to
       // other types, though (empty strings are already considered
       // true).
-      if (!arrayp (var))
+      if (!arrayp (var) && !mappingp (var) && !multisetp (var))
 	return !!var;
     }
     else {
       var=source(id, arr[0]);
-      if(!arrayp(var))
+      if (!arrayp (var) && !mappingp (var) && !multisetp (var))
 	return do_check(var, arr, id);
     }
 
-    int(0..1) recurse_check(array var, array arr, RequestID id) {
+    int(0..1) recurse_check(array|mapping|multiset var, array arr, RequestID id) {
       foreach(arrayp (var) ? var :
 	      mappingp (var) ? values (var) :
 	      indices (var),
@@ -4876,10 +4876,14 @@ class IfIs
 	 sscanf (is, "%f%*c", n_is) == 1)) {
       if(arr[1]=="<") return n_var < n_is;
       if(arr[1]==">") return n_var > n_is;
+      if(arr[1]=="<=") return n_var <= n_is;
+      if(arr[1]==">=") return n_var >= n_is;
     }
     else {
       if(arr[1]=="<") return (var<is);
       if(arr[1]==">") return (var>is);
+      if(arr[1]=="<=") return (var<=is);
+      if(arr[1]==">=") return (var>=is);
     }
 
     return !!source(id, arr*" ");
@@ -7403,7 +7407,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 <attr name='range' value='integer'>
  <p>The random range, from 0 up to but not including the range integer.</p>
 
- <ex><random random='10'/></ex>
+ <ex><random range='10'/></ex>
 </attr>
 
 <attr name='separator' value='string'>
@@ -8508,7 +8512,8 @@ the respective attributes below for further information.</p></desc>
 
  <p>If there is an operator then the right hand is treated as a
  literal value (with some exceptions described below). Valid operators
- are \"=\", \"==\", \"is\", \"!=\", \"&lt;\" and \"&gt;\".</p>
+ are \"=\", \"==\", \"is\", \"!=\", \"&lt;\", \"&gt;\", \"&lt;=\", and
+ \"&gt;=\".</p>
 
  <ex><set variable='var.x' value='6'/>
 <if variable='var.x > 5'>More than one hand</if></ex>
