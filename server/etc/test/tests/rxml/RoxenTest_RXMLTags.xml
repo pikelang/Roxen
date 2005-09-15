@@ -114,6 +114,40 @@ abc
 c</p></result>
 </test>
 
+<test>
+  <rxml><autoformat p="">1234</autoformat></rxml>
+  <result><p>1234</p></result>
+</test>
+
+<test>
+  <rxml><autoformat p="">123</autoformat></rxml>
+  <result><p>123</p></result>
+</test>
+
+<!-- The following tests are for unbalanced old html style <p> tags.
+     <autoformat> ought to handle this, but doesn't currently.
+
+<test>
+  <rxml><autoformat p=""><p>123</autoformat></rxml>
+  <result><p>123</p></result>
+</test>
+
+<test>
+  <rxml><autoformat p=""><p/>123</autoformat></rxml>
+  <result><p/><p>123</p></result>
+</test>
+
+<test>
+  <rxml><autoformat p="">12<p>34</autoformat></rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml><autoformat p="">12<p/>34</autoformat></rxml>
+  <result></result>
+</test>
+
+-->
 
 <!-- ............................................................ -->
 <comment>Catch/throw</comment>
