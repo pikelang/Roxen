@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.496 2005/09/14 12:02:47 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.497 2005/09/15 12:03:43 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1022,7 +1022,7 @@ class TagInsertVariable {
     else {
       mixed data = RXML.user_get_var(var, args->scope);
       if (arrayp (data) && insert_frame->result_type->subtype_of (RXML.t_any_text))
-	data *= "\0";
+	data = map (data, RXML.t_string->encode) * "\0";
       return data;
     }
   }
@@ -2052,46 +2052,44 @@ class TagDoc {
   }
 }
 
-string simpletag_autoformat(string tag, mapping m, string s, RequestID id)
-{
-  s-="\r";
+class TagAutoformat {
+  inherit RXML.Tag;
 
-  string p=(m["class"]?"<p class=\""+m["class"]+"\">":"<p>");
+  constant name  = "autoformat";
 
-  if(!m->nonbsp)
-  {
-    s = replace(s, "\n ", "\n&nbsp;"); // "|\n |"      => "|\n&nbsp;|"
-    s = replace(s, "  ", "&nbsp; ");  //  "|   |"      => "|&nbsp;  |"
-    s = replace(s, "  ", " &nbsp;"); //   "|&nbsp;  |" => "|&nbsp; &nbsp;|"
-  }
+  class Frame {
+    inherit RXML.Frame;
 
-  if(!m->nobr) {
-    s = replace(s, "\n", "<br />\n");
-    if(m->p) {
-      if(search(s, "<br />\n<br />\n")!=-1) s=p+s;
-      s = replace(s, "<br />\n<br />\n", "\n</p>"+p+"\n");
-      if(sizeof(s)>3 && s[0..2]!="<p>" && s[0..2]!="<p ")
-        s=p+s;
-      if(s[..sizeof(s)-4]==p)
-        return s[..sizeof(s)-4];
+    array do_return(RequestID id) {
+      string s=content || "";
+      s-="\r";
+
+      if (s == "") return ({""});
+
+      if(!args->nonbsp)
+	{
+	  s = replace(s, "\n ", "\n&nbsp;"); // "|\n |"      => "|\n&nbsp;|"
+	  s = replace(s, "  ", "&nbsp; ");  //  "|   |"      => "|&nbsp;  |"
+	  s = replace(s, "  ", " &nbsp;"); //   "|&nbsp;  |" => "|&nbsp; &nbsp;|"
+	}
+
+      string dbl_nl;
+
+      if(!args->nobr) {
+	s = replace(s, "\n", "<br />\n");
+	dbl_nl = "<br />\n<br />\n";
+      }
       else
-        return s+"</p>";
+	dbl_nl = "\n\n";
+      
+      if(args->p) {
+	string p=(args["class"]?"<p class=\""+args["class"]+"\">":"<p>");
+	s = p + replace(s, dbl_nl, "\n</p>" + p + "\n") + "</p>";
+      }
+      
+      return ({ s });
     }
-    return s;
   }
-
-  if(m->p) {
-    if(search(s, "\n\n")!=-1) s=p+s;
-      s = replace(s, "\n\n", "\n</p>"+p+"\n");
-      if(sizeof(s)>3 && s[0..2]!="<p>" && s[0..2]!="<p ")
-        s=p+s;
-      if(s[..sizeof(s)-4]==p)
-        return s[..sizeof(s)-4];
-      else
-        return s+"</p>";
-    }
-
-  return s;
 }
 
 class Smallcapsstr (string bigtag, string smalltag, mapping bigarg, mapping smallarg)
@@ -2412,20 +2410,23 @@ class TagReplace
   }
 }
 
-class TagSubstring
+#if 0
+class TagRange
 {
   inherit RXML.Tag;
-  constant name = "substring";
-  //mapping(string:RXML.Type) req_arg_types = ([ "variable" : RXML.t_text(RXML.PEnt) ]);
+  constant name = "range";
   mapping(string:RXML.Type) opt_arg_types = ([
     "from"         : RXML.t_int(RXML.PEnt),
     "to"           : RXML.t_int(RXML.PEnt),
+    "index"        : RXML.t_int(RXML.PEnt),
     "split"        : RXML.t_text(RXML.PEnt),
-    //"before-first" : RXML.t_text(RXML.PEnt),
-    //"before-last"  : RXML.t_text(RXML.PEnt),
-    //"after-first"  : RXML.t_text(RXML.PEnt),
-    //"after-last"   : RXML.t_text(RXML.PEnt),
-    //"index"        : RXML.t_int(RXML.PEnt),
+    "split-chars"  : RXML.t_text (RXML.PEnt),
+    "after-first"  : RXML.t_any (RXML.PEnt),
+    "after-last"   : RXML.t_any (RXML.PEnt),
+    "after-nth"    : RXML.t_any (RXML.PEnt),
+    "before-first" : RXML.t_any (RXML.PEnt),
+    "before-last"  : RXML.t_any (RXML.PEnt),
+    "before-nth"   : RXML.t_any (RXML.PEnt),
   ]);
   RXML.Type content_type = RXML.t_any (RXML.PXml);
 
@@ -2433,18 +2434,57 @@ class TagSubstring
     inherit RXML.Frame;
 
     array(string) do_return(RequestID id) {
-      string|array(string) substring;
+      int from = args->from, to = args->to;
+      string after_str = args["after-first"] ||
+	args["after-last"] ||
+	args["after-nth"];
+      string before_str = args["before-first"] ||
+	args["before-last"] ||
+	args["before-nth"];
+
+      if (!zero_type (args->index)) {
+	if (!zero_type (args->from) || !zero_type (args->to))
+	  parse_error ("The \"index\" attribute cannot be used "
+		       "together with \"from\" and/or \"to\".\n");
+	from = to = args->index;
+      }
+      if (args->split && args["split-chars"])
+	parse_error ("Both \"split\" and \"split-chars\" cannot "
+		     "be used at the same time.\n");
+      if ((!!args["after-first"] +
+	   !!args["after-last"] +
+	   !!args["after-nth"]) > 1)
+	parse_error ("Only one \"after-...\" attribute may be specified.\n");
+      if ((!!args["before-first"] +
+	   !!args["before-last"] +
+	   !!args["before-nth"]) > 1)
+	parse_error ("Only one \"before-...\" attribute may be specified.\n");
+      if (args->from && (args["after-first"] || args["after-last"]))
+	parse_error ("Attributes \"after-first\" and \"after-last\" may not "
+		     "be used together with \"from\" or \"index\".\n");
+      if (args->to && (args["before-first"] || args["before-last"]))
+	parse_error ("Attributes \"before-first\" and \"after-last\" may not "
+		     "be used together with \"to\" or \"index\".\n");
+
       if(!content)
 	return 0;
-      else if(args->split) {
-	substring = (content || "") / (args->split||"");
-	substring -= ({ "" });
-	if(sizeof(substring) == 0) {
-	  return ({ "" });
+
+      string|array(string) splitted;
+      if(args->split)
+	splitted = content / args->split;
+      else if (args["split-chars"]) {
+	if (mixed err = catch {
+	    splitted = array_sscanf (
+	      content, "%{%s%*[" + args["split-chars"] + "]%}") * ({});
+	  }) {
+	  if (describe_error (err) == "Error in sscanf format string.\n")
+	    parse_error ("Format error in \"split-chars\".\n");
+	  else
+	    throw (err);
 	}
-      } else {
-	substring = content;
       }
+      else
+	splitted = content;
 
       //if(args["before-first"] || args["before-last"] ||
       //   args["after-first"] || args["after-last"] )
@@ -2484,6 +2524,7 @@ class TagSubstring
     }
   }
 }
+#endif
 
 class TagCSet {
   inherit RXML.Tag;
