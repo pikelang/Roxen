@@ -58,7 +58,13 @@ array(string) verify_set( string new_value ) {
 #endif
 
 #ifndef NO_DNS
-  if(check_domain && !Protocols.DNS.client()->get_primary_mx(domain))
+  if(check_domain &&
+#ifdef __NT__
+     !get_mx(domain) /* Workaround for [bug 3992] */
+#else
+     !Protocols.DNS.client()->get_primary_mx(domain)
+#endif
+     )
     return ({ sprintf(LOCALE(319,"The domain %s could not be found."),domain),
 	      new_value });
   // We could perhaps take this a step further and ask the mailserver if the account is present.
@@ -66,6 +72,34 @@ array(string) verify_set( string new_value ) {
 
   return ({ 0, new_value });
 }
+
+#if constant(Thread.Queue)
+
+class DNSclient
+{
+  Protocols.DNS.async_client dns = Protocols.DNS.async_client();
+  Thread.Queue queue = Thread.Queue();
+  string result;
+  void got_result(mixed mx)
+  {
+    if (mx && sizeof(mx))
+      result = mx[0];
+    queue->write(".");
+  }
+  void create(string domain)
+  {
+    dns->get_mx(domain, got_result);
+    queue->read();
+  }
+  string data() { return result; }
+}
+
+string get_mx(string domain)
+{
+  object client = DNSclient(domain);
+  return client->data();
+}
+#endif
 
 static string|array(string) mailparser(string address)
 //! A futile attempt to comply with RFC 822
