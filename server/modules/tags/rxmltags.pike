@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.497 2005/09/15 12:03:43 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.498 2005/09/15 13:56:51 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2081,12 +2081,40 @@ class TagAutoformat {
       }
       else
 	dbl_nl = "\n\n";
-      
+
       if(args->p) {
-	string p=(args["class"]?"<p class=\""+args["class"]+"\">":"<p>");
-	s = p + replace(s, dbl_nl, "\n</p>" + p + "\n") + "</p>";
+	s = replace (s, dbl_nl, "\n<p>\n");
+
+	// Now fix balanced <p> tags.
+
+	string ptag = args["class"]?"<p class=\""+args["class"]+"\"":"<p";
+	int got_toplevel_data = 0;
+	Parser.HTML p = Roxen.get_xml_parser();
+
+	p->add_container (
+	  "p", lambda (Parser.HTML p, mapping a, string c)
+	       {
+		 string ender = got_toplevel_data ? "</p>" : "";
+		 got_toplevel_data = 0;
+		 return ({ender,
+			  ptag, Roxen.make_tag_attributes (a),
+			  c == "" ? " />" : ">" + c + "</p>"});
+	       });
+
+	p->_set_data_callback (
+	  lambda (Parser.HTML p, string c) {
+	    if (!got_toplevel_data && sscanf (c, "%*[ \t\n]%*c") == 2) {
+	      got_toplevel_data = 1;
+	      return ({ptag, ">", c});
+	    }
+	    return ({c});
+	  });
+
+	s = p->finish (s)->read();
+	if (got_toplevel_data)
+	  s += "</p>";
       }
-      
+
       return ({ s });
     }
   }
@@ -6302,7 +6330,8 @@ using the pre tag.
 </desc>
 
 <attr name='p'>
- <p>Replace empty lines with <tag>p</tag>:s.</p>
+ <p>Replace empty lines with <tag>p</tag>:s and also ensure there are
+ balanced <tag>p</tag> tags at the top level.</p>
 <ex><autoformat p=''>
 It is almost like
 

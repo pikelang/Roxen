@@ -124,9 +124,6 @@ c</p></result>
   <result><p>123</p></result>
 </test>
 
-<!-- The following tests are for unbalanced old html style <p> tags.
-     <autoformat> ought to handle this, but doesn't currently.
-
 <test>
   <rxml><autoformat p=""><p>123</autoformat></rxml>
   <result><p>123</p></result>
@@ -134,20 +131,38 @@ c</p></result>
 
 <test>
   <rxml><autoformat p=""><p/>123</autoformat></rxml>
-  <result><p/><p>123</p></result>
+  <result><p /><p>123</p></result>
+</test>
+
+<test>
+  <rxml><autoformat p=""><p></p>123</autoformat></rxml>
+  <result><p /><p>123</p></result>
 </test>
 
 <test>
   <rxml><autoformat p="">12<p>34</autoformat></rxml>
-  <result></result>
+  <result><p>12</p><p>34</p></result>
 </test>
 
 <test>
   <rxml><autoformat p="">12<p/>34</autoformat></rxml>
-  <result></result>
+  <result><p>12</p><p/><p>34</p></result>
 </test>
 
--->
+<test>
+  <rxml><autoformat p=""><p>12</p><p>34</p></autoformat></rxml>
+  <result><p>12</p><p>34</p></result>
+</test>
+
+<test>
+  <rxml><autoformat p=""><p>12</p> <!-- foo --> <p>34</p></autoformat></rxml>
+  <result><p>12</p> <!-- foo --> <p>34</p></result>
+</test>
+
+<test>
+  <rxml><autoformat p=""><p>12</p>34</autoformat></rxml>
+  <result><p>12</p><p>34</p></result>
+</test>
 
 <!-- ............................................................ -->
 <comment>Catch/throw</comment>
