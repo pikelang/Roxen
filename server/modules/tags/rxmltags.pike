@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.499 2005/09/15 13:58:15 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.500 2005/09/16 10:48:35 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1022,7 +1022,7 @@ class TagInsertVariable {
     else {
       mixed data = RXML.user_get_var(var, args->scope);
       if (arrayp (data) && insert_frame->result_type->subtype_of (RXML.t_any_text))
-	data *= "\0";
+	data = map (data, RXML.t_string->encode) * "\0";
       return data;
     }
   }
