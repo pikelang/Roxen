@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.342 2005/05/27 12:34:23 mast Exp $
+// $Id: module.pmod,v 1.343 2005/09/16 10:50:00 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -49,10 +49,6 @@ static object roxen;
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
-#include <config.h>
-#include <module.h>
-#include <request_trace.h>
-
 #define MAGIC_HELP_ARG
 // #define OBJ_COUNT_DEBUG
 // #define RXML_OBJ_DEBUG
@@ -67,6 +63,10 @@ static object roxen;
 // #define RXML_PCODE_UPDATE_DEBUG
 // #define RXML_PCODE_COMPACT_DEBUG
 // #define TAGSET_GENERATION_DEBUG
+
+#include <config.h>
+#include <module.h>
+#include <request_trace.h>
 
 
 #ifdef RXML_OBJ_DEBUG
