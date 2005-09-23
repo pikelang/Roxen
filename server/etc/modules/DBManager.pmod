@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.64 2005/09/23 20:00:22 mast Exp $
+// $Id: DBManager.pmod,v 1.65 2005/09/23 21:24:29 mast Exp $
 
 //! Manages database aliases and permissions
 
@@ -612,12 +612,156 @@ Sql.Sql get( string name, void|Configuration conf,
 //! it to variables declared inside functions or pass it in arguments
 //! to functions.
 {
+#ifdef MODULE_DEBUG
+  if (!reuse_in_thread)
+    if (mapping(string:TableLockInfo) dbs = table_locks->get())
+      if (TableLockInfo lock_info = dbs[name])
+	werror ("Warning: Another connection was requested to %O "
+		"in a thread that has locked tables %s.\n"
+		"It's likely that this will result in a deadlock - "
+		"consider using the reuse_in_thread flag.\n",
+		name,
+		String.implode_nicely (indices (lock_info->locked_for_read &
+						lock_info->locked_for_write)));
+#endif
   return low_get( get_db_user( name, conf, read_only), name, reuse_in_thread);
 }
 
 Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
 {
-  return low_get( get_db_user( name,c,ro ), name );
+  return get (name, c, ro);
+}
+
+static Thread.Local table_locks = Thread.Local();
+static class TableLockInfo (
+  Sql.Sql db,
+  int count,
+  multiset(string) locked_for_read,
+  multiset(string) locked_for_write,
+) {}
+
+class MySQLTablesLock
+//! This class is a helper to do MySQL style LOCK TABLES in a safer
+//! way:
+//!
+//! o  It avoids nested LOCK TABLES which would implicitly release the
+//!    previous lock. Instead it checks that the outermost lock
+//!    encompasses all tables.
+//! o  It ensures UNLOCK TABLES always gets executed on exit through
+//!    the refcount garb strategy (i.e. put it in a local variable
+//!    just like a @[Thread.MutexKey]).
+//! o  It checks that the @[reuse_in_thread] flag was used to
+//!    @[DBManager.get] to ensure that a thread doesn't outlock itself
+//!    by using different connections.
+//!
+//! Note that atomic queries and updates don't require
+//! @[MySQLTablesLock] stuff even when it's used in other places at
+//! the same time. They should however use a connection retrieved with
+//! @[reuse_in_thread] set to avoid deadlocks.
+{
+  static TableLockInfo lock_info;
+
+  static void create (Sql.Sql db,
+		      array(string) read_tables,
+		      array(string) write_tables)
+  //! @[read_tables] and @[write_tables] contain the tables to lock
+  //! for reading and writing, respectively. A table string may be
+  //! written as @expr{"foo AS bar"@} to specify an alias.
+  {
+    if (!db->db_name)
+      error ("db was not retrieved with DBManager.get().\n");
+    if (!db->reuse_in_thread)
+      error ("db was not retrieved with DBManager.get(x,y,z,1).\n");
+
+    multiset(string) read_tbl = (<>);
+    foreach (read_tables || ({}), string tbl) {
+      sscanf (tbl, "%[^ \t]", tbl);
+      read_tbl[tbl] = 1;
+    }
+
+    multiset(string) write_tbl = (<>);
+    foreach (write_tables || ({}), string tbl) {
+      sscanf (tbl, "%[^ \t]", tbl);
+      write_tbl[tbl] = 1;
+    }
+
+    mapping(string:TableLockInfo) dbs = table_locks->get();
+    if (!dbs) table_locks->set (dbs = ([]));
+
+    if ((lock_info = dbs[db->db_name])) {
+      if (lock_info->db != db)
+	error ("Tables %s are already locked by this thread through "
+	       "a different connection.\nResult objects from "
+	       "db->big_query or similar might be floating around, "
+	       "or normal and read-only access might be mixed.\n",
+	       indices (lock_info->locked_for_read &
+			lock_info->locked_for_write) * ", ");
+      if (sizeof (read_tbl - lock_info->locked_for_read -
+		  lock_info->locked_for_write))
+	error ("Cannot read lock more tables %s "
+	       "due to already held locks on %s.\n",
+	       indices (read_tbl - lock_info->locked_for_read -
+			lock_info->locked_for_write) * ", ",
+	       indices (lock_info->locked_for_read &
+			lock_info->locked_for_write) * ", ");
+      if (sizeof (write_tbl - lock_info->locked_for_write))
+	error ("Cannot write lock more tables %s "
+	       "due to already held locks on %s.\n",
+	       indices (write_tbl - lock_info->locked_for_write) * ", ",
+	       indices (lock_info->locked_for_read &
+			lock_info->locked_for_write) * ", ");
+#ifdef TABLE_LOCK_DEBUG
+      werror ("[%O, %O] MySQLTablesLock.create(): Tables already locked: "
+	      "read: [%{%O, %}], write: [%{%O, %}]\n",
+	      this_thread(), db,
+	      indices (lock_info->locked_for_read),
+	      indices (lock_info->locked_for_write));
+#endif
+      lock_info->count++;
+    }
+
+    else {
+      string query = "LOCK TABLES " +
+	({
+	  sizeof (read_tbl) && (read_tables * " READ, " + " READ"),
+	  sizeof (write_tbl) && (write_tables * " WRITE, " + " WRITE")
+	}) * ", ";
+#ifdef TABLE_LOCK_DEBUG
+      werror ("[%O, %O] MySQLTablesLock.create(): %s\n",
+	      this_thread(), db, query);
+#endif
+      db->query (query);
+      dbs[db->db_name] = lock_info =
+	TableLockInfo (db, 1, read_tbl, write_tbl);
+    }
+  }
+
+  int topmost_lock()
+  {
+    return lock_info->count == 1;
+  }
+
+  Sql.Sql get_db()
+  {
+    return lock_info->db;
+  }
+
+  static void destroy()
+  {
+    if (!--lock_info->count) {
+#ifdef TABLE_LOCK_DEBUG
+      werror ("[%O, %O] MySQLTablesLock.destroy(): UNLOCK TABLES\n",
+	      this_thread(), lock_info->db);
+#endif
+      lock_info->db->query ("UNLOCK TABLES");
+      m_delete (table_locks->get(), lock_info->db->db_name);
+    }
+#ifdef TABLE_LOCK_DEBUG
+    else
+      werror ("[%O, %O] MySQLTablesLock.destroy(): %d locks left\n",
+	      this_thread(), lock_info->db, lock_info->count);
+#endif
+  }
 }
 
 void drop_db( string name )
