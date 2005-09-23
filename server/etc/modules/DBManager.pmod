@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.63 2005/09/06 13:02:15 grubba Exp $
+// $Id: DBManager.pmod,v 1.64 2005/09/23 20:00:22 mast Exp $
 
 //! Manages database aliases and permissions
 
@@ -216,7 +216,7 @@ private
   }
 
   mapping(string:mapping(string:string)) sql_url_cache = ([]);
-  Sql.Sql low_get( string user, string db )
+  Sql.Sql low_get( string user, string db, void|int reuse_in_thread)
   {
     if( !user )
       return 0;
@@ -238,8 +238,9 @@ private
       // The ROWrapper object really has all member functions Sql.Sql
       // has, but they are hidden behind an overloaded index operator.
       // Thus, we have to fool the typechecker.
-      return [object(Sql.Sql)](object)ROWrapper( sql_cache_get( d->path ) );
-    return sql_cache_get( d->path );
+      return [object(Sql.Sql)](object)
+	ROWrapper( sql_cache_get( d->path, reuse_in_thread) );
+    return sql_cache_get( d->path, reuse_in_thread);
   }
 };
 
@@ -252,12 +253,13 @@ Sql.Sql get_sql_handler(string db_url)
   return Sql.Sql(db_url);
 }
 
-mixed sql_cache_get(string what)
+Sql.Sql sql_cache_get(string what, void|int reuse_in_thread)
 {
-  mixed key = roxenloader.sq_cache_lock();  
+  Thread.MutexKey key = roxenloader.sq_cache_lock();
   string i = replace(what,":",";")+":-";
-  mixed res = roxenloader.sq_cache_get( i ) ||
-    roxenloader.sq_cache_set( i, get_sql_handler( what ) );
+  Sql.Sql res =
+    roxenloader.sq_cache_get( i, reuse_in_thread) ||
+    roxenloader.sq_cache_set( i, get_sql_handler( what ), reuse_in_thread);
   // Fool the optimizer so that key is not released prematurely
   if( res )
     return res; 
@@ -583,12 +585,34 @@ string get_db_user( string name, Configuration c, int ro )
   return connection_user_cache[ key ] = ro?"ro":"rw";
 }
 
-Sql.Sql get( string name, void|Configuration c, int|void ro )
-//! Get the database @[name]. If the configuration @[c] is specified,
-//! only return the database if the configuration has at least read
-//! access.
+Sql.Sql get( string name, void|Configuration conf,
+	     int|void read_only, void|int reuse_in_thread)
+//! Returns an SQL connection object for the database @[name]. If the
+//! configuration @[conf] is specified, only return the database if
+//! that configuration has at least read access.
+//!
+//! If @[read_only] is set then a read-only connection is returned. A
+//! read-only connection is also returned if @[conf] is specified and
+//! only has read access (regardless of @[read_only]).
+//!
+//! If @[reuse_in_thread] is nonzero then the SQL connection is reused
+//! within the current thread. I.e. other calls to this function from
+//! this thread with the same @[name] and @[read_only] and a nonzero
+//! @[reuse_in_thread] will return the same object. However, the
+//! connection won't be reused while a result object from
+//! @[Sql.Sql.big_query] or similar exists.
+//!
+//! Using @[reuse_in_thread] is a good way to cut down on the amount
+//! of simultaneous connections, and to avoid deadlocks when
+//! transactions or locked tables are used (other problems can occur
+//! instead though, if transactions or table locking is done
+//! recursively). However, the caller has to ensure that the
+//! connection never becomes in use by another thread. The safest way
+//! to ensure that is to always keep it on the stack, i.e. only assign
+//! it to variables declared inside functions or pass it in arguments
+//! to functions.
 {
-  return low_get( get_db_user( name,c,ro ), name );
+  return low_get( get_db_user( name, conf, read_only), name, reuse_in_thread);
 }
 
 Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
