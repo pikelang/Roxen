@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.363 2005/08/05 08:45:02 noring Exp $
+// $Id: roxenloader.pike,v 1.364 2005/09/23 19:35:42 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.363 2005/08/05 08:45:02 noring Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.364 2005/09/23 19:35:42 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1281,13 +1281,14 @@ string query_configuration_dir()
   return configuration_dir;
 }
 
-mapping(string:array(MySQLTimeout)) sql_free_list = ([ ]);
+static mapping(string:array(SQLTimeout)) sql_free_list = ([ ]);
+static Thread.Local sql_reuse_in_thread = Thread.Local();
 mapping sql_active_list = ([ ]);
 
 #ifdef DB_DEBUG
 static int sql_keynum;
 mapping(int:string) my_mysql_last_user = ([]);
-multiset all_sql_wrappers = set_weak_flag( (<>), 1 );
+multiset(SQLKey) all_sql_wrappers = set_weak_flag( (<>), 1 );
 #endif /* DB_DEBUG */
 
 
@@ -1297,7 +1298,7 @@ void clear_connect_to_my_mysql_cache( )
   sql_free_list = ([]);
 }
 
-class MySQLTimeout(static Sql.Sql real)
+static class SQLTimeout(static Sql.Sql real)
 {
   // 5 minutes timeout.
   static int timeout = time(1) + 5*60;
@@ -1320,9 +1321,19 @@ class MySQLTimeout(static Sql.Sql real)
   }
 }
 
-class MySQLResKey(static object real, static MySQLKey key)
+static class SQLResKey
 {
+  static Sql.sql_result real;
+  static SQLKey key;
+
+  static void create (Sql.sql_result real, SQLKey key)
+  {
+    this_program::real = real;
+    this_program::key = key;
+  }
+
   // Proxy functions:
+  // Why are these needed? /mast
   static int num_rows()
   {
     return real->num_rows();
@@ -1374,21 +1385,27 @@ class MySQLResKey(static object real, static MySQLKey key)
 
   static string _sprintf(int type)
   {
-    return sprintf( "MySQLRes( X, %O )", key );
+    return sprintf( "SQLRes( X, %O )", key );
   }
 
-#if 0
   static void destroy()
   {
+    if (key->reuse_in_thread) {
+      mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
+      if (!dbs_for_thread[key->db_name])
+	dbs_for_thread[key->db_name] = key->real;
+    }
+#if 0
     werror("Destroying %O\n", this_object());
+#endif
   }
-#endif /* 0 */
 }
 
-class MySQLKey
+static class SQLKey
 {
-  object real;
-  string name;
+  static Sql.Sql real;
+  static string db_name;
+  static int reuse_in_thread;
 
   static int `!( )  { return !real; }
 
@@ -1396,34 +1413,50 @@ class MySQLKey
   {
     return real->query( f, @args );
   }
-  
-  object big_query( string f, mixed ... args )
+
+  Sql.sql_result big_query( string f, mixed ... args )
   {
-    object o = real->big_query( f, @args );
-    return o && MySQLResKey(o, this_object());
+    if (Sql.sql_result o = real->big_query( f, @args )) {
+      if (reuse_in_thread) {
+	mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
+	if (dbs_for_thread[db_name] == real)
+	  m_delete (dbs_for_thread, db_name);
+      }
+      return [object(Sql.sql_result)] (object) SQLResKey (o, this);
+    }
+    return 0;
   }
   
 #ifdef DB_DEBUG
   static int num = sql_keynum++;
   static string bt;
 #endif
-  static void create( object _real, string _name )
+  static void create( Sql.Sql real, string db_name, int reuse_in_thread)
   {
-    real = _real;
-    name = _name;
+    this_program::real = real;
+    this_program::db_name = db_name;
+    this_program::reuse_in_thread = reuse_in_thread;
+
+    if (reuse_in_thread) {
+      mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
+      if (!dbs_for_thread) sql_reuse_in_thread->set (dbs_for_thread = ([]));
+      if (!dbs_for_thread[db_name])
+	dbs_for_thread[db_name] = real;
+    }
+
 #ifdef DB_DEBUG
     if( !_real )
       error("Creating SQL with empty real sql\n");
 
-    foreach( (array)all_sql_wrappers, object ro )
+    foreach( (array)all_sql_wrappers, SQLKey ro )
     {
       if( ro )
 	if( ro->real == real )
-	  error("Fatal: This databaseconnection is already used!\n");
+	  error("Fatal: This database connection is already used!\n");
 	else if( ro->real->master_sql == real->master_sql )
 	  error("Fatal: Internal share error: master_sql equal!\n");
     }
-    all_sql_wrappers[this_object()] = 1;
+    all_sql_wrappers[this] = 1;
 
     bt=(my_mysql_last_user[num] = describe_backtrace(backtrace()));
 #endif /* DB_DEBUG */
@@ -1433,8 +1466,16 @@ class MySQLKey
   {
     // FIXME: Ought to be abstracted to an sq_cache_free().
 #ifdef DB_DEBUG
-    all_sql_wrappers[this_object()]=0;
+    all_sql_wrappers[this]=0;
 #endif
+
+    if (reuse_in_thread) {
+      mapping(string:SQLKey) dbs_for_thread = sql_reuse_in_thread->get();
+      if (dbs_for_thread[db_name] == real) {
+	m_delete (dbs_for_thread, db_name);
+	if (!sizeof (dbs_for_thread)) sql_reuse_in_thread->set (0);
+      }
+    }
 
 #ifndef NO_DB_REUSE
     mixed key;
@@ -1443,13 +1484,13 @@ class MySQLKey
     };
     
 #ifdef DB_DEBUG
-    werror("%O:%d added to free list\n", name, num );
+    werror("%O:%d added to free list\n", db_name, num );
     m_delete(my_mysql_last_user, num);
 #endif
-    if( !--sql_active_list[name] )
-      m_delete( sql_active_list, name );
-    sql_free_list[ name ] = ({ MySQLTimeout(real) }) +
-      (sql_free_list[ name ]||({}));
+    if( !--sql_active_list[db_name] )
+      m_delete( sql_active_list, db_name );
+    sql_free_list[ db_name ] = ({ SQLTimeout(real) }) +
+      (sql_free_list[ db_name ]||({}));
     if( `+( 0, @map(values( sql_free_list ),sizeof ) ) > 20 )
     {
 #ifdef DB_DEBUG
@@ -1473,6 +1514,8 @@ class MySQLKey
     switch( what )
     {
       case "real":      return real;
+      case "db_name":   return db_name;
+      case "reuse_in_thread": return reuse_in_thread;
       case "query":     return query;
       case "big_query": return big_query;
     }
@@ -1483,55 +1526,66 @@ class MySQLKey
   {
 #ifdef DB_DEBUG
     if (type == 'd') return (string)num;
-    return sprintf( "SQL( %O:%d )", name, num );
+    return sprintf( "SQL( %O:%d )", db_name, num );
 #else
-    return sprintf( "SQL( %O )", name );
+    return sprintf( "SQL( %O )", db_name );
 #endif /* DB_DEBUG */
   }
 }
 
 static Thread.Mutex mt = Thread.Mutex();
-mixed sq_cache_lock()
+Thread.MutexKey sq_cache_lock()
 {
   return mt->lock();
 }
 
-mixed sq_cache_get( string i )
+Sql.Sql sq_cache_get( string db_name, void|int reuse_in_thread)
 {
-  while(sql_free_list[ i ])
+  if (reuse_in_thread) {
+    mapping(string:SQLKey) dbs_for_thread = sql_reuse_in_thread->get();
+    if (Sql.Sql db = dbs_for_thread && dbs_for_thread[db_name])
+      return [object(Sql.Sql)] (object) SQLKey (db, db_name, 1);
+  }
+
+  while(sql_free_list[ db_name ])
   {
 #ifdef DB_DEBUG
-    werror("%O found in free list\n", i );
+    werror("%O found in free list\n", db_name );
 #endif
-    mixed res = sql_free_list[i][0];
-    if( sizeof( sql_free_list[ i ] ) > 1)
-      sql_free_list[ i ] = sql_free_list[i][1..];
+    SQLTimeout res = sql_free_list[db_name][0];
+    if( sizeof( sql_free_list[ db_name ] ) > 1)
+      sql_free_list[ db_name ] = sql_free_list[db_name][1..];
     else
-      m_delete( sql_free_list, i );
-    if (!res || !(res = res->get())) continue;
-    sql_active_list[i]++;
-    return MySQLKey( res, i );
+      m_delete( sql_free_list, db_name );
+    if (Sql.Sql db = res && res->get()) {
+      sql_active_list[db_name]++;
+      return [object(Sql.Sql)] (object)
+	SQLKey( db, db_name, reuse_in_thread);
+    }
   }
 }
 
-mixed sq_cache_set( string i, mixed res )
+Sql.Sql sq_cache_set( string db_name, Sql.Sql res, void|int reuse_in_thread)
 {
   if( res )
   {
-    sql_active_list[ i ]++;
-    return MySQLKey( res, i );
+    sql_active_list[ db_name ]++;
+    return [object(Sql.Sql)] (object) SQLKey( res, db_name, reuse_in_thread);
   }
 }
 
 /* Not to be documented. This is a low-level function that should be
  * avoided by normal users. 
 */
-mixed connect_to_my_mysql( string|int ro, void|string db )
+Sql.Sql connect_to_my_mysql( string|int ro, void|string db,
+			     void|int reuse_in_thread)
 {
+#if 0
 #ifdef DB_DEBUG
   gc();
 #endif
-  mixed key;
+#endif
+  Thread.MutexKey key;
   if (catch {
     key = sq_cache_lock();
   }) {
@@ -1540,9 +1594,9 @@ mixed connect_to_my_mysql( string|int ro, void|string db )
     return low_connect_to_my_mysql(ro, db);
   }
   string i = db+":"+(intp(ro)?(ro&&"ro")||"rw":ro);
-  mixed res =
-    sq_cache_get(i) ||
-    sq_cache_set(i,low_connect_to_my_mysql( ro, db ));
+  Sql.Sql res =
+    sq_cache_get(i, reuse_in_thread) ||
+    sq_cache_set(i,low_connect_to_my_mysql( ro, db ), reuse_in_thread);
 
   // Fool the optimizer so that key is not released prematurely
   if( res )
