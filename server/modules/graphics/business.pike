@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.148 2004/06/30 16:59:03 mast Exp $";
+constant cvs_version = "$Id: business.pike,v 1.149 2005/09/28 12:29:22 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -436,7 +436,7 @@ constant _diagram_args =
    "legendfont",
    "legend_texts", "labelcolor", "axwidth", "linewidth", "center",
    "rotate", "image", "bw", "eng", "neng", "xmin", "ymin", "turn", "notrans",
-   "colortable_cache"});
+   "colortable_cache", "tonedbox", "name" });
 constant diagram_args = mkmapping(_diagram_args,_diagram_args);
 
 constant _shuffle_args =
@@ -713,7 +713,7 @@ string container_diagram(string tag, mapping m, string contents,
     return(sprintf("<pre>Timers: %O\n</pre>", bg_timers) + make_tag("img", m, xml));
 #endif
 
-  return Roxen.make_tag("img", m, xml);
+  return Roxen.make_tag("img", m - ({ "format" }), xml);
 }
 
 int|object PPM(string fname, object id)
