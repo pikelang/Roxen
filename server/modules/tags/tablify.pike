@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.76 2004/06/30 16:59:27 mast Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.77 2005/09/28 12:31:39 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -484,10 +484,9 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
   if(opt->nice || opt->nicer)
     return Roxen.parse_rxml(r+"</table></td></tr>\n</table>\n", id);
 
-  m_delete(opt, "cellalign");
-  m_delete(opt, "cellvalign");
-  m_delete(opt, "fields");
-  m_delete(opt, "state");
+  opt &= ({ "width", "height", "style", "title", 
+	    "class", "summary", "border", "cellspacing",
+	    "cellpadding", "xml:space", "xml:lang" });
   return Roxen.make_container("table",opt,r);
 }
 
