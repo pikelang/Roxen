@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.61 2005/05/10 15:52:09 stewa Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.62 2005/09/30 19:14:10 jonasw Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -281,6 +281,13 @@ string container_js_popup(string name, mapping args, string contents, object id)
   id->misc->_popupparent = popupname;
   id->misc->_popuplevel++;
   
+  if(args["args-variable"])
+    id->variables[args["args-variable"]] = make_args_unquoted(largs);
+  if(args["name-variable"])
+    id->variables[args["name-variable"]] = popupname;
+  if(args["event-variable"])
+    id->variables[args["event-variable"]] = largs[event];
+
   get_jss(id)->get_insert("div")->
     add("<div id='"+popupname+"'>\n"+
 	Roxen.parse_rxml(contents, id)+"</div>\n");
@@ -289,14 +296,6 @@ string container_js_popup(string name, mapping args, string contents, object id)
   id->misc->_popuplevel--;
   id->misc->_popupname = popupname;
   
-  if(args["args-variable"])
-    id->variables[args["args-variable"]] = make_args_unquoted(largs);
-  if(args["name-variable"])
-    id->variables[args["name-variable"]] = popupname;
-
-  if(args["event-variable"])
-    id->variables[args["event-variable"]] = largs[event];
-
   if(!args->label)
     return "";
   
