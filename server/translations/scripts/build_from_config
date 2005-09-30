@@ -17,4 +17,4 @@ EXTRACT="$3"
 #             --verbose       more informative text in xml
 #
 echo "  Rebuilding $CFGFILE"
-$EXTRACT --config=$CFGFILE --wipe --sync --notime
+$PIKE $EXTRACT --config=$CFGFILE --wipe --sync --notime
