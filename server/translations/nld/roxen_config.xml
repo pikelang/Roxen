@@ -106,7 +106,8 @@
 </str>
 
 <str id="13">
-<o>The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order</o>
+<changed from="The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order"/>
+<o>The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order.</o>
 <t>De prioriteit van de module. 9 is het hoogst, 0 is het laagst. Modules met dezelfde prioriteit worden in willekeurige volgorde geladen.</t>
 </str>
 
@@ -121,7 +122,8 @@
 </str>
 
 <str id="20">
-<o>Default site</o>
+<changed from="Default site"/>
+<o>Ports: Default site</o>
 <t>Dit is de standaard site</t>
 </str>
 
@@ -2501,7 +2503,7 @@ modules.&lt;/p&gt;
 
 <str id="401">
 <new/>
-<o>Copy or move database</o>
+<o>Copy or rename database</o>
 <t></t>
 </str>
 
@@ -2559,31 +2561,11 @@ modules.&lt;/p&gt;
 <t></t>
 </str>
 
-<str id="411">
-<new/>
-<o>While copying %s.%s: The source database does not support %s.
-The copy will not contain all metadata</o>
-<t></t>
-</str>
 
-<str id="412">
-<new/>
-<o>The source database used the string %s as a fieldname.
-This is reserved in newer MySQL versions.
-Substituting with %s</o>
-<t></t>
-</str>
-
-<str id="413">
-<new/>
-<o>Failed to copy data from source table.
-</o>
-<t></t>
-</str>
 
 <str id="414">
 <new/>
-<o>Move or copy this database</o>
+<o>Copy or rename this database</o>
 <t></t>
 </str>
 
@@ -2601,7 +2583,7 @@ Substituting with %s</o>
 
 <str id="417">
 <new/>
-<o>Move database</o>
+<o>Rename database</o>
 <t></t>
 </str>
 
@@ -2617,21 +2599,11 @@ Substituting with %s</o>
 <t></t>
 </str>
 
-<str id="420">
-<new/>
-<o>The new name of the database. You do not have to change the name if you change the database type from internal to external, or change the URL of an external database. To make it easy on your users, use all lowercaps characters, and avoid hard to type characters</o>
-<t></t>
-</str>
 
-<str id="421">
-<new/>
-<o>The database type. Internal means that it will be stored in the Roxen MySQL database, and the permissions of the database will be automatically manged by Roxen. External means that the database resides in another database.</o>
-<t></t>
-</str>
 
 <str id="422">
 <new/>
-<o>This URL is only used for &lt;/i&gt;External&lt;i&gt; databases, it is totally ignored for databases defined internally in Roxen </o>
+<o>This URL is only used for &lt;/i&gt;External&lt;i&gt; databases, it is totally ignored for databases defined internally in Roxen. </o>
 <t></t>
 </str>
 
@@ -2918,7 +2890,7 @@ server must be a MySQL server, nothing else will work.
 
 <str id="471">
 <new/>
-<o>If you do not want to delete one or more of these databases, uncheck the checkmark in front of the ones you want to keep</o>
+<o>If you do not want to delete one or more of these databases, uncheck the checkmark in front of the ones you want to keep.</o>
 <t></t>
 </str>
 
@@ -3429,5 +3401,29 @@ server must be a MySQL server, nothing else will work.
 <str id="512">
 <new/>
 <o>This does not look like a valid email address.</o>
+<t></t>
+</str>
+
+<str id="518">
+<new/>
+<o>Support EPRT/EPSV</o>
+<t></t>
+</str>
+
+<str id="528">
+<new/>
+<o>Enable support for the EPRT and EPSV commands (RFC2428).Some firewalls don't handle these commands properly, so depending on your network configuration you may need to disable them. </o>
+<t></t>
+</str>
+
+<str id="529">
+<new/>
+<o>the database %s does already exist</o>
+<t></t>
+</str>
+
+<str id="530">
+<new/>
+<o>The new name of the database. To make it easy on your users, use all lowercaps characters, and avoid hard to type characters.</o>
 <t></t>
 </str>

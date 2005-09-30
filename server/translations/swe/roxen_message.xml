@@ -38,49 +38,62 @@ Kontrollera att gruppdatabasen stämmer, och att lösenordsdatabasen för användare
 </str>
 
 <str id="6">
-<o>Failed to bind %s://%s:%d/ (%s)</o>
+<changed from="Failed to bind %s://%s:%d/ (%s)"/>
+<o>Failed to bind %s (%s)</o>
 <t>Misslyckades med att binda %s://%s:%d/ (%s)</t>
 </str>
 
 <str id="8">
 <changed from="SSL3: Reading cert-file failed!"/>
-<o>SSL3: Reading cert-file '%s' failed!</o>
+<o>Reading certificate file %O failed: %s
+</o>
 <t>SSL3: Kunde ej läsa cert-filen!</t>
 </str>
 
 <str id="9">
 <changed from="SSL3: Reading key-file failed!"/>
-<o>SSL3: Reading key-file '%s' failed!</o>
+<o>Reading key file %O failed: %s
+</o>
 <t>SSL3: Kunde ej läsa nyckelfilen!</t>
 </str>
 
 <str id="10">
-<o>SSL3: No certificate found.</o>
+<changed from="SSL3: No certificate found."/>
+<o>No certificate found in %O.
+</o>
 <t>SSL3: Hittade inget certifikat.</t>
 </str>
 
 <str id="11">
-<o>SSL3: Private rsa key not valid</o>
+<changed from="SSL3: Private rsa key not valid"/>
+<o>Private rsa key not valid</o>
 <t>SSL3: Privat rsa-nyckel ej giltig</t>
 </str>
 
 <str id="13">
-<o>SSL3: Certificate not valid (DER).</o>
+<changed from="SSL3: Certificate not valid (DER)."/>
+<o>Certificate not valid (DER).
+</o>
 <t>SSL3: Certifikatet ogiltigt (DER).</t>
 </str>
 
 <str id="14">
-<o>SSL3: Certificate and private key do not match.</o>
+<changed from="SSL3: Certificate and private key do not match."/>
+<o>Certificate and private key do not match.
+</o>
 <t>SSL3: Certifikat och nyckel stämmer inte överrens.</t>
 </str>
 
 <str id="15">
-<o>SSL3: Private dsa key not valid</o>
+<changed from="SSL3: Private dsa key not valid"/>
+<o>Private dsa key not valid</o>
 <t>SSL3: Privat dsa-nyckel ogiltig</t>
 </str>
 
 <str id="17">
-<o>SSL3: No private key found.</o>
+<changed from="SSL3: No private key found."/>
+<o>No private key found.
+</o>
 <t>SSL3: Hittade ingen privat nyckel.</t>
 </str>
 
@@ -359,5 +372,12 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 <str id="62">
 <new/>
 <o>Attempt %d. Retrying in 1 minute.</o>
+<t></t>
+</str>
+
+<str id="65">
+<new/>
+<o>IPv6 port for URL %s disabled: %s
+</o>
 <t></t>
 </str>

@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.95 2005/04/25 08:50:08 grubba Exp $
+// $Id: global_variables.pike,v 1.96 2005/09/30 11:21:35 anders Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -102,9 +102,9 @@ void set_up_ftp_variables( Protocol o )
 	  TYPE_INT,
 	  LOCALE(322, "Maximum port number to use in the PASV/EPSV response."));
 
-  defvar( "rfc2428_support", 1, LOCALE(0, "Support EPRT/EPSV"),
+  defvar( "rfc2428_support", 1, LOCALE(518, "Support EPRT/EPSV"),
 	  TYPE_FLAG,
-	  LOCALE(0, "Enable support for the EPRT and EPSV commands (RFC2428)."
+	  LOCALE(528, "Enable support for the EPRT and EPSV commands (RFC2428)."
 		 "Some firewalls don't handle these commands properly, "
 		 "so depending on your network configuration you may need "
 		 "to disable them. "));

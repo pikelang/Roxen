@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.903 2005/05/31 12:10:49 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.904 2005/09/30 11:21:36 anders Exp $";
 
 //! @appears roxen
 //!
@@ -2382,7 +2382,7 @@ int register_url( string url, Configuration conf )
 #else
     if (sizeof(ipv6)) {
       foreach(ipv6, string p) {
-	report_warning(LOC_M(0, "IPv6 port for URL %s disabled: %s\n"),
+	report_warning(LOC_M(65, "IPv6 port for URL %s disabled: %s\n"),
 		       url, p);
       }
     }

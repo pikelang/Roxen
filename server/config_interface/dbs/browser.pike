@@ -120,7 +120,7 @@ mixed move_db( string db, RequestID id )
 	 if( DBManager.cached_get( id->variables->name ) &&
 	     db != id->variables->name )
 	   warning = sprintf("<font color='&usr.warncolor;'>"+
-			     _(0,"the database %s does already exist")+
+			     _(529,"the database %s does already exist")+
 			     "</font>", id->variables->name );
 	 // FIXME: Also check if the name is a valid db name.
 	 break;
@@ -199,7 +199,7 @@ mixed move_db( string db, RequestID id )
     
     "  <tr>\n"
     "    <td valign=top colspan='2'>\n"
-    "      <i>"+_(0,"The new name of the database. To make it easy on "
+    "      <i>"+_(530,"The new name of the database. To make it easy on "
 		  "your users, use all lowercaps characters, and avoid hard to type "
 		  "characters.")+"</i>\n"
     "    </td>\n"

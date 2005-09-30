@@ -37,47 +37,53 @@ Check that your password database is correct for user %s(%d),
 </str>
 
 <str id="6">
-<o>Failed to bind %s://%s:%d/ (%s)</o>
+<o>Failed to bind %s (%s)</o>
 <t></t>
 </str>
 
 <str id="8">
-<o>SSL3: Reading cert-file '%s' failed!</o>
+<o>Reading certificate file %O failed: %s
+</o>
 <t></t>
 </str>
 
 <str id="9">
-<o>SSL3: Reading key-file '%s' failed!</o>
+<o>Reading key file %O failed: %s
+</o>
 <t></t>
 </str>
 
 <str id="10">
-<o>SSL3: No certificate found.</o>
+<o>No certificate found in %O.
+</o>
 <t></t>
 </str>
 
 <str id="11">
-<o>SSL3: Private rsa key not valid</o>
+<o>Private rsa key not valid</o>
 <t></t>
 </str>
 
 <str id="13">
-<o>SSL3: Certificate not valid (DER).</o>
+<o>Certificate not valid (DER).
+</o>
 <t></t>
 </str>
 
 <str id="14">
-<o>SSL3: Certificate and private key do not match.</o>
+<o>Certificate and private key do not match.
+</o>
 <t></t>
 </str>
 
 <str id="15">
-<o>SSL3: Private dsa key not valid</o>
+<o>Private dsa key not valid</o>
 <t></t>
 </str>
 
 <str id="17">
-<o>SSL3: No private key found.</o>
+<o>No private key found.
+</o>
 <t></t>
 </str>
 
@@ -340,5 +346,11 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 
 <str id="62">
 <o>Attempt %d. Retrying in 1 minute.</o>
+<t></t>
+</str>
+
+<str id="65">
+<o>IPv6 port for URL %s disabled: %s
+</o>
 <t></t>
 </str>
