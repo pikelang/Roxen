@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.111 2004/06/30 16:59:03 mast Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.112 2005/10/01 14:56:20 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -944,13 +944,14 @@ class TagGButton {
       //  Make button clickable if not dimmed
       if(args->href && !new_args->dim)
       {
-	mapping a_attrs = ([ "href" : args->href,
-	]);
+	mapping a_attrs = ([ "href"    : args->href,
+			     "onfocus" : "this.blur();" ]);
 
 	foreach(indices(args), string arg)
-	  if(has_value("target/onmousedown/onmouseup/onclick/ondblclick/"
+	  if(has_value("/target/onmousedown/onmouseup/onclick/ondblclick/"
 		       "onmouseout/onmouseover/onkeypress/onkeyup/"
-		       "onkeydown" / "/", lower_case(arg)))
+		       "onkeydown/style/class/",
+		       "/" + lower_case(arg) + "/"))
 	    a_attrs[arg] = args[arg];
 
 	result = Roxen.make_container("a", a_attrs, result);
