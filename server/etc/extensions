@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.55 2005/04/04 14:00:22 noring Exp $
+# $Id: extensions,v 1.56 2005/10/03 16:03:24 grubba Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -317,6 +317,15 @@ dot	application/msword
 # application/x400-bp
 # application/sgml
 # application/cals-1840
+odb	application/vnd.oasis.opendocument.database
+odc	application/vnd.oasis.opendocument.chart
+odf	application/vnd.oasis.opendocument.formula
+odg	application/vnd.oasis.opendocument.graphics
+odi	application/vnd.oasis.opendocument.image
+odm	application/vnd.oasis.opendocument.text-master
+odp	application/vnd.oasis.opendocument.presentation
+ods	application/vnd.oasis.opendocument.spreadsheet
+odt	application/vnd.oasis.opendocument.text
 # application/pgp-encrypted
 # application/pgp-signature
 # application/pgp-keys
@@ -554,7 +563,7 @@ sdp	application/sdp
 # vnd.contact.cmsg
 # vnd.epson.esf
 
-# Open Office
+# Old Open Office
 
 sxw	application/vnd.sun.xml.writer
 stw	application/vnd.sun.xml.writer.template
