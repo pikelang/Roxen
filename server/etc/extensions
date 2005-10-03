@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.56 2005/10/03 16:03:24 grubba Exp $
+# $Id: extensions,v 1.57 2005/10/03 16:07:34 grubba Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -326,6 +326,14 @@ odm	application/vnd.oasis.opendocument.text-master
 odp	application/vnd.oasis.opendocument.presentation
 ods	application/vnd.oasis.opendocument.spreadsheet
 odt	application/vnd.oasis.opendocument.text
+otc	application/vnd.oasis.opendocument.chart-template
+otf	application/vnd.oasis.opendocument.formula-template
+otg	application/vnd.oasis.opendocument.graphics-template
+oth	application/vnd.oasis.opendocument.text-web
+oti	application/vnd.oasis.opendocument.image-template
+otp	application/vnd.oasis.opendocument.presentation-template
+ots	application/vnd.oasis.opendocument.spreadsheet-template
+ott	application/vnd.oasis.opendocument.text-template
 # application/pgp-encrypted
 # application/pgp-signature
 # application/pgp-keys
