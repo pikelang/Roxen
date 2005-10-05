@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.70 2005/01/27 10:31:59 anders Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.71 2005/10/05 16:57:00 wellhard Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -228,8 +228,8 @@ array(Image.Layer)|mapping generate_image( mapping args, RequestID id )
 
   if (!sizeof(filter(layers->image(), objectp)))
     image_error("Failed to decode layers in specified image [%O]\n", args->src);
-
-  layers->set_misc_value( "visible",1 );
+  if(!args["exclude-invisible-layers"])
+     layers->set_misc_value( "visible",1 );
   foreach( layers, Image.Layer lay )
     if( !lay->get_misc_value( "name" ) )
       lay->set_misc_value( "name", "Background" );
