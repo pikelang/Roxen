@@ -4,12 +4,12 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.48 2005/02/08 17:55:55 wellhard Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.49 2005/10/06 15:13:56 jonasw Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Verified form";
-constant module_doc  = "Creates a self verifying form.";
+constant module_doc  = "Creates a self-verifying form.";
 
 // maxlength is excluded so that it gets exported. value is included
 // since not all widgets have a value attribute, and those who do add
@@ -307,22 +307,36 @@ class TagVForm {
 	  id->misc->vform_ok = 0;
 
 	  //Create error message
-	  switch(args->mode||"after") {
+	  string mode = args->mode || "after";
+	  m_delete(args, "mode");
+	  switch(mode) {
 	  case "complex": // not working...
-	    result = parse_html(content, ([]),
-				([ "failed":lambda(string t, mapping m, string c) { return c; },
-				   "verified":"" ]) );
+	    result =
+	      parse_html(content, ([ ]),
+			 ([ "failed"   : lambda(string t, mapping m,
+						string c) {
+					   return c;
+					 },
+			    "verified" : "" ]) );
 	    break;
 	  case "before":
-	    string error = parse_html(content, ([]),
-				      ([ "error-message":lambda(string t, mapping m, string c) { return c; },
-					 "option":"" ]) );
+	    string error =
+	      parse_html(content, ([ ]),
+			 ([ "error-message" : lambda(string t, mapping m,
+						     string c) {
+						return c;
+					      },
+			    "option"        : "" ]) );
 	    result = error + RXML.t_xml->format_tag("select", args, content);
 	  case "after":
 	  default:
-	    error = parse_html(content, ([]),
-                               ([ "error-message":lambda(string t, mapping m, string c) { return c; },
-                                  "option":"" ]) );
+	    error =
+	      parse_html(content, ([]),
+			 ([ "error-message" : lambda(string t, mapping m,
+						     string c) {
+						return c;
+					      },
+			    "option"        : "" ]) );
 	    result = RXML.t_xml->format_tag("select", args, content) + error;
 	  }
 	}
@@ -491,6 +505,8 @@ class TagVForm {
       m_delete(id->misc, "vform_verified");
       m_delete(id->misc, "vform_failed");
       m_delete(id->misc, "vform_xml");
+      m_delete(args, "noxml");
+      m_delete(args, "hide-if-verified");
 
       if(!args->method) args->method="post";
       if(!args->action) args->action=get_var("self", "page");
@@ -504,8 +520,8 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
 "vform":({ #"<desc type='cont'><p><short>
- Creates a self verifying form.</short> You can use all standard
- HTML-input widgets in this container as well.</p>
+ Creates a self-verifying form.</short> You can use all standard
+ HTML input widgets in this container as well.</p>
 
 <ex-box>
 <vform>
@@ -567,7 +583,7 @@ constant tagdoc=([
 </p></desc>",
 
 "vinput":({ #"<desc type='cont'><p><short>
- Creates a self verifying input widget.</short>
+ Creates a self-verifying input widget.</short>
 </p></desc>
 
 <attr name='fail-if-failed' value='name'><p>
