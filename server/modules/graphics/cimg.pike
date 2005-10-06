@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.71 2005/10/05 16:57:00 wellhard Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.72 2005/10/06 09:07:36 anders Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -59,7 +59,14 @@ layers are made visible regardless of their original state.</p>
 <attr name='exclude-layers' value='layer-glob-list'><p>Comma-separated list
 of glob expressions which is matched against layer names. All matching
 layers are hidden regardless of their original state.</p>
-</attr>",
+</attr>
+
+<attr name='exclude-invisible-layers'><p>Set this flag to
+automatically exclude layers that are not shown in the original
+image. This is only useful in combination with the
+'process-all-layers' attribute.</p>
+</attr>
+",
 
 "cimg-url":#"<desc tag='tag'><p><short>
  This tag generates an URL to the manipulated picture.</short>
