@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module.pike,v 1.221 2005/10/05 14:47:49 mast Exp $
+// $Id: module.pike,v 1.222 2005/10/06 12:43:31 wellhard Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -124,11 +124,11 @@ int module_dependencies(Configuration configuration,
 		 });
   Configuration conf = configuration || my_configuration();
   if (!conf)
-    report_warning ("Configuration not resolved; module(s) %s%s "
-		    "weren't added.",
-		    String.implode_nicely (modules),
-		    module_identifier() ?
-		    " that " + module_identifier() + " depend on" : "");
+    report_warning ("Configuration not resolved; module(s) %s that %O "
+		    "depend on weren't added.\n", String.implode_nicely (modules),
+		    module_identifier() ||
+		    master()->describe_program(this_program) ||
+		    "unknown module");
   else
     conf->add_modules( modules, now );
   return 1;
