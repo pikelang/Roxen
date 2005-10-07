@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.904 2005/09/30 11:21:36 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.905 2005/10/07 09:32:30 anders Exp $";
 
 //! @appears roxen
 //!
@@ -1173,7 +1173,10 @@ int(0..1) host_is_local(string hostname)
 
   // Can we bind to it?
   Stdio.Port port = Stdio.Port();
-  res = port->bind(0, 0, ip);
+  // bind() can trow error if ip is an invalid hostname.
+  catch {
+    res = port->bind(0, 0, ip);
+  };
 
   destruct(port);
   return host_is_local_cache[hostname] = res;
