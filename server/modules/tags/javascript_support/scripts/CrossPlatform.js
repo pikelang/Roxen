@@ -64,8 +64,8 @@ function shiftTo(obj, x, y) {
   if (isNav4) {
     theObj.moveTo(x,y);
   } else if (isNav5) {
-    theObj.style.left = x;
-    theObj.style.top = y;
+    theObj.style.left = x+'px';
+    theObj.style.top = y+'px';
   } else {
     theObj.style.pixelLeft = x;
     theObj.style.pixelTop = y;
