@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.77 2005/09/28 12:31:36 jonasw Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.78 2005/10/18 17:02:31 anders Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -333,6 +333,38 @@ text	center	right	float	economic-float	int	economic-int
 #endif
 
 
+constant _tablify_args = ({
+  "bordercolor",
+  "cellalign",
+  "cellseparator",
+  "cellvalign",
+  "evenbgcolor",
+  "face",
+  "fields",
+  "font",
+  "fontsize",
+  "grid",
+  "intable",
+  "interactive-sort",
+  "max",
+  "min",
+  "modulo",
+  "negativecolor",
+  "nice",
+  "nicer",
+  "notitle",
+  "noxml",
+  "oddbgcolor",
+  "rowseparator",
+  "scale",
+  "size",
+  "state",
+  "sortcol",
+  "textcolor",
+  "titlebgcolor",
+  "titlecolor",
+});
+constant tablify_args = mkmapping(_tablify_args, _tablify_args);
 
 
 string encode_url(int col, int state, object stateobj, RequestID id){
@@ -484,9 +516,7 @@ string make_table(array subtitles, array table, mapping opt, RequestID id)
   if(opt->nice || opt->nicer)
     return Roxen.parse_rxml(r+"</table></td></tr>\n</table>\n", id);
 
-  opt &= ({ "width", "height", "style", "title", 
-	    "class", "summary", "border", "cellspacing",
-	    "cellpadding", "xml:space", "xml:lang" });
+  opt -= tablify_args;
   return Roxen.make_container("table",opt,r);
 }
 
