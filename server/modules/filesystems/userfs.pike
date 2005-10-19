@@ -24,7 +24,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.69 2004/06/30 16:59:00 mast Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.70 2005/10/19 12:15:35 wellhard Exp $";
 constant module_type = MODULE_LOCATION;
 LocaleString module_name = _(1,"File systems: User file system");
 LocaleString module_doc  = 
@@ -135,6 +135,7 @@ void start()
   // We fix all file names to be absolute before passing them to
   // filesystem.pike
   path="";
+  normalized_path="";
   banish_list = mkmultiset(query("banish_list"));
   dude_ok = ([]);
   // This is needed to override the inherited filesystem module start().
