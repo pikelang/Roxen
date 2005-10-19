@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.78 2005/10/18 17:02:32 anders Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.79 2005/10/19 11:03:04 anders Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -602,7 +602,7 @@ string simpletag_tablify(string tag, mapping m, string q, RequestID id)
     int sortcol = abs((int)m->sortcol)-1;
     if (sortcol < col_min) {
       int num;
-      if(m->fields && (sortcol+1 < sizeof(m->fields))) {
+      if(m->fields && (sortcol+1 <= sizeof(m->fields))) {
 	switch(m->fields[sortcol]) {
 	case "num":
 	case "int":
