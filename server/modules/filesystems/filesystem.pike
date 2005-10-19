@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.148 2005/08/25 14:01:32 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.149 2005/10/19 13:33:56 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -682,6 +682,15 @@ int contains_symlinks(string root, string path)
   return(0);
 }
 
+//! @[chmod()] that doesn't throw errors.
+string safe_chmod(string path, int mask)
+{
+  return describe_error(catch {
+      chmod(path, mask);
+      return 0;
+    });
+}
+
 mapping make_collection(string coll, RequestID id)
 {
   TRACE_ENTER(sprintf("make_collection(%O)", coll), this_object());
@@ -734,16 +743,21 @@ mapping make_collection(string coll, RequestID id)
 
   int code = mkdir(norm_f);
   int err_code = errno();
-  privs = 0;
 
   TRACE_ENTER(sprintf("%s: Accepted", id->method), 0);
 
   if (code) {
-    chmod(norm_f, 0777 & ~(id->misc->umask || 022));
-    TRACE_LEAVE(sprintf("%s: Success", id->method));
+    string msg = safe_chmod(norm_f, 0777 & ~(id->misc->umask || 022));
+    privs = 0;
+    if (msg) {
+      TRACE_LEAVE(sprintf("%s: chmod %O failed: %s", id->method, norm_f, msg));
+    } else {
+      TRACE_LEAVE(sprintf("%s: chmod ok", id->method, msg));
+    }
     TRACE_LEAVE(sprintf("%s: Success", id->method));
     return Roxen.http_status(201, "Created");
   }
+  privs = 0;
 
   TRACE_LEAVE(sprintf("%s: Failed", id->method));
   return errno_to_status (err_code, 1, id);
@@ -941,19 +955,24 @@ mixed find_file( string f, RequestID id )
 
     code = mkdir(f);
     int err_code = errno();
-    privs = 0;
 
     TRACE_ENTER(sprintf("%s: Accepted", id->method), 0);
 
     if (code) {
-      chmod(f, 0777 & ~(id->misc->umask || 022));
-      TRACE_LEAVE(sprintf("%s: Success", id->method));
+      string msg = safe_chmod(f, 0777 & ~(id->misc->umask || 022));
+      privs = 0;
+      if (msg) {
+	TRACE_LEAVE(sprintf("%s: chmod %O failed: %s", id->method, f, msg));
+      } else {
+	TRACE_LEAVE(sprintf("%s: Success", id->method));
+      }
       TRACE_LEAVE("Success");
       if (id->method == "MKCOL") {
 	return Roxen.http_status(201, "Created");
       }
       return Roxen.http_string_answer("Ok");
     } else {
+      privs = 0;
       SIMPLE_TRACE_LEAVE("%s: Failed (errcode:%d)", id->method, errcode);
       TRACE_LEAVE("Failure");
       if (id->method == "MKCOL") {
@@ -1044,7 +1063,7 @@ mixed find_file( string f, RequestID id )
     }
 
     // FIXME: Race-condition.
-    chmod(f, 0666 & ~(id->misc->umask || 022));
+    string msg = safe_chmod(f, 0666 & ~(id->misc->umask || 022));
     privs = 0;
 
     putting[id->my_fd] = id->misc->len;
@@ -1116,7 +1135,7 @@ mixed find_file( string f, RequestID id )
       return Roxen.http_status(403, "Permission denied.");
     }
 
-    array err = catch(chmod(f, id->misc->mode & 0777));
+    string msg = safe_chmod(f, id->misc->mode & 0777);
     int err_code = errno();
     privs = 0;
 
@@ -1128,9 +1147,9 @@ mixed find_file( string f, RequestID id )
       cache_set("stat_cache", f, 0);
     }
 
-    if(err)
+    if(msg)
     {
-      TRACE_LEAVE("CHMOD: Failure");
+      TRACE_LEAVE(sprintf("CHMOD: Failure: %s", msg));
       return errno_to_status (err_code, 0, id);
     }
     TRACE_LEAVE("CHMOD: Success");
@@ -1587,11 +1606,15 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
 
     int code = mkdir(dest_path);
     int err_code = errno();
-    privs = 0;
 
     if (code) {
-      chmod(dest_path, 0777 & ~(id->misc->umask || 022));
-      TRACE_LEAVE("Success");
+      string msg = safe_chmod(dest_path, 0777 & ~(id->misc->umask || 022));
+      privs = 0;
+      if (msg) {
+	TRACE_LEAVE(sprintf("Chmod %O failed: %s", dest_path, msg));
+      } else {
+	TRACE_LEAVE("Success");
+      }
       return Roxen.http_status(dest_st?204:201, "Created");
     } else {
       return errno_to_status (err_code, 1, id);
