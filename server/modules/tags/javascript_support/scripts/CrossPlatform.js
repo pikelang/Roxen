@@ -288,22 +288,21 @@ function getTargetX(e)
   if(isNav4){
     return e.target.x;
   }
-  if(isNav5){
-    if (e.target.offsetParent == null)
-      // Betst we can do?
-      return e.pageX;
-    elt = e.target;
-    x = 0;
-    while (elt.offsetParent != null) {
-      x += elt.offsetLeft;
-      elt = elt.offsetParent;
-    }
-    x += elt.offsetLeft;
-    return x;
-  }
   if(isIE4){
     return getRecursiveLeft(window.event.srcElement);
   }
+
+  if (e.target.offsetParent == null)
+    // Best we can do?
+    return e.pageX;
+  elt = e.target;
+  x = 0;
+  while (elt.offsetParent != null) {
+    x += elt.offsetLeft;
+    elt = elt.offsetParent;
+  }
+  x += elt.offsetLeft;
+  return x;
 }
 
 function getTargetY(e)
@@ -311,23 +310,22 @@ function getTargetY(e)
   if(isNav4){
     return e.target.y;
   }
-  if(isNav5){
-    if (e.target.offsetParent == null)
-      // Betst we can do?
-      return e.pageY;
-    elt = e.target;
-    x = 0;
-    while (elt.offsetParent != null) {
-      x += elt.offsetTop;
-      elt = elt.offsetParent;
-    }
-    x += elt.offsetTop;
-    return x;
-    // return e.target.offsetTop;
-  }
   if(isIE4){
     return getRecursiveTop(window.event.srcElement);
   }
+
+  if (e.target.offsetParent == null)
+    // Best we can do?
+    return e.pageY;
+  elt = e.target;
+  x = 0;
+  while (elt.offsetParent != null) {
+    x += elt.offsetTop;
+    elt = elt.offsetParent;
+  }
+  x += elt.offsetTop;
+  return x;
+  // return e.target.offsetTop;
 }
 
 function captureMouseEvent(callback)
