@@ -1,4 +1,4 @@
-# $Id: supports,v 1.91 2001/09/19 14:44:50 nilsson Exp $
+# $Id: supports,v 1.92 2005/10/21 09:31:05 jonasw Exp $
 
 # --- Supports database ---
 # The database used to determine what different user-agents (browsers) support.
@@ -140,7 +140,8 @@
 .*compatible.*opera.2.*		align, fontcolor, tablecolor
 .*compatible.*opera.[3-9].*	-java, javascript, fontcolor, tablecolor, *javascript=1.1
 .*compatible.*opera.[4-9].*	trade
-.*compatible.*opera.[5-9].*	*javascript=1.3
+.*compatible.*opera.[5-9].*	*javascript=1.3, stylesheets
+
 
 # BLAM BLAM BLAM BLAM
 .*compatible.*			-push, -layer, -js_global_event
@@ -165,6 +166,16 @@ gecko				basic, some_html3, backgrounds, center, cookies,\
 				js_image_object, js_inner_html, pjpeginline,\
 				pnginline, stylesheets, tables, tablecolor, tableimages,\
 				*javascript=1.5
+
+# section opera {
+.*		basic, tables, jpeginline, font, imagealign,\
+		cookies, push, pull, backgrounds, ssl,\
+		java, frames, autogunzip, js_image_object, javascript,\
+		align, center, images \
+		*javascript=1.5, js_global_event,\
+		js_inner_html, pnginline, trade, stylesheets
+# }
+
 
 #section netsurfer {
 # Netsurfer is a popular commercial Web browser for NEXTSTEP. for more
