@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.592 2005/09/02 12:25:27 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.593 2005/10/21 21:15:41 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2623,26 +2623,10 @@ array(int)|Stat try_stat_file(string s, RequestID id, int|void not_internal)
   // id->root_id->misc.
   if ( !id->misc )
     id->misc = ([]);
-  if ( !id->misc->common )
-    id->misc->common = ([]);
 
-  fake_id = id->clone_me();
+  fake_id = make_fake_id(s, id);
 
-  fake_id->misc->common = id->misc->common;
   fake_id->misc->internal_get = !not_internal;
-  fake_id->conf = this_object();
-
-  if (fake_id->scan_for_query)
-    // FIXME: If we're using e.g. ftp this doesn't exist. But the
-    // right solution might be that clone_me() in an ftp id object
-    // returns a vanilla (i.e. http) id instead when this function is
-    // used.
-    s = fake_id->scan_for_query (s);
-
-  s = Roxen.fix_relative (s, id);
-
-  fake_id->raw_url = s;
-  fake_id->not_query = s;
   fake_id->method = "GET";
 
   res = stat_file(fake_id->not_query, fake_id);
@@ -2672,7 +2656,13 @@ static RequestID make_fake_id (string s, RequestID id)
     // used.
     s = fake_id->scan_for_query (s);
 
+  s = http_decode_string(s);
+
   s = Roxen.fix_relative (s, id);
+
+  // s is sent to Unix API's that take NUL-terminated strings...
+  if (search(s, "\0") != -1)
+    sscanf(s, "%s\0", s);
 
   fake_id->raw_url=s;
   fake_id->not_query=s;
@@ -2815,30 +2805,13 @@ mapping(string:mixed) try_put_file(string path, string data, RequestID id)
   // id->root_id->misc.
   if ( !id->misc )
     id->misc = ([]);
-  if ( !id->misc->common )
-    id->misc->common = ([]);
 
-  RequestID fake_id = id->clone_me();
+  RequestID fake_id = make_fake_id(path, id);
   
-  fake_id->misc->common = id->misc->common;
-  fake_id->misc->internal_get = 1;
-  fake_id->conf = this_object();
-
   fake_id->root_id->misc->_request_depth++;
   if(sub_req_limit && fake_id->root_id->misc->_request_depth > sub_req_limit)
     error("Subrequest limit reached. (Possibly an insertion loop.)");
 
-  if (fake_id->scan_for_query)
-    // FIXME: If we're using e.g. ftp this doesn't exist. But the
-    // right solution might be that clone_me() in an ftp id object
-    // returns a vanilla (i.e. http) id instead when this function is
-    // used.
-    path = fake_id->scan_for_query(path);
-
-  path = Roxen.fix_relative(path, id);
-
-  fake_id->raw_url=path;
-  fake_id->not_query=path;
   fake_id->method = "PUT";
   fake_id->data = data;
   fake_id->misc->len = sizeof(data);
