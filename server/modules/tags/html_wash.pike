@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.27 2004/06/30 16:59:25 mast Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.28 2005/10/21 14:33:56 anders Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";
@@ -75,7 +75,12 @@ class TagWashHtml
   string filter_body(string s, array keep_tags, array keep_containers,
 		     string close_tags)
   {
+    // Replace < and > with \1 and \2 in stead of quoting with &lt; and &gt; to
+    // be able regexp match on single characters.
+    // \0 is used to keep allowed tags.
     s -= "\0";
+    s -= "\1";
+    s -= "\2";
     mapping allowed_tags =
       mkmapping(keep_tags, allocate(sizeof(keep_tags), safe_tag));
 
@@ -86,7 +91,7 @@ class TagWashHtml
     return replace(
       parse_html(s, allowed_tags, allowed_containers, close_tags),
       ({ "<",    ">",    "&",     "\0[", "\0]" }),
-      ({ "&lt;", "&gt;", "&amp;", "<",   ">" }));
+      ({ "\1", "\2", "&amp;", "<",   ">" }));
   }
 
   string linkify(string s)
@@ -156,6 +161,9 @@ class TagWashHtml
       if(args["linkify"])
 	result = linkify(result);
 
+      if (!args["keep-all"])
+	result = replace(result, ({ "\1", "\2" }), ({ "&lt;", "&gt;" }));
+
       return 0;
     }
   }
@@ -172,9 +180,10 @@ class TagWashHtml
                        "unlinkify":RXML.t_text(RXML.PXml),
 		       "close-tags":RXML.t_text(RXML.PXml) ]);
 
+#define VALID_CHARS "[^][ \t\n\r<>\"'`(){}|\1\2]"
     link_regexp =
-      Regexp("(((http)|(https)|(ftp))://([^ \t\n\r<]+)(\\.[^ \t\n\r<>\"]+)+)|"
-	     "(((www)|(ftp))(\\.[^ \t\n\r<>\"]+)+)");
+      Regexp("(((http)|(https)|(ftp))://(" VALID_CHARS "+)(\\." VALID_CHARS "+)+)|"
+	     "(((www)|(ftp))(\\." VALID_CHARS "+)+)");
   }
 }
 
