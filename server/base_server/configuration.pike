@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.593 2005/10/21 21:15:41 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.594 2005/10/23 15:09:44 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1191,6 +1191,47 @@ static array(string) draw_saturation_bar(int hue,int brightness, int where,
 }
 
 
+#if constant(Image.GIF) && constant(Image.PNG)
+array(mapping) spinner_data = 0;
+
+//  Returns tuple < image, mime type >
+static array(string) draw_spinner(string bgcolor)
+{
+  //  Parse color
+  array color = parse_color(bgcolor);
+  
+  //  Load all spinner PNGs
+  if (!spinner_data) {
+    spinner_data = ({ });
+    for (int i = 0; i < 12; i++) {
+      string src = lopen("roxen-images/spinner" + i + ".png", "r")->read();
+      spinner_data += ({ Image.PNG._decode(src) });
+    }
+  }
+  
+  //  Create non-transparent Image object for each frame
+  array(Image.Image) frames = ({ });
+  foreach(spinner_data, mapping data) {
+    Image.Image frame = Image.Image(17, 17, @color);
+    frame->paste_mask(data->image, data->alpha);
+    frames += ({ frame });
+  }
+  
+  //  Create animated GIF using colortable based on first frame (all of
+  //  them have the same set of colors)
+  Image.Colortable colors = Image.Colortable(frames[0]);
+  string res = Image.GIF.header_block(17, 17, colors);
+  foreach(frames, Image.Image frame)
+    res += Image.GIF.render_block(frame, colors, 0, 0, 0, 1);
+  res +=
+    Image.GIF.netscape_loop_block(0) +
+    Image.GIF.end_block();
+  
+  return ({ res, "image/gif" });
+}
+#endif
+
+
 // Inspired by the internal-gopher-... thingie, this is the images
 // from the administration interface. :-)
 private mapping internal_roxen_image( string from, RequestID id )
@@ -1199,6 +1240,16 @@ private mapping internal_roxen_image( string from, RequestID id )
   sscanf(from, "%s.jpg", from);
   sscanf(from, "%s.xcf", from);
   sscanf(from, "%s.png", from);
+
+#if constant(Image.GIF) && constant(Image.PNG)
+  //  Animated spinner image
+  if (has_prefix(from, "spinner-")) {
+    array(string) spinner = draw_spinner(from[8..]);
+    return ([ "data" : spinner[0],
+	      "type" : spinner[1],
+	      "stat" : ({ 0, 0, 0, 900000000, 0, 0, 0 }) ]);
+  }
+#endif
 
   // Automatically generated colorbar. Used by wizard code...
   int hue,bright,w;
