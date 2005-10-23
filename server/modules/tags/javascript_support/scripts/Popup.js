@@ -68,6 +68,21 @@ function addPopup(name, properties)
 		  getObjectWidth(name), getObjectHeight(name), properties);
 }
 
+
+//  Needs to be called if a popup if resized dynamically so that we'll
+//  detect mouse inside/outside correctly.
+function resizePopup(name)
+{
+  if (popups.length == 0)
+    return;
+  var p = popups[popups.length -1];
+  if (p.name == name) {
+    p.w = getObjectWidth(name);
+    p.h = getObjectHeight(name);
+  }
+}
+
+
 // Remove all popups above the given one.
 function clearToPopup(popup)
 {
