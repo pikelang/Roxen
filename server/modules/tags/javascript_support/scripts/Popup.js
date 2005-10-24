@@ -82,7 +82,7 @@ function resizePopup(name)
     p.never_inside = true;
     p.inside = false;
     if (p.hide_timer) {
-      clearTimeout(p.hideTimer);
+      clearTimeout(p.hide_timer);
       p.hide_timer = null;
     }
   }
