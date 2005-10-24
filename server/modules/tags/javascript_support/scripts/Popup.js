@@ -79,6 +79,8 @@ function resizePopup(name)
   if (p.name == name) {
     p.w = getObjectWidth(name);
     p.h = getObjectHeight(name);
+    p.never_inside = true;
+    p.inside = false;
   }
 }
 
