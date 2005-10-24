@@ -208,6 +208,7 @@ function loadLayer(e, layer_name, src, properties, parent)
 	    addPopup(layer_name, properties);
 	    captureMouseEvent(popupMove);
 	    show(layer_name);
+	    if (properties.show_callback) properties.show_callback(layer_name);
 	  }
       }
 
