@@ -575,6 +575,7 @@ Click "Next" to start the installation.</Text>
           <Publish Event="EndDialog" Value="Return"><![CDATA[AdminFolderForm_NextArgs="" AND OutOfDiskSpace<>1]]></Publish>
           <Publish Event="NewDialog" Value="[AdminFolderForm_NextArgs]"><![CDATA[AdminFolderForm_NextArgs<>"" AND OutOfDiskSpace<>1]]></Publish>
           <Publish Property="ALLUSERS" Value="2"><![CDATA[AdminFolderForm_AllUsers="ALL"]]></Publish>
+          <Publish Property="INSTALL_SERVICE" Value="0"><![CDATA[AdminFolderForm_AllUsers&lt;&gt;"ALL"]]></Publish>
         </Control>
         <Control Id="FolderLabel" Type="Text" X="18" Y="114" Width="348" Height="12" TabSkip="no">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Folder:</Text>
@@ -754,6 +755,7 @@ To create an image in this folder, click "Next". To use a different folder, ente
           <Publish Event="NewDialog" Value="[FolderForm_NextArgs]"><![CDATA[FolderForm_NextArgs<>"" AND OutOfDiskSpace<>1]]></Publish>
           <Publish Property="ALLUSERS" Value="2"><![CDATA[FolderForm_AllUsers="ALL" AND VersionNT>=400 AND Privileged=1 AND FolderForm_AllUsersVisible=1]]></Publish>
           <Publish Property="ALLUSERS" Value="{}"><![CDATA[FolderForm_AllUsers="ME" AND VersionNT>=400 AND Privileged=1 AND FolderForm_AllUsersVisible=1]]></Publish>
+	  <Publish Property="INSTALL_SERVICE" Value="0"><![CDATA[FolderForm_AllUsers&lt;&gt;"ALL"]]></Publish>
           <Publish Event="DoAction" Value="FindRelatedProducts"><![CDATA[1]]></Publish>
         </Control>
         <Control Id="FolderLabel" Type="Text" X="18" Y="114" Width="348" Height="12" TabSkip="no">
@@ -847,22 +849,22 @@ Click "Next" to start the installation.</Text>
         </Control>
         <Control Id="InstallServiceText" Type="Text" X="9" Y="185" Width="354" Height="14">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Install as service</Text>
-	  <Condition Action="disable">(NOT VersionNT) OR (INSTALLATION_TYPE="2")</Condition>
-	  <Condition Action="enable">VersionNT AND (INSTALLATION_TYPE&lt;&gt;"2")</Condition>
+	  <Condition Action="disable">(NOT VersionNT) OR (INSTALLATION_TYPE="2") OR (ALLUSERS&lt;&gt;"2")</Condition>
+	  <Condition Action="enable">VersionNT AND (INSTALLATION_TYPE&lt;&gt;"2") AND (ALLUSERS="2")</Condition>
         </Control>
 	<Control Id="InstallServiceGroup" Type="RadioButtonGroup" X="18" Y="199" Width="348" Height="48" Property="INSTALL_SERVICE">
           <Text>{\VSI_MS_Shell_Dlg13.0_0_0}MsiRadioButtonGroup</Text>
-	  <Condition Action="disable">(NOT VersionNT) OR (INSTALLATION_TYPE="2")</Condition>
-	  <Condition Action="enable">VersionNT AND (INSTALLATION_TYPE&lt;&gt;"2")</Condition>
+	  <Condition Action="disable">(NOT VersionNT) OR (INSTALLATION_TYPE="2") OR (ALLUSERS&lt;&gt;"2")</Condition>
+	  <Condition Action="enable">VersionNT AND (INSTALLATION_TYPE&lt;&gt;"2") AND (ALLUSERS="2")</Condition>
         </Control>
       </Dialog>
       <Dialog Id="CustomTextA" Width="373" Height="287" Title="[ProductName]">
         <Control Id="NextButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Next &gt;</Text>
-          <Publish Event="EndDialog" Value="Return"><![CDATA[CustomTextA_NextArgs=""]]></Publish>
-          <Publish Event="NewDialog" Value="[CustomTextA_NextArgs]"><![CDATA[CustomTextA_NextArgs<>""]]></Publish>
-          <Condition Action="disable"><![CDATA[(ADM_PASS1="") OR (ADM_PASS1<>ADM_PASS2)]]></Condition>
-          <Condition Action="enable"><![CDATA[(ADM_PASS1<>"") AND (ADM_PASS1=ADM_PASS2)]]></Condition>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[(CustomTextA_NextArgs="") AND (ADM_PASS1=ADM_PASS2)]]></Publish>
+          <Publish Event="NewDialog" Value="[CustomTextA_NextArgs]"><![CDATA[(CustomTextA_NextArgs<>"") AND (ADM_PASS1=ADM_PASS2)]]></Publish>
+          <Condition Action="disable"><![CDATA[(ADM_PASS1="") AND (ADM_PASS2="")]]></Condition>
+          <Condition Action="enable"><![CDATA[(ADM_PASS1<>"") OR (ADM_PASS2<>"")]]></Condition>
         </Control>
 
         <Control Id="Label1" Type="Text" X="18" Y="108" Width="348" Height="12" TabSkip="no">
@@ -1104,6 +1106,7 @@ Click "Next" to start the installation.</Text>
         <Custom Action="CustomTextA_SetProperty_EDIT3" After="CustomTextA_SetProperty_EDIT2" />
         <Custom Action="CustomTextA_SetProperty_EDIT4" After="CustomTextA_SetProperty_EDIT3" />
         <Custom Action="DIRCA_TARGETDIR" After="CustomTextA_SetProperty_EDIT4"><![CDATA[TARGETDIR=""]]></Custom>
+        <AppSearch After="DIRCA_TARGETDIR"/>
         <Show Dialog="WelcomeForm" After="IsolateComponents"><![CDATA[Installed="" AND NOT RESUME]]></Show>
         <Custom Action="VSDCA_FolderForm_AllUsers" After="WelcomeForm"><![CDATA[Installed="" AND NOT RESUME AND ALLUSERS=1]]></Custom>
         <Show Dialog="ResumeForm" After="VSDCA_FolderForm_AllUsers"><![CDATA[Installed="" AND RESUME]]></Show>
@@ -1126,7 +1129,7 @@ Click "Next" to start the installation.</Text>
     <Property Id="ConfirmInstallForm_PrevArgs"><![CDATA[CustomTextA]]></Property>
 
     <Property Id="VSDIISMSG"><![CDATA[This setup requires Internet Information Server 4.0 or higher and Windows NT 4.0, Windows 2000, or Windows XP.  This setup cannot be installed on Windows 95, Windows 98, or Windows Me.  Please install Internet Information Server and run this setup again.]]></Property>
-    <Property Id="FolderForm_AllUsersVisible"><![CDATA[1]]></Property>
+    <Property Id="FolderForm_AllUsersVisible"><![CDATA[0]]></Property>
     <Property Id="SFF_NewFldrBtn"><![CDATA[NewFldrBtn]]></Property>
     <Property Id="FolderForm_AllUsers"><![CDATA[ME]]></Property>
     <Property Id="ARPCONTACT"><![CDATA[Roxen Internet Software]]></Property>
@@ -1152,6 +1155,11 @@ Click "Next" to start the installation.</Text>
       <ComponentSearch Id="NTSTART" Type="directory"
         Guid='8c53c060-a679-3ab2-a67f-0e7f84da59ab' />
     </Property>
+    <Property Id="OLDCONFIGDIR">
+      <DirectorySearch Id="CONFIGURATIONS" Path="configurations">
+        <FileSearch Name="Global_Variables" MinSize="128" />
+      </DirectorySearch>
+    </Property>
     <AdminExecuteSequence>
       <Custom Action="DONT_INSTALL_SERVICE" Before="DIRCA_TARGETDIR">NOT VersionNT</Custom>
       <Custom Action="DIRCA_TARGETDIR" Before="CostInitialize"><![CDATA[TARGETDIR=""]]></Custom>
@@ -1164,6 +1172,7 @@ Click "Next" to start the installation.</Text>
       <Custom Action="CustomTextA_SetProperty_EDIT4" After="CustomTextA_SetProperty_EDIT3" />
       <Custom Action="DIRCA_TARGETDIR" After="CustomTextA_SetProperty_EDIT4"><![CDATA[TARGETDIR=""]]></Custom>
       <Custom Action="DONT_INSTALL_SERVICE" After="DIRCA_TARGETDIR">NOT VersionNT</Custom>
+      <AppSearch After="DONT_INSTALL_SERVICE"/>
       <RemoveExistingProducts After="InstallInitialize" />
       <StopServices Sequence="1900">VersionNT AND INSTALL_SERVICE="1"</StopServices>
       <DeleteServices Sequence="2000">VersionNT AND INSTALL_SERVICE="1"</DeleteServices>
