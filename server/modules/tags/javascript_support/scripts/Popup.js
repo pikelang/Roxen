@@ -75,12 +75,16 @@ function resizePopup(name)
 {
   if (popups.length == 0)
     return;
-  var p = popups[popups.length -1];
+  var p = popups[popups.length - 1];
   if (p.name == name) {
     p.w = getObjectWidth(name);
     p.h = getObjectHeight(name);
     p.never_inside = true;
     p.inside = false;
+    if (p.hide_timer) {
+      clearTimeout(p.hideTimer);
+      p.hide_timer = null;
+    }
   }
 }
 
