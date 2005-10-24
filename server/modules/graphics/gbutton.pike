@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.112 2005/10/01 14:56:20 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.113 2005/10/24 09:50:16 anders Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -950,7 +950,7 @@ class TagGButton {
 	foreach(indices(args), string arg)
 	  if(has_value("/target/onmousedown/onmouseup/onclick/ondblclick/"
 		       "onmouseout/onmouseover/onkeypress/onkeyup/"
-		       "onkeydown/style/class/",
+		       "onkeydown/style/class/id/accesskey/",
 		       "/" + lower_case(arg) + "/"))
 	    a_attrs[arg] = args[arg];
 
