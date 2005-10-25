@@ -18,6 +18,13 @@ li
 	list-style-image: URL(/themes/default/bullet.gif);
 }
 
+h3
+{
+	color: #778;
+	border-bottom: 1px solid #bbc;
+	padding: 6px 0 4px 0;
+}
+
 /* For Mozilla */
 .add-module-select option
 {
