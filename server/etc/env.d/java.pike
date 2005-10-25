@@ -82,8 +82,10 @@ void run(object env)
   {
     if(arch == "")
       arch = "_";
+    else if(arch == "x86_64")
+      arch = "amd64";
   
-    foreach(({arch+"/"+threads_type, arch+"/classic", arch}), string dir) {
+    foreach(({arch+"/"+threads_type, arch+"/classic", arch+"/server", arch}), string dir) {
       mixed s = file_stat(jrehome+"/lib/"+dir);
       if(s && s[1]==-2)
 	env->append("LD_LIBRARY_PATH", jrehome+"/lib/"+dir);
