@@ -9,6 +9,8 @@
     <CustomAction Id="CustomTextA_SetProperty_EDIT2" Property="SERVER_PROTOCOL" Value="https" Execute="firstSequence" />
     <CustomAction Id="CustomTextA_SetProperty_EDIT1" Property="SERVER_NAME" Value="Administration Interface" Execute="firstSequence" />
     <CustomAction Id="CustomTextA_SetProperty_EDIT4" Property="ADM_USER" Value="administrator" Execute="firstSequence" />
+    <CustomAction Id="Override_CustomTextA_1" Property="Custom2Buttons_NextArgs" Value="[CustomTextA_NextArgs]" Execute="firstSequence" />
+    <CustomAction Id="Override_CustomTextA_2" Property="ConfirmInstallForm_PrevArgs" Value="[CustomTextA_PrevArgs]" Execute="firstSequence" />
     <CustomAction Id="VSDCA_FolderForm_AllUsers" Property="FolderForm_AllUsers" Value="ALL" />
     <CustomAction Id="SetRemoveOldService" Property="RemoveOldService"
       Value="[TARGETDIR]" Execute="immediate" />
@@ -1173,6 +1175,8 @@ Click "Next" to start the installation.</Text>
       <Custom Action="DIRCA_TARGETDIR" After="CustomTextA_SetProperty_EDIT4"><![CDATA[TARGETDIR=""]]></Custom>
       <Custom Action="DONT_INSTALL_SERVICE" After="DIRCA_TARGETDIR">NOT VersionNT</Custom>
       <AppSearch After="DONT_INSTALL_SERVICE"/>
+      <Custom Action="Override_CustomTextA_1" After="AppSearch">OLDCONFIGDIR&lt;&gt;""</Custom>
+      <Custom Action="Override_CustomTextA_2" After="Override_CustomTextA_1">OLDCONFIGDIR&lt;&gt;""</Custom>
       <RemoveExistingProducts After="InstallInitialize" />
       <StopServices Sequence="1900">VersionNT AND INSTALL_SERVICE="1"</StopServices>
       <DeleteServices Sequence="2000">VersionNT AND INSTALL_SERVICE="1"</DeleteServices>
@@ -1181,7 +1185,7 @@ Click "Next" to start the installation.</Text>
       <Custom Action="SetRemoveOldService" After="InstallFiles">REMOVE="" AND INSTALL_SERVICE="1"</Custom>
       <Custom Action="RemoveOldService" After="SetRemoveOldService">REMOVE="" AND INSTALL_SERVICE="1"</Custom>
       <Custom Action="SetCreateConfigInterface" Sequence="5100">REMOVE=""</Custom>
-      <Custom Action="CreateConfigInterface" After="SetCreateConfigInterface">REMOVE=""</Custom>
+      <Custom Action="CreateConfigInterface" After="SetCreateConfigInterface">(REMOVE="") AND (OLDCONFIGDIR="")</Custom>
       <Custom Action="SetCreatePikeLocation" After="CreateConfigInterface">REMOVE=""</Custom>
       <Custom Action="CreatePikeLocation" After="SetCreatePikeLocation">REMOVE=""</Custom>
       <Custom Action="ConsoleStartServer" After="StartServices">((NOT VersionNT) OR INSTALL_SERVICE&lt;&gt;"1") AND START_SERVER="1"</Custom>
