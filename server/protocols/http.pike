@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.466 2005/08/16 14:54:23 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.467 2005/10/27 17:40:54 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1641,7 +1641,6 @@ void send_result(mapping|void result)
 
   array err;
   int tmp;
-  string head_string="";
   if (result)
     file = result;
 #ifdef PROFILE
@@ -1703,6 +1702,19 @@ void send_result(mapping|void result)
     if(file->type == "raw")  file->raw = 1;
   }
 
+  // Invariant part of header. (Cached)
+  // Contains the result line except for the protocol part.
+  // Note: Only a single CRLF as terminator.
+  string head_string="";
+
+  // Variant part of header.
+  // Currently the Date and Connection headers.
+  // Note: Terminated with a double CRLF.
+  string variant_string="";
+
+  // The full header block (prot + head_string + variant_string).
+  string full_headers="";
+
   if(!file->raw && (prot != "HTTP/0.9"))
   {
       if (!sizeof (file) && multi_status)
@@ -1737,6 +1749,11 @@ void send_result(mapping|void result)
       }
 
       mapping(string:string) heads = make_response_headers (file);
+
+      mapping(string:string) variant_heads = ([ "Date":"",
+						"Connection":"" ]) & heads;
+      m_delete(heads, "Date");
+      m_delete(heads, "Connection");
 
       if (file->error == 200) {
 	int conditional;
@@ -1838,7 +1855,8 @@ void send_result(mapping|void result)
 	}
       }
 
-      head_string = sprintf("%s %d %s\r\n", prot, file->error,
+      // FIXME: prot.
+      head_string = sprintf(" %d %s\r\n", file->error,
 			    head_status || errors[file->error] || "");
 
       // Must update the content length after the modifications of the
@@ -1850,7 +1868,7 @@ void send_result(mapping|void result)
       // close in that case.
       if( file->error/100 == 2 && file->len <= 0 )
       {
-	heads->Connection = "close";
+	variant_heads->Connection = "close";
 	misc->connection = "close";
       }
 
@@ -1892,8 +1910,8 @@ void send_result(mapping|void result)
       }
 #endif
 
-	if( mixed err = catch( head_string += Roxen.make_http_headers( heads ) ) )
-	{
+      if (mixed err = catch(head_string += Roxen.make_http_headers(heads, 1)))
+      {
 #ifdef DEBUG
 	  report_debug ("Roxen.make_http_headers failed: " +
 			describe_error (err));
@@ -1911,8 +1929,11 @@ void send_result(mapping|void result)
 	    }
 	  }
 	  head_string += "\r\n";
-	}
-        conf->hsent += strlen(head_string);
+      }
+
+      variant_string = Roxen_make_http_headers(variant_heads);
+      full_headers = prot + head_string + variant_string;
+      conf->hsent += strlen(full_headers);
     }
   else
     if(!file->type) file->type="text/plain";
@@ -1931,7 +1952,7 @@ void send_result(mapping|void result)
 	  (prot != "HTTP/0.9") && !misc->no_proto_cache)
       {
         if( file->len>0 && // known length.
-	    ((file->len + strlen( head_string )) < 
+	    ((file->len + sizeof(head_string)) < 
 	     conf->datacache->max_file_size)
 	    // vvv Relying on the interpreter lock from here.
             && misc->cachekey )
@@ -1945,7 +1966,6 @@ void send_result(mapping|void result)
 	  MY_TRACE_LEAVE ("");
           conf->datacache->set( raw_url, data,
                                 ([
-                                  // We have to handle the date header.
                                   "hs":head_string,
                                   "key":misc->cachekey,
 				  "etag":misc->etag,
@@ -1964,7 +1984,7 @@ void send_result(mapping|void result)
 #endif
       if(!kept_alive &&
 	 (file->len > 0) &&
-	 ((sizeof(head_string) + file->len) < (HTTP_BLOCKING_SIZE_THRESHOLD)))
+	 ((sizeof(full_headers) + file->len) < (HTTP_BLOCKING_SIZE_THRESHOLD)))
       {
 	// The first time we get a request, the output buffers will
 	// be empty. We can thus just do a single blocking write()
@@ -1972,7 +1992,7 @@ void send_result(mapping|void result)
         int s;
 	TIMER_END(send_result);
 	TIMER_START(blocking_write);
-	string data = head_string;
+	string data = full_headers;
 	if (file->data)
 	  data += file->data[..file->len-1];
 	if (file->file)
@@ -1991,27 +2011,28 @@ void send_result(mapping|void result)
         do_log( s );
         return;
       }
-      if(strlen(head_string))                 send(head_string);
+      if(strlen(full_headers))                send(full_headers);
       if(file->data && strlen(file->data))    send(file->data, file->len);
       if(file->file)                          send(file->file, file->len);
     }
     else 
     {
-      if( strlen( head_string ) < (HTTP_BLOCKING_SIZE_THRESHOLD))
+      if( strlen( full_headers ) < (HTTP_BLOCKING_SIZE_THRESHOLD))
       {
 #ifdef CONNECTION_DEBUG
 	werror ("HTTP: Response =================================================\n"
 		"%s\n",
-		replace (sprintf ("%O", head_string),
+		replace (sprintf ("%O", full_headers),
 			 ({"\\r\\n", "\\n", "\\t"}),
 			 ({"\n",     "\n",  "\t"})));
 #else
-	REQUEST_WERR (sprintf ("HTTP: Send headers blocking %O", head_string));
+	REQUEST_WERR (sprintf ("HTTP: Send headers blocking %O",
+			       full_headers));
 #endif
-	do_log( my_fd->write( head_string ) );
+	do_log( my_fd->write( full_headers ) );
         return;
       }
-      send(head_string);
+      send(full_headers);
       file->len = 1; // Keep those alive, please...
     }
 
@@ -2369,26 +2390,27 @@ void got_data(mixed fooid, string s)
 	      ((st = file_stat( file->rf )) && st->mtime == file->mtime ))
 #endif
 	  {
-	    string fix_date( string headers )
-	    {
-	      string a, b;
-	      if( sscanf( headers, "%sDate: %*s\n%s", a, b ) == 3 )
-		return a+"Date: "+Roxen.http_date( predef::time(1) ) +"\r\n"+b;
-	      return headers;
-	    };
-	    
+	    string full_headers = prot + file->hs +
+	      Roxen.make_http_headers(([
+		"Date":Roxen.http_date(predef::time(1)),
+		"Connection":misc->connection ||
+		([ "HTTP/1.1":"keep-alive" ])[prot] || "close",
+	      ]));
+
 	    MY_TRACE_LEAVE ("Using entry from ram cache");
-	    conf->hsent += strlen(file->hs);
+	    conf->hsent += strlen(full_headers);
 	    cache_status["protcache"] = 1;
-	    if( strlen( d ) < (HTTP_BLOCKING_SIZE_THRESHOLD) )
+	    if( (sizeof(full_headers) + strlen(d)) <
+		(HTTP_BLOCKING_SIZE_THRESHOLD) )
 	    {
 	      TIMER_END(cache_lookup);
-	      do_log( my_fd->write( fix_date(file->hs)+d ) );
+	      do_log( my_fd->write( ({ full_headers, d }) ));
 	    } 
 	    else 
 	    {
 	      TIMER_END(cache_lookup);
-	      send( fix_date(file->hs)+d );
+	      send( full_headers );
+	      send( d );
 	      start_sender( );
 	    }
 	    return;
