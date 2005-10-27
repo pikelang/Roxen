@@ -1131,9 +1131,9 @@ Click "Next" to start the installation.</Text>
     <Property Id="ConfirmInstallForm_PrevArgs"><![CDATA[CustomTextA]]></Property>
 
     <Property Id="VSDIISMSG"><![CDATA[This setup requires Internet Information Server 4.0 or higher and Windows NT 4.0, Windows 2000, or Windows XP.  This setup cannot be installed on Windows 95, Windows 98, or Windows Me.  Please install Internet Information Server and run this setup again.]]></Property>
-    <Property Id="FolderForm_AllUsersVisible"><![CDATA[0]]></Property>
+    <Property Id="FolderForm_AllUsersVisible"><![CDATA[1]]></Property>
     <Property Id="SFF_NewFldrBtn"><![CDATA[NewFldrBtn]]></Property>
-    <Property Id="FolderForm_AllUsers"><![CDATA[ME]]></Property>
+    <Property Id="FolderForm_AllUsers"><![CDATA[ALL]]></Property>
     <Property Id="ARPCONTACT"><![CDATA[Roxen Internet Software]]></Property>
     <Property Id="INSTALLATION_TYPE"><![CDATA[2]]></Property>
     <Property Id="START_SERVER"><![CDATA[1]]></Property>
