@@ -1153,12 +1153,12 @@ Click "Next" to start the installation.</Text>
     <Property Id="NEWERPRODUCTFOUND" Secure="yes" />
     <Property Id="UPGRADE" Secure="yes" />
     <Property Id="BROWSER">explorer</Property>
-    <Property Id="OLDTARGETDIR">
+    <Property Id="TARGETDIR">
       <ComponentSearch Id="NTSTART" Type="directory"
         Guid='8c53c060-a679-3ab2-a67f-0e7f84da59ab' />
     </Property>
     <Property Id="OLDCONFIGDIR">
-      <DirectorySearch Id="CONFIGURATIONS" Path="configurations">
+      <DirectorySearch Id="OLDCONFIGURATIONS" Path="[TARGETDIR]configurations">
         <FileSearch Name="Global_Variables" MinSize="128" />
       </DirectorySearch>
     </Property>
