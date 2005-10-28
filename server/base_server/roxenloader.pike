@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.361 2005/10/27 17:39:57 grubba Exp $
+// $Id: roxenloader.pike,v 1.362 2005/10/28 08:56:32 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.361 2005/10/27 17:39:57 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.362 2005/10/28 08:56:32 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2061,7 +2061,8 @@ and rebuild Pike from scratch.
   _exit(0); // 0 means stop start script looping
 #endif // !constant (Mysql.mysql)
 
-  if (catch(_Roxen.make_http_headers(([]), 1))) {
+  if (catch(((function(mapping(string:string|array(string)),int|void:string))
+	     _Roxen->make_http_headers)(([]), 1))) {
     add_constant("HAVE_OLD__Roxen_make_http_headers", 1);
     report_debug(#"
 
