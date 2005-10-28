@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.28 2005/10/21 14:33:57 anders Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.29 2005/10/28 12:04:10 noring Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";
@@ -124,6 +124,21 @@ class TagWashHtml
     return parser->finish(s)->read();
   }
 
+  string remove_illegal_chars(string s)
+  {
+    string result = "";
+
+    while(sizeof(s))
+    {
+      string rest = "";
+      sscanf(s, "%s%*[\x0-\x8\xb\xc\xe-\x1f\x7f-\x84\x86-\x9f]%s", s, rest);
+      result += s;
+      s = rest;
+    }
+
+    return result;
+  }
+
   string unlinkify(string s)
   {
     string tag_a(string tag, mapping arg, string cont)
@@ -163,6 +178,9 @@ class TagWashHtml
 
       if (!args["keep-all"])
 	result = replace(result, ({ "\1", "\2" }), ({ "&lt;", "&gt;" }));
+
+      if(args["remove-illegal-xml-chars"])
+	result = remove_illegal_chars(result);
 
       return 0;
     }
@@ -264,6 +282,19 @@ constant tagdoc=([
   <a href=\"http://www.roxen.com\">http://www.roxen.com</a><br />
   <a href=\"http://www.roxen.com\">Roxen IS</a>
 </wash-html></ex>
+</attr>
+
+<attr name='remove-illegal-xml-chars'><p>
+ Removes illegal and discouraged XML characters. Legal characters 
+ include #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] |
+ [#x10000-#x10FFFF]. Discouraged characters include
+ [#x7F-#x84], [#x86-#x9F], [#xFDD0-#xFDDF],
+ [#1FFFE-#x1FFFF], [#2FFFE-#x2FFFF], [#3FFFE-#x3FFFF],
+ [#4FFFE-#x4FFFF], [#5FFFE-#x5FFFF], [#6FFFE-#x6FFFF],
+ [#7FFFE-#x7FFFF], [#8FFFE-#x8FFFF], [#9FFFE-#x9FFFF],
+ [#AFFFE-#xAFFFF], [#BFFFE-#xBFFFF], [#CFFFE-#xCFFFF],
+ [#DFFFE-#xDFFFF], [#EFFFE-#xEFFFF], [#FFFFE-#xFFFFF],
+ [#10FFFE-#x10FFFF]</p>
 </attr>
 
 <attr name='paragraphify'><p>
