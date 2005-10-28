@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.467 2005/10/27 17:40:54 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.468 2005/10/28 08:53:12 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1931,7 +1931,7 @@ void send_result(mapping|void result)
 	  head_string += "\r\n";
       }
 
-      variant_string = Roxen_make_http_headers(variant_heads);
+      variant_string = Roxen.make_http_headers(variant_heads);
       full_headers = prot + head_string + variant_string;
       conf->hsent += strlen(full_headers);
     }
