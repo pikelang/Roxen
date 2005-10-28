@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.195 2005/08/16 15:53:11 mast Exp $
+// $Id: Roxen.pmod,v 1.196 2005/10/28 11:52:31 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2610,6 +2610,21 @@ function get_client_charset_decoder( string едц, RequestID|void id )
 
 // Low-level C-roxen optimization functions.
 inherit _Roxen;
+
+// This symbol is added by roxenloader if an old _Roxen.make_http_headers()
+// is detected.
+#if constant(HAVE_OLD__Roxen_make_http_headers)
+string make_http_headers(mapping(string:string|array(string)) heads,
+			 int(0..1)|void no_terminator)
+{
+  string res = ::make_http_headers(heads);
+  if (no_terminator) {
+    // Remove the terminating CRLF.
+    return res[..sizeof(res)-3];
+  }
+  return res;
+}
+#endif /* constant(HAVE_OLD__Roxen_make_http_headers) */
 
 /*
  * TODO:
