@@ -577,7 +577,7 @@ Click "Next" to start the installation.</Text>
           <Publish Event="EndDialog" Value="Return"><![CDATA[AdminFolderForm_NextArgs="" AND OutOfDiskSpace<>1]]></Publish>
           <Publish Event="NewDialog" Value="[AdminFolderForm_NextArgs]"><![CDATA[AdminFolderForm_NextArgs<>"" AND OutOfDiskSpace<>1]]></Publish>
           <Publish Property="ALLUSERS" Value="2"><![CDATA[AdminFolderForm_AllUsers="ALL"]]></Publish>
-          <Publish Property="INSTALL_SERVICE" Value="0"><![CDATA[AdminFolderForm_AllUsers<>"ALL"]]></Publish>
+          <Publish Property="INSTALL_SERVICE" Value="0"><![CDATA[Privileged<>1]]></Publish>
         </Control>
         <Control Id="FolderLabel" Type="Text" X="18" Y="114" Width="348" Height="12" TabSkip="no">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Folder:</Text>
@@ -757,7 +757,7 @@ To create an image in this folder, click "Next". To use a different folder, ente
           <Publish Event="NewDialog" Value="[FolderForm_NextArgs]"><![CDATA[FolderForm_NextArgs<>"" AND OutOfDiskSpace<>1]]></Publish>
           <Publish Property="ALLUSERS" Value="2"><![CDATA[FolderForm_AllUsers="ALL" AND VersionNT>=400 AND Privileged=1 AND FolderForm_AllUsersVisible=1]]></Publish>
           <Publish Property="ALLUSERS" Value="{}"><![CDATA[FolderForm_AllUsers="ME" AND VersionNT>=400 AND Privileged=1 AND FolderForm_AllUsersVisible=1]]></Publish>
-	  <Publish Property="INSTALL_SERVICE" Value="0"><![CDATA[FolderForm_AllUsers<>"ALL"]]></Publish>
+	  <Publish Property="INSTALL_SERVICE" Value="0"><![CDATA[Privileged<>1]]></Publish>
           <Publish Event="DoAction" Value="FindRelatedProducts"><![CDATA[1]]></Publish>
         </Control>
         <Control Id="FolderLabel" Type="Text" X="18" Y="114" Width="348" Height="12" TabSkip="no">
@@ -851,13 +851,13 @@ Click "Next" to start the installation.</Text>
         </Control>
         <Control Id="InstallServiceText" Type="Text" X="9" Y="185" Width="354" Height="14">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Install as service</Text>
-	  <Condition Action="disable">(NOT VersionNT) OR (INSTALLATION_TYPE="2") OR (ALLUSERS&lt;&gt;"2")</Condition>
-	  <Condition Action="enable">VersionNT AND (INSTALLATION_TYPE&lt;&gt;"2") AND (ALLUSERS="2")</Condition>
+	  <Condition Action="disable">(NOT VersionNT) OR (INSTALLATION_TYPE="2") OR (Privileged&lt;&gt;1)</Condition>
+	  <Condition Action="enable">VersionNT AND (INSTALLATION_TYPE&lt;&gt;"2") AND (Privileged=1)</Condition>
         </Control>
 	<Control Id="InstallServiceGroup" Type="RadioButtonGroup" X="18" Y="199" Width="348" Height="48" Property="INSTALL_SERVICE">
           <Text>{\VSI_MS_Shell_Dlg13.0_0_0}MsiRadioButtonGroup</Text>
-	  <Condition Action="disable">(NOT VersionNT) OR (INSTALLATION_TYPE="2") OR (ALLUSERS&lt;&gt;"2")</Condition>
-	  <Condition Action="enable">VersionNT AND (INSTALLATION_TYPE&lt;&gt;"2") AND (ALLUSERS="2")</Condition>
+	  <Condition Action="disable">(NOT VersionNT) OR (INSTALLATION_TYPE="2") OR (Privileged&lt;&gt;1)</Condition>
+	  <Condition Action="enable">VersionNT AND (INSTALLATION_TYPE&lt;&gt;"2") AND (Privileged=1)</Condition>
         </Control>
       </Dialog>
       <Dialog Id="CustomTextA" Width="373" Height="287" Title="[ProductName]">
