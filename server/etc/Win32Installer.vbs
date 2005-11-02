@@ -1,5 +1,5 @@
 '
-' $Id: Win32Installer.vbs,v 1.10 2004/12/07 17:27:09 grubba Exp $
+' $Id: Win32Installer.vbs,v 1.11 2005/11/02 15:39:22 anders Exp $
 '
 ' Companion file to RoxenUI.wxs with custom actions.
 '
@@ -59,4 +59,20 @@ Function CreateConfigInterface()
     Session.Property("CustomActionData") & """ ok y update n", 0, True
 
   CreateConfigInterface = 1
+End Function
+
+Function CreateEnvironment()
+  Dim envfile, fso, tf
+  Set fso = CreateObject("Scripting.FileSystemObject")
+
+  envfile = Session.Property("CustomActionData")
+
+  If (Not fso.FileExists(envfile)) Then
+    Set tf = fso.CreateTextFile(envfile, True)
+    tf.WriteLine("[Parameters]")
+    tf.WriteLine("default= ")
+    tf.WriteLine("[Environment]")
+    tf.WriteLine("_JAVA_OPTIONS=-Xmx256M")
+    tf.Close
+  End If
 End Function
