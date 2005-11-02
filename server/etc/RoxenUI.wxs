@@ -32,6 +32,12 @@
     <CustomAction Id="ConsoleStartServer" Directory="TARGETDIR"
       ExeCommand='"[TARGETDIR]ntstart"'
       Execute="deferred" Return="asyncNoWait" />
+    <CustomAction Id="SetCreateEnvironment"
+      Property="CreateEnvironment"
+      Value="[TARGETDIR]local/environment.ini"
+      Execute="immediate" />
+    <CustomAction Id="CreateEnvironment" BinaryKey="RoxenInstaller"
+      VBScriptCall="CreateEnvironment" Execute="deferred" />
     <UI>
       <Property Id="ErrorDialog"><![CDATA[ErrorDialog]]></Property>
       <Property Id="DefaultUIFont"><![CDATA[VsdDefaultUIFont.524F4245_5254_5341_4C45_534153783400]]></Property>
@@ -1187,6 +1193,8 @@ Click "Next" to start the installation.</Text>
       <Custom Action="CreateConfigInterface" After="SetCreateConfigInterface">(REMOVE="") AND (OLDCONFIGDIR="")</Custom>
       <Custom Action="SetCreatePikeLocation" After="CreateConfigInterface">REMOVE=""</Custom>
       <Custom Action="CreatePikeLocation" After="SetCreatePikeLocation">REMOVE=""</Custom>
+      <Custom Action="SetCreateEnvironment" After="CreatePikeLocation">REMOVE=""</Custom>
+      <Custom Action="CreateEnvironment" After="SetCreateEnvironment">REMOVE=""</Custom>
       <Custom Action="ConsoleStartServer" After="StartServices">((NOT VersionNT) OR INSTALL_SERVICE&lt;&gt;"1") AND START_SERVER="1"</Custom>
     </InstallExecuteSequence>
     <Binary Id="DefBannerBitmap" src="Banner.bmp" />
