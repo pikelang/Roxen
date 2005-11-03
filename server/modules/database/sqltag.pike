@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.103 2005/09/06 13:01:33 grubba Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.104 2005/11/03 10:26:00 noring Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -200,7 +200,7 @@ array|object do_sql_query(mapping args, RequestID id,
       error = con->error();
       if (error) error = ": " + error;
       error = sprintf("Query failed%s\n", error||".");
-      RXML.parse_error(error);
+      RXML.run_error(error);
     }
   }
   else
@@ -222,7 +222,7 @@ array|object do_sql_query(mapping args, RequestID id,
       error = con->error();
       if (error) error = ": " + error;
       error = sprintf("Query failed%s\n", error||".");
-      RXML.parse_error(error);
+      RXML.run_error(error);
     }
   }
 
@@ -369,7 +369,7 @@ class TagSQLQuery {
 	  RXML.user_set_var(args["mysql-insert-id"],
 			    con->master_sql->insert_id());
 	else
-	  RXML.parse_error("No insert_id present.\n");
+	  RXML.run_error("No insert_id present.\n");
       }
       id->misc->defines[" _ok"] = 1;
       return 0;
