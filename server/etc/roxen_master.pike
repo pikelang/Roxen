@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.141 2004/08/18 16:58:42 mast Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.142 2005/11/09 15:58:22 grubba Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -730,7 +730,7 @@ program low_findprog(string pname, string ext,
 
   if( (s=master_file_stat( relocate_module(fname) )) && s[1]>=0 )
   {
-    if( load_time[ fname ] > s[ 3 ] )
+    if( load_time[ fname ] >= s[ 3 ] )
       if( !zero_type (ret = programs[fname]) )
         return ret;
 
@@ -755,7 +755,7 @@ program low_findprog(string pname, string ext,
       do {                                                                   \
         mixed err = catch                                                    \
         {                                                                    \
-          load_time[ fname ] = time();                                       \
+          load_time[ fname ] = s[3];					     \
           programs[ fname ] = 0;                                             \
           ret = programs[ fname ] = decode_value( DATA, MyCodec() );         \
           program_names[ ret ] = fname;                                      \
@@ -767,7 +767,7 @@ program low_findprog(string pname, string ext,
       do {                                                                   \
         mixed err = catch                                                    \
         {                                                                    \
-          load_time[ fname ] = time();                                       \
+          load_time[ fname ] = s[3];                                         \
           programs[ fname ] = 0;                                             \
           ret = programs[ fname ] = decode_value( DATA, Codec() );	     \
           program_names[ ret ] = fname;                                      \
@@ -777,7 +777,7 @@ program low_findprog(string pname, string ext,
       } while(0)
       if(sizeof(q=sql_query( "SELECT data,mtime FROM precompiled_files WHERE id=%s",
 			     make_ofilename( fname )))) {
-	if( (int)q[0]->mtime > s[3] ) {
+	if( (int)q[0]->mtime >= s[3] ) {
 	  DDEBUG ("Loading dump from sql: %O\n", make_ofilename( fname ));
 	  LOAD_DATA( q[0]->data );
 	}
@@ -795,7 +795,7 @@ program low_findprog(string pname, string ext,
 #ifdef DUMP_DEBUG
       int t = gethrtime();
 #endif
-      load_time[fname] = time();
+      load_time[fname] = s[3];
 #if constant (__empty_program)
       programs[fname]=ret=__empty_program(0, fname);
 #endif
@@ -807,7 +807,7 @@ program low_findprog(string pname, string ext,
 			  );
 	} )
       {
-	// load_time[fname] = time(); not here, no.... reload breaks miserably
+	// load_time[fname] = s[3]; not here, no.... reload breaks miserably
 	//
 	// Yes indeed here. How else avoid many many recompilations of
 	// a module that's broken and referenced from a gazillion
@@ -894,7 +894,7 @@ int refresh( program p, int|void force )
 
   if( s && s[1]>=0 )
   {
-    if( load_time[ fname ] > s[ 3 ] )
+    if( load_time[ fname ] > =s[ 3 ] )
       return 0;
   }
   else
@@ -942,8 +942,16 @@ string program_name(program p)
 
 void name_program( program p, string name )
 {
+  if (programs[name]) {
+    if (programs[name] == p) return;
+    if (rev_programs && (rev_programs[programs[name]] == name)) {
+      m_delete(rev_programs, programs[name]);
+    }
+    m_delete(programs, name);
+  }
+  string t = programs_reverse_lookup(p);
+  load_time[name] = t?load_time[t]:time(1);
   programs[name] = p;
-  load_time[ name ] = time();
 }
 
 class Describer
@@ -987,7 +995,7 @@ void create()
   init_security();
     
   foreach( indices(programs), string f )
-    load_time[ f ] = time();
+    load_time[f] = load_time[f] || time(1);
 
   programs["/master"] = object_program(o);
   program_names[object_program(o)] = "/master";
