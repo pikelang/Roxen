@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.365 2005/10/28 11:51:31 grubba Exp $
+// $Id: roxenloader.pike,v 1.366 2005/11/14 10:06:13 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.365 2005/10/28 11:51:31 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.366 2005/11/14 10:06:13 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2145,6 +2145,24 @@ Please install a newer version of Pike.
 ");
   }
 
+  Stdio.Stat stat = file_stat("etc/include/version.h");
+  if (stat && (stat->mtime > time())) {
+    report_debug(#"
+
+
+------- WARNING -----------------------------------------------
+System time is incorrect.
+
+System time: %s
+Check time: %s
+This may cause unreliable operation. Please set
+the correct system time.
+---------------------------------------------------------------
+
+
+", ctime(stat->mtime), ctime(time(1)));
+  }
+
   int start_time = gethrtime();
   string path = make_path("base_server", "etc/include", ".");
   last_was_nl = 1;
@@ -2152,8 +2170,14 @@ Please install a newer version of Pike.
   string hostinfo =
     (un->sysname || "") + " " + (un->release || "") +
     (un->machine ? (" (" + un->machine + ")") : "");
+  string pike_ver = version();
+  if ((__REAL_MAJOR__ != __MAJOR__) ||
+      (__REAL_MINOR__ != __MINOR__)) {
+    pike_ver += sprintf(" (in Pike %d.%d compat mode)",
+			__MAJOR__, __MINOR__);
+  }
   report_debug("-" * 65 + "\n"
-	       "Pike version:      " + version() + "\n"
+	       "Pike version:      " + pike_ver + "\n"
                "Product version:   " + roxen_product_name + " " + roxen_version() + "\n"
                "Operating system:  " + hostinfo + "\n");
   master()->putenv("PIKE_INCLUDE_PATH", path);
