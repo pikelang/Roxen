@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.906 2005/11/14 09:08:08 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.907 2005/11/14 13:00:47 mast Exp $";
 
 //! @appears roxen
 //!
@@ -2147,7 +2147,7 @@ array(string) find_ips_for( string what )
 {
   if( what == "*" || lower_case(what) == "any" )
     return ({ 0,
-#if 0 && constant(__ROXEN_SUPPORTS_IPV6__)
+#if constant(__ROXEN_SUPPORTS_IPV6__)
 	      "::",
 #endif /* __ROXEN_SUPPORTS_IPV6__ */
     });	// ANY
@@ -2362,7 +2362,7 @@ int register_url( string url, Configuration conf )
     // There is now no need to check for both open_ports[prot][0] and
     // open_ports[prot][0][port], we can go directly to the latter
     // test.
-    m = open_ports[ protocol ] = ([ 0:([]), /* "::":([]) */ ]);
+    m = open_ports[ protocol ] = ([ 0:([]), "::":([]) ]); 
 
   if (prot->supports_ipless ) {
     // Check if the ANY port is already open for this port, since this
@@ -2376,7 +2376,7 @@ int register_url( string url, Configuration conf )
       // We have a non-ANY IPv4 IP number.
       ipv4 = ({ 0 });
     }
-#if 0 && constant(__ROXEN_SUPPORTS_IPV6__)
+#if constant(__ROXEN_SUPPORTS_IPV6__)
     if (m["::"][port] && sizeof(ipv6 - ({ "::" }))) {
       // We have a non-ANY IPv6 IP number.
       ipv6 = ({ "::" });
