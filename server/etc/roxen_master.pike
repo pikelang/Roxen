@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.142 2005/11/09 15:58:22 grubba Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.143 2005/11/14 17:38:34 jonasw Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -894,7 +894,7 @@ int refresh( program p, int|void force )
 
   if( s && s[1]>=0 )
   {
-    if( load_time[ fname ] > =s[ 3 ] )
+    if( load_time[ fname ] >= s[ 3 ] )
       return 0;
   }
   else
