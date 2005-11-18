@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.907 2005/11/14 13:00:47 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.908 2005/11/18 16:29:44 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1402,11 +1402,15 @@ class Protocol
 	destruct(port_obj);
       }
       port_obj = 0;
-      m_delete(open_ports[name][ip], port);
-      if(!sizeof(open_ports[name][ip]))
-	m_delete(open_ports[name], ip);
-      if(!sizeof(open_ports[name]))
-	m_delete(open_ports, name);
+      if (open_ports[name]) {
+	if (open_ports[name][ip]) {
+	  m_delete(open_ports[name][ip], port);
+	  if(!sizeof(open_ports[name][ip]))
+	    m_delete(open_ports[name], ip);
+	}
+	if(!sizeof(open_ports[name]))
+	  m_delete(open_ports, name);
+      }
       //destruct( ); // Close the port.
     }
   }
@@ -4938,6 +4942,15 @@ int main(int argc, array tmp)
     report_debug("\bdisabled.\n");
 #endif // SNMP_AGENT
 
+#ifdef THREADS
+  backend_thread = this_thread();
+  name_thread( backend_thread, "Backend" );
+#else
+  report_debug("\n"
+	       "WARNING: Threads not enabled!\n"
+	       "\n");
+#endif /* THREADS */
+
   enable_configurations();
 
   string pid_file = Getopt.find_option(argv, "p", "pid-file");
@@ -4962,8 +4975,6 @@ int main(int argc, array tmp)
 
 #ifdef THREADS
   start_handler_threads();
-  backend_thread = this_thread();
-  name_thread( backend_thread, "Backend" );
 #endif /* THREADS */
 
 #ifdef TEST_EUID_CHANGE
