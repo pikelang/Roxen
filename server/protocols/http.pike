@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.476 2005/10/28 11:58:55 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.477 2005/11/18 15:53:05 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1727,7 +1727,7 @@ void send_result(mapping|void result)
   }
 
   // Invariant part of header. (Cached)
-  // Contains the result line except for the protocol part.
+  // Contains the result line except for the protocol and code parts.
   // Note: Only a single CRLF as terminator.
   string head_string="";
 
@@ -1736,7 +1736,7 @@ void send_result(mapping|void result)
   // Note: Terminated with a double CRLF.
   string variant_string="";
 
-  // The full header block (prot + head_string + variant_string).
+  // The full header block (prot + " " + code + head_string + variant_string).
   string full_headers="";
 
   if(!file->raw && (prot != "HTTP/0.9"))
@@ -1775,8 +1775,10 @@ void send_result(mapping|void result)
       mapping(string:string) heads = make_response_headers (file);
 
       mapping(string:string) variant_heads = ([ "Date":"",
-						"Connection":"" ]) & heads;
+						"Content-Length":"",
+						"Connection":"", ]) & heads;
       m_delete(heads, "Date");
+      m_delete(heads, "Content-Length");
       m_delete(heads, "Connection");
 
       if (file->error == 200) {
@@ -1880,12 +1882,12 @@ void send_result(mapping|void result)
       }
 
       // FIXME: prot.
-      head_string = sprintf(" %d %s\r\n", file->error,
+      head_string = sprintf(" %s\r\n", 
 			    head_status || errors[file->error] || "");
 
       // Must update the content length after the modifications of the
       // data to send that might have been done above for 206 or 304.
-      heads["Content-Length"] = (string)file->len;
+      variant_heads["Content-Length"] = (string)file->len;
 
       // Some browsers, e.g. Netscape 4.7, don't trust a zero
       // content length when using keep-alive. So let's force a
@@ -1958,7 +1960,7 @@ void send_result(mapping|void result)
       }
 
       variant_string = Roxen.make_http_headers(variant_heads);
-      full_headers = prot + head_string + variant_string;
+      full_headers = prot + " " + file->error + head_string + variant_string;
       conf->hsent += strlen(full_headers);
     }
   else
@@ -1970,8 +1972,8 @@ void send_result(mapping|void result)
 #endif
     MARK_FD("HTTP handled");
   
-    if( (method!="HEAD") && (file->error!=204) )
-      // No data for these two...
+    if( (method!="HEAD") && (file->error!=204) && (file->error !=304) )
+      // No data for the above...
     {
 #ifdef RAM_CACHE
       if( (misc->cacheable > 0) && (file->data || file->file) &&
@@ -2000,6 +2002,7 @@ void send_result(mapping|void result)
                                   // fix non-keep-alive when sending from cache
                                   "raw":file->raw,
                                   "error":file->error,
+				  "last_modified":misc->last_modified,
                                   "mtime":(file->stat && file->stat[ST_MTIME]),
                                   "rf":realfile,
                                 ]), 
@@ -2366,7 +2369,6 @@ void got_data(mixed fooid, string s, void|int chained)
     if( prot != "HTTP/0.9" &&
 	misc->cacheable    &&
 	!misc->no_proto_cache &&
-	!since             &&
 	(cv = conf->datacache->get( raw_url )) )
     {
       MY_TRACE_ENTER (sprintf ("Found %O in ram cache - checking entry", raw_url), 0);
@@ -2421,9 +2423,26 @@ void got_data(mixed fooid, string s, void|int chained)
 	      ((st = file_stat( file->rf )) && st->mtime == file->mtime ))
 #endif
 	  {
-	    string full_headers = prot + file->hs +
+	    int code = file->error;
+	    int len = sizeof(d);
+	    if (since && file->last_modified) {
+	      array(int) since_info = Roxen.parse_since( since );
+	      if ((since_info[0] >= file->last_modified) &&
+		  ((since_info[1] == -1) ||
+		   (since_info[1] == len))) {
+		// Not modified.
+		code = 304;
+		d = "";
+		len = 0;
+	      }
+	    }
+	    if (method == "HEAD") {
+	      d = "";
+	    }
+	    string full_headers = prot + " " + code + file->hs +
 	      Roxen.make_http_headers(([
 		"Date":Roxen.http_date(predef::time(1)),
+		"Content-Length":(string)len,
 		"Connection":misc->connection ||
 		([ "HTTP/1.1":"keep-alive" ])[prot] || "close",
 	      ]));
@@ -2436,12 +2455,13 @@ void got_data(mixed fooid, string s, void|int chained)
 	    {
 	      TIMER_END(cache_lookup);
 	      do_log( my_fd->write( ({ full_headers, d }) ));
-	    } 
+	    }
 	    else 
 	    {
 	      TIMER_END(cache_lookup);
 	      send( full_headers );
-	      send( d );
+	      if (sizeof(d))
+		send(d);
 	      start_sender( );
 	    }
 	    return;
