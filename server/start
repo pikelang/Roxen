@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.221 2004/08/11 15:18:46 grubba Exp $
+# $Id: start,v 1.222 2005/11/18 16:42:16 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -117,7 +117,8 @@ DEFINES="$DEFINES -DRAM_CACHE"
 # Enable threads (if available) on Solaris.
 # Most other OS's have thread bugs that cause them or Roxen to crash.
 if uname | grep 'SunOS' >/dev/null 2>&1; then
-  if uname -r | grep '5\.[5-9]' >/dev/null 2>&1; then
+  vers="`uname -r|sed -e 's/5.\([0-9]*\)/\1/p' -ed`"
+  if [ "$vers" -ge "5" ]; then
     # FIXME: What about Solaris 10+ (SunOS 5.10+)?
 #    if [ $verbose -gt 0 ] ; then
 #      dp "Solaris 2.5 or later detected. Using threads by default."
