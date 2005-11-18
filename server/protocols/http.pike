@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.477 2005/11/18 15:53:05 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.478 2005/11/18 16:32:47 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -64,17 +64,20 @@ private static multiset(string) none_match;
 
 int kept_alive;
 
-#ifdef DEBUG
+#if defined(DEBUG) && defined(THREADS)
 #define CHECK_FD_SAFE_USE do {						\
     if (this_thread() != roxen->backend_thread &&			\
 	(my_fd->query_read_callback() || my_fd->query_write_callback() || \
 	 my_fd->query_close_callback() ||				\
 	 !zero_type (find_call_out (do_timeout))))			\
       error ("Got callbacks but not called from backend thread.\n"	\
+	     "backend_thread:%O\n"					\
+	     "this thread:%O\n"						\
 	     "rcb:%O\n"							\
 	     "wcb:%O\n"							\
 	     "ccb:%O\n"							\
 	     "timeout:%O\n",						\
+	     roxen->backend_thread, this_thread(),			\
 	     my_fd->query_read_callback(),				\
 	     my_fd->query_write_callback(),				\
 	     my_fd->query_close_callback(),				\
@@ -2588,7 +2591,7 @@ void chain(object f, object c, string le)
 {
   my_fd = f;
 
-#ifdef DEBUG
+#if defined(DEBUG) && defined(THREADS)
   if (this_thread() != roxen->backend_thread)
     error ("Not called from backend\n");
 #endif
