@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.149 2005/09/02 12:26:07 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.150 2005/11/24 17:40:21 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -331,10 +331,12 @@ class Configuration
   {
     int current_size, max_size, max_file_size;
     int hits, misses;
+    void need_host_in_key();
     void flush();
     void expire_entry( string url );
-    void set( string url, string data, mapping meta, int expire );
-    array(string|mapping(string:mixed)) get( string url );
+    void set(string url, string data, mapping meta, int expire,
+	     string|void host);
+    array(string|mapping(string:mixed)) get(string url, string|void host);
     void init_from_variables( );
   };
 
@@ -500,6 +502,8 @@ class Protocol
 
 class FakedVariables( mapping real_variables )
 {
+  // FIXME: _get_iterator()
+
   static array _indices()
   {
     return indices( real_variables );
