@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.595 2005/11/24 15:31:06 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.596 2005/11/24 17:36:50 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -216,7 +216,7 @@ string name = roxen->bootstrap_info->get();
 // lines of C in HTTPLoop. But it does not have to bother with the
 // fact that more than one thread can be active in it at once. Also,
 // it does not have to delay free until all current connections using
-// the cache entry is done...)
+// the cache entry are done...)
 class DataCache
 {
   mapping(string:array(string|mapping(string:mixed))) cache = ([]);
@@ -226,6 +226,13 @@ class DataCache
   int max_file_size;
 
   int hits, misses;
+
+  // FIXME: We ought to have proper varies support here.
+  static int host_in_key;
+  void need_host_in_key()
+  {
+    host_in_key = 1;
+  }
 
   void flush()
   {
@@ -256,7 +263,8 @@ class DataCache
     }
   }
 
-  void set( string url, string data, mapping meta, int expire )
+  void set(string url, string data, mapping meta, int expire,
+	   string|void host)
   {
     if( strlen( data ) > max_file_size ) return;
     call_out( expire_entry, expire, url );
@@ -267,9 +275,15 @@ class DataCache
       clear_some_cache();
   }
   
-  array(string|mapping(string:mixed)) get( string url )
+  array(string|mapping(string:mixed)) get(string url, string|void host)
   {
     mixed res;
+    if (host_in_key) {
+      url = (host|"") + "\0" + url;
+    } else {
+      // Forward compat in case host_in_key is enabled later...
+      url = "\0" + url;
+    }
     if( res = cache[ url ] )  
       hits++;
     else
