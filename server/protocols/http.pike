@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.479 2005/11/24 14:39:01 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.480 2005/11/24 17:41:26 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2041,21 +2041,21 @@ void send_result(mapping|void result)
           if( file->file ) data = file->file->read(file->len);
 	  MY_TRACE_ENTER (sprintf ("Storing in ram cache, entry: %O", raw_url), 0);
 	  MY_TRACE_LEAVE ("");
-          conf->datacache->set( raw_url, data,
-                                ([
-                                  "hs":head_string,
-                                  "key":misc->cachekey,
-				  "etag":misc->etag,
-                                  "callbacks":misc->_cachecallbacks,
-                                  "len":file->len,
-                                  // fix non-keep-alive when sending from cache
-                                  "raw":file->raw,
-                                  "error":file->error,
-				  "last_modified":misc->last_modified,
-                                  "mtime":(file->stat && file->stat[ST_MTIME]),
-                                  "rf":realfile,
-                                ]), 
-                                misc->cacheable );
+          conf->datacache->set(raw_url, data,
+			       ([
+				 "hs":head_string,
+				 "key":misc->cachekey,
+				 "etag":misc->etag,
+				 "callbacks":misc->_cachecallbacks,
+				 "len":file->len,
+				 // fix non-keep-alive when sending from cache
+				 "raw":file->raw,
+				 "error":file->error,
+				 "last_modified":misc->last_modified,
+				 "mtime":(file->stat && file->stat[ST_MTIME]),
+				 "rf":realfile,
+			       ]),
+			       misc->cacheable, misc->host);
           file = ([ "data":data, "raw":file->raw, "len":strlen(data) ]);
         }
       }
@@ -2285,42 +2285,40 @@ void got_data(mixed fooid, string s, void|int chained)
     }
 
     TIMER_START(find_conf);
-    string path;
-    if( !conf || !(path = port_obj->path ) 
-	|| (sizeof( path ) 
-	    && raw_url[..sizeof(path) - 1] != path) )
 
-    {
+    string path;
+
+    // RFC 2068 5.1.2:
+    //
+    // To allow for transition to absoluteURIs in all requests in future
+    // versions of HTTP, all HTTP/1.1 servers MUST accept the absoluteURI
+    // form in requests, even though HTTP/1.1 clients will only generate
+    // them in requests to proxies. 
+    if (has_prefix(raw_url, port_obj->url_prefix)) {
+      sscanf(raw_url[sizeof(port_obj->url_prefix)..], "%[^/]%s",
+	     misc->host, raw_url);
+    }
+    if (misc->host) {
+      // Parse and canonicalize the host header.
+      misc->port = port_obj->port;
+      sscanf(lower_case(misc->host), "%[^:]:%d", misc->hostname, misc->port);
+      misc->host = misc->hostname + ":" + misc->port;
+    }
+    if( !conf || !(path = port_obj->path ) ||
+	(sizeof( path ) && !has_prefix(raw_url, path)) ) {
       // FIXME: port_obj->name & port_obj->default_port are constant
       // consider caching them?
 
-      // RFC 2068 5.1.2:
-      //
-      // To allow for transition to absoluteURIs in all requests in future
-      // versions of HTTP, all HTTP/1.1 servers MUST accept the absoluteURI
-      // form in requests, even though HTTP/1.1 clients will only generate
-      // them in requests to proxies. 
-      if (has_prefix(raw_url, port_obj->name+"://") &&
-	  (conf = port_obj->find_configuration_for_url(raw_url,
-						       this_object(), 1))) {
-	sscanf(raw_url[sizeof(port_obj->name+"://")..],
-	       "%[^/]%s", misc->host, raw_url);
+      if (misc->host) {
+	conf =
+	  port_obj->find_configuration_for_url(port_obj->url_prefix +
+					       misc->host + raw_url,
+					       this_object());
       } else {
-	if (misc->host) {
-	  conf =
-	    port_obj->find_configuration_for_url(port_obj->name + "://" +
-						 misc->host +
-						 (search(misc->host, ":")<0?
-						  (":"+port_obj->port):"") +
-						 raw_url,
-						 this_object());
-	} else {
-	  conf =
-	    port_obj->find_configuration_for_url(port_obj->name +
-						 "://*:" + port_obj->port +
-						 raw_url,
-						 this_object());
-	}
+	conf =
+	  port_obj->find_configuration_for_url(port_obj->url_prefix + "*:" +
+					       port_obj->port + raw_url,
+					       this_object());
       }
     }
     else if( strlen(path) )
@@ -2371,7 +2369,7 @@ void got_data(mixed fooid, string s, void|int chained)
     if( prot != "HTTP/0.9" &&
 	misc->cacheable    &&
 	!misc->no_proto_cache &&
-	(cv = conf->datacache->get( raw_url )) )
+	(cv = conf->datacache->get(raw_url, misc->host)) )
     {
       MY_TRACE_ENTER(sprintf("Found %O in ram cache - checking entry",
 			     raw_url), 0);
