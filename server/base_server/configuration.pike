@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.594 2005/10/23 15:09:44 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.595 2005/11/24 15:31:06 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -229,8 +229,10 @@ class DataCache
 
   void flush()
   {
+#ifndef RAM_CACHE_NO_RELOAD_FLUSH
     current_size = 0;
     cache = ([]);
+#endif
   }
 
   static void clear_some_cache()
