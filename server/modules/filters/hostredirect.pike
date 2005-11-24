@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.27 2004/10/11 19:05:57 mast Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.28 2005/11/24 17:37:39 grubba Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -49,7 +49,7 @@ void create()
 
 mapping patterns = ([ ]);
 
-void start()
+void start(Configuration conf)
 {
   array a;
   string s;
@@ -64,6 +64,10 @@ void start()
       //  a[1] = a[1][0..strlen(a[1])-2];
       patterns[lower_case(a[0])] = a[1];
     }
+  }
+  if (sizeof(patterns)) {
+    // Tell the RAM cache that we look at the host header.
+    conf->datacache->need_host_in_key();
   }
 }
 
