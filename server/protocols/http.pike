@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.478 2005/11/18 16:32:47 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.479 2005/11/24 14:39:01 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -696,6 +696,7 @@ private final int parse_got_2( )
       {
 	// FIXME: my_fd_busy.
 	my_fd->write("PONG\r\n");
+	TIMER_END(parse_got_2_parse_line);
 	TIMER_END(parse_got_2);
 	return 2;
       }
@@ -824,6 +825,7 @@ private final int parse_got_2( )
     {
       REQUEST_WERR(sprintf("HTTP: More data needed in %s.", method));
       ready_to_receive();
+      TIMER_END(parse_got_2_more_data);
       TIMER_END(parse_got_2);
       return 0;
     }
@@ -1661,6 +1663,51 @@ void ready_to_receive()
     my_fd->write("HTTP/1.1 100 Continue\r\n");
 }
 
+// Send and account the formatted result
+void low_send_result(string headers, string data, int|void len,
+		     Stdio.File|void file)
+{
+  MY_TRACE_ENTER(sprintf("Sending %d bytes of headers, %d bytes of data, "
+			 "len:%d",
+			 sizeof(headers), sizeof(data), len), 0);
+  conf->hsent += sizeof(headers);
+  if(!kept_alive && (len > 0) &&
+     ((sizeof(headers) + len) < (HTTP_BLOCKING_SIZE_THRESHOLD))) {
+    MY_TRACE_ENTER("Blocking write.", 0);
+    TIMER_START(blocking_write);
+    if (data && sizeof(data) != len) {
+      data = data[..len-1];
+    }
+    if (file) {
+      data = file->read(len);
+    }
+#ifdef CONNECTION_DEBUG
+    werror("HTTP: Response =================================================\n"
+	   "%s\n",
+	   replace(sprintf("%O", headers + data),
+		   ({"\\r\\n", "\\n", "\\t"}),
+		   ({"\n",     "\n",  "\t"})));
+#else
+    REQUEST_WERR(sprintf("HTTP: Send blocking %O", headers + data));
+#endif
+    int s = my_fd->write(({ headers, data }));
+    TIMER_END(blocking_write);
+    MY_TRACE_LEAVE(sprintf("Blocking write wrote %d bytes.", s));
+    do_log(s);
+  } else {
+    MY_TRACE_ENTER("Async write.", 0);
+    if (sizeof(headers))
+      send(headers);
+    if (sizeof(data))
+      send(data, len);
+    if (file)
+      send(file, len);
+    start_sender();
+    MY_TRACE_LEAVE("Async write done");
+  }
+  MY_TRACE_LEAVE("Result sent.\n");
+}
+
 // Send the result.
 void send_result(mapping|void result)
 {
@@ -1964,8 +2011,7 @@ void send_result(mapping|void result)
 
       variant_string = Roxen.make_http_headers(variant_heads);
       full_headers = prot + " " + file->error + head_string + variant_string;
-      conf->hsent += strlen(full_headers);
-    }
+  }
   else
     if(!file->type) file->type="text/plain";
 
@@ -1975,7 +2021,7 @@ void send_result(mapping|void result)
 #endif
     MARK_FD("HTTP handled");
   
-    if( (method!="HEAD") && (file->error!=204) && (file->error !=304) )
+    if( (method!="HEAD") && (file->error!=204) && (file->error != 304) )
       // No data for the above...
     {
 #ifdef RAM_CACHE
@@ -1991,8 +2037,8 @@ void send_result(mapping|void result)
 	  misc->cachekey->activate();
 	  // ^^^ Relying on the interpreter lock to here.
 	  string data = "";
-          if( file->file )   data += file->file->read();
-          if( file->data )   data += file->data;
+          if( file->data ) data = file->data[..file->len-1];
+          if( file->file ) data = file->file->read(file->len);
 	  MY_TRACE_ENTER (sprintf ("Storing in ram cache, entry: %O", raw_url), 0);
 	  MY_TRACE_LEAVE ("");
           conf->datacache->set( raw_url, data,
@@ -2014,63 +2060,15 @@ void send_result(mapping|void result)
         }
       }
 #endif
-      if(!kept_alive &&
-	 (file->len > 0) &&
-	 ((sizeof(full_headers) + file->len) < (HTTP_BLOCKING_SIZE_THRESHOLD)))
-      {
-	// The first time we get a request, the output buffers will
-	// be empty. We can thus just do a single blocking write()
-	// if the data will fit in the output buffer (usually 4KB).
-        int s;
-	TIMER_END(send_result);
-	TIMER_START(blocking_write);
-	string data = full_headers;
-	if (file->data)
-	  data += file->data[..file->len-1];
-	if (file->file)
-	  data += file->file->read(file->len);
-#ifdef CONNECTION_DEBUG
-	werror ("HTTP: Response =================================================\n"
-		"%s\n",
-		replace (sprintf ("%O", data),
-			 ({"\\r\\n", "\\n", "\\t"}),
-			 ({"\n",     "\n",  "\t"})));
-#else
-	REQUEST_WERR (sprintf ("HTTP: Send blocking %O", data));
-#endif
-	s = my_fd->write(data);
-	TIMER_END(blocking_write);
-        do_log( s );
-        return;
-      }
-      if(strlen(full_headers))                send(full_headers);
-      if(file->data && strlen(file->data))    send(file->data, file->len);
-      if(file->file)                          send(file->file, file->len);
+      low_send_result(full_headers, file->data, file->len, file->file);
     }
     else 
     {
-      if( !kept_alive &&
-	  (strlen(full_headers) < (HTTP_BLOCKING_SIZE_THRESHOLD)))
-      {
-#ifdef CONNECTION_DEBUG
-	werror ("HTTP: Response =================================================\n"
-		"%s\n",
-		replace (sprintf ("%O", full_headers),
-			 ({"\\r\\n", "\\n", "\\t"}),
-			 ({"\n",     "\n",  "\t"})));
-#else
-	REQUEST_WERR (sprintf ("HTTP: Send headers blocking %O",
-			       full_headers));
-#endif
-	do_log( my_fd->write( full_headers ) );
-        return;
-      }
-      send(full_headers);
       file->len = 1; // Keep those alive, please...
+      low_send_result(full_headers, "");
     }
 
   TIMER_END(send_result);
-  start_sender();
 }
 
 // Execute the request
@@ -2278,6 +2276,7 @@ void got_data(mixed fooid, string s, void|int chained)
 #endif
 
     if( method == "GET" || method == "HEAD" ) {
+      // NOTE: Setting misc->cacheable enables use of the RAM_CACHE.
       misc->cacheable = INITIAL_CACHEABLE; // FIXME: Make configurable.
 #ifdef DEBUG_CACHEABLE
       report_debug("===> Request for %s initiated cacheable to %d.\n", raw_url,
@@ -2374,9 +2373,10 @@ void got_data(mixed fooid, string s, void|int chained)
 	!misc->no_proto_cache &&
 	(cv = conf->datacache->get( raw_url )) )
     {
-      MY_TRACE_ENTER (sprintf ("Found %O in ram cache - checking entry", raw_url), 0);
+      MY_TRACE_ENTER(sprintf("Found %O in ram cache - checking entry",
+			     raw_url), 0);
       if( !cv[1]->key ) {
-	MY_TRACE_LEAVE ("Entry invalid due to zero key");
+	MY_TRACE_LEAVE("Entry invalid due to zero key");
 	conf->datacache->expire_entry( raw_url );
       }
       else 
@@ -2451,22 +2451,10 @@ void got_data(mixed fooid, string s, void|int chained)
 	      ]));
 
 	    MY_TRACE_LEAVE ("Using entry from ram cache");
-	    conf->hsent += strlen(full_headers);
 	    cache_status["protcache"] = 1;
-	    if( (sizeof(full_headers) + strlen(d)) <
-		(HTTP_BLOCKING_SIZE_THRESHOLD) )
-	    {
-	      TIMER_END(cache_lookup);
-	      do_log( my_fd->write( ({ full_headers, d }) ));
-	    }
-	    else 
-	    {
-	      TIMER_END(cache_lookup);
-	      send( full_headers );
-	      if (sizeof(d))
-		send(d);
-	      start_sender( );
-	    }
+
+	    TIMER_END(cache_lookup);
+	    low_send_result(full_headers, d, sizeof(d));
 	    return;
 	  }
 #ifndef RAM_CACHE_ASUME_STATIC_CONTENT
