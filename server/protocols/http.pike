@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.481 2005/11/25 16:14:42 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.482 2005/11/25 17:52:00 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -284,7 +284,7 @@ private void setup_pipe()
 }
 
 
-void send (string|object what, int|void len)
+void send(string|object what, int|void len)
 {
   if( len>0 && port_obj && port_obj->minimum_byterate )
     call_out( end, len / port_obj->minimum_byterate );
@@ -1509,8 +1509,7 @@ class MultiRangeWrapper
   array range_info = ({});
   string type;
   string stored_data = "";
-  void create(mapping _file, mapping heads, array _ranges,
-	      array(string)|string t, object id)
+  void create(mapping _file, array _ranges, array(string)|string t, object id)
   {
     file = _file->file;
     len = _file->len;
@@ -1640,6 +1639,97 @@ array parse_range_header(int len)
       return 0;
   }
   return ranges;
+}
+
+
+// Handle byte ranges.
+// NOTE: Modifies both arguments destructively.
+void handle_byte_ranges(mapping(string:mixed) file,
+			mapping(string:array(string)|string) variant_heads)
+{
+  if(misc->range && file->len && (method == "GET") &&
+     (file->error == 200) && (objectp(file->file) || file->data))
+    // Plain and simple file and a Range header. Let's play.
+    // Also we only bother with 200-requests. Anything else should be
+    // nicely and completely ignored.
+    // Also this is only used for GET requests.
+  {
+    // split the range header. If no valid ranges are found, ignore it.
+    // If one is found, send that range. If many are found we need to
+    // use a wrapper and send a multi-part message.
+    array ranges = parse_range_header(file->len);
+    if(ranges) // No incorrect syntax...
+    {
+      misc->no_proto_cache = 1;
+      if(sizeof(ranges)) // And we have valid ranges as well.
+      {
+	m_delete(variant_heads, "Content-Length");
+
+	file->error = 206; // 206 Partial Content
+	if(sizeof(ranges) == 1)
+	{
+	  variant_heads["Content-Range"] = sprintf("bytes %d-%d/%d",
+						   @ranges[0],
+						   file->len);
+	  if (objectp(file->file)) {
+	    file->file->seek(ranges[0][0]);
+	  } else {
+	    file->data = file->data[ranges[0][0]..ranges[0][1]];
+	  }
+	  if(ranges[0][1] == (file->len - 1) &&
+	     GLOBVAR(RestoreConnLogFull))
+	    // Log continuations (ie REST in FTP), 'range XXX-'
+	    // using the entire length of the file, not just the
+	    // "sent" part. Ie add the "start" byte location when logging
+	    misc->_log_cheat_addition = ranges[0][0];
+	  file->len = ranges[0][1] - ranges[0][0]+1;
+	} else {
+	  // Multiple ranges. Multipart reply and stuff needed.
+
+	  array(string)|string content_type =
+	    variant_heads["Content-Type"] || "application/octet-stream";
+
+	  if(request_headers["request-range"]) {
+	    // Compat with old Netscape.
+	    variant_heads["Content-Type"] =
+	      "multipart/x-byteranges; boundary=" BOUND;
+	  } else {
+	    variant_heads["Content-Type"] =
+	      "multipart/byteranges; boundary=" BOUND;
+	  }
+
+	  if (objectp(file->file)) {
+	    // We do this by replacing the file object with a wrapper.
+	    // Nice and handy.
+	    file->file = MultiRangeWrapper(file, ranges,
+					   content_type, this_object());
+	  } else {
+	    array(string) res = allocate(sizeof(ranges)*3+1);
+	    mapping(string:string) part_heads = ([
+	      "Content-Type":content_type,
+	    ]);
+	    int j;
+	    foreach(ranges; int i; array(int) range) {
+	      res[j++] = "\r\n--" BOUND "\r\n";
+	      part_heads["Content-Range"] =
+		sprintf("bytes %d-%d/%d", @range, file->len);
+	      res[j++] = Roxen.make_http_headers(part_heads);
+	      res[j++] = data[range[0]..range[1]];
+	    }
+	    res[j++] = "\r\n--" BOUND "\r\n";
+	    file->len = sizeof(file->data = res * "");
+	    variant_heads["Content-Length"] = (string)file->len;
+	  }
+	}
+      } else {
+	// Got the header, but the specified ranges were out of bounds.
+	// Reply with a 416 Requested Range not satisfiable.
+	file->error = 416;
+	variant_heads["Content-Range"] = "*/"+file->len;
+	file->file = file->data = file->type = file->len = 0;
+      }
+    }
+  }
 }
 
 // Tell the client that it can start sending some more data
@@ -1978,8 +2068,7 @@ void send_result(mapping|void result)
       file->file = 0;
     } else {
 #ifdef RAM_CACHE
-      if( (misc->cacheable > 0) && (file->data || file->file) &&
-	  (prot != "HTTP/0.9") && !misc->no_proto_cache)
+      if( (misc->cacheable > 0) && !misc->no_proto_cache)
       {
 	if( file->len>0 && // known length.
 	    ((file->len + sizeof(head_string)) < 
@@ -2020,104 +2109,24 @@ void send_result(mapping|void result)
 	}
       }
 #endif
-      if(misc->range && file->len && (method == "GET") &&
-	 (file->error == 200) && (objectp(file->file) || file->data))
-	// Plain and simple file and a Range header. Let's play.
-	// Also we only bother with 200-requests. Anything else should be
-	// nicely and completely ignored.
-	// Also this is only used for GET requests.
-      {
-	// split the range header. If no valid ranges are found, ignore it.
-	// If one is found, send that range. If many are found we need to
-	// use a wrapper and send a multi-part message.
-	array ranges = parse_range_header(file->len);
-	if(ranges) // No incorrect syntax...
-	{
-	  misc->no_proto_cache = 1;
-	  if(sizeof(ranges)) // And we have valid ranges as well.
-	  {
-	    m_delete(variant_heads, "Content-Length");
-
-	    file->error = 206; // 206 Partial Content
-	    if(sizeof(ranges) == 1)
-	    {
-	      variant_heads["Content-Range"] = sprintf("bytes %d-%d/%d",
-						       @ranges[0],
-						       file->len);
-	      if (objectp(file->file)) {
-		file->file->seek(ranges[0][0]);
-	      } else {
-		file->data = file->data[ranges[0][0]..ranges[0][1]];
-	      }
-	      if(ranges[0][1] == (file->len - 1) &&
-		 GLOBVAR(RestoreConnLogFull))
-		// Log continuations (ie REST in FTP), 'range XXX-'
-		// using the entire length of the file, not just the
-		// "sent" part. Ie add the "start" byte location when logging
-		misc->_log_cheat_addition = ranges[0][0];
-	      file->len = ranges[0][1] - ranges[0][0]+1;
-	    } else {
-	      // Multiple ranges. Multipart reply and stuff needed.
-
-	      array(string)|string content_type =
-		variant_heads["Content-Type"] || "application/octet-stream";
-
-	      if(request_headers["request-range"]) {
-		// Compat with old Netscape.
-		variant_heads["Content-Type"] =
-		  "multipart/x-byteranges; boundary=" BOUND;
-	      } else {
-		variant_heads["Content-Type"] =
-		  "multipart/byteranges; boundary=" BOUND;
-	      }
-
-	      if (objectp(file->file)) {
-		// We do this by replacing the file object with a wrapper.
-		// Nice and handy.
-		file->file = MultiRangeWrapper(file, heads, ranges,
-					       content_type, this_object());
-	      } else {
-		array(string) res = allocate(sizeof(ranges)*3+1);
-		mapping(string:string) part_heads = ([
-		  "Content-Type":content_type,
-		]);
-		int j;
-		foreach(ranges; int i; array(int) range) {
-		  res[j++] = "\r\n--" BOUND "\r\n";
-		  part_heads["Content-Range"] =
-		    sprintf("bytes %d-%d/%d", @range, file->len);
-		  res[j++] = Roxen.make_http_headers(part_heads);
-		  res[j++] = data[range[0]..range[1]];
-		}
-		res[j++] = "\r\n--" BOUND "\r\n";
-		file->len = sizeof(file->data = res * "");
-		variant_heads["Content-Length"] = (string)file->len;
-	      }
-	    }
-	  } else {
-	    // Got the header, but the specified ranges were out of bounds.
-	    // Reply with a 416 Requested Range not satisfiable.
-	    file->error = 416;
-	    variant_heads["Content-Range"] = "*/"+file->len;
-	    file->file = file->data = file->type = file->len = 0;
-	  }
-	}
+      if (misc->range) {
+	// Handle byte ranges.
+	// NOTE: Modifies both arguments destructively.
+	handle_byte_ranges(file, variant_heads);
       }
     }
 
     variant_string = Roxen.make_http_headers(variant_heads);
     full_headers = prot + " " + file->error + head_string + variant_string;
-    REQUEST_WERR(sprintf("HTTP: full_headers: %O\n"
-			 "HTTP: file: %O\n",
-			 full_headers, file));
 
     low_send_result(full_headers, file->data, file->len, file->file);
   }
   else {
     // RAW or HTTP/0.9 mode.
-    // No headers!
 
     if(!file->type) file->type="text/plain";
+
+    // No headers!
     low_send_result("", file->data, file->len, file->file);
   }
 
@@ -2496,14 +2505,30 @@ void got_data(mixed fooid, string s, void|int chained)
 	    if (method == "HEAD") {
 	      d = "";
 	    }
+	    mapping(string:string) variant_heads = ([
+	      "Date":Roxen.http_date(predef::time(1)),
+	      "Content-Length":(string)len,
+	      "Content-Type":file->type,
+	      "Connection":misc->connection ||
+	      ([ "HTTP/1.1":"keep-alive" ])[prot] || "close",
+	    ]);
+	    if (misc->range) {
+	      // Handle byte ranges.
+	      // NOTE: Modifies both arguments destructively.
+
+	      // Make sure we don't mess with the RAM cache.
+	      file += ([]);
+	      file->error = code;
+	      file->data = d;
+	      file->len = len;
+
+	      handle_byte_ranges(file, variant_heads);
+
+	      d = file->data;
+	      code = file->error;
+	    }
 	    string full_headers = prot + " " + code + file->hs +
-	      Roxen.make_http_headers(([
-		"Date":Roxen.http_date(predef::time(1)),
-		"Content-Length":(string)len,
-		"Content-Type":file->type,
-		"Connection":misc->connection ||
-		([ "HTTP/1.1":"keep-alive" ])[prot] || "close",
-	      ]));
+	      Roxen.make_http_headers(variant_heads);
 
 	    MY_TRACE_LEAVE ("Using entry from ram cache");
 	    cache_status["protcache"] = 1;
