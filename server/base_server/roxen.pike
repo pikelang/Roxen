@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.908 2005/11/18 16:29:44 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.909 2005/11/25 16:29:33 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1336,6 +1336,8 @@ class Protocol
 
   constant default_port = 4711;
   //! If no port is specified in the URL, use this one
+
+  string url_prefix = name + "://";
 
   int port;
   //! The currently bound portnumber
