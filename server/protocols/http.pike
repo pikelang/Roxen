@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.480 2005/11/24 17:41:26 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.481 2005/11/25 16:14:42 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -770,14 +770,14 @@ private final int parse_got_2( )
 
      case "request-range":
        contents = lower_case(contents-" ");
-       if(!search(contents, "bytes"))
+       if (has_prefix(contents, "bytes"))
          // Only care about "byte" ranges.
          misc->range = contents[6..];
        break;
 
      case "range":
        contents = lower_case(contents-" ");
-       if(!misc->range && !search(contents, "bytes"))
+       if (!misc->range && has_prefix(contents, "bytes"))
          // Only care about "byte" ranges. Also the Request-Range header
          // has precedence since Stupid Netscape (TM) sends both but can't
          // handle multipart/byteranges but only multipart/x-byteranges.
@@ -1509,23 +1509,14 @@ class MultiRangeWrapper
   array range_info = ({});
   string type;
   string stored_data = "";
-  void create(mapping _file, mapping heads, array _ranges, object id)
+  void create(mapping _file, mapping heads, array _ranges,
+	      array(string)|string t, object id)
   {
     file = _file->file;
     len = _file->len;
-    foreach(indices(heads), string h)
-    {
-      if(lower_case(h) == "content-type") {
-	array(string)|string t = heads[h];
-	m_delete(heads, h);
-	if (arrayp(t)) type = t[-1];
-	else type = t;
-      }
-    }
-    if(id->request_headers["request-range"])
-      heads["Content-Type"] = "multipart/x-byteranges; boundary=" BOUND;
-    else
-      heads["Content-Type"] = "multipart/byteranges; boundary=" BOUND;
+    if (arrayp(t)) type = t[-1];
+    else type = t;
+
     ranges = _ranges;
     int clen;
     foreach(ranges, array range)
@@ -1533,8 +1524,7 @@ class MultiRangeWrapper
       int rlen = 1+ range[1] - range[0];
       string sep =  sprintf("\r\n--" BOUND "\r\nContent-Type: %s\r\n"
 			    "Content-Range: bytes %d-%d/%d\r\n\r\n",
-			    type||"application/octet-stream",
-			    @range, len);
+			    type, @range, len);
       clen += rlen + strlen(sep);
       range_info += ({ ({ rlen, sep }) });
     }
@@ -1680,7 +1670,7 @@ void low_send_result(string headers, string data, int|void len,
     }
     if (file) {
       data = file->read(len);
-    }
+    } else if (!data) data = "";
 #ifdef CONNECTION_DEBUG
     werror("HTTP: Response =================================================\n"
 	   "%s\n",
@@ -1696,9 +1686,18 @@ void low_send_result(string headers, string data, int|void len,
     do_log(s);
   } else {
     MY_TRACE_ENTER("Async write.", 0);
+#ifdef CONNECTION_DEBUG
+    werror("HTTP: Response headers =========================================\n"
+	   "%s\n",
+	   replace(sprintf("%O", headers),
+		   ({"\\r\\n", "\\n", "\\t"}),
+		   ({"\n",     "\n",  "\t"})));
+#else
+    REQUEST_WERR(sprintf("HTTP: Send headers %O", headers));
+#endif
     if (sizeof(headers))
       send(headers);
-    if (sizeof(data))
+    if (data && sizeof(data))
       send(data, len);
     if (file)
       send(file, len);
@@ -1756,7 +1755,7 @@ void send_result(mapping|void result)
   {
     misc->no_proto_cache = 1;
     if(misc->error_code)
-      file = Roxen.http_status(misc->error_code, errors[misc->error]);
+      file = Roxen.http_status(misc->error_code, errors[misc->error_code]);
     else if(err = catch {
       file = conf->error_file( this_object() );
     })
@@ -1789,284 +1788,341 @@ void send_result(mapping|void result)
   // The full header block (prot + " " + code + head_string + variant_string).
   string full_headers="";
 
+#if 0
+  REQUEST_WERR(sprintf("HTTP: Sending result for prot:%O, method:%O, file:%O",
+		       prot, method, file));
+#endif
   if(!file->raw && (prot != "HTTP/0.9"))
   {
-      if (!sizeof (file) && multi_status)
-	file = multi_status->http_answer();
+    if (!sizeof (file) && multi_status)
+      file = multi_status->http_answer();
 
-      if (file->error == Protocols.HTTP.HTTP_NO_CONTENT) {
-#if 0
-	// We actually give some content cf comment below.
-	file->len = 2;
-	file->data = "\r\n";
-#else
-	file->len = 0;
-	file->data = "";
-#endif /* 0 */
+    if (file->error == Protocols.HTTP.HTTP_NO_CONTENT) {
+      file->len = 0;
+      file->data = "";
+    }
+
+    string head_status = file->rettext;
+    if (head_status) {
+      if (!file->file && !file->data &&
+	  (!file->type || file->type == "text/html")) {
+	// If we got no body then put the message there to make it
+	// more visible.
+	file->data = "<html><body>" +
+	  replace (Roxen.html_encode_string (head_status), "\n", "<br />\n") +
+	  "</body></html>";
+	file->len = sizeof (file->data);
+	file->type = "text/html";
       }
+      if (has_value (head_status, "\n"))
+	// Fold lines nicely.
+	head_status = map (head_status / "\n", String.trim_all_whites) * " ";
+    }
 
-      string head_status = file->rettext;
-      if (head_status) {
-	if (!file->file && !file->data &&
-	    (!file->type || file->type == "text/html")) {
-	  // If we got no body then put the message there to make it
-	  // more visible.
-	  file->data = "<html><body>" +
-	    replace (Roxen.html_encode_string (head_status), "\n", "<br />\n") +
-	    "</body></html>";
-	  file->len = sizeof (file->data);
-	  file->type = "text/html";
-	}
-	if (has_value (head_status, "\n"))
-	  // Fold lines nicely.
-	  head_status = map (head_status / "\n", String.trim_all_whites) * " ";
-      }
+    mapping(string:string) heads = make_response_headers (file);
 
-      mapping(string:string) heads = make_response_headers (file);
+    mapping(string:string) variant_heads = ([ "Date":"",
+					      "Content-Type":"",
+					      "Content-Length":"",
+					      "Connection":"", ]) & heads;
+    m_delete(heads, "Date");
+    m_delete(heads, "Content-Type");
+    m_delete(heads, "Content-Length");
+    m_delete(heads, "Connection");
 
-      mapping(string:string) variant_heads = ([ "Date":"",
-						"Content-Length":"",
-						"Connection":"", ]) & heads;
-      m_delete(heads, "Date");
-      m_delete(heads, "Content-Length");
-      m_delete(heads, "Connection");
-
-      if (file->error == 200) {
-	int conditional;
-	if (none_match) {
-	  // NOTE: misc->etag may be zero below, but that's ok.
-	  if (none_match[misc->etag] || (misc->etag && none_match["*"])) {
-	    // We have a if-none-match header that matches our etag.
-	    if ((<"HEAD", "GET">)[method]) {
-	      // RFC 2616 14.26:
-	      //   Instead, if the request method was GET or HEAD, the server
-	      //   SHOULD respond with a 304 (Not Modified) response, including
-	      //   the cache- related header fields (particularly ETag) of one
-	      //   of the entities that matched. For all other request methods,
-	      //   the server MUST respond with a status of 412 (Precondition
-	      //   Failed). 
-	      conditional = 304;
-	    } else {
-	      conditional = 412;
-	    }
+    if (file->error == 200) {
+      int conditional;
+      if (none_match) {
+	// NOTE: misc->etag may be zero below, but that's ok.
+	if (none_match[misc->etag] || (misc->etag && none_match["*"])) {
+	  // We have a if-none-match header that matches our etag.
+	  if ((<"HEAD", "GET">)[method]) {
+	    // RFC 2616 14.26:
+	    //   Instead, if the request method was GET or HEAD, the server
+	    //   SHOULD respond with a 304 (Not Modified) response, including
+	    //   the cache- related header fields (particularly ETag) of one
+	    //   of the entities that matched. For all other request methods,
+	    //   the server MUST respond with a status of 412 (Precondition
+	    //   Failed). 
+	    conditional = 304;
 	  } else {
-	    conditional = -1;
+	    conditional = 412;
 	  }
+	} else {
+	  conditional = -1;
 	}
-	if(since && misc->last_modified && (conditional >= 0))
-	{
-	  /* ({ time, len }) */
-	  array(int) since_info = Roxen.parse_since( since );
-//	  werror("since: %{%O, %}\n"
-//		 "lm:    %O\n"
-//		 "cacheable: %O\n",
-//		 since_info,
-//		 misc->last_modified,
-//		 misc->cacheable);
-	  if ( ((since_info[0] >= misc->last_modified) && 
-		((since_info[1] == -1) || (since_info[1] == file->len)))
-	       // never say 'not modified' if cacheable has been lowered.
-	       && (zero_type(misc->cacheable) ||
-		   (misc->cacheable >= INITIAL_CACHEABLE))
+      }
+      if(since && misc->last_modified && (conditional >= 0))
+      {
+	/* ({ time, len }) */
+	array(int) since_info = Roxen.parse_since( since );
+//	werror("since: %{%O, %}\n"
+//	       "lm:    %O\n"
+//	       "cacheable: %O\n",
+//	       since_info,
+//	       misc->last_modified,
+//	       misc->cacheable);
+	if ( ((since_info[0] >= misc->last_modified) && 
+	      ((since_info[1] == -1) || (since_info[1] == file->len)))
+	     // never say 'not modified' if cacheable has been lowered.
+	     && (zero_type(misc->cacheable) ||
+		 (misc->cacheable >= INITIAL_CACHEABLE))
 	       // actually ok, or...
-//	       || ((misc->cacheable>0) 
-//		   && (since_info[0] + misc->cacheable<= predef::time(1))
-//		   // cacheable, and not enough time has passed.
-	       )
-	  {
-	    conditional = conditional || 304;
-	  } else {
-	    conditional = -1;
-	  }
-	}
-	if (conditional > 0) {
-	  // All conditionals apply.
-	  file->error = conditional;
-	  file->file = file->data = file->len = 0;
-	} else if(misc->range && file->len && objectp(file->file) &&
-		  !file->data && (method == "GET" || method == "HEAD"))
-          // Plain and simple file and a Range header. Let's play.
-          // Also we only bother with 200-requests. Anything else should be
-          // nicely and completely ignored. Also this is only used for GET and
-          // HEAD requests.
-        {
-          // split the range header. If no valid ranges are found, ignore it.
-          // If one is found, send that range. If many are found we need to
-          // use a wrapper and send a multi-part message.
-          array ranges = parse_range_header(file->len);
-          if(ranges) // No incorrect syntax...
-          {
-            misc->no_proto_cache = 1;
-            if(sizeof(ranges)) // And we have valid ranges as well.
-            {
-              file->error = 206; // 206 Partial Content
-              if(sizeof(ranges) == 1)
-              {
-                heads["Content-Range"] = sprintf("bytes %d-%d/%d",
-                                                 @ranges[0], file->len);
-                file->file->seek(ranges[0][0]);
-                if(ranges[0][1] == (file->len - 1) &&
-                   GLOBVAR(RestoreConnLogFull))
-                  // Log continuations (ie REST in FTP), 'range XXX-'
-                  // using the entire length of the file, not just the
-                  // "sent" part. Ie add the "start" byte location when logging
-                  misc->_log_cheat_addition = ranges[0][0];
-                file->len = ranges[0][1] - ranges[0][0]+1;
-              } else {
-                // Multiple ranges. Multipart reply and stuff needed.
-                // We do this by replacing the file object with a wrapper.
-                // Nice and handy.
-                file->file = MultiRangeWrapper(file, heads, ranges, this_object());
-              }
-            } else {
-	      // Got the header, but the specified ranges were out of bounds.
-              // Reply with a 416 Requested Range not satisfiable.
-              file->error = 416;
-              heads["Content-Range"] = "*/"+file->len;
-	      if(method == "GET") {
-		file->file = file->data = file->type = file->len = 0;
-              }
-            }
-          }
+//	     || ((misc->cacheable>0) 
+//		 && (since_info[0] + misc->cacheable<= predef::time(1))
+//	       // cacheable, and not enough time has passed.
+	     )
+	{
+	  conditional = conditional || 304;
+	} else {
+	  conditional = -1;
 	}
       }
-
-      // FIXME: prot.
-      head_string = sprintf(" %s\r\n", 
-			    head_status || errors[file->error] || "");
-
-      // Must update the content length after the modifications of the
-      // data to send that might have been done above for 206 or 304.
-      variant_heads["Content-Length"] = (string)file->len;
-
-      // Some browsers, e.g. Netscape 4.7, don't trust a zero
-      // content length when using keep-alive. So let's force a
-      // close in that case.
-      if( file->error/100 == 2 && file->len <= 0 )
-      {
-	variant_heads->Connection = "close";
-	misc->connection = "close";
+      if (conditional > 0) {
+	// All conditionals apply.
+	file->error = conditional;
+	file->file = file->data = file->len = 0;
       }
+    }
 
-#if 0
-      // Check for wide or 8-bit headers.
-      // FIXME: Assumes no header names are wide.
-      //
-      // This is disabled since it doesn't work for all headers. It
-      // therefore has to be the responsibility of whatever code makes
-      // the header to ensure it's correctly encoded. /mast
-      foreach(heads; string header_name; string content) {
-	string encoded;
-	if (content != (encoded = string_to_utf8(content))) {
-	  array(array(string)|int) tokenized =
-	    MIME.decode_words_tokenized(encoded);
-	  foreach(tokenized, array(string)|int token) {
-	    if (arrayp(token)) {
-	      string raw = utf8_to_string(token[0]);
-	      if (raw == token[0]) {
-		if (token[1]) {
-		  // Should not happen in normal circumstances.
-		  catch {
-		    // Attempt to recode in UTF-8.
-		    token[0] = string_to_utf8(Locale.Charset.
-					      decoder(token[1])->
-					      feed(raw)->drain());
-		  };
-		}
-		token[1] = "utf-8";
-	      }
-	    }
-	  }
-	  string q = MIME.encode_words_quoted(tokenized, "q");
-	  string b = MIME.encode_words_quoted(tokenized, "b");
-	  // Prefer QP to BASE-64 if they are the same length.
-	  heads[header_name] = (sizeof(b)<sizeof(q))?b:q;
-	}
-      }
-#endif
+    // FIXME: prot.
+    head_string = sprintf(" %s\r\n", 
+			  head_status || errors[file->error] || "");
 
-      if (mixed err = catch(head_string += Roxen.make_http_headers(heads, 1)))
-      {
-#ifdef DEBUG
-	  report_debug ("Roxen.make_http_headers failed: " +
-			describe_error (err));
-#endif
-	  foreach(heads; string x; string|array(string) val) {
-	    if( !arrayp( val ) ) val = ({val});
-	    foreach( val, string xx ) {
-	      if (!stringp (xx) && catch {xx = (string) xx;})
-		report_error ("Error in request for %O:\n"
-			      "Invalid value for header %O: %O\n",
-			      raw_url, x, xx);
-	      else if (String.width (xx) > 8)
-		report_error ("Error in request for %O:\n"
-			      "Invalid widestring value for header %O: %O\n",
-			      raw_url, x, xx);
-	      else
-		head_string += x+": "+xx+"\r\n";
-	    }
-	  }
-	  head_string += "\r\n";
-      }
+    // Must update the content length after the modifications of the
+    // data to send that might have been done above for 206 or 304.
+    variant_heads["Content-Length"] = (string)file->len;
 
-      variant_string = Roxen.make_http_headers(variant_heads);
-      full_headers = prot + " " + file->error + head_string + variant_string;
-  }
-  else
-    if(!file->type) file->type="text/plain";
-
-#if 0
-    REQUEST_WERR(sprintf("HTTP: Sending result for prot:%O, method:%O, file:%O",
-			 prot, method, file));
-#endif
-    MARK_FD("HTTP handled");
-  
-    if( (method!="HEAD") && (file->error!=204) && (file->error != 304) )
-      // No data for the above...
+    // Some browsers, e.g. Netscape 4.7, don't trust a zero
+    // content length when using keep-alive. So let's force a
+    // close in that case.
+    if( file->error/100 == 2 && file->len <= 0 )
     {
+      variant_heads->Connection = "close";
+      misc->connection = "close";
+    }
+
+#if 0
+    // Check for wide or 8-bit headers.
+    // FIXME: Assumes no header names are wide.
+    //
+    // This is disabled since it doesn't work for all headers. It
+    // therefore has to be the responsibility of whatever code makes
+    // the header to ensure it's correctly encoded. /mast
+    foreach(heads; string header_name; string content) {
+      string encoded;
+      if (content != (encoded = string_to_utf8(content))) {
+	array(array(string)|int) tokenized =
+	  MIME.decode_words_tokenized(encoded);
+	foreach(tokenized, array(string)|int token) {
+	  if (arrayp(token)) {
+	    string raw = utf8_to_string(token[0]);
+	    if (raw == token[0]) {
+	      if (token[1]) {
+		// Should not happen in normal circumstances.
+		catch {
+		  // Attempt to recode in UTF-8.
+		  token[0] = string_to_utf8(Locale.Charset.
+					    decoder(token[1])->
+					    feed(raw)->drain());
+		};
+	      }
+	      token[1] = "utf-8";
+	    }
+	  }
+	}
+	string q = MIME.encode_words_quoted(tokenized, "q");
+	string b = MIME.encode_words_quoted(tokenized, "b");
+	// Prefer QP to BASE-64 if they are the same length.
+	heads[header_name] = (sizeof(b)<sizeof(q))?b:q;
+      }
+    }
+#endif
+
+    if (mixed err = catch(head_string += Roxen.make_http_headers(heads, 1)))
+    {
+#ifdef DEBUG
+      report_debug("Roxen.make_http_headers failed: " +
+		   describe_error (err));
+#endif
+      foreach(heads; string x; string|array(string) val) {
+	if( !arrayp( val ) ) val = ({val});
+	foreach( val, string xx ) {
+	  if (!stringp (xx) && catch {xx = (string) xx;})
+	    report_error("Error in request for %O:\n"
+			 "Invalid value for header %O: %O\n",
+			 raw_url, x, xx);
+	  else if (String.width (xx) > 8)
+	    report_error("Error in request for %O:\n"
+			 "Invalid widestring value for header %O: %O\n",
+			 raw_url, x, xx);
+	  else
+	    head_string += x+": "+xx+"\r\n";
+	}
+      }
+      head_string += "\r\n";
+    }
+
+    if( (method == "HEAD") || (file->error == 204) || (file->error == 304) ||
+	(file->error < 200))
+    {
+      // RFC 2068 4.4.1
+      //   Any response message which MUST NOT include a message-body
+      //   (such as the 1xx, 204, and 304 responses and any response
+      //   to a HEAD request) is always terminated by the first empty
+      //   line after the header fields, regardless of the entity-header
+      //   fields present in the message.
+
+      file->len = 1; // Keep those alive, please...
+      file->data = "";
+      file->file = 0;
+    } else {
 #ifdef RAM_CACHE
       if( (misc->cacheable > 0) && (file->data || file->file) &&
 	  (prot != "HTTP/0.9") && !misc->no_proto_cache)
       {
-        if( file->len>0 && // known length.
+	if( file->len>0 && // known length.
 	    ((file->len + sizeof(head_string)) < 
 	     conf->datacache->max_file_size)
 	    // vvv Relying on the interpreter lock from here.
-            && misc->cachekey )
+	    && misc->cachekey )
 	{
 	  misc->cachekey->activate();
 	  // ^^^ Relying on the interpreter lock to here.
 	  string data = "";
-          if( file->data ) data = file->data[..file->len-1];
-          if( file->file ) data = file->file->read(file->len);
-	  MY_TRACE_ENTER (sprintf ("Storing in ram cache, entry: %O", raw_url), 0);
+	  if( file->data ) data = file->data[..file->len-1];
+	  if( file->file ) data = file->file->read(file->len);
+	  MY_TRACE_ENTER(sprintf("Storing in ram cache, entry: %O",
+				 raw_url), 0);
 	  MY_TRACE_LEAVE ("");
-          conf->datacache->set(raw_url, data,
+	  conf->datacache->set(raw_url, data,
 			       ([
 				 "hs":head_string,
 				 "key":misc->cachekey,
 				 "etag":misc->etag,
 				 "callbacks":misc->_cachecallbacks,
 				 "len":file->len,
-				 // fix non-keep-alive when sending from cache
 				 "raw":file->raw,
 				 "error":file->error,
+				 "type":variant_heads["Content-Type"],
 				 "last_modified":misc->last_modified,
-				 "mtime":(file->stat && file->stat[ST_MTIME]),
+				 "mtime":(file->stat &&
+					  file->stat[ST_MTIME]),
 				 "rf":realfile,
 			       ]),
 			       misc->cacheable, misc->host);
-          file = ([ "data":data, "raw":file->raw, "len":strlen(data) ]);
-        }
+	  file = ([
+	    "data":data,
+	    "raw":file->raw,
+	    "len":strlen(data),
+	    "error":file->error,
+	  ]);
+	}
       }
 #endif
-      low_send_result(full_headers, file->data, file->len, file->file);
+      if(misc->range && file->len && (method == "GET") &&
+	 (file->error == 200) && (objectp(file->file) || file->data))
+	// Plain and simple file and a Range header. Let's play.
+	// Also we only bother with 200-requests. Anything else should be
+	// nicely and completely ignored.
+	// Also this is only used for GET requests.
+      {
+	// split the range header. If no valid ranges are found, ignore it.
+	// If one is found, send that range. If many are found we need to
+	// use a wrapper and send a multi-part message.
+	array ranges = parse_range_header(file->len);
+	if(ranges) // No incorrect syntax...
+	{
+	  misc->no_proto_cache = 1;
+	  if(sizeof(ranges)) // And we have valid ranges as well.
+	  {
+	    m_delete(variant_heads, "Content-Length");
+
+	    file->error = 206; // 206 Partial Content
+	    if(sizeof(ranges) == 1)
+	    {
+	      variant_heads["Content-Range"] = sprintf("bytes %d-%d/%d",
+						       @ranges[0],
+						       file->len);
+	      if (objectp(file->file)) {
+		file->file->seek(ranges[0][0]);
+	      } else {
+		file->data = file->data[ranges[0][0]..ranges[0][1]];
+	      }
+	      if(ranges[0][1] == (file->len - 1) &&
+		 GLOBVAR(RestoreConnLogFull))
+		// Log continuations (ie REST in FTP), 'range XXX-'
+		// using the entire length of the file, not just the
+		// "sent" part. Ie add the "start" byte location when logging
+		misc->_log_cheat_addition = ranges[0][0];
+	      file->len = ranges[0][1] - ranges[0][0]+1;
+	    } else {
+	      // Multiple ranges. Multipart reply and stuff needed.
+
+	      array(string)|string content_type =
+		variant_heads["Content-Type"] || "application/octet-stream";
+
+	      if(request_headers["request-range"]) {
+		// Compat with old Netscape.
+		variant_heads["Content-Type"] =
+		  "multipart/x-byteranges; boundary=" BOUND;
+	      } else {
+		variant_heads["Content-Type"] =
+		  "multipart/byteranges; boundary=" BOUND;
+	      }
+
+	      if (objectp(file->file)) {
+		// We do this by replacing the file object with a wrapper.
+		// Nice and handy.
+		file->file = MultiRangeWrapper(file, heads, ranges,
+					       content_type, this_object());
+	      } else {
+		array(string) res = allocate(sizeof(ranges)*3+1);
+		mapping(string:string) part_heads = ([
+		  "Content-Type":content_type,
+		]);
+		int j;
+		foreach(ranges; int i; array(int) range) {
+		  res[j++] = "\r\n--" BOUND "\r\n";
+		  part_heads["Content-Range"] =
+		    sprintf("bytes %d-%d/%d", @range, file->len);
+		  res[j++] = Roxen.make_http_headers(part_heads);
+		  res[j++] = data[range[0]..range[1]];
+		}
+		res[j++] = "\r\n--" BOUND "\r\n";
+		file->len = sizeof(file->data = res * "");
+		variant_heads["Content-Length"] = (string)file->len;
+	      }
+	    }
+	  } else {
+	    // Got the header, but the specified ranges were out of bounds.
+	    // Reply with a 416 Requested Range not satisfiable.
+	    file->error = 416;
+	    variant_heads["Content-Range"] = "*/"+file->len;
+	    file->file = file->data = file->type = file->len = 0;
+	  }
+	}
+      }
     }
-    else 
-    {
-      file->len = 1; // Keep those alive, please...
-      low_send_result(full_headers, "");
-    }
+
+    variant_string = Roxen.make_http_headers(variant_heads);
+    full_headers = prot + " " + file->error + head_string + variant_string;
+    REQUEST_WERR(sprintf("HTTP: full_headers: %O\n"
+			 "HTTP: file: %O\n",
+			 full_headers, file));
+
+    low_send_result(full_headers, file->data, file->len, file->file);
+  }
+  else {
+    // RAW or HTTP/0.9 mode.
+    // No headers!
+
+    if(!file->type) file->type="text/plain";
+    low_send_result("", file->data, file->len, file->file);
+  }
+
+  MARK_FD("HTTP handled");
+  
 
   TIMER_END(send_result);
 }
@@ -2444,6 +2500,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	      Roxen.make_http_headers(([
 		"Date":Roxen.http_date(predef::time(1)),
 		"Content-Length":(string)len,
+		"Content-Type":file->type,
 		"Connection":misc->connection ||
 		([ "HTTP/1.1":"keep-alive" ])[prot] || "close",
 	      ]));
