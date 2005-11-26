@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.436 2005/11/26 15:01:52 _cvs_dirix Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.437 2005/11/26 17:19:32 uid100352 Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -262,10 +262,10 @@ class TagAppend {
   inherit RXML.Tag;
   constant name = "append";
   mapping(string:RXML.Type) req_arg_types = ([ "variable" : RXML.t_text(RXML.PEnt) ]);
-  mapping(string:RXML.Type) opt_arg_types = ([ "type": RXML.t_type(RXML.PEnt) ]);
+  mapping(string:RXML.Type) opt_arg_types = ([ "type": RXML.t_text(RXML.PEnt) ]);
   RXML.Type content_type = RXML.t_any (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
-  int flags;
+  int flags = RXML.FLAG_DONT_RECOVER;
 
   class Frame {
     inherit RXML.Frame;
@@ -273,32 +273,41 @@ class TagAppend {
     array do_enter (RequestID id)
     {
       if (args->value || args->from) flags |= RXML.FLAG_EMPTY_ELEMENT;
-      if (args->type) content_type = args->type (RXML.PXml);
+      if (args->type && args->type != "array") {
+        args->type = RXML.t_type->encode (args->type);
+	content_type = args->type (RXML.PXml);
+      }
     }
-
+    
     array do_return(RequestID id) {
       mixed value=RXML.user_get_var(args->variable, args->scope);
-      if (args->value) {
-	content = args->value;
-	if (args->type) content = args->type->encode (content);
+      if (args->value || args->form) {
+        if (args->value) {
+          content = args->value;
+        }
+        else if (args->from) {
+	  // Append the value of another entity variable.
+	  mixed from=RXML.user_get_var(args->from, args->scope);
+	  if(!from) 
+	    parse_error("From variable %O doesn't exist.\n", args->from);
+          content = from;
+        }
+        if (objectp (args->type))
+	  content = args->type->encode (content);
       }
-      else if (args->from) {
-	// Append the value of another entity variable.
-	mixed from=RXML.user_get_var(args->from, args->scope);
-	if(!from) parse_error("From variable %O doesn't exist.\n", args->from);
-	if (value)
-	  value+=from;
-	else
-	  value=from;
-	RXML.user_set_var(args->variable, value, args->scope);
-	return 0;
-      }
-
+      
+      if (args->type == "array" && !arrayp (content))
+          content = ({ content });
+       
       // Append a value to an entity variable.
       if (value)
-	value+=content;
+      {
+        if(arrayp(content) && !arrayp(value))
+	  value = ({ value });
+        value+=content;
+      }
       else
-	value=content;
+        value=content;
       RXML.user_set_var(args->variable, value, args->scope);
     }
   }
@@ -3003,7 +3012,11 @@ constant tagdoc=([
 <attr name='from' value='string'>
  <p>The name of another variable that the value should be copied
  from.</p>
-</attr>",
+</attr>
+
+<attr name='type' value='string'>
+ <p>If type is 'array', the resulting value will be an array.</p>
+ </attr>",
 
 //----------------------------------------------------------------------
 
