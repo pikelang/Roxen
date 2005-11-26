@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.435 2005/02/05 16:14:50 _cvs_dirix Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.436 2005/11/26 15:01:52 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -507,8 +507,6 @@ class TagCopyScope {
   inherit RXML.Tag;
   constant name = "copy-scope";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "from":RXML.t_text,
-					       "to":RXML.t_text ]);
 
   class Frame {
     inherit RXML.Frame;

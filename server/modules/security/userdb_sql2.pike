@@ -10,7 +10,7 @@
 //
 
 constant cvs_version =
- "$Id: userdb_sql2.pike,v 1.4 2004/06/19 23:05:23 _cvs_stephen Exp $";
+ "$Id: userdb_sql2.pike,v 1.5 2005/11/26 15:01:51 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -425,3 +425,135 @@ constant tagdoc=([
 </desc>",
 ]);
 #endif
+
+/* Minimal Tables needed for this module 			*
+
+* First execute this script with superuser privileges:		
+---------------------------------------------------------------------
+
+(
+plib=/usr/lib/postgresql
+for clib in /lib/libc-*.*.*.so; do :; done
+echo "
+ CREATE OR REPLACE FUNCTION plpgsql_call_handler()
+  RETURNS LANGUAGE_HANDLER AS '$plib/lib/plpgsql.so' LANGUAGE C;
+ DROP LANGUAGE PLPGSQL CASCADE;
+ CREATE TRUSTED PROCEDURAL LANGUAGE PLPGSQL
+  HANDLER plpgsql_call_handler LANCOMPILER 'PL/pgSQL';
+ CREATE OR REPLACE FUNCTION getpid() RETURNS INT AS
+  '$clib','getpid' LANGUAGE C;
+ CREATE OR REPLACE FUNCTION sleep(INT) RETURNS INT AS
+  '$clib','sleep' LANGUAGE C;
+"
+cd /usr/share/postgresql/contrib
+cat pgcrypto.sql tsearch.sql fuzzystrmatch.sql
+cat xinetops.sql
+) | psql template1 
+
+---------------------------------------------------------------------
+* Table globals
+---------------------------------------------------------------------
+
+gname		VARCHAR(32) NOT NULL PRIMARY KEY
+vint		BIGINT
+tstamp		TIMESTAMP WITH TIME ZONE
+txt		VARCHAR(255)
+
+---------------------------------------------------------------------
+* Table namedata
+---------------------------------------------------------------------
+
+
+id		INT
+nick		VARCHAR(32) UNIQUE
+parent          INT REFERENCES namedata \
+                         ON DELETE CASCADE ON UPDATE CASCADE \
+                         DEFERRABLE INITIALLY DEFERRED
+owner           INT REFERENCES namedata \
+                         ON DELETE CASCADE ON UPDATE CASCADE \
+                         DEFERRABLE INITIALLY DEFERRED
+function         SMALLINT 0 owner, 1 employee, 2 supplier, 3 customer
+password         VARCHAR(16)
+changedby        INT REFERENCES namedata ON UPDATE CASCADE \
+                         DEFERRABLE INITIALLY DEFERRED
+
+---------------------------------------------------------------------
+* Table statehist
+---------------------------------------------------------------------
+
+id		INT NOT NULL REFERENCES namedata \
+                         ON DELETE CASCADE ON UPDATE CASCADE \
+                         DEFERRABLE INITIALLY DEFERRED
+ip              INET NOT NULL
+lastactive      TIMESTAMP WITH TIME ZONE NOT NULL \
+                         DEFAULT CURRENT_TIMESTAMP
+secondsused     INT NOT NULL DEFAULT '0'
+
+---------------------------------------------------------------------
+* function updatestatehist(INT,INET)
+---------------------------------------------------------------------
+
+ RETURNS VOID AS '
+DECLARE
+ vid ALIAS FOR $1;
+ vip ALIAS FOR $2;
+ vlastactive TIMESTAMP WITH TIME ZONE;
+ secs INT;
+ nextsession INT;
+ cp RECORD;
+BEGIN
+ SELECT INTO vlastactive,secs,nextsession
+   sh.lastactive,
+   CAST(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)
+    -EXTRACT(EPOCH FROM sh.lastactive) AS INT) AS ds,
+   nextses.vint
+  FROM globals AS nextses JOIN statehist AS sh ON sh.id=vid
+  WHERE nextses.gname=''nextsession''
+  ORDER BY sh.lastactive DESC
+  LIMIT 1
+  FOR UPDATE OF sh;
+ IF secs IS NULL OR secs>nextsession
+ THEN
+  FOR cp IN SELECT sh.lastactive AS first,
+    nsh.lastactive AS next, nsh.secondsused
+   FROM statehist AS sh
+    JOIN globals AS detaillog ON detaillog.gname=''detaillog''
+    JOIN globals AS decay ON decay.gname=''decay''
+    JOIN statehist AS nsh
+     ON sh.id=vid AND nsh.id=vid
+      AND sh.lastactive<CURRENT_TIMESTAMP
+       -CAST(detaillog.vint||'' SECOND'' AS INTERVAL)
+      AND sh.lastactive<nsh.lastactive
+      AND sh.creationdate
+       +CAST((EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)
+       -EXTRACT(EPOCH FROM sh.creationdate))/decay.vint
+       ||'' SECOND'' AS INTERVAL)>nsh.lastactive
+   ORDER BY sh.lastactive DESC,nsh.lastactive
+   LIMIT 2
+  LOOP
+   EXIT WHEN vlastactive=cp.next;
+   vlastactive:=cp.next;
+   UPDATE statehist
+    SET secondsused=secondsused+cp.secondsused
+    WHERE id=vid AND lastactive=cp.first;
+   DELETE FROM statehist WHERE id=vid AND lastactive=cp.next;
+  END LOOP;
+  INSERT INTO statehist (id,ip) VALUES (vid,vip);
+ ELSIF secs>0
+ THEN
+  UPDATE statehist
+   SET secondsused=statehist.secondsused
+     +CASE WHEN secs<=sessiongap.vint THEN secs ELSE usecache.vint/2 END,
+    lastactive=CURRENT_TIMESTAMP
+   FROM globals AS sessiongap,globals AS usecache
+   WHERE sessiongap.gname=''sessiongap'' AND usecache.gname=''usecache''
+    AND statehist.id=vid AND statehist.lastactive=vlastactive;
+ END IF;
+ RETURN;
+END;
+ ' LANGUAGE PLPGSQL STRICT;
+
+
+--------------------------------------------------------------------*/
+
+

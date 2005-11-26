@@ -1,6 +1,6 @@
 // This is a ChiliMoon pike module. Copyright © 1999 - 2001, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.198 2004/06/09 00:17:42 _cvs_stephen Exp $
+// $Id: Roxen.pmod,v 1.199 2005/11/26 15:01:53 _cvs_dirix Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1851,6 +1851,11 @@ string roxen_encode( string val, string encoding )
      return replace (val,
 		    ({ "'", "\"" }),
 		    ({ "''", "\"'\"'\"" }) );
+   case "tex":
+     return replace (val,
+                    ({ "\\", "%", "&", "$", "{", "}", "#", "^", "_" }),
+		    ({ "\\\\", "\\%", "\\&", "\\$", "\\{", "\\}", 
+		       "\\#", "\\^", "\\_" })  );
 
    case "bytea":
      return replace (val,
