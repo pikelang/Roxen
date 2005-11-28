@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.483 2005/11/28 14:44:00 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.484 2005/11/28 16:21:40 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2117,8 +2117,28 @@ void send_result(mapping|void result)
 #endif
       if (misc->range) {
 	// Handle byte ranges.
-	// NOTE: Modifies both arguments destructively.
-	handle_byte_ranges(file, variant_heads);
+	int skip;
+	string if_range;
+	if (if_range = request_headers["if-range"]) {
+	  // Check If-Range header (RFC 2068 14.27).
+	  if (has_prefix(if_range, "\"")) {
+	    // ETag
+	    if (if_range != misc->etag) {
+	      // ETag has changed.
+	      skip = 1;
+	    }
+	  } else {
+	    array(int) since_info = Roxen.parse_since(if_range);
+	    if (!since_info || (since_info[0] < misc->last_modified)) {
+	      // Failed to parse since info, or the file has changed.
+	      skip = 1;
+	    }
+	  }
+	}
+	if (!skip) {
+	  // NOTE: Modifies both arguments destructively.
+	  handle_byte_ranges(file, variant_heads);
+	}
       }
     }
 
@@ -2520,18 +2540,37 @@ void got_data(mixed fooid, string s, void|int chained)
 	    ]);
 	    if (misc->range) {
 	      // Handle byte ranges.
-	      // NOTE: Modifies both arguments destructively.
+	      int skip;
+	      string if_range;
+	      if (if_range = request_headers["if-range"]) {
+		// Check If-Range header (RFC 2068 14.27).
+		if (has_prefix(if_range, "\"")) {
+		  // ETag
+		  if (if_range != file->etag) {
+		    // ETag has changed.
+		    skip = 1;
+		  }
+		} else {
+		  array(int) since_info = Roxen.parse_since(if_range);
+		  if (!since_info || (since_info[0] < file->last_modified)) {
+		    // Failed to parse since info, or the file has changed.
+		    skip = 1;
+		  }
+		}
+	      }
+	      if (!skip) {
+		// Make sure we don't mess with the RAM cache.
+		file += ([]);
+		file->error = code;
+		file->data = d;
+		file->len = len;
 
-	      // Make sure we don't mess with the RAM cache.
-	      file += ([]);
-	      file->error = code;
-	      file->data = d;
-	      file->len = len;
+		// NOTE: Modifies both arguments destructively.
+		handle_byte_ranges(file, variant_heads);
 
-	      handle_byte_ranges(file, variant_heads);
-
-	      d = file->data;
-	      code = file->error;
+		d = file->data;
+		code = file->error;
+	      }
 	    }
 	    string full_headers = prot + " " + code + file->hs +
 	      Roxen.make_http_headers(variant_heads);
