@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.482 2005/11/25 17:52:00 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.483 2005/11/28 14:44:00 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1911,6 +1911,12 @@ void send_result(mapping|void result)
 
     mapping(string:string) heads = make_response_headers (file);
 
+    // Notes about the variant headers:
+    //
+    // Date		Changes with every request.
+    // Content-Type	May change if a byte-range request is performed.
+    // Content-Length	May change due to If-* headers, etc.
+    // Connection	Depends on the protocol version and state.
     mapping(string:string) variant_heads = ([ "Date":"",
 					      "Content-Type":"",
 					      "Content-Length":"",
@@ -2440,7 +2446,7 @@ void got_data(mixed fooid, string s, void|int chained)
 			     raw_url), 0);
       if( !cv[1]->key ) {
 	MY_TRACE_LEAVE("Entry invalid due to zero key");
-	conf->datacache->expire_entry( raw_url );
+	conf->datacache->expire_entry(raw_url, misc->host);
       }
       else 
       {
@@ -2478,7 +2484,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	if( !cv[1]->key )
 	{
 	  MY_TRACE_LEAVE ("Entry invalid due to zero key");
-	  conf->datacache->expire_entry( raw_url );
+	  conf->datacache->expire_entry(raw_url, misc->host);
 	  can_cache = 0;
 	}
 	if( can_cache )
