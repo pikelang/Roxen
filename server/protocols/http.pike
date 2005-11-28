@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.469 2005/11/18 15:53:10 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.470 2005/11/28 14:42:19 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1966,7 +1966,7 @@ void send_result(mapping|void result)
           if( file->data )   data += file->data;
 	  MY_TRACE_ENTER (sprintf ("Storing in ram cache, entry: %O", raw_url), 0);
 	  MY_TRACE_LEAVE ("");
-          conf->datacache->set( raw_url, data,
+          conf->datacache->set( misc->host + "\0" + raw_url, data,
                                 ([
                                   "hs":head_string,
                                   "key":misc->cachekey,
@@ -2335,15 +2335,17 @@ void got_data(mixed fooid, string s)
 #ifdef RAM_CACHE
     TIMER_START(cache_lookup);
     array cv;
+    string cache_key;
     if( prot != "HTTP/0.9" &&
 	misc->cacheable    &&
 	!misc->no_proto_cache &&
-	(cv = conf->datacache->get( raw_url )) )
+	(cv = conf->datacache->get(cache_key = misc->host + "\0" + raw_url)) )
     {
-      MY_TRACE_ENTER (sprintf ("Found %O in ram cache - checking entry", raw_url), 0);
+      MY_TRACE_ENTER(sprintf("Found %O in ram cache - checking entry",
+			     cache_key), 0);
       if( !cv[1]->key ) {
 	MY_TRACE_LEAVE ("Entry invalid due to zero key");
-	conf->datacache->expire_entry( raw_url );
+	conf->datacache->expire_entry(cache_key);
       }
       else 
       {
@@ -2381,7 +2383,7 @@ void got_data(mixed fooid, string s)
 	if( !cv[1]->key )
 	{
 	  MY_TRACE_LEAVE ("Entry invalid due to zero key");
-	  conf->datacache->expire_entry( raw_url );
+	  conf->datacache->expire_entry(cache_key);
 	  can_cache = 0;
 	}
 	if( can_cache )
