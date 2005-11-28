@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.596 2005/11/24 17:36:50 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.597 2005/11/28 14:43:32 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -254,8 +254,14 @@ class DataCache
       expire_entry( q[random(sizeof(q))] );
   }
 
-  void expire_entry( string url )
+  void expire_entry(string url, string|void host)
   {
+    if (host_in_key) {
+      url = (host|"") + "\0" + url;
+    } else {
+      // Forward compat in case host_in_key is enabled later...
+      url = "\0" + url;
+    }
     if( cache[ url ] )
     {
       current_size -= strlen(cache[url][0]);
@@ -267,7 +273,14 @@ class DataCache
 	   string|void host)
   {
     if( strlen( data ) > max_file_size ) return;
-    call_out( expire_entry, expire, url );
+    call_out(expire_entry, expire, url, host);
+
+    if (host_in_key) {
+      url = (host|"") + "\0" + url;
+    } else {
+      // Forward compat in case host_in_key is enabled later...
+      url = "\0" + url;
+    }
     current_size += strlen( data );
     cache[url] = ({ data, meta });
     int n;
