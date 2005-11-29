@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.196 2005/10/28 11:52:31 grubba Exp $
+// $Id: Roxen.pmod,v 1.197 2005/11/29 16:39:16 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2113,24 +2113,19 @@ string get_modfullname (RoxenModule module)
   else return 0;
 }
 
-string roxen_encode( string val, string encoding )
-//! Quote strings in a multitude of ways. Used primarily by entity quoting.
-//! The encoding string can be any of the following:
-//! none   - No encoding
-//! http   - HTTP encoding
-//! cookie - HTTP cookie encoding
-//! url    - HTTP encoding, including special characters in URL:s
-//! html   - HTML encofing, for generic text in html documents.
-//! pike   - Pike string quoting, for use in e.g. the <pike></pike> tag.
-//! js     - Javascript string quoting.
-//! mysql  - MySQL quoting.
-//! oracle - Oracle quoting.
-//! mysql-pike - MySQL quoting followed by Pike string quoting.
+//! Encode a single segment of @[roxen_encode()].
+//!
+//! See @[roxen_encode()] for details.
+static string low_roxen_encode(string val, string encoding)
 {
   switch (encoding) {
    case "":
    case "none":
      return val;
+
+   case "utf8":
+   case "utf-8":
+     return string_to_utf8(val);
 
    case "http":
      return http_encode_invalids (val);
@@ -2202,6 +2197,76 @@ string roxen_encode( string val, string encoding )
      // Unknown encoding. Let the caller decide what to do with it.
      return 0;
   }
+}
+
+//! Quote strings in a multitude of ways. Used primarily by entity quoting.
+//!
+//! The @[encoding] string is split on @expr{"."@}, and encoded in order.
+//!
+//! The segments in the splitted @[encoding] string can be any of
+//! the following:
+//! @string
+//!   @value ""
+//!   @value "none"
+//!     No encoding.
+//!
+//!   @value "utf8"
+//!   @value "utf-8"
+//!     UTF-8 encoding.
+//!
+//!   @value "http"
+//!     HTTP encoding.
+//!   @value "cookie"
+//!     HTTP cookie encoding.
+//!   @value "url"
+//!     HTTP encoding, including special characters in URL:s.
+//!   @value "wml-url"
+//!     RFC-compliant HTTP URL encoding.
+//!
+//!   @value "html"
+//!     HTML encoding, for generic text in html documents.
+//!   @value "wml"
+//!     HTML encoding, and doubling of any @tt{$@}'s.
+//!
+//!   @value "pike"
+//!     Pike string quoting, for use in e.g. the @tt{<pike></pike>@} tag.
+//!
+//!   @value "js"
+//!   @value "javascript"
+//!     Javascript string quoting.
+//!
+//!   @value "mysql"
+//!     MySQL quoting.
+//!
+//!   @value "sql"
+//!   @value "oracle"
+//!     SQL/Oracle quoting.
+//!
+//!   @value "mysql-pike"
+//!     Compat.
+//!     MySQL quoting followed by Pike string quoting.
+//!     Equvivalent to using @expr{"mysql.pike"@}.
+//!
+//!   @value "dtag"
+//!   @value "stag"
+//!     Compat.
+//!
+//!   @value "mysql-dtag"
+//!   @value "sql-dtag"
+//!   @value "oracle-dtag"
+//!     Compat.
+//! @endstring
+//!
+//! @example
+//!   UTF8-encode a string for use in a Mysql query in an HTML page:
+//!   @expr{roxen_encode(val, "utf8.mysql.html")@}.
+string roxen_encode(string val, string encoding)
+{
+  foreach(encoding/".", string enc) {
+    if (!(val = low_roxen_encode(val, enc)))
+      return 0;
+  }
+  return val;
 }
 
 string fix_relative( string file, RequestID id )
