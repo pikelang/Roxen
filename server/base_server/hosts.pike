@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: hosts.pike,v 1.33 2005/03/01 19:11:48 grubba Exp $
+// $Id: hosts.pike,v 1.34 2005/11/30 17:50:00 anders Exp $
 
 #include <roxen.h>
 
@@ -61,9 +61,9 @@ string blocking_host_to_ip(string host)
   if(mixed foo = cache_lookup("hosts", host)) return foo;
   ISIP(host,return host);
   array addr = gethostbyname( host );
-  got_one_result(host, addr&&(addr[1][0]));
+  got_one_result(host, addr&&sizeof(addr[1])&&(addr[1][0]));
   m_delete(do_when_found, host);
-  return addr?(addr[1][0]):host;
+  return addr&&sizeof(addr[1])?(addr[1][0]):host;
 }
 
 string quick_ip_to_host(string ipnumber)
