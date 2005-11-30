@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.909 2005/11/25 16:29:33 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.910 2005/11/30 10:48:53 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1407,11 +1407,24 @@ class Protocol
       if (open_ports[name]) {
 	if (open_ports[name][ip]) {
 	  m_delete(open_ports[name][ip], port);
-	  if(!sizeof(open_ports[name][ip]))
-	    m_delete(open_ports[name], ip);
+	  if(!sizeof(open_ports[name][ip])) {
+	    // Make sure the entries for IPv4 and IPv6 ANY are left alone.
+	    if (ip && ip != "::")
+	      m_delete(open_ports[name], ip);
+	  }
 	}
-	if(!sizeof(open_ports[name]))
-	  m_delete(open_ports, name);
+	if (sizeof(open_ports[name]) <= 2) {
+	  // Only ANY left.
+	  int empty = 1;
+	  foreach(open_ports[name]; string ip; mapping m) {
+	    if (sizeof(m)) {
+	      empty = 0;
+	      break;
+	    }
+	  }
+	  if (empty)
+	    m_delete(open_ports, name);
+	}
       }
       //destruct( ); // Close the port.
     }
