@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.910 2005/11/30 10:48:53 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.911 2005/11/30 18:22:26 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -3735,7 +3735,7 @@ class ArgCache
 # define LOCK()
 #endif
   
-  static mapping (string:mixed) cache = ([ ]);
+  static mapping(string|int:mixed) cache = ([ ]);
 
   static void setup_table()
   {
