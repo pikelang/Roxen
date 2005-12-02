@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.151 2005/11/28 14:42:59 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.152 2005/12/02 18:37:12 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -334,9 +334,8 @@ class Configuration
     void need_host_in_key();
     void flush();
     void expire_entry(string url, string|void host);
-    void set(string url, string data, mapping meta, int expire,
-	     string|void host);
-    array(string|mapping(string:mixed)) get(string url, string|void host);
+    void set(string url, string data, mapping meta, int expire, RequestID id);
+    array(string|mapping(string:mixed)) get(string url, RequestID id);
     void init_from_variables( );
   };
 
@@ -873,6 +872,46 @@ class RequestID
   //! is the typical location to store away your own request-local data for
   //! passing between modules et cetera. Be sure to use a key unique to your
   //! own application.
+  //!
+  //! These are some of the defined entries:
+  //! @mapping
+  //!   @member int "cacheable"
+  //!     Time in seconds that the request is cacheable.
+  //!   @member CacheKey "cachekey"
+  //!     @[CacheKey] for the request.
+  //!   @member string "connection"
+  //!     Protocol connection mode. Typically @tt{"keep-alive"@} or
+  //!     @tt{"close"@}.
+  //!   @member mapping(string:mixed) "defines"
+  //!     RXML macros.
+  //!   @member string "etag"
+  //!     Entity tag for the request. If the request is cacheable in
+  //!     the protocol cache one will be generated if not already present.
+  //!   @member int "last_modified"
+  //!     Time stamp for when the request was last modified.
+  //!   @member mapping(string:string|array(string)) "moreheads"
+  //!     Response headers. See @[add_response_header()] for details.
+  //!   @member RequestID "orig"
+  //!     Originating @[RequestID] for recursive requests.
+  //!   @member PrefLanguages "pref_languages"
+  //!     Language preferences for the request.
+  //!   @member string "site_prefix_path"
+  //!     Site path prefix.
+  //!   @member Stat "stat"
+  //!     File status information for the request.
+  //!   @member multiset(string) "vary"
+  //!     Contains the active set of vary headers. Please use
+  //!     @[register_vary_callback()] to alter.
+  //!   @member array(string|function(string, RequestID:string)) @
+  //!           "vary_cb_order"
+  //!     Contains the cache lookup callback functions relevant to the
+  //!     request so far in order. See @[register_vary_callback()] for
+  //!     details.
+  //!   @member multiset(string|function(string, RequestID:string)) @
+  //!           "vary_cb_set"
+  //!     Same content as @tt{"vary_cb_order"@} above, but only used to
+  //!     speed up some lookups.
+  //! @endmapping
 
   mapping (string:mixed) connection_misc;
   //! This mapping contains miscellaneous non-standardized information, and
@@ -1179,6 +1218,67 @@ class RequestID
     IF_HDR_MSG("get_if_data(): Parsed if header: %s:\n"
 	       "%O\n", raw_header, res);
     return if_data = res;
+  }
+
+  //! Register that the result was dependant on the request header
+  //! specified by @[vary], and/or a callback @[cb] that generates
+  //! a key that can be used as a decision variable.
+  //!
+  //! The headers registred in @[vary] during the requests parsing
+  //! will be used to generate the vary header (RFC 2068 14.43) for
+  //! the result.
+  //!
+  //! @param vary
+  //!   Either a (lower-case) string that specifies the name of
+  //!   a request header, or @tt{0@} (zero) which specifies that
+  //!   it doesn't depend on a header, but something else (eg
+  //!   the IP-number of the client (and thus will generate a
+  //!   @tt{"*"@} vary header.
+  //!
+  //! @param cb
+  //!   This function will be called at request time with the
+  //!   path of the request, and the @[RequestID]. It should
+  //!   return a key fragment. If @[cb] is not specified, it
+  //!   will default to a function that returns the value of
+  //!   the request header specified by @[vary].
+  //!
+  //! @note
+  //!   The order of calls to @[register_vary_callback()] is significant
+  //!   since it will be used to create a decision tree.
+  //!
+  //!   Note also that the function @[cb] should be fast, and avoid
+  //!   excessive lengths in the returned key, to keep down on
+  //!   perfomance issues.
+  //!
+  //!   Caveat! The callback function gets called very early in
+  //!   the request processing, so not all fields in the @[RequestID]
+  //!   object may be valid yet.
+  //!
+  //! @seealso
+  //!   @[NOCACHE()]
+  void register_vary_callback(string|void vary,
+			      function(string, RequestID: string)|void cb)
+  {
+    if (!misc->vary) {
+      misc->vary = (< vary || "*" >);
+    } else {
+      misc->vary[vary || "*"] = 1;
+    }
+    if (!misc->vary_cb_set) {
+      misc->vary_cb_set = (< cb || vary >);
+      misc->vary_cb_order = ({ cb || vary });
+      return;
+    }
+    if (misc->vary_cb_set[cb || vary]) {
+      // Already registred.
+      return;
+    }
+    if (vary && misc->vary_cb_set[vary]) {
+      // The full header has already been registred.
+      return;
+    }
+    misc->vary_cb_set[cb || vary] = 1;
+    misc->vary_cb_order += ({ cb || vary });
   }
 
   static string cached_url_base;
@@ -1580,6 +1680,8 @@ class RequestID
       if (!misc->cacheable) {
 	// It expired a year ago.
 	heads["Expires"] = Roxen->http_date( predef::time(1)-31557600 );
+	// Force the vary header generated below to be "*".
+	misc->vary = (< 0 >);
       } else
 	heads["Expires"] = Roxen->http_date( predef::time(1)+misc->cacheable );
       if (misc->cacheable < INITIAL_CACHEABLE) {
@@ -1592,7 +1694,6 @@ class RequestID
     if (misc->last_modified)
       heads["Last-Modified"] = Roxen->http_date(misc->last_modified);
 
-    {
       string charset="";
       if( stringp(file->data) )
       {
@@ -1615,7 +1716,7 @@ class RequestID
 	file->len = strlen(file->data);
       }
       heads["Content-Type"] = file->type + charset;
-    }
+
 
     heads["Accept-Ranges"] = "bytes";
     heads["Server"] = replace(roxenp()->version(), " ", "_");
@@ -1661,8 +1762,15 @@ class RequestID
     }
 #endif /* RAM_CACHE */
 
-    if (misc->vary && sizeof(misc->vary)) {
-      heads->Vary = ((array)misc->vary)*", ";
+    if (misc->vary) {
+      // Generate a vary header.
+
+      if (misc->vary[0]) {
+	// Depends on non-headers.
+	heads->Vary = "*";
+      } else {
+	heads->Vary = ((array)misc->vary) * ", ";
+      }
     }
 
     if(mappingp(file->extra_heads))
