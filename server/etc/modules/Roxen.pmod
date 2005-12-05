@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.199 2005/12/05 17:05:28 grubba Exp $
+// $Id: Roxen.pmod,v 1.200 2005/12/05 17:06:03 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -132,9 +132,9 @@ string http_roxen_id_cookie()
 
 static mapping(string:function(string, RequestID:string)) cookie_callbacks =
   set_weak_flag(([]), Pike.WEAK_VALUES);
-function(strimg, RequestID:string) get_cookie_callback(string cookie)
+function(string, RequestID:string) get_cookie_callback(string cookie)
 {
-  function(strimg, RequestID:string) cb = cookie_callbacks[cookie];
+  function(string, RequestID:string) cb = cookie_callbacks[cookie];
   if (cb) return cb;
   cb = lambda(string path, RequestID id) {
 	 return id->cookies[cookie];
