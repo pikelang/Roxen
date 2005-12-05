@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.154 2005/12/05 13:48:24 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.155 2005/12/05 13:50:54 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1298,6 +1298,7 @@ class RequestID
     } else {
       misc->vary[vary || "*"] = 1;
     }
+    if (vary) vary = lower_case(vary);
     if (!misc->vary_cb_set) {
       misc->vary_cb_set = (< cb || vary >);
       misc->vary_cb_order = ({ cb || vary });
