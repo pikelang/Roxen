@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.20 2004/06/30 16:59:26 mast Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.21 2005/12/05 15:21:27 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Session tag module";
@@ -25,6 +25,9 @@ class EntityClientSession {
     multiset prestates = filter(c->id->prestate,
 				lambda(string in) {
 				  return has_prefix(in, "RoxenUserID="); } );
+
+    c->id->register_vary_callback("Cookie",
+				  Roxen.get_cookie_callback("RoxenUserID"));
 
     // If there is both a cookie and a prestate, then we're in the process of
     // deciding session variable vehicle, and should thus return nothing.
@@ -118,6 +121,9 @@ class TagForceSessionID {
 
       string path_info = id->misc->path_info || "";
 
+      id->register_vary_callback("Cookie",
+				 Roxen.get_cookie_callback("RoxenUserID"));
+
       // If there is no ID cooke nor prestate, redirect to the same page
       // but with a session id prestate set.
       if(!id->cookies->RoxenUserID && !prestate) {
@@ -138,6 +144,9 @@ class TagForceSessionID {
 	id->prestate = orig_prestate;
 	return 0;
       }
+
+      id->register_vary_callback("Cookie",
+				 Roxen.get_cookie_callback("RoxenUserID"));
 
       // If there is both an ID cookie and a session prestate, then the
       // user do accept cookies, and there is no need for the session

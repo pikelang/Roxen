@@ -36,7 +36,7 @@
 //
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.14 2004/06/30 16:59:26 mast Exp $";
+constant cvs_version = "$Id: sed.pike,v 1.15 2005/12/05 15:21:27 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -306,9 +306,11 @@ string container_sed(string tag,mapping m,string cont,object id)
 			 {
 			    if (m->variable)
 			      c->data = RXML_CONTEXT->user_get_var (m->variable) || "";
-			    else if (m->cookie)
+			    else if (m->cookie) {
+			      id->register_vary_callback("Cookie",
+							 Roxen.get_cookie_callback(m->cookie));
 			       c->data=id->cookie[m->cookie]||"";
-			    else
+			    } else
 			       c->data="";
 			    if (m->rxml) c->data=Roxen.parse_rxml(c->data,id);
 			 },
@@ -361,7 +363,11 @@ string container_sed(string tag,mapping m,string cont,object id)
       if (m->prepend) d += RXML_CONTEXT->user_get_var (c->destvar) || "";
       if (m->apppend || m->append)
 	d = (RXML_CONTEXT->user_get_var (c->destvar) || "") + d;
+      // NOTE: The following line messes up for the protocol cache,
+      //       since we have no idea if it overwrites a cookie that
+      //       has been used earlier.
       id->cookie[c->destcookie]=d;
+      id->register_vary_callback();
    }
    else if (!c->nodest)
       return d;

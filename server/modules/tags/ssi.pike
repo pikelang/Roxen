@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.46 2005/02/11 20:49:54 grubba Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.47 2005/12/05 15:21:27 grubba Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -61,6 +61,7 @@ class ScopeSSI {
 		 "last_modified", "server_software", "server_name",
 		 "gateway_interface", "server_protocol", "auth_type",
 		 "http_cookie", "cookie" });
+
     if(c->id) {
       ind += indices(Roxen.build_env_vars(0, c->id, 0));
       if(c->id->misc->ssi_variables) ind += indices(c->id->misc->ssi_variables);
@@ -383,8 +384,8 @@ string get_var(string var, RequestID id)
     return "Basic";
 
    case "http_cookie": case "cookie":
-    NOCACHE();
-    return Roxen.html_encode_string(id->misc->cookies || "");
+     id->register_vary_callback("Cookie");
+     return Roxen.html_encode_string(id->misc->cookies || "");
 
    default:
     var = upper_case(var);
