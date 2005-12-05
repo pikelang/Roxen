@@ -37,10 +37,12 @@ void create() {
 	 LOCALE(0, "States how often the data of an URL should be updated. "
 		   "In seconds, minutes, hours or days."));
   
-  defvar("fresh-time", "20 minutes", LOCALE(0, "Fresh time"),
+  defvar("fresh-time", "0", LOCALE(0, "Fresh time"),
 	 TYPE_STRING|VAR_MORE,
 	 LOCALE(0, "States how long data in the database can be considered fresh enough"
-		   " to display. In seconds, minutes, hours or days."));
+		   " to display. In seconds, minutes, hours or days. As default this"
+		   " is 0, which means that this attribute is not used and that there"
+		   " are no restrictions on data freshness."));
   
   defvar("ttl", "7 days", LOCALE(0, "Time to live"),
 	 TYPE_STRING|VAR_MORE,
@@ -287,8 +289,8 @@ class HrefDatabase {
 	      args["cached-href"]); 
     
     result = sql_query("SELECT data FROM " + data_table + " WHERE url='" + 
-		       args["cached-href"] + "' AND " + time() + " - latest_write < " 
-		       + args["fresh-time"]);
+		       args["cached-href"] + "' AND (" + time() + " - latest_write < " 
+		       + args["fresh-time"] + " OR " + args["fresh-time"] + " = 0)");
     
     if (result && sizeof(result) && result[0]["data"] != "") {
       DWRITE("in get_data(): Returning cached data");
@@ -464,11 +466,12 @@ class Attributes {
       db_args["fetch-interval"] = query("fetch-interval");
     }
 
-    if (orig_args["fresh-time"] && valid_arg(orig_args["fresh-time"]))
+    if (orig_args["fresh-time"] && 
+	(valid_arg(orig_args["fresh-time"]) || orig_args["fresh-time"] == "0"))
       db_args["fresh-time"] = orig_args["fresh-time"];
     else
       db_args["fresh-time"] = query("fresh-time");
-
+    
     if (orig_args["ttl"] && valid_arg(orig_args["ttl"]))
       db_args["ttl"] = orig_args["ttl"];
     else
