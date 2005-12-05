@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.28 2005/11/24 17:37:39 grubba Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.29 2005/12/05 13:47:12 grubba Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -65,10 +65,6 @@ void start(Configuration conf)
       patterns[lower_case(a[0])] = a[1];
     }
   }
-  if (sizeof(patterns)) {
-    // Tell the RAM cache that we look at the host header.
-    conf->datacache->need_host_in_key();
-  }
 }
 
 constant module_type = MODULE_FIRST;
@@ -79,6 +75,22 @@ constant module_doc  = "This module redirects requests to different places, "
   "to do virtual hosting. <i>Note that this won't work with "
   "all clients.</i>"
   "<p>v2 now also allows HTTP redirects.</p>";
+
+string get_host(string ignored, RequestID id)
+{
+  if(!((id->misc->host && (host = lower_case(id->misc->host))) ||
+       (id->my_fd && id->my_fd->query_address &&
+	(host = replace(id->my_fd->query_address(1)," ",":")))))
+    return 0;
+
+  host = (host / ":")[0];  // Remove port number
+  host = (host / "\0")[0]; // Spoof protection.
+  if(!patterns[host])
+  {
+    host = "default";
+  }
+  return host;
+}
 
 int|mapping first_try(RequestID id)
 {
@@ -91,17 +103,12 @@ int|mapping first_try(RequestID id)
   }
 
   id->misc->host_redirected = 1;
-  if(!((id->misc->host && (host = lower_case(id->misc->host))) ||
-       (id->my_fd && id->my_fd->query_address &&
-	(host = replace(id->my_fd->query_address(1)," ",":")))))
-    return 0;
 
-  host = (host / ":")[0]; // Remove port number
+  // We look at the host header...
+  id->register_vary_callback("Host", get_host);
 
-  if(!patterns[host])
-  {
-    host = "default";
-  }
+  if (!(host = get_host(0, id))) return 0;
+
   to = patterns[host];
   if(!to) {
     //    if(patterns["default"])
