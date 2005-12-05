@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.197 2005/11/29 16:39:16 grubba Exp $
+// $Id: Roxen.pmod,v 1.198 2005/12/05 14:29:44 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -130,6 +130,17 @@ string http_roxen_id_cookie()
     http_date (3600*24*365*2 + time (1)) + "; path=/";
 }
 
+static mapping(string:function(strimg, RequestID:string)) cookie_callbacks =
+  set_weak_flag(([]), Pike.WEAK_VALUES);
+function(strimg, RequestID:string) get_cookie_callback(string cookie)
+{
+  function(strimg, RequestID:string) cb = cookie_callbacks[cookie];
+  if (cb) return cb;
+  cb = lambda(string path, RequestID id) {
+	 return id->cookies[cookie];
+       };
+  return cookie_callbacks[cookie] = cb;
+}
 
 // These five functions are questionable, but rather widely used.
 string msectos(int t)
