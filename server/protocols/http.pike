@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.486 2005/12/05 16:29:43 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.487 2005/12/05 17:04:22 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -681,10 +681,17 @@ private final int parse_got_2( )
 	  // is something very weird.
 	  prot = "HTTP/1.1";
       }
+      // HTTP/1.1 and later default to keep-alive.
+      misc->connection = "keep-alive";
+      if (prot == "HTTP/1.0") {
+	// But HTTP/1.0 did not.
+	misc->connection = "close";
+      }
       break;
       
     case 2:     // HTTP/0.9
     case 1:     // PING
+      misc->connection = "close";
       method = sl[0];
       f = sl[-1];
       if( sizeof( sl ) == 1 )
@@ -960,7 +967,6 @@ void end(int|void keepit)
   if(keepit
      && !file->raw
      && misc->connection != "close"
-     && ((prot == "HTTP/1.1") || (misc->connection == "keep-alive"))
      && my_fd
      // Is this necessary now when this function no longer is called
      // from the close callback? /mast
@@ -2554,8 +2560,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	      "Date":Roxen.http_date(predef::time(1)),
 	      "Content-Length":(string)len,
 	      "Content-Type":file->type,
-	      "Connection":misc->connection ||
-	      ([ "HTTP/1.1":"keep-alive" ])[prot] || "close",
+	      "Connection":misc->connection,
 	      "Expires":(file->varies && (prot == "HTTP/1.0")?
 			 Roxen->http_date(predef::time(1)-31557600):
 			 file->expires),
