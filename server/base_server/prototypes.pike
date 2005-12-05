@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.152 2005/12/02 18:37:12 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.153 2005/12/05 13:36:29 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -333,7 +333,7 @@ class Configuration
     int hits, misses;
     void need_host_in_key();
     void flush();
-    void expire_entry(string url, string|void host);
+    void expire_entry(string url, RequestID id);
     void set(string url, string data, mapping meta, int expire, RequestID id);
     array(string|mapping(string:mixed)) get(string url, RequestID id);
     void init_from_variables( );
@@ -877,24 +877,56 @@ class RequestID
   //! @mapping
   //!   @member int "cacheable"
   //!     Time in seconds that the request is cacheable.
+  //!     Use @[get_max_cache()], @[set_max_cache()] or one of the
+  //!     cache macros to access.
+  //!   @member array(function) "_cachecallbacks"
+  //!     Callbacks to verify that the cache entry is valid.
   //!   @member CacheKey "cachekey"
   //!     @[CacheKey] for the request.
+  //!   @member multiset(string) "client_connection"
+  //!     Parsed request header "Connection".
+  //!   @member array "cookies"
+  //!     Empty array. Obsolete entry.
   //!   @member string "connection"
   //!     Protocol connection mode. Typically @tt{"keep-alive"@} or
   //!     @tt{"close"@}.
   //!   @member mapping(string:mixed) "defines"
   //!     RXML macros.
+  //!   @member int(100..) "error_code"
+  //!     Result error code unless specified elsewhere.
   //!   @member string "etag"
   //!     Entity tag for the request. If the request is cacheable in
   //!     the protocol cache one will be generated if not already present.
+  //!   @member array(string) "files"
+  //!     Multipart/form-data variables that have an associated filename.
+  //!   @member string "host"
+  //!     Canonical host header (lower-case, port number present).
+  //!   @member string "hostname"
+  //!     Hostname from the canonicalized host header.
   //!   @member int "last_modified"
   //!     Time stamp for when the request was last modified.
+  //!   @member int "len"
+  //!     Length in bytes of the data section of the request.
+  //!   @member int "_log_cheat_addition"
+  //!     Value to add to @expr{file->len@} to get the length
+  //!     to report in the access log.
   //!   @member mapping(string:string|array(string)) "moreheads"
   //!     Response headers. See @[add_response_header()] for details.
+  //!   @member int(1..1) "no_proto_cache"
+  //!     Flag indicating that the result should not be cached in
+  //!     the protocol cache.
   //!   @member RequestID "orig"
   //!     Originating @[RequestID] for recursive requests.
+  //!   @member int "port"
+  //!     Port number from the canonicalized host header.
   //!   @member PrefLanguages "pref_languages"
   //!     Language preferences for the request.
+  //!   @member array "proxyauth"
+  //!     Decoded proxy authentication information.
+  //!   @member string "range"
+  //!     Byte range information.
+  //!   @member int(1..1) "request_charset_decoded"
+  //!     Flag indicating that @[decode_charset_encoding()] has been run.
   //!   @member string "site_prefix_path"
   //!     Site path prefix.
   //!   @member Stat "stat"
@@ -1249,6 +1281,9 @@ class RequestID
   //!   Note also that the function @[cb] should be fast, and avoid
   //!   excessive lengths in the returned key, to keep down on
   //!   perfomance issues.
+  //!
+  //!   Please avoid having NULs (@tt{"\0"@}) in the key fragments,
+  //!   since they may be used to spoof the cache.
   //!
   //!   Caveat! The callback function gets called very early in
   //!   the request processing, so not all fields in the @[RequestID]
