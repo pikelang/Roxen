@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.484 2005/11/28 16:21:40 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.485 2005/12/05 13:35:49 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -575,7 +575,8 @@ int things_to_do_when_not_sending_from_cache( )
   }
   if ( client_var->charset && client_var->charset  != "iso-8859-1" )
   {
-    misc->no_proto_cache = 1;
+    misc->no_proto_cache = 1;	// FIXME: Why?
+
     set_output_charset( client_var->charset );
     input_charset = client_var->charset;
     decode_charset_encoding( client_var->charset );
@@ -2105,7 +2106,7 @@ void send_result(mapping|void result)
 					  file->stat[ST_MTIME]),
 				 "rf":realfile,
 			       ]),
-			       misc->cacheable, misc->host);
+			       misc->cacheable, this_object());
 	  file = ([
 	    "data":data,
 	    "raw":file->raw,
@@ -2460,13 +2461,13 @@ void got_data(mixed fooid, string s, void|int chained)
     if( prot != "HTTP/0.9" &&
 	misc->cacheable    &&
 	!misc->no_proto_cache &&
-	(cv = conf->datacache->get(raw_url, misc->host)) )
+	(cv = conf->datacache->get(raw_url, this_object())) )
     {
       MY_TRACE_ENTER(sprintf("Found %O in ram cache - checking entry",
 			     raw_url), 0);
       if( !cv[1]->key ) {
 	MY_TRACE_LEAVE("Entry invalid due to zero key");
-	conf->datacache->expire_entry(raw_url, misc->host);
+	conf->datacache->expire_entry(raw_url, this_object());
       }
       else 
       {
@@ -2504,7 +2505,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	if( !cv[1]->key )
 	{
 	  MY_TRACE_LEAVE ("Entry invalid due to zero key");
-	  conf->datacache->expire_entry(raw_url, misc->host);
+	  conf->datacache->expire_entry(raw_url, this_object());
 	  can_cache = 0;
 	}
 	if( can_cache )

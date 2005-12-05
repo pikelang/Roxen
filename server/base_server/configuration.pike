@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.597 2005/11/28 14:43:32 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.598 2005/12/05 13:35:49 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -242,66 +242,139 @@ class DataCache
 #endif
   }
 
+  static void low_expire_entry(string key_prefix, array(string) keys)
+  {
+    if (!key_prefix) return;
+    int found;
+    do {
+      found = 0;
+      foreach(keys; int ind; string key) {
+	if (!key) continue;
+	if (has_prefix(key, key_prefix)) {
+	  found = 1;
+	  if (arrayp(cache[key])) {
+	    current_size -= sizeof(cache[key][0]);
+	  }
+	  m_delete(cache, key);
+	  keys[ind] = 0;
+	}
+      }
+      key_prefix = "\0" + key_prefix;
+    } while (found);
+  }
+
+  void expire_entry(string key_prefix, RequestID|void id)
+  {
+    if (!id) {
+      low_expire_entry(key_prefix, indices(cache));
+      return;
+    }
+    string url = key_prefix;
+    if ((url != "") && !url[0]) {
+      sscanf(url, "%*[\0]%[^\0]", url);
+    }
+    while(1) {
+      array(string|mapping(string:mixed))|string|
+	function(string, RequestID:string) val;
+      if (arrayp(val = cache[key_prefix])) {
+	current_size -= sizeof(val[0]);
+	m_delete(cache, key_prefix);
+	return;
+      }
+      if (!val) {
+	return;
+      }
+
+      string key_frag;
+      if (stringp(val)) {
+	key_frag = id->result_headers[val];
+      } else {
+	key_frag = val(url, id);
+      }
+      // NOTE: The prepended NUL is for spoof protection.
+      key_prefix = "\0" + key_prefix + "\0" + (key_frag || "");
+    }
+  }
+
   static void clear_some_cache()
   {
-    array q = indices( cache );
+    array(string) q = indices(cache);
     if(!sizeof(q))
     {
       current_size=0;
       return;
     }
-    for( int i = 0; i<sizeof( q )/10; i++ )
-      expire_entry( q[random(sizeof(q))] );
+    for(int i = 0; i < sizeof(q)/10; i++)
+      low_expire_entry(q[random(sizeof(q))], q);
   }
 
-  void expire_entry(string url, string|void host)
-  {
-    if (host_in_key) {
-      url = (host|"") + "\0" + url;
-    } else {
-      // Forward compat in case host_in_key is enabled later...
-      url = "\0" + url;
-    }
-    if( cache[ url ] )
-    {
-      current_size -= strlen(cache[url][0]);
-      m_delete( cache, url );
-    }
-  }
-
-  void set(string url, string data, mapping meta, int expire,
-	   string|void host)
+  void set(string url, string data, mapping meta, int expire, RequestID id)
   {
     if( strlen( data ) > max_file_size ) return;
-    call_out(expire_entry, expire, url, host);
 
-    if (host_in_key) {
-      url = (host|"") + "\0" + url;
-    } else {
-      // Forward compat in case host_in_key is enabled later...
-      url = "\0" + url;
+    string key = url;
+
+    foreach(id->misc->vary_cb_order || ({}),
+	    string|function(string, RequestID: string) vary_cb) {
+      array(string|mapping(string:mixed))|string|
+	function(string, RequestID:string) old = cache[key];
+      if (old && (old != vary_cb)) {
+	// FIXME: Warn?
+	expire_entry(key);
+      }
+      cache[key] = vary_cb;
+
+      string key_frag;
+      if (stringp(vary_cb)) {
+	key_frag = id->request_headers[vary_cb];
+      } else {
+	key_frag = vary_cb(url, id);
+      }
+      // NOTE: The prepended NUL is for spoof protection.
+      key = "\0" + key + "\0" + (key_frag || "");
     }
+
+    array(string|mapping(string:mixed))|string|
+      function(string, RequestID:string) old = cache[key];
+    if (old) {
+      // FIXME: Warn?
+      expire_entry(key);
+    }
+
     current_size += strlen( data );
-    cache[url] = ({ data, meta });
+    cache[key] = ({ data, meta });
+
+    // Only the actual cache entry is expired.
+    call_out(low_expire_entry, expire, key, ({ key }));
     int n;
     while( (current_size > max_size) && (n++<10))
       clear_some_cache();
   }
   
-  array(string|mapping(string:mixed)) get(string url, string|void host)
+  array(string|mapping(string:mixed)) get(string url, RequestID id)
   {
-    mixed res;
-    if (host_in_key) {
-      url = (host|"") + "\0" + url;
-    } else {
-      // Forward compat in case host_in_key is enabled later...
-      url = "\0" + url;
-    }
-    if( res = cache[ url ] )  
-      hits++;
-    else
-      misses++;
-    return res;
+    array(string|mapping(string:mixed))|string|
+      function(string, RequestID:string) res;
+    string key = url;
+    while(1) {
+      if (arrayp(res = cache[key])) {
+	hits++;
+	return [array(string|mapping(string:mixed))]res;
+      }
+      if (!res) {
+	misses++;
+	return UNDEFINED;
+      }
+
+      string key_frag;
+      if (stringp(res)) {
+	key_frag = id->result_headers[res];
+      } else {
+	key_frag = res(url, id);
+      }
+      // NOTE: The prepended NUL is for spoof protection.
+      key = "\0" + key + "\0" + (key_frag || "");
+    };
   }
 
   void init_from_variables( )
