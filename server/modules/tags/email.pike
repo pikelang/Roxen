@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.35 2005/02/10 16:35:14 wellhard Exp $";
+constant cvs_version = "$Id: email.pike,v 1.36 2005/12/05 15:20:34 grubba Exp $";
 
 constant thread_safe=1;
 
@@ -65,8 +65,8 @@ void create(Configuration conf)
 	 "useful to find messages that may have been lost. Undelivered "
 	 "messages may have the header X-Roxen-Email-Error included.");
   defvar ("mbox_file_errors_only", 1, "Log undelivered messages only",
-         TYPE_FLAG,
-         "Log only e-mail messages which the system knows will not be "
+	  TYPE_FLAG,
+	  "Log only e-mail messages which the system knows will not be "
 	  "delivered. Beware! All undelivered messages may not always be "
 	  "logged.");
   
@@ -98,7 +98,7 @@ void create(Configuration conf)
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.35 $"/" ")[1];
+string revision = ("$Revision: 1.36 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -465,7 +465,7 @@ class TagEmail {
 	 string subject_qp = MIME.encode_word(({subject, s_chs}), "quoted-printable");
 
 	 // Use quoted printable if it is shorter because it is
-	 // significantly easier to reed in clients not supporting
+	 // significantly easier to read in clients not supporting
 	 // encoded subjects.
 	 if(sizeof(subject_b) < sizeof(subject_qp))
 	   subject = subject_b;
@@ -562,7 +562,7 @@ class TagEmail {
 
      log_message(from, message);
      
-     //itterate log
+     //iterate log
      mails += ({ m->headers + ([ "length" : (string)(sizeof((string)m)) ]) });
 
      if (id->misc->debug)
@@ -680,9 +680,9 @@ value=''><p>
 
 <attr name='charset' value='' default='iso-8859-1'><p>
  The charset of the body and subject. The body will be encoded in utf-8
- if the text was unable to be encoded in the supplied charset. The subject
+ if it was not possible to encode the text in the supplied charset. The subject
  will be unencoded if possible otherwise encoded with the supplied charset
- or encoded in utf-8 if the text was unable to be encoded with the supplied
+ or encoded in utf-8 if it was not possible to encode the text in the supplied
  charset.
 </p>
 </attr>
