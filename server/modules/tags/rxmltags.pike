@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.501 2005/09/16 14:42:23 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.502 2005/12/05 14:31:30 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -431,7 +431,7 @@ class TagHeader {
     array do_return(RequestID id) {
       if(args->name == "WWW-Authenticate") {
 	string r;
-	if(args->value) {
+	if(r = args->value) {
 	  if(!sscanf(args->value, "Realm=%s", r))
 	    r=args->value;
 	} else
@@ -1217,6 +1217,9 @@ class TagRemoveCookie {
 //    really... is this error a good idea?  I don't think so, it makes
 //    it harder to make pages that use cookies. But I'll let it be for now.
 //       /Per
+
+      id->register_vary_callback("Cookie",
+				 Roxen.get_cookie_callback(args->name));
 
       if(!id->cookies[args->name])
         RXML.run_error("That cookie does not exist.\n");
@@ -5342,6 +5345,7 @@ class TagIfCookie {
   inherit IfIs;
   constant plugin_name = "cookie";
   string source(RequestID id, string s) {
+    id->register_vary_callback("Cookie", Roxen.get_cookie_callback(s));
     return id->cookies[s];
   }
 }
