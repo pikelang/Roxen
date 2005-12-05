@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.485 2005/12/05 13:35:49 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.486 2005/12/05 16:29:43 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1921,11 +1921,14 @@ void send_result(mapping|void result)
     mapping(string:string) variant_heads = ([ "Date":"",
 					      "Content-Type":"",
 					      "Content-Length":"",
-					      "Connection":"", ]) & heads;
+					      "Connection":"",
+					      "Expires":"",
+    ]) & heads;
     m_delete(heads, "Date");
     m_delete(heads, "Content-Type");
     m_delete(heads, "Content-Length");
     m_delete(heads, "Connection");
+    m_delete(heads, "Expires");
 
     if (file->error == 200) {
       int conditional;
@@ -2060,6 +2063,7 @@ void send_result(mapping|void result)
       head_string += "\r\n";
     }
 
+    int varies = misc->vary && (sizeof(misc->vary) - misc->vary["Host"]);
     if( (method == "HEAD") || (file->error == 204) || (file->error == 304) ||
 	(file->error < 200))
     {
@@ -2073,6 +2077,12 @@ void send_result(mapping|void result)
       file->len = 1; // Keep those alive, please...
       file->data = "";
       file->file = 0;
+      if (varies && (prot == "HTTP/1.0")) {
+	// The Vary header is new in HTTP/1.1.
+	// It expired a year ago.
+	variant_heads["Expires"] =
+	  Roxen->http_date(predef::time(1)-31557600);
+      }
     } else {
 #ifdef RAM_CACHE
       if( (misc->cacheable > 0) && !misc->no_proto_cache)
@@ -2102,6 +2112,8 @@ void send_result(mapping|void result)
 				 "error":file->error,
 				 "type":variant_heads["Content-Type"],
 				 "last_modified":misc->last_modified,
+				 "varies":varies,
+				 "expires":variant_heads["Expires"],
 				 "mtime":(file->stat &&
 					  file->stat[ST_MTIME]),
 				 "rf":realfile,
@@ -2116,6 +2128,12 @@ void send_result(mapping|void result)
 	}
       }
 #endif
+      if (varies && (prot == "HTTP/1.0")) {
+	// The Vary header is new in HTTP/1.1.
+	// It expired a year ago.
+	variant_heads["Expires"] =
+	  Roxen->http_date(predef::time(1)-31557600);
+      }
       if (misc->range) {
 	// Handle byte ranges.
 	int skip;
@@ -2538,6 +2556,9 @@ void got_data(mixed fooid, string s, void|int chained)
 	      "Content-Type":file->type,
 	      "Connection":misc->connection ||
 	      ([ "HTTP/1.1":"keep-alive" ])[prot] || "close",
+	      "Expires":(file->varies && (prot == "HTTP/1.0")?
+			 Roxen->http_date(predef::time(1)-31557600):
+			 file->expires),
 	    ]);
 	    if (misc->range) {
 	      // Handle byte ranges.
