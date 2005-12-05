@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.153 2005/12/05 13:36:29 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.154 2005/12/05 13:48:24 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -331,7 +331,6 @@ class Configuration
   {
     int current_size, max_size, max_file_size;
     int hits, misses;
-    void need_host_in_key();
     void flush();
     void expire_entry(string url, RequestID id);
     void set(string url, string data, mapping meta, int expire, RequestID id);

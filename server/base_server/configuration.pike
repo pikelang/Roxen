@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.598 2005/12/05 13:35:49 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.599 2005/12/05 13:48:52 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -226,13 +226,6 @@ class DataCache
   int max_file_size;
 
   int hits, misses;
-
-  // FIXME: We ought to have proper varies support here.
-  static int host_in_key;
-  void need_host_in_key()
-  {
-    host_in_key = 1;
-  }
 
   void flush()
   {
