@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: newdecode.pike,v 1.33 2005/12/06 13:56:28 grubba Exp $
+// $Id: newdecode.pike,v 1.34 2005/12/06 13:57:09 grubba Exp $
 
 // The magic below is for the 'install' program
 #ifndef roxenp
@@ -18,7 +18,6 @@ SIMPLE_DECODE(decode_int, (int)s );
 SIMPLE_DECODE(decode_module, s );
 SIMPLE_DECODE(decode_float, (float)s );
 SIMPLE_DECODE(decode_string,
-	      /* http_decode_string() doesn't like wide strings... */
 	      ((String.width(s)>8)?
 	       utf8_to_string(http_decode_string(string_to_utf8(s))):
 	       http_decode_string(s)));
