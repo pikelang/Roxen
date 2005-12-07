@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.159 2005/12/07 15:01:36 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.160 2005/12/07 15:03:48 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -973,8 +973,8 @@ class RequestID
 	  while(sizeof(c) && c[0]==' ') c=c[1..];
 	  if(sscanf(c, "%s=%s", name, value) == 2)
 	  {
-	    value=http_decode_string(value);
-	    name=http_decode_string(name);
+	    value=_Roxen.http_decode_string(value);
+	    name=_Roxen.http_decode_string(name);
 	    jar[ name ]=value;
 #ifdef OLD_RXML_CONFIG
 	    // FIXME: Really ought to register this one...
@@ -992,7 +992,7 @@ class RequestID
     }
     static string `[](mixed cookie)
     {
-      if (stringp(s)) {
+      if (stringp(cookie)) {
 	return `->(cookie);
       }
       return UNDEFINED;
@@ -1008,12 +1008,12 @@ class RequestID
       // FIXME: Warn if not string?
       return `->=(cookie, value);
     }
-    static string _mdelete(string cookie)
+    static string _m_delete(string cookie)
     {
       // FIXME: Warn if not string?
       // Messes up for the RAM cache...
       register_vary_callback();
-      return mdelete(jar, cookie);
+      return m_delete(jar, cookie);
     }
     static array(string) _indices()
     {
