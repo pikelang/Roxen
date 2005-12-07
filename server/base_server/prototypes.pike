@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.156 2005/12/07 14:48:20 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.157 2005/12/07 14:54:56 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1029,6 +1029,12 @@ class RequestID
     {
       register_vary_callback("Cookie");
       return sizeof(jar);
+    }
+    static string _sprintf(int fmt)
+    {
+      if (fmt == 'O') return sprintf("CookieJar(%O)", jar);
+      // Probably not reached, but...
+      return sprintf(sprintf("%%%c", fmt), jar);
     }
   }
 
