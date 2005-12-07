@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.200 2005/12/05 17:06:03 grubba Exp $
+// $Id: Roxen.pmod,v 1.201 2005/12/07 14:49:05 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -137,6 +137,9 @@ function(string, RequestID:string) get_cookie_callback(string cookie)
   function(string, RequestID:string) cb = cookie_callbacks[cookie];
   if (cb) return cb;
   cb = lambda(string path, RequestID id) {
+	 if (!id->cookies) {
+	   id->init_cookies();
+	 }
 	 return id->cookies[cookie];
        };
   return cookie_callbacks[cookie] = cb;
