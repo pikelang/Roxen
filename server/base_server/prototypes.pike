@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.155 2005/12/05 13:50:54 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.156 2005/12/07 14:48:20 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -950,10 +950,108 @@ class RequestID
   //! for passing between requests on the same connection et cetera. Be sure
   //! to use a key unique to your own application.
 
-  mapping (string:string) cookies;
+  //! Wrapper that calls @[register_vary_callback()] as appropriate when
+  //! cookies are accessed.
+  //!
+  //! @seealso
+  //!   @[cookies], @[register_vary_callback()], @[Roxen.get_cookie_callback()]
+  static class CookieJar
+  {
+    static mapping(string:string) jar = ([]);
+    static void create(string|array(string) headers)
+    {
+      if(!contents)
+	return;
+
+      array tmp = arrayp(contents) ? contents : ({ contents});
+  
+      foreach(tmp, string cookieheader) {
+    
+	foreach(((cookieheader/";") - ({""})), string c)
+	{
+	  string name, value;
+	  while(sizeof(c) && c[0]==' ') c=c[1..];
+	  if(sscanf(c, "%s=%s", name, value) == 2)
+	  {
+	    value=http_decode_string(value);
+	    name=http_decode_string(name);
+	    jar[ name ]=value;
+#ifdef OLD_RXML_CONFIG
+	    // FIXME: Really ought to register this one...
+	    if( (name == "RoxenConfig") && strlen(value) )
+	      config =  mkmultiset( value/"," );
+#endif
+	  }
+	}
+      }
+    }
+    static string `->(string cookie)
+    {
+      register_vary_callback("Cookie", Roxen.get_cookie_callback(cookie));
+      return jar[cookie];
+    }
+    static string `[](mixed cookie)
+    {
+      if (stringp(s)) {
+	return `->(cookie);
+      }
+      return UNDEFINED;
+    }
+    static string `->=(string cookie, string value)
+    {
+      // Messes up for the RAM cache...
+      register_vary_callback();
+      return jar[cookie] = value;
+    }
+    static string `[]=(mixed cookie, string value)
+    {
+      // FIXME: Warn if not string?
+      return `->=(cookie, value);
+    }
+    static string _mdelete(string cookie)
+    {
+      // FIXME: Warn if not string?
+      // Messes up for the RAM cache...
+      register_vary_callback();
+      return mdelete(jar, cookie);
+    }
+    static array(string) _indices()
+    {
+      register_vary_callback("Cookie");
+      return indices(jar);
+    }
+    static array(string) _values()
+    {
+      register_vary_callback("Cookie");
+      return values(jar);
+    }
+    static int _sizeof()
+    {
+      register_vary_callback("Cookie");
+      return sizeof(jar);
+    }
+  }
+
+  //mapping (string:string) cookies;
+  CookieJar cookies;
   //! The indices and values map to the names and values of the cookies sent
   //! by the client for the requested page. All data (names and values) are
   //! decoded from their possible transport encoding.
+  //!
+  //! @note
+  //!   Used to be a plain mapping in Roxen 4.0 and earlier. It now
+  //!   has a wrapper that registers dependencies on the various cookies.
+
+  //! Call to initialize the cookies.
+  //!
+  //! Typically called from callbacks installed with
+  //! @[register_vary_callback()] if @[cookies] hasn't been initialized.
+  void init_cookies()
+  {
+    if (!cookies) {
+      cookies = CookieJar(request_headers["cookie"]);
+    }
+  }
 
   mapping (string:array(string)|string) request_headers;
   //! Indices and values map to the names and values of all HTTP headers sent
