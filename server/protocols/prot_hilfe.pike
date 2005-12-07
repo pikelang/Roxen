@@ -48,7 +48,7 @@ class Connection
       real_variables = ([]);
       variables = FakedVariables( real_variables );
       misc = ([]);
-      cookies = ([]);
+      cookies = CookieJar();
       throttle = ([]);
       client_var = ([]);
       request_headers = ([]);
