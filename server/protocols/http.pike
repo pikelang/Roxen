@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.489 2005/12/07 14:51:59 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.490 2005/12/07 15:13:05 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -222,7 +222,7 @@ void decode_charset_encoding( string|function(string:string) decoder )
 
   decode_map( real_variables, decoder );
   decode_map( misc, decoder );
-  decode_map( cookies, decoder );
+  //decode_map( cookies, decoder );
   decode_map( request_headers, decoder );
 
   if( client )
