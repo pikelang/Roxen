@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.160 2005/12/07 15:03:48 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.161 2005/12/07 15:08:22 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -958,7 +958,7 @@ class RequestID
   static class CookieJar
   {
     static mapping(string:string) jar = ([]);
-    static void create(string|array(string) contents)
+    static void create(string|array(string)|void contents)
     {
       if(!contents)
 	return;
