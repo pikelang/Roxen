@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.487 2005/12/05 17:04:22 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.488 2005/12/07 13:24:50 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2561,10 +2561,13 @@ void got_data(mixed fooid, string s, void|int chained)
 	      "Content-Length":(string)len,
 	      "Content-Type":file->type,
 	      "Connection":misc->connection,
-	      "Expires":(file->varies && (prot == "HTTP/1.0")?
-			 Roxen->http_date(predef::time(1)-31557600):
-			 file->expires),
 	    ]);
+	    string expires;
+	    if (expires = (file->varies && (prot == "HTTP/1.0")?
+			   Roxen->http_date(predef::time(1)-31557600):
+			   file->expires)) {
+	      variant_heads["Expires"] = expires;
+	    }
 	    if (misc->range) {
 	      // Handle byte ranges.
 	      int skip;
