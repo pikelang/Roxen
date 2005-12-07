@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.488 2005/12/07 13:24:50 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.489 2005/12/07 14:51:59 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -112,7 +112,6 @@ mapping (string:mixed)  misc            =
 #endif // REQUEST_DEBUG
 ]);
 mapping (string:mixed)  connection_misc = ([ ]);
-mapping (string:string) cookies         = ([ ]);
 mapping (string:string) request_headers = ([ ]);
 mapping (string:string) client_var      = ([ ]);
 
@@ -447,6 +446,7 @@ private void really_set_config(array mod_config)
 private static mixed f, line;
 private static int hstart;
 
+#if 0
 //! Parse cookie strings.
 //!
 //! @param contents
@@ -454,6 +454,9 @@ private static int hstart;
 //!
 //! @returns
 //!   Returns the resulting current cookie mapping.
+//!
+//! @obsolete
+//!   Use @[CookieJar] instead.
 mapping(string:string) parse_cookies( array|string contents )
 {
   if(!contents)
@@ -483,6 +486,7 @@ mapping(string:string) parse_cookies( array|string contents )
   }
   return cookies;
 }
+#endif
 
 int things_to_do_when_not_sending_from_cache( )
 {
@@ -506,17 +510,7 @@ int things_to_do_when_not_sending_from_cache( )
     misc["accept-language"] = contents;
   }
 
-  if( contents = request_headers[ "cookie" ] )
-  {
-    // FIXME:
-    // "misc->cookies"? Shouldn't it be just "cookies"?
-    //   /grubba 2002-03-22
-    misc->cookies = ({});
-    foreach( arrayp( contents )? contents : ({ contents }), contents )
-    {
-      parse_cookies(contents);
-    }
-  }
+  init_cookies();
 
   string f = raw_url;
 
