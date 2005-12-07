@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.437 2005/11/26 17:19:32 uid100352 Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.438 2005/12/07 23:11:18 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -281,7 +281,7 @@ class TagAppend {
     
     array do_return(RequestID id) {
       mixed value=RXML.user_get_var(args->variable, args->scope);
-      if (args->value || args->form) {
+      if (args->value || args->from) {
         if (args->value) {
           content = args->value;
         }
