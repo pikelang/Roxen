@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.157 2005/12/07 14:54:56 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.158 2005/12/07 15:00:50 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -987,7 +987,7 @@ class RequestID
     }
     static string `->(string cookie)
     {
-      register_vary_callback("Cookie", Roxen.get_cookie_callback(cookie));
+      register_vary_callback("Cookie", Roxen->get_cookie_callback(cookie));
       return jar[cookie];
     }
     static string `[](mixed cookie)
