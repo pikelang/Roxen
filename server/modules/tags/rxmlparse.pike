@@ -7,7 +7,7 @@
 //This can be turned on when types in dumped files are working properly.
 //#pragma strict_types
 
-#define _id_misc ([mapping(string:mixed)]id->misc)
+#define _id_misc (id->misc)
 #define _context_misc ([mapping(string:mixed)] RXML_CONTEXT->misc)
 #define _stat _context_misc[" _stat"]
 #define _error _context_misc[" _error"]
@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.73 2005/12/05 14:31:24 grubba Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.74 2005/12/09 01:05:23 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -111,7 +111,7 @@ function(string,int|void,string|void:string) file2type;
 
 mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 {
-  array stat = [array]_id_misc->stat || file->stat();
+  Stdio.Stat stat = _id_misc->stat || file->stat();
 
   if(require_exec && !(stat[0] & 07111)) return 0;
   if(!parse_exec && (stat[0] & 07111)) return 0;
@@ -131,9 +131,9 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
      data = unicode_to_string( data );
      break;
    default:
-     data = [string] (Locale.Charset.decoder( [string]_id_misc->input_charset )
-		      ->feed( data )
-		      ->drain());
+     data = (Locale.Charset.decoder( [string]_id_misc->input_charset )
+	     ->feed( data )
+	     ->drain());
      break;
   }
 
@@ -185,9 +185,9 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
   TRACE_LEAVE ("");
 
   return (["data":rxml,
-	   "type": file2type([string](id->realfile
-				      || id->no_query
-				      || "index.html"),
+	   "type": file2type((id->realfile
+			      || id->no_query
+			      || "index.html"),
 			     0, e) || "text/html",
 	   "stat":context->misc[" _stat"],
 	   "error":context->misc[" _error"],
@@ -224,7 +224,7 @@ string rxml_run_error(RXML.Backtrace err, RXML.Type type)
       report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
 #endif
     _ok=0;
-    if(query("quietr") && !_id_misc->debug && !([multiset(string)]id->prestate)->debug)
+    if(query("quietr") && !_id_misc->debug && !id->prestate->debug)
       return "";
     return "<br clear=\"all\" />\n<pre>" +
       Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
@@ -256,7 +256,7 @@ string rxml_parse_error(RXML.Backtrace err, RXML.Type type)
     if(query("logerrorsp"))
       report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
 #endif
-    if(query("quietp") && !_id_misc->debug && !([multiset(string)]id->prestate)->debug)
+    if(query("quietp") && !_id_misc->debug && !id->prestate->debug)
       return "";
     return "<br clear=\"all\" />\n<pre>" +
       Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
@@ -309,7 +309,7 @@ string api_query_variable(RequestID id, string what, void|string scope)
 string api_query_cookie(RequestID id, string f)
 {
   id->register_vary_callback("Cookie", Roxen.get_cookie_callback(f));
-  return ([mapping(string:string)]id->cookies)[f];
+  return id->cookies[f];
 }
 
 void api_add_header(RequestID id, string h, string v)
@@ -333,24 +333,24 @@ int api_remove_cookie(RequestID id, string c, string v)
 
 int api_prestate(RequestID id, string p)
 {
-  return ([multiset(string)]id->prestate)[p];
+  return id->prestate[p];
 }
 
 int api_set_prestate(RequestID id, string p)
 {
-  return ([multiset(string)]id->prestate)[p]=1;
+  return id->prestate[p]=1;
 }
 
 int api_supports(RequestID id, string p)
 {
   NOCACHE();
-  return ([multiset(string)]id->supports)[p];
+  return id->supports[p];
 }
 
 int api_set_supports(RequestID id, string p)
 {
   NOCACHE();
-  return ([multiset(string)]id->supports)[p]=1;
+  return id->supports[p]=1;
 }
 
 int api_set_return_code(RequestID id, int c, void|string p)
@@ -367,8 +367,8 @@ int api_set_return_code(RequestID id, int c, void|string p)
 string api_get_referer(RequestID id)
 {
   NOCACHE();
-  if([array(string)]id->referer && sizeof([array(string)]id->referer))
-    return [array(string)]id->referer*"";
+  if(id->referer && sizeof(id->referer))
+    return id->referer*"";
   return "";
 }
 
