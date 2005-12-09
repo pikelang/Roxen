@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.161 2005/12/07 15:08:22 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.162 2005/12/09 00:47:39 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -138,7 +138,6 @@ class ModuleInfo
   void save();
   void update_with( RoxenModule mod, string what ); // NOTE: Throws strings.
   int init_module( string what );
-  int rec_find_module( string what, string dir );
   int find_module( string sn );
   int check (void|int force);
 }
@@ -1030,11 +1029,17 @@ class RequestID
       register_vary_callback("Cookie");
       return sizeof(jar);
     }
+    static mapping(string:string) `+ (mapping(string:string) other)
+    {
+      return jar + other;
+    }
+    static mapping(string:string) ``+ (mapping(string:string) other)
+    {
+      return other + jar;
+    }
     static string _sprintf(int fmt)
     {
-      if (fmt == 'O') return sprintf("CookieJar(%O)", jar);
-      // Probably not reached, but...
-      return sprintf(sprintf("%%%c", fmt), jar);
+      return fmt == 'O' && sprintf("CookieJar(%O)", jar);
     }
   }
 
