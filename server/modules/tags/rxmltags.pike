@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.502 2005/12/05 14:31:30 grubba Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.503 2005/12/09 14:17:58 noring Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -916,6 +916,25 @@ class TagDate {
 	  }) {
 	  RXML.run_error("Unsupported date.\n");
 	}
+      }
+      
+      if(args["to-timezone"] && args["to-timezone"] != "local")
+      {
+	if(args->timezone != "GMT")
+	{
+	  if (catch {
+	    // Go from local timezone to GMT.
+	    t += localtime(t)->timezone;
+	  }) {
+	    RXML.run_error("Unsupported date.\n");
+	  }
+	}
+	object tz = Calendar.Timezone[args["to-timezone"]];
+	if(tz)
+	  t -= tz->tz_ux(t)[0];
+	else
+	  RXML.run_error("Unsupported timezone %O for 'to-timezone'.\n",
+			 args["to-timezone"]);
       }
       t = Roxen.time_dequantifier(args, t);
 
@@ -6778,6 +6797,10 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
 <attr name='timezone' value='local|GMT' default='local'>
  <p>Display the time from another timezone.</p>
+</attr>
+
+<attr name='to-timezone' value='local|GMT|Europe/Stockholm|...' default='local'>
+ <p>Display the time in another timezone.</p>
 </attr>
 
 <attr name='years' value='number'>
