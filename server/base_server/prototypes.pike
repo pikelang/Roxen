@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.162 2005/12/09 00:47:39 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.163 2005/12/09 16:15:36 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -952,6 +952,11 @@ class RequestID
   //! Wrapper that calls @[register_vary_callback()] as appropriate when
   //! cookies are accessed.
   //!
+  //! @note
+  //!   Uses the parent pointer to access @[register_vary_callback()] and
+  //!   will thus update the original @[RequestID] object even if copied
+  //!   to a cloned @[RequestID]. This is a feature.
+  //!
   //! @seealso
   //!   @[cookies], @[register_vary_callback()], @[Roxen.get_cookie_callback()]
   static class CookieJar
@@ -1031,10 +1036,12 @@ class RequestID
     }
     static mapping(string:string) `+ (mapping(string:string) other)
     {
+      register_vary_callback("Cookie");
       return jar + other;
     }
     static mapping(string:string) ``+ (mapping(string:string) other)
     {
+      register_vary_callback("Cookie");
       return other + jar;
     }
     static string _sprintf(int fmt)
