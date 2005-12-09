@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.201 2005/12/07 14:49:05 grubba Exp $
+// $Id: Roxen.pmod,v 1.202 2005/12/09 14:26:59 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2141,6 +2141,16 @@ static string low_roxen_encode(string val, string encoding)
    case "utf-8":
      return string_to_utf8(val);
 
+   case "base64":
+   case "base-64":
+   case "b64":
+     return MIME.encode_base64(val);
+
+   case "quotedprintable":
+   case "quoted-printable":
+   case "qp":
+     return MIME.encode_qp(val);
+
    case "http":
      return http_encode_invalids (val);
 
@@ -2227,6 +2237,16 @@ static string low_roxen_encode(string val, string encoding)
 //!   @value "utf8"
 //!   @value "utf-8"
 //!     UTF-8 encoding.
+//!
+//!   @value "base64"
+//!   @value "base-64"
+//!   @value "b64"
+//!     Base-64 MIME encoding.
+//!
+//!   @value "quotedprintable"
+//!   @value "quoted-printable"
+//!   @value "qp"
+//!     Quoted-Printable MIME encoding.
 //!
 //!   @value "http"
 //!     HTTP encoding.
