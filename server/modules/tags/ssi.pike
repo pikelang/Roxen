@@ -5,7 +5,7 @@ inherit "module";
 #include <module.h>
 
 constant thread_safe=1;
-constant cvs_version = "$Id: ssi.pike,v 1.47 2005/12/05 15:21:27 grubba Exp $";
+constant cvs_version = "$Id: ssi.pike,v 1.48 2005/12/09 21:01:14 grubba Exp $";
 
 
 constant module_type = MODULE_TAG;
@@ -384,7 +384,6 @@ string get_var(string var, RequestID id)
     return "Basic";
 
    case "http_cookie": case "cookie":
-     id->register_vary_callback("Cookie");
      return Roxen.html_encode_string(id->misc->cookies || "");
 
    default:

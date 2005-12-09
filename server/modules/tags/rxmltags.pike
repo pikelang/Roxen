@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.503 2005/12/09 14:17:58 noring Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.504 2005/12/09 20:57:59 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1237,8 +1237,6 @@ class TagRemoveCookie {
 //    it harder to make pages that use cookies. But I'll let it be for now.
 //       /Per
 
-      id->register_vary_callback("Cookie",
-				 Roxen.get_cookie_callback(args->name));
 
       if(!id->cookies[args->name])
         RXML.run_error("That cookie does not exist.\n");
@@ -5364,7 +5362,6 @@ class TagIfCookie {
   inherit IfIs;
   constant plugin_name = "cookie";
   string source(RequestID id, string s) {
-    id->register_vary_callback("Cookie", Roxen.get_cookie_callback(s));
     return id->cookies[s];
   }
 }
