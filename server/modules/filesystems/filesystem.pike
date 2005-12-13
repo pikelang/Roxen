@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.149 2005/10/19 13:33:56 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.150 2005/12/13 15:45:54 anders Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -404,7 +404,8 @@ mapping(string:mixed) lock_file(string path, DAVLock lock, RequestID id)
     return
       // FIXME: Sane realm.
       Roxen.http_auth_required("foo",
-			       "<h1>Permission to 'LOCK' files denied</h1>");
+			       "<h1>Permission to 'LOCK' files denied</h1>",
+			       id);
   }
   register_lock(path, lock, id);
   return 0;
@@ -418,7 +419,8 @@ mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID|int(0..0)
     return
       // FIXME: Sane realm.
       Roxen.http_auth_required("foo",
-			       "<h1>Permission to 'UNLOCK' files denied</h1>");
+			       "<h1>Permission to 'UNLOCK' files denied</h1>",
+			       id);
   }
   unregister_lock(path, lock, id);
   return 0;
@@ -447,7 +449,7 @@ static mapping(string:mixed)|int(0..1) write_access(string path,
     return
       Roxen.http_auth_required("foo",
 			       sprintf("<h1>Permission to '%s' denied</h1>",
-				       id->method));
+				       id->method), id);
   }
   TRACE_LEAVE("Fall back to the default write access checks.");
   return ::write_access(path, recursive, id);

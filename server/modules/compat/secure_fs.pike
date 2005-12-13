@@ -5,7 +5,7 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.29 2004/06/30 16:58:51 mast Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.30 2005/12/13 15:45:54 anders Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -184,7 +184,7 @@ mixed not_allowed(string f, object id)
 					      id->conf->query("MyWorldLocation")})));
 
 	   } else {
-	     return Roxen.http_auth_required("user");
+	     return Roxen.http_auth_required("user", 0, id);
 	   }
 	 }
 	 foreach(level[2]/",", uname) {
@@ -203,7 +203,7 @@ mixed not_allowed(string f, object id)
 				     ({id->not_query,
 				       id->conf->query("MyWorldLocation")})));
     } else {
-      return Roxen.http_auth_required("user");
+      return Roxen.http_auth_required("user", 0 , id);
     }
   }
   return  1;

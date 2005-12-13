@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.192 2005/10/27 17:40:25 grubba Exp $
+// $Id: Roxen.pmod,v 1.193 2005/12/13 15:45:53 anders Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -813,7 +813,8 @@ mapping http_digest_required(mapping(string:string) challenge,
     + ([ "extra_heads":([ "WWW-Authenticate":"Digest "+digest_challenge,]),]);
 }
 
-mapping http_auth_required(string realm, string|void message)
+mapping http_auth_required(string realm, string|void message,
+			   void|RequestID id)
 //! Generates a result mapping that will instruct the web browser that
 //! the user needs to authorize himself before being allowed access.
 //! `realm' is the name of the realm on the server, which will
@@ -827,9 +828,13 @@ mapping http_auth_required(string realm, string|void message)
 //! with the header <tt>WWW-Authenticate: basic realm="`realm'"</tt>.
 //! For more info, see RFC 2617.
 {
+  HTTP_WERR("Auth required ("+realm+")");
+  if (id) {
+    return id->conf->auth_failed_file( id, message )
+      + ([ "extra_heads":([ "WWW-Authenticate":"basic realm=\""+realm+"\"",]),]);
+  }
   if(!message)
     message = "<h1>Authentication failed.</h1>";
-  HTTP_WERR("Auth required ("+realm+")");
   return http_low_answer(401, message)
     + ([ "extra_heads":([ "WWW-Authenticate":"basic realm=\""+realm+"\"",]),]);
 }
