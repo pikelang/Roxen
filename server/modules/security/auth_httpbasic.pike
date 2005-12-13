@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2001 - 2004, Roxen IS.
 
 constant cvs_version =
-  "$Id: auth_httpbasic.pike,v 1.10 2004/06/30 16:59:22 mast Exp $";
+  "$Id: auth_httpbasic.pike,v 1.11 2005/12/13 15:46:00 anders Exp $";
 inherit AuthModule;
 inherit "module";
 
@@ -106,5 +106,5 @@ mapping authenticate_throw( RequestID id, string realm, UserDB db )
 //! configuration are searched in order, then the configuration user
 //! database.
 {
-  return Roxen.http_auth_required( realm );
+  return Roxen.http_auth_required( realm, 0, id );
 }

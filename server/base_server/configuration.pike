@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.599 2005/12/05 13:48:52 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.600 2005/12/13 15:45:58 anders Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2498,6 +2498,15 @@ mapping error_file( RequestID id )
   return res;
 }
 
+mapping auth_failed_file( RequestID id, string message )
+{
+  string data = query("ZAuthFailed");
+  NOCACHE();
+  mapping res = Roxen.http_rxml_answer( data, id, 0, "text/html" );
+  res->error = 401;
+  return res;
+}
+
 // this is not as trivial as it sounds. Consider gtext. :-)
 array open_file(string fname, string mode, RequestID id, void|int internal_get,
 		void|int recurse_count)
@@ -4219,6 +4228,16 @@ also set 'URLs'."));
 		 " these files will be searched for, in this order:</p><br /> "
 		 " /foo/bar/404.inc, /foo/404.inc and /404.inc." ) );
 
+  defvar("401-files", ({ "401.inc" }),
+	 DLOCALE(0, "Authentication failed message override files"),
+	 TYPE_STRING_LIST|VAR_PUBLIC,
+	 DLOCALE(0,
+		 "With each authentication required response this file is "
+		 "sent and displayed if the authentication fails or the user "
+		 "choose not to authenticate at all.<p>\n"
+		 "The file is searched for in parent directories in the same "
+		 "manner as the no such file message override files.") );
+
   defvar("license",
 	 License.
 	 LicenseVariable("../license/", VAR_NO_DEFAULT,
@@ -4346,6 +4365,127 @@ also set 'URLs'."));
 	 TYPE_TEXT_FIELD|VAR_PUBLIC,
 	 DLOCALE(59, "What to return when there is no resource or file "
 		 "available at a certain location."));
+
+
+  class AuthFailedOverride
+  {
+    // compatibility with old config-files.
+    inherit Variable.Variable;
+
+    int check_visibility( RequestID id, int more_mode,
+			  int expert_mode, int devel_mode,
+			  int initial, int|void variable_in_cfif )
+    {
+      return 0;
+    }
+
+    void set( string newval )
+    {
+      if( search(newval,"emit source=values") == -1 )
+	variables[ "401-message" ]->set( newval );
+    }
+
+    void create()
+    {
+      ::create(
+#"<nooutput><emit source=values scope=ef variable='modvar.site.401-files'>
+   <set variable='var.base' value=''/>
+   <emit source='path'>
+     <append variable='var.base' value='/&_.name;'/>
+     <set variable='var.401' value='&var.base;/&ef.value;'/>
+     <if exists='&var.401;'>
+       <set variable='var.errfile' from='var.401'/>
+     </if>
+   </emit>
+</emit>
+</nooutput><if variable='var.errfile'><eval><insert file='&var.errfile;'/></eval></if><else><eval>&modvar.site.401-message:none;</eval></else>", 0, 0, 0 );
+    }
+  };
+  
+  defvar("ZAuthFailed", AuthFailedOverride() );
+
+  defvar("401-message", #"<html>
+<head>
+  <title>401 - Authentication Failed</title>
+  <style>
+    .msg  { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      12px;
+            line-height:    160% }
+    .url  { font-family:    georgia, times, serif;
+            font-size:      18px;
+            padding-top:    6px;
+            padding-bottom: 20px }
+    .info { font-family:    verdana, helvetica, arial, sans-serif;
+            font-size:      10px;
+            color:          #999999 }
+  </style>
+</head>
+<body bgcolor='#f2f1eb' vlink='#2331d1' alink='#f6f6ff'
+      leftmargin='0' rightmargin='0' topmargin='0' bottommargin='0'
+      style='margin: 0; padding: 0'>
+
+<table border='0' cellspacing='0' cellpadding='0' height='99%'>
+  <colgroup>
+    <col span='3' />
+    <col width='356' />
+    <col width='0*' />
+  </colgroup>
+  <tr>
+    <td><img src='/internal-roxen-unit' height='30' /></td>
+  </tr><tr>
+    <td></td>
+    <td><img src='/internal-roxen-401' /></td>
+    <td><img src='/internal-roxen-unit' width='30' /></td>
+    <td valign='bottom'><img src='/internal-roxen-authentication-failed' /></td>
+    <td></td>
+  </tr><tr>
+    <td><img src='/internal-roxen-unit' height='30' /></td>
+  </tr><tr>
+    <td colspan='3'></td>
+    <td colspan='2'>
+      <div class='msg'>Unable to retrieve</div>
+      <div class='url'>&page.virtfile;</div>
+    </td>
+  </tr><tr>
+    <td colspan='3'></td>
+    <td width='356'>
+      <div class='msg'>
+        If you feel this is a configuration error, please contact
+        the administrators of this server or the author of the
+        <if referrer=''>
+          <a href='&client.referrer;'>referring page</a>.
+        </if><else>
+          referring page.
+        </else>
+      </div>
+    </td>
+    <td>&nbsp;</td>
+  </tr><tr valign='bottom' height='100%'>
+    <td colspan='3'></td>
+    <td>
+      <img src='/internal-roxen-unit' height='20' />
+      <table border='0' cellspacing='0' cellpadding='0'>
+        <tr>
+          <td><img src='/internal-roxen-roxen-mini.gif' /></td>
+          <td class='info'>
+            &nbsp;&nbsp;<b>&roxen.product-name;</b> <font color='#ffbe00'>|</font>
+            version &roxen.dist-version;
+          </td>
+        </tr>
+      </table>
+      <img src='/internal-roxen-unit' height='15' />
+    </td>
+    <td></td>
+  </tr>
+</table>
+
+</body>
+</html>",
+	 DLOCALE(0, "Authentication failed message"),
+	 TYPE_TEXT_FIELD|VAR_PUBLIC,
+	 DLOCALE(0, "What to return when an authentication attempt failed."));
+
+
 
 #ifdef SNMP_AGENT
   // SNMP stuffs
