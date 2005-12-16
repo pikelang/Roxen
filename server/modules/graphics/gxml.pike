@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.32 2004/06/30 16:59:04 mast Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.33 2005/12/16 17:50:52 jonasw Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -27,7 +27,7 @@ void flush_cache() {
 
 mapping(string:function) query_action_buttons()
 {
-  return ([ _(3,"Clear cache"):flush_cache ]);
+  return ([ _(3,"Clear Cache"):flush_cache ]);
 }
 
 string status() {

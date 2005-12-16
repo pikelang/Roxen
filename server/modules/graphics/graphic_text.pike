@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.297 2005/05/19 14:46:52 stewa Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.298 2005/12/16 17:50:52 jonasw Exp $";
 
 #include <module.h>
 inherit "module";
@@ -585,7 +585,7 @@ string status() {
 }
 
 mapping(string:function) query_action_buttons() {
-  return ([ "Clear cache":flush_cache ]);
+  return ([ "Clear Cache":flush_cache ]);
 }
 
 void flush_cache() {

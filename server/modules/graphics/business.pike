@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.149 2005/09/28 12:29:22 jonasw Exp $";
+constant cvs_version = "$Id: business.pike,v 1.150 2005/12/16 17:50:52 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -76,7 +76,7 @@ string status() {
 }
 
 mapping(string:function) query_action_buttons() {
-  return ([ "Clear cache":flush_cache ]);
+  return ([ "Clear Cache":flush_cache ]);
 }
 
 void flush_cache() {

@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.113 2005/10/24 09:50:16 anders Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.114 2005/12/16 17:50:52 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -207,7 +207,7 @@ string status() {
 }
 
 mapping(string:function) query_action_buttons() {
-  return ([ "Clear cache":flush_cache ]);
+  return ([ "Clear Cache":flush_cache ]);
 }
 
 void flush_cache() {
