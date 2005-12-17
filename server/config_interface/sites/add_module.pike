@@ -69,6 +69,9 @@ string site_url( RequestID id, string site )
 
 string page_base( RequestID id, string content, int|void noform )
 {
+  string method =
+    id->variables->method ||
+    replace(config_setting( "addmodulemethod" ), " ", "_");
   return sprintf( "<use file='/template' />\n"
                   "<tmpl title=' %s'%s>"
                   "<topmenu base='/' selected='sites'/>\n"
@@ -77,18 +80,44 @@ string page_base( RequestID id, string content, int|void noform )
                   "<st-tabs></st-tabs>"
                   "<st-page>"
                   "<if not='1' variable='form.initial'>"
+		  "<table border='0' cellspacing='4' cellpadding='0'>"
+		  "<tr><td>%s:</td><td>"
+		  "<form action='' style='margin: 0'>"
+		  "<input type='hidden' name='config' value='&form.config;'>"
+		  "<default variable='form.method' value='%s'>"
+		  "<select name='method' onchange='submit()'>"
+		  "<option value='normal'>%s</option>"
+		  "<option value='fast'>%s</option>"
+		  "<option value='faster'>%s</option>"
+		  "<option value='compact'>%s</option>"
+		  "<option value='really_compact'>%s</option>"
+		  "</select>"
+		  "</default>"
+		  "</form>"
+		  "</td><td></td>&nbsp;&nbsp;<td>"
                   "<gbutton href='add_module.pike?config=&form.config:http;"
-                  "&reload_module_list=yes' "
-		  "> %s </gbutton> "
+                  "&reload_module_list=yes&method=%s' "
+		  "> %s </gbutton>"
+		  "</td><td>"
                   "<gbutton href='site.html/&form.config;/' "
 		  "> %s </gbutton>"
+		  "</td></tr></table>"
                   "<p>\n</if>%s\n</p>\n"
                   "</st-page></subtablist></td></tr></table>"
                   "</cv-split></content></tmpl>", 
 		  LOCALE(258,"Add module"),
 		  noform?" noform='noform'":"",
+		  LOCALE(0, "List type"),
+		  method,
+		  LOCALE(0, "Normal"),
+		  LOCALE(0, "Fast"),
+		  LOCALE(0, "Faster"),
+		  LOCALE(0, "Compact"),
+		  LOCALE(0, "Really Compact"),
+		  method,
                   LOCALE(272,"Reload module list"),
-		  LOCALE(202,"Cancel"), content );
+		  LOCALE(202,"Cancel"),
+		  content );
 }
 
 
@@ -177,8 +206,8 @@ string pafeaw( string errors, string warnings, array(ModuleInfo) locked_modules)
 #define RELOAD(X) sprintf("<gbutton "                                         \
 			  "img-align='middle' "                               \
                           "href='add_module.pike?config=&form.config:http;"   \
-                          "&random=%d&only=%s&reload_module_list=yes#"        \
-                          "errors_and_warnings'> %s </gbutton>",              \
+                          "&random=%d&only=%s&reload_module_list=yes"	      \
+			  "#errors_and_warnings'> %s </gbutton>",   	      \
                           random(4711111),                                    \
                           (X),                                                \
                           LOCALE(253, "Reload"))
@@ -369,6 +398,9 @@ array(int|string) class_visible_normal( string c, string d, int size,
 					RequestID id )
 {
   int x;
+  string method =
+    id->variables->method ||
+    replace(config_setting( "addmodulemethod" ), " ", "_");
   string header = ("<tr><td colspan='2'><table width='100%' "
                    "cellspacing='0' border='0' cellpadding='3' "
                    "bgcolor='&usr.content-titlebg;'><tr><td>");
@@ -377,7 +409,7 @@ array(int|string) class_visible_normal( string c, string d, int size,
     header+=("<a name='"+Roxen.html_encode_string(c)+
 	     "'></a><gbutton "
 	     "href='add_module.pike?config=&form.config;"
-	     "#"+Roxen.http_encode_url(c)+"' > "+
+	     "&method=" + method + "#"+Roxen.http_encode_url(c)+"' > "+
 	     LOCALE(168, "Hide")+" </gbutton>");
     x=1;
   }
@@ -385,6 +417,7 @@ array(int|string) class_visible_normal( string c, string d, int size,
     header+=("<a name='"+Roxen.html_encode_string(c)+
 	     "'></a><gbutton "
 	     "href='add_module.pike?config=&form.config;"
+	     "&method=" + method +
 	     "&unfolded="+Roxen.http_encode_url(c)+
 	     "#"+Roxen.http_encode_url(c)+"' > "+
 	     LOCALE(267, "View")+" </gbutton>");
@@ -447,6 +480,9 @@ array(int|string) class_visible_faster( string c, string d, int size,
 					RequestID id )
 {
   int x;
+  string method =
+    id->variables->method ||
+    replace(config_setting( "addmodulemethod" ), " ", "_");
   string header = ("<tr><td colspan='2'><table width='100%' cellspacing='0' "
                    "border='0' cellpadding='3' bgcolor='&usr.content-titlebg;'>"
                    "<tr><td>");
@@ -462,6 +498,7 @@ array(int|string) class_visible_faster( string c, string d, int size,
     header+=("<a name='"+Roxen.html_encode_string(c)+
 	     "'></a><gbutton "
 	     "href='add_module.pike?config=&form.config;"
+	     "&method=" + method +
 	     "&unfolded="+Roxen.http_encode_url(c)+
 	     "#"+Roxen.http_encode_url(c)+"' > "+
 	     LOCALE(267, "View")+" </gbutton>");
@@ -753,5 +790,8 @@ mixed parse( RequestID id )
   if( !conf->inited )
     conf->enable_all_modules();
 
-  return this_object()["page_"+replace(config_setting( "addmodulemethod" )," ","_")]( id );
+  string method =
+    id->variables->method ||
+    replace(config_setting( "addmodulemethod" ), " ", "_");
+  return this_object()["page_" + method]( id );
 }
