@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.89 2005/02/11 15:26:01 mast Exp $
+// $Id: module.pmod,v 1.90 2005/12/17 18:41:43 jonasw Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1162,7 +1162,7 @@ class MultipleChoice
     ::create( default_value, _flags, std_name, std_doc );
     if( mappingp( choices ) ) {
       set_translation_table( choices );
-      set_choice_list( indices(choices) );
+      set_choice_list( sort(indices(choices)) );
     } else
       set_choice_list( choices );
   }
