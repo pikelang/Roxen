@@ -8,6 +8,11 @@ tt, pre, textarea
 	font-family: monospace;
 }
 
+.dimtext
+{
+	color: #aaa;
+}
+
 a { text-decoration: none; color: #2331d1 }
 a:hover { text-decoration: underline; color: #6d7cff }
 
