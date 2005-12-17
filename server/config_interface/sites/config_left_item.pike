@@ -396,7 +396,7 @@ string selected_item( string q, Configuration c, RequestID id,
 		 "href='%sadd_module.pike?config=%s'> %s </gbutton>",
 		 pre_site_url,
 		 Roxen.http_encode_url( c->name ),
-		 LOCALE(258, "Add module"))+
+		 LOCALE(258, "Add Module"))+
       sprintf("<br />\n"
 	      "<img src='/internal-roxen-unit' width=1 height=1/><br />"
 	      "<gbutton frame-image='&usr.left-buttonframe;' "
@@ -405,7 +405,7 @@ string selected_item( string q, Configuration c, RequestID id,
 	      "href='%sdrop_module.pike?config=%s'> %s </gbutton><br />\n",
 	      pre_site_url,
 	      Roxen.http_encode_url( c->name ),
-	      LOCALE(259, "Drop module"));
+	      LOCALE(259, "Drop Module"));
   }
   return pre;
 }
