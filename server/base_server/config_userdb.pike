@@ -362,21 +362,24 @@ class ConfigurationSettings
 		   "configuration interface"),
 	    ({ -2, -1, 0, 1, 2, }) );
 
+    mixed listmode_var =
     defvar( "modulelistmode", "uf",
 	    LOCALE(14,"Module list mode"),
 	    TYPE_STRING_LIST,
 	    LOCALE(15,"The module list mode. One of "
 		   "<dl>"
 		   "<dt>Folded</dt><dd>Modules in the same group are folded</dd>"
-		   "<dt>UnFolded</dt><dd>Like the 'old' Roxen 2.1 list</dd>"
-		   "<dt>JavaScript Popup</dt><dd>Like Folded, but when you "
+		   "<dt>Folded with JavaScript Popup</dt><dd>Like Folded, but when you "
 		   "move the mouse over a folded group, a menu with the folded "
-		   "modules will popup</dd></dl>"),
+		   "modules will popup</dd>"
+		   "<dt>Unfolded</dt><dd>Like the 'old' Roxen 2.1 list</dd>"
+		   "</dl>"),
 	    ([
-	      "js": LOCALE(17,"Folded with javascript popup"),
+	      "js": LOCALE(17,"Folded with JavaScript popup"),
 	      "fl": LOCALE(122,"Folded"),
-	      "uf": LOCALE(123,"Unfolded (old style)"),
+	      "uf": LOCALE(123,"Unfolded (Old style)"),
 	    ]) );
+    listmode_var->set_choice_list( ({ "fl", "js", "uf" }) );
 
     defvar( "moduletab", "Status",
 	    LOCALE(85,"Default module tab"),
@@ -414,15 +417,20 @@ class ConfigurationSettings
 // 	      "iso646-se",
             }));
 
+    mixed sort_var =
     defvar( "sortorder", "as defined",
 	    LOCALE(236, "Default variable sort order"), TYPE_STRING_LIST,
 	    LOCALE(237, "The default order variables are sorted in" ),
 	    ([
-	      "alphabetical" : LOCALE(238,"alphabetical"),
-	      "as defined"   : LOCALE(239,"as defined"),
-	      "changed/alphabetical" : LOCALE(240,"alphabetical, changed first"),
-	      "changed/as defined"   : LOCALE(241,"as defined, changed first"),
+	      "alphabetical" : LOCALE(238,"Alphabetical"),
+	      "as defined"   : LOCALE(239,"As defined"),
+	      "changed/alphabetical" : LOCALE(240,"Alphabetical, changed first"),
+	      "changed/as defined"   : LOCALE(241,"As defined, changed first"),
 	    ]) );
+    sort_var->set_choice_list( ({ "as defined",
+				  "changed/as defined",
+				  "alphabetical",
+				  "changed/alphabetical" }) );
 
     defvar( "changemark", "color",
 	    LOCALE(242, "Changed variables are highlighted"),
@@ -486,6 +494,7 @@ class ConfigurationSettings
 			       "type, otherwise all tasks will be listed on "
 			       "one page") );
 
+    mixed method_var =
     defvar( "addmodulemethod", "normal", 
 	    LOCALE(189, "Add/Delete module page type"),
             TYPE_STRING_LIST, 
@@ -501,9 +510,13 @@ class ConfigurationSettings
 		   "addition/deletion of multiple modules at once."
 		   "</dd>\n<dt>Really compact</dt><dd>"
 		   "Like Compact, but no module classes.</dd>\n</dl>"),
-	    ([ "normal":LOCALE(280, "Normal"), "fast":LOCALE(282, "Fast"),
-	       "faster":LOCALE(284, "Faster"), "compact":LOCALE(286, "Compact"),
-	       "really compact":LOCALE(288, "Really compact")  ]));
+	    ([ "normal"         : LOCALE(280, "Normal"),
+	       "fast"           : LOCALE(282, "Fast"),
+	       "faster"         : LOCALE(284, "Faster"),
+	       "compact"        : LOCALE(286, "Compact"),
+	       "really compact" : LOCALE(288, "Really compact")  ]));
+    method_var->set_choice_list( ({ "normal", "fast", "faster",
+				    "compact", "really compact" }) );
 
     restore( );
   }
