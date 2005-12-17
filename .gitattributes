@@ -19,6 +19,7 @@
 *.jar binary
 *.jpeg binary
 *.jpg binary
+/server/config_interface/sites/find_module.js -text -crlf
 *.mc eol=crlf
 /server/demo_certificate.pem -text -crlf
 /server/modules/proxies/gopher.pike -text -crlf
@@ -111,6 +112,7 @@ worldmap binary
 /server/config_interface/actions/restart.pike foreign_ident
 /server/config_interface/actions/ssl_common.pike foreign_ident
 /server/config_interface/actions/upload_license.pike foreign_ident
+/server/config_interface/sites/add_module.pike foreign_ident
 /server/config_interface/sites/site_content.pike foreign_ident
 /server/config_interface/template foreign_ident
 /server/config_interface/user_form.pike foreign_ident

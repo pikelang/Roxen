@@ -1,3 +1,5 @@
+// $Id: add_module.pike,v 1.80 2005/12/17 22:51:57 jonasw Exp $
+
 #include <config_interface.h>
 #include <module.h>
 #include <module_constants.h>
@@ -67,11 +69,45 @@ string site_url( RequestID id, string site )
   return "/sites/site.html/"+site+"/";
 }
 
-string page_base( RequestID id, string content, int|void noform )
+string get_method(RequestID id)
 {
+  //  There really is no difference between Normal and Fast
   string method =
     id->variables->method ||
     replace(config_setting( "addmodulemethod" ), " ", "_");
+  if (has_value(method, "\0"))
+    method = (method / "\0")[0];
+  if (method == "fast")
+    method = "normal";
+  id->variables->method = method;
+  return method;
+}
+
+string page_base( RequestID id, string content, int|void noform,
+		  int|void show_search_form)
+{
+  string method = get_method(id);
+
+  string search_form =
+    "<script language='javascript' src='find_module.js'></script>"
+    "<script language='javascript'>"
+    "  query_config = '&form.config;';\n"
+    "  query_method = '" + method + "';\n"
+    "</script>"
+    "<table cellspacing='2' cellpadding='0' border='0'>"
+    "<tr><td>Find:&nbsp;</td>"
+    "<td>"
+    "<form style='margin: 0' onsubmit='return false'>"
+    "<input type='search' size='30' name='mod_query' id='mod_query' "
+    "       onkeydown='return query_update_results(event);'"
+    "       onkeypress='return query_update_results(event);'>"
+    "</form>"
+    "</td>"
+    "<td><img src='/internal-roxen-spinner-white'"
+    "         id='mod_spinner' style='visibility: hidden'></td>"
+    "</tr>"
+    "</table>";
+
   return sprintf( "<use file='/template' />\n"
                   "<tmpl title=' %s'%s>"
                   "<topmenu base='/' selected='sites'/>\n"
@@ -80,21 +116,26 @@ string page_base( RequestID id, string content, int|void noform )
                   "<st-tabs></st-tabs>"
                   "<st-page>"
                   "<if not='1' variable='form.initial'>"
-		  "<table border='0' cellspacing='4' cellpadding='0'>"
-		  "<tr><td>%s:</td><td>"
+		  "<table width='100%%' border='0' cellspacing='4' "
+		  "       cellpadding='0'>"
+		  "<tr><td nowrap='nowrap'>%s:</td><td>"
 		  "<form action='' style='margin: 0'>"
 		  "<input type='hidden' name='config' value='&form.config;'>"
 		  "<default variable='form.method' value='%s'>"
 		  "<select name='method' onchange='submit()'>"
 		  "<option value='normal'>%s</option>"
-		  "<option value='fast'>%s</option>"
+		  //  "<option value='fast'>%s</option>"
 		  "<option value='faster'>%s</option>"
 		  "<option value='compact'>%s</option>"
 		  "<option value='really_compact'>%s</option>"
 		  "</select>"
 		  "</default>"
 		  "</form>"
-		  "</td><td></td>&nbsp;&nbsp;<td>"
+		  "</td>"
+		  "<td>&nbsp;&nbsp;</td>"
+		  "<td width='100%%' nowrap='nowrap'>%s</td>"  // search form
+		  "<td>&nbsp;&nbsp;</td>"
+		  "<td align='right'>"
                   "<gbutton href='add_module.pike?config=&form.config:http;"
                   "&reload_module_list=yes&method=%s' "
 		  "> %s </gbutton>"
@@ -105,19 +146,20 @@ string page_base( RequestID id, string content, int|void noform )
                   "<p>\n</if>%s\n</p>\n"
                   "</st-page></subtablist></td></tr></table>"
                   "</cv-split></content></tmpl>", 
-		  LOCALE(258,"Add module"),
+		  LOCALE(258,"Add Module"),
 		  noform?" noform='noform'":"",
-		  LOCALE(0, "List type"),
+		  LOCALE(0, "List Type"),
 		  method,
 		  LOCALE(0, "Normal"),
-		  LOCALE(0, "Fast"),
+		  //  LOCALE(0, "Fast"),
 		  LOCALE(0, "Faster"),
 		  LOCALE(0, "Compact"),
 		  LOCALE(0, "Really Compact"),
+		  (show_search_form && search_form) || "",
 		  method,
-                  LOCALE(272,"Reload module list"),
+                  LOCALE(272,"Reload Module List"),
 		  LOCALE(202,"Cancel"),
-		  content );
+		  content);
 }
 
 
@@ -294,6 +336,26 @@ array(string) get_module_list( function describe_module,
       classes[r[0]]->modules += ({ mods[i] });
   }
 
+  multiset(ModuleInfo) search_modules;
+  if (string mod_query = id->variables->mod_query) {
+    array(string) mod_query_words = (lower_case(mod_query) / " ") - ({ "" });
+    search_modules = (< >);
+    foreach(mods, ModuleInfo m) {
+      string compare =
+	lower_case(((string) m->get_name() || "") + "\0" +
+		   m->sname + "\0" +
+		   m->filename + "\0" +
+		   Roxen.html_decode_string((string) m->get_description()||""));
+    search_miss:
+      {
+	foreach(mod_query_words, string w)
+	  if (!has_value(compare, w))
+	    break search_miss;
+	search_modules[m] = 1;
+      }
+    }
+  }
+
   License.Key license_key = conf->getvar("license")->get_key();
   array(RoxenModule) locked_modules = ({});
   
@@ -303,7 +365,9 @@ array(string) get_module_list( function describe_module,
     if( c == "" )
       continue;
     if( (r = class_visible( c, classes[c]->doc, sizeof(classes[c]->modules), id )) &&
-	r[0] )
+	r[0] &&
+	(!search_modules ||
+	 sizeof(classes[c]->modules & indices(search_modules))))
     {
       res += r[1];
       array m = classes[c]->modules;
@@ -314,6 +378,8 @@ array(string) get_module_list( function describe_module,
         if( q->get_description() == "Undocumented" &&
             q->type == 0 )
           continue;
+	if (search_modules && !search_modules[q])
+	  continue;
         object b = module_nomore(q->sname, q, conf);
 	if( !b && q->locked && (!license_key || !q->unlocked(license_key)) )
 	{
@@ -322,8 +388,10 @@ array(string) get_module_list( function describe_module,
 	}
         res += describe_module( q, b );
       }
-    } else
-      res += r[1];
+    } else {
+      if (!search_modules)
+	res += r[1];
+    }
   }
   master()->set_inhibit_compile_errors( 0 );
   return ({ res, pafeaw( ec->get(), ec->get_warnings(), locked_modules) });
@@ -355,14 +423,15 @@ function describe_module_normal( int image )
      <table width='100%%'>
       <tr>
        <td><font size='+2'>%s</font></td>
-       <td align='right'>(%s) %s</td>
+       <td align='right'><span class='dimtext'>(%s)</span> %s</td>
       </tr>
      </table>
      </td>
    </tr>
    <tr>
      <td valign='top'>
-       <form method='post' action='add_module.pike'>
+       <form method='post' action='add_module.pike' 
+	     style='margin: 0 10px 0 0'>
          <roxen-automatic-charset-variable/>
          <input type='hidden' name='module_to_add' value='%s'>
          <input type='hidden' name='config' value='&form.config;'>
@@ -370,10 +439,8 @@ function describe_module_normal( int image )
        </form>
      </td>
      <td valign='top'>
-        %s
-       <p>
-         %s
-       </p>
+       %s
+       <p class='dimtext'>%s</p>
     </td>
   </tr>
 ",
@@ -398,29 +465,29 @@ array(int|string) class_visible_normal( string c, string d, int size,
 					RequestID id )
 {
   int x;
-  string method =
-    id->variables->method ||
-    replace(config_setting( "addmodulemethod" ), " ", "_");
+  string method = get_method(id);
   string header = ("<tr><td colspan='2'><table width='100%' "
                    "cellspacing='0' border='0' cellpadding='3' "
-                   "bgcolor='&usr.content-titlebg;'><tr><td>");
+                   "bgcolor='&usr.content-titlebg;'><tr><td valign='top'>");
 
-  if( id->variables->unfolded == c ) {
+  if (id->variables->mod_query) {
+    x = 1;
+  } else if( id->variables->unfolded == c) {
     header+=("<a name='"+Roxen.html_encode_string(c)+
-	     "'></a><gbutton "
+	     "'></a><gbutton hspace='5' "
 	     "href='add_module.pike?config=&form.config;"
 	     "&method=" + method + "#"+Roxen.http_encode_url(c)+"' > "+
 	     LOCALE(168, "Hide")+" </gbutton>");
     x=1;
-  }
-  else
+  } else {
     header+=("<a name='"+Roxen.html_encode_string(c)+
-	     "'></a><gbutton "
+	     "'></a><gbutton hspace='5' "
 	     "href='add_module.pike?config=&form.config;"
 	     "&method=" + method +
 	     "&unfolded="+Roxen.http_encode_url(c)+
 	     "#"+Roxen.http_encode_url(c)+"' > "+
 	     LOCALE(267, "View")+" </gbutton>");
+  }
 
   header+=("</td><td width='100%'>"
 	   "<font color='&usr.content-titlefg;' size='+2'>"+c+"</font>"
@@ -429,15 +496,37 @@ array(int|string) class_visible_normal( string c, string d, int size,
   return ({ x, header });
 }
 
-string page_normal( RequestID id, int|void noimage )
+
+string page_normal_low(RequestID id, int|void noimage)
 {
-  string content = "";
-  content += "<table>";
   string desc, err;
   [desc,err] = get_module_list( describe_module_normal(!noimage),
                                 class_visible_normal, id );
-  content += (desc+"</table>"+err);
-  return page_base( id, content, 1 );
+  return
+    "<table cellspacing='3' cellpadding='0' border='0' width='100%'>" +
+    desc +
+    "</table>" +
+    err;
+}
+
+string page_normal_search(RequestID id, int|void noimage)
+{
+  return
+    "<use file='/template-insert' />\n"
+    "<tmpl>" +
+    page_normal_low(id, noimage) +
+    "</tmpl>";
+}
+
+string page_normal( RequestID id, int|void noimage )
+{
+  string content =
+    "<div id='mod_results' style='display: none'>"
+    "</div>"
+    "<div id='mod_default'>" +
+    page_normal_low(id, noimage) +
+    "</div>";
+  return page_base( id, content, 1, 1);
 }
 
 string page_fast( RequestID id )
@@ -453,10 +542,12 @@ return sprintf(
    #"
     <tr><td colspan='2'><table width='100%%'>
         <td><font size='+2'>%s</font></td>
-        <td align='right'>(%s) %s</td></table></td></tr>
-    <tr><td valign='top'><select multiple='multiple' name='module_to_add'>
+        <td align='right'><span class='dimtext'>(%s)</span> %s</td></table>
+        </td></tr>
+    <tr><td valign='top'><select multiple='multiple' size='1'
+                                 name='module_to_add'>
                        <option value='%s'>%s</option></select>
-        </td><td valign='top'>%s<p>%s</p></td>
+        </td><td valign='top'>%s<p class='dimtext'>%s</p></td>
     </tr>
 ",
    //Roxen.html_encode_string(strip_leading(module->get_name())),
@@ -480,23 +571,28 @@ array(int|string) class_visible_faster( string c, string d, int size,
 					RequestID id )
 {
   int x;
-  string method =
-    id->variables->method ||
-    replace(config_setting( "addmodulemethod" ), " ", "_");
+  string method = get_method(id);
   string header = ("<tr><td colspan='2'><table width='100%' cellspacing='0' "
                    "border='0' cellpadding='3' bgcolor='&usr.content-titlebg;'>"
-                   "<tr><td>");
+                   "<tr><td nowrap='nowrap' valign='top'>");
 
-  if( id->variables->unfolded == c ) {
+  if (id->variables->mod_query) {
+    header+=("<gbutton hspace='5' dim='1'> "+LOCALE(267, "View")+
+	     " </gbutton><br>"
+	     "<submit-gbutton hspace='5' vspace='2'> "+LOCALE(0, "Add Modules")+
+	     " </submit-gbutton>");
+    x = 1;
+  } else if( id->variables->unfolded == c ) {
     header+=("<a name='"+Roxen.html_encode_string(c)+
-	     "'></a><gbutton dim='1'> "+LOCALE(267, "View")+" </gbutton>"
-	     "<tr><td><submit-gbutton> "+LOCALE(251, "Add Module")+
-	     " </submit-gbutton></td></tr>");
+	     "'></a><gbutton hspace='5' dim='1'> "+LOCALE(267, "View")+
+	     " </gbutton><br>"
+	     "<submit-gbutton hspace='5' vspace='2'> "+LOCALE(0, "Add Modules")+
+	     " </submit-gbutton>");
     x=1;
   }
   else
     header+=("<a name='"+Roxen.html_encode_string(c)+
-	     "'></a><gbutton "
+	     "'></a><gbutton hspace='5' "
 	     "href='add_module.pike?config=&form.config;"
 	     "&method=" + method +
 	     "&unfolded="+Roxen.http_encode_url(c)+
@@ -510,17 +606,39 @@ array(int|string) class_visible_faster( string c, string d, int size,
   return ({ x, header });
 }
 
-string page_faster( RequestID id )
+string page_faster_low(RequestID id)
 {
-  string content = "";
-  content += "<form method='post' action='add_module.pike'>"
-             "<input type='hidden' name='config' value='&form.config;'>"
-             "<table>";
   string desc, err;
   [desc,err] = get_module_list( describe_module_faster,
                                 class_visible_faster, id );
-  content += (desc+"</table></form>"+err);
-  return page_base( id, content );
+  return
+    "<form method='post' action='add_module.pike'>"
+    "<input type='hidden' name='config' value='&form.config;'>"
+    "<table cellspacing='3' cellpadding='0' border='0' width='100%'>" +
+    desc +
+    "</table>"
+    "</form>" +
+    err;
+}
+
+string page_faster_search(RequestID id)
+{
+  return
+    "<use file='/template-insert' />\n"
+    "<tmpl>" +
+    page_faster_low(id) +
+    "</tmpl>";
+}
+
+string page_faster( RequestID id )
+{
+  string content =
+    "<div id='mod_results' style='display: none'>"
+    "</div>"
+    "<div id='mod_default'>" +
+    page_faster_low(id) +
+    "</div>";
+  return page_base( id, content, 0, 1);
 }
 
 int first;
@@ -530,8 +648,8 @@ array(int|string) class_visible_compact( string c, string d, int size,
 {
   string res="";
   if(first++)
-    res = "</select><br /><submit-gbutton> "+LOCALE(251, "Add Module")+
-      " </submit-gbutton> ";
+    res = "</select><br /><submit-gbutton vspace='3'> "+
+      LOCALE(0, "Add Modules")+ " </submit-gbutton> ";
   res += "<p><a name='"+Roxen.html_encode_string(c)+
     "'></a><font size='+2'>"+c+"</font><br />"+d+"<p>"
     "<select size='"+size+"' multiple name='module_to_add' class='add-module-select'>";
@@ -561,8 +679,8 @@ string page_compact( RequestID id )
   return page_base(id,
                    "<form action='add_module.pike' method='POST'>"
                    "<input type='hidden' name='config' value='&form.config;'>"+
-                   desc+"</select><br /><submit-gbutton> "
-                   +LOCALE(251, "Add Module")+" </submit-gbutton><p>"
+                   desc+"</select><br /><submit-gbutton vspace='3'> "
+                   +LOCALE(0, "Add Modules")+" </submit-gbutton><p>"
                    +err+"</form>",
                    );
 }
@@ -603,7 +721,7 @@ string page_really_compact( RequestID id )
   License.Key license_key = conf->getvar("license")->get_key();
   array(RoxenModule) locked_modules = ({});
   
-  if( (r = class_visible_compact( LOCALE(258,"Add module"), 
+  if( (r = class_visible_compact( LOCALE(0,"Add Modules"),
 				  LOCALE(273,"Select one or several modules to add."),
 				  sizeof(mods), id )) && r[0] ) {
     res += r[1];
@@ -620,8 +738,9 @@ string page_really_compact( RequestID id )
       }
       res += describe_module_compact( q, b );
     }
-  } else
+  } else {
     res += r[1];
+  }
 
   master()->set_inhibit_compile_errors( 0 );
 
@@ -629,7 +748,7 @@ string page_really_compact( RequestID id )
                    "<form action=\"add_module.pike\" method=\"post\">"
                    "<input type=\"hidden\" name=\"config\" value=\"&form.config;\" />"+
                    res+"</select><br /><submit-gbutton> "
-                   +LOCALE(251, "Add Module")+" </submit-gbutton><br />"
+                   +LOCALE(0, "Add Modules")+" </submit-gbutton><br />"
                    +pafeaw(ec->get(),ec->get_warnings(),
 			   locked_modules)+"</form>",
                    );
@@ -778,7 +897,7 @@ mixed parse( RequestID id )
 
   Configuration conf;
   foreach(id->variables->config/"\0", string config) {
-    if (conf = roxen.find_configuration( id->variables->config )) {
+    if (conf = roxen.find_configuration(config)) {
       id->variables->config = config;
       break;
     }
@@ -790,8 +909,14 @@ mixed parse( RequestID id )
   if( !conf->inited )
     conf->enable_all_modules();
 
-  string method =
-    id->variables->method ||
-    replace(config_setting( "addmodulemethod" ), " ", "_");
+  string method = get_method(id);
+
+  if (id->variables->mod_query) {
+    //  This can be invoked from both Normal and Faster methods
+    return (method == "faster" ?
+	    page_faster_search(id) :
+	    page_normal_search(id, 1));
+  }
+  
   return this_object()["page_" + method]( id );
 }
