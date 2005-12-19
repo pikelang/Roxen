@@ -1,4 +1,4 @@
-// $Id: add_module.pike,v 1.80 2005/12/17 22:51:57 jonasw Exp $
+// $Id: add_module.pike,v 1.81 2005/12/19 13:14:51 jonasw Exp $
 
 #include <config_interface.h>
 #include <module.h>
@@ -474,14 +474,14 @@ array(int|string) class_visible_normal( string c, string d, int size,
     x = 1;
   } else if( id->variables->unfolded == c) {
     header+=("<a name='"+Roxen.html_encode_string(c)+
-	     "'></a><gbutton hspace='5' "
+	     "'></a><gbutton hspace='5' vspace='5' "
 	     "href='add_module.pike?config=&form.config;"
 	     "&method=" + method + "#"+Roxen.http_encode_url(c)+"' > "+
 	     LOCALE(168, "Hide")+" </gbutton>");
     x=1;
   } else {
     header+=("<a name='"+Roxen.html_encode_string(c)+
-	     "'></a><gbutton hspace='5' "
+	     "'></a><gbutton hspace='5' vspace='5' "
 	     "href='add_module.pike?config=&form.config;"
 	     "&method=" + method +
 	     "&unfolded="+Roxen.http_encode_url(c)+
@@ -577,14 +577,14 @@ array(int|string) class_visible_faster( string c, string d, int size,
                    "<tr><td nowrap='nowrap' valign='top'>");
 
   if (id->variables->mod_query) {
-    header+=("<gbutton hspace='5' dim='1'> "+LOCALE(267, "View")+
+    header+=("<gbutton hspace='5' vspace='5' dim='1'> "+LOCALE(267, "View")+
 	     " </gbutton><br>"
 	     "<submit-gbutton hspace='5' vspace='2'> "+LOCALE(0, "Add Modules")+
 	     " </submit-gbutton>");
     x = 1;
   } else if( id->variables->unfolded == c ) {
     header+=("<a name='"+Roxen.html_encode_string(c)+
-	     "'></a><gbutton hspace='5' dim='1'> "+LOCALE(267, "View")+
+	     "'></a><gbutton hspace='5' vspace='5' dim='1'> "+LOCALE(267, "View")+
 	     " </gbutton><br>"
 	     "<submit-gbutton hspace='5' vspace='2'> "+LOCALE(0, "Add Modules")+
 	     " </submit-gbutton>");
@@ -592,7 +592,7 @@ array(int|string) class_visible_faster( string c, string d, int size,
   }
   else
     header+=("<a name='"+Roxen.html_encode_string(c)+
-	     "'></a><gbutton hspace='5' "
+	     "'></a><gbutton hspace='5' vspace='5' "
 	     "href='add_module.pike?config=&form.config;"
 	     "&method=" + method +
 	     "&unfolded="+Roxen.http_encode_url(c)+
