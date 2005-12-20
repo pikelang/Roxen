@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.491 2005/12/13 12:17:44 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.492 2005/12/20 17:30:57 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1931,6 +1931,9 @@ void send_result(mapping|void result)
     m_delete(heads, "Expires");
 
     if (file->error == 200) {
+      // FIXME:	This code probably ought to move to after the store
+      //	to the RAM cache.
+      //		/grubba 2005-12-20
       int conditional;
       if (none_match) {
 	// NOTE: misc->etag may be zero below, but that's ok.
@@ -1982,6 +1985,7 @@ void send_result(mapping|void result)
 	// All conditionals apply.
 	file->error = conditional;
 	file->file = file->data = file->len = 0;
+	misc->no_proto_cache = 1;
       }
     }
 
