@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.470 2005/11/28 14:42:19 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.471 2005/12/20 17:27:06 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1809,6 +1809,7 @@ void send_result(mapping|void result)
 	  // All conditionals apply.
 	  file->error = conditional;
 	  file->file = file->data = file->len = 0;
+	  misc->no_proto_cache = 1;	  
 	} else if(misc->range && file->len && objectp(file->file) &&
 		  !file->data && (method == "GET" || method == "HEAD"))
           // Plain and simple file and a Range header. Let's play.
