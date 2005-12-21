@@ -1,8 +1,8 @@
 #!/bin/sh
 #
-# $Id: roxen,v 1.1 2005/07/25 08:01:03 noring Exp $
+# $Id: roxen,v 1.2 2005/12/21 13:57:57 noring Exp $
 
-ROXEN_DIR=/usr/lib64/roxen-4.0.379
+ROXEN_DIR=@ROXEN_DIR@
 
 parse_args()
 {
@@ -10,7 +10,7 @@ parse_args()
     do
 	case "$1" in
 	    --config-dir=*)
-		DIR=`echo "$1" | sed -e 's/--config-dir=//'`
+		ROXEN_CONFIGDIR=`echo "$1" | sed -e 's/--config-dir=//'`
 	    ;;
 	esac
     
@@ -31,22 +31,23 @@ fi
 
 parse_args "$@"
 
-if [ x"$DIR" = x ]
+if [ x"$ROXEN_CONFIGDIR" = x ]
 then
-    DIR=configurations
+    ROXEN_DATADIR="`pwd`"
+    ROXEN_LOGDIR="$ROXEN_DATADIR"/logs
+    ROXEN_CONFIGDIR="$ROXEN_DATADIR"/configurations
+    export ROXEN_DATADIR ROXEN_LOGDIR ROXEN_CONFIGDIR
 fi
 
-if [ ! -d "$DIR" ]
+if [ ! -d "$ROXEN_CONFIGDIR" ]
 then
     echo "No configuration found. Use --config-dir=<config dir>"
     exit 1
 fi
 
-if [ -f "$DIR"/_environment ]
+if [ -f "$ROXEN_CONFIGDIR"/_environment ]
 then
-    . "$DIR"/_environment
-    ROXEN_LOCALDIR="$VARDIR"/local
-    export ROXEN_LOCALDIR
+    . "$ROXEN_CONFIGDIR"/_environment
 fi
 
 cd "$ROXEN_DIR" && exec ./start "$@"

@@ -1,6 +1,8 @@
 #!/bin/env pike
 
-// $Id: roxen-create-server,v 1.1 2005/07/25 08:01:03 noring Exp $
+// $Id: roxen-create-server,v 1.2 2005/12/21 13:57:50 noring Exp $
+
+string roxen_dir = "@ROXEN_DIR@";
 
 class Config
 {
@@ -60,7 +62,7 @@ class Config
     
     data_dir = combine_path(default_data_dir, suffix);
     log_dir = combine_path(default_log_dir, suffix);
-    pid_file = combine_path(default_pid_file, suffix + ".pid");
+    pid_file = combine_path(default_pid_file, suffix, suffix + ".pid");
     
     data_dir = interactive->edit_directory
 	       (data_dir,     "         Data directory: ");
@@ -130,12 +132,39 @@ class Config
   }
 }
 
+void parse_options(array(string) argv)
+{
+  array(array(string)) opts = Getopt.find_all_options(argv, ({
+    ({ "help",      Getopt.NO_ARG,  ({ "-h, --help" }),  0, 0 }),
+    ({ "roxen-dir", Getopt.HAS_ARG, ({ "--roxen-dir" }), 0, 0 })
+  }));
+
+  for(int i = 0; i < sizeof(opts); i++)
+    switch(opts[i][0])
+    {
+    case "help":
+      write(#"Usage: %s [options]...
+
+Options:
+  -h, --help             Display this help
+", argv[0]);
+      exit(0);
+
+    case "roxen-dir":
+      roxen_dir = opts[i][1];
+      break;
+    }
+}
+
 int main(int argc, array argv)
 {
-  if(has_value(argv, "--help"))
+  parse_options(argv);
+
+  if(!Stdio.is_dir(roxen_dir))
   {
-    write("Creates and initializes a Roxen server configuration.\n");
-    return 0;
+    werror("Fatal error: Cannot find Roxen server directory in %O.\n"
+	   "Use --roxen-dir option?\n", roxen_dir);
+    exit(1);
   }
 
   Config config = Config();
@@ -145,6 +174,18 @@ int main(int argc, array argv)
     werror("Failed to create config dir in %s", config->config_dir);
     exit(1);
   }
+
+  if(!Stdio.mkdirhier(combine_path(config->config_dir, "_license")))
+  {
+    werror("Failed to create license dir dir in %s", 
+	   combine_path(config->config_dir, "_license"));
+    exit(1);
+  }
+  foreach(get_dir(combine_path(roxen_dir, "license_templates")) || ({}), string f)
+    if(glob("*.lic", f) || glob("*.key", f))
+      Stdio.write_file(combine_path(config->config_dir, "_license", f),
+		       Stdio.read_file(combine_path(roxen_dir, 
+						    "license_templates", f)));
 
   if(!Stdio.mkdirhier(config->data_dir) ||
      !Stdio.mkdirhier(combine_path(config->data_dir, "local", "modules")) ||
@@ -232,9 +273,9 @@ ent text/html
 ROXEN_CONFIGDIR="+config->config_dir+#"
 ROXEN_DATADIR="+config->data_dir+#"
 ROXEN_LOGDIR="+config->log_dir+#"
-ROXEN_PIDFILE="+config->pid_file+#"
+ROXEN_PID_FILE="+config->pid_file+#"
 
-export ROXEN_CONFIGDIR ROXEN_DATADIR ROXEN_LOGDIR ROXEN_PIDFILE
+export ROXEN_CONFIGDIR ROXEN_DATADIR ROXEN_LOGDIR ROXEN_PID_FILE
 ";
 
   if(Stdio.write_file(combine_path(config->config_dir,
