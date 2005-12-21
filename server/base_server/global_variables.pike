@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.96 2005/09/30 11:21:35 anders Exp $
+// $Id: global_variables.pike,v 1.97 2005/12/21 13:40:03 noring Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -262,7 +262,8 @@ void define_global_variables(  )
 	 TYPE_FONT,
 	 LOCALE(93, "The default font to use when modules request a font."));
 
-  defvar("font_dirs", ({"../local/fonts/", "nfonts/" })+
+  defvar("font_dirs", ({ combine_path(getenv("LOCALDIR") || "../local", "fonts/"),
+			 "nfonts/" })+
 #ifdef __NT__
          ({combine_path(replace(getenv("SystemRoot"),"\\","/"),"fonts/")})
 #else
@@ -279,7 +280,7 @@ void define_global_variables(  )
 		"of various graphics caches like the Graphic text and "
 		"GButton caches to take full effect."));
 
-  defvar("logdirprefix", "../logs/", 
+  defvar("logdirprefix", getenv("LOGDIR") || "../logs/", 
 	 LOCALE(96, "Logging: Log directory prefix"),
 	 TYPE_STRING|VAR_MORE,
 	 LOCALE(97, "This is the default file path that will be prepended "
@@ -428,7 +429,8 @@ The start script attempts to fix this for the standard file locations.</p>"));
 	  "for CGI, and also 'access files as user' in the filesystems, but "
 	  "it gives better security."));
 
-  defvar("ModuleDirs", ({ "../local/modules/", "modules/" }),
+  defvar("ModuleDirs", ({ combine_path(getenv("LOCALDIR") || "../local", "modules/"),
+			  "modules/" }),
 	 LOCALE(132, "Module directories"), 
 	 TYPE_DIR_LIST,
 	 LOCALE(133, "This is a list of directories where Roxen should look "
