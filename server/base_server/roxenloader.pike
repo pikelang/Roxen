@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.366 2005/11/14 10:06:13 grubba Exp $
+// $Id: roxenloader.pike,v 1.367 2005/12/21 13:46:26 noring Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.366 2005/11/14 10:06:13 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.367 2005/12/21 13:46:26 noring Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1224,12 +1224,11 @@ Roxen 4.0 should be run with Pike 7.4 or newer.
 #ifdef __NT__
     // Use pipes with a name created from the config dir
     "mysql://%user%@.:"+
-    replace(combine_path( getcwd(),
-                          query_configuration_dir()+"_mysql/pipe"), ":", "_") +
+    replace(combine_path(query_mysql_data_dir(), "pipe"), ":", "_") +
     "/%db%";
 #else
     "mysql://%user%@localhost:"+
-    combine_path( getcwd(), query_configuration_dir()+"_mysql/socket")+
+      combine_path(query_mysql_data_dir(), "socket")+
     "/%db%";
 #endif
 
@@ -1272,6 +1271,21 @@ string query_mysql_dir()
 {
   // FIXME: Should be configurable.
   return combine_path( __FILE__, "../../mysql/" );
+}
+
+string query_mysql_data_dir()
+{
+  string old_dir = combine_path(getcwd(), query_configuration_dir(), "_mysql");
+  string new_dir, datadir = getenv("ROXEN_DATADIR");
+  if(datadir)
+    new_dir = combine_path(getcwd(), datadir, "mysql");
+  if(new_dir && Stdio.exist(new_dir))
+    return new_dir;
+  if(Stdio.exist(old_dir))
+    return old_dir;
+  if(new_dir)
+    return new_dir;
+  return old_dir;
 }
 
 string  my_mysql_path;
@@ -1806,7 +1820,7 @@ void start_mysql()
 {
   Sql.Sql db;
   int st = gethrtime();
-  string mysqldir = combine_path(getcwd(),query_configuration_dir()+"_mysql");
+  string mysqldir = query_mysql_data_dir();
   string err_log = mysqldir+"/error_log";
   string pid_file = mysqldir+"/mysql_pid";
   int do_tailf_threaded = 0;
