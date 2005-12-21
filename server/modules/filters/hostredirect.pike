@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.29 2005/12/05 13:47:12 grubba Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.30 2005/12/21 09:45:44 jonasw Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -78,6 +78,7 @@ constant module_doc  = "This module redirects requests to different places, "
 
 string get_host(string ignored, RequestID id)
 {
+  string host;
   if(!((id->misc->host && (host = lower_case(id->misc->host))) ||
        (id->my_fd && id->my_fd->query_address &&
 	(host = replace(id->my_fd->query_address(1)," ",":")))))
