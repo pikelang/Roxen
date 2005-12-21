@@ -8,7 +8,7 @@
  *    various other external stuff happy.
  */
  
-string cvs_version = "$Id: buildenv.pike,v 1.8 2005/05/23 08:16:02 noring Exp $";
+string cvs_version = "$Id: buildenv.pike,v 1.9 2005/12/21 13:48:21 noring Exp $";
 
 class Environment
 {
@@ -173,23 +173,24 @@ void config_env(object(Environment) env)
 
 void main(int argc, array argv)
 {
-  write("   Setting up environment in %s.\n",
-	combine_path(getcwd(), "../local"));
+  string localdir = getenv("LOCALDIR") || combine_path(getcwd(), "../local");
 
-  if (Stdio.file_size("../local") != -2)
+  write("   Setting up environment in %s.\n", localdir);
+
+  if (Stdio.file_size(localdir) != -2)
   { if (Stdio.file_size("bin") != -2 || Stdio.file_size("modules") != -2)
     { write("   "+argv[0]+": "
 	    "should be run in the Roxen 'server' directory.\n");
       exit(1);
     }
-    if (!mkdir("../local", 0775))
+    if (!mkdir(localdir, 0775))
     {
-      write("   Failed to create ../local!\n");
+      write("   Failed to create %s!\n", localdir);
       exit(1);
     }
   }
 
-  Environment envobj = Environment("../local/environment");
+  Environment envobj = Environment(combine_path(localdir, "environment"));
 
   config_env(envobj);
   if (envobj->finalize())
