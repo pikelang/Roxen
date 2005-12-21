@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.601 2005/12/21 12:05:47 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.602 2005/12/21 13:37:23 noring Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4240,8 +4240,8 @@ also set 'URLs'."));
 
   defvar("license",
 	 License.
-	 LicenseVariable("../license/", VAR_NO_DEFAULT,
-			 DLOCALE(39, "License file"),
+	 LicenseVariable(getenv("ROXEN_LICENSEDIR") || "../license/", 
+			 VAR_NO_DEFAULT, DLOCALE(39, "License file"),
 			 DLOCALE(336, "The license file for this configuration."),
 			 this_object()));
   

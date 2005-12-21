@@ -1,5 +1,5 @@
 /*
- * $Id: upload_license.pike,v 1.13 2004/06/10 14:56:18 anders Exp $
+ * $Id: upload_license.pike,v 1.14 2005/12/21 13:50:38 noring Exp $
  */
 
 #include <roxen.h>
@@ -14,7 +14,7 @@ string doc = LOCALE(168, "Upload a new Roxen license file.");
 
 int enabled()
 {
-  return License.is_active("../license");
+  return License.is_active(getenv("ROXEN_LICENSEDIR") || "../license");
 }
 
 mixed parse( RequestID id )

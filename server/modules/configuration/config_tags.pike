@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.189 2005/03/30 17:55:13 grubba Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.190 2005/12/21 13:55:30 noring Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -1243,7 +1243,7 @@ class TagCfUserWants
 
 
 // License tags.
-constant license_dir = "../license";
+string license_dir = getenv("ROXEN_LICENSEDIR") || "../license";
 
 class TagGetPostFilename
 {

@@ -58,7 +58,7 @@ string|mapping parse( RequestID id )
   }
 
   License.LicenseVariable license =
-    License.LicenseVariable("../license/", 0,
+    License.LicenseVariable(getenv("ROXEN_LICENSEDIR") || "../license/", 0,
 			    "License file",
 			    "Use this license file for the new configuration.",
 			    0, 1);
