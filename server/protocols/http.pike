@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.492 2005/12/20 17:30:57 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.493 2006/01/02 12:54:32 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2518,10 +2518,20 @@ void got_data(mixed fooid, string s, void|int chained)
 	    }
 	  } )
 	  {
-	    INTERNAL_ERROR( e );
-	    TIMER_END(cache_lookup);
-	    send_result();
-	    return;
+	    // Callback failed; in destructed object?
+	    if (e = catch {
+		werror("Cache callback internal server error:\n"
+		       "%s\n",
+		       describe_backtrace(e));
+		// Invalidate the key.
+		destruct(cv[1]->key);
+	      }) {
+	      // Fall back to a standard internal error.
+	      INTERNAL_ERROR( e );
+	      TIMER_END(cache_lookup);
+	      send_result();
+	      return;
+	    }
 	  }
 	}
 	if( !cv[1]->key )
