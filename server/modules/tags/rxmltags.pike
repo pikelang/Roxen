@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.506 2006/01/04 12:14:20 grubba Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.507 2006/01/04 13:06:54 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1144,7 +1144,10 @@ class TagInsertFile {
       pl->set_sorted( ({ args->language }) + old_lang );
     }
 
-    result=id->conf->try_get_file(var, id);
+    mapping(string:mixed) result_mapping = ([]);
+
+    result=id->conf->try_get_file(var, id, UNDEFINED, UNDEFINED, UNDEFINED,
+				  result_mapping);
 
     // Restore previous language state.
     if (args->langauge && pl) {
@@ -1156,7 +1159,7 @@ class TagInsertFile {
 
     if (args["decode-charset"]) {
       if (result_mapping->charset) {
-	Locale.Charset.Decoder decoder =
+	object /*(Locale.Charset.Decoder)*/ decoder =
 	  Locale.Charset.decoder(result_mapping->charset);
 	result = decoder->feed(result)->drain();
       }
