@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.489 2005/12/13 15:45:55 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.490 2006/01/04 12:14:04 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1133,7 +1133,10 @@ class TagInsertFile {
       pl->set_sorted( ({ args->language }) + old_lang );
     }
 
-    result=id->conf->try_get_file(var, id);
+    mapping(string:mixed) result_mapping = ([]);
+
+    result=id->conf->try_get_file(var, id, UNDEFINED, UNDEFINED, UNDEFINED,
+				  result_mapping);
 
     // Restore previous language state.
     if (args->langauge && pl) {
@@ -1142,6 +1145,14 @@ class TagInsertFile {
 
     if( !result )
       RXML.run_error("No such file ("+Roxen.fix_relative( var, id )+").\n");
+
+    if (args["decode-charset"]) {
+      if (result_mapping->charset) {
+	Locale.Charset.Decoder decoder =
+	  Locale.Charset.decoder(result_mapping->charset);
+	result = decoder->feed(result)->drain();
+      }
+    }
 
 #if ROXEN_COMPAT <= 1.3
     if(id->conf->old_rxml_compat)
@@ -7201,6 +7212,12 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  <p>The virtual path to the file to be inserted.</p>
 
  <ex-box><eval><insert file='html_header.inc'/></eval></ex-box>
+</attr>
+
+<attr name='decode-charset'><p>
+ Decode the character encoding before insertion.</p>
+
+ <p>Used to decode the transport encoding for the inserted file.</p>
 </attr>
 
 <attr name='language' value='string'>
