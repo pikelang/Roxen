@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.62 2004/06/30 16:58:53 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.63 2006/01/10 23:19:22 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -784,8 +784,8 @@ class EntityDyn {
 
 class EntityCVal(string val) {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    return ENCODE_RXML_TEXT(val, type);
+  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
+    return val;
   }
 }
 
