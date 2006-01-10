@@ -913,23 +913,23 @@ a&auml; &amp; b  &gt;
 </test>
 
 <test>
-  <rxml type="text/html"><emit source="TESTER" test="5">&_.v;&_.v;</emit></rxml>
-  <result>&lt;&amp;&gt;&lt;&amp;&gt;</result>
+  <rxml type="text/html"><emit source="TESTER" test="5">&_.v;&_.v;&_.v:html;&_.v:none;</emit></rxml>
+  <result>&lt;&amp;&gt;&lt;&amp;&gt;&lt;&amp;&gt;<&></result>
 </test>
 
 <test>
-  <rxml type="text/html"><emit source="TESTER" test="5">&_.c;&_.c;</emit></rxml>
-  <result>&lt;&amp;&gt;&lt;&amp;&gt;</result>
+  <rxml type="text/html"><emit source="TESTER" test="5">&_.c;&_.c;&_.c:html;&_.v:none;</emit></rxml>
+  <result>&lt;&amp;&gt;&lt;&amp;&gt;&lt;&amp;&gt;<&></result>
 </test>
 
 <test>
-  <rxml type="text/plain"><emit source="TESTER" test="5">&_.v;&_.v;</emit></rxml>
-  <result><&><&></result>
+  <rxml type="text/plain"><emit source="TESTER" test="5">&_.v;&_.v;&_.v:html;&_.v:none;</emit></rxml>
+  <result><&><&>&lt;&amp;&gt;<&></result>
 </test>
 
 <test>
-  <rxml type="text/plain"><emit source="TESTER" test="5">&_.c;&_.c;</emit></rxml>
-  <result><&><&></result>
+  <rxml type="text/plain"><emit source="TESTER" test="5">&_.c;&_.c;&_.c:html;&_.v:none;</emit></rxml>
+  <result><&><&>&lt;&amp;&gt;<&></result>
 </test>
 
 <!-- client.tm is used below because it's a constant variable
