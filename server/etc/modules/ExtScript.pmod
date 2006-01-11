@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.19 2004/05/25 12:36:56 grubba Exp $
+// $Id: ExtScript.pmod,v 1.20 2006/01/11 06:12:41 mast Exp $
 
 // 
 
@@ -59,7 +59,7 @@ class Handler
 
   int probe()
   {
-    return timeout < time(0);
+    return timeout < time();
   }
 
   static void putvar(string vtype, string vname, string vval)
@@ -171,7 +171,7 @@ class Handler
   {
     Thread.MutexKey lock = mutex ? mutex->lock(1) : 0;
 
-    timeout = time(0) + 190;
+    timeout = time() + 190;
 
     if (!proc || proc->status() != 0)
     {
@@ -412,7 +412,7 @@ class Handler
   {
     settings = settings0 ? settings0 : ([ ]);
     proc = 0; pipe = 0;
-    timeout = time(0) + 300;
+    timeout = time() + 300;
     command = ({ helper_program_path, "--cmdsocket=3" });
 #ifdef __NT__
     string binpath = helper_program_path;
@@ -471,9 +471,9 @@ static int lastobjdiag = 0;
 
 static void objdiag()
 {
-  if (lastobjdiag < time(0)-25)
+  if (lastobjdiag < time()-25)
   {
-    lastobjdiag = time(0);
+    lastobjdiag = time();
     DEBUGMSG("Subprocess status:\n");
     foreach(indices(scripthandlers), string binpath)
     {
@@ -498,7 +498,7 @@ static roxen.BackgroundProcess cleaner;
 
 void periodic_cleanup()
 {
-  int now = time(0);
+  int now = time();
   if (lastcleanup+42 < now)
   {
     lastcleanup = now;
@@ -520,7 +520,7 @@ void periodic_cleanup()
   	   m->handlers = m->handlers[1..];
   	else
   	   m->handlers = ({ 0 });
-  	now = time(0);
+  	now = time();
   	m->expire   = now+600/(2+sizeof(m->handlers));
   	lock = 0;
       }
@@ -538,7 +538,7 @@ Handler getscripthandler(string binpath, void|int multi, void|mapping settings)
 
   if (!intp(multi) || multi < 1) multi = 1;
 
-  if (lastcleanup+900 < time(0)) {
+  if (lastcleanup+900 < time()) {
     if (!cleaner) {
       cleaner = roxen.BackgroundProcess(50, periodic_cleanup);
     }
@@ -550,7 +550,7 @@ Handler getscripthandler(string binpath, void|int multi, void|mapping settings)
     scripthandlers[binpath] = m =
        ([
 	 "handlers": ({ Handler(binpath) }),
-          "expire": time(0) + 600,  
+          "expire": time() + 600,  
           "mutex": Thread.Mutex(),
           "binpath": binpath
         ]);
