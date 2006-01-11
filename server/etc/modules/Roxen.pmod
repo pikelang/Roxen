@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.203 2005/12/13 15:45:59 anders Exp $
+// $Id: Roxen.pmod,v 1.204 2006/01/11 03:10:48 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2166,6 +2166,12 @@ static string low_roxen_encode(string val, string encoding)
      return http_encode_url (val);
 
    case "wml-url":
+     // Note: In 4.0 and earlier, this encoding was ambiguous since 8
+     // bit strings were %-encoded according to the ISO 8859-1 charset
+     // while wider strings first were UTF-8 encoded and then
+     // %-encoded. Although unlikely, it might be possible that the
+     // old ambiguous encoding is the one mandated by the WAP/WML
+     // standard - I haven't been able to verify it. /mast
      return correctly_http_encode_url(val);
 
    case "html":

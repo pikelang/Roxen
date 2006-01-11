@@ -2752,7 +2752,15 @@ cd</rxml>
 
 <test>
 <rxml><set variable="var.x">&lt;$%a#å</set>&var.x:wml-url;</rxml>
-<result>%3c%24%25a%23%e5</result>
+<!--
+  Behavior in 4.0 and earlier - strings with only ISO 8859-1 chars are
+  encoded straight off by the wml-url encoding while wider strings
+  first are UTF-8 encoded. I don't know what the WAP/WML standard says
+  about this. /mast
+
+  <result>%3c%24%25a%23%e5</result>
+-->
+<result>%3c%24%25a%23%c3%a5</result>
 </test>
 
 
