@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.163 2005/12/09 16:15:36 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.164 2006/01/11 06:29:36 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -244,7 +244,7 @@ class DAVLock
     DAVLock::owner = owner;
     if (expiry_delta) {
       if (expiry_delta < 0) error("Negative expiry delta!\n");
-      expiry_time = time(0) + expiry_delta;
+      expiry_time = time() + expiry_delta;
     }
   }
 
