@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module.pike,v 1.222 2005/10/06 12:43:31 wellhard Exp $
+// $Id: module.pike,v 1.223 2006/01/12 00:03:10 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -111,11 +111,10 @@ int module_dependencies(Configuration configuration,
                         array (string) modules,
                         int|void now)
 //! If your module depends on other modules present in the server,
-//! calling <pi>module_dependencies()</pi>, supplying an array of
-//! module identifiers. A module identifier is either the filename
-//! minus extension, or a string on the form that Roxen.get_modname
-//! returns. In the latter case, the <config name> and <copy> parts
-//! are ignored.
+//! call this function and supply an array of module identifiers. A
+//! module identifier is either the filename minus extension, or a
+//! string on the form that @[Roxen.get_modname] returns. In the
+//! latter case, the <config name> and <copy> parts are ignored.
 {
   modules = map (modules,
 		 lambda (string modname) {
