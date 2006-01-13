@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.507 2006/01/04 13:06:54 grubba Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.508 2006/01/13 15:15:56 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5851,6 +5851,8 @@ class TagIWCache {
 
 #ifdef manual
 constant tagdoc=([
+  // NOTE: The implementation of the &roxen; scope is in
+  //        etc/modules/Roxen.pmod.
 "&roxen;":#"<desc type='scope'><p><short>
  This scope contains information specific to this Roxen
  WebServer.</short> It is not possible to write any information to
@@ -5872,6 +5874,10 @@ constant tagdoc=([
 "&roxen.hits-per-minute;":#"<desc type='entity'><p>
  The average number of requests per minute since the webserver last
  started.
+</p></desc>",
+
+"&roxen.nodename;":#"<desc type='entity'><p>
+ The node name of the machine that the webserver is running on.
 </p></desc>",
 
 "&roxen.pike-version;":#"<desc type='entity'><p>
