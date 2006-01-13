@@ -8,11 +8,13 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: japanese.pike,v 1.19 2003/07/15 08:50:47 anders Exp $";
+constant cvs_version = "$Id: japanese.pike,v 1.20 2006/01/13 15:58:28 wellhard Exp $";
 constant _id = ({ "kj", "japanese", "日本語" });
-constant _aliases =  ({ "kj", "kanji", /* For backward compatibility */
-			"jp", "japanese", "nihongo" /* To keep Peter Evans happy */,
-			"日本語" });
+constant _id = ({ "ja", "japanese", "日本語" });
+constant _aliases =  ({ "jp", "japanese", "nihongo" /* To keep Peter Evans happy */,
+			"日本語",
+			"kj", "kanji", /* For backward compatibility */
+});
 
 constant required_charset = "iso-2022";
 /* The following function is correct for -10**12 < n < 10**12 (I think...) */
