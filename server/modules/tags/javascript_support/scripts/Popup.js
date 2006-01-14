@@ -172,7 +172,8 @@ function showPopup(e, name, parent, properties)
   var pos = new properties.LayerPosition(new TriggerCoord(e, parentCoord, name),
 					 parentCoord, properties);
   shiftTo(popup, pos.x, pos.y);
-  boundPopup(popup);
+  if (!properties.dont_bound_popup)
+      boundPopup(popup);
   addPopup(name, properties);
   show(popup);
   if(properties.init_hide_delay > 0) {

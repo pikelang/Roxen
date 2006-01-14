@@ -134,7 +134,8 @@ function layerLoadHandler(file_loader)
     o.innerText = "";
     o.innerHTML = file_loader.document.body.innerHTML;
   }
-  boundPopup(layer);
+  if (!properties.dont_bound_popup)
+      boundPopup(layer);
   addPopup(layer, properties);
   captureMouseEvent(popupMove);
   show(layer);
@@ -204,7 +205,8 @@ function loadLayer(e, layer_name, src, properties, parent)
 	  if (req.status == 200 || req.status == undefined) {
 	    var o = getObject(layer_name);
 	    o.innerHTML = req.responseText;
-	    boundPopup(layer_name);
+	    if (!properties.dont_bound_popup)
+	      boundPopup(layer_name);
 	    addPopup(layer_name, properties);
 	    captureMouseEvent(popupMove);
 	    show(layer_name);
