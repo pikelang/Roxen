@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.205 2006/01/13 15:13:05 grubba Exp $
+// $Id: Roxen.pmod,v 1.206 2006/01/14 03:11:13 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4450,7 +4450,7 @@ LogPipe get_log_pipe()
 //! in the debug log.
 {
   Stdio.File read_end = Stdio.File();
-  Stdio.File write_end = read_end->pipe (Stdio.PROP_IPC);
+  Stdio.File write_end = read_end->pipe (Stdio.PROP_IPC|Stdio.PROP_NONBLOCK);
   if (!write_end) error ("Failed to create pipe: %s\n",
 			 strerror (read_end->errno()));
   return LogPipe (read_end, write_end);
