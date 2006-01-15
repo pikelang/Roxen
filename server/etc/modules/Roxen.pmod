@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.206 2006/01/14 03:11:13 mast Exp $
+// $Id: Roxen.pmod,v 1.207 2006/01/15 06:25:41 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4413,19 +4413,43 @@ class LogPipe
   static string prefix = "";
   static string line_buf = "";
 
-  static void read_end_cb (mixed dummy, string data)
+  static void read_cb (Stdio.File read_end, string data)
   {
     line_buf += data;
-    while (1) {
-      sscanf (line_buf, "%[^\r\n]%*[\r\n]%s", string line, line_buf);
-      if (line == "") break;
+    while (sscanf (line_buf, "%[^\n]%*c%s", string line, string rest) == 3) {
       werror (prefix + line + "\n");
+      line_buf = rest;
     }
   }
 
-  static void create (Stdio.File read_end, Stdio.File write_end)
+  static void close_cb (Stdio.File read_end)
   {
-    read_end->set_read_callback (read_end_cb);
+    if (line_buf != "")
+      werror (prefix + line_buf + "\n");
+    read_end->set_read_callback (0);
+    read_end->set_close_callback (0);
+    read_end->set_id (0);
+  }
+
+  static void log_pipe_read_thread (Stdio.File read_end)
+  {
+    while (1) {
+      string data = read_end->read (1024, 1);
+      if (!data || data == "") break;
+      read_cb (read_end, data);
+    }
+    close_cb (read_end);
+  }
+
+  static void create (Stdio.File read_end, Stdio.File write_end,
+		      int use_read_thread)
+  {
+    if (use_read_thread)
+      thread_create (log_pipe_read_thread, read_end);
+    else {
+      read_end->set_nonblocking (read_cb, 0, close_cb);
+      read_end->set_id (read_end);
+    }
     assign (write_end);
   }
 
@@ -4438,20 +4462,37 @@ class LogPipe
 }
 
 LogPipe get_log_pipe()
-//! Returns a pipe suitable to bind to @expr{"stderr"@} and
-//! @expr{"stdout"@} in a @[Process.create_process] call to get the
+//! Returns a pipe suitable to bind to @expr{"stdout"@} and
+//! @expr{"stderr"@} in a @[Process.create_process] call to get the
 //! output from the created process into the debug log. The log data
 //! is line buffered to avoid mixing output from different processes
 //! on the same line.
 //!
 //! @note
-//! The standard backend is used to echo the data that arrives on the
-//! pipe. If it's hung then data that arrives on the pipe won't show
-//! in the debug log.
+//! Don't forget to close the returned pipe after the call to
+//! @[Process.create_process]. Otherwise the pipe will remain intact
+//! after the process has exited and you'll get an fd leak.
+//!
+//! @note
+//! The standard backend is used (when possible) to echo the data that
+//! arrives on the pipe. If it's hung then data that arrives on the
+//! pipe won't show in the debug log.
 {
   Stdio.File read_end = Stdio.File();
-  Stdio.File write_end = read_end->pipe (Stdio.PROP_IPC|Stdio.PROP_NONBLOCK);
+  Stdio.File write_end;
+  int use_read_thread;
+  if (catch (write_end =
+	     read_end->pipe (Stdio.PROP_IPC|Stdio.PROP_NONBLOCK))) {
+    // Some OS'es (notably Windows) can't create a nonblocking
+    // interprocess pipe.
+    read_end = Stdio.File();
+    write_end = read_end->pipe (Stdio.PROP_IPC);
+    use_read_thread = 1;
+#if 0
+    report_debug ("Using read thread with a blocking pipe for logging.\n");
+#endif
+  }
   if (!write_end) error ("Failed to create pipe: %s\n",
 			 strerror (read_end->errno()));
-  return LogPipe (read_end, write_end);
+  return LogPipe (read_end, write_end, use_read_thread);
 }
