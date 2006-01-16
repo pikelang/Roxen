@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.142 2005/05/30 12:59:01 wellhard Exp $
+// $Id: site_content.pike,v 1.143 2006/01/16 16:08:32 grubba Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -576,7 +576,11 @@ string parse( RequestID id )
        foreach(ports, array(Protocol|array(string)) port) {
 	 array(Protocol|array(string)) prev;
 	 if (prev = prot_info[port[0]]) {
-	   prev[1] += port[1];
+	   if (prev[1]) {
+	     prev[1] += port[1];
+	   } else {
+	     prev[1] = port[1];
+	   }
 	   port[0] = 0;
 	   port[1] = 0;
 	 } else {
