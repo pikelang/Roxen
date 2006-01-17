@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.491 2006/01/04 13:07:18 grubba Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.492 2006/01/17 14:53:27 wellhard Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5680,6 +5680,10 @@ constant tagdoc=([
 "&roxen.hits-per-minute;":#"<desc type='entity'><p>
  The average number of requests per minute since the webserver last
  started.
+</p></desc>",
+
+"&roxen.nodename;":#"<desc type='entity'><p>
+ The node name of the machine that the webserver is running on.
 </p></desc>",
 
 "&roxen.pike-version;":#"<desc type='entity'><p>
