@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.193 2005/12/13 15:45:53 anders Exp $
+// $Id: Roxen.pmod,v 1.194 2006/01/17 13:37:48 wellhard Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3334,6 +3334,8 @@ class ScopeRoxen {
     
     switch(var)
     {
+     case "nodename":
+       return uname()->nodename;
      case "uptime":
        CACHE(c->id,1);
        return ENCODE_RXML_INT(time(1)-roxenp()->start_time, type);
