@@ -1,4 +1,4 @@
-// $Id: add_module.pike,v 1.81 2005/12/19 13:14:51 jonasw Exp $
+// $Id: add_module.pike,v 1.82 2006/01/19 13:26:21 jonasw Exp $
 
 #include <config_interface.h>
 #include <module.h>
@@ -866,7 +866,7 @@ mixed do_it( RequestID id )
 
   Configuration conf;
   foreach(id->variables->config/"\0", string config) {
-    if (conf = roxen.find_configuration( id->variables->config )) {
+    if (conf = roxen.find_configuration( config )) {
       id->variables->config = config;
       break;
     }
