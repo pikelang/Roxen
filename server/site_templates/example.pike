@@ -6,7 +6,7 @@ constant doc  = "Standard Roxen site, with most of the commonly used modules. "
 		"If you are a new Roxen user, or would like to start a fresh "
 		"new site using the server to its full potential, use this "
 		"template. This version of the template includes a few example "
-                "pages. The souce of said pages can be found in the "
+                "pages. The source of said pages can be found in the "
                 "'example_pages' directory in the 'server' directory";
 
 constant modules = ({
