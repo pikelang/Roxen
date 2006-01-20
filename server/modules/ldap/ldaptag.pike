@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.34 2006/01/20 14:50:40 erik Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.35 2006/01/20 15:06:45 erik Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -85,7 +85,6 @@ Modify (adds a second value to an existing attribute):
       attr=\"(sn:'additional value')\"
       password=\"<password>\" />
 </ex-box>
-</p>
 </p>
 </desc>
 
