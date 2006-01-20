@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.33 2005/04/04 14:35:18 mast Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.34 2006/01/20 14:50:40 erik Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -40,6 +40,53 @@ constant tagdoc=([
  result.</short>The <tag>ldap</tag> tag is mostly used for LDAP
  operation that change the contents of the directory, for example
  <i>add</i> or <i>modify</i>.</p>
+<p>
+Add (adds an object):
+<ex-box>
+<ldap server=\"ldap://ldap.foo.com/\"
+      op=\"add\"
+      binddn=\"cn=admin,dc=foo,dc=com\"
+      dn=\"cn=user,dc=foo,dc=edu\"
+      attr=\"(cn:'user')(sn:'surname')(objectClass:'req'd objectClass')\"
+      password=\"<password>\" />
+</ex-box>
+</p>
+
+<p>
+Delete (deletes an object):
+<ex-box>
+<ldap server=\"ldap://ldap.foo.com/\"
+      op=\"delete\"
+      binddn=\"cn=admin,dc=foo,dc=com\"
+      dn=\"cn=user,dc=foo,dc=com\"
+      password=\"<password>\" />
+</ex-box>
+</p>
+
+<p>
+Replace (replaces a value of an attribute):
+<ex-box>
+<ldap server=\"ldap://ldap.foo.com/\"
+      op=\"replace\"
+      binddn=\"cn=admin,dc=foo,dc=com\"
+      dn=\"cn=user,dc=foo,dc=com\"
+      attr=\"(sn:'new value')\"
+      password=\"<password>\" />
+</ex-box>
+</p>
+
+<p>
+Modify (adds a second value to an existing attribute):
+<ex-box>
+<ldap server=\"ldap://ldap.foo.com/\"
+      op=\"modify\"
+      binddn=\"cn=admin,dc=foo,dc=com\"
+      dn=\"cn=user,dc=foo,dc=com\"
+      attr=\"(sn:'additional value')\"
+      password=\"<password>\" />
+</ex-box>
+</p>
+</p>
 </desc>
 
 <attr name='server' value='LDAP URL' default='Server URL'><p>
