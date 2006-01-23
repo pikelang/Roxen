@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.20 2005/07/25 16:22:39 mast Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.21 2006/01/23 10:53:27 anders Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -233,9 +233,8 @@ void create(Configuration conf)
 	 });
 
   defvar ("db_name",
-          Variable.DatabaseChoice( "timerange_"+
-          (conf ? Roxen.short_name(conf->name):""),
-          0, "TimeRange module database")->set_configuration_pointer( my_configuration ) );
+          Variable.DatabaseChoice( " none", 0, "TimeRange module database")
+	  ->set_configuration_pointer( my_configuration ) );
 
   if(inited_from_scratch)
   {
