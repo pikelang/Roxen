@@ -1,7 +1,7 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2001 - 2004, Roxen IS.
 
-constant cvs_version="$Id: replicate.pike,v 1.22 2005/08/23 16:44:54 wellhard Exp $";
+constant cvs_version="$Id: replicate.pike,v 1.23 2006/01/23 10:33:02 jonasw Exp $";
 
 #if constant(WS_REPLICATE)
 #define QUERY(X,Y...)    get_db()->query(X,Y)
@@ -207,7 +207,7 @@ Sql.Sql debug_get_sdb() {
     if( off )								\
       return X;								\
   } else {								\
-    if( !debug_get_sdb() ) ) {						\
+    if( !debug_get_sdb() ) 						\
       off = -1;								\
     if(off)return X;							\
   }
