@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.10 2003/11/17 16:01:28 anders Exp $
+ * $Id: openfiles.pike,v 1.11 2006/01/24 09:55:15 jonasw Exp $
  */
 inherit "wizard";
 
@@ -45,6 +45,9 @@ string parse( RequestID id )
 	  {
 	    object f = Stdio.File(fd);
 	    object stat = f->stat();
+	    if (!stat)
+	      return sprintf("%-5s  %-9s  %-10s   %-12s",
+			     (string) fd, "Unknown", "?", "(error " + f->errno() + ")");
 
 	    string type = ([
 	      "reg":"File",
