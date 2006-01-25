@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.602 2005/12/21 13:37:23 noring Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.603 2006/01/25 10:22:30 anders Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4229,9 +4229,9 @@ also set 'URLs'."));
 		 " /foo/bar/404.inc, /foo/404.inc and /404.inc." ) );
 
   defvar("401-files", ({ "401.inc" }),
-	 DLOCALE(0, "Authentication failed message override files"),
+	 DLOCALE(411, "Authentication failed message override files"),
 	 TYPE_STRING_LIST|VAR_PUBLIC,
-	 DLOCALE(0,
+	 DLOCALE(412,
 		 "With each authentication required response this file is "
 		 "sent and displayed if the authentication fails or the user "
 		 "choose not to authenticate at all.<p>\n"
@@ -4481,9 +4481,9 @@ also set 'URLs'."));
 
 </body>
 </html>",
-	 DLOCALE(0, "Authentication failed message"),
+	 DLOCALE(413, "Authentication failed message"),
 	 TYPE_TEXT_FIELD|VAR_PUBLIC,
-	 DLOCALE(0, "What to return when an authentication attempt failed."));
+	 DLOCALE(420, "What to return when an authentication attempt failed."));
 
 
 

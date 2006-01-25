@@ -1104,16 +1104,6 @@ The start script attempts to fix this for the standard file locations.&lt;/p&gt;
 <t></t>
 </str>
 
-<str id="258">
-<o>Add module</o>
-<t></t>
-</str>
-
-<str id="259">
-<o>Drop module</o>
-<t></t>
-</str>
-
 <str id="251">
 <o>Add Module</o>
 <t></t>
@@ -1170,7 +1160,7 @@ The start script attempts to fix this for the standard file locations.&lt;/p&gt;
 </str>
 
 <str id="272">
-<o>Reload module list</o>
+<o>Reload Module List</o>
 <t></t>
 </str>
 
@@ -1320,22 +1310,22 @@ The start script attempts to fix this for the standard file locations.&lt;/p&gt;
 </str>
 
 <str id="238">
-<o>alphabetical</o>
+<o>Alphabetical</o>
 <t></t>
 </str>
 
 <str id="239">
-<o>as defined</o>
+<o>As defined</o>
 <t></t>
 </str>
 
 <str id="240">
-<o>alphabetical, changed first</o>
+<o>Alphabetical, changed first</o>
 <t></t>
 </str>
 
 <str id="241">
-<o>as defined, changed first</o>
+<o>As defined, changed first</o>
 <t></t>
 </str>
 
@@ -1963,12 +1953,12 @@ as the name of its log file directory.
 </str>
 
 <str id="15">
-<o>The module list mode. One of &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Modules in the same group are folded&lt;/dd&gt;&lt;dt&gt;UnFolded&lt;/dt&gt;&lt;dd&gt;Like the 'old' Roxen 2.1 list&lt;/dd&gt;&lt;dt&gt;JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Like Folded, but when you move the mouse over a folded group, a menu with the folded modules will popup&lt;/dd&gt;&lt;/dl&gt;</o>
+<o>The module list mode. One of &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Modules in the same group are folded&lt;/dd&gt;&lt;dt&gt;Folded with JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Like Folded, but when you move the mouse over a folded group, a menu with the folded modules will popup&lt;/dd&gt;&lt;dt&gt;Unfolded&lt;/dt&gt;&lt;dd&gt;Like the 'old' Roxen 2.1 list&lt;/dd&gt;&lt;/dl&gt;</o>
 <t></t>
 </str>
 
 <str id="17">
-<o>Folded with javascript popup</o>
+<o>Folded with JavaScript popup</o>
 <t></t>
 </str>
 
@@ -1978,7 +1968,7 @@ as the name of its log file directory.
 </str>
 
 <str id="123">
-<o>Unfolded (old style)</o>
+<o>Unfolded (Old style)</o>
 <t></t>
 </str>
 
@@ -2047,8 +2037,8 @@ modules.&lt;/p&gt;
   &lt;td&gt;Corresponds to Roxen 3.4.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr valign='top'&gt;&lt;td&gt;4.0&amp;nbsp;&amp;nbsp;&lt;/td&gt;
   &lt;td&gt;Corresponds to Roxen 4.0.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;4.1&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen 4.1.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;4.5&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen 4.5.&lt;/td&gt;&lt;/tr&gt;
 &lt;/table&gt;&lt;/p&gt;</o>
 <t></t>
 </str>
@@ -2168,8 +2158,6 @@ modules.&lt;/p&gt;
 <t></t>
 </str>
 
-
-
 <str id="414">
 <o>Copy or rename this database</o>
 <t></t>
@@ -2199,8 +2187,6 @@ modules.&lt;/p&gt;
 <o>Type</o>
 <t></t>
 </str>
-
-
 
 <str id="422">
 <o>This URL is only used for &lt;/i&gt;External&lt;i&gt; databases, it is totally ignored for databases defined internally in Roxen. </o>
@@ -2891,5 +2877,36 @@ server must be a MySQL server, nothing else will work.
 
 <str id="530">
 <o>The new name of the database. To make it easy on your users, use all lowercaps characters, and avoid hard to type characters.</o>
+<t></t>
+</str>
+
+<str id="411">
+<o>Authentication failed message override files</o>
+<t></t>
+</str>
+
+<str id="412">
+<o>With each authentication required response this file is sent and displayed if the authentication fails or the user choose not to authenticate at all.&lt;p&gt;
+The file is searched for in parent directories in the same manner as the no such file message override files.</o>
+<t></t>
+</str>
+
+<str id="413">
+<o>Authentication failed message</o>
+<t></t>
+</str>
+
+<str id="420">
+<o>What to return when an authentication attempt failed.</o>
+<t></t>
+</str>
+
+<str id="421">
+<o>List Type</o>
+<t></t>
+</str>
+
+<str id="531">
+<o>Really Compact</o>
 <t></t>
 </str>

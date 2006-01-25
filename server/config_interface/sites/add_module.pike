@@ -1,4 +1,4 @@
-// $Id: add_module.pike,v 1.82 2006/01/19 13:26:21 jonasw Exp $
+// $Id: add_module.pike,v 1.83 2006/01/25 10:22:30 anders Exp $
 
 #include <config_interface.h>
 #include <module.h>
@@ -146,15 +146,15 @@ string page_base( RequestID id, string content, int|void noform,
                   "<p>\n</if>%s\n</p>\n"
                   "</st-page></subtablist></td></tr></table>"
                   "</cv-split></content></tmpl>", 
-		  LOCALE(258,"Add Module"),
+		  LOCALE(251,"Add Module"),
 		  noform?" noform='noform'":"",
-		  LOCALE(0, "List Type"),
+		  LOCALE(421, "List Type"),
 		  method,
-		  LOCALE(0, "Normal"),
+		  LOCALE(280, "Normal"),
 		  //  LOCALE(0, "Fast"),
-		  LOCALE(0, "Faster"),
-		  LOCALE(0, "Compact"),
-		  LOCALE(0, "Really Compact"),
+		  LOCALE(284, "Faster"),
+		  LOCALE(286, "Compact"),
+		  LOCALE(531, "Really Compact"),
 		  (show_search_form && search_form) || "",
 		  method,
                   LOCALE(272,"Reload Module List"),
@@ -579,14 +579,14 @@ array(int|string) class_visible_faster( string c, string d, int size,
   if (id->variables->mod_query) {
     header+=("<gbutton hspace='5' vspace='5' dim='1'> "+LOCALE(267, "View")+
 	     " </gbutton><br>"
-	     "<submit-gbutton hspace='5' vspace='2'> "+LOCALE(0, "Add Modules")+
+	     "<submit-gbutton hspace='5' vspace='2'> "+LOCALE(200, "Add Modules")+
 	     " </submit-gbutton>");
     x = 1;
   } else if( id->variables->unfolded == c ) {
     header+=("<a name='"+Roxen.html_encode_string(c)+
 	     "'></a><gbutton hspace='5' vspace='5' dim='1'> "+LOCALE(267, "View")+
 	     " </gbutton><br>"
-	     "<submit-gbutton hspace='5' vspace='2'> "+LOCALE(0, "Add Modules")+
+	     "<submit-gbutton hspace='5' vspace='2'> "+LOCALE(200, "Add Modules")+
 	     " </submit-gbutton>");
     x=1;
   }
@@ -649,7 +649,7 @@ array(int|string) class_visible_compact( string c, string d, int size,
   string res="";
   if(first++)
     res = "</select><br /><submit-gbutton vspace='3'> "+
-      LOCALE(0, "Add Modules")+ " </submit-gbutton> ";
+      LOCALE(200, "Add Modules")+ " </submit-gbutton> ";
   res += "<p><a name='"+Roxen.html_encode_string(c)+
     "'></a><font size='+2'>"+c+"</font><br />"+d+"<p>"
     "<select size='"+size+"' multiple name='module_to_add' class='add-module-select'>";
@@ -680,7 +680,7 @@ string page_compact( RequestID id )
                    "<form action='add_module.pike' method='POST'>"
                    "<input type='hidden' name='config' value='&form.config;'>"+
                    desc+"</select><br /><submit-gbutton vspace='3'> "
-                   +LOCALE(0, "Add Modules")+" </submit-gbutton><p>"
+                   +LOCALE(200, "Add Modules")+" </submit-gbutton><p>"
                    +err+"</form>",
                    );
 }
@@ -721,7 +721,7 @@ string page_really_compact( RequestID id )
   License.Key license_key = conf->getvar("license")->get_key();
   array(RoxenModule) locked_modules = ({});
   
-  if( (r = class_visible_compact( LOCALE(0,"Add Modules"),
+  if( (r = class_visible_compact( LOCALE(200,"Add Modules"),
 				  LOCALE(273,"Select one or several modules to add."),
 				  sizeof(mods), id )) && r[0] ) {
     res += r[1];
@@ -748,7 +748,7 @@ string page_really_compact( RequestID id )
                    "<form action=\"add_module.pike\" method=\"post\">"
                    "<input type=\"hidden\" name=\"config\" value=\"&form.config;\" />"+
                    res+"</select><br /><submit-gbutton> "
-                   +LOCALE(0, "Add Modules")+" </submit-gbutton><br />"
+                   +LOCALE(200, "Add Modules")+" </submit-gbutton><br />"
                    +pafeaw(ec->get(),ec->get_warnings(),
 			   locked_modules)+"</form>",
                    );

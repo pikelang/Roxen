@@ -1213,16 +1213,6 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 <t>Einstellungen</t>
 </str>
 
-<str id="258">
-<o>Add module</o>
-<t>Modul hinzfügen</t>
-</str>
-
-<str id="259">
-<o>Drop module</o>
-<t>Modul entfernen</t>
-</str>
-
 <str id="251">
 <o>Add Module</o>
 <t>Modul hinzuzfügen</t>
@@ -1279,7 +1269,8 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="272">
-<o>Reload module list</o>
+<changed from="Reload module list"/>
+<o>Reload Module List</o>
 <t>Modul-Liste neu laden</t>
 </str>
 
@@ -1435,22 +1426,26 @@ Zeit an. Diese Option ist in diesem Falle dann sinnvoll.</t>
 </str>
 
 <str id="238">
-<o>alphabetical</o>
+<changed from="alphabetical"/>
+<o>Alphabetical</o>
 <t>alphabetisch</t>
 </str>
 
 <str id="239">
-<o>as defined</o>
+<changed from="as defined"/>
+<o>As defined</o>
 <t>wie definiert</t>
 </str>
 
 <str id="240">
-<o>alphabetical, changed first</o>
+<changed from="alphabetical, changed first"/>
+<o>Alphabetical, changed first</o>
 <t>alphabetisch, geänderte zuerst</t>
 </str>
 
 <str id="241">
-<o>as defined, changed first</o>
+<changed from="as defined, changed first"/>
+<o>As defined, changed first</o>
 <t>wie definiert, geänderte zuerst</t>
 </str>
 
@@ -2158,12 +2153,14 @@ as the name of its log file directory.
 </str>
 
 <str id="15">
-<o>The module list mode. One of &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Modules in the same group are folded&lt;/dd&gt;&lt;dt&gt;UnFolded&lt;/dt&gt;&lt;dd&gt;Like the 'old' Roxen 2.1 list&lt;/dd&gt;&lt;dt&gt;JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Like Folded, but when you move the mouse over a folded group, a menu with the folded modules will popup&lt;/dd&gt;&lt;/dl&gt;</o>
+<changed from="The module list mode. One of &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Modules in the same group are folded&lt;/dd&gt;&lt;dt&gt;UnFolded&lt;/dt&gt;&lt;dd&gt;Like the 'old' Roxen 2.1 list&lt;/dd&gt;&lt;dt&gt;JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Like Folded, but when you move the mouse over a folded group, a menu with the folded modules will popup&lt;/dd&gt;&lt;/dl&gt;"/>
+<o>The module list mode. One of &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Modules in the same group are folded&lt;/dd&gt;&lt;dt&gt;Folded with JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Like Folded, but when you move the mouse over a folded group, a menu with the folded modules will popup&lt;/dd&gt;&lt;dt&gt;Unfolded&lt;/dt&gt;&lt;dd&gt;Like the 'old' Roxen 2.1 list&lt;/dd&gt;&lt;/dl&gt;</o>
 <t>Der Modullisten Modus. Kann sein: &lt;dl&gt;&lt;dt&gt;Zusammengefaltet&lt;/dt&gt;&lt;dd&gt;Module derselben Gruppe sind zusammengefaltet&lt;/dd&gt;&lt;dt&gt;Nicht zusammengefaltet&lt;/dt&gt;&lt;dd&gt;Wie die 'alte' Roxen 2.1 Liste&lt;/dd&gt;&lt;dt&gt;JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Wie Zusammengefaltet, aber ein Menu mit den untergeordneten Modulen erscheint, wenn man mit der Maus drüberfährt&lt;/dd&gt;&lt;/dl&gt;</t>
 </str>
 
 <str id="17">
-<o>Folded with javascript popup</o>
+<changed from="Folded with javascript popup"/>
+<o>Folded with JavaScript popup</o>
 <t>Zusammengefaltet mit Javascript Popup</t>
 </str>
 
@@ -2173,7 +2170,8 @@ as the name of its log file directory.
 </str>
 
 <str id="123">
-<o>Unfolded (old style)</o>
+<changed from="Unfolded (old style)"/>
+<o>Unfolded (Old style)</o>
 <t>Nicht zusammengefaltet (Herkömmliches Verhalten)</t>
 </str>
 
@@ -2270,8 +2268,8 @@ modules.&lt;/p&gt;
   &lt;td&gt;Corresponds to Roxen 3.4.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr valign='top'&gt;&lt;td&gt;4.0&amp;nbsp;&amp;nbsp;&lt;/td&gt;
   &lt;td&gt;Corresponds to Roxen 4.0.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr valign='top'&gt;&lt;td&gt;4.1&amp;nbsp;&amp;nbsp;&lt;/td&gt;
-  &lt;td&gt;Corresponds to Roxen 4.1.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;4.5&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen 4.5.&lt;/td&gt;&lt;/tr&gt;
 &lt;/table&gt;&lt;/p&gt;</o>
 <t>&lt;p&gt;Der Kompatibilitäts-Level wird von einigen Modulen benutzt, um das korrekte Verhalten zu wählen, um mit früheren Roxen-Version kompatibel zu bleiben. Wenn eine Server-Konfiguration erstellt wird, wird diese Variable auf die aktuelle Version gesetzt. Danach wird sie niemals automatisch geändert, um zu gewährleisten, dass Server-Konfigurationen, die von früheren Roxen-Versionen migriert werden, auf dem richtigen Kompatibilitäts-Level zu halten.&lt;/p&gt;
 
@@ -2410,8 +2408,6 @@ modules.&lt;/p&gt;
 <t>%s ist ein mysql-Schlüsselwort. Bitte einen anderen Namen wählen</t>
 </str>
 
-
-
 <str id="414">
 <changed from="Move or copy this database"/>
 <o>Copy or rename this database</o>
@@ -2443,8 +2439,6 @@ modules.&lt;/p&gt;
 <o>Type</o>
 <t>Typ</t>
 </str>
-
-
 
 <str id="422">
 <changed from="This URL is only used for &lt;/i&gt;External&lt;i&gt; databases, it is totally ignored for databases defined internally in Roxen "/>
@@ -3165,5 +3159,42 @@ Roxen verwaltet.&lt;/p&gt;</t>
 <str id="530">
 <new/>
 <o>The new name of the database. To make it easy on your users, use all lowercaps characters, and avoid hard to type characters.</o>
+<t></t>
+</str>
+
+<str id="411">
+<new/>
+<o>Authentication failed message override files</o>
+<t></t>
+</str>
+
+<str id="412">
+<new/>
+<o>With each authentication required response this file is sent and displayed if the authentication fails or the user choose not to authenticate at all.&lt;p&gt;
+The file is searched for in parent directories in the same manner as the no such file message override files.</o>
+<t></t>
+</str>
+
+<str id="413">
+<new/>
+<o>Authentication failed message</o>
+<t></t>
+</str>
+
+<str id="420">
+<new/>
+<o>What to return when an authentication attempt failed.</o>
+<t></t>
+</str>
+
+<str id="421">
+<new/>
+<o>List Type</o>
+<t></t>
+</str>
+
+<str id="531">
+<new/>
+<o>Really Compact</o>
 <t></t>
 </str>

@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.914 2006/01/11 06:29:35 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.915 2006/01/25 10:22:30 anders Exp $";
 
 //! @appears roxen
 //!
@@ -1881,7 +1881,7 @@ class SSLProtocol
 
     if (!sizeof(decoded_certs)) {
       report_error ("TLS port %s: %s", get_url(),
-		    LOC_M (0,"No certificates found.\n"));
+		    LOC_M(63,"No certificates found.\n"));
       cert_err_unbind();
       cert_failure = 1;
       return;
@@ -2005,7 +2005,7 @@ class SSLProtocol
     if (!bound) {
       bind();
       if (old_cert_failure && bound)
-	report_notice (LOC_M (0, "TLS port %s opened.\n"), get_url());
+	report_notice (LOC_M(64, "TLS port %s opened.\n"), get_url());
     }
   }
 

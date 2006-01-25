@@ -354,3 +354,15 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </o>
 <t></t>
 </str>
+
+<str id="63">
+<o>No certificates found.
+</o>
+<t></t>
+</str>
+
+<str id="64">
+<o>TLS port %s opened.
+</o>
+<t></t>
+</str>
