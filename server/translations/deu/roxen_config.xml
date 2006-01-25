@@ -3147,3 +3147,28 @@ Roxen verwaltet.&lt;/p&gt;</t>
 <o>The new name of the database. To make it easy on your users, use all lowercaps characters, and avoid hard to type characters.</o>
 <t></t>
 </str>
+
+<str id="1000">
+<new/>
+<o>Authentication failed message override files</o>
+<t></t>
+</str>
+
+<str id="1001">
+<new/>
+<o>With each authentication required response this file is sent and displayed if the authentication fails or the user choose not to authenticate at all.&lt;p&gt;
+The file is searched for in parent directories in the same manner as the no such file message override files.</o>
+<t></t>
+</str>
+
+<str id="1002">
+<new/>
+<o>Authentication failed message</o>
+<t></t>
+</str>
+
+<str id="1003">
+<new/>
+<o>What to return when an authentication attempt failed.</o>
+<t></t>
+</str>
