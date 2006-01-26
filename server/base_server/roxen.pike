@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.915 2006/01/25 10:22:30 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.916 2006/01/26 13:54:56 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -3678,8 +3678,16 @@ class ImageCache
 
   void do_cleanup( )
   {
-    background_run( 3600*10+random(4711), do_cleanup );
-    flush(time()-7*3600*24);
+    //  Flushes may be costly in large sites (at least the OPTIMIZE TABLE
+    //  command) so schedule next run sometime after 04:30 the day after
+    //  tomorrow.
+    int now = time();
+    mapping info = localtime(now);
+    int wait = (int) ((24 - info->hour) + 24 + 4.5) * 3600 + random(500);
+    background_run(wait, do_cleanup);
+
+    //  Remove items older than one week
+    flush(now - 7 * 3600 * 24);
   }
   
   void create( string id, function draw_func )
