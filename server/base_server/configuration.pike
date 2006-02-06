@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.603 2006/01/25 10:22:30 anders Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.604 2006/02/06 13:51:56 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4226,7 +4226,11 @@ also set 'URLs'."));
 		 "As an example, if the file /foo/bar/not_there.html is "
 		 "wanted, and this list contains the default value of 404.inc,"
 		 " these files will be searched for, in this order:</p><br /> "
-		 " /foo/bar/404.inc, /foo/404.inc and /404.inc." ) );
+		 " /foo/bar/404.inc, /foo/404.inc and /404.inc."
+		 "<p>\n"
+		 "The inclusion file can access the form variables "
+		 "form.orig-file and form.orig-url to identify the original "
+		 "page that was requested.") );
 
   defvar("401-files", ({ "401.inc" }),
 	 DLOCALE(411, "Authentication failed message override files"),
@@ -4278,7 +4282,7 @@ also set 'URLs'."));
      </if>
    </emit>
 </emit>
-</nooutput><if variable='var.errfile'><eval><insert file='&var.errfile;'/></eval></if><else><eval>&modvar.site.404-message:none;</eval></else>", 0, 0, 0 );
+</nooutput><if variable='var.errfile'><eval><insert file='&var.errfile;?orig-url=&page.url:url;&amp;orig-file=&page.virtfile:url;'/></eval></if><else><eval>&modvar.site.404-message:none;</eval></else>", 0, 0, 0 );
     }
   };
   
@@ -4398,7 +4402,7 @@ also set 'URLs'."));
      </if>
    </emit>
 </emit>
-</nooutput><if variable='var.errfile'><eval><insert file='&var.errfile;'/></eval></if><else><eval>&modvar.site.401-message:none;</eval></else>", 0, 0, 0 );
+</nooutput><if variable='var.errfile'><eval><insert file='&var.errfile;?orig-url=&page.url:url;&amp;orig-file=&page.virtfile:url;'/></eval></if><else><eval>&modvar.site.401-message:none;</eval></else>", 0, 0, 0 );
     }
   };
   
