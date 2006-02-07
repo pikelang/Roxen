@@ -1,4 +1,4 @@
-// $Id: add_module.pike,v 1.83 2006/01/25 10:22:30 anders Exp $
+// $Id: add_module.pike,v 1.84 2006/02/07 10:52:52 jonasw Exp $
 
 #include <config_interface.h>
 #include <module.h>
@@ -912,6 +912,10 @@ mixed parse( RequestID id )
   string method = get_method(id);
 
   if (id->variables->mod_query) {
+    //  Force UTF-8 to please some browsers that can't guess charset in
+    //  XMLHttpRequest communication.
+    id->set_output_charset && id->set_output_charset("UTF-8");
+    
     //  This can be invoked from both Normal and Faster methods
     return (method == "faster" ?
 	    page_faster_search(id) :
