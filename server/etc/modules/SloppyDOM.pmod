@@ -1,4 +1,4 @@
-// $Id: SloppyDOM.pmod,v 1.10 2004/12/01 16:58:11 mast Exp $
+// $Id: SloppyDOM.pmod,v 1.11 2006/02/15 10:59:01 mast Exp $
 
 //! A somewhat DOM-like library that implements lazy generation of the
 //! node tree, i.e. it's generated from the data upon lookup. There's
@@ -12,7 +12,7 @@
 //! Implementation status: There's only enough implemented to parse a
 //! node tree from source and access it, i.e. modification functions
 //! aren't implemented. Data hiding stuff like NodeList and
-//! NamedNodeMap are not implemented, partly since it's cumbersome to
+//! NamedNodeMap is not implemented, partly since it's cumbersome to
 //! meet the "live" requirement. Also, @[Parser.HTML] is used in XML
 //! mode to parse the input. Thus it's too error tolerant to be XML
 //! compliant, and it currently doesn't handle DTD elements, like
@@ -93,6 +93,86 @@ class Node
     return res->get();
   }
 
+  mapping(string:string)|Node|array(mapping(string:string)|Node)|string
+    simple_path (string path, void|int xml_format);
+  //! Access a node or a set of nodes through an expression that is a
+  //! subset of an XPath RelativeLocationPath in abbreviated form.
+  //!
+  //! That means one or more Steps separated by "/" or "//". A Step
+  //! consists of an AxisSpecifier followed by a NodeTest and then
+  //! optionally by one or more Predicate's.
+  //!
+  //! "/" before a Step causes it to be matched only against the
+  //! immediate children of the node(s) selected by the previous Step.
+  //! "//" before a Step causes it to be matched against any children
+  //! in the tree below the node(s) selected by the previous Step.
+  //! The initial selection before the first Step is this element.
+  //!
+  //! The currently allowed AxisSpecifier NodeTest combinations are:
+  //!
+  //! @ul
+  //! @item
+  //!   @tt{name@} to select all elements with the given name. The
+  //!   name can be @tt{"*"@} to select all.
+  //! @item
+  //!   @tt{@@name@} to select all attributes with the given name. The
+  //!   name can be @tt{"*"@} to select all.
+  //! @item
+  //!   @tt{comment()@} to select all comments.
+  //! @item
+  //!   @tt{text()@} to select all text and CDATA blocks. Note that
+  //!   all entity references are also selected, under the assumption
+  //!   that they would expand to text only.
+  //! @item
+  //!   @tt{processing-instruction("name")@} to select all processing
+  //!   instructions with the given name. The name can be left out to
+  //!   select all. Either @tt{'@} or @tt{"@} may be used to delimit
+  //!   the name. For compatibility, it can also occur without
+  //!   surrounding quotes.
+  //! @item
+  //!   @tt{node()@} to select all nodes, i.e. the whole content of an
+  //!   element node.
+  //! @item
+  //!   @tt{.@} to select the currently selected element itself.
+  //! @endul
+  //!
+  //! A Predicate is on the form @tt{[PredicateExpr]@} where
+  //! PredicateExpr currently can be in any of the following forms:
+  //!
+  //! @ul
+  //! @item
+  //!   An integer indexes one item in the selected set, according to
+  //!   the document order. A negative index counts from the end of
+  //!   the set.
+  //! @item
+  //!   A RelativeLocationPath as specified above. It's executed for
+  //!   each element in the selected set and those where it yields an
+  //!   empty result are filtered out while the rest remain in the
+  //!   set.
+  //! @item
+  //!   A RelativeLocationPath as specified above followed by
+  //!   @tt{="value"@}. The path is executed for each element in the
+  //!   selected set and those where the text result of it is equal to
+  //!   the given value remain in the set. Either @tt{'@} or @tt{"@}
+  //!   may be used to delimit the value.
+  //! @endul
+  //!
+  //! If @[xml_format] is nonzero, the return value is an xml
+  //! formatted string of all the matched nodes, in document order.
+  //! Otherwise the return value is as follows:
+  //!
+  //! Attributes are returned as one or more index/value pairs in a
+  //! mapping. Other nodes are returned as the node objects. If the
+  //! expression is on a form that can give at most one answer (i.e.
+  //! there's a predicate with an integer index) then a single mapping
+  //! or node is returned, or zero if there was no match. If the
+  //! expression can give more answers then the return value is an
+  //! array containing zero or more attribute mappings and/or nodes.
+  //! The array follows document order.
+  //!
+  //! @note
+  //! Not DOM compliant.
+
   string xml_format()
   //! Returns the formatted XML that corresponds to the node tree.
   //!
@@ -114,6 +194,48 @@ class Node
   /*protected*/ void _text_content (String.Buffer into);
   /*protected*/ void _xml_format (String.Buffer into);
   /*protected*/ void _destruct_tree() {destruct (this_object());}
+
+#define WS "%*[ \t\n\r]"
+#define NAME "%[^][ \t\n\r/@(){},=.]"
+
+  void simple_path_error (string msg, mixed... args)
+  {
+    if (sizeof (args)) msg = sprintf (msg, @args);
+    msg += sprintf ("%s node%s.\n", class_name,
+		    this_object()->node_name ?
+		    " " + this_object()->node_name : "");
+    error (msg);
+  };
+
+  static array(string) parse_trivial_node_type_path (string path)
+  {
+    string orig_path = path;
+    while (sscanf (path, WS"."WS"%s", string rest) == 3) {
+      if (has_prefix (rest, "//")) path = rest[2..];
+      else if (has_prefix (rest, "/")) path = rest[1..];
+      else break;
+    }
+    if (sscanf (path, WS""NAME""WS"("WS"%s",
+		string node_type, string rest) == 5) {
+      string arg;
+      if (sscanf (rest, ")"WS"%s", rest) != 2 &&
+	  (sscanf (rest, "'%[^']'"WS")"WS"%s", arg, rest) != 4 ||
+	   sscanf (rest, "\"%[^\"]\""WS")"WS"%s", arg, rest) != 4))
+	simple_path_error ("Invalid argument list after %O in %O in ",
+			   node_type, orig_path);
+      if (rest != "")
+	simple_path_error ("Unexpected expression %O after node type %s in ",
+			   rest, node_type);
+      if (!(<"node", "comment", "text", "processing-instruction">)[node_type])
+	simple_path_error ("Invalid node type %O in %O in ",
+			   node_type, orig_path);
+      if (arg && node_type != "processing-instruction")
+	simple_path_error ("Cannot give an argument to the node type %s "
+			   "in %O in ", node_type, orig_path);
+      return ({node_type, arg});
+    }
+    return ({0, 0});
+  }
 
   static string sprintf_name (int flag) {return "";}
   static string sprintf_attr (int flag) {return "";}
@@ -184,7 +306,7 @@ static class NodeWithChildren
     destruct (this_object());
   }
 
-  static Node make_node (int pos)
+  /*protected*/ Node make_node (int pos)
   {
     Document doc = _get_doc();
     string text = content[pos];
@@ -214,7 +336,7 @@ static class NodeWithChildren
     return node;
   }
 
-  static void make_all_nodes()
+  /*protected*/ void make_all_nodes()
   {
     CHECK_CONTENT;
     if (arrayp (content))
@@ -323,86 +445,23 @@ static class NodeWithChildElements
 
   mapping(string:string)|Node|array(mapping(string:string)|Node)|string
     simple_path (string path, void|int xml_format)
-  //! Access a node or a set of nodes through an expression that is a
-  //! subset of an XPath RelativeLocationPath. It's one or more Steps
-  //! separated by '/'. A Step consists of an AxisSpecifier followed
-  //! by a NodeTest and then by an optional Predicate. There can
-  //! currently be at most one Predicate in each Step.
-  //!
-  //! The currently allowed AxisSpecifier NodeTest combinations are:
-  //!
-  //! @ul
-  //! @item
-  //!   @tt{name@} to select all child elements with the given name.
-  //!   The name can be @tt{"*"@} to select all.
-  //! @item
-  //!   @tt{@@name@} to select all attributes with the given name. The
-  //!   name can be @tt{"*"@} to select all.
-  //! @item
-  //!   @tt{comment()@} to select all child comments.
-  //! @item
-  //!   @tt{text()@} to select all child text and CDATA blocks. Note
-  //!   that all entity references are also selected, under the
-  //!   assumption that they would expand to text only.
-  //! @item
-  //!   @tt{processing-instruction(name)@} to select all child
-  //!   processing instructions with the given name. The name can be
-  //!   left out to select all.
-  //! @item
-  //!   @tt{node()@} to select all child nodes, i.e. the whole content
-  //!   of an element node.
-  //! @endul
-  //!
-  //! A Predicate is on the form @tt{[PredicateExpr]@} where
-  //! PredicateExpr currently can be in any of the following forms:
-  //!
-  //! @ul
-  //! @item
-  //!   An integer indexes one item in the selected set, according to
-  //!   the document order. A negative index counts from the end of
-  //!   the set.
-  //! @item
-  //!   @tt{@@name@} filters out the elements in the selected set that
-  //!   has an attribute with the given name.
-  //! @item
-  //!   @tt{@@name="value"@} filters out the elements in the selected
-  //!   set that has an attribute with the given name and value.
-  //!   Either @tt{'@} or @tt{"@} may be used to delimit the string
-  //!   literal.
-  //! @endul
-  //!
-  //! If @[xml_format] is nonzero, the return value is an xml
-  //! formatted string of all the matched nodes, in document order.
-  //! Otherwise the return value is as follows:
-  //!
-  //! Attributes are returned as one or more index/value pairs in a
-  //! mapping. Other nodes are returned as the node objects. If the
-  //! expression is on a form that can give at most one answer then a
-  //! single mapping or node is returned, or zero if there was no
-  //! match. If the expression can give more answers then the return
-  //! value is an array containing zero or more attribute mappings
-  //! and/or nodes. The array follows document order.
-  //!
-  //! @note
-  //! Not DOM compliant.
   {
-#define NAME_OR_STAR_CC "^\0-)+,/;-@[-^`{-\xbf\xd7\xf7"
-#define NAME_CC NAME_OR_STAR_CC "*"
+    string orig_path = path;
+    sscanf (path, ""WS NAME WS"%s", string name, path);
 
-    sscanf (path, "%*[ \t\n\r]%["NAME_OR_STAR_CC"]%*[ \t\n\r]%s", string name, path);
-
-    void simple_path_error (string msg, mixed... args)
+    string num_ord (int nr)
     {
-      if (sizeof (args)) msg = sprintf (msg, @args);
-      msg += sprintf ("%s node%s.\n", class_name,
-		      this_object()->node_name ? " " + this_object()->node_name : "");
-      error (msg);
+      return sprintf ("%d%s", nr,
+		      nr % 10 == 1 && nr != 11 ? "st" :
+		      nr % 10 == 2 && nr != 12 ? "nd" :
+		      nr % 10 == 3 && nr != 13 ? "rd" :
+		      "th");
     };
 
     mixed res;
 
     if (!sizeof (name)) {
-      if (sscanf (path, "@%*[ \t\n\r]%["NAME_OR_STAR_CC"]%*[ \t\n\r]%s", name, path)) {
+      if (sscanf (path, "@"WS NAME WS"%s", name, path)) {
 	if (!sizeof (name))
 	  simple_path_error ("No attribute name after @ in ");
 	mapping(string:string) attr = this_object()->attributes;
@@ -415,14 +474,22 @@ static class NodeWithChildElements
 	else
 	  return xml_format && "";
       }
+
+      else if (sscanf (path, "."WS"%s", path))
+	res = ({this});
+
       else simple_path_error ("Invalid path %O in ", path);
     }
 
     else if (has_prefix (path, "(")) {
       string arg;
-      if (sscanf (path, "(%*[ \t\n\r]%["NAME_CC"]%*[ \t\n\r])%*[ \t\n\r]%s",
-		  arg, path) != 5)
-	simple_path_error ("Invalid node type expression in %O in ", name + path);
+      // The first syntax below is not correct, but we need to support
+      // it for compatibility.
+      if (sscanf (path, "("WS NAME WS")"WS"%s", arg, path) != 5 &&
+	  sscanf (path, "("WS"'%[^']'"WS")"WS"%s", arg, path) != 5 &&
+	  sscanf (path, "("WS"\"%[^\"]\""WS")"WS"%s", arg, path) != 5)
+	simple_path_error ("Invalid node type expression in %O in ",
+			   name + path);
       if (sizeof (arg) && name != "processing-instruction")
 	simple_path_error ("Cannot give an argument %O to the node type %s in ",
 			   arg, name);
@@ -512,97 +579,227 @@ static class NodeWithChildElements
 
     else res = get_elements (name);
 
-    if (has_prefix (path, "[")) {
-    parse_predicate: {
-	if (sscanf (path, "[%*[ \t\n\r]%d%*[ \t\n\r]]%*[ \t\n\r]%s",
-		    int index, path) == 5) {
-	  if (!index)
-	    simple_path_error ("Invalid index 0 in expression %O in ", name + "[0]");
+    //werror ("%O: path %O before preds: %O\n", this, path, res);
 
-	  if (index > 0) {
-	    if (index > sizeof (res)) return xml_format && "";
-	    if (mappingp (res))
-	      res = (mapping) ({((array) res)[index - 1]});
-	    else
-	      res = res[index - 1];
-	  }
-	  else {
-	    if (index < -sizeof (res)) return xml_format && "";
-	    if (mappingp (res))
-	      res = (mapping) ({((array) res)[index]});
-	    else
-	      res = res[index];
-	  }
+    string preds_path = path;
+    for (int pred_num = 1; has_prefix (path, "["); pred_num++) {
 
-	  if (intp (res)) res = make_node (res);
-	  break parse_predicate;
-	}
+      if (sscanf (path, "["WS"%d"WS"]"WS"%s", int index, path) == 5) {
+	if (!index)
+	  simple_path_error (
+	    "Invalid index 0 in %s predicate after %O in ",
+	    num_ord (pred_num),
+	    orig_path[..sizeof (orig_path) - sizeof (preds_path) - 1]);
 
-	if (sscanf (path,
-		    "[%*[ \t\n\r]@%*[ \t\n\r]%["NAME_CC"]%*[ \t\n\r]%s",
-		    string attr_name, string rest) == 5) {
-	  string attr_value;
-	  if (sscanf (rest, "]%*[ \t\n\r]%s", rest) == 2 ||
-	      sscanf (rest, "=%*[ \t\n\r]'%[^']'%*[ \t\n\r]]%*[ \t\n\r]%s",
-		      attr_value, rest) == 5 ||
-	      sscanf (rest, "=%*[ \t\n\r]\"%[^\"]\"%*[ \t\n\r]]%*[ \t\n\r]%s",
-		      attr_value, rest) == 5) {
-
-	    if (mappingp (res)) {
-	      if (!(attr_value ? res[attr_name] == attr_value : res[attr_name]))
-		return xml_format && "";
-	    }
-	    else {
-	      array(Node) filtered_res = ({});
-	      foreach (res, int|Node elem) {
-		if (intp (elem)) elem = make_node (elem);
-		if (elem->node_type == ELEMENT_NODE &&
-		    (attr_value ? elem->attributes[attr_name] == attr_value :
-		     elem->attributes[attr_name]))
-		  filtered_res += ({elem});
-	      }
-	      res = filtered_res;
-	    }
-
-	    path = rest;
-	    break parse_predicate;
-	  }
-	}
-
-	simple_path_error ("Invalid index expression in %O in ", name + path);
-      }
-    }
-
-    else
-      if (arrayp (res))
-	for (int i = sizeof (res) - 1; i >= 0; i--)
-	  if (intp (res[i])) res[i] = make_node (res[i]);
-
-    if (sizeof (path)) {
-      if (!has_prefix (path, "/"))
-	simple_path_error ("Invalid expression %O after ", path);
-      path = path[1..];
-
-      if (arrayp (res))
-	if (xml_format) {
-	  String.Buffer collected = String.Buffer();
-	  foreach (res, Node child)
-	    if (string subres = child->simple_path && child->simple_path (path, 1))
-	      collected->add (subres);
-	  return collected->get();
+	if (index > 0) {
+	  if (index > sizeof (res)) return xml_format && "";
+	  if (mappingp (res))
+	    res = (mapping) ({((array) res)[index - 1]});
+	  else
+	    res = res[index - 1];
 	}
 	else {
-	  mixed collected = ({});
-	  foreach (res, Node child)
-	    if (mixed subres = child->simple_path && child->simple_path (path, 0))
-	      collected += arrayp (subres) ? subres : ({subres});
-	  return collected;
+	  if (index < -sizeof (res)) return xml_format && "";
+	  if (mappingp (res))
+	    res = (mapping) ({((array) res)[index]});
+	  else
+	    res = res[index];
 	}
 
-      if (objectp (res) && res->simple_path)
-	return res->simple_path (path, xml_format);
+	if (intp (res)) res = make_node (res);
+      }
+
+      else {
+	string pred_expr = "";
+	string value;
+	int depth = 1;
+	path = path[1..];
+      find_balanced_brackets:
+	while (sscanf (path, "%[^][=]%1s%s",
+		       string pre, string delim, path) == 3) {
+	  pred_expr += pre;
+	  switch (delim) {
+	    case "[":
+	      depth++;
+	      break;
+	    case "]":
+	      depth--;
+	      if (!depth) break find_balanced_brackets;
+	      break;
+	    case "=":
+	      if (depth == 1) {
+		if (sscanf (path, WS"'%[^']'"WS"]"WS"%s", value, path) == 5 ||
+		    sscanf (path, WS"\"%[^\"]\""WS"]"WS"%s", value, path) == 5){
+		  depth = 0;
+		  break find_balanced_brackets;
+		}
+		simple_path_error (
+		  "Invalid equals operand in %s predicate after %O in ",
+		  num_ord (pred_num),
+		  orig_path[..sizeof (orig_path) - sizeof (preds_path) - 1]);
+	      }
+	      break;
+	  }
+	  pred_expr += delim;
+	}
+	if (depth)
+	  simple_path_error (
+	    "Unbalanced brackets in %s predicate after %O in ",
+	    num_ord (pred_num),
+	    orig_path[..sizeof (orig_path) - sizeof (preds_path) - 1]);
+
+	sscanf (pred_expr, WS"%s", pred_expr);
+
+	if (mappingp (res)) {
+	  if (sscanf (pred_expr, "@"WS NAME WS"%s",
+		      string attr_name, string rest)) {
+	    if (rest != "")
+	      simple_path_error (
+		"Invalid %s predicate after %O in ",
+		num_ord (pred_num),
+		orig_path[..sizeof (orig_path) - sizeof (preds_path) - 1]);
+	    if (!(value ? res[attr_name] == value : res[attr_name]))
+	      return xml_format && "";
+	    res = ([attr_name: res[attr_name]]);
+	  }
+	  else
+	    return xml_format && "";
+	}
+
+	else {
+	  array filtered_res = ({});
+
+	  if (value) {
+	  res_loop:
+	    foreach (res, int|Node elem) {
+	      if (intp (elem)) elem = make_node (elem);
+	      if (mixed pred_res = elem->simple_path (pred_expr)) {
+		if (arrayp (pred_res)) {
+		  foreach (pred_res, Node pred_node)
+		    if (pred_node->get_text_content() == value) {
+		      filtered_res += ({elem});
+		      continue res_loop;
+		    }
+		}
+		else if (mappingp (pred_res)) {
+		  if (values (pred_res)[0] == value) {
+		    filtered_res += ({elem});
+		    continue res_loop;
+		  }
+		}
+		else
+		  if (pred_res->get_text_content() == value) {
+		    filtered_res += ({elem});
+		    continue res_loop;
+		  }
+	      }
+	    }
+	  }
+
+	  else {
+	    foreach (res, int|Node elem) {
+	      if (intp (elem)) elem = make_node (elem);
+	      if (mixed pred_res = elem->simple_path (pred_expr))
+		if (objectp (pred_res) || sizeof (pred_res))
+		  filtered_res += ({elem});
+	    }
+	  }
+
+	  res = filtered_res;
+	  if (!sizeof (res)) return xml_format ? "" : ({});
+	}
+      }
+
+      //werror ("%O: path %O after pred %d: %O\n", this, path, pred_num, res);
+    }
+
+    if (arrayp (res))
+      for (int i = sizeof (res) - 1; i >= 0; i--)
+	if (intp (res[i])) res[i] = make_node (res[i]);
+
+    if (sizeof (path)) {
+      if (has_prefix (path, "//")) {
+	path = path[2..];
+
+	if (arrayp (res) ||
+	    (objectp (res) && res->get_elements && (res = ({res})))) {
+	  if (xml_format) {
+	    String.Buffer collected = String.Buffer();
+	    void process_list (array(Node) list) {
+	      foreach (list, Node child) {
+		if (child->get_elements) {
+		  string subres = child->simple_path (path, 1);
+		  if (subres != "")
+		    collected->add (subres);
+		  else {
+		    child->make_all_nodes();
+		    if (child->content) process_list (child->content);
+		  }
+		}
+	      }
+	    };
+	    process_list (res);
+	    return collected->get();
+	  }
+
+	  else {
+	    mixed collected = ({});
+	    void process_list (array(Node) list) {
+	      foreach (list, Node child) {
+		if (child->get_elements) {
+		  mixed subres = child->simple_path (path, 0);
+		  if (objectp (subres))
+		    collected += ({subres});
+		  else if (sizeof (subres))
+		    collected += subres;
+		  else {
+		    child->make_all_nodes();
+		    if (child->content) process_list (child->content);
+		  }
+		}
+	      }
+	    };
+	    process_list (res);
+	    return collected;
+	  }
+	}
+      }
+
+      else if (has_prefix (path, "/")) {
+	path = path[1..];
+
+	if (arrayp (res)) {
+	  if (xml_format) {
+	    String.Buffer collected = String.Buffer();
+	    foreach (res, Node child)
+	      if (child->get_elements) {
+		string subres = child->simple_path (path, 1);
+		collected->add (subres);
+	      }
+	    return collected->get();
+	  }
+
+	  else {
+	    mixed collected = ({});
+	    foreach (res, Node child)
+	      if (child->get_elements) {
+		mixed subres = child->simple_path (path, 0);
+		if (objectp (subres) || mappingp (subres))
+		  collected += ({subres});
+		else if (arrayp (subres))
+		  collected += subres;
+	      }
+	    return collected;
+	  }
+	}
+	else if (objectp (res) && res->get_elements)
+	  return res->simple_path (path, xml_format);
+	else
+	  return xml_format ? "" : ({});
+      }
+
       else
-	return xml_format ? "" : ({});
+	simple_path_error ("Invalid expression %O after ", path);
     }
 
     if (xml_format) {
@@ -611,10 +808,14 @@ static class NodeWithChildElements
       if (mappingp (res))
 	format_attrs (res, collected);
       else
-	res->_xml_format (collected); // Works both when res is Node and array(Node).
-      return collected->get();
+	// Works both when res is Node and array(Node).
+	res->_xml_format (collected);
+      string formatted = collected->get();
+      //werror ("%O: path %O, leaf result %O\n", this, orig_path, formatted);
+      return formatted;
     }
 
+    //werror ("%O: path %O, leaf result %O\n", this, orig_path, res);
     return res;
   }
 
@@ -829,6 +1030,14 @@ class CharacterData
   void replace_data (int offset, int count, string arg)
     {node_value = node_value[..offset - 1] + arg + node_value[offset + count..];}
 
+  mapping(string:string)|Node|array(mapping(string:string)|Node)|string
+    simple_path (string path, void|int xml_format)
+  {
+    [string node_type, string arg] = parse_trivial_node_type_path (path);
+    if (node_type == "text") return node_value;
+    return xml_format && "";
+  }
+
   // Internals.
 
   static constant class_name = "CharacterData";
@@ -886,6 +1095,14 @@ class Comment
   constant node_type = COMMENT_NODE;
   int get_node_type() { return COMMENT_NODE; }
   string get_node_name() { return "#comment"; }
+
+  mapping(string:string)|Node|array(mapping(string:string)|Node)|string
+    simple_path (string path, void|int xml_format)
+  {
+    [string node_type, string arg] = parse_trivial_node_type_path (path);
+    if (node_type == "comment") return node_value;
+    return xml_format && "";
+  }
 
   static void create (Document owner, string data)
   {
@@ -955,6 +1172,14 @@ class EntityReference
   //Node get_previous_sibling();
   //Node get_next_sibling();
 
+  mapping(string:string)|Node|array(mapping(string:string)|Node)|string
+    simple_path (string path, void|int xml_format)
+  {
+    [string node_type, string arg] = parse_trivial_node_type_path (path);
+    if (node_type == "text") return "&" + node_name + ";";
+    return xml_format && "";
+  }
+
   static void create (Document owner, string name)
   {
     owner_document = owner;
@@ -1000,6 +1225,16 @@ class ProcessingInstruction
   void set_node_value (string data) {node_value = data;}
   string get_data() {return node_value;}
   void set_data (string data) {node_value = data;}
+
+  mapping(string:string)|Node|array(mapping(string:string)|Node)|string
+    simple_path (string path, void|int xml_format)
+  {
+    [string node_type, string arg] = parse_trivial_node_type_path (path);
+    if (node_type == "processing-instruction")
+      if (!arg) return node_value;
+      else if (arg == node_name) return node_value;
+    return xml_format && "";
+  }
 
   static void create (Document owner, string t, string data)
   {
@@ -1049,7 +1284,7 @@ static array sloppy_parser_container_callback (
       args[arg] = ent_p->finish (args[arg])->read();
   Element element = Element (cur->_get_doc(), p->tag_name(), args);
   element->parent_node = cur;
-  element->content = p->tag_content();
+  element->content = content;
   return ({element});
 }
 
