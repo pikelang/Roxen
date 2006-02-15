@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.508 2006/01/13 15:15:56 grubba Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.509 2006/02/15 11:05:31 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -8431,6 +8431,9 @@ the respective attributes below for further information.</p></desc>
 
    <item><p>\'<tt>node()</tt>\' selects all the different sorts of
    nodes in the content, i.e. the whole content.</p></item>
+
+   <item><p>\'.\' selects the currently selected element
+   itself.</p></item>
  </list>
 
  <p>A step may be followed by \'<tt>[<i>test</i>]</tt>\' to filter the
@@ -8438,20 +8441,28 @@ the respective attributes below for further information.</p></desc>
  following:</p>
 
  <list type=\"ul\">
-   <item>If <i>test</i> is an integer then the item on that position
-   in the set is selected. The index n may be negative to select an
-   element in reverse order, i.e. -1 selects the last element, -2 the
-   second-to-last, etc.</item>
+   <item><p>If <i>test</i> is an integer then the item on that
+   position in the set is selected. The index n may be negative to
+   select an element in reverse order, i.e. -1 selects the last
+   element, -2 the second-to-last, etc.</p></item>
 
-   <item>If <i>test</i> is on the form \'<tt>@<i>name</i></tt>\' then
-   only the elements that have an attribute with the given name are
-   selected.</item>
+   <item><p>If <i>test</i> is a path on the form described above then
+   that path is evaluated for each node in the selected set, and only
+   the nodes where the path finds a match remain in the set.</p>
 
-   <item>If <i>test</i> is on the form
-   \'<tt>@<i>name</i>=<i>value</i></tt>\' then only the elements that
-   have an attribute with the given name and value are selected.
+   <p>E.g. a test on the form \'<tt>@<i>name</i></tt>\' accepts only
+   elements that have an attribute with the given name.</p></item>
+
+   <item><p>If <i>test</i> is on the form
+   \'<tt><i>path</i>=<i>value</i>\' then <i>path</i> is evaluated for
+   each node in the selected set, and only the nodes where at least
+   one path result matches <i>value</i> remain in the set.
    <i>value</i> is a string literal delimited by either <tt>\"</tt> or
-   <tt>\'</tt>.</item>
+   <tt>\'</tt>.</p>
+
+   <p>E.g. \'<tt>@<i>name</i>=<i>value</i></tt>\' filters out the
+   elements that have an attribute with the given name and
+   value.</p></item>
  </list>
 
  <p>An example: The expression \'<tt>p/*[2]/@href</tt>\' first
