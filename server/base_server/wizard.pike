@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2004, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.153 2004/08/01 12:45:08 anders Exp $
+// $Id: wizard.pike,v 1.154 2006/02/15 13:15:24 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -254,7 +254,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       "<hr size=\"2\" align=\"left\" noshade=\"noshade\" width=\"70\" />\n"+
       "<font size=\"-1\"><input type=\"string\" name=\""+
       m->name+".entered\" size=\"8\" value=\""+
-      color_name(a)+"\"> <input type=\"submit\" value=\"Ok\"></font></td></table>\n");
+      color_name(a)+"\"> <input type=\"submit\" value=\"OK\"></font></td></table>\n");
 
    case "color-small":
      if(id->variables[m->name+".hsv"])
