@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.65 2005/09/23 21:24:29 mast Exp $
+// $Id: DBManager.pmod,v 1.66 2006/02/17 20:49:36 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -257,12 +257,19 @@ Sql.Sql sql_cache_get(string what, void|int reuse_in_thread)
 {
   Thread.MutexKey key = roxenloader.sq_cache_lock();
   string i = replace(what,":",";")+":-";
-  Sql.Sql res =
-    roxenloader.sq_cache_get( i, reuse_in_thread) ||
-    roxenloader.sq_cache_set( i, get_sql_handler( what ), reuse_in_thread);
-  // Fool the optimizer so that key is not released prematurely
-  if( res )
-    return res; 
+  Sql.Sql res = roxenloader.sq_cache_get(i, reuse_in_thread);
+  if (res) return res;
+  // Release the lock during the call to get_sql_handler(),
+  // since it may take quite a bit of time...
+  destruct(key);
+  if (res = get_sql_handler(what)) {
+    // Now we need the lock again...
+    key = roxenloader.sq_cache_lock();
+    res = roxenloader.sq_cache_set(i, res, reuse_in_thread);
+    // Fool the optimizer so that key is not released prematurely
+    if( res )
+      return res; 
+  }
 }
 
 void add_dblist_changed_callback( function(void:void) callback )
