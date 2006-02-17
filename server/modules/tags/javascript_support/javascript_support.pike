@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.62 2005/09/30 19:14:10 jonasw Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.63 2006/02/17 12:52:37 jonasw Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -155,8 +155,13 @@ static private
 string c_js_quote(string name, mapping args, string contents)
 {
   string r = "var r = \"\";\n";
-  r += Array.map(replace(contents, ({"\""}), ({ "\\\"" }) )/"\n", 
-		 lambda(string row) {return "r += \""+row;})*"\\n\";\n";
+  r +=
+    Array.map(replace(contents,
+		      ({ "\"", "<script", "</script>",
+			 "<SCRIPT", "</SCRIPT>" }),
+		      ({ "\\\"", "<scr\" + \"ipt", "</scr\" + \"ipt>",
+			 "<SCR\" + \"IPT", "</SCR\" + \"IPT>" }) ) / "\n", 
+	      lambda(string row) {return "r += \"" + row; }) * "\\n\";\n";
   r += "\";\ndocument.write(r);\n";
   return r;
 };
