@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.62 2005/08/17 12:28:19 noring Exp $
+// $Id: DBManager.pmod,v 1.63 2006/02/17 20:49:43 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -29,9 +29,14 @@ private
     return connect_to_my_mysql( 0, "roxen" )->query( @args );
   }
 
-  string short( string n )
+  string old_short( string n )
   {
     return lower_case(sprintf("%s%4x", CN(n)[..6],(hash( n )&65535) ));
+  }
+
+  string short( string n )
+  {
+    return lower_case(sprintf("%s%04x", CN(n - " ")[..6],(hash( n )&65535) ));
   }
 
   void clear_sql_caches()
@@ -252,8 +257,16 @@ mixed sql_cache_get(string what)
 {
   mixed key = roxenloader.sq_cache_lock();  
   string i = replace(what,":",";")+":-";
-  mixed res = roxenloader.sq_cache_get( i ) ||
-    roxenloader.sq_cache_set( i, get_sql_handler( what ) );
+  mixed res = roxenloader.sq_cache_get( i );
+  if (res) return res;
+  // Release the lock during the call to get_sql_handler(),
+  // since it may take quite a bit of time...
+  destruct(key);
+  if (res = get_sql_handler(what)) {
+    // Now we need the lock again...
+    key = roxenloader.sq_cache_lock();
+    res = roxenloader.sq_cache_set(i, res);
+  }
   // Fool the optimizer so that key is not released prematurely
   if( res )
     return res; 
@@ -570,10 +583,25 @@ string get_db_user( string name, Configuration c, int ro )
   if( c )
   {
     res = query( "SELECT permission FROM db_permissions "
-                 "WHERE db=%s AND config=%s",  name, CN(c->name));
-    if( sizeof( res ) && res[0]->permission != "none" )
-      return connection_user_cache[ key ]=short(c->name) +
+                 "WHERE db=%s AND config=%s", name, CN(c->name));
+    if( sizeof( res ) && res[0]->permission != "none" ) {
+      string name = connection_user_cache[ key ]=short(c->name) +
 	((ro || res[0]->permission!="write")?"_ro":"_rw");
+      string old_name = connection_user_cache[ key ] = old_short(c->name) +
+	((ro || res[0]->permission!="write")?"_ro":"_rw");
+      if (name != old_name) {
+	object db = connect_to_my_mysql( 0, "mysql" );
+	if (sizeof(db->query("SELECT User FROM Users WHERE User=%s",
+			     old_name))) {
+	  db->query("UPDATE TABLE users SET User=%s WHERE User=%s",
+		    name, old_name);
+	  db->query("UPDATE TABLE db SET User=%s WHERE User=%s",
+		    name, old_name);
+	  db->query("FLUSH PRIVILEGES");
+	}
+      }
+      return name;
+    }
     return connection_user_cache[ key ] = 0;
   }
   return connection_user_cache[ key ] = ro?"ro":"rw";
