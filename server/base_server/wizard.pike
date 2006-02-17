@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2004, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.154 2006/02/15 13:15:24 jonasw Exp $
+// $Id: wizard.pike,v 1.155 2006/02/17 12:24:00 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -401,12 +401,12 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        //  but MSIE 6.0 failed to recognize them so we execute them explicitly
        //  instead.
        "<script language='javascript'>"
-       "getObject('PREFIX_mark_x').style.top = 5;"
-       "getObject('PREFIX_mark_x').style.left = " + mark_x_left + ";"
-       "getObject('PREFIX_mark_y').style.top = " + mark_y_top + ";"
-       "getObject('PREFIX_mark_y').style.left = 5;"
-       "getObject('PREFIX_mark_y_small').style.top = " + mark_y_small_top + ";"
-       "getObject('PREFIX_mark_y_small').style.left = 143;"
+       "getObject('PREFIX_mark_x').style.top = '5px';"
+       "getObject('PREFIX_mark_x').style.left = '" + mark_x_left + "px';"
+       "getObject('PREFIX_mark_y').style.top = '" + mark_y_top + "px';"
+       "getObject('PREFIX_mark_y').style.left = '5px';"
+       "getObject('PREFIX_mark_y_small').style.top = '" + mark_y_small_top + "px';"
+       "getObject('PREFIX_mark_y_small').style.left = '143px';"
        "</script>"
 
        "<table border='0' cellspacing='0' cellpadding='2'>"

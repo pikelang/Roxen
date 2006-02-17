@@ -1,5 +1,5 @@
 //  Color selector scripts. Used by <var type="color"> in WebServer wizards.
-//  $Id: ColorSelector.js,v 1.5 2004/09/27 17:32:07 jonasw Exp $
+//  $Id: ColorSelector.js,v 1.6 2006/02/17 12:23:36 jonasw Exp $
 
 
 //  Known HTML color names
@@ -237,13 +237,13 @@ function colsel_update(prefix, h, s, v, update_field, force_color)
 
   var mark_x_img = getObject(prefix + "mark_x");
   if (mark_x_img)
-    mark_x_img.style.left = 5 + Math.floor(h / 2);
+    mark_x_img.style.left = 5 + Math.floor(h / 2) + "px";
   var mark_y_img = getObject(prefix + "mark_y");
   if (mark_y_img)
-    mark_y_img.style.top = 5 + Math.floor((255 - v) / 2);
+    mark_y_img.style.top = 5 + Math.floor((255 - v) / 2) + "px";
   var mark_y_small_img = getObject(prefix + "mark_y_small");
   if (mark_y_small_img)
-    mark_y_small_img.style.top = 5 + Math.floor((255 - s) / 2);
+    mark_y_small_img.style.top = 5 + Math.floor((255 - s) / 2) + "px";
   
   var preview_td = getObject(prefix + "preview");
   if (preview_td) {
