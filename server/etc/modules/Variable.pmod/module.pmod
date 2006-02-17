@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.90 2005/12/17 18:41:43 jonasw Exp $
+// $Id: module.pmod,v 1.91 2006/02/17 06:26:29 mast Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -681,7 +681,7 @@ class Float
     //! As a compatibility measure, the range check is removed if
     //! maximum < minimum.
   {
-    if (maximum < minimum)
+    if (maximum != no_limit && minimum != no_limit && maximum < minimum)
       _max = _min = no_limit;
     else {
       _max = maximum;
@@ -766,7 +766,7 @@ class Int
     //! As a compatibility measure, the range check is removed if
     //! maximum < minimum.
   {
-    if (maximum < minimum)
+    if (maximum != no_limit && minimum != no_limit && maximum < minimum)
       _max = _min = no_limit;
     else {
       _max = maximum;
