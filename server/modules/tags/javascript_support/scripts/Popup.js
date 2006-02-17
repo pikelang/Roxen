@@ -3,6 +3,14 @@
 
 popups = new Array(0);
 
+//  Extra help function that can be overridden when page coordinates are
+//  non-standard (e.g. due to canvas positioning tricks).
+function get_vertical_offset()
+{
+  return 0;
+}
+
+
 // Removes all hide timers.
 function clearHideTimers(from)
 {
@@ -64,7 +72,8 @@ function PopupInfo(name, x, y, w, h, properties)
 function addPopup(name, properties)
 {
   popups[popups.length] =
-    new PopupInfo(name, getObjectLeft(name), getObjectTop(name),
+    new PopupInfo(name, getObjectLeft(name),
+		  getObjectTop(name) - get_vertical_offset(),
 		  getObjectWidth(name), getObjectHeight(name), properties);
 }
 
@@ -171,7 +180,7 @@ function showPopup(e, name, parent, properties)
   var parentCoord = (parent != "none"? new PopupCoord(parent): 0);
   var pos = new properties.LayerPosition(new TriggerCoord(e, parentCoord, name),
 					 parentCoord, properties);
-  shiftTo(popup, pos.x, pos.y);
+  shiftTo(popup, pos.x, pos.y + get_vertical_offset());
   if (!properties.dont_bound_popup)
       boundPopup(popup);
   addPopup(name, properties);
