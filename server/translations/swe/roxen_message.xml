@@ -281,7 +281,7 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </str>
 
 <str id="38">
-<o>Ok</o>
+<o>OK</o>
 <t>OK</t>
 </str>
 
