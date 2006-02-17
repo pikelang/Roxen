@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.75 2005/12/09 20:56:43 grubba Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.76 2006/02/17 19:42:14 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -308,7 +308,7 @@ string api_query_variable(RequestID id, string what, void|string scope)
 
 string api_query_cookie(RequestID id, string f)
 {
-  return ([mapping(string:string)]id->cookies)[f];
+  return id->cookies[f];
 }
 
 void api_add_header(RequestID id, string h, string v)
