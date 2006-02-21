@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.343 2005/09/16 10:50:00 mast Exp $
+// $Id: module.pmod,v 1.344 2006/02/21 06:36:32 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -8973,7 +8973,9 @@ PCode string_to_p_code (string str, void|Configuration default_config,
   // to staleness.
   string errmsg = describe_error (err);
   if (has_value (errmsg, "Bad instruction checksum") ||
-      has_value (errmsg, "encoded with other pike version"))
+      has_value (errmsg, "encoded with other pike version") ||
+      has_value (errmsg, "Unsupported byte-code method") ||
+      has_value (errmsg, "Unsupported byte-order"))
     p_code_stale_error ("P-code is stale - " + errmsg);
   else
     throw (err);
