@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.604 2006/02/06 13:51:56 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.605 2006/02/23 12:26:31 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1297,11 +1297,12 @@ static array(string) draw_spinner(string bgcolor)
   
   //  Load all spinner PNGs
   if (!spinner_data) {
-    spinner_data = ({ });
+    array(mapping) temp_spinner_data = ({ });
     for (int i = 0; i < 12; i++) {
       string src = lopen("roxen-images/spinner" + i + ".png", "r")->read();
-      spinner_data += ({ Image.PNG._decode(src) });
+      temp_spinner_data += ({ Image.PNG._decode(src) });
     }
+    spinner_data = temp_spinner_data;
   }
   
   //  Create non-transparent Image object for each frame
