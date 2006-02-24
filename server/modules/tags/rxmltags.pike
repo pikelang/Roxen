@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.438 2005/12/07 23:11:18 _cvs_dirix Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.439 2006/02/24 11:17:55 _cvs_dirix Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -262,7 +262,8 @@ class TagAppend {
   inherit RXML.Tag;
   constant name = "append";
   mapping(string:RXML.Type) req_arg_types = ([ "variable" : RXML.t_text(RXML.PEnt) ]);
-  mapping(string:RXML.Type) opt_arg_types = ([ "type": RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) opt_arg_types = ([ "type": RXML.t_text(RXML.PEnt),
+  					       "key": RXML.t_text(RXML.PEnt) ]);
   RXML.Type content_type = RXML.t_any (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
   int flags = RXML.FLAG_DONT_RECOVER;
@@ -273,7 +274,7 @@ class TagAppend {
     array do_enter (RequestID id)
     {
       if (args->value || args->from) flags |= RXML.FLAG_EMPTY_ELEMENT;
-      if (args->type && args->type != "array") {
+      if (args->type && args->type != "array" && args->type != "mapping" ) {
         args->type = RXML.t_type->encode (args->type);
 	content_type = args->type (RXML.PXml);
       }
@@ -298,12 +299,21 @@ class TagAppend {
       
       if (args->type == "array" && !arrayp (content))
           content = ({ content });
-       
+
+      if (args->type == "mapping" && !mappingp (content))
+          content = ([ args->key : content ]);
+      
       // Append a value to an entity variable.
       if (value)
       {
-        if(arrayp(content) && !arrayp(value))
+        if(arrayp(content) && !arrayp(value) && !mappingp(value))
 	  value = ({ value });
+	else if(arrayp(content) && mappingp(value))
+	  parse_error("Trying to assign array to a mapping");
+        else if(mappingp(content) && !mappingp(value) && !arrayp(value))
+	  value = ([ 0 : value ]);
+	else if(mappingp(content) && arrayp(value))
+	  parse_error("Trying to assign mapping to an array");
         value+=content;
       }
       else
