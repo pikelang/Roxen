@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.207 2006/01/15 06:25:41 mast Exp $
+// $Id: Roxen.pmod,v 1.208 2006/02/27 18:10:24 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3605,12 +3605,13 @@ class ScopeRoxen {
 
   array(string) _indices(void|RXML.Context c) {
     if (!c) c = RXML_CONTEXT;
-    return indices(c->misc->scope_roxen) +
-      ({ "uptime", "uptime-days", "uptime-hours", "uptime-minutes",
-	 "hits-per-minute", "hits", "sent-mb", "sent", "unique-id",
-	 "sent-per-minute", "sent-kbit-per-second", "ssl-strength",
-	 "pike-version", "version", "time", "server", "domain",
-	 "locale", "path" });
+    return
+      Array.uniq(indices(c->misc->scope_roxen) +
+		 ({ "uptime", "uptime-days", "uptime-hours", "uptime-minutes",
+		    "hits-per-minute", "hits", "sent-mb", "sent", "unique-id",
+		    "sent-per-minute", "sent-kbit-per-second", "ssl-strength",
+		    "pike-version", "version", "time", "server", "domain",
+		    "locale", "path" }) );
   }
 
   void _m_delete (string var, void|RXML.Context c, void|string scope_name) {
@@ -3691,7 +3692,7 @@ class ScopePage {
 	 "ssl-strength", "dir", "counter" });
     foreach(indices(converter), string def)
       if(c->misc[converter[def]]) ind+=({def});
-    return ind + ({"pathinfo"});
+    return Array.uniq(ind);
   }
 
   void _m_delete (string var, void|RXML.Context c, void|string scope_name) {
