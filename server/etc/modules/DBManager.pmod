@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.63 2006/02/17 20:49:43 grubba Exp $
+// $Id: DBManager.pmod,v 1.64 2006/02/28 11:03:53 wellhard Exp $
 
 //! Manages database aliases and permissions
 
@@ -29,14 +29,9 @@ private
     return connect_to_my_mysql( 0, "roxen" )->query( @args );
   }
 
-  string old_short( string n )
-  {
-    return lower_case(sprintf("%s%4x", CN(n)[..6],(hash( n )&65535) ));
-  }
-
   string short( string n )
   {
-    return lower_case(sprintf("%s%04x", CN(n - " ")[..6],(hash( n )&65535) ));
+    return lower_case(sprintf("%s%4x", CN(n)[..6],(hash( n )&65535) ));
   }
 
   void clear_sql_caches()
@@ -583,25 +578,10 @@ string get_db_user( string name, Configuration c, int ro )
   if( c )
   {
     res = query( "SELECT permission FROM db_permissions "
-                 "WHERE db=%s AND config=%s", name, CN(c->name));
-    if( sizeof( res ) && res[0]->permission != "none" ) {
-      string name = connection_user_cache[ key ]=short(c->name) +
+                 "WHERE db=%s AND config=%s",  name, CN(c->name));
+    if( sizeof( res ) && res[0]->permission != "none" )
+      return connection_user_cache[ key ]=short(c->name) +
 	((ro || res[0]->permission!="write")?"_ro":"_rw");
-      string old_name = connection_user_cache[ key ] = old_short(c->name) +
-	((ro || res[0]->permission!="write")?"_ro":"_rw");
-      if (name != old_name) {
-	object db = connect_to_my_mysql( 0, "mysql" );
-	if (sizeof(db->query("SELECT User FROM Users WHERE User=%s",
-			     old_name))) {
-	  db->query("UPDATE TABLE users SET User=%s WHERE User=%s",
-		    name, old_name);
-	  db->query("UPDATE TABLE db SET User=%s WHERE User=%s",
-		    name, old_name);
-	  db->query("FLUSH PRIVILEGES");
-	}
-      }
-      return name;
-    }
     return connection_user_cache[ key ] = 0;
   }
   return connection_user_cache[ key ] = ro?"ro":"rw";
