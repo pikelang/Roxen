@@ -11,7 +11,7 @@ constant module_type = MODULE_TAG;
 constant module_name = "Tags: Translation module";
 constant module_doc  = "This module provides an RXML API to the Pike localization system.";
 constant thread_safe = 1;
-constant cvs_version = "$Id: translation_mod.pike,v 1.15 2006/03/01 13:53:02 jonasw Exp $";
+constant cvs_version = "$Id: translation_mod.pike,v 1.16 2006/03/01 16:28:52 jonasw Exp $";
 
 
 
@@ -47,7 +47,10 @@ class TagTranslate {
   inherit RXML.Tag;
   constant name = "translate";
 
-  array(RXML.Type) result_types = ({ RXML.t_html(RXML.PXml) });
+  array(RXML.Type) result_types = ({ RXML.t_xml(RXML.PXml),
+				     RXML.t_html(RXML.PXml),
+				     RXML.t_text(RXML.PXml),
+				     RXML.t_any(RXML.PXml) });
 
   mapping(string:RXML.Type) opt_arg_types = ([ 
     "id":RXML.t_text(RXML.PEnt),
@@ -68,7 +71,7 @@ class TagTranslate {
 	RXML.user_set_var(args->variable, trans, args->scope);
 	return 0;
       }
-
+      
       return ({ trans });
     }
   }
