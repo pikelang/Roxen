@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.190 2005/12/21 13:55:30 noring Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.191 2006/03/06 13:04:04 jonasw Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -471,7 +471,8 @@ mapping get_variable_map( string s, object mod, RequestID id, int noset )
     res->id = var->_id;
     res->changed = !var->is_defaulted();
     res->cid = res->changed*-10000000+res->id;
-    res->name = (((string)var->name())/":")[-1];
+    string n = (string) var->name();
+    res->name = has_value(n, ":") ? ((n / ":")[1..] * ":") : n;
     res->cname = (!res->changed)+res->name;
     res->doc = config_setting2("docs")?(string)var->doc():"";
     res->value = var->query();
