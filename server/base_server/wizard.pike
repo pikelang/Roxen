@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2004, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.155 2006/02/17 12:24:00 jonasw Exp $
+// $Id: wizard.pike,v 1.156 2006/03/06 13:06:47 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -315,7 +315,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
       "<tr><td width=\"110\">\n"
       "<font size=\"-1\"><input type=\"string\" name=\""+
       m->name+".entered\" size=\"8\" value=\""+
-      color_name(a)+"\"> <input type=\"submit\" value=\"" + LOCALE(38, "Ok") + "\"></font>"
+      color_name(a)+"\"> <input type=\"submit\" value=\"" + LOCALE(38, "OK") + "\"></font>"
       "</td></tr>\n"
       "</table>\n");
 

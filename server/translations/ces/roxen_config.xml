@@ -1546,7 +1546,8 @@ The start script attempts to fix this for the standard file locations.&lt;/p&gt;
 <str id="308">
 <new/>
 <o>If no file match a given resource all directories above the wanted file is searched for one of the files in this list.&lt;p&gt;
-As an example, if the file /foo/bar/not_there.html is wanted, and this list contains the default value of 404.inc, these files will be searched for, in this order:&lt;/p&gt;&lt;br /&gt;  /foo/bar/404.inc, /foo/404.inc and /404.inc.</o>
+As an example, if the file /foo/bar/not_there.html is wanted, and this list contains the default value of 404.inc, these files will be searched for, in this order:&lt;/p&gt;&lt;br /&gt;  /foo/bar/404.inc, /foo/404.inc and /404.inc.&lt;p&gt;
+The inclusion file can access the form variables form.orig-file and form.orig-url to identify the original page that was requested.</o>
 <t></t>
 </str>
 

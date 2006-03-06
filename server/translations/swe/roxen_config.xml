@@ -106,9 +106,8 @@
 </str>
 
 <str id="13">
-<changed from="The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order"/>
 <o>The priority of the module. 9 is highest and 0 is lowest. Modules with the same priority can be assumed to be called in random order.</o>
-<t>Modulens prioritet, där 9 är högst och 0 är lägst. Moduler med samma prioritet kan antas anropas i slumpvis ordning</t>
+<t>Modulens prioritet, där 9 är högst och 0 är lägst. Moduler med samma prioritet kan antas anropas i slumpvis ordning.</t>
 </str>
 
 <str id="16">
@@ -122,9 +121,8 @@
 </str>
 
 <str id="20">
-<changed from="Default site"/>
 <o>Ports: Default site</o>
-<t>Standardsite</t>
+<t>Portar: Standardsite</t>
 </str>
 
 <str id="21">
@@ -162,48 +160,6 @@ att användas.</t>
 </str>
 
 <str id="27">
-<changed from="What format to use for logging. The syntax is:
-&lt;pre&gt;response-code or *: Log format for that response code
-
-Log format is normal characters, or one or more of the variables below:
-
-\n \t \r       -- As in C, newline, tab and linefeed
-$char(int)     -- Insert the (1 byte) character specified by the integer.
-$wchar(int)    -- Insert the (2 byte) word specified by the integer.
-$int(int)      -- Insert the (4 byte) word specified by the integer.
-$^             -- Supress newline at the end of the logentry
-$host          -- The remote host name, or ip number.
-$vhost         -- The Host request-header sent by the client, or - if none
-$ip_number     -- The remote ip number.
-$bin-ip_number -- The remote host id as a binary integer number.
-$cern_date     -- Cern Common Log file format date.
-$bin-date      -- Time, but as an 32 bit integer in network byteorder
-$method        -- Request method
-$resource      -- Resource identifier
-$full_resource -- Full requested resource, including any query fields
-$protocol      -- The protocol used (normally HTTP/1.0)
-$response      -- The response code sent
-$bin-response  -- The response code sent as a binary short number
-$length        -- The length of the data section of the reply
-$bin-length    -- Same, but as an 32 bit integer in network byteorder
-$request-time  -- The time the request took (seconds)
-$referer       -- the header 'referer' from the request, or '-'.
-$user_agent    -- the header 'User-Agent' from the request, or '-'.
-
-$user          -- the name of the auth user used, if any
-$user_id       -- A unique user ID, if cookies are supported,
-                  by the client, otherwise '0'
-$cache-status  -- A comma separated list of words (containing no
-                  whitespace) that describes which cache(s) the page
-                  was delivered from:
-                  protcache -- The low-level cache in the HTTP
-                               protocol module.
-                  xsltcache -- The XSLT cache.
-                  pcoderam  -- RXML parse tree RAM cache.
-                  pcodedisk -- RXML parse tree persistent cache.
-                  cachetag  -- No RXML &amp;lt;cache&amp;gt; tag misses.
-                  nocache   -- No hit in any known cache.
-&lt;/pre&gt;"/>
 <o>What format to use for logging. The syntax is:
 &lt;pre&gt;response-code or *: Log format for that response code
 
@@ -253,53 +209,54 @@ svarskod eller *: Loggformat för svarskoden (eller alla koder som inte
 
 loggformatet är normala tecken, och en eller flera av koderna nedan.
 
-\n \t \r       -- Precis som i C, ny rad, tab och carriage return
-$char(int)     -- Stoppa in det tecken vars teckenkod är det angivna nummret.
-$wchar(int)    -- Stoppa in det tvåocktetstecken vars teckenkod är det
-                  angivna nummret.
-$int(int)      -- Stoppa in det fyraocktetstecken vars teckenkod är det
-                  angivna nummret.
-$^             -- Stoppa &lt;b&gt;inte&lt;/b&gt; in en vagnretur på slutet av
-                  varje loggrad
-$host          -- DNS namnet för datorn som gjorde förfrågan
-$vhost         -- Host-headern som klienten skickade, eller '-' om den inte
-                  skickade någon.
-$ip_number     -- IP-nummret för datorn som gjorde förfrågan
-$bin-ip_number -- IP-nummret för datorn som gjorde förfrågan som
-                  binärdata i nätverksoktettordning
-
-$cern_date     -- Ett datum som det ska vara enligt Cern Common Log
-                  file specifikationen
-$bin-date      -- Tiden för requesten som sekunder sedan 1970, binärt
-                  i nätverksoktettordning.
-
-$method        -- Förfrågningsmetoden (GET, POST etc)
-$resource      -- Resursidentifieraren (filnamnet)
-$full_resource -- Hela den efterfrågade resursen, inklusive eventuella
-                  query-variabler.
-$protocol      -- Protokollet som användes för att fråga efter filen
-$response      -- Den skickade svarskoden
-$bin-response  -- Den skickade svarskoden som ett binärt ord (2
-                  oktetter) i nätverksoktettordning
-$length        -- Längden av datan som skickades som svar till klienten
-$bin-length    -- Samma sak, men som ett 4 oktetters ord i
-                  nätverksoktettordning.
-$request-time  -- Tiden som requesten tog i sekunder
-$referer       -- Headern 'referer' från förfrågan eller '-'.
-$user_agent    -- Headern 'User-Agent' från förfrågan eller '-'.
-$user          -- Den autentifierade användarens namn, eller '-'
-$user_id       -- Ett unikt användarid. Tas från kakan RoxenUserID; du
-                  måste slå på kaksättningsfunktionaliteten i de
-                  globala inställningarna. '0' används för de
-                  förfrågningar som inte har kakan.
-$cache-status  -- En komma-separerad lista av identifierare som beskriver
-                  vilken cache/vilka cachear, som sidan skickades från:
-                  protcache -- Lågnivå-cachen i HTTP-protokollmodulen.
-                  xsltcache -- XSLT-cachen.
-                  pcoderam  -- RXML-parseträds RAM-cache.
-                  pcodedisk -- RXML-parseträds diskcache.
-                  cachetag  -- Inga RXML &amp;lt;cache&amp;gt;-tagsmissar.
-                  nocache   -- Cachemiss.
+\n \t \r        -- Precis som i C, ny rad, tab och carriage return
+$char(int)      -- Stoppa in det tecken vars teckenkod är det angivna nummret.
+$wchar(int)     -- Stoppa in det tvåocktetstecken vars teckenkod är det
+                   angivna nummret.
+$int(int)       -- Stoppa in det fyraocktetstecken vars teckenkod är det
+                   angivna nummret.
+$^              -- Stoppa &lt;b&gt;inte&lt;/b&gt; in en vagnretur på slutet av
+                   varje loggrad
+$host           -- DNS namnet för datorn som gjorde förfrågan
+$vhost          -- Host-headern som klienten skickade, eller '-' om den inte
+                   skickade någon.
+$ip_number      -- IP-nummret för datorn som gjorde förfrågan
+$bin-ip_number  -- IP-nummret för datorn som gjorde förfrågan som
+                   binärdata i nätverksoktettordning
+	        
+$cern_date      -- Ett datum som det ska vara enligt Cern Common Log
+                   file specifikationen
+$bin-date       -- Tiden för requesten som sekunder sedan 1970, binärt
+                   i nätverksoktettordning.
+	        
+$method         -- Förfrågningsmetoden (GET, POST etc)
+$resource       -- Resursidentifieraren (filnamnet)
+$full_resource  -- Hela den efterfrågade resursen, inklusive eventuella
+                   query-variabler.
+$protocol       -- Protokollet som användes för att fråga efter filen
+$response       -- Den skickade svarskoden
+$bin-response   -- Den skickade svarskoden som ett binärt ord (2
+                   oktetter) i nätverksoktettordning
+$length         -- Längden av datan som skickades som svar till klienten
+$bin-length     -- Samma sak, men som ett 4 oktetters ord i
+                   nätverksoktettordning.
+$request-time   -- Tiden som requesten tog i sekunder
+$referer        -- Headern 'referer' från förfrågan eller '-'.
+$user_agent     -- Headern 'User-Agent' från förfrågan eller '-'.
+$user_agent_raw -- Samma, men mellanslag ej kodade som %20.
+$user           -- Den autentifierade användarens namn, eller '-'
+$user_id        -- Ett unikt användarid. Tas från kakan RoxenUserID; du
+                   måste slå på kaksättningsfunktionaliteten i de
+                   globala inställningarna. '0' används för de
+                   förfrågningar som inte har kakan.
+$cache-status   -- En komma-separerad lista av identifierare som beskriver
+                   vilken cache/vilka cachear, som sidan skickades från:
+                   protcache -- Lågnivå-cachen i HTTP-protokollmodulen.
+                   xsltcache -- XSLT-cachen.
+                   pcoderam  -- RXML-parseträds RAM-cache.
+                   pcodedisk -- RXML-parseträds diskcache.
+                   cachetag  -- Inga RXML &amp;lt;cache&amp;gt;-tagsmissar.
+                   nocache   -- Cachemiss.
 &lt;/pre&gt;</t>
 </str>
 
@@ -364,7 +321,6 @@ epostadresser, samt för att generera skönsvärdet för serverurl-variablen.</t>
 </str>
 
 <str id="37">
-<changed from="This is the main server URL, where your start page is located. Please note that you also have to configure the 'URLs' variable."/>
 <o>This is the main server URL, where your start page is located. This
 setting is for instance used as fallback to generate absolute URLs to
 the server, but in most circumstances the URLs sent by the clients are
@@ -373,13 +329,18 @@ blank.
 
 &lt;p&gt;Note that setting this doesn't make the server accessible; you must
 also set 'URLs'.</o>
-<t>Det här är huvudURLen till din startsida. Den används av många
-moduler för att bygga upp absoluta URLer från en relativ URL.</t>
+<t>Det här är huvud-URL:en till din startsida. Värdet används till exempel
+i undantagsfall för att generera absoluta URL:ar till servern, men vanligtvis
+används URL:ar skickade från webbläsarna. Om fältet lämnas tomt härleds en
+URL från den första posten i inställningen för 'URL:er'.
+
+&lt;p&gt;Observera att denna inställning inte är tillräcklig för att göra
+servern åtkomlig; då måste även ange 'URL:er'.
 </str>
 
 <str id="38">
 <o>Ports: URLs</o>
-<t>Portar: URLer</t>
+<t>Portar: URL:er</t>
 </str>
 
 <str id="40">
@@ -517,9 +478,8 @@ multiplicera detta värde med den här faktorn.</t>
 </str>
 
 <str id="61">
-<changed from="The text shown to the user on connect"/>
 <o>The text shown to the user on connect.</o>
-<t>Texten som visas för användaren vid uppkoppling</t>
+<t>Texten som visas för användaren vid uppkoppling.</t>
 </str>
 
 <str id="62">
@@ -538,9 +498,9 @@ multiplicera detta värde med den här faktorn.</t>
 </str>
 
 <str id="65">
-<changed from="If yes, non-anonymous users can connect"/>
 <o>If yes, non-anonymous users can connect. Note that for password authentication to be performed you will need to have the "Authentication: Password" module in your site.</o>
-<t>Om ja så tillåts icke-anonyma användare</t>
+<t>Om ja så tillåts icke-anonyma användare. Observera att för
+lösenordsautenticering skall ske behöver du ha modulen "Autenticering: Lösenord" i din sajt.</t>
 </str>
 
 <str id="66">
@@ -559,9 +519,8 @@ multiplicera detta värde med den här faktorn.</t>
 </str>
 
 <str id="69">
-<changed from="If yes, anonymous users is allowed to connect."/>
 <o>If yes, anonymous users are allowed to connect.</o>
-<t>Om ja så tillåts anonyma användare</t>
+<t>Om ja så tillåts anonyma användare.</t>
 </str>
 
 <str id="70">
@@ -586,9 +545,8 @@ multiplicera detta värde med den här faktorn.</t>
 </str>
 
 <str id="74">
-<changed from="Logging: Set unique user id cookies"/>
 <o>Logging: Set unique browser id cookies</o>
-<t>Loggning: Sätt en unik cookie för alla användare</t>
+<t>Loggning: Sätt en unik kaka för alla webbläsare</t>
 </str>
 
 <str id="75">
@@ -614,9 +572,8 @@ multiplicera detta värde med den här faktorn.</t>
 </str>
 
 <str id="87">
-<changed from="The SSL certificate file to use. The path is relative to %s"/>
 <o>The SSL certificate file(s) to use. If a path is relative, it will first be searched for relative to %s, and if not found there relative to %s. </o>
-<t>SSL-certifikatfilen som den här porten ska använda. Filnamnet är relativt %s</t>
+<t>SSL-certifikatfilen/-erna som den här porten ska använda. Om sökvägen är relativ kommer den först sökas relativt %s, och om ej funnen där relativt %s. </t>
 </str>
 
 <str id="88">
@@ -625,9 +582,8 @@ multiplicera detta värde med den här faktorn.</t>
 </str>
 
 <str id="89">
-<changed from="The SSL key file to use. The path is relative to %s, you do not have to specify a key file, leave this field empty to use the certificate file only"/>
 <o>The SSL key file to use. If the path is relative, it will first be searched for relative to %s, and if not found there relative to %s. You do not have to specify a key file, leave this field empty to use the certificate file only.</o>
-<t>SSLnyckelfilen som den här porten ska använda. Filnamnet är relativt %s. Du behöver inte ange en nyckelfil, lämna det här fältet tomt om du bara har en certifikatfil</t>
+<t>SSL-nyckelfilen som den här porten ska använda. Om sökvägen är relativ kommer den först sökas relativt %s, och om ej funnen där relativt %s. Du behöver inte ange en nyckelfil, lämna det här fältet tomt om du bara har en certifikatfil.</t>
 </str>
 
 <str id="90">
@@ -1026,9 +982,8 @@ flesta servrar</t>
 </str>
 
 <str id="154">
-<changed from="ABS: Enable Anti-Block-System"/>
 <o>Auto Restart: Enable Anti-Block-System</o>
-<t>ABS: Slå på AntiBlockSystemet</t>
+<t>Auto-omstart: Aktivera antiblock-systemet</t>
 </str>
 
 <str id="155">
@@ -1041,9 +996,8 @@ flesta servrar</t>
 </str>
 
 <str id="156">
-<changed from="ABS: Timeout"/>
 <o>Auto Restart: ABS Timeout</o>
-<t>ABS: Tidsbegränsning</t>
+<t>Auto-omstart: Tidsbegränsning</t>
 </str>
 
 <str id="157">
@@ -1223,7 +1177,6 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 </str>
 
 <str id="201">
-<changed from="Ok"/>
 <o>OK</o>
 <t>OK</t>
 </str>
@@ -1409,9 +1362,8 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 </str>
 
 <str id="272">
-<changed from="Reload module list"/>
 <o>Reload Module List</o>
-<t>Skapa om modullistan</t>
+<t>Hämta modullistan igen</t>
 </str>
 
 <str id="273">
@@ -1451,33 +1403,28 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 </str>
 
 <str id="280">
-<changed from="normal"/>
 <o>Normal</o>
-<t>normal</t>
+<t>Normal</t>
 </str>
 
 <str id="282">
-<changed from="fast"/>
 <o>Fast</o>
-<t>snabb</t>
+<t>Snabb</t>
 </str>
 
 <str id="284">
-<changed from="faster"/>
 <o>Faster</o>
-<t>snabbare</t>
+<t>Snabbare</t>
 </str>
 
 <str id="286">
-<changed from="compact"/>
 <o>Compact</o>
-<t>kompakt</t>
+<t>Kompakt</t>
 </str>
 
 <str id="288">
-<changed from="really compact"/>
 <o>Really compact</o>
-<t>väldigt kompakt</t>
+<t>Väldigt kompakt</t>
 </str>
 
 <str id="290">
@@ -1566,27 +1513,23 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 </str>
 
 <str id="238">
-<changed from="alphabetical"/>
 <o>Alphabetical</o>
-<t>alphabetisk</t>
+<t>Alfabetisk</t>
 </str>
 
 <str id="239">
-<changed from="as defined"/>
 <o>As defined</o>
-<t>fördefinierad</t>
+<t>Fördefinierad</t>
 </str>
 
 <str id="240">
-<changed from="alphabetical, changed first"/>
 <o>Alphabetical, changed first</o>
-<t>alphabetisk, ändringar först</t>
+<t>Alfabetisk, ändringar först</t>
 </str>
 
 <str id="241">
-<changed from="as defined, changed first"/>
 <o>As defined, changed first</o>
-<t>fördefinierad, ändringar först</t>
+<t>Fördefinierad, ändringar först</t>
 </str>
 
 <str id="242">
@@ -1647,8 +1590,11 @@ ihåg vilka supportsflaggor som hör till vilken klient.</t>
 </str>
 
 <str id="308">
+<changed from="If no file match a given resource all directories above the wanted file is searched for one of the files in this list.&lt;p&gt;
+As an example, if the file /foo/bar/not_there.html is wanted, and this list contains the default value of 404.inc, these files will be searched for, in this order:&lt;/p&gt;&lt;br /&gt;  /foo/bar/404.inc, /foo/404.inc and /404.inc."/>
 <o>If no file match a given resource all directories above the wanted file is searched for one of the files in this list.&lt;p&gt;
-As an example, if the file /foo/bar/not_there.html is wanted, and this list contains the default value of 404.inc, these files will be searched for, in this order:&lt;/p&gt;&lt;br /&gt;  /foo/bar/404.inc, /foo/404.inc and /404.inc.</o>
+As an example, if the file /foo/bar/not_there.html is wanted, and this list contains the default value of 404.inc, these files will be searched for, in this order:&lt;/p&gt;&lt;br /&gt;  /foo/bar/404.inc, /foo/404.inc and /404.inc.&lt;p&gt;
+The inclusion file can access the form variables form.orig-file and form.orig-url to identify the original page that was requested.</o>
 <t>Om ingen fil matchar en given URL så letas alla mappar över den
 efterfrågade filen igenom efter en av de i den här listan listade
 filerna.&lt;p&gt;
@@ -1834,13 +1780,6 @@ användas: /foo/bar/404.inc, /foo/404.inc eller /404.inc.</t>
 </str>
 
 <str id="153">
-<changed from="&lt;dl&gt;
-&lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Show module name and documentation with images.&lt;/dd&gt;
-&lt;dt&gt;fast&lt;/dt&gt;&lt;dd&gt;Like normal, but no type images.&lt;/dd&gt;
-&lt;dt&gt;faster&lt;/dt&gt;&lt;dd&gt;Like normal, but allows selecting multiple modules at once.&lt;/dd&gt;
-&lt;dt&gt;compact&lt;/dt&gt;&lt;dd&gt;Only show the names of modules, and allow addition/deletion of multiple modules at once.&lt;/dd&gt;
-&lt;dt&gt;really compact&lt;/dt&gt;&lt;dd&gt;Like compact, but no module classes.&lt;/dd&gt;
-&lt;/dl&gt;"/>
 <o>&lt;dl&gt;
 &lt;dt&gt;Normal&lt;/dt&gt;&lt;dd&gt;Show module name and documentation with images.&lt;/dd&gt;
 &lt;dt&gt;Fast&lt;/dt&gt;&lt;dd&gt;Like Normal, but no type images.&lt;/dd&gt;
@@ -1849,11 +1788,11 @@ användas: /foo/bar/404.inc, /foo/404.inc eller /404.inc.</t>
 &lt;dt&gt;Really compact&lt;/dt&gt;&lt;dd&gt;Like Compact, but no module classes.&lt;/dd&gt;
 &lt;/dl&gt;</o>
 <t>&lt;dl&gt;
-&lt;dt&gt;normal&lt;/dt&gt;&lt;dd&gt;Visa modulnamn och dokumentation med bilder.&lt;/dd&gt;
-&lt;dt&gt;snabb&lt;/dt&gt;&lt;dd&gt;Som normal, men utan typbilder.&lt;/dd&gt;
-&lt;dt&gt;snabbare&lt;/dt&gt;&lt;dd&gt;Som normal, men tillåter att man väljer flera moduler samtidigt.&lt;/dd&gt;
-&lt;dt&gt;kompakt&lt;/dt&gt;&lt;dd&gt;Visar bara namnet på modulerna. Tillåter att man lägger till flera moduler samtidigt.&lt;/dd&gt;
-&lt;dt&gt;väldigt kompakt&lt;/dt&gt;&lt;dd&gt;Som kompakt, men utan modulklasser.&lt;/dd&gt;
+&lt;dt&gt;Normal&lt;/dt&gt;&lt;dd&gt;Visa modulnamn och dokumentation med bilder.&lt;/dd&gt;
+&lt;dt&gt;Snabb&lt;/dt&gt;&lt;dd&gt;Som Normal, men utan typbilder.&lt;/dd&gt;
+&lt;dt&gt;Snabbare&lt;/dt&gt;&lt;dd&gt;Som Normal, men tillåter att man väljer flera moduler samtidigt.&lt;/dd&gt;
+&lt;dt&gt;Kompakt&lt;/dt&gt;&lt;dd&gt;Visar bara namnet på modulerna. Tillåter att man lägger till flera moduler samtidigt.&lt;/dd&gt;
+&lt;dt&gt;Väldigt kompakt&lt;/dt&gt;&lt;dd&gt;Som Kompakt, men utan modulklasser.&lt;/dd&gt;
 &lt;/dl&gt;</t>
 </str>
 
@@ -2055,7 +1994,6 @@ utifrån detta namn.</t>
 </str>
 
 <str id="9">
-<changed from="The server secret is a string used in some cryptographic functions, such as calculating unique, non-guessable session id's. Change this value into something that is hard to guess, unless you are satisfied with what your computers random generator has produced"/>
 <o>The server secret is a string used in some cryptographic functions, such as calculating unique, non-guessable session id's. Change this value into something that is hard to guess, unless you are satisfied with what your computers random generator has produced.</o>
 <t>Serverhemligheten är en sträng som används i kryptografiska
 funktioner, som t.ex. beräkningen av unika sessionsnycklar. Ändra det
@@ -2122,9 +2060,8 @@ variabeln sätts till ett värde större än 14000 om du har modemanvändare.</t>
 </str>
 
 <str id="233">
-<changed from="Binary data"/>
 <o>bytecode data</o>
-<t>Binärdata</t>
+<t>binärdata</t>
 </str>
 
 <str id="374">
@@ -2251,22 +2188,21 @@ PASV/EPSV kommando</t>
 </str>
 
 <str id="15">
-<changed from="The module list mode. One of &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Modules in the same group are folded&lt;/dd&gt;&lt;dt&gt;UnFolded&lt;/dt&gt;&lt;dd&gt;Like the 'old' Roxen 2.1 list&lt;/dd&gt;&lt;dt&gt;JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Like Folded, but when you move the mouse over a folded group, a menu with the folded modules will popup&lt;/dd&gt;&lt;/dl&gt;"/>
 <o>The module list mode. One of &lt;dl&gt;&lt;dt&gt;Folded&lt;/dt&gt;&lt;dd&gt;Modules in the same group are folded&lt;/dd&gt;&lt;dt&gt;Folded with JavaScript Popup&lt;/dt&gt;&lt;dd&gt;Like Folded, but when you move the mouse over a folded group, a menu with the folded modules will popup&lt;/dd&gt;&lt;dt&gt;Unfolded&lt;/dt&gt;&lt;dd&gt;Like the 'old' Roxen 2.1 list&lt;/dd&gt;&lt;/dl&gt;</o>
 <t>Modullistningsmodellen. En av
 &lt;dl&gt;&lt;dt&gt;Ihopfälld&lt;/dt&gt;
-&lt;dd&gt;Moduler i samma grupp är ihoppfälldad
-&lt;/dd&gt;&lt;dt&gt;Uppfälld&lt;/dt&gt;
-&lt;dd&gt;Samma stil som den 'gamla' listan i Roxen 2.1&lt;/dd&gt;
-&lt;dt&gt;JavaScript fönster&lt;/dt&gt;
-&lt;dd&gt;Som ihopfälld, men när musen dras över en grupp som dyker
-ett fönster med modulerna upp.&lt;/dd&gt;&lt;/dl&gt;</t>
+&lt;dd&gt;Moduler i samma grupp är ihoppfälld&lt;/dd&gt;
+&lt;dt&gt;Ihopfälld med JavaScript-popup&lt;/dt&gt;
+&lt;dd&gt;Som Ihopfälld, men när musen dras över en grupp dyker
+en meny med modulerna upp&lt;/dd&gt;
+&lt;dt&gt;Uppfälld&lt;/dt&gt;
+&lt;dd&gt;Samma variant som den 'gamla' listan i Roxen 2.1&lt;/dd&gt;
+&lt;/dl&gt;</t>
 </str>
 
 <str id="17">
-<changed from="Folded with javascript popup"/>
 <o>Folded with JavaScript popup</o>
-<t>Ihoppfäld med Javascript fönster</t>
+<t>Ihopfälld med JavaScript-popup</t>
 </str>
 
 <str id="122">
@@ -2275,9 +2211,8 @@ ett fönster med modulerna upp.&lt;/dd&gt;&lt;/dl&gt;</t>
 </str>
 
 <str id="123">
-<changed from="Unfolded (old style)"/>
 <o>Unfolded (Old style)</o>
-<t>Uppfälld (gamla stilen)</t>
+<t>Uppfälld (gamla varianten)</t>
 </str>
 
 <str id="219">
@@ -3048,9 +2983,8 @@ server must be a MySQL server, nothing else will work.
 </str>
 
 <str id="163">
-<new/>
 <o>Enable replication system</o>
-<t></t>
+<t>Aktivera replikeringssystem</t>
 </str>
 
 <str id="337">
@@ -3072,15 +3006,13 @@ server must be a MySQL server, nothing else will work.
 </str>
 
 <str id="503">
-<new/>
 <o>Group</o>
-<t></t>
+<t>Grupp</t>
 </str>
 
 <str id="299">
-<new/>
 <o>URLs</o>
-<t></t>
+<t>URL:er</t>
 </str>
 
 <str id="324">

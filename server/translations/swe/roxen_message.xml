@@ -38,63 +38,60 @@ Kontrollera att gruppdatabasen stämmer, och att lösenordsdatabasen för användare
 </str>
 
 <str id="6">
-<changed from="Failed to bind %s://%s:%d/ (%s)"/>
 <o>Failed to bind %s (%s)</o>
-<t>Misslyckades med att binda %s://%s:%d/ (%s)</t>
+<t>Misslyckades med att binda %s (%s)</t>
 </str>
 
 <str id="8">
-<changed from="SSL3: Reading cert-file failed!"/>
 <o>Reading certificate file %O failed: %s
 </o>
-<t>SSL3: Kunde ej läsa cert-filen!</t>
+<t>Kunde ej läsa certifikatfilen %O: %s
+</t>
 </str>
 
 <str id="9">
-<changed from="SSL3: Reading key-file failed!"/>
 <o>Reading key file %O failed: %s
 </o>
-<t>SSL3: Kunde ej läsa nyckelfilen!</t>
+<t>Kunde ej läsa nyckelfilen %O: %s
+</t>
 </str>
 
 <str id="10">
-<changed from="SSL3: No certificate found."/>
 <o>No certificate found in %O.
 </o>
-<t>SSL3: Hittade inget certifikat.</t>
+<t>Hittade inget certifikat i %O.
+</t>
 </str>
 
 <str id="11">
-<changed from="SSL3: Private rsa key not valid"/>
 <o>Private rsa key not valid</o>
-<t>SSL3: Privat rsa-nyckel ej giltig</t>
+<t>Privat rsa-nyckel ej giltig</t>
 </str>
 
 <str id="13">
-<changed from="SSL3: Certificate not valid (DER)."/>
 <o>Certificate not valid (DER).
 </o>
-<t>SSL3: Certifikatet ogiltigt (DER).</t>
+<t>Certifikatet ogiltigt (DER).
+</t>
 </str>
 
 <str id="14">
-<changed from="SSL3: Certificate and private key do not match."/>
 <o>Certificate and private key do not match.
 </o>
-<t>SSL3: Certifikat och nyckel stämmer inte överrens.</t>
+<t>Certifikat och nyckel stämmer inte överrens.
+</t>
 </str>
 
 <str id="15">
-<changed from="SSL3: Private dsa key not valid"/>
 <o>Private dsa key not valid</o>
-<t>SSL3: Privat dsa-nyckel ogiltig</t>
+<t>Privat dsa-nyckel ogiltig</t>
 </str>
 
 <str id="17">
-<changed from="SSL3: No private key found."/>
 <o>No private key found.
 </o>
-<t>SSL3: Hittade ingen privat nyckel.</t>
+<t>Hittade ingen privat nyckel.
+</t>
 </str>
 
 <str id="19">
@@ -126,8 +123,7 @@ Kontrollera att gruppdatabasen stämmer, och att lösenordsdatabasen för användare
 </str>
 
 <str id="24">
-<changed from="It is only possible to change uid and gid if the server is running as root."/>
-<o>It is possible to change uid and gid only if the server is running as root.</o>
+ <o>It is possible to change uid and gid only if the server is running as root.</o>
 <t>Det går endast att ändra användar-/grupp-id om servern körs av root.</t>
 </str>
 
@@ -341,19 +337,13 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </str>
 
 <str id="58">
-<changed from="Syntax error in security patterns: Cannot find the user database '%s'
-"/>
 <o>Syntax error in security patterns: Cannot find the user database '%s'</o>
-<t>Syntaxfel i säkerhetsmönstren: Kan inte hitta användardatabasen '%s'
-</t>
+<t>Syntaxfel i säkerhetsmönstren: Kan inte hitta användardatabasen '%s'</t>
 </str>
 
 <str id="59">
-<changed from="Syntax error in security patterns: Cannot find the auth method '%s'
-"/>
 <o>Syntax error in security patterns: Cannot find the auth method '%s'</o>
-<t>Syntaxfel i säkerhetsmönstren: Kan inte hitta authentifieringsmetoden '%s'
-</t>
+<t>Syntaxfel i säkerhetsmönstren: Kan inte hitta authentifieringsmetoden '%s'</t>
 </str>
 
 <str id="60">
@@ -364,34 +354,32 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </str>
 
 <str id="61">
-<new/>
 <o>Not binding the port %O, disabled in configuration</o>
-<t></t>
+<t>Binder ej port %O, avstängd i konfigurationen</t>
 </str>
 
 <str id="62">
-<new/>
 <o>Attempt %d. Retrying in 1 minute.</o>
-<t></t>
+<t>Försök %d. Nästa försök om 1 minut.</t>
 </str>
 
 <str id="65">
-<new/>
 <o>IPv6 port for URL %s disabled: %s
 </o>
-<t></t>
+<t>IPv6-port för URL:en %s avstängd: %s
+</t>
 </str>
 
 <str id="63">
-<new/>
 <o>No certificates found.
 </o>
-<t></t>
+<t>Inga certifikat funna.
+</t>
 </str>
 
 <str id="64">
-<new/>
 <o>TLS port %s opened.
 </o>
-<t></t>
+<t>TLS-port %s öppnad.
+</t>
 </str>
