@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.493 2006/01/02 12:54:32 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.494 2006/03/09 14:27:12 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1061,8 +1061,11 @@ string link_to(string file, int line, string fun, int eid, int qq)
 	  "\">");
 }
 
-static string error_page(string line1, string title, string body)
+static string error_page(string title, void|string msg,
+			 void|string longmsg, void|string body)
 {
+  if (longmsg && has_suffix (longmsg, "\n"))
+    longmsg = longmsg[..sizeof (longmsg) - 2];
   return #"\
 <html><head>
   <title>Internal Server Error</title>
@@ -1072,8 +1075,7 @@ static string error_page(string line1, string title, string body)
             line-height:    160% }
     .big  { font-family:    georgia, times, serif;
             font-size:      18px;
-            padding-top:    6px;
-            padding-bottom: 20px }
+	    padding-top:    6px }
     .info { font-family:    verdana, helvetica, arial, sans-serif;
             font-size:      10px;
             color:          #999999 }
@@ -1087,31 +1089,29 @@ static string error_page(string line1, string title, string body)
 <body text='#000000' style='margin: 0; padding: 0' vlink='#2331d1' 
       rightmargin='0' leftmargin='0' alink='#f6f6ff' link='#0000ee' 
       bgcolor='#f2f1eb' bottommargin='0' topmargin='0'>
-<table border='0' cellspacing='0' cellpadding='0' height='99%'>
+<table border='0' cellspacing='30' cellpadding='0' height='99%'>
   <tr>
-    <td><img src='/internal-roxen-unit' height='30' /></td>
-  </tr><tr>
-    <td></td>
-    <td><img src='/internal-roxen-500' /></td>
-    <td><img src='/internal-roxen-unit' width='30' /></td>
+    <td width='1'><img src='/internal-roxen-500' /></td>
     <td valign='bottom'><img src='/internal-roxen-server-error' /></td>
-  </tr><tr>
-    <td><img src='/internal-roxen-unit' height='30' /></td>
-  </tr><tr>
-    <td colspan='3'></td>
+  </tr>
+  <tr>
+    <td></td>
     <td>
-      <div class='msg'>" + line1 + #"</div>
-      <div class='big'>" + title + #"</div>
+      <div class='msg'>" + title + #"</div>" +
+    (msg ? #"
+      <div class='big'>" + msg + #"</div>" : "") +
+    (longmsg ? #"
+      <div class='code'><pre>" + longmsg + #"</pre></div>" : "") + #"
     </td>
-  </tr><tr>
-    <td></td>
-    <td colspan='3'>
-      <div class='msg'>" + body + #"</div>
+  </tr>
+  <tr>
+    <td colspan='2'>" +
+    (body ? #"
+      <div class='msg'>" + body + #"</div>" : "") + #"
     </td>
-  </tr><tr valign='bottom' height='100%'>
-    <td></td>
-    <td colspan='3'>
-      <img src='/internal-roxen-unit' height='20' />
+  </tr>
+  <tr valign='bottom' height='100%'>
+    <td colspan='2'>
       <table border='0' cellspacing='0' cellpadding='0'>
         <tr>
           <td><img src='/internal-roxen-roxen-mini.gif' /></td>
@@ -1121,7 +1121,6 @@ static string error_page(string line1, string title, string body)
           </td>
         </tr>
       </table>
-      <img src='/internal-roxen-unit' height='15' />
     </td>
   </tr>
 </table>
@@ -1157,13 +1156,13 @@ string format_backtrace(int eid, string|void md5)
   array(string|array(string)|array(array)) err_info = get_err_info(eid, md5);
 
   if (!err_info) {
-    return error_page("Unregistered error", "", "");
+    return error_page("Unregistered error");
   }
 
   [string msg, array(string) rxml_bt, array(array) bt,
    string raw_bt_descr, string raw_url, string raw] = err_info;
 
-  string title = replace(Roxen.html_encode_string(msg), "\n", "<br />\n");
+  sscanf (msg, "%s\n%s", string title, string longmsg);
   string body = "";
 
   if (rxml_bt && sizeof (rxml_bt)) {
@@ -1207,7 +1206,8 @@ string format_backtrace(int eid, string|void md5)
     "&error_md5=" + get_err_md5(get_err_info(eid)) +
     "\">"
     "text-only version</a> of this error message for bug reports.</p>";
-  return error_page("The server failed to fulfill your query.", title, body);
+  return error_page("The server failed to fulfill your query.",
+		    title, longmsg != "" && longmsg, body);
 }
 
 string generate_bugreport(string msg, array(string) rxml_bt, array(string) bt,
@@ -1346,12 +1346,12 @@ void internal_error(array _err)
 	Roxen.http_low_answer(500, error_page("The server failed to fulfill "
 					      "your query due to an internal "
 					      "error in the internal error "
-					      "routine.", "", ""));
+					      "routine."));
     }
   } else {
     file =
       Roxen.http_low_answer(500, error_page("The server failed to fulfill "
-					    "your query.", "", ""));
+					    "your query."));
   }
   report_error("Internal server error: " +
 	       describe_backtrace(err) + "\n");
@@ -1459,7 +1459,7 @@ string handle_error_file_request (string msg, array(string) rxml_bt, array(array
     }
   }
   if(!data)
-    return error_page("Source file could not be read:", variables->file, "");
+    return error_page("Source file could not be read:", variables->file);
 
   string down;
   int next = (int) variables->off + 1;
@@ -1492,7 +1492,7 @@ string handle_error_file_request (string msg, array(string) rxml_bt, array(array
   }
   lines[max(off-20,0)] = "<a name=here>"+lines[max(off-20,0)]+"</a>";
 
-  return error_page("Source code for", variables->file,
+  return error_page("Source code for", variables->file, 0,
 		    "<span class='code'><pre>" +
 		    (lines * "\n") +
 		    "</pre></span>");
