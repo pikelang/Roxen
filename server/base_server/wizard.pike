@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2004, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.156 2006/03/06 13:06:47 jonasw Exp $
+// $Id: wizard.pike,v 1.157 2006/03/10 16:40:35 stewa Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -342,14 +342,16 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "                           PREFIX_s, PREFIX_v, in_bar, in_cross);\n"
        "    PREFIX_h = hsv[0];\n"
        "    PREFIX_s = hsv[1];\n"
-       "    PREFIX_v = hsv[2];\n"
+       "    PREFIX_v = hsv[2];\n"+
+       (m->onChange||"")+
        "  }\n"
        "  function PREFIX_colsel_type(value, update_field)\n"
        "  {\n"
        "    var hsv = colsel_type(\"PREFIX_\", value, update_field);\n"
        "    PREFIX_h = hsv[0];\n"
        "    PREFIX_s = hsv[1];\n"
-       "    PREFIX_v = hsv[2];\n"
+       "    PREFIX_v = hsv[2];\n"+
+       (m->onChange||"")+
        "  }\n"
        "</script>"
        "<js-popup args-variable='__popup' event='onClick' props='color_props'>"
@@ -413,7 +415,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        "<tr>"
        "  <td>"
        "    <input type='text' size='10' value='" + current + "' id='PREFIX_color_input' "
-       "           name='" + m->name + "' onChange='PREFIX_colsel_type(this.value, 1);' />"
+       "           name='" + m->name + "' onChange='PREFIX_colsel_type(this.value, 1);"+(m->onChange||"")+"' />"
        "  </td>"
        "  <td>"
        "    <table border='0' cellspacing='0' cellpadding='0' bgcolor='#ffffff'>"
