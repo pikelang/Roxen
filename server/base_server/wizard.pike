@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2004, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.157 2006/03/10 16:40:35 stewa Exp $
+// $Id: wizard.pike,v 1.158 2006/03/14 16:03:47 noring Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -325,6 +325,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        current = color_input;
      a = parse_color(current || "black");
      [h, s, v] = rgb_to_hsv(@a);
+     if(!h && !s && !v)
+       s = 255;
      current = upper_case(sprintf("#%02x%02x%02x", a[0], a[1], a[2]));
      id->variables[m->name] = current;
 
