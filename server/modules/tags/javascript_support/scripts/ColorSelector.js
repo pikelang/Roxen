@@ -1,5 +1,5 @@
 //  Color selector scripts. Used by <var type="color"> in WebServer wizards.
-//  $Id: ColorSelector.js,v 1.5 2004/09/27 17:32:13 jonasw Exp $
+//  $Id: ColorSelector.js,v 1.6 2006/03/14 16:03:47 noring Exp $
 
 
 //  Known HTML color names
@@ -163,7 +163,9 @@ function rgb_string_to_hsv(rgb_str)
   if (max > 0 && delta > 0) {
     s = Math.round(255.0 * delta / max);
   } else {
-    return new Array(0, 0, v);
+    if(v > 0)
+      return new Array(0, 0, v);
+    return new Array(0, 255, 0);
   }
 
   if (r == max) {
