@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.893 2006/01/26 13:54:53 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.894 2006/03/15 15:58:58 wellhard Exp $";
 
 //! @appears roxen
 //!
@@ -3420,9 +3420,9 @@ class ImageCache
     if(id->misc->persistent_cache_crawler) {
       // Force an update of atime for the requested arg cache id.
       foreach(ci/"$", string key) {
-#if REPLICATE_DEBUG
+#if ARGCACHE_DEBUG
 	werror("Request for id %O from prefetch crawler.\n", key);
-#endif /* REPLICATE_DEBUG */
+#endif /* ARGCACHE_DEBUG */
 	argcache->refresh_arg(key);
       }
     }
@@ -3515,6 +3515,268 @@ class ImageCache
   }
 }
 
+
+#ifdef ENABLE_NEW_ARGCACHE
+class ArgCache
+//! Generic cache for storing away a persistent mapping of data to be
+//! refetched later by a short string key. This being a cache, your
+//! data may be thrown away at random when the cache is full.
+{
+#undef QUERY
+#define QUERY(X,Y...) db->query(X,Y)
+  Sql.Sql db;
+  string name;
+
+#define CACHE_SIZE  900
+
+#ifdef THREADS
+  Thread.Mutex mutex = Thread.Mutex();
+  // Allow recursive locks, since it's normal here.
+# define LOCK() mixed __; catch( __ = mutex->lock() )
+#else
+# define LOCK()
+#endif
+  
+#ifdef ARGCACHE_DEBUG
+#define dwerror(ARGS...) werror(ARGS)
+#else
+#define dwerror(ARGS...) 0
+#endif    
+
+  static mapping(string|int:mixed) cache = ([ ]);
+
+  static void setup_table()
+  {
+    // New style argument2 table.
+    if(catch(QUERY("SELECT id FROM "+name+"2 WHERE id = 0")))
+    {
+      master()->resolv("DBManager.is_module_table")
+	( 0, "local", name+"2",
+	  "The argument cache, used to map between "
+	  "a unique string and an argument mapping" );
+      catch(QUERY("DROP TABLE "+name+"2" ));
+      QUERY("CREATE TABLE "+name+"2 ("
+	    "id        CHAR(32) PRIMARY KEY, "
+	    "ctime     DATETIME NOT NULL, "
+	    "atime     DATETIME NOT NULL, "
+	    "contents  BLOB NOT NULL)");
+    }
+  }
+
+  static void init_db()
+  {
+    // Delay DBManager resolving to before the 'roxen' object is
+    // compiled.
+    cache = ([]);
+    db = dbm_cached_get("local");
+    setup_table( );
+  }
+
+  static void create( string _name )
+  {
+    name = _name;
+    init_db();
+    // Support that the 'local' database moves (not really nessesary,
+    // but it won't hurt either)
+    master()->resolv( "DBManager.add_dblist_changed_callback" )( init_db );
+    get_plugins();
+  }
+
+  string read_encoded_args( string id )
+  {
+    LOCK();
+    array res = QUERY("SELECT contents FROM "+name+"2 "
+		      " WHERE id = %s", id);
+    if(!sizeof(res))
+      return 0;
+    QUERY("UPDATE "+name+"2 "
+	  "   SET atime = NOW() "
+	  " WHERE id = %s", id);
+    return res[0]->contents;
+  }
+
+  void create_key( string id, string encoded_args )
+  {
+    LOCK();
+    array(mapping) rows =
+      QUERY("SELECT id, contents FROM "+name+"2 WHERE id = %s", id );
+    foreach( rows, mapping row )
+      if( row->contents != encoded_args ) {
+      	report_error("ArgCache.create_key(): "
+		     "Duplicate key found! Please report this to support@roxen.com: "
+		     "id: %O, old data: %O, new data: %O\n",
+		     id, row->contents, encoded_args);
+	error("ArgCache.create_key() Duplicate key found!\n");
+      }
+
+    if(sizeof(rows))
+      return;
+
+    QUERY( "INSERT INTO "+name+"2 "
+	   "(id, contents, ctime, atime) VALUES "
+	   "(%s, %s, NOW(), NOW())", id, encoded_args );
+
+    dwerror("ArgCache: Create new key %O\n", id);
+
+    (plugins->create_key-({0}))( id, encoded_args );
+  }
+  
+  static array plugins;
+  static void get_plugins()
+  {
+    plugins = ({});
+    foreach( ({ "../local/arg_cache_plugins", "arg_cache_plugins" }), string d)
+      if( file_stat( d  ) )
+	foreach( glob("*.pike", get_dir( d )), string f )
+	{
+	  object plug = ((program)(d+"/"+f))(this_object());
+	  if( !plug->disabled )
+	    plugins += ({ plug  });
+	}
+  }
+
+  mapping plugins_read_encoded_args( string id )
+  {
+    mapping args;
+    foreach( (plugins->read_encoded_args - ({0})), function(string:mapping) f )
+      if( args = f( id ) )
+	return args;
+    return 0;
+  }
+
+  string store( mapping args )
+  //! Store a mapping (of purely encode_value:able data) in the
+  //! argument cache. The string returned is your key to retrieve the
+  //! data later.
+  {
+    string encoded_args = encode_value_canonic( args );
+    string id = Gmp.mpz(Crypto.sha()->update(encoded_args)->digest(), 256)->digits(36);
+    if( cache[ id ] )
+      return id;
+    create_key(id, encoded_args);
+    if( !cache[ id ] )
+      cache[ id ] = args+([]);
+    if( sizeof( cache ) >= CACHE_SIZE )
+      cache = ([]);
+    return id;
+  }
+
+
+  mapping lookup( string id )
+  //! Recall a mapping stored in the cache. 
+  {
+    if( cache[id] )
+      return cache[id] + ([]);
+    string encoded_args = read_encoded_args(id) || plugins_read_encoded_args(id);
+    if(!encoded_args) {
+      error("Requesting unknown key (not found in db)\n");
+    }
+    mapping args = decode_value(encoded_args);
+    cache[id] = args + ([]);
+    if( sizeof( cache ) >= CACHE_SIZE )
+      cache = ([]);
+    return args;
+  }
+
+  void delete( string id )
+  //! Remove the data element stored under the key 'id'.
+  {
+    LOCK();
+    (plugins->delete-({0}))( id );
+    m_delete( cache, id );
+    
+    QUERY( "DELETE FROM "+name+"2 WHERE id = %s", id );
+  }
+
+#define SECRET_TAG "££"
+  
+  int write_dump(Stdio.File file, int|void from_time)
+  // Write a mapping from id to encoded arg string for all local arg
+  // entries created after from_time to a file. Returns 0 if faled, 1
+  // otherwise.
+  {
+    constant FETCH_ROWS = 10000;
+    
+    // The server does only need to use file based argcache
+    // replication if the server don't participate in a replicate
+    // setup with a shared database.
+    if( !has_value((plugins->is_functional-({0}))(), 1) )
+    {
+      int cursor;
+      array(string) ids;
+      do {
+	if(from_time)
+	  // Only replicate entries accessed during the prefetch crawling.
+	  ids = 
+	    (array(string))
+	    QUERY( "SELECT id from "+name+"2 "
+		   " WHERE atime >= FROM_UNIXTIME(%d) "
+		   " LIMIT %d, %d", from_time, cursor, FETCH_ROWS)->id;
+	else
+	  // Make sure _every_ entry is replicated when a dump is created.
+	  ids = 
+	    (array(string))
+	    QUERY( "SELECT id from "+name+"2 "
+		   " LIMIT %d, %d", cursor, FETCH_ROWS)->id;
+	
+	cursor += FETCH_ROWS;
+	
+	foreach(ids, string id) {
+	  dwerror("ArgCache.write_dump(): %O\n", id);
+	  
+	  string s = 
+	    MIME.encode_base64(encode_value(({ id, read_encoded_args(id) })),
+			       1)+"\n";
+	  if(sizeof(s) != file->write(s))
+	    return 0;
+	}
+      } while(sizeof(ids) == FETCH_ROWS);
+    }
+    return file->write("EOF\n") == 4;
+  }
+
+  string read_dump (Stdio.FILE file)
+  // Returns an error message if there was a parse error, 0 otherwise.
+  {
+    string secret = file->gets();
+    // Check if no secret is present -> newstyle package.
+    if(!secret || !has_prefix(secret, SECRET_TAG))
+      // New pakage found, restore input stream.
+      file->ungets(secret);
+
+    string s;
+    while(s = file->gets())
+    {
+      if(s == "EOF")
+	return 0;
+      array a;
+      if(catch {
+	a = decode_value(MIME.decode_base64(s));
+      }) return "Decode failed for argcache record\n";
+
+      if(sizeof(a) == 4) {
+	// Old style argcache dump.
+	dwerror("ArgCache.read_dump(): value_id: %O, index_id: %O.\n", a[0], a[2]);
+	store(mkmapping(decode_value(a[1]), decode_value(a[3])));
+      } else if (sizeof(a) == 2) {
+	// New style argcache dump.
+	dwerror("ArgCache.read_dump(): %O\n", a[0]);
+	create_key(a[0], a[1]);
+      } else
+	return "Decode failed for argcache record (wrong size on key array)\n";
+    }
+    if(s != "EOF")
+      return "Missing data in argcache file\n";
+    return 0;
+  }
+
+  void refresh_arg(string id)
+  {
+    QUERY("UPDATE "+name+"2 SET atime=NOW() WHERE id = %s", id);
+  }
+}
+
+#else // ENABLE_NEW_ARGCACHE
 
 class ArgCache
 //! Generic cache for storing away a persistent mapping of data to be
@@ -3934,6 +4196,7 @@ class ArgCache
     QUERY("UPDATE "+name+" SET atime='"+time(1)+"' WHERE id="+i[1]);
   }
 }
+#endif // ENABLE_NEW_ARGCACHE
 
 mapping cached_decoders = ([]);
 string decode_charset( string charset, string data )
