@@ -912,11 +912,18 @@ class Text
       if( !f )
 	RXML.parse_error("Cannot find the font ("+font+")\n");
 
-      Image.Image text = f->write( @(parse_variables(args->text,0,l)/"\n") );
-      
+      mapping text_info;
+      if(f->write_with_info)
+	text_info = f->write_with_info(@(parse_variables(args->text,0,l)/"\n"));
+      else
+	text_info = ([ "img" : f->write(@(parse_variables(args->text,0,l)/"\n")) ]);
+      Image.Image text = text_info->img;
+      int overshoot = (int)text_info->overshoot;
 
       int x = translate_coordinate( args->x,text,l );
       int y = translate_coordinate( args->y,text,l );
+      y -= overshoot;
+
       if( args["modulate-alpha"] )
 	foreach( on, int i )
 	{
