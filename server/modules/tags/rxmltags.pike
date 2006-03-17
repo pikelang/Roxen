@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.509 2006/02/15 11:05:31 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.510 2006/03/17 10:24:13 erikd Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -105,6 +105,20 @@ private class SExprCompileHandler
   {
     return 0;
   }
+}
+
+private string try_decode_image(string data, void|string var) {
+    mixed file_data = (data)? data: RXML.user_get_var(var);
+    if(!file_data || !stringp(file_data))
+	return 0;
+    mapping image;
+    mixed error = catch {
+	image = Image.ANY._decode(file_data);
+    };
+    if(image) {
+	return image->type;
+    }
+    return my_configuration()->type_from_filename("nonenonenone");
 }
 
 string|int|float sexpr_eval(string what)
@@ -495,6 +509,35 @@ class TagRedirect {
 	RXML_CONTEXT->set_misc (" _rettext", args->text);
 
       return 0;
+    }
+  }
+}
+
+class TagGuessContentType
+{
+  inherit RXML.Tag;
+  constant name = "guess-content-type";
+  mapping(string:RXML.Type)
+    opt_arg_types = ([ "filename" : RXML.t_text(RXML.PXml),
+		       "content"     : RXML.t_text(RXML.PXml) ]);
+  class Frame {
+    inherit RXML.Frame;
+
+    array do_return(RequestID id)
+    {
+	if(!args->filename && !args->content)
+	    parse_error("<"+name+"> Required attribute missing: either content or filename\n");
+	if (args->filename) {
+	    if(id->misc->sb)
+		result = id->misc->sb->find_content_type_from_filename(args->filename);
+	    else if(my_configuration()->type_from_filename)
+		result = my_configuration()->type_from_filename(args->filename);
+	    else
+		RXML.parse_error("No Content type module loaded\n");
+	    return 0;
+	}
+	result = try_decode_image(args->content, 0);
+	return 0;
     }
   }
 }
@@ -5573,6 +5616,32 @@ class TagIfTestLicense {
   }
 }
 
+class TagIfTypeFromData {
+    inherit IfIs;
+    constant plugin_name = "type-from-data";
+    string source(RequestID id, string s) {
+	if(RXML.user_get_var(s)) {
+	    return try_decode_image(0, s);
+	}
+	RXML.run_error("Variable %s do not exists\n",s);
+    }
+}
+
+class TagIfTypeFromFilename {
+    inherit IfIs;
+    constant plugin_name = "type-from-filename";
+    string source(RequestID id, string s) {
+	if(RXML.user_get_var(s)) {
+	    if (id->misc->sb)
+		return id->misc->sb->find_content_type_from_filename(RXML.user_get_var(s));
+	    else if(my_configuration()->type_from_filename)
+		return my_configuration()->type_from_filename(RXML.user_get_var(s));
+	    RXML.parse_error("No Content type module loaded\n");
+	}
+	RXML.run_error("Variable %s do not exists\n",s);
+    }
+}
+
 
 // --------------------- Emit plugins -------------------
 
@@ -8563,6 +8632,32 @@ the respective attributes below for further information.</p></desc>
 
 //----------------------------------------------------------------------
 
+"guess-content-type":#"<desc type='tag'><p><short>
+ Tries to find a content type from content, filename or file path.</short>
+ Either <em>content</em> or <em>filename</em> attributes must be supplied.
+</p>
+</desc>
+
+<attr name='content' value='string'><p>
+   Guess the content type from the content. This function is currently
+   only capable of recognizing several common image formats. If the
+   content format isn't recognized then the fallback content type in the
+   Content Types module is returned. That type is
+   \"application/octet-stream\" by default.
+ .</p>
+<ex-box><guess-content-type content='&form.image;'/></ex-box>
+</attr>
+
+<attr name='filename' value='filename|path'><p>
+ It will make its guess from by the path or just the filename. It will use
+ the filename suffix. If you want it to verify that the file is an image
+ by its file content use <em>content</em> attribute instead.
+ .</p>
+<ex><guess-content-type filename='/foo/bar.jpg'/></ex>
+</attr>",
+
+//----------------------------------------------------------------------
+
 "help":#"<desc type='tag'><p><short>
  Gives help texts for tags.</short> If given no arguments, it will
  list all available tags. By inserting <tag>help/</tag> in a page, a
@@ -8724,6 +8819,87 @@ the respective attributes below for further information.</p></desc>
 <attr name='and'><p>
  If all criterions are met the result is true. And is default.</p>
 </attr>",
+
+//----------------------------------------------------------------------
+
+"if#type-from-data":#"<desc type='plugin'><p><short>
+ Compares if the variable's data is known content type and tries to match
+ that content type with the content type pattern.
+</short>
+ </p><p>
+ This test is currently only capable of recognizing several common image
+ formats. If the content format isn't recognized then the fallback content
+ type in the  Content Types module is tested against the pattern. That type
+ is \"application/octet-stream\" by default. That also means that if the
+ variable content is unknown and there is nothing to test the content type
+ from, it will always return true:
+</p>
+ <ex>
+   <set variable='var.fake-image' value='fakedata here'/>
+   <if type-from-data='var.fake-image'>It is an image</if>
+ </ex>
+<p>While the correct way would be:
+</p>
+<ex>
+   <set variable='var.fake-image' value='fakedata here'/>
+   <if type-from-data='var.fake-image is application/octet-stream'>
+     Not known content type!
+   </if>
+</ex>
+<p> This is an <i>Eval</i> plugin.</p>
+<p>Related tags: <tag>if#type-from-filename</tag>, <tag>cimg</tag>, <tag>guess-content-type</tag>,
+   <tag>emit#dir</tag>.</p>
+<ex-box>
+<nocache>
+  <form method='post' enctype='multipart/form-data'>
+    <input type='file' name='image' />
+    <input type='submit' name='upload' />
+  </form>
+  <if variable='form.image' and='' sizeof='form.image < 2048000'>
+    File is less than 2MB
+    <if type-from-data='form.image is image/*'>
+      It's an image!
+    </if>
+    <elseif type-from-filename='form.image is text/*'>
+      It is a text file of some sort.
+    </elseif>
+    <elseif type-from-filename='form.image is application/msword,application/pdf'>
+      The image is a MS word- or pdf file.
+    </elseif>
+    <elseif type-from-filename='form.image is application/octet-stream'>
+      Invalid content type, type is unknown!
+    </elseif>
+  </if>
+  <else>File larger than 2MB</else>
+</nocache>
+</ex-box>
+</desc>
+",
+
+//----------------------------------------------------------------------
+
+"if#type-from-filename":#"<desc type='plugin'><p><short>
+ Compares if the variable contains a path that match the
+ content type pattern.
+</short></p>
+<p>
+ This is an <i>Eval</i> plugin.
+</p>
+<p>Related tags: <tag>if#type-from-data</tag>, <tag>cimg</tag>, <tag>guess-content-type</tag>,
+   <tag>emit#dir</tag>.</p>
+<p>See a lengthier example under <tag>if#type-from-data</tag>.</p>
+<ex>
+  <set variable='var.path' value='/a-path/to somthing/wordfile.doc'/>
+  <if type-from-filename='var.path is application/msword'>
+    It is a word document.
+  </if>
+  <else>
+    It is other document type that I do not want.
+  </else>
+</ex>
+</ex-box>
+</desc>
+",
 
 //----------------------------------------------------------------------
 
