@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.494 2006/03/09 14:27:12 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.495 2006/03/21 16:18:53 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -372,6 +372,15 @@ string scan_for_query( string f )
   {
     string v, a, b;
 
+    if (search("&" + query, "&roxen_magic_per_u=%25") != -1) {
+      // Broken Safari detected
+      //   (http://bugzilla.opendarwin.org/show_bug.cgi?id=6452)
+      // Assume that %u and %U won't occur naturally.
+      REQUEST_WERR(sprintf("Broken http encoding detected. query=%O\n",
+			   query));
+      query = replace(query, ({ "%25u", "%25U" }), ({ "%u", "%U" }));
+      REQUEST_WERR(sprintf("Repaired query=%O\n", query));
+    }
     foreach(query / "&", v)
       if(sscanf(v, "%s=%s", a, b) == 2)
       {
@@ -2261,19 +2270,19 @@ string url_base()
     // First look at the host header in the request.
     if (string tmp = misc->host) {
       int scanres = sscanf (tmp, "%[^:]:%d", string host, int port);
-      if (scanres < 2)
-	// Some clients don't send the port in the host header.
-	port = port_obj->port;
-      if (port_obj->default_port == port)
+      if ((scanres < 2) || (port == port_obj->default_port)) {
+	// Some clients don't send the port in the host header
+	// if they've connected to the default port.
+	// NOTE: We want the (probable) port number that the client
+	//       used here; NOT the actual port number, since there
+	//       may be port remappers in the way.
+	port = port_obj->default_port;
 	// Remove redundant port number.
 	cached_url_base = port_obj->prot_name + "://" + host;
-      else
-	if (scanres < 2)
-	  cached_url_base = port_obj->prot_name + "://" + host + ":" + port;
-	else
-	  cached_url_base = port_obj->prot_name + "://" + tmp;
+      } else {
+	cached_url_base = port_obj->prot_name + "://" + tmp;
+      }
     }
-
     // Then use the port object.
     else {
       string host = (port_obj->conf_data[conf] ||
