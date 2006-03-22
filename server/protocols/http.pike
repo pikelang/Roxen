@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.471 2005/12/20 17:27:06 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.472 2006/03/22 14:56:33 wellhard Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2122,7 +2122,7 @@ string url_base()
       int scanres = sscanf (tmp, "%[^:]:%d", string host, int port);
       if (scanres < 2)
 	// Some clients don't send the port in the host header.
-	port = port_obj->port;
+	port = port_obj->default_port;
       if (port_obj->default_port == port)
 	// Remove redundant port number.
 	cached_url_base = port_obj->prot_name + "://" + host;
