@@ -661,6 +661,13 @@ e</result>
   <result><x><x></result>
 </test>
 
+<test>
+  <rxml><replace from="x" to="y"><br/>&lt;br/&gt;&amp;
+&#33;&#34;&#35;&#36;&#37;&#38;&#39;&#59;&#60;&#61;&#62;</replace></rxml>
+  <result><br/>&lt;br/&gt;&amp;
+!"#$%&#38;';&#60;=&#62;</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Trimlines</comment>
