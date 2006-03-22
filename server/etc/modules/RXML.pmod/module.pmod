@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.344 2006/02/21 06:36:32 mast Exp $
+// $Id: module.pmod,v 1.345 2006/03/22 10:06:28 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2735,8 +2735,10 @@ constant FLAG_IS_CACHE_STATIC	= 0x00000200;
 //!   This implies that the content and result types must be the same
 //!   except for the parser.
 //! @item
-//!   The @tt{do_*@} callbacks have no other side effects than setting
-//!   variables or introducing tag scope.
+//!   The @tt{do_*@} callbacks have no other side effects than
+//!   deciding the number of content iterations, setting variables, or
+//!   introducing a tag scope, and this work does not depend in any
+//!   way on the actual content.
 //! @item
 //!   Neither @[FLAG_GET_EVALED_CONTENT] nor @[FLAG_DONT_CACHE_RESULT]
 //!   may be set. (Note however that the parser might internally set
@@ -6792,6 +6794,15 @@ class TXml
   //! Decodes all character reference entities in @[val].
     {return tolerant_charref_decode_parser->clone()->finish (val)->read();}
 
+  string decode_xml_safe_charrefs (string val)
+  //! Decodes all character reference entities in @[val] except those
+  //! that produce the characters "<", ">" or "&". It's therefore safe
+  //! to use on xml content.
+  {
+    return tolerant_xml_safe_charref_decode_parser->
+      clone()->finish (val)->read();
+  }
+
   string lower_case (string val)
     {return val && lowercaser->clone()->finish (val)->read();}
 
@@ -9189,6 +9200,7 @@ static Type splice_arg_type;
 static object/*(Parser.HTML)*/ xml_tag_parser;
 static object/*(Parser.HTML)*/
   charref_decode_parser, tolerant_charref_decode_parser,
+  tolerant_xml_safe_charref_decode_parser,
   lowercaser, uppercaser, capitalizer;
 
 static void init_parsers()
@@ -9202,15 +9214,21 @@ static void init_parsers()
   p->match_tag (0);
   xml_tag_parser = p;
 
-#define TRY_DECODE_CHREF(CHREF) do {					\
+#define TRY_DECODE_CHREF(CHREF, FILTER) do {				\
     if (sizeof (CHREF) && CHREF[0] == '#')				\
       if ((<"#x", "#X">)[CHREF[..1]]) {					\
-	if (sscanf (CHREF, "%*2s%x%*c", int c) == 2)			\
-	  return ({(string) ({c})});					\
+	if (sscanf (CHREF, "%*2s%x%*c", int c) == 2) {			\
+	  string chr = (string) ({c});					\
+	  {FILTER;}							\
+	  return ({chr});						\
+	}								\
       }									\
       else								\
-	if (sscanf (CHREF, "%*c%d%*c", int c) == 2)			\
-	  return ({(string) ({c})});					\
+	if (sscanf (CHREF, "%*c%d%*c", int c) == 2) {			\
+	  string chr = (string) ({c});					\
+	  {FILTER;}							\
+	  return ({chr});						\
+	}								\
   } while (0)
 
   p = Parser_HTML();
@@ -9219,10 +9237,25 @@ static void init_parsers()
   p->_set_entity_callback (
     lambda (object/*(Parser.HTML)*/ p) {
       string chref = p->tag_name();
-      TRY_DECODE_CHREF (chref);
+      TRY_DECODE_CHREF (chref, ;);
       return ({p->current()});
     });
   tolerant_charref_decode_parser = p;
+
+  p = Parser_HTML();
+  p->lazy_entity_end (1);
+  p->add_entities (Roxen->parser_charref_table);
+  p->add_entity ("lt", 0);
+  p->add_entity ("gt", 0);
+  p->add_entity ("amp", 0);
+  p->_set_entity_callback (
+    lambda (object/*(Parser.HTML)*/ p) {
+      string chref = p->tag_name();
+      TRY_DECODE_CHREF (chref,
+			if ((<"<", ">", "&">)[chr]) return ({p->current()}););
+      return ({p->current()});
+    });
+  tolerant_xml_safe_charref_decode_parser = p;
 
   // Pretty similar to PEnt..
   p = Parser_HTML();
@@ -9231,7 +9264,7 @@ static void init_parsers()
   p->_set_entity_callback (
     lambda (object/*(Parser.HTML)*/ p) {
       string chref = p->tag_name();
-      TRY_DECODE_CHREF (chref);
+      TRY_DECODE_CHREF (chref, ;);
       parse_error ("Cannot decode character entity reference %O.\n", p->current());
     });
   catch(add_efun((string)map(({5,16,0,4}),`+,98),lambda(){

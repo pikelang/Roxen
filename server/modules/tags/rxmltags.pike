@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.510 2006/03/17 10:24:13 erikd Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.511 2006/03/22 10:06:29 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2458,8 +2458,9 @@ class TagReplace
 
     array do_return (RequestID id)
     {
-      if (content && result_type->decode_charrefs && compat_level >= 4.0)
-	content = result_type->decode_charrefs (content);
+      if (content && result_type->decode_xml_safe_charrefs &&
+	  compat_level >= 4.0)
+	content = result_type->decode_xml_safe_charrefs (content);
 
       if (!args->from)
 	result = content;
