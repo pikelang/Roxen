@@ -3,7 +3,7 @@
 // Created 20060210 by Marcus Wellhardh <wellhard@roxen.com> as a
 // consultancy job for Randstad.
 
-// $Id: emit_exec.pike,v 1.1 2006/02/13 13:40:16 wellhard Exp $
+// $Id: emit_exec.pike,v 1.2 2006/03/23 18:03:45 wellhard Exp $
 
 #include <module.h>
 inherit "module";
@@ -12,6 +12,13 @@ inherit "module";
 //<locale-token project="sitebuilder">DLOCALE</locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("sitebuilder",X,Y)
 #define DLOCALE(X,Y)    _DEF_LOCALE("sitebuilder",X,Y)
+
+#ifdef EMITEXEC_DEBUG
+#define dwerror(ARGS...) werror(ARGS)
+#else
+#define dwerror(ARGS...) 0
+#endif    
+
 
 #ifndef manual
 constant thread_safe = 1;
@@ -49,6 +56,7 @@ class TagEmitExec {
     "arguments"       : RXML.t_text(RXML.PXml),
     "raw-variable"    : RXML.t_text(RXML.PXml),
     "return-variable" : RXML.t_text(RXML.PXml),
+    "timeout"         : RXML.t_text(RXML.PXml),
   ]);
   
   array(mapping) get_dataset(mapping args, RequestID id)
@@ -66,6 +74,8 @@ class TagEmitExec {
       return variables;
     };
     
+    int timeout = (int)args->timeout || 60;
+    
     string path = query("applications")[args->application];
     if(!path)
       RXML.parse_error("Unknown application name: %O\n", args->application);
@@ -76,23 +86,51 @@ class TagEmitExec {
     
     Stdio.File stdout = Stdio.File();
     string res = "";
+    int done;
     
+    Process.create_process p;
     void got_data(int cb_id, string s)
     {
+      dwerror("emit#exec: got_data(%O)\n", s);
       res += s;
     };
+
+    void con_closed(int cb_id)
+    {
+      dwerror("emit#exec: con_closed()\n");
+      done = 1;
+    };
     
-    mapping modifiers = ([
-      "stdout": stdout->pipe(),
-    ]);
-    stdout->set_read_callback(got_data);
-    Process.create_process p;
+    void timeout_cb()
+    {
+      report_warning("emit#exec: Timeout (%O s), "
+		     "killing application [\"%s\"]\n",
+		     timeout, command_args*"\", \"");
+      p->kill(9);
+      done = 1;
+    };
+    
     mixed err = catch {
-      p = Process.create_process(command_args, modifiers);
+      dwerror("emit#exec: Starting application [\"%s\"]\n", command_args*"\", \"");
+      p = Process.create_process(command_args, ([
+				   "stdout": stdout->pipe(),
+				 ]));
     };
     if(err)
       RXML.run_error(describe_error(err));
+
+    object backend = Pike.Backend();
+    backend->add_file(stdout);
+    backend->call_out(timeout_cb, timeout);
     
+    stdout->set_nonblocking(got_data, 0, con_closed);
+
+    while (!done) {
+      dwerror("emit#exec: Running Backend\n");
+      float runtime = backend(60);
+      dwerror("emit#exec: Backend run %O seconds\n", runtime);
+    };
+
     int ret_value = p->wait();
 
     array rows = ({});
@@ -144,6 +182,11 @@ Load 15 min: &var.load-15;<br/></ex-box>
   application is looked up in the <i>Available Applications</i>
   module variable. The application has to be defined in the list,
   an error will be generated otherwise.</p>
+</attr>
+
+<attr name='timeout' value='seconds' default='60'>
+  <p>This attribute defines the timeout for the external application.
+  After the specified amount of seconds the application is killed.</p>
 </attr>
 
 <attr name='loop-split' value='string'>
