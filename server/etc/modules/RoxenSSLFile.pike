@@ -1,4 +1,4 @@
-/* $Id: RoxenSSLFile.pike,v 1.10 2006/01/28 03:14:49 mast Exp $
+/* $Id: RoxenSSLFile.pike,v 1.11 2006/03/26 23:21:54 mast Exp $
  */
 
 // This is SSL.sslfile from Pike 7.6, slightly modified for the old
@@ -1228,7 +1228,7 @@ static void update_internal_state()
     if (install_read_cbs) {
       stream->set_read_callback (ssl_read_callback);
       stream->set_close_callback (ssl_close_callback);
-      if (got_extra_read_call_out < 0) {
+      if (got_extra_read_call_out < 0 || sizeof (read_buffer)) {
 	call_out (ssl_read_callback, 0, 1, 0);
 	got_extra_read_call_out = 1;
       }
