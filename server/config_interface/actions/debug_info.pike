@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.36 2004/09/20 17:51:13 mast Exp $
+ * $Id: debug_info.pike,v 1.37 2006/03/30 03:54:56 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -268,7 +268,7 @@ mixed page_0( object id )
 
   roxen->set_var("__num_clones", save_numobjs);
 
-  res += "<p><table border='0' cellpadding='0'>\n<tr>\n" +
+  res += "<p><table style='font-size: 9px' border='0' cellpadding='0'>\n<tr>\n" +
     HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(141,"Source")) +
     HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(142,"Program")) +
     HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(143,"Clones")) +
