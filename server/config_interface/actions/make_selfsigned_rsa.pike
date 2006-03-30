@@ -1,5 +1,5 @@
 /*
- * $Id: make_selfsigned_rsa.pike,v 1.8 2005/05/21 09:25:01 grubba Exp $
+ * $Id: make_selfsigned_rsa.pike,v 1.9 2006/03/30 03:30:44 mast Exp $
  */
 
 #if (constant(Nettle) || constant(_Crypto)) && constant(Crypto.rsa)
@@ -86,7 +86,7 @@ mixed page_3(object id, object mc)
 	      "organizationUnitName", "commonName" }), attr)
   {
     if (id->variables[attr]) {
-      attrs[attr] = String.trim_whites (id->variables[attr]);
+      attrs[attr] = global.String.trim_whites (id->variables[attr]);
       if (attrs[attr] == "") m_delete (attrs, attr);
     }
   }

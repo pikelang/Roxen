@@ -1,5 +1,5 @@
 /*
- * $Id: make_rsa_csr.pike,v 1.9 2005/05/21 09:25:00 grubba Exp $
+ * $Id: make_rsa_csr.pike,v 1.10 2006/03/30 03:30:44 mast Exp $
  */
 
 #if (constant(Nettle) || constant(_Crypto)) && constant(Crypto.rsa)
@@ -107,7 +107,7 @@ mixed page_4(object id, object mc)
 	      "emailAddress", "challengePassword"}), attr)
   {
     if (id->variables[attr]) {
-      attrs[attr] = String.trim_whites(id->variables[attr]);
+      attrs[attr] = global.String.trim_whites(id->variables[attr]);
       if (attrs[attr] == "") m_delete (attrs, attr);
     }
   }
