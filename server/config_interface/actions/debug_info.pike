@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.37 2006/03/30 03:54:56 mast Exp $
+ * $Id: debug_info.pike,v 1.38 2006/03/30 06:49:20 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -43,7 +43,7 @@ mixed page_0( object id )
   Pike.gc_parameters ((["enabled": 0]));
 #endif
 
-  int gc_freed = id->real_variables->do_gc && gc();
+  int gc_freed = id->real_variables->gc && gc();
 
   mapping(string:int) mem_usage = _memory_usage();
   int this_found = 0, walked_objects = 0, destructed_objs = 0;
@@ -61,7 +61,13 @@ mixed page_0( object id )
       p = functionp (p) && Function.defined (p) ||
 	programp (p) && Program.defined (p) ||
 	p;
-      if (++numobjs[p] <= 50) allobj[p] += ({obj});
+      if (++numobjs[p] <= 50) {
+#if 0
+	if (stringp (p) && has_suffix (p, "my-file.pike:4711"))
+	  _locate_references (obj);
+#endif
+	allobj[p] += ({obj});
+      }
     }
     else
       destructed_objs++;
@@ -84,7 +90,7 @@ mixed page_0( object id )
 
   string res = "<p>Current time: " + ctime (time()) + "</p>\n"
     "<p>";
-  if (id->real_variables->do_gc)
+  if (id->real_variables->gc)
     res += sprintf (LOCALE(169, "The garbage collector freed %d of %d things (%d%%)."),
 		    gc_freed, gc_freed + num_things_afterwards,
 		    gc_freed * 100 / (gc_freed + num_things_afterwards));
@@ -95,9 +101,7 @@ mixed page_0( object id )
 		    (gc_status->num_allocs + 1) * 100 /
 		    (gc_status->alloc_threshold + 1));
 
-  res += "<br />\n<input type='checkbox' name='do_gc' value='yes'" +
-    (id->real_variables->do_gc ? " checked='checked'" : "") +
-    " /> " + LOCALE(171, "Run the garbage collector first.") + "</p>\n";
+  res += "</p>\n";
 
   if (!this_found)
     res += "<p><font color='&usr.warncolor;'>" + LOCALE(173, "Internal inconsistency") +
@@ -316,9 +320,12 @@ mixed parse( RequestID id )
     "</b></font>"
     "<p />"
     "<input type='hidden' name='action' value='debug_info.pike' />\n"
-    "<p><submit-gbutton name='refresh'> "
+    "<p><submit-gbutton2 name='refresh'> "
     "<translate id='520'>Refresh</translate> "// <cf-refresh> doesn't submit.
-    "</submit-gbutton>\n"
+    "</submit-gbutton2>\n"
+    "<submit-gbutton2 name='gc'> "
+    "<translate id='0'>Run garbage collector</translate> "
+    "</submit-gbutton2>\n"
     "<cf-cancel href='?class=&form.class;'/>\n" +
     page_0( id );
 }
