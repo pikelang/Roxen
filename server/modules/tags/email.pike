@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.35 2005/02/10 16:35:18 wellhard Exp $";
+constant cvs_version = "$Id: email.pike,v 1.36 2006/04/07 13:51:08 erikd Exp $";
 
 constant thread_safe=1;
 
@@ -65,8 +65,8 @@ void create(Configuration conf)
 	 "useful to find messages that may have been lost. Undelivered "
 	 "messages may have the header X-Roxen-Email-Error included.");
   defvar ("mbox_file_errors_only", 1, "Log undelivered messages only",
-         TYPE_FLAG,
-         "Log only e-mail messages which the system knows will not be "
+	  TYPE_FLAG,
+	  "Log only e-mail messages which the system knows will not be "
 	  "delivered. Beware! All undelivered messages may not always be "
 	  "logged.");
   
@@ -98,7 +98,7 @@ void create(Configuration conf)
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.35 $"/" ")[1];
+string revision = ("$Revision: 1.36 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -465,7 +465,7 @@ class TagEmail {
 	 string subject_qp = MIME.encode_word(({subject, s_chs}), "quoted-printable");
 
 	 // Use quoted printable if it is shorter because it is
-	 // significantly easier to reed in clients not supporting
+	 // significantly easier to read in clients not supporting
 	 // encoded subjects.
 	 if(sizeof(subject_b) < sizeof(subject_qp))
 	   subject = subject_b;
@@ -562,8 +562,8 @@ class TagEmail {
 
      log_message(from, message);
      
-     //itterate log
-     mails += ({ m->headers + ([ "length" : (string)(sizeof((string)m)) ]) });
+     //iterate log
+     mails += ({ m->headers + ([ "length" : (string)(sizeof((string)m)), "date" : Calendar.Second()->format_time() ]) });
 
      if (id->misc->debug)
        //result = ("\n<!-- debug output --><pre>\n"+Roxen.html_encode_string(colorize_parts((string)m))+"\n</pre><!-- end of debug output -->\n");
@@ -588,9 +588,11 @@ string status() {
   if(query("CI_verbose_status") && sizeof(mails)) {
 #if 1 //EMAIL_STATS
     rv += "<table>\n";
-    rv += "<tr ><th>From</th><th>To</th><th>Size</th></tr>\n";
+    rv += "<tr ><th>Date</th><th>From</th><th>To</th><th>Size</th></tr>\n";
     foreach(mails, mapping m)
-      rv += "<tr ><td>"+(m->from||"[N/A]")+"</td><td>"+(m->to||"[default]")+"</td><td>"+m->length+"</td></tr>\n";
+      rv += "<tr><td>"+(m->date||"")+"</td> <td>" +
+	  (replace((m->from||"[N/A]"),",",", ")) +
+	  "</td> <td>"+(m->to||"[default]")+"</td> <td>"+m->length+"</td></tr>\n";
     rv += "</table>\n";
 #else
     ; // xxx
@@ -680,9 +682,9 @@ value=''><p>
 
 <attr name='charset' value='' default='iso-8859-1'><p>
  The charset of the body and subject. The body will be encoded in utf-8
- if the text was unable to be encoded in the supplied charset. The subject
+ if it was not possible to encode the text in the supplied charset. The subject
  will be unencoded if possible otherwise encoded with the supplied charset
- or encoded in utf-8 if the text was unable to be encoded with the supplied
+ or encoded in utf-8 if it was not possible to encode the text in the supplied
  charset.
 </p>
 </attr>
