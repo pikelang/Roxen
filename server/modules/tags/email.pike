@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.36 2005/12/05 15:20:34 grubba Exp $";
+constant cvs_version = "$Id: email.pike,v 1.37 2006/04/07 13:47:59 erikd Exp $";
 
 constant thread_safe=1;
 
@@ -98,7 +98,7 @@ void create(Configuration conf)
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.36 $"/" ")[1];
+string revision = ("$Revision: 1.37 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -563,7 +563,7 @@ class TagEmail {
      log_message(from, message);
      
      //iterate log
-     mails += ({ m->headers + ([ "length" : (string)(sizeof((string)m)) ]) });
+     mails += ({ m->headers + ([ "length" : (string)(sizeof((string)m)), "date" : Calendar.Second()->format_time() ]) });
 
      if (id->misc->debug)
        //result = ("\n<!-- debug output --><pre>\n"+Roxen.html_encode_string(colorize_parts((string)m))+"\n</pre><!-- end of debug output -->\n");
@@ -588,9 +588,11 @@ string status() {
   if(query("CI_verbose_status") && sizeof(mails)) {
 #if 1 //EMAIL_STATS
     rv += "<table>\n";
-    rv += "<tr ><th>From</th><th>To</th><th>Size</th></tr>\n";
+    rv += "<tr ><th>Date</th><th>From</th><th>To</th><th>Size</th></tr>\n";
     foreach(mails, mapping m)
-      rv += "<tr ><td>"+(m->from||"[N/A]")+"</td><td>"+(m->to||"[default]")+"</td><td>"+m->length+"</td></tr>\n";
+      rv += "<tr><td>"+(m->date||"")+"</td> <td>" +
+	  (replace((m->from||"[N/A]"),",",", ")) +
+	  "</td> <td>"+(m->to||"[default]")+"</td> <td>"+m->length+"</td></tr>\n";
     rv += "</table>\n";
 #else
     ; // xxx
