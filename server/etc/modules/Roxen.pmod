@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.208 2006/02/27 18:10:24 jonasw Exp $
+// $Id: Roxen.pmod,v 1.209 2006/04/18 17:22:15 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -143,6 +143,14 @@ function(string, RequestID:string) get_cookie_callback(string cookie)
 	 return id->cookies[cookie];
        };
   return cookie_callbacks[cookie] = cb;
+}
+
+//! Return id->remoteaddr.
+//!
+//! Useful to use with @[RequestID()->register_vary_callback()].
+string get_remoteaddr(string ignored, RequestID id)
+{
+  return id->remoteaddr;
 }
 
 // These five functions are questionable, but rather widely used.
