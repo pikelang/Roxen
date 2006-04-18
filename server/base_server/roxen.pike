@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.917 2006/03/15 15:45:40 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.918 2006/04/18 17:24:48 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -3537,7 +3537,9 @@ class ImageCache
     //  be placed in the protocol-level cache, so we'll counter by setting a
     //  separate flag.
     RAISE_CACHE(INITIAL_CACHEABLE);
+#if 0
     NO_PROTO_CACHE();
+#endif
     return res;
   }
 
@@ -5606,43 +5608,68 @@ function compile_log_format( string fmt )
   return compiled_formats[ fmt ] = res()->log;
 }
 
-// This array contains the compilation information for the different
-// security checks for e.g. htaccess. The layout of the top array is
-// triplet of sscanf string that the security command should match,
-// the number of arguments that it takes and an array with the actual
-// compilation information.
-//
-// ({ command_sscanf_string, number_of_arguments, actual_tests,
-//    state_symbol_string,
-// })
-// 
-
-// In the tests array the following types has the following meaning:
-// function
-//   The function will be run during compilation. It gets the values
-//   acquired through sscanf-ing the command as input and should return
-//   an array with corresponding data.
-// string
-//   The string will be compiled into the actual test code. It is
-//   first modified as
-//   str = sprintf(str, @args)
-//   where args are the arguments from the command after it has been
-//   processed by the provided function, if any.
-// multiset
-//   Strings in a multiset will be added before the string above.
-//   should typically be used for variable declarations.
-// int
-//   Signals that an authentication request should be sent to the user
-//   upon failure.
-// 
-// 
-// NOTE: It's up to the security checks in this file to ensure that
-// nothing is overcached. All patterns that perform checks using
-// information from the client (such as remote address, referer etc)
-// _have_ to use NOCACHE() or NO_PROTO_CACHE(). It's not necessary, however,
-// to do that for checks that use the authentication module API, since
-// then it's up to the user database and authentication modules to ensure
-// that nothing is overcached in that case.
+//! This array contains the compilation information for the different
+//! security checks for e.g. @tt{htaccess@}. The layout of the top array is
+//! a quadruple of sscanf string that the security command should match,
+//! the number of arguments that it takes, an array with the actual
+//! compilation information, and a symbol identifying the class of tests
+//! the test belongs to.
+//!
+//! @array
+//!   @elem string command_sscanf_string
+//!     String to be passed as second argument to @[array_sscanf()]
+//!     to perform the match for the pattern.
+//!   @elem int(0..) number_of_arguments
+//!     Number of elements expected in the array returned by
+//!     @[array_sscanf()] for a proper match.
+//!   @elem array(function|string|int|multiset) actual_tests
+//!     In the tests array the following types has the following meaning:
+//!     @mixed
+//!       @type function
+//!         The function will be run during compilation. It gets the values
+//!         acquired through sscanf-ing the command as input and should return
+//!         an array with corresponding data.
+//!       @type string
+//!         The string will be compiled into the actual test code. It is
+//!         first modified as
+//!         @expr{str = sprintf(str, @@args)@}
+//!         where args are the arguments from the command after it has been
+//!         processed by the provided function, if any.
+//!       @type multiset
+//!         Strings in a multiset will be added before the string above.
+//!         should typically be used for variable declarations.
+//!       @type int
+//!         Signals that an authentication request should be sent to the user
+//!         upon failure.
+//!     @endmixed
+//!   @elem string state_symbol_string
+//!     Used to group the results from a class of tests.
+//!     Currently the following values are used:
+//!     @string
+//!       @value "ip"
+//!       @value "user"
+//!       @value "group"
+//!       @value "time"
+//!       @value "referer"
+//!       @value "day"
+//!       @value "language"
+//!       @value "luck"
+//!     @endstring
+//! @endarray
+//! 
+//! @note
+//!   It's up to the security checks in this file to ensure that
+//!   nothing is overcached. All patterns that perform checks using
+//!   information from the client (such as remote address, referer etc)
+//!   @b{have@} to use @[RequestID()->register_vary_callback()] (preferred),
+//!   or @[NOCACHE()] or @[NO_PROTO_CACHE()]. It's not necessary, however,
+//!   to do this for checks that use the authentication module API, since
+//!   then it's up to the user database and authentication modules to ensure
+//!   that nothing is overcached.
+//!
+//! @seealso
+//!   @[RequestID()->register_vary_callback()], @[NOCACHE()],
+//!   @[NO_PROTO_CACHE()], @[array_sscanf()]
 array(array(string|int|array)) security_checks = ({
   ({ "ip=%s:%s",2,({
     lambda( string a, string b ){
@@ -5652,7 +5679,7 @@ array(array(string|int|array)) security_checks = ({
       return ({ net, sprintf("%c",mask)[0] });
     },
     "    if ((Roxen.ip_to_int(id->remoteaddr) & %[1]d) == %[0]d)",
-    (<"  NO_PROTO_CACHE()" >),
+    (<"  id->register_vary_callback(0, Roxen.get_remoteaddr);">),
   }), "ip" }),
   ({ "ip=%s/%d",2,({
     lambda( string a, int b ){
@@ -5662,14 +5689,14 @@ array(array(string|int|array)) security_checks = ({
       return ({ net, sprintf("%c",mask)[0] });
     },
     "    if ((Roxen.ip_to_int(id->remoteaddr) & %[1]d) == %[0]d) ",
-    (<"  NO_PROTO_CACHE()" >),
+    (<"  id->register_vary_callback(0, Roxen.get_remoteaddr);">),
   }), "ip", }),
   ({ "ip=%s",1,({
     "    if (sizeof(filter(%[0]O/\",\",\n"
     "                      lambda(string q){\n"
     "                        return glob(q,id->remoteaddr);\n"
     "                      })))",
-    (<"  NO_PROTO_CACHE()" >),
+    (<"  id->register_vary_callback(0, Roxen.get_remoteaddr);">),
   }), "ip", }),
   ({ "user=%s",1,({ 1,
     lambda( string x ) {
@@ -5700,7 +5727,7 @@ array(array(string|int|array)) security_checks = ({
     "    if (sizeof(filter(%[0]O/\",\",\n"
     "                      lambda(string q){return glob(lower_case(q),lower_case(dns));})))",
     (< "  string dns" >),
-    (<"  NO_PROTO_CACHE()" >),
+    (<"  id->register_vary_callback(0, Roxen.get_remoteaddr);">),
   }), "ip", }),
   ({ "time=%d:%d-%d:%d",4,({
     (< "  mapping l = localtime(time(1))" >),
@@ -5711,12 +5738,11 @@ array(array(string|int|array)) security_checks = ({
   }), "time", }),
   ({ "referer=%s", 1, ({
     (<
-      "  string referer = sizeof(id->referer||({}))?"
-      "id->referer[0]:\"\"; "
+      "  string referer = sizeof(id->referer||({}))?id->referer[0]:\"\"; "
     >),
     "    if( sizeof(filter(%[0]O/\",\",\n"
     "                      lambda(string q){return glob(q,referer);})))",
-    (<"  NO_PROTO_CACHE()" >),
+    (<"  id->register_vary_callback(\"referer\");">),
   }), "referer", }),
   ({ "day=%s",1,({
     lambda( string q ) {
