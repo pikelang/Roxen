@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.148 2006/01/11 06:12:41 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.149 2006/04/19 16:40:22 wellhard Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -653,6 +653,7 @@ class PrefLanguages
 		       sscanf(lower_case(x), "%s;q=%f", x, n);
 		       if(n==0.0) return "";
 		       sscanf(x, "%s-%s", x, sub);
+		       if(x == "" ) return "";
 		       q+=({n});
 		       u+=({sub});
 		       return x;
