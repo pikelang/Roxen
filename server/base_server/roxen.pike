@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.918 2006/04/18 17:24:48 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.919 2006/04/19 09:16:52 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -3537,7 +3537,7 @@ class ImageCache
     //  be placed in the protocol-level cache, so we'll counter by setting a
     //  separate flag.
     RAISE_CACHE(INITIAL_CACHEABLE);
-#if 0
+#ifndef ENABLE_NEW_ARGCACHE
     NO_PROTO_CACHE();
 #endif
     return res;
@@ -5679,7 +5679,6 @@ array(array(string|int|array)) security_checks = ({
       return ({ net, sprintf("%c",mask)[0] });
     },
     "    if ((Roxen.ip_to_int(id->remoteaddr) & %[1]d) == %[0]d)",
-    (<"  id->register_vary_callback(0, Roxen.get_remoteaddr);">),
   }), "ip" }),
   ({ "ip=%s/%d",2,({
     lambda( string a, int b ){
@@ -5689,14 +5688,12 @@ array(array(string|int|array)) security_checks = ({
       return ({ net, sprintf("%c",mask)[0] });
     },
     "    if ((Roxen.ip_to_int(id->remoteaddr) & %[1]d) == %[0]d) ",
-    (<"  id->register_vary_callback(0, Roxen.get_remoteaddr);">),
   }), "ip", }),
   ({ "ip=%s",1,({
     "    if (sizeof(filter(%[0]O/\",\",\n"
     "                      lambda(string q){\n"
     "                        return glob(q,id->remoteaddr);\n"
     "                      })))",
-    (<"  id->register_vary_callback(0, Roxen.get_remoteaddr);">),
   }), "ip", }),
   ({ "user=%s",1,({ 1,
     lambda( string x ) {
@@ -5727,7 +5724,6 @@ array(array(string|int|array)) security_checks = ({
     "    if (sizeof(filter(%[0]O/\",\",\n"
     "                      lambda(string q){return glob(lower_case(q),lower_case(dns));})))",
     (< "  string dns" >),
-    (<"  id->register_vary_callback(0, Roxen.get_remoteaddr);">),
   }), "ip", }),
   ({ "time=%d:%d-%d:%d",4,({
     (< "  mapping l = localtime(time(1))" >),
@@ -5742,7 +5738,6 @@ array(array(string|int|array)) security_checks = ({
     >),
     "    if( sizeof(filter(%[0]O/\",\",\n"
     "                      lambda(string q){return glob(q,referer);})))",
-    (<"  id->register_vary_callback(\"referer\");">),
   }), "referer", }),
   ({ "day=%s",1,({
     lambda( string q ) {
@@ -5847,6 +5842,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 		       "  object authmethod = id->conf",
 		       "  string realm = \"User\"",
 		       "  mapping(string:int|mapping) state = ([])",
+		       "  id->register_vary_cb(0, vary_cb)",
   });
 
   // Some state variables for optimizing.
@@ -6125,6 +6121,18 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 	   "    return authmethod->authenticate_throw(id, realm);\n":
 	   "") +
 	  "  return 1;\n"
+	  "}\n"
+	  "string vary_cb(string ignored, RequestID id)\n"
+	  "{\n"
+	  "  int|mapping res = f(id);"
+	  "  if (intp(res)) return (string) res;"
+	  "  return 0; // FIXME: Analyze the mapping."
+	  "}\n"
+	  "int|mapping f(RequestID id)\n"
+	  "{\n"
+	  "  int res = low_f(id);\n"
+	  "  if (res == 2) authmethod->authenticate_throw(id, realm);\n"
+	  "  return res;\n"
 	  "}\n");
 #if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
   report_debug(sprintf("Compiling security pattern:\n"
