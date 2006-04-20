@@ -1,11 +1,11 @@
 #
 # Main makefile for extracting autodoc.
 #
-# $Id: Makefile,v 1.4 2004/05/18 16:37:57 grubba Exp $
+# $Id: Makefile,v 1.5 2006/04/20 13:26:07 grubba Exp $
 #
 
 PIKE=pike
-REFDOC=/home/nilsson/Pike/7.3/refdoc
+REFDOC=/home/grubba/src/Pike/7.7/refdoc
 
 # FIXME: The REFDOC variable should be generated.
 
@@ -14,14 +14,14 @@ all: modref
 modref: build/modref.xml
 	rm -rf modref || /bin/true
 	@mkdir modref
-	@cp $(REFDOC)/tree-split-style.css modref/style.css
+	@cp $(REFDOC)/modref/style.css modref/style.css
 	@$(PIKE) $(REFDOC)/presentation/tree-split-autodoc.pike \
-	  build/modref.xml $(REFDOC)/tree-split-template.html modref
+	  build/modref.xml $(REFDOC)/structure/module_modref.html modref roxen
 	@mkdir modref/images
 #	cp build/images/* modref/images
 	@cp $(REFDOC)/src_images/next.gif $(REFDOC)/src_images/prev.gif modref/images
 
-html: html_manual
+html: html_manual build/manual.xml
 #	cp build/images/* html_manual/images/
 	@$(PIKE) $(REFDOC)/presentation/make_html.pike --img=images/ build/manual.xml
 
@@ -29,9 +29,9 @@ traditional: traditional_manual build/traditional.xml
 #	cp build/images/* traditional_manual/images/
 	@$(PIKE) @(REFDOC)/presentation/make_html.pike --img=images/ build/traditional.xml
 
-build/autodoc.xml: recursive_join
-	@$(MAKE) PIKE="$(PIKE)" XMLFILES="`echo build/*/*.xml`" \
-	  autodoc.xml
+# build/autodoc.xml: recursive_join
+# 	@$(MAKE) PIKE="$(PIKE)" XMLFILES="`echo build/*/*.xml`" \
+# 	  autodoc.xml
 
 recursive_join: extract
 	@(cd build/etc && $(MAKE) PIKE="$(PIKE)" join)
@@ -41,35 +41,24 @@ extract: build/etc/Makefile build/base/Makefile
 	@(cd build/etc && $(MAKE) PIKE="$(PIKE)" extract)
 	@(cd build/base && $(MAKE) PIKE="$(PIKE)" extract)
 
-manual.xml: build/autodoc.xml $(REFDOC)/structure/onepage.xml $(REFDOC)/bin/assembler.pike
-	@$(PIKE) $(REFDOC)/bin/assembler.pike $(REFDOC)/structure/onepage.xml build/autodoc.xml > manual.xml
+build/manual.xml: build/autodoc.xml $(REFDOC)/structure/onepage.xml
+	@$(PIKE) -x assemble_autodoc $(REFDOC)/structure/onepage.xml build/autodoc.xml > build/manual.xml
 
-build/traditional.xml: build/autodoc.xml $(REFDOC)/structure/traditional.xml $(REFDOC)/bin/assembler.pike
-	@$(PIKE) $(REFDOC)/bin/assembler.pike $(REFDOC)/structure/traditional.xml build/autodoc.xml > build/traditional.xml
+build/traditional.xml: build/autodoc.xml $(REFDOC)/structure/traditional.xml
+	@$(PIKE) -x assemble_autodoc $(REFDOC)/structure/traditional.xml build/autodoc.xml > build/traditional.xml
 
-build/modref.xml: build/autodoc.xml modref.xml $(REFDOC)/bin/assembler.pike
-	@$(PIKE) $(REFDOC)/bin/assembler.pike modref.xml build/autodoc.xml > build/modref.xml
+build/modref.xml: build/autodoc.xml modref.xml
+	@$(PIKE) -x assemble_autodoc modref.xml build/autodoc.xml > build/modref.xml
 
-autodoc.xml: $(XMLFILES) $(REFDOC)/bin/join.pike
-	@$(PIKE) $(REFDOC)/bin/join.pike --post-process build/autodoc.xml $(XMLFILES)
-
-# Makefiles
-
-build/etc/Makefile: Makefile.in build/etc
-	@sed -e "s#@SRCDIR@#../../modules#" \
-	     -e "s#@REFDOC@#$(REFDOC)#" \
-	     -e "s#@ROOT@#../../#" \
-	     -e "s#@BUILDROOT@#../#" \
-	     -e "s#@EXTARGS@##" \
-	  <Makefile.in >build/etc/Makefile
-
-build/base/Makefile: Makefile.in build/base
-	@sed -e "s#@SRCDIR@#../../../base_server#" \
-	     -e "s#@REFDOC@#$(REFDOC)#" \
-	     -e "s#@ROOT@#../../#" \
-	     -e "s#@BUILDROOT@#../#" \
-	     -e "s#@EXTARGS@#--rootless#" \
-	  <Makefile.in >build/base/Makefile
+build/autodoc.xml: $(XMLFILES) build/etc build/base build/protocols
+	@$(PIKE) -x extract_autodoc -q --srcdir=modules \
+	  --builddir=build/etc
+	@$(PIKE) -x extract_autodoc -q --srcdir=../base_server \
+	  --builddir=build/base
+	@$(PIKE) -x extract_autodoc -q --srcdir=../protocols \
+	  --builddir=build/protocols
+	@$(PIKE) -x join_autodoc --quiet --post-process build/autodoc.xml \
+	  build/etc build/base build/protocols
 
 # Directories
 
@@ -78,6 +67,9 @@ build/etc: build
 
 build/base: build
 	@test -d build/base || mkdir build/base
+
+build/protocols: build
+	@test -d build/protocols || mkdir build/protocols
 
 build:
 	@test -d build || mkdir build
