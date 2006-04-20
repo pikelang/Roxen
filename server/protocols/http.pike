@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.496 2006/04/20 11:03:57 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.497 2006/04/20 13:29:06 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -466,7 +466,9 @@ private static int hstart;
 //! @returns
 //!   Returns the resulting current cookie mapping.
 //!
-//! @obsolete
+//! @deprecated CookieJar
+//!
+//! @seealso
 //!   Use @[CookieJar] instead.
 mapping(string:string) parse_cookies( array|string contents )
 {
@@ -2147,6 +2149,7 @@ void send_result(mapping|void result)
 	    "len":strlen(data),
 	    "error":file->error,
 	  ]);
+	  cache_status["protstore"] = 1;
 	}
       }
 #endif
