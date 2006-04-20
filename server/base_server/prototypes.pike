@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.165 2006/04/19 16:40:29 wellhard Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.166 2006/04/20 09:34:08 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -962,7 +962,12 @@ class RequestID
   //!   @[cookies], @[register_vary_callback()], @[Roxen.get_cookie_callback()]
   static class CookieJar
   {
+    //! Contains the current set of cookies.
     static mapping(string:string) jar = ([]);
+
+    //! Contains the set of cookies that have been zapped in some way.
+    static mapping(string:string) eaten = ([]);
+
     static void create(string|array(string)|void contents)
     {
       if(!contents)
@@ -992,7 +997,9 @@ class RequestID
     }
     static string `->(string cookie)
     {
-      register_vary_callback("Cookie", Roxen->get_cookie_callback(cookie));
+      if (zero_type(eaten[cookie])) {
+	register_vary_callback("Cookie", Roxen->get_cookie_callback(cookie));
+      }
       return jar[cookie];
     }
     static string `[](mixed cookie)
@@ -1004,8 +1011,9 @@ class RequestID
     }
     static string `->=(string cookie, string value)
     {
-      // Messes up for the RAM cache...
-      register_vary_callback();
+      if (zero_type(eaten[cookie])) {
+	eaten[cookie] = jar[cookie];
+      }
       return jar[cookie] = value;
     }
     static string `[]=(mixed cookie, string value)
@@ -1016,8 +1024,9 @@ class RequestID
     static string _m_delete(string cookie)
     {
       // FIXME: Warn if not string?
-      // Messes up for the RAM cache...
-      register_vary_callback();
+      if (zero_type(eaten[cookie])) {
+	eaten[cookie] = jar[cookie];
+      }
       return m_delete(jar, cookie);
     }
     static array(string) _indices()
@@ -1035,24 +1044,31 @@ class RequestID
       register_vary_callback("Cookie");
       return sizeof(jar);
     }
-    static mapping(string:string) `+ (mapping(string:string) other)
+    static mapping(string:string) `+(mapping(string:string) other)
     {
       register_vary_callback("Cookie");
       return jar + other;
     }
-    static mapping(string:string) ``+ (mapping(string:string) other)
+    static mapping(string:string) ``+(mapping(string:string) other)
     {
       register_vary_callback("Cookie");
       return other + jar;
     }
+
+    //! Used to retrieve the original set of cookies at
+    //! protocol cache store time.
+    static mapping(string:string) `~()
+    {
+      return jar + eaten;
+    }
+
     static string _sprintf(int fmt)
     {
       return fmt == 'O' && sprintf("CookieJar(%O)", jar);
     }
   }
 
-  //mapping (string:string) cookies;
-  CookieJar cookies;
+  CookieJar|mapping(string:string) cookies;
   //! The indices and values map to the names and values of the cookies sent
   //! by the client for the requested page. All data (names and values) are
   //! decoded from their possible transport encoding.
@@ -1060,6 +1076,9 @@ class RequestID
   //! @note
   //!   Used to be a plain mapping in Roxen 4.0 and earlier. It now
   //!   has a wrapper that registers dependencies on the various cookies.
+  //! @note
+  //!   The wrapper is removed, and the contents partially restored at
+  //!   request send time.
 
   //! Call to initialize the cookies.
   //!
