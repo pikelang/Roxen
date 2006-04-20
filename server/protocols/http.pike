@@ -2,9 +2,11 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.495 2006/03/21 16:18:53 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.496 2006/04/20 11:03:57 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
+
+#define REQUESTID this
 
 #ifdef MAGIC_ERROR
 inherit "highlight_pike";
@@ -578,7 +580,8 @@ int things_to_do_when_not_sending_from_cache( )
   }
   if ( client_var->charset && client_var->charset  != "iso-8859-1" )
   {
-    misc->no_proto_cache = 1;	// FIXME: Why?
+    // FIXME: This code is suspect, and probably ought to be removed.
+    NO_PROTO_CACHE();	// FIXME: Why?
 
     set_output_charset( client_var->charset );
     input_charset = client_var->charset;
@@ -713,7 +716,8 @@ private final int parse_got_2( )
       }
       s = data = ""; // no headers or extra data...
       sscanf( f, "%s%*[\r\n]", f );
-      misc->no_proto_cache = 1;
+      if (sizeof(s1) == 1)
+	NO_PROTO_CACHE();
       break;
 
     case 0:
@@ -1338,7 +1342,7 @@ array get_error(string eid, string md5)
 
 void internal_error(array _err)
 {
-  misc->no_proto_cache = 1;
+  NO_PROTO_CACHE();
   mixed err = _err;
   _err = 0; // hide in backtrace, they are bad enough anyway...
   array err2;
@@ -1670,7 +1674,7 @@ void handle_byte_ranges(mapping(string:mixed) file,
     array ranges = parse_range_header(file->len);
     if(ranges) // No incorrect syntax...
     {
-      misc->no_proto_cache = 1;
+      NO_PROTO_CACHE();
       if(sizeof(ranges)) // And we have valid ranges as well.
       {
 	m_delete(variant_heads, "Content-Length");
@@ -1846,14 +1850,14 @@ void send_result(mapping|void result)
 	       misc->no_proto_cache ? "disabled" : "enabled");
 #endif
 
-  if( prot == "HTTP/0.9" )  misc->no_proto_cache = 1;
+  if( prot == "HTTP/0.9" )  NO_PROTO_CACHE();
 
   if(!leftovers) 
     leftovers = data||"";
 
   if(!mappingp(file))
   {
-    misc->no_proto_cache = 1;
+    NO_PROTO_CACHE();
     if(misc->error_code)
       file = Roxen.http_status(misc->error_code, errors[misc->error_code]);
     else if(err = catch {
@@ -1994,7 +1998,7 @@ void send_result(mapping|void result)
 	// All conditionals apply.
 	file->error = conditional;
 	file->file = file->data = file->len = 0;
-	misc->no_proto_cache = 1;
+	NO_PROTO_CACHE();
       }
     }
 
@@ -2074,6 +2078,11 @@ void send_result(mapping|void result)
 	}
       }
       head_string += "\r\n";
+    }
+
+    if (objectp(cookies)) {
+      // Disconnect the cookie jar.
+      cookies = ~cookies;
     }
 
     int varies = misc->vary && (sizeof(misc->vary) - misc->vary["Host"]);
@@ -2452,7 +2461,7 @@ void got_data(mixed fooid, string s, void|int chained)
     if (rawauth)
     {
       /* Need to authenticate with the configuration */
-      misc->no_proto_cache = 1;
+      NO_PROTO_CACHE();
       array(string) y = rawauth / " ";
       realauth = 0;
       auth = 0;
@@ -2467,7 +2476,7 @@ void got_data(mixed fooid, string s, void|int chained)
     if( misc->proxyauth )
     {
       /* Need to authenticate with the configuration */
-      misc->no_proto_cache = 1;
+      NO_PROTO_CACHE();
       if (sizeof(misc->proxyauth) >= 2)
       {
 	//    misc->proxyauth[1] = MIME.decode_base64(misc->proxyauth[1]);
@@ -2489,10 +2498,8 @@ void got_data(mixed fooid, string s, void|int chained)
 #ifdef RAM_CACHE
     TIMER_START(cache_lookup);
     array cv;
-    if( prot != "HTTP/0.9" &&
-	misc->cacheable    &&
-	!misc->no_proto_cache &&
-	(cv = conf->datacache->get(raw_url, this_object())) )
+    if(misc->cacheable && !misc->no_proto_cache &&
+       (cv = conf->datacache->get(raw_url, this_object())) )
     {
       MY_TRACE_ENTER(sprintf("Found %O in ram cache - checking entry",
 			     raw_url), 0);
@@ -2619,8 +2626,11 @@ void got_data(mixed fooid, string s, void|int chained)
 		code = file->error;
 	      }
 	    }
-	    string full_headers = prot + " " + code + file->hs +
-	      Roxen.make_http_headers(variant_heads);
+	    string full_headers = "";
+	    if (prot != "HTTP/0.9") {
+	      full_headers = prot + " " + code + file->hs +
+		Roxen.make_http_headers(variant_heads);
+	    }
 
 	    MY_TRACE_LEAVE ("Using entry from ram cache");
 	    cache_status["protcache"] = 1;
@@ -2635,8 +2645,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	      sprintf ("Entry out of date (disk: %s, cache: mtime %d)",
 		       st ? "mtime " + st->mtime : "gone", file->mtime));
 #endif
-	} else
-	  misc->no_proto_cache = 1; // Never cache in this case.
+	}
 	file = 0;
       }
     }
