@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.91 2006/02/17 06:26:29 mast Exp $
+// $Id: module.pmod,v 1.92 2006/04/20 13:27:15 grubba Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1287,7 +1287,7 @@ class DatabaseChoice
   //! Provide a function that returns a configuration object,
   //! that will be used for authentication against the database
   //! manager. Typically called as
-  //! @code{set_configuration_pointer(my_configuration)@}.
+  //! @expr{set_configuration_pointer(my_configuration)@}.
   {
     config = configuration;
     return this_object();
@@ -1593,7 +1593,7 @@ class FloatList
 //! A list of floating point numbers
 {
   inherit List;
-  constant type="DirectoryList";
+  constant type="FloatList";
   int width=20;
 
   static int _prec = 3;

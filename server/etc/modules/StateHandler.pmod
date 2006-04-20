@@ -1,7 +1,7 @@
 // This is the Roxen WebServer state mechanism.
 // Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: StateHandler.pmod,v 1.11 2004/06/30 16:58:45 mast Exp $
+// $Id: StateHandler.pmod,v 1.12 2006/04/20 13:27:15 grubba Exp $
 
 #ifdef STATE_HANDLER_DEBUG
 # define STATE_WERR(X) werror("State: "+X+"\n")
@@ -23,22 +23,22 @@
 //! tag. The registration method then returns the given id,
 //! which may be a different one than the suggested id.
 //!
-//! @code{
+//! @code
 //!   string state_id = "my-tag";
 //!   object state = Page_state(id);
 //!   state_id = state->register_consumer(state_id, id);
-//! @}
+//! @endcode
 //!
 //! Then it is a good idea to update the state object with
 //! the current page state, as given in the encoded state
 //! variable. This variable is typically URI-encoded and
 //! sent in a forms variable between pages.
 //!
-//! @code{
+//! @code
 //!   if(id->real_variables->__state &&
 //!      !state->uri_decode(id->real_variables->__state[0]))
 //!     RXML.run_error("Error in state.\n");
-//! @}
+//! @endcode
 //!
 //! It is now possible to retrieve the state associated
 //! with your page object by calling the get method in the
@@ -54,7 +54,7 @@
 //! your object has two states, 1 and 2, the following code
 //! would calculate the proper way to alter the state.
 //!
-//! @code{
+//! @code
 //!   string get_actions(string uri, int current_state,
 //!                      object state) {
 //!     // encode_revisit_url places the encoded state in the variable
@@ -62,7 +62,7 @@
 //!     return "<a href='" + state->encode_revisit_url(id, 1) + "'>1</a><br />"
 //!            "<a href='" + state->encode_revisit_url(id, 2) + "'>2</a>";
 //!   }
-//! @}
+//! @endcode
 
 
 // --- State code -------------------------------------------

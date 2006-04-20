@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.167 2006/04/20 11:49:52 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.168 2006/04/20 13:31:53 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2408,20 +2408,20 @@ enum LockFlag {
 //! How to handle an existing destination when files or directories
 //! are moved or copied in a filesystem.
 enum Overwrite {
-  NEVER_OVERWRITE = -1,
   //! Fail if the destination exists. Corresponds to an Overwrite
   //! header with the value "F" (RFC 2518 9.6).
+  NEVER_OVERWRITE = -1,
 
-  MAYBE_OVERWRITE = 0,
   //! If the source and destination are directories, overwrite the
   //! properties only. If the source and destination are files,
   //! overwrite the file along with the properties. Otherwise fail if
   //! the destination exists.
+  MAYBE_OVERWRITE = 0,
 
-  DO_OVERWRITE = 1,
   //! If the destination exists then delete it recursively before
   //! writing the new content. Corresponds to an Overwrite header with
   //! the value "T" (RFC 2518 9.6).
+  DO_OVERWRITE = 1,
 };
 
 //! State of the DAV:propertybehavior.

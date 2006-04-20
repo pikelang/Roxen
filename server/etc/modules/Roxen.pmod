@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.209 2006/04/18 17:22:15 grubba Exp $
+// $Id: Roxen.pmod,v 1.210 2006/04/20 13:27:15 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -366,7 +366,7 @@ mapping(string:mixed) http_method_not_allowed (
   string allowed_methods, void|string message, mixed... args)
 //! Make a HTTP 405 method not allowed response with the required
 //! Allow header containing @[allowed_methods], which is a comma
-//! separated list of HTTP methods, e.g. @code{"GET, HEAD"@}.
+//! separated list of HTTP methods, e.g. @expr{"GET, HEAD"@}.
 {
   mapping(string:mixed) response =
     http_status (Protocols.HTTP.HTTP_METHOD_INVALID, message, @args);
@@ -1939,6 +1939,14 @@ string html_encode_tag_value(LocaleString str)
   return "\"" + replace((string)str, ({"&", "\"", "<"}), ({"&amp;", "&quot;", "&lt;"})) + "\"";
 }
 
+static string my_sprintf(int prefix, string f, int arg)
+//! Filter prefix option in format string if prefix = 0.
+{
+  if(!prefix && sscanf(f, "%%%*d%s", string format) == 2)
+    f = "%" + format;
+  return sprintf(f, arg);
+}
+
 string strftime(string fmt, int t,
 		void|string lang, void|function language, void|RequestID id)
 //! Encodes the time `t' according to the format string `fmt'.
@@ -1949,14 +1957,6 @@ string strftime(string fmt, int t,
   array(string) a = fmt/"%";
   string res = a[0];
   mapping(string:string) m = (["type":"string"]);
-
-  string my_sprintf(int prefix, string f, int arg)
-  //! Filter prefix option in format string if prefix = 0.
-  {
-    if(!prefix && sscanf(f, "%%%*d%s", string format) == 2)
-      f = "%" + format;
-    return sprintf(f, arg);
-  };
   
   foreach(a[1..], string key) {
     if(key=="") continue;

@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module.pike,v 1.223 2006/01/12 00:03:10 mast Exp $
+// $Id: module.pike,v 1.224 2006/04/20 13:31:53 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -856,26 +856,26 @@ multiset(DAVLock) find_locks(string path,
 //!       the lock doesn't match the @[recursive] argument.)
 //!     @type LockFlag
 //!       @int
-//!         @value LOCK_NONE (0)
-//!           No locks apply.
-//!         @value LOCK_SHARED_BELOW (2)
+//!         @value LOCK_NONE
+//!           No locks apply. (0)
+//!         @value LOCK_SHARED_BELOW
 //!           There are only one or more shared locks held by other
 //!           users somewhere below @[path] (but not on @[path]
-//!           itself). Only returned if @[recursive] is set.
-//!         @value LOCK_SHARED_AT (3)
+//!           itself). Only returned if @[recursive] is set. (2)
+//!         @value LOCK_SHARED_AT
 //!           There are only one or more shared locks held by other
-//!           users on @[path].
-//!         @value LOCK_OWN_BELOW (4)
+//!           users on @[path]. (3)
+//!         @value LOCK_OWN_BELOW
 //!           The authenticated user has locks under @[path] (but not
 //!           on @[path] itself) and there are no exclusive locks held
-//!           by other users. Only returned if @[recursive] is set.
-//!         @value LOCK_EXCL_BELOW (6)
+//!           by other users. Only returned if @[recursive] is set. (4)
+//!         @value LOCK_EXCL_BELOW
 //!           There are one or more exclusive locks held by other
 //!           users somewhere below @[path] (but not on @[path]
-//!           itself). Only returned if @[recursive] is set.
-//!         @value LOCK_EXCL_AT (7)
+//!           itself). Only returned if @[recursive] is set. (6)
+//!         @value LOCK_EXCL_AT
 //!           There are one or more exclusive locks held by other
-//!           users on @[path].
+//!           users on @[path]. (7)
 //!       @endint
 //!       Note that the lowest bit is set for all flags that apply to
 //!       @[path] itself.
@@ -979,7 +979,7 @@ DAVLock|LockFlag check_locks(string path,
 
 //! Register @[lock] on the path @[path] under the assumption that
 //! there is no other lock already that conflicts with this one, i.e.
-//! that @code{check_locks(path,lock->recursive,id)@} would return
+//! that @expr{check_locks(path,lock->recursive,id)@} would return
 //! @expr{LOCK_NONE@} if @expr{lock->lockscope@} is
 //! @expr{"DAV:exclusive"@}, or @expr{< LOCK_OWN_BELOW@} if
 //! @expr{lock->lockscope@} is @expr{"DAV:shared"@}.
@@ -1076,7 +1076,7 @@ static void unregister_lock (string path, DAVLock lock, RequestID|int(0..0) id)
 
 //! Register @[lock] on the path @[path] under the assumption that
 //! there is no other lock already that conflicts with this one, i.e.
-//! that @code{check_locks(path,lock->recursive,id)@} would return
+//! that @expr{check_locks(path,lock->recursive,id)@} would return
 //! @expr{LOCK_NONE@} if @expr{lock->lockscope@} is
 //! @expr{"DAV:exclusive"@}, or @expr{<= LOCK_SHARED_AT@} if
 //! @expr{lock->lockscope@} is @expr{"DAV:shared"@}.
@@ -2068,12 +2068,12 @@ static string|int get_my_table( string|array(string) name,
 //! table, and @[types] is an array of definitions, as an example:
 //!
 //! 
-//! @code{
+//! @code
 //!   cache_table = get_my_table( "cache", ({
 //!               "id INT UNSIGNED AUTO_INCREMENT",
 //!               "data BLOB",
 //!               }) );
-//! @}
+//! @endcode
 //!
 //! In the second form, the whole table definition is instead sent as
 //! a string. The cases where the name is not included (the third and

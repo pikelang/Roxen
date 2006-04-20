@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: roxenlib.pike,v 1.220 2005/08/16 15:39:28 mast Exp $
+// $Id: roxenlib.pike,v 1.221 2006/04/20 13:31:54 grubba Exp $
 
 //#pragma strict_types
 
@@ -19,9 +19,9 @@ inherit Roxen;
 
 //! Converted the integer @[color] into a six character hexadecimal
 //! value prepended with "#", e.g. "#FF8C00". Does the same thing as
-//! @code{
+//! @code
 //!    sprintf("#%06X", color);
-//! @}
+//! @endcode
 static string conv_hex( int color )
 {
   return sprintf("#%06X", color);

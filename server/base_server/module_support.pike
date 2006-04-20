@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module_support.pike,v 1.125 2006/01/10 05:14:30 mast Exp $
+// $Id: module_support.pike,v 1.126 2006/04/20 13:31:53 grubba Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -10,10 +10,10 @@
 static int got_java_flag = 0;	// 1: yes, -1: no, 0: unknown.
 
 int got_java()
+//! @appears roxen.got_java
+//!
 //! Used to check dynamically whether Java support is available. If it
 //! is then this function will initialize a JVM.
-//!
-//! @appears roxen
 {
   if (!got_java_flag) {
     object jvm;
