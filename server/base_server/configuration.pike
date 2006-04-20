@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.605 2006/02/23 12:26:31 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.606 2006/04/20 11:49:19 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -350,6 +350,7 @@ class DataCache
       function(string, RequestID:string) res;
     string key = url;
     while(1) {
+      id->misc->protcache_cost++;
       if (arrayp(res = cache[key])) {
 	hits++;
 	return [array(string|mapping(string:mixed))]res;
@@ -4079,11 +4080,16 @@ $cache-status   -- A comma separated list of words (containing no
                    was delivered from:
                    protcache -- The low-level cache in the HTTP
                                 protocol module.
+                   protstore -- The page got stored in the low-level
+                                cache in the HTTP protocol module.
                    xsltcache -- The XSLT cache.
                    pcoderam  -- RXML parse tree RAM cache.
                    pcodedisk -- RXML parse tree persistent cache.
                    cachetag  -- No RXML &lt;cache&gt; tag misses.
-                   nocache   -- No hit in any known cache.
+                   nocache   -- No hit in any known cache, and not
+                                added to the HTTP protocol cache.
+$protcache-cost -- The lookup depth in the HTTP protocol module
+                   low-level cache.
 </pre>"), 0, lambda(){ return !query("Log");});
 
   // FIXME: Mention it is relative to getcwd(). Can not be localized in pike 7.0.
