@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.166 2006/04/20 09:34:08 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.167 2006/04/20 11:49:52 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1193,10 +1193,10 @@ class RequestID
   //! The client's hostname, if resolved.
 
   multiset(string) cache_status = (<>);
-  //! Contains the caches that was hit when the request was served.
+  //! Contains the caches that were hit when the request was served.
   //! See the docstring for @tt{$cache-status@} in the @tt{LogFormat@}
   //! global variable for known values, but note that the multiset
-  //! actually never contains the value "nocache"; it's only written
+  //! never actually contains the value @expr{"nocache"@}; it's only written
   //! when the multiset is empty.
 
   object root_id;
