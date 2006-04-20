@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.920 2006/04/19 11:54:02 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.921 2006/04/20 08:37:11 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -5842,7 +5842,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 		       "  object authmethod = id->conf",
 		       "  string realm = \"User\"",
 		       "  mapping(string:int|mapping) state = ([])",
-		       "  id->register_vary_cb(0, vary_cb)",
+		       "  id->register_vary_callback(0, vary_cb)",
   });
 
   // Some state variables for optimizing.
