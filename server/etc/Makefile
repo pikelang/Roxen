@@ -1,7 +1,7 @@
 #
 # Main makefile for extracting autodoc.
 #
-# $Id: Makefile,v 1.6 2006/04/22 14:28:46 grubba Exp $
+# $Id: Makefile,v 1.7 2006/04/22 15:20:13 grubba Exp $
 #
 
 PIKE=pike
@@ -42,15 +42,20 @@ build/modref.xml: build/autodoc.xml modref.xml
 	  >build/modref.xml
 
 build/autodoc.xml: build/etc build/base build/protocols force
-	@$(PIKE) -x extract_autodoc -q --srcdir=modules --builddir=build/etc
-	@$(PIKE) -x extract_autodoc -q --srcdir=../base_server \
+	$(PIKE) -x extract_autodoc -q --srcdir=modules --builddir=build/etc
+	$(PIKE) -x extract_autodoc -q --srcdir=../base_server \
 	  --builddir=build/base
-	@$(PIKE) -x extract_autodoc -q --srcdir=../protocols \
+	$(PIKE) -x extract_autodoc -q --srcdir=../protocols \
 	  --builddir=build/protocols
-	@pike_autodoc="$(REFDIR)/core_autodoc.xml"; \
-	  if [ -f "$pike_autodoc" ]; then :; else pike_autodoc=""; fi; \
+	pike_autodoc="$(REFDOC)/core_autodoc.xml"; \
+	  if [ -f "$$pike_autodoc" ]; then \
+	    echo "Joining with $$pike_autodoc."; \
+	  else \
+	    echo "$$pike_autodoc not found."; \
+	    pike_autodoc=""; \
+	  fi; \
 	  $(PIKE) -x join_autodoc --quiet --post-process build/autodoc.xml \
-	    $pike_autodoc build/etc build/base build/protocols
+	    $$pike_autodoc build/etc build/base build/protocols
 
 # Directories
 
