@@ -1,20 +1,20 @@
 #
 # Main makefile for extracting autodoc.
 #
-# $Id: Makefile,v 1.5 2006/04/20 13:26:07 grubba Exp $
+# $Id: Makefile,v 1.6 2006/04/22 14:28:46 grubba Exp $
 #
 
 PIKE=pike
-REFDOC=/home/grubba/src/Pike/7.7/refdoc
+REFDOC=`$(PIKE) -x module --query system_doc_path`/src
 
-# FIXME: The REFDOC variable should be generated.
-
-all: modref
+# Recursive make to avoid evaluating REFDOC above so many times.
+all:
+	$(MAKE) $(MAKE_FLAGS) PIKE="$(PIKE)" REFDOC="$(REFDOC)" modref
 
 modref: build/modref.xml
 	rm -rf modref || /bin/true
 	@mkdir modref
-	@cp $(REFDOC)/modref/style.css modref/style.css
+	@cp $(REFDOC)/structure/modref.css modref/style.css
 	@$(PIKE) $(REFDOC)/presentation/tree-split-autodoc.pike \
 	  build/modref.xml $(REFDOC)/structure/module_modref.html modref roxen
 	@mkdir modref/images
@@ -29,36 +29,28 @@ traditional: traditional_manual build/traditional.xml
 #	cp build/images/* traditional_manual/images/
 	@$(PIKE) @(REFDOC)/presentation/make_html.pike --img=images/ build/traditional.xml
 
-# build/autodoc.xml: recursive_join
-# 	@$(MAKE) PIKE="$(PIKE)" XMLFILES="`echo build/*/*.xml`" \
-# 	  autodoc.xml
+build/manual.xml: build/autodoc.xml
+	@$(PIKE) -x assemble_autodoc $(REFDOC)/structure/onepage.xml \
+	  build/autodoc.xml >build/manual.xml
 
-recursive_join: extract
-	@(cd build/etc && $(MAKE) PIKE="$(PIKE)" join)
-	@(cd build/base && $(MAKE) PIKE="$(PIKE)" join)
-
-extract: build/etc/Makefile build/base/Makefile
-	@(cd build/etc && $(MAKE) PIKE="$(PIKE)" extract)
-	@(cd build/base && $(MAKE) PIKE="$(PIKE)" extract)
-
-build/manual.xml: build/autodoc.xml $(REFDOC)/structure/onepage.xml
-	@$(PIKE) -x assemble_autodoc $(REFDOC)/structure/onepage.xml build/autodoc.xml > build/manual.xml
-
-build/traditional.xml: build/autodoc.xml $(REFDOC)/structure/traditional.xml
-	@$(PIKE) -x assemble_autodoc $(REFDOC)/structure/traditional.xml build/autodoc.xml > build/traditional.xml
+build/traditional.xml: build/autodoc.xml
+	@$(PIKE) -x assemble_autodoc $(REFDOC)/structure/traditional.xml \
+	  build/autodoc.xml >build/traditional.xml
 
 build/modref.xml: build/autodoc.xml modref.xml
-	@$(PIKE) -x assemble_autodoc modref.xml build/autodoc.xml > build/modref.xml
+	@$(PIKE) -x assemble_autodoc modref.xml build/autodoc.xml \
+	  >build/modref.xml
 
-build/autodoc.xml: $(XMLFILES) build/etc build/base build/protocols
-	@$(PIKE) -x extract_autodoc -q --srcdir=modules \
-	  --builddir=build/etc
+build/autodoc.xml: build/etc build/base build/protocols force
+	@$(PIKE) -x extract_autodoc -q --srcdir=modules --builddir=build/etc
 	@$(PIKE) -x extract_autodoc -q --srcdir=../base_server \
 	  --builddir=build/base
 	@$(PIKE) -x extract_autodoc -q --srcdir=../protocols \
 	  --builddir=build/protocols
-	@$(PIKE) -x join_autodoc --quiet --post-process build/autodoc.xml \
-	  build/etc build/base build/protocols
+	@pike_autodoc="$(REFDIR)/core_autodoc.xml"; \
+	  if [ -f "$pike_autodoc" ]; then :; else pike_autodoc=""; fi; \
+	  $(PIKE) -x join_autodoc --quiet --post-process build/autodoc.xml \
+	    $pike_autodoc build/etc build/base build/protocols
 
 # Directories
 
@@ -80,6 +72,8 @@ html_manual:
 
 traditional_manual:
 	@test -d traditional_manual || mkdir traditional_manual
+
+force:
 
 clean:
 	@rm -rf build || /bin/true
