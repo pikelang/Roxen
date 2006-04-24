@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.497 2006/04/20 13:29:06 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.498 2006/04/24 15:06:57 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -718,7 +718,7 @@ private final int parse_got_2( )
       }
       s = data = ""; // no headers or extra data...
       sscanf( f, "%s%*[\r\n]", f );
-      if (sizeof(s1) == 1)
+      if (sizeof(sl) == 1)
 	NO_PROTO_CACHE();
       break;
 
