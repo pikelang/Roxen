@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.498 2006/04/24 15:06:57 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.499 2006/04/26 12:03:35 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1763,9 +1763,10 @@ void ready_to_receive()
 void low_send_result(string headers, string data, int|void len,
 		     Stdio.File|void file)
 {
-  MY_TRACE_ENTER(sprintf("Sending %d bytes of headers, %d bytes of data, "
+  MY_TRACE_ENTER(sprintf("Sending %d bytes of headers, "
+			 "%d bytes of string data, "
 			 "len:%d",
-			 sizeof(headers), sizeof(data), len), 0);
+			 sizeof(headers), data && sizeof(data), len), 0);
   conf->hsent += sizeof(headers);
   if(!kept_alive && (len > 0) &&
      ((sizeof(headers) + len) < (HTTP_BLOCKING_SIZE_THRESHOLD))) {
