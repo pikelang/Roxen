@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.512 2006/05/02 12:24:27 noring Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.513 2006/05/02 12:48:21 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -7447,9 +7447,9 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 <attr name='variables' value='full|plain'>
  <p>Sets how the output should be formatted.</p>
 
- <ex><pre>
+ <ex-box><pre>
 <insert variables='full' scope='roxen'/>
-</pre></ex>
+</pre></ex-box>
 </attr>
 
 <attr name='scope'>
@@ -8909,7 +8909,6 @@ the respective attributes below for further information.</p></desc>
     It is other document type that I do not want.
   </else>
 </ex>
-</ex-box>
 </desc>
 ",
 
