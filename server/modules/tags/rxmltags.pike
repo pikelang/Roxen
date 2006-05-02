@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.494 2006/03/22 10:11:33 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.495 2006/05/02 12:24:27 noring Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1406,10 +1406,18 @@ class TagSetMaxCache {
   inherit RXML.Tag;
   constant name = "set-max-cache";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
+
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "force-protocol-cache" : RXML.t_text(RXML.PEnt)
+  ]);
+  
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
       id->misc->cacheable = Roxen.time_dequantifier(args);
+      
+      if(args["force-protocol-cache"])
+	id->misc->no_proto_cache = 0;
     }
   }
 }
@@ -7778,6 +7786,9 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 </attr>
 <attr name='seconds' value='number'>
  <p>Add this number of seconds to the time this page was last loaded.</p>
+</attr>
+<attr name='force-protocol-cache'>
+ <p>Try to force the page into the protocol cache.</p>
 </attr>",
 
 //----------------------------------------------------------------------
