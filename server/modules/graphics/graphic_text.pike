@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.298 2005/12/16 17:50:52 jonasw Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.299 2006/05/03 16:37:06 anders Exp $";
 
 #include <module.h>
 inherit "module";
@@ -551,11 +551,12 @@ function alter_image(label)
 </attr>"+gtextargs,
 
 "gtext-js":#"<desc tag='tag'><p><short>
- Inserts javascript funcations that are used by gtext when using the magic attributes.
+ Inserts javascript funcations that are used by gtext when using
+ the magic attributes.</short>
  This is normally inserted at the first instance of a gtext, but it may
  be necessary to insert the gtext using this tag if the first gtext in a page
  may be hidden, for example if contained in an if tag.
- </short></p>
+ </p>
 </desc>",
 
 "gtext-url":#"<desc type='cont'><p><short>
