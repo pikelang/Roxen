@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.55 2005/04/21 11:22:28 erikd Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.56 2006/05/03 08:23:28 erik Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -539,11 +539,13 @@ string tag_accessed(string tag, mapping m, RequestID id)
   NOCACHE();
 
   if(m->reset) {
-    if( !query("restrict") || !search( (dirname(Roxen.fix_relative(m->file, id))+"/")-"//",
+    if( !query("restrict") || 
+	!m->file ||
+	!search( (dirname(Roxen.fix_relative(m->file, id))+"/")-"//",
 		 (dirname(Roxen.fix_relative(id->not_query, id))+"/")-"//" ) )
     {
-      counter->reset(m->file);
-      return "Number of counts for "+m->file+" is now 0.<br />";
+      counter->reset(m->file || id->not_query);
+      return "Number of counts for "+(m->file || id->not_query)+" is now 0.<br />";
     }
     else
       // On a web hotell you don't want the guests to be alowed to reset
