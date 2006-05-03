@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.513 2006/05/02 12:48:21 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.514 2006/05/03 16:58:26 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -7741,7 +7741,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 //----------------------------------------------------------------------
 
 "substring": #"
-<desc type='cont'><p><short hide='hide'>Extract part of or parts of string.</short>
+<desc type='cont'><p><short hide='hide'>Extract part of or parts of string.</short></p>
 <p>The <tag>substring</tag> will extract parts of the content of the
  tag.</p>
 <p>If you do not use the <em>split</em> attribute then each of the
@@ -8535,7 +8535,7 @@ the respective attributes below for further information.</p></desc>
    elements that have an attribute with the given name.</p></item>
 
    <item><p>If <i>test</i> is on the form
-   \'<tt><i>path</i>=<i>value</i>\' then <i>path</i> is evaluated for
+   \'<i>path</i>=<i>value</i>\' then <i>path</i> is evaluated for
    each node in the selected set, and only the nodes where at least
    one path result matches <i>value</i> remain in the set.
    <i>value</i> is a string literal delimited by either <tt>\"</tt> or
