@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.499 2006/04/26 12:03:35 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.500 2006/05/03 16:48:31 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1178,6 +1178,7 @@ string format_backtrace(int eid, string|void md5)
    string raw_bt_descr, string raw_url, string raw] = err_info;
 
   sscanf (msg, "%s\n%s", string title, string longmsg);
+  if (!title) title = msg;
   string body = "";
 
   if (rxml_bt && sizeof (rxml_bt)) {
