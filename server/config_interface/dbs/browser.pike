@@ -236,7 +236,7 @@ mixed delete_db( string db, RequestID id )
 		    "and the data?");
   else
     msg = (string)_(362,"Are you sure you want to delete the database %s?"
-		    " No data will be deleted from the remote datbase.");
+		    " No data will be deleted from the remote database.");
     
   VERIFY(msg);
   report_notice( _(424,"The database %s was deleted by %s")+"\n",
