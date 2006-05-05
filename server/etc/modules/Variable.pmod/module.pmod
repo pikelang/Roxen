@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.85 2004/06/09 08:47:17 grubba Exp $
+// $Id: module.pmod,v 1.86 2006/05/05 11:05:27 wellhard Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -844,7 +844,7 @@ class Text
 
   string render_form( RequestID id, void|mapping additional_args )
   {
-    return "<textarea cols='"+cols+"' rows='"+rows+"' name='"+path()+"'>"
+    return "<textarea cols='"+cols+"' rows='"+rows+"' name='"+path()+"' wrap='off'>"
            + Roxen.html_encode_string( query() || "" ) +
            "</textarea>";
   }
