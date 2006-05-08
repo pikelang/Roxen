@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.346 2006/05/08 12:59:53 mast Exp $
+// $Id: module.pmod,v 1.347 2006/05/08 16:15:07 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2297,20 +2297,30 @@ class Context
 #ifdef DEBUG
     if (!vars) fatal_error ("Got no scope mapping.\n");
 #endif
+
+    array rec_chgs = misc->recorded_changes;
+    if (rec_chgs)
+      CLEANUP_VAR_CHG_SCOPE (rec_chgs[-1], "_");
+
     if (string scope_name = [string] frame->scope_name) {
       if (!hidden[frame])
 	hidden[frame] = ({scopes["_"], scopes[scope_name]});
       scopes["_"] = scopes[scope_name] = vars;
-      if (array rec_chgs = misc->recorded_changes)
+
+      if (rec_chgs) {
+	CLEANUP_VAR_CHG_SCOPE (rec_chgs[-1], scope_name);
 	rec_chgs[-1][encode_value_canonic (({scope_name}))] =
 	  rec_chgs[-1][encode_value_canonic (({"_"}))] =
 	  mappingp (vars) ? vars + ([]) : vars;
+      }
     }
+
     else {
       if (!hidden[frame])
 	hidden[frame] = ({scopes["_"], 0});
       scopes["_"] = vars;
-      if (array rec_chgs = misc->recorded_changes)
+
+      if (rec_chgs)
 	rec_chgs[-1][encode_value_canonic (({"_"}))] =
 	  mappingp (vars) ? vars + ([]) : vars;
     }
@@ -8076,7 +8086,7 @@ class PCode
 	  if (objectp (item))
 	    if (item->is_RXML_p_code_frame) {
 	      PCODE_COMPACT_MSG ("  Compact: Moving frame at %d..%d to %d..%d\n",
-				 pos, pos + 2, length + 2);
+				 pos, pos + 2, length, length + 2);
 	      exec[length++] = item;
 	      exec[length++] = exec[++pos];
 	      exec[length++] = exec[++pos];
@@ -8462,7 +8472,7 @@ class PCode
       return intro + ")" + OBJ_COUNT;
   }
 
-  constant P_CODE_VERSION = "5.3";
+  constant P_CODE_VERSION = "5.4";
   // Version spec encoded with the p-code, so we can detect and reject
   // incompatible p-code dumps even when the encoded format hasn't
   // changed in an obvious way.
