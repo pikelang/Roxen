@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.345 2006/03/22 10:06:28 mast Exp $
+// $Id: module.pmod,v 1.346 2006/05/08 12:59:53 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7168,9 +7168,16 @@ class VariableChange (/*static*/ mapping settings)
       if (stringp (encoded_var)) {
 	mixed var = decode_value (encoded_var);
 	string scope_name;
-	if (arrayp (var) && stringp (scope_name = var[0]) && sizeof (var) > 1)
-	  if (SCOPE_TYPE scope = settings[encode_value_canonic (({scope_name}))]) {
+	if (arrayp (var) &&
+	    stringp (scope_name = var[0]) && sizeof (var) > 1) {
+	  string encoded_scope = encode_value_canonic (({scope_name}));
+#ifdef DEBUG
+	  if (later_sets[encoded_scope])
+	    error ("Got both scope and variable entry "
+		   "for the same scope %O in %O\n", scope_name, later_sets);
+#endif
 
+	  if (SCOPE_TYPE scope = settings[encoded_scope]) {
 	    // There's a variable change in later_chg in a scope
 	    // that's added in this entry.
 	    if (sizeof (var) > 2)
@@ -7190,6 +7197,7 @@ class VariableChange (/*static*/ mapping settings)
 	      continue;
 	    }
 	  }
+	}
       }
 
       settings[encoded_var] = later_sets[encoded_var];
