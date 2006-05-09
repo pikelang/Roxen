@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.514 2006/05/03 16:58:26 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.515 2006/05/09 14:06:36 erikd Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -9140,38 +9140,16 @@ the respective attributes below for further information.</p></desc>
  tutorial</xref>. Match is an <i>Eval</i> plugin.</p></desc>
 
 <attr name='match' value='pattern' required='required'><p>
- Choose what pattern to test. The pattern could be any expression.
- Note!: The pattern content is treated as strings:</p>
+ Choose what pattern to test. The pattern could be any expression.</p>
+ <p>Note! The pattern content is treated as strings. Compare how 
+ <tag>if variable</tag> tag works.</p>
 
 <ex>
- <set variable='var.hepp' value='10' />
-
- <if match='var.hepp is 10'>
-  true
- </if>
- <else>
-  false
- </else>
+ <set variable='var.ten' value='10' />
+ <if match='&var.ten; is 10'>true</if>
+ <else>false</else>
 </ex>
 
- <p>This example shows how the plugin treats \"var.hepp\" and \"10\"
- as strings. Hence when evaluating a variable as part of the pattern,
- the entity associated with the variable should be used, i.e.
- <ent>var.hepp</ent> instead of var.hepp. A correct example would be:</p>
-
-<ex>
-<set variable='var.hepp' value='10' />
-
- <if match='&var.hepp; is 10'>
-  true
- </if>
- <else>
-  false
- </else>
-</ex>
-
- <p>Here, &var.hepp; is treated as an entity and parsed
- correctly, letting the plugin test the contents of the entity.</p>
 </attr>
 ",
 
@@ -9293,6 +9271,9 @@ the respective attributes below for further information.</p></desc>
 <attr name='variable' value='name[ operator pattern]' required='required'><p>
  Choose variable to test. Valid operators are '=', '==', 'is', '!=',
  '&lt;' and '&gt;'.</p>
+ <p>Examples of how this <i>Eval</i> plugin exists in <tag>if</tag>
+    documentation and the <xref href='../../tutorial/if_tags/plugins.xml'>If tags
+ tutorial</xref>.</p>
 </attr>",
 
 //----------------------------------------------------------------------
