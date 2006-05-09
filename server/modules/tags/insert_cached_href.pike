@@ -61,7 +61,7 @@ void create() {
   
   defvar("recursion_limit", 2, LOCALE(0, "Maximum recursion depth"),
 	 TYPE_INT|VAR_MORE,
-	 LOCALE(0,"Maxumum number of nested <tt>&lt;insert cached-href&gt;</tt>'s "
+	 LOCALE(0,"Maximum number of nested <tt>&lt;insert cached-href&gt;</tt>'s "
 		  "allowed. May be set to zero to disable the limit."));
 }
 
