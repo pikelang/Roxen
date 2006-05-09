@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.10 2006/05/09 09:24:34 anders Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.11 2006/05/09 09:48:37 anders Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -710,43 +710,57 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
 
-  "insert#cached-href":#"<desc type='plugin'><p>
-This tag inserts the contents of the provided URL, as read from a database.
-The database is updated repeatedly in the background by a background process
-that is initiated and run as soon as this module is loaded. If the database
-is empty when the tag is executed, the standard behavior is to fetch the data
-immediately. When providing values for the attributes fetch-interval,
-fresh-time, ttl, update-interval or timeout, the time can either be seconds,
-minutes, hours or days. If only a number is provided, it is interpreted as
-seconds, otherwise write the corresponding letter or word after the number,
-e.g: 10 days, 10d, 10 h, 10hours, 5 min, 5m, 2 hours and so on. Spaces 
-between the number and the word are allowed. The values at the settings tab
-for fetch-interval, fresh-time, ttl and timeout are the standard values that
-the tag will be assigned if an attribute is left out. update-interval on the
-other hand, is central and common for all tags.
-</p>
+  "insert#cached-href":#"<desc type='plugin'>
 <p>
-<h4>IMPORTANT:</h4> 
-The data in the database for an URL is always shared by all tags at the
-same site. This means that when data for an URL is updated this affects all
-tags referring to this specific URL, even if the other attributes may differ.
-For example, if the same URL is referenced by one tag without the pure-db
-attribute and another tag WITH the pure-db attribute, the only guarantee is
-that the tag with the attribute pure-db never will generate a data fetch. The
-tag without the attribute still can. Another implication of the data being
-shared is for example if the same URL is referenced by two tags with different
-fetch intervals. The data will then be updated at the smallest of these two
-fetch intervals. Providing the time-of-day attribute will however always make
-the module fetch data when that time of day occur, without interference by any
-other tag referencing the same URL. Also important to note, is that since the
-fetching of the common data is performed centrally by the module, the timeout
-of every tag can not be used, of course. If several tags refer to the same
-URL but are provided with different timeouts, the longest timeout will be
-used. However, if there exists no data in the database for the URL of a tag
-when the tag is run, and the pure-db attribute is not provided, then the
-fetching of data will be performed for that specific tag and with the
-specified timeout.
-</p></desc>
+  <short>This tag inserts the contents of the provided URL,
+  as read from a database.</short>
+  The database is updated repeatedly in the background by a background
+  process that is initiated and run as soon as this module is
+  loaded. If the database is empty when the tag is executed, the
+  standard behavior is to fetch the data immediately. When providing
+  values for the attributes fetch-interval, fresh-time, ttl,
+  update-interval or timeout, the time can either be seconds, minutes,
+  hours or days. If only a number is provided, it is interpreted as
+  seconds, otherwise write the corresponding letter or word after the
+  number, e.g: 10 days, 10d, 10 h, 10hours, 5 min, 5m, 2 hours and so
+  on. Spaces between the number and the word are allowed. The values
+  at the settings tab for fetch-interval, fresh-time, ttl and timeout
+  are the standard values that the tag will be assigned if an
+  attribute is left out. update-interval on the other hand, is central
+  and common for all tags.
+</p>
+<note>
+ <p>
+  The data in the database for an URL is always shared by all tags at
+  the same site. This means that when data for an URL is updated this
+  affects all tags referring to this specific URL, even if the other
+  attributes may differ.  For example, if the same URL is referenced
+  by one tag without the pure-db attribute and another tag WITH the
+  pure-db attribute, the only guarantee is that the tag with the
+  attribute pure-db never will generate a data fetch. The tag without
+  the attribute still can.
+ </p>
+ <p>
+  Another implication of the data being shared is for example if the
+  same URL is referenced by two tags with different fetch
+  intervals. The data will then be updated at the smallest of these
+  two fetch intervals. Providing the time-of-day attribute will
+  however always make the module fetch data when that time of day
+  occur, without interference by any other tag referencing the same
+  URL.
+ </p>
+ <p>
+  Also important to note, is that since the fetching of the common
+  data is performed centrally by the module, the timeout of every tag
+  can not be used, of course. If several tags refer to the same URL
+  but are provided with different timeouts, the longest timeout will
+  be used. However, if there exists no data in the database for the
+  URL of a tag when the tag is run, and the pure-db attribute is not
+  provided, then the fetching of data will be performed for that
+  specific tag and with the specified timeout.
+ </p>
+</note>
+</desc>
 
 <attr name='cached-href' value='string'>
 <p>
