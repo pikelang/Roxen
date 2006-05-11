@@ -3,8 +3,8 @@
 #define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
 constant action = "status";
-string name = LOCALE(156, "Active connection" );
-string doc = LOCALE(157,"All currently active connection");
+string name = LOCALE(156, "Active connections" );
+string doc = LOCALE(157,"All currently active connections");
 
 string parse( RequestID id )
 {
