@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.922 2006/04/20 11:49:12 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.923 2006/05/16 09:09:03 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2064,6 +2064,10 @@ class SSLProtocol
 
     // Install the change callbacks here to avoid duplicate calls
     // above.
+    // FIXME: Both variables ought to be updated on save before the
+    //        changed callback is called. Currently you can get warnings
+    //        that the files don't match if you update both variables
+    //        at the same time.
     getvar ("ssl_cert_file")->set_changed_callback (certificates_changed);
     getvar ("ssl_key_file")->set_changed_callback (certificates_changed);
   }
