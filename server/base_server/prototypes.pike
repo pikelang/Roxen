@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.168 2006/04/20 13:31:53 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.169 2006/05/17 17:06:03 anders Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -998,7 +998,20 @@ class RequestID
     static string `->(string cookie)
     {
       if (zero_type(eaten[cookie])) {
-	register_vary_callback("Cookie", Roxen->get_cookie_callback(cookie));
+	/* Workaround for MSIE 6's refusal to cache anything with
+	 * a Vary:Cookie header.
+	 */
+	register_vary_callback("User-Agent",
+			       lambda(string ignored, RequestID id)
+			       {
+				 return (string)!has_value(id->client, "MSIE");
+			       });
+	if (supports->vary) {
+	  register_vary_callback("Cookie", Roxen->get_cookie_callback(cookie));
+	} else {
+	  register_vary_callback("User-Agent",
+				 Roxen->get_cookie_callback(cookie));
+	}
       }
       return jar[cookie];
     }
