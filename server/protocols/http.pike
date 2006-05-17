@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.500 2006/05/03 16:48:31 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.501 2006/05/17 16:53:40 anders Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -592,6 +592,8 @@ int things_to_do_when_not_sending_from_cache( )
 #else
   supports = (< "images", "gifinline", "forms", "mailto">);
 #endif
+  if (!has_value(client, "MSIE"))
+    supports->vary = 1;
   //REQUEST_WERR("HTTP: parse_got(): supports");
   if(!referer) referer = ({ });
   if(misc->proxyauth) 
