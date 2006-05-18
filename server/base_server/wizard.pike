@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2004, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.160 2006/05/18 16:10:27 grubba Exp $
+// $Id: wizard.pike,v 1.161 2006/05/18 16:32:23 grubba Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -476,8 +476,10 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 	 m2->onchange +=
 	   "  if (this.value == '" + m2->select_none +"') {"
 	   "    field.setAttribute('disabled', 'yes');"
+	   "    field.disabled = 'disabled';"
 	   "    field.value = '';"
 	   "  } else {"
+	   "    field.disabled = '';"
 	   "    field.removeAttribute('disabled');";
        }
        m2->onchange +=
