@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2004, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.158 2006/03/14 16:03:47 noring Exp $
+// $Id: wizard.pike,v 1.159 2006/05/18 16:07:48 grubba Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -463,17 +463,74 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
      m_delete(m,"default");
      m_delete(m,"type");
      mapping m2 = copy_value(m);
-     if (m->autosubmit)
-       m2->onChange = "javascript:submit();";
+     if (m->select_override) {
+       if (!m->id) {
+	 m->id = "wizard-select-" + random(65536) + "-" + random(65536);
+       }
+       m_delete(m2, "select_override");
+       m2->id = m->id + "-selector";
+       m2->onchange =
+	 "var field = document.getElementById('" + m->id + "-field');"
+	 "if (field) { ";
+       if (m->select_none) {
+	 m2->onchange +=
+	   "  if (this.value == '" + m2->select_none +"') {"
+	   "    field.setAttribute('disabled', 'yes');"
+	   "    field.value = '';"
+	   "  } else {"
+	   "    field.removeAttribute('disabled');";
+       }
+       m2->onchange +=
+	 "  if (this.value != '" + m->select_override +"') {"
+	 "    field.value = this.value;"
+	 "  }";
+       if (m->select_none) {
+	 m2->onchange +=
+	   "  }";
+       }
+       m2->onchange +=
+	 "}";
+       if (m->autosubmit) {
+	 m2->onchange += "submit();";
+	 m_delete(m2, "autosubmit");
+       }
+     } else if (m->autosubmit) {
+       m2->onchange = "javascript:submit();";
+       m_delete(m2, "autosubmit");
+     }
      m_delete(m2, "choices");
      m_delete(m2, "options");
      //escape the characters we need for internal purposes..
      m->choices=replace(m->choices,
 			({"\\,", "\\:"}),
 			({"__CoMma__", "__CoLon__"}));
+     string tc = replace(current,
+			({"\\,", "\\:"}),
+			({"__CoMma__", "__CoLon__"}));
 
-     return make_container("select", m2, map(m->choices/",",
-                                             lambda(string s, string c, mapping m) {
+     array(string) choices = m->choices/",";
+
+     foreach(choices, string c) {
+       sscanf(c, "%[^:]", c);
+       if (c == tc) {
+	 tc = 0;
+	 break;
+       }
+     }
+     if (!tc) {
+       tc = current;
+     } else if (m->select_override) {
+       tc = m->select_override;
+     } else {
+       // Unlisted choice selected!
+       choices += ({ tc + ":" + tc });
+       tc = current;
+     }
+
+     string selector =
+       make_container("select", m2,
+		      map(choices,
+			  lambda(string s, string c, mapping m) {
         string t;
         if(sscanf(s, "%s:%s", s, t) != 2)
 	  t = s;
@@ -482,10 +539,32 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 	t=replace(t,({"__CoMma__",
 		      "__CoLon__"}),({",",":"}));
 
-        return "<option value=\""+s+"\" "+(s==c?" selected=\"selected\"":"")+">"+
-	  loc_encode(t, m, "html")+"</option>\n";
-     },current,m)*"");
+        return "<option value=\"" + s + "\" " +
+	  (s==c ? " selected=\"selected\"":"") + ">" +
+	  loc_encode(t, m, "html") + "</option>\n";
+     }, tc, m)*"");
 
+     if (m->select_override) {
+       m2->id = m->id + "-field";
+       m2->onchange =
+	 "var selector = document.getElementById('" + m->id + "-selector');"
+	 "if (selector) { "
+	 "  selector.value = this.value;"
+	 "  if (selector.value != this.value) {"
+	 "    selector.value = '" + m->select_override + "';"
+	 "  }"
+	 "}";
+       m2->value = "";
+       if (current == m->select_none) {
+	 m2->disabled = "yes";
+       } else if (current != m->select_override) {
+	 m2->value = current;
+       }
+
+       selector += make_tag("input", m2);
+     }
+
+     return selector;
 
    case "select_multiple":
      if(!m->choices && m->options)
