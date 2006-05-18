@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2004, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.159 2006/05/18 16:07:48 grubba Exp $
+// $Id: wizard.pike,v 1.160 2006/05/18 16:10:27 grubba Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -561,7 +561,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 	 m2->value = current;
        }
 
-       selector += make_tag("input", m2);
+       selector += "&nbsp;" + make_tag("input", m2);
      }
 
      return selector;
