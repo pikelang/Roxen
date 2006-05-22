@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.606 2006/04/20 11:49:19 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.607 2006/05/22 15:35:05 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -945,9 +945,13 @@ private void parse_log_formats()
 void log(mapping file, RequestID request_id)
 {
   // Call all logging functions
-  foreach(logger_module_cache||logger_modules(), function f)
-    if( f( request_id, file ) )
-      return;
+  array(function) log_funs = logger_module_cache||logger_modules();
+  if (sizeof(log_funs)) {
+    id->init_cookies();
+    foreach(log_funs, function f)
+      if( f( request_id, file ) )
+	return;
+  }
 
   if( !log_function ) 
     return; // No file is open for logging.
