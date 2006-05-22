@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.924 2006/05/22 08:25:50 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.925 2006/05/22 15:34:16 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -5473,6 +5473,9 @@ class LogFormat
 
 static mapping(string:function) compiled_formats = ([ ]);
 
+#define LOG_FLAG_ASYNC		1
+#define LOG_FLAG_NEED_COOKIES	2
+
 constant formats = 
 ({
   ({ "ip_number",   "%s",   "(string)request_id->remoteaddr",0 }),
@@ -5500,10 +5503,11 @@ constant formats =
      " request_id->misc->moreheads[\"Set-Cookie\"]&&"
      " request_id->parse_cookies&&"
      " request_id->parse_cookies(request_id->misc->moreheads[\"Set-Cookie\"])"
-     " ->RoxenUserID)||\"0\"",0 }),
+     " ->RoxenUserID)||\"0\"", LOG_FLAG_NEED_COOKIES }),
   ({ "user",        "%s",    "extract_user( request_id->realauth )",0 }),
   ({ "request-time","%1.2f",  "time(request_id->time )",0 }),
-  ({ "host",        "\4711",    0, 1 }), // unlikely to occur normally
+  ({ "host",        "\4711", // unlikely to occur normally
+     0, LOG_FLAG_ASYNC }),
   ({ "cache-status","%s",   ("sizeof(request_id->cache_status||({}))?"
 			     "indices(request_id->cache_status)*\",\":"
 			     "\"nocache\""), 0 }),
@@ -5541,7 +5545,7 @@ function compile_log_format( string fmt )
   array parts = fmt/"$";
   string format = parts[0];
   array args = ({});
-  int do_it_async = 0;
+  int log_flags = 0;
   int add_nl = 1;
 
   string sr( string s ) { return s[1..strlen(s)-2]; };
@@ -5557,7 +5561,7 @@ function compile_log_format( string fmt )
       {
         format += q[1] + DO_ES(part[ strlen(q[0]) .. ]);
         if( q[2] ) args += ({ q[2] });
-        if( q[3] ) do_it_async = 1;
+	log_flags |= q[3];
         processed=1;
         break;
       }
@@ -5578,28 +5582,31 @@ function compile_log_format( string fmt )
   }
   if( add_nl ) format += "\n";
 
-  string code = sprintf(
-#"
-  inherit ___LogFormat;
-  void log( function callback, RequestID request_id, mapping file )
-  {
-     if(!callback) return;
-     string data = sprintf( %O %{, %s%} );
-", format, args );
- 
-  if( do_it_async )
-  {
-    code += 
-#"
-     roxen.ip_to_host(request_id->remoteaddr,do_async_write,
-                      data, request_id->remoteaddr, callback );
-   }
-";
-  } else
-    code += 
-#"  
-   callback( data );
+  string code = #"
+    inherit ___LogFormat;
+    void log( function callback, RequestID request_id, mapping file )
+    {
+      if(!callback) return;";
+
+  if (log_flags & LOG_FLAG_NEED_COOKIES) {
+    code += #"
+      id->init_cookies();";
   }
+
+  code += sprintf(#"
+      string data = sprintf( %O %{, %s%} );", format, args );
+ 
+  if (log_flags & LOG_FLAG_ASYNC)
+  {
+    code += #"
+      roxen.ip_to_host(request_id->remoteaddr,do_async_write,
+                       data, request_id->remoteaddr, callback );";
+  } else {
+    code += #"  
+      callback( data );";
+  }
+  code += #"
+    }
 ";
 
   program res = compile_string(code);
