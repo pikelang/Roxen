@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.169 2006/05/17 17:06:03 anders Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.170 2006/05/22 14:07:55 jonasw Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -997,7 +997,7 @@ class RequestID
     }
     static string `->(string cookie)
     {
-      if (zero_type(eaten[cookie])) {
+      if (supports && zero_type(eaten[cookie])) {
 	/* Workaround for MSIE 6's refusal to cache anything with
 	 * a Vary:Cookie header.
 	 */
