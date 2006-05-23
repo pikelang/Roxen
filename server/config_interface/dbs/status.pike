@@ -62,12 +62,8 @@ string parse( RequestID id )
   res += "</table>";
 
   // Inactive connections.
-
-  connections = ([]);
-
-  foreach( indices( roxenloader->sql_free_list ), string name )
-    connections[name]=sizeof(roxenloader->sql_free_list[name]);
-
+  connections = roxenloader->get_sql_free_list_status();
+  
   res += "<h2>Inactive connections</h2>";
   
   res +=

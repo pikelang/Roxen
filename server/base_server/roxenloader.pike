@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.367 2005/12/21 13:46:26 noring Exp $
+// $Id: roxenloader.pike,v 1.368 2006/05/23 12:14:45 jonasw Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.367 2005/12/21 13:46:26 noring Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.368 2006/05/23 12:14:45 jonasw Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1310,6 +1310,12 @@ multiset(SQLKey) all_sql_wrappers = set_weak_flag( (<>), 1 );
 void clear_connect_to_my_mysql_cache( )
 {
   sql_free_list = ([]);
+}
+
+//  Helper function for DB status tab in Admin interface
+mapping(string:int) get_sql_free_list_status()
+{
+  return map(sql_free_list, sizeof);
 }
 
 static class SQLTimeout(static Sql.Sql real)
