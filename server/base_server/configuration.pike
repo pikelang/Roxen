@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.607 2006/05/22 15:35:05 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.608 2006/05/23 14:49:45 anders Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -947,7 +947,7 @@ void log(mapping file, RequestID request_id)
   // Call all logging functions
   array(function) log_funs = logger_module_cache||logger_modules();
   if (sizeof(log_funs)) {
-    id->init_cookies();
+    request_id->init_cookies();
     foreach(log_funs, function f)
       if( f( request_id, file ) )
 	return;
