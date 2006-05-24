@@ -224,6 +224,8 @@ void run_tests( Configuration c )
     string realauth   = "foo:bar";
 
     mapping misc      = ([]);
+
+    void init_cookies() { }
   };
 
   FakeID http_id = FakeID(([ "RoxenUserID":"iieff1934"]),
