@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2004, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.162 2006/05/22 16:06:11 jonasw Exp $
+// $Id: wizard.pike,v 1.163 2006/05/30 12:52:35 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -525,7 +525,8 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
        tc = m->select_override;
      } else {
        // Unlisted choice selected!
-       choices += ({ tc + ":" + tc });
+       if (tc != "")
+	 choices += ({ tc + ":" + tc });
        tc = current;
      }
 
