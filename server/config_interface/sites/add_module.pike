@@ -1,4 +1,4 @@
-// $Id: add_module.pike,v 1.84 2006/02/07 10:52:52 jonasw Exp $
+// $Id: add_module.pike,v 1.85 2006/05/31 15:32:56 mast Exp $
 
 #include <config_interface.h>
 #include <module.h>
@@ -841,7 +841,8 @@ mixed do_it_pass_2( array modules, Configuration conf,
     if( num ) Roxen.parse_rxml( cf_form, id );
     foreach( modules, string mod )
      conf->call_high_start_callbacks( conf->find_module( replace(mod,"!","#") ),
-				      roxen.find_module( (mod/"!")[0] ) );
+				      roxen.find_module( (mod/"!")[0] ),
+				      1);
     already_added = ([ ]);
     conf->save( ); // save it all in one go
     conf->forcibly_added = ([]);

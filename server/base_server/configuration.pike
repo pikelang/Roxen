@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.608 2006/05/23 14:49:45 anders Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.609 2006/05/31 15:32:55 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3101,7 +3101,7 @@ void save(int|void all)
     {
       store(modname+"#"+i, modules[modname]->copies[i]->query(), 0, this_object());
       if (mixed err = catch(modules[modname]->copies[i]->
-			    start(2, this_object())))
+			    start(2, this_object(), 0)))
 	report_error("Error calling start in module.\n%s",
 		     describe_backtrace (err));
     }
@@ -3126,7 +3126,7 @@ int save_one( RoxenModule o )
   store(q, o->query(), 0, this_object());
   invalidate_cache();
   mixed error;
-  if( error = catch( o->start(2, this_object()) ) )
+  if( error = catch( o->start(2, this_object(), 0) ) )
   {
     if( objectp(error ) )
       error = (array)error;
@@ -3471,10 +3471,11 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 
 void call_start_callbacks( RoxenModule me, 
                            ModuleInfo moduleinfo, 
-                           ModuleCopies module )
+			   ModuleCopies module,
+			   void|int newly_added)
 {
   call_low_start_callbacks(  me, moduleinfo, module );
-  call_high_start_callbacks (me, moduleinfo);
+  call_high_start_callbacks (me, moduleinfo, newly_added);
 }
 
 void call_low_start_callbacks( RoxenModule me, 
@@ -3585,14 +3586,16 @@ void call_low_start_callbacks( RoxenModule me,
   invalidate_cache();
 }
 
-void call_high_start_callbacks (RoxenModule me, ModuleInfo moduleinfo)
+void call_high_start_callbacks (RoxenModule me, ModuleInfo moduleinfo,
+				void|int newly_added)
 {
   // This is icky, but I don't know if it's safe to remove. /mast
   if(!me) return;
   if(!moduleinfo) return;
 
   mixed err;
-  if((me->start) && (err = catch( me->start(0, this_object()) ) ) )
+  if((me->start) &&
+     (err = catch( me->start(0, this_object(), newly_added) ) ) )
   {
 #ifdef MODULE_DEBUG
     if (enable_module_batch_msgs) 

@@ -150,7 +150,8 @@ mixed parse( RequestID id, mapping|void opt )
       if(module)
 	conf->call_start_callbacks( module,
 				    roxen.find_module( mod ),
-				    conf->modules[ mod ] );
+				    conf->modules[ mod ],
+				    1);
     }
     
     License.Key key = conf->getvar("license")->get_key();
