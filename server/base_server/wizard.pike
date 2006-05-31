@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2004, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.163 2006/05/30 12:52:35 jonasw Exp $
+// $Id: wizard.pike,v 1.164 2006/05/31 13:38:03 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -564,7 +564,10 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 	 m2->value = current;
        }
 
-       selector += "&nbsp;" + make_tag("input", m2);
+       selector +=
+	 "&nbsp;" + make_tag("input", m2) +
+	 "<input type='hidden' name='__select_override_vars' "
+	 "       value='" + m2->name + ":" + m->select_override + "' />";
      }
 
      return selector;
@@ -807,6 +810,28 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
   mapping å = id->real_variables;
   foreach(indices(s), string q)
      å[q] = å[q]||s[q];
+
+  //  Handle double posting of variables in select override widgets
+  foreach(Array.uniq(id->real_variables->__select_override_vars || ({ }) ),
+	  string override_combo) {
+    [string override_var, string override_marker] = override_combo / ":";
+    array(string) override_info = id->real_variables[override_var];
+    if (sizeof(override_info) > 1) {
+      string override_value = override_info[0];
+      if (override_value != override_info[1]) {
+	if (override_value == override_marker) {
+	  override_value = override_info[1];
+#if 0
+	} else if (override_info[1] == override_marker) {
+	  /* Already ok. */
+	} else {
+	  /* Ambiguous case. Warn? */
+#endif /* 0 */
+	}
+      }
+      id->real_variables[override_var] = ({ override_value });
+    }
+  }
 
   FakedVariables v=id->variables;
 
