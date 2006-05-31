@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.66 2006/02/17 20:49:36 grubba Exp $
+// $Id: DBManager.pmod,v 1.67 2006/05/31 17:55:25 mast Exp $
 
 //! Manages database aliases and permissions
 
@@ -52,7 +52,6 @@ private
     sql_url_cache = ([]);
     connection_user_cache = ([]);
     clear_connect_to_my_mysql_cache();
-    gc( );
   }
   
   array changed_callbacks = ({});
@@ -63,7 +62,6 @@ private
     
     foreach( changed_callbacks, function cb )
       catch( cb() );
-    gc( );
   }
 
   static void low_ensure_has_users( Sql.Sql db, Configuration c, string host,
