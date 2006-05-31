@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.170 2006/05/22 14:07:55 jonasw Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.171 2006/05/31 15:33:25 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2469,7 +2469,26 @@ class RoxenModule
   array(int|string|mapping) register_module();
   string file_name_and_stuff();
 
-  void start(void|int num, void|object conf);
+  void start (void|int variable_save, void|Configuration conf,
+	      void|int newly_added);
+  //! This function is called both when a module is loaded
+  //! (@[variable_save] is 0) and when its variables are saved after a
+  //! change (@[variable_save] is 2).
+  //!
+  //! @[newly_added] is 1 if the module is being added by the
+  //! administrator through the admin interface (implies that
+  //! @[variable_save] is 0). It's zero if the module is loaded
+  //! normally, i.e. as a result of an entry in the server
+  //! configuration file.
+  //!
+  //! @[conf] is the configuration that the module instance belongs
+  //! to, i.e. the same as the return value from @[my_configuration].
+  //!
+  //! @note
+  //! A module can't assume that it has been loaded before in this
+  //! server configuration just because @[newly_added] is zero. The
+  //! administrator might for instance have edited the configuration
+  //! file directly.
 
   string query_internal_location();
   string query_location();
