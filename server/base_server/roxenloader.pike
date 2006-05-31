@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.369 2006/05/31 16:18:05 grubba Exp $
+// $Id: roxenloader.pike,v 1.370 2006/05/31 17:32:13 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.369 2006/05/31 16:18:05 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.370 2006/05/31 17:32:13 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1184,13 +1184,14 @@ Roxen 4.0 should be run with Pike 7.4 or newer.
     //       IPv6 support is actually configured. This is needed
     //       since eg Solaris happily opens ports on :: even
     //       if no IPv6 interfaces are configured.
-    Stdio.Port p = Stdio.Port(0, 0, "::1");
+    //       Try IPv6 any (::) too for paranoia reasons.
+    Stdio.Port p = Stdio.Port();
+    if (p->bind(0, 0, "::1") &&
+	p->bind(0, 0, "::")) {
+      add_constant("__ROXEN_SUPPORTS_IPV6__", 1);
+      report_debug("Support for IPv6 enabled.\n");
+    }
     destruct(p);
-    // Try IPv6 any (::) too for paranoia reasons.
-    p = Stdio.Port(0, 0, "::");
-    destruct(p);
-    add_constant("__ROXEN_SUPPORTS_IPV6__", 1);
-    report_debug("Support for IPv6 enabled.\n");
   };
 
   // (. Note: Optimal implementation. .)
