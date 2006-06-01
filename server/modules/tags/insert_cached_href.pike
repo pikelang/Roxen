@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.12 2006/06/01 13:58:42 jonasw Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.13 2006/06/01 13:59:44 jonasw Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -81,17 +81,18 @@ void start(int occasion, Configuration conf) {
   
 #ifdef THREADS
   if (occasion == 2)
-    bg_process->stop();
+    bg_process && bg_process->stop();
 
   //  Check whether setup is ok before scheduling background task
   if (href_database) {
-    if (href_database->ready_to_run())
+    if (href_database->ready_to_run()) {
       bg_process =
 	roxen.BackgroundProcess(get_time_in_seconds(query("update-interval")), 
 				href_database->update_db, 0); 
-    else
+    } else {
       report_error("Insert cached href: Failed to initialize SQL tables. "
 		   "Permission error?\n");
+    }
   }
 #endif
 }
@@ -100,7 +101,7 @@ void stop() {
   DWRITE("stop()");
     
 #ifdef THREADS
-  bg_process->stop();
+  bg_process && bg_process->stop();
   bg_process = 0;
   mutex_key = mutex->lock();
   
@@ -528,6 +529,11 @@ class TagInsertCachedHref {
     if (query("recursion_limit") &&
 	(recursion_depth >= query("recursion_limit")))
       RXML.run_error("Too deep insert cached-href recursion.");
+
+    //  Verify that database connection is working
+    if (!href_database || !href_database->ready_to_run())
+      RXML.run_error("Insert cached href: Database connection not working. "
+		     "Permission problems?\n");
     
     recursion_depth++;
 
