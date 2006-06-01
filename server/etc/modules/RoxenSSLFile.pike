@@ -1,4 +1,4 @@
-/* $Id: RoxenSSLFile.pike,v 1.12 2006/05/31 17:49:26 mast Exp $
+/* $Id: RoxenSSLFile.pike,v 1.13 2006/06/01 11:00:32 mast Exp $
  */
 
 // This is SSL.sslfile from Pike 7.6, slightly modified for the old
@@ -393,9 +393,10 @@ static THREAD_T op_thread;
 	FIX_ERRNOS ({							\
 	    SSL3_DEBUG_MSG ("Local backend ended with error\n");	\
 	    if (stream) {						\
-	      Pike.DefaultBackend->add_file (stream);			\
 	      stream->set_id (1);					\
 	      update_internal_state();					\
+	      /* Switch backend after updating the installed callbacks. */ \
+	      Pike.DefaultBackend->add_file (stream);			\
 	    }								\
 	    {ERROR_CODE;}						\
 	    break run_local_backend;					\
@@ -417,9 +418,10 @@ static THREAD_T op_thread;
 	}								\
       }									\
 									\
-      Pike.DefaultBackend->add_file (stream);				\
       stream->set_id (1);						\
       update_internal_state();						\
+      /* Switch backend after updating the installed callbacks. */	\
+      Pike.DefaultBackend->add_file (stream);				\
     }									\
   } while (0)
 
