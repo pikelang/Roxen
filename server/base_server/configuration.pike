@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.609 2006/05/31 15:32:55 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.610 2006/06/01 11:25:40 wellhard Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4097,6 +4097,7 @@ $cache-status   -- A comma separated list of words (containing no
                                 added to the HTTP protocol cache.
 $protcache-cost -- The lookup depth in the HTTP protocol module
                    low-level cache.
+$cookies        -- All cookies sent by the browser.
 </pre>"), 0, lambda(){ return !query("Log");});
 
   // FIXME: Mention it is relative to getcwd(). Can not be localized in pike 7.0.
