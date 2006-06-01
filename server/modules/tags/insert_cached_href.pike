@@ -7,13 +7,13 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.11 2006/05/09 09:48:37 anders Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.12 2006/06/01 13:58:42 jonasw Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 LocaleString module_name = LOCALE(0, "Tags: Insert cached href");
-LocaleString module_doc  = LOCALE(0, "This module contains the rxml-tag 'insert "
-				     "cached-href'. Useful when implementing e.g."
+LocaleString module_doc  = LOCALE(0, "This module contains the RXML tag \"insert "
+				     "cached-href\". Useful when implementing e.g."
 				     " RSS syndication.");
 
 #if DEBUG_INSERT_CACHED_HREF
@@ -82,9 +82,17 @@ void start(int occasion, Configuration conf) {
 #ifdef THREADS
   if (occasion == 2)
     bg_process->stop();
-  
-  bg_process = roxen.BackgroundProcess(get_time_in_seconds(query("update-interval")), 
-				       href_database->update_db, 0); 
+
+  //  Check whether setup is ok before scheduling background task
+  if (href_database) {
+    if (href_database->ready_to_run())
+      bg_process =
+	roxen.BackgroundProcess(get_time_in_seconds(query("update-interval")), 
+				href_database->update_db, 0); 
+    else
+      report_error("Insert cached href: Failed to initialize SQL tables. "
+		   "Permission error?\n");
+  }
 #endif
 }
 
@@ -220,8 +228,15 @@ class HrefDatabase {
   private string data_table;
   
   public void create() {
+    //  Failure to create tables will lead to zero return values
     request_table = get_my_table("request", ({request_table_def}));
     data_table = get_my_table("data", ({data_table_def}));
+  }
+
+  public int ready_to_run()
+  {
+    //  Only ok to run if both tables are accessible
+    return request_table && data_table && 1;
   }
 
   public void update_db() {
