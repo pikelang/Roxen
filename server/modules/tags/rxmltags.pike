@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.515 2006/05/09 14:06:36 erikd Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.516 2006/06/01 16:11:37 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2701,6 +2701,7 @@ class TagHelp {
       string ret="<h2>Roxen Interactive RXML Help</h2>";
 
       if(!help_for) {
+	// FIXME: Is it actually needed to disable the cache?
 	NOCACHE();
 	array tags=map(indices(RXML_CONTEXT->tag_set->get_tag_names()),
 		       lambda(string tag) {
@@ -5725,10 +5726,10 @@ class TagEmitValues {
 	  return ""; });
     }
 
-    if( m->variable )
-      m->values = RXML_CONTEXT->user_get_var( m->variable );
-
-    if(zero_type (m->values))
+    if ((m->variable &&
+	 // NOTE: Side-effect!
+	 zero_type(m->values = RXML_CONTEXT->user_get_var( m->variable ))) ||
+	zero_type(m->values))
       return ({});
 
     if(stringp(m->values)) {
