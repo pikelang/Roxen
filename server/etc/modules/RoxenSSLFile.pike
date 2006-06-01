@@ -1,4 +1,4 @@
-/* $Id: RoxenSSLFile.pike,v 1.13 2006/06/01 11:00:32 mast Exp $
+/* $Id: RoxenSSLFile.pike,v 1.14 2006/06/01 11:47:05 mast Exp $
  */
 
 // This is SSL.sslfile from Pike 7.6, slightly modified for the old
@@ -8,6 +8,8 @@
 // Therefore this one is used by Roxen in that case.
 
 #if constant(SSL.Cipher.CipherAlgorithm)
+
+#pike 7.6
 
 // We have a modern enough Pike.
 inherit SSL.sslfile;
@@ -544,10 +546,11 @@ int close (void|string how, void|int clean_close)
     }
 
     if (!direct_write()) {
+      int err = errno();
       // Should be shut down after close(), even if an error occurred.
       shutdown();
       // Errors are thrown from close().
-      error ("Failed to close SSL connection: %s\n", strerror (errno()));
+      error ("Failed to close SSL connection: %s\n", strerror (err));
     }
 
     if (stream && (stream->query_read_callback() || stream->query_write_callback()))
