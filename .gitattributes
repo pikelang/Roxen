@@ -51,6 +51,7 @@ worldmap binary
 # changes to these files.
 /local/translations/Makefile foreign_ident
 /local/translations/README foreign_ident
+/mkdir foreign_ident
 /server/arg_cache_plugins/replicate.pike foreign_ident
 /server/base_server/__default.pmod foreign_ident
 /server/base_server/basic_defvar.pike foreign_ident
