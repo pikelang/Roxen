@@ -4,6 +4,8 @@
 /server/tools/ntroxen/startdll/enumproc.c eol=crlf
 *.cif binary
 *.cpp eol=crlf
+/local/fonts/.distignore -text -crlf
+/local/pike_modules/.distignore -text -crlf
 *.dsp eol=crlf
 *.gif binary
 /server/tools/ntroxen/ntstart/StdAfx.h eol=crlf
