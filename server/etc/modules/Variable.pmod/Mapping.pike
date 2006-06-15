@@ -125,6 +125,9 @@ array(string) render_row(string prefix, mixed val, int width)
 	    Variable.input( prefix+"b", val[1], width ) });
 }
 
+LocaleString key_title = LOCALE(376, "Name");
+LocaleString val_title = LOCALE(473, "Value");
+
 string render_view( RequestID id, void|mapping additional_args )
 {
   mapping val = query();
@@ -132,8 +135,8 @@ string render_view( RequestID id, void|mapping additional_args )
 
   if(sizeof(val))
   {
-    res += "<tr><th align='left'>"+LOCALE(376,"Name")+"</th>"
-      "<th align='left'>"+LOCALE(473,"Value")+"</th></tr>";
+    res += "<tr><th align='left'>" + key_title + "</th>"
+      "<th align='left'>" + val_title + "</th></tr>";
     foreach( sort(indices(val)), mixed var )
     {
       res += "<tr>\n"
@@ -160,8 +163,8 @@ string render_form( RequestID id, void|mapping additional_args )
   mapping val = query();
 
   if(sizeof(val)) {
-    res += "<tr><th align='left'>"+LOCALE(376,"Name")+"</th>"
-      "<th align='left'>"+LOCALE(473,"Value")+"</th></tr>";
+    res += "<tr><th align='left'>" + key_title + "</th>"
+      "<th align='left'>" + val_title + "</th></tr>";
 
     foreach( sort(indices(val)), mixed var ) {
       res += "<tr>\n<td><font size='-1'>"+
