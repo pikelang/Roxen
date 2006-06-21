@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.610 2006/06/01 11:25:40 wellhard Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.611 2006/06/21 11:02:59 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -280,7 +280,7 @@ class DataCache
 
       string key_frag;
       if (stringp(val)) {
-	key_frag = id->result_headers[val];
+	key_frag = id->request_headers[val];
       } else {
 	key_frag = val(url, id);
       }
@@ -362,7 +362,7 @@ class DataCache
 
       string key_frag;
       if (stringp(res)) {
-	key_frag = id->result_headers[res];
+	key_frag = id->request_headers[res];
       } else {
 	key_frag = res(url, id);
       }
