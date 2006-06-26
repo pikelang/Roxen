@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.171 2006/05/31 15:33:25 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.172 2006/06/26 16:27:30 wellhard Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1004,7 +1004,8 @@ class RequestID
 	register_vary_callback("User-Agent",
 			       lambda(string ignored, RequestID id)
 			       {
-				 return (string)!has_value(id->client, "MSIE");
+				 return (string)!has_value(id->client||"",
+							   "MSIE");
 			       });
 	if (supports->vary) {
 	  register_vary_callback("Cookie", Roxen->get_cookie_callback(cookie));
