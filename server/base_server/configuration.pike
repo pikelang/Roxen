@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.611 2006/06/21 11:02:59 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.612 2006/06/30 09:10:44 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -278,12 +278,13 @@ class DataCache
 	return;
       }
 
-      string key_frag;
+      string|array(string) key_frag;
       if (stringp(val)) {
 	key_frag = id->request_headers[val];
       } else {
 	key_frag = val(url, id);
       }
+      if (arrayp(key_frag)) keyfrag *= ", ";
       // NOTE: The prepended NUL is for spoof protection.
       key_prefix = "\0" + key_prefix + "\0" + (key_frag || "");
     }
@@ -317,12 +318,13 @@ class DataCache
       }
       cache[key] = vary_cb;
 
-      string key_frag;
+      string|array(string) key_frag;
       if (stringp(vary_cb)) {
 	key_frag = id->request_headers[vary_cb];
       } else {
 	key_frag = vary_cb(url, id);
       }
+      if (arrayp(key_frag)) keyfrag *= ", ";
       // NOTE: The prepended NUL is for spoof protection.
       key = "\0" + key + "\0" + (key_frag || "");
     }
@@ -360,12 +362,13 @@ class DataCache
 	return UNDEFINED;
       }
 
-      string key_frag;
+      string|array(string) key_frag;
       if (stringp(res)) {
 	key_frag = id->request_headers[res];
       } else {
 	key_frag = res(url, id);
       }
+      if (arrayp(key_frag)) keyfrag *= ", ";
       // NOTE: The prepended NUL is for spoof protection.
       key = "\0" + key + "\0" + (key_frag || "");
     };
