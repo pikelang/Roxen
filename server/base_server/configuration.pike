@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.612 2006/06/30 09:10:44 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.613 2006/06/30 09:20:28 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -284,7 +284,7 @@ class DataCache
       } else {
 	key_frag = val(url, id);
       }
-      if (arrayp(key_frag)) keyfrag *= ", ";
+      if (arrayp(key_frag)) key_frag *= ", ";
       // NOTE: The prepended NUL is for spoof protection.
       key_prefix = "\0" + key_prefix + "\0" + (key_frag || "");
     }
@@ -324,7 +324,7 @@ class DataCache
       } else {
 	key_frag = vary_cb(url, id);
       }
-      if (arrayp(key_frag)) keyfrag *= ", ";
+      if (arrayp(key_frag)) key_frag *= ", ";
       // NOTE: The prepended NUL is for spoof protection.
       key = "\0" + key + "\0" + (key_frag || "");
     }
@@ -368,7 +368,7 @@ class DataCache
       } else {
 	key_frag = res(url, id);
       }
-      if (arrayp(key_frag)) keyfrag *= ", ";
+      if (arrayp(key_frag)) key_frag *= ", ";
       // NOTE: The prepended NUL is for spoof protection.
       key = "\0" + key + "\0" + (key_frag || "");
     };
