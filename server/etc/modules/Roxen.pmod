@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.196 2006/06/28 16:32:55 anders Exp $
+// $Id: Roxen.pmod,v 1.197 2006/06/30 09:55:04 anders Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2204,7 +2204,8 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
   if (m->adjust) t+=(int)m->adjust;
 
   string lang;
-  if(id && id->misc->defines->theme_language) lang=id->misc->defines->theme_language;
+  if(id && id->misc->defines && id->misc->defines->theme_language)
+    lang=id->misc->defines->theme_language;
   if(m->lang) lang=m->lang;
 
   if(m->strftime)
