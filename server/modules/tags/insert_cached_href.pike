@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.13 2006/06/01 13:59:44 jonasw Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.14 2006/07/05 07:38:08 jonasw Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -247,6 +247,11 @@ class HrefDatabase {
     foreach(initiated, HTTPClient client) {
       DWRITE("STILL initiated (should be empty!!!!!): " + (string)client->url);
     }
+
+#ifdef OFFLINE
+    //  Don't alter entries when running server without network connections.
+    return;
+#endif
     
     remove_old_entrys();
 
