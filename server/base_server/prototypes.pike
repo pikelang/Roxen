@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.172 2006/06/26 16:27:30 wellhard Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.173 2006/07/05 16:30:03 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -171,6 +171,8 @@ static constant SimpleHeaderNode = Parser.XML.Tree.SimpleHeaderNode;
 static constant SimpleTextNode = Parser.XML.Tree.SimpleTextNode;
 static constant SimpleElementNode = Parser.XML.Tree.SimpleElementNode;
 
+//! @appears DAVLock
+//!
 //! Container for information about an outstanding DAV lock. No field
 //! except @[owner] may change after the object has been created since
 //! filesystem modules might store this info persistently.
@@ -297,7 +299,10 @@ class DAVLock
   }
 }
 
+//! @appears Configuration
 //! Configuration information for a site.
+//! @seealso
+//!   @[configuration]
 class Configuration
 {
   inherit BasicDefvar;
@@ -1949,8 +1954,12 @@ class RequestID
 
     if (misc->vary) {
       // Generate a vary header.
-
-      if (misc->vary[0]) {
+      if (!supports->vary) {
+	// Broken support for vary.
+	heads->Vary = "User-Agent";
+	// It expired a year ago.
+	heads->Expires = Roxen->http_date(time(1)-31557600);
+      } else if (misc->vary[0]) {
 	// Depends on non-headers.
 	heads->Vary = "*";
       } else {
@@ -2057,6 +2066,7 @@ class RequestID
   }
 }
 
+//! @appears MultiStatusStatus
 class MultiStatusStatus (int http_code, void|string message)
 {
   constant is_status = 1;
@@ -2099,6 +2109,7 @@ class MultiStatusStatus (int http_code, void|string message)
 private SimpleElementNode ok_status_node =
   SimpleElementNode("DAV:status", ([]))->add_child(SimpleTextNode("HTTP/1.1 200 OK"));
 
+//! @appears MultiStatusPropStat
 class MultiStatusPropStat
 {
   constant is_prop_stat = 1;
@@ -2192,8 +2203,10 @@ class MultiStatusPropStat
   }
 }
 
+//! @appears MultiStatusNode
 typedef MultiStatusStatus|MultiStatusPropStat MultiStatusNode;
 
+//! @appears MultiStatus
 class MultiStatus
 {
   static mapping(string:MultiStatusNode) status_set = ([]);
