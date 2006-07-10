@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.173 2006/07/05 16:30:03 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.174 2006/07/10 11:15:52 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1958,7 +1958,7 @@ class RequestID
 	// Broken support for vary.
 	heads->Vary = "User-Agent";
 	// It expired a year ago.
-	heads->Expires = Roxen->http_date(time(1)-31557600);
+	heads->Expires = Roxen->http_date(predef::time(1)-31557600);
       } else if (misc->vary[0]) {
 	// Depends on non-headers.
 	heads->Vary = "*";
