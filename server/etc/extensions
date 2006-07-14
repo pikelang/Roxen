@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.57 2005/10/03 16:07:34 grubba Exp $
+# $Id: extensions,v 1.58 2006/07/14 14:09:48 grubba Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -467,6 +467,7 @@ p7s	application/x-pkcs7-signature
 # application/vnd.hp-hps
 # application/vnd.fujixerox.docuworks
 ##xml	application/xml
+dtd	application/xml-dtd
 # application/vnd.anser-web-funds-transfer-initiation
 # application/vnd.anser-web-certificate-issue-initiation
 # application/vnd.is-xpr
