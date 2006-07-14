@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.362 2005/10/28 08:56:32 grubba Exp $
+// $Id: roxenloader.pike,v 1.363 2006/07/14 09:54:05 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.362 2005/10/28 08:56:32 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.363 2006/07/14 09:54:05 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1528,13 +1528,16 @@ mixed connect_to_my_mysql( string|int ro, void|string db )
     return low_connect_to_my_mysql(ro, db);
   }
   string i = db+":"+(intp(ro)?(ro&&"ro")||"rw":ro);
-  mixed res =
-    sq_cache_get(i) ||
-    sq_cache_set(i,low_connect_to_my_mysql( ro, db ));
-
-  // Fool the optimizer so that key is not released prematurely
-  if( res )
-    return res;
+  mixed res = sq_cache_get(i);
+  if (res) return res;
+  destruct(key);
+  if (res = low_connect_to_my_mysql( ro, db )) {
+    key = sq_cache_lock();
+    // Fool the optimizer so that key is not released prematurely
+    if( res )
+      sq_cache_set(i, res);
+  }
+  return 0;
 }
 
 static mixed low_connect_to_my_mysql( string|int ro, void|string db )
