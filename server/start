@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.224 2005/12/21 14:03:33 noring Exp $
+# $Id: start,v 1.225 2006/07/17 15:30:39 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -275,6 +275,23 @@ parse_args() {
   '--with-file-profile'|'--file-profile')
     DEFINES="-DPROFILE -DFILE_PROFILE $DEFINES"
   ;;
+  '--generations='*)
+    GENERATIONS=`echo $1 | sed -e 's/--generations=//'`
+    if test "$GENERATTIONS" -gt 1; then :; else
+      echo "Invalid number of log generations: $GENERATIONS" >&2
+      echo "Using default: 5" >&2
+      GENERATIONS=5
+    fi
+  ;;
+  '--generations')
+    GENERATIONS="$2"
+    shift
+    if test "$GENERATTIONS" -gt 1; then :; else
+      echo "Invalid number of log generations: $GENERATIONS" >&2
+      echo "Using default: 5" >&2
+      GENERATIONS=5
+    fi
+  ;;
   '--quiet'|'-q')
     verbose=0
   ;;
@@ -431,6 +448,9 @@ the default arguments.
 
       .B--with-file-profileB.:        Like .B--with-profileB., but save information
                                   for each and every file.
+
+      .B--generations=NUMBERB.:       Specify the number of generations for the
+                                  log rotation. Default: 5.
 
       .B--self-testB.:                Runs a testsuite.
       .B--self-test-verboseB.:        Runs a testsuite, report all tests.
