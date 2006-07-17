@@ -1,9 +1,19 @@
 # -*- sh -*-
 # Support functions for the startscript and some other scripts.
+#
+# $Id: functions,v 1.15 2006/07/17 15:18:02 grubba Exp $
+#
+
+# Default number of generations for log rotation.
+generations=5
 
 rotate () {
-  b=5;
-  for a in 4 3 2 1 ; do mv -f $1.$a $1.$b 2> /dev/null;  b=$a; done
+  b="$generations";
+  while test "$b" -gt 1; do
+    a=`echo "$b - 1" | bc`;
+    mv -f "$1.$a" "$1.$b" 2> /dev/null;
+    b=$a;
+  done
 }
 
 setup_environment() {

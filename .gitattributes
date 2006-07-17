@@ -87,6 +87,7 @@ worldmap binary
 /server/bin/buildenv.pike foreign_ident
 /server/bin/create_configif.pike foreign_ident
 /server/bin/fixquota.pike foreign_ident
+/server/bin/functions foreign_ident
 /server/bin/garbagecollector.pike foreign_ident
 /server/bin/lsquota.pike foreign_ident
 /server/bin/mk_wxs.pike foreign_ident
