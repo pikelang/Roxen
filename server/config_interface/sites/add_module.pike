@@ -1,4 +1,4 @@
-// $Id: add_module.pike,v 1.85 2006/05/31 15:32:56 mast Exp $
+// $Id: add_module.pike,v 1.86 2006/07/25 11:15:27 anders Exp $
 
 #include <config_interface.h>
 #include <module.h>
@@ -248,6 +248,7 @@ string pafeaw( string errors, string warnings, array(ModuleInfo) locked_modules)
 #define RELOAD(X) sprintf("<gbutton "                                         \
 			  "img-align='middle' "                               \
                           "href='add_module.pike?config=&form.config:http;"   \
+                          "&method=&form.method;"                             \
                           "&random=%d&only=%s&reload_module_list=yes"	      \
 			  "#errors_and_warnings'> %s </gbutton>",   	      \
                           random(4711111),                                    \
