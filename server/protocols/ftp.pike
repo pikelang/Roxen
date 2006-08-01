@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.109 2005/12/07 15:09:32 grubba Exp $
+ * $Id: ftp.pike,v 2.110 2006/08/01 09:50:53 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -3368,14 +3368,15 @@ class FTPSession
       session->file = ([]);
       session->file->full_path = args;
       send_MLSD_response(session->conf->find_dir_stat(args, session), session);
+      // NOTE: send_MLSD_response is asynchronous!
     } else {
       if (st) {
 	session->file->error = 405;
       }
       send_error("MLSD", args, session->file, session);
       discard_data_connection();
+      destruct(session);
     }
-    destruct(session);
   }
 
   void ftp_DELE(string args)
