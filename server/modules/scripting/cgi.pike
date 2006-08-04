@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.62 2004/06/30 16:59:19 mast Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.63 2006/08/04 11:15:07 grubba Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -654,7 +654,7 @@ class CGIScript
 
     // Send input to script..
     if( tosend || ffd )
-      Stdio.sendfile(({tosend||""}),ffd,0,0,0,stdin,
+      Stdio.sendfile(({tosend||""}),ffd,-1,-1,0,stdin,
                      lambda(int i,mixed q){ stdin->close();stdin=0; });
     else
     {
@@ -831,7 +831,7 @@ class CGIScript
         error("No real file associated with "+id->not_query+
               ", thus it's not possible to run it as a CGI script.\n");
     }
-    command = id->realfile;
+    command = combine_path(getcwd(), id->realfile);
 #if UNIX
 #define LIMIT(L,X,Y,M,N) if(query(#Y)!=N){if(!L)L=([]);L->X=query(#Y)*M;}
     [uid,gid,extra_gids] = verify_access( id );
@@ -864,8 +864,11 @@ class CGIScript
     environment |= Roxen.build_roxen_env_vars(id);
     if(id->misc->ssi_env)
       environment |= id->misc->ssi_env;
-    if(id->misc->is_redirected)
+    if(id->misc->is_redirected) {
+      if (id->misc->redirected_not_query)
+	environment["REDIRECT_URL"] = id->misc->redirected_not_query;
       environment["REDIRECT_STATUS"] = "1";
+    }
     if(id->rawauth && query("rawauth"))
       environment["HTTP_AUTHORIZATION"] = (string)id->rawauth;
     else
