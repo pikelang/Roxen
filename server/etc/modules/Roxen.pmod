@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.212 2006/06/30 09:55:04 anders Exp $
+// $Id: Roxen.pmod,v 1.213 2006/08/04 11:13:39 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1025,11 +1025,9 @@ mapping build_env_vars(string f, RequestID id, string path_info)
 
   if(path_info && strlen(path_info))
   {
-    string t, t2;
+    string t2;
     if(path_info[0] != '/')
       path_info = "/" + path_info;
-
-    t = t2 = "";
 
     // Kludge
     if ( ([mapping(string:mixed)]id->misc)->path_info == path_info ) {
@@ -1042,20 +1040,22 @@ mapping build_env_vars(string f, RequestID id, string path_info)
     new["PATH_INFO"]=path_info;
 
 
+    // FIXME: Consider looping over the splitted path.
+    string trailer = "";
     while(1)
     {
       // Fix PATH_TRANSLATED correctly.
-      t2 = id->conf->real_file(path_info, id);
-      if(t2)
+      string translated_base = id->conf->real_file(path_info, id);
+      if (translated_base)
       {
-	new["PATH_TRANSLATED"] = t2 + t;
+	new["PATH_TRANSLATED"] = combine_path_unix(translated_base, trailer);
 	break;
       }
       array(string) tmp = path_info/"/" - ({""});
       if(!sizeof(tmp))
 	break;
-      path_info = "/" + (tmp[0..sizeof(tmp)-2]) * "/";
-      t = tmp[-1] +"/" + t;
+      path_info = "/" + (tmp[..sizeof(tmp)-2]) * "/";
+      trailer = tmp[-1] + "/" + trailer;
     }
   } else
     new["SCRIPT_NAME"]=id->not_query;
