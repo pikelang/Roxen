@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.191 2006/03/06 13:04:04 jonasw Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.192 2006/08/09 18:18:14 mast Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -841,7 +841,21 @@ class TagPortURLsplugin
   array get_dataset(mapping m, RequestID id)
   {
     mapping u = roxen->find_port( m->port )->urls;
-    return map(sort(indices(u)),get_url_map,u)-({0});
+    array(mapping(string:string)) res =
+      map(sort(indices(u)),get_url_map,u)-({0});
+    if (m->distinct) {
+      mapping(string:int) found = ([]);
+      res = filter (res, lambda (mapping(string:string) ent) {
+			   int first = !found[ent[m->distinct]];
+			   found[ent[m->distinct]] = 1;
+			   return first;
+			 });
+    }
+    if (string excl_conf = m["exclude-conf"])
+      res = filter (res, lambda (mapping(string:string) ent) {
+			   return ent->conf != excl_conf;
+			 });
+    return res;
   }
 }
 

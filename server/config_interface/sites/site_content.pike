@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.144 2006/01/16 16:08:37 grubba Exp $
+// $Id: site_content.pike,v 1.145 2006/08/09 18:18:13 mast Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -470,8 +470,10 @@ string low_port_for(array(Protocol|array(string)) port_info, int settings)
   string url = urls[0];	// FIXME: Report the others too.
   string res =
 #"
-  <set variable='var.port' value='"+Roxen.html_encode_string(p->get_key())+
-"'/><set variable='var.url' value='"+Roxen.html_encode_string(url)+#"'/>
+  <set variable='var.port' value='"+
+    Roxen.html_encode_string(p->get_key())+ #"'/>
+  <set variable='var.urlconf' value='"+
+    Roxen.html_encode_string (replace (p->urls[url]->conf->name, " ", "-"))+#"'/>
   <emit source='ports' scope='port'>
     <if variable='var.port is &_.port;'>"+
     (settings?
@@ -491,9 +493,10 @@ string low_port_for(array(Protocol|array(string)) port_info, int settings)
            <br clear='all' />
         </if>
         <unset variable='var.end'/>
-        <emit source='port-urls' port='&_.port;' rowinfo='var.rowinfo'>"
+	<emit source='port-urls' port='&_.port;' rowinfo='var.rowinfo'
+	      distinct='conf'>"
     // No whitespace in this emit
-          "<if not variable='_.url is &var.url;'>"
+	  "<if not variable='_.conf is &var.urlconf;'>"
             "<if not='' variable='var.end'>"
               "<set variable='var.end' value='.'/>"
               +LOCALE(323,"Shared with ")+
