@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.501 2006/05/17 16:53:40 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.502 2006/08/11 15:03:26 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -594,6 +594,9 @@ int things_to_do_when_not_sending_from_cache( )
 #endif
   if (!has_value(client, "MSIE"))
     supports->vary = 1;
+  else {
+    // FIXME: Vary seems to work in MSIE 7.
+  }
   //REQUEST_WERR("HTTP: parse_got(): supports");
   if(!referer) referer = ({ });
   if(misc->proxyauth) 
@@ -1737,9 +1740,9 @@ void handle_byte_ranges(mapping(string:mixed) file,
 	    }
 	    res[j++] = "\r\n--" BOUND "\r\n";
 	    file->len = sizeof(file->data = res * "");
-	    variant_heads["Content-Length"] = (string)file->len;
 	  }
 	}
+	variant_heads["Content-Length"] = (string)file->len;
       } else {
 	// Got the header, but the specified ranges were out of bounds.
 	// Reply with a 416 Requested Range not satisfiable.
