@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.174 2006/07/10 11:15:52 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.175 2006/08/15 10:52:19 wellhard Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1448,10 +1448,13 @@ class RequestID
   void register_vary_callback(string|void vary,
 			      function(string, RequestID: string)|void cb)
   {
-    if (!misc->vary) {
-      misc->vary = (< vary || "*" >);
-    } else {
-      misc->vary[vary || "*"] = 1;
+    // Don't generate a vary header for the Host header.
+    if (vary != "Host") {
+      if (!misc->vary) {
+	misc->vary = (< vary || "*" >);
+      } else {
+	misc->vary[vary || "*"] = 1;
+      }
     }
     if (vary) vary = lower_case(vary);
     if (!misc->vary_cb_set) {
