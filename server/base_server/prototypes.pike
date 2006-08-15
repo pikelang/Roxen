@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.175 2006/08/15 10:52:19 wellhard Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.176 2006/08/15 15:08:57 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -813,6 +813,11 @@ class CacheKey
 //  Kludge for resolver problems
 static function _charset_decoder_func;
 
+string browser_supports_vary(string ignored, RequestID id)
+{
+  return (string)!has_value(id->client||"", "MSIE");
+}
+
 class RequestID
 //! @appears RequestID
 //! The request information object contains all request-local information and
@@ -1006,12 +1011,7 @@ class RequestID
 	/* Workaround for MSIE 6's refusal to cache anything with
 	 * a Vary:Cookie header.
 	 */
-	register_vary_callback("User-Agent",
-			       lambda(string ignored, RequestID id)
-			       {
-				 return (string)!has_value(id->client||"",
-							   "MSIE");
-			       });
+	register_vary_callback("User-Agent", browser_supports_vary);
 	if (supports->vary) {
 	  register_vary_callback("Cookie", Roxen->get_cookie_callback(cookie));
 	} else {
