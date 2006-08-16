@@ -6,13 +6,19 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.176 2006/08/15 15:08:57 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.177 2006/08/16 10:00:28 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
 #else /* !DAV_DEBUG */
 #define DAV_WERROR(X...)
 #endif /* DAV_DEBUG */
+
+#ifdef VARY_DEBUG
+#define VARY_WERROR(X...)	werror("VARY: " + X)
+#else
+#define VARY_WERROR(X...)
+#endif /* VARY_DEBUG */
 
 // To avoid reference cycles. Set to the Roxen module object by
 // roxenloader.pike.
@@ -960,6 +966,15 @@ class RequestID
   //! for passing between requests on the same connection et cetera. Be sure
   //! to use a key unique to your own application.
 
+  //! Contains the current set of cookies.
+  //!
+  //! @note
+  //!   DON'T touch!
+  //!
+  //! @seealso
+  //!   @[cookies]
+  mapping(string:string) real_cookies;
+
   //! Wrapper that calls @[register_vary_callback()] as appropriate when
   //! cookies are accessed.
   //!
@@ -972,14 +987,13 @@ class RequestID
   //!   @[cookies], @[register_vary_callback()], @[Roxen.get_cookie_callback()]
   static class CookieJar
   {
-    //! Contains the current set of cookies.
-    static mapping(string:string) jar = ([]);
-
     //! Contains the set of cookies that have been zapped in some way.
     static mapping(string:string) eaten = ([]);
 
     static void create(string|array(string)|void contents)
     {
+      real_cookies = ([]);
+
       if(!contents)
 	return;
 
@@ -995,7 +1009,7 @@ class RequestID
 	  {
 	    value=_Roxen.http_decode_string(value);
 	    name=_Roxen.http_decode_string(name);
-	    jar[ name ]=value;
+	    real_cookies[ name ]=value;
 #ifdef OLD_RXML_CONFIG
 	    // FIXME: Really ought to register this one...
 	    if( (name == "RoxenConfig") && strlen(value) )
@@ -1008,6 +1022,8 @@ class RequestID
     static string `->(string cookie)
     {
       if (supports && zero_type(eaten[cookie])) {
+	VARY_WERROR("Looking at cookie %O from %s\n",
+		   cookie, describe_backtrace(({backtrace()[-2]})));
 	/* Workaround for MSIE 6's refusal to cache anything with
 	 * a Vary:Cookie header.
 	 */
@@ -1019,7 +1035,7 @@ class RequestID
 				 Roxen->get_cookie_callback(cookie));
 	}
       }
-      return jar[cookie];
+      return real_cookies[cookie];
     }
     static string `[](mixed cookie)
     {
@@ -1031,9 +1047,9 @@ class RequestID
     static string `->=(string cookie, string value)
     {
       if (zero_type(eaten[cookie])) {
-	eaten[cookie] = jar[cookie];
+	eaten[cookie] = real_cookies[cookie];
       }
-      return jar[cookie] = value;
+      return real_cookies[cookie] = value;
     }
     static string `[]=(mixed cookie, string value)
     {
@@ -1044,46 +1060,46 @@ class RequestID
     {
       // FIXME: Warn if not string?
       if (zero_type(eaten[cookie])) {
-	eaten[cookie] = jar[cookie];
+	eaten[cookie] = real_cookies[cookie];
       }
-      return m_delete(jar, cookie);
+      return m_delete(real_cookies, cookie);
     }
     static array(string) _indices()
     {
       register_vary_callback("Cookie");
-      return indices(jar);
+      return indices(real_cookies);
     }
     static array(string) _values()
     {
       register_vary_callback("Cookie");
-      return values(jar);
+      return values(real_cookies);
     }
     static int _sizeof()
     {
       register_vary_callback("Cookie");
-      return sizeof(jar);
+      return sizeof(real_cookies);
     }
     static mapping(string:string) `+(mapping(string:string) other)
     {
       register_vary_callback("Cookie");
-      return jar + other;
+      return real_cookies + other;
     }
     static mapping(string:string) ``+(mapping(string:string) other)
     {
       register_vary_callback("Cookie");
-      return other + jar;
+      return other + real_cookies;
     }
 
     //! Used to retrieve the original set of cookies at
     //! protocol cache store time.
     static mapping(string:string) `~()
     {
-      return jar + eaten;
+      return real_cookies + eaten;
     }
 
     static string _sprintf(int fmt)
     {
-      return fmt == 'O' && sprintf("CookieJar(%O)", jar);
+      return fmt == 'O' && sprintf("CookieJar(%O)", real_cookies);
     }
   }
 
@@ -1460,18 +1476,22 @@ class RequestID
     if (!misc->vary_cb_set) {
       misc->vary_cb_set = (< cb || vary >);
       misc->vary_cb_order = ({ cb || vary });
+      VARY_WERROR("register_vary_callback(%O, %O)\n", vary, cb);
       return;
     }
     if (misc->vary_cb_set[cb || vary]) {
       // Already registred.
+      VARY_WERROR("register_vary_callback(%O, %O) Duplicate\n", vary, cb);
       return;
     }
     if (vary && misc->vary_cb_set[vary]) {
       // The full header has already been registred.
+      VARY_WERROR("register_vary_callback(%O, %O) Full header\n", vary, cb);
       return;
     }
     misc->vary_cb_set[cb || vary] = 1;
     misc->vary_cb_order += ({ cb || vary });
+    VARY_WERROR("register_vary_callback(%O, %O)\n", vary, cb);
   }
 
   static string cached_url_base;
@@ -1875,6 +1895,7 @@ class RequestID
 	heads["Expires"] = Roxen->http_date( predef::time(1)-31557600 );
 	// Force the vary header generated below to be "*".
 	misc->vary = (< 0 >);
+	VARY_WERROR("Not cacheable. Force vary *.\n");
       } else
 	heads["Expires"] = Roxen->http_date( predef::time(1)+misc->cacheable );
       if (misc->cacheable < INITIAL_CACHEABLE) {
@@ -1957,11 +1978,13 @@ class RequestID
 
     if (misc->vary) {
       // Generate a vary header.
+      VARY_WERROR("Full set: %s\n", ((array)misc->vary) * ", ");
       if (!supports->vary) {
 	// Broken support for vary.
 	heads->Vary = "User-Agent";
 	// It expired a year ago.
 	heads->Expires = Roxen->http_date(predef::time(1)-31557600);
+	VARY_WERROR("Vary not supported by the browser.\n");
       } else if (misc->vary[0]) {
 	// Depends on non-headers.
 	heads->Vary = "*";
