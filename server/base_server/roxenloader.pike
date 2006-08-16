@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.372 2006/08/16 12:10:01 grubba Exp $
+// $Id: roxenloader.pike,v 1.373 2006/08/16 15:25:56 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -33,7 +33,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.372 2006/08/16 12:10:01 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.373 2006/08/16 15:25:56 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1655,11 +1655,11 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
     res = Sql.Sql( replace( my_mysql_path,({"%user%", "%db%" }),
 			    ({ ro, db })) );
 #ifdef ENABLE_MYSQL_UNICODE_MODE
-    if (res && res->master_sql->set_unicode_decode_mode) {
+    if (res && res->master_sql->set_charset) {
       catch {
-	res->master_sql->set_unicode_decode_mode(1);
+	res->master_sql->set_charset("unicode");
 #ifdef DB_DEBUG
-	werror("set_unicode_decode_mode(1) succeeded.\n");
+	werror("set_charset(\"unicode\") succeeded.\n");
 #endif
       };
     }
