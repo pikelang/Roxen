@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.371 2006/07/14 09:54:11 grubba Exp $
+// $Id: roxenloader.pike,v 1.372 2006/08/16 12:10:01 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -25,12 +25,15 @@ private static __builtin.__master new_master;
 
 constant s = spider; // compatibility
 
+// Enable decoding of wide string data from mysql.
+#define ENABLE_MYSQL_UNICODE_MODE
+
 int      remove_dumped;
 string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.371 2006/07/14 09:54:11 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.372 2006/08/16 12:10:01 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1307,7 +1310,7 @@ mapping sql_active_list = ([ ]);
 #ifdef DB_DEBUG
 static int sql_keynum;
 mapping(int:string) my_mysql_last_user = ([]);
-multiset(SQLKey) all_sql_wrappers = set_weak_flag( (<>), 1 );
+multiset(Sql.Sql) all_wrapped_sql_objects = set_weak_flag( (<>), 1 );
 #endif /* DB_DEBUG */
 
 
@@ -1470,20 +1473,23 @@ static class SQLKey
     }
 
 #ifdef DB_DEBUG
-    if( !_real )
+    if( !real )
       error("Creating SQL with empty real sql\n");
 
-    foreach( (array)all_sql_wrappers, SQLKey ro )
+    foreach( (array)all_wrapped_sql_objects, Sql.Sql sql )
     {
-      if( ro )
-	if( ro->real == real )
+      if( sql )
+	if( sql == real )
 	  error("Fatal: This database connection is already used!\n");
-	else if( ro->real->master_sql == real->master_sql )
+	else if( sql->master_sql == real->master_sql )
 	  error("Fatal: Internal share error: master_sql equal!\n");
     }
-    all_sql_wrappers[this] = 1;
 
+    all_wrapped_sql_objects[real] = 1;
+#if 0
+    // Disabled, since it seems to have bad side-effects :-(
     bt=(my_mysql_last_user[num] = describe_backtrace(backtrace()));
+#endif
 #endif /* DB_DEBUG */
   }
   
@@ -1491,7 +1497,7 @@ static class SQLKey
   {
     // FIXME: Ought to be abstracted to an sq_cache_free().
 #ifdef DB_DEBUG
-    all_sql_wrappers[this]=0;
+    all_wrapped_sql_objects[real]=0;
 #endif
 
     if (reuse_in_thread) {
@@ -1648,6 +1654,16 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
     int t = gethrtime();
     res = Sql.Sql( replace( my_mysql_path,({"%user%", "%db%" }),
 			    ({ ro, db })) );
+#ifdef ENABLE_MYSQL_UNICODE_MODE
+    if (res && res->master_sql->set_unicode_decode_mode) {
+      catch {
+	res->master_sql->set_unicode_decode_mode(1);
+#ifdef DB_DEBUG
+	werror("set_unicode_decode_mode(1) succeeded.\n");
+#endif
+      };
+    }
+#endif /* ENABLE_MYSQL_UNICODE_MODE */
 #ifdef DB_DEBUG
     werror("Connect took %.2fms\n", (gethrtime()-t)/1000.0 );
 #endif
