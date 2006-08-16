@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.214 2006/08/15 15:59:06 grubba Exp $
+// $Id: Roxen.pmod,v 1.215 2006/08/16 10:01:20 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -136,10 +136,11 @@ static class CookieChecker(string cookie)
 {
   string `()(string path, RequestID id)
   {
-    if (!id->cookies) {
+    if (!id->real_cookies) {
       id->init_cookies();
     }
-    return id->cookies[cookie];
+    // Note: Access the real_cookies directly to avoid registering callbacks.
+    return id->real_cookies[cookie];
   }
   string _sprintf(int c)
   {
