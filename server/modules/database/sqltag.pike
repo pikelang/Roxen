@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.104 2005/11/03 10:26:00 noring Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.105 2006/08/16 13:40:09 grubba Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -189,7 +189,7 @@ array|object do_sql_query(mapping args, RequestID id,
       RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
 		     ": "+ describe_error (error) +"\n");
       
-    if( catch
+    if( error = catch
     {
       string f=(big_query?"big_query":"query")+(ro?"_ro":"");
       result = bindings ?  
@@ -197,9 +197,8 @@ array|object do_sql_query(mapping args, RequestID id,
 	module["sql_"+f]( args->query );
     } )
     {
-      error = con->error();
-      if (error) error = ": " + error;
-      error = sprintf("Query failed%s\n", error||".");
+      error = sprintf("Query failed: %s\n",
+		      con->error() || describe_error(error));
       RXML.run_error(error);
     }
   }
@@ -218,10 +217,9 @@ array|object do_sql_query(mapping args, RequestID id,
 		     (error?": "+ describe_error (error) :"")+"\n");
 
     function query_fn = (big_query ? con->big_query : con->query); 
-    if( catch(result = (bindings ? query_fn(args->query, bindings) : query_fn(args->query))) ) {
-      error = con->error();
-      if (error) error = ": " + error;
-      error = sprintf("Query failed%s\n", error||".");
+    if( error = catch( result = (bindings ? query_fn(args->query, bindings) : query_fn(args->query))) ) {
+      error = sprintf("Query failed: %s\n",
+		      con->error() || describe_error(error));
       RXML.run_error(error);
     }
   }
