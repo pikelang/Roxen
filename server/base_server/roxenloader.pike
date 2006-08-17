@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.373 2006/08/16 15:25:56 grubba Exp $
+// $Id: roxenloader.pike,v 1.374 2006/08/17 14:47:43 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -33,7 +33,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.373 2006/08/16 15:25:56 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.374 2006/08/17 14:47:43 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1655,11 +1655,20 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
     res = Sql.Sql( replace( my_mysql_path,({"%user%", "%db%" }),
 			    ({ ro, db })) );
 #ifdef ENABLE_MYSQL_UNICODE_MODE
-    if (res && res->master_sql->set_charset) {
+    if (res) {
+      // NOTE: The following code only works on Mysql servers 4.1 and later.
       catch {
-	res->master_sql->set_charset("unicode");
+	if (res->master_sql->set_unicode_decode_mode) {
+	  res->master_sql->set_unicode_decode_mode(1);
 #ifdef DB_DEBUG
-	werror("set_charset(\"unicode\") succeeded.\n");
+	  werror("Unicode decode mode enabled.\n");
+#endif
+	}
+      };
+      catch {
+	res->query("set character_set_connection = utf8");
+#ifdef DB_DEBUG
+	werror("Connection character set set to utf8.\n");
 #endif
       };
     }
