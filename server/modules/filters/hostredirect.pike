@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.30 2005/12/21 09:45:44 jonasw Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.31 2006/08/17 12:25:17 wellhard Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -98,7 +98,8 @@ int|mapping first_try(RequestID id)
   string host, to;
   int path=0, stripped=0;
 
-  if(id->misc->host_redirected || !sizeof(patterns))
+  if(id->misc->host_redirected || !sizeof(patterns) ||
+     !has_prefix(lower_case(id->prot), "http"))
   {
     return 0;
   }
@@ -170,7 +171,6 @@ int|mapping first_try(RequestID id)
        to[5]==':' || to[6]==':')))
   {
      to=replace(to, ({ "\000", " " }), ({"%00", "%20" }));
-     NOCACHE();
      return Roxen.http_low_answer( 302,
 				   "See <a href='"+to+"'>"+to+"</a>")
        + ([ "extra_heads":([ "Location":to,  ]) ]);
