@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.110 2006/08/01 09:50:53 grubba Exp $
+ * $Id: ftp.pike,v 2.111 2006/08/17 15:11:44 wellhard Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -356,6 +356,14 @@ class FileWrapper
       BACKEND_CLOSE(f);
     }
   }
+
+  string query_address(int|void loc)
+  {
+    if (!f->query_address) {
+      werror("%O->query_address(%O)\n", f, loc);
+    }
+    return f->query_address(loc);
+  }
 }
 
 class ToAsciiWrapper
@@ -582,6 +590,9 @@ class PutFileWrapper
 
   string query_address(int|void loc)
   {
+    if (!from_fd->query_address) {
+      werror("%O->query_address(%O)\n", from_fd, loc);
+    }
     return from_fd->query_address(loc);
   }
 }
