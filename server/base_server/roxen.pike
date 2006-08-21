@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.895 2006/08/21 11:52:45 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.896 2006/08/21 15:42:30 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2505,6 +2505,15 @@ void restart_if_stuck (int force)
 }
 #endif
 
+#if constant(ROXEN_MYSQL_SUPPORTS_UNICODE)
+// NOTE: We need to mark binary data as binary in case
+//       the Mysql character_set_connection has been
+//       set to anything other than "latin1".
+#define MYSQL__BINARY	"_binary"
+#else
+#define MYSQL__BINARY	""
+#endif
+
 function(string:Sql.Sql) dbm_cached_get;
 
 class ImageCache
@@ -3083,7 +3092,7 @@ class ImageCache
 #endif
     QUERY("REPLACE INTO "+name+
 	  " (id,size,atime,meta,data)"
-	  " VALUES (%s,%d,UNIX_TIMESTAMP(),_binary%s,_binary%s)",
+	  " VALUES (%s,%d,UNIX_TIMESTAMP()," MYSQL__BINARY "%s," MYSQL__BINARY "%s)",
 	  id, strlen(data)+strlen(meta_data), meta_data, data );
 #ifdef ARG_CACHE_DEBUG
     array(mapping(string:string)) q =
@@ -3637,7 +3646,7 @@ class ArgCache
 
     QUERY( "INSERT INTO "+name+"2 "
 	   "(id, contents, ctime, atime) VALUES "
-	   "(%s, _binary%s, NOW(), NOW())", id, encoded_args );
+	   "(%s, " MYSQL__BINARY "%s, NOW(), NOW())", id, encoded_args );
 
     dwerror("ArgCache: Create new key %O\n", id);
 
@@ -3910,7 +3919,7 @@ class ArgCache
 
     string index_id_value = (index_id == -1? "NULL": index_id);
     QUERY( "INSERT INTO "+name+" (contents,md5,atime,index_id) VALUES "
-	   "(_binary%s,%s,UNIX_TIMESTAMP(),"+index_id_value+")",
+	   "(" MYSQL__BINARY "%s,%s,UNIX_TIMESTAMP(),"+index_id_value+")",
 	   long_key, md );
     int id = (int)db->master_sql->insert_id();
     if(!id)
