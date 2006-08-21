@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.503 2006/08/16 10:56:10 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.504 2006/08/21 11:20:54 wellhard Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -398,8 +398,6 @@ string scan_for_query( string f )
   }
   return f;
 }
-
-#define OLD_RXML_CONFIG
 
 #ifdef OLD_RXML_CONFIG
 private void really_set_config(array mod_config)

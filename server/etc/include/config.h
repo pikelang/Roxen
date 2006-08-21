@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.34 2003/04/22 14:28:22 grubba Exp $
+ * $Id: config.h,v 1.35 2006/08/21 11:20:54 wellhard Exp $
  *
  * User configurable things not accessible from the normal
  * administration interface. Not much, but there are some things..  
@@ -80,6 +80,9 @@
 /* Define this to keep support for old (pre-2.0) RXML.
  */
 #define OLD_RXML_COMPAT
+
+/* Define this to enable the RoxenConfig cooke */
+#define OLD_RXML_CONFIG
 
 // Define to get verbose backtraces in the debug log for each RXML
 // error. As opposed to the normal reports of RXML errors, they will
