@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.894 2006/03/15 15:58:58 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.895 2006/08/21 11:52:45 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -3082,8 +3082,27 @@ class ImageCache
     werror("Replacing entry for %O\n", id );
 #endif
     QUERY("REPLACE INTO "+name+
-	  " (id,size,atime,meta,data) VALUES (%s,%d,UNIX_TIMESTAMP(),%s,%s)",
+	  " (id,size,atime,meta,data)"
+	  " VALUES (%s,%d,UNIX_TIMESTAMP(),_binary%s,_binary%s)",
 	  id, strlen(data)+strlen(meta_data), meta_data, data );
+#ifdef ARG_CACHE_DEBUG
+    array(mapping(string:string)) q =
+      QUERY("SELECT meta, data FROM " + name +
+	    " WHERE id = %s", id);
+    if (!q || sizeof(q) != 1) {
+      werror("Unexpected result size: %d\n",
+	     q && sizeof(q));
+    } else {
+      if (q[0]->meta != meta_data) {
+	werror("Meta data differs: %O != %O\n",
+	       meta_data, q[0]->meta);
+      }
+      if (q[0]->data != data) {
+	werror("Data differs: %O != %O\n",
+	       data, q[0]->data);
+      }
+    }
+#endif
   }
 
   static mapping restore_meta( string id, RequestID rid )
@@ -3240,7 +3259,11 @@ class ImageCache
 	// Case 1: We have cache entry and image.
 	string f = q[0]->data;
 	mapping m;
-	catch( m = decode_value( q[0]->meta ) );
+	mixed err = catch( m = decode_value( q[0]->meta ) );
+	if (err) {
+	  werror("Decode_value failed.\n"
+		 "%s\n", describe_backtrace(err));
+	}
 	if( !m ) return 0;
 
 	m = Roxen.http_string_answer( f, m->type||("image/gif") );
@@ -3438,7 +3461,7 @@ class ImageCache
 
   static void setup_tables()
   {
-    if(catch(QUERY("SELECT DATA FROM "+name+" WHERE id=''")))
+    if(catch(QUERY("SELECT data FROM "+name+" WHERE id=''")))
     {
       werror("Creating image-cache tables for '"+name+"'\n");
       catch(QUERY("DROP TABLE "+name));
@@ -3614,7 +3637,7 @@ class ArgCache
 
     QUERY( "INSERT INTO "+name+"2 "
 	   "(id, contents, ctime, atime) VALUES "
-	   "(%s, %s, NOW(), NOW())", id, encoded_args );
+	   "(%s, _binary%s, NOW(), NOW())", id, encoded_args );
 
     dwerror("ArgCache: Create new key %O\n", id);
 
@@ -3887,7 +3910,8 @@ class ArgCache
 
     string index_id_value = (index_id == -1? "NULL": index_id);
     QUERY( "INSERT INTO "+name+" (contents,md5,atime,index_id) VALUES "
-	   "(%s,%s,UNIX_TIMESTAMP(),"+index_id_value+")", long_key, md );
+	   "(_binary%s,%s,UNIX_TIMESTAMP(),"+index_id_value+")",
+	   long_key, md );
     int id = (int)db->master_sql->insert_id();
     if(!id)
       error("ArgCache::create_key() insert_id returned 0.\n");
