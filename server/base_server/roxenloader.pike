@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.374 2006/08/17 14:47:43 grubba Exp $
+// $Id: roxenloader.pike,v 1.375 2006/08/21 15:41:09 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -33,7 +33,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.374 2006/08/17 14:47:43 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.375 2006/08/21 15:41:09 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1921,6 +1921,11 @@ void start_mysql()
     if( (float)version < 3.23 )
       report_debug( "Warning: This is a very old MySQL. "
 		    "Please use 3.23.* or later.\n");
+
+    if ((float)version > 4.0) {
+      // UTF8 and explicit character set markup was added in Mysql 4.1.x.
+      add_constant("ROXEN_MYSQL_SUPPORTS_UNICODE", 1);
+    }
 
     if( !do_tailf_threaded ) do_tailf(0, err_log );
     assure_that_base_tables_exists();
