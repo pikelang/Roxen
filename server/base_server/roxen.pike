@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.927 2006/06/01 11:25:40 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.928 2006/08/21 11:56:38 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -3288,7 +3288,8 @@ class ImageCache
     werror("Replacing entry for %O\n", id );
 #endif
     QUERY("REPLACE INTO "+name+
-	  " (id,size,atime,meta,data) VALUES (%s,%d,UNIX_TIMESTAMP(),%s,%s)",
+	  " (id,size,atime,meta,data) VALUES"
+	  " (%s,%d,UNIX_TIMESTAMP(),_binary%s,_binary%s)",
 	  id, strlen(data)+strlen(meta_data), meta_data, data );
   }
 
@@ -3646,7 +3647,7 @@ class ImageCache
 
   static void setup_tables()
   {
-    if(catch(QUERY("SELECT DATA FROM "+name+" WHERE id=''")))
+    if(catch(QUERY("SELECT data FROM "+name+" WHERE id=''")))
     {
       werror("Creating image-cache tables for '"+name+"'\n");
       catch(QUERY("DROP TABLE "+name));
@@ -3822,7 +3823,7 @@ class ArgCache
 
     QUERY( "INSERT INTO "+name+"2 "
 	   "(id, contents, ctime, atime) VALUES "
-	   "(%s, %s, NOW(), NOW())", id, encoded_args );
+	   "(%s, _binary%s, NOW(), NOW())", id, encoded_args );
 
     dwerror("ArgCache: Create new key %O\n", id);
 
@@ -4095,7 +4096,8 @@ class ArgCache
 
     string index_id_value = (index_id == -1? "NULL": index_id);
     QUERY( "INSERT INTO "+name+" (contents,md5,atime,index_id) VALUES "
-	   "(%s,%s,UNIX_TIMESTAMP(),"+index_id_value+")", long_key, md );
+	   "(_binary%s,%s,UNIX_TIMESTAMP(),"+index_id_value+")",
+	   long_key, md );
     int id = (int)db->master_sql->insert_id();
     if(!id)
       error("ArgCache::create_key() insert_id returned 0.\n");
