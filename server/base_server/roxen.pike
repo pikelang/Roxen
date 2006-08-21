@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.928 2006/08/21 11:56:38 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.929 2006/08/21 12:00:26 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -3291,6 +3291,24 @@ class ImageCache
 	  " (id,size,atime,meta,data) VALUES"
 	  " (%s,%d,UNIX_TIMESTAMP(),_binary%s,_binary%s)",
 	  id, strlen(data)+strlen(meta_data), meta_data, data );
+#ifdef ARG_CACHE_DEBUG
+    array(mapping(string:string)) q =
+      QUERY("SELECT meta, data FROM " + name +
+	    " WHERE id = %s", id);
+    if (!q || sizeof(q) != 1) {
+      werror("Unexpected result size: %d\n",
+	     q && sizeof(q));
+    } else {
+      if (q[0]->meta != meta_data) {
+	werror("Meta data differs: %O != %O\n",
+	       meta_data, q[0]->meta);
+      }
+      if (q[0]->data != data) {
+	werror("Data differs: %O != %O\n",
+	       data, q[0]->data);
+      }
+    }
+#endif
   }
 
   static mapping restore_meta( string id, RequestID rid )
