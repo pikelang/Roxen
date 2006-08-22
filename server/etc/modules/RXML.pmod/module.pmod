@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.348 2006/05/08 16:16:11 mast Exp $
+// $Id: module.pmod,v 1.349 2006/08/22 12:21:35 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -464,7 +464,7 @@ class Tag
       frame->raw_tag_text = parser->current_input();
     mixed result;
     EVAL_FRAME (frame, ctx, parser, type, result);
-    if (result != nil) parser->add_value (result);
+    if (result != nil && result != empty) parser->add_value (result);
     return ({});
   }
 
@@ -489,7 +489,7 @@ class Tag
       frame->raw_tag_text = parser->current_input();
     mixed result;
     EVAL_FRAME (frame, ctx, parser, type, result);
-    if (result != nil) parser->add_value (result);
+    if (result != nil && result != empty) parser->add_value (result);
     return ({});
   }
 

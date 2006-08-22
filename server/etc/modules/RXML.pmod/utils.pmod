@@ -7,7 +7,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.32 2004/05/21 13:33:39 grubba Exp $
+//! $Id: utils.pmod,v 1.33 2006/08/22 12:21:35 mast Exp $
 
 constant is_RXML_encodable = 1;
 
@@ -196,7 +196,7 @@ final int(1..1)|string|array p_xml_entity_cb (object/*(RXML.PXml)*/ p, string st
 	  // safeguard against splicing in things like "nice><evil
 	  // stuff='...'"?
 	  p->html_context() == "splice_arg" ? RXML.t_any_text : type);
-	if (value != RXML.nil) p->add_value (value);
+	if (value != RXML.nil && value != RXML.empty) p->add_value (value);
 	return ({});
       }
     }
@@ -217,7 +217,7 @@ final int(1..1)|string|array p_xml_compat_entity_cb (object/*(RMXL.PXml)*/ p, st
 	// safeguard against splicing in things like "nice><evil
 	// stuff='...'"?
 	p->html_context() == "splice_arg" ? RXML.t_any_text : type);
-      if (value != RXML.nil) p->add_value (value);
+      if (value != RXML.nil && value != RXML.empty) p->add_value (value);
       return ({});
     }
   return ({str});
