@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.364 2006/08/21 15:42:12 grubba Exp $
+// $Id: roxenloader.pike,v 1.365 2006/08/23 10:49:20 anders Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.364 2006/08/21 15:42:12 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.365 2006/08/23 10:49:20 anders Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1535,7 +1535,7 @@ mixed connect_to_my_mysql( string|int ro, void|string db )
     key = sq_cache_lock();
     // Fool the optimizer so that key is not released prematurely
     if( res )
-      sq_cache_set(i, res);
+      return sq_cache_set(i, res);
   }
   return 0;
 }
@@ -1913,7 +1913,7 @@ void start_mysql()
       werror ("Error connecting to local MySQL: %s", describe_error (err));
 #endif
     }
-    else
+    else if (db)
     {
       connected_ok(0);
       return;
