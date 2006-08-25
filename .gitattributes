@@ -246,6 +246,7 @@ worldmap binary
 /server/modules/filesystems/tarfs.pike foreign_ident
 /server/modules/filesystems/userfs.pike foreign_ident
 /server/modules/filters/auto_gzip.pike foreign_ident
+/server/modules/filters/expires.pike foreign_ident
 /server/modules/filters/hostredirect.pike foreign_ident
 /server/modules/filters/redirect.pike foreign_ident
 /server/modules/filters/supports_filter.pike foreign_ident
