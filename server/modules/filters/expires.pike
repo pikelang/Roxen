@@ -1,19 +1,13 @@
-constant cvs_version = "$Id: expires.pike,v 1.1 2006/08/25 09:26:44 wellhard Exp $";
+constant cvs_version = "$Id: expires.pike,v 1.2 2006/08/25 15:14:44 wellhard Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
 inherit "module";
 
-//<locale-token project="sitebuilder">LOCALE</locale-token>
-//<locale-token project="sitebuilder">DLOCALE</locale-token>
-#define LOCALE(X,Y)	_STR_LOCALE("sitebuilder",X,Y)
-#define DLOCALE(X,Y)    _DEF_LOCALE("sitebuilder",X,Y)
-
 constant module_type = MODULE_FILTER;
-LocaleString module_name = DLOCALE(0,"Expires modifier");
-LocaleString module_doc  = DLOCALE(0,
-				   "Adds expires header of configurable time "
-				   "to selected files.");
+constant module_name = "Expires modifier";
+constant module_doc  = "Adds expires header of configurable time "
+			   "to selected files.";
 
 array(string) globs;
 int expire_time;
@@ -61,6 +55,8 @@ mapping|void filter(mapping res, RequestID id)
       m_delete(res->extra_heads, "expires");
       m_delete(res->extra_heads, "Expires");
       RAISE_CACHE(expire_time);
+
+      id->misc->vary = (<>);
 
 #ifdef DEBUG_CACHEABLE
       report_debug("Rewrote extra_heads: %O\n", res->extra_heads);
