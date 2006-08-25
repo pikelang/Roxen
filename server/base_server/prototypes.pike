@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.177 2006/08/16 10:00:28 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.178 2006/08/25 14:43:20 jonasw Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1976,7 +1976,7 @@ class RequestID
     }
 #endif /* RAM_CACHE */
 
-    if (misc->vary) {
+    if (misc->vary && sizeof(misc->vary)) {
       // Generate a vary header.
       VARY_WERROR("Full set: %s\n", ((array)misc->vary) * ", ");
       if (!supports->vary) {
