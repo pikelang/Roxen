@@ -2018,7 +2018,7 @@ det värde som din dators slumptalsfunktion har räknat fram åt dig.</t>
 
 <str id="168">
 <o>Hide</o>
-<t>Gömm</t>
+<t>Göm</t>
 </str>
 
 <str id="169">
@@ -3292,13 +3292,11 @@ The file is searched for in parent directories in the same manner as the no such
 </str>
 
 <str id="421">
-<new/>
 <o>List Type</o>
-<t></t>
+<t>Listtyp</t>
 </str>
 
 <str id="531">
-<new/>
 <o>Really Compact</o>
-<t></t>
+<t>Extra kompakt</t>
 </str>
