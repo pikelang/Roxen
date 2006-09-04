@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.366 2006/09/04 16:09:27 grubba Exp $
+// $Id: roxenloader.pike,v 1.367 2006/09/04 16:15:24 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.366 2006/09/04 16:09:27 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.367 2006/09/04 16:15:24 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1567,6 +1567,7 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
 #endif
       };
     }
+#endif
 #ifdef DB_DEBUG
     werror("Connect took %.2fms\n", (gethrtime()-t)/1000.0 );
 #endif
