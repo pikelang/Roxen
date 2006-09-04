@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.54 2005/04/04 14:00:22 distmaker Exp $
+# $Id: extensions,v 1.55 2006/09/04 16:06:29 grubba Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -683,6 +683,8 @@ psr	application/datawindow
 ptlk	application/listenup
 qrt	application/quest
 quake	application/x-qplug-plugin
+qxd	application/quarkxpress
+qxp	application/quarkxpress
 rm	application/vnd.rn-realmedia
 rnx	application/vnd.rn-realplayer
 roff	application/x-troff
