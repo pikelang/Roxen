@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.64 2006/02/28 11:03:53 wellhard Exp $
+// $Id: DBManager.pmod,v 1.65 2006/09/04 15:30:40 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -38,12 +38,10 @@ private
   {
 #if DBMANAGER_DEBUG
     werror("DBManager: clear_sql_caches():\n"
-	   "  dead_sql_cache: %O\n"
-	   "  sql_cache: %O\n"
-	   "  connection_cache: %O\n",
-	   dead_sql_cache,
-	   sql_cache,
-	   connection_cache);
+	   "  sql_url_cache: %O\n"
+	   "  connection_user_cache: %O\n",
+	   sql_url_cache,
+	   connection_user_cache);
 #endif /* DMBMANAGER_DEBUG */
     /* Rotate the sql_caches.
      *
