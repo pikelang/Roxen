@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.365 2006/08/23 10:49:20 anders Exp $
+// $Id: roxenloader.pike,v 1.366 2006/09/04 16:09:27 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -30,7 +30,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.365 2006/08/23 10:49:20 anders Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.366 2006/09/04 16:09:27 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1557,6 +1557,16 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
     int t = gethrtime();
     res = Sql.Sql( replace( my_mysql_path,({"%user%", "%db%" }),
 			    ({ ro, db })) );
+#ifdef ENABLE_MYSQL_UNICODE_MODE
+    if (res && res->master_sql->set_unicode_decode_mode) {
+      // NOTE: The following code only works on Mysql servers 4.1 and later.
+      catch {
+        res->master_sql->set_unicode_decode_mode(1);
+#ifdef DB_DEBUG
+        werror("Unicode decode mode enabled.\n");
+#endif
+      };
+    }
 #ifdef DB_DEBUG
     werror("Connect took %.2fms\n", (gethrtime()-t)/1000.0 );
 #endif
