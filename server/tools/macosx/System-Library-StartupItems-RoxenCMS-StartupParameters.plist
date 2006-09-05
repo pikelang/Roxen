@@ -1,0 +1,6 @@
+{
+Description = "Roxen CMS";
+Provides = ("RoxenCMS");
+Requires = ("Resolver");
+OrderPreference = "None";
+}

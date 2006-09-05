@@ -1,0 +1,13 @@
+#!/bin/sh
+
+. /etc/rc.common
+
+##
+# Start up Roxen CMS
+##
+
+if [ "${ROXENCMS:=-NO-}" = "-YES-" ]
+then
+  ConsoleMessage "Starting Roxen CMS"
+  /usr/local/roxen/start
+fi
