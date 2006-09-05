@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.930 2006/08/21 15:41:48 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.931 2006/09/05 12:30:33 stewa Exp $";
 
 //! @appears roxen
 //!
@@ -5509,11 +5509,18 @@ constant formats =
 ({
   ({ "ip_number",   "%s",   "(string)request_id->remoteaddr",0 }),
   ({ "bin-ip_number","%s",  "host_ip_to_int(request_id->remoteaddr)",0 }),
+  ({ "date",   "%s",   "Roxen.log_date( time( 1 ) )",0 }),
+  ({ "time",   "%s",   "Roxen.log_time( time( 1 ) )",0 }),
   ({ "cern_date",   "%s",   "Roxen.cern_http_date( time( 1 ) )",0 }),
   ({ "bin-date",    "%4c",  "time(1)",0 }),
   ({ "method",      "%s",   "(string)request_id->method",0 }),
-  ({ "resource",    "%s",   "(string)(request_id->raw_url||request_id->not_query)", 0 }),
-  ({ "full_resource","%s",  "(string)(request_id->raw_url||request_id->not_query)",0 }),
+  ({ "real_resource",    "%s",   "(string)(request_id->raw_url||request_id->not_query)", 0 }),
+  ({ "resource",    "%s",   "(string)(request_id->raw_url||(request_id->misc->common&&request_id->misc->common->orig_url)||request_id->not_query)", 0 }),
+  ({ "real_full_resource","%s",  "(string)(request_id->raw_url||request_id->not_query)",0 }),
+  ({ "full_resource","%s",  "(string)(request_id->raw_url||(request_id->misc->common&&request_id->misc->common->orig_url)||request_id->not_query)",0 }),
+  ({ "real_cs-uri-stem","%s",  "(string)(request_id->not_query||(request_id->raw_url && (request_id->raw_url/\"?\")[0])||\"-\" )",0 }),
+  ({ "cs-uri-stem","%s",  "(string)((request_id->misc->common&&request_id->misc->common->orig_url)||request_id->not_query||(request_id->raw_url && (request_id->raw_url/\"?\")[0])||\"-\" )",0 }),
+  ({ "cs-uri-query","%s",  "(string)(request_id->query||\"-\")",0 }),
   ({ "protocol",    "%s",   "(string)request_id->prot",0 }),
   ({ "response",    "%d",   "(int)(file->error || 200)",0 }),
   ({ "bin-response","%2c",  "(int)(file->error || 200)",0 }),

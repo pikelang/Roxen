@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.215 2006/08/16 10:01:20 grubba Exp $
+// $Id: Roxen.pmod,v 1.216 2006/09/05 12:30:33 stewa Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -506,6 +506,20 @@ static constant days = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" });
 
 static int chd_lt;
 static string chd_lf;
+
+string log_date(int t) {
+  string c;
+  mapping(string:int) lt = localtime(t);
+  return(sprintf("%04d-%02d-%02d",
+		 1900+lt->year,lt->mon+1, lt->mday));
+}
+ 
+string log_time(int t) {
+  string c;
+  mapping(string:int) lt = localtime(t);
+  return(sprintf("%02d:%02d:%02d",
+		 lt->hour, lt->min, lt->sec));
+}
 
 string cern_http_date(int t)
 //! Return a date, formated to be used in the common log format
