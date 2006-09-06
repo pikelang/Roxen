@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.472 2006/03/22 14:56:33 wellhard Exp $";
+constant cvs_version = "$Id: http.pike,v 1.473 2006/09/06 11:39:42 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -348,6 +348,15 @@ string scan_for_query( string f )
   {
     string v, a, b;
 
+    if (search("&" + query, "&roxen_magic_per_u=%25") != -1) {
+      // Broken Safari detected
+      //   (http://bugzilla.opendarwin.org/show_bug.cgi?id=6452)
+      // Assume that %u and %U won't occur naturally.
+      REQUEST_WERR(sprintf("Broken http encoding detected. query=%O\n",
+                           query));
+      query = replace(query, ({ "%25u", "%25U" }), ({ "%u", "%U" }));
+      REQUEST_WERR(sprintf("Repaired query=%O\n", query));
+    }
     foreach(query / "&", v)
       if(sscanf(v, "%s=%s", a, b) == 2)
       {
