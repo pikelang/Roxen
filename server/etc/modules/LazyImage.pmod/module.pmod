@@ -914,7 +914,7 @@ class Text
 
       mapping text_info;
       if(f->write_with_info)
-	text_info = f->write_with_info(@(parse_variables(args->text,0,l)/"\n"));
+	text_info = f->write_with_info(parse_variables(args->text,0,l)/"\n");
       else
 	text_info = ([ "img" : f->write(@(parse_variables(args->text,0,l)/"\n")) ]);
       Image.Image text = text_info->img;
