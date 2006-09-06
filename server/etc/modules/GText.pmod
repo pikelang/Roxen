@@ -253,6 +253,7 @@ array(Image.Image) make_text_image(
       werror("Failed to load image for "+args->texture+"\n");
   }
   int background_is_color;
+  Image.Image alpha;
   mapping(string:string|Image.Image) bg_info;
   if(args->background &&
      (((bg_info = roxen.low_load_image(args->background, id)) &&
@@ -263,7 +264,6 @@ array(Image.Image) make_text_image(
        && (background_is_color=1))))
   {
     extend_alpha = 1;
-    Image.Image alpha;
     if(args->alpha && (alpha = roxen.load_image(args->alpha,id)) && background_is_color)
     {
       xsize=max(xsize,alpha->xsize());
@@ -357,10 +357,15 @@ array(Image.Image) make_text_image(
   if( xs != background->xsize() ||
       ys != background->ysize() )
   {
-    if(!args->rescale)
+    if(!args->rescale) {
       background = background->copy(0,0,xs-1,ys-1);
-    else
+      if(alpha)
+       alpha = alpha->copy(0,0,xs-1,ys-1);
+    } else {
       background = background->scale(xs, ys);
+      if(alpha)
+	alpha = alpha->scale(xs, ys);
+    }
   }
 
   if(args->bgturbulence)
@@ -500,11 +505,12 @@ array(Image.Image) make_text_image(
 				 background->xsize() - xoffset - 1,
 				 background->ysize() - yoffset - 1);
 
-  if (extend_alpha) {
+  if (extend_alpha && !args["no-auto-alpha"]) {
     Image.Image ext = background->distancesq( @bgcolor );
     ext->gamma( 8 );
     text_alpha |= ext;
-  }
+  } else if(args["no-auto-alpha"] && alpha)
+    text_alpha |= alpha;
 
   if(args->rotate)
   {

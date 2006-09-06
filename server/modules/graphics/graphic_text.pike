@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.300 2006/09/06 11:30:47 stewa Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.301 2006/09/06 14:18:31 stewa Exp $";
 
 #include <module.h>
 inherit "module";
@@ -818,6 +818,7 @@ private constant textarg = ({
   "mirrortile",
   "move",
   "narrow",
+  "no-auto-alpha",
   "notrans",
   "opaque",
   "outline",
