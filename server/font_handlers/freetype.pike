@@ -99,7 +99,7 @@ class FTFont
   }
 
   static int line_height;
-  static mapping low_write_row(int do_overshoot, string text )
+  static mapping low_write_row(int do_overshoot, string text, void|int _oversampling )
   {
     Image.Image res;
     int xp, ys;
@@ -181,7 +181,11 @@ class FTFont
                               overshoot + ys+c->descender-c->y );
       xp += (int)(c->advance*x_spacing) + kerning[i+1]+(fake_bold>0?1:0);
     }  
-    return ([ "overshoot":overshoot, "img":res]);
+    return ([ "overshoot":overshoot, 
+	      "ascender":chars[0]->ascender,
+	      "descender":chars[0]->descender,
+	      "height":chars[0]->height,
+	      "img":res ]);
   }
   static Image.Image write_row( string text ) {
     return (Image.Image)((low_write_row(0, text))->img);
@@ -189,17 +193,19 @@ class FTFont
 
   int fake_bold, fake_italic;
   Image.Image write( string ... what ) {
-    return ((low_write_with_info(0, @what))->img);
+    return ((low_write_with_info(what, 0))->img);
   }
 
-  mapping write_with_info( string ... what ) {
-    return low_write_with_info(1, @what);
+  mapping write_with_info( string|array what, void|int oversampling ) {
+    return low_write_with_info(what, 1, oversampling);
   }
 
-  mapping low_write_with_info( int do_overshoot, string ... what )
+  mapping low_write_with_info(array|string what, void|int do_overshoot, void|int _oversampling )
   {
     object key = lock->lock();
-    int oversampling = roxen->query("font_oversampling") ? 2 : 1;
+    if(stringp(what))
+      what = ({ what });
+    int oversampling = _oversampling || (roxen->query("font_oversampling") ? 2 : 1);
     if( oversampling != 1 )
       face->set_size( 0, size * oversampling );
     else
@@ -215,7 +221,7 @@ class FTFont
                                return encoder->clear()->feed(s)->drain();
                              });
     
-    array(mapping) res_with_info = map( what, lambda(string s) { return low_write_row(do_overshoot, s); });
+    array(mapping) res_with_info = map( what, lambda(string s) { return low_write_row(do_overshoot, s, _oversampling); });
     array(Image.Image) res = res_with_info->img;
 
     Image.Image rr = Image.Image( max(0,@res->xsize()),
@@ -259,6 +265,9 @@ class FTFont
       rr = rr->scale(1.0 / oversampling);
     return ([ "oversampling" : oversampling,
 	      "overshoot" : overshoot / oversampling,
+	      "ascender": res_with_info[0]->ascender / oversampling,
+	      "descender": res_with_info[0]->descender / oversampling,
+	      "height": res_with_info[0]->height / oversampling,
 	      "img" : rr, 
     ]);
   }

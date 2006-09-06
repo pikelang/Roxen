@@ -147,7 +147,7 @@ array(Image.Image) make_text_image(
     text = roxen.decode_charset(args->encoding,text);
   mapping text_info;
   if(font->write_with_info)
-    text_info = font->write_with_info(@(text/"\n"));
+    text_info = font->write_with_info(text/"\n", (int)args->oversampling);
   else
     text_info = ([ "img" : font->write(@(text/"\n")) ]);
   Image.Image text_alpha= text_info->img;
@@ -318,6 +318,9 @@ array(Image.Image) make_text_image(
     }
   }
 
+  if(!zero_type(args["baselineoffset"]) && text_info->ascender)
+    yoffset += (-text_info->ascender + (int)args["baselineoffset"]);
+  
   if(args->border)
   {
     extend_alpha = 1;

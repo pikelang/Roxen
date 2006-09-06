@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.299 2006/05/03 16:37:06 anders Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.300 2006/09/06 11:30:47 stewa Exp $";
 
 #include <module.h>
 inherit "module";
@@ -798,6 +798,7 @@ private constant filearg = ({
 private constant textarg = ({
   "afont",
   "alpha",
+  "baselineoffset",
   "bevel",
   "bgcolor",
   "bgturbulence",
@@ -820,6 +821,7 @@ private constant textarg = ({
   "notrans",
   "opaque",
   "outline",
+  "oversampling",
   "pressed",
   "rescale",
   "rotate",
