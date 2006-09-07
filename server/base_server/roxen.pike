@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.896 2006/08/21 15:42:30 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.897 2006/09/07 07:26:58 noring Exp $";
 
 //! @appears roxen
 //!
@@ -5254,6 +5254,41 @@ static string _sprintf( )
 
 class LogFormat
 {
+  static int rusage_time;
+  static array(int) rusage_data;
+  static void update_rusage()
+  {
+    if(!rusage_data || time(1) != rusage_time)
+    {
+      rusage_data = rusage();
+      rusage_time = time(1);
+    }
+  }
+
+  static int server_cputime()
+  {
+    update_rusage();
+    if(rusage_data && sizeof(rusage_data) >= 2)
+      return rusage_data[0] + rusage_data[1];
+    return 0;
+  }
+
+  static int server_usertime()
+  {
+    update_rusage();
+    if(rusage_data && sizeof(rusage_data) >= 1)
+      return rusage_data[0];
+    return 0;
+  }
+
+  static int server_systime()
+  {
+    update_rusage();
+    if(rusage_data && sizeof(rusage_data) >= 2)
+      return rusage_data[1];
+    return 0;
+  }
+  
   static string host_ip_to_int(string s)
   {
     int a, b, c, d;
@@ -5313,6 +5348,14 @@ constant formats =
   ({ "cache-status","%s",   ("sizeof(request_id->cache_status||({}))?"
 			     "indices(request_id->cache_status)*\",\":"
 			     "\"nocache\""), 0 }),
+  ({ "eval-status","%s",   ("sizeof(request_id->eval_status||({}))?"
+			    "indices(request_id->eval_status)*\",\":"
+			    "\"-\""), 0 }),
+  ({ "content-type", "%s", "(file->type||\"-\")", 0 }),
+  ({ "server-uptime", "%d", "max(1, time(1) - roxen->start_time)", 0 }),
+  ({ "server-cputime", "%d", "server_cputime()", 0 }),
+  ({ "server-usertime", "%d", "server_usertime()", 0 }),
+  ({ "server-systime", "%d", "server_systime()", 0 }),
 });
 
 void run_log_format( string fmt, function c, RequestID id, mapping file )

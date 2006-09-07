@@ -1,3 +1,4 @@
+
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
 //
@@ -5,7 +6,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.591 2006/02/23 12:26:27 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.592 2006/09/07 07:26:56 noring Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3996,6 +3997,18 @@ $cache-status   -- A comma separated list of words (containing no
                    pcodedisk -- RXML parse tree persistent cache.
                    cachetag  -- No RXML &lt;cache&gt; tag misses.
                    nocache   -- No hit in any known cache.
+$eval-status    -- A comma separated list of words (containing no
+                   whitespace) that describes how the page has been
+                   evaluated:
+                   xslt -- The XSLT parser.
+                   rxml -- The RXML parser.
+$content-type   -- Resource mime type.
+$protcache-cost -- The lookup depth in the HTTP protocol module
+                   low-level cache.
+$server-uptime  -- Server uptime in seconds.
+$server-cputime -- Server cpu (user+system) time in milliseconds.
+$server-usertime -- Server cpu user time in milliseconds.
+$server-systime -- Server cpu system time in milliseconds.
 </pre>"), 0, lambda(){ return !query("Log");});
 
   // FIXME: Mention it is relative to getcwd(). Can not be localized in pike 7.0.
