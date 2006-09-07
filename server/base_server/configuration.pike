@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.613 2006/06/30 09:20:28 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.614 2006/09/07 07:26:59 noring Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4098,8 +4098,18 @@ $cache-status   -- A comma separated list of words (containing no
                    cachetag  -- No RXML &lt;cache&gt; tag misses.
                    nocache   -- No hit in any known cache, and not
                                 added to the HTTP protocol cache.
+$eval-status    -- A comma separated list of words (containing no
+                   whitespace) that describes how the page has been
+                   evaluated:
+                   xslt -- The XSLT parser.
+                   rxml -- The RXML parser.
+$content-type   -- Resource mime type.
 $protcache-cost -- The lookup depth in the HTTP protocol module
                    low-level cache.
+$server-uptime  -- Server uptime in seconds.
+$server-cputime -- Server cpu (user+system) time in milliseconds.
+$server-usertime -- Server cpu user time in milliseconds.
+$server-systime -- Server cpu system time in milliseconds.
 $cookies        -- All cookies sent by the browser.
 </pre>"), 0, lambda(){ return !query("Log");});
 

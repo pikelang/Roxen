@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.178 2006/08/25 14:43:20 jonasw Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.179 2006/09/07 07:26:59 noring Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1233,6 +1233,11 @@ class RequestID
   //! global variable for known values, but note that the multiset
   //! never actually contains the value @expr{"nocache"@}; it's only written
   //! when the multiset is empty.
+
+  multiset(string) eval_status = (<>);
+  //! Contains the content evaluators that were hit when the request
+  //! was served. See the docstring for @tt{$eval-status@} in the
+  //! @tt{LogFormat@} global variable for known values.
 
   object root_id;
   //! @decl RequestID root_id;
