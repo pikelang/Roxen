@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.897 2006/09/07 07:26:58 noring Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.898 2006/09/08 07:13:54 noring Exp $";
 
 //! @appears roxen
 //!
@@ -5974,10 +5974,54 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 
 static string cached_hostname = gethostname();
 
-class LogFile(string fname)
+class LogFile(string fname, string|void compressor_program)
 {
   Stdio.File fd;
   int opened;
+
+  // FIXME: compress_logs is limited to scanning files with filename
+  // substitutions within a fixed directory (e.g.
+  // "$LOGDIR/test/Log.%y-%m-%d", not "$LOGDIR/test/%y/Log.%m-%d").
+  Process.Process compressor_process;
+  int last_compressor_scan_time;
+  static void compress_logs(string fname, string active_log)
+  {
+    if(!compressor_program || !sizeof(compressor_program))
+      // No compressor program specified...
+      return;
+    if(compressor_process && !compressor_process->status())
+      // The compressor is already running...
+      return;
+    if(time(1) - last_compressor_scan_time < 300)
+      // Scan for compressable files at most once every 5 minutes...
+      return;
+    last_compressor_scan_time = time(1);
+    fname = roxen_path(fname);
+    active_log = roxen_path(active_log);
+    string dir = dirname(fname);
+    foreach(sort(get_dir(dir) || ({})), string filename_candidate)
+    {
+      if(filename_candidate == basename(active_log))
+       // Don't try to compress the active log just yet...
+       continue;
+      if(Regexp("^"+replace(basename(fname),
+                           ({ "%y", "%m", "%d", "%h", "%H" }),
+                           ({ "[0-9][0-9][0-9][0-9]", "[0-9][0-9]",
+                              "[0-9][0-9]", "[0-9][0-9]", "(.+)" }))+"$")->
+        match(filename_candidate))
+      {
+       string compress_file = combine_path(dir, filename_candidate);
+       Stdio.Stat stat = file_stat(compress_file);
+       if(!stat || time(1) < stat->mtime + 300)
+         // Wait at least 5 minutes before compressing log file...
+         continue;
+       werror("Compressing log file %O\n", compress_file);
+       compressor_process = Process.create_process(({ compressor_program,
+                                                      compress_file }));
+       return;
+      }
+    }
+  }
 
   void do_open()
   {
@@ -6003,6 +6047,7 @@ class LogFile(string fname)
 			 (string)(m->year),(string)m->hour,
 			 cached_hostname,
 		      }));
+    compress_logs(fname, ff);
     mkdirhier( ff );
     fd = open( ff, "wac" );
     if(!fd) 

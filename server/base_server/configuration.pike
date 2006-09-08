@@ -6,7 +6,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.592 2006/09/07 07:26:56 noring Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.593 2006/09/08 07:13:53 noring Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -827,7 +827,7 @@ void init_log_file()
   {
     string logfile = query("LogFile");
     if(strlen(logfile))
-      log_function = roxen.LogFile( logfile )->write;
+      log_function = roxen.LogFile(logfile, query("LogFileCompressor"))->write;
   }
 }
 
@@ -4025,7 +4025,21 @@ $server-systime -- Server cpu system time in milliseconds.
 	 "%H    Hostname\n"
 	 "</pre>")
 	 ,0, lambda(){ return !query("Log");});
-
+  
+  defvar("LogFileCompressor", "",
+	 DLOCALE(0, "Logging: Compress log file"), TYPE_STRING,
+	 DLOCALE(0, "Path to a program to compress log files, "
+		 "e.g. <tt>/usr/bin/bzip2</tt> or <tt>/usr/bin/gzip</tt>. "
+		 "<b>Note&nbsp;1:</b> The active log file is never compressed. "
+		 "Log rotation needs to be used using the \"Log file\" "
+		 "filename substitutions "
+		 "(e.g. <tt>$LOGDIR/mysite/Log.%y-%m-%d</tt>). "
+		 "<b>Note&nbsp;2:</b> Compression is limited to scanning files "
+		 "with filename substitutions within a fixed directory (e.g. "
+		 "<tt>$LOGDIR/mysite/Log.%y-%m-%d</tt>, "
+		 "not <tt>$LOGDIR/mysite/%y/Log.%m-%d</tt>)."),
+	 0, lambda(){ return !query("Log");});
+  
   defvar("NoLog", ({ }),
 	 DLOCALE(32, "Logging: No Logging for"), TYPE_STRING_LIST|VAR_MORE,
          DLOCALE(33, "Don't log requests from hosts with an IP number which "
