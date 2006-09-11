@@ -1,5 +1,5 @@
 /*
- * $Id: debug_summary.pike,v 1.12 2006/05/11 13:30:40 mast Exp $
+ * $Id: debug_summary.pike,v 1.13 2006/09/11 14:30:38 wellhard Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -164,7 +164,7 @@ string make_summary()
 mixed parse( RequestID id )
 {
   string res;
-  string debuglog = roxen_path("$LOGDIR/debug/default.1");
+  string debuglog = roxen_path("$LOGFILE");
 
   if (id->variables->download &&
       id->variables->download == "summary") {

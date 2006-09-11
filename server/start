@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.225 2006/07/17 15:30:39 grubba Exp $
+# $Id: start,v 1.226 2006/09/11 14:30:37 wellhard Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -919,6 +919,9 @@ if [ -z "$once" ] ; then
   else
     DEBUGDIR="`dirname "$DEBUGLOG"`"
   fi
+  LOGFILE="${DEBUGLOG}.1"
+  export LOGFILE
+
   # This duplicate of the logdir creation code is needed, check the 
   # redirect below
   if [ ! -d "$DEBUGDIR" ] ; then

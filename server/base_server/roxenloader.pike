@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.377 2006/08/23 10:50:30 anders Exp $
+// $Id: roxenloader.pike,v 1.378 2006/09/11 14:30:37 wellhard Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -33,7 +33,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.377 2006/08/23 10:50:30 anders Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.378 2006/09/11 14:30:37 wellhard Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1020,6 +1020,10 @@ string roxen_version()
 //!     The log directory of the webserver. Normally "../logs",
 //!     but it can be changed in the configuration interface under
 //!     global settings.
+//!   @value "$LOGFILE"
+//!     The debuglog of the webserver. Normally
+//!     "../logs/debug/default.1", but it can be the name of the
+//!     configuration directory if multiple instances are used.
 //!   @value "$VARDIR"
 //!     The webservers var directory. Normally "../var", but it can
 //!     be changed by setting the environment variable VARDIR.
@@ -1029,9 +1033,10 @@ string roxen_version()
 //! @endstring
 string roxen_path( string filename )
 {
-  filename = replace( filename, ({"$VVARDIR","$LOCALDIR"}),
+  filename = replace( filename, ({"$VVARDIR","$LOCALDIR","$LOGFILE"}),
                       ({"$VARDIR/"+roxen_version(),
-                        getenv ("LOCALDIR") || "../local"}) );
+                        getenv ("LOCALDIR") || "../local",
+			getenv ("LOGFILE") || "$LOGDIR/debug/default.1" }) );
   if( roxen )
     filename = replace( filename, 
                         "$LOGDIR", 
