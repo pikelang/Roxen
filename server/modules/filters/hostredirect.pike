@@ -7,11 +7,17 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.31 2006/08/17 12:25:17 wellhard Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.32 2006/09/12 14:10:16 wellhard Exp $";
 constant thread_safe=1;
 
 inherit "module";
 #include <module.h>
+
+#ifdef HOSTREDIRECT_DEBUG
+#define dwerror(ARGS...) werror(ARGS)
+#else
+#define dwerror(ARGS...) 0
+#endif
 
 void create()
 {
@@ -45,6 +51,19 @@ void create()
          ".</strong> in fact if <tt>%p</tt> is included it will "
          "just stay and probably not produce the expected result."
        );
+  
+  defvar("ignorepaths",
+	 Variable.StringList( ({ "/_internal/", "/__internal/", "/internal-roxen-",
+				 "/roxen-files/", "/edit", "/__frame/"
+			      }), 0, "Ignore paths",
+			      "A list of path prefexes that sould not be redirected. "
+			      "Useful for making global images work in sub sites." ));
+  defvar("ignorevariables",
+	 Variable.StringList( ({ "__force_path" }), 0, "Ignore form variables",
+			      "A list of form variables. If one of the form variables "
+			      "is set, the request will not be redirected."
+			      "Useful for making login redirects to / work in sub "
+			      "sites." ));
 }
 
 mapping patterns = ([ ]);
@@ -86,11 +105,27 @@ string get_host(string ignored, RequestID id)
 
   host = (host / ":")[0];  // Remove port number
   host = (host / "\0")[0]; // Spoof protection.
-  if(!patterns[host])
-  {
-    host = "default";
-  }
+  dwerror("HR: get_host: %O\n", host);
   return host;
+}
+
+string get_protocol(string ignored, RequestID id)
+{
+  string prot = lower_case((id->prot/"/")[0]);
+  // Check if the request is done via https.
+  if(id->my_fd && id->my_fd && id->my_fd->SSLConnection)
+    prot = "https";
+  dwerror("HR: get_protocol: %O\n", prot);
+  return prot;
+}
+
+string get_port(string ignored, RequestID id)
+{
+  string port = id->my_fd && id->my_fd->query_address &&
+		(id->my_fd->query_address(1) / " ")[1];
+  
+  dwerror("HR: host_port: %O\n", port);
+  return port;
 }
 
 int|mapping first_try(RequestID id)
@@ -104,12 +139,27 @@ int|mapping first_try(RequestID id)
     return 0;
   }
 
-  id->misc->host_redirected = 1;
+  dwerror("HR: %O\n", id->not_query);
+  foreach(query("ignorepaths"), string path) {
+    dwerror("  IP: %O, %O, [%O]\n", id->not_query, path,
+	    has_prefix(id->not_query, path));
+    if(has_prefix(id->not_query, path))
+      return 0;
+  }
+  
+  foreach(query("ignorevariables"), string var) {
+    dwerror("  IP: %O, %O, [%O]\n", id->not_query, var, id->variables[var]);
+    if(id->variables[var])
+      return 0;
+  }
 
   // We look at the host header...
   id->register_vary_callback("Host", get_host);
 
   if (!(host = get_host(0, id))) return 0;
+  
+  if(!patterns[host])
+    host = "default";
 
   to = patterns[host];
   if(!to) {
@@ -150,6 +200,7 @@ int|mapping first_try(RequestID id)
   url=url[..strlen(url)-2];
   to = replace(to, "%u", url);
 
+  string to_prefix = to - "%p";
 
   if((host != "default") && (search(to, "%p") != -1))
   {
@@ -161,20 +212,43 @@ int|mapping first_try(RequestID id)
     path = 1;
   }
 
-  if(search(id->not_query, to) == 0) {
-    // Already have the correct beginning...
-    return 0;
-  }
-
   if((strlen(to) > 6 &&
       (to[3]==':' || to[4]==':' ||
        to[5]==':' || to[6]==':')))
   {
-     to=replace(to, ({ "\000", " " }), ({"%00", "%20" }));
-     return Roxen.http_low_answer( 302,
-				   "See <a href='"+to+"'>"+to+"</a>")
-       + ([ "extra_heads":([ "Location":to,  ]) ]);
+    // HTTP redirect
+    // We look at the protocol (host header)...
+    id->register_vary_callback("Host", get_protocol);
+    // We look at the port (host header)...
+    id->register_vary_callback("Host", get_port);
+    catch {  // The catch is needed to make sure the url parsing don't backtrace.
+      Standards.URI to_uri = Standards.URI(to_prefix);
+      Standards.URI cur_uri =
+	Standards.URI(get_protocol(0, id)+"://"+id->misc->host+id->not_query);
+      
+      // Don't redirect if the prot/host/port is the same and the
+      // beginning of the path is already correct.
+      if(has_prefix(cur_uri->path, to_uri->path) &&
+	 cur_uri->scheme == to_uri->scheme &&
+	 cur_uri->host == to_uri->host &&
+	 cur_uri->port == to_uri->port)
+      {
+	return 0;
+      }
+    };
+    to=replace(to, ({ "\000", " " }), ({"%00", "%20" }));
+    dwerror("HR: %O -> %O (http redirect)\n", id->not_query, to);
+    return Roxen.http_low_answer( 302,
+				  "See <a href='"+to+"'>"+to+"</a>")
+      + ([ "extra_heads":([ "Location":to,  ]) ]);
   } else {
+    // Internal redirect
+    
+    if(has_prefix(id->not_query, to_prefix)) {
+      // Already have the correct beginning...
+      return 0;
+    }
+
     //  if the default file contains images, they will not be found,
     //  because they will be redirected just like the original request
     //  without id->not_query. maybe it's possible to check the referer
@@ -186,6 +260,9 @@ int|mapping first_try(RequestID id)
     if((host != "default") && !path )
       to +=id->not_query;
 
+    dwerror("HR: %O -> %O (internal redirect)\n", id->not_query, to);
+    
+    id->misc->host_redirected = 1;
     id->not_query = id->scan_for_query( to );
     id->raw_url = Roxen.http_encode_invalids(to);
     //if we internally redirect to the proxy,
