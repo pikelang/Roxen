@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.301 2006/09/06 14:18:31 stewa Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.302 2006/09/13 14:48:17 stewa Exp $";
 
 #include <module.h>
 inherit "module";
@@ -1067,6 +1067,25 @@ class TagGText {
   }
 }
 
+#ifdef GTEXT_RANDOM_PREFIX
+constant random_chars = "abcdefghijklmnopqrstuvwxyz" / "";
+ 
+string random_pfx() {
+  string s = "";
+  for(int i=0; i < 4; i++)
+    s += random_chars[random(sizeof(random_chars))];
+  return s;
+}
+
+string get_gtext_pfx(RequestID id) {
+  if(!id->root_id->misc->gtext_pfx) {
+    id->root_id->misc->gtext_pfx = random_pfx();
+    RXML_CONTEXT->set_root_id_misc("gtext_pfx", id->root_id->misc->gtext_pfx);
+  }
+  return id->root_id->misc->gtext_pfx;
+}
+#endif
+
 private string do_gtext(mapping arg, string c, RequestID id)
 {
   if((c-" ")=="") return "";
@@ -1167,7 +1186,11 @@ private string do_gtext(mapping arg, string c, RequestID id)
       arg->height=(string)max(arg->ysize,size->ysize);
     }
 
+#ifdef GTEXT_RANDOM_PREFIX
+    string sn = "gtext" + get_gtext_pfx(id) + id->root_id->misc->gtext_mi++;
+#else
     string sn = "gtext" + id->root_id->misc->gtext_mi++;
+#endif
     RXML_CONTEXT->set_root_id_misc("gtext_mi", id->root_id->misc->gtext_mi);
 
     if(honor_supports && !id->supports->js_image_object) {
