@@ -294,19 +294,22 @@ array(Image.Image) make_text_image(
     if(alpha)
       background->paste_alpha_color(alpha->invert(),@bgcolor);
 
-    switch(lower_case(args->talign||"left")) {
-    case "center":
-      xoffset = (xsize/2 - txsize/2);
-      yoffset = (ysize/2 - tysize/2);
-      break;
-    case "right":
-      xoffset = (xsize - txsize);
-      break;
-    case "left":
-    }
   } else
     background = Image.Image(xsize, ysize, @bgcolor);
 
+  int xsize2 = (int)args->xsize || xsize;
+  int ysize2 = (int)args->ysize || ysize;
+  switch(lower_case(args->talign||"left")) {
+  case "center":
+    xoffset = (xsize2/2 - txsize/2);
+    yoffset = (ysize2/2 - tysize/2);
+    break;
+  case "right":
+    xoffset = (xsize2 - txsize);
+    break;
+       case "left":
+  }
+  
   if(args->move)
   {
     int dx,dy;
