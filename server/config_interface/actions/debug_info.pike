@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.38 2006/03/30 06:49:20 mast Exp $
+ * $Id: debug_info.pike,v 1.39 2006/09/13 11:35:42 jonasw Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -43,7 +43,8 @@ mixed page_0( object id )
   Pike.gc_parameters ((["enabled": 0]));
 #endif
 
-  int gc_freed = id->real_variables->gc && gc();
+  int gc_freed =
+    (id->real_variables->gc || id->real_variables["gc.x"]) && gc();
 
   mapping(string:int) mem_usage = _memory_usage();
   int this_found = 0, walked_objects = 0, destructed_objs = 0;
@@ -90,7 +91,7 @@ mixed page_0( object id )
 
   string res = "<p>Current time: " + ctime (time()) + "</p>\n"
     "<p>";
-  if (id->real_variables->gc)
+  if (id->real_variables->gc || id->real_variables["gc.x"])
     res += sprintf (LOCALE(169, "The garbage collector freed %d of %d things (%d%%)."),
 		    gc_freed, gc_freed + num_things_afterwards,
 		    gc_freed * 100 / (gc_freed + num_things_afterwards));
