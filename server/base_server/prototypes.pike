@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.179 2006/09/07 07:26:59 noring Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.180 2006/09/14 11:36:11 wellhard Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1094,6 +1094,7 @@ class RequestID
     //! protocol cache store time.
     static mapping(string:string) `~()
     {
+      VARY_WERROR("Disconnecting cookie jar.\n");
       return real_cookies + eaten;
     }
 
