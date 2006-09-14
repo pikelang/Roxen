@@ -489,11 +489,16 @@ mapping|string parse( RequestID id )
 	  }
 	}
       };
-      if( e )
+      if( e ) {
 	qres += "<tr><td> <font color='&usr.warncolor;'>"+
 	  sprintf((string)_(380,"While running %s: %s"), q,
 		  describe_error(e) )+
 	  "</td></tr>\n";
+#ifdef DEBUG
+	report_debug("Administration DB browser error: \n" +
+		     describe_backtrace(e));
+#endif
+      }
       qres += "</table>"+
 	sprintf( _(426,"Query took %[0].3fs, %[1]d rows in the reply")+
 		 "\n<br />", qtime, qrows);
