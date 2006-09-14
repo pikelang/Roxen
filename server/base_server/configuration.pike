@@ -6,7 +6,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.593 2006/09/08 07:13:53 noring Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.594 2006/09/14 13:01:24 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4000,8 +4000,9 @@ $cache-status   -- A comma separated list of words (containing no
 $eval-status    -- A comma separated list of words (containing no
                    whitespace) that describes how the page has been
                    evaluated:
-                   xslt -- The XSLT parser.
-                   rxml -- The RXML parser.
+                   xslt      -- XSL transform.
+                   rxmlsrc   -- RXML evaluated from source.
+                   rxmlpcode -- RXML evaluated from compiled p-code.
 $content-type   -- Resource mime type.
 $protcache-cost -- The lookup depth in the HTTP protocol module
                    low-level cache.
