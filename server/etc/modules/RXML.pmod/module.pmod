@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.349 2006/08/22 12:21:35 mast Exp $
+// $Id: module.pmod,v 1.350 2006/09/14 13:01:23 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2270,10 +2270,11 @@ class Context
   private int eval_finished = 0;
 #endif
 
-  final void eval_finish()
+  final void eval_finish (void|int dont_set_eval_status)
   // Called at the end of the evaluation in this context.
   {
     FRAME_DEPTH_MSG ("%*s%O eval_finish\n", frame_depth, "", this_object());
+    if (!dont_set_eval_status) id->eval_status["rxmlsrc"] = 1;
     if (!frame_depth) {
 #ifdef DEBUG
       if (eval_finished) fatal_error ("Context already finished.\n");
@@ -8311,7 +8312,9 @@ class PCode
 	    parts[ppos++] = errmsgs;
 	}
 
-	ctx->eval_finish();
+	ctx->eval_finish (1);
+	ctx->id->eval_status["rxmlpcode"] = 1;
+
 	if (ctx->state_updated > update_count) flags |= UPDATED;
 
 	if (!ppos)
