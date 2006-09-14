@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.517 2006/06/16 12:29:01 wellhard Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.518 2006/09/14 15:42:31 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1636,10 +1636,13 @@ class TagCache {
       // for the same page.
       array(string|int) keys = indices(keymap) - ({1}) - ({"page.path"});
       if (sizeof(keys)) {
-	if (!args["enable-client-cache"])
-	  NOCACHE();
-	else if(!args["enable-protocol-cache"])
+	if (args["enable-protocol-cache"])
+	  ;
+	else {
 	  NO_PROTO_CACHE();
+	  if (!args["enable-client-cache"])
+	    NOCACHE();
+	}
       }
 
       key = encode_value_canonic (keymap);
@@ -6686,9 +6689,12 @@ using the pre tag.
 </attr>
 
 <attr name='enable-client-cache'>
+ <p>Mark output as cachable in browsers.</p>
 </attr>
 
 <attr name='enable-protocol-cache'>
+ <p>Mark output as cachable in server-side protocol cache and browser
+    cache.</p>
 </attr>
 
 <attr name='years' value='number'>
