@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.504 2006/08/21 11:20:54 wellhard Exp $";
+constant cvs_version = "$Id: http.pike,v 1.505 2006/09/14 11:36:52 wellhard Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2572,6 +2572,11 @@ void got_data(mixed fooid, string s, void|int chained)
 	      ((st = file_stat( file->rf )) && st->mtime == file->mtime ))
 #endif
 	  {
+	    if (objectp(cookies)) {
+	      // Disconnect the cookie jar.
+	      real_cookies = cookies = ~cookies;
+	    }
+
 	    int code = file->error;
 	    int len = sizeof(d);
 	    // Make sure we don't mess with the RAM cache.
