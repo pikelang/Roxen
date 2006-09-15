@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.180 2006/09/14 11:36:11 wellhard Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.181 2006/09/15 12:06:16 wellhard Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -992,6 +992,7 @@ class RequestID
 
     static void create(string|array(string)|void contents)
     {
+      VARY_WERROR("Initiating cookie jar.\n");
       real_cookies = ([]);
 
       if(!contents)
@@ -1120,10 +1121,14 @@ class RequestID
   //!
   //! Typically called from callbacks installed with
   //! @[register_vary_callback()] if @[cookies] hasn't been initialized.
-  void init_cookies()
+  void init_cookies(int|void no_cookie_jar)
   {
     if (!cookies) {
       cookies = CookieJar(request_headers["cookie"]);
+      if (no_cookie_jar) {
+	// Disable the cookie jar -- Called from log()?
+	real_cookies = cookies = ~cookies;
+      }
     }
   }
 
