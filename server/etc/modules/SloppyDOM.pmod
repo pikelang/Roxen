@@ -1,4 +1,4 @@
-// $Id: SloppyDOM.pmod,v 1.12 2006/04/20 13:27:15 grubba Exp $
+// $Id: SloppyDOM.pmod,v 1.13 2006/09/16 14:17:15 mast Exp $
 
 //! A somewhat DOM-like library that implements lazy generation of the
 //! node tree, i.e. it's generated from the data upon lookup. There's
@@ -752,7 +752,7 @@ static class NodeWithChildElements
 		  mixed subres = child->simple_path (path, 0);
 		  if (objectp (subres))
 		    collected += ({subres});
-		  else if (sizeof (subres))
+		  else if (arrayp (subres) && sizeof (subres))
 		    collected += subres;
 		  else {
 		    child->make_all_nodes();
