@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module.pike,v 1.224 2006/04/20 13:31:53 grubba Exp $
+// $Id: module.pike,v 1.225 2006/09/18 16:18:34 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -2169,12 +2169,14 @@ static void set_my_db( string to )
   my_db = to;
 }
 
-Sql.Sql get_my_sql( int|void read_only )
+Sql.Sql get_my_sql( int|void read_only, void|string charset )
 //! Return a SQL-object for the database set with @[set_my_db],
-//! defaulting to the 'shared' database. If read_only is specified,
-//! the database will be opened in read_only mode.
+//! defaulting to the 'shared' database. If @[read_only] is specified,
+//! the database will be opened in read_only mode. @[charset] may be
+//! used to specify a charset for the connection if the database
+//! supports it.
 //! 
 //! See also @[DBManager.get]
 {
-  return DBManager.cached_get( my_db, _my_configuration, read_only );
+  return DBManager.cached_get( my_db, _my_configuration, read_only, charset );
 }

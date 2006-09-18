@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.617 2006/09/15 12:06:42 wellhard Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.618 2006/09/18 16:18:34 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3831,12 +3831,12 @@ mapping(string:string) sql_urls = ([]);
 
 constant sql_cache_get = DBManager.sql_cache_get;
 
-Sql.Sql sql_connect(string db)
+Sql.Sql sql_connect(string db, void|string charset)
 {
   if (sql_urls[db])
-    return sql_cache_get(sql_urls[db]);
+    return sql_cache_get(sql_urls[db], 0, charset);
   else
-    return sql_cache_get(db);
+    return sql_cache_get(db, 0, charset);
 }
 
 // END SQL

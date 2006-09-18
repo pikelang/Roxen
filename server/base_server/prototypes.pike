@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.181 2006/09/15 12:06:16 wellhard Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.182 2006/09/18 16:18:34 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -437,7 +437,7 @@ class Configuration
   RoxenModule find_module(string name);
 #if ROXEN_COMPAT < 2.2
   Sql.Sql sql_cache_get(string what);
-  Sql.Sql sql_connect(string db);
+  Sql.Sql sql_connect(string db, void|string charset);
 #endif
   void enable_all_modules();
   void low_init(void|int modules_already_enabled);

@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.378 2006/09/11 14:30:37 wellhard Exp $
+// $Id: roxenloader.pike,v 1.379 2006/09/18 16:18:34 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -33,7 +33,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.378 2006/09/11 14:30:37 wellhard Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.379 2006/09/18 16:18:34 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1310,7 +1310,7 @@ string query_configuration_dir()
 
 static mapping(string:array(SQLTimeout)) sql_free_list = ([ ]);
 static Thread.Local sql_reuse_in_thread = Thread.Local();
-mapping sql_active_list = ([ ]);
+mapping(string:int) sql_active_list = ([ ]);
 
 #ifdef DB_DEBUG
 static int sql_keynum;
@@ -1575,36 +1575,60 @@ Thread.MutexKey sq_cache_lock()
   return mt->lock();
 }
 
-Sql.Sql sq_cache_get( string db_name, void|int reuse_in_thread)
+static mapping(program:string) default_db_charsets = ([]);
+
+Sql.Sql sq_cache_get( string db_name,
+		      void|int reuse_in_thread, void|string charset)
 {
+  Sql.Sql db;
+
   if (reuse_in_thread) {
     mapping(string:SQLKey) dbs_for_thread = sql_reuse_in_thread->get();
-    if (Sql.Sql db = dbs_for_thread && dbs_for_thread[db_name])
-      return [object(Sql.Sql)] (object) SQLKey (db, db_name, 1);
+    db = dbs_for_thread && dbs_for_thread[db_name];
   }
 
-  while(sql_free_list[ db_name ])
-  {
+  else {
+    while(sql_free_list[ db_name ])
+    {
 #ifdef DB_DEBUG
-    werror("%O found in free list\n", db_name );
+      werror("%O found in free list\n", db_name );
 #endif
-    SQLTimeout res = sql_free_list[db_name][0];
-    if( sizeof( sql_free_list[ db_name ] ) > 1)
-      sql_free_list[ db_name ] = sql_free_list[db_name][1..];
-    else
-      m_delete( sql_free_list, db_name );
-    if (Sql.Sql db = res && res->get()) {
-      sql_active_list[db_name]++;
-      return [object(Sql.Sql)] (object)
-	SQLKey( db, db_name, reuse_in_thread);
+      SQLTimeout res = sql_free_list[db_name][0];
+      if( sizeof( sql_free_list[ db_name ] ) > 1)
+	sql_free_list[ db_name ] = sql_free_list[db_name][1..];
+      else
+	m_delete( sql_free_list, db_name );
+      if ((db = res && res->get())) {
+	sql_active_list[db_name]++;
+	break;
+      }
     }
   }
+
+  if (db) {
+    if (!charset)
+      charset = default_db_charsets[object_program (db->master_sql)];
+    if (charset != db->get_charset())
+      db->set_charset (charset);
+    return [object(Sql.Sql)] (object) SQLKey (db, db_name, reuse_in_thread);
+  }
+
+  return 0;
 }
 
-Sql.Sql sq_cache_set( string db_name, Sql.Sql res, void|int reuse_in_thread)
+#define FIX_DEFAULT_DB_CHARSET(SQLOBJ) do {				\
+    if (zero_type (default_db_charsets[object_program (SQLOBJ->master_sql)])) \
+      default_db_charsets[object_program (SQLOBJ->master_sql)] =	\
+	SQLOBJ->get_charset();						\
+  } while (0)
+
+Sql.Sql sq_cache_set( string db_name, Sql.Sql res,
+		      void|int reuse_in_thread, void|string charset)
 {
   if( res )
   {
+    FIX_DEFAULT_DB_CHARSET (res);
+    if (charset) res->set_charset (charset);
     sql_active_list[ db_name ]++;
     return [object(Sql.Sql)] (object) SQLKey( res, db_name, reuse_in_thread);
   }
@@ -1614,7 +1638,7 @@ Sql.Sql sq_cache_set( string db_name, Sql.Sql res, void|int reuse_in_thread)
  * avoided by normal users. 
 */
 Sql.Sql connect_to_my_mysql( string|int ro, void|string db,
-			     void|int reuse_in_thread)
+			     void|int reuse_in_thread, void|string charset)
 {
 #if 0
 #ifdef DB_DEBUG
@@ -1626,18 +1650,21 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db,
     key = sq_cache_lock();
   }) {
     // Threads disabled.
-    // This can occurr if we are called from the compiler.
-    return low_connect_to_my_mysql(ro, db);
+    // This can occur if we are called from the compiler.
+    Sql.Sql res = low_connect_to_my_mysql(ro, db);
+    FIX_DEFAULT_DB_CHARSET (res);
+    if (charset) res->set_charset (charset);
+    return res;
   }
   string i = db+":"+(intp(ro)?(ro&&"ro")||"rw":ro);
-  Sql.Sql res = sq_cache_get(i, reuse_in_thread);
+  Sql.Sql res = sq_cache_get(i, reuse_in_thread, charset);
   if (res) return res;
   destruct(key);
   if (res = low_connect_to_my_mysql( ro, db )) {
     key = sq_cache_lock();
     // Fool the optimizer so that key is not released prematurely
     if( res )
-      return sq_cache_set(i, res, reuse_in_thread);
+      return sq_cache_set(i, res, reuse_in_thread, charset);
   }
   return 0;
 }

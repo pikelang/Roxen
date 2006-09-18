@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.67 2006/05/31 17:55:25 mast Exp $
+// $Id: DBManager.pmod,v 1.68 2006/09/18 16:18:34 mast Exp $
 
 //! Manages database aliases and permissions
 
@@ -214,7 +214,8 @@ private
   }
 
   mapping(string:mapping(string:string)) sql_url_cache = ([]);
-  Sql.Sql low_get( string user, string db, void|int reuse_in_thread)
+  Sql.Sql low_get( string user, string db, void|int reuse_in_thread,
+		   void|string charset)
   {
     if( !user )
       return 0;
@@ -229,7 +230,7 @@ private
     }
 
     if( (int)d->local )
-      return connect_to_my_mysql( user, db );
+      return connect_to_my_mysql( user, db, reuse_in_thread, charset );
 
     // Otherwise it's a tad more complex...  
     if( user[strlen(user)-2..] == "ro" )
@@ -237,8 +238,8 @@ private
       // has, but they are hidden behind an overloaded index operator.
       // Thus, we have to fool the typechecker.
       return [object(Sql.Sql)](object)
-	ROWrapper( sql_cache_get( d->path, reuse_in_thread) );
-    return sql_cache_get( d->path, reuse_in_thread);
+	ROWrapper( sql_cache_get( d->path, reuse_in_thread, charset) );
+    return sql_cache_get( d->path, reuse_in_thread, charset);
   }
 };
 
@@ -251,11 +252,12 @@ Sql.Sql get_sql_handler(string db_url)
   return Sql.Sql(db_url);
 }
 
-Sql.Sql sql_cache_get(string what, void|int reuse_in_thread)
+Sql.Sql sql_cache_get(string what, void|int reuse_in_thread,
+		      void|string charset)
 {
   Thread.MutexKey key = roxenloader.sq_cache_lock();
   string i = replace(what,":",";")+":-";
-  Sql.Sql res = roxenloader.sq_cache_get(i, reuse_in_thread);
+  Sql.Sql res = roxenloader.sq_cache_get(i, reuse_in_thread, charset);
   if (res) return res;
   // Release the lock during the call to get_sql_handler(),
   // since it may take quite a bit of time...
@@ -263,7 +265,7 @@ Sql.Sql sql_cache_get(string what, void|int reuse_in_thread)
   if (res = get_sql_handler(what)) {
     // Now we need the lock again...
     key = roxenloader.sq_cache_lock();
-    res = roxenloader.sq_cache_set(i, res, reuse_in_thread);
+    res = roxenloader.sq_cache_set(i, res, reuse_in_thread, charset);
     // Fool the optimizer so that key is not released prematurely
     if( res )
       return res; 
@@ -591,31 +593,62 @@ string get_db_user( string name, Configuration c, int ro )
 }
 
 Sql.Sql get( string name, void|Configuration conf,
-	     int|void read_only, void|int reuse_in_thread)
-//! Returns an SQL connection object for the database @[name]. If the
-//! configuration @[conf] is specified, only return the database if
-//! that configuration has at least read access.
+	     int|void read_only, void|int reuse_in_thread,
+	     void|string charset)
+//! Returns an SQL connection object for a database named under the
+//! "DB" tab in the administration interface.
 //!
-//! If @[read_only] is set then a read-only connection is returned. A
-//! read-only connection is also returned if @[conf] is specified and
-//! only has read access (regardless of @[read_only]).
+//! @param name
+//!   The name of the database.
 //!
-//! If @[reuse_in_thread] is nonzero then the SQL connection is reused
-//! within the current thread. I.e. other calls to this function from
-//! this thread with the same @[name] and @[read_only] and a nonzero
-//! @[reuse_in_thread] will return the same object. However, the
-//! connection won't be reused while a result object from
-//! @[Sql.Sql.big_query] or similar exists.
+//! @param conf
+//!   If this isn't zero, only return the database if this
+//!   configuration has at least read access.
 //!
-//! Using @[reuse_in_thread] is a good way to cut down on the amount
-//! of simultaneous connections, and to avoid deadlocks when
-//! transactions or locked tables are used (other problems can occur
-//! instead though, if transactions or table locking is done
-//! recursively). However, the caller has to ensure that the
-//! connection never becomes in use by another thread. The safest way
-//! to ensure that is to always keep it on the stack, i.e. only assign
-//! it to variables declared inside functions or pass it in arguments
-//! to functions.
+//! @param read_only
+//!   Return a read-only connection if this is set. A read-only
+//!   connection is also returned if @[conf] is specified and only has
+//!   read access (regardless of @[read_only]).
+//!
+//! @param reuse_in_thread
+//!   If this is nonzero then the SQL connection is reused within the
+//!   current thread. I.e. other calls to this function from this
+//!   thread with the same @[name] and @[read_only] and a nonzero
+//!   @[reuse_in_thread] will return the same object. However, the
+//!   connection won't be reused while a result object from
+//!   @[Sql.Sql.big_query] or similar exists.
+//!
+//!   Using this flag is a good way to cut down on the amount of
+//!   simultaneous connections, and to avoid deadlocks when
+//!   transactions or locked tables are used (other problems can occur
+//!   instead though, if transactions or table locking is done
+//!   recursively). However, the caller has to ensure that the
+//!   connection never becomes in use by another thread. The safest
+//!   way to ensure that is to always keep it on the stack, i.e. only
+//!   assign it to variables declared inside functions or pass it in
+//!   arguments to functions.
+//!
+//! @param charset
+//!   If this is nonzero then the returned connection is configured to
+//!   use the specified charset for queries and returned text strings.
+//!
+//!   The valid values and their meanings depend on the type of
+//!   database connection. However, the special value
+//!   @expr{"unicode"@} configures the connection to accept and return
+//!   unencoded (possibly wide) unicode strings (provided the
+//!   connection supports this).
+//!
+//!   An error is thrown if the database connection doesn't support
+//!   the given charset or has no charset support at all.
+//!
+//!   See @[Sql.Sql.set_charset] for more information.
+//!
+//! @note
+//! A charset being set through the @[charset] argument or
+//! @[Sql.Sql.set_charset] is tracked and reset properly when a
+//! connection is reused. If the charset (or any other context info,
+//! for that matter) is changed some other way then it must be
+//! restored before the connection is released.
 {
 #ifdef MODULE_DEBUG
   if (!reuse_in_thread)
@@ -629,12 +662,14 @@ Sql.Sql get( string name, void|Configuration conf,
 		String.implode_nicely (indices (lock_info->locked_for_read &
 						lock_info->locked_for_write)));
 #endif
-  return low_get( get_db_user( name, conf, read_only), name, reuse_in_thread);
+  return low_get( get_db_user( name, conf, read_only), name, reuse_in_thread,
+		  charset);
 }
 
-Sql.Sql cached_get( string name, void|Configuration c, void|int ro )
+Sql.Sql cached_get( string name, void|Configuration c, void|int ro,
+		    void|string charset)
 {
-  return get (name, c, ro);
+  return get (name, c, ro, charset);
 }
 
 static Thread.Local table_locks = Thread.Local();

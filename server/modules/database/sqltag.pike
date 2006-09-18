@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.105 2006/08/16 13:40:09 grubba Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.106 2006/09/18 16:18:34 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -53,6 +53,11 @@ constant tagdoc=([
 <attr name='parse'><p>
  If specified, the query will be parsed by the RXML parser.
  Useful if you wish to dynamically build the query.</p>
+</attr>
+
+<attr name='charset' value='string'><p>
+ Use the specified charset for the SQL statement. See the description
+ for the \"sql\" emit source for more info.</p>
 </attr>",
 
 "sqlquery":#"
@@ -96,6 +101,11 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
 <attr name='mysql-insert-id' value='variable'><p>
  Set the given variable to the insert id used by Mysql for
  auto-incrementing columns. Note: This is only available with Mysql.</p>
+</attr>
+
+<attr name='charset' value='string'><p>
+ Use the specified charset for the SQL statement. See the description
+ for the \"sql\" emit source for more info.</p>
 </attr>",
 
 "emit#sql":#"<desc type='plugin'><p><short>
@@ -128,6 +138,20 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
           bindings='foo=var.foo,bar=form.bar' />
 </ex-box>
 </p>
+</attr>
+
+<attr name='charset' value='string'><p>
+ Use the specified charset for the SQL statement and returned text
+ values.</p>
+
+ <p>The valid charsets depend on the type of database connection.
+ However, the special value \"unicode\" configures the connection to
+ accept and return unencoded (possibly wide) unicode strings (provided
+ the connection supports this).</p>
+
+ <p>An RXML run error is thrown if the database connection doesn't
+ support the given charset or has no charset support at all. (At least
+ MySQL 4.1 and later has support.)</p>
 </attr>"
 ]);
 #endif
@@ -138,7 +162,7 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
 #if ROXEN_COMPAT <= 1.3
 string compat_default_host;
 #endif
-string default_db;
+string default_db, default_charset;
 
 //  Cached copy of conf->query("compat_level"). This setting is defined
 //  to require a module reload to take effect so we only query it when
@@ -185,7 +209,9 @@ array|object do_sql_query(mapping args, RequestID id,
       RXML.run_error( (string)LOCALE(9,"Cannot find the module %s"),
 		      args->module );
 
-    if( error = catch( con = module->get_my_sql( ro ) ) )
+    if( error = catch {
+	con = module->get_my_sql (ro, args->charset || default_charset);
+      } )
       RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
 		     ": "+ describe_error (error) +"\n");
       
@@ -206,12 +232,16 @@ array|object do_sql_query(mapping args, RequestID id,
   {
 #if ROXEN_COMPAT <= 1.3
     if( !args->db && (host || query("db")==" none") )
-      error = catch(con = id->conf->sql_connect(host || compat_default_host));
+      error = catch {
+	  con = id->conf->sql_connect(host || compat_default_host,
+				      args->charset || default_charset);
+	};
     if(!con)
 #endif
       error = catch(con = DBManager.get( host||args->db||
 					 default_db||compat_default_host,
-					 my_configuration(), ro));
+					 my_configuration(), ro, 0,
+					 args->charset || default_charset));
     if( !con )
       RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
 		     (error?": "+ describe_error (error) :"")+"\n");
@@ -479,6 +509,18 @@ void create()
                        LOCALE(8,"If this is defined, it's the "
                               "database this server will use as the "
                               "default database") ) );
+
+  defvar ("charset", "",
+	  LOCALE(0, "Default charset"),
+	  TYPE_STRING,
+	  LOCALE(0, #"\
+<p>The default value to use for the <i>charset</i> attribute to the
+SQL tags. See the description for the \"sql\" emit source for more
+details.</p>
+
+<p>Note that not all database connection supports this, and the tags
+will throw errors if this is used in such cases. MySQL 4.1 or later
+supports it.</p>"));
 }
 
 
@@ -490,6 +532,8 @@ void start()
   compat_default_host = query("hostname");
 #endif
   default_db          = query("db");
+  default_charset = query ("charset");
+  if (default_charset == "") default_charset = 0;
   compat_level = my_configuration()->query("compat_level");
 }
 
