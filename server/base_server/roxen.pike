@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.934 2006/09/14 09:23:50 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.935 2006/09/19 17:36:56 mast Exp $";
 
 //! @appears roxen
 //!
@@ -4462,7 +4462,7 @@ void create()
 
   // for module encoding stuff
 
-#if constant (Protocols.LDAP.FilterError)
+#if constant (Protocols.LDAP.SEARCH_RETURN_DECODE_ERRORS)
   // Pike 7.7 or later - we use the native LDAP module and link the
   // migration alias NewLDAP to it.
   add_constant ("NewLDAP", Protocols.LDAP);
