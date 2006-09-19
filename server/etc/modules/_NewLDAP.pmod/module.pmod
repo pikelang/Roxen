@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.1 2005/11/14 09:06:11 mast Exp $
+// $Id: module.pmod,v 1.2 2006/09/19 17:25:26 mast Exp $
 
 #include "ldap_globals.h"
 
@@ -154,6 +154,7 @@ constant ldap_error_strings = ([
 
 constant SEARCH_LOWER_ATTRS = 1;
 constant SEARCH_MULTIVAL_ARRAYS_ONLY = 2;
+constant SEARCH_RETURN_DECODE_ERRORS = 4;
 //! Bitfield flags given to @[Protocols.LDAP.client.search]:
 //!
 //! @dl
@@ -179,6 +180,13 @@ constant SEARCH_MULTIVAL_ARRAYS_ONLY = 2;
 //!   Note that it's the attribute type descriptions that are used to
 //!   decide this, not the number of values a particular attribute
 //!   happens to have in the search result.
+//!
+//! @item SEARCH_RETURN_DECODE_ERRORS
+//!   Don't throw attribute value decode errors, instead return them
+//!   in the result from @[Protocols.LDAP.client.result.fetch] in
+//!   place of the value. I.e. anywhere an attribute value string
+//!   occurs, you might instead have a @[Locale.Charset.DecodeError]
+//!   object.
 //! @enddl
 
 constant SCOPE_BASE = 0;
