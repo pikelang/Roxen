@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.216 2006/09/05 12:30:33 stewa Exp $
+// $Id: Roxen.pmod,v 1.217 2006/09/19 17:19:33 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4530,3 +4530,102 @@ LogPipe get_log_pipe()
 			 strerror (read_end->errno()));
   return LogPipe (read_end, write_end, use_read_thread);
 }
+
+#if constant (Locale.Charset.DecodeError)
+constant DecodeError = Locale.Charset.DecodeError;
+constant EncodeError = Locale.Charset.EncodeError;
+#else
+
+static string format_charset_err_msg (
+  string intro, string err_str, int err_pos, string charset, string reason)
+{
+  if (err_pos < 0) {
+    err_str = sizeof (err_str) > 43 ?
+      sprintf ("%O...", err_str[..39]) : sprintf ("%O", err_str);
+  }
+
+  else {
+    string pre_context = err_pos > 23 ?
+      sprintf ("...%O", err_str[err_pos - 20..err_pos - 1]) :
+      err_pos > 0 ?
+      sprintf ("%O", err_str[..err_pos - 1]) :
+      "";
+    string post_context = err_pos < sizeof (err_str) - 24 ?
+      sprintf ("%O...", err_str[err_pos + 1..err_pos + 20]) :
+      err_pos + 1 < sizeof (err_str) ?
+      sprintf ("%O", err_str[err_pos + 1..]) :
+      "";
+    err_str = sprintf ("%s[0x%x]%s",
+		       pre_context, err_str[err_pos], post_context);
+  }
+
+  return intro + " " + err_str +
+    (charset ? " using " + charset : "") +
+    (reason ? ": " + reason : ".\n");
+}
+
+class CharsetDecodeError
+//! Typed error thrown in some places when charset decoding fails.
+{
+#if constant (Error.Generic)
+  inherit Error.Generic;
+#else
+  inherit __builtin.generic_error;
+#endif
+  constant error_type = "charset_decode";
+  constant is_charset_decode_error = 1;
+
+  string err_str;
+  //! The string that failed to be decoded.
+
+  int err_pos;
+  //! The failing position in @[err_str] or @expr{-1@} if not known.
+
+  string charset;
+  //! The decoding charset (if known).
+
+  static void create (string err_str, int err_pos, string charset,
+		      void|string reason, void|array bt)
+  {
+    this_program::err_str = err_str;
+    this_program::err_pos = err_pos;
+    this_program::charset = charset;
+    ::create (format_charset_err_msg ("Error decoding",
+				      err_str, err_pos, charset, reason),
+	      bt);
+  }
+}
+
+class CharsetEncodeError
+//! Typed error thrown in some places when charset encoding fails.
+{
+#if constant (Error.Generic)
+  inherit Error.Generic;
+#else
+  inherit __builtin.generic_error;
+#endif
+  constant error_type = "charset_encode";
+  constant is_charset_encode_error = 1;
+
+  string err_str;
+  //! The string that failed to be encoded.
+
+  int err_pos;
+  //! The failing position in @[err_str], -1 if not known.
+
+  string charset;
+  //! The encoding charset (if known).
+
+  static void create (string err_str, int err_pos, string charset,
+		      void|string reason, void|array bt)
+  {
+    this_program::err_str = err_str;
+    this_program::err_pos = err_pos;
+    this_program::charset = charset;
+    ::create (format_charset_err_msg ("Error encoding",
+				      err_str, err_pos, charset, reason),
+	      bt);
+  }
+}
+
+#endif	// !constant (Locale.Charset.DecodeError)
