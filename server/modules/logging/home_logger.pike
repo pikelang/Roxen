@@ -4,7 +4,7 @@
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
 
-constant cvs_version="$Id: home_logger.pike,v 1.32 2004/06/30 16:59:14 mast Exp $";
+constant cvs_version="$Id: home_logger.pike,v 1.33 2006/09/21 15:40:07 grubba Exp $";
 constant thread_safe=1;
 
 #include <config.h>
@@ -102,10 +102,6 @@ class CacheFile {
       call_out( really_timeout, 1 );
     } else {
       close();
-      remove_call_out( really_timeout );
-      set_file = 0;
-      ready = 1;
-      move_this_to_tail();
     }
   }
 
@@ -118,6 +114,19 @@ class CacheFile {
   {
     mapping lc = localtime( time() );
     return sprintf("%4d-%02d-%02d", lc->year+1900, lc->mon+1, lc->mday);
+  }
+
+  int close(string|void how)
+  {
+    int ret = 1;
+    remove_call_out(really_timeout);
+    if (set_file) {
+      catch { ret = ::close(how); };
+    }
+    set_file = 0;
+    ready = 1;
+    move_this_to_tail();
+    return ret;
   }
 
   int open(string s, string|void mode)
