@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.182 2006/09/18 16:18:34 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.183 2006/09/21 14:44:42 wellhard Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -845,6 +845,9 @@ class RequestID
 
   int time;
   //! Time of the request, standard unix time (seconds since the epoch; 1970).
+
+  int hrtime;
+  //! Time of the request, high resolution time.
 
   string raw_url;
   //! The nonparsed, nontouched, non-* URL requested by the client.

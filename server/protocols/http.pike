@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.505 2006/09/14 11:36:52 wellhard Exp $";
+constant cvs_version = "$Id: http.pike,v 1.506 2006/09/21 14:44:42 wellhard Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2764,6 +2764,7 @@ static void create(object f, object c, object cc)
     if( c ) port_obj = c;
     if( cc ) conf = cc;
     time = predef::time(1);
+    hrtime = gethrtime();
     call_out(do_timeout, 90);
   }
   root_id = this_object();
@@ -2783,6 +2784,7 @@ void chain(object f, object c, string le)
   port_obj = c;
   MARK_FD("HTTP kept alive");
   time = predef::time();
+  hrtime = gethrtime();
 
   if ( le && strlen( le ) ) {
 #ifdef CONNECTION_DEBUG
