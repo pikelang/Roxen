@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.506 2006/09/21 14:44:42 wellhard Exp $";
+constant cvs_version = "$Id: http.pike,v 1.507 2006/09/21 14:56:04 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1950,10 +1950,98 @@ void send_result(mapping|void result)
     m_delete(heads, "Connection");
     m_delete(heads, "Expires");
 
+    // FIXME: prot.
+    head_string = sprintf(" %s\r\n", 
+			  head_status || errors[file->error] || "");
+
+    if (mixed err = catch(head_string += Roxen.make_http_headers(heads, 1)))
+    {
+#ifdef DEBUG
+      report_debug("Roxen.make_http_headers failed: " +
+		   describe_error (err));
+#endif
+      foreach(heads; string x; string|array(string) val) {
+	if( !arrayp( val ) ) val = ({val});
+	foreach( val, string xx ) {
+	  if (!stringp (xx) && catch {xx = (string) xx;})
+	    report_error("Error in request for %O:\n"
+			 "Invalid value for header %O: %O\n",
+			 raw_url, x, xx);
+	  else if (String.width (xx) > 8)
+	    report_error("Error in request for %O:\n"
+			 "Invalid widestring value for header %O: %O\n",
+			 raw_url, x, xx);
+	  else
+	    head_string += x+": "+xx+"\r\n";
+	}
+      }
+      head_string += "\r\n";
+    }
+
+    if (objectp(cookies)) {
+      // Disconnect the cookie jar.
+      real_cookies = cookies = ~cookies;
+    }
+
+    int varies = misc->vary && (sizeof(misc->vary) - misc->vary["Host"]);
+#ifdef RAM_CACHE
+    if( (misc->cacheable > 0) && !misc->no_proto_cache)
+    {
+      if ((<"HEAD","GET">)[method]) {
+	if( file->len>0 && // known length.
+	    ((file->len + sizeof(head_string)) < 
+	     conf->datacache->max_file_size)
+	    // vvv Relying on the interpreter lock from here.
+	    && misc->cachekey )
+	{
+	  misc->cachekey->activate();
+	  // ^^^ Relying on the interpreter lock to here.
+	  string data = "";
+	  if( file->data ) data = file->data[..file->len-1];
+	  if( file->file ) data = file->file->read(file->len);
+	  MY_TRACE_ENTER(sprintf("Storing in ram cache, entry: %O",
+				 raw_url), 0);
+	  MY_TRACE_LEAVE ("");
+	  conf->datacache->set(raw_url, data,
+			       ([
+				 "hs":head_string,
+				 "key":misc->cachekey,
+				 "etag":misc->etag,
+				 "callbacks":misc->_cachecallbacks,
+				 "len":file->len,
+				 "raw":file->raw,
+				 "error":file->error,
+				 "type":variant_heads["Content-Type"],
+				 "last_modified":misc->last_modified,
+				 "varies":varies,
+				 "expires":variant_heads["Expires"],
+				 "mtime":(file->stat &&
+					  file->stat[ST_MTIME]),
+				 "rf":realfile,
+			       ]),
+			       misc->cacheable, this_object());
+	  file = ([
+	    "data":data,
+	    "raw":file->raw,
+	    "len":strlen(data),
+	    "error":file->error,
+	  ]);
+	  cache_status["protstore"] = 1;
+	}
+      }
+    }
+#endif
+
+    // Some browsers, e.g. Netscape 4.7, don't trust a zero
+    // content length when using keep-alive. So let's force a
+    // close in that case.
+    if( file->error/100 == 2 && file->len <= 0 )
+    {
+      variant_heads->Connection = "close";
+      misc->connection = "close";
+    }
+
     if (file->error == 200) {
-      // FIXME:	This code probably ought to move to after the store
-      //	to the RAM cache.
-      //		/grubba 2005-12-20
       int conditional;
       if (none_match) {
 	// NOTE: misc->etag may be zero below, but that's ok.
@@ -2005,94 +2093,17 @@ void send_result(mapping|void result)
 	// All conditionals apply.
 	file->error = conditional;
 	file->file = file->data = file->len = 0;
-	NO_PROTO_CACHE();
+	// Must update the content length after the modifications of the
+	// data to send that might have been done above for 206 or 304.
+	variant_heads["Content-Length"] = "0";
       }
     }
 
-    // FIXME: prot.
-    head_string = sprintf(" %s\r\n", 
-			  head_status || errors[file->error] || "");
-
-    // Must update the content length after the modifications of the
-    // data to send that might have been done above for 206 or 304.
-    variant_heads["Content-Length"] = (string)file->len;
-
-    // Some browsers, e.g. Netscape 4.7, don't trust a zero
-    // content length when using keep-alive. So let's force a
-    // close in that case.
-    if( file->error/100 == 2 && file->len <= 0 )
-    {
-      variant_heads->Connection = "close";
-      misc->connection = "close";
+    if (varies && (prot == "HTTP/1.0")) {
+      // The Vary header is new in HTTP/1.1.
+      // It expired a year ago.
+      variant_heads["Expires"] = Roxen->http_date(predef::time(1)-31557600);
     }
-
-#if 0
-    // Check for wide or 8-bit headers.
-    // FIXME: Assumes no header names are wide.
-    //
-    // This is disabled since it doesn't work for all headers. It
-    // therefore has to be the responsibility of whatever code makes
-    // the header to ensure it's correctly encoded. /mast
-    foreach(heads; string header_name; string content) {
-      string encoded;
-      if (content != (encoded = string_to_utf8(content))) {
-	array(array(string)|int) tokenized =
-	  MIME.decode_words_tokenized(encoded);
-	foreach(tokenized, array(string)|int token) {
-	  if (arrayp(token)) {
-	    string raw = utf8_to_string(token[0]);
-	    if (raw == token[0]) {
-	      if (token[1]) {
-		// Should not happen in normal circumstances.
-		catch {
-		  // Attempt to recode in UTF-8.
-		  token[0] = string_to_utf8(Locale.Charset.
-					    decoder(token[1])->
-					    feed(raw)->drain());
-		};
-	      }
-	      token[1] = "utf-8";
-	    }
-	  }
-	}
-	string q = MIME.encode_words_quoted(tokenized, "q");
-	string b = MIME.encode_words_quoted(tokenized, "b");
-	// Prefer QP to BASE-64 if they are the same length.
-	heads[header_name] = (sizeof(b)<sizeof(q))?b:q;
-      }
-    }
-#endif
-
-    if (mixed err = catch(head_string += Roxen.make_http_headers(heads, 1)))
-    {
-#ifdef DEBUG
-      report_debug("Roxen.make_http_headers failed: " +
-		   describe_error (err));
-#endif
-      foreach(heads; string x; string|array(string) val) {
-	if( !arrayp( val ) ) val = ({val});
-	foreach( val, string xx ) {
-	  if (!stringp (xx) && catch {xx = (string) xx;})
-	    report_error("Error in request for %O:\n"
-			 "Invalid value for header %O: %O\n",
-			 raw_url, x, xx);
-	  else if (String.width (xx) > 8)
-	    report_error("Error in request for %O:\n"
-			 "Invalid widestring value for header %O: %O\n",
-			 raw_url, x, xx);
-	  else
-	    head_string += x+": "+xx+"\r\n";
-	}
-      }
-      head_string += "\r\n";
-    }
-
-    if (objectp(cookies)) {
-      // Disconnect the cookie jar.
-      real_cookies = cookies = ~cookies;
-    }
-
-    int varies = misc->vary && (sizeof(misc->vary) - misc->vary["Host"]);
     if( (method == "HEAD") || (file->error == 204) || (file->error == 304) ||
 	(file->error < 200))
     {
@@ -2106,64 +2117,7 @@ void send_result(mapping|void result)
       file->len = 1; // Keep those alive, please...
       file->data = "";
       file->file = 0;
-      if (varies && (prot == "HTTP/1.0")) {
-	// The Vary header is new in HTTP/1.1.
-	// It expired a year ago.
-	variant_heads["Expires"] =
-	  Roxen->http_date(predef::time(1)-31557600);
-      }
     } else {
-#ifdef RAM_CACHE
-      if( (misc->cacheable > 0) && !misc->no_proto_cache)
-      {
-	if( file->len>0 && // known length.
-	    ((file->len + sizeof(head_string)) < 
-	     conf->datacache->max_file_size)
-	    // vvv Relying on the interpreter lock from here.
-	    && misc->cachekey )
-	{
-	  misc->cachekey->activate();
-	  // ^^^ Relying on the interpreter lock to here.
-	  string data = "";
-	  if( file->data ) data = file->data[..file->len-1];
-	  if( file->file ) data = file->file->read(file->len);
-	  MY_TRACE_ENTER(sprintf("Storing in ram cache, entry: %O",
-				 raw_url), 0);
-	  MY_TRACE_LEAVE ("");
-	  conf->datacache->set(raw_url, data,
-			       ([
-				 "hs":head_string,
-				 "key":misc->cachekey,
-				 "etag":misc->etag,
-				 "callbacks":misc->_cachecallbacks,
-				 "len":file->len,
-				 "raw":file->raw,
-				 "error":file->error,
-				 "type":variant_heads["Content-Type"],
-				 "last_modified":misc->last_modified,
-				 "varies":varies,
-				 "expires":variant_heads["Expires"],
-				 "mtime":(file->stat &&
-					  file->stat[ST_MTIME]),
-				 "rf":realfile,
-			       ]),
-			       misc->cacheable, this_object());
-	  file = ([
-	    "data":data,
-	    "raw":file->raw,
-	    "len":strlen(data),
-	    "error":file->error,
-	  ]);
-	  cache_status["protstore"] = 1;
-	}
-      }
-#endif
-      if (varies && (prot == "HTTP/1.0")) {
-	// The Vary header is new in HTTP/1.1.
-	// It expired a year ago.
-	variant_heads["Expires"] =
-	  Roxen->http_date(predef::time(1)-31557600);
-      }
       if (misc->range) {
 	// Handle byte ranges.
 	int skip;
@@ -2607,6 +2561,14 @@ void got_data(mixed fooid, string s, void|int chained)
 			   Roxen->http_date(predef::time(1)-31557600):
 			   file->expires)) {
 	      variant_heads["Expires"] = expires;
+	    }
+	    // Some browsers, e.g. Netscape 4.7, don't trust a zero
+	    // content length when using keep-alive. So let's force a
+	    // close in that case.
+	    if( file->error/100 == 2 && file->len <= 0 )
+	    {
+	      variant_heads->Connection = "close";
+	      misc->connection = "close";
 	    }
 	    if (misc->range) {
 	      // Handle byte ranges.
