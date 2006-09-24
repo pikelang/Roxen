@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.14 2006/07/05 07:38:08 jonasw Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.15 2006/09/24 09:06:55 liin Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -30,8 +30,6 @@ private Thread.MutexKey mutex_key;
 #endif
 
 private HrefDatabase href_database;
-private constant unavailable = "The requested page is unavailable at the moment. "
-			       "Please try again later";
 
 void create() {
   defvar("fetch-interval", "5 minutes", LOCALE(0, "Fetch interval"),
@@ -166,14 +164,13 @@ public int(0..1) already_initiated(string url) {
 }
 
 public void|string fetch_url(mapping(string:mixed) to_fetch, void|mapping header) {
-  DWRITE(sprintf("in fetch_url(): To fetch: %s, with timeout: %d", to_fetch["url"], 
+  DWRITE(sprintf("fetch_url(): To fetch: %s, with timeout: %d", to_fetch["url"], 
 		 to_fetch["timeout"]));
   
   mapping(string:mixed) args = (["timeout":to_fetch["timeout"], 
 				 "cached-href":to_fetch["url"],
 				 "sync":to_fetch["sync"]]);
 
-  string method = "GET";
   object client;
   
 #ifdef THREADS
@@ -184,25 +181,25 @@ public void|string fetch_url(mapping(string:mixed) to_fetch, void|mapping header
     return;
   }
   
-  client = HTTPClient(method, args, header);
+  client = HTTPClient("GET", args, header);
   initiated += ({client});
   mutex_key = 0;
   client->run();
   
   if (to_fetch["sync"]) {
-    if(client->status > 0) {
+    if(client->status > 0 && client->status < 400) {
       return client->data();
     } else
-      return unavailable;
+      return "";
   }
 #else
   client = Protocols.HTTP.get_url(to_fetch["url"], 0);
   
-  if(client && client->status > 0) {
+  if(client && client->status > 0 && client->status < 400) {
     href_database->update_data(to_fetch["url"], client->data());
     return client->data();
   } else
-    return unavailable;
+    return "";
 #endif
 }
 
@@ -255,7 +252,7 @@ class HrefDatabase {
     
     remove_old_entrys();
 
-    if (no_requests()) {
+    if (!nr_of_requests()) {
       DWRITE("There are no requests, returning from update_db()");
       return;
     }
@@ -316,21 +313,21 @@ class HrefDatabase {
 		       + args["fresh-time"] + " OR " + args["fresh-time"] + " = 0)");
     
     if (result && sizeof(result) && result[0]["data"] != "") {
-      DWRITE("in get_data(): Returning cached data");
+      DWRITE("get_data(): Returning cached data for " + args["cached-href"]);
       
       return result[0]["data"];
     } else if (!args["pure-db"]) {
-      DWRITE("in get_data(): No cached data existed so performing a synchronous fetch");
+      DWRITE("get_data(): No cached data existed for " + args["cached-href"] + " so performing a synchronous fetch");
       
       string data = fetch_url((["url":args["cached-href"], "timeout":args["timeout"], 
 				"sync":1]), header);
       
       return data;
     } else {
-      DWRITE("in get_data(): No cached data existed and pure-db data "
-	     "was desired, so simply returning 'unavailable'");
+      DWRITE("get_data(): No cached data existed for " + args["cached-href"] + " and pure-db data "
+	     "was desired, so simply returning the empty string");
       
-      return unavailable;
+      return "";
     }
   }
   
@@ -347,12 +344,10 @@ class HrefDatabase {
     return to_fetch;
   }
   
-  private int(0..1) no_requests() {
-    array(mapping(string:mixed)) result = sql_query("SELECT url from " + request_table);
-    
-    return sizeof(result) == 0 ? 1 : 0;
+  private int nr_of_requests() {
+    return sizeof(sql_query("SELECT url from " + request_table));
   }
-
+  
   private void remove_old_entrys() {
     sql_query("DELETE FROM " + request_table + " WHERE " + time() + " - latest_request "
 								    "> ttl");
@@ -419,7 +414,7 @@ class HrefDatabase {
   }
   
   public void update_data(string url, string data) {
-    DWRITE(sprintf("in update_data(): Saving the fetched data to the db for url %s"
+    DWRITE(sprintf("update_data(): Saving the fetched data to the db for url %s"
 		   ,  url));
     
     sql_query("UPDATE " + data_table + " SET data=%s, latest_write=%d WHERE url=%s", 
@@ -650,6 +645,17 @@ class HTTPClient {
   void req_ok() {
     DWRITE("Received headers from " + (string)url + " OK");
     status = con->status;
+
+    if (status >= 400) {
+      DWRITE("HTTP status code " + (string)status + " for " + (string)url + ", aborting fetch");
+      finish_up();
+      
+      if (sync)
+	queue->write("@");
+      
+      return;
+    }
+    
     int data_timeout = timeout - (time() - start_time);
     con->data_timeout = data_timeout >= 0 ? data_timeout : 0;
     con->timed_async_fetch(data_ok, data_fail);
@@ -658,9 +664,7 @@ class HTTPClient {
   void req_fail() {
     DWRITE("Receiving headers from " + (string)url + " FAILED");
     status = 0;
-    mutex_key = mutex->lock();
-    initiated -= ({this_object()});
-    mutex_key = 0;
+    finish_up();
 
     if (sync)
       queue->write("@");
@@ -669,9 +673,7 @@ class HTTPClient {
   void data_ok() {
     DWRITE("Received data from " + (string)url + " OK");
     status = con->status;
-    mutex_key = mutex->lock();
-    initiated -= ({this_object()});
-    mutex_key = 0;
+    finish_up();
 
     if (href_database)
       href_database->update_data((string)url, con->data());
@@ -683,12 +685,16 @@ class HTTPClient {
   void data_fail() {
     DWRITE("Receiving data from " + (string)url + " FAILED");
     status = 0;
-    mutex_key = mutex->lock();
-    initiated -= ({this_object()});
-    mutex_key = 0;
+    finish_up();
 
     if (sync)
       queue->write("@");
+  }
+  
+  private void finish_up() {
+    mutex_key = mutex->lock();
+    initiated -= ({this_object()});
+    mutex_key = 0;
   }
   
   void run() {
@@ -701,9 +707,9 @@ class HTTPClient {
     status = con->status;
 
     if (sync) {
-      DWRITE("Waiting for fetch to complete (sync fetch)......");
+      DWRITE("Initiating synchronous fetch for " + (string)url);
       queue->read();
-      DWRITE("Done waiting for fetch.");
+      DWRITE("Synchronous fetch for " + (string)url + " completed.");
     }
   }
 
