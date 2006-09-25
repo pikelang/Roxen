@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.184 2006/09/25 13:13:38 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.185 2006/09/25 13:36:26 wellhard Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1519,8 +1519,6 @@ class RequestID
   //! This function gets the correct host for protocols that handles
   //! IP-less hosts.
   {
-    // Note: Code duplication in protocols/http.pike.
-
     if (!cached_url_base) {
       string tmp;
 
