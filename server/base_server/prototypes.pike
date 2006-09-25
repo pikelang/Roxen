@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.183 2006/09/21 14:44:42 wellhard Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.184 2006/09/25 13:13:38 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1524,11 +1524,35 @@ class RequestID
     if (!cached_url_base) {
       string tmp;
 
-      // First consult the port object.
-      if (port_obj) {
+      // We're looking at the host header...
+      register_vary_callback("Host");
+
+      // First look at the host header in the request.
+      if (tmp = misc->host) {
+	int scanres = sscanf(tmp, "%[^:]:%d", string host, int port);
+	if ((scanres < 2) || (port == port_obj->default_port)) {
+	  // Some clients don't send the port in the host header
+	  // if they've connected to the default port.
+	  // NOTE: We want the (probable) port number that the client
+	  //       used here; NOT the actual port number, since there
+	  //       may be port remappers in the way.
+	  port = port_obj->default_port;
+	  // Remove redundant port number.
+	  cached_url_base = port_obj->prot_name + "://" + host;
+	} else {
+	  cached_url_base = port_obj->prot_name + "://" + tmp;
+	}
+      }
+      // Then use the port object.
+      else if (port_obj) {
 	string host = port_obj->conf_data[conf]->hostname;
-	if (host == "*" && conf && sizeof (host = conf->get_url()))
-	  if (sscanf (host, "%*s://%[^:/]", host) < 2)
+	if (host == "*")
+	  if (conf && sizeof (host = conf->get_url()) &&
+	      sscanf (host, "%*s://%[^:/]", host) == 2) {
+	    // Use the hostname in the configuration url.
+	  }
+	  else
+	    // Fall back to the numeric ip.
 	    host = port_obj->ip;
 	cached_url_base = port_obj->prot_name + "://" + host;
 	if (port_obj->port != port_obj->default_port)
