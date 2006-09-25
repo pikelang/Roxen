@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.508 2006/09/21 15:03:40 wellhard Exp $";
+constant cvs_version = "$Id: http.pike,v 1.509 2006/09/25 13:14:20 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2232,51 +2232,6 @@ void handle_request( )
 
   TIMER_END(handle_request);
   send_result();
-}
-
-string url_base()
-// See the RequestID class for doc.
-{
-  // Note: Code duplication in base_server/prototypes.pike.
-
-  if (!cached_url_base) {
-    // First look at the host header in the request.
-    if (string tmp = misc->host) {
-      int scanres = sscanf (tmp, "%[^:]:%d", string host, int port);
-      if ((scanres < 2) || (port == port_obj->default_port)) {
-	// Some clients don't send the port in the host header
-	// if they've connected to the default port.
-	// NOTE: We want the (probable) port number that the client
-	//       used here; NOT the actual port number, since there
-	//       may be port remappers in the way.
-	port = port_obj->default_port;
-	// Remove redundant port number.
-	cached_url_base = port_obj->prot_name + "://" + host;
-      } else {
-	cached_url_base = port_obj->prot_name + "://" + tmp;
-      }
-    }
-    // Then use the port object.
-    else {
-      string host = (port_obj->conf_data[conf] ||
-		     (["hostname":"*"]))->hostname;
-      if (host == "*")
-	if (conf && sizeof (host = conf->get_url()) &&
-	    sscanf (host, "%*s://%[^:/]", host) == 2) {
-	  // Use the hostname in the configuration url.
-	}
-	else
-	  // Fall back to the numeric ip.
-	  host = port_obj->ip;
-      cached_url_base = port_obj->prot_name + "://" + host;
-      if (port_obj->port != port_obj->default_port)
-	cached_url_base += ":" + port_obj->port;
-    }
-
-    if (string p = misc->site_prefix_path) cached_url_base += p;
-    cached_url_base += "/";
-  }
-  return cached_url_base;
 }
 
 /* We got some data on a socket.
