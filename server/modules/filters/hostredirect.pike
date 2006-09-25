@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.32 2006/09/12 14:10:16 wellhard Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.33 2006/09/25 13:43:48 wellhard Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -59,7 +59,8 @@ void create()
 			      "A list of path prefexes that sould not be redirected. "
 			      "Useful for making global images work in sub sites." ));
   defvar("ignorevariables",
-	 Variable.StringList( ({ "__force_path" }), 0, "Ignore form variables",
+	 Variable.StringList( ({ "__force_path", "__sb_force_login" }),
+			      0, "Ignore form variables",
 			      "A list of form variables. If one of the form variables "
 			      "is set, the request will not be redirected."
 			      "Useful for making login redirects to / work in sub "
