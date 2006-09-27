@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.618 2006/09/18 16:18:34 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.619 2006/09/27 11:49:38 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4079,6 +4079,7 @@ $bin-response   -- The response code sent as a binary short number
 $length         -- The length of the data section of the reply
 $bin-length     -- Same, but as an 32 bit integer in network byteorder
 $request-time   -- The time the request took (seconds)
+$etag           -- The entity tag (aka ETag) header of the result.
 $referer        -- The header 'referer' from the request, or '-'.
 $user_agent     -- The header 'User-Agent' from the request, or '-'.
 $user_agent_raw -- Same, but spaces in the name are not encoded to %20.
