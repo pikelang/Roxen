@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.60 2006/08/25 10:48:39 grubba Exp $
+# $Id: extensions,v 1.61 2006/09/27 09:08:40 grubba Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -264,6 +264,8 @@ cpp	text/x-c++-code
 etx	text/x-setext
 h	text/x-include-file
 hdml	text/x-hdml
+# MSIE 5+ HTML Component file.
+htc	text/x-component
 htt	text/webviewhtml
 pgr	text/parsnegar-document
 rt	text/vnd.rn-realtext
