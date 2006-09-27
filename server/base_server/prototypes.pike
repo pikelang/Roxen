@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.185 2006/09/25 13:36:26 wellhard Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.186 2006/09/27 15:07:34 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -891,6 +891,12 @@ class RequestID
   //! passing between modules et cetera. Be sure to use a key unique to your
   //! own application.
   //!
+  //! If a subrequest (a.k.a. "fake" request) is generated within
+  //! another request then the subrequest receives a copy (created
+  //! with @[copy_value]) of this mapping. I.e. the subrequest sees
+  //! any data put here by the parent request, but changes made in the
+  //! subrequest won't affect the parent.
+  //!
   //! These are some of the defined entries:
   //! @mapping
   //!   @member int "cacheable"
@@ -963,7 +969,7 @@ class RequestID
   //!     speed up some lookups.
   //! @endmapping
 
-  mapping (string:mixed) connection_misc;
+  mapping (string:mixed) connection_misc = ([]);
   //! This mapping contains miscellaneous non-standardized information, and
   //! is the typical location to store away your own connection-local data
   //! for passing between requests on the same connection et cetera. Be sure
