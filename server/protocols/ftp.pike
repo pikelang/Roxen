@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.111 2006/08/17 15:11:44 wellhard Exp $
+ * $Id: ftp.pike,v 2.112 2006/09/27 15:05:45 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -211,14 +211,12 @@ class RequestID2
 #endif /* DEBUG */
 	}
       }
-      o["misc"] = m_rid["misc"] + ([ ]);
     } else {
       // Defaults...
       client = ({ "ftp" });
       prot = "FTP";
       clientprot = "FTP";
       variables = FakedVariables(real_variables = ([]));
-      misc = (["pref_languages": PrefLanguages()]);
       cookies = CookieJar();
       throttle = ([]);
       client_var = ([]);
@@ -232,6 +230,7 @@ class RequestID2
       extra_extension = "";
     }
     time = predef::time(1);
+    misc = (["pref_languages": PrefLanguages()]);
 #ifdef FTP2_DEBUG
     misc->trace_enter = trace_enter;
     misc->trace_leave = trace_leave;
