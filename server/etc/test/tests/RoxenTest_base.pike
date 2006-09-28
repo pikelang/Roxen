@@ -216,6 +216,7 @@ void run_tests( Configuration c )
     // Invariants -- must be supported by all protocols or bad things
     // will happen.
     int    time       = predef::time();
+    int    hrtime     = gethrtime();
     string remoteaddr = "194.52.182.122";
     string method     = "GET";
 
