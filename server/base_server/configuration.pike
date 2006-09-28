@@ -6,7 +6,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.595 2006/09/27 16:20:17 wellhard Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.596 2006/09/28 07:19:02 wellhard Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1959,9 +1959,10 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
 	  (id->query?("?"+id->query):"");
 	new_query=Roxen.add_pre_state(new_query, id->prestate);
 
-	TIMER_END(location_modules);
 	// Avoid overcaching of the host header by disabling the protocol cache.
 	NO_PROTO_CACHE();
+	
+	TIMER_END(location_modules);
 	return Roxen.http_redirect(new_query, id);
       }
     }
