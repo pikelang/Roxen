@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.937 2006/09/27 11:49:38 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.938 2006/09/29 12:43:31 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -1272,6 +1272,9 @@ class InternalRequestID
     object uri = Standards.URI(url);
     prot = upper_case(uri->scheme);
     misc->host = uri->host;
+    if ((prot == "HTTP" && uri->port != 80) ||
+	(prot == "HTTPS" && uri->port != 443))
+      misc->host += ":" + uri->port;
     string path = uri->path;
     raw_url = path;
     method = "GET";
