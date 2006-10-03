@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.518 2006/09/14 15:42:31 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.519 2006/10/03 12:18:56 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -8496,10 +8496,18 @@ the respective attributes below for further information.</p></desc>
  details).</p>
 
  <p>The expression is a simplified variant of an XPath location path:
- It consists of one or more steps delimited by \'<tt>/</tt>\'.
- Each step selects some part(s) of the current node. The first step
- operates on the defined tag or container itself, and each following
- one operates on the part(s) selected by the previous step.</p>
+ It consists of one or more steps delimited by \'<tt>/</tt>\' or
+ \'<tt>//</tt>\'. Each step selects some part(s) of the tree starting
+ from the current node. The first step operates on the defined tag or
+ container itself.</p>
+
+ <p>A step preceded by \'<tt>/</tt>\' is only matched against the
+ immediate children of the node currently selected by the preceding
+ step. A step preceded by \'<tt>//</tt>\' is matched against any node
+ in the tree below that node.</p>
+
+ <p>Note: An expression cannot begin with \'<tt>/</tt>\' or
+ \'<tt>//</tt>\'. Use \'<tt>./</tt>\' or \'<tt>.//</tt>\' instead.</p>
 
  <p>A step may be any of the following:</p>
 
