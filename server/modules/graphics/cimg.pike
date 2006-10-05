@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.72 2005/10/06 09:07:36 anders Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.73 2006/10/05 09:03:47 jonasw Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -337,6 +337,8 @@ mapping check_args( mapping args )
     args->format = "png";
   if( !(args->src || args->data) )
     RXML.parse_error("Required attribute 'src' or 'data' missing\n");
+  if (args->src == "")
+    RXML.parse_error("Attribute 'src' cannot be empty\n");
   if( args->src && args->data )
     RXML.parse_error("Only one of 'src' and 'data' may be specified\n");
 
