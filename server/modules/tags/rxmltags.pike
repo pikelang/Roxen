@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.496 2006/05/02 12:48:20 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.497 2006/10/05 09:14:03 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -723,6 +723,8 @@ class TagImgs {
 
     array do_return(RequestID id) {
       if(args->src) {
+	if (!sizeof(args->src))
+	  RXML.parse_error("Attribute 'src' cannot be empty.\n");
 	string|object file=id->conf->real_file(Roxen.fix_relative(args->src, id), id);
 	if(!file) {
 	  file=id->conf->try_get_file(args->src,id);
