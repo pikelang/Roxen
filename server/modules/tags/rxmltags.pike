@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.497 2006/10/05 09:14:03 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.498 2006/10/05 12:49:54 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1183,6 +1183,14 @@ class TagInsertFile {
 
     result=id->conf->try_get_file(var, id, UNDEFINED, UNDEFINED, UNDEFINED,
 				  result_mapping);
+
+    // Propagate last_modified to parent request...
+    if (result_mapping->stat &&
+	result_mapping->stat[ST_MTIME] > id->misc->last_modified)
+      id->misc->last_modified = result_mapping->stat[ST_MTIME];
+    // ... and also in recursive inserts.
+    if (result_mapping->last_modified > id->misc->last_modified)
+      id->misc->last_modified = result_mapping->last_modified;
 
     // Restore previous language state.
     if (args->langauge && pl) {
