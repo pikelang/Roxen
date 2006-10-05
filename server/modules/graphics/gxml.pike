@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.33 2005/12/16 17:50:52 jonasw Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.34 2006/10/05 09:52:05 jonasw Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -105,6 +105,8 @@ class GXML##X								\
 									\
     array do_return( RequestID id )					\
     {									\
+      if (content)							\
+        content = result_type->decode_xml_safe_charrefs(content);	\
       Y;                                                                \
       LazyImage.LazyImage i = TMP_POP();				\
       LazyImage.LazyImage ii = STACK_POP();				\
