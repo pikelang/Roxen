@@ -269,6 +269,7 @@ worldmap binary
 /server/modules/ldap/ldaptag.pike foreign_ident
 /server/modules/ldap/userdb_ldap.pike foreign_ident
 /server/modules/logging/client_logger.pike foreign_ident
+/server/modules/logging/commonlog_sql_import.pike foreign_ident
 /server/modules/logging/home_logger.pike foreign_ident
 /server/modules/logging/nologging.pike foreign_ident
 /server/modules/logging/roxen_network.pike foreign_ident
