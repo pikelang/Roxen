@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.509 2006/09/25 13:14:20 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.510 2006/10/13 17:20:54 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -38,12 +38,37 @@ int footime, bartime;
 #define FD_WERR(X)	werror("%s\n", (X))
 #endif
 #define MARK_FD(X) do {							\
-    int _fd = my_fd && my_fd->query_fd ? my_fd->query_fd() : -1;	\
+    int _fd = -1;							\
+    if (my_fd->query_fd)						\
+      _fd = my_fd->query_fd();						\
+    if (my_fd->query_stream)						\
+      if (object stream = my_fd->query_stream()) /* SSL */		\
+	if (stream->query_fd)						\
+	  _fd = stream->query_fd();					\
     FD_WERR("FD " + (_fd == -1 ? sprintf ("%O", my_fd) : _fd) + ": " + (X)); \
     mark_fd(_fd, (X)+" "+remoteaddr);					\
   } while (0)
 #else
 #define MARK_FD(X) do {} while (0)
+#endif
+
+#ifdef CONNECTION_DEBUG
+// Currently only used by CONNECTION_DEBUG to label each message with
+// the fd.
+private string debug_fd_str;
+private string debug_my_fd()
+{
+  if (my_fd->query_fd)
+    return debug_fd_str = (string) my_fd->query_fd();
+  if (my_fd->query_stream)
+    if (object stream = my_fd->query_stream()) // SSL
+      if (stream->query_fd)
+	return debug_fd_str = (string) stream->query_fd();
+  return debug_fd_str = sprintf ("%O", my_fd);
+}
+#define DEBUG_GET_FD							\
+  (my_fd ? debug_fd_str || debug_my_fd() :				\
+   debug_fd_str ? "ex " + debug_fd_str : "??")
 #endif
 
 #ifdef THROTTLING_DEBUG
@@ -292,20 +317,25 @@ void send(string|object what, int|void len)
 
   if(!what) return;
   if(!pipe) setup_pipe();
-  if(stringp(what))  {
+  if(stringp(what)) {
 #ifdef CONNECTION_DEBUG
 #define TOSTR(X)	#X
 #define TOSTR2(X)	TOSTR(X)
-
+#if TOSTR2(CONNECTION_DEBUG) != "1"
+    // CONNECTION_DEBUG may be defined to something like "text/" to
+    // see the response content for all content types with that
+    // prefix, only headers are shown otherwise.
     if (has_prefix(file->type || "", TOSTR2(CONNECTION_DEBUG))) {
-      werror ("HTTP: Response =================================================\n"
-	      "%s\n",
+      werror ("HTTP[%s]: Response =============================================\n"
+	      "%s\n", DEBUG_GET_FD,
 	      replace (sprintf ("%O", what),
 		       ({"\\r\\n", "\\n", "\\t"}),
 		       ({"\n",     "\n",  "\t"})));
-    } else {
-      werror ("HTTP: Response =================================================\n"
-	      "string[%d]\n", sizeof(what));
+    } else
+#endif
+    {
+      werror ("HTTP[%s]: Response =============================================\n"
+	      "string[%d]\n", DEBUG_GET_FD, sizeof (what));
     }
 #else
     REQUEST_WERR(sprintf("HTTP: Pipe string %O", what));
@@ -314,8 +344,8 @@ void send(string|object what, int|void len)
   }
   else {
 #ifdef CONNECTION_DEBUG
-    werror ("HTTP: Response =================================================\n"
-	    "Stream %O, length %O\n", what, len);
+    werror ("HTTP[%s]: Response =============================================\n"
+	    "Stream %O, length %O\n", DEBUG_GET_FD, what, len);
 #else
     REQUEST_WERR(sprintf("HTTP: Pipe stream %O, length %O", what, len));
 #endif
@@ -331,9 +361,7 @@ void start_sender( )
   if (my_fd_busy) {
     // We're waiting for the previous request to finish.
     pipe_pending = 1;
-#ifdef CONNECTION_DEBUG
-    werror("HTTP: Pipe pending.\n");
-#endif
+    REQUEST_WERR ("HTTP: Pipe pending.\n");
     return;
   }
   if (pipe) 
@@ -358,9 +386,7 @@ void start_sender( )
 void my_fd_released()
 {
   my_fd_busy = 0;
-#ifdef CONNECTION_DEBUG
-  werror("HTTP: Fd released.\n");
-#endif
+  REQUEST_WERR ("HTTP: Fd released.\n");
   if (pipe_pending) {
     start_sender();
   }
@@ -1015,7 +1041,8 @@ void end(int|void keepit)
 static void close_cb()
 {
 #ifdef CONNECTION_DEBUG
-  werror ("HTTP: Client close ---------------------------------------------\n");
+  werror ("HTTP[%s]: Client close -----------------------------------------\n",
+	  DEBUG_GET_FD);
 #else
   REQUEST_WERR ("HTTP: Got remote close.");
 #endif
@@ -1040,14 +1067,8 @@ static void do_timeout()
   if(time && elapsed >= 30)
   {
 #ifdef CONNECTION_DEBUG
-    werror("HTTP: Connection timed out. Closing.\n"
-	   "rcb:%O\n"
-	   "wcb:%O\n"
-	   "ccb:%O\n",
-	   my_fd->query_read_callback(),
-	   my_fd->query_write_callback(),
-	   my_fd->query_close_callback());
-#else
+    werror ("HTTP[%s]: Connection timed out. Closing.\n", DEBUG_GET_FD);
+#endif
     REQUEST_WERR(sprintf("HTTP: Connection timed out. Closing.\n"
 			 "rcb:%O\n"
 			 "wcb:%O\n"
@@ -1055,7 +1076,6 @@ static void do_timeout()
 			 my_fd->query_read_callback(),
 			 my_fd->query_write_callback(),
 			 my_fd->query_close_callback()));
-#endif
     MARK_FD("HTTP timeout");
     end();
   } else {
@@ -1411,7 +1431,8 @@ static void destroy()
 void do_log( int|void fsent )
 {
 #ifdef CONNECTION_DEBUG
-  werror ("HTTP: Response sent ============================================\n");
+  werror ("HTTP[%s]: Response sent ========================================\n",
+	  DEBUG_GET_FD);
 #endif
   MARK_FD("HTTP logging"); // fd can be closed here
   if (chained_to) {
@@ -1785,8 +1806,8 @@ void low_send_result(string headers, string data, int|void len,
       data = file->read(len);
     } else if (!data) data = "";
 #ifdef CONNECTION_DEBUG
-    werror("HTTP: Response =================================================\n"
-	   "%s\n",
+    werror("HTTP[%s]: Response =============================================\n"
+	   "%s\n", DEBUG_GET_FD,
 	   replace(sprintf("%O", headers + data),
 		   ({"\\r\\n", "\\n", "\\t"}),
 		   ({"\n",     "\n",  "\t"})));
@@ -1800,8 +1821,8 @@ void low_send_result(string headers, string data, int|void len,
   } else {
     MY_TRACE_ENTER("Async write.", 0);
 #ifdef CONNECTION_DEBUG
-    werror("HTTP: Response headers =========================================\n"
-	   "%s\n",
+    werror("HTTP[%s]: Response headers =====================================\n"
+	   "%s\n", DEBUG_GET_FD,
 	   replace(sprintf("%O", headers),
 		   ({"\\r\\n", "\\n", "\\t"}),
 		   ({"\n",     "\n",  "\t"})));
@@ -2241,8 +2262,8 @@ void handle_request( )
 void got_data(mixed fooid, string s, void|int chained)
 {
 #ifdef CONNECTION_DEBUG
-  werror ("HTTP: Request --------------------------------------------------\n"
-	  "%s\n",
+  werror ("HTTP[%s]: Request ----------------------------------------------\n"
+	  "%s\n", DEBUG_GET_FD,
 	  replace (sprintf ("%O", s),
 		   ({"\\r\\n", "\\n", "\\t"}),
 		   ({"\n",     "\n",  "\t"})));
@@ -2323,7 +2344,8 @@ void got_data(mixed fooid, string s, void|int chained)
     }
 
 #ifdef CONNECTION_DEBUG
-    werror ("HTTP: Request received -----------------------------------------\n");
+    werror ("HTTP[%s]: Request received -------------------------------------\n",
+	    DEBUG_GET_FD);
 #endif
 
     if( method == "GET" || method == "HEAD" ) {
@@ -2706,11 +2728,7 @@ void chain(object f, object c, string le)
   hrtime = 0;
 
   if ( le && strlen( le ) ) {
-#ifdef CONNECTION_DEBUG
-    werror("HTTP: Leftovers: %O\n", le);
-#else
     REQUEST_WERR(sprintf("HTTP: %d bytes left over.\n", sizeof(le)));
-#endif
     got_data(0, le, 1);
   }
   else
