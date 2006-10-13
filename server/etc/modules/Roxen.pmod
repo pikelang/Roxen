@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.217 2006/09/19 17:19:33 mast Exp $
+// $Id: Roxen.pmod,v 1.218 2006/10/13 18:11:27 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -503,10 +503,6 @@ static constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
                             "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
 static constant days = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" });
 
-
-static int chd_lt;
-static string chd_lf;
-
 string log_date(int t) {
   string c;
   mapping(string:int) lt = localtime(t);
@@ -521,10 +517,17 @@ string log_time(int t) {
 		 lt->hour, lt->min, lt->sec));
 }
 
+// CERN date formatter. Note similar code in LogFormat in roxen.pike.
+
+static int chd_lt;
+static string chd_lf;
+
 string cern_http_date(int t)
 //! Return a date, formated to be used in the common log format
 {
-  if( t == chd_lt ) return chd_lf;
+  if( t == chd_lt )
+    // Interpreter lock assumed here.
+    return chd_lf;
 
   string c;
   mapping(string:int) lt = localtime(t);
@@ -535,10 +538,16 @@ string cern_http_date(int t)
     tzh = -tzh;
     c="+";
   }
+
+  c = sprintf("%02d/%s/%04d:%02d:%02d:%02d %s%02d00",
+	      lt->mday, months[lt->mon], 1900+lt->year,
+	      lt->hour, lt->min, lt->sec, c, tzh);
+
   chd_lt = t;
-  return(chd_lf=sprintf("%02d/%s/%04d:%02d:%02d:%02d %s%02d00",
-		 lt->mday, months[lt->mon], 1900+lt->year,
-		 lt->hour, lt->min, lt->sec, c, tzh));
+  // Interpreter lock assumed here.
+  chd_lf = c;
+
+  return c;
 }
 
 string http_status_message (int status_code)
