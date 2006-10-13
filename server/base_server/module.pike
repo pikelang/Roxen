@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module.pike,v 1.226 2006/10/13 18:02:43 mast Exp $
+// $Id: module.pike,v 1.227 2006/10/13 18:20:38 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -173,7 +173,7 @@ void set_module_url(string to)
 
 void free_some_sockets_please(){}
 
-void start(int variable_save, Configuration conf) {}
+void start(int variable_save, Configuration conf, void|int newly_added) {}
 
 string status() {}
 
