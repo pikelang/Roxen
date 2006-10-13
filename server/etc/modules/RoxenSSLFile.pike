@@ -1,4 +1,4 @@
-/* $Id: RoxenSSLFile.pike,v 1.15 2006/08/17 14:03:55 mast Exp $
+/* $Id: RoxenSSLFile.pike,v 1.16 2006/10/13 18:17:13 mast Exp $
  */
 
 // This is SSL.sslfile from Pike 7.6, slightly modified for the old
@@ -241,11 +241,15 @@ static constant epipe_errnos = (<
 static void thread_error (string msg, THREAD_T other_thread)
 {
   error ("%s"
+	 "%s\n"
 	 "User callbacks: a=%O r=%O w=%O c=%O\n"
 	 "Internal callbacks: r=%O w=%O c=%O\n"
 	 "This thread: %O  Other thread: %O\n"
 	 "Other thread backtrace:\n%s----------\n",
 	 msg,
+	 !stream ? "Got no stream" :
+	 stream->is_open() ? "Stream is open" :
+	 "Stream is closed",
 	 accept_callback, read_callback, write_callback, close_callback,
 	 stream && stream->query_read_callback(),
 	 stream && stream->query_write_callback(),
@@ -262,9 +266,13 @@ static void thread_error (string msg, THREAD_T other_thread)
 static void thread_error (string msg, THREAD_T other_thread)
 {
   error ("%s"
+	 "%s\n"
 	 "User callbacks: a=%O r=%O w=%O c=%O\n"
 	 "Internal callbacks: r=%O w=%O c=%O\n",
 	 msg,
+	 !stream ? "Got no stream" :
+	 stream->is_open() ? "Stream is open" :
+	 "Stream is closed",
 	 accept_callback, read_callback, write_callback, close_callback,
 	 stream && stream->query_read_callback(),
 	 stream && stream->query_write_callback(),
