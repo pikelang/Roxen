@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.620 2006/10/05 12:49:53 anders Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.621 2006/10/13 17:12:32 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -219,7 +219,9 @@ string name = roxen->bootstrap_info->get();
 // the cache entry are done...)
 class DataCache
 {
-  mapping(string:array(string|mapping(string:mixed))) cache = ([]);
+  mapping(string:
+	  array(string|mapping(string:mixed))|string|
+	  function(string, RequestID:string)) cache = ([]);
 
   int current_size;
   int max_size;
@@ -238,22 +240,16 @@ class DataCache
   static void low_expire_entry(string key_prefix, array(string) keys)
   {
     if (!key_prefix) return;
-    int found;
-    do {
-      found = 0;
-      foreach(keys; int ind; string key) {
-	if (!key) continue;
-	if (has_prefix(key, key_prefix)) {
-	  found = 1;
-	  if (arrayp(cache[key])) {
-	    current_size -= sizeof(cache[key][0]);
-	  }
-	  m_delete(cache, key);
-	  keys[ind] = 0;
+    foreach(keys; int ind; string key) {
+      if (!key) continue;
+      if (has_prefix(key, key_prefix)) {
+	if (arrayp(cache[key])) {
+	  current_size -= sizeof(cache[key][0]);
 	}
+	m_delete(cache, key);
+	keys[ind] = 0;
       }
-      key_prefix = "\0" + key_prefix;
-    } while (found);
+    }
   }
 
   void expire_entry(string key_prefix, RequestID|void id)
@@ -263,9 +259,7 @@ class DataCache
       return;
     }
     string url = key_prefix;
-    if ((url != "") && !url[0]) {
-      sscanf(url, "%*[\0]%[^\0]", url);
-    }
+    sscanf(url, "%[^\0]", url);
     while(1) {
       array(string|mapping(string:mixed))|string|
 	function(string, RequestID:string) val;
@@ -284,14 +278,17 @@ class DataCache
       } else {
 	key_frag = val(url, id);
       }
-      if (arrayp(key_frag)) key_frag *= ", ";
-      // NOTE: The prepended NUL is for spoof protection.
-      key_prefix = "\0" + key_prefix + "\0" + (key_frag || "");
+      if (key_frag)
+	// Avoid spoofing if key_frag happens to contain "\0\0".
+	key_frag = replace (key_frag, "\0", "\0\1");
+      else key_frag = "";
+      key_prefix += "\0\0" + key_frag;
     }
   }
 
   static void clear_some_cache()
   {
+    // FIXME: Use random(cache) instead to avoid the indices() call.
     array(string) q = indices(cache);
     if(!sizeof(q))
     {
@@ -324,9 +321,11 @@ class DataCache
       } else {
 	key_frag = vary_cb(url, id);
       }
-      if (arrayp(key_frag)) key_frag *= ", ";
-      // NOTE: The prepended NUL is for spoof protection.
-      key = "\0" + key + "\0" + (key_frag || "");
+      if (key_frag)
+	// Avoid spoofing if key_frag happens to contain "\0\0".
+	key_frag = replace (key_frag, "\0", "\0\1");
+      else key_frag = "";
+      key += "\0\0" + key_frag;
     }
 
     array(string|mapping(string:mixed))|string|
@@ -340,6 +339,7 @@ class DataCache
     cache[key] = ({ data, meta });
 
     // Only the actual cache entry is expired.
+    // FIXME: This could lead to lots and lots of call outs.. :P
     call_out(low_expire_entry, expire, key, ({ key }));
     int n;
     while( (current_size > max_size) && (n++<10))
@@ -368,9 +368,11 @@ class DataCache
       } else {
 	key_frag = res(url, id);
       }
-      if (arrayp(key_frag)) key_frag *= ", ";
-      // NOTE: The prepended NUL is for spoof protection.
-      key = "\0" + key + "\0" + (key_frag || "");
+      if (key_frag)
+	// Avoid spoofing if key_frag happens to contain "\0\0".
+	key_frag = replace (key_frag, "\0", "\0\1");
+      else key_frag = "";
+      key += "\0\0" + key_frag;
     };
   }
 

@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.186 2006/09/27 15:07:34 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.187 2006/10/13 17:12:32 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1471,9 +1471,6 @@ class RequestID
   //!   Note also that the function @[cb] should be fast, and avoid
   //!   excessive lengths in the returned key, to keep down on
   //!   perfomance issues.
-  //!
-  //!   Please avoid having NULs (@tt{"\0"@}) in the key fragments,
-  //!   since they may be used to spoof the cache.
   //!
   //!   Caveat! The callback function gets called very early in
   //!   the request processing, so not all fields in the @[RequestID]
