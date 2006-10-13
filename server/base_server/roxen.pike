@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.938 2006/09/29 12:43:31 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.939 2006/10/13 17:30:12 mast Exp $";
 
 //! @appears roxen
 //!
@@ -3749,8 +3749,14 @@ class ImageCache
 
   void destroy()
   {
-    if (mixed err = catch(sync_meta()))
+    if (mixed err = catch(sync_meta())) {
       report_warning("Failed to sync cached atimes for "+name+"\n");
+#if 0
+#ifdef DEBUG
+      report_debug (describe_backtrace (err));
+#endif
+#endif
+    }
   }
 }
 
@@ -5138,6 +5144,15 @@ int main(int argc, array tmp)
   argv = tmp;
   tmp = 0;
 
+#if 0
+  Thread.thread_create (lambda () {
+			  while (1) {
+			    sleep (10);
+			    describe_all_threads();
+			  }
+			});
+#endif
+
 #ifdef LOG_GC_TIMESTAMPS
   GCTimestamp();
 #endif
@@ -6362,4 +6377,3 @@ class LogFile(string fname, string|void compressor_program)
     return strlen(what); 
   }
 }
-
