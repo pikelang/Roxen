@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module.pike,v 1.225 2006/09/18 16:18:34 mast Exp $
+// $Id: module.pike,v 1.226 2006/10/13 18:02:43 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -34,39 +34,35 @@ string|array(string) module_creator;
 string module_url;
 RXML.TagSet module_tag_set;
 
-/* These functions exists in here because otherwise the messages in
- * the event log does not always end up in the correct
- * module/configuration.  And the reason for that is that if the
- * messages are logged from subclasses in the module, the DWIM in
- * roxenlib.pike cannot see that they are logged from a module. This
- * solution is not really all that beautiful, but it works. :-)
+/* These functions exist in here because otherwise the messages in the
+ * event log do not always end up in the correct module/configuration.
+ * And the reason for that is that if the messages are logged from
+ * subclasses in the module, the DWIM in roxenlib.pike cannot see that
+ * they are logged from a module. This solution is not really all that
+ * beautiful, but it works. :-)
  */
 void report_fatal( mixed ... args )  { predef::report_fatal( @args );  }
 void report_error( mixed ... args )  { predef::report_error( @args );  }
 void report_notice( mixed ... args ) { predef::report_notice( @args ); }
 void report_debug( mixed ... args )  { predef::report_debug( @args );  }
 
+void log_event (string facility, string action, string resource,
+		void|mapping(string:mixed) info)
+//! Log an event. See @[Configuration.log_event] for details.
+//!
+//! @[facility] may be zero. The local module identifier as returned
+//! by @[module_local_id] is used as facility in that case.
+{
+  _my_configuration->log_event (facility || _module_local_identifier,
+				action, resource, info);
+}
 
 string module_identifier()
 //! Returns a string that uniquely identifies this module instance
 //! within the server. The identifier is the same as
 //! @[Roxen.get_module] and @[Roxen.get_modname] handles.
 {
-#if 1
   return _module_identifier;
-#else
-  if (!_module_identifier) {
-    string|mapping name = this_object()->register_module()[1];
-    if (mappingp (name)) name = name->standard;
-    string cname = sprintf ("%O", my_configuration());
-    if (sscanf (cname, "Configuration(%s", cname) == 1 &&
-	sizeof (cname) && cname[-1] == ')')
-      cname = cname[..sizeof (cname) - 2];
-    _module_identifier = sprintf ("%s,%s",
-				  name||this_object()->module_name, cname);
-  }
-  return _module_identifier;
-#endif
 }
 
 string module_local_id()
@@ -177,7 +173,7 @@ void set_module_url(string to)
 
 void free_some_sockets_please(){}
 
-void start(void|int num, void|Configuration conf) {}
+void start(int variable_save, Configuration conf) {}
 
 string status() {}
 
