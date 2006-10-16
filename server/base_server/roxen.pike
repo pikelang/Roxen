@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.900 2006/09/29 12:51:13 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.901 2006/10/16 15:17:57 mast Exp $";
 
 //! @appears roxen
 //!
@@ -5253,10 +5253,41 @@ static string _sprintf( )
   return "roxen";
 }
 
-// Support for logging in configurations and modules.
 
-class LogFormat
+// Logging
+
+class LogFormat			// Note: Dumping won't work if static.
 {
+  static string url_encode (string str)
+  {
+    // Somewhat like Roxen.http_encode_url, but only encode enough
+    // chars to avoid ambiguity in typical log formats. Notably, UTF-8
+    // encoded chars aren't URL encoded too, to make the log easier to
+    // view in any UTF-8 aware editor or viewer.
+    return replace (
+      string_to_utf8 (str), ({
+	// Control chars.
+	"\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
+	"\010", "\011", "\012", "\013", "\014", "\015", "\016", "\017",
+	"\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
+	"\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
+	"\177",
+	// The escape char.
+	"%",
+	// Common log format separators.
+	" ", "\"", "'",
+      }),
+      ({
+	"%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07",
+	"%08", "%09", "%0a", "%0b", "%0c", "%0d", "%0e", "%0f",
+	"%10", "%11", "%12", "%13", "%14", "%15", "%16", "%17",
+	"%18", "%19", "%1a", "%1b", "%1c", "%1d", "%1e", "%1f",
+	"%7f",
+	"%25",
+	"%20", "%22", "%27",
+      }));
+  }
+
   static int rusage_time;
   static array(int) rusage_data;
   static void update_rusage()
@@ -5291,6 +5322,50 @@ class LogFormat
       return rusage_data[1];
     return 0;
   }
+
+  static string std_date(mapping(string:int) ct) {
+    return(sprintf("%04d-%02d-%02d",
+		   1900+ct->year,ct->mon+1, ct->mday));
+  }
+ 
+  static string std_time(mapping(string:int) ct) {
+    return(sprintf("%02d:%02d:%02d",
+		   ct->hour, ct->min, ct->sec));
+  }
+
+  // CERN date formatter. Note similar code in Roxen.pmod.
+
+  static constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+			      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
+
+  static int chd_lt;
+  static string chd_lf;
+
+  static string cern_http_date(int t, mapping(string:int) ct)
+  {
+    if( t == chd_lt )
+      // Interpreter lock assumed here.
+      return chd_lf;
+
+    string c;
+    int tzh = ct->timezone/3600;
+    if(tzh > 0)
+      c="-";
+    else {
+      tzh = -tzh;
+      c="+";
+    }
+
+    c = sprintf("%02d/%s/%04d:%02d:%02d:%02d %s%02d00",
+		ct->mday, months[ct->mon], 1900+ct->year,
+		ct->hour, ct->min, ct->sec, c, tzh);
+
+    chd_lt = t;
+    // Interpreter lock assumed here.
+    chd_lf = c;
+
+    return c;
+  }
   
   static string host_ip_to_int(string s)
   {
@@ -5307,7 +5382,11 @@ class LogFormat
     return tmp[0];      // username only, no password
   }
 
-  void log( function do_write, RequestID id, mapping file );
+  void log_access( function do_write, RequestID id, mapping file );
+
+  void log_event (function do_write, string facility, string action,
+		  string resource, mapping(string:mixed) info);
+
   static void do_async_write( string host, string data, string ip, function c )
   {
     if( c ) 
@@ -5315,154 +5394,351 @@ class LogFormat
   }
 }
 
-static mapping(string:function) compiled_formats = ([ ]);
+static mapping(string:function) compiled_log_access = ([ ]);
+static mapping(string:function) compiled_log_event = ([ ]);
 
-constant formats = 
-({
-  ({ "ip_number",   "%s",   "(string)request_id->remoteaddr",0 }),
-  ({ "bin-ip_number","%s",  "host_ip_to_int(request_id->remoteaddr)",0 }),
-  ({ "cern_date",   "%s",   "Roxen.cern_http_date( time( 1 ) )",0 }),
-  ({ "bin-date",    "%4c",  "time(1)",0 }),
-  ({ "method",      "%s",   "(string)request_id->method",0 }),
-  ({ "resource",    "%s",   "(string)(request_id->raw_url||request_id->not_query)", 0 }),
-  ({ "full_resource","%s",  "(string)(request_id->raw_url||request_id->not_query)",0 }),
-  ({ "protocol",    "%s",   "(string)request_id->prot",0 }),
-  ({ "response",    "%d",   "(int)(file->error || 200)",0 }),
-  ({ "bin-response","%2c",  "(int)(file->error || 200)",0 }),
-  ({ "length",      "%d",   "(int)file->len",0 }),
-  ({ "bin-length",  "%4c",  "(int)file->len",0 }),
-  ({ "vhost",       "%s",   "(request_id->misc->host||\"-\")", 0 }),
-  ({ "referer",     "%s",    
-     "sizeof(request_id->referer||({}))?request_id->referer[0]:\"-\"", 0 }),
-  ({ "user_agent_raw",  "%s",    
-     "request_id->client?request_id->client*\" \":\"-\"", 0 }),
-  ({ "user_agent",  "%s",    
-     "request_id->client?request_id->client*\"%20\":\"-\"", 0 }),
-  ({ "user_id",     "%s",
-     "(request_id->cookies&&request_id->cookies->RoxenUserID)||"
-     "(request_id->misc->moreheads&&"
-     " request_id->misc->moreheads[\"Set-Cookie\"]&&"
-     " request_id->parse_cookies&&"
-     " request_id->parse_cookies(request_id->misc->moreheads[\"Set-Cookie\"])"
-     " ->RoxenUserID)||\"0\"",0 }),
-  ({ "user",        "%s",    "extract_user( request_id->realauth )",0 }),
-  ({ "request-time","%1.2f",  "time(request_id->time )",0 }),
-  ({ "host",        "\4711",    0, 1 }), // unlikely to occur normally
-  ({ "cache-status","%s",   ("sizeof(request_id->cache_status||({}))?"
-			     "indices(request_id->cache_status)*\",\":"
-			     "\"nocache\""), 0 }),
-  ({ "eval-status","%s",   ("sizeof(request_id->eval_status||({}))?"
-			    "indices(request_id->eval_status)*\",\":"
-			    "\"-\""), 0 }),
-  ({ "content-type", "%s", "((file->type || \"-\") / \";\")[0]", 0 }),
-  ({ "server-uptime", "%d", "max(1, time(1) - roxen->start_time)", 0 }),
-  ({ "server-cputime", "%d", "server_cputime()", 0 }),
-  ({ "server-usertime", "%d", "server_usertime()", 0 }),
-  ({ "server-systime", "%d", "server_systime()", 0 }),
-});
+#define LOG_ASYNC_HOST		1
+#define LOG_NEED_COOKIES	2
+#define LOG_NEED_TIMESTAMP	4
+#define LOG_NEED_LTIME		(8 | LOG_NEED_TIMESTAMP)
+#define LOG_NEED_GTIME		(16 | LOG_NEED_TIMESTAMP)
+
+// Elements of a format array arr:
+// arr[0]: sprintf format for acccess logging (run_log_format).
+// arr[1]: Code for the corresponding sprintf argument of arr[0].
+// arr[2]: sprintf format for event logging (run_log_event_format).
+//   May be 0 to reuse arr[0] and arr[1].
+//   May be 1 to indicate that an attempt is made to look up the
+//   variable in the info mapping. If it isn't found then arr[3] is
+//   used as fallback. The sprintf format string is always "%s" in
+//   this case.
+// arr[3]: Code for the corresponding sprintf argument of arr[2].
+// arr[4]: Flags.
+
+static constant formats = ([
+
+  // Used for both access and event logging
+  "date":		({"%s", "std_date (ltime)", 0, 0, LOG_NEED_LTIME}),
+  "time":		({"%s", "std_time (ltime)", 0, 0, LOG_NEED_LTIME}),
+  "cern-date":		({"%s", "cern_http_date (timestamp, ltime)",
+			  0, 0, LOG_NEED_LTIME}),
+  "utc-date":		({"%s", "std_date (gtime)", 0, 0, LOG_NEED_GTIME}),
+  "utc-time":		({"%s", "std_time (gtime)", 0, 0, LOG_NEED_GTIME}),
+  "bin-date":		({"%4c", "timestamp", 0, 0, LOG_NEED_TIMESTAMP}),
+  // FIXME: There is no difference between $resource and $full-resource.
+  "resource":		({"%s", ("(string)"
+				 "(request_id->raw_url||"
+				 " (request_id->misc->common&&"
+				 "  request_id->misc->common->orig_url)||"
+				 " request_id->not_query)"),
+			  "%s" , "url_encode (resource)", 0}),
+  "full-resource":	({"%s", ("(string)"
+				 "(request_id->raw_url||"
+				 " (request_id->misc->common&&"
+				 "  request_id->misc->common->orig_url)||"
+				 " request_id->not_query)"),
+			  "%s" , "url_encode (resource)", 0}),
+  "server-uptime":	({"%d", "max(1, timestamp - roxen->start_time)",
+			  0, 0, 0}),
+  "server-cputime":	({"%d", "server_cputime()", 0, 0, 0}),
+  "server-usertime":	({"%d", "server_usertime()", 0, 0, 0}),
+  "server-systime":	({"%d", "server_systime()", 0, 0, 0}),
+
+  // Used for access logging
+  "host":		({"\4711" /* unlikely to occur normally */, 0,
+			  1, "\"-\"", LOG_ASYNC_HOST}),
+  "vhost":		({"%s", "(request_id->misc->host||\"-\")",
+			  1, "\"-\"", 0}),
+  "ip-number":		({"%s", "(string)request_id->remoteaddr",
+			  1, "\"0.0.0.0\"", 0}),
+  "bin-ip-number":	({"%s", "host_ip_to_int(request_id->remoteaddr)",
+			  1, "\"\0\0\0\0\"", 0}),
+  "method":		({"%s", "(string)request_id->method",
+			  1, "\"-\"", 0}),
+  "cs-uri-stem":	({"%s", ("(string)"
+				 "((request_id->misc->common&&"
+				 "  request_id->misc->common->orig_url)||"
+				 " request_id->not_query||"
+				 " (request_id->raw_url && "
+				 "  (request_id->raw_url/\"?\")[0])||"
+				 " \"-\")"),
+			  "%s" , "url_encode (resource)", 0}),
+  "cs-uri-query":	({"%s", "(string)(request_id->query||\"-\")",
+			  1, "\"-\"", 0}),
+  // FIXME: There is no difference between $real-resource and
+  // $real-full-resource.
+  "real-resource":	({"%s", ("(string)(request_id->raw_url||"
+				 "         request_id->not_query)"),
+			  "%s" , "url_encode (resource)", 0}),
+  "real-full-resource":	({"%s", ("(string)(request_id->raw_url||"
+				 "         request_id->not_query)"),
+			  "%s" , "url_encode (resource)", 0}),
+  "real-cs-uri-stem":	({"%s", ("(string)(request_id->not_query||"
+				 "         (request_id->raw_url && "
+				 "          (request_id->raw_url/\"?\")[0])||"
+				 "         \"-\")"),
+			  "%s" , "url_encode (resource)", 0}),
+  "protocol":		({"%s", "(string)request_id->prot", 1, "\"-\"", 0}),
+  "response":		({"%d", "(int)(file->error || 200)", 1, "\"-\"", 0}),
+  "bin-response":	({"%2c", "(int)(file->error || 200)", 1, "\"\0\0\"", 0}),
+  "length":		({"%d", "(int)file->len", 1, "\"0\"", 0}),
+  "bin-length":		({"%4c", "(int)file->len", 1, "\"\0\0\0\0\"", 0}),
+  "request-time":	({"%1.4f", ("(float)(gethrtime() - "
+				    "        request_id->hrtime) /"
+				    "1000000.0"),
+			  1, "\"-\"", 0}),
+#if 0
+  // This needs to be solved better to work correctly when gethrvtime
+  // tracks thread local vtime.
+#if constant (gethrvtime)
+  // Note: This function exists on a lot more platforms in pike >= 7.6.
+  "request-vtime":	({"%1.4f", ("(float)(gethrvtime() - "
+				    "        request_id->hrvtime) /"
+				    "1000000.0"),
+			  1, "\"-\"", 0}),
+#endif
+#endif
+  "etag":		({"%s", "request_id->misc->etag || \"-\"",
+			  1, "\"-\"", 0}),
+  "referer":		({"%s", ("sizeof(request_id->referer||({}))?"
+				 "request_id->referer[0]:\"-\""),
+			  1, "\"-\"", 0}),
+  "user-agent":		({"%s", ("request_id->client?"
+				 "request_id->client*\"%20\":\"-\""),
+			  1, "\"-\"", 0}),
+  "user-agent-raw":	({"%s", ("request_id->client?"
+				 "request_id->client*\" \":\"-\""),
+			  1, "\"-\"", 0}),
+  "user":		({"%s", "extract_user( request_id->realauth )",
+			  1, "\"-\"", 0}),
+  "user-id":		({"%s", ("(request_id->cookies&&"
+				 " request_id->cookies->RoxenUserID)||"
+				 "(request_id->misc->moreheads&&"
+				 " request_id->misc->"
+				 "   moreheads[\"Set-Cookie\"]&&"
+				 " request_id->parse_cookies&&"
+				 " request_id->parse_cookies("
+				 "   request_id->misc->"
+				 "     moreheads[\"Set-Cookie\"])->"
+				 "   RoxenUserID)||"
+				 "\"0\""),
+			  1, "\"-\"", 0}),
+  "content-type":	({"%s", "((file->type || \"-\") / \";\")[0]",
+			  1, "\"-\"", 0}),
+  "cookies":		({"%s", ("arrayp(request_id->request_headers->cookie)?"
+				 "request_id->request_headers->cookie*\";\":"
+				 "request_id->request_headers->cookie||\"\""),
+			  1, "\"-\"", 0}),
+  "cache-status":	({"%s", ("sizeof(request_id->cache_status||({}))?"
+				 "indices(request_id->cache_status)*\",\":"
+				 "\"nocache\""),
+			  1, "\"-\"", 0}),
+  "eval-status":	({"%s", ("sizeof(request_id->eval_status||({}))?"
+				 "indices(request_id->eval_status)*\",\":"
+				 "\"-\""),
+			  1, "\"-\"", 0}),
+  "protcache-cost":	({"%d", "request_id->misc->protcache_cost",
+			  1, "\"-\"", 0}),
+
+  // Used for event logging
+  "facility":		({"-", 0, "%s", "facility", 0}),
+  "action":		({"-", 0, "%s", "action", 0}),
+]);
 
 void run_log_format( string fmt, function c, RequestID id, mapping file )
 {
-  (compiled_formats[ fmt ] || compile_log_format( fmt ))(c,id,file);
+  (compiled_log_access[ fmt ] ||
+   compile_log_format( fmt )->log_access) (c,id,file);
 }
 
-function compile_log_format( string fmt )
+void run_log_event_format (string fmt, function cb,
+			   string facility, string action, string resource,
+			   mapping(string:mixed) info)
+{
+  (compiled_log_event[ fmt ] ||
+   compile_log_format( fmt )->log_event) (cb, facility, action,
+					  resource, info);
+}
+
+static LogFormat compile_log_format( string fmt )
 {
   add_constant( "___LogFormat", LogFormat );
-  if( compiled_formats[ fmt ] )
-    return compiled_formats[ fmt ];
 
   string kmd5 = md5( fmt );
 
-  array tmp =
-    dbm_cached_get( "local" )
-    ->query("SELECT full,enc FROM compiled_formats WHERE md5=%s", kmd5 );
+  object con = dbm_cached_get("local");
 
-  if( sizeof(tmp) && (tmp[0]->full == fmt) )
   {
-    mixed err = catch {
-      return compiled_formats[fmt] =
-	decode_value( tmp[0]->enc, master()->MyCodec() )()->log;
-    };
+    array tmp =
+      con->query("SELECT full,enc FROM compiled_formats WHERE md5=%s", kmd5 );
+
+    if( sizeof(tmp) && (tmp[0]->full == fmt) )
+    {
+      LogFormat lf;
+      if (mixed err = catch {
+	  lf = decode_value( tmp[0]->enc, master()->MyCodec() )();
+	}) {
 // #ifdef DEBUG
-    report_error("Decoding of dumped log format failed:\n%s",
-		 describe_backtrace(err));
+	report_error("Decoding of dumped log format failed:\n%s",
+		     describe_backtrace(err));
 // #endif
+      }
+
+      if (lf && lf->log_access) {
+	// Check that it's a new style log program (old ones have log()
+	// instead of log_access()).
+	compiled_log_access[fmt] = lf->log_access;
+	compiled_log_event[fmt] = lf->log_event;
+	return lf;
+      }
+    }
   }
+
   array parts = fmt/"$";
-  string format = parts[0];
-  array args = ({});
-  int do_it_async = 0;
+  string a_format = parts[0], e_format = parts[0];
+  array a_args = ({}), e_args = ({});
+  int log_flags = 0;
   int add_nl = 1;
 
-  string sr( string s ) { return s[1..strlen(s)-2]; };
-  // sr(replace(sprintf("%O", X), "%", "%%"))
-
-#define DO_ES(X) replace(X, ({"\\n", "\\r", "\\t", }), ({ "\n", "\r", "\t" }) )
+#define DO_ES(X) replace(X, ({"\\n", "\\r", "\\t", "%"}),		\
+			 ({ "\n", "\r", "\t", "%%" }) )
 
   foreach( parts[1..], string part )
   {
-    int c, processed;
-    foreach( formats, array q )
-      if( part[..strlen(q[0])-1] == q[0])
-      {
-        format += q[1] + DO_ES(part[ strlen(q[0]) .. ]);
-        if( q[2] ) args += ({ q[2] });
-        if( q[3] ) do_it_async = 1;
-        processed=1;
-        break;
+    sscanf (part, "%[-_a-zA-Z0-9]%s", string kwd, part);
+    kwd = replace (kwd, "_", "-");
+
+    if (array(string|int) spec = formats[kwd]) {
+      [string a_fmt, string a_code,
+       string|int e_fmt, string e_code, int flags] = spec;
+      string escaped = DO_ES (part);
+      a_format += a_fmt + escaped;
+      if( a_code ) a_args += ({ a_code });
+      if (!e_fmt) e_fmt = a_fmt, e_code = a_code;
+      else if (e_fmt == 1) {
+	e_fmt = "%s";
+	e_code = sprintf ("info && !zero_type (info[%O]) ? "
+			  "url_encode ((string) info[%O]) : (%s)",
+			  kwd, kwd, e_code);
       }
-    if( processed )
+      e_format += e_fmt + escaped;
+      if (e_code) e_args += ({e_code});
+      log_flags |= flags;
       continue;
-    if( sscanf( part, "char(%d)%s", c, part ) )
-      format += sprintf( "%"+(c<0?"-":"")+"c", abs( c ) )+DO_ES(part);
-    else if( sscanf( part, "wchar(%d)%s", c, part ) )
-      format += sprintf( "%"+(c<0?"-":"")+"2c", abs( c ) )+DO_ES(part);
-    else if( sscanf( part, "int(%d)%s", c, part ) )
-      format += sprintf( "%"+(c<0?"-":"")+"4c", abs( c ) )+DO_ES(part);
-    else if( part[0] == '^' )
+    }
+
+    switch (kwd) {
+      case "char":
+	if( sscanf( part, "(%d)%s", int c, part ) == 2 ) {
+	  string s = sprintf( "%"+(c<0?"-":"")+"c", abs( c ) )+DO_ES(part);
+	  a_format += s, e_format += s;
+	  continue;
+	}
+	break;
+      case "wchar":
+	if( sscanf( part, "(%d)%s", int c, part ) == 2 ) {
+	  string s = sprintf( "%"+(c<0?"-":"")+"2c", abs( c ) )+DO_ES(part);
+	  a_format += s, e_format += s;
+	  continue;
+	}
+	break;
+      case "int":
+	if( sscanf( part, "(%d)%s", int c, part ) == 2 ) {
+	  string s = sprintf( "%"+(c<0?"-":"")+"4c", abs( c ) )+DO_ES(part);
+	  a_format += s, e_format += s;
+	  continue;
+	}
+	break;
+      case "":
+	if( part[0] == '^' )
+	{
+	  string escaped = DO_ES(part[1..]);
+	  a_format += escaped, e_format += escaped;
+	  add_nl = 0;
+	  continue;
+	}
+	break;
+    }
+
+    a_format += "-" + DO_ES (part);
+
+    // Any unknown variable is indexed from the info mapping for events.
+    e_format += "%s" + DO_ES (part);
+    e_args += ({sprintf ("info && !zero_type (info[%O]) ? "
+			 "url_encode ((string) info[%O]) : \"-\"",
+			 kwd, kwd)});
+  }
+  if( add_nl ) a_format += "\n", e_format += "\n";
+
+  string a_func = #"
+    void log_access( function callback, RequestID request_id, mapping file )
     {
-      format += DO_ES(part[1..]);
-      add_nl = 0;
-    } else
-      format += "$"+part;
-  }
-  if( add_nl ) format += "\n";
+      if(!callback) return;";
+  string e_func = #"
+    void log_event (function callback, string facility, string action,
+		    string resource, mapping(string:mixed) info)
+    {
+      if(!callback) return;";
 
-  string code = sprintf(
-#"
-  inherit ___LogFormat;
-  void log( function callback, RequestID request_id, mapping file )
-  {
-     if(!callback) return;
-     string data = sprintf( %O %{, %s%} );
-", format, args );
+  if (log_flags & LOG_NEED_TIMESTAMP) {
+    string c = #"
+      int timestamp = time (1);";
+    a_func += c, e_func += c;
+  }
+  if (log_flags & LOG_NEED_LTIME) {
+    string c = #"
+      mapping(string:int) ltime = localtime (timestamp);";
+    a_func += c, e_func += c;
+  }
+  if (log_flags & LOG_NEED_GTIME) {
+    string c = #"
+      mapping(string:int) gtime = gmtime (timestamp);";
+    a_func += c, e_func += c;
+  }
+
+  if (log_flags & LOG_NEED_COOKIES) {
+    a_func += #"
+      request_id->init_cookies();";
+  }
+
+  a_func += sprintf(#"
+      string data = sprintf( %O %{, %s%} );", a_format, a_args );
+  e_func += sprintf(#"
+      string data = sprintf( %O %{, %s%} );", e_format, e_args );
  
-  if( do_it_async )
+  if (log_flags & LOG_ASYNC_HOST)
   {
-    code += 
-#"
-     roxen.ip_to_host(request_id->remoteaddr,do_async_write,
-                      data, request_id->remoteaddr, callback );
-   }
-";
-  } else
-    code += 
-#"  
-   callback( data );
+    a_func += #"
+      roxen.ip_to_host(request_id->remoteaddr,do_async_write,
+                       data, request_id->remoteaddr, callback );";
+  } else {
+    a_func += #"
+      callback( data );";
   }
+  a_func += #"
+    }
 ";
 
-  program res = compile_string(code);
+  e_func += #"
+      callback (data);
+    }
+";
+
+  program res = compile_string(#"
+    inherit ___LogFormat;" + a_func + e_func);
   string enc = encode_value(res, master()->MyCodec(res));
-  object con = dbm_cached_get("local");
-  
+
   con->query("REPLACE INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
 	     kmd5, fmt, enc);
-  con = 0;
-  
-  return compiled_formats[ fmt ] = res()->log;
+
+  LogFormat lf = res();
+  compiled_log_access[fmt] = lf->log_access;
+  compiled_log_event[fmt] = lf->log_event;
+  return lf;
 }
+
+
+// Security patterns
 
 // This array contains the compilation information for the different
 // security checks for e.g. htaccess. The layout of the top array is
@@ -6067,6 +6343,50 @@ class LogFile(string fname, string|void compressor_program)
     opened = 1;
     remove_call_out( do_open );
     call_out( do_open, 900 ); 
+  }
+
+  static string std_date(mapping(string:int) ct) {
+    return(sprintf("%04d-%02d-%02d",
+		   1900+ct->year,ct->mon+1, ct->mday));
+  }
+ 
+  static string std_time(mapping(string:int) ct) {
+    return(sprintf("%02d:%02d:%02d",
+		   ct->hour, ct->min, ct->sec));
+  }
+
+  // CERN date formatter. Note similar code in Roxen.pmod.
+
+  static constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+			      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
+
+  static int chd_lt;
+  static string chd_lf;
+
+  static string cern_http_date(int t, mapping(string:int) ct)
+  {
+    if( t == chd_lt )
+      // Interpreter lock assumed here.
+      return chd_lf;
+
+    string c;
+    int tzh = ct->timezone/3600;
+    if(tzh > 0)
+      c="-";
+    else {
+      tzh = -tzh;
+      c="+";
+    }
+
+    c = sprintf("%02d/%s/%04d:%02d:%02d:%02d %s%02d00",
+		ct->mday, months[ct->mon], 1900+ct->year,
+		ct->hour, ct->min, ct->sec, c, tzh);
+
+    chd_lt = t;
+    // Interpreter lock assumed here.
+    chd_lf = c;
+
+    return c;
   }
   
   void do_close()

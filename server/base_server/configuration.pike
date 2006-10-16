@@ -6,7 +6,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.597 2006/10/05 12:49:54 anders Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.598 2006/10/16 15:17:56 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -831,20 +831,24 @@ void init_log_file()
   }
 }
 
-// Parse the logging format strings.
-private inline string fix_logging(string s)
-{
-  sscanf(s, "%*[\t ]%s", s);
-  return s;
-}
-
 private void parse_log_formats()
 {
-  string b;
   array foo=query("LogFormat")/"\n";
-  foreach(foo, b)
-    if(strlen(b) && b[0] != '#' && sizeof(b/":")>1)
-      log_format[(int)(b/":")[0]] = fix_logging((b/":")[1..]*":");
+  foreach(foo; int i; string b)
+    if(strlen(b) && b[0] != '#') {
+      if (sscanf (b, "%d:%*[\t ]%s", int status, b))
+	log_format[status] = b;
+      else if (sscanf (b, "*:%*[\t ]%s", b))
+	log_format[0] = b;
+      else if (sscanf (b, "%[-_.#a-zA-Z0-9*]/%[-_.#a-zA-Z0-9*]:%*[\t ]%s",
+		       string facility, string action, b) >= 2)
+	log_format[facility + "/" + action] = b;
+      else
+	// Ought to be an error when the variable is set, but that's
+	// not entirely backward compatible.
+	report_warning ("Unrecognized format on line %d "
+			"in log format setting: %O\n", i + 1, b);
+    }
 }
 
 void log(mapping file, RequestID request_id)
@@ -862,11 +866,95 @@ void log(mapping file, RequestID request_id)
     return;
 
   string form;
-  if(!(form=log_format[file->error])) 
+  if(!(form=log_format[(int) file->error]))
     form = log_format[0];
   if(!form) return;
 
   roxen.run_log_format( form, log_function, request_id, file );
+}
+
+void log_event (string facility, string action, string resource,
+		void|mapping(string:mixed) info)
+//! Log an event.
+//!
+//! This function is primarily intended for logging arbitrary internal
+//! events for performance monitoring purposes; see @[log_event] for
+//! details. The events are sent to the access log, where they
+//! typically are formatted in a CommonLog lookalike format.
+//!
+//! The intention is to extend this function to be able to collect
+//! statistics of these events for polling by e.g. SNMP.
+//!
+//! @param facility
+//!   An identifier for the module or subsystem that the event comes
+//!   from. This defaults to the module identifier returned by
+//!   @[RoxenModule.module_local_id] when the @[RoxenModule.log_event]
+//!   wrapper is used. It should be unique within the configuration.
+//!   Valid characters are @expr{[-_.#a-zA-Z0-9]@}.
+//!
+//! @param action
+//!   An identifier for the specific event within the facility. Should
+//!   be enumerable. Valid characters are @expr{[-_.#a-zA-Z0-9]@}.
+//!
+//! @param resource
+//!   Identifies the resource that the event acts on.
+//!
+//!   If applicable, this is the path within the virtual file system
+//!   of the module, beginning with a "@expr{/@}".
+//!
+//!   Otherwise it is some other string, not beginning with
+//!   "@expr{/@}", that has a format suitable for describing the
+//!   resource handled by the facility, e.g. "@expr{pclass:17@}".
+//!
+//!   This string should preferably contain URI valid chars only, but
+//!   other chars are allowed and will be encoded if necessary.
+//!
+//! @param info
+//!   An optional mapping containing arbitrary info about the event.
+//!   The entries here can be accessed as @expr{$@} format specifiers
+//!   in the @expr{LogFormat@} configuration variable.
+//!
+//!   The values must be castable to strings. The strings should
+//!   preferably contain URI valid chars only, but other chars are
+//!   allowed and will be encoded if necessary.
+//!
+//!   The strings should preferably never be empty. If a string might
+//!   be, it should be documented in the doc blurb for the
+//!   @expr{LogFormat@} configuration variable.
+//!
+//!   Most but not all of the predefined format specifiers can be
+//!   overridden this way, but if any is overridden it should map very
+//!   closely to the syntax and semantics of the original.
+//!
+//!   Note that "@expr{_@}" cannot be used in names in the indices
+//!   here since the log formatter code replaces "@expr{_@}" with
+//!   "@expr{-@}" before doing lookups.
+//!
+//! @note
+//! Events should be documented in the doc blurb for the
+//! @expr{LogFormat@} configuration variable.
+{
+  // Currently this bypasses logger modules. Might change in the future.
+
+  if( !log_function ) 
+    return; // No file is open for logging.
+
+  if(do_not_log_patterns &&
+     Roxen._match("0.0.0.0", do_not_log_patterns))
+    return;
+
+  sscanf (facility, "%[^#]", string modname);
+
+  if (string format =
+      log_format[facility + "/" + action] ||
+      log_format[facility + "/*"] ||
+      // Also try without the module copy number if the facility
+      // appears to be a module identifier.
+      modname && (log_format[modname + "/" + action] ||
+		  log_format[modname + "/*"]) ||
+      log_format["*/*"])
+    roxen.run_log_event_format (format, log_function,
+				facility, action, resource, info);
 }
 
 array(string) userinfo(string u, RequestID|void id)
@@ -3949,72 +4037,264 @@ modules.</p>
   // frequently. It's perfectly all right to do that in e.g. the
   // module start function, since the documentation explicitly states
   // that a reload of all modules is necessary to propagate a change
-  // the setting.
+  // of the setting.
 
   defvar("Log", 1, DLOCALE(28, "Logging: Enabled"), 
 	 TYPE_FLAG, DLOCALE(29, "Log requests"));
 
-  defvar("LogFormat",
-	 "404: $host $referer - [$cern_date] \"$method $resource $protocol\" 404 -\n"
-	 "500: $host $referer ERROR [$cern_date] \"$method $resource $protocol\" 500 -\n"
-	 "*: $host - - [$cern_date] \"$method $resource $protocol\" $response $length",
+  defvar("LogFormat", #"\
+404: $host $referer $user [$cern_date] \"$method $resource $protocol\" 404 -
+500: $host - ERROR [$cern_date] \"$method $resource $protocol\" 500 -
+*: $host - $user [$cern_date] \"$method $resource $protocol\" $response $length
+
+# The following lines are extensions of the above that adds useful cache
+# info. If you enable these you have to comment out or delete those above.
+#404: $host $referer $user [$cern_date] \"$method $resource $protocol\" 404 - $cache-status $eval-status
+#500: $host - ERROR [$cern_date] \"$method $resource $protocol\" 500 - $cache-status $eval-status
+#*: $host - $user [$cern_date] \"$method $resource $protocol\" $response $length $cache-status $eval-status
+
+# You might want to enable some of the following lines to get logging
+# of various internal activities in the server. The formats below are
+# somewhat similar to the Common Log Format standard, but they might
+# still break external log analysis tools.
+
+# To log commits and similar filesystem changes in a sitebuilder file system.
+#sbfs/commit: 0.0.0.0 - - [$cern_date] \"$action $ac-userid:$workarea:$resource sbfs\" - - $commit-type
+#sbfs/*: 0.0.0.0 - - [$cern_date] \"$action $ac-userid:$workarea:$resource sbfs\" - -
+
+# Catch-all for internal log messages.
+#*/*: 0.0.0.0 - - [$cern_date] \"$action $resource $facility\" - -",
 	 DLOCALE(26, "Logging: Format"),
 	 TYPE_TEXT_FIELD|VAR_MORE,
-	 DLOCALE(27, #"What format to use for logging. The syntax is:
-<pre>response-code or *: Log format for that response code
+	 // FIXME: Undocumented: $cs-uri-stem, $cs-uri-query,
+	 // $real-resource, $real-full-resource, $real-cs-uri-stem,
+	 DLOCALE(27, #"\
+Describes the format to use for access logging. The log file can also
+receive messages for various internal activities.
 
-Log format is normal characters, or one or more of the variables below:
+Empty lines and lines beginning with '<code>#</code>' are ignored.
+Other lines describes how to log either an access or an internal
+event.
 
-\\n \\t \\r        -- As in C, newline, tab and linefeed
-$char(int)      -- Insert the (1 byte) character specified by the integer.
-$wchar(int)     -- Insert the (2 byte) word specified by the integer.
-$int(int)       -- Insert the (4 byte) word specified by the integer.
-$^              -- Supress newline at the end of the logentry
-$host           -- The remote host name, or ip number.
-$vhost          -- The Host request-header sent by the client, or - if none
-$ip_number      -- The remote ip number.
-$bin-ip_number  -- The remote host id as a binary integer number.
-$cern_date      -- Cern Common Log file format date.
-$bin-date       -- Time, but as an 32 bit integer in network byteorder
-$method         -- Request method
-$resource       -- Resource identifier
-$full_resource  -- Full requested resource, including any query fields
-$protocol       -- The protocol used (normally HTTP/1.0)
-$response       -- The response code sent
-$bin-response   -- The response code sent as a binary short number
-$length         -- The length of the data section of the reply
-$bin-length     -- Same, but as an 32 bit integer in network byteorder
-$request-time   -- The time the request took (seconds)
-$referer        -- The header 'referer' from the request, or '-'.
-$user_agent     -- The header 'User-Agent' from the request, or '-'.
-$user_agent_raw -- Same, but spaces in the name are not encoded to %20.
-$user           -- the name of the auth user used, if any
-$user_id        -- A unique user ID, if cookies are supported,
-                   by the client, otherwise '0'
-$cache-status   -- A comma separated list of words (containing no
-                   whitespace) that describes which cache(s) the page
-                   was delivered from:
-                   protcache -- The low-level cache in the HTTP
-                                protocol module.
-                   xsltcache -- The XSLT cache.
-                   pcoderam  -- RXML parse tree RAM cache.
-                   pcodedisk -- RXML parse tree persistent cache.
-                   cachetag  -- No RXML &lt;cache&gt; tag misses.
-                   nocache   -- No hit in any known cache.
-$eval-status    -- A comma separated list of words (containing no
-                   whitespace) that describes how the page has been
-                   evaluated:
-                   xslt      -- XSL transform.
-                   rxmlsrc   -- RXML evaluated from source.
-                   rxmlpcode -- RXML evaluated from compiled p-code.
-$content-type   -- Resource mime type.
-$protcache-cost -- The lookup depth in the HTTP protocol module
-                   low-level cache.
-$server-uptime  -- Server uptime in seconds.
-$server-cputime -- Server cpu (user+system) time in milliseconds.
-$server-usertime -- Server cpu user time in milliseconds.
-$server-systime -- Server cpu system time in milliseconds.
-</pre>"), 0, lambda(){ return !query("Log");});
+<p>A line to format an access logging message is one of:</p>
+
+<pre><i>&lt;response code&gt;</i>: <i>&lt;log format&gt;</i>
+*: <i>&lt;log format&gt;</i>
+</pre>
+
+<p><i>&lt;response code&gt;</i> is an HTTP status code. The
+corresponding <i>&lt;log format&gt;</i> is used for all responses
+matching that code. It's described in more detail below. If
+'<code>*</code>' is used instead of a response code then that line
+matches all responses that aren't matched by any specific response
+code line.</p>
+
+<p>A line to format an event logging message is one of:</p>
+
+<pre><i>&lt;facility&gt;</i>/<i>&lt;action&gt;</i>: <i>&lt;log format&gt;</i>
+<i>&lt;facility&gt;</i>/*: <i>&lt;log format&gt;</i>
+*/*: <i>&lt;log format&gt;</i>
+</pre>
+
+<p><i>&lt;facility&gt;</i> matches an identifier for the Roxen module
+or subsystem that the event comes from. Facility identifiers always
+starts with a character in <code>[a-zA-Z0-9]</code> and contains only
+characters in <code>[-_.#a-zA-Z0-9]</code>. If '<code>*</code>' is
+used instead of <i>&lt;facility&gt;</i> then that line matches all
+facilities that aren't matched by any other line.</p>
+
+<p><i>&lt;action&gt;</i> matches an identifier for a specific kind of
+event logged by a facility. An action identifier contains only
+characters in <code>[-_.#a-zA-Z0-9]</code>. '<code>*</code>' may be
+used instead of an <i>&lt;action&gt;</i> to match all events logged by
+a facility that aren't matched by any other line.</p>
+
+<p><i>&lt;log format&gt;</i> consists of literal characters and the
+special specifiers described below. All specifiers are not applicable
+for all kinds of messages. If an unknown or inapplicable specifier is
+encountered it typically expands to '<code>-</code>', but in some
+cases it expands to a dummy value that is syntactically compatible
+with what it usually expands to.</p>
+
+<p>For compatibility, underscores ('_') may be used wherever
+hyphens ('-') occur in the specifier names.</p>
+
+<h3>Format specifiers for both access and event logging</h3>
+
+<table><tbody valign='top'>
+<tr><td>\\n \\t \\r</td>
+    <td>Insert a newline, tab or linefeed character, respectively.</td></tr>
+<tr><td>$char(int)</td>
+    <td>Insert the (1 byte) character specified by the integer. E.g.
+    '<code>$char(36)</code>' inserts a literal '<code>$</code>'
+    character.</td></tr>
+<tr><td>$wchar(int)</td>
+    <td>Insert the specified integer using 2 bytes in network byte
+    order. Specify a negative integer to get the opposite (i.e. big
+    endian) order.</td></tr>
+<tr><td>$int(int)</td>
+    <td>Insert the specified integer using 4 bytes in network byte
+    order. Specify a negative integer to get the opposite (i.e. big
+    endian) order.</td></tr>
+<tr><td>$^</td>
+    <td>Suppress newline at the end of the logentry.</td></tr>
+<tr><td>$date</td>
+    <td>Local date formatted like '<code>2001-01-17</code>'.</td></tr>
+<tr><td>$time</td>
+    <td>Local time formatted like '<code>13:00:00</code>'.</td></tr>
+<tr><td>$cern-date</td>
+    <td>Local date and time in CERN Common Log file format, i.e.
+    like '<code>17/Jan/2001:13:00:00 +0200</code>'.</td></tr>
+<tr><td>$utc-date</td>
+    <td>UTC date formatted like '<code>2001-01-17</code>'.</td></tr>
+
+<tr><td>$utc-time</td>
+    <td>UTC time formatted like '<code>13:00:00</code>'.</td></tr>
+<tr><td>$bin-date</td>
+    <td>Unix time as a 32 bit integer in network byte order.</td></tr>
+<tr><td>$resource</td>
+    <td>Resource identifier. For events, this is either a path to a
+    file (if it begins with '<code>/</code>') or some other kind of
+    resource indentifier (otherwise).</td></tr>
+<tr><td>$server-uptime</td>
+    <td>Server uptime in seconds.</td></tr>
+<tr><td>$server-cputime</td>
+    <td>Server cpu (user+system) time in milliseconds.</td></tr>
+<tr><td>$server-usertime</td>
+    <td>Server cpu user time in milliseconds.</td></tr>
+<tr><td>$server-systime</td>
+    <td>Server cpu system time in milliseconds.</td></tr>
+</tbody></table>
+
+<h3>Format specifiers for access logging</h3>
+
+<table><tbody valign='top'>
+<tr><td>$host</td>
+    <td>The remote host name, or ip number.</td></tr>
+<tr><td>$vhost</td>
+    <td>The Host request-header sent by the client, or '-' if none.</td></tr>
+<tr><td>$ip-number</td>
+    <td>The remote ip number.</td></tr>
+<tr><td>$bin-ip-number</td>
+    <td>The remote host id as a binary integer number.</td></tr>
+<tr><td>$method</td>
+    <td>Request method.</td></tr>
+<tr><td>$full-resource</td>
+    <td>Full requested resource, including any query fields.</td></tr>
+<tr><td>$protocol</td>
+    <td>The protocol used (normally HTTP/1.1).</td></tr>
+<tr><td>$response</td>
+    <td>The response code sent.</td></tr>
+<tr><td>$bin-response</td>
+    <td>The response code sent as a binary short number.</td></tr>
+<tr><td>$length</td>
+    <td>The length of the data section of the reply.</td></tr>
+<tr><td>$bin-length</td>
+    <td>Same, but as a 32 bit integer in network byte order.</td></tr>
+<tr><td>$request-time</td>
+    <td>The time the request took (seconds). Note that this measures
+    real time, not virtual process time. I.e. if there are other
+    processes using the CPU then this will not accurately show the
+    time that the Roxen server process spent.</td></tr>
+<tr><td>$etag</td>
+    <td>The entity tag (aka ETag) header of the result.</td></tr>
+<tr><td>$referer</td>
+    <td>The header 'referer' from the request, or '-'.</td></tr>
+<tr><td>$user-agent</td>
+    <td>The header 'User-Agent' from the request, or '-'.</td></tr>
+<tr><td>$user-agent-raw</td>
+    <td>Same, but spaces in the name are not encoded to %20.</td></tr>
+<tr><td>$user</td>
+    <td>The name of the user, if any is given using the HTTP basic
+    authentication method.</td></tr>
+<tr><td>$user-id</td>
+    <td>A unique user ID, if cookies are supported, by the client,
+    otherwise '0'.</td></tr>
+<tr><td>$content-type</td>
+    <td>Resource MIME type.</td></tr>
+<tr><td>$cookies</td>
+    <td>All cookies sent by the browser, separated by ';'.</td></tr>
+
+<tr><td>$cache-status</td>
+    <td>A comma separated list of words (containing no whitespace)
+    that describes which cache(s) the page was delivered from:
+
+    <table><tbody valign='top'>
+    <tr><td>protcached</td>
+	<td>The low-level cache in the HTTP protocol module.</td></tr>
+    <tr><td>protstore</td>
+	<td>The page got stored in the low-level cache in the HTTP
+	protocol module.</td></tr>
+    <tr><td>xsltcache</td>
+	<td>The XSLT cache.</td></tr>
+    <tr><td>pcoderam</td>
+	<td>RXML parse tree RAM cache.</td></tr>
+    <tr><td>pcodedisk</td>
+	<td>RXML parse tree persistent cache.</td></tr>
+    <tr><td>cachetag</td>
+	<td>No RXML &lt;cache&gt; tag misses.</td></tr>
+    <tr><td>nocache</td>
+	<td>No hit in any known cache, and not added to the HTTP
+	protocol cache.</td></tr>
+    </tbody></table></td></tr>
+
+<tr><td>$eval-status</td>
+    <td>A comma separated list of words (containing no whitespace)
+    that describes how the page has been evaluated:
+
+    <table><tbody valign='top'>
+    <tr><td>xslt</td>
+	<td>XSL transform.</td></tr>
+    <tr><td>rxmlsrc</td>
+	<td>RXML evaluated from source.</td></tr>
+    <tr><td>rxmlpcode</td>
+	<td>RXML evaluated from compiled p-code.</td></tr>
+    </tbody></table></td></tr>
+
+<tr><td>$protcache-cost</td>
+    <td>The lookup depth in the HTTP protocol module low-level cache.</td></tr>
+</tbody></table>
+
+<h3>Event logging</h3>
+
+<p>The known event logging facilities and modules are described
+below.</p>
+
+<dl>
+<dt>Facility: sbfs</dt>
+    <dd><p>A SiteBuilder file system.</p>
+
+    <p>The actions <code>commit</code>, <code>purge</code>,
+    <code>mkdir</code>, <code>set-dir-md</code>, and
+    <code>rmdir</code> are logged for file system changes except those
+    in edit areas.</p>
+
+    <p>The action <code>crawl-file</code> is logged for files that are
+    crawled by the persistent cache crawler.</p>
+
+    <p>These extra format specifiers are defined where applicable:</p>
+
+    <table><tbody valign='top'>
+    <tr><td>ac-userid</td>
+	<td>The ID number of the AC identity whose edit area was used.
+	Zero for the common view area.</td></tr>
+    <tr><td>workarea</td>
+	<td>The unique tag for the work area. Empty for the main work
+	area.</td></tr>
+    <tr><td>commit-type</td>
+	<td>The type of file commit, one of <code>create</code>,
+	<code>edit</code>, <code>delete</code>, and
+	<code>undelete</code>.</td></tr>
+    <tr><td>revision</td>
+	<td>The committed revision number, a dotted decimal.</td></tr>
+    <tr><td>comment</td>
+	<td>The commit message.</td></tr>
+    </tbody></table></dd>
+</dl>"), 0, lambda(){ return !query("Log");});
+
+  // Make the widget above a bit larger.
+  getvar ("LogFormat")->rows = 20;
+  getvar ("LogFormat")->cols = 80;
 
   // FIXME: Mention it is relative to getcwd(). Can not be localized in pike 7.0.
   defvar("LogFile", "$LOGDIR/"+Roxen.short_name(name)+"/Log",
@@ -4071,7 +4351,7 @@ also set 'URLs'."));
   
   defvar("URLs", 
          Variable.PortList( ({"http://*/#ip=;nobind=0;"}), VAR_INITIAL|VAR_NO_DEFAULT,
-           DLOCALE(38, "Ports: URLs"),
+	   DLOCALE(38, "Ports: URLs"),
 	   DLOCALE(373, "Bind to these URLs. You can use '*' and '?' to perform"
 		   " globbing (using any of these will default to binding to "
 		   "all IP-numbers on your machine).  If you specify a IP# in "

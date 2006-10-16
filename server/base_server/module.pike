@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module.pike,v 1.222 2005/10/06 12:43:31 wellhard Exp $
+// $Id: module.pike,v 1.223 2006/10/16 15:17:56 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -46,6 +46,16 @@ void report_error( mixed ... args )  { predef::report_error( @args );  }
 void report_notice( mixed ... args ) { predef::report_notice( @args ); }
 void report_debug( mixed ... args )  { predef::report_debug( @args );  }
 
+void log_event (string facility, string action, string resource,
+		void|mapping(string:mixed) info)
+//! Log an event. See @[Configuration.log_event] for details.
+//!
+//! @[facility] may be zero. The local module identifier as returned
+//! by @[module_local_id] is used as facility in that case.
+{
+  _my_configuration->log_event (facility || _module_local_identifier,
+				action, resource, info);
+}
 
 string module_identifier()
 //! Returns a string that uniquely identifies this module instance
