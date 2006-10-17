@@ -1,5 +1,5 @@
 // Common Log SQL Aggregate module
-// $Id: commonlog_sql_aggregate.pike,v 1.1 2006/10/13 12:40:04 noring Exp $
+// $Id: commonlog_sql_aggregate.pike,v 1.2 2006/10/17 12:07:30 simon Exp $
 
 #include <module.h>
 
@@ -12,7 +12,7 @@ inherit "roxenlib";
 constant thread_safe = 1;
 constant module_unique = 0;
 constant module_type = MODULE_PROVIDER;
-constant cvs_version = "$Id: commonlog_sql_aggregate.pike,v 1.1 2006/10/13 12:40:04 noring Exp $";
+constant cvs_version = "$Id: commonlog_sql_aggregate.pike,v 1.2 2006/10/17 12:07:30 simon Exp $";
 
 LocaleString module_group_name = DLOCALE(0,"SQL Log:");
 LocaleString module_generic_name = DLOCALE(0, "Aggregate module");
@@ -140,12 +140,46 @@ void aggregate_start()
   
   if(is_aggregate_running())
     return;
+
   
-  aggregate_summary(sql, query("minute_granularity"));
-  aggregate_hosts(sql);
-  aggregate_resources(sql);
-  aggregate_resources_dir(sql);
-  // FIXME: aggregate_thread = Thread.thread_create();
+  Aggregate aggregate_hits_and_cpu_time = AggregateHitsAndCpuTime( sql );
+  //aggregate_hits_and_cpu_time->create_table_if_not_exist( sql );
+  //aggregate_hits_and_cpu_time->update_date( sql, "2006-10-10" );
+  
+  Aggregate aggregate_distinct_hits = AggregateDistinctHits( sql );
+  //aggregate_distinct_hits->create_table_if_not_exist( sql );
+  //aggregate_distinct_hits->update_date( sql, "2006-10-10" );
+
+  
+  Aggregate aggregate_cached_hits = AggregateCachedHits( sql );
+  //  aggregate_cached_hits->create_table_if_not_exist( sql );
+  //aggregate_cached_hits->update_date( sql, "2006-10-10" );
+
+  //  Aggregate aggregate_eval_hits = AggregateEvalHits( sql );
+  //  aggregate_eval_hits->create_table_if_not_exist( sql );
+  //aggregate_eval_hits->update_date( sql, "2006-10-10" );
+
+  Aggregate aggregate_resources = AggregateResources( sql );
+  //  aggregate_resources->create_table_if_not_exist( sql );
+  //aggregate_resources->update_date( sql, "2006-10-10" );
+
+  Aggregate aggregate_cache_type = AggregateCacheType( sql );
+  aggregate_cache_type->create_table_if_not_exist( sql );
+  aggregate_cache_type->update_date( sql, "2006-10-10" );
+}
+
+void aggregate_start() 
+{
+  int purge_days = query("acces_log_purge_days");
+  int log_time_cutoff;
+  if(purge_days)
+    log_time_cutoff = time() - purge_days*24*60*60;
+
+  string log_format = query("alt_LogFormat");
+  if(!sizeof(log_format))
+    log_format = conf->query("LogFormat");
+
+  aggregate_thread = Thread.thread_create( );
 }
 
 mapping(string:int) last_access_log_row_id_per_date(Sql.sql sql)
@@ -180,159 +214,12 @@ array(string) updated_dates(Sql.sql sql, string table)
   return indices(last_access_row_id);
 }
 
-void aggregate_summary(Sql.sql sql, int minute_granularity)
-{
-  constant table_name = "aggregate_summary";
-
-  werror("%s: %s starting\n", query_name(), table_name);
-    
-  constant optional_fields = ({
-    ({ "length",          "BIGINT UNSIGNED",  "SUM(length)"          }),
-    ({ "server_uptime",   "INTEGER UNSIGNED", "MAX(server_uptime)"   }),
-    ({ "server_cputime",  "INTEGER UNSIGNED", "MAX(server_cputime)"  }),
-    ({ "server_usertime", "INTEGER UNSIGNED", "MAX(server_usertime)" }),
-    ({ "server_systime",  "INTEGER UNSIGNED", "MAX(server_systime)"  })
-  });
-
-  multiset(string) available_fields =
-    (multiset)sql->list_fields("access_log")->name;
-
-  string table_def = "CREATE TABLE IF NOT EXISTS "+table_name+"\n"
-		     "(aggregate_id INTEGER NOT NULL AUTO_INCREMENT,\n"
-		     " last_log_row_id BIGINT NOT NULL,\n"
-		     " server_name VARCHAR(32),\n"
-		     " date DATE,\n"
-		     " time DATETIME,\n"
-		     " hits INTEGER UNSIGNED,\n";
-  foreach(optional_fields, array(string) field)
-    if(available_fields[field[0]])
-      table_def += field[0] + " " + field[1] + ",\n";
-  table_def += "PRIMARY KEY (aggregate_id),\n"
-	       "INDEX (date),\n"
-	       "INDEX (server_name),\n"
-	       "INDEX (server_name, date))\n";
-  sql->query(table_def);
-
-  foreach(sort(updated_dates(sql, table_name)), string date)
-  {
-    werror("%s: %s %s\n", query_name(), table_name, date);
-
-    sql->query("DELETE FROM "+table_name+" WHERE date = %s", date);
-    
-    string query_def = "INSERT INTO "+table_name+"\n"
-		       "           (last_log_row_id,\n"
-		       "            server_name,\n"
-		       "            date,\n"
-		       "            time,\n"
-		       "            hits";
-    foreach(optional_fields, array(string) field)
-      if(available_fields[field[0]])
-	query_def += ",\n            " + field[0];
-    query_def += ")\n"
-		 "     SELECT MAX(log_row_id),\n"
-		 "            server_name,\n"
-		 "            date,\n"
-		 "            CONCAT(DATE_FORMAT(time, '%Y-%m-%d %H:'),\n"
-		 "                   FLOOR(MINUTE(time)/"+minute_granularity+")*"+minute_granularity+") AS time_granularity,\n"
-	       "            COUNT(*)";
-    foreach(optional_fields, array(string) field)
-      if(available_fields[field[0]])
-	query_def += ",\n            " + field[2];
-    query_def += "\n"
-		 "       FROM access_log,\n"
-		 "            log_files\n"
-		 "      WHERE access_log.date = '"+sql->quote(date)+"'\n"
-		 "        AND access_log.log_file_id = log_files.log_file_id\n"
-		 "   GROUP BY server_name,\n"
-		 "            time_granularity";
-    
-    sql->query(query_def + "\n");
-  }
-  
-  werror("%s: %s finished\n", query_name(), table_name);
-}
-
-void aggregate_hosts(Sql.sql sql)
-{
-  constant table_name = "aggregate_hosts";
-  
-  werror("%s: %s starting\n", query_name(), table_name);
-    
-  constant optional_fields = ({
-    ({ "length",          "BIGINT UNSIGNED",  "SUM(length)"          }),
-    ({ "response",        "INTEGER UNSIGNED", "response"             })
-  });
-
-  multiset(string) available_fields =
-    (multiset)sql->list_fields("access_log")->name;
-
-  // "host" is a required field.
-  if(!available_fields["host"])
-    return;
-  
-  string table_def = "CREATE TABLE IF NOT EXISTS "+table_name+"\n"
-		     "(aggregate_id INTEGER NOT NULL AUTO_INCREMENT,\n"
-		     " last_log_row_id BIGINT NOT NULL,\n"
-		     " server_name VARCHAR(32),\n"
-		     " date DATE,\n"
-		     " host VARCHAR(64),\n"
-		     " hits INTEGER UNSIGNED,\n";
-  foreach(optional_fields, array(string) field)
-    if(available_fields[field[0]])
-      table_def += field[0] + " " + field[1] + ",\n";
-  table_def += "PRIMARY KEY (aggregate_id),\n"
-	       "INDEX (date),\n"
-	       "INDEX (server_name),\n"
-	       "INDEX (server_name, date))\n";
-  sql->query(table_def);
-
-  foreach(sort(updated_dates(sql, table_name)), string date)
-  {
-    werror("%s: %s %s\n", query_name(), table_name, date);
-
-    sql->query("DELETE FROM "+table_name+" WHERE date = %s", date);
-    
-    string query_def = "INSERT INTO "+table_name+"\n"
-		       "           (last_log_row_id,\n"
-		       "            server_name,\n"
-		       "            date,\n"
-		       "            host,\n"
-		       "            hits";
-    foreach(optional_fields, array(string) field)
-      if(available_fields[field[0]])
-	query_def += ",\n            " + field[0];
-    query_def += ")\n"
-		 "     SELECT MAX(log_row_id),\n"
-		 "            server_name,\n"
-		 "            date,\n"
-		 "            host,\n"
-		 "            COUNT(*) AS hits";
-    foreach(optional_fields, array(string) field)
-      if(available_fields[field[0]])
-	query_def += ",\n            " + field[2];
-    query_def += "\n"
-		 "       FROM access_log,\n"
-		 "            log_files\n"
-		 "      WHERE access_log.date = '"+sql->quote(date)+"'\n"
-		 "        AND access_log.log_file_id = log_files.log_file_id\n"
-		 "   GROUP BY server_name,\n"
-		 "            host";
-    foreach(optional_fields, array(string) field)
-      if(available_fields[field[0]] && field[0] == field[2])
-	query_def += ",\n            " + field[0];
-    
-    sql->query(query_def + "\n");
-  }
-  
-  werror("%s: %s finished\n", query_name(), table_name);
-}
-
 class Aggregate
 {
   string table_name;
   
   array(array(string)) computed_fields = ({});
-  array(array(string)) requried_fields = ({});
+  array(array(string)) required_fields = ({});
   array(array(string)) optional_fields = ({});
         array(string)  group_by_fields = ({});
   
@@ -344,17 +231,24 @@ class Aggregate
 		       "(aggregate_id INTEGER NOT NULL AUTO_INCREMENT,\n"
 		       " last_log_row_id BIGINT NOT NULL,\n"
 		       " server_name VARCHAR(32),\n"
-		       " date DATE,\n";
+		       " date DATE,\n"
+	           " time DATETIME,\n";
     foreach(computed_fields +
-	    required_fields +
-	    optional_fields, array(string) field)
-      if(field[1] && available_fields[field[0]])
-	table_def += field[0] + " " + field[1] + ",\n";
+			required_fields +
+			optional_fields, array(string) field) {
+      if(field[1] && available_fields[field[0]]) {
+		table_def += field[0] + " " + field[1] + ",\n";
+	  }
+	}
     table_def += "PRIMARY KEY (aggregate_id),\n"
 		 "INDEX (date),\n"
 		 "INDEX (server_name),\n"
 		 "INDEX (server_name, date))\n";
-    sql->query(table_def);
+	
+	write( "#####################\n" );
+	write( table_def + "\n" );
+	write( "#####################\n" );
+	sql->query(table_def);
   }
 
   int is_available()
@@ -362,14 +256,16 @@ class Aggregate
     return !sizeof(required_fields - (array)available_fields);
   }
 
-  void update_date(Sql.sql sql, string date)
+  void update_date(Sql.sql sql, string date )
   {
-    sql->query("DELETE FROM "+table_name+" WHERE date = %s", date);
+	sql->query("DELETE FROM "+table_name+" WHERE date = %s", date);
     
+	string minute_granularity = query( "minute_granularity" );
     string query_def = "INSERT INTO "+table_name+"\n"
 		       "           (last_log_row_id,\n"
 		       "            server_name,\n"
-		       "            date";
+		       "            date,\n"
+	           "            time";
     foreach(computed_fields +
 	    required_fields +
 	    optional_fields, array(string) field)
@@ -378,7 +274,9 @@ class Aggregate
     query_def += ")\n"
 		 "     SELECT MAX(log_row_id),\n"
 		 "            server_name,\n"
-		 "            date";
+		 "            date,\n"
+	     "            CONCAT(DATE_FORMAT(time, '%Y-%m-%d %H:'),\n"
+	     "                   FLOOR(MINUTE(time)/"+minute_granularity+")*"+minute_granularity+") AS time_granularity";
     foreach(computed_fields +
 	    required_fields +
 	    optional_fields, array(string) field)
@@ -389,12 +287,17 @@ class Aggregate
 		 "            log_files\n"
 		 "      WHERE access_log.date = '"+sql->quote(date)+"'\n"
 		 "        AND access_log.log_file_id = log_files.log_file_id\n"
-		 "   GROUP BY server_name";
-    foreach(group_by_fields, array(string) field)
-      if(available_fields[field[0]])
-	query_def += ",\n            " + field[0];
-    
-    sql->query(query_def + "\n");
+		 "   GROUP BY server_name, time_granularity";
+    foreach(group_by_fields, string field) {
+      if(available_fields[field]) {
+		query_def += ",\n            " + field;
+	  }
+    }
+	
+	write( "#####################\n" );
+	write( query_def + "\n" );
+	write( "#####################\n" );
+	sql->query(query_def + "\n");
   }
 
   void update(Sql.sql sql)
@@ -411,27 +314,140 @@ class Aggregate
   static void create(Sql.sql sql)
   {
     available_fields = (multiset)sql->list_fields("access_log")->name |
-		       (multiset)computed_fields;
+	  (multiset)computed_fields[*][0]; // computed_fields is an array(array(string))
   }
 }
 
 // FIXME: Add time with minute granularity.
-class AggregateSummary
+class AggregateDistinctHits
 {
+
+  /**
+select hour, minute, (max_server_cputime-min_server_cputime) as cpu_time from aggregate_summary order by hour asc, minute asc;
+   */
   inherit Aggregate;
 
-  string table_name = "aggregate_summary";
+  string table_name = "aggregate_distinct_hits";
+
+  // distinct_hits may want to be tuned to include params as well
+  array(array(string)) computed_fields = ({
+	({ "unique_file_resources",       "INTEGER UNSIGNED", "COUNT( DISTINCT replace(resource, substring(resource, locate('?', resource), length(resource)), '' ) )" }),
+	({ "unique_resources",       "INTEGER UNSIGNED", "COUNT( DISTINCT resource )" }),
+    ({ "max_server_cputime",  "INTEGER UNSIGNED", "MAX(server_cputime) as max_server_cputime"  }),
+    ({ "min_server_cputime",  "INTEGER UNSIGNED", "MIN(server_cputime) as min_server_cputime"  })
+  });
+    
+  //  array(string) group_by_fields = ({
+  //  "resource"
+  //});
+}
+
+class AggregateHitsAndCpuTime
+{
+
+  /**
+select time_granularity, (max_server_cputime-min_server_cputime)/5 as cpu_time from aggregate_summary_minute order by hour asc, minute asc;
+   */
+  inherit Aggregate;
+
+  string table_name = "aggregate_hits_and_cpu_time";
 
   array(array(string)) computed_fields = ({
-    ({ "hits",            "INTEGER UNSIGNED", "COUNT(*) AS hits"     })
+    ({ "hits",                "INTEGER UNSIGNED", "COUNT(*) AS hits"     }),
+    ({ "max_server_cputime",  "INTEGER UNSIGNED", "MAX(server_cputime) as max_server_cputime"  }),
+    ({ "min_server_cputime",  "INTEGER UNSIGNED", "MIN(server_cputime) as min_server_cputime"  })
   });
     
   array(array(string)) optional_fields = ({
     ({ "length",          "BIGINT UNSIGNED",  "SUM(length)"          }),
     ({ "server_uptime",   "INTEGER UNSIGNED", "MAX(server_uptime)"   }),
-    ({ "server_cputime",  "INTEGER UNSIGNED", "MAX(server_cputime)"  }),
     ({ "server_usertime", "INTEGER UNSIGNED", "MAX(server_usertime)" }),
     ({ "server_systime",  "INTEGER UNSIGNED", "MAX(server_systime)"  })
+  });
+}
+
+// FIXME: Add time with minute granularity.
+class AggregateCachedHits
+{
+
+  /**
+select hour, minute, (max_server_cputime-min_server_cputime) as cpu_time from aggregate_summary order by hour asc, minute asc;
+   */
+  inherit Aggregate;
+
+  string table_name = "aggregate_cached_hits";
+
+  // distinct_hits may want to be tuned to include params as well
+  array(array(string)) computed_fields = ({
+	({ "cached_hits",         "INTEGER UNSIGNED", "COUNT(*) as cached_hits" }),
+    ({ "max_server_cputime",  "INTEGER UNSIGNED", "MAX(server_cputime) as max_server_cputime"  }),
+    ({ "min_server_cputime",  "INTEGER UNSIGNED", "MIN(server_cputime) as min_server_cputime"  })
+  });
+    
+
+  array(array(string)) required_fields = ({
+    ({ "cache_status",    "VARCHAR(64)",      "IF( LOCATE( 'rxml', cache_status ), CONCAT( 'rxml', IF( LOCATE( 'xslt', cache_status ), '_xslt', '') ), IF( LOCATE( 'xslt' ), 'xslt', '' ), 'other' ) AS cache_status"                 })
+  });
+
+  array(string) group_by_fields = ({
+    "cache_status"
+  });
+}
+
+class AggregateEvalType
+{
+  inherit Aggregate;
+
+  string table_name = "aggregate_eval_type";
+
+  // distinct_hits may want to be tuned to include params as well
+  array(array(string)) computed_fields = ({
+	({ "eval_hits",            "INTEGER UNSIGNED", "COUNT(*) as eval_hits" }),
+    ({ "eval_class_rxmlpcode", "INTEGER UNSIGNED", "IF( LOCATE( 'rxmlpcode', eval_status ), 1, 0 ) as eval_class_rxmlpcode" }),
+    ({ "eval_class_rxmlsrc",   "INTEGER UNSIGNED", "IF( LOCATE( 'rxmlsrc', eval_status ), 1, 0 ) as eval_class_rxmlsrc" }),
+    ({ "eval_class_xslt",      "INTEGER UNSIGNED", "IF( LOCATE( 'xslt', eval_status ), 1, 0 ) as eval_class_xslt" })
+  });
+    
+  array(array(string)) required_fields = ({
+	({ "eval_status",          "VARCHAR(64)",      "eval_status" }),
+  });
+
+  array(string) group_by_fields = ({
+	"eval_class_rxml",
+	"eval_class_xslt",
+	"eval_status"
+  });
+}
+
+class AggregateCacheType
+{
+  inherit Aggregate;
+
+  string table_name = "aggregate_cache_type";
+
+  // distinct_hits may want to be tuned to include params as well
+  array(array(string)) computed_fields = ({
+	({ "cache_hits",                            "INTEGER UNSIGNED", "COUNT(*) as eval_hits" }),
+    ({ "cache_class_pcodedisk",                  "INTEGER UNSIGNED", "IF( LOCATE( 'pcodedisk', cache_status ), 1, 0 ) as cache_class_pcodedisk" }),
+    ({ "cache_class_nocache",                    "INTEGER UNSIGNED", "IF( LOCATE( 'nocache', cache_status ), 1, 0 ) as cache_class_nocache" }),
+    ({ "cache_class_protcache",                  "INTEGER UNSIGNED", "IF( LOCATE( 'protcache', cache_status ), 1, 0 ) as cache_class_protcache" }),
+    ({ "cache_class_cachetag",                   "INTEGER UNSIGNED", "IF( LOCATE( 'cachetag', cache_status ), 1, 0 ) as cache_class_cachetag" }),
+    ({ "cache_class_crawlondemand",              "INTEGER UNSIGNED", "IF( LOCATE( 'crawlondemand', cache_status ), 1, 0 ) as cache_class_crawlondemand" }),
+    ({ "cache_class_crawlondemandbyotherthread", "INTEGER UNSIGNED", "IF( LOCATE( 'crawlondemandbyotherthread', cache_status ), 1, 0 ) as cache_class_crawlondemandbyotherthread" })
+  });
+    
+  array(array(string)) required_fields = ({
+	({ "cache_status",          "VARCHAR(64)",      "cache_status" }),
+  });
+
+  array(string) group_by_fields = ({
+	"cache_class_pcodedisk",
+	"cache_class_nocache",
+	"cache_class_protcache",
+	"cache_class_cachetag",
+	"cache_class_crawlondemand",
+	"cache_class_crawlondemandbyotherthread",
+	"cache_status"
   });
 }
 
@@ -477,10 +493,10 @@ class AggregateResources
   array(array(string)) computed_fields = ({
     ({ "hits",            "INTEGER UNSIGNED", "COUNT(*) AS hits"     }),
     ({ "resource_path",   "VARCHAR(255)",
-       "            SUBSTRING_INDEX(resource, '?', 1)"               }),
+       "            SUBSTRING_INDEX(resource, '?', 1) as resource_path"               }),
     ({ "resource_query",  "VARCHAR(255)",
        "            SUBSTRING(resource,\n"
-       "                      1+LENGTH(SUBSTRING_INDEX(resource, '?', 1)))" })
+       "                      1+LENGTH(SUBSTRING_INDEX(resource, '?', 1))) as resource_query" })
   });
   
   array(array(string)) required_fields = ({
@@ -540,3 +556,4 @@ class AggregateResourceDirs
     "content_type"
   });
 }
+
