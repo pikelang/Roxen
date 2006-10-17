@@ -1,5 +1,5 @@
 // Common Log SQL Import module
-// $Id: commonlog_sql_import.pike,v 1.1 2006/10/13 10:52:47 noring Exp $
+// $Id: commonlog_sql_import.pike,v 1.2 2006/10/17 11:31:36 simon Exp $
 
 #include <module.h>
 
@@ -12,7 +12,7 @@ inherit "roxenlib";
 constant thread_safe = 1;
 constant module_unique = 0;
 constant module_type = MODULE_PROVIDER;
-constant cvs_version = "$Id: commonlog_sql_import.pike,v 1.1 2006/10/13 10:52:47 noring Exp $";
+constant cvs_version = "$Id: commonlog_sql_import.pike,v 1.2 2006/10/17 11:31:36 simon Exp $";
 
 LocaleString module_group_name = DLOCALE(0,"SQL Log:");
 LocaleString module_generic_name = DLOCALE(0, "Common Log Import module");
@@ -462,8 +462,8 @@ class LogImport
     LogField("$host",            "%s",  "host",            "VARCHAR(64)"),
     LogField("$vhost",           "%s",  "vhost",           "VARCHAR(64)"),
     LogField("$ip_number",       "%s",  "ip_number",       "VARCHAR(32)"),
-    LogField("$bin-ip_number",   "%4c", "ip_number",       "VARCHAR(32)",
-	     bin_ip_number_to_ascii),
+	//    LogField("$bin-ip_number",   "%4c", "ip_number",       "VARCHAR(32)",
+	//     bin_ip_number_to_ascii),
     LogField("$cern_date",       "%{%d/%s/%d:%d:%d:%d %d%}",
 	                                "time",            "DATETIME",
 	     cern_date_to_unix),
@@ -490,7 +490,12 @@ class LogImport
     LogField("$server-cputime",  "%d",  "server_cputime",  "INTEGER UNSIGNED"),
     LogField("$server-usertime", "%d",  "server_usertime", "INTEGER UNSIGNED"),
     LogField("$server-systime",  "%d",  "server_systime",  "INTEGER UNSIGNED"),
-    LogField("$cookies",         "%s",  "cookies",         "VARCHAR(255)")
+    LogField("$cookies",         "%s",  "cookies",         "VARCHAR(255)"),
+    LogField("$ac-userid",       "%d",  "ac_userid",       "INTEGER"),
+    LogField("$workarea",        "%s",  "workarea",        "VARCHAR(255)"),
+    LogField("$commit-type",     "%s",  "commit_type",     "VARCHAR(32)"),
+    LogField("$action",          "%s",  "action",          "VARCHAR(32)"), 
+    LogField("$facility",        "%s",  "facility",        "VARCHAR(255)") 
   });
 
   // Quick lookup from "sql_field" to "format_conversion_f" in clf_format.
