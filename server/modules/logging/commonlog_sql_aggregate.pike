@@ -1,5 +1,5 @@
 // Common Log SQL Aggregate module
-// $Id: commonlog_sql_aggregate.pike,v 1.2 2006/10/17 12:07:30 simon Exp $
+// $Id: commonlog_sql_aggregate.pike,v 1.3 2006/10/17 12:08:49 simon Exp $
 
 #include <module.h>
 
@@ -12,7 +12,7 @@ inherit "roxenlib";
 constant thread_safe = 1;
 constant module_unique = 0;
 constant module_type = MODULE_PROVIDER;
-constant cvs_version = "$Id: commonlog_sql_aggregate.pike,v 1.2 2006/10/17 12:07:30 simon Exp $";
+constant cvs_version = "$Id: commonlog_sql_aggregate.pike,v 1.3 2006/10/17 12:08:49 simon Exp $";
 
 LocaleString module_group_name = DLOCALE(0,"SQL Log:");
 LocaleString module_generic_name = DLOCALE(0, "Aggregate module");
@@ -166,20 +166,6 @@ void aggregate_start()
   Aggregate aggregate_cache_type = AggregateCacheType( sql );
   aggregate_cache_type->create_table_if_not_exist( sql );
   aggregate_cache_type->update_date( sql, "2006-10-10" );
-}
-
-void aggregate_start() 
-{
-  int purge_days = query("acces_log_purge_days");
-  int log_time_cutoff;
-  if(purge_days)
-    log_time_cutoff = time() - purge_days*24*60*60;
-
-  string log_format = query("alt_LogFormat");
-  if(!sizeof(log_format))
-    log_format = conf->query("LogFormat");
-
-  aggregate_thread = Thread.thread_create( );
 }
 
 mapping(string:int) last_access_log_row_id_per_date(Sql.sql sql)
