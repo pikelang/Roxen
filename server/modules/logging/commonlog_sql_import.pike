@@ -1,5 +1,5 @@
 // Common Log SQL Import module
-// $Id: commonlog_sql_import.pike,v 1.2 2006/10/17 11:31:36 simon Exp $
+// $Id: commonlog_sql_import.pike,v 1.3 2006/10/17 12:02:45 noring Exp $
 
 #include <module.h>
 
@@ -12,7 +12,7 @@ inherit "roxenlib";
 constant thread_safe = 1;
 constant module_unique = 0;
 constant module_type = MODULE_PROVIDER;
-constant cvs_version = "$Id: commonlog_sql_import.pike,v 1.2 2006/10/17 11:31:36 simon Exp $";
+constant cvs_version = "$Id: commonlog_sql_import.pike,v 1.3 2006/10/17 12:02:45 noring Exp $";
 
 LocaleString module_group_name = DLOCALE(0,"SQL Log:");
 LocaleString module_generic_name = DLOCALE(0, "Common Log Import module");
@@ -123,8 +123,7 @@ string status()
            "create this table with the following fields as currently defined "
            "by the <b>Logging Format</b> setting:</p>"
            "<pre>"+
-           log_import->
-             access_log_fields_from_format(conf->query("LogFormat")/"\n")*"\n"+
+      log_import->access_log_fields_from_format(get_sql_log_format())*"\n"+
            "</pre>";
 
   msg += "<p><b>Import status:</b> "+import_status()+"<br/>"
@@ -176,6 +175,24 @@ int has_log_tables(Sql.sql sql)
   return 0;
 }
 
+array(string) get_log_format()
+{
+  string log_format = query("alt_LogFormat");
+  if(!sizeof(log_format))
+    log_format = query("LogFormat");
+  return log_format / "\n";
+}
+
+array(string) get_sql_log_format()
+{
+  string log_format = query("alt_sql_LogFormat");
+  if(!sizeof(log_format))
+    log_format = query("alt_LogFormat");
+  if(!sizeof(log_format))
+    log_format = query("LogFormat");
+  return log_format / "\n";
+}
+
 void create_access_log_table()
 {
   Sql.sql sql = get_log_db();
@@ -187,10 +204,7 @@ void create_access_log_table()
   }
   log_import->create_log_files_table(sql);
 
-  string log_format = query("alt_sql_LogFormat");
-  if(!sizeof(log_format))
-    log_format = conf->query("LogFormat");
-  log_import->create_access_log_table(sql, log_format/"\n");
+  log_import->create_access_log_table(sql, get_sql_log_format());
 }
 
 void create_log_db()
@@ -335,15 +349,12 @@ void import_start()
   int log_time_cutoff;
   if(purge_days)
     log_time_cutoff = time() - purge_days*24*60*60;
-  string log_format = query("alt_LogFormat");
-  if(!sizeof(log_format))
-    log_format = conf->query("LogFormat");
 
   if(is_import_running())
     return;
   import_thread = Thread.thread_create(log_import->import_log_files,
 				       sql, get_server_name(), log_file_list(),
-				       log_time_cutoff, log_format/"\n",
+				       log_time_cutoff, get_log_format(),
 				       query("decompressor_programs"));
 }
 
@@ -420,17 +431,22 @@ class LogField(string clf_field,
 
 class LogImport
 {
-  string bin_ip_number_to_ascii(int bin_ip_number)
+  string ip_number_to_string(string|int ip_number)
   {
-    return sprintf("%d.%d.%d.%d",
-		   (bin_ip_number >> 24) % 256,
-		   (bin_ip_number >> 16) % 256,
-		   (bin_ip_number >>  8) % 256,
-		   (bin_ip_number >>  0) % 256);
+    if(intp(ip_number))
+      return sprintf("%d.%d.%d.%d",
+		     (ip_number >> 24) % 256,
+		     (ip_number >> 16) % 256,
+		     (ip_number >>  8) % 256,
+		     (ip_number >>  0) % 256);
+    return ip_number;
   }
   
-  int cern_date_to_unix(array(array(int)) cern_date)
+  int cern_date_to_unix(int|array(array(int)) cern_date)
   {
+    if(intp(cern_date))
+      return cern_date;
+    
     constant month_names = ([ "Jan":1,
 			      "Feb":2,
 			      "Mar":3,
@@ -462,8 +478,8 @@ class LogImport
     LogField("$host",            "%s",  "host",            "VARCHAR(64)"),
     LogField("$vhost",           "%s",  "vhost",           "VARCHAR(64)"),
     LogField("$ip_number",       "%s",  "ip_number",       "VARCHAR(32)"),
-	//    LogField("$bin-ip_number",   "%4c", "ip_number",       "VARCHAR(32)",
-	//     bin_ip_number_to_ascii),
+    LogField("$bin-ip_number",   "%4c", "ip_number",       "VARCHAR(32)",
+	     ip_number_to_string),
     LogField("$cern_date",       "%{%d/%s/%d:%d:%d:%d %d%}",
 	                                "time",            "DATETIME",
 	     cern_date_to_unix),
@@ -505,9 +521,9 @@ class LogImport
   {
     multiset(string) fields = (<>);
     foreach(format, string format_line)
-      if(sscanf(format_line, "%s:%s", string code, string def))
+      if(sscanf((format_line/"#")[0], "%s:%s", string code, string def))
       {
-	while(has_value(def, "$"))
+	while(code && def && has_value(def, "$"))
 	{
 	  sscanf(def, "%*s$%[a-z_-]%s", string column, def);
 	  if(!sizeof(column))
