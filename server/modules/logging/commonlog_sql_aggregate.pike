@@ -1,5 +1,5 @@
 // Common Log SQL Aggregate module
-// $Id: commonlog_sql_aggregate.pike,v 1.3 2006/10/17 12:08:49 simon Exp $
+// $Id: commonlog_sql_aggregate.pike,v 1.4 2006/10/17 14:01:17 noring Exp $
 
 #include <module.h>
 
@@ -12,7 +12,7 @@ inherit "roxenlib";
 constant thread_safe = 1;
 constant module_unique = 0;
 constant module_type = MODULE_PROVIDER;
-constant cvs_version = "$Id: commonlog_sql_aggregate.pike,v 1.3 2006/10/17 12:08:49 simon Exp $";
+constant cvs_version = "$Id: commonlog_sql_aggregate.pike,v 1.4 2006/10/17 14:01:17 noring Exp $";
 
 LocaleString module_group_name = DLOCALE(0,"SQL Log:");
 LocaleString module_generic_name = DLOCALE(0, "Aggregate module");
@@ -141,32 +141,30 @@ void aggregate_start()
   if(is_aggregate_running())
     return;
 
-  
-  Aggregate aggregate_hits_and_cpu_time = AggregateHitsAndCpuTime( sql );
-  //aggregate_hits_and_cpu_time->create_table_if_not_exist( sql );
-  //aggregate_hits_and_cpu_time->update_date( sql, "2006-10-10" );
-  
-  Aggregate aggregate_distinct_hits = AggregateDistinctHits( sql );
-  //aggregate_distinct_hits->create_table_if_not_exist( sql );
-  //aggregate_distinct_hits->update_date( sql, "2006-10-10" );
-
-  
-  Aggregate aggregate_cached_hits = AggregateCachedHits( sql );
-  //  aggregate_cached_hits->create_table_if_not_exist( sql );
-  //aggregate_cached_hits->update_date( sql, "2006-10-10" );
-
-  //  Aggregate aggregate_eval_hits = AggregateEvalHits( sql );
-  //  aggregate_eval_hits->create_table_if_not_exist( sql );
-  //aggregate_eval_hits->update_date( sql, "2006-10-10" );
-
-  Aggregate aggregate_resources = AggregateResources( sql );
-  //  aggregate_resources->create_table_if_not_exist( sql );
-  //aggregate_resources->update_date( sql, "2006-10-10" );
-
-  Aggregate aggregate_cache_type = AggregateCacheType( sql );
-  aggregate_cache_type->create_table_if_not_exist( sql );
-  aggregate_cache_type->update_date( sql, "2006-10-10" );
+  foreach(({ AggregateHits(sql),
+	     AggregateHosts(sql),
+	     AggregateResources(sql),
+	     AggregateResourceDirs(sql) }),
+	  Aggregate aggregate)
+  {
+    aggregate->create_table_if_not_exist(sql);
+    aggregate->update(sql);
+  }
 }
+
+// void aggregate_start() 
+// {
+//   int purge_days = query("acces_log_purge_days");
+//   int log_time_cutoff;
+//   if(purge_days)
+//     log_time_cutoff = time() - purge_days*24*60*60;
+// 
+//   string log_format = query("alt_LogFormat");
+//   if(!sizeof(log_format))
+//     log_format = conf->query("LogFormat");
+// 
+//   aggregate_thread = Thread.thread_create( );
+// }
 
 mapping(string:int) last_access_log_row_id_per_date(Sql.sql sql)
 {
@@ -175,7 +173,8 @@ mapping(string:int) last_access_log_row_id_per_date(Sql.sql sql)
 		     "       date\n"
 		     "  FROM access_log\n"
 		     " GROUP BY date\n"), mapping r)
-    res[r->date] = (int)r->last_log_row_id;
+    if(r->date)
+      res[r->date] = (int)r->last_log_row_id;
   return res;
 }
 
@@ -186,7 +185,8 @@ mapping(string:int) last_aggregate_log_row_id_per_date(Sql.sql sql, string tbl)
 		     "       date\n"
 		     "  FROM "+tbl+"\n"
 		     " GROUP BY date\n"), mapping r)
-    res[r->date] = (int)r->last_log_row_id;
+    if(r->date)
+      res[r->date] = (int)r->last_log_row_id;
   return res;
 }
 
@@ -207,10 +207,15 @@ class Aggregate
   array(array(string)) computed_fields = ({});
   array(array(string)) required_fields = ({});
   array(array(string)) optional_fields = ({});
+        array(string)  where_fields    = ({});
         array(string)  group_by_fields = ({});
   
   multiset(string) available_fields;
 
+  void alter_table_if_not_exist(Sql.sql sql)
+  {
+  }
+  
   void create_table_if_not_exist(Sql.sql sql)
   {
     string table_def = "CREATE TABLE IF NOT EXISTS "+table_name+"\n"
@@ -218,23 +223,25 @@ class Aggregate
 		       " last_log_row_id BIGINT NOT NULL,\n"
 		       " server_name VARCHAR(32),\n"
 		       " date DATE,\n"
-	           " time DATETIME,\n";
+		       " time DATETIME,\n";
     foreach(computed_fields +
-			required_fields +
-			optional_fields, array(string) field) {
+	    required_fields +
+	    optional_fields, array(string) field) {
       if(field[1] && available_fields[field[0]]) {
-		table_def += field[0] + " " + field[1] + ",\n";
-	  }
-	}
+	table_def += field[0] + " " + field[1] + ",\n";
+      }
+    }
     table_def += "PRIMARY KEY (aggregate_id),\n"
 		 "INDEX (date),\n"
 		 "INDEX (server_name),\n"
 		 "INDEX (server_name, date))\n";
-	
-	write( "#####################\n" );
-	write( table_def + "\n" );
-	write( "#####################\n" );
-	sql->query(table_def);
+    
+    write( "#####################\n" );
+    write( table_def + "\n" );
+    write( "#####################\n" );
+    
+    sql->query(table_def);
+    alter_table_if_not_exist(sql);
   }
 
   int is_available()
@@ -242,16 +249,20 @@ class Aggregate
     return !sizeof(required_fields - (array)available_fields);
   }
 
-  void update_date(Sql.sql sql, string date )
+  void post_update_date(Sql.sql sql, string date)
   {
-	sql->query("DELETE FROM "+table_name+" WHERE date = %s", date);
+  }
+  
+  void update_date(Sql.sql sql, string date)
+  {
+    sql->query("DELETE FROM "+table_name+" WHERE date = %s", date);
     
-	string minute_granularity = query( "minute_granularity" );
+    string minute_granularity = query( "minute_granularity" );
     string query_def = "INSERT INTO "+table_name+"\n"
 		       "           (last_log_row_id,\n"
 		       "            server_name,\n"
 		       "            date,\n"
-	           "            time";
+		       "            time";
     foreach(computed_fields +
 	    required_fields +
 	    optional_fields, array(string) field)
@@ -261,8 +272,8 @@ class Aggregate
 		 "     SELECT MAX(log_row_id),\n"
 		 "            server_name,\n"
 		 "            date,\n"
-	     "            CONCAT(DATE_FORMAT(time, '%Y-%m-%d %H:'),\n"
-	     "                   FLOOR(MINUTE(time)/"+minute_granularity+")*"+minute_granularity+") AS time_granularity";
+		 "            CONCAT(DATE_FORMAT(time, '%Y-%m-%d %H:'),\n"
+		 "                   FLOOR(MINUTE(time)/"+minute_granularity+")*"+minute_granularity+") AS time_granularity";
     foreach(computed_fields +
 	    required_fields +
 	    optional_fields, array(string) field)
@@ -272,18 +283,23 @@ class Aggregate
 		 "       FROM access_log,\n"
 		 "            log_files\n"
 		 "      WHERE access_log.date = '"+sql->quote(date)+"'\n"
-		 "        AND access_log.log_file_id = log_files.log_file_id\n"
-		 "   GROUP BY server_name, time_granularity";
+		 "        AND access_log.log_file_id =\n"
+		 "              log_files.log_file_id\n";
+    foreach(where_fields, string field)
+      query_def += "        AND " + field + "\n";
+    query_def += "   GROUP BY server_name, time_granularity";
     foreach(group_by_fields, string field) {
       if(available_fields[field]) {
 		query_def += ",\n            " + field;
 	  }
     }
-	
-	write( "#####################\n" );
-	write( query_def + "\n" );
-	write( "#####################\n" );
-	sql->query(query_def + "\n");
+
+    write( "#####################\n" );
+    write( query_def + "\n" );
+    write( "#####################\n" );
+    sql->query(query_def + "\n");
+
+    post_update_date(sql, date);
   }
 
   void update(Sql.sql sql)
@@ -291,7 +307,7 @@ class Aggregate
     werror("%s: %s starting\n", query_name(), table_name);
     foreach(sort(updated_dates(sql, table_name)), string date)
     {
-      werror("%s: %s aggregating %s\n", query_name(), table_name, date);
+      werror("%s: %s aggregating %O\n", query_name(), table_name, date);
       update_date(sql, date);
     }
     werror("%s: %s finished\n", query_name(), table_name);
@@ -300,59 +316,195 @@ class Aggregate
   static void create(Sql.sql sql)
   {
     available_fields = (multiset)sql->list_fields("access_log")->name |
-	  (multiset)computed_fields[*][0]; // computed_fields is an array(array(string))
+		       // computed_fields is an array(array(string))
+		       (multiset)computed_fields[*][0];
   }
 }
 
-// FIXME: Add time with minute granularity.
-class AggregateDistinctHits
+class AggregateHits
 {
-
-  /**
-select hour, minute, (max_server_cputime-min_server_cputime) as cpu_time from aggregate_summary order by hour asc, minute asc;
-   */
   inherit Aggregate;
 
-  string table_name = "aggregate_distinct_hits";
-
-  // distinct_hits may want to be tuned to include params as well
-  array(array(string)) computed_fields = ({
-	({ "unique_file_resources",       "INTEGER UNSIGNED", "COUNT( DISTINCT replace(resource, substring(resource, locate('?', resource), length(resource)), '' ) )" }),
-	({ "unique_resources",       "INTEGER UNSIGNED", "COUNT( DISTINCT resource )" }),
-    ({ "max_server_cputime",  "INTEGER UNSIGNED", "MAX(server_cputime) as max_server_cputime"  }),
-    ({ "min_server_cputime",  "INTEGER UNSIGNED", "MIN(server_cputime) as min_server_cputime"  })
-  });
-    
-  //  array(string) group_by_fields = ({
-  //  "resource"
-  //});
-}
-
-class AggregateHitsAndCpuTime
-{
-
-  /**
-select time_granularity, (max_server_cputime-min_server_cputime)/5 as cpu_time from aggregate_summary_minute order by hour asc, minute asc;
-   */
-  inherit Aggregate;
-
-  string table_name = "aggregate_hits_and_cpu_time";
+  string table_name = "aggregate_hits";
 
   array(array(string)) computed_fields = ({
-    ({ "hits",                "INTEGER UNSIGNED", "COUNT(*) AS hits"     }),
-    ({ "max_server_cputime",  "INTEGER UNSIGNED", "MAX(server_cputime) as max_server_cputime"  }),
-    ({ "min_server_cputime",  "INTEGER UNSIGNED", "MIN(server_cputime) as min_server_cputime"  })
+    ({ "hits",            "INTEGER UNSIGNED", "COUNT(*) AS hits"     })
   });
     
   array(array(string)) optional_fields = ({
     ({ "length",          "BIGINT UNSIGNED",  "SUM(length)"          }),
     ({ "server_uptime",   "INTEGER UNSIGNED", "MAX(server_uptime)"   }),
+    ({ "server_cputime",  "INTEGER UNSIGNED", "MAX(server_cputime)"  }),
     ({ "server_usertime", "INTEGER UNSIGNED", "MAX(server_usertime)" }),
     ({ "server_systime",  "INTEGER UNSIGNED", "MAX(server_systime)"  })
   });
+  
+  array(string) where_fields = ({
+    "ip_number IS NOT NULL"
+  });
+  
+  void alter_table_if_not_exist(Sql.sql sql)
+  {
+    array(string) fields = sql->list_fields(table_name)->name;
+    foreach(fields, string field)
+      switch(field)
+      {
+	case "server_uptime":
+	case "server_cputime":
+	case "server_usertime":
+	case "server_systime":
+	  if(has_value(fields, field + "_diff"))
+	    break;
+	  sql->query("ALTER TABLE " + table_name +
+		     " ADD " + field + "_diff INTEGER UNSIGNED");
+	  break;
+      }
+  }
+
+  void post_update_date(Sql.sql sql, string date)
+  {
+    array(string) fields =
+      sql->list_fields(table_name)->name & ({ "server_uptime",
+					      "server_cputime",
+					      "server_usertime",
+					      "server_systime"  });
+    if(!sizeof(fields))
+      return;
+    
+    Sql.sql_result sql_result =
+      sql->big_query("SELECT server_name, aggregate_id, " + (fields * ", ") +
+		     "  FROM " + table_name +
+		     " WHERE " + (map(fields, `+, " IS NOT NULL") * " AND ") +
+		     " ORDER BY server_name, aggregate_id");
+    mapping(string:array(string)) prev_row = ([]);
+    array(string) row;
+    while(row = sql_result->fetch_row())
+    {
+      string server_name = row[0];
+      string aggregate_id = row[1];
+      
+      if(prev_row[server_name])
+      {
+	array(string) diff_row = ({});
+	for(int i = 2; i < sizeof(row); i++)
+	  diff_row += ({ (int)row[i] - (int)prev_row[server_name][i] });
+	
+	string query_def = "UPDATE " + table_name + " SET ";
+	foreach(fields; int i; string field)
+	  query_def += (i ? ", " : "") + field + "_diff = " + diff_row[i];
+	query_def += " WHERE aggregate_id = " + aggregate_id;
+	
+	sql->query(query_def);
+      }
+      
+      prev_row[server_name] = row;
+    }
+  }
 }
 
-// FIXME: Add time with minute granularity.
+class AggregateHosts
+{
+  inherit Aggregate;
+
+  string table_name = "aggregate_hosts";
+
+  array(array(string)) computed_fields = ({
+    ({ "hits",            "INTEGER UNSIGNED", "COUNT(*) AS hits"     })
+  });
+  
+  array(array(string)) required_fields = ({
+    ({ "host",            "VARCHAR(64)",      "host"                 }),
+    ({ "response",        "INTEGER UNSIGNED", "response"             })
+  });
+    
+  array(array(string)) optional_fields = ({
+    ({ "length",          "BIGINT UNSIGNED",  "SUM(length)"          }),
+    ({ "cache_status",    "VARCHAR(64)",      "cache_status"         }),
+    ({ "eval_status",     "VARCHAR(64)",      "eval_status"          }),
+    ({ "content_type",    "VARCHAR(32)",      "content_type"         })
+  });
+    
+  array(string) group_by_fields = ({
+    "host",
+    "response",
+    "cache_status",
+    "eval_status",
+    "content_type"
+  });
+}
+
+class AggregateResources
+{
+  inherit Aggregate;
+
+  string table_name = "aggregate_resources";
+
+  array(array(string)) computed_fields = ({
+    ({ "hits",            "INTEGER UNSIGNED", "COUNT(*) AS hits"     }),
+    ({ "resource_path",   "VARCHAR(255)",
+       "            SUBSTRING_INDEX(resource, '?', 1) as resource_path"               }),
+    ({ "resource_query",  "VARCHAR(255)",
+       "            SUBSTRING(resource,\n"
+       "                      1+LENGTH(SUBSTRING_INDEX(resource, '?', 1))) as resource_query" })
+  });
+  
+  array(array(string)) required_fields = ({
+    ({ "resource",        0,                  0                      }),
+    ({ "response",        "INTEGER UNSIGNED", "response"             })
+  });
+    
+  array(array(string)) optional_fields = ({
+    ({ "length",          "BIGINT UNSIGNED",  "SUM(length)"          }),
+    ({ "cache_status",    "VARCHAR(64)",      "cache_status"         }),
+    ({ "eval_status",     "VARCHAR(64)",      "eval_status"          }),
+    ({ "content_type",    "VARCHAR(32)",      "content_type"         })
+  });
+    
+  array(string) group_by_fields = ({
+    "resource_path",
+    "resource_query",
+    "response",
+    "cache_status",
+    "eval_status",
+    "content_type"
+  });
+}
+
+class AggregateResourceDirs
+{
+  inherit Aggregate;
+
+  string table_name = "aggregate_resource_dirs";
+  
+  array(array(string)) computed_fields = ({
+    ({ "hits",            "INTEGER UNSIGNED", "COUNT(*) AS hits"     }),
+    ({ "resource_dir",    "VARCHAR(255)",
+       "            REVERSE(SUBSTRING(REVERSE(resource),\n"
+       "                              LOCATE('/',\n"
+       "                                     REVERSE(resource)))) AS resource_dir"   })
+  });
+  
+  array(array(string)) required_fields = ({
+    ({ "resource",        0,                  0                      }),
+    ({ "response",        "INTEGER UNSIGNED", "response"             })
+  });
+    
+  array(array(string)) optional_fields = ({
+    ({ "length",          "BIGINT UNSIGNED",  "SUM(length)"          }),
+    ({ "cache_status",    "VARCHAR(64)",      "cache_status"         }),
+    ({ "eval_status",     "VARCHAR(64)",      "eval_status"          }),
+    ({ "content_type",    "VARCHAR(32)",      "content_type"         })
+  });
+    
+  array(string) group_by_fields = ({
+    "resource_dir",
+    "response",
+    "cache_status",
+    "eval_status",
+    "content_type"
+  });
+}
+
 class AggregateCachedHits
 {
 
@@ -365,9 +517,11 @@ select hour, minute, (max_server_cputime-min_server_cputime) as cpu_time from ag
 
   // distinct_hits may want to be tuned to include params as well
   array(array(string)) computed_fields = ({
-	({ "cached_hits",         "INTEGER UNSIGNED", "COUNT(*) as cached_hits" }),
-    ({ "max_server_cputime",  "INTEGER UNSIGNED", "MAX(server_cputime) as max_server_cputime"  }),
-    ({ "min_server_cputime",  "INTEGER UNSIGNED", "MIN(server_cputime) as min_server_cputime"  })
+    ({ "cached_hits",         "INTEGER UNSIGNED", "COUNT(*) as cached_hits" }),
+    ({ "max_server_cputime",  "INTEGER UNSIGNED",
+       "MAX(server_cputime) AS max_server_cputime"  }),
+    ({ "min_server_cputime",  "INTEGER UNSIGNED",
+       "MIN(server_cputime) AS min_server_cputime"  })
   });
     
 
@@ -388,10 +542,13 @@ class AggregateEvalType
 
   // distinct_hits may want to be tuned to include params as well
   array(array(string)) computed_fields = ({
-	({ "eval_hits",            "INTEGER UNSIGNED", "COUNT(*) as eval_hits" }),
-    ({ "eval_class_rxmlpcode", "INTEGER UNSIGNED", "IF( LOCATE( 'rxmlpcode', eval_status ), 1, 0 ) as eval_class_rxmlpcode" }),
-    ({ "eval_class_rxmlsrc",   "INTEGER UNSIGNED", "IF( LOCATE( 'rxmlsrc', eval_status ), 1, 0 ) as eval_class_rxmlsrc" }),
-    ({ "eval_class_xslt",      "INTEGER UNSIGNED", "IF( LOCATE( 'xslt', eval_status ), 1, 0 ) as eval_class_xslt" })
+    ({ "eval_hits",            "INTEGER UNSIGNED", "COUNT(*) as eval_hits" }),
+    ({ "eval_class_rxmlpcode", "INTEGER UNSIGNED",
+       "IF( LOCATE( 'rxmlpcode', eval_status ), 1, 0 ) AS eval_class_rxmlpcode" }),
+    ({ "eval_class_rxmlsrc",   "INTEGER UNSIGNED",
+       "IF( LOCATE( 'rxmlsrc', eval_status ), 1, 0 ) AS eval_class_rxmlsrc" }),
+    ({ "eval_class_xslt",      "INTEGER UNSIGNED",
+       "IF( LOCATE( 'xslt', eval_status ), 1, 0 ) AS eval_class_xslt" })
   });
     
   array(array(string)) required_fields = ({
@@ -436,110 +593,3 @@ class AggregateCacheType
 	"cache_status"
   });
 }
-
-// FIXME: Add time with hour granularity.
-class AggregateHosts
-{
-  inherit Aggregate;
-
-  string table_name = "aggregate_hosts";
-
-  array(array(string)) computed_fields = ({
-    ({ "hits",            "INTEGER UNSIGNED", "COUNT(*) AS hits"     })
-  });
-  
-  array(array(string)) required_fields = ({
-    ({ "host",            "VARCHAR(64)",      "host"                 }),
-    ({ "response",        "INTEGER UNSIGNED", "response"             })
-  });
-    
-  array(array(string)) optional_fields = ({
-    ({ "length",          "BIGINT UNSIGNED",  "SUM(length)"          }),
-    ({ "cache_status",    "VARCHAR(64)",      "cache_status"         }),
-    ({ "eval_status",     "VARCHAR(64)",      "eval_status"          }),
-    ({ "content_type",    "VARCHAR(32)",      "content_type"         })
-  });
-    
-  array(string) group_by_fields = ({
-    "host",
-    "response",
-    "cache_status",
-    "eval_status",
-    "content_type"
-  });
-}
-
-// FIXME: Add time with hour granularity.
-class AggregateResources
-{
-  inherit Aggregate;
-
-  string table_name = "aggregate_resources";
-
-  array(array(string)) computed_fields = ({
-    ({ "hits",            "INTEGER UNSIGNED", "COUNT(*) AS hits"     }),
-    ({ "resource_path",   "VARCHAR(255)",
-       "            SUBSTRING_INDEX(resource, '?', 1) as resource_path"               }),
-    ({ "resource_query",  "VARCHAR(255)",
-       "            SUBSTRING(resource,\n"
-       "                      1+LENGTH(SUBSTRING_INDEX(resource, '?', 1))) as resource_query" })
-  });
-  
-  array(array(string)) required_fields = ({
-    ({ "resource",        0,                  0                      }),
-    ({ "response",        "INTEGER UNSIGNED", "response"             })
-  });
-    
-  array(array(string)) optional_fields = ({
-    ({ "length",          "BIGINT UNSIGNED",  "SUM(length)"          }),
-    ({ "cache_status",    "VARCHAR(64)",      "cache_status"         }),
-    ({ "eval_status",     "VARCHAR(64)",      "eval_status"          }),
-    ({ "content_type",    "VARCHAR(32)",      "content_type"         })
-  });
-    
-  array(string) group_by_fields = ({
-    "resource_path",
-    "resource_query",
-    "response",
-    "cache_status",
-    "eval_status",
-    "content_type"
-  });
-}
-
-// FIXME: Add time with hour granularity.
-class AggregateResourceDirs
-{
-  inherit Aggregate;
-
-  string table_name = "aggregate_resource_dirs";
-  
-  array(array(string)) computed_fields = ({
-    ({ "hits",            "INTEGER UNSIGNED", "COUNT(*) AS hits"     }),
-    ({ "resource_dir",    "VARCHAR(255)",
-       "            REVERSE(SUBSTRING(REVERSE(resource),\n"
-       "                              LOCATE('/',\n"
-       "                                     REVERSE(resource))))"   })
-  });
-  
-  array(array(string)) required_fields = ({
-    ({ "resource",        0,                  0                      }),
-    ({ "response",        "INTEGER UNSIGNED", "response"             })
-  });
-    
-  array(array(string)) optional_fields = ({
-    ({ "length",          "BIGINT UNSIGNED",  "SUM(length)"          }),
-    ({ "cache_status",    "VARCHAR(64)",      "cache_status"         }),
-    ({ "eval_status",     "VARCHAR(64)",      "eval_status"          }),
-    ({ "content_type",    "VARCHAR(32)",      "content_type"         })
-  });
-    
-  array(string) group_by_fields = ({
-    "resource_dir",
-    "response",
-    "cache_status",
-    "eval_status",
-    "content_type"
-  });
-}
-
