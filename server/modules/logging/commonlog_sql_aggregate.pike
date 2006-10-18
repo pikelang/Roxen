@@ -1,5 +1,5 @@
 // Common Log SQL Aggregate module
-// $Id: commonlog_sql_aggregate.pike,v 1.5 2006/10/18 07:34:07 noring Exp $
+// $Id: commonlog_sql_aggregate.pike,v 1.6 2006/10/18 08:06:18 noring Exp $
 
 #include <module.h>
 
@@ -12,7 +12,7 @@ inherit "roxenlib";
 constant thread_safe = 1;
 constant module_unique = 0;
 constant module_type = MODULE_PROVIDER;
-constant cvs_version = "$Id: commonlog_sql_aggregate.pike,v 1.5 2006/10/18 07:34:07 noring Exp $";
+constant cvs_version = "$Id: commonlog_sql_aggregate.pike,v 1.6 2006/10/18 08:06:18 noring Exp $";
 
 LocaleString module_group_name = DLOCALE(0,"SQL Log:");
 LocaleString module_generic_name = DLOCALE(0, "Aggregate module");
@@ -152,7 +152,8 @@ void run_aggregate(Sql.sql sql)
 	     AggregateCache(sql),
 	     AggregateHosts(sql),
 	     AggregateResources(sql),
-	     AggregateResourceDirs(sql) }),
+	     AggregateResourceDirs(sql),
+	     AggregateActions(sql) }),
 	  Aggregate aggregate)
   {
     if(!is_aggregate_running())
@@ -572,5 +573,34 @@ class AggregateResourceDirs
     "cache_status",
     "eval_status",
     "content_type"
+  });
+}
+
+class AggregateActions
+{
+  inherit Aggregate;
+
+  string table_name = "aggregate_actions";
+
+  array(array(string)) computed_fields = ({
+    ({ "actions",              "INTEGER UNSIGNED", "COUNT(*) AS actions" }),
+    ({ "action_commit",        "INTEGER UNSIGNED",
+       "SUM(IF(LOCATE('commit', action), 1, 0))"                         }),
+    ({ "action_crawl_file",    "INTEGER UNSIGNED",
+       "SUM(IF(LOCATE('crawl-file', action), 1, 0))"                     }),
+    ({ "action_mkdir",         "INTEGER UNSIGNED",
+       "SUM(IF(LOCATE('mkdir', action), 1, 0))"                          }),
+    ({ "action_purge",         "INTEGER UNSIGNED",
+       "SUM(IF(LOCATE('purge', action), 1, 0))"                          }),
+    ({ "action_set_dir_md",    "INTEGER UNSIGNED",
+       "SUM(IF(LOCATE('set-dir-md', action), 1, 0))"                     })
+  });
+  
+  array(array(string)) required_fields = ({
+    ({ "action",               0,                   0                    })
+  });
+  
+  array(string) where_fields = ({
+    "action IS NOT NULL"
   });
 }
