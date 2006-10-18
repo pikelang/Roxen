@@ -1,5 +1,5 @@
 // Common Log SQL Aggregate module
-// $Id: commonlog_sql_aggregate.pike,v 1.4 2006/10/17 14:01:17 noring Exp $
+// $Id: commonlog_sql_aggregate.pike,v 1.5 2006/10/18 07:34:07 noring Exp $
 
 #include <module.h>
 
@@ -12,7 +12,7 @@ inherit "roxenlib";
 constant thread_safe = 1;
 constant module_unique = 0;
 constant module_type = MODULE_PROVIDER;
-constant cvs_version = "$Id: commonlog_sql_aggregate.pike,v 1.4 2006/10/17 14:01:17 noring Exp $";
+constant cvs_version = "$Id: commonlog_sql_aggregate.pike,v 1.5 2006/10/18 07:34:07 noring Exp $";
 
 LocaleString module_group_name = DLOCALE(0,"SQL Log:");
 LocaleString module_generic_name = DLOCALE(0, "Aggregate module");
@@ -141,30 +141,28 @@ void aggregate_start()
   if(is_aggregate_running())
     return;
 
+  aggregate_thread = Thread.thread_create(run_aggregate, sql);
+}
+
+void run_aggregate(Sql.sql sql)
+{
+  werror("%s: Starting\n", query_name());
   foreach(({ AggregateHits(sql),
+	     AggregatePerformance(sql),
+	     AggregateCache(sql),
 	     AggregateHosts(sql),
 	     AggregateResources(sql),
 	     AggregateResourceDirs(sql) }),
 	  Aggregate aggregate)
   {
+    if(!is_aggregate_running())
+      // Check if the import thread is supposed to run.
+      break;
     aggregate->create_table_if_not_exist(sql);
     aggregate->update(sql);
   }
+  werror("%s: Finished\n", query_name());
 }
-
-// void aggregate_start() 
-// {
-//   int purge_days = query("acces_log_purge_days");
-//   int log_time_cutoff;
-//   if(purge_days)
-//     log_time_cutoff = time() - purge_days*24*60*60;
-// 
-//   string log_format = query("alt_LogFormat");
-//   if(!sizeof(log_format))
-//     log_format = conf->query("LogFormat");
-// 
-//   aggregate_thread = Thread.thread_create( );
-// }
 
 mapping(string:int) last_access_log_row_id_per_date(Sql.sql sql)
 {
@@ -214,6 +212,7 @@ class Aggregate
 
   void alter_table_if_not_exist(Sql.sql sql)
   {
+    // Placeholder function.
   }
   
   void create_table_if_not_exist(Sql.sql sql)
@@ -226,21 +225,16 @@ class Aggregate
 		       " time DATETIME,\n";
     foreach(computed_fields +
 	    required_fields +
-	    optional_fields, array(string) field) {
-      if(field[1] && available_fields[field[0]]) {
+	    optional_fields, array(string) field)
+      if(field[1] && available_fields[field[0]])
 	table_def += field[0] + " " + field[1] + ",\n";
-      }
-    }
     table_def += "PRIMARY KEY (aggregate_id),\n"
 		 "INDEX (date),\n"
 		 "INDEX (server_name),\n"
 		 "INDEX (server_name, date))\n";
     
-    write( "#####################\n" );
-    write( table_def + "\n" );
-    write( "#####################\n" );
-    
     sql->query(table_def);
+    
     alter_table_if_not_exist(sql);
   }
 
@@ -251,6 +245,7 @@ class Aggregate
 
   void post_update_date(Sql.sql sql, string date)
   {
+    // Placeholder function.
   }
   
   void update_date(Sql.sql sql, string date)
@@ -288,17 +283,12 @@ class Aggregate
     foreach(where_fields, string field)
       query_def += "        AND " + field + "\n";
     query_def += "   GROUP BY server_name, time_granularity";
-    foreach(group_by_fields, string field) {
-      if(available_fields[field]) {
-		query_def += ",\n            " + field;
-	  }
-    }
-
-    write( "#####################\n" );
-    write( query_def + "\n" );
-    write( "#####################\n" );
+    foreach(group_by_fields, string field)
+      if(available_fields[field])
+	query_def += ",\n            " + field;
+    
     sql->query(query_def + "\n");
-
+    
     post_update_date(sql, date);
   }
 
@@ -307,7 +297,10 @@ class Aggregate
     werror("%s: %s starting\n", query_name(), table_name);
     foreach(sort(updated_dates(sql, table_name)), string date)
     {
-      werror("%s: %s aggregating %O\n", query_name(), table_name, date);
+      if(!is_aggregate_running())
+	// Check if the import thread is supposed to run.
+	break;
+      werror("%s: %s %s\n", query_name(), table_name, date);
       update_date(sql, date);
     }
     werror("%s: %s finished\n", query_name(), table_name);
@@ -342,24 +335,38 @@ class AggregateHits
   array(string) where_fields = ({
     "ip_number IS NOT NULL"
   });
+}
+
+class AggregatePerformance
+{
+  inherit Aggregate;
+
+  string table_name = "aggregate_performance";
+
+  array(array(string)) computed_fields = ({
+    ({ "hits",                 "INTEGER UNSIGNED", "COUNT(*) AS hits" }),
+    ({ "server_uptime_diff",   "INTEGER UNSIGNED", "NULL"             }),
+    ({ "server_cputime_diff",  "INTEGER UNSIGNED", "NULL"             }),
+    ({ "server_usertime_diff", "INTEGER UNSIGNED", "NULL"             }),
+    ({ "server_systime_diff",  "INTEGER UNSIGNED", "NULL"             })
+  });
+    
+  array(array(string)) optional_fields = ({
+    ({ "length",          "BIGINT UNSIGNED",  "SUM(length)"           }),
+  });
   
-  void alter_table_if_not_exist(Sql.sql sql)
-  {
-    array(string) fields = sql->list_fields(table_name)->name;
-    foreach(fields, string field)
-      switch(field)
-      {
-	case "server_uptime":
-	case "server_cputime":
-	case "server_usertime":
-	case "server_systime":
-	  if(has_value(fields, field + "_diff"))
-	    break;
-	  sql->query("ALTER TABLE " + table_name +
-		     " ADD " + field + "_diff INTEGER UNSIGNED");
-	  break;
-      }
-  }
+  array(array(string)) required_fields = ({
+    ({ "eval_status",     0,                  0                       }),
+    ({ "cache_status",    0,                  0                       }),
+    ({ "server_uptime",   "INTEGER UNSIGNED", "MAX(server_uptime)"    }),
+    ({ "server_cputime",  "INTEGER UNSIGNED", "MAX(server_cputime)"   }),
+    ({ "server_usertime", "INTEGER UNSIGNED", "MAX(server_usertime)"  }),
+    ({ "server_systime",  "INTEGER UNSIGNED", "MAX(server_systime)"   })
+  });
+  
+  array(string) where_fields = ({
+    "ip_number IS NOT NULL"
+  });
 
   void post_update_date(Sql.sql sql, string date)
   {
@@ -371,6 +378,10 @@ class AggregateHits
     if(!sizeof(fields))
       return;
     
+    // Compute server_{up,cpu,user,sys}time differences. We prefer
+    // NULL for the corner cases (beginning of the day), because
+    // calculating that will complicate the code too much. Server
+    // restarts are also not considered accurately.
     Sql.sql_result sql_result =
       sql->big_query("SELECT server_name, aggregate_id, " + (fields * ", ") +
 		     "  FROM " + table_name +
@@ -388,18 +399,77 @@ class AggregateHits
 	array(string) diff_row = ({});
 	for(int i = 2; i < sizeof(row); i++)
 	  diff_row += ({ (int)row[i] - (int)prev_row[server_name][i] });
-	
-	string query_def = "UPDATE " + table_name + " SET ";
-	foreach(fields; int i; string field)
-	  query_def += (i ? ", " : "") + field + "_diff = " + diff_row[i];
-	query_def += " WHERE aggregate_id = " + aggregate_id;
-	
-	sql->query(query_def);
+
+	if(diff_row[0] >= 0)
+	{
+	  string query_def = "UPDATE " + table_name + " SET ";
+	  foreach(fields; int i; string field)
+	    query_def += (i ? ", " : "") + field + "_diff = " + diff_row[i];
+	  query_def += " WHERE aggregate_id = " + aggregate_id;
+	  sql->query(query_def);
+	}
       }
       
       prev_row[server_name] = row;
     }
   }
+}
+
+class AggregateCache
+{
+  inherit Aggregate;
+
+  string table_name = "aggregate_cache";
+
+  array(array(string)) computed_fields = ({
+    ({ "hits",                 "INTEGER UNSIGNED", "COUNT(*) AS hits" }),
+    // eval_status
+    ({ "eval_xslt",            "INTEGER UNSIGNED",
+       "SUM(IF(LOCATE('xslt', eval_status), 1, 0))"                   }),
+    ({ "eval_rxmlpcode",       "INTEGER UNSIGNED",
+       "SUM(IF(LOCATE('rxmlpcode', eval_status), 1, 0))"              }),
+    ({ "eval_rxmlsrc",         "INTEGER UNSIGNED",
+       "SUM(IF(LOCATE('rxmlpsrc', eval_status), 1, 0))"               }),
+    // cache_status
+    ({ "cache_nocache",        "INTEGER UNSIGNED",
+       "SUM(IF(LOCATE('nocache', cache_status), 1, 0))"               }),
+    ({ "cache_protstore",      "INTEGER UNSIGNED",
+       "SUM(IF(LOCATE('protstore', cache_status), 1, 0))"             }),
+    ({ "cache_xsltcache",      "INTEGER UNSIGNED",
+       "SUM(IF(LOCATE('xsltcache', cache_status), 1, 0))"             }),
+    ({ "cache_pcoderam",       "INTEGER UNSIGNED",
+       "SUM(IF(LOCATE('pcoderam', cache_status), 1, 0))"              }),
+    ({ "cache_pcodedisk",       "INTEGER UNSIGNED",
+       "SUM(IF(LOCATE('pcodedisk', cache_status), 1, 0))"             }),
+    ({ "cache_cachetag",       "INTEGER UNSIGNED",
+       "SUM(IF(LOCATE('pcodedisk', cache_status), 1, 0))"             }),
+    ({ "cache_crawlondemand",       "INTEGER UNSIGNED",
+       "SUM(IF(LOCATE('crawlondemand', cache_status), 1, 0))"         }),
+    ({ "cache_crawlondemandbyotherthread",       "INTEGER UNSIGNED",
+       "SUM(IF(LOCATE('crawlondemandbyotherthread', cache_status), 1, 0))"}),
+    ({ "cache_protcache",      "INTEGER UNSIGNED",
+       "SUM(IF(LOCATE('protcache', cache_status), 1, 0))"             }),
+  });
+  
+  array(array(string)) optional_fields = ({
+    ({ "length",          "BIGINT UNSIGNED",  "SUM(length)"           }),
+    ({ "content_type",    "VARCHAR(32)",      "content_type"          })
+  });
+  
+  array(array(string)) required_fields = ({
+    ({ "eval_status",     0,                  0                       }),
+    ({ "cache_status",    0,                  0                       }),
+    ({ "response",        "INTEGER UNSIGNED", "response"              })
+  });
+  
+  array(string) where_fields = ({
+    "ip_number IS NOT NULL"
+  });
+    
+  array(string) group_by_fields = ({
+    "response",
+    "content_type"
+  });
 }
 
 class AggregateHosts
@@ -502,94 +572,5 @@ class AggregateResourceDirs
     "cache_status",
     "eval_status",
     "content_type"
-  });
-}
-
-class AggregateCachedHits
-{
-
-  /**
-select hour, minute, (max_server_cputime-min_server_cputime) as cpu_time from aggregate_summary order by hour asc, minute asc;
-   */
-  inherit Aggregate;
-
-  string table_name = "aggregate_cached_hits";
-
-  // distinct_hits may want to be tuned to include params as well
-  array(array(string)) computed_fields = ({
-    ({ "cached_hits",         "INTEGER UNSIGNED", "COUNT(*) as cached_hits" }),
-    ({ "max_server_cputime",  "INTEGER UNSIGNED",
-       "MAX(server_cputime) AS max_server_cputime"  }),
-    ({ "min_server_cputime",  "INTEGER UNSIGNED",
-       "MIN(server_cputime) AS min_server_cputime"  })
-  });
-    
-
-  array(array(string)) required_fields = ({
-    ({ "cache_status",    "VARCHAR(64)",      "IF( LOCATE( 'rxml', cache_status ), CONCAT( 'rxml', IF( LOCATE( 'xslt', cache_status ), '_xslt', '') ), IF( LOCATE( 'xslt' ), 'xslt', '' ), 'other' ) AS cache_status"                 })
-  });
-
-  array(string) group_by_fields = ({
-    "cache_status"
-  });
-}
-
-class AggregateEvalType
-{
-  inherit Aggregate;
-
-  string table_name = "aggregate_eval_type";
-
-  // distinct_hits may want to be tuned to include params as well
-  array(array(string)) computed_fields = ({
-    ({ "eval_hits",            "INTEGER UNSIGNED", "COUNT(*) as eval_hits" }),
-    ({ "eval_class_rxmlpcode", "INTEGER UNSIGNED",
-       "IF( LOCATE( 'rxmlpcode', eval_status ), 1, 0 ) AS eval_class_rxmlpcode" }),
-    ({ "eval_class_rxmlsrc",   "INTEGER UNSIGNED",
-       "IF( LOCATE( 'rxmlsrc', eval_status ), 1, 0 ) AS eval_class_rxmlsrc" }),
-    ({ "eval_class_xslt",      "INTEGER UNSIGNED",
-       "IF( LOCATE( 'xslt', eval_status ), 1, 0 ) AS eval_class_xslt" })
-  });
-    
-  array(array(string)) required_fields = ({
-	({ "eval_status",          "VARCHAR(64)",      "eval_status" }),
-  });
-
-  array(string) group_by_fields = ({
-	"eval_class_rxml",
-	"eval_class_xslt",
-	"eval_status"
-  });
-}
-
-class AggregateCacheType
-{
-  inherit Aggregate;
-
-  string table_name = "aggregate_cache_type";
-
-  // distinct_hits may want to be tuned to include params as well
-  array(array(string)) computed_fields = ({
-	({ "cache_hits",                            "INTEGER UNSIGNED", "COUNT(*) as eval_hits" }),
-    ({ "cache_class_pcodedisk",                  "INTEGER UNSIGNED", "IF( LOCATE( 'pcodedisk', cache_status ), 1, 0 ) as cache_class_pcodedisk" }),
-    ({ "cache_class_nocache",                    "INTEGER UNSIGNED", "IF( LOCATE( 'nocache', cache_status ), 1, 0 ) as cache_class_nocache" }),
-    ({ "cache_class_protcache",                  "INTEGER UNSIGNED", "IF( LOCATE( 'protcache', cache_status ), 1, 0 ) as cache_class_protcache" }),
-    ({ "cache_class_cachetag",                   "INTEGER UNSIGNED", "IF( LOCATE( 'cachetag', cache_status ), 1, 0 ) as cache_class_cachetag" }),
-    ({ "cache_class_crawlondemand",              "INTEGER UNSIGNED", "IF( LOCATE( 'crawlondemand', cache_status ), 1, 0 ) as cache_class_crawlondemand" }),
-    ({ "cache_class_crawlondemandbyotherthread", "INTEGER UNSIGNED", "IF( LOCATE( 'crawlondemandbyotherthread', cache_status ), 1, 0 ) as cache_class_crawlondemandbyotherthread" })
-  });
-    
-  array(array(string)) required_fields = ({
-	({ "cache_status",          "VARCHAR(64)",      "cache_status" }),
-  });
-
-  array(string) group_by_fields = ({
-	"cache_class_pcodedisk",
-	"cache_class_nocache",
-	"cache_class_protcache",
-	"cache_class_cachetag",
-	"cache_class_crawlondemand",
-	"cache_class_crawlondemandbyotherthread",
-	"cache_status"
   });
 }
