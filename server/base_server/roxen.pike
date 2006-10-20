@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.941 2006/10/17 20:45:26 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.942 2006/10/20 14:30:14 mast Exp $";
 
 //! @appears roxen
 //!
@@ -5684,7 +5684,7 @@ static constant formats = ([
   "ip-number":		({"%s", "(string)request_id->remoteaddr",
 			  1, "\"0.0.0.0\"", 0}),
   "bin-ip-number":	({"%s", "host_ip_to_int(request_id->remoteaddr)",
-			  1, "\"\0\0\0\0\"", 0}),
+			  1, "\"\\0\\0\\0\\0\"", 0}),
   "method":		({"%s", "(string)request_id->method",
 			  1, "\"-\"", 0}),
   "full-resource":	({"%s", ("(string)"
@@ -5718,9 +5718,9 @@ static constant formats = ([
 			  "%s" , "url_encode (resource)", 0}),
   "protocol":		({"%s", "(string)request_id->prot", 1, "\"-\"", 0}),
   "response":		({"%d", "(int)(file->error || 200)", 1, "\"-\"", 0}),
-  "bin-response":	({"%2c", "(int)(file->error || 200)", 1, "\"\0\0\"", 0}),
+  "bin-response":	({"%2c", "(int)(file->error || 200)", 1, "\"\\0\\0\"", 0}),
   "length":		({"%d", "(int)file->len", 1, "\"0\"", 0}),
-  "bin-length":		({"%4c", "(int)file->len", 1, "\"\0\0\0\0\"", 0}),
+  "bin-length":		({"%4c", "(int)file->len", 1, "\"\\0\\0\\0\\0\"", 0}),
   "request-time":	({"%1.4f", ("(float)(gethrtime() - "
 				    "        request_id->hrtime) /"
 				    "1000000.0"),
@@ -5947,9 +5947,11 @@ static LogFormat compile_log_format( string fmt )
   }
 
   a_func += sprintf(#"
-      string data = sprintf( %O %{, %s%} );", a_format, a_args );
+      string data = sprintf( %O%{,
+	%s%} );", a_format, a_args );
   e_func += sprintf(#"
-      string data = sprintf( %O %{, %s%} );", e_format, e_args );
+      string data = sprintf( %O%{,
+	%s%} );", e_format, e_args );
  
   if (log_flags & LOG_ASYNC_HOST)
   {
@@ -5969,8 +5971,13 @@ static LogFormat compile_log_format( string fmt )
     }
 ";
 
-  program res = compile_string(#"
-    inherit ___LogFormat;" + a_func + e_func);
+  string src = #"
+    inherit ___LogFormat;" + a_func + e_func;
+  program res;
+  if (mixed err = catch (res = compile_string (src))) {
+    werror ("Failed to compile program: %s\n", src);
+    throw (err);
+  }
   string enc = encode_value(res, master()->MyCodec(res));
 
   con->query("REPLACE INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
