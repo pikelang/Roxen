@@ -240,25 +240,24 @@ void run_tests( Configuration c )
     "len":3611,
   ]);
 
-  function format1 = 
-    test_true( roxen.compile_log_format,
+  string format1 =
 	    ({
 	      "$ip_number",  "$bin-ip_number",  "$cern_date",  "$bin-date",
 	      "$method",     "$resource",  "$full_resource", "$protocol",
 	      "$response", "$bin-response", "$length", "$bin-length",
 	      "$referer", "$user_agent", "$user", "$user_id", "$request-time"
-	    }) * "$char(9999)"  + "$char(9999)");
+	    }) * "$char(9999)"  + "$char(9999)";
 
 
   array(string) logged;
   void do_log( string what ) {  logged = what/"\23417";  };
   
   time();
-  test( format1, do_log, http_id, fake_response );
+  test( roxen.run_log_format, format1, do_log, http_id, fake_response );
 
   test( verify_logged_data, logged, 0 );
 
-  test( format1, do_log, minimum_id, fake_response );
+  test( roxen.run_log_format, format1, do_log, minimum_id, fake_response );
 
   test( verify_logged_data, logged, 1 );
 }
