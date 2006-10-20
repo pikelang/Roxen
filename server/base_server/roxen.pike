@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.901 2006/10/16 15:17:57 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.902 2006/10/20 14:29:10 mast Exp $";
 
 //! @appears roxen
 //!
@@ -5452,7 +5452,7 @@ static constant formats = ([
   "ip-number":		({"%s", "(string)request_id->remoteaddr",
 			  1, "\"0.0.0.0\"", 0}),
   "bin-ip-number":	({"%s", "host_ip_to_int(request_id->remoteaddr)",
-			  1, "\"\0\0\0\0\"", 0}),
+			  1, "\"\\0\\0\\0\\0\"", 0}),
   "method":		({"%s", "(string)request_id->method",
 			  1, "\"-\"", 0}),
   "cs-uri-stem":	({"%s", ("(string)"
@@ -5480,9 +5480,9 @@ static constant formats = ([
 			  "%s" , "url_encode (resource)", 0}),
   "protocol":		({"%s", "(string)request_id->prot", 1, "\"-\"", 0}),
   "response":		({"%d", "(int)(file->error || 200)", 1, "\"-\"", 0}),
-  "bin-response":	({"%2c", "(int)(file->error || 200)", 1, "\"\0\0\"", 0}),
+  "bin-response":	({"%2c", "(int)(file->error || 200)", 1, "\"\\0\\0\"", 0}),
   "length":		({"%d", "(int)file->len", 1, "\"0\"", 0}),
-  "bin-length":		({"%4c", "(int)file->len", 1, "\"\0\0\0\0\"", 0}),
+  "bin-length":		({"%4c", "(int)file->len", 1, "\"\\0\\0\\0\\0\"", 0}),
   "request-time":	({"%1.4f", ("(float)(gethrtime() - "
 				    "        request_id->hrtime) /"
 				    "1000000.0"),
