@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.522 2006/10/14 10:39:54 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.523 2006/10/23 15:49:32 stewa Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1751,6 +1751,13 @@ class TagCache {
 
       if (subvariables) add_subvariables_to_keymap();
 
+      timeout = Roxen.time_dequantifier (args);
+
+#ifdef RXML_CACHE_TIMEOUT_IMPLIES_SHARED
+      if(timeout)
+	args->shared="yes";
+#endif
+
       if (args->shared) {
 	if(args->nohash)
 	  // Always use the configuration in the key; noone really
@@ -1772,8 +1779,6 @@ class TagCache {
       }
 
       make_key_from_keymap(id);
-
-      timeout = Roxen.time_dequantifier (args);
 
       // Now we have the cache key.
 
