@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.29 2006/10/24 08:00:49 liin Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.30 2006/10/24 08:42:59 liin Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -126,7 +126,7 @@ as language settings.";
 	l += ({ ({ "hostmatch","*.se","sv" }) });
 	break;
       case "pathmatch":
-	l += ({ ({ "pathmatch","*/sweden/*","sv" }) });
+	l += ({ ({ "pathmatch","/*","en" }) });
 	break;
       }
     }
