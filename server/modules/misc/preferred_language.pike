@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.28 2004/11/10 14:25:17 jonasw Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.29 2006/10/24 08:00:49 liin Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -37,9 +37,10 @@ Languages added from sources on top of the list will have a higher priority.<br 
 <b>Prestate</b> will add languages from prestates.<br />
 <b>Cookie</b> will add languages from a specified cookie.<br />
 <b>Variable</b> will add languages from a specified variable.<br />
-<b>Match host name</b> will add a specified list of langauges if the host name
-matches a given pattern. This can be used to select lanaguges based on the URL, 
+<b>Match host name</b> will add a specified list of languages if the host name
+matches a given pattern. This can be used to select languages based on the URL, 
 such as using Swedish for roxen.se and English for roxen.com.<br />
+<b>Match path</b> will add languages based on the path.<br />
 <br />
 The &lt;emit source=\"languages\"&gt; tag can be used to easily build a language
 selector which will change prestates and the roxen config cookie.<br />
@@ -124,9 +125,12 @@ as language settings.";
       case "hostmatch":
 	l += ({ ({ "hostmatch","*.se","sv" }) });
 	break;
+      case "pathmatch":
+	l += ({ ({ "pathmatch","*/sweden/*","sv" }) });
+	break;
       }
     }
-
+    
     // .. and delete ..
     foreach( indices(vl), string vv )
       if( sscanf( vv, ".delete.%d.x%*s", rn )==2 )
@@ -188,7 +192,10 @@ as language settings.";
 	 res+= "<b>Add languages:</b> " + make_input_tag(prefix+"set."+i+".arg2",_action[2],8) +
 	   " if host matches glob: " + make_input_tag(prefix+"set."+i+".arg1",_action[1],8);
 	 break;
-      }
+       case "pathmatch":
+	 res+= "<b>Add languages:</b> " + make_input_tag(prefix+"set."+i+".arg2",_action[2],8) +
+	   " if the path matches glob: " + make_input_tag(prefix+"set."+i+".arg1",_action[1],8);
+       }
        
        res += "</font></td>\n";
 
@@ -222,6 +229,7 @@ as language settings.";
       "<option value=\"cookie\">Cookie</option>\n"+
       "<option value=\"variable\">Variable</option>\n"+
       "<option value=\"hostmatch\">Match host name</option>\n"+
+      "<option value=\"pathmatch\">Match path</option>\n"+
       "</select> "+
       BUTTON(prefix+"new", "Add")+
       "</td></tr></table>\n\n";
@@ -384,6 +392,11 @@ RequestID first_try(RequestID id) {
     case "hostmatch":
       if(sizeof(action) > 2)
 	if(glob(action[1], id->misc->host || ""))
+	  lang+= map(action[2]/",",String.trim_all_whites);
+      break;
+    case "pathmatch":
+      if(sizeof(action) > 2)
+	if(glob(action[1], id->raw_url || ""))
 	  lang+= map(action[2]/",",String.trim_all_whites);
       break;
     }
