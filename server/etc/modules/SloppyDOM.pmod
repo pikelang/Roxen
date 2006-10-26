@@ -1,4 +1,4 @@
-// $Id: SloppyDOM.pmod,v 1.13 2006/09/16 14:17:15 mast Exp $
+// $Id: SloppyDOM.pmod,v 1.14 2006/10/26 18:22:16 mast Exp $
 
 //! A somewhat DOM-like library that implements lazy generation of the
 //! node tree, i.e. it's generated from the data upon lookup. There's
@@ -327,9 +327,7 @@ static class NodeWithChildren
       node = ProcessingInstruction (doc, target, data || "");
     }
     else if (has_prefix (text, "<![CDATA["))
-      // FIXME: Shouldn't this be from index 9 and onwards?
-      // FIXME: Check suffix?
-      node = CDATASection (doc, text[8..sizeof (text) - 4]);
+      node = CDATASection (doc, text[9..sizeof (text) - 4]);
     else
       node = Text (doc, text);
     content[pos] = node;
