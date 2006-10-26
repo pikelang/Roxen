@@ -883,6 +883,120 @@ a&auml; &amp; b  &gt;
   <result><item>fyra</item><item>tv�</item></result>
 </test>
 
+<test>
+  <rxml
+    ><define container="fl"><contents copy-of="text()"/></define
+    ><fl><![CDATA[xyz]]></fl
+  ></rxml>
+  <result><![CDATA[xyz]]></result>
+</test>
+
+<test>
+  <rxml
+    ><define container='datest'
+      ><contents copy-of=".//pcheck"
+    /></define
+    ><datest
+      ><pcheck>chk1</pcheck
+      ><pcheck>chk2</pcheck
+      ><p><pcheck>chk3</pcheck></p
+      ><pcheck>chk4</pcheck
+    ></datest
+  ></rxml>
+  <result><pcheck>chk1</pcheck><pcheck>chk2</pcheck><pcheck>chk3</pcheck><pcheck>chk4</pcheck></result>
+</test>
+
+<test>
+  <rxml
+    ><define container='snyggtorkel'
+      ><contents copy-of=".//comment()"
+    /></define
+    ><snyggtorkel
+      ><!-- etta --><pcheck
+	><!-- tvåa --><p/><!-- trea --></pcheck
+      ><!-- fyra --><p
+    /></snyggtorkel
+  ></rxml>
+  <result><!-- etta --><!-- tvåa --><!-- trea --><!-- fyra --></result>
+</test>
+
+<test>
+  <rxml
+    ><define container='nisse'
+      ><contents copy-of=".//."
+    /></define
+    ><nisse
+      ><e id="1"
+	>1<e id="1.1"
+      />2</e
+      >3<e id="2"
+    /></nisse
+  ></rxml>
+  <result><e id='1'>1<e id='1.1'/>2</e>1<e id='1.1'/>23<e id='2'/></result>
+</test>
+
+<test>
+  <rxml
+    ><define container='nisse'
+      ><contents copy-of=".//node()"
+    /></define
+    ><nisse
+      ><e id="1"
+	>1<e id="1.1"
+      />2</e
+      >3<e id="2"
+    /></nisse
+  ></rxml>
+  <result><e id='1'>1<e id='1.1'/>2</e>1<e id='1.1'/>23<e id='2'/></result>
+</test>
+
+<test>
+  <rxml
+    ><define container='nisse'
+      ><contents copy-of=".//*"
+    /></define
+    ><nisse
+      ><e id="1"
+	>1<e id="1.1"
+      />2</e
+      >3<e id="2"
+    /></nisse
+  ></rxml>
+  <result><e id='1'>1<e id='1.1'/>2</e><e id='1.1'/><e id='2'/></result>
+</test>
+
+<test>
+  <rxml
+    ><define container='nisse'
+      ><contents copy-of=".//e//e"
+    /></define
+    ><nisse
+      ><e id="1"
+	><e id="1.1"
+	  ><e id="1.1.1"
+	    ><e id="1.1.1.1"
+	  /></e
+	></e
+      ></e
+    ></nisse
+  ></rxml>
+  <result><e id="1.1"><e id="1.1.1"><e id="1.1.1.1"/></e></e><e id="1.1.1"><e id="1.1.1.1"/></e><e id="1.1.1.1"/></result>
+</test>
+
+<test>
+  <rxml
+    ><define container='nisse'
+      ><contents copy-of=".//a/b//c"
+    /></define
+    ><nisse
+      ><a><x><c/></x></a
+      ><a><x><b><y><c/></y></b></x></a
+      ><x><a><y><a><b><z><c hit="yes"/></z></b></a></y></a></x
+    ></nisse
+  ></rxml>
+  <result><c hit="yes"/></result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Type tests</comment>
