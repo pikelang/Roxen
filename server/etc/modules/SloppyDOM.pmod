@@ -1,4 +1,4 @@
-// $Id: SloppyDOM.pmod,v 1.14 2006/10/26 18:22:16 mast Exp $
+// $Id: SloppyDOM.pmod,v 1.15 2006/10/26 18:23:46 mast Exp $
 
 //! A somewhat DOM-like library that implements lazy generation of the
 //! node tree, i.e. it's generated from the data upon lookup. There's
@@ -443,8 +443,52 @@ static class NodeWithChildElements
     }
   }
 
+  array(Element) get_descendant_elements()
+  //! Returns all descendant elements in document order.
+  //!
+  //! @note
+  //! Not DOM compliant.
+  {
+    CHECK_CONTENT;
+    if (!content) return ({});
+    array(Element) res = ({});
+    foreach (content, string|Node child) {
+      if (objectp (child) && child->node_type == ELEMENT_NODE)
+	res += ({child}) + child->get_descendant_elements();
+    }
+    return res;
+  }
+
+  array(Node) get_descendant_nodes()
+  //! Returns all descendant nodes (except attribute nodes) in
+  //! document order.
+  //!
+  //! @note
+  //! Not DOM compliant.
+  {
+    CHECK_CONTENT;
+    if (!content) return ({});
+    array(Node) res = ({});
+    for (int i = 0; i < sizeof (content); i++) {
+      string|Node child = content[i];
+      if (!objectp (child)) child = make_node (i);
+      res += ({child});
+      if (child->node_type == ELEMENT_NODE)
+	res += child->get_descendant_nodes();
+    }
+    return res;
+  }
+
   mapping(string:string)|Node|array(mapping(string:string)|Node)|string
     simple_path (string path, void|int xml_format)
+  {
+    return simple_path_recur (path, xml_format, 0);
+  }
+
+  // Internals.
+
+  mapping(string:string)|Node|array(mapping(string:string)|Node)|string
+    simple_path_recur (string path, int xml_format, int rec_search)
   {
     string orig_path = path;
     sscanf (path, ""WS NAME WS"%s", string name, path);
@@ -458,25 +502,34 @@ static class NodeWithChildElements
 		      "th");
     };
 
-    mixed res;
+    mapping(string:string)|Node|array(Node|int) res;
 
-    if (!sizeof (name)) {
+    if (name == "") {
       if (sscanf (path, "@"WS NAME WS"%s", name, path)) {
 	if (!sizeof (name))
 	  simple_path_error ("No attribute name after @ in ");
-	mapping(string:string) attr = this_object()->attributes;
-	if (!mappingp (attr))
-	  simple_path_error ("Cannot access an attribute %O in ", name);
-	if (name == "*")
-	  res = attr + ([]);
-	else if (string val = attr[name])
-	  res = ([name: val]);
-	else
+
+	foreach (rec_search ? ({this_object()}) + get_descendant_elements() :
+		 ({this_object()}), NodeWithChildElements node) {
+	  mapping(string:string) attr = node->attributes;
+	  if (!mappingp (attr))
+	    simple_path_error ("Cannot access an attribute %O in ", name);
+	  if (name == "*") {
+	    if (res) res += attr;
+	    else res = attr + ([]);
+	  }
+	  else if (string val = attr[name]) {
+	    if (res) res[name] = val;
+	    else res = ([name: val]);
+	  }
+	}
+
+	if (!res)
 	  return xml_format && "";
       }
 
       else if (sscanf (path, "."WS"%s", path))
-	res = ({this});
+	res = rec_search ? get_descendant_nodes() : ({this});
 
       else simple_path_error ("Invalid path %O in ", path);
     }
@@ -495,10 +548,12 @@ static class NodeWithChildElements
 			   arg, name);
 
       if (name == "node") {
-	if (xml_format && !sizeof (path)) {
-	  res = String.Buffer();
-	  xml_format_children (res);
-	  return res->get();
+	if (rec_search)
+	  res = get_descendant_nodes();
+	else if (xml_format && !sizeof (path)) {
+	  String.Buffer buf = String.Buffer();
+	  xml_format_children (buf);
+	  return buf->get();
 	}
 	else {
 	  CHECK_CONTENT;
@@ -515,60 +570,98 @@ static class NodeWithChildElements
 
 	switch (name) {
 	  case "comment":
-	    for (int i = 0; i < sizeof (content); i++) {
-	      string|Node child = content[i];
-	      if (objectp (child)) {
-		if (child->node_type == COMMENT_NODE)
-		  res += ({child});
+	    if (rec_search) {
+	      foreach (get_descendant_nodes(), Node node)
+		if (node->node_type == COMMENT_NODE)
+		  res += ({node});
+	    }
+
+	    else {
+	      for (int i = 0; i < sizeof (content); i++) {
+		string|Node child = content[i];
+		if (objectp (child)) {
+		  if (child->node_type == COMMENT_NODE)
+		    res += ({child});
+		}
+		else
+		  if (has_prefix (child, "<!--"))
+		    res += ({i});
 	      }
-	      else
-		if (has_prefix (child, "<!--"))
-		  res += ({i});
 	    }
 	    break;
 
 	  case "text":
-	    //normalize();
-	    for (int i = 0; i < sizeof (content); i++) {
-	      string|Node child = content[i];
-	      if (objectp (child)) {
+	    if (rec_search) {
+	      foreach (get_descendant_nodes(), Node node)
 		if ((<TEXT_NODE, ENTITY_REFERENCE_NODE,
-		      CDATA_SECTION_NODE>)[child->node_type])
-		  res += ({child});
+		      CDATA_SECTION_NODE>)[node->node_type])
+		  res += ({node});
+	    }
+
+	    else {
+	      //normalize();
+	      for (int i = 0; i < sizeof (content); i++) {
+		string|Node child = content[i];
+		if (objectp (child)) {
+		  if ((<TEXT_NODE, ENTITY_REFERENCE_NODE,
+			CDATA_SECTION_NODE>)[child->node_type])
+		    res += ({child});
+		}
+		else
+		  if (!has_prefix (child, "<!--") && !has_prefix (child, "<?"))
+		    res += ({i});
 	      }
-	      else
-		if (!has_prefix (child, "<!--") && !has_prefix (child, "<?"))
-		  res += ({i});
 	    }
 	    break;
 
 	  case "processing-instruction":
 	    if (sizeof (arg)) {
-	      string scanfmt = "<?" + replace (arg, "%", "%%") + "%[ \t\n\r]";
-	      for (int i = 0; i < sizeof (content); i++) {
-		string|Node child = content[i];
-		if (objectp (child)) {
-		  if (child->node_type == PROCESSING_INSTRUCTION_NODE &&
-		      child->node_name == arg)
-		    res += ({child});
+	      string scanfmt =
+		"<?" + replace (arg, "%", "%%") + "%[ \t\n\r]";
+
+	      if (rec_search) {
+		foreach (get_descendant_nodes(), Node node)
+		  if (node->node_type == PROCESSING_INSTRUCTION_NODE &&
+		      node->node_name == arg)
+		    res += ({node});
+	      }
+
+	      else {
+		for (int i = 0; i < sizeof (content); i++) {
+		  string|Node child = content[i];
+		  if (objectp (child)) {
+		    if (child->node_type == PROCESSING_INSTRUCTION_NODE &&
+			child->node_name == arg)
+		      res += ({child});
+		  }
+		  else
+		    if (sscanf (child, scanfmt, string ws) &&
+			(sizeof (ws) || sizeof (child) == sizeof (arg) + 4))
+		      res += ({i});
 		}
-		else
-		  if (sscanf (child, scanfmt, string ws) &&
-		      (sizeof (ws) || sizeof (child) == sizeof (arg) + 4))
-		    res += ({i});
 	      }
 	    }
-	    else
-	      for (int i = 0; i < sizeof (content); i++) {
-		string|Node child = content[i];
-		if (objectp (child)) {
-		  if (child->node_type == PROCESSING_INSTRUCTION_NODE)
-		    res += ({child});
-		}
-		else
-		  if (has_prefix (child, "<?"))
-		    res += ({i});
+
+	    else {
+	      if (rec_search) {
+		foreach (get_descendant_nodes(), Node node)
+		  if (node->node_type == PROCESSING_INSTRUCTION_NODE)
+		    res += ({node});
 	      }
+
+	      else {
+		for (int i = 0; i < sizeof (content); i++) {
+		  string|Node child = content[i];
+		  if (objectp (child)) {
+		    if (child->node_type == PROCESSING_INSTRUCTION_NODE)
+		      res += ({child});
+		  }
+		  else
+		    if (has_prefix (child, "<?"))
+		      res += ({i});
+		}
+	      }
+	    }
 	    break;
 
 	  default:
@@ -577,7 +670,22 @@ static class NodeWithChildElements
       }
     }
 
-    else res = get_elements (name);
+    else {
+      if (rec_search) {
+	if (name == "*")
+	  res = get_descendant_elements();
+	else {
+	  res = ({});
+	  // Can't use get_elements here since we need to preserve the
+	  // document order.
+	  foreach (get_descendant_elements(), NodeWithChildElements node)
+	    if (node->node_name == name)
+	      res += ({node});
+	}
+      }
+      else
+	res = get_elements (name);
+    }
 
     //werror ("%O: path %O before preds: %O\n", this, path, res);
 
@@ -591,22 +699,24 @@ static class NodeWithChildElements
 	    num_ord (pred_num),
 	    orig_path[..sizeof (orig_path) - sizeof (preds_path) - 1]);
 
+	mapping(string:string)|int|Node elem;
+
 	if (index > 0) {
 	  if (index > sizeof (res)) return xml_format && "";
 	  if (mappingp (res))
-	    res = (mapping) ({((array) res)[index - 1]});
+	    elem = (mapping) ({((array) res)[index - 1]});
 	  else
-	    res = res[index - 1];
+	    elem = res[index - 1];
 	}
 	else {
 	  if (index < -sizeof (res)) return xml_format && "";
 	  if (mappingp (res))
-	    res = (mapping) ({((array) res)[index]});
+	    elem = (mapping) ({((array) res)[index]});
 	  else
-	    res = res[index];
+	    elem = res[index];
 	}
 
-	if (intp (res)) res = make_node (res);
+	res = intp (elem) ? make_node (elem) : elem;
       }
 
       else {
@@ -673,7 +783,7 @@ static class NodeWithChildElements
 	  res_loop:
 	    foreach (res, int|Node elem) {
 	      if (intp (elem)) elem = make_node (elem);
-	      if (mixed pred_res = elem->simple_path (pred_expr)) {
+	      if (mixed pred_res = elem->simple_path_recur (pred_expr, 0, 0)) {
 		if (arrayp (pred_res)) {
 		  foreach (pred_res, Node pred_node)
 		    if (pred_node->get_text_content() == value) {
@@ -699,7 +809,7 @@ static class NodeWithChildElements
 	  else {
 	    foreach (res, int|Node elem) {
 	      if (intp (elem)) elem = make_node (elem);
-	      if (mixed pred_res = elem->simple_path (pred_expr))
+	      if (mixed pred_res = elem->simple_path_recur (pred_expr, 0, 0))
 		if (objectp (pred_res) || sizeof (pred_res))
 		  filtered_res += ({elem});
 	    }
@@ -720,48 +830,25 @@ static class NodeWithChildElements
     if (sizeof (path)) {
       if (has_prefix (path, "//")) {
 	path = path[2..];
-
 	if (arrayp (res) ||
 	    (objectp (res) && res->get_elements && (res = ({res})))) {
-	  if (xml_format) {
-	    String.Buffer collected = String.Buffer();
-	    void process_list (array(Node) list) {
-	      foreach (list, Node child) {
-		if (child->get_elements) {
-		  string subres = child->simple_path (path, 1);
-		  if (subres != "")
-		    collected->add (subres);
-		  else {
-		    child->make_all_nodes();
-		    if (child->content) process_list (child->content);
-		  }
-		}
-	      }
-	    };
-	    process_list (res);
-	    return collected->get();
+	  array(Node) collected = ({});
+	  // res might contain nodes that are inside other nodes in
+	  // res (e.g. when processing the second "//" in expressions
+	  // like ".//a//b"). We therefore use |= below to avoid
+	  // duplicates. Since res is in document order we can always
+	  // keep the first instance to produce a result in document
+	  // order (actually, we could remove all nested elements in
+	  // res and still get a complete result).
+	  foreach (res, Node node) {
+	    mapping(string:string)|Node|array(mapping(string:string)|Node)
+	      subres = node->simple_path_recur (path, 0, 1);
+	    if (objectp (subres))
+	      collected |= ({subres});
+	    else if (arrayp (subres) && sizeof (subres))
+	      collected |= subres;
 	  }
-
-	  else {
-	    mixed collected = ({});
-	    void process_list (array(Node) list) {
-	      foreach (list, Node child) {
-		if (child->get_elements) {
-		  mixed subres = child->simple_path (path, 0);
-		  if (objectp (subres))
-		    collected += ({subres});
-		  else if (arrayp (subres) && sizeof (subres))
-		    collected += subres;
-		  else {
-		    child->make_all_nodes();
-		    if (child->content) process_list (child->content);
-		  }
-		}
-	      }
-	    };
-	    process_list (res);
-	    return collected;
-	  }
+	  res = collected;
 	}
       }
 
@@ -773,17 +860,18 @@ static class NodeWithChildElements
 	    String.Buffer collected = String.Buffer();
 	    foreach (res, Node child)
 	      if (child->get_elements) {
-		string subres = child->simple_path (path, 1);
+		string subres = child->simple_path_recur (path, 1, 0);
 		collected->add (subres);
 	      }
 	    return collected->get();
 	  }
 
 	  else {
-	    mixed collected = ({});
+	    array(mapping(string:string)|Node) collected = ({});
 	    foreach (res, Node child)
 	      if (child->get_elements) {
-		mixed subres = child->simple_path (path, 0);
+		mapping(string:string)|Node|array(mapping(string:string)|Node)
+		  subres = child->simple_path_recur (path, 0, 0);
 		if (objectp (subres) || mappingp (subres))
 		  collected += ({subres});
 		else if (arrayp (subres))
@@ -793,7 +881,7 @@ static class NodeWithChildElements
 	  }
 	}
 	else if (objectp (res) && res->get_elements)
-	  return res->simple_path (path, xml_format);
+	  return res->simple_path_recur (path, xml_format, 0);
 	else
 	  return xml_format ? "" : ({});
       }
@@ -818,8 +906,6 @@ static class NodeWithChildElements
     //werror ("%O: path %O, leaf result %O\n", this, orig_path, res);
     return res;
   }
-
-  // Internals.
 
   static constant class_name = "NodeWithChildElements";
 
