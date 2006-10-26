@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.350 2006/09/14 13:01:23 mast Exp $
+// $Id: module.pmod,v 1.351 2006/10/26 18:09:03 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -9024,7 +9024,10 @@ Empty empty = Empty();
 //! @note
 //! As opposed to @[RXML.nil], it's not false in a boolean context.
 
-static class Empty
+class Empty
+//! The class of @[RXML.empty]. There should only be a single
+//! @[RXML.empty] instance, so this class should never be
+//! instantiated. It's only available to allow inherits.
 {
   mixed `+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
   mixed ``+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
@@ -9067,7 +9070,10 @@ Nil nil = Nil();
 //! For compatibility, @[RXML.nil] can be cast to the empty value for
 //! the basic Pike types.
 
-static class Nil
+class Nil
+//! The class of @[RXML.nil]. There should only be a single
+//! @[RXML.nil] instance, so this class should never be instantiated.
+//! It's only available to allow inherits.
 {
   // Only inherit implementation; there's no type-wise significance
   // whatsoever of this inherit.
