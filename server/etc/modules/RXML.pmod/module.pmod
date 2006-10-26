@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.319 2006/05/08 16:15:04 mast Exp $
+// $Id: module.pmod,v 1.320 2006/10/26 18:09:03 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -8806,7 +8806,10 @@ Nil nil = Nil();
 //! also evaluates to false in a boolean context, but it's not equal
 //! to 0.
 
-static class Nil
+class Nil
+//! The class of @[RXML.nil]. There should only be a single
+//! @[RXML.nil] instance, so this class should never be instantiated.
+//! It's only available to allow inherits.
 {
   mixed `+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
   mixed ``+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
