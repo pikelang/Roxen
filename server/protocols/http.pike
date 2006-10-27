@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.510 2006/10/13 17:20:54 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.511 2006/10/27 12:54:34 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2048,6 +2048,7 @@ void send_result(mapping|void result)
 	    "raw":file->raw,
 	    "len":strlen(data),
 	    "error":file->error,
+	    "type":variant_heads["Content-Type"],
 	  ]);
 	  cache_status["protstore"] = 1;
 	}
