@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.97 2005/12/21 13:40:03 noring Exp $
+// $Id: global_variables.pike,v 1.98 2006/10/27 15:58:38 mast Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -27,6 +27,8 @@ mixed save()
 private int(0..1) cache_disabled_p() { return !query("cache");         }
 private int(0..1) syslog_disabled()  { return query("LogA")!="syslog"; }
 private int(0..1) ident_disabled_p() { return [int(0..1)]query("default_ident"); }
+
+static void cdt_changed (Variable v);
 
 #ifdef SNMP_AGENT
 private int(0..1) snmp_disabled() { return !query("snmp_agent"); }
@@ -501,6 +503,31 @@ The start script attempts to fix this for the standard file locations.</p>"));
 		"all logs."),
 	 0, syslog_disabled);
 #endif // efun(syslog)
+
+  Variable v = Variable.Flag (0, 0,
+			      LOCALE(0, "Logging: Dump threads by file polling"),
+			      LOCALE(0, #"\
+<p>This option can be used to produce dumps of all the threads in the
+debug log in situations where the Administration Interface doesn't
+respond.</p>
+
+<p>It works by checking for a file called \"<i>&lt;config
+name&gt;</i>.dump_threads\" in the same directory as the debug log.
+<i>&lt;config name&gt;</i> is the name of the server configuration,
+i.e. the same as the base name of the debug log files (typically
+\"default\"). If this file exists, a thread dump is generated and the
+file is deleted. If a file on the form \"<i>&lt;config
+name&gt;</i>.dump_threads.<i>&lt;n&gt;</i>\", where <i>&lt;n&gt;</i>
+is an integer, exists then <i>n</i> thread dumps are generated in one
+minute intervals.</p>
+
+<p>Note that this method normally isn't necessary in unix-like
+environments; there you can just send a SIGQUIT signal to the pike
+process to get a thread dump.</p>
+
+<p>Enabling this creates a dedicated thread.</p>"));
+  v->set_changed_callback (cdt_changed);
+  defvar ("dump_threads_by_file", v);
 
 #ifdef THREADS
   defvar("numthreads", 5, LOCALE(150, "Number of threads to run"), 

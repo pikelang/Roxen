@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.943 2006/10/25 08:04:18 noring Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.944 2006/10/27 15:58:38 mast Exp $";
 
 //! @appears roxen
 //!
@@ -5086,6 +5086,54 @@ void describe_all_threads()
 #endif
 }
 
+
+// Dump threads by file polling.
+
+constant cdt_poll_interval = 5;	// Seconds.
+constant cdt_dump_seq_interval = 60;
+
+string cdt_directory, cdt_filename;
+
+Thread.Thread cdt_thread;
+int cdt_next_seq_dump;
+
+void cdt_poll_file()
+{
+  while (this && query ("dump_threads_by_file")) {
+    if (array(string) dir = r_get_dir (cdt_directory)) {
+      if (has_value (dir, cdt_filename)) {
+	r_rm (cdt_directory + "/" + cdt_filename);
+	describe_all_threads();
+      }
+      else if (time() >= cdt_next_seq_dump) {
+	dir = glob (cdt_filename + ".*", dir);
+	if (sizeof (dir)) {
+	  string file = dir[0];
+	  r_rm (cdt_directory + "/" + file);
+	  describe_all_threads();
+	  sscanf (file, cdt_filename + ".%d", int count);
+	  if (--count > 0) {
+	    open (cdt_directory + "/" + cdt_filename + "." + count,
+		  "cwt");
+	    cdt_next_seq_dump = time (1) + cdt_dump_seq_interval;
+	  }
+	}
+      }
+    }
+    sleep (cdt_poll_interval);
+  }
+  cdt_thread = 0;
+}
+
+void cdt_changed (Variable v)
+{
+  if (cdt_directory && v->query() && !cdt_thread)
+    cdt_thread = Thread.thread_create (cdt_poll_file);
+}
+
+// ----------------------------------------
+
+
 constant dump = roxenloader.dump;
 
 program slowpipe, fastpipe;
@@ -5343,6 +5391,16 @@ int main(int argc, array tmp)
   start_time=time();		// Used by the "uptime" info later on.
 
   restart_suicide_checker();
+
+  {
+    array(string) splitdir = roxen_path ("$LOGFILE") / "/";
+    cdt_filename = splitdir[-1];
+    cdt_directory = splitdir[..sizeof (splitdir) - 2] * "/";
+    if (has_suffix (cdt_filename, ".1"))
+      cdt_filename = cdt_filename[..sizeof (cdt_filename) - 3];
+    cdt_filename += ".dump_threads";
+    cdt_changed (getvar ("dump_threads_by_file"));
+  }
 
 #ifdef ROXEN_DEBUG_MEMORY_TRACE
   restart_roxen_debug_memory_trace();
