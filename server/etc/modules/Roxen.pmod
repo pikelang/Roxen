@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.198 2006/09/13 10:15:13 mast Exp $
+// $Id: Roxen.pmod,v 1.199 2006/10/30 15:56:39 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -446,7 +446,7 @@ array(object|mapping) http_try_resume( RequestID id, float|void max_delay )
 //! }
 {
   Delayer delay = Delayer( id, max_delay );
-  return ({delay, ([ "try_again":delay ]) });
+  return ({delay, ([ "try_again_later":delay ]) });
 }
 
 mapping(string:mixed) http_string_answer(string text, string|void type)
