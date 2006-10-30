@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.476 2006/10/27 12:54:49 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.477 2006/10/30 10:09:54 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1768,6 +1768,8 @@ void send_result(mapping|void result)
       m_delete(heads, "Content-Length");
       m_delete(heads, "Connection");
 
+      file->type = heads["Content-Type"];
+
       if (file->error == 200) {
 	int conditional;
 	if (none_match) {
@@ -1988,7 +1990,7 @@ void send_result(mapping|void result)
                                   // fix non-keep-alive when sending from cache
                                   "raw":file->raw,
                                   "error":file->error,
-				  "type":heads["Content-Type"],
+				  "type":file->type,
 				  "last_modified":misc->last_modified,
                                   "mtime":(file->stat && file->stat[ST_MTIME]),
                                   "rf":realfile,
@@ -1997,9 +1999,9 @@ void send_result(mapping|void result)
           file = ([
 	    "data":data,
 	    "raw":file->raw,
-	    "len":strlen(data)
+	    "len":strlen(data),
 	    "error":file->error,
-	    "type":variant_heads["Content-Type"],
+	    "type":file->type,
 	  ]);
         }
       }
