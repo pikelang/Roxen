@@ -1,5 +1,5 @@
 // Common Log SQL Aggregate module
-// $Id: commonlog_sql_aggregate.pike,v 1.6 2006/10/18 08:06:18 noring Exp $
+// $Id: commonlog_sql_aggregate.pike,v 1.7 2006/10/31 13:59:58 simon Exp $
 
 #include <module.h>
 
@@ -12,7 +12,7 @@ inherit "roxenlib";
 constant thread_safe = 1;
 constant module_unique = 0;
 constant module_type = MODULE_PROVIDER;
-constant cvs_version = "$Id: commonlog_sql_aggregate.pike,v 1.6 2006/10/18 08:06:18 noring Exp $";
+constant cvs_version = "$Id: commonlog_sql_aggregate.pike,v 1.7 2006/10/31 13:59:58 simon Exp $";
 
 LocaleString module_group_name = DLOCALE(0,"SQL Log:");
 LocaleString module_generic_name = DLOCALE(0, "Aggregate module");
@@ -37,11 +37,58 @@ void create(Configuration conf)
 	 ->set_configuration_pointer(my_configuration));
 
   // FIXME: Update after Common Log SQL: Import module: Yes/No.
-
+ 
   defvar("minute_granularity", 5, "Minute granularity", TYPE_MULTIPLE_INT,
 	 "Granularity of aggregated statistics in minutes.",
 	 ({ 1, 2, 3, 5, 6, 10, 12, 15, 20, 30, 60 }));
+
+  defvar("update_hour", "05", "Aggregate hour", TYPE_MULTIPLE_STRING,
+	 "Hour during the day when to start aggregating logs, "
+	 "'Every hour' or 'Never'.",
+	 ({ "Never" }) + ({ "Every hour" }) +
+	 Array.map(indices(allocate(24)),
+		   lambda(int h) { return sprintf("%02d", h); }));
+
 }
+
+void stop_aggregate_schedule()
+{
+  while(!zero_type(remove_call_out(run_scheduled_aggregate)))
+    ;
+}
+
+void schedule_aggregate()
+{
+  stop_aggregate_schedule();
+  
+  string hour = query("update_hour");
+  switch(hour)
+  {
+    case "Never":
+      return;
+
+    case "Every hour":
+      call_out(run_scheduled_aggregate, 3600 - time(1)%3600);
+      break;
+
+    default:
+      int time_offset;
+      
+      mapping t = localtime(time());
+      time_offset = (((24 + (int)hour - t->hour) % 24)*60 - t->min)*60 - t->sec;
+      if(time_offset <= 0)
+	time_offset += 24*60*60;
+
+      call_out(run_scheduled_aggregate, time_offset);
+  }
+}
+
+void run_scheduled_aggregate()
+{
+  schedule_aggregate();
+  aggregate_start();
+}
+
 
 string status()
 {
@@ -83,6 +130,7 @@ void start(int when, Configuration _conf)
 {
   conf = _conf;
   db_name = query("db_name");
+  schedule_aggregate();
 }
 
 void stop()

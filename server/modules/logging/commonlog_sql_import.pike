@@ -1,5 +1,5 @@
 // Common Log SQL Import module
-// $Id: commonlog_sql_import.pike,v 1.3 2006/10/17 12:02:45 noring Exp $
+// $Id: commonlog_sql_import.pike,v 1.4 2006/10/31 13:59:58 simon Exp $
 
 #include <module.h>
 
@@ -12,7 +12,7 @@ inherit "roxenlib";
 constant thread_safe = 1;
 constant module_unique = 0;
 constant module_type = MODULE_PROVIDER;
-constant cvs_version = "$Id: commonlog_sql_import.pike,v 1.3 2006/10/17 12:02:45 noring Exp $";
+constant cvs_version = "$Id: commonlog_sql_import.pike,v 1.4 2006/10/31 13:59:58 simon Exp $";
 
 LocaleString module_group_name = DLOCALE(0,"SQL Log:");
 LocaleString module_generic_name = DLOCALE(0, "Common Log Import module");
@@ -94,6 +94,16 @@ string query_name()
 {
   return module_group_name + " "+
          DLOCALE(0, "Import") +" \"" + get_server_name() + "\"";
+}
+
+string query_provides()
+{
+  return "logs_database_name";
+}
+
+string get_database_name()
+{
+  return db_name;
 }
 
 string get_server_name()
@@ -203,7 +213,6 @@ void create_access_log_table()
     return;
   }
   log_import->create_log_files_table(sql);
-
   log_import->create_access_log_table(sql, get_sql_log_format());
 }
 
