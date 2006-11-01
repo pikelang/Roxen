@@ -1,5 +1,5 @@
 // Common Log SQL Import module
-// $Id: commonlog_sql_import.pike,v 1.4 2006/10/31 13:59:58 simon Exp $
+// $Id: commonlog_sql_import.pike,v 1.5 2006/11/01 12:29:52 simon Exp $
 
 #include <module.h>
 
@@ -12,7 +12,7 @@ inherit "roxenlib";
 constant thread_safe = 1;
 constant module_unique = 0;
 constant module_type = MODULE_PROVIDER;
-constant cvs_version = "$Id: commonlog_sql_import.pike,v 1.4 2006/10/31 13:59:58 simon Exp $";
+constant cvs_version = "$Id: commonlog_sql_import.pike,v 1.5 2006/11/01 12:29:52 simon Exp $";
 
 LocaleString module_group_name = DLOCALE(0,"SQL Log:");
 LocaleString module_generic_name = DLOCALE(0, "Common Log Import module");
@@ -509,7 +509,7 @@ class LogImport
     LogField("$user_id",         "%s",  "user_id",         "VARCHAR(32)"),
     LogField("$cache-status",    "%s",  "cache_status",    "VARCHAR(64)"),
     LogField("$eval-status",     "%s",  "eval_status",     "VARCHAR(64)"),
-    LogField("$content-type",    "%s",  "conent_type",     "VARCHAR(32)"),
+    LogField("$content-type",    "%s",  "content_type",     "VARCHAR(32)"),
     LogField("$protcache-cost",  "%d",  "protcache_cost",  "INTEGER UNSIGNED"),
     LogField("$server-uptime",   "%d",  "server_uptime",   "INTEGER UNSIGNED"),
     LogField("$server-cputime",  "%d",  "server_cputime",  "INTEGER UNSIGNED"),
