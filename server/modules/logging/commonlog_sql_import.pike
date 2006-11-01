@@ -1,5 +1,5 @@
 // Common Log SQL Import module
-// $Id: commonlog_sql_import.pike,v 1.5 2006/11/01 12:29:52 simon Exp $
+// $Id: commonlog_sql_import.pike,v 1.6 2006/11/01 16:29:18 noring Exp $
 
 #include <module.h>
 
@@ -12,7 +12,7 @@ inherit "roxenlib";
 constant thread_safe = 1;
 constant module_unique = 0;
 constant module_type = MODULE_PROVIDER;
-constant cvs_version = "$Id: commonlog_sql_import.pike,v 1.5 2006/11/01 12:29:52 simon Exp $";
+constant cvs_version = "$Id: commonlog_sql_import.pike,v 1.6 2006/11/01 16:29:18 noring Exp $";
 
 LocaleString module_group_name = DLOCALE(0,"SQL Log:");
 LocaleString module_generic_name = DLOCALE(0, "Common Log Import module");
@@ -482,6 +482,11 @@ class LogImport
 		     "year"     : year - 1900,
 		     "timezone" : -((timezone%100) + ((timezone/100)*3600)) ]));
   }
+
+  int seconds_to_microseconds(float seconds)
+  {
+    return (int)(1e6 * seconds);
+  }
   
   array(LogField) clf_format = ({
     LogField("$host",            "%s",  "host",            "VARCHAR(64)"),
@@ -501,7 +506,8 @@ class LogImport
     LogField("$bin-response",    "%2c", "response",        "INTEGER UNSIGNED"),
     LogField("$length",          "%d",  "length",          "BIGINT UNSIGNED"),
     LogField("$bin-length",      "%4c", "length",          "BIGINT UNSIGNED"),
-    LogField("$request-time",    "%d",  "request_time",    "INTEGER UNSIGNED"),
+    LogField("$request-time",    "%f",  "request_time",    "BIGINT UNSIGNED",
+	     seconds_to_microseconds),
     LogField("$referer",         "%s",  "referrer",        "VARCHAR(255)"),
     LogField("$user_agent",      "%s",  "user_agent",      "VARCHAR(255)"),
     LogField("$user_agent_raw",  "%s",  "user_agent",      "VARCHAR(255)"),
@@ -509,7 +515,7 @@ class LogImport
     LogField("$user_id",         "%s",  "user_id",         "VARCHAR(32)"),
     LogField("$cache-status",    "%s",  "cache_status",    "VARCHAR(64)"),
     LogField("$eval-status",     "%s",  "eval_status",     "VARCHAR(64)"),
-    LogField("$content-type",    "%s",  "content_type",     "VARCHAR(32)"),
+    LogField("$content-type",    "%s",  "content_type",    "VARCHAR(32)"),
     LogField("$protcache-cost",  "%d",  "protcache_cost",  "INTEGER UNSIGNED"),
     LogField("$server-uptime",   "%d",  "server_uptime",   "INTEGER UNSIGNED"),
     LogField("$server-cputime",  "%d",  "server_cputime",  "INTEGER UNSIGNED"),
