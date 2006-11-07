@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.623 2006/10/17 20:45:27 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.624 2006/11/07 08:37:14 wellhard Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2601,6 +2601,13 @@ mapping error_file( RequestID id )
 
 mapping auth_failed_file( RequestID id, string message )
 {
+  // Avoid recurssion in 401 messages. This could occure if the
+  // 401 messages used files that also where access denied.
+  if(id->misc->generate_auth_failed)
+    return Roxen.http_low_answer(401, "<title>Access Denied</title>"
+				 "<h2 align=center>Access Denied</h2>");
+  id->misc->generate_auth_failed = 1;
+  
   string data = query("ZAuthFailed");
   NOCACHE();
   mapping res = Roxen.http_rxml_answer( data, id, 0, "text/html" );
