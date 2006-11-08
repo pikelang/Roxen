@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.21 2006/01/23 10:53:27 anders Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.22 2006/11/08 10:03:16 mast Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -776,7 +776,8 @@ class TagEmitTimeRange
     RXML.Tag emit = id->conf->rxml_tag_set->get_tag("emit");
     args = args - emit->req_arg_types - emit->opt_arg_types;
     if(sizeof( args ))
-      RXML.parse_error(sprintf("Unknown attribute%s %s.\n",
+      RXML.parse_error(sprintf("Unknown attribute%s %s (or maybe missing "
+			       "unit/query/plugin attribute?).\n",
 			       (sizeof(args)==1 ? "" : "s"),
 			       String.implode_nicely(indices(args))));
 #endif
