@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.219 2006/10/30 17:05:18 grubba Exp $
+// $Id: Roxen.pmod,v 1.220 2006/11/08 17:03:39 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1020,6 +1020,10 @@ mapping build_env_vars(string f, RequestID id, string path_info)
 //! with CGI-scripts or SSI scripts etc.
 //!
 //! @mapping
+//!   @member string REQUEST_URI
+//!     URI requested by the user.
+//!   @member string REDIRECT_URL
+//!     Target of the first internal redirect.
 //!   @member string INDEX
 //!   @member string SCRIPT_NAME
 //!   @member string PATH_INFO
@@ -1051,7 +1055,6 @@ mapping build_env_vars(string f, RequestID id, string path_info)
 {
   string addr=id->remoteaddr || "Internal";
   mapping(string:string) new = ([]);
-  RequestID tmpid;
 
   if(id->query && strlen(id->query))
     new->INDEX=id->query;
@@ -1092,10 +1095,29 @@ mapping build_env_vars(string f, RequestID id, string path_info)
     }
   } else
     new["SCRIPT_NAME"]=id->not_query;
-  tmpid = id;
-  while(tmpid->misc->orig)
+
+  // Find the original request.
+  RequestID tmpid = id;
+  RequestID previd;
+  while(tmpid->misc->orig) {
     // internal get
-    tmpid = tmpid->misc->orig;
+    tmpid = (previd = tmpid)->misc->orig;
+  }
+
+  // The original URL.
+  environment["REQUEST_URI"] =
+    tmpid->misc->redirected_raw_url || tmpid->raw_url;
+
+  if(tmpid->misc->is_redirected || previd) {
+    // Destination of the first internal redirect.
+    if (tmpid->misc->redirected_to) {
+      environment["REDIRECT_URL"] =
+	Roxen.http_encode_invalids(tmpid->misc->redirected_to);
+    } else if (previd) {
+      environment["REDIRECT_URL"] = previd->raw_url;
+    }
+    environment["REDIRECT_STATUS"] = "200";
+  }
 
   // Begin "SSI" vars.
   array(string) tmps;
