@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.511 2006/10/27 12:54:34 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.512 2006/11/08 15:58:39 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1585,7 +1585,7 @@ class MultiRangeWrapper
       rlen = range_info[0][0] - current_pos;
       if(separator != 1) {
 	// New range, write new separator.
-	//	write("Initiating new range %d -> %d.\n", @range);
+	// werror("Initiating new range %d -> %d.\n", @range);
 	out += range_info[0][1];
 	num_bytes -= strlen(range_info[0][1]);
 	file->seek(range[0]);
@@ -1757,7 +1757,7 @@ void handle_byte_ranges(mapping(string:mixed) file,
 	      part_heads["Content-Range"] =
 		sprintf("bytes %d-%d/%d", @range, file->len);
 	      res[j++] = Roxen.make_http_headers(part_heads);
-	      res[j++] = data[range[0]..range[1]];
+	      res[j++] = file->data[range[0]..range[1]];
 	    }
 	    res[j++] = "\r\n--" BOUND "\r\n";
 	    file->len = sizeof(file->data = res * "");
