@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.22 2006/11/08 10:06:40 erikd Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.23 2006/11/09 13:20:54 erikd Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -560,8 +560,6 @@ class TagEmitTimeRange
     Calendar.TimeRange from, to, range;
     string what, output_unit;
     int compare_num, unit_no;
-    if(!args->unit)
-      RXML.parse_error("Required attribute 'unit' is missing.\n");
     if(what = m_delete(args, "unit"))
     {
       output_unit = output_units[search(output_units, what)];
