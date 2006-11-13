@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.220 2006/11/08 17:03:39 grubba Exp $
+// $Id: Roxen.pmod,v 1.221 2006/11/13 12:26:55 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1105,18 +1105,18 @@ mapping build_env_vars(string f, RequestID id, string path_info)
   }
 
   // The original URL.
-  environment["REQUEST_URI"] =
+  new["REQUEST_URI"] =
     tmpid->misc->redirected_raw_url || tmpid->raw_url;
 
   if(tmpid->misc->is_redirected || previd) {
     // Destination of the first internal redirect.
     if (tmpid->misc->redirected_to) {
-      environment["REDIRECT_URL"] =
+      new["REDIRECT_URL"] =
 	Roxen.http_encode_invalids(tmpid->misc->redirected_to);
     } else if (previd) {
-      environment["REDIRECT_URL"] = previd->raw_url;
+      new["REDIRECT_URL"] = previd->raw_url;
     }
-    environment["REDIRECT_STATUS"] = "200";
+    new["REDIRECT_STATUS"] = "200";
   }
 
   // Begin "SSI" vars.
