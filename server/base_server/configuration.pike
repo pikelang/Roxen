@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.625 2006/11/14 16:28:02 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.626 2006/11/14 16:48:22 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -240,6 +240,14 @@ class DataCache
   static int low_expire_entry(string key_prefix, array(string) keys)
   {
     if (!key_prefix) return 0;
+    if (arrayp(cache[key_prefix])) {
+      // Leaf node. No need to loop.
+      current_size -= sizeof(cache[key_prefix][0]);
+      m_delete(cache, key_prefix);
+      // keys[] = 0;
+      return 1;
+    }
+    // Inner node. Find all its children.
     int res = 0;
     foreach(keys; int ind; string key) {
       if (!key) continue;
@@ -298,8 +306,11 @@ class DataCache
       current_size=0;
       return;
     }
-    for(int i = 0; i < sizeof(q)/10; i++)
-      i += low_expire_entry(q[random(sizeof(q))], q);
+    for(int i = 0; i < sizeof(q)/10; i++) {
+      int r;
+      i += low_expire_entry(q[r = random(sizeof(q))], q);
+      q[r] = 0;
+    }
   }
 
   void set(string url, string data, mapping meta, int expire, RequestID id)
