@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.945 2006/11/14 10:25:22 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.946 2006/11/14 15:18:49 anders Exp $";
 
 //! @appears roxen
 //!
@@ -3545,16 +3545,29 @@ class ImageCache
   	  return res;
       })) {
 	// File not found.
-	if(arrayp(err) && sizeof(err) && stringp(err[0]) &&
-	   sscanf(err[0], "Requesting unknown key %s\n", string message) == 1)
+	
+	if(arrayp(err) && sizeof(err) && stringp(err[0]))
 	{
-	  report_debug("Requesting unknown key %s %O from %O\n",
-		       message,
-		       id->not_query,
-		       (sizeof(id->referer)?id->referer[0]:"unknown page"));
+	  if (sscanf(err[0], "Requesting unknown key %s\n",
+		     string message) == 1)
+	  {
+	    report_debug("Requesting unknown key %s %O from %O\n",
+			 message,
+			 id->not_query,
+			 (sizeof(id->referer)?id->referer[0]:"unknown page"));
+	    return 0;
+	  }
+	  if (sscanf(err[0], "Failed to load specified image [\"%s\"]\n",
+		     string message) == 1)
+	  {
+	    report_debug("Failed to load specified image %O from %O - referrer %O\n",
+			 message,
+			 id->not_query,
+			 (sizeof(id->referer)?id->referer[0]:"unknown page"));
+	    return 0;
+	  }
 	}
-	else
-	  report_debug("Error in draw: %s\n", describe_backtrace(err));
+	report_debug("Error in draw: %s\n", describe_backtrace(err));
 	return 0;
       }
       if( !(res = restore( na,id )) ) {
