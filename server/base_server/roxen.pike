@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.947 2006/11/14 15:18:50 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.948 2006/11/14 21:27:06 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1025,7 +1025,7 @@ static void bg_process_queue()
 }
 #endif
 
-void background_run (int|float delay, function func, mixed... args)
+mixed background_run (int|float delay, function func, mixed... args)
 //! Enqueue a task to run in the background in a way that makes as
 //! little impact as possible on the incoming requests. No matter how
 //! many tasks are queued to run in the background, only one is run at
@@ -1035,10 +1035,15 @@ void background_run (int|float delay, function func, mixed... args)
 //! seconds, to be called with the rest of the arguments as its
 //! arguments.
 //!
-//! The function might be run in the backend thread, so it should
-//! never run for a considerable time. Instead do another call to
-//! @[background_run] to queue it up again after some work has been
-//! done, or use @[BackgroundProcess].
+//! The function might be run in the backend thread if no thread
+//! support is available, so it should never run for a long time.
+//! Instead do another call to @[background_run] to queue it up again
+//! after some work has been done, or use @[BackgroundProcess].
+//!
+//! @returns
+//! If the function is queued for execution right away then zero is
+//! returned. Otherwise its call out identifier is returned, which can
+//! be used with @[find_call_out] or @[remove_call_out].
 {
 #ifdef DEBUG_BACKGROUND_RUN
   report_debug ("background_run enqueue %s (%s) [%d jobs in queue]\n",
@@ -1057,7 +1062,7 @@ void background_run (int|float delay, function func, mixed... args)
 #ifdef THREADS
   if (!hold_wakeup_cond)
     // stop_handler_threads is running; ignore more work.
-    return;
+    return 0;
 
   function enqueue = lambda()
   {
@@ -1066,16 +1071,18 @@ void background_run (int|float delay, function func, mixed... args)
       handle (bg_process_queue);
   };
 
+  mixed res;
   if (delay)
-    call_out (enqueue, delay);
+    res = call_out (enqueue, delay);
   else
     enqueue();
 
   enqueue = 0;			// To avoid garbage.
 
+  return res;
 #else
   // Can't do much better when we haven't got threads..
-  call_out (func, delay, @args);
+  return call_out (func, delay, @args);
 #endif
 }
 
@@ -1110,6 +1117,10 @@ class BackgroundProcess
   //! @decl void set_period (int|float period);
   //!
   //! Changes the period to @[period] seconds between calls.
+  //!
+  //! @note
+  //! This does not change the currently ongoing period, if any. That
+  //! might be remedied.
   void set_period (int|float period_)
   {
     period = period_;
