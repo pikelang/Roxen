@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.626 2006/11/14 16:48:22 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.627 2006/11/14 21:19:16 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -212,11 +212,6 @@ mapping(RequestID:mapping) connection_get( )
 // It's nice to have the name when the rest of __INIT executes.
 string name = roxen->bootstrap_info->get();
 
-// Trivial cache (actually, it's more or less identical to the 200+
-// lines of C in HTTPLoop. But it does not have to bother with the
-// fact that more than one thread can be active in it at once. Also,
-// it does not have to delay free until all current connections using
-// the cache entry are done...)
 class DataCache
 {
   mapping(string:
