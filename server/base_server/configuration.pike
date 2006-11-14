@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.624 2006/11/07 08:37:07 wellhard Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.625 2006/11/14 16:28:02 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -237,9 +237,10 @@ class DataCache
 #endif
   }
 
-  static void low_expire_entry(string key_prefix, array(string) keys)
+  static int low_expire_entry(string key_prefix, array(string) keys)
   {
-    if (!key_prefix) return;
+    if (!key_prefix) return 0;
+    int res = 0;
     foreach(keys; int ind; string key) {
       if (!key) continue;
       if (has_prefix(key, key_prefix)) {
@@ -248,8 +249,10 @@ class DataCache
 	}
 	m_delete(cache, key);
 	keys[ind] = 0;
+	res++;
       }
     }
+    return res;
   }
 
   void expire_entry(string key_prefix, RequestID|void id)
@@ -296,7 +299,7 @@ class DataCache
       return;
     }
     for(int i = 0; i < sizeof(q)/10; i++)
-      low_expire_entry(q[random(sizeof(q))], q);
+      i += low_expire_entry(q[random(sizeof(q))], q);
   }
 
   void set(string url, string data, mapping meta, int expire, RequestID id)
