@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.351 2006/10/26 18:09:03 mast Exp $
+// $Id: module.pmod,v 1.352 2006/11/14 21:29:48 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1646,11 +1646,18 @@ class Context
 
   local mixed set_var (string|array(string|int) var, mixed val, void|string scope_name)
   //! Sets the value of a variable in the specified scope, or the
-  //! current scope if none is given. Returns @[val].
+  //! current scope if none is given. If @[val] is @[RXML.nil] then
+  //! the variable is removed instead (see @[delete_var]). Returns
+  //! @[val].
   //!
   //! If @[var] is an array, it's used to successively index the value
   //! to get subvalues (see @[rxml_index] for details).
   {
+    if (val == nil) {
+      delete_var (var, scope_name);
+      return nil;
+    }
+
 #ifdef MODULE_DEBUG
     if (arrayp (var) ? !sizeof (var) : !stringp (var))
       fatal_error ("Invalid variable specifier.\n");
@@ -1819,15 +1826,29 @@ class Context
     delete_var(splitted[1..], splitted[0]);
   }
 
-  array(string) list_var (void|string scope_name)
+  array(string) list_var (void|string scope_name, void|int check_nil)
   //! Returns the names of all variables in the specified scope, or
   //! the current scope if none is given.
+  //!
+  //! Variables with the value @[RXML.nil] or @[UNDEFINED] should not
+  //! occur (since those values by definition indicates that the
+  //! variable doesn't exist). This function doesn't check for this by
+  //! default, but that can be enabled with the @[check_nil] flag.
   {
-    if (SCOPE_TYPE vars = scopes[scope_name || "_"])
+    if (SCOPE_TYPE vars = scopes[scope_name || "_"]) {
+      array(string) res;
       if (objectp (vars))
-	return ([object(Scope)] vars)->_indices (this_object(), scope_name || "_");
+	res = ([object(Scope)] vars)->_indices (this_object(),
+						scope_name || "_");
       else
-	return indices ([mapping(string:mixed)] vars);
+	res = indices ([mapping(string:mixed)] vars);
+      if (check_nil)
+	res = filter (res, lambda (string var) {
+			     mixed val = vars[var];
+			     return val != nil && !zero_type (val);
+			   });
+      return res;
+    }
     else if ((<0, "_">)[scope_name]) parse_error ("No current scope.\n");
     else parse_error ("Unknown scope %O.\n", scope_name);
   }
