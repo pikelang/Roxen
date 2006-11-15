@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.15 2006/09/24 09:06:55 liin Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.16 2006/11/15 14:05:05 liin Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -94,6 +94,12 @@ void start(int occasion, Configuration conf) {
   }
 #endif
 }
+
+mapping(string:function) query_action_buttons()
+{
+  return ([LOCALE(0, "Clear database") : href_database->empty_db]);
+}
+
 
 void stop() {
   DWRITE("stop()");
@@ -231,6 +237,23 @@ class HrefDatabase {
     data_table = get_my_table("data", ({data_table_def}));
   }
 
+  public void empty_db() {
+    /* Might as well clean up the database in a mutex section,
+       just to be sure. No performance issue since this function is only
+       supposed to be used when the "Clear database" button in the admin interface 
+       is pressed.
+    */
+#ifdef THREADS
+    mutex_key = mutex->lock();
+#endif
+    sql_query("DELETE FROM " + request_table);
+    sql_query("DELETE FROM " + data_table);
+    DWRITE("Database has been emptied.");
+#ifdef THREADS
+    mutex_key = 0;
+#endif
+  }
+  
   public int ready_to_run()
   {
     //  Only ok to run if both tables are accessible
