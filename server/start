@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.226 2006/09/11 14:30:37 wellhard Exp $
+# $Id: start,v 1.227 2006/11/15 16:33:10 anders Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -277,7 +277,7 @@ parse_args() {
   ;;
   '--generations='*)
     GENERATIONS=`echo $1 | sed -e 's/--generations=//'`
-    if test "$GENERATTIONS" -gt 1; then :; else
+    if test "$GENERATIONS" -gt 1; then :; else
       echo "Invalid number of log generations: $GENERATIONS" >&2
       echo "Using default: 5" >&2
       GENERATIONS=5
@@ -286,7 +286,7 @@ parse_args() {
   '--generations')
     GENERATIONS="$2"
     shift
-    if test "$GENERATTIONS" -gt 1; then :; else
+    if test "$GENERATIONS" -gt 1; then :; else
       echo "Invalid number of log generations: $GENERATIONS" >&2
       echo "Using default: 5" >&2
       GENERATIONS=5
