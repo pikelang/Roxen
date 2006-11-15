@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.143 2005/11/14 17:38:34 jonasw Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.144 2006/11/15 09:56:08 mast Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -313,9 +313,6 @@ mixed add_dump_constant( string f, mixed what )
 
 void unregister(program p)
 {
-#ifdef DEBUG
-  werror ("UNREGISTER\n");
-#endif
   m_delete (all_constants_object_program_rev, p);
   ::unregister (p);
 }
