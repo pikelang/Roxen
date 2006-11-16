@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.948 2006/11/14 21:27:06 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.949 2006/11/16 14:19:43 mast Exp $";
 
 //! @appears roxen
 //!
@@ -3683,7 +3683,7 @@ class ImageCache
 
 #ifndef NO_ARG_CACHE_SB_REPLICATE
     if(id->misc->persistent_cache_crawler) {
-      // Force an update of atime for the requested arg cache id.
+      // Force an update of rep_time for the requested arg cache id.
       foreach(ci/"$", string key) {
 #if ARGCACHE_DEBUG
 	werror("Request for id %O from prefetch crawler.\n", key);
@@ -3830,7 +3830,16 @@ class ArgCache
 	    "id        CHAR(32) PRIMARY KEY, "
 	    "ctime     DATETIME NOT NULL, "
 	    "atime     DATETIME NOT NULL, "
+	    "rep_time  DATETIME NOT NULL, "
 	    "contents  BLOB NOT NULL)");
+    }
+
+    if (catch (QUERY ("SELECT rep_time FROM " + name + "2 WHERE id = 0")))
+    {
+      // Upgrade a table without rep_time.
+      QUERY ("ALTER TABLE " + name + "2"
+	     " ADD rep_time DATETIME NOT NULL"
+	     " AFTER atime");
     }
   }
 
@@ -3853,20 +3862,21 @@ class ArgCache
     get_plugins();
   }
 
-  string read_encoded_args( string id )
+  static string read_encoded_args( string id, int dont_update_atime )
   {
     LOCK();
     array res = QUERY("SELECT contents FROM "+name+"2 "
 		      " WHERE id = %s", id);
     if(!sizeof(res))
       return 0;
-    QUERY("UPDATE "+name+"2 "
-	  "   SET atime = NOW() "
-	  " WHERE id = %s", id);
+    if (!dont_update_atime)
+      QUERY("UPDATE "+name+"2 "
+	    "   SET atime = NOW() "
+	    " WHERE id = %s", id);
     return res[0]->contents;
   }
 
-  void create_key( string id, string encoded_args )
+  static void create_key( string id, string encoded_args )
   {
     LOCK();
     array(mapping) rows =
@@ -3880,8 +3890,12 @@ class ArgCache
 	error("ArgCache.create_key() Duplicate key found!\n");
       }
 
-    if(sizeof(rows))
+    if(sizeof(rows)) {
+      QUERY("UPDATE "+name+"2 "
+	    "   SET atime = NOW() "
+	    " WHERE id = %s", id);
       return;
+    }
 
     QUERY( "INSERT INTO "+name+"2 "
 	   "(id, contents, ctime, atime) VALUES "
@@ -3906,7 +3920,7 @@ class ArgCache
 	}
   }
 
-  mapping plugins_read_encoded_args( string id )
+  static mapping plugins_read_encoded_args( string id )
   {
     mapping args;
     foreach( (plugins->read_encoded_args - ({0})), function(string:mapping) f )
@@ -3938,13 +3952,15 @@ class ArgCache
   {
     if( cache[id] )
       return cache[id] + ([]);
-    string encoded_args = read_encoded_args(id) || plugins_read_encoded_args(id);
+    string encoded_args = (read_encoded_args(id, 0) ||
+			   plugins_read_encoded_args(id));
     if(!encoded_args) {
       error("Requesting unknown key (not found in db)\n");
     }
     mapping args = decode_value(encoded_args);
     cache[id] = args + ([]);
     if( sizeof( cache ) >= CACHE_SIZE )
+      // Yowza! Garbing bulldoze style. /mast
       cache = ([]);
     return args;
   }
@@ -3961,12 +3977,21 @@ class ArgCache
 
 #define SECRET_TAG "££"
   
-  int write_dump(Stdio.File file, int|void from_time)
-  // Write a mapping from id to encoded arg string for all local arg
-  // entries created after from_time to a file. Returns 0 if faled, 1
-  // otherwise.
+  int write_dump(Stdio.File file, int from_time)
+  //! Dumps all entries that have been @[refresh_arg]'ed at or after
+  //! @[from_time] to @[file]. All existing entries are dumped if
+  //! @[from_time] is zero.
+  //!
+  //! @returns
+  //! Returns 0 if writing failed, -1 if there was no new entries, 1
+  //! otherwise.
+  //!
+  //! @note
+  //! Entries added during the execution of this function might or
+  //! might not be included in the dump.
   {
     constant FETCH_ROWS = 10000;
+    int entry_count = 0;
     
     // The server does only need to use file based argcache
     // replication if the server don't participate in a replicate
@@ -3976,12 +4001,20 @@ class ArgCache
       int cursor;
       array(string) ids;
       do {
+	// Note: No lock is held, so rows might be added between the
+	// SELECTs here. That can however only cause a slight overlap
+	// between the LIMIT windows since rows are only added and
+	// never removed, and read_dump doesn't mind the occasional
+	// duplicate entry.
+	//
+	// A lock will be necessary here if a garb is added, though.
+
 	if(from_time)
 	  // Only replicate entries accessed during the prefetch crawling.
 	  ids = 
 	    (array(string))
 	    QUERY( "SELECT id from "+name+"2 "
-		   " WHERE atime >= FROM_UNIXTIME(%d) "
+		   " WHERE rep_time >= FROM_UNIXTIME(%d) "
 		   " LIMIT %d, %d", from_time, cursor, FETCH_ROWS)->id;
 	else
 	  // Make sure _every_ entry is replicated when a dump is created.
@@ -3994,16 +4027,27 @@ class ArgCache
 	
 	foreach(ids, string id) {
 	  dwerror("ArgCache.write_dump(): %O\n", id);
-	  
+
+	  string encoded_args;
+	  if (mapping args = cache[id])
+	    encoded_args = encode_value_canonic (args);
+	  else {
+	    encoded_args = read_encoded_args (id, 1);
+	    if (!encoded_args) error ("ArgCache entry %O disappeared.\n", id);
+	  }
+
 	  string s = 
-	    MIME.encode_base64(encode_value(({ id, read_encoded_args(id) })),
+	    MIME.encode_base64(encode_value(({ id, encoded_args })),
 			       1)+"\n";
 	  if(sizeof(s) != file->write(s))
 	    return 0;
+	  entry_count++;
 	}
       } while(sizeof(ids) == FETCH_ROWS);
     }
-    return file->write("EOF\n") == 4;
+    if (file->write("EOF\n") != 4)
+      return 0;
+    return entry_count ? 1 : -1;
   }
 
   string read_dump (Stdio.FILE file)
@@ -4042,8 +4086,10 @@ class ArgCache
   }
 
   void refresh_arg(string id)
+  //! Indicate that the entry @[id] needs to be included in the next
+  //! @[write_dump]. @[id] must be an existing entry.
   {
-    QUERY("UPDATE "+name+"2 SET atime=NOW() WHERE id = %s", id);
+    QUERY("UPDATE "+name+"2 SET rep_time=NOW() WHERE id = %s", id);
   }
 }
 
