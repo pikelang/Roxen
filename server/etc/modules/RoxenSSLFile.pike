@@ -1,4 +1,4 @@
-/* $Id: RoxenSSLFile.pike,v 1.16 2006/10/13 18:17:13 mast Exp $
+/* $Id: RoxenSSLFile.pike,v 1.17 2006/11/16 12:48:15 mast Exp $
  */
 
 // This is SSL.sslfile from Pike 7.6, slightly modified for the old
@@ -67,6 +67,11 @@ class SSLConnection
 //! @item
 //!   @[is_open], connection init (@[create]) and close (@[close]) can
 //!   do both reading and writing.
+//! @item
+//!   @[destroy] attempts to close the stream properly by sending the
+//!   close packet, but since it can't do blocking I/O it's not
+//!   certain that will succeed. The stream should therefore always be
+//!   closed with an explicit @[close] call.
 //! @item
 //!   Abrupt remote close without the proper handshake gets the errno
 //!   @[System.EPIPE].
@@ -663,25 +668,23 @@ Stdio.File shutdown()
 }
 
 static void destroy()
-// Try to close down the connection properly in blocking mode since
-// it's customary to close files just by dropping them.
+//! Try to close down the connection properly since it's customary to
+//! close files just by dropping them. No guarantee can be made that
+//! the close packet gets sent successfully though, because we can't
+//! risk blocking I/O here. You should call @[close] explicitly.
 {
   SSL3_DEBUG_MSG ("SSL.sslfile->destroy()\n");
 
-  // Note that we don't know which thread this will be called in
-  // (could be anyone if the gc got here), so there might be a race
-  // problem with a backend in another thread. That would only
-  // happen if somebody has destructed this object explicitly
-  // though, and in that case he can have all that's coming.
+  // We don't know which thread this will be called in if the refcount
+  // garb or the gc got here. That's not a race problem since it won't
+  // be registered in a backend in that case.
   ENTER (0, 0) {
     if (stream) {
       if (close_state <= STREAM_OPEN &&
 	  // Don't bother with closing nicely if there's an error from
 	  // an earlier operation. close() will throw an error for it.
 	  !cb_errno) {
-	// Have to do the close in blocking mode since this object will
-	// go away as soon as we return.
-	set_blocking();
+	set_nonblocking_keep_callbacks();
 	close (0, 0, 1);
       }
       else
