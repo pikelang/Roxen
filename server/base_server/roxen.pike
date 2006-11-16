@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.946 2006/11/14 15:18:49 anders Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.947 2006/11/16 13:08:15 mast Exp $";
 
 //! @appears roxen
 //!
@@ -3840,16 +3840,17 @@ class ArgCache
     get_plugins();
   }
 
-  string read_encoded_args( string id )
+  string read_encoded_args( string id, void|int dont_update_atime)
   {
     LOCK();
     array res = QUERY("SELECT contents FROM "+name+"2 "
 		      " WHERE id = %s", id);
     if(!sizeof(res))
       return 0;
-    QUERY("UPDATE "+name+"2 "
-	  "   SET atime = NOW() "
-	  " WHERE id = %s", id);
+    if (!dont_update_atime)
+      QUERY("UPDATE "+name+"2 "
+	    "   SET atime = NOW() "
+	    " WHERE id = %s", id);
     return res[0]->contents;
   }
 
@@ -3983,7 +3984,7 @@ class ArgCache
 	  dwerror("ArgCache.write_dump(): %O\n", id);
 	  
 	  string s = 
-	    MIME.encode_base64(encode_value(({ id, read_encoded_args(id) })),
+	    MIME.encode_base64(encode_value(({ id, read_encoded_args(id, 1) })),
 			       1)+"\n";
 	  if(sizeof(s) != file->write(s))
 	    return 0;
@@ -4108,13 +4109,14 @@ class ArgCache
     get_plugins();
   }
 
-  string read_args( int id )
+  string read_args( int id, void|int dont_update_atime)
   {
     LOCK();
     array res = QUERY("SELECT contents FROM "+name+" WHERE id="+id);
     if( sizeof(res) )
     {
-      QUERY("UPDATE "+name+" SET atime='"+time(1)+"' WHERE id="+id);
+      if (!dont_update_atime)
+	QUERY("UPDATE "+name+" SET atime='"+time(1)+"' WHERE id="+id);
       return res[0]->contents;
     }
     return 0;
@@ -4393,8 +4395,9 @@ class ArgCache
 #endif
 	  
 	  string s = 
-	    MIME.encode_base64(encode_value(({ id, read_args(id),
-					       index_id, read_args(index_id) })),
+	    MIME.encode_base64(encode_value(({ id, read_args(id, 1),
+					       index_id,
+					       read_args(index_id, 1) })),
 			       1)+"\n";
 	  if(sizeof(s) != file->write(s))
 	    return 0;
