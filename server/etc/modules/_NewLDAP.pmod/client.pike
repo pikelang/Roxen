@@ -1,6 +1,6 @@
 // LDAP client protocol implementation for Pike.
 //
-// $Id: client.pike,v 1.6 2006/09/19 17:25:26 mast Exp $
+// $Id: client.pike,v 1.7 2006/11/17 12:25:41 mast Exp $
 //
 // Honza Petrous, hop@unibase.cz
 //
@@ -73,6 +73,11 @@
 
 #if constant(SSL.Cipher.CipherAlgorithm)
 import SSL.Constants;
+#define HAVE_LDAPS_SUPPORT
+#elif constant(SSL.cipher.CipherSpec)
+// Pike <= 7.4.
+import SSL.constants;
+#define HAVE_LDAPS_SUPPORT
 #endif
 
 import ".";
@@ -654,7 +659,7 @@ typedef mapping(string:ResultAttributeValue) ResultEntry;
   void create(string|mapping(string:mixed)|void url, object|void context)
   {
 
-    info = ([ "code_revision" : ("$Revision: 1.6 $"/" ")[1] ]);
+    info = ([ "code_revision" : ("$Revision: 1.7 $"/" ")[1] ]);
 
     if(!url || !sizeof(url))
       url = LDAP_DEFAULT_URL;
@@ -666,7 +671,7 @@ typedef mapping(string:ResultAttributeValue) ResultEntry;
 
     if(!stringp(lauth->scheme) ||
        ((lauth->scheme != "ldap")
-#if constant(SSL.Cipher.CipherAlgorithm)
+#ifdef HAVE_LDAPS_SUPPORT
 	&& (lauth->scheme != "ldaps")
 #endif
 	)) {
@@ -678,7 +683,7 @@ typedef mapping(string:ResultAttributeValue) ResultEntry;
     if(!lauth->port)
       lauth += ([ "port" : lauth->scheme == "ldap" ? LDAP_DEFAULT_PORT : LDAPS_DEFAULT_PORT ]);
 
-#if constant(SSL.Cipher.CipherAlgorithm)
+#ifdef HAVE_LDAPS_SUPPORT
     if(lauth->scheme == "ldaps" && !context) {
       context = SSL.context();
       // Allow only strong crypto
@@ -702,9 +707,9 @@ typedef mapping(string:ResultAttributeValue) ResultEntry;
       THROW(({"Failed to connect to LDAP server.\n",backtrace()}));
     }
 
-#if constant(SSL.Cipher.CipherAlgorithm)
+#ifdef HAVE_LDAPS_SUPPORT
     if(lauth->scheme == "ldaps") {
-      context->random = Crypto.Random.random_string;
+      context->random = Crypto.randomness.reasonably_random()->read;
       ::create(SSL.sslfile(low_fd, context, 1,1));
       info->tls_version = ldapfd->version;
     } else
@@ -759,7 +764,7 @@ void reset_options()
   private mixed send_starttls_op(object|void context) {
 
     object msgval;
-#if constant(SSL.Cipher.CipherAlgorithm)
+#ifdef HAVE_LDAPS_SUPPORT
 
     // can we do this now?
     if(ldapfd->context) 
@@ -771,7 +776,7 @@ void reset_options()
 
     
 
-    msgval = ASN1_APPLICATION_SEQUENCE(23, ({Standards.ASN1.Types.OctetString("1.3.6.1.4.1.1466.20037")}));
+    msgval = ASN1_APPLICATION_SEQUENCE(23, ({Standards.ASN1.Types.asn1_octet_string("1.3.6.1.4.1.1466.20037")}));
 
     do_op(msgval);
     int result = ASN1_DECODE_RESULTCODE(readbuf);
