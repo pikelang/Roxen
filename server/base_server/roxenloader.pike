@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.379 2006/09/18 16:18:34 mast Exp $
+// $Id: roxenloader.pike,v 1.380 2006/11/17 20:14:01 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -26,14 +26,16 @@ private static __builtin.__master new_master;
 constant s = spider; // compatibility
 
 // Enable decoding of wide string data from mysql.
-#define ENABLE_MYSQL_UNICODE_MODE
+// Disabled since it isn't compatible enough - has to be enabled on a
+// per-connection basis through the charset argument. /mast
+//#define ENABLE_MYSQL_UNICODE_MODE
 
 int      remove_dumped;
 string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.379 2006/09/18 16:18:34 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.380 2006/11/17 20:14:01 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1689,12 +1691,16 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
 #ifdef ENABLE_MYSQL_UNICODE_MODE
     if (res && res->master_sql->set_unicode_decode_mode) {
       // NOTE: The following code only works on Mysql servers 4.1 and later.
-      catch {
+      mixed err2 = catch {
 	res->master_sql->set_unicode_decode_mode(1);
 #ifdef DB_DEBUG
 	werror("Unicode decode mode enabled.\n");
 #endif
       };
+#ifdef DB_DEBUG
+      if (err2) werror ("Failed to enable unicode decode mode: %s",
+			describe_error (err2));
+#endif
     }
 #endif /* ENABLE_MYSQL_UNICODE_MODE */
 #ifdef DB_DEBUG
