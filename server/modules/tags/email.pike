@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.38 2006/11/20 07:53:51 marty Exp $";
+constant cvs_version = "$Id: email.pike,v 1.39 2006/11/20 13:04:31 marty Exp $";
 
 constant thread_safe=1;
 
@@ -98,7 +98,7 @@ void create(Configuration conf)
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.38 $"/" ")[1];
+string revision = ("$Revision: 1.39 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -344,8 +344,8 @@ class TagEmail {
 		 (replace(error_msg, "\r", "")/"\n" - ({ "" }))*"\n  " +
 		 "\n" + body;
 	Stdio.append_file(roxen_path(mbox_file),
-			  sprintf("From %s %s\nDate: %s\n%s\n\n",
-				  from, date, date,
+			  sprintf("From %s %s\n%s\n\n",
+				  from, date,
 				  replace(body, ({ "\r", "\n" }),
 					  ({ "", "\n" }))));
       }
