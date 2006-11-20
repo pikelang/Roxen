@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.37 2006/04/07 13:47:59 erikd Exp $";
+constant cvs_version = "$Id: email.pike,v 1.38 2006/11/20 12:38:43 marty Exp $";
 
 constant thread_safe=1;
 
@@ -98,7 +98,7 @@ void create(Configuration conf)
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.37 $"/" ")[1];
+string revision = ("$Revision: 1.38 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -502,6 +502,8 @@ class TagEmail {
 			   "subject"      : subject,
 			   "from"         : nice_from_h(fromx),
 			   "to"           : replace(tox, split, ","),
+			   "date"         : Calendar.ISO.Second()->
+		                              format_smtp(),
 			   "content-type" : (args["main-mimetype"] ||
 					     "multipart/mixed"),
 			   "x-mailer"     : "Roxen's email, r"+revision
@@ -516,6 +518,8 @@ class TagEmail {
 			     "subject"      : subject,
 			     "from"         : nice_from_h(fromx),
 			     "to"           : replace(tox, split, ","),
+			     "date"         : Calendar.ISO.Second()->
+			                        format_smtp(),
 			     "content-type" : ( (headers["CONTENT-TYPE"] ||
 						 args->mimetype ||
 						 "text/plain") +
