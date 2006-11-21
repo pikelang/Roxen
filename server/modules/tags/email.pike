@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.36 2006/04/07 13:51:08 erikd Exp $";
+constant cvs_version = "$Id: email.pike,v 1.37 2006/11/21 14:38:44 marty Exp $";
 
 constant thread_safe=1;
 
@@ -98,7 +98,7 @@ void create(Configuration conf)
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.36 $"/" ")[1];
+string revision = ("$Revision: 1.37 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -344,8 +344,8 @@ class TagEmail {
 		 (replace(error_msg, "\r", "")/"\n" - ({ "" }))*"\n  " +
 		 "\n" + body;
 	Stdio.append_file(roxen_path(mbox_file),
-			  sprintf("From %s %s\nDate: %s\n%s\n\n",
-				  from, date, date,
+			  sprintf("From %s %s\n%s\n\n",
+				  from, date,
 				  replace(body, ({ "\r", "\n" }),
 					  ({ "", "\n" }))));
       }
@@ -502,6 +502,8 @@ class TagEmail {
 			   "subject"      : subject,
 			   "from"         : nice_from_h(fromx),
 			   "to"           : replace(tox, split, ","),
+			   "date"         : Calendar.ISO.Second()->
+		                              format_smtp(),
 			   "content-type" : (args["main-mimetype"] ||
 					     "multipart/mixed"),
 			   "x-mailer"     : "Roxen's email, r"+revision
@@ -516,6 +518,8 @@ class TagEmail {
 			     "subject"      : subject,
 			     "from"         : nice_from_h(fromx),
 			     "to"           : replace(tox, split, ","),
+			     "date"         : Calendar.ISO.Second()->
+			                        format_smtp(),
 			     "content-type" : ( (headers["CONTENT-TYPE"] ||
 						 args->mimetype ||
 						 "text/plain") +
