@@ -1,4 +1,4 @@
-// $Id: print.pike,v 1.2 2006/11/21 07:37:42 simon Exp $
+// $Id: print.pike,v 1.3 2006/11/21 10:45:10 simon Exp $
 
 inherit "standard";
 constant site_template = 1;
@@ -14,7 +14,6 @@ constant locked = 1;
 constant modules =
 ({
   "sitebuilder",
-  "site-news",
 });
 
 constant silent_modules =
@@ -41,6 +40,16 @@ void init_modules(Configuration c, RequestID id)
   if( RoxenModule m = c->find_module( "acauth_cookie" ) )
     m->set( "redirect", "/login.html" );
 
+  if( RoxenModule m = c->find_module( "sqltag" ) )
+    m->set( "charset", "unicode" );
+
+  if( RoxenModule m = c->find_module( "print-db" ) )
+    m->set( "sitebuilder", c->name );
+
+  if( RoxenModule m = c->find_module( "feed-import" ) ) 
+    if (RoxenModule sb_module = c->find_module("sitebuilder")) 
+      m->set( "workarea", c->name + "/" + "Main" );
+  
   if (RoxenModule sb_module = c->find_module("sitebuilder")) {
     sb_module->set("load-insite-editor", 1);
     sb_module->set("site-create-version", roxen_version());
