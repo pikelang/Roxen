@@ -1,4 +1,4 @@
-// $Id: print.pike,v 1.3 2006/11/21 10:45:10 simon Exp $
+// $Id: print.pike,v 1.4 2006/11/23 07:58:08 simon Exp $
 
 inherit "standard";
 constant site_template = 1;
@@ -91,6 +91,11 @@ mapping get_default_site(string name, RequestID id)
   }
 }
 
+Sql.Sql get_db()
+{
+  return DBManager.get( "mysql" );
+}
+
 string format_input(string title, string form, string doc, string hint)
 {
   return
@@ -103,6 +108,19 @@ string format_input(string title, string form, string doc, string hint)
     "  <td colspan=2>"+doc+"<p>"+hint+"</td>"
     "</tr>";
 }
+
+string page_db_notice(RequestID id, mixed pre_res, string version)
+{
+  
+  return
+    "<input type='hidden' name='page' value='0' />"
+    "<h1><font color='#FF0000'>Warning: Old MySQL version (" + version + ")</font></h1>"
+    "You are running version " + version + " of MySQL. "
+    "It's recommended that you upgrade to version 4.1 before continuing. "
+    "Press Cancel to exit the site installation process or Next to continue. "
+    "<div align='right'><cf-cancel href='./'/><cf-next /></div>";
+}
+
 
 string page_0(RequestID id, mixed pre_res)
 {
@@ -203,6 +221,14 @@ mixed parse (RequestID id)
   
   if(id->variables["page"] == "2")
     return page_2(id, res);
-  
+
+  if(id->variables["page"] == "0")
+    return page_0(id, res);
+
+  Sql.Sql db = get_db();
+  string version = db->query( "SELECT VERSION() AS v" )[0]->v;
+  if( (float)version < 4.1 ) 
+    return page_db_notice(id, res, version);
+
   return page_0(id, res);
 }
