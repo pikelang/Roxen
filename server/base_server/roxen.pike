@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.950 2006/11/16 16:45:49 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.951 2006/11/23 13:06:42 mast Exp $";
 
 //! @appears roxen
 //!
@@ -4067,7 +4067,18 @@ class ArgCache
       if(sizeof(a) == 4) {
 	// Old style argcache dump.
 	dwerror("ArgCache.read_dump(): value_id: %O, index_id: %O.\n", a[0], a[2]);
-	store(mkmapping(decode_value(a[1]), decode_value(a[3])));
+	if (a[2] == -1)
+	  // The old write_dump didn't filter out entries with NULL
+	  // index_id when from_time was zero, so we ignore them here
+	  // instead.
+	  dwerror ("ArgCache.read_dump(): entry ignored.\n");
+	else {
+	  array v = decode_value(a[1]), i = decode_value(a[3]);
+#if 0
+	  dwerror ("ArgCache.read_dump(): values: %O, indices: %O\n", v, i);
+#endif
+	  store(mkmapping(i, v));
+	}
       } else if (sizeof(a) == 2) {
 	// New style argcache dump.
 	dwerror("ArgCache.read_dump(): %O\n", a[0]);
