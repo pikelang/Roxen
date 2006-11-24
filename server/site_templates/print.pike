@@ -1,4 +1,4 @@
-// $Id: print.pike,v 1.5 2006/11/24 13:27:15 simon Exp $
+// $Id: print.pike,v 1.6 2006/11/24 13:30:17 simon Exp $
 
 inherit "standard";
 constant site_template = 1;
@@ -132,10 +132,10 @@ string page_db_notice(RequestID id, mixed pre_res, string version)
     lower_tr( "Tasks -> Maintenance -> Restart or shutdown" ) + 
     upper_tr( 2, "Download the latest 4.1 distribution available from http://dev.mysql.com/downloads/mysql/4.1.html" ) + 
     upper_tr( 3, "Extract the downloaded file." ) + 
-    lower_tr( "tar xzf mysql-standard-4.1.21-pc-linux-gnu-i686-glibc23.tar.gz" ) + 
+    lower_tr( "tar xzf mysql-YYY.tar.gz" ) + 
 
     upper_tr( 4, "Move the extracted directory into the appropriate Roxen server directory." ) + 
-    lower_tr( "mv mysql-standard-4.1.21-pc-linux-gnu-i686-glibc23 /usr/local/roxen/server-XXX/mysql-4.1" ) + 
+    lower_tr( "mv mysql-YYY /usr/local/roxen/server-XXX/mysql-4.1" ) + 
 
     upper_tr( 5, "Move the default mysql directory to a backup directory. (*)" ) + 
     lower_tr( "mv mysql mysql.dist" ) + 
@@ -150,8 +150,8 @@ string page_db_notice(RequestID id, mixed pre_res, string version)
     lower_tr( "ln mysql/bin/mysqld bin/roxen_mysql" ) + 
     
     upper_tr( 9, "Append the option -DENABLE_MYSQL_UNICODE_MODE to the DEFINES variable to the roxen/local/environment2 file. (**)" ) + 
-    lower_tr( "echo \"DEFINES=\\\"$DEFINES -DENABLE_MYSQL_UNICODE_MODE\\\"\" >> environment2" ) + 
-    lower_tr( "echo \"export DEFINES\" >> environment2" ) + 
+    lower_tr( "echo \"DEFINES=\\\"$DEFINES -DENABLE_MYSQL_UNICODE_MODE\\\"\" >> local/environment2" ) + 
+    lower_tr( "echo \"export DEFINES\" >> local/environment2" ) + 
     
     upper_tr( 10, "Start the server." ) + 
     "<tr><td>&nbsp</td><td></td></tr>" +
