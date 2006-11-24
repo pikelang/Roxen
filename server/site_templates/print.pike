@@ -1,4 +1,4 @@
-// $Id: print.pike,v 1.4 2006/11/23 07:58:08 simon Exp $
+// $Id: print.pike,v 1.5 2006/11/24 13:27:15 simon Exp $
 
 inherit "standard";
 constant site_template = 1;
@@ -109,6 +109,14 @@ string format_input(string title, string form, string doc, string hint)
     "</tr>";
 }
 
+string upper_tr(int num, string text) {
+  return "<tr><td style=\"font-size: 10px; font-style: italic;\">" + num + ".</td><td style=\"font-size: 12px; font-weight: bold;\">" + text + "</td></tr>";
+}
+
+string lower_tr(string text) {
+  return "<tr><td style=\"font-size: 10px; font-style: italic;\">&nbsp;</td><td style=\"font-size: 10px; font-style: italic;\">" + text + "</td></tr>";
+}
+
 string page_db_notice(RequestID id, mixed pre_res, string version)
 {
   
@@ -117,7 +125,39 @@ string page_db_notice(RequestID id, mixed pre_res, string version)
     "<h1><font color='#FF0000'>Warning: Old MySQL version (" + version + ")</font></h1>"
     "You are running version " + version + " of MySQL. "
     "It's recommended that you upgrade to version 4.1 before continuing. "
-    "Press Cancel to exit the site installation process or Next to continue. "
+    "Press Cancel to exit the site installation process or Next to continue anyway. "
+    "<h2>Upgrade instructions MySQL 4.0 -> 4.1</h2>"
+    "<table border=0>" + 
+    upper_tr( 1, "Shutdown Roxen server." ) + 
+    lower_tr( "Tasks -> Maintenance -> Restart or shutdown" ) + 
+    upper_tr( 2, "Download the latest 4.1 distribution available from http://dev.mysql.com/downloads/mysql/4.1.html" ) + 
+    upper_tr( 3, "Extract the downloaded file." ) + 
+    lower_tr( "tar xzf mysql-standard-4.1.21-pc-linux-gnu-i686-glibc23.tar.gz" ) + 
+
+    upper_tr( 4, "Move the extracted directory into the appropriate Roxen server directory." ) + 
+    lower_tr( "mv mysql-standard-4.1.21-pc-linux-gnu-i686-glibc23 /usr/local/roxen/server-XXX/mysql-4.1" ) + 
+
+    upper_tr( 5, "Move the default mysql directory to a backup directory. (*)" ) + 
+    lower_tr( "mv mysql mysql.dist" ) + 
+
+    upper_tr( 6, "Create a symbolic link from the mysql 4.1 directory to mysql. (*)" ) + 
+    lower_tr( "ln -s mysql-4.1 mysql" ) + 
+
+    upper_tr( 7, "Move the default roxen_mysql binary file to a backup copy. (*)" ) + 
+    lower_tr( "mv bin/roxen_mysql bin/roxen_mysql.dist" ) + 
+
+    upper_tr( 8, "Create a hard link to the new mysqld file and place it in the bin directory under the name roxen_mysql. (*)" ) + 
+    lower_tr( "ln mysql/bin/mysqld bin/roxen_mysql" ) + 
+    
+    upper_tr( 9, "Append the option -DENABLE_MYSQL_UNICODE_MODE to the DEFINES variable to the roxen/local/environment2 file. (**)" ) + 
+    lower_tr( "echo \"DEFINES=\\\"$DEFINES -DENABLE_MYSQL_UNICODE_MODE\\\"\" >> environment2" ) + 
+    lower_tr( "echo \"export DEFINES\" >> environment2" ) + 
+    
+    upper_tr( 10, "Start the server." ) + 
+    "<tr><td>&nbsp</td><td></td></tr>" +
+    lower_tr( "* To be performed in the roxen/server-XXX directory" ) +
+    lower_tr( "** To be performed in the roxen/ directory" ) +
+    "</table>"
     "<div align='right'><cf-cancel href='./'/><cf-next /></div>";
 }
 
@@ -135,7 +175,7 @@ string page_1(RequestID id, mixed pre_res)
   if(Stdio.is_dir(mod->query("storage")))
     return page_3(id, pre_res);
 
-  string ret = 
+  string ret =
     "<input type='hidden' name='page' value='2' />"
     "<h2>Roxen Print settings</h2>"
     "Please observe that you need to visit the settings for "
@@ -198,7 +238,6 @@ mixed parse (RequestID id)
 
   // Default to http on the first page.
   if(id->variables["initialize_template"]) {
-    werror( "initialize template. \n" );
     id->misc->new_configuration->query()["URLs"]->set( ({ "http://*/" }) );
 
     // Make sure site-news is loaded.
@@ -227,7 +266,7 @@ mixed parse (RequestID id)
 
   Sql.Sql db = get_db();
   string version = db->query( "SELECT VERSION() AS v" )[0]->v;
-  if( (float)version < 4.1 ) 
+  if( (float)version < 5.1 ) 
     return page_db_notice(id, res, version);
 
   return page_0(id, res);
