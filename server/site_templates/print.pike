@@ -1,4 +1,4 @@
-// $Id: print.pike,v 1.9 2006/11/28 09:45:26 simon Exp $
+// $Id: print.pike,v 1.10 2006/11/28 14:17:01 noring Exp $
 
 inherit "standard";
 constant site_template = 1;
@@ -26,6 +26,7 @@ constant silent_modules =
   "vform",
   "preferred_language",
   "search_sb_interface",
+  "search_utils",
   "feed-import",
   "print-db",
 });
