@@ -1,4 +1,4 @@
-// $Id: print.pike,v 1.8 2006/11/28 07:14:08 simon Exp $
+// $Id: print.pike,v 1.9 2006/11/28 09:45:26 simon Exp $
 
 inherit "standard";
 constant site_template = 1;
@@ -266,7 +266,7 @@ mixed parse (RequestID id)
 
   Sql.Sql db = get_db();
   string version = db->query( "SELECT VERSION() AS v" )[0]->v;
-  if( (float)version < 5.1 ) 
+  if( (float)version < 4.1 ) 
     return page_db_notice(id, res, version);
 
   return page_0(id, res);
