@@ -1,4 +1,4 @@
-// $Id: print.pike,v 1.7 2006/11/24 13:32:38 simon Exp $
+// $Id: print.pike,v 1.8 2006/11/28 07:14:08 simon Exp $
 
 inherit "standard";
 constant site_template = 1;
@@ -135,7 +135,7 @@ string page_db_notice(RequestID id, mixed pre_res, string version)
     lower_tr( "tar xzf mysql-YYY.tar.gz" ) + 
 
     upper_tr( 4, "Move the extracted directory into the appropriate Roxen server directory." ) + 
-    lower_tr( "mv mysql-YYY /usr/local/roxen/server-XXX/mysql-4.1" ) + 
+    lower_tr( "mv mysql-YYY roxen/server-XXX/mysql-4.1" ) + 
 
     upper_tr( 5, "Move the default mysql directory to a backup directory. (*)" ) + 
     lower_tr( "mv mysql mysql.dist" ) + 
@@ -266,7 +266,7 @@ mixed parse (RequestID id)
 
   Sql.Sql db = get_db();
   string version = db->query( "SELECT VERSION() AS v" )[0]->v;
-  if( (float)version < 4.1 ) 
+  if( (float)version < 5.1 ) 
     return page_db_notice(id, res, version);
 
   return page_0(id, res);
