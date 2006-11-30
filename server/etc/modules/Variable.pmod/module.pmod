@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.94 2006/11/30 15:31:48 grubba Exp $
+// $Id: module.pmod,v 1.95 2006/11/30 15:32:08 grubba Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1372,7 +1372,7 @@ class ProviderChoice
       // The module might have been reloaded.
       // Try locating it again.
       res = transform_from_form(local_id);
-      ::low_set(res);
+      low_set(res);
     }
     return res;
   }
