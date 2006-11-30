@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.951 2006/11/23 13:06:42 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.952 2006/11/30 12:41:56 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2685,6 +2685,37 @@ string create_unique_id()
 
 #ifndef __NT__
 static int abs_started;
+static int handlers_alive;
+
+static void low_engage_abs()
+{
+  report_debug("**** %s: ABS exiting roxen!\n\n",
+	       ctime(time()) - "\n");
+  _exit(1);	// It might not quit correctly otherwise, if it's
+		// locked up
+}
+
+static void engage_abs(int n)
+{
+  if (!query("abs_engage")) {
+    abs_started = 0;
+    report_debug("Anti-Block System Disabled.\n");
+    return;
+  }
+  report_debug("**** %s: ABS engaged!\n"
+	       "Waited more than %d minute(s).\n"
+	       "Trying to dump backlog: \n",
+	       ctime(time()) - "\n",
+	       query("abs_timeout"));
+  // Paranoia exit in case describe_all_threads below hangs.
+  signal(signum("SIGALRM"), low_engage_abs);
+  int t = alarm(20);
+  catch {
+    // Catch for paranoia reasons.
+    describe_all_threads();
+  };
+  low_engage_abs();
+}
 
 void restart_if_stuck (int force)
 //! @note
@@ -2696,34 +2727,22 @@ void restart_if_stuck (int force)
   if(!abs_started)
   {
     abs_started = 1;
+    handlers_alive = time(1);
     report_debug("Anti-Block System Enabled.\n");
   }
   call_out (restart_if_stuck,10);
 //    werror("call_out_info %O\n", filter(call_out_info(), lambda(array a) {
 //  							 return a[2] == restart_if_stuck; }));
-  signal(signum("SIGALRM"),
-	 lambda( int n ) {
-	   if (!query("abs_engage")) {
-	     abs_started = 0;
-	     report_debug("Anti-Block System Disabled.\n");
-	     return;
-	   }
-	   report_debug("**** %s: ABS engaged!\n"
-			"Waited more than %d minute(s).\n"
-			"Trying to dump backlog: \n",
-			ctime(time()) - "\n",
-			query("abs_timeout"));
-	   catch {
-	     // Catch for paranoia reasons.
-	     describe_all_threads();
-	   };
-	   report_debug("**** %s: ABS exiting roxen!\n\n",
-			ctime(time()));
-	   _exit(1); 	// It might now quit correctly otherwise, if it's
-	   //  locked up
-	 });
+  signal(signum("SIGALRM"), engage_abs);
   int t = alarm (60*query("abs_timeout")+20);
   // werror("alarm: %d seconds left, set to %d\n", t, 60*query("abs_timeout")+20);
+  if ((time(1) - handlers_alive) > 60*query("abs_timeout")) {
+    // The handler installed below hasn't run.
+    report_debug("**** %s: ABS: Handlers are dead!\n",
+		 ctime(time()) - "\n");
+    engage_abs(0);
+  }
+  handle(lambda() { handlers_alive = time(1); });
 }
 #endif
 
