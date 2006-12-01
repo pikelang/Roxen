@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.512 2006/11/08 15:58:39 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.513 2006/12/01 10:49:45 stewa Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1657,7 +1657,7 @@ array parse_range_header(int len)
 	// Entire file requested here.
 	r1 = 0;
       }
-      ranges += ({ ({ len - (int)range[1..], len-1 }) });
+      ranges += ({ ({ r1, len-1 }) });
     } else if(range[-1] == '-') {
       // Rest of file request
       r1 = (int)range;
@@ -1759,7 +1759,7 @@ void handle_byte_ranges(mapping(string:mixed) file,
 	      res[j++] = Roxen.make_http_headers(part_heads);
 	      res[j++] = file->data[range[0]..range[1]];
 	    }
-	    res[j++] = "\r\n--" BOUND "\r\n";
+	    res[j++] = "\r\n--" BOUND "--\r\n";
 	    file->len = sizeof(file->data = res * "");
 	  }
 	}
