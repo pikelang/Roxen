@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.112 2006/09/27 15:05:45 mast Exp $
+ * $Id: ftp.pike,v 2.113 2006/12/04 14:39:45 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -110,6 +110,12 @@ class RequestID2
 {
   inherit RequestID;
 
+  // Contains the fields that auth modules traditionally set in
+  // id->misc. Since that's done in the master session RequestID in
+  // our case we need to transfer those fields to the subrequest
+  // id->misc for compatibility.
+  /*static*/ mapping auth_misc;
+
   mapping file;
 
 #ifdef FTP2_DEBUG
@@ -211,12 +217,14 @@ class RequestID2
 #endif /* DEBUG */
 	}
       }
+      o["misc"] = m_rid->auth_misc + (["pref_languages": PrefLanguages()]);
     } else {
       // Defaults...
       client = ({ "ftp" });
       prot = "FTP";
       clientprot = "FTP";
       variables = FakedVariables(real_variables = ([]));
+      misc = (["pref_languages": PrefLanguages()]);
       cookies = CookieJar();
       throttle = ([]);
       client_var = ([]);
@@ -230,7 +238,6 @@ class RequestID2
       extra_extension = "";
     }
     time = predef::time(1);
-    misc = (["pref_languages": PrefLanguages()]);
 #ifdef FTP2_DEBUG
     misc->trace_enter = trace_enter;
     misc->trace_leave = trace_leave;
@@ -2785,6 +2792,12 @@ class FTPSession
     m_delete(master_session->misc, "home");
 
     auth_user = master_session->conf->authenticate(master_session);
+
+    // Transfer entries traditionally set by auth modules in id->misc.
+    // These end up in id->misc in all subrequests too.
+    master_session->auth_misc =
+      (["authenticated_user": 1, "user": 1, "password": 1, "uid": 1, "gid": 1,
+	"gecos": 1, "home": 1, "shell": 1]) & master_session->misc;
 
     if (!auth_user) {
       if (!port_obj->query_option("guest_ftp")) {
