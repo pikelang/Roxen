@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.627 2006/11/14 21:19:16 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.628 2006/12/05 15:50:04 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -214,9 +214,10 @@ string name = roxen->bootstrap_info->get();
 
 class DataCache
 {
-  mapping(string:
-	  array(string|mapping(string:mixed))|string|
-	  function(string, RequestID:string)) cache = ([]);
+  static typedef array(string|mapping(string:mixed))|string|
+                 function(string, RequestID:string) EntryType;
+
+  mapping(string:EntryType) cache = ([]);
 
   int current_size;
   int max_size;
@@ -232,26 +233,30 @@ class DataCache
 #endif
   }
 
-  static int low_expire_entry(string key_prefix, array(string) keys)
+  // Expire a single entry.
+  static void really_low_expire_entry(string key)
+  {
+    EntryType e = m_delete(cache, key);
+    if (arrayp(e)) {
+      current_size -= sizeof(e[0]);
+    }
+  }
+
+  // NOTE: Avoid using this function if possible! O(n)
+  static int low_expire_entry(string key_prefix)
   {
     if (!key_prefix) return 0;
     if (arrayp(cache[key_prefix])) {
       // Leaf node. No need to loop.
-      current_size -= sizeof(cache[key_prefix][0]);
-      m_delete(cache, key_prefix);
-      // keys[] = 0;
+      really_low_expire_entry(key_prefix);
       return 1;
     }
     // Inner node. Find all its children.
     int res = 0;
-    foreach(keys; int ind; string key) {
+    foreach(indices(cache); int ind; string key) {
       if (!key) continue;
       if (has_prefix(key, key_prefix)) {
-	if (arrayp(cache[key])) {
-	  current_size -= sizeof(cache[key][0]);
-	}
-	m_delete(cache, key);
-	keys[ind] = 0;
+	really_low_expire_entry(key);
 	res++;
       }
     }
@@ -261,14 +266,13 @@ class DataCache
   void expire_entry(string key_prefix, RequestID|void id)
   {
     if (!id) {
-      low_expire_entry(key_prefix, indices(cache));
+      low_expire_entry(key_prefix);
       return;
     }
     string url = key_prefix;
     sscanf(url, "%[^\0]", url);
     while(1) {
-      array(string|mapping(string:mixed))|string|
-	function(string, RequestID:string) val;
+      EntryType val;
       if (arrayp(val = cache[key_prefix])) {
 	current_size -= sizeof(val[0]);
 	m_delete(cache, key_prefix);
@@ -292,6 +296,7 @@ class DataCache
     }
   }
 
+  //! Clear ~1/10th of the cache.
   static void clear_some_cache()
   {
     // FIXME: Use random(cache) instead to avoid the indices() call.
@@ -301,10 +306,18 @@ class DataCache
       current_size=0;
       return;
     }
+
+    // The following code should be ~O(n * log(n)).
+    sort(q);
     for(int i = 0; i < sizeof(q)/10; i++) {
-      int r;
-      i += low_expire_entry(q[r = random(sizeof(q))], q);
-      q[r] = 0;
+      int r = random(sizeof(q));
+      string key_prefix = q[r = random(sizeof(q))];
+      for(;r < sizeof(q); r++,i++) {
+	if (!q[r]) break;
+	if (!has_prefix(q[r], key_prefix)) break;
+	really_low_expire_entry(q[r]);
+	q[r] = 0;
+      }
     }
   }
 
@@ -320,7 +333,7 @@ class DataCache
 	function(string, RequestID:string) old = cache[key];
       if (old && (old != vary_cb)) {
 	// FIXME: Warn?
-	expire_entry(key);
+	low_expire_entry(key);
       }
       cache[key] = vary_cb;
 
@@ -341,7 +354,7 @@ class DataCache
       function(string, RequestID:string) old = cache[key];
     if (old) {
       // FIXME: Warn?
-      expire_entry(key);
+      low_expire_entry(key);
     }
 
     current_size += strlen( data );
@@ -349,7 +362,7 @@ class DataCache
 
     // Only the actual cache entry is expired.
     // FIXME: This could lead to lots and lots of call outs.. :P
-    call_out(low_expire_entry, expire, key, ({ key }));
+    call_out(really_low_expire_entry, expire, key);
     int n;
     while( (current_size > max_size) && (n++<10))
       clear_some_cache();
