@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.628 2006/12/05 15:50:04 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.629 2006/12/05 15:51:24 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -312,8 +312,9 @@ class DataCache
     for(int i = 0; i < sizeof(q)/10; i++) {
       int r = random(sizeof(q));
       string key_prefix = q[r = random(sizeof(q))];
+      if (!key_prefix) continue;
       for(;r < sizeof(q); r++,i++) {
-	if (!q[r]) break;
+	if (!q[r]) continue;
 	if (!has_prefix(q[r], key_prefix)) break;
 	really_low_expire_entry(q[r]);
 	q[r] = 0;
