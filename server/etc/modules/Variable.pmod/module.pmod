@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.96 2006/12/06 15:57:35 grubba Exp $
+// $Id: module.pmod,v 1.97 2006/12/06 17:03:22 grubba Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1136,8 +1136,8 @@ class MultipleChoice
       // so no other value appears to be selected, and to ensure that
       // the value doesn't change as a side-effect by another change.
       res += "  " + Roxen.make_container (
-	"option", (["value":_name(current), "selected": "selected"]),
-	sprintf(LOCALE(332,"(keep stale value %s)"),_name(current)));
+	"option", (["value": current, "selected": "selected"]),
+	sprintf(LOCALE(332,"(keep stale value %s)"), current));
     return res + "</select>";
   }
 
@@ -1357,7 +1357,7 @@ class ProviderChoice
   static Configuration conf;
   static string provides;
   static string default_id;
-  static string local_id;
+  static string local_id = "";
 
   int low_set(RoxenModule to)
   {
@@ -1369,14 +1369,12 @@ class ProviderChoice
   {
     RoxenModule res = ::query();
     if (!res) {
-      if (local_id) {
+      if (local_id != "") {
 	// The module might have been reloaded.
 	// Try locating it again.
 	res = transform_from_form(local_id);
-      } else {
-	res = default_value();
+	if (res) low_set(res);
       }
-      if (res || local_id) low_set(res);
     }
     return res;
   }
@@ -1393,7 +1391,7 @@ class ProviderChoice
 
   static string _title(RoxenModule val)
   {
-    return val?val->query_name():"";
+    return val?val->module_name:"";
   }
 
   RoxenModule transform_from_form(string local_id, mapping|void v)
