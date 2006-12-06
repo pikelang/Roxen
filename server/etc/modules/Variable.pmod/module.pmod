@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.95 2006/11/30 15:32:08 grubba Exp $
+// $Id: module.pmod,v 1.96 2006/12/06 15:57:35 grubba Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1368,11 +1368,15 @@ class ProviderChoice
   RoxenModule query()
   {
     RoxenModule res = ::query();
-    if (!res && local_id) {
-      // The module might have been reloaded.
-      // Try locating it again.
-      res = transform_from_form(local_id);
-      low_set(res);
+    if (!res) {
+      if (local_id) {
+	// The module might have been reloaded.
+	// Try locating it again.
+	res = transform_from_form(local_id);
+      } else {
+	res = default_value();
+      }
+      if (res || local_id) low_set(res);
     }
     return res;
   }
@@ -1407,7 +1411,7 @@ class ProviderChoice
 	// FIXME: Add sorting?
 	return providers[0];
       }
-      return 0;
+      return UNDEFINED;
     }
   }
 
