@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.107 2006/10/26 17:54:49 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.108 2006/12/07 16:08:27 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -311,18 +311,6 @@ class TagSQLOutput {
 
 inherit "emit_object";
 
-class SqlNull
-{
-  inherit RXML.Nil;
-  constant is_RXML_encodable = 1;
-  string _sprintf() {return "NULL";}
-  int _encode() {return 0;}
-  void _decode (int dummy) {}
-}
-
-// Represents the SQL NULL value in RXML.
-SqlNull sql_null = SqlNull();
-
 class SqlEmitResponse {
   inherit EmitObject;
   private object sqlres;
@@ -344,8 +332,11 @@ class SqlEmitResponse {
 		     if ((x != 0) && stringp(x->type))
 		       // Transform NULLString to "".
 		       return x->type;
-		     // It's 0 or a null object.
-		     return sql_null;
+		     // It's 0 or a null object. Treat it as the value
+		     // doesn't exist at all (ideally there should be
+		     // some sort of dbnull value at the rxml level
+		     // too to tell these cases apart).
+		     return RXML.nil;
 		   });
     return mkmapping(cols, val);
   }
