@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.97 2006/12/06 17:03:22 grubba Exp $
+// $Id: module.pmod,v 1.98 2006/12/07 12:12:47 grubba Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1411,6 +1411,14 @@ class ProviderChoice
       }
       return UNDEFINED;
     }
+  }
+
+  array(string|mixed) verify_set( mixed new_value )
+  {
+    if (!new_value) {
+      return ({ "Not configured", 0 });
+    }
+    return ({ 0, new_value });
   }
 
   //! @param default_id
