@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.113 2006/12/04 14:39:46 mast Exp $
+ * $Id: ftp.pike,v 2.114 2006/12/08 14:03:01 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -491,8 +491,7 @@ class PutFileWrapper
       session->conf->received += recvd;
       session->file->len = recvd;
       session->conf->log(session->file, session);
-      session->file = 0;
-      session->my_fd = from_fd;
+      destruct(session);
     }
     if (how) {
       return from_fd->close(how);
@@ -1907,7 +1906,7 @@ class FTPSession
     session->conf->log(file, session);
   }
 
-  static private int open_file(string fname, object session, string cmd)
+  static private mapping open_file(string fname, object session, string cmd)
   {
     object|array|mapping file;
 
@@ -1941,6 +1940,8 @@ class FTPSession
       }
     }
 
+    // file is a mapping.
+
     session->file = file;
 
     if (!file || (file->error && (file->error >= 300))) {
@@ -1966,7 +1967,7 @@ class FTPSession
       }
     }
 
-    return 1;
+    return file;
   }
 
   static private void connected_to_send(object fd, string ignored,
@@ -2114,12 +2115,13 @@ class FTPSession
     session->my_fd = PutFileWrapper(fd, session, this_object());
     session->misc->len = 0x7fffffff;
 
-    if (open_file(args, session, "STOR")) {
-      if (!(session->file->pipe)) {
+    mapping file;
+    if (file = open_file(args, session, "STOR")) {
+      if (!(file->pipe)) {
 	if (fd) {
 	  BACKEND_CLOSE(fd);
 	}
-	switch(session->file->error) {
+	switch(file->error) {
 	case 401:
 	  send(530, ({ sprintf("%s: Need account for storing files.", args)}));
 	  break;
@@ -2133,11 +2135,11 @@ class FTPSession
 	  send(550, ({ sprintf("%s: Error opening file.", args) }));
 	  break;
 	}
-	session->conf->log(session->file, session);
+	session->conf->log(file, session);
 	destruct(session);
 	return;
       }
-      master_session->file = session->file;
+      master_session->file = file;
     } else {
       // Error message has already been sent.
       if (fd) {
@@ -3217,20 +3219,21 @@ class FTPSession
     session->method = "GET";
     session->not_query = args;
 
-    if (open_file(args, session, "RETR")) {
+    mapping file;
+    if (file = open_file(args, session, "RETR")) {
       if (restart_point) {
-	if (session->file->data) {
-	  if (sizeof(session->file->data) >= restart_point) {
-	    session->file->data = session->file->data[restart_point..];
+	if (file->data) {
+	  if (sizeof(file->data) >= restart_point) {
+	    file->data = file->data[restart_point..];
 	    restart_point = 0;
 	  } else {
-	    restart_point -= sizeof(session->file->data);
-	    m_delete(session->file, "data");
+	    restart_point -= sizeof(file->data);
+	    m_delete(file, "data");
 	  }
 	}
 	if (restart_point) {
-	  if (!(session->file->file && session->file->file->seek &&
-		(session->file->file->seek(restart_point) != -1))) {
+	  if (!(file->file && file->file->seek &&
+		(file->file->seek(restart_point) != -1))) {
 	    restart_point = 0;
 	    send(550, ({ "'RETR': Error restoring restart point." }));
 	    discard_data_connection();
@@ -3241,7 +3244,7 @@ class FTPSession
 	}
       }
 
-      connect_and_send(session->file, session);
+      connect_and_send(file, session);
     }
     else {
       discard_data_connection();
