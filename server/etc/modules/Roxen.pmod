@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.221 2006/11/13 12:26:55 jonasw Exp $
+// $Id: Roxen.pmod,v 1.222 2006/12/11 17:23:53 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -144,7 +144,7 @@ static class CookieChecker(string cookie)
   }
   string _sprintf(int c)
   {
-    return sprintf("CookieChecker(%O)", cookie);
+    return c == 'O' && sprintf("CookieChecker(%O)", cookie);
   }
 }
 function(string, RequestID:string) get_cookie_callback(string cookie)
@@ -3546,7 +3546,10 @@ class ScopeRequestHeader {
     return values((c || RXML_CONTEXT)->id->request_headers);
   }
 
-  string _sprintf() { return "RXML.Scope(request-header)"; }
+  string _sprintf (int flag)
+  {
+    return flag == 'O' && "RXML.Scope(request-header)";
+  }
 }
 
 class ScopeRoxen {
@@ -3683,7 +3686,7 @@ class ScopeRoxen {
     predef::m_delete(c->misc->scope_roxen, var);
   }
 
-  string _sprintf() { return "RXML.Scope(roxen)"; }
+  string _sprintf (int flag) { return flag == 'O' && "RXML.Scope(roxen)"; }
 }
 
 class ScopePage {
@@ -3776,7 +3779,7 @@ class ScopePage {
     predef::m_delete(c->misc->scope_page, var);
   }
 
-  string _sprintf() { return "RXML.Scope(page)"; }
+  string _sprintf (int flag) { return flag == 'O' && "RXML.Scope(page)"; }
 }
 
 class ScopeCookie {
@@ -3821,7 +3824,7 @@ class ScopeCookie {
 		    http_encode_cookie(var)+"=; expires=Thu, 01-Jan-70 00:00:01 GMT; path=/");
   }
 
-  string _sprintf() { return "RXML.Scope(Cookie)"; }
+  string _sprintf (int flag) { return flag == 'O' && "RXML.Scope(Cookie)"; }
 }
 
 RXML.Scope scope_request_header=ScopeRequestHeader();

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.107 2006/10/26 17:54:49 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.108 2006/12/11 17:25:13 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -315,7 +315,7 @@ class SqlNull
 {
   inherit RXML.Nil;
   constant is_RXML_encodable = 1;
-  string _sprintf() {return "NULL";}
+  string _sprintf (int flag) {return flag == 'O' && "SqlNull()";}
   int _encode() {return 0;}
   void _decode (int dummy) {}
 }
