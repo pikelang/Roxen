@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.952 2006/11/30 12:41:56 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.953 2006/12/12 15:06:10 mast Exp $";
 
 //! @appears roxen
 //!
@@ -3980,13 +3980,22 @@ class ArgCache
   }
 
   void delete( string id )
-  //! Remove the data element stored under the key 'id'.
+  //! Remove the data element stored under the key @[id].
   {
     LOCK();
     (plugins->delete-({0}))( id );
     m_delete( cache, id );
     
     QUERY( "DELETE FROM "+name+"2 WHERE id = %s", id );
+  }
+
+  int key_exists( string id )
+  //! Does the key @[id] exist in the cache? Returns 1 if it does, 0
+  //! if it was not present.
+  {
+    if( cache[id] ) return 1;
+    if (read_encoded_args(id, 0) || plugins_read_encoded_args(id)) return 1;
+    return 0;
   }
 
 #define SECRET_TAG "££"
