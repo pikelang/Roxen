@@ -60,6 +60,17 @@ a VARCHAR(255))"/>&page.last-true;</rxml>
 </test>
 
 <test>
+  <rxml type="string">
+    <emit source="sql" db="local" query="SELECT a FROM __test">
+      &_.a;,
+      <if variable-exists="_.a">exists</if>,
+      <if variable="_.a">not null</if>;
+    </emit>
+  </rxml>
+  <result>hej,exists,not null;hopp,exists,not null;,exists,;</result>
+</test>
+
+<test>
 <rxml><sqlquery db="local" query="DROP TABLE __test"/>&page.last-true;</rxml>
 <result>1</result>
 </test>
