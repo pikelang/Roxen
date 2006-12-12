@@ -1395,6 +1395,59 @@ a&auml; &amp; b  &gt;
 
 
 <!-- ............................................................ -->
+<comment>Variable existence and null values</comment>
+
+<test>
+  <rxml type="string">
+    <set variable="var.foo"/>
+    <if variable-exists="var.foo">foo exists</if>
+    <if variable-exists="var.bar">bar exists</if>
+  </rxml>
+  <result>foo exists</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <emit source="TESTER" test="3" skiprows="1" maxrows="2">
+      &TESTER.data;
+    </emit>
+  </rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml type="string">
+    <emit source="TESTER" test="3" skiprows="1" maxrows="2">
+      <copy-scope from="TESTER" to="var"/>
+      &var.data;
+    </emit>
+  </rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml type="string">
+    <emit source="TESTER" test="3" skiprows="1" maxrows="2">
+      <emit source="values" from-scope="TESTER">
+	&_.index;=[&_.value;]
+      </emit>,
+    </emit>
+  </rxml>
+  <result>counter=[1],data=[]counter=[2],</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <emit source="TESTER" test="3" skiprows="1" maxrows="2">
+      <insert variables="full" scope="TESTER"/>,
+    </emit>
+  </rxml>
+  <result>counter=1,counter=2
+data=TestNull(),</result>
+</test>
+
+
+<!-- ............................................................ -->
 <comment>Sort</comment>
 
 <test>
