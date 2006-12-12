@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.114 2006/12/12 10:20:46 wellhard Exp $
+ * $Id: ftp.pike,v 2.115 2006/12/12 14:34:45 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -114,7 +114,7 @@ class RequestID2
   // id->misc. Since that's done in the master session RequestID in
   // our case we need to transfer those fields to the subrequest
   // id->misc for compatibility.
-  /*static*/ mapping auth_misc;
+  /*static*/ mapping auth_misc = ([]);
 
   mapping file;
 
