@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.523 2006/10/23 15:49:32 stewa Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.524 2006/12/12 18:15:46 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -644,7 +644,8 @@ class TagCopyScope {
 
     array do_enter(RequestID id) {
       RXML.Context ctx = RXML_CONTEXT;
-      foreach(ctx->list_var(args->from), string var)
+      // Filter out undefined values if the compat level allows us.
+      foreach(ctx->list_var(args->from, compat_level > 4.5), string var)
 	ctx->set_var(var, ctx->get_var(var, args->from), args->to);
     }
   }
@@ -1104,12 +1105,18 @@ class TagInsertVariables {
       return map(sort(context->list_var(args->scope)),
 		 lambda(string s) {
 		   mixed value = context->get_var(s, args->scope);
-		   if (zero_type (value))
-		     return sprintf("%s=UNDEFINED", s);
-		   else
+		   if (!zero_type (value))
 		     return sprintf("%s=%O", s, value);
+		   else if (compat_level < 4.6)
+		     // A variable with an undefined value doesn't
+		     // exist by definition, even though list_var
+		     // might still list it. It should therefore be
+		     // ignored, but we keep this compat for
+		     // hysterical reasons.
+		     return sprintf("%s=UNDEFINED", s);
 		 } ) * "\n";
-    return String.implode_nicely(sort(context->list_var(args->scope)));
+    return String.implode_nicely(sort(context->list_var(args->scope,
+							compat_level > 4.5)));
   }
 }
 
@@ -1124,11 +1131,13 @@ class TagInsertScopes {
       string result = "";
       foreach(sort(context->list_scopes()), string scope) {
 	result += scope+"\n";
-	result += Roxen.html_encode_string(map(sort(context->list_var(args->scope)),
-					       lambda(string s) {
-						 return sprintf("%s.%s=%O", scope, s,
-								context->get_var(s, args->scope) );
-					       } ) * "\n");
+	// Filter out undefined values if the compat level allows us.
+	result += Roxen.html_encode_string(
+	  map(sort(context->list_var(args->scope, compat_level > 4.5)),
+	      lambda(string s) {
+		return sprintf("%s.%s=%O", scope, s,
+			       context->get_var(s, args->scope) );
+	      } ) * "\n");
 	result += "\n";
       }
       return result;
@@ -5579,7 +5588,8 @@ class TagIfVariable {
       if (!(var=RXML.user_get_var(s))) return 0;
     }
     else
-      if (zero_type (var=RXML.user_get_var(s))) return 0;
+      if (zero_type (var=RXML.user_get_var(s)) ||
+	  objectp (var) && var->is_rxml_null_value) return 0;
     if(arrayp(var)) return var;
     return check_set_only ? 1 : RXML.t_text->encode (var);
   }
@@ -5589,6 +5599,18 @@ class TagIfVaRiAbLe {
   inherit TagIfVariable;
   constant plugin_name = "Variable";
   constant case_sensitive = 1;
+}
+
+class TagIfVariableExists
+{
+  inherit RXML.Tag;
+  constant name = "if";
+  constant plugin_name = "variable-exists";
+
+  int(0..1) eval (string var, RequestID id, mapping args)
+  {
+    return !zero_type (RXML.user_get_var (var));
+  }
 }
 
 class TagIfSizeof {
@@ -5602,7 +5624,8 @@ class TagIfSizeof {
       if (!(var=RXML.user_get_var(s))) return 0;
     }
     else
-      if (zero_type (var=RXML.user_get_var(s))) return 0;
+      if (zero_type (var=RXML.user_get_var(s)) ||
+	  objectp (var) && var->is_rxml_null_value) return 0;
     if(stringp(var) || arrayp(var) ||
        multisetp(var) || mappingp(var)) return (string)sizeof(var);
     if(objectp(var) && var->_sizeof) return (string)sizeof(var);
@@ -5746,7 +5769,8 @@ class TagEmitValues {
     if(m["from-scope"]) {
       m->values=([]);
       RXML.Context context=RXML_CONTEXT;
-      map(context->list_var(m["from-scope"]),
+      // Filter out undefined values if the compat level allows us.
+      map(context->list_var(m["from-scope"], compat_level > 4.5),
 	  lambda(string var){ m->values[var]=context->get_var(var, m["from-scope"]);
 	  return ""; });
     }
@@ -8733,9 +8757,9 @@ the respective attributes below for further information.</p></desc>
 
  <p>The tag itself is useless without its plugins. Its main
  functionality is to provide a framework for the plugins. It is
- mandatory to add a plugin as one attribute. The other attributes
- provided are and, or and not, used for combining different plugins
- with logical operations.</p>
+ mandatory to add a plugin as one attribute. The other provided
+ attributes are 'and', 'or' and 'not', used for combining different
+ plugins with logical operations.</p>
 
  <p>Note: Since XML mandates that tag attributes must be unique, it's
  not possible to use the same plugin more than once with a logical
@@ -9301,8 +9325,9 @@ the respective attributes below for further information.</p></desc>
 //----------------------------------------------------------------------
 
 "if#variable":#"<desc type='plugin'><p><short>
- Does the variable exist and, optionally, does its content match the
- pattern?</short> This is an <i>Eval</i> plugin.
+ Does the variable exist and have a non-null value? And optionally,
+ does its content match the pattern?</short> This is an <i>Eval</i>
+ plugin.
 </p></desc>
 
 <attr name='variable' value='name[ operator pattern]' required='required'><p>
@@ -9318,6 +9343,28 @@ the respective attributes below for further information.</p></desc>
 "if#Variable":#"<desc type='plugin'><p><short>
  Case sensitive version of the <tag>if variable</tag> plugin.</short></p>
 </desc>",
+
+//----------------------------------------------------------------------
+
+"if#variable-exists": #"<desc type='plugin'><p><short>
+ Does the given variable exist?</short> I.e. is it bound to any value,
+ be it null or something else?</p>
+
+ <p>The difference from the <tag>if variable</tag> plugin is that this
+ one returns true for variables with a null value (typically produced
+ by the <tag>emit source=\"sql\"</tag> for columns containing an SQL
+ NULL value).</p>
+
+ <p><i>Compatibility note:</i> When the compatibility level is 4.5 or
+ lower, <tag>emit source=\"sql\"</tag> assigns the undefined value for
+ SQL NULLs instead of a proper null value. This test is therefore
+ false for such values too unless the compatibility level is higher
+ than 4.5.</p>
+</desc>
+
+<attr name='variable' value='name' required='required'><p>
+ Name of the variable to test.</p>
+</attr>",
 
 //----------------------------------------------------------------------
 
