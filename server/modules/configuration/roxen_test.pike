@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.63 2006/01/10 23:19:22 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.64 2006/12/12 18:22:35 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -796,6 +796,13 @@ class EntityVVal(string val) {
   }
 }
 
+class TestNull
+{
+  inherit RXML.Nil;
+  constant is_RXML_encodable = 1;
+  string _sprintf (int flag) {return flag == 'O' && "TestNull()";}
+}
+
 class TagEmitTESTER {
   inherit RXML.Tag;
   constant name = "emit";
@@ -837,6 +844,7 @@ class TagEmitTESTER {
     case "3":
       return ({ (["data":"a"]),
 		(["data":RXML.nil]),
+		(["data":TestNull()]),
 		(["data":RXML.empty]),
 		(["data":EntityDyn()]) });
 
