@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.108 2006/12/11 17:25:13 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.109 2006/12/12 18:13:30 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -21,7 +21,7 @@ LocaleString module_doc =
 LOCALE(2,
        "The SQL tags module provides the tags <tt>&lt;sqlquery&gt;</tt> and"
        "<tt>&lt;sqltable&gt;</tt> as well as being a source to the "
-       "<tt>&lt;emit&gt;</tt> tag (<tt>&lt;emit source=\"sql\" ... &gt;</tt>)."
+       "<tt>&lt;emit&gt;</tt> tag (<tt>&lt;emit source=\"sql\" ...&gt;</tt>)."
        "All tags send queries to SQL databases.");
 
 TAGDOCUMENTATION
@@ -109,10 +109,20 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
 </attr>",
 
 "emit#sql":#"<desc type='plugin'><p><short>
-
  Use this source to connect to and query SQL databases for
  information.</short> The result will be available in variables named
  as the SQL columns.</p>
+
+ <p>NULL values in the SQL result are mapped to a special null value.
+ That value expands to the empty string if inserted, and tests as
+ false with <tag>if variable</tag> and true with <tag>if
+ variable-exists</tag>.</p>
+
+ <p><i>Compatibility note:</i> If the compatibility level is 4.5 or
+ lower, an SQL NULL value instead maps to an undefined value in RXML,
+ which is similar to that the RXML variable doesn't exist at all. That
+ makes both <tag>if variable</tag> and <tag>if variable-exists</tag>
+ return false for it, among other things.</p>
 </desc>
 
 <attr name='host' value='database'><p>
@@ -164,11 +174,6 @@ string compat_default_host;
 #endif
 string default_db, default_charset;
 
-//  Cached copy of conf->query("compat_level"). This setting is defined
-//  to require a module reload to take effect so we only query it when
-//  start() is called.
-string compat_level;
-
 
 array|object do_sql_query(mapping args, RequestID id,
 			  void|int(0..1) big_query,
@@ -181,7 +186,7 @@ array|object do_sql_query(mapping args, RequestID id,
     args->host="SECRET";
   }
 #if ROXEN_COMPAT <= 2.1
-  if (args->parse && compat_level < "2.2")
+  if (args->parse && my_configuration()->compat_level() < 2.2)
     args->query = Roxen.parse_rxml(args->query, id);
 #endif
 
@@ -315,7 +320,17 @@ class SqlNull
 {
   inherit RXML.Nil;
   constant is_RXML_encodable = 1;
+  constant is_sqltag_sql_null = 1;
+
+  // Treat these objects as indistinguishable from each other. We
+  // ought to ensure that there's only one in the pike process
+  // instead, but that's tricky to solve in the PCode codec.
+  int `== (mixed other)
+    {return objectp (other) && other->is_sqltag_sql_null;}
+  int __hash() {return 17;}
+
   string _sprintf (int flag) {return flag == 'O' && "SqlNull()";}
+
   int _encode() {return 0;}
   void _decode (int dummy) {}
 }
@@ -337,16 +352,45 @@ class SqlEmitResponse {
       sqlres = 0;
       return 0;
     }
-    val = map(val, lambda(mixed x) {
-		     if (x) return x;
-		     // Might be a dbnull object which considers
-		     // itself false (e.g. in the oracle glue).
-		     if ((x != 0) && stringp(x->type))
-		       // Transform NULLString to "".
-		       return x->type;
-		     // It's 0 or a null object.
-		     return sql_null;
-		   });
+
+    if (my_configuration()->compat_level() > 4.5) {
+      // Change in >= 4.6: Don't abuse RXML.nil for SQL NULL. RXML.nil
+      // means UNDEFINED in this context, i.e. that the variable
+      // doesn't exist at all. An SQL NULL otoh is just a special
+      // value in an existing variable, at least on the RXML level.
+
+      foreach (val; int i; string v) {
+#if 0
+	// Afaics the following isn't of any use since the big_query
+	// wrapper in Sql.oracle handles the dbnull objects when it
+	// converts all types to strings. /mast
+
+	// Might be a dbnull object which considers
+	// itself false (e.g. in the oracle glue).
+	if ((x != 0) && stringp(x->type))
+	  // Transform NULLString to "".
+	  return x->type;
+#endif
+
+	if (!v) val[i] = sql_null;
+      }
+    }
+
+    else
+      val = map(val, lambda(mixed x) {
+		       if (x) return x;
+		       // Might be a dbnull object which considers
+		       // itself false (e.g. in the oracle glue).
+		       if ((x != 0) && stringp(x->type))
+			 // Transform NULLString to "".
+			 return x->type;
+		       // It's 0 or a null object. Treat it as the value
+		       // doesn't exist at all (ideally there should be
+		       // some sort of dbnull value at the rxml level
+		       // too to tell these cases apart).
+		       return RXML.nil;
+		     });
+
     return mkmapping(cols, val);
   }
 
@@ -543,7 +587,6 @@ void start()
   default_db          = query("db");
   default_charset = query ("charset");
   if (default_charset == "") default_charset = 0;
-  compat_level = my_configuration()->query("compat_level");
 }
 
 string status()
