@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.145 2006/08/09 18:18:13 mast Exp $
+// $Id: site_content.pike,v 1.146 2006/12/12 18:33:41 mast Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -410,9 +410,10 @@ string find_module_documentation( string conf, string mn, RequestID id )
     if(!tags) return "";
     id = id->clone_me();
     id->conf = c;
+    mapping(string:int) documented_tags = ([]);
     foreach(sort(indices(tags->get_tag_names())), string name)
     {
-      string tag_doc = c->find_tag_doc( name, id, 1 );
+      string tag_doc = c->find_tag_doc( name, id, 1, 0, documented_tags);
       if (tag_doc && sizeof(tag_doc))
 	full_doc += "<p>"+tag_doc+"</p>";
     }
