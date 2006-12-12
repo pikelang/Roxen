@@ -42,13 +42,45 @@ string available_languages(object id) {
 
 // --------------------- Help layout functions --------------------
 
-class TagdocParser
+static class TagdocParser (int level)
 {
   inherit Parser.HTML;
   mapping misc = ([]);
+
+  TagdocParser clone()
+  {
+    TagdocParser c = ::clone (level);
+    c->misc = misc;
+    return c;
+  }
 }
 
-static string desc_cont(TagdocParser parser, mapping m, string c, string rt)
+// Header tags for different levels.
+static array(array(array(string))) hdr_tags = ({
+  // Top level (0).
+  ({({"<h2>", "</h2>"}), // Top header
+    ({"<h3>", "</h3>"}), // Subheaders (Attributes/Defined in content/etc)
+    ({"<h4>", "</h4>"})}), // <h1> inside doc.
+
+  // Sublevel 1.
+  ({({"<h3>", "</h3>"}),
+    ({"<h4>", "</h4>"}),
+    ({"<h5>", "</h5>"})}),
+
+  // Sublevel 2.
+  ({({"<h4>", "</h4>"}),
+    ({"<h5>", "</h5>"}),
+    ({"<h6>", "</h6>"})}),
+
+  // Sublevel 3 (shouldn't occur).
+  ({({"<h5>", "</h5>"}),
+    ({"<h6>", "</h6>"}),
+    ({"<h6>", "</h6>"})}),
+});
+
+#define NEXT_HDR_LEVEL(LEVEL) min ((LEVEL) + 1, sizeof (hdr_tags) - 1)
+
+static array desc_cont(TagdocParser parser, mapping m, string c, string rt)
 {
   string type;
   if(m->tag)	type = "tag";
@@ -67,15 +99,19 @@ static string desc_cont(TagdocParser parser, mapping m, string c, string rt)
     case "both":   rt = sprintf("&lt;%s/&gt; or "
 				"&lt;%s&gt;&lt;/%s&gt;",
 				rt, rt, rt); break;
-    case "plugin": rt = replace(rt, "#", " plugin "); break;
+    case "plugin": rt = String.capitalize (replace(rt, "#", " plugin ")); break;
   //case "entity": rt = rt; break;
     case "scope":  rt = rt[..sizeof(rt)-2] + " ... ;";
     case "pi":     rt = "&lt;" + rt + " ... ?&gt;";
   }
-  return sprintf("<h2>%s</h2><p>%s</p>", rt, c);
+  return ({sprintf("\n%s%s%s\n<p>%s</p>\n",
+		   hdr_tags[parser->level][0][0],
+		   parser->clone()->finish(rt)->read(),
+		   hdr_tags[parser->level][0][1],
+		   parser->clone()->finish(c)->read())});
 }
 
-static string attr_cont(TagdocParser parser, mapping m, string c)
+static array attr_cont(TagdocParser parser, mapping m, string c)
 {
   string p="";
   if(!m->name) m->name="(Not entered)";
@@ -89,10 +125,13 @@ static string attr_cont(TagdocParser parser, mapping m, string c)
 
   if (!parser->misc->got_attrs) {
     parser->misc->got_attrs = 1;
-    p = "<h3>Attributes</h3>\n" + p;
+    p = hdr_tags[parser->level][1][0] +
+      "Attributes" +
+      hdr_tags[parser->level][1][1] +
+      p;
   }
 
-  return p;
+  return ({parser->clone()->finish(p)->read()});
 }
 
 static string attr_vals(string v)
@@ -199,10 +238,11 @@ static string xtable_h_cont( mixed a, mixed b, string c )
   return "<th>"+c+"</th>";
 }
 
-static string help_tag( mixed a, mapping m, string c )
+static string help_tag( TagdocParser p, mapping m, string c )
 {
   if( m["for"] )
-    return find_tag_doc( m["for"], RXML.get_context()->id,0,1 );
+    return find_tag_doc( m["for"], RXML.get_context()->id,0,
+			 NEXT_HDR_LEVEL (p->level));
   return 0; // keep.
 }
 
@@ -212,7 +252,7 @@ static string webserver_tag( mixed a, mixed b, string c )
 }
 
 
-static string format_doc(string|mapping doc, string name, void|object id) 
+static string format_doc(string|mapping doc, string name, object id, int level)
 {
   if(mappingp(doc)) {
     if(id && id->misc->pref_languages) {
@@ -238,7 +278,7 @@ static string format_doc(string|mapping doc, string name, void|object id)
 
   name=replace(name, ({ "<", ">", "&" }), ({ "&lt;", "&gt;", "&amp;" }) );
 
-  return TagdocParser()->
+  return TagdocParser (level)->
          add_tag( "lang",lambda() { return available_languages(id); } )->
          add_tag( "help", help_tag )->
          add_tag( "webserver", webserver_tag )->
@@ -275,7 +315,12 @@ static string format_doc(string|mapping doc, string name, void|object id)
 	   "note":lambda(TagdocParser p, mapping m, string c) {
 		    return c;
 		  },
-         ]) )->
+	   "h1": lambda (TagdocParser p, mapping m, string c) {
+		   return ({hdr_tags[p->level][2][0],
+			    p->clone()->finish(c)->read(),
+			    hdr_tags[p->level][2][1]});
+		 },
+	 ]) )->
     add_quote_tag("!--","","--")->
     set_extra(name, id)->finish(doc)->read();
 }
@@ -283,20 +328,27 @@ static string format_doc(string|mapping doc, string name, void|object id)
 
 // ------------------ Parse docs in mappings --------------
 
-static string parse_doc(string|mapping|array doc, string name, void|object id) {
-  if(arrayp(doc) && (sizeof( doc ) == 2) )
-    return format_doc(doc[0], name, id)+
-      "<dl><dd>"+parse_mapping(doc[1], id)+"</dd></dl>";
+static string parse_doc(string|mapping|array doc, string name, object id, int level) {
+  if(arrayp(doc) && (sizeof( doc ) == 2) ) {
+    string top = format_doc(doc[0], name, id, level);
+    string sub = parse_mapping(doc[1], id, NEXT_HDR_LEVEL (level));
+    if (sizeof (sub))
+      return top +
+	hdr_tags[level][1][0] + "Defined in content" + hdr_tags[level][1][1] +
+	"<dl><dd>" + sub + "</dd></dl>";
+    else
+      return top;
+  }
   if( arrayp( doc ) && sizeof(doc) )
-    return format_doc( doc[0], name, id );
-  return format_doc(doc, name, id);
+    return format_doc( doc[0], name, id, level);
+  return format_doc(doc, name, id, level);
 }
 
-static string parse_mapping(mapping doc, void|object id) {
+static string parse_mapping(mapping doc, object id, int level) {
   string ret="";
   if(!mappingp(doc)) return "";
   foreach(sort(indices(doc)), string tmp) {
-    ret+=parse_doc(doc[tmp], tmp, id);
+    ret+=parse_doc(doc[tmp], tmp, id, level);
   }
   return ret;
 }
@@ -306,7 +358,7 @@ string parse_all_doc(RoxenModule o, void|RequestID id) {
   if(!doc) return 0;
   string ret = "";
   foreach(sort(indices(doc)), string tagname)
-    ret += parse_doc(doc[tagname], tagname, id);
+    ret += parse_doc(doc[tagname], tagname, id, 0);
   return ret;
 }
 
@@ -333,17 +385,26 @@ mapping call_tagdocumentation(RoxenModule o) {
 
 static int generation;
 multiset undocumented_tags=(<>);
+
 string find_tag_doc(string name, RequestID id, int|void no_undoc,
-		    int|void reenter)
+		    int|void level, void|mapping(string:int) documented_tags)
 {
   RXMLHELP_WERR("Help for tag "+name+" requested.");
+
+  if (documented_tags) {
+    if (documented_tags[name]) {
+      RXMLHELP_WERR("Already documented.");
+      return "";
+    }
+    documented_tags[name] = 1;
+  }
 
   object old_ctx = RXML.get_context();
 
   if( !id )
     error("find_tag_doc called without ID-object\n");
 
-  if( !reenter )
+  if( !level )
     parse_rxml( "", id );
   RXML.TagSet tag_set = id->conf->rxml_tag_set;
   
@@ -371,23 +432,14 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
 
   if(!sizeof(tags))
   {
-    if( !reenter )
+    if( !level )
       RXML.set_context( old_ctx );
     return no_undoc ? "" : "<h4>That tag ("+name+") is not defined</h4>";
   }
 
-  string plugindoc="";
-
   foreach(tags, array|object|function tag) {
     if(objectp(tag)) {
       // FIXME: New style tag. Check for internal documentation.
-      mapping(string:RXML.Tag) plugins=tag_set->get_plugins(name);
-      if(sizeof(plugins)) {
-	plugindoc="<hr /><dl><dd>";
-	foreach(sort(indices(plugins)), string plugin)
-	  plugindoc+=find_tag_doc(name+"#"+plugin, id,no_undoc,1);
-	plugindoc+="</dd></dl>";
-      }
       if(tag->is_compat_tag) {
 	RXMLHELP_WERR(sprintf("CompatTag %O", tag));
 	tag=tag->fn;
@@ -419,8 +471,16 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
       RXMLHELP_WERR(name+" not present in result.");
       continue;
     }
-    string res = parse_doc(tagdoc[name], name, id)+plugindoc;
-    if( !reenter )
+    string res = parse_doc(tagdoc[name], name, id, level);
+
+    mapping(string:RXML.Tag) plugins=tag_set->get_plugins(name);
+    if(sizeof(plugins)) {
+      foreach(sort(indices(plugins)), string plugin)
+	res += find_tag_doc(name+"#"+plugin, id,no_undoc,
+			    NEXT_HDR_LEVEL (level), documented_tags);
+    }
+
+    if( !level )
       RXML.set_context( old_ctx );
     return res;
   }
@@ -430,7 +490,7 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
     sscanf(name,"%*s#%s", name);
     name="plugin "+name;
   }
-  if( !reenter )
+  if( !level )
     RXML.set_context( old_ctx );
   return (no_undoc ? "" : 
 	  "<h4>No documentation available for \""+name+"\".</h4>\n");
@@ -445,5 +505,5 @@ string find_module_doc( string cn, string mn, RequestID id )
   RoxenModule o = c->find_module( replace(mn,"!","#") );
   if(!o) return "";
 
-  return parse_mapping(o->tagdocumentation());
+  return parse_mapping(o->tagdocumentation(), 0, 0);
 }
