@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.153 2006/12/13 15:44:55 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.154 2006/12/14 13:29:30 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -909,7 +909,7 @@ mixed find_file( string f, RequestID id )
         id->misc->input_charset = charset;
       }
       if (query("no-parse")) {
-	TRACE_ENTER("Content-type mapping module", types_module);
+	TRACE_ENTER("Content-type mapping module", conf->types_module);
 	array(string) tmp = conf->type_from_filename(norm_f, 1);
 	TRACE_LEAVE(tmp?sprintf("Returned type %s %s.", tmp[0], tmp[1]||"")
 		    : "Missing type.");
