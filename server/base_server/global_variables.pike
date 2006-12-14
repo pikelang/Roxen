@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.98 2006/10/27 15:58:38 mast Exp $
+// $Id: global_variables.pike,v 1.99 2006/12/14 12:52:48 wellhard Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -561,7 +561,7 @@ process to get a thread dump.</p>
 		"if set too low, the server will be restarted even if it's doing "
 		"legal things (like generating many images), if set too high you might "
 		"get a long downtime if the server for some reason locks up."),
-	 ({1,2,3,4,5,10,15}),
+	 ({1,2,3,4,5,10,15,30,60}),
 	 lambda() {return !query("abs_engage");});
 #endif // __NT__
 
