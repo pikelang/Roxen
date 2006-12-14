@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.152 2005/12/13 15:45:59 anders Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.153 2006/12/14 13:04:59 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -158,6 +158,10 @@ void create()
 	 LOCALE(24,"All directories containing any of these files will not be "
 		"browsable."));
 
+  defvar("no-parse", 0, LOCALE(0, "Raw files"), TYPE_FLAG|VAR_MORE,
+	 LOCALE(0, "If set files from this filesystem will be returned "
+		"without any further processing. This disables eg RXML "
+		"parsing of files."));
 
   defvar("tilde", 0, LOCALE(25,"Show backup files"), TYPE_FLAG|VAR_MORE,
 	 LOCALE(26,"If set, files ending with '~', '#' or '.bak' will "+
@@ -898,13 +902,21 @@ mixed find_file( string f, RequestID id )
       id->realfile = norm_f;
       TRACE_LEAVE("");
       accesses++;
-      TRACE_LEAVE("Normal return");
       if( charset != "iso-8859-1" )
       {
 	if( id->set_output_charset )
 	  id->set_output_charset( charset, 2 );
         id->misc->input_charset = charset;
       }
+      if (query("no-parse")) {
+	TRACE_ENTER("Content-type mapping module", types_module);
+	array(string) tmp = conf->type_from_filename(norm_f, 1);
+	TRACE_LEAVE(tmp?sprintf("Returned type %s %s.", tmp[0], tmp[1]||"")
+		    : "Missing type.");
+	TRACE_LEAVE("No parse return");
+	return Roxen.http_file_answer(o, tmp[0]) + ([ "encoding":tmp[1] ]);
+      }
+      TRACE_LEAVE("Normal return");
       return o;
     }
     break;
