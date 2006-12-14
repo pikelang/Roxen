@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.86 2006/05/05 11:05:27 wellhard Exp $
+// $Id: module.pmod,v 1.87 2006/12/14 16:51:13 grubba Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1083,8 +1083,8 @@ class MultipleChoice
       // so no other value appears to be selected, and to ensure that
       // the value doesn't change as a side-effect by another change.
       res += "  " + Roxen.make_container (
-	"option", (["value":_name(current), "selected": "selected"]),
-	sprintf(LOCALE(332,"(keep stale value %s)"),_name(current)));
+	"option", (["value":current, "selected": "selected"]),
+	sprintf(LOCALE(332,"(keep stale value %s)"),current));
     return res + "</select>";
   }
 
@@ -1294,6 +1294,96 @@ class UserDBChoice
   }
 }
 
+// FIXME: Consider making a ModuleChoice as well.
+
+//! Select a module that provides the specified interface.
+class ProviderChoice
+{
+  inherit StringChoice;
+  constant type = "ProviderChoice";
+  static Configuration conf;
+  static string provides;
+  static string default_id;
+  static string local_id = "";
+
+  int low_set(RoxenModule to)
+  {
+    local_id = _name(to);
+    return ::low_set(to);
+  }
+
+  RoxenModule query()
+  {
+    RoxenModule res = ::query();
+    if (!res) {
+      if (local_id != "") {
+	// The module might have been reloaded.
+	// Try locating it again.
+	res = transform_from_form(local_id);
+	if (res) low_set(res);
+      }
+    }
+    return res;
+  }
+
+  array get_choice_list()
+  {
+    return conf->get_providers(provides);
+  }
+
+  static string _name(RoxenModule val)
+  {
+    return val?val->module_local_id():"";
+  }
+
+  static string _title(RoxenModule val)
+  {
+    return val?val->module_name:"";
+  }
+
+  RoxenModule transform_from_form(string local_id, mapping|void v)
+  {
+    return conf->find_module(local_id);
+  }
+
+  RoxenModule default_value()
+  {
+    if (default_id) {
+      return transform_from_form(default_id);
+    } else {
+      array(RoxenModule) providers = get_choice_list();
+      if (sizeof(providers)) {
+	// FIXME: Add sorting?
+	return providers[0];
+      }
+      return UNDEFINED;
+    }
+  }
+
+  array(string|mixed) verify_set( mixed new_value )
+  {
+    if (!new_value) {
+      return ({ "Not configured", 0 });
+    }
+    return ({ 0, new_value });
+  }
+
+  //! @param default_id
+  //!   The @[RoxenModule.module_local_id] of the default value.
+  //! @param provides
+  //!   The provider string to match modules against.
+  //! @param conf
+  //!   The current configuration.
+  static void create(string default_id, int flags,
+		     string std_name, string std_doc,
+		     string provides, Configuration conf)
+  {
+    this_program::provides = provides;
+    this_program::default_id = default_id;
+    this_program::conf = conf;
+    ::create(0, ({}), flags, std_name, std_doc);
+  }
+}
 
 // =====================================================================
 // List baseclass
@@ -1399,8 +1489,13 @@ class List
     int ret;
     if( b ) 
     {
+      werror("query(): %O\n"
+	     "l: %O\n"
+	     "b: %O\n",
+	     query(), l, b);
       add_warning( b[0] );
       set( b[1] );
+      werror("query(): %O\n", query());
       ret = 1;
     }
 
