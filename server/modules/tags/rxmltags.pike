@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.524 2006/12/12 18:15:46 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.525 2006/12/19 12:19:36 marty Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -825,6 +825,19 @@ class TagDebug {
 	  obj=obj[tmp];
 	}
 	result = "<pre>"+Roxen.html_encode_string(sprintf("%O",obj))+"</pre>";
+	TAG_TRACE_LEAVE("");
+	return 0;
+      }
+      if (args->showlog) {
+	TAG_TRACE_ENTER("");
+	string debuglog = roxen_path("$LOGFILE");
+	result = "---";
+	object st = file_stat(debuglog);
+	if (st && st->isreg)
+	  result = 
+	    "<pre>" + 
+	    Roxen.html_encode_string(Stdio.read_file(debuglog)) + 
+	    "</pre>";
 	TAG_TRACE_LEAVE("");
 	return 0;
       }
@@ -7156,6 +7169,10 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
 <attr name='toggle'>
  <p>Toggles debug mode.</p>
+</attr>
+
+<attr name='showlog'>
+ <p>Shows the debug log.</p>
 </attr>
 
 <attr name='showid' value='string'>
