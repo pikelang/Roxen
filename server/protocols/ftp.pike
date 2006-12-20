@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.115 2006/12/12 14:33:41 mast Exp $
+ * $Id: ftp.pike,v 2.116 2006/12/20 16:54:14 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -110,12 +110,6 @@ class RequestID2
 {
   inherit RequestID;
 
-  // Contains the fields that auth modules traditionally set in
-  // id->misc. Since that's done in the master session RequestID in
-  // our case we need to transfer those fields to the subrequest
-  // id->misc for compatibility.
-  /*static*/ mapping auth_misc = ([]);
-
   mapping file;
 
 #ifdef FTP2_DEBUG
@@ -165,7 +159,7 @@ class RequestID2
   {
   }
 
-  constant __num = ({ 0 });
+  static constant __num = ({ 0 });
   int _num;
 
   void destroy()
@@ -203,7 +197,7 @@ class RequestID2
 		"output_encode", "adjust_for_config_path",
 		"get_multi_status", "multi_status_size", "init_cookies",
 		"set_status_for_path", "set_status_for_url",
-		"destroy", "_sprintf", "__num" >)[var]) {
+		"destroy", "_sprintf", "_num" >)[var]) {
 #ifdef DEBUG
 	  if (catch {
 #endif /* DEBUG */
@@ -217,7 +211,7 @@ class RequestID2
 #endif /* DEBUG */
 	}
       }
-      o["misc"] = m_rid->auth_misc + (["pref_languages": PrefLanguages()]);
+      o->misc = m_rid->misc + ([]);
     } else {
       // Defaults...
       client = ({ "ftp" });
@@ -2793,18 +2787,14 @@ class FTPSession
     // Compatibility...
     m_delete(master_session->misc, "home");
 
-    auth_user = master_session->conf->authenticate(master_session);
+    RequestID2 session = RequestID2 (master_session);
 
-    // Transfer entries traditionally set by auth modules in id->misc.
-    // These end up in id->misc in all subrequests too.
-    master_session->auth_misc =
-      (["authenticated_user": 1, "user": 1, "password": 1, "uid": 1, "gid": 1,
-	"gecos": 1, "home": 1, "shell": 1]) & master_session->misc;
+    auth_user = session->conf->authenticate(session);
 
     if (!auth_user) {
       if (!port_obj->query_option("guest_ftp")) {
 	send(530, ({ sprintf("User %s access denied.", user) }));
-	conf->log(([ "error":401 ]), master_session);
+	conf->log(([ "error":401 ]), session);
       } else {
 	// Guest user.
 	string u = user;
@@ -2812,27 +2802,40 @@ class FTPSession
 	if (login()) {
 	  send(230, ({ sprintf("Guest user %s logged in.", u) }));
 	  logged_in = -1;
-	  conf->log(([ "error":200 ]), master_session);
-	  DWRITE("FTP: Guest-user: %O\n", master_session->realauth);
+	  conf->log(([ "error":200 ]), session);
+	  DWRITE("FTP: Guest-user: %O\n", session->realauth);
 	} else {
 	  send(530, ({
 	    sprintf("Too many anonymous/guest users (%d).",
 		    port_obj->query_option("ftp_user_session_limit"))
 	  }));
-	  conf->log(([ "error":403 ]), master_session);
+	  conf->log(([ "error":403 ]), session);
 	}
       }
+      destruct (session);
       return;
     }
 
     // Authentication successful
 
+    // Transfer entries traditionally set by auth modules in id->misc
+    // so that these end up in id->misc in all subsequent subrequests.
+    //
+    // We can't copy the whole misc mapping to the master RequestID;
+    // that can cause various stuff set during the auth check to be
+    // around for too long - the lifespan of id->misc must generally
+    // not be longer than a single http-style request.
+    master_session->misc =
+      (["authenticated_user": 1, "user": 1, "password": 1, "uid": 1, "gid": 1,
+	"gecos": 1, "home": 1, "shell": 1]) & session->misc;
+
     if (!port_obj->query_option("named_ftp") ||
 	!check_shell(auth_user->shell())) {
       send(530, ({ "You are not allowed to use named-ftp.",
 		   "Try using anonymous, or check /etc/shells" }));
-      conf->log(([ "error":402 ]), master_session);
+      conf->log(([ "error":402 ]), session);
       auth_user = 0;
+      destruct (session);
       return;
     }
 
@@ -2841,7 +2844,8 @@ class FTPSession
 	sprintf("Too many concurrent sessions (limit is %d).",
 		port_obj->query_option("ftp_user_session_limit"))
       }));
-      conf->log(([ "error":403 ]), master_session);
+      conf->log(([ "error":403 ]), session);
+      destruct (session);
       return;
     }
 
@@ -2855,18 +2859,20 @@ class FTPSession
       // Compatibility...
       master_session->misc->home = home;
 
-      object session = RequestID2(master_session);
-      session->method = "STAT";
-      array(int)|object st = conf->stat_file(home, session);
-      destruct(session);
+      RequestID2 stat_session = RequestID2(master_session);
+      stat_session->method = "STAT";
+      array(int)|object st = conf->stat_file(home, stat_session);
+      destruct(stat_session);
 
       if (st && (st[1] < 0)) {
 	cwd = home;
       }
     }
+
     logged_in = 1;
     send(230, ({ sprintf("User %s logged in.", user) }));
-    conf->log(([ "error":202 ]), master_session);
+    conf->log(([ "error":202 ]), session);
+    destruct (session);
   }
 
   void ftp_CWD(string args)
