@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.116 2006/12/20 16:54:15 mast Exp $
+ * $Id: ftp.pike,v 2.117 2006/12/20 17:26:24 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -2819,15 +2819,24 @@ class FTPSession
     // Authentication successful
 
     // Transfer entries traditionally set by auth modules in id->misc
-    // so that these end up in id->misc in all subsequent subrequests.
+    // so that they get propagated to id->misc in all subsequent
+    // subrequests.
     //
     // We can't copy the whole misc mapping to the master RequestID;
     // that can cause various stuff set during the auth check to be
     // around for too long - the lifespan of id->misc must generally
-    // not be longer than a single http-style request.
-    master_session->misc =
-      (["authenticated_user": 1, "user": 1, "password": 1, "uid": 1, "gid": 1,
-	"gecos": 1, "home": 1, "shell": 1]) & session->misc;
+    // not be longer than a single (http style) request.
+    {
+      mapping ses_misc = session->misc, mses_misc = master_session->misc;
+      foreach (({"authenticated_user", "user", "password", "uid", "gid",
+		 "gecos", "home", "shell"}), string field) {
+	mixed val = ses_misc[field];
+	if (zero_type (val))
+	  m_delete (mses_misc, field);
+	else
+	  mses_misc[field] = val;
+      }
+    }
 
     if (!port_obj->query_option("named_ftp") ||
 	!check_shell(auth_user->shell())) {
