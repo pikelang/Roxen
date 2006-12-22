@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.525 2006/12/19 12:19:36 marty Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.526 2006/12/22 20:36:12 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4396,15 +4396,16 @@ class TagEmit {
     inherit RXML.Tag;
     constant name = "delimiter";
 
-    static int(0..1) more_rows(array|object res, mapping filter) {
+    static int(0..1) more_rows(TagEmit.Frame emit_frame) {
+      object|array res = emit_frame->res;
       if(objectp(res)) {
-	while(res->peek() && should_filter(res->peek(), filter))
+	while(res->peek() && should_filter(res->peek(), emit_frame->filter))
 	  res->skip_row();
 	return !!res->peek();
       }
       if(!sizeof(res)) return 0;
-      foreach(res[RXML.get_var("real-counter")..], mapping v) {
-	if(!should_filter(v, filter))
+      foreach(res[emit_frame->real_counter..], mapping v) {
+	if(!should_filter(v, emit_frame->filter))
 	  return 1;
       }
       return 0;
@@ -4414,17 +4415,18 @@ class TagEmit {
       inherit RXML.Frame;
 
       array do_return(RequestID id) {
-	object|array res = id->misc->emit_rows;
-	if(!id->misc->emit_filter) {
+	TagEmit.Frame emit_frame = id->misc->emit_frame;
+	object|array res = emit_frame->res;
+	if(!emit_frame->filter) {
 	  if( objectp(res) ? res->peek() :
-	      RXML.get_var("counter") < sizeof(res) )
+	      emit_frame->counter < sizeof(res) )
 	    result = content;
 	  return 0;
 	}
-	if(id->misc->emit_args->maxrows &&
-	   id->misc->emit_args->maxrows == RXML.get_var("counter"))
+	if(emit_frame->args->maxrows &&
+	   emit_frame->args->maxrows == emit_frame->counter)
 	  return 0;
-	if(more_rows(res, id->misc->emit_filter))
+	if(more_rows(emit_frame))
 	  result = content;
 	return 0;
       }
@@ -4528,18 +4530,47 @@ class TagEmit {
       return 0;
   }
 
+  static class VarsCounterWrapper (RXML.Scope vars, int counter)
+  // Used when the emit source returns a variable scope that is a
+  // Scope object without `[]=. In that case we have to wrap it to
+  // add the builtin _.counter variable.
+  {
+    inherit RXML.Scope;
+
+    mixed `[] (string var, void|RXML.Context ctx,
+	       void|string scope_name, void|RXML.Type type)
+    {
+      return var == "counter" ?
+	ENCODE_RXML_INT (counter, type) :
+	vars->`[] (var, ctx, scope_name, type);
+    }
+
+    array(string) _indices (void|RXML.Context ctx, void|string scope_name)
+    {
+      return vars->_indices (ctx, scope_name) | ({"counter"});
+    }
+
+    // No need to implement `[]= and _m_delete - the vars scope
+    // doesn't implement them anyway (at least not `[]=) so we're
+    // effectively read-only anyway.
+  }
+
   class Frame {
     inherit RXML.Frame;
     RXML.TagSet additional_tags = internal;
     string scope_name;
-    mapping vars;
+    mapping|RXML.Scope vars;
 
-    // These variables are used to store id->misc-variables
-    // that otherwise would be overwritten when emits are
-    // nested.
-    array(mapping(string:mixed))|object outer_rows;
-    mapping outer_filter;
-    mapping outer_args;
+    int counter;
+    // The visible counter.
+
+    int real_counter;
+    // The actual index of the current scope in res. Only used when
+    // filtering an array result.
+
+    // Used to store id->misc->emit_frame that otherwise would be
+    // overwritten when emits are nested.
+    Frame outer_emit_frame;
 
     object plugin;
     array(mapping(string:mixed))|object res;
@@ -4558,6 +4589,7 @@ class TagEmit {
 	parse_error("The emit source %O doesn't exist.\n", args->source);
       scope_name=args->scope||args->source;
       vars = (["counter":0]);
+      counter = 0;
 
 #if 0
 #ifdef DEBUG
@@ -4602,11 +4634,8 @@ class TagEmit {
 	if(!sizeof(filter)) filter = 0;
       }
 
-      outer_args = id->misc->emit_args;
-      outer_rows = id->misc->emit_rows;
-      outer_filter = id->misc->emit_filter;
-      id->misc->emit_args = args;
-      id->misc->emit_filter = filter;
+      outer_emit_frame = id->misc->emit_frame;
+      id->misc->emit_frame = this;
 
       if(objectp(res))
 	if(args->sort ||
@@ -4625,12 +4654,10 @@ class TagEmit {
 	  res = expand(res);
 	else if(filter) {
 	  do_iterate = object_filter_iterate;
-	  id->misc->emit_rows = res;
 	  return 0;
 	}
 	else {
 	  do_iterate = object_iterate;
-	  id->misc->emit_rows = res;
 
 	  if(args->skiprows) {
 	    int loop = args->skiprows;
@@ -4762,7 +4789,7 @@ class TagEmit {
 	      }
 	    }
 
-	    vars["real-counter"] = 0;
+	    real_counter = 0;
 	    do_iterate = array_filter_iterate;
 	  }
 	}
@@ -4788,8 +4815,6 @@ class TagEmit {
 	  do_iterate = array_iterate;
 	}
 
-	id->misc->emit_rows = res;
-
 	return 0;
       }
 
@@ -4797,21 +4822,34 @@ class TagEmit {
     }
 
     int(0..1) do_once_more() {
-      if(vars->counter || !args["do-once"]) return 0;
+      if(counter || !args["do-once"]) return 0;
       vars = (["counter":1]);
+      counter = 1;
       return 1;
     }
 
     function do_iterate;
 
-    int(0..1) object_iterate(RequestID id) {
-      int counter = vars->counter;
+    static mapping|RXML.Scope vars_with_counter (mapping|RXML.Scope vars)
+    {
+      if (objectp (vars)) {
+	if (vars->`[]=)
+	  vars->`[]= ("counter", counter, RXML_CONTEXT, scope_name || "_");
+	else
+	  vars = VarsCounterWrapper (vars, counter);
+      }
+      else
+	vars->counter = counter;
+      return vars;
+    }
 
+    int(0..1) object_iterate(RequestID id) {
       if(args->maxrows && counter == args->maxrows)
 	return do_once_more();
 
-      if(mappingp(vars=res->get_row())) {
-	vars->counter = ++counter;
+      if ((vars = res->get_row())) {
+	counter++;
+	vars = vars_with_counter (vars);
 	return 1;
       }
 
@@ -4820,8 +4858,6 @@ class TagEmit {
     }
 
     int(0..1) object_filter_iterate(RequestID id) {
-      int counter = vars->counter;
-
       if(args->maxrows && counter == args->maxrows)
 	return do_once_more();
 
@@ -4833,8 +4869,9 @@ class TagEmit {
 	while((vars=res->get_row()) &&
 	      should_filter(vars, filter));
 
-      if(mappingp(vars)) {
-	vars->counter = ++counter;
+      if (vars) {
+	counter++;
+	vars = vars_with_counter (vars);
 	return 1;
       }
 
@@ -4843,17 +4880,12 @@ class TagEmit {
     }
 
     int(0..1) array_iterate(RequestID id) {
-      int counter=vars->counter;
       if(counter>=sizeof(res)) return 0;
-      vars=res[counter++];
-      vars->counter=counter;
+      vars = vars_with_counter (res[counter++]);
       return 1;
     }
 
     int(0..1) array_filter_iterate(RequestID id) {
-      int real_counter = vars["real-counter"];
-      int counter = vars->counter;
-
       if(real_counter>=sizeof(res)) return do_once_more();
 
       if(args->maxrows && counter == args->maxrows)
@@ -4862,28 +4894,24 @@ class TagEmit {
       while(should_filter(res[real_counter++], filter))
 	if(real_counter>=sizeof(res)) return do_once_more();
 
-      vars=res[real_counter-1];
-
-      vars["real-counter"] = real_counter;
-      vars->counter = counter+1;
+      counter++;
+      vars = vars_with_counter (res[real_counter-1]);
       return 1;
     }
 
     array do_return(RequestID id) {
       result = content;
 
-      id->misc->emit_rows = outer_rows;
-      id->misc->emit_filter = outer_filter;
-      id->misc->emit_args = outer_args;
+      id->misc->emit_frame = outer_emit_frame;
 
-      int rounds = vars->counter - !!args["do-once"];
+      int rounds = counter - !!args["do-once"];
       _ok = !!rounds;
 
       if(args->remainderinfo) {
 	if(args->filter) {
 	  int rem;
 	  if(arrayp(res)) {
-	    foreach(res[vars["real-counter"]+1..], mapping v)
+	    foreach(res[real_counter+1..], mapping v)
 	      if(!should_filter(v, filter))
 		rem++;
 	  } else {
@@ -5783,9 +5811,9 @@ class TagEmitValues {
       m->values=([]);
       RXML.Context context=RXML_CONTEXT;
       // Filter out undefined values if the compat level allows us.
-      map(context->list_var(m["from-scope"], compat_level > 4.5),
-	  lambda(string var){ m->values[var]=context->get_var(var, m["from-scope"]);
-	  return ""; });
+      foreach (context->list_var(m["from-scope"], compat_level > 4.5),
+	       string var)
+	m->values[var]=context->get_var(var, m["from-scope"]);
     }
 
     if ((m->variable &&
@@ -9711,7 +9739,7 @@ the respective attributes below for further information.</p></desc>
 </attr>
 
 <attr name='randomize' value='yes|no'><p>
-  Outputs the values in random order.</p>
+  Outputs the values in random order if it has the value 'yes'.</p>
 </attr>
 
 <attr name='distinct'><p>
