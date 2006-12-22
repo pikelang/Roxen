@@ -1428,12 +1428,12 @@ a&auml; &amp; b  &gt;
 <test>
   <rxml type="string">
     <emit source="TESTER" test="3" skiprows="1" maxrows="2">
-      <emit source="values" from-scope="TESTER">
+      <emit source="values" from-scope="TESTER" sort="index">
 	&_.index;=[&_.value;]
       </emit>,
     </emit>
   </rxml>
-  <result>counter=[1],data=[]counter=[2],</result>
+  <result>counter=[1],counter=[2]data=[],</result>
 </test>
 
 <test>
