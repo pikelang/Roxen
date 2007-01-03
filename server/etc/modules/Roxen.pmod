@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.223 2007/01/03 12:31:35 wellhard Exp $
+// $Id: Roxen.pmod,v 1.224 2007/01/03 12:47:45 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3689,6 +3689,14 @@ class ScopeRoxen {
   string _sprintf (int flag) { return flag == 'O' && "RXML.Scope(roxen)"; }
 }
 
+int get_ssl_strength(string ignored, RequestID id)
+{
+  if (!id->my_fd || !id->my_fd->SSLConnection ||
+      !id->my_fd->query_connection())
+    return 0;
+  return id->my_fd->query_connection()->session->cipher_spec->key_bits;
+}
+
 class ScopePage {
   inherit RXML.Scope;
   constant converter=(["fgcolor":"fgcolor", "bgcolor":"bgcolor",
@@ -3728,12 +3736,8 @@ class ScopePage {
 					      c->misc[" _stat"][1]:-4, type);
       case "self": return ENCODE_RXML_TEXT( (c->id->not_query/"/")[-1], type);
       case "ssl-strength":
-	NOCACHE(c->id);
-	if (!c->id->my_fd || !c->id->my_fd->SSLConnection ||
-	    !c->id->my_fd->query_connection())
-	  return ENCODE_RXML_INT(0, type);
-	return ENCODE_RXML_INT(c->id->my_fd->query_connection()->
-			       session->cipher_spec->key_bits, type);
+	c->id->register_vary_callback("Host", get_ssl_strength);
+	return ENCODE_RXML_INT(get_ssl_strength("", c->id), type);
       case "dir":
 	array parts = c->id->not_query/"/";
 	return ENCODE_RXML_TEXT( parts[..sizeof(parts)-2]*"/"+"/", type);
