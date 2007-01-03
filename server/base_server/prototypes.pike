@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.188 2006/10/13 18:08:10 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.189 2007/01/03 12:42:42 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1460,9 +1460,9 @@ class RequestID
   //! @param cb
   //!   This function will be called at request time with the
   //!   path of the request, and the @[RequestID]. It should
-  //!   return a key fragment. If @[cb] is not specified, it
-  //!   will default to a function that returns the value of
-  //!   the request header specified by @[vary].
+  //!   return a key fragment (either a string or an integer). If
+  //!   @[cb] is not specified, it will default to a function that
+  //!   returns the value of the request header specified by @[vary].
   //!
   //! @note
   //!   The order of calls to @[register_vary_callback()] is significant
@@ -1479,7 +1479,7 @@ class RequestID
   //! @seealso
   //!   @[NOCACHE()]
   void register_vary_callback(string|void vary,
-			      function(string, RequestID: string)|void cb)
+			      function(string, RequestID: string|int)|void cb)
   {
     // Don't generate a vary header for the Host header.
     if (vary != "Host") {
@@ -2021,8 +2021,10 @@ class RequestID
       if (!supports->vary) {
 	// Broken support for vary.
 	heads->Vary = "User-Agent";
+#ifndef DISABLE_VARY_EXPIRES_FALLBACK
 	// It expired a year ago.
 	heads->Expires = Roxen->http_date(predef::time(1)-31557600);
+#endif /* !DISABLE_VARY_EXPIRES_FALLBACK */
 	VARY_WERROR("Vary not supported by the browser.\n");
       } else if (misc->vary[0]) {
 	// Depends on non-headers.
