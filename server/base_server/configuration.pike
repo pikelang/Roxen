@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.629 2006/12/05 15:51:24 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.630 2007/01/03 12:41:19 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -215,7 +215,7 @@ string name = roxen->bootstrap_info->get();
 class DataCache
 {
   static typedef array(string|mapping(string:mixed))|string|
-                 function(string, RequestID:string) EntryType;
+                 function(string, RequestID:string|int) EntryType;
 
   mapping(string:EntryType) cache = ([]);
 
@@ -299,7 +299,6 @@ class DataCache
   //! Clear ~1/10th of the cache.
   static void clear_some_cache()
   {
-    // FIXME: Use random(cache) instead to avoid the indices() call.
     array(string) q = indices(cache);
     if(!sizeof(q))
     {
@@ -329,20 +328,27 @@ class DataCache
     string key = url;
 
     foreach(id->misc->vary_cb_order || ({}),
-	    string|function(string, RequestID: string) vary_cb) {
+	    string|function(string, RequestID: string|int) vary_cb) {
       array(string|mapping(string:mixed))|string|
-	function(string, RequestID:string) old = cache[key];
+	function(string, RequestID:string|int) old = cache[key];
       if (old && (old != vary_cb)) {
 	// FIXME: Warn?
 	low_expire_entry(key);
       }
       cache[key] = vary_cb;
 
-      string|array(string) key_frag;
+      string key_frag;
       if (stringp(vary_cb)) {
-	key_frag = id->request_headers[vary_cb];
+	string|array(string) header = id->request_headers[vary_cb];
+	if (arrayp(header)) key_frag = header * ",";
+	else key_frag = header;
       } else {
-	key_frag = vary_cb(url, id);
+	int|string frag = vary_cb(url, id);
+	if (intp(frag) && frag) {
+	  key_frag = frag->digits(256);
+	} else {
+	  key_frag = frag;
+	}
       }
       if (key_frag)
 	// Avoid spoofing if key_frag happens to contain "\0\0".
@@ -372,7 +378,7 @@ class DataCache
   array(string|mapping(string:mixed)) get(string url, RequestID id)
   {
     array(string|mapping(string:mixed))|string|
-      function(string, RequestID:string) res;
+      function(string, RequestID:string|int) res;
     string key = url;
     while(1) {
       id->misc->protcache_cost++;
@@ -385,11 +391,18 @@ class DataCache
 	return UNDEFINED;
       }
 
-      string|array(string) key_frag;
+      string key_frag;
       if (stringp(res)) {
-	key_frag = id->request_headers[res];
+	string|array(string) header = id->request_headers[res];
+	if (arrayp(header)) key_frag = header * ",";
+	else key_frag = header;
       } else {
-	key_frag = res(url, id);
+	int|string frag = res(url, id);
+	if (intp(frag) && frag) {
+	  key_frag = frag->digits(256);
+	} else {
+	  key_frag = frag;
+	}
       }
       if (key_frag)
 	// Avoid spoofing if key_frag happens to contain "\0\0".
@@ -619,19 +632,15 @@ string|array(string) type_from_filename( string file, int|void to,
 
   if(tmp = types_fun(ext))
   {
-    mixed tmp2,nx;
     // FIXME: Ought to support several levels of "strip".
     if (tmp[0] == "strip")
     {
-      tmp2=file/".";
+      array(string) tmp2 = file/".";
+      string nx;
       if (sizeof(tmp2) > 2)
-	nx=tmp2[-2];
-      if (nx && (tmp2 = types_fun(nx)))
-	tmp[0] = tmp2[0];
-      else if (tmp2 = types_fun("default"))
-	tmp[0] = tmp2[0];
-      else
-	tmp[0] = "application/octet-stream";
+	nx = lower_case(tmp2[-2]);
+      tmp[0] = (nx && types_fun(nx)) || types_fun("default") ||
+	"application/octet-stream";
     }
   } else if (!(tmp = types_fun("default"))) {
     tmp = ({ "application/octet-stream", 0 });
