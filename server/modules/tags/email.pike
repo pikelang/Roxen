@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.39 2006/11/20 13:04:31 marty Exp $";
+constant cvs_version = "$Id: email.pike,v 1.40 2007/01/08 10:19:30 anders Exp $";
 
 constant thread_safe=1;
 
@@ -45,7 +45,9 @@ void create(Configuration conf)
          "Note: Used only if charset is unknown (defined in filesystem module, mostly.");
   defvar("CI_mimeencoding", "base64", "Defaults: MIME encoding",
          TYPE_STRING|VAR_MORE,
-         "The default MIME encoding for attachment will be used if no '<i>mimeencoding</i>' "
+         "The default MIME encoding for attachment will be used "
+	 "for <i>file</i> attachments "
+	 "if no '<i>mimeencoding</i>' "
          "attribute is given to the subtag &lt;attachment /&gt;.<br>"
          "Note: Used only if Content type module isn't loaded.");
   defvar("CI_nosubject", "[ * No Subject * ]", "Defaults: Subject line",
@@ -98,7 +100,7 @@ void create(Configuration conf)
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.39 $"/" ")[1];
+string revision = ("$Revision: 1.40 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
