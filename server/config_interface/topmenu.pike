@@ -30,9 +30,9 @@ mapping last_seen_on = ([]);
 //  Some page visits have undesired side-effects so we list some
 //  exceptions here.
 mapping(Regexp:string) suppress_last_seen = ([
-  Regexp("/actions/?action=(.*)&")           : "/actions/?",
-  Regexp("/dbs/create_(.*)")                 : "/dbs/",
-  Regexp("/dbs/browser.pike(.*)action=(.*)") : "/dbs/"
+  Regexp("/actions/(index\.html|)?action=(.*)&") : "/actions/?",
+  Regexp("/dbs/create_(.*)")                     : "/dbs/",
+  Regexp("/dbs/browser.pike(.*)action=(.*)")     : "/dbs/"
 ]);
 
 string parse( RequestID id )
