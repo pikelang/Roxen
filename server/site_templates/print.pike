@@ -1,4 +1,4 @@
-// $Id: print.pike,v 1.10 2006/11/28 14:17:01 noring Exp $
+// $Id: print.pike,v 1.11 2007/01/09 14:54:45 simon Exp $
 
 inherit "standard";
 constant site_template = 1;
@@ -28,6 +28,7 @@ constant silent_modules =
   "search_sb_interface",
   "search_utils",
   "feed-import",
+  "rxmlparse",
   "print-db",
 });
 
@@ -55,6 +56,8 @@ void init_modules(Configuration c, RequestID id)
     sb_module->set("load-insite-editor", 1);
     sb_module->set("site-create-version", roxen_version());
   }
+  if( RoxenModule m = c->find_module( "rxmlparse" ) )
+    m->set( "logerrorsp", 1 );
 }
 
 int unlocked(License.Key license)
