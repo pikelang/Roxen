@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.94 2006/12/14 16:50:56 grubba Exp $
+// $Id: module.pmod,v 1.95 2007/01/10 12:30:08 grubba Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1363,6 +1363,16 @@ class ProviderChoice
   {
     local_id = _name(to);
     return ::low_set(to);
+  }
+
+  // NOTE: Will be called with a string at module init!
+  int set(string|RoxenModule to)
+  {
+    if (stringp(to)) {
+      local_id = to;
+      to = transform_from_form(to);
+    }
+    return ::set(to);
   }
 
   RoxenModule query()
