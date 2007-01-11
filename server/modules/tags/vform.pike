@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.50 2005/10/06 15:13:54 jonasw Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.51 2007/01/11 19:01:02 erikd Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -121,6 +121,7 @@ class VInputFrame {
       if(!var) var=Variable.VerifiedText(args->value||"");
     case "string":
       if(!var) var=Variable.VerifiedString(args->value||"");
+      var->clear_verifications();
       if(args->regexp) var->add_regexp(args->regexp);
       if(args->glob) var->add_glob(args->glob);
       if(args->minlength) var->add_minlength((int)args->minlength);
