@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.189 2007/01/03 12:42:42 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.190 2007/01/11 19:18:57 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -808,7 +808,7 @@ class CacheKey
 
   string _sprintf (int flag)
   {
-    return flag == 'O' && ("CacheKey()"
+    return flag == 'O' && (function_name (object_program (this)) +"()"
 #ifdef ID_CACHEKEY_DEBUG
 			   + (__marker ? "[" + __marker->count + "]" : "")
 #endif
