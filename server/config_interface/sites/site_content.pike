@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.146 2006/12/12 18:33:41 mast Exp $
+// $Id: site_content.pike,v 1.147 2007/01/12 10:34:23 jonasw Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -186,11 +186,16 @@ string buttons( Configuration c, string mn, RequestID id )
     }
     else if(mod->query_action_buttons)
     {
-      mapping buttons=mod->query_action_buttons("standard");
+      mapping(string:function|array(function|string)) buttons =
+	mod->query_action_buttons(id);
       foreach(indices(buttons), string title)
 	if( (string)a==(string)title )
 	{
-	  buttons[title](id);
+	  function|array(function|string) action = buttons[title];
+	  if (arrayp(action))
+	    action[0](id);
+	  else
+	    action(id);
 	  break;
 	}
     }
@@ -226,13 +231,20 @@ string buttons( Configuration c, string mn, RequestID id )
 
   //  Add action buttons produced by the module itself
   if (mod->query_action_buttons) {
-    array(string) titles = indices(mod->query_action_buttons("standard"));
+    mapping(string:function|array(function|string)) mod_buttons =
+      mod->query_action_buttons(id);
+    array(string) titles = indices(mod_buttons);
     if (sizeof(titles)) {
       buttons +=
 	" <img src='/internal-roxen-pixel-888888' "
 	"      width='1' height='15' hspace='5' align='center' />";
-      foreach(sort(titles), string title )
-	buttons += "<submit-gbutton>"+title+"</submit-gbutton>";
+      foreach(sort(titles), string title) {
+	function|array(function|string) action = mod_buttons[title];
+	if (arrayp(action))
+	  buttons += action[1];
+	else
+	  buttons += "<submit-gbutton>" + title + "</submit-gbutton>";
+      }
     }
   }
 
