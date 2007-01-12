@@ -8,6 +8,7 @@ inherit Variable.String;
    ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
 
 constant type = "Date";
+static int _may_be_empty=0;
 string date_type = "%Y-%M-%D";
   // int any_date = 0;
 
@@ -22,6 +23,8 @@ array(string) verify_set( string new_value ) {
   //    return ({ 0, new_value });
   //  }
   //  else {
+  if(!sizeof(new_value) && _may_be_empty)
+    return ({ 0, new_value });
   if( !Calendar.parse(date_type, new_value ) )
     return ({ "Could not interpret the date", new_value });
   return ({ 0, new_value });
@@ -33,4 +36,10 @@ void set_date_type( string new_date_type ) {
   //    any_date = 1;
   //  else
     date_type = new_date_type;
+}
+
+void may_be_empty(int(0..1) state)
+//! Decides if an empty variable also is valid.
+{
+  _may_be_empty = state;
 }
