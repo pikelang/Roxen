@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.358 2007/01/12 19:49:03 mast Exp $
+// $Id: module.pmod,v 1.359 2007/01/12 20:13:06 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1491,20 +1491,25 @@ class Scope
   string _sprintf (void|int flag) {return flag == 'O' && "RXML.Scope()";}
 }
 
-mapping(string:mixed) scope_to_mapping (SCOPE_TYPE scope)
+mapping(string:mixed) scope_to_mapping (SCOPE_TYPE scope,
+					void|Context ctx,
+					void|string scope_name)
 //! Converts an RXML scope (in the form of a mapping or an object) to
 //! a mapping. If @[scope] is a mapping, a shallow copy is returned.
 //! If @[scope] is an object, every variable in it is queried to
 //! produce the mapping. An error is thrown if the scope can't be
 //! listed.
+//!
+//! The optional @[ctx] and @[scope_name] are passed on to the
+//! @[RXML.Scope] object functions.
 {
   if (mappingp (scope))
     return scope + ([]);
 
   mapping(string:mixed) res = ([]);
-  foreach (scope->_indices(), string var) {
-    mixed val = scope[var];
-    if (!zero_type (val)) res[var] = val;
+  foreach (scope->_indices (ctx, scope_name), string var) {
+    mixed val = scope->`[] (var, ctx, scope_name);
+    if (!zero_type (val) && val != nil) res[var] = val;
   }
   return res;
 }
@@ -1964,7 +1969,8 @@ class Context
       if (!oldvars) fatal_error ("I before e except after c.\n");
 #endif
       foreach (objectp (vars) ?
-	       ([object(Scope)] vars)->_indices (this_object(), scope_name || "_") :
+	       ([object(Scope)] vars)->_indices (this_object(),
+						 scope_name || "_") :
 	       indices(vars), string var)
 	set_var(var, vars[var], scope_name);
     }
@@ -3781,7 +3787,7 @@ class Frame
 	if (!csf) csf = CacheStaticFrame (this_object()->scope_name);	\
 	ctx->misc->recorded_changes[-1][csf] =				\
 	  objectp (vars) && vars->clone ? vars->clone() :		\
-	  scope_to_mapping (vars);					\
+	  scope_to_mapping (vars, ctx, this->scope_name);		\
       }									\
     }									\
   } while (0)
@@ -7313,7 +7319,9 @@ class VariableChange (/*static*/ mapping settings)
   void eval_rxml_consts (Context ctx)
   // This is used to evaluate constant RXML.Value objects before the
   // p-code is saved so that we don't try to encode the objects
-  // themselves.
+  // themselves. We also convert RXML.Scope objects to mappings, but
+  // we don't touch any objects that can be encoded as-is (i.e. have
+  // is_RXML_encodable set).
   {
     foreach (indices (settings), mixed encoded_var)
       if (stringp (encoded_var)) {
@@ -7322,24 +7330,29 @@ class VariableChange (/*static*/ mapping settings)
 	if (arrayp (var) && stringp (var[0]))
 	  if (sizeof (var) == 1) {
 	    if (SCOPE_TYPE vars = settings[encoded_var])
-	      foreach (indices (vars), string name) {
-		mixed val = vars[name];
-		if (objectp (val) && val->rxml_const_eval) {
+	      if (!objectp (vars) || !vars->is_RXML_encodable)
+		foreach (indices (vars), string name) {
+		  mixed val = vars[name];
+		  if (objectp (val) && val->rxml_const_eval &&
+		      !val->is_RXML_encodable) {
 #ifdef DEBUG
-		  if (TAG_DEBUG_TEST (ctx->frame))
-		    TAG_DEBUG (ctx->frame,
-			       "    Evaluating constant rxml value in scope %s: "
-			       "%s: %s\n", replace (var[0], ".", ".."),
-			       replace (name, ".", ".."), format_short (val));
+		    if (TAG_DEBUG_TEST (ctx->frame))
+		      TAG_DEBUG (ctx->frame,
+				 "    Evaluating constant rxml value "
+				 "in scope %s: %s: %s\n",
+				 replace (var[0], ".", ".."),
+				 replace (name, ".", ".."),
+				 format_short (val));
 #endif
-		  vars[name] = val->rxml_const_eval (ctx, name, var[0]);
+		    vars[name] = val->rxml_const_eval (ctx, name, var[0]);
+		  }
 		}
-	      }
 	  }
 
 	  else {
 	    mixed val = settings[encoded_var];
-	    if (objectp (val) && val->rxml_const_eval) {
+	    if (objectp (val) && val->rxml_const_eval &&
+		!val->is_RXML_encodable) {
 #ifdef DEBUG
 	      if (TAG_DEBUG_TEST (ctx->frame))
 		TAG_DEBUG (ctx->frame,
@@ -7348,7 +7361,8 @@ class VariableChange (/*static*/ mapping settings)
 			   format_short (val));
 #endif
 	      settings[encoded_var] =
-		val->rxml_const_eval (ctx, var[-1], var[..sizeof (var) - 2] * ".");
+		val->rxml_const_eval (ctx, var[-1],
+				      var[..sizeof (var) - 2] * ".");
 	    }
 	  }
       }
