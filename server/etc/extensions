@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.61 2006/09/27 09:08:40 grubba Exp $
+# $Id: extensions,v 1.62 2007/01/12 14:58:11 grubba Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -71,6 +71,8 @@ vqe	audio/x-twinvq-plugin
 vql	audio/x-twinvq
 vox	audio/voxware
 wav	audio/x-wav
+wax	audio/x-ms-wax
+wma	audio/x-ms-wma
 wtx	audio/x-wtx
 
 
@@ -207,6 +209,10 @@ vgm	video/x-videogram
 vgp	video/x-videogram-plugin
 vgx	video/x-videogram
 vos	video/vosaic
+wm	video/x-ms-wm
+wmv	video/x-ms-wmv
+wmx	video/x-ms-wmx
+wvx	video/x-ms-wvx
 xdr	video/x-videogram
 
 
@@ -766,6 +772,8 @@ vmf	application/vocaltec-media-file
 wid	application/x-DemoShield
 wis	application/x-InstallShield
 wlt	application/x-mswallet
+wmd	application/x-ms-wmd
+wmz	application/x-ms-wmz
 wpc	application/wpc
 wri	application/x-write
 xcf	application/x-gimp
