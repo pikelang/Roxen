@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.356 2007/01/12 17:35:12 mast Exp $
+// $Id: module.pmod,v 1.357 2007/01/12 17:51:28 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1459,6 +1459,13 @@ class Scope
   void m_delete (string var, void|Context ctx, void|string scope_name)
   // For compatibility with 2.1.
     {_m_delete (var, ctx, scope_name, 1);}
+
+  optional Scope clone();
+  //! Define this to allow cloning of the scope object. A scope object
+  //! with the same state as this one should be returned. Any future
+  //! variable changes in either object shouldn't affect the variables
+  //! in the other one. If a scope implements read-only access it's ok
+  //! to return the same object.
 
   optional string format_rxml_backtrace_frame (
     Context ctx, string var, string scope_name);
@@ -3772,7 +3779,9 @@ class Frame
       ENTER_SCOPE (ctx, this_object());					\
       if (flags & FLAG_IS_CACHE_STATIC && ctx->evaled_p_code) {		\
 	if (!csf) csf = CacheStaticFrame (this_object()->scope_name);	\
-	ctx->misc->recorded_changes[-1][csf] = scope_to_mapping (vars);	\
+	ctx->misc->recorded_changes[-1][csf] =				\
+	  objectp (vars) && vars->clone ? vars->clone() :		\
+	  scope_to_mapping (vars);					\
       }									\
     }									\
   } while (0)
