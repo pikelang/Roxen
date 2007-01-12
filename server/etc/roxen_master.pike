@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.144 2006/11/15 09:56:08 mast Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.145 2007/01/12 19:40:31 mast Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -998,6 +998,9 @@ void create()
   program_names[object_program(o)] = "/master";
   objects[ object_program(o) ] = o;
   /* Move the old efuns to the new object. */
+
+  // To be able to inherit various classes in the master, e.g. codecs.
+  add_constant ("Master", this);
 
   add_constant("add_dump_constant", add_dump_constant);
   foreach(master_efuns, string e)
