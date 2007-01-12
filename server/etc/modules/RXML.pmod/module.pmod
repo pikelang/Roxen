@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.359 2007/01/12 20:13:06 mast Exp $
+// $Id: module.pmod,v 1.360 2007/01/12 20:41:20 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7270,7 +7270,7 @@ class VariableChange (/*static*/ mapping settings)
 
   int add (VariableChange later_chg)
   {
-    // Fix any sequence dependecies between the current settings and
+    // Fix any sequence dependencies between the current settings and
     // later_chg. Return zero if we can't resolve them so that the
     // entries must remain separate.
     mapping later_sets = later_chg->settings;
@@ -7323,47 +7323,52 @@ class VariableChange (/*static*/ mapping settings)
   // we don't touch any objects that can be encoded as-is (i.e. have
   // is_RXML_encodable set).
   {
+#define CONVERT_VAL(SCOPE_NAME, VAR_NAME, VAL, ASSIGN_TO, TRANSFER) do { \
+      if (objectp (VAL) && VAL->rxml_const_eval && !VAL->is_RXML_encodable) { \
+	DO_IF_DEBUG (							\
+	  if (TAG_DEBUG_TEST (ctx->frame))				\
+	    TAG_DEBUG (ctx->frame,					\
+		       "    Evaluating constant rxml value: %s: %s\n",	\
+		       ({SCOPE_NAME, VAR_NAME}) * ".",			\
+		       format_short (VAL));				\
+	);								\
+	ASSIGN_TO = VAL->rxml_const_eval (ctx, VAR_NAME, SCOPE_NAME);	\
+      }									\
+      else {TRANSFER;}							\
+    } while (0)
+
     foreach (indices (settings), mixed encoded_var)
       if (stringp (encoded_var)) {
 	mixed var = decode_value (encoded_var);
 
 	if (arrayp (var) && stringp (var[0]))
 	  if (sizeof (var) == 1) {
-	    if (SCOPE_TYPE vars = settings[encoded_var])
-	      if (!objectp (vars) || !vars->is_RXML_encodable)
-		foreach (indices (vars), string name) {
-		  mixed val = vars[name];
-		  if (objectp (val) && val->rxml_const_eval &&
-		      !val->is_RXML_encodable) {
-#ifdef DEBUG
-		    if (TAG_DEBUG_TEST (ctx->frame))
-		      TAG_DEBUG (ctx->frame,
-				 "    Evaluating constant rxml value "
-				 "in scope %s: %s: %s\n",
-				 replace (var[0], ".", ".."),
-				 replace (name, ".", ".."),
-				 format_short (val));
-#endif
-		    vars[name] = val->rxml_const_eval (ctx, name, var[0]);
+	    if (SCOPE_TYPE vars = settings[encoded_var]) {
+	      if (objectp (vars)) {
+		if (!vars->is_RXML_encodable) {
+		  mapping(string:mixed) new_vars = ([]);
+		  foreach (vars->_indices (ctx, var[0]), string name) {
+		    mixed val = vars[name];
+		    if (!zero_type (val) && val != nil)
+		      CONVERT_VAL (var[0], name, val, new_vars[name],
+				   new_vars[name] = val);
 		  }
+		  settings[encoded_var] = new_vars;
 		}
+	      }
+
+	      else
+		foreach (vars; string name; mixed val) {
+		  if (val != nil)
+		    CONVERT_VAL (var[0], name, val, vars[name], {});
+		}
+	    }
 	  }
 
 	  else {
 	    mixed val = settings[encoded_var];
-	    if (objectp (val) && val->rxml_const_eval &&
-		!val->is_RXML_encodable) {
-#ifdef DEBUG
-	      if (TAG_DEBUG_TEST (ctx->frame))
-		TAG_DEBUG (ctx->frame,
-			   "    Evaluating constant rxml value: %s: %s\n",
-			   map ((array(string)) var, replace, ".", "..") * ".",
-			   format_short (val));
-#endif
-	      settings[encoded_var] =
-		val->rxml_const_eval (ctx, var[-1],
-				      var[..sizeof (var) - 2] * ".");
-	    }
+	    CONVERT_VAL (var[..sizeof (var) - 2] * ".", var[-1],
+			 val, settings[encoded_var], {});
 	  }
       }
   }
