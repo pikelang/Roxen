@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.99 2007/01/10 12:30:02 grubba Exp $
+// $Id: module.pmod,v 1.100 2007/01/12 10:17:31 erikd Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -659,6 +659,8 @@ class Float
   constant type = "Float";
   static float|NoLimit _max = no_limit, _min = no_limit;
   static int _prec = 2;
+  static int _may_be_empty = 0;
+  static int(0..1) _is_empty = 0;
 
   static string _format( float|NoLimit m )
   {
@@ -699,6 +701,8 @@ class Float
 
   array(string|float) verify_set( float new_value )
   {
+    if (new_value == (float)0 && _is_empty)
+      return ({ 0, new_value });
     string warn;
     if(_max != no_limit && new_value > _max)
     {
@@ -717,6 +721,10 @@ class Float
   
   float transform_from_form( mixed what )
   {
+    if (!sizeof(what) && _may_be_empty) {
+      _is_empty = 1;
+      return (float)0;
+    }
     string junk;
     if(!sizeof(what)) {
       add_warning(LOCALE(80, "No data entered.\n"));
@@ -742,7 +750,19 @@ class Float
     int size = 15;
     if( _max != no_limit && _min != no_limit )
       size = max( strlen(_format(_max)), strlen(_format(_min)) )+2;
-    return input(path(), (query()==""?"":_format((float)query())), size, additional_args);
+    string value;
+    if (_may_be_empty && (float)query() == (float)0)
+      value = "";
+    else
+      value = query()==""? "" : _format( (float)query() );
+
+    return input(path(), value, size, additional_args);
+  }
+
+  void may_be_empty(int(0..1) state)
+  //! Decides if an empty variable also is valid.
+  {
+    _may_be_empty = state;
   }
 }
 
@@ -759,6 +779,9 @@ class Int
   inherit Variable;
   constant type = "Int";
   static int|NoLimit _max = no_limit, _min = no_limit;
+
+  static int(0..1) _may_be_empty = 0;
+  static int(0..1) _is_empty = 0;
 
   void set_range(int|NoLimit minimum, int|NoLimit maximum )
     //! Set the range of the variable.
@@ -782,6 +805,8 @@ class Int
 
   array(string|int) verify_set( mixed new_value )
   {
+    if (new_value == 0 && _is_empty)
+      return ({ 0, new_value });
     string warn;
     if(!intp( new_value ) )
       return ({ sprintf(LOCALE(152,"%O is not an integer"),new_value),
@@ -803,6 +828,10 @@ class Int
 
   int transform_from_form( mixed what )
   {
+    if (!sizeof(what) && _may_be_empty) {
+      _is_empty = 1;
+      return 0;
+    }
     string junk;
     if(!sizeof(what)) {
       add_warning(LOCALE(80, "No data entered.\n"));
@@ -823,7 +852,14 @@ class Int
     int size = 10;
     if( _min != no_limit && _max != no_limit )
       size = max( strlen((string)_max), strlen((string)_min) )+2;
-    return input(path(), (string)query(), size, additional_args);
+    string value = (query() == 0 && _is_empty)? "" : (string)query();
+    return input(path(), value, size, additional_args);
+  }
+
+  void may_be_empty(int(0..1) state)
+  //! Decides if an empty variable also is valid.
+  {
+    _may_be_empty = state;
   }
 }
 
