@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.355 2006/12/12 15:36:56 mast Exp $
+// $Id: module.pmod,v 1.356 2007/01/12 17:35:12 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1482,6 +1482,24 @@ class Scope
   }
 
   string _sprintf (void|int flag) {return flag == 'O' && "RXML.Scope()";}
+}
+
+mapping(string:mixed) scope_to_mapping (SCOPE_TYPE scope)
+//! Converts an RXML scope (in the form of a mapping or an object) to
+//! a mapping. If @[scope] is a mapping, a shallow copy is returned.
+//! If @[scope] is an object, every variable in it is queried to
+//! produce the mapping. An error is thrown if the scope can't be
+//! listed.
+{
+  if (mappingp (scope))
+    return scope + ([]);
+
+  mapping(string:mixed) res = ([]);
+  foreach (scope->_indices(), string var) {
+    mixed val = scope[var];
+    if (!zero_type (val)) res[var] = val;
+  }
+  return res;
 }
 
 class Context
@@ -3754,8 +3772,7 @@ class Frame
       ENTER_SCOPE (ctx, this_object());					\
       if (flags & FLAG_IS_CACHE_STATIC && ctx->evaled_p_code) {		\
 	if (!csf) csf = CacheStaticFrame (this_object()->scope_name);	\
-	ctx->misc->recorded_changes[-1][csf] = mappingp (vars) ?	\
-	  vars + ([]) : mkmapping (indices (vars), values (vars));	\
+	ctx->misc->recorded_changes[-1][csf] = scope_to_mapping (vars);	\
       }									\
     }									\
   } while (0)
