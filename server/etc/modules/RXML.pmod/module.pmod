@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.357 2007/01/12 17:51:28 mast Exp $
+// $Id: module.pmod,v 1.358 2007/01/12 19:49:03 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -8739,7 +8739,7 @@ class RenewablePCode
 #  define ENCODE_DEBUG_RETURN(val) do {					\
   mixed _v__ = (val);							\
   report_debug ("  returned %s\n",					\
-		zero_type (_v__) ? "([])[0]" :				\
+		zero_type (_v__) ? "UNDEFINED" :			\
 		format_short (_v__, 160));				\
   return _v__;								\
 } while (0)
@@ -8751,155 +8751,32 @@ class RenewablePCode
 constant is_RXML_encodable = 1;
 static object rxml_module = this_object();
 
-class PCodec (Configuration default_config, int check_tag_set_hash)
+class PCodeEncoder
 {
-  object objectof(string|array what)
+  inherit Master.Encoder;
+
+  Configuration default_config;
+
+  static void create (Configuration default_config)
   {
-    if (arrayp (what)) {
-      ENCODE_MSG ("objectof (({%{%O, %}}))\n", what);
-      switch (what[0]) {
-	case "frame": {
-	  [string ignored, Tag tag, mixed saved] = what;
-	  Frame frame = tag->Frame();
-	  frame->tag = tag;
-#ifdef RXML_OBJ_DEBUG
-	  frame->__object_marker->create (frame);
-#endif
-	  frame->_restore (saved);
-	  ENCODE_DEBUG_RETURN (frame);
-	}
-
-	case "tag": {
-	  [string ignored, TagSet tag_set, int proc_instr, string name] = what;
-	  if (Tag tag = tag_set->get_local_tag(name, proc_instr))
-	    ENCODE_DEBUG_RETURN (tag);
-	  error ("Cannot find %s %O in tag set %O.\n",
-		 proc_instr ? "processing instruction" : "tag",
-		 name, tag_set);
-	}
-
-	case "ts": {
-	  [string ignored, object(RoxenModule)|object(Configuration) owner,
-	   string name] = what;
-	  if (TagSet tag_set = LOOKUP_TAG_SET (owner, name))
-	    if (objectp (tag_set))
-	      ENCODE_DEBUG_RETURN (tag_set);
-	  error ("Cannot find tag set %O in %O.\n", name, owner);
-	}
-
-	case "cts": {
-	  TagSet tag_set;
-	  GET_COMPOSITE_TAG_SET (what[1], what[2], tag_set);
-	  ENCODE_DEBUG_RETURN (tag_set);
-	}
-
-	case "type": {
-	  string parser_name;
-	  sscanf (what[2], "p:%s", parser_name);
-	  program/*(Parser)*/ parser_prog = reg_parsers[parser_name];
-	  if (!parser_prog)
-	    error ("Cannot find parser %O.\n", parser_name);
-	  ENCODE_DEBUG_RETURN (reg_types[what[1]] (parser_prog, @what[3..]));
-	}
-
-	case "mod": {
-	  [string ignored, Configuration config, string name] = what;
-	  if (RoxenModule mod = config->find_module (name))
-	    ENCODE_DEBUG_RETURN (mod);
-	  error ("Cannot find module %O in configuration %O.\n", what, config);
-	}
-
-	case "conf": {
-	  Configuration config;
-	  if (!what[1]) {
-#ifdef DEBUG
-	    if (!default_config)
-	      error ("No default configuration given to string_to_p_code.\n");
-#endif
-	    config = default_config;
-	  }
-	  else if (!(config = roxen->get_configuration (what[1])))
-	    error ("Cannot find configuration %O.\n", what[1]);
-	  if (config->compat_level() != what[2])
-	    p_code_stale_error ("P-code is stale - the compatibility level "
-				"has changed since it was encoded.\n");
-	  ENCODE_DEBUG_RETURN (config);
-	}
-
-#ifdef RXML_OBJ_DEBUG
-	case "ObjectMarker":
-	  ENCODE_DEBUG_RETURN (RoxenDebug.ObjectMarker (what[1]));
-#endif
-      }
-    }
-
-    else {
-      ENCODE_MSG ("objectof (%O)\n", what);
-      switch (what) {
-	case "nil": ENCODE_DEBUG_RETURN (nil);
-	case "empty": ENCODE_DEBUG_RETURN (empty);
-	case "RXML": ENCODE_DEBUG_RETURN (rxml_module);
-	case "utils": ENCODE_DEBUG_RETURN (utils);
-	case "xtp": ENCODE_DEBUG_RETURN (xml_tag_parser);
-      }
-
-      if (sscanf (what, "c:%s", what)) {
-	mixed efun;
-	if (objectp (efun = all_constants()[what]))
-	  ENCODE_DEBUG_RETURN (efun);
-	error ("Cannot find global constant object %O.\n", what);
-      }
-    }
-
-    error ("Cannot decode object %O.\n", what);
+    ::create();
+    this_program::default_config = default_config;
   }
 
-  function functionof(string what)
-  {
-    ENCODE_MSG ("functionof (%O)\n", what);
-
-    if (sscanf (what, "p:%s", what)) {
-      if (program/*(Parser)*/ parser_prog = reg_parsers[what])
-	ENCODE_DEBUG_RETURN (parser_prog);
-      error ("Cannot find parser %O.\n", what);
-    }
-    else if (sscanf (what, "c:%s", what)) {
-      mixed efun;
-      if (functionp (efun = all_constants()[what]))
-	ENCODE_DEBUG_RETURN (efun);
-      error ("Cannot find global constant function %O.\n", what);
-    }
-
-    error ("Cannot decode function %O.\n", what);
-  }
-
-  program programof (string what)
-  {
-    ENCODE_MSG ("programof (%O)\n", what);
-
-    if (sscanf (what, "p:%s", what)) {
-      if (program/*(Parser)*/ parser_prog = reg_parsers[what])
-	ENCODE_DEBUG_RETURN (parser_prog);
-      error ("Cannot find parser %O.\n", what);
-    }
-    else if (sscanf (what, "c:%s", what)) {
-      mixed efun;
-      if (programp (efun = all_constants()[what]))
-	ENCODE_DEBUG_RETURN (efun);
-      error ("Cannot find global constant program %O.\n", what);
-    }
-
-    error ("Cannot decode program %O.\n", what);
-  }
+  static string server_dir = getcwd() + "/";
 
   string|array nameof(mixed what)
   {
-    if(objectp(what)) {
+    // All our special things are prefixed with "R" to ensure there's
+    // no conflict with the pike standard codec (it never uses any
+    // uppercase letters).
+
+    if (objectp (what)) {
       ENCODE_MSG ("nameof (object %O)\n", what);
 
-      if(what->is_RXML_Frame) {
+      if (what->is_RXML_Frame) {
 	if (Tag tag = what->RXML_dump_frame_reference && what->tag)
-	  ENCODE_DEBUG_RETURN (({"frame", tag, what->_save()}));
+	  ENCODE_DEBUG_RETURN (({"Rfr", tag, what->_save()}));
 	ENCODE_MSG ("  encoding frame recursively since " +
 		    (what->RXML_dump_frame_reference ?
 		     "it got no tag object\n" :
@@ -8910,7 +8787,7 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
       else if (what->is_RXML_Tag) {
 	if (what->name && what->tagset)
 	  ENCODE_DEBUG_RETURN (({
-	    "tag",
+	    "Rtag",
 	    what->tagset,
 	    what->flags & FLAG_PROC_INSTR,
 	    what->name + (what->plugin_name? "#"+what->plugin_name : "")}));
@@ -8921,9 +8798,9 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 
       else if (what->is_RXML_TagSet) {
 	if (what->name)
-	  ENCODE_DEBUG_RETURN (({"ts", what->owner, what->name}));
+	  ENCODE_DEBUG_RETURN (({"Rts", what->owner, what->name}));
 	if (array components = what->tag_set_components())
-	  ENCODE_DEBUG_RETURN (({"cts"}) + components);
+	  ENCODE_DEBUG_RETURN (({"Rcts"}) + components);
 	error ("Cannot encode unnamed tag set %O.\n", what);
       }
 
@@ -8934,34 +8811,34 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 	  error ("Cannot encode unregistered parser at %s in type %O.\n",
 		 Program.defined (what->parser_prog), what);
 #endif
-	ENCODE_DEBUG_RETURN (({"type", what->name, "p:" + parser_name}) +
+	ENCODE_DEBUG_RETURN (({"Rtype", what->name, parser_name}) +
 			     what->parser_args);
       }
 
       else if (what->is_module)
-	ENCODE_DEBUG_RETURN (({"mod",
+	ENCODE_DEBUG_RETURN (({"Rmod",
 			       what->my_configuration(),
 			       what->module_local_id()}));
 
       else if (what->is_configuration)
-	ENCODE_DEBUG_RETURN (({"conf",
+	ENCODE_DEBUG_RETURN (({"Rconf",
 			       what != default_config && what->name,
 			       what->compat_level()}));
 
-      else if(what == nil)
-	ENCODE_DEBUG_RETURN ("nil");
-      else if(what == empty)
-	ENCODE_DEBUG_RETURN ("empty");
+      else if (what == nil)
+	ENCODE_DEBUG_RETURN ("Rnil");
+      else if (what == empty)
+	ENCODE_DEBUG_RETURN ("Rempty");
       else if (what == rxml_module)
-	ENCODE_DEBUG_RETURN ("RXML");
-      else if(what == utils)
-	ENCODE_DEBUG_RETURN ("utils");
+	ENCODE_DEBUG_RETURN ("RRXML");
+      else if (what == utils)
+	ENCODE_DEBUG_RETURN ("Rutils");
       else if (what == xml_tag_parser)
-	ENCODE_DEBUG_RETURN ("xtp");
+	ENCODE_DEBUG_RETURN ("Rxtp");
 #ifdef RXML_OBJ_DEBUG
       else if (object_program (what) == RoxenDebug.ObjectMarker)
 	ENCODE_DEBUG_RETURN (({
-	  "ObjectMarker",
+	  "RObjectMarker",
 	  reverse (array_sscanf (reverse (what->id), "]%*d[%s")[0])}));
 #endif
       else if (what->is_RXML_encodable) {
@@ -8984,7 +8861,7 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 	    error ("Cannot encode unregistered parser at %s.\n",
 		   Program.defined (what));
 #endif
-	  ENCODE_DEBUG_RETURN ("p:" + what->name);
+	  ENCODE_DEBUG_RETURN (({"Rp", what->name}));
 	}
 
 	else if (functionp (what) && what->is_RXML_encodable) {
@@ -9006,27 +8883,35 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
 	}
     }
 
-    if (string efun = reverse_constants[what])
-      if (all_constants()[efun] == what)
-	ENCODE_DEBUG_RETURN ("c:" + efun);
-    if (string efun = search (all_constants(), what)) {
-      reverse_constants[efun] = what;
-      ENCODE_DEBUG_RETURN ("c:" + efun);
+    // Fall back to the pike encoder. This is mainly useful to look up
+    // pike modules.
+    string|array pike_name = ::nameof (what);
+
+    // Make any file paths relative to the server tree.
+    if (stringp (pike_name)) {
+      sscanf (pike_name, "%1s%s", string cls, string path);
+      if ((<"p", "o", "f">)[cls]) {
+	if (has_prefix (path, server_dir))
+	  pike_name = "Rf:" + cls + path[sizeof (server_dir)..];
+	else
+	  report_warning ("Encoding absolute pike file path %O into p-code.\n"
+			  "This can probably lead to problems if replication "
+			  "is in use.\n", path);
+      }
+    }
+    else {
+      sscanf (pike_name[0], "%1s%s", string cls, string path);
+      if ((<"p", "o", "f">)[cls]) {
+	if (has_prefix (path, server_dir))
+	  pike_name[0] = "Rf:" + cls + path[sizeof (server_dir)..];
+	else
+	  report_warning ("Encoding absolute pike file path %O into p-code.\n"
+			  "This can probably lead to problems if replication "
+			  "is in use.\n", path);
+      }
     }
 
-    if (programp (what))
-      error ("Cannot encode program at %s.\n", Program.defined (what));
-    else if (functionp (what)) {
-      string s = "";
-      if (object o = function_object (what)) {
-	s = sprintf ("%O", o);
-	if (s == "object") s = "";
-	else s = " in object " + s;
-      }
-      error ("Cannot encode function %O%s at %s.\n", what, s, Function.defined (what));
-    }
-    else
-      error ("Cannot encode %O.\n", what);
+    ENCODE_DEBUG_RETURN (pike_name);
   }
 
   mixed encode_object (object x)
@@ -9035,6 +8920,147 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
     if (x->_encode && x->_decode) ENCODE_DEBUG_RETURN (x->_encode());
     error ("Cannot encode object %O at %s without _encode() and _decode().\n",
 	   x, Program.defined (object_program (x)));
+  }
+
+  string _sprintf (int flag)
+  {
+    return flag == 'O' &&
+      sprintf ("RXML.PCodeEncoder(%O)", default_config);
+  }
+}
+
+class PCodeDecoder
+{
+  inherit Master.Decoder;
+
+  Configuration default_config;
+  int check_tag_set_hash;
+
+  static void create (Configuration default_config, int check_tag_set_hash)
+  {
+    ::create();
+    this_program::default_config = default_config;
+    this_program::check_tag_set_hash = check_tag_set_hash;
+  }
+
+  static string server_dir = getcwd() + "/";
+
+  mixed thingof(string|array what)
+  {
+    if (arrayp (what)) {
+      ENCODE_MSG ("thingof (({%{%O, %}}))\n", what);
+
+      switch (what[0]) {
+	case "Rfr": {
+	  [string ignored, Tag tag, mixed saved] = what;
+	  Frame frame = tag->Frame();
+	  frame->tag = tag;
+#ifdef RXML_OBJ_DEBUG
+	  frame->__object_marker->create (frame);
+#endif
+	  frame->_restore (saved);
+	  ENCODE_DEBUG_RETURN (frame);
+	}
+
+	case "Rtag": {
+	  [string ignored, TagSet tag_set, int proc_instr, string name] = what;
+	  if (Tag tag = tag_set->get_local_tag(name, proc_instr))
+	    ENCODE_DEBUG_RETURN (tag);
+	  error ("Cannot find %s %O in tag set %O.\n",
+		 proc_instr ? "processing instruction" : "tag",
+		 name, tag_set);
+	}
+
+	case "Rts": {
+	  [string ignored, object(RoxenModule)|object(Configuration) owner,
+	   string name] = what;
+	  if (TagSet tag_set = LOOKUP_TAG_SET (owner, name))
+	    if (objectp (tag_set))
+	      ENCODE_DEBUG_RETURN (tag_set);
+	  error ("Cannot find tag set %O in %O.\n", name, owner);
+	}
+
+	case "Rcts": {
+	  TagSet tag_set;
+	  GET_COMPOSITE_TAG_SET (what[1], what[2], tag_set);
+	  ENCODE_DEBUG_RETURN (tag_set);
+	}
+
+	case "Rtype": {
+	  program/*(Parser)*/ parser_prog = reg_parsers[what[2]];
+	  if (!parser_prog)
+	    error ("Cannot find parser %O.\n", what[2]);
+	  ENCODE_DEBUG_RETURN (reg_types[what[1]] (parser_prog, @what[3..]));
+	}
+
+	case "Rmod": {
+	  [string ignored, Configuration config, string name] = what;
+	  if (RoxenModule mod = config->find_module (name))
+	    ENCODE_DEBUG_RETURN (mod);
+	  error ("Cannot find module %O in configuration %O.\n", what, config);
+	}
+
+	case "Rconf": {
+	  Configuration config;
+	  if (!what[1]) {
+#ifdef DEBUG
+	    if (!default_config)
+	      error ("No default configuration given to string_to_p_code.\n");
+#endif
+	    config = default_config;
+	  }
+	  else if (!(config = roxen->get_configuration (what[1])))
+	    error ("Cannot find configuration %O.\n", what[1]);
+	  if (config->compat_level() != what[2])
+	    p_code_stale_error ("P-code is stale - the compatibility level "
+				"has changed since it was encoded.\n");
+	  ENCODE_DEBUG_RETURN (config);
+	}
+
+	case "Rp":
+	  if (program/*(Parser)*/ parser_prog = reg_parsers[what[1]])
+	    ENCODE_DEBUG_RETURN (parser_prog);
+	  error ("Cannot find parser %O.\n", what[1]);
+
+#ifdef RXML_OBJ_DEBUG
+	case "RObjectMarker":
+	  ENCODE_DEBUG_RETURN (RoxenDebug.ObjectMarker (what[1]));
+#endif
+
+	default:
+	  if (sscanf (what[0], "Rf:%1s%s", string cls, string path) == 2)
+	    what[0] = cls + server_dir + path;
+	  ENCODE_DEBUG_RETURN (::thingof (what));
+      }
+    }
+
+    else {
+      ENCODE_MSG ("thingof (%O)\n", what);
+
+      switch (what) {
+	case "Rnil": ENCODE_DEBUG_RETURN (nil);
+	case "Rempty": ENCODE_DEBUG_RETURN (empty);
+	case "RRXML": ENCODE_DEBUG_RETURN (rxml_module);
+	case "Rutils": ENCODE_DEBUG_RETURN (utils);
+	case "Rxtp": ENCODE_DEBUG_RETURN (xml_tag_parser);
+
+	case "RXML":
+	  // Kludge to detect p-code encoded with an earlier version
+	  // of the codec. As it happens, the first thing we get in
+	  // that case is the string "RXML" from the old encoding of
+	  // rxml_module.
+	  p_code_stale_error ("P-code is stale - "
+			      "it was made with an incompatible version "
+			      "of the codec.\n");
+
+	default:
+	  if (sscanf (what, "Rf:%1s%s", string cls, string path) == 2)
+	    what = cls + server_dir + path;
+	  ENCODE_DEBUG_RETURN (::thingof (what));
+      }
+    }
+
+    error ("Cannot decode %O.\n", what);
   }
 
   void decode_object (object x, mixed data)
@@ -9053,7 +9079,7 @@ class PCodec (Configuration default_config, int check_tag_set_hash)
   }
 }
 
-static mapping(Configuration:array(PCodec)) p_codecs = ([]);
+static mapping(Configuration:PCodeEncoder) p_code_encoders = ([]);
 
 string p_code_to_string (PCode p_code, void|Configuration default_config)
 //! Encodes the @[PCode] object @[p_code] to a string which can be
@@ -9066,12 +9092,12 @@ string p_code_to_string (PCode p_code, void|Configuration default_config)
 //! are replaced with references to the corresponding default
 //! configuration given to @[p_code_to_string].
 {
-  array(PCodec) codecs =
-    p_codecs[default_config] || (p_codecs[default_config] = ({0, 0}));
-  PCodec codec =
-    codecs[0] || (codecs[0] = PCodec (default_config, 0));
-  return encode_value(p_code, codec);
+  PCodeEncoder encoder =
+    p_code_encoders[default_config] ||
+    (p_code_encoders[default_config] = PCodeEncoder (default_config));
+  return encode_value (p_code, encoder);
 }
+static mapping(Configuration:array(PCodeDecoder)) p_code_decoders = ([]);
 
 PCode string_to_p_code (string str, void|Configuration default_config,
 			void|int ignore_tag_set_hash)
@@ -9097,14 +9123,16 @@ PCode string_to_p_code (string str, void|Configuration default_config,
 //! caller should catch them and fall back to RXML evaluation from
 //! source.
 {
-  array(PCodec) codecs =
-    p_codecs[default_config] || (p_codecs[default_config] = ({0, 0}));
-  PCodec codec =
-    codecs[!ignore_tag_set_hash] ||
-    (codecs[!ignore_tag_set_hash] = PCodec (default_config, !ignore_tag_set_hash));
+  array(PCodeDecoder) decoders =
+    p_code_decoders[default_config] ||
+    (p_code_decoders[default_config] = ({0, 0}));
+  PCodeDecoder decoder =
+    decoders[!ignore_tag_set_hash] ||
+    (decoders[!ignore_tag_set_hash] =
+     PCodeDecoder (default_config, !ignore_tag_set_hash));
 
   mixed err = catch {
-      return [object(PCode)]decode_value(str, codec);
+      return [object(PCode)] decode_value (str, decoder);
     };
 
   // Ugly way to recognize the errors from decode_value that are due
