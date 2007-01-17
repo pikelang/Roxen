@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.68 2006/09/18 16:18:34 mast Exp $
+// $Id: DBManager.pmod,v 1.69 2007/01/17 14:40:19 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -223,14 +223,16 @@ private
     mapping(string:mixed) d = sql_url_cache[ db ];
     if( !d )
     {
-      res = query("SELECT path,local FROM dbs WHERE name=%s", db );
+      res = query("SELECT path, local, default_charset "
+		  "  FROM dbs WHERE name=%s", db );
       if( !sizeof( res ) )
 	return 0;
       sql_url_cache[db] = d = res[0];
     }
 
     if( (int)d->local )
-      return connect_to_my_mysql( user, db, reuse_in_thread, charset );
+      return connect_to_my_mysql( user, db, reuse_in_thread,
+				  charset || d->default_charset );
 
     // Otherwise it's a tad more complex...  
     if( user[strlen(user)-2..] == "ro" )
@@ -238,8 +240,10 @@ private
       // has, but they are hidden behind an overloaded index operator.
       // Thus, we have to fool the typechecker.
       return [object(Sql.Sql)](object)
-	ROWrapper( sql_cache_get( d->path, reuse_in_thread, charset) );
-    return sql_cache_get( d->path, reuse_in_thread, charset);
+	ROWrapper( sql_cache_get( d->path, reuse_in_thread,
+				  charset || d->default_charset) );
+    return sql_cache_get( d->path, reuse_in_thread,
+			  charset || d->default_charset);
   }
 };
 
@@ -310,7 +314,7 @@ array(string) list( void|Configuration c )
       -({"roxen","mysql"})
 #endif
       ;
-  return query( "SELECT name from dbs" )->name
+  return query( "SELECT name FROM dbs" )->name
 #ifndef YES_I_KNOW_WHAT_I_AM_DOING
       -({"roxen","mysql"})
 #endif
@@ -541,7 +545,7 @@ int is_internal( string name )
 //! Return true if the DB @[name] is an internal database
 {
   array(mapping(string:mixed)) d =
-           query("SELECT path,local FROM dbs WHERE name=%s", name );
+    query("SELECT local FROM dbs WHERE name=%s", name );
   if( !sizeof( d ) ) return 0;
   return (int)d[0]["local"];
 }
@@ -553,7 +557,7 @@ string db_url( string name,
 //! a URL is always returned unless the database does not exist.
 {
   array(mapping(string:mixed)) d =
-           query("SELECT path,local FROM dbs WHERE name=%s", name );
+    query("SELECT path,local FROM dbs WHERE name=%s", name );
 
   if( !sizeof( d ) )
     return 0;
@@ -832,6 +836,30 @@ void set_url( string db, string url, int is_internal )
   changed();
 }
 
+void set_db_default_charset( string db, string default_charset )
+//! Set the default character set for the specified database.
+//! No data is recoded.
+{
+  if (default_charset && (default_charset != "")) {
+    query( "UPDATE dbs SET default_charset=%s WHERE name=%s",
+	   default_charset, db );
+  } else {
+    query( "UPDATE dbs SET default_charset=NULL WHERE name=%s", db );
+  }
+  changed();
+}
+
+string get_db_default_charset( string db)
+//! Get the default character set for the specified database.
+//! Returns @tt{0@} (zero) if no default has been set.
+{
+  array(mapping(string:string)) res =
+    query( "SELECT default_charset FROM dbs WHERE name=%s",
+	   db );
+  if (sizeof(res)) return res[0]->default_charset;
+  return 0;
+}
+
 void copy_db_md( string oname, string nname )
 //! Copy the metadata from oname to nname. Both databases must exist
 //! prior to this call.
@@ -1066,7 +1094,7 @@ void set_db_group( string db, string group )
 }
 
 void create_db( string name, string path, int is_internal,
-		string|void group )
+		string|void group, string|void default_charset )
 //! Create a new symbolic database alias.
 //!
 //! If @[is_internal] is specified, the database will be automatically
@@ -1091,17 +1119,23 @@ void create_db( string name, string path, int is_internal,
     set_db_group( name, group );
     if( is_internal )
     {
-    path = get_group_path( name, group );
-    if( path )
-      is_internal = 0;
+      path = get_group_path( name, group );
+      if( path )
+	is_internal = 0;
     }
   }
   else
     query("INSERT INTO db_groups (db,groupn) VALUES (%s,%s)",
 	  name, "internal" );
 
-  query( "INSERT INTO dbs (name,path,local) VALUES (%s,%s,%s)", name,
-	 (is_internal?name:path), (is_internal?"1":"0") );
+  if (default_charset) {
+    query( "INSERT INTO dbs (name, path, local, default_charset) "
+	   "VALUES (%s, %s, %s, %s)", name,
+	   (is_internal?name:path), (is_internal?"1":"0"), default_charset );
+  } else {
+    query( "INSERT INTO dbs (name, path, local) VALUES (%s, %s, %s)",
+	   name, (is_internal?name:path), (is_internal?"1":"0") );
+  }
   if( is_internal )
     catch(query( "CREATE DATABASE `"+name+"`"));
   changed();
@@ -1287,7 +1321,8 @@ static void create()
 CREATE TABLE dbs (
  name VARCHAR(64) NOT NULL PRIMARY KEY,
  path VARCHAR(100) NOT NULL, 
- local INT UNSIGNED NOT NULL )
+ local INT UNSIGNED NOT NULL,
+ default_charset VARCHAR(64) )
  " );
     create_db( "local",  0, 1 );
     create_db( "roxen",  0, 1 );
@@ -1296,6 +1331,11 @@ CREATE TABLE dbs (
     is_module_db( 0, "local",
 		  "The local database contains data that "
 		  "should not be shared between multiple-frontend servers" );
+  } else if (catch { query("SELECT default_charset FROM dbs LIMIT 1"); }) {
+    // The default_charset field is missing.
+    // Upgraded Roxen?
+    query("ALTER TABLE dbs "
+	  "  ADD default_charset VARCHAR(64)");
   }
   
   if( !q->db_permissions )
@@ -1307,7 +1347,7 @@ CREATE TABLE db_permissions (
  permission ENUM ('none','read','write') NOT NULL,
  INDEX db_conf (db,config))
 " );
-    // Must be done from a call_out -- the configurations does not
+    // Must be done from a call_out -- the configurations do not
     // exist yet (this code is called before 'main' is called in
     // roxen)
     call_out(
