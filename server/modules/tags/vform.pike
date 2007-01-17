@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.52 2007/01/12 10:25:25 erikd Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.53 2007/01/17 10:05:06 erikd Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -539,6 +539,9 @@ constant tagdoc=([
 "vform":({ #"<desc type='cont'><p><short>
  Creates a self-verifying form.</short> You can use all standard
  HTML input widgets in this container as well.</p>
+
+<p>Other tags that is related and usefull are <tag>default</tag>
+and <tag>roxen-automatic-charset-variable</tag>.</p>
 
 <ex-box>
 <vform>
