@@ -11,6 +11,7 @@ mapping actions = ([
   "group":  ({  _(324,"Change group for this database"), change_group, 0 }),
   "clear":  ({  _(403,"Delete all tables"),    clear_db,  0 }),
   "backup": ({  _(404,"Make a backup"),        backup_db, 1 }),
+  "charset":({  _(0, "Change default character set"), change_charset, 0 }),
 ]);
 
 
@@ -52,6 +53,27 @@ mixed change_group( string db, RequestID id )
       "</submit-gbutton2>";
   }
   DBManager.set_db_group( db, id->variables->group );
+  return 0;
+}
+
+mixed change_charset( string db, RequestID id )
+{
+  if( !id->variables->default_charset )
+  {
+    string old_charset = DBManager.get_db_default_charset(db);
+    string res ="<br /><blockquote>"
+    "<input type=hidden name=action value='&form.action;' />"
+      "<h2>"+sprintf(_(0,"Changing default character set for %s"), db )+
+      "</h2>"+
+      (old_charset?("<b>"+_(0, "Old default character set")+":</b> " +
+		    old_charset+"<br />"):"")+
+      "<b>"+_(0,"New default character set")+":</b> "
+      "<input type='string' name='default_charset' value='" +
+      Roxen.html_encode_string(old_charset||"") +"' />";
+    return res + "</select><submit-gbutton2 name='ok'>"+(201,"OK")+
+      "</submit-gbutton2>";
+  }
+  DBManager.set_db_default_charset( db, id->variables->default_charset );
   return 0;
 }
 
@@ -562,12 +584,18 @@ mapping|string parse( RequestID id )
   if( !url )
     res += "<b>Internal database</b>";
   else
-    res += "<b>"+url+"</b>";
+    res += "<b>"+Roxen.html_encode_string(url)+"</b>";
 
   res += "</td></tr><tr><td></td><td>";
 
   res += table_module_info( "" );
-  
+
+  string default_charset = DBManager.get_db_default_charset(id->variables->db);
+  if (default_charset) {
+    res += "<br />" + _(0,"Default charset:") +
+      " <b>" + Roxen.html_encode_string(default_charset) + "</b>";
+  }
+
   res +="<br /><a href='edit_group.pike?group="+
     Roxen.http_encode_url(DBManager.db_group( id->variables->db ))+"'>"+
     sprintf( (string)
