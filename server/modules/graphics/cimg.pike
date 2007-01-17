@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.73 2006/10/05 09:03:47 jonasw Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.74 2007/01/17 12:45:24 jonasw Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -148,8 +148,20 @@ void create()
 
 void start()
 {
-  the_cache = roxen.ImageCache( "cimg", generate_image );
+  //  Reuse previous cache object if possible
+  if (the_cache) {
+    //  Update reference to callback function in case we've been reloaded
+    the_cache->set_draw_function(generate_image);
+  } else {
+    the_cache = roxen.ImageCache( "cimg", generate_image );
+  }
   do_ext = query("ext");
+}
+
+void stop()
+{
+  //  Force cache object to be recreated in start()
+  the_cache = 0;
 }
 
 mapping(string:function) query_action_buttons() {
