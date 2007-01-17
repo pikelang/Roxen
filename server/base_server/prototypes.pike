@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.190 2007/01/11 19:18:57 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.191 2007/01/17 18:13:43 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -770,8 +770,12 @@ class CacheKey
     if (array(array(CacheActivationCB|array)) cbs = activation_cbs) {
       // Relying on the interpreter lock here too.
       activation_cbs = 0;
-      foreach (cbs, [CacheActivationCB cb, array args])
+      foreach (cbs, [CacheActivationCB cb, array args]) {
+#if 0
+	werror ("Activating key %O: Calling %O(%{%O, %})\n", this, cb, args);
+#endif
 	cb (this, @args);
+      }
       return sizeof (cbs);
     }
     return 0;
@@ -798,21 +802,30 @@ class CacheKey
 	if (this)
 	  // Relying on the interpreter lock here.
 	  activation_cbs = 0;
-	foreach (cbs, [CacheActivationCB cb, array args])
+	foreach (cbs, [CacheActivationCB cb, array args]) {
+#if 0
+	  werror ("Activating key %O: Calling %O(%{%O, %})\n", this, cb, args);
+#endif
 	  cb (this, @args);
+	}
 	return 1;
       }
     }
     return 0;
   }
 
-  string _sprintf (int flag)
+  static string _sprintf (int flag)
   {
-    return flag == 'O' && (function_name (object_program (this)) +"()"
+    return flag == 'O' &&
+      sprintf ("%s(%s)%s",
+	       function_name (object_program (this)) || "CacheKey",
+	       activation_cbs ? "inactive" : "active",
 #ifdef ID_CACHEKEY_DEBUG
-			   + (__marker ? "[" + __marker->count + "]" : "")
+	       __marker ? "[" + __marker->count + "]" : "",
+#else
+	       ""
 #endif
-			  );
+	      );
   }
 }
 
