@@ -364,6 +364,33 @@ string format_int( int x )
   return (string)x;
 }
 
+string db_switcher( RequestID id )
+{
+  mapping q = DBManager.get_permission_map( );
+  if ( !sizeof( q ))
+    return "";
+
+  string res = #"
+  <script type='text/javascript'>
+  function switch_db( objSel ) {
+    if( objSel.selectedIndex == 0) {
+      return;
+    }
+    var selValue = objSel.options[objSel.selectedIndex].value;
+    if(selValue != '&form.db:js;') {
+      window.location.href = window.location.pathname + '?db=' + escape( selValue );
+    }
+  }
+  </script>
+  <select name='db' onchange='switch_db(this)'>
+    <option value=''>Switch to other DB</option>\n";
+  foreach( sort(indices(q)), string d ) {
+    res += sprintf( "<option value='%s'%s>%s</option>\n", d,
+                    (d == id->variables->db)? "selected='selected'": "", d);
+  }
+  return res + "</select><noscript><input type='submit' value='Switch db'/></noscript>\n";
+}
+
 mapping|string parse( RequestID id )
 {
   if( id->variables->image )
@@ -378,8 +405,8 @@ mapping|string parse( RequestID id )
     "<topmenu base='../' selected='dbs'/>"
     "<content><cv-split><subtablist width='100%'><st-tabs>"
     "<insert file='subtabs.pike'/></st-tabs><st-page>"
-    "<input type=hidden name='sort' value='&form.sort:http;' />\n"
-    "<input type=hidden name='db' value='&form.db:http;' />\n";
+    "<input type='hidden' name='sort' value='&form.sort:http;' />\n"
+    //"<input type='hidden' name='db' value='&form.db:http;' />\n";
 
   if( id->variables->action && actions[ id->variables->action ])
   {
@@ -576,7 +603,8 @@ mapping|string parse( RequestID id )
     "<table cellspacing=3 cellpadding=0 border=0 width=100%><tr><td>"
     "<colorscope bgcolor='&usr.content-bg;' text='&usr.fgcolor;'>"
     "<cimg border='0' format='gif' src='&usr.database-small;' alt='' "
-    "max-height='20'/></td><td width=100%>"
+    "max-height='20'/></td><td width=100%>" +
+    db_switcher( id ) + "<br />"
     "<gtext fontsize='20'>"+id->variables->db+
     "</gtext></colorscope></td></tr>"
     "<tr><td></td><td>";
