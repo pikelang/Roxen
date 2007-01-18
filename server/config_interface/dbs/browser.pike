@@ -384,10 +384,10 @@ mapping|string parse( RequestID id )
     "<content><cv-split><subtablist width='100%'><st-tabs>"
     "<insert file='subtabs.pike'/></st-tabs><st-page>"
     "<input type='hidden' name='sort' value='&form.sort:http;' />\n";
-    //"<input type='hidden' name='db' value='&form.db:http;' />\n";
 
   if( id->variables->action && actions[ id->variables->action ])
   {
+    res += "<input type='hidden' name='db' value='&form.db:http;' />\n";
     mixed tmp = actions[ id->variables->action ][1]( id->variables->db, id );
     if( stringp( tmp ) )
       return res+tmp+"\n</st-page></content></tmpl>";
