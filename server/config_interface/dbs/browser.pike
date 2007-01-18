@@ -382,7 +382,7 @@ string db_switcher( RequestID id )
     }
   }
   </script>
-  <select name='db' onchange='switch_db(this)'>
+  <select name='dbChooser' onchange='switch_db(this)'>
     <option value=''>Switch to other DB</option>\n";
   foreach( sort(indices(q)), string d ) {
     res += sprintf( "<option value='%s'%s>%s</option>\n", d,
@@ -406,7 +406,7 @@ mapping|string parse( RequestID id )
     "<content><cv-split><subtablist width='100%'><st-tabs>"
     "<insert file='subtabs.pike'/></st-tabs><st-page>"
     "<input type='hidden' name='sort' value='&form.sort:http;' />\n"
-    //"<input type='hidden' name='db' value='&form.db:http;' />\n";
+    "<input type='hidden' name='db' value='&form.db:http;' />\n";
 
   if( id->variables->action && actions[ id->variables->action ])
   {
