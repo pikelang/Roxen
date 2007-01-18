@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.53 2007/01/17 10:05:06 erikd Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.54 2007/01/18 16:33:49 erikd Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -144,27 +144,22 @@ class VInputFrame {
     }
 
     var->set_path( args->name );
-    if(!id->real_variables["__clear"] && id->real_variables[args->name] &&
-       !(args->optional && id->real_variables[args->name][0]=="") ) 
-    {
-      if(args->trim) 
-        id->real_variables[args->name][0]
-           = String.trim_all_whites(id->real_variables[args->name][0]);
-      var->set_from_form( id, 1 );
+
+    if ( !id->real_variables["__clear"] ) {
+      if (args->optional && id->real_variables[args->name] &&
+          id->real_variables[args->name][0] == "") {
+        var->set_warning(0);
+        var->low_set ("");
+      }
+      else if(id->real_variables[args->name] &&
+              !(args->optional && id->real_variables[args->name][0]=="") ) 
+        {
+          if(args->trim) 
+            id->real_variables[args->name][0]
+              = String.trim_all_whites(id->real_variables[args->name][0]);
+          var->set_from_form( id, 1 );
+        }
     }
-
-    if (args->optional && id->real_variables[args->name] &&
-        id->real_variables[args->name][0] == "" && 
-        !id->real_variables["__reload"]) {
-      if (var->clear_verifications)
-        var->clear_verifications();
-      else if(var->may_be_empty)
-        var->may_be_empty(1);
-
-      var->set_default_value ("");
-      var->set_from_form( id, 1 );
-    }
-
     mapping new_args=([]);
     foreach(indices(args), string arg)
       if(!ARGS[arg]) new_args[arg]=args[arg];
