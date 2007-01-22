@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.101 2007/01/22 13:05:48 grubba Exp $
+// $Id: module.pmod,v 1.102 2007/01/22 13:16:34 grubba Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1478,6 +1478,9 @@ class ProviderChoice
 
   array(string|mixed) verify_set( mixed new_value )
   {
+    if (!new_value) {
+      new_value = query();
+    }
     if (!new_value) {
       return ({ "Not configured", 0 });
     }
