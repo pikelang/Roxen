@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.96 2007/01/12 10:17:26 erikd Exp $
+// $Id: module.pmod,v 1.97 2007/01/22 13:05:41 grubba Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1397,8 +1397,24 @@ class ProviderChoice
 
   int low_set(RoxenModule to)
   {
+    RoxenModule old = changed_values[_id];
+    if (to == old) return 0;
+    if (!old) {
+      if (local_id != "") {
+	old = transform_from_form(local_id);
+      }
+      if (!old) {
+	old = default_value();
+	if (old) local_id = _name(old);
+      }
+      changed_values[_id] = to;
+      if (to == old) return 0;
+    }
+    changed_values[_id] = to;
     local_id = _name(to);
-    return ::low_set(to);
+    if( get_changed_callback() )
+      get_changed_callback()( this_object() );
+    return 1;
   }
 
   // NOTE: Will be called with a string at module init!
@@ -1427,7 +1443,9 @@ class ProviderChoice
 
   array get_choice_list()
   {
-    return conf->get_providers(provides);
+    array res = conf->get_providers(provides);
+    sort(map(res, _title), res);
+    return res;
   }
 
   static string _name(RoxenModule val)
@@ -1452,7 +1470,6 @@ class ProviderChoice
     } else {
       array(RoxenModule) providers = get_choice_list();
       if (sizeof(providers)) {
-	// FIXME: Add sorting?
 	return providers[0];
       }
       return UNDEFINED;
