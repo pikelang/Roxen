@@ -578,13 +578,14 @@ mapping|string parse( RequestID id )
 
   res +=
     "<br />"
-    "<table cellspacing=3 cellpadding=0 border=0 width=100%><tr><td>"
+    "<table cellspacing=3 cellpadding=0 border=0 width=100%><tr>"
+    "<td valign=top>"
     "<colorscope bgcolor='&usr.content-bg;' text='&usr.fgcolor;'>"
     "<cimg border='0' format='gif' src='&usr.database-small;' alt='' "
-    "max-height='20'/></td><td width=100%>" +
+    "max-height='20' style='margin-top: 7px'/></td><td width=100%>" +
     db_switcher( id ) + "<br />"
-    "<gtext fontsize='20'>"+id->variables->db+
-    "</gtext></colorscope></td></tr>"
+    "<span style='font-size: 32px'>" + id->variables->db + "</span>"
+    "</colorscope></td></tr>"
     "<tr><td></td><td>";
 
   if( !url )
