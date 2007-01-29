@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.955 2007/01/10 13:17:43 marty Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.956 2007/01/29 16:09:18 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -3437,6 +3437,9 @@ class ImageCache
 	// Old versions of Mysql lacks OPTIMIZE. Not that we support
 	// them, really, but it might be nice not to throw an error, at
 	// least.
+#ifdef DEBUG
+	report_debug("Optimizing image cache for %s.\n", name);
+#endif
 	QUERY( "OPTIMIZE TABLE "+name );
       };
 
