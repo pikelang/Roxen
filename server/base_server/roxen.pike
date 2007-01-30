@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.951 2007/01/29 16:09:20 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.952 2007/01/30 10:42:28 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -3425,13 +3425,13 @@ class ImageCache
 	// them, really, but it might be nice not to throw an error, at
 	// least.
 #ifdef DEBUG
-	report_debug("Optimizing image cache for %s.\n", name);
+	report_debug("Optimizing database ... ", name);
 #endif
 	QUERY( "OPTIMIZE TABLE "+name );
       };
 
 #ifdef DEBUG
-    report_debug("%s removed, %dms\n",
+    report_debug("%s removed (%dms)\n",
 		 (num==-1?"all":num?(string)num:"none"),
 		 (gethrtime()-t)/1000);
 #endif
