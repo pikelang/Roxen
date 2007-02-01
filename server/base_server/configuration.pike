@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.630 2007/01/03 12:41:19 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.631 2007/02/01 15:47:16 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -200,7 +200,7 @@ mapping connection_drop( RequestID id )
 //! Remove a connection from the list of currently active connections.
 //! Returns the mapping previously added with connection_add, if any.
 {
-  m_delete( current_connections, id );
+  return m_delete( current_connections, id );
 }
 
 mapping(RequestID:mapping) connection_get( )
