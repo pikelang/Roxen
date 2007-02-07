@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.224 2007/01/03 12:47:45 grubba Exp $
+// $Id: Roxen.pmod,v 1.225 2007/02/07 14:35:57 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -622,13 +622,11 @@ string http_encode_invalids (string f)
 //!
 //! @note
 //! Eight bit chars and wider are encoded using UTF-8 followed by http
-//! escaping. This is in line with the recommendations in RFC 2718
-//! section 2.2.5, appendix B.2 in the HTML 4.01 standard
-//! (http://www.w3.org/TR/html4/appendix/notes.html#non-ascii-chars),
-//! and the IRI recommendation
-//! (http://www.w3.org/International/O-URL-and-ident.html). (It should
-//! work regardless of the charset used in the XML document the URL
-//! might be inserted into.)
+//! escaping, as mandated by RFC 3987, section 3.1 and appendix B.2 in
+//! the HTML 4.01 standard
+//! (http://www.w3.org/TR/html4/appendix/notes.html#non-ascii-chars).
+//! (It should work regardless of the charset used in the XML document
+//! the URL might be inserted into.)
 //!
 //! @seealso
 //! @[http_encode_url]
@@ -732,13 +730,11 @@ string http_encode_url (string f)
 //!
 //! @note
 //! Eight bit chars and wider are encoded using UTF-8 followed by http
-//! escaping. This is in line with the recommendations in RFC 2718
-//! section 2.2.5, appendix B.2 in the HTML 4.01 standard
-//! (http://www.w3.org/TR/html4/appendix/notes.html#non-ascii-chars),
-//! and the IRI recommendation
-//! (http://www.w3.org/International/O-URL-and-ident.html). (It should
-//! work regardless of the charset used in the XML document the URL
-//! might be inserted into.)
+//! escaping, as mandated by RFC 3987, section 3.1 and appendix B.2 in
+//! the HTML 4.01 standard
+//! (http://www.w3.org/TR/html4/appendix/notes.html#non-ascii-chars).
+//! (It should work regardless of the charset used in the XML document
+//! the URL might be inserted into.)
 //!
 //! @seealso
 //! @[http_encode_invalids]
