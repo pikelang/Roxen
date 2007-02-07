@@ -4,7 +4,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: norwegian.pike,v 1.10 2000/12/15 15:24:34 jhs Exp $";
+constant cvs_version = "$Id: norwegian.pike,v 1.11 2007/02/07 11:55:33 erikd Exp $";
 constant _id = ({ "no", "norwegian", "norsk" });
 constant _aliases = ({ "no", "nor", "norwegian", "norsk" });
 
@@ -14,7 +14,7 @@ constant months = ({
   "november", "december" });
 
 constant days = ({
-  "søndag","mandag","tisdag","onsdag",
+  "søndag","mandag","tirsdag","onsdag",
   "torsdag","fredag","lørdag" });
 
 string ordered(int i)
