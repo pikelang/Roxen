@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.87 2006/12/14 16:51:13 grubba Exp $
+// $Id: module.pmod,v 1.88 2007/02/08 13:01:44 mast Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1234,7 +1234,7 @@ class DatabaseChoice
   //! Provide a function that returns a configuration object,
   //! that will be used for authentication against the database
   //! manager. Typically called as
-  //! @code{set_configuration_pointer(my_configuration)@}.
+  //! @expr{set_configuration_pointer(my_configuration)@}.
   {
     config = configuration;
     return this_object();
@@ -1489,13 +1489,8 @@ class List
     int ret;
     if( b ) 
     {
-      werror("query(): %O\n"
-	     "l: %O\n"
-	     "b: %O\n",
-	     query(), l, b);
       add_warning( b[0] );
       set( b[1] );
-      werror("query(): %O\n", query());
       ret = 1;
     }
 
