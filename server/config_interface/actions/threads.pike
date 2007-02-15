@@ -69,21 +69,38 @@ mixed parse( RequestID id )
   object threads_disabled = _disable_threads();
 
   array(Thread.Thread) threads = all_threads();
-  array(string|int) thread_ids =
-    map (threads,
-	 lambda (Thread.Thread t) {
-	   string desc = sprintf ("%O", t);
-	   if (sscanf (desc, "Thread.Thread(%d)", int i)) return i;
-	   else return desc;
-	 });
-  sort (thread_ids, threads);
+
+  mapping(Thread.Thread:string|int) thread_ids = ([]);
+  foreach (threads, Thread.Thread thread) {
+    string desc = sprintf ("%O", thread);
+    if (sscanf (desc, "Thread.Thread(%d)", int i)) thread_ids[thread] = i;
+    else thread_ids[thread] = desc;
+  }
+
+  threads = Array.sort_array (
+    threads,
+    lambda (Thread.Thread a, Thread.Thread b) {
+      // Backend thread first, our thread last (since
+      // it typically only is busy doing this page),
+      // otherwise in id order.
+      if (a == roxen->backend_thread)
+	return 0;
+      else if (b == roxen->backend_thread)
+	return 1;
+      else if (a == this_thread())
+	return 1;
+      else if (b == this_thread())
+	return 0;
+      else
+	return thread_ids[a] > thread_ids[b];
+    });
 
   string res =
     "<font size='+1'><b>" + name + "</b></font>\n"
     "<p><cf-refresh/></p>\n";
   for (int i = 0; i < sizeof (threads); i++)
     res +=
-      "<h3>" + LOCALE(39,"Thread") + " " + thread_ids[i] +
+      "<h3>" + LOCALE(39,"Thread") + " " + thread_ids[threads[i]] +
 #ifdef THREADS
       (threads[i] == roxen->backend_thread ?
        " (" + LOCALE(38,"backend thread")+ ")" : "") +

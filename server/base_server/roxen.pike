@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.957 2007/01/30 17:18:45 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.958 2007/02/15 13:06:07 mast Exp $";
 
 //! @appears roxen
 //!
@@ -4736,19 +4736,30 @@ void describe_all_threads()
   report_debug("### Describing all Pike threads:\n\n");
 
   array(Thread.Thread) threads = all_threads();
-  array(string|int) thread_ids =
-    map (threads,
-	 lambda (Thread.Thread t) {
-	   string desc = sprintf ("%O", t);
-	   if (sscanf (desc, "Thread.Thread(%d)", int i)) return i;
-	   else return desc;
-	 });
-  sort (thread_ids, threads);
+
+  mapping(Thread.Thread:string|int) thread_ids = ([]);
+  foreach (threads, Thread.Thread thread) {
+    string desc = sprintf ("%O", thread);
+    if (sscanf (desc, "Thread.Thread(%d)", int i)) thread_ids[thread] = i;
+    else thread_ids[thread] = desc;
+  }
+
+  threads = Array.sort_array (
+    threads,
+    lambda (Thread.Thread a, Thread.Thread b) {
+      // Backend thread first, otherwise in id order.
+      if (a == backend_thread)
+	return 0;
+      else if (b == backend_thread)
+	return 1;
+      else
+	return thread_ids[a] > thread_ids[b];
+    });
 
   int i;
   for(i=0; i < sizeof(threads); i++) {
     report_debug("### Thread %s%s:\n",
-		 (string) thread_ids[i],
+		 (string) thread_ids[threads[i]],
 #ifdef THREADS
 		 threads[i] == backend_thread ? " (backend thread)" : ""
 #else
@@ -4758,12 +4769,12 @@ void describe_all_threads()
     report_debug(describe_backtrace(threads[i]->backtrace()) + "\n");
   }
 
-  report_debug ("### Total %d Pike threads\n", sizeof (threads));
+  report_debug ("### Total %d Pike threads\n\n", sizeof (threads));
 
   threads = 0;
   threads_disabled = 0;
 #else
-  report_debug("Describing single thread:\n%s\n",
+  report_debug("Describing single thread:\n%s\n\n",
 	       describe_backtrace (backtrace()));
 #endif
 
