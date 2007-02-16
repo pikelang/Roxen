@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.11 2006/01/24 09:55:17 jonasw Exp $
+ * $Id: openfiles.pike,v 1.12 2007/02/16 19:03:26 mast Exp $
  */
 inherit "wizard";
 
@@ -43,6 +43,9 @@ string parse( RequestID id )
      (Array.map(get_all_active_fd(),
 	  lambda(int fd)
 	  {
+	    // FIXME: This way of creating an Stdio.File object from
+	    // an fd doesn't work in pike >= 7.6. It actually causes a
+	    // fatal in the backend. :(
 	    object f = Stdio.File(fd);
 	    object stat = f->stat();
 	    if (!stat)
@@ -67,6 +70,7 @@ string parse( RequestID id )
 
 	    string details = "-";
 
+	  format_details:
 	    if (stat->isreg) {
 	      if (stat->size == 1) {
 		details = "1 byte";
@@ -77,17 +81,38 @@ string parse( RequestID id )
 		details += sprintf(", inode: %d", stat->ino);
 	      }
 	    } else if (stat->issock) {
-	      string remote_port = f->query_address();
+
+
 	      string local_port = f->query_address(1);
-	      if (!remote_port) {
-		if (local_port && (local_port != "0.0.0.0 0")) {
-		  type = "Port";
-		  details = fix_port(local_port);
+	      if (local_port)
+		local_port = fix_port (local_port);
+	      else {
+		if ((<System.EBADF, System.ENOTCONN>)[f->errno()]) {
+		  // A socket that getsockname(2) doesn't like. Assume
+		  // it's a unix socket if we get these errors. Don't
+		  // know how portable it is - only tested on Linux.
+		  // /mast
+		  type = "Unix";
+		  break format_details;
 		}
+
+		local_port =
+		  "(Cannot get local port: "+ strerror (f->errno()) + ")";
+	      }
+
+	      string remote_port = f->query_address();
+	      if (remote_port)
+		remote_port = fix_port (remote_port);
+	      else if (f->errno() != System.ENOTCONN)
+		remote_port =
+		  "(Cannot get remote port: "+ strerror (f->errno()) + ")";
+
+	      if (!remote_port) {
+		type = "Port";
+		details = local_port + " (listen)";
 	      } else {
 		details = sprintf("%s &lt;=&gt; %s",
-				  local_port?fix_port(local_port):"-",
-				  fix_port(remote_port));
+				  local_port, remote_port);
 	      }
 	    }
 
