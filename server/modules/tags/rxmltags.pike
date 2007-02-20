@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.524 2006/12/19 12:19:50 marty Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.525 2007/02/20 15:33:21 erik Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -7092,7 +7092,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  <row><c><p>%p</p></c><c><p>\"a.m.\" or \"p.m.\"</p></c></row>
  <row><c><p>%r</p></c><c><p>Time in 12 hour clock format with %p</p></c></row>
  <row><c><p>%R</p></c><c><p>Time as \"%H:%M\"</p></c></row>
- <row><c><p>%S</p></c><c><p>Seconds (0-61), zero padded to two characters.</p></c></row>
+ <row><c><p>%S</p></c><c><p>Seconds (0-60), zero padded to two characters. Second 59-60 is a leap second.</p></c></row>
  <row><c><p>%t</p></c><c><p>Tab</p></c></row>
  <row><c><p>%T</p></c><c><p>Time as \"%H:%M:%S\"</p></c></row>
  <row><c><p>%u</p></c><c><p>Weekday as a decimal number (1-7), 1 is Sunday.</p></c></row>
