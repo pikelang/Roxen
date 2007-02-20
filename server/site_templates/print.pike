@@ -1,4 +1,4 @@
-// $Id: print.pike,v 1.11 2007/01/09 14:54:45 simon Exp $
+// $Id: print.pike,v 1.12 2007/02/20 07:24:04 simon Exp $
 
 inherit "standard";
 constant site_template = 1;
@@ -30,6 +30,7 @@ constant silent_modules =
   "feed-import",
   "rxmlparse",
   "print-db",
+  "pathinfo",
 });
 
 array(string) _print_modules_display = ({ // Information purposes only
@@ -39,6 +40,7 @@ array(string) _print_modules_display = ({ // Information purposes only
 
 void init_modules(Configuration c, RequestID id)
 {
+  // FIXME: Add search engine configuration
   if( RoxenModule m = c->find_module( "acauth_cookie" ) )
     m->set( "redirect", "/login.html" );
 
