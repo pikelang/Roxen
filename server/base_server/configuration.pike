@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.631 2007/02/01 15:47:16 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.632 2007/02/23 13:25:09 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4432,20 +4432,27 @@ below.</p>
     <p>These extra format specifiers are defined where applicable:</p>
 
     <table><tbody valign='top'>
-    <tr><td>ac-userid</td>
+    <tr><td>$ac-userid</td>
 	<td>The ID number of the AC identity whose edit area was used.
 	Zero for the common view area.</td></tr>
-    <tr><td>workarea</td>
+    <tr><td>$workarea</td>
 	<td>The unique tag for the work area. Empty for the main work
 	area.</td></tr>
-    <tr><td>commit-type</td>
+    <tr><td>$commit-type</td>
 	<td>The type of file commit, one of <code>create</code>,
 	<code>edit</code>, <code>delete</code>, and
 	<code>undelete</code>.</td></tr>
-    <tr><td>revision</td>
+    <tr><td>$revision</td>
 	<td>The committed revision number, a dotted decimal.</td></tr>
-    <tr><td>comment</td>
+    <tr><td>$comment</td>
 	<td>The commit message.</td></tr>
+    <tr><td>$request-time</td>
+	<td>This is set for the action <code>crawl-file</code>. It's
+	similar to <code>$request-time</code> for normal requests,
+	except that it measures the whole time it took for the
+	persistent cache crawler to process the page. That includes
+	all crawled variants and the saving of the entry to the
+	database.</td></tr>
     </tbody></table></dd>
 </dl>"), 0, lambda(){ return !query("Log");});
 
