@@ -1,7 +1,7 @@
 // This is a roxen protocol module.
 // Copyright © 2001 - 2004, Roxen IS.
 
-// $Id: prot_https.pike,v 2.13 2005/03/30 17:53:07 grubba Exp $
+// $Id: prot_https.pike,v 2.14 2007/02/26 13:02:46 mast Exp $
 
 // --- Debug defines ---
 
@@ -180,6 +180,12 @@ class http_fallback
 	my_fd->socket = 0;
       }
 
+      if (function close_cb = my_fd->query_close_callback())
+	// Pretend there was a close of the old fd. This is necessary
+	// to make the http RequestID cleanup and destruct itself
+	// properly.
+	close_cb (my_fd->query_id());
+
       /* Redirect to a https-url */
       fallback_redirect_request(raw_fd, data,
 				my_fd->config &&
@@ -190,6 +196,9 @@ class http_fallback
 	// Old sslfile contains cyclic references.
 	destruct(my_fd);
       }
+
+      // Break cyclic refs.
+      my_fd = 0;
     }
   }
 
