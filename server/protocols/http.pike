@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.515 2006/12/14 10:48:26 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.516 2007/02/26 13:02:46 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1424,9 +1424,13 @@ int wants_more()
 
 static object(this_program) chained_to;
 
-// Paranoia.
 static void destroy()
 {
+  // To avoid references to destructed RequestID objects. Happens
+  // otherwise when prot_https makes a http -> https redirect, for
+  // instance.
+  remove_call_out (do_timeout);
+
   if (chained_to) {
     // This happens when do_log() is called before the request
     // has been chained (eg for short data over fast connections).
