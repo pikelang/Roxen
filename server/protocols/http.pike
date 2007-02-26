@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.479 2007/02/08 14:05:11 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.480 2007/02/26 15:22:02 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1373,6 +1373,14 @@ void internal_error(array _err)
 int wants_more()
 {
   return !!cache;
+}
+
+static void destroy()
+{
+  // To avoid references to destructed RequestID objects. Happens
+  // otherwise when prot_https makes a http -> https redirect, for
+  // instance.
+  remove_call_out (do_timeout);
 }
 
 void do_log( int|void fsent )
