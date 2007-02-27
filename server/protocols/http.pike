@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.516 2007/02/26 13:02:46 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.517 2007/02/27 09:08:18 noring Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -892,13 +892,24 @@ private final int parse_got_2( )
 	// Normal form data.
 	string v;
 
-	// Ok.. This might seem somewhat odd, but IE seems to add a
-	// (spurious) \r\n to the end of the data, and some versions of
-	// opera seem to add (spurious) \r\n to the start of the data.
-	//
-	// Oh, the joy of supporting all webbrowsers is endless.
-	data = String.trim_all_whites( data );
-	l = misc->len = strlen(data);
+	// Oh, the joy of supporting all clients is endless.
+	if(client &&
+	   sizeof(client) >= 3 &&
+	   client[0] == "Roxen" &&
+	   client[1] == "Application" &&
+	   client[2] == "Launcher")
+	{
+	  // Don't trim whitespace for Application Launcher. It uses a
+	  // non-standard way of "posting" data on Mac OS.
+	}
+	else
+	{
+	  // Ok.. This might seem somewhat odd, but IE seems to add a
+	  // (spurious) \r\n to the end of the data, and some versions of
+	  // opera seem to add (spurious) \r\n to the start of the data.
+	  data = String.trim_all_whites(data);
+	  l = misc->len = strlen(data);
+	}
 
 	foreach(replace(data,"+"," ")/"&", v)
 	  if(sscanf(v, "%s=%s", a, b) == 2)
