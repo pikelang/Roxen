@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.360 2007/01/12 20:41:20 mast Exp $
+// $Id: module.pmod,v 1.361 2007/03/01 16:06:23 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -8486,7 +8486,11 @@ class PCode
 	  };
 
 	  if (tag_set && tag_set->generation != generation)
-	    catch (err[0] += "Note: Error happened in stale p-code.\n");
+	    catch {
+	      if (!has_suffix (err[0],
+			       "Note: Error happened in stale p-code.\n"))
+		err[0] += "Note: Error happened in stale p-code.\n";
+	    };
 	  throw (err);
 	}
       }
