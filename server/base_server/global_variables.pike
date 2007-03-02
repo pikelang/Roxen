@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.99 2006/12/14 12:52:42 wellhard Exp $
+// $Id: global_variables.pike,v 1.100 2007/03/02 18:04:31 grubba Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -647,7 +647,46 @@ process to get a thread dump.</p>
 		"in the configuration files. Only useful if you read or "
 		"edit the config files directly."));
 
+#ifdef SMTP_RELAY
+  // SMTP stuff
 
+  defvar("mail_spooldir", "../var/spool/mqueue/",
+	 "SMTP: Mail queue directory", TYPE_DIR,
+	 "Directory where the mail spool queue is stored.");
+
+  defvar("mail_maxhops", 10, "SMTP: Maximum number of hops", TYPE_INT,
+	 "Maximum number of MTA hops (used to avoid loops).<br>\n"
+	 "Zero means no limit.");
+
+  defvar("mail_bounce_size_limit", 262144,
+	 "SMTP: Maximum bounce size", TYPE_INT,
+	 "<p>Maximum size (bytes) of the embedded message in "
+	 "generated bounces.</p>"
+	 "<p>Set to zero for no limit.</p>"
+	 "<p>Set to -1 to disable bounces.</p>");
+
+  // Try to get our FQDN.
+  string hostname = gethostname();
+  array(string) hostinfo = gethostbyname(hostname);
+  if (hostinfo && sizeof(hostinfo)) {
+    hostname = hostinfo[0];
+  }
+
+  defvar("mail_hostname", hostname,
+	 "SMTP: Mailserver host name", TYPE_STRING,
+	 "This is the hostname used by the server in the SMTP "
+	 "handshake (EHLO & HELO).");
+
+  defvar("mail_postmaster",
+	 "Postmaster <postmaster@" + hostname + ">",
+	 "SMTP: Postmaster address", TYPE_STRING,
+	 "Email address of the postmaster.");
+
+  defvar("mail_mailerdaemon",
+	 "Mail Delivery Subsystem <MAILER-DAEMON@" + hostname + ">",
+	 "SMTP: Mailer daemon address", TYPE_STRING,
+	 "Email address of the mailer daemon.");
+#endif /* SMTP_RELAY */
 
 #ifdef SNMP_AGENT
   // SNMP stuffs
