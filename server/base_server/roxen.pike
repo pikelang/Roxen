@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.958 2007/02/15 13:06:07 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.959 2007/03/02 18:03:38 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -28,6 +28,9 @@ ArgCache argcache;
 inherit "global_variables";
 #ifdef SNMP_AGENT
 inherit "snmpagent";
+#endif
+#ifdef SMTP_RELAY
+inherit "smtprelay";
 #endif
 inherit "hosts";
 inherit "disk_cache";
@@ -5011,6 +5014,10 @@ int main(int argc, array tmp)
   foreach( find_all_pike_module_directories( ), string d )
     master()->add_module_path( d );
   report_debug("\bDone [%dms]\n", (gethrtime()-t)/1000 );
+
+#ifdef SMTP_RELAY
+  smtp_relay_start();
+#endif /* SMTP_RELAY */
 
 #ifdef SNMP_AGENT
   //SNMPagent start
