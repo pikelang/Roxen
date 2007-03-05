@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.627 2007/02/23 13:25:09 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.628 2007/03/05 12:13:59 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4368,7 +4368,7 @@ hyphens ('-') occur in the specifier names.</p>
     that describes which cache(s) the page was delivered from:
 
     <table><tbody valign='top'>
-    <tr><td>protcached</td>
+    <tr><td>protcache</td>
 	<td>The low-level cache in the HTTP protocol module.</td></tr>
     <tr><td>protstore</td>
 	<td>The page got stored in the low-level cache in the HTTP
