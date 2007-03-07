@@ -1,4 +1,4 @@
-/* $Id: RoxenSSLFile.pike,v 1.19 2007/03/07 13:29:15 mast Exp $
+/* $Id: RoxenSSLFile.pike,v 1.20 2007/03/07 18:47:58 mast Exp $
  */
 
 // This is SSL.sslfile from Pike 7.6, slightly modified for the old
@@ -563,10 +563,14 @@ int close (void|string how, void|int clean_close, void|int dont_throw)
     if (close_packet_send_state == CLOSE_PACKET_NOT_SCHEDULED)
       close_packet_send_state = CLOSE_PACKET_SCHEDULED;
 
-    if (nonblocking_mode)
+    if (nonblocking_mode) {
+      SSL3_DEBUG_MSG ("SSL.sslfile->close: Nonblocking close started\n");
+      RESTORE;
       update_internal_state();
+      return 1;
+    }
 
-    else
+    else {
       if (!direct_write()) {
 	// Should be shut down after close(), even if an error occurred.
 	int err = errno();
@@ -580,9 +584,6 @@ int close (void|string how, void|int clean_close, void|int dont_throw)
 	  error ("Failed to close SSL connection: %s\n", strerror (err));
       }
 
-    if (stream && (stream->query_read_callback() || stream->query_write_callback()))
-      SSL3_DEBUG_MSG ("SSL.sslfile->close: Close underway\n");
-    else {
       // The local backend run by direct_write has typically already
       // done this, but it might happen that it doesn't do anything in
       // case close packets already have been exchanged.
@@ -1269,12 +1270,23 @@ static void update_internal_state (void|int assume_real_backend)
       SSL3_DEBUG_MORE_MSG ("update_internal_state: Not in callback mode\n");
     }
 
+    if (!got_extra_read_call_out && sizeof (read_buffer))
+      // Got buffered read data, so schedule a call to
+      // ssl_read_callback to handle it.
+      got_extra_read_call_out = -1;
+
+    // If got_extra_read_call_out is set here then we wait with all
+    // other callbacks so that the extra ssl_read_callback call is
+    // carried out before anything else.
+
     if (install_read_cbs) {
-      stream->set_read_callback (ssl_read_callback);
-      stream->set_close_callback (ssl_close_callback);
-      if (got_extra_read_call_out < 0 || sizeof (read_buffer)) {
+      if (got_extra_read_call_out < 0) {
 	call_out (ssl_read_callback, 0, 1, 0);
 	got_extra_read_call_out = 1;
+      }
+      else {
+	stream->set_read_callback (ssl_read_callback);
+	stream->set_close_callback (ssl_close_callback);
       }
     }
     else {
@@ -1288,7 +1300,8 @@ static void update_internal_state (void|int assume_real_backend)
       }
     }
 
-    stream->set_write_callback (install_write_cb && ssl_write_callback);
+    stream->set_write_callback (install_write_cb && !got_extra_read_call_out &&
+				ssl_write_callback);
   }
 
   else
@@ -1383,6 +1396,11 @@ static int ssl_read_callback (int called_from_real_backend, string input)
       int handshake_already_finished = conn->handshake_finished;
       string|int data = conn->got_data (input);
 
+#ifdef DEBUG
+      if (got_extra_read_call_out)
+	error ("Got to real read callback with queued extra read call out.\n");
+#endif
+
 #ifdef SSL3_DEBUG_TRANSPORT
       werror ("ssl_read_callback: Got data: %O\n", data);
 #endif
@@ -1443,7 +1461,7 @@ static int ssl_read_callback (int called_from_real_backend, string input)
       }
     }
 
-    else
+    else {
       // This is another call that has been queued below through a
       // call out. That is necessary whenever we need to call several
       // user callbacks from the same invocation: We can't do anything
@@ -1453,6 +1471,8 @@ static int ssl_read_callback (int called_from_real_backend, string input)
       // problem by queuing a call out to ourselves (with zero as
       // input) to continue.
       got_extra_read_call_out = 0;
+      update_internal_state();
+    }
 
     // Figure out what we need to do. call_accept_cb is already set
     // from above.
@@ -1483,19 +1503,11 @@ static int ssl_read_callback (int called_from_real_backend, string input)
 	       "when no callbacks are supposed to be installed.\n");
 #endif
       if (!got_extra_read_call_out) {
-	if (called_from_real_backend) {
-	  call_out (ssl_read_callback, 0, 1, 0);
-	  got_extra_read_call_out = 1;
-	  SSL3_DEBUG_MSG ("ssl_read_callback: Too much to do (%O, %O, %O, %O) - "
-			  "queued another call\n", alert_cb_called, call_accept_cb,
-			  call_read_cb, do_close_stuff);
-	}
-	else {
-	  got_extra_read_call_out = -1;
-	  SSL3_DEBUG_MSG ("ssl_read_callback: Too much to do (%O, %O, %O, %O) - "
-			  "scheduled another call\n", alert_cb_called, call_accept_cb,
-			  call_read_cb, do_close_stuff);
-	}
+	got_extra_read_call_out = -1;
+	SSL3_DEBUG_MSG ("ssl_read_callback: Too much to do (%O, %O, %O, %O) - "
+			"scheduled another call\n", alert_cb_called, call_accept_cb,
+			call_read_cb, do_close_stuff);
+	update_internal_state();
       }
       else
 	SSL3_DEBUG_MSG ("ssl_read_callback: Too much to do (%O, %O, %O, %O) - "
@@ -1510,6 +1522,7 @@ static int ssl_read_callback (int called_from_real_backend, string input)
 	if (got_extra_read_call_out > 0)
 	  remove_call_out (ssl_read_callback);
 	got_extra_read_call_out = 0;
+	update_internal_state();
       }
 
     // Now actually do (a bit of) what should be done.
@@ -1599,6 +1612,8 @@ static int ssl_write_callback (int called_from_real_backend)
 #ifdef DEBUG
     if (!stream)
       error ("Got zapped stream in callback.\n");
+    if (got_extra_read_call_out)
+      error ("Got to write callback with queued extra read call out.\n");
 #endif
 
     if (got_extra_read_call_out) {
@@ -1825,6 +1840,8 @@ static int ssl_close_callback (int called_from_real_backend)
 #ifdef DEBUG
     if (!stream)
       error ("Got zapped stream in callback.\n");
+    if (got_extra_read_call_out)
+      error ("Got to close callback with queued extra read call out.\n");
 #endif
 
     if (got_extra_read_call_out) {
