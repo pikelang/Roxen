@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.16 2006/11/15 14:05:05 liin Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.17 2007/03/08 09:57:44 liin Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -283,7 +283,7 @@ class HrefDatabase {
     array(mapping(string:mixed)) to_fetch = urls_to_fetch();
     
     foreach(to_fetch, mapping next) {
-      fetch_url(next);
+      fetch_url(next, (["x-roxen-recursion-depth":1]));
     }
    
     foreach(initiated, HTTPClient client) {
@@ -637,7 +637,7 @@ class HTTPClient {
       request_headers = ([]);
     mapping default_headers = ([
       "user-agent" : "Mozilla/4.0 compatible (Pike HTTP client)",
-      "host" : url->host ]);
+      "host" : sprintf("%s:%d", url->host, url->port) ]);
     
     if(url->user || url->passwd)
       default_headers->authorization = "Basic "
