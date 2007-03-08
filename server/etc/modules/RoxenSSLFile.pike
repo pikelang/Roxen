@@ -1,4 +1,4 @@
-/* $Id: RoxenSSLFile.pike,v 1.20 2007/03/07 18:47:58 mast Exp $
+/* $Id: RoxenSSLFile.pike,v 1.21 2007/03/08 18:04:14 mast Exp $
  */
 
 // This is SSL.sslfile from Pike 7.6, slightly modified for the old
@@ -481,6 +481,13 @@ static void create (Stdio.File stream, SSL.context ctx,
     stream->set_close_callback (0);
     stream->set_id (1);
 
+    // The session cache is broken in 7.4, so we have to disable it.
+    // Not only is the garbing buggy (fixable with a fairly small
+    // patch) but the session objects also contain cyclic references.
+    // That makes it necessary to destruct them explicitly, and we
+    // therefore must avoid that they get shared between connections.
+    ctx->use_cache = 0;
+
     conn = SSLConnection (!is_client, ctx);
 
     if(is_blocking) {
@@ -631,9 +638,12 @@ Stdio.File shutdown()
       close_state = STREAM_OPEN;
     }
 
-    if (conn->session && !sizeof(conn->session->identity))
-      // conn->session doesn't exist before the handshake.
-      conn->context->purge_session (conn->session);
+    if (conn->session)
+      // Check conn->session since it doesn't exist before the
+      // handshake. Need to destruct the session object to avoid
+      // garbage. It's safe to do that here since the session cache is
+      // disabled in create().
+      destruct (conn->session);
     destruct (conn);		// Necessary to avoid garbage.
 
     write_buffer = ({});
