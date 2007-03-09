@@ -1,7 +1,7 @@
 // This is a roxen protocol module.
 // Copyright © 2001 - 2004, Roxen IS.
 
-// $Id: prot_https.pike,v 2.14 2007/02/26 13:02:46 mast Exp $
+// $Id: prot_https.pike,v 2.15 2007/03/09 21:30:38 mast Exp $
 
 // --- Debug defines ---
 
@@ -171,6 +171,11 @@ class http_fallback
 	  my_fd->query_connection()->current_write_state)->seq_num == 0) &&
       search(lower_case(data), "http"))
     {
+      if (function close_cb = my_fd->query_close_callback())
+	// Pretend there was a close of the old fd. This is necessary
+	// to make the http RequestID cleanup and destruct itself
+	// properly.
+	close_cb (my_fd->query_id());
       
       Stdio.File raw_fd;
       if (my_fd->shutdown) {
@@ -179,12 +184,6 @@ class http_fallback
 	raw_fd = my_fd->socket;
 	my_fd->socket = 0;
       }
-
-      if (function close_cb = my_fd->query_close_callback())
-	// Pretend there was a close of the old fd. This is necessary
-	// to make the http RequestID cleanup and destruct itself
-	// properly.
-	close_cb (my_fd->query_id());
 
       /* Redirect to a https-url */
       fallback_redirect_request(raw_fd, data,

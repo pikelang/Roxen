@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.516 2007/02/27 09:08:18 noring Exp $";
+constant cvs_version = "$Id: http.pike,v 1.517 2007/03/09 21:30:38 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -995,7 +995,7 @@ void disconnect()
     if (mixed err = catch (my_fd->close())) {
 #ifdef DEBUG
       report_debug ("Failed to close http(s) connection: " +
-		    describe_error (err));
+		    describe_backtrace (err));
 #endif
     }
     my_fd = 0;
@@ -1068,8 +1068,28 @@ static void close_cb()
   data_buffer = 0;
   pipe = 0;
 
-  // Avoid that the fd is closed by disconnect() - the write direction
-  // might still want to use it. We rely on refcount garbing instead.
+  // Zero my_fd to avoid that the fd is closed by disconnect() - the
+  // write direction might still want to use it. We rely on refcount
+  // garbing instead, which means we must be careful about
+  // deinstalling callbacks (they might not point to this object in
+  // all cases).
+  //
+  // http_fallback.ssl_alert_callback also counts on that my_fd
+  // doesn't get closed since it calls this close callback and then
+  // passes the connection on to fallback_redirect_request.
+  my_fd->set_read_callback (0);
+  my_fd->set_close_callback (0);
+  if (my_fd->set_alert_callback) {
+    // Ugly hack in case of an ssl connection: Zero the alert and
+    // accept callbacks too. They are set by the http_fallback in
+    // prot_https.pike. It normally ensures that they get zeroed too
+    // after a successful connect or http redirect, but if the client
+    // drops the connection very early, before either path has been
+    // taken, we get here directly. (http_fallback can't wrap close_cb
+    // since it's installed afterwards.)
+    my_fd->set_alert_callback (0);
+    my_fd->set_accept_callback (0);
+  }
   my_fd = 0;
 
   disconnect();
