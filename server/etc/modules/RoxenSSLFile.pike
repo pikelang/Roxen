@@ -1,4 +1,4 @@
-/* $Id: RoxenSSLFile.pike,v 1.21 2007/03/08 18:04:14 mast Exp $
+/* $Id: RoxenSSLFile.pike,v 1.22 2007/03/09 18:08:27 mast Exp $
  */
 
 // This is SSL.sslfile from Pike 7.6, slightly modified for the old
@@ -70,8 +70,8 @@ class SSLConnection
 //! @item
 //!   @[destroy] attempts to close the stream properly by sending the
 //!   close packet, but since it can't do blocking I/O it's not
-//!   certain that will succeed. The stream should therefore always be
-//!   closed with an explicit @[close] call.
+//!   certain that it will succeed. The stream should therefore always
+//!   be closed with an explicit @[close] call.
 //! @item
 //!   Abrupt remote close without the proper handshake gets the errno
 //!   @[System.EPIPE].
@@ -167,7 +167,7 @@ static int local_errno;
 
 static int cb_errno;
 // Stores the errno from failed I/O in a callback so that the next
-// visible I/O operations can report it properly.
+// visible I/O operation can report it properly.
 
 static int got_extra_read_call_out;
 // 1 when we have a call out to ssl_read_callback. We get this when we
@@ -176,6 +176,10 @@ static int got_extra_read_call_out;
 // for more details. -1 if we've switched to non-callback mode and
 // therefore has removed the call out temporarily but need to restore
 // it when switching back. 0 otherwise.
+//
+// -1 is also set before a call to update_internal_state when we want
+// to schedule an extra read call out; update_internal_state will then
+// do the actual call out installation if possible.
 
 static int alert_cb_called;
 // Need to know if the alert callback has been called in
@@ -270,6 +274,10 @@ static void thread_error (string msg, THREAD_T other_thread)
 
 static void thread_error (string msg, THREAD_T other_thread)
 {
+#if 0 && constant (_locate_references)
+  werror ("%s\n%O got %d refs", msg, this, _refs (this));
+  _locate_references (this);
+#endif
   error ("%s"
 	 "%s\n"
 	 "User callbacks: a=%O r=%O w=%O c=%O\n"
@@ -302,7 +310,7 @@ static THREAD_T op_thread;
     }									\
 									\
     if (OP_THREAD && OP_THREAD != CUR_THREAD)				\
-      thread_error ("Already doing operation in another thread.\n",	\
+      thread_error ("Doing operation in another thread.\n",		\
 		    OP_THREAD);						\
   } while (0)
 
@@ -1258,8 +1266,10 @@ static void update_internal_state (void|int assume_real_backend)
       install_read_cbs = SSL_INTERNAL_READING;
       install_write_cb = SSL_INTERNAL_WRITING;
 
-      SSL3_DEBUG_MORE_MSG ("update_internal_state: After close [r:%O w:%O]\n",
-			   !!install_read_cbs, !!install_write_cb);
+      SSL3_DEBUG_MORE_MSG ("update_internal_state: "
+			   "After close [r:%O w:%O rcb:%O]\n",
+			   !!install_read_cbs, !!install_write_cb,
+			   got_extra_read_call_out);
     }
 
     // CALLBACK_MODE but slightly optimized below.
@@ -1269,15 +1279,18 @@ static void update_internal_state (void|int assume_real_backend)
       install_write_cb = (write_callback || SSL_INTERNAL_WRITING);
 
       SSL3_DEBUG_MORE_MSG ("update_internal_state: "
-			   "Callback mode [r:%O w:%O]\n",
-			   !!install_read_cbs, !!install_write_cb);
+			   "Callback mode [r:%O w:%O rcb:%O]\n",
+			   !!install_read_cbs, !!install_write_cb,
+			   got_extra_read_call_out);
     }
 
     else {
       // Not in callback mode. Can't install callbacks even though we'd
       // "need" to - have to cope with the local backend in each
       // operation instead.
-      SSL3_DEBUG_MORE_MSG ("update_internal_state: Not in callback mode\n");
+      SSL3_DEBUG_MORE_MSG ("update_internal_state: "
+			   "Not in callback mode [rcb:%O]\n",
+			   got_extra_read_call_out);
     }
 
     if (!got_extra_read_call_out && sizeof (read_buffer))
@@ -1316,7 +1329,8 @@ static void update_internal_state (void|int assume_real_backend)
 
   else
     SSL3_DEBUG_MORE_MSG ("update_internal_state: "
-			 "In local backend - nothing done\n");
+			 "In local backend - nothing done [rcb:%O]\n",
+			 got_extra_read_call_out);
 }
 
 static int queue_write()
@@ -1554,6 +1568,11 @@ static int ssl_read_callback (int called_from_real_backend, string input)
     }
 
     else if (do_close_stuff) {
+#ifdef DEBUG
+      if (got_extra_read_call_out)
+	error ("Shouldn't have more to do after close stuff.\n");
+#endif
+
       if (conn->closing & 2 &&
 	  close_packet_send_state == CLOSE_PACKET_NOT_SCHEDULED) {
 	close_packet_send_state = CLOSE_PACKET_SCHEDULED;
@@ -1625,23 +1644,6 @@ static int ssl_write_callback (int called_from_real_backend)
     if (got_extra_read_call_out)
       error ("Got to write callback with queued extra read call out.\n");
 #endif
-
-    if (got_extra_read_call_out) {
-      // Not sure if this actually can happen, but handle it correctly
-      // if it does - the call out would be out of order otherwise.
-#ifdef DEBUG
-      if (!called_from_real_backend)
-	error ("RUN_MAYBE_BLOCKING is supposed "
-	       "to handle got_extra_read_call_out first.\n");
-      if (got_extra_read_call_out < 0)
-	error ("Ended up in ssl_write_callback from real backend "
-	       "when no callbacks are supposed to be installed.\n");
-#endif
-      remove_call_out (ssl_read_callback);
-      RESTORE;
-      // ssl_read_callback will clear got_extra_read_call_out.
-      return ssl_read_callback (called_from_real_backend, 0);
-    }
 
   write_to_stream:
     do {
@@ -1853,23 +1855,6 @@ static int ssl_close_callback (int called_from_real_backend)
     if (got_extra_read_call_out)
       error ("Got to close callback with queued extra read call out.\n");
 #endif
-
-    if (got_extra_read_call_out) {
-      // Not sure if this actually can happen, but handle it correctly
-      // if it does - the call out would be out of order otherwise.
-#ifdef DEBUG
-      if (!called_from_real_backend)
-	error ("RUN_MAYBE_BLOCKING is supposed "
-	       "to handle got_extra_read_call_out first.\n");
-      if (got_extra_read_call_out < 0)
-	error ("Ended up in ssl_close_callback from real backend "
-	       "when no callbacks are supposed to be installed.\n");
-#endif
-      remove_call_out (ssl_read_callback);
-      RESTORE;
-      // ssl_read_callback will clear got_extra_read_call_out.
-      return ssl_read_callback (called_from_real_backend, 0);
-    }
 
     // If we've arrived here due to an error, let it override any
     // older errno from an earlier callback.
