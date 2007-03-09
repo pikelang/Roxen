@@ -1,4 +1,4 @@
-/* $Id: RoxenSSLFile.pike,v 1.22 2007/03/09 18:08:27 mast Exp $
+/* $Id: RoxenSSLFile.pike,v 1.23 2007/03/09 18:16:35 mast Exp $
  */
 
 // This is SSL.sslfile from Pike 7.6, slightly modified for the old
@@ -249,6 +249,10 @@ static constant epipe_errnos = (<
 
 static void thread_error (string msg, THREAD_T other_thread)
 {
+#if 0 && constant (_locate_references)
+  werror ("%s\n%O got %d refs", msg, this, _refs (this));
+  _locate_references (this);
+#endif
   error ("%s"
 	 "%s\n"
 	 "User callbacks: a=%O r=%O w=%O c=%O\n"
@@ -274,10 +278,6 @@ static void thread_error (string msg, THREAD_T other_thread)
 
 static void thread_error (string msg, THREAD_T other_thread)
 {
-#if 0 && constant (_locate_references)
-  werror ("%s\n%O got %d refs", msg, this, _refs (this));
-  _locate_references (this);
-#endif
   error ("%s"
 	 "%s\n"
 	 "User callbacks: a=%O r=%O w=%O c=%O\n"
