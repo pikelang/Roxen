@@ -1,4 +1,4 @@
-/* $Id: RoxenSSLFile.pike,v 1.24 2007/03/09 21:21:34 mast Exp $
+/* $Id: RoxenSSLFile.pike,v 1.25 2007/03/14 15:43:31 mast Exp $
  */
 
 // This is SSL.sslfile from Pike 7.6, slightly modified for the old
@@ -362,7 +362,7 @@ static THREAD_T op_thread;
       while (1) {							\
 	float|int(0..0) action;						\
 									\
-	if (got_extra_read_call_out && ENABLE_READS) {			\
+	if (got_extra_read_call_out) {					\
 	  /* Do whatever ssl_read_callback needs to do before we	\
 	   * continue. Since the first arg is zero here it won't call	\
 	   * any user callbacks, so they are superseded as they should	\
