@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.904 2006/11/23 14:02:30 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.905 2007/03/15 16:46:24 anders Exp $";
 
 //! @appears roxen
 //!
@@ -3119,10 +3119,10 @@ class ImageCache
 
   static mapping restore_meta( string id, RequestID rid )
   {
-    if( meta_cache[ id ] )
+    if( array item = meta_cache[ id ] )
     {
-      meta_cache[ id ][ 1 ] = time(1); // Update cached atime.
-      return meta_cache[ id ][ 0 ];
+      item[ 1 ] = time(1); // Update cached atime.
+      return item[ 0 ];
     }
 
 #ifdef ARG_CACHE_DEBUG
@@ -3150,10 +3150,10 @@ class ImageCache
   static void sync_meta()
   {
     // Sync cached atimes.
-    foreach(indices(meta_cache), string id) {
-      if (meta_cache[id][1])
+    foreach(meta_cache; string id; array value) {
+      if (value[1])
 	QUERY("UPDATE "+name+" SET atime=%d WHERE id=%s",
-	      meta_cache[id][1], id);
+	      value[1], id);
     }
     meta_cache = ([]);
   }
@@ -3343,16 +3343,29 @@ class ImageCache
   	  return res;
       })) {
 	// File not found.
-	if(arrayp(err) && sizeof(err) && stringp(err[0]) &&
-	   sscanf(err[0], "Requesting unknown key %s\n", string message) == 1)
+	
+	if(arrayp(err) && sizeof(err) && stringp(err[0]))
 	{
-	  report_debug("Requesting unknown key %s %O from %O\n",
-		       message,
-		       id->not_query,
-		       (sizeof(id->referer)?id->referer[0]:"unknown page"));
+	  if (sscanf(err[0], "Requesting unknown key %s\n",
+		     string message) == 1)
+	  {
+	    report_debug("Requesting unknown key %s %O from %O\n",
+			 message,
+			 id->not_query,
+			 (sizeof(id->referer)?id->referer[0]:"unknown page"));
+	    return 0;
+	  }
+	  if (sscanf(err[0], "Failed to load specified image [\"%s\"]\n",
+		     string message) == 1)
+	  {
+	    report_debug("Failed to load specified image %O from %O - referrer %O\n",
+			 message,
+			 id->not_query,
+			 (sizeof(id->referer)?id->referer[0]:"unknown page"));
+	    return 0;
+	  }
 	}
-	else
-	  report_debug("Error in draw: %s\n", describe_backtrace(err));
+	report_debug("Error in draw: %s\n", describe_backtrace(err));
 	return 0;
       }
       if( !(res = restore( na,id )) ) {
