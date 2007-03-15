@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.17 2007/03/08 09:57:44 liin Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.18 2007/03/15 11:50:56 liin Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -570,7 +570,13 @@ class TagInsertCachedHref {
     
     if(args["decode-xml"]) {
       // Parse xml header and recode content to internal representation.
-      res = Parser.XML.Simple()->autoconvert(res);
+      mixed result = catch {
+	res = Parser.XML.Simple()->autoconvert(res);
+      };
+      
+      if (result) {
+	werror("insert#cached-href: An error occurred trying to decode the data.\n");
+      }
       
       // Remove any bytes potentially still preceeding the first '<' in the xml file
       return res[search(res, "<")..];
