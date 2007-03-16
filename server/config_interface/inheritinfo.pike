@@ -43,12 +43,14 @@ string program_name_version( program what )
     if( file )
       ofile = master()->make_ofilename( master()->program_name( what ) );
   };
-  array q = connect_to_my_mysql( 1, "local" )
-        ->query( "select mtime from precompiled_files where id=%s", ofile );
-  if( !sizeof( q ) )
-    ofs = 0;
-  else
-    ofs = ([ "mtime":(int)q[0]->mtime ]);
+  if (ofile) {
+    array q = connect_to_my_mysql( 1, "local" )
+      ->query( "select mtime from precompiled_files where id=%s", ofile );
+    if( !sizeof( q ) )
+      ofs = 0;
+    else
+      ofs = ([ "mtime":(int)q[0]->mtime ]);
+  }
 
   if( !(fs = file_stat( file )) )
     warning="<i>Source file gone!</i>";
