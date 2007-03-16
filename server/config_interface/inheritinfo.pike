@@ -87,10 +87,13 @@ string rec_print_tree( array q )
 
 string inherit_tree( RoxenModule m )
 {
-  catch{ // won't work for programs in other programs.
+  mixed err = catch { // won't work for programs in other programs.
     if( m->get_inherit_tree )
       return m->get_inherit_tree( );
     return rec_print_tree( Program.inherit_tree( object_program(m) ) );
   };
+  report_debug("Failed to generated inherit tree:\n"
+	       "%s\n",
+	       describe_backtrace(err));
   return "";
 }
