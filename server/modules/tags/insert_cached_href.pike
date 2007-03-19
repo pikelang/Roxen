@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.18 2007/03/15 11:50:56 liin Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.19 2007/03/19 08:43:57 liin Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -28,6 +28,8 @@ private array(HTTPClient) initiated; /* Contains initiated but unfinished data f
 private Thread.Mutex mutex;
 private Thread.MutexKey mutex_key;
 #endif
+
+constant MAX_REDIRECTS = 5;
 
 private HrefDatabase href_database;
 
@@ -160,6 +162,7 @@ static int(0..1) is_number(int char) {
   return (char >= 48 && char <= 57) ? 1 : 0;  
 }
 
+#ifdef THREADS
 public int(0..1) already_initiated(string url) {
   foreach(initiated, HTTPClient client) {
     if (url == (string)client->url)
@@ -167,6 +170,88 @@ public int(0..1) already_initiated(string url) {
   }
   
   return 0;
+}
+#endif
+
+public int(0..1) is_redirect(int status) {
+  /*
+    A 304 will never happen since the 
+    GET is never conditional. 
+  */
+  if (status >= 300 && status < 400 && status != 304)
+    return 1;
+  
+  return 0;
+}
+
+/*
+  Takes action based on HTTP status codes in reply.
+  Synchronous:
+*/
+public string get_result_sync(HTTPClient client, mapping args, mapping header) {
+  if (!is_redirect(client->status) || !MAX_REDIRECTS)
+    return client->data();
+  
+  int counter;
+  string location = client->con->headers->location;
+  
+  if (!location || !sizeof(location))
+    return client->data();
+  
+  DWRITE("Following redirect from " + (string)client->url + 
+	 " to " + location);
+  
+  args["cached-href"] = location;
+  HTTPClient new_client = HTTPClient("GET", args, header);
+  
+  new_client->orig_url = (string)client->url;
+  new_client->run();
+  counter++;
+  
+  while (is_redirect(new_client->status) && counter < MAX_REDIRECTS) {
+    location = new_client->con->headers->location;
+    
+    if (!location || !sizeof(location))
+      return new_client->data();
+    
+    DWRITE("Following redirect from " + (string)new_client->url + 
+	   " to " + location);
+    
+    args["cached-href"] = location;
+    new_client = HTTPClient("GET", args, header);
+    new_client->orig_url = (string)client->url;
+    new_client->run();
+    counter++;
+  }
+  
+  return new_client->data();
+}
+
+/*
+  Takes action based on HTTP status codes in reply.
+  Asynchronous:
+*/
+public void get_result_async(HTTPClient client, mapping args, mapping header) {
+  if (!is_redirect(client->status))
+    return;
+  
+  int redirects = client->redirects + 1;
+  string location = client->con->headers->location;
+  
+  if (redirects > MAX_REDIRECTS ||
+      !location ||
+      !sizeof(location))
+    return;
+    
+  DWRITE("Following redirect from " + (string)client->url + 
+	 " to " + location);
+  
+  args["cached-href"] = location;
+  HTTPClient new_client = HTTPClient("GET", args, header);
+  
+  new_client->orig_url = client->orig_url;
+  new_client->redirects = redirects;
+  new_client->run();
 }
 
 public void|string fetch_url(mapping(string:mixed) to_fetch, void|mapping header) {
@@ -190,18 +275,17 @@ public void|string fetch_url(mapping(string:mixed) to_fetch, void|mapping header
   client = HTTPClient("GET", args, header);
   initiated += ({client});
   mutex_key = 0;
+  client->orig_url = (string)client->url;
   client->run();
   
-  if (to_fetch["sync"]) {
-    if(client->status > 0 && client->status < 400) {
-      return client->data();
-    } else
-      return "";
-  }
+  if (to_fetch["sync"]) 
+    return get_result_sync(client, args, header);
 #else
   client = Protocols.HTTP.get_url(to_fetch["url"], 0);
-  
-  if(client && client->status > 0 && client->status < 400) {
+
+  // In practice a server never runs unthreaded. Keep it 
+  // simple and only return when status code < 300:
+  if(client && client->status > 0 && client->status < 300) {
     href_database->update_data(to_fetch["url"], client->data());
     return client->data();
   } else
@@ -238,7 +322,8 @@ class HrefDatabase {
   }
 
   public void empty_db() {
-    /* Might as well clean up the database in a mutex section,
+    /* 
+       Might as well clean up the database in a mutex section,
        just to be sure. No performance issue since this function is only
        supposed to be used when the "Clear database" button in the admin interface 
        is pressed.
@@ -263,10 +348,12 @@ class HrefDatabase {
   public void update_db() {
     DWRITE(sprintf("###########  update_db(): Called every %d seconds  ##########"
 		   , get_time_in_seconds(query("update-interval"))));
-    
+   
+#ifdef THREADS
     foreach(initiated, HTTPClient client) {
       DWRITE("STILL initiated (should be empty!!!!!): " + (string)client->url);
     }
+#endif
 
 #ifdef OFFLINE
     //  Don't alter entries when running server without network connections.
@@ -286,9 +373,11 @@ class HrefDatabase {
       fetch_url(next, (["x-roxen-recursion-depth":1]));
     }
    
+#ifdef THREADS
     foreach(initiated, HTTPClient client) {
       DWRITE("initiated: " + (string)client->url);
     }
+#endif
  
     DWRITE("----------------- Leaving update_db() ------------------------");
   }
@@ -575,7 +664,8 @@ class TagInsertCachedHref {
       };
       
       if (result) {
-	werror("insert#cached-href: An error occurred trying to decode the data.\n");
+	werror("INSERT_CACHED_HREF: An error occurred trying to decode the data from " +
+	       args["cached-href"] + ".\n");
       }
       
       // Remove any bytes potentially still preceeding the first '<' in the xml file
@@ -590,10 +680,10 @@ class TagInsertCachedHref {
 
 /* This class represents the retrieval of data from an URL */
 class HTTPClient {
-  int status, timeout, start_time;
+  int status, timeout, start_time, redirects;
   object con;
   Standards.URI url;
-  string path, query, req_data,method;
+  string path, query, req_data,method, orig_url;
   mapping request_headers;
   Thread.Queue queue = Thread.Queue();
   int(0..1) sync;
@@ -666,17 +756,23 @@ class HTTPClient {
   
   string data() {
     if(!con->ok)
-      return 0;
+      return "";
     
-    return con->data();
+    if(status > 0 && status < 300)
+      return con->data();
+
+    return "";
   }
   
   void req_ok() {
     DWRITE("Received headers from " + (string)url + " OK");
     status = con->status;
 
+    /*
+      Error, abort:
+    */
     if (status >= 400) {
-      DWRITE("HTTP status code " + (string)status + " for " + (string)url + ", aborting fetch");
+      DWRITE("HTTP status code " + (string)status + " for " + (string)url + ", aborting.");
       finish_up();
       
       if (sync)
@@ -684,7 +780,31 @@ class HTTPClient {
       
       return;
     }
-    
+
+    /*
+      Redirection:
+    */
+    if (is_redirect(status)) {
+      finish_up();
+      
+      if (sync) {
+	queue->write("@");
+	return;
+      }
+      
+      mapping args = (["cached-href" : (string)url,
+		       "timeout"     : timeout,
+		       "sync"        : 0]);
+      
+      get_result_async(this_object(), args, request_headers);
+      
+      return;
+    }
+
+    /*
+      HTTP status code OK, continuing
+      with data fetch:
+    */
     int data_timeout = timeout - (time() - start_time);
     con->data_timeout = data_timeout >= 0 ? data_timeout : 0;
     con->timed_async_fetch(data_ok, data_fail);
@@ -705,7 +825,10 @@ class HTTPClient {
     finish_up();
 
     if (href_database)
-      href_database->update_data((string)url, con->data());
+      if (orig_url)
+	href_database->update_data(orig_url, con->data());
+      else
+	href_database->update_data((string)url, con->data());
     
     if (sync)
       queue->write("@");
