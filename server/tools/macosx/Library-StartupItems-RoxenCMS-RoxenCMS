@@ -1,0 +1,139 @@
+#!/bin/sh
+#
+# /Library/StartupItems/RoxenCMS/RoxenCMS
+#
+# StartupItem script for Roxen CMS. Set the variables
+# below to something fitting. This is only an example script.
+#
+
+# Check if zero arguments
+#
+if [ -z $1 ] ; then
+    echo "Usage: $0 [start|stop|restart]"
+    exit 1
+fi
+
+# Setup environment
+#
+test -r /etc/rc.common || exit 1
+. /etc/rc.common
+
+# The server directory where the 'start' script is located.
+#
+roxenhome=/usr/local/roxen
+
+# File creation mask
+#
+umask 022
+
+# If you want to start with another configuration directory. The path
+# is relative to the server-X.Y.Z directory.
+#
+configdir=
+#configdir=../configurations
+
+# Here you can add extra flags to the start script, like enabling or
+# disabling threads.
+# 
+flags=
+#flags="--with-threads"
+# flags="--without-threads"
+
+# The file to store the process ids in, to allow this script to stop,
+# reload and restart the server. By default it's placed in the
+# configuration directory, which ensures that it doesn't accidentally
+# overwrite the pid file for another server instance.
+#
+pidfile=
+#pidfile=$configdir/_roxen_pid
+
+
+### You should not _have_ to change anything below here...
+
+if test x$configdir = x; then
+  configdir=../configurations
+else
+  flags="$flags --config-dir=$configdir"
+fi
+
+test x$pidfile = x && pidfile=$configdir/_roxen_pid
+flags="$flags --pid-file=$pidfile"
+
+find_server_dir()
+{
+    (
+	cd "$roxenhome" >/dev/null 2>&1 &&
+	for dir in server*; do
+	    ( cd "$dir" >/dev/null 2>&1 &&
+		test -f "$configdir/server_version" &&
+		echo "$roxenhome/`cat \"$configdir/server_version\"`"
+		) && return
+	done
+	echo "$roxenhome/server"
+	)
+}
+roxenhome=`find_server_dir`
+
+
+StartService()
+{
+    if [ "${ROXENCMS:=-NO-}" = "-YES-" ]; then
+	ConsoleMessage "Starting Roxen CMS in $roxenhome..."
+	cd $roxenhome && {
+	    test -f "$pidfile" && {
+		if read pid && read pid && kill -0 "$pid" 2>/dev/null; then
+		    ConsoleMessage "Roxen CMS is already running (start script pid $pid)."
+		    :
+		else false; fi
+	    } < $pidfile && exit 0
+	    if [ -x $roxenhome/start ]; then
+		./start $flags 2>/dev/null
+		ConsoleMessage "Roxen CMS started."
+	    else
+		ConsoleMessage "Cannot find a Roxen CMS installation in $roxenhome."
+	    fi
+	}
+    fi
+}
+
+StopService()
+{
+    ConsoleMessage "Stopping Roxen CMS in $roxenhome..."
+    cd $roxenhome && {
+      test -f "$pidfile" && {
+	  if read pid && read pid; then
+	      ConsoleMessage "Sending SIGTERM to Roxen CMS process $pid."
+	      if kill "$pid"; then
+		  while kill -0 $pid 2>/dev/null; do
+		      sleep 1
+		  done
+		  ConsoleMessage "Roxen CMS stopped."
+		  :
+	      else false; fi
+	  else false; fi
+      } < $pidfile && exit 0
+      ConsoleMessage "Roxen CMS doesn't seem to be running."
+    }
+}
+
+RestartService()
+{
+    ConsoleMessage "Stopping Roxen CMS in $roxenhome..."
+    cd $roxenhome && {
+	test -f "$pidfile" && {
+	    if read pid && read pid; then
+		ConsoleMessage "Sending SIGTERM to Roxen CMS process $pid."
+		if kill "$pid"; then
+		    while kill -0 $pid 2>/dev/null; do
+			sleep 1
+		    done
+		    ConsoleMessage "Roxen CMS stopped."
+		    StartService
+		else false; fi
+	    else false; fi
+	} < $pidfile && exit 0
+	ConsoleMessage "Roxen CMS doesn't seem to be running."
+    }
+}
+
+RunService "$1"
