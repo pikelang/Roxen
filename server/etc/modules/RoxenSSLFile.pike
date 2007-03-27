@@ -1,4 +1,4 @@
-/* $Id: RoxenSSLFile.pike,v 1.25 2007/03/14 15:43:31 mast Exp $
+/* $Id: RoxenSSLFile.pike,v 1.26 2007/03/27 14:17:01 mast Exp $
  */
 
 // This is SSL.sslfile from Pike 7.6, slightly modified for the old
@@ -708,7 +708,12 @@ static void destroy()
   // garb or the gc got here. That's not a race problem since it won't
   // be registered in a backend in that case.
   ENTER (0, 0) {
-    if (stream) {
+    // Check that all our internal objects are still there before
+    // trying to do anything fancy. This is only necessary to avoid
+    // bogus backtraces on exit when running with 7.4, which has flaky
+    // cleanup code that doesn't take care to destruct things in the
+    // right order.
+    if (stream && read_buffer && conn) {
       if (close_state <= STREAM_OPEN &&
 	  // Don't bother with closing nicely if there's an error from
 	  // an earlier operation. close() will throw an error for it.
