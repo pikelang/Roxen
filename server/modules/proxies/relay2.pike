@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.35 2005/06/21 11:34:53 mast Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.36 2007/03/29 15:50:33 wellhard Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -167,10 +167,15 @@ class Relay
       }
       if(!type)
 	type = "text/html";
-      else if( sscanf( type, "text/%*s;charset=%s", charset ) == 2 )
+      else if( sscanf( type-" ", "text/%*s;charset=%s", charset ) == 2 )
         type = String.trim_all_whites( (type/";")[0] );
     }
 
+#ifdef RELAY_DEBUG
+    werror("RELAY: url: %O, type: %O, data: %O bytes, headers: \n%s\n\n",
+	   id->not_query, type, sizeof(data), headers);
+#endif
+    
     if( !headers || !data )
     {
       mapping q = Roxen.http_string_answer( buffer, "" );
@@ -179,7 +184,7 @@ class Relay
       destruct( );
       return;
     }
-    if( options->rxml &&
+    if( options->rxml && code >= 200 && code < 300 &&
 	(lower_case(type) == "text/html" ||
 	 lower_case(type) == "text/plain" ))
     {
@@ -196,6 +201,9 @@ class Relay
       id->misc->defines = ([]);
       id->misc->defines[" _extra_heads"] = h;
       id->misc->defines[" _error"] = code;
+#ifdef RELAY_DEBUG
+      werror("RELAY: parsing rxml\n");
+#endif
       id->send_result( Roxen.http_rxml_answer( query("pre-rxml")
                                                + data +
                                                query("post-rxml"), id ) );
