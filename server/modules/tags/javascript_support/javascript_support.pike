@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.63 2006/02/17 12:52:37 jonasw Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.64 2007/03/30 09:03:15 jonasw Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -154,6 +154,8 @@ class JSSupport
 static private
 string c_js_quote(string name, mapping args, string contents)
 {
+  if (!sizeof(contents))
+    return "";
   string r = "var r = \"\";\n";
   r +=
     Array.map(replace(contents,
@@ -180,6 +182,8 @@ string container_js_write(string name, mapping args, string contents, object id)
   contents = parse_html(contents, ([]), ([ "script": c_script ]), args);
   contents = parse_html("<"INT_TAG">"+contents+"</"INT_TAG">",
 			([]), ([ INT_TAG: c_js_quote ]), args);
+  if (!sizeof(contents))
+    return "";
   return ("<script language='"+(args->language||"javascript")+
 	  "' type='text/javascript'><!--\n"+contents+"//--></script>");
 }
@@ -419,9 +423,13 @@ static mixed c_filter_insert(Parser.HTML parser, mapping args, RequestID id)
   }
     
   SIMPLE_TRACE_LEAVE ("");
-  if(args->name == "javascript1.2")
+  if(args->name == "javascript1.2") {
+    string content = js_insert->get();
+    if (!sizeof(content))
+      return ({ "" });
     return ({ "<script type=\"text/javascript\" language='javascript1.2'><!--\n"+
-	      js_insert->get()+"//--></script>" });
+	      content+"//--></script>" });
+  }
 
   if(args->jswrite)
     return container_js_write("js-post-write", ([]), js_insert->get(), id);
