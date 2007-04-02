@@ -9,7 +9,7 @@
 # Check if zero arguments
 #
 if [ -z $1 ] ; then
-    echo "Usage: $0 [start|stop|restart]"
+    echo "Usage: $0 [start|stop|restart|status|debug]"
     exit 1
 fi
 
@@ -118,7 +118,7 @@ StopService()
 
 RestartService()
 {
-    ConsoleMessage "Stopping Roxen CMS in $roxenhome..."
+    ConsoleMessage "Restarting Roxen CMS in $roxenhome..."
     cd $roxenhome && {
 	test -f "$pidfile" && {
 	    if read pid && read pid; then
@@ -136,4 +136,39 @@ RestartService()
     }
 }
 
-RunService "$1"
+status()
+{
+    ConsoleMessage "Status of Roxen CMS in $roxenhome..."
+    cd $roxenhome && {
+	test -f "$pidfile" && {
+	    if read pid && read pid && kill -0 "$pid" 2>/dev/null; then
+		ConsoleMessage "Roxen CMS is running (start script pid $pid)."
+		:
+	    else false; fi
+	} < $pidfile && exit 0
+	ConsoleMessage "Roxen CMS is not running."
+    }
+}
+
+debug()
+{
+    ConsoleMessage "Debugging Roxen CMS in $roxenhome..."
+    cd $roxenhome && {
+      test -f "$pidfile" && {
+        if read pid && kill -QUIT "$pid" 2>/dev/null; then
+          ConsoleMessage "Roxen CMS process found. Consult debug log for output."
+          :
+        else ConsoleMessage "pid $pid"; fi
+      } < $pidfile && exit 0
+      ConsoleMessage "Roxen CMS doesn't seem to be running."
+    }
+}
+
+
+if [ $1 = "status" ] ; then
+    status
+elif [ $1 = "debug" ] ; then
+    debug
+else
+    RunService "$1"
+fi
