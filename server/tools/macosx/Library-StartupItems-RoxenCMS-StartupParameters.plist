@@ -4,6 +4,15 @@
   <dict>
     <key>Description</key>
     <string>Roxen CMS</string>
+    <key>Messages</key> 
+    <dict> 
+      <key>start</key> 
+      <string>Starting Roxen CMS server</string> 
+      <key>stop</key> 
+      <string>Stopping Roxen CMS server</string> 
+      <key>restart</key> 
+      <string>Restarting Roxen CMS server</string> 
+    </dict> 
     <key>OrderPreference</key>
     <string>None</string>
     <key>Provides</key>
@@ -12,6 +21,7 @@
     </array>
     <key>Requires</key>
     <array>
+      <string>Disks</string>
       <string>Resolver</string>
     </array>
   </dict>
