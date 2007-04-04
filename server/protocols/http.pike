@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.518 2007/03/09 21:30:38 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.519 2007/04/04 15:55:40 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -188,29 +188,32 @@ array|AuthEmulator auth;
 
 void decode_map( mapping what, function decoder )
 {
-  foreach( indices( what ), mixed q )
+  foreach(what; mixed q; mixed val)
   {
     string ni;
     mixed val;
     if( stringp( q ) )
       catch { ni = decoder( q ); };
-    val = what[q];
-    if( stringp( val ) )
-      catch { val = decoder( val ); };
-    else if( arrayp( val ) )
-      val = map( val, lambda( mixed q ) {
-                        if( stringp( q ) )
-                          catch { return decoder( q ); };
-                        return q;
-                      } );
-    else if( mappingp( val ) )
-      decode_map( val, decoder );
-    else if( multisetp( val ) )
-      val = mkmultiset( map( indices(val), lambda( mixed q ) {
-                                             if( stringp( q ) )
-                                               catch { return decoder( q ); };
-                                             return q;
-                                           } ));
+    // Don't touch stuff that has a mimetype.
+    if (!stringp(q) || (!what[q + ".mimetype"] && !what[ni + ".mimetype"])) {
+      if( stringp( val ) )
+	catch { val = decoder( val ); };
+      else if( arrayp( val ) )
+	val = map( val, lambda( mixed q ) {
+			  if( stringp( q ) )
+			    catch { return decoder( q ); };
+			  return q;
+			} );
+      else if( mappingp( val ) )
+	decode_map( val, decoder );
+      else if( multisetp( val ) )
+	val = mkmultiset( map( indices(val),
+			       lambda( mixed q ) {
+				 if( stringp( q ) )
+				   catch { return decoder( q ); };
+				 return q;
+			       } ));
+    }
     what[ni] = val;
     if( q != ni )
       m_delete( what, q );
