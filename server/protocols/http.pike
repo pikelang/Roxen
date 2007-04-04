@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.481 2007/02/27 09:08:17 noring Exp $";
+constant cvs_version = "$Id: http.pike,v 1.482 2007/04/04 15:57:07 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -166,22 +166,25 @@ void decode_map( mapping what, function decoder )
     if( stringp( q ) )
       catch { ni = decoder( q ); };
     val = what[q];
-    if( stringp( val ) )
-      catch { val = decoder( val ); };
-    else if( arrayp( val ) )
-      val = map( val, lambda( mixed q ) {
-                        if( stringp( q ) )
-                          catch { return decoder( q ); };
-                        return q;
-                      } );
-    else if( mappingp( val ) )
-      decode_map( val, decoder );
-    else if( multisetp( val ) )
-      val = mkmultiset( map( indices(val), lambda( mixed q ) {
-                                             if( stringp( q ) )
-                                               catch { return decoder( q ); };
-                                             return q;
-                                           } ));
+    if (!stringp(q) || (!what[q + ".mimetype"] && !what[ni + ".mimetype"])) {
+      if( stringp( val ) )
+	catch { val = decoder( val ); };
+      else if( arrayp( val ) )
+	val = map( val, lambda( mixed q ) {
+			  if( stringp( q ) )
+			    catch { return decoder( q ); };
+			  return q;
+			} );
+      else if( mappingp( val ) )
+	decode_map( val, decoder );
+      else if( multisetp( val ) )
+	val = mkmultiset( map( indices(val),
+			       lambda( mixed q ) {
+				 if( stringp( q ) )
+				   catch { return decoder( q ); };
+				 return q;
+			       } ));
+    }
     what[ni] = val;
     if( q != ni )
       m_delete( what, q );
