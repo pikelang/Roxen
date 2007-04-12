@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.29 2005/10/28 12:04:10 noring Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.30 2007/04/12 15:01:28 stewa Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";
@@ -94,7 +94,7 @@ class TagWashHtml
       ({ "\1", "\2", "&amp;", "<",   ">" }));
   }
 
-  string linkify(string s)
+  string linkify(string s, string|void target)
   {
     string fix_link(string l)
     {
@@ -117,7 +117,7 @@ class TagWashHtml
 		  replace(string_to_utf8(data), lambda(string link)
 				{
 				  link = fix_link(link);
-				  return "<a href='"+link+"'>"+
+				  return "<a href='"+link+"'"+(target?" "+Roxen.make_tag_attributes((["target":target])):"")+">"+
 				    link+"</a>";
 				}) ) }); });
 
@@ -174,7 +174,7 @@ class TagWashHtml
 	result = paragraphify(result);
 
       if(args["linkify"])
-	result = linkify(result);
+	result = linkify(result, args["link-target"]);
 
       if (!args["keep-all"])
 	result = replace(result, ({ "\1", "\2" }), ({ "&lt;", "&gt;" }));
@@ -195,6 +195,7 @@ class TagWashHtml
 		       "paragraphify":RXML.t_text(RXML.PXml),
                        "unparagraphify":RXML.t_text(RXML.PXml),
                        "linkify":RXML.t_text(RXML.PXml),
+                       "link-target":RXML.t_text(RXML.PXml),
                        "unlinkify":RXML.t_text(RXML.PXml),
 		       "close-tags":RXML.t_text(RXML.PXml) ]);
 
@@ -272,6 +273,10 @@ constant tagdoc=([
   http://pike.roxen.com<br />
   www.roxen.com
 </wash-html></ex>
+</attr>
+
+<attr name='link-target'><p>
+  If the linkify attribute is used, set the link target to this.</p> 
 </attr>
 
 <attr name='unlinkify'><p>
