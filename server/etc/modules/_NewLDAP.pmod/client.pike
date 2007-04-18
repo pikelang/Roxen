@@ -1,6 +1,6 @@
 // LDAP client protocol implementation for Pike.
 //
-// $Id: client.pike,v 1.7 2006/11/17 12:25:41 mast Exp $
+// $Id: client.pike,v 1.8 2007/04/18 12:16:17 mast Exp $
 //
 // Honza Petrous, hop@unibase.cz
 //
@@ -659,7 +659,7 @@ typedef mapping(string:ResultAttributeValue) ResultEntry;
   void create(string|mapping(string:mixed)|void url, object|void context)
   {
 
-    info = ([ "code_revision" : ("$Revision: 1.7 $"/" ")[1] ]);
+    info = ([ "code_revision" : ("$Revision: 1.8 $"/" ")[1] ]);
 
     if(!url || !sizeof(url))
       url = LDAP_DEFAULT_URL;
@@ -1410,7 +1410,7 @@ object get_default_filter()
     mixed raw;
     array(string) rawarr = ({});
 
-    DWRITE_HI("client.SEARCH: " + (string)filter + "\n");
+    DWRITE_HI(sprintf ("client.SEARCH: %O\n", filter));
     if (chk_ver())
       return 0;
     if (chk_binded())
