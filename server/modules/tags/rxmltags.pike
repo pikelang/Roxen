@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.527 2007/01/18 16:55:33 grubba Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.528 2007/04/26 15:07:51 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1126,7 +1126,7 @@ class TagInsertVariables {
 		   mixed value = context->get_var(s, args->scope);
 		   if (!zero_type (value))
 		     return sprintf("%s=%O", s, value);
-		   else if (compat_level < 4.6)
+		   else if (compat_level < 5.0)
 		     // A variable with an undefined value doesn't
 		     // exist by definition, even though list_var
 		     // might still list it. It should therefore be

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.109 2006/12/12 18:13:30 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.110 2007/04/26 15:07:51 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -354,7 +354,7 @@ class SqlEmitResponse {
     }
 
     if (my_configuration()->compat_level() > 4.5) {
-      // Change in >= 4.6: Don't abuse RXML.nil for SQL NULL. RXML.nil
+      // Change in >= 5.0: Don't abuse RXML.nil for SQL NULL. RXML.nil
       // means UNDEFINED in this context, i.e. that the variable
       // doesn't exist at all. An SQL NULL otoh is just a special
       // value in an existing variable, at least on the RXML level.
