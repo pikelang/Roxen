@@ -1,4 +1,4 @@
-// $Id: print.pike,v 1.12 2007/02/20 07:24:04 simon Exp $
+// $Id: print.pike,v 1.13 2007/05/03 15:52:27 tor Exp $
 
 inherit "standard";
 constant site_template = 1;
@@ -31,6 +31,7 @@ constant silent_modules =
   "rxmlparse",
   "print-db",
   "pathinfo",
+  "emit_timerange",
 });
 
 array(string) _print_modules_display = ({ // Information purposes only
@@ -48,11 +49,15 @@ void init_modules(Configuration c, RequestID id)
     m->set( "charset", "unicode" );
 
   if( RoxenModule m = c->find_module( "print-db" ) )
+  {
     m->set( "sitebuilder", c->name );
+    m->create_print_db();
+    m->create_print_tables();
+  }
 
   if( RoxenModule m = c->find_module( "feed-import" ) ) 
     if (RoxenModule sb_module = c->find_module("sitebuilder")) 
-      m->set( "workarea", c->name + "/" + "Main" );
+      m->set( "workarea", c->name + "/" );
   
   if (RoxenModule sb_module = c->find_module("sitebuilder")) {
     sb_module->set("load-insite-editor", 1);
