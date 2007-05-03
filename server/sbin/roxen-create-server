@@ -1,6 +1,6 @@
 #!/bin/env pike
 
-// $Id: roxen-create-server,v 1.2 2005/12/21 13:57:50 noring Exp $
+// $Id: roxen-create-server,v 1.3 2007/05/03 06:54:00 marty Exp $
 
 string roxen_dir = "@ROXEN_DIR@";
 
@@ -33,6 +33,15 @@ class Config
 
     return confirm == "" || confirm == "y";
   }
+
+  static void complete_paths(string config_dir)
+  {
+    string suffix = basename(((config_dir / "/") - ({ "" })) * "/");
+    
+    data_dir = combine_path(default_data_dir, suffix);
+    log_dir = combine_path(default_log_dir, suffix);
+    pid_file = combine_path(default_pid_file, suffix, suffix + ".pid");
+  }
   
   static int ask_paths(Tools.Install.Readline interactive)
   {
@@ -58,11 +67,7 @@ class Config
 	break;
     }
 
-    string suffix = basename(((config_dir / "/") - ({ "" })) * "/");
-    
-    data_dir = combine_path(default_data_dir, suffix);
-    log_dir = combine_path(default_log_dir, suffix);
-    pid_file = combine_path(default_pid_file, suffix, suffix + ".pid");
+    complete_paths(config_dir);
     
     data_dir = interactive->edit_directory
 	       (data_dir,     "         Data directory: ");
@@ -106,59 +111,92 @@ class Config
     return ask_confirm(interactive);
   }
   
-  static void create()
+  static void create(void|string _admin_user, void|string _admin_pass, 
+		     void|string _admin_url, void|string _config_dir)
   {
-    Tools.Install.Readline interactive = Tools.Install.Readline();
+    if (_admin_user)
+      admin_user = _admin_user;
 
-    write("   Welcome to the interactive Roxen server installation script.\n"
-	  "\n" +
-	  (interactive->get_input_controller()->dumb ?
-	   "   The script will guide you through the installation process by asking\n"
-	   "   a few questions. You will be able to confirm your settings before\n"
-	   "   the installation begins.\n"
-	   :
-	   "   The script will guide you through the installation process by asking\n"
-	   "   a few questions. Whenever you input a path or a filename, you may use\n"
-	   "   the <tab> key to perform filename completion. You will be able to\n"
-	   "   confirm your settings before the installation begins.\n")
+    if (_admin_pass)
+      password = _admin_pass;
+
+    if (_admin_url)
+      admin_url = _admin_url;
+
+    if (_config_dir) {
+      config_dir = _config_dir;
+      complete_paths(config_dir);
+    }
+    
+    if (!_admin_user || !_admin_pass || !_admin_url || !_config_dir) {
+      Tools.Install.Readline interactive = Tools.Install.Readline();
+
+      write("   Welcome to the interactive Roxen server installation script.\n"
+	    "\n" +
+	    (interactive->get_input_controller()->dumb ?
+	     "   The script will guide you through the installation process by asking\n"
+	     "   a few questions. You will be able to confirm your settings before\n"
+	     "   the installation begins.\n"
+	     :
+	     "   The script will guide you through the installation process by asking\n"
+	     "   a few questions. Whenever you input a path or a filename, you may use\n"
+	     "   the <tab> key to perform filename completion. You will be able to\n"
+	     "   confirm your settings before the installation begins.\n")
 	    );
+      
 
-    while(!ask_paths(interactive))
-      ;
-    
-    while(!ask_admin(interactive))
-      ;
-    
+      if (!_config_dir)
+	while(!ask_paths(interactive))
+	  ;
+      
+      if (!_admin_user || !_admin_pass || !_admin_url)
+	while(!ask_admin(interactive))
+	  ;
+
+    }
   }
 }
 
-void parse_options(array(string) argv)
+Config parse_options(array(string) argv)
 {
   array(array(string)) opts = Getopt.find_all_options(argv, ({
     ({ "help",      Getopt.NO_ARG,  ({ "-h, --help" }),  0, 0 }),
-    ({ "roxen-dir", Getopt.HAS_ARG, ({ "--roxen-dir" }), 0, 0 })
+    ({ "roxen-dir", Getopt.HAS_ARG, ({ "--roxen-dir" }), 0, 0 }),
+    ({ "admin-user", Getopt.HAS_ARG, ({ "--admin-user" }), 0, 0 }),
+    ({ "admin-pass", Getopt.HAS_ARG, ({ "--admin-pass" }), 0, 0 }),
+    ({ "admin-url", Getopt.HAS_ARG, ({ "--admin-url" }), 0, 0 }),
+    ({ "config-dir", Getopt.HAS_ARG, ({ "--config-dir" }), 0, 0 }),
   }));
+
+  string admin_user, admin_pass, admin_url, config_dir;
 
   for(int i = 0; i < sizeof(opts); i++)
     switch(opts[i][0])
     {
-    case "help":
-      write(#"Usage: %s [options]...
+      case "help":
+	write(#"Usage: %s [options]...
 
 Options:
   -h, --help             Display this help
 ", argv[0]);
-      exit(0);
+	exit(0);
 
-    case "roxen-dir":
-      roxen_dir = opts[i][1];
+      case "roxen-dir":
+	roxen_dir = opts[i][1];
+      break;
+      case "admin-user":
+	admin_user = opts[i][1];
+      break;
+      case "admin-pass":
+	admin_pass = opts[i][1];
+      break;
+      case "admin-url":
+	admin_url = opts[i][1];
+      break;
+      case "config-dir":
+	config_dir = opts[i][1];
       break;
     }
-}
-
-int main(int argc, array argv)
-{
-  parse_options(argv);
 
   if(!Stdio.is_dir(roxen_dir))
   {
@@ -167,7 +205,12 @@ int main(int argc, array argv)
     exit(1);
   }
 
-  Config config = Config();
+  return Config(admin_user, admin_pass, admin_url, config_dir);
+}
+
+int main(int argc, array argv)
+{
+  Config config =  parse_options(argv);
 
   if(!Stdio.mkdirhier(config->config_dir))
   {
@@ -181,12 +224,14 @@ int main(int argc, array argv)
 	   combine_path(config->config_dir, "_license"));
     exit(1);
   }
-  foreach(get_dir(combine_path(roxen_dir, "license_templates")) || ({}), string f)
-    if(glob("*.lic", f) || glob("*.key", f))
-      Stdio.write_file(combine_path(config->config_dir, "_license", f),
-		       Stdio.read_file(combine_path(roxen_dir, 
-						    "license_templates", f)));
 
+  foreach(({ "license", "license_templates" }), string dir)
+    foreach(get_dir(combine_path(roxen_dir, dir)) || ({}), string f)
+      if(glob("*.lic", f) || glob("*.key", f))
+	Stdio.write_file(combine_path(config->config_dir, "_license", f),
+			 Stdio.read_file(combine_path(roxen_dir, 
+						      dir, f)));
+  
   if(!Stdio.mkdirhier(config->data_dir) ||
      !Stdio.mkdirhier(combine_path(config->data_dir, "local", "modules")) ||
      !Stdio.mkdirhier(combine_path(config->data_dir, "local", "fonts")))
