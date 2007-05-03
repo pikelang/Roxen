@@ -23,6 +23,7 @@
 *.jpg binary
 /server/config_interface/sites/find_module.js -text -crlf
 *.mc eol=crlf
+*.pdf binary
 /server/demo_certificate.pem -text -crlf
 /server/modules/proxies/gopher.pike -text -crlf
 *.png binary
