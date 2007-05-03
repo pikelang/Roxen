@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.100 2007/03/02 18:04:31 grubba Exp $
+// $Id: global_variables.pike,v 1.101 2007/05/03 13:42:53 mast Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -572,8 +572,9 @@ process to get a thread dump.</p>
 			   LOCALE(159, "Locale, used to localize all "
 				  "messages in Roxen. Standard means using "
 				  "the default locale, which varies "
-				  "according to the value of "
-				  "the 'LANG' environment variable.")))
+				  "according to the values of "
+				  "the 'LC_MESSAGES' and 'LANG' environment "
+				  "variables.")))
     ->set_changed_callback( lambda(Variable.Variable s) {
 			      roxenp()->set_default_locale(query("locale"));
 			      roxenp()->set_locale();
