@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.960 2007/04/26 15:03:55 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.961 2007/05/03 15:59:30 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1048,6 +1048,9 @@ mixed background_run (int|float delay, function func, mixed... args)
 //! returned. Otherwise its call out identifier is returned, which can
 //! be used with @[find_call_out] or @[remove_call_out].
 {
+  // FIXME: Make it possible to associate the background job with a
+  // RoxenModule or Configuration, so that report_error etc can log in
+  // a good place.
 #ifdef DEBUG_BACKGROUND_RUN
   report_debug ("background_run enqueue %s (%s) [%d jobs in queue]\n",
 		functionp (func) ?
@@ -1627,7 +1630,7 @@ class Protocol
   }
 
   static int retries;
-  static void bind()
+  static void bind (void|int ignore_eaddrinuse)
   {
     if (bound) return;
     if (!port_obj) port_obj = Stdio.Port();
@@ -1645,26 +1648,33 @@ class Protocol
       error("Invalid address " + ip);
     }
 #endif /* System.EAFNOSUPPORT */
-    report_error(LOC_M(6, "Failed to bind %s (%s)")+"\n",
-		 get_url(), strerror(port_obj->errno()));
-#if 0
-    werror (describe_backtrace (backtrace()));
-#endif
 #if constant(System.EADDRINUSE) || constant(system.EADDRINUSE)
     if (
 #if constant(System.EADDRINUSE)
-	(port_obj->errno() == System.EADDRINUSE) && 
+	(port_obj->errno() == System.EADDRINUSE)
 #else /* !constant(System.EADDRINUSE) */
-	(port_obj->errno() == system.EADDRINUSE) && 
+	(port_obj->errno() == system.EADDRINUSE)
 #endif /* constant(System.EADDRINUSE) */
-	(retries++ < 10)) {
-      // We may get spurious failures on rebinding ports on some OS'es
-      // (eg Linux, WIN32). See [bug 3031].
-      report_notice(LOC_M(62, "Attempt %d. Retrying in 1 minute.")+"\n",
-		    retries);
-      call_out(bind, 60);
+    ) {
+      if (!ignore_eaddrinuse && (retries++ < 10)) {
+	// We may get spurious failures on rebinding ports on some OS'es
+	// (eg Linux, WIN32). See [bug 3031].
+	report_error(LOC_M(6, "Failed to bind %s (%s)")+"\n",
+		     get_url(), strerror(port_obj->errno()));
+	report_notice(LOC_M(62, "Attempt %d. Retrying in 1 minute.")+"\n",
+		      retries);
+	call_out(bind, 60);
+      }
     }
+    else
 #endif /* constant(System.EADDRINUSE) || constant(system.EADDRINUSE) */
+    {
+      report_error(LOC_M(6, "Failed to bind %s (%s)")+"\n",
+		   get_url(), strerror(port_obj->errno()));
+#if 0
+      werror (describe_backtrace (backtrace()));
+#endif
+    }
   }
 
   static array(int) get_ipv6_sequence(string partition)
@@ -1795,11 +1805,11 @@ class Protocol
     retries = 0;
   }
 
-  static void create( int pn, string i )
+  static void create( int pn, string i, void|int ignore_eaddrinuse )
   //! Constructor. Bind to the port 'pn' ip 'i'
   {
     setup (pn, i);
-    bind();
+    bind (ignore_eaddrinuse);
   }
 
   static string _sprintf( )
@@ -1847,7 +1857,8 @@ class SSLProtocol
     return;								\
   } while (0)
 
-  void certificates_changed(Variable|void ignored)
+  void certificates_changed(Variable|void ignored,
+			    void|int ignore_eaddrinuse)
   {
     int old_cert_failure = cert_failure;
 
@@ -2022,7 +2033,7 @@ class SSLProtocol
 #endif
 
     if (!bound) {
-      bind();
+      bind (ignore_eaddrinuse);
       if (old_cert_failure && bound)
 	report_notice (LOC_M(64, "TLS port %s opened.\n"), get_url());
     }
@@ -2060,14 +2071,14 @@ class SSLProtocol
     return 0;
   }
 
-  static void bind()
+  static void bind (void|int ignore_eaddrinuse)
   {
     // Don't bind if we don't have correct certs.
     if (!ctx->certificates) return;
-    ::bind();
+    ::bind (ignore_eaddrinuse);
   }
 
-  void create(int pn, string i)
+  void create(int pn, string i, void|int ignore_eaddrinuse)
   {
 #if constant(Crypto.Random.random_string)
     ctx->random = Crypto.Random.random_string;
@@ -2079,7 +2090,7 @@ class SSLProtocol
 
     ::setup(pn, i);
 
-    certificates_changed();
+    certificates_changed (0, ignore_eaddrinuse);
 
     // Install the change callbacks here to avoid duplicate calls
     // above.
@@ -2436,6 +2447,7 @@ int register_url( string url, Configuration conf )
   }
 
   int failures;
+  int opened_ipv4_any_port;
 
   foreach(required_hosts, string required_host)
   {
@@ -2453,7 +2465,14 @@ int register_url( string url, Configuration conf )
 
     mixed err;
     if (err = catch {
-	m[ required_host ][ port ] = prot( port, required_host );
+	m[ required_host ][ port ] =
+	  prot( port, required_host,
+		// Don't complain if binding IPv6 ANY fails with
+		// EADDRINUSE after we've bound IPv4 ANY. At least on
+		// Linux, it seems that IPv4 and IPv6 can share the
+		// same interface, and in that case we're already done
+		// if we've bound the IPv4 ANY.
+		required_host == "::" && opened_ipv4_any_port);
       }) {
       failures++;
       if (has_prefix(describe_error(err), "Invalid address") &&
@@ -2471,6 +2490,8 @@ int register_url( string url, Configuration conf )
       }
       continue;
     }
+
+    if (!required_host) opened_ipv4_any_port = 1;
 
     if( !( m[ required_host ][ port ] ) )
     {
