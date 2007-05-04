@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.525 2007/02/20 15:33:21 erik Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.526 2007/05/04 09:13:40 wellhard Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5654,13 +5654,20 @@ class TagIfTestLicense {
   {
     License.Key key = id->conf->getvar("license")->get_key();
     if(!key)
-      RXML.run_error("No license key defined for this configuration.");
+      return 0;
     
-    //  Expects a string on the form "module#feature"
-    if(sscanf(u, "%s#%s", string module, string feature) == 2) {
+    //  Expects a string on the form:
+    //  * module::mode#feature
+    //  * module#feature
+    //  * module::mode
+    //  * module
+    if(sscanf(u, "%s::%s#%s", string module, string mode, string feature) == 3)
+      return !!key->get_module_feature(module, feature, mode);
+    if(sscanf(u, "%s#%s", string module, string feature) == 2)
       return !!key->get_module_feature(module, feature);
-    }
-    RXML.parse_error("Wrong syntax!");
+    if(sscanf(u, "%s::%s", string module, string mode) == 2)
+      return key->is_module_unlocked(module, mode);
+    return key->is_module_unlocked(u);
   }
 }
 
