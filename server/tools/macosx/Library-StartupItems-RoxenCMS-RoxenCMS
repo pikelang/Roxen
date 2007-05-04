@@ -1,17 +1,30 @@
 #!/bin/sh
 #
-# /Library/StartupItems/RoxenCMS/RoxenCMS
+# /Library/StartupItems/Roxen/Roxen
 #
 # StartupItem script for Roxen CMS. Set the variables
 # below to something fitting. This is only an example script.
 #
 
+# If the directory /etc/roxen exists, we'll loop through all
+# directories within it and apply an action to all servers, 
+# or if an instance name has been specified, we'll only do
+# that one.
+#
+# Example, starts only the instance with config dir named "default": 
+# /Library/StartupItems/Roxen/Roxen start default
+#
+# Example, starts all configured instances within /etc/roxen:
+# /Library/StartupItems/Roxen/Roxen start
+
 # Check if zero arguments
 #
 if [ -z $1 ] ; then
-    echo "Usage: $0 [start|stop|restart|status|debug]"
+    echo "Usage: $0 [start|stop|restart|status|debug] <instance name>"
     exit 1
 fi
+
+useconfig=$2
 
 # Setup environment
 #
@@ -47,6 +60,7 @@ flags=
 pidfile=
 #pidfile=$configdir/_roxen_pid
 
+roxenconfdir=/etc/roxen
 
 ### You should not _have_ to change anything below here...
 
@@ -85,7 +99,7 @@ StartService()
 		    ConsoleMessage "Roxen CMS is already running (start script pid $pid)."
 		    :
 		else false; fi
-	    } < $pidfile && exit 0
+	    } < $pidfile && return
 	    if [ -x $roxenhome/start ]; then
 		./start $flags 2>/dev/null
 		ConsoleMessage "Roxen CMS started."
@@ -111,7 +125,7 @@ StopService()
 		  :
 	      else false; fi
 	  else false; fi
-      } < $pidfile && exit 0
+      } < $pidfile && return
       ConsoleMessage "Roxen CMS doesn't seem to be running."
     }
 }
@@ -131,7 +145,7 @@ RestartService()
 		    StartService
 		else false; fi
 	    else false; fi
-	} < $pidfile && exit 0
+	} < $pidfile && return
 	ConsoleMessage "Roxen CMS doesn't seem to be running."
     }
 }
@@ -145,7 +159,7 @@ status()
 		ConsoleMessage "Roxen CMS is running (start script pid $pid)."
 		:
 	    else false; fi
-	} < $pidfile && exit 0
+	} < $pidfile && return
 	ConsoleMessage "Roxen CMS is not running."
     }
 }
@@ -159,16 +173,39 @@ debug()
           ConsoleMessage "Roxen CMS process found. Consult debug log for output."
           :
         else ConsoleMessage "pid $pid"; fi
-      } < $pidfile && exit 0
+      } < $pidfile && return
       ConsoleMessage "Roxen CMS doesn't seem to be running."
     }
 }
 
+dorunservice()
+{
+    if [ $1 = "status" ] ; then
+	status
+    elif [ $1 = "debug" ] ; then
+	debug
+    else
+	RunService "$1"
+    fi
+}
 
-if [ $1 = "status" ] ; then
-    status
-elif [ $1 = "debug" ] ; then
-    debug
+if [ -d $roxenconfdir ] ; then
+    if [ -z $useconfig ] ; then
+	for f in $roxenconfdir/* ; do
+	    ConsoleMessage "Configuration dir: $f"
+	    test -r $f/_startparams && source $f/_startparams
+	    test -r $f/_environment && source $f/_environment
+	    test -n $ROXEN_PID_FILE && pidfile=$ROXEN_PID_FILE
+	    dorunservice $1
+	done
+    else
+	test -r $roxenconfdir/$2/_startparams && \
+	    source $roxenconfdir/$2/_startparams
+	test -r $roxenconfdir/$2/_environment && \
+	    source $roxenconfdir/$2/_environment
+	test -n $ROXEN_PID_FILE && pidfile=$ROXEN_PID_FILE
+	dorunservice $1
+    fi
 else
-    RunService "$1"
+    dorunservice $1
 fi
