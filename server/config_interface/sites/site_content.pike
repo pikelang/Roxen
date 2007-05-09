@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.147 2007/01/12 10:34:23 jonasw Exp $
+// $Id: site_content.pike,v 1.148 2007/05/09 16:16:05 grubba Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -91,30 +91,30 @@ do                                                                      \
      if( Y )                                                            \
        res += ("<table border='0' cellspacing='0' cellpadding='0'><tr>" \
                "<td valign='top'><nobr>" + #X + " (</nobr></td>"     \
-               "<td valign='top'>"+Y(m,Z)+")</td></tr></table>");         \
+               "<td valign='top'>"+(Y)(m,Z)+")</td></tr></table>");	\
      else                                                               \
        res += #X + "<br />";                                 \
 } while(0)
 
   T(MODULE_EXTENSION,      describe_exts,       "query_extensions");
   T(MODULE_LOCATION,   describe_location,                       id);
-  T(MODULE_URL,                        0,                        0);
+  T(MODULE_URL,                 (mixed)0,                        0);
   T(MODULE_FILE_EXTENSION, describe_exts,  "query_file_extensions");
   T(MODULE_TAG,            describe_tags,                        0);
-  T(MODULE_LAST,                       0,                        0);
-  T(MODULE_FIRST,                      0,                        0);
-  T(MODULE_AUTH,                       0,                        0);
-  T(MODULE_TYPES,                      0,                        0);
-  T(MODULE_DIRECTORIES,                0,                        0);
-  T(MODULE_PROXY,                      0,                        0);
-  T(MODULE_LOGGER,                     0,                        0);
-  T(MODULE_FILTER,                     0,                        0);
+  T(MODULE_LAST,                (mixed)0,                        0);
+  T(MODULE_FIRST,               (mixed)0,                        0);
+  T(MODULE_AUTH,                (mixed)0,                        0);
+  T(MODULE_TYPES,               (mixed)0,                        0);
+  T(MODULE_DIRECTORIES,         (mixed)0,                        0);
+  T(MODULE_PROXY,               (mixed)0,                        0);
+  T(MODULE_LOGGER,              (mixed)0,                        0);
+  T(MODULE_FILTER,              (mixed)0,                        0);
   T(MODULE_PROVIDER,   describe_provides,                        0);
-  T(MODULE_PROTOCOL,                   0,                        0);
-  T(MODULE_CONFIG,                     0,                        0);
-  T(MODULE_SECURITY,                   0,                        0);
-  T(MODULE_USERDB,                     0,                        0);
-  T(MODULE_EXPERIMENTAL,               0,                        0);
+  T(MODULE_PROTOCOL,            (mixed)0,                        0);
+  T(MODULE_CONFIG,              (mixed)0,                        0);
+  T(MODULE_SECURITY,            (mixed)0,                        0);
+  T(MODULE_USERDB,              (mixed)0,                        0);
+  T(MODULE_EXPERIMENTAL,        (mixed)0,                        0);
 
   return res;
 }
