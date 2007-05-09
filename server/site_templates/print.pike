@@ -1,4 +1,4 @@
-// $Id: print.pike,v 1.13 2007/05/03 15:52:27 tor Exp $
+// $Id: print.pike,v 1.14 2007/05/09 17:04:36 tor Exp $
 
 inherit "standard";
 constant site_template = 1;
@@ -49,12 +49,8 @@ void init_modules(Configuration c, RequestID id)
     m->set( "charset", "unicode" );
 
   if( RoxenModule m = c->find_module( "print-db" ) )
-  {
     m->set( "sitebuilder", c->name );
-    m->create_print_db();
-    m->create_print_tables();
-  }
-
+    
   if( RoxenModule m = c->find_module( "feed-import" ) ) 
     if (RoxenModule sb_module = c->find_module("sitebuilder")) 
       m->set( "workarea", c->name + "/" );
