@@ -35,71 +35,76 @@ string|mapping parse( RequestID id )
                                 DBManager.NONE );
   }
 
-  array colors = ({
-    ({
-      "&usr.matrix11;",
-      "&usr.matrix21;",
-    }),
-    ({
-      "&usr.matrix12;",
-      "&usr.matrix22;",
-    }),
-  });
-  
   mapping q = DBManager.get_permission_map( );
   if( !sizeof( q ) )
     return "No defined databases\n";
-  string res = "<br /><table border='0' cellpadding='4' cellspacing='0'>\n";
-  int x, y;
-  int i = 1;
-  int tc = sizeof( roxen->configurations )+2;
-  if( tc < 8 )
-  {
-    foreach( sort(roxen->configurations->name), string conf )
-    {
-      res += "<tr>";
-      for( int j = 0; j<i; j++ )
-      {
-        if( j )
-        {
-          string ct = colors[0][j%sizeof(colors)];
-          res += "<td bgcolor='"+ct+"'>&nbsp;</td>";
-        }
-        else
-          res += "<td></td>";
-      }
-      string ct = colors[0][i%sizeof(colors)];
-      res += "<td bgcolor='"+ct+"' colspan='"+(tc-i)+"'>"+
-	get_conf_name(conf)+"</td>";
-      res += "</tr>\n";
-      i++;
-    }
-    res += "<tr>";
-    for( int j = 0; j<i; j++ )
-    {
-      if( j )
-      {
-        string ct = colors[0][j%sizeof(colors)];
-        res += "<td bgcolor='"+ct+"'>"
-            "<img src='/internal-roxen-unit' alt='' width='1' height='5' /></td>";
-      }
-      else
-        res += "<td></td>";
-    }
-    res += "</tr>";
-  }
-  else
-  {
-    res += "<tr><td>&nbsp;</td>";
-    foreach( sort(roxen->configurations->name), string conf )
-    {
-      x++;
-      string ct = colors[0][x%sizeof(colors)];
-      res += "<td bgcolor='"+ct+"'valign=bottom><gtext scale='0.4' bgcolor='"+ct+"' rotate='90'>"+
-          get_conf_name(conf)+"</gtext></td>";
-    }
-    res += "</tr>\n";
-  }
+  
+  string res = "<style type='text/css'>\n"
+    ".df_table_c {"
+    " vertical-align: bottom;"
+    " text-align: center;"
+    " font-size: 8pt;"
+    " background-color: &usr.matrix12;;"
+    " padding: 2px;"
+    " border-top: 1px solid &usr.matrix11;;"
+    " border-left: 1px solid &usr.matrix11;;"
+    " border-right: 1px solid &usr.matrix21;;"
+    " border-bottom: 1px solid black;"
+    "}\n"
+    ".df_table_d {"
+    " font-size: 8pt;"
+    " background-color: &usr.matrix12;;"
+    " padding: 2px;"
+    " border-top: 1px solid &usr.matrix11;;"
+    " border-left: 1px solid &usr.matrix11;;"
+    " border-right: 1px solid &usr.matrix21;;"
+    " border-bottom: 1px solid &usr.matrix21;;"
+    "}\n"
+    ".df_table_r {"
+    " font-size: 8pt;"
+    " padding: 1px;"
+    " border-bottom: 1px solid &usr.matrix22;;"
+    " border-right: 1px solid &usr.matrix22;;"
+    "}\n"
+    ".df_table_s {"
+    " font-size: 8pt;"
+    " padding: 1px;"
+    " padding-left: 12px;"
+    " border-bottom: 1px solid &usr.matrix22;;"
+    "}\n"
+    ".df_table_g1 {"
+    " vertical-align: bottom;"
+    " font-size: 12pt;"
+    " padding: 1px;"
+    " border-bottom: 1px solid black;"
+    "}\n"
+    ".df_table_g2 {"
+    " font-size: 12pt;"
+    " padding: 1px;"
+    " padding-top: 16px;"
+    " border-bottom: 1px solid black;"
+    " border-right: 1px solid &usr.matrix22;;"
+    "}\n"
+    ".df_table_gr {"
+    " padding: 1px;"
+    " border-bottom: 1px solid black;"
+    " border-right: 1px solid &usr.matrix22;;"
+    "}\n"
+    ".df_table_gs {"
+    " padding: 1px;"
+    " padding-left: 12px;"
+    " border-bottom: 1px solid black;"
+    "}\n"
+    "a.dblink {"
+    " color: #0033aa;"
+    " text-decoration: none;"
+    "}\n"
+    "a.dblink:hover {"
+    " color: #0055ff;"
+    " text-decoration: underline;"
+    "}\n"
+    "</style>\n"
+    "<br /><table border='0' cellpadding='2' cellspacing='0'>\n";
 
   mapping rres = ([]);
   foreach( DBManager.list_groups(), string g )
@@ -107,46 +112,42 @@ string|mapping parse( RequestID id )
   
   foreach( sort(indices(q)), string db )
   {
-    mapping p = q[db];
-    y++;
-    x=0;
-    if( !rres[ DBManager.db_group(db) ] )
-    {
-      y=0;
-      rres[ DBManager.db_group(db) ]="";
-    }
-    string ct = colors[y%sizeof(colors)][0];
+    string db_group = DBManager.db_group(db);
     int ii = DBManager.is_internal( db );
-    rres[DBManager.db_group(db)] +=
-      "<tr><td bgcolor='"+ct+"'>"
-      "<nobr>"
-      +"&nbsp; &nbsp;"+
-      (view_mode ? "" : "<a href='browser.pike?db="+db+"'>")+
+		
+    mapping p = q[db];
+    if( !rres[ db_group ] )
+    {
+      rres[ db_group ]="";
+    }
+	    
+    rres[db_group] +=
+      "<tr><td class='df_table_d'>" +
+      (view_mode ? "" : "<a class='dblink' href='browser.pike?db="+db+"'>") +
       "<cimg border='0' format='gif'"
-      "      src='&usr.database-small;' alt='' max-height='12'/>"
-      "&nbsp;&nbsp;"+db+
-      (view_mode ? "" : "</a>")+
-      "</nobr>"
+      " src='&usr.database-small;' alt='' max-height='12'/>"
+      "&nbsp;" + db +
+      (view_mode ? "" : "</a>") +
       "</td>";
     foreach( sort(roxen->configurations->name), string conf )
     {
-      x++;
-      string col = colors[y%sizeof(colors)][x%sizeof(colors[0])];
-      string bgc = col;
-      rres[DBManager.db_group(db)] += "<td bgcolor='"+col+"' width='1%'><nobr>";
-
-#define PERM(P,T,L)\
-     rres[DBManager.db_group(db)] += sprintf((view_mode ? "":"<a href='?set_"+L+"=%s&db=%s'>")+\
-		     "<gtext  fontsize=13"+\
-		     " alt='"+((p[conf]==DBManager.P)?T:"-")+"'"\
-		     ">"+((p[conf]==DBManager.P)?(DBManager.P!=DBManager.NONE?"&nbsp;":"")+T:(DBManager.P!=DBManager.NONE?"&nbsp;-":"-"))+"</gtext>"\
-		     +(view_mode?"":"</a>"), Roxen.http_encode_url(conf),\
-		     Roxen.http_encode_url(db))
-
+      rres[db_group] += "<td class='df_table_r'>";
+	
+			
+#define PERM(P,T,L)							\
+      rres[db_group] +=							\
+	(view_mode ? "" :						\
+	 "<a class='dblink' href='?set_"+L+"="+				\
+	 Roxen.http_encode_url(conf)+"&db="+Roxen.http_encode_url(db)+"'>") \
+	+ (p[conf] == DBManager.P ? T : "&#x2013;")				\
+	+ (view_mode?"":"</a>")
+	
       PERM(NONE,_(431,"N"),"none");
+      rres[db_group] += "&nbsp;";
       PERM(READ,_(432,"R"),"read");
+      rres[db_group] += "&nbsp;";
       PERM(WRITE,_(433,"W"),"write");
-      rres[DBManager.db_group(db)] += "</nobr></td>";
+      rres[db_group] += "</td>";
     }
     string format_stats( mapping s, string url )
     {
@@ -169,18 +170,18 @@ string|mapping parse( RequestID id )
 
     array e;
     if( mixed e = catch {
-      rres[DBManager.db_group(db)] += "<td align=right width='60%' >"+
-	format_stats( DBManager.db_stats( db ),
-		      DBManager.db_url( db ) )+"</td>";
-    } )
+	rres[db_group] += "<td class='df_table_s'>"+
+	  format_stats( DBManager.db_stats( db ),
+			DBManager.db_url( db ) )+"</td>";
+      } )
     {
       string em = describe_error(e);
       sscanf( em, "%*sreconnect to SQL-server%s", em);
-      rres[DBManager.db_group(db)] +=
-	"<td width='60%'>"+DBManager.db_url( db )+"<br />"
-	"<font color='&usr.warncolor;'>"+em+"</font></td>";
+      rres[db_group] +=
+	"<td class='df_table_s'>" + DBManager.db_url( db ) + "<br />"
+	"<font color='&usr.warncolor;'>" + em + "</font></td>";
     }
-    rres[DBManager.db_group(db)] += "</tr>\n";
+    rres[db_group] += "</tr>\n";
   }
 
   array cats = ({});
@@ -190,15 +191,23 @@ string|mapping parse( RequestID id )
     else
       cats = ({ ({DBManager.get_group(c)->lname, c}) }) + cats;
 
-  foreach( cats[0..0]+sort(cats[1..]), array q )
+  if (sizeof (cats)) {
+    res += "<tr><td class='df_table_g1'><a class='dblink' href='edit_group.pike?group=" + cats[0][1] + "'>" + cats[0][0] + "</a></td>";
+    foreach( sort(roxen->configurations->name), string conf )
+    {
+      res += "<td class='df_table_c'><gtext href='/sites/site.html/" + conf + "/' scale='0.35' fgcolor='black' bgcolor='&usr.matrix12;' rotate='90'>" + get_conf_name(conf) + "</gtext></td>";
+    }
+    res += "<td class='df_table_gs'>&nbsp;</td></tr>\n" +
+      rres[ cats[0][1] ];
+  }
+
+  foreach( sort(cats[1..]), array q )
   {
-    res += "<tr><td>\n";
-    res += "<b><a href='edit_group.pike?group="+q[1]+"'>"+
-      q[0]+"</a></b></td>";
-    for( i = 0; i<sizeof( roxen->configurations ); i++ )
-      res += "<td bgcolor='"+colors[(i+1)%sizeof(colors)][0]+
-	"'>&nbsp;</td>";
-    res += "<td></td></tr>\n";
+    if (q[1] != "internal") {
+      res += "<tr><td class='df_table_g2'><a class='dblink' href='edit_group.pike?group=" + q[1] + "'>" + q[0] + "</a></td>" +
+	("<td class='df_table_gr'>&nbsp;</td>" * sizeof( roxen->configurations )) +
+	"<td class='df_table_gs'>&nbsp;</td></tr>\n";
+    }
     res += rres[ q[1] ];
   }
   return Roxen.http_string_answer(res+"</table>");
