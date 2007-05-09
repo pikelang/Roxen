@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.155 2006/12/14 13:32:27 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.156 2007/05/09 16:35:34 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -758,7 +758,7 @@ mapping make_collection(string coll, RequestID id)
     if (msg) {
       TRACE_LEAVE(sprintf("%s: chmod %O failed: %s", id->method, norm_f, msg));
     } else {
-      TRACE_LEAVE(sprintf("%s: chmod ok", id->method, msg));
+      TRACE_LEAVE(sprintf("%s: chmod ok", id->method));
     }
     TRACE_LEAVE(sprintf("%s: Success", id->method));
     return Roxen.http_status(201, "Created");
