@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.145 2007/01/12 19:40:31 mast Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.146 2007/05/09 16:37:16 grubba Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -812,9 +812,14 @@ program low_findprog(string pname, string ext,
 	// compilation that could occur with misspelled identifiers in
 	// pike modules. /mast
 	ret=programs[fname]=0;
-        if(arrayp(e) && sizeof(e) &&
-	   (<"Compilation failed.\n", "Cpp() failed\n">)[e[0]])
-          e[1]=({});
+	mixed err = catch {
+	    if(arrayp(e) && (sizeof(e)>1) &&
+	       (<"Compilation failed.\n", "Cpp() failed\n">)[e[0]])
+	      e[1]=({});
+	  };
+	if (err) {
+	  werror("Failed to truncate backtrace!\n");
+	}
 	DDEBUG( "Compile FAILED: %O\n",fname );
 	throw(e);
       }
