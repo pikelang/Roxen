@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.952 2007/01/30 10:42:28 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.953 2007/05/10 12:54:26 mast Exp $";
 
 //! @appears roxen
 //!
@@ -3418,6 +3418,12 @@ class ImageCache
       QUERY( "DELETE FROM "+name+" WHERE id in ('"+list+"')" );
     }
 
+#if 0
+    // Disabled. This can take a significant amount of time to run,
+    // and we really can't afford an unresponsive image cache - it can
+    // easily hang all handler threads. Besides, it's doubtful if this
+    // is of any use since the space for the deleted records probably
+    // will get reused soon enough anyway. /mast
     if( num )
       catch
       {
@@ -3429,6 +3435,7 @@ class ImageCache
 #endif
 	QUERY( "OPTIMIZE TABLE "+name );
       };
+#endif
 
 #ifdef DEBUG
     report_debug("%s removed (%dms)\n",
@@ -3753,6 +3760,8 @@ class ImageCache
     //  Flushes may be costly in large sites (at least the OPTIMIZE TABLE
     //  command) so schedule next run sometime after 04:30 the day after
     //  tomorrow.
+    //
+    // Note: The OPTIMIZE TABLE step has been disabled. /mast
     int now = time();
     mapping info = localtime(now);
     int wait = (int) ((24 - info->hour) + 24 + 4.5) * 3600 + random(500);
