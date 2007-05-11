@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.64 2007/03/30 09:03:15 jonasw Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.65 2007/05/11 17:35:44 jonasw Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -193,7 +193,10 @@ string make_args_unquoted(mapping args)
 {
   return map(indices(args),
 	     lambda(string key)
-	     { return key+"="+"\""+args[key]+"\""; })*" ";
+	     {
+	       string arg = replace(args[key], "\"", "'");
+	       return key + "=\"" + arg + "\"";
+	     })*" ";
 }
 
 static private
@@ -416,7 +419,7 @@ static mixed c_filter_insert(Parser.HTML parser, mapping args, RequestID id)
   SIMPLE_TRACE_ENTER (this_object(), "Filtering tag <js-filter-insert%s>",
 		      Roxen.make_tag_attributes (args));
   JSInsert js_insert = get_jss(id)->get_insert(args->name);
-    
+  
   if(!js_insert) {
     SIMPLE_TRACE_LEAVE ("Got no record of this tag");
     return "";
@@ -433,7 +436,7 @@ static mixed c_filter_insert(Parser.HTML parser, mapping args, RequestID id)
 
   if(args->jswrite)
     return container_js_write("js-post-write", ([]), js_insert->get(), id);
-    
+  
   return js_insert->get();
 }
 
