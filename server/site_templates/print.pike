@@ -1,4 +1,4 @@
-// $Id: print.pike,v 1.14 2007/05/09 17:04:36 tor Exp $
+// $Id: print.pike,v 1.15 2007/05/11 07:43:27 tor Exp $
 
 inherit "standard";
 constant site_template = 1;
@@ -14,11 +14,11 @@ constant locked = 1;
 constant modules =
 ({
   "sitebuilder",
+  "print-db",
 });
 
 constant silent_modules =
 ({
-  "logview",
   "url_rectifier",
   "indexfiles",
   "cimg",
@@ -29,7 +29,6 @@ constant silent_modules =
   "search_utils",
   "feed-import",
   "rxmlparse",
-  "print-db",
   "pathinfo",
   "emit_timerange",
 });
@@ -50,7 +49,7 @@ void init_modules(Configuration c, RequestID id)
 
   if( RoxenModule m = c->find_module( "print-db" ) )
     m->set( "sitebuilder", c->name );
-    
+  
   if( RoxenModule m = c->find_module( "feed-import" ) ) 
     if (RoxenModule sb_module = c->find_module("sitebuilder")) 
       m->set( "workarea", c->name + "/" );
