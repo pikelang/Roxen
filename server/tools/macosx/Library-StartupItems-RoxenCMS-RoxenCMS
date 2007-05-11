@@ -159,7 +159,7 @@ status()
 		ConsoleMessage "Roxen CMS is running (start script pid $pid)."
 		:
 	    else false; fi
-	} < $pidfile && return
+	} < $pidfile && status=0 && return 
 	ConsoleMessage "Roxen CMS is not running."
     }
 }
@@ -181,6 +181,7 @@ debug()
 dorunservice()
 {
     if [ $1 = "status" ] ; then
+	status=1
 	status
     elif [ $1 = "debug" ] ; then
 	debug
@@ -208,4 +209,8 @@ if [ -d $roxenconfdir ] ; then
     fi
 else
     dorunservice $1
+fi
+
+if [ $1 = "status" ] ; then
+	exit $status
 fi
