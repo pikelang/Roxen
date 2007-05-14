@@ -1,4 +1,4 @@
-// $Id: print.pike,v 1.15 2007/05/11 07:43:27 tor Exp $
+// $Id: print.pike,v 1.16 2007/05/14 04:00:49 tor Exp $
 
 inherit "standard";
 constant site_template = 1;
@@ -41,8 +41,8 @@ array(string) _print_modules_display = ({ // Information purposes only
 void init_modules(Configuration c, RequestID id)
 {
   // FIXME: Add search engine configuration
-  if( RoxenModule m = c->find_module( "acauth_cookie" ) )
-    m->set( "redirect", "/login.html" );
+  /*if( RoxenModule m = c->find_module( "acauth_cookie" ) )
+    m->set( "redirect", "/login.html" );*/
 
   if( RoxenModule m = c->find_module( "sqltag" ) )
     m->set( "charset", "unicode" );
@@ -58,8 +58,12 @@ void init_modules(Configuration c, RequestID id)
     sb_module->set("load-insite-editor", 1);
     sb_module->set("site-create-version", roxen_version());
   }
+  
   if( RoxenModule m = c->find_module( "rxmlparse" ) )
     m->set( "logerrorsp", 1 );
+  
+  if( RoxenModule m = c->find_module( "category" ) )
+    m->set( "sitebuilder", c->name );
 }
 
 int unlocked(License.Key license)
@@ -208,8 +212,8 @@ string page_2(RequestID id, mixed pre_res)
     "<p>An initial administrators account will be set up with a predefined username and password listed below. "
     "This username and/or password can later be changed from the insite editor under Access Control. "
     "It's recommended that you change this password as soon as possible.</p>"
-    "<p>Username: <b>roxen</b></p>"
-    "<p>Password: <b>roxen</b></p>"
+    "<p>Username: <b>print</b></p>"
+    "<p>Password: <b>print</b></p>"
     
     "<p>Watch out for any messages in the event log under the 'Status' tab.";
 
