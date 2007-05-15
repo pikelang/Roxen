@@ -1,4 +1,4 @@
-// $Id: print.pike,v 1.16 2007/05/14 04:00:49 tor Exp $
+// $Id: print.pike,v 1.17 2007/05/15 14:08:11 noring Exp $
 
 inherit "standard";
 constant site_template = 1;
@@ -45,7 +45,7 @@ void init_modules(Configuration c, RequestID id)
     m->set( "redirect", "/login.html" );*/
 
   if( RoxenModule m = c->find_module( "sqltag" ) )
-    m->set( "charset", "unicode" );
+    m->set( "charset", "broken-unicode" );
 
   if( RoxenModule m = c->find_module( "print-db" ) )
     m->set( "sitebuilder", c->name );
