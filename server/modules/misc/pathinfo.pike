@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.20 2007/05/16 15:23:41 stewa Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.21 2007/05/16 16:26:17 jonasw Exp $";
 constant thread_safe = 1;
 
 #ifdef PATHINFO_DEBUG
@@ -28,7 +28,7 @@ array pathlimit = ({ });
 void create(Configuration c) {
   defvar("pathlimit", ({  }), "Limit to paths",
           TYPE_STRING_LIST,
-         "If specified, path info support will only be active for patsh matching globs provided in this list.");
+         "If specified, path info support will only be active for paths matching globs provided in this list.");
 }
 
 void start() {
