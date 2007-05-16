@@ -1,8 +1,9 @@
 // This is a roxen module. Copyright © 1998 - 2004, Roxen IS.
 
+#include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.19 2004/06/30 16:59:16 mast Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.20 2007/05/16 15:24:47 stewa Exp $";
 constant thread_safe = 1;
 
 #ifdef PATHINFO_DEBUG
@@ -22,8 +23,31 @@ In this case <tt>/index.html</tt> will be fetched, and the rest,
 
 /* #define PATHINFO_LINEAR */
 
+array pathlimit = ({ });
+
+void create(Configuration c) {
+  defvar("pathlimit", ({  }), "Limit to paths",
+          TYPE_STRING_LIST,
+         "If specified, path info support will only be active for paths matching globs provided in this list.");
+}
+
+void start() {
+  pathlimit = query("pathlimit");
+}
+
 mapping|int last_resort(object id)
 {
+  if(sizeof(pathlimit)) {
+    int found_match = 0;
+    foreach(pathlimit, string s) {
+      if(glob(s, id->not_query)) {
+	found_match = 1;
+	break;
+      }
+    }
+    if(!found_match)
+      return 0;
+  }
   PATHINFO_WERR(sprintf("Checking %O...", id->not_query));
 
 #if 0
