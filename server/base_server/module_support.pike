@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module_support.pike,v 1.126 2006/04/20 13:31:53 grubba Exp $
+// $Id: module_support.pike,v 1.127 2007/05/16 08:00:29 jonasw Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -602,7 +602,7 @@ static void rec_find_all_modules( string dir,
     if (r_file_stat(combine_path(dir, ".nomodules")) ||
 	r_file_stat(combine_path(dir, ".no_modules")))
       return;
-    array(string) dirlist = r_get_dir( dir ) - ({"CVS"});
+    array(string) dirlist = (r_get_dir( dir ) || ({ }) ) - ({"CVS"});
 
     foreach( dirlist, string file ) {
         if( file[0] == '.' ) continue;
