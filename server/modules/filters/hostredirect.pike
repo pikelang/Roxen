@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.33 2006/09/25 13:43:48 wellhard Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.34 2007/05/21 10:35:09 erikd Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -23,11 +23,15 @@ void create()
 {
   defvar("hostredirect", "", "Redirect rules", TYPE_TEXT_FIELD,
          "Syntax:<pre>"
-         "    ab.domain.com             /ab/\n"
-         "    bc.domain.com             /bc/\n"
-         "    main.domain.com           /\n"
-         "    default                   /serverlist.html</pre>"
-         "If someone access the server at http://ab.domain.com/text.html, "
+         "[permanent] domain [other domain][path]</pre>"
+         "<strong>Examples:</strong><pre>"
+         " permanent domain.com www.domain.com"
+         "    ab.domain.com     /ab/\n"
+         "    bc.domain.com     /bc/\n"
+         "    main.domain.com   /\n"
+         "    ab.domian.com     www.domain.com/ab/"
+         "    default           /serverlist.html</pre>"
+         "<p>If someone access the server at http://ab.domain.com/text.html, "
          "it will be internally redirected to http://ab.domain.com/ab/text.html. "
          "If someone accesses http://bc.domain.com/bc/text.html, the URL "
          "won't be modified. The <tt>default</tt> line is a special case "
@@ -35,8 +39,12 @@ void create()
          "very recommended that this file contains a list of all the "
          "servers, with correct URL's. If someone visits with a client "
          "that doesn't send the <tt>host</tt> header, the module won't "
-         "do anything at all.<p>\n"
+         "do anything at all.</p>\n"
+         "<p>If the first string on the line is 'permanent', the http return code is "
+         "301 (moved permanently) instead of 302 (found).</p> "
          "v2 also allows the following syntax for HTTP redirects:<pre>"
+         "[permanent] domain [url][path][%p]\n</pre>"
+         "<strong>Examples:</strong><pre>"
          "    ab.domain.org             http://my.university.edu/~me/ab/%p\n"
          "    bc.domain.com             %u/bc/%p\n"
          "    default                   %u/serverlist.html</pre>"
@@ -68,21 +76,27 @@ void create()
 }
 
 mapping patterns = ([ ]);
+mapping(string:int) rcode = ([ ]);
 
 void start(Configuration conf)
 {
   array a;
   string s;
   patterns = ([]);
+  rcode = ([ ]);
   foreach(replace(query("hostredirect"), "\t", " ")/"\n", s)
   {
     a = s/" " - ({""});
-    if(sizeof(a)>=2) {
+    if(sizeof(a)==2) {
       //if(a[1][0] != '/')  //this can now only be done if we
       //  a[1] = "/"+ a[1]; // don't have a HTTP redirect
       //if(a[0] != "default" && strlen(a[1]) > 1 && a[1][-1] == '/')
       //  a[1] = a[1][0..strlen(a[1])-2];
       patterns[lower_case(a[0])] = a[1];
+      rcode[lower_case(a[0])] = 302;
+    } else if ( (sizeof(a)==3) && (a[0]=="permanent") ){
+      patterns[lower_case(a[1])] = a[2];
+      rcode[lower_case(a[1])] = 301;
     }
   }
 }
@@ -94,7 +108,7 @@ constant module_doc  = "This module redirects requests to different places, "
   "server. It can be used as a cheap way (IP number wise) "
   "to do virtual hosting. <i>Note that this won't work with "
   "all clients.</i>"
-  "<p>v2 now also allows HTTP redirects.</p>";
+  "<p>v2 now also allows HTTP redirects (302 as well as 301).</p>";
 
 string get_host(string ignored, RequestID id)
 {
@@ -132,7 +146,7 @@ string get_port(string ignored, RequestID id)
 int|mapping first_try(RequestID id)
 {
   string host, to;
-  int path=0, stripped=0;
+  int path=0, stripped=0, return_code = 302;
 
   if(id->misc->host_redirected || !sizeof(patterns) ||
      !has_prefix(lower_case(id->prot), "http"))
@@ -158,7 +172,7 @@ int|mapping first_try(RequestID id)
   id->register_vary_callback("Host", get_host);
 
   if (!(host = get_host(0, id))) return 0;
-  
+
   if(!patterns[host])
     host = "default";
 
@@ -200,6 +214,7 @@ int|mapping first_try(RequestID id)
   string url = id->conf->query("MyWorldLocation");
   url=url[..strlen(url)-2];
   to = replace(to, "%u", url);
+  return_code = rcode[host];
 
   string to_prefix = to - "%p";
 
@@ -239,12 +254,12 @@ int|mapping first_try(RequestID id)
     };
     to=replace(to, ({ "\000", " " }), ({"%00", "%20" }));
     dwerror("HR: %O -> %O (http redirect)\n", id->not_query, to);
-    return Roxen.http_low_answer( 302,
+    return Roxen.http_low_answer( return_code,
 				  "See <a href='"+to+"'>"+to+"</a>")
       + ([ "extra_heads":([ "Location":to,  ]) ]);
   } else {
     // Internal redirect
-    
+
     if(has_prefix(id->not_query, to_prefix)) {
       // Already have the correct beginning...
       return 0;
