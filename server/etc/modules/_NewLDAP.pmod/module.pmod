@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.2 2006/09/19 17:25:26 mast Exp $
+// $Id: module.pmod,v 1.3 2007/05/23 12:01:50 mast Exp $
 
 #include "ldap_globals.h"
 
@@ -1675,6 +1675,7 @@ find_connection:
 
       int now = time();
       client rebind_conn;
+      string md5_pass;
       for (int i = 0; i < sizeof (conns);) {
 	conn = conns[i];
 	int last_use = conn->get_last_io_time();
@@ -1684,7 +1685,11 @@ find_connection:
 	  idle_conns[ldap_url] = conns = conns[..i-1] + conns[i+1..];
 	}
 	else {
-	  if (!binddn || conn->get_bound_dn() == binddn) {
+	  if (!binddn ||
+	      (conn->get_bound_dn() == binddn &&
+	       (conn->get_bind_password_hash() ==
+		(md5_pass ||
+		 (md5_pass = Crypto.md5()->update (pass || "")->digest()))))) {
 	    DWRITE ("Reusing connection which has been idle for %d s.\n",
 		    now - last_use);
 	    idle_conns[ldap_url] = conns[..i-1] + conns[i+1..];
