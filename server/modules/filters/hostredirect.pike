@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.34 2007/05/21 10:35:09 erikd Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.35 2007/05/25 00:01:47 erikd Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -48,23 +48,23 @@ void create()
          "    ab.domain.org             http://my.university.edu/~me/ab/%p\n"
          "    bc.domain.com             %u/bc/%p\n"
          "    default                   %u/serverlist.html</pre>"
-         "A <tt>%p</tt> in the 'to' field will be replaced with the full "
+         "<p>A <tt>%p</tt> in the 'to' field will be replaced with the full "
          "path, and <tt>%u</tt> will be replaced with this server's URL "
          "(useful if you want to send a redirect instead of doing an "
-         "internal one).<p>\n"
-         "Internal redirects will always have the path added, whether you "
+         "internal one).</p>\n"
+         "<p>Internal redirects will always have the path added, whether you "
          "use <tt>%p</tt> or not. however for HTTP redirects <tt>%p</tt> "
          "is mandatory if you want the path. <strong><tt>default</tt> "
          "will never add a path, even if <tt>%p</tt> is present"
          ".</strong> in fact if <tt>%p</tt> is included it will "
-         "just stay and probably not produce the expected result."
+         "just stay and probably not produce the expected result.</p>"
        );
   
   defvar("ignorepaths",
 	 Variable.StringList( ({ "/_internal/", "/__internal/", "/internal-roxen-",
 				 "/roxen-files/", "/edit", "/__frame/"
 			      }), 0, "Ignore paths",
-			      "A list of path prefexes that sould not be redirected. "
+			      "A list of path prefixes that should not be redirected. "
 			      "Useful for making global images work in sub sites." ));
   defvar("ignorevariables",
 	 Variable.StringList( ({ "__force_path", "__sb_force_login" }),
