@@ -35,156 +35,81 @@ string|mapping parse( RequestID id )
                                 DBManager.NONE );
   }
 
-  mapping q = DBManager.get_permission_map( );
+  mapping(string:mapping(string:int)) q = DBManager.get_permission_map( );
   if( !sizeof( q ) )
-    return "No defined databases\n";
-  
+    return _(0, "No defined databases.\n");
+
+  array(string) conf_cols = sort (roxen->configurations->name);
+
   string res = "<style type='text/css'>\n"
-    ".df_table_c {"
-    " vertical-align: bottom;"
-    " text-align: center;"
-    " font-size: 8pt;"
-    " background-color: &usr.matrix12;;"
-    " padding: 2px;"
-    " border-top: 1px solid &usr.matrix11;;"
-    " border-left: 1px solid &usr.matrix11;;"
-    " border-right: 1px solid &usr.matrix21;;"
-    " border-bottom: 1px solid black;"
+    "#tbl {"
+    " font-size: smaller;"
+    " text-align: left;"
+    " empty-cells: show;"
     "}\n"
-    ".df_table_d {"
-    " font-size: 8pt;"
-    " background-color: &usr.matrix12;;"
-    " padding: 2px;"
-    " border-top: 1px solid &usr.matrix11;;"
-    " border-left: 1px solid &usr.matrix11;;"
-    " border-right: 1px solid &usr.matrix21;;"
-    " border-bottom: 1px solid &usr.matrix21;;"
-    "}\n"
-    ".df_table_r {"
-    " font-size: 8pt;"
-    " padding: 1px;"
-    " border-bottom: 1px solid &usr.matrix22;;"
-    " border-right: 1px solid &usr.matrix22;;"
-    "}\n"
-    ".df_table_s {"
-    " font-size: 8pt;"
-    " padding: 1px;"
-    " padding-left: 12px;"
-    " border-bottom: 1px solid &usr.matrix22;;"
-    "}\n"
-    ".df_table_g1 {"
-    " vertical-align: bottom;"
-    " font-size: 12pt;"
-    " padding: 1px;"
-    " border-bottom: 1px solid black;"
-    "}\n"
-    ".df_table_g2 {"
-    " font-size: 12pt;"
-    " padding: 1px;"
-    " padding-top: 16px;"
-    " border-bottom: 1px solid black;"
-    " border-right: 1px solid &usr.matrix22;;"
-    "}\n"
-    ".df_table_gr {"
-    " padding: 1px;"
-    " border-bottom: 1px solid black;"
-    " border-right: 1px solid &usr.matrix22;;"
-    "}\n"
-    ".df_table_gs {"
-    " padding: 1px;"
-    " padding-left: 12px;"
-    " border-bottom: 1px solid black;"
-    "}\n"
-    "a.dblink {"
+    "#tbl a {"
     " color: #0033aa;"
     " text-decoration: none;"
     "}\n"
-    "a.dblink:hover {"
+    "#tbl a:hover {"
     " color: #0055ff;"
     " text-decoration: underline;"
     "}\n"
+    "#tbl td, #tbl th {"	// Cell defaults.
+    " border-right: 1px solid &usr.matrix22;;"
+    " border-bottom: 1px solid &usr.matrix22;;"
+    "}\n"
+    "#tbl .db {"		// The database name cells.
+    " background-color: &usr.matrix12;;"
+    "}\n"
+    "#tbl tr.group-hdr > * {"	// The cells in the database group name rows.
+    " font-weight: bold;"
+    " vertical-align: bottom;"
+    " border-bottom-color: black;"
+    "}\n"
+    "#tbl tr.group-hdr > .conf {" // The cells containing configuration names.
+    " text-align: center;"
+    " background-color: &usr.matrix12;;"
+    "}\n"
     "</style>\n"
-    "<br /><table border='0' cellpadding='2' cellspacing='0'>\n";
+    "<table id='tbl' border='0' cellpadding='2' cellspacing='0'>\n";
 
-  mapping rres = ([]);
+  mapping(string:string) rres = ([]);
   foreach( DBManager.list_groups(), string g )
     rres[g]="";
-  
+
   foreach( sort(indices(q)), string db )
   {
     string db_group = DBManager.db_group(db);
-    int ii = DBManager.is_internal( db );
-		
-    mapping p = q[db];
-    if( !rres[ db_group ] )
-    {
-      rres[ db_group ]="";
-    }
-	    
-    rres[db_group] +=
-      "<tr><td class='df_table_d'>" +
-      (view_mode ? "" : "<a class='dblink' href='browser.pike?db="+db+"'>") +
-      "<cimg border='0' format='gif'"
+
+    string res =
+      "<tr><td class='db'>" +
+      (view_mode ? "" : "<a href='browser.pike?db="+db+"'>") +
+      "<cimg style='vertical-align: -2px' border='0' format='gif'"
       " src='&usr.database-small;' alt='' max-height='12'/>"
       "&nbsp;" + db +
       (view_mode ? "" : "</a>") +
       "</td>";
-    foreach( sort(roxen->configurations->name), string conf )
-    {
-      rres[db_group] += "<td class='df_table_r'>";
-	
-			
-#define PERM(P,T,L)							\
-      rres[db_group] +=							\
-	(view_mode ? "" :						\
-	 "<a class='dblink' href='?set_"+L+"="+				\
-	 Roxen.http_encode_url(conf)+"&db="+Roxen.http_encode_url(db)+"'>") \
-	+ (p[conf] == DBManager.P ? T : "&#x2013;")				\
-	+ (view_mode?"":"</a>")
-	
-      PERM(NONE,_(431,"N"),"none");
-      rres[db_group] += "&nbsp;";
-      PERM(READ,_(432,"R"),"read");
-      rres[db_group] += "&nbsp;";
-      PERM(WRITE,_(433,"W"),"write");
-      rres[db_group] += "</td>";
-    }
-    string format_stats( mapping s, string url )
-    {
-      if( !url )
-        url = "internal";
-      else
-      {
-	mixed err;
-	if( err = catch( DBManager.cached_get( db ) ) )
-	  url="<font color='&usr.warncolor;'>"+
-	    _(381,"Failed to connect")+": "+
-	    describe_error(err)+"</font>";
-	else
-	  url = "remote";
-      }
-      if( !s )
-        return url;
-      return sprintf( "%s %.1fMb", url, s->size/1024.0/1024.0 );
-    };
 
-    array e;
-    if( mixed e = catch {
-	rres[db_group] += "<td class='df_table_s'>"+
-	  format_stats( DBManager.db_stats( db ),
-			DBManager.db_url( db ) )+"</td>";
-      } )
+    mapping(string:int) p = q[db];
+    foreach( conf_cols, string conf )
     {
-      string em = describe_error(e);
-      sscanf( em, "%*sreconnect to SQL-server%s", em);
-      rres[db_group] +=
-	"<td class='df_table_s'>" + DBManager.db_url( db ) + "<br />"
-	"<font color='&usr.warncolor;'>" + em + "</font></td>";
+#define PERM(P,T,L)							\
+	((view_mode ? "" :						\
+	  "<a href='?set_"+L+"="+					\
+	  Roxen.http_encode_url(conf)+"&db="+Roxen.http_encode_url(db)+"'>") \
+	 + (p[conf] == DBManager.P ? T : "&#x2013;")			\
+	 + (view_mode?"":"</a>"))
+      res += "<td>" +
+	PERM(NONE,_(431,"N"),"none") + "&nbsp;" +
+	PERM(READ,_(432,"R"),"read") + "&nbsp;" +
+	PERM(WRITE,_(433,"W"),"write") + "</td>";
     }
-    rres[db_group] += "</tr>\n";
+
+    rres[db_group] += res + "</tr>\n";
   }
 
-  array cats = ({});
+  array(array(string)) cats = ({});
   foreach( indices(rres), string c )
     if( c != "internal" )
       cats += ({ ({DBManager.get_group(c)->lname, c}) });
@@ -192,23 +117,35 @@ string|mapping parse( RequestID id )
       cats = ({ ({DBManager.get_group(c)->lname, c}) }) + cats;
 
   if (sizeof (cats)) {
-    res += "<tr><td class='df_table_g1'><a class='dblink' href='edit_group.pike?group=" + cats[0][1] + "'>" + cats[0][0] + "</a></td>";
-    foreach( sort(roxen->configurations->name), string conf )
+    res += "<thead>\n"
+      "<tr class='group-hdr'><th><br/>"
+      "<a style='font-size: larger'"
+      " href='edit_group.pike?group=" + cats[0][1] + "'>" +
+      cats[0][0] + "</a></th>";
+    foreach( conf_cols, string conf )
     {
-      res += "<td class='df_table_c'><gtext href='/sites/site.html/" + conf + "/' scale='0.35' fgcolor='black' bgcolor='&usr.matrix12;' rotate='90'>" + get_conf_name(conf) + "</gtext></td>";
+      res += "<th class='conf'>"
+	"<gtext href='/sites/site.html/" + conf + "/' "
+	"scale='0.35' fgcolor='black' bgcolor='&usr.matrix12;' rotate='90'>" +
+	get_conf_name(conf) + "</gtext>"
+	"</th>";
     }
-    res += "<td class='df_table_gs'>&nbsp;</td></tr>\n" +
-      rres[ cats[0][1] ];
+    res += "</tr>\n</thead>\n" +
+      "<tbody>\n" + rres[ cats[0][1] ] + "</tbody>\n";
+
+    foreach( sort(cats[1..]), array q )
+    {
+      res += "<tbody>\n"
+	"<tr class='group-hdr'><th><br/>"
+	"<a style='font-size: larger'"
+	" href='edit_group.pike?group=" + q[1] + "'>" + q[0] + "</a></th>" +
+	("<td></td>" *
+	 sizeof( roxen->configurations )) +
+	"</tr>\n" +
+	rres[ q[1] ] +
+	"</tbody>\n";
+    }
   }
 
-  foreach( sort(cats[1..]), array q )
-  {
-    if (q[1] != "internal") {
-      res += "<tr><td class='df_table_g2'><a class='dblink' href='edit_group.pike?group=" + q[1] + "'>" + q[0] + "</a></td>" +
-	("<td class='df_table_gr'>&nbsp;</td>" * sizeof( roxen->configurations )) +
-	"<td class='df_table_gs'>&nbsp;</td></tr>\n";
-    }
-    res += rres[ q[1] ];
-  }
   return Roxen.http_string_answer(res+"</table>");
 }
