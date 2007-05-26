@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.70 2007/05/26 01:48:48 mast Exp $
+// $Id: DBManager.pmod,v 1.71 2007/05/26 13:26:38 mast Exp $
 
 //! Manages database aliases and permissions
 
@@ -380,6 +380,8 @@ array(mapping(string:mixed)) db_table_fields( string name, string table )
 //! the protocol handler. Otherwise returns 0.
 {
   Sql.Sql db = cached_get( name );
+#if 0
+  // fetch_fields provides more info.
   catch {
     if( db->list_fields )
     {
@@ -387,23 +389,16 @@ array(mapping(string:mixed)) db_table_fields( string name, string table )
       if( res ) return res;
     }
   };
-  // Now, this is slow, but very generic. :-)
-  mixed err = catch {
-    array res = ({});
-    foreach( db->big_query( "SELECT * FROM "+table )->fetch_fields(),
-	     object q )
-    {
-      res += ({
-	([
-	  "name":q->name,
-	  "type":q->type,
-	])
-      });
-    }
-    return res;
-  };
-  // No dice.
-  return 0;
+#endif
+
+  object q;
+  if (mixed err = catch (
+	q = db->big_query ("SELECT * FROM " + table + " LIMIT 0"))) {
+    report_debug ("Error listing fields in %O: %s",
+		  table, describe_error (err));
+    return 0;
+  }
+  return q->fetch_fields();
 }
 
 array(string) db_tables( string name )
