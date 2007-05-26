@@ -29,8 +29,13 @@ function GetXMLHttpObject()
 	var objXmlHttp = null;
 	if( window.XMLHttpRequest )
 		objXmlHttp = new XMLHttpRequest();
-	else if( window.ActiveXObject )
-		objXmlHttp = new ActiveXObject( "Microsoft.XMLHTTP" );
+	else if( window.ActiveXObject ) {
+		try {
+			objXmlHttp = new ActiveXObject( "Msxml2.XMLHTTP" );
+		} catch (e) {
+			objXmlHttp = new ActiveXObject( "Microsoft.XMLHTTP" );
+		}
+	}
 
 	return objXmlHttp;
 }
