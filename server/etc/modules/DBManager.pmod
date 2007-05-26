@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.69 2007/01/17 14:40:19 grubba Exp $
+// $Id: DBManager.pmod,v 1.70 2007/05/26 01:48:48 mast Exp $
 
 //! Manages database aliases and permissions
 
@@ -497,12 +497,12 @@ mapping db_table_information( string db, string table )
 }
 
 
-mapping db_stats( string name )
+mapping(string:int) db_stats( string name )
 //! Return statistics for the specified database (such as the number
 //! of tables and their total size). If the database is not an
 //! internal database, or the database does not exist, 0 is returned
 {
-  mapping res = ([]);
+  mapping(string:int) res = (["size": 0, "tables": 0, "rows": 0]);
   Sql.Sql db = cached_get( name );
   array d;
 
@@ -1229,13 +1229,50 @@ int set_permission( string name, Configuration c, int level )
   return 1;
 }
 
-mapping module_table_info( string db, string table )
+mapping(string:string) module_table_info( string db, string table )
 {
-  array td;
+  array(mapping(string:string)) td;
+  mapping(string:string) res1;
   if( sizeof(td=query("SELECT * FROM module_tables WHERE db=%s AND tbl=%s",
-		      db, table ) ) )
-    return td[0];
-  return ([]);
+		      db, table ) ) ) {
+    res1 = td[0];
+    if (table != "" ||
+	(res1->conf && sizeof (res1->conf) &&
+	 res1->module && sizeof (res1->module)))
+      return res1;
+  }
+  else
+    res1 = ([]);
+
+  // Many modules don't set the conf and module on the database but
+  // only on the individual tables, so do some more effort to find a
+  // common conf and module if table == "".
+
+  if (table == "" &&
+      sizeof (td = query ("SELECT DISTINCT conf, module, db FROM module_tables "
+			  "WHERE db=%s AND tbl!=\"\"", db))) {
+    if (sizeof (td) == 1 &&
+	(td[0]->conf && sizeof (td[0]->conf) &&
+	 td[0]->module && sizeof (td[0]->module)))
+      return td[0];
+    res1->module_varies = "yes";
+
+    string conf;
+    foreach (td, mapping(string:string) ent)
+      if (ent->conf) {
+	if (!conf) conf = ent->conf;
+	else if (conf != ent->conf) {
+	  conf = 0;
+	  break;
+	}
+      }
+    if (conf) res1->conf = conf;
+    else res1->conf_varies = "yes";
+
+    return res1;
+  }
+
+  return res1;
 }
 
 string insert_statement( string db, string table, mapping row )
