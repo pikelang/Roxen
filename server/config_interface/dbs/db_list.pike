@@ -113,10 +113,12 @@ string|mapping parse( RequestID id )
     " border-bottom: 1px solid &usr.matrix22;;"
     "}\n"
     "#tbl tr > *:first-child {"
+    " white-space: nowrap;" // No wrapping between the table icon and the name.
     " padding-left: 0;"
     "}\n"
     "#tbl .num {"
     " text-align: right;"
+    " white-space: nowrap;"
     "}\n"
     "#tbl tr.group-hdr > * {"	// The cells in the database group name rows.
     " font-weight: bold;"
@@ -142,8 +144,8 @@ string|mapping parse( RequestID id )
       "<tr><td class='db'>" +
       (view_mode ? "" : "<a href='browser.pike?db="+db+"'>") +
       "<cimg style='vertical-align: -2px' border='0' format='gif'"
-      " src='&usr.database-small;' alt='' max-height='12'/>"
-      "&nbsp;" + db +
+      " src='&usr.database-small;' alt='' max-height='12'/> " +
+      db +
       (view_mode ? "" : "</a>") +
       "</td>";
 
@@ -168,7 +170,7 @@ string|mapping parse( RequestID id )
       "<td class='num'>" +
       (zero_type (db_stats->size) ? "" :
        db_stats->size ?
-       sprintf ("%.1f&nbsp;MiB", db_stats->size / (1024.0 * 1024.0)) :
+       sprintf ("%.1f MiB", db_stats->size / (1024.0 * 1024.0)) :
        "empty") + "</td>";
 
     // Type column

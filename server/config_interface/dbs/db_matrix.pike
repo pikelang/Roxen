@@ -56,6 +56,7 @@ string|mapping parse( RequestID id )
     " text-decoration: underline;"
     "}\n"
     "#tbl td, #tbl th {"	// Cell defaults.
+    " white-space: nowrap;"
     " border-right: 1px solid &usr.matrix22;;"
     " border-bottom: 1px solid &usr.matrix22;;"
     "}\n"
@@ -86,8 +87,8 @@ string|mapping parse( RequestID id )
       "<tr><td class='db'>" +
       (view_mode ? "" : "<a href='browser.pike?db="+db+"'>") +
       "<cimg style='vertical-align: -2px' border='0' format='gif'"
-      " src='&usr.database-small;' alt='' max-height='12'/>"
-      "&nbsp;" + db +
+      " src='&usr.database-small;' alt='' max-height='12'/> " +
+      db +
       (view_mode ? "" : "</a>") +
       "</td>";
 
@@ -101,8 +102,8 @@ string|mapping parse( RequestID id )
 	 + (p[conf] == DBManager.P ? T : "&#x2013;")			\
 	 + (view_mode?"":"</a>"))
       res += "<td>" +
-	PERM(NONE,_(431,"N"),"none") + "&nbsp;" +
-	PERM(READ,_(432,"R"),"read") + "&nbsp;" +
+	PERM(NONE,_(431,"N"),"none") + " " +
+	PERM(READ,_(432,"R"),"read") + " " +
 	PERM(WRITE,_(433,"W"),"write") + "</td>";
     }
 
