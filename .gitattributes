@@ -21,6 +21,8 @@
 *.jar binary
 *.jpeg binary
 *.jpg binary
+/server/config_interface/dbs/ajax_optimizeall.js eol=crlf
+/server/config_interface/dbs/ajax_repairall.js eol=crlf
 /server/config_interface/sites/find_module.js -text -crlf
 *.mc eol=crlf
 *.pdf binary
