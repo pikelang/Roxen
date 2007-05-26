@@ -12,6 +12,8 @@ mapping actions = ([
   "clear":  ({  _(403,"Delete all tables"),    clear_db,  0 }),
   "backup": ({  _(404,"Make a backup"),        backup_db, 1 }),
   "charset":({  _(0, "Change default character set"), change_charset, 0 }),
+  "repair": ({  _(0, "Repair all tables"),     repair_db, 0 }),
+  "optimize":({  _(0, "Optimize all tables"),   optimize_db, 0 }),
 ]);
 
 
@@ -77,6 +79,147 @@ mixed change_charset( string db, RequestID id )
   return 0;
 }
 
+mixed repair_db( string db, RequestID id )
+{
+  // CSS stylesheet
+  string res = "<style type='text/css'>"
+    "#tbl {"
+    " font-size: smaller;"
+    " text-align: left;"
+    "}\n"
+    "#tbl tr > td {"
+    " padding-left: 1em;"
+    " border-bottom: 1px solid &usr.matrix22;;"
+    "}\n"
+    "#tbl tr > th {"
+    " font-weight: bold;"
+    " background-color: &usr.matrix12;;"
+    " padding-left: 1em;"
+    "}\n"
+    "#tbl tr > *:first-child {"
+    " padding-left: 0;"
+    "}\n"
+    "</style>"
+
+    "<a href='browser.pike?db=" + db + "'><gbutton>Back</gbutton></a><br/><br/>"
+
+    "<table id='tbl' cellspacing='0' cellpadding='1'>"
+    "<thead>"
+    "<tr>"
+    "<th>Target</th>"
+    "<th>Result</th>"
+    "<th>Time</th>"
+    "</tr>"
+    "</thead>"
+    "<tbody>";
+
+  mixed m = query("SHOW TABLE STATUS IN " + db);
+  float t3 = 0;
+
+  if (sizeof(m)) {
+    foreach (m,m) {
+      string result = "";
+      mixed q;
+      int t = time();
+      float t1 = time(t);
+      float t2;
+
+      if ( mixed e = catch { q = query( "REPAIR TABLE `" + db + "`.`" + m->Name + "`" ); } ) {
+	result = "<font color='red'>Error: " + describe_error(e) + "</font>";
+      } else {
+	t2 = (time(t)-t1);
+	t3 += t2;
+
+	if (q->Msg_text = "OK")
+	  result = "<font color='green'>OK</font>";
+	else
+	  result = "<font color='red'>Failed: " + q->Msg_text + "</font>";
+      }
+
+      res += "<tr>" +
+	"<td><a href='browser.pike?db=" + db + "'>" + db + "</a>.<a href='browser.pike?db=" + db + "&table=" + m->Name + "'>" + m->Name + "</a></td>" +
+	"<td><b>" + result + "</b></td>" +
+	"<td>" + t2 + " sec</td>" +
+	"</tr>";
+    }
+  }
+  res += "<tr><td colspan='2'>Total:</td><td>" + t3 + " sec</td></tr></tbody></table><br/>";
+
+  return res;
+}
+
+mixed optimize_db( string db, RequestID id )
+{
+  // CSS stylesheet
+  string res = "<style type='text/css'>"
+    "#tbl {"
+    " font-size: smaller;"
+    " text-align: left;"
+    "}\n"
+    "#tbl tr > td {"
+    " padding-left: 1em;"
+    " border-bottom: 1px solid &usr.matrix22;;"
+    "}\n"
+    "#tbl tr > th {"
+    " font-weight: bold;"
+    " background-color: &usr.matrix12;;"
+    " padding-left: 1em;"
+    "}\n"
+    "#tbl tr > *:first-child {"
+    " padding-left: 0;"
+    "}\n"
+    "</style>"
+
+    "<a href='browser.pike?db=" + db + "'><gbutton>Back</gbutton></a><br/><br/>"
+
+    "<table id='tbl' cellspacing='0' cellpadding='1'>"
+    "<thead>"
+    "<tr>"
+    "<th>Target</th>"
+    "<th>Result</th>"
+    "<th>Time</th>"
+    "</tr>"
+    "</thead>"
+    "<tbody>";
+
+  mixed m = query("SHOW TABLE STATUS IN " + db);
+  float t3 = 0;
+
+  if (sizeof(m)) {
+    foreach (m,m) {
+      string result = "";
+      mixed q;
+      int t = time();
+      float t1 = time(t);
+      float t2;
+
+      if ( mixed e = catch { q = query( "OPTIMIZE TABLE `" + db + "`.`" + m->Name + "`" ); } ) {
+	result = "<font color='red'>Error: " + describe_error(e) + "</font>";
+      } else {
+	t2 = (time(t)-t1);
+	t3 += t2;
+
+	if (q->Msg_text = "OK")
+	  result = "<font color='green'>OK</font>";
+	else
+	  result = "<font color='red'>Failed: " + q->Msg_text + "</font>";
+      }
+
+      res += "<tr>" +
+	"<td><a href='browser.pike?db=" + db + "'>" + db + "</a>.<a href='browser.pike?db=" + db + "&table=" + m->Name + "'>" + m->Name + "</a></td>" +
+	"<td><b>" + result + "</b></td>" +
+	"<td>" + t2 + " sec</td>" +
+	"</tr>";
+    }
+  }
+  res += "<tr><td colspan='2'>Total:</td><td>" + t3 + " sec</td></tr></table><br/>";
+
+  return res;}
+
+mixed query( mixed ... args ) {
+	return connect_to_my_mysql( 0, "roxen" )->query( @args );
+}
+
 mixed backup_db( string db, RequestID id )
 {
   if( id->variables["ok.x"] )
@@ -122,7 +265,7 @@ mixed move_db( string db, RequestID id )
       switch( id->variables->name )
       {
        case "":
-         warning =  "<font color='&usr.warncolor;'>"+
+	 warning =  "<font color='&usr.warncolor;'>"+
 	   _(408,"Please specify a name for the database")+
 	   "</font>";
          break;
@@ -304,6 +447,7 @@ int is_encode_value( string what )
 
 string format_decode_value( string what )
 {
+#if 0
   string trim_comments( string what ) /* Needs work */
   {
     string a, b;
@@ -311,6 +455,7 @@ string format_decode_value( string what )
       what = a+b;
     return what;
   };
+#endif
 
   // Type is program or object?
   if( (what[4] & 15) == 5 || (what[4] & 15) == 3 )
@@ -322,7 +467,8 @@ string format_decode_value( string what )
   {
     return
       "<pre>"+
-      Roxen.html_encode_string(trim_comments(sprintf("%O",decode_value(what))))+
+      Roxen.html_encode_string(
+	String.trim_all_whites(sprintf("%O",decode_value(what))))+
       "</pre>";
   };
   return Roxen.html_encode_string( what );
@@ -391,6 +537,56 @@ string db_switcher( RequestID id )
   return res + "</select><noscript><input type='submit' value='Switch db'/></noscript>\n";
 }
 
+string format_table_owner (mapping(string:string) mod_info, void|int skip_conf)
+{
+  // Note: Code duplication in db_list.pike.
+
+  if ((<0, "">)[mod_info->conf]) return 0;
+
+  Configuration c = roxen.find_configuration( mod_info->conf );
+  RoxenModule m = c && !(<0, "">)[mod_info->module] &&
+    c->find_module( mod_info->module );
+  ModuleInfo i =
+    !(<0, "">)[mod_info->module] &&
+    roxen.find_module( (mod_info->module/"#")[0] );
+  string mn;
+
+  if (!skip_conf) {
+    if (c) {
+      mn = "<a href='../sites/site.html/" +
+	Roxen.http_encode_url (mod_info->conf) + "/'>" +
+	Roxen.html_encode_string (c->query_name()) + "</a>";
+    }
+    else
+      mn = Roxen.html_encode_string (
+	sprintf ((string) _(0, "the deleted site %O"), mod_info->conf));
+  }
+
+  if( m ) {
+    string module = "<a href='../sites/site.html/"+
+      Roxen.http_encode_url(mod_info->conf)+"/n!n/"+
+      replace(mod_info->module,"#","!")+"/"+
+      "'>"+ Roxen.html_encode_string (i->get_name())+"</a>";
+    if (mn)
+      mn = sprintf ((string) _(0, "%s in %s"), module, mn);
+    else
+      mn = module;
+  }
+  else if( i ) {
+    if (mn)
+      mn = sprintf (
+	(string) _(0, "the deleted module %s in %s"),
+	Roxen.html_encode_string (sprintf ("%O", (string) i->get_name())),
+	mn);
+    else
+      mn = sprintf (
+	(string) _(0, "the deleted module %s"),
+	Roxen.html_encode_string (sprintf ("%O", (string) i->get_name())));
+  }
+
+  return mn;
+}
+
 mapping|string parse( RequestID id )
 {
   if( id->variables->image )
@@ -401,6 +597,63 @@ mapping|string parse( RequestID id )
     return Roxen.http_redirect( "/dbs/", id );
 
   string res =
+    "<style type='text/css'>"
+    ".num {"
+    " text-align: right;"
+    "}\n"
+    "#tbls a {"
+    " color: #0033aa;"
+    " text-decoration: none;"
+    "}\n"
+    "#tbls a:hover {"
+    " color: #0055ff;"
+    " text-decoration: underline;"
+    "}\n"
+    "#tbls {"
+    " font-size: smaller;"
+    " text-align: left;"
+    " border-collapse: collapse;"
+    "}\n"
+    "#tbls > * > tr > td {"
+    " padding-left: 1em;"
+    " border-bottom: 1px solid &usr.matrix22;;"
+    "}\n"
+    "#tbls > * > tr > th {"
+    " font-weight: bold;"
+    " background-color: &usr.matrix12;;"
+    " padding-left: 1em;"
+    "}\n"
+    "#tbls > * > tr > *:first-child {"
+    " padding-left: 0;"
+    "}\n"
+    "#tbls > * > tr.tbl-details > * {"
+    " border-top-style: hidden;"
+    "}\n"
+    "#tbl-details {"
+    " font-size: smaller;"
+    "}\n"
+    "#tbl-details > * > tr > * {"
+    " padding-left: 1em;"
+    "}\n"
+    "#tbl-details > * > tr > *:first-child {"
+    " padding-left: 0;"
+    "}\n"
+    "#res {"
+    " font-size: smaller;"
+    " text-align: left;"
+    " border-collapse: collapse;"
+    "}\n"
+    "#res > * > tr {"
+    " vertical-align: top;"
+    "}\n"
+    "#res > * > tr > * {"
+    " border: 1px solid &usr.matrix22;;"
+    "}\n"
+    "#res > * > tr > th {"
+    " font-weight: bold;"
+    " background-color: &usr.matrix12;;"
+    "}\n"
+    "</style>"
     "<use file='/template'/><tmpl>"
     "<topmenu base='../' selected='dbs'/>"
     "<content><cv-split><subtablist width='100%'><st-tabs>"
@@ -435,8 +688,6 @@ mapping|string parse( RequestID id )
       ::create( ([]), 65535 );
     }
   };
-  
-  array sel_t_columns = ({});
 
   object user = id->misc->config_user;
   QueryHistory hs;
@@ -445,29 +696,52 @@ mapping|string parse( RequestID id )
     user->settings->defvar( "db_history", (hs = QueryHistory( )) );
     user->settings->restore();
   }
-  if( (!id->variables->query || id->variables["clear_q.x"]) )
+  if( (!id->variables->query || id->variables["reset_q.x"]) )
   {
+    array sel_t_columns = ({});
+    if( id->variables->table ) {
+      if (mixed err = catch {
+	  sel_t_columns = DBManager.db_table_fields( id->variables->db,
+						     id->variables->table )
+	    ->name;
+	}) {
+	report_debug ("Error listing fields for table %s.%s: %s",
+		      id->variables->db, id->variables->table,
+		      describe_error (err));
+      }
+    }
+
     mapping h = hs->query();
-    catch {
-      if( id->variables->table )
-	sel_t_columns = DBManager.db_table_fields( id->variables->db,
-						   id->variables->table )
-	  ->name;
-      if( h[id->variables->db+"."+id->variables->table] )
-	id->variables->query = h[id->variables->db+"."+id->variables->table];
-      else if( id->variables->table )
-	id->variables->query = "SELECT "+(sel_t_columns*", ")+" FROM "+id->variables->table;
-      else if( DBManager.is_mysql( id->variables->db ) )
-	id->variables->query = "SHOW TABLES";
-      else
-	id->variables->query = "";
-    };
+
+    function(string:string) quote_name = lambda (string s) {return s;};
+    if (DBManager.is_mysql (id->variables->db))
+      // FIXME: Ought to be generalized and put into Sql.pmod.
+      quote_name = lambda (string s) {
+		     if (db && db->master_sql->is_keyword (s))
+		       return "`" + s + "`";
+		     return s;
+		   };
+
+    if( !id->variables["reset_q.x"] &&
+	h[id->variables->db+"."+id->variables->table] )
+      id->variables->query = h[id->variables->db+"."+id->variables->table];
+    else if( id->variables->table )
+      id->variables->query = "SELECT "+
+	(sizeof (sel_t_columns) ?
+	 map (sel_t_columns, quote_name) *", " : "*") +
+	" FROM "+ quote_name (id->variables->table);
+    else if( DBManager.is_mysql( id->variables->db ) )
+      id->variables->query = "SHOW TABLES";
+    else
+      id->variables->query = "";
   }
+
+  if (id->variables["run_q.x"] || id->variables["reset_q.x"])
+    hs->query()[ id->variables->db+"."+id->variables->table ]
+      = id->variables->query-"\r";
 
   if(db && id->variables["run_q.x"])
   {
-    hs->query()[ id->variables->db+"."+id->variables->table ]
-      = id->variables->query-"\r";
     user->settings->save();
 
     string query = "";
@@ -483,7 +757,8 @@ mapping|string parse( RequestID id )
     {
       float qtime = 0.0;
       int qrows;
-      qres += "<table celpadding=2><tr>";
+      qres += "<p>\n"
+	"<table id='res'><tr>";
       mixed e = catch {
 	multiset right_columns = (<>);
 	int h = gethrtime();
@@ -500,13 +775,12 @@ mapping|string parse( RequestID id )
 	      case "int":
 	      case "short":
 		right_columns[column]=1;
-		qres += "<td align=right>";
+		qres += "<th class='num'>";
 		break;
 	      default:
-		qres += "<td>";
+		qres += "<th>";
 	    }
-	    qres += "<b><font size=-1>"+field->name+
-	      "</font size=-1></b></td>\n";
+	    qres += Roxen.html_encode_string (field->name) + "</th>\n";
 	    column++;
 	  }
 	  qres += "</tr>";
@@ -514,26 +788,24 @@ mapping|string parse( RequestID id )
 	  while( array q = big_q->fetch_row() )
 	  {
 	    qrows++;
-	    qres += "<tr valign=top>";
-	    for( int i = 0; i<sizeof(q); i++ )
+	    qres += "<tr>";
+	    for( int i = 0; i<sizeof(q); i++ ) {
+	      qres += right_columns[i] ? "<td class='num'>" : "<td>";
 	      if( !q[i] )
-		qres +=
-		  "<td align=right><i><font size=-2>NULL</font></i></td>";
+		qres += "<i>NULL</i>";
 	      else if( intp( q[i] ) || is_int(q[i]) )
-		qres += "<td align=right>"+format_int((int)q[i])+"</td>";
+		qres += format_int((int)q[i]);
 	      else if( floatp( q[i] ) || is_float(q[i]) )
-		qres += "<td align=right>"+format_float((float)q[i])+"</td>";
+		qres += format_float((float)q[i]);
 	      else if( is_image( q[i] ) )
 		qres +=
-		  "<td><img src='browser.pike?image="+store_image( q[i] )+
-		  "' /></td>";
+		  "<img src='browser.pike?image="+store_image( q[i] )+ "' />";
 	      else if( is_encode_value( q[i] ) )
-		qres += "<td>"+ format_decode_value(q[i]) +"</td>";
-	      else if( right_columns[i] )
-		qres += "<td align=right>"+ Roxen.html_encode_string(q[i]) +
-		  "</td>";
+		qres += format_decode_value(q[i]);
 	      else
-		qres += "<td>"+ Roxen.html_encode_string(q[i]) +"</td>";
+		qres += Roxen.html_encode_string(q[i]);
+	      qres += "</td>";
+	    }
 	    qres += "</tr>\n";
 	  }
 	}
@@ -550,207 +822,270 @@ mapping|string parse( RequestID id )
       }
       qres += "</table>"+
 	sprintf( _(426,"Query took %[0].3fs, %[1]d rows in the reply")+
-		 "\n<br />", qtime, qrows);
+		 "\n</p>\n", qtime, qrows);
     }
   }
-
-
-  string table_module_info( string table )
-  {
-    mapping mi = DBManager.module_table_info( id->variables->db, table );
-    string res = "";
-
-    if(!mi->comment)
-      return "";
-    
-    if( strlen(mi->conf) && strlen(mi->module) )
-    {
-      Configuration c = roxen.find_configuration( mi->conf );
-      RoxenModule   m = c && c->find_module( mi->module );
-      ModuleInfo    i = roxen.find_module( (mi->module/"#")[0] );
-      string mn;
-
-      if( c && m )
-	mn =  "<a href='../sites/site.html/"+
-	  Roxen.http_encode_url(mi->conf)+"/n!n/"+
-	  replace(mi->module,"#","!")+"/"+
-	  "'>"+i->get_name()+"</a> in "+c->query_name();
-      else if( i )
-	mn =  sprintf((string)_(427,"the deleted module %s from %s"),
-		      i->get_name(), mi->conf );
-      res=sprintf((string)_(428,"Defined by %s"),mn)+"<br />";
-    }
-
-    sscanf( mi->comment, "%s\0%s", mi->tbl, mi->comment );
-    if( mi->tbl && mi->tbl != table)
-      if( mi->tbl != (string)0 )
-	return sprintf(_(429,"The table is known as '%s' in the module"),
-		       mi->tbl )+"<br />"+res+mi->comment;
-      else
-	return sprintf(_(430,"The table is an anymous table defined by "
-			 "the module"), mi->tbl )+
-	  "<br />"+res+mi->comment;
-
-    return res+mi->comment;
-  };
-
 
   if( id->variables->table )
     res += "<input type=hidden name='table' value='&form.table:http;' />\n";
 
-  res +=
-    "<br />"
-    "<table cellspacing=3 cellpadding=0 border=0 width=100%><tr>"
-    "<td valign=top>"
-    "<colorscope bgcolor='&usr.content-bg;' text='&usr.fgcolor;'>"
-    "<cimg border='0' format='gif' src='&usr.database-small;' alt='' "
-    "max-height='20' style='margin-top: 7px'/></td><td width=100%>" +
-    db_switcher( id ) + "<br />"
-    "<span style='font-size: 32px'>" + id->variables->db + "</span>"
-    "</colorscope></td></tr>"
-    "<tr><td></td><td>";
+  // DB switcher and title.
 
-  if( !url )
-    res += "<b>Internal database</b>";
+  res += "<p>"
+    "<table><tr valign='center'>"
+    "<td><cimg border='0' format='gif' src='&usr.database-small;' alt='' "
+    "max-height='20'/></td>" +
+    "<td>" + db_switcher( id ) + "</td></tr></table>\n"
+    "</p>\n"
+    "<h3>Database " + Roxen.html_encode_string (id->variables->db) + "</h3>\n";
+
+  // Bullet list with generic database info.
+
+  res += "<p><ul>\n";
+
+  if (id->variables->db == "local")
+    res += "<li>" +
+      _(0, "Internal data that cannot be shared between servers.") + "</li>\n";
+  else if (id->variables->db == "shared")
+    res += "<li>" +
+      _(0, "Internal data that may be shared between servers.") + "</li>\n";
+  else if( !url )
+    res += "<li>Internal database.</li>\n";
   else
-    res += "<b>"+Roxen.html_encode_string(url)+"</b>";
+    res += "<li>Database URL: " + Roxen.html_encode_string(url)+"</li>\n";
 
-  res += "</td></tr><tr><td></td><td>";
-
-  res += table_module_info( "" );
+  mapping(string:string) db_info =
+    DBManager.module_table_info (id->variables->db, "");
+  if (string owner = format_table_owner (db_info))
+    res += "<li>" + sprintf((string)_(428,"Defined by %s."), owner) +
+      "</li>\n";
+  if (string c = db_info->comment) {
+    c = String.trim_all_whites (c);
+    if (c != "")
+      res += "<li>" + Roxen.html_encode_string (c) + "</li>\n";
+  }
 
   string default_charset = DBManager.get_db_default_charset(id->variables->db);
   if (default_charset) {
-    res += "<br />" + _(0,"Default charset:") +
-      " <b>" + Roxen.html_encode_string(default_charset) + "</b>";
+    res += "<li>" + _(0,"Default charset:") +
+      Roxen.html_encode_string(default_charset) + "</li>";
   }
 
-  res +="<br /><a href='edit_group.pike?group="+
-    Roxen.http_encode_url(DBManager.db_group( id->variables->db ))+"'>"+
+  res +="<li>" +
     sprintf( (string)
-	     _(506,"Member of the %s database group"),
+	     _(506,"Member of the %s database group."),
+	     "<a href='edit_group.pike?group="+
+	     Roxen.http_encode_url(DBManager.db_group( id->variables->db ))+
+	     "'>" +
 	     DBManager.get_group( DBManager.db_group( id->variables->db ) )
-	     ->lname )
-    + "</a>";
+	     ->lname +
+	     "</a>")
+    + "</li>";
 
-  res += "<table>";
-
-  array table_data = ({});
-  int sort_ok;
-  string deep_table_info( string table )
-  {
-    array data = DBManager.db_table_fields( id->variables->db, table );
-    if( !data )
-      return sprintf((string)_(507,"Cannot list fields in %s databases"), 
-		     DBManager.db_driver(id->variables->db) );
-    string res = "<tr><td></td><td colspan='3'><table>";
-    foreach( data, mapping r )
-    {
-      res += "<tr>\n";
-      res += "<td><font size=-1><b>"+r->name+"</b></font></td>\n";
-      res += "<td><font size=-1>"+r->type+"</font></td>\n";
-      res += "</tr>\n";
-    }
-    return res+ "</table></td></tr>";
-  };
-
-  void add_table_info( string table, mapping tbi )
-  {
-    string res = "";
-    res += "<tr>\n";
-    res += "<td> <cimg src='&usr.table-small;' max-height='12'/> </td>\n";
-    res += "<td> <a href='browser.pike?sort=&form.sort:http;&"
-      "db=&form.db:http;&table="+Roxen.http_encode_url(table)+"'>"+
-      table+"</a> </td>";
-
-    
-    if( tbi )
-      res += "<td align=right> <font size=-1>"+
-	tbi->rows+" "+_(374,"rows")+"</font></td><td align=right>"
-	"<font size=-1>"+
-	(( (int)tbi->data_length+(int)tbi->index_length) ? 	
-	 ( (int)tbi->data_length+(int)tbi->index_length)/1024+_(375,"KiB"):
-	 "")+
-	"</font></td>";
-
-    if( id->variables->table == table )
-      res += "</tr>\n<tr><td colspan='4'><font size='-1'>"
-	+ table_module_info( table )+"</font></td></tr>\n";
-
-    if( tbi )
-      sort_ok = 1;
-
-    table_data += ({({
-      table,
-      (tbi ?(int)tbi->data_length+ (int)tbi->index_length:0),
-      (tbi ?(int)tbi->rows:0),
-      res+
-      ( id->variables->table == table ?
-	deep_table_info( table ) : "")
-    })});
-  };
+  res += "</ul></p>\n";
 
   if (db) {
+    // The database table list.
+
+    res += "<p><table id='tbls' border='0' cellpadding='2' cellspacing='0'>";
+
+    array table_data = ({});
+    int sort_ok;
+
+    string deep_table_info( string table )
+    {
+      array(mapping(string:mixed)) data =
+	DBManager.db_table_fields( id->variables->db, table );
+      if( !data )
+	return sprintf((string)_(507,"Cannot list fields in %s databases"),
+		       DBManager.db_driver(id->variables->db) );
+
+      multiset(string) props = (<>);
+      foreach (data, mapping(string:mixed) r)
+	foreach (r; string prop;)
+	  props[prop] = 1;
+      props->name = 0;		// Always listed first.
+      props->type = 0;		// Always listed second.
+      props->table = 0;		// Just our own table - ignored.
+      array(string) sort_props = sort (indices (props));
+
+      string res = "<table id='tbl-details'>"
+	"<tr>"
+	"<th>Column</th>"
+	"<th>Type</th>" +
+	map (sort_props,
+	     lambda (string prop) {
+	       return "<th>" + Roxen.html_encode_string (
+		 String.capitalize (prop)) + "</th>";
+	     }) * "" +
+	"</tr>\n";
+
+      foreach( data, mapping(string:mixed) r )
+      {
+	res += "<tr>"
+	  "<td>" + Roxen.html_encode_string (r->name) + "</td>"
+	  "<td>" + Roxen.html_encode_string (r->type) + "</td>";
+
+	foreach (sort_props, string prop) {
+	  mixed val = r[prop];
+	  if (zero_type (val))
+	    res += "<td></td>";
+	  else if (intp (val) || floatp (val))
+	    res += "<td class='num'>" + val + "</td>";
+	  else if (stringp (val))
+	    res += "<td>" + Roxen.html_encode_string (val) + "</td>";
+	  else if (arrayp (val) &&
+		   !catch (val = (array(string)) val))
+	    res += "<td>" + Roxen.html_encode_string (val * ", ") + "</td>";
+	  else if (multisetp (val) &&
+		   !catch (val = (array(string)) indices (val)))
+	    res += "<td>" + Roxen.html_encode_string (val * ", ") + "</td>";
+	  else if (objectp (val))
+	    res += "<td>" + Roxen.html_encode_string (sprintf ("%O", val)) +
+	      "</td>";
+	  else
+	    res += "<td>" + Roxen.html_encode_string (sprintf ("<%t>", val)) +
+	      "</td>";
+	}
+
+	res += "</tr>\n";
+      }
+
+      return res+ "</table>";
+    };
+
+    void add_table_info( string table, mapping tbi )
+    {
+      mapping(string:string) tbl_info =
+	DBManager.module_table_info (id->variables->db, table);
+
+      int deep_info = id->variables->table == table;
+
+      string res = "<tr>"
+	"<td><a href='browser.pike?sort=&form.sort:http;&amp;"
+	"db=&form.db:http;" +
+	(deep_info ? "" : "&amp;table="+Roxen.http_encode_url(table)) +"'>"+
+	"<cimg style='vertical-align: -2px' border='0' format='gif'"
+	" src='&usr.table-small;' alt='' max-height='12'/>"
+	"&nbsp;" + table+"</a></td>"
+	"<td class='num'>"+
+	(zero_type (tbi->rows) ? "" : tbi->rows) + "</td>"
+	"<td class='num'>" +
+	(zero_type (tbi->data_length) ? "" :
+	 sprintf ("%d&nbsp;KiB",
+		  ((int)tbi->data_length+(int)tbi->index_length) / 1024)) +
+	"</td>"
+	"<td>" +
+	String.capitalize (
+	  format_table_owner (tbl_info, !(<0, "">)[db_info->conf]) || "") +
+	"</td>";
+
+      if (deep_info) {
+	res += "</tr>\n<tr class='tbl-details'><td colspan='5'>";
+
+	if (tbl_info->comment)
+	  sscanf( tbl_info->comment, "%s\0%s",
+		  tbl_info->tbl, tbl_info->comment );
+
+	if( tbl_info->tbl && tbl_info->tbl != table)
+	  if( tbl_info->tbl != (string)0 )
+	    res +=
+	      sprintf((string) _(429,"The table is known as %O "
+				 "in the module."), tbl_info->tbl ) + "<br/>\n";
+	  else
+	    res +=
+	      sprintf((string) _(430,"The table is an anonymous table defined "
+				 "by the module."), tbl_info->tbl ) + "<br/>\n";
+
+	if (string c = tbl_info->comment) {
+	  c = String.trim_all_whites (c);
+	  if (c != "" && c != "0")
+	    res += Roxen.html_encode_string (c) + "<br/>\n";
+	}
+
+	res += deep_table_info (table) + "</td></tr>\n";
+      }
+      else
+	res += "</tr>\n";
+
+      if( tbi )
+	sort_ok = 1;
+
+      table_data += ({({
+			table,
+			(tbi ?(int)tbi->data_length+ (int)tbi->index_length:0),
+			(tbi ?(int)tbi->rows:0),
+			res
+		      })});
+    };
+
     foreach( DBManager.db_tables( id->variables->db )-({0}), string tb )
       add_table_info(tb,
 		     DBManager.db_table_information(id->variables->db, tb));
-  }
 
-  switch( id->variables->sort )
-  {
-    default:
-      sort( column( table_data, 0 ), table_data );
-      break;
+    switch( id->variables->sort )
+    {
+      default:
+	sort( column( table_data, 0 ), table_data );
+	break;
 
-    case "rows":
-      sort( column( table_data, 2 ), table_data );
-      table_data = reverse( table_data );
-      break;
+      case "rows":
+	sort( column( table_data, 2 ), table_data );
+	table_data = reverse( table_data );
+	break;
 
-    case "size":
-      sort( column( table_data, 1 ), table_data );
-      table_data = reverse( table_data );
-      break;
-  }
-#define SEL(X,Y) ((id->variables->sort==X||(Y&&!id->variables->sort))?"<img src='&usr.selected-indicator;' border=0 alt='&gt;' />":"")
+      case "size":
+	sort( column( table_data, 1 ), table_data );
+	table_data = reverse( table_data );
+	break;
+    }
+#define SEL(X,Y)							\
+    ((id->variables->sort == X || (Y && !id->variables->sort)) ?	\
+     "<img style='vertical-align: -2px' src='&usr.selected-indicator;'"	\
+     " border='0' alt='&gt;'/>" :					\
+     "")
 
-  if( sort_ok )
-  {
+    if( sort_ok )
+    {
+      res +=
+	"<thead><tr>"
+	"<th><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=name'>"+
+	SEL("name", 1) + _(376,"Name")+
+	"</a></th>\n"
+	"<th class='num'><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=rows'>"+
+	SEL("rows",0)+String.capitalize(_(374,"rows"))+
+	"</a></th>\n"
+	"<th class='num'><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=size'>"+
+	SEL("size",0)+_(377,"Size")+
+	"</a></th>\n"
+	"<th>Owner</th>\n"
+	"</tr></thead>\n";
+    }
+
+    res += "<tbody>" + column( table_data, 3 )*"\n" +
+      "</tbody></table></p>\n";
+
+    // Query widget.
+
     res +=
-      "<tr><td align=right>"+
+      "<p>"
+      "<table><tr><td valign=top><font size=-1>"
+      "<textarea rows=8 cols=50 wrap=soft name='query'>" +
+      Roxen.html_encode_string (id->variables->query) + "</textarea>"
+      "</font></td><td valign=top>"
+      "<submit-gbutton2 name=reset_q> "+_(378,"Reset query")+" </submit-gbutton2>"
+      "<br />"
+      "<submit-gbutton2 name=run_q> "+_(379,"Run query")+" </submit-gbutton2>"
+      "</td></tr></table></p>";
 
-      SEL("name",1)+"</td>"
-      "<td><b><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=name'>"+
-      _(376,"Name")+
-      "</a></b></td>\n"
-      "<td align=right><b><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=rows'>"+
+    // Query result.
 
-      SEL("rows",0)+String.capitalize(_(374,"rows"))+
-      "</a></b></td>\n"
-      "<td align=right><b><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=size'>"+
-
-      SEL("size",0)+_(377,"Size")+
-      "</a></b></td>\n"
-      "</tr>";
+    res += qres;
   }
 
-  res += column( table_data, 3 )*"\n";
+  // Actions.
 
-  res += "</table></td></tr></table>";
-
-
-  res +=
-    "<table><tr><td valign=top><font size=-1>"
-    "<textarea rows=8 cols=50 wrap=soft name='query'>&form.query:html;</textarea>"
-    "</font></td><td valign=top>"
-    "<submit-gbutton2 name=clear_q> "+_(378,"Clear query")+" </submit-gbutton2>"
-    "<br />"
-    "<submit-gbutton2 name=run_q> "+_(379,"Run query")+" </submit-gbutton2>"
-    "<br /></td></tr></table>";
-
-
-  res += qres;
-
+  res += "<p>";
 
 #define ADD_ACTION(X) if(!actions[X][2] || \
 			 DBManager.is_internal(id->variables->db) ) \
@@ -760,7 +1095,7 @@ mapping|string parse( RequestID id )
   switch( id->variables->db )
   {
     case "local":
-      foreach( ({ "move","backup" }), string x )
+      foreach( ({ "move","backup","optimize","repair" }), string x )
 	ADD_ACTION( x );
       break;
       
@@ -769,5 +1104,5 @@ mapping|string parse( RequestID id )
 	ADD_ACTION( x );
       break;
   }
-  return res+"</st-page></subtablist></cv-split></content></tmpl>";
+  return res+"</p></st-page></subtablist></cv-split></content></tmpl>";
 }
