@@ -137,7 +137,7 @@ mixed repair_db( string db, RequestID id )
       }
 
       res += "<tr>" +
-	"<td><a href='browser.pike?db=" + db + "'>" + db + "</a>.<a href='browser.pike?db=" + db + "&table=" + m->Name + "'>" + m->Name + "</a></td>" +
+	"<td><a href='browser.pike?db=" + db + "'>" + db + "</a>.<a href='browser.pike?db=" + db + "&amp;table=" + m->Name + "'>" + m->Name + "</a></td>" +
 	"<td><b>" + result + "</b></td>" +
 	"<td>" + t2 + " sec</td>" +
 	"</tr>";
@@ -206,7 +206,7 @@ mixed optimize_db( string db, RequestID id )
       }
 
       res += "<tr>" +
-	"<td><a href='browser.pike?db=" + db + "'>" + db + "</a>.<a href='browser.pike?db=" + db + "&table=" + m->Name + "'>" + m->Name + "</a></td>" +
+	"<td><a href='browser.pike?db=" + db + "'>" + db + "</a>.<a href='browser.pike?db=" + db + "&amp;table=" + m->Name + "'>" + m->Name + "</a></td>" +
 	"<td><b>" + result + "</b></td>" +
 	"<td>" + t2 + " sec</td>" +
 	"</tr>";
@@ -600,6 +600,7 @@ mapping|string parse( RequestID id )
     "<style type='text/css'>"
     ".num {"
     " text-align: right;"
+    " white-space: nowrap;"
     "}\n"
     "#tbls a {"
     " color: #0033aa;"
@@ -620,10 +621,12 @@ mapping|string parse( RequestID id )
     "}\n"
     "#tbls > * > tr > th {"
     " font-weight: bold;"
+    " white-space: nowrap;"
     " background-color: &usr.matrix12;;"
     " padding-left: 1em;"
     "}\n"
     "#tbls > * > tr > *:first-child {"
+    " white-space: nowrap;" // No wrapping between the table icon and the name.
     " padding-left: 0;"
     "}\n"
     "#tbls > * > tr.tbl-details > * {"
@@ -699,7 +702,7 @@ mapping|string parse( RequestID id )
   if( (!id->variables->query || id->variables["reset_q.x"]) )
   {
     array sel_t_columns = ({});
-    if( id->variables->table ) {
+    if( !(<0, "">)[id->variables->table] ) {
       if (mixed err = catch {
 	  sel_t_columns = DBManager.db_table_fields( id->variables->db,
 						     id->variables->table )
@@ -725,7 +728,7 @@ mapping|string parse( RequestID id )
     if( !id->variables["reset_q.x"] &&
 	h[id->variables->db+"."+id->variables->table] )
       id->variables->query = h[id->variables->db+"."+id->variables->table];
-    else if( id->variables->table )
+    else if( !(<0, "">)[id->variables->table] )
       id->variables->query = "SELECT "+
 	(sizeof (sel_t_columns) ?
 	 map (sel_t_columns, quote_name) *", " : "*") +
@@ -826,7 +829,7 @@ mapping|string parse( RequestID id )
     }
   }
 
-  if( id->variables->table )
+  if( !(<0, "">)[id->variables->table] )
     res += "<input type=hidden name='table' value='&form.table:http;' />\n";
 
   // DB switcher and title.
@@ -966,8 +969,8 @@ mapping|string parse( RequestID id )
 	"db=&form.db:http;" +
 	(deep_info ? "" : "&amp;table="+Roxen.http_encode_url(table)) +"'>"+
 	"<cimg style='vertical-align: -2px' border='0' format='gif'"
-	" src='&usr.table-small;' alt='' max-height='12'/>"
-	"&nbsp;" + table+"</a></td>"
+	" src='&usr.table-small;' alt='' max-height='12'/> " +
+	table+"</a></td>"
 	"<td class='num'>"+
 	(zero_type (tbi->rows) ? "" : tbi->rows) + "</td>"
 	"<td class='num'>" +
@@ -1049,13 +1052,13 @@ mapping|string parse( RequestID id )
     {
       res +=
 	"<thead><tr>"
-	"<th><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=name'>"+
+	"<th><a href='browser.pike?db=&form.db:http;&amp;table=&form.table:http;&amp;sort=name'>"+
 	SEL("name", 1) + _(376,"Name")+
 	"</a></th>\n"
-	"<th class='num'><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=rows'>"+
+	"<th class='num'><a href='browser.pike?db=&form.db:http;&amp;table=&form.table:http;&amp;sort=rows'>"+
 	SEL("rows",0)+String.capitalize(_(374,"rows"))+
 	"</a></th>\n"
-	"<th class='num'><a href='browser.pike?db=&form.db:http;&table=&form.table:http;&sort=size'>"+
+	"<th class='num'><a href='browser.pike?db=&form.db:http;&amp;table=&form.table:http;&amp;sort=size'>"+
 	SEL("size",0)+_(377,"Size")+
 	"</a></th>\n"
 	"<th>Owner</th>\n"
@@ -1089,7 +1092,7 @@ mapping|string parse( RequestID id )
 
 #define ADD_ACTION(X) if(!actions[X][2] || \
 			 DBManager.is_internal(id->variables->db) ) \
-   res += sprintf("<a href='%s?db=%s&action=%s'><gbutton>%s</gbutton></a>\n",\
+   res += sprintf("<a href='%s?db=%s&amp;action=%s'><gbutton>%s</gbutton></a>\n",\
 		  id->not_query, id->variables->db, X, actions[X][0] )
   
   switch( id->variables->db )
