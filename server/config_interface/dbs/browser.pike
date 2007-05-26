@@ -626,7 +626,6 @@ mapping|string parse( RequestID id )
     " padding-left: 1em;"
     "}\n"
     "#tbls > * > tr > *:first-child {"
-    " white-space: nowrap;" // No wrapping between the table icon and the name.
     " padding-left: 0;"
     "}\n"
     "#tbls > * > tr.tbl-details > * {"
@@ -893,7 +892,7 @@ mapping|string parse( RequestID id )
     res += "<p><table id='tbls' border='0' cellpadding='2' cellspacing='0'>";
 
     array table_data = ({});
-    int sort_ok;
+    int sort_ok, got_owner_column;
 
     string deep_table_info( string table )
     {
@@ -965,7 +964,8 @@ mapping|string parse( RequestID id )
       int deep_info = id->variables->table == table;
 
       string res = "<tr>"
-	"<td><a href='browser.pike?sort=&form.sort:http;&amp;"
+	"<td style='white-space: nowrap'>"
+	"<a href='browser.pike?sort=&form.sort:http;&amp;"
 	"db=&form.db:http;" +
 	(deep_info ? "" : "&amp;table="+Roxen.http_encode_url(table)) +"'>"+
 	"<cimg style='vertical-align: -2px' border='0' format='gif'"
@@ -975,13 +975,20 @@ mapping|string parse( RequestID id )
 	(zero_type (tbi->rows) ? "" : tbi->rows) + "</td>"
 	"<td class='num'>" +
 	(zero_type (tbi->data_length) ? "" :
-	 sprintf ("%d&nbsp;KiB",
+	 sprintf ("%d KiB",
 		  ((int)tbi->data_length+(int)tbi->index_length) / 1024)) +
-	"</td>"
-	"<td>" +
-	String.capitalize (
-	  format_table_owner (tbl_info, !(<0, "">)[db_info->conf]) || "") +
 	"</td>";
+
+      string owner;
+      if ((db_info->conf || "") != (tbl_info->conf || ""))
+	owner = format_table_owner (tbl_info, 0);
+      else if ((db_info->module || "") != (tbl_info->module || ""))
+	owner = format_table_owner (tbl_info, 1);
+      if (owner) {
+	res += "<td>" + String.capitalize (owner) + "</td>";
+	got_owner_column = 1;
+      }
+      else res += "<td></td>";
 
       if (deep_info) {
 	res += "</tr>\n<tr class='tbl-details'><td colspan='5'>";
@@ -1050,6 +1057,10 @@ mapping|string parse( RequestID id )
 
     if( sort_ok )
     {
+      if (!got_owner_column)
+	// Try to hide the owner column when it's empty. Doesn't work
+	// in firefox 2.0, though.
+	res += "<col span='3'/><col style='visiblity: collapse'/>\n";
       res +=
 	"<thead><tr>"
 	"<th><a href='browser.pike?db=&form.db:http;&amp;table=&form.table:http;&amp;sort=name'>"+
