@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.71 2007/05/26 13:26:38 mast Exp $
+// $Id: DBManager.pmod,v 1.72 2007/05/26 16:32:52 mast Exp $
 
 //! Manages database aliases and permissions
 
@@ -393,7 +393,7 @@ array(mapping(string:mixed)) db_table_fields( string name, string table )
 
   object q;
   if (mixed err = catch (
-	q = db->big_query ("SELECT * FROM " + table + " LIMIT 0"))) {
+	q = db->big_query ("SELECT * FROM `" + table + "` LIMIT 0"))) {
     report_debug ("Error listing fields in %O: %s",
 		  table, describe_error (err));
     return 0;
@@ -483,7 +483,7 @@ mapping db_table_information( string db, string table )
       mixed err = catch{
 	return ([
 	  "rows":
-	  (int)(get(db)->query( "SELECT COUNT(*) AS C FROM "+table )[0]->C),
+	  (int)(get(db)->query( "SELECT COUNT(*) AS C FROM `"+table+"`" )[0]->C),
 	]);
       };
 #endif
@@ -1249,7 +1249,7 @@ mapping(string:string) module_table_info( string db, string table )
     if (sizeof (td) == 1 &&
 	(td[0]->conf && sizeof (td[0]->conf) &&
 	 td[0]->module && sizeof (td[0]->module)))
-      return td[0];
+      return res1 + td[0];
     res1->module_varies = "yes";
 
     string conf;
