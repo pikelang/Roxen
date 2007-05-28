@@ -196,6 +196,9 @@ if [ -d $roxenconfdir ] ; then
 	    ConsoleMessage "Configuration dir: $f"
 	    test -r $f/_startparams && source $f/_startparams
 	    test -r $f/_environment && source $f/_environment
+	    if [ ! -d `dirname $ROXEN_PID_FILE` ] ; then
+	    	echo "Warning: `dirname $ROXEN_PID_FILE` does not exist!"
+	    fi
 	    test -n $ROXEN_PID_FILE && pidfile=$ROXEN_PID_FILE
 	    dorunservice $1
 	done
@@ -204,6 +207,9 @@ if [ -d $roxenconfdir ] ; then
 	    source $roxenconfdir/$2/_startparams
 	test -r $roxenconfdir/$2/_environment && \
 	    source $roxenconfdir/$2/_environment
+    	if [ ! -d `dirname $ROXEN_PID_FILE` ] ; then
+    	    echo "Warning: `dirname $ROXEN_PID_FILE` does not exist!"
+    	fi
 	test -n $ROXEN_PID_FILE && pidfile=$ROXEN_PID_FILE
 	dorunservice $1
     fi
