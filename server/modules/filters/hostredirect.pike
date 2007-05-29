@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.35 2007/05/25 00:01:47 erikd Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.36 2007/05/29 23:26:02 erikd Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -86,17 +86,19 @@ void start(Configuration conf)
   rcode = ([ ]);
   foreach(replace(query("hostredirect"), "\t", " ")/"\n", s)
   {
+    int ret_code = 302;
     a = s/" " - ({""});
-    if(sizeof(a)==2) {
+    if ( a[0]=="permanent" ) {
+      ret_code = 301;
+      a = a[1..];
+    }
+    if(sizeof(a)>=2) {
       //if(a[1][0] != '/')  //this can now only be done if we
       //  a[1] = "/"+ a[1]; // don't have a HTTP redirect
       //if(a[0] != "default" && strlen(a[1]) > 1 && a[1][-1] == '/')
       //  a[1] = a[1][0..strlen(a[1])-2];
       patterns[lower_case(a[0])] = a[1];
-      rcode[lower_case(a[0])] = 302;
-    } else if ( (sizeof(a)==3) && (a[0]=="permanent") ){
-      patterns[lower_case(a[1])] = a[2];
-      rcode[lower_case(a[1])] = 301;
+      rcode[lower_case(a[0])] = ret_code;
     }
   }
 }
