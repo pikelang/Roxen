@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.361 2007/03/01 16:06:23 mast Exp $
+// $Id: module.pmod,v 1.362 2007/05/29 13:12:37 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -137,25 +137,6 @@ static object roxen;
 // This must be first so that it happens early in __INIT.
 
 static int tag_set_count = 0;
-
-static mapping(int|string:TagSet) garb_composite_tag_set_cache()
-{
-  call_out (garb_composite_tag_set_cache, 30*60);
-  return composite_tag_set_cache = ([]);
-}
-
-static mapping(int|string:TagSet) composite_tag_set_cache =
-  garb_composite_tag_set_cache();
-
-#define GET_COMPOSITE_TAG_SET(a, b, res) do {				\
-  int|string hash = HASH_INT2 (b->id_number, a->id_number);		\
-  if (!(res = composite_tag_set_cache[hash])) {				\
-    res = TagSet (0, 0);						\
-    res->imported = ({a, b});						\
-    /* Race, but it doesn't matter. */					\
-    composite_tag_set_cache[hash] = res;				\
-  }									\
-} while (0)
 
 static mapping(RoxenModule|Configuration:mapping(string:TagSet|int)) all_tag_sets = ([]);
 // Maps all tag sets to their TagSet objects. The top mapping is
@@ -670,7 +651,24 @@ class TagSet
   //! "my-tag" is the name of the tag that contains the subtags. It's
   //! typically a good idea to use the name of that tag, since it
   //! always is stable enough and unique within the tag set.
+  //!
+  //! Note that creating a tag set at runtime when a @[Frame] is
+  //! created doesn't work with p-code generation. If you think you
+  //! need to do that then you should probably take a look at
+  //! @[Frame.parent_frame] instead.
   {
+    if (RXML_CONTEXT) {
+      report_debug (
+	"Warning: Tag set %O in %O created during RXML evaluation.\n"
+	"This doesn't work with p-code generation and should be avoided.\n",
+	name_, owner_);
+#ifdef MODULE_DEBUG
+      array bt = backtrace();
+      report_debug (describe_backtrace (bt[sizeof (bt) - 6..]));
+#endif
+    }
+
+    // Note: Some code duplication wrt CompositeTagSet.create.
     id_number = ++tag_set_count;
     if (name_) {
       Thread.MutexKey key = all_tag_sets_mutex->lock (2);
@@ -1296,6 +1294,45 @@ TagSet shared_tag_set (RoxenModule|Configuration owner, string name, void|array(
       return tag_set;
   return TagSet (owner, name, tags);
 }
+
+static class CompositeTagSet
+{
+  inherit TagSet;
+
+  static void create (TagSet... tag_sets)
+  {
+    // Note: Some code duplication wrt TagSet.create.
+    id_number = ++tag_set_count;
+#ifdef RXML_OBJ_DEBUG
+    __object_marker->create (this_object());
+#endif
+    imported = tag_sets;
+  }
+
+  string _sprintf (void|int flag)
+  {
+    if (flag != 'O') return 0;
+    return "RXML.CompositeTagSet(" + tag_set_component_names() + ")" +
+      OBJ_COUNT;
+    //return "RXML.TagSet(" + id_number + ")" + OBJ_COUNT;
+  }
+}
+
+static mapping(int|string:CompositeTagSet) garb_composite_tag_set_cache()
+{
+  call_out (garb_composite_tag_set_cache, 30*60);
+  return composite_tag_set_cache = ([]);
+}
+
+static mapping(int|string:CompositeTagSet) composite_tag_set_cache =
+  garb_composite_tag_set_cache();
+
+#define GET_COMPOSITE_TAG_SET(a, b, res) do {				\
+  int|string hash = HASH_INT2 (b->id_number, a->id_number);		\
+  if (!(res = composite_tag_set_cache[hash]))				\
+    /* Race, but it doesn't matter. */					\
+    res = composite_tag_set_cache[hash] = CompositeTagSet (a, b);	\
+} while (0)
 
 
 class Value
