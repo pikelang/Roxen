@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.633 2007/03/05 12:13:59 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.634 2007/05/30 12:40:05 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4017,8 +4017,20 @@ void fix_no_delayed_load_flag()
 void enable_all_modules()
 {
   MODULE_LOCK (0);
-  low_init( );
-  fix_no_delayed_load_flag();
+
+  // Temporarily shift out of the rxml parsing context if we're inside
+  // any (e.g. due to delayed loading from inside the admin
+  // interface).
+  RXML.Context old_ctx = RXML.get_context();
+  RXML.set_context (0);
+  mixed err = catch {
+
+      low_init( );
+      fix_no_delayed_load_flag();
+
+    };
+  RXML.set_context (old_ctx);
+  if (err) throw (err);
 }
 
 void low_init(void|int modules_already_enabled)
