@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.635 2007/05/31 13:15:01 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.636 2007/05/31 13:15:36 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3351,7 +3351,7 @@ RoxenModule reload_module( string modname )
 
     };
   RXML.set_context (old_ctx);
-  if (err) throw (err);
+  throw (err);
 }
 
 #ifdef THREADS
