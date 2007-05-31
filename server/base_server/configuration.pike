@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.634 2007/05/30 12:40:05 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.635 2007/05/31 13:15:01 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3291,53 +3291,67 @@ RoxenModule reload_module( string modname )
 
   if( !old_module ) return 0;
 
-  master()->clear_compilation_failures();
-
-  if( !old_module->not_a_module )
-  {
-    save_one( old_module );
-    master()->refresh_inherit( object_program( old_module ) );
-    master()->refresh( object_program( old_module ), 1 );
-  }
-
-  array old_error_log = (array) old_module->error_log;
-
-  RoxenModule nm;
-
-  // Load up a new instance.
-  nm = mi->instance( this_object() );
-  // If this is a faked module, let's call it a failure.
-  if( nm->not_a_module )
-  {
-    old_module->report_error(LOC_C(385,"Reload failed")+"\n");
-    return old_module;
-  }
-
-  disable_module( modname, 1 );
-  destruct( old_module ); 
-
+  // Temporarily shift out of the rxml parsing context if we're inside
+  // any (e.g. due to delayed loading from inside the admin
+  // interface).
+  RXML.Context old_ctx = RXML.get_context();
+  RXML.set_context (0);
   mixed err = catch {
-      mi->update_with( nm,0 ); // This is sort of nessesary...
+
+      master()->clear_compilation_failures();
+
+      if( !old_module->not_a_module )
+      {
+	save_one( old_module );
+	master()->refresh_inherit( object_program( old_module ) );
+	master()->refresh( object_program( old_module ), 1 );
+      }
+
+      array old_error_log = (array) old_module->error_log;
+
+      RoxenModule nm;
+
+      // Load up a new instance.
+      nm = mi->instance( this_object() );
+      // If this is a faked module, let's call it a failure.
+      if( nm->not_a_module )
+      {
+	old_module->report_error(LOC_C(385,"Reload failed")+"\n");
+	RXML.set_context (old_ctx);
+	return old_module;
+      }
+
+      disable_module( modname, 1 );
+      destruct( old_module ); 
+
+      mixed err = catch {
+	  mi->update_with( nm,0 ); // This is sort of nessesary...
+	};
+      if (err)
+	if (stringp (err)) {
+	  // Error from the register_module call. We can't enable the old
+	  // module now, and I don't dare changing the order so that
+	  // register_module starts to get called before the old module is
+	  // destructed. /mast
+	  report_error (err);
+	  report_error(LOC_C(385,"Reload failed")+"\n");
+	  RXML.set_context (old_ctx);
+	  return 0;			// Use a placeholder module instead?
+	}
+	else
+	  throw (err);
+      enable_module( modname, nm, mi );
+
+      foreach (old_error_log, [string msg, array(int) times])
+	nm->error_log[msg] += times;
+
+      nm->report_notice(LOC_C(11, "Reloaded %s.")+"\n", mi->get_name());
+      RXML.set_context (old_ctx);
+      return nm;
+
     };
-  if (err)
-    if (stringp (err)) {
-      // Error from the register_module call. We can't enable the old
-      // module now, and I don't dare changing the order so that
-      // register_module starts to get called before the old module is
-      // destructed. /mast
-      report_error (err);
-      report_error(LOC_C(385,"Reload failed")+"\n");
-      return 0;			// Use a placeholder module instead?
-    }
-    else
-      throw (err);
-  enable_module( modname, nm, mi );
-
-  foreach (old_error_log, [string msg, array(int) times])
-    nm->error_log[msg] += times;
-
-  nm->report_notice(LOC_C(11, "Reloaded %s.")+"\n", mi->get_name());
-  return nm;
+  RXML.set_context (old_ctx);
+  if (err) throw (err);
 }
 
 #ifdef THREADS
