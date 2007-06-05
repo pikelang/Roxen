@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: cache.pike,v 1.85 2004/09/20 17:50:26 mast Exp $
+// $Id: cache.pike,v 1.86 2007/06/05 15:00:22 mast Exp $
 
 // #pragma strict_types
 
@@ -61,7 +61,7 @@ void flush_memory_cache (void|string in)
 
   else {
 #ifdef CACHE_DEBUG
-    gc();
+    //gc();
     [int before_count, int before_bytes] = memory_usage_summary();
 #endif
     foreach (cache; string cache_class; mapping(string:array) subcache) {
@@ -72,7 +72,7 @@ void flush_memory_cache (void|string in)
       m_delete (hits, cache_class);
       m_delete (all, cache_class);
 #ifdef CACHE_DEBUG
-      gc();
+      //gc();
       [int after_count, int after_bytes] = memory_usage_summary();
       CACHE_WERR ("  Flushed %O that had %d entries: "
 		  "Freed %d things and %d bytes\n",
