@@ -1438,6 +1438,14 @@ hej</result>
   <result parser="xml">&test.pass;</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <set variable="var.foo"/>
+    <cache variable="var.foo" shared="yes">&test.pass;</cache>
+  </rxml>
+  <result>1</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Random tests</comment>
