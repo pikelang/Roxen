@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.526 2007/05/04 09:13:40 wellhard Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.527 2007/06/08 15:50:47 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1630,26 +1630,50 @@ class TagCache {
     array(string|int) subvariables;
     mapping(string:RXML.PCode|array(int|RXML.PCode)) alternatives;
 
+    static constant rxml_empty_replacement = (<"eMp ty__">);
+
+    // Got ugly special cases below to avoid getting RXML.empty and
+    // RXML.nil into the keymap since that doesn't work with
+    // encode_value_canonic (ought to have a canonic_nameof callback
+    // in the codec). This should cover most cases with object values,
+    // at least.
+#define ADD_VARIABLE_TO_KEYMAP(ctx, var) do {				\
+      array splitted = ctx->parse_user_var (var, 1);			\
+      if (intp (splitted[0])) { /* Depend on the whole scope. */	\
+	mapping|RXML.Scope scope = ctx->get_scope (var);		\
+	array ind, val;							\
+	if (mappingp (scope)) {						\
+	  ind = indices (scope);					\
+	  val = values (scope);						\
+	}								\
+	else if (scope) {						\
+	  ind = scope->_indices (ctx, var);				\
+	  val = rows (scope, ind);					\
+	}								\
+	else								\
+	  parse_error ("Unknown scope %O.\n", var);			\
+	mapping filtered_scope = ([]);					\
+	foreach (ind, mixed i) {					\
+	  mixed v = scope[i];						\
+	  if (!zero_type (v))						\
+	    filtered_scope[i] =						\
+	      (v == RXML.empty ? rxml_empty_replacement : v);		\
+	}								\
+	keymap[var] = filtered_scope;					\
+      }									\
+      else {								\
+	mixed val = ctx->get_var (splitted[1..], splitted[0]);		\
+	if (!zero_type (val) && val != RXML.nil)			\
+	  keymap[var] = (val == RXML.empty ? rxml_empty_replacement : val); \
+      }									\
+    } while (0)
+
     static void add_subvariables_to_keymap()
     {
       RXML.Context ctx = RXML_CONTEXT;
-      foreach (subvariables, string var) {
-	array splitted = ctx->parse_user_var (var, 1);
-	if (intp (splitted[0])) { // Depend on the whole scope.
-	  mapping|RXML.Scope scope = ctx->get_scope (var);
-	  if (mappingp (scope))
-	    keymap[var] = scope + ([]);
-	  else if (var == "form")
-	    // Special case to optimize this scope.
-	    keymap->form = ctx->id->real_variables + ([]);
-	  else {
-	    array indices = scope->_indices (ctx, var);
-	    keymap[var] = mkmapping (indices, rows (scope, indices));
-	  }
-	}
-	else
-	  keymap[var] = ctx->get_var (splitted[1..], splitted[0]);
-      }
+      foreach (subvariables, string var)
+	// Note: Shouldn't get an invalid variable spec here.
+	ADD_VARIABLE_TO_KEYMAP (ctx, var);
     }
 
     static void make_key_from_keymap(RequestID id)
@@ -1706,23 +1730,7 @@ class TagCache {
 	if (args->variable != "")
 	  foreach (args->variable / ",", string var) {
 	    var = String.trim_all_whites (var);
-	    array splitted = ctx->parse_user_var (var, 1);
-	    if (intp (splitted[0])) { // Depend on the whole scope.
-	      mapping|RXML.Scope scope = ctx->get_scope (var);
-	      if (mappingp (scope))
-		keymap[var] = scope + ([]);
-	      else if (var == "form")
-		// Special case to optimize this scope.
-		keymap->form = id->real_variables + ([]);
-	      else if (scope) {
-		array indices = scope->_indices (ctx, var);
-		keymap[var] = mkmapping (indices, rows (scope, indices));
-	      }
-	      else
-		parse_error ("Unknown scope %O.\n", var);
-	    }
-	    else
-	      keymap[var] = ctx->get_var (splitted[1..], splitted[0]);
+	    ADD_VARIABLE_TO_KEYMAP (ctx, var);
 	  }
 	default_key = 0;
       }
@@ -6804,7 +6812,7 @@ using the pre tag.
  Converts the contents of the charset tag from the character set indicated
  by this attribute to the internal text representation.</p>
 
- <note><p>This attribute is depricated, use &lt;recode 
+ <note><p>This attribute is deprecated, use &lt;recode
  from=\"\"&gt;...&lt;/recode&gt; instead.</p></note>
 </attr>
 
