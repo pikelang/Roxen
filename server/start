@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.228 2007/05/28 08:45:52 marty Exp $
+# $Id: start,v 1.229 2007/06/12 06:24:21 marty Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -328,6 +328,7 @@ parse_args() {
     program="$2"
     once=2
     passhelp=1
+    keep_mysql=1
     shift
     shift
     # Pass any remaining arguments along to the program.
