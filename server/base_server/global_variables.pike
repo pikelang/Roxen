@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.101 2007/05/03 13:42:53 mast Exp $
+// $Id: global_variables.pike,v 1.102 2007/06/12 12:07:46 erikd Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -410,6 +410,14 @@ void define_global_variables(  )
 	 TYPE_STRING /* |VAR_MORE */,
 	 LOCALE(127, "Enter the name that Roxen should use when talking to clients. "),
 	 0, ident_disabled_p);
+  
+  defvar("config_header_string", "", 
+	 LOCALE(0, "Show this string in header"),
+	 TYPE_STRING /* |VAR_MORE */,
+	 LOCALE(0, "Enter a identifier that will be displayed in the head of "
+		   " config interface. This makes it easier to distinguish "
+		   "between different site configurations. "),
+	 0);
   
   defvar("User", "", LOCALE(128, "Change uid and gid to"), 
 	 TYPE_STRING,
