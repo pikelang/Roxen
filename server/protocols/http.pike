@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.518 2007/04/04 15:55:45 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.519 2007/06/12 12:28:20 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1942,6 +1942,7 @@ void send_result(mapping|void result)
       TIMER_END(send_result);
       file = 0;
       pipe = 0;
+      if (do_not_disconnect) return;
       my_fd = 0;
       return;
     }
