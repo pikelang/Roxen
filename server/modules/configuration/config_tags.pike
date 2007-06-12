@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.192 2006/08/09 18:18:14 mast Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.193 2007/06/12 12:13:21 erikd Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -973,6 +973,22 @@ class TagModuleVariablesSectionsplugin
 }
 
 
+
+// usage: <cf-headline/>
+class TagCFHeadline
+{
+  inherit RXML.Tag;
+  constant name = "cf-headline";
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    array do_return( RequestID id )
+    {
+      return ({ roxen->query("config_header_string") });
+    }
+  }
+}
 
 class TagGlobalVariablesSectionsplugin
 {
