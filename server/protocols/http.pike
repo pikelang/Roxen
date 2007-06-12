@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.520 2007/04/20 15:01:05 jonasw Exp $";
+constant cvs_version = "$Id: http.pike,v 1.521 2007/06/12 12:28:08 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1943,6 +1943,7 @@ void send_result(mapping|void result)
       TIMER_END(send_result);
       file = 0;
       pipe = 0;
+      if (do_not_disconnect) return;
       my_fd = 0;
       return;
     }
@@ -2082,6 +2083,7 @@ void send_result(mapping|void result)
 				 "mtime":(file->stat &&
 					  file->stat[ST_MTIME]),
 				 "rf":realfile,
+				 "refresh":time(1) + misc->cacheable/2,
 			       ]),
 			       misc->cacheable, this_object());
 	  file = ([
@@ -2508,7 +2510,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	    foreach( file->callbacks, function f ) {
 	      MY_TRACE_ENTER (sprintf ("Checking with %s",
 				       master()->describe_function (f)), 0);
-	      if( !f(this_object(), cv[1]->key ) )
+	      if( !f(this_object(), file->key ) )
 	      {
 		MY_TRACE_LEAVE ("Entry invalid according to callback");
 		MY_TRACE_LEAVE ("");
@@ -2525,7 +2527,7 @@ void got_data(mixed fooid, string s, void|int chained)
 		       "%s\n",
 		       describe_backtrace(e));
 		// Invalidate the key.
-		destruct(cv[1]->key);
+		destruct(file->key);
 	      }) {
 	      // Fall back to a standard internal error.
 	      INTERNAL_ERROR( e );
@@ -2535,7 +2537,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	    }
 	  }
 	}
-	if( !cv[1]->key )
+	if( !file->key )
 	{
 	  MY_TRACE_LEAVE ("Entry invalid due to zero key");
 	  conf->datacache->expire_entry(raw_url, this_object());
@@ -2552,6 +2554,14 @@ void got_data(mixed fooid, string s, void|int chained)
 	    if (objectp(cookies)) {
 	      // Disconnect the cookie jar.
 	      real_cookies = cookies = ~cookies;
+	    }
+
+	    int refresh;
+	    if (cv[1]->refresh && (cv[1]->refresh <= time(1))) {
+	      // We need to refresh the entry.
+	      refresh = 1 + time(1) - cv[1]->refresh;
+	      m_delete(cv[1], "refresh");
+	      misc->connection = "close";
 	    }
 
 	    int code = file->error;
@@ -2635,7 +2645,13 @@ void got_data(mixed fooid, string s, void|int chained)
 
 	    TIMER_END(cache_lookup);
 	    low_send_result(full_headers, d, sizeof(d));
-	    return;
+	    if (!refresh) return;
+	    MY_TRACE_ENTER (
+	      sprintf("Entry in need of refresh (%d seconds past refresh)",
+		      refresh - 1), 0);
+	    cache_status["protcache"] = 0;
+	    cache_status["refresh"] = 1;
+	    MY_TRACE_LEAVE("");
 	  }
 #ifndef RAM_CACHE_ASUME_STATIC_CONTENT
 	  else
