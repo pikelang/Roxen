@@ -3,7 +3,7 @@
 // Created 20060210 by Marcus Wellhardh <wellhard@roxen.com> as a
 // consultancy job for Randstad.
 
-// $Id: emit_exec.pike,v 1.2 2006/03/23 18:03:46 wellhard Exp $
+// $Id: emit_exec.pike,v 1.3 2007/06/12 17:15:26 mast Exp $
 
 #include <module.h>
 inherit "module";
@@ -58,7 +58,76 @@ class TagEmitExec {
     "return-variable" : RXML.t_text(RXML.PXml),
     "timeout"         : RXML.t_text(RXML.PXml),
   ]);
-  
+
+  // Kludge: Keep a limited pool of backend objects to avoid leaks in
+  // pike 7.4 on NT.
+  Thread.Local backends = Thread.Local();
+
+  class ExecProcess (int timeout, array(string) command_args)
+  {
+    Process.create_process p;
+    string res = "";
+    int done, ret_value;
+
+    void got_data(int cb_id, string s)
+    {
+      dwerror("emit#exec: got_data(%O)\n", s);
+      res += s;
+    }
+
+    void con_closed(int cb_id)
+    {
+      dwerror("emit#exec: con_closed()\n");
+      done = 1;
+    }
+    
+    void timeout_cb()
+    {
+      report_warning("emit#exec: Timeout (%O s), "
+		     "killing application [\"%s\"]\n",
+		     timeout, command_args*"\", \"");
+      p->kill(9);
+      done = 1;
+    }
+
+    void run()
+    {
+      Stdio.File stdout = Stdio.File();
+      mixed err = catch {
+	  dwerror("emit#exec: Starting application [\"%s\"]\n",
+		  command_args*"\", \"");
+	  p = Process.create_process(command_args, ([
+				       "stdout": stdout->pipe(),
+				     ]));
+	};
+      if(err)
+	RXML.run_error(describe_error(err));
+
+      Pike.Backend backend = backends->get();
+      if (!backend) backends->set (backend = Pike.Backend());
+      backend->add_file(stdout);
+      mixed timeout_co = backend->call_out(timeout_cb, timeout);
+    
+      stdout->set_nonblocking(got_data, 0, con_closed);
+
+      while (!done) {
+	dwerror("emit#exec: Running Backend\n");
+	float runtime = backend(0);
+	dwerror("emit#exec: Backend run %O seconds\n", runtime);
+      };
+
+      ret_value = p->wait();
+      stdout->close();
+      backend->remove_call_out (timeout_co);
+    }
+
+    static string _sprintf (int flag)
+    {
+      return flag == 'O' &&
+	sprintf ("TagEmitExec.ExecProcess(%{%s %})", command_args);
+    }
+  }
+
   array(mapping) get_dataset(mapping args, RequestID id)
   {
     mapping(string:string) get_entities(string s)
@@ -83,68 +152,22 @@ class TagEmitExec {
     array(string) command_args = ({ path });
     if(args->arguments && sizeof(args->arguments))
       command_args += Process.split_quoted_string(args->arguments);
-    
-    Stdio.File stdout = Stdio.File();
-    string res = "";
-    int done;
-    
-    Process.create_process p;
-    void got_data(int cb_id, string s)
-    {
-      dwerror("emit#exec: got_data(%O)\n", s);
-      res += s;
-    };
 
-    void con_closed(int cb_id)
-    {
-      dwerror("emit#exec: con_closed()\n");
-      done = 1;
-    };
-    
-    void timeout_cb()
-    {
-      report_warning("emit#exec: Timeout (%O s), "
-		     "killing application [\"%s\"]\n",
-		     timeout, command_args*"\", \"");
-      p->kill(9);
-      done = 1;
-    };
-    
-    mixed err = catch {
-      dwerror("emit#exec: Starting application [\"%s\"]\n", command_args*"\", \"");
-      p = Process.create_process(command_args, ([
-				   "stdout": stdout->pipe(),
-				 ]));
-    };
-    if(err)
-      RXML.run_error(describe_error(err));
-
-    object backend = Pike.Backend();
-    backend->add_file(stdout);
-    backend->call_out(timeout_cb, timeout);
-    
-    stdout->set_nonblocking(got_data, 0, con_closed);
-
-    while (!done) {
-      dwerror("emit#exec: Running Backend\n");
-      float runtime = backend(60);
-      dwerror("emit#exec: Backend run %O seconds\n", runtime);
-    };
-
-    int ret_value = p->wait();
+    ExecProcess ep = ExecProcess (timeout, command_args);
+    ep->run();
 
     array rows = ({});
     string loop_split = args["loop-split"];
     if(loop_split)
-      foreach(res/loop_split, string row)
+      foreach(ep->res/loop_split, string row)
 	rows += ({ get_entities(row) });
     else
-      rows += ({ get_entities(res) });
+      rows += ({ get_entities(ep->res) });
       
     if(args["raw-variable"])
-      RXML.user_set_var(args["raw-variable"], res);
+      RXML.user_set_var(args["raw-variable"], ep->res);
     if(args["return-variable"])
-      RXML.user_set_var(args["return-variable"], ret_value);
+      RXML.user_set_var(args["return-variable"], ep->ret_value);
     
     return rows;
   }
