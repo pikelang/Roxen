@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.521 2007/06/12 12:28:08 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.522 2007/06/12 13:25:22 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2281,10 +2281,13 @@ void handle_request( )
     INTERNAL_ERROR( e );
 
   else {
-    if (result && result->pipe)
+    if (result && result->pipe) {
       // Could be destructed here already since handle_request might
       // have handed over us to another thread that finished quickly.
+      REQUEST_WERR("HTTP: handle_request: pipe in progress.");
+      TIMER_END(handle_request);
       return;
+    }
     file = result;
   }
 
@@ -2294,6 +2297,7 @@ void handle_request( )
       ;
     else
       call_out( roxen.handle, file->try_again_later, handle_request );
+    TIMER_END(handle_request);
     return;
   }
 
