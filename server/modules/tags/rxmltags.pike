@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.527 2007/06/08 15:50:47 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.528 2007/06/14 07:26:34 erik Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -9138,12 +9138,23 @@ the respective attributes below for further information.</p></desc>
  <tag>set variable</tag> and an apropriate <tag>if</tag> plugin.
 </p></desc>",
 
-"if#exists":#"<desc type='plugin'><p><short>
- Returns true if the named page is viewable.</short> A nonviewable page
- is e.g. a file that matches the internal files patterns in the filesystem module.
- If the path does not begin with /, it is assumed to be a URL relative to the directory
- containing the page with the <tag>if</tag>-statement. 'Magic' files like /internal-roxen-unit
- will evaluate as true. This is a <i>State</i> plugin.</p>
+"if#exists":#"<desc type='plugin'><p><short> Returns true if the named page is
+ viewable.</short> A nonviewable page is e.g. a file that matches the
+ internal files patterns in the filesystem module. If the path does
+ not begin with /, it is assumed to be a URL relative to the directory
+ containing the page with the <tag>if</tag>-statement. 'Magic' files
+ like /internal-roxen-unit will evaluate as true. This is a
+ <i>State</i> plugin.</p>
+
+<p>To check if a path supplied via e.g. a
+ form exists you could combine the -exists plugin with e.g. the
+ sizeof-plugin:</p>
+
+<ex>
+  <if exists='&form.path;' and='' sizeof='form.path > 0'>
+    The path &form.path; exists in the virtual filesystem.
+  </if>
+</ex>
 </desc>
 
 <attr name='exists' value='path' required='1'>
