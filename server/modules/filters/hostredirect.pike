@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.36 2007/05/29 23:26:02 erikd Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.37 2007/06/14 06:01:14 erikd Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -88,7 +88,7 @@ void start(Configuration conf)
   {
     int ret_code = 302;
     a = s/" " - ({""});
-    if ( a[0]=="permanent" ) {
+    if ( sizeof(a) && a[0]=="permanent" ) {
       ret_code = 301;
       a = a[1..];
     }
