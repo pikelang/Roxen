@@ -209,7 +209,8 @@ getvariables()
     fi
     test -r $1/_environment && source $1/_environment
     if [ ! -d `dirname $ROXEN_PID_FILE` ] ; then
-    	ConsoleMessage "Warning: `dirname $ROXEN_PID_FILE` does not exist!"
+    	ConsoleMessage "`dirname $ROXEN_PID_FILE` does not exist, creating."
+	mkdir -p `dirname $ROXEN_PID_FILE` 
     fi
     test -n $ROXEN_PID_FILE && pidfile=$ROXEN_PID_FILE
 }
