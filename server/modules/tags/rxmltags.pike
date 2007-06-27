@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.530 2007/06/08 15:50:47 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.531 2007/06/27 11:47:43 erik Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -7159,7 +7159,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  <row><c><p>%p</p></c><c><p>\"a.m.\" or \"p.m.\"</p></c></row>
  <row><c><p>%r</p></c><c><p>Time in 12 hour clock format with %p</p></c></row>
  <row><c><p>%R</p></c><c><p>Time as \"%H:%M\"</p></c></row>
- <row><c><p>%S</p></c><c><p>Seconds (0-61), zero padded to two characters.</p></c></row>
+ <row><c><p>%S</p></c><c><p>Seconds (0-60), zero padded to two characters. Second 59-60 is a leap second.</p></c></row>
  <row><c><p>%t</p></c><c><p>Tab</p></c></row>
  <row><c><p>%T</p></c><c><p>Time as \"%H:%M:%S\"</p></c></row>
  <row><c><p>%u</p></c><c><p>Weekday as a decimal number (1-7), 1 is Sunday.</p></c></row>
@@ -9190,12 +9190,23 @@ the respective attributes below for further information.</p></desc>
  <tag>set variable</tag> and an apropriate <tag>if</tag> plugin.
 </p></desc>",
 
-"if#exists":#"<desc type='plugin'><p><short>
- Returns true if the named page is viewable.</short> A nonviewable page
- is e.g. a file that matches the internal files patterns in the filesystem module.
- If the path does not begin with /, it is assumed to be a URL relative to the directory
- containing the page with the <tag>if</tag>-statement. 'Magic' files like /internal-roxen-unit
- will evaluate as true. This is a <i>State</i> plugin.</p>
+"if#exists":#"<desc type='plugin'><p><short> Returns true if the named page is
+ viewable.</short> A nonviewable page is e.g. a file that matches the
+ internal files patterns in the filesystem module. If the path does
+ not begin with /, it is assumed to be a URL relative to the directory
+ containing the page with the <tag>if</tag>-statement. 'Magic' files
+ like /internal-roxen-unit will evaluate as true. This is a
+ <i>State</i> plugin.</p>
+
+<p>To check if a path supplied via e.g. a
+ form exists you could combine the -exists plugin with e.g. the
+ sizeof-plugin:</p>
+
+<ex>
+  <if exists='&form.path;' and='' sizeof='form.path > 0'>
+    The path &form.path; exists in the virtual filesystem.
+  </if>
+</ex>
 </desc>
 
 <attr name='exists' value='path' required='1'>
