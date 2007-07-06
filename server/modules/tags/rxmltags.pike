@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.531 2007/06/27 11:47:43 erik Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.532 2007/07/06 14:12:13 erik Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6268,6 +6268,10 @@ constant tagdoc=([
  as \"http://www.roxen.com/products/index.xml\", the value will be
  \"/products/index.xml\", given that the virtual filsystem was mounted
  on \"/\".
+</p></desc>",
+
+"&page.virtfile;":#"<desc type='entity'><p>
+ This tag is depricated. Use <ent>page.path</ent> instead.
 </p></desc>",
 
 "&page.pathinfo;":#"<desc type='entity'><p>
