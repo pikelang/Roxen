@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.532 2007/07/06 14:12:13 erik Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.533 2007/07/06 22:41:54 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6271,7 +6271,7 @@ constant tagdoc=([
 </p></desc>",
 
 "&page.virtfile;":#"<desc type='entity'><p>
- This tag is depricated. Use <ent>page.path</ent> instead.
+ This tag is deprecated. Use <ent>page.path</ent> instead.
 </p></desc>",
 
 "&page.pathinfo;":#"<desc type='entity'><p>
