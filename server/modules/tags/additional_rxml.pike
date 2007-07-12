@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2007, Roxen IS.
 //
 
 #include <module.h>
@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.33 2007/03/07 16:23:19 wellhard Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.34 2007/07/12 19:42:21 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -19,13 +19,15 @@ void create() {
 #else
 	 0
 #endif
-	 , "Allow <insert href>",
+	 , "Allow tags that might hang",
 	 TYPE_FLAG, #"\
-If set, it will be possible to use <tt>&lt;insert href&gt;</tt> to
-insert pages from another web server. Note that the handler thread
-will be blocked while it fetches the web page, so if enough requests
-are made to an unresponding external web server, this server might
-also cease to respond.");
+<p>If set, it will be possible to use <tt>&lt;insert href&gt;</tt> and
+<tt>&lt;xml-rpc-call&gt;</tt> to retrieve responses from other
+servers.</p>
+
+<p>These tags will block the handler thread while they wait for the
+remote server, so if enough requests are made to an unresponding
+external web server, this server might also cease to respond.</p>");
 
   defvar ("default_timeout", 300, "Default timeout for <insert href>",
 	  TYPE_INT, #"\
@@ -203,7 +205,7 @@ class TagInsertHref {
   constant plugin_name = "href";
 
   string get_data(string var, mapping args, RequestID id) {
-    if(!query("insert_href")) RXML.run_error("Insert href is not allowed.");
+    if(!query("insert_href")) RXML.run_error("Insert href is not allowed.\n");
 
     int recursion_depth = (int)id->request_headers["x-roxen-recursion-depth"];
 
@@ -274,8 +276,251 @@ class TagInsertHref {
   }
 }
 
+class TagXmlRpcCall
+// FIXME: This tag should also implement timeout using AsyncHTTPClient
+// or similar.
+{
+  inherit RXML.Tag;
+  constant name = "xml-rpc-call";
+  constant flags = RXML.FLAG_DONT_RECOVER;
+  mapping(string:RXML.Type) req_arg_types = ([
+    "href": RXML.t_text (RXML.PXml),
+    "method": RXML.t_text (RXML.PXml),
+  ]);
+
+  class TagSimpleParam
+  {
+    inherit RXML.Tag;
+    constant flags = RXML.FLAG_DONT_RECOVER;
+    constant allow_empty = 0;
+    class Frame
+    {
+      inherit RXML.Frame;
+      array do_return (RequestID id)
+      {
+	if (content == RXML.nil) {
+	  if (!allow_empty)
+	    RXML.parse_error ("Missing value.\n");
+	  up->params += ({content_type->empty_value});
+	}
+	else
+	  up->params += ({content});
+	result = RXML.nil;
+	return 0;
+      }
+    }
+  }
+
+  class TagString
+  {
+    inherit TagSimpleParam;
+    constant name = "string";
+    RXML.Type content_type = RXML.t_string (RXML.PXml);
+    constant allow_empty = 1;
+  }
+
+  class TagInt
+  {
+    inherit TagSimpleParam;
+    constant name = "int";
+    RXML.Type content_type = RXML.t_int (RXML.PXml);
+  }
+
+  class TagFloat
+  {
+    inherit TagSimpleParam;
+    constant name = "float";
+    RXML.Type content_type = RXML.t_float (RXML.PXml);
+  }
+
+  class TagIsoDateTime
+  {
+    inherit RXML.Tag;
+    constant name = "iso-date-time";
+    RXML.Type content_type = RXML.t_string (RXML.PXml);
+    constant flags = RXML.FLAG_DONT_RECOVER;
+    class Frame
+    {
+      inherit RXML.Frame;
+      array do_return (RequestID id)
+      {
+	int t;
+	int year, month, day, hour, minute, second;
+	if (sscanf (content || "", "%d-%d-%d%*c%d:%d:%d",
+		    year, month, day, hour, minute, second) < 3)
+	  RXML.parse_error ("Need at least yyyy-mm-dd specified.\n");
+	if (mixed err = catch (t = mktime (([
+					     "year": year - 1900,
+					     "mon": month - 1,
+					     "mday": day,
+					     "hour": hour,
+					     "min": minute,
+					     "sec": second,
+					   ]))))
+	  RXML.run_error (describe_error (err));
+	up->params += ({Calendar.ISO.Second (t)});
+	result = RXML.nil;
+	return 0;
+      }
+    }
+  }
+
+  class TagArray
+  {
+    inherit RXML.Tag;
+    constant name = "array";
+    constant flags = RXML.FLAG_DONT_RECOVER;
+    class Frame
+    {
+      inherit RXML.Frame;
+      RXML.TagSet local_tags = param_tags;
+      array params = ({});
+      array do_return (RequestID id)
+      {
+	up->params += ({params});
+	result = RXML.nil;
+	return 0;
+      }
+    }
+  }
+
+  class TagMember
+  {
+    inherit RXML.Tag;
+    constant name = "member";
+    constant flags = RXML.FLAG_DONT_RECOVER;
+    mapping(string:RXML.Type) req_arg_types = ([
+      "name": RXML.t_text (RXML.PXml),
+    ]);
+    class Frame
+    {
+      inherit RXML.Frame;
+      RXML.TagSet local_tags = param_tags;
+      array params = ({});
+      array do_return (RequestID id)
+      {
+	if (sizeof (params) > 1)
+	  RXML.parse_error ("Cannot take more than one value.\n");
+	if (sizeof (params) < 1)
+	  RXML.parse_error ("Missing value.\n");
+	if (!zero_type (up->members[args->name]))
+	  RXML.parse_error ("Cannot handle several members "
+			    "with the same name.\n");
+	up->members[args->name] = params[0];
+	result = RXML.nil;
+	return 0;
+      }
+    }
+  }
+
+  RXML.TagSet struct_tags = RXML.TagSet (this_module(), "xml-rpc-call/struct",
+					 ({TagMember()}));
+
+  class TagStruct
+  {
+    inherit RXML.Tag;
+    constant name = "struct";
+    constant flags = RXML.FLAG_DONT_RECOVER;
+    class Frame
+    {
+      inherit RXML.Frame;
+      RXML.TagSet local_tags = struct_tags;
+      mapping(string:mixed) members = ([]);
+      array do_return (RequestID id)
+      {
+	up->params += ({members});
+	result = RXML.nil;
+	return 0;
+      }
+    }
+  }
+
+  RXML.TagSet param_tags = RXML.TagSet (this_module(), "xml-rpc-call",
+					({TagString(),
+					  TagInt(),
+					  TagFloat(),
+					  TagIsoDateTime(),
+					  TagArray(),
+					  TagStruct(),
+					}));
+
+  class Frame
+  {
+    inherit RXML.Frame;
+    RXML.TagSet local_tags = param_tags;
+    array params = ({});
+
+    void format_response (array res, String.Buffer buf)
+    {
+      foreach (res, mixed val) {
+	if (stringp (val))
+	  buf->add ("<string>", Roxen.html_encode_string (val), "</string>\n");
+	else if (intp (val))
+	  buf->add ("<int>", (string) val, "</int>\n");
+	else if (floatp (val))
+	  buf->add ("<float>", val, "</float>\n");
+	else if (arrayp (val)) {
+	  buf->add ("<array>\n");
+	  format_response (val, buf);
+	  buf->add ("</array>\n");
+	}
+	else if (mappingp (val)) {
+	  buf->add ("<struct>\n");
+	  foreach (val; string name; mixed val) {
+	    buf->add ("<member name='",
+		      Roxen.html_encode_string (name), "'>\n");
+	    format_response (({val}), buf);
+	    buf->add ("</member>\n");
+	  }
+	  buf->add ("</struct>\n");
+	}
+	else {			// Gotta be a Calendar object.
+	  // Format this to be compatible with the iso-time attribute
+	  // to the <date> tag.
+	  buf->add ("<iso-date-time>", val->format_time(),
+		    "</iso-date-time>\n");
+	}
+      }
+    }
+
+    array do_return (RequestID id)
+    {
+      if (!query ("insert_href"))
+	RXML.run_error ("This tag is disabled.\n");
+
+      // FIXME: Should provide a way to avoid having the href in the
+      // rxml pages since it might contain user and password.
+
+      Protocols.XMLRPC.Client client =
+	Protocols.XMLRPC.Client (args->href);
+      array|Protocols.XMLRPC.Fault res;
+
+      if (mixed err = catch (res = client[args->method] (@params)))
+	RXML.run_error ("Failed to make XML-RPC call %O: %s\n",
+			args->method, describe_error (err));
+
+      if (objectp (res)) {
+	if (string var = args["fault-code"])
+	  RXML_CONTEXT->user_set_var (var, res->fault_code);
+	if (string var = args["fault-string"])
+	  RXML_CONTEXT->user_set_var (var, res->fault_string);
+	result = RXML.nil;
+	RXML_CONTEXT->misc[" _ok"] = 0;
+	return 0;
+      }
+
+      String.Buffer buf = String.Buffer();
+      format_response (res, buf);
+      result = buf->get();
+      RXML_CONTEXT->misc[" _ok"] = 1;
+      return 0;
+    }
+  }
+}
+
 string container_recursive_output (string tagname, mapping args,
-                                  string contents, RequestID id)
+				  string contents, RequestID id)
+// This tag only exists for historical amusement.
 {
   int limit;
   array(string) inside, outside;
@@ -529,6 +774,79 @@ constant tagdoc=([
  Comma separated list of extra headers to send in the request.</p>
 </attr>
 ",
+
+  "xml-rpc-call":
+  ({#"<desc type='cont'><p><short>
+ Perform a synchronous XML-RPC call.</short> The content specifies the
+ call parameters, and the result of the tag is the return parameters
+ (if the call is successful). The result is expressed using the same
+ kind of tags that specifies the parameters (this is a more compact
+ and rxml-friendly format than the actual XML-RPC form; see
+ below).</p>
+
+ <p>If the call fails on a high level, i.e. if the remote side returns
+ a fault, then the result is empty and the fault code and string gets
+ stored in the variables specified by the \"fault-code\" and
+ \"fault-string\" attributes (if they exist).</p>
+
+ <p>If the call fails on a low level, i.e. connection error or due to
+ some kind of syntactic error in the result, then an RXML run error is
+ thrown.</p>
+
+ <p>The boolean status is set to true if the call is successful, false
+ otherwise.</p>
+
+ <p>Example:</p>
+
+ <ex-box><set variable='var.xml-rpc-result'>
+  <xml-rpc-call href='http://xmlrpchost.foo.com/xmlrpc/'
+		method='service.doSomething'
+		fault-code='var.fault-code'
+		fault-string='var.fault-string'>
+    <string>abc</string>
+    <if variable='var.rpc-use-float'>
+      <float>3.14159</float>
+    </if>
+    <else>
+      <int>3</int>
+    </else>
+    <array>
+      <int>1</int>
+      <string>&amp;page.path;</string>
+    </array>
+    <struct>
+      <member name='x'><float>-37.45</float></member>
+      <member name='y'><float>0.055</float></member>
+    </struct>
+    <iso-date-time><date type='iso'/></iso-date-time>
+  </xml-rpc-call>
+</set>
+<then>
+  <p>XML-RPC call successful: &var.xml-rpc-result;</p>
+</then>
+<else>
+  <p>XML-RPC call failed: &var.fault-string; (code &var.fault-code;)</p>
+</else></ex-box>
+
+<attr name='href' value='URL' required='yes'>
+ <p>URL to the server to make the call to.</p>
+</attr>
+
+<attr name='method' value='string' required='yes'>
+ <p>The name of the method.</p>
+</attr>
+
+<attr name='fault-code' value='variable'>
+ <p>If this attribute is present, the variable it specifies will
+ receive the fault code if the call fails.</p>
+</attr>
+
+<attr name='fault-string' value='variable'>
+ <p>If this attribute is present, the variable it specifies will
+ receive the fault string if the call fails.</p>
+</attr>",
+    // FIXME: Document content tags.
+  }),
 
 "sscanf":#"<desc type='cont'><p><short>
  Extract parts of a string and put them in other variables.</short> Refer to
