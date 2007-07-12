@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.191 2007/01/17 18:13:43 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.192 2007/07/12 18:58:18 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2584,6 +2584,8 @@ class RoxenModule
   //! administrator might for instance have edited the configuration
   //! file directly.
 
+  void stop();
+  void ready_to_receive_requests (Configuration conf);
   string query_internal_location();
   string query_location();
   string|multiset(string) query_provides();
