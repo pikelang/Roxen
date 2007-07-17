@@ -1,7 +1,7 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2001 - 2006, Roxen IS.
 
-constant cvs_version="$Id: replicate.pike,v 1.24 2006/03/15 15:45:40 wellhard Exp $";
+constant cvs_version="$Id: replicate.pike,v 1.25 2007/07/17 09:24:05 marty Exp $";
 
 #if constant(WS_REPLICATE)
 #ifdef ENABLE_NEW_ARGCACHE
@@ -52,7 +52,17 @@ static void init_replicate_db()
 	    " id        CHAR(32) PRIMARY KEY, "
 	    " ctime     DATETIME NOT NULL, "
 	    " atime     DATETIME NOT NULL, "
-	    " contents  BLOB NOT NULL)");
+	    " contents  MEDIUMBLOB NOT NULL)");
+  };
+
+  catch {
+      array(mapping(string:mixed)) res = 
+	sQUERY("DESCRIBE "+cache->name+"2 contents");
+
+      if(res[0]->Type == "blob") {
+	sQUERY("ALTER TABLE "+cache->name+"2 MODIFY contents MEDIUMBLOB NOT NULL");
+	werror("ArgCache replication: Extending \"contents\" field in table \"%s2\" from BLOB to MEDIUMBLOB.\n", cache->name);
+      }
   };
   
   // Populate with entries created when the shared table was down.
@@ -289,7 +299,7 @@ static void init_replicate_db()
     sQUERY( "CREATE TABLE "+cache->name+" ("
 	    "   server varchar(80) binary not null, "
 	    "   id int not null, "
-	    "   dat_content blob not null, "
+	    "   dat_content mediumblob not null, "
 	    "   ctime int unsigned not null, "
 	    "   PRIMARY KEY(server, id), "
 	    "   INDEX k (id), "
@@ -311,6 +321,17 @@ static void init_replicate_db()
     sQUERY( "INSERT INTO servers (secret) VALUES (%s)",
 	    cache->secret );
   };
+
+  catch {
+      array(mapping(string:mixed)) res = 
+	sQUERY("DESCRIBE "+cache->name+" dat_content");
+
+      if(res[0]->Type == "blob") {
+	sQUERY("ALTER TABLE "+cache->name+" MODIFY dat_content MEDIUMBLOB NOT NULL");
+	werror("ArgCache replication: Extending \"dat_content\" field in table \"%s\" from BLOB to MEDIUMBLOB.\n", cache->name);
+      }
+  };
+  
 
   // Populate with entries created when the shared table was down.
 

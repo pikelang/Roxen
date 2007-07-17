@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.953 2007/05/10 12:54:26 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.954 2007/07/17 09:24:05 marty Exp $";
 
 //! @appears roxen
 //!
@@ -3848,8 +3848,18 @@ class ArgCache
 	    "id        CHAR(32) PRIMARY KEY, "
 	    "ctime     DATETIME NOT NULL, "
 	    "atime     DATETIME NOT NULL, "
-	    "contents  BLOB NOT NULL)");
+	    "contents  MEDIUMBLOB NOT NULL)");
     }
+
+    catch {
+      array(mapping(string:mixed)) res = 
+	QUERY("DESCRIBE "+name+"2 contents");
+
+      if(res[0]->Type == "blob") {
+	QUERY("ALTER TABLE "+name+"2 MODIFY contents MEDIUMBLOB NOT NULL");
+	werror("ArgCache: Extending \"contents\" field in table \"%s2\" from BLOB to MEDIUMBLOB.\n", name);
+      }
+    };
   }
 
   static void init_db()
@@ -4121,7 +4131,7 @@ class ArgCache
 	    "index_id  INT UNSIGNED NULL DEFAULT NULL, "
 	    "md5       CHAR(32) NOT NULL DEFAULT '', "
 	    "atime     INT UNSIGNED NOT NULL DEFAULT 0, "
-	    "contents  BLOB NOT NULL DEFAULT '', "
+	    "contents  MEDIUMBLOB NOT NULL DEFAULT '', "
 	    "INDEX hind (md5))");
     }
     // Add column index_id if it doesn't exists.
@@ -4130,6 +4140,17 @@ class ArgCache
       QUERY("ALTER TABLE "+name+" "
 	    "ADD index_id INT UNSIGNED NULL DEFAULT NULL");
     }
+    
+    catch {
+      array(mapping(string:mixed)) res = 
+	QUERY("DESCRIBE "+name+" contents");
+
+      if(res[0]->Type == "blob") {
+	QUERY("ALTER TABLE "+name+" MODIFY contents MEDIUMBLOB NOT NULL DEFAULT ''");
+	werror("ArgCache: Extending \"contents\" field in table \"%s\" from BLOB to MEDIUMBLOB.\n", name);
+      }
+    };
+
   }
 
   static void init_db()
