@@ -1,7 +1,7 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2001 - 2006, Roxen IS.
 
-constant cvs_version="$Id: replicate.pike,v 1.25 2006/11/16 16:45:49 mast Exp $";
+constant cvs_version="$Id: replicate.pike,v 1.26 2007/07/17 09:24:06 marty Exp $";
 
 #if constant(WS_REPLICATE)
 
@@ -52,7 +52,17 @@ static void init_replicate_db()
 	    " id        CHAR(32) PRIMARY KEY, "
 	    " ctime     DATETIME NOT NULL, "
 	    " atime     DATETIME NOT NULL, "
-	    " contents  BLOB NOT NULL)");
+	    " contents  MEDIUMBLOB NOT NULL)");
+  };
+
+  catch {
+      array(mapping(string:mixed)) res = 
+	sQUERY("DESCRIBE "+cache->name+"2 contents");
+
+      if(res[0]->Type == "blob") {
+	sQUERY("ALTER TABLE "+cache->name+"2 MODIFY contents MEDIUMBLOB NOT NULL");
+	werror("ArgCache replication: Extending \"contents\" field in table \"%s2\" from BLOB to MEDIUMBLOB.\n", cache->name);
+      }
   };
   
   // Populate with entries created when the shared table was down.

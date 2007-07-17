@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.962 2007/05/10 12:54:27 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.963 2007/07/17 09:24:05 marty Exp $";
 
 //! @appears roxen
 //!
@@ -3881,7 +3881,7 @@ class ArgCache
 	    "ctime     DATETIME NOT NULL, "
 	    "atime     DATETIME NOT NULL, "
 	    "rep_time  DATETIME NOT NULL, "
-	    "contents  BLOB NOT NULL)");
+	    "contents  MEDIUMBLOB NOT NULL)");
     }
 
     if (catch (QUERY ("SELECT rep_time FROM " + name + "2 WHERE id = 0")))
@@ -3891,6 +3891,16 @@ class ArgCache
 	     " ADD rep_time DATETIME NOT NULL"
 	     " AFTER atime");
     }
+
+    catch {
+      array(mapping(string:mixed)) res = 
+	QUERY("DESCRIBE "+name+"2 contents");
+      
+      if(res[0]->Type == "blob") {
+	QUERY("ALTER TABLE "+name+"2 MODIFY contents MEDIUMBLOB NOT NULL");
+	werror("ArgCache: Extending \"contents\" field in table \"%s2\" from BLOB to MEDIUMBLOB.\n", name);
+      }
+    };
   }
 
   static void init_db()
