@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.963 2007/07/17 09:24:05 marty Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.964 2007/07/31 11:24:53 noring Exp $";
 
 //! @appears roxen
 //!
@@ -4946,7 +4946,7 @@ int main(int argc, array tmp)
 #endif
 
   // For RBF
-  catch(mkdir( "../var" ));
+  catch(mkdir(getenv("VARDIR") || "../var"));
   
   dbm_cached_get = master()->resolv( "DBManager.cached_get" );
 
