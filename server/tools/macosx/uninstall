@@ -1,0 +1,13 @@
+#!/bin/sh
+
+rm -rf /etc/roxen
+rm -rf /usr/local/lib/roxen
+rm -rf /usr/local/lib/roxen-*
+rm -rf /usr/local/bin/roxen*
+rm -rf /var/roxen
+rm -rf /var/log/roxen
+rm -rf /var/run/roxen
+rm -rf /Applications/Roxen
+rm -rf /Library/StartupItems/Roxen
+grep -v ROXEN= /etc/hostconfig >/tmp/hostconfig."$$" &&
+    mv /tmp/hostconfig."$$" /etc/hostconfig
