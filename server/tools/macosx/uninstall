@@ -1,5 +1,7 @@
 #!/bin/sh
 
+/Library/StartupItems/Roxen/Roxen stop
+
 rm -rf /etc/roxen
 rm -rf /usr/local/lib/roxen
 rm -rf /usr/local/lib/roxen-*
