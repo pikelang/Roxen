@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.102 2007/06/12 12:07:46 erikd Exp $
+// $Id: global_variables.pike,v 1.103 2007/08/06 08:28:02 noring Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -538,7 +538,7 @@ process to get a thread dump.</p>
   defvar ("dump_threads_by_file", v);
 
 #ifdef THREADS
-  defvar("numthreads", 5, LOCALE(150, "Number of threads to run"), 
+  defvar("numthreads", 15, LOCALE(150, "Number of threads to run"), 
 	 TYPE_INT,
 	 LOCALE(151, "The number of simultaneous threads Roxen will use.\n"
 	  "<p>Please note that even if this is one, Roxen will still "
