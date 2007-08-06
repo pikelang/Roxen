@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.636 2007/05/31 13:15:36 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.637 2007/08/06 07:14:47 noring Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -658,7 +658,10 @@ array (RoxenModule) get_providers(string provides)
     provider_module_cache[provides]  = ({ });
     for(i = 9; i >= 0; i--)
     {
-      foreach(indices(pri[i]->provider_modules), RoxenModule d)
+      array(RoxenModule) modules = indices(pri[i]->provider_modules);
+      array(string) module_identifiers = modules->module_identifier();
+      sort(module_identifiers, modules);
+      foreach(modules, RoxenModule d)
 	if(pri[i]->provider_modules[ d ][ provides ])
 	  provider_module_cache[provides] += ({ d });
     }
