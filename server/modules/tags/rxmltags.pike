@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.530 2007/07/06 22:41:56 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.531 2007/08/10 10:05:11 wellhard Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4786,6 +4786,9 @@ class TagEmit {
 
 	  do_iterate = array_iterate;
 	}
+
+	if( args->reverse )
+	  res = reverse( res );
 
 	id->misc->emit_rows = res;
 
@@ -9824,6 +9827,14 @@ the respective attributes below for further information.</p></desc>
   <p>Compatibility notes: In 2.1 compatibility mode the default sort
   algorithm is the stricter one. In 2.2 compatibility mode the \"*\"
   flag is disabled.</p>
+</attr>
+
+<attr name='reverse'><p>
+  The results will be output in reverse order.</p>
+<ex>
+<emit source='path' path='/path/to/file' reverse=''>
+  &_.path;<br/>
+</emit>
 </attr>",
 
 	  ([
