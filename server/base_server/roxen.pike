@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.965 2007/08/14 13:54:03 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.966 2007/08/14 14:30:10 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2737,7 +2737,7 @@ static void engage_abs(int n)
   report_debug("Handler queue:\n");
   catch {
     array(mixed) queue = handle_queue->buffer[handle_queue->rptr..];
-    foreach(queue; mixed v) {
+    foreach(queue, mixed v) {
       if (!v) continue;
       if (!arrayp(v)) {
 	report_debug("  *** Strange entry: %O ***\n", v);
