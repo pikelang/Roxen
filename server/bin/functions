@@ -1,7 +1,7 @@
 # -*- sh -*-
 # Support functions for the startscript and some other scripts.
 #
-# $Id: functions,v 1.16 2006/07/17 15:26:55 grubba Exp $
+# $Id: functions,v 1.17 2007/08/14 15:54:08 mast Exp $
 #
 
 # Default number of generations for log rotation.
@@ -11,7 +11,7 @@ export GENERATIONS
 rotate () {
   b="$GENERATIONS";
   while test "$b" -gt 1; do
-    a=`echo "$b - 1" | bc`;
+    a=`expr "$b" - 1`;
     mv -f "$1.$a" "$1.$b" 2> /dev/null;
     b=$a;
   done
