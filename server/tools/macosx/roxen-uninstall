@@ -18,6 +18,8 @@ remove_all()
     rm -rf /usr/local/lib/roxen
     rm -rf /usr/local/lib/roxen-*
     rm -rf /usr/local/bin/roxen*
+    rm -rf /usr/local/bin/pike
+    rm -rf /usr/local/bin/pike74
     rm -rf /var/roxen
     rm -rf /var/log/roxen
     rm -rf /var/run/roxen
