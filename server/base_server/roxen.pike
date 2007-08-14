@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.964 2007/07/31 11:24:53 noring Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.965 2007/08/14 13:54:03 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2727,13 +2727,27 @@ static void engage_abs(int n)
     return;
   }
   report_debug("**** %s: ABS engaged!\n"
-	       "Waited more than %d minute(s).\n"
-	       "Trying to dump backlog: \n",
+	       "Waited more than %d minute(s).\n",
 	       ctime(time()) - "\n",
 	       query("abs_timeout"));
   // Paranoia exit in case describe_all_threads below hangs.
   signal(signum("SIGALRM"), low_engage_abs);
   int t = alarm(20);
+#ifdef THREADS
+  report_debug("Handler queue:\n");
+  catch {
+    array(mixed) queue = handle_queue->buffer[handle_queue->rptr..];
+    foreach(queue; mixed v) {
+      if (!v) continue;
+      if (!arrayp(v)) {
+	report_debug("  *** Strange entry: %O ***\n", v);
+      } else {
+	report_debug("  %{%O, %}\n", v);
+      }
+    }
+  };
+#endif
+  report_debug("Trying to dump backlog: \n");
   catch {
     // Catch for paranoia reasons.
     describe_all_threads();
@@ -2751,7 +2765,7 @@ void restart_if_stuck (int force)
   if(!abs_started)
   {
     abs_started = 1;
-    handlers_alive = time(1);
+    handlers_alive = time();
     report_debug("Anti-Block System Enabled.\n");
   }
   call_out (restart_if_stuck,10);
@@ -2766,7 +2780,7 @@ void restart_if_stuck (int force)
 		 ctime(time()) - "\n");
     engage_abs(0);
   }
-  handle(lambda() { handlers_alive = time(1); });
+  handle(lambda() { handlers_alive = time(); });
 }
 #endif
 
