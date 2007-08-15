@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.193 2007/08/15 11:03:23 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.194 2007/08/15 11:05:13 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1737,6 +1737,12 @@ class RequestID
 
   void set_output_charset( string|function to, int|void mode )
   {
+#ifdef DEBUG
+    if (stringp (to))
+      // This will throw an error if the charset is invalid.
+      Locale.Charset.encoder (to);
+#endif
+
     if (object/*(RXML.Context)*/ ctx = RXML_CONTEXT)
       ctx->add_p_code_callback ("set_output_charset", to, mode);
 
