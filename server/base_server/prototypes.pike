@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.192 2007/07/12 18:58:18 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.193 2007/08/15 11:03:23 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1795,21 +1795,19 @@ class RequestID
       return string_to_utf8;
       
     default:
-      catch {
-	//  Use entity fallback if content type allows it
-	function fallback_func =
-	  allow_entities &&
-	  lambda(string char) {
-	    return sprintf("&#x%x;", char[0]);
-	  };
+      //  Use entity fallback if content type allows it
+      function fallback_func =
+	allow_entities &&
+	lambda(string char) {
+	  return sprintf("&#x%x;", char[0]);
+	};
 	
-	_charset_decoder_func =
-	  _charset_decoder_func || Roxen->_charset_decoder;
-	return
-	  _charset_decoder_func(Locale.Charset.encoder((string) what, "",
-						       fallback_func))
-	  ->decode;
-      };
+      _charset_decoder_func =
+	_charset_decoder_func || Roxen->_charset_decoder;
+      return
+	_charset_decoder_func(Locale.Charset.encoder((string) what, "",
+						     fallback_func))
+	->decode;
     }
     return lambda(string what) { return what; };
   }
