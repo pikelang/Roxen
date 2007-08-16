@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.523 2007/08/14 16:04:17 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.524 2007/08/16 11:53:35 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2102,7 +2102,7 @@ void send_result(mapping|void result)
 				 "mtime":(file->stat &&
 					  file->stat[ST_MTIME]),
 				 "rf":realfile,
-				 "refresh":time(1) + misc->cacheable/2,
+				 "refresh":predef::time(1) + misc->cacheable/2,
 			       ]),
 			       misc->cacheable, this_object());
 	  file = ([
@@ -2580,9 +2580,9 @@ void got_data(mixed fooid, string s, void|int chained)
 	    }
 
 	    int refresh;
-	    if (cv[1]->refresh && (cv[1]->refresh <= time(1))) {
+	    if (cv[1]->refresh && (cv[1]->refresh <= predef::time(1))) {
 	      // We need to refresh the entry.
-	      refresh = 1 + time(1) - cv[1]->refresh;
+	      refresh = 1 + predef::time(1) - cv[1]->refresh;
 	      m_delete(cv[1], "refresh");
 	      misc->connection = "close";
 	    }
