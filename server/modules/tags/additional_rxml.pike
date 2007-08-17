@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.34 2007/07/12 19:42:21 mast Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.35 2007/08/17 15:29:32 tor Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -638,6 +638,7 @@ class TagSscanf {
 
     string do_return(RequestID id) {
       array(string) vars=args->variables/",";
+      vars=map(vars, String.trim_all_whites);
       array(string) vals=array_sscanf(content || "", args->format);
       if(sizeof(vars)<sizeof(vals))
 	RXML.run_error("Too few variables.\n");
