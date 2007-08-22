@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.21 2002/02/12 16:52:33 hop Exp $
+ * $Id: snmpagent.pike,v 1.22 2007/08/22 15:00:46 grubba Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Honza Petrous, hop@unibase.cz
@@ -78,7 +78,7 @@ inherit Roxen;
 #define OBJ_TICK(x)		({"tick", x})
 #define OBJ_COUNT(x)		({"count", x})
 
-// The starting part of OID of every object will have, so we stripp it out
+// The starting part of OID of every object will have, so we strip it out
 // before making index from OID to the MIB DB
 #define MIBTREE_BASE				"1.3.6.1"
 
@@ -86,7 +86,7 @@ inherit Roxen;
 // enterprises.roxenis
 #define RISMIB_BASE				MIBTREE_BASE+"."+RISMIB_BASE_ADD
 #define RISMIB_BASE_WEBSERVER_ADD		"1.1"
-// enterprises.roxenis.app.roxen
+// enterprises.roxenis.app.webserver
 #define RISMIB_BASE_WEBSERVER			RISMIB_BASE+"."+RISMIB_BASE_WEBSERVER_ADD
 //
 // enterprises.roxenis.app.webserver.global
@@ -582,7 +582,7 @@ class SNMPagent {
 private string|int oid_strip (string oid) { // note: this method must be public!
 
   array arr = oid / ".";
-  if (sizeof(arr) < 7)  // FIXME: exists oid with less octets?
+  if (sizeof(arr) < 5)  // FIXME: exists oid with less octets?
     return 0;
   oid = arr[4..] * ".";
   return oid;
@@ -778,7 +778,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.21 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.22 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
