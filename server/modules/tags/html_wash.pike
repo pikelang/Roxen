@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.30 2007/04/12 15:00:49 stewa Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.31 2007/08/22 12:13:01 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";
@@ -58,14 +58,22 @@ class TagWashHtml
     return ((s - " ")/",") - ({ "" });
   }
 
-  string safe_container(string tag, mapping m, string cont)
+  string safe_container(string tag, mapping m, string cont,
+			string close_tags, mapping keep_attrs)
   {
+    if(keep_attrs)
+      m &= (keep_attrs[tag] || ({ }));
+    
     return replace(Roxen.make_tag(tag, m),
 		   ({ "<",">" }), ({ "\0[","\0]" }) ) + cont+"\0[/"+tag+"\0]";
   }
 
-  string safe_tag(string tag, mapping m, string close_tags)
+  string safe_tag(string tag, mapping m,
+		  string close_tags, mapping keep_attrs)
   {
+    if(keep_attrs)
+      m &= (keep_attrs[tag] || ({ }));
+    
     return replace(RXML.t_xml->format_tag(tag, m, 0, (close_tags?0:
 						      RXML.FLAG_COMPAT_PARSE|
 						      RXML.FLAG_EMPTY_ELEMENT)),
@@ -73,7 +81,7 @@ class TagWashHtml
   }
 
   string filter_body(string s, array keep_tags, array keep_containers,
-		     string close_tags)
+		     string close_tags, string keep_attributes)
   {
     // Replace < and > with \1 and \2 in stead of quoting with &lt; and &gt; to
     // be able regexp match on single characters.
@@ -88,8 +96,19 @@ class TagWashHtml
       mkmapping(keep_containers,
 		allocate(sizeof(keep_containers), safe_container));
 
+    mapping keep_attrs;
+    if(keep_attributes)
+    {
+      keep_attrs = ([ ]);
+      foreach(keep_attributes/",", string entry)
+      {
+	if(sscanf(entry, "%s:%s", string tag, string attr) == 2)
+	  keep_attrs[tag] = (keep_attrs[tag] || ({ })) + ({ attr });
+      }
+    }
+
     return replace(
-      parse_html(s, allowed_tags, allowed_containers, close_tags),
+      parse_html(s, allowed_tags, allowed_containers, close_tags, keep_attrs),
       ({ "<",    ">",    "&",     "\0[", "\0]" }),
       ({ "\1", "\2", "&amp;", "<",   ">" }));
   }
@@ -168,7 +187,8 @@ class TagWashHtml
 	result = filter_body(result,
 			     parse_arg_array(args["keep-tags"]),
 			     parse_arg_array(args["keep-containers"]),
-			     args["close-tags"]);
+			     args["close-tags"],
+			     args["keep-attributes"]);
 
       if(args->paragraphify)
 	result = paragraphify(result);
@@ -192,6 +212,7 @@ class TagWashHtml
     opt_arg_types = ([ "keep-all":RXML.t_text(RXML.PXml),
 		       "keep-tags":RXML.t_text(RXML.PXml),
 		       "keep-containers":RXML.t_text(RXML.PXml),
+		       "keep-attributes":RXML.t_text(RXML.PXml),
 		       "paragraphify":RXML.t_text(RXML.PXml),
                        "unparagraphify":RXML.t_text(RXML.PXml),
                        "linkify":RXML.t_text(RXML.PXml),
@@ -260,6 +281,29 @@ constant tagdoc=([
   <hr />A little image:<img src='/internal-roxen-next' />.
 </wash-html>
 </ex>
+</attr>
+
+<attr name='keep-attributes' value='list'><p>
+ List of attributes to preserve in keep-containers and keep-tags.
+ If the attribute is omitted all attributes for tags will be
+ preserved. The format is tag1:attribute1,tag1:attribute2,tag2:attribute1...
+ Useful for allowing tags but not attributes, i.e. allow the &lt;quote&gt;
+ tag but not attributes such as onclick etc.</p>
+
+<ex><wash-html keep-containers=\"a,font\">
+  <a href=\"http://docs.roxen.com\">Roxen docs</a>
+  <font style=\"color:red;\">Text</font>
+</wash-html></ex>
+
+<p>Note that all attributes for preserved tags are kept.</p>
+
+<ex><wash-html keep-containers=\"a,font\" keep-attributes=\"a:href\">
+  <a href=\"http://docs.roxen.com\">Roxen docs</a>
+  <font style=\"color:red;\">Text</font>
+</wash-html></ex>
+
+<p>Only the href attribute for the a tag is kept.</p>
+
 </attr>
 
 <attr name='linkify'><p>
