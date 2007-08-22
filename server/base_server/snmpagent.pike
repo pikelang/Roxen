@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.22 2007/08/22 15:04:14 grubba Exp $
+ * $Id: snmpagent.pike,v 1.23 2007/08/22 15:05:12 grubba Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Honza Petrous, hop@unibase.cz
@@ -78,7 +78,7 @@ inherit Roxen;
 #define OBJ_TICK(x)		({"tick", x})
 #define OBJ_COUNT(x)		({"count", x})
 
-// The starting part of OID of every object will have, so we stripp it out
+// The starting part of OID of every object will have, so we strip it out
 // before making index from OID to the MIB DB
 #define MIBTREE_BASE				"1.3.6.1"
 
@@ -778,7 +778,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.22 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.23 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
