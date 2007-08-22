@@ -83,7 +83,6 @@ worldmap binary
 /server/base_server/rxml.pike foreign_ident
 /server/base_server/slowpipe.pike foreign_ident
 /server/base_server/smtprelay.pike foreign_ident
-/server/base_server/snmpagent.pike foreign_ident
 /server/base_server/socket.pike foreign_ident
 /server/base_server/supports.pike foreign_ident
 /server/base_server/throttler.pike foreign_ident
@@ -356,6 +355,7 @@ worldmap binary
 /server/protocols/ftp.pike foreign_ident
 /server/protocols/http.pike foreign_ident
 /server/protocols/prot_https.pike foreign_ident
+/server/protocols/snmp.pike foreign_ident
 /server/protocols/tetris.pike foreign_ident
 /server/rxml_packages/counter foreign_ident
 /server/rxml_packages/gtext_list foreign_ident

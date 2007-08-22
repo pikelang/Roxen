@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.22 2007/08/22 15:04:51 grubba Exp $
+ * $Id: snmp.pike,v 1.22 2007/08/22 15:04:51 grubba Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Honza Petrous, hop@unibase.cz
