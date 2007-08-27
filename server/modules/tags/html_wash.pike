@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.31 2007/08/22 12:13:01 wellhard Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.32 2007/08/27 12:43:40 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";
@@ -58,26 +58,29 @@ class TagWashHtml
     return ((s - " ")/",") - ({ "" });
   }
 
-  string safe_container(string tag, mapping m, string cont,
+  array safe_container(Parser.HTML p, mapping args, string cont,
 			string close_tags, mapping keep_attrs)
   {
+    string tag = p->tag_name();
     if(keep_attrs)
-      m &= (keep_attrs[tag] || ({ }));
-    
-    return replace(Roxen.make_tag(tag, m),
-		   ({ "<",">" }), ({ "\0[","\0]" }) ) + cont+"\0[/"+tag+"\0]";
+      args &= (keep_attrs[tag] || ({ }));
+    Parser.HTML parser = p->clone();
+    string res = parser->finish(cont)->read();
+    return ({ replace(Roxen.make_tag(tag, args), ({ "<",">" }), ({ "\0[","\0]" })) +
+	      res + "\0[/"+tag+"\0]" });
   }
 
-  string safe_tag(string tag, mapping m,
+  array safe_tag(Parser.HTML p, mapping args,
 		  string close_tags, mapping keep_attrs)
   {
+    string tag = p->tag_name();
     if(keep_attrs)
-      m &= (keep_attrs[tag] || ({ }));
+      args &= (keep_attrs[tag] || ({ }));
     
-    return replace(RXML.t_xml->format_tag(tag, m, 0, (close_tags?0:
-						      RXML.FLAG_COMPAT_PARSE|
-						      RXML.FLAG_EMPTY_ELEMENT)),
-		   ({ "<",">" }), ({ "\0[","\0]" }) );
+    return ({ replace(RXML.t_xml->format_tag(tag, args, 0, (close_tags?0:
+							    RXML.FLAG_COMPAT_PARSE|
+							    RXML.FLAG_EMPTY_ELEMENT)),
+		      ({ "<",">" }), ({ "\0[","\0]" }) ) });
   }
 
   string filter_body(string s, array keep_tags, array keep_containers,
@@ -89,12 +92,6 @@ class TagWashHtml
     s -= "\0";
     s -= "\1";
     s -= "\2";
-    mapping allowed_tags =
-      mkmapping(keep_tags, allocate(sizeof(keep_tags), safe_tag));
-
-    mapping allowed_containers =
-      mkmapping(keep_containers,
-		allocate(sizeof(keep_containers), safe_container));
 
     mapping keep_attrs;
     if(keep_attributes)
@@ -107,10 +104,18 @@ class TagWashHtml
       }
     }
 
-    return replace(
-      parse_html(s, allowed_tags, allowed_containers, close_tags, keep_attrs),
-      ({ "<",    ">",    "&",     "\0[", "\0]" }),
-      ({ "\1", "\2", "&amp;", "<",   ">" }));
+    Parser.HTML parser = Parser.HTML();
+    parser->set_extra(close_tags, keep_attrs);
+    
+    foreach(keep_tags, string tag)
+      parser->add_tag(tag, safe_tag);
+    
+    foreach(keep_containers, string container)
+      parser->add_container(container, safe_container);
+    
+    return replace(parser->finish(s)->read(),
+		   ({ "<",  ">",  "&",     "\0[", "\0]" }),
+		   ({ "\1", "\2", "&amp;", "<",   ">" }));
   }
 
   string linkify(string s, string|void target)
