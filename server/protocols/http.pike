@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.524 2007/08/16 11:53:35 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.525 2007/08/28 15:12:02 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2591,7 +2591,13 @@ void got_data(mixed fooid, string s, void|int chained)
 	    int len = sizeof(d);
 	    // Make sure we don't mess with the RAM cache.
 	    file += ([]);
-	    if (since && file->last_modified) {
+	    if ((none_match && none_match[file->etag]) ||
+		(none_match["*"] && file->etag)) {
+	      // Not modified.
+	      code = 304;
+	      d = "";
+	      len = 0;
+	    } else if (since && file->last_modified) {
 	      array(int) since_info = Roxen.parse_since( since );
 	      if ((since_info[0] >= file->last_modified) &&
 		  ((since_info[1] == -1) ||
