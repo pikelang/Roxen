@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.526 2007/09/03 13:42:48 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.527 2007/09/03 16:45:05 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1017,7 +1017,9 @@ static void cleanup_request_object()
 
 void end(int|void keepit)
 {
-  CHECK_FD_SAFE_USE;
+  if (my_fd) {
+    CHECK_FD_SAFE_USE;
+  }
 
   cleanup_request_object();
 
@@ -1485,10 +1487,9 @@ void do_log( int|void fsent )
   if(conf)
   {
     int len;
-    if(!fsent && pipe)
+    if(!(file->len = fsent) && pipe) {
       file->len = pipe->bytes_sent();
-    else
-      file->len = fsent;
+    }
     if(conf)
     {
       if(file->len > 0) conf->sent+=file->len;
@@ -1836,6 +1837,11 @@ void low_send_result(string headers, string data, int|void len,
 			 "len:%d",
 			 sizeof(headers), data && sizeof(data), len), 0);
 
+  if (!my_fd) {
+    do_log(0);
+    return;
+  }
+
   if (data && String.width (data) != 8) {
     int from, to;
     foreach (data; from; int chr)
@@ -1906,7 +1912,8 @@ void send_result(mapping|void result)
 {
   TIMER_START(send_result);
 
-  CHECK_FD_SAFE_USE;
+  if (my_fd)
+    CHECK_FD_SAFE_USE;
 
   array err;
   int tmp;
@@ -2674,8 +2681,33 @@ void got_data(mixed fooid, string s, void|int chained)
 	    cache_status["protcache"] = 1;
 
 	    TIMER_END(cache_lookup);
-	    low_send_result(full_headers, d, sizeof(d));
-	    if (!refresh) return;
+	    if (!refresh) {
+	      low_send_result(full_headers, d, sizeof(d));
+	      return;
+	    }
+	    // Create a new RequestID for sending the cached response,
+	    // so that it won't interfere with this one when it finishes.
+	    // We need to copy lots of stuff to keep the log functions happy.
+	    RequestID id = clone_me();
+	    id->hrtime = hrtime;
+	    if (cookies) {
+	      id->cookies = id->real_cookies = real_cookies + ([]);
+	    }
+	    id->my_fd = my_fd;
+	    id->file = file;
+	    id->kept_alive = kept_alive;
+	    id->cache_status = cache_status + (<>);
+	    id->eval_status = eval_status + (<>);
+	    id->output_charset = output_charset;
+	    id->input_charset = input_charset;
+	    id->auth = auth;
+	    id->throttle = throttle + ([]);
+	    id->throttler = throttler;
+	    conf->connection_add( id, connection_stats );
+	    id->low_send_result(full_headers, d, sizeof(d));
+	    
+	    my_fd = 0;
+	    
 	    MY_TRACE_ENTER (
 	      sprintf("Entry in need of refresh (%d seconds past refresh)",
 		      refresh - 1), 0);
