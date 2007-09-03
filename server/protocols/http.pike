@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.525 2007/08/28 15:12:02 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.526 2007/09/03 13:42:48 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2591,8 +2591,9 @@ void got_data(mixed fooid, string s, void|int chained)
 	    int len = sizeof(d);
 	    // Make sure we don't mess with the RAM cache.
 	    file += ([]);
-	    if ((none_match && none_match[file->etag]) ||
-		(none_match["*"] && file->etag)) {
+	    if (none_match &&
+		(none_match[file->etag] ||
+		 (none_match["*"] && file->etag))) {
 	      // Not modified.
 	      code = 304;
 	      d = "";
