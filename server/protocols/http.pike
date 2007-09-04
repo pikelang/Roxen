@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.528 2007/09/04 12:59:36 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.529 2007/09/04 13:25:07 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2681,8 +2681,8 @@ void got_data(mixed fooid, string s, void|int chained)
 	    MY_TRACE_LEAVE ("Using entry from ram cache");
 	    cache_status["protcache"] = 1;
 
-	    TIMER_END(cache_lookup);
 	    if (!refresh) {
+	      TIMER_END(cache_lookup);
 	      low_send_result(full_headers, d, sizeof(d));
 	      return;
 	    }
@@ -2705,6 +2705,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	    id->throttle = throttle + ([]);
 	    id->throttler = throttler;
 	    conf->connection_add( id, connection_stats );
+	    TIMER_END(cache_lookup);
 	    id->low_send_result(full_headers, d, sizeof(d));
 	    
 	    my_fd = 0;
