@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.522 2007/09/03 13:42:54 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.523 2007/09/04 13:27:05 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2082,6 +2082,8 @@ void send_result(mapping|void result)
 				 "mtime":(file->stat &&
 					  file->stat[ST_MTIME]),
 				 "rf":realfile,
+				 "refresh":predef::time(1) +
+				 5 + 3*misc->cacheable/4,
 			       ]),
 			       misc->cacheable, this_object());
 	  file = ([
@@ -2556,6 +2558,14 @@ void got_data(mixed fooid, string s, void|int chained)
 	      real_cookies = cookies = ~cookies;
 	    }
 
+	    int refresh;
+	    if (cv[1]->refresh && (cv[1]->refresh <= predef::time(1))) {
+	      // We need to refresh the entry.
+	      refresh = 1 + predef::time(1) - cv[1]->refresh;
+	      m_delete(cv[1], "refresh");
+	      misc->connection = "close";
+	    }
+
 	    int code = file->error;
 	    int len = sizeof(d);
 	    // Make sure we don't mess with the RAM cache.
@@ -2642,9 +2652,41 @@ void got_data(mixed fooid, string s, void|int chained)
 	    MY_TRACE_LEAVE ("Using entry from ram cache");
 	    cache_status["protcache"] = 1;
 
+	    if (!refresh) {
+	      TIMER_END(cache_lookup);
+	      low_send_result(full_headers, d, sizeof(d));
+	      return;
+	    }
+	    // Create a new RequestID for sending the cached response,
+	    // so that it won't interfere with this one when it finishes.
+	    // We need to copy lots of stuff to keep the log functions happy.
+	    RequestID id = clone_me();
+	    id->hrtime = hrtime;
+	    if (cookies) {
+	      id->cookies = id->real_cookies = real_cookies + ([]);
+	    }
+	    id->my_fd = my_fd;
+	    id->file = file;
+	    id->kept_alive = kept_alive;
+	    id->cache_status = cache_status + (<>);
+	    id->eval_status = eval_status + (<>);
+	    id->output_charset = output_charset;
+	    id->input_charset = input_charset;
+	    id->auth = auth;
+	    id->throttle = throttle + ([]);
+	    id->throttler = throttler;
+	    conf->connection_add( id, connection_stats );
 	    TIMER_END(cache_lookup);
-	    low_send_result(full_headers, d, sizeof(d));
-	    return;
+	    id->low_send_result(full_headers, d, sizeof(d));
+	    
+	    my_fd = 0;
+	    
+	    MY_TRACE_ENTER (
+	      sprintf("Entry in need of refresh (%d seconds past refresh)",
+		      refresh - 1), 0);
+	    cache_status["protcache"] = 0;
+	    cache_status["refresh"] = 1;
+	    MY_TRACE_LEAVE("");
 	  }
 #ifndef RAM_CACHE_ASUME_STATIC_CONTENT
 	  else
