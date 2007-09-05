@@ -197,7 +197,7 @@ mixed if_blobupdate(mixed ... args) {
   string where = args[2];
   string contents = args[3];
 
-  object o = db->master_sql->big_query("select "+blob+" from "+table+" where "+where+" FOR UPDATE",([ ]),1);
+  object o = db->master_sql->big_typed_query("select "+blob+" from "+table+" where "+where+" FOR UPDATE",([ ]),1);
   mixed res = o->fetch_row();
   res[0]->write(contents);
   db->master_sql->commit();
