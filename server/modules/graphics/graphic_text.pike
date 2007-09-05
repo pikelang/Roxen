@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.302 2006/09/13 14:48:17 stewa Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.303 2007/09/05 14:37:00 mathias Exp $";
 
 #include <module.h>
 inherit "module";
@@ -1126,7 +1126,10 @@ private string do_gtext(mapping arg, string c, RequestID id)
 
   int xml=!m_delete(arg, "noxml");
 
-  if(!arg->border) arg->border="0";
+  //  No border should be used for <img>. Force CSS declaration to avoid
+  //  borders when gtext is clickable.
+  m_delete(arg, "border");
+  arg->style = "border: none;" + (arg->style || "");
 
   int no_draw = !id->misc->generate_images;
   if(arg->split)
