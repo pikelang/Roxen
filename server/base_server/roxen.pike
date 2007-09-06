@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.967 2007/08/14 14:50:52 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.968 2007/09/06 12:17:52 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -642,6 +642,7 @@ local static void handler_thread(int id)
     if(q=catch {
       do {
 //  	if (!busy_threads) werror ("GC: %d\n", gc());
+	cache_clear_deltas();
 	THREAD_WERR("Handle thread ["+id+"] waiting for next event");
 	if(arrayp(h=handle_queue->read()) && h[0]) {
 	  THREAD_WERR(sprintf("Handle thread [%O] calling %O(%{%O, %})",
@@ -1381,6 +1382,21 @@ class Protocol
 
   mapping(string:mapping) urls = ([]);
   //! .. url -> ([ "conf":.., ... ])
+  //!
+  //! Indexed by URL. The following data is stored:
+  //! @mapping
+  //!   @entry Configuration "conf"
+  //!     The Configuration object for this URL.
+  //!   @entry string "hostname"
+  //!     The hostname from the URL.
+  //!   @entry string|void "path"
+  //!     The path (if any) from the URL.
+  //!   @entry Protocol "port"
+  //!     The protocol handler for this URL.
+  //!   @entry int "mib_version"
+  //!     (Only SNMP). The version number for the configuration MIB
+  //!     tree when it was last merged.
+  //! @endmapping
 
   mapping(Configuration:mapping) conf_data = ([]);
   //! Maps the configuration objects to the data mappings in @[urls].
@@ -5049,6 +5065,7 @@ int main(int argc, array tmp)
   DDUMP( "languages/abstract.pike" );
   initiate_languages(query("locale"));
 
+  cache_clear_deltas();
   set_locale();
 
 #if efun(syslog)
