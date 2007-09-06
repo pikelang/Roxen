@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: cache.pike,v 1.87 2007/09/06 11:52:41 grubba Exp $
+// $Id: cache.pike,v 1.88 2007/09/06 13:11:35 grubba Exp $
 
 // #pragma strict_types
 
@@ -17,7 +17,7 @@
 #else /* !TIME_BASED_CACHE */
 // A cache entry is an array with four elements
 #define ENTRY_SIZE 4
-#eddif /* TIME_BASED_CACHE */
+#endif /* TIME_BASED_CACHE */
 // The elements are as follows:
 // A timestamp when the entry was last used
 #define TIMESTAMP 0
