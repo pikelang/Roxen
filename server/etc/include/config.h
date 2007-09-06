@@ -1,5 +1,5 @@
 /* -*- Pike -*-
- * $Id: config.h,v 1.35 2006/08/21 11:20:54 wellhard Exp $
+ * $Id: config.h,v 1.36 2007/09/06 12:37:37 grubba Exp $
  *
  * User configurable things not accessible from the normal
  * administration interface. Not much, but there are some things..  
@@ -72,6 +72,12 @@
 #define SET_EFFECTIVE 
 
 #define URL_MODULES
+
+/* Define this to change the main RAM cache retention policy
+ * to be based on the time it took to generate the entry and
+ * the number of hits it has received.
+ */
+// #define TIME_BASED_CACHE
 
 /* The namespace prefix for RXML.
  */
