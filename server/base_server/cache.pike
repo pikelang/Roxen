@@ -1,14 +1,23 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: cache.pike,v 1.86 2007/06/05 15:00:22 mast Exp $
+// $Id: cache.pike,v 1.87 2007/09/06 11:52:41 grubba Exp $
 
 // #pragma strict_types
 
 #include <roxen.h>
 #include <config.h>
 
+// Base the cache retention time on the time it took to
+// generate the entry.
+/* #define TIME_BASED_CACHE */
+
+#ifdef TIME_BASED_CACHE
+// A cache entry is an array with six elements
+#define ENTRY_SIZE 6
+#else /* !TIME_BASED_CACHE */
 // A cache entry is an array with four elements
 #define ENTRY_SIZE 4
+#eddif /* TIME_BASED_CACHE */
 // The elements are as follows:
 // A timestamp when the entry was last used
 #define TIMESTAMP 0
@@ -18,6 +27,12 @@
 #define TIMEOUT 2
 // The size of the entry, in bytes.
 #define SIZE 3
+#ifdef TIME_BASED_CACHE
+// The approximate time in µs it took to generate the data for the entry.
+#define HRTIME 4
+// The number of hits for this entry.
+#define HITS 5
+#endif /* TIME_BASED_CACHE */
 
 #undef CACHE_WERR
 #ifdef CACHE_DEBUG
@@ -36,6 +51,10 @@
 // The actual cache along with some statistics mappings.
 static mapping(string:mapping(string:array)) cache;
 static mapping(string:int) hits=([]), all=([]);
+
+#ifdef TIME_BASED_CACHE
+static Thread.Local deltas = Thread.Local();
+#endif /* TIME_BASED_CACHE */
 
 #ifdef CACHE_DEBUG
 static array(int) memory_usage_summary()
@@ -87,6 +106,13 @@ void flush_memory_cache (void|string in)
   CACHE_WERR ("flush_memory_cache() done\n");
 }
 
+void cache_clear_deltas()
+{
+#ifdef TIME_BASED_CACHE
+  deltas->set(([]));
+#endif /* TIME_BASED_CACHE */
+}
+
 constant svalsize = 4*4;
 
 // Expire a whole cache
@@ -101,6 +127,14 @@ mixed cache_lookup(string in, mixed what)
 {
   all[in]++;
   int t=time(1);
+#ifdef TIME_BASED_CACHE
+  mapping deltas = this_program::deltas->get() || ([]);
+  if (deltas[in]) {
+    deltas[in][what] = gethrtime();
+  } else {
+    deltas[in] = ([ what : gethrtime() ]);
+  }
+#endif /* TIME_BASED_CACHE */
   // Does the entry exist at all?
   if(array entry = (cache[in] && cache[in][what]) )
     // Is it time outed?
@@ -113,6 +147,9 @@ mixed cache_lookup(string in, mixed what)
       cache[in][what][TIMESTAMP]=t;
       MORE_CACHE_WERR("cache_lookup(%O, %O)  ->  Hit\n", in, what);
       hits[in]++;
+#ifdef TIME_BASED_CACHE
+      entry[HITS]++;
+#endif /* TIME_BASED_CACHE */
       return entry[DATA];
     }
   else
@@ -178,6 +215,12 @@ mixed cache_set(string in, mixed what, mixed to, int|void tm)
   cache[in][what][DATA] = to;
   if(tm) cache[in][what][TIMEOUT] = t + tm;
   cache[in][what][TIMESTAMP] = t;
+#ifdef TIME_BASED_CACHE
+  mapping deltas = this_program::deltas->get() || ([]);
+  cache[in][what][HRTIME] = gethrtime() - (deltas[in] && deltas[in][what]);
+  cache[in][what][HITS] = 1;
+  CACHE_WERR("[%O] HRTIME: %d\n", in, cache[in][what][HRTIME]);
+#endif /* TIME_BASED_CACHE */
   return to;
 }
 
@@ -211,22 +254,47 @@ void cache_clean()
       }
       else {
 	if(!entry[SIZE]) {
-	  // Perform a size calculation.
-	  if (catch{
+ 	  // Perform a size calculation.
+#ifdef TIME_BASED_CACHE
+	  if (entry[HRTIME] < 10*60*1000000) {	// 10 minutes.
+	    // Valid HRTIME entry.
+	    // Let an entry live for 5000 times longer than
+	    // it takes to create it times the 2-logarithm of
+	    // the number of hits.
+	    // Minimum one second.
+	    // 5000/1000000 = 1/200
+	    // FIXME: Adjust the factor dynamically?
+	    int t = [int](entry[HRTIME]*(entry[HITS]->size(2)))/200 + 1;
+	    if ((entry[TIMESTAMP] + t) < now)
+	    {
+	      m_delete(cache_class, idx);
+	      MORE_CACHE_WERR("    %O with lifetime %d seconds (%d hits): Deleted\n",
+			      idx, t, entry[HITS]);
+	    } else {
+	      MORE_CACHE_WERR("    %O with lifetime %d seconds (%d hits): Ok\n",
+			      idx, t, entry[HITS]);
+	    }
+	    continue;
+	  } else {
+#endif /* TIME_BASED_CACHE */
+	    if (catch{
 		entry[SIZE] = sizeof(encode_value(idx)) +
 		  sizeof(encode_value(entry[DATA]));
 	      }) {
-	    // encode_value() failed,
-	    // probably because some object is in there...
+	      // encode_value() failed,
+	      // probably because some object is in there...
 
-	    // FIXME: We probably ought to have a special case
-	    //        for PCode here.
+	      // FIXME: We probably ought to have a special case
+	      //        for PCode here.
 
-	    // We guess that it takes 1KB space.
-	    entry[SIZE] = 1024;
+	      // We guess that it takes 1KB space.
+	      entry[SIZE] = 1024;
+	    }
+	    entry[SIZE] = (entry[SIZE] + (ENTRY_SIZE + 2)*svalsize + 4)/100;
+	    // (Entry size + cache overhead) / arbitrary factor
+#ifdef TIME_BASED_CACHE
 	  }
-	  entry[SIZE] = (entry[SIZE] + 5*svalsize + 4)/100;
-	  // (Entry size + cache overhead) / arbitrary factor
+#endif /* TIME_BASED_CACHE */
 	}
 	if(entry[TIMESTAMP]+1 < now &&
 	   entry[TIMESTAMP] + gc_time - entry[SIZE] < now)
