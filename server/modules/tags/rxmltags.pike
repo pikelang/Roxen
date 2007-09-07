@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.535 2007/09/07 14:41:40 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.536 2007/09/07 14:57:50 tomas Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -5628,6 +5628,18 @@ class TagIfSupports {
   }
 }
 
+class TagIfScope {
+  inherit IfIs;
+  constant plugin_name = "scope";
+  constant cache = 1;
+  mixed source(RequestID id, string s, void|int check_set_only) {
+
+    if (RXML_CONTEXT->get_scope (s)) return 1;
+
+    return 0;
+  }
+}
+
 class TagIfVariable {
   inherit IfIs;
   constant plugin_name = "variable";
@@ -9404,6 +9416,16 @@ the respective attributes below for further information.</p></desc>
  Specify which users to test.</p>
 </attr>
 ",
+
+//----------------------------------------------------------------------
+
+"if#scope":#"<desc type='plugin'><p><short>
+ Does the scope exists.
+</p></desc>
+
+<attr name='scope' value='name' required='required'><p>
+Specify scope to test for existence.</p>
+</attr>",
 
 //----------------------------------------------------------------------
 
