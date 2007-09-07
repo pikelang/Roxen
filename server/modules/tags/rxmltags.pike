@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.534 2007/08/10 10:05:09 wellhard Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.535 2007/09/07 14:41:40 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1845,8 +1845,10 @@ class TagCache {
 	  do_iterate = -1;
 	  TAG_TRACE_ENTER ("cache hit%s for key %s",
 			   args->shared ?
-			   (timeout ? " (shared timeout cache)" : " (shared cache)") :
-			   (timeout ? " (timeout cache)" : ""),
+			   (timeout ?
+			    " (shared " + timeout + "s timeout cache)" :
+			    " (shared cache)") :
+			   (timeout ? " (" + timeout + "s timeout cache)" : ""),
 			   RXML.utils.format_short (keymap, 200));
 	  key = keymap = 0;
 	  return ({evaled_content});
@@ -1857,8 +1859,10 @@ class TagCache {
       do_iterate = 1;
       TAG_TRACE_ENTER ("cache miss%s for key %s, %s",
 		       args->shared ?
-		       (timeout ? " (shared timeout cache)" : " (shared cache)") :
-		       (timeout ? " (timeout cache)" : ""),
+		       (timeout ?
+			" (shared " + timeout + "s timeout cache)" :
+			" (shared cache)") :
+		       (timeout ? " (" + timeout + "s timeout cache)" : ""),
 		       RXML.utils.format_short (keymap, 200),
 		       removed == 1 ? "entry p-code is stale" :
 		       removed == 2 ? "entry had timed out" :
@@ -1900,8 +1904,9 @@ class TagCache {
 	      if (!persistent_cache) add_timeout_cache (alternatives);
 	    }
 	    alternatives[key] = ({time() + timeout, evaled_content});
-	    TAG_TRACE_LEAVE ("added%s timeout cache entry with key %s",
+	    TAG_TRACE_LEAVE ("added%s %ds timeout cache entry with key %s",
 			     persistent_cache ? " (possibly persistent)" : "",
+			     timeout,
 			     RXML.utils.format_short (keymap, 200));
 	  }
 	  else {
