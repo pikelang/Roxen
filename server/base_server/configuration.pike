@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.637 2007/08/06 07:14:47 noring Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.638 2007/09/10 11:59:58 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -239,6 +239,9 @@ class DataCache
     EntryType e = m_delete(cache, key);
     if (arrayp(e)) {
       current_size -= sizeof(e[0]);
+      if (e[1]->co_handle) {
+	remove_call_out(e[1]->co_handle);
+      }
     }
   }
 
@@ -369,7 +372,7 @@ class DataCache
 
     // Only the actual cache entry is expired.
     // FIXME: This could lead to lots and lots of call outs.. :P
-    call_out(really_low_expire_entry, expire, key);
+    meta->co_handle = call_out(really_low_expire_entry, expire, key);
     int n;
     while( (current_size > max_size) && (n++<10))
       clear_some_cache();
@@ -496,6 +499,37 @@ array (Priority) allocate_pris()
   return allocate(10, Priority)();
 }
 
+// SNMP MIB for this configuration.
+ADT.Trie mib = ADT.Trie();
+int mib_version;
+
+array(int) query_oid()
+{
+  return SNMP.RIS_OID_WEBSERVER +
+    ({ 2, query("snmp_site_id"), });
+}
+
+array(int) generate_module_oid(RoxenModule me)
+{
+  string s = otomod[me];
+  array(string) a = s/"#";
+  array(string) n = a[0]/4.0;
+  return query_oid() +
+    ({ 8, sizeof(n), @map(n, Gmp.bignum, 256), ((int)a[1]) + 1 });
+}
+
+ADT.Trie generate_module_mib(array(int) oid,
+			     RoxenModule me,
+			     ModuleInfo moduleinfo,
+			     ModuleCopies module)
+{
+  return SNMP.SimpleMIB(oid,
+			({
+			  UNDEFINED,
+			  SNMP.String(otomod[me]),
+			  SNMP.Integer(moduleinfo->type),
+			}));
+}
 
 // Cache some configuration variables.
 private int sub_req_limit = 30;
@@ -3735,6 +3769,13 @@ void call_low_start_callbacks( RoxenModule me,
   if(module_type & MODULE_FIRST)
     pri[pr]->first_modules += ({ me });
 
+  mib->merge(generate_module_mib(generate_module_oid(me) + ({ 1 }),
+				 me, moduleinfo, module));
+  if (me->query_snmp_mib) {
+    mib->merge(me->query_snmp_mib(generate_module_oid(me) + ({ 2 })));
+  }
+  mib_version++;
+
   invalidate_cache();
 }
 
@@ -4950,6 +4991,28 @@ also set 'URLs'."));
   setvars( retrieved_vars );
 
 //   report_debug("[restore: %.1fms] ", (gethrtime()-st)/1000.0 );
+
+  // FIXME: The default value ought to be stable.
+  defvar("snmp_site_id", sizeof(roxen->configurations)+1,
+	 DLOCALE(0, "SNMP: Site id"), TYPE_INT,
+	 DLOCALE(0, "OID suffix to 1.3.6.1.4.1.8614.1.1.2 "
+		 "identifying this site."));
+
+  // FIXME: The following should move to a stage where
+  //        the config variables have been loaded.
+  mib->merge(SNMP.SimpleMIB(query_oid(),
+			    ({
+			      UNDEFINED,
+			      UNDEFINED,
+			      query_name,
+			      comment,
+			      lambda() { return SNMP.Counter64(sent); },
+			      lambda() { return SNMP.Counter64(received); },
+			      lambda() { return SNMP.Counter64(hsent); },
+			      lambda() { return SNMP.Counter64(requests); },
+			      UNDEFINED,	// NOTE: Reserved for modules!
+			    })));
+  mib_version++;
 }
 
 static int arent_we_throttling_server () {
