@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.968 2007/09/06 12:17:52 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.969 2007/09/10 11:55:51 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1485,7 +1485,7 @@ class Protocol
     Stdio.File q;
     while( q = accept() )
     {
-      if( !requesthandler )
+      if( !requesthandler && rrhf )
       {
 	requesthandler = (program)(rrhf);
       }
@@ -1807,15 +1807,17 @@ class Protocol
     ip = canonical_ip(i);
 
     restore();
-    if( file_stat( "../local/"+requesthandlerfile ) )
-      rrhf = "../local/"+requesthandlerfile;
-    else
-      rrhf = requesthandlerfile;
-    DDUMP( rrhf );
+    if (sizeof(requesthandlerfile)) {
+      if( file_stat( "../local/"+requesthandlerfile ) )
+	rrhf = "../local/"+requesthandlerfile;
+      else
+	rrhf = requesthandlerfile;
+      DDUMP( rrhf );
 #ifdef DEBUG
-    if( !requesthandler )
-      requesthandler = (program)(rrhf);
+      if( !requesthandler )
+	requesthandler = (program)(rrhf);
 #endif
+    }
     bound = 0;
     port_obj = 0;
     retries = 0;
