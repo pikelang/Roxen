@@ -357,7 +357,6 @@ worldmap binary
 /server/protocols/http.pike foreign_ident
 /server/protocols/prot_https.pike foreign_ident
 /server/protocols/prot_snmp.pike foreign_ident
-/server/protocols/snmp.pike foreign_ident
 /server/protocols/tetris.pike foreign_ident
 /server/rxml_packages/counter foreign_ident
 /server/rxml_packages/gtext_list foreign_ident
