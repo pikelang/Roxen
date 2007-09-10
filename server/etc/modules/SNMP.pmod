@@ -1,7 +1,7 @@
 //
 // SNMP helper stuff.
 //
-// $Id: SNMP.pmod,v 1.1 2007/09/10 11:07:42 grubba Exp $
+// $Id: SNMP.pmod,v 1.2 2007/09/10 15:15:36 grubba Exp $
 //
 // 2007-08-29 Henrik Grubbström
 //
@@ -22,18 +22,35 @@ class Documentation(string name,
 {
 }
 
+class Updateable(function(:mixed) fun)
+{
+  void update_value()
+  {
+    if (fun) {
+      this_object()->value = fun();
+    }
+  }
+}
+
 // ASN1 datatypes.
 
 class app_integer
 {
   inherit Standards.ASN1.Types.asn1_integer : integer;
   inherit Documentation : doc;
+  inherit Updateable : update;
   constant cls = 1;
   constant type_name = "APPLICATION INTEGER";
   constant tag = 0;
-  static void create(int val, string|void name, string|void doc_string)
+  static void create(int|function(:int) val, string|void name, string|void doc_string)
   {
-    integer::create(val);
+    if (intp(val)) {
+      update::create(UNDEFINED);
+      integer::create(val);
+    } else {
+      update::create(val);
+      integer::create(val());
+    }
     doc::create(name, doc_string);
   }
 }
@@ -42,12 +59,19 @@ class app_octet_string
 {
   inherit Standards.ASN1.Types.asn1_octet_string : octet_string;
   inherit Documentation : doc;
+  inherit Updateable : update;
   constant cls = 1;
   constant type_name = "APPLICATION OCTET_STRING";
   constant tag = 0;
-  static void create(string val, string|void name, string|void doc_string)
+  static void create(string|function(:string) val, string|void name, string|void doc_string)
   {
-    octet_string::create(val);
+    if (stringp(val)) {
+      update::create(UNDEFINED);
+      octet_string::create(val);
+    } else {
+      update::create(val);
+      octet_string::create(val());
+    }
     doc::create(name, doc_string);
   }
 }
@@ -68,10 +92,17 @@ class Integer
 {
   inherit Standards.ASN1.Types.asn1_integer : integer;
   inherit Documentation : doc;
+  inherit Updateable : update;
   constant type_name = "INTEGER";
-  static void create(int val, string|void name, string|void doc_string)
+  static void create(int|function(:int) val, string|void name, string|void doc_string)
   {
-    integer::create(val);
+    if (intp(val)) {
+      update::create(UNDEFINED);
+      integer::create(val);
+    } else {
+      update::create(val);
+      integer::create(val());
+    }
     doc::create(name, doc_string);
   }
 }
@@ -80,10 +111,17 @@ class String
 {
   inherit Standards.ASN1.Types.asn1_octet_string : octet_string;
   inherit Documentation : doc;
+  inherit Updateable : update;
   constant type_name = "STRING";
-  static void create(string val, string|void name, string|void doc_string)
+  static void create(string|function(:string) val, string|void name, string|void doc_string)
   {
-    octet_string::create(val);
+    if (stringp(val)) {
+      update::create(UNDEFINED);
+      octet_string::create(val);
+    } else {
+      update::create(val);
+      octet_string::create(val());
+    }
     doc::create(name, doc_string);
   }
 }
