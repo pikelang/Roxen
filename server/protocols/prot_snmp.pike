@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2007, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.1 2007/09/10 12:05:11 grubba Exp $
+ * $Id: prot_snmp.pike,v 2.2 2007/09/10 15:18:07 grubba Exp $
  *
  * SNMP protocol support.
  *
@@ -96,7 +96,7 @@ class SystemMIB
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.1 $"/" ")[1],
+			   ("$Revision: 2.2 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
@@ -454,6 +454,10 @@ static void got_connection(mapping data)
 	//   prefix of any (potential) variable accessible by this request,
 	//   then its value field is set to `noSuchObject'.
 	val = val || SNMP.NO_SUCH_OBJECT;
+      }
+      if (objectp(val) && val->update_value) {
+	// Update value callback.
+	val->update_value();
       }
       if (intp(val)) val = SNMP.Integer(val);
       else if (stringp(val)) val = SNMP.String(val);
