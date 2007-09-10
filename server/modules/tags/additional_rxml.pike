@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.35 2007/08/17 15:29:32 tor Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.36 2007/09/10 13:09:12 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -496,7 +496,7 @@ class TagXmlRpcCall
       array|Protocols.XMLRPC.Fault res;
 
       if (mixed err = catch (res = client[args->method] (@params)))
-	RXML.run_error ("Failed to make XML-RPC call %O: %s\n",
+	RXML.run_error ("Failed to make XML-RPC call %O: %s",
 			args->method, describe_error (err));
 
       if (objectp (res)) {
