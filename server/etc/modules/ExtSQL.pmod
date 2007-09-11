@@ -7,6 +7,17 @@ class sqlproxy {
   private object proc,pipe;
 
   private string connect_string;
+
+  int lastuse, usage_count;
+
+  
+  int get_last_use() {
+    return lastuse;
+  }
+
+  void touch() {
+    lastuse = time();
+  }
   
   private void write(string s) {
     pipe->write(s);
