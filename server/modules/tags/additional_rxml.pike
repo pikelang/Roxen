@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.37 2007/09/11 14:05:11 mathias Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.38 2007/09/12 11:02:40 mathias Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -774,7 +774,7 @@ class TagFormatNumber
       }
       else
       {
-	RXML.parse_error("No number to formatted was given.");
+	RXML.parse_error("No number to be formatted was given.");
       }
 
 
