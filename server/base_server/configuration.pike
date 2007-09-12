@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.638 2007/09/10 11:59:58 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.639 2007/09/12 14:12:56 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -526,8 +526,12 @@ ADT.Trie generate_module_mib(array(int) oid,
   return SNMP.SimpleMIB(oid,
 			({
 			  UNDEFINED,
-			  SNMP.String(otomod[me]),
-			  SNMP.Integer(moduleinfo->type),
+			  SNMP.String(otomod[me],
+				      "moduleIdentifier"),
+			  SNMP.Integer(moduleinfo->type,
+				       "moduleType"),
+			  SNMP.String(me->cvs_version || "",
+				      "moduleVersion"),
 			}));
 }
 
@@ -5006,10 +5010,10 @@ also set 'URLs'."));
 			      UNDEFINED,
 			      query_name,
 			      comment,
-			      lambda() { return SNMP.Counter64(sent); },
-			      lambda() { return SNMP.Counter64(received); },
-			      lambda() { return SNMP.Counter64(hsent); },
-			      lambda() { return SNMP.Counter64(requests); },
+			      SNMP.Counter64(lambda() { return sent; }),
+			      SNMP.Counter64(lambda() { return received; }),
+			      SNMP.Counter64(lambda() { return hsent; }),
+			      SNMP.Counter64(lambda() { return requests; }),
 			      UNDEFINED,	// NOTE: Reserved for modules!
 			    })));
   mib_version++;
