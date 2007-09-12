@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.523 2007/09/04 13:27:05 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.524 2007/09/12 16:43:15 anders Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1834,6 +1834,12 @@ void low_send_result(string headers, string data, int|void len,
 			 "%d bytes of string data, "
 			 "len:%d",
 			 sizeof(headers), data && sizeof(data), len), 0);
+
+  if (!my_fd) {
+    do_log(0);
+    return;
+  }
+
   conf->hsent += sizeof(headers);
   if(!kept_alive && (len > 0) &&
      ((sizeof(headers) + len) < (HTTP_BLOCKING_SIZE_THRESHOLD))) {
@@ -2063,8 +2069,8 @@ void send_result(mapping|void result)
 	  string data = "";
 	  if( file->data ) data = file->data[..file->len-1];
 	  if( file->file ) data = file->file->read(file->len);
-	  MY_TRACE_ENTER(sprintf("Storing in ram cache, entry: %O",
-				 raw_url), 0);
+	  MY_TRACE_ENTER(sprintf("Storing in ram cache, entry: %O (%d seconds)",
+				 raw_url, misc->cacheable), 0);
 	  MY_TRACE_LEAVE ("");
 	  conf->datacache->set(raw_url, data,
 			       ([
