@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.530 2007/09/12 16:45:48 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.531 2007/09/12 16:53:01 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2587,12 +2587,14 @@ void got_data(mixed fooid, string s, void|int chained)
 	      real_cookies = cookies = ~cookies;
 	    }
 
-	    int refresh;
+	    int(0..1) refresh;
 	    if (cv[1]->refresh && (cv[1]->refresh <= predef::time(1))) {
-	      // We need to refresh the entry.
-	      refresh = 1 + predef::time(1) - cv[1]->refresh;
-	      m_delete(cv[1], "refresh");
-	      misc->connection = "close";
+	      // We might need to refresh the entry.
+	      // Note that we use the return value from m_delete()
+	      // to make sure we are free from races.
+	      if (refresh = m_delete(cv[1], "refresh")) {
+		refresh = 1 + predef::time(1) - refresh;
+	      }
 	    }
 
 	    int code = file->error;
@@ -2682,6 +2684,8 @@ void got_data(mixed fooid, string s, void|int chained)
 	    cache_status["protcache"] = 1;
 
 	    if (!refresh) {
+	      // No need to refresh the cached entry, so we just send it,
+	      // and are done.
 	      TIMER_END(cache_lookup);
 	      low_send_result(full_headers, d, sizeof(d));
 	      return;
@@ -2709,6 +2713,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	    id->low_send_result(full_headers, d, sizeof(d));
 	    
 	    my_fd = 0;
+	    misc->connection = "close";
 	    
 	    MY_TRACE_ENTER (
 	      sprintf("Entry in need of refresh (%d seconds past refresh)",
