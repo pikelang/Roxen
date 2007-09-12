@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.529 2007/09/04 13:25:07 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.530 2007/09/12 16:45:48 anders Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2090,8 +2090,8 @@ void send_result(mapping|void result)
 	  string data = "";
 	  if( file->data ) data = file->data[..file->len-1];
 	  if( file->file ) data = file->file->read(file->len);
-	  MY_TRACE_ENTER(sprintf("Storing in ram cache, entry: %O",
-				 raw_url), 0);
+	  MY_TRACE_ENTER(sprintf("Storing in ram cache, entry: %O (%d seconds)",
+				 raw_url, misc->cacheable), 0);
 	  MY_TRACE_LEAVE ("");
 	  conf->datacache->set(raw_url, data,
 			       ([
