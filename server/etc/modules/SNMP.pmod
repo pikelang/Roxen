@@ -1,7 +1,7 @@
 //
 // SNMP helper stuff.
 //
-// $Id: SNMP.pmod,v 1.2 2007/09/10 15:15:36 grubba Exp $
+// $Id: SNMP.pmod,v 1.3 2007/09/12 13:36:32 grubba Exp $
 //
 // 2007-08-29 Henrik Grubbström
 //
@@ -28,6 +28,7 @@ class Updateable(function(:mixed) fun)
   {
     if (fun) {
       this_object()->value = fun();
+      this_object()->der = UNDEFINED;
     }
   }
 }
