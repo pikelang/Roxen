@@ -1,0 +1,123 @@
+ROXEN-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    enterprises, Integer32, IpAddress, Counter32,
+    Gauge32, Unsigned32, TimeTicks, Opaque, Counter64
+        FROM SNMPv2-SMI
+    ;
+
+roxenis		OBJECT IDENTIFIER ::= { enterprises 8614 }
+app		OBJECT IDENTIFIER ::= { roxenis 1 }
+webserver	OBJECT IDENTIFIER ::= { app 1 }
+sites		OBJECT-TYPE
+    SYNTAX	SEQUENCE OF Site
+    ACCESS	not-accessible
+    STATUS	current
+    DESCRIPTION	"The table of sites in the server."
+    INDEX	{ siteNumber }
+    ::= { webserver 2 }
+
+Site ::= SEQUENCE {
+    siteNumber		INTEGER,
+    siteName		OCTET STRING,
+    comment		OCTET STRING,
+    sentBytes		Counter64,
+    receivedBytes	Counter64,
+    sentHeaders		Counter64,
+    numRequests		Counter64,
+    moduleTable		SEQUENCE OF moduledata ModuleData
+}
+
+siteNumber	OBJECT-TYPE
+    SYNTAX	INTEGER
+    ACCESS	read-only
+    STATUS	current
+    DESCRIPTION	"The number identifying the site in the server."
+    ::= { sites 1 }
+siteName	OBJECT-TYPE
+    SYNTAX	OCTET STRING
+    ACCESS	read-only
+    STATUS	current
+    DESCRIPTION	"The display name of the site."
+    ::= { sites 2 }
+comment	OBJECT-TYPE
+    SYNTAX	OCTET STRING
+    ACCESS	read-only
+    STATUS	current
+    DESCRIPTION	"The comment for the site."
+    ::= { sites 3 }
+sentBytes OBJECT-TYPE
+    SYNTAX	Counter64
+    ACCESS	read-only
+    STATUS	current
+    DESCRIPTION	"The number of bytes sent."
+    ::= { sites 4 }
+receivedBytes OBJECT-TYPE
+    SYNTAX	Counter64
+    ACCESS	read-only
+    STATUS	current
+    DESCRIPTION	"The number of bytes received."
+    ::= { sites 5 }
+sentHeaders OBJECT-TYPE
+    SYNTAX	Counter64
+    ACCESS	read-only
+    STATUS	current
+    DESCRIPTION	"The number of bytes of received headers."
+    ::= { sites 6 }
+numRequests OBJECT-TYPE
+    SYNTAX	Counter64
+    ACCESS	read-only
+    STATUS	current
+    DESCRIPTION	"The number of requests handled."
+    ::= { sites 7 }
+modules		OBJECT-TYPE
+    SYNTAX	SEQUENCE OF Module
+    ACCESS	not-accessible
+    STATUS	current
+    DESCRIPTION	"The table of modules in the server."
+    INDEX	{ siteNumber moduleIdentifier moduleCopy }
+    ::= { sites 8 }
+Module ::= SEQUENCE {
+    stdModuleInfo	SEQUENCE OF StdModuleInfo,
+    customModuleInfo	OBJECT
+}
+stdModuleInfo		OBJECT IDENTIFIER ::= { modules 1 }
+customModuleInfo	OBJECT-TYPE
+    SYNTAX	SEQUENCE OF OBJECT
+    ACCESS	not-accessible
+    STATUS	current
+    DESCRIPTION	"Custom module-specific data."
+    INDEX	{ moduleIdentifier siteNumber moduleCopy }
+    ::= { modules 2 }
+StdModuleInfo ::= SEQUENCE {
+    moduleCopy		INTEGER,
+    moduleIdentifier	OCTET STRING,
+    moduleType		INTEGER,
+    moduleVersion	OCTET STRING
+}
+moduleCopy	OBJECT-TYPE
+    SYNTAX	INTEGER
+    ACCESS	read-only
+    STATUS	current
+    DESCRIPTION	"The module copy number in this site."
+    ::= { stdModuleInfo 1 }
+moduleIdentifier	OBJECT-TYPE
+    SYNTAX	OCTET STRING
+    ACCESS	read-only
+    STATUS	current
+    DESCRIPTION	"The module identifier."
+    ::= { stdModuleInfo 2 }
+moduleType	OBJECT-TYPE
+    SYNTAX	INTEGER
+    ACCESS	read-only
+    STATUS	current
+    DESCRIPTION	"The module type."
+    ::= { stdModuleInfo 3 }
+moduleVersion	OBJECT-TYPE
+    SYNTAX	OCTET STRING
+    ACCESS	read-only
+    STATUS	current
+    DESCRIPTION	"The module version."
+    ::= { stdModuleInfo 4 }
+
+END
