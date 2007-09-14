@@ -1,7 +1,7 @@
 //
 // SNMP helper stuff.
 //
-// $Id: SNMP.pmod,v 1.3 2007/09/12 13:36:32 grubba Exp $
+// $Id: SNMP.pmod,v 1.4 2007/09/14 11:23:37 grubba Exp $
 //
 // 2007-08-29 Henrik Grubbström
 //
@@ -183,13 +183,14 @@ class SimpleMIB
   inherit ADT.Trie;
 
   static void create(array(int) oid,
+		     array(int) oid_suffix,
 		     array(Standards.ASN1.Types.Object|function)|
 		     mapping(int:Standards.ASN1.Types.Object|function) values)
   {
     ::create(oid);
     foreach(values; int i; function|Standards.ASN1.Types.Object val) {
       if (!zero_type(val)) {
-	insert(oid + ({ i, 0 }), val);
+	insert(oid + ({ i }) + oid_suffix + ({ 0 }), val);
       }
     }
   }

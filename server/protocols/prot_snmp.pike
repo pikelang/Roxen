@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2007, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.2 2007/09/10 15:18:07 grubba Exp $
+ * $Id: prot_snmp.pike,v 2.3 2007/09/14 11:23:37 grubba Exp $
  *
  * SNMP protocol support.
  *
@@ -91,41 +91,36 @@ class SystemMIB
 
   static void create()
   {
-    ::create(SNMP.INTERNET_OID + ({ 2, 1, 1 }),
+    ::create(SNMP.INTERNET_OID + ({ 2, 1, 1 }), ({}),
 	     ({
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.2 $"/" ")[1],
+			   ("$Revision: 2.3 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
 			"sysObjectID"),
 	       // system.sysUpTime
-	       lambda() {
-		 return SNMP.Tick((time(1) - roxen->start_time)*100,
-				  "sysUpTime");
-	       },
+	       SNMP.Tick(lambda() {
+			   return (time(1) - roxen->start_time)*100;
+			 }, "sysUpTime"),
 	       // system.sysContact
-	       lambda() {
-		 return SNMP.String(query("snmp_syscontact"),
-				    "sysContact");
-	       },
+	       SNMP.String(lambda() {
+			     return query("snmp_syscontact");
+			   }, "sysContact"),
 	       // system.sysName
-	       lambda() {
-		 return SNMP.String(query("snmp_sysname"),
-				    "sysName");
-	       },
+	       SNMP.String(lambda() {
+			     return query("snmp_sysname");
+			   }, "sysName"),
 	       // system.sysLocation
-	       lambda() {
-		 return SNMP.String(query("snmp_syslocation"),
-				    "sysLocation");
-	       },
+	       SNMP.String(lambda() {
+			     return query("snmp_syslocation");
+			   }, "sysLocation"),
 	       // system.sysServices
-	       lambda() {
-		 return SNMP.Integer(query("snmp_sysservices"),
-				     "sysServices");
-	       },
+	       SNMP.Integer(lambda() {
+			      return query("snmp_sysservices");
+			    }, "sysServices"),
 	     }));
   }
 }
@@ -147,7 +142,7 @@ class SNMPMIB
 
   static void create()
   {
-    ::create(SNMP.INTERNET_OID + ({ 2, 1, 11 }),
+    ::create(SNMP.INTERNET_OID + ({ 2, 1, 11 }), ({}),
 	     ({
 	       UNDEFINED,
 	       // snmp.snmpInPkts

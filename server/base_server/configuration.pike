@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.639 2007/09/12 14:12:56 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.640 2007/09/14 11:23:36 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -506,26 +506,34 @@ int mib_version;
 array(int) query_oid()
 {
   return SNMP.RIS_OID_WEBSERVER +
-    ({ 2, query("snmp_site_id"), });
+    ({ 2 });
 }
 
-array(int) generate_module_oid(RoxenModule me)
+//! @returns
+//!   Returns an array with two elements:
+//!   @array
+//!     @item array(int) oid
+//!     @item array(int) oid_suffix
+//!   @endarray
+array(int) generate_module_oid_segment(RoxenModule me)
 {
   string s = otomod[me];
   array(string) a = s/"#";
-  array(string) n = a[0]/4.0;
-  return query_oid() +
-    ({ 8, sizeof(n), @map(n, Gmp.bignum, 256), ((int)a[1]) + 1 });
+  return ({ sizeof(a[0]), @((array(int))a[0]), ((int)a[1]) + 1 });
 }
 
 ADT.Trie generate_module_mib(array(int) oid,
+			     array(int) oid_suffix,
 			     RoxenModule me,
 			     ModuleInfo moduleinfo,
 			     ModuleCopies module)
 {
+  array(int) segment = generate_module_oid_segment(me);
   return SNMP.SimpleMIB(oid,
+			oid_suffix + segment,
 			({
 			  UNDEFINED,
+			  SNMP.Integer(segment[-1]),
 			  SNMP.String(otomod[me],
 				      "moduleIdentifier"),
 			  SNMP.Integer(moduleinfo->type,
@@ -3773,10 +3781,14 @@ void call_low_start_callbacks( RoxenModule me,
   if(module_type & MODULE_FIRST)
     pri[pr]->first_modules += ({ me });
 
-  mib->merge(generate_module_mib(generate_module_oid(me) + ({ 1 }),
+  array(int) oid_suffix = ({ query("snmp_site_id") });
+  mib->merge(generate_module_mib(query_oid() + ({ 8, 1 }), oid_suffix,
 				 me, moduleinfo, module));
   if (me->query_snmp_mib) {
-    mib->merge(me->query_snmp_mib(generate_module_oid(me) + ({ 2 })));
+    array(int) segment = generate_module_oid_segment(me);
+    mib->merge(me->query_snmp_mib(query_oid() + ({ 8, 2 }) +
+				  segment[..sizeof(segment)-2],
+				  oid_suffix + ({ segment[-1] })));
   }
   mib_version++;
 
@@ -5004,7 +5016,7 @@ also set 'URLs'."));
 
   // FIXME: The following should move to a stage where
   //        the config variables have been loaded.
-  mib->merge(SNMP.SimpleMIB(query_oid(),
+  mib->merge(SNMP.SimpleMIB(query_oid(), ({ query("snmp_site_id") }),
 			    ({
 			      UNDEFINED,
 			      UNDEFINED,
