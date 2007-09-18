@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: roxenlib.pike,v 1.221 2006/04/20 13:31:54 grubba Exp $
+// $Id: roxenlib.pike,v 1.222 2007/09/18 17:57:49 mast Exp $
 
 //#pragma strict_types
 
@@ -9,7 +9,145 @@
 #include <stat.h>
 #include <variables.h>
 
-inherit Roxen;
+// Reference every public symbol in Roxen.pmod for compatibility.
+// Can't inherit Roxen.pmod here since that'd cause duplicate
+// instances of all its constants and scopes and stuff.
+//
+// Note that this list doesn't need to be kept up-to-date with
+// additions in Roxen.pmod since we only do this for compatibility.
+constant parse_box_xml = Roxen.parse_box_xml;
+constant ip_to_int = Roxen.ip_to_int;
+constant http_roxen_config_cookie = Roxen.http_roxen_config_cookie;
+constant http_roxen_id_cookie = Roxen.http_roxen_id_cookie;
+constant get_cookie_callback = Roxen.get_cookie_callback;
+constant get_remoteaddr = Roxen.get_remoteaddr;
+constant msectos = Roxen.msectos;
+constant decode_mode = Roxen.decode_mode;
+constant add_http_header = Roxen.add_http_header;
+constant is_mysql_keyword = Roxen.is_mysql_keyword;
+constant short_name = Roxen.short_name;
+constant _match = Roxen._match;
+constant http_low_answer = Roxen.http_low_answer;
+constant http_status = Roxen.http_status;
+constant http_method_not_allowed = Roxen.http_method_not_allowed;
+constant http_pipe_in_progress = Roxen.http_pipe_in_progress;
+constant http_rxml_answer = Roxen.http_rxml_answer;
+constant http_try_again = Roxen.http_try_again;
+constant http_try_resume = Roxen.http_try_resume;
+constant http_string_answer = Roxen.http_string_answer;
+constant http_file_answer = Roxen.http_file_answer;
+constant log_date = Roxen.log_date;
+constant log_time = Roxen.log_time;
+constant cern_http_date = Roxen.cern_http_date;
+constant http_status_message = Roxen.http_status_message;
+constant http_date = Roxen.http_date;
+constant iso8601_date_time = Roxen.iso8601_date_time;
+constant http_encode_string = Roxen.http_encode_string;
+constant http_encode_invalids = Roxen.http_encode_invalids;
+constant http_encode_cookie = Roxen.http_encode_cookie;
+constant http_encode_url = Roxen.http_encode_url;
+constant correctly_http_encode_url = Roxen.correctly_http_encode_url;
+constant add_pre_state = Roxen.add_pre_state;
+constant http_redirect = Roxen.http_redirect;
+constant http_stream = Roxen.http_stream;
+constant http_digest_required = Roxen.http_digest_required;
+constant http_auth_required = Roxen.http_auth_required;
+constant http_proxy_auth_required = Roxen.http_proxy_auth_required;
+constant extract_query = Roxen.extract_query;
+constant build_env_vars = Roxen.build_env_vars;
+constant build_roxen_env_vars = Roxen.build_roxen_env_vars;
+constant strip_config = Roxen.strip_config;
+constant strip_prestate = Roxen.strip_prestate;
+constant compile_rxml = Roxen.compile_rxml;
+constant eval_p_code = Roxen.eval_p_code;
+constant get_rxml_parser = Roxen.get_rxml_parser;
+constant get_xml_parser = Roxen.get_xml_parser;
+constant iso88591 = Roxen.iso88591;
+constant international = Roxen.international;
+constant symbols = Roxen.symbols;
+constant greek = Roxen.greek;
+constant replace_entities = Roxen.replace_entities;
+constant replace_values = Roxen.replace_values;
+constant safe_characters = Roxen.safe_characters;
+constant empty_strings = Roxen.empty_strings;
+constant is_safe_string = Roxen.is_safe_string;
+constant make_entity = Roxen.make_entity;
+constant make_tag_attributes = Roxen.make_tag_attributes;
+constant make_tag = Roxen.make_tag;
+constant make_container = Roxen.make_container;
+constant add_config = Roxen.add_config;
+constant extension = Roxen.extension;
+constant backup_extension = Roxen.backup_extension;
+constant win_drive_prefix = Roxen.win_drive_prefix;
+constant simplify_path = Roxen.simplify_path;
+constant short_date = Roxen.short_date;
+constant int2roman = Roxen.int2roman;
+constant number2string = Roxen.number2string;
+constant image_from_type = Roxen.image_from_type;
+constant sizetostring = Roxen.sizetostring;
+constant html_decode_string = Roxen.html_decode_string;
+constant html_encode_tag_value = Roxen.html_encode_tag_value;
+constant strftime = Roxen.strftime;
+constant get_module = Roxen.get_module;
+constant get_modname = Roxen.get_modname;
+constant get_modfullname = Roxen.get_modfullname;
+constant roxen_encode = Roxen.roxen_encode;
+constant fix_relative = Roxen.fix_relative;
+constant open_log_file = Roxen.open_log_file;
+constant tagtime = Roxen.tagtime;
+constant time_dequantifier = Roxen.time_dequantifier;
+constant _charset_decoder = Roxen._charset_decoder;
+constant magic_charset_variable_placeholder = Roxen.magic_charset_variable_placeholder;
+constant magic_charset_variable_value = Roxen.magic_charset_variable_value;
+constant get_client_charset_decoder = Roxen.get_client_charset_decoder;
+#if constant(HAVE_OLD__Roxen_make_http_headers)
+constant make_http_headers = Roxen.make_http_headers;
+#endif /* constant(HAVE_OLD__Roxen_make_http_headers) */
+constant QuotaDB = Roxen.QuotaDB;
+constant EScope = Roxen.EScope;
+constant SRestore = Roxen.SRestore;
+constant add_scope_constants = Roxen.add_scope_constants;
+constant parser_charref_table = Roxen.parser_charref_table;
+constant inverse_charref_table = Roxen.inverse_charref_table;
+constant decode_charref = Roxen.decode_charref;
+constant safe_compile = Roxen.safe_compile;
+constant encode_charref = Roxen.encode_charref;
+constant ScopeRequestHeader = Roxen.ScopeRequestHeader;
+constant ScopeRoxen = Roxen.ScopeRoxen;
+constant get_ssl_strength = Roxen.get_ssl_strength;
+constant ScopePage = Roxen.ScopePage;
+constant ScopeCookie = Roxen.ScopeCookie;
+constant scope_request_header = Roxen.scope_request_header;
+constant scope_roxen = Roxen.scope_roxen;
+constant scope_page = Roxen.scope_page;
+constant scope_cookie = Roxen.scope_cookie;
+constant ScopeModVar = Roxen.ScopeModVar;
+constant scope_modvar = Roxen.scope_modvar;
+constant FormScope = Roxen.FormScope;
+constant scope_form = Roxen.scope_form;
+constant entities_tag_set = Roxen.entities_tag_set;
+constant monthnum= Roxen.monthnum;
+constant parse_since = Roxen.parse_since;
+constant is_modified = Roxen.is_modified;
+constant httpdate_to_time = Roxen.httpdate_to_time;
+constant set_cookie = Roxen.set_cookie;
+constant remove_cookie = Roxen.remove_cookie;
+constant add_cache_stat_callback = Roxen.add_cache_stat_callback;
+constant add_cache_callback = Roxen.add_cache_callback;
+constant get_server_url = Roxen.get_server_url;
+constant get_world = Roxen.get_world;
+constant get_owning_module = Roxen.get_owning_module;
+constant get_owning_config = Roxen.get_owning_config;
+#ifdef REQUEST_TRACE
+constant trace_enter = Roxen.trace_enter;
+constant trace_leave = Roxen.trace_leave;
+#endif
+constant init_wiretap_stack = Roxen.init_wiretap_stack;
+constant push_color = Roxen.push_color;
+constant pop_color = Roxen.pop_color;
+
+// Low-level C-roxen optimization functions. FIXME: Avoid inheriting this too.
+inherit _Roxen;
 
 //! The old Roxen standard library. Everything defined in this class,
 //! i.e. not the inherited, is to be considered deprecated. The
@@ -202,7 +340,7 @@ static string do_output_tag( mapping(string:string) args,
   string multi_separator = args->multi_separator || args->multisep || "\000";
 
   if (args->preprocess)
-    contents = parse_rxml( contents, id );
+    contents = Roxen.parse_rxml( contents, id );
 
   switch (args["debug-input"]) {
     case 0: break;
@@ -382,11 +520,11 @@ static string do_output_tag( mapping(string:string) args,
       else if (args->delimiter)
 	new_contents += args->delimiter;
       new_contents += args->preprocess ? exploded * "" :
-	parse_rxml (exploded * "", id);
+	Roxen.parse_rxml (exploded * "", id);
       if (args["debug-output"]) unparsed_contents += exploded * "";
     }
     else {
-      new_contents += args->preprocess ? contents : parse_rxml (contents, id);
+      new_contents += args->preprocess ? contents : Roxen.parse_rxml (contents, id);
       if (args["debug-output"]) unparsed_contents += contents;
     }
   }
