@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.532 2007/09/07 14:55:20 tomas Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.533 2007/09/18 18:10:58 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1626,7 +1626,18 @@ class TagCache {
     int timeout, persistent_cache = 0;
 
     // The following are retained for frame reuse.
-    string content_hash;
+
+    string cache_id;
+    // This is set whenever the cache is stored in the roxen RAM cache
+    // and we need to identify it from the frame. That means two
+    // cases: One is for shared caches, the other is when the cache is
+    // stored in RAM but the frame itself might get destructed and
+    // reinstated later from encoded p-code.
+    //
+    // It's not necessary when both the cache and the frame remains in
+    // RAM. In that case we keep the cache in the variable
+    // alternatives.
+
     array(string|int) subvariables;
     mapping(string:RXML.PCode|array(int|RXML.PCode)) alternatives;
 
@@ -1785,17 +1796,17 @@ class TagCache {
 	  // wants cache tainting between servers.
 	  keymap[1] = id->conf->name;
 	else {
-	  if (!content_hash) {
+	  if (!cache_id) {
 	    // Include the content type in the hash since we cache the
 	    // p-code which has static type inference.
 	    if (!content) content = "";
 	    if (String.width (content) != 8) content = encode_value_canonic (content);
-	    content_hash = Crypto.md5()->update ("................................")
-				       ->update (content)
-				       ->update (content_type->name)
-				       ->digest();
+	    cache_id = Crypto.md5()->update ("................................")
+				   ->update (content)
+				   ->update (content_type->name)
+				   ->digest();
 	  }
-	  keymap[1] = ({id->conf->name, content_hash});
+	  keymap[1] = ({id->conf->name, cache_id});
 	}
       }
 
@@ -1875,12 +1886,13 @@ class TagCache {
 	}
 
 	if (args->shared) {
-	  cache_set(cache_tag_location, key, evaled_content, timeout);
+	  cache_set (cache_tag_location, key, evaled_content, timeout);
 	  TAG_TRACE_LEAVE ("added shared%s cache entry with key %s",
 			   timeout ? " timeout" : "",
 			   RXML.utils.format_short (keymap, 200));
 	}
-	else
+
+	else {
 	  if (timeout) {
 	    if (args["persistent-cache"] == "yes") {
 	      persistent_cache = 1;
@@ -1891,12 +1903,39 @@ class TagCache {
 	      if (!persistent_cache) add_timeout_cache (alternatives);
 	    }
 	    alternatives[key] = ({time() + timeout, evaled_content});
+	    if (cache_id) {
+	      // A persistent <cache> frame with a nonpersistent
+	      // cache. We need to ensure the cache exists in the
+	      // roxen RAM cache with a fresh timeout, since we
+	      // probably won't enter save() after this.
+#ifdef DEBUG
+	      if (!has_prefix (cache_id, "ci"))
+		error ("Unexpected non-shared cache identifier: %O\n",
+		       cache_id);
+#endif
+	      cache_set (cache_tag_location, cache_id, alternatives, timeout);
+	    }
 	    TAG_TRACE_LEAVE ("added%s timeout cache entry with key %s",
 			     persistent_cache ? " (possibly persistent)" : "",
 			     RXML.utils.format_short (keymap, 200));
 	  }
+
 	  else {
-	    if (!alternatives) alternatives = ([]);
+	    if (!alternatives) {
+	      alternatives = ([]);
+	      if (cache_id) {
+		// A persistent <cache> frame with a nonpersistent
+		// cache. The cache itself has gotten lost if we get
+		// here, so we need to readd it to the Roxen cache
+		// since we probably won't enter save() in this case.
+#ifdef DEBUG
+		if (!has_prefix (cache_id, "ci"))
+		  error ("Unexpected non-shared cache identifier: %O\n",
+			 cache_id);
+#endif
+		cache_set (cache_tag_location, cache_id, alternatives, 0);
+	      }
+	    }
 	    alternatives[key] = evaled_content;
 	    if (args["persistent-cache"] != "no") {
 	      persistent_cache = 1;
@@ -1906,6 +1945,7 @@ class TagCache {
 			     persistent_cache ? " (possibly persistent)" : "",
 			     RXML.utils.format_short (keymap, 200));
 	  }
+	}
       }
       else
 	TAG_TRACE_LEAVE ("");
@@ -1921,18 +1961,46 @@ class TagCache {
 
     array save()
     {
-      if (persistent_cache && timeout && alternatives) {
-	int now = time (1);
-	foreach (alternatives; string key; array(int|RXML.PCode) entry)
-	  if (entry[0] < now) m_delete (alternatives, key);
+      if (alternatives) {
+	if (persistent_cache) {
+	  if (timeout) {
+	    // It's worth the effort to expunge stale entries before
+	    // we write the cache to disk.
+	    int now = time (1);
+	    foreach (alternatives; string key; array(int|RXML.PCode) entry)
+	      if (entry[0] < now) m_delete (alternatives, key);
+	  }
+	}
+
+	else {
+	  if (!cache_id && sizeof (alternatives)) {
+	    // Saving the frame of a nonpersistent cache, and it got
+	    // entries. Since the frame itself will probably go out of
+	    // memory after this, we put it into the RAM cache with a
+	    // unique identifier so that we find the cache again when
+	    // the tag is reinstated.
+	    cache_id = "ci" + roxen.new_uuid_string();
+	    cache_set (cache_tag_location, cache_id, alternatives, timeout);
+	  }
+	}
       }
-      return ({content_hash, subvariables, persistent_cache,
+
+      return ({cache_id, subvariables, persistent_cache,
 	       persistent_cache && alternatives});
     }
 
     void restore (array saved)
     {
-      [content_hash, subvariables, persistent_cache, alternatives] = saved;
+      [cache_id, subvariables, persistent_cache, alternatives] = saved;
+
+      if (cache_id && has_prefix (cache_id, "ci")) {
+#ifdef DEBUG
+	if (alternatives)
+	  error ("Cache unexpectedly stored persistently.\n"
+		 "cache_id: %O, alternatives: %O)\n", cache_id, alternatives);
+#endif
+	alternatives = cache_lookup (cache_tag_location, cache_id);
+      }
     }
   }
 }
