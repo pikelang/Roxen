@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.969 2007/09/10 11:55:51 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.970 2007/09/20 10:28:13 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -4215,6 +4215,28 @@ string decode_charset( string charset, string data )
   data = cached_decoders[ charset ]->feed( data )->drain();
   cached_decoders[ charset ]->clear();
   return data;
+}
+
+//! Check if a cache key has been marked invalid (aka stale).
+int(0..1) invalidp(CacheKey key)
+{
+  catch {
+    return !key || (key->invalidp && key->invalidp());
+  };
+  return !key;
+}
+
+//! Invalidate (mark as stale) a cache key.
+void invalidate(CacheKey key)
+{
+  if (!key) return;
+  catch {
+    if (key->invalidate) {
+      key->invalidate();
+      return;
+    }
+  };
+  if (key) destruct(key);
 }
 
 void create()
