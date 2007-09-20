@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.194 2007/08/15 11:05:13 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.195 2007/09/20 10:29:17 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -691,7 +691,7 @@ class CacheKey
 //! @appears CacheKey
 //!
 //! Used as @expr{id->misc->cachekey@}. Every request that might be
-//! cacheable has an instance, and the protocol cache which store the
+//! cacheable has an instance, and the protocol cache which stores the
 //! result of the request checks that this object still exists before
 //! using the cache entry. Thus other subsystems that provide data to
 //! the result can keep track of this object and destruct it whenever
@@ -700,6 +700,15 @@ class CacheKey
 //! Those data providers should however not store this object
 //! directly, but instead call @[add_activation_cb]. That avoids
 //! unnecessary garbage (see below).
+//!
+//! There is also the option to have cache keys with an intermediate
+//! stale state. The semantics of those is that the protocol cache
+//! will continue to send cached results for stale cache objects until
+//! they get destructed, but subsystems that rely on valid data may
+//! use @[roxen.invalidp()] to check whether the data is stale or not.
+//!
+//! @[roxen.invalidate()] is used to force a cache key into the stale
+//! state.
 //!
 //! A cache implementation must call @[activate] before storing the
 //! cache key. At that point the functions registered with
@@ -730,6 +739,28 @@ class CacheKey
   {
     if (!activate_immediately) activation_cbs = ({});
   }
+
+  int invalidp();
+  //! Has this cache key been invalidated.
+  //!
+  //! @note
+  //!   If this function does not exist, the key is assumed
+  //!   to be valid for as long as it hasn't been destructed.
+  //!
+  //! @seealso
+  //!   @[roxen.invalidp()], @[invalidate()]
+
+  void invalidate();
+  //! Invalidation callback.
+  //!
+  //! Callback used for invalidating the cache key.
+  //!
+  //! @note
+  //!   If this function does not exist, invalidation is done
+  //!   by destructing the cache key.
+  //!
+  //! @seealso
+  //!   @[roxen.invalidate()], @[invalidp()]
 
   void add_activation_cb (CacheActivationCB cb, mixed... args)
   //! Register a callback that will be called if and when this cache
