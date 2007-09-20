@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.533 2007/09/18 18:10:58 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.534 2007/09/20 15:06:47 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4679,16 +4679,19 @@ class TagEmit {
 	if(args->sort ||
 	   (args->skiprows && args->skiprows<0) ||
 	   args->rowinfo ||
-	   args->remainderinfo )
+	   args->remainderinfo ||
+	   args->reverse)
 	  // Expand the object into an array of mappings if sort,
-	  // negative skiprows or rowinfo is used. These arguments
-	  // should be intercepted, dealt with and removed by the
-	  // plugin, should it have a more clever solution. Note that
-	  // it would be possible to use a expand_on_demand-solution
-	  // where a value object is stored as the rowinfo value and,
-	  // if used inside the loop, triggers an expansion. That
-	  // would however force us to jump to another iterator function.
-	  // Let's save that complexity enhancement until later.
+	  // negative skiprows, rowinfo or reverse is used. These
+	  // arguments should be intercepted, dealt with and removed
+	  // by the plugin, should it have a more clever solution.
+	  //
+	  // Note that it would be possible to use a
+	  // expand_on_demand-solution where a value object is stored
+	  // as the rowinfo value and, if used inside the loop,
+	  // triggers an expansion. That would however force us to
+	  // jump to another iterator function. Let's save that
+	  // complexity enhancement until later.
 	  res = expand(res);
 	else if(filter) {
 	  do_iterate = object_filter_iterate;
@@ -7194,7 +7197,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  <row><c><p>%p</p></c><c><p>\"a.m.\" or \"p.m.\"</p></c></row>
  <row><c><p>%r</p></c><c><p>Time in 12 hour clock format with %p</p></c></row>
  <row><c><p>%R</p></c><c><p>Time as \"%H:%M\"</p></c></row>
- <row><c><p>%S</p></c><c><p>Seconds (0-60), zero padded to two characters. Second 59-60 is a leap second.</p></c></row>
+ <row><c><p>%S</p></c><c><p>Seconds (0-60), zero padded to two characters. 60 only occurs in case of a leap second.</p></c></row>
  <row><c><p>%t</p></c><c><p>Tab</p></c></row>
  <row><c><p>%T</p></c><c><p>Time as \"%H:%M:%S\"</p></c></row>
  <row><c><p>%u</p></c><c><p>Weekday as a decimal number (1-7), 1 is Sunday.</p></c></row>
