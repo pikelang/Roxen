@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.956 2007/08/15 09:21:46 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.957 2007/09/20 10:28:17 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1765,15 +1765,17 @@ class Protocol
     ip = canonical_ip(i);
 
     restore();
-    if( file_stat( "../local/"+requesthandlerfile ) )
-      rrhf = "../local/"+requesthandlerfile;
-    else
-      rrhf = requesthandlerfile;
-    DDUMP( rrhf );
+    if (sizeof(requesthandlerfile)) {
+      if( file_stat( "../local/"+requesthandlerfile ) )
+	rrhf = "../local/"+requesthandlerfile;
+      else
+	rrhf = requesthandlerfile;
+      DDUMP( rrhf );
 #ifdef DEBUG
-    if( !requesthandler )
-      requesthandler = (program)(rrhf);
+      if( !requesthandler )
+	requesthandler = (program)(rrhf);
 #endif
+    }
     bound = 0;
     port_obj = 0;
     retries = 0;
@@ -4547,6 +4549,28 @@ string decode_charset( string charset, string data )
   data = cached_decoders[ charset ]->feed( data )->drain();
   cached_decoders[ charset ]->clear();
   return data;
+}
+
+//! Check if a cache key has been marked invalid (aka stale).
+int(0..1) invalidp(CacheKey key)
+{
+  catch {
+    return !key || (key->invalidp && key->invalidp());
+  };
+  return !key;
+}
+
+//! Invalidate (mark as stale) a cache key.
+void invalidate(CacheKey key)
+{
+  if (!key) return;
+  catch {
+    if (key->invalidate) {
+      key->invalidate();
+      return;
+    }
+  };
+  if (key) destruct(key);
 }
 
 void create()
