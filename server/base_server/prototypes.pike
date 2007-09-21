@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.195 2007/09/20 10:29:17 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.196 2007/09/21 12:53:45 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -740,7 +740,9 @@ class CacheKey
     if (!activate_immediately) activation_cbs = ({});
   }
 
-  int invalidp();
+  static int flags;
+
+  int invalidp()
   //! Has this cache key been invalidated.
   //!
   //! @note
@@ -749,8 +751,11 @@ class CacheKey
   //!
   //! @seealso
   //!   @[roxen.invalidp()], @[invalidate()]
+  {
+    return flags;
+  }
 
-  void invalidate();
+  void invalidate()
   //! Invalidation callback.
   //!
   //! Callback used for invalidating the cache key.
@@ -761,6 +766,9 @@ class CacheKey
   //!
   //! @seealso
   //!   @[roxen.invalidate()], @[invalidp()]
+  {
+    flags = 1;
+  }
 
   void add_activation_cb (CacheActivationCB cb, mixed... args)
   //! Register a callback that will be called if and when this cache
