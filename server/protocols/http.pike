@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.532 2007/09/21 12:42:42 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.533 2007/09/21 14:26:07 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2584,7 +2584,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	    // Note that we use the return value from m_delete()
 	    // to make sure we are free from races.
 	    if (m_delete(file, "refresh")) {
-	      file->refresh = time(1);
+	      file->refresh = predef::time(1);
 	    }
 	  }
 	}      
