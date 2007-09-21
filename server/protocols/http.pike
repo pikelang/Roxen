@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.531 2007/09/12 16:53:01 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.532 2007/09/21 12:42:42 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2539,6 +2539,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	  if( mixed e = catch 
 	  {
 	    foreach( file->callbacks, function f ) {
+	      if (!file->key) break;
 	      MY_TRACE_ENTER (sprintf ("Checking with %s",
 				       master()->describe_function (f)), 0);
 	      if( !f(this_object(), file->key ) )
@@ -2568,12 +2569,25 @@ void got_data(mixed fooid, string s, void|int chained)
 	    }
 	  }
 	}
-	if( !file->key )
+	if(roxen.invalidp(file->key))
 	{
-	  MY_TRACE_LEAVE ("Entry invalid due to zero key");
-	  conf->datacache->expire_entry(raw_url, this_object());
-	  can_cache = 0;
-	}
+	  // Stale or invalid key.
+	  if (!file->key) {
+	    // Invalid.
+	    MY_TRACE_LEAVE ("Entry invalid due to zero key");
+	    conf->datacache->expire_entry(raw_url, this_object());
+	    can_cache = 0;
+	  } else if (file->refresh) {
+	    // Stale and no refresh in progress.
+	    // We want a refresh as soon as possible,
+	    // so move the refresh time to now.
+	    // Note that we use the return value from m_delete()
+	    // to make sure we are free from races.
+	    if (m_delete(file, "refresh")) {
+	      file->refresh = time(1);
+	    }
+	  }
+	}      
 	if( can_cache )
 	{
 #ifndef RAM_CACHE_ASUME_STATIC_CONTENT
@@ -2587,12 +2601,12 @@ void got_data(mixed fooid, string s, void|int chained)
 	      real_cookies = cookies = ~cookies;
 	    }
 
-	    int(0..1) refresh;
-	    if (cv[1]->refresh && (cv[1]->refresh <= predef::time(1))) {
+	    int refresh;
+	    if (file->refresh && (file->refresh <= predef::time(1))) {
 	      // We might need to refresh the entry.
 	      // Note that we use the return value from m_delete()
 	      // to make sure we are free from races.
-	      if (refresh = m_delete(cv[1], "refresh")) {
+	      if (refresh = m_delete(file, "refresh")) {
 		refresh = 1 + predef::time(1) - refresh;
 	      }
 	    }
