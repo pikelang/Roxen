@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.533 2007/09/21 14:26:07 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.534 2007/10/01 12:29:00 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2577,12 +2577,14 @@ void got_data(mixed fooid, string s, void|int chained)
 	    MY_TRACE_LEAVE ("Entry invalid due to zero key");
 	    conf->datacache->expire_entry(raw_url, this_object());
 	    can_cache = 0;
-	  } else if (file->refresh) {
+	  } else if (file->refresh > predef::time(1)) {
 	    // Stale and no refresh in progress.
 	    // We want a refresh as soon as possible,
 	    // so move the refresh time to now.
 	    // Note that we use the return value from m_delete()
 	    // to make sure we are free from races.
+	    // Note also that we above check that the change is needed,
+	    // so as to avoid the risk of starving the code below.
 	    if (m_delete(file, "refresh")) {
 	      file->refresh = predef::time(1);
 	    }
