@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.32 2007/08/27 12:43:33 wellhard Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.33 2007/10/01 15:30:09 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";
@@ -61,7 +61,7 @@ class TagWashHtml
   array safe_container(Parser.HTML p, mapping args, string cont,
 			string close_tags, mapping keep_attrs)
   {
-    string tag = p->tag_name();
+    string tag = lower_case(p->tag_name());
     if(keep_attrs)
       args &= (keep_attrs[tag] || ({ }));
     Parser.HTML parser = p->clone();
@@ -73,7 +73,7 @@ class TagWashHtml
   array safe_tag(Parser.HTML p, mapping args,
 		  string close_tags, mapping keep_attrs)
   {
-    string tag = p->tag_name();
+    string tag = lower_case(p->tag_name());
     if(keep_attrs)
       args &= (keep_attrs[tag] || ({ }));
     
@@ -105,6 +105,7 @@ class TagWashHtml
     }
 
     Parser.HTML parser = Parser.HTML();
+    parser->case_insensitive_tag(1);
     parser->set_extra(close_tags, keep_attrs);
     
     foreach(keep_tags, string tag)
