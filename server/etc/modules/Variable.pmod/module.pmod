@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.98 2007/01/22 13:16:29 grubba Exp $
+// $Id: module.pmod,v 1.99 2007/10/05 07:34:07 marty Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1394,6 +1394,7 @@ class ProviderChoice
   static string provides;
   static string default_id;
   static string local_id = "";
+  static int isset;
 
   int low_set(RoxenModule to)
   {
@@ -1423,19 +1424,25 @@ class ProviderChoice
     if (stringp(to)) {
       local_id = to;
       to = transform_from_form(to);
+      isset = 1;
     }
     return ::set(to);
   }
 
   RoxenModule query()
   {
-    RoxenModule res = ::query();
+    RoxenModule res = changed_values[_id];
     if (!res) {
       if (local_id != "") {
 	// The module might have been reloaded.
 	// Try locating it again.
 	res = transform_from_form(local_id);
 	if (res) low_set(res);
+      } else if(!isset) {
+	res = default_value();
+	if(res) {
+	  set(res);
+	}
       }
     }
     return res;
@@ -1468,7 +1475,7 @@ class ProviderChoice
     if (default_id) {
       return transform_from_form(default_id);
     } else {
-      array(RoxenModule) providers = get_choice_list();
+      array(RoxenModule) providers = conf->get_providers(provides);
       if (sizeof(providers)) {
 	return providers[0];
       }
