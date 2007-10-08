@@ -1,6 +1,6 @@
 // LDAP client protocol implementation for Pike.
 //
-// $Id: client.pike,v 1.9 2007/05/23 12:01:50 mast Exp $
+// $Id: client.pike,v 1.10 2007/10/08 15:58:30 mast Exp $
 //
 // Honza Petrous, hop@unibase.cz
 //
@@ -374,7 +374,9 @@ typedef mapping(string:ResultAttributeValue) ResultEntry;
       if (resultstring == "")
 	resultstring = 0;
       else if (ldap_version >= 3)
-	resultstring = utf8_to_string (resultstring);
+	if (mixed err = catch (resultstring = utf8_to_string (resultstring)))
+	  DWRITE (sprintf ("Failed to decode result string %O: %s",
+			   resultstring, describe_error (err)));
       DWRITE(sprintf("result.create: str=%O\n",resultstring));
 #ifdef V3_REFERRALS
       // referral (v3 mode)
@@ -660,7 +662,7 @@ typedef mapping(string:ResultAttributeValue) ResultEntry;
   void create(string|mapping(string:mixed)|void url, object|void context)
   {
 
-    info = ([ "code_revision" : ("$Revision: 1.9 $"/" ")[1] ]);
+    info = ([ "code_revision" : ("$Revision: 1.10 $"/" ")[1] ]);
 
     if(!url || !sizeof(url))
       url = LDAP_DEFAULT_URL;
