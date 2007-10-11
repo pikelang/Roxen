@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.62 2007/01/12 14:58:11 grubba Exp $
+# $Id: extensions,v 1.63 2007/10/11 09:01:21 grubba Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -325,6 +325,9 @@ dot	application/msword
 # application/x400-bp
 # application/sgml
 # application/cals-1840
+
+# ISO 26300 - Open Document Format (ODF)
+
 odb	application/vnd.oasis.opendocument.database
 odc	application/vnd.oasis.opendocument.chart
 odf	application/vnd.oasis.opendocument.formula
@@ -342,6 +345,8 @@ oti	application/vnd.oasis.opendocument.image-template
 otp	application/vnd.oasis.opendocument.presentation-template
 ots	application/vnd.oasis.opendocument.spreadsheet-template
 ott	application/vnd.oasis.opendocument.text-template
+
+oxt	application/vnd.openofficeorg.extension
 # application/pgp-encrypted
 # application/pgp-signature
 # application/pgp-keys
@@ -592,6 +597,18 @@ sxi	application/vnd.sun.xml.impress
 sti	application/vnd.sun.xml.impress.template
 sxg	application/vnd.sun.xml.writer.global
 sxm	application/vnd.sun.xml.math
+
+# Old Star Office
+
+sda	application/vnd.stardivision.draw
+sdc	application/vnd.stardivision.calc
+sdd	application/vnd.stardivision.impress
+sdp	application/vnd.stardivision.impress
+sds	application/vnd.stardivision.chart
+sdw	application/vnd.stardivision.writer
+sgl	application/vnd.stardivision.writer-global
+smf	application/vnd.stardivision.math
+vor	application/vnd.stardivision.writer
 
 # Other
 
