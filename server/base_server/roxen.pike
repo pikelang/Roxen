@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.970 2007/09/20 10:28:13 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.971 2007/10/11 11:48:45 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1116,8 +1116,16 @@ class BackgroundProcess
     if (self_refs < 4)
       error ("Minimum ref calculation wrong - have only %d refs.\n", self_refs);
 #endif
-    if (stopping || self_refs <= 4) return;
-    func (@args);
+    if (stopping || (self_refs <= 4) || !func) return;
+    mixed err = catch {
+	func (@args);
+      };
+    if (err) {
+      catch {
+	report_error(LOC_M(0, "Uncaught error in background process:") +
+		     "%s\n", describe_backtrace(err));
+      };
+    }
     background_run (period, repeat, func, args);
   }
 
@@ -4229,7 +4237,7 @@ int(0..1) invalidp(CacheKey key)
 //! Invalidate (mark as stale) a cache key.
 void invalidate(CacheKey key)
 {
-  if (!key) return;
+  if (invalidp(key)) return;
   catch {
     if (key->invalidate) {
       key->invalidate();
