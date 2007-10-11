@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.99 2007/10/05 07:34:07 marty Exp $
+// $Id: module.pmod,v 1.100 2007/10/11 15:32:25 mathias Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -888,6 +888,8 @@ class String
 
   string render_form( RequestID id, void|mapping additional_args )
   {
+    additional_args = additional_args || ([]);
+    additional_args->type="string";
     return input(path(), (string)query(), width, additional_args);
   }
 }
