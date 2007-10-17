@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.22 2006/11/08 10:03:16 mast Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.23 2007/10/17 09:23:28 erikd Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -293,7 +293,7 @@ string status()
 
 void set_entities(RXML.Context c)
 {
-  c->add_scope("calendar", TimeRangeValue(calendar->Second(c->id->time),
+  c->add_scope("calendar", TimeRangeValue(calendar->Second(time(1)),
 					  "second", ""));
 }
 
@@ -301,11 +301,32 @@ void set_entities(RXML.Context c)
 //! such as scope.year.is-leap-year and friends) and an RXML.Value for
 //! the leaves of all such entities (as well as the one-dot variables,
 //! for example scope.julian-day).
-class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
+class TimeRangeValue(Calendar.TimeRange _time,	// the time object we represent
 		     string type,		// its type ("second"..."year")
-		     string parent_scope)	// e g "" or "calendar.next"
+		     string parent_scope,       // e g "" or "calendar.next"
+		     string|void lang           // e.g. "sv" the language...
+		     )
 {
   inherit RXML.Scope;
+
+  constant is_RXML_encodable = 1;
+
+  array(int|string) _encode()
+  {
+    array(int|string) a = ({ _time->unix_time(), _time->calendar()->calendar_name(),
+			     type, _time->timezone()->zoneid, parent_scope,
+			     lang||query("language") });
+    return a;
+  }
+
+  void _decode( array(int|string) a )
+  {
+    [int t, string cal_name, string type, string tz, parent_scope, lang] = a;
+    Calendar.TimeRange cal = Calendar[cal_name||"ISO"]["Second"](t);
+    if(tz && sizeof(tz))
+      cal = cal->set_timezone(tz);
+    cal->set_language(lang);
+  }
 
   //! Once we have the string pointing out the correct time object
   //! method, this method calls it from the @code{time@} object and
@@ -331,13 +352,13 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
     else if(sscanf(calendar_method, "q:%s", calendar_method))
       result = query(calendar_method);
     else if(sscanf(calendar_method, "p:%s", calendar_method))
-      result = time[ calendar_method ]() ? "yes" : "no";
+      result = _time[ calendar_method ]() ? "yes" : "no";
     else if(sscanf(calendar_method, "%s:%s", calendar_method, format_string))
-      result = sprintf(format_string, time[ calendar_method ]());
+      result = sprintf(format_string, _time[ calendar_method ]());
     else if(calendar_method == "number_of_days")
-      result = (string)time->month()->number_of_days();
+      result = (string)_time->month()->number_of_days();
     else {
-      result = (string)time[ calendar_method ]();
+      result = (string)_time[ calendar_method ]();
     }
     if(want_type && want_type != RXML.t_text)
       result = want_type->encode( result );
@@ -374,7 +395,7 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
   {
     DEBUG("%O->`[](var %O, ctx %O, scope %O, type %O)\b",
 	  this_object(), var, ctx, scope, want_type);
-    RequestID id = ctx->id; NOCACHE();
+    RequestID id = ctx->id;
 
     // If we further down decide on creating a new TimeRangeValue, this will
     // be its parent_scope name; let's memorize instead of reconstruct it:
@@ -395,8 +416,8 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
     //report_debug("scope: %O, var: %O, what: %t\n", scope, var, what);
     if(functionp( what )) // it's a temporal method to render us a new TimeRange
     {
-      //report_debug("was: %O became: %O\n", time, what(time));
-      object result = TimeRangeValue(what(time), type, child_scope);
+      //report_debug("was: %O became: %O\n", _time, what(time));
+      object result = TimeRangeValue(what(_time), type, child_scope, lang);
       DEBUG("\b => new %O\n", result);
       return result;
     }
@@ -415,7 +436,7 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
   {
     DEBUG("%O->rxml_var_eval(ctx %O, var %O, scope %O, type %O)\b",
 	  this_object(), ctx, var, scope, want_type);
-    RequestID id = ctx->id; NOCACHE();
+    RequestID id = ctx->id;
 
     // Just as in `[], we might have arrived via some parent. In the specific
     // case that we arrived via `[], and got called with the same parameters as
@@ -464,7 +485,7 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
       case 't': return sprintf("TimeRangeValue(%s)", type);
       case 'O':
       default:
-	return sprintf("TimeRangeValue(%O/%O)", time, parent_scope);
+	return sprintf("TimeRangeValue(%O/%O)", _time, parent_scope);
     }
   }
 }
@@ -673,11 +694,14 @@ class TagEmitTimeRange
     else
       range = get_date("", args, cal) || cal->Second();
 
+    string lang;
     if(what = m_delete(args, "output-timezone"))
       range = range->set_timezone( what );
 
-    if(what = m_delete(args, "language"))
+    if(what = m_delete(args, "language")) {
       range = range->set_language( what );
+      lang = what;
+    }
 
     array(Calendar.TimeRange) dataset;
     if(output_unit)
@@ -776,8 +800,7 @@ class TagEmitTimeRange
     RXML.Tag emit = id->conf->rxml_tag_set->get_tag("emit");
     args = args - emit->req_arg_types - emit->opt_arg_types;
     if(sizeof( args ))
-      RXML.parse_error(sprintf("Unknown attribute%s %s (or maybe missing "
-			       "unit/query/plugin attribute?).\n",
+      RXML.parse_error(sprintf("Unknown attribute%s %s.\n",
 			       (sizeof(args)==1 ? "" : "s"),
 			       String.implode_nicely(indices(args))));
 #endif
@@ -791,23 +814,23 @@ class TagEmitTimeRange
         if(arrayp(dset[i]))
           {
             //werror(sprintf("dset[%O][0]: %O\n",i,dset[i][0]));
-            res += ({ scopify(dset[i][0], output_unit) + dset[i][1] });
+            res += ({ scopify(dset[i][0], output_unit, 0, lang) + dset[i][1] });
             //werror(sprintf("dset[%O][1]: %O\n",i,dset[i..]));
           }
         else
-          res += ({ scopify(dset[i], output_unit) });
+          res += ({ scopify(dset[i], output_unit, 0, lang) });
       }
   }
   else
-    res = map(dataset, scopify, output_unit);
+    res = map(dataset, scopify, output_unit, 0, lang);
   // DEBUG("\b => %O\n", res);
   return res;
   }
 }
 
-mapping scopify(Calendar.TimeRange time, string unit, string|void parent_scope)
+mapping scopify(Calendar.TimeRange time, string unit, string|void parent_scope, string|void lang)
 {
-  TimeRangeValue value = TimeRangeValue(time, unit, parent_scope || "");
+  TimeRangeValue value = TimeRangeValue(time, unit, parent_scope || "", lang);
   return mkmapping(indices( layout ),
 		   allocate(sizeof( layout ), value));
 }
