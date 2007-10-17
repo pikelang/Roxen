@@ -25,6 +25,7 @@ remove_all()
     rm -rf /var/run/roxen
     rm -rf /Applications/Roxen
     rm -rf /Library/StartupItems/Roxen
+    rm -rf /Library/Receipts/Roxen*
     grep -v ROXEN= /etc/hostconfig >/tmp/hostconfig."$$" && mv /tmp/hostconfig."$$" /etc/hostconfig
 }
 
