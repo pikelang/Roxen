@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.220 2007/01/03 12:31:37 wellhard Exp $
+// $Id: Roxen.pmod,v 1.221 2007/10/18 11:32:50 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2173,6 +2173,29 @@ string get_modfullname (RoxenModule module)
   else return 0;
 }
 
+static constant xml_invalids = ((string)({
+   0,  1,  2,  3,  4,  5,  6,  7,
+   8,         11, 12,     14, 15,
+  16, 17, 18, 19, 20, 21, 22, 23,
+  24, 25, 26, 27, 28, 29, 30, 31,
+      127
+}))/"";
+
+static constant xml_printables = ((string)({
+  0x2400, 0x2401, 0x2402, 0x2403, 0x2404, 0x2405, 0x2406, 0x2407,
+  0x2408,                 0x240b, 0x240c,         0x240e, 0x240f,
+  0x2410, 0x2411, 0x2412, 0x2413, 0x2414, 0x2415, 0x2416, 0x2417,
+  0x2418, 0x2419, 0x241a, 0x241b, 0x241c, 0x241d, 0x241e, 0x241f,
+          0x2421,
+}))/"";
+
+string encode_xml_invalids(string s)
+//! Remap control characters not valid in XML-documents to their
+//! corresponding printable code points (@tt{U2400 - U2421@}).
+{
+  return replace(s, xml_invalids, xml_printables);
+}
+
 //! Encode a single segment of @[roxen_encode()].
 //!
 //! See @[roxen_encode()] for details.
@@ -2217,6 +2240,11 @@ static string low_roxen_encode(string val, string encoding)
 
    case "html":
      return html_encode_string (val);
+
+   case "invalids":
+   case "xmlinvalids":
+   case "xml-invalids":
+     return encode_xml_invalids(val);
 
    case "wml":
      return replace(html_encode_string(val), "$", "$$");
