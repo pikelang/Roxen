@@ -7,6 +7,7 @@
   <var name='roxen_test#0'>      <int>1</int> </var>
   <var name='rxmlparse#0'>       <int>1</int> </var>
   <var name='rxmltags#0'>        <int>1</int> </var>
+  <var name='emit_timerange#0'>  <int>1</int> </var>
 </region>
 
 <region name='contenttypes#0'>
