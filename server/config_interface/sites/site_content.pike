@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.148 2007/05/09 16:16:05 grubba Exp $
+// $Id: site_content.pike,v 1.149 2007/10/19 15:12:00 grubba Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -252,7 +252,7 @@ string buttons( Configuration c, string mn, RequestID id )
   return buttons;
 }
 
-string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
+string get_eventlog(RoxenModule o, RequestID id, int|void no_links )
 {
   mapping log = o->error_log;
   if(!sizeof(log)) return "";
@@ -273,6 +273,79 @@ string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
 	      sizeof( report )-999 );
 
   return "<h3>"+LOCALE(216, "Events")+"</h3>" + (report[..1000]*"");
+}
+
+string get_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
+{
+  if (!o->query_snmp_mib) return "";
+
+  Configuration conf = o->my_configuration();
+
+  // NOTE: Duplicates code in configuration.pike:call_low_start_callbacks()!
+  array(int) segment = conf->generate_module_oid_segment(o);
+  array(int) oid_prefix =
+    conf->query_oid() + ({ 8, 2 }) + segment[..sizeof(segment)-2];
+  array(int) oid_suffix = ({ conf->query("snmp_site_id"), segment[-1] });
+
+  ADT.Trie mib = ADT.Trie();
+
+  mib->merge(o->query_snmp_mib(oid_prefix, oid_suffix));
+
+  mib->merge(conf->generate_module_mib(conf->query_oid() + ({ 8, 1 }),
+				       oid_suffix[..0],
+				       o, moduleinfo, UNDEFINED));
+
+  array(string) res = ({
+    "<th align='left'>Name</th>"
+    "<th align='left'>Value</th>"
+    "<th align='left'>OID</th>",
+  });
+
+  for (array(int) oid = mib->first(); oid; oid = mib->next(oid)) {
+    string oid_string = ((array(string)) oid) * ".";
+    string name = "";
+    string doc = "";
+    mixed val = "";
+    mixed err = catch {
+	val = mib->lookup(oid);
+	if (zero_type(val)) continue;
+	if (objectp(val)) {
+	  if (val->update_value) {
+	    val->update_value();
+	  }
+	  name = val->name || "";
+	  doc = val->doc || "";
+	  val = val->value;
+	}
+	val = (string)val;
+      };
+    if (err) {
+      name = "Error";
+      val = "";
+      doc = "<tt>" +
+	replace(Roxen.html_encode_string(describe_backtrace(err)),
+		"\n", "<br />\n") +
+	"</tt>";
+    }
+    res += ({
+	sprintf("<td><b>%s:</b></td>"
+		"<td>%s</td>"
+		"<td><font size='-1'>%s</font></td>",
+		Roxen.html_encode_string(name),
+		Roxen.html_encode_string(val),
+		oid_string),
+    });
+    if (sizeof(doc)) {
+      res += ({
+	sprintf("<td></td><td colspan='2'><font size='-1'>%s</font></td>", doc),
+      });
+    }
+  }
+
+  return "<h3>SNMP</h3>\n"
+    "<table><tr>" +
+    res * "</tr>\n<tr>" +
+    "</tr></table>\n";
 }
 
 #define EC(X) niceerror( lambda(){ return (X); } , #X)
@@ -314,6 +387,8 @@ string find_module_doc( string cn, string mn, RequestID id )
     return "";
 
   ModuleInfo mi = roxen.find_module( (mn/"!")[0] );
+
+  string snmp = get_snmp(m, mi, id);
 
   string eventlog = get_eventlog( m, id );
 
@@ -363,7 +438,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 	     + "</h2></b>"
                   + EC(TRANSLATE(m->info(id)||"")) + "</p><p>"
                   + EC(TRANSLATE(m->status()||"")) + "</p><p>"
-                  + dbuttons + eventlog +
+                  + snmp + dbuttons + eventlog +
                   ( config_setting( "devel_mode" ) ?
 		    "<br clear='all' />\n"
 		    "<h3>Developer information</h3>"
