@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.149 2007/10/19 15:12:00 grubba Exp $
+// $Id: site_content.pike,v 1.150 2007/10/22 12:54:28 grubba Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -438,7 +438,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 	     + "</h2></b>"
                   + EC(TRANSLATE(m->info(id)||"")) + "</p><p>"
                   + EC(TRANSLATE(m->status()||"")) + "</p><p>"
-                  + snmp + dbuttons + eventlog +
+                  + dbuttons + snmp + eventlog +
                   ( config_setting( "devel_mode" ) ?
 		    "<br clear='all' />\n"
 		    "<h3>Developer information</h3>"
