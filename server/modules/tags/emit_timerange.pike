@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.24 2007/10/17 08:30:08 erikd Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.25 2007/10/22 20:56:36 erikd Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -301,7 +301,7 @@ void set_entities(RXML.Context c)
 //! such as scope.year.is-leap-year and friends) and an RXML.Value for
 //! the leaves of all such entities (as well as the one-dot variables,
 //! for example scope.julian-day).
-class TimeRangeValue(Calendar.TimeRange _time,	// the time object we represent
+class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
 		     string type,		// its type ("second"..."year")
 		     string parent_scope,       // e g "" or "calendar.next"
 		     string|void lang           // e.g. "sv" the language...
@@ -313,8 +313,8 @@ class TimeRangeValue(Calendar.TimeRange _time,	// the time object we represent
 
   array(int|string) _encode()
   {
-    array(int|string) a = ({ _time->unix_time(), _time->calendar()->calendar_name(),
-			     type, _time->timezone()->zoneid, parent_scope,
+    array(int|string) a = ({ time->unix_time(), time->calendar()->calendar_name(),
+			     type, time->timezone()->zoneid, parent_scope,
 			     lang||query("language") });
     return a;
   }
@@ -352,13 +352,13 @@ class TimeRangeValue(Calendar.TimeRange _time,	// the time object we represent
     else if(sscanf(calendar_method, "q:%s", calendar_method))
       result = query(calendar_method);
     else if(sscanf(calendar_method, "p:%s", calendar_method))
-      result = _time[ calendar_method ]() ? "yes" : "no";
+      result = time[ calendar_method ]() ? "yes" : "no";
     else if(sscanf(calendar_method, "%s:%s", calendar_method, format_string))
-      result = sprintf(format_string, _time[ calendar_method ]());
+      result = sprintf(format_string, time[ calendar_method ]());
     else if(calendar_method == "number_of_days")
-      result = (string)_time->month()->number_of_days();
+      result = (string)time->month()->number_of_days();
     else {
-      result = (string)_time[ calendar_method ]();
+      result = (string)time[ calendar_method ]();
     }
     if(want_type && want_type != RXML.t_text)
       result = want_type->encode( result );
@@ -395,7 +395,7 @@ class TimeRangeValue(Calendar.TimeRange _time,	// the time object we represent
   {
     DEBUG("%O->`[](var %O, ctx %O, scope %O, type %O)\b",
 	  this_object(), var, ctx, scope, want_type);
-    RequestID id = ctx->id;
+    RequestID id = ctx->id; NOCACHE();
 
     // If we further down decide on creating a new TimeRangeValue, this will
     // be its parent_scope name; let's memorize instead of reconstruct it:
@@ -416,8 +416,8 @@ class TimeRangeValue(Calendar.TimeRange _time,	// the time object we represent
     //report_debug("scope: %O, var: %O, what: %t\n", scope, var, what);
     if(functionp( what )) // it's a temporal method to render us a new TimeRange
     {
-      //report_debug("was: %O became: %O\n", _time, what(time));
-      object result = TimeRangeValue(what(_time), type, child_scope, lang);
+      //report_debug("was: %O became: %O\n", time, what(time));
+      object result = TimeRangeValue(what(time), type, child_scope, lang);
       DEBUG("\b => new %O\n", result);
       return result;
     }
@@ -436,7 +436,7 @@ class TimeRangeValue(Calendar.TimeRange _time,	// the time object we represent
   {
     DEBUG("%O->rxml_var_eval(ctx %O, var %O, scope %O, type %O)\b",
 	  this_object(), ctx, var, scope, want_type);
-    RequestID id = ctx->id;
+    RequestID id = ctx->id; NOCACHE();
 
     // Just as in `[], we might have arrived via some parent. In the specific
     // case that we arrived via `[], and got called with the same parameters as
@@ -485,7 +485,7 @@ class TimeRangeValue(Calendar.TimeRange _time,	// the time object we represent
       case 't': return sprintf("TimeRangeValue(%s)", type);
       case 'O':
       default:
-	return sprintf("TimeRangeValue(%O/%O)", _time, parent_scope);
+	return sprintf("TimeRangeValue(%O/%O)", time, parent_scope);
     }
   }
 }
