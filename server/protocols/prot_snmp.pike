@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2007, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.4 2007/10/23 13:53:52 grubba Exp $
+ * $Id: prot_snmp.pike,v 2.5 2007/10/23 14:10:45 grubba Exp $
  *
  * SNMP protocol support.
  *
@@ -96,7 +96,7 @@ class SystemMIB
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.4 $"/" ")[1],
+			   ("$Revision: 2.5 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
@@ -627,6 +627,13 @@ static void create( mixed ... args )
 #if constant(roxen.set_up_snmp_variables)
   roxen.set_up_snmp_variables( this_object() );
 #else
+
+#define TYPE_STRING            1
+#define TYPE_FILE              2
+#define TYPE_INT               3
+#define TYPE_DIR               4
+#define TYPE_STRING_LIST       5
+
   defvar("snmp_community", ({"public:ro"}), "Community string",
          TYPE_STRING_LIST,
          "One community name per line. Default permissions are 'read-only'. "
