@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2007, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.3 2007/09/14 11:23:37 grubba Exp $
+ * $Id: prot_snmp.pike,v 2.4 2007/10/23 13:53:52 grubba Exp $
  *
  * SNMP protocol support.
  *
@@ -96,7 +96,7 @@ class SystemMIB
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.3 $"/" ")[1],
+			   ("$Revision: 2.4 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
@@ -209,10 +209,86 @@ class SNMPMIB
   }
 }
 
+class RoxenGlobalMIB
+{
+  inherit SNMP.SimpleMIB;
+
+  // Global information.
+
+  static void create()
+  {
+    ::create(SNMP.RIS_OID_WEBSERVER + ({ 1 }), ({}),
+	     ({
+	       UNDEFINED,
+	       UNDEFINED,	/* restart */
+	       SNMP.Integer(lambda() {
+			      return sizeof(roxen->configurations);
+			    }, "vsCount"),
+	       UNDEFINED,	/* Reserved for DBManager (see below). */
+	     }));
+  }
+}
+
+class DBManagerMIB
+{
+  inherit SNMP.SimpleMIB;
+
+  // DBManager information.
+
+  int db_status(string pattern)
+  {
+    Sql.Sql sql = connect_to_my_mysql(0, "mysql");
+    if (!sql) return 0;
+    array(mapping(string:string)) res =
+      sql->query("SHOW STATUS LIKE %s", pattern);
+    if (!res || !sizeof(res)) return 0;
+    return (int)(res[0]->Value || res[0]->value);
+  }
+
+  static void create()
+  {
+    ::create(SNMP.RIS_OID_WEBSERVER + ({ 1, 3 }), ({}),
+	     ({
+	       UNDEFINED,
+	       SNMP.String(lambda() {
+			     Sql.Sql sql = connect_to_my_mysql(0, "mysql");
+			     if (!sql) return "";
+			     return sql->master_sql->server_info() || "";
+			   }, "serverVersion"),
+	       SNMP.String(lambda() {
+			     Sql.Sql sql = connect_to_my_mysql(0, "mysql");
+			     if (!sql) return "";
+			     return sql->master_sql->host_info() || "";
+			   }, "connectionType"),
+	       SNMP.Integer(lambda() {
+			      Sql.Sql sql = connect_to_my_mysql(0, "mysql");
+			      return sql && sql->master_sql->protocol_info();
+			    }, "protocolVersion"),
+	       SNMP.Tick(lambda() {
+			   return db_status("Uptime")*100;
+			 }, "numQueries"),
+	       SNMP.Gauge(lambda() {
+			    return db_status("Threads_connected");
+			  }, "numThreads"),
+	       SNMP.Gauge(lambda() {
+			    return db_status("Threads_running");
+			  }, "numActiveThreads"),
+	       SNMP.Counter(lambda() {
+			      return db_status("Questions");
+			    }, "numQueries"),
+	       SNMP.Counter(lambda() {
+			      return db_status("Slow_queries");
+			    }, "numSlowQueries"),
+	     }));
+  }
+}
+
 static void setup_mib()
 {
   mib->merge(SystemMIB());
   mib->merge(SNMPMIB());
+  mib->merge(RoxenGlobalMIB());
+  mib->merge(DBManagerMIB());
 }
 
 #define SNMP_OP_GETREQUEST	0
