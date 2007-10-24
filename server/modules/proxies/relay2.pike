@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.36 2007/03/29 16:21:08 jonasw Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.37 2007/10/24 13:06:42 erikd Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -417,9 +417,15 @@ void create( Configuration c )
 	    "headers will be exactly those sent by the remote server, and this "
 	    "only works for http clients. Less memory is used, however.</p><p>"
 
-            "For <b>EXTENSION</b> and <b>LOCATION</b>, the URL path+query "
+	    "For <b>EXTENSION</b> and <b>LOCATION</b>, the URL path+query "
 	    "components (<b>location</b> part trimmed off) is appended to the "
 	    "<b>url-prefix</b> specified; no replacing is done.</p><p>"
+
+	    "Note that /login.xml is a submatch in itself, it will match all paths containing /login.xml, "
+	    "since /login.xml will be translated to /login.xml(.*) and therefore "
+	    "will match /login.xml, /foo/login.xml, /bar/foo/login.xml and /login.xml?x=3"
+	    "Changing the pattern to ^/login.xml will make it only match /login.xml and anything "
+	    "after /login.xml - e.g. /login.xml?x=2&amp;y=34.</p><p>"
 
             "If <b>LAST</b> is specified, the match is only tried if Roxen "
             "fails to find a file (a 404 error). If <b>rewrite</b> is "
