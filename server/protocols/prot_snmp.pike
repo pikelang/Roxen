@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2007, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.5 2007/10/23 14:10:45 grubba Exp $
+ * $Id: prot_snmp.pike,v 2.6 2007/10/24 12:33:44 grubba Exp $
  *
  * SNMP protocol support.
  *
@@ -96,7 +96,7 @@ class SystemMIB
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.5 $"/" ")[1],
+			   ("$Revision: 2.6 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
@@ -266,7 +266,7 @@ class DBManagerMIB
 			    }, "protocolVersion"),
 	       SNMP.Tick(lambda() {
 			   return db_status("Uptime")*100;
-			 }, "numQueries"),
+			 }, "uptime"),
 	       SNMP.Gauge(lambda() {
 			    return db_status("Threads_connected");
 			  }, "numThreads"),
