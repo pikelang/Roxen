@@ -1,7 +1,7 @@
 //
 // SNMP helper stuff.
 //
-// $Id: SNMP.pmod,v 1.6 2007/10/25 12:53:46 grubba Exp $
+// $Id: SNMP.pmod,v 1.7 2007/10/25 13:20:13 grubba Exp $
 //
 // 2007-08-29 Henrik Grubbström
 //
@@ -27,7 +27,18 @@ class Updateable(function(:mixed) fun)
   void update_value()
   {
     if (fun) {
-      this_object()->value = fun();
+      mixed val = fun();
+      if (
+#if __VERSION__ < 7.6
+	  intp(val)
+#else
+	  0
+#endif
+	  ) {
+	this_object()->value = Gmp.mpz(val);
+      } else {
+	this_object()->value = val;
+      }
       this_object()->der = UNDEFINED;
     }
   }
@@ -189,7 +200,7 @@ class Tick
   static string _sprintf(int t)
   {
     if (t == 's') {
-      return Roxen.short_date(time(1) + value/100);
+      return Roxen.short_date(time(1) + ((int)value)/100);
     }
     return ::_sprintf(t);
   }
