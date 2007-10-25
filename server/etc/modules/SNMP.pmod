@@ -1,7 +1,7 @@
 //
 // SNMP helper stuff.
 //
-// $Id: SNMP.pmod,v 1.5 2007/10/25 12:43:44 grubba Exp $
+// $Id: SNMP.pmod,v 1.6 2007/10/25 12:53:46 grubba Exp $
 //
 // 2007-08-29 Henrik Grubbström
 //
@@ -56,8 +56,10 @@ class app_integer
   }
   static string _sprintf(int t)
   {
-    if (t == 's') return (string)value;
-    return ::_sprintf(t);
+    switch(t) {
+    case 's': return (string)value;
+    default: return sprintf("%s[%d][%d](%O)", type_name, cls, tag, value);
+    }
   }
 }
 
@@ -82,8 +84,10 @@ class app_octet_string
   }
   static string _sprintf(int t)
   {
-    if (t == 's') return value;
-    return ::_sprintf(t);
+    switch(t) {
+    case 's': return (string)value;
+    default: return sprintf("%s[%d][%d](%O)", type_name, cls, tag, value);
+    }
   }
 }
 
@@ -99,10 +103,12 @@ class OID
   }
   static string _sprintf(int t)
   {
-    if (t == 's') {
-      return ((array(string))id) * ".";
+    switch(t) {
+    case 's': return ((array(string))id) * ".";
+    default: return sprintf("%s[%d][%d](%O)",
+			    type_name, cls, tag,
+			    ((array(string))id) * ".");
     }
-    return ::_sprintf(t);
   }
 }
 
@@ -125,10 +131,11 @@ class Integer
   }
   static string _sprintf(int t)
   {
-    if (t == 's' || t == 'd') {
-      return (string)value;
+    switch(t) {
+    case 'd':
+    case 's': return (string)value;
+    default: return sprintf("%s[%d][%d](%O)", type_name, cls, tag, value);
     }
-    return ::_sprintf(t);
   }
 }
 
@@ -151,10 +158,11 @@ class String
   }
   static string _sprintf(int t)
   {
-    if (t == 's') {
-      return value;
+    switch(t) {
+    case 's': return (string)value;
+    default: return sprintf("%s[%d][%d](%O)",
+			    type_name, cls, tag, (string)value);
     }
-    return ::_sprintf(t);
   }
 }
 
@@ -180,9 +188,6 @@ class Tick
   constant type_name = "TICK";
   static string _sprintf(int t)
   {
-    if (t == 'd') {
-      return (string)value;
-    }
     if (t == 's') {
       return Roxen.short_date(time(1) + value/100);
     }
