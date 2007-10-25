@@ -1,7 +1,7 @@
 //
 // SNMP helper stuff.
 //
-// $Id: SNMP.pmod,v 1.4 2007/09/14 11:23:37 grubba Exp $
+// $Id: SNMP.pmod,v 1.5 2007/10/25 12:43:44 grubba Exp $
 //
 // 2007-08-29 Henrik Grubbström
 //
@@ -50,9 +50,14 @@ class app_integer
       integer::create(val);
     } else {
       update::create(val);
-      integer::create(val());
+      integer::create(0);
     }
     doc::create(name, doc_string);
+  }
+  static string _sprintf(int t)
+  {
+    if (t == 's') return (string)value;
+    return ::_sprintf(t);
   }
 }
 
@@ -71,9 +76,14 @@ class app_octet_string
       octet_string::create(val);
     } else {
       update::create(val);
-      octet_string::create(val());
+      octet_string::create("");
     }
     doc::create(name, doc_string);
+  }
+  static string _sprintf(int t)
+  {
+    if (t == 's') return value;
+    return ::_sprintf(t);
   }
 }
 
@@ -86,6 +96,13 @@ class OID
   {
     identifier::create(@oid);
     doc::create(name, doc_string);
+  }
+  static string _sprintf(int t)
+  {
+    if (t == 's') {
+      return ((array(string))id) * ".";
+    }
+    return ::_sprintf(t);
   }
 }
 
@@ -102,9 +119,16 @@ class Integer
       integer::create(val);
     } else {
       update::create(val);
-      integer::create(val());
+      integer::create(0);
     }
     doc::create(name, doc_string);
+  }
+  static string _sprintf(int t)
+  {
+    if (t == 's' || t == 'd') {
+      return (string)value;
+    }
+    return ::_sprintf(t);
   }
 }
 
@@ -121,9 +145,16 @@ class String
       octet_string::create(val);
     } else {
       update::create(val);
-      octet_string::create(val());
+      octet_string::create("");
     }
     doc::create(name, doc_string);
+  }
+  static string _sprintf(int t)
+  {
+    if (t == 's') {
+      return value;
+    }
+    return ::_sprintf(t);
   }
 }
 
@@ -141,11 +172,22 @@ class Gauge
   constant type_name = "GAUGE";
 }
 
+//! One tick is 1/100 seconds.
 class Tick
 {
   inherit app_integer;
   constant tag = 3;
   constant type_name = "TICK";
+  static string _sprintf(int t)
+  {
+    if (t == 'd') {
+      return (string)value;
+    }
+    if (t == 's') {
+      return Roxen.short_date(time(1) + value/100);
+    }
+    return ::_sprintf(t);
+  }
 }
 
 class Opaque
@@ -153,6 +195,11 @@ class Opaque
   inherit app_octet_string;
   constant tag = 4;
   constant type_name = "OPAQUE";
+  static string _sprintf(int t)
+  {
+    if (t == 's') return "";
+    return ::_sprintf(t);
+  }
 }
 
 class Counter64
@@ -203,3 +250,108 @@ class SimpleMIB
     return res;
   }
 }
+
+#if 0	// Not ready for production yet.
+
+class Describer(string symbol)
+{
+}
+
+class IndexDescriber
+{
+  inherit Describer;
+  constant is_index = "int";
+}
+
+class StringIndexDescriber
+{
+  inherit Describer;
+  constant is_index = "string";
+}
+
+class IndexedDescriber
+{
+  inherit Describer;
+  constant index = "int";
+}
+
+class StringIndexedDescriber
+{
+  inherit Describer;
+  constant index = "string";
+}
+
+ADT.Trie OID_ParseInfo = ADT.Trie();
+
+void add_oid_path(array(int) oid, string symbolic_oid)
+{
+  int i;
+  foreach(symbolic_oid/".", string symbol) {
+    if (i >= sizeof(oid)) return;
+    if (sizeof(symbol)) {
+      if (symbol[0] == '"') {
+	OID_ParseInfo->insert(oid[..i], StringDescriber(symbol));
+	i += oid[i];
+      } else {
+	OID_ParseInfo->insert(oid[..i], Describer(symbol));
+      }
+    }
+    i++;
+  }
+}
+
+string format_oid(array(int) oid)
+{
+  ADT.Trie parse_info = OID_ParseInfo;
+  
+  int i;
+  array(IndexDescriber) indexers = ({});
+  array(string) res = ({});
+  for (i=0; i < sizeof(oid); i++) {
+    int j = i;
+    while(i < parse_info->offset) {
+      if (oid[i] != parse_info->path[i]) {
+	i = j;
+	break;
+      }
+      i++;
+    }
+    if (i < parse_info->offset) break;
+    Describer desc = parse_info->value;
+    switch(desc && desc->is_index) {
+    case "string":
+      if (i + oid[i] < sizeof(oid)) {
+	res += ({ sprintf("%O", (string)oid[i+1..i+oid[i]]) });
+	i += oid[i];
+	break;
+      }
+      res += ({ (string)oid[i] });
+      break;
+    case 0:
+      if (desc->symbol) {
+	res += desc->symbol;
+	break;
+      }
+    case "int":
+    default:
+      res += ({ (string)oid[i] });
+    }
+    if (desc && desc->index) {
+      indexers += ({ desc });
+    }
+    while (parse_info && parse_info->offset < i) {
+      parse_info = parse_info->trie[oid[parse_info->offset]];
+    }
+    if (parse_info) break;
+  }
+  return res * ".";
+}
+
+static void create()
+{
+  add_oid_path(RIS_OID_WEBSERVER,
+	       "iso.organizations.dod.internet.private."
+	       "enterprises.roxenis.app.webserver");
+}
+
+#endif /* 0 */
