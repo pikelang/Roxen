@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.150 2007/10/22 12:54:28 grubba Exp $
+// $Id: site_content.pike,v 1.151 2007/10/25 13:14:49 grubba Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -315,7 +315,7 @@ string get_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
 	  }
 	  name = val->name || "";
 	  doc = val->doc || "";
-	  val = val->value;
+	  val = sprintf("%s", val);
 	}
 	val = (string)val;
       };
