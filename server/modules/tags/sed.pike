@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
+// This is a roxen module. Copyright Â© 1996 - 2004, Roxen IS.
 // by Mirar <mirar@roxen.com>
 
 // Adds the <sed> tag, to emulate a subset of sed operations in rxml
@@ -36,7 +36,7 @@
 //
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.16 2005/12/09 20:59:12 grubba Exp $";
+constant cvs_version = "$Id: sed.pike,v 1.17 2007/10/26 15:06:52 mathias Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -371,3 +371,77 @@ string container_sed(string tag,mapping m,string cont,object id)
 
    return "";
 }
+
+
+TAGDOCUMENTATION;
+#ifdef manual
+constant tagdoc=([
+  "sed":({ #"<desc type='cont'><p><short>Adds the <tag>sed</tag> tag, to emulate a 
+  subset of sed operations in rxml.</short></desc>
+
+  <attr name='suppress'></attr>
+  <attr name='lines'></attr>
+  <attr name='chars'></attr>
+  <attr name='split' value='separator'></attr>
+  <attr name='append'></attr>
+  <attr name='prepend'></attr>
+
+  ", 
+       	   (["e":#"<desc type='cont'>
+	     <p>The edit command to apply to the input. It is possible to control
+	        which lines that will be affected by using 
+                <tag>e</tag>[<i>first line</i>],[<i>last line</i>][<i>command</i>]<tag>/e</tag>.
+                It is possible to use relative line numbers using '+' and '-' or 
+                using regexp by start and end the regexp with '/'</p>
+             <p>
+<ex>
+  <set variable=\"var.foo\">Foo. Foo. Foo. Foo. Foo. Foo. Foo.</set>
+
+  <sed split=\".\">
+    <source variable=\"var.foo\" />
+    <e>3,+3y/o/u/</e>
+  </sed>
+</ex>
+             </p>
+	     <list type=\"dl\">
+	       <item name='D'>Delete first line in space</item>
+	       <item name='G'>Insert hold space</item>
+	       <item name='H'>Append current space to hold space</item>
+	       <item name='P'>Print current data</item>
+	       <item name='a[<i style=\"font-weight: normal;\">string</i>]'>insert</item>
+	       <item name='c[<i style=\"font-weight: normal;\">string</i>]'>change current space</item>
+	       <item name='d'>Delete current space</item>
+	       <item name='h'>Copy current space to hold space</item>
+	       <item name='i[<i style=\"font-weight: normal;\">string</i>]'>Print string</item>
+	       <item name='l'>Print current space</item>
+	       <item name='p'>Print first line in data</item>
+	       <item name='q'>Quit evaluating</item>
+	       <item name='s/[<i style=\"font-weight: normal;\">regexp</i>]/[<i style=\"font-weight: normal;\">with</i>]/[<i style=\"font-weight: normal;\">x</i>]'>Replace</item>
+	       <item name='y/[<i style=\"font-weight: normal;\">chars</i>]/[<i style=\"font-weight: normal;\">chars</i>]/'>Replace chars
+	     </item></list></desc>
+	     
+	     <attr name='rxml'>Run through RXML parser before edit</attr>"
+	   ,
+	   "source":#"<desc type='cont'>Tells which source to read from if
+                        <tag>raw</tag> or <tag>rxml</tag>is not used. Must be 
+			either variable or cookie.</desc>
+
+			<attr name='variable' value='variable'></attr>
+			<attr name='cookie' value='cookie'></attr>
+			<attr name='rxml'>Run through RXML parser 
+			                  before edit</attr>",
+	   
+	   "destination":#"<desc type='cont'>Tells which destination to store 
+	                     the edited string if other than screen. Must be 
+			     either variable or cookie.</desc>
+
+			     <attr name='variable' value='variable'></attr>
+			     <attr name='cookie' value='cookie'></attr>",
+
+	   "raw":#"<desc type='cont'>Raw, unparsed data.</desc>",
+	   
+	   "rxml":#"<desc type='cont'>Data run through RXML parser before 
+                      edited. </desc>"]),
+  }),
+]);
+#endif
