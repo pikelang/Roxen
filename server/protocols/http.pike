@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.534 2007/10/01 12:29:00 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.535 2007/10/30 13:03:29 anders Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2450,7 +2450,7 @@ void got_data(mixed fooid, string s, void|int chained)
     }
     if (misc->host) {
       // Parse and canonicalize the host header.
-      misc->port = port_obj->port;
+      misc->port = port_obj->default_port;
       sscanf(lower_case(misc->host), "%[^:]:%d", misc->hostname, misc->port);
       misc->host = misc->hostname + ":" + misc->port;
     }
