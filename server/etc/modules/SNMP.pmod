@@ -1,7 +1,7 @@
 //
 // SNMP helper stuff.
 //
-// $Id: SNMP.pmod,v 1.8 2007/10/29 14:10:18 grubba Exp $
+// $Id: SNMP.pmod,v 1.9 2007/11/03 14:20:03 grubba Exp $
 //
 // 2007-08-29 Henrik Grubbström
 //
@@ -44,6 +44,12 @@ class Updateable(function(:mixed) fun)
   }
 }
 
+class OwnerInfo
+{
+  Configuration conf;
+  RoxenModule module;
+}
+
 // ASN1 datatypes.
 
 class app_integer
@@ -51,6 +57,7 @@ class app_integer
   inherit Standards.ASN1.Types.asn1_integer : integer;
   inherit Documentation : doc;
   inherit Updateable : update;
+  inherit OwnerInfo : owner_info;
   constant cls = 1;
   constant type_name = "APPLICATION INTEGER";
   constant tag = 0;
@@ -79,6 +86,7 @@ class app_octet_string
   inherit Standards.ASN1.Types.asn1_octet_string : octet_string;
   inherit Documentation : doc;
   inherit Updateable : update;
+  inherit OwnerInfo : owner_info;
   constant cls = 1;
   constant type_name = "APPLICATION OCTET_STRING";
   constant tag = 0;
@@ -106,6 +114,7 @@ class OID
 {
   inherit Standards.ASN1.Types.asn1_identifier : identifier;
   inherit Documentation : doc;
+  inherit OwnerInfo : owner_info;
   constant type_name = "OID";
   static void create(array(int) oid, string|void name, string|void doc_string)
   {
@@ -128,6 +137,7 @@ class Integer
   inherit Standards.ASN1.Types.asn1_integer : integer;
   inherit Documentation : doc;
   inherit Updateable : update;
+  inherit OwnerInfo : owner_info;
   constant type_name = "INTEGER";
   static void create(int|function(:int) val, string|void name, string|void doc_string)
   {
@@ -155,6 +165,7 @@ class String
   inherit Standards.ASN1.Types.asn1_octet_string : octet_string;
   inherit Documentation : doc;
   inherit Updateable : update;
+  inherit OwnerInfo : owner_info;
   constant type_name = "STRING";
   static void create(string|function(:string) val, string|void name, string|void doc_string)
   {
@@ -264,6 +275,34 @@ class SimpleMIB
     if (zero_type(res)) return UNDEFINED;
     if (functionp(res)) return res();
     return res;
+  }
+}
+
+void set_owner(ADT.Trie mib, Configuration conf, RoxenModule|void module)
+{
+  array(int) oid = mib->first();
+  while (oid) {
+    Standards.ASN1.Types.Object o = mib->lookup(oid);
+    catch {
+      o->conf = conf;
+      if (module) {
+	o->module = module;
+      }
+    };
+    oid = mib->next(oid);
+  }
+}
+
+void remove_owned(ADT.Trie mib, Configuration conf, RoxenModule|void module)
+{
+  array(int) oid = mib->first();
+  while(oid) {
+    Standards.ASN1.Types.Object o = mib->lookup(oid);
+    if (objectp(o) && (o->conf == conf) &&
+	(!module || (o->module == module))) {
+      mib->remove(oid);
+    }
+    oid = mib->next(oid);
   }
 }
 
