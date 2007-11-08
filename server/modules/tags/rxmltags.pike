@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.539 2007/09/20 15:07:07 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.540 2007/11/08 16:18:47 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6139,6 +6139,20 @@ constant tagdoc=([
  this scope.
 </p></desc>",
 
+"&roxen.auto-charset-value;":#"<desc type='entity'><p>
+ The value of the URL variable which is inserted by
+ <tag>roxen-automatic-charset-variable</tag>. Can be used together with
+ <ent>roxen.auto-charset-variable</ent> in custom links when you want Roxen
+ to automatically detect the character set in the URL.
+</p></desc>",
+
+"&roxen.auto-charset-variable;":#"<desc type='entity'><p>
+ The name of the URL variable which is inserted by
+ <tag>roxen-automatic-charset-variable</tag>. Can be used together with
+ <ent>roxen.auto-charset-value</ent> in custom links when you want Roxen
+ to automatically detect the character set in the URL.
+</p></desc>",
+
 "&roxen.domain;":#"<desc type='entity'><p>
  The domain name of this site. The information is taken from the
  client request, so a request to \"http://community.roxen.com/\" would
@@ -6475,6 +6489,9 @@ constant tagdoc=([
   Mail: <input name='mail'/><br />
   <input type='submit'/>
 </form></ex-box>
+
+<p>See also <ent>roxen.auto-charset-variable</ent> and
+  <ent>roxen.auto-charset-value</ent>.</p>
 </desc>",
 
 //----------------------------------------------------------------------

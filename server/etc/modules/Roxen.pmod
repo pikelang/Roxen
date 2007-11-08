@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.227 2007/10/18 09:13:13 grubba Exp $
+// $Id: Roxen.pmod,v 1.228 2007/11/08 16:18:48 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3683,6 +3683,11 @@ class ScopeRoxen {
        object key = c->id->conf->getvar("license")->get_key();
        return ENCODE_RXML_TEXT(key?sizeof(key->get_warnings()):0, type);
      }
+
+    case "auto-charset-variable":
+      return ENCODE_RXML_TEXT("magic_roxen_automatic_charset_variable", type);
+    case "auto-charset-value":
+      return ENCODE_RXML_TEXT(magic_charset_variable_value, type);
     }
     
     return RXML.nil;
@@ -3702,7 +3707,8 @@ class ScopeRoxen {
 		    "hits-per-minute", "hits", "sent-mb", "sent", "unique-id",
 		    "sent-per-minute", "sent-kbit-per-second", "ssl-strength",
 		    "pike-version", "version", "time", "server", "domain",
-		    "locale", "path" }) );
+		    "locale", "path", "auto-charset-variable",
+		    "auto-charset-value" }) );
   }
 
   void _m_delete (string var, void|RXML.Context c, void|string scope_name) {
