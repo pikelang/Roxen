@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.41 2007/11/13 15:04:24 mathias Exp $";
+constant cvs_version = "$Id: email.pike,v 1.42 2007/11/13 16:32:06 mathias Exp $";
 
 constant thread_safe=1;
 
@@ -100,7 +100,7 @@ void create(Configuration conf)
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.41 $"/" ")[1];
+string revision = ("$Revision: 1.42 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -710,6 +710,7 @@ separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\" >
 
  </short>This subtag/container is designed for adding additional
  headers to the mail.</p>
+ <p>By default replacing standard headers is not allowed.</p>
 </desc>
 
 <attr name='name' value='string' required='required'><p>
