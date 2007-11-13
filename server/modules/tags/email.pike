@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.40 2007/01/08 10:19:30 anders Exp $";
+constant cvs_version = "$Id: email.pike,v 1.41 2007/11/13 15:04:24 mathias Exp $";
 
 constant thread_safe=1;
 
@@ -100,7 +100,7 @@ void create(Configuration conf)
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.40 $"/" ")[1];
+string revision = ("$Revision: 1.41 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -377,9 +377,9 @@ class TagEmail {
 
 
      if(stringp(id->misc->_email_sign_))
-	body += "\n-- \n" + id->misc->_email_sign_;
+	body += "\n-- \n" + m_delete(id->misc, "_email_sign_");
      if(mappingp(id->misc->_email_headers_))
-	headers = id->misc->_email_headers_;
+	headers = m_delete(id->misc, "_email_headers_");
      if(sizeof(query("CI_headers")))
 	foreach(((string)query("CI_headers")/"\r\n"), string line) 
 	  if (stringp(line) && sizeof(line)) {
@@ -739,7 +739,7 @@ separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\">
 </email>
 </ex-box>",
 
-"signature":#"<desc tag='tag'><p><short hide='hide'>Adds a signature to the mail.
+"signature":#"<desc tag='cont'><p><short hide='hide'>Adds a signature to the mail.
  </short>This container is designed for adding a signature to the
  mail.</p></desc>
 
