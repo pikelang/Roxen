@@ -177,6 +177,14 @@ class sqlproxy {
     return remote_call("case_convert",@args);
   }
 
+  mixed set_charset(mixed ... args) {
+    return remote_call("set_charset",@args);
+  }
+
+  mixed get_charset(mixed ... args) {
+    return remote_call("get_charset",@args);
+  }
+
 
   /////////////////////////////
 
