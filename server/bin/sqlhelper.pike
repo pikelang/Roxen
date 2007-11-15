@@ -283,3 +283,11 @@ mixed if_list_fields(mixed ... args) {
 mixed if_case_convert(mixed ... args) {
   return db->case_convert(@args);
 }
+
+mixed if_set_charset(mixed ... args) {
+  return db->set_charset(@args);
+}
+
+mixed if_get_charset(mixed ... args) {
+  return db->get_charset(@args);
+}
