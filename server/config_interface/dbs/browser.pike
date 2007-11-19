@@ -972,9 +972,9 @@ mapping|string parse( RequestID id )
 	" src='&usr.table-small;' alt='' max-height='12'/> " +
 	table+"</a></td>"
 	"<td class='num'>"+
-	(zero_type (tbi->rows) ? "" : tbi->rows) + "</td>"
+	(!tbi || zero_type (tbi->rows) ? "" : tbi->rows) + "</td>"
 	"<td class='num'>" +
-	(zero_type (tbi->data_length) ? "" :
+	(!tbi || zero_type (tbi->data_length) ? "" :
 	 sprintf ("%d KiB",
 		  ((int)tbi->data_length+(int)tbi->index_length) / 1024)) +
 	"</td>";
