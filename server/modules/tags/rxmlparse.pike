@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.76 2006/02/17 19:42:14 jonasw Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.77 2007/11/21 11:59:22 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -218,10 +218,14 @@ string rxml_run_error(RXML.Backtrace err, RXML.Type type)
   NOCACHE();
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml)) {
 #ifdef VERBOSE_RXML_ERRORS
-    report_notice ("Error in %s.\n%s", id->raw_url, describe_backtrace (err));
+    report_notice ("Error in %s.\n%s",
+		   id->raw_url || id->not_query || "UNKNOWN",
+		   describe_backtrace (err));
 #else
     if(query("logerrorsr"))
-      report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
+      report_notice ("Error in %s.\n%s",
+		     id->raw_url || id->not_query || "UNKNOWN",
+		     describe_error (err));
 #endif
     _ok=0;
     if(query("quietr") && !_id_misc->debug && !id->prestate->debug)
