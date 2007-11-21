@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.194 2007/06/12 12:07:46 erikd Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.195 2007/11/21 13:52:45 stewa Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -871,6 +871,14 @@ class TagConfigVariablesSectionsplugin
                                      m, id );
 
     string section = RXML.get_var( "section", "form" );
+    if( m["add-module-priorities"] )
+      v = ({ 
+        ([
+          "section":"ModulePriorities",
+          "sectionname":LOCALE(0,"Module Priorities"),
+          "selected":(section=="ModulePriorities")?"selected":"",
+        ]),
+      }) + v;
     if( m["add-status"] )
       v = ({ 
         ([
@@ -878,11 +886,6 @@ class TagConfigVariablesSectionsplugin
           "sectionname":LOCALE(228,"Status"),
           "selected":(!section||(section=="Status")?"selected":""),
         ]),
-//         ([
-//           "section":"Ports",
-//           "sectionname":LOCALE(324,"Ports"),
-//           "selected":((section=="Ports")?"selected":""),
-//         ]),
       }) + v;
 
     if( section != "Settings" )

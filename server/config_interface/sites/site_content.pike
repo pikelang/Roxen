@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.151 2007/10/25 13:14:49 grubba Exp $
+// $Id: site_content.pike,v 1.152 2007/11/21 13:52:45 stewa Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -654,6 +654,10 @@ string parse( RequestID id )
        return "<cfg-variables source='config-variables' "
 	      "configuration='"+path[0]+"' section='&form.section;'/>";
 
+    case "ModulePriorities":
+      return module_priorities_page(id, conf);
+       
+
      case "Ports":
        string res = 
 	 "<input type=hidden name='section' value='Ports' />"
@@ -797,3 +801,141 @@ string parse( RequestID id )
     return module_page( id, path[0], path[2] );
   return "";
 }
+
+
+
+string module_priorities_page( RequestID id, Configuration c)
+{
+
+  array modids = map( indices( c->otomod )-({0}),
+		      lambda(mixed q){ return c->otomod[q]; });
+
+  array mod_types = ({ 
+    ([ "title" : "First Try Modules", "type" : MODULE_FIRST  ]), 
+    ([ "title" : "Filter Modules",    "type" : MODULE_FILTER ]), 
+    ([ "title" : "Last Try Modules",  "type" : MODULE_LAST   ]), 
+    
+  });
+  
+  array mods = map( modids,
+		   lambda(string q) {
+		     object mod = roxen.find_module( (q/"#")[0] );
+		     object modi = c->find_module(q);
+		     int c = (int)((q/"#")[-1]);
+		     return ([
+		       "id":q,
+		       "name":mod->get_name(),
+		       "name2":mod->get_name()+(c?" #"+(c+1):""),
+		       "modi":modi,
+		       "instance":c,
+		       "pri":modi->query("_priority"),
+		       "type":modi->module_type,
+		     ]);
+		   } );
+
+ 
+  string res = "<input type=hidden name='section' value='ModulePriorities' />";
+
+  res += "<cf-save/>";
+
+  res += "<h1>Module priorities for site "+Roxen.roxen_encode(c->name,"html")+"</h1>";
+  res += "9 is highest and 0 is lowest.<br /><br />";
+
+  res += "<table border='0' cellpadding='0' cellspacing='2'>";
+
+  mapping modules_seen = ([ ]);
+
+  foreach(mod_types, mapping mt) {
+    res += "<tr><td colspan='3'><h2>"+mt->title+"</h2></td></tr>\n";
+
+    array _mods = Array.filter(mods, lambda(mapping m) { return m->type & mt->type; });
+
+    foreach( _mods, mapping m ) {
+      int modpri = m->pri;
+      string varname = "prichange_"+replace(m->id,"#","!");
+      if(id->variables[varname]) {
+	modpri = (int)(id->variables[varname]);
+	if(modpri < 0)
+	  modpri = 0;
+	if(modpri > 9)
+	  modpri = 9;
+
+	if(m->pri != modpri) {
+	  m->oldpri = m->pri;
+	  m->pri = modpri;
+	  m->modi->getvar("_priority")->set(m->pri);
+	  if( m->modi->save_me )
+	    m->modi->save_me();
+	  else
+	    m->modi->save();
+	}
+      }
+    }
+
+    _mods = Array.sort_array(_mods, lambda(mapping m1, mapping m2) { 
+				      if(m2->pri==m1->pri) 
+					return m2->name2 > m1->name2;
+				      return m2->pri > m1->pri;
+				    }
+			     );
+
+    mapping seen_pri = ([ ]);
+    int pri_warn = 0;
+
+    foreach( _mods, mapping m ) {
+      
+      res += "<tr><td>" + m->name2 + "</td>";
+      res+= "<td><img src='/internal-roxen-unit' width='20' height='1'/></td>";
+
+      res += "<td> Priority: ";
+
+      if(seen_pri[m->pri])
+	pri_warn = 1;
+      else
+	seen_pri[m->pri] = 1;
+
+      if(!modules_seen[m->name2]) {
+	res += "<select name='prichange_"+replace(m->id,"#","!")+"'>";
+	foreach( ({ 0,1,2,3,4,5,6,7,8,9 }), int pri) {
+	  if(m->pri == pri)
+	    res+="<option selected='selected' value='"+pri+"'>"+pri+"</option>";
+	  else
+	    res+="<option value='"+pri+"'>"+pri+"</option>";
+	}
+	res+="</select>";
+	modules_seen[m->name2] = 1;
+      } else {
+	res += (string)m->pri + " (change above)";
+      }
+
+
+      res+="</td></tr>\n";
+      
+      res += "<tr><td colspan='3'>";
+
+      if(m->oldpri)
+	res += "<imgs src='&usr.err-1;'/> Priority changed from " + m->oldpri + " to " + m->pri +".";
+
+      res += "</td></tr>";
+    }
+    
+    if(pri_warn) {
+      res += "<tr><td colspan='3'>";
+      res+= "<br /><imgs src='&usr.err-2;'/> Some modules have the same priority and will be called in random order.";
+      res += "</td></tr>";
+    }
+
+    res += "<tr><td colspan='3'>";
+    res+= "<img src='/internal-roxen-unit' width='1' height='20'/>";
+    res += "</td></tr>";
+
+  }
+  
+  res += "</table>";
+
+  res += "<cf-save/>";
+
+  return res;
+}
+
+
