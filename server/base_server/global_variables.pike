@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.103 2007/08/06 08:28:02 noring Exp $
+// $Id: global_variables.pike,v 1.104 2007/11/29 13:48:26 mast Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -644,7 +644,7 @@ process to get a thread dump.</p>
 	 TYPE_FLAG,
 	 LOCALE(337,"If enabled, Roxen will enable various replication systems "
 		"needed to set up multiple frontend systems. You will need "
-		"a database named 'replicate' that recides in a shared mysql "
+		"a database named 'replicate' that resides in a shared mysql "
 		"server for this to work. Also, all servers has to have this "
 		"flag set. Roxen must be restarted before changes to this "
 		"variable takes effect." ) );
