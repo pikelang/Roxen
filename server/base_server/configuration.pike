@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.641 2007/11/05 15:16:35 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.642 2007/11/29 14:33:48 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4479,7 +4479,7 @@ hyphens ('-') occur in the specifier names.</p>
 <tr><td>$ip-number</td>
     <td>The remote ip number.</td></tr>
 <tr><td>$bin-ip-number</td>
-    <td>The remote host id as a binary integer number.</td></tr>
+    <td>The remote host ip as a binary integer number.</td></tr>
 <tr><td>$xff</td>
     <td>The remote host name/ip taken from the X-Forwarded-For header, or
         '-' if none is provided. If multiple headers or multiple values are
