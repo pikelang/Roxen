@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.525 2007/10/30 13:03:29 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.526 2007/12/04 12:58:40 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1834,6 +1834,24 @@ void low_send_result(string headers, string data, int|void len,
 			 "%d bytes of string data, "
 			 "len:%d",
 			 sizeof(headers), data && sizeof(data), len), 0);
+
+  if (data && String.width (data) != 8) {
+    int from, to;
+    foreach (data; from; int chr)
+      if (chr > 255)
+	break;
+    to = from + 1024;
+    from -= 1024;
+    error ("Attempt to send wide data: %s%O%s\n"
+	   "Response mapping: %O\n"
+	   "output_charset: %O\n",
+	   from > 0 ? "..." : "",
+	   data[from..to],
+	   to < sizeof (data) ? "..." : "",
+	   (this_program::file->data ?
+	    this_program::file | (["data": "..."]) : this_program::file),
+	   output_charset);
+  }
 
   if (!my_fd) {
     do_log(0);
