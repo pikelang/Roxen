@@ -1,0 +1,76 @@
+<interface>
+	<name>Get Monitored Virtual Servers</name>
+	<oid_index>.1.3.6.1.4.1.8614.1.1.2.2</oid_index>
+	<oid_index_parse>OID/REGEXP:1\.3\.6\.1\.4\.1\.8614\.1\.1\.2\.[0-9]*\.(.*)$</oid_index_parse>
+	<index_order>serverName</index_order>
+	<index_order_type>alphabetic</index_order_type>
+	<index_title_format>|chosen_order_field|</index_title_format>
+
+	<fields>
+		<serverName>
+			<name>Server Name</name>
+			<method>walk</method>
+			<source>value</source>
+			<direction>input</direction>
+			<oid>.1.3.6.1.4.1.8614.1.1.2.2</oid>
+		</serverName>
+
+		<sentBytesInput>
+			<name>Sent Bytes</name>
+			<method>walk</method>
+			<source>value</source>
+			<direction>input</direction>
+			<oid>.1.3.6.1.4.1.8614.1.1.2.4</oid>
+		</sentBytesInput>
+		<receivedBytesInput>
+			<name>Received Bytes</name>
+			<method>walk</method>
+			<source>value</source>
+			<direction>input</direction>
+			<oid>.1.3.6.1.4.1.8614.1.1.2.5</oid>
+		</receivedBytesInput>
+		<sentHeaderBytesInput>
+			<name>Sent Header Bytes</name>
+			<method>walk</method>
+			<source>value</source>
+			<direction>input</direction>
+			<oid>.1.3.6.1.4.1.8614.1.1.2.6</oid>
+		</sentHeaderBytesInput>
+		<requestsInput>
+			<name>Requests</name>
+			<method>walk</method>
+			<source>value</source>
+			<direction>input</direction>
+			<oid>.1.3.6.1.4.1.8614.1.1.2.7</oid>
+		</requestsInput>
+
+		<sentBytes>
+			<name>Sent Bytes</name>
+			<method>walk</method>
+			<source>value</source>
+			<direction>output</direction>
+			<oid>.1.3.6.1.4.1.8614.1.1.2.4</oid>
+		</sentBytes>
+		<receivedBytes>
+			<name>Received Bytes</name>
+			<method>walk</method>
+			<source>value</source>
+			<direction>output</direction>
+			<oid>.1.3.6.1.4.1.8614.1.1.2.5</oid>
+		</receivedBytes>
+		<sentHeaderBytes>
+			<name>Sent Header Bytes</name>
+			<method>walk</method>
+			<source>value</source>
+			<direction>output</direction>
+			<oid>.1.3.6.1.4.1.8614.1.1.2.6</oid>
+		</sentHeaderBytes>
+		<requests>
+			<name>Requests</name>
+			<method>walk</method>
+			<source>value</source>
+			<direction>output</direction>
+			<oid>.1.3.6.1.4.1.8614.1.1.2.7</oid>
+		</requests>
+	</fields>
+</interface>
