@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.642 2007/11/29 14:33:48 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.643 2007/12/21 16:01:06 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2988,6 +2988,8 @@ static RequestID make_fake_id (string s, RequestID id)
   fake_id->misc->common = id->misc->common;
   fake_id->conf = this_object();
 
+  fake_id->raw_url=s;
+
   if (fake_id->scan_for_query)
     // FIXME: If we're using e.g. ftp this doesn't exist. But the
     // right solution might be that clone_me() in an ftp id object
@@ -3003,7 +3005,6 @@ static RequestID make_fake_id (string s, RequestID id)
   if (search(s, "\0") != -1)
     sscanf(s, "%s\0", s);
 
-  fake_id->raw_url=s;
   fake_id->not_query=s;
 
   return fake_id;
