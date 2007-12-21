@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.385 2007/12/07 15:18:20 marty Exp $
+// $Id: roxenloader.pike,v 1.386 2007/12/21 23:25:18 jonasw Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.385 2007/12/07 15:18:20 marty Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.386 2007/12/21 23:25:18 jonasw Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1861,7 +1861,7 @@ void low_start_mysql( string datadir,
      env->ROXEN_MYSQL_SLOW_QUERY_LOG != "0") {
     rotate_log(slow_query_log);
     args += ({ "--log-slow-queries="+slow_query_log+".1" });
-    report_debug("Setting MySQL:s slow query log to \"%s.1\"\n", slow_query_log);
+    report_debug("Setting MySQL's slow query log to \"%s.1\"\n", slow_query_log);
   }
 
   // Create the configuration file.
