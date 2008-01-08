@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.196 2007/09/21 12:53:45 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.197 2008/01/08 13:43:51 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -694,21 +694,13 @@ class CacheKey
 //! cacheable has an instance, and the protocol cache which stores the
 //! result of the request checks that this object still exists before
 //! using the cache entry. Thus other subsystems that provide data to
-//! the result can keep track of this object and destruct it whenever
-//! they change state in a way that invalidates the previous result.
+//! the result can keep track of this object and use
+//! @[roxen.invalidate] on it whenever they change state in a way that
+//! invalidates the previous result.
 //!
 //! Those data providers should however not store this object
 //! directly, but instead call @[add_activation_cb]. That avoids
 //! unnecessary garbage (see below).
-//!
-//! There is also the option to have cache keys with an intermediate
-//! stale state. The semantics of those is that the protocol cache
-//! will continue to send cached results for stale cache objects until
-//! they get destructed, but subsystems that rely on valid data may
-//! use @[roxen.invalidp()] to check whether the data is stale or not.
-//!
-//! @[roxen.invalidate()] is used to force a cache key into the stale
-//! state.
 //!
 //! A cache implementation must call @[activate] before storing the
 //! cache key. At that point the functions registered with
@@ -721,10 +713,17 @@ class CacheKey
 //! doesn't necessarily mean it's used in a cache.
 //!
 //! @note
+//! @[destruct] is traditionally used on cache keys to invalidate
+//! them. That is no longer recommended since it doesn't allow
+//! @[TristateCacheKey] to operate correctly. Nowadays
+//! @[roxen.invalidate] should always be used, regardless whether it's
+//! a tristate cache key or not.
+//!
+//! @note
 //! These objects can be destructed asynchronously; all accesses for
 //! things inside them have to rely on the interpreter lock, and code
 //! can never assume that @expr{id->misc->cachekey@} exists to begin
-//! with. The wrapper functions in @[RequestID] handles all this.
+//! with.
 {
 #if ID_CACHEKEY_DEBUG
   RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this);
@@ -738,36 +737,6 @@ class CacheKey
   static void create (void|int activate_immediately)
   {
     if (!activate_immediately) activation_cbs = ({});
-  }
-
-  static int flags;
-
-  int invalidp()
-  //! Has this cache key been invalidated.
-  //!
-  //! @note
-  //!   If this function does not exist, the key is assumed
-  //!   to be valid for as long as it hasn't been destructed.
-  //!
-  //! @seealso
-  //!   @[roxen.invalidp()], @[invalidate()]
-  {
-    return flags;
-  }
-
-  void invalidate()
-  //! Invalidation callback.
-  //!
-  //! Callback used for invalidating the cache key.
-  //!
-  //! @note
-  //!   If this function does not exist, invalidation is done
-  //!   by destructing the cache key.
-  //!
-  //! @seealso
-  //!   @[roxen.invalidate()], @[invalidp()]
-  {
-    flags = 1;
   }
 
   void add_activation_cb (CacheActivationCB cb, mixed... args)
@@ -866,6 +835,66 @@ class CacheKey
 #endif
 	      );
   }
+}
+
+class TristateCacheKey
+//! @appears TristateCacheKey
+//!
+//! This is a variant of @[CacheKey] that adds a third state called
+//! "invalid" or "stale". The semantics of that is that the cache will
+//! continue to send the cached result for a stale cache entry until
+//! it get destructed, but the cache should trig an update to replace
+//! the cache entry as soon as possible. This is useful in cases where
+//! response times are more important than correctness.
+//!
+//! Subsystems that rely on valid data may use @[roxen.invalidp()] to
+//! check whether the cache entry is stale or not.
+//!
+//! As with the basic @[CacheKey], @[roxen.invalidate()] should be
+//! used to force a cache key into the stale state.
+{
+  inherit CacheKey;
+
+  static int flags;
+
+  int invalidp()
+  //! Return nonzero if this cache key has been invalidated.
+  //!
+  //! Don't call directly - use @[roxen.invalidp] instead. That one
+  //! deals properly with destruct races.
+  //!
+  //! @note
+  //!   If this function does not exist, the key is assumed
+  //!   to be valid for as long as it hasn't been destructed.
+  //!
+  //! @seealso
+  //!   @[roxen.invalidp()], @[invalidate()]
+  {
+    // DANGER HIGH HAZARD AREA: Exceptions in this function will go unseen.
+    return flags;
+  }
+
+  void invalidate()
+  //! Mark this cache key as invalid/stale.
+  //!
+  //! @note
+  //!   If this function does not exist, invalidation is done
+  //!   by destructing the cache key.
+  //!
+  //! @seealso
+  //!   @[roxen.invalidate()], @[invalidp()]
+  {
+    // DANGER HIGH HAZARD AREA: Exceptions in this function will go unseen.
+    flags = 1;
+  }
+}
+
+class ProtocolCacheKey
+//! @appears ProtocolCacheKey
+//!
+//! The cache key used by the protocol cache.
+{
+  inherit TristateCacheKey;
 }
 
 //  Kludge for resolver problems
