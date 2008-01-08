@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.535 2007/10/30 13:03:29 anders Exp $";
+constant cvs_version = "$Id: http.pike,v 1.536 2008/01/08 13:44:38 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -536,7 +536,7 @@ int things_to_do_when_not_sending_from_cache( )
   array|string contents;
   misc->pref_languages=PrefLanguages();
 
-  misc->cachekey = CacheKey();
+  misc->cachekey = ProtocolCacheKey();
   misc->_cachecallbacks = ({});
   if( contents = request_headers[ "accept-language" ] )
   {
@@ -2583,7 +2583,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	    // so move the refresh time to now.
 	    // Note that we use the return value from m_delete()
 	    // to make sure we are free from races.
-	    // Note also that we above check that the change is needed,
+	    // Note also that we check above that the change is needed,
 	    // so as to avoid the risk of starving the code below.
 	    if (m_delete(file, "refresh")) {
 	      file->refresh = predef::time(1);
