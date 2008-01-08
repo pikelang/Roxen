@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.526 2007/12/04 12:58:40 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.527 2008/01/08 15:14:00 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -536,7 +536,11 @@ int things_to_do_when_not_sending_from_cache( )
   array|string contents;
   misc->pref_languages=PrefLanguages();
 
+#ifdef ENABLE_SPCI
+  misc->cachekey = ProtocolCacheKey();
+#else
   misc->cachekey = CacheKey();
+#endif
   misc->_cachecallbacks = ({});
   if( contents = request_headers[ "accept-language" ] )
   {
@@ -1016,7 +1020,9 @@ static void cleanup_request_object()
 
 void end(int|void keepit)
 {
-  CHECK_FD_SAFE_USE;
+  if (my_fd) {
+    CHECK_FD_SAFE_USE;
+  }
 
   cleanup_request_object();
 
@@ -1910,7 +1916,8 @@ void send_result(mapping|void result)
 {
   TIMER_START(send_result);
 
-  CHECK_FD_SAFE_USE;
+  if (my_fd)
+    CHECK_FD_SAFE_USE;
 
   array err;
   int tmp;
@@ -2563,12 +2570,38 @@ void got_data(mixed fooid, string s, void|int chained)
 	    }
 	  }
 	}
+
+#ifdef ENABLE_SPCI
+	if(roxen.invalidp(file->key))
+	{
+	  // Stale or invalid key.
+	  if (!file->key) {
+	    // Invalid.
+	    MY_TRACE_LEAVE ("Entry invalid due to zero key");
+	    conf->datacache->expire_entry(raw_url, this_object());
+	    can_cache = 0;
+	  } else if (file->refresh > predef::time(1)) {
+	    // Stale and no refresh in progress.
+	    // We want a refresh as soon as possible,
+	    // so move the refresh time to now.
+	    // Note that we use the return value from m_delete()
+	    // to make sure we are free from races.
+	    // Note also that we check above that the change is needed,
+	    // so as to avoid the risk of starving the code below.
+	    if (m_delete(file, "refresh")) {
+	      file->refresh = predef::time(1);
+	    }
+	  }
+	}
+#else  // !ENABLE_SPCI
 	if( !cv[1]->key )
 	{
 	  MY_TRACE_LEAVE ("Entry invalid due to zero key");
 	  conf->datacache->expire_entry(raw_url, this_object());
 	  can_cache = 0;
 	}
+#endif	// !ENABLE_SPCI
+
 	if( can_cache )
 	{
 #ifndef RAM_CACHE_ASUME_STATIC_CONTENT
@@ -2584,9 +2617,12 @@ void got_data(mixed fooid, string s, void|int chained)
 
 	    int refresh;
 	    if (cv[1]->refresh && (cv[1]->refresh <= predef::time(1))) {
-	      // We need to refresh the entry.
-	      refresh = 1 + predef::time(1) - cv[1]->refresh;
-	      m_delete(cv[1], "refresh");
+	      // We might need to refresh the entry.
+	      // Note that we use the return value from m_delete()
+	      // to make sure we are free from races.
+	      if (refresh = m_delete(file, "refresh")) {
+		refresh = 1 + predef::time(1) - refresh;
+	      }
 	      misc->connection = "close";
 	    }
 

@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.188 2006/10/13 18:08:10 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.189 2008/01/08 15:14:00 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -815,6 +815,33 @@ class CacheKey
 			  );
   }
 }
+
+// Used for Selectively Postponed Cache Invalidation
+#ifdef ENABLE_SPCI
+class TristateCacheKey
+{
+  inherit CacheKey;
+
+  static int flags;
+
+  int invalidp()
+  {
+    // DANGER HIGH HAZARD AREA: Exceptions in this function will go unseen.
+    return flags;
+  }
+
+  void invalidate()
+  {
+    // DANGER HIGH HAZARD AREA: Exceptions in this function will go unseen.
+    flags = 1;
+  }
+}
+
+class ProtocolCacheKey
+{
+  inherit TristateCacheKey;
+}
+#endif	// ENABLE_SPCI
 
 //  Kludge for resolver problems
 static function _charset_decoder_func;
