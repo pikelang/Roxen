@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.537 2008/01/08 15:11:18 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.538 2008/01/09 16:40:43 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2090,9 +2090,6 @@ void send_result(mapping|void result)
 	  string data = "";
 	  if( file->data ) data = file->data[..file->len-1];
 	  if( file->file ) data = file->file->read(file->len);
-	  MY_TRACE_ENTER(sprintf("Storing in ram cache, entry: %O (%d seconds)",
-				 raw_url, misc->cacheable), 0);
-	  MY_TRACE_LEAVE ("");
 	  conf->datacache->set(raw_url, data,
 			       ([
 				 "hs":head_string,
@@ -2519,8 +2516,7 @@ void got_data(mixed fooid, string s, void|int chained)
     if(misc->cacheable && !misc->no_proto_cache &&
        (cv = conf->datacache->get(raw_url, this_object())) )
     {
-      MY_TRACE_ENTER(sprintf("Found %O in ram cache - checking entry",
-			     raw_url), 0);
+      MY_TRACE_ENTER(sprintf("Checking entry %O", raw_url), 0);
       if( !cv[1]->key ) {
 	MY_TRACE_LEAVE("Entry invalid due to zero key");
 	conf->datacache->expire_entry(raw_url, this_object());
@@ -2696,7 +2692,7 @@ void got_data(mixed fooid, string s, void|int chained)
 		Roxen.make_http_headers(variant_heads);
 	    }
 
-	    MY_TRACE_LEAVE ("Using entry from ram cache");
+	    MY_TRACE_LEAVE ("Using entry from protocol cache");
 	    cache_status["protcache"] = 1;
 
 	    if (!refresh) {

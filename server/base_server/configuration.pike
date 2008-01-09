@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.643 2007/12/21 16:01:06 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.644 2008/01/09 16:40:43 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -326,8 +326,17 @@ class DataCache
 
   void set(string url, string data, mapping meta, int expire, RequestID id)
   {
-    if( strlen( data ) > max_file_size ) return;
+    if( strlen( data ) > max_file_size ) {
+      SIMPLE_TRACE_ENTER (this, "Result of size %d is too large "
+			  "to store in the protocol cache (limit %d)",
+			  sizeof (data), max_file_size);
+      SIMPLE_TRACE_LEAVE ("");
+      return;
+    }
 
+    SIMPLE_TRACE_ENTER (this, "Storing result of size %d in the protocol cache "
+			"using key %O (expire in %ds)",
+			sizeof (data), url, expire);
     string key = url;
 
     foreach(id->misc->vary_cb_order || ({}),
@@ -335,10 +344,17 @@ class DataCache
       array(string|mapping(string:mixed))|string|
 	function(string, RequestID:string|int) old = cache[key];
       if (old && (old != vary_cb)) {
-	// FIXME: Warn?
+	SIMPLE_TRACE_ENTER (this, "Registering vary cb %O - conflicts with "
+			    "existing entry %s, old entry expired",
+			    vary_cb,
+			    (arrayp (old) ? "of size " + sizeof (old[0]) :
+			     sprintf ("%O", old)));
 	low_expire_entry(key);
+	SIMPLE_TRACE_LEAVE ("");
       }
       cache[key] = vary_cb;
+
+      SIMPLE_TRACE_ENTER (this, "Registering vary cb %O", vary_cb);
 
       string key_frag;
       if (stringp(vary_cb)) {
@@ -353,6 +369,10 @@ class DataCache
 	  key_frag = frag;
 	}
       }
+
+      SIMPLE_TRACE_LEAVE ("Vary cb resolved to key fragment %O",
+			  key_frag || "");
+
       if (key_frag)
 	// Avoid spoofing if key_frag happens to contain "\0\0".
 	key_frag = replace (key_frag, "\0", "\0\1");
@@ -363,9 +383,14 @@ class DataCache
     array(string|mapping(string:mixed))|string|
       function(string, RequestID:string) old = cache[key];
     if (old) {
-      // FIXME: Warn?
+      SIMPLE_TRACE_LEAVE ("Entry conflicts with existing entry %s, "
+			  "old entry expired",
+			  (arrayp (old) ? "of size " + sizeof (old[0]) :
+			   sprintf ("%O", old)));
       low_expire_entry(key);
     }
+    else
+      SIMPLE_TRACE_LEAVE ("");
 
     current_size += strlen( data );
     cache[key] = ({ data, meta });
@@ -380,6 +405,9 @@ class DataCache
   
   array(string|mapping(string:mixed)) get(string url, RequestID id)
   {
+    SIMPLE_TRACE_ENTER (this, "Looking up entry for %O in the protocol cache",
+			url);
+
     array(string|mapping(string:mixed))|string|
       function(string, RequestID:string|int) res;
     string key = url;
@@ -387,12 +415,16 @@ class DataCache
       id->misc->protcache_cost++;
       if (arrayp(res = cache[key])) {
 	hits++;
+	SIMPLE_TRACE_LEAVE ("Found entry of size %d", sizeof (res[0]));
 	return [array(string|mapping(string:mixed))]res;
       }
       if (!res) {
 	misses++;
+	SIMPLE_TRACE_LEAVE ("Found no entry");
 	return UNDEFINED;
       }
+
+      SIMPLE_TRACE_ENTER (this, "Found vary cb %O", res);
 
       string key_frag;
       if (stringp(res)) {
@@ -407,6 +439,10 @@ class DataCache
 	  key_frag = frag;
 	}
       }
+
+      SIMPLE_TRACE_LEAVE ("Vary cb resolved to key fragment %O",
+			  key_frag || "");
+
       if (key_frag)
 	// Avoid spoofing if key_frag happens to contain "\0\0".
 	key_frag = replace (key_frag, "\0", "\0\1");
