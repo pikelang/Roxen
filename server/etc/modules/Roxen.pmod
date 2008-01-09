@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.228 2007/11/08 16:18:48 jonasw Exp $
+// $Id: Roxen.pmod,v 1.229 2008/01/09 15:59:18 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4338,8 +4338,8 @@ void trace_enter (RequestID id, string msg, object|function thing)
     // leads to races in the TRACE_LEAVE calls in low_get_file.
     mapping id_misc = id->misc;
 
-    if (!id_misc->trace_level) {
-      id_misc->trace_id_prefix = ({"%%", "##", "§§", "**", "@@", "$$", "¤¤"})[
+    if (zero_type (id_misc->trace_level)) {
+      id_misc->trace_id_prefix = ({"%%", "##", "||", "**", "@@", "$$", "&&"})[
 	all_constants()->id_trace_level_rotate_counter++ % 7];
 #ifdef ID_OBJ_DEBUG
       report_debug ("%s%s %O: Request handled by: %O\n",
