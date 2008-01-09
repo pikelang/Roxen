@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: cache.pike,v 1.88 2007/09/06 13:11:35 grubba Exp $
+// $Id: cache.pike,v 1.89 2008/01/09 16:03:25 mast Exp $
 
 // #pragma strict_types
 
@@ -59,7 +59,6 @@ static Thread.Local deltas = Thread.Local();
 #ifdef CACHE_DEBUG
 static array(int) memory_usage_summary()
 {
-  mapping(string:int) usage = _memory_usage();
   int count, bytes;
   foreach (_memory_usage(); string descr; int amount)
     if (has_prefix (descr, "num_")) count += amount;
