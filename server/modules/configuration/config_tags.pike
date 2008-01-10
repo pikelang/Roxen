@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.195 2007/11/21 13:52:45 stewa Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.196 2008/01/10 15:36:20 jonasw Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -875,7 +875,7 @@ class TagConfigVariablesSectionsplugin
       v = ({ 
         ([
           "section":"ModulePriorities",
-          "sectionname":LOCALE(0,"Module Priorities"),
+          "sectionname":LOCALE(551,"Module Priorities"),
           "selected":(section=="ModulePriorities")?"selected":"",
         ]),
       }) + v;

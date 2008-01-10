@@ -37,7 +37,7 @@ string|mapping parse( RequestID id )
 
   mapping(string:mapping(string:int)) q = DBManager.get_permission_map( );
   if( !sizeof( q ) )
-    return _(0, "No defined databases.\n");
+    return _(549, "No defined databases.\n");
 
   array(string) conf_cols = sort (roxen->configurations->name);
 

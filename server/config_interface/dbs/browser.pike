@@ -11,9 +11,9 @@ mapping actions = ([
   "group":  ({  _(324,"Change group for this database"), change_group, 0 }),
   "clear":  ({  _(403,"Delete all tables"),    clear_db,  0 }),
   "backup": ({  _(404,"Make a backup"),        backup_db, 1 }),
-  "charset":({  _(0, "Change default character set"), change_charset, 0 }),
-  "repair": ({  _(0, "Repair all tables"),     repair_db, 0 }),
-  "optimize":({  _(0, "Optimize all tables"),   optimize_db, 0 }),
+  "charset":({  _(536, "Change default character set"), change_charset, 0 }),
+  "repair": ({  _(537, "Repair all tables"),     repair_db, 0 }),
+  "optimize":({  _(538, "Optimize all tables"),   optimize_db, 0 }),
 ]);
 
 
@@ -65,11 +65,11 @@ mixed change_charset( string db, RequestID id )
     string old_charset = DBManager.get_db_default_charset(db);
     string res ="<br /><blockquote>"
     "<input type=hidden name=action value='&form.action;' />"
-      "<h2>"+sprintf(_(0,"Changing default character set for %s"), db )+
+      "<h2>"+sprintf(_(539,"Changing default character set for %s"), db )+
       "</h2>"+
-      (old_charset?("<b>"+_(0, "Old default character set")+":</b> " +
+      (old_charset?("<b>"+_(540, "Old default character set")+":</b> " +
 		    old_charset+"<br />"):"")+
-      "<b>"+_(0,"New default character set")+":</b> "
+      "<b>"+_(541,"New default character set")+":</b> "
       "<input type='string' name='default_charset' value='" +
       Roxen.html_encode_string(old_charset||"") +"' />";
     return res + "</select><submit-gbutton2 name='ok'>"+(201,"OK")+
@@ -559,7 +559,7 @@ string format_table_owner (mapping(string:string) mod_info, void|int skip_conf)
     }
     else
       mn = Roxen.html_encode_string (
-	sprintf ((string) _(0, "the deleted site %O"), mod_info->conf));
+	sprintf ((string) _(542, "the deleted site %O"), mod_info->conf));
   }
 
   if( m ) {
@@ -568,19 +568,19 @@ string format_table_owner (mapping(string:string) mod_info, void|int skip_conf)
       replace(mod_info->module,"#","!")+"/"+
       "'>"+ Roxen.html_encode_string (i->get_name())+"</a>";
     if (mn)
-      mn = sprintf ((string) _(0, "%s in %s"), module, mn);
+      mn = sprintf ((string) _(543, "%s in %s"), module, mn);
     else
       mn = module;
   }
   else if( i ) {
     if (mn)
       mn = sprintf (
-	(string) _(0, "the deleted module %s in %s"),
+	(string) _(544, "the deleted module %s in %s"),
 	Roxen.html_encode_string (sprintf ("%O", (string) i->get_name())),
 	mn);
     else
       mn = sprintf (
-	(string) _(0, "the deleted module %s"),
+	(string) _(545, "the deleted module %s"),
 	Roxen.html_encode_string (sprintf ("%O", (string) i->get_name())));
   }
 
@@ -847,10 +847,10 @@ mapping|string parse( RequestID id )
 
   if (id->variables->db == "local")
     res += "<li>" +
-      _(0, "Internal data that cannot be shared between servers.") + "</li>\n";
+      _(546, "Internal data that cannot be shared between servers.") + "</li>\n";
   else if (id->variables->db == "shared")
     res += "<li>" +
-      _(0, "Internal data that may be shared between servers.") + "</li>\n";
+      _(547, "Internal data that may be shared between servers.") + "</li>\n";
   else if( !url )
     res += "<li>Internal database.</li>\n";
   else
@@ -869,7 +869,7 @@ mapping|string parse( RequestID id )
 
   string default_charset = DBManager.get_db_default_charset(id->variables->db);
   if (default_charset) {
-    res += "<li>" + _(0,"Default charset:") +
+    res += "<li>" + _(548,"Default charset:") +
       Roxen.html_encode_string(default_charset) + "</li>";
   }
 

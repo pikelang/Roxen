@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.104 2007/11/29 13:48:26 mast Exp $
+// $Id: global_variables.pike,v 1.105 2008/01/10 15:35:50 jonasw Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -412,9 +412,9 @@ void define_global_variables(  )
 	 0, ident_disabled_p);
   
   defvar("config_header_string", "", 
-	 LOCALE(0, "Show this string in header"),
+	 LOCALE(532, "Show this string in header"),
 	 TYPE_STRING /* |VAR_MORE */,
-	 LOCALE(0, "Enter a identifier that will be displayed in the head of "
+	 LOCALE(533, "Enter a identifier that will be displayed in the head of "
 		   " config interface. This makes it easier to distinguish "
 		   "between different site configurations. "),
 	 0);
@@ -513,8 +513,8 @@ The start script attempts to fix this for the standard file locations.</p>"));
 #endif // efun(syslog)
 
   Variable v = Variable.Flag (0, 0,
-			      LOCALE(0, "Logging: Dump threads by file polling"),
-			      LOCALE(0, #"\
+			      LOCALE(534, "Logging: Dump threads by file polling"),
+			      LOCALE(535, #"\
 <p>This option can be used to produce dumps of all the threads in the
 debug log in situations where the Administration Interface doesn't
 respond.</p>

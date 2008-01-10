@@ -160,7 +160,7 @@ att användas.</t>
 </str>
 
 <str id="27">
-<o>What format to use for logging. The syntax is:
+<changed from="What format to use for logging. The syntax is:
 &lt;pre&gt;response-code or *: Log format for that response code
 
 Log format is normal characters, or one or more of the variables below:
@@ -201,7 +201,245 @@ $cache-status   -- A comma separated list of words (containing no
                    pcodedisk -- RXML parse tree persistent cache.
                    cachetag  -- No RXML &amp;lt;cache&amp;gt; tag misses.
                    nocache   -- No hit in any known cache.
-&lt;/pre&gt;</o>
+&lt;/pre&gt;"/>
+<o>Describes the format to use for access logging. The log file can also
+receive messages for various internal activities.
+
+Empty lines and lines beginning with '&lt;code&gt;#&lt;/code&gt;' are ignored.
+Other lines describes how to log either an access or an internal
+event.
+
+&lt;p&gt;A line to format an access logging message is one of:&lt;/p&gt;
+
+&lt;pre&gt;&lt;i&gt;&amp;lt;response code&amp;gt;&lt;/i&gt;: &lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt;
+*: &lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;&lt;i&gt;&amp;lt;response code&amp;gt;&lt;/i&gt; is an HTTP status code. The
+corresponding &lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt; is used for all responses
+matching that code. It's described in more detail below. If
+'&lt;code&gt;*&lt;/code&gt;' is used instead of a response code then that line
+matches all responses that aren't matched by any specific response
+code line.&lt;/p&gt;
+
+&lt;p&gt;A line to format an event logging message is one of:&lt;/p&gt;
+
+&lt;pre&gt;&lt;i&gt;&amp;lt;facility&amp;gt;&lt;/i&gt;/&lt;i&gt;&amp;lt;action&amp;gt;&lt;/i&gt;: &lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt;
+&lt;i&gt;&amp;lt;facility&amp;gt;&lt;/i&gt;/*: &lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt;
+*/*: &lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt;
+&lt;/pre&gt;
+
+&lt;p&gt;&lt;i&gt;&amp;lt;facility&amp;gt;&lt;/i&gt; matches an identifier for the Roxen module
+or subsystem that the event comes from. Facility identifiers always
+starts with a character in &lt;code&gt;[a-zA-Z0-9]&lt;/code&gt; and contains only
+characters in &lt;code&gt;[-_.#a-zA-Z0-9]&lt;/code&gt;. If '&lt;code&gt;*&lt;/code&gt;' is
+used instead of &lt;i&gt;&amp;lt;facility&amp;gt;&lt;/i&gt; then that line matches all
+facilities that aren't matched by any other line.&lt;/p&gt;
+
+&lt;p&gt;&lt;i&gt;&amp;lt;action&amp;gt;&lt;/i&gt; matches an identifier for a specific kind of
+event logged by a facility. An action identifier contains only
+characters in &lt;code&gt;[-_.#a-zA-Z0-9]&lt;/code&gt;. '&lt;code&gt;*&lt;/code&gt;' may be
+used instead of an &lt;i&gt;&amp;lt;action&amp;gt;&lt;/i&gt; to match all events logged by
+a facility that aren't matched by any other line.&lt;/p&gt;
+
+&lt;p&gt;&lt;i&gt;&amp;lt;log format&amp;gt;&lt;/i&gt; consists of literal characters and the
+special specifiers described below. All specifiers are not applicable
+for all kinds of messages. If an unknown or inapplicable specifier is
+encountered it typically expands to '&lt;code&gt;-&lt;/code&gt;', but in some
+cases it expands to a dummy value that is syntactically compatible
+with what it usually expands to.&lt;/p&gt;
+
+&lt;p&gt;For compatibility, underscores ('_') may be used wherever
+hyphens ('-') occur in the specifier names.&lt;/p&gt;
+
+&lt;h3&gt;Format specifiers for both access and event logging&lt;/h3&gt;
+
+&lt;table&gt;&lt;tbody valign='top'&gt;
+&lt;tr&gt;&lt;td&gt;\n \t \r&lt;/td&gt;
+    &lt;td&gt;Insert a newline, tab or linefeed character, respectively.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$char(int)&lt;/td&gt;
+    &lt;td&gt;Insert the (1 byte) character specified by the integer. E.g.
+    '&lt;code&gt;$char(36)&lt;/code&gt;' inserts a literal '&lt;code&gt;$&lt;/code&gt;'
+    character.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$wchar(int)&lt;/td&gt;
+    &lt;td&gt;Insert the specified integer using 2 bytes in network byte
+    order. Specify a negative integer to get the opposite (i.e. big
+    endian) order.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$int(int)&lt;/td&gt;
+    &lt;td&gt;Insert the specified integer using 4 bytes in network byte
+    order. Specify a negative integer to get the opposite (i.e. big
+    endian) order.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$^&lt;/td&gt;
+    &lt;td&gt;Suppress newline at the end of the logentry.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$date&lt;/td&gt;
+    &lt;td&gt;Local date formatted like '&lt;code&gt;2001-01-17&lt;/code&gt;'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$time&lt;/td&gt;
+    &lt;td&gt;Local time formatted like '&lt;code&gt;13:00:00&lt;/code&gt;'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$cern-date&lt;/td&gt;
+    &lt;td&gt;Local date and time in CERN Common Log file format, i.e.
+    like '&lt;code&gt;17/Jan/2001:13:00:00 +0200&lt;/code&gt;'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$utc-date&lt;/td&gt;
+    &lt;td&gt;UTC date formatted like '&lt;code&gt;2001-01-17&lt;/code&gt;'.&lt;/td&gt;&lt;/tr&gt;
+
+&lt;tr&gt;&lt;td&gt;$utc-time&lt;/td&gt;
+    &lt;td&gt;UTC time formatted like '&lt;code&gt;13:00:00&lt;/code&gt;'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$bin-date&lt;/td&gt;
+    &lt;td&gt;Unix time as a 32 bit integer in network byte order.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$resource&lt;/td&gt;
+    &lt;td&gt;Resource identifier. For events, this is either a path to a
+    file (if it begins with '&lt;code&gt;/&lt;/code&gt;') or some other kind of
+    resource indentifier (otherwise).&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$server-uptime&lt;/td&gt;
+    &lt;td&gt;Server uptime in seconds.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$server-cputime&lt;/td&gt;
+    &lt;td&gt;Server cpu (user+system) time in milliseconds.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$server-usertime&lt;/td&gt;
+    &lt;td&gt;Server cpu user time in milliseconds.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$server-systime&lt;/td&gt;
+    &lt;td&gt;Server cpu system time in milliseconds.&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+
+&lt;h3&gt;Format specifiers for access logging&lt;/h3&gt;
+
+&lt;table&gt;&lt;tbody valign='top'&gt;
+&lt;tr&gt;&lt;td&gt;$host&lt;/td&gt;
+    &lt;td&gt;The remote host name, or ip number.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$vhost&lt;/td&gt;
+    &lt;td&gt;The Host request-header sent by the client, or '-' if none.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$ip-number&lt;/td&gt;
+    &lt;td&gt;The remote ip number.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$bin-ip-number&lt;/td&gt;
+    &lt;td&gt;The remote host ip as a binary integer number.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$xff&lt;/td&gt;
+    &lt;td&gt;The remote host name/ip taken from the X-Forwarded-For header, or
+        '-' if none is provided. If multiple headers or multiple values are
+        given the first value is logged; this should correspond to the
+        originating computer.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$method&lt;/td&gt;
+    &lt;td&gt;Request method.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$full-resource&lt;/td&gt;
+    &lt;td&gt;Full requested resource, including any query fields.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$protocol&lt;/td&gt;
+    &lt;td&gt;The protocol used (normally HTTP/1.1).&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$response&lt;/td&gt;
+    &lt;td&gt;The response code sent.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$bin-response&lt;/td&gt;
+    &lt;td&gt;The response code sent as a binary short number.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$length&lt;/td&gt;
+    &lt;td&gt;The length of the data section of the reply.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$bin-length&lt;/td&gt;
+    &lt;td&gt;Same, but as a 32 bit integer in network byte order.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$request-time&lt;/td&gt;
+    &lt;td&gt;The time the request took (seconds). Note that this measures
+    real time, not virtual process time. I.e. if there are other
+    processes using the CPU then this will not accurately show the
+    time that the Roxen server process spent.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$etag&lt;/td&gt;
+    &lt;td&gt;The entity tag (aka ETag) header of the result.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$referer&lt;/td&gt;
+    &lt;td&gt;The header 'referer' from the request, or '-'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$user-agent&lt;/td&gt;
+    &lt;td&gt;The header 'User-Agent' from the request, or '-'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$user-agent-raw&lt;/td&gt;
+    &lt;td&gt;Same, but spaces in the name are not encoded to %20.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$user&lt;/td&gt;
+    &lt;td&gt;The name of the user, if any is given using the HTTP basic
+    authentication method.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$user-id&lt;/td&gt;
+    &lt;td&gt;A unique user ID, if cookies are supported, by the client,
+    otherwise '0'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$content-type&lt;/td&gt;
+    &lt;td&gt;Resource MIME type.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$cookies&lt;/td&gt;
+    &lt;td&gt;All cookies sent by the browser, separated by ';'.&lt;/td&gt;&lt;/tr&gt;
+
+&lt;tr&gt;&lt;td&gt;$cache-status&lt;/td&gt;
+    &lt;td&gt;A comma separated list of words (containing no whitespace)
+    that describes which cache(s) the page was delivered from:
+
+    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;tr&gt;&lt;td&gt;protcache&lt;/td&gt;
+	&lt;td&gt;The low-level cache in the HTTP protocol module.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;protstore&lt;/td&gt;
+	&lt;td&gt;The page got stored in the low-level cache in the HTTP
+	protocol module.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;xsltcache&lt;/td&gt;
+	&lt;td&gt;The XSLT cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;pcoderam&lt;/td&gt;
+	&lt;td&gt;RXML parse tree RAM cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;pcodedisk&lt;/td&gt;
+	&lt;td&gt;RXML parse tree persistent cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;cachetag&lt;/td&gt;
+	&lt;td&gt;No RXML &amp;lt;cache&amp;gt; tag misses.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;nocache&lt;/td&gt;
+	&lt;td&gt;No hit in any known cache, and not added to the HTTP
+	protocol cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;&lt;/table&gt;&lt;/td&gt;&lt;/tr&gt;
+
+&lt;tr&gt;&lt;td&gt;$eval-status&lt;/td&gt;
+    &lt;td&gt;A comma separated list of words (containing no whitespace)
+    that describes how the page has been evaluated:
+
+    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;tr&gt;&lt;td&gt;xslt&lt;/td&gt;
+	&lt;td&gt;XSL transform.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;rxmlsrc&lt;/td&gt;
+	&lt;td&gt;RXML evaluated from source.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;rxmlpcode&lt;/td&gt;
+	&lt;td&gt;RXML evaluated from compiled p-code.&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;&lt;/table&gt;&lt;/td&gt;&lt;/tr&gt;
+
+&lt;tr&gt;&lt;td&gt;$protcache-cost&lt;/td&gt;
+    &lt;td&gt;The lookup depth in the HTTP protocol module low-level cache.&lt;/td&gt;&lt;/tr&gt;
+&lt;/tbody&gt;&lt;/table&gt;
+
+&lt;h3&gt;Event logging&lt;/h3&gt;
+
+&lt;p&gt;The known event logging facilities and modules are described
+below.&lt;/p&gt;
+
+&lt;dl&gt;
+&lt;dt&gt;Facility: sbfs&lt;/dt&gt;
+    &lt;dd&gt;&lt;p&gt;A SiteBuilder file system.&lt;/p&gt;
+
+    &lt;p&gt;The actions &lt;code&gt;commit&lt;/code&gt;, &lt;code&gt;purge&lt;/code&gt;,
+    &lt;code&gt;mkdir&lt;/code&gt;, &lt;code&gt;set-dir-md&lt;/code&gt;, and
+    &lt;code&gt;rmdir&lt;/code&gt; are logged for file system changes except those
+    in edit areas.&lt;/p&gt;
+
+    &lt;p&gt;The action &lt;code&gt;crawl-file&lt;/code&gt; is logged for files that are
+    crawled by the persistent cache crawler.&lt;/p&gt;
+
+    &lt;p&gt;The actions &lt;code&gt;file-change&lt;/code&gt; and
+    &lt;code&gt;dir-change-flat&lt;/code&gt; are logged when external file and
+    directory changes are detected (and this feature is enabled).&lt;/p&gt;
+
+    &lt;p&gt;These extra format specifiers are defined where applicable:&lt;/p&gt;
+
+    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;tr&gt;&lt;td&gt;$ac-userid&lt;/td&gt;
+	&lt;td&gt;The ID number of the AC identity whose edit area was used.
+	Zero for the common view area.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;$workarea&lt;/td&gt;
+	&lt;td&gt;The unique tag for the work area. Empty for the main work
+	area.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;$commit-type&lt;/td&gt;
+	&lt;td&gt;The type of file commit, one of &lt;code&gt;create&lt;/code&gt;,
+	&lt;code&gt;edit&lt;/code&gt;, &lt;code&gt;delete&lt;/code&gt;, and
+	&lt;code&gt;undelete&lt;/code&gt;.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;$revision&lt;/td&gt;
+	&lt;td&gt;The committed revision number, a dotted decimal.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;$comment&lt;/td&gt;
+	&lt;td&gt;The commit message.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;$request-time&lt;/td&gt;
+	&lt;td&gt;This is set for the action &lt;code&gt;crawl-file&lt;/code&gt;. It's
+	similar to &lt;code&gt;$request-time&lt;/code&gt; for normal requests,
+	except that it measures the whole time it took for the
+	persistent cache crawler to process the page. That includes
+	all crawled variants and the saving of the entry to the
+	database.&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;&lt;/table&gt;&lt;/dd&gt;
+&lt;/dl&gt;</o>
 <t>Vilket format som ska användas för att logga
 &lt;pre&gt;
 svarskod eller *: Loggformat för svarskoden (eller alla koder som inte
@@ -336,6 +574,7 @@ URL från den första posten i inställningen för 'URL:er'.
 
 &lt;p&gt;Observera att denna inställning inte är tillräcklig för att göra
 servern åtkomlig; då måste även ange 'URL:er'.
+</t>
 </str>
 
 <str id="38">
@@ -358,16 +597,16 @@ behöva för vanliga resurser.</t>
 
 <str id="42">
 <o>Throttling: Server; Enabled</o>
-<t>Bandviddsbegränsning: Servernivå: Aktiverad</t>
+<t>Bandbreddsbegränsning: Servernivå: Aktiverad</t>
 </str>
 
 <str id="43">
 <o>If set, per-server bandwidth throttling will be enabled. It will allow you to limit the total available bandwidth for this site.&lt;br /&gt;Bandwidth is assigned using a Token Bucket. The principle under which it works is: for each byte we send we use a token. Tokens are added to a repository at a constant rate. When there's not enough, we can't transmit. When there's too many, they "spill" and are lost.</o>
 <t>Om den här variablen är på så kommer bandvisddsbegränsning
 på servernivå att ske. Det gör det möjligt för dig att begränsa den totala
-bandvidden som den här virtuella servern använder.
+bandbredden som den här virtuella servern använder.
 &lt;p&gt;
-Bandvidden räknas ut genom att använda en poletthink. Principen som den
+Bandbredden räknas ut genom att använda en poletthink. Principen som den
 arbetar efter är: För varje byte som sänds så används en polett, poletter
 stoppas i hinken i en konstant hastighet. När det inte finns några poletter
 så avstännar dataskickande tills en polett blir tillgänglig. När det är för
@@ -376,31 +615,31 @@ många poletter i hinken så kommer de nya som kommer in att "ramla brevid".</t>
 
 <str id="44">
 <o>Throttling: Server; Average available bandwidth</o>
-<t>Bandviddsbegränsning: Servernivå: Genomsnittlig tillgänglig bandbredd</t>
+<t>Bandbreddsbegränsning: Servernivå: Genomsnittlig tillgänglig bandbredd</t>
 </str>
 
 <str id="45">
 <o>This is the average bandwidth available to this site in bytes/sec (the bucket "fill rate").</o>
-<t>Det här är den genomsnittliga bandvidden som är tillgänglig för servern (hastigheten med vilken hinken fylls).</t>
+<t>Det här är den genomsnittliga bandbredden som är tillgänglig för servern (hastigheten med vilken hinken fylls).</t>
 </str>
 
 <str id="46">
 <o>Throttling: Server; Bucket Depth</o>
-<t>Bandviddsbegränsning: Servernivå: Hinkstorlek</t>
+<t>Bandbreddsbegränsning: Servernivå: Hinkstorlek</t>
 </str>
 
 <str id="47">
 <o>This is the maximum depth of the bucket. After a long enough period of inactivity, a request will get this many unthrottled bytes of data, before throttling kicks back in.&lt;br&gt;Set equal to the Fill Rate in order not to allow any data bursts. This value determines the length of the time over which the bandwidth is averaged.</o>
 <t>Det här är det maximala antalet poletter som får plats i hinken.
 Om det här värdet är lika stort som den
-genomsnittliga tillgängliga bandvidden så tillåts inga 
+genomsnittliga tillgängliga bandbredden så tillåts inga 
 tillfälliga datapulser när servern har varit inaktiv ett tag
 utan data skickas alltid med max den bandbredden.</t>
 </str>
 
 <str id="48">
 <o>Throttling: Server; Minimum Grant</o>
-<t>Bandviddsbegränsning: Servernivå: Minimalt antal bytes</t>
+<t>Bandbreddsbegränsning: Servernivå: Minimalt antal bytes</t>
 </str>
 
 <str id="49">
@@ -412,13 +651,13 @@ värdet så fördröjs förbindelser. Detta för att undvika att skicka för små paket,
 
 <str id="50">
 <o>Throttling: Server; Maximum Grant</o>
-<t>Bandviddsbegränsning: Servernivå: Maximalt antal bytes</t>
+<t>Bandbreddsbegränsning: Servernivå: Maximalt antal bytes</t>
 </str>
 
 <str id="51">
 <o>This is the maximum number of bytes assigned in a single request to a connection. Keeping this number low will share bandwidth more evenly among the pending connections, but keeping it too low will increase IP overhead and (marginally) CPU usage. You'll want to set it just a tiny bit lower than any integer multiple of your network's MTU (typically 1500 for ethernet).</o>
 <t>Det här är det maximala antalet bytes som en förbindelse kan få.
-Om det här värdet är lågt så fördelas bandvidden mer jämnt mellan olika
+Om det här värdet är lågt så fördelas bandbredden mer jämnt mellan olika
 förbindelser, men om det är för lågt så ökar overheaden från IP och TCP.
 &lt;br /&gt;&lt;br /&gt;
 Sätt det till ett värde som är aningens lägre än en jämn multipel av
@@ -427,7 +666,7 @@ ditt nätverks MTU (normala ethernetförbindelser har en MTU på 1500).</t>
 
 <str id="52">
 <o>Throttling: Request; Enabled</o>
-<t>Bandviddsbegränsning: Förbindelsenivå: Aktiverad</t>
+<t>Bandbreddsbegränsning: Förbindelsenivå: Aktiverad</t>
 </str>
 
 <str id="53">
@@ -437,26 +676,26 @@ ditt nätverks MTU (normala ethernetförbindelser har en MTU på 1500).</t>
 
 <str id="54">
 <o>Throttling: Request; Minimum guarranteed bandwidth</o>
-<t>Bandviddsbegränsning: Förbindelsenivå: Minimal bandbredd</t>
+<t>Bandbreddsbegränsning: Förbindelsenivå: Minimal bandbredd</t>
 </str>
 
 <str id="55">
 <o>The maximum bandwidth each connection (in bytes/sec) can use is determined combining a number of modules. But doing so can lead to too small or even negative bandwidths for particularly unlucky requests. This variable guarantees a minimum bandwidth for each request.</o>
-<t>Den maximala bandvidden som varje förbindelse får bestäms av en kombination
-av de bandviddsbegränsningsmoduler som är adderade i servern. Men ibland
+<t>Den maximala bandbredden som varje förbindelse får bestäms av en kombination
+av de bandbreddsbegränsningsmoduler som är adderade i servern. Men ibland
 så blir det framräknade värdet väldigt lågt, och en del riktigt otursamma
 förbindelser kan råka hamna på 0 eller mindre bytes per sekund.  &lt;br /&gt;&lt;br /&gt;
-Den här variablen garanterar en viss minimal bandvidd för alla requests</t>
+Den här variablen garanterar en viss minimal bandbredd för alla requests</t>
 </str>
 
 <str id="56">
 <o>Throttling: Request; Bucket Depth Multiplier</o>
-<t>Bandviddsbegränsning: Förbindelsenivå: Hinkstorlek</t>
+<t>Bandbreddsbegränsning: Förbindelsenivå: Hinkstorlek</t>
 </str>
 
 <str id="57">
 <o>The average bandwidth available for each request will be determined by the modules combination. The bucket depth will be determined multiplying the rate by this factor.</o>
-<t>Den genomsnittliga bandvidden som varje förbindelse bestäms av
+<t>Den genomsnittliga bandbredden som varje förbindelse bestäms av
 de adderade bandbreddsbegränsningsmodulerna. Hinkstorleken bestäms genom att
 multiplicera detta värde med den här faktorn.</t>
 </str>
@@ -1015,7 +1254,8 @@ ett bra tag.</t>
 </str>
 
 <str id="159">
-<o>Locale, used to localize all messages in Roxen. Standard means using the default locale, which varies according to the value of the 'LANG' environment variable.</o>
+<changed from="Locale, used to localize all messages in Roxen. Standard means using the default locale, which varies according to the value of the 'LANG' environment variable."/>
+<o>Locale, used to localize all messages in Roxen. Standard means using the default locale, which varies according to the values of the 'LC_MESSAGES' and 'LANG' environment variables.</o>
 <t>Den här variablen anger vilket språk Roxen ska använda.
 'standard' betyder att språket sätts automatiskt från
 värdet av omgivningsvariabeln LANG.</t>
@@ -1023,7 +1263,7 @@ värdet av omgivningsvariabeln LANG.</t>
 
 <str id="160">
 <o>Auto Restart: Enable Automatic Restart</o>
-<t>Automatomstart: Starta om automatiskt</t>
+<t>Auto-omstart: Starta om automatiskt</t>
 </str>
 
 <str id="161">
@@ -2069,10 +2309,7 @@ variabeln sätts till ett värde större än 14000 om du har modemanvändare.</t>
 <t>rader</t>
 </str>
 
-<str id="375">
-<o>KiB</o>
-<t>KiB</t>
-</str>
+
 
 <str id="376">
 <o>Name</o>
@@ -2085,7 +2322,8 @@ variabeln sätts till ett värde större än 14000 om du har modemanvändare.</t>
 </str>
 
 <str id="378">
-<o>Clear query</o>
+<changed from="Clear query"/>
+<o>Reset query</o>
 <t>Töm frågan</t>
 </str>
 
@@ -2099,10 +2337,7 @@ variabeln sätts till ett värde större än 14000 om du har modemanvändare.</t>
 <t>Under tiden som %s kördes: %s</t>
 </str>
 
-<str id="381">
-<o>Failed to connect</o>
-<t>Misslyckades koppla upp</t>
-</str>
+
 
 <str id="382">
 <o>Failed to enable %s</o>
@@ -2480,27 +2715,23 @@ modules.&lt;/p&gt;
 <t></t>
 </str>
 
-<str id="427">
-<new/>
-<o>the deleted module %s from %s</o>
-<t></t>
-</str>
+
 
 <str id="428">
 <new/>
-<o>Defined by %s</o>
+<o>Defined by %s.</o>
 <t></t>
 </str>
 
 <str id="429">
 <new/>
-<o>The table is known as '%s' in the module</o>
+<o>The table is known as %O in the module.</o>
 <t></t>
 </str>
 
 <str id="430">
 <new/>
-<o>The table is an anymous table defined by the module</o>
+<o>The table is an anonymous table defined by the module.</o>
 <t></t>
 </str>
 
@@ -2534,15 +2765,7 @@ modules.&lt;/p&gt;
 <t></t>
 </str>
 
-<str id="436">
-<new/>
-<o>The
-          &lt;i&gt;local&lt;/i&gt; database contains data that should not
-          be shared. The &lt;i&gt;docs&lt;/i&gt; database contains all
-          documentation.
-          </o>
-<t></t>
-</str>
+
 
 <str id="437">
 <new/>
@@ -2989,7 +3212,7 @@ server must be a MySQL server, nothing else will work.
 
 <str id="337">
 <new/>
-<o>If enabled, Roxen will enable various replication systems needed to set up multiple frontend systems. You will need a database named 'replicate' that recides in a shared mysql server for this to work. Also, all servers has to have this flag set. Roxen must be restarted before changes to this variable takes effect.</o>
+<o>If enabled, Roxen will enable various replication systems needed to set up multiple frontend systems. You will need a database named 'replicate' that resides in a shared mysql server for this to work. Also, all servers has to have this flag set. Roxen must be restarted before changes to this variable takes effect.</o>
 <t></t>
 </str>
 
@@ -3001,7 +3224,7 @@ server must be a MySQL server, nothing else will work.
 
 <str id="362">
 <new/>
-<o>Are you sure you want to delete the database %s? No data will be deleted from the remote datbase.</o>
+<o>Are you sure you want to delete the database %s? No data will be deleted from the remote database.</o>
 <t></t>
 </str>
 
@@ -3047,7 +3270,7 @@ server must be a MySQL server, nothing else will work.
 
 <str id="506">
 <new/>
-<o>Member of the %s database group</o>
+<o>Member of the %s database group.</o>
 <t></t>
 </str>
 
@@ -3299,4 +3522,155 @@ The file is searched for in parent directories in the same manner as the no such
 <str id="531">
 <o>Really Compact</o>
 <t>Extra kompakt</t>
+</str>
+
+<str id="258">
+<new/>
+<o>Logging: Compress log file</o>
+<t>Loggning: Komprimera loggfiler</t>
+</str>
+
+<str id="259">
+<new/>
+<o>Path to a program to compress log files, e.g. &lt;tt&gt;/usr/bin/bzip2&lt;/tt&gt; or &lt;tt&gt;/usr/bin/gzip&lt;/tt&gt;. &lt;b&gt;Note&amp;nbsp;1:&lt;/b&gt; The active log file is never compressed. Log rotation needs to be used using the "Log file" filename substitutions (e.g. &lt;tt&gt;$LOGDIR/mysite/Log.%y-%m-%d&lt;/tt&gt;). &lt;b&gt;Note&amp;nbsp;2:&lt;/b&gt; Compression is limited to scanning files with filename substitutions within a fixed directory (e.g. &lt;tt&gt;$LOGDIR/mysite/Log.%y-%m-%d&lt;/tt&gt;, not &lt;tt&gt;$LOGDIR/mysite/%y/Log.%m-%d&lt;/tt&gt;).</o>
+<t></t>
+</str>
+
+<str id="532">
+<new/>
+<o>Show this string in header</o>
+<t></t>
+</str>
+
+<str id="533">
+<new/>
+<o>Enter a identifier that will be displayed in the head of  config interface. This makes it easier to distinguish between different site configurations. </o>
+<t></t>
+</str>
+
+<str id="534">
+<new/>
+<o>Logging: Dump threads by file polling</o>
+<t>Loggning: Dumpa trådar med filpollning</t>
+</str>
+
+<str id="535">
+<new/>
+<o>&lt;p&gt;This option can be used to produce dumps of all the threads in the
+debug log in situations where the Administration Interface doesn't
+respond.&lt;/p&gt;
+
+&lt;p&gt;It works by checking for a file called "&lt;i&gt;&amp;lt;config
+name&amp;gt;&lt;/i&gt;.dump_threads" in the same directory as the debug log.
+&lt;i&gt;&amp;lt;config name&amp;gt;&lt;/i&gt; is the name of the server configuration,
+i.e. the same as the base name of the debug log files (typically
+"default"). If this file exists, a thread dump is generated and the
+file is deleted. If a file on the form "&lt;i&gt;&amp;lt;config
+name&amp;gt;&lt;/i&gt;.dump_threads.&lt;i&gt;&amp;lt;n&amp;gt;&lt;/i&gt;", where &lt;i&gt;&amp;lt;n&amp;gt;&lt;/i&gt;
+is an integer, exists then &lt;i&gt;n&lt;/i&gt; thread dumps are generated in one
+minute intervals.&lt;/p&gt;
+
+&lt;p&gt;Note that this method normally isn't necessary in unix-like
+environments; there you can just send a SIGQUIT signal to the pike
+process to get a thread dump.&lt;/p&gt;
+
+&lt;p&gt;Enabling this creates a dedicated thread.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="536">
+<new/>
+<o>Change default character set</o>
+<t></t>
+</str>
+
+<str id="537">
+<new/>
+<o>Repair all tables</o>
+<t></t>
+</str>
+
+<str id="538">
+<new/>
+<o>Optimize all tables</o>
+<t></t>
+</str>
+
+<str id="539">
+<new/>
+<o>Changing default character set for %s</o>
+<t></t>
+</str>
+
+<str id="540">
+<new/>
+<o>Old default character set</o>
+<t></t>
+</str>
+
+<str id="541">
+<new/>
+<o>New default character set</o>
+<t></t>
+</str>
+
+<str id="542">
+<new/>
+<o>the deleted site %O</o>
+<t></t>
+</str>
+
+<str id="543">
+<new/>
+<o>%s in %s</o>
+<t></t>
+</str>
+
+<str id="544">
+<new/>
+<o>the deleted module %s in %s</o>
+<t></t>
+</str>
+
+<str id="545">
+<new/>
+<o>the deleted module %s</o>
+<t></t>
+</str>
+
+<str id="546">
+<new/>
+<o>Internal data that cannot be shared between servers.</o>
+<t></t>
+</str>
+
+<str id="547">
+<new/>
+<o>Internal data that may be shared between servers.</o>
+<t></t>
+</str>
+
+<str id="548">
+<new/>
+<o>Default charset:</o>
+<t></t>
+</str>
+
+<str id="549">
+<new/>
+<o>No defined databases.
+</o>
+<t></t>
+</str>
+
+<str id="550">
+<new/>
+<o>Site Permissions</o>
+<t></t>
+</str>
+
+<str id="551">
+<new/>
+<o>Module Priorities</o>
+<t></t>
 </str>

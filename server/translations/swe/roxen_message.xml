@@ -123,7 +123,7 @@ Kontrollera att gruppdatabasen stämmer, och att lösenordsdatabasen för användare
 </str>
 
 <str id="24">
- <o>It is possible to change uid and gid only if the server is running as root.</o>
+<o>It is possible to change uid and gid only if the server is running as root.</o>
 <t>Det går endast att ändra användar-/grupp-id om servern körs av root.</t>
 </str>
 
@@ -382,4 +382,9 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </o>
 <t>TLS-port %s öppnad.
 </t>
+</str>
+
+<str id="66">
+<o>Uncaught error in background process:</o>
+<t>Fel som ej fångats i bakgrundsprocess:</t>
 </str>
