@@ -2309,8 +2309,6 @@ variabeln sätts till ett värde större än 14000 om du har modemanvändare.</t>
 <t>rader</t>
 </str>
 
-
-
 <str id="376">
 <o>Name</o>
 <t>Namn</t>
@@ -2336,8 +2334,6 @@ variabeln sätts till ett värde större än 14000 om du har modemanvändare.</t>
 <o>While running %s: %s</o>
 <t>Under tiden som %s kördes: %s</t>
 </str>
-
-
 
 <str id="382">
 <o>Failed to enable %s</o>
@@ -2715,8 +2711,6 @@ modules.&lt;/p&gt;
 <t></t>
 </str>
 
-
-
 <str id="428">
 <new/>
 <o>Defined by %s.</o>
@@ -2764,8 +2758,6 @@ modules.&lt;/p&gt;
 <o>When the group is created, the checked databases will be imported as well</o>
 <t></t>
 </str>
-
-
 
 <str id="437">
 <new/>
@@ -3525,7 +3517,6 @@ The file is searched for in parent directories in the same manner as the no such
 </str>
 
 <str id="258">
-<new/>
 <o>Logging: Compress log file</o>
 <t>Loggning: Komprimera loggfiler</t>
 </str>
@@ -3549,7 +3540,6 @@ The file is searched for in parent directories in the same manner as the no such
 </str>
 
 <str id="534">
-<new/>
 <o>Logging: Dump threads by file polling</o>
 <t>Loggning: Dumpa trådar med filpollning</t>
 </str>

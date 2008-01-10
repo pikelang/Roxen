@@ -2354,8 +2354,6 @@ as the name of its log file directory.
 <t></t>
 </str>
 
-
-
 <str id="376">
 <new/>
 <o>Name</o>
@@ -2385,8 +2383,6 @@ as the name of its log file directory.
 <o>While running %s: %s</o>
 <t></t>
 </str>
-
-
 
 <str id="382">
 <new/>
@@ -2779,8 +2775,6 @@ modules.&lt;/p&gt;
 <t></t>
 </str>
 
-
-
 <str id="428">
 <new/>
 <o>Defined by %s.</o>
@@ -2828,8 +2822,6 @@ modules.&lt;/p&gt;
 <o>When the group is created, the checked databases will be imported as well</o>
 <t></t>
 </str>
-
-
 
 <str id="437">
 <new/>

@@ -2217,8 +2217,6 @@ as the name of its log file directory.
 <t>Zeilen</t>
 </str>
 
-
-
 <str id="376">
 <o>Name</o>
 <t>Name</t>
@@ -2244,8 +2242,6 @@ as the name of its log file directory.
 <o>While running %s: %s</o>
 <t>Bei Ausführung von %s: %s</t>
 </str>
-
-
 
 <str id="382">
 <o>Failed to enable %s</o>
@@ -2698,8 +2694,6 @@ modules.&lt;/p&gt;
 <t>Abfrage dauerte %[0].3fs, %[1]d Zeilen in der Antwort</t>
 </str>
 
-
-
 <str id="428">
 <changed from="Defined by %s"/>
 <o>Defined by %s.</o>
@@ -2742,8 +2736,6 @@ modules.&lt;/p&gt;
 <o>When the group is created, the checked databases will be imported as well</o>
 <t>Wenn diese Gruppe erstellt wird, werden die markierten Datenbanken ebenfalls importiert</t>
 </str>
-
-
 
 <str id="437">
 <o>Create new database</o>
