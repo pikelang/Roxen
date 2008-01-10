@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.199 2008/01/10 10:19:56 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.200 2008/01/10 11:55:33 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1044,10 +1044,10 @@ class RequestID
   //!     Contains the cache lookup callback functions relevant to the
   //!     request so far in order. See @[register_vary_callback()] for
   //!     details.
-  //!   @member multiset(string|function(string, RequestID:string)) @
-  //!           "vary_cb_set"
+  //!   @member mapping(string:multiset(function(string, RequestID:string))| @
+  //!                          int(1..1)) "vary_cb_set"
   //!     Same content as @tt{"vary_cb_order"@} above, but only used to
-  //!     speed up some lookups.
+  //!     speed up some lookups. For internal use only.
   //! @endmapping
 
   mapping (string:mixed) connection_misc = ([]);
@@ -1593,22 +1593,34 @@ class RequestID
       }
     }
     if (!misc->vary_cb_set) {
-      misc->vary_cb_set = (< cb || vary >);
+      misc->vary_cb_set = cb ? ([vary: (<cb>)]) : ([vary: 1]);
       misc->vary_cb_order = ({ cb || vary });
       VARY_WERROR("register_vary_callback(%O, %O)\n", vary, cb);
       return;
     }
-    if (misc->vary_cb_set[cb || vary]) {
-      // Already registred.
-      VARY_WERROR("register_vary_callback(%O, %O) Duplicate\n", vary, cb);
-      return;
+    if (multiset(function(string,RequestID:string|int))|int(1..1) old =
+	misc->vary_cb_set[vary]) {
+      if (old == 1) {
+	// The full header has already been registred.
+	VARY_WERROR("register_vary_callback(%O, %O) Full header\n", vary, cb);
+	return;
+      }
+      else if (old[cb]) {
+	// Already registred.
+	VARY_WERROR("register_vary_callback(%O, %O) Duplicate\n", vary, cb);
+	return;
+      }
+      else if (!cb) {
+	// Registering full header now - remove all callbacks.
+	misc->vary_cb_order = misc->vary_cb_order - (array) old + ({vary});
+	misc->vary_cb_set[vary] = 1;
+	VARY_WERROR("register_vary_callback(%O, 0) Removed old cbs\n", vary);
+	return;
+      }
+      old[cb] = 1;
     }
-    if (vary && misc->vary_cb_set[vary]) {
-      // The full header has already been registred.
-      VARY_WERROR("register_vary_callback(%O, %O) Full header\n", vary, cb);
-      return;
-    }
-    misc->vary_cb_set[cb || vary] = 1;
+    else
+      misc->vary_cb_set[vary] = cb ? (<cb>) : 1;
     misc->vary_cb_order += ({ cb || vary });
     VARY_WERROR("register_vary_callback(%O, %O)\n", vary, cb);
   }
