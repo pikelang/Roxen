@@ -1085,13 +1085,13 @@ change the currently running version.</o>
 
 <str id="156">
 <new/>
-<o>Active connection</o>
+<o>Active connections</o>
 <t></t>
 </str>
 
 <str id="157">
 <new/>
-<o>All currently active connection</o>
+<o>All currently active connections</o>
 <t></t>
 </str>
 
@@ -1158,12 +1158,6 @@ change the currently running version.</o>
 <str id="170">
 <new/>
 <o>%d seconds since last garbage collection, %d%% of the interval is consumed.</o>
-<t></t>
-</str>
-
-<str id="171">
-<new/>
-<o>Run the garbage collector first.</o>
 <t></t>
 </str>
 

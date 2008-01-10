@@ -916,12 +916,14 @@ ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 </str>
 
 <str id="156">
-<o>Active connection</o>
+<changed from="Active connection"/>
+<o>Active connections</o>
 <t>Aktive Verbindungen</t>
 </str>
 
 <str id="157">
-<o>All currently active connection</o>
+<changed from="All currently active connection"/>
+<o>All currently active connections</o>
 <t>Alle derzeit aktiven Verbindungen</t>
 </str>
 
@@ -981,12 +983,6 @@ ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 <str id="170">
 <new/>
 <o>%d seconds since last garbage collection, %d%% of the interval is consumed.</o>
-<t></t>
-</str>
-
-<str id="171">
-<new/>
-<o>Run the garbage collector first.</o>
 <t></t>
 </str>
 

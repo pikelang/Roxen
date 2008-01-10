@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.630 2007/12/21 16:08:34 wellhard Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.631 2008/01/10 15:38:49 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4474,8 +4474,8 @@ below.</p>
 	 ,0, lambda(){ return !query("Log");});
   
   defvar("LogFileCompressor", "",
-	 DLOCALE(0, "Logging: Compress log file"), TYPE_STRING,
-	 DLOCALE(0, "Path to a program to compress log files, "
+	 DLOCALE(258, "Logging: Compress log file"), TYPE_STRING,
+	 DLOCALE(259, "Path to a program to compress log files, "
 		 "e.g. <tt>/usr/bin/bzip2</tt> or <tt>/usr/bin/gzip</tt>. "
 		 "<b>Note&nbsp;1:</b> The active log file is never compressed. "
 		 "Log rotation needs to be used using the \"Log file\" "

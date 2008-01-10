@@ -279,7 +279,8 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </str>
 
 <str id="38">
-<o>Ok</o>
+<changed from="Ok"/>
+<o>OK</o>
 <t>OK</t>
 </str>
 
@@ -383,5 +384,11 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 <new/>
 <o>TLS port %s opened.
 </o>
+<t></t>
+</str>
+
+<str id="66">
+<new/>
+<o>Uncaught error in background process:</o>
 <t></t>
 </str>

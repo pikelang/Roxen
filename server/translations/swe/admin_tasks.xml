@@ -37,7 +37,6 @@
 </str>
 
 <str id="2">
-<changed from="Show some information about how pike is using the memory it has allocated. Mostly useful for developers."/>
 <o>Show some information about how Pike is using the memory it has allocated. Mostly useful for developers.</o>
 <t>Visar en del information om hur Pike använder det minne som allokerats. Mest användbart för utvecklare.</t>
 </str>
@@ -290,9 +289,8 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="38">
-<changed from="Main thread"/>
 <o>backend thread</o>
-<t>Huvudtråden</t>
+<t>backend-tråden</t>
 </str>
 
 <str id="39">
@@ -321,7 +319,6 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="231">
-<changed from="Debug information"/>
 <o>Debug Information</o>
 <t>Debuginformation</t>
 </str>
@@ -437,9 +434,8 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="74">
-<changed from="Loaded projects:"/>
 <o>Loaded project files:</o>
-<t>Inlästa projekt:</t>
+<t>Inlästa projektfiler:</t>
 </str>
 
 <str id="75">
@@ -563,9 +559,8 @@ demonstrationscertifikat som följer med Roxen.</t>
 </str>
 
 <str id="95">
-<changed from="The largest RSA key that is publicly known to have been broken was 155 decimal digits, or 512 bits large. This effort required approximately 8000 MIPS-years.&lt;p&gt;A key 1024 bits large should be secure enough for most applications, but of course you can you use an even larger key if you so wish."/>
 <o>The largest key that is publicly known to have been broken was 155 decimal digits, or 512 bits large. This effort required approximately 8000 MIPS-years.&lt;p&gt;A key 1024 bits large should be secure enough for most applications, but of course you can you use an even larger key if you so wish.</o>
-<t>Den största kända RSA-nyckeln som har blivit knäckt bestod av 155 decimala siffror, d.v.s 512 bitar lång. Den bedriften krävde ungefär 8000 MIPS-år.&lt;p&gt;En 1024 bitar stor nyckel bör vara tillräckligt säker för de flesta tillämpningar, men du kan givetvis använda större nycklar än så om du så önskar.</t>
+<t>Den största kända nyckel som har blivit knäckt bestod av 155 decimala siffror, d.v.s 512 bitar lång. Den bedriften krävde ungefär 8000 MIPS-år.&lt;p&gt;En 1024 bitar stor nyckel bör vara tillräckligt säker för de flesta tillämpningar, men du kan givetvis använda större nycklar än så om du så önskar.</t>
 </str>
 
 <str id="96">
@@ -646,9 +641,8 @@ Trots att de flesta klienter accepterar 8-bitars ISO 8859-1 tecken i dessa fält 
 </str>
 
 <str id="111">
-<new/>
 <o>Common Name</o>
-<t></t>
+<t>Common Name</t>
 </str>
 
 <str id="112">
@@ -786,12 +780,11 @@ nyckelpar. Den ena halvan ska hållas hemlig</t>
 </str>
 
 <str id="42">
-<changed from=""/>
 <o>If you have more than one Roxen version installed
 in the same location, you can use this action to
 change the currently running version.</o>
 <t>Om du har mer än en Roxenversion installerad i samma mapp så
-kan du använda den här för att byta vilken som körs.</t>
+kan du använda den här för att växla vilken version som körs.</t>
 </str>
 
 <str id="43">
@@ -815,9 +808,8 @@ kan du använda den här för att byta vilken som körs.</t>
 </str>
 
 <str id="47">
-<changed from="Shutting down and changing roxen version"/>
 <o>Shutting down and changing Roxen version</o>
-<t>Avslutar Roxen och ändrar roxenversion</t>
+<t>Avslutar och ändrar Roxenversion</t>
 </str>
 
 <str id="48">
@@ -841,9 +833,8 @@ kan du använda den här för att byta vilken som körs.</t>
 </str>
 
 <str id="137">
-<changed from="If you change to one these roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again"/>
 <o>If you change to one these Roxen versions, you will not be able to change back from the administration interface, you will instead have to edit the file %O manually, shutdown the server, and execute %O again</o>
-<t>Om du ändrar till en av de här roxenversionerna så kommer du inte
+<t>Om du ändrar till en av de här Roxenversionerna så kommer du inte
 kunna byta tillbaka igen från administrationsgränssnittet, du måste
 istället editera filen %O manuellt och sedan ta ner server, och köra
 %O manuellt.</t>
@@ -855,313 +846,256 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 </str>
 
 <str id="87">
-<new/>
 <o>Non-garbing Memory Cache</o>
-<t></t>
+<t>Icke-garbande minnescache</t>
 </str>
 
 <str id="139">
-<new/>
 <o>one day</o>
-<t></t>
+<t>en dag</t>
 </str>
 
 <str id="140">
-<new/>
 <o>Unavailable features</o>
-<t></t>
+<t>Otillgängliga funktioner</t>
 </str>
 
 <str id="141">
-<new/>
 <o>Source</o>
-<t></t>
+<t>Källkodsfil</t>
 </str>
 
 <str id="142">
-<new/>
 <o>Program</o>
-<t></t>
+<t>Program</t>
 </str>
 
 <str id="143">
-<new/>
 <o>Clones</o>
-<t></t>
+<t>Kopior</t>
 </str>
 
 <str id="144">
-<new/>
 <o>Create site template</o>
-<t></t>
+<t>Skapa sajtmall</t>
 </str>
 
 <str id="145">
-<new/>
 <o>Create a site template from a site configuration</o>
-<t></t>
+<t>Skapa sajtmall från en sajtkonfiguration</t>
 </str>
 
 <str id="146">
-<new/>
 <o>Coundn't find configuration</o>
-<t></t>
+<t>Kunde inte hitta konfiguration</t>
 </str>
 
 <str id="147">
-<new/>
 <o>Select configuration to base the template on.</o>
-<t></t>
+<t>Välj konfiguration att basera mallen på.</t>
 </str>
 
 <str id="148">
-<new/>
 <o>Selected configuration</o>
-<t></t>
+<t>Vald konfiguration</t>
 </str>
 
 <str id="149">
-<new/>
 <o>Coundn't create directory</o>
-<t></t>
+<t>Kunde inte skapa katalog</t>
 </str>
 
 <str id="150">
-<new/>
 <o>Failed to create template file</o>
-<t></t>
+<t>Misslyckades med att skapa mallfil</t>
 </str>
 
 <str id="151">
-<new/>
 <o>Failed to write template file</o>
-<t></t>
+<t>Misslyckades med att skriva mallfil</t>
 </str>
 
 <str id="152">
-<new/>
 <o>Site template created successfully.</o>
-<t></t>
+<t>Mallfilen har skapats</t>
 </str>
 
 <str id="154">
-<new/>
 <o>Note that you will have to start the new server manually because you may have to answer a few questions for the new environment file.</o>
-<t></t>
+<t>Observera att du måste starta den nya servern manuellt eftersom du kommer få ett par frågor att besvara rörande den nya environment-filen.</t>
 </str>
 
 <str id="155">
-<new/>
 <o>Failed to write CSR to %s.</o>
-<t></t>
+<t>Misslyckades med att skriva CSR till %s.</t>
 </str>
 
 <str id="156">
-<new/>
-<o>Active connection</o>
-<t></t>
+<o>Active connections</o>
+<t>Aktiva uppkopplingar</t>
 </str>
 
 <str id="157">
-<new/>
-<o>All currently active connection</o>
-<t></t>
+<o>All currently active connections</o>
+<t>Alla nuvarande aktiva uppkopplingar</t>
 </str>
 
 <str id="158">
-<new/>
 <o>Time</o>
-<t></t>
+<t>Tidpunkt</t>
 </str>
 
 <str id="159">
-<new/>
 <o>Sent (Mib)</o>
-<t></t>
+<t>Skickat (Mib)</t>
 </str>
 
 <str id="160">
-<new/>
 <o>Kibyte/s</o>
-<t></t>
+<t>Kibyte/s</t>
 </str>
 
 <str id="161">
-<new/>
 <o>Total bandwidth</o>
-<t></t>
+<t>Total bandbredd</t>
 </str>
 
 <str id="163">
-<new/>
 <o>Debug summary</o>
-<t></t>
+<t>Debugsammanställning</t>
 </str>
 
 <str id="164">
-<new/>
 <o>Shows a text file containing a configuration summary, suitable for support purposes.</o>
-<t></t>
+<t>Visar en textfil innehållande en sammanställning av konfigurationen för debugändamål.</t>
 </str>
 
 <str id="165">
-<new/>
 <o>License status</o>
-<t></t>
+<t>Licensstatus</t>
 </str>
 
 <str id="166">
-<new/>
 <o>Show information about the installed licenses and there usage.</o>
-<t></t>
+<t>Visa information om installerade licenser och deras användning.</t>
 </str>
 
 <str id="168">
-<new/>
 <o>Upload a new Roxen license file.</o>
-<t></t>
+<t>Ladda upp en ny Roxen-licensfil.</t>
 </str>
 
 <str id="169">
-<new/>
 <o>The garbage collector freed %d of %d things (%d%%).</o>
-<t></t>
+<t>Garbage Collector frigjorde %d av %d saker (%d%%).</t>
 </str>
 
 <str id="170">
-<new/>
 <o>%d seconds since last garbage collection, %d%% of the interval is consumed.</o>
-<t></t>
-</str>
-
-<str id="171">
-<new/>
-<o>Run the garbage collector first.</o>
-<t></t>
+<t>%d sekunder sedan senaste Garbage Collector-passet, %d%% av intervallet passerat.</t>
 </str>
 
 <str id="172">
-<new/>
 <o>Garbage collector status</o>
-<t></t>
+<t>Status för Garbage Collector</t>
 </str>
 
 <str id="173">
-<new/>
 <o>Internal inconsistency</o>
-<t></t>
+<t>Intern inkonsistens</t>
 </str>
 
 <str id="174">
-<new/>
 <o>Object(s) missing in object link list.</o>
-<t></t>
+<t>Objekt saknas i lista för länkade objekt.</t>
 </str>
 
 <str id="175">
-<new/>
 <o>Warning</o>
-<t></t>
+<t>Varning</t>
 </str>
 
 <str id="176">
-<new/>
 <o>Number of objects changed during object walkthrough (probably due to automatic gc call) - the list below is not complete.</o>
-<t></t>
+<t>Antal objekt ändrades under pågående genomsökning (troligen på grund av automatisk Garbage Collection) - listan nedan är inkomplett.</t>
 </str>
 
 <str id="177">
-<new/>
 <o>The object walkthrough visited %d of %d objects - the list below is not accurate.</o>
-<t></t>
+<t>Genomsökningen efter objekt besökte %d av %d objekt - listan nedan är inte korrekt.</t>
 </str>
 
 <str id="178">
-<new/>
 <o>Total</o>
-<t></t>
+<t>Totalt</t>
 </str>
 
 <str id="179">
-<new/>
 <o>Canonic URL: </o>
-<t></t>
+<t>Kanonisk URL: </t>
 </str>
 
 <str id="180">
-<new/>
 <o>Upload license...</o>
-<t></t>
+<t>Ladda upp licens...</t>
 </str>
 
 <str id="41">
-<new/>
 <o>Download</o>
-<t></t>
+<t>Ladda ned</t>
 </str>
 
 <str id="153">
-<new/>
 <o>Download Debug Log</o>
-<t></t>
+<t>Spara debuglogg</t>
 </str>
 
 <str id="162">
-<new/>
 <o>Pike profiling information</o>
-<t></t>
+<t>Pike profileringsinformation</t>
 </str>
 
 <str id="167">
-<new/>
 <o>Show some information about how much time has been spent in various functions. Mostly useful for developers.</o>
-<t></t>
+<t>Visa information om hur mycket tid som spenderats i olika funktioner. Främst värdefullt för utvecklare.</t>
 </str>
 
 <str id="181">
-<new/>
 <o>Request profiling information</o>
-<t></t>
+<t>Information om profilering av sidhämtningar</t>
 </str>
 
 <str id="182">
-<new/>
 <o>Show some information about how how much time has been spent in requests. Mostly useful for developers.</o>
-<t></t>
+<t>Visa information om hur mycket tid som spenderats i en sidhämtning. Främst värdefullt för utvecklare.</t>
 </str>
 
 <str id="183">
-<new/>
 <o>All times are in microseconds.</o>
-<t></t>
+<t>Alla tider i microsekunder.</t>
 </str>
 
 <str id="184">
-<new/>
 <o>NOTE: This information is only available if the server has been stared with &lt;tt&gt;-DPROFILE&lt;/tt&gt;.</o>
-<t></t>
+<t>Observera: Denna information är endast tillgänglig om servern startats med &lt;tt&gt;-DPROFILE&lt;/tt&gt;.</t>
 </str>
 
 <str id="185">
-<new/>
 <o>This information is only available if the pike binary has been compiled with &lt;tt&gt;--with-profiling&lt;/tt&gt;.</o>
-<t></t>
+<t>Denna information är endast tillgänglig om Pike har kompilerats med &lt;tt&gt;--with-profiling&lt;/tt&gt;.</t>
 </str>
 
 <str id="186">
-<new/>
 <o>Refresh</o>
-<t></t>
+<t>Uppdatera</t>
 </str>
 
 <str id="187">
-<new/>
 <o>Reset</o>
-<t></t>
+<t>Nollställ</t>
 </str>
 
 <str id="188">
-<new/>
 <o>Unable to parse URL.</o>
-<t></t>
+<t>Kan inte tolka URL.</t>
 </str>
