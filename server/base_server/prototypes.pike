@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.197 2008/01/08 13:43:51 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.198 2008/01/10 10:06:21 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1118,11 +1118,11 @@ class RequestID
 	/* Workaround for MSIE 6's refusal to cache anything with
 	 * a Vary:Cookie header.
 	 */
-	register_vary_callback("User-Agent", browser_supports_vary);
+	register_vary_callback("user-agent", browser_supports_vary);
 	if (supports->vary) {
-	  register_vary_callback("Cookie", Roxen->get_cookie_callback(cookie));
+	  register_vary_callback("cookie", Roxen->get_cookie_callback(cookie));
 	} else {
-	  register_vary_callback("User-Agent",
+	  register_vary_callback("user-agent",
 				 Roxen->get_cookie_callback(cookie));
 	}
       }
@@ -1157,27 +1157,27 @@ class RequestID
     }
     static array(string) _indices()
     {
-      register_vary_callback("Cookie");
+      register_vary_callback("cookie");
       return indices(real_cookies);
     }
     static array(string) _values()
     {
-      register_vary_callback("Cookie");
+      register_vary_callback("cookie");
       return values(real_cookies);
     }
     static int _sizeof()
     {
-      register_vary_callback("Cookie");
+      register_vary_callback("cookie");
       return sizeof(real_cookies);
     }
     static mapping(string:string) `+(mapping(string:string) other)
     {
-      register_vary_callback("Cookie");
+      register_vary_callback("cookie");
       return real_cookies + other;
     }
     static mapping(string:string) ``+(mapping(string:string) other)
     {
-      register_vary_callback("Cookie");
+      register_vary_callback("cookie");
       return other + real_cookies;
     }
 
@@ -1563,14 +1563,13 @@ class RequestID
 			      function(string, RequestID: string|int)|void cb)
   {
     // Don't generate a vary header for the Host header.
-    if (vary != "Host") {
+    if (vary != "host") {
       if (!misc->vary) {
 	misc->vary = (< vary || "*" >);
       } else {
 	misc->vary[vary || "*"] = 1;
       }
     }
-    if (vary) vary = lower_case(vary);
     if (!misc->vary_cb_set) {
       misc->vary_cb_set = (< cb || vary >);
       misc->vary_cb_order = ({ cb || vary });
@@ -1607,7 +1606,7 @@ class RequestID
       string tmp;
 
       // We're looking at the host header...
-      register_vary_callback("Host");
+      register_vary_callback("host");
 
       // First look at the host header in the request.
       if (tmp = misc->host) {

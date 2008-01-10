@@ -7,7 +7,7 @@
 
 // responsible for the changes to the original version 1.3: Martin Baehr mbaehr@iaeste.or.at
 
-constant cvs_version = "$Id: hostredirect.pike,v 1.37 2007/06/14 06:01:14 erikd Exp $";
+constant cvs_version = "$Id: hostredirect.pike,v 1.38 2008/01/10 10:06:21 mast Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -171,7 +171,7 @@ int|mapping first_try(RequestID id)
   }
 
   // We look at the host header...
-  id->register_vary_callback("Host", get_host);
+  id->register_vary_callback("host", get_host);
 
   if (!(host = get_host(0, id))) return 0;
 
@@ -236,9 +236,9 @@ int|mapping first_try(RequestID id)
   {
     // HTTP redirect
     // We look at the protocol (host header)...
-    id->register_vary_callback("Host", get_protocol);
+    id->register_vary_callback("host", get_protocol);
     // We look at the port (host header)...
-    id->register_vary_callback("Host", get_port);
+    id->register_vary_callback("host", get_port);
     catch {  // The catch is needed to make sure the url parsing don't backtrace.
       Standards.URI to_uri = Standards.URI(to_prefix);
       Standards.URI cur_uri =

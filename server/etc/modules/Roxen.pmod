@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.229 2008/01/09 15:59:18 mast Exp $
+// $Id: Roxen.pmod,v 1.230 2008/01/10 10:06:21 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3766,7 +3766,7 @@ class ScopePage {
 					      c->misc[" _stat"][1]:-4, type);
       case "self": return ENCODE_RXML_TEXT( (c->id->not_query/"/")[-1], type);
       case "ssl-strength":
-	c->id->register_vary_callback("Host", get_ssl_strength);
+	c->id->register_vary_callback("host", get_ssl_strength);
 	return ENCODE_RXML_INT(get_ssl_strength("", c->id), type);
       case "dir":
 	array parts = c->id->not_query/"/";
