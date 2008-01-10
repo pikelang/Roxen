@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.200 2008/01/10 11:55:33 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.201 2008/01/10 15:21:07 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1623,6 +1623,61 @@ class RequestID
       misc->vary_cb_set[vary] = cb ? (<cb>) : 1;
     misc->vary_cb_order += ({ cb || vary });
     VARY_WERROR("register_vary_callback(%O, %O)\n", vary, cb);
+  }
+
+  void unregister_vary_callback (string vary,
+				 void|function(string,RequestID:string|int) cb)
+  //! Unregisters a dependency on a request header or a specific vary
+  //! callback. @[vary] and @[cb] should be the same arguments that
+  //! were previously passed to @[register_vary_callback]. If @[cb] is
+  //! zero then all callbacks registered for the @[vary] header are
+  //! unregistered.
+  //!
+  //! @note
+  //! Try to avoid this function. It's ugly practice.
+  {
+    if (misc->vary)
+      misc->vary[vary || "*"] = 0;
+    if (!misc->vary_cb_set) {
+      VARY_WERROR ("unregister_vary_callback (%O, %O) "
+		   "Got no vary registrations\n", vary, cb);
+      return;
+    }
+    if (multiset(function(string,RequestID:string|int))|int(1..1) old =
+	misc->vary_cb_set[vary]) {
+      if (multisetp (old)) {
+	if (cb) {
+	  if (old[cb]) {
+	    misc->vary_cb_order -= ({cb});
+	    old[cb] = 0;
+	    VARY_WERROR ("unregister_vary_callback (%O, %O) "
+			 "Removed callback\n", vary, cb);
+	  }
+	  else {
+	    VARY_WERROR ("unregister_vary_callback (%O, %O) "
+			 "Callback wasn't registered\n", vary, cb);
+	  }
+	}
+	else {
+	  misc->vary_cb_order -= (array) old;
+	  m_delete (misc->vary_cb_set, vary);
+	  VARY_WERROR ("unregister_vary_callback (%O, 0) "
+		       "Removed %d callbacks\n", vary, sizeof (old));
+	}
+      }
+      else {
+	if (cb) {
+	  VARY_WERROR ("unregister_vary_callback (%O, %O) "
+		       "Callback wasn't registered\n", vary, cb);
+	}
+	else {
+	  misc->vary_cb_order -= ({vary});
+	  m_delete (misc->vary_cb_set, vary);
+	  VARY_WERROR ("unregister_vary_callback (%O, 0) "
+		       "Removed header\n", vary);
+	}
+      }
+    }
   }
 
   static string cached_url_base;
