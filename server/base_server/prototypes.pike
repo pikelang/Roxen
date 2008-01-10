@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.201 2008/01/10 15:21:07 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.202 2008/01/10 17:12:16 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1038,7 +1038,8 @@ class RequestID
   //!     File status information for the request.
   //!   @member multiset(string) "vary"
   //!     Contains the active set of vary headers. Please use
-  //!     @[register_vary_callback()] to alter.
+  //!     @[register_vary_callback()] to alter. All header names here
+  //!     should be lowercase to avoid problems with duplicates.
   //!   @member array(string|function(string, RequestID:string)) @
   //!           "vary_cb_order"
   //!     Contains the cache lookup callback functions relevant to the
