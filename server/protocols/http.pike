@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.539 2008/01/10 10:19:56 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.540 2008/01/10 15:14:27 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -607,10 +607,17 @@ int things_to_do_when_not_sending_from_cache( )
 #else
   supports = (< "images", "gifinline", "forms", "mailto">);
 #endif
-  if (!has_value(client, "MSIE"))
-    supports->vary = 1;
-  else {
-    // FIXME: Vary seems to work in MSIE 7.
+  {
+    int i = search (client, "MSIE");
+    if (i < 0)
+      supports->vary = 1;
+    else if (++i < sizeof (client) &&
+	     sscanf (client[i], "%d", int msie_major) == 1) {
+      // Vary doesn't work in MSIE <= 6.
+      // FIXME: Does it really work in MSIE 7?
+      if (msie_major >= 7)
+	supports->vary = 1;
+    }
   }
   //REQUEST_WERR("HTTP: parse_got(): supports");
   if(!referer) referer = ({ });
