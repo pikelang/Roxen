@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.198 2008/01/10 10:06:21 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.199 2008/01/10 10:19:56 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1210,7 +1210,7 @@ class RequestID
   //! Call to initialize the cookies.
   //!
   //! Typically called from callbacks installed with
-  //! @[register_vary_callback()] if @[cookies] hasn't been initialized.
+  //! @[register_vary_callback()] to ensure @[cookies] is initialized.
   void init_cookies(int|void no_cookie_jar)
   {
     if (!cookies) {
@@ -1218,6 +1218,28 @@ class RequestID
       if (no_cookie_jar) {
 	// Disable the cookie jar -- Called from log()?
 	real_cookies = cookies = ~cookies;
+      }
+    }
+  }
+
+  void init_pref_languages()
+  //! Call to initialize @code{@[misc]->pref_languages@}.
+  //!
+  //! Typically called from callbacks installed with
+  //! @[register_vary_callback()] to ensure
+  //! @code{@[misc]->pref_languages@} is initialized.
+  {
+    if (!misc->pref_languages) {
+      misc->pref_languages=PrefLanguages();
+      if (string|array(string) contents = request_headers[ "accept-language" ])
+      {
+	if( !arrayp( contents ) )
+	  contents = (contents-" ")/",";
+	else
+	  contents =
+	    Array.flatten( map( map( contents, `-, " " ), `/, "," ))-({""});
+	misc->pref_languages->languages=contents;
+	misc["accept-language"] = contents;
       }
     }
   }

@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.538 2008/01/09 16:40:43 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.539 2008/01/10 10:19:56 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -533,22 +533,11 @@ int things_to_do_when_not_sending_from_cache( )
   array mod_config;
   int config_in_url;
 #endif
-  array|string contents;
-  misc->pref_languages=PrefLanguages();
 
   misc->cachekey = ProtocolCacheKey();
   misc->_cachecallbacks = ({});
-  if( contents = request_headers[ "accept-language" ] )
-  {
-    if( !arrayp( contents ) )
-      contents = (contents-" ")/",";
-    else
-      contents =
-	Array.flatten( map( map( contents, `-, " " ), `/, "," ))-({""});
-    misc->pref_languages->languages=contents;
-    misc["accept-language"] = contents;
-  }
 
+  init_pref_languages();
   init_cookies();
 
   string f = raw_url;
