@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.202 2008/01/10 17:12:16 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.203 2008/01/11 08:25:00 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1651,6 +1651,7 @@ class RequestID
 	  if (old[cb]) {
 	    misc->vary_cb_order -= ({cb});
 	    old[cb] = 0;
+	    if (!sizeof (old)) m_delete (misc->vary_cb_set, vary);
 	    VARY_WERROR ("unregister_vary_callback (%O, %O) "
 			 "Removed callback\n", vary, cb);
 	  }
