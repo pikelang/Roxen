@@ -1937,109 +1937,109 @@ b</strlen></rxml>
 
 <test>
 <rxml><set variable="var.date"><date strftime="%Y%m%d"/></set><if date="&var.date;"
- after="1">X</if>Y</rxml>
+ after="1">X[&var.date;]</if>Y</rxml>
 <result>Y</result>
 </test>
 
 <test>
 <rxml><set variable="var.date"><date strftime="%Y%m%d"/></set><if date="&var.date;"
- after="1" inclusive="1">X</if>Y</rxml>
+ after="1" inclusive="1">X</if><else>[&var.date;]</else>Y</rxml>
 <result>XY</result>
 </test>
 
 <test>
 <rxml><set variable="var.date"><date strftime="%Y%m%d"/></set><if date="&var.date;"
- before="1">X</if>Y</rxml>
+ before="1">X[&var.date;]</if>Y</rxml>
 <result>Y</result>
 </test>
 
 <test>
 <rxml><set variable="var.date"><date strftime="%Y%m%d"/></set><if date="&var.date;"
- before="1" inclusive="1">X</if>Y</rxml>
+ before="1" inclusive="1">X</if><else>[&var.date;]</else>Y</rxml>
 <result>XY</result>
 </test>
 
 <test>
 <rxml><set variable="var.date"><date strftime="%Y%m%d" days="-1"/></set><if date="&var.date;"
- after="1">X</if>Y</rxml>
+ after="1">X</if><else>[&var.date;]</else>Y</rxml>
 <result>XY</result>
 </test>
 
 <test>
 <rxml><set variable="var.date"><date strftime="%Y%m%d" days="1"/></set><if date="&var.date;"
- before="1">X</if>Y</rxml>
+ before="1">X</if><else>[&var.date;]</else>Y</rxml>
 <result>XY</result>
 </test>
 
 <test>
 <rxml><set variable="var.date"><date strftime="%Y-%m-%d"/></set><if date="&var.date;"
- after="1">X</if>Y</rxml>
+ after="1">X[&var.date;]</if>Y</rxml>
 <result>Y</result>
 </test>
 
 <test>
 <rxml><set variable="var.date"><date strftime="%Y-%m-%d"/></set><if date="&var.date;"
- after="1" inclusive="1">X</if>Y</rxml>
+ after="1" inclusive="1">X</if><else>[&var.date;]</else>Y</rxml>
 <result>XY</result>
 </test>
 
 <test>
 <rxml><set variable="var.date"><date strftime="%Y-%m-%d"/></set><if date="&var.date;"
- before="1">X</if>Y</rxml>
+ before="1">X[&var.date;]</if>Y</rxml>
 <result>Y</result>
 </test>
 
 <test>
 <rxml><set variable="var.date"><date strftime="%Y-%m-%d"/></set><if date="&var.date;"
- before="1" inclusive="1">X</if>Y</rxml>
+ before="1" inclusive="1">X</if><else>[&var.date;]</else>Y</rxml>
 <result>XY</result>
 </test>
 
 <test>
 <rxml><set variable="var.date"><date strftime="%Y-%m-%d" days="-1"/></set><if date="&var.date;"
- after="1">X</if>Y</rxml>
+ after="1">X</if><else>[&var.date;]</else>Y</rxml>
 <result>XY</result>
 </test>
 
 <test>
 <rxml><set variable="var.date"><date strftime="%Y-%m-%d" days="1"/></set><if date="&var.date;"
- before="1">X</if>Y</rxml>
+ before="1">X</if><else>[&var.date;]</else>Y</rxml>
 <result>XY</result>
 </test>
 
 <test>
 <rxml><set variable="var.time"><date strftime="%H%M"/></set><if time="&var.time;"
- after="1">X</if>Y</rxml>
+ after="1">X[&var.date;]</if>Y</rxml>
 <result>Y</result>
 </test>
 
 <test>
 <rxml><set variable="var.time"><date strftime="%H%M"/></set><if time="&var.time;"
- after="1" inclusive="1">X</if>Y</rxml>
+ after="1" inclusive="1">X</if><else>[&var.date;]</else>Y</rxml>
 <result>XY</result>
 </test>
 
 <test>
 <rxml><set variable="var.time"><date strftime="%H%M"/></set><if time="&var.time;"
- before="1">X</if>Y</rxml>
+ before="1">X[&var.date;]</if>Y</rxml>
 <result>Y</result>
 </test>
 
 <test>
 <rxml><set variable="var.time"><date strftime="%H%M"/></set><if time="&var.time;"
- before="1" inclusive="1">X</if>Y</rxml>
+ before="1" inclusive="1">X</if><else>[&var.time;]</else>Y</rxml>
 <result>XY</result>
 </test>
 
 <test>
 <rxml><set variable="var.time"><date strftime="%H%M" minutes="-1"/></set><if time="&var.time;"
- after="1">X</if>Y</rxml>
+ after="1">X</if><else>[&var.time;]</else>Y</rxml>
 <result>XY</result>
 </test>
 
 <test>
 <rxml><set variable="var.time"><date strftime="%H%M" minutes="1"/></set><if time="&var.time;"
- before="1">X</if>Y</rxml>
+ before="1">X</if><else>[&var.time;]</else>Y</rxml>
 <result>XY</result>
 </test>
 
