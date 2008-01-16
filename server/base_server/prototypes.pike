@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.204 2008/01/16 13:07:00 stewa Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.205 2008/01/16 14:50:07 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -725,7 +725,7 @@ class CacheKey
 //! can never assume that @expr{id->misc->cachekey@} exists to begin
 //! with.
 {
-#if ID_CACHEKEY_DEBUG
+#ifdef ID_CACHEKEY_DEBUG
   RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this);
 #endif
 
