@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.189 2008/01/08 15:14:00 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.190 2008/01/16 13:06:18 stewa Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1998,7 +1998,9 @@ class RequestID
       heads["Content-Type"] = file->type + charset;
 
 
-    heads["Accept-Ranges"] = "bytes";
+#ifndef DISABLE_BYTE_RANGES
+      heads["Accept-Ranges"] = "bytes";
+#endif
     heads["Server"] = replace(roxenp()->version(), " ", "_");
     if (file->error == 500) {
       // Internal server error.
