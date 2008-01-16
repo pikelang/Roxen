@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.541 2008/01/10 17:12:16 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.542 2008/01/16 09:32:08 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1821,7 +1821,7 @@ void ready_to_receive()
       (request_headers->expect ==  "100-continue" ||
        has_value(request_headers->expect, "100-continue" )) &&
       !my_fd_busy)
-    my_fd->write("HTTP/1.1 100 Continue\r\n");
+    my_fd->write("HTTP/1.1 100 Continue\r\n\r\n");
 }
 
 // Send and account the formatted result
