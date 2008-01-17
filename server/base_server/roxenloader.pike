@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.383 2007/11/15 10:21:58 wellhard Exp $
+// $Id: roxenloader.pike,v 1.384 2008/01/17 15:55:11 marty Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.383 2007/11/15 10:21:58 wellhard Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.384 2008/01/17 15:55:11 marty Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1784,6 +1784,13 @@ void low_start_mysql( string datadir,
 		      string basedir,
 		      string uid )
 {
+  void rotate_log(string path)
+  {
+    rm(path+".5");
+    for(int i=4; i>0; i--)
+      mv(path+"."+(string)i, path+"."+(string)(i+1));
+  };
+
   string mysqld =
 #ifdef __NT__
     "mysqld-nt.exe";
@@ -1806,6 +1813,15 @@ void low_start_mysql( string datadir,
   }
   string pid_file = datadir + "/mysql_pid";
   string err_log  = datadir + "/error_log";
+  string slow_query_log;
+
+  // If the LOGFILE environment variable is set, the logfile will be written
+  // to the same directory as the debug log. Otherwise, it will be written
+  // to the mysql data directory (i.e. configurations/_mysql/).
+  if(getenv("LOGFILE"))
+    slow_query_log = dirname(roxen_path("$LOGFILE")) + "/slow_query_log";
+  else
+    slow_query_log = datadir + "/slow_query_log";
 
   // Default arguments.
   array(string) args = ({
@@ -1838,6 +1854,13 @@ void low_start_mysql( string datadir,
     args += ({ "--skip-networking" });
     env->MYSQL_HOST = "127.0.0.1";
     env->MYSQL_TCP_PORT = "0";
+  }
+
+  if(!env->ROXEN_MYSQL_SLOW_QUERY_LOG || 
+     env->ROXEN_MYSQL_SLOW_QUERY_LOG != "0") {
+    rotate_log(slow_query_log);
+    args += ({ "--log-slow-queries="+slow_query_log+".1" });
+    report_debug("Setting MySQL:s slow query log to \"%s.1\"\n", slow_query_log);
   }
 
   // Create the configuration file.
