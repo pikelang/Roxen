@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.101 2007/10/17 11:33:45 mathias Exp $
+// $Id: module.pmod,v 1.102 2008/01/29 10:37:05 mathias Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -755,6 +755,9 @@ class Float
       value = "";
     else
       value = query()==""? "" : _format( (float)query() );
+    
+    additional_args = additional_args || ([]);
+    additional_args->type="text";
 
     return input(path(), value, size, additional_args);
   }
@@ -853,6 +856,10 @@ class Int
     if( _min != no_limit && _max != no_limit )
       size = max( strlen((string)_max), strlen((string)_min) )+2;
     string value = (query() == 0 && _is_empty)? "" : (string)query();
+
+    additional_args = additional_args || ([]);
+    additional_args->type="text";
+
     return input(path(), value, size, additional_args);
   }
 
