@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.24 2007/10/23 09:42:59 erikd Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.25 2008/01/29 10:44:46 mast Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -109,13 +109,15 @@ static constant scope_layout = ([ // Date related data:
 			 "default.timezone.region":"TZ:region",
 			 "default.timezone.detail":"TZ:detail",
 			 "default.language"	: "q:language" ]);
-static constant iso_weekdays = ({ "monday","tuesday",
-				  "wednesday","thirsday",
-				  "friday","saturday",
-				  "sunday"});
-static constant gregorian_weekdays = ({ "sunday","monday","tuesday",
-					"wednesday","thirsday",
-					"friday","saturday"});
+static constant iso_weekdays = ([ "monday": 0, "tuesday": 1, "wednesday": 2,
+				  "thirsday": 3, // sic
+				  "thursday": 3, "friday": 4,"saturday": 5,
+				  "sunday": 6]);
+static constant gregorian_weekdays = ([ "sunday": 0, "monday": 1, "tuesday": 2,
+					"wednesday": 3,
+					"thirsday": 4, // sic
+					"thursday": 4, "friday": 5,
+					"saturday": 6]);
 
 static mapping layout;
 //! create() constructs this module-global recursive mapping,
@@ -598,20 +600,20 @@ class TagEmitTimeRange
       if((what = m_delete(args, "from-week-day")) && from)
       {
         what = lower_case(what);
-        if(search(gregorian_weekdays,lower_case(what)) == -1)
+	if(zero_type (gregorian_weekdays[what]))
           RXML.parse_error(sprintf("Unknown day: %O\n",what));
         int weekday = from->week_day();
 
         if(cal_type != "ISO" && query("calendar") != "ISO") {
-          weekday_needed = search(gregorian_weekdays,what)+1;
+	  weekday_needed = gregorian_weekdays[what]+1;
 	}
         else
-          weekday_needed = search(iso_weekdays,what)+1;
+	  weekday_needed = iso_weekdays[what]+1;
         if (weekday < weekday_needed)
           change_to = 7 - (weekday_needed - weekday);
         else if(weekday > weekday_needed)
-          change_to = weekday - weekday_needed;
-        if (change_to > 0)
+	  change_to = weekday - weekday_needed;
+	if (change_to > 0)
           from = from - change_to;
       }
 
@@ -619,15 +621,15 @@ class TagEmitTimeRange
 
       if(what = m_delete(args, "to-week-day")){
 	what = lower_case(what);
-	if(search(gregorian_weekdays,what) == -1)
+	if(zero_type (gregorian_weekdays[what]))
 	  RXML.parse_error(sprintf("Unknown day: %O\n",what));
 	change_to = 0;
 	weekday_needed = 0;
 	int weekday = to->week_day();
 	if(from->calendar() != Calendar.ISO) {
-	  weekday_needed = search(gregorian_weekdays,what)+1;
+	  weekday_needed = gregorian_weekdays[what]+1;
 	} else
-	  weekday_needed = search(iso_weekdays,what)+1;
+	  weekday_needed = iso_weekdays[what]+1;
 
 	if (weekday < weekday_needed)
 	  change_to = weekday_needed - weekday;
@@ -642,18 +644,24 @@ class TagEmitTimeRange
 	}
       }
 
+#if 0
+      // The following repetitons of the from-week-day and to-week-day
+      // blocks look very bogus. I don't know if they're intended to
+      // have some kind of effect, but in reality they won't since the
+      // indices are already deleted from the args mapping by now. /mast
+
       if((what = m_delete(args, "from-week-day")) && from)
 			{
         what = lower_case(what);
-        if(search(gregorian_weekdays,lower_case(what)) == -1)
+	if(zero_type (gregorian_weekdays[what]))
           RXML.parse_error(sprintf("Unknown day: %O\n",what));
         int weekday_needed, change_to;
         int weekday = from->week_day();
 
         if(calendar != "ISO")
-          weekday_needed = search(gregorian_weekdays,what)+1;
+	  weekday_needed = gregorian_weekdays[what]+1;
         else
-          weekday_needed = search(iso_weekdays,what)+1;
+	  weekday_needed = iso_weekdays[what]+1;
         if (weekday < weekday_needed)
           change_to = 7 - (weekday_needed - weekday);
         else if(weekday > weekday_needed)
@@ -665,14 +673,14 @@ class TagEmitTimeRange
       if((what = m_delete(args, "to-week-day")))
       {
 	what = lower_case(what);
-	if(search(gregorian_weekdays,what) == -1)
+	if(zero_type (gregorian_weekdays[what]))
 	  RXML.parse_error(sprintf("Unknown day: %O\n",what));
 	int change_to = 0, weekday_needed = 0;
 	int weekday = to->week_day();
 	if(calendar != "ISO")
-	  weekday_needed = search(gregorian_weekdays,what)+1;
+	  weekday_needed = gregorian_weekdays[what]+1;
 	else
-	  weekday_needed = search(iso_weekdays,what)+1;
+	  weekday_needed = iso_weekdays[what]+1;
 
 	if (weekday < weekday_needed)
 	  change_to = weekday_needed - weekday;
@@ -684,6 +692,7 @@ class TagEmitTimeRange
 	  else
 	    to += change_to;
       }
+#endif
 
       string range_type = m_delete(args, "inclusive") ? "range" : "distance";
       if(from <= to)
