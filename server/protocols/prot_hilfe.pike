@@ -434,13 +434,19 @@ class Connection
 	rl->set_secret( 0 );
 	state++;
 	handler = Handler( );
+#ifndef THREADS
 	signal( signum("ALRM"), handle_alarm );
 	update_lu();
 	handle_alarm();
+#endif
 	break;
     }
   }
 
+#ifndef THREADS
+  // This is only a good thing when we've got no threads and have to
+  // use the backend. In a threaded server this code misbehaves
+  // severely (handle_alarm trigs an error in a random thread).
   int last_update;
   void update_lu()
   {
@@ -456,6 +462,7 @@ class Connection
     if( time()-last_update > 5 )
       error( "Too long evaluation\n" );
   }
+#endif
 
   void begone()
   {
