@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.540 2007/11/08 16:18:47 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.541 2008/01/31 12:58:41 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1772,7 +1772,7 @@ class TagCache {
       if (args->propagate) {
 	if (args->key)
 	  parse_error ("Argument \"key\" cannot be used together with \"propagate\".");
-	// Updated the key, so we're done. The surrounding cache tag
+	// Updated the key, so we're done. The enclosing cache tag
 	// should do the caching.
 	do_iterate = 1;
 	TAG_TRACE_ENTER ("propagating key, is now %s",
@@ -6703,14 +6703,14 @@ using the pre tag.
  and return that result without evaluating the content again.</p>
 
  <p>Nested <tag>cache</tag> tags are normally cached separately, and
- they are also recognized so that the surrounding tags don't cache
- their contents too. It's thus possible to change the cache parameters
- or completely disable caching of a certain part of the content inside
- a <tag>cache</tag> tag.</p>
+ they are also recognized so that the enclosing <tag>cache</tag> tags
+ don't cache their contents too. It's thus possible to change the
+ cache parameters or completely disable caching of a certain part of
+ the content inside a <tag>cache</tag> tag.</p>
  
- <note><p>This implies that many RXML tags that surrounds the inner
+ <note><p>This implies that many RXML tags that enclose the inner
  <tag>cache</tag> tag(s) won't be cached. The reason is that those
- surrounding tags use the result of the inner <tag>cache</tag> tag(s),
+ enclosing tags use the result of the inner <tag>cache</tag> tag(s),
  which can only be established when the actual context in each request
  is compared to the cache parameters. See the section below about
  cache static tags, though.</p></note>
@@ -6780,7 +6780,7 @@ using the pre tag.
  simply let their content pass through (repeated zero or more
  times).</p>
 
- <p>Cache static tags are always evaluated when the surrounding
+ <p>Cache static tags are always evaluated when the enclosing
  <tag>cache</tag> generates a new entry. Other tags are evaluated when
  the entry is used, providing they contain or might contain nested
  <tag>cache</tag> or <tag>nocache</tag>. This can give side effects;
@@ -6797,7 +6797,7 @@ using the pre tag.
  <p>Assume the tag <tag>registered-user</tag> is a custom tag that
  ignores its content whenever the user isn't registered. If it isn't
  cache static, the nested <tag>nocache</tag> tag causes it to stay
- unevaluated in the surrounding cache, and the test of the user is
+ unevaluated in the enclosing cache, and the test of the user is
  therefore kept dynamic. If it on the other hand is cache static, that
  test is cached and the cache entry will either contain the
  <tag>nocache</tag> block and a cached assignment to
@@ -6953,8 +6953,8 @@ using the pre tag.
  attribute.</p>
 
  <p>Note that when a part inside a <tag>cache</tag> tag isn't cached,
- it implies that any RXML tags that surround the <tag>nocache</tag>
- tag inside the <tag>cache</tag> tag also aren't cached.</p>
+ it implies that any RXML tags that enclose the <tag>nocache</tag> tag
+ inside the <tag>cache</tag> tag also aren't cached.</p>
 </desc>",
 
 //----------------------------------------------------------------------
