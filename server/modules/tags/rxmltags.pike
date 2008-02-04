@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.541 2008/01/31 12:58:41 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.542 2008/02/04 13:17:33 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -9514,7 +9514,7 @@ the respective attributes below for further information.</p></desc>
 
 "if#scope":#"<desc type='plugin'><p><short>
  Does the scope exists.
-</p></desc>
+</short></p></desc>
 
 <attr name='scope' value='name' required='required'><p>
 Specify scope to test for existence.</p>
@@ -10030,6 +10030,7 @@ Specify scope to test for existence.</p>
 <emit source='path' path='/path/to/file' reverse=''>
   &_.path;<br/>
 </emit>
+</ex>
 </attr>",
 
 	  ([
