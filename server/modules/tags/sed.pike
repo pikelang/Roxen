@@ -36,7 +36,7 @@
 //
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.17 2007/10/26 15:06:52 mathias Exp $";
+constant cvs_version = "$Id: sed.pike,v 1.18 2008/02/04 13:17:33 anders Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -377,7 +377,7 @@ TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
   "sed":({ #"<desc type='cont'><p><short>Adds the <tag>sed</tag> tag, to emulate a 
-  subset of sed operations in rxml.</short></desc>
+  subset of sed operations in rxml.</short></p></desc>
 
   <attr name='suppress'></attr>
   <attr name='lines'></attr>
