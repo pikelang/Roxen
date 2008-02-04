@@ -82,8 +82,10 @@ class ConfigIFCache
         return to;
       }
     }
-    f->write("<?XML version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-             string_to_utf8(encode_mixed( to, this_object() ) ));
+    f->write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+	     "<roxen-config>\n" +
+             string_to_utf8(encode_mixed( to, this_object() ) ) +
+	     "</roxen-config>\n");
     return to;
   }
 

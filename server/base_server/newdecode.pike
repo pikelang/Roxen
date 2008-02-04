@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: newdecode.pike,v 1.33 2005/12/06 13:58:08 grubba Exp $
+// $Id: newdecode.pike,v 1.34 2008/02/04 12:49:11 jonasw Exp $
 
 // The magic below is for the 'install' program
 #ifndef roxenp
@@ -22,7 +22,7 @@ SIMPLE_DECODE(decode_string,
 	       utf8_to_string(http_decode_string(string_to_utf8(s))):
 	       http_decode_string(s)));
 
-constant xml_header = "<?XML version=\"1.0\" encoding=\"UTF-8\"?>";
+constant xml_header = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
 private string decode_list(Parser.HTML p, mapping m, string s, mapping res)
 {
@@ -105,12 +105,18 @@ mapping decode_config_file(string s)
 {
   mapping res = ([ ]);
   if(sizeof(s) < 10) return res; // Empty file..
-  if( sscanf( s, "%*s" + xml_header + "\n%*s" ) == 2 )
+
+  //  Older Roxen generated invalid XML headers so we have to perform a
+  //  lower-case comparison.
+  if( sscanf( lower_case(s[..100]),
+	      "%*s" + lower_case(xml_header) + "\n%*s" ) == 2 )
     s = utf8_to_string( s );
   else
     s = trim_comments( s );
   Parser.HTML()
     ->add_container ("region", decode_config_region)
+    ->add_tags ( ([ "roxen-config"  : 0,
+		    "/roxen-config" : 0 ]) )
     ->add_quote_tag ("!--", "", "--")
     ->set_extra (res)
     ->finish (s);
@@ -271,7 +277,9 @@ string encode_config_region(mapping m, string reg, Configuration c,
 string encode_regions(mapping r, Configuration c)
 {
   string v;
-  string res = (xml_header + "\n\n");
+  string res =
+    xml_header + "\n"
+    "<roxen-config>\n\n";
   int comments = all_constants()->roxen->query ("config_file_comments");
   foreach(r->EnabledModules ?
 	  ({"EnabledModules"}) + sort(indices(r) - ({"EnabledModules"})) :
@@ -279,5 +287,6 @@ string encode_regions(mapping r, Configuration c)
     res += "<region name='"+v+"'>\n" +
              encode_config_region(r[v],v,c,comments)
            + "</region>\n\n";
+  res += "</roxen-config>\n";
   return string_to_utf8( res );
 }
