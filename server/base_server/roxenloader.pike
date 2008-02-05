@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.386 2007/12/21 23:25:18 jonasw Exp $
+// $Id: roxenloader.pike,v 1.387 2008/02/05 15:40:43 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.386 2007/12/21 23:25:18 jonasw Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.387 2008/02/05 15:40:43 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -201,7 +201,7 @@ string possibly_encode( string what )
 //! @decl void roxen_perror(string format, mixed ... args)
 //! @appears roxen_perror
 
-static int last_was_nl;
+static int last_was_nl = 1;
 // Used to print error/debug messages
 void roxen_perror(string format, mixed ... args)
 {
@@ -1106,15 +1106,64 @@ object|void open(string filename, string mode, int|void perm)
   return o;
 }
 
+array(string) default_roxen_font_path =
+  ({ "nfonts/",
+#ifdef __NT__
+     combine_path(replace(getenv("SystemRoot"), "\\", "/"), "fonts/")
+#else
+     @((getenv("RX_FONTPATH") || "")/"," - ({""}))
+#endif
+  });
+array(string) default_roxen_module_path = ({ "modules/" });
+
+array(string) package_directories = ({ });
+
+void add_package(string package_dir)
+{
+  string ver = Stdio.read_bytes(combine_path(package_dir, "VERSION"));
+  if (ver && (ver != "")) {
+    report_debug("Adding package %s (Version %s).\n", package_dir, ver - "\n");
+  } else {
+    report_debug("Adding package %s.\n", package_dir);
+  }
+  package_directories = ({ package_dir }) + package_directories;
+  string sub_dir = combine_path(package_dir, "pike-modules");
+  if (Stdio.is_dir(sub_dir)) {
+    master()->add_module_path(sub_dir);
+  }
+  if (Stdio.is_dir(sub_dir = combine_path(package_dir, "include/"))) {
+    master()->add_include_path(sub_dir);
+  }
+  default_roxen_module_path = ({ combine_path(package_dir, "modules/") }) +
+    default_roxen_module_path;
+  if (Stdio.is_dir(sub_dir = combine_path(package_dir, "fonts/"))) {
+    default_roxen_font_path = ({ sub_dir }) + default_roxen_font_path;
+  }
+}
+
+
 //! @appears lopen
 object|void lopen(string filename, string mode, int|void perm)
 {
-  Stdio.File o;
-  if( filename[0] != '/' )
-    o = open( "../local/"+filename, mode, perm );
-  if( !o )
-    o = open( filename, mode, perm );
-  return o;
+  if( filename[0] != '/' ) {
+    foreach(package_directories, string dir) {
+      Stdio.File o;
+      if (o = open(combine_path(dir, filename), mode, perm)) return o;
+    }
+  }
+  return open( filename, mode, perm );
+}
+
+//! @appears lfile_stat
+object(Stdio.Stat) lfile_stat(string filename)
+{
+  if (filename[0] != '/') {
+    foreach(package_directories, string dir) {
+      Stdio.Stat res;
+      if (res = file_stat(combine_path(dir, filename))) return res;
+    }
+  }
+  return file_stat(filename);
 }
 
 // Make a $PATH-style string
@@ -1228,7 +1277,20 @@ Roxen 4.0 should be run with Pike 7.4 or newer.
   else
     dist_version = roxen_version();
 
-  roxen_is_cms = !!file_stat("modules/sitebuilder");
+  // Get package directories.
+  add_package(getenv("LOCALDIR") || "../local");
+  foreach(package_directories + ({ "." }), string dir) {
+    dir = combine_path(dir, "packages");
+    foreach(sort(get_dir(dir) || ({})), string fname) {
+      if (fname == "CVS") continue;
+      fname = combine_path(dir, fname);
+      if (Stdio.is_dir(fname)) {
+	add_package(fname);
+      }
+    }
+  }
+
+  roxen_is_cms = !!lfile_stat("modules/sitebuilder");
 
   if(roxen_is_cms)
     roxen_product_name="Roxen CMS";
@@ -2334,6 +2396,7 @@ the correct system time.
   add_constant("roxen_is_cms",  roxen_is_cms);
   add_constant("roxen_product_name", roxen_product_name);
   add_constant("lopen",         lopen);
+  add_constant("lfile_stat",    lfile_stat);
   add_constant("report_notice", report_notice);
   add_constant("report_debug",  report_debug);
   add_constant("report_warning",report_warning);
