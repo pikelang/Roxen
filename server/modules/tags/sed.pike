@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright Â© 1996 - 2004, Roxen IS.
+// This is a roxen module. Copyright Ã‚Â© 1996 - 2004, Roxen IS.
 // by Mirar <mirar@roxen.com>
 
 // Adds the <sed> tag, to emulate a subset of sed operations in rxml
@@ -36,7 +36,7 @@
 //
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.19 2008/02/05 15:00:47 mathias Exp $";
+constant cvs_version = "$Id: sed.pike,v 1.20 2008/02/05 15:41:56 mathias Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -408,17 +408,21 @@ constant tagdoc=([
 	       <item name='G'><p>Insert hold space</p></item>
 	       <item name='H'><p>Append current space to hold space</p></item>
 	       <item name='P'><p>Print current data</p></item>
-	       <item name='a[<i style=\"font-weight: normal;\">string</i>]'><p>insert</p></item>
-	       <item name='c[<i style=\"font-weight: normal;\">string</i>]'><p>change current space</p></item>
+	       <item name='a'><p>Insert.</p> 
+                              <p>Usage: <b>a</b>[<i>string</i>]</p></item>
+	       <item name='c'><p>Change current space.</p> 
+	                      <p>Usage: <b>c</b>[<i>string</i>]</p></item>
 	       <item name='d'><p>Delete current space</p></item>
 	       <item name='h'><p>Copy current space to hold space</p></item>
-	       <item name='i[<i style=\"font-weight: normal;\">string</i>]'><p>Print string</p></item>
+	       <item name='i'><p>Print string</p>
+	                      <p>Usage: <b>i</b>[<i>string</i>]</p></item>
 	       <item name='l'><p>Print current space</p></item>
 	       <item name='p'><p>Print first line in data</p></item>
 	       <item name='q'><p>Quit evaluating</p></item>
-	       <item name='s/[<i style=\"font-weight: normal;\">regexp</i>]/[<i style=\"font-weight: normal;\">with</i>]/[<i style=\"font-weight: normal;\">x</i>]'><p>Replace</p></item>
-	       <item name='y/[<i style=\"font-weight: normal;\">chars</i>]/[<i style=\"font-weight: normal;\">chars</i>]/'><p>Replace chars</p></item></list></desc>
-	     
+	       <item name='s'><p>Replace</p>
+	                      <p>Usage: <b>s/</b>[<i>regexp</i>]<b>/</b>[<i>with</i>]<b>/</b>[<i>x</i>]</p></item>
+	       <item name='y'><p>Replace chars</p>
+	                      <p>Usage: <b>y/</b>[<i>chars</i>]<b>/</b>[<i>chars</i>]<b>/</b></p></item></list></desc>
 	     <attr name='rxml'><p>Run through RXML parser before edit</p></attr>"
 	   ,
 	   "source":#"<desc type='cont'><p>Tells which source to read from if
