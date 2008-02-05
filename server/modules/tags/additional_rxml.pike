@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.33 2007/03/07 16:23:07 wellhard Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.34 2008/02/05 14:39:18 mathias Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -467,10 +467,326 @@ class TagEmitKnownLangs
   }
 }
 
+class TagFormatNumber
+{
+  inherit RXML.Tag;
+  constant name  = "format-number";
+
+  mapping(string:RXML.Type) req_arg_types = 
+    ([ /* "value"                : RXML.t_text(RXML.PEnt), */
+       "pattern"              : RXML.t_text(RXML.PEnt)
+    ]);
+  mapping(string:RXML.Type) opt_arg_types = 
+    ([ "decimal-separator"    : RXML.t_text(RXML.PEnt),
+       "group-separator"      : RXML.t_text(RXML.PEnt)
+    ]); 
+
+  class Frame {
+    inherit RXML.Frame;
+
+    string do_return(RequestID req_id) {
+      constant PERCENT   = 0x01;
+      constant PER_MILLE = 0x02;
+      constant TRUE      = 0x01;
+      constant FALSE     = 0x00;
+      constant FRAC_PART = 1;
+      constant INT_PART  = 0;
+      
+      string grp_sep     = ",";
+      string dec_sep     = "."; 
+      if (args["group-separator"])
+      {
+	grp_sep = args["group-separator"];
+      }
+      if (args["decimal-separator"])
+      {
+	dec_sep = args["decimal-separator"];
+      }
+
+      // Parse the number.
+      array(string) value = ({"", ""});
+      int int_part = 0, frac_part = 0;
+      if (sscanf(content, "%*s%d.%d", int_part, frac_part) == 3)
+      {
+	value[INT_PART]  = (string) int_part;
+	value[FRAC_PART] = (string) frac_part;
+      }
+      else if (sscanf(content, "%*s-.%d", frac_part) == 2)
+      {
+	value[INT_PART]  = "-0";
+	value[FRAC_PART] = (string) frac_part; 
+      }
+      else if (sscanf(content, "%*s.%d", frac_part) == 2)
+      {
+	value[INT_PART]  = "0";
+	value[FRAC_PART] = (string) frac_part;
+      }
+      else if (sscanf(content, "%*s%d", int_part) == 2)
+      {
+	value[INT_PART]  = (string) int_part;
+	value[FRAC_PART] = "";
+      }
+      else
+      {
+	RXML.parse_error("No number to be formatted was given.");
+      }
+
+
+      /* We need to break down the pattern, first by ";" and make sure that ";"
+         is not an escaped character. */
+      array(string) temp_pattern = args->pattern / ";";
+      array(string) pattern = ({ "", "" });
+      int is_pos = TRUE;
+      for (int i = 0; i < sizeof(temp_pattern); i++)
+      {
+	pattern[is_pos] += temp_pattern[i];
+	if (sizeof(pattern[is_pos]) > 0 &&
+	    pattern[is_pos][sizeof(pattern[is_pos]) - 1] == "'"[0])
+	{
+	  pattern[is_pos][sizeof(pattern[is_pos]) - 1] = ";"[0];
+	}
+	else if (is_pos)
+	{
+	    is_pos = FALSE;
+	}
+      }
+
+      /* Now that we have extracted the patterns for positive and negative 
+         numbers, we can reuse the is_pos flag to reflect which pattern we
+	 should use. */
+      if ((((int)value[INT_PART]) < 0 || value[INT_PART][0..0] == "-") && 
+	  sizeof(pattern[0]) > 0)
+      {
+	is_pos = FALSE;
+	// Trim away the minus sign.
+	sscanf(value[0], "%*[ ]-%s", value[0]) ;
+      }
+      else if (sizeof(pattern[1]) > 0)
+      {
+	is_pos = TRUE;
+      }
+      else
+      {
+	RXML.parse_error("The value was positive but no pattern " +
+			 "for positive values was defined.\n");
+      }
+      
+      // Now do the same thing as above to find the fraction delimiter.
+      temp_pattern = pattern[is_pos] / ".";
+      pattern = ({"", ""});
+      int is_frac = FALSE;
+
+      pattern[INT_PART] = temp_pattern[0];
+      if (sizeof(pattern[INT_PART]) > 0 &&
+	  pattern[INT_PART][-1] == "'"[0])
+      {
+	pattern[INT_PART][sizeof(pattern[INT_PART]) - 1] = "."[0];
+      }
+      else
+      {
+	is_frac = TRUE;
+      }
+
+      if (sizeof(temp_pattern) > 1)
+      {
+	for (int i = 1; i < sizeof(temp_pattern); i++)
+	{
+	  pattern[is_frac] += temp_pattern[i];
+	  if (sizeof(pattern[is_frac]) > 0 &&
+	      pattern[is_frac][-1] == "'"[0])
+	  {
+	    pattern[is_frac][-1] = "."[0];
+	  }
+	  else if (!is_frac)
+	  {
+	    is_frac = TRUE;
+	  }
+	  else if (i < (sizeof(temp_pattern) - 1))
+	  {
+	    pattern[is_frac] += ".";
+	  }
+	}
+      }
+
+      // Handle percent and per-mille
+      int log_ten = 0;
+      if (search(pattern[FRAC_PART], "%") >= 0 ||
+	  search(pattern[INT_PART], "%") >= 0)
+      {
+	log_ten = 2;
+      }
+      else if (search(pattern[FRAC_PART], "\x2030") >= 0 ||
+	       search(pattern[INT_PART], "\x2030") >= 0)
+      {
+	log_ten = 3;
+      }
+
+      for (int i = log_ten; i > 0; i--)
+      {
+	if (strlen(value[FRAC_PART]) > 0)
+	{
+	  value[INT_PART] += value[FRAC_PART][0..0];
+	  value[FRAC_PART] = value[FRAC_PART][1..];
+	}
+        else 
+	{
+	  value[INT_PART] += "0";
+	}
+      }
+
+      // Trim away leading zeros
+      value[INT_PART] = (string)(int)value[INT_PART][0..];
+
+      // Start with the fractional part.
+      int val_length     = strlen(value[FRAC_PART]);
+      int ptn_length     = strlen(pattern[FRAC_PART]);
+      int vi             = 0;
+      string frac_result = "";
+      
+      foreach(pattern[FRAC_PART]/1, string s)
+      {
+	switch(s)
+	{
+	  case "'":
+	    break;
+	  case "#":
+	    if (vi < val_length)
+	    {
+	      frac_result += value[FRAC_PART][vi..vi];
+	      vi++;
+	    }
+	    break;
+	  case "0":
+	    if (vi < val_length)
+	    {
+	      frac_result += value[FRAC_PART][vi..vi];
+	      vi++;
+	    } 
+	    else
+	    {
+	      frac_result += "0";
+	    }
+	    break;
+	  default:
+	    frac_result += s;
+	}
+      }
+
+      // Round the last digit.    
+      if (vi < val_length &&
+	  ((int)value[FRAC_PART][vi..vi] > 5 ||
+	  ((int)value[FRAC_PART][vi..vi] == 5 && is_pos)))
+      {
+	if (strlen(frac_result) == 0)
+	{
+	  value[INT_PART] = (string)(((int)value[INT_PART]) + 1);  
+	}
+	else
+	{
+	  frac_result[-1] = frac_result[-1] + 1;  
+	}
+      }
+      
+      // Now for the integral part. We traverse it in reverse.
+      val_length        = strlen(value[INT_PART]);
+      ptn_length        = strlen(pattern[INT_PART]);
+      vi                = 0;
+      int num_wid       = 0; 
+      string rev_val    = reverse(value[INT_PART]);
+      string int_result = "";
+      string minus_sign = "";
+      foreach(reverse(pattern[INT_PART])/1, string s)
+      {
+	switch(s)
+	{
+	  case "'":
+	    break;
+	  case "#":
+	    if (vi < val_length)
+	    {
+	      int_result += rev_val[vi..vi];
+	      vi++;
+	    }
+	    if (num_wid <= 0)
+	    {
+	      num_wid--;
+	    }
+	    break;
+	  case "0":
+	    if (vi < val_length)
+	    {
+	      int_result += rev_val[vi..vi];
+	      vi++;
+	    } 
+	    else
+	    {
+	      int_result += "0";
+	    }
+	    if (num_wid <= 0)
+	    {
+	      num_wid--;
+	    }
+	    break;
+	  case ",":
+	    if (num_wid <= 0)
+	    {
+	      num_wid *= -1;
+	    }
+	    if (vi < val_length)
+	    {
+	      int_result += grp_sep;
+	    }
+	    break;
+	  case "-":
+	    if (is_pos)
+	    {
+	      int_result += s;
+	    }
+	    else if (minus_sign = "")
+	    {
+	      minus_sign = "-";
+	    }
+	    break;
+	  case "%":
+	  case "\x2030":
+	    frac_result = s;
+	    break;
+	  default:
+	    int_result += s;
+	}
+      }
+      for (;vi < val_length;vi++)
+	{
+	  if (num_wid > 0 && vi%num_wid == 0)
+	  {
+	    int_result += grp_sep;
+	  }
+	  int_result += rev_val[vi..vi];
+      }
+
+      if (strlen(frac_result) == 0)
+      {
+	result += minus_sign + reverse(int_result);
+      }
+      else if (frac_result[0..0] == "%" ||
+	       frac_result[0..0] == "\x2030")
+      {
+	result += minus_sign + reverse(int_result) + frac_result[0..0];
+      }
+      else 
+      {
+	result += minus_sign + reverse(int_result) + dec_sep + frac_result;
+      }
+    }
+  } 
+}
+
+
+
 TAGDOCUMENTATION;
 #ifdef manual
 constant tagdoc=([
-  "dice":#"<desc type='cont'><p><short>
+  "dice":#"<desc type='tag'><p><short>
  Simulates a D&amp;D style dice algorithm.</short></p></desc>
 
 <attr name='type' value='string' default='D6'><p>
@@ -558,7 +874,7 @@ format='%4d%2d%2d'>19771003</sscanf>
 </attr>
 
 <attr name='return' value='name'><p>
- If used, the number of successfull variable 'extractions' will be
+ If used, the number of successful variable 'extractions' will be
  available in the given variable.</p>
 </attr>",
 
@@ -578,6 +894,210 @@ format='%4d%2d%2d'>19771003</sscanf>
 </ex>
 </attr>",
 
+  "format-number":#"<desc type='cont'><p><short>
+Formats a number according to pattern passed as an argument. </short>
+Useful for adding grouping and rounding numbers to a fixed number 
+of fraction digit characters.
+</p>
+<p>
+<ex><set variable='var.foo'>2318543.78</set>
+
+<p><format-number pattern='0.000'>&var.foo;</format-number></p>
+
+<p>
+  <format-number pattern='#,###' 
+		 group-separator=' '
+		 decimal-separator=','>
+    &var.foo;
+  </format-number>
+</p></ex>
+</p>
+<p>
+  It's important that the guidelines for the pattern are followed. 
+  Bad patterns will normally not cause an RXML-parse error, 
+  instead <tag>format-number</tag> will try to format the number 
+  according to the given pattern anyway.
+</p>
+<p>
+  <tag>format-number</tag> does not handle infinity.
+</p>
+</desc>
+
+<attr name='pattern' value='string' required='required'>
+<p>
+  The format pattern that dictates how the digits should be represented on
+  screen.
+</p>
+<p>
+  The following symbols are allowed:
+</p>
+<list type=\"dl\">
+  <item name=\"# - Digit\">
+    <p>
+      Placeholder for optional digits. The number of # after the decimal 
+      separator indicates number fo fraction digits to be shown.
+    </p>
+    <p>      
+<ex><set variable='var.foo'>18543.78903</set>
+
+<p><format-number pattern='###'>&var.foo;</format-number></p>
+      
+<p><format-number pattern='#.###'>&var.foo;</format-number></p></ex>
+    </p>
+  </item>
+  <item name=\"0 - Zero Digit\">
+    <p>
+      Placeholder for required digits.
+      If there are more digits required than given, the remaining positions
+      will be filled with zeros. 
+    </p>
+    <p>
+      0 should be placed to the right of # in the 
+      pattern in the integral part and to the left of # in the fraction part.
+      If they are not and there are less digits than #, the zeros will be 
+      concatenated to the beginning of the integral part or the end of the
+      fractional part giving unwanted results.
+    </p>
+    <p>
+<ex><set variable='var.foo'>543.78</set>
+
+<p><format-number pattern='#00.00'>&var.foo;</format-number></p>
+
+<p><format-number pattern='0000.000'>&var.foo;</format-number></p>
+</ex>
+    </p>
+  </item>
+  <item name=\". - Decimal separator\">
+    <p>
+      Placeholder for decimal separator. If more than one are present then the
+      leftmost will be used. And the remaining will be printed out \"as is\".
+    </p>
+    <p>
+      The character used as decimal separator in the output can be changed 
+      with attribute \"decimal-separator\".
+    </p>
+    <p>
+<ex><set variable='var.foo'>543.789</set>
+<p><format-number pattern='##.##'>&var.foo;</format-number></p>
+
+<p>
+  <format-number pattern='.######' decimal-separator=','>
+    &var.foo;
+  </format-number>
+</p>
+</ex>
+    </p>
+  </item>
+  <item name=\", - Grouping separator\">
+    <p>
+      Placeholder for group separator. The character in output can be changed
+      with attribute \"group-separator\".
+    </p>
+    <p>
+<ex>
+<p><format-number pattern='#,###'>1677518543</format-number></p>
+
+<p><format-number pattern='#,###,###'>8543</format-number></p>
+</ex>
+    </p>
+  </item>
+  <item name=\"; - Pattern separator\">
+  <p>
+    Separates pattern for positive and negative result respectively. If more 
+    than one ; is present, everything after the second one will be ignored.
+  </p>
+  <p>
+<ex>
+<p><format-number pattern='#,###.##;-#'>1000.50</format-number></p>
+<p><format-number pattern='#,###.##;-#'>-1000.50</format-number></p>
+</ex>
+  </p>
+  </item>
+  <item name=\"% -  Percent\">
+    <p>
+      The number will be multiplied by 100 and a percent sign will be added
+      to the output.
+    </p>
+    <p>
+<ex>
+<p><format-number pattern='#,###%'>10.50</format-number></p>
+
+<p><format-number pattern='#.####%'>0.0003</format-number></p>
+</ex>
+    </p>
+  </item>
+  <item name=\"&#x2030; - Per-mille\">
+    <p>
+      The number will be multiplied by 1000 and a per-mille sign will be added
+      to the output.
+    </p>
+    <p>
+<ex>
+<p><format-number pattern='##&#x2030;'>0.003</format-number></p>
+</ex>
+    </p>      
+  </item>
+  <item name=\"- - minus sign\">
+    <p>
+      Default negative prefix
+    </p>
+  </item>
+  <item name=\"' - escape character\">
+    <p>
+      Can be used to escape characters that normally has another meaning.
+    </p>
+    <p>
+<ex>
+<p><format-number pattern=\"#'.###\">1255.34</format-number></p>
+</ex>
+    </p>
+  </item>
+</list>
+</attr>
+
+<attr name='decimal-separator' value='' default='.'>
+  <p>
+    A character to be used as decimal separator. Can be useful for european
+    formatting.
+  </p>
+  <p>
+<ex>
+<p>
+  <format-number pattern='###.##' decimal-separator=','>
+    543.78
+  </format-number>
+</p>
+
+<p>Even this attribute can be abused:</p>
+<p>
+  <format-number pattern='###.##' 
+	         decimal-separator=' &lt;--integral part, fractional part--&gt; '>
+    5023.643
+  </format-number>
+</p></ex>
+  </p>
+</attr>
+
+<attr name='group-separator' value='' default=','>
+  <p>
+    A character to be used as group separator. Can be useful for european
+    formatting.
+  </p>
+  <p>
+<ex><set variable='var.foo'>20070901</set>
+<p>
+  <format-number pattern='#,###' group-separator='.'>
+    &var.foo;
+  </format-number>
+</p>
+<p>
+  <format-number pattern='####,##,##' group-separator='-'>
+    &var.foo; 
+  </format-number>
+</p>
+</ex>
+  </p>
+</attr>",
 
 "emit#known-langs":({ #"<desc type='plugin'><p><short>
  Outputs all languages partially supported by roxen for writing
