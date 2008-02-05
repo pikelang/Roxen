@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.959 2008/01/10 15:38:49 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.960 2008/02/05 17:41:57 wellhard Exp $";
 
 //! @appears roxen
 //!
@@ -3861,7 +3861,7 @@ class ArgCache
   static void setup_table()
   {
     // New style argument2 table.
-    if(catch(QUERY("SELECT id FROM "+name+"2 WHERE id = 0")))
+    if(catch(QUERY("SELECT id FROM "+name+"2 LIMIT 0")))
     {
       master()->resolv("DBManager.is_module_table")
 	( 0, "local", name+"2",
