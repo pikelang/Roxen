@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.105 2008/01/10 15:35:50 jonasw Exp $
+// $Id: global_variables.pike,v 1.106 2008/02/05 15:42:14 grubba Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -54,6 +54,51 @@ void set_up_hilfe_variables( Protocol o )
 		 "be allowed, even one with only the view settings permission." ) );
 }
 
+#if 0
+void set_up_snmp_variables( Protocol o )
+{
+  function(DEFVAR) defvar = o->defvar;
+
+  defvar("snmp_community", ({"public:ro"}), "Community string",
+         TYPE_STRING_LIST,
+         "One community name per line. Default permissions are 'read-only'. "
+	 "'Read-write' permissions can be specified by appending :rw to the "
+	 "community name (for example mypub:rw).");
+/*
+  defvar("snmp_mode", "smart", "Agent mode",
+         TYPE_STRING_LIST,
+         "Standard SNMP server mode, muxed SNMP mode, "
+         "proxy, agentx or automatic (smart) mode.",
+         ({"smart", "agent", "agentx", "smux", "proxy" }));
+*/
+  defvar("snmp_global_traphosts", ({}),"Trap destinations",
+         TYPE_STRING_LIST,
+         "The SNMP traphost URL for sending common traps (like coldstart).");
+
+  defvar("snmp_syscontact","","System MIB: Contact",
+         TYPE_STRING,
+         "The textual identification of the contact person for this managed "
+         "node, together with information on how to contact this person.");
+  defvar("snmp_sysname","","System MIB: Name",
+         TYPE_STRING,
+         "An administratively-assigned name for this managed node. By "
+         "convention, this is the node's fully-qualified domain name.");
+  defvar("snmp_syslocation","","System MIB: Location",
+         TYPE_STRING,
+         "The physical location of this node (e.g., `telephone closet, 3rd "
+         "floor').");
+  defvar("snmp_sysservices",72,"System MIB: Services",
+         TYPE_INT,
+         "A value which indicates the set of services that this entity "
+         "primarily offers.");
+#if 0
+  defvar("site_id", 0,
+	 LOCALE(0, "SNMP sub-MIB"), TYPE_INT,
+	 LOCALE(0, "MIB suffix to 1.3.6.1.4.1.8614.1.1.2 "
+		"identifying this site."));
+#endif /* 0 */
+}
+#endif /* 0 */
 
 void set_up_ftp_variables( Protocol o )
 {
@@ -264,15 +309,8 @@ void define_global_variables(  )
 	 TYPE_FONT,
 	 LOCALE(93, "The default font to use when modules request a font."));
 
-  defvar("font_dirs", ({ combine_path(getenv("LOCALDIR") || "../local", "fonts/"),
-			 "nfonts/" })+
-#ifdef __NT__
-         ({combine_path(replace(getenv("SystemRoot"),"\\","/"),"fonts/")})
-#else
-         ((getenv("RX_FONTPATH")||"")/","-({""}))
-#endif
-         , LOCALE(94, "Font directories"), 
-	 TYPE_DIR_LIST,
+  defvar("font_dirs", roxenloader.default_roxen_font_path,
+         LOCALE(94, "Font directories"), TYPE_DIR_LIST,
 	 LOCALE(95, "This is where the fonts are located."));
 
   defvar("font_oversampling", 1, LOCALE(521, "Font oversampling"), 
@@ -439,8 +477,7 @@ The start script attempts to fix this for the standard file locations.</p>"));
 	  "for CGI, and also 'access files as user' in the filesystems, but "
 	  "it gives better security."));
 
-  defvar("ModuleDirs", ({ combine_path(getenv("LOCALDIR") || "../local", "modules/"),
-			  "modules/" }),
+  defvar("ModuleDirs", roxenloader.default_roxen_module_path,
 	 LOCALE(132, "Module directories"), 
 	 TYPE_DIR_LIST,
 	 LOCALE(133, "This is a list of directories where Roxen should look "
