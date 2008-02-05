@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
+// This is a roxen module. Copyright Â© 1996 - 2004, Roxen IS.
 // by Mirar <mirar@roxen.com>
 
 // Adds the <sed> tag, to emulate a subset of sed operations in rxml
@@ -36,7 +36,7 @@
 //
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.18 2008/02/04 13:17:33 anders Exp $";
+constant cvs_version = "$Id: sed.pike,v 1.19 2008/02/05 15:00:47 mathias Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -404,44 +404,43 @@ constant tagdoc=([
 </ex>
              </p>
 	     <list type=\"dl\">
-	       <item name='D'>Delete first line in space</item>
-	       <item name='G'>Insert hold space</item>
-	       <item name='H'>Append current space to hold space</item>
-	       <item name='P'>Print current data</item>
-	       <item name='a[<i style=\"font-weight: normal;\">string</i>]'>insert</item>
-	       <item name='c[<i style=\"font-weight: normal;\">string</i>]'>change current space</item>
-	       <item name='d'>Delete current space</item>
-	       <item name='h'>Copy current space to hold space</item>
-	       <item name='i[<i style=\"font-weight: normal;\">string</i>]'>Print string</item>
-	       <item name='l'>Print current space</item>
-	       <item name='p'>Print first line in data</item>
-	       <item name='q'>Quit evaluating</item>
-	       <item name='s/[<i style=\"font-weight: normal;\">regexp</i>]/[<i style=\"font-weight: normal;\">with</i>]/[<i style=\"font-weight: normal;\">x</i>]'>Replace</item>
-	       <item name='y/[<i style=\"font-weight: normal;\">chars</i>]/[<i style=\"font-weight: normal;\">chars</i>]/'>Replace chars
-	     </item></list></desc>
+	       <item name='D'><p>Delete first line in space</p></item>
+	       <item name='G'><p>Insert hold space</p></item>
+	       <item name='H'><p>Append current space to hold space</p></item>
+	       <item name='P'><p>Print current data</p></item>
+	       <item name='a[<i style=\"font-weight: normal;\">string</i>]'><p>insert</p></item>
+	       <item name='c[<i style=\"font-weight: normal;\">string</i>]'><p>change current space</p></item>
+	       <item name='d'><p>Delete current space</p></item>
+	       <item name='h'><p>Copy current space to hold space</p></item>
+	       <item name='i[<i style=\"font-weight: normal;\">string</i>]'><p>Print string</p></item>
+	       <item name='l'><p>Print current space</p></item>
+	       <item name='p'><p>Print first line in data</p></item>
+	       <item name='q'><p>Quit evaluating</p></item>
+	       <item name='s/[<i style=\"font-weight: normal;\">regexp</i>]/[<i style=\"font-weight: normal;\">with</i>]/[<i style=\"font-weight: normal;\">x</i>]'><p>Replace</p></item>
+	       <item name='y/[<i style=\"font-weight: normal;\">chars</i>]/[<i style=\"font-weight: normal;\">chars</i>]/'><p>Replace chars</p></item></list></desc>
 	     
-	     <attr name='rxml'>Run through RXML parser before edit</attr>"
+	     <attr name='rxml'><p>Run through RXML parser before edit</p></attr>"
 	   ,
-	   "source":#"<desc type='cont'>Tells which source to read from if
+	   "source":#"<desc type='cont'><p>Tells which source to read from if
                         <tag>raw</tag> or <tag>rxml</tag>is not used. Must be 
-			either variable or cookie.</desc>
+			either variable or cookie.</p></desc>
 
 			<attr name='variable' value='variable'></attr>
 			<attr name='cookie' value='cookie'></attr>
-			<attr name='rxml'>Run through RXML parser 
-			                  before edit</attr>",
+			<attr name='rxml'><p>Run through RXML parser 
+			                  before edit</p></attr>",
 	   
-	   "destination":#"<desc type='cont'>Tells which destination to store 
-	                     the edited string if other than screen. Must be 
-			     either variable or cookie.</desc>
+	   "destination":#"<desc type='cont'><p>Tells which destination to 
+                             store the edited string if other than screen. Must
+                             be either variable or cookie.</p></desc>
 
 			     <attr name='variable' value='variable'></attr>
 			     <attr name='cookie' value='cookie'></attr>",
 
-	   "raw":#"<desc type='cont'>Raw, unparsed data.</desc>",
+	   "raw":#"<desc type='cont'><p>Raw, unparsed data.</p></desc>",
 	   
-	   "rxml":#"<desc type='cont'>Data run through RXML parser before 
-                      edited. </desc>"]),
+	   "rxml":#"<desc type='cont'><p>Data run through RXML parser before 
+                      edited.</p></desc>"]),
   }),
 ]);
 #endif
