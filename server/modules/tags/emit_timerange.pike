@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.25 2008/01/29 10:44:46 mast Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.26 2008/02/06 18:24:28 erikd Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -1064,7 +1064,7 @@ constant tagdoc = ([
   "&calendar;":#"<desc type='scope'><p><short hide='hide'>
     This scope contains date variables.</short> This scope contains the
     dates variables, and also some possibility to calculate dates, e.g.
-    when yuo ant to know the next month or the previous day.
+    when you want to know the next month or the previous day.
    </p></desc>",
 
   DOC_SCOPE("calendar"),
@@ -1082,6 +1082,7 @@ constant tagdoc = ([
   <p>
   This tag is very useful for application that needs a calendar functionality.
   </p>
+  <note><p>In Gregorian calendar, first day of the week is Sunday.</p></note>
   <note><p>All <xref href='emit.tag'>emit</xref> attributes apply.</p></note>
 
   </desc>
@@ -1140,15 +1141,15 @@ constant tagdoc = ([
     </p>
   </attr>
 
-  <attr name='from-week-day' value='monday|tuesday|wednesday|thirsday|friday|saturday|sunday'>
+  <attr name='from-week-day' value='monday|tuesday|wednesday|thursday|friday|saturday|sunday'>
    <p>Alter the startdate to nearest weekday of the choice which means
       that if you declare in <att>from-date</att> 2002-07-25 which is a
       tuesday the startdate will become
-      2002-07-24 when week-start='monday'. So far this is supported by ISO, 
+      2002-07-24 when from-week-day='monday'. So far this is supported by ISO, 
       Gregorian and Julian calendar.</p>
   </attr>
 
-  <attr name='to-week-day' value='monday|tuesday|wednesday|thirsday|friday|saturday|sunday'>
+  <attr name='to-week-day' value='monday|tuesday|wednesday|thursday|friday|saturday|sunday'>
     <p>Alter the <att>to-date</att> to neareast weekday this day or after
        this day depending on where the weekday is. So far this is supported
        by ISO, Gregorian and Julian calendar.</p>
