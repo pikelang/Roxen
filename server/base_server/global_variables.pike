@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.106 2008/02/05 15:42:14 grubba Exp $
+// $Id: global_variables.pike,v 1.107 2008/02/06 12:42:42 noring Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -289,6 +289,60 @@ void zap_all_module_caches( Variable.Variable v )
 void define_global_variables(  )
 {
   int p;
+
+  defvar("myisamchk",
+	 Variable.Language("Fast check and repair",
+			   ({ "Disable check",
+			      "Fast check and repair",
+			      "Normal check and repair",
+			      "Medium check and repair",
+			      "Extended check and repair" }),
+			   0, LOCALE(0, "MySQL table check"), 
+			   LOCALE(0, "Check MySQL tables on server start, "
+				  "and automatically repair if necessary. "
+				  "<b>Fast</b> checks only tables that haven't "
+				  "been closed properly. "
+				  "<b>Normal</b> checks for general errors. "
+				  "<b>Medium</b> catches 99.99 % of all "
+				  "errors. Should be good enough for most "
+				  "cases. "
+				  "<b>Extended</b> checks the tables VERY "
+				  "throughly.  Only use this in extreme cases "
+				  "as myisamchk should normally be able to "
+				  "find out if the table is OK even without "
+				  "this switch.")))
+    ->set_changed_callback(lambda(Variable.Variable s)
+			   {
+			     string options = "--force"
+					      " --silent";
+			     switch(query("myisamchk"))
+			     {
+			       case "Disable check":
+				 options = "";
+				 break;
+			       case "Fast check and repair":
+				 options += " --fast\n"
+					    "--myisam-recover=QUICK,FORCE\n";
+				 break;
+			       case "Normal check and repair":
+				 options += " --check\n"
+					    "--myisam-recover=DEFAULT,FORCE\n";
+				 break;
+			       case "Medium check and repair":
+				 options += " --medium-check\n"
+					    "--myisam-recover=DEFAULT,FORCE\n";
+				 break;
+			       case "Extended check and repair":
+				 options += " --extend-check\n"
+					    "--myisam-recover=DEFAULT,FORCE\n";
+				 break;
+			       default:
+				 error("Unknown myisamchk level %O\n",
+				       query("myisamchk"));
+				 return;
+			     }
+			     Stdio.write_file(combine_path(roxenloader.query_configuration_dir(), "_mysql_table_check"), options);
+			   });
 
   defvar("port_options", PortOptions());
 
