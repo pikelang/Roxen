@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.390 2008/02/06 13:34:04 marty Exp $
+// $Id: roxenloader.pike,v 1.391 2008/02/06 15:07:43 noring Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.390 2008/02/06 13:34:04 marty Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.391 2008/02/06 15:07:43 noring Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1820,6 +1820,7 @@ static void do_tailf( int loop, string file )
     Stdio.Stat s = file_stat( file );
     if(!s) {
       os = tailf_info[ file ] = 0;
+      sleep(1);
       continue;
     }
     si = s[ ST_SIZE ];
