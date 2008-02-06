@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.385 2008/02/06 13:22:45 marty Exp $
+// $Id: roxenloader.pike,v 1.386 2008/02/06 13:34:04 marty Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.385 2008/02/06 13:22:45 marty Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.386 2008/02/06 13:34:04 marty Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1823,8 +1823,7 @@ void low_start_mysql( string datadir,
   else
     slow_query_log = datadir + "/slow_query_log";
 
-  if(has_prefix(slow_query_log, "../"))
-    slow_query_log = combine_path(getcwd(), slow_query_log);
+  slow_query_log = combine_path(getcwd(), slow_query_log);
 
   // Default arguments.
   array(string) args = ({
