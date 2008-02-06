@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.36 2008/02/06 12:30:20 erikd Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.37 2008/02/06 13:13:07 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -919,7 +919,7 @@ format='%4d%2d%2d'>19771003</sscanf>
 </attr>
 
 <attr name='return' value='name'><p>
- If used, the number of successfull variable 'extractions' will be
+ If used, the number of successful variable 'extractions' will be
  available in the given variable.</p>
 </attr>",
 
