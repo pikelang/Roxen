@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.77 2007/11/21 11:59:22 grubba Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.78 2008/02/07 13:39:51 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -215,23 +215,28 @@ string rxml_run_error(RXML.Backtrace err, RXML.Type type)
   else
     _run_error=0;
 
-  NOCACHE();
-  if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml)) {
 #ifdef VERBOSE_RXML_ERRORS
+  report_notice ("Error in %s.\n%s",
+		 id->raw_url || id->not_query || "UNKNOWN",
+		 describe_backtrace (err));
+#else
+  if(query("logerrorsr"))
     report_notice ("Error in %s.\n%s",
 		   id->raw_url || id->not_query || "UNKNOWN",
-		   describe_backtrace (err));
-#else
-    if(query("logerrorsr"))
-      report_notice ("Error in %s.\n%s",
-		     id->raw_url || id->not_query || "UNKNOWN",
-		     describe_error (err));
+		   describe_error (err));
 #endif
-    _ok=0;
+
+  NOCACHE();
+  _ok=0;
+  if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml) ||
+      type->subtype_of (RXML.t_text)) {
     if(query("quietr") && !_id_misc->debug && !id->prestate->debug)
       return "";
-    return "<br clear=\"all\" />\n<pre>" +
-      Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
+    if (type->subtype_of (RXML.t_text))
+      return "\n" + describe_error (err) + "\n";
+    else
+      return "<br clear=\"all\" />\n<pre>" +
+	Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
   }
   return 0;
 }
@@ -252,18 +257,27 @@ string rxml_parse_error(RXML.Backtrace err, RXML.Type type)
   else
     _parse_error=0;
 
-  NOCACHE();
-  if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml)) {
 #ifdef VERBOSE_RXML_ERRORS
-    report_notice ("Error in %s.\n%s", id->raw_url, describe_backtrace (err));
+  report_notice ("Error in %s.\n%s",
+		 id->raw_url || id->not_query || "UNKNOWN",
+		 describe_backtrace (err));
 #else
-    if(query("logerrorsp"))
-      report_notice ("Error in %s.\n%s", id->raw_url, describe_error (err));
+  if(query("logerrorsp"))
+    report_notice ("Error in %s.\n%s",
+		   id->raw_url || id->not_query || "UNKNOWN",
+		   describe_error (err));
 #endif
+
+  NOCACHE();
+  if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml) ||
+      type->subtype_of (RXML.t_text)) {
     if(query("quietp") && !_id_misc->debug && !id->prestate->debug)
       return "";
-    return "<br clear=\"all\" />\n<pre>" +
-      Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
+    if (type->subtype_of (RXML.t_text))
+      return "\n" + describe_error (err) + "\n";
+    else
+      return "<br clear=\"all\" />\n<pre>" +
+	Roxen.html_encode_string (describe_error (err)) + "</pre>\n";
   }
   return 0;
 }
