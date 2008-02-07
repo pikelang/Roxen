@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.107 2008/02/06 12:42:42 noring Exp $
+// $Id: global_variables.pike,v 1.108 2008/02/07 10:05:29 noring Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -313,27 +313,25 @@ void define_global_variables(  )
 				  "this switch.")))
     ->set_changed_callback(lambda(Variable.Variable s)
 			   {
-			     string options = "--force"
-					      " --silent";
+			     string options = "";
 			     switch(query("myisamchk"))
 			     {
 			       case "Disable check":
-				 options = "";
 				 break;
 			       case "Fast check and repair":
-				 options += " --fast\n"
+				 options += "--force --fast --silent\n"
 					    "--myisam-recover=QUICK,FORCE\n";
 				 break;
 			       case "Normal check and repair":
-				 options += " --check\n"
+				 options += "--force --check\n"
 					    "--myisam-recover=DEFAULT,FORCE\n";
 				 break;
 			       case "Medium check and repair":
-				 options += " --medium-check\n"
+				 options += "--force --medium-check\n"
 					    "--myisam-recover=DEFAULT,FORCE\n";
 				 break;
 			       case "Extended check and repair":
-				 options += " --extend-check\n"
+				 options += "--force --extend-check\n"
 					    "--myisam-recover=DEFAULT,FORCE\n";
 				 break;
 			       default:

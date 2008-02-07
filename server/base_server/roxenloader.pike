@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.391 2008/02/06 15:07:43 noring Exp $
+// $Id: roxenloader.pike,v 1.392 2008/02/07 10:05:29 noring Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.391 2008/02/06 15:07:43 noring Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.392 2008/02/07 10:05:29 noring Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1867,7 +1867,7 @@ void low_check_mysql(string bindir, string datadir, array(string) args)
   report_debug("Checking MySQL tables with %O...\n", args*" ");
   mixed err = catch {
       Process.create_process(({ combine_path(bindir, myisamchk) }) +
-			     args + files)->wait();
+			     args + sort(files))->wait();
     };
   if(err)
     werror(describe_backtrace(err));
