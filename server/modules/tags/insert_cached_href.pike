@@ -7,12 +7,12 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.19 2007/03/19 08:33:16 liin Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.20 2008/02/11 10:27:24 jonasw Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
-LocaleString module_name = LOCALE(0, "Tags: Insert cached href");
-LocaleString module_doc  = LOCALE(0, "This module contains the RXML tag \"insert "
+LocaleString module_name = LOCALE(1, "Tags: Insert cached href");
+LocaleString module_doc  = LOCALE(2, "This module contains the RXML tag \"insert "
 				     "cached-href\". Useful when implementing e.g."
 				     " RSS syndication.");
 
@@ -34,36 +34,36 @@ constant MAX_REDIRECTS = 5;
 private HrefDatabase href_database;
 
 void create() {
-  defvar("fetch-interval", "5 minutes", LOCALE(0, "Fetch interval"),
+  defvar("fetch-interval", "5 minutes", LOCALE(3, "Fetch interval"),
 	 TYPE_STRING|VAR_MORE,
-	 LOCALE(0, "States how often the data of an URL should be updated. "
+	 LOCALE(4, "States how often the data of an URL should be updated. "
 		   "In seconds, minutes, hours or days."));
   
-  defvar("fresh-time", "0", LOCALE(0, "Fresh time"),
+  defvar("fresh-time", "0", LOCALE(5, "Fresh time"),
 	 TYPE_STRING|VAR_MORE,
-	 LOCALE(0, "States how long data in the database can be considered fresh enough"
+	 LOCALE(6, "States how long data in the database can be considered fresh enough"
 		   " to display. In seconds, minutes, hours or days. As default this"
 		   " is 0, which means that this attribute is not used and that there"
 		   " are no restrictions on data freshness."));
   
-  defvar("ttl", "7 days", LOCALE(0, "Time to live"),
+  defvar("ttl", "7 days", LOCALE(7, "Time to live"),
 	 TYPE_STRING|VAR_MORE,
-	 LOCALE(0, "States how long unrequested data can exist in the database"
+	 LOCALE(8, "States how long unrequested data can exist in the database"
 		   " before being removed. In seconds, minutes, hours or days."));
  
-  defvar("timeout", "10 seconds", LOCALE(0, "Timeout"),
+  defvar("timeout", "10 seconds", LOCALE(9, "Timeout"),
 	 TYPE_STRING|VAR_MORE,
-	 LOCALE(0, "The timeout when fetching data from a server. In seconds, minutes, "
+	 LOCALE(10, "The timeout when fetching data from a server. In seconds, minutes, "
 		   "hours or days."));
   
-  defvar("update-interval", "1 minute", LOCALE(0, "Update interval"),
+  defvar("update-interval", "1 minute", LOCALE(11, "Update interval"),
 	 TYPE_STRING|VAR_MORE,
-	 LOCALE(0, "States how often the module will check if the database needs to "
+	 LOCALE(12, "States how often the module will check if the database needs to "
 		   "be updated. In seconds, minutes, hours or days."));
   
-  defvar("recursion_limit", 2, LOCALE(0, "Maximum recursion depth"),
+  defvar("recursion_limit", 2, LOCALE(13, "Maximum recursion depth"),
 	 TYPE_INT|VAR_MORE,
-	 LOCALE(0,"Maximum number of nested <tt>&lt;insert cached-href&gt;</tt>'s "
+	 LOCALE(14,"Maximum number of nested <tt>&lt;insert cached-href&gt;</tt>'s "
 		  "allowed. May be set to zero to disable the limit."));
 }
 
@@ -99,7 +99,7 @@ void start(int occasion, Configuration conf) {
 
 mapping(string:function) query_action_buttons()
 {
-  return ([LOCALE(0, "Clear database") : href_database->empty_db]);
+  return ([LOCALE(15, "Clear database") : href_database->empty_db]);
 }
 
 

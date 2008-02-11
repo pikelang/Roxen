@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.108 2006/12/07 16:08:27 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.109 2008/02/11 10:27:50 jonasw Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -511,9 +511,9 @@ void create()
                               "default database") ) );
 
   defvar ("charset", "",
-	  LOCALE(0, "Default charset"),
+	  LOCALE(10, "Default charset"),
 	  TYPE_STRING,
-	  LOCALE(0, #"\
+	  LOCALE(11, #"\
 <p>The default value to use for the <i>charset</i> attribute to the
 SQL tags. See the description for the \"sql\" emit source for more
 details.</p>

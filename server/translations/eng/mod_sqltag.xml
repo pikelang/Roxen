@@ -51,3 +51,19 @@
 <o>Cannot find the module %s</o>
 <t></t>
 </str>
+
+<str id="10">
+<o>Default charset</o>
+<t></t>
+</str>
+
+<str id="11">
+<o>&lt;p&gt;The default value to use for the &lt;i&gt;charset&lt;/i&gt; attribute to the
+SQL tags. See the description for the "sql" emit source for more
+details.&lt;/p&gt;
+
+&lt;p&gt;Note that not all database connection supports this, and the tags
+will throw errors if this is used in such cases. MySQL 4.1 or later
+supports it.&lt;/p&gt;</o>
+<t></t>
+</str>

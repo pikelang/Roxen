@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.155 2006/12/14 13:31:48 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.156 2008/02/11 10:27:27 jonasw Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -158,8 +158,8 @@ void create()
 	 LOCALE(24,"All directories containing any of these files will not be "
 		"browsable."));
 
-  defvar("no-parse", 0, LOCALE(0, "Raw files"), TYPE_FLAG|VAR_MORE,
-	 LOCALE(0, "If set files from this filesystem will be returned "
+  defvar("no-parse", 0, LOCALE(58, "Raw files"), TYPE_FLAG|VAR_MORE,
+	 LOCALE(59, "If set files from this filesystem will be returned "
 		"without any further processing. This disables eg RXML "
 		"parsing of files."));
 

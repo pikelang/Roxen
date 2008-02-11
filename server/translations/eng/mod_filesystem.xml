@@ -311,3 +311,13 @@
 </o>
 <t></t>
 </str>
+
+<str id="58">
+<o>Raw files</o>
+<t></t>
+</str>
+
+<str id="59">
+<o>If set files from this filesystem will be returned without any further processing. This disables eg RXML parsing of files.</o>
+<t></t>
+</str>
