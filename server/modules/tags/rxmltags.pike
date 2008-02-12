@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.542 2008/02/04 13:17:33 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.543 2008/02/12 14:18:33 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6878,9 +6878,8 @@ using the pre tag.
  ignored.</p>
 
  <p>Note that only the dependencies are propagated, i.e. the settings
- in the \"variable\", \"key\" and \"profile\" attributes. The other
- attributes are used only if there's no surrounding <tag>cache</tag>
- tag.</p>
+ in the \"variable\" and \"profile\" attributes. The other attributes
+ are used only if there's no surrounding <tag>cache</tag> tag.</p>
 </attr>
 
 <attr name='nohash'>
