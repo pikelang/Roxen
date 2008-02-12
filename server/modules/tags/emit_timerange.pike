@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.26 2008/02/06 18:24:28 erikd Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.27 2008/02/12 14:15:05 mast Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -438,6 +438,7 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
   {
     DEBUG("%O->rxml_var_eval(ctx %O, var %O, scope %O, type %O)\b",
 	  this_object(), ctx, var, scope, want_type);
+    string full_scope = scope;
     RequestID id = ctx->id; NOCACHE();
 
     // Just as in `[], we might have arrived via some parent. In the specific
@@ -463,7 +464,12 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
       DEBUG("\b => ([])[0] (what:%O)\n", what);
       return ([])[0];
     }
-    return fetch_and_quote_value(result || what, want_type);
+    if (!result) result = what;
+    if (!stringp (result))
+      RXML.parse_error ("%O has no printable representation. "
+			"You need to subindex it further.\n",
+			full_scope + "." + var);
+    return fetch_and_quote_value(result, want_type);
   }
 
   array(string) _indices(void|RXML.Context ctx, void|string scope_name)
@@ -486,7 +492,6 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
     {
       case 't': return sprintf("TimeRangeValue(%s)", type);
       case 'O':
-      default:
 	return sprintf("TimeRangeValue(%O/%O)", time, parent_scope);
     }
   }
