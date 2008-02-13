@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.392 2008/02/07 10:05:29 noring Exp $
+// $Id: roxenloader.pike,v 1.393 2008/02/13 15:37:33 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.392 2008/02/07 10:05:29 noring Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.393 2008/02/13 15:37:33 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1489,6 +1489,8 @@ static class SQLResKey
   static void destroy()
   {
     if (key->reuse_in_thread) {
+      // FIXME: This won't work well; destroy() might get called from
+      // any thread when an object is refcount garbed.
       mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
       if (!dbs_for_thread[key->db_name])
 	dbs_for_thread[key->db_name] = key->real;
@@ -1571,6 +1573,8 @@ static class SQLKey
 #endif
 
     if (reuse_in_thread) {
+      // FIXME: This won't work well; destroy() might get called from
+      // any thread when an object is refcount garbed.
       mapping(string:SQLKey) dbs_for_thread = sql_reuse_in_thread->get();
       if (dbs_for_thread[db_name] == real) {
 	m_delete (dbs_for_thread, db_name);
@@ -1844,7 +1848,8 @@ static void do_tailf( int loop, string file )
   } while( loop );
 }
 
-void low_check_mysql(string bindir, string datadir, array(string) args)
+static void low_check_mysql(string basedir, string datadir, array(string) args,
+			    void|Stdio.File errlog)
 {
   array(string) files = ({});
   foreach(get_dir(datadir) || ({}), string dir) {
@@ -1863,11 +1868,37 @@ void low_check_mysql(string bindir, string datadir, array(string) args)
 #else
   string myisamchk = "myisamchk";
 #endif
+  string bindir = basedir+"libexec/";
+  if( !file_stat( bindir+myisamchk ) )
+  {
+    bindir = basedir+"bin/";
+    if( !file_stat( bindir+myisamchk ) )
+    {
+      bindir = basedir+"sbin/";
+      if( !file_stat( bindir+myisamchk ) )
+      {
+	report_warning ("No myisamchk found in %s. Tables not checked.\n",
+			basedir);
+	return;
+      }
+    }
+  }
+
+  Stdio.File  devnull
+#ifndef __NT__
+    = Stdio.File( "/dev/null", "w" )
+#endif
+    ;
   
   report_debug("Checking MySQL tables with %O...\n", args*" ");
   mixed err = catch {
       Process.create_process(({ combine_path(bindir, myisamchk) }) +
-			     args + sort(files))->wait();
+			     args + sort(files),
+			     ([
+			       "stdin":devnull,
+			       "stdout":errlog,
+			       "stderr":errlog
+			     ]))->wait();
     };
   if(err)
     werror(describe_backtrace(err));
@@ -1991,6 +2022,8 @@ void low_start_mysql( string datadir,
 	catch(chmod( binary, 0500 )) )
       binary = bindir+mysqld;
 
+  Stdio.File errlog = Stdio.File( err_log, "wct" );
+
   string mysql_table_check =
     Stdio.read_file(combine_path(query_configuration_dir(),
 				 "_mysql_table_check"));
@@ -2000,7 +2033,9 @@ void low_start_mysql( string datadir,
   sscanf(mysql_table_check, "%s\n%s\n",
 	 string myisamchk_args, string mysqld_extra_args);
   if(myisamchk_args && sizeof(myisamchk_args))
-    low_check_mysql(bindir, datadir, (myisamchk_args/" ") - ({ "" }));
+    low_check_mysql(basedir, datadir, (myisamchk_args/" ") - ({ "" }),
+		    errlog);
+
   if(mysqld_extra_args && sizeof(mysqld_extra_args))
     args += (mysqld_extra_args/" ") - ({ "" });
 
@@ -2011,7 +2046,6 @@ void low_start_mysql( string datadir,
     = Stdio.File( "/dev/null", "w" )
 #endif
     ;
-  Stdio.File errlog = Stdio.File( err_log, "wct" );
 
   Process.create_process p = Process.create_process( args,
 			  ([
