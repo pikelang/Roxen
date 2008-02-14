@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.362 2007/05/29 13:12:37 mast Exp $
+// $Id: module.pmod,v 1.363 2008/02/14 22:13:16 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -530,7 +530,8 @@ class Tag
   string _sprintf (void|int flag)
   {
     return flag == 'O' &&
-      ("RXML.Tag(" + [string] this_object()->name +
+      ((function_name (object_program (this)) || "RXML.Tag") +
+       "(" + [string] this->name +
        (this->plugin_name ? "#" + [string] this->plugin_name : "") +
        ([int] this->flags & FLAG_PROC_INSTR ? " [PI]" : "") + ")" +
        OBJ_COUNT);
@@ -664,7 +665,7 @@ class TagSet
 	name_, owner_);
 #ifdef MODULE_DEBUG
       array bt = backtrace();
-      report_debug (describe_backtrace (bt[sizeof (bt) - 6..]));
+      report_debug (describe_backtrace (bt/*[sizeof (bt) - 6..]*/));
 #endif
     }
 
@@ -1265,7 +1266,8 @@ class TagSet
   string _sprintf (void|int flag)
   {
     if (flag != 'O') return 0;
-    return "RXML.TagSet(" +
+    return (function_name (object_program (this)) || "RXML.TagSet") +
+      "(" +
       // No, the owner isn't written unambiguously; we try to be brief here.
       (string) (owner && (owner->is_module ?
 			  owner->module_local_id() :
@@ -1426,7 +1428,11 @@ class Value
   //! good reasons; the backtrace easily just becomes confusing
   //! instead.
 
-  string _sprintf (void|int flag) {return flag == 'O' && "RXML.Value()";}
+  string _sprintf (void|int flag)
+  {
+    return flag == 'O' &&
+      ((function_name (object_program (this)) || "RXML.Value") + "()");
+  }
 }
 
 class Scope
@@ -1525,7 +1531,11 @@ class Scope
     else return "";
   }
 
-  string _sprintf (void|int flag) {return flag == 'O' && "RXML.Scope()";}
+  string _sprintf (void|int flag)
+  {
+    return flag == 'O' &&
+      ((function_name (object_program (this)) || "RXML.Scope") + "()");
+  }
 }
 
 mapping(string:mixed) scope_to_mapping (SCOPE_TYPE scope,
@@ -2516,7 +2526,9 @@ class Context
 
   string _sprintf (int flag)
   {
-    return flag == 'O' && ("RXML.Context()" + OBJ_COUNT);
+    return flag == 'O' &&
+      ((function_name (object_program (this)) || "RXML.Context") +
+       "()" + OBJ_COUNT);
   }
 
 #ifdef MODULE_DEBUG
@@ -4865,7 +4877,8 @@ class Frame
   string _sprintf (void|int flag)
   {
     return flag == 'O' &&
-      ("RXML.Frame(" + (tag && [string] tag->name) + ")" + OBJ_COUNT);
+      ((function_name (object_program (this)) || "RXML.Frame") +
+       "(" + (tag && [string] tag->name) + ")" + OBJ_COUNT);
   }
 }
 
@@ -5562,7 +5575,10 @@ class Parser
 
   string _sprintf (void|int flag)
   {
-    return flag == 'O' && sprintf ("RXML.Parser(%O)%s", type, OBJ_COUNT);
+    return flag == 'O' &&
+      sprintf ("%s(%O)%s",
+	       function_name (object_program (this)) || "RXML.Parser",
+	       type, OBJ_COUNT);
   }
 }
 
