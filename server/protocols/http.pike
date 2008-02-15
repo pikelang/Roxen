@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.542 2008/01/16 09:32:08 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.543 2008/02/15 16:37:47 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -480,9 +480,6 @@ private void really_set_config(array mod_config)
 }
 #endif
 
-private static mixed f, line;
-private static int hstart;
-
 #if 0
 //! Parse cookie strings.
 //!
@@ -662,18 +659,18 @@ int things_to_do_when_not_sending_from_cache( )
 }
 
 static Roxen.HeaderParser hp = Roxen.HeaderParser();
-static function(string:array(string|mapping)) hpf = hp->feed;
-int last;
 
 private int parse_got( string new_data )
 {
+  string line;
+
   TIMER_START(parse_got);
   if( !method )
   {
     if (!hrtime)
       hrtime = gethrtime();
     array res;
-    if( mixed err = catch( res = hpf( new_data ) ) ) {
+    if( mixed err = catch( res = hp->feed( new_data ) ) ) {
 #ifdef DEBUG
       report_debug ("Got bad request, HeaderParser error: " + describe_error (err));
 #endif
@@ -684,89 +681,86 @@ private int parse_got( string new_data )
       TIMER_END(parse_got);
       return 0; // Not enough data
     }
-    data = res[0];
-    line = res[1];
-    request_headers = res[2];
+    [data, line, request_headers] = res;
   }
+  hp = 0;
   TIMER_END(parse_got);
-  return parse_got_2();
-}
 
-private final int parse_got_2( )
-{
+  // The following was earlier a separate function parse_got_2.
+
   TIMER_START(parse_got_2);
   TIMER_START(parse_got_2_parse_line);
-  string trailer, trailer_trailer;
-  multiset (string) sup;
-  string a, b, s="", linename, contents;
-  array(string) sl = line / " ";
-  switch( sizeof( sl ) )
   {
-    default:
-      sl = ({ sl[0], sl[1..sizeof(sl)-2]*" ", sl[-1] });
-      /* FALL_THROUGH */
+    string f;
+    array(string) sl = line / " ";
+    switch( sizeof( sl ) )
+    {
+      default:
+	sl = ({ sl[0], sl[1..sizeof(sl)-2]*" ", sl[-1] });
+	/* FALL_THROUGH */
 
-    case 3: /* HTTP/1.0 */
-      method = sl[0];
-      f = sl[1];
-      clientprot = sl[2];
-      prot = clientprot;
-      if(!(< "HTTP/1.0", "HTTP/1.1" >)[prot])
-      {
-	int maj,min;
-	if( sscanf(prot, "HTTP/%d.%d", maj, min) == 2 )
-	  // Comply with the annoying weirdness of RFC 2616.
-	  prot = "HTTP/" + maj + "." + min;
-	else
-	  // We're nice here and assume HTTP even if the protocol
-	  // is something very weird.
-	  prot = "HTTP/1.1";
-      }
-      // HTTP/1.1 and later default to keep-alive.
-      misc->connection = "keep-alive";
-      if (prot == "HTTP/1.0") {
-	// But HTTP/1.0 did not.
-	misc->connection = "close";
-      }
-      break;
+      case 3: /* HTTP/1.0 */
+	method = sl[0];
+	f = sl[1];
+	clientprot = sl[2];
+	prot = clientprot;
+	if(!(< "HTTP/1.0", "HTTP/1.1" >)[prot])
+	{
+	  int maj,min;
+	  if( sscanf(prot, "HTTP/%d.%d", maj, min) == 2 )
+	    // Comply with the annoying weirdness of RFC 2616.
+	    prot = "HTTP/" + maj + "." + min;
+	  else
+	    // We're nice here and assume HTTP even if the protocol
+	    // is something very weird.
+	    prot = "HTTP/1.1";
+	}
+	// HTTP/1.1 and later default to keep-alive.
+	misc->connection = "keep-alive";
+	if (prot == "HTTP/1.0") {
+	  // But HTTP/1.0 did not.
+	  misc->connection = "close";
+	}
+	break;
       
-    case 2:     // HTTP/0.9
-    case 1:     // PING
-      misc->connection = "close";
-      method = sl[0];
-      f = sl[-1];
-      if( sizeof( sl ) == 1 )
-	sscanf( method, "%s%*[\r\n]", method );
+      case 2:     // HTTP/0.9
+      case 1:     // PING
+	misc->connection = "close";
+	method = sl[0];
+	f = sl[-1];
+	if( sizeof( sl ) == 1 )
+	  sscanf( method, "%s%*[\r\n]", method );
 	
-      clientprot = prot = "HTTP/0.9";
-      if(method != "PING")
-	method = "GET"; // 0.9 only supports get.
-      else
-      {
-	// FIXME: my_fd_busy.
-	my_fd->write("PONG\r\n");
-	TIMER_END(parse_got_2_parse_line);
-	TIMER_END(parse_got_2);
-	return 2;
-      }
-      s = data = ""; // no headers or extra data...
-      sscanf( f, "%s%*[\r\n]", f );
-      if (sizeof(sl) == 1)
-	NO_PROTO_CACHE();
-      break;
+	clientprot = prot = "HTTP/0.9";
+	if(method != "PING")
+	  method = "GET"; // 0.9 only supports get.
+	else
+	{
+	  // FIXME: my_fd_busy.
+	  my_fd->write("PONG\r\n");
+	  TIMER_END(parse_got_2_parse_line);
+	  TIMER_END(parse_got_2);
+	  return 2;
+	}
+	data = ""; // no headers or extra data...
+	sscanf( f, "%s%*[\r\n]", f );
+	if (sizeof(sl) == 1)
+	  NO_PROTO_CACHE();
+	break;
 
-    case 0:
-      /* Not reached */
-      break;
+      case 0:
+	/* Not reached */
+	break;
+    }
+    TIMER_END(parse_got_2_parse_line);
+    REQUEST_WERR(sprintf("HTTP: request line %O", line));
+    REQUEST_WERR(sprintf("HTTP: headers %O", request_headers));
+    REQUEST_WERR(sprintf("HTTP: data (length %d) %O", strlen(data),data));
+    raw_url    = f;
+    time       = predef::time(1);
+    // if(!data) data = "";
+    //REQUEST_WERR(sprintf("HTTP: raw_url %O", raw_url));
   }
-  TIMER_END(parse_got_2_parse_line);
-  REQUEST_WERR(sprintf("HTTP: request line %O", line));
-  REQUEST_WERR(sprintf("HTTP: headers %O", request_headers));
-  REQUEST_WERR(sprintf("HTTP: data (length %d) %O", strlen(data),data));
-  raw_url    = f;
-  time       = predef::time(1);
-  // if(!data) data = "";
-  //REQUEST_WERR(sprintf("HTTP: raw_url %O", raw_url));
 
   if(!remoteaddr)
   {
@@ -863,6 +857,7 @@ private final int parse_got_2( )
     }
   }
   TIMER_END(parse_got_2_parse_headers);
+
   TIMER_START(parse_got_2_more_data);
   if(misc->len)
   {
@@ -910,7 +905,7 @@ private final int parse_got_2( )
 	}
 
 	foreach(replace(data,"+"," ")/"&", v)
-	  if(sscanf(v, "%s=%s", a, b) == 2)
+	  if(sscanf(v, "%s=%s", string a, string b) == 2)
 	    {
 	      a = http_decode_string( a );
 	      b = http_decode_string( b );
@@ -953,6 +948,7 @@ private final int parse_got_2( )
     leftovers = data;
   }
   TIMER_END(parse_got_2_more_data);
+
   if (!(< "HTTP/1.0", "HTTP/0.9" >)[prot]) {
     if (!misc->host) {
       // RFC 2616 requires this behaviour.
@@ -968,6 +964,7 @@ private final int parse_got_2( )
     }
   }
   TIMER_END(parse_got_2);
+
   return 3;	// Done.
 }
 
