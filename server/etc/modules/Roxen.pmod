@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.231 2008/02/15 23:37:03 mast Exp $
+// $Id: Roxen.pmod,v 1.232 2008/02/15 23:50:18 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2814,8 +2814,7 @@ string get_client_charset (string едц)
   switch( test ) {
   case "edv":
   case "edv?":
-    report_notice( "Warning: Non 8-bit safe client detected (%s)",
-		   (id?id->client*" ":"unknown client"));
+    report_notice( "Warning: Non 8-bit safe client detected.\n");
     return 0;
 
   case "едц?":
@@ -2888,7 +2887,7 @@ function(string:string) get_client_charset_decoder( string едц,
 {
   string charset = get_client_charset (едц);
 
-  if (function(string:void) f = id && id->set_output_charset)
+  if (function(string|function:void) f = id && id->set_output_charset)
     switch (charset) {
       case "iso-2022-jp":		f ("iso-2022"); break;
       case "utf-7":			f ("utf-7"); break;
