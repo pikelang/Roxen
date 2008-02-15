@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.230 2008/01/10 10:06:21 mast Exp $
+// $Id: Roxen.pmod,v 1.231 2008/02/15 23:37:03 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2686,38 +2686,120 @@ class _charset_decoder(object cs)
   }
 }
 
+static class CharsetDecoderWrapper
+{
+  static object decoder;
+  string charset;
+
+  static void create (string cs)
+  {
+    // Would be nice if it was possible to get the canonical charset
+    // name back from Locale.Charset so we could use that instead in
+    // the client_charset_decoders cache mapping.
+    decoder = Locale.Charset.decoder (charset = cs);
+    werror ("created %O from %O\n", decoder, cs);
+  }
+
+  string decode (string what)
+  {
+    object d = decoder;
+    // Relying on the interpreter lock here.
+    decoder = 0;
+    if (d) d->clear();
+    else d = Locale.Charset.decoder (charset);
+    string res = d->feed (what)->drain();
+    decoder = d;
+    return res;
+  }
+}
+
 static multiset(string) charset_warned_for = (<>);
 
 constant magic_charset_variable_placeholder = "__MaGIC_RoxEn_Actual___charseT";
 constant magic_charset_variable_value = "едц&#x829f;@" + magic_charset_variable_placeholder;
 
-function get_client_charset_decoder( string едц, RequestID|void id )
-  //! Returns a decoder for the clients charset, given the clients
-  //! encoding of the string "едц&#x829f;".
-  //! See the roxen-automatic-charset-variable tag.
+static mapping(string:function(string:string)) client_charset_decoders = ([
+  "http": http_decode_string,
+  "html": Parser.parse_html_entities,
+  "utf-8": utf8_to_string,
+  "utf-16": unicode_to_string,
+]);
+
+static function(string:string) make_composite_decoder (
+  function(string:string) outer, function(string:string) inner)
+{
+  // This is put in a separate function to minimize the size of the
+  // dynamic frame for this lambda.
+  return lambda (string what) {
+	   return outer (inner (what));
+	 };
+}
+
+function(string:string) get_decoder_for_client_charset (string charset)
+//! Returns a decoder function for the given charset, which is on the
+//! form returned by @[get_client_charset].
+{
+  if (function(string:string) dec = client_charset_decoders[charset])
+    // This always succeeds to look up the special values "http" and "html".
+    return dec;
+
+  if (sscanf (charset, "%s|%s", string outer_cs, string inner_cs)) {
+    function(string:string) outer = client_charset_decoders[outer_cs];
+    if (!outer)
+      outer = client_charset_decoders[outer_cs] =
+	CharsetDecoderWrapper (outer_cs)->decode;
+    return client_charset_decoders[charset] =
+      make_composite_decoder (outer, get_decoder_for_client_charset (inner_cs));
+  }
+
+  return client_charset_decoders[charset] =
+    CharsetDecoderWrapper (charset)->decode;
+}
+
+string get_client_charset (string едц)
+//! Returns charset used by the client, given the clients encoding of
+//! the string @[magic_charset_variable_value]. See the
+//! @expr{<roxen-automatic-charset-variable>@} RXML tag.
+//!
+//! The return value is usually a charset name, but it can also be any
+//! of:
+//!
+//! @dl
+//!   @item "http"
+//!     It was URI-encoded (i.e. using @expr{%XX@} style escapes).
+//!   @item "html"
+//!     It was encoded using HTML character entities.
+//! @enddl
+//!
+//! Furthermore, some cases of double encodings are also detected. In
+//! these cases the returned string is a list of the charset names or
+//! values described above, separated by @expr{"|"@}, starting with
+//! the encoding that was used first.
+//!
+//! @seealso
+//! @[get_client_charset_decoder], @[get_decoder_for_client_charset]
 {
   //  If the first character is "%" the whole request is most likely double
   //  encoded. We'll undo the decoding by combining the charset decoder with
   //  http_decode_string().
   if (has_prefix(едц, "%") && !has_prefix(едц, "%%")) {
     report_notice("Warning: Double HTTP encoding detected: %s\n", едц);
-    function decoder = get_client_charset_decoder(http_decode_string(едц), id);
-    if (decoder) {
-      return lambda(string s) { return decoder(http_decode_string(s)); };
+    string cs = get_client_charset (http_decode_string(едц));
+    if (cs) {
+      return cs + "|http";
     } else {
-      return http_decode_string;
+      return "http";
     }
   }
 
   // Netscape and Safari seem to send "?" for characters that can't be
   // represented by the current character set while IE encodes those
   // characters as entities, while Opera uses "\201" or "?x829f;"...
-  string charset;
-  string test = (едц/"\0")[0];
-  array tmp = test/"@";
-  if(sizeof(tmp)>1)
-    charset = tmp[1];
-  string test2 = replace(tmp[0], ({ "\201",  "?x829f;", }), ({ "?", "?", }));
+  string test = едц;
+  sscanf (test, "%s\0", test);
+  string test2 = test;
+  sscanf (test2, "%s@%s", test2, string charset);
+  test2 = replace(test2, ({ "\201",  "?x829f;", }), ({ "?", "?", }));
 
   test = replace(test2,
 		 ({ "&aring;", "&#229;", "&#xe5;",
@@ -2738,71 +2820,85 @@ function get_client_charset_decoder( string едц, RequestID|void id )
 
   case "едц?":
     if (test2 != test)
-      return Parser.parse_html_entities;
+      return "html";
     // FALL_THROUGH
   case "едц":
-    return 0;
+    return "iso-8859-1";
     
   case "\33-Aедц":
   case "\33-A\345\344\366\33$Bgl":
-    id && id->set_output_charset && id->set_output_charset( "iso-2022" );
-    return _charset_decoder(Locale.Charset.decoder("iso-2022-jp"))->decode;
+    return "iso-2022-jp";
     
   case "+AOUA5AD2-":
   case "+AOUA5AD2gp8-":
-    id && id->set_output_charset && id->set_output_charset( "utf-7" );
-    return _charset_decoder(Locale.Charset.decoder("utf-7"))->decode;
+    return "utf-7";
      
   case "ГҐГ¤Г¶?":
     if (test != test2) {
-      id && id->set_output_charset && id->set_output_charset( "utf-8" );
-      return lambda(string x) {
-	       return utf8_to_string(Parser.parse_html_entities(x));
-	     };
+      return "utf-8|html";
     }
     // FALL_THROUGH
   case "ГҐГ¤Г¶":
   case "ГҐГ¤":
   case "ГҐГ¤Г¶\350\212\237":
   case "\357\277\275\357\277\275\357\277\275\350\212\237":
-    id && id->set_output_charset && id->set_output_charset( "utf-8" );
-    return utf8_to_string;
+    return "utf-8";
 
   case "\214\212\232?":
     if (test != test2) {
-      id && id->set_output_charset && id->set_output_charset( "mac" );
-      return lambda(string x) {
-	       return utf8_to_string(_charset_decoder( Locale.Charset.decoder( "mac" ) )->decode(x));
-	     };
+      return "mac|html";
     }
     // FALL_THROUGH
   case "\214\212\232":
-    id && id->set_output_charset && id->set_output_charset( "mac" );
-    return _charset_decoder( Locale.Charset.decoder( "mac" ) )->decode;
+    return "mac";
     
   case "\0е\0д\0ц":
   case "\0е\0д\0ц\202\237":
-     id&&id->set_output_charset&&id->set_output_charset(string_to_unicode);
-     return unicode_to_string;
+     return "utf-16";
      
   case "\344\214":
   case "???\344\214":
   case "\217\206H\217\206B\217\206r\344\214": // Netscape sends this (?!)
-    id && id->set_output_charset && id->set_output_charset( "shift_jis" );
-    return _charset_decoder(Locale.Charset.decoder("shift_jis"))->decode;
+    return "shift_jis";
   }
 
   // If the actual charset is valid, return a decoder for that charset
-  catch {
-    function f = _charset_decoder(Locale.Charset.decoder(charset))->decode;
-    return f;
-  };
+  if (charset)
+    catch {
+      get_decoder_for_client_charset (charset);
+      return charset;
+    };
   
   if (!charset_warned_for[test] && (sizeof(charset_warned_for) < 256)) {
     charset_warned_for[test] = 1;
-    report_warning( "Unable to find charset decoder for %O, vector: %O\n",
-		    едц, test);
+    report_warning( "Unable to find charset decoder for %O "
+		    "(vector %O, charset %O).\n",
+		    едц, test, charset);
   }
+}
+
+function(string:string) get_client_charset_decoder( string едц,
+						    RequestID|void id )
+//! Returns a decoder for the client's charset, given the clients
+//! encoding of the string @[magic_charset_variable_value]. See the
+//! @expr{<roxen-automatic-charset-variable>@} RXML tag.
+//!
+//! @seealso
+//! @[get_client_charset]
+{
+  string charset = get_client_charset (едц);
+
+  if (function(string:void) f = id && id->set_output_charset)
+    switch (charset) {
+      case "iso-2022-jp":		f ("iso-2022"); break;
+      case "utf-7":			f ("utf-7"); break;
+      case "utf-8|html": case "utf-8":	f ("utf-8"); break;
+      case "mac|html": case "mac":	f ("mac"); break;
+      case "utf-16":			f (string_to_unicode); break;
+      case "shift_jis":			f ("shift_jis"); break;
+    }
+
+  return get_decoder_for_client_charset (charset);
 }
 
 
