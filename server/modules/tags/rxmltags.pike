@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.537 2008/02/12 14:18:33 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.538 2008/02/15 16:55:19 stewa Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4437,6 +4437,7 @@ class TagEmit {
 					       "rowinfo":RXML.t_text(RXML.PEnt), // t_var
 					       "do-once":RXML.t_text(RXML.PEnt), // t_bool
 					       "filter":RXML.t_text(RXML.PEnt),  // t_list
+					       "filter-exclude":RXML.t_text(RXML.PEnt),  // t_list
 					       "sort":RXML.t_text(RXML.PEnt),    // t_list
 					       "remainderinfo":RXML.t_text(RXML.PEnt), // t_var
   ]);
@@ -4444,17 +4445,29 @@ class TagEmit {
   RXML.Type def_arg_type = RXML.t_text(RXML.PNone);
   array(RXML.Type) result_types = ({RXML.t_any});
 
-  int(0..1) should_filter(mapping vs, mapping filter) {
+  int(0..1) should_filter(mapping vs, mapping filter, mapping filter_exclude) {
     RXML.Context ctx = RXML_CONTEXT;
-    foreach(indices(filter), string v) {
-      string|object val = vs[v];
-      if(objectp(val))
-	val = val->rxml_const_eval ? val->rxml_const_eval(ctx, v, "") :
-	  val->rxml_var_eval(ctx, v, "", RXML.t_text);
-      if(!val)
-	return 1;
-      if(!glob(filter[v], val))
-	return 1;
+    if(filter) {
+      foreach(indices(filter), string v) {
+	string|object val = vs[v];
+	if(objectp(val))
+	  val = val->rxml_const_eval ? val->rxml_const_eval(ctx, v, "") :
+	    val->rxml_var_eval(ctx, v, "", RXML.t_text);
+	if(!val)
+	  return 1;
+	if(!glob(filter[v], val))
+	  return 1;
+      }
+    }
+    if(filter_exclude) {
+      foreach(indices(filter_exclude), string v) {
+	string|object val = vs[v];
+	if(objectp(val))
+	  val = val->rxml_const_eval ? val->rxml_const_eval(ctx, v, "") :
+	    val->rxml_var_eval(ctx, v, "", RXML.t_text);
+	if(val && glob(filter_exclude[v], val))
+	  return 1;
+      }
     }
     return 0;
   }
@@ -4463,15 +4476,15 @@ class TagEmit {
     inherit RXML.Tag;
     constant name = "delimiter";
 
-    static int(0..1) more_rows(array|object res, mapping filter) {
+    static int(0..1) more_rows(array|object res, mapping filter, mapping filter_exclude) {
       if(objectp(res)) {
-	while(res->peek() && should_filter(res->peek(), filter))
+	while(res->peek() && should_filter(res->peek(), filter, filter_exclude))
 	  res->skip_row();
 	return !!res->peek();
       }
       if(!sizeof(res)) return 0;
       foreach(res[RXML.get_var("real-counter")..], mapping v) {
-	if(!should_filter(v, filter))
+	if(!should_filter(v, filter, filter_exclude))
 	  return 1;
       }
       return 0;
@@ -4482,7 +4495,7 @@ class TagEmit {
 
       array do_return(RequestID id) {
 	object|array res = id->misc->emit_rows;
-	if(!id->misc->emit_filter) {
+	if(!id->misc->emit_filter && !id->misc->emit_filter_exclude) {
 	  if( objectp(res) ? res->peek() :
 	      RXML.get_var("counter") < sizeof(res) )
 	    result = content;
@@ -4491,7 +4504,7 @@ class TagEmit {
 	if(id->misc->emit_args->maxrows &&
 	   id->misc->emit_args->maxrows == RXML.get_var("counter"))
 	  return 0;
-	if(more_rows(res, id->misc->emit_filter))
+	if(more_rows(res, id->misc->emit_filter, id->misc->emit_filter_exclude))
 	  result = content;
 	return 0;
       }
@@ -4606,11 +4619,13 @@ class TagEmit {
     // nested.
     array(mapping(string:mixed))|object outer_rows;
     mapping outer_filter;
+    mapping outer_filter_exclude;
     mapping outer_args;
 
     object plugin;
     array(mapping(string:mixed))|object res;
     mapping filter;
+    mapping filter_exclude;
 
     array expand(object res) {
       array ret = ({});
@@ -4668,12 +4683,27 @@ class TagEmit {
 	}
 	if(!sizeof(filter)) filter = 0;
       }
+      if(args["filter-exclude"]) {
+	array pairs = args["filter-exclude"] / ",";
+	filter_exclude = ([]);
+	foreach( pairs, string pair) {
+	  string v,g;
+	  if( sscanf(pair, "%s=%s", v,g) != 2)
+	    continue;
+	  v = String.trim_whites(v);
+	  if(g != "*"*sizeof(g))
+	    filter_exclude[v] = g;
+	}
+	if(!sizeof(filter_exclude)) filter_exclude = 0;
+      }
 
       outer_args = id->misc->emit_args;
       outer_rows = id->misc->emit_rows;
       outer_filter = id->misc->emit_filter;
+      outer_filter_exclude = id->misc->emit_filter_exclude;
       id->misc->emit_args = args;
       id->misc->emit_filter = filter;
+      id->misc->emit_filter_exclude = filter_exclude;
 
       if(objectp(res))
 	if(args->sort ||
@@ -4693,7 +4723,7 @@ class TagEmit {
 	  // jump to another iterator function. Let's save that
 	  // complexity enhancement until later.
 	  res = expand(res);
-	else if(filter) {
+	else if(filter || filter_exclude) {
 	  do_iterate = object_filter_iterate;
 	  id->misc->emit_rows = res;
 	  return 0;
@@ -4801,18 +4831,19 @@ class TagEmit {
 	    fields);
 	}
 
-	if(filter) {
+	if(filter || filter_exclude) {
 
 	  // If rowinfo or negative skiprows are used we have
 	  // to do filtering in a loop of its own, instead of
 	  // doing it during the emit loop.
 	  if(args->rowinfo || (args->skiprows && args->skiprows<0)) {
 	    for(int i; i<sizeof(res); i++)
-	      if(should_filter(res[i], filter)) {
+	      if(should_filter(res[i], filter, filter_exclude)) {
 		res = res[..i-1] + res[i+1..];
 		i--;
 	      }
 	    filter = 0;
+	    filter_exclude = 0;
 	  }
 	  else {
 
@@ -4826,7 +4857,7 @@ class TagEmit {
 	      else {
 		int i;
 		for(; i<sizeof(res) && skiprows; i++)
-		  if(!should_filter(res[i], filter))
+		  if(!should_filter(res[i], filter, filter_exclude))
 		    skiprows--;
 		res = res[i..];
 	      }
@@ -4839,7 +4870,7 @@ class TagEmit {
 
 	// We have to check the filter again, since it
 	// could have been zeroed in the last if statement.
-	if(!filter) {
+	if(!filter && !filter_exclude) {
 
 	  if(args->skiprows) {
 	    if(args->skiprows<0) args->skiprows = sizeof(res) + args->skiprows;
@@ -4901,10 +4932,10 @@ class TagEmit {
       if(args->skiprows && args->skiprows>0)
 	while(args->skiprows-->-1)
 	  while((vars=res->get_row()) &&
-		should_filter(vars, filter));
+		should_filter(vars, filter, filter_exclude));
       else
 	while((vars=res->get_row()) &&
-	      should_filter(vars, filter));
+	      should_filter(vars, filter, filter_exclude));
 
       if(mappingp(vars)) {
 	vars->counter = ++counter;
@@ -4932,7 +4963,7 @@ class TagEmit {
       if(args->maxrows && counter == args->maxrows)
 	return do_once_more();
 
-      while(should_filter(res[real_counter++], filter))
+      while(should_filter(res[real_counter++], filter, filter_exclude))
 	if(real_counter>=sizeof(res)) return do_once_more();
 
       vars=res[real_counter-1];
@@ -4947,22 +4978,23 @@ class TagEmit {
 
       id->misc->emit_rows = outer_rows;
       id->misc->emit_filter = outer_filter;
+      id->misc->emit_filter_exclude = outer_filter_exclude;
       id->misc->emit_args = outer_args;
 
       int rounds = vars->counter - !!args["do-once"];
       _ok = !!rounds;
 
       if(args->remainderinfo) {
-	if(args->filter) {
+	if(args->filter || args["filter-exclude"]) {
 	  int rem;
 	  if(arrayp(res)) {
 	    foreach(res[vars["real-counter"]+1..], mapping v)
-	      if(!should_filter(v, filter))
+	      if(!should_filter(v, filter, filter_exclude))
 		rem++;
 	  } else {
 	    mapping v;
 	    while( v=res->get_row() )
-	      if(!should_filter(v, filter))
+	      if(!should_filter(v, filter, filter_exclude))
 		rem++;
 	  }
 	  RXML.user_set_var(args->remainderinfo, rem);
