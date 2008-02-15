@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.543 2008/02/15 16:37:47 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.544 2008/02/15 16:40:23 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -662,35 +662,35 @@ static Roxen.HeaderParser hp = Roxen.HeaderParser();
 
 private int parse_got( string new_data )
 {
-  string line;
-
-  TIMER_START(parse_got);
-  if( !method )
   {
-    if (!hrtime)
-      hrtime = gethrtime();
-    array res;
-    if( mixed err = catch( res = hp->feed( new_data ) ) ) {
-#ifdef DEBUG
-      report_debug ("Got bad request, HeaderParser error: " + describe_error (err));
-#endif
-      return 1;
-    }
-    if( !res )
+    string line;
+
+    TIMER_START(parse_got);
+    if( !method )
     {
-      TIMER_END(parse_got);
-      return 0; // Not enough data
+      if (!hrtime)
+	hrtime = gethrtime();
+      array res;
+      if( mixed err = catch( res = hp->feed( new_data ) ) ) {
+#ifdef DEBUG
+	report_debug ("Got bad request, HeaderParser error: " + describe_error (err));
+#endif
+	return 1;
+      }
+      if( !res )
+      {
+	TIMER_END(parse_got);
+	return 0; // Not enough data
+      }
+      [data, line, request_headers] = res;
     }
-    [data, line, request_headers] = res;
-  }
-  hp = 0;
-  TIMER_END(parse_got);
+    hp = 0;
+    TIMER_END(parse_got);
 
-  // The following was earlier a separate function parse_got_2.
+    // The following was earlier a separate function parse_got_2.
 
-  TIMER_START(parse_got_2);
-  TIMER_START(parse_got_2_parse_line);
-  {
+    TIMER_START(parse_got_2);
+    TIMER_START(parse_got_2_parse_line);
     string f;
     array(string) sl = line / " ";
     switch( sizeof( sl ) )
