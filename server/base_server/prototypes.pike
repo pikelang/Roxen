@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.208 2008/02/18 17:45:05 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.209 2008/02/18 17:54:12 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2208,7 +2208,7 @@ class RequestID
       input_charset = decode_charset; // Set this after we're done.
     }
 
-    if (real_variables && sizeof (real_variables))
+    if (sizeof (real_variables))
       foreach (vars; string var; array(string) vals)
 	real_variables[var] += vals;
     else {
