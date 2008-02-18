@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.547 2008/02/18 16:56:08 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.548 2008/02/18 18:39:58 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -789,101 +789,101 @@ private int parse_got( string new_data )
     //REQUEST_WERR(sprintf("HTTP: raw_url %O", raw_url));
   }
 
-  if(!remoteaddr)
-  {
-    if(my_fd) {
-      remoteaddr = my_fd->query_address();
-      if(remoteaddr)
-      	sscanf(remoteaddr, "%s %*s", remoteaddr);
-    }
-    if(!remoteaddr) {
-      REQUEST_WERR("HTTP: No remote address.");
-      TIMER_END(parse_got_2);
-      return 2;
-    }
-  }
-
-  TIMER_START(parse_got_2_parse_headers);
-  foreach( (array)request_headers, [string linename, array|string contents] )
-  {
-    if( arrayp(contents) ) contents = contents[0];
-    switch (linename) 
+    if(!remoteaddr)
     {
-     case "cache-control":	// Opera sends "no-cache" here.
-     case "pragma": pragma|=(multiset)((contents-" ")/",");  break;
-
-     case "content-length": misc->len = (int)contents;       break;
-     case "authorization":  rawauth = contents;              break;
-     case "referer": referer = ({contents}); break;
-     case "if-modified-since": since=contents; break;
-     case "if-match": break; // Not supported yet.
-     case "if-none-match":
-       none_match = (multiset)((contents-" ")/",");
-       break;
-
-     case "proxy-authorization":
-       array y;
-       y = contents / " ";
-       if(sizeof(y) < 2)
-         break;
-       y[1] = decode(y[1]);
-       misc->proxyauth=y;
-       break;
-
-     case "user-agent":
-       if( !client )
-       {
-         sscanf(contents, "%s via", contents);
-         client_var->Fullname=contents;
-         client = contents/" " - ({ "" });
-       }
-       break;
-
-     case "request-range":
-       contents = lower_case(contents-" ");
-       if (has_prefix(contents, "bytes"))
-         // Only care about "byte" ranges.
-         misc->range = contents[6..];
-       break;
-
-     case "range":
-       contents = lower_case(contents-" ");
-       if (!misc->range && has_prefix(contents, "bytes"))
-         // Only care about "byte" ranges. Also the Request-Range header
-         // has precedence since Stupid Netscape (TM) sends both but can't
-         // handle multipart/byteranges but only multipart/x-byteranges.
-         // Duh!!!
-         misc->range = contents[6..];
-       break;
-
-     case "connection":
-       misc->client_connection = (<@(lower_case(contents)/" " - ({""}))>);
-       if (misc->client_connection->close) {
-	 misc->connection = "close";
-       } else if (misc->client_connection["keep-alive"]) {
-	 misc->connection = "keep-alive";
-       }
-       break;
-     case "host":
-       misc[linename] = lower_case(contents);
-       break;
-     case "content-type":
-       misc[linename] = contents;
-       break;
-     case "destination":
-       if (mixed err = catch {
-	   contents = http_decode_string (Standards.URI(contents)->path);
-	 }) {
-#ifdef DEBUG
-	 report_debug(sprintf("Destination header contained a bad URI: %O\n"
-			      "%s", contents, describe_error(err)));
-#endif /* DEBUG */
-       }
-       misc["new-uri"] = VFS.normalize_path (contents);
-       break;
+      if(my_fd) {
+	remoteaddr = my_fd->query_address();
+	if(remoteaddr)
+	  sscanf(remoteaddr, "%s %*s", remoteaddr);
+      }
+      if(!remoteaddr) {
+	REQUEST_WERR("HTTP: No remote address.");
+	TIMER_END(parse_got_2);
+	return 2;
+      }
     }
-  }
-  TIMER_END(parse_got_2_parse_headers);
+
+    TIMER_START(parse_got_2_parse_headers);
+    foreach( (array)request_headers, [string linename, array|string contents] )
+    {
+      if( arrayp(contents) ) contents = contents[0];
+      switch (linename) 
+      {
+       case "cache-control":	// Opera sends "no-cache" here.
+       case "pragma": pragma|=(multiset)((contents-" ")/",");  break;
+
+       case "content-length": misc->len = (int)contents;       break;
+       case "authorization":  rawauth = contents;              break;
+       case "referer": referer = ({contents}); break;
+       case "if-modified-since": since=contents; break;
+       case "if-match": break; // Not supported yet.
+       case "if-none-match":
+	 none_match = (multiset)((contents-" ")/",");
+	 break;
+
+       case "proxy-authorization":
+	 array y;
+	 y = contents / " ";
+	 if(sizeof(y) < 2)
+	   break;
+	 y[1] = decode(y[1]);
+	 misc->proxyauth=y;
+	 break;
+
+       case "user-agent":
+	 if( !client )
+	 {
+	   sscanf(contents, "%s via", contents);
+	   client_var->Fullname=contents;
+	   client = contents/" " - ({ "" });
+	 }
+	 break;
+
+       case "request-range":
+	 contents = lower_case(contents-" ");
+	 if (has_prefix(contents, "bytes"))
+	   // Only care about "byte" ranges.
+	   misc->range = contents[6..];
+	 break;
+
+       case "range":
+	 contents = lower_case(contents-" ");
+	 if (!misc->range && has_prefix(contents, "bytes"))
+	   // Only care about "byte" ranges. Also the Request-Range header
+	   // has precedence since Stupid Netscape (TM) sends both but can't
+	   // handle multipart/byteranges but only multipart/x-byteranges.
+	   // Duh!!!
+	   misc->range = contents[6..];
+	 break;
+
+       case "connection":
+	 misc->client_connection = (<@(lower_case(contents)/" " - ({""}))>);
+	 if (misc->client_connection->close) {
+	   misc->connection = "close";
+	 } else if (misc->client_connection["keep-alive"]) {
+	   misc->connection = "keep-alive";
+	 }
+	 break;
+       case "host":
+	 misc[linename] = lower_case(contents);
+	 break;
+       case "content-type":
+	 misc[linename] = contents;
+	 break;
+       case "destination":
+	 if (mixed err = catch {
+	     contents = http_decode_string (Standards.URI(contents)->path);
+	   }) {
+#ifdef DEBUG
+	   report_debug(sprintf("Destination header contained a bad URI: %O\n"
+				"%s", contents, describe_error(err)));
+#endif /* DEBUG */
+	 }
+	 misc["new-uri"] = VFS.normalize_path (contents);
+	 break;
+      }
+    }
+    TIMER_END(parse_got_2_parse_headers);
 
   TIMER_START(parse_got_2_more_data);
   if(misc->len)
