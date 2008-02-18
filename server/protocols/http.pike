@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.544 2008/02/15 16:40:23 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.545 2008/02/18 11:50:28 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -404,7 +404,8 @@ string scan_for_query( string f )
 
     if (search("&" + query, "&roxen_magic_per_u=%25") != -1) {
       // Broken Safari detected
-      //   (http://bugzilla.opendarwin.org/show_bug.cgi?id=6452)
+      //   (http://bugs.webkit.org/show_bug.cgi?id=6452, historically
+      //   http://bugzilla.opendarwin.org/show_bug.cgi?id=6452)
       // Assume that %u and %U won't occur naturally.
       REQUEST_WERR(sprintf("Broken http encoding detected. query=%O\n",
 			   query));
@@ -592,6 +593,7 @@ int things_to_do_when_not_sending_from_cache( )
       client_var = s_and_v[1];
     }
   }
+
   if ( client_var->charset && client_var->charset  != "iso-8859-1" )
   {
     // FIXME: This code is suspect, and probably ought to be removed.
@@ -604,6 +606,7 @@ int things_to_do_when_not_sending_from_cache( )
 #else
   supports = (< "images", "gifinline", "forms", "mailto">);
 #endif
+
   {
     int i = search (client, "MSIE");
     if (i < 0)
@@ -616,8 +619,10 @@ int things_to_do_when_not_sending_from_cache( )
 	supports->vary = 1;
     }
   }
+
   //REQUEST_WERR("HTTP: parse_got(): supports");
   if(!referer) referer = ({ });
+
   if(misc->proxyauth) 
   {
     // The Proxy-authorization header should be removed... So there.
@@ -629,6 +634,7 @@ int things_to_do_when_not_sending_from_cache( )
     }
     raw = tmp2 * "\n";
   }
+
 #ifdef OLD_RXML_CONFIG
   if(config_in_url) {
     //REQUEST_WERR("HTTP: parse_got(): config_in_url");
@@ -636,6 +642,7 @@ int things_to_do_when_not_sending_from_cache( )
     return 1;
   }
 #endif
+
   if(!supports->cookies && !sizeof(config))
     config = prestate;
   else {
@@ -879,10 +886,22 @@ private int parse_got( string new_data )
 	
     switch(method) {
     case "POST":
+      // See http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4
+      // for spec of the format of form submissions.
       switch(lower_case((((misc["content-type"]||"")+";")/";")[0]-" "))
       {
-      default: 
+      default: {
 	// Normal form data.
+	//
+	// FIXME: This assumes only html forms are ever submitted
+	// using http POST, thereby possibly precluding other
+	// applications of the http protocol. Using
+	// "application/x-www-form-urlencoded" above instead of going
+	// here by default would fix that, and I don't think even the
+	// lowliest client gets the content type wrong. But still, I
+	// refrain from introducing a possible interoperability
+	// problem without any tangible benefit. /mast
+
 	string v;
 
 	// Oh, the joy of supporting all clients is endless.
@@ -900,8 +919,10 @@ private int parse_got( string new_data )
 	  // Ok.. This might seem somewhat odd, but IE seems to add a
 	  // (spurious) \r\n to the end of the data, and some versions of
 	  // opera seem to add (spurious) \r\n to the start of the data.
-	  data = String.trim_all_whites(data);
-	  l = misc->len = strlen(data);
+	  if (has_prefix (data, "\r\n"))
+	    data = data[2..], l = misc->len = l - 2;
+	  if (has_suffix (data, "\r\n"))
+	    data = data[..sizeof (data) - 3], l = misc->len = l - 2;
 	}
 
 	foreach(replace(data,"+"," ")/"&", v)
@@ -912,8 +933,9 @@ private int parse_got( string new_data )
 	      real_variables[ a ] += ({ b });
 	    }
 	break;
+      }
 	    
-      case "multipart/form-data":
+      case "multipart/form-data": {
 	object messg = MIME.Message(data, request_headers);
 	if (!messg->body_parts) {
 	  report_error("HTTP: Bad multipart/form-data.\n"
@@ -941,6 +963,7 @@ private int parse_got( string new_data )
 	  }
 	}
 	break;
+      }
       }
       break;
     }
