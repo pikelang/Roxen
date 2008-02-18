@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.546 2008/02/18 13:42:26 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.547 2008/02/18 16:56:08 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -185,6 +185,8 @@ class AuthEmulator
 
 array|AuthEmulator auth;
 
+#if 0
+// This is a smidgen too blunt, methinks. /mast
 
 void decode_map( mapping what, function decoder )
 {
@@ -265,6 +267,7 @@ void decode_charset_encoding( string|function(string:string) decoder )
   pragma = mkmultiset( map( (array(string))indices( pragma ),
 			    safe_decoder ) );
 }
+#endif
 
 // Parse a HTTP/1.1 HTTP/1.0 or 0.9 request, including form data and
 // state variables.  Return 0 if more is expected, 1 if done, and -1
@@ -394,40 +397,6 @@ void my_fd_released()
   }
 }
 
-string scan_for_query( string f )
-{
-  query=0;
-  rest_query="";
-  if(sscanf(f,"%s?%s", f, query) == 2)
-  {
-    string v, a, b;
-
-    if (search("&" + query, "&roxen_magic_per_u=%25") != -1) {
-      // Broken Safari detected
-      //   (http://bugs.webkit.org/show_bug.cgi?id=6452, historically
-      //   http://bugzilla.opendarwin.org/show_bug.cgi?id=6452)
-      // Assume that %u and %U won't occur naturally.
-      REQUEST_WERR(sprintf("Broken http encoding detected. query=%O\n",
-			   query));
-      query = replace(query, ({ "%25u", "%25U" }), ({ "%u", "%U" }));
-      REQUEST_WERR(sprintf("Repaired query=%O\n", query));
-    }
-    foreach(query / "&", v)
-      if(sscanf(v, "%s=%s", a, b) == 2)
-      {
-	a = http_decode_string(replace(a, "+", " "));
-	b = http_decode_string(replace(b, "+", " "));
-	real_variables[ a ] += ({ b });
-      } else
-	if(strlen( rest_query ))
-	  rest_query += "&" + http_decode_string( v );
-	else
-	  rest_query = http_decode_string( v );
-    rest_query=replace(rest_query, "+", "\000"); /* IDIOTIC STUPID STANDARD */
-  }
-  return f;
-}
-
 #ifdef OLD_RXML_CONFIG
 private void really_set_config(array mod_config)
 {
@@ -538,42 +507,6 @@ int things_to_do_when_not_sending_from_cache( )
   init_pref_languages();
   init_cookies();
 
-  string f = raw_url;
-
-
-  f = scan_for_query( f );
-  f = http_decode_string( f );
-
-  // f is sent to Unix API's that take NUL-terminated strings...
-  if(search(f, "\0") != -1)
-     sscanf(f, "%s\0", f);
-  
-  if( strlen( f ) > 5 )
-  {
-    string a;
-    switch( f[1] )
-    {
-#ifdef OLD_RXML_CONFIG
-      case '<':
-        if (sscanf(f, "/<%s>/%s", a, f)==2)
-        {
-          config_in_url = 1;
-          mod_config = (a/",");
-          f = "/"+f;
-        }
-#endif
-        // intentional fall-through
-     case '(':
-       if(strlen(f) && sscanf(f, "/(%s)/%s", a, f)==2)
-       {
-         prestate = (multiset)( a/","-({""}) );
-         f = "/"+f;
-       }
-    }
-  }
-
-  not_query = combine_path_unix ("/", f);
-
 #ifndef DISABLE_SUPPORTS
   if( !supports )
   {
@@ -599,14 +532,103 @@ int things_to_do_when_not_sending_from_cache( )
   {
     // FIXME: This code is suspect, and probably ought to be removed.
     NO_PROTO_CACHE();	// FIXME: Why?
+    // I guess the line above can be removed if we register a vary
+    // dependency on User-Agent. /mast
 
     set_output_charset( client_var->charset );
     input_charset = client_var->charset;
-    decode_charset_encoding( client_var->charset );
   }
-#else
+
+#else  // DISABLE_SUPPORTS
   supports = (< "images", "gifinline", "forms", "mailto">);
 #endif
+
+  {
+    string f = raw_url;
+    sscanf (f, "%s?%s", f, query);
+
+    if (query) {
+      int i = search (query, "roxen_magic_per_u=%25");
+      if (i >= 0 && (i == 0 || query[i - 1] == '&')) {
+	// Broken Safari detected
+	//   (http://bugs.webkit.org/show_bug.cgi?id=6452, historically
+	//   http://bugzilla.opendarwin.org/show_bug.cgi?id=6452)
+	// Assume that %u and %U won't occur naturally.
+	REQUEST_WERR(sprintf("Broken http encoding detected. query=%O\n",
+			     query));
+	query = replace(query, ({ "%25u", "%25U" }), ({ "%u", "%U" }));
+	REQUEST_WERR(sprintf("Repaired query=%O\n", query));
+      }
+    }
+
+  decode_query: {
+      string post_form = m_delete (misc, "post_form");
+      if (post_form || query) {
+	array(string) split_query =
+	  post_form && query ?
+	  (post_form / "&") + (query / "&") : (post_form || query) / "&";
+
+	if (input_charset) {
+	  if (mixed err = catch (decode_query (split_query, input_charset))) {
+	    report_debug ("Client %O sent query %O which failed to decode with "
+			  "its own charset %O: %s",
+			  client_var->fullname, split_query * "&",
+			  input_charset, describe_error (err));
+	    input_charset = 0;
+	  }
+	  else break decode_query;
+	}
+
+	decode_query (split_query, "roxen-http-default");
+      }
+    }
+
+    f = http_decode_string( f );
+    if (input_charset) {
+      if (mixed err =
+	  catch (f = Roxen.get_decoder_for_client_charset (input_charset) (f)))
+	report_debug ("Client %O requested path %O which failed to decode "
+		      "with the input charset %O: %s",
+		      client_var->fullname, f, input_charset,
+		      describe_error (err));
+    }
+
+#if 0
+    // f is sent to Unix API's that take NUL-terminated strings...
+    // This should really not be necessary. /mast
+    if(search(f, "\0") != -1)
+      sscanf(f, "%s\0", f);
+#endif
+  
+    if( strlen( f ) > 5 )
+    {
+      string a;
+      switch( f[1] )
+      {
+#ifdef OLD_RXML_CONFIG
+	case '<':
+	  if (sscanf(f, "/<%s>/%s", a, f)==2)
+	  {
+	    config_in_url = 1;
+	    mod_config = (a/",");
+	    f = "/"+f;
+	  }
+#endif
+	  // intentional fall-through
+	case '(':
+	  if(sscanf(f, "/(%s)/%s", a, f)==2)
+	  {
+	    prestate = (multiset)( a/","-({""}) );
+	    f = "/"+f;
+	  }
+      }
+    }
+
+    if (has_prefix (f, "/"))
+      not_query = combine_path_unix ("/", f);
+    else
+      not_query = combine_path_unix ("/", f)[1..];
+  }
 
   {
     int i = search (client, "MSIE");
@@ -661,9 +683,6 @@ int things_to_do_when_not_sending_from_cache( )
 	cache_set("hosts_for_cookie",remoteaddr,1);
     }
   }
-
-  if( mixed q = real_variables->magic_roxen_automatic_charset_variable )
-    decode_charset_encoding(Roxen.get_client_charset_decoder(q[0],this_object()));
 }
 
 static Roxen.HeaderParser hp = Roxen.HeaderParser();
@@ -926,13 +945,13 @@ private int parse_got( string new_data )
 	    data = data[..sizeof (data) - 3], l = misc->len = l - 2;
 	}
 
-	foreach(replace(data,"+"," ")/"&", v)
-	  if(sscanf(v, "%s=%s", string a, string b) == 2)
-	    {
-	      a = http_decode_string( a );
-	      b = http_decode_string( b );
-	      real_variables[ a ] += ({ b });
-	    }
+	// Store it temporary in the misc mapping so we can decode it
+	// together with the query string in
+	// things_to_do_when_not_sending_from_cache.
+	//
+	// Note: This is just kludgy temporary storage. It's nothing
+	// to rely on and it should not be documented.
+	misc->post_form = data;
 	break;
       }
 	    
