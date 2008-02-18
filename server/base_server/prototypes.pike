@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.206 2008/02/18 12:40:22 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.207 2008/02/18 16:48:20 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -932,11 +932,12 @@ class RequestID
 
   string raw_url;
   //! The nonparsed, nontouched, non-* URL requested by the client.
-  //! Hence, this path is unlike <ref>not_query</ref> and
-  //! <ref>virtfile</ref> not relative to the server URL and must be
-  //! used in conjunction with the former to generate absolute paths
-  //! within the server. Be aware that this string will contain any
-  //! URL variables present in the request as well as the file path.
+  //! Hence, this path is unlike @[not_query] and @[virtfile] not
+  //! relative to the server URL and must be used in conjunction with
+  //! the former to generate absolute paths within the server. Be
+  //! aware that this string will contain any URL variables present in
+  //! the request as well as the file path, and it is not decoded from
+  //! the transport encoding.
 
   int do_not_disconnect;
   //! Typically 0, meaning the channel to the client will be disconnected upon
@@ -952,11 +953,18 @@ class RequestID
   //! value(s) from the query part are appended to those from the POST
   //! response.
   //!
-  //! The indices and values of this mapping map to the names and values of
-  //! the variable names. All data (names and values) are decoded from their
-  //! possible transport encoding.
+  //! The indices are the variable names. The values contain the
+  //! variable value(s) for each variable. The variable values are
+  //! stored in arrays to make it possible to hold more than one value
+  //! for a variable. These arrays are never empty.
   //!
-  //! The value is always an array
+  //! All data (names and values) have been decoded from the transport
+  //! encoding (i.e. @expr{%XX@} style escapes and the charset
+  //! according to @[input_charset] have been decoded). See
+  //! @[decode_query] for details.
+  //!
+  //! @seealso
+  //! @[rest_query]
 
   mapping(string:mixed)|FakedVariables variables;
   //! @decl mapping(string:mixed) variables;
@@ -1032,8 +1040,6 @@ class RequestID
   //!     Decoded proxy authentication information.
   //!   @member string "range"
   //!     Byte range information.
-  //!   @member int(1..1) "request_charset_decoded"
-  //!     Flag indicating that @[decode_charset_encoding()] has been run.
   //!   @member string "site_prefix_path"
   //!     Site path prefix.
   //!   @member Stat "stat"
@@ -1271,12 +1277,18 @@ class RequestID
   //! Prestates are mostly useful for debugging purposes, since prestates
   //! generally lead to multiple URLs for identical documents resulting in
   //! poor usage of browser/proxy caches and the like. See <ref>config</ref>.
+  //!
+  //! The transport encoding has been decoded (i.e. any @expr{%XX@}
+  //! escapes and the charset according to @[input_charset]).
 
   multiset(string) config;
   //! Much like prestates, the id->config multiset is typically used for
   //! boolean information of state supplied by the client. The config state,
   //! however, is hidden in a client-side cookie treated specially by roxen,
   //! namely the <tt>RoxenConfig</tt> cookie.
+  //!
+  //! The transport encoding has been decoded (i.e. any @expr{%XX@}
+  //! escapes and the charset according to @[input_charset]).
 
   multiset(string) supports;
   //! All flags set by the supports system.
@@ -1318,20 +1330,49 @@ class RequestID
   string rest_query;
   //! The scraps and leftovers of the requested URL's query part after
   //! removing all variables (that is, all key=value pairs) from it.
+  //!
+  //! The transport encoding has been decoded (i.e. any @expr{%XX@}
+  //! escapes and the charset according to @[input_charset]). The
+  //! pieces have then been concatenated together again in the same
+  //! order, separated by @expr{"&"@}.
 
   string raw;
   //! The raw, untouched request in its entirety.
+  //!
+  //! @seealso
+  //! @[raw_url]
 
   string query;
-  //! The entire raw query part (all characters after the first question mark,
-  //! '?') of the requested URL.
+  //! The query part (i.e. all characters after the first question
+  //! mark) of the requested URL.
+  //!
+  //! The transport encoding has been decoded (i.e. any @expr{%XX@}
+  //! escapes and the charset according to @[input_charset]).
 
   string not_query;
-  //! The part of the path segment of the requested URL that is below
-  //! the virtual server's mountpoint. For a typical server
-  //! registering a URL with no ending path component, not_query will
-  //! contain all characters from and including the leading '/' to but
-  //! not including the first question mark ('?') of the URL.
+  //! The path to the requested resource that is below the virtual
+  //! server's mountpoint. I.e. for a typical server registering a URL
+  //! with no ending path component, @[not_query] will contain the
+  //! full path.
+  //!
+  //! @[not_query] usually begins with @expr{"/"@} but that is not
+  //! guaranteed since it's taken from the request line. It has
+  //! however been simplified so it is guaranteed to not contain any
+  //! @expr{"."@} or @expr{".."@} segments.
+  //!
+  //! The transport encoding has been decoded (i.e. any @expr{%XX@}
+  //! escapes and the charset according to @[input_charset]).
+
+  string input_charset;
+  //! The charset that was used to decode @[prestate], @[config],
+  //! @[query], @[not_query], @[rest_query], and the variable bindings
+  //! in @[real_variables].
+  //!
+  //! It is zero if they were not successfully charset decoded. That
+  //! is effectively the same as if the charset was ISO-8859-1.
+  //!
+  //! @seealso
+  //! @[decode_query]
 
   string extra_extension;
 
@@ -1893,7 +1934,6 @@ class RequestID
   //  Charset handling
   
   array(string) output_charset = ({});
-  string input_charset;
 
   void set_output_charset( string|function to, int|void mode )
   {
@@ -1906,7 +1946,7 @@ class RequestID
     if (object/*(RXML.Context)*/ ctx = RXML_CONTEXT)
       ctx->add_p_code_callback ("set_output_charset", to, mode);
 
-    if( search( output_charset, to ) != -1 ) // Already done.
+    if( has_value (output_charset, to) ) // Already done.
       return;
 
     switch( mode )
@@ -1925,7 +1965,7 @@ class RequestID
 	    (!stringp (to) || !stringp (output_charset[0])))
 	  error ("Can't join charsets with functions (%O with %O).\n",
 		 to, output_charset[0]);
-	output_charset |= ({ to });
+	output_charset += ({ to });
 	break;
     }
   }
@@ -1975,7 +2015,6 @@ class RequestID
 						     fallback_func))
 	->decode;
     }
-    return lambda(string what) { return what; };
   }
   
   static array(string) join_charset(string old,
@@ -1985,6 +2024,8 @@ class RequestID
   {
     switch (old && upper_case(old)) {
     case 0:
+    case "ISO8859-1":
+    case "ISO-8859-1":
       return ({ charset_name(add), charset_function(add, allow_entities) });
     case "ISO10646-1":
     case "UTF-8":
@@ -2046,26 +2087,138 @@ class RequestID
       });
   }
 
+  void decode_query (array(string) split_query, string decode_charset)
+  //! Parses each element in @[split_query] as a variable tuple on the
+  //! form @expr{var=val@} according to the MIME type
+  //! application/x-www-form-urlencoded (see section 17.13.4 in the
+  //! HTML 4.01 standard).
+  //!
+  //! All elements containing @expr{"="@} are treated as form variable
+  //! bindings and are added to @[real_variables] after the
+  //! @expr{%XX@} style transport encoding has been decoded.
+  //!
+  //! Any remaining elements are added to @[rest_query] after decoding
+  //! the transport encoding.
+  //!
+  //! If @[decode_charset] is a string, it defines a charset to decode
+  //! with after the transport encoding has been removed. The string
+  //! can be on the combined form understood by
+  //! @[Roxen.get_decoder_for_client_charset].
+  //!
+  //! If @[decode_charset] has the special value @expr{"magic"@} then
+  //! the function will look for a variable tuple with
+  //! @expr{magic_roxen_automatic_charset_variable@} and use
+  //! heuristics on that to figure out the character set that
+  //! @[query_string] has been encoded with. See the RXML tag
+  //! @expr{<roxen-automatic-charset-variable>@} and
+  //! @[Roxen.get_client_charset].
+  //!
+  //! If @[decode_charset] has the special value
+  //! @expr{"roxen-http-default"@} then the function will first try
+  //! the @expr{"magic"@} method above, and if the special variable is
+  //! not found it tries to UTF-8 decode. If there is a decode failure
+  //! then it is ignored and no charset decoding is done (meaning that
+  //! the original charset is effectively assumed to be ISO-8859-1).
+  //! As the name suggests, this is the default method used on
+  //! incoming requests by the http protocol module.
+  //!
+  //! The variable @[input_charset] is set to the charset successfully
+  //! used if @[decode_charset] was given. The charset decoding uses
+  //! an all-or-nothing approach - if there is an error decoding any
+  //! string then no string is decoded. If the function throws an
+  //! error due to a decode failure then @[real_variables] and
+  //! @[rest_query] remain unchanged.
+  //!
+  //! @note
+  //! Using @expr{"utf-8"@} as @[decode_charset] reverses the URI
+  //! encoding produced by @[Roxen.http_encode_url] for eight bit and
+  //! wider chars. That is compliant with the IRI standard (RFC 3987)
+  //! and HTML 4.01 (appendix B.2.1).
+  {
+    mapping(string:array(string)) vars = ([]);
+    string rest;
+    {
+      array(string) rests = ({});
+      foreach (split_query, string v) {
+	if(sscanf(v, "%s=%s", string a, string b) == 2)
+	{
+	  a = _Roxen.http_decode_string(replace(a, "+", " "));
+	  b = _Roxen.http_decode_string(replace(b, "+", " "));
+	  vars[ a ] += ({ b });
+	} else
+	  rests += ({_Roxen.http_decode_string( v )});
+      }
+      rest = rests * "&";
+    }
+
+#ifdef ENABLE_IDIOTIC_STUPID_STANDARD
+    // This comes from http.pike with the illustrious comment "IDIOTIC
+    // STUPID STANDARD". I fail to find any standard that says
+    // anything about this, so nowadays it's disabled by default.
+    // /mast
+    rest=replace(rest, "+", "\000");
+#endif
+
+  do_decode_charset:
+    if (decode_charset == "roxen-http-default") {
+      array(string) magic = vars->magic_roxen_automatic_charset_variable;
+      decode_charset = magic && Roxen->get_client_charset (magic[0]);
+      function(string:string) decoder = decode_charset ?
+	Roxen->get_decoder_for_client_charset (decode_charset) :
+	utf8_to_string;
+
+      mapping(string:array(string)) decoded_vars = ([]);
+      if (mixed err = catch {
+	  foreach (vars; string var; array(string) vals)
+	    decoded_vars[var] = map (vals, decoder);
+	  rest = decoder (rest);
+	}) {
+#ifdef DEBUG
+	if (decode_charset)
+	  report_debug ("Failed to decode query %O using charset %O derived "
+			"from magic_roxen_automatic_charset_variable %O: %s",
+			split_query * "&", decode_charset, magic[0],
+			describe_error (err));
+#if 0
+	else
+	  report_debug ("Failed to decode query %O using UTF-8: %s",
+			split_query * "&", describe_error (err));
+#endif
+#endif
+      }
+      else {
+	vars = decoded_vars;
+	input_charset = decode_charset || "utf-8"; // Set this after we're done.
+      }
+    }
+
+    else if (decode_charset) {
+      if (decode_charset == "magic") {
+	array(string) magic = vars->magic_roxen_automatic_charset_variable;
+	decode_charset = magic && Roxen->get_client_charset (magic[0]);
+	if (!decode_charset)
+	  break do_decode_charset;
+      }
+
+      function(string:string) decoder =
+	Roxen->get_decoder_for_client_charset (decode_charset);
+      foreach (vars; string var; array(string) vals)
+	vars[var] = map (vals, decoder);
+      rest = decoder (rest);
+      input_charset = decode_charset; // Set this after we're done.
+    }
+
+    if (real_variables && sizeof (real_variables))
+      foreach (vars; string var; array(string) vals)
+	real_variables[var] += vals;
+    else real_variables = vars;
+    rest_query = rest;
+  }
 
   string scan_for_query( string f )
   {
     if(sscanf(f,"%s?%s", f, query) == 2)
-    {
-      string v, a, b;
-
-      foreach(query / "&", v)
-	if(sscanf(v, "%s=%s", a, b) == 2)
-	{
-	  a = _Roxen.http_decode_string(replace(a, "+", " "));
-	  b = _Roxen.http_decode_string(replace(b, "+", " "));
-	  real_variables[ a ] += ({ b });
-	} else
-	  if(strlen( rest_query ))
-	    rest_query += "&" + _Roxen.http_decode_string( v );
-	  else
-	    rest_query = _Roxen.http_decode_string( v );
-      rest_query=replace(rest_query, "+", "\000");
-    }
+      decode_query (query / "&", 0);
     return f;
   }
 
