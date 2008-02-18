@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.190 2008/01/16 13:06:18 stewa Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.191 2008/02/18 12:40:22 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -890,11 +890,13 @@ class RequestID
 
   mapping (string:array) real_variables;
   //! Form variables submitted by the client browser, as found in the
-  //! <tt>form</tt> scope in RXML. Both query (as found in the query part of
-  //! the URL) and POST (submitted in the request body) variables share this
-  //! scope, with query variables having priority over POST ones. In other
-  //! words, the query part of the URL overrides whatever variables are sent
-  //! in the request body.
+  //! @expr{form@} scope in RXML.
+  //!
+  //! Both query (as found in the query part of the URL) and POST
+  //! (submitted in the request body from a form response) variables
+  //! share this scope. If the same variable occurs in both then the
+  //! value(s) from the query part are appended to those from the POST
+  //! response.
   //!
   //! The indices and values of this mapping map to the names and values of
   //! the variable names. All data (names and values) are decoded from their
