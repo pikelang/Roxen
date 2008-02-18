@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.31 2004/06/11 18:15:21 jonasw Exp $
+ * $Id: resolv.pike,v 1.32 2008/02/18 18:28:12 jonasw Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -117,12 +117,6 @@ string format_time (int hrstart, int hrvstart)
 
 void trace_leave_ol(string desc)
 {
-#if efun(gethrtime)
-  int delay = gethrtime()-et[level];
-#endif
-#if efun(gethrvtime)
-  int delay2 = gethrvtime()-et2[level];
-#endif
   string efont="";
   if(level>2) efont="</font>";
   resolv += ("</ol>" + efont + "\n" +
