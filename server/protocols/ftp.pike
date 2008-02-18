@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.118 2008/01/10 10:19:56 mast Exp $
+ * $Id: ftp.pike,v 2.119 2008/02/18 17:03:28 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -186,18 +186,19 @@ class RequestID2
     if (m_rid) {
       object o = this_object();
       foreach(indices(m_rid), string var) {
-	if (!(< "create", "connection", "configuration",
-		"clone_me", "end", "ready_to_receive",
-		"send", "scan_for_query", "make_response_headers",
-		"send_result", "misc", "get_if_data",
-		"url_base", "set_response_header", "get_xml_data",
-		"add_response_header", "set_output_charset", "get_output_charset",
-		"replace_charset_placeholder", "register_vary_callback",
-		"charset_name", "charset_function", "join_charset", 
-		"output_encode", "adjust_for_config_path",
-		"get_multi_status", "multi_status_size", "init_cookies",
-		"init_pref_languages", "set_status_for_path",
-		"set_status_for_url", "destroy", "_sprintf", "_num" >)[var]) {
+	if (!([ "create": 1, "connection": 1, "configuration": 1, "clone_me": 1,
+		"end": 1, "ready_to_receive": 1, "send": 1, "scan_for_query": 1,
+		"make_response_headers": 1, "send_result": 1, "misc": 1,
+		"get_if_data": 1, "url_base": 1, "set_response_header": 1,
+		"get_xml_data": 1, "add_response_header": 1, "decode_query": 1,
+		"set_output_charset": 1, "get_output_charset": 1,
+		"replace_charset_placeholder": 1, "register_vary_callback": 1,
+		"charset_name": 1, "charset_function": 1, "join_charset": 1,
+		"output_encode": 1, "adjust_for_config_path": 1,
+		"get_multi_status": 1, "multi_status_size": 1,
+		"init_cookies": 1, "init_pref_languages": 1,
+		"set_status_for_path": 1, "set_status_for_url": 1, "destroy": 1,
+		"_sprintf": 1, "_num": 1 ])[var]) {
 #ifdef DEBUG
 	  if (catch {
 #endif /* DEBUG */
