@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2007, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.6 2007/10/24 12:33:44 grubba Exp $
+ * $Id: prot_snmp.pike,v 2.7 2008/02/19 14:58:18 marty Exp $
  *
  * SNMP protocol support.
  *
@@ -96,7 +96,7 @@ class SystemMIB
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.6 $"/" ")[1],
+			   ("$Revision: 2.7 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
@@ -225,6 +225,9 @@ class RoxenGlobalMIB
 			      return sizeof(roxen->configurations);
 			    }, "vsCount"),
 	       UNDEFINED,	/* Reserved for DBManager (see below). */
+	       SNMP.Gauge(lambda() {
+			    return sizeof(Stdio.get_all_active_fd());
+			  }, "activeFDCount"),
 	     }));
   }
 }
