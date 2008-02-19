@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.209 2008/02/18 17:54:12 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.210 2008/02/19 17:10:30 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1000,6 +1000,19 @@ class RequestID
   //!     @[CacheKey] for the request.
   //!   @member multiset(string) "client_connection"
   //!     Parsed request header "Connection".
+  //!   @member string "content-type"
+  //!     Alias for @expr{@[request_header]["content-type"]@}, the
+  //!     content type of the request. (Note the dash instead of
+  //!     underscore in the field name.)
+  //!   @member string "content_type_type"
+  //!     The content type itself from the @expr{Content-Type@} header
+  //!     of the request, i.e. without any parameters. It has been
+  //!     lowercased and whitespace stripped, so it's on a canonical
+  //!     form like e.g. @expr{"image/jpeg"@}.
+  //!   @member string "content_type_params"
+  //!     The parameters from the @expr{Content-Type@} header of the
+  //!     request, if any. Whitespace preceding the first parameter
+  //!     have been removed, but otherwise it remains unchanged.
   //!   @member array "cookies"
   //!     Empty array. Obsolete entry.
   //!   @member string "connection"
@@ -1254,11 +1267,11 @@ class RequestID
   }
 
   mapping (string:array(string)|string) request_headers;
-  //! Indices and values map to the names and values of all HTTP headers sent
-  //! with the request; all data has been transport decoded, and the header
-  //! names are canonized (lowercased) on top of that. Here is where you look
-  //! for the "user-agent" header, the "referer" [sic!] header and similar
-  //! interesting data provided by the client.
+  //! Indices and values map to the names and values of all HTTP
+  //! headers sent with the request, with lowercased header names.
+  //! Here is where you look for the "user-agent" header, the
+  //! "referer" [sic!] header and similar interesting data provided by
+  //! the client.
 
   mapping (string:mixed) throttle;
   // ?
