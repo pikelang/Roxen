@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.549 2008/02/18 18:51:24 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.550 2008/02/19 17:09:38 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -866,7 +866,16 @@ private int parse_got( string new_data )
 	 misc[linename] = lower_case(contents);
 	 break;
        case "content-type":
+	 // The following is the useless result of an old "fix" (it
+	 // was lowercased before that); it'd been better to have used
+	 // the field directly in request_headers instead if the
+	 // lowercasing messed things up.
 	 misc[linename] = contents;
+#define WS "%*[ \t]"
+	 sscanf (contents, WS"%[^ \t/]"WS"/"WS"%[^ \t;]"WS";"WS"%s",
+		 string ct_type, string ct_subtype,
+		 misc->content_type_params);
+	 misc->content_type_type = lower_case (ct_type + "/" + ct_subtype);
 	 break;
        case "destination":
 	 if (mixed err = catch {
@@ -902,55 +911,38 @@ private int parse_got( string new_data )
     }
     leftovers = data[l+2..];
     data = data[..l+1];
-	
+
     switch(method) {
     case "POST":
       // See http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4
       // for spec of the format of form submissions.
-      switch(lower_case((((misc["content-type"]||"")+";")/";")[0]-" "))
+      switch (misc->content_type_type)
       {
-      default: {
-	// Normal form data.
-	//
-	// FIXME: This assumes only html forms are ever submitted
-	// using http POST, thereby possibly precluding other
-	// applications of the http protocol. Using
-	// "application/x-www-form-urlencoded" above instead of going
-	// here by default would fix that, and I don't think even the
-	// lowliest client gets the content type wrong. But still, I
-	// refrain from introducing a possible interoperability
-	// problem without any tangible benefit. /mast
+      case "application/x-www-form-urlencoded": {
+	// Form data.
 
 	string v;
 
-	// Oh, the joy of supporting all clients is endless.
-	if(client &&
-	   sizeof(client) >= 3 &&
-	   client[0] == "Roxen" &&
-	   client[1] == "Application" &&
-	   client[2] == "Launcher")
-	{
-	  // Don't trim whitespace for Application Launcher. It uses a
-	  // non-standard way of "posting" data on Mac OS.
-	}
-	else
-	{
-	  // Ok.. This might seem somewhat odd, but IE seems to add a
-	  // (spurious) \r\n to the end of the data, and some versions of
-	  // opera seem to add (spurious) \r\n to the start of the data.
-	  if (has_prefix (data, "\r\n"))
-	    data = data[2..], l = misc->len = l - 2;
-	  if (has_suffix (data, "\r\n"))
-	    data = data[..sizeof (data) - 3], l = misc->len = l - 2;
-	}
+	// Ok.. This might seem somewhat odd, but IE seems to add a
+	// (spurious) \r\n to the end of the data, and some versions of
+	// opera seem to add (spurious) \r\n to the start of the data.
+	//
+	// 4.5 and older trimmed id->data directly. We no longer do
+	// that to allow the application to see the unmodified data if
+	// the client says it's application/x-www-form-urlencoded but
+	// in reality sends something else (some versions of the roxen
+	// applauncher did that). (This is safe for correct
+	// applauncher/x-www-form-urlencoded data since it doesn't
+	// contain any whitespace.)
+	v = String.trim_all_whites (data);
 
-	// Store it temporary in the misc mapping so we can decode it
-	// together with the query string in
+	// Store it temporarily in the misc mapping so we can decode
+	// it together with the query string in
 	// things_to_do_when_not_sending_from_cache.
 	//
 	// Note: This is just kludgy temporary storage. It's nothing
 	// to rely on and it should not be documented.
-	misc->post_form = data;
+	misc->post_form = v;
 	break;
       }
 	    
