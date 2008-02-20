@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.544 2008/02/15 16:54:55 stewa Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.545 2008/02/20 10:27:16 noring Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -6200,6 +6200,22 @@ constant tagdoc=([
 
 "&roxen.nodename;":#"<desc type='entity'><p>
  The node name of the machine that the webserver is running on.
+</p></desc>",
+
+"&roxen.version;":#"<desc type='entity'><p>                                     
+ The version of the webserver.                                                  
+</p></desc>",
+
+"&roxen.build;":#"<desc type='entity'><p>                                       
+</p></desc>",
+
+"&roxen.base-version;":#"<desc type='entity'><p>                                
+</p></desc>",
+
+"&roxen.dist-version;":#"<desc type='entity'><p>                                
+</p></desc>",
+
+"&roxen.product-name;":#"<desc type='entity'><p>                                
 </p></desc>",
 
 "&roxen.pike-version;":#"<desc type='entity'><p>
