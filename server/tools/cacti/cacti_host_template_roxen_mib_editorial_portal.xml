@@ -1,7 +1,7 @@
 <cacti>	
 	<hash_0200137a3e8a3948a8d9dfe7ede77a2e25be36>
 		<name>Roxen MIB - Editorial Portal</name>
-		<graph_templates>hash_000013b57de5d1ff034af587e82c7770cf41a4|hash_0000139eb5f27b3464d4d47ac40c9715c8390f|hash_000013904f77986cd5de4db3ddfadf22cea3e6|hash_000013bca18509d87d41a9a51de3084107b789|hash_00001344d0fd18cbd4fc39ac8246c8a6cc19c2|hash_00001399edbb921f9228424425b4488c807df1|hash_00001317e0cedd84ae52b97b68abd3f11a048f|hash_0000135f54198a67f838496c45a23e8f0f5ce3|hash_000013a4539283dec7e9abfde207f2dbd30125|hash_000013738eb7295c2c230d3c15e9e224e30d2e|hash_0000130c2c8671639dc5cffeb716199d8b3d64|hash_00001335a8df7333b62bd89518bc4e47532f54|hash_000013833ad8c764c2b7519909060dcb28aeef|hash_000013f483f3d92783695f433ab30b71c2ba3b|hash_000013d16ea926647708d49ea67b2b421966b7|hash_0000131dbb0d357b5925c33c253a0c154fc9ac|hash_000013ad0bfe9081e72b6b3f0fee22eac6d559|hash_00001350f617f52d4ddd74493da7ee72bb5595|hash_00001374573626a2eea87cbd5f2fd2a2d89ede|hash_000013cdaf80905f04e0fc642ed53978b33511|hash_0000132baf427c80c507b40f0d78c6ee4912a2|hash_0000134b8c6405fbaae6adc6027a80256b9abb</graph_templates>
+		<graph_templates>hash_000013b57de5d1ff034af587e82c7770cf41a4|hash_0000139eb5f27b3464d4d47ac40c9715c8390f|hash_000013904f77986cd5de4db3ddfadf22cea3e6|hash_000013bca18509d87d41a9a51de3084107b789|hash_00001344d0fd18cbd4fc39ac8246c8a6cc19c2|hash_00001399edbb921f9228424425b4488c807df1|hash_00001317e0cedd84ae52b97b68abd3f11a048f|hash_0000135f54198a67f838496c45a23e8f0f5ce3|hash_000013a4539283dec7e9abfde207f2dbd30125|hash_000013738eb7295c2c230d3c15e9e224e30d2e|hash_0000130c2c8671639dc5cffeb716199d8b3d64|hash_00001335a8df7333b62bd89518bc4e47532f54|hash_000013833ad8c764c2b7519909060dcb28aeef|hash_000013f483f3d92783695f433ab30b71c2ba3b|hash_000013d16ea926647708d49ea67b2b421966b7|hash_0000131dbb0d357b5925c33c253a0c154fc9ac|hash_000013ad0bfe9081e72b6b3f0fee22eac6d559|hash_00001350f617f52d4ddd74493da7ee72bb5595|hash_00001374573626a2eea87cbd5f2fd2a2d89ede|hash_000013cdaf80905f04e0fc642ed53978b33511|hash_0000132baf427c80c507b40f0d78c6ee4912a2|hash_0000134b8c6405fbaae6adc6027a80256b9abb|hash_00001342193f6df65803c0eecde25170132c76</graph_templates>
 		<data_queries>hash_040013511b609ca000a2d88d31a2916bdb388b|hash_040013f105b4649288abf3ffad41cba8c67096</data_queries>
 	</hash_0200137a3e8a3948a8d9dfe7ede77a2e25be36>
 	<hash_000013b57de5d1ff034af587e82c7770cf41a4>
@@ -1330,7 +1330,7 @@
 			<vertical_label>bytes</vertical_label>
 		</graph>
 		<items>
-			<hash_100013974ae9eb56cca0da03bc68b07c9283af>
+			<hash_1000130c0ab52a6c9b70717e7bb4dd2019fa3f>
 				<task_item_id>hash_080013f56869f6342bccaf7a653082e3736cc1</task_item_id>
 				<color_id>002A97</color_id>
 				<graph_type_id>7</graph_type_id>
@@ -1341,8 +1341,8 @@
 				<text_format>Total</text_format>
 				<hard_return></hard_return>
 				<sequence>1</sequence>
-			</hash_100013974ae9eb56cca0da03bc68b07c9283af>
-			<hash_1000137fc5419112def5b391bfbdabbff68607>
+			</hash_1000130c0ab52a6c9b70717e7bb4dd2019fa3f>
+			<hash_10001366899abe5e6f0be76b7dd21aacb28012>
 				<task_item_id>hash_080013f56869f6342bccaf7a653082e3736cc1</task_item_id>
 				<color_id>0</color_id>
 				<graph_type_id>9</graph_type_id>
@@ -1353,8 +1353,8 @@
 				<text_format>Current:</text_format>
 				<hard_return></hard_return>
 				<sequence>2</sequence>
-			</hash_1000137fc5419112def5b391bfbdabbff68607>
-			<hash_100013e1bc3e27350575b61c9175a3fdc017f0>
+			</hash_10001366899abe5e6f0be76b7dd21aacb28012>
+			<hash_1000138a938303933d2a692943832e1e267aed>
 				<task_item_id>hash_080013f56869f6342bccaf7a653082e3736cc1</task_item_id>
 				<color_id>0</color_id>
 				<graph_type_id>9</graph_type_id>
@@ -1365,8 +1365,8 @@
 				<text_format>Average:</text_format>
 				<hard_return></hard_return>
 				<sequence>3</sequence>
-			</hash_100013e1bc3e27350575b61c9175a3fdc017f0>
-			<hash_100013a99a8c677ea087aa43fee54331a6cc29>
+			</hash_1000138a938303933d2a692943832e1e267aed>
+			<hash_10001301798291eb6675b75a6dd6ff92f38f00>
 				<task_item_id>hash_080013f56869f6342bccaf7a653082e3736cc1</task_item_id>
 				<color_id>0</color_id>
 				<graph_type_id>9</graph_type_id>
@@ -1377,8 +1377,8 @@
 				<text_format>Maximum:</text_format>
 				<hard_return>on</hard_return>
 				<sequence>4</sequence>
-			</hash_100013a99a8c677ea087aa43fee54331a6cc29>
-			<hash_100013f6309c2eec3169184181d3a2c24b2c8f>
+			</hash_10001301798291eb6675b75a6dd6ff92f38f00>
+			<hash_100013316c92bc294f01ec308762925a0668e9>
 				<task_item_id>hash_08001346609af7cbbfcf5738ae25153644a923</task_item_id>
 				<color_id>F51D30</color_id>
 				<graph_type_id>7</graph_type_id>
@@ -1389,8 +1389,8 @@
 				<text_format>Used</text_format>
 				<hard_return></hard_return>
 				<sequence>5</sequence>
-			</hash_100013f6309c2eec3169184181d3a2c24b2c8f>
-			<hash_100013ff088c9933c208272a3e74ee49505fe8>
+			</hash_100013316c92bc294f01ec308762925a0668e9>
+			<hash_1000131992ae8f6ff712128411d89b60418499>
 				<task_item_id>hash_08001346609af7cbbfcf5738ae25153644a923</task_item_id>
 				<color_id>0</color_id>
 				<graph_type_id>9</graph_type_id>
@@ -1401,8 +1401,8 @@
 				<text_format>Current:</text_format>
 				<hard_return></hard_return>
 				<sequence>6</sequence>
-			</hash_100013ff088c9933c208272a3e74ee49505fe8>
-			<hash_100013f41c1b91a718c27974f459d25b96bec8>
+			</hash_1000131992ae8f6ff712128411d89b60418499>
+			<hash_100013905b7b7aa5555ce5d3ec011b6c197471>
 				<task_item_id>hash_08001346609af7cbbfcf5738ae25153644a923</task_item_id>
 				<color_id>0</color_id>
 				<graph_type_id>9</graph_type_id>
@@ -1413,8 +1413,8 @@
 				<text_format>Average:</text_format>
 				<hard_return></hard_return>
 				<sequence>7</sequence>
-			</hash_100013f41c1b91a718c27974f459d25b96bec8>
-			<hash_10001325b76d51c24cbb569604168c482642c3>
+			</hash_100013905b7b7aa5555ce5d3ec011b6c197471>
+			<hash_100013950efde490f61d7eecf3a3f87094b9c8>
 				<task_item_id>hash_08001346609af7cbbfcf5738ae25153644a923</task_item_id>
 				<color_id>0</color_id>
 				<graph_type_id>9</graph_type_id>
@@ -1425,21 +1425,21 @@
 				<text_format>Maximum:</text_format>
 				<hard_return>on</hard_return>
 				<sequence>8</sequence>
-			</hash_10001325b76d51c24cbb569604168c482642c3>
+			</hash_100013950efde490f61d7eecf3a3f87094b9c8>
 		</items>
 		<inputs>
-			<hash_09001349d796f5a6e4bfa67f0f6db9c274efd0>
+			<hash_090013d453b0794a1f2391b502408e5785d756>
 				<name>Data Source [db_disk_capacity]</name>
 				<description></description>
 				<column_name>task_item_id</column_name>
-				<items>hash_0000134131fb9e9c25eabb7de1a1ee3a15f235|hash_0000130f4cc81f2e8be0a4aee4386f76a01240|hash_0000130236c7b960936d641977b38d891c17ac|hash_0000138004674f80fe8be735a0097ac4790009</items>
-			</hash_09001349d796f5a6e4bfa67f0f6db9c274efd0>
-			<hash_0900133f6b85339ce5a852a79e221b7778e48a>
+				<items>hash_0000132be1b97bbf7f2729b48a6ea287df707f|hash_0000134f67d8e9b04cdf4cc904b30bb36677da|hash_00001301bcb9de30986f294bc28c6084411353|hash_0000139b2140ebb21ec5863e767d6ef8528468</items>
+			</hash_090013d453b0794a1f2391b502408e5785d756>
+			<hash_090013ab6d614c26f6e6ad409caa4637e8b2fa>
 				<name>Data Source [db_disk_used]</name>
 				<description></description>
 				<column_name>task_item_id</column_name>
-				<items>hash_00001358769a8270f75c8396cbe7296f296a78|hash_00001394f95bedc6c5771c57f0bde595bedbdc|hash_0000139ac8d86fa23d9fe7a1be5549e0dc7924|hash_0000132e4a734ce8b1799d07b4a5719f1a82b0</items>
-			</hash_0900133f6b85339ce5a852a79e221b7778e48a>
+				<items>hash_000013447fb152348ca7035bbe0b5b6b5555cf|hash_000013df2307993fc4a1965a8224d9c9becdbf|hash_000013eb59bce808b3cab6ab8bfc3185c2c935|hash_000013e9ee20342a1f7bcc45da96a0519d02d7</items>
+			</hash_090013ab6d614c26f6e6ad409caa4637e8b2fa>
 		</inputs>
 	</hash_000013f483f3d92783695f433ab30b71c2ba3b>
 	<hash_000013d16ea926647708d49ea67b2b421966b7>
@@ -2166,12 +2166,12 @@
 			</hash_100013eab1ab4b3edffc956f2e2b416947da5a>
 		</items>
 		<inputs>
-			<hash_09001380f561fd89bd679bcc28790ebff22a7d>
+			<hash_0900130f26fffa873cbaded59b257f8072e8f0>
 				<name>Data Source [last_import_total]</name>
 				<description></description>
 				<column_name>task_item_id</column_name>
 				<items></items>
-			</hash_09001380f561fd89bd679bcc28790ebff22a7d>
+			</hash_0900130f26fffa873cbaded59b257f8072e8f0>
 			<hash_0900137e29980eb75e250d08b798f06adbe5ad>
 				<name>Data Source [backup_queue_length]</name>
 				<description></description>
@@ -2376,6 +2376,101 @@
 			</hash_09001343425f37459de47aebde35c8fae41022>
 		</inputs>
 	</hash_0000134b8c6405fbaae6adc6027a80256b9abb>
+	<hash_00001342193f6df65803c0eecde25170132c76>
+		<name>Roxen MIB - Core - Open File Descriptors</name>
+		<graph>
+			<t_title></t_title>
+			<title>|host_description| - Core - Open File Descriptors</title>
+			<t_image_format_id></t_image_format_id>
+			<image_format_id>1</image_format_id>
+			<t_height></t_height>
+			<height>120</height>
+			<t_width></t_width>
+			<width>500</width>
+			<t_auto_scale></t_auto_scale>
+			<auto_scale>on</auto_scale>
+			<t_auto_scale_opts></t_auto_scale_opts>
+			<auto_scale_opts>2</auto_scale_opts>
+			<t_auto_scale_log></t_auto_scale_log>
+			<auto_scale_log></auto_scale_log>
+			<t_auto_scale_rigid></t_auto_scale_rigid>
+			<auto_scale_rigid></auto_scale_rigid>
+			<t_auto_padding></t_auto_padding>
+			<auto_padding>on</auto_padding>
+			<t_export></t_export>
+			<export>on</export>
+			<t_upper_limit></t_upper_limit>
+			<upper_limit>100</upper_limit>
+			<t_lower_limit></t_lower_limit>
+			<lower_limit>0</lower_limit>
+			<t_base_value></t_base_value>
+			<base_value>1000</base_value>
+			<t_unit_value></t_unit_value>
+			<unit_value></unit_value>
+			<t_unit_exponent_value></t_unit_exponent_value>
+			<unit_exponent_value></unit_exponent_value>
+			<t_vertical_label></t_vertical_label>
+			<vertical_label>Open File Descriptors</vertical_label>
+		</graph>
+		<items>
+			<hash_100013e4fe2dd0bdcf849708c8cc7da02df91b>
+				<task_item_id>hash_08001302333c1d5c50c19ae74daa5d0b931265</task_item_id>
+				<color_id>F51D30</color_id>
+				<graph_type_id>7</graph_type_id>
+				<consolidation_function_id>1</consolidation_function_id>
+				<cdef_id>0</cdef_id>
+				<value></value>
+				<gprint_id>hash_060013e9c43831e54eca8069317a2ce8c6f751</gprint_id>
+				<text_format>Open FDs</text_format>
+				<hard_return></hard_return>
+				<sequence>1</sequence>
+			</hash_100013e4fe2dd0bdcf849708c8cc7da02df91b>
+			<hash_1000137c41d7f6dece683aef39cc730b816482>
+				<task_item_id>hash_08001302333c1d5c50c19ae74daa5d0b931265</task_item_id>
+				<color_id>0</color_id>
+				<graph_type_id>9</graph_type_id>
+				<consolidation_function_id>4</consolidation_function_id>
+				<cdef_id>0</cdef_id>
+				<value></value>
+				<gprint_id>hash_06001319414480d6897c8731c7dc6c5310653e</gprint_id>
+				<text_format>Current:</text_format>
+				<hard_return></hard_return>
+				<sequence>2</sequence>
+			</hash_1000137c41d7f6dece683aef39cc730b816482>
+			<hash_1000132b5a1014a93ec33361c65382e768399b>
+				<task_item_id>hash_08001302333c1d5c50c19ae74daa5d0b931265</task_item_id>
+				<color_id>0</color_id>
+				<graph_type_id>9</graph_type_id>
+				<consolidation_function_id>1</consolidation_function_id>
+				<cdef_id>0</cdef_id>
+				<value></value>
+				<gprint_id>hash_06001319414480d6897c8731c7dc6c5310653e</gprint_id>
+				<text_format>Average:</text_format>
+				<hard_return></hard_return>
+				<sequence>3</sequence>
+			</hash_1000132b5a1014a93ec33361c65382e768399b>
+			<hash_100013fff41dfebdf97d946b602b1babd09767>
+				<task_item_id>hash_08001302333c1d5c50c19ae74daa5d0b931265</task_item_id>
+				<color_id>0</color_id>
+				<graph_type_id>9</graph_type_id>
+				<consolidation_function_id>3</consolidation_function_id>
+				<cdef_id>0</cdef_id>
+				<value></value>
+				<gprint_id>hash_06001319414480d6897c8731c7dc6c5310653e</gprint_id>
+				<text_format>Maximum:</text_format>
+				<hard_return></hard_return>
+				<sequence>4</sequence>
+			</hash_100013fff41dfebdf97d946b602b1babd09767>
+		</items>
+		<inputs>
+			<hash_090013f67d5bbc0726d76c7422512de79eec19>
+				<name>Data Source [core_active_fds]</name>
+				<description></description>
+				<column_name>task_item_id</column_name>
+				<items>hash_000013e4fe2dd0bdcf849708c8cc7da02df91b|hash_0000137c41d7f6dece683aef39cc730b816482|hash_0000132b5a1014a93ec33361c65382e768399b|hash_000013fff41dfebdf97d946b602b1babd09767</items>
+			</hash_090013f67d5bbc0726d76c7422512de79eec19>
+		</inputs>
+	</hash_00001342193f6df65803c0eecde25170132c76>
 	<hash_000013bdbdf2dcd5fb7a7c4c5b7e1804486c55>
 		<name>Roxen MIB - Feed - Last Import</name>
 		<graph>
@@ -4781,6 +4876,73 @@
 			</item_006>
 		</data>
 	</hash_010013e33cd71059934edb626a47a6e1e48357>
+	<hash_010013ad7db7d44e93ace818df407b434e69db>
+		<name>Roxen MIB - Core - Open File Descriptors</name>
+		<ds>
+			<t_name></t_name>
+			<name>|host_description| Core - Open File Descriptors</name>
+			<data_input_id>hash_0300133eb92bb845b9660a7445cf9740726522</data_input_id>
+			<t_rra_id></t_rra_id>
+			<t_rrd_step></t_rrd_step>
+			<rrd_step>300</rrd_step>
+			<t_active></t_active>
+			<active>on</active>
+			<rra_items>hash_150013c21df5178e5c955013591239eb0afd46|hash_1500130d9c0af8b8acdc7807943937b3208e29|hash_1500136fc2d038fb42950138b0ce3e9874cc60|hash_150013e36f3adb9f152adfa5dc50fd2b23337e</rra_items>
+		</ds>
+		<items>
+			<hash_08001302333c1d5c50c19ae74daa5d0b931265>
+				<t_data_source_name></t_data_source_name>
+				<data_source_name>core_active_fds</data_source_name>
+				<t_rrd_minimum></t_rrd_minimum>
+				<rrd_minimum>0</rrd_minimum>
+				<t_rrd_maximum></t_rrd_maximum>
+				<rrd_maximum>0</rrd_maximum>
+				<t_data_source_type_id></t_data_source_type_id>
+				<data_source_type_id>1</data_source_type_id>
+				<t_rrd_heartbeat></t_rrd_heartbeat>
+				<rrd_heartbeat>600</rrd_heartbeat>
+				<t_data_input_field_id></t_data_input_field_id>
+				<data_input_field_id>0</data_input_field_id>
+			</hash_08001302333c1d5c50c19ae74daa5d0b931265>
+		</items>
+		<data>
+			<item_000>
+				<data_input_field_id>hash_070013fc64b99742ec417cc424dbf8c7692d36</data_input_field_id>
+				<t_value></t_value>
+				<value></value>
+			</item_000>
+			<item_001>
+				<data_input_field_id>hash_0700134276a5ec6e3fe33995129041b1909762</data_input_field_id>
+				<t_value></t_value>
+				<value>.1.3.6.1.4.1.8614.1.1.1.4.0</value>
+			</item_001>
+			<item_002>
+				<data_input_field_id>hash_070013012ccb1d3687d3edb29c002ea66e72da</data_input_field_id>
+				<t_value></t_value>
+				<value></value>
+			</item_002>
+			<item_003>
+				<data_input_field_id>hash_0700139c55a74bd571b4f00a96fd4b793278c6</data_input_field_id>
+				<t_value></t_value>
+				<value></value>
+			</item_003>
+			<item_004>
+				<data_input_field_id>hash_070013ad14ac90641aed388139f6ba86a2e48b</data_input_field_id>
+				<t_value></t_value>
+				<value></value>
+			</item_004>
+			<item_005>
+				<data_input_field_id>hash_07001332285d5bf16e56c478f5e83f32cda9ef</data_input_field_id>
+				<t_value></t_value>
+				<value></value>
+			</item_005>
+			<item_006>
+				<data_input_field_id>hash_07001392f5906c8dc0f964b41f4253df582c38</data_input_field_id>
+				<t_value></t_value>
+				<value></value>
+			</item_006>
+		</data>
+	</hash_010013ad7db7d44e93ace818df407b434e69db>
 	<hash_010013e6aabcedbea34e00cf3138abdcf87ff7>
 		<name>Roxen MIB - Feed</name>
 		<ds>
