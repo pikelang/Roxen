@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.527 2008/01/08 15:14:00 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.528 2008/02/22 14:19:04 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -666,6 +666,15 @@ int things_to_do_when_not_sending_from_cache( )
 
   if( mixed q = real_variables->magic_roxen_automatic_charset_variable )
     decode_charset_encoding(Roxen.get_client_charset_decoder(q[0],this_object()));
+  else
+    // Try to utf8 decode the request-URI according to the IRI spec
+    // (RFC 3987). This is necessary to reverse the http_encode_url
+    // encoding in the absence of magic_roxen_automatic_charset_variable.
+    // This can theoretically decode utf8-lookalike strings for
+    // non-IRI urls, but it's very unlikely. (5.0 does it a bit better
+    // because it employs an all-or-nothing approach across all
+    // strings.)
+    decode_charset_encoding (utf8_to_string);
 }
 
 static Roxen.HeaderParser hp = Roxen.HeaderParser();
