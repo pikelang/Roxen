@@ -7,12 +7,12 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.19 2007/03/19 08:43:57 liin Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.20 2008/02/27 08:55:44 liin Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
-LocaleString module_name = LOCALE(0, "Tags: Insert cached href");
-LocaleString module_doc  = LOCALE(0, "This module contains the RXML tag \"insert "
+LocaleString module_name = LOCALE(1, "Tags: Insert cached href");
+LocaleString module_doc  = LOCALE(2, "This module contains the RXML tag \"insert "
 				     "cached-href\". Useful when implementing e.g."
 				     " RSS syndication.");
 
@@ -34,36 +34,36 @@ constant MAX_REDIRECTS = 5;
 private HrefDatabase href_database;
 
 void create() {
-  defvar("fetch-interval", "5 minutes", LOCALE(0, "Fetch interval"),
+  defvar("fetch-interval", "5 minutes", LOCALE(3, "Fetch interval"),
 	 TYPE_STRING|VAR_MORE,
-	 LOCALE(0, "States how often the data of an URL should be updated. "
+	 LOCALE(4, "States how often the data of an URL should be updated. "
 		   "In seconds, minutes, hours or days."));
   
-  defvar("fresh-time", "0", LOCALE(0, "Fresh time"),
+  defvar("fresh-time", "0", LOCALE(5, "Fresh time"),
 	 TYPE_STRING|VAR_MORE,
-	 LOCALE(0, "States how long data in the database can be considered fresh enough"
+	 LOCALE(6, "States how long data in the database can be considered fresh enough"
 		   " to display. In seconds, minutes, hours or days. As default this"
 		   " is 0, which means that this attribute is not used and that there"
 		   " are no restrictions on data freshness."));
   
-  defvar("ttl", "7 days", LOCALE(0, "Time to live"),
+  defvar("ttl", "7 days", LOCALE(7, "Time to live"),
 	 TYPE_STRING|VAR_MORE,
-	 LOCALE(0, "States how long unrequested data can exist in the database"
+	 LOCALE(8, "States how long unrequested data can exist in the database"
 		   " before being removed. In seconds, minutes, hours or days."));
  
-  defvar("timeout", "10 seconds", LOCALE(0, "Timeout"),
+  defvar("timeout", "10 seconds", LOCALE(9, "Timeout"),
 	 TYPE_STRING|VAR_MORE,
-	 LOCALE(0, "The timeout when fetching data from a server. In seconds, minutes, "
+	 LOCALE(10, "The timeout when fetching data from a server. In seconds, minutes, "
 		   "hours or days."));
   
-  defvar("update-interval", "1 minute", LOCALE(0, "Update interval"),
+  defvar("update-interval", "1 minute", LOCALE(11, "Update interval"),
 	 TYPE_STRING|VAR_MORE,
-	 LOCALE(0, "States how often the module will check if the database needs to "
+	 LOCALE(12, "States how often the module will check if the database needs to "
 		   "be updated. In seconds, minutes, hours or days."));
   
-  defvar("recursion_limit", 2, LOCALE(0, "Maximum recursion depth"),
+  defvar("recursion_limit", 2, LOCALE(13, "Maximum recursion depth"),
 	 TYPE_INT|VAR_MORE,
-	 LOCALE(0,"Maximum number of nested <tt>&lt;insert cached-href&gt;</tt>'s "
+	 LOCALE(14,"Maximum number of nested <tt>&lt;insert cached-href&gt;</tt>'s "
 		  "allowed. May be set to zero to disable the limit."));
 }
 
@@ -99,7 +99,7 @@ void start(int occasion, Configuration conf) {
 
 mapping(string:function) query_action_buttons()
 {
-  return ([LOCALE(0, "Clear database") : href_database->empty_db]);
+  return ([LOCALE(15, "Clear database") : href_database->empty_db]);
 }
 
 
@@ -190,13 +190,13 @@ public int(0..1) is_redirect(int status) {
 */
 public string get_result_sync(HTTPClient client, mapping args, mapping header) {
   if (!is_redirect(client->status) || !MAX_REDIRECTS)
-    return client->data();
+    return decode_data(client->data(), client->con->headers);
   
   int counter;
   string location = client->con->headers->location;
   
   if (!location || !sizeof(location))
-    return client->data();
+    return decode_data(client->data(), client->con->headers);
   
   DWRITE("Following redirect from " + (string)client->url + 
 	 " to " + location);
@@ -212,7 +212,7 @@ public string get_result_sync(HTTPClient client, mapping args, mapping header) {
     location = new_client->con->headers->location;
     
     if (!location || !sizeof(location))
-      return new_client->data();
+      return decode_data(new_client->data(), new_client->con->headers);
     
     DWRITE("Following redirect from " + (string)new_client->url + 
 	   " to " + location);
@@ -224,7 +224,7 @@ public string get_result_sync(HTTPClient client, mapping args, mapping header) {
     counter++;
   }
   
-  return new_client->data();
+  return decode_data(new_client->data(), new_client->con->headers);
 }
 
 /*
@@ -286,8 +286,9 @@ public void|string fetch_url(mapping(string:mixed) to_fetch, void|mapping header
   // In practice a server never runs unthreaded. Keep it 
   // simple and only return when status code < 300:
   if(client && client->status > 0 && client->status < 300) {
-    href_database->update_data(to_fetch["url"], client->data());
-    return client->data();
+    string data = decode_data(client->data(), client->headers);
+    href_database->update_data(to_fetch["url"], data);
+    return data;
   } else
     return "";
 #endif
@@ -427,7 +428,7 @@ class HrefDatabase {
     if (result && sizeof(result) && result[0]["data"] != "") {
       DWRITE("get_data(): Returning cached data for " + args["cached-href"]);
       
-      return result[0]["data"];
+      return utf8_to_string(result[0]["data"]);
     } else if (!args["pure-db"]) {
       DWRITE("get_data(): No cached data existed for " + args["cached-href"] + " so performing a synchronous fetch");
       
@@ -530,7 +531,7 @@ class HrefDatabase {
 		   ,  url));
     
     sql_query("UPDATE " + data_table + " SET data=%s, latest_write=%d WHERE url=%s", 
-	      data, time(), url);
+	      string_to_utf8(data), time(), url);
     
     sql_query("UPDATE " + request_table + " SET next_fetch=next_fetch + " + (24 * 3600) 
 	      + " WHERE time_of_day > 0 AND " + time() + " > next_fetch AND url='" 
@@ -657,21 +658,19 @@ class TagInsertCachedHref {
     string res = href_database->get_data(Attributes(args)->get_db_args(), 
 					 (["x-roxen-recursion-depth":recursion_depth]));
     
+    // DEPRECATED attribute 'decode-xml'. Keep it during transition period for upgrades, 
+    // since there will be undecoded data in the database until the first fetch for each 
+    // URL. The same type of decoding now occur upon saving the data in the database
     if(args["decode-xml"]) {
       // Parse xml header and recode content to internal representation.
       mixed result = catch {
-	res = Parser.XML.Simple()->autoconvert(res);
+        res = Parser.XML.Simple()->autoconvert(res);
       };
-      
-      if (result) {
-	werror("INSERT_CACHED_HREF: An error occurred trying to decode the data from " +
-	       args["cached-href"] + ".\n");
-      }
       
       // Remove any bytes potentially still preceeding the first '<' in the xml file
       return res[search(res, "<")..];
     }
-    
+
     return res;
   }
 } 
@@ -760,7 +759,7 @@ class HTTPClient {
     
     if(status > 0 && status < 300)
       return con->data();
-
+    
     return "";
   }
   
@@ -826,9 +825,9 @@ class HTTPClient {
 
     if (href_database)
       if (orig_url)
-	href_database->update_data(orig_url, con->data());
+	href_database->update_data(orig_url, decode_data(con->data(), con->headers));
       else
-	href_database->update_data((string)url, con->data());
+	href_database->update_data((string)url, decode_data(con->data(), con->headers));
     
     if (sync)
       queue->write("@");
@@ -887,8 +886,100 @@ class HTTPClient {
 }
 #endif
 
+/* 
+   Decodes data based on 1) HTTP headers or 2) fallbacks on 
+   data content, meta http-equiv for html and BOM + encoding='' 
+   for xml 
+*/
+string decode_data(string data, mapping headers) {
+  function get_ct_cs =
+    lambda(string ct) {
+      string cs;
+      foreach((ct/";")[1..], string s) {
+	string s2 = String.trim_all_whites(s);
+	string _cs;
+	if(sscanf(s2, "charset=%s", _cs) == 1)
+	  cs = String.trim_all_whites(_cs);
+      }
+      return cs;
+    };
+  
+  function get_cs_from_html = 
+    lambda(string data) {
+      string cs;
+      Parser.HTML parser = Parser.HTML();
+      parser->case_insensitive_tag(1);
+      parser->lazy_entity_end(1);
+      parser->ignore_unknown(1);
+      parser->match_tag(0);
+      parser->add_tags( ([ "meta": lambda( Parser.HTML p, mapping m) 
+				   {
+				     if(m["content"] && m["http-equiv"] && 
+					lower_case(m["http-equiv"]) == "content-type")
+				       cs = get_ct_cs(m["content"]);
+				   } ]) );
+      parser->finish(data);
+      return cs;
+    };
+  
+  function get_cs_from_xml_enc = 
+    lambda(string data) {
+      string cs,tmp;
+      sscanf(data, "%*s<?xml%s?>%*s", tmp);
+      sscanf(lower_case(tmp), "%*sencoding=\"%s\"%*s", cs);
+      if (!cs)
+	cs = "utf-8"; // UTF-8 is default XML encoding when omitted
+      return cs;
+    };
 
+  string ct, cs;
+ 
+  if(!(ct = headers["content-type"])) {
+    // Don't even try to decode, might be binary for all we know
+    return data;
+  }
+  
+  ct = String.trim_all_whites(lower_case(ct));
 
+  // If text, look for charset:  
+  if(has_prefix(ct,"text/") || has_prefix(ct, "application/xml")) {
+    cs = get_ct_cs(ct);
+    
+    if (!cs) {
+      // No charset in content-type header, look in data for encoding hints
+
+      if(has_prefix(ct, "text/html")) {
+	cs = get_cs_from_html(data);
+      } else if(has_prefix(ct, "text/xml") || has_prefix(ct, "application/xml")) {
+	string data2;
+	mixed result = catch {
+	  data2 = Parser.XML.Simple()->autoconvert(data);
+	};
+	
+	if (!result)
+	  return remove_bom(data2);
+	
+	cs = get_cs_from_xml_enc(data);
+      }
+    }
+  }
+  
+  if(has_prefix(ct, "text/xml") || has_prefix(ct, "application/xml"))
+    data = remove_bom(data);
+
+  if(cs) {
+    catch {
+      data = Locale.Charset.decoder(cs)->feed(data)->drain();
+      return data;
+    };
+  }
+
+  return data;
+}
+
+string remove_bom(string data) {
+  return data[search(data, "<")..];
+}
 
 TAGDOCUMENTATION;
 #ifdef manual
@@ -1005,6 +1096,7 @@ constant tagdoc=([
 
 <attr name='decode-xml' value='string'>
 <p>
+ <i>(DEPRECATED. All text content is now decoded automatically.)</i>
  If provided the resulting content will be decoded to the internal
  charset representation by looking at a potential BOM (Byte Order
  Mark) and the specified encoding in the XML header. Defaults to UTF-8
