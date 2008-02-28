@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.631 2008/01/10 15:38:49 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.632 2008/02/28 19:37:44 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4095,12 +4095,12 @@ static void create()
   roxen.add_permission( "Site:"+name, LOC_C(306,"Site")+": "+name );
 
   // for now only these two. In the future there might be more variables.
-  defvar( "data_cache_size", 16384, DLOCALE(274, "Cache:Cache size"),
+  defvar( "data_cache_size", 131072, DLOCALE(274, "Cache:Cache size"),
           TYPE_INT| VAR_PUBLIC,
           DLOCALE(275, "The size of the data cache used to speed up requests "
                   "for commonly requested files, in KBytes"));
 
-  defvar( "data_cache_file_max_size", 100, DLOCALE(276, "Cache:Max file size"),
+  defvar( "data_cache_file_max_size", 256, DLOCALE(276, "Cache:Max file size"),
           TYPE_INT | VAR_PUBLIC,
           DLOCALE(277, "The maximum size of a file that is to be considered for "
 		  "the cache, in KBytes."));
