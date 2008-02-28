@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.528 2008/02/22 14:19:04 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.529 2008/02/28 15:27:36 jonasw Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2639,13 +2639,22 @@ void got_data(mixed fooid, string s, void|int chained)
 	    int len = sizeof(d);
 	    // Make sure we don't mess with the RAM cache.
 	    file += ([]);
-	    if (none_match &&
-		(none_match[file->etag] ||
-		 (none_match["*"] && file->etag))) {
-	      // Not modified.
-	      code = 304;
-	      d = "";
-	      len = 0;
+	    if (none_match) {
+	      //  RFC 2616, Section 14.26:
+	      //
+	      //  If none of the entity tags match, then the server
+	      //  MAY perform the requested method as if the
+	      //  If-None-Match header field did not exist, but MUST
+	      //  also ignore any If-Modified-Since header field(s) in
+	      //  the request. That is, if no entity tags match, then
+	      //  the server MUST NOT return a 304 (Not Modified)
+	      //  response.
+	      if (none_match[file->etag] || (none_match["*"] && file->etag)) {
+		// Not modified.
+		code = 304;
+		d = "";
+		len = 0;
+	      }
 	    } else if (since && file->last_modified) {
 	      array(int) since_info = Roxen.parse_since( since );
 	      if ((since_info[0] >= file->last_modified) &&
