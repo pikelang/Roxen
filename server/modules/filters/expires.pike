@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: expires.pike,v 1.2 2006/08/25 15:14:44 wellhard Exp $";
+constant cvs_version = "$Id: expires.pike,v 1.3 2008/03/05 15:57:34 tomas Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -8,6 +8,7 @@ constant module_type = MODULE_FILTER;
 constant module_name = "Expires modifier";
 constant module_doc  = "Adds expires header of configurable time "
 			   "to selected files.";
+constant module_unique = 0; 
 
 array(string) globs;
 int expire_time;
@@ -41,7 +42,7 @@ void start(int when, Configuration conf)
 
 mapping|void filter(mapping res, RequestID id)
 {
-  if (!res || !res->extra_heads) return;
+  if (!res) return;
 
   foreach(globs, string g) {
     if (glob(g, id->not_query)) {
@@ -49,11 +50,14 @@ mapping|void filter(mapping res, RequestID id)
 #ifdef DEBUG_CACHEABLE
       report_debug("Original extra_heads: %O\n", res->extra_heads);
 #endif
-
-      m_delete(res->extra_heads, "cache-control");
-      m_delete(res->extra_heads, "Cache-Control");
-      m_delete(res->extra_heads, "expires");
-      m_delete(res->extra_heads, "Expires");
+      
+      if (res->extra_heads) {
+	m_delete(res->extra_heads, "cache-control");
+	m_delete(res->extra_heads, "Cache-Control");
+	m_delete(res->extra_heads, "expires");
+	m_delete(res->extra_heads, "Expires");
+      }
+      
       RAISE_CACHE(expire_time);
 
       id->misc->vary = (<>);
