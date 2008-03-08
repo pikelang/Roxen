@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.65 2007/05/11 17:35:44 jonasw Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.66 2008/03/08 14:02:24 jonasw Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -267,15 +267,17 @@ string container_js_popup(string name, mapping args, string contents, object id)
   
   if(!args->props)
     args->props = "default_props";
-  if(!largs->href) 
+  if(!largs->href)
     largs->href = "javascript:void(0);";
+  else if (largs->href == "")
+    m_delete(largs, "href");
   string popupname = get_jss(id)->get_unique_id(args["id-prefix"] || "popup");
   string popupparent =
     (id->misc->_popupparent?id->misc->_popupparent:"none");
   if(zero_type(id->misc->_popuplevel) && args["z-index"])
     id->misc->_popuplevel = (int)args["z-index"];
 
-  string event = "onMouseOver";
+  string event = args->event || "onMouseOver";
   if(lower_case(args->event||"") == "onclick")
     event = "onClick";
   
@@ -572,7 +574,9 @@ javascript support.</p></desc>
 
 <attr name='href' value='url' default='javascript:void(0);'>
   <p>If you didn't give a href argument of your own to the link, the
-  javascript \"do nothing\" statement is filled in for you.</p>
+  javascript \"do nothing\" statement is filled in for you. In case you
+  want to disable this behavior, provide an empty string as the href
+  value.</p>
 </attr>
 
 <attr name='label' value='string'>
@@ -635,7 +639,7 @@ props_arg+
 
 <attr name='event-variable' value='RXML form variable name'>
   <p>Javascript trigger code will be stored in this variable.
-  This argument is useful if multiple actions should be perormed
+  This argument is useful if multiple actions should be performed
   in the same event. For example rase the popup and change the
   css-class of the link.</p>
   <ex-box>
