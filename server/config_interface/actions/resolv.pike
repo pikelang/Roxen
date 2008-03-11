@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.31 2004/06/11 18:15:21 jonasw Exp $
+ * $Id: resolv.pike,v 1.32 2008/03/11 13:05:13 erikd Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -225,13 +225,57 @@ string parse( RequestID id )
     "<input name='user'  value='&form.user;' size='12' />"
     "&nbsp;&nbsp;&nbsp;" +LOCALE(30,"Password")+ ": "
     "<input name='password' value='&form.password;' type='password' "
-    "size='12' /></td></tr></table>\n"
+    "size='12' /></td></tr>\n"
+    "<tr><td align='left' valign='top'>" + LOCALE(0, "Form variables") + ":</td><td align='left'>"
+    "<input type='text' size='60' name='form_vars' value='&form.form_vars;' />"
+    "<br/>Ex. id=234&amp;page=3&amp;hidden=1</td>\n"
+    "</tr><tr><td align='left' valign='top'>" + LOCALE(325, "HTTP Cookies") + ": </td><td align='left'>"
+    "<textarea cols='58' row='4' name='cookies'>&form.cookies;</textarea><br />"
+    "Cookies are separated by a new line for each cookie you want to set. e.g.:"
+    "<pre>UniqueUID=eIkT67lksoOe23q\nSessionID=123123:sadfi:114lj</pre></td>"
+    "</tr></table>\n"
     "<table border='0'><tr><td><cf-ok/></td><td><cf-cancel href='?class=&form.class;'/></td></tr></table>\n";
 
   roxen.InternalRequestID nid = roxen.InternalRequestID();
   nid->client = id->client;
   nid->client_var = id->client_var + ([]);
   nid->supports = id->supports;
+  string raw_vars = id->variables->form_vars;
+  if( raw_vars && sizeof(raw_vars) ) {
+    if( !nid->variables )
+      nid->variables = ([]);
+    foreach( raw_vars /"&", string val_pair ) {
+      string idx, val;
+      if( sscanf(val_pair, "%s=%s", idx, val) == 2 ) {
+	if(nid->variables[idx]) {
+	  if(arrayp(nid->variables[idx]))
+	    nid->variables[idx] += ({ val });
+	  else
+	    nid->variables[idx] = ({ nid->variables[idx], val });
+	} else {
+	  nid->variables[idx] = val;
+	}
+      }
+    }
+  }
+  string raw_cookies = id->variables->cookies;
+  if( raw_cookies && sizeof(raw_cookies) ) {
+    mapping(string:string) faked_cookies = ([]);
+    foreach(raw_cookies / "\n", string raw_cookie) {
+      string c_idx, c_val;
+      if( sscanf( raw_cookie, "%s=%s", c_idx, c_val) == 2) {
+	faked_cookies += ([ c_idx : c_val ]);
+      }      
+    }
+    if( sizeof(faked_cookies) ) {
+      if( nid->cookies && sizeof(indices(nid->cookies)) ) {
+	foreach(nid->cookies; string c_idx; string c_val )
+	  faked_cookies[c_idx] = c_val;
+	nid->cookies = faked_cookies;
+      } else
+	nid->cookies = faked_cookies;
+    }
+  }
 
   if( id->variables->path )
   {
