@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.233 2008/02/20 09:07:45 mast Exp $
+// $Id: Roxen.pmod,v 1.234 2008/03/11 10:17:40 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2834,7 +2834,7 @@ string get_client_charset (string едц)
      
   case "ГҐГ¤Г¶?":
     if (test != test2) {
-      return "utf-8|html";
+      return "html|utf-8";
     }
     // FALL_THROUGH
   case "ГҐГ¤Г¶":
@@ -2845,7 +2845,7 @@ string get_client_charset (string едц)
 
   case "\214\212\232?":
     if (test != test2) {
-      return "mac|html";
+      return "html|mac";
     }
     // FALL_THROUGH
   case "\214\212\232":
@@ -2891,8 +2891,8 @@ function(string:string) get_client_charset_decoder( string едц,
     switch (charset) {
       case "iso-2022-jp":		f ("iso-2022"); break;
       case "utf-7":			f ("utf-7"); break;
-      case "utf-8|html": case "utf-8":	f ("utf-8"); break;
-      case "mac|html": case "mac":	f ("mac"); break;
+      case "html|utf-8": case "utf-8":	f ("utf-8"); break;
+      case "html|mac": case "mac":	f ("mac"); break;
       case "utf-16":			f (string_to_unicode); break;
       case "shift_jis":			f ("shift_jis"); break;
     }
