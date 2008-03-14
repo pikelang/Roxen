@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.234 2008/03/11 10:17:40 mast Exp $
+// $Id: Roxen.pmod,v 1.235 2008/03/14 13:21:52 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -899,7 +899,7 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
 
   HTTP_WERR("Redirect -> "+url);
 
-  return http_status( 302, "Redirect to "+html_encode_string(url))
+  return http_status( 302, "Redirect to " + url)
     + ([ "extra_heads":([ "Location":url ]) ]);
 }
 
