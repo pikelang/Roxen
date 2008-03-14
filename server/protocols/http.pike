@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.551 2008/02/28 15:27:34 jonasw Exp $";
+constant cvs_version = "$Id: http.pike,v 1.552 2008/03/14 13:25:26 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -51,6 +51,9 @@ int footime, bartime;
 #else
 #define MARK_FD(X) do {} while (0)
 #endif
+
+#define TOSTR(X)	#X
+#define TOSTR2(X)	TOSTR(X)
 
 #ifdef CONNECTION_DEBUG
 // Currently only used by CONNECTION_DEBUG to label each message with
@@ -324,8 +327,6 @@ void send(string|object what, int|void len)
   if(!pipe) setup_pipe();
   if(stringp(what)) {
 #ifdef CONNECTION_DEBUG
-#define TOSTR(X)	#X
-#define TOSTR2(X)	TOSTR(X)
 #if TOSTR2(CONNECTION_DEBUG) != "1"
     // CONNECTION_DEBUG may be defined to something like "text/" to
     // see the response content for all content types with that
@@ -1914,11 +1915,17 @@ void low_send_result(string headers, string data, int|void len,
   } else {
     MY_TRACE_ENTER("Async write.", 0);
 #ifdef CONNECTION_DEBUG
-    werror("HTTP[%s]: Response headers =====================================\n"
-	   "%s\n", DEBUG_GET_FD,
-	   replace(sprintf("%O", headers),
-		   ({"\\r\\n", "\\n", "\\t"}),
-		   ({"\n",     "\n",  "\t"})));
+#if TOSTR2 (CONNECTION_DEBUG) != "1"
+    if (!has_prefix (this_program::file->type || "", TOSTR2 (CONNECTION_DEBUG)))
+      // Avoid showing the headers twice if CONNECTION_DEBUG matches
+      // the content type.
+#endif
+      werror("HTTP[%s]: "
+	     "Response headers =====================================\n"
+	     "%s\n", DEBUG_GET_FD,
+	     replace(sprintf("%O", headers),
+		     ({"\\r\\n", "\\n", "\\t"}),
+		     ({"\n",     "\n",  "\t"})));
 #else
     REQUEST_WERR(sprintf("HTTP: Send headers %O", headers));
 #endif
