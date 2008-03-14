@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.235 2008/03/14 13:21:52 mast Exp $
+// $Id: Roxen.pmod,v 1.236 2008/03/14 17:34:56 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -615,10 +615,10 @@ string http_encode_string(string f)
 string http_encode_invalids (string f)
 //! Encode dangerous chars to be included as a URL in an HTTP message
 //! or header field. This includes control chars, space and the quote
-//! chars ' and ". Note that chars allowed in a quoted string (RFC
-//! 2616 section 2.2) are not encoded. This function may be used on a
-//! complete URI since it doesn't encode any URI special chars,
-//! including the escape char %.
+//! chars @expr{'@} and @expr{"@}. Note that chars allowed in a quoted
+//! string (RFC 2616 section 2.2) are not encoded. This function may
+//! be used on a complete URI since it doesn't encode any URI special
+//! chars, including the escape char @expr{%@}.
 //!
 //! @note
 //! Eight bit chars and wider are encoded using UTF-8 followed by http
@@ -633,20 +633,27 @@ string http_encode_invalids (string f)
 {
   return replace (
     string_to_utf8 (f), ({
-      // Control chars (RFC 2396 2.4.3).
+      // Encode all chars outside the set of reserved characters
+      // (RFC 3986, section 2.2) and unreserved chars (section 2.3).
+      //
+      // Control chars
       "\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
       "\010", "\011", "\012", "\013", "\014", "\015", "\016", "\017",
       "\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
       "\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
       "\177",
-      // Space (RFC 2396 2.4.3).
-      " ",
-      // Escaped by legacy (presumably since they're used to delimit
-      // attributes in xml). The double quote is invalid in URI's (RFC
-      // 2396 2.4.3) and in http messages and headers (RFC 2616 2.2).
-      // The single quote is valid but may be escaped without changing
-      // its meaning in URI's (RFC 2396 2.3).
-      "\"", "'",
+      // Others
+      " ", "\"",
+      // Encoded by legacy (presumably since it's used to delimit
+      // attributes in xml). The single quote is valid but may be
+      // escaped without changing its meaning in URI's according to
+      // RFC 2396 section 2.3. FIXME: In the successor RFC 3986 it is
+      // however part of the reserved set and ought therefore not be
+      // encoded.
+      "'",
+      // FIXME: The following chars are invalid according to RFC 3986,
+      // but can we add them without compatibility woes?
+      //"<", ">", "\\", "^", "`", "{", "|", "}",
       // All eight bit chars (this is fast with the current replace()
       // implementation).
       "\200", "\201", "\202", "\203", "\204", "\205", "\206", "\207",
@@ -672,8 +679,8 @@ string http_encode_invalids (string f)
       "%10", "%11", "%12", "%13", "%14", "%15", "%16", "%17",
       "%18", "%19", "%1A", "%1B", "%1C", "%1D", "%1E", "%1F",
       "%7F",
-      "%20",
-      "%22", "%27",
+      "%20", "%22",
+      "%27",
       "%80", "%81", "%82", "%83", "%84", "%85", "%86", "%87",
       "%88", "%89", "%8A", "%8B", "%8C", "%8D", "%8E", "%8F",
       "%90", "%91", "%92", "%93", "%94", "%95", "%96", "%97",
@@ -726,7 +733,9 @@ string http_encode_cookie(string f)
 string http_encode_url (string f)
 //! Encode any string to be used as a component part in a URI. This
 //! means that all URI reserved and excluded characters are escaped,
-//! e.g. /, #, ?, &, \n, etc (see RFC 2396).
+//! i.e. everything except @expr{A-Z@}, @expr{a-z@}, @expr{0-9@},
+//! @expr{-@}, @expr{.@}, @expr{_@}, and @expr{~@} (see RFC 2396
+//! section 2.3).
 //!
 //! @note
 //! Eight bit chars and wider are encoded using UTF-8 followed by http
@@ -741,28 +750,21 @@ string http_encode_url (string f)
 {
   return replace (
     string_to_utf8 (f), ({
-      // Reserved URI chars according to RFC 2396 section 2.2.
-      ";", "/", "?", ":", "@", "&", "=", "+", "$", ",",
-      // Control chars (RFC 2396 2.4.3).
+      // Control chars
       "\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
       "\010", "\011", "\012", "\013", "\014", "\015", "\016", "\017",
       "\020", "\021", "\022", "\023", "\024", "\025", "\026", "\027",
       "\030", "\031", "\032", "\033", "\034", "\035", "\036", "\037",
       "\177",
-      // Space (RFC 2396 2.4.3).
-      " ",
-      // Delimiters (RFC 2396 2.4.3).
-      "<", ">", "#", "%", "\"",
-      // Unwise chars (RFC 2396 2.4.3).
-      "{", "}", "|", "\\", "^", "[", "]", "`",
-      // Encoded by http_encode_url legacy. Imho this is also an
-      // unwise char since it's used to delimit attributes in XML
-      // (note however that URLs in attributes typically still needs
-      // to be HTML quoted to cope with e.g. "&").
-      //
-      // Encoding the single quote does not change its meaning in a
-      // URI (RFC 2396 2.3).
-      "'",
+      // RFC 3986, section 2.2, gen-delims
+      ":", "/", "?", "#", "[", "]", "@",
+      // RFC 3986, section 2.2, sub-delims
+      "!", "$", "&", "'", "(", ")", "*", "+", ",", ";", "=",
+      // Others outside the unreserved chars (RFC 3986, section 2.2)
+      " ", "\"", "%", "<", ">", "\\", "^", "`", "{", "|", "}",
+      // Compat note: "!", "(", ")" and "*" were not encoded in 4.5
+      // and earlier since they were part of the unreserved set in the
+      // superseded URI RFC 2396.
       // All eight bit chars (this is fast with the current replace()
       // implementation).
       "\200", "\201", "\202", "\203", "\204", "\205", "\206", "\207",
@@ -783,16 +785,14 @@ string http_encode_url (string f)
       "\370", "\371", "\372", "\373", "\374", "\375", "\376", "\377",
     }),
     ({
-      "%3B", "%2F", "%3F", "%3A", "%40", "%26", "%3D", "%2B", "%24", "%2C",
       "%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07",
       "%08", "%09", "%0A", "%0B", "%0C", "%0D", "%0E", "%0F",
       "%10", "%11", "%12", "%13", "%14", "%15", "%16", "%17",
       "%18", "%19", "%1A", "%1B", "%1C", "%1D", "%1E", "%1F",
       "%7F",
-      "%20",
-      "%3C", "%3E", "%23", "%25", "%22",
-      "%7B", "%7D", "%7C", "%5C", "%5E", "%5B", "%5D", "%60",
-      "%27",
+      "%3A", "%2F", "%3F", "%23", "%5B", "%5D", "%40",
+      "%21","%24","%26","%27","%28","%29","%2A","%2B","%2C","%3B","%3D",
+      "%20","%22","%25","%3C","%3E","%5C","%5E","%60","%7B","%7C","%7D",
       "%80", "%81", "%82", "%83", "%84", "%85", "%86", "%87",
       "%88", "%89", "%8A", "%8B", "%8C", "%8D", "%8E", "%8F",
       "%90", "%91", "%92", "%93", "%94", "%95", "%96", "%97",
