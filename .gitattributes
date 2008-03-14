@@ -270,6 +270,8 @@ worldmap binary
 /server/modules/graphics/wiretap.pike foreign_ident
 /server/modules/icecast/dir_playlist.pike foreign_ident
 /server/modules/icecast/icecast.pike foreign_ident
+/server/modules/js-support/javascript_support.pike foreign_ident
+/server/modules/js-support/scripts/ColorSelector.js foreign_ident
 /server/modules/ldap/ldaptag.pike foreign_ident
 /server/modules/ldap/userdb_ldap.pike foreign_ident
 /server/modules/logging/client_logger.pike foreign_ident
@@ -320,8 +322,6 @@ worldmap binary
 /server/modules/tags/html_wash.pike foreign_ident
 /server/modules/tags/indirect_href.pike foreign_ident
 /server/modules/tags/insert_cached_href.pike foreign_ident
-/server/modules/tags/javascript_support/javascript_support.pike foreign_ident
-/server/modules/tags/javascript_support/scripts/ColorSelector.js foreign_ident
 /server/modules/tags/kerberos.pike foreign_ident
 /server/modules/tags/killframe.pike foreign_ident
 /server/modules/tags/obox.pike foreign_ident
