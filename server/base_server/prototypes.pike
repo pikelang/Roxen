@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.210 2008/02/19 17:10:30 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.211 2008/03/14 14:47:24 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -904,6 +904,11 @@ string browser_supports_vary(string ignored, RequestID id)
 {
   return (string)!has_value(id->client||"", "MSIE");
 }
+
+// This is a somewhat simplistic regexp that doesn't handle
+// quoted-string parameter values correctly. It's only used on content
+// types so we know wide strings aren't a problem.
+static Regexp ct_charset_search = Regexp (";[ \t\n\r]*charset=");
 
 class RequestID
 //! @appears RequestID
@@ -2272,6 +2277,7 @@ class RequestID
       file->error = Protocols.HTTP.HTTP_OK;
 
     if(!file->type) file->type="text/plain";
+    string type = file->type;
 
     mapping(string:string) heads = ([]);
 
@@ -2295,32 +2301,34 @@ class RequestID
     if (misc->last_modified)
       heads["Last-Modified"] = Roxen->http_date(misc->last_modified);
 
-      string charset="";
-      if( stringp(file->data) )
+    if( stringp(file->data) )
+    {
+      if (file->charset)
+	// Join to be on the safe side.
+	set_output_charset (file->charset, 2);
+      if (sizeof (output_charset) ||
+	  has_prefix (type, "text/") ||
+	  (String.width(file->data) > 8))
       {
-	if (file->charset)
-	  // Join to be on the safe side.
-	  set_output_charset (file->charset, 2);
-	if (sizeof (output_charset) ||
-	    has_prefix (file->type, "text/") ||
-	    (String.width(file->data) > 8))
-	{
-	  int allow_entities =
-	    has_prefix(file->type, "text/xml") ||
-	    has_prefix(file->type, "text/html");
-	  [charset,file->data] = output_encode( file->data, allow_entities );
-	  if( charset && (search(file["type"], "; charset=") == -1))
-	    charset = "; charset="+charset;
-	  else
-	    charset = "";
-	}
-	file->len = strlen(file->data);
+	int allow_entities =
+	  has_prefix(type, "text/xml") ||
+	  has_prefix(type, "text/html");
+	[string charset,file->data] =
+	  output_encode( file->data, allow_entities );
+	if (!ct_charset_search->match (type))
+	  // Always set the charset. At least Firefox 2.0 is known to
+	  // propagate the charset from the frameset page to the frame
+	  // pages if they lack explicit charsets.
+	  charset = "; charset=" + (charset || "ISO-8859-1");
+	if (charset) type += charset;
       }
-      heads["Content-Type"] = file->type + charset;
+      file->len = strlen(file->data);
+    }
 
+    heads["Content-Type"] = type;
 
 #ifndef DISABLE_BYTE_RANGES
-      heads["Accept-Ranges"] = "bytes";
+    heads["Accept-Ranges"] = "bytes";
 #endif
     heads["Server"] = replace(roxenp()->version(), " ", "_");
     if (file->error == 500) {
