@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.211 2008/03/14 14:47:24 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.212 2008/03/14 17:16:47 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2301,31 +2301,33 @@ class RequestID
     if (misc->last_modified)
       heads["Last-Modified"] = Roxen->http_date(misc->last_modified);
 
-    if( stringp(file->data) )
-    {
-      if (file->charset)
-	// Join to be on the safe side.
-	set_output_charset (file->charset, 2);
-      if (sizeof (output_charset) ||
-	  has_prefix (type, "text/") ||
-	  (String.width(file->data) > 8))
-      {
-	int allow_entities =
-	  has_prefix(type, "text/xml") ||
-	  has_prefix(type, "text/html");
-	[string charset,file->data] =
-	  output_encode( file->data, allow_entities );
-	if (!ct_charset_search->match (type))
-	  // Always set the charset. At least Firefox 2.0 is known to
-	  // propagate the charset from the frameset page to the frame
-	  // pages if they lack explicit charsets.
-	  charset = "; charset=" + (charset || "ISO-8859-1");
-	if (charset) type += charset;
+    if (has_prefix (type, "text/") && !ct_charset_search->match (type)) {
+      string charset;
+
+      if( stringp(file->data) ) {
+	if (file->charset)
+	  // Join to be on the safe side.
+	  set_output_charset (file->charset, 2);
+
+	if (sizeof (output_charset) || (String.width(file->data) > 8))
+	{
+	  int allow_entities =
+	    has_prefix(type, "text/xml") ||
+	    has_prefix(type, "text/html");
+	  [charset, file->data] = output_encode( file->data, allow_entities );
+	}
       }
-      file->len = strlen(file->data);
+
+      // Always set the charset. At least Firefox 2.0 is known to
+      // propagate the charset from the frameset page to the frame
+      // pages if they lack explicit charsets.
+      type += "; charset=" + (charset || "ISO-8859-1");
     }
 
     heads["Content-Type"] = type;
+
+    if (stringp (file->data))
+      file->len = sizeof (file->data);
 
 #ifndef DISABLE_BYTE_RANGES
     heads["Accept-Ranges"] = "bytes";
