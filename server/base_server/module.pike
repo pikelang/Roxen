@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module.pike,v 1.228 2007/07/12 18:58:18 mast Exp $
+// $Id: module.pike,v 1.229 2008/03/17 14:19:03 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -93,6 +93,7 @@ array register_module()
     0,
     module_unique,
     this_object()->module_locked,
+    this_object()->module_counter,
   });
 }
 

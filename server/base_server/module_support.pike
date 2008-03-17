@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module_support.pike,v 1.127 2007/05/16 08:00:29 jonasw Exp $
+// $Id: module_support.pike,v 1.128 2008/03/17 14:16:40 grubba Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -143,7 +143,7 @@ static int check_ambiguous_module (string name, array(string) files)
 //
 //  This is stored in a ConfigurationIFCache instance.
 //
-object module_cache; // Cannot be ConfigurationIFCache, load order problems
+object module_cache; // Cannot be ConfigIFCache, load order problems
 
 class BasicModule
 {
@@ -209,7 +209,7 @@ class FakeModuleInfo( string sname )
   int init_module( string what )  { }
   int find_module( string sn )  { }
   int check (void|int force) { }
-  int unlocked(object /*License.Key*/ key) { }
+  int unlocked(object /*License.Key*/ key, Configuration|void conf) { }
 
   static string _sprintf()
   {
@@ -263,7 +263,8 @@ class ModuleInfo( string sname, string filename )
 {
   int last_checked;
   int type, multiple_copies;
-  int|string locked;
+  string locked;
+  string counter;
   mapping(Configuration:int) config_locked = ([]);
 
   mapping|string name;
@@ -365,13 +366,14 @@ class ModuleInfo( string sname, string filename )
       // Check if the module is locked. Throw an empty string to not
       // generate output, this is handled later.
       object key = conf && conf->getvar("license")->get_key();
-      if(locked && !(key && unlocked(key))) {
+      if(locked && !(key && unlocked(key, conf))) {
 	config_locked[conf] = 1;
 	throw( "" );
       }
       else
 	m_delete(config_locked, conf);
-      return load( filename, silent )( conf );
+      RoxenModule ret = load( filename, silent )( conf );
+      return ret;
     };
     roxenloader.pop_compile_error_handler( );
     if( err )
@@ -421,6 +423,7 @@ class ModuleInfo( string sname, string filename )
 	       "name":encode_string(name),
 	       "description":encode_string(description),
 	       "locked":locked,
+	       "counter":counter,
              ]) );
   }
 
@@ -446,8 +449,13 @@ class ModuleInfo( string sname, string filename )
       multiple_copies = !data[4];
     else
       multiple_copies = 1;
-    if( sizeof( data ) > 5)
-      locked = data[5];
+    if( sizeof( data ) > 5) {
+      if (data[5]) locked = stringp(data[5])?data[5]:sname;
+    }
+    if( sizeof( data ) > 6 )
+      counter = data[6];
+    else
+      counter = sname;
     last_checked = file_stat( filename )[ ST_MTIME ];
     save();
   }
@@ -559,6 +567,7 @@ class ModuleInfo( string sname, string filename )
             name = decode_string( data->name );
             description = decode_string( data->description );
 	    locked = data->locked;
+	    counter = data->counter || sname;
             return 1;
           }
           else
@@ -573,9 +582,14 @@ class ModuleInfo( string sname, string filename )
       return find_module( sname );
   }
 
-  int unlocked(object /*License.Key*/ key)
+  int unlocked(object /*License.Key*/ key, Configuration|void conf)
   {
-    return key->is_module_unlocked(stringp(locked)?locked:sname);
+    if (!key->is_module_unlocked(locked))
+      return 0;
+    if (!conf) return 1;
+    int|string cnt = key->get_module_feature(counter, "instances");
+    if (!cnt || cnt == "*") return 1;
+    return conf->counters[counter] < cnt;
   }
 }
 
