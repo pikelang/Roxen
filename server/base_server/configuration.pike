@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.646 2008/02/28 19:38:05 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.647 2008/03/17 13:28:53 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -327,6 +327,8 @@ class DataCache
   void set(string url, string data, mapping meta, int expire, RequestID id)
   {
     if( strlen( data ) > max_file_size ) {
+      // NOTE: There's a possibility of a stale entry remaining in the
+      //       cache until it expires, rather than being replaced here.
       SIMPLE_TRACE_ENTER (this, "Result of size %d is too large "
 			  "to store in the protocol cache (limit %d)",
 			  sizeof (data), max_file_size);
@@ -592,6 +594,7 @@ mapping modules = ([]);
 mapping (RoxenModule:string) otomod = ([]);
 //! A mapping from the module objects to module names
 
+mapping(string:int) counters = ([]);
 
 // Caches to speed up the handling of the module search.
 // They are all sorted in priority order, and created by the functions
@@ -3704,6 +3707,9 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   int has_stored_vars = sizeof (stored_vars); // A little ugly, but it suffices.
   me->setvars(stored_vars);
 
+  if (!module[id])
+    counters[moduleinfo->counter]++;
+
   module[ id ] = me;
   otomod[ me ] = modname+"#"+id;
 
@@ -4079,6 +4085,10 @@ int disable_module( string modname, int|void nodest )
 #ifdef MODULE_DEBUG
   report_debug("Disabling "+descr+"\n");
 #endif
+
+  if (moduleinfo->counter) {
+    counters[moduleinfo->counter]--;
+  }
 
   clean_up_for_module( moduleinfo, me );
 
