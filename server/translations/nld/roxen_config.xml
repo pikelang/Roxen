@@ -122,9 +122,8 @@
 </str>
 
 <str id="20">
-<changed from="Default site"/>
 <o>Ports: Default site</o>
-<t>Dit is de standaard site</t>
+<t>Ports: Dit is de standaard site</t>
 </str>
 
 <str id="21">
@@ -516,9 +515,8 @@ $user_id       -- Een uniek gebruikers-ID, als cookies ondersteund worden door d
 </str>
 
 <str id="36">
-<changed from="Primary Server URL"/>
 <o>Ports: Primary Server URL</o>
-<t>URL van de Primaire server</t>
+<t>Ports: URL van de Primaire server</t>
 </str>
 
 <str id="37">
@@ -535,9 +533,8 @@ also set 'URLs'.</o>
 </str>
 
 <str id="38">
-<changed from="URLs"/>
 <o>Ports: URLs</o>
-<t>URL's</t>
+<t>Ports: URL's</t>
 </str>
 
 <str id="40">
@@ -2034,9 +2031,8 @@ The inclusion file can access the form variables form.orig-file and form.orig-ur
 </str>
 
 <str id="5">
-<changed from="Number of requests:"/>
 <o>Interface language</o>
-<t>Aantal verzoeken:</t>
+<t></t>
 </str>
 
 <str id="19">
