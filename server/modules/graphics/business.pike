@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.150 2005/12/16 17:50:52 jonasw Exp $";
+constant cvs_version = "$Id: business.pike,v 1.151 2008/03/18 10:38:24 stewa Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -83,12 +83,16 @@ void flush_cache() {
   image_cache->flush();
 }
 
-string itag_xaxis(string tag, mapping m, mapping res)
+string itag_xaxis(string tag, mapping m, mapping res, object id)
 {
 #ifdef BG_DEBUG
   bg_timers->xaxis = gauge {
 #endif
   int l=query("maxstringlength")-1;
+
+  if(!m->noparse)
+    foreach(indices(m), string attr)
+      m[attr] = Roxen.parse_rxml( m[attr], id );
 
   res->xaxisfont = verify_font( m->font || m->nfont || res->xaxisfont,
 				res->labelsize );
@@ -109,12 +113,16 @@ string itag_xaxis(string tag, mapping m, mapping res)
   return "";
 }
 
-string itag_yaxis(string tag, mapping m, mapping res)
+string itag_yaxis(string tag, mapping m, mapping res, object id)
 {
 #ifdef BG_DEBUG
   bg_timers->yaxis = gauge {
 #endif
   int l=query("maxstringlength")-1;
+
+  if(!m->noparse)
+    foreach(indices(m), string attr)
+      m[attr] = Roxen.parse_rxml( m[attr], id );
 
   res->yaxisfont = verify_font( m->font || m->nfont || res->yaxisfont,
 				res->labelsize );
@@ -436,12 +444,12 @@ constant _diagram_args =
    "legendfont",
    "legend_texts", "labelcolor", "axwidth", "linewidth", "center",
    "rotate", "image", "bw", "eng", "neng", "xmin", "ymin", "turn", "notrans",
-   "colortable_cache", "tonedbox", "name" });
+   "colortable_cache", "tonedbox", "name","color-scheme" });
 constant diagram_args = mkmapping(_diagram_args,_diagram_args);
 
 constant _shuffle_args =
 ({ "dimensions", "dimensionsdepth", "ygridspace", "xgridspace",
-   "xstart", "xstop", "ystart", "ystop", "colors", "xvalues", "yvalues",
+   "xstart", "xstop", "ystart", "ystop", "colors", "autocolors","xvalues", "yvalues",
    "axwidth", "xstor", "ystor", "xunit", "yunit", "fg", "bg", "voidsep" });
 constant shuffle_args = mkmapping( _shuffle_args, _shuffle_args );
 
@@ -576,6 +584,15 @@ string container_diagram(string tag, mapping m, string contents,
   res->bg = parse_color(m->bgcolor || id->misc->defines->bgcolor || "white");
   res->fg = parse_color(m->textcolor || id->misc->defines->fgcolor || "black");
 
+  switch((string)(m["color-scheme"]||"")) {
+  case "1":
+    res->autocolors = allocate(sizeof(res->data));
+#define NUM_AUTOCOLORS 8
+    for(int i=0; i<sizeof(res->autocolors); i++)
+      res->autocolors[i]=Colors.hsv_to_rgb((int)(256.0/(NUM_AUTOCOLORS+1) * (i%NUM_AUTOCOLORS)) ,255, 255 - (int)(((float)(i/NUM_AUTOCOLORS) / (float)(sizeof(res->autocolors)/NUM_AUTOCOLORS)) * 160) );
+    break;
+  }
+
   if(m->center) res->center = (int)m->center;
   if(m->eng) res->eng=1;
   if(m->neng) res->neng=1;
@@ -657,7 +674,6 @@ string container_diagram(string tag, mapping m, string contents,
     if(res->ystart > res->ystop) m_delete( res, "ystart" );
 
   res->labels = ({ res->xstor, res->ystor, res->xunit, res->yunit });
-
   if(res->dimensions) res->drawtype = res->dimensions;
   if(res->dimensionsdepth) res["3Ddepth"] = res->dimensionsdepth;
   if(res->ygridspace)  res->yspace = res->ygridspace;
@@ -668,6 +684,7 @@ string container_diagram(string tag, mapping m, string contents,
   if(res->ystart)  res->yminvalue  = (float)res->ystart;
   if(res->ystop)   res->ymaxvalue  = (float)res->ystop;
   if(res->colors)  res->datacolors = res->colors;
+  else if(res->autocolors)  res->datacolors = res->autocolors;
   if(res->xvalues) res->values_for_xnames = res->xvalues;
   if(res->yvalues) res->values_for_ynames = res->yvalues;
   if((int)res->linewidth) res->graphlinewidth = (float)res->linewidth;
