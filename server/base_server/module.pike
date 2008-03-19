@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module.pike,v 1.227 2006/10/13 18:20:38 mast Exp $
+// $Id: module.pike,v 1.228 2008/03/19 14:08:01 grubba Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -93,6 +93,7 @@ array register_module()
     0,
     module_unique,
     this_object()->module_locked,
+    this_object()->module_counter,
   });
 }
 
@@ -332,7 +333,7 @@ void set_status_for_path (string path, RequestID id, int status_code,
 //! directories.
 //!
 //! The status is stored in the @[MultiStatus] object returned by
-//! @[id->get_multi_status]. The server will use it to make a 207
+//! @[RequestID.get_multi_status]. The server will use it to make a 207
 //! Multi-Status response iff the module returns an empty mapping as
 //! response.
 //!
@@ -354,7 +355,7 @@ void set_status_for_path (string path, RequestID id, int status_code,
 //!   format @[args].
 //!
 //! @note
-//! This function is just a wrapper for @[id->set_status_for_path]
+//! This function is just a wrapper for @[RequestID.set_status_for_path]
 //! that corrects for the filesystem location.
 //!
 //! @seealso
@@ -1334,7 +1335,7 @@ static mapping(string:mixed) delete_file(string path, RequestID id)
 //!   appropriate status mapping for any other error. That includes an
 //!   empty mapping in case some subparts couldn't be deleted, to
 //!   signify a 207 Multi-Status response using the info in
-//!   @[id->get_multi_status()].
+//!   @[RequestID.get_multi_status()].
 mapping(string:mixed) recurse_delete_files(string path,
 					   RequestID id,
 					   void|MultiStatus.Prefixed stat)
@@ -1502,7 +1503,7 @@ static mapping(string:mixed) copy_properties(string source, string destination,
 //!   Returns an appropriate status mapping for any other error. That
 //!   includes an empty mapping in case there's a failure on some
 //!   subpart or at the destination, to signify a 207 Multi-Status
-//!   response using the info in @[id->get_multi_status()].
+//!   response using the info in @[RequestID.get_multi_status()].
 static mapping(string:mixed) copy_collection(string source,
 					     string destination,
 					     PropertyBehavior behavior,
@@ -1639,7 +1640,7 @@ static mapping(string:mixed) copy_file(string source, string destination,
 //!   Returns an appropriate status mapping for any other error. That
 //!   includes an empty mapping in case there's a failure on some
 //!   subpart or at the destination, to signify a 207 Multi-Status
-//!   response using the info in @[id->get_multi_status()].
+//!   response using the info in @[RequestID.get_multi_status()].
 mapping(string:mixed) recurse_copy_files(string source, string destination,
 					 PropertyBehavior behavior,
 					 Overwrite overwrite, RequestID id)
@@ -1734,7 +1735,7 @@ mapping(string:mixed) recurse_copy_files(string source, string destination,
 //!   Returns an appropriate status mapping for any other error. That
 //!   includes an empty mapping in case there's a failure on some
 //!   subpart or at the destination, to signify a 207 Multi-Status
-//!   response using the info in @[id->get_multi_status()].
+//!   response using the info in @[RequestID.get_multi_status()].
 static mapping(string:mixed) move_file(string source, string destination,
 				       PropertyBehavior behavior,
 				       Overwrite overwrite, RequestID id)
@@ -1787,7 +1788,7 @@ static mapping(string:mixed) move_file(string source, string destination,
 //!   Returns an appropriate status mapping for any other error. That
 //!   includes an empty mapping in case there's a failure on some
 //!   subpart or at the destination, to signify a 207 Multi-Status
-//!   response using the info in @[id->get_multi_status()].
+//!   response using the info in @[RequestID.get_multi_status()].
 //!
 //! @note
 //! The function must be prepared to recurse to check DAV locks
@@ -1857,7 +1858,7 @@ static mapping(string:mixed) move_collection(string source, string destination,
 //!   Returns an appropriate status mapping for any other error. That
 //!   includes an empty mapping in case there's a failure on some
 //!   subpart or at the destination, to signify a 207 Multi-Status
-//!   response using the info in @[id->get_multi_status()].
+//!   response using the info in @[RequestID.get_multi_status()].
 mapping(string:mixed) recurse_move_files(string source, string destination,
 					 PropertyBehavior behavior,
 					 Overwrite overwrite, RequestID id)
