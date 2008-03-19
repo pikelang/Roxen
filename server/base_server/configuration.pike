@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.647 2008/03/17 13:28:53 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.648 2008/03/19 14:04:39 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4064,6 +4064,10 @@ int disable_module( string modname, int|void nodest )
   if(!sizeof(module->copies))
     m_delete( modules, modname );
 
+  if (moduleinfo->counter) {
+    counters[moduleinfo->counter]--;
+  }
+
   invalidate_cache();
 
   if(!me)
@@ -4085,10 +4089,6 @@ int disable_module( string modname, int|void nodest )
 #ifdef MODULE_DEBUG
   report_debug("Disabling "+descr+"\n");
 #endif
-
-  if (moduleinfo->counter) {
-    counters[moduleinfo->counter]--;
-  }
 
   clean_up_for_module( moduleinfo, me );
 
