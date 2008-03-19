@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.632 2008/02/28 19:37:44 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.633 2008/03/19 14:06:47 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -487,6 +487,38 @@ array (Priority) allocate_pris()
   return allocate(10, Priority)();
 }
 
+array(int) query_oid()
+{
+  return SNMP.RIS_OID_WEBSERVER + ({ 2 });
+}
+
+array(int) generate_module_oid_segment(RoxenModule me)
+{
+  string s = otomod[me];
+  array(string) a = s/"#";
+  return ({ sizeof(a[0]), @((array(int))a[0]), ((int)a[1]) + 1 });
+}
+
+ADT.Trie generate_module_mib(array(int) oid,
+			     array(int) oid_suffix,
+			     RoxenModule me,
+			     ModuleInfo moduleinfo,
+			     ModuleCopies module)
+{
+  array(int) segment = generate_module_oid_segment(me);
+  return SNMP.SimpleMIB(oid,
+			oid_suffix + segment,
+			({
+			  UNDEFINED,
+			  SNMP.Integer(segment[-1], "moduleCopy"),
+			  SNMP.String(otomod[me],
+				      "moduleIdentifier"),
+			  SNMP.Integer(moduleinfo->type,
+				       "moduleType"),
+			  SNMP.String(me->cvs_version || "",
+				      "moduleVersion"),
+			}));
+}
 
 // Cache some configuration variables.
 private int sub_req_limit = 30;
@@ -506,6 +538,7 @@ mapping modules = ([]);
 mapping (RoxenModule:string) otomod = ([]);
 //! A mapping from the module objects to module names
 
+mapping(string:int) counters = ([]);
 
 // Caches to speed up the handling of the module search.
 // They are all sorted in priority order, and created by the functions
@@ -3210,6 +3243,41 @@ void start(int num)
       roxen->snmpagent->add_virtserv(get_config_id());
 #endif
 
+  foreach(registered_urls, string url) {
+    mapping(string:string|Configuration|Protocol) port_info = roxen.urls[url];
+
+    foreach((port_info && port_info->ports) || ({}), Protocol prot) {
+      if ((prot->prot_name != "snmp") || (!prot->mib)) {
+	continue;
+      }
+
+      string path = port_info->path || "";
+      if (has_prefix(path, "/")) {
+	path = path[1..];
+      }
+      if (has_suffix(path, "/")) {
+	path = path[..sizeof(path)-2];
+      }
+    
+      array(int) oid_suffix = ({ sizeof(path), @((array(int))path) });
+
+      ADT.Trie mib =
+	SNMP.SimpleMIB(query_oid(), oid_suffix,
+		       ({
+			 UNDEFINED,
+			 UNDEFINED,
+			 query_name,
+			 comment,
+			 SNMP.Counter64(lambda() { return sent; }),
+			 SNMP.Counter64(lambda() { return received; }),
+			 SNMP.Counter64(lambda() { return hsent; }),
+			 SNMP.Counter64(lambda() { return requests; }),
+			 UNDEFINED,	// NOTE: Reserved for modules!
+		       }));
+      SNMP.set_owner(mib, this_object());
+      prot->mib->merge(mib);
+    }
+  }
 }
 
 void save_me()
@@ -3568,6 +3636,9 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   int has_stored_vars = sizeof (stored_vars); // A little ugly, but it suffices.
   me->setvars(stored_vars);
 
+  if (!module[id])
+    counters[moduleinfo->counter]++;
+
   module[ id ] = me;
   otomod[ me ] = modname+"#"+id;
 
@@ -3716,6 +3787,41 @@ void call_low_start_callbacks( RoxenModule me,
   if(module_type & MODULE_FIRST)
     pri[pr]->first_modules += ({ me });
 
+  foreach(registered_urls, string url) {
+    mapping(string:string|Configuration|Protocol) port_info = roxen.urls[url];
+
+    foreach((port_info && port_info->ports) || ({}), Protocol prot) {
+      if ((prot->prot_name != "snmp") || (!prot->mib)) {
+	continue;
+      }
+
+      string path = port_info->path || "";
+      if (has_prefix(path, "/")) {
+	path = path[1..];
+      }
+      if (has_suffix(path, "/")) {
+	path = path[..sizeof(path)-2];
+      }
+    
+      array(int) oid_suffix = ({ sizeof(path), @((array(int))path) });
+
+      ADT.Trie sub_mib = generate_module_mib(query_oid() + ({ 8, 1 }),
+					     oid_suffix, me, moduleinfo, module);
+      SNMP.set_owner(sub_mib, this_object(), me);
+
+      prot->mib->merge(sub_mib);
+
+      if (me->query_snmp_mib) {
+	array(int) segment = generate_module_oid_segment(me);
+	sub_mib = me->query_snmp_mib(query_oid() + ({ 8, 2 }) +
+				     segment[..sizeof(segment)-2],
+				     oid_suffix + ({ segment[-1] }));
+	SNMP.set_owner(sub_mib, this_object(), me);
+	prot->mib->merge(sub_mib);
+      }
+    }
+  }
+
   invalidate_cache();
 }
 
@@ -3847,6 +3953,17 @@ void clean_up_for_module( ModuleInfo moduleinfo,
   if( moduleinfo->type & MODULE_LOGGER )
     for(pr=0; pr<10; pr++)
       pri[pr]->logger_modules -= ({ me });
+
+  foreach(registered_urls, string url) {
+    mapping(string:string|Configuration|Protocol) port_info = roxen.urls[url];
+    foreach((port_info && port_info->ports) || ({}), Protocol prot) {
+      if ((prot->prot_name != "snmp") || (!prot->mib)) {
+	continue;
+      }
+
+      SNMP.remove_owned(prot->mib, this_object(), me);
+    }
+  }
 }
 
 int disable_module( string modname, int|void nodest )
@@ -3875,6 +3992,10 @@ int disable_module( string modname, int|void nodest )
 
   if(!sizeof(module->copies))
     m_delete( modules, modname );
+
+  if (moduleinfo->counter) {
+    counters[moduleinfo->counter]--;
+  }
 
   invalidate_cache();
 
