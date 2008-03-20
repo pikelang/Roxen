@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.43 2006/11/08 17:00:24 grubba Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.44 2008/03/20 12:53:21 erikd Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -16,7 +16,8 @@ void create()
 {
   defvar("fileredirect", "", "Redirect patterns", TYPE_TEXT_FIELD|VAR_INITIAL,
 	 "Redirect one file to another. The syntax is 'regexp to_URL',"
-	 "or 'prefix to_URL', or 'exact file_name to_URL. More patterns "
+	 "or 'prefix to_URL', or 'exact file_name to_URL', or 'permanent regexp to_URL', "
+	 "or 'permanent prefix to_URL', or 'permanent exact file_name to_URL'. More patterns "
 	 "can be read from a file by using '#include &lt;filename&gt;' on a line. "
 	 "The path is relative to the Roxen server directory in the real "
 	 "filesystem. Other lines beginning with '#' are treated as comments.\n"
@@ -26,6 +27,7 @@ void create()
          "/from/.*      http://to.roxen.com/to/%f\n"
          ".*\\.cgi       http://cgi.foo.bar/cgi-bin/%p\n"
 	 "/thb/.*       %u/thb_gone.html\n"
+	 "permanent /from/(.*) %u/to/$1\n"
 	 "/roxen/       http://www.roxen.com/\n"
 	 "exact /       /main/index.html\n"
 	 "</pre>"
@@ -36,7 +38,7 @@ void create()
 	 "a redirect instead of doing an internal one). The last two "
 	 "examples are special cases. <p>"
 
-	 "If the first string on the line is 'exact', the filename following "
+	 "If the first word (or second word after permanent) on the line is 'exact', the filename following "
 	 "must match _exactly_. This is equivalent to entering ^FILE$, but "
 	 "faster. "
 
@@ -48,10 +50,12 @@ void create()
 	 "<p>More examples:<pre>"
 	 ".*/SE/liu/lysator/(.*)\\.class   /java/classes/SE/liu/lysator/$1.class\n"
 	 "/(.*)\\.en\\.html                 /(en)/$1.html\n"
-	 "(.*)/index\\.html                %u/$1/\n</pre>"
+	 "(.*)/index\\.html                %u/$1/\n"
+	 "permanent exact / %u/main/index.html\n</pre>"
 	 ""
-	 "If the to file isn't an URL, the redirect will always be handled "
-	 "internally, so add %u to generate an actual redirect.<p>"
+	 "<b>If the to file isn't an URL, the redirect will always be handled "
+	 "internally, so add %u to generate an actual redirect (302 Moved Temporarily) "
+	 "or with keyword 'permanent' a permanent redirect (301 Moved Permanently).</b><p>"
 	 ""
 	 "<b>Note 1:</b> "
 	 "For speed reasons: If the from pattern does <i>not</i> contain "
@@ -61,7 +65,12 @@ void create()
 
 	 "<p><b>Note 2:</b> "
 	 "Included files are not rechecked for changes automatically. You "
-	 "have to reload the module to do that." );
+	 "have to reload the module to do that."
+
+	 "<p><b>Note 3:</b> "
+	 "The keyword 'permanent' in the redirect pattern line, to get a "
+	 "301 redirect response header, only works if you use either %u or "
+	 "a valid url (e.g. http://www.roxen.com) in the 'to url' pattern." );
   defvar("poll_interval", 60, "Poll interval", TYPE_INT,
 	 "Time in seconds between polls of the files <tt>#include</tt>d "
 	 "in the redirect pattern.");
@@ -69,7 +78,8 @@ void create()
 
 array(string) redirect_from = ({});
 array(string) redirect_to = ({});
-mapping(string:string) exact_patterns = ([]);
+array(int) redirect_code = ({});
+mapping(string:array(string|int)) exact_patterns = ([]);
 
 //! Mapping from filename to
 //! @array
@@ -84,6 +94,7 @@ mapping(string:array(int|Stdio.Stat)) dependencies = ([]);
 
 void parse_redirect_string(string what, string|void fname)
 {
+  int ret_code = 302;
   foreach(replace(what, "\t", " ")/"\n", string s)
   {
     if (sscanf (s, "#include%*[\t ]<%s>", string file) == 2) {
@@ -98,17 +109,23 @@ void parse_redirect_string(string what, string|void fname)
 	report_warning ("Cannot read redirect patterns from "+file+".\n");
     }
     else if (sizeof(s) && (s[0] != '#')) {
+      if( has_prefix(s, "permanent ") ) {
+	s = s[10..];
+	ret_code = 301;
+      } else
+	ret_code = 302;
       array(string) a = s/" " - ({""});
       if(sizeof(a)>=3 && a[0]=="exact") {
 	if (exact_patterns[a[1]])
 	  report_warning ("Duplicate redirect pattern %O.\n", a[1]);
-	exact_patterns[a[1]] = a[2];
+	exact_patterns[a[1]] = ({ a[2], ret_code });
       }
       else if (sizeof(a)==2) {
 	if (search (redirect_from, a[0]) >= 0)
 	  report_warning ("Duplicate redirect pattern %O.\n", a[0]);
 	redirect_from += ({a[0]});
 	redirect_to += ({a[1]});
+	redirect_code += ({ ret_code });
       }
       else if (sizeof (a))
 	report_warning ("Invalid redirect pattern %O.\n", a[0]);
@@ -157,6 +174,7 @@ void start()
 {
   redirect_from = ({});
   redirect_to = ({});
+  redirect_code = ({});
   exact_patterns = ([]);
   dependencies = ([]);
   parse_redirect_string(query("fileredirect"));
@@ -184,7 +202,7 @@ mixed first_try(object id)
 {
   string f, to;
   mixed tmp;
-
+  int ret_code = 302;
   if(id->misc->is_redirected)
     return 0;
 
@@ -199,7 +217,8 @@ mixed first_try(object id)
   {
     if(m == f)
     {
-      to = exact_patterns[f];
+      to = exact_patterns[f][0];
+      ret_code = exact_patterns[f][1];
       ok=1;
       break;	
     }
@@ -210,6 +229,7 @@ mixed first_try(object id)
       if(has_prefix(m, f))
       {
 	to = redirect_to[i] + m[strlen(f)..];
+	ret_code = redirect_code[i];
 	//  Do not explicitly remove the query part of the URL.
 	// sscanf(to, "%s?", to);
 	break;
@@ -248,6 +268,7 @@ mixed first_try(object id)
 	    //  Try reverting the temporary UTF8 encoding
 	    catch { to = utf8_to_string(to); };
 	  }
+	  ret_code = redirect_code[i];
 	  break;
 	}
       }
@@ -270,8 +291,7 @@ mixed first_try(object id)
        to[5]==':' || to[6]==':')))
   {
     to=replace(to, ({ "\000", " " }), ({"%00", "%20" }));
-
-    return Roxen.http_low_answer( 302, "")
+    return Roxen.http_low_answer( ret_code, "")
       + ([ "extra_heads":([ "Location":to ]) ]);
   } else {
     id->variables = FakedVariables(id->real_variables = ([]));
