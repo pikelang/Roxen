@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.146 2007/05/09 16:37:16 grubba Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.147 2008/03/21 17:31:17 grubba Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -708,9 +708,13 @@ program low_findprog(string pname, string ext,
   // FIXME: The catch is needed, since we might be called in
   // a context when threads are disabled.
   // (compile() disables threads).
-  catch {
+  mixed err = catch {
     key=compilation_mutex->lock(2);
   };
+  if (err) {
+    werror( "low_findprog: Caught spurious error:\n"
+	    "%s\n", describe_backtrace(err) );
+  }
 #endif
 
 #if constant(PIKE_MODULE_RELOC)
