@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.545 2008/02/20 10:27:16 noring Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.546 2008/03/27 16:43:48 mathias Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -954,6 +954,100 @@ class TagDate {
     array do_return(RequestID id) {
       int t = args["unix-time"] ? (int)args["unix-time"] : time(1);
       mixed err;
+
+      // http-time
+      if(args["http-time"])
+      {
+	constant month_mapping = ([ "jan" : 0,
+				    "feb" : 1,
+				    "mar" : 2,
+				    "apr" : 3,
+				    "may" : 4,
+				    "jun" : 5,
+				    "jul" : 6,
+				    "aug" : 7,
+				    "sep" : 8,
+				    "oct" : 9,
+				    "nov" : 10,
+				    "dec" : 11 ]);
+	int year, month, day, hour, minute, second;
+	string month_string, time_zone;
+	// First check if it's on the format 
+	// Sun Nov  6 08:49:37 1994  -  ANSI C's asctime() format
+	if(sscanf(args["http-time"], 
+		  "%*3s%*[ \t]%3s%*[ \t]%d%*[ \t]%2d:%2d:%2d%*[ \t]%4d", 
+		  month_string, day, 
+		  hour, minute, second, 
+		  year) == 11)
+	{
+	  month = month_mapping[lower_case(month_string)];
+
+	  err = catch {
+	      t = mktime(([ "sec"  :second,
+			    "min"  :minute,
+			    "hour" :hour,
+			    "mday" :day,
+			    "mon"  :month,
+			    "year" :year-1900 ]));
+	    };
+	  if (err)
+	    RXML.run_error("Unsupported date.\n");
+	}
+	else
+	{
+	  // Now check if it's on any of the formats 
+	  // Sun, 06 Nov 1994 08:49:37 GMT       - RFC 822, updated by RFC 1123
+	  // Sunday, 06-Nov-94 08:49:37 GMT      - RFC 850, obsoleted by RFC 1036
+	  // [Sun, ]06 Nov 1994 08:49[:37][ GMT] - Might be found in RSS feeds.
+	  string stripped_date = 
+	    String.trim_whites((args["http-time"] / ",")[-1]);
+
+	  if(sscanf(stripped_date, 
+		    "%d%*[ \t-]%s%*[ \t-]%d%*[ \t-]%d:%d%s",
+		    day, month_string, year, 
+		    hour, minute, stripped_date) >= 8)
+	  {
+	    if(sizeof(month_string) >= 3)
+	    { 
+	      month = month_mapping[lower_case(month_string[..2])];
+	    }
+	    else
+	      RXML.run_error("Unsupported date.\n");
+	    
+	    // Check if the year was written in only two digits. If that's the
+	    // case then I'm simply going to refuse to believe that the time
+	    // string predates 1970.
+	    if (year < 70)
+	      year += 100;
+	    else if (year > 1900)
+	      year -= 1900;
+
+	    // Check for seconds and/or timezone
+	    stripped_date = String.trim_whites(stripped_date || "");
+	    if (sscanf(stripped_date, ":%d%*[ \t]%s", second, time_zone) > 0)
+	      args->timezone = time_zone || args->timezone;
+	    else
+	    {
+	      second = 0;
+	      args->timezone = (sizeof(stripped_date) ? 
+				stripped_date : args->time_zone);
+	    }
+	    err = catch {
+		t = mktime(([ "sec"  : second,
+			      "min"  : minute,
+			      "hour" : hour,
+			      "mday" : day,
+			      "mon"  : month,
+			      "year" : year ]));
+	      };
+	    if (err)
+	      RXML.run_error("Unsupported date.\n");
+	  }
+	  else 
+	    RXML.parse_error("Attribute http-time needs to be on the format "
+			     "[Tue,] 04 Dec [20]07 17:08[:04] [GMT]\n");
+	}
+      }
 
       if(args["iso-time"])
       {
@@ -7146,6 +7240,21 @@ using the pre tag.
  Pike-script or Roxen module.</p>
 
 <ex><date unix-time='120'/></ex>
+</attr>
+
+<attr name='http-time' value='http time stamp'>
+ <p>Display this time instead of the current. This attribute uses the
+ specified http-time, instead of the current time.</p>
+ <p>All three http-time formats are supported:
+
+<ex><p>RFC 822, updated by RFC 1123:
+<date http-time='Sun, 06 Nov 1994 08:49:37 GMT'/></p>
+
+<p>RFC 850, obsoleted by RFC 1036:
+<date http-time='Sunday, 06-Nov-94 08:49:37 GMT' /></p>
+
+<p>ANSI C's asctime() format:
+<date http-time='Sun Nov  6 08:49:37 1994' /></p></ex>
 </attr>
 
 <attr name='iso-time' value='{yyyy-mm-dd, yyyy-mm-dd hh:mm, yyyy-mm-dd hh:mm:ss}'>
