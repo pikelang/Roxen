@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.21 2008/02/27 08:53:38 liin Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.22 2008/03/31 14:19:48 liin Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -69,8 +69,6 @@ void create() {
 
 
 void start(int occasion, Configuration conf) {
-  DWRITE("start(), occasion: " + occasion);
-  
   if (occasion == 0) {
     href_database = HrefDatabase();
 #ifdef THREADS
@@ -104,8 +102,6 @@ mapping(string:function) query_action_buttons()
 
 
 void stop() {
-  DWRITE("stop()");
-    
 #ifdef THREADS
   bg_process && bg_process->stop();
   bg_process = 0;
@@ -202,7 +198,7 @@ public string get_result_sync(HTTPClient client, mapping args, mapping header) {
 	 " to " + location);
   
   args["cached-href"] = location;
-  HTTPClient new_client = HTTPClient("GET", args, header);
+  HTTPClient new_client = HTTPClient(args, header);
   
   new_client->orig_url = (string)client->url;
   new_client->run();
@@ -218,7 +214,7 @@ public string get_result_sync(HTTPClient client, mapping args, mapping header) {
 	   " to " + location);
     
     args["cached-href"] = location;
-    new_client = HTTPClient("GET", args, header);
+    new_client = HTTPClient(args, header);
     new_client->orig_url = (string)client->url;
     new_client->run();
     counter++;
@@ -247,7 +243,7 @@ public void get_result_async(HTTPClient client, mapping args, mapping header) {
 	 " to " + location);
   
   args["cached-href"] = location;
-  HTTPClient new_client = HTTPClient("GET", args, header);
+  HTTPClient new_client = HTTPClient(args, header);
   
   new_client->orig_url = client->orig_url;
   new_client->redirects = redirects;
@@ -272,7 +268,7 @@ public void|string fetch_url(mapping(string:mixed) to_fetch, void|mapping header
     return;
   }
   
-  client = HTTPClient("GET", args, header);
+  client = HTTPClient(args, header);
   initiated += ({client});
   mutex_key = 0;
   client->orig_url = (string)client->url;
@@ -682,39 +678,24 @@ class HTTPClient {
   int status, timeout, start_time, redirects;
   object con;
   Standards.URI url;
-  string path, query, req_data,method, orig_url;
+  string path, query, orig_url;
   mapping request_headers;
   Thread.Queue queue = Thread.Queue();
   int(0..1) sync;
   
-  void do_method(string _method,
-		 string|Standards.URI _url,
-		 void|mapping query_variables,
-		 void|mapping _request_headers,
-		 void|Protocols.HTTP.Query _con, void|string _data)
-  {
-    if(!_con) {
-      con = Protocols.HTTP.Query();
-    }
-    else
-      con = _con;
-
-    method = _method;
+  void create(mapping args, void|mapping _request_headers) {
+    timeout = args["timeout"];
+    sync = args["sync"];
+    con = Protocols.HTTP.Query();
 
     if(!_request_headers)
       request_headers = ([]);
     else
       request_headers = _request_headers;
-
-    req_data = _data;
-
-    if(stringp(_url)) {
-      if (mixed err = catch (url=Standards.URI(_url)))
-	RXML.parse_error ("Invalid URL: %s\n", describe_error (err));
-    }
-    else
-      url = _url;
-
+    
+    if (mixed err = catch (url=Standards.URI(args["cached-href"])))
+      RXML.parse_error ("Invalid URL: %s\n", describe_error (err));
+    
 #if constant(SSL.sslfile) 	
     if(url->scheme!="http" && url->scheme!="https")
       error("Protocols.HTTP can't handle %O or any other protocols than HTTP or HTTPS\n",
@@ -738,18 +719,11 @@ class HTTPClient {
       default_headers->authorization = "Basic "
 	+ MIME.encode_base64(url->user + ":" +
 			     (url->password || ""));
+
     request_headers = default_headers | request_headers;
-    
     query=url->query;
-    if(query_variables && sizeof(query_variables))
-      {
-	if(query)
-	  query+="&"+Protocols.HTTP.http_encode_query(query_variables);
-	else
-	  query=Protocols.HTTP.http_encode_query(query_variables);
-      }
-    
     path=url->path;
+    
     if(path=="") path="/";
   }
   
@@ -853,8 +827,8 @@ class HTTPClient {
     con->timeout = timeout;
     start_time = time();
     con->async_request(url->host,url->port,
-		       method+" "+path+(query?("?"+query):"")+" HTTP/1.0",
-		       request_headers, req_data);
+		       "GET "+path+(query?("?"+query):"")+" HTTP/1.0",
+		       request_headers);
     status = con->status;
 
     if (sync) {
@@ -863,26 +837,6 @@ class HTTPClient {
       DWRITE("Synchronous fetch for " + (string)url + " completed.");
     }
   }
-
-  void create(string method, mapping args, mapping|void headers) {
-    if(method == "POST") {
-      mapping vars = ([ ]);
-#if constant(roxen)
-      foreach( (args["post-variables"] || "") / ",", string var) {
-	array a = var / "=";
-	if(sizeof(a) == 2)
-	  vars[String.trim_whites(a[0])] = RXML.user_get_var(String.trim_whites(a[1]));
-      }
-#endif
-      do_method("POST", args["cached-href"], vars, headers);
-    }
-    else
-      do_method("GET", args["cached-href"], 0, headers);
-
-    timeout = args["timeout"];
-    sync = args["sync"];
-  }
-  
 }
 #endif
 
@@ -892,6 +846,9 @@ class HTTPClient {
    for xml 
 */
 string decode_data(string data, mapping headers) {
+  if (data == "" || !headers)
+    return data;
+
   function get_ct_cs =
     lambda(string ct) {
       string cs;
@@ -933,7 +890,7 @@ string decode_data(string data, mapping headers) {
     };
 
   string ct, cs;
- 
+  
   if(!(ct = headers["content-type"])) {
     // Don't even try to decode, might be binary for all we know
     return data;
