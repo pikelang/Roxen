@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module_support.pike,v 1.128 2008/03/19 14:08:57 grubba Exp $
+// $Id: module_support.pike,v 1.129 2008/04/02 12:44:20 grubba Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -263,7 +263,7 @@ class ModuleInfo( string sname, string filename )
 {
   int last_checked;
   int type, multiple_copies;
-  int|string locked;
+  array(string) locked;
   string counter;
   mapping(Configuration:int) config_locked = ([]);
 
@@ -421,7 +421,7 @@ class ModuleInfo( string sname, string filename )
 	       "multiple_copies":multiple_copies,
 	       "name":encode_string(name),
 	       "description":encode_string(description),
-	       "locked":locked,
+	       "locked":locked*"::",
 	       "counter":counter,
              ]) );
   }
@@ -448,8 +448,9 @@ class ModuleInfo( string sname, string filename )
       multiple_copies = !data[4];
     else
       multiple_copies = 1;
-    if( sizeof( data ) > 5)
-      locked = data[5];
+    if( sizeof( data ) > 5) {
+      if (data[5]) locked = (stringp(data[5])?data[5]:sname)/"::";
+    }
     if( sizeof( data ) > 6 )
       counter = data[6];
     else
@@ -564,7 +565,7 @@ class ModuleInfo( string sname, string filename )
             multiple_copies = data->multiple_copies;
             name = decode_string( data->name );
             description = decode_string( data->description );
-	    locked = data->locked;
+	    locked = data->locked/"::";
 	    counter = data->counter || sname;
             return 1;
           }
@@ -582,8 +583,27 @@ class ModuleInfo( string sname, string filename )
 
   int unlocked(object /*License.Key*/ key, Configuration|void conf)
   {
-    if (!key->is_module_unlocked(stringp(locked)?locked:sname))
-      return 0;
+    // NOTE: The locked string is module:feature:mode.
+    switch(sizeof(locked)) {
+    case 0:
+      break;
+    case 1:
+      if (!key->get_module_unlocked(locked[0]))
+	return 0;
+      break;
+    default:
+    case 3:
+      if (!sizeof(locked[1])) {
+	if (!key->get_module_unlocked(locked[0], locked[2]))
+	  return 0;
+	break;
+      }
+      // FALL_THROUGH
+    case 2:
+      if (!key->get_module_feature(@locked))
+	return 0;
+      break;
+    }
     if (!conf) return 1;
     int|string cnt = key->get_module_feature(counter, "instances");
     if (!cnt || cnt == "*") return 1;
