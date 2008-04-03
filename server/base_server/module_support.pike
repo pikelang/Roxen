@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module_support.pike,v 1.130 2008/04/02 12:44:55 grubba Exp $
+// $Id: module_support.pike,v 1.131 2008/04/03 13:08:54 grubba Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -600,7 +600,8 @@ class ModuleInfo( string sname, string filename )
       }
       // FALL_THROUGH
     case 2:
-      if (!key->get_module_feature(@locked))
+      int val;	// Note: Use of zero_type() to promote old licenses.
+      if (!(val = key->get_module_feature(@locked)) && !zero_type(val))
 	return 0;
       break;
     }
