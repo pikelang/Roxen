@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.387 2008/02/06 15:07:43 noring Exp $
+// $Id: roxenloader.pike,v 1.388 2008/04/07 13:12:31 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.387 2008/02/06 15:07:43 noring Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.388 2008/04/07 13:12:31 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1781,6 +1781,35 @@ static void do_tailf( int loop, string file )
   } while( loop );
 }
 
+void low_check_mysql(string bindir, string datadir, array(string) args)
+{
+  array(string) files = ({});
+  foreach(get_dir(datadir) || ({}), string dir) {
+    foreach(get_dir(combine_path(datadir, dir)) || ({}), string file)
+      if(!file || !glob("*.myi", lower_case(file), ))
+	continue;
+      else
+	files += ({ combine_path(datadir, dir, file) });
+  }
+
+  if(!sizeof(files))
+    return;
+  
+#ifdef __NT__
+  string myisamchk = "myisamchk.exe";
+#else
+  string myisamchk = "myisamchk";
+#endif
+  
+  report_debug("Checking MySQL tables with %O...\n", args*" ");
+  mixed err = catch {
+      Process.create_process(({ combine_path(bindir, myisamchk) }) +
+			     args + sort(files))->wait();
+    };
+  if(err)
+    werror(describe_backtrace(err));
+}
+
 void low_start_mysql( string datadir,
 		      string basedir,
 		      string uid )
@@ -1898,6 +1927,19 @@ void low_start_mysql( string datadir,
     if( !Stdio.cp( bindir+mysqld, binary ) ||
 	catch(chmod( binary, 0500 )) )
       binary = bindir+mysqld;
+
+  string mysql_table_check =
+    Stdio.read_file(combine_path(query_configuration_dir(),
+				 "_mysql_table_check"));
+  if(!mysql_table_check)
+    mysql_table_check = "--force --silent --fast\n"
+			"--myisam-recover=QUICK,FORCE\n";
+  sscanf(mysql_table_check, "%s\n%s\n",
+	 string myisamchk_args, string mysqld_extra_args);
+  if(myisamchk_args && sizeof(myisamchk_args))
+    low_check_mysql(bindir, datadir, (myisamchk_args/" ") - ({ "" }));
+  if(mysqld_extra_args && sizeof(mysqld_extra_args))
+    args += (mysqld_extra_args/" ") - ({ "" });
 
   args = ({ binary }) + args;
 
