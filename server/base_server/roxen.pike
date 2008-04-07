@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.960 2008/02/05 17:41:57 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.961 2008/04/07 13:04:47 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2176,7 +2176,8 @@ mapping protocols;
 mapping(string:mapping(string:mapping(int:Protocol))) open_ports = ([ ]);
 
 // url:"port" ==> Protocol.
-mapping(string:mapping(string:Configuration)) urls = ([]);
+mapping(string:mapping(string:Configuration|Protocol|array(Protocol)|string))
+  urls = ([]);
 array sorted_urls = ({});
 
 array(string) find_ips_for( string what )
@@ -2439,6 +2440,11 @@ int register_url( string url, Configuration conf )
 
       urls[url]->port = m[required_host][port];
       urls[ourl]->port = m[required_host][port];
+      if (urls[ourl]->ports) {
+	urls[ourl]->ports += ({ m[required_host][port] });
+      } else {
+	urls[ourl]->ports = ({ m[required_host][port] });
+      }
       continue;    /* No need to open a new port */
     }
 
@@ -2481,6 +2487,11 @@ int register_url( string url, Configuration conf )
 
     urls[ url ]->port = m[ required_host ][ port ];
     urls[ ourl ]->port = m[ required_host ][ port ];
+    if (urls[ourl]->ports) {
+      urls[ourl]->ports += ({ m[required_host][port] });
+    } else {
+      urls[ourl]->ports = ({ m[required_host][port] });
+    }
     m[ required_host ][ port ]->ref(url, urls[url]);
  
     if( !m[ required_host ][ port ]->bound )

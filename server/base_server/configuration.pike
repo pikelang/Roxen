@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.633 2008/03/19 14:06:47 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.634 2008/04/07 13:04:47 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4205,6 +4205,45 @@ void low_init(void|int modules_already_enabled)
     roxen->snmpagent->vs_start_trap(get_config_id());
 #endif
 
+  foreach(registered_urls, string url) {
+    mapping(string:string|Configuration|Protocol) port_info = roxen.urls[url];
+
+    foreach((port_info && port_info->ports) || ({}), Protocol prot) {
+      if ((prot->prot_name != "snmp") || (!prot->mib)) {
+	continue;
+      }
+
+      string path = port_info->path || "";
+      if (has_prefix(path, "/")) {
+	path = path[1..];
+      }
+      if (has_suffix(path, "/")) {
+	path = path[..sizeof(path)-2];
+      }
+    
+      array(int) oid_suffix = ({ sizeof(path), @((array(int))path) });
+
+      ADT.Trie mib =
+	SNMP.SimpleMIB(query_oid(), oid_suffix,
+		       ({
+			 UNDEFINED,
+			 UNDEFINED,
+			 SNMP.String(query_name, "siteName"),
+			 SNMP.String(comment, "siteComment"),
+			 SNMP.Counter64(lambda() { return sent; },
+					"sent"),
+			 SNMP.Counter64(lambda() { return received; },
+					"received"),
+			 SNMP.Counter64(lambda() { return hsent; },
+					"sentHeaders"),
+			 SNMP.Counter64(lambda() { return requests; },
+					"numRequests"),
+			 UNDEFINED,	// NOTE: Reserved for modules!
+		       }));
+      SNMP.set_owner(mib, this_object());
+      prot->mib->merge(mib);
+    }
+  }
 }
 
 DataCache datacache;

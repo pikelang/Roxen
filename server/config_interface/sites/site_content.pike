@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.148 2007/11/21 13:44:21 stewa Exp $
+// $Id: site_content.pike,v 1.149 2008/04/07 13:04:47 grubba Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -285,15 +285,6 @@ string get_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
   array(int) segment = conf->generate_module_oid_segment(o);
   array(int) oid_prefix =
     conf->query_oid() + ({ 8, 2 }) + segment[..sizeof(segment)-2];
-  array(int) oid_suffix = ({ conf->query("snmp_site_id"), segment[-1] });
-
-  ADT.Trie mib = ADT.Trie();
-
-  mib->merge(o->query_snmp_mib(oid_prefix, oid_suffix));
-
-  mib->merge(conf->generate_module_mib(conf->query_oid() + ({ 8, 1 }),
-				       oid_suffix[..0],
-				       o, moduleinfo, UNDEFINED));
 
   array(string) res = ({
     "<th align='left'>Name</th>"
@@ -301,44 +292,72 @@ string get_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
     "<th align='left'>OID</th>",
   });
 
-  for (array(int) oid = mib->first(); oid; oid = mib->next(oid)) {
-    string oid_string = ((array(string)) oid) * ".";
-    string name = "";
-    string doc = "";
-    mixed val = "";
-    mixed err = catch {
-	val = mib->lookup(oid);
-	if (zero_type(val)) continue;
-	if (objectp(val)) {
-	  if (val->update_value) {
-	    val->update_value();
-	  }
-	  name = val->name || "";
-	  doc = val->doc || "";
-	  val = sprintf("%s", val);
+  foreach(conf->registered_urls, string url) {
+    mapping(string:string|Configuration|Protocol) port_info = roxen.urls[url];
+
+    foreach((port_info && port_info->ports) || ({}), Protocol prot) {
+      if ((prot->prot_name != "snmp") || (!prot->mib)) {
+	continue;
+      }
+
+      string path = port_info->path || "";
+      if (has_prefix(path, "/")) {
+	path = path[1..];
+      }
+      if (has_suffix(path, "/")) {
+	path = path[..sizeof(path)-2];
+      }
+
+      array(int) oid_suffix = ({ sizeof(path), @((array(int))path) });
+
+      ADT.Trie mib = ADT.Trie();
+
+      mib->merge(o->query_snmp_mib(oid_prefix, oid_suffix));
+
+      mib->merge(conf->generate_module_mib(conf->query_oid() + ({ 8, 1 }),
+					   oid_suffix[..0],
+					   o, moduleinfo, UNDEFINED));
+
+      for (array(int) oid = mib->first(); oid; oid = mib->next(oid)) {
+	string oid_string = ((array(string)) oid) * ".";
+	string name = "";
+	string doc = "";
+	mixed val = "";
+	mixed err = catch {
+	    val = mib->lookup(oid);
+	    if (zero_type(val)) continue;
+	    if (objectp(val)) {
+	      if (val->update_value) {
+		val->update_value();
+	      }
+	      name = val->name || "";
+	      doc = val->doc || "";
+	      val = sprintf("%s", val);
+	    }
+	    val = (string)val;
+	  };
+	if (err) {
+	  name = "Error";
+	  val = "";
+	  doc = "<tt>" +
+	    replace(Roxen.html_encode_string(describe_backtrace(err)),
+		    "\n", "<br />\n") +
+	    "</tt>";
 	}
-	val = (string)val;
-      };
-    if (err) {
-      name = "Error";
-      val = "";
-      doc = "<tt>" +
-	replace(Roxen.html_encode_string(describe_backtrace(err)),
-		"\n", "<br />\n") +
-	"</tt>";
-    }
-    res += ({
-	sprintf("<td><b>%s:</b></td>"
-		"<td>%s</td>"
-		"<td><font size='-1'>%s</font></td>",
-		Roxen.html_encode_string(name),
-		Roxen.html_encode_string(val),
-		oid_string),
-    });
-    if (sizeof(doc)) {
-      res += ({
-	sprintf("<td></td><td colspan='2'><font size='-1'>%s</font></td>", doc),
-      });
+	res += ({
+	  sprintf("<td><b>%s:</b></td>"
+		  "<td>%s</td>"
+		  "<td><font size='-1'>%s</font></td>",
+		  Roxen.html_encode_string(name),
+		  Roxen.html_encode_string(val),
+		  oid_string),
+	});
+	if (sizeof(doc)) {
+	  res += ({
+	    sprintf("<td></td><td colspan='2'><font size='-1'>%s</font></td>", doc),
+	  });
+	}
+      }
     }
   }
 
