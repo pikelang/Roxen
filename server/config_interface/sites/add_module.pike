@@ -1,4 +1,4 @@
-// $Id: add_module.pike,v 1.86 2006/07/25 11:15:27 anders Exp $
+// $Id: add_module.pike,v 1.87 2008/04/08 15:32:26 grubba Exp $
 
 #include <config_interface.h>
 #include <module.h>
@@ -262,7 +262,7 @@ string pafeaw( string errors, string warnings, array(ModuleInfo) locked_modules)
                   "Compile errors and warnings</font></b><br />"
                   "<table width=100% cellpadding='3' cellspacing='0' border='0'>";
 
-      da_string += "<tr><td></td>"
+      da_string += "<tr><td>&nbsp;</td>"
                 "<td colspan='3' bgcolor='&usr.content-titlebg;'>"
                 + "<b><font color='&usr.content-titlefg;' size='+1'>"
                 + module_name_from_file(module)+"</font></b></td>"
@@ -382,7 +382,8 @@ array(string) get_module_list( function describe_module,
 	if (search_modules && !search_modules[q])
 	  continue;
         object b = module_nomore(q->sname, q, conf);
-	if( !b && q->locked && (!license_key || !q->unlocked(license_key)) )
+	if( !b && q->locked &&
+	    (!license_key || !q->unlocked(license_key, conf)) )
 	{
 	  locked_modules += ({ q });
 	  continue;
@@ -732,7 +733,8 @@ string page_really_compact( RequestID id )
 	  q->type == 0 )
 	continue;
       object b = module_nomore(q->sname, q, conf);
-      if( !b && q->locked && (!license_key || !q->unlocked(license_key)) )
+      if( !b && q->locked &&
+	  (!license_key || !q->unlocked(license_key, conf)) )
       {
 	locked_modules += ({ q });
 	continue;
