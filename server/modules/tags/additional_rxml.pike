@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.38 2008/02/12 16:08:28 stewa Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.39 2008/04/10 06:51:02 marty Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -172,14 +172,20 @@ class AsyncHTTPClient {
   void create(string method, mapping args, mapping|void headers) {
     if(method == "POST") {
       mapping vars = ([ ]);
+      string data;
 #if constant(roxen)
+      data = args["post-data"];
       foreach( (args["post-variables"] || "") / ",", string var) {
 	array a = var / "=";
 	if(sizeof(a) == 2)
 	  vars[String.trim_whites(a[0])] = RXML.user_get_var(String.trim_whites(a[1]));
       }
+      if(data && sizeof(data) && sizeof(vars))
+	RXML.run_error("The 'post-variables' and the 'post-data' arguments "
+		       "are mutually exclusive.");
 #endif
-      do_method("POST", args->href, vars, headers);
+      do_method("POST", args->href, sizeof(vars) && vars, headers,
+		0, data);
     }
     else
       do_method("GET", args->href, 0, headers);
@@ -892,6 +898,14 @@ constant tagdoc=([
 <ex-box>
 <insert href='http://www.somesite.com/news/' 
          method='POST' post-variables='action=var.action,data=form.data' />
+</ex-box> 
+</attr>
+
+<attr name='post-data' value='string'><p>
+ String to send as the body content of the POST request. Mutually exclusive with the 'post-variables' argument.</p>
+<ex-box>
+<insert href='http://www.somesite.com/webservice/' 
+         method='POST' post-data='&var.data;' />
 </ex-box> 
 </attr>
 
