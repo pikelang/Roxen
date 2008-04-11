@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.539 2008/03/27 14:29:33 mathias Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.540 2008/04/11 10:27:38 noring Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1582,8 +1582,9 @@ class TagRecode
   inherit RXML.Tag;
   constant name="recode";
   mapping(string:RXML.Type) opt_arg_types = ([
-    "from" : RXML.t_text(RXML.PEnt),
-    "to"   : RXML.t_text(RXML.PEnt),
+    "from"                   : RXML.t_text(RXML.PEnt),
+    "to"                     : RXML.t_text(RXML.PEnt),
+    "ignore-illegal-charset" : RXML.t_text(RXML.PEnt),
   ]);
 
   class Frame
@@ -1595,12 +1596,12 @@ class TagRecode
 
       if( args->from && catch {
 	content=Locale.Charset.decoder( args->from )->feed( content )->drain();
-      })
+      } && !args["ignore-illegal-charset"])
 	RXML.run_error("Illegal charset, or unable to decode data: %s\n",
 		       args->from );
       if( args->to && catch {
 	content=Locale.Charset.encoder( args->to )->feed( content )->drain();
-      })
+      } && !args["ignore-illegal-charset"])
 	RXML.run_error("Illegal charset, or unable to encode data: %s\n",
 		       args->to );
       return ({ content });
@@ -7077,6 +7078,10 @@ using the pre tag.
  Converts the contents of the charset tag from the internal representation
  to the character set indicated by this attribute. Useful for encoding data
  before storing it into a database.</p>
+</attr>
+
+<attr name='ignore-illegal-charset'><p>
+ When provided, silently ignore any illegal charset errors.</p>
 </attr>
 ",
 
