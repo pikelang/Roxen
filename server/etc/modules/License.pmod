@@ -2,11 +2,13 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.25 2004/10/28 12:05:07 wellhard Exp $
+// $Id: License.pmod,v 1.26 2008/04/15 09:30:58 noring Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
 #endif
+
+constant have_feature_locking = 1;
 
 int is_active(string license_dir)
 // Returns true if the license system is enabled.
