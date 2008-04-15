@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module_support.pike,v 1.132 2008/04/08 12:46:21 grubba Exp $
+// $Id: module_support.pike,v 1.133 2008/04/15 09:34:45 grubba Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -566,7 +566,7 @@ class ModuleInfo( string sname, string filename )
             multiple_copies = data->multiple_copies;
             name = decode_string( data->name );
             description = decode_string( data->description );
-	    locked = data->locked/":";
+	    locked = data->locked && data->locked/":";
 	    counter = data->counter || sname;
             return 1;
           }
