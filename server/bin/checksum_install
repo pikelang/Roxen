@@ -22,6 +22,20 @@ print_usage()
 {
     echo "checksum_install: [options] [install.md5 file to compare]"
     echo
+    echo "Script to calculate md5 checksums for all files in the server dir,"
+    echo "which must be the current working directory."
+    echo
+    echo "The script can also diff against a previously, for example factory"
+    echo "created, md5 checksum file for a given Roxen release. This is a"
+    echo "convenient way to figure out how any server installation has been"
+    echo "modified after the initial installation."
+    echo
+    echo "Another practical approach is to create additional md5 files"
+    echo "for each patch level, for example .install-patch-20080229.md5 etc."
+    echo
+    echo "The factory version is typically found in .install.md5 in the"
+    echo "Roxen lib direcory."
+    echo
     echo "  -h,--help     Print this help and exit."
 }
 
