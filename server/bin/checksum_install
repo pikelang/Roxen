@@ -34,7 +34,7 @@ print_usage()
     echo "for each patch level, for example .install-patch-20080229.md5 etc."
     echo
     echo "The factory version is typically found in .install.md5 in the"
-    echo "Roxen lib direcory."
+    echo "Roxen lib directory."
     echo
     echo "  -h,--help     Print this help and exit."
 }
