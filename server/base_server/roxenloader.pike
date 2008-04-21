@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.388 2008/04/07 13:12:31 grubba Exp $
+// $Id: roxenloader.pike,v 1.389 2008/04/21 15:09:08 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.388 2008/04/07 13:12:31 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.389 2008/04/21 15:09:08 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1781,7 +1781,8 @@ static void do_tailf( int loop, string file )
   } while( loop );
 }
 
-void low_check_mysql(string bindir, string datadir, array(string) args)
+static void low_check_mysql(string basedir, string datadir, array(string) args,
+			    void|Stdio.File errlog)
 {
   array(string) files = ({});
   foreach(get_dir(datadir) || ({}), string dir) {
@@ -1800,11 +1801,37 @@ void low_check_mysql(string bindir, string datadir, array(string) args)
 #else
   string myisamchk = "myisamchk";
 #endif
+  string bindir = basedir+"libexec/";
+  if( !file_stat( bindir+myisamchk ) )
+  {
+    bindir = basedir+"bin/";
+    if( !file_stat( bindir+myisamchk ) )
+    {
+      bindir = basedir+"sbin/";
+      if( !file_stat( bindir+myisamchk ) )
+      {
+	report_warning ("No myisamchk found in %s. Tables not checked.\n",
+			basedir);
+	return;
+      }
+    }
+  }
+
+  Stdio.File  devnull
+#ifndef __NT__
+    = Stdio.File( "/dev/null", "w" )
+#endif
+    ;
   
   report_debug("Checking MySQL tables with %O...\n", args*" ");
   mixed err = catch {
       Process.create_process(({ combine_path(bindir, myisamchk) }) +
-			     args + sort(files))->wait();
+			     args + sort(files),
+			     ([
+			       "stdin":devnull,
+			       "stdout":errlog,
+			       "stderr":errlog
+			     ]))->wait();
     };
   if(err)
     werror(describe_backtrace(err));
@@ -1928,6 +1955,8 @@ void low_start_mysql( string datadir,
 	catch(chmod( binary, 0500 )) )
       binary = bindir+mysqld;
 
+  Stdio.File errlog = Stdio.File( err_log, "wct" );
+
   string mysql_table_check =
     Stdio.read_file(combine_path(query_configuration_dir(),
 				 "_mysql_table_check"));
@@ -1937,7 +1966,9 @@ void low_start_mysql( string datadir,
   sscanf(mysql_table_check, "%s\n%s\n",
 	 string myisamchk_args, string mysqld_extra_args);
   if(myisamchk_args && sizeof(myisamchk_args))
-    low_check_mysql(bindir, datadir, (myisamchk_args/" ") - ({ "" }));
+    low_check_mysql(basedir, datadir, (myisamchk_args/" ") - ({ "" }),
+		    errlog);
+
   if(mysqld_extra_args && sizeof(mysqld_extra_args))
     args += (mysqld_extra_args/" ") - ({ "" });
 
@@ -1948,7 +1979,6 @@ void low_start_mysql( string datadir,
     = Stdio.File( "/dev/null", "w" )
 #endif
     ;
-  Stdio.File errlog = Stdio.File( err_log, "wct" );
 
   Process.create_process p = Process.create_process( args,
 			  ([
