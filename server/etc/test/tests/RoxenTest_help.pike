@@ -6,8 +6,12 @@ array(string) new = ({});
 
 int test_module_info(ModuleInfo mi)
 {
-  if (!(mi->last_checked && !mi->name) ||
-      mi->NotAModule) return 0;
+  if (mi->NotAModule) {
+    werror("%O is not a module.\n", mi->sname);
+    return 0;
+  }
+  if (!mi->last_checked && !mi->name)
+    return mi->init_module(mi->filename);
   return 1;
 }
 
