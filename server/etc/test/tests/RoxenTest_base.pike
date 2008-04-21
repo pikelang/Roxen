@@ -260,22 +260,4 @@ void run_tests( Configuration c )
   test( roxen.run_log_format, format1, do_log, minimum_id, fake_response );
 
   test( verify_logged_data, logged, 1 );
-
-  // Check that all modules compile.
-  werror("Checking that all modules compile...\n");
-  object ec = roxenloader.LowErrorContainer();
-  master()->set_inhibit_compile_errors(ec);
-  roxen->clear_all_modules_cache();
-  roxenloader.push_compile_error_handler(ec);
-  array(ModuleInfo) mods = roxen->all_modules();
-  roxenloader.pop_compile_error_handler();
-
-  werror("Checking for errors.\n");
-  test_equal("", ec->get);
-  werror("Checking for warnings.\n");
-  test_equal("", ec->get_warnings);
-
-  foreach(mods, ModuleInfo mi) {
-    test_generic(check_true, mi->init_module, mi->filename);
-  }
 }
