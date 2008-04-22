@@ -57,7 +57,8 @@ void run_tests( Configuration c )
       continue;
     if (m->locked) {
       if (!key || !m->unlocked(key, c)) {
-	werror("Locked module: %O lock: %O\n", m->name || m->sname, m->locked);
+	werror("Locked module: %O lock: %O\n",
+	       m->name || m->sname, m->locked * ":");
 	continue;
       }
     }
