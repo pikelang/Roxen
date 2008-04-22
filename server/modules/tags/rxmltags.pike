@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.547 2008/04/11 10:27:43 noring Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.548 2008/04/22 09:26:21 noring Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1581,7 +1581,7 @@ class TagCharset
       if( args->in && catch {
 	content=Locale.Charset.decoder( args->in )->feed( content || "" )->drain();
       })
-	RXML.run_error("Illegal charset, or unable to decode data: %s\n",
+	RXML.run_error("Invalid charset, or unable to decode data: %s\n",
 		       args->in );
       if( args->out && id->set_output_charset)
 	id->set_output_charset( args->out );
@@ -1599,7 +1599,6 @@ class TagRecode
   mapping(string:RXML.Type) opt_arg_types = ([
     "from"                   : RXML.t_text(RXML.PEnt),
     "to"                     : RXML.t_text(RXML.PEnt),
-    "ignore-illegal-charset" : RXML.t_text(RXML.PEnt),
   ]);
 
   class Frame
@@ -1609,16 +1608,27 @@ class TagRecode
     {
       if( !content ) content = "";
 
-      if( args->from && catch {
-	content=Locale.Charset.decoder( args->from )->feed( content )->drain();
-      } && !args["ignore-illegal-charset"])
-	RXML.run_error("Illegal charset, or unable to decode data: %s\n",
-		       args->from );
-      if( args->to && catch {
-	content=Locale.Charset.encoder( args->to )->feed( content )->drain();
-      } && !args["ignore-illegal-charset"])
-	RXML.run_error("Illegal charset, or unable to encode data: %s\n",
-		       args->to );
+      switch(args->from)
+      {
+	case "safe-utf8":
+	  catch {
+	    content = Locale.Charset.decoder("utf8")->feed(content)->drain();
+	  };
+	  break;
+
+	default:
+	  if(args->from && catch {
+	      content = Locale.Charset.decoder(args->from)->
+			feed(content)->drain(); })
+	    RXML.run_error("Invalid charset, or unable to decode data: %s\n",
+			   args->from);
+      }
+      
+      if(args->to && catch {
+	  content = Locale.Charset.encoder(args->to)->feed(content)->drain(); })
+	RXML.run_error("Invalid charset, or unable to encode data: %s\n",
+		       args->to);
+      
       return ({ content });
     }
   }
@@ -7145,17 +7155,16 @@ using the pre tag.
 <attr name='from' value='Character set'><p>
  Converts the contents of the charset tag from the character set indicated
  by this attribute to the internal text representation. Useful for decoding
- data stored in a database.</p>
+ data stored in a database. The special character set called \"safe-utf8\"
+ will try to decode utf8, and silently revert back in case the content is
+ not valid utf8 (for example iso-8859-1); this is useful when the content
+ is not always valid utf8.</p>
 </attr>
 
 <attr name='to' value='Character set'><p>
  Converts the contents of the charset tag from the internal representation
  to the character set indicated by this attribute. Useful for encoding data
  before storing it into a database.</p>
-</attr>
-
-<attr name='ignore-illegal-charset'><p>
- When provided, silently ignore any illegal charset errors.</p>
 </attr>
 ",
 
