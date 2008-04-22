@@ -119,8 +119,8 @@ function boundPopup(name)
   var p_t = getObjectTop(name);     // this.top
   var p_h = getObjectHeight(name);  // clip.height 
   var p_w = getObjectWidth(name);   // clip.width
-  var c_h = getClientHeight() - 16; // window.innerHeight
-  var c_w = getClientWidth()  - 16; // window.innerWidth
+  var c_h = getClientHeight();      // window.innerHeight
+  var c_w = getClientWidth();       // window.innerWidth
   var s_l = getScrollLeft();        // window.pageXOffset
   var s_t = getScrollTop();         // window.pageYOffset
   
