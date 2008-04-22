@@ -188,14 +188,22 @@ function scrollHorizontal(h)  {
 
 // Retrieving the clients viewable hight
 function getClientHeight()  {
-  if (isNav4||isNav5) return innerHeight;
-  else return document.body.clientHeight;
+  //  client* is non-standard but preferred since it accounts for margins
+  //  and scrollbars.
+  if (document.body.clientHeight)
+    return document.body.clientHeight;
+  if (innerHeight)
+    return innerHeight;
 }
 
 // Retrieving the clients viewable width
 function getClientWidth()  {
-  if (isNav4||isNav5) return innerWidth;
-  else return document.body.clientWidth;
+  //  client* is non-standard but preferred since it accounts for margins
+  //  and scrollbars.
+  if (document.body.clientWidth)
+    return document.body.clientWidth;
+  if (innerWidth)
+    return innerWidth;
 }
 
 function showProps(o) {
