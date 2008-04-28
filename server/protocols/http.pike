@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.552 2008/03/14 13:25:26 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.553 2008/04/28 15:13:37 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2607,16 +2607,19 @@ void got_data(mixed fooid, string s, void|int chained)
 	    MY_TRACE_LEAVE ("Entry invalid due to zero key");
 	    conf->datacache->expire_entry(raw_url, this_object());
 	    can_cache = 0;
-	  } else if (file->refresh > predef::time(1)) {
-	    // Stale and no refresh in progress.
-	    // We want a refresh as soon as possible,
-	    // so move the refresh time to now.
-	    // Note that we use the return value from m_delete()
-	    // to make sure we are free from races.
-	    // Note also that we check above that the change is needed,
-	    // so as to avoid the risk of starving the code below.
-	    if (m_delete(file, "refresh")) {
-	      file->refresh = predef::time(1);
+	  } else {
+	    cache_status["stale"] = 1;
+	    if (file->refresh > predef::time(1)) {
+	      // Stale and no refresh in progress.
+	      // We want a refresh as soon as possible,
+	      // so move the refresh time to now.
+	      // Note that we use the return value from m_delete()
+	      // to make sure we are free from races.
+	      // Note also that we check above that the change is needed,
+	      // so as to avoid the risk of starving the code below.
+	      if (m_delete(file, "refresh")) {
+		file->refresh = predef::time(1);
+	      }
 	    }
 	  }
 	}      
@@ -2741,6 +2744,9 @@ void got_data(mixed fooid, string s, void|int chained)
 	    if (!refresh) {
 	      // No need to refresh the cached entry, so we just send it,
 	      // and are done.
+	      //
+	      // FIXME: Use Cache-Control: no-cache when sending
+	      // invalid entries.
 	      TIMER_END(cache_lookup);
 	      low_send_result(full_headers, d, sizeof(d));
 	      return;
@@ -2777,6 +2783,7 @@ void got_data(mixed fooid, string s, void|int chained)
 		      refresh - 1), 0);
 	    cache_status["protcache"] = 0;
 	    cache_status["refresh"] = 1;
+	    cache_status["stale"] = 0;
 	    MY_TRACE_LEAVE("");
 	  }
 #ifndef RAM_CACHE_ASUME_STATIC_CONTENT
