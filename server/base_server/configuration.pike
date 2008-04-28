@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.648 2008/03/19 14:04:39 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.649 2008/04/28 15:14:30 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4572,22 +4572,31 @@ hyphens ('-') occur in the specifier names.</p>
 
 <tr><td>$cache-status</td>
     <td>A comma separated list of words (containing no whitespace)
-    that describes which cache(s) the page was delivered from:
+    that describes how the request got handled by various caches:
 
     <table><tbody valign='top'>
     <tr><td>protcache</td>
-	<td>The low-level cache in the HTTP protocol module.</td></tr>
+	<td>The page is served from the HTTP protocol cache.</td></tr>
     <tr><td>protstore</td>
-	<td>The page got stored in the low-level cache in the HTTP
-	protocol module.</td></tr>
-    <tr><td>xsltcache</td>
-	<td>The XSLT cache.</td></tr>
+	<td>The page is stored in the HTTP protocol cache.</td></tr>
+    <tr><td>stale</td>
+	<td>There is a stale entry in the HTTP protocol cache. A
+	refresh is underway in the background and the stale entry is
+	sent in the meantime to avoid a long response time and server
+	congestion.</td></tr>
+    <tr><td>refresh</td>
+	<td>This is the finishing of the background refresh request
+	for the entry in the HTTP protocol cache.</td></tr>
     <tr><td>pcoderam</td>
-	<td>RXML parse tree RAM cache.</td></tr>
+	<td>A hit in the RXML p-code RAM cache.</td></tr>
     <tr><td>pcodedisk</td>
-	<td>RXML parse tree persistent cache.</td></tr>
+	<td>A hit in the RXML p-code persistent cache.</td></tr>
     <tr><td>cachetag</td>
-	<td>No RXML &lt;cache&gt; tag misses.</td></tr>
+	<td>RXML was evaluated without any cache miss in any RXML
+	&lt;cache&gt; tag. The &lt;nocache&gt; tag does not count as a
+	miss.</td></tr>
+    <tr><td>xsltcache</td>
+	<td>There is a hit XSLT cache.</td></tr>
     <tr><td>nocache</td>
 	<td>No hit in any known cache, and not added to the HTTP
 	protocol cache.</td></tr>
