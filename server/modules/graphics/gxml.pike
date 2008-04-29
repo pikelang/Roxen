@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.36 2006/10/05 17:30:18 jonasw Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.37 2008/04/29 09:25:35 mast Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -421,6 +421,9 @@ class TagGXML
   class LayersVars
   {
     inherit RXML.Scope;
+
+    constant is_RXML_encodable = 1;
+
     mixed `[] (string var, void|RXML.Context ctx,
 	       void|string scope_name, void|RXML.Type type)
     {
@@ -429,6 +432,9 @@ class TagGXML
 	return V("layers."+scope+"."+var);
       return this_object();
     }
+
+    int _encode() {return 0;}
+    void _decode (int dummy) {}
   }
     mapping make_guides_mapping( string v )
     {
