@@ -1,4 +1,4 @@
-constant cvs_version = "$Id: expires.pike,v 1.3 2008/03/05 15:57:34 tomas Exp $";
+constant cvs_version = "$Id: expires.pike,v 1.4 2008/04/29 11:15:50 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -17,20 +17,21 @@ void create()
 {
   defvar("paths",
 	 Variable.StringList(({}), VAR_INITIAL,
-			     "Path globs",
-			     "List of glob expressions for files that should "
-			     "be targeted for modification of the expire "
-			     "time. Ex: <tt>/images/navigation/*.gif</tt>"
-			     "<br />"
-			     "Try to keep this to a minimum in order to "
-			     "minimize performance issues and avoid "
-			     "overcaching of other files."));
+			     "Path globs", #"\
+<p>List of glob expressions for files that should be targeted for
+modification of the expire time, e.g.
+<tt>/images/navigation/*.gif</tt>. The glob chars '?' and '*' match
+any character, including '/'.</p>
+
+<p>Try to keep this to a minimum in order to minimize performance
+issues and avoid overcaching of other files.</p>"));
+
   defvar("expire_time", INITIAL_CACHEABLE,
 	 "Expire time", TYPE_INT,
 	 "The number of seconds the files should expire in. "
 	 "Leaving this to the default value might result in that no 'Expire:' "
 	 "header at all is sent to the client and should be used to "
-	 "compensate for other modules the has previously lowered the "
+	 "compensate for other modules that has previously lowered the "
 	 "expire time.");
 }
 
