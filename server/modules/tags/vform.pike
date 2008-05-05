@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: vform.pike,v 1.54 2007/01/18 16:33:49 erikd Exp $";
+constant cvs_version = "$Id: vform.pike,v 1.55 2008/05/05 14:36:29 mathias Exp $";
 constant thread_safe = 1;
 
 constant module_type = MODULE_TAG;
@@ -227,6 +227,7 @@ class VInputFrame {
       break;
     case "before":
       result = content + var->render_form(id, args);
+      break;
     case "after":
     default:
       result = RXML.get_var("input") + content;
