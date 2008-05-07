@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.213 2008/05/07 10:51:29 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.214 2008/05/07 15:19:49 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -134,7 +134,7 @@ class ModuleInfo
 
   int last_checked;
   int type, multiple_copies;
-  int|string locked;
+  array(string) locked;
   mapping(Configuration:int) config_locked;
   
   string get_name();
@@ -427,7 +427,8 @@ class Configuration
                              int|void nosave );
   void call_start_callbacks( RoxenModule me, 
                              ModuleInfo moduleinfo, 
-                             ModuleCopies module );
+			     ModuleCopies module,
+			     void|int newly_added);
   void call_low_start_callbacks( RoxenModule me, 
                                  ModuleInfo moduleinfo, 
                                  ModuleCopies module );
