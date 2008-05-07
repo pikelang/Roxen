@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.72 2007/05/26 16:32:52 mast Exp $
+// $Id: DBManager.pmod,v 1.73 2008/05/07 11:02:41 mast Exp $
 
 //! Manages database aliases and permissions
 
@@ -97,7 +97,9 @@ private
 		 host, short(c->name)+"_ro" );
     }
   }
-  
+
+#if 0
+  // Private and not used anywhere.
   void ensure_has_users( Sql.Sql db, Configuration c )
   {
     low_ensure_has_users( db, c, "localhost" );
@@ -108,6 +110,7 @@ private
   {
     low_ensure_has_users( db, c, "127.0.0.1", password );
   }
+#endif
 
   static void low_set_user_permissions( Configuration c, string name,
 					int level, string host,

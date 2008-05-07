@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.108 2008/02/07 10:05:29 noring Exp $
+// $Id: global_variables.pike,v 1.109 2008/05/07 11:02:41 mast Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -227,7 +227,6 @@ void set_up_ssl_variables( Protocol o )
 // Get the current domain. This is not as easy as one could think.
 string get_domain(int|void l)
 {
-  array f;
   string t, s;
 
   // FIXME: NT support.
@@ -288,8 +287,6 @@ void zap_all_module_caches( Variable.Variable v )
 
 void define_global_variables(  )
 {
-  int p;
-
   defvar("myisamchk",
 	 Variable.Language("Fast check and repair",
 			   ({ "Disable check",

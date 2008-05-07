@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.237 2008/05/07 10:51:29 mast Exp $
+// $Id: Roxen.pmod,v 1.238 2008/05/07 10:58:30 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -503,14 +503,12 @@ static constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 static constant days = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" });
 
 string log_date(int t) {
-  string c;
   mapping(string:int) lt = localtime(t);
   return(sprintf("%04d-%02d-%02d",
 		 1900+lt->year,lt->mon+1, lt->mday));
 }
  
 string log_time(int t) {
-  string c;
   mapping(string:int) lt = localtime(t);
   return(sprintf("%02d:%02d:%02d",
 		 lt->hour, lt->min, lt->sec));
@@ -1116,7 +1114,6 @@ mapping build_env_vars(string f, RequestID id, string path_info)
 
   if(path_info && strlen(path_info))
   {
-    string t2;
     if(path_info[0] != '/')
       path_info = "/" + path_info;
 

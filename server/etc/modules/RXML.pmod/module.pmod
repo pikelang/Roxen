@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.363 2008/02/14 22:13:16 mast Exp $
+// $Id: module.pmod,v 1.364 2008/05/07 10:57:26 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -5300,7 +5300,6 @@ class Parser
   //! data.
   {
     //werror ("%O write_end %s\n", this_object(), format_short (in));
-    int res;
     ENTER_CONTEXT (context);
   eval:
     if (mixed err = catch {
@@ -7136,7 +7135,9 @@ class VarRef (string scope, string|array(string|int) var,
 		   (encoding ? t_any_text : want_type)->name);
 #endif
       mixed val;
+#ifdef AVERAGE_PROFILING
       string varref;
+#endif
 
       COND_PROF_ENTER(mixed id=ctx->id,(varref = VAR_STRING),"entity");
       if (zero_type (val = ctx->get_var (
