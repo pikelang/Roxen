@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.119 2008/02/18 17:03:28 mast Exp $
+ * $Id: ftp.pike,v 2.120 2008/05/07 10:51:30 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -469,8 +469,6 @@ class PutFileWrapper
     is_file = from_fd->is_file;
   }
 
-#include <variables.h>
-
   int bytes_received()
   {
     return recvd;
@@ -582,7 +580,7 @@ class PutFileWrapper
     if (result->rettext)
       response = result->rettext / "\n";
     else
-      response = ({errors[result->error] || ""});
+      response = ({Roxen.http_status_messages[result->error] || ""});
     gotdata = result->data || "";
 
     close();

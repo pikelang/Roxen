@@ -1,12 +1,11 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.236 2008/03/14 17:34:56 mast Exp $
+// $Id: Roxen.pmod,v 1.237 2008/05/07 10:51:29 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
 #include <version.h>
 #include <module.h>
-#include <variables.h>
 #include <stat.h>
 #define roxen roxenp()
 
@@ -550,11 +549,71 @@ string cern_http_date(int t)
   return c;
 }
 
+constant http_status_messages = ([
+  100:"Continue",
+  101:"Switching Protocols",
+  102:"Processing",
+
+  200:"OK",
+  201:"Created",		// URI follows
+  202:"Accepted",
+  203:"Non-Authoritative Information",	// Provisional Information
+  204:"No Content",
+  205:"Reset Content",
+  206:"Partial Content",	// Byte Ranges
+  207:"Multi-Status",
+  226:"IM Used",		// RFC 3229
+
+  300:"Multiple Choices",	// Moved
+  301:"Moved Permanently",	// Permanent Relocation
+  302:"Found",
+  303:"See Other",
+  304:"Not Modified",
+  305:"Use Proxy",
+  // RFC 2616 10.3.7: 306 not used but reserved.
+  307:"Temporary Redirect",
+
+  400:"Bad Request",
+  401:"Unauthorized",		// Access denied
+  402:"Payment Required",
+  403:"Forbidden",
+  404:"Not Found",		// No such file or directory
+  405:"Method Not Allowed",
+  406:"Not Acceptable",
+  407:"Proxy Authentication Required", // Proxy authorization needed
+  408:"Request Timeout",
+  409:"Conflict",
+  410:"Gone",			// This document is no more. It has gone to meet its creator. It is gone. It will not be back. Give up. I promise. There is no such file or directory.",
+  411:"Length Required",
+  412:"Precondition Failed",
+  413:"Request Entity Too Large",
+  414:"Request-URI Too Long",
+  415:"Unsupported Media Type",
+  416:"Requested Range Not Satisfiable",
+  417:"Expectation Failed",
+  418:"I'm a teapot",
+  // FIXME: What is 419?
+  420:"Server temporarily unavailable",
+  421:"Server shutting down at operator request",
+  422:"Unprocessable Entity",
+  423:"Locked",
+  424:"Failed Dependency",
+
+  500:"Internal Server Error.",
+  501:"Not Implemented",
+  502:"Bad Gateway",		// Gateway Timeout
+  503:"Service Unavailable",
+  504:"Gateway Timeout",
+  505:"HTTP Version Not Supported",
+  506:"Variant Also Negotiates",
+  507:"Insufficient Storage",
+]);
+
 string http_status_message (int status_code)
 //! Returns the standard message that corresponds to the given HTTP
 //! status code.
 {
-  return errors[status_code];
+  return http_status_messages[status_code];
 }
 
 string http_date( mixed t )

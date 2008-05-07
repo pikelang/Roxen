@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.553 2008/04/28 15:13:37 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.554 2008/05/07 10:51:30 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -119,7 +119,6 @@ int kept_alive;
 
 #include <roxen.h>
 #include <module.h>
-#include <variables.h>
 #include <request_trace.h>
 
 #define MY_TRACE_ENTER(A, B) \
@@ -1990,7 +1989,8 @@ void send_result(mapping|void result)
   {
     NO_PROTO_CACHE();
     if(misc->error_code)
-      file = Roxen.http_status(misc->error_code, errors[misc->error_code]);
+      file = Roxen.http_status(misc->error_code,
+			       Roxen.http_status_messages[misc->error_code]);
     else if(err = catch {
       file = conf->error_file( this_object() );
     })
@@ -2076,8 +2076,8 @@ void send_result(mapping|void result)
     m_delete(heads, "Expires");
 
     // FIXME: prot.
-    head_string = sprintf(" %s\r\n", 
-			  head_status || errors[file->error] || "");
+    head_string = sprintf(" %s\r\n", head_status ||
+			  Roxen.http_status_messages[file->error] || "");
 
     if (mixed err = catch(head_string += Roxen.make_http_headers(heads, 1)))
     {

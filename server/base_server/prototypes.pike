@@ -4,9 +4,8 @@
 #include <stat.h>
 #include <config.h>
 #include <module.h>
-#include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.212 2008/03/14 17:16:47 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.213 2008/05/07 10:51:29 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)

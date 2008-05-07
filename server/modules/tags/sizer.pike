@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 
 constant thread_safe=1;
-constant cvs_version = "$Id: sizer.pike,v 1.25 2004/07/05 17:23:00 grubba Exp $";
+constant cvs_version = "$Id: sizer.pike,v 1.26 2008/05/07 10:51:30 mast Exp $";
 #include <request_trace.h>
 #include <module.h>
 inherit "module";
@@ -21,8 +21,6 @@ LocaleString module_doc  =
     " estimates of the time it will take to download the page.<p>"
     "You can also use the <i>size</i> prestate to trigger the sizing "
     "process</p>");
-
-#include <variables.h>
 
 #define NOTE(X) ("<tr><td valign='top'><img src='/internal-roxen-err_1'></td>\n"\
 		"<td><font color='black' size='-1'>" + (X) +"</font></td></tr>")
@@ -98,7 +96,8 @@ class Combo( string file, RequestID id )
       heads["Content-Length"] = (string)res->len;
 
     string head_string = sprintf( "%s %d %s\r\n", id2->prot, res->error,
-				  res->rettext||errors[res->error]||"");
+				  res->rettext||
+				  Roxen.http_status_messages[res->error]||"");
 
     if( (res->error/100 == 2) && (res->len <= 0) )
       heads->Connection = "close";
