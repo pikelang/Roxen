@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.114 2005/02/25 16:17:15 grubba Exp $";
+  "$Id: config_filesystem.pike,v 1.115 2008/05/08 15:17:33 mast Exp $";
 
 constant path = "config_interface/";
 
@@ -121,6 +121,13 @@ mixed find_file( string f, RequestID id )
   User user;
   string locale = "standard";
   string encoding;
+
+  // Can get false alarms from the warning "Tag set ... created during
+  // RXML evaluation" in RXML.TagSet.create in here since modules
+  // containing TagSets are compiled and instantiated from within the
+  // rxml parse pass in the config interface. Thus it's disabled by a
+  // special ad-hoc flag.
+  id->misc->disable_tag_set_creation_warning = 1;
 
   if( (time(1) - last_cache_clear_time) > 4 )
   {

@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.364 2008/05/07 10:57:26 mast Exp $
+// $Id: module.pmod,v 1.365 2008/05/08 15:17:33 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -658,7 +658,9 @@ class TagSet
   //! need to do that then you should probably take a look at
   //! @[Frame.parent_frame] instead.
   {
-    if (RXML_CONTEXT) {
+    if (RXML_CONTEXT &&
+	(!RXML_CONTEXT->id ||
+	 !RXML_CONTEXT->id->misc->disable_tag_set_creation_warning)) {
       report_debug (
 	"Warning: Tag set %O in %O created during RXML evaluation.\n"
 	"This doesn't work with p-code generation and should be avoided.\n",
