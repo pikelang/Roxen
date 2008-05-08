@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.649 2008/04/28 15:14:30 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.650 2008/05/08 14:34:29 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3370,7 +3370,6 @@ void save(int|void all)
 int save_one( RoxenModule o )
 //! Save all variables in a given module.
 {
-  mapping mod;
   if(!o)
   {
     store("spider#0", variables, 0, this_object());
@@ -3494,7 +3493,6 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   MODULE_LOCK (2);
   int id;
   ModuleCopies module;
-  int pr;
   mixed err;
   int module_type;
 
@@ -4041,7 +4039,7 @@ int disable_module( string modname, int|void nodest )
 {
   MODULE_LOCK (2);
   RoxenModule me;
-  int id, pr;
+  int id;
   sscanf(modname, "%s#%d", modname, id );
 
   if( datacache ) datacache->flush();
