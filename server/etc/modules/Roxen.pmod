@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.239 2008/05/09 07:22:21 erikd Exp $
+// $Id: Roxen.pmod,v 1.240 2008/05/09 18:26:27 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -893,8 +893,10 @@ string correctly_http_encode_url(string f) {
 string add_pre_state( string url, multiset state )
 //! Adds the provided states as prestates to the provided url.
 {
+#ifdef MODULE_DEBUG
   if(!url)
     error("URL needed for add_pre_state()\n");
+#endif
   if(!state || !sizeof(state))
     return url;
   string base;
@@ -907,32 +909,32 @@ string add_pre_state( string url, multiset state )
   return base + "/(" + sort(indices(state)) * "," + ")" + url ;
 }
 
-mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
-		       mapping|void variables)
-//! Simply returns a http-redirect message to the specified URL. If
-//! the url parameter is just a virtual (possibly relative) path, the
-//! current id object must be supplied to resolve the destination URL.
-//! If no prestates are provided, the current prestates in the request
-//! id object will be added to the URL, if the url is a local absolute
-//! or relative URL.
+string make_absolute_url (string url, RequestID|void id,
+			  multiset|void prestates, mapping|void variables)
+//! Returns an absolute URL built from the components: If @[url] is a
+//! virtual (possibly relative) path, the current @[RequestID] object
+//! must be supplied in @[id] to resolve the absolute URL.
+//!
+//! If no @[prestates] are provided, the current prestates in @[id]
+//! are added to the URL, provided @[url] is a local absolute or
+//! relative URL.
 //!
 //! If @[variables] is given it's a mapping containing variables that
 //! should be appended to the URL. Each index is a variable name and
 //! the value can be a string or an array, in which case a separate
 //! variable binding is added for each string in the array. That means
 //! that e.g. @[RequestID.real_variables] can be used as @[variables].
+//!
+//! @[url] is encoded using @[http_encode_invalids] so it may contain
+//! eight bit chars and wider. All variable names and values in
+//! @[variables] are thoroughly encoded using @[http_encode_url] so
+//! they should not be encoded in any way to begin with.
 {
-  // If we don't get any URL we don't know what to do.
-  // But we do!  /per
-  if(!url)
-    url = "";
-
   // If the URL is a local relative URL we make it absolute.
-  if(!has_value(url, "://") && (!strlen(url) || url[0] != '/') )
-    url = fix_relative(url, id);
+  url = fix_relative(url, id);
   
   // Add protocol and host to local absolute URLs.
-  if(strlen(url) && url[0]=='/') {
+  if (has_prefix (url, "/")) {
     if(id) {
       url = id->url_base() + url[1..];
       if (!prestates) prestates = id->prestate;
@@ -969,6 +971,23 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
 	  }
     }
   }
+
+  return url;
+}
+
+mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
+		       mapping|void variables)
+//! Returns a http-redirect message to the specified URL. The absolute
+//! URL that is required for the @expr{Location@} header is built from
+//! the given components using @[make_absolute_url]. See that function
+//! for details.
+{
+  // If we don't get any URL we don't know what to do.
+  // But we do!  /per
+  if(!url)
+    url = "";
+
+  url = make_absolute_url (url, id, prestates, variables);
 
   HTTP_WERR("Redirect -> "+url);
 
@@ -1914,23 +1933,24 @@ string simplify_path(string file)
 		       !has_value (file, "//")))
     return file;
 
-  int t2,t1;
+  int relative, got_slashdot_suffix;
 
   [string prefix, file] = win_drive_prefix(file);
 
-  if(file[0] != '/')
-    t2 = 1;
+  if (!has_prefix (file, "/"))
+    relative = 1;
 
-  if(strlen(file) > 1
-     && file[-2]=='/'
-     && ((file[-1] == '/') || (file[-1]=='.'))
-	)
-    t1=1;
+  // The following used to test for "//" at the end (thus replacing
+  // that too with "/."). That must be some kind of old confusion
+  // (dates back to at least roxenlib.pike 1.1 from 11 Nov 1996).
+  // /mast
+  if (has_suffix (file, "/."))
+    got_slashdot_suffix = 1;
 
   file=combine_path("/", file);
 
-  if(t1) file += "/.";
-  if(t2) return prefix + file[1..];
+  if(got_slashdot_suffix) file += "/.";
+  if(relative) return prefix + file[1..];
 
   return prefix + file;
 }
@@ -2474,27 +2494,29 @@ string roxen_encode(string val, string encoding)
 }
 
 string fix_relative( string file, RequestID id )
-//! Turns a relative (or already absolute) virtual path into an
-//! absolute virtual path, that is, one rooted at the virtual server's
-//! root directory. The returned path is @[simplify_path()]:ed.
+//! Using @expr{@[id]->not_query@}, turns a relative (or already
+//! absolute) virtual path into an absolute virtual path, i.e. one
+//! rooted at the virtual server's root directory. The returned path
+//! is simplified to not contain any @expr{"."@} or @expr{".."@}
+//! segments.
 {
-  string path = id->not_query;
-  if( has_prefix( file, "http:" ) )
-    return file;
+  if (sscanf (file, "%[-+.a-zA-Z0-9]://%s", string prot, file) == 2)
+    return prot + ":/" + combine_path ("/", file);
 
+#if 0
+  // This is immensely suspect considering we're dealing with virtual
+  // paths here. /mast
   [string prefix, file] = win_drive_prefix(file);
+#endif
+  string path = id->not_query;
 
   // +(id->misc->path_info?id->misc->path_info:"");
-  if(file != "" && file[0] == '/')
-    ;
-  else if(file != "" && file[0] == '#')
-    file = path + file;
-  else {
-    string dir = dirname(path);
-    if (dir == "/") file = "/" + file;
-    else file = dir + "/" +  file;
-  }
-  return simplify_path(prefix + file);
+  if (has_prefix (file, "/"))
+    return /*prefix +*/ combine_path ("/", file);
+  else if (has_prefix (file, "#"))
+    return /*prefix +*/ combine_path ("/", path + file);
+  else
+    return /*prefix +*/ combine_path ("/", dirname (path), file);
 }
 
 Stdio.File open_log_file( string logfile )
