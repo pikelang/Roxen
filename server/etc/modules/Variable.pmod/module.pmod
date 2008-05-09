@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.106 2008/01/29 10:53:51 mathias Exp $
+// $Id: module.pmod,v 1.107 2008/05/09 18:22:47 mast Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1648,12 +1648,13 @@ class List
       query +=
 	(section ? ("section=" + section + "&") : "") +
 	"random=" + random(4949494);
-      
-      nid->misc->moreheads =
-	([
-	  "Location":nid->not_query+(nid->misc->path_info||"")+
-	  "?"+query+"#"+path(),
-	]);
+
+      string url =
+	Roxen.http_encode_invalids (nid->not_query +
+				    (nid->misc->path_info || "") +
+				    "?" + query + "#" + path());
+
+      nid->set_response_header ("Location", url);
       if( nid->misc->defines )
 	nid->misc->defines[ " _error" ] = 302;
       else if( id->misc->defines )
