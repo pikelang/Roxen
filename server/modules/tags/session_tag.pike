@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.22 2005/12/09 21:00:46 grubba Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.23 2008/05/09 07:22:21 erikd Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Session tag module";
@@ -122,7 +122,7 @@ class TagForceSessionID {
       // but with a session id prestate set.
       if(!id->cookies->RoxenUserID && !prestate) {
 	multiset orig_prestate = id->prestate;
-	id->prestate += (< "RoxenUserID=" + roxen.create_unique_id() >);
+	id->prestate += (< "RoxenUserID=" + Roxen.get_roxen_ip_prefix(id->port_obj) + roxen.create_unique_id() >);
 
 	mapping r = Roxen.http_redirect(id->not_query + path_info, id, 0,
 					id->real_variables);
@@ -134,7 +134,7 @@ class TagForceSessionID {
 	// Don't trust that the user cookie setting is turned on. The effect
 	// might be that the RoxenUserID cookie is set twice, but that is
 	// not a problem for us.
-	id->add_response_header( "Set-Cookie", Roxen.http_roxen_id_cookie() );
+	id->add_response_header( "Set-Cookie", Roxen.http_roxen_id_cookie(id->port_obj) );
 	id->prestate = orig_prestate;
 	return 0;
       }
