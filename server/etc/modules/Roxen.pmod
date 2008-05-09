@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.222 2007/11/08 16:18:48 jonasw Exp $
+// $Id: Roxen.pmod,v 1.223 2008/05/09 07:11:29 erikd Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -124,10 +124,26 @@ string http_roxen_config_cookie(string from)
     +"; expires=" + http_date (3600*24*365*2 + time (1)) + "; path=/";
 }
 
-string http_roxen_id_cookie()
+string http_roxen_id_cookie( void|object /* Protocol */ port_obj )
 {
-  return "RoxenUserID=" + roxen->create_unique_id() + "; expires=" +
+  return "RoxenUserID=" + get_roxen_ip_prefix( port_obj ) +
+    roxen->create_unique_id() + "; expires=" +
     http_date (3600*24*365*2 + time (1)) + "; path=/";
+}
+
+// Returns a prefix based on the ip address (or not implemented other
+// string that identifies this site or server).
+string get_roxen_ip_prefix( void|object/* Protocol */ port_obj ) {
+  string ip = port_obj && port_obj->ip;
+  if( ip && sizeof(ip) ) {
+    if( has_value( ip, ":" ) ) {
+      // IP v6
+      ip = (ip / "/")[0];
+      return reverse( ip / ":") * ":";
+    }
+    return reverse( ip / ".") * ".";
+  }
+  return "0.0.0.0";
 }
 
 static mapping(string:function(string, RequestID:string)) cookie_callbacks =
