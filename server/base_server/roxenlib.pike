@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: roxenlib.pike,v 1.222 2007/09/18 17:57:49 mast Exp $
+// $Id: roxenlib.pike,v 1.223 2008/05/09 16:23:59 mast Exp $
 
 //#pragma strict_types
 
@@ -506,7 +506,6 @@ static string do_output_tag( mapping(string:string) args,
 	    encodings = args->encode ?
 	      Array.map (lower_case (args->encode) / ",", String.trim_whites) : ({"html"});
 
-	  string tmp_val;
 	  foreach (encodings, string encoding)
 	    if( !(val = roxen_encode( [string]val, encoding )) )
 	      return ("<b>Unknown encoding " + encoding

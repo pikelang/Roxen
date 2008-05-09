@@ -114,7 +114,6 @@ class CIF
     int wc;
     sscanf( fname, "%s.", fname );
     if( strlen(fname) > 2 ) sscanf( fname, "0x%x", wc ); else wc=fname[0];
-    int c;
 
     if( fname == "fontinfo" )
       wc = 0xffffffff;

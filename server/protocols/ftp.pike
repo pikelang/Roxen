@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.120 2008/05/07 10:51:30 mast Exp $
+ * $Id: ftp.pike,v 2.121 2008/05/09 16:23:59 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1657,7 +1657,7 @@ class FTPSession
    * PASV handling
    */
   static private object pasv_port;
-  static private function(object, mixed:void) pasv_callback;
+  static private function(object, mixed ...:void) pasv_callback;
   static private mixed pasv_args;
   static private array(object) pasv_accepted = ({});
 
@@ -2292,8 +2292,6 @@ class FTPSession
     for(index = 0; index < sizeof(args); index++) {
 
       // Glob-expand args[index]
-
-      array (int) st;
 
       // FIXME: Does not check if "*" or "?" was quoted!
       if (replace(args[index], ({"*", "?"}), ({ "", "" })) != args[index]) {

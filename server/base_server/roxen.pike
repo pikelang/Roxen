@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.974 2008/05/07 10:51:29 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.975 2008/05/09 16:23:59 mast Exp $";
 
 //! @appears roxen
 //!
@@ -4689,7 +4689,6 @@ constant decode_layers = Image.decode_layers;
 mapping low_load_image(string f, RequestID id, void|mapping err)
 {
   string data;
-  Stdio.File file;
   if(id->misc->_load_image_called < 5)
   {
     // We were recursing very badly with the demo module here...
@@ -4728,7 +4727,6 @@ mapping low_load_image(string f, RequestID id, void|mapping err)
 array(Image.Layer)|mapping load_layers(string f, RequestID id, mapping|void opt)
 {
   string data;
-  Stdio.File file;
   mapping res = ([]);
   if(id->misc->_load_image_called < 5)
   {

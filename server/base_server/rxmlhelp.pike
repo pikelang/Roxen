@@ -408,7 +408,6 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
     parse_rxml( "", id );
   RXML.TagSet tag_set = id->conf->rxml_tag_set;
   
-  string doc;
   int new_gen=tag_set->generation;
 
   if(generation!=new_gen)

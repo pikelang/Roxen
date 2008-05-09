@@ -1,4 +1,4 @@
-//   $Id: Dims.pmod,v 1.11 2001/08/20 13:28:30 nilsson Exp $
+//   $Id: Dims.pmod,v 1.12 2008/05/09 16:23:59 mast Exp $
 //
 //   Imagedimensionreadermodule for Pike.
 //   Created by Johan Schön, <js@roxen.com>.
@@ -171,7 +171,6 @@ class dims
 
   array(int) get_GIF()
   {
-    int marker;
     int offs=f->tell();
     if(f->read(3)!="GIF") return 0;
     f->seek(offs+6);
@@ -182,7 +181,6 @@ class dims
 
   array(int) get_PNG()
   {
-    int marker;
     int offs=f->tell();
     f->seek(offs+1);
     if(f->read(3)!="PNG") return 0;

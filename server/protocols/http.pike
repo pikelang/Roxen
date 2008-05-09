@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.555 2008/05/09 07:22:21 erikd Exp $";
+constant cvs_version = "$Id: http.pike,v 1.556 2008/05/09 16:23:59 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1513,7 +1513,6 @@ void do_log( int|void fsent )
   TIMER_START(do_log);
   if(conf)
   {
-    int len;
     if(!(file->len = fsent) && pipe) {
       file->len = pipe->bytes_sent();
     }
@@ -1949,7 +1948,6 @@ void send_result(mapping|void result)
     CHECK_FD_SAFE_USE;
 
   array err;
-  int tmp;
   if (result)
     file = result;
 #ifdef PROFILE

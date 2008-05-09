@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.73 2008/05/07 11:02:41 mast Exp $
+// $Id: DBManager.pmod,v 1.74 2008/05/09 16:23:59 mast Exp $
 
 //! Manages database aliases and permissions
 
@@ -302,7 +302,6 @@ array(string) list( void|Configuration c )
 //! If @[c] is specified, only databases that the given configuration can
 //! access will be visible.
 {
-  array(mapping(string:string)) res;
   if( c )
     return  query( "SELECT "
                    " dbs.name AS name "
