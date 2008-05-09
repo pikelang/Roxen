@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.556 2008/05/09 16:23:59 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.557 2008/05/09 18:47:59 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -317,7 +317,11 @@ private void setup_pipe()
 }
 
 
-void send(string|object what, int|void len)
+void send(string|object what, int|void len,
+#ifdef CONNECTION_DEBUG
+	  void|int connection_debug_verbose
+#endif
+	 )
 {
   if( len>0 && port_obj && port_obj->minimum_byterate )
     call_out( end, len / port_obj->minimum_byterate );
@@ -326,22 +330,22 @@ void send(string|object what, int|void len)
   if(!pipe) setup_pipe();
   if(stringp(what)) {
 #ifdef CONNECTION_DEBUG
+    if (connection_debug_verbose
 #if TOSTR2(CONNECTION_DEBUG) != "1"
-    // CONNECTION_DEBUG may be defined to something like "text/" to
-    // see the response content for all content types with that
-    // prefix, only headers are shown otherwise.
-    if (has_prefix(file->type || "", TOSTR2(CONNECTION_DEBUG))) {
-      werror ("HTTP[%s]: Response =============================================\n"
-	      "%s\n", DEBUG_GET_FD,
+	// CONNECTION_DEBUG may be defined to something like "text/"
+	// to see the response content for all content types with that
+	// prefix, only headers are shown otherwise.
+	|| has_prefix(file->type || "", TOSTR2(CONNECTION_DEBUG))
+#endif
+       )
+      werror ("HTTP[%s]: Response (length %d) ===============================\n"
+	      "%s\n", DEBUG_GET_FD, sizeof (what),
 	      replace (sprintf ("%O", what),
 		       ({"\\r\\n", "\\n", "\\t"}),
 		       ({"\n",     "\n",  "\t"})));
-    } else
-#endif
-    {
+    else
       werror ("HTTP[%s]: Response =============================================\n"
-	      "string[%d]\n", DEBUG_GET_FD, sizeof (what));
-    }
+	      "String, length %d\n", DEBUG_GET_FD, sizeof (what));
 #else
     REQUEST_WERR(sprintf("HTTP: Pipe string %O", what));
 #endif
@@ -1898,8 +1902,8 @@ void low_send_result(string headers, string data, int|void len,
       data = file->read(len);
     } else if (!data) data = "";
 #ifdef CONNECTION_DEBUG
-    werror("HTTP[%s]: Response =============================================\n"
-	   "%s\n", DEBUG_GET_FD,
+    werror("HTTP[%s]: Response (length %d) ===============================\n"
+	   "%s\n", DEBUG_GET_FD, sizeof (headers) + sizeof (data),
 	   replace(sprintf("%O", headers + data),
 		   ({"\\r\\n", "\\n", "\\t"}),
 		   ({"\n",     "\n",  "\t"})));
@@ -1912,23 +1916,15 @@ void low_send_result(string headers, string data, int|void len,
     do_log(s);
   } else {
     MY_TRACE_ENTER("Async write.", 0);
-#ifdef CONNECTION_DEBUG
-#if TOSTR2 (CONNECTION_DEBUG) != "1"
-    if (!has_prefix (this_program::file->type || "", TOSTR2 (CONNECTION_DEBUG)))
-      // Avoid showing the headers twice if CONNECTION_DEBUG matches
-      // the content type.
-#endif
-      werror("HTTP[%s]: "
-	     "Response headers =====================================\n"
-	     "%s\n", DEBUG_GET_FD,
-	     replace(sprintf("%O", headers),
-		     ({"\\r\\n", "\\n", "\\t"}),
-		     ({"\n",     "\n",  "\t"})));
-#else
+#ifndef CONNECTION_DEBUG
     REQUEST_WERR(sprintf("HTTP: Send headers %O", headers));
 #endif
     if (sizeof(headers))
-      send(headers);
+      send(headers, 0,
+#ifdef CONNECTION_DEBUG
+	   1
+#endif
+	  );
     if (data && sizeof(data))
       send(data, len);
     if (file)
