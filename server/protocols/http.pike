@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.557 2008/05/09 18:47:59 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.558 2008/05/12 14:25:57 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2682,8 +2682,11 @@ void got_data(mixed fooid, string s, void|int chained)
 	      "Connection":misc->connection,
 	    ]);
 	    string expires;
-	    if (expires = (file->varies && (prot == "HTTP/1.0")?
+	    if (expires = (
+#ifndef DISABLE_VARY_EXPIRES_FALLBACK
+			   file->varies && (prot == "HTTP/1.0")?
 			   Roxen->http_date(predef::time(1)-31557600):
+#endif /* !DISABLE_VARY_EXPIRES_FALLBACK */
 			   file->expires)) {
 	      variant_heads["Expires"] = expires;
 	    }
@@ -2767,6 +2770,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	    TIMER_END(cache_lookup);
 	    id->low_send_result(full_headers, d, sizeof(d));
 
+	    method = "GET";
 	    remoteaddr = "127.0.0.1";
 	    host = 0;
 	    my_fd = 0;
