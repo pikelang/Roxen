@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.240 2008/05/09 18:26:27 mast Exp $
+// $Id: Roxen.pmod,v 1.241 2008/05/13 13:52:44 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2508,15 +2508,14 @@ string fix_relative( string file, RequestID id )
   // paths here. /mast
   [string prefix, file] = win_drive_prefix(file);
 #endif
-  string path = id->not_query;
 
   // +(id->misc->path_info?id->misc->path_info:"");
   if (has_prefix (file, "/"))
     return /*prefix +*/ combine_path ("/", file);
   else if (has_prefix (file, "#"))
-    return /*prefix +*/ combine_path ("/", path + file);
+    return /*prefix +*/ combine_path ("/", id->not_query + file);
   else
-    return /*prefix +*/ combine_path ("/", dirname (path), file);
+    return /*prefix +*/ combine_path ("/", dirname (id->not_query), file);
 }
 
 Stdio.File open_log_file( string logfile )
