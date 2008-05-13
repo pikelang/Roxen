@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.558 2008/05/12 14:25:57 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.559 2008/05/13 13:55:57 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2057,17 +2057,21 @@ void send_result(mapping|void result)
     // Content-Type	May change if a byte-range request is performed.
     // Content-Length	May change due to If-* headers, etc.
     // Connection	Depends on the protocol version and state.
+    // Expires          Might need to modify this for HTTP/1.0 clients.
+    // Cache-Control    Might need to modify this when sending stale responses.
     mapping(string:string) variant_heads = ([ "Date":"",
 					      "Content-Type":"",
 					      "Content-Length":"",
 					      "Connection":"",
 					      "Expires":"",
+					      "Cache-Control": "",
     ]) & heads;
     m_delete(heads, "Date");
     m_delete(heads, "Content-Type");
     m_delete(heads, "Content-Length");
     m_delete(heads, "Connection");
     m_delete(heads, "Expires");
+    m_delete(heads, "Cache-Control");
 
     // FIXME: prot.
     head_string = sprintf(" %s\r\n", head_status ||
@@ -2131,6 +2135,7 @@ void send_result(mapping|void result)
 				 "last_modified":misc->last_modified,
 				 "varies":varies,
 				 "expires":variant_heads["Expires"],
+				 "cache_control":variant_heads["Cache-Control"],
 				 "mtime":(file->stat &&
 					  file->stat[ST_MTIME]),
 				 "rf":realfile,
@@ -2681,12 +2686,33 @@ void got_data(mixed fooid, string s, void|int chained)
 	      "Content-Type":file->type,
 	      "Connection":misc->connection,
 	    ]);
+
+	    // Don't allow any downstream caching if the response is stale. One
+	    // reason for this is that if a client has been notified somehow
+	    // about the change that has made this entry stale, and then
+	    // proceeds to retrieve the resource to get the new version, it at
+	    // least shouldn't overcache the response if it's unlucky and gets
+	    // the old stale version. (One might consider disabling this if all
+	    // clients can be assumed to be end users.)
+	    if (cache_status->stale) {
+	      variant_heads["Cache-Control"] = "no-cache";
+	      // RFC2616, 14.9.3: "If a cache returns a stale response, /.../,
+	      // the cache MUST attach a Warning header to the stale response,
+	      // using Warning 110 (Response is stale)."
+	      variant_heads["Warning"] = "110 " +
+		replace (my_fd->query_address (1) || "roxen", " ", ":") +
+		" \"Response is stale - update is underway\" "
+		"\"" + variant_heads["Date"] + "\"";
+	    }
+	    else if (string cc = file->cache_control)
+	      variant_heads["Cache-Control"] = cc;
+
 	    string expires;
-	    if (expires = (
+	    if (expires = (cache_status->stale // See above.
 #ifndef DISABLE_VARY_EXPIRES_FALLBACK
-			   file->varies && (prot == "HTTP/1.0")?
-			   Roxen->http_date(predef::time(1)-31557600):
+			   || (file->varies && (prot == "HTTP/1.0"))
 #endif /* !DISABLE_VARY_EXPIRES_FALLBACK */
+			   ? Roxen->http_date(predef::time(1)-31557600) :
 			   file->expires)) {
 	      variant_heads["Expires"] = expires;
 	    }
@@ -2741,9 +2767,6 @@ void got_data(mixed fooid, string s, void|int chained)
 	    if (!refresh) {
 	      // No need to refresh the cached entry, so we just send it,
 	      // and are done.
-	      //
-	      // FIXME: Use Cache-Control: no-cache when sending
-	      // invalid entries.
 	      TIMER_END(cache_lookup);
 	      low_send_result(full_headers, d, sizeof(d));
 	      return;
@@ -2777,8 +2800,8 @@ void got_data(mixed fooid, string s, void|int chained)
 	    misc->connection = "close";
 	    
 	    MY_TRACE_ENTER (
-	      sprintf("Entry in need of refresh (%d seconds past refresh)",
-		      refresh - 1), 0);
+	      sprintf("Starting refresh of stale entry "
+		      "(%d seconds past refresh time)", refresh - 1), 0);
 	    cache_status["protcache"] = 0;
 	    cache_status["refresh"] = 1;
 	    cache_status["stale"] = 0;
