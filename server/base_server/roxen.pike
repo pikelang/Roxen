@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.975 2008/05/09 16:23:59 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.976 2008/05/13 16:12:06 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1006,15 +1006,41 @@ static void bg_process_queue()
 		    map (task[1], lambda (mixed arg)
 				  {return sprintf ("%O", arg);}) * ", ",
 		    bg_queue->size());
-      float task_time = gauge {
 #endif
+      int start_hrtime = gethrtime (1);
+      float task_vtime = gauge {
 	  if (task[0])		// Ignore things that have become destructed.
 	  // Note: BackgroundProcess.repeat assumes that there are
 	  // exactly two refs to task[0] during the call below.
 	    task[0] (@task[1]);
-#ifdef DEBUG_BACKGROUND_RUN
 	};
-      report_debug ("background_run done, took %f sec\n", task_time);
+      float task_rtime = (gethrtime (1) - start_hrtime) / 1e9;
+
+      if (task_rtime > 60.0)
+	report_warning ("Warning: Background job took more than one minute "
+			"(%g s real time and %g s cpu time):\n"
+			"  %s (%s)\n%s",
+			task_rtime, task_vtime,
+			functionp (task[0]) ?
+			sprintf ("%s: %s", Function.defined (task[0]),
+				 master()->describe_function (task[0])) :
+			programp (task[0]) ?
+			sprintf ("%s: %s", Program.defined (task[0]),
+				 master()->describe_program (task[0])) :
+			sprintf ("%O", task[0]),
+			map (task[1], lambda (mixed arg)
+					{return sprintf ("%O", arg);}) * ", ",
+			bg_queue->size() ?
+			(bg_queue->size() > 1 ?
+			 "  " + bg_queue->size() + " more jobs in the "
+			 "background queue were delayed.\n" :
+			 "  1 more job in the background queue was delayed.\n"):
+			"");
+#ifdef DEBUG_BACKGROUND_RUN
+      else
+	report_debug ("background_run done, "
+		      "took %g ms cpu time and %g ms real time\n",
+		      task_vtime * 1000, task_rtime * 1000);
 #endif
 
       if (busy_threads > 1) bg_last_busy = time();
