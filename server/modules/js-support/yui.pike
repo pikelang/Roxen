@@ -15,7 +15,51 @@ LocaleString module_doc =
 LOCALE(0,"This sets The Yahoo! User Interface Library (YUI) as a virtual file system "
 	 "of your site.");
 
-string yui_root_dir = combine_path(__FILE__, "../yui/");
+string module_dir = combine_path(__FILE__, "../");
+string yui_root_dir = "../var/yui/";
+
+int limit_yui_paths;
+
+void tar_extract(string tar_file, string dest_dir) {
+  object fs = Filesystem.Tar(tar_file);
+  array files = fs->find();
+
+  foreach(files, Stdio.Stat s) {
+    if(s->isdir())
+      Stdio.mkdirhier(yui_root_dir+s->fullpath);
+    else if(s->isreg()) 
+      Stdio.write_file(yui_root_dir+s->fullpath, fs->open(s->fullpath,"r")->read());
+  }
+}
+
+void ready_to_receive_requests (Configuration conf) {
+  multiset yui_versions = (< >);
+
+  foreach(glob("yui-*.tar",get_dir(module_dir)), string s) {
+    string ver;
+    sscanf(s, "yui-%s.tar", ver);
+    yui_versions[ver] = 1;
+  }
+  
+  if(!file_stat(yui_root_dir))
+    mkdir(yui_root_dir);
+
+  multiset missing_versions = yui_versions - (multiset)get_dir(yui_root_dir);
+
+  foreach(indices(missing_versions), string ver) {
+    report_notice("Will extraxt YUI version "+ ver+".\n");
+    tar_extract(combine_path(module_dir,"yui-"+ver+".tar"), yui_root_dir);
+  }
+
+
+}
+
+
+void start() {
+  set("searchpath", yui_root_dir);
+  ::start();
+  limit_yui_paths = query("limit-yui-paths");
+}
 
 void set_invisible(string var)
 {
@@ -27,17 +71,46 @@ void set_invisible(string var)
       });
 }
 
+
+int is_hidden(string s) {
+  if(limit_yui_paths) {
+    array path = s/"/";
+    if(sizeof(path) > 1 && !(< "assets","build">)[path[1]])
+      return 1;
+  }
+  return 0;
+}
+
+mixed stat_file( string f, RequestID id )
+{
+  if(is_hidden(f))
+    return 0;
+  return ::stat_file(f,id);
+}
+
+mixed find_file( string f, RequestID id )
+{
+  if(is_hidden(f))
+    return 0;
+  return ::find_file(f,id);
+}
+
 void create()
 {
   ::create();
   
   defvar("mountpoint", "/yui/", LOCALE(0,"Mount point"),
-	 TYPE_LOCATION|VAR_INITIAL|VAR_NO_DEFAULT,
+	 TYPE_LOCATION,
 	 LOCALE(0,"Where the module will be mounted in the site's virtual "
 		"file system."));
 
   set("searchpath", yui_root_dir);
   set_invisible("searchpath");
+
+
+  defvar("limit-yui-paths", 1, LOCALE(0, "Limit YUI paths"), TYPE_FLAG,
+         LOCALE(0, "If set, access is limited to the assets and build directories."));
+
 }
 
 string query_name()
