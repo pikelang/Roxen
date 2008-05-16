@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.27 2008/02/12 14:15:05 mast Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.28 2008/05/16 17:15:27 mast Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -515,9 +515,15 @@ class TagEmitTimeZones
 
   mapping(string:mapping(string : Calendar.TimeRange)) zones;
 
+  static void init()
+  {
+    refresh_zones(get_calendar(query("calendar"))->Second());
+  }
+
   Calendar.TimeRange get_time_in_timezone(Calendar.TimeRange time,
 					  string tzname, string region)
   {
+    if (!zones) init();
     Calendar.TimeRange q = time->set_timezone(tzname),
 		      ds = Calendar.Events.tzshift->next(q); // next (non|)dst
     if(ds && (!zones[region]->next_shift || (zones[region]->next_shift < ds)))
@@ -548,10 +554,9 @@ class TagEmitTimeZones
 	zones[region][z] = get_time_in_timezone(time, region+"/"+z, region);
   }
 
-  void create() { refresh_zones(get_calendar(query("calendar"))->Second()); }
-
   array get_dataset(mapping args, RequestID id)
   {
+    if (!zones) init();
     NOCACHE();
     string region = m_delete(args, "region");
     if(!region)
