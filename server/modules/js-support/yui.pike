@@ -16,7 +16,7 @@ LOCALE(0,"This sets The Yahoo! User Interface Library (YUI) as a virtual file sy
 	 "of your site.");
 
 string module_dir = combine_path(__FILE__, "../");
-string yui_root_dir = "../var/yui/";
+string yui_root_dir = (getenv("VARDIR") || "../var") +"/yui/";
 
 int limit_yui_paths;
 
