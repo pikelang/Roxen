@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.214 2008/05/07 15:19:49 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.215 2008/05/21 13:12:43 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2932,7 +2932,26 @@ class RoxenModule
   //! file directly.
 
   void stop();
+  //! This function is called when a running module is stopped either
+  //! because it's being dropped or reloaded in the admin interface,
+  //! or the server is being shut down orderly.
+
   void ready_to_receive_requests (Configuration conf);
+  //! This function is called after all modules in a configuration
+  //! have been loaded and @[start]ed. If a function is added later on
+  //! it's called directly @[start].
+  //!
+  //! When a configuration is loaded on server start, this function is
+  //! still called before the handler threads are started.
+  //!
+  //! @note
+  //! This function is intended for things that can't be done in
+  //! @[start] because all modules might not be loaded by then. There
+  //! is no well defined order between calls to
+  //! @[ready_to_receive_requests], so its usefulness diminishes the
+  //! more module that use it. In other words, don't use unless you
+  //! absolutely have to.
+
   string query_internal_location();
   string query_location();
   string|multiset(string) query_provides();
