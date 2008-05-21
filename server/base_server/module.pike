@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module.pike,v 1.229 2008/03/17 14:19:03 grubba Exp $
+// $Id: module.pike,v 1.230 2008/05/21 14:50:23 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -107,11 +107,38 @@ string fix_cvs(string from)
 int module_dependencies(Configuration configuration,
                         array (string) modules,
                         int|void now)
-//! If your module depends on other modules present in the server,
-//! call this function and supply an array of module identifiers. A
-//! module identifier is either the filename minus extension, or a
-//! string on the form that @[Roxen.get_modname] returns. In the
-//! latter case, the <config name> and <copy> parts are ignored.
+//! If your module depends on other modules, call this function to
+//! ensure that those modules get loaded.
+//!
+//! @param configuration
+//!   The configuration for the modules. Use zero for the same as this
+//!   module.
+//!
+//! @param modules
+//!   An array of module identifiers. A module identifier is either
+//!   the name of the pike file minus extension, or a string on the
+//!   form that @[Roxen.get_modname] returns. In the latter case, the
+//!   @tt{<config name>@} and @tt{<copy>@} parts are ignored.
+//!
+//! @param now
+//!   If this flag is nonzero then any modules that aren't already
+//!   loaded get loaded (and started) right away, so that the code
+//!   following the @[module_dependencies] call can start using them.
+//!
+//!   Otherwise the function only ensures that the modules exist in
+//!   the configuration and they will be loaded sometime during the
+//!   startup of it.
+//!
+//! @note
+//! This function is only intended to be called from @[start].
+//!
+//! @note
+//! The @[now] flag does not affect calls to
+//! @[ready_to_receive_requests] in the listed modules. I.e. even if
+//! you have declared a dependency on a module and have @[now] set,
+//! you cannot assume its @[ready_to_receive_requests] function has
+//! run (in fact, you can almost safely assume it hasn't). You can
+//! however assume that its @[start] function has been called.
 {
   modules = map (modules,
 		 lambda (string modname) {
