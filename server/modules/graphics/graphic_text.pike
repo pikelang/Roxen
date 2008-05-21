@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.303 2007/09/05 14:47:09 mathias Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.304 2008/05/21 15:05:45 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -719,7 +719,7 @@ private Image.Image|mapping draw_callback(mapping args, string text, RequestID i
 
   if(args->fadein)
   {
-    int amount=2, steps=10, delay=10, initialdelay=0, ox;
+    int amount=2, steps=10, delay=10, initialdelay=0;
     string res = img->gif_begin();
     sscanf(args->fadein,"%d,%d,%d,%d", amount, steps, delay, initialdelay);
     if(initialdelay)
