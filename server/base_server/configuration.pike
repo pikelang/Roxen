@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.650 2008/05/08 14:34:29 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.651 2008/05/22 12:14:02 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4387,9 +4387,9 @@ modules.</p>
 
 # The following lines are extensions of the above that adds useful cache
 # info. If you enable these you have to comment out or delete those above.
-#404: $host $referer $user [$cern_date] \"$method $resource $protocol\" 404 - $cache-status $eval-status
-#500: $host - ERROR [$cern_date] \"$method $resource $protocol\" 500 - $cache-status $eval-status
-#*: $host - $user [$cern_date] \"$method $resource $protocol\" $response $length $cache-status $eval-status
+#404: $host $referer $user [$cern_date] \"$method $resource $protocol\" 404 - $cache-status $eval-status $request-time
+#500: $host - ERROR [$cern_date] \"$method $resource $protocol\" 500 - $cache-status $eval-status $request-time
+#*: $host - $user [$cern_date] \"$method $resource $protocol\" $response $length $cache-status $eval-status $request-time
 
 # You might want to enable some of the following lines to get logging
 # of various internal activities in the server. The formats below are
