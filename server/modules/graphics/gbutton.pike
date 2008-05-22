@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.115 2006/01/25 09:21:47 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.116 2008/05/22 14:43:04 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -869,10 +869,10 @@ class ButtonFrame {
     foreach(glob("*-*", indices(args)), string n)
       new_args[n] = args[n];
 
+    //string fn;
     //  if( new_args->stat && (fn = id->conf->real_file( fi, id ) ) )
     //     Roxen.add_cache_stat_callback( id, fn, new_args->stat );
 
-    string fn;
 //     werror("mkurl took %dµs\n", gethrtime()-t );
 
 //     t = gethrtime();

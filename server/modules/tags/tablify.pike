@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: tablify.pike,v 1.79 2005/10/19 11:03:05 anders Exp $";
+constant cvs_version = "$Id: tablify.pike,v 1.80 2008/05/22 14:45:59 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -529,7 +529,7 @@ string _fields(string name, mapping arg, string q, mapping m)
 
 string simpletag_tablify(string tag, mapping m, string q, RequestID id)
 {
-  array rows, res;
+  array rows;
   string sep;
 
   q = parse_html(q, ([]), (["fields":_fields]), m);
