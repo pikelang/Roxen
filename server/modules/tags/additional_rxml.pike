@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.41 2008/04/10 06:50:54 marty Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.42 2008/05/22 14:47:07 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -791,8 +791,8 @@ class TagFormatNumber
     inherit RXML.Frame;
 
     string do_return(RequestID req_id) {
-      constant PERCENT   = 0x01;
-      constant PER_MILLE = 0x02;
+      //constant PERCENT   = 0x01;
+      //constant PER_MILLE = 0x02;
       constant TRUE      = 0x01;
       constant FALSE     = 0x00;
       constant FRAC_PART = 1;
