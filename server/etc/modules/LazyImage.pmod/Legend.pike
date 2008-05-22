@@ -6,7 +6,6 @@ static
   LazyImage.Layers process( LazyImage.Layers layers )
   {
     array labels = args->parsed_labels;
-    Image.Layer res;
     int col = 2;
       
     if( args->columns )

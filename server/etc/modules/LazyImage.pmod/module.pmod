@@ -1634,8 +1634,6 @@ class Expand
   static {
     Layers process( Layers layers )
     {
-      int x, y;
-      int x0=10000000, y0=100000000;
       Layers victims = layers;
       if( !layers )
 	RXML.parse_error( "Expand cannot be the toplevel node\n");
