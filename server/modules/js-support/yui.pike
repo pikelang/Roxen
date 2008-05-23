@@ -32,7 +32,7 @@ void tar_extract(string tar_file, string dest_dir) {
   }
 }
 
-void ready_to_receive_requests (Configuration conf) {
+void setup_yui() {
   multiset yui_versions = (< >);
 
   foreach(glob("yui-*.tar",get_dir(module_dir)), string s) {
@@ -55,10 +55,13 @@ void ready_to_receive_requests (Configuration conf) {
 }
 
 
-void start() {
+void start(int when) {
+  werror("when: %O\n", when);
   set("searchpath", yui_root_dir);
   ::start();
   limit_yui_paths = query("limit-yui-paths");
+  if(when == 0)
+    setup_yui();
 }
 
 void set_invisible(string var)
