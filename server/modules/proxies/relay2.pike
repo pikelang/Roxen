@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.36 2007/03/29 15:50:33 wellhard Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.37 2008/05/30 08:44:13 erik Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -424,7 +424,12 @@ void create( Configuration c )
             "If <b>LAST</b> is specified, the match is only tried if Roxen "
             "fails to find a file (a 404 error). If <b>rewrite</b> is "
 	    "specified, redirects and file contents are rewritten if possible, "
-	    "so that links and images point to the correct place.</p>");
+	    "so that links and images point to the correct place.</p><p>"
+
+	    "Example:\n"
+	    "<pre>\n"
+	    "LOCATION /&lt;path&gt;/ CALL http://&lt;domain&gt;/&lt;path&gt;/\n"	   
+ 	    "</pre></p>");
     defvar("pre-rxml", "",
            "Header-RXML", TYPE_TEXT,
            "Included before the page contents for redirectpatterns with "
