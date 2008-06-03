@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.42 2008/05/22 14:47:07 mast Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.43 2008/06/03 12:31:20 liin Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -144,17 +144,25 @@ class AsyncHTTPClient {
  
   void req_ok() {
     status = con->status;
-    // Wake up handler thread
-    queue->write("@");
+    con->timed_async_fetch(data_ok, data_fail);
   }
   
   void req_fail() {
-    //werror("Insert HREF request failed or timed out.\n");
     status = 0;
     // Wake up handler thread
     queue->write("@");
   }
 
+  void data_ok() {
+    // Wake up handler thread
+    queue->write("@");
+  }
+  
+  void data_fail() {
+    status = 0;
+    // Wake up handler thread
+    queue->write("@");
+  }
 
   void run() {
     /*
@@ -192,14 +200,18 @@ class AsyncHTTPClient {
     else
       do_method("GET", args->href, 0, headers);
 
-    if(args->timeout)
+    if(args->timeout) {
       con->timeout = (int) args->timeout;
-    else if (int t = global::query ("default_timeout"))
+      con->data_timeout = (int) args->timeout;
+    } else if (int t = global::query ("default_timeout")) {
       con->timeout = t;
-    else
+      con->data_timeout = t;
+    } else {
       // There ought to be a way to disable the timeout in
       // Protocols.HTTP.Query.
-      con->timeout = 2147483647;
+      con->timeout = 214748364;
+      con->data_timeout = 214748364;
+    }
   }
   
 }
