@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.43 2008/06/03 12:31:20 liin Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.44 2008/06/10 15:46:38 stewa Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -111,7 +111,10 @@ class AsyncHTTPClient {
       request_headers = ([]);
     mapping default_headers = ([
       "user-agent" : "Mozilla/4.0 compatible (Pike HTTP client)",
-      "host" : sprintf("%s:%d", url->host, url->port) ]);
+      "host" : url->host + ( (url->scheme=="http" && url->port != 80) ||
+                             (url->scheme=="https" && url->port != 443) ?
+                             ":"+ url->port : "")
+    ]);
     
     if(url->user || url->passwd)
       default_headers->authorization = "Basic "
