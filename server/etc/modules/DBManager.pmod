@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.74 2008/05/09 16:23:59 mast Exp $
+// $Id: DBManager.pmod,v 1.75 2008/06/11 17:21:38 jonasw Exp $
 
 //! Manages database aliases and permissions
 
@@ -670,7 +670,7 @@ Sql.Sql get( string name, void|Configuration conf,
 Sql.Sql cached_get( string name, void|Configuration c, void|int ro,
 		    void|string charset)
 {
-  return get (name, c, ro, charset);
+  return get (name, c, ro, 0, charset);
 }
 
 static Thread.Local table_locks = Thread.Local();
