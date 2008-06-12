@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.147 2008/03/21 17:31:17 grubba Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.148 2008/06/12 12:14:51 grubba Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -1015,3 +1015,18 @@ void create()
   foreach(master_efuns, string e)
     add_constant(e, o[e]);
 }
+
+#if __REAL_VERSION__ >= 7.7
+
+local object get_compat_master(int major, int minor)
+{
+  if ((major > __MAJOR__) || ((major == __MAJOR__) && (minor >= __MINOR__))) {
+    // Disable the compat master stuff for the default compatibility level
+    // or better, since otherwise the main Roxen code won't get at our
+    // added functions.
+    return this;
+  }
+  return ::get_compat_master(major, minor);
+}
+
+#endif
