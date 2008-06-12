@@ -1,4 +1,4 @@
-// $Id: add_module.pike,v 1.87 2008/04/08 15:32:26 grubba Exp $
+// $Id: add_module.pike,v 1.88 2008/06/12 07:24:34 erikd Exp $
 
 #include <config_interface.h>
 #include <module.h>
@@ -115,6 +115,7 @@ string page_base( RequestID id, string content, int|void noform,
                   "<subtablist width='100%%'>"
                   "<st-tabs></st-tabs>"
                   "<st-page>"
+		  "<h2>Site: '&form.config;'</h2>"
                   "<if not='1' variable='form.initial'>"
 		  "<table width='100%%' border='0' cellspacing='4' "
 		  "       cellpadding='0'>"
