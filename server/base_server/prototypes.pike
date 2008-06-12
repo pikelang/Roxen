@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.215 2008/05/21 13:12:43 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.216 2008/06/12 12:08:58 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1809,8 +1809,10 @@ class RequestID
   void add_response_header (string name, string value)
   //! Adds a header @[name] with the value @[value] to be sent in the
   //! http response. An existing header with the same name will not be
-  //! overridden, instead another (duplicate) header line will be sent
-  //! in the response.
+  //! overridden, instead another (duplicate) header line with
+  //! @[value] will be sent in the response, after the old one(s).
+  //! However, if a header with the same name and value already exists
+  //! then another one isn't added.
   //!
   //! @note
   //! If used from within an RXML parse session, this function will
@@ -1819,7 +1821,8 @@ class RequestID
   //! adding the header directly to @tt{misc->moreheads@} or
   //! @tt{misc->defines[" _extra_heads"]@}.
   {
-    mapping hdrs = misc->defines && misc->defines[" _extra_heads"] || misc->moreheads;
+    mapping(string:string|array(string)) hdrs =
+      misc->defines && misc->defines[" _extra_heads"] || misc->moreheads;
     if (!hdrs) hdrs = misc->moreheads = ([]);
 
     // Essentially Roxen.add_http_header inlined. Can't refer to it
@@ -2245,7 +2248,8 @@ class RequestID
     return f;
   }
 
-  mapping(string:string) make_response_headers (mapping(string:mixed) file)
+  mapping(string:string|array(string)) make_response_headers (
+    mapping(string:mixed) file)
   //! Make the response headers from a response mapping for this
   //! request. The headers associated with transfer modifications of
   //! the response, e.g. 206 Partial Content and 304 Not Modified, are
@@ -2393,6 +2397,11 @@ class RequestID
 	heads->Vary = ((array)misc->vary) * ", ";
       }
     }
+
+    // Note: The following will cause headers with the same names to
+    // be replaced rather than added to. That's not always what one
+    // wants, but otoh it's not clear in which order to merge them
+    // either.
 
     if(mappingp(file->extra_heads))
       heads |= file->extra_heads;
