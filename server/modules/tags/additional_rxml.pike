@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.44 2008/06/10 15:46:38 stewa Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.45 2008/06/13 16:27:24 dist Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -1175,8 +1175,8 @@ constant tagdoc=([
 </attr>
 ",
 
-  "xml-rpc-call":
-  ({#"<desc type='cont'><p><short>
+ "xml-rpc-call":
+ #"<desc type='cont'><p><short>
  Perform a synchronous XML-RPC call.</short> The content specifies the
  call parameters, and the result of the tag is the return parameters
  (if the call is successful). The result is expressed using the same
@@ -1246,7 +1246,7 @@ constant tagdoc=([
  receive the fault string if the call fails.</p>
 </attr>",
     // FIXME: Document content tags.
-  }),
+
 
 "sscanf":#"<desc type='cont'><p><short>
  Extract parts of a string and put them in other variables.</short> Refer to
