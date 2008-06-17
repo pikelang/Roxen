@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.549 2008/05/23 12:43:55 mathias Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.550 2008/06/17 09:35:35 erik Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -10170,7 +10170,7 @@ Specify scope to test for existence.</p>
 
 <attr name='filter-exclude' value='list'><p>The filter exclude attribute is
  used to filter out unwanted rows that would otherwise be emitted. 
- Uses the same syntax as the filter attribute.<p>
+ Uses the same syntax as the filter attribute.</p>
 </attr>
 
 <attr name='sort' value='list'><p>
