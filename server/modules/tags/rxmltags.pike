@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.543 2008/06/17 07:24:55 erik Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.544 2008/06/17 09:47:48 erik Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -7185,7 +7185,7 @@ using the pre tag.
 <attr name='http-time' value='http time stamp'>
  <p>Display this time instead of the current. This attribute uses the
  specified http-time, instead of the current time.</p>
- <p>All three http-time formats are supported:
+ <p>All three http-time formats are supported:</p>
 
 <ex><p>RFC 822, updated by RFC 1123:
 <date http-time='Sun, 06 Nov 1994 08:49:37 GMT'/></p>
