@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: newdecode.pike,v 1.34 2008/02/04 12:49:14 jonasw Exp $
+// $Id: newdecode.pike,v 1.35 2008/06/18 20:03:33 mast Exp $
 
 // The magic below is for the 'install' program
 #ifndef roxenp
@@ -94,6 +94,12 @@ string trim_comments( string from )
     if( strlen(l) && l[0] == '#' )
       // Just defeat any tags on the line. This won't clobber any
       // variable values, since '<' is always encoded in them.
+      //
+      // NB: The above is probably false - a multiline <str> value can
+      // contain a "#" on the last line which then would be followed
+      // by "</str>" on the same line. That can at least occur in
+      // newer files with xml headers, but this function shouldn't be
+      // used at all then.
       res += replace (l, "<", "") + "\n";
     else
       res += l+"\n";
