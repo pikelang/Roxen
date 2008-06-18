@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.230 2008/03/21 13:48:56 grubba Exp $
+# $Id: start,v 1.231 2008/06/18 21:15:57 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -353,6 +353,9 @@ parse_args() {
     # Argument passed along to Pike.
     DEFINES="$DEFINES \"$1\""
   ;;
+  --pikeargs=*)
+    PIKEARGS="$PIKEARGS "`expr "$1" : '--pikeargs=\(.*\)'`
+  ;;
   '--version')
    if [ "x$passhelp" = "x1" ] ; then
      pass="$pass --version"
@@ -367,7 +370,7 @@ parse_args() {
    fi
   ;;
   --self-test-dir=*)
-    SELF_TEST_DIR=`echo $1 | sed -e's/--self-test-dir=//'`
+    SELF_TEST_DIR=`echo $1 | sed -e's/^--self-test-dir=//'`
   ;;
   '--self-test')
     setup_for_tests
@@ -556,6 +559,8 @@ the default arguments.
 				  (i.e. with --rtl-debug to configure).
 
        .B-wB.:                        Turn on Pike warnings.
+
+       .B--pikeargs=<args>B.:         Pass arbitrary arguments to Pike.
 
   .BEnvironment variables:B.
 
@@ -792,9 +797,9 @@ start_roxen() {
     remove_old_dot_o_files "user request"
   fi
   if [ "x$DIR" != "x../configurations" ] ; then
-    args="$DEFINES $ARGS $program --config-dir='`echo \"$DIR\" | sed -e \"s/'/'\\\"'\\\"'/g\"`' $pass"
+    args="$PIKEARGS $DEFINES $ARGS $program --config-dir='`echo \"$DIR\" | sed -e \"s/'/'\\\"'\\\"'/g\"`' $pass"
   else
-    args="$DEFINES $ARGS $program $pass"
+    args="$PIKEARGS $DEFINES $ARGS $program $pass"
   fi
   if [ x"$cd_to" != x ] ; then
     cd "$cd_to"
@@ -938,7 +943,7 @@ if [ -z "$once" ] ; then
   fi
   if [ -f "bin/setup_nsr.pike" ]; then
     # Setup .nsr (Networker) files for the logfile directories.
-    eval "\"$pike\" $DEFINES bin/setup_nsr.pike --logdir=\"$LOGDIR\" --debugdir=\"$DEBUGDIR\""
+    eval "\"$pike\" $PIKEARGS $DEFINES bin/setup_nsr.pike --logdir=\"$LOGDIR\" --debugdir=\"$DEBUGDIR\""
   fi
   if [ $verbose -gt 0 ]; then
     dp "Using configuration from $DIR"
