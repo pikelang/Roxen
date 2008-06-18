@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.241 2008/05/13 13:52:44 mast Exp $
+// $Id: Roxen.pmod,v 1.242 2008/06/18 20:05:59 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -230,14 +230,15 @@ string decode_mode(int m)
   return s;
 }
 
-mapping add_http_header(mapping to, string name, string value)
+mapping(string:mixed) add_http_header(mapping(string:mixed) to,
+				      string name, string value)
 //! Adds a header @[name] with value @[value] to the header style
-//! mapping @[to] (which commonly is @tt{id->misc[" _extra_heads"]@})
+//! mapping @[to] (which commonly is @tt{id->defines[" _extra_heads"]@})
 //! if no header with that value already exist.
 //!
 //! @note
 //! This function doesn't notify the RXML p-code cache, which makes it
-//! inappropriate to use for updating @tt{id->misc[" _extra_heads"]@}
+//! inappropriate to use for updating @tt{id->defines[" _extra_heads"]@}
 //! in RXML tags (which has been its primary use). Use
 //! @[RequestID.add_response_header] instead.
 {
@@ -253,6 +254,29 @@ mapping add_http_header(mapping to, string name, string value)
   else
     to[name] = value;
   return to;
+}
+
+mapping(string:mixed) merge_http_headers (mapping(string:mixed) a,
+					  mapping(string:mixed) b)
+//! Merges two response header mappings as if @[add_http_header] was
+//! called for @[a] with every header in @[b], except that it isn't
+//! destructive on @[a].
+{
+  mapping(string:mixed) res = a ^ b;
+  foreach (a & b; string name;) {
+    string|array(string) a_val = a[name], b_val = b[name];
+    if (a_val == b_val)
+      // Shortcut for the string case (usually). This also ensures
+      // that same-string values don't become arrays with a single
+      // element.
+      res[name] = a_val;
+    else {
+      if (!arrayp (a_val)) a_val = ({a_val});
+      if (!arrayp (b_val)) b_val = ({b_val});
+      res[name] = a_val | b_val;
+    }
+  }
+  return res;
 }
 
 int is_mysql_keyword( string name )
@@ -1004,76 +1028,64 @@ mapping http_stream(Stdio.File from)
   return ([ "raw":1, "file":from, "len":-1, ]);
 }
 
-mapping http_digest_required(mapping(string:string) challenge,
-			     string|void message)
-//! Generates a result mapping that will instruct the web browser that
-//! the user needs to authorize himself before being allowed access.
-//! `realm' is the name of the realm on the server, which will
-//! typically end up in the browser's prompt for a name and password
-//! (e g "Enter username for <i>realm</i> at <i>hostname</i>:"). The
-//! optional message is the message body that the client typically
-//! shows the user, should he decide not to authenticate himself, but
-//! rather refraim from trying to authenticate himself.
+mapping(string:mixed) http_digest_required(mapping(string:string) challenge,
+					   string|void message)
+//! Generates a result mapping that instructs the browser to
+//! authenticate the user using Digest authentication (see RFC 2617
+//! section 3).
 //!
-//! In HTTP terms, this sends a <tt>401 Auth Required</tt> response
-//! with the header <tt>WWW-Authenticate: basic realm="`realm'"</tt>.
-//! For more info, see RFC 2617.
+//! The optional message is the message body that the client typically
+//! shows the user if he or she decides to abort the authentication
+//! request.
 {
   if(!message)
     message = "<h1>Authentication failed.\n</h1>";
   HTTP_WERR(sprintf("Auth required (%O)", challenge));
   string digest_challenge = "";
   foreach(challenge; string key; string val) {
+    // FIXME: This doesn't work with all Digest directives. E.g. the
+    // algorithm gets incorrectly quoted.
     digest_challenge += sprintf(" %s=%O", key, val);
   }
   return http_low_answer(401, message)
-    + ([ "extra_heads":([ "WWW-Authenticate":"Digest "+digest_challenge,]),]);
+    + ([ "extra_heads":([ "WWW-Authenticate":"Digest"+digest_challenge,]),]);
 }
 
-mapping http_auth_required(string realm, string|void message,
-			   void|RequestID id)
-//! Generates a result mapping that will instruct the web browser that
-//! the user needs to authorize himself before being allowed access.
-//! `realm' is the name of the realm on the server, which will
-//! typically end up in the browser's prompt for a name and password
-//! (e g "Enter username for <i>realm</i> at <i>hostname</i>:"). The
-//! optional message is the message body that the client typically
-//! shows the user, should he decide not to authenticate himself, but
-//! rather refraim from trying to authenticate himself.
+mapping(string:mixed) http_auth_required(string realm, string|void message,
+					 void|RequestID id)
+//! Generates a result mapping that instructs the browser to
+//! authenticate the user using Basic authentication (see RFC 2617
+//! section 2). @[realm] is the name of the realm on the server, which
+//! will typically end up in the browser's prompt for a name and
+//! password (e.g. "Enter username for @i{realm@} at @i{hostname@}:").
 //!
-//! In HTTP terms, this sends a <tt>401 Auth Required</tt> response
-//! with the header <tt>WWW-Authenticate: basic realm="`realm'"</tt>.
-//! For more info, see RFC 2617.
+//! The optional message is the message body that the client typically
+//! shows the user if he or she decides to abort the authentication
+//! request.
 {
   HTTP_WERR("Auth required ("+realm+")");
   if (id) {
     return id->conf->auth_failed_file( id, message )
-      + ([ "extra_heads":([ "WWW-Authenticate":"basic realm=\""+realm+"\"",]),]);
+      + ([ "extra_heads":([ "WWW-Authenticate":
+			    sprintf ("Basic realm=%O", realm)])]);
   }
   if(!message)
     message = "<h1>Authentication failed.</h1>";
   return http_low_answer(401, message)
-    + ([ "extra_heads":([ "WWW-Authenticate":"basic realm=\""+realm+"\"",]),]);
+    + ([ "extra_heads":([ "WWW-Authenticate":
+			  sprintf ("Basic realm=%O", realm)])]);
 }
 
-mapping http_proxy_auth_required(string realm, void|string message)
-//! Generates a result mapping that will instruct the client end that
-//! it needs to authenticate itself before being allowed access.
-//! `realm' is the name of the realm on the server, which will
-//! typically end up in the browser's prompt for a name and password
-//! (e g "Enter username for <i>realm</i> at <i>hostname</i>:"). The
-//! optional message is the message body that the client typically
-//! shows the user, should he decide not to authenticate himself, but
-//! rather refraim from trying to authenticate himself.
-//!
-//! In HTTP terms, this sends a <tt>407 Proxy authentication
-//! failed</tt> response with the header <tt>Proxy-Authenticate: basic
-//! realm="`realm'"</tt>. For more info, see RFC 2617.
+mapping(string:mixed) http_proxy_auth_required(string realm,
+					       void|string message)
+//! Similar to @[http_auth_required], but returns a 407
+//! Proxy-Authenticate header (see RFC 2616 section 14.33).
 {
   if(!message)
     message = "<h1>Proxy authentication failed.</h1>";
   return http_low_answer(407, message)
-    + ([ "extra_heads":([ "Proxy-Authenticate":"basic realm=\""+realm+"\"",]),]);
+    + ([ "extra_heads":([ "Proxy-Authenticate":
+			  sprintf ("Basic realm=%O", realm)])]);
 }
 
 
