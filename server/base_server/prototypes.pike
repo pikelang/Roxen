@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.216 2008/06/12 12:08:58 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.217 2008/06/18 20:04:12 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1818,8 +1818,17 @@ class RequestID
   //! If used from within an RXML parse session, this function will
   //! ensure that the new header is registered properly in the RXML
   //! p-code cache. That's the primary reason to used it instead of
-  //! adding the header directly to @tt{misc->moreheads@} or
-  //! @tt{misc->defines[" _extra_heads"]@}.
+  //! adding the header directly to
+  //! @tt{misc->defines[" _extra_heads"]@} or @tt{misc->moreheads@}.
+  //!
+  //! @note
+  //! Although case is insignificant in http header names, it is
+  //! significant here. @[name] should always follow the
+  //! capitalization used in RFC 2616.
+  //!
+  //! @seealso
+  //! @[set_response_header], @[get_response_headers],
+  //! @[remove_response_headers]
   {
     mapping(string:string|array(string)) hdrs =
       misc->defines && misc->defines[" _extra_heads"] || misc->moreheads;
@@ -1852,15 +1861,23 @@ class RequestID
   //! Sets the header @[name] to the value @[value] to be sent in the
   //! http response. If an existing header with the same name exists,
   //! its value(s) will be overridden. This is useful for headers like
-  //! "Expire-Time", otherwise @[add_response_header] is typically a
-  //! better choice.
+  //! @expr{"Expire-Time"@}, otherwise @[add_response_header] is
+  //! typically a better choice.
   //!
   //! @note
   //! If used from within an RXML parse session, this function will
   //! ensure that the new header is registered properly in the RXML
   //! p-code cache. That's the primary reason to used it instead of
-  //! adding the header directly to @tt{misc->moreheads@} or
-  //! @tt{misc->defines[" _extra_heads"]@}.
+  //! adding the header directly to
+  //! @tt{misc->defines[" _extra_heads"]@} or @tt{misc->moreheads@}.
+  //!
+  //! @note
+  //! Although case is insignificant in http header names, it is
+  //! significant here. @[name] should always follow the
+  //! capitalization used in RFC 2616.
+  //!
+  //! @seealso
+  //! @[get_response_headers], @[remove_response_headers]
   {
     if (misc->defines && misc->defines[" _extra_heads"]) {
       misc->defines[" _extra_heads"][name] = value;
@@ -1871,6 +1888,112 @@ class RequestID
       if (!misc->moreheads) misc->moreheads = ([]);
       misc->moreheads[name] = value;
     }
+  }
+
+  static constant http_nontoken_chars = ([
+    0:1, 1:1, 2:1, 3:1, 4:1, 5:1, 6:1, 7:1, 8:1, 9:1, 10:1, 11:1, 12:1, 13:1,
+    14:1, 15:1, 16:1, 17:1, 18:1, 19:1, 20:1, 21:1, 22:1, 23:1, 24:1, 25:1,
+    26:1, 27:1, 28:1, 29:1, 30:1, 31:1, '(':1, ')':1, '<':1, '>':1, '@':1,
+    ',':1, ';':1, ':':1, '\\':1, '"':1, '/':1, '[':1, ']':1, '?':1, '=':1,
+    '{':1, '}':1, ' ':1, '\t':1]);
+
+#define MATCH_TOKEN_PREFIX(VAL, PREFIX)					\
+  (VAL == PREFIX ||							\
+   has_prefix (VAL, PREFIX) && http_nontoken_chars[VAL[sizeof (PREFIX)]])
+
+  array(string) get_response_headers (string name, void|string value_prefix)
+  //! Returns the values of all headers with the given @[name] in the
+  //! set of headers that are to be sent in the response.
+  //!
+  //! If @[value_prefix] is given then it must match a prefix of the
+  //! header value up to a token boundary for the value to be
+  //! returned.
+  //!
+  //! @returns
+  //! Returns an array containing the matching values (zero or more).
+  //!
+  //! @note
+  //! This function only searches through headers in
+  //! @tt{misc->defines[" _extra_heads"]@} and @tt{misc->moreheads@},
+  //! i.e. headers that have been set using @[add_response_header] or
+  //! @[set_response_header].
+  {
+    array(string) res = ({});
+
+    foreach (({misc->defines && misc->defines[" _extra_heads"],
+	       misc->moreheads}),
+	     mapping(string:string|array(string)) hdrs)
+      if (hdrs) {
+	if (array(string)|string cur_val = hdrs[name]) {
+	  if (!value_prefix)
+	    res += arrayp (cur_val) ? cur_val : ({cur_val});
+	  else {
+	    if (arrayp (cur_val)) {
+	      foreach (cur_val, string val)
+		if (MATCH_TOKEN_PREFIX (val, value_prefix))
+		  res += ({val});
+	    }
+	    else
+	      if (MATCH_TOKEN_PREFIX (cur_val, value_prefix))
+		res += ({cur_val});
+	  }
+	}
+      }
+
+    return res;
+  }
+
+  int remove_response_headers (string name, void|string value_prefix)
+  //! Removes a header with the given @[name] from the set of headers
+  //! that are to be sent in the response.
+  //!
+  //! If @[value_prefix] is given then it must match a prefix of the
+  //! header value up to a token boundary for the header to be
+  //! removed, otherwise all headers with the given name are removed.
+  //!
+  //! @returns
+  //! Returns nonzero if at least one header was removed.
+  //!
+  //! @note
+  //! This function only removes headers in
+  //! @tt{misc->defines[" _extra_heads"]@} and @tt{misc->moreheads@},
+  //! i.e. headers that have been set using @[add_response_header] or
+  //! @[set_response_header]. It's possible that a matching header
+  //! gets sent anyway if it gets added later or through other means
+  //! (e.g. through @tt{"extra_heads"@} in a response mapping).
+  {
+    int removed;
+
+    foreach (({misc->defines && misc->defines[" _extra_heads"],
+	       misc->moreheads}),
+	     mapping(string:string|array(string)) hdrs)
+      if (hdrs) {
+	if (array(string)|string cur_val = hdrs[name]) {
+	  if (!value_prefix) {
+	    m_delete (hdrs, name);
+	    removed = 1;
+	  }
+	  else {
+	    if (arrayp (cur_val)) {
+	      foreach (cur_val; int i; string val)
+		if (MATCH_TOKEN_PREFIX (val, value_prefix)) {
+		  cur_val[i] = 0;
+		  removed = 1;
+		}
+	      cur_val -= ({0});
+	      if (sizeof (cur_val)) hdrs[name] = cur_val;
+	      else m_delete (hdrs, name);
+	    }
+	    else
+	      if (MATCH_TOKEN_PREFIX (cur_val, value_prefix)) {
+		m_delete (hdrs, name);
+		removed = 1;
+	      }
+	  }
+	}
+      }
+
+    return removed;
   }
 
   static MultiStatus multi_status;
