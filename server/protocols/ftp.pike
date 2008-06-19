@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.121 2008/05/09 16:23:59 mast Exp $
+ * $Id: ftp.pike,v 2.122 2008/06/19 12:35:08 agehall Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -231,6 +231,7 @@ class RequestID2
       pragma = (<>);
       rest_query = "";
       extra_extension = "";
+      root_id = this_object();
     }
     time = predef::time(1);
 #ifdef FTP2_DEBUG
