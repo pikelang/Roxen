@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.651 2008/05/22 12:14:02 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.652 2008/06/24 16:19:52 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4367,7 +4367,7 @@ modules.</p>
   <td>Corresponds to Roxen 4.5.</td></tr>
 </table></p>")));
 
-  set ("compat_level", roxen.__roxen_version__);
+  set ("compat_level", roxen.roxen_ver);
   // Note to developers: This setting can be accessed through
   // id->conf->query("compat_level") or similar, but observe that that
   // call is not entirely cheap. It's therefore advisable to put it in

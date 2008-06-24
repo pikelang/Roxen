@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.976 2008/05/13 16:12:06 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.977 2008/06/24 16:19:52 mast Exp $";
 
 //! @appears roxen
 //!
@@ -5054,9 +5054,9 @@ int main(int argc, array tmp)
   dump( "base_server/fastpipe.pike" );
   dump( "base_server/throttler.pike" );
 
-  if (!has_value (compat_levels, __roxen_version__))
+  if (!has_value (compat_levels, roxen_ver))
     report_debug ("Warning: The current version %s does not exist in "
-		  "roxen.compat_levels.\n", __roxen_version__);
+		  "roxen.compat_levels.\n", roxen_ver);
 
   add_constant( "Protocol", Protocol );
 #ifdef TIMERS

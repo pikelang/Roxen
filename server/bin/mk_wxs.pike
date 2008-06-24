@@ -1,5 +1,5 @@
 /*
- * $Id: mk_wxs.pike,v 1.15 2004/11/24 09:45:02 grubba Exp $
+ * $Id: mk_wxs.pike,v 1.16 2008/06/24 16:19:52 mast Exp $
  *
  * Make a Windows Installer XML Source file (wxs) suitable
  * for a Roxen installer.
@@ -10,8 +10,8 @@
 import Standards.XML.Wix;
 
 #ifdef ROXEN_VERSION
-constant __roxen_version__ = "4.0";
-constant __roxen_build__ = "0";
+constant roxen_ver = "5.0";
+constant roxen_build = "0";
 #else
 #include "../etc/include/version.h"
 #endif
@@ -19,7 +19,7 @@ constant __roxen_build__ = "0";
 int main(int argc, array(string) argv)
 {
   string base_guid = "e0eb949e-2d84-11d9-8482-77582478aab0"; // WebServer.
-  string version_str = __roxen_version__+"."+__roxen_build__;
+  string version_str = roxen_ver+"."+roxen_build;
   string title = "Roxen Webserver";
   string manufacturer = "Roxen Internet Software";
   string pike_module = "Pike_module.msm";
@@ -39,7 +39,7 @@ int main(int argc, array(string) argv)
       if (stringp(opt[1])) {
 	version_str = opt[1];
       } else {
-	werror("$Id: mk_wxs.pike,v 1.15 2004/11/24 09:45:02 grubba Exp $\n");
+	werror("$Id: mk_wxs.pike,v 1.16 2008/06/24 16:19:52 mast Exp $\n");
 	exit(0);
       }
       break;

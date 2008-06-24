@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.394 2008/05/09 16:23:59 mast Exp $
+// $Id: roxenloader.pike,v 1.395 2008/06/24 16:19:52 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.394 2008/05/09 16:23:59 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.395 2008/06/24 16:19:52 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1007,7 +1007,7 @@ string roxen_version()
 //! @appears roxen_version
 {
   // Note: roxen_release is usually "-cvs" at the time this is compiled.
-  return __roxen_version__+"."+__roxen_build__+(release||roxen_release);
+  return roxen_ver+"."+roxen_build+(release||roxen_release);
 }
 
 //! @appears roxen_path

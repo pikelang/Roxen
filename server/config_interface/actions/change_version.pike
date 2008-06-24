@@ -69,8 +69,8 @@ array available_versions()
       catch {
 	string s = Stdio.read_file( "../"+f+"/etc/include/version.h" );
 	string a, b;
-	sscanf( s, "%*s__roxen_vers%*s\"%s\"", a );
-	sscanf( s, "%*s__roxen_build%*s\"%s\"", b );
+	sscanf( s, "%*sroxen_ver%*s\"%s\"", a );
+	sscanf( s, "%*sroxen_build%*s\"%s\"", b );
 	if( a && b )
 	  res += ({ Server( f, a+"."+b,s ) });
       };
@@ -133,7 +133,7 @@ string parse( RequestID id )
   foreach( available_versions(), Server f )
   {
     res += "<tr><td>";
-    if( f->version != roxen.__roxen_version__+"."+roxen.__roxen_build__ )
+    if( f->version != roxen.roxen_ver+"."+roxen.roxen_build )
       res += "<input type='radio' name='server' value='"+f->dir+"' /> ";
     else
       res += "";

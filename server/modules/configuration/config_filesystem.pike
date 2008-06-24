@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.115 2008/05/08 15:17:33 mast Exp $";
+  "$Id: config_filesystem.pike,v 1.116 2008/06/24 16:19:52 mast Exp $";
 
 constant path = "config_interface/";
 
@@ -372,9 +372,9 @@ void start(int n, Configuration cfg)
 {
   if( cfg )
   {
-    if (cfg->query ("compat_level") != roxen.__roxen_version__)
+    if (cfg->query ("compat_level") != roxen.roxen_ver)
       // The config interface always runs with the current compatibility level.
-      cfg->set ("compat_level", roxen.__roxen_version__);
+      cfg->set ("compat_level", roxen.roxen_ver);
 
     mixed err;
     array(mapping(string:string)) old_version;

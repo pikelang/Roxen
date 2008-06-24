@@ -8,7 +8,7 @@ inherit "module";
 
 // ---------------- Module registration stuff ----------------
 
-constant cvs_version = "$Id: roxen_network.pike,v 1.14 2004/10/11 19:05:59 mast Exp $";
+constant cvs_version = "$Id: roxen_network.pike,v 1.15 2008/06/24 16:19:52 mast Exp $";
 constant module_type = MODULE_ZERO;
 constant thread_safe = 1;
 constant module_name = "Roxen Network module";
@@ -128,7 +128,7 @@ string build_package() {
   mapping info = ([]);
 
   info->pike_version = predef::version();
-  info->roxen_version = __roxen_version__ + "." + __roxen_build__;
+  info->roxen_version = roxen_ver + "." + roxen_build;
   info->id_string = roxen->version();
 
   foreach( ({ "owner", "webmaster", "ad" }), string var)
