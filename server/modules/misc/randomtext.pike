@@ -60,7 +60,7 @@ inherit "module";
 
 #include <module.h>
 
-string version = "$Id: randomtext.pike,v 1.8 2004/06/30 16:59:16 mast Exp $";
+string version = "$Id: randomtext.pike,v 1.9 2008/06/24 10:51:29 jonasw Exp $";
 
 constant module_type = MODULE_TAG;
 constant module_name = "Random Text";
@@ -408,7 +408,7 @@ string rtt_parse(mapping sections, string sec, mapping args, int depth)
 }
 
 string rtt_read(string path)
-{ int lineno = 0; string line, mode = 0, tmp;
+{ int lineno = 0; string line, mode = 0;
   mapping sections = ([ "steps": 0 ]);
   string this_section = "***";
   int secindex = -1;
