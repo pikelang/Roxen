@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 3.0 2007/03/02 18:02:27 grubba Exp $
+ * $Id: smtprelay.pike,v 3.1 2008/06/24 11:23:05 jonasw Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -912,7 +912,7 @@ void bounce(mapping(string:string) msg, string code, array(string) text,
   if (sizeof(msg->sender)) {
     // Send a bounce.
 
-    int limit = query("mail_bounce_size_limit");
+    int limit = (int) query("mail_bounce_size_limit");
     if (limit < 0) {
       // Bounces disabled.
       return;
