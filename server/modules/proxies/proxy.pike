@@ -4,7 +4,7 @@
 // limit of proxy connections/second is somewhere around 70% of normal
 // requests, but there is no real reason for them to take longer.
 
-constant cvs_version = "$Id: proxy.pike,v 1.55 2004/06/30 16:59:18 mast Exp $";
+constant cvs_version = "$Id: proxy.pike,v 1.56 2008/06/24 11:15:56 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -511,8 +511,7 @@ string status()
 
 mapping find_file( string f, object id )
 {
-  string host, file, key;
-  string filter;
+  string host, file;
   int port;
   mixed tmp;
 
@@ -1220,7 +1219,6 @@ class Server
       return;
     }
 
-    string cmd;
     if(filter)
     {
       object f, q;
@@ -1560,9 +1558,9 @@ class Request
 
       // FIX_ME: does not work for now /wk
       // try incoming requests
-      object request;
       // FIX_ME: should loop over all matching requests
       /*
+      object request;
       if(query("server_additional_output") && sizeof(requests) &&
 	 (request=search(requests, name)) && request->server &&
 	 request->server->_data && request->server->headers &&

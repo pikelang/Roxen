@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.55 2006/05/03 08:23:40 erik Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.56 2008/06/24 11:00:59 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -380,7 +380,7 @@ class FileCounter {
   }
 
   void reset(string file) {
-    int p, n;
+    int p;
 
     mixed key = open_db_file();
 

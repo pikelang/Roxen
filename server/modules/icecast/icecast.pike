@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2001 - 2004, Roxen IS.
 
 inherit "module";
-constant cvs_version="$Id: icecast.pike,v 1.10 2004/06/30 16:59:11 mast Exp $";
+constant cvs_version="$Id: icecast.pike,v 1.11 2008/06/24 11:04:35 jonasw Exp $";
 constant thread_safe=1;
 
 #define BSIZE 8192
@@ -211,7 +211,7 @@ class MPEGStream( Playlist playlist )
       p++;
       if( (patt & 0xfff0) == 0xfff0 )
       {
-	int srate, channels, layer, ID, pad, blen;
+	int srate, layer, ID, pad, blen;
 	int header = ((patt&0xffff)<<16);
 	if( (by = getbytes( 2 )) < 0 )
 	  break;

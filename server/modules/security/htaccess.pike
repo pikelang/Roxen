@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.104 2004/06/30 16:59:22 mast Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.105 2008/06/24 11:04:08 jonasw Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -185,7 +185,6 @@ function(RequestID:mapping|int) allow_deny( function allow,
 			  0:"deny, allow"])[order] || "UNKNOWN",
 			allow, deny);
 #endif /* HTACCESS_DEBUG */
-	   int ok;
 	   switch( order )
 	   {
 	     case 1: //allow,deny

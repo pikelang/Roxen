@@ -6,7 +6,6 @@ void inc_dbcc( ) { db_changed++; };
 void run_tests( Configuration c )
 {
   Configuration c1, c2;
-  RoxenModule m;
 
   test( roxen.enable_configuration, "dbtest1" );
   test( roxen.enable_configuration, "dbtest2" );

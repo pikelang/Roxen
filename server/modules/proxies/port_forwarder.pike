@@ -25,7 +25,7 @@ inherit "socket";
  * thing...
  */
 
-constant cvs_version="$Id: port_forwarder.pike,v 1.12 2003/04/01 19:24:37 anders Exp $";
+constant cvs_version="$Id: port_forwarder.pike,v 1.13 2008/06/24 10:57:18 jonasw Exp $";
 
 
 
@@ -130,7 +130,6 @@ class Connection
 
   void destroy()
   {
-    mapping result;
     debug_perror("Destroying connection\n");
     fdescs[0]->close();
     fdescs[1]->close();

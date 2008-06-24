@@ -5,7 +5,7 @@
 
 // Mk II changes by Henrik P Johnson <hpj@globecom.net>.
 
-constant cvs_version = "$Id: secure_fs.pike,v 1.31 2005/12/13 15:45:59 anders Exp $";
+constant cvs_version = "$Id: secure_fs.pike,v 1.32 2008/06/24 11:03:36 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -40,7 +40,7 @@ array seclevels = ({ });
 
 void start()
 {
-  string sl, sec;
+  string sl;
   array new_seclevels = ({});
 
   foreach(replace(query("sec"),({" ","\t","\\\n"}),({"","",""}))/"\n", sl)

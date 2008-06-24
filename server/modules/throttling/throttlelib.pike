@@ -7,7 +7,7 @@
  * rules-based modules.
  */
 
-constant cvs_version="$Id: throttlelib.pike,v 1.14 2004/06/30 16:59:31 mast Exp $";
+constant cvs_version="$Id: throttlelib.pike,v 1.15 2008/06/24 10:56:34 jonasw Exp $";
 
 #include <module.h>
 inherit "module";
@@ -93,8 +93,8 @@ string|void update_rules(string new_rules) {
   mapping my_rules=([]);
   array(string) my_rulenames=({});
   array(string) errors=({}); //contains the lines where parse errors occurred
-  string line, cmd;
-  array(string) lines, words;
+  string line;
+  array(string) lines;
 
   if (!new_rules || ! sizeof(new_rules)) {
     THROTTLING_DEBUG("new rules empty, returning");

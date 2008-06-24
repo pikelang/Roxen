@@ -3,7 +3,7 @@
 // ISMAP image map support. Quite over-complex, really.  An example is
 // the support for index images, and chromatic distances.
 
-constant cvs_version = "$Id: ismap.pike,v 1.21 2004/10/11 19:06:01 mast Exp $";
+constant cvs_version = "$Id: ismap.pike,v 1.22 2008/06/24 11:18:40 jonasw Exp $";
 
 #include <module.h>
 inherit "module";
@@ -175,7 +175,7 @@ array parse_cern_map_line(string line)
 array parse_ncsa_map_line(string line)
 {
   string Url;
-  int x, y, x1, y1, r;
+  int x, y, x1, y1;
 
   line = (replace(line, "\t", "")/" " - ({""})) * "";
 
@@ -316,9 +316,6 @@ mixed do_color_match(string file, mapping cols, int x, int y, int color)
   if(!file_stat(file))
     return 0;
 
-
-  int depth;
-  
   if(!(f=open(file, "r")))
     return 0;
   f->seek(3);
