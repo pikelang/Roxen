@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.217 2008/06/18 20:04:12 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.218 2008/06/24 12:14:29 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -981,7 +981,7 @@ class RequestID
   //! variables with the same name but different values), the values
   //! will be separated with \0 (the null character) in this mapping.
   
-  mapping (string:mixed) misc;
+  mapping misc;			// Note that non-string indices are ok.
   //! This mapping contains miscellaneous non-standardized information, and
   //! is the typical location to store away your own request-local data for
   //! passing between modules et cetera. Be sure to use a key unique to your
@@ -1077,7 +1077,7 @@ class RequestID
   //!     speed up some lookups. For internal use only.
   //! @endmapping
 
-  mapping (string:mixed) connection_misc = ([]);
+  mapping connection_misc = ([]); // Note that non-string indices are ok.
   //! This mapping contains miscellaneous non-standardized information, and
   //! is the typical location to store away your own connection-local data
   //! for passing between requests on the same connection et cetera. Be sure
