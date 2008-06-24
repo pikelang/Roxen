@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.365 2008/05/08 15:17:33 mast Exp $
+// $Id: module.pmod,v 1.366 2008/06/24 13:25:14 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3956,7 +3956,9 @@ class Frame
 	    PCode sub_p_code = 0;
 	    if (comp) {
 	      fn_text_add = (fn_text = String.Buffer())->add;
-	      fn_text_add ("mixed tmp;\n");
+	      // The zero assignment is to avoid unused variable
+	      // warnings in pike > 7.6.
+	      fn_text_add ("mixed tmp = 0;\n");
 	      sub_p_code = PCode (0, 0);
 	    }
 
