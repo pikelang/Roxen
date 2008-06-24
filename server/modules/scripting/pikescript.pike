@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.73 2004/06/30 16:59:20 mast Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.74 2008/06/24 10:51:13 jonasw Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -97,13 +97,11 @@ mapping locks = ([]);
 array|mapping call_script(function fun, RequestID id, Stdio.File file)
 {
   mixed result, err;
-  string s;
   object privs;
   if(!functionp(fun)) {
     report_debug("call_script() failed: %O is not a function!\n", fun);
     return 0;
   }
-  string|array (int) uid, olduid, us;
 
   if(id->rawauth && (!query("rawauth") || !query("clearpass")))
     id->rawauth=0;
@@ -176,7 +174,6 @@ mapping handle_file_extension(Stdio.File f, string e, RequestID id)
   id->misc->cacheable=0;
 
   string file="";
-  string s;
   mixed err;
   program p;
   object o;
