@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.977 2008/06/24 16:19:52 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.978 2008/07/01 19:44:20 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -5866,10 +5866,15 @@ static LogFormat compile_log_format( string fmt )
     werror ("Failed to compile program: %s\n", src);
     throw (err);
   }
-  string enc = encode_value(res, master()->MyCodec(res));
+  mixed err = catch {
+    string enc = encode_value(res, master()->MyCodec(res));
 
-  con->query("REPLACE INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
+    con->query("REPLACE INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
 	     kmd5, fmt, enc);
+    };
+  if (err) {
+    master()->handle_error(err);
+  }
 
   LogFormat lf = res();
   compiled_log_access[fmt] = lf->log_access;
