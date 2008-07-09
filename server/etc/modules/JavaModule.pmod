@@ -1,119 +1,122 @@
-static constant jvm = Java.machine;
+static object jvm = Java.machine;
 
 static private inherit "roxenlib";
 
 #include <module.h>
 
-#define FINDCLASS(X) (jvm->find_class(X)||(jvm->exception_describe(),jvm->exception_clear(),error("Failed to load class " X ".\n"),0))
+#define FIND_CLASS(X) (jvm && (jvm->find_class(X)||(jvm->exception_describe(),jvm->exception_clear(),error("Failed to load class " X ".\n"),0)))
+#define FIND_METHOD(C, M...) ((C) && (C)->get_method (M))
+#define FIND_STATIC_METHOD(C, M...) ((C) && (C)->get_static_method (M))
+#define FIND_FIELD(C, F...) ((C) && (C)->get_field (F))
 
 /* Marshalling */
-static object object_class = FINDCLASS("java/lang/Object");
-static object int_class = FINDCLASS("java/lang/Integer");
-static object map_class = FINDCLASS("java/util/HashMap");
-static object set_class = FINDCLASS("java/util/HashSet");
-static object map_ifc = FINDCLASS("java/util/Map");
-static object map_entry_ifc = FINDCLASS("java/util/Map$Entry");
-static object set_ifc = FINDCLASS("java/util/Set");
-static object int_value = int_class->get_method("intValue", "()I");
-static object int_init = int_class->get_method("<init>", "(I)V");
-static object map_init = map_class->get_method("<init>", "(I)V");
-static object map_put = map_class->get_method("put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-static object set_init = set_class->get_method("<init>", "(I)V");
-static object set_add = set_class->get_method("add", "(Ljava/lang/Object;)Z");
-static object map_entry_set = map_ifc->get_method("entrySet", "()Ljava/util/Set;");
-static object set_to_array = set_ifc->get_method("toArray", "()[Ljava/lang/Object;");
-static object map_entry_getkey = map_entry_ifc->get_method("getKey", "()Ljava/lang/Object;");
-static object map_entry_getvalue = map_entry_ifc->get_method("getValue", "()Ljava/lang/Object;");
+static object object_class = FIND_CLASS("java/lang/Object");
+static object int_class = FIND_CLASS("java/lang/Integer");
+static object map_class = FIND_CLASS("java/util/HashMap");
+static object set_class = FIND_CLASS("java/util/HashSet");
+static object map_ifc = FIND_CLASS("java/util/Map");
+static object map_entry_ifc = FIND_CLASS("java/util/Map$Entry");
+static object set_ifc = FIND_CLASS("java/util/Set");
+static object int_value = FIND_METHOD (int_class, "intValue", "()I");
+static object int_init = FIND_METHOD (int_class, "<init>", "(I)V");
+static object map_init = FIND_METHOD (map_class, "<init>", "(I)V");
+static object map_put = FIND_METHOD (map_class, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+static object set_init = FIND_METHOD (set_class, "<init>", "(I)V");
+static object set_add = FIND_METHOD (set_class, "add", "(Ljava/lang/Object;)Z");
+static object map_entry_set = FIND_METHOD (map_ifc, "entrySet", "()Ljava/util/Set;");
+static object set_to_array = FIND_METHOD (set_ifc, "toArray", "()[Ljava/lang/Object;");
+static object map_entry_getkey = FIND_METHOD (map_entry_ifc, "getKey", "()Ljava/lang/Object;");
+static object map_entry_getvalue = FIND_METHOD (map_entry_ifc, "getValue", "()Ljava/lang/Object;");
 
 /* File I/O */
-static object reader_class = FINDCLASS("java/io/Reader");
-static object string_class = FINDCLASS("java/lang/String");
-static object _read = reader_class->get_method("read", "([C)I");
-static object string_init = string_class->get_method("<init>", "([CII)V");
+static object reader_class = FIND_CLASS("java/io/Reader");
+static object string_class = FIND_CLASS("java/lang/String");
+static object _read = FIND_METHOD (reader_class, "read", "([C)I");
+static object string_init = FIND_METHOD (string_class, "<init>", "([CII)V");
 
 /* Class loading */
-static object class_class = FINDCLASS("java/lang/Class");
-static object classloader_class = FINDCLASS("java/lang/ClassLoader");
-static object roxenclassloader_class = FINDCLASS("com/roxen/roxen/RoxenClassLoader");
-static object file_class = FINDCLASS("java/io/File");
-static object url_class = FINDCLASS("java/net/URL");
-static object load_class = roxenclassloader_class->get_method("loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-static object cl_init = roxenclassloader_class->get_method("<init>", "([Ljava/net/URL;)V");
-static object file_init = file_class->get_method("<init>", "(Ljava/lang/String;)V");
-static object file_tourl = file_class->get_method("toURL", "()Ljava/net/URL;");
-static object get_module_name = roxenclassloader_class->get_static_method("getModuleClassName", "(Ljava/lang/String;)Ljava/lang/String;");
-static object add_jar = roxenclassloader_class->get_method("addJarFile", "(Ljava/lang/String;)V");
-static object new_instance = class_class->get_method("newInstance", "()Ljava/lang/Object;");
-static object filenotfound_class = FINDCLASS("java/io/FileNotFoundException");
-static object ioexception_class = FINDCLASS("java/io/IOException");
+static object class_class = FIND_CLASS("java/lang/Class");
+static object classloader_class = FIND_CLASS("java/lang/ClassLoader");
+static object roxenclassloader_class = FIND_CLASS("com/roxen/roxen/RoxenClassLoader");
+static object file_class = FIND_CLASS("java/io/File");
+static object url_class = FIND_CLASS("java/net/URL");
+static object load_class = FIND_METHOD (roxenclassloader_class, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+static object cl_init = FIND_METHOD (roxenclassloader_class, "<init>", "([Ljava/net/URL;)V");
+static object file_init = FIND_METHOD (file_class, "<init>", "(Ljava/lang/String;)V");
+static object file_tourl = FIND_METHOD (file_class, "toURL", "()Ljava/net/URL;");
+static object get_module_name = FIND_STATIC_METHOD (roxenclassloader_class, "getModuleClassName", "(Ljava/lang/String;)Ljava/lang/String;");
+static object add_jar = FIND_METHOD (roxenclassloader_class, "addJarFile", "(Ljava/lang/String;)V");
+static object new_instance = FIND_METHOD (class_class, "newInstance", "()Ljava/lang/Object;");
+static object filenotfound_class = FIND_CLASS("java/io/FileNotFoundException");
+static object ioexception_class = FIND_CLASS("java/io/IOException");
 
 /* Error messages */
-static object throwable_class = FINDCLASS("java/lang/Throwable");
-static object stringwriter_class = FINDCLASS("java/io/StringWriter");
-static object printwriter_class = FINDCLASS("java/io/PrintWriter");
-static object throwable_printstacktrace = throwable_class->get_method("printStackTrace", "(Ljava/io/PrintWriter;)V");
-static object throwable_get_message = throwable_class->get_method("getMessage", "()Ljava/lang/String;");
-static object stringwriter_init = stringwriter_class->get_method("<init>", "()V");
-static object printwriter_init = printwriter_class->get_method("<init>", "(Ljava/io/Writer;)V");
-static object printwriter_flush = printwriter_class->get_method("flush", "()V");
+static object throwable_class = FIND_CLASS("java/lang/Throwable");
+static object stringwriter_class = FIND_CLASS("java/io/StringWriter");
+static object printwriter_class = FIND_CLASS("java/io/PrintWriter");
+static object throwable_printstacktrace = FIND_METHOD (throwable_class, "printStackTrace", "(Ljava/io/PrintWriter;)V");
+static object throwable_get_message = FIND_METHOD (throwable_class, "getMessage", "()Ljava/lang/String;");
+static object stringwriter_init = FIND_METHOD (stringwriter_class, "<init>", "()V");
+static object printwriter_init = FIND_METHOD (printwriter_class, "<init>", "(Ljava/io/Writer;)V");
+static object printwriter_flush = FIND_METHOD (printwriter_class, "flush", "()V");
 
 /* Module interface */
-static object reqid_class = FINDCLASS("com/roxen/roxen/RoxenRequest");
-static object conf_class = FINDCLASS("com/roxen/roxen/RoxenConfiguration");
-static object module_class = FINDCLASS("com/roxen/roxen/Module");
-static object defvar_class = FINDCLASS("com/roxen/roxen/Defvar");
-static object location_ifc = FINDCLASS("com/roxen/roxen/LocationModule");
-static object parser_ifc = FINDCLASS("com/roxen/roxen/ParserModule");
-static object fileext_ifc = FINDCLASS("com/roxen/roxen/FileExtensionModule");
-static object provider_ifc = FINDCLASS("com/roxen/roxen/ProviderModule");
-static object simpletagcaller_ifc = FINDCLASS("com/roxen/roxen/SimpleTagCaller");
-static object lastresort_ifc = FINDCLASS("com/roxen/roxen/LastResortModule");
-static object frame_class = FINDCLASS("com/roxen/roxen/Frame");
-static object response_class = FINDCLASS("com/roxen/roxen/RoxenResponse");
-static object response2_class = FINDCLASS("com/roxen/roxen/RoxenStringResponse");
-static object response3_class = FINDCLASS("com/roxen/roxen/RoxenFileResponse");
-static object response4_class = FINDCLASS("com/roxen/roxen/RoxenRXMLResponse");
-static object rxml_class = FINDCLASS("com/roxen/roxen/RXML");
-static object backtrace_class = FINDCLASS("com/roxen/roxen/RXML$Backtrace");
-static object reqid_init = reqid_class->get_method("<init>", "(Lcom/roxen/roxen/RoxenConfiguration;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
-static object conf_init = conf_class->get_method("<init>", "()V");
-static object frame_init = frame_class->get_method("<init>", "()V");
-static object _configuration = module_class->get_field("configuration", "Lcom/roxen/roxen/RoxenConfiguration;");
-static object query_type = module_class->get_method("queryType", "()I");
-static object query_unique = module_class->get_method("queryUnique", "()Z");
-static object _query_name = module_class->get_method("queryName", "()Ljava/lang/String;");
-static object query_desc = module_class->get_method("info", "()Ljava/lang/String;");
-static object _status = module_class->get_method("status", "()Ljava/lang/String;");
-static object _start = module_class->get_method("start", "()V");
-static object _stop = module_class->get_method("stop", "()V");
-static object _query_provides = provider_ifc->get_method("queryProvides", "()Ljava/lang/String;");
-static object _check_variable = module_class->get_method("checkVariable", "(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/String;");
-static object _getdefvars = module_class->get_method("getDefvars", "()[Lcom/roxen/roxen/Defvar;");
-static object _find_internal = module_class->get_method("findInternal", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
-static object _query_location = location_ifc->get_method("queryLocation", "()Ljava/lang/String;");
-static object _find_file = location_ifc->get_method("findFile", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
-static object _find_dir = location_ifc->get_method("findDir", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)[Ljava/lang/String;");
-static object _real_file = location_ifc->get_method("realFile", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;");
-static object _stat_file = location_ifc->get_method("statFile", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)[I");
-static object _query_file_extensions = fileext_ifc->get_method("queryFileExtensions", "()[Ljava/lang/String;");
-static object _handle_file_extension = fileext_ifc->get_method("handleFileExtension", "(Ljava/io/File;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
-static object _query_tag_callers = parser_ifc->get_method("querySimpleTagCallers", "()[Lcom/roxen/roxen/SimpleTagCaller;");
-static object _last_resort = lastresort_ifc->get_method("last_resort", "(Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
-static object simpletagcaller_query_name = simpletagcaller_ifc->get_method("queryTagName", "()Ljava/lang/String;");
-static object simpletagcaller_query_flags = simpletagcaller_ifc->get_method("queryTagFlags", "()I");
-static object _tag_called = simpletagcaller_ifc->get_method("tagCalled", "(Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;Lcom/roxen/roxen/Frame;)Ljava/lang/String;");
-static object dv_var = defvar_class->get_field("var", "Ljava/lang/String;");
-static object dv_name = defvar_class->get_field("name", "Ljava/lang/String;");
-static object dv_doc = defvar_class->get_field("doc", "Ljava/lang/String;");
-static object dv_value = defvar_class->get_field("value", "Ljava/lang/Object;");
-static object dv_type = defvar_class->get_field("type", "I");
-static object _errno = response_class->get_field("errno", "I");
-static object _len = response_class->get_field("len", "J");
-static object _type = response_class->get_field("type", "Ljava/lang/String;");
-static object _extra_heads = response_class->get_field("extraHeads", "Ljava/util/Map;");
-static object _data = response2_class->get_field("data", "Ljava/lang/String;");
-static object _file = response3_class->get_field("file", "Ljava/io/Reader;");
-static object bt_get_type = backtrace_class->get_method("getType", "()Ljava/lang/String;");
+static object reqid_class = FIND_CLASS("com/roxen/roxen/RoxenRequest");
+static object conf_class = FIND_CLASS("com/roxen/roxen/RoxenConfiguration");
+static object module_class = FIND_CLASS("com/roxen/roxen/Module");
+static object defvar_class = FIND_CLASS("com/roxen/roxen/Defvar");
+static object location_ifc = FIND_CLASS("com/roxen/roxen/LocationModule");
+static object parser_ifc = FIND_CLASS("com/roxen/roxen/ParserModule");
+static object fileext_ifc = FIND_CLASS("com/roxen/roxen/FileExtensionModule");
+static object provider_ifc = FIND_CLASS("com/roxen/roxen/ProviderModule");
+static object simpletagcaller_ifc = FIND_CLASS("com/roxen/roxen/SimpleTagCaller");
+static object lastresort_ifc = FIND_CLASS("com/roxen/roxen/LastResortModule");
+static object frame_class = FIND_CLASS("com/roxen/roxen/Frame");
+static object response_class = FIND_CLASS("com/roxen/roxen/RoxenResponse");
+static object response2_class = FIND_CLASS("com/roxen/roxen/RoxenStringResponse");
+static object response3_class = FIND_CLASS("com/roxen/roxen/RoxenFileResponse");
+static object response4_class = FIND_CLASS("com/roxen/roxen/RoxenRXMLResponse");
+static object rxml_class = FIND_CLASS("com/roxen/roxen/RXML");
+static object backtrace_class = FIND_CLASS("com/roxen/roxen/RXML$Backtrace");
+static object reqid_init = FIND_METHOD (reqid_class, "<init>", "(Lcom/roxen/roxen/RoxenConfiguration;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V");
+static object conf_init = FIND_METHOD (conf_class, "<init>", "()V");
+static object frame_init = FIND_METHOD (frame_class, "<init>", "()V");
+static object _configuration = FIND_FIELD (module_class, "configuration", "Lcom/roxen/roxen/RoxenConfiguration;");
+static object query_type = FIND_METHOD (module_class, "queryType", "()I");
+static object query_unique = FIND_METHOD (module_class, "queryUnique", "()Z");
+static object _query_name = FIND_METHOD (module_class, "queryName", "()Ljava/lang/String;");
+static object query_desc = FIND_METHOD (module_class, "info", "()Ljava/lang/String;");
+static object _status = FIND_METHOD (module_class, "status", "()Ljava/lang/String;");
+static object _start = FIND_METHOD (module_class, "start", "()V");
+static object _stop = FIND_METHOD (module_class, "stop", "()V");
+static object _query_provides = FIND_METHOD (provider_ifc, "queryProvides", "()Ljava/lang/String;");
+static object _check_variable = FIND_METHOD (module_class, "checkVariable", "(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/String;");
+static object _getdefvars = FIND_METHOD (module_class, "getDefvars", "()[Lcom/roxen/roxen/Defvar;");
+static object _find_internal = FIND_METHOD (module_class, "findInternal", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
+static object _query_location = FIND_METHOD (location_ifc, "queryLocation", "()Ljava/lang/String;");
+static object _find_file = FIND_METHOD (location_ifc, "findFile", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
+static object _find_dir = FIND_METHOD (location_ifc, "findDir", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)[Ljava/lang/String;");
+static object _real_file = FIND_METHOD (location_ifc, "realFile", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;");
+static object _stat_file = FIND_METHOD (location_ifc, "statFile", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)[I");
+static object _query_file_extensions = FIND_METHOD (fileext_ifc, "queryFileExtensions", "()[Ljava/lang/String;");
+static object _handle_file_extension = FIND_METHOD (fileext_ifc, "handleFileExtension", "(Ljava/io/File;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
+static object _query_tag_callers = FIND_METHOD (parser_ifc, "querySimpleTagCallers", "()[Lcom/roxen/roxen/SimpleTagCaller;");
+static object _last_resort = FIND_METHOD (lastresort_ifc, "last_resort", "(Lcom/roxen/roxen/RoxenRequest;)Lcom/roxen/roxen/RoxenResponse;");
+static object simpletagcaller_query_name = FIND_METHOD (simpletagcaller_ifc, "queryTagName", "()Ljava/lang/String;");
+static object simpletagcaller_query_flags = FIND_METHOD (simpletagcaller_ifc, "queryTagFlags", "()I");
+static object _tag_called = FIND_METHOD (simpletagcaller_ifc, "tagCalled", "(Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;Lcom/roxen/roxen/Frame;)Ljava/lang/String;");
+static object dv_var = FIND_FIELD (defvar_class, "var", "Ljava/lang/String;");
+static object dv_name = FIND_FIELD (defvar_class, "name", "Ljava/lang/String;");
+static object dv_doc = FIND_FIELD (defvar_class, "doc", "Ljava/lang/String;");
+static object dv_value = FIND_FIELD (defvar_class, "value", "Ljava/lang/Object;");
+static object dv_type = FIND_FIELD (defvar_class, "type", "I");
+static object _errno = FIND_FIELD (response_class, "errno", "I");
+static object _len = FIND_FIELD (response_class, "len", "J");
+static object _type = FIND_FIELD (response_class, "type", "Ljava/lang/String;");
+static object _extra_heads = FIND_FIELD (response_class, "extraHeads", "Ljava/util/Map;");
+static object _data = FIND_FIELD (response2_class, "data", "Ljava/lang/String;");
+static object _file = FIND_FIELD (response3_class, "file", "Ljava/io/Reader;");
+static object bt_get_type = FIND_METHOD (backtrace_class, "getType", "()Ljava/lang/String;");
 
 static object natives_bind1, natives_bind2, natives_bind3,
   natives_bind4, natives_bind5;
@@ -818,6 +821,8 @@ static void native_tag_debug(object msg)
 
 void create()
 {
+  if (!jvm) return;
+
   natives_bind1 = module_class->register_natives(({
     ({"query", "(Ljava/lang/String;)Ljava/lang/Object;", native_query}),
     ({"set", "(Ljava/lang/String;Ljava/lang/Object;)V", native_set}),
@@ -830,7 +835,7 @@ void create()
     ({"getMimeType", "(Ljava/lang/String;)Ljava/lang/String;", native_type_from_filename}),
     ({"getProviders", "(Ljava/lang/String;)[Lcom/roxen/roxen/Module;", native_get_providers}),
   }));
-  natives_bind3 = FINDCLASS("com/roxen/roxen/RoxenLib")->register_natives(({
+  natives_bind3 = FIND_CLASS("com/roxen/roxen/RoxenLib")->register_natives(({
     ({"doOutputTag", "(Ljava/util/Map;[Ljava/util/Map;Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;", native_do_output_tag}),
     ({"parseRXML", "(Ljava/lang/String;Lcom/roxen/roxen/RoxenRequest;)Ljava/lang/String;", native_parse_rxml}),
   }));
