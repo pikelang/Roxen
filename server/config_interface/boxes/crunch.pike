@@ -54,7 +54,7 @@ class Data( string data )
     string format( )
     {
       if( product == "Roxen WebServer" &&
-	  (version > roxen.__roxen_version__) )
+	  (version > roxen.roxen_ver) )
 	return "";
 
       if( (product == "Pike") && (abs((float)version - __VERSION__) > 0.09) )
