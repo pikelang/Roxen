@@ -1011,28 +1011,28 @@ Click "Next" to start the installation.</Text>
         </Control>
       </Dialog>
       <RadioButtonGroup Property="AdminMaintenanceForm_Action">
-        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}&amp;Repair [ProductName]" X="0" Y="0" Width="348" Height="17">Repair</RadioButton>
-        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Re&amp;move [ProductName]" X="0" Y="18" Width="348" Height="17">Remove</RadioButton>
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}&amp;Repair [ProductName]" X="0" Y="0" Width="348" Height="17" Value="Repair" />
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Re&amp;move [ProductName]" X="0" Y="18" Width="348" Height="17" Value="Remove" />
       </RadioButtonGroup>
       <RadioButtonGroup Property="MaintenanceForm_Action">
-        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}&amp;Repair [ProductName]" X="0" Y="0" Width="348" Height="17">Repair</RadioButton>
-        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Re&amp;move [ProductName]" X="0" Y="18" Width="348" Height="17">Remove</RadioButton>
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}&amp;Repair [ProductName]" X="0" Y="0" Width="348" Height="17" Value="Repair" />
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Re&amp;move [ProductName]" X="0" Y="18" Width="348" Height="17" Value="Remove" />
       </RadioButtonGroup>
       <RadioButtonGroup Property="FolderForm_AllUsers">
-        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}&amp;Everyone" X="0" Y="0" Width="342" Height="17">ALL</RadioButton>
-        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Just &amp;me" X="0" Y="18" Width="342" Height="17">ME</RadioButton>
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}&amp;Everyone" X="0" Y="0" Width="342" Height="17" Value="ALL" />
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Just &amp;me" X="0" Y="18" Width="342" Height="17" Value="ME" />
       </RadioButtonGroup>
       <RadioButtonGroup Property="INSTALLATION_TYPE">
-        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Custom" X="0" Y="0" Width="348" Height="17">1</RadioButton>
-        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Typical" X="0" Y="24" Width="348" Height="17">2</RadioButton>
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Custom" X="0" Y="0" Width="348" Height="17" Value="1" />
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Typical" X="0" Y="24" Width="348" Height="17" Value="2" />
       </RadioButtonGroup>
       <RadioButtonGroup Property="START_SERVER">
-        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Yes" X="0" Y="0" Width="348" Height="17">1</RadioButton>
-        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}No" X="0" Y="24" Width="348" Height="17">0</RadioButton>
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Yes" X="0" Y="0" Width="348" Height="17" Value="1" />
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}No" X="0" Y="24" Width="348" Height="17" Value="0" />
       </RadioButtonGroup>
       <RadioButtonGroup Property="INSTALL_SERVICE">
-        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Yes" X="0" Y="0" Width="348" Height="17">1</RadioButton>
-        <RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}No" X="0" Y="24" Width="348" Height="17">0</RadioButton>
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}Yes" X="0" Y="0" Width="348" Height="17" Value="1" />
+	<RadioButton Text="{\VSI_MS_Sans_Serif13.0_0_0}No" X="0" Y="24" Width="348" Height="17" Value="0" />
       </RadioButtonGroup>
       <ComboBox Property="SERVER_PROTOCOL">
 	<ListItem Value="http" />
