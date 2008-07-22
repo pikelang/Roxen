@@ -6,7 +6,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version = "$Id: awizard.pike,v 1.27 2004/06/30 16:59:24 mast Exp $";
+constant cvs_version = "$Id: awizard.pike,v 1.28 2008/07/22 13:35:38 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Advanced wizards";
@@ -361,6 +361,7 @@ class AWizard
     object page, last_page;
     int new_page;
     string contents, goto;
+    int cur_page_num = (int) v->_page_num;
 
 
     if( v->_____state)
@@ -441,10 +442,21 @@ class AWizard
 
     if(error)
     {
-      if(error->page && error->page != page->name)
+      if(error->page && error->page != page->name &&
+	 !(id->misc->awizard_in_error_page &&
+	   id->misc->awizard_in_error_page[cur_page_num]))
       {
 	v["goto_page_"+error->page+"/0"]=1;
-	return handle( id );
+	// The following is a safeguard to prevent infinite recursion
+	// if the awizard pages are improperly constructed. This code
+	// doesn't work perfectly if <awizard> tags are nested, but
+	// it's assumed elsewhere that that never happens.
+	if (!id->misc->awizard_in_error_page)
+	  id->misc->awizard_in_error_page = (<>);
+	id->misc->awizard_in_error_page[cur_page_num] = 1;
+	mapping|string res = handle( id );
+	id->misc->awizard_in_error_page[cur_page_num] = 0;
+	return res;
       } else if(error->href) {
 	return http_redirect(fix_relative(error->href,id), id);
       } else if(!error->page)
