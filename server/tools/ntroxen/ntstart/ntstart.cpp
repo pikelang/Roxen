@@ -125,7 +125,8 @@ BOOL GetServerDir(char * path, int maxlen)
       return FALSE;
     }
     
-    for (int j = len - 1; j && isspace (path[j]); j--) {}
+	int j;
+    for (j = len - 1; j && isspace (path[j]); j--) {}
     len = j + 1;
     path[len] = 0;
 
