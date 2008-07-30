@@ -63,7 +63,10 @@ version_fixup()
         echo No tagging!
     fi
 
-    #mv server server.tmp
+    for f in *.wxs; do
+	echo "Substituting version number in $f"
+	sed -e "s/@NTSTART_VERSION@/$VERSION/g" < $f > $f.new && mv $f.new $f || fail
+    done
 }
 
 # Main
