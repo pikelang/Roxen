@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2003/01/wi'>
+  <Module Guid='f07cb250-2a72-3e93-aaee-b8e35d8de664'
+	  Version='@NTSTART_VERSION@' Id='ntstart-root' Language='1033'>
+    <Package Manufacturer='Roxen Internet Software'
+	     Id='????????-????-????-????-????????????'
+	     InstallerVersion='300' Compressed='yes'/>
+    <Directory src='.\' Id='TARGETDIR' Name='SourceDir'>
+      <Directory Name='.' Id='KLUDGE_TARGETDIR'>
+	<Component Guid='8c53c060-a679-3ab2-a67f-0e7f84da59ab' Id='C_TARGETDIR'>
+	  <File Vital='yes' Name='ntstart.exe' LongName='ntstart.exe'
+		Id='_5e40ba08355a30fb868f94be2c700cc8' KeyPath='yes'/>
+	  <Registry Action="write" Type="string"
+		    Root="HKCR" Name="LocalService"
+		    Key="AppID\{EE755A27-6EEA-4AD7-AB21-BCE00C6CFF1A}"
+		    Value="ntstart" Id="RE__LOCALSERVICE"/>
+	  <Registry Action="write" Type="string"
+		    Root="HKCR" Name="ServiceParameters"
+		    Key="AppID\{EE755A27-6EEA-4AD7-AB21-BCE00C6CFF1A}"
+		    Value="-Service" Id="RE__SERVICEPARAMETERS"/>
+	  <Registry Action="write" Type="string"
+		    Root="HKCR" Name="AppID"
+		    Key="AppID\ntstart.EXE"
+		    Value="{EE755A27-6EEA-4AD7-AB21-BCE00C6CFF1A}"
+		    Id="RE__APPID"/>
+	  <ServiceInstall Id='RoxenService' DisplayName='[Product]'
+			  Name='RoxenService' Start='auto' Type='ownProcess'
+			  ErrorControl='normal' Vital='yes'
+			  Description='Controls [Product]'>
+	    <ServiceDependency Id='RPCSS' Group='no' />
+	  </ServiceInstall>
+	  <ServiceControl Id='ServiceStart' Name='RoxenService'
+			  Remove='uninstall'
+			  Start='install' Stop='uninstall' Wait='yes'/>
+	</Component>
+      </Directory>
+    </Directory>
+  </Module>
+</Wix>
