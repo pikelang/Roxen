@@ -419,7 +419,7 @@ string|array container_aconf(string tag, mapping m, string q, RequestID id)
 		   LOCALE(55,"config items as atomic attributes in aconf tag"),
 		   LOCALE(38,"add and drop"));
 
-  string href,s;
+  string href;
   mapping cookies = ([]);
 
   if(!m->href)
