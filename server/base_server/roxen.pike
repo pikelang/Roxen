@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.978 2008/07/01 19:44:20 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.979 2008/08/05 22:15:44 mast Exp $";
 
 //! @appears roxen
 //!
@@ -126,7 +126,6 @@ string thread_name( object thread )
 
 void name_thread( object thread, string name )
 {
-  catch(thread->set_name( name ));
   thread_names[ sprintf( "%O", thread ) ] = name;
 }
 
@@ -194,7 +193,8 @@ static class Privs
 
 #ifdef THREADS
     if (euid_egid_lock) {
-      catch { mutex_key = euid_egid_lock->lock(); };
+      if (mixed err = catch { mutex_key = euid_egid_lock->lock(); })
+	werror (describe_backtrace (err));
     }
     threads_disabled = _disable_threads();
 #endif /* THREADS */
@@ -254,10 +254,12 @@ static class Privs
 
     if (u[2]) {
 #if efun(cleargroups)
-      catch { cleargroups(); };
+      if (mixed err = catch { cleargroups(); })
+	werror (describe_backtrace (err));
 #endif /* cleargroups */
 #if efun(initgroups)
-      catch { initgroups(u[0], u[3]); };
+      if (mixed err = catch { initgroups(u[0], u[3]); })
+	werror (describe_backtrace (err));
 #endif
     }
     gid = gid || getgid();
@@ -340,7 +342,7 @@ static class Privs
     privs_level = p_level;
 
     if(LOGP) {
-      catch {
+      if (mixed err = catch {
 	array bt = backtrace();
 	if (sizeof(bt) >= 2) {
 	  report_notice(LOC_M(3,"Change back to uid#%d gid#%d, from %s")+"\n",
@@ -349,7 +351,8 @@ static class Privs
 	  report_notice(LOC_M(4,"Change back to uid#%d gid#%d, "
 			      "from backend")+"\n", saved_uid, saved_gid);
 	}
-      };
+	})
+	werror (describe_backtrace (err));
     }
 
 #ifdef PRIVS_DEBUG
@@ -370,10 +373,12 @@ static class Privs
     seteuid(0);
     array u = getpwuid(saved_uid);
 #if efun(cleargroups)
-    catch { cleargroups(); };
+    if (mixed err = catch { cleargroups(); })
+      werror (describe_backtrace (err));
 #endif /* cleargroups */
     if(u && (sizeof(u) > 3)) {
-      catch { initgroups(u[0], u[3]); };
+      if (mixed err = catch { initgroups(u[0], u[3]); })
+	werror (describe_backtrace (err));
     }
     setegid(saved_gid);
     seteuid(saved_uid);
@@ -440,27 +445,31 @@ private void really_low_shutdown(int exit_code)
 {
   // Die nicely. Catch for paranoia reasons
 #ifdef THREADS
-  catch (stop_handler_threads());
+  if (mixed err = catch (stop_handler_threads()))
+    werror (describe_backtrace (err));
 #endif /* THREADS */
   if (!exit_code || once_mode) {
     // We're shutting down; Attempt to take mysqld with us.
-    catch { report_notice("Shutting down MySQL.\n"); };
-    catch {
-      Sql.sql db = connect_to_my_mysql(0, "mysql");
-      db->shutdown();
-    };
+    if (mixed err =
+	catch { report_notice("Shutting down MySQL.\n"); } ||
+	catch {
+	  Sql.Sql db = connect_to_my_mysql(0, "mysql");
+	  db->shutdown();
+	})
+      werror (describe_backtrace (err));
   }
   destruct (cache);
 #if 0
   // Disabled since it's lying when the server is shut down with a
   // SIGTERM or SIGINT to the start script (which include the stop
   // action of the init.d script).
-  catch {
-    if (exit_code && !once_mode)
-      report_notice("Restarting Roxen.\n");
-    else
-      report_notice("Shutting down Roxen.\n");
-  };
+  if (mixed err = catch {
+      if (exit_code && !once_mode)
+	report_notice("Restarting Roxen.\n");
+      else
+	report_notice("Shutting down Roxen.\n");
+    })
+    werror (describe_backtrace (err));
 #endif
   roxenloader.real_exit( exit_code ); // Now we die...
 }
@@ -474,17 +483,21 @@ private void low_shutdown(int exit_code)
 {
   if(_recurse >= 4)
   {
-    catch (report_notice("Exiting roxen (spurious signals received).\n"));
-    catch (stop_all_configurations());
+    if (mixed err =
+	catch (report_notice("Exiting roxen (spurious signals received).\n")) ||
+	catch (stop_all_configurations()))
+      werror (describe_backtrace (err));
     destruct(cache);
 #ifdef THREADS
-    catch (stop_handler_threads());
+    if (mixed err = catch (stop_handler_threads()))
+      werror (describe_backtrace (err));
 #endif /* THREADS */
     roxenloader.real_exit(exit_code);
   }
   if (_recurse++) return;
 
-  catch(stop_all_configurations());
+  if (mixed err = catch(stop_all_configurations()))
+    werror (describe_backtrace (err));
 
 #ifdef SNMP_AGENT
   if(objectp(snmpagent)) {
@@ -2786,7 +2799,7 @@ static void engage_abs(int n)
   int t = alarm(20);
 #ifdef THREADS
   report_debug("Handler queue:\n");
-  catch {
+  if (mixed err = catch {
     array(mixed) queue = handle_queue->buffer[handle_queue->r_ptr..];
     foreach(queue, mixed v) {
       if (!v) continue;
@@ -2796,13 +2809,15 @@ static void engage_abs(int n)
 	report_debug("  %{%O, %}\n", v/({}));
       }
     }
-  };
+    })
+    werror (describe_backtrace (err));
 #endif
   report_debug("Trying to dump backlog: \n");
-  catch {
-    // Catch for paranoia reasons.
-    describe_all_threads();
-  };
+  if (mixed err = catch {
+      // Catch for paranoia reasons.
+      describe_all_threads();
+    })
+    werror (describe_backtrace (err));
   low_engage_abs();
 }
 
@@ -3608,7 +3623,9 @@ class ImageCache
 	// Case 1: We have cache entry and image.
 	string f = q[0]->data;
 	mapping m;
-	catch( m = decode_value( q[0]->meta ) );
+	if (mixed err = catch( m = decode_value( q[0]->meta ) ))
+	  report_debug ("Failed to decode meta mapping for id %O in %s: %s",
+			id, name, describe_error (err));
 	if( !m ) return 0;
 
 	m = Roxen.http_string_answer( f, m->type||("image/gif") );
@@ -3921,7 +3938,7 @@ class ArgCache
 
   Thread.Mutex mutex = Thread.Mutex();
   // Allow recursive locks, since it's normal here.
-# define LOCK() mixed __; catch( __ = mutex->lock() )
+# define LOCK() mixed __ = mutex->lock (2)
 
 #ifdef ARGCACHE_DEBUG
 #define dwerror(ARGS...) werror(ARGS)
@@ -4199,9 +4216,9 @@ class ArgCache
       if(s == "EOF")
 	return 0;
       array a;
-      if(catch {
+      if(mixed err = catch {
 	a = decode_value(MIME.decode_base64(s));
-      }) return "Decode failed for argcache record\n";
+      }) return "Decode failed for argcache record: " + describe_error (err);
 
       if(sizeof(a) == 4) {
 	// Old style argcache dump.
@@ -4450,7 +4467,8 @@ int set_u_and_gid (void|int from_handler_thread)
       if (!from_handler_thread) {
 	// If this is necessary from every handler thread, these
 	// things are thread local and thus are no locks necessary.
-	catch { mutex_key = euid_egid_lock->lock(); };
+	if (mixed err = catch { mutex_key = euid_egid_lock->lock(); })
+	  werror (describe_backtrace (err));
 	threads_disabled = _disable_threads();
       }
 #endif
@@ -4460,10 +4478,11 @@ int set_u_and_gid (void|int from_handler_thread)
 #endif
 
 #if constant(initgroups)
-      catch {
-	initgroups(pw[0], gid);
-	// Doesn't always work - David.
-      };
+      if (mixed err = catch {
+	  initgroups(pw[0], gid);
+	  // Doesn't always work - David.
+	})
+	werror (describe_backtrace (err));
 #endif
 
       if (query("permanent_uid")) {
@@ -4727,7 +4746,7 @@ mapping low_load_image(string f, RequestID id, void|mapping err)
       //  file=Stdio.File();
       //  if(!file->open(f,"r") || !(data=file->read()))
 #ifdef THREADS
-        catch
+      if (mixed err = catch
         {
           string host = "";
           sscanf( f, "http://%[^/]", host );
@@ -4739,7 +4758,8 @@ mapping low_load_image(string f, RequestID id, void|mapping err)
                     "Host":host,
                   ]);
           data = Protocols.HTTP.get_url_data( f, 0, hd );
-        };
+	})
+	werror (describe_backtrace (err));
 #endif
       if( !data )
 	return 0;
@@ -4766,10 +4786,11 @@ array(Image.Layer)|mapping load_layers(string f, RequestID id, mapping|void opt)
       //  file=Stdio.File();
       //  if(!file->open(f,"r") || !(data=file->read()))
 // #ifdef THREADS
-        catch
+      if (mixed err = catch
         {
           data = Protocols.HTTP.get_url_nice( f )[1];
-        };
+	})
+	werror (describe_backtrace (err));
 // #endif
       if( !data )
 	return res;
@@ -4822,8 +4843,11 @@ void create_pid_file(string where)
   object privs = Privs("Deleting old pid file.");
   r_rm(where);
   privs = 0;
-  if(catch(Stdio.write_file(where, sprintf("%d\n%d\n", getpid(), getppid()))))
-    report_debug("I cannot create the pid file ("+where+").\n");
+  if(mixed err = catch {
+      Stdio.write_file(where, sprintf("%d\n%d\n", getpid(), getppid()));
+    })
+    report_debug("Cannot create the pid file %O: %s",
+		 where, describe_error (err));
 #endif
 }
 
