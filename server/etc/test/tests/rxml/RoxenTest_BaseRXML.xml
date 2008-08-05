@@ -169,7 +169,7 @@
 <comment>Define/undefine</comment>
 <test>
 <rxml><define if='x'>3</define><if x='3'>1</if><undefine if='x'/><if x='3'>1</if><else>0</else></rxml>
-<result>10</result>
+<glob>1[Error (parse): *]</glob>
 </test>
 
 <test>
@@ -1537,7 +1537,7 @@ b</strlen></rxml>
 
 <test>
 <rxml><if q>X</if><else>Y</else></rxml>
-<result>Y</result>
+<glob>[Error (parse): *]</glob>
 </test>
 
 <test>
@@ -2755,12 +2755,12 @@ boo</set><emit source="values" values="&var.x;" advanced="words">&_.value; </emi
 
 <test>
 <rxml><if rxml_test="xyz">1</if><use package="test_rxml_package"/><if rxml_test="xyz">2</if><if rxml_test="a">3</if></rxml>
-<result>2</result>
+<glob>[Error (parse): *]2</glob>
 </test>
 
 <test>
 <rxml><if rxml_test2="abc">1</if><use package="test_rxml_package"/><if rxml_test2="abc">2</if><if rxml_test2="a">3</if></rxml>
-<result></result>
+<glob>[Error (parse): *][Error (parse): *][Error (parse): *]</glob>
 </test>
 
 <test>
@@ -2921,7 +2921,7 @@ cd</rxml>
 </test>
 
 <test>
-<rxml><set variable="var.x">&lt;$%a#å</set>&var.x:wml-url;</rxml>
+<rxml><set variable="var.x">&lt;$%a#å</set><case case="lower">&var.x:wml-url;</case></rxml>
 <!--
   Behavior in 4.0 and earlier - strings with only ISO 8859-1 chars are
   encoded straight off by the wml-url encoding while wider strings
