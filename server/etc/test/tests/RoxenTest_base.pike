@@ -199,9 +199,9 @@ void run_tests( Configuration c )
 #endif
 
   test_equal( "foo", Roxen.short_name, "foo" );
-  test_equal( "1_2", Roxen.short_name, "½" );
+  test_equal( "1_2", Roxen.short_name, "\xbd" );
   test_equal( "foo_bar", Roxen.short_name, "Foo/Bar" );
-  test_equal( "foo_bar_1_2", Roxen.short_name, "Foo/Bar§½" );
+  test_equal( "foo_bar_1_2", Roxen.short_name, "Foo/Bar\xa7\xbd" );
 
   // Test logging functions.
 
