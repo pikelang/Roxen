@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.65 2008/08/06 20:18:20 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.66 2008/08/06 20:22:03 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -190,6 +190,17 @@ string canon_html(string in) {
     })->finish (in)->read();
 }
 
+string strip_silly_ws (string in)
+// Silly whitespace is defined to be any whitespace next to tags,
+// comments, processing instructions, and at the beginning or end of
+// the whole string.
+{
+  return Roxen.get_xml_parser()->_set_data_callback (
+    lambda (Parser.HTML p, string data) {
+      return ({String.trim_all_whites (data)});
+    })->finish (in)->read();
+}
+
 
 // --- XML-based test files -------------------------------
 
@@ -287,7 +298,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
   NOCACHE();
   set_id_path (id, "/index.html");
 
-  int no_canon;
+  int no_canon, no_strip_silly_ws;
   Parser.HTML parser =
     Roxen.get_xml_parser()->
     add_containers( ([ "rxml" :
@@ -324,10 +335,15 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			   test_error("Failed (backtrace): %s",describe_backtrace(err));
 			   throw(1);
 			 }
+
 			 if(!args["no-canon"])
 			   res = canon_html(res);
 			 else
 			   no_canon = 1;
+			 if (!args["no-strip-ws"])
+			   res = strip_silly_ws (res);
+			 else
+			   no_strip_silly_ws = 1;
 		       },
 
 		       "test-in-file":
@@ -353,6 +369,10 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			   res = canon_html(res);
 			 else
 			   no_canon = 1;
+			 if (!args["no-strip-ws"])
+			   res = strip_silly_ws (res);
+			 else
+			   no_strip_silly_ws = 1;
 		       },
 
 		       "result" :
@@ -370,6 +390,8 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			   }
 			   if( !no_canon )
 			     c = canon_html( c );
+			   if (!no_strip_silly_ws)
+			     c = strip_silly_ws (c);
 			   if(res != c) {
 			     if(m->not) return;
 			     test_error("Failed (got %s, expected %s)\n",
