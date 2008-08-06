@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.243 2008/06/24 16:19:52 mast Exp $
+// $Id: Roxen.pmod,v 1.244 2008/08/06 16:27:44 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4506,6 +4506,182 @@ Configuration get_owning_config (object|function thing)
     }
   }
   return 0;
+}
+
+// A slightly modified Array.dwim_sort_func used as emits sort
+// function.
+static int dwim_compare(string a0,string b0)
+{
+  string a2="",b2="";
+  int a1,b1;
+  sscanf(a0,"%[^0-9]%d%s",a0,a1,a2);
+  sscanf(b0,"%[^0-9]%d%s",b0,b1,b2);
+  if (a0>b0) return 1;
+  if (a0<b0) return -1;
+  if (a1>b1) return 1;
+  if (a1<b1) return -1;
+  if (a2==b2) return 0;
+  return dwim_compare(a2,b2);
+}
+
+static int strict_compare (mixed a, mixed b)
+// This one does a more strict compare than dwim_compare. It only
+// tries to convert values from strings to floats or ints if they are
+// formatted exactly as floats or ints. That since there still are
+// places where floats and ints are represented as strings (e.g. in
+// sql query results). Then it compares the values with `<.
+//
+// This more closely resembles how 2.1 and earlier compared values.
+{
+  if (stringp (a)) {
+    if (sscanf (a, "%d%*[ \t]%*c", int i) == 2) a = i;
+    else if (sscanf (a, "%f%*[ \t]%*c", float f) == 2) a = f;
+  }
+  if (stringp (b)) {
+    if (sscanf (b, "%d%*[ \t]%*c", int i) == 2) b = i;
+    else if (sscanf (b, "%f%*[ \t]%*c", float f) == 2) b = f;
+  }
+
+  int res;
+  if (mixed err = catch (res = b < a)) {
+    // Assume we got a "cannot compare different types" error.
+    // Compare the types instead.
+    a = sprintf ("%t", a);
+    b = sprintf ("%t", b);
+    res = b < a;
+  }
+  if (res)
+    return 1;
+  else if (a < b)
+    return -1;
+  else
+    return 0;
+}
+
+array(mapping(string:mixed)|object) rxml_emit_sort (
+  array(mapping(string:mixed)|object) dataset, string sort_spec,
+  void|float compat_level)
+//! Implements the sorting used by @expr{<emit sort=...>@}. @[dataset]
+//! is the data to sort, and @[sort_spec] is the sort order on the
+//! form specified by the @expr{sort@} attribute to @expr{<emit>@}.
+{
+  array(string) raw_fields = (sort_spec - " ")/"," - ({ "" });
+
+  class FieldData {
+    string name;
+    int order, string_cast, lcase;
+    function(mixed,mixed:int) compare;
+    mapping value_cache = ([]);
+  };
+
+  array(FieldData) fields = allocate (sizeof (raw_fields));
+
+  for (int idx = 0; idx < sizeof (raw_fields); idx++) {
+    string raw_field = raw_fields[idx];
+    FieldData field = fields[idx] = FieldData();
+    int i;
+
+  field_flag_scan:
+    for (i = 0; i < sizeof (raw_field); i++)
+      switch (raw_field[i]) {
+	case '-':
+	  if (field->order) break field_flag_scan;
+	  field->order = '-';
+	  break;
+	case '+':
+	  if (field->order) break field_flag_scan;
+	  field->order = '+';
+	  break;
+	case '*':
+	  if (compat_level && compat_level > 2.2) {
+	    if (field->compare) break field_flag_scan;
+	    field->compare = strict_compare;
+	  }
+	  break;
+	case '^':
+	  if (compat_level && compat_level > 3.3) {
+	    if (field->lcase) break field_flag_scan;
+	    field->lcase = 1;
+	  }
+	  break;
+	  // Fall through.
+	default:
+	  break field_flag_scan;
+      }
+    field->name = raw_field[i..];
+
+    if (!field->compare) {
+      if (compat_level && compat_level > 2.1) {
+	field->compare = dwim_compare;
+	field->string_cast = 1;
+      }
+      else
+	field->compare = strict_compare;
+    }
+  }
+
+  RXML.Context ctx;
+
+  return Array.sort_array (
+    dataset,
+    lambda (mapping(string:mixed)|object ma,
+	    mapping(string:mixed)|object mb,
+	    array(FieldData) fields)
+    {
+      foreach (fields, FieldData field) {
+	string name = field->name;
+	int string_cast = field->string_cast, lcase = field->lcase;
+	mapping value_cache = field->value_cache;
+	mixed a = ma[name], b = mb[name];
+	int eval_a = objectp (a) && a->rxml_var_eval;
+	int eval_b = objectp (b) && b->rxml_var_eval;
+
+	if (string_cast || lcase || eval_a) {
+	  mixed v = value_cache[a];
+	  if (zero_type (v)) {
+	    if (eval_a) {
+	      if (!ctx) ctx = RXML_CONTEXT;
+	      v = a->rxml_const_eval ? a->rxml_const_eval (ctx, name, "") :
+		a->rxml_var_eval (ctx, name, "", RXML.t_text);
+	    }
+	    else v = a;
+	    if (string_cast) v = RXML.t_string->encode (v);
+	    if (lcase && stringp (v)) v = lower_case (v);
+	    value_cache[a] = v;
+	  }
+	  a = v;
+	}
+
+	if (string_cast || lcase || eval_b) {
+	  mixed v = value_cache[b];
+	  if (zero_type (v)) {
+	    if (eval_b) {
+	      if (!ctx) ctx = RXML_CONTEXT;
+	      v = b->rxml_const_eval ? b->rxml_const_eval (ctx, name, "") :
+		b->rxml_var_eval (ctx, name, "", RXML.t_text);
+	    }
+	    else v = b;
+	    if (string_cast) v = RXML.t_string->encode (v);
+	    if (lcase && stringp (v)) v = lower_case (v);
+	    value_cache[b] = v;
+	  }
+	  b = v;
+	}
+
+	int tmp;
+	switch (field->order) {
+	  case '-': tmp = field->compare (b, a); break;
+	  default:
+	  case '+': tmp = field->compare (a, b); break;
+	}
+	if (tmp > 0)
+	  return 1;
+	else if (tmp < 0)
+	  return 0;
+      }
+      return 0;
+    },
+    fields);
 }
 
 #ifdef REQUEST_TRACE
