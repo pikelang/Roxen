@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.66 2008/08/06 20:22:03 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.67 2008/08/06 23:34:11 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -46,7 +46,7 @@ int is_last_test_configuration()
   return 1;
 }
 
-int tests, ltests;
+int tests, ltests, test_num;
 int fails, lfails;
 int pass;
 string tag_test_data;
@@ -239,7 +239,8 @@ string format_multiline_string (string s)
 
 void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_cache) {
 
-  RXML.PCode p_code = p_code_cache[ltests];
+  test_num++;
+  RXML.PCode p_code = p_code_cache[test_num];
   if (pass == 2 && !p_code) return; // Not a test that produced p-code.
 
   ltests++;
@@ -259,7 +260,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
   {
     if( sizeof( args ) )
       message = sprintf( message, @args );
-    message = (p_code ? "[Pass 2 (p-code)] " : "[Pass 1 (source)] ") + message;
+    message = (pass == 2 ? "[Pass 2 (p-code)] " : "[Pass 1 (source)] ") + message;
     if( verbose )
       if( strlen( rxml ) )
 	report_debug("FAIL\n" );
@@ -549,6 +550,8 @@ void run_xml_tests(string data) {
 
   ltests=0;
   lfails=0;
+
+  test_num = 0;
   pass = 1;
   Roxen.get_xml_parser()->add_containers( ([
     "add-module" : xml_add_module,
@@ -572,7 +575,7 @@ void run_xml_tests(string data) {
 		   test_tags, ltests);
 
   // Go through them again, evaluation from the p-code this time.
-  ltests=0;
+  test_num = 0;
   pass = 2;
   Roxen.get_xml_parser()->add_containers( ([
     "add-module" : xml_dummy /* xml_add_module */,
@@ -586,7 +589,7 @@ void run_xml_tests(string data) {
   foreach (indices (used_modules), string modname)
     conf->disable_module (modname);
 
-  report_debug("Did %d tests, failed on %d.\n", ltests * 2, lfails);
+  report_debug("Did %d tests, failed on %d.\n", ltests, lfails);
   continue_find_tests();
 }
 
