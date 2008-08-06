@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.64 2006/12/12 18:22:35 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.65 2008/08/06 20:18:20 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -13,6 +13,7 @@ constant is_roxen_tester_module = 1;
 Configuration conf;
 Stdio.File index_file;
 Protocol port;
+RoxenModule rxmlparser;
 
 int verbose;
 private int running;
@@ -47,6 +48,8 @@ int is_last_test_configuration()
 
 int tests, ltests;
 int fails, lfails;
+int pass;
+string tag_test_data;
 
 int do_continue(int _tests, int _fails)
 {
@@ -74,6 +77,9 @@ void start(int n, Configuration c)
 {
   conf=c;
   index_file = Stdio.File();
+
+  module_dependencies (0, ({"rxmlparse"}), 1);
+  rxmlparser = conf->find_module ("rxmlparse");
 
   if(is_ready_to_start())
   {
@@ -153,20 +159,12 @@ class FakePrefLang() {
   }
 }
 
-RequestID get_id()
+void set_id_path (RequestID fake_id, string path)
 {
-  object id = roxen.InternalRequestID();
-  id->supports = (< "images" >);
-  id->client = ({ "RoxenTest" });
-  id->set_url("http://localhost:17369/index.html");
-
-  id->realfile = combine_path_unix(query("selftestdir"), "filesystem/index.html");
-  id->misc->stat = conf->stat_file("/index.html", id);
-  id->misc->pref_languages = FakePrefLang();
-  id->misc->pref_languages->set_sorted( ({"sv","en","bräk"}) );
-  NOCACHE();
-
-  return id;
+  fake_id->set_url("http://localhost:17369" + path);
+  string realpath =
+    combine_path_unix (query("selftestdir"), "filesystem" + path);
+  if (file_stat (realpath)) fake_id->realfile = realpath;
 }
 
 static string ignore_errors = 0;
@@ -230,12 +228,13 @@ string format_multiline_string (string s)
 
 void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_cache) {
 
+  RXML.PCode p_code = p_code_cache[ltests];
+  if (pass == 2 && !p_code) return; // Not a test that produced p-code.
+
   ltests++;
   tests++;
 
   string rxml="", res;
-  RXML.PCode p_code = p_code_cache[ltests];
-  int pass = p_code ? 2 : 1;
 
   string indent( int l, string what )
   {
@@ -273,22 +272,31 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
     rxml = test;
     if( verbose )
     {
-      report_debug( "%4d %-69s %s  ",
-		    ltests, sprintf("%O", test)[..68],
-		    p_code ? "(pass 2)" : "(pass 1)");
+      report_debug( "%4d %-69s (pass %d)  ",
+		    ltests, sprintf("%O", test)[..68], pass);
     }
   };
 
-  RequestID id = get_id();
+  RequestID id = roxen.InternalRequestID();
+  id->conf = conf;
+  id->prot = "HTTP";
+  id->supports = (< "images" >);
+  id->client = ({ "RoxenTest" });
+  id->misc->pref_languages = FakePrefLang();
+  id->misc->pref_languages->set_sorted( ({"sv","en","bräk"}) );
+  NOCACHE();
+  set_id_path (id, "/index.html");
+
   int no_canon;
   Parser.HTML parser =
     Roxen.get_xml_parser()->
     add_containers( ([ "rxml" :
 		       lambda(object t, mapping m, string c) {
 			 test_test( c );
+			 id->misc->stat = conf->stat_file ("/index.html", id);
 			 mixed err = catch {
 			   ignore_errors = m["ignore-errors"];
-			   if (!p_code) {
+			   if (pass == 1) {
 			     RXML.Type type = m->type ?
 			       RXML.t_type->encode (m->type) (
 				 conf->default_content_type->parser_prog) :
@@ -296,7 +304,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			     if (m->parser)
 			       type = type (RXML.t_parser->encode (m->parser));
 			     RXML.Parser parser = Roxen.get_rxml_parser (id, type, 1);
-			     parser->context->add_scope ("test", (["pass": pass]));
+			     parser->context->add_scope ("test", (["pass": 1]));
 			     parser->write_end (rxml);
 			     res = parser->eval();
 			     parser->p_code->finish();
@@ -304,7 +312,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			   }
 			   else {
 			     RXML.Context ctx = p_code->new_context (id);
-			     ctx->add_scope ("test", (["pass": pass]));
+			     ctx->add_scope ("test", (["pass": 2]));
 			     res = p_code->eval (ctx);
 			   }
 			 };
@@ -321,6 +329,32 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			 else
 			   no_canon = 1;
 		       },
+
+		       "test-in-file":
+		       lambda(object t, mapping m, string c) {
+			 test_test (tag_test_data = c);
+			 set_id_path (id, m->file);
+
+			 int logerrorsr = rxmlparser->query("logerrorsr");
+			 int quietr = rxmlparser->query("quietr");
+			 if(m["ignore-rxml-run-error"]) {
+			   rxmlparser->getvar("logerrorsr")->set(0);
+			   rxmlparser->getvar("quietr")->set(1);
+			 }
+
+			 res = conf->try_get_file(m->file, id);
+
+			 if(m["ignore-rxml-run-error"]) {
+			   rxmlparser->getvar("logerrorsr")->set(logerrorsr);
+			   rxmlparser->getvar("quietr")->set(quietr);
+			 }
+
+			 if(!args["no-canon"])
+			   res = canon_html(res);
+			 else
+			   no_canon = 1;
+		       },
+
 		       "result" :
 		       lambda(object t, mapping m, string c) {
 			 if (!m->pass || (int) m->pass == pass) {
@@ -451,9 +485,9 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			   },
 
 		   "login" : lambda(Parser.HTML p, mapping m) {
+			       id->realauth = m->user + ":" + m->password;
 			       id->request_headers->authorization =
-				 "Basic " + MIME.encode_base64(args->user+":"+args->password);
-			       id->realauth = args->user+":"+args->password;
+				 "Basic " + MIME.encode_base64 (id->realauth);
 			       conf->authenticate(id);
 			     },
     ]) );
@@ -467,131 +501,6 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 
   if( verbose && strlen( rxml ) ) test_ok();
   return;
-}
-
-string tag_test_data;
-class PrefLang {
-  array(string) get_languages()
-  {
-    return ({});
-  }
-
-  string get_language()
-  {
-    return 0;
-  }
-
-  void set_sorted(array(string) lang) {}
-}
-
-void xml_tag_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_cache) {
-
-  ltests++;
-  tests++;
-
-  string indent( int l, string what )
-  {
-    array q = what/"\n";
-    //   if( q[-1] == "" )  q = q[..sizeof(q)-2];
-    string i = (" "*l+"|  ");
-    return i+q*("\n"+i)+"\n";
-  };
-
-  string test_error( string message, mixed ... args )
-  {
-    if( sizeof( args ) )
-      message = sprintf( message, @args );
-    if( verbose )
-      report_debug("FAIL\n" );
-    report_debug( indent(2, message ) );
-  };
-
-  string test_ok(  )
-  {
-    if( verbose )
-      report_debug( "PASS\n" );
-  };
-
-  string test_test( string test )
-  {
-    if( verbose )
-    {
-      report_debug( "%4d %-69s  ",
-		    ltests, sprintf("%O", test)[..68] );
-    }
-  };
-
-  string res;
-  Parser.HTML parser =
-    Roxen.get_xml_parser()->
-    add_containers( ([ "rxml":
-		       lambda(object t, mapping m, string c) {
-			 tag_test_data = c;
-
-			 mapping request_headers = ([]);
-			 if(args->admin && args->password)
-			   request_headers->authorization =
-			     "Basic " + MIME.encode_base64(args->user+":"+args->password);
-			 roxen.InternalRequestID id = roxen.InternalRequestID();
-			 id->misc->pref_languages = PrefLang();
-			 id->conf = conf;
-			 id->realauth = args->user+":"+args->password;
-			 id->request_headers = request_headers;
-			 id->prot = "HTTP";
-
-			 int logerrorsr =
-			   conf->find_module("rxmlparse")->query("logerrorsr");
-			 int quietr =
-			   conf->find_module("rxmlparse")->query("quietr");
-			 if(m["ignore-rxml-run-error"]) {
-			   conf->find_module("rxmlparse")->getvar("logerrorsr")->set(0);
-			   conf->find_module("rxmlparse")->getvar("quietr")->set(1);
-			 }
-			 res = conf->try_get_file(args->file, id);
-			 if(m["ignore-rxml-run-error"]) {
-			   conf->find_module("rxmlparse")->getvar("logerrorsr")->
-			     set(logerrorsr);
-			   conf->find_module("rxmlparse")->getvar("quietr")->
-			     set(quietr);
-			 }
-		       },
-
-		       "result":
-		       lambda(object t, mapping m, string c) {
-			 res = canon_html( res );
-			 c = canon_html( c );
-
-			 test_test(c);
-			 if(res != c) {
-			   if(m->not) return;
-			   test_error("Failed (got %s, expected %s)\n",
-				      format_multiline_string (res),
-				      format_multiline_string (c));
-			   throw(1);
-			 }
-			 test_ok( );
-		       },
-
-		       "glob" :
-		       lambda(object t, mapping m, string c) {
-			 if( !glob(c, res) ) {
-			   if(m->not) return;
-			   test_error("Failed (result %s does not match %s)\n",
-				      format_multiline_string (res),
-				      format_multiline_string (c));
-			   throw(1);
-			 }
-			 test_ok( );
-		       },
-
-    ]));
-
-  if( mixed error = catch(parser->finish(c)) ) {
-    if (error != 1)
-      test_error ("Failed to parse test: " + describe_backtrace (error));
-    fails++;
-    lfails++;
-  }
 }
 
 class TagTestData {
@@ -618,12 +527,12 @@ void run_xml_tests(string data) {
 
   ltests=0;
   lfails=0;
+  pass = 1;
   Roxen.get_xml_parser()->add_containers( ([
     "add-module" : xml_add_module,
     "drop-module" : xml_dummy /* xml_drop_module */,
     "use-module": xml_use_module,
     "test" : xml_test,
-    "tag-test" : xml_tag_test,
     "comment": xml_comment,
   ]) )->
     set_extra (p_code_cache, used_modules)->
@@ -632,8 +541,7 @@ void run_xml_tests(string data) {
   int test_tags = 0;
 
   Roxen.get_xml_parser()->add_quote_tag ("!--", "", "--")
-			->add_tags ((["test": lambda () {test_tags++;},
-				      "tag-test": lambda () {test_tags++;}]))
+			->add_tags ((["test": lambda () {test_tags++;}]))
 			->finish (data);
 
   if(test_tags != ltests)
@@ -643,11 +551,11 @@ void run_xml_tests(string data) {
 
   // Go through them again, evaluation from the p-code this time.
   ltests=0;
+  pass = 2;
   Roxen.get_xml_parser()->add_containers( ([
     "add-module" : xml_dummy /* xml_add_module */,
     "drop-module" : xml_drop_module,
     "test" : xml_test,
-    "tag-test" : xml_tag_test,
     "comment": xml_comment,
   ]) )->
     set_extra (p_code_cache, used_modules)->
