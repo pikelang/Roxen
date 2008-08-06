@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.244 2008/08/06 16:27:44 mast Exp $
+// $Id: Roxen.pmod,v 1.245 2008/08/06 16:29:41 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4624,9 +4624,7 @@ array(mapping(string:mixed)|object) rxml_emit_sort (
 
   return Array.sort_array (
     dataset,
-    lambda (mapping(string:mixed)|object ma,
-	    mapping(string:mixed)|object mb,
-	    array(FieldData) fields)
+    lambda (mapping(string:mixed)|object ma, mapping(string:mixed)|object mb)
     {
       foreach (fields, FieldData field) {
 	string name = field->name;
@@ -4680,8 +4678,7 @@ array(mapping(string:mixed)|object) rxml_emit_sort (
 	  return 0;
       }
       return 0;
-    },
-    fields);
+    });
 }
 
 #ifdef REQUEST_TRACE
