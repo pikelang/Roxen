@@ -43,7 +43,7 @@ a VARCHAR(255))"/>&page.last-true;</rxml>
 </table></result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><sqltable db="local" query="SELECT * FROM __test" ascii="1" rowinfo="var.r"/>&var.r;</rxml>
 <result>1	hej
 2	hopp
@@ -51,7 +51,7 @@ a VARCHAR(255))"/>&page.last-true;</rxml>
 3</result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><sqltable db="local" query="SELECT * FROM __test" ascii="1" nullvalue="x"/></rxml>
 <result>1	hej
 2	hopp

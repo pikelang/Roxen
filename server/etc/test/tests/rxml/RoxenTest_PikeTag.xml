@@ -14,7 +14,7 @@ write("<roxen/>");
 <result><roxen/></result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><?pike
 // Hello
 //Obzot
@@ -30,7 +30,7 @@ y
 </result>
 </test>
 
-<test>
+<test no-strip-ws="">
 <rxml><?pike
 //X<set variable="var.foo">1</set>
 //O&var.foo;
