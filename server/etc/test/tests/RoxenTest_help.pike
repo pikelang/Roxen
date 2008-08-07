@@ -15,6 +15,17 @@ int test_module_info(ModuleInfo mi)
   return 1;
 }
 
+void check_compilation_errors (string log, mixed err,
+			       function cb, array args, int st)
+{
+  if (err)
+    report_test_failure (err, cb, args, st);
+  else if (log != "")
+    report_test_failure (log, cb, args, st);
+  else
+    report_test_ok (err, cb, args, st);
+}
+
 void run_tests( Configuration c )
 {
   // Create a new server
@@ -42,9 +53,9 @@ void run_tests( Configuration c )
   array modules = roxen->all_modules();
   roxenloader.pop_compile_error_handler();
   werror("Checking for errors.\n");
-  test_equal("", ec->get);
+  test_generic (check_compilation_errors, ec->get);
   werror("Checking for warnings.\n");
-  test_equal("", ec->get_warnings);
+  test_generic (check_compilation_errors, ec->get_warnings);
 
   object key = c->getvar("license")->get_key();
   sort(modules->sname, modules);
