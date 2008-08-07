@@ -1,7 +1,7 @@
 
 #if constant(Java.jvm)
 
-static constant jvm = Java.machine;
+static object jvm = Java.machine;
 
 #define FINDCLASS(X) (jvm && (jvm->find_class(X)||(jvm->exception_describe(),jvm->exception_clear(),error("Failed to load class " X ".\n"),0)))
 #define FIND_METHOD(C, M...) ((C) && (C)->get_method (M))
