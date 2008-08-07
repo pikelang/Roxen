@@ -3,7 +3,10 @@
 
 static constant jvm = Java.machine;
 
-#define FINDCLASS(X) (jvm->find_class(X)||(jvm->exception_describe(),jvm->exception_clear(),error("Failed to load class " X ".\n"),0))
+#define FINDCLASS(X) (jvm && (jvm->find_class(X)||(jvm->exception_describe(),jvm->exception_clear(),error("Failed to load class " X ".\n"),0)))
+#define FIND_METHOD(C, M...) ((C) && (C)->get_method (M))
+#define FIND_STATIC_METHOD(C, M...) ((C) && (C)->get_static_method (M))
+#define FIND_FIELD(C, F...) ((C) && (C)->get_field (F))
 
 static object servlet_ifc = FINDCLASS("javax/servlet/Servlet");
 static object singlethread_ifc = FINDCLASS("javax/servlet/SingleThreadModel");
@@ -29,45 +32,44 @@ static object url_class = FINDCLASS("java/net/URL");
 static object string_class = FINDCLASS("java/lang/String");
 static object jarutil_class = FINDCLASS("com/roxen/roxen/JarUtil");
 
-static object new_instance = class_class->get_method("newInstance",
-						     "()Ljava/lang/Object;");
-static object file_init = file_class->get_method("<init>", "(Ljava/lang/String;)V");
-static object file_tourl = file_class->get_method("toURL", "()Ljava/net/URL;");
-static object load_class = classloader_class->get_method("loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
-static object cl_init = classloader2_class->get_method("<init>", "([Ljava/net/URL;)V");
-static object servlet_init = servlet_ifc->get_method("init", "(Ljavax/servlet/ServletConfig;)V");
-static object servlet_destroy = servlet_ifc->get_method("destroy", "()V");
-static object servlet_getservletinfo = servlet_ifc->get_method("getServletInfo", "()Ljava/lang/String;");
-static object servlet_service = servlet_ifc->get_method("service", "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;)V");
-static object cfg_init = config_class->get_method("<init>", "(Ljavax/servlet/ServletContext;Ljava/lang/String;)V");
-static object context_init = context_class->get_method("<init>", "(ILjava/lang/String;)V");
-static object context_id_field = context_class->get_field("id", "I");
-static object context_initpars_field = context_class->get_field("initparameters", "Ljava/util/Hashtable;");
-static object context_set_attribute = context_class->get_method("setAttribute", "(Ljava/lang/String;Ljava/lang/Object;)V");
-static object request_init = request_class->get_method("<init>", "(Lcom/roxen/servlet/RoxenServletContext;Lcom/roxen/servlet/RoxenSessionContext;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
-static object response_init = response_class->get_method("<init>", "(Lcom/roxen/servlet/HTTPOutputStream;)V");
-static object dic_field = config_class->get_field("dic", "Ljava/util/Dictionary;");
-static object params_field = request_class->get_field("parameters", "Ljava/util/Dictionary;");
-static object attrs_field = request_class->get_field("attributes", "Ljava/util/Dictionary;");
-static object headers_field = request_class->get_field("headers", "Ljava/util/Dictionary;");
-static object set_response_method = request_class->get_method("setResponse", "(Lcom/roxen/servlet/ServletResponse;)V");
-static object dic_put = dictionary_class->get_method("put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-static object hash_clear = hashtable_class->get_method("clear", "()V");
-static object stream_id_field = stream_class->get_field("id", "I");
-static object stream_init = stream_class->get_method("<init>", "(I)V");
-static object throwable_printstacktrace = throwable_class->get_method("printStackTrace", "(Ljava/io/PrintWriter;)V");
-static object throwable_getmessage = throwable_class->get_method("getMessage", "()Ljava/lang/String;");
-static object unavailable_ispermanent = unavailable_class->get_method("isPermanent", "()Z");
-static object unavailable_getunavailableseconds = unavailable_class->get_method("getUnavailableSeconds", "()I");
-static object servlet_exc_getrootcause = servlet_exc_class->get_method("getRootCause", "()Ljava/lang/Throwable;");
-static object stringwriter_init = stringwriter_class->get_method("<init>", "()V");
-static object printwriter_init = printwriter_class->get_method("<init>", "(Ljava/io/Writer;)V");
-static object printwriter_flush = printwriter_class->get_method("flush", "()V");
-static object wrapup_method = response_class->get_method("wrapUp", "()V");
-static object session_context_init = session_context_class->get_method("<init>", "()V");
-static object vector_init = vector_class->get_method("<init>", "()V");
-static object vector_add = vector_class->get_method("add", "(Ljava/lang/Object;)Z");
-static object jarutil_expand = jarutil_class->get_static_method("expand", "(Ljava/lang/String;Ljava/lang/String;)V");
+static object new_instance = FIND_METHOD (class_class, "newInstance", "()Ljava/lang/Object;");
+static object file_init = FIND_METHOD (file_class, "<init>", "(Ljava/lang/String;)V");
+static object file_tourl = FIND_METHOD (file_class, "toURL", "()Ljava/net/URL;");
+static object load_class = FIND_METHOD (classloader_class, "loadClass", "(Ljava/lang/String;)Ljava/lang/Class;");
+static object cl_init = FIND_METHOD (classloader2_class, "<init>", "([Ljava/net/URL;)V");
+static object servlet_init = FIND_METHOD (servlet_ifc, "init", "(Ljavax/servlet/ServletConfig;)V");
+static object servlet_destroy = FIND_METHOD (servlet_ifc, "destroy", "()V");
+static object servlet_getservletinfo = FIND_METHOD (servlet_ifc, "getServletInfo", "()Ljava/lang/String;");
+static object servlet_service = FIND_METHOD (servlet_ifc, "service", "(Ljavax/servlet/ServletRequest;Ljavax/servlet/ServletResponse;)V");
+static object cfg_init = FIND_METHOD (config_class, "<init>", "(Ljavax/servlet/ServletContext;Ljava/lang/String;)V");
+static object context_init = FIND_METHOD (context_class, "<init>", "(ILjava/lang/String;)V");
+static object context_id_field = FIND_FIELD (context_class, "id", "I");
+static object context_initpars_field = FIND_FIELD (context_class, "initparameters", "Ljava/util/Hashtable;");
+static object context_set_attribute = FIND_METHOD (context_class, "setAttribute", "(Ljava/lang/String;Ljava/lang/Object;)V");
+static object request_init = FIND_METHOD (request_class, "<init>", "(Lcom/roxen/servlet/RoxenServletContext;Lcom/roxen/servlet/RoxenSessionContext;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+static object response_init = FIND_METHOD (response_class, "<init>", "(Lcom/roxen/servlet/HTTPOutputStream;)V");
+static object dic_field = FIND_FIELD (config_class, "dic", "Ljava/util/Dictionary;");
+static object params_field = FIND_FIELD (request_class, "parameters", "Ljava/util/Dictionary;");
+static object attrs_field = FIND_FIELD (request_class, "attributes", "Ljava/util/Dictionary;");
+static object headers_field = FIND_FIELD (request_class, "headers", "Ljava/util/Dictionary;");
+static object set_response_method = FIND_METHOD (request_class, "setResponse", "(Lcom/roxen/servlet/ServletResponse;)V");
+static object dic_put = FIND_METHOD (dictionary_class, "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+static object hash_clear = FIND_METHOD (hashtable_class, "clear", "()V");
+static object stream_id_field = FIND_FIELD (stream_class, "id", "I");
+static object stream_init = FIND_METHOD (stream_class, "<init>", "(I)V");
+static object throwable_printstacktrace = FIND_METHOD (throwable_class, "printStackTrace", "(Ljava/io/PrintWriter;)V");
+static object throwable_getmessage = FIND_METHOD (throwable_class, "getMessage", "()Ljava/lang/String;");
+static object unavailable_ispermanent = FIND_METHOD (unavailable_class, "isPermanent", "()Z");
+static object unavailable_getunavailableseconds = FIND_METHOD (unavailable_class, "getUnavailableSeconds", "()I");
+static object servlet_exc_getrootcause = FIND_METHOD (servlet_exc_class, "getRootCause", "()Ljava/lang/Throwable;");
+static object stringwriter_init = FIND_METHOD (stringwriter_class, "<init>", "()V");
+static object printwriter_init = FIND_METHOD (printwriter_class, "<init>", "(Ljava/io/Writer;)V");
+static object printwriter_flush = FIND_METHOD (printwriter_class, "flush", "()V");
+static object wrapup_method = FIND_METHOD (response_class, "wrapUp", "()V");
+static object session_context_init = FIND_METHOD (session_context_class, "<init>", "()V");
+static object vector_init = FIND_METHOD (vector_class, "<init>", "()V");
+static object vector_add = FIND_METHOD (vector_class, "add", "(Ljava/lang/Object;)Z");
+static object jarutil_expand = FIND_STATIC_METHOD (jarutil_class, "expand", "(Ljava/lang/String;Ljava/lang/String;)V");
 
 
 static object natives_bind1, natives_bind2, natives_bind3;
@@ -600,6 +602,8 @@ static string native_blockingIPToHost(object n)
 
 void create()
 {
+  if (!jvm) return;
+
   natives_bind1 = context_class->register_natives(({
     ({"log", "(Ljava/lang/String;)V", native_log}),
     ({"getRealPath", "(Ljava/lang/String;)Ljava/lang/String;",
