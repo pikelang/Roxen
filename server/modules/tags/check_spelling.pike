@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.33 2005/01/21 14:56:04 grubba Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.34 2008/08/07 10:36:18 mast Exp $";
 
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Tags: Spell checker";
@@ -89,7 +89,7 @@ string do_spell(string q, mapping args, string content,RequestID id)
   string dict=args->dictionary || query("dictionary");
   if(!sizeof(dict)) dict="american";
 
-  string text=Protocols.HTTP.unentity(content);
+  string text=Parser.parse_html_entities (content, 1);
 
   text=replace(text,({"\n","\r"}),({" "," "}));
   text=Array.everynth((replace(text,">","<")/"<"),2)*" ";
