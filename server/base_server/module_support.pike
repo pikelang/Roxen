@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module_support.pike,v 1.133 2008/04/15 09:34:45 grubba Exp $
+// $Id: module_support.pike,v 1.134 2008/08/08 16:50:31 mast Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -73,7 +73,7 @@ static program my_compile_file(string file, void|int silent)
 
   if (p->dont_dump_program)
   {
-#ifdef MODULE_DEBUG
+#if defined (ENABLE_DUMPING) && defined (MODULE_DEBUG)
     if (!silent)
       report_debug("\b[dontdump] \b");
 #endif
