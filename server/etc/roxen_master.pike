@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.148 2008/06/12 12:14:51 grubba Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.149 2008/08/08 15:06:22 mast Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -290,6 +290,7 @@ void init_security()
 }
 #endif
 
+#ifdef ENABLE_DUMPING
 mapping dump_constants = ([]), dump_constants_rev = ([]);
 
 // These reverse mapping are not only for speed; we use mapping
@@ -611,17 +612,26 @@ class MyCodec
   }
 }
 
+#else  // !ENABLE_DUMPING
+mixed add_dump_constant( string f, mixed what )
+{
+  return what;
+}
+#endif
 
+
+#if 0
 #ifdef __NT__
 string getcwd()
 {
   return replace (::getcwd(), "\\", "/");
 }
 #endif
-
-mapping handled = ([]);
+#endif
 
 mapping(program:string) program_names = set_weak_flag (([]), 1);
+
+#ifdef ENABLE_DUMPING
 
 string make_ofilename( string from )
 {
@@ -674,6 +684,8 @@ void dump_program( string pname, program what )
   dump_debug_indent = save_dump_debug_indent;
 #endif
 }
+
+#endif	// ENABLE_DUMPING
 
 int loaded_at( program p )
 {
@@ -740,7 +752,6 @@ program low_findprog(string pname, string ext,
     case "":
     case ".pike":
       // First check in mysql.
-      array q;
 
 #ifdef DUMP_DEBUG
 #define DUMP_WARNING(fname,err)                                         \
@@ -751,6 +762,8 @@ program low_findprog(string pname, string ext,
 #define DUMP_WARNING(f,e)
 #define DDEBUG( X... )
 #endif
+
+#ifdef ENABLE_DUMPING
 
 #define LOAD_DATA( DATA )                                                    \
       do {                                                                   \
@@ -776,6 +789,8 @@ program low_findprog(string pname, string ext,
           return ret;                                                        \
         }; DUMP_WARNING(fname,err)                                           \
       } while(0)
+
+      array q;
       if(sizeof(q=sql_query( "SELECT data,mtime FROM precompiled_files WHERE id=%s",
 			     make_ofilename( fname )))) {
 	if( (int)q[0]->mtime >= s[3] ) {
@@ -791,6 +806,8 @@ program low_findprog(string pname, string ext,
         if(Stat s2=master_file_stat( ofile ))
           if(s2[1]>0 && s2[3]>=s[3])
             LOAD_OFILE( Stdio.File( ofile,"r")->read() );
+
+#endif	// ENABLE_DUMPING
 
       DDEBUG( "Really compile: %O\n", fname );
 #ifdef DUMP_DEBUG
@@ -861,6 +878,7 @@ program handle_inherit (string pname, string current_file, object|void handler)
   return ::handle_inherit (pname, current_file, handler);
 }
 
+#if 0
 void handle_error(array(mixed)|object trace)
 {
   catch {
@@ -872,6 +890,7 @@ void handle_error(array(mixed)|object trace)
   };
   ::handle_error (trace);
 }
+#endif
 
 void clear_compilation_failures()
 {
@@ -891,8 +910,10 @@ int refresh( program p, int|void force )
   {
     m_delete( programs, fname );
     m_delete( load_time, fname );
+#ifdef ENABLE_DUMPING
     sql_query( "DELETE FROM precompiled_files WHERE id=%s",
 	       make_ofilename(fname) );
+#endif
     return 1;
   }
 
@@ -908,8 +929,10 @@ int refresh( program p, int|void force )
 
   m_delete( programs, fname );
   m_delete( load_time, fname );
+#ifdef ENABLE_DUMPING
   sql_query( "DELETE FROM precompiled_files WHERE id=%s",
 	     make_ofilename(fname));
+#endif
   return 1;
 }
 
@@ -960,6 +983,8 @@ void name_program( program p, string name )
   programs[name] = p;
 }
 
+#if 0
+
 class Describer
 {
   inherit master::Describer;
@@ -988,6 +1013,7 @@ string describe_backtrace(mixed trace, void|int linewidth)
   return predef::describe_backtrace(trace, 999999);
 }
 
+#endif
 
 void create()
 {

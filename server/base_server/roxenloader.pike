@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.395 2008/06/24 16:19:52 mast Exp $
+// $Id: roxenloader.pike,v 1.396 2008/08/08 15:06:22 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.395 2008/06/24 16:19:52 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.396 2008/08/08 15:06:22 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2246,6 +2246,7 @@ void start_mysql()
 
 int dump( string file, program|void p )
 {
+#ifdef ENABLE_DUMPING
   if( file[0] != '/' )
     file = getcwd() +"/"+ file;
 #ifdef __NT__
@@ -2298,6 +2299,7 @@ int dump( string file, program|void p )
 #ifdef MUCHO_DUMP_DEBUG
   werror(file+" already dumped (and up to date)\n");
 #endif
+#endif // ENABLE_DUMPING
   return 0;
 }
 
