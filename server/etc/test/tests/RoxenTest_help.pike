@@ -51,11 +51,6 @@ void run_tests( Configuration c )
   // Add all modules except wrapper modules and other funny stuff.
   roxenloader.push_compile_error_handler(ec);
   array modules = roxen->all_modules();
-  roxenloader.pop_compile_error_handler();
-  werror("Checking for errors.\n");
-  test_generic (check_compilation_errors, ec->get);
-  werror("Checking for warnings.\n");
-  test_generic (check_compilation_errors, ec->get_warnings);
 
   object key = c->getvar("license")->get_key();
   sort(modules->sname, modules);
@@ -79,10 +74,9 @@ void run_tests( Configuration c )
   }
 
   // Wait for everything to settle down.
-  sleep(5);
+  sleep(1);
   test( c->disable_module, "ac_filesystem" );
   //test( c->disable_module, "auth" );
-  sleep(5);
 
   // Make a list of all tags and PI:s
   array tags=map(indices(c->rxml_tag_set->get_tag_names()),
@@ -106,4 +100,10 @@ void run_tests( Configuration c )
 
   test(c->stop);
   test( roxen.disable_configuration, "usertestconfig" );
+
+  roxenloader.pop_compile_error_handler();
+  werror("Checking for errors.\n");
+  test_generic (check_compilation_errors, ec->get);
+  werror("Checking for warnings.\n");
+  test_generic (check_compilation_errors, ec->get_warnings);
 }
