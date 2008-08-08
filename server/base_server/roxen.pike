@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.979 2008/08/05 22:15:44 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.980 2008/08/08 15:04:22 mast Exp $";
 
 //! @appears roxen
 //!
@@ -5733,7 +5733,7 @@ static LogFormat compile_log_format( string fmt )
     {
       LogFormat lf;
       if (mixed err = catch {
-	  lf = decode_value( tmp[0]->enc, master()->MyCodec() )();
+	  lf = decode_value( tmp[0]->enc, master()->Decoder() )();
 	}) {
 // #ifdef DEBUG
 	report_error("Decoding of dumped log format failed:\n%s",
@@ -5891,7 +5891,7 @@ static LogFormat compile_log_format( string fmt )
     throw (err);
   }
   mixed err = catch {
-    string enc = encode_value(res, master()->MyCodec(res));
+    string enc = encode_value(res, master()->Encoder (res));
 
     con->query("REPLACE INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
 	     kmd5, fmt, enc);
@@ -6128,7 +6128,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
   if( sizeof(tmp) && (tmp[0]->full == pattern) )
   {
     mixed err = catch {
-      return decode_value( tmp[0]->enc, master()->MyCodec() )()->f;
+      return decode_value( tmp[0]->enc, master()->Decoder() )()->f;
     };
 // #ifdef DEBUG
     report_error("Decoding of dumped log format failed:\n%s",
@@ -6441,7 +6441,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
    
   dbm_cached_get( "local" )
     ->query("REPLACE INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
-	    kmd5,pattern,encode_value( res, master()->MyCodec( res ) ) );
+	    kmd5,pattern,encode_value( res, master()->Encoder (res) ) );
   return compile_string(code)()->f;
 }
 
