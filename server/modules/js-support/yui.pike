@@ -56,7 +56,6 @@ void setup_yui() {
 
 
 void start(int when) {
-  werror("when: %O\n", when);
   set("searchpath", yui_root_dir);
   ::start();
   limit_yui_paths = query("limit-yui-paths");
