@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.559 2008/05/13 13:55:57 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.560 2008/08/13 16:18:02 mathias Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -951,7 +951,9 @@ private int parse_got( string new_data )
       }
 	    
       case "multipart/form-data": {
-	object messg = MIME.Message(data, request_headers);
+	// Set Guess to one in order to fix the incorrect quoting of paths
+	// from Internet Explorer when sending a file.
+	object messg = MIME.Message(data, request_headers, UNDEFINED, 1);
 	if (!messg->body_parts) {
 	  report_error("HTTP: Bad multipart/form-data.\n"
 		       "  headers:\n"
