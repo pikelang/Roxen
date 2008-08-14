@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.34 2008/08/07 10:36:18 mast Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.35 2008/08/14 16:30:18 mast Exp $";
 
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Tags: Spell checker";
@@ -122,15 +122,13 @@ function getObj(obj) {
     return eval(\"document.all.\" + obj);
 }
 
-function getRecursiveLeft(o)
-{
+function getRecursiveLeft(o) {
   if(o.tagName == \"BODY\")
     return o.offsetLeft;
   return o.offsetLeft + getRecursiveLeft(o.offsetParent);
 }
 
-function getRecursiveTop(o)
-{
+function getRecursiveTop(o) {
   if(o.tagName == \"BODY\")
     return o.offsetTop;
   return o.offsetTop + getRecursiveTop(o.offsetParent);
@@ -154,8 +152,7 @@ function showPopup(popupid,e) {
   }
 }
 
-function checkPopupCoord(e)
-{
+function checkPopupCoord(e) {
   p = getObj(spellcheckpopup);
   if(isNav4) {
     x=e.pageX;
@@ -237,7 +234,7 @@ string run_spellcheck(string|array(string) words, void|string dict)
     werror("check_spelling: Missing binary in %s\n", query("spellchecker"));
     return 0;
   }
-  Process p =
+  Process.Process p =
     Process.create_process(({ query("spellchecker"), "-a", "-C" }) +
                            (stringp(words) ? ({ "-H" })       : ({})) +
                            (dict           ? ({ "-d", dict }) : ({})),
