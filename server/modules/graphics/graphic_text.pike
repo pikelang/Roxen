@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.303 2007/09/05 14:37:00 mathias Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.304 2008/08/14 09:41:34 erik Exp $";
 
 #include <module.h>
 inherit "module";
@@ -476,7 +476,7 @@ constant tagdoc=([
  highlighted image.</p>
 
 <ex><gtext fgcolor=\"blue\" magic=\"\"
-magic-glow=\"red\" magic-fg=\"white\">Mouse me!</gtext></ex>
+magic-glow=\"red\" magic-fgcolor=\"white\">Mouse me!</gtext></ex>
 </attr>
 
 <attr name='noxml'><p>
