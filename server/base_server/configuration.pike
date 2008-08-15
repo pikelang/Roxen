@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.653 2008/08/15 12:33:53 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.654 2008/08/15 13:37:47 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4238,12 +4238,6 @@ void low_init(void|int modules_already_enabled)
 
     array modules_to_process = indices( enabled_modules );
     string tmp_string;
-
-#if 0
-    if (enabled_modules["sbtags_2.0#0"])
-      modules_to_process =
-	({"sbtags_2.0#0"}) + (modules_to_process - ({"sbtags_2.0#0"}));
-#endif
 
     mixed err;
     forcibly_added = ([]);
