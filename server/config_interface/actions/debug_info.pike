@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.39 2006/09/13 11:35:42 jonasw Exp $
+ * $Id: debug_info.pike,v 1.40 2008/08/15 12:33:54 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -33,15 +33,10 @@ mixed page_0( object id )
   mapping(string|program:array) allobj = ([]);
   mapping(string|program:int) numobjs = ([]);
 
-  // Collect data. Disable threads to avoid inconsistencies. Note that
-  // in Pike 7.4 and earlier, we can't stop automatic gc calls in here
-  // which would mess things up.
   object threads_disabled = _disable_threads();
 
-#if constant (Pike.gc_parameters)
   int orig_enabled = Pike.gc_parameters()->enabled;
   Pike.gc_parameters ((["enabled": 0]));
-#endif
 
   int gc_freed =
     (id->real_variables->gc || id->real_variables["gc.x"]) && gc();
@@ -83,9 +78,7 @@ mixed page_0( object id )
     mem_usage_afterwards->num_objects +
     mem_usage_afterwards->num_programs;
 
-#if constant (Pike.gc_parameters)
   Pike.gc_parameters ((["enabled": orig_enabled]));
-#endif
   mapping gc_status = _gc_status();
   threads_disabled = 0;
 

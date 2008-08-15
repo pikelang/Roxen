@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.107 2008/05/09 18:22:47 mast Exp $
+// $Id: module.pmod,v 1.108 2008/08/15 12:33:54 mast Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -11,18 +11,18 @@
 
 // Increased for each variable, used to index the mappings below. The unique
 // prefix is needed to avoid clobbering variables after server restart.
-static int unique_vid;
-static string unique_prefix = (string) getpid();
+protected int unique_vid;
+protected string unique_prefix = (string) getpid();
 
 // The theory is that most variables (or at least a sizable percentage
 // of all variables) does not have these members. Thus this saves
 // quite a respectable amount of memory, the cost is speed. But
 // hopefully not all that great a percentage of speed.
-static mapping(string:mixed)  changed_values = ([]);
-static mapping(string:function(object:void)) changed_callbacks = ([]);
-static mapping(string:int)    all_flags      = ([]);
-static mapping(string:string) all_warnings   = ([]);
-static mapping(string:function(RequestID,object:int))
+protected mapping(string:mixed)  changed_values = ([]);
+protected mapping(string:function(object:void)) changed_callbacks = ([]);
+protected mapping(string:int)    all_flags      = ([]);
+protected mapping(string:string) all_warnings   = ([]);
+protected mapping(string:function(RequestID,object:int))
                            invisibility_callbacks = set_weak_flag( ([]), 1 );
 
 mapping(string:Variable) all_variables = set_weak_flag( ([]), 1 );
@@ -77,9 +77,9 @@ string get_diff_def_html( Variable v,
 
 class Diff
 {
-  static private array(string) diff;
+  private array(string) diff;
   
-  static private
+  private
   array(string) print_row(array(string) diff_old, array(string) diff_new,
                           int line, int|void start, int|void end)
   {
@@ -197,9 +197,9 @@ class Variable
   string _id = unique_prefix + "_" + (string) unique_vid++;
   // used for indexing the mappings.
 
-  static mixed _initial; // default value
-  static string _path = sprintf("v%s",_id);   // used for forms
-  static LocaleString  __name, __doc;
+  protected mixed _initial; // default value
+  protected string _path = sprintf("v%s",_id);   // used for forms
+  protected LocaleString  __name, __doc;
 
   string diff( int render )
   //! Generate a html diff of the difference between the current
@@ -598,14 +598,14 @@ class Variable
     return Roxen.html_encode_string( (string)v );
   }
   
-  static string _sprintf( int i )
+  protected string _sprintf( int i )
   {
     if( i == 'O' )
       return sprintf( "Variable.%s(%s)",type,(string)name());
   }
 
-  static void create(mixed default_value, void|int flags,
-                     void|LocaleString std_name, void|LocaleString std_doc)
+  protected void create(mixed default_value, void|int flags,
+			void|LocaleString std_name, void|LocaleString std_doc)
     //! Constructor. 
     //! Flags is a bitwise or of one or more of 
     //! 
@@ -657,12 +657,12 @@ class Float
 {
   inherit Variable;
   constant type = "Float";
-  static float|NoLimit _max = no_limit, _min = no_limit;
-  static int _prec = 2;
-  static int _may_be_empty = 0;
-  static int(0..1) _is_empty = 0;
+  protected float|NoLimit _max = no_limit, _min = no_limit;
+  protected int _prec = 2;
+  protected int _may_be_empty = 0;
+  protected int(0..1) _is_empty = 0;
 
-  static string _format( float|NoLimit m )
+  protected string _format( float|NoLimit m )
   {
     if (m == no_limit)
       return "n/a";
@@ -781,10 +781,10 @@ class Int
 {
   inherit Variable;
   constant type = "Int";
-  static int|NoLimit _max = no_limit, _min = no_limit;
+  protected int|NoLimit _max = no_limit, _min = no_limit;
 
-  static int(0..1) _may_be_empty = 0;
-  static int(0..1) _is_empty = 0;
+  protected int(0..1) _may_be_empty = 0;
+  protected int(0..1) _is_empty = 0;
 
   void set_range(int|NoLimit minimum, int|NoLimit maximum )
     //! Set the range of the variable.
@@ -947,8 +947,8 @@ class Text
            "</textarea>";
   }
 
-  static void create(mixed default_value, void|int flags,
-                     void|LocaleString std_name, void|LocaleString std_doc)
+  protected void create(mixed default_value, void|int flags,
+			void|LocaleString std_name, void|LocaleString std_doc)
     //! Constructor. 
     //! Flags is a bitwise or of one or more of 
     //! 
@@ -1107,8 +1107,8 @@ class MultipleChoice
 //! Base class for multiple-choice (one of many) variables.
 {
   inherit Variable;
-  static array _list = ({});
-  static mapping _table = ([]);
+  protected array _list = ({});
+  protected mapping _table = ([]);
 
   string diff( int render )
   {
@@ -1142,14 +1142,14 @@ class MultipleChoice
     return _table;
   }
 
-  static string _name( mixed what )
+  protected string _name( mixed what )
     //! Get the name used as value for an element gotten from the
     //! get_choice_list() function.
   {
     return (string)what;
   }
 
-  static string _title( mixed what )
+  protected string _title( mixed what )
     //! Get the title used as description (shown to the user) for an
     //! element gotten from the get_choice_list() function.
   {
@@ -1186,9 +1186,9 @@ class MultipleChoice
     return res + "</select>";
   }
 
-  static void create( mixed default_value, array|mapping choices,
-                      void|int _flags, void|LocaleString std_name,
-		      void|LocaleString std_doc )
+  protected void create( mixed default_value, array|mapping choices,
+			 void|int _flags, void|LocaleString std_name,
+			 void|LocaleString std_doc )
     //! Constructor. 
     //!
     //! Choices is the list of possible choices, can be set with 
@@ -1242,7 +1242,7 @@ class FloatChoice
 {
   inherit MultipleChoice;
   constant type = "FloatChoice";
-  static int _prec = 3;
+  protected int _prec = 3;
 
   void set_precision( int prec )
     //! Set the number of _decimals_ shown to the user.
@@ -1252,7 +1252,7 @@ class FloatChoice
     _prec = prec;
   }
 
-  static string _title( mixed what )
+  protected string _title( mixed what )
   {
     if( !_prec )
       return sprintf( "%d", (int)what );
@@ -1280,8 +1280,8 @@ class FontChoice
     return roxenp()->fonts->available_fonts();
   }
 
-  static void create(mixed default_value, void|int flags,
-                     void|LocaleString std_name, void|LocaleString std_doc)
+  protected void create(mixed default_value, void|int flags,
+			void|LocaleString std_name, void|LocaleString std_doc)
     //! Constructor. 
     //! Flags is a bitwise or of one or more of 
     //! 
@@ -1343,8 +1343,8 @@ class DatabaseChoice
     return ({ " none" }) + sort(DBManager.list( config() ));
   }
 
-  static void create(string default_value, void|int flags,
-		     void|LocaleString std_name, void|LocaleString std_doc)
+  protected void create(string default_value, void|int flags,
+			void|LocaleString std_name, void|LocaleString std_doc)
   {
     ::create( default_value, ({}), flags, std_name, std_doc );
   }
@@ -1355,16 +1355,16 @@ class AuthMethodChoice
   inherit StringChoice;
   constant type = "AuthMethodChoice";
 
-  static Configuration config;
+  protected Configuration config;
   
   array get_choice_list( )
   {
     return ({ " all" }) + sort( config->auth_modules()->name );
   }
 
-  static void create( string default_value, int flags,
-		      string std_name, string std_doc,
-		      Configuration c )
+  protected void create( string default_value, int flags,
+			 string std_name, string std_doc,
+			 Configuration c )
   {
     config = c;
     ::create( default_value, ({}), flags, std_name, std_doc );
@@ -1376,16 +1376,16 @@ class UserDBChoice
   inherit StringChoice;
   constant type = "UserDBChoice";
 
-  static Configuration config;
+  protected Configuration config;
   
   array get_choice_list( )
   {
     return ({ " all" }) + sort( config->user_databases()->name );
   }
 
-  static void create( string default_value, int flags,
-		      string std_name, string std_doc,
-		      Configuration c )
+  protected void create( string default_value, int flags,
+			 string std_name, string std_doc,
+			 Configuration c )
   {
     config = c;
     ::create( default_value, ({}), flags, std_name, std_doc );
@@ -1399,11 +1399,11 @@ class ProviderChoice
 {
   inherit StringChoice;
   constant type = "ProviderChoice";
-  static Configuration conf;
-  static string provides;
-  static string default_id;
-  static string local_id = "";
-  static int isset;
+  protected Configuration conf;
+  protected string provides;
+  protected string default_id;
+  protected string local_id = "";
+  protected int isset;
 
   int low_set(RoxenModule to)
   {
@@ -1464,12 +1464,12 @@ class ProviderChoice
     return res;
   }
 
-  static string _name(RoxenModule val)
+  protected string _name(RoxenModule val)
   {
     return val?val->module_local_id():"";
   }
 
-  static string _title(RoxenModule val)
+  protected string _title(RoxenModule val)
   {
     return val?val->module_name:"";
   }
@@ -1509,9 +1509,9 @@ class ProviderChoice
   //!   The provider string to match modules against.
   //! @param conf
   //!   The current configuration.
-  static void create(string default_id, int flags,
-		     string std_name, string std_doc,
-		     string provides, Configuration conf)
+  protected void create(string default_id, int flags,
+			string std_name, string std_doc,
+			string provides, Configuration conf)
   {
     this_program::provides = provides;
     this_program::default_id = default_id;
@@ -1553,7 +1553,7 @@ class List
     return what;
   }
 
-  static int _current_count = time()*100+(gethrtime()/10000);
+  protected int _current_count = time()*100+(gethrtime()/10000);
   int(0..1) set_from_form(RequestID id)
   {
     int rn, do_goto;
@@ -1769,7 +1769,7 @@ class FloatList
   constant type="FloatList";
   int width=20;
 
-  static int _prec = 3;
+  protected int _prec = 3;
 
   void set_precision( int prec )
     //! Set the number of _decimals_ shown to the user.
@@ -1958,7 +1958,7 @@ class Flag
 // =================================================================
 // Utility functions used in multiple variable classes above
 // =================================================================
-static array(string) verify_port( string port )
+protected array(string) verify_port( string port )
 {
   if(!strlen(port))
     return ({ 0, port });

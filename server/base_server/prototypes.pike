@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.218 2008/06/24 12:14:29 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.219 2008/08/15 12:33:53 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -29,7 +29,7 @@ constant ignore_identifiers = (<
   "cvs_version", "Roxen", "ignore_identifiers"
 >);
 
-static class Variable
+protected class Variable
 {
   constant is_variable = 1;
   constant type = "Basic";
@@ -170,11 +170,11 @@ class ModuleCopies
 }
 
 // Simulate an import of useful stuff from Parser.XML.Tree.
-static constant SimpleNode = Parser.XML.Tree.SimpleNode;
-static constant SimpleRootNode = Parser.XML.Tree.SimpleRootNode;
-static constant SimpleHeaderNode = Parser.XML.Tree.SimpleHeaderNode;
-static constant SimpleTextNode = Parser.XML.Tree.SimpleTextNode;
-static constant SimpleElementNode = Parser.XML.Tree.SimpleElementNode;
+protected constant SimpleNode = Parser.XML.Tree.SimpleNode;
+protected constant SimpleRootNode = Parser.XML.Tree.SimpleRootNode;
+protected constant SimpleHeaderNode = Parser.XML.Tree.SimpleHeaderNode;
+protected constant SimpleTextNode = Parser.XML.Tree.SimpleTextNode;
+protected constant SimpleElementNode = Parser.XML.Tree.SimpleElementNode;
 
 //! @appears DAVLock
 //!
@@ -238,9 +238,9 @@ class DAVLock
   //! As a special case, if the value is @expr{0@} (zero), the lock
   //! has infinite duration.
 
-  static void create(string locktoken, string path, int(0..1) recursive,
-		     string|SimpleNode lockscope, string|SimpleNode locktype,
-		     int(0..) expiry_delta, array(SimpleNode) owner)
+  protected void create(string locktoken, string path, int(0..1) recursive,
+			string|SimpleNode lockscope, string|SimpleNode locktype,
+			int(0..) expiry_delta, array(SimpleNode) owner)
   {
     DAVLock::locktoken = locktoken;
     DAVLock::path = path;
@@ -292,7 +292,7 @@ class DAVLock
     return res;
   }
 
-  static string _sprintf (int flag)
+  protected string _sprintf (int flag)
   {
     return flag == 'O' &&
       sprintf ("DAVLock(%O on %O, %s, %s%s)", locktoken, path,
@@ -465,7 +465,7 @@ class Configuration
   AuthModule find_auth_module( string name );
   UserDB find_user_database( string name );
   
-  static string _sprintf( )
+  protected string _sprintf( )
   {
     return "Configuration("+name+")";
   }
@@ -512,17 +512,17 @@ class FakedVariables( mapping real_variables )
 {
   // FIXME: _get_iterator()
 
-  static array _indices()
+  protected array _indices()
   {
     return indices( real_variables );
   }
 
-  static array _values()
+  protected array _values()
   {
     return map( _indices(), `[] );
   }
 
-  static mixed fix_value( mixed what )
+  protected mixed fix_value( mixed what )
   {
     if( !what ) return what;
     if( !arrayp(what) ) return what; // huh
@@ -532,38 +532,38 @@ class FakedVariables( mapping real_variables )
     return what*"\0";
   }
 
-  static mixed `[]( string ind ) {
+  protected mixed `[]( string ind ) {
     return fix_value( real_variables[ ind ] );
   }
 
-  static mixed `->(string ind ) {
+  protected mixed `->(string ind ) {
     return `[]( ind );
   }
 
-  static mixed `[]=( string ind, mixed what ) {
+  protected mixed `[]=( string ind, mixed what ) {
     real_variables[ ind ] = ({ what });
     return what;
   }
 
-  static mixed `->=(string ind, mixed what ) {
+  protected mixed `->=(string ind, mixed what ) {
     return `[]=( ind,what );
   }
 
-  static mixed _m_delete( mixed what ) {
+  protected mixed _m_delete( mixed what ) {
 //     report_debug(" _m_delete( %O )\n", what );
     return fix_value( m_delete( real_variables, what ) );
   }
 
-  static int _equal( mixed what ) {
+  protected int _equal( mixed what ) {
     return `==(what);
   }
 
-  static int `==( mixed what ) {
+  protected int `==( mixed what ) {
     if( mappingp( what ) && (real_variables == what) )
       return 1;
   }
 
-  static string _sprintf( int f )
+  protected string _sprintf( int f )
   {
     switch( f )
     {
@@ -574,25 +574,25 @@ class FakedVariables( mapping real_variables )
     }
   }
 
-  static this_program `|( mapping what )
+  protected this_program `|( mapping what )
   {
     foreach( indices(what), string q )`[]=( q,what[q] );
     return this_object();
   }
 
-  static this_program `+=( mapping what )
+  protected this_program `+=( mapping what )
   {
     foreach( indices(what), string q )`[]=( q,what[q] );
     return this_object();
   }
 
-  static this_program `+( mapping what )
+  protected this_program `+( mapping what )
   {
     foreach( indices(what), string q )`[]=( q,what[q] );
     return this_object();
   }
 
-  static mapping cast(string to)
+  protected mapping cast(string to)
   {
     if (to[..6]=="mapping")
     {
@@ -615,7 +615,7 @@ class PrefLanguages
   array(string) languages=({});
   array(float) qualities=({});
 
-  static string _sprintf(int c, mapping|void attrs)
+  protected string _sprintf(int c, mapping|void attrs)
   {
     return sprintf("PrefLanguages(%O)", get_languages());
   }
@@ -729,12 +729,12 @@ class CacheKey
   RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this);
 #endif
 
-  static array(array(CacheActivationCB|array)) activation_cbs;
+  protected array(array(CacheActivationCB|array)) activation_cbs;
   // Functions to call when the cache key is activated, i.e. stored
   // together with some result in a cache. Zero when the key already
   // is active.
 
-  static void create (void|int activate_immediately)
+  protected void create (void|int activate_immediately)
   {
     if (!activate_immediately) activation_cbs = ({});
   }
@@ -822,7 +822,7 @@ class CacheKey
     return 0;
   }
 
-  static string _sprintf (int flag)
+  protected string _sprintf (int flag)
   {
     return flag == 'O' &&
       sprintf ("%s(%s)%s",
@@ -855,7 +855,7 @@ class TristateCacheKey
 {
   inherit CacheKey;
 
-  static int flags;
+  protected int flags;
 
   int invalidp()
   //! Return nonzero if this cache key has been invalidated.
@@ -898,7 +898,7 @@ class ProtocolCacheKey
 }
 
 //  Kludge for resolver problems
-static function _charset_decoder_func;
+protected function _charset_decoder_func;
 
 string browser_supports_vary(string ignored, RequestID id)
 {
@@ -908,7 +908,7 @@ string browser_supports_vary(string ignored, RequestID id)
 // This is a somewhat simplistic regexp that doesn't handle
 // quoted-string parameter values correctly. It's only used on content
 // types so we know wide strings aren't a problem.
-static Regexp ct_charset_search = Regexp (";[ \t\n\r]*charset=");
+protected Regexp ct_charset_search = Regexp (";[ \t\n\r]*charset=");
 
 class RequestID
 //! @appears RequestID
@@ -1102,12 +1102,12 @@ class RequestID
   //!
   //! @seealso
   //!   @[cookies], @[register_vary_callback()], @[Roxen.get_cookie_callback()]
-  static class CookieJar
+  protected class CookieJar
   {
     //! Contains the set of cookies that have been zapped in some way.
-    static mapping(string:string) eaten = ([]);
+    protected mapping(string:string) eaten = ([]);
 
-    static void create(string|array(string)|void contents)
+    protected void create(string|array(string)|void contents)
     {
       VARY_WERROR("Initiating cookie jar.\n");
       real_cookies = ([]);
@@ -1137,7 +1137,7 @@ class RequestID
 	}
       }
     }
-    static string `->(string cookie)
+    protected string `->(string cookie)
     {
       if (supports && zero_type(eaten[cookie])) {
 	VARY_WERROR("Looking at cookie %O from %s\n",
@@ -1155,26 +1155,26 @@ class RequestID
       }
       return real_cookies[cookie];
     }
-    static string `[](mixed cookie)
+    protected string `[](mixed cookie)
     {
       if (stringp(cookie)) {
 	return `->(cookie);
       }
       return UNDEFINED;
     }
-    static string `->=(string cookie, string value)
+    protected string `->=(string cookie, string value)
     {
       if (zero_type(eaten[cookie])) {
 	eaten[cookie] = real_cookies[cookie];
       }
       return real_cookies[cookie] = value;
     }
-    static string `[]=(mixed cookie, string value)
+    protected string `[]=(mixed cookie, string value)
     {
       // FIXME: Warn if not string?
       return `->=(cookie, value);
     }
-    static string _m_delete(string cookie)
+    protected string _m_delete(string cookie)
     {
       // FIXME: Warn if not string?
       if (zero_type(eaten[cookie])) {
@@ -1182,27 +1182,27 @@ class RequestID
       }
       return m_delete(real_cookies, cookie);
     }
-    static array(string) _indices()
+    protected array(string) _indices()
     {
       register_vary_callback("cookie");
       return indices(real_cookies);
     }
-    static array(string) _values()
+    protected array(string) _values()
     {
       register_vary_callback("cookie");
       return values(real_cookies);
     }
-    static int _sizeof()
+    protected int _sizeof()
     {
       register_vary_callback("cookie");
       return sizeof(real_cookies);
     }
-    static mapping(string:string) `+(mapping(string:string) other)
+    protected mapping(string:string) `+(mapping(string:string) other)
     {
       register_vary_callback("cookie");
       return real_cookies + other;
     }
-    static mapping(string:string) ``+(mapping(string:string) other)
+    protected mapping(string:string) ``+(mapping(string:string) other)
     {
       register_vary_callback("cookie");
       return other + real_cookies;
@@ -1210,13 +1210,13 @@ class RequestID
 
     //! Used to retrieve the original set of cookies at
     //! protocol cache store time.
-    static mapping(string:string) `~()
+    protected mapping(string:string) `~()
     {
       VARY_WERROR("Disconnecting cookie jar.\n");
       return real_cookies + eaten;
     }
 
-    static string _sprintf(int fmt)
+    protected string _sprintf(int fmt)
     {
       return fmt == 'O' && sprintf("CookieJar(%O)", real_cookies);
     }
@@ -1425,10 +1425,10 @@ class RequestID
   //!   the same for all id objects generated by <insert href> tags and
   //!   similar conditions that invoke @[clone_me()].
 
-  static void create(Stdio.File fd, Protocol port, Configuration conf){}
+  protected void create(Stdio.File fd, Protocol port, Configuration conf){}
   void send(string|object what, int|void len){}
 
-  static SimpleNode xml_data;	// XML data for the request.
+  protected SimpleNode xml_data;	// XML data for the request.
 
   SimpleNode get_xml_data()
   {
@@ -1444,7 +1444,7 @@ class RequestID
   }
 
   // Parsed if-header for the request.
-  static mapping(string:array(array(array(string)))) if_data;
+  protected mapping(string:array(array(array(string)))) if_data;
 
 #ifdef IF_HEADER_DEBUG
 #define IF_HDR_MSG(X...) werror (X)
@@ -1743,7 +1743,7 @@ class RequestID
     }
   }
 
-  static string cached_url_base;
+  protected string cached_url_base;
 
   string url_base()
   //! Returns the base part of the URL, i.e. what should be added in
@@ -1890,7 +1890,7 @@ class RequestID
     }
   }
 
-  static constant http_nontoken_chars = ([
+  protected constant http_nontoken_chars = ([
     0:1, 1:1, 2:1, 3:1, 4:1, 5:1, 6:1, 7:1, 8:1, 9:1, 10:1, 11:1, 12:1, 13:1,
     14:1, 15:1, 16:1, 17:1, 18:1, 19:1, 20:1, 21:1, 22:1, 23:1, 24:1, 25:1,
     26:1, 27:1, 28:1, 29:1, 30:1, 31:1, '(':1, ')':1, '<':1, '>':1, '@':1,
@@ -1996,7 +1996,7 @@ class RequestID
     return removed;
   }
 
-  static MultiStatus multi_status;
+  protected MultiStatus multi_status;
 
   MultiStatus get_multi_status()
   //! Returns a @[MultiStatus] object that will be used to produce a
@@ -2123,7 +2123,7 @@ class RequestID
     return charset || encoder;
   }
   
-  static string charset_name(function|string what)
+  protected string charset_name(function|string what)
   {
     switch (what) {
     case string_to_unicode: return "ISO10646-1";
@@ -2132,7 +2132,7 @@ class RequestID
     }
   }
 
-  static function charset_function(function|string what, int allow_entities)
+  protected function charset_function(function|string what, int allow_entities)
   {
     switch (what) {
     case "ISO-10646-1":
@@ -2161,10 +2161,10 @@ class RequestID
     }
   }
   
-  static array(string) join_charset(string old,
-				    function|string add,
-				    function oldcodec,
-				    int allow_entities)
+  protected array(string) join_charset(string old,
+				       function|string add,
+				       function oldcodec,
+				       int allow_entities)
   {
     switch (old && upper_case(old)) {
     case 0:
@@ -2498,7 +2498,7 @@ class RequestID
       file->data = data;
       heads->ETag = misc->etag =
 	sprintf("\"%s\"",
-		Crypto.string_to_hex(Crypto.md5()->update(data)->digest()));
+		String.string2hex(Crypto.MD5()->update(data)->digest()));
     }
 #endif /* RAM_CACHE */
 
@@ -2768,9 +2768,9 @@ typedef MultiStatusStatus|MultiStatusPropStat MultiStatusNode;
 //! @appears MultiStatus
 class MultiStatus
 {
-  static mapping(string:MultiStatusNode) status_set = ([]);
+  protected mapping(string:MultiStatusNode) status_set = ([]);
 
-  static mapping(string:string) args = ([
+  protected mapping(string:string) args = ([
     "xmlns:DAV": "DAV:",
     // MS namespace for data types; see comment in
     // XMLPropStatNode.add_property. Note: The XML parser in the
@@ -2926,7 +2926,7 @@ class MultiStatus
     ]);
   }
 
-  class Prefixed (static string href_prefix)
+  class Prefixed (protected string href_prefix)
   {
     MultiStatus get_multi_status() {return MultiStatus::this;}
     void add_property(string path, string prop_name,
@@ -2959,7 +2959,7 @@ class MultiStatus
 }
 
 // Only for protyping and breaking of circularities.
-static class PropertySet
+protected class PropertySet
 {
   string path;
   RequestID id;
@@ -3068,13 +3068,16 @@ class RoxenModule
   //! because it's being dropped or reloaded in the admin interface,
   //! or the server is being shut down orderly.
 
-  void ready_to_receive_requests (Configuration conf);
+  void ready_to_receive_requests (void|Configuration conf);
   //! This function is called after all modules in a configuration
   //! have been loaded and @[start]ed. If a function is added later on
   //! it's called directly @[start].
   //!
   //! When a configuration is loaded on server start, this function is
   //! still called before the handler threads are started.
+  //!
+  //! @[conf] is the configuration that the module instance belongs
+  //! to, i.e. the same as the return value from @[my_configuration].
   //!
   //! @note
   //! This function is intended for things that can't be done in
@@ -3197,9 +3200,9 @@ class AuthModule
   //! database.
 }
 
-static mapping(string:function(void:void)) user_sql_inited = ([]);
-static Sql.Sql user_mysql;
-static void init_user_sql(string table)
+protected mapping(string:function(void:void)) user_sql_inited = ([]);
+protected Sql.Sql user_mysql;
+protected void init_user_sql(string table)
 {
   string db = all_constants()->REPLICATE?"replicate":"local";
   if( !user_mysql )
@@ -3258,13 +3261,13 @@ class Group( UserDB database )
 }
 
 #ifdef THREADS
-static Thread.Mutex mutex = Thread.Mutex();
+protected Thread.Mutex mutex = Thread.Mutex();
 #endif
 
 //! @appears User
 class User( UserDB database )
 {
-  static string table;
+  protected string table;
 
   string name();
   //! The user (short) name
@@ -3343,7 +3346,7 @@ class User( UserDB database )
 #define LOCK()
 #endif
 
-  static string module_name( RoxenModule module )
+  protected string module_name( RoxenModule module )
   {
     if( !module )
       // NULL does not work together with indexes, but this is

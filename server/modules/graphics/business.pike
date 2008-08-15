@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.151 2008/03/18 10:38:24 stewa Exp $";
+constant cvs_version = "$Id: business.pike,v 1.152 2008/08/15 12:33:54 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -427,7 +427,7 @@ int datacounter = 0;
 //FIXME: Put back some hash on the URL. Easily done by putting the hash
 //in the metadata.
 /* Old hashcode:
-  object o=Crypto.sha();
+  object o=Crypto.SHA1();
   string data=encode_value(in);
   o->update(data);
   string out=replace(http_encode_string(MIME.encode_base64(o->digest(),1)),

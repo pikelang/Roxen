@@ -13,7 +13,7 @@
 #define _ok	id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: writefile.pike,v 1.19 2005/02/25 17:38:31 grubba Exp $";
+ "$Id: writefile.pike,v 1.20 2008/08/15 12:33:55 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -47,7 +47,7 @@ void create() {
         );
 }
 
-static string lastfile;
+protected string lastfile;
 
 string status() {
   return sprintf(_(5,"Last file written: %s"),lastfile||"NONE");
@@ -180,7 +180,7 @@ class TagWritefile {
 
 	      else {
 		string charset = args->charset || "iso-8859-1";
-		Locale.Charset._encoder enc;
+		Locale.Charset.Encoder enc;
 		if (mixed err = catch (enc = Locale.Charset.encoder (charset)))
 		  if (has_prefix (describe_error (err), "Unknown character encoding"))
 		    parse_error ("Unknown charset %O.\n", charset);

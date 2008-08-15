@@ -42,7 +42,7 @@ string available_languages(object id) {
 
 // --------------------- Help layout functions --------------------
 
-static class TagdocParser (int level)
+protected class TagdocParser (int level)
 {
   inherit Parser.HTML;
   mapping misc = ([]);
@@ -56,7 +56,7 @@ static class TagdocParser (int level)
 }
 
 // Header tags for different levels.
-static array(array(array(string))) hdr_tags = ({
+protected array(array(array(string))) hdr_tags = ({
   // Top level (0).
   ({({"<h2>", "</h2>"}), // Top header
     ({"<h3>", "</h3>"}), // Subheaders (Attributes/Defined in content/etc)
@@ -80,7 +80,7 @@ static array(array(array(string))) hdr_tags = ({
 
 #define NEXT_HDR_LEVEL(LEVEL) min ((LEVEL) + 1, sizeof (hdr_tags) - 1)
 
-static array desc_cont(TagdocParser parser, mapping m, string c, string rt)
+protected array desc_cont(TagdocParser parser, mapping m, string c, string rt)
 {
   string type;
   if(m->tag)	type = "tag";
@@ -111,7 +111,7 @@ static array desc_cont(TagdocParser parser, mapping m, string c, string rt)
 		   parser->clone()->finish(c)->read())});
 }
 
-static array attr_cont(TagdocParser parser, mapping m, string c)
+protected array attr_cont(TagdocParser parser, mapping m, string c)
 {
   string p="";
   if(!m->name) m->name="(Not entered)";
@@ -134,7 +134,7 @@ static array attr_cont(TagdocParser parser, mapping m, string c)
   return ({parser->clone()->finish(p)->read()});
 }
 
-static string attr_vals(string v)
+protected string attr_vals(string v)
 {
   if(has_value(v,"|")) return "{"+(v/"|")*", "+"}";
   // FIXME Use real config url
@@ -142,18 +142,18 @@ static string attr_vals(string v)
   return v;
 }
 
-static string noex_cont(TagdocParser parser, mapping m, string c) {
+protected string noex_cont(TagdocParser parser, mapping m, string c) {
   return Parser.HTML()->add_container("ex","")->
     add_quote_tag("!--","","--")->feed(c)->read();
 }
 
-static string ex_quote(string in) {
+protected string ex_quote(string in) {
   string s = replace(in, "&lt;", "__LT__");
   s = "<pre>"+replace(s, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
   return replace(s, "__LT__", "&lt;");
 }
 
-static string ex_cont(TagdocParser parser, mapping m, string c, string rt, void|object id)
+protected string ex_cont(TagdocParser parser, mapping m, string c, string rt, void|object id)
 {
   c=Parser.HTML()->add_container("ent", lambda(Parser.HTML parser, mapping m, string c) {
 					  return "&amp;"+c+";"; 
@@ -185,21 +185,21 @@ static string ex_cont(TagdocParser parser, mapping m, string c, string rt, void|
   }
 }
 
-static string ex_box_cont(TagdocParser parser, mapping m, string c, string rt) {
+protected string ex_box_cont(TagdocParser parser, mapping m, string c, string rt) {
   return "<br />"+mktable( ({ ({ ex_quote(c) }) }) );
 }
 
-static string ex_html_cont(TagdocParser parser, mapping m, string c, string rt) {
+protected string ex_html_cont(TagdocParser parser, mapping m, string c, string rt) {
   return "<br />" + mktable( ({ ({ c }) }) );
 }
 
-static string ex_src_cont(TagdocParser parser, mapping m, string c, string rt, void|object id) {
+protected string ex_src_cont(TagdocParser parser, mapping m, string c, string rt, void|object id) {
   string quoted = ex_quote(c);
   string parsed = parse_rxml("<colorscope bgcolor="+TDBG+">"+c+"</colorscope>", id);
   return "<br />" + mktable( ({ ({ quoted }), ({ ex_quote(parsed) }) }) );
 }
 
-static string list_cont( TagdocParser parser, mapping m, string c )
+protected string list_cont( TagdocParser parser, mapping m, string c )
 {
   string type = m->type || "ul";
   return "<"+type+">"+
@@ -213,32 +213,32 @@ static string list_cont( TagdocParser parser, mapping m, string c )
     "</"+type+">";
 }
 
-static string xtable_cont( mixed a, mixed b, string c )
+protected string xtable_cont( mixed a, mixed b, string c )
 {
   return "<table border='1' cellpadding='2' cellspacing='0'>"+c+"</table>";
 }
 
-static string module_cont( mixed a, mixed b, string c )
+protected string module_cont( mixed a, mixed b, string c )
 {
   return "<i>"+c+"</i>";
 }
 
-static string xtable_row_cont( mixed a, mixed b, string c )
+protected string xtable_row_cont( mixed a, mixed b, string c )
 {
   return "<tr>"+c+"</tr>";
 }
 
-static string xtable_c_cont( mixed a, mixed b, string c )
+protected string xtable_c_cont( mixed a, mixed b, string c )
 {
   return "<td>"+c+"</td>";
 }
 
-static string xtable_h_cont( mixed a, mixed b, string c )
+protected string xtable_h_cont( mixed a, mixed b, string c )
 {
   return "<th>"+c+"</th>";
 }
 
-static string help_tag( TagdocParser p, mapping m, string c )
+protected string help_tag( TagdocParser p, mapping m, string c )
 {
   if( m["for"] )
     return find_tag_doc( m["for"], RXML.get_context()->id,0,
@@ -246,13 +246,13 @@ static string help_tag( TagdocParser p, mapping m, string c )
   return 0; // keep.
 }
 
-static string webserver_tag( mixed a, mixed b, string c )
+protected string webserver_tag( mixed a, mixed b, string c )
 {
   return roxen_product_name;
 }
 
 
-static string format_doc(string|mapping doc, string name, object id, int level)
+protected string format_doc(string|mapping doc, string name, object id, int level)
 {
   if(mappingp(doc)) {
     if(id && id->misc->pref_languages) {
@@ -328,7 +328,7 @@ static string format_doc(string|mapping doc, string name, object id, int level)
 
 // ------------------ Parse docs in mappings --------------
 
-static string parse_doc(string|mapping|array doc, string name, object id, int level) {
+protected string parse_doc(string|mapping|array doc, string name, object id, int level) {
   if(arrayp(doc) && (sizeof( doc ) == 2) ) {
     string top = format_doc(doc[0], name, id, level);
     string sub = parse_mapping(doc[1], id, NEXT_HDR_LEVEL (level));
@@ -344,7 +344,7 @@ static string parse_doc(string|mapping|array doc, string name, object id, int le
   return format_doc(doc, name, id, level);
 }
 
-static string parse_mapping(mapping doc, object id, int level) {
+protected string parse_mapping(mapping doc, object id, int level) {
   string ret="";
   if(!mappingp(doc)) return "";
   foreach(sort(indices(doc)), string tmp) {
@@ -383,7 +383,7 @@ mapping call_tagdocumentation(RoxenModule o) {
   return doc;
 }
 
-static int generation;
+protected int generation;
 multiset undocumented_tags=(<>);
 
 string find_tag_doc(string name, RequestID id, int|void no_undoc,

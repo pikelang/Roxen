@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.31 2006/10/24 08:44:11 liin Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.32 2008/08/15 12:33:55 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -26,7 +26,7 @@ class LanguagePrefs
   inherit Variable.Variable;
   constant type="LanguagePrefs";
 
-  static void create() {
+  protected void create() {
     set_flags( VAR_INITIAL );
     _initial = "prestate\nroxen-config\naccept-language";
     __name = "Language sources";
@@ -58,7 +58,7 @@ as language settings.";
     return res + " />";
   }
 
-  static int _current_count = time()*100+(gethrtime()/10000);
+  protected int _current_count = time()*100+(gethrtime()/10000);
   void set_from_form(RequestID id)
   {
     int rn, do_goto;

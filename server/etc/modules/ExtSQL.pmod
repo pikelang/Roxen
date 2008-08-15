@@ -76,11 +76,11 @@ class sqlproxy {
 
 
   string _sprintf() {
-    return "Sql.sql( /* remote */ )";
+    return "Sql.Sql( /* remote */ )";
   }
 
   /////////////////////////////
-  // The Sql.sql API
+  // The Sql.Sql API
   /////////////////////////////
 
   mixed query(mixed ... args) {
@@ -193,6 +193,6 @@ class sqlproxy {
 
 
 object sql(string connect_url) {
-  //return Sql.sql(connect_url);
+  //return Sql.Sql(connect_url);
   return sqlproxy(connect_url);
 }

@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.245 2008/08/06 16:29:41 mast Exp $
+// $Id: Roxen.pmod,v 1.246 2008/08/15 12:33:54 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -145,9 +145,9 @@ string get_roxen_ip_prefix( void|object/* Protocol */ port_obj ) {
   return "0.0.0.0";
 }
 
-static mapping(string:function(string, RequestID:string)) cookie_callbacks =
+protected mapping(string:function(string, RequestID:string)) cookie_callbacks =
   ([]);
-static class CookieChecker(string cookie)
+protected class CookieChecker(string cookie)
 {
   string `()(string path, RequestID id)
   {
@@ -467,7 +467,7 @@ mapping(string:mixed) http_try_again( float delay )
   return ([ "try_again_later":delay ]);
 }
 
-static class Delayer
+protected class Delayer
 {
   RequestID id;
   int resumed;
@@ -538,9 +538,9 @@ mapping(string:mixed) http_file_answer(Stdio.File text,
   return ([ "file":text, "type":(type||"text/html"), "len":len ]);
 }
 
-static constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
-static constant days = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" });
+protected constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+			       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
+protected constant days = ({ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" });
 
 string log_date(int t) {
   mapping(string:int) lt = localtime(t);
@@ -556,8 +556,8 @@ string log_time(int t) {
 
 // CERN date formatter. Note similar code in LogFormat in roxen.pike.
 
-static int chd_lt;
-static string chd_lf;
+protected int chd_lt;
+protected string chd_lf;
 
 string cern_http_date(int t)
 //! Return a date, formated to be used in the common log format
@@ -1099,7 +1099,7 @@ string extract_query(string from)
   return "";
 }
 
-static string mk_env_var_name(string name)
+protected string mk_env_var_name(string name)
 {
   name = replace(name, " ", "_");
   string res = "";
@@ -1516,9 +1516,9 @@ RXML.Parser get_rxml_parser (RequestID id, void|RXML.Type type, void|int make_p_
   return parser;
 }
 
-static int(0..0) return_zero() {return 0;}
+protected int(0..0) return_zero() {return 0;}
 
-static Parser.HTML xml_parser =
+protected Parser.HTML xml_parser =
   lambda() {
     Parser.HTML p = Parser.HTML();
     p->lazy_entity_end (1);
@@ -2094,7 +2094,7 @@ string html_encode_tag_value(LocaleString str)
   return "\"" + replace((string)str, ({"&", "\"", "<"}), ({"&amp;", "&quot;", "&lt;"})) + "\"";
 }
 
-static string my_sprintf(int prefix, string f, int arg)
+protected string my_sprintf(int prefix, string f, int arg)
 //! Filter prefix option in format string if prefix = 0.
 {
   if(!prefix && sscanf(f, "%%%*d%s", string format) == 2)
@@ -2295,7 +2295,7 @@ string get_modfullname (RoxenModule module)
   else return 0;
 }
 
-static constant xml_invalids = ((string)({
+protected constant xml_invalids = ((string)({
    0,  1,  2,  3,  4,  5,  6,  7,
    8,         11, 12,     14, 15,
   16, 17, 18, 19, 20, 21, 22, 23,
@@ -2303,7 +2303,7 @@ static constant xml_invalids = ((string)({
       127
 }))/"";
 
-static constant xml_printables = ((string)({
+protected constant xml_printables = ((string)({
   0x2400, 0x2401, 0x2402, 0x2403, 0x2404, 0x2405, 0x2406, 0x2407,
   0x2408,                 0x240b, 0x240c,         0x240e, 0x240f,
   0x2410, 0x2411, 0x2412, 0x2413, 0x2414, 0x2415, 0x2416, 0x2417,
@@ -2321,7 +2321,7 @@ string encode_xml_invalids(string s)
 //! Encode a single segment of @[roxen_encode()].
 //!
 //! See @[roxen_encode()] for details.
-static string low_roxen_encode(string val, string encoding)
+protected string low_roxen_encode(string val, string encoding)
 {
   switch (encoding) {
    case "":
@@ -2791,12 +2791,12 @@ class _charset_decoder(object cs)
   }
 }
 
-static class CharsetDecoderWrapper
+protected class CharsetDecoderWrapper
 {
-  static object decoder;
+  protected object decoder;
   string charset;
 
-  static void create (string cs)
+  protected void create (string cs)
   {
     // Would be nice if it was possible to get the canonical charset
     // name back from Locale.Charset so we could use that instead in
@@ -2818,19 +2818,19 @@ static class CharsetDecoderWrapper
   }
 }
 
-static multiset(string) charset_warned_for = (<>);
+protected multiset(string) charset_warned_for = (<>);
 
 constant magic_charset_variable_placeholder = "__MaGIC_RoxEn_Actual___charseT";
 constant magic_charset_variable_value = "едц&#x829f;@" + magic_charset_variable_placeholder;
 
-static mapping(string:function(string:string)) client_charset_decoders = ([
+protected mapping(string:function(string:string)) client_charset_decoders = ([
   "http": http_decode_string,
   "html": Parser.parse_html_entities,
   "utf-8": utf8_to_string,
   "utf-16": unicode_to_string,
 ]);
 
-static function(string:string) make_composite_decoder (
+protected function(string:string) make_composite_decoder (
   function(string:string) outer, function(string:string) inner)
 {
   // This is put in a separate function to minimize the size of the
@@ -3089,15 +3089,15 @@ class QuotaDB
 
   int next_offset;
 
-  static class QuotaEntry
+  protected class QuotaEntry
   {
     string name;
     int data_offset;
 
-    static int usage;
-    static int quota;
+    protected int usage;
+    protected int quota;
 
-    static void store()
+    protected void store()
     {
       LOCK();
 
@@ -3110,7 +3110,7 @@ class QuotaDB
       UNLOCK();
     }
 
-    static void read()
+    protected void read()
     {
       LOCK();
 
@@ -3195,7 +3195,7 @@ class QuotaDB
     }
   }
 
-  static object read_entry(int offset, int|void quota)
+  protected object read_entry(int offset, int|void quota)
   {
     QD_WRITE(sprintf("QuotaDB::read_entry(%O, %O)\n", offset, quota));
 
@@ -3233,7 +3233,7 @@ class QuotaDB
     return QuotaEntry(key, data_offset, quota);
   }
 
-  static Stdio.File open(string fname, int|void create_new)
+  protected Stdio.File open(string fname, int|void create_new)
   {
     Stdio.File f = Stdio.File();
     string mode = create_new?"rwc":"rw";
@@ -3247,7 +3247,7 @@ class QuotaDB
     return(f);
   }
 
-  static void init_index_acc()
+  protected void init_index_acc()
   {
     /* Set up the index accellerator.
      * sizeof(index_acc) ~ sqrt(sizeof(index))
@@ -3383,7 +3383,7 @@ class QuotaDB
     }
   }
 
-  static object low_lookup(string key, int quota)
+  protected object low_lookup(string key, int quota)
   {
     QD_WRITE(sprintf("QuotaDB::low_lookup(%O, %O)\n", key, quota));
 
@@ -3620,36 +3620,36 @@ class EScope(string scope)
     return scope == "_" ? ctx->current_scope() : scope;
   }
 
-  static mixed `[]( string what )
+  protected mixed `[]( string what )
   {
     RXML.Context ctx = RXML.get_context( );  
     return ctx->get_var( what, scope );
   }
 
-  static mixed `->( string what )
+  protected mixed `->( string what )
   {
     return `[]( what );
   }
 
-  static mixed `[]=( string what, mixed nval )
+  protected mixed `[]=( string what, mixed nval )
   {
     RXML.Context ctx = RXML.get_context( );  
     ctx->set_var( what, nval, scope );
     return nval;
   }
 
-  static mixed `->=( string what, mixed nval )
+  protected mixed `->=( string what, mixed nval )
   {
     return `[]=( what, nval );
   }
 
-  static array(string) _indices( )
+  protected array(string) _indices( )
   {
     RXML.Context ctx = RXML.get_context( );  
     return ctx->list_var( scope );
   } 
 
-  static array(string) _values( )
+  protected array(string) _values( )
   {
     RXML.Context ctx = RXML.get_context( );  
     return map( ctx->list_var( scope ), `[] );
@@ -4266,7 +4266,7 @@ constant monthnum=(["Jan":0, "Feb":1, "Mar":2, "Apr":3, "May":4, "Jun":5,
 		    "jul":6, "aug":7, "sep":8, "oct":9, "nov":10, "dec":11,]);
 
 #define MAX_SINCE_CACHE 16384
-static mapping(string:int) since_cache=([ ]);
+protected mapping(string:int) since_cache=([ ]);
 array(int) parse_since(string date)
 {
   if(!date || sizeof(date)<14) return({0,-1});
@@ -4510,7 +4510,7 @@ Configuration get_owning_config (object|function thing)
 
 // A slightly modified Array.dwim_sort_func used as emits sort
 // function.
-static int dwim_compare(string a0,string b0)
+protected int dwim_compare(string a0,string b0)
 {
   string a2="",b2="";
   int a1,b1;
@@ -4524,7 +4524,7 @@ static int dwim_compare(string a0,string b0)
   return dwim_compare(a2,b2);
 }
 
-static int strict_compare (mixed a, mixed b)
+protected int strict_compare (mixed a, mixed b)
 // This one does a more strict compare than dwim_compare. It only
 // tries to convert values from strings to floats or ints if they are
 // formatted exactly as floats or ints. That since there still are
@@ -4682,7 +4682,7 @@ array(mapping(string:mixed)|object) rxml_emit_sort (
 }
 
 #ifdef REQUEST_TRACE
-static string trace_msg (mapping id_misc, string msg, string name)
+protected string trace_msg (mapping id_misc, string msg, string name)
 {
   msg = html_decode_string (
     Parser.HTML()->_set_tag_callback (lambda (object p, string s) {return "";})->
@@ -4888,10 +4888,10 @@ class LogPipe
 {
   inherit Stdio.File;
 
-  static string prefix = "";
-  static string line_buf = "";
+  protected string prefix = "";
+  protected string line_buf = "";
 
-  static void read_cb (Stdio.File read_end, string data)
+  protected void read_cb (Stdio.File read_end, string data)
   {
     line_buf += data;
     while (sscanf (line_buf, "%[^\n]%*c%s", string line, string rest) == 3) {
@@ -4900,7 +4900,7 @@ class LogPipe
     }
   }
 
-  static void close_cb (Stdio.File read_end)
+  protected void close_cb (Stdio.File read_end)
   {
     if (line_buf != "")
       werror (prefix + line_buf + "\n");
@@ -4909,7 +4909,7 @@ class LogPipe
     read_end->set_id (0);
   }
 
-  static void log_pipe_read_thread (Stdio.File read_end)
+  protected void log_pipe_read_thread (Stdio.File read_end)
   {
     while (1) {
       string data = read_end->read (1024, 1);
@@ -4919,8 +4919,8 @@ class LogPipe
     close_cb (read_end);
   }
 
-  static void create (Stdio.File read_end, Stdio.File write_end,
-		      int use_read_thread)
+  protected void create (Stdio.File read_end, Stdio.File write_end,
+			 int use_read_thread)
   {
     if (use_read_thread)
       thread_create (log_pipe_read_thread, read_end);
@@ -4980,7 +4980,7 @@ constant DecodeError = Locale.Charset.DecodeError;
 constant EncodeError = Locale.Charset.EncodeError;
 #else
 
-static string format_charset_err_msg (
+protected string format_charset_err_msg (
   string intro, string err_str, int err_pos, string charset, string reason)
 {
   if (err_pos < 0) {
@@ -5028,8 +5028,8 @@ class CharsetDecodeError
   string charset;
   //! The decoding charset (if known).
 
-  static void create (string err_str, int err_pos, string charset,
-		      void|string reason, void|array bt)
+  protected void create (string err_str, int err_pos, string charset,
+			 void|string reason, void|array bt)
   {
     this_program::err_str = err_str;
     this_program::err_pos = err_pos;
@@ -5060,8 +5060,8 @@ class CharsetEncodeError
   string charset;
   //! The encoding charset (if known).
 
-  static void create (string err_str, int err_pos, string charset,
-		      void|string reason, void|array bt)
+  protected void create (string err_str, int err_pos, string charset,
+			 void|string reason, void|array bt)
   {
     this_program::err_str = err_str;
     this_program::err_pos = err_pos;

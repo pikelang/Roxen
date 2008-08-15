@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.196 2008/01/10 15:36:20 jonasw Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.197 2008/08/15 12:33:54 mast Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -66,8 +66,8 @@ class Scope_usr
     s->save();
   }
 
-  static string fade_color( int color_type, object c1,
-			    RXML.Context c, string scope, RXML.Type type)
+  protected string fade_color( int color_type, object c1,
+			       RXML.Context c, string scope, RXML.Type type)
   {
     int add;
     switch( color_type )
@@ -685,9 +685,9 @@ class TagCFBoxes
   class Frame
   {
     inherit RXML.Frame;
-    static mapping(string:object) boxes = ([]);
+    protected mapping(string:object) boxes = ([]);
 
-    static object compile_box( string box )
+    protected object compile_box( string box )
     {
       if( boxes[box] )
       {
@@ -704,7 +704,7 @@ class TagCFBoxes
       return boxes[box];
     }
 
-    static object get_box( string box, RequestID id )
+    protected object get_box( string box, RequestID id )
     {
       object bx = boxes[ box ];
       if( !bx  || (!id->pragma["no-cache"] &&

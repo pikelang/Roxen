@@ -1,5 +1,5 @@
 //
-// $Id: php.pike,v 2.4 2005/03/09 17:46:50 grubba Exp $
+// $Id: php.pike,v 2.5 2008/08/15 12:33:55 mast Exp $
 //
 // Support for files with php markup.
 //
@@ -11,7 +11,7 @@
 
 inherit "cgi.pike";
 
-constant cvs_version = "$Id: php.pike,v 2.4 2005/03/09 17:46:50 grubba Exp $";
+constant cvs_version = "$Id: php.pike,v 2.5 2008/08/15 12:33:55 mast Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION;
 constant module_name = "Scripting: PHP scripting support";
@@ -135,9 +135,9 @@ class PHPScript
   }
 
   // HUP, PIPE, INT, TERM, KILL
-  static constant kill_signals = ({ 1, 13, 2, 15, 9 });
-  static constant kill_interval = 3;
-  static int next_kill;
+  protected constant kill_signals = ({ 1, 13, 2, 15, 9 });
+  protected constant kill_interval = 3;
+  protected int next_kill;
 
   void kill_script()
   {

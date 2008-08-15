@@ -11,7 +11,7 @@ string doc = LOCALE(36,
 		    "Shows a backtrace (stack) for each and every "
 		    "thread in Roxen.");
 
-static string last_id, last_from;
+protected string last_id, last_from;
 
 string get_id(string from)
 {

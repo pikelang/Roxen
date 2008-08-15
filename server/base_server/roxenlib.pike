@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: roxenlib.pike,v 1.223 2008/05/09 16:23:59 mast Exp $
+// $Id: roxenlib.pike,v 1.224 2008/08/15 12:33:54 mast Exp $
 
 //#pragma strict_types
 
@@ -160,7 +160,7 @@ inherit _Roxen;
 //! @code
 //!    sprintf("#%06X", color);
 //! @endcode
-static string conv_hex( int color )
+protected string conv_hex( int color )
 {
   return sprintf("#%06X", color);
 }
@@ -199,7 +199,7 @@ string program_directory()
 
 //! Creates an HTTP response string from the internal
 //! file representation mapping @[file].
-static string http_res_to_string( mapping file, RequestID id )
+protected string http_res_to_string( mapping file, RequestID id )
 {
   mapping(string:string|array(string)) heads=
     ([
@@ -267,14 +267,14 @@ static string http_res_to_string( mapping file, RequestID id )
 //! Returns the dimensions of the file @[gif] as
 //! a string like @tt{"width=17 height=42"@}. Use
 //! @[Dims] instead.
-static string gif_size(Stdio.File gif)
+protected string gif_size(Stdio.File gif)
 {
   array(int) xy=Dims.dims()->get(gif);
   return "width="+xy[0]+" height="+xy[1];
 }
 
 //! Returns @[x] to the power of @[y].
-static int ipow(int x, int y)
+protected int ipow(int x, int y)
 {
   return (int)pow(x, y);
 }
@@ -293,7 +293,7 @@ static int ipow(int x, int y)
 //!     @value -1
 //!       a < b
 //!   @endint
-static int compare( string a, string b )
+protected int compare( string a, string b )
 {
   if (!a)
     if (b)
@@ -318,9 +318,9 @@ static int compare( string a, string b )
       return 0;
 }
 
-static string do_output_tag( mapping(string:string) args,
-			     array(mapping(string:string)|object) var_arr,
-			     string contents, RequestID id )
+protected string do_output_tag( mapping(string:string) args,
+				array(mapping(string:string)|object) var_arr,
+				string contents, RequestID id )
 //! Method for use by tags that replace variables in their content,
 //! like formoutput, sqloutput and others.
 //!

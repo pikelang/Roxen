@@ -1,22 +1,22 @@
 //
-// $Id: Client.pike,v 1.9 2004/06/30 16:58:46 mast Exp $
+// $Id: Client.pike,v 1.10 2008/08/15 12:33:54 mast Exp $
 //
 // Roxen HTTP RPC
 //
 // Copyright © 1996 - 2004, Roxen IS
 //
 
-static private int port;
-static private string host, path;
+private int port;
+private string host, path;
 
-static private object rpc;
+private object rpc;
 
-static private void disconnect()
+private void disconnect()
 {
   rpc = 0;
 }
 
-static private void establish()
+private void establish()
 {
   int rpc_port;
   object o = Stdio.File();

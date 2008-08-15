@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.20 2008/07/31 20:16:08 mast Exp $
+// $Id: cmdline.cpp,v 1.21 2008/08/15 12:33:55 mast Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -17,7 +17,6 @@ static char THIS_FILE[]=__FILE__;
 #endif
 
 static char *defPikeArgs[] = {
-  "-V7.4",			// Temporary kludge.
 
   // List terminator
   NULL

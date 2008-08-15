@@ -1,6 +1,6 @@
 /* This file is executed by Pike to bootstrap Roxen on NT.
  *
- * $Id: ntroxenloader.pike,v 1.8 2001/06/27 16:20:09 tomas Exp $
+ * $Id: ntroxenloader.pike,v 1.9 2008/08/15 12:33:53 mast Exp $
  */
 
 string dir;
@@ -169,7 +169,7 @@ int main(int argc, array (string) argv)
 	   "Roxen log directory  : "+log_dir+"\n"
 	   "Roxen shutdown file  : "+(key || "None")+"\n"
 	   "Roxen arguments      : "+(sizeof(argv)>1?argv[1..]*" ":"None")+"\n"
-#if constant(_Crypto) && constant(Crypto.rsa)
+#if constant (Nettle)
 	   "This version of Roxen has crypto algorithms available.\n"
 #endif
 	   );

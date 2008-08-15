@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.75 2008/06/11 17:21:38 jonasw Exp $
+// $Id: DBManager.pmod,v 1.76 2008/08/15 12:33:54 mast Exp $
 
 //! Manages database aliases and permissions
 
@@ -64,8 +64,8 @@ private
       catch( cb() );
   }
 
-  static void low_ensure_has_users( Sql.Sql db, Configuration c, string host,
-				    string|void password )
+  protected void low_ensure_has_users( Sql.Sql db, Configuration c, string host,
+				       string|void password )
   {
     array q = db->query( "SELECT User FROM user WHERE User=%s AND Host=%s",
 			 short(c->name)+"_rw", host );
@@ -112,9 +112,9 @@ private
   }
 #endif
 
-  static void low_set_user_permissions( Configuration c, string name,
-					int level, string host,
-					string|void password )
+  protected void low_set_user_permissions( Configuration c, string name,
+					   int level, string host,
+					   string|void password )
   {
     Sql.Sql db = connect_to_my_mysql( 0, "mysql" );
 
@@ -158,10 +158,10 @@ private
   }
 
   
-  class ROWrapper( static Sql.Sql sql )
+  class ROWrapper( protected Sql.Sql sql )
   {
-    static int pe;
-    static array(mapping(string:mixed)) query( string query, mixed ... args )
+    protected int pe;
+    protected array(mapping(string:mixed)) query( string query, mixed ... args )
     {
       // Get rid of any initial whitespace.
       query = String.trim_all_whites(query);
@@ -172,7 +172,7 @@ private
       pe = 1;
       throw( ({ "Permission denied\n", backtrace()}) );
     }
-    static object big_query( string query, mixed ... args )
+    protected object big_query( string query, mixed ... args )
     {
       // Get rid of any initial whitespace.
       query = String.trim_all_whites(query);
@@ -183,7 +183,7 @@ private
       pe = 1;
       throw( ({ "Permission denied\n", backtrace()}) );
     }
-    static string error()
+    protected string error()
     {
       if( pe )
       {
@@ -193,12 +193,12 @@ private
       return sql->error();
     }
 
-    static string host_info()
+    protected string host_info()
     {
       return sql->host_info()+" (read only)";
     }
 
-    static mixed `[]( string i )
+    protected mixed `[]( string i )
     {
       switch( i )
       {
@@ -210,7 +210,7 @@ private
          return sql[i];
       }
     }
-    static mixed `->( string i )
+    protected mixed `->( string i )
     {
       return `[](i);
     }
@@ -572,7 +572,7 @@ string db_url( string name,
   return d[0]->path;
 }
 
-static mapping connection_user_cache  = ([]);
+protected mapping connection_user_cache  = ([]);
 
 string get_db_user( string name, Configuration c, int ro )
 {
@@ -673,8 +673,8 @@ Sql.Sql cached_get( string name, void|Configuration c, void|int ro,
   return get (name, c, ro, 0, charset);
 }
 
-static Thread.Local table_locks = Thread.Local();
-static class TableLockInfo (
+protected Thread.Local table_locks = Thread.Local();
+protected class TableLockInfo (
   Sql.Sql db,
   int count,
   multiset(string) locked_for_read,
@@ -700,11 +700,11 @@ class MySQLTablesLock
 //! the same time. They should however use a connection retrieved with
 //! @[reuse_in_thread] set to avoid deadlocks.
 {
-  static TableLockInfo lock_info;
+  protected TableLockInfo lock_info;
 
-  static void create (Sql.Sql db,
-		      array(string) read_tables,
-		      array(string) write_tables)
+  protected void create (Sql.Sql db,
+			 array(string) read_tables,
+			 array(string) write_tables)
   //! @[read_tables] and @[write_tables] contain the tables to lock
   //! for reading and writing, respectively. A table string may be
   //! written as @expr{"foo AS bar"@} to specify an alias.
@@ -787,7 +787,7 @@ class MySQLTablesLock
     return lock_info->db;
   }
 
-  static void destroy()
+  protected void destroy()
   {
     if (!--lock_info->count) {
 #ifdef TABLE_LOCK_DEBUG
@@ -1314,7 +1314,7 @@ void is_module_db( RoxenModule module, string db, string|void comment )
 }
   
 
-static void create()
+protected void create()
 {
   mixed err = 
   catch {

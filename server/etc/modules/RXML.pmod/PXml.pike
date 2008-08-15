@@ -13,7 +13,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.64 2003/12/15 09:51:08 grubba Exp $
+//! $Id: PXml.pike,v 1.65 2008/08/15 12:33:54 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -57,13 +57,14 @@ constant name = "xml";
 
 // Kludge to get to the functions in Parser.HTML from inheriting
 // programs.. :P
-/*static*/ this_program _low_add_tag (string name, EmptyTagDef tdef)
+/*protected*/ this_program _low_add_tag (string name, EmptyTagDef tdef)
   {return [object(this_program)] low_parser::add_tag (name, tdef);}
-/*static*/ this_program _low_add_container (string name, ContainerDef tdef)
+/*protected*/ this_program _low_add_container (string name, ContainerDef tdef)
   {return [object(this_program)] low_parser::add_container (name, tdef);}
-/*static*/ this_program _low_add_quote_tag (string beg, QuoteTagDef tdef, string end)
+/*protected*/ this_program _low_add_quote_tag (string beg, QuoteTagDef tdef,
+					       string end)
   {return [object(this_program)] low_parser::add_quote_tag (beg, tdef, end);}
-static this_program _low_clone (mixed... args)
+protected this_program _low_clone (mixed... args)
   {return [object(this_program)] low_parser::clone (@args);}
 
 string html_context() {return low_parser::context();}
@@ -71,7 +72,8 @@ string current_input() {return low_parser::current();}
 
 constant reset = 0;
 
-static void set_quote_tag_cbs (QuoteTagDef unknown_pi_tag_cb, QuoteTagDef cdata_cb)
+protected void set_quote_tag_cbs (QuoteTagDef unknown_pi_tag_cb,
+				  QuoteTagDef cdata_cb)
 {
   add_quote_tag ("!--", .utils.p_xml_comment_cb, "--");
   add_quote_tag ("?", unknown_pi_tag_cb, "?");
@@ -90,19 +92,19 @@ this_program clone (RXML.Context ctx, RXML.Type type, RXML.PCode p_code,
 }
 
 #ifdef OLD_RXML_COMPAT
-static int not_compat = 1;
+protected int not_compat = 1;
 #endif
 
 // Decide some alternative behaviors at initialization.
-static int alternative;
-static constant FREE_TEXT = 2;
-static constant FREE_TEXT_P_CODE = 3;
-static constant LITERALS = 4;
-static constant LITERALS_P_CODE = 5;
-static constant NO_LITERALS = 6;
-static constant NO_LITERALS_P_CODE = 7;
+protected int alternative;
+protected constant FREE_TEXT = 2;
+protected constant FREE_TEXT_P_CODE = 3;
+protected constant LITERALS = 4;
+protected constant LITERALS_P_CODE = 5;
+protected constant NO_LITERALS = 6;
+protected constant NO_LITERALS_P_CODE = 7;
 
-static void create (
+protected void create (
   RXML.Context ctx, RXML.Type type, RXML.PCode p_code, RXML.TagSet tag_set,
   void|int|mapping(string:TagDef) orig_rt_replacements,
   void|mapping(string:QuoteTagDef) orig_rt_pi_replacements
@@ -255,8 +257,8 @@ static void create (
 #endif
 }
 
-static void initialize (RXML.Context ctx, RXML.Type type,
-			RXML.PCode p_code, RXML.TagSet tag_set)
+protected void initialize (RXML.Context ctx, RXML.Type type,
+			   RXML.PCode p_code, RXML.TagSet tag_set)
 {
   TagSetParser::initialize (ctx, type, p_code, tag_set);
 
@@ -272,7 +274,7 @@ static void initialize (RXML.Context ctx, RXML.Type type,
   else alternative &= ~1;
 }
 
-static mixed value;
+protected mixed value;
 
 void add_value (mixed val)
 {
@@ -351,7 +353,7 @@ mixed read()
   }
 }
 
-static string errmsgs;
+protected string errmsgs;
 
 int output_errors()
 {
@@ -387,8 +389,8 @@ void finish (void|string in)
 
 // Runtime tags.
 
-static mapping(string:TagDef) rt_replacements;
-static mapping(string:QuoteTagDef) rt_pi_replacements;
+protected mapping(string:TagDef) rt_replacements;
+protected mapping(string:QuoteTagDef) rt_pi_replacements;
 
 local void add_runtime_tag (RXML.Tag tag)
 {
@@ -498,15 +500,15 @@ local void remove_runtime_tag (string|RXML.Tag tag, void|int proc_instr)
 }
 
 #if defined (OBJ_COUNT_DEBUG) || defined (RXML_OBJ_DEBUG)
-static int master_parser;
-static string _sprintf()
+protected int master_parser;
+protected string _sprintf()
 {
   return sprintf ("RXML.PXml(%s,%O,%O)%s",
 		  master_parser ? "master" : "clone", type, tag_set,
 		  __object_marker ? "[" + __object_marker->count + "]" : "");
 }
 #else
-static string _sprintf()
+protected string _sprintf()
 {
   return sprintf ("RXML.PXml(%O,%O)", type, tag_set);
 }

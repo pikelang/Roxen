@@ -1,6 +1,7 @@
 #!/bin/env pike
+// -*- pike -*-
 
-// $Id: roxen-create-server,v 1.4 2007/11/02 11:52:15 noring Exp $
+// $Id: roxen-create-server,v 1.5 2008/08/15 12:33:55 mast Exp $
 
 string roxen_dir = "@ROXEN_DIR@";
 
@@ -19,7 +20,7 @@ class Config
   string admin_user = "administrator";
   string password = "";
   
-  static int ask_confirm(Tools.Install.Readline interactive)
+  protected int ask_confirm(Tools.Install.Readline interactive)
   {
     string confirm = lower_case
 		     (interactive->
@@ -34,7 +35,7 @@ class Config
     return confirm == "" || confirm == "y";
   }
 
-  static void complete_paths(string config_dir)
+  protected void complete_paths(string config_dir)
   {
     string suffix = basename(((config_dir / "/") - ({ "" })) * "/");
     
@@ -44,7 +45,7 @@ class Config
       pid_file = combine_path(default_pid_file, suffix, suffix + ".pid");
   }
   
-  static int ask_paths(Tools.Install.Readline interactive)
+  protected int ask_paths(Tools.Install.Readline interactive)
   {
     write("\n");
 
@@ -81,7 +82,7 @@ class Config
     return ask_confirm(interactive);
   }
   
-  static int ask_admin(Tools.Install.Readline interactive)
+  protected int ask_admin(Tools.Install.Readline interactive)
   {
     write("\n");
     admin_url = interactive->edit(admin_url, "Port URL: ");
@@ -112,9 +113,9 @@ class Config
     return ask_confirm(interactive);
   }
   
-  static void create(void|string _admin_user, void|string _admin_pass, 
-		     void|string _admin_url, void|string _config_dir,
-		     void|string _pid_file)
+  protected void create(void|string _admin_user, void|string _admin_pass, 
+			void|string _admin_url, void|string _config_dir,
+			void|string _pid_file)
   {
     if (_admin_user)
       admin_user = _admin_user;

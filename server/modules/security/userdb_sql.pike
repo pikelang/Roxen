@@ -10,7 +10,7 @@ inherit "module";
 int inited;
 
 constant cvs_version =
-  "$Id: userdb_sql.pike,v 1.9 2002/10/22 08:48:32 jonasw Exp $";
+  "$Id: userdb_sql.pike,v 1.10 2008/08/15 12:33:55 mast Exp $";
 
 LocaleString module_name = _(1,"Authentication: SQL user database");
 LocaleString module_doc  = _(2,"This module implements a user database via "
@@ -19,7 +19,7 @@ LocaleString module_doc  = _(2,"This module implements a user database via "
 class SqlUser
 {
   inherit User;
-  static mapping ent;
+  protected mapping ent;
 
   string name()             { return ent->name; }
   string crypted_password() { return ent->password; }
@@ -46,14 +46,13 @@ class SqlUser
 	return (crypt(password, crypted_password()));
       case "clear text":
 	return (password == crypted_password());
-#if constant(Crypto.crypt_md5)
       case "md5 crypt":
-	return Crypto.crypt_md5( password, crypted_password()) == crypted_password();
-#endif
+	catch {return Crypto.verify_crypt_md5 (password, crypted_password());};
+	return 0;
     }
   }
 
-  static void create( UserDB p, mapping e )
+  protected void create( UserDB p, mapping e )
   {
     ::create( p );
     ent = e;
@@ -63,7 +62,7 @@ class SqlUser
 class SqlGroup
 {
   inherit Group;
-  static mapping ent;
+  protected mapping ent;
 
   int gid() { return (int)ent->gid; }
   string name() { return ent->name; }
@@ -72,7 +71,7 @@ class SqlGroup
     return get_group_users( gid() );
   }
 
-  static void create( UserDB p, mapping e )
+  protected void create( UserDB p, mapping e )
   {
     ::create( p );
     ent = e;
@@ -219,9 +218,7 @@ void create()
 				  "password":_(5,"MySQL Password"),
 				  "crypt":_(6,"Unix crypt"),
 				  "clear text":_(7,"Clear text"),
-#if constant(Crypto.crypt_md5)
 				  "md5 crypt":_(8,"MD5 crypt"),
-#endif
 				]), 0,
 				_(9,"Password type"),
 				_(10,"Password hashing method. "

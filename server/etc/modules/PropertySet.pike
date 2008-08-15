@@ -28,7 +28,7 @@ RequestID id;
 //! Create a new property set.
 //!
 //! Usually called via @[query_properties()].
-static void create(string path, string abs_path, RequestID id)
+protected void create(string path, string abs_path, RequestID id)
 {
   global::path = path;
   global::abs_path = abs_path;
@@ -37,7 +37,7 @@ static void create(string path, string abs_path, RequestID id)
   ASSERT_IF_DEBUG(has_prefix(abs_path, "/") && has_suffix(abs_path, path));
 }
 
-//! @decl static void destroy();
+//! @decl protected void destroy();
 //!
 //! Destruction callback.
 //!
@@ -55,8 +55,8 @@ Stat get_stat();
 mapping(string:string) get_response_headers();
 
 // Simulate an import of useful stuff from Parser.XML.Tree.
-static constant SimpleNode = Parser.XML.Tree.SimpleNode;
-static constant SimpleElementNode = Parser.XML.Tree.SimpleElementNode;
+protected constant SimpleNode = Parser.XML.Tree.SimpleNode;
+protected constant SimpleElementNode = Parser.XML.Tree.SimpleElementNode;
 
 private constant all_properties_common = (<
   "DAV:getcontentlength",

@@ -26,7 +26,7 @@ inherit "module";
 "with(location)"                          \
   "pathname=R(/^(\\/\\(([^)]*)\\))?(.*)/(pathname))"
 
-constant cvs_version = "$Id: tableborder.pike,v 1.12 2004/06/30 16:59:02 mast Exp $";
+constant cvs_version = "$Id: tableborder.pike,v 1.13 2008/08/15 12:33:54 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Table/Image Border Unveiler";
@@ -43,9 +43,9 @@ constant module_doc  =
 	      "respectively."
 	    "</p>";
 
-static array(string) add_border(Parser.HTML me, mapping arg,
-				string contents, RequestID id,
-				Parser.HTML parser)
+protected array(string) add_border(Parser.HTML me, mapping arg,
+				   string contents, RequestID id,
+				   Parser.HTML parser)
 {
   arg->border = "1";
   id->misc->borders_unveiled++;

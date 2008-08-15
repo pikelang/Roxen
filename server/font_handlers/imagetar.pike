@@ -35,7 +35,7 @@ class myFont
     return sprintf( "FontTar(%O,%d)", path, height() );
   }
 
-  static mapping(string:Image.Image) load_char( string c )
+  protected mapping(string:Image.Image) load_char( string c )
   {
 #ifdef THREADS
     object key = lock->lock();

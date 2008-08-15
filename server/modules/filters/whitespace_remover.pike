@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: whitespace_remover.pike,v 1.3 2004/06/30 16:59:02 mast Exp $";
+constant cvs_version = "$Id: whitespace_remover.pike,v 1.4 2008/08/15 12:33:54 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Whitespace Remover";
@@ -28,7 +28,7 @@ string status()
   return sprintf("<b>%d bytes</b> have been dropped.", gain);
 }
 
-static string most_significant_whitespace(string ws)
+protected string most_significant_whitespace(string ws)
 {
   int size = sizeof( ws );
   if( size )
@@ -37,7 +37,7 @@ static string most_significant_whitespace(string ws)
 		    : has_value(ws, "\t") ? "\t" : " ";
 }
 
-static array(string) remove_consecutive_whitespace(Parser.HTML p, string in)
+protected array(string) remove_consecutive_whitespace(Parser.HTML p, string in)
 {
   sscanf(in, "%{%[ \t\r\n]%[^ \t\r\n]%}", array ws_nws);
   if(sizeof(ws_nws))

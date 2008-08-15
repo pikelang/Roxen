@@ -5,7 +5,7 @@
 
 
 
-static Stat stat( string file, RequestID id )
+protected Stat stat( string file, RequestID id )
 {
   int oi = id->misc->internal_get;
   id->misc->internal_get = 1;

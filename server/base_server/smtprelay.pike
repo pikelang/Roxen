@@ -1,5 +1,5 @@
 /*
- * $Id: smtprelay.pike,v 3.1 2008/06/24 11:23:05 jonasw Exp $
+ * $Id: smtprelay.pike,v 3.2 2008/08/15 12:33:54 mast Exp $
  *
  * An SMTP-relay RCPT module for the AutoMail system.
  *
@@ -20,10 +20,10 @@
  */
 
 #ifdef THREADS
-static Thread.Mutex queue_mutex = Thread.Mutex();
+protected Thread.Mutex queue_mutex = Thread.Mutex();
 #endif /* THREADS */
 
-static Protocols.DNS.async_client smtp_dns = Protocols.DNS.async_client();
+protected Protocols.DNS.async_client smtp_dns = Protocols.DNS.async_client();
 
 // The following are mixed in when inherited by roxen.pike.
 mixed query(string|void var, int|void ok);
@@ -66,15 +66,15 @@ void smtp_relay_start()
  * Helper functions
  */
 
-static constant weekdays = ({
+protected constant weekdays = ({
   "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat",
 });
-static constant months = ({
+protected constant months = ({
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 });
 
-static string mktimestamp(int t)
+protected string mktimestamp(int t)
 {
   mapping(string:int) lt = localtime(t);
     
@@ -97,7 +97,7 @@ static string mktimestamp(int t)
 		 off/60, off%60, tz));
 }
 
-static string get_addr(string addr)
+protected string get_addr(string addr)
 {
   array a = MIME.tokenize(addr);
 
@@ -134,17 +134,17 @@ constant ACON_REFUSED = 0;
 constant ACON_LOOP = -1;
 constant ACON_DNS_FAIL = -2;
 
-static void async_connected(int status,
-			    function(int|object, mixed ...:void) cb,
-			    object f, mixed ... args)
+protected void async_connected(int status,
+			       function(int|object, mixed ...:void) cb,
+			       object f, mixed ... args)
 {
   /* Done */
   cb(status && f, @args);
 }
 
-static void async_connect_got_hostname(string host, int port,
-				       function(int|object, mixed ...:void) cb,
-				       mixed ... args)
+protected void async_connect_got_hostname(
+  string host, int port,
+  function(int|object, mixed ...:void) cb, mixed ... args)
 {
   if (!host) {
     // DNS Failure
@@ -175,9 +175,9 @@ static void async_connect_got_hostname(string host, int port,
   }
 }
 
-static int async_connect_not_self(string host, int port,
-				  function(int|Stdio.File, mixed ...:void) callback,
-				  mixed ... args)
+protected int async_connect_not_self(
+  string host, int port,
+  function(int|Stdio.File, mixed ...:void) callback, mixed ... args)
 {
 #ifdef SOCKET_DEBUG
   roxen_perror("SOCKETS: async_connect requested to "+host+":"+port+"\n");
@@ -192,17 +192,17 @@ class SMTP_Reader
   int sent_bytes;
   int recv_bytes;
 
-  static string read_buffer = "";
+  protected string read_buffer = "";
 
-  static function(string, array(string):void) _got_code;
+  protected function(string, array(string):void) _got_code;
 
   /* ({ ({ "code", ({ "line 1", "line 2" }) }) }) */
-  static array(array(string|array(string))) codes = ({});
+  protected array(array(string|array(string))) codes = ({});
 
   /* ({ "line1", "line2" }) */
-  static array(string) partial = ({});
+  protected array(string) partial = ({});
 
-  static void reset()
+  protected void reset()
   {
     if (con) {
       con->close();
@@ -214,7 +214,7 @@ class SMTP_Reader
     partial = ({});
   }
 
-  static void call_callback()
+  protected void call_callback()
   {
     function(string, array(string):void) cb = _got_code;
     _got_code = 0;
@@ -230,7 +230,7 @@ class SMTP_Reader
     cb(0, 0);
   }
 
-  static void parse_buffer()
+  protected void parse_buffer()
   {
     array(string) arr = read_buffer/"\r\n";
 
@@ -253,7 +253,7 @@ class SMTP_Reader
     }
   }
 
-  static void con_closed(mixed ignored)
+  protected void con_closed(mixed ignored)
   {
     if (con) {
       con->set_nonblocking(0,0,0);
@@ -274,7 +274,7 @@ class SMTP_Reader
     call_callback();
   }
 
-  static void got_data(mixed ignored, string s)
+  protected void got_data(mixed ignored, string s)
   {
     read_buffer += s;
 
@@ -289,7 +289,7 @@ class SMTP_Reader
     }
   }
 
-  static void async_get_code(function(string, array(string):void) cb)
+  protected void async_get_code(function(string, array(string):void) cb)
   {
     _got_code = cb;
 
@@ -300,9 +300,9 @@ class SMTP_Reader
     }
   }
 
-  static string send_buffer = "";
+  protected string send_buffer = "";
 
-  static void write_data(mixed ignored)
+  protected void write_data(mixed ignored)
   {
     int n = con->write(send_buffer);
 
@@ -337,8 +337,8 @@ class SMTP_Reader
 
   string last_command = "";
 
-  static void send_command(string command,
-			   function(string, array(string):void) cb)
+  protected void send_command(string command,
+			      function(string, array(string):void) cb)
   {
     last_command = command;
 
@@ -365,17 +365,17 @@ class MailSender
 {
   inherit SMTP_Reader;
 
-  static mapping(string:string) message;
-  static array(string) servers;
-  static int servercount;
+  protected mapping(string:string) message;
+  protected array(string) servers;
+  protected int servercount;
 
-  static object(Stdio.File) mail;
+  protected object(Stdio.File) mail;
 
-  static function(int, mapping(string:string):void) send_done;
+  protected function(int, mapping(string:string):void) send_done;
 
-  static multiset(string) esmtp_features = (<>);
+  protected multiset(string) esmtp_features = (<>);
 
-  static void send_bounce(string code, array(string) text)
+  protected void send_bounce(string code, array(string) text)
   {
     message->sent += sent_bytes;
     sent_bytes = 0;
@@ -390,7 +390,7 @@ class MailSender
     send_command("QUIT", got_quit_reply_fail);
   }
 
-  static void send_bounce_and_stop(string code, array(string) text)
+  protected void send_bounce_and_stop(string code, array(string) text)
   {
     message->sent += sent_bytes;
     sent_bytes = 0;
@@ -399,12 +399,12 @@ class MailSender
     send_command("QUIT", got_quit_reply_stop);
   }
 
-  static void bad_address(string code, array(string) text)
+  protected void bad_address(string code, array(string) text)
   {
     send_bounce_and_stop(code, text);
   }
 
-  static void got_quit_reply_ok(string code, array(string) text)
+  protected void got_quit_reply_ok(string code, array(string) text)
   {
     if (con) {
       con->close();
@@ -415,7 +415,7 @@ class MailSender
     send_done(SEND_OK, message);
   }
 
-  static void got_quit_reply_fail(string code, array(string) text)
+  protected void got_quit_reply_fail(string code, array(string) text)
   {
     if (con) {
       con->close();
@@ -424,7 +424,7 @@ class MailSender
     connect_and_send();
   }
 
-  static void got_quit_reply_stop(string code, array(string) text)
+  protected void got_quit_reply_stop(string code, array(string) text)
   {
     if (con) {
       con->close();
@@ -436,7 +436,7 @@ class MailSender
     send_done(SEND_ADDR_FAIL, message);
   }
 
-  static void got_message_reply(string code, array(string) text)
+  protected void got_message_reply(string code, array(string) text)
   {
     switch(code) {
     case "250":
@@ -453,14 +453,14 @@ class MailSender
     }
   }
 
-  static void message_sent(int bytes)
+  protected void message_sent(int bytes)
   {
     sent_bytes += bytes;
 
     send_command(".", got_message_reply);
   }
 
-  static void got_data_reply(string code, array(string) text)
+  protected void got_data_reply(string code, array(string) text)
   {
     switch(code) {
     case "354":
@@ -480,7 +480,7 @@ class MailSender
     }
   }
 
-  static void got_rcpt_to_reply(string code, array(string) text)
+  protected void got_rcpt_to_reply(string code, array(string) text)
   {
     switch((code || "00")[..1]) {
     case "25":
@@ -498,7 +498,7 @@ class MailSender
     }
   }
 
-  static void got_mail_from_reply(string code, array(string) text)
+  protected void got_mail_from_reply(string code, array(string) text)
   {
     switch(code) {
     case "250":
@@ -519,7 +519,7 @@ class MailSender
     }
   }
 
-  static void got_helo_reply(string code, array(string) text)
+  protected void got_helo_reply(string code, array(string) text)
   {
     switch(code) {
     case "250":
@@ -534,7 +534,7 @@ class MailSender
     }
   }
 
-  static void got_ehlo_reply(string code, array(string) text)
+  protected void got_ehlo_reply(string code, array(string) text)
   {
     switch(code) {
     case "250":
@@ -575,18 +575,18 @@ class MailSender
       // EHLO not supported.
       // Try HELO.
       message->prot = "SMTP";
-      send_command(sprintf("HELO %s", query("mail_hostname")),
+      send_command(sprintf("HELO %s", [string] query("mail_hostname")),
 		   got_helo_reply);
       break;
     }
   }
 
-  static void got_con_reply(string code, array(string) text)
+  protected void got_con_reply(string code, array(string) text)
   {
     switch(code) {
     case "220":
       message->prot = "ESMTP";
-      send_command(sprintf("EHLO %s", query("mail_hostname")),
+      send_command(sprintf("EHLO %s", [string] query("mail_hostname")),
 		   got_ehlo_reply);
       break;
     case 0:
@@ -600,7 +600,7 @@ class MailSender
     }
   }
 
-  static void got_connection(int|object(Stdio.File) c)
+  protected void got_connection(int|object(Stdio.File) c)
   {
     message->sent += sent_bytes;
     sent_bytes = 0;
@@ -616,9 +616,9 @@ class MailSender
 	  // We're the primary MX!
 	  bounce(message, "554",
 		 sprintf("MX list for %s points back to %s(%s)\n"
-			 "<%s@%2>... Local configuration error",
+			 "<%s@%s>... Local configuration error",
 			 message->domain, message->remote_mta,
-			 query("mail_hostname"),
+			 [string] query("mail_hostname"),
 			 message->user, message->domain)/"\n",
 		 "");
 	  send_done(SEND_ADDR_FAIL, message);
@@ -659,7 +659,7 @@ class MailSender
     async_get_code(got_con_reply);
   }
 
-  static void connect_and_send()
+  protected void connect_and_send()
   {
     // Try the next SMTP server.
     int server = servercount++;
@@ -691,7 +691,7 @@ class MailSender
     async_connect_not_self(servers[server], 25, got_connection);
   }
 
-  static void got_mx(array(string) mx)
+  protected void got_mx(array(string) mx)
   {
     if (!(servers = mx)) {
       // No MX record for the domain.
@@ -727,7 +727,7 @@ class MailSender
   }
 }
 
-static void mail_sent(int res, mapping(string:string) message)
+protected void mail_sent(int res, mapping(string:string) message)
 {
   // Fake request id for logging purposes.
   RequestID id = RequestID(0, 0, 0 /*conf*/);
@@ -788,9 +788,9 @@ static void mail_sent(int res, mapping(string:string) message)
   }
 }
 
-static int check_interval = 0x7fffffff;
+protected int check_interval = 0x7fffffff;
 
-static void send_mail()
+protected void send_mail()
 {
 #ifdef RELAY_DEBUG
   // roxen_perror("SMTP: send_mail()\n");
@@ -842,8 +842,8 @@ static void send_mail()
   check_mail(t);
 }
 
-static mixed send_mail_id;
-static void check_mail(int t)
+protected mixed send_mail_id;
+protected void check_mail(int t)
 {
 #ifdef RELAY_DEBUG
   // roxen_perror(sprintf("SMTP: check_mail(%d)\n", t));
@@ -1095,7 +1095,7 @@ int relay(string from, string user, string domain,
   // Calculate the checksum if it isn't calculated already.
 
   if (!csum) {
-    Crypto.sha sha = Crypto.sha();
+    Crypto.SHA1 sha = Crypto.SHA1();
     string s;
     mail->seek(0);
     while ((s = mail->read(8192)) && (s != "")) {

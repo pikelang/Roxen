@@ -25,7 +25,7 @@ mixed transform_from_form( string what,mapping v )
   return what;
 }
 
-static int _current_count = time()*100+(gethrtime()/10000);
+protected int _current_count = time()*100+(gethrtime()/10000);
 int(0..1) set_from_form(RequestID id)
 {
   int rn, do_goto;

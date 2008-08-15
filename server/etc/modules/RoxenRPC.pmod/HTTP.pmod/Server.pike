@@ -1,16 +1,16 @@
 //
-// $Id: Server.pike,v 1.5 2004/06/30 16:58:47 mast Exp $
+// $Id: Server.pike,v 1.6 2008/08/15 12:33:54 mast Exp $
 //
 // Roxen HTTP RPC
 //
 // Copyright © 1996 - 2004, Roxen IS
 //
 
-static private int port;
-static private string host;
+private int port;
+private string host;
 
-static private object rpc;
-static private function security;
+private object rpc;
+private function security;
 
 mapping http(string path)
 {
@@ -18,7 +18,7 @@ mapping http(string path)
     return ([ "raw":1, "data":"port "+port ]);
 }
 
-static private int ip_security(string ip)
+private int ip_security(string ip)
 {
   ip = (ip/" ")[0];
   array a = gethostbyaddr(ip) || ({ ip });

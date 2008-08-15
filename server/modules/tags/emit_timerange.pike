@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.28 2008/05/16 17:15:27 mast Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.29 2008/08/15 12:33:55 mast Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -29,97 +29,98 @@ constant module_doc  = "This module provides the emit sources \"timerange\" and"
 //   [calendar="{ISO/...}"]
 // > &_.week.day.name; and so on from the look of the below scope_layout </emit>
 
-static constant units =        ({ "Year", "Month", "Week", "Day",
-				  "Hour", "Minute", "Second" });
-static constant calendars =    ({ "ISO", "Gregorian", "Julian", "Coptic",
-				  "Islamic", "Discordian", "unknown" });
-static constant output_units = ({ "years", "months", "weeks", "days",
-				  "hours", "minutes", "seconds", "unknown" });
+protected constant units =        ({ "Year", "Month", "Week", "Day",
+				     "Hour", "Minute", "Second" });
+protected constant calendars =    ({ "ISO", "Gregorian", "Julian", "Coptic",
+				     "Islamic", "Discordian", "unknown" });
+protected constant output_units = ({ "years", "months", "weeks", "days",
+				     "hours", "minutes", "seconds", "unknown"});
 // output_unit_no is used for the comparing when using query attribute.
-static constant ouput_unit_no = ({ 3,6,0,9,12,15,18,0 });
-static constant scope_layout = ([ // Date related data:
-			 "ymd"      : "format_ymd",
-			 "ymd_short": "format_ymd_short",
-			 "date"			: "format_ymd",
-			 "year"			: "year_no",
-			 "year.day"		: "year_day",
-			 "year.name"		: "year_name",
-			 "year.is-leap-year"	: "p:leap_year", // predicate
-			 "month"		: "month_no",
-			 "months"		: "month_no:%02d",
-			 "month.day"		: "month_day",
-			 "month.days"		: "month_day:%02d",
-			 "month.name"		: "month_name",
-			 "month.short-name"	: "month_shortname",
-			 "month.number_of_days" : "number_of_days",
-			 "month.number-of-days" : "number_of_days",
-			 "week"			: "week_no",
-			 "weeks"		: "week_no:%02d",
-			 "week.day"		: "week_day",
-			 "week.day.name"	: "week_day_name",
-			 "week.day.short-name"	: "week_day_shortname",
-			 "week.name"		: "week_name",
-			 "day"			: "month_day",
-			 "days"			: "month_day:%02d",
-			 // Time zone dependent data:
-			 "time"			: "format_tod",
-			 "timestamp"		: "format_time",
-			 "hour"			: "hour_no",
-			 "hours"		: "hour_no:%02d",
-			 "minute"		: "minute_no",
-			 "minutes"		: "minute_no:%02d",
-			 "second"		: "second_no",
-			 "seconds"		: "second_no:%02d",
-			 "timezone"		: "tzname_iso",
-			 "timezone.name"	: "tzname",
-			 "timezone.iso-name"	: "tzname_iso",
-			 "timezone.seconds-to-utc" : "utc_offset",
-			 // Misc data:
-			 "unix-time"		: "unix_time",
-			 "julian-day"		: "julian_day",
-			 ""			: "format_nice",
-			 // Methods that index to a new timerange object:
-			 "next"			: "o:next",
-			 "next.second"		: "o:next_second",
-			 "next.minute"		: "o:next_minute",
-			 "next.hour"		: "o:next_hour",
-			 "next.day"		: "o:next_day",
-			 "next.week"		: "o:next_week",
-			 "next.month"		: "o:next_month",
-			 "next.year"		: "o:next_year",
-			 "prev"			: "o:prev",
-			 "prev.second"		: "o:prev_second",
-			 "prev.minute"		: "o:prev_minute",
-			 "prev.hour"		: "o:prev_hour",
-			 "prev.day"		: "o:prev_day",
-			 "prev.week"		: "o:prev_week",
-			 "prev.month"		: "o:prev_month",
-			 "prev.year"		: "o:prev_year",
-			 "this"			: "o:same",
-			 "this.second"		: "o:this_second",
-			 "this.minute"		: "o:this_minute",
-			 "this.hour"		: "o:this_hour",
-			 "this.day"		: "o:this_day",
-			 "this.week"		: "o:this_week",
-			 "this.month"		: "o:this_month",
-			 "this.year"		: "o:this_year",
-			 // Returns the current module default settings
-			 "default.calendar"	: "q:calendar",
-			 "default.timezone"	: "q:timezone",
-			 "default.timezone.region":"TZ:region",
-			 "default.timezone.detail":"TZ:detail",
-			 "default.language"	: "q:language" ]);
-static constant iso_weekdays = ([ "monday": 0, "tuesday": 1, "wednesday": 2,
-				  "thirsday": 3, // sic
-				  "thursday": 3, "friday": 4,"saturday": 5,
-				  "sunday": 6]);
-static constant gregorian_weekdays = ([ "sunday": 0, "monday": 1, "tuesday": 2,
-					"wednesday": 3,
-					"thirsday": 4, // sic
-					"thursday": 4, "friday": 5,
-					"saturday": 6]);
+protected constant ouput_unit_no = ({ 3,6,0,9,12,15,18,0 });
+protected constant scope_layout = ([ // Date related data:
+  "ymd"			: "format_ymd",
+  "ymd_short"		: "format_ymd_short",
+  "date"		: "format_ymd",
+  "year"		: "year_no",
+  "year.day"		: "year_day",
+  "year.name"		: "year_name",
+  "year.is-leap-year"	: "p:leap_year", // predicate
+  "month"		: "month_no",
+  "months"		: "month_no:%02d",
+  "month.day"		: "month_day",
+  "month.days"		: "month_day:%02d",
+  "month.name"		: "month_name",
+  "month.short-name"	: "month_shortname",
+  "month.number_of_days" : "number_of_days",
+  "month.number-of-days" : "number_of_days",
+  "week"		: "week_no",
+  "weeks"		: "week_no:%02d",
+  "week.day"		: "week_day",
+  "week.day.name"	: "week_day_name",
+  "week.day.short-name"	: "week_day_shortname",
+  "week.name"		: "week_name",
+  "day"			: "month_day",
+  "days"		: "month_day:%02d",
+  // Time zone dependent data:
+  "time"		: "format_tod",
+  "timestamp"		: "format_time",
+  "hour"		: "hour_no",
+  "hours"		: "hour_no:%02d",
+  "minute"		: "minute_no",
+  "minutes"		: "minute_no:%02d",
+  "second"		: "second_no",
+  "seconds"		: "second_no:%02d",
+  "timezone"		: "tzname_iso",
+  "timezone.name"	: "tzname",
+  "timezone.iso-name"	: "tzname_iso",
+  "timezone.seconds-to-utc" : "utc_offset",
+  // Misc data:
+  "unix-time"		: "unix_time",
+  "julian-day"		: "julian_day",
+  ""			: "format_nice",
+  // Methods that index to a new timerange object:
+  "next"		: "o:next",
+  "next.second"		: "o:next_second",
+  "next.minute"		: "o:next_minute",
+  "next.hour"		: "o:next_hour",
+  "next.day"		: "o:next_day",
+  "next.week"		: "o:next_week",
+  "next.month"		: "o:next_month",
+  "next.year"		: "o:next_year",
+  "prev"		: "o:prev",
+  "prev.second"		: "o:prev_second",
+  "prev.minute"		: "o:prev_minute",
+  "prev.hour"		: "o:prev_hour",
+  "prev.day"		: "o:prev_day",
+  "prev.week"		: "o:prev_week",
+  "prev.month"		: "o:prev_month",
+  "prev.year"		: "o:prev_year",
+  "this"		: "o:same",
+  "this.second"		: "o:this_second",
+  "this.minute"		: "o:this_minute",
+  "this.hour"		: "o:this_hour",
+  "this.day"		: "o:this_day",
+  "this.week"		: "o:this_week",
+  "this.month"		: "o:this_month",
+  "this.year"		: "o:this_year",
+  // Returns the current module default settings
+  "default.calendar"	: "q:calendar",
+  "default.timezone"	: "q:timezone",
+  "default.timezone.region":"TZ:region",
+  "default.timezone.detail":"TZ:detail",
+  "default.language"	: "q:language",
+]);
+protected constant iso_weekdays = ([ "monday": 0, "tuesday": 1, "wednesday": 2,
+				     "thirsday": 3, // sic
+				     "thursday": 3, "friday": 4,"saturday": 5,
+				     "sunday": 6]);
+protected constant gregorian_weekdays = ([ "sunday": 0, "monday": 1,
+					   "tuesday": 2, "wednesday": 3,
+					   "thirsday": 4, // sic
+					   "thursday": 4, "friday": 5,
+					   "saturday": 6]);
 
-static mapping layout;
+protected mapping layout;
 //! create() constructs this module-global recursive mapping,
 //! with one mapping level for each dot-separated segment of the
 //! indices of the scope_layout constant, sharing the its values.
@@ -338,9 +339,9 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
   //!   possibly prefixed with the string @tt{"p:"@}, which signifies
   //!   that the function returns a boolean answer that in RXML should
   //!   return either of the strings @tt{"yes"@} or @tt{"no"@}.
-  static string fetch_and_quote_value(string calendar_method,
-				      RXML.Type want_type,
-				      string|void parent_scope)
+  protected string fetch_and_quote_value(string calendar_method,
+					 RXML.Type want_type,
+					 string|void parent_scope)
   {
     string result, format_string;
     if(sscanf(calendar_method, "TZ:%s", calendar_method))
@@ -372,7 +373,7 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
   //! scope × var variable name points at there. (Once the contents of
   //! the layout mapping is set in stone, the return type can safely
   //! be strictened up a bit ("string" instead of "mixed", perhaps).
-  static mixed dig_out(string scope, string|void var)
+  protected mixed dig_out(string scope, string|void var)
   {
     mixed result = layout;
     string reached;
@@ -497,7 +498,7 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
   }
 }
 
-Calendar get_calendar(string name)
+Calendar.YMD get_calendar(string name)
 {
   if(!name)
     return calendar;
@@ -515,7 +516,7 @@ class TagEmitTimeZones
 
   mapping(string:mapping(string : Calendar.TimeRange)) zones;
 
-  static void init()
+  protected void init()
   {
     refresh_zones(get_calendar(query("calendar"))->Second());
   }
@@ -562,7 +563,7 @@ class TagEmitTimeZones
     if(!region)
       return map(sort(indices(zones)),
 		 lambda(string region) { return ([ "name":region ]); });
-    Calendar cal = get_calendar(m_delete(args, "calendar"));
+    Calendar.YMD cal = get_calendar(m_delete(args, "calendar"));
     Calendar.TimeRange time, next_shift;
     if(!(time = get_date("", args, cal)))
       time = cal->Second();
@@ -589,7 +590,7 @@ class TagEmitTimeRange
   {
     // DEBUG("get_dataset(%O, %O)\b", args, id);
     string cal_type = args["calendar"];
-    Calendar cal = get_calendar(m_delete(args, "calendar"));
+    Calendar.YMD cal = get_calendar(m_delete(args, "calendar"));
     Calendar.TimeRange from, to, range;
     string what, output_unit;
     int compare_num, unit_no;
@@ -854,11 +855,11 @@ mapping scopify(Calendar.TimeRange time, string unit, string|void parent_scope, 
 		   allocate(sizeof( layout ), value));
 }
 
-Calendar.TimeRange get_date(string name, mapping args, Calendar calendar)
+Calendar.TimeRange get_date(string name, mapping args, Calendar.YMD calendar)
 {
   if(name != "")
     name = name + "-";
-  Calendar cal = calendar; // local copy
+  Calendar.YMD cal = calendar; // local copy
   Calendar.TimeRange date; // carries the result
   string what; // temporary data
   if(what = m_delete(args, name + "timezone"))
@@ -905,7 +906,7 @@ Calendar.TimeRange get_date(string name, mapping args, Calendar calendar)
 array(mapping) db_query(string q,string db_name)
 {
   mixed error;
-  Sql.sql con;
+  Sql.Sql con;
   array(mapping(string:mixed))|object result;
   error = catch(con = DBManager.get(db_name,my_configuration(),0));
   if(!con)

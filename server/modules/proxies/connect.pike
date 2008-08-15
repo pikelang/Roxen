@@ -3,7 +3,7 @@
 // An implementation of the CONNECT methos, used for SSL tunneling in
 // Netscape (the "Secure proxy" field)
 
-constant cvs_version = "$Id: connect.pike,v 1.19 2004/06/30 16:59:17 mast Exp $";
+constant cvs_version = "$Id: connect.pike,v 1.20 2008/08/15 12:33:55 mast Exp $";
 constant thread_safe = 1;
 
 
@@ -153,12 +153,12 @@ void connected(object to, object id)
   id->disconnect();
 }
 
-inline private nomask static string find_host(string from)
+inline private string find_host(string from)
 {
   return (from/":")[0];
 }
 
-inline private nomask static int find_port(string from)
+inline private int find_port(string from)
 {
   return (int)(((from/":")+({80}))[1]);
 }

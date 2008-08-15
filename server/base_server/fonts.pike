@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: fonts.pike,v 1.86 2008/05/09 16:23:58 mast Exp $
+// $Id: fonts.pike,v 1.87 2008/08/15 12:33:53 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -8,8 +8,8 @@
 //!
 class Font
 {
-  static int j_right, j_center;
-  static float|int x_spacing=1.0, y_spacing=1.0;
+  protected int j_right, j_center;
+  protected float|int x_spacing=1.0, y_spacing=1.0;
 
   Image.Image write( string ... what );
   //! non-breakable spaces in any of the strings in 'what' is to be
@@ -82,7 +82,7 @@ class FontHandler
   array(mapping(string:mixed)) font_information( string font );
   //! return a mapping with information about the specified font
 
-  static int|string font_style( string name, int size, int bold, int italic )
+  protected int|string font_style( string name, int size, int bold, int italic )
   {
     if( r_file_stat( name ) )
       return -1;
@@ -112,7 +112,7 @@ class FontHandler
           return bc+ic;
   }
 
-  static string make_font_name(string name, int size, int bold, int italic)
+  protected string make_font_name(string name, int size, int bold, int italic)
   {
     mixed style = font_style( name, size, bold, italic );
     if( style == -1 ) return name;
@@ -157,7 +157,7 @@ string describe_font_type(string n)
   return res;
 }
 
-static Font get_font_3(string f, int size, int bold, int italic)
+protected Font get_font_3(string f, int size, int bold, int italic)
 {
   Font fnt;
   foreach( font_handlers, FontHandler fh )
@@ -167,7 +167,7 @@ static Font get_font_3(string f, int size, int bold, int italic)
   return 0;
 }
 
-static Font get_font_2(string f, int size, int bold, int italic)
+protected Font get_font_2(string f, int size, int bold, int italic)
 {
   if (Font fnt = get_font_3 (f, size, bold, italic))
     return fnt;
@@ -301,7 +301,7 @@ Font resolve_font(string f, string|void justification)
 		  justification||"left",xspace, 0.0);
 }
 
-static string verify_font_3 (string font, int size)
+protected string verify_font_3 (string font, int size)
 {
   foreach( font_handlers, FontHandler fh )
     if( fh->has_font( font,size ) )
@@ -309,7 +309,7 @@ static string verify_font_3 (string font, int size)
   return 0;
 }
 
-static string verify_font_2 (string font, int size)
+protected string verify_font_2 (string font, int size)
 {
   if (verify_font_3 (font, size)) return font;
 
@@ -387,7 +387,7 @@ array get_font_information(void|int scalable_only)
   return res;
 }
 
-static void create()
+protected void create()
 {
   int h = gethrtime();
   // Must have this _before_ the add_contant()s

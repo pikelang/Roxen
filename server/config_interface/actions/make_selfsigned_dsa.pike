@@ -1,8 +1,8 @@
 /*
- * $Id: make_selfsigned_dsa.pike,v 1.10 2006/03/30 03:30:44 mast Exp $
+ * $Id: make_selfsigned_dsa.pike,v 1.11 2008/08/15 12:33:54 mast Exp $
  */
 
-#if (constant(Nettle) || constant(_Crypto)) && constant(Crypto.dsa)
+#if constant (Nettle)
 
 inherit "ssl_common.pike";
 inherit "wizard";
@@ -59,8 +59,8 @@ mixed verify_0(object id, object mc)
 
   privs = 0;
 
-  object dsa = Crypto.dsa();
-  dsa->use_random(Crypto.randomness.reasonably_random()->read);
+  Crypto.DSA dsa = Crypto.DSA();
+  dsa->use_random(Crypto.Random.random_string);
   dsa->generate_parameters(key_size);
   dsa->generate_key();
 
@@ -138,7 +138,7 @@ mixed page_3(object id, object mc)
   if (!dsa)
     return "<font color='red'>Invalid key.\n</font>";
 
-  dsa->use_random(Crypto.randomness.reasonably_random()->read);
+  dsa->use_random(Crypto.Random.random_string);
 
   mapping attrs = ([]);
   string attr;
@@ -230,4 +230,4 @@ mixed wizard_done(object id, object mc)
 mixed parse( RequestID id ) { return wizard_for(id,0); }
 
 
-#endif /* (constant(Nettle) || constant(_Crypto)) && constant(Crypto.dsa) */
+#endif /* constant (Nettle) */

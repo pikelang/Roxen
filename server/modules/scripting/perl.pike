@@ -14,7 +14,7 @@ inherit "module";
 inherit "roxenlib";
 
 string cvs_version =
-       "$Id: perl.pike,v 2.25 2004/06/30 16:59:20 mast Exp $";
+       "$Id: perl.pike,v 2.26 2008/08/15 12:33:55 mast Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
@@ -25,19 +25,19 @@ constant module_doc =
    "container (and a corresponding processing instruction &lt;?perl ... "
    "?&gt;) to run Perl code from inside RXML pages."; 
 
-static string recent_error = 0;
-static int parsed_tags = 0, script_calls = 0, script_errors = 0;
+protected string recent_error = 0;
+protected int parsed_tags = 0, script_calls = 0, script_errors = 0;
 
-static mapping handler_settings = ([ ]);
+protected mapping handler_settings = ([ ]);
 
-static int cache_output;
+protected int cache_output;
 
-static string script_output_mode;
+protected string script_output_mode;
 
 constant thread_safe = 1;
 
 #ifdef THREADS
-static object mutex = Thread.Mutex();
+protected object mutex = Thread.Mutex();
 #endif
 
 void create()
@@ -144,12 +144,12 @@ string status()
   return s;
 }
 
-static object gethandler()
+protected object gethandler()
 { return ExtScript.getscripthandler(query("helper"),
                                     query("parallel"), handler_settings);
 }
 
-static void fix_settings()
+protected void fix_settings()
 {
   string u, g;
   mapping s = ([ ]);
@@ -172,7 +172,7 @@ static void fix_settings()
   cache_output = query("caching");
 }
 
-static void periodic()
+protected void periodic()
 {
   fix_settings();
   ExtScript.periodic_cleanup();
@@ -185,7 +185,7 @@ void start()
   script_output_mode = query("scriptout");
 }
 
-static void add_headers(string headers, object id)
+protected void add_headers(string headers, object id)
 { string header, name, value;
   if (headers)
     foreach(headers / "\r\n", header)
@@ -202,7 +202,7 @@ static void add_headers(string headers, object id)
     }
 }
 
-static void do_response_callback(RequestID id, array result)
+protected void do_response_callback(RequestID id, array result)
 {
 //  werror("perl:do_response_callback: %O %O\n", id, result);
   id->connection()->write("HTTP/1.0 200 OK\r\n");

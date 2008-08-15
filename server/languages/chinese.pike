@@ -5,11 +5,11 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: chinese.pike,v 1.1 2004/11/16 12:19:40 wellhard Exp $";
+constant cvs_version = "$Id: chinese.pike,v 1.2 2008/08/15 12:33:54 mast Exp $";
 constant _id = ({ "zh", "chinese", "\x4e2d\x6587" });
 constant _aliases = ({ "zh", "chi", "zho", "chinese", "\x4e2d\x6587" });
 
-static void create()
+protected void create()
 {
   roxen.dump( __FILE__ );
 }

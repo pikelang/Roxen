@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 
-string cvs_version="$Id: pimage.pike,v 1.30 2004/06/30 16:59:04 mast Exp $";
+string cvs_version="$Id: pimage.pike,v 1.31 2008/08/15 12:33:54 mast Exp $";
 
 #include <module.h>
 inherit "module";
@@ -200,7 +200,7 @@ class Constructors
     }
   }
 
-  private static array (int) to_color(mixed in)
+  private array (int) to_color(mixed in)
   {
     if(stringp(in)) return parse_color(in);
     return ({ in, in, in });

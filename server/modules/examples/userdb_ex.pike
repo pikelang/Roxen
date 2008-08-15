@@ -28,7 +28,7 @@ constant name = "example";
 //! will be impossible to know which of them will be used when
 //! authentication is done, however..
 
-constant cvs_version="$Id: userdb_ex.pike,v 1.7 2004/06/30 16:58:58 mast Exp $";
+constant cvs_version="$Id: userdb_ex.pike,v 1.8 2008/08/15 12:33:54 mast Exp $";
 
 LocaleString module_name = LOCALE(1,"RefDoc for MODULE_USERDB");
 
@@ -44,7 +44,7 @@ LocaleString module_doc =
 	 "however does show the basics of making a user database module.");
 
 
-static void create()
+protected void create()
 // Define a variable that will hold all the users. Only the user id
 // (the short name) and the password are defined in this list, but it
 // could easily be extended to include more information.
@@ -61,8 +61,8 @@ class ExUser
 //! Each user in the new userdatabase system is represented by a user
 //! object.
 {
-  static string id;
-  static string pw;
+  protected string id;
+  protected string pw;
   // Passed when this object is created. This is not really enough to
   // implement all functions below, but it's enough to fulfill the
   // minimum implementation.
@@ -73,7 +73,7 @@ class ExUser
   //! implementations, if any, are noted below.
 
 
-  static void create( string _id, string _pw )
+  protected void create( string _id, string _pw )
   // Set the variables from the constructor arguments and call the
   // create method in the parent class.
   {
@@ -163,7 +163,7 @@ class ExGroup
   inherit Group;
   //! All groups should inherit the group class.
   
-  static void create()
+  protected void create()
   // Call the constructor in the parent class.
   {
     ::create( this_module() );
@@ -194,7 +194,7 @@ class ExGroup
   }
 }
 
-static ExGroup the_one_and_only_group = ExGroup();
+protected ExGroup the_one_and_only_group = ExGroup();
 // There can be only one.
 
 array(string) list_users( RequestID dummy )

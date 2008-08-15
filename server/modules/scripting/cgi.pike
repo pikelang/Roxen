@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.64 2006/11/08 17:04:19 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.65 2008/08/15 12:33:55 mast Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -520,7 +520,7 @@ class CGIWrapper
     return 1;
   }
 
-  static int mode;
+  protected int mode;
   void process( string what )
   {
     DWERR(sprintf("CGIWrapper::process(%O)", what));
@@ -543,11 +543,11 @@ mapping(string:object) nt_opencommands = ([]);
 
 class NTOpenCommand
 {
-  static array(string) line;
-  static array(string) repsrc;
-  static int starpos;
+  protected array(string) line;
+  protected array(string) repsrc;
+  protected int starpos;
 
-  static int expiry;
+  protected int expiry;
 
   int expired()
   {
@@ -690,9 +690,9 @@ class CGIScript
   }
 
   // HUP, PIPE, INT, TERM, KILL
-  static constant kill_signals = ({ 1, 13, 2, 15, 9 });
-  static constant kill_interval = 3;
-  static int next_kill;
+  protected constant kill_signals = ({ 1, 13, 2, 15, 9 });
+  protected constant kill_interval = 3;
+  protected int next_kill;
 
   void kill_script()
   {

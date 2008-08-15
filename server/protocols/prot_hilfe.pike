@@ -30,12 +30,12 @@ class Connection
     inherit RequestID;
     string real_auth;
     string remoteaddr = "127.0.0.1";
-    static string _sprintf()
+    protected string _sprintf()
     {
       return sprintf("RequestID(conf=%O; not_query=%O)", conf, not_query );
     }
 
-    static void create()
+    protected void create()
     {
       port_obj = my_port_obj;
       conf = my_conf;
@@ -478,7 +478,7 @@ class Connection
   }
 
   int n;
-  static void init2( )
+  protected void init2( )
   {
     if( rl->readline )
     {
@@ -496,7 +496,7 @@ class Connection
     }
   }
 
-  static void create(object f, object c, object cc)
+  protected void create(object f, object c, object cc)
   {
     my_port_obj = c; 
     my_conf = cc;

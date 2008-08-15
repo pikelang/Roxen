@@ -18,7 +18,7 @@ Roxen 2.2+ LDAP directory user database module
 #define ROXEN_HASH_SIGN		"{x-roxen-hash}"
 
 constant cvs_version =
-  "$Id: userdb_ldap.pike,v 1.13 2004/06/30 16:59:12 mast Exp $";
+  "$Id: userdb_ldap.pike,v 1.14 2008/08/15 12:33:54 mast Exp $";
 inherit UserDB;
 inherit "module";
 
@@ -49,7 +49,7 @@ Thread.Mutex mt = Thread.Mutex(); // FIXME: what about unthreaded version ???
 class LDAPUser
 {
   inherit User;
-  static array pwent;
+  protected array pwent;
 
   string name()             { return pwent[0]; }
   string crypted_password() { return pwent[1]; }
@@ -62,7 +62,7 @@ class LDAPUser
   array compat_userinfo()   { return pwent[0..6];    }
   string dn()		    { return pwent[7]; }
 
-  static void create( UserDB p, array _pwent )
+  protected void create( UserDB p, array _pwent )
   {
     ::create( p );
     pwent = _pwent;
@@ -104,7 +104,7 @@ DEBUGLOG(sprintf("DEB: user->pass_auth(%s): %s <%O>", name(), password, pass));
     if (sizeof(pass) > 6)
       switch (upper_case(pass[..4])) {
 	case "{SHA}" :
-	  flg = (pass[5..] == MIME.encode_base64(Crypto.sha()->update(password)->digest()));
+	  flg = (pass[5..] == MIME.encode_base64(Crypto.SHA1()->update(password)->digest()));
 	  DEBUGLOG ("Trying SHA digest ...");
 	  break;
 
@@ -112,13 +112,13 @@ DEBUGLOG(sprintf("DEB: user->pass_auth(%s): %s <%O>", name(), password, pass));
 	  if (sizeof(pass) > 7 && pass[5] == '}') {
 	    if(sscanf(MIME.decode_base64(pass[6..]),"%20s%s",sv,salt) != 2 || sizeof(sv) != 20 || sizeof(salt) < 4)
 	      break;
- 	    flg = (pass[6..] == MIME.encode_base64(Crypto.sha()->update(password+salt)->digest()+salt));
+	    flg = (pass[6..] == MIME.encode_base64(Crypto.SHA1()->update(password+salt)->digest()+salt));
 	    DEBUGLOG ("Trying SSHA digest ...");
 	  }
 	  break;
 
 	case "{MD5}" :
-	  flg = (pass[5..] == MIME.encode_base64(Crypto.md5()->update(password)->digest()));
+	  flg = (pass[5..] == MIME.encode_base64(Crypto.MD5()->update(password)->digest()));
 	  DEBUGLOG ("Trying MD5 digest ...");
 	  break;
 
@@ -126,7 +126,7 @@ DEBUGLOG(sprintf("DEB: user->pass_auth(%s): %s <%O>", name(), password, pass));
 	  if (sizeof(pass) > 7 && pass[5] == '}') {
 	    if(sscanf(MIME.decode_base64(pass[6..]),"%16s%s",sv,salt) != 2 || sizeof(sv) != 16 || sizeof(salt) < 4)
 	      break;
- 	    flg = (pass[6..] == MIME.encode_base64(Crypto.md5()->update(password+salt)->digest()+salt));
+	    flg = (pass[6..] == MIME.encode_base64(Crypto.MD5()->update(password+salt)->digest()+salt));
 	    DEBUGLOG ("Trying SMD5 digest ...");
 	  }
 	  break;

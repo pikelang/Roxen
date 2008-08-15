@@ -8,24 +8,24 @@ constant required_charset = "iso-8859-5";
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: russian.pike,v 1.9 2000/12/18 17:10:05 jhs Exp $";
-constant _id = ({ "ru", "russian", "-LюЦААзьы" });
-constant _aliases = ({ "ru", "rus", "russian", "русский" });
+constant cvs_version = "$Id: russian.pike,v 1.10 2008/08/15 12:33:54 mast Exp $";
+constant _id = ({ "ru", "russian", ".L▌ю▌Ц▌А▌А▌з▌ь▌ы" });
+constant _aliases = ({ "ru", "rus", "russian", "▌р▌у▌с▌с▌к▌и▌й" });
 
 #define error(x) throw( ({ x, backtrace() }) )
 
 constant months = ({
-  "январь", "фебраль", "март", "апрель", "май",
-  "июнь", "июль", "августь", "сентябрь", "октябь",
-  "ноябрь", "декабрь" });
+  "▌я▌н▌в▌а▌р▌ь", "▌ф▌е▌б▌р▌а▌л▌ь", "▌м▌а▌р▌т", "▌а▌п▌р▌е▌л▌ь", "▌м▌а▌й",
+  "▌и▌ю▌н▌ь", "▌и▌ю▌л▌ь", "▌а▌в▌г▌у▌с▌т▌ь", "▌с▌е▌н▌т▌я▌б▌р▌ь", "▌о▌к▌т▌я▌б▌ь",
+  "▌н▌о▌я▌б▌р▌ь", "▌д▌е▌к▌а▌б▌р▌ь" });
 
 constant days = ({
-  "воскресенье","понедельник","вторник","среда", "четверк",
-  "пятница", "суббота" });
+  "▌в▌о▌с▌к▌р▌е▌с▌е▌н▌ь▌е","▌п▌о▌н▌е▌д▌е▌л▌ь▌н▌и▌к","▌в▌т▌о▌р▌н▌и▌к","▌с▌р▌е▌д▌а", "▌ч▌е▌т▌в▌е▌р▌к",
+  "▌п▌я▌т▌н▌и▌ц▌а", "▌с▌у▌б▌б▌о▌т▌а" });
 
 string ordered(int i)
 {
-  return (string) i + "-е";
+  return (string) i + "-▌е";
 }
 
 string date(int timestamp, mapping m)
@@ -38,13 +38,13 @@ string date(int timestamp, mapping m)
   if(!(m["full"] || m["date"] || m["time"]))
   {
     if(t1["yday"] == t2["yday"] && t1["year"] == t2["year"])
-      return "сегодня, в " + ctime(timestamp)[11..15];
+      return "▌с▌е▌г▌о▌д▌н▌я, ▌в " + ctime(timestamp)[11..15];
 
     if(t1["yday"] == t2["yday"]-1 && t1["year"] == t2["year"])
-      return "вчера, v " + ctime(timestamp)[11..15];
+      return "▌в▌ч▌е▌р▌а, v " + ctime(timestamp)[11..15];
 
     if(t1["yday"] == t2["yday"]+1 && t1["year"] == t2["year"])
-      return "завтра, okolo "  + ctime(timestamp)[11..15];
+      return "▌з▌а▌в▌т▌р▌а, okolo "  + ctime(timestamp)[11..15];
 
     if(t1["year"] != t2["year"])
       return month(t1["mon"]+1) + " " + (t1["year"]+1900);
@@ -71,17 +71,17 @@ string _number_1(int num, string gender)
   switch(num)
   {
    case 0:  return "";
-   case 1:  return ([ "m" : "один",
-		      "f" : "одна",
-		      "n" : "одно" ])[gender];
-   case 2:  return ("f" == gender) ? "двe" : "два";
-   case 3:  return "три";
-   case 4:  return "четыре";
-   case 5:  return "пять";
-   case 6:  return "шесть";
-   case 7:  return "семь";
-   case 8:  return "восемь";
-   case 9:  return "дебять";
+   case 1:  return ([ "m" : "▌о▌д▌и▌н",
+		      "f" : "▌о▌д▌н▌а",
+		      "n" : "▌о▌д▌н▌о" ])[gender];
+   case 2:  return ("f" == gender) ? "▌д▌вe" : "▌д▌в▌а";
+   case 3:  return "▌т▌р▌и";
+   case 4:  return "▌ч▌е▌т▌ы▌р▌е";
+   case 5:  return "▌п▌я▌т▌ь";
+   case 6:  return "▌ш▌е▌с▌т▌ь";
+   case 7:  return "▌с▌е▌м▌ь";
+   case 8:  return "▌в▌о▌с▌е▌м▌ь";
+   case 9:  return "▌д▌е▌б▌я▌т▌ь";
    default:
      error("russian->_number_1: internal error.\n");
   }
@@ -91,14 +91,14 @@ string _number_10(int num)
 {
   switch(num)
   {
-   case 2: return "двадцать";
-   case 3: return "тридцать";
-   case 4: return "сопок";
-   case 5: return "пятьдесят";
-   case 6: return "шестьдесят";
-   case 7: return "семьдесят";
-   case 8: return "восемьдесят";
-   case 9: return "девяносто";
+   case 2: return "▌д▌в▌а▌д▌ц▌а▌т▌ь";
+   case 3: return "▌т▌р▌и▌д▌ц▌а▌т▌ь";
+   case 4: return "▌с▌о▌п▌о▌к";
+   case 5: return "▌п▌я▌т▌ь▌д▌е▌с▌я▌т";
+   case 6: return "▌ш▌е▌с▌т▌ь▌д▌е▌с▌я▌т";
+   case 7: return "▌с▌е▌м▌ь▌д▌е▌с▌я▌т";
+   case 8: return "▌в▌о▌с▌е▌м▌ь▌д▌е▌с▌я▌т";
+   case 9: return "▌д▌е▌в▌я▌н▌о▌с▌т▌о";
    default:
      error("russian->_number_10: internal error.\n");
   }
@@ -108,12 +108,12 @@ string _number_100(int num)
 {
   switch(num)
   {
-   case 1: return "сто";
-   case 2: return "двести";
+   case 1: return "▌с▌т▌о";
+   case 2: return "▌д▌в▌е▌с▌т▌и";
    case 3: case 4:
-     return _number_1(num, "m")+"ста";
+     return _number_1(num, "m")+"▌с▌т▌а";
    case 5: case 6: case 7: case 8: case 9:
-     return _number_1(num, "m")+"сот";
+     return _number_1(num, "m")+"▌с▌о▌т";
    default:
      error("russian->_number_10: internal error.\n");
   }
@@ -124,32 +124,32 @@ string _number(int num, string gender);
 string _number_1000(int num)
 {
   if (num == 1)
-    return "тысяча";
+    return "▌т▌ы▌с▌я▌ч▌а";
 
   string pre = _number(num, "f");
   switch(num % 10)
   {
-   case 1: return pre + " тысяча";
+   case 1: return pre + " ▌т▌ы▌с▌я▌ч▌а";
    case 2: case 3: case 4:
-     return pre + " тысячи";
+     return pre + " ▌т▌ы▌с▌я▌ч▌и";
    default:
-     return pre + " тысяч";
+     return pre + " ▌т▌ы▌с▌я▌ч";
   }
 }
 
 string _number_1000000(int num)
 {
   if (num == 1)
-    return "миллион";
+    return "▌м▌и▌л▌л▌и▌о▌н";
 
   string pre = _number(num, "m");
   switch(num % 10)
   {
-   case 1: return pre + " миллион";
+   case 1: return pre + " ▌м▌и▌л▌л▌и▌о▌н";
    case 2: case 3: case 4:
-     return pre + " миллиона";
+     return pre + " ▌м▌и▌л▌л▌и▌о▌н▌а";
    default:
-     return pre + " миллионов";
+     return pre + " ▌м▌и▌л▌л▌и▌о▌н▌о▌в";
   }
 }
 
@@ -164,16 +164,16 @@ string _number(int num, string gender)
     return _number_1(num, gender);
 
   if (num < 20)
-    return ([ 10: "десять",
-	      11: "одиннадцать",
-	      12: "двенадцать",
-	      13: "тринадцать",
-	      14: "четырнадцать",
-	      15: "пятнадцать",
-	      16: "шестнадцать",
-	      17: "семнадцать",
-	      18: "восемнадцать",
-	      19: "девятнадцать" ])[num];
+    return ([ 10: "▌д▌е▌с▌я▌т▌ь",
+	      11: "▌о▌д▌и▌н▌н▌а▌д▌ц▌а▌т▌ь",
+	      12: "▌д▌в▌е▌н▌а▌д▌ц▌а▌т▌ь",
+	      13: "▌т▌р▌и▌н▌а▌д▌ц▌а▌т▌ь",
+	      14: "▌ч▌е▌т▌ы▌р▌н▌а▌д▌ц▌а▌т▌ь",
+	      15: "▌п▌я▌т▌н▌а▌д▌ц▌а▌т▌ь",
+	      16: "▌ш▌е▌с▌т▌н▌а▌д▌ц▌а▌т▌ь",
+	      17: "▌с▌е▌м▌н▌а▌д▌ц▌а▌т▌ь",
+	      18: "▌в▌о▌с▌е▌м▌н▌а▌д▌ц▌а▌т▌ь",
+	      19: "▌д▌е▌в▌я▌т▌н▌а▌д▌ц▌а▌т▌ь" ])[num];
   if (num < 100)
     return _number_10(num/10) + " " + _number_1(num%10, gender);
 
@@ -192,16 +192,16 @@ string number(int num, string|void gender)
   if (!gender)   /* Solitary numbers are inflected as masculine */
     gender = "m";
   if (num<0) {
-    return("минус"+_number(-num, gender));
+    return("▌м▌и▌н▌у▌с"+_number(-num, gender));
   } if (num) {
     return(_number(num, gender));
   } else {
-    return("ноль");
+    return("▌н▌о▌л▌ь");
   }
 }
 
 
-static void create()
+protected void create()
 {
   roxen.dump( __FILE__ );
 }

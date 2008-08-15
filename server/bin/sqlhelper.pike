@@ -103,12 +103,12 @@ void main() {
 
 // Interface functions
 
-object db;
+Sql.Sql db;
 string db_url;
 
 void if_connect(string connect_string) {
   db_url = connect_string;
-  db = Sql.sql(connect_string);
+  db = Sql.Sql(connect_string);
 }
 
 string if_ping(string s) {
@@ -153,7 +153,7 @@ mixed if_query(mixed ... args) {
     mapping new_bindings = ([ ]);
     foreach(indices(args[1]),string ind) {
       if(ind[0..2] == "@@@")
-	new_bindings[ind[3..]] = Crypto.string_to_hex(args[1][ind]);
+	new_bindings[ind[3..]] = String.string2hex(args[1][ind]);
       else {
 	new_bindings[ind] = args[1][ind];
       }

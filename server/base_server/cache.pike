@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: cache.pike,v 1.89 2008/01/09 16:03:25 mast Exp $
+// $Id: cache.pike,v 1.90 2008/08/15 12:33:53 mast Exp $
 
 // #pragma strict_types
 
@@ -49,15 +49,15 @@
 #endif
 
 // The actual cache along with some statistics mappings.
-static mapping(string:mapping(string:array)) cache;
-static mapping(string:int) hits=([]), all=([]);
+protected mapping(string:mapping(string:array)) cache;
+protected mapping(string:int) hits=([]), all=([]);
 
 #ifdef TIME_BASED_CACHE
-static Thread.Local deltas = Thread.Local();
+protected Thread.Local deltas = Thread.Local();
 #endif /* TIME_BASED_CACHE */
 
 #ifdef CACHE_DEBUG
-static array(int) memory_usage_summary()
+protected array(int) memory_usage_summary()
 {
   int count, bytes;
   foreach (_memory_usage(); string descr; int amount)

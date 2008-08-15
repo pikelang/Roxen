@@ -16,7 +16,7 @@
 
 inherit "abstract";
 
-constant cvs_version = "$Id: italian.pike,v 1.12 2000/11/27 14:09:14 per Exp $";
+constant cvs_version = "$Id: italian.pike,v 1.13 2008/08/15 12:33:54 mast Exp $";
 constant _id = ({ "it", "italian", "italiano" });
 constant _aliases = ({ "it", "ita", "italiano", "italian" });
 
@@ -155,7 +155,7 @@ string date(int timestamp, mapping|void m)
     return ctime(timestamp)[11..15];
 }
 
-static void create()
+protected void create()
 {
   roxen.dump( __FILE__ );
 }

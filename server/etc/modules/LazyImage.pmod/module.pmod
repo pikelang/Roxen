@@ -146,7 +146,7 @@ enum JoinStyle    { JOIN_MITER,  JOIN_ROUND,     JOIN_BEVEL };
 #define JOINSTEPS 5
 constant PI = Math.pi;
 
-static array(float) init_cap_sin_table()
+protected array(float) init_cap_sin_table()
 {
   array(float) s_t = allocate(CAPSTEPS);
 
@@ -156,9 +156,9 @@ static array(float) init_cap_sin_table()
   return(s_t);
 }
 
-static array(float) cap_sin_table = init_cap_sin_table();
+protected array(float) cap_sin_table = init_cap_sin_table();
 
-static array(float) init_cap_cos_table()
+protected array(float) init_cap_cos_table()
 {
   array(float) c_t = allocate(CAPSTEPS);
 
@@ -168,10 +168,10 @@ static array(float) init_cap_cos_table()
   return(c_t);
 }
 
-static array(float) cap_cos_table = init_cap_cos_table();
+protected array(float) cap_cos_table = init_cap_cos_table();
 
 
-static private array(float) xyreverse(array(float) a)
+private array(float) xyreverse(array(float) a)
 {
   array(float) r = reverse(a);
   int n = sizeof(r)/2;
@@ -184,7 +184,7 @@ static private array(float) xyreverse(array(float) a)
 }
 
 
-static object compile_handler = class {
+protected object compile_handler = class {
     mapping(string:mixed) get_default_module() {
       return ([ "this_program":0,"`+":`+,"`-":`-,
 		"`*":`*,"`/":`/, "`%":`%,"`&":`&,
@@ -351,10 +351,10 @@ array(array(float)) make_polygon_from_line(float h,
 }
 
 
-static mapping(program:string) programs;
-static object dirnode = master()->handle_import(".", __FILE__);
+protected mapping(program:string) programs;
+protected object dirnode = master()->handle_import(".", __FILE__);
 
-static string get_program_name (program p)
+protected string get_program_name (program p)
 {
   if (!programs) {
     array inds = indices (dirnode);
@@ -366,7 +366,7 @@ static string get_program_name (program p)
 
 int image_object_count;
 
-static Thread.Local request_id = Thread.Local();
+protected Thread.Local request_id = Thread.Local();
 
 class LazyImage( LazyImage parent )
 //! One or more layers, with lazy evaluation.
@@ -408,15 +408,15 @@ class LazyImage( LazyImage parent )
     return this_object();
   }
   
-  static Layers result;
-  static Image.Layer render_result;
+  protected Layers result;
+  protected Image.Layer render_result;
 
-  static Arguments args;
+  protected Arguments args;
   //! The args given to @[new] or @[set_args].
   //! Please note that this mapping can be shared between several
   //! different images, do not modify it destructively in your code.
   
-  static string _sprintf( int f, mapping a )
+  protected string _sprintf( int f, mapping a )
   {
     switch( f )
     {
@@ -499,20 +499,20 @@ class LazyImage( LazyImage parent )
     }
   }
 
-  static Image.Layer copy_layer( Image.Layer l )
+  protected Image.Layer copy_layer( Image.Layer l )
   {
     return l->clone();
   }
 
 
-  static Image.Color translate_color( string col )
+  protected Image.Color translate_color( string col )
   //! Parse the color specified in 'col', and return the best-guess color
   //! If no intepretation can be done, return Image.Color.black  
   {
     return Image.Color.guess( col || "000" ) || Image.Color.black;
   }
 
-  static float virtual_to_screen( float v, float v0, float v1, int rs )
+  protected float virtual_to_screen( float v, float v0, float v1, int rs )
   //! Convert a the virtual coordinate @[v], with ranges between @[v0]
   //! and @[v1] to a screen coordinate where 0 corresponds to @[v0], and
   //! @[rs] corresponds to @[v1]
@@ -523,7 +523,7 @@ class LazyImage( LazyImage parent )
     return ((v/vs) * rs);
   }
 
-  static int find_guide( int index, int vertical, Layers in )
+  protected int find_guide( int index, int vertical, Layers in )
   {
     array guides = ({}), rguides;
     int limit_index( int i )
@@ -547,8 +547,8 @@ class LazyImage( LazyImage parent )
     return guides[ limit_index( index ) ];
   }
 
-  static string handle_variable( string variable, Image.Image|Image.Layer cl,
-				 Layers l)
+  protected string handle_variable( string variable, Image.Image|Image.Layer cl,
+				    Layers l)
   {
     array(string) v = (variable/".");
     string exts_ind( mapping exts, int i)
@@ -608,8 +608,8 @@ class LazyImage( LazyImage parent )
   }
   
 
-  static string parse_variables( string from, Image.Layer|Image.Image cl,
-				 Layers l)
+  protected string parse_variables( string from, Image.Layer|Image.Image cl,
+				    Layers l)
   {
     if( !from )
       return 0;
@@ -619,14 +619,14 @@ class LazyImage( LazyImage parent )
     return from;
   }
   
-  static int translate_coordinate( string from, Image.Layer|Image.Image cl,
-				   Layers l)
+  protected int translate_coordinate( string from, Image.Layer|Image.Image cl,
+				      Layers l)
   {
     if( !from ) return 0;
     return (int)parse_sexpr( parse_variables( from, cl, l ) );
   }
 
-  static int translate_cap_style( string style )
+  protected int translate_cap_style( string style )
   {
     switch( lower_case(String.trim_all_whites(style||"")) )
     {
@@ -639,7 +639,7 @@ class LazyImage( LazyImage parent )
     }
   }
 
-  static int translate_join_style( string style )
+  protected int translate_join_style( string style )
   {
     switch( lower_case(String.trim_all_whites(style||"")) )
     {
@@ -652,15 +652,15 @@ class LazyImage( LazyImage parent )
     }
   }
 
-  static float translate_coordinate_f( string from,
-				       Image.Layer|Image.Image cl,
-				       Layers l)
+  protected float translate_coordinate_f( string from,
+					  Image.Layer|Image.Image cl,
+					  Layers l)
   {
     if( !from ) return 0;
     return (float)parse_sexpr( parse_variables( from, cl, l ) );
   }
   
-  static Image.Layer copy_layer_data( Image.Layer l )
+  protected Image.Layer copy_layer_data( Image.Layer l )
   {
     Image.Image i = l->image();
     Image.Image a = l->alpha();
@@ -672,7 +672,7 @@ class LazyImage( LazyImage parent )
     return l;
   }
 
-  static Arguments check_args( Arguments a )
+  protected Arguments check_args( Arguments a )
   //! Verify that the argument mapping is valid. This function can
   //! call the error functions in the RXML module. The default
   //! implementation does nothing but return it's argument.
@@ -680,7 +680,7 @@ class LazyImage( LazyImage parent )
     return a;
   }
   
-  static Layers process( Layers layers )
+  protected Layers process( Layers layers )
   //! Do the actual work needed to process the image.
   //! The default implementation does nothing but return the image
   //! layers.
@@ -795,7 +795,7 @@ class LoadImage
   inherit LazyImage;
   constant operation_name = "load-image";
 
-  static
+  protected
   {
     Layers process( Layers layers)
     {
@@ -855,7 +855,7 @@ class SelectLayers
   inherit LazyImage;
   constant operation_name = "select-layers";
 
-  static {
+  protected {
     Layers process( Layers l )
     {
       Layers res = l;
@@ -891,7 +891,7 @@ class Text
   constant operation_name = "text";
   constant destructive    = (<"image","alpha">);
 
-  static {
+  protected {
     Layers process( array(Image.Layer|array(Image.Layer)) l )
     {
       Image.Layer ti;
@@ -987,7 +987,7 @@ class ReplaceAlpha
   constant operation_name = "replace-alpha";
   constant destructive    = (<"alpha">);
   
-  static {
+  protected {
     Layers process( Layers layers )
     {
       Layers victims = layers;
@@ -1056,7 +1056,7 @@ class Shadow
   inherit LazyImage;
   constant operation_name = "shadow";
   
-  static {
+  protected {
 
     Layers process( Layers layers )
     {
@@ -1122,7 +1122,7 @@ class Join
     args = _args;
   }
     
-  static {
+  protected {
     string _sprintf( int f, mapping a )
     {
       switch( f )
@@ -1169,7 +1169,7 @@ class SetLayerMode
   constant operation_name = "set-layer-mode";
   constant destructive    = (<"meta">);
 
-  static {
+  protected {
     Layers process( Layers l )
     {
       Layers q = l;
@@ -1202,7 +1202,7 @@ class MoveLayer
   constant operation_name = "move-layer";
   constant destructive    = (<"meta">);
 
-  static {
+  protected {
     Layers process( Layers l )
     {
       Layers q = l;
@@ -1243,7 +1243,7 @@ class NewLayer
   inherit LazyImage;
   constant operation_name = "new-layer";
 
-  static {
+  protected {
     Layers process( Layers l )
     {
       Image.Layer new_layer = Image.Layer();
@@ -1278,7 +1278,7 @@ class Crop
   inherit LazyImage;
   constant operation_name = "crop";
   constant destructive    = (<"meta","image","alpha">);
-  static {
+  protected {
     Layers process( Layers layers )
     {
       int x0 = translate_coordinate( args->x, 0, layers );
@@ -1336,7 +1336,7 @@ class Scale
   inherit LazyImage;
   constant operation_name = "scale";
   constant destructive    = (<"meta","image","alpha">);
-  static {
+  protected {
     Layers process( Layers layers )
     {
       Layers victims = layers;
@@ -1405,7 +1405,7 @@ class Rotate
   inherit LazyImage;
   constant operation_name = "rotate";
   constant destructive    = (<"image","alpha","meta">);
-  static {
+  protected {
     Layers process( Layers layers )
     {
       Layers victims = layers;
@@ -1445,7 +1445,7 @@ class GreyBlur
   inherit LazyImage;
   constant operation_name = "grey-blur";
   constant destructive    = (<"image","alpha">);
-  static {
+  protected {
     Layers process( Layers layers )
     {
       int t = max((int)args->times, 1);
@@ -1499,7 +1499,7 @@ class Blur
   inherit LazyImage;
   constant operation_name = "blur";
   constant destructive    = (<"image","alpha">);
-  static {
+  protected {
     array(array(int)) blur_matrix( int r )
     {
       return ({({1})*r })*r;
@@ -1558,7 +1558,7 @@ class X									\
   inherit LazyImage;							\
   constant operation_name =  Y;						\
   constant destructive    = (<"image","alpha">);			\
-  static {								\
+  protected {								\
     Layers process( Layers layers )					\
     {									\
       Layers victims = layers;						\
@@ -1631,7 +1631,7 @@ class Expand
   constant operation_name = "expand";
   constant destructive    = (<"image","alpha">);
 
-  static {
+  protected {
     Layers process( Layers layers )
     {
       Layers victims = layers;
@@ -1682,7 +1682,7 @@ class Line
   constant operation_name = "line";
   constant destructive    = (< "alpha", >);
 
-  static {
+  protected {
     Layers process( Layers layers )
     {
       array(float) coordinates = ({});
@@ -1795,7 +1795,7 @@ class Polygone
   constant operation_name = "poly";
   constant destructive    = (< "alpha", >);
 
-  static {
+  protected {
     Layers process( Layers layers )
     {
       array(float) coordinates = ({});
@@ -1893,9 +1893,9 @@ class Polygone
 
 
 
-static string low_hash( program|object p, mapping a )
+protected string low_hash( program|object p, mapping a )
 {
-  object o = Crypto.md5();
+  Crypto.MD5 o = Crypto.MD5();
   if(!a)
     error("low_hash called before set_args\n");
   o->update( p->operation_name );
@@ -1903,8 +1903,8 @@ static string low_hash( program|object p, mapping a )
   return o->digest();
 }
 
-static Thread.Local current_layers = Thread.Local();
-static Thread.Local known_images = Thread.Local();
+protected Thread.Local current_layers = Thread.Local();
+protected Thread.Local known_images = Thread.Local();
 
 void add_layers( Layers l )
 {

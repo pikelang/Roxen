@@ -1,5 +1,5 @@
 
-static int check_jre_dir(string dir)
+protected int check_jre_dir(string dir)
 {
   if(!dir || dir=="" || dir[0]!='/')
     return 0;
@@ -20,7 +20,7 @@ static int check_jre_dir(string dir)
     return 1;
 }
 
-static string findjre()
+protected string findjre()
 {
   string dir = combine_path(combine_path(getcwd(), __FILE__),
 			    "../../../java/jre");

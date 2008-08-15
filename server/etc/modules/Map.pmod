@@ -277,26 +277,26 @@ mapping(string:string) domain_to_country =
   ]);
 
 class Legend {
-  static private string state_color_scheme = "white-to-red";
+  private string state_color_scheme = "white-to-red";
   
-  static private mapping color_schemes = ([ "white-to-red":
-					    ([ 0:({ 0xff,0xff,0xff }),
-					       1:({ 0xe0,0xc0,0x80 }),
-					       2:({ 0xe0,0x80,0x40 }),
-					       3:({ 0xd0,0x40,0x00 }),
-					       4:({ 0x80,0x00,0x00 }) ]),
-					    "white-to-green":
-					    ([ 0:({ 0xff,0xff,0xff }),
-					       1:({ 0xe0,0xe0,0x80 }),
-					       2:({ 0x80,0xe0,0x40 }),
-					       3:({ 0x40,0xd0,0x00 }),
-					       4:({ 0x00,0x80,0x00 }) ]),
-					    "white-to-purpur":
-					    ([ 0:({ 0xff,0xff,0xff }),
-					       1:({ 0xe0,0xc0,0xe0 }),
-					       2:({ 0xe0,0x80,0xe0 }),
-					       3:({ 0xd0,0x40,0xd0 }),
-					       4:({ 0x80,0x00,0x80 }) ]) ]);
+  private mapping color_schemes = ([ "white-to-red":
+				     ([ 0:({ 0xff,0xff,0xff }),
+					1:({ 0xe0,0xc0,0x80 }),
+					2:({ 0xe0,0x80,0x40 }),
+					3:({ 0xd0,0x40,0x00 }),
+					4:({ 0x80,0x00,0x00 }) ]),
+				     "white-to-green":
+				     ([ 0:({ 0xff,0xff,0xff }),
+					1:({ 0xe0,0xe0,0x80 }),
+					2:({ 0x80,0xe0,0x40 }),
+					3:({ 0x40,0xd0,0x00 }),
+					4:({ 0x00,0x80,0x00 }) ]),
+				     "white-to-purpur":
+				     ([ 0:({ 0xff,0xff,0xff }),
+					1:({ 0xe0,0xc0,0xe0 }),
+					2:({ 0xe0,0x80,0xe0 }),
+					3:({ 0xd0,0x40,0xd0 }),
+					4:({ 0x80,0x00,0x80 }) ]) ]);
 
   object scheme(string color_scheme)
   {
@@ -365,7 +365,7 @@ class Legend {
 		    font->text_extents(@opt->titles)[0] + nom+nom/2);
     int height = title_h + bar_h + 2*nom + nom;
     
-    object img = Image.image(width, height+100, @opt->background_color);
+    Image.Image img = Image.Image(width, height+100, @opt->background_color);
 
     img->paste_alpha_color(font->write(@(opt->title/"\n")),
 			   @opt->title_color, 0, 0);
@@ -393,12 +393,12 @@ class Legend {
   }
 }
 
-static private mapping map_of_the_earth =
+private mapping map_of_the_earth =
             decode_value(Stdio.read_bytes("etc/maps/worldmap"));
 
 class Earth {
-  static string state_region;
-  static string state_country;
+  protected string state_region;
+  protected string state_country;
     
   // Aliases.
   mapping(string:array(string)) country_name_aliases =
@@ -435,7 +435,7 @@ class Earth {
     return object_program(this_object())(state_region, new_country);
   }
 
-  static private string capitalize_country(string s)
+  private string capitalize_country(string s)
   {
     return Array.map(s/" ",
 		     lambda(string w)
@@ -461,7 +461,7 @@ class Earth {
       return map_of_the_earth[state_country];
   }
 
-  static private array(float) transform(float x, float y, mapping opt)
+  private array(float) transform(float x, float y, mapping opt)
   {
     y = 1.0-y;
 
@@ -500,13 +500,13 @@ class Earth {
     return ({ x, y });
   }
   
-  object image(int width, int height, mapping|void opt)
+  Image.Image image(int width, int height, mapping|void opt)
   {
     opt = opt || ([]);
     opt->color_sea = opt->color_sea || ({ 0x10,0x10,0x40 });
     opt->color_fu = opt->color_fu || lambda() { return ({ 0xff,0xff,0xff }); };
 
-    Image.image map = Image.image(width, height, @opt->color_sea);
+    Image.Image map = Image.Image(width, height, @opt->color_sea);
     foreach(indices(map_of_the_earth), string cntry) {
       map->setcolor(@opt->color_fu(cntry, @(opt->fu_args||({}))));
       foreach(map_of_the_earth[cntry], array(float) original_vertices) {
@@ -545,7 +545,7 @@ class Earth {
     
     // Apply borders.
     if(opt->border)
-      map = Image.image(map->xsize()+2*opt->border,
+      map = Image.Image(map->xsize()+2*opt->border,
 			map->ysize()+2*opt->border,
 			@opt->color_sea)->paste(map, opt->border, opt->border);
     

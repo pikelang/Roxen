@@ -3,7 +3,7 @@
  * This is a Roxen module. Copyright © 2000 - 2004, Roxen IS.
  */
 
-constant cvs_version="$Id: throttling_byaddress.pike,v 1.5 2004/06/30 16:59:32 mast Exp $";
+constant cvs_version="$Id: throttling_byaddress.pike,v 1.6 2008/08/15 12:33:55 mast Exp $";
 
 #include <module.h>
 inherit "throttlelib";
@@ -32,7 +32,7 @@ class IP_with_mask
 {
   int net;
   int mask;
-  static private int ip_to_int(string ip)
+  private int ip_to_int(string ip)
   {
     int res;
     foreach(((ip/".") + ({ "0", "0", "0" }))[..3], string num) {

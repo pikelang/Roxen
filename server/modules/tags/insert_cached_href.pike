@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.21 2008/03/31 14:29:22 liin Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.22 2008/08/15 12:33:55 mast Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -122,7 +122,7 @@ void stop() {
   href_database = 0;
 }
 
-static int get_time_in_seconds(string input) {
+protected int get_time_in_seconds(string input) {
   input = lower_case((string)input);
   input = String.trim_whites(input);
   
@@ -154,7 +154,7 @@ static int get_time_in_seconds(string input) {
   return number;
 }
 
-static int(0..1) is_number(int char) {
+protected int(0..1) is_number(int char) {
   return (char >= 48 && char <= 57) ? 1 : 0;  
 }
 

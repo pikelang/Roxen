@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.552 2008/08/06 16:27:44 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.553 2008/08/15 12:33:55 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -713,7 +713,7 @@ class TagDec {
   }
 }
 
-static void inc(mapping m, int val, RequestID id)
+protected void inc(mapping m, int val, RequestID id)
 {
   RXML.Context context=RXML_CONTEXT;
   array entity=context->parse_user_var(m->variable, m->scope);
@@ -1696,7 +1696,7 @@ class TagCache {
 		    RXML.FLAG_CUSTOM_TRACE);
   constant cache_tag_location = "tag_cache";
 
-  static class TimeOutEntry (
+  protected class TimeOutEntry (
     TimeOutEntry next,
     // timeout_cache is a wrapper array to get a weak ref to the
     // timeout_cache mapping for the frame. This way the mapping will
@@ -1705,9 +1705,9 @@ class TagCache {
     array(mapping(string:array(int|RXML.PCode))) timeout_cache)
     {}
 
-  static TimeOutEntry timeout_list;
+  protected TimeOutEntry timeout_list;
 
-  static void do_timeouts()
+  protected void do_timeouts()
   {
     int now = time (1);
     for (TimeOutEntry t = timeout_list, prev; t; t = t->next) {
@@ -1724,7 +1724,8 @@ class TagCache {
     roxen.background_run (roxen.query("mem_cache_gc"), do_timeouts);
   }
 
-  static void add_timeout_cache (mapping(string:array(int|RXML.PCode)) timeout_cache)
+  protected void add_timeout_cache (
+    mapping(string:array(int|RXML.PCode)) timeout_cache)
   {
     if (!timeout_list)
       roxen.background_run (roxen.query("mem_cache_gc"), do_timeouts);
@@ -1761,7 +1762,7 @@ class TagCache {
     array(string|int) subvariables;
     mapping(string:RXML.PCode|array(int|RXML.PCode)) alternatives;
 
-    static constant rxml_empty_replacement = (<"eMp ty__">);
+    protected constant rxml_empty_replacement = (<"eMp ty__">);
 
     // Got ugly special cases below to avoid getting RXML.empty into
     // the keymap since that doesn't work with encode_value_canonic
@@ -1793,7 +1794,7 @@ class TagCache {
       }									\
     } while (0)
 
-    static void add_subvariables_to_keymap()
+    protected void add_subvariables_to_keymap()
     {
       RXML.Context ctx = RXML_CONTEXT;
       foreach (subvariables, string var)
@@ -1801,7 +1802,7 @@ class TagCache {
 	ADD_VARIABLE_TO_KEYMAP (ctx, var);
     }
 
-    static void make_key_from_keymap(RequestID id)
+    protected void make_key_from_keymap(RequestID id)
     {
       // Caching is not allowed if there are keys except '1' and
       // page.path, i.e. when different cache entries might be chosen
@@ -1823,7 +1824,7 @@ class TagCache {
 	// through all the rounds even if the key is very short.
 	// Otherwise the risk for coincidental equal keys gets much
 	// bigger.
-	key = Crypto.md5()->update ("................................")
+	key = Crypto.MD5()->update ("................................")
 			  ->update (key)
 			  ->digest();
     }
@@ -1915,7 +1916,7 @@ class TagCache {
 	    // p-code which has static type inference.
 	    if (!content) content = "";
 	    if (String.width (content) != 8) content = encode_value_canonic (content);
-	    cache_id = Crypto.md5()->update ("................................")
+	    cache_id = Crypto.MD5()->update ("................................")
 				   ->update (content)
 				   ->update (content_type->name)
 				   ->digest();
@@ -2429,11 +2430,12 @@ class TagAutoformat {
   }
 }
 
-class Smallcapsstr (string bigtag, string smalltag, mapping bigarg, mapping smallarg)
+class Smallcapsstr (string bigtag, string smalltag,
+		    mapping bigarg, mapping smallarg)
 {
   constant UNDEF=0, BIG=1, SMALL=2;
-  static string text="",part="";
-  static int last=UNDEF;
+  protected string text="",part="";
+  protected int last=UNDEF;
 
   string _sprintf() {
     return "Smallcapsstr("+bigtag+","+smalltag+")";
@@ -2537,7 +2539,7 @@ string simpletag_random(string tag, mapping m, string s, RequestID id)
   array q = s/(m->separator || m->sep || "\n");
   int index;
   if(m->seed)
-    index = array_sscanf(Crypto.md5()->update(m->seed)->digest(),
+    index = array_sscanf(Crypto.MD5()->update(m->seed)->digest(),
 			 "%4c")[0]%sizeof(q);
   else
     index = random(sizeof(q));
@@ -3259,7 +3261,7 @@ class UserTagContents
     }
   }
 
-  static function(:mapping) get_arg_function (mapping args)
+  protected function(:mapping) get_arg_function (mapping args)
   {
     return lambda () {return args;};
   }
@@ -3271,8 +3273,8 @@ class UserTagContents
 
     RXML.Frame upframe;
 
-    static void create (void|RXML.Frame upframe_,
-			void|RXML.Type type, void|mapping contents_args)
+    protected void create (void|RXML.Frame upframe_,
+			   void|RXML.Type type, void|mapping contents_args)
     {
       if (type) {		// Might be created from decode or _clone_empty.
 	content_type = type, result_type = type (RXML.PNone);
@@ -3301,7 +3303,7 @@ class UserTagContents
       }
     }
 
-    static mapping(string:mixed) get_input_attrs (RXML.Frame upframe)
+    protected mapping(string:mixed) get_input_attrs (RXML.Frame upframe)
     {
       mapping(string:mixed) res = ([]);
       foreach (upframe->vars; string var; mixed val)
@@ -4600,7 +4602,7 @@ class TagEmit {
     inherit RXML.Tag;
     constant name = "delimiter";
 
-    static int(0..1) more_rows(TagEmit.Frame emit_frame) {
+    protected int(0..1) more_rows(TagEmit.Frame emit_frame) {
       object|array res = emit_frame->res;
       if(objectp(res)) {
 	while(res->peek() && should_filter(res->peek(), emit_frame->filter, emit_frame->filter_exclude))
@@ -4640,7 +4642,7 @@ class TagEmit {
   RXML.TagSet internal =
     RXML.shared_tag_set (0, "/rxmltags/emit", ({ TagDelimiter() }) );
 
-  static class VarsCounterWrapper (RXML.Scope vars, int counter)
+  protected class VarsCounterWrapper (RXML.Scope vars, int counter)
   // Used when the emit source returns a variable scope that is a
   // Scope object without `[]=. In that case we have to wrap it to
   // add the builtin _.counter variable.
@@ -4875,7 +4877,7 @@ class TagEmit {
 
     function do_iterate;
 
-    static mapping|RXML.Scope vars_with_counter (mapping|RXML.Scope vars)
+    protected mapping|RXML.Scope vars_with_counter (mapping|RXML.Scope vars)
     {
       if (objectp (vars)) {
 	if (vars->`[]=)
@@ -6029,7 +6031,7 @@ mapping tagdocumentation() {
   return doc;
 }
 
-static int format_support(Parser.HTML p, mapping m, string c, mapping doc) {
+protected int format_support(Parser.HTML p, mapping m, string c, mapping doc) {
   string key = ([ "flags":"if#supports",
 		  "vars":"if#clientvar" ])[p->tag_name()];
   c=Roxen.html_encode_string(c)-"#! ";

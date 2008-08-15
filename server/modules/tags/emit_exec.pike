@@ -3,7 +3,7 @@
 // Created 20060210 by Marcus Wellhardh <wellhard@roxen.com> as a
 // consultancy job for Randstad.
 
-// $Id: emit_exec.pike,v 1.3 2007/06/12 17:15:26 mast Exp $
+// $Id: emit_exec.pike,v 1.4 2008/08/15 12:33:55 mast Exp $
 
 #include <module.h>
 inherit "module";
@@ -121,7 +121,7 @@ class TagEmitExec {
       backend->remove_call_out (timeout_co);
     }
 
-    static string _sprintf (int flag)
+    protected string _sprintf (int flag)
     {
       return flag == 'O' &&
 	sprintf ("TagEmitExec.ExecProcess(%{%s %})", command_args);

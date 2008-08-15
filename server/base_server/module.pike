@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module.pike,v 1.230 2008/05/21 14:50:23 mast Exp $
+// $Id: module.pike,v 1.231 2008/08/15 12:33:53 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -28,7 +28,7 @@ private string _module_identifier =
       return _my_configuration->name + "/" + _module_local_identifier;
     }
   }();
-static mapping _api_functions = ([]);
+protected mapping _api_functions = ([]);
 
 string|array(string) module_creator;
 string module_url;
@@ -173,7 +173,7 @@ Configuration my_configuration()
   return _my_configuration;
 }
 
-nomask void set_configuration(Configuration c)
+final void set_configuration(Configuration c)
 {
   if(_my_configuration && _my_configuration != c)
     error("set_configuration() called twice.\n");
@@ -428,9 +428,9 @@ class DefaultPropertySet
 {
   inherit PropertySet;
 
-  static Stat stat;
+  protected Stat stat;
 
-  static void create (string path, string abs_path, RequestID id, Stat stat)
+  protected void create (string path, string abs_path, RequestID id, Stat stat)
   {
     ::create (path, abs_path, id);
     this_program::stat = stat;
@@ -438,7 +438,7 @@ class DefaultPropertySet
 
   Stat get_stat() {return stat;}
 
-  static mapping(string:string) response_headers;
+  protected mapping(string:string) response_headers;
 
   mapping(string:string) get_response_headers()
   {
@@ -769,14 +769,14 @@ string|int authenticated_user_id (string path, RequestID id)
 // that apply to the resource.
 //
 // Only used internally by the default lock implementation.
-static mapping(string:mapping(mixed:DAVLock)) file_locks = ([]);
+protected mapping(string:mapping(mixed:DAVLock)) file_locks = ([]);
 
 // Mapping from resource id to a mapping from user id to the lock
 // that apply recursively to the resource and all other resources
 // it's a prefix of.
 //
 // Only used internally by the default lock implementation.
-static mapping(string:mapping(mixed:DAVLock)) prefix_locks = ([]);
+protected mapping(string:mapping(mixed:DAVLock)) prefix_locks = ([]);
 
 #define LOOP_OVER_BOTH(PATH, LOCKS, CODE)				\
   do {									\
@@ -1030,7 +1030,7 @@ DAVLock|LockFlag check_locks(string path,
 //! The default implementation only handles the @expr{"DAV:write"@}
 //! lock type. It uses @[resource_id] to map paths to unique resources
 //! and @[authenticated_user_id] to tell users apart.
-static void register_lock(string path, DAVLock lock, RequestID id)
+protected void register_lock(string path, DAVLock lock, RequestID id)
 {
   TRACE_ENTER(sprintf("register_lock(%O, lock(%O), X).", path, lock->locktoken),
 	      this);
@@ -1070,7 +1070,8 @@ static void register_lock(string path, DAVLock lock, RequestID id)
 //! @param id
 //!   The request id may have the value @expr{0@} (zero) if called
 //!   by @[Configuration()->expire_locks()].
-static void unregister_lock (string path, DAVLock lock, RequestID|int(0..0) id)
+protected void unregister_lock (string path, DAVLock lock,
+				RequestID|int(0..0) id)
 {
   TRACE_ENTER(sprintf("unregister_lock(%O, lock(%O), X).", path, lock->locktoken),
 	      this);
@@ -1328,9 +1329,9 @@ mapping(string:mixed)|int(0..1) check_if_header(string relative_path,
 //! A filesystem module should typically put all needed write access
 //! checks here and then use this from @[find_file()],
 //! @[delete_file()] etc.
-static mapping(string:mixed)|int(0..1) write_access(string relative_path,
-						    int(0..1) recursive,
-						    RequestID id)
+protected mapping(string:mixed)|int(0..1) write_access(string relative_path,
+						       int(0..1) recursive,
+						       RequestID id)
 {
   return check_if_header (relative_path, recursive, id);
 }
@@ -1348,7 +1349,7 @@ mapping(string:mixed)|int(-1..0)|Stdio.File find_file(string path,
 //!
 //! @note
 //!   The default implementation falls back to @[find_file()].
-static mapping(string:mixed) delete_file(string path, RequestID id)
+protected mapping(string:mixed) delete_file(string path, RequestID id)
 {
   // Fall back to find_file().
   RequestID tmp_id = id->clone_me();
@@ -1457,8 +1458,8 @@ mapping(string:mixed) make_collection(string path, RequestID id)
 //! @returns
 //!   @expr{0@} (zero) on success or an appropriate status mapping for
 //!   any error.
-static mapping(string:mixed) copy_properties(string source, string destination,
-					     PropertyBehavior behavior, RequestID id)
+protected mapping(string:mixed) copy_properties(
+  string source, string destination, PropertyBehavior behavior, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "copy_properties(%O, %O, %O, %O)",
 		     source, destination, behavior, id);
@@ -1539,12 +1540,9 @@ static mapping(string:mixed) copy_properties(string source, string destination,
 //!   includes an empty mapping in case there's a failure on some
 //!   subpart or at the destination, to signify a 207 Multi-Status
 //!   response using the info in @[id->get_multi_status()].
-static mapping(string:mixed) copy_collection(string source,
-					     string destination,
-					     PropertyBehavior behavior,
-					     Overwrite overwrite,
-					     MultiStatus.Prefixed result,
-					     RequestID id)
+protected mapping(string:mixed) copy_collection(
+  string source, string destination, PropertyBehavior behavior,
+  Overwrite overwrite, MultiStatus.Prefixed result, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "copy_collection(%O, %O, %O, %O, %O, %O).",
 		     source, destination, behavior, overwrite, result, id);
@@ -1642,9 +1640,9 @@ static mapping(string:mixed) copy_collection(string source,
 //!   Created if the destination didn't exist before, or 204 No
 //!   Content otherwise). Returns 0 if the source doesn't exist.
 //!   Returns an appropriate status mapping for any other error.
-static mapping(string:mixed) copy_file(string source, string destination,
-				       PropertyBehavior behavior,
-				       Overwrite overwrite, RequestID id)
+protected mapping(string:mixed) copy_file(string source, string destination,
+					  PropertyBehavior behavior,
+					  Overwrite overwrite, RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "copy_file(%O, %O, %O, %O, %O)\n",
 		     source, destination, behavior, overwrite, id);
@@ -1771,9 +1769,9 @@ mapping(string:mixed) recurse_copy_files(string source, string destination,
 //!   includes an empty mapping in case there's a failure on some
 //!   subpart or at the destination, to signify a 207 Multi-Status
 //!   response using the info in @[id->get_multi_status()].
-static mapping(string:mixed) move_file(string source, string destination,
-				       PropertyBehavior behavior,
-				       Overwrite overwrite, RequestID id)
+protected mapping(string:mixed) move_file(string source, string destination,
+					  PropertyBehavior behavior,
+					  Overwrite overwrite, RequestID id)
 {
   // Fall back to find_file().
   RequestID tmp_id = id->clone_me();
@@ -1828,9 +1826,9 @@ static mapping(string:mixed) move_file(string source, string destination,
 //! @note
 //! The function must be prepared to recurse to check DAV locks
 //! properly.
-static mapping(string:mixed) move_collection(string source, string destination,
-					     PropertyBehavior behavior,
-					     Overwrite overwrite, RequestID id)
+protected mapping(string:mixed) move_collection(
+  string source, string destination, PropertyBehavior behavior,
+  Overwrite overwrite, RequestID id)
 {
   // Fall back to find_file().
   RequestID tmp_id = id->clone_me();
@@ -1998,7 +1996,7 @@ mixed get_value_from_file(string path, string index, void|string pre)
   return compile_string((pre || "") + file->read(), path)[index];
 }
 
-static private mapping __my_tables = ([]);
+private mapping __my_tables = ([]);
 
 array(mapping(string:mixed)) sql_query( string query, mixed ... args )
 //! Do a SQL-query using @[get_my_sql], the table names in the query
@@ -2014,8 +2012,8 @@ array(mapping(string:mixed)) sql_query( string query, mixed ... args )
 }
 
 object sql_big_query( string query, mixed ... args )
-//! Identical to @[sql_query], but the @[Sql.sql()->big_query] method
-//! will be used instead of the @[Sql.sql()->query] method.
+//! Identical to @[sql_query], but the @[Sql.Sql()->big_query] method
+//! will be used instead of the @[Sql.Sql()->query] method.
 {
   return get_my_sql()->big_query( replace( query, __my_tables ), @args );
 }
@@ -2034,15 +2032,14 @@ array(mapping(string:mixed)) sql_query_ro( string query, mixed ... args )
 }
 
 object sql_big_query_ro( string query, mixed ... args )
-//! Identical to @[sql_query_ro], but the @[Sql.sql()->big_query] method
-//! will be used instead of the @[Sql.sql()->query] method.
+//! Identical to @[sql_query_ro], but the @[Sql.Sql()->big_query] method
+//! will be used instead of the @[Sql.Sql()->query] method.
 {
   return get_my_sql(1)->big_query( replace( query, __my_tables ), @args );
 }
 
-static int create_sql_tables( mapping(string:array(string)) definitions,
-			      string|void comment,
-			      int|void no_unique_names )
+protected int create_sql_tables( mapping(string:array(string)) definitions,
+				 string|void comment, int|void no_unique_names )
 //! Create multiple tables in one go. See @[get_my_table]
 //! Returns the number of tables that were actually created.
 {
@@ -2065,7 +2062,7 @@ static int create_sql_tables( mapping(string:array(string)) definitions,
   return ddc;
 }
 
-static string sql_table_exists( string name )
+protected string sql_table_exists( string name )
 //! Return the real name of the table 'name' if it exists.
 {
   if(strlen(name))
@@ -2078,10 +2075,9 @@ static string sql_table_exists( string name )
 }
 
 
-static string|int get_my_table( string|array(string) name,
-				void|array(string)|string definition,
-				string|void comment,
-				int|void flag )
+protected string|int get_my_table( string|array(string) name,
+				   void|array(string)|string definition,
+				   string|void comment, int|void flag )
 //! @decl string get_my_table( string name, array(string) types )
 //! @decl string get_my_table( string name, string definition )
 //! @decl string get_my_table( string definition )
@@ -2191,9 +2187,9 @@ static string|int get_my_table( string|array(string) name,
   return __my_tables[ "&"+oname+";" ] = res;
 }
 
-static string my_db = "local";
+protected string my_db = "local";
 
-static void set_my_db( string to )
+protected void set_my_db( string to )
 //! Select the database in which tables will be created with
 //! get_my_table, and also the one that will be returned by
 //! @[get_my_sql]

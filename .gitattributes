@@ -157,17 +157,12 @@ worldmap binary
 /server/etc/modules/RoxenRPC.pmod/HTTP.pmod/Client.pike foreign_ident
 /server/etc/modules/RoxenRPC.pmod/HTTP.pmod/Server.pike foreign_ident
 /server/etc/modules/RoxenRPC.pmod/Server.pike foreign_ident
-/server/etc/modules/RoxenSSLFile.pike foreign_ident
 /server/etc/modules/SNMP.pmod foreign_ident
 /server/etc/modules/SloppyDOM.pmod foreign_ident
 /server/etc/modules/StateHandler.pmod foreign_ident
 /server/etc/modules/Variable.pmod/Schedule.pike foreign_ident
 /server/etc/modules/Variable.pmod/VerifiedText.pike foreign_ident
 /server/etc/modules/Variable.pmod/module.pmod foreign_ident
-/server/etc/modules/_NewLDAP.pmod/client.pike foreign_ident
-/server/etc/modules/_NewLDAP.pmod/ldap_privates.pmod foreign_ident
-/server/etc/modules/_NewLDAP.pmod/module.pmod foreign_ident
-/server/etc/modules/_NewLDAP.pmod/protocol.pike foreign_ident
 /server/etc/more_extensions/apache foreign_ident
 /server/etc/more_extensions/chemical foreign_ident
 /server/etc/more_extensions/inlinetypes foreign_ident

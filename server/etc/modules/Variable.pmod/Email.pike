@@ -3,8 +3,8 @@
 inherit Variable.String;
 
 constant type="Email";
-static int check_domain=1;
-static int _may_be_empty=0;
+protected int check_domain=1;
+protected int _may_be_empty=0;
 
 // Locale macros
 //<locale-token project="roxen_config"> LOCALE </locale-token>
@@ -101,7 +101,7 @@ string get_mx(string domain)
 }
 #endif
 
-static string|array(string) mailparser(string address)
+protected string|array(string) mailparser(string address)
 //! A futile attempt to comply with RFC 822
 {
   string new="";

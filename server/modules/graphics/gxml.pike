@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.37 2008/04/29 09:25:35 mast Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.38 2008/08/15 12:33:54 mast Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -355,11 +355,11 @@ SIMPLE_LI(SelectFrom);
 
 array(string|RXML.Tag) builtin_tags = gxml_find_builtin_tags();
 
-static class InternalTagSet
+protected class InternalTagSet
 {
   inherit RXML.TagSet;
 
-  static class GXTag
+  protected class GXTag
   {
     inherit RXML.Tag;
     string name;
@@ -376,7 +376,7 @@ static class InternalTagSet
     }
   }
 
-  static array(RXML.Tag) gxml_make_tags()
+  protected array(RXML.Tag) gxml_make_tags()
   {
     Configuration conf = my_configuration();
     if(!conf)
@@ -390,7 +390,7 @@ static class InternalTagSet
 			       });
   }
 
-  static int in_changed = 0;
+  protected int in_changed = 0;
 
   void changed()
   {
@@ -402,14 +402,14 @@ static class InternalTagSet
     ::changed();
   }
 
-  static void create()
+  protected void create()
   {
     ::create (this_module(), "gxml");
     changed();
   }
 }
 
-static RXML.TagSet internal_tag_set = InternalTagSet();
+protected RXML.TagSet internal_tag_set = InternalTagSet();
 
 class TagGXML
 {

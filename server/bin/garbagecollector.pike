@@ -6,7 +6,7 @@
  * doc = "This is the proxy garbage collector";
  */
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.22 2004/05/18 15:52:02 grubba Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.23 2008/08/15 12:33:54 mast Exp $";
 
 //#define DEBUG
 
@@ -454,7 +454,7 @@ void cache_stream_closed()
   exit(0);
 }
 
-static mixed do_command(array what)
+protected mixed do_command(array what)
 {
   mixed res;
   if(!arrayp(what))
@@ -471,7 +471,7 @@ static mixed do_command(array what)
 }
 
 private string _cache = "";
-static void got_command(object o, string cmd)
+protected void got_command(object o, string cmd)
 {
   cmd = _cache+cmd;
 

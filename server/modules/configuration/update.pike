@@ -1,5 +1,5 @@
 /*
- * $Id: update.pike,v 1.39 2004/09/27 09:55:26 grubba Exp $
+ * $Id: update.pike,v 1.40 2008/08/15 12:33:54 mast Exp $
  *
  * The Roxen Update Client
  * Copyright © 2000 - 2004, Roxen IS.
@@ -46,7 +46,7 @@ constant module_doc = "This is the update client. "
                       "website, feel free to enter your username and password in "
                       "the settings tab.";
 
-function(void:Sql.sql) db;
+function(void:Sql.Sql) db;
 object updater;
 SqlMapping pkginfo, misc, installed;
 
@@ -57,8 +57,8 @@ int inited;
 class SqlMapping
 {
   string table;
-  function(void:Sql.sql) db;
-  void create(function(void:Sql.sql) _db, string _table)
+  function(void:Sql.Sql) db;
+  void create(function(void:Sql.Sql) _db, string _table)
   {
     db=_db;
     table=_table;
@@ -158,7 +158,7 @@ void create()
   Locale.register_project("update_client", "translations/%L/update_client.xml");
 }
 
-static string describe_time_period( int amnt )
+protected string describe_time_period( int amnt )
 {
   if(amnt < 0) return LOC_U(18,"some time");
   amnt/=60;

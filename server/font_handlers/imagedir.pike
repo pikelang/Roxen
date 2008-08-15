@@ -3,7 +3,7 @@
 
 #include <config.h>
 #include <stat.h>
-constant cvs_version = "$Id: imagedir.pike,v 1.14 2004/06/30 16:58:48 mast Exp $";
+constant cvs_version = "$Id: imagedir.pike,v 1.15 2008/08/15 12:33:54 mast Exp $";
 
 constant name = "Image directory fonts";
 constant doc = ("Handles a directory with images (in almost any format), each "
@@ -19,32 +19,32 @@ inherit FontHandler;
 Thread.Mutex lock = Thread.Mutex();
 #endif
 
-static mapping nullchar = ([ "image":Image.Image(1,1),
-                             "alpha":Image.Image(1,1) ]);
-static mapping spacechar = ([ "image":Image.Image(10,1),
-                              "alpha":Image.Image(10,1) ]);
-static mapping smallspacechar = ([ "image":Image.Image(2,1),
-                                   "alpha":Image.Image(2,1) ]);
+protected mapping nullchar = ([ "image":Image.Image(1,1),
+				"alpha":Image.Image(1,1) ]);
+protected mapping spacechar = ([ "image":Image.Image(10,1),
+				 "alpha":Image.Image(10,1) ]);
+protected mapping smallspacechar = ([ "image":Image.Image(2,1),
+				      "alpha":Image.Image(2,1) ]);
 class myFont
 {
   inherit Font;
-  static string path;
-  static int size, rsize;
-  static array files;
+  protected string path;
+  protected int size, rsize;
+  protected array files;
 
   string _sprintf()
   {
     return sprintf( "FontDir(%O,%d)", path, height() );
   }
   
-  static string encode_char( string c )
+  protected string encode_char( string c )
   {
     int cc = c[0];
     if( (cc < 48) || (cc > 127) ) return sprintf( "0x%x", cc );
     return c;
   }
 
-  static mapping(string:Image.Image) load_char( string c )
+  protected mapping(string:Image.Image) load_char( string c )
   {
     if( c[0] == 0x120 ) return smallspacechar;
     if(!files)
@@ -62,13 +62,13 @@ class myFont
     return nullchar;
   }
   mapping(string:mapping(string:Image.Image)) char_cache = ([]);
-  static mapping(string:Image.Image) write_char( string c )
+  protected mapping(string:Image.Image) write_char( string c )
   {
     if( char_cache[ c ] ) return char_cache[ c ];
     return char_cache[ c ] = load_char( c );
   }
 
-  static Image.Image write_row( string text )
+  protected Image.Image write_row( string text )
   {
     array(mapping(string:Image.Image)) res = map( text/"", write_char );
     
@@ -157,7 +157,7 @@ class myFont
 
 mapping font_list;
 mapping meta_data;
-static string font_name( string what )
+protected string font_name( string what )
 {
   if(!meta_data) meta_data=([]);
   mapping _meta_data=([]);

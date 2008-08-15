@@ -13,7 +13,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: hungarian.pike,v 1.6 2000/11/27 14:09:14 per Exp $";
+constant cvs_version = "$Id: hungarian.pike,v 1.7 2008/08/15 12:33:54 mast Exp $";
 constant _id = ({ "hu", "hungarian", "" });
 constant _aliases = ({ "hu", "hun", "magyar", "hungarian" });
 
@@ -119,7 +119,7 @@ string number(int num)
   }
 }
 
-static void create()
+protected void create()
 {
   roxen.dump( __FILE__ );
 }

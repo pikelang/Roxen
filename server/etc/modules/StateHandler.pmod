@@ -1,7 +1,7 @@
 // This is the Roxen WebServer state mechanism.
 // Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: StateHandler.pmod,v 1.12 2006/04/20 13:27:15 grubba Exp $
+// $Id: StateHandler.pmod,v 1.13 2008/08/15 12:33:54 mast Exp $
 
 #ifdef STATE_HANDLER_DEBUG
 # define STATE_WERR(X) werror("State: "+X+"\n")
@@ -180,7 +180,7 @@ class Page_state {
     return indices(id->misc->state->keys);
   }
 
-  static string low_encode_state(mapping state, void|mapping diff) {
+  protected string low_encode_state(mapping state, void|mapping diff) {
     string session_id = id->misc->state->session;
     if(session_id) {
       cache.set_session_data(state, session_id);

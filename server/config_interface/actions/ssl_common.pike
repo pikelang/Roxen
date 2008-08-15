@@ -1,8 +1,8 @@
 /*
- * $Id: ssl_common.pike,v 1.7 2005/05/21 09:25:01 grubba Exp $
+ * $Id: ssl_common.pike,v 1.8 2008/08/15 12:33:54 mast Exp $
  */
 
-#if constant(Nettle) || constant(_Crypto)
+#if constant (Nettle)
 
 #include <roxen.h>
 //<locale-token project="admin_tasks">LOCALE</locale-token>
@@ -43,7 +43,6 @@ mixed page_0(object id, object mc)
 }
 
 
-#if constant(Crypto.rsa)
 mixed verify_0(object id, object mc)
 {
   int key_size = (int) id->variables->key_size;
@@ -75,18 +74,11 @@ mixed verify_0(object id, object mc)
 
   privs = 0;
 
-  object rsa = Crypto.rsa();
-  rsa->generate_key(key_size, Crypto.randomness.reasonably_random()->read);
+  Crypto.RSA rsa = Crypto.RSA();
+  rsa->generate_key(key_size, Crypto.Random.random_string);
 
-#if constant(Tools)
-  string key = Tools.PEM.simple_build_pem
-    ("RSA PRIVATE KEY",
-     Standards.PKCS.RSA.private_key(rsa));
-#else /* !constant(Tools) */
-  /* Backward compatibility */
-  string key = SSL.pem.build_pem("RSA PRIVATE KEY",
-				 Standards.PKCS.RSA.rsa_private_key(rsa));
-#endif /* constant(Tools) */
+  string key = Tools.PEM.simple_build_pem ("RSA PRIVATE KEY",
+					   Standards.PKCS.RSA.private_key(rsa));
   WERROR(key);
   
   if (strlen(key) != file->write(key))
@@ -100,7 +92,6 @@ mixed verify_0(object id, object mc)
 
   return 0;
 }
-#endif /* constant(Crypto.rsa) */
 
 
 string ssl_errors (RequestID id) {
@@ -237,4 +228,4 @@ string save_certificate_form (string name, string filename)
 }
 
 
-#endif /* constant(Nettle) || constant(_Crypto) */
+#endif /* constant (Nettle) */

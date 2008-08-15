@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.149 2008/08/08 15:06:22 mast Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.150 2008/08/15 12:33:54 mast Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -27,12 +27,12 @@ constant out_of_date_warning = 0;
 
 #ifdef SECURITY
 #if constant(thread_local)
-static object chroot_dir = thread_local();
+protected object chroot_dir = thread_local();
 #else
-static string chroot_dir = "";
+protected string chroot_dir = "";
 #endif
 
-static void low_set_chroot_dir( string to )
+protected void low_set_chroot_dir( string to )
 {
 #if constant(thread_local)
   chroot_dir->set( to );
@@ -41,7 +41,7 @@ static void low_set_chroot_dir( string to )
 #endif
 }
 
-static string low_get_chroot_dir( )
+protected string low_get_chroot_dir( )
 {
 #if constant(thread_local)
   return chroot_dir->get( );
@@ -71,12 +71,12 @@ class UID
 {
   inherit Creds;
 
-  static string _name;
-  static string _rname;
-  static int _uid, _gid;
-  static int _data_bits, _allow_bits;
-  static int io_bits = BIT_IO_CHROOT | BIT_IO_CAN_READ | BIT_IO_CAN_WRITE | BIT_IO_CAN_CREATE;
-  static string always_chroot;
+  protected string _name;
+  protected string _rname;
+  protected int _uid, _gid;
+  protected int _data_bits, _allow_bits;
+  protected int io_bits = BIT_IO_CHROOT | BIT_IO_CAN_READ | BIT_IO_CAN_WRITE | BIT_IO_CAN_CREATE;
+  protected string always_chroot;
   
   constant modetobits = (["read":2, "write":4,   ]);
 
@@ -244,7 +244,7 @@ class UID
     ::create( this_object(), allow_bits, data_bits );
   }
 
-  static string _sprintf( )
+  protected string _sprintf( )
   {
     return sprintf("UID( %s (%s) )",_name,_rname);
   }
@@ -297,11 +297,11 @@ mapping dump_constants = ([]), dump_constants_rev = ([]);
 // lookups to avoid calling the clever `== that objects might contain.
 // E.g. Image.Color.black thinks it's equal to 0, which means that
 // search (all_constants(), Image.Color.black) == "UNDEFINED".
-static mapping(mixed:string) all_constants_rev = ([]);
-static mapping(program:string) all_constants_object_program_rev = ([]);
-static mapping(mixed:string) __builtin_rev =
+protected mapping(mixed:string) all_constants_rev = ([]);
+protected mapping(program:string) all_constants_object_program_rev = ([]);
+protected mapping(mixed:string) __builtin_rev =
   mkmapping (values (__builtin), indices (__builtin));
-static mapping(mixed:string) _static_modules_rev =
+protected mapping(mixed:string) _static_modules_rev =
   mkmapping (values (_static_modules), indices (_static_modules));
 
 mixed add_dump_constant( string f, mixed what )
@@ -359,8 +359,8 @@ class MyCodec
   String.Buffer log = String.Buffer();
 #endif
 
-  static mapping(program:string) nameof_program_cache = ([]);
-  static string nameof_program(program prog)
+  protected mapping(program:string) nameof_program_cache = ([]);
+  protected string nameof_program(program prog)
   {
     string res;
     DUMP_DEBUG_ENTER("nameof_program(%O)\n", prog);
@@ -415,28 +415,11 @@ class MyCodec
   string nameof(mixed x)
   {
 #ifdef DUMP_DEBUG
-#if __VERSION__ < 7.4
-    if (objectp (x))
-      DUMP_DEBUG_ENTER ("nameof (object %s: %O)\n",
-			Program.defined (object_program (x)) || "?", x);
-    else if (functionp (x))
-      DUMP_DEBUG_ENTER ("nameof (function %s in object %s: %O)\n",
-			Function.defined (x) || "?",
-			function_object (x) &&
-			Program.defined (object_program (function_object (x))) || "?",
-			function_object (x));
-    else if (programp (x))
-      DUMP_DEBUG_ENTER ("nameof (program %s)\n",
-			Program.defined (x) || "?");
-    else
-      DUMP_DEBUG_ENTER ("nameof (%O)\n", x);
-#else /* __VERSION__ >= 7.4 */
     string type_str = "";
     if (objectp(x)) type_str="object ";
     else if (functionp(x)) type_str="function ";
     else if (programp(x)) type_str="program ";
     DUMP_DEBUG_ENTER("nameof (%s%O)\n", type_str, x);
-#endif /* __VERSION__ < 7.4 */
 #endif
 
     if(p!=x)
@@ -530,7 +513,7 @@ class MyCodec
     DUMP_DEBUG_RETURN (([])[0]);
   }
 
-  static mixed low_lookup(string x, void|int is_prog)
+  protected mixed low_lookup(string x, void|int is_prog)
   {
     array(string) segments = x/"\0";
     string s;

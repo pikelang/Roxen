@@ -1,7 +1,7 @@
 inherit LazyImage.LazyImage;
 constant operation_name = "legend";
 
-static
+protected
 {
   LazyImage.Layers process( LazyImage.Layers layers )
   {

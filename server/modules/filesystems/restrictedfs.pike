@@ -10,7 +10,7 @@
 
 inherit "filesystem";
 
-constant cvs_version = "$Id: restrictedfs.pike,v 1.23 2004/06/30 16:59:00 mast Exp $";
+constant cvs_version = "$Id: restrictedfs.pike,v 1.24 2008/08/15 12:33:54 mast Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -114,7 +114,7 @@ array find_dir(string f, object id)
 
 // Duplicate of ::real_file(), that uses ::stat_file() instead of
 // stat_file(). This fixes [bug 618].
-static string low_real_file(string f, RequestID id)
+protected string low_real_file(string f, RequestID id)
 {
   if (::stat_file(f, id)) {
     catch {

@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: wizz.pike,v 1.9 2004/06/30 16:59:28 mast Exp $";
+constant cvs_version = "$Id: wizz.pike,v 1.10 2008/08/15 12:33:55 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Really advanced wizard";
@@ -23,7 +23,7 @@ constant module_doc  = "...";
 // verify_ok = The verification result.
 // the_wizard_tag_args|the_page_tag_args
 
-static RXML.TagSet rxml_tag_set;
+protected RXML.TagSet rxml_tag_set;
 void start(int num, Configuration conf) {
   rxml_tag_set = conf->rxml_tag_set;
 }
@@ -71,8 +71,8 @@ class Page {
   }
 }
 
-static int page_internal_tags_generation;
-static RXML.TagSet page_internal_tags;
+protected int page_internal_tags_generation;
+protected RXML.TagSet page_internal_tags;
 
 class PageFrame {
   inherit RXML.Frame;

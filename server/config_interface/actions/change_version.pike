@@ -53,7 +53,7 @@ class Server(string dir,
     return d;
   }
 
-  static string _sprintf()
+  protected string _sprintf()
   {
     return sprintf("Server(%O,%O,%O)", dir,version, reldate() );
   }

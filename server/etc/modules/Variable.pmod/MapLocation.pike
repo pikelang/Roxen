@@ -7,11 +7,11 @@ constant type = "MapLocation";
 roxen.ImageCache cache;
 //! This is the image cache used for the maps.
 
-static int width = 500;
-static int height = 300;
-static function(void:string) internal_location;
-static mapping map_settings;
-static mapping marker_settings;
+protected int width = 500;
+protected int height = 300;
+protected function(void:string) internal_location;
+protected mapping map_settings;
+protected mapping marker_settings;
 
 void set_land_color(int(0..255) r, int(0..255) g, int(0..255) b)
   //! Sets the color of the land areas.
@@ -122,7 +122,7 @@ void set_from_form( RequestID id )
     set( 0 );
 }
 
-static string create_src( RequestID id ) {
+protected string create_src( RequestID id ) {
   mapping state = ([ "width":width,
 		     "height":height ]);
   array coord = query();

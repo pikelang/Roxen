@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.156 2007/05/09 16:35:34 grubba Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.157 2008/08/15 12:33:54 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -49,7 +49,7 @@ constant module_unique = 0;
 int redirects, accesses, errors, dirlists;
 int puts, deletes, mkdirs, moves, chmods;
 
-static mapping http_low_answer(int errno, string data, string|void desc)
+protected mapping http_low_answer(int errno, string data, string|void desc)
 {
   mapping res = Roxen.http_low_answer(errno, data);
 
@@ -61,8 +61,8 @@ static mapping http_low_answer(int errno, string data, string|void desc)
 }
 
 // Note: This does a TRACE_LEAVE.
-static mapping(string:mixed) errno_to_status (int err, int(0..1) create,
-					      RequestID id)
+protected mapping(string:mixed) errno_to_status (int err, int(0..1) create,
+						 RequestID id)
 {
   switch (err) {
     case System.ENOENT:
@@ -109,7 +109,7 @@ static mapping(string:mixed) errno_to_status (int err, int(0..1) create,
   }
 }
 
-static int do_stat = 1;
+protected int do_stat = 1;
 
 string status()
 {
@@ -441,9 +441,9 @@ array(string) list_lock_files() {
   return query("nobrowse");
 }
 
-static mapping(string:mixed)|int(0..1) write_access(string path,
-						    int(0..1) recursive,
-						    RequestID id)
+protected mapping(string:mixed)|int(0..1) write_access(string path,
+						       int(0..1) recursive,
+						       RequestID id)
 {
   SIMPLE_TRACE_ENTER(this, "write_access(%O, %O, %O)\n", path, recursive, id);
   if(query("check_auth") && (!id->conf->authenticate( id ) ) ) {

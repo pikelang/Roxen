@@ -8,7 +8,7 @@ inherit Variable.String;
    ([string](mixed)Locale.translate("roxen_config",roxenp()->locale->get(),X,Y))
 
 constant type = "Date";
-static int _may_be_empty=0;
+protected int _may_be_empty=0;
 string date_type = "%Y-%M-%D";
   // int any_date = 0;
 

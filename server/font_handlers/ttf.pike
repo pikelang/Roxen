@@ -4,7 +4,7 @@
 #if !constant(Image.FreeType.Face)
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.17 2004/06/30 16:58:49 mast Exp $";
+constant cvs_version = "$Id: ttf.pike,v 1.18 2008/08/15 12:33:54 mast Exp $";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader. Uses freetype to render text.";
@@ -12,15 +12,15 @@ constant scalable = 1;
 
 inherit FontHandler;
 
-static mapping ttf_font_names_cache;
+protected mapping ttf_font_names_cache;
 
-static string trimttfname( string n )
+protected string trimttfname( string n )
 {
   n = lower_case(replace( n, "\t", " " ));
   return ((n/" ")*"")-"'";
 }
 
-static string translate_ttf_style( string style )
+protected string translate_ttf_style( string style )
 {
   //  Check for weight. Default is "n" for normal/regular/roman.
   style = lower_case((style - "-") - " ");
@@ -42,7 +42,7 @@ static string translate_ttf_style( string style )
   return weight + slant;
 }
 
-static void build_font_names_cache( )
+protected void build_font_names_cache( )
 {
   mapping ttf_done = ([ ]);
   mapping new_ttf_font_names_cache=([]);
@@ -87,23 +87,23 @@ static void build_font_names_cache( )
 class TTFWrapper
 {
   inherit Font;
-  static int size, rsize;
-  static object real;
-  static object encoder;
-  static function(string ...:Image.image) real_write;
-  static int fake_bold, fake_italic;
+  protected int size, rsize;
+  protected object real;
+  protected object encoder;
+  protected function(string ...:Image.image) real_write;
+  protected int fake_bold, fake_italic;
 
   int height( )
   {
     return rsize ? rsize : (rsize = text_extents("W")[1] );
   }
 
-  static string _sprintf()
+  protected string _sprintf()
   {
     return sprintf( "TTF(%O,%d)", real, size );
   }
 
-  static Image.image write_encoded(string ... what)
+  protected Image.image write_encoded(string ... what)
   {
     return real->write(@(encoder?
                          Array.map(what, lambda(string s) {

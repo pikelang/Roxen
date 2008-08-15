@@ -2,7 +2,7 @@
 //
 // Originally by Leif Stensson <leif@roxen.com>, June/July 2000.
 //
-// $Id: ExtScript.pmod,v 1.21 2006/01/11 06:29:35 mast Exp $
+// $Id: ExtScript.pmod,v 1.22 2008/08/15 12:33:54 mast Exp $
 
 // 
 
@@ -62,7 +62,7 @@ class Handler
     return timeout < time();
   }
 
-  static void putvar(string vtype, string vname, string vval)
+  protected void putvar(string vtype, string vname, string vval)
   // Send a variable name and value to the subprocess. The
   // one-character string in vtype indicates the type; "E" is
   // an environment variable, "I" a Roxen-internal RequestID
@@ -109,7 +109,7 @@ class Handler
     }
   }
 
-  static void read_callback(mixed fid, string data)
+  protected void read_callback(mixed fid, string data)
   { if (!run_lock || !stringp(data) || strlen(data) < 1)
       { return;}
     if (nb_data != 0)
@@ -470,9 +470,9 @@ class Handler
 
 Thread.Mutex dispatchmutex = Thread.Mutex();
 
-static int lastobjdiag = 0;
+protected int lastobjdiag = 0;
 
-static void objdiag()
+protected void objdiag()
 {
   if (lastobjdiag < time()-25)
   {
@@ -495,9 +495,9 @@ static void objdiag()
   }
 }
 
-static int lastcleanup = 0;
+protected int lastcleanup = 0;
 
-static roxen.BackgroundProcess cleaner;
+protected roxen.BackgroundProcess cleaner;
 
 void periodic_cleanup()
 {

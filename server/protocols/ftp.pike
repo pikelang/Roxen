@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.124 2008/08/05 22:22:45 mast Exp $
+ * $Id: ftp.pike,v 2.125 2008/08/15 12:33:55 mast Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -113,12 +113,12 @@ class RequestID2
   mapping file;
 
 #ifdef FTP2_DEBUG
-  static void trace_enter(mixed a, mixed b)
+  protected void trace_enter(mixed a, mixed b)
   {
     write("FTP: TRACE_ENTER(%O, %O)\n", a, b);
   }
 
-  static void trace_leave(mixed a)
+  protected void trace_leave(mixed a)
   {
     write("FTP: TRACE_LEAVE(%O)\n", a);
   }
@@ -159,7 +159,7 @@ class RequestID2
   {
   }
 
-  static constant __num = ({ 0 });
+  protected constant __num = ({ 0 });
   int _num;
 
   void destroy()
@@ -245,19 +245,19 @@ class RequestID2
 
 class FileWrapper
 {
-  static string convert(string s);
+  protected string convert(string s);
 
-  static private function read_cb;
-  static private function close_cb;
-  static private mixed id;
+  private function read_cb;
+  private function close_cb;
+  private mixed id;
 
-  static private object f;
-  static private string data;
-  static private object ftpsession;
+  private object f;
+  private string data;
+  private object ftpsession;
 
   int is_file;
 
-  static void create(object f_, string data_, object ftpsession_)
+  protected void create(object f_, string data_, object ftpsession_)
   {
     f = f_;
     data = data_;
@@ -266,13 +266,13 @@ class FileWrapper
     is_file = f_->is_file;
   }
 
-  static private void read_callback(mixed i, string s)
+  private void read_callback(mixed i, string s)
   {
     read_cb(id, convert(s));
     ftpsession->touch_me();
   }
 
-  static private void close_callback(mixed i)
+  private void close_callback(mixed i)
   {
     close_cb(id);
     if (f) {
@@ -281,7 +281,7 @@ class FileWrapper
     ftpsession->touch_me();
   }
 
-  static private void delayed_nonblocking(function w_cb)
+  private void delayed_nonblocking(function w_cb)
   {
     string d = data;
     data = 0;
@@ -376,7 +376,7 @@ class ToAsciiWrapper
 
   int converted;
 
-  static string convert(string s)
+  protected string convert(string s)
   {
     converted += sizeof(s);
     return(replace(s, ({ "\r\n", "\n", "\r" }), ({ "\r\n", "\r\n", "\r\n" })));
@@ -389,7 +389,7 @@ class FromAsciiWrapper
 
   int converted;
 
-  static string convert(string s)
+  protected string convert(string s)
   {
     converted += sizeof(s);
 #ifdef __NT__
@@ -410,7 +410,7 @@ class BinaryWrapper
 {
   inherit FileWrapper;
 
-  static string convert(string s)
+  protected string convert(string s)
   {
     return(s);
   }
@@ -424,9 +424,9 @@ class ToEBCDICWrapper
 
   int converted;
 
-  static object converter = Locale.Charset.encoder("EBCDIC-US", "");
+  protected object converter = Locale.Charset.encoder("EBCDIC-US", "");
 
-  static string convert(string s)
+  protected string convert(string s)
   {
     converted += sizeof(s);
     return(converter->feed(s)->drain());
@@ -439,9 +439,9 @@ class FromEBCDICWrapper
 
   int converted;
 
-  static object converter = Locale.Charset.decoder("EBCDIC-US");
+  protected object converter = Locale.Charset.decoder("EBCDIC-US");
 
-  static string convert(string s)
+  protected string convert(string s)
   {
     converted += sizeof(s);
     return(converter->feed(s)->drain());
@@ -451,19 +451,19 @@ class FromEBCDICWrapper
 
 class PutFileWrapper
 {
-  static int response_code = 226;
-  static array(string) response = ({"Stored."});
-  static string gotdata = "";
-  static int closed, recvd;
-  static function other_read_callback;
+  protected int response_code = 226;
+  protected array(string) response = ({"Stored."});
+  protected string gotdata = "";
+  protected int closed, recvd;
+  protected function other_read_callback;
 
-  static object from_fd;
-  static object session;
-  static object ftpsession;
+  protected object from_fd;
+  protected object session;
+  protected object ftpsession;
 
   int is_file;
 
-  static void create(object from_fd_, object session_, object ftpsession_)
+  protected void create(object from_fd_, object session_, object ftpsession_)
   {
     from_fd = from_fd_;
     session = session_;
@@ -507,7 +507,7 @@ class PutFileWrapper
     return r;
   }
 
-  static mixed my_read_callback(mixed id, string data)
+  protected mixed my_read_callback(mixed id, string data)
   {
     DWRITE("FTP: PUT: my_read_callback(X, \"%s\")\n", data||"");
     ftpsession->touch_me();
@@ -622,10 +622,10 @@ class PutFileWrapper
 #define LS_FLAG_U       0x40000
 #define LS_FLAG_v	0x80000
 
-class LS_L(static RequestID master_session,
-	   static int|void flags)
+class LS_L(protected RequestID master_session,
+	   protected int|void flags)
 {
-  static constant decode_mode = ({
+  protected constant decode_mode = ({
     ({ S_IRUSR, S_IRUSR, 1, "r" }),
     ({ S_IWUSR, S_IWUSR, 2, "w" }),
     ({ S_IXUSR|S_ISUID, S_IXUSR, 3, "x" }),
@@ -643,10 +643,10 @@ class LS_L(static RequestID master_session,
     ({ S_IXOTH|S_ISVTX, S_IXOTH|S_ISVTX, 9, "t" })
   });
 
-  static constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  protected constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
 			      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
 
-  static string name_from_uid(int uid)
+  protected string name_from_uid(int uid)
   {
     User user;
     foreach(master_session->conf->user_databases(), UserDB user_db) {
@@ -720,21 +720,21 @@ class LS_L(static RequestID master_session,
 
 class LSFile
 {
-  static inherit LS_L;
+  protected inherit LS_L;
 
-  static string cwd;
-  static array(string) argv;
-  static object ftpsession;
+  protected string cwd;
+  protected array(string) argv;
+  protected object ftpsession;
 
-  static array(string) output_queue = ({});
-  static int output_pos;
-  static string output_mode = "A";
+  protected array(string) output_queue = ({});
+  protected int output_pos;
+  protected string output_mode = "A";
 
-  static mapping(string:array|object) stat_cache = ([]);
+  protected mapping(string:array|object) stat_cache = ([]);
 
-  static object conv;
+  protected object conv;
 
-  static array|object stat_file(string long, RequestID|void session)
+  protected array|object stat_file(string long, RequestID|void session)
   {
     array|object st = stat_cache[long];
     if (zero_type(st)) {
@@ -749,7 +749,7 @@ class LSFile
   }
 
   // FIXME: Should convert output somewhere below.
-  static void output(string s)
+  protected void output(string s)
   {
     if(stringp(s)) {
       // ls is always ASCII-mode...
@@ -762,7 +762,7 @@ class LSFile
     output_queue += ({ s });
   }
 
-  static string quote_non_print(string s)
+  protected string quote_non_print(string s)
   {
     return(replace(s, ({
       "\000", "\001", "\002", "\003", "\004", "\005", "\006", "\007",
@@ -779,7 +779,7 @@ class LSFile
     })));
   }
 
-  static string list_files(array(string) files, string|void dir)
+  protected string list_files(array(string) files, string|void dir)
   {
     dir = dir || cwd;
 
@@ -879,18 +879,18 @@ class LSFile
   }
 
 #if constant (ADT.Stack)
-  static ADT.Stack dir_stack = ADT.Stack();
+  protected ADT.Stack dir_stack = ADT.Stack();
 #else
-  static object(Stack.stack) dir_stack = Stack.stack();
+  protected object(Stack.stack) dir_stack = Stack.stack();
 #endif
-  static int name_directories;
+  protected int name_directories;
 
-  static string fix_path(string s)
+  protected string fix_path(string s)
   {
     return(combine_path(cwd, s));
   }
 
-  static void list_next_directory()
+  protected void list_next_directory()
   {
     if (dir_stack->ptr) {
       string short = dir_stack->pop();
@@ -1000,7 +1000,7 @@ class LSFile
     return -1;
   }
 
-  static mixed id;
+  protected mixed id;
 
   void set_id(mixed i)
   {
@@ -1106,16 +1106,16 @@ class LSFile
 }
 
 class TelnetSession {
-  static object fd;
-  static object conf;
+  protected object fd;
+  protected object conf;
 
-  static private mapping cb;
-  static private mixed id;
-  static private function(mixed|void:string) write_cb;
-  static private function(mixed, string:void) read_cb;
-  static private function(mixed|void:void) close_cb;
+  private mapping cb;
+  private mixed id;
+  private function(mixed|void:string) write_cb;
+  private function(mixed, string:void) read_cb;
+  private function(mixed|void:void) close_cb;
 
-  static private constant TelnetCodes = ([
+  private constant TelnetCodes = ([
     236:"EOF",		// End Of File
     237:"SUSP",		// Suspend Process
     238:"ABORT",	// Abort Process
@@ -1141,9 +1141,9 @@ class TelnetSession {
   ]);
 
   // Some prototypes needed by Pike 0.5
-  static private void got_data(mixed ignored, string s);
-  static private void send_data();
-  static private void got_oob(mixed ignored, string s);
+  private void got_data(mixed ignored, string s);
+  private void send_data();
+  private void got_oob(mixed ignored, string s);
 
   void set_write_callback(function(mixed|void:string) w_cb)
   {
@@ -1153,13 +1153,13 @@ class TelnetSession {
     }
   }
 
-  static private string to_send = "";
-  static private void send(string s)
+  private string to_send = "";
+  private void send(string s)
   {
     to_send += s;
   }
 
-  static private void send_data()
+  private void send_data()
   {
     if (!sizeof(to_send)) {
       to_send = write_cb(id);
@@ -1198,7 +1198,7 @@ class TelnetSession {
     }
   }
 
-  static private mapping(string:function) default_cb = ([
+  private mapping(string:function) default_cb = ([
     "BRK":lambda() {
 	    if (fd) {
 	      fd->close();
@@ -1218,9 +1218,9 @@ class TelnetSession {
 	 },
   ]);
 
-  static private int sync = 0;
+  private int sync = 0;
 
-  static private void got_oob(mixed ignored, string s)
+  private void got_oob(mixed ignored, string s)
   {
     DWRITE("TELNET: got_oob(\"%s\")\n", s);
 
@@ -1230,8 +1230,8 @@ class TelnetSession {
     }
   }
 
-  static private string rest = "";
-  static private void got_data(mixed ignored, string s)
+  private string rest = "";
+  private void got_data(mixed ignored, string s)
   {
     DWRITE("TELNET: got_data(\"%s\")\n", s);
 
@@ -1369,7 +1369,7 @@ class FTPSession
 
   inherit "roxenlib";
 
-  static private constant cmd_help = ([
+  private constant cmd_help = ([
     // FTP commands in reverse RFC order.
 
     // The following is a command suggested by the author of ncftp.
@@ -1482,31 +1482,31 @@ class FTPSession
     "MLFL":"(Mail file)",
   ]);
 
-  static private constant site_help = ([
+  private constant site_help = ([
     "CHMOD":"<sp> mode <sp> file",
     "UMASK":"<sp> mode",
     "PRESTATE":"<sp> prestate",
   ]);
 
-  static private constant modes = ([
+  private constant modes = ([
     "A":"ASCII",
     "E":"EBCDIC",
     "I":"BINARY",
     "L":"LOCAL",
   ]);
 
-  static private int time_touch = time();
+  private int time_touch = time();
 
-  static private object(ADT.Queue) to_send = ADT.Queue();
+  private object(ADT.Queue) to_send = ADT.Queue();
 
-  static private int end_marker = 0;
+  private int end_marker = 0;
 
   void touch_me()
   {
     time_touch = time();
   }
 
-  static private string write_cb()
+  private string write_cb()
   {
     touch_me();
 
@@ -1572,26 +1572,26 @@ class FTPSession
     }
   }
 
-  static private RequestID master_session;
+  private RequestID master_session;
 
-  static private string dataport_addr;
-  static private int dataport_port;
+  private string dataport_addr;
+  private int dataport_port;
 
-  static private string mode = "A";
+  private string mode = "A";
 
-  static private string cwd = "/";
+  private string cwd = "/";
 
-  static private User auth_user;
+  private User auth_user;
   // Authenticated user.
 
-  static private string user;
-  static private string password;
-  static private int logged_in;
+  private string user;
+  private string password;
+  private int logged_in;
 
-  static private object curr_pipe;
-  static private int restart_point;
+  private object curr_pipe;
+  private int restart_point;
 
-  static private multiset|int allowed_shells = 0;
+  private multiset|int allowed_shells = 0;
 
   // On a multihomed server host, the default data transfer port
   // (L-1) MUST be associated with the same local IP address as
@@ -1607,7 +1607,7 @@ class FTPSession
    * Misc
    */
 
-  static private int check_shell(string shell)
+  private int check_shell(string shell)
   {
     // FIXME: Should the shell database be protocol specific or
     // virtual-server specific?
@@ -1639,7 +1639,7 @@ class FTPSession
     return 1;
   }
 
-  static private string fix_path(string s)
+  private string fix_path(string s)
   {
     if (!sizeof(s)) {
       if (cwd[-1] == '/') {
@@ -1659,10 +1659,10 @@ class FTPSession
   /*
    * PASV handling
    */
-  static private object pasv_port;
-  static private function(object, mixed ...:void) pasv_callback;
-  static private mixed pasv_args;
-  static private array(object) pasv_accepted = ({});
+  private object pasv_port;
+  private function(object, mixed ...:void) pasv_callback;
+  private mixed pasv_args;
+  private array(object) pasv_accepted = ({});
 
   void pasv_accept_callback(mixed id)
   {
@@ -1683,7 +1683,7 @@ class FTPSession
 		"ftp communication: -> "+remote[0]+":"+remote[1]);
 #endif
 	if (use_ssl) {
-	  fd = RoxenSSLFile(fd, port_obj->ctx);
+	  fd = SSL.sslfile (fd, port_obj->ctx);
 	  DWRITE("FTP: Created an sslfile: %O\n", fd);
 	}
 	if(pasv_callback) {
@@ -1696,8 +1696,8 @@ class FTPSession
     }
   }
 
-  static private void ftp_async_accept(function(object,mixed ...:void) fun,
-				       mixed ... args)
+  private void ftp_async_accept(function(object,mixed ...:void) fun,
+				mixed ... args)
   {
     DWRITE("FTP: async_accept(%O, %@O)...\n", fun, args);
     touch_me();
@@ -1715,8 +1715,8 @@ class FTPSession
    * PORT handling
    */
 
-  static private void ftp_async_connect(function(object,string,mixed ...:void) fun,
-					mixed ... args)
+  private void ftp_async_connect(function(object,string,mixed ...:void) fun,
+				 mixed ... args)
   {
     DWRITE("FTP: async_connect(%O, %@O)...\n", fun, args);
 
@@ -1761,7 +1761,7 @@ class FTPSession
     Stdio.File raw_connection = f;
 
     if (use_ssl) {
-      f = (object)RoxenSSLFile(f, port_obj->ctx, 1, 0);
+      f = (object) SSL.sslfile (f, port_obj->ctx, 1, 0);
     }
 
     f->set_nonblocking(lambda(mixed ignored, string data) {
@@ -1803,7 +1803,7 @@ class FTPSession
   /*
    * Data connection handling
    */
-  static private void send_done_callback(array(object) args)
+  private void send_done_callback(array(object) args)
   {
     DWRITE("FTP: send_done_callback()\n");
 
@@ -1830,8 +1830,8 @@ class FTPSession
     send(226, ({ "Transfer complete." }));
   }
 
-  static private mapping|array|object stat_file(string fname,
-						object|void session)
+  private mapping|array|object stat_file(string fname,
+					 object|void session)
   {
     mapping file;
 
@@ -1853,7 +1853,7 @@ class FTPSession
     return file;
   }
 
-  static private int expect_argument(string cmd, string args)
+  private int expect_argument(string cmd, string args)
   {
     if ((< "", 0 >)[args]) {
       send(504, ({ sprintf("Syntax: %s %s", cmd, cmd_help[cmd]) }));
@@ -1862,8 +1862,8 @@ class FTPSession
     return 1;
   }
 
-  static private void send_error(string cmd, string f, mapping file,
-				 object session)
+  private void send_error(string cmd, string f, mapping file,
+			  object session)
   {
     switch(file && file->error) {
     case 301:
@@ -1902,7 +1902,7 @@ class FTPSession
     session->conf->log(file, session);
   }
 
-  static private mapping open_file(string fname, object session, string cmd)
+  private mapping open_file(string fname, object session, string cmd)
   {
     object|array|mapping file;
 
@@ -1966,8 +1966,8 @@ class FTPSession
     return file;
   }
 
-  static private void connected_to_send(object fd, string ignored,
-					mapping file, object session)
+  private void connected_to_send(object fd, string ignored,
+				 mapping file, object session)
   {
     DWRITE("FTP: connected_to_send(X, %O, %O, X)\n", ignored, file);
 
@@ -2077,7 +2077,7 @@ class FTPSession
     pipe->output(fd);
   }
 
-  static private void connected_to_receive(object fd, string data, string args)
+  private void connected_to_receive(object fd, string data, string args)
   {
     DWRITE("FTP: connected_to_receive(X, %O, %O)\n", data, args);
 
@@ -2145,12 +2145,12 @@ class FTPSession
     }
   }
 
-  static private void discard_data_connection() {
+  private void discard_data_connection() {
     if(pasv_port && sizeof(pasv_accepted))
       pasv_accepted = pasv_accepted[1..];
   }
 
-  static private void connect_and_send(mapping file, object session)
+  private void connect_and_send(mapping file, object session)
   {
     DWRITE("FTP: connect_and_send(%O)\n", file);
 
@@ -2161,7 +2161,7 @@ class FTPSession
     }
   }
 
-  static private void connect_and_receive(string arg)
+  private void connect_and_receive(string arg)
   {
     DWRITE("FTP: connect_and_receive(\"%s\")\n", arg);
 
@@ -2194,7 +2194,7 @@ class FTPSession
     }
   }
 
-  static private string my_combine_path(string base, string part)
+  private string my_combine_path(string base, string part)
   {
     if ((sizeof(part) && (part[0] == '/')) ||
         (sizeof(base) && (base[0] == '/'))) {
@@ -2217,11 +2217,11 @@ class FTPSession
     }
   }
 
-  static private constant IFS = (<" ", "\t">);
-  static private constant Quote = (< "\'", "\"", "\`", "\\" >);
-  static private constant Specials = IFS|Quote;
+  private constant IFS = (<" ", "\t">);
+  private constant Quote = (< "\'", "\"", "\`", "\\" >);
+  private constant Specials = IFS|Quote;
 
-  static private array(string) split_command_line(string cmdline)
+  private array(string) split_command_line(string cmdline)
   {
     // Check if we need to handle quoting at all...
     int need_quoting;
@@ -2284,7 +2284,7 @@ class FTPSession
     return res;
   }
 
-  static private array(string) glob_expand_command_line(string cmdline)
+  private array(string) glob_expand_command_line(string cmdline)
   {
     DWRITE("glob_expand_command_line(\"%s\")\n", cmdline);
 
@@ -2386,7 +2386,7 @@ class FTPSession
    * LS handling
    */
 
-  static private constant ls_options = ({
+  private constant ls_options = ({
     ({ ({ "-A", "--almost-all" }),	LS_FLAG_A,
        "do not list implied . and .." }),
     ({ ({ "-a", "--all" }),		LS_FLAG_a|LS_FLAG_A,
@@ -2437,13 +2437,13 @@ class FTPSession
        "output version information and exit" }),
   });
 
-  static private array(array(string)|string|int)
+  private array(array(string)|string|int)
     ls_getopt_args = Array.map(ls_options,
 			       lambda(array(array(string)|int|string) entry) {
 				 return({ entry[1], Getopt.NO_ARG, entry[0] });
 			       });
 
-  static private string ls_help(string ls)
+  private string ls_help(string ls)
   {
     return sprintf("Usage: %s [OPTION]... [FILE]...\n"
 		   "List information about the FILEs "
@@ -3313,7 +3313,7 @@ class FTPSession
    * Handling of file moving
    */
 
-  static private string rename_from; // rename from
+  private string rename_from; // rename from
 
   void ftp_RNFR(string args)
   {
@@ -3789,7 +3789,7 @@ class FTPSession
     }
   }
 
-  static private void timeout()
+  private void timeout()
   {
     if (fd) {
       int t = (time() - time_touch);
@@ -3822,7 +3822,7 @@ class FTPSession
     }
   }
 
-  static private void got_command(mixed ignored, string line)
+  private void got_command(mixed ignored, string line)
   {
     DWRITE("FTP2: got_command(X, \"%s\")\n", line);
 

@@ -63,7 +63,7 @@ class EmitObject {
 
   //! Returns the next element and increments the
   //! element counter.
-  static mapping(string:mixed) really_get_row() { }
+  protected mapping(string:mixed) really_get_row() { }
 
   //! Remove the next value.
   void skip_row() {

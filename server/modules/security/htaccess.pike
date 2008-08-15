@@ -3,7 +3,7 @@
 // .htaccess compability by David Hedbor, neotron@roxen.com
 //   Changed into module by Per Hedbor, per@roxen.com
 
-constant cvs_version="$Id: htaccess.pike,v 1.105 2008/06/24 11:04:08 jonasw Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.106 2008/08/15 12:33:55 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -575,7 +575,7 @@ class HtUser
 {
   inherit User;
   constant is_transient = 1;
-  static array pwent;
+  protected array pwent;
 
 #ifdef HTACCESS_DEBUG
   int password_authenticate(string password)
@@ -603,7 +603,7 @@ class HtUser
     return ((array)(pwent[7]||(<>)))+(({pwent[8]})-({0}));
   }
   
-  static void create( UserDB p, array _pwent )
+  protected void create( UserDB p, array _pwent )
   {
     ::create( p );
     pwent = _pwent;
@@ -620,7 +620,7 @@ class HtGroup
   string name()            { return grent[0]; }
   array(string) members()  { return (array)grent[3]; }
 
-  static void create( UserDB p, array _grent )
+  protected void create( UserDB p, array _grent )
   {
     ::create( p );
     grent = _grent;

@@ -1,4 +1,4 @@
-// $Id: ftp_test.pike,v 1.3 2001/10/09 13:55:12 grubba Exp $
+// $Id: ftp_test.pike,v 1.4 2008/08/15 12:33:54 mast Exp $
 //
 // Tests of the ftp protocol module.
 //
@@ -157,7 +157,7 @@ class do_active_read
   string buf;
   object fd;
 
-  static void create(string cmd, function(string:void) cb)
+  protected void create(string cmd, function(string:void) cb)
   {
     command = cmd;
     done_cb = cb;
@@ -235,7 +235,7 @@ class do_passive_read
 
   array(int) port_info;
 
-  static void create(string cmd, function(string:void) cb)
+  protected void create(string cmd, function(string:void) cb)
   {
     command = cmd;
     done_cb = cb;

@@ -8,7 +8,7 @@
 
 inherit "abstract.pike";
 
-constant cvs_version="$Id: dutch.pike,v 1.10 2004/12/07 12:47:16 wellhard Exp $";
+constant cvs_version="$Id: dutch.pike,v 1.11 2008/08/15 12:33:54 mast Exp $";
 constant _id = ({ "du", "dutch", "" });
 constant _aliases = ({ "du", "nl", "nld", "ned", "dutch" });
 
@@ -82,7 +82,7 @@ string date(int timestamp, mapping|void m)
     return snumber(num/(unit))+(name)+snumber(num%(unit))
  
 
-static string snumber(int num)
+protected string snumber(int num)
 {
   if(num<0)
     return "min "+snumber(-num);
@@ -138,7 +138,7 @@ string number(int num)
   return num?snumber(num):"nul";
 }
 
-static void create()
+protected void create()
 {
   roxen.dump( __FILE__ );
 }

@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.109 2008/05/07 11:02:41 mast Exp $
+// $Id: global_variables.pike,v 1.110 2008/08/15 12:33:53 mast Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -28,7 +28,7 @@ private int(0..1) cache_disabled_p() { return !query("cache");         }
 private int(0..1) syslog_disabled()  { return query("LogA")!="syslog"; }
 private int(0..1) ident_disabled_p() { return [int(0..1)]query("default_ident"); }
 
-static void cdt_changed (Variable v);
+protected void cdt_changed (Variable.Variable v);
 
 #ifdef SNMP_AGENT
 private int(0..1) snmp_disabled() { return !query("snmp_agent"); }
@@ -598,9 +598,10 @@ The start script attempts to fix this for the standard file locations.</p>"));
 	 0, syslog_disabled);
 #endif // efun(syslog)
 
-  Variable v = Variable.Flag (0, 0,
-			      LOCALE(534, "Logging: Dump threads by file polling"),
-			      LOCALE(535, #"\
+  Variable.Variable v =
+    Variable.Flag (0, 0,
+		   LOCALE(534, "Logging: Dump threads by file polling"),
+		   LOCALE(535, #"\
 <p>This option can be used to produce dumps of all the threads in the
 debug log in situations where the Administration Interface doesn't
 respond.</p>
@@ -674,7 +675,7 @@ process to get a thread dump.</p>
 			      roxenp()->set_locale();
 			    } );
 
-  string secret=Crypto.md5()->update(""+time(1)+random(100000))->digest();
+  string secret=Crypto.MD5()->update(""+time(1)+random(100000))->digest();
   secret = MIME.encode_base64(secret,1);
   defvar("server_salt", secret[..sizeof(secret)-3], LOCALE(8, "Server secret"),
 	 TYPE_STRING|VAR_MORE|VAR_NO_DEFAULT,
@@ -685,7 +686,7 @@ process to get a thread dump.</p>
 		"you are satisfied with what your computers random "
 		"generator has produced.") );
 
-  secret = Crypto.md5()->update(""+time(1)+random(100000)+"x"+gethrtime())
+  secret = Crypto.MD5()->update(""+time(1)+random(100000)+"x"+gethrtime())
     ->digest();
 
   definvisvar("argcache_secret","",TYPE_STRING|VAR_NO_DEFAULT);
@@ -851,7 +852,7 @@ void restore_global_variables()
   getvar( "ModuleDirs" )->add_changed_callback( zap_all_module_caches );
 }
 
-static mapping(string:mixed) __vars = ([ ]);
+protected mapping(string:mixed) __vars = ([ ]);
 
 // These two should be documented somewhere. They are to be used to
 // set global, but non-persistent, variables in Roxen.

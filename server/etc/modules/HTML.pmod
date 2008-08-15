@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 2001 - 2004, Roxen IS.
 //
-// $Id: HTML.pmod,v 1.7 2004/06/30 16:58:45 mast Exp $
+// $Id: HTML.pmod,v 1.8 2008/08/15 12:33:54 mast Exp $
 
 //! Functions that helps generating HTML. All functions generates
 //! HTML that is XHTML compliant as well as backwards compatible
@@ -127,7 +127,8 @@ array(array(string)) pad_rows( array(array(string)) rows, void|string padding ) 
 }
 
 // Kludge: An alternative name to allow access from OBox.pad_rows.
-static array(array(string)) _pad_rows( array(array(string)) rows, void|string padding )
+protected array(array(string)) _pad_rows( array(array(string)) rows,
+					  void|string padding )
   {return pad_rows (rows, padding);}
 
 //! Provides the same functionality as the @[simple_obox] function,
@@ -138,7 +139,7 @@ static array(array(string)) _pad_rows( array(array(string)) rows, void|string pa
 //!   simple_obox
 class OBox {
 
-  static {
+  protected {
     string frame_color;
     string cell_color = "#ffffff";
     string width;

@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.42 2007/11/13 16:32:06 mathias Exp $";
+constant cvs_version = "$Id: email.pike,v 1.43 2008/08/15 12:33:55 mast Exp $";
 
 constant thread_safe=1;
 
@@ -100,7 +100,7 @@ void create(Configuration conf)
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.42 $"/" ")[1];
+string revision = ("$Revision: 1.43 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -422,7 +422,7 @@ class TagEmail {
        bccx = args->bcc;
      if (headers->BCC)
        bccx = (bccx?bccx+",":"") + headers->BCC;
-     // Our SMTP.client should remove any BCC header, but it does not parse
+     // Our SMTP.Client should remove any BCC header, but it does not parse
      // headers at all so we have to do it here.
      m_delete(headers, "BCC");
 
@@ -537,7 +537,7 @@ class TagEmail {
 			  Roxen.html_encode_string(error[0]));
 
      error = catch {
-       o = Protocols.SMTP.client(query("CI_server_restrict") ?
+       o = Protocols.SMTP.Client(query("CI_server_restrict") ?
 				 query("CI_server") :
 				 (args->server || query("CI_server")));
      };

@@ -1,7 +1,7 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2001 - 2006, Roxen IS.
 
-constant cvs_version="$Id: replicate.pike,v 1.26 2007/07/17 09:24:06 marty Exp $";
+constant cvs_version="$Id: replicate.pike,v 1.27 2008/08/15 12:33:53 mast Exp $";
 
 #if constant(WS_REPLICATE)
 
@@ -23,7 +23,7 @@ constant cvs_version="$Id: replicate.pike,v 1.26 2007/07/17 09:24:06 marty Exp $
 #define dwerror(ARGS...) 0
 #endif    
 
-static int off;
+protected int off;
 // The off variable can have the following values:
 //   -1: The shared replicate database is temporarly down.
 //    0: The shared replicate database is online.
@@ -44,7 +44,7 @@ Sql.Sql get_db()
   return DBManager.cached_get( "local" );
 }
 
-static void init_replicate_db()
+protected void init_replicate_db()
 {
   catch {
     // Avoid the 'IF NOT EXISTS' feature here to be more compatible.
@@ -109,7 +109,7 @@ static void init_replicate_db()
 			     "replication purposes.");
 }
 
-static void create( object c )
+protected void create( object c )
 {
   object d;
   cache = c;

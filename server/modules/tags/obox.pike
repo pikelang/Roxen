@@ -5,7 +5,7 @@
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.40 2004/06/30 16:59:25 mast Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.41 2008/08/15 12:33:55 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -29,7 +29,7 @@ LocaleString module_doc  =
 
 constant unit_gif = "/internal-roxen-unit";
 
-static string img_placeholder (mapping args)
+protected string img_placeholder (mapping args)
 {
   int width=((int)args->outlinewidth)||1;
 
@@ -40,14 +40,14 @@ static string img_placeholder (mapping args)
 		 unit_gif, width, width, (args->noxml?"":" /"));
 }
 
-static string handle_title(string name, mapping junk_args,
-			   string contents, mapping args)
+protected string handle_title(string name, mapping junk_args,
+			      string contents, mapping args)
 {
   args->title=contents;
   return "";
 }
 
-static string horiz_line(mapping args)
+protected string horiz_line(mapping args)
 {
   args->fixedleft="";
   return sprintf("<tr><td colspan=\"5\" bgcolor=\"%s\">\n"
@@ -56,7 +56,7 @@ static string horiz_line(mapping args)
 		 img_placeholder(args));
 }
 
-static string title(mapping args)
+protected string title(mapping args)
 {
   if (!args->title)
     return horiz_line(args);

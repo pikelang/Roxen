@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.56 2008/06/24 11:00:59 jonasw Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.57 2008/08/15 12:33:55 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -256,8 +256,8 @@ class FileCounter {
     }
   }
 
-  static string olf; // Used to avoid reparsing of the accessed index file...
-  static mixed names_file_callout_id;
+  protected string olf; // Used to avoid reparsing of the accessed index file...
+  protected mixed names_file_callout_id;
   inline void open_names_file()
   {
     if(objectp(names_file)) return;
@@ -270,7 +270,7 @@ class FileCounter {
   object db_lock = Thread.Mutex();
 #endif /* THREADS */
 
-  static void close_db_file(object db)
+  protected void close_db_file(object db)
   {
 #ifdef THREADS
     mixed key = db_lock->lock();
@@ -280,7 +280,7 @@ class FileCounter {
     }
   }
 
-  static mixed db_file_callout_id;
+  protected mixed db_file_callout_id;
   inline mixed open_db_file()
   {
     mixed key;
@@ -303,7 +303,7 @@ class FileCounter {
     return key;
   }
 
-  static int mdc;
+  protected int mdc;
   int main_database_created() {
     if(!mdc) {
       mixed key = open_db_file();
@@ -437,7 +437,7 @@ class SQLCounter {
   private string fix_file(string file)
   {
     if(sizeof(file)>255)
-      file="//"+MIME.encode_base64(Crypto.md5()->update(file)->digest(),1);
+      file="//"+MIME.encode_base64(Crypto.MD5()->update(file)->digest(),1);
     return file;
   }
 

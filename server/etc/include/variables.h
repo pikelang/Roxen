@@ -1,5 +1,5 @@
 // -*- Pike -*-
-// $Id: variables.h,v 1.17 2008/05/07 10:51:29 mast Exp $
+// $Id: variables.h,v 1.18 2008/08/15 12:33:54 mast Exp $
 // Fallback-resources, don't change here.
 
-private static constant errors = Roxen.http_status_messages;
+private constant errors = Roxen.http_status_messages;

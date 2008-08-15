@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.980 2008/08/08 15:04:22 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.981 2008/08/15 12:33:54 mast Exp $";
 
 //! @appears roxen
 //!
@@ -76,7 +76,7 @@ Thread.Thread backend_thread;
 #endif
 
 #define DDUMP(X) sol( combine_path( __FILE__, "../../" + X ), dump )
-static function sol = master()->set_on_load;
+protected function sol = master()->set_on_load;
 
 #ifdef TEST_EUID_CHANGE
 int test_euid_change;
@@ -84,7 +84,7 @@ int test_euid_change;
 
 string md5( string what )
 {
-  return Gmp.mpz(Crypto.md5()->update( what )->digest(),256)
+  return Gmp.mpz(Crypto.MD5()->update( what )->digest(),256)
     ->digits(32);
 }
   
@@ -104,7 +104,7 @@ string filename( program|object o )
   return fname-(getcwd()+"/");
 }
 
-static int once_mode;
+protected int once_mode;
 
 // Note that 2.5 is a nonexisting version. It's only used for the
 // cache static optimization for tags such as <if> and <emit> inside
@@ -141,7 +141,7 @@ Thread.Mutex euid_egid_lock = Thread.Mutex();
  */
 int privs_level;
 
-static class Privs
+protected class Privs
 {
 #if efun(seteuid)
 
@@ -157,22 +157,22 @@ static class Privs
 #define HAVE_EFFECTIVE_USER
 #endif
 
-  static private string _getcwd()
+  private string _getcwd()
   {
     if (catch{return(getcwd());}) {
       return("Unknown directory (no x-bit on current directory?)");
     }
   }
 
-  static private string dbt(array t)
+  private string dbt(array t)
   {
     if(!arrayp(t) || (sizeof(t)<2)) return "";
     return (((t[0]||"Unknown program")-(_getcwd()+"/"))-"base_server/")+":"+t[1]+"\n";
   }
 
 #ifdef THREADS
-  static mixed mutex_key;	// Only one thread may modify the euid/egid at a time.
-  static object threads_disabled;
+  protected mixed mutex_key; // Only one thread may modify the euid/egid at a time.
+  protected object threads_disabled;
 #endif /* THREADS */
 
   int p_level;
@@ -393,7 +393,7 @@ static class Privs
 /* Used by read_config.pike, since there seems to be problems with
  * overloading otherwise.
  */
-static Privs PRIVS(string r, int|string|void u, int|string|void g)
+protected Privs PRIVS(string r, int|string|void u, int|string|void g)
 {
   return Privs(r, u, g);
 }
@@ -620,17 +620,17 @@ class Queue
 // 	   thread_create( f, @args );
 //  };
 // }
-local static Queue handle_queue = Queue();
+local protected Queue handle_queue = Queue();
 //! Queue of things to handle.
 //! An entry consists of an array(function fp, array args)
 
-local static int thread_reap_cnt;
+local protected int thread_reap_cnt;
 //! Number of handler threads in the process of being stopped.
 
-static int threads_on_hold;
+protected int threads_on_hold;
 //! Number of handler threads on hold.
 
-local static void handler_thread(int id)
+local protected void handler_thread(int id)
 //! The actual handling function. This functions read function and
 //! parameters from the queue, calls it, then reads another one. There
 //! is a lot of error handling to ensure that nothing serious happens if
@@ -733,7 +733,7 @@ int number_of_threads;
 int busy_threads;
 //! The number of currently busy threads.
 
-static array(object) handler_threads = ({});
+protected array(object) handler_threads = ({});
 //! The handler threads, the list is kept for debug reasons.
 
 void start_handler_threads()
@@ -753,8 +753,8 @@ void start_handler_threads()
   handler_threads += new_threads;
 }
 
-static int num_hold_messages;
-static Thread.Condition hold_wakeup_cond = Thread.Condition();
+protected int num_hold_messages;
+protected Thread.Condition hold_wakeup_cond = Thread.Condition();
 // Note: There are races in the use of this condition variable, but
 // the only effect of that is that some handler thread might be
 // considered hung when it's actually waiting on hold_wakeup_cond, and
@@ -834,7 +834,7 @@ void release_handler_threads (int numthreads)
   }
 }
 
-static Thread.MutexKey backend_block_lock;
+protected Thread.MutexKey backend_block_lock;
 
 void stop_handler_threads()
 //! Stop all the handler threads and the backend, but give up if it
@@ -901,7 +901,7 @@ function async_sig_start( function f, int really )
 {
   class SignalAsyncVerifier( function f )
   {
-    static int async_called;
+    protected int async_called;
 
     void really_call( array args )
     {
@@ -970,8 +970,8 @@ function async_sig_start( function f, int really )
 }
 
 #ifdef THREADS
-static Thread.Queue bg_queue = Thread.Queue();
-static int bg_process_running;
+protected Thread.Queue bg_queue = Thread.Queue();
+protected int bg_process_running;
 
 // Use a time buffer to strike a balance if the server is busy and
 // always have at least one busy thread: The maximum waiting time in
@@ -979,11 +979,11 @@ static int bg_process_running;
 // bg_time_buffer_max. If there are only short periods of time between
 // the queue runs, the max waiting time will shrink towards the
 // minimum.
-static constant bg_time_buffer_max = 30;
-static constant bg_time_buffer_min = 0;
-static int bg_last_busy = 0;
+protected constant bg_time_buffer_max = 30;
+protected constant bg_time_buffer_min = 0;
+protected int bg_last_busy = 0;
 
-static void bg_process_queue()
+protected void bg_process_queue()
 {
   if (bg_process_running) return;
   // Relying on the interpreter lock here.
@@ -1142,7 +1142,7 @@ class BackgroundProcess
   int|float period;
   int stopping = 0;
 
-  static void repeat (function func, mixed args)
+  protected void repeat (function func, mixed args)
   {
     // Got a minimum of four refs to this:
     // o  One in the task array in bg_process_queue.
@@ -1179,7 +1179,7 @@ class BackgroundProcess
     period = period_;
   }
 
-  //! @decl static void create (int|float period, function func, mixed... args);
+  //! @decl protected void create (int|float period, function func, mixed... args);
   //!
   //! The function @[func] will be called with the following arguments
   //! after approximately @[period] seconds, and then kept being
@@ -1187,7 +1187,7 @@ class BackgroundProcess
   //!
   //! The repetition will stop if @[stop] is called, or if @[func]
   //! throws an error.
-  static void create (int|float period_, function func, mixed... args)
+  protected void create (int|float period_, function func, mixed... args)
   {
     period = period_;
     background_run (period, repeat, func, args);
@@ -1226,7 +1226,7 @@ void set_port_options( string key, mapping value )
 #define URL2CONF_MSG(X...)
 #endif
 
-static mapping(string:int(0..1)) host_is_local_cache = ([]);
+protected mapping(string:int(0..1)) host_is_local_cache = ([]);
 
 //! Check if @[hostname] is local to this machine.
 int(0..1) host_is_local(string hostname)
@@ -1351,12 +1351,12 @@ class InternalRequestID
     return set_path( raw_url );
   }
 
-  static string _sprintf()
+  protected string _sprintf()
   {
     return sprintf("RequestID(conf=%O; not_query=%O)", conf, not_query );
   }
 
-  static void create()
+  protected void create()
   {
     client = ({ "Roxen" });
     prot = "INTERNAL";
@@ -1388,7 +1388,7 @@ class Protocol
 //! Implements reference handling, finding Configuration objects
 //! for URLs, and the bind/accept handling.
 {
-  static Stdio.Port port_obj;
+  protected Stdio.Port port_obj;
 
   inherit "basic_defvar";
   int bound;
@@ -1526,7 +1526,7 @@ class Protocol
 
   mapping mu;
   string rrhf;
-  static void got_connection()
+  protected void got_connection()
   {
     Stdio.File q;
     while( q = accept() )
@@ -1691,8 +1691,8 @@ class Protocol
       set( kv[0], kv[1] );
   }
 
-  static int retries;
-  static void bind (void|int ignore_eaddrinuse)
+  protected int retries;
+  protected void bind (void|int ignore_eaddrinuse)
   {
     if (bound) return;
     if (!port_obj) port_obj = Stdio.Port();
@@ -1739,7 +1739,7 @@ class Protocol
     }
   }
 
-  static array(int) get_ipv6_sequence(string partition)
+  protected array(int) get_ipv6_sequence(string partition)
   {
     array(int) segments = ({});
     foreach(partition/":", string part) {
@@ -1847,7 +1847,7 @@ class Protocol
     }
   }
 
-  static void setup (int pn, string i)
+  protected void setup (int pn, string i)
   {
     port = pn;
     ip = canonical_ip(i);
@@ -1869,14 +1869,14 @@ class Protocol
     retries = 0;
   }
 
-  static void create( int pn, string i, void|int ignore_eaddrinuse )
+  protected void create( int pn, string i, void|int ignore_eaddrinuse )
   //! Constructor. Bind to the port 'pn' ip 'i'
   {
     setup (pn, i);
     bind (ignore_eaddrinuse);
   }
 
-  static string _sprintf( )
+  protected string _sprintf( )
   {
     return "Protocol(" + get_url() + ")";
   }
@@ -1893,7 +1893,7 @@ class SSLProtocol
 
   int cert_failure;
 
-  static void cert_err_unbind()
+  protected void cert_err_unbind()
   {
     if (bound) {
       port_obj->close();
@@ -1921,7 +1921,7 @@ class SSLProtocol
     return;								\
   } while (0)
 
-  void certificates_changed(Variable|void ignored,
+  void certificates_changed(Variable.Variable|void ignored,
 			    void|int ignore_eaddrinuse)
   {
     int old_cert_failure = cert_failure;
@@ -1929,7 +1929,7 @@ class SSLProtocol
     string raw_keydata;
     array(string) certificates = ({});
     array(object) decoded_certs = ({});
-    Variable Certificates = getvar("ssl_cert_file");
+    Variable.Variable Certificates = getvar("ssl_cert_file");
 
     object privs = Privs("Reading cert file");
 
@@ -1981,7 +1981,7 @@ class SSLProtocol
       return;
     }
 
-    Variable KeyFile = getvar("ssl_key_file");
+    Variable.Variable KeyFile = getvar("ssl_key_file");
 
     if( strlen(KeyFile->query())) {
       SSL3_WERR (sprintf ("Reading key file %O", KeyFile->query()));
@@ -2023,13 +2023,9 @@ class SSLProtocol
       if (rsa->rsa_size() > 512)
       {
 	/* Too large for export */
-#if constant(Crypto.RSA)
 	ctx->short_rsa = Crypto.RSA()->generate_key(512, ctx->random);
-#else
-	ctx->short_rsa = Crypto.rsa()->generate_key(512, ctx->random);
-#endif
 
-	// ctx->long_rsa = Crypto.rsa()->generate_key(rsa->rsa_size(), ctx->random);
+	// ctx->long_rsa = Crypto.RSA()->generate_key(rsa->rsa_size(), ctx->random);
       }
       ctx->rsa_mode();
 
@@ -2127,15 +2123,15 @@ class SSLProtocol
     }
   }
 
-  RoxenSSLFile accept()
+  SSL.sslfile accept()
   {
     Stdio.File q = ::accept();
     if (q)
-      return RoxenSSLFile (q, ctx);
+      return SSL.sslfile (q, ctx);
     return 0;
   }
 
-  static void bind (void|int ignore_eaddrinuse)
+  protected void bind (void|int ignore_eaddrinuse)
   {
     // Don't bind if we don't have correct certs.
     if (!ctx->certificates) return;
@@ -2144,11 +2140,7 @@ class SSLProtocol
 
   void create(int pn, string i, void|int ignore_eaddrinuse)
   {
-#if constant(Crypto.Random.random_string)
     ctx->random = Crypto.Random.random_string;
-#else
-    ctx->random = Crypto.randomness.reasonably_random()->read;
-#endif
 
     set_up_ssl_variables( this_object() );
 
@@ -2182,7 +2174,7 @@ mapping(string:Protocol) build_protocols_mapping()
   class lazy_load( string prog, string name )
   {
     program real;
-    static void realize()
+    protected void realize()
     {
       if( catch {
 	DDUMP( prog );
@@ -2609,11 +2601,11 @@ Configuration find_configuration( string name )
   return 0;
 }
 
-static int last_hrtime = gethrtime(1)/100;
-static int clock_sequence = random(0x4000);
-static string hex_mac_address =
-  Crypto.string_to_hex(Crypto.randomness.reasonably_random()->read(6)|
-		       "\1\0\0\0\0\0");	// Multicast bit.
+protected int last_hrtime = gethrtime(1)/100;
+protected int clock_sequence = random(0x4000);
+protected string hex_mac_address =
+  String.string2hex(Crypto.Random.random_string (6)|
+		    "\1\0\0\0\0\0");	// Multicast bit.
 // Generate an uuid string.
 string new_uuid_string()
 {
@@ -2765,17 +2757,17 @@ int increase_id()
 private int unique_id_counter;
 string create_unique_id()
 {
-  object md5 = Crypto.md5();
+  Crypto.MD5 md5 = Crypto.MD5();
   md5->update(query("server_salt") + start_time + "|" +
 	      (unique_id_counter++) + "|" + time(1));
-  return Crypto.string_to_hex(md5->digest());
+  return String.string2hex(md5->digest());
 }
 
 #ifndef __NT__
-static int abs_started;
-static int handlers_alive;
+protected int abs_started;
+protected int handlers_alive;
 
-static void low_engage_abs()
+protected void low_engage_abs()
 {
   report_debug("**** %s: ABS exiting roxen!\n\n",
 	       ctime(time()) - "\n");
@@ -2783,7 +2775,7 @@ static void low_engage_abs()
 		// locked up
 }
 
-static void engage_abs(int n)
+protected void engage_abs(int n)
 {
   if (!query("abs_engage")) {
     abs_started = 0;
@@ -2883,7 +2875,7 @@ class ImageCache
     return replace(doc, "###", tag_n_args);
   }
 
-  static mapping meta_cache_insert( string i, mapping what )
+  protected mapping meta_cache_insert( string i, mapping what )
   {
 #ifdef ARG_CACHE_DEBUG
     werror("MD insert for %O: %O\n", i, what );
@@ -2899,7 +2891,7 @@ class ImageCache
     return 0;
   }
 
-  static mixed frommapp( mapping what )
+  protected mixed frommapp( mapping what )
   {
     if( !what )
       error( "Got invalid argcache-entry\n" );
@@ -2907,7 +2899,7 @@ class ImageCache
     return what;
   }
 
-  static void|mapping draw( string name, RequestID id )
+  protected void|mapping draw( string name, RequestID id )
   {
 #ifdef ARG_CACHE_DEBUG
     werror("draw %O\n", name );
@@ -3424,7 +3416,7 @@ class ImageCache
 #endif
   }
 
-  static void store_data( string id, string data, mapping meta )
+  protected void store_data( string id, string data, mapping meta )
   {
     if(!stringp(data)) return;
 #ifdef ARG_CACHE_DEBUG
@@ -3459,7 +3451,7 @@ class ImageCache
 #endif
   }
 
-  static mapping restore_meta( string id, RequestID rid )
+  protected mapping restore_meta( string id, RequestID rid )
   {
     if( array item = meta_cache[ id ] )
     {
@@ -3489,7 +3481,7 @@ class ImageCache
     return meta_cache_insert( id, m );
   }
 
-  static void sync_meta()
+  protected void sync_meta()
   {
     // Sync cached atimes.
     foreach(meta_cache; string id; array value) {
@@ -3585,10 +3577,10 @@ class ImageCache
     return ({ imgs, size, aged });
   }
 
-  static mapping(string:mapping) rst_cache = ([ ]);
-  static mapping(string:string) uid_cache = ([ ]);
+  protected mapping(string:mapping) rst_cache = ([ ]);
+  protected mapping(string:string) uid_cache = ([ ]);
 
-  static mapping restore( string id, RequestID rid )
+  protected mapping restore( string id, RequestID rid )
   {
     array q;
     string uid;
@@ -3836,7 +3828,7 @@ class ImageCache
     draw_function = to;
   }
 
-  static void setup_tables()
+  protected void setup_tables()
   {
     if(catch(QUERY("SELECT data FROM "+name+" WHERE id=''")))
     {
@@ -3868,7 +3860,7 @@ class ImageCache
     return dbm_cached_get("local");
   }
 
-  static void init_db( )
+  protected void init_db( )
   {
     catch(sync_meta());
     setup_tables();
@@ -3946,9 +3938,9 @@ class ArgCache
 #define dwerror(ARGS...) 0
 #endif    
 
-  static mapping(string|int:mixed) cache = ([ ]);
+  protected mapping(string|int:mixed) cache = ([ ]);
 
-  static void setup_table()
+  protected void setup_table()
   {
     // New style argument2 table.
     if(catch(QUERY("SELECT id FROM "+name+"2 LIMIT 0")))
@@ -3985,7 +3977,7 @@ class ArgCache
     };
   }
 
-  static void init_db()
+  protected void init_db()
   {
     // Delay DBManager resolving to before the 'roxen' object is
     // compiled.
@@ -3994,7 +3986,7 @@ class ArgCache
     setup_table( );
   }
 
-  static void create( string _name )
+  protected void create( string _name )
   {
     name = _name;
     init_db();
@@ -4004,7 +3996,7 @@ class ArgCache
     get_plugins();
   }
 
-  static string read_encoded_args( string id, int dont_update_atime )
+  protected string read_encoded_args( string id, int dont_update_atime )
   {
     LOCK();
     array res = QUERY("SELECT contents FROM "+name+"2 "
@@ -4018,7 +4010,7 @@ class ArgCache
     return res[0]->contents;
   }
 
-  static void create_key( string id, string encoded_args )
+  protected void create_key( string id, string encoded_args )
   {
     LOCK();
     array(mapping) rows =
@@ -4048,8 +4040,8 @@ class ArgCache
     (plugins->create_key-({0}))( id, encoded_args );
   }
   
-  static array plugins;
-  static void get_plugins()
+  protected array plugins;
+  protected void get_plugins()
   {
     plugins = ({});
     foreach( ({ "../local/arg_cache_plugins", "arg_cache_plugins" }), string d)
@@ -4062,7 +4054,7 @@ class ArgCache
 	}
   }
 
-  static mapping plugins_read_encoded_args( string id )
+  protected mapping plugins_read_encoded_args( string id )
   {
     mapping args;
     foreach( (plugins->read_encoded_args - ({0})), function(string:mapping) f )
@@ -4077,7 +4069,7 @@ class ArgCache
   //! data later.
   {
     string encoded_args = encode_value_canonic( args );
-    string id = Gmp.mpz(Crypto.sha()->update(encoded_args)->digest(), 256)->digits(36);
+    string id = Gmp.mpz(Crypto.SHA1()->update(encoded_args)->digest(), 256)->digits(36);
     if( cache[ id ] )
       return id;
     create_key(id, encoded_args);
@@ -4304,14 +4296,9 @@ void create()
 
   // for module encoding stuff
 
-#if constant (Protocols.LDAP.SEARCH_RETURN_DECODE_ERRORS)
   // Pike 7.7 or later - we use the native LDAP module and link the
   // migration alias NewLDAP to it.
   add_constant ("NewLDAP", Protocols.LDAP);
-#else
-  // Older pike - use our own LDAP protocol as NewLDAP.
-  add_constant ("NewLDAP", _NewLDAP);
-#endif
 
   add_constant( "CFUserDBModule",config_userdb_module );
   
@@ -4722,9 +4709,9 @@ void enable_configurations_modules()
                    config->name+":\n", describe_backtrace(err)+"\n");
 }
 
-mapping low_decode_image(string data, void|mixed tocolor)
+mapping low_decode_image(string data)
 {
-  mapping w = Image._decode( data, tocolor );
+  mapping w = Image._decode( data );
   if( w->image ) return w;
   return 0;
 }
@@ -4974,7 +4961,7 @@ void cdt_poll_file()
   cdt_thread = 0;
 }
 
-void cdt_changed (Variable v)
+void cdt_changed (Variable.Variable v)
 {
   if (cdt_directory && v->query() && !cdt_thread)
     cdt_thread = Thread.thread_create (cdt_poll_file);
@@ -5026,8 +5013,8 @@ void show_timers()
 class GCTimestamp
 {
   array self_ref;
-  static void create() {self_ref = ({this_object()});}
-  static void destroy() {
+  protected void create() {self_ref = ({this_object()});}
+  protected void destroy() {
     werror ("GC runs at %s", ctime(time()));
     GCTimestamp();
   }
@@ -5327,7 +5314,7 @@ void restart_suicide_checker()
 }
 
 #ifdef ROXEN_DEBUG_MEMORY_TRACE
-static object roxen_debug_info_obj;
+protected object roxen_debug_info_obj;
 void restart_roxen_debug_memory_trace()
 {
   remove_call_out(restart_roxen_debug_memory_trace);
@@ -5398,7 +5385,7 @@ int is_ip(string s)
      (sizeof(s/":") > 1));	// IPv6
 }
 
-static string _sprintf( )
+protected string _sprintf( )
 {
   return "roxen";
 }
@@ -5406,9 +5393,9 @@ static string _sprintf( )
 
 // Logging
 
-class LogFormat			// Note: Dumping won't work if static.
+class LogFormat			// Note: Dumping won't work if protected.
 {
-  static string url_encode (string str)
+  protected string url_encode (string str)
   {
     // Somewhat like Roxen.http_encode_url, but only encode enough
     // chars to avoid ambiguity in typical log formats. Notably, UTF-8
@@ -5438,60 +5425,60 @@ class LogFormat			// Note: Dumping won't work if static.
       }));
   }
 
-  static int rusage_time;
-  static array(int) rusage_data;
-  static void update_rusage()
+  protected int rusage_time;
+  protected mapping(string:int) rusage_data;
+  protected void update_rusage()
   {
     if(!rusage_data || time(1) != rusage_time)
     {
-      rusage_data = rusage();
+      rusage_data = (["utime": 1, "stime": 1]) & System.getrusage();
       rusage_time = time(1);
     }
   }
 
-  static int server_cputime()
+  protected int server_cputime()
   {
     update_rusage();
-    if(rusage_data && sizeof(rusage_data) >= 2)
-      return rusage_data[0] + rusage_data[1];
+    if(rusage_data)
+      return rusage_data->utime + rusage_data->stime;
     return 0;
   }
 
-  static int server_usertime()
+  protected int server_usertime()
   {
     update_rusage();
-    if(rusage_data && sizeof(rusage_data) >= 1)
-      return rusage_data[0];
+    if(rusage_data)
+      return rusage_data->utime;
     return 0;
   }
 
-  static int server_systime()
+  protected int server_systime()
   {
     update_rusage();
-    if(rusage_data && sizeof(rusage_data) >= 2)
-      return rusage_data[1];
+    if(rusage_data)
+      return rusage_data->stime;
     return 0;
   }
 
-  static string std_date(mapping(string:int) ct) {
+  protected string std_date(mapping(string:int) ct) {
     return(sprintf("%04d-%02d-%02d",
 		   1900+ct->year,ct->mon+1, ct->mday));
   }
  
-  static string std_time(mapping(string:int) ct) {
+  protected string std_time(mapping(string:int) ct) {
     return(sprintf("%02d:%02d:%02d",
 		   ct->hour, ct->min, ct->sec));
   }
 
   // CERN date formatter. Note similar code in Roxen.pmod.
 
-  static constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-			      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
+  protected constant months = ({ "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+				 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" });
 
-  static int chd_lt;
-  static string chd_lf;
+  protected int chd_lt;
+  protected string chd_lf;
 
-  static string cern_http_date(int t, mapping(string:int) ct)
+  protected string cern_http_date(int t, mapping(string:int) ct)
   {
     if( t == chd_lt )
       // Interpreter lock assumed here.
@@ -5517,14 +5504,14 @@ class LogFormat			// Note: Dumping won't work if static.
     return c;
   }
   
-  static string host_ip_to_int(string s)
+  protected string host_ip_to_int(string s)
   {
     int a, b, c, d;
     sscanf(s, "%d.%d.%d.%d", a, b, c, d);
     return sprintf("%c%c%c%c",a, b, c, d);
   }
 
-  static string extract_user(string from)
+  protected string extract_user(string from)
   {
     array tmp;
     if (!from || sizeof(tmp = from/":")<2)
@@ -5537,15 +5524,16 @@ class LogFormat			// Note: Dumping won't work if static.
   void log_event (function do_write, string facility, string action,
 		  string resource, mapping(string:mixed) info);
 
-  static void do_async_write( string host, string data, string ip, function c )
+  protected void do_async_write( string host, string data,
+				 string ip, function c )
   {
     if( c ) 
       c( replace( data, "\4711", (host||ip) ) );
   }
 }
 
-static mapping(string:function) compiled_log_access = ([ ]);
-static mapping(string:function) compiled_log_event = ([ ]);
+protected mapping(string:function) compiled_log_access = ([ ]);
+protected mapping(string:function) compiled_log_event = ([ ]);
 
 #define LOG_ASYNC_HOST		1
 #define LOG_NEED_COOKIES	2
@@ -5565,7 +5553,7 @@ static mapping(string:function) compiled_log_event = ([ ]);
 // arr[3]: Code for the corresponding sprintf argument of arr[2].
 // arr[4]: Flags.
 
-static constant formats = ([
+protected constant formats = ([
 
   // Used for both access and event logging
   "date":		({"%s", "std_date (ltime)", 0, 0, LOG_NEED_LTIME}),
@@ -5717,7 +5705,7 @@ void run_log_event_format (string fmt, function cb,
 					  resource, info);
 }
 
-static LogFormat compile_log_format( string fmt )
+protected LogFormat compile_log_format( string fmt )
 {
   add_constant( "___LogFormat", LogFormat );
 
@@ -6446,7 +6434,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 }
 
 
-static string cached_hostname = gethostname();
+protected string cached_hostname = gethostname();
 
 class LogFile(string fname, string|void compressor_program)
 {
@@ -6458,7 +6446,7 @@ class LogFile(string fname, string|void compressor_program)
   // "$LOGDIR/test/Log.%y-%m-%d", not "$LOGDIR/test/%y/Log.%m-%d").
   Process.Process compressor_process;
   int last_compressor_scan_time;
-  static void compress_logs(string fname, string active_log)
+  protected void compress_logs(string fname, string active_log)
   {
     if(!compressor_program || !sizeof(compressor_program))
       // No compressor program specified...
@@ -6547,7 +6535,7 @@ class LogFile(string fname, string|void compressor_program)
   }
 
   array(string) write_buf = ({});
-  static void do_the_write( )
+  protected void do_the_write( )
   {
     if( !opened ) do_open();
     if( !opened ) return 0;

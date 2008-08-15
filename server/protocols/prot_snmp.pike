@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2007, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.7 2008/02/19 14:58:18 marty Exp $
+ * $Id: prot_snmp.pike,v 2.8 2008/08/15 12:33:55 mast Exp $
  *
  * SNMP protocol support.
  *
@@ -49,7 +49,7 @@ constant default_port = 161;
 class SNMP_Port {
   inherit Protocols.SNMP.protocol;
 
-  static int udp_errno = 0;
+  protected int udp_errno = 0;
 
   int errno()
   {
@@ -77,7 +77,7 @@ class SNMP_Port {
     DWRITE("protocol.create: can't bind to the socket.\n");
   }
 
-  static void create() {}
+  protected void create() {}
 }
 
 SNMP_Port port_obj;
@@ -89,14 +89,14 @@ class SystemMIB
 {
   inherit SNMP.SimpleMIB;
 
-  static void create()
+  protected void create()
   {
     ::create(SNMP.INTERNET_OID + ({ 2, 1, 1 }), ({}),
 	     ({
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.7 $"/" ")[1],
+			   ("$Revision: 2.8 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
@@ -126,21 +126,21 @@ class SystemMIB
 }
 
 // Statistics.
-static SNMP.Counter snmpinpkts = SNMP.Counter(0, "snmpInPkts");
-static SNMP.Counter snmpoutpkts = SNMP.Counter(0, "snmpOutPkts");
-static SNMP.Counter snmpbadver = SNMP.Counter(0, "snmpBadVers");
-static SNMP.Counter snmpbadcommnames = SNMP.Counter(0,
-						    "snmpInBadCommunityNames");
-static SNMP.Counter snmpbadcommuses = SNMP.Counter(0,
-						   "snmpInBadCommunityUses");
-static SNMP.Counter snmpenaauth = SNMP.Integer(0, "snmpEnableAuthenTraps");
+protected SNMP.Counter snmpinpkts = SNMP.Counter(0, "snmpInPkts");
+protected SNMP.Counter snmpoutpkts = SNMP.Counter(0, "snmpOutPkts");
+protected SNMP.Counter snmpbadver = SNMP.Counter(0, "snmpBadVers");
+protected SNMP.Counter snmpbadcommnames =
+  SNMP.Counter(0, "snmpInBadCommunityNames");
+protected SNMP.Counter snmpbadcommuses =
+  SNMP.Counter(0, "snmpInBadCommunityUses");
+protected SNMP.Counter snmpenaauth = SNMP.Integer(0, "snmpEnableAuthenTraps");
 
 //! cf RFC 1213.
 class SNMPMIB
 {
   inherit SNMP.SimpleMIB;
 
-  static void create()
+  protected void create()
   {
     ::create(SNMP.INTERNET_OID + ({ 2, 1, 11 }), ({}),
 	     ({
@@ -215,7 +215,7 @@ class RoxenGlobalMIB
 
   // Global information.
 
-  static void create()
+  protected void create()
   {
     ::create(SNMP.RIS_OID_WEBSERVER + ({ 1 }), ({}),
 	     ({
@@ -248,7 +248,7 @@ class DBManagerMIB
     return (int)(res[0]->Value || res[0]->value);
   }
 
-  static void create()
+  protected void create()
   {
     ::create(SNMP.RIS_OID_WEBSERVER + ({ 1, 3 }), ({}),
 	     ({
@@ -286,7 +286,7 @@ class DBManagerMIB
   }
 }
 
-static void setup_mib()
+protected void setup_mib()
 {
   mib->merge(SystemMIB());
   mib->merge(SNMPMIB());
@@ -302,8 +302,8 @@ static void setup_mib()
 
 #define LOG_EVENT(txt, pkt) log_event(txt, pkt)
 
-static mapping events = ([]);
-static void log_event(string txt, mapping pkt) {
+protected mapping events = ([]);
+protected void log_event(string txt, mapping pkt) {
   SNMPAGENT_MSG(sprintf("event: %O: %O\n", txt, pkt));
   if(zero_type(events[txt]))
     events[txt] += ([ pkt->ip : ([ pkt->community: 1]) ]) ;
@@ -321,8 +321,8 @@ class Binding
   array(int) oid;
   Standards.ASN1.Types.Object value;
 
-  static void create(array(int)|Standards.ASN1.Types.Object duo,
-		     Standards.ASN1.Types.Object|void val)
+  protected void create(array(int)|Standards.ASN1.Types.Object duo,
+			Standards.ASN1.Types.Object|void val)
   {
     if (val) {
       oid = duo;
@@ -335,7 +335,7 @@ class Binding
 }
 
 //! decode ASN1 data, if garbaged or unsupported ignore it
-static mapping(string:int|string|array) decode_asn1_msg(mapping rawd)
+protected mapping(string:int|string|array) decode_asn1_msg(mapping rawd)
 {
   object(Standards.ASN1.Types.Object) xdec =
     port_obj->snmp_der_decode(rawd->data);
@@ -445,7 +445,7 @@ int send_response(array(Binding) bindings,
   return id;
 }
 
-static void got_connection(mapping data)
+protected void got_connection(mapping data)
 {
   mapping pdata;
   array rdata = ({});
@@ -577,7 +577,7 @@ static void got_connection(mapping data)
 }
 
 // NOTE: Code duplication from Protocol!
-static void bind(void|int ignore_eaddrinuse)
+protected void bind(void|int ignore_eaddrinuse)
 {
   if (bound) return;
   if (!port_obj) port_obj = SNMP_Port();
@@ -625,7 +625,7 @@ static void bind(void|int ignore_eaddrinuse)
   }
 }
 
-static void create( mixed ... args )
+protected void create( mixed ... args )
 {
 #if constant(roxen.set_up_snmp_variables)
   roxen.set_up_snmp_variables( this_object() );

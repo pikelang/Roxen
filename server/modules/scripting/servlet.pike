@@ -4,11 +4,11 @@ inherit "module";
 
 #include <module.h>
 
-string cvs_version = "$Id: servlet.pike,v 2.23 2004/06/30 16:59:20 mast Exp $";
+string cvs_version = "$Id: servlet.pike,v 2.24 2008/08/15 12:33:55 mast Exp $";
 int thread_safe=1;
 constant module_unique = 0;
 
-static inherit "http";
+protected inherit "http";
 
 object servlet;
 
@@ -29,7 +29,7 @@ void stop()
   }
 }
 
-static mapping(string:string) make_initparam_mapping()
+protected mapping(string:string) make_initparam_mapping()
 {
   mapping(string:string) p = ([]);
   string n, v;
@@ -84,9 +84,9 @@ string query_name()
 
 class RXMLParseWrapper
 {
-  static object _file;
-  static object _id;
-  static string _data;
+  protected object _file;
+  protected object _id;
+  protected string _data;
 
   int write(string data)
   {

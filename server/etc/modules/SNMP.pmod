@@ -1,7 +1,7 @@
 //
 // SNMP helper stuff.
 //
-// $Id: SNMP.pmod,v 1.9 2007/11/03 14:20:03 grubba Exp $
+// $Id: SNMP.pmod,v 1.10 2008/08/15 12:33:54 mast Exp $
 //
 // 2007-08-29 Henrik Grubbström
 //
@@ -61,7 +61,8 @@ class app_integer
   constant cls = 1;
   constant type_name = "APPLICATION INTEGER";
   constant tag = 0;
-  static void create(int|function(:int) val, string|void name, string|void doc_string)
+  protected void create(int|function(:int) val, string|void name,
+			string|void doc_string)
   {
     if (intp(val)) {
       update::create(UNDEFINED);
@@ -72,7 +73,7 @@ class app_integer
     }
     doc::create(name, doc_string);
   }
-  static string _sprintf(int t)
+  protected string _sprintf(int t)
   {
     switch(t) {
     case 's': return (string)value;
@@ -90,7 +91,8 @@ class app_octet_string
   constant cls = 1;
   constant type_name = "APPLICATION OCTET_STRING";
   constant tag = 0;
-  static void create(string|function(:string) val, string|void name, string|void doc_string)
+  protected void create(string|function(:string) val, string|void name,
+			string|void doc_string)
   {
     if (stringp(val)) {
       update::create(UNDEFINED);
@@ -101,7 +103,7 @@ class app_octet_string
     }
     doc::create(name, doc_string);
   }
-  static string _sprintf(int t)
+  protected string _sprintf(int t)
   {
     switch(t) {
     case 's': return (string)value;
@@ -116,12 +118,13 @@ class OID
   inherit Documentation : doc;
   inherit OwnerInfo : owner_info;
   constant type_name = "OID";
-  static void create(array(int) oid, string|void name, string|void doc_string)
+  protected void create(array(int) oid, string|void name,
+			string|void doc_string)
   {
     identifier::create(@oid);
     doc::create(name, doc_string);
   }
-  static string _sprintf(int t)
+  protected string _sprintf(int t)
   {
     switch(t) {
     case 's': return ((array(string))id) * ".";
@@ -139,7 +142,8 @@ class Integer
   inherit Updateable : update;
   inherit OwnerInfo : owner_info;
   constant type_name = "INTEGER";
-  static void create(int|function(:int) val, string|void name, string|void doc_string)
+  protected void create(int|function(:int) val, string|void name,
+			string|void doc_string)
   {
     if (intp(val)) {
       update::create(UNDEFINED);
@@ -150,7 +154,7 @@ class Integer
     }
     doc::create(name, doc_string);
   }
-  static string _sprintf(int t)
+  protected string _sprintf(int t)
   {
     switch(t) {
     case 'd':
@@ -167,7 +171,8 @@ class String
   inherit Updateable : update;
   inherit OwnerInfo : owner_info;
   constant type_name = "STRING";
-  static void create(string|function(:string) val, string|void name, string|void doc_string)
+  protected void create(string|function(:string) val, string|void name,
+			string|void doc_string)
   {
     if (stringp(val)) {
       update::create(UNDEFINED);
@@ -178,7 +183,7 @@ class String
     }
     doc::create(name, doc_string);
   }
-  static string _sprintf(int t)
+  protected string _sprintf(int t)
   {
     switch(t) {
     case 's': return (string)value;
@@ -208,7 +213,7 @@ class Tick
   inherit app_integer;
   constant tag = 3;
   constant type_name = "TICK";
-  static string _sprintf(int t)
+  protected string _sprintf(int t)
   {
     if (t == 's') {
       return Roxen.short_date(time(1) - ((int)value)/100);
@@ -222,7 +227,7 @@ class Opaque
   inherit app_octet_string;
   constant tag = 4;
   constant type_name = "OPAQUE";
-  static string _sprintf(int t)
+  protected string _sprintf(int t)
   {
     if (t == 's') return "";
     return ::_sprintf(t);
@@ -256,10 +261,10 @@ class SimpleMIB
 {
   inherit ADT.Trie;
 
-  static void create(array(int) oid,
-		     array(int) oid_suffix,
-		     array(Standards.ASN1.Types.Object|function)|
-		     mapping(int:Standards.ASN1.Types.Object|function) values)
+  protected void create(array(int) oid,
+			array(int) oid_suffix,
+			array(Standards.ASN1.Types.Object|function)|
+			mapping(int:Standards.ASN1.Types.Object|function) values)
   {
     ::create(oid);
     foreach(values; int i; function|Standards.ASN1.Types.Object val) {
@@ -402,7 +407,7 @@ string format_oid(array(int) oid)
   return res * ".";
 }
 
-static void create()
+protected void create()
 {
   add_oid_path(RIS_OID_WEBSERVER,
 	       "iso.organizations.dod.internet.private."

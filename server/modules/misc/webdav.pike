@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.37 2004/06/02 21:49:34 mast Exp $
+// $Id: webdav.pike,v 1.38 2008/08/15 12:33:55 mast Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.37 2004/06/02 21:49:34 mast Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.38 2008/08/15 12:33:55 mast Exp $";
 constant thread_safe = 1;
 constant module_name = "WebDAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -80,10 +80,10 @@ mapping(string:mixed)|int(-1..0) first_try(RequestID id)
   return 0;
 }
 
-static constant SimpleNode = Parser.XML.Tree.SimpleNode;
-static constant SimpleRootNode = Parser.XML.Tree.SimpleRootNode;
-static constant SimpleHeaderNode = Parser.XML.Tree.SimpleHeaderNode;
-static constant SimpleElementNode = Parser.XML.Tree.SimpleElementNode;
+protected constant SimpleNode = Parser.XML.Tree.SimpleNode;
+protected constant SimpleRootNode = Parser.XML.Tree.SimpleRootNode;
+protected constant SimpleHeaderNode = Parser.XML.Tree.SimpleHeaderNode;
+protected constant SimpleElementNode = Parser.XML.Tree.SimpleElementNode;
 
 //! Implements PROPPATCH <DAV:set/>.
 class PatchPropertySetCmd
@@ -91,7 +91,7 @@ class PatchPropertySetCmd
   constant command="DAV:set";
   string property_name;
   string|array(SimpleNode) value;
-  static void create(SimpleNode prop_node)
+  protected void create(SimpleNode prop_node)
   {
     property_name = prop_node->get_full_name();
     value = prop_node->get_children();

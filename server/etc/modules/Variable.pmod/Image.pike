@@ -30,7 +30,7 @@ mapping get_imagealpha()
   return Image._decode( query() );
 }
 
-static int _ivi;
+protected int _ivi;
 int is_valid_image()
 {
   if( _ivi )  return _ivi > 0 ? 1 : 0;

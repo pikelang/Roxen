@@ -1,6 +1,6 @@
 
 #if !efun(make_matrix)
-static private mapping (int:array(array(int))) matrixes = ([]);
+private mapping (int:array(array(int))) matrixes = ([]);
 array (array(int)) make_matrix(int size)
 {
   if(matrixes[size]) return matrixes[size];
@@ -126,7 +126,7 @@ Image.Image load_image(string f,string bd, object|void id)
   if(last_image_name == f && last_image) return last_image->copy();
   string data;
   Stdio.File file;
-  Image.image img=Image.image();
+  Image.Image img=Image.Image();
 
   if(!(file=open(fix_relative(f,bd),"r")) || (!(data=file->read())))
     return 0;

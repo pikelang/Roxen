@@ -9,9 +9,9 @@ constant scalable = 1;
 
 inherit FontHandler;
 
-static mapping ttf_font_names_cache;
+protected mapping ttf_font_names_cache;
 
-static string translate_ttf_style( string style )
+protected string translate_ttf_style( string style )
 {
   //  Check for weight. Default is "n" for normal/regular/roman.
   style = lower_case((style - "-") - " ");
@@ -33,7 +33,7 @@ static string translate_ttf_style( string style )
   return weight + slant;
 }
 
-static void build_font_names_cache( )
+protected void build_font_names_cache( )
 {
   mapping ttf_done = ([ ]);
   mapping new_ttf_font_names_cache=([]);
@@ -76,9 +76,9 @@ Thread.Mutex lock = Thread.Mutex();
 class FTFont
 {
   inherit Font;
-  static int size;
-  static Image.FreeType.Face face;
-  static object encoder;
+  protected int size;
+  protected Image.FreeType.Face face;
+  protected object encoder;
 
   array text_extents( string what )
   {
@@ -91,15 +91,15 @@ class FTFont
     return size;
   }
 
-  static mixed do_write_char( int c )
+  protected mixed do_write_char( int c )
   {
     if (mixed err = catch{ return face->write_char( c ); })
       werror (describe_error (err));
     return 0;
   }
 
-  static int line_height;
-  static mapping low_write_row(int do_overshoot, string text, void|int _oversampling )
+  protected int line_height;
+  protected mapping low_write_row(int do_overshoot, string text, void|int _oversampling )
   {
     Image.Image res;
     int xp, ys;
@@ -187,7 +187,7 @@ class FTFont
 	      "height":chars[0]->height,
 	      "img":res ]);
   }
-  static Image.Image write_row( string text ) {
+  protected Image.Image write_row( string text ) {
     return (Image.Image)((low_write_row(0, text))->img);
   }	
 
@@ -276,7 +276,7 @@ class FTFont
     return "Freetype";
   }
 
-  static void create(object r, int s, string fn, int fb, int fi)
+  protected void create(object r, int s, string fn, int fb, int fi)
   {
     fake_bold = fb;
     fake_italic = fi;

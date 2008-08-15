@@ -1,5 +1,5 @@
 /*
- * $Id: snmpagent.pike,v 1.23 2008/07/09 20:49:36 mast Exp $
+ * $Id: snmpagent.pike,v 1.24 2008/08/15 12:33:54 mast Exp $
  *
  * The Roxen SNMP agent
  * Copyright © 2001, Honza Petrous, hop@unibase.cz
@@ -162,7 +162,7 @@ class SNMPagent {
   private int snmpenaauth;
   private mapping events;
   private mixed co;
-  private static object mib;
+  private object mib;
   private mapping vsdb;		// table of registered virtual servers
   private array dtraps;		// delayed traps
 
@@ -776,7 +776,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.23 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.24 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'

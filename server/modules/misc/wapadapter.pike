@@ -11,7 +11,7 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wapadapter.pike,v 1.12 2004/06/30 16:59:16 mast Exp $";
+constant cvs_version = "$Id: wapadapter.pike,v 1.13 2008/08/15 12:33:55 mast Exp $";
 
 constant module_type = MODULE_FIRST|MODULE_FILE_EXTENSION|MODULE_TAG;
 constant module_name = "WAP Adapter";
@@ -167,7 +167,7 @@ array tag_wimg(string t, mapping m, RequestID id) {
 
 RXML.Type type = TWml()(RXML.PXml);
 
-static class TWml {
+protected class TWml {
   inherit RXML.TXml;
   constant name = "text/wml";
   RXML.Type conversion_type = RXML.t_xml;

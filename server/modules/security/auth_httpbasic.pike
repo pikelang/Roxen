@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2001 - 2004, Roxen IS.
 
 constant cvs_version =
-  "$Id: auth_httpbasic.pike,v 1.11 2005/12/13 15:46:00 anders Exp $";
+  "$Id: auth_httpbasic.pike,v 1.12 2008/08/15 12:33:55 mast Exp $";
 inherit AuthModule;
 inherit "module";
 
@@ -18,7 +18,7 @@ LocaleString module_name =
 LocaleString module_doc =
   _(2,"Authenticate users using basic username/password authentication.");
 
-static array(string) parse_auth_header( mixed header )
+protected array(string) parse_auth_header( mixed header )
 {
   array(string) res;
   array(string) handle_header( string header ) 
@@ -46,9 +46,9 @@ static array(string) parse_auth_header( mixed header )
 }
 
 
-static User low_authenticate( RequestID id,
-			      string user, string password,
-			      UserDB db)
+protected User low_authenticate( RequestID id,
+				 string user, string password,
+				 UserDB db)
 {
   if( User u = db->find_user( user, id ) )
     if( u->password_authenticate( password ) )

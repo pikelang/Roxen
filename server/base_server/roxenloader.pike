@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.396 2008/08/08 15:06:22 mast Exp $
+// $Id: roxenloader.pike,v 1.397 2008/08/15 12:33:54 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -21,7 +21,7 @@ mixed x = Calendar.Timezone; // #"!¤&"¤%/"&#¤!%#¤&#
 //	master() efun when used in this file will return the old
 //	master and not the new one.
 //
-private static __builtin.__master new_master;
+private __builtin.__master new_master;
 
 constant s = spider; // compatibility
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.396 2008/08/08 15:06:22 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.397 2008/08/15 12:33:54 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -123,7 +123,7 @@ int use_syslog, loggingfield;
  * Some efuns used by Roxen
  */
 
-static string last_id, last_from;
+protected string last_id, last_from;
 string get_cvs_id(string from)
 {
   if(last_from == from) return last_id;
@@ -158,7 +158,7 @@ string describe_backtrace (mixed err, void|int linewidth)
   return predef::describe_backtrace (err, 999999);
 }
 
-static int(0..5) last_was_change;
+protected int(0..5) last_was_change;
 int(2..2147483647) roxen_started = [int(2..2147483647)]time();
 float roxen_started_flt = time(time());
 string short_time()
@@ -201,7 +201,7 @@ string possibly_encode( string what )
 //! @decl void roxen_perror(string format, mixed ... args)
 //! @appears roxen_perror
 
-static int last_was_nl = 1;
+protected int last_was_nl = 1;
 // Used to print error/debug messages
 void roxen_perror(string format, mixed ... args)
 {
@@ -469,9 +469,9 @@ void report_fatal(string message, mixed ... foo)
 #endif
 }
 
-static mapping(string:int) sparsely_dont_log = (garb_sparsely_dont_log(), ([]));
+protected mapping(string:int) sparsely_dont_log = (garb_sparsely_dont_log(), ([]));
 
-static void garb_sparsely_dont_log()
+protected void garb_sparsely_dont_log()
 {
   if (sparsely_dont_log && sizeof (sparsely_dont_log)) {
     int now = time (1);
@@ -610,7 +610,7 @@ Process.Process spawn_pike(array(string) args, void|string wd,
 }
 
 // Add a few cache control related efuns
-static private object initiate_cache()
+private object initiate_cache()
 {
   object cache;
   cache=((program)"base_server/cache")();
@@ -833,7 +833,7 @@ void load_roxen()
 
 #ifndef OLD_PARSE_HTML
 
-static int|string|array(string) compat_call_tag (
+protected int|string|array(string) compat_call_tag (
   Parser.HTML p, string str, mixed... extra)
 {
   string name = lower_case (p->tag_name());
@@ -846,7 +846,7 @@ static int|string|array(string) compat_call_tag (
   return 1;
 }
 
-static int|string|array(string) compat_call_container (
+protected int|string|array(string) compat_call_container (
   Parser.HTML p, mapping(string:string) args, string content, mixed... extra)
 {
   string name = lower_case (p->tag_name());
@@ -889,7 +889,7 @@ string parse_html (string data, mapping(string:function|string) tags,
   return ParseHtmlCompat (tags, containers, @args)->finish (data)->read();
 }
 
-static int|string|array(string) compat_call_tag_lines (
+protected int|string|array(string) compat_call_tag_lines (
   Parser.HTML p, string str, mixed... extra)
 {
   string name = lower_case (p->tag_name());
@@ -902,7 +902,7 @@ static int|string|array(string) compat_call_tag_lines (
   return 1;
 }
 
-static int|string|array(string) compat_call_container_lines (
+protected int|string|array(string) compat_call_container_lines (
   Parser.HTML p, mapping(string:string) args, string content, mixed... extra)
 {
   string name = lower_case (p->tag_name());
@@ -946,7 +946,7 @@ string parse_html_lines (string data, mapping tags, mapping containers,
 
 #endif
 
-static local mapping fd_marks = ([]);
+protected local mapping fd_marks = ([]);
 
 //! @appears mark_fd
 mixed mark_fd( int fd, string|void with )
@@ -998,10 +998,10 @@ constant mf = Stdio.File;
 
 #include "../etc/include/version.h"
 
-static string release;
-static string dist_version;
-static int roxen_is_cms;
-static string roxen_product_name;
+protected string release;
+protected string dist_version;
+protected int roxen_is_cms;
+protected string roxen_product_name;
 
 string roxen_version()
 //! @appears roxen_version
@@ -1227,11 +1227,11 @@ int main(int argc, array(string) argv)
   add_constant("__pragma_save_parent__",1); // FIXME: Change this later on
   Protocols.HTTP; // FIXME: Workaround for bug 2637.
 
-#if __VERSION__ < 7.4
+#if __VERSION__ < 7.8
     report_debug(
 #"
 ------- FATAL -------------------------------------------------
-Roxen 4.0 should be run with Pike 7.4 or newer.
+Roxen 5.0 should be run with Pike 7.8 or newer.
 ---------------------------------------------------------------
 ");
     exit(1);
@@ -1373,12 +1373,12 @@ string query_configuration_dir()
   return configuration_dir;
 }
 
-static mapping(string:array(SQLTimeout)) sql_free_list = ([ ]);
-static Thread.Local sql_reuse_in_thread = Thread.Local();
+protected mapping(string:array(SQLTimeout)) sql_free_list = ([ ]);
+protected Thread.Local sql_reuse_in_thread = Thread.Local();
 mapping(string:int) sql_active_list = ([ ]);
 
 #ifdef DB_DEBUG
-static int sql_keynum;
+protected int sql_keynum;
 mapping(int:string) my_mysql_last_user = ([]);
 multiset(Sql.Sql) all_wrapped_sql_objects = set_weak_flag( (<>), 1 );
 #endif /* DB_DEBUG */
@@ -1396,12 +1396,12 @@ mapping(string:int) get_sql_free_list_status()
   return map(sql_free_list, sizeof);
 }
 
-static class SQLTimeout(static Sql.Sql real)
+protected class SQLTimeout(protected Sql.Sql real)
 {
   // 5 minutes timeout.
-  static int timeout = time(1) + 5*60;
+  protected int timeout = time(1) + 5*60;
 
-  static int(0..1) `!()
+  protected int(0..1) `!()
   {
     if (timeout < time(1)) {
       real = 0;
@@ -1419,12 +1419,12 @@ static class SQLTimeout(static Sql.Sql real)
   }
 }
 
-static class SQLResKey
+protected class SQLResKey
 {
-  static Sql.sql_result real;
-  static SQLKey key;
+  protected Sql.sql_result real;
+  protected SQLKey key;
 
-  static void create (Sql.sql_result real, SQLKey key)
+  protected void create (Sql.sql_result real, SQLKey key)
   {
     this_program::real = real;
     this_program::key = key;
@@ -1432,41 +1432,41 @@ static class SQLResKey
 
   // Proxy functions:
   // Why are these needed? /mast
-  static int num_rows()
+  protected int num_rows()
   {
     return real->num_rows();
   }
-  static int num_fields()
+  protected int num_fields()
   {
     return real->num_fields();
   }
-  static int eof()
+  protected int eof()
   {
     return real->eof();
   }
-  static array(mapping(string:mixed)) fetch_fields()
+  protected array(mapping(string:mixed)) fetch_fields()
   {
     return real->fetch_fields();
   }
-  static void seek(int skip)
+  protected void seek(int skip)
   {
     real->seek(skip);
   }
-  static int|array(string|int) fetch_row()
+  protected int|array(string|int) fetch_row()
   {
     return real->fetch_row();
   }
 
-  static int(0..1) `!()
+  protected int(0..1) `!()
   {
     return !real;
   }
 
-  static mixed `[]( string what )
+  protected mixed `[]( string what )
   {
     return `->( what );
   }
-  static mixed `->(string what )
+  protected mixed `->(string what )
   {
     switch( what )
     {
@@ -1481,12 +1481,12 @@ static class SQLResKey
     return real[what];
   }
 
-  static string _sprintf(int type)
+  protected string _sprintf(int type)
   {
     return sprintf( "SQLRes( X, %O )", key );
   }
 
-  static void destroy()
+  protected void destroy()
   {
     if (key->reuse_in_thread) {
       // FIXME: This won't work well; destroy() might get called from
@@ -1501,13 +1501,13 @@ static class SQLResKey
   }
 }
 
-static class SQLKey
+protected class SQLKey
 {
-  static Sql.Sql real;
-  static string db_name;
-  static int reuse_in_thread;
+  protected Sql.Sql real;
+  protected string db_name;
+  protected int reuse_in_thread;
 
-  static int `!( )  { return !real; }
+  protected int `!( )  { return !real; }
 
   array(mapping) query( string f, mixed ... args )
   {
@@ -1528,10 +1528,10 @@ static class SQLKey
   }
   
 #ifdef DB_DEBUG
-  static int num = sql_keynum++;
-  static string bt;
+  protected int num = sql_keynum++;
+  protected string bt;
 #endif
-  static void create( Sql.Sql real, string db_name, int reuse_in_thread)
+  protected void create( Sql.Sql real, string db_name, int reuse_in_thread)
   {
     this_program::real = real;
     this_program::db_name = db_name;
@@ -1565,7 +1565,7 @@ static class SQLKey
 #endif /* DB_DEBUG */
   }
   
-  static void destroy()
+  protected void destroy()
   {
     // FIXME: Ought to be abstracted to an sq_cache_free().
 #ifdef DB_DEBUG
@@ -1575,7 +1575,7 @@ static class SQLKey
     if (reuse_in_thread) {
       // FIXME: This won't work well; destroy() might get called from
       // any thread when an object is refcount garbed.
-      mapping(string:SQLKey) dbs_for_thread = sql_reuse_in_thread->get();
+      mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
       if (dbs_for_thread[db_name] == real) {
 	m_delete (dbs_for_thread, db_name);
 	if (!sizeof (dbs_for_thread)) sql_reuse_in_thread->set (0);
@@ -1609,12 +1609,12 @@ static class SQLKey
 #endif
   }
 
-  static mixed `[]( string what )
+  protected mixed `[]( string what )
   {
     return `->( what );
   }
   
-  static mixed `->(string what )
+  protected mixed `->(string what )
   {
     switch( what )
     {
@@ -1627,7 +1627,7 @@ static class SQLKey
     return real[what];
   }
 
-  static string _sprintf(int type)
+  protected string _sprintf(int type)
   {
 #ifdef DB_DEBUG
     if (type == 'd') return (string)num;
@@ -1638,13 +1638,13 @@ static class SQLKey
   }
 }
 
-static Thread.Mutex mt = Thread.Mutex();
+protected Thread.Mutex mt = Thread.Mutex();
 Thread.MutexKey sq_cache_lock()
 {
   return mt->lock();
 }
 
-static mapping(program:string) default_db_charsets = ([]);
+protected mapping(program:string) default_db_charsets = ([]);
 
 Sql.Sql sq_cache_get( string db_name,
 		      void|int reuse_in_thread, void|string charset)
@@ -1652,7 +1652,7 @@ Sql.Sql sq_cache_get( string db_name,
   Sql.Sql db;
 
   if (reuse_in_thread) {
-    mapping(string:SQLKey) dbs_for_thread = sql_reuse_in_thread->get();
+    mapping(string:Sql.Sql) dbs_for_thread = sql_reuse_in_thread->get();
     db = dbs_for_thread && dbs_for_thread[db_name];
   }
 
@@ -1748,7 +1748,7 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db,
   return 0;
 }
 
-static mixed low_connect_to_my_mysql( string|int ro, void|string db )
+protected mixed low_connect_to_my_mysql( string|int ro, void|string db )
 {
   object res;
 #ifdef DB_DEBUG
@@ -1798,8 +1798,8 @@ static mixed low_connect_to_my_mysql( string|int ro, void|string db )
 }
 
 
-static mapping tailf_info = ([]);
-static void do_tailf( int loop, string file )
+protected mapping tailf_info = ([]);
+protected void do_tailf( int loop, string file )
 {
   string mysqlify( string what )
   {
@@ -1848,8 +1848,8 @@ static void do_tailf( int loop, string file )
   } while( loop );
 }
 
-static void low_check_mysql(string basedir, string datadir, array(string) args,
-			    void|Stdio.File errlog)
+protected void low_check_mysql(string basedir, string datadir,
+			       array(string) args, void|Stdio.File errlog)
 {
   array(string) files = ({});
   foreach(get_dir(datadir) || ({}), string dir) {
@@ -2363,20 +2363,20 @@ some environment variables are ignored.
 ");
 #endif
 
-#if __VERSION__ < 7.4
+#if __VERSION__ < 7.8
   report_debug(
 #"
 
 
 ******************************************************
-Roxen 4.0 requires Pike 7.4 or newer.
+Roxen 5.0 requires Pike 7.8 or newer.
 Please install a newer version of Pike.
 ******************************************************
 
 
 ");
   _exit(0); /* 0 means stop start script looping */
-#endif /* __VERSION__ < 7.4 */
+#endif /* __VERSION__ < 7.8 */
 
 #if !constant (Mysql.mysql)
   report_debug (#"
@@ -2393,24 +2393,6 @@ and rebuild Pike from scratch.
 ");
   _exit(0); // 0 means stop start script looping
 #endif // !constant (Mysql.mysql)
-
-  if (catch(((function(mapping(string:string|array(string)),int|void:string))
-	     _Roxen->make_http_headers)(([]), 1))) {
-    add_constant("HAVE_OLD__Roxen_make_http_headers", 1);
-    report_debug(#"
-
-
-------- WARNING -----------------------------------------------
-Old or broken _Roxen.make_http_headers() detected.
-
-Roxen 4.0 prefers Pike 7.4.336 or newer.
-Roxen will still work, but at lower performance.
-Please install a newer version of Pike.
----------------------------------------------------------------
-
-
-");
-  }
 
   Stdio.Stat stat = file_stat("etc/include/version.h");
   if (stat && (stat->mtime > time())) {
@@ -2658,9 +2640,9 @@ library should be enough.
   {
     DC( "SSL.context" );
     DC( "Tools.PEM.pem_msg" );
-    DC( "Crypto.randomness.reasonably_random" );
+    DC( "Crypto.Random.random_string" );
     DC( "Standards.PKCS.RSA.parse_private_key");
-    DC( "Crypto.rsa" );
+    DC( "Crypto.RSA" );
     DC( "Tools.X509.decode_certificate" );
     DC( "Standards.PKCS.DSA.parse_private_key" );
     DC( "SSL.cipher.dh_parameters" );

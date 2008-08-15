@@ -2,7 +2,7 @@
 
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.12 2004/06/30 16:59:20 mast Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.13 2008/08/15 12:33:55 mast Exp $";
 
 #include <roxen.h>
 #include <module.h>
@@ -44,7 +44,7 @@ constant module_doc  =
 
 class FCGIChannel
 {
-  static
+  protected
   {
     Stdio.File fd;
     array request_ids = allocate(MAX_FCGI_PREQ+1);
@@ -197,7 +197,7 @@ class FCGIChannel
         fd = 0;
       }
     }
-  } /* end of static */
+  } /* end of protected */
 
 
   void setup_channels()
@@ -272,11 +272,11 @@ class FCGIChannel
 
 class Packet
 {
-  static
+  protected
   {
     int readyp;
     string leftovers;
-  } /* end of static */
+  } /* end of protected */
 
 
   mixed cast( string to )
@@ -356,7 +356,7 @@ class Stream
 
   int writer, closed;
 
-  static
+  protected
   {
     int reqid;
     FCGIChannel fd;
@@ -712,7 +712,7 @@ class FCGIRun
 
 class FCGI
 {
-  static
+  protected
   {
     Stdio.Port socket;
     array all_pids = ({});
@@ -903,7 +903,7 @@ class FCGI
 //                                         "FCGI_MPXS_CONNS") );
 #endif
     }
-  } /* end of  static */
+  } /* end of  protected */
 
 
   FCGIChannel stream()

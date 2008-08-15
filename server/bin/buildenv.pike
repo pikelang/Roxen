@@ -8,14 +8,14 @@
  *    various other external stuff happy.
  */
  
-string cvs_version = "$Id: buildenv.pike,v 1.9 2005/12/21 13:48:21 noring Exp $";
+string cvs_version = "$Id: buildenv.pike,v 1.10 2008/08/15 12:33:54 mast Exp $";
 
 class Environment
 {
-  static string filename;
-  static mapping(string:array(string)) env, oldenv;
+  protected string filename;
+  protected mapping(string:array(string)) env, oldenv;
 
-  static void read()
+  protected void read()
   {
     string var, def;
     multiset(string) exports = (<>);
@@ -58,7 +58,7 @@ class Environment
     oldenv = copy_value(env);
   }
 
-  static void write()
+  protected void write()
   {
     Stdio.File f = Stdio.File(filename, "cwt");
     if (!f)
@@ -92,7 +92,7 @@ class Environment
     f->close();
   }
 
-  static int changed()
+  protected int changed()
   {
     return !equal(env, oldenv);
   }

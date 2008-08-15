@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.37 2006/01/20 15:05:19 erik Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.38 2008/08/15 12:33:54 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -328,33 +328,33 @@ Modify (adds a second value to an existing attribute):
 
 // Internal helpers
 
-static class ConnectionStatus
+protected class ConnectionStatus
 {
   int last_connect_time;
   string status_msg = "Not connected";
 }
 
-static mapping(string:ConnectionStatus) connection_status = ([]);
+protected mapping(string:ConnectionStatus) connection_status = ([]);
 // Status for every server url.
 
-static constant Connection = NewLDAP.client;
+protected constant Connection = Protocols.LDAP.client;
 
-static ConnectionStatus get_conn_status (string server_url)
+protected ConnectionStatus get_conn_status (string server_url)
 {
   return connection_status[server_url] ||
     (connection_status[server_url] = ConnectionStatus());
 }
 
-static string format_ldap_error (Connection conn)
+protected string format_ldap_error (Connection conn)
 {
   if (string srv_err = conn->server_error_string())
     return sprintf ("%s (%s)", srv_err,
-		    NewLDAP.ldap_error_strings[conn->error_number()]);
+		    Protocols.LDAP.ldap_error_strings[conn->error_number()]);
   else
-    return NewLDAP.ldap_error_strings[conn->error_number()];
+    return Protocols.LDAP.ldap_error_strings[conn->error_number()];
 }
 
-static void connection_error (ConnectionStatus status, string msg, mixed... args)
+protected void connection_error (ConnectionStatus status, string msg, mixed... args)
 {
   if (sizeof (args)) msg = sprintf (msg, @args);
   status->status_msg =
@@ -569,7 +569,8 @@ mapping(string:array(mixed))|int read_attrs(string attrs, int opval, void|string
 
 #endif
 
-static void join_attrvals (mapping(string:array) into, mapping(string:array) from)
+protected void join_attrvals (mapping(string:array) into,
+			      mapping(string:array) from)
 {
   foreach (indices (from), string attr)
     if (into[attr])
@@ -595,7 +596,7 @@ int|array(mapping(string:string|array(string))) do_ldap_op (
   }
 
   if (!binddn)
-    // Avoid an arbitrarily bound connection from NewLDAP.get_connection.
+    // Avoid an arbitrarily bound connection from Protocols.LDAP.get_connection.
     binddn = "";
 
   if (args->password)
@@ -625,21 +626,24 @@ int|array(mapping(string:string|array(string))) do_ldap_op (
     case "modify":
     case "replace": {
       mapping(string:array) add_attrs = args["add-attr"] ?
-	read_attrs (args["add-attr"], NewLDAP.MODIFY_ADD, "add-attr") : ([]);
+	read_attrs (args["add-attr"], Protocols.LDAP.MODIFY_ADD,
+		    "add-attr") : ([]);
       attrvals = args["replace-attr"] ?
-	read_attrs (args["replace-attr"], NewLDAP.MODIFY_REPLACE, "replace-attr") : ([]);
+	read_attrs (args["replace-attr"], Protocols.LDAP.MODIFY_REPLACE,
+		    "replace-attr") : ([]);
       mapping(string:array) delete_attrs = args["delete-attr"] ?
-	read_attrs (args["delete-attr"], NewLDAP.MODIFY_DELETE, "delete-attr") : ([]);
+	read_attrs (args["delete-attr"], Protocols.LDAP.MODIFY_DELETE,
+		    "delete-attr") : ([]);
 
       if (string attr = args->attr) {
 	mapping(string:array) attrs1, attrs2;
 	if (op == "modify") {
 	  attrs1 = add_attrs;
-	  attrs2 = read_attrs (attr, NewLDAP.MODIFY_ADD, "attr");
+	  attrs2 = read_attrs (attr, Protocols.LDAP.MODIFY_ADD, "attr");
 	}
 	else {
 	  attrs1 = attrvals;
-	  attrs2 = read_attrs (attr, NewLDAP.MODIFY_REPLACE, "attr");
+	  attrs2 = read_attrs (attr, Protocols.LDAP.MODIFY_REPLACE, "attr");
 	}
 	join_attrvals (attrs1, attrs2);
       }
@@ -661,9 +665,9 @@ int|array(mapping(string:string|array(string))) do_ldap_op (
       foreach (indices (delete_attrs), string attr) {
 	if (array repl = attrvals[attr]) {
 #ifdef DEBUG
-	  if (repl[0] != NewLDAP.MODIFY_REPLACE) error ("Oops..\n");
+	  if (repl[0] != Protocols.LDAP.MODIFY_REPLACE) error ("Oops..\n");
 #endif
-	  attrvals[attr] = ({NewLDAP.MODIFY_REPLACE}) +
+	  attrvals[attr] = ({Protocols.LDAP.MODIFY_REPLACE}) +
 	    // NB: This doesn't use the proper equality matchers
 	    // according to the attribute syntax.
 	    (repl[1..] - delete_attrs[attr][1..]);
@@ -681,7 +685,8 @@ int|array(mapping(string:string|array(string))) do_ldap_op (
 
   Connection con;
   ConnectionStatus status = get_conn_status (host);
-  if (mixed error = catch (con = NewLDAP.get_connection (host, binddn, pass)))
+  if (mixed error =
+      catch (con = Protocols.LDAP.get_connection (host, binddn, pass)))
     connection_error (status, "Couldn't connect to LDAP server: %s",
 		      describe_error (error));
   if (con->error_number())
@@ -730,8 +735,10 @@ int|array(mapping(string:string|array(string))) do_ldap_op (
 
       Connection.result res =
 	con->search (filter, attr_list, !!args["no-values"], 0,
-		     (args["lower-attrs"] && NewLDAP.SEARCH_LOWER_ATTRS) |
-		     (args["array-values"] && NewLDAP.SEARCH_MULTIVAL_ARRAYS_ONLY));
+		     (args["lower-attrs"] &&
+		      Protocols.LDAP.SEARCH_LOWER_ATTRS) |
+		     (args["array-values"] &&
+		      Protocols.LDAP.SEARCH_MULTIVAL_ARRAYS_ONLY));
 
       if (res) {
 	result = ({});
@@ -769,7 +776,7 @@ int|array(mapping(string:string|array(string))) do_ldap_op (
     connection_error (status, "LDAP operation %s failed: %s\n",
 		      op, format_ldap_error (con));
 
-  NewLDAP.return_connection (con);
+  Protocols.LDAP.return_connection (con);
 
   return result;
 }
@@ -932,7 +939,7 @@ string status()
 	"<tr><td>Status</td>"
 	"<td>&nbsp;" + connection_status[url]->status_msg + "</td></tr>\n"
 	"<tr><td>Open connections</td>"
-	"<td>&nbsp;" + NewLDAP.num_connections (url) + "</td></tr>\n"
+	"<td>&nbsp;" + Protocols.LDAP.num_connections (url) + "</td></tr>\n"
 	"<tr><td>Time of last query</td>"
 	"<td>&nbsp;" + Roxen.html_encode_string (
 	  ctime (connection_status[url]->last_connect_time)) + "</td></tr>\n"

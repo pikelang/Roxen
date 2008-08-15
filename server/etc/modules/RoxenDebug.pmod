@@ -1,6 +1,6 @@
 // Some debug tools.
 //
-// $Id: RoxenDebug.pmod,v 1.11 2008/01/16 15:03:08 mast Exp $
+// $Id: RoxenDebug.pmod,v 1.12 2008/08/15 12:33:54 mast Exp $
 
 
 //! Helper to locate leaking objects. Use a line like this to mark a
@@ -21,7 +21,8 @@ class ObjectMarker
   string id;
   int flags;
 
-  static void debug_msg (array bt, int ignore_frames, string msg, mixed... args)
+  protected void debug_msg (array bt, int ignore_frames,
+			    string msg, mixed... args)
   {
     if (sizeof (args)) msg = sprintf (msg, @args);
 

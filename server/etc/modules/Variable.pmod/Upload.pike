@@ -7,7 +7,7 @@ inherit Variable.String;
 
 constant type="Upload";
 
-static string filename;
+protected string filename;
 
 int set_filename( string to )
 //. Set the filename associated with this upload variable. Not normally

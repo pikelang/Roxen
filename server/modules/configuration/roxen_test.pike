@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.67 2008/08/06 23:34:11 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.68 2008/08/15 12:33:54 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -167,7 +167,7 @@ void set_id_path (RequestID fake_id, string path)
   if (file_stat (realpath)) fake_id->realfile = realpath;
 }
 
-static string ignore_errors = 0;
+protected string ignore_errors = 0;
 
 string rxml_error(RXML.Backtrace err, RXML.Type type) {
   //  if(verbose)

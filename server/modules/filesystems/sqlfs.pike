@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version= "$Id: sqlfs.pike,v 1.8 2004/06/30 16:59:00 mast Exp $";
+constant cvs_version= "$Id: sqlfs.pike,v 1.9 2008/08/15 12:33:54 mast Exp $";
 
 #include <module.h>
 #include <roxen.h>
@@ -90,7 +90,7 @@ private mapping last_file;
 private Thread.Mutex lfm = Thread.Mutex();
 #endif
 
-static string decode_path( string p )
+protected string decode_path( string p )
 {
   if( path_encoding != "iso-8859-1" )
     p = Locale.Charset.encoder( path_encoding )->feed( p )->drain();
@@ -101,7 +101,7 @@ static string decode_path( string p )
   return p;
 }
 
-static array low_stat_file( string f, RequestID id )
+protected array low_stat_file( string f, RequestID id )
 {
   if (disabled)
     return 0;

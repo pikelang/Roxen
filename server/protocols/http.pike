@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.560 2008/08/13 16:18:02 mathias Exp $";
+constant cvs_version = "$Id: http.pike,v 1.561 2008/08/15 12:33:55 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -86,11 +86,11 @@ constant find_supports_and_vars = roxen.find_supports_and_vars;
 constant version         = roxen.version;
 constant _query          = roxen.query;
 
-private static array(string) cache;
-private static int wanted_data, have_data;
-private static object(String.Buffer) data_buffer;
+private array(string) cache;
+private int wanted_data, have_data;
+private object(String.Buffer) data_buffer;
 
-private static multiset(string) none_match;
+private multiset(string) none_match;
 
 int kept_alive;
 
@@ -154,7 +154,7 @@ string rest_query="";
 string raw="";
 string extra_extension = ""; // special hack for the language module
 
-static mapping connection_stats = ([]);
+protected mapping connection_stats = ([]);
 
 class AuthEmulator
 // Emulate the old (rather cumbersome) authentication API 
@@ -689,7 +689,7 @@ int things_to_do_when_not_sending_from_cache( )
   }
 }
 
-static Roxen.HeaderParser hp = Roxen.HeaderParser();
+protected Roxen.HeaderParser hp = Roxen.HeaderParser();
 
 private int parse_got( string new_data )
 {
@@ -1041,7 +1041,7 @@ void disconnect()
   destruct();
 }
 
-static void cleanup_request_object()
+protected void cleanup_request_object()
 {
   if( conf )
     conf->connection_drop( this_object() );
@@ -1090,7 +1090,7 @@ void end(int|void keepit)
   disconnect();
 }
 
-static void close_cb()
+protected void close_cb()
 {
 #ifdef CONNECTION_DEBUG
   werror ("HTTP[%s]: Client close -----------------------------------------\n",
@@ -1133,7 +1133,7 @@ static void close_cb()
   disconnect();
 }
 
-static void do_timeout()
+protected void do_timeout()
 {
   int elapsed = predef::time(1)-time;
   if(time && elapsed >= 30)
@@ -1173,8 +1173,8 @@ string link_to(string file, int line, string fun, int eid, int qq)
 	  "\">");
 }
 
-static string error_page(string title, void|string msg,
-			 void|string longmsg, void|string body)
+protected string error_page(string title, void|string msg,
+			    void|string longmsg, void|string body)
 {
   if (longmsg && has_suffix (longmsg, "\n"))
     longmsg = longmsg[..sizeof (longmsg) - 2];
@@ -1240,16 +1240,16 @@ static string error_page(string title, void|string msg,
 }
 
 
-static string get_err_md5(array(string|array(string)|array(array)) err_info)
+protected string get_err_md5(array(string|array(string)|array(array)) err_info)
 {
   if (err_info) {
-    return Crypto.string_to_hex(Crypto.md5()->update(err_info[3])->digest());
+    return String.string2hex(Crypto.MD5()->update(err_info[3])->digest());
   }
   return "NONE";
 }
 
-static array(string|array(string)|array(array)) get_err_info(int eid,
-							     string|void md5)
+protected array(string|array(string)|array(array)) get_err_info(int eid,
+								string|void md5)
 {
   array(string|array(string)|array(array)) err_info = 
     roxen.query_var ("errors")[eid];
@@ -1431,8 +1431,7 @@ array get_error(string eid, string md5)
   mapping e = roxen.query_var("errors");
   if(e) {
     array r = e[(int)eid];
-    if (r && (md5 == Crypto.string_to_hex(Crypto.md5()->
-					  update(r[3])->digest()))) {
+    if (r && (md5 == String.string2hex(Crypto.MD5()->update(r[3])->digest()))) {
       return r;
     }
   }
@@ -1487,9 +1486,9 @@ int wants_more()
   return !!cache;
 }
 
-static object(this_program) chained_to;
+protected object(this_program) chained_to;
 
-static void destroy()
+protected void destroy()
 {
   // To avoid references to destructed RequestID objects. Happens
   // otherwise when prot_https makes a http -> https redirect, for
@@ -2904,7 +2903,7 @@ void clean()
     end();
 }
 
-static void create(object f, object c, object cc)
+protected void create(object f, object c, object cc)
 {
   if(f)
   {

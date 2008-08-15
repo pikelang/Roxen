@@ -21,7 +21,7 @@ class ConfigIFCache
 {
   string dir;
   function db;
-  private static inherit "newdecode";
+  private inherit "newdecode";
 
   mixed query( string what, mixed ... args )
   {
@@ -123,7 +123,7 @@ class ConfigIFCache
 }
 
 
-static mapping settings_cache = ([ ]);
+protected mapping settings_cache = ([ ]);
 ConfigIFCache config_settings;
 ConfigIFCache config_settings2;
 
@@ -143,7 +143,7 @@ class ConfigurationSettings
       return "Unknown theme ("+theme+")";
     }
 
-    static array(string) all_themes( )
+    protected array(string) all_themes( )
     {
       return filter((get_dir( "config_interface/themes/" ) + 
 		     (get_dir( "../local/config_interface/themes/" )||({}))-
@@ -176,13 +176,13 @@ class ConfigurationSettings
       return all_themes();
     }
 
-    static string _title( string what )
+    protected string _title( string what )
     {
       return theme_name( what );
     }
 
-    static void create(mixed default_value,int flags,
-                       string std_name,string std_doc)
+    protected void create(mixed default_value,int flags,
+			  string std_name,string std_doc)
     {
       ::create( default_value,0, flags,std_name, std_doc );
     }
@@ -201,7 +201,7 @@ class ConfigurationSettings
     config_settings2->set( name, trim_variables(variables) );
   }
 
-  static string _sprintf()
+  protected string _sprintf()
   {
     return sprintf("ConfigSettings( %O )", name );
   }
@@ -219,10 +219,10 @@ class ConfigurationSettings
   {
     inherit Variable.Variable;
     constant type = "ContentBoxes";
-    static string box_type;
+    protected string box_type;
 
 #define BDIR "config_interface/boxes/"
-    static mapping bdata = ([]);
+    protected mapping bdata = ([]);
     array possible( )
     {
       class Box
@@ -263,8 +263,8 @@ class ConfigurationSettings
       return i;
     }
 
-    static void create( LocaleString name, LocaleString doc,
-                        string _type, int|void flags  )
+    protected void create( LocaleString name, LocaleString doc,
+			   string _type, int|void flags  )
     {
       box_type = _type;
       _initial = ({});
@@ -276,7 +276,7 @@ class ConfigurationSettings
       set_flags( flags );
     }
 
-    static string short_describe_box( string box )
+    protected string short_describe_box( string box )
     {
       if( !bdata[box] )  possible();
       if( !bdata[box] )
@@ -303,7 +303,7 @@ class ConfigurationSettings
       }
     }
 
-    static string describe_box( string b, string ea )
+    protected string describe_box( string b, string ea )
     {
       mapping bd = bdata[b];
       if( bd )
@@ -326,7 +326,7 @@ class ConfigurationSettings
     }
   }
 
-  static void create( string _name )
+  protected void create( string _name )
   {
     name = _name;
     variables = ([]);
@@ -708,13 +708,13 @@ class AdminUser
     if( crypt( auth[1], password ) )  return 1;
   }
 
-  static void create( string n )
+  protected void create( string n )
   {
     name = n;
     restore( );
   }
 
-  static string _sprintf()
+  protected string _sprintf()
   {
     return sprintf("AdminUser( %O, %O, %{%s %} )", 
                    name, real_name, (array)permissions);
@@ -747,7 +747,7 @@ void init_configuserdb()
 }
 
 // cache
-static mapping(string:AdminUser) admin_users = ([]);
+protected mapping(string:AdminUser) admin_users = ([]);
 
 AdminUser find_admin_user( string s )
 {
@@ -815,7 +815,7 @@ class UserDBModule
 
   string module_identifier(){ return 0; }
   
-  static class CFUser
+  protected class CFUser
   {
     inherit User;
     AdminUser ruser;
@@ -830,7 +830,7 @@ class UserDBModule
     string crypted_password()  {  return ruser->password; }
 
 
-    static void create( UserDB p, AdminUser u )
+    protected void create( UserDB p, AdminUser u )
     {
       ::create( p );
       ruser = u;

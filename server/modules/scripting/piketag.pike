@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.37 2004/06/30 16:59:20 mast Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.38 2008/08/15 12:33:55 mast Exp $";
 constant thread_safe=1;
 
 inherit "module";
@@ -202,7 +202,7 @@ array helper_prototypes( )
   return SPLIT("inherit __ps_magic_protos;\nimport Roxen;\n",PREFN);
 }
 
-private static mapping(string:program) program_cache = ([]);
+private mapping(string:program) program_cache = ([]);
 
 string simple_pi_tag_pike( string tag, mapping m, string s,RequestID id  )
 {

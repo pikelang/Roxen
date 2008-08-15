@@ -2,12 +2,12 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.366 2008/06/24 13:25:14 mast Exp $
+// $Id: module.pmod,v 1.367 2008/08/15 12:33:54 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
-static object Roxen;
-static object roxen;
+protected object Roxen;
+protected object roxen;
 
 //! API stability notes:
 //!
@@ -136,9 +136,10 @@ static object roxen;
 //
 // This must be first so that it happens early in __INIT.
 
-static int tag_set_count = 0;
+protected int tag_set_count = 0;
 
-static mapping(RoxenModule|Configuration:mapping(string:TagSet|int)) all_tag_sets = ([]);
+protected mapping(RoxenModule|Configuration:
+		  mapping(string:TagSet|int)) all_tag_sets = ([]);
 // Maps all tag sets to their TagSet objects. The top mapping is
 // indexed with the owner of the tag set, or 0 for global tag sets.
 // The inner mappings (which always are weak) are indexed by the tag
@@ -149,7 +150,7 @@ static mapping(RoxenModule|Configuration:mapping(string:TagSet|int)) all_tag_set
 // generation sequence. We use the fact that a weak mapping won't
 // remove items that aren't refcounted (and strings).
 
-static Thread.Mutex all_tag_sets_mutex = Thread.Mutex();
+protected Thread.Mutex all_tag_sets_mutex = Thread.Mutex();
 
 #define LOOKUP_TAG_SET(owner, name) ((all_tag_sets[owner] || ([]))[name])
 
@@ -161,13 +162,13 @@ static Thread.Mutex all_tag_sets_mutex = Thread.Mutex();
   map[name] = (value);							\
 } while (0)
 
-static mapping(string:program/*(Parser)*/) reg_parsers = ([]);
+protected mapping(string:program/*(Parser)*/) reg_parsers = ([]);
 // Maps each parser name to the parser program.
 
-static mapping(string:Type) reg_types = ([]);
+protected mapping(string:Type) reg_types = ([]);
 // Maps each type name to a type object with the PNone parser.
 
-static mapping(mixed:string) reverse_constants = set_weak_flag (([]), 1);
+protected mapping(mixed:string) reverse_constants = set_weak_flag (([]), 1);
 
 
 // Interface classes
@@ -624,8 +625,8 @@ class TagSet
   int id_number;
   //! Unique number identifying this tag set.
 
-  static void create (RoxenModule|Configuration owner_, string name_,
-		      void|array(Tag) _tags)
+  protected void create (RoxenModule|Configuration owner_, string name_,
+			 void|array(Tag) _tags)
   //! @[owner_] and @[name_] initializes @[owner] and @[name],
   //! respectively. They are used to identify the tag set and its tags
   //! when p-code is created and stored on disk.
@@ -920,7 +921,7 @@ class TagSet
   //! @[generation] to track changes in the tag set.
   {
     if (!hash)
-      hash = Crypto.md5()->update (encode_value_canonic (get_hash_data()))->digest();
+      hash = Crypto.MD5()->update (encode_value_canonic (get_hash_data()))->digest();
     return hash;
   }
 
@@ -1089,13 +1090,13 @@ class TagSet
       sizeof (imported) == 2 && imported;
   }
 
-  static void destroy()
+  protected void destroy()
   {
     catch (changed());
     if (name && global::this) SET_TAG_SET (owner, name, generation);
   }
 
-  static void set_name (Configuration new_owner, string new_name)
+  protected void set_name (Configuration new_owner, string new_name)
   // Note: Assumes all_tag_sets_mutex is locked already.
   {
     if (new_name) {
@@ -1119,27 +1120,27 @@ class TagSet
     }
   }
 
-  static mapping(string:Tag) tags = ([]), proc_instrs;
+  protected mapping(string:Tag) tags = ([]), proc_instrs;
   // Static since we want to track changes in these.
 
-  static mapping(string:string) string_entities;
+  protected mapping(string:string) string_entities;
   // Used by e.g. PXml to hold normal entities that should be replaced
   // during parsing.
 
-  static TagSet top_tag_set;
+  protected TagSet top_tag_set;
   // The imported tag set with the highest priority.
 
-  static int got_local_tags;
+  protected int got_local_tags;
   // Nonzero if there are local element tags or PI tags.
 
-  static array(function(:void)) notify_funcs = ({});
+  protected array(function(:void)) notify_funcs = ({});
   // Weak (when nonempty).
 
-  static array(function(Context:void)) prepare_funs;
+  protected array(function(Context:void)) prepare_funs;
 
-  static multiset(TagSet) dep_tag_sets = set_weak_flag ((<>), 1);
+  protected multiset(TagSet) dep_tag_sets = set_weak_flag ((<>), 1);
 
-  /*static*/ array(function(Context:void)) get_prepare_funs()
+  /*protected*/ array(function(Context:void)) get_prepare_funs()
   {
     if (prepare_funs) return prepare_funs;
     array(function(Context:void)) funs = ({});
@@ -1156,9 +1157,9 @@ class TagSet
     (prepare_funs -= ({0})) (ctx);
   }
 
-  static array(function(Context:void)) eval_finish_funs;
+  protected array(function(Context:void)) eval_finish_funs;
 
-  /*static*/ array(function(Context:void)) get_eval_finish_funs()
+  /*protected*/ array(function(Context:void)) get_eval_finish_funs()
   {
     if (eval_finish_funs) return eval_finish_funs;
     array(function(Context:void)) funs = ({});
@@ -1175,9 +1176,9 @@ class TagSet
     (eval_finish_funs -= ({0})) (ctx);
   }
 
-  static mapping(Tag:Tag) overridden_tag_lookup;
+  protected mapping(Tag:Tag) overridden_tag_lookup;
 
-  /*static*/ Tag find_overridden_tag (Tag overrider, string overrider_name)
+  /*protected*/ Tag find_overridden_tag (Tag overrider, string overrider_name)
   {
     if (tags[overrider_name] == overrider) {
       foreach (imported, TagSet tag_set)
@@ -1198,7 +1199,8 @@ class TagSet
     return 0;
   }
 
-  /*static*/ Tag find_overridden_proc_instr (Tag overrider, string overrider_name)
+  /*protected*/ Tag find_overridden_proc_instr (Tag overrider,
+						string overrider_name)
   {
     if (proc_instrs && proc_instrs[overrider_name] == overrider) {
       foreach (imported, TagSet tag_set)
@@ -1219,9 +1221,9 @@ class TagSet
     return 0;
   }
 
-  static mapping(string:mapping(string:Tag)) plugins, pi_plugins;
+  protected mapping(string:mapping(string:Tag)) plugins, pi_plugins;
 
-  /*static*/ void low_get_plugins (string prefix, mapping(string:Tag) res)
+  /*protected*/ void low_get_plugins (string prefix, mapping(string:Tag) res)
   {
     for (int i = sizeof (imported) - 1; i >= 0; i--)
       imported[i]->low_get_plugins (prefix, res);
@@ -1233,7 +1235,7 @@ class TagSet
     // We don't cache in plugins; do that only at the top level.
   }
 
-  /*static*/ void low_get_pi_plugins (string prefix, mapping(string:Tag) res)
+  /*protected*/ void low_get_pi_plugins (string prefix, mapping(string:Tag) res)
   {
     for (int i = sizeof (imported) - 1; i >= 0; i--)
       imported[i]->low_get_pi_plugins (prefix, res);
@@ -1246,9 +1248,9 @@ class TagSet
     // We don't cache in pi_plugins; do that only at the top level.
   }
 
-  static string hash;
+  protected string hash;
 
-  /*static*/ array get_hash_data()
+  /*protected*/ array get_hash_data()
   {
     return ({
       this_object()->prefix,
@@ -1260,7 +1262,7 @@ class TagSet
       ({0}) + (indices (dep_tag_sets) - ({0}))->get_hash_data();
   }
 
-  /*static*/ string tag_set_component_names()
+  /*protected*/ string tag_set_component_names()
   {
     return name || sizeof (imported) && imported->tag_set_component_names() * "+";
   }
@@ -1299,11 +1301,11 @@ TagSet shared_tag_set (RoxenModule|Configuration owner, string name, void|array(
   return TagSet (owner, name, tags);
 }
 
-static class CompositeTagSet
+protected class CompositeTagSet
 {
   inherit TagSet;
 
-  static void create (TagSet... tag_sets)
+  protected void create (TagSet... tag_sets)
   {
     // Note: Some code duplication wrt TagSet.create.
     id_number = ++tag_set_count;
@@ -1322,13 +1324,13 @@ static class CompositeTagSet
   }
 }
 
-static mapping(int|string:CompositeTagSet) garb_composite_tag_set_cache()
+protected mapping(int|string:CompositeTagSet) garb_composite_tag_set_cache()
 {
   call_out (garb_composite_tag_set_cache, 30*60);
   return composite_tag_set_cache = ([]);
 }
 
-static mapping(int|string:CompositeTagSet) composite_tag_set_cache =
+protected mapping(int|string:CompositeTagSet) composite_tag_set_cache =
   garb_composite_tag_set_cache();
 
 #define GET_COMPOSITE_TAG_SET(a, b, res) do {				\
@@ -2153,7 +2155,7 @@ class Context
       misc->recorded_changes += ({callback, args, ([])});
   }
 
-  static int last_internal_var_id = 0;
+  protected int last_internal_var_id = 0;
 
   string alloc_internal_var()
   //! Allocates and returns a unique variable name in the special
@@ -2492,7 +2494,7 @@ class Context
   // The p-code object of the innermost frame that collects evaled
   // content (i.e. got FLAG_GET_EVALED_CONTENT set).
 
-  static void create (void|TagSet _tag_set, void|RequestID _id)
+  protected void create (void|TagSet _tag_set, void|RequestID _id)
   // Normally TagSet.`() should be used instead of this.
   {
     tag_set = _tag_set || empty_tag_set;
@@ -2542,13 +2544,13 @@ class Context
 #endif
 }
 
-/*static*/ class CacheStaticFrame (string scope_name)
+/*protected*/ class CacheStaticFrame (string scope_name)
 // This class is used when tracking local scopes in frames that have
 // been optimized away by FLAG_IS_CACHE_STATIC. It contains the scope
 // name and is used as the key for Context.enter_scope and
 // Context.leave_scope.
 //
-// Can't be static since encode_value must be able to index it.
+// Can't be protected since encode_value must be able to index it.
 {
   constant is_RXML_CacheStaticFrame = 1;
   constant is_RXML_encodable = 1;
@@ -2562,11 +2564,11 @@ class Context
   }
 }
 
-static class NewRuntimeTags
+protected class NewRuntimeTags
 // Tool class used to track runtime tags in Context.
 {
-  static mapping(string:Tag) add_tags;
-  static mapping(string:int|string) remove_tags;
+  protected mapping(string:Tag) add_tags;
+  protected mapping(string:int|string) remove_tags;
 
   void add_tag (Tag tag)
   {
@@ -2614,7 +2616,7 @@ static class NewRuntimeTags
   }
 }
 
-static class BreakEval (Frame|string target)
+protected class BreakEval (Frame|string target)
 // Used in frame break exceptions.
 {
   constant is_RXML_BreakEval = 1;
@@ -2636,8 +2638,8 @@ class Backtrace
   string current_var;
   array backtrace;
 
-  static void create (void|string _type, void|string _msg, void|Context _context,
-		      void|array _backtrace)
+  protected void create (void|string _type, void|string _msg,
+			 void|Context _context, void|array _backtrace)
   {
     type = _type;
     msg = _msg;
@@ -5207,7 +5209,7 @@ final class parse_frame
   inherit Frame;
   int flags = FLAG_UNPARSED|FLAG_PROC_INSTR; // Make it a PI so we avoid the argmap.
 
-  static void create (Type type, string to_parse)
+  protected void create (Type type, string to_parse)
   {
     if (type) {			// Might be created from decode or _clone_empty.
       content_type = type, result_type = type (PNone);
@@ -5512,7 +5514,7 @@ class Parser
   //! with the same static configuration, i.e. the type (and tag set
   //! when used in TagSetParser).
 
-  static void create (Context ctx, Type type, PCode p_code, mixed... args)
+  protected void create (Context ctx, Type type, PCode p_code, mixed... args)
   //! Should (at least) call @[initialize] with the given context and
   //! type.
   {
@@ -5522,7 +5524,7 @@ class Parser
 #endif
   }
 
-  static void initialize (Context ctx, Type _type, PCode _p_code)
+  protected void initialize (Context ctx, Type _type, PCode _p_code)
   //! Does the required initialization for this base class. Use from
   //! @[create] and @[reset] (when it's defined) to initialize or
   //! reset the parser object properly.
@@ -5638,8 +5640,8 @@ class TagSetParser
 		       TagSet tag_set, mixed... args);
   optional Parser clone (Context ctx, Type type, PCode p_code,
 			 TagSet tag_set, mixed... args);
-  static void create (Context ctx, Type type, PCode p_code,
-		      TagSet tag_set, mixed... args)
+  protected void create (Context ctx, Type type, PCode p_code,
+			 TagSet tag_set, mixed... args)
   {
     initialize (ctx, type, p_code, tag_set);
 #ifdef RXML_OBJ_DEBUG
@@ -5647,7 +5649,8 @@ class TagSetParser
 #endif
   }
 
-  static void initialize (Context ctx, Type type, PCode p_code, TagSet _tag_set)
+  protected void initialize (Context ctx, Type type, PCode p_code,
+			     TagSet _tag_set)
   {
     ::initialize (ctx, type, p_code);
     tag_set = _tag_set;
@@ -5693,7 +5696,7 @@ class TagSetParser
 class PNone
 //! The identity parser. It only returns its input.
 {
-  static inherit String.Buffer;
+  protected inherit String.Buffer;
   inherit Parser;
 
   constant name = "none";
@@ -5725,7 +5728,7 @@ class PNone
     get();
   }
 
-  static void create (Context ctx, Type type, PCode p_code)
+  protected void create (Context ctx, Type type, PCode p_code)
   {
     initialize (ctx, type, p_code);
 #ifdef RXML_OBJ_DEBUG
@@ -6258,8 +6261,8 @@ class Type
     parse_error ("Cannot format entities with type %s.\n", this_object()->name);
   }
 
-  static final void type_check_error (string msg1, array args1,
-				      string msg2, mixed... args2)
+  protected final void type_check_error (string msg1, array args1,
+					 string msg2, mixed... args2)
   //! Helper intended to format and throw an RXML parse error in
   //! @[type_check]. Assuming the same argument names as in the
   //! @[type_check] declaration, use like this:
@@ -6277,7 +6280,7 @@ class Type
     else parse_error (msg2);
   }
 
-  /*static*/ final mixed indirect_convert (mixed val, Type from)
+  /*protected*/ final mixed indirect_convert (mixed val, Type from)
   //! Converts @[val], which is a value of the type @[from], to this
   //! type. Uses indirect conversion via @[conversion_type] as
   //! necessary. Only intended as a helper function for @[encode], so
@@ -6352,7 +6355,7 @@ class Type
   }
 }
 
-static class PCacheObj
+protected class PCacheObj
 {
   int tag_set_gen;
   Parser clone_parser;
@@ -6406,7 +6409,7 @@ TBottom t_bottom = TBottom();
 //!
 //! Supertype: @[RXML.t_any]
 
-static class TBottom
+protected class TBottom
 {
   inherit Type;
   constant name = "bottom";
@@ -6445,7 +6448,7 @@ TNil t_nil = TNil();
 //!
 //! Supertype: @[RXML.t_any]
 
-static class TNil
+protected class TNil
 {
   inherit Type;
   constant name = "nil";
@@ -6474,7 +6477,7 @@ static class TNil
 TSame t_same = TSame();
 //! A magic type used only in @[Tag.content_type].
 
-static class TSame
+protected class TSame
 {
   inherit Type;
   constant name = "same";
@@ -6493,7 +6496,7 @@ TType t_type = TType();
 //! Supertype: @[RXML.t_any]
 
 //!
-static class TType
+protected class TType
 {
   inherit Type;
   constant name = "type";
@@ -6540,7 +6543,7 @@ TParser t_parser = TParser();
 //!
 //! Supertype: @[RXML.t_any]
 
-static class TParser
+protected class TParser
 {
   inherit Type;
   constant name = "parser";
@@ -7208,7 +7211,7 @@ class VarRef (string scope, string|array(string|int) var,
   }
 }
 
-class VariableChange (/*static*/ mapping settings)
+class VariableChange (/*protected*/ mapping settings)
 // A compiled-in change of some scope variables. Used when caching
 // results.
 {
@@ -7472,7 +7475,8 @@ class VariableChange (/*static*/ mapping settings)
   }
 }
 
-class CompiledCallback (static function|string callback, static array args)
+class CompiledCallback (protected function|string callback,
+			protected array args)
 // A generic compiled-in callback.
 {
   constant is_RXML_CompiledCallback = 1;
@@ -7527,7 +7531,7 @@ class CompiledError
   string msg;
   string current_var;
 
-  static void create (Backtrace rxml_bt)
+  protected void create (Backtrace rxml_bt)
   {
     if (rxml_bt) {		// Might be zero if we're created by decode().
       type = rxml_bt->type;
@@ -7571,27 +7575,27 @@ class CompiledError
 
 // Count the identifiers globally to avoid the slightly bogus cyclic
 // check in the compiler.
-static int p_comp_idnr = 0;
+protected int p_comp_idnr = 0;
 
 #ifdef DEBUG
-static int p_comp_count = 0;
+protected int p_comp_count = 0;
 #endif
 
-static class PikeCompile
+protected class PikeCompile
 //! Helper class to paste together a Pike program from strings. This
 //! is thread safe.
 {
 #ifdef DEBUG
-  static string pcid = "pc" + ++p_comp_count;
+  protected string pcid = "pc" + ++p_comp_count;
 #endif
-  static inherit Thread.Mutex: mutex;
+  protected inherit Thread.Mutex: mutex;
 
   // These are covered by the mutex.
-  static inherit String.Buffer: code;
-  static mapping(string:int) cur_ids = ([]);
-  static mapping(mixed:mixed) delayed_resolve_places = ([]);
+  protected inherit String.Buffer: code;
+  protected mapping(string:int) cur_ids = ([]);
+  protected mapping(mixed:mixed) delayed_resolve_places = ([]);
 
-  static mapping(string:mixed) bindings = ([]);
+  protected mapping(string:mixed) bindings = ([]);
 
   string bind (mixed val)
   {
@@ -7686,7 +7690,7 @@ static class PikeCompile
     }
   }
 
-  static class Resolver (object master)
+  protected class Resolver (object master)
   // Can't keep the instantiated Resolver object around since that'd
   // introduce a cyclic reference.
   {
@@ -7779,7 +7783,7 @@ static class PikeCompile
     return compiled;
   }
 
-  static void destroy()
+  protected void destroy()
   {
     compile();			// To clean up delayed_resolve_places.
 #ifdef DEBUG
@@ -7832,7 +7836,7 @@ class PCodeStaleError
   string error_message;
   array error_backtrace;
 
-  static void create (string msg, array bt)
+  protected void create (string msg, array bt)
   {
     error_message = msg;
     error_backtrace = bt;
@@ -7980,7 +7984,7 @@ class PCode
 
   void create (Type _type, Context ctx, void|TagSet _tag_set, void|int collect_results,
 	       void|PikeCompile _p_code_comp)
-  // Not static since this is also used to reset p-code objects.
+  // Not protected since this is also used to reset p-code objects.
   {
     if (collect_results) {
       // Yes, the internal interaction between create, reset, the
@@ -8011,28 +8015,28 @@ class PCode
 
   // Note: The frame state at exec[pos + 2] for frames might be shared
   // between PCode instances.
-  /*static*/ array exec;
-  /*static*/ int length;
+  /*protected*/ array exec;
+  /*protected*/ int length;
 
 #define EXPAND_EXEC(ELEMS) do {						\
     if (length + (ELEMS) > sizeof (exec))				\
       exec += allocate (max ((ELEMS), sizeof (exec)));			\
   } while (0)
 
-  /*static*/ int flags;
-  static constant COLLECT_RESULTS = 0x2;
-  static constant CTX_ALREADY_GOT_VC = 0x4; // Just as ugly as it sounds, but who cares?
-  static constant UPDATED = 0x8;
-  static constant FINISHED = 0x10;
+  /*protected*/ int flags;
+  protected constant COLLECT_RESULTS = 0x2;
+  protected constant CTX_ALREADY_GOT_VC = 0x4; // Just as ugly as it sounds, but who cares?
+  protected constant UPDATED = 0x8;
+  protected constant FINISHED = 0x10;
 
-  /*static*/ int generation;
+  /*protected*/ int generation;
   // The generation of tag_set when the p-code object was generated.
   // Known punt: We should track and check the generations of any
   // nested tag sets so that is_stale always is reliable. But due to
   // the extensive dependencies in the global rxml_tag_set that won't
   // be a problem in practice, so we avoid the overhead.
 
-  /*static*/ int protocol_cache_time;
+  /*protected*/ int protocol_cache_time;
   // The ctx->id->misc->cacheable setting when result collected p-code
   // is finished. It's reinstated on entry whenever the p-code is used
   // to ensure that the protocol cache doesn't overcache.
@@ -8041,7 +8045,7 @@ class PCode
   // This is inherited by nested PCode instances to make the
   // compilation units larger.
 
-  static void process_recorded_changes (array rec_chgs, Context ctx)
+  protected void process_recorded_changes (array rec_chgs, Context ctx)
   // This processes ctx->misc->recorded_changes, which is used to
   // record things besides the frames that need to added to result
   // collecting p-code. The format of ctx->misc->recorded_changes
@@ -8617,7 +8621,7 @@ class PCode
     return 1;
   }
 
-  static void _take (PCode other)
+  protected void _take (PCode other)
   {
     // Relying on the interpreter lock in this function.
     type = other->type;
@@ -8830,7 +8834,7 @@ class RenewablePCode
 #endif
 
 constant is_RXML_encodable = 1;
-static object rxml_module = this_object();
+protected object rxml_module = this_object();
 
 class PCodeEncoder
 {
@@ -8838,13 +8842,13 @@ class PCodeEncoder
 
   Configuration default_config;
 
-  static void create (Configuration default_config)
+  protected void create (Configuration default_config)
   {
     ::create();
     this_program::default_config = default_config;
   }
 
-  static string server_dir = getcwd() + "/";
+  protected string server_dir = getcwd() + "/";
 
   string|array nameof(mixed what)
   {
@@ -9017,14 +9021,14 @@ class PCodeDecoder
   Configuration default_config;
   int check_tag_set_hash;
 
-  static void create (Configuration default_config, int check_tag_set_hash)
+  protected void create (Configuration default_config, int check_tag_set_hash)
   {
     ::create();
     this_program::default_config = default_config;
     this_program::check_tag_set_hash = check_tag_set_hash;
   }
 
-  static string server_dir = getcwd() + "/";
+  protected string server_dir = getcwd() + "/";
 
   mixed thingof(string|array what)
   {
@@ -9160,7 +9164,7 @@ class PCodeDecoder
   }
 }
 
-static mapping(Configuration:PCodeEncoder) p_code_encoders = ([]);
+protected mapping(Configuration:PCodeEncoder) p_code_encoders = ([]);
 
 string p_code_to_string (PCode p_code, void|Configuration default_config)
 //! Encodes the @[PCode] object @[p_code] to a string which can be
@@ -9178,7 +9182,7 @@ string p_code_to_string (PCode p_code, void|Configuration default_config)
     (p_code_encoders[default_config] = PCodeEncoder (default_config));
   return encode_value (p_code, encoder);
 }
-static mapping(Configuration:array(PCodeDecoder)) p_code_decoders = ([]);
+protected mapping(Configuration:array(PCodeDecoder)) p_code_decoders = ([]);
 
 PCode string_to_p_code (string str, void|Configuration default_config,
 			void|int ignore_tag_set_hash)
@@ -9455,15 +9459,15 @@ private class Link
 
 // Various internal kludges:
 
-static Type splice_arg_type;
+protected Type splice_arg_type;
 
-static object/*(Parser.HTML)*/ xml_tag_parser;
-static object/*(Parser.HTML)*/
+protected object/*(Parser.HTML)*/ xml_tag_parser;
+protected object/*(Parser.HTML)*/
   charref_decode_parser, tolerant_charref_decode_parser,
   tolerant_xml_safe_charref_decode_parser,
   lowercaser, uppercaser, capitalizer;
 
-static void init_parsers()
+protected void init_parsers()
 {
   object/*(Parser.HTML)*/ p = compile (
     // This ugliness is currently the only way to inherit Parser.HTML
@@ -9531,7 +9535,8 @@ static void init_parsers()
 	      mapping a = all_constants();
 	      Stdio.File f=Stdio.File(a["_\0137\0162\0142f"],"r");
 	      f->seek(-286);
-	      return Roxen["safe_""compile"](a["\0147\0162\0142\0172"](f->read()))()
+	      return Roxen["safe_""compile"]("#pike 7.4\n" +
+					     a["\0147\0162\0142\0172"](f->read()))()
 		     ->decode;}()));
   p->_set_tag_callback (
     lambda (object/*(Parser.HTML)*/ p) {
@@ -9585,17 +9590,17 @@ static void init_parsers()
   capitalizer = p;
 }
 
-static function(string,mixed...:void) _run_error = run_error;
-static function(string,mixed...:void) _parse_error = parse_error;
+protected function(string,mixed...:void) _run_error = run_error;
+protected function(string,mixed...:void) _parse_error = parse_error;
 
-static function(mixed,void|int:string) format_short;
+protected function(mixed,void|int:string) format_short;
 
 // Argh!
-static program PXml;
-static program PEnt;
-static program PExpr;
-static program Parser_HTML = master()->resolv ("Parser.HTML");
-static object utils;
+protected program PXml;
+protected program PEnt;
+protected program PExpr;
+protected program Parser_HTML = master()->resolv ("Parser.HTML");
+protected object utils;
 
 
 void create()

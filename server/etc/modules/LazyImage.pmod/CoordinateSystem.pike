@@ -11,7 +11,7 @@ constant operation_name = "coordinate-system";
 //!                The default is a fully opaque layer.
 
 
-static
+protected
 {
   mapping parse_data(string d)
   {

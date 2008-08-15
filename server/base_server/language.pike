@@ -1,6 +1,6 @@
 // Roxen Locale Support
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: language.pike,v 1.42 2007/05/03 13:42:53 mast Exp $
+// $Id: language.pike,v 1.43 2008/08/15 12:33:53 mast Exp $
 
 #pragma strict_types
 
@@ -52,7 +52,7 @@ int(0..1) set_locale(void|string lang)
 }
 
 // Compatibility mapping
-static mapping(string:string) compat_languages = ([
+protected mapping(string:string) compat_languages = ([
   "english":"eng",
   "standard":"eng",
   "svenska":"swe",
@@ -139,7 +139,7 @@ void initiate_languages(string def_loc)
 
 // ------------- The language functions ------------
 
-static string nil()
+protected string nil()
 {
 #ifdef LANGUAGE_DEBUG
   report_debug("Cannot find that one in %O.\n", list_languages());
@@ -148,7 +148,7 @@ static string nil()
 }
 
 /* Return a pointer to an language-specific conversion function. */
-public function language(string lang, string func, object|void id)
+function language(string lang, string func, object|void id)
 {
 #ifdef LANGUAGE_DEBUG
   report_debug("Function: '" + func + "' in "+ verify_locale(lang) +"\n");

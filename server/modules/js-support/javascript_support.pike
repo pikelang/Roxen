@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.67 2008/03/14 10:01:36 mast Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.68 2008/08/15 12:33:54 mast Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -23,10 +23,10 @@ constant thread_safe = 1;
 //  where token is the token used when registering the callback and path
 //  is the remaining part of the URL. The function should return the
 //  JavaScript code which gets sent to the browser.
-static private mapping(string:function(string,string,object:string)) callbacks = ([ ]);
+private mapping(string:function(string,string,object:string)) callbacks = ([ ]);
 
 //  Mapping of serverside exludes.
-static private mapping(string:string) externals;
+private mapping(string:string) externals;
 
 string query_provides()
 {
@@ -87,9 +87,9 @@ class JSInsert
 {
   constant is_RXML_encodable = 1;
 
-  static private string name;
-  static private mapping(string:string) args;
-  static private string content = "";
+  private string name;
+  private mapping(string:string) args;
+  private string content = "";
 
   void add(string s)
   {
@@ -120,8 +120,8 @@ class JSSupport
 {
   constant is_RXML_encodable = 1;
 
-  static private mapping(string:JSInsert) inserts = ([]);
-  static private mapping(string:int) keys = ([]);
+  private mapping(string:JSInsert) inserts = ([]);
+  private mapping(string:int) keys = ([]);
 
   string get_unique_id(string name)
   {
@@ -151,7 +151,7 @@ class JSSupport
   void _decode (array data) {[inserts, keys] = data;}
 }
 
-static private
+private
 string c_js_quote(string name, mapping args, string contents)
 {
   if (!sizeof(contents))
@@ -168,7 +168,7 @@ string c_js_quote(string name, mapping args, string contents)
   return r;
 };
 
-static private
+private
 string container_js_write(string name, mapping args, string contents, object id)
 {
   string c_script(string name, mapping args, string contents, mapping xargs)
@@ -188,7 +188,7 @@ string container_js_write(string name, mapping args, string contents, object id)
 	  "' type='text/javascript'><!--\n"+contents+"//--></script>");
 }
 
-static private
+private
 string make_args_unquoted(mapping args)
 {
   return map(indices(args),
@@ -199,7 +199,7 @@ string make_args_unquoted(mapping args)
 	     })*" ";
 }
 
-static private
+private
 string make_container_unquoted(string name, mapping args, string contents)
 {
   return "<"+name+" " + make_args_unquoted(args) + ">"+contents+"</"+name+">";
@@ -242,14 +242,14 @@ class TagEmitJSHidePopup {
 }
 
 // Compatibility. The tag js-link is depricated.
-static private string container_js_link(string name, mapping args,
-					string contents, object id)
+private string container_js_link(string name, mapping args,
+				 string contents, object id)
 {
   args->onMouseOver = "clearToPopup('"+(id->misc->_popupparent||"none")+"')";
   return make_container_unquoted("a", args, contents);
 }
 
-static private
+private
 string container_js_popup(string name, mapping args, string contents, object id)
 {
   // Link arguments.
@@ -360,7 +360,7 @@ class TagJSExternal
 
     array do_return(RequestID id)
     {
-      string key = Crypto.md5()->update(string_to_utf8(content))->digest();
+      string key = Crypto.MD5()->update(string_to_utf8(content))->digest();
       if(!externals[key])
 	externals[key] = c_js_quote("", ([]), content);
       return ({ "<script language=\"javascript\" type=\"text/javascript\" "
@@ -416,7 +416,7 @@ class TagEmitJSDynamicPopup {
   }
 }
 
-static mixed c_filter_insert(Parser.HTML parser, mapping args, RequestID id)
+protected mixed c_filter_insert(Parser.HTML parser, mapping args, RequestID id)
 {
   SIMPLE_TRACE_ENTER (this_object(), "Filtering tag <js-filter-insert%s>",
 		      Roxen.make_tag_attributes (args));

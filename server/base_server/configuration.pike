@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.652 2008/06/24 16:19:52 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.653 2008/08/15 12:33:53 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -177,7 +177,7 @@ void avg_prof_leave( string name, string type, RequestID id )
 inherit Configuration;
 inherit "basic_defvar";
 
-static mapping(RequestID:mapping) current_connections =
+protected mapping(RequestID:mapping) current_connections =
   set_weak_flag( ([ ]), 1 );
 
 void connection_add( RequestID id, mapping data )
@@ -214,8 +214,8 @@ string name = roxen->bootstrap_info->get();
 
 class DataCache
 {
-  static typedef array(string|mapping(string:mixed))|string|
-                 function(string, RequestID:string|int) EntryType;
+  protected typedef array(string|mapping(string:mixed))|string|
+		    function(string, RequestID:string|int) EntryType;
 
   mapping(string:EntryType) cache = ([]);
 
@@ -234,7 +234,7 @@ class DataCache
   }
 
   // Expire a single entry.
-  static void really_low_expire_entry(string key)
+  protected void really_low_expire_entry(string key)
   {
     EntryType e = m_delete(cache, key);
     if (arrayp(e)) {
@@ -246,7 +246,7 @@ class DataCache
   }
 
   // NOTE: Avoid using this function if possible! O(n)
-  static int low_expire_entry(string key_prefix)
+  protected int low_expire_entry(string key_prefix)
   {
     if (!key_prefix) return 0;
     if (arrayp(cache[key_prefix])) {
@@ -300,7 +300,7 @@ class DataCache
   }
 
   //! Clear ~1/10th of the cache.
-  static void clear_some_cache()
+  protected void clear_some_cache()
   {
     array(string) q = indices(cache);
     if(!sizeof(q))
@@ -464,7 +464,7 @@ class DataCache
       clear_some_cache();
   }
 
-  static void create()
+  protected void create()
   {
     init_from_variables();
   }
@@ -833,7 +833,7 @@ array (function) url_modules()
   return url_module_cache;
 }
 
-static mapping api_module_cache = ([]);
+protected mapping api_module_cache = ([]);
 mapping api_functions(void|RequestID id)
 {
   return api_module_cache+([]);
@@ -877,7 +877,7 @@ array (function) last_modules()
   return last_module_cache;
 }
 
-static mixed strip_fork_information(RequestID id)
+protected mixed strip_fork_information(RequestID id)
 {
   if (uname()->sysname == "Darwin") {
     //  Look for Mac OS X special filenames that are used access files in
@@ -1191,7 +1191,7 @@ array(string) userinfo(string u, RequestID|void id)
   User uid;
   foreach( user_databases(), UserDB m )
     if( uid = m->find_user( u ) )
-      return uid->compat_userinfo(id);
+      return uid->compat_userinfo();
 }
 
 array(string) userlist(RequestID|void id)
@@ -1466,8 +1466,8 @@ void clear_memory_caches()
 }
 
 //  Returns tuple < image, mime-type >
-static array(string) draw_saturation_bar(int hue,int brightness, int where,
-					 int small_version)
+protected array(string) draw_saturation_bar(int hue,int brightness, int where,
+					    int small_version)
 {
   Image.Image bar =
     small_version ? Image.Image(16, 128) : Image.Image(30, 256);
@@ -1505,7 +1505,7 @@ static array(string) draw_saturation_bar(int hue,int brightness, int where,
 array(mapping) spinner_data = 0;
 
 //  Returns tuple < image, mime type >
-static array(string) draw_spinner(string bgcolor)
+protected array(string) draw_spinner(string bgcolor)
 {
   //  Parse color
   array color = parse_color(bgcolor);
@@ -1792,7 +1792,7 @@ DAVLock|LockFlag check_locks(string path, int(0..1) recursive, RequestID id)
   return state;
 }
 
-static multiset(DAVLock) active_locks = (<>);
+protected multiset(DAVLock) active_locks = (<>);
 
 //! Unlock the lock represented by @[lock] on @[path].
 //!
@@ -1844,7 +1844,7 @@ int expire_locks(RequestID id)
   return min_time - t;
 }
 
-static void expire_lock_loop()
+protected void expire_lock_loop()
 {
   int t = expire_locks(0);	// NOTE: Called with RequestID 0!
 
@@ -3013,7 +3013,7 @@ array(int)|Stat try_stat_file(string s, RequestID id, int|void not_internal)
   return res;
 }
 
-static RequestID make_fake_id (string s, RequestID id)
+protected RequestID make_fake_id (string s, RequestID id)
 {
   RequestID fake_id;
 
@@ -3484,7 +3484,7 @@ Thread.Mutex enable_modules_mutex = Thread.Mutex();
 #define MODULE_LOCK(TYPE)
 #endif
 
-static int enable_module_batch_msgs;
+protected int enable_module_batch_msgs;
 
 RoxenModule enable_module( string modname, RoxenModule|void me, 
                            ModuleInfo|void moduleinfo, 
@@ -4162,7 +4162,7 @@ Sql.Sql sql_connect(string db, void|string charset)
 // END SQL
 #endif
 
-static string my_url;
+protected string my_url;
 
 void fix_my_url()
 {
@@ -4189,7 +4189,7 @@ mixed add_init_hook( mixed what )
     after_init_hooks |= ({ what });
 }
 
-static int got_no_delayed_load = 0;
+protected int got_no_delayed_load = 0;
 // 0 -> enable delayed loading, 1 -> disable delayed loading,
 // -1 -> don't change.
 
@@ -4238,6 +4238,12 @@ void low_init(void|int modules_already_enabled)
 
     array modules_to_process = indices( enabled_modules );
     string tmp_string;
+
+#if 0
+    if (enabled_modules["sbtags_2.0#0"])
+      modules_to_process =
+	({"sbtags_2.0#0"}) + (modules_to_process - ({"sbtags_2.0#0"}));
+#endif
 
     mixed err;
     forcibly_added = ([]);
@@ -4290,7 +4296,7 @@ void low_init(void|int modules_already_enabled)
 
 DataCache datacache;
 
-static void create()
+protected void create()
 {
   if (!name) error ("Configuration name not set through bootstrap_info.\n");
 //   int st = gethrtime();
@@ -5132,18 +5138,18 @@ also set 'URLs'."));
 //   report_debug("[restore: %.1fms] ", (gethrtime()-st)/1000.0 );
 }
 
-static int arent_we_throttling_server () {
+protected int arent_we_throttling_server () {
   return !query("throttle");
 }
-static int arent_we_throttling_request() {
+protected int arent_we_throttling_request() {
   return !query("req_throttle");
 }
 
 #ifdef SNMP_AGENT
-private static int(0..1) snmp_disabled() {
+private int(0..1) snmp_disabled() {
   return (!snmp_global_disabled() && !query("snmp_process"));
 }
-private static int(0..1) snmp_global_disabled() {
+private int(0..1) snmp_global_disabled() {
   return (!objectp(roxen->snmpagent));
 }
 #endif

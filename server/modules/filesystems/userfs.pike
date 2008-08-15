@@ -24,7 +24,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.70 2005/10/19 12:15:35 wellhard Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.71 2008/08/15 12:33:54 mast Exp $";
 constant module_type = MODULE_LOCATION;
 LocaleString module_name = _(1,"File systems: User file system");
 LocaleString module_doc  = 
@@ -141,7 +141,7 @@ void start()
   // This is needed to override the inherited filesystem module start().
 }
 
-static array(string) find_user(string f, RequestID id)
+protected array(string) find_user(string f, RequestID id)
 {
   string of = f;
   string u;

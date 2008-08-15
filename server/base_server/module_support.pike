@@ -1,13 +1,13 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module_support.pike,v 1.134 2008/08/08 16:50:31 mast Exp $
+// $Id: module_support.pike,v 1.135 2008/08/15 12:33:53 mast Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
 #include <module_constants.h>
 #include <stat.h>
 
-static int got_java_flag = 0;	// 1: yes, -1: no, 0: unknown.
+protected int got_java_flag = 0;	// 1: yes, -1: no, 0: unknown.
 
 int got_java()
 //! @appears roxen.got_java
@@ -36,7 +36,7 @@ int got_java()
 int dump( string file, program|void p );
 
 // Throws strings.
-static program my_compile_file(string file, void|int silent)
+protected program my_compile_file(string file, void|int silent)
 {
   if( file[0] != '/' )
     file = combine_path(getcwd(), file);
@@ -94,13 +94,13 @@ static program my_compile_file(string file, void|int silent)
 }
 
 // Throws strings.
-static function|program load( string what, void|int silent )
+protected function|program load( string what, void|int silent )
 {
 //   werror("Load "+what+"\n");
   return my_compile_file( what, silent );
 }
 
-static int check_ambiguous_module (string name, array(string) files)
+protected int check_ambiguous_module (string name, array(string) files)
 // A module can be loaded from more than one file. Report this and see
 // if it really is ambiguous.
 {
@@ -152,9 +152,9 @@ class BasicModule
   mapping error_log = ([]);
   constant is_module = 1;
   constant faked = 1;
-  static Configuration _my_configuration;
-  static string _module_local_identifier;
-  static string _module_identifier =
+  protected Configuration _my_configuration;
+  protected string _module_local_identifier;
+  protected string _module_identifier =
     lambda() {
       mixed init_info = roxenp()->bootstrap_info->get();
       if (arrayp (init_info)) {
@@ -172,7 +172,7 @@ class BasicModule
   string module_identifier() {return _module_identifier;}
   string module_local_id() {return _module_local_identifier;}
   Configuration my_configuration() { return _my_configuration; }
-  nomask void set_configuration(Configuration c)
+  final void set_configuration(Configuration c)
   {
     if(_my_configuration && _my_configuration != c)
       error("set_configuration() called twice.\n");
@@ -211,7 +211,7 @@ class FakeModuleInfo( string sname )
   int check (void|int force) { }
   int unlocked(object /*License.Key*/ key, Configuration|void conf) { }
 
-  static string _sprintf()
+  protected string _sprintf()
   {
     return "FakeModuleInfo("+sname+")";
   }
@@ -270,7 +270,7 @@ class ModuleInfo( string sname, string filename )
   mapping|string name;
   mapping|string description;
 
-  static string _sprintf()
+  protected string _sprintf()
   {
     return "ModuleInfo("+sname+")";
   }
@@ -301,7 +301,7 @@ class ModuleInfo( string sname, string filename )
     }
   }
 
-  static class LoadFailed(roxenloader.ErrorContainer ec) // faked module. 
+  protected class LoadFailed(roxenloader.ErrorContainer ec) // faked module. 
   {
     inherit BasicModule;
     constant not_a_module = 1;
@@ -389,7 +389,7 @@ class ModuleInfo( string sname, string filename )
     return 0;
   }
 
-  static mixed encode_string( mixed what )
+  protected mixed encode_string( mixed what )
   {
     if( objectp( what ) && what->get_identifier ) // locale string.
     {
@@ -400,7 +400,7 @@ class ModuleInfo( string sname, string filename )
     return what;
   }
 
-  static LocaleString decode_string( mixed what )
+  protected LocaleString decode_string( mixed what )
   {
     if( arrayp( what ) )
     {
@@ -484,10 +484,10 @@ class ModuleInfo( string sname, string filename )
   }
 
 
-  static constant nomods = (< "pike-modules", "CVS" >);
+  protected constant nomods = (< "pike-modules", "CVS" >);
 
-  static void rec_find_module_files (string what, string dir,
-				     multiset(string) files)
+  protected void rec_find_module_files (string what, string dir,
+					multiset(string) files)
   {
     if (r_file_stat(combine_path(dir, ".nomodules")) ||
 	r_file_stat(combine_path(dir, ".no_modules")))
@@ -629,8 +629,8 @@ string extension( string from )
 }
 
 mapping(string:ModuleInfo) modules;
-static void rec_find_all_modules( string dir,
-				  mapping(string:string) modules )
+protected void rec_find_all_modules( string dir,
+				     mapping(string:string) modules )
 {
     Stdio.Stat s;
     if (r_file_stat(combine_path(dir, ".nomodules")) ||
@@ -745,7 +745,7 @@ array(string) find_all_pike_module_directories()
 }
 
 // List of modules that have been renamed
-static constant module_aliases = ([
+protected constant module_aliases = ([
   "whitespace_sucker":"whitespace_remover",
 ]);
 

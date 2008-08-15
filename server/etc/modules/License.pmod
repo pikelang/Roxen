@@ -2,7 +2,7 @@
 //
 // Created 2002-02-18 by Marcus Wellhardh.
 //
-// $Id: License.pmod,v 1.26 2008/04/15 09:30:37 noring Exp $
+// $Id: License.pmod,v 1.27 2008/08/15 12:33:54 mast Exp $
 
 #if constant(roxen)
 #define INSIDE_ROXEN
@@ -28,8 +28,8 @@ array(Configuration) get_configurations_for_license(Key key)
   return confs;
 }
 
-static mapping(string:Key) license_keys = ([]);
-static mapping(string:int) license_keys_time = ([]);
+protected mapping(string:Key) license_keys = ([]);
+protected mapping(string:int) license_keys_time = ([]);
 
 // Returns the key object for the specified filename/directory. If a
 // known error occures an error mapping is returned. The returned key
@@ -89,15 +89,15 @@ array(Key|mapping) get_licenses(string license_dir)
 }
 
 
-static int key_count;  // How many licenses has been created, used for debug.
+protected int key_count;  // How many licenses has been created, used for debug.
 
 //!  License key created from a key file.
 class Key
 {
-  static mapping content;
-  static string license_dir, _filename;
-  static mapping warnings;
-  static int key_id;  // This licenses create id, used for debug.
+  protected mapping content;
+  protected string license_dir, _filename;
+  protected mapping warnings;
+  protected int key_id;  // This licenses create id, used for debug.
   
   class WarningEntry
   {
@@ -145,7 +145,7 @@ class Key
     return warnings[type] && warnings[type]->to_mapping();
   }
   
-  static array(Gmp.mpz) read_public_key()
+  protected array(Gmp.mpz) read_public_key()
   {
     string key_name = combine_path(license_dir, "public.key");
     string s = Stdio.read_bytes(key_name);
@@ -157,7 +157,7 @@ class Key
     return ({ Gmp.mpz(n), Gmp.mpz(e) });
   }
   
-  static Gmp.mpz read_private_key()
+  protected Gmp.mpz read_private_key()
   {
     string key_name = combine_path(license_dir, "private.key");
     string s = Stdio.read_bytes(key_name);
@@ -169,16 +169,16 @@ class Key
     return Gmp.mpz(d);
   }
   
-  static string encrypt(string msg)
+  protected string encrypt(string msg)
   {
-    Crypto.rsa rsa = Crypto.rsa()->
+    Crypto.RSA rsa = Crypto.RSA()->
 		     set_public_key(@read_public_key())->
 		     set_private_key(read_private_key());
     string sign = rsa->sha_sign(msg);
     return sprintf("%d:%s%s", sizeof(sign), msg, sign);
   }
   
-  static string decrypt(string gibberish)
+  protected string decrypt(string gibberish)
   {
     string s;
     int size;
@@ -189,7 +189,7 @@ class Key
     string msg = s[..sizeof(s)-size-1];
     string sign = s[sizeof(msg)..];
 
-    Crypto.rsa rsa = Crypto.rsa()->set_public_key(@read_public_key());
+    Crypto.RSA rsa = Crypto.RSA()->set_public_key(@read_public_key());
     return rsa->sha_verify(msg, sign) && msg;
   }
 
@@ -382,8 +382,8 @@ class LicenseVariable
   inherit Variable.MultipleChoice;
   Configuration configuration;
   string license_dir;
-  static Key license_key;
-  static int verify_mode;
+  protected Key license_key;
+  protected int verify_mode;
   
   Key get_key()
   {
@@ -452,14 +452,14 @@ class LicenseVariable
     return ::low_set(to);
   }
   
-  static int invisibility_check(RequestID id, Variable.Variable var)
+  protected int invisibility_check(RequestID id, Variable.Variable var)
   {
     return !Stdio.is_dir(license_dir);
   }
   
-  static void create(string _license_dir, void|int _flags,
-		     void|LocaleString std_name, void|LocaleString std_doc,
-		     Configuration _configuration, int|void _verify_mode)
+  protected void create(string _license_dir, void|int _flags,
+			void|LocaleString std_name, void|LocaleString std_doc,
+			Configuration _configuration, int|void _verify_mode)
   {
     license_dir = _license_dir;
     configuration = _configuration;
