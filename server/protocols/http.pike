@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.561 2008/08/15 12:33:55 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.562 2008/08/18 13:18:40 erikd Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -681,7 +681,7 @@ int things_to_do_when_not_sending_from_cache( )
       NO_PROTO_CACHE();
       if (!(port_obj->set_cookie_only_once &&
 	    cache_lookup("hosts_for_cookie",remoteaddr))) {
-	misc->moreheads = ([ "Set-Cookie":Roxen.http_roxen_id_cookie( port_obj ), ]);
+	misc->moreheads = ([ "Set-Cookie":Roxen.http_roxen_id_cookie(), ]);
       }
       if (port_obj->set_cookie_only_once)
 	cache_set("hosts_for_cookie",remoteaddr,1);
