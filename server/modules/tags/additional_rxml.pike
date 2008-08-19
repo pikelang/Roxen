@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.42 2008/06/11 11:49:21 stewa Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.43 2008/08/19 08:54:31 erik Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -876,9 +876,8 @@ constant tagdoc=([
  Inserts the contents at that URL.</short> This function has to be
  enabled in the <module>Additional RXML tags</module> module in the
  Roxen WebServer configuration interface. The page download will block
- the current thread, and if running unthreaded, the whole server.
- There is no timeout in the download, so if the server connected to
- hangs during transaction, so will the current thread in this server.</p></desc>
+ the current thread, and if running unthreaded, the whole server.</p>
+ <p><b>Note:</b> Requests are made in HTTP/1.0.</p></desc>
 
 <attr name='href' value='string'><p>
  The URL to the page that should be inserted.</p>
@@ -896,6 +895,13 @@ constant tagdoc=([
 
 <attr name='silent' value='string' ><p>
  Do not print any error messages.</p>
+</attr>
+
+<attr name='status-variable' value='variable' ><p>
+  Prints the return code for the request in the specified varible.</p>
+  <ex-box>
+    <insert href='http://www.somesite.com/news/' status-variable='var.status-code' />
+  </ex-box>
 </attr>
 
 <attr name='timeout' value='int' ><p>
