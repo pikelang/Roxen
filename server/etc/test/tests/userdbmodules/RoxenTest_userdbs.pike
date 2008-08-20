@@ -64,7 +64,9 @@ void verify_compat_userinfo( Configuration c, array list )
       throw( sprintf( "Expected array of size 7, got array of size %d\n",
 		      sizeof(ui ) ) );
 
-    if( ui[0] != s )
+    //  Mac OS X 10.5 returns system users with a "_" prefix even if queried
+    //  for the non-prefixed name so we'll look the other way when comparing.
+    if( (ui[0] - "_") != (s - "_") )
       throw(sprintf("Got different user (0) from userinfo than given (%O!=%O)",
 		    ui[0],s ));
 
