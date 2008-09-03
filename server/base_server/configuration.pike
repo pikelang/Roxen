@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.655 2008/08/28 16:07:22 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.656 2008/09/03 16:14:28 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1705,8 +1705,6 @@ string examine_return_mapping(mapping m)
        stringp(m->type)) {
       res += sprintf(" of %O", m->type||m->extra_heads["content-type"]);
    }
-
-   res+="<br />";
 
    return res;
 }

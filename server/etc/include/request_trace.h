@@ -2,7 +2,7 @@
 //
 // Some stuff to do logging of a request through the server.
 //
-// $Id: request_trace.h,v 1.13 2004/05/14 17:08:24 mast Exp $
+// $Id: request_trace.h,v 1.14 2008/09/03 16:14:28 jonasw Exp $
 
 #ifndef REQUEST_TRACE_H
 #define REQUEST_TRACE_H
@@ -10,9 +10,17 @@
 #include <roxen.h>
 #include <module.h>
 
-// Note that TRACE_ENTER (but not TRACE_LEAVE) takes html encoded
-// message strings. Messages are preferably a single line, and they
+// Note that TRACE_ENTER (and TRACE_LEAVE) takes message strings
+// in plain text. Messages are preferably a single line, and they
 // should not end with period and/or newline.
+//
+//
+// Roxen 5.0 compatibility notice:
+//
+//   Pre-5.0 these macros allowed html markup to pass through unquoted
+//   into the tracing machinery, but since the ultimate destination may
+//   not be a web page at all this capability has been removed. The
+//   Resolve Path wizard will now quote all strings instead.
 
 #ifdef REQUEST_TRACE
 
@@ -48,19 +56,17 @@
 
 #define SIMPLE_TRACE_ENTER(OBJ, MSG...) do {				\
     array _msg_arr_;							\
-    TRACE_ENTER (Roxen.html_encode_string (				\
-		   (_msg_arr_ = ({MSG}),				\
+    TRACE_ENTER (  (_msg_arr_ = ({MSG}),				\
 		    sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :	\
-		    (sizeof (_msg_arr_) ? _msg_arr_[0] : ""))),		\
+		    (sizeof (_msg_arr_) ? _msg_arr_[0] : "")),		\
 		 (OBJ));						\
   } while (0)
 
 #define SIMPLE_TRACE_LEAVE(MSG...) do {					\
     array _msg_arr_;							\
-    TRACE_LEAVE (Roxen.html_encode_string (				\
-		   (_msg_arr_ = ({MSG}),				\
+    TRACE_LEAVE (  (_msg_arr_ = ({MSG}),				\
 		    sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :	\
-		    (sizeof (_msg_arr_) ? _msg_arr_[0] : ""))));	\
+		    (sizeof (_msg_arr_) ? _msg_arr_[0] : "")));		\
   } while (0)
 
 // The following variant should be used inside RXML.Frame callbacks
@@ -69,17 +75,16 @@
 // combination with the magic _debug_ tag argument or the RXML_VERBOSE
 // or RXML_REQUEST_VERBOSE defines.
 //
-// These two macros do not take html encoded messages, as opposed to
-// TRACE_ENTER and TRACE_LEAVE.
+// These two macros do not take html encoded messages (which since 5.0
+// is true for all tracing macros).
 
 #define TAG_TRACE_ENTER(MSG...) do {					\
     array _msg_arr_;							\
     string _msg_;							\
-    TRACE_ENTER ("tag &lt;" + (tag && tag->name) + "&gt; " +		\
-		 Roxen.html_encode_string (				\
+    TRACE_ENTER ("tag <" + (tag && tag->name) + "> " +		\
 		   (_msg_arr_ = ({MSG}),				\
 		    _msg_ = sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) : \
-		    (sizeof (_msg_arr_) ? _msg_arr_[0] : ""))),		\
+		    (sizeof (_msg_arr_) ? _msg_arr_[0] : "")),		\
 		 tag);							\
     DO_IF_DEBUG (							\
       if (TAG_DEBUG_TEST (flags & RXML.FLAG_DEBUG))			\

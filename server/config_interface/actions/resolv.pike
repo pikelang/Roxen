@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.33 2008/03/11 13:04:55 erikd Exp $
+ * $Id: resolv.pike,v 1.34 2008/09/03 16:14:28 jonasw Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -87,8 +87,8 @@ void trace_enter_ol(string type, function|object module)
   if(level>2) font="<font size=-1>";
   resolv += ((prev_level >= level ? "<br />\n" : "") +
 	     anchor("")+"<li>"+
-	     type + " " + module_name(module) + "<br />\n" +
-	     font + "<ol>");
+	     Roxen.html_encode_string(type) + " " + module_name(module) +
+	     "<br />\n" + font + "<ol>");
 #if efun(gethrvtime)
   et2[level] = gethrvtime();
 #endif
@@ -119,42 +119,15 @@ void trace_leave_ol(string desc)
 {
   string efont="";
   if(level>2) efont="</font>";
-  resolv += ("</ol>" + efont + "\n" +
-	     (sizeof (desc) ? Roxen.html_encode_string(desc) + "<br />\n" : "") +
-	     format_time (et[level], et2[level]));
+
+  string html_desc = Roxen.html_encode_string(desc || "");
+  if (has_value(html_desc, "\n"))
+    html_desc = "<pre>" + html_desc + "</pre>\n";
+  else if (html_desc != "")
+    html_desc += "<br />\n";
+  resolv +=
+    "</ol>" + efont + "\n" + html_desc + format_time (et[level], et2[level]);
   level--;
-}
-
-void trace_enter_table(string type, function|object module)
-{
-  level++;
-  string efont="", font="";
-  if(level>2) {efont="</font>";font="<font size='-1'>";}
-  resolv += ("<tr>"
-	     +(level>1?("<td width='1' bgcolor='blue'>"
-			"<img src=\"/image/unit.gif\" alt=\"|\"/></td>") :"")
-	     +"<td width='100%'>"+font+type+" "+module_name(module)+
-	     "<table width='100%' border='0' cellspacing='10' "
-	     "cellpadding='0'>");
-
-#if efun(gethrtime)
-  et[level]= gethrtime();
-#endif
-}
-
-void trace_leave_table(string desc)
-{
-#if efun(gethrtime)
-  int delay = gethrtime()-et[level];
-#endif
-  level--;
-  string efont="", font="";
-  if(level>1) {font="<font size='-1'>";}
-  resolv += ("</td></tr></table><br />"+font+
-#if efun(gethrtime)
-	     "Time: "+sprintf("%.5f",delay/1000000.0)+
-#endif
-	     "<br />"+Roxen.html_encode_string(desc)+efont)+"</td></tr>";
 }
 
 void resolv_handle_request(object c, object nid)
@@ -222,10 +195,11 @@ string parse( RequestID id )
     "size='12' /></td></tr>\n"
     "<tr><td align='left' valign='top'>" + LOCALE(0, "Form variables") + ":</td><td align='left'>"
     "<input type='text' size='60' name='form_vars' value='&form.form_vars;' />"
-    "<br/>Ex. id=234&amp;page=3&amp;hidden=1</td>\n"
+    "<br/>Example: <tt>id=234&amp;page=3&amp;hidden=1</tt></td>\n"
     "</tr><tr><td align='left' valign='top'>" + LOCALE(325, "HTTP Cookies") + ": </td><td align='left'>"
     "<textarea cols='58' row='4' name='cookies'>&form.cookies;</textarea><br />"
-    "Cookies are separated by a new line for each cookie you want to set. e.g.:"
+    "Cookies are separated by a new line for each cookie you want to set. "
+    "Example:"
     "<pre>UniqueUID=eIkT67lksoOe23q\nSessionID=123123:sadfi:114lj</pre></td>"
     "</tr></table>\n"
     "<table border='0'><tr><td><cf-ok/></td><td><cf-cancel href='?class=&form.class;'/></td></tr></table>\n";

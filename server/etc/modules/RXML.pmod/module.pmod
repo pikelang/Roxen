@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.367 2008/08/15 12:33:54 mast Exp $
+// $Id: module.pmod,v 1.368 2008/09/03 16:14:23 jonasw Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -4217,14 +4217,14 @@ class Frame
 
 	else {			// Initialize a new evaluation.
 	  if (!(flags & FLAG_CUSTOM_TRACE))
-	    TRACE_ENTER(tag ? "tag &lt;" + tag->name + "&gt;" : "tagless frame",
+	    TRACE_ENTER(tag ? "tag <" + tag->name + ">" : "tagless frame",
 			tag || this_object());
 #ifdef MODULE_LEVEL_SECURITY
 	  if (object sec_obj =
 	      this_object()->check_security_object || tag || this_object())
 	    if (id->conf->check_security (sec_obj, id, id->misc->seclevel)) {
 	      if (flags & FLAG_CUSTOM_TRACE)
-		TRACE_ENTER(tag ? "tag &lt;" + tag->name + "&gt;" : "tagless frame",
+		TRACE_ENTER(tag ? "tag <" + tag->name + ">" : "tagless frame",
 			    tag || this_object());
 	      THIS_TAG_TOP_DEBUG ("Access denied - exiting\n");
 	      TRACE_LEAVE("access denied");
@@ -4344,7 +4344,7 @@ class Frame
 
 #ifdef MAGIC_HELP_ARG
 	if ((args || ([]))->help) {
-	  TRACE_ENTER(tag ? "tag &lt;" + tag->name + " help&gt;" : "tagless frame",
+	  TRACE_ENTER(tag ? "tag <" + tag->name + " help>" : "tagless frame",
 		      tag || this_object());
 	  string help = id->conf->find_tag_doc (tag->name, id);
 	  TRACE_LEAVE ("");
