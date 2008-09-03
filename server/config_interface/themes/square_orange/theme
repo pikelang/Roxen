@@ -20,7 +20,9 @@
            to='cellpadding=0 cellspacing=0 valign=top width=200 align=left' />
 <theme-set what='left-buttonwidth' to='210' />
 
-<theme-set what=logo to=logo.gif themefile />
+<theme-set what=logo      to=logo.gif themefile />
+<theme-set what=fold      to=fold.gif themefile/>
+<theme-set what=unfold    to=unfold.gif themefile/>
 
 <theme-set what=linkcolor to=#ae3c00/>
 

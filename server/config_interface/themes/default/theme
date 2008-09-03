@@ -126,6 +126,8 @@
 <theme-set what=padlock			to="padlock.gif" themefile />
 <theme-set what=unfolded		to="open-folder.gif" themefile />
 <theme-set what=folded			to="closed-folder.gif" themefile />
+<theme-set what=fold                    to="fold.gif" themefile/>
+<theme-set what=unfold                  to="unfold.gif" themefile/>
 
 <theme-set what=left-buttonbg     to="&var.page-bg;"/>
 <theme-set what=left-selbuttonbg  to="&var.content-bg;"/>

@@ -15,6 +15,8 @@
 <theme-set what="tab-frame-image" to="tabframe.xcf" themefile="1" />
 
 <theme-set what="gbutton-frame-image" to="gbutton.xcf"  themefile="1" />
+<theme-set what="fold" to="fold.gif" themefile/>
+<theme-set what="unfold" to="unfold.gif" themefile/>
 
 <theme-set what="logo-html" to='<img border="0" src="/internal-roxen-unit" width="15" height="1" alt="" /><img border="0" src="&usr.logo;" alt="" />' />
 
