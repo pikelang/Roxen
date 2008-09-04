@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.247 2008/08/18 13:18:40 erikd Exp $
+// $Id: Roxen.pmod,v 1.248 2008/09/04 10:56:30 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4668,10 +4668,6 @@ array(mapping(string:mixed)|object) rxml_emit_sort (
 #ifdef REQUEST_TRACE
 protected string trace_msg (mapping id_misc, string msg, string name)
 {
-  msg = html_decode_string (
-    Parser.HTML()->_set_tag_callback (lambda (object p, string s) {return "";})->
-    finish (msg)->read());
-
   array(string) lines = msg / "\n";
   if (lines[-1] == "") lines = lines[..sizeof (lines) - 2];
 
@@ -4713,9 +4709,7 @@ void trace_enter (RequestID id, string msg, object|function thing)
     if (thing) {
       name = get_modfullname (get_owning_module (thing));
       if (name)
-	name = "mod: " + html_decode_string (
-	  Parser.HTML()->_set_tag_callback (lambda (object p, string s) {return "";})->
-	  finish (name)->read());
+	name = "mod: " + name;
       else if (Configuration conf = get_owning_config (thing))
 	name = "conf: " + conf->query_name();
       else
