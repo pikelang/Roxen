@@ -239,7 +239,7 @@ class Patcher
   {
     string log = "";
     int error_count = 0;
-    Calendar.ISO current_time = Calendar.ISO->now();
+    object current_time = Calendar.ISO->now();
 
     string source_path = id_to_filepath(patch_id);
 
@@ -1784,7 +1784,7 @@ class Patcher
     return 1;
   }
 
-  string create_id(void|Calendar.ISO time)
+  string create_id(void|object time)
   //! Creates a string on the format YYYY-MM-DDThhmm based on the current time.
   {
     if (!time)
