@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.656 2008/09/03 16:14:28 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.657 2008/09/04 09:49:30 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2704,14 +2704,20 @@ array(int)|Stat stat_file(string file, RequestID id)
 
 mapping error_file( RequestID id )
 {
-  string data = query("ZNoSuchFile");
-  NOCACHE();
+  mapping res;  
+  if (id->not_query == "/favicon.ico") {
+    //  The most popular 404 request ever? Skip the fancy error page.
+    res = Roxen.http_string_answer("No such file", "text/plain");
+  } else {
+    string data = query("ZNoSuchFile");
 #if ROXEN_COMPAT <= 2.1
-  data = replace(data,({"$File", "$Me"}),
-                 ({"&page.virtfile;", "&roxen.server;"}));
+    data = replace(data,({"$File", "$Me"}),
+		   ({"&page.virtfile;", "&roxen.server;"}));
 #endif
-  mapping res = Roxen.http_rxml_answer( data, id, 0, "text/html" );
+    res = Roxen.http_rxml_answer( data, id, 0, "text/html" );
+  }
   res->error = 404;
+  NOCACHE();
   return res;
 }
 
