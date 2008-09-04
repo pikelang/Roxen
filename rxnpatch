@@ -1,0 +1,2 @@
+#! /bin/sh
+./start --silent-start --program bin/rxnpatch.pike -S./ $@
