@@ -837,9 +837,10 @@ class Patcher
     //				       PARSE_FORCE_LOWERCASE |
     //				       PARSE_WANT_ERROR_CONTEXT);
 
-    p->rxp_version = md[0]->get_attributes()->version;
+    md = md->get_first_element();
+    p->rxp_version = md->get_attributes()->version;
 
-    foreach(md[0]->get_elements(0,1), SimpleNode node)
+    foreach(md->get_elements(0,1), SimpleNode node)
     {
       string name = node->get_full_name();
       string tag_content = (node[0]) ? node[0]->get_text() : "";
@@ -1006,6 +1007,11 @@ class Patcher
 	PatchObject po = parse_metadata(mdblock, 
 					extract_id_from_filename(mdfile));
 
+	if (!po)
+	{
+	  werror("Metadata block not valid: [%O]\n", po);
+          continue;
+	}
       	res += ({ po });
       }
     }
@@ -1315,6 +1321,7 @@ class Patcher
     PatchObject res = parse_metadata(md, patchid);
     if (!res)
       rm(combine_path(target_dir, patchid));
+    
     return res;
   }
 
