@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.123 2007/06/12 12:07:46 erikd Exp $ -->
+<!-- $Id: template,v 1.124 2008/09/05 15:57:55 mathias Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -205,6 +205,9 @@
    
    <if not variable='_.noform'>
      <if variable="form.action == upload_license.pike">
+       <set variable="var.form_extra">enctype="multipart/form-data"</set>
+     </if>
+     <if variable="form.action == patcher.pike">
        <set variable="var.form_extra">enctype="multipart/form-data"</set>
      </if>
      <form method="POST" action="&cf.current-url;" ::="&var.form_extra;">
