@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.553 2008/08/15 12:33:55 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.554 2008/09/05 19:16:27 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -70,16 +70,25 @@ private mapping(string:mixed) sexpr_constants = ([
   "`<=":`<=,
   "`>=":`>=,
 
+  "equal": equal,
   "sizeof": sizeof,
-
   "pow":pow,
+  "abs": abs,
+  "aggregate": aggregate,
+  "search": lambda (mixed a, mixed b) {
+	      return search (a, b) + 1;	// RXML uses base 1.
+	    },
+  "reverse": reverse,
 
   "INT":lambda(void|mixed x) {
 	  return intp (x) || floatp (x) || stringp (x) ? (int) x : 0;
 	},
   "FLOAT":lambda(void|mixed x) {
-	    return intp (x) || floatp (x) || stringp (x) ? (float) x : 0;
+	    return intp (x) || floatp (x) || stringp (x) ? (float) x : 0.0;
 	  },
+  "STRING":lambda(void|mixed x) {
+	     return intp (x) || floatp (x) || stringp (x) ? (string) x : "";
+	   },
 ]);
 
 private class SExprCompileHandler
@@ -123,13 +132,17 @@ private string try_decode_image(string data, void|string var) {
 
 string|int|float sexpr_eval(string what)
 {
-  what -= "lambda";
-  what -= "\"";
-  what -= ";";
+  if (has_value (what, "lambda") ||
+      has_value (what, "program") ||
+      has_value (what, "object") ||
+      has_value (what, "\"") ||
+      has_value (what, ";"))
+    RXML.parse_error ("Syntax error in expr attribute.\n");
+
   SExprCompileHandler handler = SExprCompileHandler();
   string|int|float res;
   if (mixed err = catch {
-      res = compile_string( "int|string|float foo=(" + what + ");",
+      res = compile_string( "mixed foo=(" + what + ");",
 			    0, handler )()->foo;
     })
     RXML.parse_error ("Error in expr attribute: %s\n",
@@ -8100,43 +8113,270 @@ visible) since there is nothing in between the comma characters:</p>
 </attr>
 
 <attr name='expr' value='string'>
- <p>An expression whose evaluated value the variable should have.</p>
+ <p>An expression that gets evaluated to produce the value for the
+ variable.</p>
 
- <p>Available arithmetic operators are +, -, *, / and % (modulo).
- Available relational operators are &lt;, &gt;, ==, !=, &lt;= and
- &gt;=. Available bitwise operators are &amp;, | and ^, representing
- AND, OR and XOR. Available boolean operators are &amp;&amp; and ||,
- working as the pike AND and OR. Subexpressions can be surrounded by (
- and ).</p>
+ <p>Expression values can take any of the following forms:</p>
 
- <p>The size of a string or array may be retrieved with
- sizeof(var.something).</p>
+ <table>
+   <tr valign='top'>
+     <td><tt><i>scope</i>.<i>var</i></tt></td>
+     <td>The value of the given RXML variable. Note that it is not
+     written as an entity reference; i.e. it is written without the
+     surrounding \"&amp;\" and \";\".</td></tr>
 
- <p>The function pow(x,y) can be 
- used for calculating the value x raised to the specified power y.</p>
+   <tr valign='top'>
+     <td><tt>49</tt></td>
+     <td>A decimal integer.</td></tr>
 
- <p>Numbers can be represented as decimal integers when numbers
- are written out as normal, e.g. \"42\". Numbers can also be written
- as hexadecimal numbers when precedeed with \"0x\", as octal numbers
- when precedeed with \"0\" and as binary number when precedeed with
- \"0b\". Numbers can also be represented as floating point numbers,
- e.g. \"1.45\" or \"1.6E5\". Numbers can be converted between floats
- and integers by using the cast operators \"(float)\" and \"(int)\".</p>
+   <tr valign='top'>
+     <td><tt>0xFE</tt>, <tt>0xfe</tt></td>
+     <td>A hexadecimal integer is preceded by \"0x\".</td></tr>
 
- <ex-box>(int)3.14</ex-box>
+   <tr valign='top'>
+     <td><tt>040</tt></td>
+     <td>An octal integer is preceded by \"0\".</td></tr>
 
- <p>RXML variables may be referenced with the syntax \"scope.name\".
- Note that they are not written as entity references (i.e. without the
- surrounding &amp; and ;). If they are written that way then their
- values will be substituted into the expression before it is parsed,
- which can lead to strange parsing effects.</p>
+   <tr valign='top'>
+     <td><tt>0b10100110</tt></td>
+     <td>A binary integer is preceded by \"0b\".</td></tr>
 
- <p>A common problem when dealing with variables from forms is that a
- variable might be empty or a non-numeric string. To ensure that a
- value is produced the special functions INT and FLOAT may be used. In
- the expression \"INT(form.num)+1\" the INT-function will produce some
- integer regardless what the form variable contains, thereby
- preventing errors in the expression.</p>
+   <tr valign='top'>
+     <td><tt>1.43</tt>, <tt>1.6e-5</tt></td>
+     <td>A floating point number contains \".\" and/or
+     \"E\"/\"e\".</td></tr>
+
+   <tr valign='top'>
+     <td><tt>({<i>expr1</i>, <i>expr2</i>, ...})</tt></td>
+     <td>An array with the given elements (zero or more).</td></tr>
+
+   <tr valign='top'>
+     <td><tt>(<i>expr</i>)</tt></td>
+     <td>Parentheses can be used around an expression for grouping
+     inside a larger expression.</td></tr>
+ </table>
+
+ <p>Note: There is currently no way to specify a string value directly
+ in an expression. It must be put in an RXML variable that is used in
+ the expression instead.</p>
+
+ <p>Value conversion expressions:</p>
+
+ <table>
+   <tr valign='top'>
+     <td><tt>(int) <i>expr</i></tt></td>
+     <td>Casts a numeric or string expression (containing a formatted
+     number on one of the formats above) to an integer.</td></tr>
+
+   <tr valign='top'>
+     <td><tt>(float) <i>expr</i></tt></td>
+     <td>Casts a numeric or string expression (containing a formatted
+     number on one of the formats above) to a floating point
+     number.</td></tr>
+
+   <tr valign='top'>
+     <td><tt>(string) <i>expr</i></tt></td>
+     <td>Casts a numeric or string expression to a string. If it is an
+     integer then it is formatted as a decimal number. If it is a
+     floating point number then it is formatted on the form
+     <i>[-]XX[.XX][e[-]XX]</i>.</td></tr>
+
+   <tr valign='top'>
+     <td><tt>INT(<i>expr</i>)</tt>, <tt>FLOAT(<i>expr</i>)</tt>,
+     <tt>STRING(<i>expr</i>)</tt></td>
+     <td>These functions cast their arguments to integer, float, or
+     string, respectively. They behave like the cast operators above
+     except that they do not generate any error if <i>expr</i> cannot
+     be cast successfully. Instead a zero number or an empty string is
+     returned as appropriate. This is useful if <i>expr</i> is a value
+     from the client that might be bogus.</td></tr>
+ </table>
+
+ <p>Note that values in RXML variables often are strings even though
+ they might appear as (formatted) numbers. It is therefore a good idea
+ to use the <tt>INT()</tt> or <tt>FLOAT()</tt> functions on them
+ before you do math.</p>
+
+ <p>Expressions for numeric operands:</p>
+
+ <table>
+   <tr valign='top'>
+     <td><tt><i>expr1</i> * <i>expr2</i></tt></td>
+     <td>Multiplication.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> / <i>expr2</i></tt></td>
+     <td>Division.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> % <i>expr2</i></tt></td>
+     <td>Modulo.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> + <i>expr2</i></tt></td>
+     <td>Addition.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> - <i>expr2</i></tt></td>
+     <td>Subtraction.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> &lt; <i>expr2</i></tt></td>
+     <td>Less than.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> &gt; <i>expr2</i></tt></td>
+     <td>Greater than.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> &lt;= <i>expr2</i></tt></td>
+     <td>Less than or equal.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> &gt;= <i>expr2</i></tt></td>
+     <td>Greater than or equal.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> &amp; <i>expr2</i></tt></td>
+     <td>Bitwise AND (integer operands only).</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> ^ <i>expr2</i></tt></td>
+     <td>Bitwise XOR (integer operands only).</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> | <i>expr2</i></tt></td>
+     <td>Bitwise OR (integer operands only).</td></tr>
+
+   <tr valign='top'>
+     <td><tt>pow(<i>expr1</i>, <i>expr2</i>)</tt></td>
+     <td>Returns the value <i>expr1</i> raised to the power of
+     <i>expr2</i>.</td></tr>
+
+   <tr valign='top'>
+     <td><tt>abs(<i>expr</i>)</tt></td>
+     <td>Returns the absolute value of <i>expr</i>.</td></tr>
+ </table>
+
+ <p>Expressions for string operands:</p>
+
+ <table>
+   <tr valign='top'>
+     <td><tt><i>expr</i> * <i>num</i></tt></td>
+     <td>Returns <i>expr</i> repeated <i>num</i> times.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> / <i>expr2</i></tt></td>
+     <td>Returns an array with <i>expr1</i> split on <i>expr2</i>.
+     E.g. the string \"a,b,c\" split on \",\" is an array with the
+     three elements \"a\", \"b\", and \"c\".</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> + <i>expr2</i></tt></td>
+     <td>Returns <i>expr1</i> concatenated with <i>expr2</i>.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> - <i>expr2</i></tt></td>
+     <td>Returns <i>expr1</i> without any occurrences of <i>expr2</i>.</td></tr>
+
+   <tr valign='top'>
+     <td><tt>sizeof(<i>expr</i>)</tt></td>
+     <td>Returns the number of characters in <i>expr</i>.</td></tr>
+
+   <tr valign='top'>
+     <td><tt>search(<i>expr1</i>, <i>expr2</i>)</tt></td>
+     <td>Returns the starting position of the first occurrence of the
+     substring <i>expr2</i> inside <i>expr1</i>, counting from 1, or 0
+     if <i>expr2</i> does not occur in <i>expr1</i>.</td></tr>
+
+   <tr valign='top'>
+     <td><tt>reverse(<i>expr</i>)</tt></td>
+     <td>Returns the reverse of <i>expr</i>.</td></tr>
+ </table>
+
+ <p>Expressions for array operands:</p>
+
+ <table>
+   <tr valign='top'>
+     <td><tt><i>expr</i> * <i>num</i></tt></td>
+     <td>Returns <i>expr</i> repeated <i>num</i> times.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> + <i>expr2</i></tt></td>
+     <td>Returns <i>expr1</i> concatenated with <i>expr2</i>.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> - <i>expr2</i></tt></td>
+     <td>Returns <i>expr1</i> without any of the elements in
+     <i>expr2</i>.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> &amp; <i>expr2</i></tt></td>
+     <td>Returns the elements that exist in both <i>expr1</i> and
+     <i>expr2</i>, ordered according to <i>expr1</i>.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> ^ <i>expr2</i></tt></td>
+     <td>Returns the elements that exist in either <i>expr1</i> or
+     <i>expr2</i> but not in both. The order is <i>expr1</i> followed
+     by <i>expr2</i>.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> | <i>expr2</i></tt></td>
+     <td>Returns the elements that exist in either <i>expr1</i> or
+     <i>expr2</i>. The order is <i>expr1</i> followed by <i>expr2</i>.
+     (The difference from <i>expr1</i> + <i>expr2</i> is that elements
+     in <i>expr2</i> aren't repeated if they occur in
+     <i>expr1</i>.)</td></tr>
+
+   <tr valign='top'>
+     <td><tt>sizeof(<i>expr</i>)</tt></td>
+     <td>Returns the number of elements in <i>expr</i>.</td></tr>
+
+   <tr valign='top'>
+     <td><tt>search(<i>arr</i>, <i>expr</i>)</tt></td>
+     <td>Returns the position of the first occurrence of the element
+     <i>expr</i> inside the array <i>arr</i>, counting from 1, or 0
+     if <i>expr</i> does not exist in <i>arr</i>.</td></tr>
+
+   <tr valign='top'>
+     <td><tt>reverse(<i>expr</i>)</tt></td>
+     <td>Returns the reverse of <i>expr</i>.</td></tr>
+ </table>
+
+ <p>Expressions for all types of operands:</p>
+
+ <table>
+   <tr valign='top'>
+     <td><tt><i>expr1</i> == <i>expr2</i></tt></td>
+     <td>1 (true) if <i>expr1</i> and <i>expr2</i> are the same, 0
+     (false) otherwise. Note that arrays might be different even
+     though they contain the same sequence of elements.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> != <i>expr2</i></tt></td>
+     <td>1 (true) if <i>expr1</i> and <i>expr2</i> are different, 0
+     (false) otherwise.</td></tr>
+
+   <tr valign='top'>
+     <td><tt>equal(<i>expr1</i>, <i>expr2</i>)</tt></td>
+     <td>1 (true) if <i>expr1</i> and <i>expr2</i> are structurally
+     equal, 0 (false) otherwise. As opposed to the == operator above,
+     this returns 1 if two arrays contain the same sequence of
+     elements.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> &amp;&amp; <i>expr2</i></tt></td>
+     <td>Nonzero (true) if both expressions are nonzero (true), 0
+     (false) otherwise. A true return value is actually the value of
+     <i>expr2</i>.</td></tr>
+
+   <tr valign='top'>
+     <td><tt><i>expr1</i> || <i>expr2</i></tt></td>
+     <td>Nonzero (true) if either expression is nonzero (true), 0
+     (false) otherwise. A true return value is actually the value of
+     the last true expression.</td></tr>
+ </table>
 </attr>
 
 <attr name='from' value='string'>
