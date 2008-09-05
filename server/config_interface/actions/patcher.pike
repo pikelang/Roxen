@@ -460,7 +460,7 @@ mixed parse(RequestID id)
       }
       // ]]>
     </script>
-";
+    <input type='hidden' name='class' value='" + action + "' />\n";
 
   if (id->real_variables["OK.x"] &&
       id->real_variables["fixedfilename"] &&
@@ -470,7 +470,7 @@ mixed parse(RequestID id)
   {
     string temp_file = combine_path(plib->get_temp_dir(),
 				    id->real_variables["fixedfilename"][0]);
-      
+
     plib->write_file_to_disk(temp_file, id->real_variables["file"][0]);
     string patch_id = plib->import_file(temp_file);
     plib->clean_up(temp_file);
@@ -631,7 +631,6 @@ mixed parse(RequestID id)
   }
   else
   {
-    // res += "<pre><insert variables='full' scope='form' /></pre>";
     res += #" 
     <font size='+1'><b>Import a new patch</b></font>
     <p>
