@@ -172,7 +172,7 @@ class Patcher
     program ver = compile_file(version_h);
     if (!ver)
       throw(({"Can't fetch server version"}));
-    server_version = ver->__roxen_version__ + "." + ver->__roxen_build__;
+    server_version = ver->roxen_ver + "." + ver->roxen_build;
     write_mess("Server version ... %s\n", server_version);
   }
   
@@ -1297,7 +1297,7 @@ class Patcher
 
     if (p->wait())
     {
-      write_mess("FAILED: Could not extract file.\n");
+      write_err("FAILED: Could not extract file.\n");
       return 0;
     }
 
