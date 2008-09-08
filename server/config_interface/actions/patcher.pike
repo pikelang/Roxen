@@ -459,8 +459,7 @@ mixed parse(RequestID id)
         }
       }
       // ]]>
-    </script>
-    <input type='hidden' name='class' value='" + action + "' />\n";
+    </script>";
 
   if (id->real_variables["OK.x"] &&
       id->real_variables["fixedfilename"] &&
@@ -468,8 +467,9 @@ mixed parse(RequestID id)
       id->real_variables["file"] &&
       sizeof(id->real_variables["file"][0]))
   {
-    string temp_file = combine_path(plib->get_temp_dir(),
-				    id->real_variables["fixedfilename"][0]);
+    string temp_file = 
+      Stdio.append_path(plib->get_temp_dir(),
+			basename(id->real_variables["fixedfilename"][0]));
 
     plib->write_file_to_disk(temp_file, id->real_variables["file"][0]);
     string patch_id = plib->import_file(temp_file);
@@ -496,10 +496,12 @@ mixed parse(RequestID id)
 		   "class=maintenance'>Back</link-gbutton>",
 		   wb->get_all_messages());
     wb->clear_all();
+    return res;
   }
-  else if (id->real_variables["uninstall-button.x"] &&
-	   id->real_variables->uninstall &&
-	   sizeof(id->real_variables->uninstall))
+  
+  if (id->real_variables["uninstall-button.x"] &&
+      id->real_variables->uninstall &&
+      sizeof(id->real_variables->uninstall))
   {
     int successful_uninstalls;
     int no_of_patches;
@@ -540,16 +542,17 @@ mixed parse(RequestID id)
     {
       res += #"
 <blockquote><br />
-  The server needs to be restarted. Would you like to do  that now?<br/>
+  The server needs to be restarted. 
   <cf-perm perm='Restart'>
+    Would you like to do  that now?<br />
     <gbutton href='?what=restart&action=restart.pike&class=maintenance' 
              width=250 icon_src=&usr.err-2;> " + LOCALE(197,"Restart") + 
-#"    </gbutton>
+#" </gbutton>
   </cf-perm>
 
   <cf-perm not perm='Restart'>
     <gbutton dim width=250 icon_src=&usr.err-2;> " + LOCALE(197,"Restart") + 
-#"    </gbutton>
+#" </gbutton>
   </cf-perm>";
     }
 
@@ -561,10 +564,12 @@ mixed parse(RequestID id)
 		  "&class=maintenance'>Back</link-gbutton>",
 		  wb->get_all_messages());
     wb->clear_all();
+    return Roxen.http_string_answer(res);
   }
-  else if (id->real_variables["install-button.x"] &&
-	   id->real_variables->install &&
-	   sizeof(id->real_variables->install))
+ 
+  if (id->real_variables["install-button.x"] &&
+      id->real_variables->install &&
+      sizeof(id->real_variables->install))
   {
     int successful_installs;
     int no_of_patches;
@@ -610,14 +615,15 @@ mixed parse(RequestID id)
   <cf-perm perm='Restart'>
     Would you like to do  that now?<br/>
     <gbutton href='?what=restart&action=restart.pike&class=maintenance' 
-         >"/*    width='250' icon_src='&usr.err-2;'> "*/ + LOCALE(197,"Restart") + 
-#"    </gbutton>
+             width=250 icon_src=&usr.err-2;> " +
+      LOCALE(197,"Restart") + #" </gbutton>
   </cf-perm>
 
   <cf-perm not perm='Restart'>
-    <gbutton dim width=250 icon_src=&usr.err-2;> " + LOCALE(197,"Restart") + 
-#"    </gbutton>
-  </cf-perm>";
+    <gbutton dim width=250 icon_src=&usr.err-2;> " +
+      LOCALE(197,"Restart") + #" </gbutton>
+  </cf-perm>
+";
     }
 
     res += sprintf("<p><span id='log_img' class='folded'"
@@ -628,10 +634,10 @@ mixed parse(RequestID id)
 		   "&class=maintenance'>Back</link-gbutton>",
 		  wb->get_all_messages());
     wb->clear_all();
+    return Roxen.http_string_answer(res);
   }
-  else
-  {
-    res += #" 
+
+  res += #" 
     <font size='+1'><b>Import a new patch</b></font>
     <p>
       Select local file to upload: <br />
@@ -665,8 +671,8 @@ mixed parse(RequestID id)
           </th>
 	</tr>
 ";
-    res += list_patches(id, plib, "imported");
-    res += #"
+  res += list_patches(id, plib, "imported");
+  res += #"
       </table>
     </box-frame>
 
@@ -678,7 +684,6 @@ mixed parse(RequestID id)
       Click on a Patch for more information.
     </p>
     <input type='hidden' name='action' value='&form.action;'/>
-    <input type='hidden' name='class' value='&form.class;'/>
     <box-frame width='100%' iwidth='100%' bodybg='&usr.contentbg;'
 	       box-frame='yes' padding='0'>
       <table class='module-list' cellspacing='0' cellpadding='3' border='0' 
@@ -696,8 +701,8 @@ mixed parse(RequestID id)
           </th>
 	</tr>
 ";
-    res += list_patches(id, plib, "installed");
-    res += #"      
+  res += list_patches(id, plib, "installed");
+  res += #"      
       </table>
     </box-frame>
 
@@ -705,6 +710,6 @@ mixed parse(RequestID id)
     <br />
     <link-gbutton href='./?class=" + action + #"'>Back</link-gbutton>
 ";
-  }
+
   return res;
 }
