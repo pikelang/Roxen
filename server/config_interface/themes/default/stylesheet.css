@@ -89,6 +89,11 @@ table.module-list
 	/*cursor: default;*/
 }
 
+table.module-list th
+{
+	white-space: nowrap;
+}
+
 ul.module-sub-list
 {
 	font-size: 90%;
@@ -99,6 +104,11 @@ ul.module-sub-list
 table.module-sub-list
 {
 	font-size: 90%;
+}
+
+table.module-sub-list-2
+{
+	font-size: 100%;
 }
 
 .module-list-item-hover,

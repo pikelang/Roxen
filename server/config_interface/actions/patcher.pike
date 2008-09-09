@@ -9,7 +9,7 @@ constant action = "maintenance";
 
 constant long_flags = ([ "restart" : "Need to restart server" ]);
 
-string name= LOCALE(165, "Patch status");
+string name= LOCALE(165, "Patch management");
 string doc = LOCALE(166, "Show information about the available patches and "
 			 "their status.");
 
@@ -131,7 +131,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
 				 );
       }
 
-      res += sprintf("      <tr valign='top' style='background-color: %s' >\n"
+      res += sprintf("      <tr style='background-color: %s' >\n"
 		     "        <td class='folded' id='%s_img'"
 		     " style='background-color: %[0]s' "
 		     " onmouseover='this.style.cursor=\"pointer\"'"
@@ -160,12 +160,13 @@ string list_patches(RequestID id, Patcher po, string which_list)
 	({ "Originator:"     , item->metadata->originator  }) });
       
 
-      string active_flags = "        <table class='module-sub-list'"
-			    " width='50%'>\n";
+      string active_flags = "        <table class='module-sub-list-2'"
+			    " width='50%' cellspacing='0' cellpadding='0'>\n";
       foreach(known_flags; string index; string long_reading)
       {
 	active_flags += sprintf("          <tr><td>%s</td>"
-				"<td style='width: 2em'><b>%s<b></td></tr>\n",
+				"<td>&nbsp;</td>"
+				"<td style='width: 2em'>%s</td></tr>\n",
 				long_reading + ":",
 				(item->metadata->flags && 
 				 item->metadata->flags[index]) ?
@@ -222,7 +223,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
       else
       {
 	md += ({
-	  ({ "Dependencies:", "(none)" }),
+	  ({ "Dependencies:", "None" }),
 	});
       }
       
@@ -638,7 +639,7 @@ mixed parse(RequestID id)
   }
 
   res += #" 
-    <font size='+1'><b>Import a new patch</b></font>
+    <font size='+1'><b>Import a New Patch</b></font>
     <p>
       Select local file to upload: <br />
         <input type='file' name='file' size='40'/>
@@ -653,7 +654,7 @@ mixed parse(RequestID id)
       but not applied.
     </p>
     <p>
-      Click on a Patch for more information.
+      Click on a patch for more information.
     </p>
     <box-frame width='100%' iwidth='100%' bodybg='&usr.content-bg;'
 	       box-frame='yes' padding='0'>\n
@@ -661,7 +662,7 @@ mixed parse(RequestID id)
              width='100%' style='table-layout: fixed'>
 	<tr bgcolor='&usr.obox-titlebg;' >
           <th style='width:20px'>&nbsp;</th>
-	  <th style='width:10em; text-align:left;'>Id</th>
+	  <th style='width:12em; text-align:left;'>Id</th>
 	  <th style='width: auto; text-align:left'>Patch Name</th>
 	  <th style='width:20px;text-align:right'>
             <input type='checkbox' 
