@@ -1291,7 +1291,7 @@ class Patcher
   //! extracts the patch there. Then returns the parsed metadata.
   {
     write_mess("Extracting %s to %s ... ", file, target_dir);
-    array args = ({ "tar", "-xf", combine_path(getcwd(), file) });
+    array args = ({ "tar", "-xzf", combine_path(getcwd(), file) });
     Process.create_process p = Process.create_process(args, 
 						      ([ "cwd" : target_dir ]));
 
