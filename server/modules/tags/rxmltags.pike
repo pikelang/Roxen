@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.554 2008/09/05 19:16:27 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.555 2008/09/09 13:22:16 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -52,23 +52,26 @@ multiset query_provides() {
 private mapping(string:mixed) sexpr_constants = ([
   "this_program":0,
 
-  "`+":`+,
-  "`-":`-,
-  "`*":`*,
-  "`/":`/,
-  "`%":`%,
+  // Kludge: These casts are to avoid that the type checker in pike
+  // 7.8 freaks out..
 
-  "`!":`!,
-  "`!=":`!=,
-  "`&":`&,
-  "`|":`|,
-  "`^":`^,
+  "`+": (function) `+,
+  "`-": (function) `-,
+  "`*": (function) `*,
+  "`/": (function) `/,
+  "`%": (function) `%,
 
-  "`<":`<,
-  "`>":`>,
-  "`==":`==,
-  "`<=":`<=,
-  "`>=":`>=,
+  "`!": (function) `!,
+  "`!=": (function) `!=,
+  "`&": (function) `&,
+  "`|": (function) `|,
+  "`^": (function) `^,
+
+  "`<": (function) `<,
+  "`>": (function) `>,
+  "`==": (function) `==,
+  "`<=": (function) `<=,
+  "`>=": (function) `>=,
 
   "equal": equal,
   "sizeof": sizeof,

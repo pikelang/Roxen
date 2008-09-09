@@ -186,10 +186,23 @@ private array(float) xyreverse(array(float) a)
 
 protected object compile_handler = class {
     mapping(string:mixed) get_default_module() {
-      return ([ "this_program":0,"`+":`+,"`-":`-,
-		"`*":`*,"`/":`/, "`%":`%,"`&":`&,
-		"`|":`|,"`^":`^,"`<":`<,"`>":`>,
-		"`==":`==,"`<=":`<=,"`>=":`>=, ]);
+      return ([ "this_program":0,
+		// Kludge: These casts are to avoid that the type
+		// checker in pike 7.8 freaks out..
+		"`+": (function) `+,
+		"`-": (function) `-,
+		"`*": (function) `*,
+		"`/": (function) `/,
+		"`%": (function) `%,
+		"`&": (function) `&,
+		"`|": (function) `|,
+		"`^": (function) `^,
+		"`<": (function) `<,
+		"`>": (function) `>,
+		"`==": (function) `==,
+		"`<=": (function) `<=,
+		"`>=": (function) `>=,
+	     ]);
     }
 
     mixed resolv(string id, void|string fn, void|string ch) {
