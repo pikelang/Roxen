@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.44 2008/09/10 07:55:37 liin Exp $";
+constant cvs_version = "$Id: email.pike,v 1.45 2008/09/10 08:45:10 liin Exp $";
 
 constant thread_safe=1;
 
@@ -100,7 +100,7 @@ void create(Configuration conf)
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.44 $"/" ")[1];
+string revision = ("$Revision: 1.45 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -370,7 +370,7 @@ class TagEmail {
     }
     
     array do_return(RequestID id) {
-
+      
       object m, o;
       string body = content || "";
       string subject;
@@ -382,6 +382,7 @@ class TagEmail {
       mixed error;
       mapping headers = ([]);
 
+      RXML_CONTEXT->misc[" _ok"] = 1;
 
      if(stringp(id->misc->_email_sign_))
 	body += "\n-- \n" + m_delete(id->misc, "_email_sign_");
@@ -702,12 +703,21 @@ value=''><p>
 </p>
 </attr>
 
+<attr name='error-variable' value='RXML variable'>
+  <p>
+    An RXML variable to store a potential error message in. 
+  </p>
+</attr>
 
 <ex-box>
 <email from=\"foo@bar.com\" to=\"johny@pub.com|pity@bufet.com|ely@rest.com\"
-separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\" >
+separator=\"|\" charset=\"iso-8859-2\" server=\"mailhub.anywhere.org\" 
+error-variable=\"var.error\">
  This is the contents.
 </email>
+<else>
+  Failed to send email: &var.error;
+</else>
 </ex-box>",
 
 ([
