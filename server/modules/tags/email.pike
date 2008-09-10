@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.43 2008/08/15 12:33:55 mast Exp $";
+constant cvs_version = "$Id: email.pike,v 1.44 2008/09/10 07:55:37 liin Exp $";
 
 constant thread_safe=1;
 
@@ -100,7 +100,7 @@ void create(Configuration conf)
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.43 $"/" ")[1];
+string revision = ("$Revision: 1.44 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -358,8 +358,15 @@ class TagEmail {
       string m;
       if(message)
 	catch { m = (string)message; };
-      log_message(from, (m || "\r\n\r\n*** Unknown message ***"), error);
-      RXML.run_error(error);
+      log_message(from, (m || "\r\n\r\n*** Unknown message ***"), 
+		  EMAIL_LABEL + error);
+      if (sscanf(args["error-variable"] || "", "%s.%s", 
+		 string scope, 
+		 string name) == 2)
+	RXML.user_set_var(name, error, scope);
+      
+      RXML_CONTEXT->misc[" _ok"] = 0;
+      RXML.run_error(EMAIL_LABEL + Roxen.html_encode_string(error));
     }
     
     array do_return(RequestID id) {
@@ -533,8 +540,8 @@ class TagEmail {
 
      if (error)
        log_rxml_run_error(from, m,
-			  EMAIL_LABEL+"MIME message processing error: "+
-			  Roxen.html_encode_string(error[0]));
+			  "MIME message processing error: "+
+			  error[0]);
 
      error = catch {
        o = Protocols.SMTP.Client(query("CI_server_restrict") ?
@@ -543,8 +550,8 @@ class TagEmail {
      };
      if (error)
        log_rxml_run_error(from, m,
-			  EMAIL_LABEL+"Couldn't connect to mail server. "+
-			  Roxen.html_encode_string(error[0]));
+			  "Couldn't connect to mail server. "+
+			  error[0]);
 
      catch(msglast = (string)m);
 
@@ -556,12 +563,12 @@ class TagEmail {
 
      if (!sizeof(to))
        log_rxml_run_error(from, message,
-			  EMAIL_LABEL+"Recipient address is missing!");
+			  "Recipient address is missing!");
      
      error = catch(o->send_message(from, to, message));
      if (error)
        log_rxml_run_error(from, message,
-			  EMAIL_LABEL+Roxen.html_encode_string(error[0]));
+			  error[0]);
 
      o->close();
      o = 0;
