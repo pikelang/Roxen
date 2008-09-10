@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.45 2008/09/10 08:45:10 liin Exp $";
+constant cvs_version = "$Id: email.pike,v 1.46 2008/09/10 11:53:29 mast Exp $";
 
 constant thread_safe=1;
 
@@ -28,6 +28,15 @@ void create(Configuration conf)
          TYPE_STRING,
          "The default sender name will be used if no '<i>from</i>' "
          "attribute is given to the tag.");
+  defvar("CI_from_envelope", "", "Defaults: SMTP Envelope sender e-mail",
+	 TYPE_STRING, #"\
+The default envelope sender address that will be used if no
+'<i>envelope-from</i>' attribute is given to the tag.
+
+<p>This email will be used for the SMTP envelope. That is extremly
+helpful if you are sending out emails on behalf of a third party. If
+empty and there is no '<i>envelope-from</i>' attribute, the sender
+from the mail's MIME headers will be taken.");
   defvar("CI_to", "", "Defaults: Recipient names",
          TYPE_TEXT_FIELD,
          "The default recipient names (one name per line) will be "
@@ -100,7 +109,7 @@ void create(Configuration conf)
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.45 $"/" ")[1];
+string revision = ("$Revision: 1.46 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -437,6 +446,13 @@ class TagEmail {
       subject = args->subject || headers->SUBJECT || query("CI_nosubject");
       fromx = args->from || headers->FROM || query("CI_from");
       string from = only_from_addr(fromx);
+     
+      string env_from = args["envelope-from"];
+      if (!env_from || !sizeof (env_from)) {
+	env_from = query ("CI_from_envelope");
+	if (!sizeof (env_from))
+	  env_from = from;
+      }
 
      // converting bare LFs (QMail specials:)
      if(query("CI_qmail_spec"))
@@ -566,7 +582,7 @@ class TagEmail {
        log_rxml_run_error(from, message,
 			  "Recipient address is missing!");
      
-     error = catch(o->send_message(from, to, message));
+     error = catch(o->send_message(env_from, to, message));
      if (error)
        log_rxml_run_error(from, message,
 			  error[0]);
@@ -649,6 +665,13 @@ value=''><p>
 
 <attr name='from' value=''><p>
  The email address of sender. Values on the form <tt>John Doe foo@bar.com</tt>
+ renders a From: header like <tt>From: \"John Doe\" &lt;foo@bar.com&gt;</tt>.
+ If the value contains a '&lt;' the value is left unaltered.
+</p>
+</attr>
+
+<attr name='envelope-from' value=''><p>
+ The email address of sender to use on the SMTP envelope. Values on the form <tt>John Doe foo@bar.com</tt>
  renders a From: header like <tt>From: \"John Doe\" &lt;foo@bar.com&gt;</tt>.
  If the value contains a '&lt;' the value is left unaltered.
 </p>
