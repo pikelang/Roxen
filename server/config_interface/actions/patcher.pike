@@ -275,8 +275,13 @@ string list_patches(RequestID id, Patcher po, string which_list)
       if (item->metadata->patch)
       {
 	string patch_data = "";
-	string patch_path = combine_path(po->get_installed_dir(),
-					 item->metadata->id);
+	string patch_path = "";
+	if (which_list == "imported")
+	  patch_path = combine_path(po->get_import_dir(),
+				    item->metadata->id);
+	else
+	  patch_path = combine_path(po->get_installed_dir(),
+				    item->metadata->id);
 	foreach(item->metadata->patch, string patch_file)
 	{
 	  patch_data += Stdio.read_file(combine_path(patch_path,
