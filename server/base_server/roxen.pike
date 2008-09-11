@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.981 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.982 2008/09/11 19:55:23 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1071,16 +1071,22 @@ mixed background_run (int|float delay, function func, mixed... args)
 //! Enqueue a task to run in the background in a way that makes as
 //! little impact as possible on the incoming requests. No matter how
 //! many tasks are queued to run in the background, only one is run at
-//! a time. The tasks won't be starved, though.
+//! a time. The tasks won't be starved regardless of server load,
+//! though.
 //!
 //! The function @[func] will be enqueued after approximately @[delay]
 //! seconds, to be called with the rest of the arguments as its
 //! arguments.
 //!
-//! The function might be run in the backend thread if no thread
-//! support is available, so it should never run for a long time.
-//! Instead do another call to @[background_run] to queue it up again
-//! after some work has been done, or use @[BackgroundProcess].
+//! In a multithreaded server the function will be executed in one of
+//! the handler threads. The function is executed in the backend
+//! thread if no thread support is available, although that
+//! practically never occurs anymore.
+//!
+//! To avoid starving other background jobs, the function should never
+//! run for a long time. Instead do another call to @[background_run]
+//! to queue it up again after some work has been done, or use
+//! @[BackgroundProcess].
 //!
 //! @returns
 //! If the function is queued for execution right away then zero is
@@ -4897,8 +4903,10 @@ void describe_all_threads()
 
   int i;
   for(i=0; i < sizeof(threads); i++) {
+    string|int thread_id = thread_ids[threads[i]];
+    if (intp (thread_id)) thread_id = sprintf ("%x", thread_id);
     report_debug("### Thread %s%s:\n",
-		 (string) thread_ids[threads[i]],
+		 thread_id,
 #ifdef THREADS
 		 threads[i] == backend_thread ? " (backend thread)" : ""
 #else
