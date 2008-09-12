@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.110 2007/04/26 15:07:51 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.111 2008/09/12 15:38:22 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -51,8 +51,9 @@ constant tagdoc=([
 </attr>
 
 <attr name='parse'><p>
- If specified, the query will be parsed by the RXML parser.
- Useful if you wish to dynamically build the query.</p>
+ If specified, the query will be parsed by the RXML parser. Useful if
+ you wish to dynamically build the query. This attribute is deprecated
+ and will have no effect if the server compatibility level is above 2.1.</p>
 </attr>
 
 <attr name='charset' value='string'><p>
@@ -81,7 +82,7 @@ constant tagdoc=([
 <attr name='parse'><p>
  If specified, the query will be parsed by the RXML parser. Useful if
  you wish to dynamically build the query. This attribute is deprecated
- and will have no effect if the servers compatibility level is above 2.1.</p>
+ and will have no effect if the server compatibility level is above 2.1.</p>
 </attr>
 
 <attr name='bindings' value='\"name=variable,name=variable,...\"'><p>
