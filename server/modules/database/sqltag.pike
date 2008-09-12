@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.109 2008/02/11 10:27:50 jonasw Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.110 2008/09/12 16:17:07 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -33,17 +33,31 @@ constant tagdoc=([
 </short></p>
 </desc>
 
-<attr name='ascii'><p>
- Create an ASCII table rather than an HTML table. Useful for
- interacting with <xref href='../graphics/diagram.tag' /> and <xref
- href='../text/tablify.tag' />.</p>
+<attr name='db' value='database'><p>
+ Which database to connect to, among the list of databases configured
+ under the \"DBs\" tab in the administrator interface. If omitted then
+ the default database will be used.</p>
 </attr>
 
-<attr name='host' value='database'><p>
- Which database to connect to, usually a symbolic name set in the <xref
- href='../../administrator_manual/installing/databases.xml'><module>SQL
- Databases</module></xref> module. If omitted the default database will
- be used.</p>
+<attr name='host' value='url'><p>
+ A database URL to specify the database to connect to, if permitted by
+ the module settings. If omitted then the default database will be
+ used.</p>
+
+ <p>The database URL is on this format:</p>
+
+ <blockquote><i>driver</i><b>://</b>[<i>username</i>[<b>:</b><i>password</i>]<b>@</b>]<i>host</i>[<b>:</b><i>port</i>][<b>/</b><i>database</i>]</blockquote>
+
+ <p>where <i>driver</i> is the database protocol, e.g. \"odbc\",
+ \"mysql\", \"oracle\", \"postgres\", etc.</p>
+
+ <p>For compatibility this can also be a database name as given to the
+ \"db\" attribute.</p>
+</attr>
+
+<attr name='module' value='string'><p>
+ Access the local database for the specified Roxen module, if
+ permitted by the module settings. This attribute is deprecated.</p>
 </attr>
 
 <attr name='query' value='SQL statement'><p>
@@ -58,6 +72,12 @@ constant tagdoc=([
 <attr name='charset' value='string'><p>
  Use the specified charset for the SQL statement. See the description
  for the \"sql\" emit source for more info.</p>
+</attr>
+
+<attr name='ascii'><p>
+ Create an ASCII table rather than an HTML table. Useful for
+ interacting with <xref href='../graphics/diagram.tag' /> and <xref
+ href='../text/tablify.tag' />.</p>
 </attr>",
 
 "sqlquery":#"
@@ -67,11 +87,31 @@ constant tagdoc=([
  contents of the database, for example INSERT or UPDATE.</p>
 </desc>
 
-<attr name='host' value='database'><p>
- Which database to connect to, usually a symbolic name set in the <xref
- href='../../administrator_manual/installing/databases.xml'><module>SQL
- Databases</module></xref> module. If omitted the default
- database will be used.</p>
+<attr name='db' value='database'><p>
+ Which database to connect to, among the list of databases configured
+ under the \"DBs\" tab in the administrator interface. If omitted then
+ the default database will be used.</p>
+</attr>
+
+<attr name='host' value='url'><p>
+ A database URL to specify the database to connect to, if permitted by
+ the module settings. If omitted then the default database will be
+ used.</p>
+
+ <p>The database URL is on this format:</p>
+
+ <blockquote><i>driver</i><b>://</b>[<i>username</i>[<b>:</b><i>password</i>]<b>@</b>]<i>host</i>[<b>:</b><i>port</i>][<b>/</b><i>database</i>]</blockquote>
+
+ <p>where <i>driver</i> is the database protocol, e.g. \"odbc\",
+ \"mysql\", \"oracle\", \"postgres\", etc.</p>
+
+ <p>For compatibility this can also be a database name as given to the
+ \"db\" attribute.</p>
+</attr>
+
+<attr name='module' value='string'><p>
+ Access the local database for the specified Roxen module, if
+ permitted by the module settings. This attribute is deprecated.</p>
 </attr>
 
 <attr name='query' value='SQL statement'><p>
@@ -99,8 +139,8 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
 </attr>
 
 <attr name='mysql-insert-id' value='variable'><p>
- Set the given variable to the insert id used by Mysql for
- auto-incrementing columns. Note: This is only available with Mysql.</p>
+ Set the given variable to the insert id used by MySQL for
+ auto-incrementing columns. Note: This is only available with MySQL.</p>
 </attr>
 
 <attr name='charset' value='string'><p>
@@ -115,11 +155,31 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
  as the SQL columns.</p>
 </desc>
 
-<attr name='host' value='database'><p>
- Which database to connect to, usually a symbolic name set in the <xref
- href='../../administrator_manual/installing/databases.xml'><module>SQL
- Databases</module></xref> module. If omitted the default
- database will be used.</p>
+<attr name='db' value='database'><p>
+ Which database to connect to, among the list of databases configured
+ under the \"DBs\" tab in the administrator interface. If omitted then
+ the default database will be used.</p>
+</attr>
+
+<attr name='host' value='url'><p>
+ A database URL to specify the database to connect to, if permitted by
+ the module settings. If omitted then the default database will be
+ used.</p>
+
+ <p>The database URL is on this format:</p>
+
+ <blockquote><i>driver</i><b>://</b>[<i>username</i>[<b>:</b><i>password</i>]<b>@</b>]<i>host</i>[<b>:</b><i>port</i>][<b>/</b><i>database</i>]</blockquote>
+
+ <p>where <i>driver</i> is the database protocol, e.g. \"odbc\",
+ \"mysql\", \"oracle\", \"postgres\", etc.</p>
+
+ <p>For compatibility this can also be a database name as given to the
+ \"db\" attribute.</p>
+</attr>
+
+<attr name='module' value='string'><p>
+ Access the local database for the specified Roxen module, if
+ permitted by the module settings. This attribute is deprecated.</p>
 </attr>
 
 <attr name='query' value='SQL statement'><p>
@@ -164,6 +224,9 @@ string compat_default_host;
 #endif
 string default_db, default_charset;
 
+int allow_sql_urls, allow_module_dbs;
+mapping(string:int(1..1)) allowed_dbs = ([]); // 0 if all dbs are allowed.
+
 //  Cached copy of conf->query("compat_level"). This setting is defined
 //  to require a module reload to take effect so we only query it when
 //  start() is called.
@@ -204,6 +267,13 @@ array|object do_sql_query(mapping args, RequestID id,
 
   if( args->module )
   {
+    if (!allow_module_dbs) {
+      report_warning ("Connection to module database for %O "
+		      "attempted from %O.\n", args->module, id->raw_url);
+      RXML.parse_error ("Invalid \"module\" attribute - "
+			"database access through modules not allowed.\n");
+    }
+
     RoxenModule module=id->conf->find_module(replace(args->module,"!","#"));
     if( !module )
       RXML.run_error( (string)LOCALE(9,"Cannot find the module %s"),
@@ -211,9 +281,13 @@ array|object do_sql_query(mapping args, RequestID id,
 
     if( error = catch {
 	con = module->get_my_sql (ro, args->charset || default_charset);
-      } )
+      } ) {
+#if 0
+      werror (describe_backtrace (error));
+#endif
       RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
 		     ": "+ describe_error (error) +"\n");
+    }
       
     if( error = catch
     {
@@ -231,20 +305,43 @@ array|object do_sql_query(mapping args, RequestID id,
   else
   {
 #if ROXEN_COMPAT <= 1.3
-    if( !args->db && (host || query("db")==" none") )
-      error = catch {
-	  con = id->conf->sql_connect(host || compat_default_host,
-				      args->charset || default_charset);
-	};
+    if( !args->db && (host || default_db == " none") ) {
+      string h = host || compat_default_host;
+      if (h && has_value (h, "://")) {
+	if (host && !allow_sql_urls) {
+	  report_warning ("Connection to %O attempted from %O.\n",
+			  host, id->raw_url);
+	  RXML.parse_error ("Invalid \"host\" attribute - "
+			    "database access through SQL URLs not allowed.\n");
+	}
+	error = catch {
+	    con = id->conf->sql_connect(h, args->charset || default_charset);
+	  };
+      }
+    }
+
     if(!con)
 #endif
-      error = catch(con = DBManager.get( host||args->db||
-					 default_db||compat_default_host,
+    {
+      string db = host || args->db;
+      if (db && allowed_dbs && !allowed_dbs[db] && db != default_db) {
+	report_warning ("Connection to database %O attempted from %O.\n",
+			db, id->raw_url);
+	RXML.parse_error ("Database %O is not in the list "
+			  "of allowed databases.\n", db);
+      }
+      error = catch(con = DBManager.get( db || default_db||compat_default_host,
 					 my_configuration(), ro, 0,
 					 args->charset || default_charset));
-    if( !con )
+    }
+
+    if( !con ) {
+#if 0
+      werror (describe_backtrace (error));
+#endif
       RXML.run_error(LOCALE(3,"Couldn't connect to SQL server")+
 		     (error?": "+ describe_error (error) :"")+"\n");
+    }
 
     function query_fn = (big_query ? con->big_query : con->query); 
     if( error = catch( result = (bindings ? query_fn(args->query, bindings) : query_fn(args->query))) ) {
@@ -489,26 +586,77 @@ void create()
   defvar("hostname", "mysql://localhost/",
          LOCALE(4,"Default database"),
 	 TYPE_STRING | VAR_INVISIBLE,
-	 LOCALE(5,"The default database that will be used if no <i>host</i> "
-	 "attribute is given to the tags. "
-	 "The value is a database URL in this format:\n"
-	 "<p><blockquote><pre>"
-	 "<i>driver</i><b>://</b>"
-	 "[<i>username</i>[<b>:</b><i>password</i>]<b>@</b>]"
-	 "<i>host</i>[<b>:</b><i>port</i>]"
-	 "[<b>/</b><i>database</i>]\n"
-	 "</pre></blockquote>\n"
-	 "<p>If the <i>SQL databases</i> module is loaded, it's also "
-	 "possible to use an alias registered there. That's the "
-	 "recommended way, since this (usually sensitive) data is "
-	 "collected in one place then."));
+	 LOCALE(5, #"
+<p>The default database that will be used if no \"host\" attribute
+is given to the tags. The value is a database URL on this format:</p>
+
+<blockquote><i>driver</i><b>://</b>[<i>username</i>[<b>:</b><i>password</i>]<b>@</b>]<i>host</i>[<b>:</b><i>port</i>][<b>/</b><i>database</i>]</blockquote>
+
+<p>where <i>driver</i> is the database protocol, e.g. \"odbc\",
+\"mysql\", \"oracle\", \"postgres\", etc.</p>
+
+<p>It is also possible to specify a database name from the \"DBs\" tab
+here, but the recommended way is to use the \"Default database\"
+setting instead.</p>"));
 #endif
+
   defvar( "db",
           DatabaseVar( " none",({}),0,
                        LOCALE(4,"Default database"),
-                       LOCALE(8,"If this is defined, it's the "
-                              "database this server will use as the "
-                              "default database") ) );
+		       LOCALE(8, #"\
+<p>If this is set, it is the default database to connect to.</p>
+
+<p>If both \"Allow SQL URLs\" and \"Allowed databases\" are disabled
+then this is the only database that the tags will use, and the
+\"host\" and \"db\" attributes are effectively disabled.</p>") ) );
+
+  defvar ("allow_sql_urls", 1,
+	  LOCALE(0, "Allow SQL URLs"),
+	  TYPE_FLAG,
+	  LOCALE(0, #"\
+<p>Allow generic SQL URLs in the \"host\" attribute to the tags. This
+can be a security hazard if users are allowed to write RXML - the
+server will make the connection as the user it is configured to run
+as.</p>
+
+<p>In particular, allowing this makes it possible to write RXML that
+connects directly to the socket of Roxen's internal MySQL server,
+thereby bypassing the permissions set under the \"DBs\" tab. It is
+therefore strongly recommended to keep this disabled and instead
+configure all database connections through the \"DBs\" tab.</p>
+
+<p>Compatibility note: For compatibility reasons, this setting is
+enabled by default in Roxen 4.5 but will be disabled in 5.0.</p>"));
+
+  defvar ("allowed_dbs", "*",
+	  LOCALE(0, "Allowed databases"),
+	  TYPE_STRING,
+	  LOCALE(0, #"\
+<p>A comma-separated list of the databases under the \"DBs\" tab that
+are allowed in the \"db\" attribute to the tags. The database in the
+\"Default database\" setting is also implicitly allowed. Set to \"*\"
+to make no restriction. In addition to this check, the permission
+settings under the \"DBs\" tab are applied.</p>
+
+<p>By default no databases are allowed, thus forcing you to list all
+allowed databases here and/or in the \"Default database\" setting.
+Note that specifying \"*\" can be a security hazard since that makes
+it possible to access internal databases (some of which can contain
+sensitive security information). It is not possible to restrict access
+to those databases under the \"DBs\" tab since that would make them
+inaccessible to the internal modules too.</p>
+
+<p>Compatibility note: For compatibility reasons, this setting is set
+to \"*\" by default in Roxen 4.5 but will be disabled in 5.0.</p>"));
+
+  defvar ("allow_module_dbs", 1,
+	  LOCALE(0, "Support \"module\" attribute"),
+	  TYPE_FLAG,
+	  LOCALE(0, #"\
+<p>Support the deprecated \"module\" attribute to the tags.</p>
+
+<p>Compatibility note: For compatibility reasons, this setting is
+enabled by default in Roxen 4.5 but will be disabled in 5.0.</p>"));
 
   defvar ("charset", "",
 	  LOCALE(10, "Default charset"),
@@ -535,31 +683,69 @@ void start()
   default_charset = query ("charset");
   if (default_charset == "") default_charset = 0;
   compat_level = my_configuration()->query("compat_level");
+
+  allow_sql_urls = query ("allow_sql_urls");
+  allow_module_dbs = query ("allow_module_dbs");
+
+  string dbs = query ("allowed_dbs");
+  if (dbs == "*") allowed_dbs = 0;
+  else {
+    allowed_dbs = ([]);
+    foreach (dbs / ",", string db) {
+      db = String.trim_all_whites (db);
+      if (db != "") allowed_dbs[db] = 1;
+    }
+  }
 }
 
 string status()
 {
-  if( query("db") != " none" )
+  string res = "";
+
+  if( default_db != " none" )
   {
     if(mixed err = catch {
-      object o = DBManager.get(query("db"),my_configuration());
+      object o = DBManager.get(default_db, my_configuration());
       if(!o)
         error("The database specified as default database does not exist");
-      return sprintf(LOCALE(6,"The default database is connected to %s "
-                            "server on %s.")+
-                     "<br />\n",
-                     Roxen.html_encode_string (o->server_info()),
-                     Roxen.html_encode_string (o->host_info()));
+      res += "<p>" +
+	sprintf(LOCALE(6,"The default database is connected to %s "
+		       "server on %s."),
+		Roxen.html_encode_string (o->server_info()),
+		Roxen.html_encode_string (o->host_info())) +
+	"</p>\n";
     })
     {
-      return
-        "<font color=\"red\">"+
+      res +=
+	"<p><font color=\"red\">"+
         LOCALE(7,"The default database is not connected")+
-        ":</font><br />\n" +
+	":</font><br />\n" +
         replace( Roxen.html_encode_string( describe_error(err) ),
                  "\n", "<br />\n") +
-        "<br />\n";
+	"</p>\n";
     }
   }
-  return "";
+
+  if (allow_sql_urls)
+    res += "<p><font color=\"red\">" + LOCALE(0, "Security warning:") +
+      "</font> " +
+      LOCALE(0, "Connections to arbitrary databases allowed. See the "
+	     "\"Allow SQL URLs\" setting.") +
+      "</p>\n";
+
+  if (!allowed_dbs)
+    res += "<p><font color=\"red\">" + LOCALE(0, "Security warning:") +
+      "</font> " +
+      LOCALE(0, "Connections to all configured database allowed. See the "
+	     "\"Allowed databases\" setting.") +
+      "</p>\n";
+
+  if (allow_module_dbs)
+    res += "<p><font color=\"red\">" + LOCALE(0, "Security warning:") +
+      "</font> " +
+      LOCALE(0, "Connections to module databases allowed. See the "
+	     "\"Support 'module' attribute\" setting.") +
+      "</p>\n";
+
+  return res;
 }
