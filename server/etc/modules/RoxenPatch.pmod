@@ -631,8 +631,8 @@ class Patcher
 	array args = ({ "patch",
 			"-p0",
 			// Reject file
-			"--global-reject-file=" +
-			   append_path(source_path, "rejects"),
+// 			"--global-reject-file=" +
+// 			   append_path(source_path, "rejects"),
 			"-d", combine_path(getcwd(), server_path) });
 	
 	if (dry_run) 
