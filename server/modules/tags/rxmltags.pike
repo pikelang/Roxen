@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.555 2008/09/09 13:22:16 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.556 2008/09/15 00:13:56 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2771,121 +2771,755 @@ class TagReplace
   }
 }
 
-#if 0
-class TagRange
+class TagSubstring
 {
   inherit RXML.Tag;
-  constant name = "range";
-  mapping(string:RXML.Type) opt_arg_types = ([
-    "from"         : RXML.t_int(RXML.PEnt),
-    "to"           : RXML.t_int(RXML.PEnt),
-    "index"        : RXML.t_int(RXML.PEnt),
-    "split"        : RXML.t_text(RXML.PEnt),
-    "split-chars"  : RXML.t_text (RXML.PEnt),
-    "after-first"  : RXML.t_any (RXML.PEnt),
-    "after-last"   : RXML.t_any (RXML.PEnt),
-    "after-nth"    : RXML.t_any (RXML.PEnt),
-    "before-first" : RXML.t_any (RXML.PEnt),
-    "before-last"  : RXML.t_any (RXML.PEnt),
-    "before-nth"   : RXML.t_any (RXML.PEnt),
-  ]);
-  RXML.Type content_type = RXML.t_any (RXML.PXml);
+  constant name = "substring";
 
-  class Frame {
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "from": RXML.t_int (RXML.PEnt),
+    "to": RXML.t_int (RXML.PEnt),
+    "index": RXML.t_int (RXML.PEnt),
+  ]);
+
+  RXML.Type content_type = RXML.t_any_text (RXML.PXml);
+  array(RXML.Type) result_types = ::result_types + ({RXML.t_any});
+  constant flags = RXML.FLAG_DONT_RECOVER;
+
+  class Frame
+  {
     inherit RXML.Frame;
 
-    array(string) do_return(RequestID id) {
-      int from = args->from, to = args->to;
-      string after_str = args["after-first"] ||
-	args["after-last"] ||
-	args["after-nth"];
-      string before_str = args["before-first"] ||
-	args["before-last"] ||
-	args["before-nth"];
-
-      if (!zero_type (args->index)) {
-	if (!zero_type (args->from) || !zero_type (args->to))
-	  parse_error ("The \"index\" attribute cannot be used "
-		       "together with \"from\" and/or \"to\".\n");
-	from = to = args->index;
-      }
-      if (args->split && args["split-chars"])
-	parse_error ("Both \"split\" and \"split-chars\" cannot "
-		     "be used at the same time.\n");
-      if ((!!args["after-first"] +
-	   !!args["after-last"] +
-	   !!args["after-nth"]) > 1)
-	parse_error ("Only one \"after-...\" attribute may be specified.\n");
-      if ((!!args["before-first"] +
-	   !!args["before-last"] +
-	   !!args["before-nth"]) > 1)
-	parse_error ("Only one \"before-...\" attribute may be specified.\n");
-      if (args->from && (args["after-first"] || args["after-last"]))
-	parse_error ("Attributes \"after-first\" and \"after-last\" may not "
-		     "be used together with \"from\" or \"index\".\n");
-      if (args->to && (args["before-first"] || args["before-last"]))
-	parse_error ("Attributes \"before-first\" and \"after-last\" may not "
-		     "be used together with \"to\" or \"index\".\n");
-
-      if(!content)
-	return 0;
-
-      string|array(string) splitted;
-      if(args->split)
-	splitted = content / args->split;
-      else if (args["split-chars"]) {
-	if (mixed err = catch {
-	    splitted = array_sscanf (
-	      content, "%{%s%*[" + args["split-chars"] + "]%}") * ({});
-	  }) {
-	  if (describe_error (err) == "Error in sscanf format string.\n")
-	    parse_error ("Format error in \"split-chars\".\n");
-	  else
-	    throw (err);
-	}
+    array do_enter (RequestID id)
+    {
+      if (args["result-array"]) {
+	//result_type = RXML.t_array; // FIXME: Add this type.
+	result_type = RXML.t_any;
       }
       else
-	splitted = content;
+	if (result_type == RXML.t_any)
+	  result_type = RXML.t_string;
+      return 0;
+    }
 
-      //if(args["before-first"] || args["before-last"] ||
-      //   args["after-first"] || args["after-last"] )
-      //{
-	/* Maximum of two arguments of these are allowed
-	   it is otherwise considered a parse error. */
-      //  if(args->split) {
-      //  
-      //  } else {
-      //
-      //  }
-      //}
+#define IS_COMPL_SET(SET)						\
+    (has_prefix ((SET), "^") && (!has_prefix ((SET), "^-") || (SET) == "^-"))
 
-      if( args->from || args->to )
-      {
-	int from, to;
-	from = (int)args->from || 0;
-	if( args->to && args->to != "0")
-	  to = (int)args->to;
-	to--;
-	from--;
-	if(from < 0)
-	  from = 0;
-	if( to && substring && to < sizeof(substring) && to > from ) {
-	  if(args->split)
-	    return ({ substring[from..to]*(args->split||"") });
-	  else
-	    return ({ substring[from..to] });
-	} else {
-	  if(args->split)
-	    return ({ substring[from..]*(args->split||"") });
-	  else
-	    return ({ substring[from..] });
+    protected string compl_sscanf_set (string set)
+    {
+      return IS_COMPL_SET (set) ? set[1..] : "^" + set;
+    }
+
+    protected void set_format_error (string attr, mixed err)
+    {
+#ifdef DEBUG
+      parse_error ("Error in %O format: %s", attr, describe_error (err));
+#else
+      parse_error ("Error in %O format.\n", attr);
+#endif
+    }
+
+    protected array(array(string)) split_on_set (string str, string set)
+    // Returns ({v, s}) where v has the field values and s has the
+    // separator(s) following each field in v.
+    {
+#ifdef DEBUG
+      if (set == "") error ("The set cannot be empty.\n");
+#endif
+      array(array(string)) res;
+      string compl_set = compl_sscanf_set (set);
+      string tail;
+      if (mixed err = catch {
+	  sscanf (str, "%{%[" + compl_set + "]%1[" + set + "]%}%s",
+		  res, tail);
+	}) set_format_error ("separator-chars", err);
+      if (tail != "")
+	// The %{...%} bit won't match the last field because of
+	// the length restriction on the sep_chars pattern.
+	res += ({({tail, ""})});
+      return Array.transpose (res);
+    }
+
+    protected array(array(string)) split_on_set_seq (string str, string set)
+    // Note that only the first field value might be empty.
+    {
+#ifdef DEBUG
+      if (set == "") error ("The set cannot be empty.\n");
+#endif
+      array(array(string)) res;
+      string compl_set = compl_sscanf_set (set);
+      if (mixed err = catch {
+	  sscanf (str, "%{%[" + compl_set + "]%[" + set + "]%}", res);
+	}) set_format_error ("separator-chars", err);
+      return Array.transpose (res);
+    }
+
+    array do_return (RequestID id)
+    {
+      int beg, end;
+
+      if (!zero_type (args->index)) {
+	if (args->from || args->to)
+	  parse_error ("\"index\" attribute cannot be used "
+		       "together with \"from\" or \"to\".\n");
+	if (args->after || args->before)
+	  parse_error ("\"index\" attribute cannot be used "
+		       "together with \"after\" or \"before\".\n");
+	beg = end = args->index;
+	if (!beg) parse_error ("\index\" cannot be zero.\n");
+      }
+      else {
+	beg = args->from;
+	if (!beg && !zero_type (beg)) parse_error ("\from\" cannot be zero.\n");
+	end = args->to;
+	if (!end && !zero_type (end)) parse_error ("\to\" cannot be zero.\n");
+      }
+
+      if (content == RXML.nil) content = "";
+      string search_str = content;
+
+      string after = args->after;
+      string before = args->before;
+      string sep = args->separator;
+      string sep_chars = args["separator-chars"];
+      string trim_chars = args["trim-chars"];
+      string joiner = args->join;
+      int ignore_empty = !!args["ignore-empty"];
+      int trimwhites = !!args->trimwhites;
+
+      if (args["separator-whites"]) {
+	if (!sep_chars)
+	  sep_chars = " \t\n\r";
+	else if (IS_COMPL_SET (sep_chars))
+	  parse_error ("Cannot combine \"separator-whites\" "
+		       "with a complemented set in \"separator-chars\".\n");
+	else if (has_suffix (sep_chars, "-"))
+	  sep_chars = sep_chars[..<1] + " \t\n\r-";
+	else
+	  sep_chars += " \t\n\r";
+	ignore_empty = 1;
+      }
+
+      if (joiner) {
+	if (!sep && !sep_chars)
+	  parse_error ("\"join\" only useful together with "
+		       "\"separator\", \"separator-chars\", "
+		       "or \"separator-whites\".\n");
+      }
+      else joiner = sep;
+
+      function(string,string:array(array(string))) char_sep_fn;
+      if (sep_chars) {
+	if (sep)
+	  parse_error ("\"separator\" and \"separator-chars\"/"
+		       "\"separator-whites\" cannot be used together.\n");
+	if (!joiner)
+	  joiner = IS_COMPL_SET (sep_chars) ? "" : sep_chars[..0];
+	if (sep_chars == "")
+	  parse_error ("\"separator-chars\" cannot be empty.\n");
+	else {
+	  if (ignore_empty) char_sep_fn = split_on_set_seq;
+	  else char_sep_fn = split_on_set;
 	}
       }
-      return ({ "" });
+
+      if (args["case-insensitive"]) {
+	search_str = lower_case (search_str);
+	if (after) after = lower_case (after);
+	if (before) before = lower_case (before);
+	if (sep) sep = lower_case (sep);
+	else if (sep_chars) {
+	  // NB: This can make the set invalid in odd cases like
+	  // "Z-a". We ignore that.
+	  sep_chars = lower_case (sep_chars);
+	}
+	if (trim_chars) trim_chars = lower_case (trim_chars); // Same here.
+      }
+
+      if (after && !beg) beg = 1;
+      if (before && !end) end = 1;
+
+      // Zero based character positions into search_str and content.
+      // -1 = undecided, -2 = calculate from beg_split using split and
+      // split_sep.
+      int beg_pos = beg && -1;
+      int end_pos = end ? -1 : Int.NATIVE_MAX; // last char + 1.
+
+      // If we need to split search_str for some reason, split is the
+      // result and split_str is the split string used. split_str is
+      // zero if search_str is split on sep_chars.
+      array(string) split;
+      string split_str;
+
+      // Set if split is, and has the same length. Each element is the
+      // separator(s) following the corresponding field in split.
+      // Useful for sep_chars, but always set to avoid special cases.
+      array(string) split_seps;
+
+      // Like beg_pos and end_pos, but expressed as positions in the
+      // split array.
+      int beg_split = beg && -1, end_split = end ? -1 : Int.NATIVE_MAX;
+
+      function(string:string) trim_for_empty;
+      if (ignore_empty) {
+	if (!sep && !sep_chars)
+	  parse_error ("\"ignore-empty\" only useful together with "
+		       "\"separator\", \"separator-chars\", "
+		       "or \"separator-whites\".\n");
+	if (trimwhites)
+	  // Check for both trimwhites and trim-chars at the same time
+	  // is done later.
+	  trim_for_empty = String.trim_all_whites;
+	else if (trim_chars)
+	  trim_for_empty =
+	    lambda (string trim) {
+	      // This outer lambda doesn't access anything in the
+	      // surrounding function frame, thereby avoiding garbage.
+	      string fmt = "%*[" + trim + "]%s";
+	      return
+		lambda (string s) {
+		  if (mixed err = catch (sscanf (s, fmt, s)))
+		    set_format_error ("trim-chars", err);
+		  return s;
+		};
+	    } (trim_chars);
+	else
+	  if (char_sep_fn == split_on_set_seq) {
+	    // No need for extra trimming in this case since
+	    // split_on_set_seq handles it internally, except for the
+	    // case when separators occur before the first field. That
+	    // requires some special care when counting by elements
+	    // from the start.
+	  }
+	  else
+	    trim_for_empty = lambda (string s) {return s;};
+      }
+
+      // Optimize by skipping past the beginning of the input string
+      // using search(), or index directly on character position.
+
+      string beg_skip_str;
+
+      {
+	string s = after || sep;
+	if (s && s != "") {
+	  if (beg > 0) {
+	    beg_pos = 0;
+	    int i = beg;
+	    if (!after && !--i) {
+	      // Using sep - first match is at the beginning of the string.
+	    }
+
+	    else {
+	      if (!trim_for_empty ||
+		  // Trimming doesn't affect after="..." splitting.
+		  after)
+		do {
+		  int p = search (search_str, s, beg_pos);
+		  if (p < 0) {beg_pos = Int.NATIVE_MAX; break;}
+		  beg_pos = p + sizeof (s);
+		} while (--i > 0);
+
+	      else
+		while (1) {
+		  int p = search (search_str, s, beg_pos);
+		  if (p < 0) {beg_pos = Int.NATIVE_MAX; break;}
+		  if (beg_pos != p &&
+		      trim_for_empty (search_str[beg_pos..p - 1]) != "")
+		    // Continue looping when i == 0 to skip empty fields
+		    // after the last nonempty match.
+		    if (--i < 0) break;
+		  beg_pos = p + sizeof (s);
+		}
+
+	      beg_skip_str = s;
+	    }
+	  }
+	}
+
+	else if (!sep_chars) {	// Index by character position.
+	  if (beg > 0)
+	    beg_pos = beg - 1;
+	  else if (beg < 0)
+	    beg_pos = max (sizeof (search_str) + beg, 0);
+	}
+      }
+
+    end_skip: {
+	string s = before || sep;
+	if (s && s != "") {
+	  if (end > 0) {
+	    int i;
+
+	    if (s == beg_skip_str) {
+	      // Optimize by continuing the search where beg_skip left off.
+	      i = end - beg;
+	      if (sep) i++;
+	      if (i <= 0 || beg_pos == Int.NATIVE_MAX) {
+		end_pos = end_split = 0;
+		break end_skip;
+	      }
+	      end_pos = beg_pos - sizeof (s);
+	    }
+	    else {
+	      i = end;
+	      end_pos = -sizeof (s);
+	    }
+
+	    if (before == after)	// True also when only sep is set.
+	      // Set end_split in case split is created in the beg_pos == -1
+	      // branch below.
+	      end_split = end;
+
+	    if (!trim_for_empty ||
+		// Trimming doesn't affect before="..." splitting.
+		before)
+	      do {
+		int p = search (search_str, s, end_pos + sizeof (s));
+		if (p < 0) {end_pos = Int.NATIVE_MAX; break;}
+		end_pos = p;
+	      } while (--i > 0);
+
+	    else {
+	      int num_empty = 0;
+	      while (1) {
+		int b = end_pos + sizeof (s);
+		int p = search (search_str, s, b);
+		if (p < 0) {end_pos = Int.NATIVE_MAX; break;}
+		end_pos = p;
+		if (b != p &&
+		    trim_for_empty (search_str[b..p - 1]) != "") {
+		  if (--i <= 0) break;
+		}
+		else
+		  num_empty++;
+	      }
+	      if (end_split >= 0) end_split += num_empty;
+	    }
+	  }
+	}
+
+	else if (!sep_chars) {	// Index by character position.
+	  if (end > 0)
+	    end_pos = end;
+	  else if (end < 0)
+	    end_pos = max (sizeof (search_str) + end + 1, 0);
+	}
+      }
+
+      // Find beg_pos and end_pos in the remaining cases.
+
+    beg_search:
+      if (beg_pos == -1) {
+	if (string s = after || sep) {
+	  // Some simple testing shows that splitting performs best
+	  // overall, compared to using search() in different ways.
+	  // Could be improved a lot if we got an rsearch().
+	  split = search_str / s;
+	  split_str = s;
+	  split_seps = allocate (sizeof (split) - 1, s) + ({""});
+	}
+
+	else {
+#ifdef DEBUG
+	  if (!sep_chars) error ("Code flow bonkers.\n");
+#endif
+	  [split, split_seps] = char_sep_fn (search_str, sep_chars);
+
+	  if (beg >= 0) {
+	    if (!trim_for_empty) {
+	      beg_split = beg - 1;
+	      if (char_sep_fn == split_on_set_seq)
+		// split_on_set_seq handles the trimming for us,
+		// except it might leave an empty field in front of
+		// the first one. Compensate for it.
+		if (sizeof (split) && split[0] == "")
+		  beg_split++;
+	      beg_pos = -2;
+	    }
+
+	    else {
+	      int b = beg - 1, i = 0;
+	      beg_pos = 0;
+	      while (1) {
+		if (i >= sizeof (split)) {
+		  beg_split = beg_pos = Int.NATIVE_MAX;
+		  break beg_search;
+		}
+		// Allow i to go past b as long as split[i] is empty,
+		// so that we skip empty fields just after the last
+		// nonempty one.
+		if (trim_for_empty (split[i]) == "")
+		  b++;
+		else
+		  if (i >= b) break;
+		beg_pos += sizeof (split[i]) + sizeof (split_seps[i]);
+		i++;
+	      }
+	      beg_split = i;
+	    }
+
+	    break beg_search;
+	  }
+	}
+
+#ifdef DEBUG
+	if (beg >= 0)
+	  error ("Expecting only count-from-the-end cases here.\n");
+#endif
+
+	if (beg < -sizeof (split))
+	  beg_pos = beg_split = 0;
+
+	else {
+	  int chars_from_end = 0;
+	  if (!trim_for_empty ||
+	      // Trimming doesn't affect after="..." splitting.
+	      after) {
+	    beg_split = sizeof (split) + beg;
+	    for (int i = -1; i >= beg; i--)
+	      chars_from_end += sizeof (split[i]) + sizeof (split_seps[i]);
+	  }
+
+	  else {
+	    int b = beg, i = -1;
+	    do {
+	      chars_from_end += sizeof (split[i]) + sizeof (split_seps[i]);
+	      if (trim_for_empty (split[i]) == "")
+		if (--b < -sizeof (split)) {
+		  beg_pos = beg_split = 0;
+		  break beg_search;
+		}
+	    } while (--i >= b);
+	    beg_split = sizeof (split) + b;
+	  }
+
+	  beg_pos = sizeof (search_str) - chars_from_end;
+#ifdef DEBUG
+	  if (beg_pos < 0)
+	    error ("Ouch! %O %O %O\n",
+		   sizeof (search_str), chars_from_end, beg);
+#endif
+	}
+      }
+
+#ifdef DEBUG
+      if (split && beg_split == -1) error ("Failed to set beg_split.\n");
+#endif
+
+    end_search:
+      if (end_pos == -1) {
+	int e = end;
+	if (!before && !++e)
+	  // Using sep or sep_chars - last match is at the end of the string.
+	  end_pos = end_split = Int.NATIVE_MAX;
+
+	else {
+	  string ss;
+	  array(string) sp, sps;
+	  int bias;
+
+	  if (string s = before || sep) {
+	    sp = s == split_str && split;
+	    if (sp) {
+	      ss = search_str;
+	      sps = split_seps;
+	    }
+	    else {
+	      // Since we count from the end we can optimize by
+	      // chopping off the part before beg_pos first.
+	      ss = search_str[beg_pos..];
+	      bias = beg_pos;
+	      sp = ss / s;
+	      sps = allocate (sizeof (sp) - 1, s) + ({""});
+	      if (!before && !beg_pos) {
+		// Want to save it if we're splitting on sep.
+		split = sp;
+		split_str = s;
+		split_seps = sps;
+	      }
+	    }
+	  }
+
+	  else {
+#ifdef DEBUG
+	    if (!sep_chars) error ("Code flow bonkers.\n");
+#endif
+	    if (!split)
+	      [split, split_seps] = char_sep_fn (search_str, sep_chars);
+
+	    if (end >= 0) {
+	      if (!trim_for_empty) {
+		end_split = end;
+		if (char_sep_fn == split_on_set_seq)
+		  // split_on_set_seq handles the trimming for us,
+		  // except it might leave an empty field in front of
+		  // the first one. Compensate for it.
+		  if (sizeof (split) && split[0] == "")
+		    end_split++;
+		end_pos = -2;
+	      }
+
+	      else {
+		e = end;
+		end_pos = 0;
+		for (int i = 0; i < e; i++) {
+		  if (i >= sizeof (split)) {
+		    end_split = end_pos = Int.NATIVE_MAX;
+		    break end_search;
+		  }
+		  if (trim_for_empty (split[i]) == "")
+		    e++;
+		  end_pos += sizeof (split[i]) + sizeof (split_seps[i]);
+		}
+		end_pos -= sizeof (split_seps[e - 1]);
+		end_split = e;
+	      }
+
+	      break end_search;
+	    }
+
+	    else {
+	      ss = search_str;
+	      sp = split;
+	      sps = split_seps;
+	    }
+	  }
+
+#ifdef DEBUG
+	  if (end >= 0)
+	    error ("Expecting only count-from-the-end cases here.\n");
+#endif
+
+	  if (e <= -sizeof (sp))
+	    end_pos = end_split = 0;
+
+	  else {
+	    int chars_from_end;
+	    if (!trim_for_empty ||
+		// Trimming doesn't affect before="..." splitting.
+		before) {
+	      if (sp == split) end_split = sizeof (split) + e;
+	      chars_from_end = sizeof (sps[e - 1]);
+	      for (; e < 0; e++)
+		chars_from_end += sizeof (sp[e]) + sizeof (sps[e]);
+	    }
+
+	    else {
+	      int i = -1;
+	      while (1) {
+		// Allow i to go past e as long as sp[i] is empty,
+		// so that we skip empty fields just before the last
+		// nonempty one.
+		if (trim_for_empty (sp[i]) == "")
+		  e--;
+		else
+		  if (i < e) break;
+		chars_from_end += sizeof (sp[i]) + sizeof (sps[i]);
+		if (--i < -sizeof (sp)) {
+		  end_pos = end_split = 0;
+		  break end_search;
+		}
+	      }
+	      if (sp == split) end_split = sizeof (split) + i + 1;
+	    }
+
+	    end_pos = sizeof (ss) - chars_from_end;
+#ifdef DEBUG
+	    if (end_pos < 0)
+	      error ("Ouch! %O %O %O %O %O\n", sizeof (search_str),
+		     chars_from_end, beg, beg_pos, bias);
+#endif
+	    end_pos += bias;
+	  }
+	}
+      }
+
+#ifdef DEBUG
+      if (beg_pos == -1) error ("Failed to set beg_pos.\n");
+      else if (beg_pos == -2) {
+	if (beg_split == -1) error ("Failed to set beg_split.\n");
+      }
+      else if (beg_pos < 0) error ("Invalid beg_pos %d.\n", beg_pos);
+      if (beg_split < -1) error ("Invalid beg_split %d.\n", beg_split);
+
+      if (end_pos == -1) error ("Failed to set end_pos.\n");
+      else if (end_pos == -2) {
+	if (end_split == -1) error ("Failed to set end_split.\n");
+      }
+      else if (end_pos < 0) error ("Invalid end_pos %d.\n", end_pos);
+      if (end_split < -1) error ("Invalid end_split %d.\n", end_split);
+#endif
+
+      // Got beg_pos and end_pos. Now finish up.
+
+      function(string:string) trimmer;
+
+      if (trimwhites) {
+	if (trim_chars)
+	  parse_error ("\"trimwhites\" and \"trim-chars\" "
+		       "cannot be used at the same time.\n");
+	trimmer = String.trim_all_whites;
+      }
+
+      else if (trim_chars) {
+	if (args["case-insensitive"])
+	  // NB: This can make the trim format invalid in odd cases
+	  // like "Z-a". We ignore that.
+	  trimmer =
+	    lambda (string trim) {
+	      // This outer lambda doesn't access anything in the
+	      // surrounding function frame, thereby avoiding garbage.
+	      string fmt = "%[" + lower_case (trim) + "]";
+	      return
+		lambda (string s) {
+		  string t, lc = lower_case (s);
+		  if (mixed err = catch (sscanf (lc, fmt, t)))
+		    set_format_error ("trim-chars", err);
+		  int b = sizeof (t);
+		  sscanf (reverse (lc), fmt, t);
+		  return s[b..<sizeof (t)];
+		};
+	    } (trim_chars);
+
+	else
+	  trimmer =
+	    lambda (string trim) {
+	      string fmt1 = "%*[" + trim + "]%s", fmt2 = "%[" + trim + "]";
+	      return
+		lambda (string s) {
+		  if (mixed err = catch (sscanf (s, fmt1, s)))
+		    set_format_error ("trim-chars", err);
+		  sscanf (reverse (s), fmt2, string t);
+		  return s[..<sizeof (t)];
+		};
+	    } (trim_chars);
+      }
+
+      if (args["result-array"] || sep_chars ||
+	  (sep && (trim_chars || trimwhites || ignore_empty ||
+		   joiner != sep || search_str != content))) {
+	// Need to do things that require a split into an array.
+
+	if (args["result-array"]) {
+	  if (args->join)
+	    parse_error ("\"join\" and \"result-array\" cannot be used "
+			 "at the same time.\n");
+	  if (!sep && !sep_chars)
+	    parse_error ("\"result-array\" only useful together with "
+			 "\"separator\", \"separator-chars\", "
+			 "or \"separator-whites\".\n");
+	}
+
+#if 0
+	werror ("split %O, split_str %O, beg %O/%O, end %O/%O\n",
+		!!split, split_str, beg_split, beg_pos, end_split, end_pos);
+#endif
+
+	if (split) {
+#ifdef DEBUG
+	  if (sep && split_str != sep)
+	    error ("Didn't expect a split on %O when sep is %O.\n",
+		   split_str, sep);
+#endif
+	  if (beg_split == -1 || end_split == -1 || search_str != content ||
+	      // If sep is used then split_str must be the sep string.
+	      // If sep isn't set then sep_chars is used and split_str
+	      // must be zero.
+	      split_str != sep) {
+	    // Can't use the split array created earlier.
+#if 0
+	    werror ("Ditching split for args %O\n", args);
+#endif
+
+	    if (beg_pos == -2) {
+	      beg_pos = 0;
+	      for (int i = 0; i < beg_split; i++)
+		beg_pos += sizeof (split[i]) + sizeof (split_seps[i]);
+	    }
+
+	    if (end_pos == -2) {
+	      end_pos = sizeof (search_str);
+	      int i = sizeof (split);
+	      while (--i >= end_split)
+		end_pos -= sizeof (split[i]) + sizeof (split_seps[i]);
+	      if (i >= 0) end_pos -= sizeof (split_seps[i]);
+	    }
+
+	    split = 0;
+	  }
+	}
+
+	if (split)
+	  split = split[beg_split..end_split - 1];
+
+	else {
+#ifdef DEBUG
+	  if (beg_pos < 0) error ("beg_pos must be valid here.\n");
+	  if (end_pos < 0) error ("end_pos must be valid here.\n");
+#endif
+
+	  string s = content[beg_pos..end_pos - 1];
+
+	  if (s == "")
+	    split = ({});
+	  else {
+	    array(string) sp, sps;
+
+	    if (sep) {
+	      if (content == search_str)
+		split = s / sep;
+	      else {
+		sp = search_str[beg_pos..end_pos - 1] / sep;
+		sps = allocate (sizeof (sp) - 1, sep) + ({""});
+	      }
+	    }
+	    else {
+#ifdef DEBUG
+	      if (!sep_chars) error ("Code flow bonkers.\n");
+#endif
+	      if (content == search_str)
+		[split, split_seps] = char_sep_fn (s, sep_chars);
+	      else
+		[sp, sps] =
+		  char_sep_fn (search_str[beg_pos..end_pos - 1], sep_chars);
+	    }
+
+	    if (sp) {
+	      // content != search_str so we must split on search_str
+	      // and then transfer the split to content.
+	      split = allocate (sizeof (sp));
+	      int p;
+	      foreach (sp; int i; string s) {
+		split[i] = content[p..p + sizeof (s) - 1];
+		p += sizeof (s) + sizeof (sps[i]);
+	      }
+	    }
+	  }
+	}
+
+	if (trimmer) split = map (split, trimmer);
+	if (ignore_empty) split -= ({""});
+
+	if (args["result-array"])
+	  result = split;
+	else {
+#ifdef DEBUG
+	  if (!joiner) error ("Got no joiner.\n");
+#endif
+	  result = split * joiner;
+	}
+      }
+
+      else {
+	result = content[beg_pos..end_pos - 1];
+	if (trimmer) result = trimmer (result);
+      }
+
+      return 0;
     }
   }
 }
-#endif
 
 class TagCSet {
   inherit RXML.Tag;
@@ -7974,56 +8608,268 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
 //----------------------------------------------------------------------
 
-"substring": #"
-<desc type='cont'><p><short hide='hide'>Extract part of or parts of string.</short></p>
-<p>The <tag>substring</tag> will extract parts of the content of the
- tag.</p>
-<p>If you do not use the <em>split</em> attribute then each of the
-characters of the string is a list of characters from the content.
-That means that the value 'Hi, how are you?' becomes a list of values:</p>
-<ex-box>'H', 'i', ',', ' ', 'h', 'o', 'w', ' ', 'a', 'r', 'e', ' ',
-'y', 'o', 'u', '?'</ex-box>
-<p>Each character is numbered from 1 to the number of characters in
-the string. In this case 16.</p>
-<p>With the split attribute, e.g. ' ' (a space), you will get another
-list of values that contains 1 or more characters:</p>
-<ex-box>'Hi,', 'how', 'are', 'you?'</ex-box>
-<p>When the split attribute is used, the values are numbered by group
-of characters, 1 to 4 in this example.</p>
+"substring": #"<desc type='cont'>
+ <p><short>Extract a part of a string.</short> The part to extract can
+ be specified using character positions, substring occurrences, and/or
+ fields separated by a set of characters. Some examples:</p>
+
+ <p>To pick out substrings based on character positions:</p>
+
+ <ex><substring index=\"2\">abcdef</substring></ex>
+ <ex><substring index=\"-2\">abcdef</substring></ex>
+ <ex><substring from=\"2\" to=\"-2\">abcdef</substring></ex>
+
+ <p>To pick out substrings based on string occurrences:</p>
+
+ <ex><substring after=\"the\">
+  From the past to the future via the present.
+</substring></ex>
+ <ex><substring after=\"the\" from=\"2\">
+  From the past to the future via the present.
+</substring></ex>
+ <ex><substring after=\"the\" from=\"-1\">
+  From the past to the future via the present.
+</substring></ex>
+ <ex><substring after=\"to\" before=\"the\" to=\"3\">
+  From the past to the future via the present.
+</substring></ex>
+
+ <p>To pick out substrings based on separated fields:</p>
+
+ <ex><substring separator-chars=\",:\" index=\"4\">a, , b:c, d::e, : f</substring></ex>
+ <ex>[<substring separator-whites=\"\" from=\"3\" to=\"4\">
+   These   are  some
+ words  separated by   different amounts of  whitespace.
+</substring>]</ex>
+ <ex>[<substring separator-chars=\",:\" trimwhites=\"\" from=\"3\">
+  a, , b:c, d::e, : f
+</substring>]</ex>
+ <ex>[<substring separator=\",\" trimwhites=\"\" from=\"3\" before=\"::\">
+   a, , b: c, d::e, : f
+</substring>]</ex>
+
+ <p>To use just the separator/join attributes to replace sets of
+ characters:</p>
+
+ <ex><substring separator-chars=\",|:;\" join=\", \">a,b:c|f</substring></ex>
+ <ex>[<substring separator-whites=\"\" join=\"\">
+Remove   all whitespace,
+	please.
+</substring>]</ex>
+ <ex>[<substring separator-whites=\"\">
+Normalize   all whitespace,
+	please.
+</substring>]</ex>
+ <ex><substring separator-chars=\"^0-9\" join=\" \">:bva2de 44:3</substring></ex>
+
+ <p>The \"from\", \"to\" and \"index\" attributes specifies positions
+ in the input string. What is considered a position depends on other
+ attributes:</p>
+
+ <ul>
+   <li>If the \"after\" attribute is given then \"from\" counts the
+   occurrences of that string.<li>
+
+   <li>Similarly, if the \"before\" attribute is given then \"to\"
+   counts the occurrences of that string.<li>
+
+   <li>Otherwise, if the \"separator\", \"separator-chars\", or
+   \"separator-whites\" attribute is given then the input string is
+   split into fields according to the separator, and the position
+   counts the fields. \"ignore-empty\" can be used to not count empty
+   fields.</li>
+
+   <li>If neither of the above applies then positions are counted by
+   characters.</li>
+ </ul>
+
+ <p>Positive positions count from the start of the input string,
+ beginning with 1. Negative positions counts from the end.</p>
+
+ <p>It is not an error if a position count goes past the string limit
+ (in either direction). The position gets capped by the start or end
+ if that happens. E.g. if a \"from\" position counts from the
+ beginning and goes past the end then the result is an empty string,
+ and if it counts from the end and goes past the beginning then the
+ result starts at the beginning of the input string.</p>
+
+ <p>It is also not an error if the start position ends up after the
+ end position. In that case the result is simply the empty string.</p>
+
+ <p>If neither \"from\", \"index\", nor \"after\" is specified then
+ the returned substring starts at the beginning of the input string.
+ If neither \"to\", \"index\", nor \"before\" is specified then the
+ returned substring ends at the end of the input string.</p>
+
+ <p>Performance notes: Character indexing is efficient on arbitrarily
+ large input. The special case with a large positive
+ \"from\"/\"to\"/\"index\" position in combination with
+ \"before\"/\"after\"/\"separator\" is also handled reasonably
+ efficiently.</p>
 </desc>
 
-<attr name='from' value='int'><p>The starting character(s) of the content
-the substring extraction starts with.
-</p>
-<ex>
-  <substring from='6'>Hi, how are you?</substring>
-</ex>
+<attr name='from' value='integer'>
+ <p>The position of the start of the substring to return.</p>
 </attr>
-<attr name='to' value='int'><p>
-Get the substring to the number given character of the string. </p>
-<ex>
-  <substring to='3'>Hi, how are you?</substring>
-</ex>
-<ex>
-  <substring from='5' to='7'>Hi, how are you?</substring>
-</ex>
+
+<attr name='to' value='integer'>
+ <p>The position of the end of the substring to return.</p>
 </attr>
-<attr name='split' value='string'><p>
-Split the content with this character or these characters. If it is an empty
-value the content will be split by every character, which is default already.</p>
-<p>Use it together with the <att>to</att> or <att>from</att> attributes.</p>
-<ex>
-  Note, there will be a space after
-  the colon:<substring from='2' split=','>Hi, how are you?</substring>
-</ex>
-<ex>
-  <substring from='2' to='3' split='/'>/path-1/path-2/path-3/index.xml</substring>
-</ex>
-<p>This case will return an empty value (the pipe characters make the empty result
-visible) since there is nothing in between the comma characters:</p>
-<ex>
-   |<substring from='1' split=','>,,,,,,,,,,,</substring>|
-</ex>
+
+<attr name='index' value='integer'>
+ <p>The single position to return. This is simply a shorthand for
+ writing \"from\" and \"to\" attributes with the same value. This
+ attribute is not allowed together with \"after\" or \"before\".</p>
+</attr>
+
+<attr name='after' value='string'>
+ <p>The substring to return begins after the first occurrence of this
+ string. Together with the \"from\" attribute, it specifies the
+ <i>n</i>th occurrence.</p>
+</attr>
+
+<attr name='before' value='string'>
+ <p>The substring to return ends before the first occurrence of this
+ string. Together with the \"to\" attribute, it specifies the
+ <i>n</i>th occurrence.</p>
+</attr>
+
+<attr name='separator' value='string'>
+ <p>The input string is read as an array of fields separated by this
+ string, and the \"from\", \"to\", and \"index\" attributes count
+ those fields.</p>
+
+ <p>If the separator string is empty (i.e. \"\") then the input string
+ is treated as an array of single character fields. Besides being
+ significantly slower, the only difference from indexing directly by
+ characters (i.e. by leaving out the separator attributes altogether)
+ is that \"trim-chars\", \"trimwhites\" and \"ignore-empty\" can be
+ used.</p>
+
+ <p>If the \"join\" attribute isn't given then this separator string
+ is also used to join together several fields in a string result.</p>
+</attr>
+
+<attr name='separator-chars' value='string'>
+ <p>The input string is read as an array of fields separated by any
+ character in this string, and the \"from\", \"to\", and \"index\"
+ attributes count those fields.</p>
+
+ <p>The syntax of this string is the same as in a \"%[...]\" format to
+ Pikes sscanf() function. That means:</p>
+
+ <ul>
+   <li>Ranges of characters can be defined by using a '-' between the
+   first and the last character to be included in the range. Example:
+   \"0-9H\" means any digit or 'H'.</li>
+
+   <li>If the first character is '^', and this character does not
+   begin a range, it means that the set is complemented, which is to
+   say that any character except those in the set is matched.</li>
+
+   <li>To include the character '-', you must have it first (not
+   possible in complemented sets, see below) or last to avoid having a
+   range defined. To include the character ']', it must be first too.
+   If both '-' and ']' should be included then put ']' first and '-'
+   last.</li>
+
+   <li>It is not possible to make a range that ends with ']'; make the
+   range end with '\\' instead and put ']' at the beginning. Likewise
+   it is generally not possible to have a range start with '-'; make
+   the range start with '.' instead and put '-' at the end of the
+   set.</li>
+
+   <li>To include '-' in a complemented set, it must be put last, not
+   first. To include '^' in a non-complemented set, it can be put
+   anywhere but first, or be specified as a range (\"^-^\").</li>
+ </ul>
+
+ <p>If \"separator-chars\" is an empty string (i.e. \"\") then the
+ input string is treated as an array of single character fields.
+ Besides being significantly slower, the only difference from indexing
+ directly by characters (i.e. by leaving out the separator attributes
+ altogether) is that \"trim-chars\", \"trimwhites\" and
+ \"ignore-empty\" can be used.</p>
+
+ <p>If a string containing several fields is returned, the first
+ character in \"separator-chars\" is used by default to join the
+ fields. However, if the set is complemented then the fields are
+ joined without anything in between. In any case, you can use the
+ \"join\" attribute to override the join string.</p>
+
+ <p>Performance note: The \"separator\" attribute is much more
+ efficient than this one, so use \"separator\" if you have a single
+ separator character.</p>
+</attr>
+
+<attr name='separator-whites'>
+ <p>The input string is read as an array of fields separated by
+ arbitrary amounts of whitespace, and the \"from\", \"to\", and
+ \"index\" attributes count those fields.</p>
+
+ <p>In other words, this is a shorthand for specifying
+ <tt>ignore-empty=\"\"</tt> together with
+ <tt>separator-chars=\"&nbsp;&amp;#9;&amp;#13;&amp;#10;\"</tt>. It can
+ be combined with more characters in another \"separator-chars\"
+ attribute.</p>
+</attr>
+
+<attr name='ignore-empty'>
+ <p>Only used together with \"separator\", \"separator-chars\", or
+ \"separator-whites\". Ignore all fields that are empty (after
+ trimming if \"trim-chars\" or \"trimwhites\" is given). In other
+ words, fields are considered to be separated by a sequence of the
+ given separator (and trim characters), instead of a single
+ separator.</p>
+</attr>
+
+<attr name='join' value='string'>
+ <p>Only used together with \"separator\", \"separator-chars\", or
+ \"separator-whites\". If several fields are joined together to a
+ result string, then this string is used as delimiter between the
+ fields.<p>
+</attr>
+
+<attr name='result-array'>
+ <p>Only used together with \"separator\", \"separator-chars\", or
+ \"separator-whites\". Return the fields as an array of strings
+ instead of a string.</p>
+
+ <p>The result can not be inserted directly into the page in this
+ form, but it can be assigned to a variable and manipulated further,
+ e.g. fed to <tag>emit</tag> to iterate over the elements in the
+ array:</p>
+
+ <ex><set variable=\"var.list\">
+  <substring separator-chars=\",:\" trimwhites=\"\" result-array=\"\">
+    a, , b:c, d::e: f
+  </substring>
+</set>
+<emit source=\"values\" variable=\"var.list\">
+  [&_.value;]
+</emit></ex>
+</attr>
+
+<attr name='case-insensitive'>
+ <p>Be case insensitive when matching the \"after\", \"before\",
+ \"separator\", \"separator-chars\" and \"trim-chars\" strings. Case
+ is still preserved in the returned result.</p>
+</attr>
+
+<attr name='trim-chars' value='string'>
+ <p>Trim any sequence of the characters in this string from the start
+ and end of the result before returning it. If \"separator\",
+ \"separator-chars\", or \"separator-whites\" is specified then the
+ trimming is done on each field.</p>
+
+ <p>The format in this attribute is the same as in a \"%[...]\" to
+Pikes sscanf() function. See the \"separator-chars\" attribute for a
+ description.</p>
+</attr>
+
+<attr name='trimwhites'>
+ <p>Shorthand for specifying \"trim-chars\" with all whitespace
+ characters, and also slightly faster.</p>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -8741,6 +9587,10 @@ just got zapped?
  that the <tag>default</tag> tag may be put whereever you want it
  within the <tag>cond</tag> tag. This will of course affect the order
  the content is parsed. The <tag>case</tag> tag is required.</p>
+
+ <p>Performance note: In the current implementation, this tag does not
+ get optimized very well when RXML is compiled. It is recommended that
+ <tag>if</tag> ... <tag>elseif</tag> sequences are used instead.</p>
 </desc>",
 
 	  (["case":#"<desc type='cont'><p>

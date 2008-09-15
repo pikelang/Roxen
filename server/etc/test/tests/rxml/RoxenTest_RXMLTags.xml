@@ -676,6 +676,808 @@ e</result>
 
 
 <!-- ............................................................ -->
+<comment>substring</comment>
+
+<test>
+  <rxml>
+    [<substring from="2" to="4">a b c </substring>]
+    [<substring from="4" to="2">a b c </substring>]
+    [<substring from="-4" to="-2">a b c </substring>]
+    [<substring from="-2" to="-4">a b c </substring>]
+    [<substring from="2" to="-4">a b c </substring>]
+    [<substring from="-4" to="2">a b c </substring>]
+    [<substring from="-4" to="5">a b c </substring>]
+    [<substring from="5" to="-4">a b c </substring>]
+  </rxml>
+  <result>
+    [ b ]
+    []
+    [b c]
+    []
+    [ b]
+    []
+    [b c]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring from="2">a b c </substring>]
+    [<substring from="-2">a b c </substring>]
+    [<substring to="4">a b c </substring>]
+    [<substring to="-4">a b c </substring>]
+    [<substring>a b c </substring>]
+  </rxml>
+  <result>
+    [ b c ]
+    [c ]
+    [a b ]
+    [a b]
+    [a b c ]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring index="-17">a b c </substring>]
+    [<substring index="-2">a b c </substring>]
+    [<substring index="2">a b c </substring>]
+    [<substring index="17">a b c </substring>]
+  </rxml>
+  <result>
+    []
+    [c]
+    [ ]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring from="17">a b c </substring>]
+    [<substring from="-17">a b c </substring>]
+    [<substring to="17">a b c </substring>]
+    [<substring to="-17">a b c </substring>]
+    [<substring from="17" to="4711">a b c </substring>]
+    [<substring from="-17" to="4711">a b c </substring>]
+    [<substring from="17" to="-4711">a b c </substring>]
+    [<substring from="-17" to="-4711">a b c </substring>]
+    [<substring from="4711" to="17">a b c </substring>]
+    [<substring from="-4711" to="17">a b c </substring>]
+    [<substring from="4711" to="-17">a b c </substring>]
+    [<substring from="-4711" to="-17">a b c </substring>]
+  </rxml>
+  <result>
+    []
+    [a b c ]
+    [a b c ]
+    []
+    []
+    [a b c ]
+    []
+    []
+    []
+    [a b c ]
+    []
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="," from="2" to="4">a, b, c, d, e, </substring>]
+    [<substring separator="," from="4" to="2">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-4" to="-2">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-2" to="-4">a, b, c, d, e, </substring>]
+    [<substring separator="," from="2" to="-4">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-4" to="2">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-4" to="5">a, b, c, d, e, </substring>]
+    [<substring separator="," from="5" to="-4">a, b, c, d, e, </substring>]
+  </rxml>
+  <result>
+    [ b, c, d]
+    []
+    [ c, d, e]
+    []
+    [ b, c]
+    []
+    [ c, d, e]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="," from="2">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-2">a, b, c, d, e, </substring>]
+    [<substring separator="," to="4">a, b, c, d, e, </substring>]
+    [<substring separator="," to="-4">a, b, c, d, e, </substring>]
+    [<substring>a, b, c, d, e, </substring>]
+  </rxml>
+  <result>
+    [ b, c, d, e, ]
+    [ e, ]
+    [a, b, c, d]
+    [a, b, c]
+    [a, b, c, d, e, ]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="," from="17">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-17">a, b, c, d, e, </substring>]
+    [<substring separator="," to="17">a, b, c, d, e, </substring>]
+    [<substring separator="," to="-17">a, b, c, d, e, </substring>]
+    [<substring separator="," from="17" to="4711">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-17" to="4711">a, b, c, d, e, </substring>]
+    [<substring separator="," from="17" to="-4711">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-17" to="-4711">a, b, c, d, e, </substring>]
+    [<substring separator="," from="4711" to="17">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-4711" to="17">a, b, c, d, e, </substring>]
+    [<substring separator="," from="4711" to="-17">a, b, c, d, e, </substring>]
+    [<substring separator="," from="-4711" to="-17">a, b, c, d, e, </substring>]
+  </rxml>
+  <result>
+    []
+    [a, b, c, d, e, ]
+    [a, b, c, d, e, ]
+    []
+    []
+    [a, b, c, d, e, ]
+    []
+    []
+    []
+    [a, b, c, d, e, ]
+    []
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring after="go">To go or not to goto.</substring>]
+    [<substring after="go" from="1">To go or not to goto.</substring>]
+    [<substring after="go" from="2">To go or not to goto.</substring>]
+    [<substring after="go" from="3">To go or not to goto.</substring>]
+    [<substring after="go" from="-1">To go or not to goto.</substring>]
+    [<substring after="go" from="-2">To go or not to goto.</substring>]
+    [<substring after="go" from="-3">To go or not to goto.</substring>]
+  </rxml>
+  <result>
+    [ or not to goto.]
+    [ or not to goto.]
+    [to.]
+    []
+    [to.]
+    [ or not to goto.]
+    [To go or not to goto.]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring before="go">To go or not to goto.</substring>]
+    [<substring before="go" to="1">To go or not to goto.</substring>]
+    [<substring before="go" to="2">To go or not to goto.</substring>]
+    [<substring before="go" to="3">To go or not to goto.</substring>]
+    [<substring before="go" to="-1">To go or not to goto.</substring>]
+    [<substring before="go" to="-2">To go or not to goto.</substring>]
+    [<substring before="go" to="-3">To go or not to goto.</substring>]
+  </rxml>
+  <result>
+    [To ]
+    [To ]
+    [To go or not to ]
+    [To go or not to goto.]
+    [To go or not to ]
+    [To ]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring after="go" before="to">To go or not to goto.</substring>]
+    [<substring after="to" before="go">To go or not to goto.</substring>]
+    x
+    [<substring after="go" before="go">To go or not to goto.</substring>]
+    [<substring after="go" before="go" to="2">To go or not to goto.</substring>]
+    [<substring after="go" before="go" to="-1">To go or not to goto.</substring>]
+    [<substring after="go" before="go" to="-2">To go or not to goto.</substring>]
+    x
+    [<substring after="go" from="2" before="go">To go or not to goto.</substring>]
+    [<substring after="go" from="2" before="go" to="2">To go or not to goto.</substring>]
+    [<substring after="go" from="2" before="go" to="-1">To go or not to goto.</substring>]
+    [<substring after="go" from="2" before="go" to="-2">To go or not to goto.</substring>]
+    x
+    [<substring after="go" from="-1" before="go">To go or not to goto.</substring>]
+    [<substring after="go" from="-1" before="go" to="2">To go or not to goto.</substring>]
+    [<substring after="go" from="-1" before="go" to="-1">To go or not to goto.</substring>]
+    [<substring after="go" from="-1" before="go" to="-2">To go or not to goto.</substring>]
+    x
+    [<substring after="go" from="-2" before="go">To go or not to goto.</substring>]
+    [<substring after="go" from="-2" before="go" to="2">To go or not to goto.</substring>]
+    [<substring after="go" from="-2" before="go" to="-1">To go or not to goto.</substring>]
+    [<substring after="go" from="-2" before="go" to="-2">To go or not to goto.</substring>]
+  </rxml>
+  <result>
+    [ or not ]
+    []
+    x
+    []
+    [ or not to ]
+    [ or not to ]
+    []
+    x
+    []
+    []
+    []
+    []
+    x
+    []
+    []
+    []
+    []
+    x
+    []
+    [ or not to ]
+    [ or not to ]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring after="to" to="3">To go or not to goto.</substring>]
+    [<substring after="to" to="-3">To go or not to goto.</substring>]
+    [<substring after="to" from="2" to="3">To go or not to goto.</substring>]
+    [<substring after="to" from="2" to="-3">To go or not to goto.</substring>]
+    [<substring after="to" from="-1" to="3">To go or not to goto.</substring>]
+    [<substring after="to" from="-1" to="-3">To go or not to goto.</substring>]
+  </rxml>
+  <result>
+    []
+    [ got]
+    []
+    []
+    []
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring from="15" before="to">To go or not to goto.</substring>]
+    [<substring from="-15" before="to">To go or not to goto.</substring>]
+    [<substring from="15" before="to" to="2">To go or not to goto.</substring>]
+    [<substring from="-15" before="to" to="2">To go or not to goto.</substring>]
+    [<substring from="15" before="to" to="-1">To go or not to goto.</substring>]
+    [<substring from="-15" before="to" to="-1">To go or not to goto.</substring>]
+  </rxml>
+  <result>
+    []
+    [or not ]
+    [o go]
+    [or not to go]
+    [o go]
+    [or not to go]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="to">To go or not to goto.</substring>]
+    [<substring separator="to" from="-4">To go or not to goto.</substring>]
+    [<substring separator="to" from="-3">To go or not to goto.</substring>]
+    [<substring separator="to" from="-2">To go or not to goto.</substring>]
+    [<substring separator="to" from="-1">To go or not to goto.</substring>]
+    [<substring separator="to" from="1">To go or not to goto.</substring>]
+    [<substring separator="to" from="2">To go or not to goto.</substring>]
+    [<substring separator="to" from="3">To go or not to goto.</substring>]
+    [<substring separator="to" from="4">To go or not to goto.</substring>]
+  </rxml>
+  <result>
+    [To go or not to goto.]
+    [To go or not to goto.]
+    [To go or not to goto.]
+    [ goto.]
+    [.]
+    [To go or not to goto.]
+    [ goto.]
+    [.]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="to" to="-4">To go or not to goto.</substring>]
+    [<substring separator="to" to="-3">To go or not to goto.</substring>]
+    [<substring separator="to" to="-2">To go or not to goto.</substring>]
+    [<substring separator="to" to="-1">To go or not to goto.</substring>]
+    [<substring separator="to" to="1">To go or not to goto.</substring>]
+    [<substring separator="to" to="2">To go or not to goto.</substring>]
+    [<substring separator="to" to="3">To go or not to goto.</substring>]
+    [<substring separator="to" to="4">To go or not to goto.</substring>]
+  </rxml>
+  <result>
+    []
+    [To go or not ]
+    [To go or not to go]
+    [To go or not to goto.]
+    [To go or not ]
+    [To go or not to go]
+    [To go or not to goto.]
+    [To go or not to goto.]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="to" from="-2" to="-2">To go or not to goto.</substring>]
+    [<substring separator="to" from="-2" to="-1">To go or not to goto.</substring>]
+    [<substring separator="to" from="-2" to="1">To go or not to goto.</substring>]
+    [<substring separator="to" from="-2" to="2">To go or not to goto.</substring>]
+    x
+    [<substring separator="to" from="-1" to="-2">To go or not to goto.</substring>]
+    [<substring separator="to" from="-1" to="-1">To go or not to goto.</substring>]
+    [<substring separator="to" from="-1" to="1">To go or not to goto.</substring>]
+    [<substring separator="to" from="-1" to="2">To go or not to goto.</substring>]
+    x
+    [<substring separator="to" from="1" to="-2">To go or not to goto.</substring>]
+    [<substring separator="to" from="1" to="-1">To go or not to goto.</substring>]
+    [<substring separator="to" from="1" to="1">To go or not to goto.</substring>]
+    [<substring separator="to" from="1" to="2">To go or not to goto.</substring>]
+    x
+    [<substring separator="to" from="2" to="-2">To go or not to goto.</substring>]
+    [<substring separator="to" from="2" to="-1">To go or not to goto.</substring>]
+    [<substring separator="to" from="2" to="1">To go or not to goto.</substring>]
+    [<substring separator="to" from="2" to="2">To go or not to goto.</substring>]
+  </rxml>
+  <result>
+    [ go]
+    [ goto.]
+    []
+    [ go]
+    x
+    []
+    [.]
+    []
+    []
+    x
+    [To go or not to go]
+    [To go or not to goto.]
+    [To go or not ]
+    [To go or not to go]
+    x
+    [ go]
+    [ goto.]
+    []
+    [ go]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="to" index="-4">To go or not to goto.</substring>]
+    [<substring separator="to" index="-2">To go or not to goto.</substring>]
+    [<substring separator="to" index="-1">To go or not to goto.</substring>]
+    [<substring separator="to" index="1">To go or not to goto.</substring>]
+    [<substring separator="to" index="2">To go or not to goto.</substring>]
+    [<substring separator="to" index="4">To go or not to goto.</substring>]
+  </rxml>
+  <result>
+    []
+    [ go]
+    [.]
+    [To go or not ]
+    [ go]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="," trimwhites="" index="2">1, 2
+	, 3</substring>]
+    [<substring separator=" " from="2" to="-2" trim-chars="go ">To go or not to goto.</substring>]
+    [<substring separator=" " from="2" to="-2" ignore-empty="" trim-chars="go ">To go or not to goto.</substring>]
+    [<substring trim-chars="^nt">To go or not to goto.</substring>]
+    [<substring trim-chars=" to." case-insensitive="">To Go Or Not To GotO.</substring>]
+  </rxml>
+  <result>
+    [2]
+    [ r not t]
+    [r not t]
+    [not to got]
+    [Go Or Not To G]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="," ignore-empty="" from="2" to="4">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" from="2" to="-2">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" from="-2" to="4">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" from="-2" to="-2">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" from="-2" to="2">,a,, , b:c,  d::e: f,, </substring>]
+  </rxml>
+  <result>
+    [ , b:c,  d::e: f]
+    [ , b:c,  d::e: f]
+    [  d::e: f]
+    [  d::e: f]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="," ignore-empty="" from="17">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" from="-17">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" to="17">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" to="-17">,a,, , b:c,  d::e: f,, </substring>]
+  </rxml>
+  <result>
+    []
+    [a, , b:c,  d::e: f, ]
+    [a, , b:c,  d::e: f, ]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="," ignore-empty="" trimwhites="" from="2" to="3">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" trimwhites="" from="2" to="-2">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" trimwhites="" from="-2" to="3">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" trimwhites="" from="-2" to="-2">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" trimwhites="" from="-2" to="1">,a,, , b:c,  d::e: f,, </substring>]
+  </rxml>
+  <result>
+    [b:c,d::e: f]
+    [b:c]
+    [b:c,d::e: f]
+    [b:c]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="," ignore-empty="" trimwhites="" from="2">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" trimwhites="" from="2" to="4">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" trimwhites="" to="2">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," ignore-empty="" trimwhites="" from="-4" to="2">,a,, , b:c,  d::e: f,, </substring>]
+  </rxml>
+  <result>
+    [b:c,d::e: f]
+    [b:c,d::e: f]
+    [a,b:c]
+    [a,b:c]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator="," from="2" before="::">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," from="2" ignore-empty="" trimwhites="" before="f">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator="," from="-1" ignore-empty="" trimwhites="" before="f">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring after=", ," separator="," ignore-empty="" trimwhites="" to="3">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring after=", ," separator="," ignore-empty="" trimwhites="" to="-2">,a,, , b:c,  d::e: f,, </substring>]
+  </rxml>
+  <result>
+    [a,, , b:c,  d]
+    [b:c,d::e:]
+    [d::e:]
+    [b:c,d::e: f]
+    [b:c]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.foo">
+      <substring separator="" from="3" result-array="">abcdef</substring>
+    </set>
+    [<emit source="values" variable="var.foo">&_.value;,</emit>]
+  </rxml>
+  <result>
+    [c,d,e,f,]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars=",:" from="6" to="9">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" from="6" to="-5">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" from="-8" to="9">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" from="-8" to="-5">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" from="-5" to="6">,a,, , b: c,  d::e : f,, </substring>]
+  </rxml>
+  <result>
+    [ c,  d,,e ]
+    [ c,  d,]
+    [ b, c,  d,,e ]
+    [ b, c,  d,]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars=",:" ignore-empty="" from="5" to="6">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" from="5" to="-3">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" from="-5" to="6">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" from="-5" to="-3">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" from="-3" to="5">,a,, , b: c,  d::e : f,, </substring>]
+  </rxml>
+  <result>
+    [  d,e ]
+    [  d,e ]
+    [ c,  d,e ]
+    [ c,  d,e ]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars=",:" ignore-empty="" from="17">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" from="-17">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" to="17">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" to="-17">,a,, , b: c,  d::e : f,, </substring>]
+  </rxml>
+  <result>
+    []
+    [a, , b, c,  d,e , f, ]
+    [a, , b, c,  d,e , f, ]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="3" to="5">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="3" to="-2">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="-5" to="5">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="-5" to="-2">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="-2" to="3">,a,, , b: c,  d::e : f,, </substring>]
+  </rxml>
+  <result>
+    [c,d,e]
+    [c,d,e]
+    [b,c,d,e]
+    [b,c,d,e]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="17">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="-17">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" to="17">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" to="-17">,a,, , b: c,  d::e : f,, </substring>]
+  </rxml>
+  <result>
+    []
+    [a,b,c,d,e,f]
+    [a,b,c,d,e,f]
+    []
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="3">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="3" to="5">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" to="5">,a,, , b: c,  d::e : f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" trimwhites="" from="-3" to="5">,a,, , b: c,  d::e : f,, </substring>]
+  </rxml>
+  <result>
+    [c,d,e,f]
+    [c,d,e]
+    [a,b,c,d,e]
+    [d,e]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars=":," from="6" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="8" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="-6" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="-5" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    x
+    [<substring separator-chars=":," from="4" ignore-empty="" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="6" ignore-empty="" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="-5" ignore-empty="" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="-3" ignore-empty="" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    x
+    [<substring separator-chars=":," from="3" ignore-empty="" trimwhites="" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="5" ignore-empty="" trimwhites="" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="-3" ignore-empty="" trimwhites="" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="-2" ignore-empty="" trimwhites="" before="::">,a,, , b: c,  d ::e : f,, </substring>]
+    x
+    [<substring separator-chars=":," from="4" ignore-empty="" trimwhites="" before=":" to="2">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="4" ignore-empty="" trimwhites="" before=":" to="-3">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="-5" ignore-empty="" trimwhites="" before=":" to="2">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring separator-chars=":," from="-5" ignore-empty="" trimwhites="" before=":" to="-3">,a,, , b: c,  d ::e : f,, </substring>]
+  </rxml>
+  <result>
+    [ c:  d ]
+    []
+    [  d ]
+    []
+    x
+    [ c:  d ]
+    []
+    [ c:  d ]
+    []
+    x
+    [c:d]
+    []
+    [d]
+    []
+    x
+    [d]
+    [d]
+    [b:c:d]
+    [b:c:d]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring after="::" separator-chars=":," to="10">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after="::" separator-chars=":," to="8">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after="::" separator-chars=":," to="-3">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after="::" separator-chars=":," to="-5">,a,, , b: c,  d ::e : f,, </substring>]
+    x
+    [<substring after="::" separator-chars=":," ignore-empty="" to="7">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after="::" separator-chars=":," ignore-empty="" to="5">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after="::" separator-chars=":," ignore-empty="" to="-2">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after="::" separator-chars=":," ignore-empty="" to="-4">,a,, , b: c,  d ::e : f,, </substring>]
+    x
+    [<substring after="::" separator-chars=":," ignore-empty="" trimwhites="" to="6">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after="::" separator-chars=":," ignore-empty="" trimwhites="" to="4">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after="::" separator-chars=":," ignore-empty="" trimwhites="" to="-1">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after="::" separator-chars=":," ignore-empty="" trimwhites="" to="-3">,a,, , b: c,  d ::e : f,, </substring>]
+    x
+    [<substring after=":" from="2" separator-chars=":," ignore-empty="" trimwhites="" to="6">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after=":" from="-3" separator-chars=":," ignore-empty="" trimwhites="" to="6">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after=":" from="2" separator-chars=":," ignore-empty="" trimwhites="" to="-2">,a,, , b: c,  d ::e : f,, </substring>]
+    [<substring after=":" from="-3" separator-chars=":," ignore-empty="" trimwhites="" to="-2">,a,, , b: c,  d ::e : f,, </substring>]
+  </rxml>
+  <result>
+    [e : f]
+    []
+    [e : f]
+    []
+    x
+    [e : f]
+    []
+    [e : f]
+    []
+    x
+    [e:f]
+    []
+    [e:f]
+    []
+    x
+    [e:f]
+    [e:f]
+    [e]
+    [e]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.foo">
+      <substring after=":" separator-chars=":," ignore-empty="" trimwhites="" to="6" result-array="">,a,, , b: c,  d ::e : f,, </substring>
+    </set>
+    [<emit source="values" variable="var.foo">&_.value;,</emit>]
+  </rxml>
+  <result>
+    [c,d,e,f,]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.foo">
+      <substring after=",," before="::"
+		 separator-chars=":," ignore-empty="" trimwhites="" result-array="">,a,, , b: c,  d ::e : f,, </substring>
+    </set>
+    [<emit source="values" variable="var.foo">&_.value;,</emit>]
+  </rxml>
+  <result>
+    [b,c,d,]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.foo">
+      <substring after=",," before=",," to="-1"
+		 separator-chars=":," ignore-empty="" trimwhites="" result-array="">,a,, , b: c,  d ::e : f,, g</substring>
+    </set>
+    [<emit source="values" variable="var.foo">&_.value;,</emit>]
+  </rxml>
+  <result>
+    [b,c,d,e,f,]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars=",:" index="6">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator-chars=",:" separator-whites="" to="4" join=":">,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator-chars=" NT" case-insensitive="" join="--">To Go Or Not To GotO.</substring>]
+    [<substring separator-chars=" N" case-insensitive="" trim-chars="t" join="-">To Go Or Not To GotO.</substring>]
+    [<substring separator="" trim-chars=" NT" ignore-empty="" join="-">To Go Or Not To GotO.</substring>]
+    [<substring after="::" from="-2" before="::" to="2" separator-chars=":," ignore-empty="" trimwhites="">,a:: , b: c,  d ::e : f,, g</substring>]
+    [<substring after="::" from="-2" before="::" to="2" separator-chars=":," trimwhites="">,a:: , b: c,  d ::e : f,, g</substring>]
+  </rxml>
+  <result>
+    [c]
+    [a:b:c:d]
+    [--o--Go--Or----o------o--Go--O.]
+    [o-Go-Or--o-o-GotO.]
+    [o-G-o-O-r-o-t-o-G-o-t-O-.]
+    [b:c:d]
+    [:b:c:d]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars=",:" ignore-empty="" index="3">,,,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" index="3">a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" from="3" before="::">,,,a,, , b:c,  d::e: f,, </substring>]
+    [<substring separator-chars=",:" ignore-empty="" from="3" before="::">a,, , b:c,  d::e: f,, </substring>]
+    [<substring after="::" separator-chars=",:" ignore-empty="" to="7">,,,a,, , b:c,  d::e: f,, </substring>]
+    [<substring after="::" separator-chars=",:" ignore-empty="" to="7">a,, , b:c,  d::e: f,, </substring>]
+  </rxml>
+  <result>
+    [ b]
+    [ b]
+    [ b,c,  d]
+    [ b,c,  d]
+    [e, f]
+    [e, f]
+  </result>
+</test>
+
+<test>
+  <rxml>
+    [<substring separator-chars="|,:;">a,b:c|f</substring>]
+    [<substring separator-whites="" join="">
+    Remove   all whitespace,
+	please. </substring>]
+    [<substring separator-whites="">
+    Normalize   all whitespace,
+	please. </substring>]
+    [<substring separator-chars="^0-9&lt;&gt;" join="">:bv&amp;a2de &lt;44&gt;:3</substring>]
+    [<substring separator="&auml;" case-insensitive="" join="-">Åäö åÄö å&auml;Ö</substring>]
+    [<substring separator="ä" case-insensitive="">Åäö åÄö å&auml;Ö</substring>]
+  </rxml>
+  <result>
+    [a|b|c|f]
+    [Removeallwhitespace,please.]
+    [Normalize all whitespace, please.]
+    [2<44>3]
+    [Å-ö å-ö å-Ö]
+    [Åäö åäö åäÖ]
+  </result>
+</test>
+
+
+<!-- ............................................................ -->
 <comment>Trimlines</comment>
 <test>
 <rxml>x<trimlines>
