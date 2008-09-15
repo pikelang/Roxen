@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.29 2008/08/15 12:33:55 mast Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.30 2008/09/15 18:45:47 mast Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -236,7 +236,11 @@ void create(Configuration conf)
 	 });
 
   defvar ("db_name",
-          Variable.DatabaseChoice( " none", 0, "TimeRange module database")
+	  Variable.DatabaseChoice( " none", 0,
+				   "Default database", #"\
+<p>Default database to use with the \"query\" attribute. If set to
+\"none\", the default database configured in the \"SQL tags\" module
+is used.</p>")
 	  ->set_configuration_pointer( my_configuration ) );
 
   if(inited_from_scratch)
@@ -751,7 +755,7 @@ class TagEmitTimeRange
       string host = m_delete(args,"host");
       //werror(sprintf("QUERY : %O HOST: %O\n",sqlquery,host));
 
-      array(mapping) rs = db_query(sqlquery,host||query("db_name")||"none");
+      array(mapping) rs = db_query(sqlquery, host);
       if(sizeof(rs) > 0)
       {
         sqlindexes = indices(rs[0]);
@@ -903,26 +907,44 @@ Calendar.TimeRange get_date(string name, mapping args, Calendar.YMD calendar)
 			  ->set_language(calendar->language());
 }
 
+protected RoxenModule rxml_sql_module;
+
 array(mapping) db_query(string q,string db_name)
 {
-  mixed error;
   Sql.Sql con;
-  array(mapping(string:mixed))|object result;
-  error = catch(con = DBManager.get(db_name,my_configuration(),0));
-  if(!con)
-    RXML.run_error("Couldn't connect to SQL server"+
-                 (error?": "+error[0]:"")+"\n");
-  else
-  {
-    if( catch(result = (con->query)(q)) )
-    {
-      error = con->error();
-        if (error) error = ": " + error;
-          error = sprintf("Query failed%s\n", error||".");
-        RXML.parse_error(error);
+  string default_db = query ("db_name");
+
+  if (db_name || default_db == " none") {
+    // Either got an explicit db, in which case get_rxml_sql_con is
+    // used to check access, or has no default db, in which case
+    // get_rxml_sql_con uses the default one configured in the sqltag
+    // module.
+
+    if (!rxml_sql_module) {
+      rxml_sql_module = my_configuration()->get_provider ("rxml_sql");
+      if (!rxml_sql_module)
+	RXML.run_error ("Couldn't connect to SQL server: "
+			"The \"SQL Tags\" module is required.\n");
     }
+
+    con = rxml_sql_module->get_rxml_sql_con (db_name);
   }
-  return con->query(q);
+
+  else {
+    // Use the database configured in the module. In this case we skip
+    // the access check made by get_rxml_sql_con.
+    mixed err = catch {
+	con = DBManager.get (db_name || default_db, my_configuration());
+      };
+    if (err || !con)
+      RXML.run_error (err ? describe_error (err) :
+		      "Couldn't connect to SQL server.\n");
+  }
+
+  array(mapping(string:mixed)) result;
+  if( mixed err = catch(result = con->query(q)) )
+    RXML.run_error ("Query failed: " + describe_error (err));
+  return result;
 }
 
 #define DOC_SCOPE(SCOPE_NAME)  \
@@ -1228,9 +1250,14 @@ constant tagdoc = ([
 
   <attr name='host' value='db-host-name'>
     <p>
-      A databas host name, found under DBs in Administration Interface.
-      Used together with <att>query</att> attribute. Look at emit#sql
-      for further information.
+      A databas host name, found under DBs in Administration
+      Interface. Used together with <att>query</att> attribute. See
+      <tag>emit source=\"sql\"</tag> for further information.
+    </p>
+    <p>
+      The \"SQL tags\" module must be loaded for this to work, and the
+      \"Allowed databases\" setting in it is used to restrict database
+      access.
     </p>
   </attr>
 
