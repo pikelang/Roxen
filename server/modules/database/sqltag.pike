@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.110 2008/09/12 16:17:07 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.111 2008/09/15 18:36:49 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -232,6 +232,98 @@ mapping(string:int(1..1)) allowed_dbs = ([]); // 0 if all dbs are allowed.
 //  start() is called.
 string compat_level;
 
+
+Sql.Sql get_rxml_sql_con (string db, void|string host, void|RequestID id,
+			  void|int read_only, void|int reuse_in_thread,
+			  void|string charset)
+//! This function is useful from other modules via the
+//! @tt{"rxml_sql"@} provider interface: It applies the security
+//! settings configured in this module to check whether the requested
+//! database is allowed. It should be used in any module that allows
+//! users to make sql queries to databases through rxml or other
+//! server side scripts.
+//!
+//! @param db
+//!   Corresponds to the @tt{"db"@} attribute to the @tt{<sql>@} tag.
+//!   Defaults to the "Default database" module setting.
+//!
+//! @param host
+//!   Corresponds to the @tt{"host"@} attribute to the @tt{<sql>@}
+//!   tag.
+//!
+//! @param id
+//!   Note: Optional.
+//!
+//! @param read_only
+//! @param reuse_in_thread
+//! @param charset
+//!   Passed on to @[DBManager.get] (if called). The default charset
+//!   configured in this module is used if @[charset] isn't given.
+//!
+//! @throws
+//!   Connection errors, access errors and syntax errors in @[db],
+//!   @[host] and @[module] are thrown as RXML errors.
+{
+  string real_host = host;
+  if (host) host = "CENSORED";
+
+  Sql.Sql con;
+  mixed error;
+
+#if ROXEN_COMPAT <= 1.3
+  if( !db && (real_host || default_db == " none") ) {
+    string h = real_host || compat_default_host;
+    if (h && has_prefix (h, "mysql://")) {
+      if (real_host && !allow_sql_urls) {
+	report_warning ("Connection to %O attempted from %O.\n",
+			real_host, id && id->raw_url);
+	RXML.parse_error ("Database access through SQL URLs not allowed.\n");
+      }
+
+      error = catch {
+	  con = my_configuration()->
+	    sql_connect(h, charset || default_charset);
+	};
+    }
+  }
+
+  if (!con && !error)
+#endif
+  {
+    if (!db) db = real_host;
+    if (db && allowed_dbs && !allowed_dbs[db] && db != default_db) {
+      report_warning ("Connection to database %O attempted from %O.\n",
+		      db, id && id->raw_url);
+      RXML.parse_error ("Database %O is not in the list "
+			"of allowed databases.\n", db);
+    }
+
+    if (!db) {
+      if (default_db != " none") db = default_db;
+      else if (compat_default_host &&
+	       !has_prefix (compat_default_host, "mysql://"))
+	db = compat_default_host;
+      else
+	RXML.parse_error ("No database specified and no default database "
+			  "configured.\n");
+    }
+
+    error = catch {
+	con = DBManager.get (db, my_configuration(), read_only,
+			     reuse_in_thread, charset || default_charset);
+      };
+  }
+
+  if (error || !con) {
+#if 0
+    werror (describe_backtrace (error));
+#endif
+    RXML.run_error(error ? describe_error (error) :
+		   (LOCALE(3,"Couldn't connect to SQL server") + "\n"));
+  }
+
+  return con;
+}
 
 array|object do_sql_query(mapping args, RequestID id,
 			  void|int(0..1) big_query,
@@ -673,6 +765,8 @@ supports it.</p>"));
 
 
 // --------------------- More interface functions --------------------------
+
+multiset(string) query_provides() {return (<"rxml_sql">);}
 
 void start()
 {
