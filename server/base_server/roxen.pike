@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.982 2008/09/11 19:55:23 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.983 2008/09/15 16:27:27 mast Exp $";
 
 //! @appears roxen
 //!
@@ -4733,26 +4733,20 @@ mapping low_load_image(string f, RequestID id, void|mapping err)
     id->misc->_load_image_called++;
     if(!(data=id->conf->try_get_file(f, id, 0, 0, 0, err)))
     {
-      //  This is a major security hole! It can load any (image) file
-      //  in the low-level file system using the server's user privileges.
-      //
-      //  file=Stdio.File();
-      //  if(!file->open(f,"r") || !(data=file->read()))
 #ifdef THREADS
-      if (mixed err = catch
-        {
-          string host = "";
-          sscanf( f, "http://%[^/]", host );
-          if( sscanf( host, "%*s:%*d" ) != 2)
-            host += ":80";
-          mapping hd = 
-                  ([
-                    "User-Agent":version(),
-                    "Host":host,
-                  ]);
-          data = Protocols.HTTP.get_url_data( f, 0, hd );
-	})
-	werror (describe_backtrace (err));
+      if (sscanf( f, "http://%[^/]", string host ) ||
+	  sscanf (f, "https://%[^/]", host)) {
+	if( sscanf( host, "%*s:%*d" ) != 2)
+	  host += ":80";
+	mapping hd = ([
+	  "User-Agent":version(),
+	  "Host":host,
+	]);
+	if (mixed err = catch {
+	    data = Protocols.HTTP.get_url_data( f, 0, hd );
+	  })
+	  werror (describe_backtrace (err));
+      }
 #endif
       if( !data )
 	return 0;
