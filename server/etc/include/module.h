@@ -1,6 +1,6 @@
 // -*- pike -*-
 //
-// $Id: module.h,v 1.62 2006/01/10 18:50:33 grubba Exp $
+// $Id: module.h,v 1.63 2008/09/15 08:58:11 jonasw Exp $
 
 #ifndef ROXEN_MODULE_H
 #define ROXEN_MODULE_H
@@ -22,8 +22,8 @@
 
 #define TAGDOCUMENTATION mapping tagdocumentation(){return [mapping]get_value_from_file(__FILE__,"tagdoc","#define manual\n");}
 
-#define ROXEN_MAJOR_VERSION 4
-#define ROXEN_MINOR_VERSION 5
+#define ROXEN_MAJOR_VERSION 5
+#define ROXEN_MINOR_VERSION 0
 
 
 #define TYPE_STRING            1
