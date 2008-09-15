@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.983 2008/09/15 16:27:27 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.984 2008/09/15 16:34:13 mast Exp $";
 
 //! @appears roxen
 //!
@@ -4767,18 +4767,21 @@ array(Image.Layer)|mapping load_layers(string f, RequestID id, mapping|void opt)
     id->misc->_load_image_called++;
     if(!(data=id->conf->try_get_file(f, id, 0, 0, 0, res)))
     {
-      //  This is a major security hole! It can load any (image) file
-      //  in the low-level file system using the server's user privileges.
-      //
-      //  file=Stdio.File();
-      //  if(!file->open(f,"r") || !(data=file->read()))
-// #ifdef THREADS
-      if (mixed err = catch
-        {
-          data = Protocols.HTTP.get_url_nice( f )[1];
-	})
-	werror (describe_backtrace (err));
-// #endif
+#ifdef THREADS
+      if (sscanf( f, "http://%[^/]", string host ) ||
+	  sscanf (f, "https://%[^/]", host)) {
+	if( sscanf( host, "%*s:%*d" ) != 2)
+	  host += ":80";
+	mapping hd = ([
+	  "User-Agent":version(),
+	  "Host":host,
+	]);
+	if (mixed err = catch {
+	    data = Protocols.HTTP.get_url_data( f, 0, hd );
+	  })
+	  werror (describe_backtrace (err));
+      }
+#endif
       if( !data )
 	return res;
     }
