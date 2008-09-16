@@ -11,7 +11,7 @@
 inherit "module";
 
 constant thread_safe = 1;
-constant cvs_version = "$Id: wapadapter.pike,v 1.13 2008/08/15 12:33:55 mast Exp $";
+constant cvs_version = "$Id: wapadapter.pike,v 1.14 2008/09/16 10:39:56 mast Exp $";
 
 constant module_type = MODULE_FIRST|MODULE_FILE_EXTENSION|MODULE_TAG;
 constant module_name = "WAP Adapter";
@@ -45,7 +45,7 @@ void start(int num, Configuration conf) {
 }
 
 void set_entities(RXML.Context c) {
-  c->extend_scope("client", client_scope);
+  c->extend_scope("client", client_scope + ([]));
 }
 
 array(string) query_file_extensions() {

@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.557 2008/09/16 00:32:01 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.558 2008/09/16 10:37:30 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -299,7 +299,7 @@ mapping client_scope = ([
 ]);
 
 void set_entities(RXML.Context c) {
-  c->extend_scope("client", client_scope);
+  c->extend_scope("client", client_scope + ([]));
   if (!c->id->misc->cache_tag_miss)
     c->id->cache_status->cachetag = 1;
 }
