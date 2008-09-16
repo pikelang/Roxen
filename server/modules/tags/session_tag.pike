@@ -7,7 +7,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: session_tag.pike,v 1.24 2008/08/18 13:18:40 erikd Exp $";
+constant cvs_version = "$Id: session_tag.pike,v 1.25 2008/09/16 10:33:16 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Session tag module";
@@ -51,7 +51,7 @@ class EntityClientSession {
 mapping session_entity = ([ "session":EntityClientSession() ]);
 
 void set_entities(RXML.Context c) {
-  c->extend_scope("client", session_entity);
+  c->extend_scope("client", session_entity + ([]));
 }
 
 void start() {
