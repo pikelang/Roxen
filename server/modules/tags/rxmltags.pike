@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.556 2008/09/15 00:13:56 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.557 2008/09/16 00:32:01 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2783,7 +2783,7 @@ class TagSubstring
   ]);
 
   RXML.Type content_type = RXML.t_any_text (RXML.PXml);
-  array(RXML.Type) result_types = ::result_types + ({RXML.t_any});
+  array(RXML.Type) result_types = ({RXML.t_any});
   constant flags = RXML.FLAG_DONT_RECOVER;
 
   class Frame
@@ -3541,6 +3541,8 @@ class TagCSet {
 class TagColorScope {
   inherit RXML.Tag;
   constant name = "colorscope";
+
+  array(RXML.Type) result_types = ({RXML.t_any});
 
   class Frame {
     inherit RXML.Frame;
