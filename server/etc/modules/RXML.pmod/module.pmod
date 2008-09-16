@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.368 2008/09/03 16:14:23 jonasw Exp $
+// $Id: module.pmod,v 1.369 2008/09/16 10:17:32 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -235,7 +235,7 @@ class Tag
   //! that's asked for, not that it has the liberty to produce results
   //! of any type it chooses.
   //!
-  //! The types in this list is first searched in order for a type
+  //! The types in this list are first searched in order for a type
   //! that is a subtype of the actual type. If none is found, the list
   //! is searched through a second time for a type that is a supertype
   //! of the actual type.
@@ -1991,7 +1991,10 @@ class Context
   }
 
   void extend_scope (string scope_name, SCOPE_TYPE vars)
-  //! Adds or extends the specified scope at the global level.
+  //! If there is a scope with the name @[scope_name] at the global
+  //! level then it is extended with @[vars]. If there is no such
+  //! scope then @[vars] becomes a global scope with the name
+  //! @[scope_name] (without copying it).
   //!
   //! @note
   //! The contents of @[vars] is currently transferred over to the
