@@ -7,6 +7,8 @@
 // inherited by configuration.pike
 #define parse_rxml Roxen.parse_rxml
 
+#include <module.h>
+
 #ifdef RXMLHELP_DEBUG
 # define RXMLHELP_WERR(X) report_debug("RXML help: %s\n", X);
 #else
@@ -18,14 +20,20 @@
 #define TDBG "#d9dee7"
 
 string mktable(array table) {
-  string ret="<table boder=\"0\" cellpadding=\"0\" border=\"0\"><tr><td bgcolor=\"#000000\">\n"
-    "<table border=\"0\" cellspacing=\"1\" cellpadding=\"5\">\n";
+  string ret= "<table style='"
+    "border: 1px solid black; "
+    "border-collapse: collapse; "
+    "background: " TDBG "; "
+    "margin: 1px 0'>"
+    "<tbody style='vertical-align: top'>\n";
 
   foreach(table, array row)
-    ret+="<tr valign=\"top\"><td bgcolor=\""+TDBG+"\"><font color=\"#000000\">"+
-      row*("</font></td><td bgcolor=\""+TDBG+"\"><font color=\"#000000\">")+"</font></td></tr>\n";
+    ret+="<tr>"
+      "<td style='border: 1px solid'>"+
+      row * "</td><td style='border: 1px solid'>" +
+      "</td></tr>\n";
 
-  ret+="</table></tr></td></table>";
+  ret+="</tbody></table>";
   return ret;
 }
 
@@ -147,7 +155,14 @@ protected string noex_cont(TagdocParser parser, mapping m, string c) {
     add_quote_tag("!--","","--")->feed(c)->read();
 }
 
-protected string ex_quote(string in) {
+protected string ex_quote(string in)
+{
+  sscanf (reverse (in), "%[ \t\n\r]", string trailing_ws);
+  if (has_prefix (in, "\n"))
+    in = in[1..<sizeof (trailing_ws)];
+  else
+    in = in[..<sizeof (trailing_ws)];
+
   string s = replace(in, "&lt;", "__LT__");
   s = "<pre>"+replace(s, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
   return replace(s, "__LT__", "&lt;");
@@ -161,42 +176,54 @@ protected string ex_cont(TagdocParser parser, mapping m, string c, string rt, vo
     add_quote_tag("!--","","--")->feed(c)->read();
   string quoted = ex_quote(c);
   if(m->type=="box")
-    return "<br />"+mktable( ({ ({ quoted }) }) );
+    return mktable( ({ ({ quoted }) }) );
 
   if(!id) return "";
 
-  string parsed=
-    parse_rxml(m->type!="hr"?
-	       "<colorscope bgcolor="+TDBG+">"+c+"</colorscope>":
-	       c, id);
-  
+  if (m->type != "hr")
+    c = "<colorscope bgcolor="+TDBG+">"+c+"</colorscope>";
+
+  string parsed;
+
+  if (m["any-result"]) {
+    // Use if the example returns a non-xml result, e.g. an array.
+    RXML.Parser p = RXML.t_any (id->conf->default_content_type->parser_prog)->
+      get_parser (RXML_CONTEXT, RXML_CONTEXT->tag_set);
+    p->write_end (c);
+    mixed res = p->eval();
+    parsed = String.capitalize (sprintf ("%t result: ", res)) +
+      Roxen.html_encode_string (RXML.utils.format_short (res, 1024));
+  }
+  else
+    parsed = parse_rxml (c, id);
+
   switch(m->type) {
   case "hr":
     return quoted+"<hr />"+parsed;
   case "svert":
-    return "<br />" + mktable( ({ ({ quoted }), ({ ex_quote(parsed) }) }) );
+    return mktable( ({ ({ quoted }), ({ ex_quote(parsed) }) }) );
   case "shor":
-    return "<br />" + mktable( ({ ({ quoted, ex_quote(parsed) }) }) );
+    return mktable( ({ ({ quoted, ex_quote(parsed) }) }) );
   case "vert":
   default:
-    return "<br />"+mktable( ({ ({ quoted }), ({ parsed }) }) );
+    return mktable( ({ ({ quoted }), ({ parsed }) }) );
   case "hor":
-    return "<br />"+mktable( ({ ({ quoted, parsed }) }) );
+    return mktable( ({ ({ quoted, parsed }) }) );
   }
 }
 
 protected string ex_box_cont(TagdocParser parser, mapping m, string c, string rt) {
-  return "<br />"+mktable( ({ ({ ex_quote(c) }) }) );
+  return mktable( ({ ({ ex_quote(c) }) }) );
 }
 
 protected string ex_html_cont(TagdocParser parser, mapping m, string c, string rt) {
-  return "<br />" + mktable( ({ ({ c }) }) );
+  return mktable( ({ ({ c }) }) );
 }
 
 protected string ex_src_cont(TagdocParser parser, mapping m, string c, string rt, void|object id) {
   string quoted = ex_quote(c);
   string parsed = parse_rxml("<colorscope bgcolor="+TDBG+">"+c+"</colorscope>", id);
-  return "<br />" + mktable( ({ ({ quoted }), ({ ex_quote(parsed) }) }) );
+  return mktable( ({ ({ quoted }), ({ ex_quote(parsed) }) }) );
 }
 
 protected string list_cont( TagdocParser parser, mapping m, string c )
@@ -215,7 +242,7 @@ protected string list_cont( TagdocParser parser, mapping m, string c )
 
 protected string xtable_cont( mixed a, mixed b, string c )
 {
-  return "<table border='1' cellpadding='2' cellspacing='0'>"+c+"</table>";
+  return "<table>"+c+"</table>";
 }
 
 protected string module_cont( mixed a, mixed b, string c )
