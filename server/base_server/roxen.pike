@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.984 2008/09/15 16:34:13 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.985 2008/09/17 14:25:51 mast Exp $";
 
 //! @appears roxen
 //!
@@ -68,9 +68,6 @@ Thread.Thread backend_thread;
 // Needed to get core dumps of seteuid()'ed processes on Linux.
 #if constant(System.dumpable)
 #define enable_coredumps(X)	System.dumpable(X)
-#elif constant(system.dumpable)
-// Pike 7.2.
-#define enable_coredumps(X)   system.dumpable(X)
 #else
 #define enable_coredumps(X)
 #endif
@@ -1397,7 +1394,14 @@ class Protocol
   protected Stdio.Port port_obj;
 
   inherit "basic_defvar";
+
   int bound;
+  //! 0 if the port isn't bound, 1 if it is, and -1 if it binding it
+  //! failed with EADDRINUSE when told to ignore that error.
+  //!
+  //! @note
+  //! The -1 state should be uncommon since @[register_url] should
+  //! remove such objects after the failed bind attempt.
 
   string path;
   constant name = "unknown";
@@ -1716,15 +1720,14 @@ class Protocol
       error("Invalid address " + ip);
     }
 #endif /* System.EAFNOSUPPORT */
-#if constant(System.EADDRINUSE) || constant(system.EADDRINUSE)
-    if (
 #if constant(System.EADDRINUSE)
-	(port_obj->errno() == System.EADDRINUSE)
-#else /* !constant(System.EADDRINUSE) */
-	(port_obj->errno() == system.EADDRINUSE)
-#endif /* constant(System.EADDRINUSE) */
-    ) {
-      if (!ignore_eaddrinuse && (retries++ < 10)) {
+    if (port_obj->errno() == System.EADDRINUSE) {
+      if (ignore_eaddrinuse) {
+	// Told to ignore the bind problem.
+	bound = -1;
+	return;
+      }
+      if (retries++ < 10) {
 	// We may get spurious failures on rebinding ports on some OS'es
 	// (eg Linux, WIN32). See [bug 3031].
 	report_error(LOC_M(6, "Failed to bind %s (%s)")+"\n",
@@ -1735,7 +1738,7 @@ class Protocol
       }
     }
     else
-#endif /* constant(System.EADDRINUSE) || constant(system.EADDRINUSE) */
+#endif /* constant(System.EADDRINUSE) */
     {
       report_error(LOC_M(6, "Failed to bind %s (%s)")+"\n",
 		   get_url(), strerror(port_obj->errno()));
@@ -1901,7 +1904,7 @@ class SSLProtocol
 
   protected void cert_err_unbind()
   {
-    if (bound) {
+    if (bound > 0) {
       port_obj->close();
       report_warning ("TLS port %s closed.\n", get_url());
       bound = 0;
@@ -2171,7 +2174,7 @@ class SSLProtocol
 }
 #endif
 
-mapping(string:Protocol) build_protocols_mapping()
+mapping(string:program/*(Protocol)*/) build_protocols_mapping()
 {
   mapping protocols = ([]);
   int st = gethrtime();
@@ -2249,7 +2252,7 @@ mapping(string:Protocol) build_protocols_mapping()
 }
 
 
-mapping protocols;
+mapping(string:program/*(Protocol)*/) protocols;
 
 // prot:ip:port ==> Protocol.
 mapping(string:mapping(string:mapping(int:Protocol))) open_ports = ([ ]);
@@ -2438,7 +2441,7 @@ int register_url( string url, Configuration conf )
       urls[ url ]->port->unref( url );
   }
 
-  Protocol prot;
+  program prot;
 
   if( !( prot = protocols[ protocol ] ) )
   {
@@ -2525,8 +2528,7 @@ int register_url( string url, Configuration conf )
     if( !m[ required_host ] )
       m[ required_host ] = ([ ]);
 
-    mixed err;
-    if (err = catch {
+    if (mixed err = catch {
 	m[ required_host ][ port ] =
 	  prot( port, required_host,
 		// Don't complain if binding IPv6 ANY fails with
@@ -2555,7 +2557,9 @@ int register_url( string url, Configuration conf )
 
     if (!required_host) opened_ipv4_any_port = 1;
 
-    if( !( m[ required_host ][ port ] ) )
+    Protocol prot_obj = m[required_host][port];
+
+    if( !prot_obj )
     {
       m_delete( m[ required_host ], port );
       failures++;
@@ -2567,12 +2571,18 @@ int register_url( string url, Configuration conf )
       continue;
     }
 
+    if (prot_obj->bound == -1) {
+      // Got EADDRINUSE for the IPv6 case - see above. Just forget
+      // about this one.
+      m_delete (m[required_host], port);
+      continue;
+    }
 
-    urls[ url ]->port = m[ required_host ][ port ];
-    urls[ ourl ]->port = m[ required_host ][ port ];
-    m[ required_host ][ port ]->ref(url, urls[url]);
+    urls[ url ]->port = prot_obj;
+    urls[ ourl ]->port = prot_obj;
+    prot_obj->ref(url, urls[url]);
  
-    if( !m[ required_host ][ port ]->bound )
+    if( !prot_obj->bound )
       failures++;
   }
   if (failures == sizeof(required_hosts)) 
