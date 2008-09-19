@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.961 2008/04/07 13:04:47 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.962 2008/09/19 15:45:19 mast Exp $";
 
 //! @appears roxen
 //!
@@ -613,6 +613,19 @@ local static int thread_reap_cnt;
 static int threads_on_hold;
 //! Number of handler threads on hold.
 
+#ifdef SLOW_REQ_BT
+static object slow_req_monitor = Pike.Backend();
+
+static void dump_slow_req (Thread.Thread thread)
+{
+  string desc = sprintf ("%O", thread);
+  if (sscanf (desc, "Thread.Thread(%d)", int i)) desc = (string) i;
+  report_debug ("### Thread %s has been busy for more than %d seconds.\n",
+		desc, SLOW_REQ_BT);
+  describe_all_threads();
+}
+#endif
+
 local static void handler_thread(int id)
 //! The actual handling function. This functions read function and
 //! parameters from the queue, calls it, then reads another one. There
@@ -634,6 +647,9 @@ local static void handler_thread(int id)
   while(1)
   {
     int thread_flagged_as_busy;
+#ifdef SLOW_REQ_BT
+    mixed slow_req_call_out;
+#endif
     if(q=catch {
       do {
 //  	if (!busy_threads) werror ("GC: %d\n", gc());
@@ -644,10 +660,21 @@ local static void handler_thread(int id)
 	  set_locale();
 	  busy_threads++;
 	  thread_flagged_as_busy = 1;
+#ifdef SLOW_REQ_BT
+	  if (h[0] != bg_process_queue)
+	    // Don't want this on the background jobs (at least not
+	    // with the same timeout).
+	    slow_req_call_out =
+	      slow_req_monitor->call_out (dump_slow_req, SLOW_REQ_BT,
+					  this_thread());
+#endif
 	  h[0](@h[1]);
 	  h=0;
 	  busy_threads--;
 	  thread_flagged_as_busy = 0;
+#ifdef SLOW_REQ_BT
+	  slow_req_monitor->remove_call_out (slow_req_call_out);
+#endif
 	} else if(!h) {
 	  // Roxen is shutting down.
 	  report_debug("Handle thread ["+id+"] stopped.\n");
@@ -681,6 +708,9 @@ local static void handler_thread(int id)
     }) {
       if (thread_flagged_as_busy)
 	busy_threads--;
+#ifdef SLOW_REQ_BT
+      slow_req_monitor->remove_call_out (slow_req_call_out);
+#endif
       if (h = catch {
 	report_error(/*LOCALE("", "Uncaught error in handler thread: %s"
 		       "Client will not get any response from Roxen.\n"),*/
@@ -5327,6 +5357,12 @@ int main(int argc, array tmp)
   // __builtin.gc_parameters((["enabled": 0]));
   argv = tmp;
   tmp = 0;
+
+#ifdef SLOW_REQ_BT
+  Thread.thread_create (lambda () {
+			  while (1) slow_req_monitor (3600);
+			});
+#endif
 
 #if 0
   Thread.thread_create (lambda () {
