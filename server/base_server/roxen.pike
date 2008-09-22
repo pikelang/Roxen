@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.986 2008/09/19 22:17:53 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.987 2008/09/22 12:07:59 mast Exp $";
 
 //! @appears roxen
 //!
@@ -606,6 +606,55 @@ class Queue
   }
 }
 
+#ifndef NO_SLOW_REQ_BT
+// This is a system to dump all threads whenever a request takes
+// longer than a configurable timeout.
+
+protected Pike.Backend slow_req_monitor; // Set iff slow req bt is enabled.
+protected int slow_req_timeout;
+
+protected void slow_req_monitor_thread (Pike.Backend my_monitor)
+{
+  // my_monitor is just a safeguard to ensure we don't get multiple
+  // monitor threads.
+  while (slow_req_monitor == my_monitor)
+    slow_req_monitor (3600);
+}
+
+void set_slow_req_timeout (int secs)
+{
+#ifdef DEBUG
+  if (secs < 0) error ("Invalid timeout.\n");
+#endif
+
+  Pike.Backend monitor = slow_req_monitor;
+  slow_req_timeout = secs;
+
+  if (secs && monitor) {
+    // Just a change of timeout - nothing more to do.
+  }
+
+  else if (secs) {		// Start.
+    monitor = slow_req_monitor = Pike.SmallBackend();
+    Thread.thread_create (slow_req_monitor_thread, monitor);
+    monitor->call_out (lambda () {}, 0); // Safeguard if there's a race.
+  }
+
+  else if (monitor) {		// Stop.
+    slow_req_monitor = 0;
+    monitor->call_out (lambda () {}, 0); // To wake up the thread.
+  }
+}
+
+protected void dump_slow_req (Thread.Thread thread, int timeout)
+{
+  report_debug ("### Thread 0x%x has been busy for more than %d seconds.\n",
+		thread->id_number(), timeout);
+  describe_all_threads();
+}
+
+#endif	// !NO_SLOW_REQ_BT
+
 // // This is easier than when there are no threads.
 // // See the discussion below. :-)
 //
@@ -648,6 +697,9 @@ local protected void handler_thread(int id)
   while(1)
   {
     int thread_flagged_as_busy;
+#ifndef NO_SLOW_REQ_BT
+    mixed slow_req_call_out;
+#endif
     if(q=catch {
       do {
 //  	if (!busy_threads) werror ("GC: %d\n", gc());
@@ -659,7 +711,23 @@ local protected void handler_thread(int id)
 	  set_locale();
 	  busy_threads++;
 	  thread_flagged_as_busy = 1;
-	  h[0](@h[1]);
+
+#ifndef NO_SLOW_REQ_BT
+	  if (Pike.Backend monitor =
+	      // Leave out bg_process_queue. It makes a timeout on
+	      // every individual job instead.
+	      h[0] != bg_process_queue &&
+	      slow_req_monitor) {
+	    slow_req_call_out =
+	      monitor->call_out (dump_slow_req, slow_req_timeout,
+				 this_thread(), slow_req_timeout);
+	    h[0](@h[1]);
+	    monitor->remove_call_out (slow_req_call_out);
+	  }
+	  else
+#endif
+	    h[0](@h[1]);
+
 	  h=0;
 	  busy_threads--;
 	  thread_flagged_as_busy = 0;
@@ -696,6 +764,10 @@ local protected void handler_thread(int id)
     }) {
       if (thread_flagged_as_busy)
 	busy_threads--;
+#ifndef NO_SLOW_REQ_BT
+      if (Pike.Backend monitor = slow_req_call_out && slow_req_monitor)
+	monitor->remove_call_out (slow_req_call_out);
+#endif
       if (h = catch {
 	report_error(/*LOCALE("", "Uncaught error in handler thread: %s"
 		       "Client will not get any response from Roxen.\n"),*/
@@ -989,6 +1061,10 @@ protected void bg_process_queue()
   int maxbeats =
     min (time() - bg_last_busy, bg_time_buffer_max) * (int) (1 / 0.04);
 
+#ifndef NO_SLOW_REQ_BT
+  mixed slow_req_call_out;
+#endif
+
   if (mixed err = catch {
     while (bg_queue->size()) {
       // Not a race here since only one thread is reading the queue.
@@ -1017,14 +1093,27 @@ protected void bg_process_queue()
 				  {return sprintf ("%O", arg);}) * ", ",
 		    bg_queue->size());
 #endif
-      int start_hrtime = gethrtime (1);
-      float task_vtime = gauge {
-	  if (task[0])		// Ignore things that have become destructed.
-	  // Note: BackgroundProcess.repeat assumes that there are
-	  // exactly two refs to task[0] during the call below.
-	    task[0] (@task[1]);
-	};
-      float task_rtime = (gethrtime (1) - start_hrtime) / 1e9;
+
+      float task_vtime, task_rtime;
+
+#ifndef NO_SLOW_REQ_BT
+      if (Pike.Backend monitor = slow_req_monitor) {
+	slow_req_call_out =
+	  monitor->call_out (dump_slow_req, slow_req_timeout,
+			     this_thread(), slow_req_timeout);
+#endif
+	int start_hrtime = gethrtime (1);
+	task_vtime = gauge {
+	    if (task[0]) // Ignore things that have become destructed.
+	      // Note: BackgroundProcess.repeat assumes that there are
+	      // exactly two refs to task[0] during the call below.
+	      task[0] (@task[1]);
+	  };
+	task_rtime = (gethrtime (1) - start_hrtime) / 1e9;
+#ifndef NO_SLOW_REQ_BT
+	monitor->remove_call_out (slow_req_call_out);
+      }
+#endif
 
       if (task_rtime > 60.0)
 	report_warning ("Warning: Background job took more than one minute "
@@ -1056,6 +1145,10 @@ protected void bg_process_queue()
       if (busy_threads > 1) bg_last_busy = time();
     }
   }) {
+#ifndef NO_SLOW_REQ_BT
+    if (Pike.Backend monitor = slow_req_call_out && slow_req_monitor)
+      monitor->remove_call_out (slow_req_call_out);
+#endif
     bg_process_running = 0;
     handle (bg_process_queue);
     throw (err);
@@ -4891,13 +4984,6 @@ void describe_all_threads()
 
   array(Thread.Thread) threads = all_threads();
 
-  mapping(Thread.Thread:string|int) thread_ids = ([]);
-  foreach (threads, Thread.Thread thread) {
-    string desc = sprintf ("%O", thread);
-    if (sscanf (desc, "Thread.Thread(%d)", int i)) thread_ids[thread] = i;
-    else thread_ids[thread] = desc;
-  }
-
   threads = Array.sort_array (
     threads,
     lambda (Thread.Thread a, Thread.Thread b) {
@@ -4907,15 +4993,13 @@ void describe_all_threads()
       else if (b == backend_thread)
 	return 1;
       else
-	return thread_ids[a] > thread_ids[b];
+	return a->id_number() > b->id_number();
     });
 
   int i;
   for(i=0; i < sizeof(threads); i++) {
-    string|int thread_id = thread_ids[threads[i]];
-    if (intp (thread_id)) thread_id = sprintf ("%x", thread_id);
-    report_debug("### Thread %s%s:\n",
-		 thread_id,
+    report_debug("### Thread 0x%x%s:\n",
+		 threads[i]->id_number(),
 #ifdef THREADS
 		 threads[i] == backend_thread ? " (backend thread)" : ""
 #else
@@ -5027,7 +5111,7 @@ void show_timers()
 #endif
 
 
-class GCTimestamp
+protected class GCTimestamp
 {
   array self_ref;
   protected void create() {self_ref = ({this_object()});}
@@ -5259,6 +5343,12 @@ int main(int argc, array tmp)
     cdt_filename += ".dump_threads";
     cdt_changed (getvar ("dump_threads_by_file"));
   }
+
+#ifndef NO_SLOW_REQ_BT
+  if (int timeout = query ("slow_req_bt"))
+    if (timeout > 0)
+      set_slow_req_timeout (timeout);
+#endif
 
 #ifdef ROXEN_DEBUG_MEMORY_TRACE
   restart_roxen_debug_memory_trace();
