@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.111 2008/09/22 12:07:59 mast Exp $
+// $Id: global_variables.pike,v 1.112 2008/09/22 15:18:02 mast Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -29,7 +29,7 @@ private int(0..1) syslog_disabled()  { return query("LogA")!="syslog"; }
 private int(0..1) ident_disabled_p() { return [int(0..1)]query("default_ident"); }
 
 protected void cdt_changed (Variable.Variable v);
-protected void set_slow_req_timeout (int t);
+protected void set_slow_req_timeout (float t);
 
 #ifdef SNMP_AGENT
 private int(0..1) snmp_disabled() { return !query("snmp_agent"); }
@@ -625,9 +625,9 @@ process to get a thread dump.</p>
   v->set_changed_callback (cdt_changed);
   defvar ("dump_threads_by_file", v);
 
-  defvar ("slow_req_bt", 0,
+  defvar ("slow_req_bt", 0.0,
 	  LOCALE(0, "Logging: Dump threads for slow requests"),
-	  TYPE_INT,
+	  TYPE_FLOAT,
 	  LOCALE(0, #"\
 <p>This setting enables a monitor that dumps all the threads in the
 debug log whenever any request or background job has been running for
@@ -643,10 +643,10 @@ feature at startup regardless of the timeout configured here.</p>
     ->set_changed_callback (
       lambda (Variable.Variable v) {
 #ifndef NO_SLOW_REQ_BT
-	int timeout = query ("slow_req_bt");
+	float timeout = query ("slow_req_bt");
 	v->set_warning (timeout < 0 &&
 			LOCALE(0, "Timeout cannot be negative."));
-	if (timeout >= 0) set_slow_req_timeout (timeout);
+	if (timeout >= 0.0) set_slow_req_timeout (timeout);
 #else
 	v->set_warning (
 	  LOCALE(0, "Feature disabled by NO_SLOW_REQ_BT define."));

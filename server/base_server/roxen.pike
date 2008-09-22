@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.987 2008/09/22 12:07:59 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.988 2008/09/22 15:18:02 mast Exp $";
 
 //! @appears roxen
 //!
@@ -611,7 +611,7 @@ class Queue
 // longer than a configurable timeout.
 
 protected Pike.Backend slow_req_monitor; // Set iff slow req bt is enabled.
-protected int slow_req_timeout;
+protected float slow_req_timeout;
 
 protected void slow_req_monitor_thread (Pike.Backend my_monitor)
 {
@@ -621,7 +621,7 @@ protected void slow_req_monitor_thread (Pike.Backend my_monitor)
     slow_req_monitor (3600);
 }
 
-void set_slow_req_timeout (int secs)
+void set_slow_req_timeout (float secs)
 {
 #ifdef DEBUG
   if (secs < 0) error ("Invalid timeout.\n");
@@ -630,11 +630,11 @@ void set_slow_req_timeout (int secs)
   Pike.Backend monitor = slow_req_monitor;
   slow_req_timeout = secs;
 
-  if (secs && monitor) {
+  if (secs > 0.0 && monitor) {
     // Just a change of timeout - nothing more to do.
   }
 
-  else if (secs) {		// Start.
+  else if (secs > 0.0) {	// Start.
     monitor = slow_req_monitor = Pike.SmallBackend();
     Thread.thread_create (slow_req_monitor_thread, monitor);
     monitor->call_out (lambda () {}, 0); // Safeguard if there's a race.
@@ -646,9 +646,9 @@ void set_slow_req_timeout (int secs)
   }
 }
 
-protected void dump_slow_req (Thread.Thread thread, int timeout)
+protected void dump_slow_req (Thread.Thread thread, float timeout)
 {
-  report_debug ("### Thread 0x%x has been busy for more than %d seconds.\n",
+  report_debug ("### Thread 0x%x has been busy for more than %g seconds.\n",
 		thread->id_number(), timeout);
   describe_all_threads();
 }
@@ -5345,8 +5345,8 @@ int main(int argc, array tmp)
   }
 
 #ifndef NO_SLOW_REQ_BT
-  if (int timeout = query ("slow_req_bt"))
-    if (timeout > 0)
+  if (float timeout = query ("slow_req_bt"))
+    if (timeout > 0.0)
       set_slow_req_timeout (timeout);
 #endif
 
