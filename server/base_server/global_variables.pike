@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.112 2008/09/22 15:18:02 mast Exp $
+// $Id: global_variables.pike,v 1.113 2008/09/25 20:40:14 mast Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -29,7 +29,8 @@ private int(0..1) syslog_disabled()  { return query("LogA")!="syslog"; }
 private int(0..1) ident_disabled_p() { return [int(0..1)]query("default_ident"); }
 
 protected void cdt_changed (Variable.Variable v);
-protected void set_slow_req_timeout (float t);
+void slow_req_count_changed();
+void slow_req_timeout_changed();
 
 #ifdef SNMP_AGENT
 private int(0..1) snmp_disabled() { return !query("snmp_agent"); }
@@ -288,6 +289,8 @@ void zap_all_module_caches( Variable.Variable v )
 
 void define_global_variables(  )
 {
+  Variable.Variable v;
+
   defvar("myisamchk",
 	 Variable.Language("Fast check and repair",
 			   ({ "Disable check",
@@ -599,10 +602,9 @@ The start script attempts to fix this for the standard file locations.</p>"));
 	 0, syslog_disabled);
 #endif // efun(syslog)
 
-  Variable.Variable v =
-    Variable.Flag (0, 0,
-		   LOCALE(534, "Logging: Dump threads by file polling"),
-		   LOCALE(535, #"\
+  v = Variable.Flag (0, 0,
+		     LOCALE(534, "Logging: Dump threads by file polling"),
+		     LOCALE(535, #"\
 <p>This option can be used to produce dumps of all the threads in the
 debug log in situations where the Administration Interface doesn't
 respond.</p>
@@ -625,33 +627,65 @@ process to get a thread dump.</p>
   v->set_changed_callback (cdt_changed);
   defvar ("dump_threads_by_file", v);
 
-  defvar ("slow_req_bt", 0.0,
-	  LOCALE(0, "Logging: Dump threads for slow requests"),
-	  TYPE_FLOAT,
-	  LOCALE(0, #"\
-<p>This setting enables a monitor that dumps all the threads in the
-debug log whenever any request or background job has been running for
-more than the set number of seconds. Zero disables the monitor.</p>
-
-<p><b>Warning:</b> If you set this too low then the debug log can fill
-up very quickly and the server become very slow due to the amount of
-logging. If that happens and it gets difficult to change back the
-value then you can add the define NO_SLOW_REQ_BT to disable this
-feature at startup regardless of the timeout configured here.</p>
-
-<p>Enabling this creates a dedicated thread.</p>"))
-    ->set_changed_callback (
+  definvisvar ("slow_req_bt_permanent", 0, TYPE_FLAG)->
+    set_changed_callback (
       lambda (Variable.Variable v) {
-#ifndef NO_SLOW_REQ_BT
-	float timeout = query ("slow_req_bt");
-	v->set_warning (timeout < 0 &&
-			LOCALE(0, "Timeout cannot be negative."));
-	if (timeout >= 0.0) set_slow_req_timeout (timeout);
-#else
-	v->set_warning (
-	  LOCALE(0, "Feature disabled by NO_SLOW_REQ_BT define."));
-#endif
+	if (v->query())
+	  set ("slow_req_bt_count", -1);
+	else if (query ("slow_req_bt_count") < 0)
+	  set ("slow_req_bt_count", 0);
       });
+
+  v = Variable.TmpInt (
+    0, 0,
+    LOCALE(0, "Logging: Dump threads for slow requests"),
+    LOCALE(0, #"\
+<p>This enables a monitor that dumps all the threads in the debug log
+whenever any request or background job has been running for more than
+a set number of seconds, which is configured with the \"Slow request
+timeout\" setting.</p>
+
+<p>This setting is a counter: A positive number stops the monitor
+after that many thread dumps have been made, -1 enables the monitor
+permanently, and zero disables it. Positive numbers aren't persistent,
+so will be reset to zero whenever the server is restarted.</p>
+
+<p><b>Warning:</b> If you set the timeout too low, combined with a
+high or no limit, then the debug log can fill up very quickly and the
+server become very slow due to the amount of logging. If that happens
+and it gets difficult to change back the value then you can force the
+monitor to be disabled from the start by adding the define
+\"NO_SLOW_REQ_BT\" (i.e. add \"-DNO_SLOW_REQ_BT\" to the start script
+or in the DEFINES environment variable).</p>
+
+<p>Enabling this creates a dedicated thread.</p>"));
+  defvar ("slow_req_bt_count", v);
+  v->set_range (-1, Variable.no_limit);
+  v->set_changed_callback (
+    lambda (Variable.Variable v) {
+      int count = v->query();
+      set ("slow_req_bt_permanent", count < 0);
+#ifndef NO_SLOW_REQ_BT
+      slow_req_count_changed();
+#else
+      v->set_warning (
+	LOCALE(0, "Feature disabled by NO_SLOW_REQ_BT define."));
+#endif
+    });
+
+  v = defvar ("slow_req_bt_timeout", 10.0,
+	      LOCALE(0, "Logging: Slow request timeout"),
+	      TYPE_FLOAT,
+	      LOCALE(0, #"\
+<p>The timeout in seconds for the slow request monitor. See the \"Dump
+threads for slow requests\" setting for details.</p>"));
+  v->set_range (1e-3, Variable.no_limit);
+  v->set_precision (3);
+#ifndef NO_SLOW_REQ_BT
+  v->set_changed_callback (lambda (Variable.Variable v) {
+			     slow_req_timeout_changed();
+			   });
+#endif
 
 #ifdef THREADS
   defvar("numthreads", 15, LOCALE(150, "Number of threads to run"), 

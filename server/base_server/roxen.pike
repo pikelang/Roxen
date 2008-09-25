@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.988 2008/09/22 15:18:02 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.989 2008/09/25 20:40:14 mast Exp $";
 
 //! @appears roxen
 //!
@@ -621,20 +621,16 @@ protected void slow_req_monitor_thread (Pike.Backend my_monitor)
     slow_req_monitor (3600);
 }
 
-void set_slow_req_timeout (float secs)
+void slow_req_count_changed()
 {
-#ifdef DEBUG
-  if (secs < 0) error ("Invalid timeout.\n");
-#endif
-
   Pike.Backend monitor = slow_req_monitor;
-  slow_req_timeout = secs;
+  int count = query ("slow_req_bt_count");
 
-  if (secs > 0.0 && monitor) {
-    // Just a change of timeout - nothing more to do.
+  if (count && monitor) {
+    // Just a change of the count - nothing to do.
   }
 
-  else if (secs > 0.0) {	// Start.
+  else if (count) {		// Start.
     monitor = slow_req_monitor = Pike.SmallBackend();
     Thread.thread_create (slow_req_monitor_thread, monitor);
     monitor->call_out (lambda () {}, 0); // Safeguard if there's a race.
@@ -646,8 +642,19 @@ void set_slow_req_timeout (float secs)
   }
 }
 
+void slow_req_timeout_changed()
+{
+#ifdef DEBUG
+  if (query ("slow_req_bt_timeout") < 0) error ("Invalid timeout.\n");
+#endif
+  slow_req_timeout = query ("slow_req_bt_timeout");
+}
+
 protected void dump_slow_req (Thread.Thread thread, float timeout)
 {
+  int count = query ("slow_req_bt_count");
+  if (count > 0) set ("slow_req_bt_count", count - 1);
+
   report_debug ("### Thread 0x%x has been busy for more than %g seconds.\n",
 		thread->id_number(), timeout);
   describe_all_threads();
@@ -5343,12 +5350,6 @@ int main(int argc, array tmp)
     cdt_filename += ".dump_threads";
     cdt_changed (getvar ("dump_threads_by_file"));
   }
-
-#ifndef NO_SLOW_REQ_BT
-  if (float timeout = query ("slow_req_bt"))
-    if (timeout > 0.0)
-      set_slow_req_timeout (timeout);
-#endif
 
 #ifdef ROXEN_DEBUG_MEMORY_TRACE
   restart_roxen_debug_memory_trace();
