@@ -9,7 +9,7 @@ inherit "roxen-module://filesystem";
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_filesystem",X,Y)
 // end of the locale related stuff
 
-LocaleString module_name = LOCALE(0,"JavaScript support modules: The Yahoo! User "
+LocaleString module_name = LOCALE(0,"JavaScript Support: The Yahoo! User "
 				    "Interface Library");
 LocaleString module_doc =
 LOCALE(0,"This sets The Yahoo! User Interface Library (YUI) as a virtual file system "
