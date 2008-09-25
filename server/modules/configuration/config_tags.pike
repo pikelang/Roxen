@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.198 2008/09/04 11:19:25 jonasw Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.199 2008/09/25 22:51:20 mast Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -1190,7 +1190,7 @@ string simpletag_cf_render_variable( string t, mapping m,
   {
     case "not":
       return
-	"<tr><td valign='top' width='20%'><b>"+
+	"<tr><td valign='top' width='30%'><b>"+
 	Roxen.html_encode_string(_("name"))+"</b></td>\n"
 	"<td valign='top'>"+_("form")+def+"</td></tr>\n"
 	"<tr><td colspan='2'>"+dfs+_("doc")+dfe+"</td></tr>\n";
@@ -1199,7 +1199,7 @@ string simpletag_cf_render_variable( string t, mapping m,
       if( chng )
 	extra = "bgcolor='"+usr("fade2")+"'";
       return "<tr>\n"
-	"<td valign='top' width='20%'><b>"+
+	"<td valign='top' width='30%'><b>"+
 	Roxen.html_encode_string(_("name"))+"</b></td>\n"
 	"<td valign='top' "+extra+">"+_("form")+def+"</td>\n"
 	"</tr>\n"
@@ -1232,7 +1232,7 @@ string simpletag_cf_render_variable( string t, mapping m,
       }
       return
 	extra+
-	"<tr><td valign='top' width='20%'><b>"+
+	"<tr><td valign='top' width='30%'><b>"+
 	Roxen.html_encode_string(_("name"))+"</b></td>"
 	"<td valign='top'>"+_("form")+"<br />"+def+"</td></tr>"
 	"<tr><td colspan='2'>"+dfs+_("doc")+dfe+"</td></tr>\n";
