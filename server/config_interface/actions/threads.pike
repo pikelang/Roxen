@@ -70,13 +70,6 @@ mixed parse( RequestID id )
 
   array(Thread.Thread) threads = all_threads();
 
-  mapping(Thread.Thread:string|int) thread_ids = ([]);
-  foreach (threads, Thread.Thread thread) {
-    string desc = sprintf ("%O", thread);
-    if (sscanf (desc, "Thread.Thread(%d)", int i)) thread_ids[thread] = i;
-    else thread_ids[thread] = desc;
-  }
-
   threads = Array.sort_array (
     threads,
     lambda (Thread.Thread a, Thread.Thread b) {
@@ -92,7 +85,7 @@ mixed parse( RequestID id )
       else if (b == this_thread())
 	return 0;
       else
-	return thread_ids[a] > thread_ids[b];
+	return a->id_number() > b->id_number();
     });
 
   string res =
@@ -100,15 +93,17 @@ mixed parse( RequestID id )
     "<p><cf-refresh/></p>\n";
   for (int i = 0; i < sizeof (threads); i++)
     res +=
-      "<h3>" + LOCALE(39,"Thread") + " " + thread_ids[threads[i]] +
+      sprintf ("<h3>%s 0x%x%s</h3>\n"
+	       "<ol> %s</ol>\n",
+	       LOCALE(39,"Thread"), threads[i]->id_number(),
 #ifdef THREADS
-      (threads[i] == roxen->backend_thread ?
-       " (" + LOCALE(38,"backend thread")+ ")" : "") +
+	       (threads[i] == roxen->backend_thread ?
+		" (" + LOCALE(38,"backend thread")+ ")" : ""),
+#else
+	       "",
 #endif
-      "</h3>\n"
-      "<ol> "+
-      format_backtrace(describe_backtrace(threads[i]->backtrace())/"\n",id)+
-      "</ol>";
+	       format_backtrace(describe_backtrace(threads[i]->backtrace())/
+				"\n", id));
 
   return res+"<p><cf-ok/></p>";
 }
