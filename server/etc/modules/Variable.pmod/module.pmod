@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.108 2008/08/15 12:33:54 mast Exp $
+// $Id: module.pmod,v 1.109 2008/09/25 20:29:44 mast Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -868,6 +868,13 @@ class Int
   {
     _may_be_empty = state;
   }
+}
+
+class TmpInt
+//! @[Int] that doesn't get saved.
+{
+  inherit Int;
+  void save() {}
 }
 
 
