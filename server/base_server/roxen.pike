@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.989 2008/09/25 20:40:14 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.990 2008/09/25 21:38:11 mast Exp $";
 
 //! @appears roxen
 //!
@@ -655,7 +655,7 @@ protected void dump_slow_req (Thread.Thread thread, float timeout)
   int count = query ("slow_req_bt_count");
   if (count > 0) set ("slow_req_bt_count", count - 1);
 
-  report_debug ("### Thread 0x%x has been busy for more than %g seconds.\n",
+  report_debug ("###### Thread 0x%x has been busy for more than %g seconds.\n",
 		thread->id_number(), timeout);
   describe_all_threads();
 }
@@ -4987,7 +4987,7 @@ void describe_all_threads()
   // have the backtraces. It also gives an atomic view of the state.
   object threads_disabled = _disable_threads();
 
-  report_debug("### Describing all Pike threads:\n\n");
+  report_debug("###### Describing all Pike threads:\n>>\n");
 
   array(Thread.Thread) threads = all_threads();
 
@@ -5005,7 +5005,7 @@ void describe_all_threads()
 
   int i;
   for(i=0; i < sizeof(threads); i++) {
-    report_debug("### Thread 0x%x%s:\n",
+    report_debug(">> ### Thread 0x%x%s:\n",
 		 threads[i]->id_number(),
 #ifdef THREADS
 		 threads[i] == backend_thread ? " (backend thread)" : ""
@@ -5013,10 +5013,13 @@ void describe_all_threads()
 		 ""
 #endif
 		);
-    report_debug(describe_backtrace(threads[i]->backtrace()) + "\n");
+    report_debug(">> " +
+		 replace (describe_backtrace (threads[i]->backtrace()),
+			  "\n", "\n>> ") +
+		 "\n");
   }
 
-  report_debug ("### Total %d Pike threads\n\n", sizeof (threads));
+  report_debug ("###### Total %d Pike threads\n\n", sizeof (threads));
 
   threads = 0;
   threads_disabled = 0;
