@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.109 2008/09/25 20:29:44 mast Exp $
+// $Id: module.pmod,v 1.110 2008/09/25 22:51:37 mast Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -917,7 +917,7 @@ class Text
   inherit String;
   constant type = "Text";
 
-  int cols = 60;
+  int cols = 56;
   //! The width of the textarea
 
   int rows = 10;
