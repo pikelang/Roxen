@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: read_config.pike,v 1.68 2005/04/02 14:46:51 mast Exp $
+// $Id: read_config.pike,v 1.69 2008/09/25 12:56:34 mast Exp $
 
 #include <module.h>
 
@@ -281,7 +281,7 @@ void remove_configuration( string name )
   last_read = 0; last_data = 0;
 }
 
-void store( string reg, mapping vars, int q,
+void store( string reg, mapping(string:mixed) vars, int q,
 	    Configuration current_configuration )
 {
   string cl;
@@ -312,14 +312,14 @@ void store( string reg, mapping vars, int q,
     data[ reg ] = m = vars;
   else
   {
-    mixed var;
     m = ([ ]);
-    foreach(indices(vars), var) {
-      if (vars[var]->save) {
+    foreach ([mapping(string:Variable.Variable)] vars;
+	     string name; Variable.Variable var) {
+      if (var->save) {
 	// Support for special save callbacks.
-	savers[vars[var]->save] = 1;
+	savers[var->save] = 1;
       } else {
-	m[ var ] = vars[ var ]->query();
+	m[ name ] = var->query();
       }
     }
     data[ reg ] = m;
