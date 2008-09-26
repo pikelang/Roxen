@@ -2,7 +2,7 @@
 //
 // Some stuff to do logging of a request through the server.
 //
-// $Id: request_trace.h,v 1.14 2008/09/03 16:14:28 jonasw Exp $
+// $Id: request_trace.h,v 1.15 2008/09/26 10:19:16 mast Exp $
 
 #ifndef REQUEST_TRACE_H
 #define REQUEST_TRACE_H
@@ -50,9 +50,9 @@
 #endif
 
 // SIMPLE_TRACE_ENTER and SIMPLE_TRACE_LEAVE are simpler variants of
-// the above macros: They handle sprintf style format lists and don't
-// take html encoded messages. Note the reversed argument order in
-// SIMPLE_TRACE_ENTER compared to TRACE_ENTER.
+// the above macros since they handle sprintf style format lists. Note
+// the reversed argument order in SIMPLE_TRACE_ENTER compared to
+// TRACE_ENTER.
 
 #define SIMPLE_TRACE_ENTER(OBJ, MSG...) do {				\
     array _msg_arr_;							\
@@ -74,9 +74,6 @@
 // debug logging which is activated with the DEBUG define in
 // combination with the magic _debug_ tag argument or the RXML_VERBOSE
 // or RXML_REQUEST_VERBOSE defines.
-//
-// These two macros do not take html encoded messages (which since 5.0
-// is true for all tracing macros).
 
 #define TAG_TRACE_ENTER(MSG...) do {					\
     array _msg_arr_;							\
