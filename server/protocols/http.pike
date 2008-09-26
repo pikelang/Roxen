@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.562 2008/08/18 13:18:40 erikd Exp $";
+constant cvs_version = "$Id: http.pike,v 1.563 2008/09/26 13:25:04 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -573,28 +573,23 @@ int things_to_do_when_not_sending_from_cache( )
 	  (post_form / "&") + (query / "&") : (post_form || query) / "&";
 
 	if (input_charset) {
-	  if (mixed err = catch (decode_query (split_query, input_charset))) {
+	  if (mixed err = catch {
+	      f = decode_query (f, split_query, input_charset);
+	    }) {
 	    report_debug ("Client %O sent query %O which failed to decode with "
 			  "its own charset %O: %s",
-			  client_var->fullname, split_query * "&",
+			  client_var->fullname, f + "?" + split_query * "&",
 			  input_charset, describe_error (err));
 	    input_charset = 0;
+	    f = http_decode_string (f);
 	  }
 	  else break decode_query;
 	}
 
-	decode_query (split_query, "roxen-http-default");
+	f = decode_query (f, split_query, "roxen-http-default");
       }
-    }
-
-    f = http_decode_string( f );
-    if (input_charset) {
-      if (mixed err =
-	  catch (f = Roxen.get_decoder_for_client_charset (input_charset) (f)))
-	report_debug ("Client %O requested path %O which failed to decode "
-		      "with the input charset %O: %s",
-		      client_var->fullname, f, input_charset,
-		      describe_error (err));
+      else
+	f = decode_query (f, ({}), "roxen-http-default");
     }
 
 #if 0
