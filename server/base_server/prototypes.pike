@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.219 2008/08/15 12:33:53 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.220 2008/09/26 13:20:27 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2231,9 +2231,14 @@ class RequestID
       });
   }
 
-  void decode_query (array(string) split_query, string decode_charset)
-  //! Parses each element in @[split_query] as a variable tuple on the
-  //! form @expr{var=val@} according to the MIME type
+  string decode_query (string path, array(string) split_query,
+		       string decode_charset)
+  //! Parses and decodes a query.
+  //!
+  //! @[path] is returned after decoding the transport encoding.
+  //!
+  //! Each element in @[split_query] is parsed as a variable tuple on
+  //! the form @expr{var=val@} according to the MIME type
   //! application/x-www-form-urlencoded (see section 17.13.4 in the
   //! HTML 4.01 standard).
   //!
@@ -2279,6 +2284,8 @@ class RequestID
   //! wider chars. That is compliant with the IRI standard (RFC 3987)
   //! and HTML 4.01 (appendix B.2.1).
   {
+    path = _Roxen.http_decode_string (path);
+
     mapping(string:array(string)) vars = ([]);
     string rest;
     {
@@ -2313,6 +2320,7 @@ class RequestID
 
       mapping(string:array(string)) decoded_vars = ([]);
       if (mixed err = catch {
+	  path = decoder (path);
 	  foreach (vars; string var; array(string) vals)
 	    decoded_vars[var] = map (vals, decoder);
 	  rest = decoder (rest);
@@ -2321,12 +2329,13 @@ class RequestID
 	if (decode_charset)
 	  report_debug ("Failed to decode query %O using charset %O derived "
 			"from magic_roxen_automatic_charset_variable %O: %s",
-			split_query * "&", decode_charset, magic[0],
-			describe_error (err));
+			({path, (split_query + ({rest})) * "&"}) * "?",
+			decode_charset, magic[0], describe_error (err));
 #if 0
 	else
 	  report_debug ("Failed to decode query %O using UTF-8: %s",
-			split_query * "&", describe_error (err));
+			({path, (split_query + ({rest})) * "&"}) * "?",
+			describe_error (err));
 #endif
 #endif
       }
@@ -2346,6 +2355,7 @@ class RequestID
 
       function(string:string) decoder =
 	Roxen->get_decoder_for_client_charset (decode_charset);
+      path = decoder (path);
       foreach (vars; string var; array(string) vals)
 	vars[var] = map (vals, decoder);
       rest = decoder (rest);
@@ -2362,12 +2372,14 @@ class RequestID
     }
 
     rest_query = rest;
+
+    return path;
   }
 
   string scan_for_query( string f )
   {
     if(sscanf(f,"%s?%s", f, query) == 2)
-      decode_query (query / "&", 0);
+      f = decode_query (f, query / "&", 0);
     return f;
   }
 
