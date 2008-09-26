@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.564 2008/09/26 13:39:12 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.565 2008/09/26 13:48:35 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -547,8 +547,6 @@ int things_to_do_when_not_sending_from_cache( )
   supports = (< "images", "gifinline", "forms", "mailto">);
 #endif
 
-  werror ("%O\n", raw_url);
-
   {
     string f = raw_url;
     sscanf (f, "%s?%s", f, query);
@@ -588,24 +586,25 @@ int things_to_do_when_not_sending_from_cache( )
 	}
 
 	f = decode_query (f, split_query, "roxen-http-default");
-	break decode_query;
       }
 
-      // No query to decode if we get here, only the path. Optimize
-      // decode_query with "roxen-http-default" since we know there's
-      // no magic_roxen_automatic_charset_variable.
-      f = http_decode_string (f);
-      if (input_charset) {
-	if (mixed err = catch {
-	    f = Roxen.get_decoder_for_client_charset (input_charset) (f);
-	  })
-	  report_debug ("Client %O requested path %O which failed to decode "
-			"with the input charset %O: %s",
-			client_var->fullname, f, input_charset,
-			describe_error (err));
+      else {
+	// No query to decode, only the path. Optimize decode_query
+	// with "roxen-http-default" since we know there's no
+	// magic_roxen_automatic_charset_variable.
+	f = http_decode_string (f);
+	if (input_charset) {
+	  if (mixed err = catch {
+	      f = Roxen.get_decoder_for_client_charset (input_charset) (f);
+	    })
+	    report_debug ("Client %O requested path %O which failed to decode "
+			  "with the input charset %O: %s",
+			  client_var->fullname, f, input_charset,
+			  describe_error (err));
+	}
+	else
+	  catch (f = utf8_to_string (f));
       }
-      else
-	catch (f = utf8_to_string (f));
     }
 
 #if 0
