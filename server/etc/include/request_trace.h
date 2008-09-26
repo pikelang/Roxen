@@ -2,7 +2,7 @@
 //
 // Some stuff to do logging of a request through the server.
 //
-// $Id: request_trace.h,v 1.15 2008/09/26 10:19:16 mast Exp $
+// $Id: request_trace.h,v 1.16 2008/09/26 10:20:38 mast Exp $
 
 #ifndef REQUEST_TRACE_H
 #define REQUEST_TRACE_H
@@ -17,10 +17,11 @@
 //
 // Roxen 5.0 compatibility notice:
 //
-//   Pre-5.0 these macros allowed html markup to pass through unquoted
-//   into the tracing machinery, but since the ultimate destination may
-//   not be a web page at all this capability has been removed. The
-//   Resolve Path wizard will now quote all strings instead.
+//   Pre-5.0 TRACE_ENTER and TRACE_LEAVE allowed html markup to pass
+//   through unquoted into the Resolve Path wizard page, but since the
+//   ultimate destination may not be a web page at all this capability
+//   has been removed. The Resolve Path wizard will now quote all
+//   strings instead.
 
 #ifdef REQUEST_TRACE
 
