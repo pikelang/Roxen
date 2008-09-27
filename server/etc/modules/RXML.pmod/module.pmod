@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.369 2008/09/16 10:17:32 mast Exp $
+// $Id: module.pmod,v 1.370 2008/09/27 18:28:54 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6066,8 +6066,8 @@ class Type
     lambda () {
       // Kludge to execute some code at object creation without
       // bothering with create(), which can be overridden.
-      if (!reg_types[this_object()->name])
-	reg_types[this_object()->name] = this_object();
+      if (!reg_types[this->name])
+	reg_types[this->name] = this;
       return PNone;
     }();
 
@@ -6403,6 +6403,35 @@ class TAny
   {
     return flag == 'O' &&
       ("RXML.t_any(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT);
+  }
+}
+
+TAnySeq t_any_seq = TAnySeq();
+//! An unspecified sequential type. I.e. just like @[RXML.t_any]
+//! except that it's sequential and values are always arrays.
+//!
+//! This is useful to collect several results of any type to an array.
+//! (Using @[RXML.t_any] would raise a "Cannot append another value
+//! ..." error if more than one result is given.)
+
+class TAnySeq
+{
+  inherit Type;
+  constant name = "any_seq";
+  constant sequential = 1;
+  constant empty_value = ({});
+  Type supertype = t_any;
+
+  array encode (mixed val, void|Type from)
+  {
+    return ({val});
+  }
+
+  string _sprintf (int flag)
+  {
+    return flag == 'O' &&
+      ("RXML.t_any_seq(" + (parser_prog && parser_prog->name) + ")" +
+       OBJ_COUNT);
   }
 }
 
