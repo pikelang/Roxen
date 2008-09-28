@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.371 2008/09/28 17:49:49 mast Exp $
+// $Id: module.pmod,v 1.372 2008/09/28 17:51:36 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6681,7 +6681,7 @@ class TScalar
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
-    if (!stringp (val) && !intp (val) && !floatp (val))
+    if (!stringp (val) && !intp (val) && !floatp (val) && val != empty)
       type_check_error (msg, args, "Expected scalar value, got %t.\n", val);
   }
 
@@ -6724,7 +6724,7 @@ class TNum
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
-    if (!intp (val) && !floatp (val))
+    if (!intp (val) && !floatp (val) && val != empty)
       type_check_error (msg, args, "Expected numeric value, got %t.\n", val);
   }
 
@@ -6772,7 +6772,7 @@ class TInt
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
-    if (!intp (val))
+    if (!intp (val) && val != empty)
       type_check_error (msg, args, "Expected integer value, got %t.\n", val);
   }
 
@@ -6817,7 +6817,7 @@ class TFloat
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
-    if (!floatp (val))
+    if (!floatp (val) && val != empty)
       type_check_error (msg, args, "Expected float value, got %t.\n", val);
   }
 
@@ -6877,8 +6877,13 @@ class TString
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
-    if (!stringp (val))
-      type_check_error (msg, args, "Expected string for %s, got %t.\n", name, val);
+    if (!stringp (val) && val != empty) {
+      if (name == "string")
+	type_check_error (msg, args, "Expected string, got %t.\n", val);
+      else
+	type_check_error (msg, args,
+			  "Expected string for %s, got %t.\n", name, val);
+    }
   }
 
   string encode (mixed val, void|Type from)
@@ -6916,6 +6921,28 @@ class TString
     return flag == 'O' &&
       ("RXML.t_string(" + (parser_prog && parser_prog->name) + ")" +
        OBJ_COUNT);
+  }
+}
+
+RXML.Type type_for_value (mixed val)
+//! Returns the type that fits the given value, or zero if none is
+//! found.
+//!
+//! The most basic type that fits the value is returned. In particular
+//! that means @[RXML.t_string] is returned for strings, not
+//! @[RXML.t_any_text] or some other text type.
+{
+  switch (sprintf ("%t", val)) {
+    case "int": return t_int;
+    case "float": return t_float;
+    case "string": return t_string;
+    case "array": return t_array;
+    case "mapping": return t_mapping;
+    case "object":
+      if (val->`[]) return t_mapping;
+      // Fall through.
+    default:
+      return 0;
   }
 }
 
