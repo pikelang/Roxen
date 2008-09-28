@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.370 2008/09/27 18:28:54 mast Exp $
+// $Id: module.pmod,v 1.371 2008/09/28 17:49:49 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6406,35 +6406,6 @@ class TAny
   }
 }
 
-TAnySeq t_any_seq = TAnySeq();
-//! An unspecified sequential type. I.e. just like @[RXML.t_any]
-//! except that it's sequential and values are always arrays.
-//!
-//! This is useful to collect several results of any type to an array.
-//! (Using @[RXML.t_any] would raise a "Cannot append another value
-//! ..." error if more than one result is given.)
-
-class TAnySeq
-{
-  inherit Type;
-  constant name = "any_seq";
-  constant sequential = 1;
-  constant empty_value = ({});
-  Type supertype = t_any;
-
-  array encode (mixed val, void|Type from)
-  {
-    return ({val});
-  }
-
-  string _sprintf (int flag)
-  {
-    return flag == 'O' &&
-      ("RXML.t_any_seq(" + (parser_prog && parser_prog->name) + ")" +
-       OBJ_COUNT);
-  }
-}
-
 TBottom t_bottom = TBottom();
 //! A sequential type accepting no values. This type is by definition
 //! a subtype of every other type except @[RXML.t_nil].
@@ -6519,6 +6490,78 @@ protected class TSame
   {
     return flag == 'O' &&
       ("RXML.t_same(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT);
+  }
+}
+
+TArray t_array = TArray();
+//! An array (with any content). This is like @[RXML.t_any] except
+//! that it's sequential and values are always arrays.
+//!
+//! This is useful to collect several results to an array. (Using
+//! @[RXML.t_any] would raise a "Cannot append another value
+//! ..." error if more than one result is given.)
+
+class TArray
+{
+  inherit TAny;
+  constant name = "array";
+  constant sequential = 1;
+  constant empty_value = ({});
+  Type supertype = t_any;
+
+  array encode (mixed val, void|Type from)
+  {
+    // Ugly special case to avoid getting RXML.empty in arrays.
+    // Conceptually it's perhaps more correct, but it probably just
+    // gets complicated in practice to handle a quirky object instead
+    // of a zero (which afterall has essentially the same meaning on
+    // the pike level).
+    return ({val != empty && val});
+  }
+
+  string _sprintf (int flag)
+  {
+    return flag == 'O' &&
+      ("RXML.t_array(" + (parser_prog && parser_prog->name) + ")" +
+       OBJ_COUNT);
+  }
+}
+
+TMapping t_mapping = TMapping();
+//! A mapping.
+//!
+//! This type is sequential, so more pairs can be added to a single
+//! mapping. If there are duplicate indices then later values override
+//! earlier.
+
+class TMapping
+{
+  inherit TAny;
+  constant name = "mapping";
+  constant sequential = 1;
+  constant empty_value = ([]);
+  Type supertype = t_any;
+
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    if (mappingp (val) || (objectp (val) && val->`[])) {
+      // Ok.
+    }
+    else if (val != empty)
+      type_check_error (msg, args, "Expected a mapping, got %t.\n", val);
+  }
+
+  mapping encode (mixed val, void|Type from)
+  {
+    type_check (val);
+    return val == empty ? empty_value : val;
+  }
+
+  string _sprintf (int flag)
+  {
+    return flag == 'O' &&
+      ("RXML.t_mapping(" + (parser_prog && parser_prog->name) + ")" +
+       OBJ_COUNT);
   }
 }
 
