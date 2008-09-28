@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.69 2008/09/13 14:38:38 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.70 2008/09/28 19:58:06 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -239,7 +239,8 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
   ltests++;
   tests++;
 
-  string rxml="", res;
+  string rxml="";
+  mixed res;
 
   string indent( int l, string what )
   {
@@ -330,11 +331,11 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			   throw(1);
 			 }
 
-			 if(!args["no-canon"])
+			 if(stringp (res) && !args["no-canon"])
 			   res = canon_html(res);
 			 else
 			   no_canon = 1;
-			 if (!args["no-strip-ws"])
+			 if (stringp (res) && !args["no-strip-ws"])
 			   res = strip_silly_ws (res);
 			 else
 			   no_strip_silly_ws = 1;
@@ -359,11 +360,11 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			   rxmlparser->getvar("quietr")->set(quietr);
 			 }
 
-			 if(!args["no-canon"])
+			 if(stringp (res) && !args["no-canon"])
 			   res = canon_html(res);
 			 else
 			   no_canon = 1;
-			 if (!args["no-strip-ws"])
+			 if (stringp (res) && !args["no-strip-ws"])
 			   res = strip_silly_ws (res);
 			 else
 			   no_strip_silly_ws = 1;
@@ -392,9 +393,11 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 					res, c);
 			     throw(1);
 			   }
+			   // FIXME: m->not
 			   test_ok( );
 			 }
 		       },
+
 		       "glob" :
 		       lambda(object t, mapping m, string c) {
 			 if( !glob(c, res) ) {
@@ -405,6 +408,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			 }
 			 test_ok( );
 		       },
+
 		       "has-value" :
 		       lambda(object t, mapping m, string c) {
 			 if( !has_value(res, c) ) {
@@ -415,6 +419,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			 }
 			 test_ok( );
 		       },
+
 		       "regexp" :
 		       lambda(object t, mapping m, string c) {
 			 if( !Regexp(c)->match(res) ) {
@@ -425,6 +430,30 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			 }
 			 test_ok( );
 		       },
+
+		       "equal":
+		       lambda(object t, mapping m, string c) {
+			 c = "constant c = (" + c + ");";
+			 program p;
+			 if (mixed err = catch (p = compile_string (c))) {
+			   test_error ("Failed\n(failed to compile %O)\n", c);
+			   throw (1);
+			 }
+			 mixed v;
+			 if (mixed err = catch (v = p()->c)) {
+			   test_error ("Failed\n(failed to clone and "
+				       "get value from %O)\n", c);
+			   throw (1);
+			 }
+			 if (!equal (res, v)) {
+			   if(m->not) return;
+			   test_error("Failed\n(result %O\ndoes not match %O)\n",
+				      res, v);
+			   throw(1);
+			 }
+			 test_ok( );
+		       },
+
 		       "pike" :
 		       lambda(object t, mapping m, string c) {
 			 c = "string test(string res) {\n" + c + "\n}";
@@ -448,6 +477,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			 test_ok( );
 		       },
     ]) )
+
     ->add_tags( ([ "add" : lambda(object t, mapping m, string c) {
 			     switch(m->what) {
 			       default:
