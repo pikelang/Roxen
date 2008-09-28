@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.34 2008/09/03 16:14:28 jonasw Exp $
+ * $Id: resolv.pike,v 1.35 2008/09/28 17:47:31 mast Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -186,9 +186,10 @@ string parse( RequestID id )
     "<input type='hidden' name='action' value='resolv.pike' />\n"
     "<font size='+1'><b>"+ name + "</b></font><p />\n"
     "<table cellpadding='0' cellspacing='10' border='0'>\n"
-    "<tr><td align='left'>" +LOCALE(29, "URL")+ ": </td><td align='left'>"
+    "<tr><th>" +LOCALE(29, "URL")+ ": </th><td>"
     "<input name='path' value='&form.path;' size='60' /></td></tr>\n"
-    "<tr><td align='left'>" +LOCALE(206, "User")+ ": </td><td align='left'>"
+    "<tr><th>" + LOCALE(0, "HTTP auth") + ": </th>"
+    "<td>" +LOCALE(206, "User")+ ": "
     "<input name='user'  value='&form.user;' size='12' />"
     "&nbsp;&nbsp;&nbsp;" +LOCALE(30,"Password")+ ": "
     "<input name='password' value='&form.password;' type='password' "
