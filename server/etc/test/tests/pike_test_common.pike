@@ -51,11 +51,13 @@ string do_describe_error( mixed err )
 {
   if( stringp( err ) )
     return indent(2,err + (strlen(err)?(err[-1] == '\n' ? "": "\n" ):""));
+#if 0
   catch {
     err = (array)err;
     err[1] = err[1][sizeof(err[1])-3..];
     return indent(2, describe_backtrace( err ) );
   };
+#endif
   return indent(2, describe_backtrace( err ) );
 }
 
