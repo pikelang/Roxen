@@ -172,8 +172,7 @@ protected string ex_cont(TagdocParser parser, mapping m, string c, string rt, vo
 {
   c=Parser.HTML()->add_container("ent", lambda(Parser.HTML parser, mapping m, string c) {
 					  return "&amp;"+c+";"; 
-					} )->
-    add_quote_tag("!--","","--")->feed(c)->read();
+					} )->feed(c)->read();
   string quoted = ex_quote(c);
   if(m->type=="box")
     return mktable( ({ ({ quoted }) }) );
@@ -188,7 +187,9 @@ protected string ex_cont(TagdocParser parser, mapping m, string c, string rt, vo
   if (m["any-result"]) {
     // Use if the example returns a non-xml result, e.g. an array.
     RXML.Parser p = RXML.t_any (id->conf->default_content_type->parser_prog)->
-      get_parser (RXML_CONTEXT, RXML_CONTEXT->tag_set);
+      get_parser (RXML_CONTEXT,
+		  RXML_CONTEXT ? RXML_CONTEXT->tag_set :
+		  id->conf->rxml_tag_set);
     p->write_end (c);
     mixed res = p->eval();
     parsed = String.capitalize (sprintf ("%t result: ", res)) +
