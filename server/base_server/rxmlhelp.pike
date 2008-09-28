@@ -24,7 +24,8 @@ string mktable(array table) {
     "border: 1px solid black; "
     "border-collapse: collapse; "
     "background: " TDBG "; "
-    "margin: 1px 0'>"
+    "width: 100%; "
+    "margin: 2px 0'>"
     "<tbody style='vertical-align: top'>\n";
 
   foreach(table, array row)
@@ -177,8 +178,6 @@ protected string ex_cont(TagdocParser parser, mapping m, string c, string rt, vo
   if(m->type=="box")
     return mktable( ({ ({ quoted }) }) );
 
-  if(!id) return "";
-
   if (m->type != "hr")
     c = "<colorscope bgcolor="+TDBG+">"+c+"</colorscope>";
 
@@ -187,9 +186,7 @@ protected string ex_cont(TagdocParser parser, mapping m, string c, string rt, vo
   if (m["any-result"]) {
     // Use if the example returns a non-xml result, e.g. an array.
     RXML.Parser p = RXML.t_any (id->conf->default_content_type->parser_prog)->
-      get_parser (RXML_CONTEXT,
-		  RXML_CONTEXT ? RXML_CONTEXT->tag_set :
-		  id->conf->rxml_tag_set);
+      get_parser (RXML_CONTEXT, RXML_CONTEXT->tag_set);
     p->write_end (c);
     mixed res = p->eval();
     parsed = String.capitalize (sprintf ("%t result: ", res)) +
@@ -283,7 +280,7 @@ protected string webserver_tag( mixed a, mixed b, string c )
 protected string format_doc(string|mapping doc, string name, object id, int level)
 {
   if(mappingp(doc)) {
-    if(id && id->misc->pref_languages) {
+    if(id->misc->pref_languages) {
       foreach(id->misc->pref_languages->get_languages()+({"en"}), string code)
       {
 	object lang=roxen->language_low(code);
@@ -427,15 +424,22 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
     documented_tags[name] = 1;
   }
 
-  object old_ctx = RXML.get_context();
-
   if( !id )
     error("find_tag_doc called without ID-object\n");
 
-  if( !level )
-    parse_rxml( "", id );
   RXML.TagSet tag_set = id->conf->rxml_tag_set;
-  
+
+  RXML.Context old_ctx, new_ctx;
+  if (!level) {
+    old_ctx = RXML.get_context();
+    new_ctx = tag_set->new_context (id);
+    // Fake one frame depth so that the context doesn't get finished
+    // after the first parse_rxml or similar. Have to do this since no
+    // real rxml parser is used on the top level here.
+    new_ctx->frame_depth = 1;
+    RXML.set_context (new_ctx);
+  }
+
   int new_gen=tag_set->generation;
 
   if(generation!=new_gen)
@@ -459,8 +463,11 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
 
   if(!sizeof(tags))
   {
-    if( !level )
+    if( !level ) {
+      new_ctx->frame_depth = 0;
+      new_ctx->eval_finish();
       RXML.set_context( old_ctx );
+    }
     return no_undoc ? "" : "<h4>That tag ("+name+") is not defined</h4>";
   }
 
@@ -507,8 +514,11 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
 			    NEXT_HDR_LEVEL (level), documented_tags);
     }
 
-    if( !level )
+    if( !level ) {
+      new_ctx->frame_depth = 0;
+      new_ctx->eval_finish();
       RXML.set_context( old_ctx );
+    }
     return res;
   }
 
@@ -517,8 +527,11 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
     sscanf(name,"%*s#%s", name);
     name="plugin "+name;
   }
-  if( !level )
+  if( !level ) {
+    new_ctx->frame_depth = 0;
+    new_ctx->eval_finish();
     RXML.set_context( old_ctx );
+  }
   return (no_undoc ? "" : 
 	  "<h4>No documentation available for \""+name+"\".</h4>\n");
 }
