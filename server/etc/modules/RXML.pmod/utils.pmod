@@ -7,7 +7,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.33 2006/08/22 12:21:35 mast Exp $
+//! $Id: utils.pmod,v 1.34 2008/09/28 12:10:07 mast Exp $
 
 constant is_RXML_encodable = 1;
 
@@ -52,18 +52,20 @@ final string format_short (mixed val, void|int length)
       }
       res += "])";
     }
-    else {
-      if (stringp (val) && sizeof (val) > length - sizeof (res)) {
+    else if (stringp (val)) {
+      if (sizeof (val) > length - sizeof (res)) {
 	sscanf (val, "%[ \t\n\r]", string lead);
 	if (sizeof (lead) > sizeof ("/.../") && sizeof (lead) < sizeof (val))
 	  val = val[sizeof (lead)..], res += "/.../";
 	if (sizeof (val) > length - sizeof (res)) {
-	  res += sprintf ("%O", val[..length - sizeof (res) - 1]);
+	  res += sprintf ("%q", val[..length - sizeof (res) - 1]);
 	  throw (0);
 	}
       }
-      res += sprintf ("%O", val);
+      res += sprintf ("%q", val);
     }
+    else
+      res += sprintf ("%O", val);
   };
 
   mixed err = catch {
