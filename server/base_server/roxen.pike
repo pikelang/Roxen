@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.991 2008/09/29 15:57:33 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.992 2008/09/29 16:10:56 mast Exp $";
 
 //! @appears roxen
 //!
@@ -731,7 +731,7 @@ protected void dump_slow_req (Thread.Thread thread, float timeout)
     report_debug ("###### %s 0x%x has been busy for more than %g seconds.\n",
 		  thread == backend_thread ? "Backend thread" : "Thread",
 		  thread->id_number(), timeout);
-    describe_all_threads (threads_disabled);
+    describe_all_threads (0, threads_disabled);
   }
 
   threads_disabled = 0; 	// Paranoia.
@@ -1725,8 +1725,13 @@ class Protocol
         if(!mu) 
         {
           mu = urls[sorted_urls[0]];
-          if(!(c=mu->conf)->inited )
-            c->enable_all_modules();
+	  if(!(c=mu->conf)->inited ) {
+	    handle (lambda () {
+		      c->enable_all_modules();
+		      call_out (requesthandler, 0, q, this, c);
+		    });
+	    return;
+	  }
         } else
           c = mu->conf;
       }
@@ -5054,7 +5059,8 @@ Pipe.pipe shuffle(Stdio.File from, Stdio.File to,
 }
 
 // Dump all threads to the debug log.
-void describe_all_threads (void|object threads_disabled)
+void describe_all_threads (void|int ignored, // Might be the signal number.
+			   void|object threads_disabled)
 {
   if (!threads_disabled)
     // Disable all threads to avoid potential locking problems while we
