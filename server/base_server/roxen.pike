@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.990 2008/09/25 21:38:11 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.991 2008/09/29 15:57:33 mast Exp $";
 
 //! @appears roxen
 //!
@@ -471,14 +471,14 @@ private void really_low_shutdown(int exit_code)
   roxenloader.real_exit( exit_code ); // Now we die...
 }
 
-private int _recurse;
+private int shutdown_recurse;
 
 // Shutdown Roxen
 //  exit_code = 0	True shutdown
 //  exit_code = -1	Restart
 private void low_shutdown(int exit_code)
 {
-  if(_recurse >= 4)
+  if(shutdown_recurse >= 4)
   {
     if (mixed err =
 	catch (report_notice("Exiting roxen (spurious signals received).\n")) ||
@@ -491,7 +491,10 @@ private void low_shutdown(int exit_code)
 #endif /* THREADS */
     roxenloader.real_exit(exit_code);
   }
-  if (_recurse++) return;
+  if (shutdown_recurse++) return;
+
+  // Turn off the backend thread monitor while we're shutting down.
+  slow_be_timeout_changed();
 
   if (mixed err = catch(stop_all_configurations()))
     werror (describe_backtrace (err));
@@ -611,7 +614,7 @@ class Queue
 // longer than a configurable timeout.
 
 protected Pike.Backend slow_req_monitor; // Set iff slow req bt is enabled.
-protected float slow_req_timeout;
+protected float slow_req_timeout, slow_be_timeout;
 
 protected void slow_req_monitor_thread (Pike.Backend my_monitor)
 {
@@ -619,6 +622,30 @@ protected void slow_req_monitor_thread (Pike.Backend my_monitor)
   // monitor threads.
   while (slow_req_monitor == my_monitor)
     slow_req_monitor (3600);
+}
+
+protected mixed slow_be_call_out;
+
+protected void slow_be_before_cb()
+{
+#ifdef DEBUG
+  if (this_thread() != backend_thread) error ("Run from wrong thread.\n");
+#endif
+  if (Pike.Backend monitor = slow_be_call_out && slow_req_monitor) {
+    monitor->remove_call_out (slow_be_call_out);
+    slow_be_call_out = 0;
+  }
+}
+
+protected void slow_be_after_cb()
+{
+#ifdef DEBUG
+  if (this_thread() != backend_thread) error ("Run from wrong thread.\n");
+#endif
+  if (slow_be_timeout > 0.0)
+    if (Pike.Backend monitor = slow_req_monitor)
+      slow_be_call_out = monitor->call_out (dump_slow_req, slow_be_timeout,
+					    this_thread(), slow_be_timeout);
 }
 
 void slow_req_count_changed()
@@ -634,11 +661,13 @@ void slow_req_count_changed()
     monitor = slow_req_monitor = Pike.SmallBackend();
     Thread.thread_create (slow_req_monitor_thread, monitor);
     monitor->call_out (lambda () {}, 0); // Safeguard if there's a race.
+    slow_be_timeout_changed();
   }
 
   else if (monitor) {		// Stop.
     slow_req_monitor = 0;
     monitor->call_out (lambda () {}, 0); // To wake up the thread.
+    slow_be_timeout_changed();
   }
 }
 
@@ -650,14 +679,62 @@ void slow_req_timeout_changed()
   slow_req_timeout = query ("slow_req_bt_timeout");
 }
 
+void slow_be_timeout_changed()
+{
+#ifdef DEBUG
+  if (query ("slow_be_bt_timeout") < 0) error ("Invalid timeout.\n");
+#endif
+  slow_be_timeout = query ("slow_be_bt_timeout");
+
+#ifdef DEBUG
+  if ((Pike.DefaultBackend->before_callback &&
+       Pike.DefaultBackend->before_callback != slow_be_before_cb) ||
+      (Pike.DefaultBackend->after_callback &&
+       Pike.DefaultBackend->after_callback != slow_be_after_cb))
+    werror ("Pike.DefaultBackend already hooked up with "
+	    "other before/after callbacks - they get overwritten: %O/%O\n",
+	    Pike.DefaultBackend->before_callback,
+	    Pike.DefaultBackend->after_callback);
+#endif
+
+  if (query ("slow_req_bt_count") && slow_be_timeout > 0.0 &&
+      // Don't trig if we're shutting down.
+      !shutdown_recurse) {
+    Pike.DefaultBackend->before_callback = slow_be_before_cb;
+    Pike.DefaultBackend->after_callback = slow_be_after_cb;
+  }
+  else {
+    Pike.DefaultBackend->before_callback = 0;
+    Pike.DefaultBackend->after_callback = 0;
+    if (Pike.Backend monitor = slow_be_call_out && slow_req_monitor) {
+      monitor->remove_call_out (slow_be_call_out);
+      slow_be_call_out = 0;
+    }
+  }
+}
+
 protected void dump_slow_req (Thread.Thread thread, float timeout)
 {
+  object threads_disabled = _disable_threads();
+
   int count = query ("slow_req_bt_count");
   if (count > 0) set ("slow_req_bt_count", count - 1);
 
-  report_debug ("###### Thread 0x%x has been busy for more than %g seconds.\n",
-		thread->id_number(), timeout);
-  describe_all_threads();
+  if (thread == backend_thread && !slow_be_call_out) {
+    // Avoid false alarms for the backend thread if we got here due to
+    // a race. Should perhaps have something like this for the handler
+    // threads too, but otoh races are more rare there due to the
+    // longer timeouts.
+  }
+
+  else {
+    report_debug ("###### %s 0x%x has been busy for more than %g seconds.\n",
+		  thread == backend_thread ? "Backend thread" : "Thread",
+		  thread->id_number(), timeout);
+    describe_all_threads (threads_disabled);
+  }
+
+  threads_disabled = 0; 	// Paranoia.
 }
 
 #endif	// !NO_SLOW_REQ_BT
@@ -705,7 +782,8 @@ local protected void handler_thread(int id)
   {
     int thread_flagged_as_busy;
 #ifndef NO_SLOW_REQ_BT
-    mixed slow_req_call_out;
+    Pike.Backend monitor;
+    mixed call_out;
 #endif
     if(q=catch {
       do {
@@ -720,16 +798,14 @@ local protected void handler_thread(int id)
 	  thread_flagged_as_busy = 1;
 
 #ifndef NO_SLOW_REQ_BT
-	  if (Pike.Backend monitor =
+	  if (h[0] != bg_process_queue &&
 	      // Leave out bg_process_queue. It makes a timeout on
 	      // every individual job instead.
-	      h[0] != bg_process_queue &&
-	      slow_req_monitor) {
-	    slow_req_call_out =
-	      monitor->call_out (dump_slow_req, slow_req_timeout,
-				 this_thread(), slow_req_timeout);
+	      (monitor = slow_req_monitor) && slow_req_timeout > 0.0) {
+	    call_out = monitor->call_out (dump_slow_req, slow_req_timeout,
+					  this_thread(), slow_req_timeout);
 	    h[0](@h[1]);
-	    monitor->remove_call_out (slow_req_call_out);
+	    monitor->remove_call_out (call_out);
 	  }
 	  else
 #endif
@@ -772,8 +848,7 @@ local protected void handler_thread(int id)
       if (thread_flagged_as_busy)
 	busy_threads--;
 #ifndef NO_SLOW_REQ_BT
-      if (Pike.Backend monitor = slow_req_call_out && slow_req_monitor)
-	monitor->remove_call_out (slow_req_call_out);
+      if (call_out) monitor->remove_call_out (call_out);
 #endif
       if (h = catch {
 	report_error(/*LOCALE("", "Uncaught error in handler thread: %s"
@@ -1069,7 +1144,8 @@ protected void bg_process_queue()
     min (time() - bg_last_busy, bg_time_buffer_max) * (int) (1 / 0.04);
 
 #ifndef NO_SLOW_REQ_BT
-  mixed slow_req_call_out;
+  Pike.Backend monitor;
+  mixed call_out;
 #endif
 
   if (mixed err = catch {
@@ -1104,10 +1180,9 @@ protected void bg_process_queue()
       float task_vtime, task_rtime;
 
 #ifndef NO_SLOW_REQ_BT
-      if (Pike.Backend monitor = slow_req_monitor) {
-	slow_req_call_out =
-	  monitor->call_out (dump_slow_req, slow_req_timeout,
-			     this_thread(), slow_req_timeout);
+      if ((monitor = slow_req_monitor) && slow_req_timeout > 0.0) {
+	call_out = monitor->call_out (dump_slow_req, slow_req_timeout,
+				      this_thread(), slow_req_timeout);
 #endif
 	int start_hrtime = gethrtime (1);
 	task_vtime = gauge {
@@ -1118,7 +1193,7 @@ protected void bg_process_queue()
 	  };
 	task_rtime = (gethrtime (1) - start_hrtime) / 1e9;
 #ifndef NO_SLOW_REQ_BT
-	monitor->remove_call_out (slow_req_call_out);
+	monitor->remove_call_out (call_out);
       }
 #endif
 
@@ -1153,8 +1228,7 @@ protected void bg_process_queue()
     }
   }) {
 #ifndef NO_SLOW_REQ_BT
-    if (Pike.Backend monitor = slow_req_call_out && slow_req_monitor)
-      monitor->remove_call_out (slow_req_call_out);
+    if (call_out) monitor->remove_call_out (call_out);
 #endif
     bg_process_running = 0;
     handle (bg_process_queue);
@@ -4980,12 +5054,12 @@ Pipe.pipe shuffle(Stdio.File from, Stdio.File to,
 }
 
 // Dump all threads to the debug log.
-void describe_all_threads()
+void describe_all_threads (void|object threads_disabled)
 {
-#if constant (thread_create)
-  // Disable all threads to avoid potential locking problems while we
-  // have the backtraces. It also gives an atomic view of the state.
-  object threads_disabled = _disable_threads();
+  if (!threads_disabled)
+    // Disable all threads to avoid potential locking problems while we
+    // have the backtraces. It also gives an atomic view of the state.
+    threads_disabled = _disable_threads();
 
   report_debug("###### Describing all Pike threads:\n>>\n");
 
@@ -5023,10 +5097,6 @@ void describe_all_threads()
 
   threads = 0;
   threads_disabled = 0;
-#else
-  report_debug("Describing single thread:\n%s\n\n",
-	       describe_backtrace (backtrace()));
-#endif
 
 #ifdef DEBUG
   report_debug (RoxenDebug.report_leaks());
@@ -5353,6 +5423,10 @@ int main(int argc, array tmp)
     cdt_filename += ".dump_threads";
     cdt_changed (getvar ("dump_threads_by_file"));
   }
+
+  slow_req_count_changed();
+  slow_req_timeout_changed();
+  slow_be_timeout_changed();
 
 #ifdef ROXEN_DEBUG_MEMORY_TRACE
   restart_roxen_debug_memory_trace();

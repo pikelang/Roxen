@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.113 2008/09/25 20:40:14 mast Exp $
+// $Id: global_variables.pike,v 1.114 2008/09/29 15:57:33 mast Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -31,6 +31,7 @@ private int(0..1) ident_disabled_p() { return [int(0..1)]query("default_ident");
 protected void cdt_changed (Variable.Variable v);
 void slow_req_count_changed();
 void slow_req_timeout_changed();
+void slow_be_timeout_changed();
 
 #ifdef SNMP_AGENT
 private int(0..1) snmp_disabled() { return !query("snmp_agent"); }
@@ -641,9 +642,10 @@ process to get a thread dump.</p>
     LOCALE(0, "Logging: Dump threads for slow requests"),
     LOCALE(0, #"\
 <p>This enables a monitor that dumps all the threads in the debug log
-whenever any request or background job has been running for more than
-a set number of seconds, which is configured with the \"Slow request
-timeout\" setting.</p>
+whenever any request, background job or the backend thread has been
+running for more than a set number of seconds, which is configured
+with the \"Slow request timeout\" and \"Slow backend timeout\"
+settings.</p>
 
 <p>This setting is a counter: A positive number stops the monitor
 after that many thread dumps have been made, -1 enables the monitor
@@ -668,8 +670,7 @@ or in the DEFINES environment variable).</p>
 #ifndef NO_SLOW_REQ_BT
       slow_req_count_changed();
 #else
-      v->set_warning (
-	LOCALE(0, "Feature disabled by NO_SLOW_REQ_BT define."));
+      v->set_warning (LOCALE(0, "Feature disabled by NO_SLOW_REQ_BT define."));
 #endif
     });
 
@@ -677,13 +678,39 @@ or in the DEFINES environment variable).</p>
 	      LOCALE(0, "Logging: Slow request timeout"),
 	      TYPE_FLOAT,
 	      LOCALE(0, #"\
-<p>The timeout in seconds for the slow request monitor. See the \"Dump
-threads for slow requests\" setting for details.</p>"));
-  v->set_range (1e-3, Variable.no_limit);
+<p>The timeout in seconds for requests or background jobs to trig a
+thread dump. Zero disables monitoring of those. See the \"Dump threads
+for slow requests\" setting for details.</p>"));
+  v->set_range (0.0, Variable.no_limit);
   v->set_precision (3);
 #ifndef NO_SLOW_REQ_BT
   v->set_changed_callback (lambda (Variable.Variable v) {
 			     slow_req_timeout_changed();
+			   });
+#endif
+
+  v = defvar ("slow_be_bt_timeout", 0.05,
+	      LOCALE(0, "Logging: Slow backend timeout"),
+	      TYPE_FLOAT,
+	      LOCALE(0, #"\
+<p>The timeout in seconds for the backend thread to trig a thread
+dump. Zero disables monitoring of it. See the \"Dump threads for slow
+requests\" setting for details.</p>
+
+<p>The backend thread is a special thread that manages most I/O and
+directs the incoming requests to the handler threads. It should never
+be occupied for a significant amount of time since that would make the
+server essentially unresponsive. Therefore this timeout should be
+small.</p>
+
+<p>Note that a good value for this is very dependent on hardware. The
+default setting here is conservative and probably should be lowered to
+be of real use.</p>"));
+  v->set_range (0.0, Variable.no_limit);
+  v->set_precision (3);
+#ifndef NO_SLOW_REQ_BT
+  v->set_changed_callback (lambda (Variable.Variable v) {
+			     slow_be_timeout_changed();
 			   });
 #endif
 
