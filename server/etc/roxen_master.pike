@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.150 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.151 2008/09/29 17:22:26 mast Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -680,11 +680,6 @@ int loaded_at( program p )
 //   return ({ make_ofilename(fname) }) + ::query_precompiled_names(fname);
 // }
 
-#if constant(_static_modules.Builtin.mutex)
-#define THREADED
-// NOTE: compilation_mutex is inherited from the original master.
-#endif
-
 mapping(string:function|int) has_set_on_load = ([]);
 void set_on_load( string f, function cb )
 {
@@ -698,19 +693,18 @@ program low_findprog(string pname, string ext,
   Stat s;
   string fname=pname+ext;
 
-#ifdef THREADED
   object key;
-  // FIXME: The catch is needed, since we might be called in
-  // a context when threads are disabled.
-  // (compile() disables threads).
   mixed err = catch {
     key=compilation_mutex->lock(2);
   };
-  if (err) {
+  if (err &&
+      // Ugly kludge to ignore the error we can get if we're being
+      // called from within the compiler, which uses _disable_threads.
+      !has_value (describe_error (err),
+		  "Cannot wait for mutexes when threads are disabled")) {
     werror( "low_findprog: Caught spurious error:\n"
 	    "%s\n", describe_backtrace(err) );
   }
-#endif
 
 #if constant(PIKE_MODULE_RELOC)
   fname = unrelocate_module(fname);
