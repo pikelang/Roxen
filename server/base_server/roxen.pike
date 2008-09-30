@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.993 2008/09/30 12:18:17 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.994 2008/09/30 12:25:13 mast Exp $";
 
 //! @appears roxen
 //!
@@ -493,8 +493,10 @@ private void low_shutdown(int exit_code)
   }
   if (shutdown_recurse++) return;
 
+#ifndef NO_SLOW_REQ_BT
   // Turn off the backend thread monitor while we're shutting down.
   slow_be_timeout_changed();
+#endif
 
   if (mixed err = catch(stop_all_configurations()))
     werror (describe_backtrace (err));
