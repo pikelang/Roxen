@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.992 2008/09/29 16:10:56 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.993 2008/09/30 12:18:17 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1183,7 +1183,6 @@ protected void bg_process_queue()
       if ((monitor = slow_req_monitor) && slow_req_timeout > 0.0) {
 	call_out = monitor->call_out (dump_slow_req, slow_req_timeout,
 				      this_thread(), slow_req_timeout);
-#endif
 	int start_hrtime = gethrtime (1);
 	task_vtime = gauge {
 	    if (task[0]) // Ignore things that have become destructed.
@@ -1192,10 +1191,18 @@ protected void bg_process_queue()
 	      task[0] (@task[1]);
 	  };
 	task_rtime = (gethrtime (1) - start_hrtime) / 1e9;
-#ifndef NO_SLOW_REQ_BT
 	monitor->remove_call_out (call_out);
       }
+      else
 #endif
+      {
+	int start_hrtime = gethrtime (1);
+	task_vtime = gauge {
+	    if (task[0])
+	      task[0] (@task[1]);
+	  };
+	task_rtime = (gethrtime (1) - start_hrtime) / 1e9;
+      }
 
       if (task_rtime > 60.0)
 	report_warning ("Warning: Background job took more than one minute "
@@ -5430,9 +5437,11 @@ int main(int argc, array tmp)
     cdt_changed (getvar ("dump_threads_by_file"));
   }
 
+#ifndef NO_SLOW_REQ_BT
   slow_req_count_changed();
   slow_req_timeout_changed();
   slow_be_timeout_changed();
+#endif
 
 #ifdef ROXEN_DEBUG_MEMORY_TRACE
   restart_roxen_debug_memory_trace();
