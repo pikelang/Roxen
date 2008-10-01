@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.68 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.69 2008/10/01 12:24:30 jonasw Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -91,9 +91,10 @@ class JSInsert
   private mapping(string:string) args;
   private string content = "";
 
-  void add(string s)
+  void add(string s, void|int(0..1) avoid_duplicates)
   {
-    content += s;
+    if (!avoid_duplicates || !has_value(content, s))
+      content += s;
   }
 
   string get()
@@ -169,7 +170,8 @@ string c_js_quote(string name, mapping args, string contents)
 };
 
 private
-string container_js_write(string name, mapping args, string contents, object id)
+string container_js_write(string name, mapping args, string contents,
+			  RequestID id)
 {
   string c_script(string name, mapping args, string contents, mapping xargs)
   {
@@ -243,14 +245,15 @@ class TagEmitJSHidePopup {
 
 // Compatibility. The tag js-link is depricated.
 private string container_js_link(string name, mapping args,
-				 string contents, object id)
+				 string contents, RequestID id)
 {
   args->onMouseOver = "clearToPopup('"+(id->misc->_popupparent||"none")+"')";
   return make_container_unquoted("a", args, contents);
 }
 
 private
-string container_js_popup(string name, mapping args, string contents, object id)
+string container_js_popup(string name, mapping args, string contents,
+			  RequestID id)
 {
   // Link arguments.
   mapping largs = copy_value(args - (< "args-variable", "label", "props",
@@ -284,12 +287,17 @@ string container_js_popup(string name, mapping args, string contents, object id)
   largs[event] = "return showPopup(event, '"+popupname+"', '"+popupparent+
 		 "', "+args->props+");";
   
+  string css_ident = "#" + popupname;
+  string shared_css = args["shared-css-class"];
+  if (shared_css) {
+    css_ident = "." + shared_css;
+  }
   get_jss(id)->get_insert("style")->
-    add("#"+popupname+" {position:absolute; "
+    add(css_ident + " {position:absolute; "
 	"left:0; top:0; visibility:hidden; "+
 	(id->supports->msie?"width:1; ":"")+
 	"z-index:"+
-	(id->misc->_popuplevel+1)+"}\n");
+	(id->misc->_popuplevel+1)+"}\n", 1);
   
   string old_pparent = id->misc->_popupparent;
   id->misc->_popupparent = popupname;
@@ -302,8 +310,9 @@ string container_js_popup(string name, mapping args, string contents, object id)
   if(args["event-variable"])
     id->variables[args["event-variable"]] = largs[event];
 
+  string css_class = shared_css ? (" class='" + shared_css + "'") : "";
   get_jss(id)->get_insert("div")->
-    add("<div id='"+popupname+"'>\n"+
+    add("<div id='" + popupname + "'" + css_class + ">\n"+
 	Roxen.parse_rxml(contents, id)+"</div>\n");
   
   id->misc->_popupparent = old_pparent;
@@ -589,6 +598,11 @@ javascript support.</p></desc>
    Default is 'popup'.
    You only need to specify this to prevent name clashes
    if you include other pages using popups in your page.</p>
+</attr>
+
+<attr name='shared-css-class' value='string'>
+  <p>Optional CSS class name which is applied to popups. This can be
+     used to minimize the number of ID-specific styles that are generated.</p>
 </attr>
 
 <attr name='props' value='javascript object name' default='default_props'>"+
