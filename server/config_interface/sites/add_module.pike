@@ -1,4 +1,4 @@
-// $Id: add_module.pike,v 1.88 2008/06/12 07:24:19 erikd Exp $
+// $Id: add_module.pike,v 1.89 2008/10/01 09:20:18 jonasw Exp $
 
 #include <config_interface.h>
 #include <module.h>
@@ -334,8 +334,7 @@ array(string) get_module_list( function describe_module,
     mixed r = w[i];
     if(!classes[r[0]])
       classes[r[0]] = ([ "doc":r[1], "modules":({}) ]);
-    if( mods[i]->get_description() )
-      classes[r[0]]->modules += ({ mods[i] });
+    classes[r[0]]->modules += ({ mods[i] });
   }
 
   multiset(ModuleInfo) search_modules;
@@ -347,7 +346,8 @@ array(string) get_module_list( function describe_module,
 	lower_case(((string) m->get_name() || "") + "\0" +
 		   m->sname + "\0" +
 		   m->filename + "\0" +
-		   Roxen.html_decode_string((string) m->get_description()||""));
+		   Roxen.html_decode_string((string) m->get_description() ||
+					    LOCALE(0, "Undocumented")));
     search_miss:
       {
 	foreach(mod_query_words, string w)
@@ -451,10 +451,10 @@ function describe_module_normal( int image )
 	Roxen.html_encode_string(module->get_name()),
 	Roxen.html_encode_string (module->sname),
 	(image?module_image(module->type):""),
-     module->sname,
-   LOCALE(251, "Add Module"),
-   module->get_description(),
-     LOCALE(266, "Will be loaded from: ")+module->filename
+	module->sname,
+	LOCALE(251, "Add Module"),
+	module->get_description() || LOCALE(0, "Undocumented"),
+	LOCALE(266, "Will be loaded from: ")+module->filename
 );
     } else {
       if( block == module )
@@ -560,7 +560,7 @@ return sprintf(
    module->sname,
    //Roxen.html_encode_string(strip_leading(module->get_name())),
    Roxen.html_encode_string(module->get_name()),
-   module->get_description(),
+   module->get_description() || LOCALE(0, "Undocumented"),
    LOCALE(266, "Will be loaded from: ")+module->filename
   );
   } else {
