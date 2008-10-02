@@ -103,7 +103,7 @@ string inherit_tree( RoxenModule m )
   mixed err = catch { // won't work for programs in other programs.
     if( m->get_inherit_tree )
       return m->get_inherit_tree( );
-    return "<ul style='padding-left: 2ex'>" +
+    return "<ul style='padding-left: 2ex; list-style-type: disc'>" +
       rec_print_tree( Program.inherit_tree( object_program(m) ) ) +
       "</ul>";
   };
