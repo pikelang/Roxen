@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.994 2008/09/30 12:25:13 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.995 2008/10/02 18:27:02 mast Exp $";
 
 //! @appears roxen
 //!
@@ -90,15 +90,38 @@ string query_configuration_dir()
   return configuration_dir;
 }
 
-string filename( program|object o )
+array(string|int) filename_2 (program|object o)
 {
   if( objectp( o ) )
     o = object_program( o );
 
-  string fname = master()->program_name( o );
-  if( !fname )
-    fname = "Unknown Program";
-  return fname-(getcwd()+"/");
+  string fname = Program.defined (o);
+  int line;
+  if (fname) {
+    array(string) p = fname / ":";
+    if (sizeof (p) > 1 && p[-1] != "" && sscanf (p[-1], "%d%*c", int l) == 1) {
+      fname = p[..<1] * ":";
+      line = l;
+    }
+  }
+
+  else if( !fname ) {
+    fname = master()->program_name( o );
+    if (!fname)
+      return ({0, 0});
+  }
+
+  string cwd = getcwd() + "/";
+  if (has_prefix (fname, cwd))
+    fname = fname[sizeof (cwd)..];
+
+  return ({fname, line});
+}
+
+string filename( program|object o )
+{
+  [string fname, int line] = filename_2 (o);
+  return fname || "(unknown program)";
 }
 
 protected int once_mode;
