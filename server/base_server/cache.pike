@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: cache.pike,v 1.90 2008/08/15 12:33:53 mast Exp $
+// $Id: cache.pike,v 1.91 2008/10/04 20:08:14 mast Exp $
 
 // #pragma strict_types
 
@@ -65,6 +65,35 @@ protected array(int) memory_usage_summary()
     else if (has_suffix (descr, "_bytes")) bytes += amount;
   return ({count, bytes});
 }
+#endif
+
+#ifdef DEBUG_COUNT_MEM
+int count_memory (int|mapping opts, mixed what)
+{
+  if (intp (opts))
+    opts = (["lookahead": opts,
+	     "collect_stats": 1,
+	     //"collect_internals": 1,
+	     //"collect_externals": 1,
+	   ]);
+  else
+    opts += (["collect_stats": 1]);
+  float t = gauge (Pike.count_memory (opts, what));
+  if (!stringp (what))
+    werror ("%s: size %d time %g int %d cyc %d ext %d vis %d revis %d "
+	    "rnd %d wqa %d\n",
+	    (arrayp (what) && sizeof (what) == 4 && objectp (what[1]) ?
+	     sprintf ("%O", what[1]) : sprintf ("%t", what)),
+	    opts->size, t, opts->internal, opts->cyclic, opts->external,
+	    opts->visits, opts->revisits, opts->rounds, opts->work_queue_alloc);
+#if 0
+  werror ("internals: %O\n", opts->collect_internals);
+  werror ("externals: %O\n", opts->collect_externals);
+#endif
+  return opts->size;
+}
+#else
+#define count_memory Pike.count_memory
 #endif
 
 void flush_memory_cache (void|string in)
@@ -173,11 +202,7 @@ mapping(string:array(int)) status()
     //  We only show names up to the first ":" if present. This lets us
     //  group entries together in the status table.
     string show_name = (name / ":")[0];
-    int size;
-    if (catch (size = sizeof(encode_value(cache[name]))))
-      // Bogus fallback, but using encode_value for this is fairly
-      // bogus in the first place.
-      size = 1024;
+    int size = count_memory (1, cache[name]);
     array(int) entry = ({ sizeof(cache[name]),
 			  hits[name],
 			  all[name],
@@ -276,21 +301,10 @@ void cache_clean()
 	    continue;
 	  } else {
 #endif /* TIME_BASED_CACHE */
-	    if (catch{
-		entry[SIZE] = sizeof(encode_value(idx)) +
-		  sizeof(encode_value(entry[DATA]));
-	      }) {
-	      // encode_value() failed,
-	      // probably because some object is in there...
-
-	      // FIXME: We probably ought to have a special case
-	      //        for PCode here.
-
-	      // We guess that it takes 1KB space.
-	      entry[SIZE] = 1024;
-	    }
-	    entry[SIZE] = (entry[SIZE] + (ENTRY_SIZE + 2)*svalsize + 4)/100;
-	    // (Entry size + cache overhead) / arbitrary factor
+	    entry[SIZE] = (count_memory (1, idx) +
+			   count_memory (1, entry)) / 100;
+	    // The 100 above is an "arbitrary factor", whatever that
+	    // means.. /mast
 #ifdef TIME_BASED_CACHE
 	  }
 #endif /* TIME_BASED_CACHE */
@@ -364,11 +378,7 @@ mapping(string:array(int)) ngc_status() {
   mapping(string:array(int)) res = ([]);
 
   foreach(indices(nongc_cache), string cache) {
-    int size;
-    if (catch (size = sizeof(encode_value(nongc_cache[cache]))))
-      // Bogus fallback, but using encode_value for this is fairly
-      // bogus in the first place.
-      size = 1024;
+    int size = count_memory (1, nongc_cache[cache]);
     res[cache] = ({ sizeof(nongc_cache[cache]), size});
   }
 
