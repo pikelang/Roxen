@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.565 2008/09/26 13:48:35 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.566 2008/10/06 15:04:49 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2580,8 +2580,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	  {
 	    foreach( file->callbacks, function f ) {
 	      if (!file->key) break;
-	      MY_TRACE_ENTER (sprintf ("Checking with %s",
-				       master()->describe_function (f)), 0);
+	      MY_TRACE_ENTER (sprintf ("Checking with %O", f), 0);
 	      if( !f(this_object(), file->key ) )
 	      {
 		MY_TRACE_LEAVE ("Entry invalid according to callback");
