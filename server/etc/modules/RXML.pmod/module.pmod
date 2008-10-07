@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.373 2008/10/07 19:16:14 mast Exp $
+// $Id: module.pmod,v 1.374 2008/10/07 19:49:27 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -342,9 +342,14 @@ class Tag
 #ifdef MODULE_DEBUG
     if (mixed err = catch {
 #endif
-      foreach (indices (args) - ( ignore_args||({}) ), string arg)
-	args[arg] = (atypes[arg] || def_arg_type)->eval (
-	  args[arg], ctx);	// Should not unwind.
+	if (ignore_args)
+	  foreach (indices (args) - ignore_args, string arg)
+	    args[arg] = (atypes[arg] || def_arg_type)->eval (
+	      args[arg], ctx);	// Should not unwind.
+	else
+	  foreach (args; string arg; mixed val)
+	    args[arg] = (atypes[arg] || def_arg_type)->eval (
+	      val, ctx);	// Should not unwind.
 #ifdef MODULE_DEBUG
     }) {
       if (objectp (err) && ([object] err)->thrown_at_unwind)
@@ -497,19 +502,18 @@ class Tag
 #ifdef MODULE_DEBUG
     if (mixed err = catch {
 #endif
-      foreach (indices (raw_args), string arg) {
+      foreach (raw_args; string arg; string val) {
 	Type t = atypes[arg] || def_arg_type;
 	if (t->parser_prog != PNone) {
 	  Parser parser = t->get_parser (ctx, ctx->tag_set, 0);
 	  TAG_DEBUG (RXML_CONTEXT->frame,
 		     "Evaluating argument value %s with %O\n",
-		     format_short (raw_args[arg]), parser);
-	  parser->finish (raw_args[arg]); // Should not unwind.
+		     format_short (val), parser);
+	  parser->finish (val); // Should not unwind.
 	  raw_args[arg] = parser->eval(); // Should not unwind.
 	  TAG_DEBUG (RXML_CONTEXT->frame,
 		     "Setting dynamic argument %s to %s\n",
-		     format_short (arg),
-		     format_short (raw_args[arg]));
+		     format_short (arg), format_short (val));
 	  t->give_back (parser, ctx->tag_set);
 	}
       }
@@ -1227,11 +1231,9 @@ class TagSet
   {
     for (int i = sizeof (imported) - 1; i >= 0; i--)
       imported[i]->low_get_plugins (prefix, res);
-    foreach (indices (tags), string name)
-      if (name[..sizeof (prefix) - 1] == prefix) {
-	Tag tag = tags[name];
+    foreach (tags; string name; Tag tag)
+      if (name[..sizeof (prefix) - 1] == prefix)
 	if (tag->plugin_name) res[[string] tag->plugin_name] = tag;
-      }
     // We don't cache in plugins; do that only at the top level.
   }
 
@@ -1240,11 +1242,9 @@ class TagSet
     for (int i = sizeof (imported) - 1; i >= 0; i--)
       imported[i]->low_get_pi_plugins (prefix, res);
     if (proc_instrs)
-      foreach (indices (proc_instrs), string name)
-	if (name[..sizeof (prefix) - 1] == prefix) {
-	  Tag tag = proc_instrs[name];
+      foreach (proc_instrs; string name; Tag tag)
+	if (name[..sizeof (prefix) - 1] == prefix)
 	  if (tag->plugin_name) res[[string] tag->plugin_name] = tag;
-	}
     // We don't cache in pi_plugins; do that only at the top level.
   }
 
@@ -1953,7 +1953,7 @@ class Context
   }
 
 #define CLEANUP_VAR_CHG_SCOPE(var_chg, scope_name) do {			\
-    foreach (indices (var_chg), mixed encoded_var)			\
+    foreach (var_chg; mixed encoded_var;)				\
       if (stringp (encoded_var)) {					\
 	mixed var = decode_value (encoded_var);				\
 	if (arrayp (var) && var[0] == scope_name)			\
@@ -2022,11 +2022,14 @@ class Context
 #ifdef DEBUG
       if (!oldvars) fatal_error ("I before e except after c.\n");
 #endif
-      foreach (objectp (vars) ?
-	       ([object(Scope)] vars)->_indices (this_object(),
-						 scope_name || "_") :
-	       indices(vars), string var)
-	set_var(var, vars[var], scope_name);
+      if (objectp (vars))
+	foreach (([object(Scope)] vars)->_indices (this_object(),
+						   scope_name || "_"),
+		 string var)
+	  set_var(var, vars[var], scope_name);
+      else
+	foreach (vars; string var; mixed val)
+	  set_var(var, val, scope_name);
     }
 
     else {
@@ -4060,15 +4063,15 @@ class Frame
 	      TagSet ctx_tag_set = ctx->tag_set;
 	      Type default_type = tag ? tag->def_arg_type : t_any_text (PNone);
 	      if (comp)
-		foreach (indices (raw_args), string arg) {
+		foreach (raw_args; string arg; string val) {
 		  Type t = atypes[arg] || default_type;
 		  if (t->parser_prog != PNone) {
 		    sub_p_code->create (t, ctx, ctx_tag_set, 0, comp);
 		    Parser parser = t->get_parser (ctx, ctx_tag_set, 0, sub_p_code);
 		    THIS_TAG_DEBUG ("Evaluating and compiling "
 				    "argument value %s with %O\n",
-				    format_short (raw_args[arg]), parser);
-		    parser->finish (raw_args[arg]); // Should not unwind.
+				    format_short (val), parser);
+		    parser->finish (val); // Should not unwind.
 		    args[arg] = parser->eval(); // Should not unwind.
 		    THIS_TAG_DEBUG ("Setting argument %s to %s\n",
 				    format_short (arg), format_short (args[arg]));
@@ -4077,25 +4080,25 @@ class Frame
 		    t->give_back (parser, ctx_tag_set);
 		  }
 		  else {
-		    args[arg] = raw_args[arg];
-		    fn_text_add (sprintf ("%O: %s,\n", arg, comp->bind (raw_args[arg])));
+		    args[arg] = val;
+		    fn_text_add (sprintf ("%O: %s,\n", arg, comp->bind (val)));
 		  }
 		}
 	      else
-		foreach (indices (raw_args), string arg) {
+		foreach (raw_args; string arg; string val) {
 		  Type t = atypes[arg] || default_type;
 		  if (t->parser_prog != PNone) {
 		    Parser parser = t->get_parser (ctx, ctx_tag_set, 0, 0);
 		    THIS_TAG_DEBUG ("Evaluating argument value %s with %O\n",
-				    format_short (raw_args[arg]), parser);
-		    parser->finish (raw_args[arg]); // Should not unwind.
+				    format_short (val), parser);
+		    parser->finish (val); // Should not unwind.
 		    args[arg] = parser->eval(); // Should not unwind.
 		    THIS_TAG_DEBUG ("Setting argument %s to %s\n",
 				    format_short (arg), format_short (args[arg]));
 		    t->give_back (parser, ctx_tag_set);
 		  }
 		  else
-		    args[arg] = raw_args[arg];
+		    args[arg] = val;
 		}
 #ifdef MODULE_DEBUG
 	    }) {
@@ -4215,6 +4218,10 @@ class Frame
     using_thread = this_thread();
     if (ctx != RXML_CONTEXT)
       PRE_INIT_ERROR ("Context not current.\n");
+    if (id && ctx->misc != ctx->id->misc->defines)
+      PRE_INIT_ERROR ("ctx->misc != ctx->id->misc->defines\n"
+		      "%O != %O\n",
+		      ctx->misc, ctx->id->misc->defines);
     if (!evaler->tag_set_eval)
       PRE_INIT_ERROR ("Calling _eval() with non-tag set parser.\n");
     if (up)
@@ -4755,7 +4762,7 @@ class Frame
 
 #define CLEANUP do {							\
 	  DO_IF_DEBUG (							\
-	    if (id && ctx->misc != ctx->id->misc->defines)		\
+	    if (id && ctx->misc != id->misc->defines)			\
 	      fatal_error ("ctx->misc != ctx->id->misc->defines\n"	\
 			   "%O != %O\n",				\
 			   ctx->misc, ctx->id->misc->defines);		\
@@ -6008,7 +6015,7 @@ class Type
 
       if (ctx->tag_set == tag_set && p->add_runtime_tag && sizeof (ctx->runtime_tags)) {
 	PDEBUG_MSG ("Adding %d runtime tags to %O\n", sizeof (ctx->runtime_tags), p);
-	foreach (values (ctx->runtime_tags), Tag tag)
+	foreach (ctx->runtime_tags;; Tag tag)
 	  p->add_runtime_tag (tag);
       }
     }
@@ -6981,6 +6988,8 @@ RXML.Type type_for_value (mixed val)
     case "array": return t_array;
     case "mapping": return t_mapping;
     case "object":
+      if (val == nil) return t_nil;
+      if (val == empty) return t_any;
       if (val->`[]) return t_mapping;
       // Fall through.
     default:
@@ -7191,12 +7200,12 @@ class TXml
 
     if (args)
       if (flags & FLAG_RAW_ARGS)
-	foreach (indices (args), string arg)
-	  add (" ", arg, "=\"", replace (args[arg], "\"", "\"'\"'\""), "\"");
+	foreach (args; string arg; string val)
+	  add (" ", arg, "=\"", replace (val, "\"", "\"'\"'\""), "\"");
       else
-	foreach (indices (args), string arg) {
+	foreach (args; string arg; string val) {
 	  // Three serial replaces are currently faster than one parallell.
-	  string val = replace (args[arg], "&", "&amp;");
+	  val = replace (val, "&", "&amp;");
 	  val = replace (val, "\"", "&quot;");
 	  val = replace (val, "<", "&lt;");
 	  add (" ", arg, "=\"", val, "\"");
@@ -7368,7 +7377,7 @@ class VariableChange (/*protected*/ mapping settings)
   mixed get (Context ctx)
   {
   handle_var_loop:
-    foreach (indices (settings), mixed encoded_var) {
+    foreach (settings; mixed encoded_var; mixed val) {
       mixed var;
       if (stringp (encoded_var)) {
 	var = decode_value (encoded_var);
@@ -7380,10 +7389,10 @@ class VariableChange (/*protected*/ mapping settings)
 	      if (TAG_DEBUG_TEST (ctx->frame))
 		TAG_DEBUG (ctx->frame,
 			   "    Installing cached scope %O with %d variables\n",
-			   replace (var[0], ".", ".."), sizeof (settings[encoded_var]));
+			   replace (var[0], ".", ".."), sizeof (val));
 #endif
-	      if (SCOPE_TYPE vars = settings[encoded_var])
-		ctx->add_scope (var[0], settings[encoded_var]);
+	      if (val)
+		ctx->add_scope (var[0], val);
 	      else
 		ctx->remove_scope (var[0]);
 	    }
@@ -7393,9 +7402,8 @@ class VariableChange (/*protected*/ mapping settings)
 	      if (TAG_DEBUG_TEST (ctx->frame))
 		TAG_DEBUG (ctx->frame, "    Installing cached value for %O: %s\n",
 			   map ((array(string)) var, replace, ".", "..") * ".",
-			   format_short (settings[encoded_var]));
+			   format_short (val));
 #endif
-	      mixed val = settings[encoded_var];
 	      if (val != nil)
 		ctx->set_var (var[1..], val, var[0]);
 	      else
@@ -7410,10 +7418,10 @@ class VariableChange (/*protected*/ mapping settings)
 	      if (TAG_DEBUG_TEST (ctx->frame))
 		TAG_DEBUG (ctx->frame,
 			   "    Installing cached runtime tag definition for %O: %O\n",
-			   var[1], settings[encoded_var]);
+			   var[1], val);
 #endif
-	      if (Tag tag = settings[encoded_var])
-		ctx->direct_add_runtime_tag (var[1], tag);
+	      if (val)
+		ctx->direct_add_runtime_tag (var[1], [object(Tag)] val);
 	      else
 		ctx->direct_remove_runtime_tag (var[1]);
 	      break;
@@ -7424,9 +7432,9 @@ class VariableChange (/*protected*/ mapping settings)
 	      if (TAG_DEBUG_TEST (ctx->frame))
 		TAG_DEBUG (ctx->frame,
 			   "    Installing cached id->misc entry %O: %s\n",
-			   format_short (var), format_short (settings[encoded_var]));
+			   format_short (var), format_short (val));
 #endif
-	      ctx->set_id_misc (var[1], settings[encoded_var]);
+	      ctx->set_id_misc (var[1], val);
 	      break;
 
 	    case 2:
@@ -7435,9 +7443,9 @@ class VariableChange (/*protected*/ mapping settings)
 	      if (TAG_DEBUG_TEST (ctx->frame))
 		TAG_DEBUG (ctx->frame,
 			   "    Installing cached id->root_id->misc entry %O: %s\n",
-			   format_short (var), format_short (settings[encoded_var]));
+			   format_short (var), format_short (val));
 #endif
-	      ctx->set_root_id_misc (var[1], settings[encoded_var]);
+	      ctx->set_root_id_misc (var[1], val);
 	      break;
 	  }
 
@@ -7451,9 +7459,9 @@ class VariableChange (/*protected*/ mapping settings)
 #ifdef DEBUG
       if (TAG_DEBUG_TEST (ctx->frame))
 	TAG_DEBUG (ctx->frame, "    Installing cached misc entry %O: %s\n",
-		   format_short (var), format_short (settings[encoded_var]));
+		   format_short (var), format_short (val));
 #endif
-      ctx->set_misc (var, settings[encoded_var]);
+      ctx->set_misc (var, val);
     }
 
     return nil;
@@ -7465,7 +7473,7 @@ class VariableChange (/*protected*/ mapping settings)
     // later_chg. Return zero if we can't resolve them so that the
     // entries must remain separate.
     mapping later_sets = later_chg->settings;
-    foreach (indices (later_sets), mixed encoded_var) {
+    foreach (later_sets; mixed encoded_var; mixed val) {
       if (stringp (encoded_var)) {
 	mixed var = decode_value (encoded_var);
 	string scope_name;
@@ -7473,7 +7481,7 @@ class VariableChange (/*protected*/ mapping settings)
 	    stringp (scope_name = var[0]) && sizeof (var) > 1) {
 	  string encoded_scope = encode_value_canonic (({scope_name}));
 #ifdef DEBUG
-	  if (later_sets[encoded_scope])
+	  if (val)
 	    error ("Got both scope and variable entry "
 		   "for the same scope %O in %O\n", scope_name, later_sets);
 #endif
@@ -7490,18 +7498,17 @@ class VariableChange (/*protected*/ mapping settings)
 	      // Since the scope is added in this object we simply
 	      // modify it for the variable change. C.f.
 	      // Context.set_var and Context.delete_var.
-	      mixed val = later_sets[encoded_var];
 	      if (val == nil)
 		m_delete (scope, var[1]);
 	      else
-		scope[var[1]] = later_sets[encoded_var];
+		scope[var[1]] = val;
 	      continue;
 	    }
 	  }
 	}
       }
 
-      settings[encoded_var] = later_sets[encoded_var];
+      settings[encoded_var] = val;
     }
 
     return 1;
@@ -7528,36 +7535,35 @@ class VariableChange (/*protected*/ mapping settings)
       else {TRANSFER;}							\
     } while (0)
 
-    foreach (indices (settings), mixed encoded_var)
+    foreach (settings; mixed encoded_var; mixed val)
       if (stringp (encoded_var)) {
 	mixed var = decode_value (encoded_var);
 
 	if (arrayp (var) && stringp (var[0]))
 	  if (sizeof (var) == 1) {
-	    if (SCOPE_TYPE vars = settings[encoded_var]) {
-	      if (objectp (vars)) {
-		if (!vars->is_RXML_encodable) {
+	    if (val) {
+	      if (objectp (val)) {
+		if (!val->is_RXML_encodable) {
 		  mapping(string:mixed) new_vars = ([]);
-		  foreach (vars->_indices (ctx, var[0]), string name) {
-		    mixed val = vars[name];
-		    if (!zero_type (val) && val != nil)
-		      CONVERT_VAL (var[0], name, val, new_vars[name],
-				   new_vars[name] = val);
+		  foreach (val->_indices (ctx, var[0]), string name) {
+		    mixed v = val[name];
+		    if (!zero_type (v) && v != nil)
+		      CONVERT_VAL (var[0], name, v, new_vars[name],
+				   new_vars[name] = v);
 		  }
 		  settings[encoded_var] = new_vars;
 		}
 	      }
 
 	      else
-		foreach (vars; string name; mixed val) {
-		  if (val != nil)
-		    CONVERT_VAL (var[0], name, val, vars[name], {});
+		foreach (val; string name; mixed v) {
+		  if (v != nil)
+		    CONVERT_VAL (var[0], name, v, val[name], {});
 		}
 	    }
 	  }
 
 	  else {
-	    mixed val = settings[encoded_var];
 	    CONVERT_VAL (var[..sizeof (var) - 2] * ".", var[-1],
 			 val, settings[encoded_var], {});
 	  }
@@ -7576,17 +7582,17 @@ class VariableChange (/*protected*/ mapping settings)
     if (flag != 'O') return 0;
     string ind = "";
     if (!mappingp (settings)) return "RXML.VariableChange()";
-    foreach (indices (settings), mixed encoded_var) {
+    foreach (settings; mixed encoded_var; mixed val) {
       mixed var;
       if (stringp (encoded_var)) {
 	var = decode_value (encoded_var);
 	if (arrayp (var)) {
 	  var = map ((array(string)) var, replace, ".", "..") * ".";
 	  if (sizeof (var) == 1)
-	    if (settings[encoded_var]) ind += sprintf (", set: %O", var);
+	    if (val) ind += sprintf (", set: %O", var);
 	    else ind += sprintf (", del: %O", var);
 	  else
-	    if (settings[encoded_var] != nil) ind += sprintf (", set: %O", var);
+	    if (val != nil) ind += sprintf (", set: %O", var);
 	    else ind += sprintf (", del: %O", var);
 	  continue;
 	}
@@ -7876,7 +7882,7 @@ protected class PikeCompile
 
       compiled = res();
 
-      foreach (indices (cur_ids), string i) {
+      foreach (cur_ids; string i;) {
 #ifdef DEBUG
 	if (zero_type (compiled[i]))
 	  error ("Identifier %O doesn't exist in compiled code.\n", i);
@@ -7893,7 +7899,7 @@ protected class PikeCompile
 	error ("Empty code got bound identifiers: %O\n", indices (cur_ids));
 #endif
 
-    foreach (indices (delayed_resolve_places), mixed what) {
+    foreach (delayed_resolve_places; mixed what;) {
       mixed index = m_delete (delayed_resolve_places, what);
       if (zero_type (bindings[what[index]]))
 	delayed_resolve_places[what] = index;
@@ -7912,7 +7918,7 @@ protected class PikeCompile
 #ifdef DEBUG
     if (sizeof (delayed_resolve_places)) {
       string errmsg = "Still got unresolved delayed resolve places:\n";
-      foreach (indices (delayed_resolve_places), mixed what) {
+      foreach (delayed_resolve_places; mixed what;) {
 	mixed index = m_delete (delayed_resolve_places, what);
 	errmsg += replace (sprintf ("  %O[%O]: %O", what, index, what[index]),
 			   "\n", "\n  ") + "\n";
