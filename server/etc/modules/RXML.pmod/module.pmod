@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.372 2008/09/28 17:51:36 mast Exp $
+// $Id: module.pmod,v 1.373 2008/10/07 19:16:14 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2403,8 +2403,11 @@ class Context
 
   void enter_scope (Frame|CacheStaticFrame frame, SCOPE_TYPE vars)
   {
+    // Note that vars is zero when called from
+    // CacheStaticFrame.EnterScope.get.
 #ifdef DEBUG
-    if (!vars) fatal_error ("Got no scope mapping.\n");
+    if (!vars && !frame->is_RXML_CacheStaticFrame)
+      fatal_error ("Got no scope mapping.\n");
 #endif
 
     array rec_chgs = misc->recorded_changes;
@@ -2560,6 +2563,44 @@ class Context
 
   string _encode() {return scope_name;}
   void _decode (string data) {scope_name = data;}
+
+  class EnterScope()
+  {
+    constant is_RXML_encodable = 1;
+    constant is_RXML_p_code_entry = 1;
+    constant is_csf_scope = 1;
+    constant is_csf_enter_scope = 1;
+    constant p_code_no_result = 1;
+    mixed get (Context ctx)
+      {RXML_CONTEXT->enter_scope (CacheStaticFrame::this, 0); return nil;}
+    CacheStaticFrame frame()
+      {return CacheStaticFrame::this;}
+    protected string _sprintf (int flag)
+    {
+      return flag == 'O' &&
+	sprintf ("CSF.EnterScope(%O)",
+		 CacheStaticFrame::this && CacheStaticFrame::scope_name);
+    }
+  }
+
+  class LeaveScope()
+  {
+    constant is_RXML_encodable = 1;
+    constant is_RXML_p_code_entry = 1;
+    constant is_csf_scope = 1;
+    constant is_csf_leave_scope = 1;
+    constant p_code_no_result = 1;
+    mixed get (Context ctx)
+      {RXML_CONTEXT->leave_scope (CacheStaticFrame::this); return nil;}
+    CacheStaticFrame frame()
+      {return CacheStaticFrame::this;}
+    protected string _sprintf (int flag)
+    {
+      return flag == 'O' &&
+	sprintf ("CSF.LeaveScope(%O)",
+		 CacheStaticFrame::this && CacheStaticFrame::scope_name);
+    }
+  }
 
   string _sprintf (int flag)
   {
@@ -3838,13 +3879,11 @@ class Frame
 #define TAG_ENTER_SCOPE(ctx, csf)					\
   do {									\
     if (SCOPE_TYPE vars = this_object()->vars) {			\
-      ENTER_SCOPE (ctx, this_object());					\
-      if (flags & FLAG_IS_CACHE_STATIC && ctx->evaled_p_code) {		\
-	if (!csf) csf = CacheStaticFrame (this_object()->scope_name);	\
-	ctx->misc->recorded_changes[-1][csf] =				\
-	  objectp (vars) && vars->clone ? vars->clone() :		\
-	  scope_to_mapping (vars, ctx, this->scope_name);		\
+      if (!csf && flags & FLAG_IS_CACHE_STATIC && ctx->evaled_p_code) {	\
+	csf = CacheStaticFrame (this_object()->scope_name);		\
+	ctx->misc->recorded_changes += ({csf->EnterScope(), ([])});	\
       }									\
+      ENTER_SCOPE (ctx, this_object());					\
     }									\
   } while (0)
 
@@ -3853,8 +3892,11 @@ class Frame
     if (SCOPE_TYPE vars = this_object()->vars) {			\
       LEAVE_SCOPE (ctx, this_object());					\
       if (flags & FLAG_IS_CACHE_STATIC && ctx->evaled_p_code) {		\
-	if (!csf) csf = CacheStaticFrame (this_object()->scope_name);	\
-	ctx->misc->recorded_changes[-1][csf] = 0;			\
+	DO_IF_DEBUG (							\
+	  if (!csf) error ("Failed to create CacheStaticFrame "		\
+			   "at scope entry.\n");			\
+	);								\
+	ctx->misc->recorded_changes += ({csf->LeaveScope(), ([])});	\
       }									\
     }									\
   } while (0)
@@ -7321,6 +7363,8 @@ class VariableChange (/*protected*/ mapping settings)
   constant is_RXML_encodable = 1;
   constant is_RXML_p_code_entry = 1;
 
+  constant p_code_no_result = 1;
+
   mixed get (Context ctx)
   {
   handle_var_loop:
@@ -7401,22 +7445,6 @@ class VariableChange (/*protected*/ mapping settings)
 	}
       }
 
-      else if (objectp (encoded_var) && encoded_var->is_RXML_CacheStaticFrame) {
-	// Entering or leaving the local scope of a
-	// FLAG_IS_CACHE_STATIC optimized frame.
-#ifdef DEBUG
-	if (TAG_DEBUG_TEST (ctx->frame))
-	  TAG_DEBUG (ctx->frame, "    %s %s local scope for a cache static frame.\n",
-		     settings[encoded_var] ? "Entering" : "Leaving",
-		     encoded_var->scope_name || "nameless");
-#endif
-	if (mapping(string:mixed) vars = settings[encoded_var])
-	  ctx->enter_scope (encoded_var, vars);
-	else
-	  ctx->leave_scope (encoded_var);
-	continue handle_var_loop;
-      }
-
       else
 	var = encoded_var;
 
@@ -7431,7 +7459,7 @@ class VariableChange (/*protected*/ mapping settings)
     return nil;
   }
 
-  int add (VariableChange later_chg)
+  int merge (VariableChange later_chg)
   {
     // Fix any sequence dependencies between the current settings and
     // later_chg. Return zero if we can't resolve them so that the
@@ -7562,13 +7590,6 @@ class VariableChange (/*protected*/ mapping settings)
 	    else ind += sprintf (", del: %O", var);
 	  continue;
 	}
-      }
-      else if (objectp (encoded_var) && encoded_var->is_RXML_CacheStaticFrame) {
-	if (settings[encoded_var])
-	  ind += sprintf (", enter scope: %O", encoded_var->scope_name);
-	else
-	  ind += sprintf (", leave scope: %O", encoded_var->scope_name);
-	continue;
       }
       else var = encoded_var;
       ind += sprintf (", set misc: %O", var);
@@ -8157,8 +8178,11 @@ class PCode
   // the following sequences:
   //
   // ({mapping vars})
-  //   The mapping contains various variable and scope changes. It's
+  //   The mapping contains various variable and scope changes. Its
   //   format is dictated by VariableChange.get.
+  //
+  // ({object with is_RXML_p_code_entry})
+  //   An object that will be directly inserted into the p-code.
   //
   // ({string|function callback, array args})
   //   A generic function call to be issued when the p-code is
@@ -8172,24 +8196,33 @@ class PCode
   {
     // Note: This function assumes that there are at least
     // sizeof(rec_chgs) elements available in exec.
-    for (int pos = 0; pos < sizeof (rec_chgs);)
-      if (mappingp (rec_chgs[pos])) {
+    for (int pos = 0; pos < sizeof (rec_chgs);) {
+      mixed entry = rec_chgs[pos];
+      if (mappingp (entry)) {
 	// A variable changes mapping.
-	if (sizeof (rec_chgs[pos])) {
-	  PCODE_MSG ("adding variable changes %s\n", format_short (rec_chgs[pos]));
-	  VariableChange var_chg = VariableChange (rec_chgs[pos]);
+	if (sizeof (entry)) {
+	  PCODE_MSG ("adding variable changes %s\n", format_short (entry));
+	  VariableChange var_chg = VariableChange (entry);
 	  var_chg->eval_rxml_consts (ctx);
 	  exec[length++] = var_chg;
 	}
 	pos++;
       }
+
+      else if (objectp (entry) && entry->is_RXML_p_code_entry) {
+	PCODE_MSG ("adding p-code entry %O\n", entry);
+	exec[length++] = entry;
+	pos++;
+      }
+
       else {
 	// A callback.
 	PCODE_MSG ("adding callback %O (%s)\n",
-		   rec_chgs[pos], map (rec_chgs[pos + 1], format_short) * ", ");
-	exec[length++] = CompiledCallback (rec_chgs[pos], rec_chgs[pos + 1]);
+		   entry, map (rec_chgs[pos + 1], format_short) * ", ");
+	exec[length++] = CompiledCallback (entry, rec_chgs[pos + 1]);
 	pos += 2;
       }
+    }
   }
 
   void add (Context ctx, mixed entry, mixed evaled_value)
@@ -8357,104 +8390,177 @@ class PCode
 	m_delete (RXML_CONTEXT->misc, "recorded_changes");
       PCODE_MSG ("end result collection\n");
 
-      // Collapse sequences of constants. Could be done when not
-      // collecting results too, but it's probably not worth the
-      // bother then.
+#ifndef DISABLE_RXML_COMPACT
+      if (length > 0) {
+	// Collapse sequences of constants and VariableChange's, etc.
+	// This is actually a simple peephole optimizer. Could be done
+	// when not collecting results too, but it's probably not
+	// worth the bother then.
 
-      PCODE_COMPACT_MSG ("  Compact: Start with %O\n", exec[..length - 1]);
+	PCODE_COMPACT_MSG ("  Compact: Start with %O\n", exec[..length - 1]);
 
-      int max = length;
-      length = 0;
-      for (int pos = 0; pos < max; pos++) {
-	mixed item = exec[pos];
-	PCODE_COMPACT_MSG ("  Compact: Got %O at %d\n", item, pos);
-
-      process_entry: {
-	  VariableChange var_chg = 0;
-
-	  if (objectp (item))
-	    if (item->is_RXML_p_code_frame) {
-	      PCODE_COMPACT_MSG ("  Compact: Moving frame at %d..%d to %d..%d\n",
-				 pos, pos + 2, length, length + 2);
-	      exec[length++] = item;
-	      exec[length++] = exec[++pos];
-	      exec[length++] = exec[++pos];
-	      continue;
-	    }
-	    else if (item->is_RXML_VariableChange) {
-	      var_chg = item;
-	      // Ignore it in the `+ below.
-	      PCODE_COMPACT_MSG ("  Compact: Removing VariableChange at %d\n", pos);
-	      exec[pos] = nil;
-	    }
-	    else if (item->is_RXML_p_code_entry)
-	      break process_entry;
-	    else if (item == nil)
-	      continue;
-
-	  int end = pos + 1;
-	  while (end < max) {
-	    item = exec[end];
-	    PCODE_COMPACT_MSG ("  Compact sequence: Got %O at %d\n", item, end);
-	    if (objectp (item))
-	      if (item->is_RXML_VariableChange) {
-		// Try to compact VariableChange entries separated by
-		// constants.
-		if (var_chg) {
-		  if (!var_chg->add (item)) {
-		    PCODE_COMPACT_MSG ("  Compact sequence: Adding %O to %O failed\n",
-				       item, var_chg);
-		    break;
-		  }
-		  PCODE_COMPACT_MSG ("  Compact sequence: Added %O to %O\n",
-				     item, var_chg);
-		}
-		else var_chg = item;
-		// Ignore it in the `+ below.
-		PCODE_COMPACT_MSG ("  Compact: Removing VariableChange at %d\n", end);
-		exec[end] = nil;
+	// beg is used to limit how far back the peep rules can look. Necessary
+	// to not walk backwards into a frame sequence.
+	int last = 0, beg = 0;
+	for (int pos = 0; pos < length;) {
+	  {
+	    // First concatenate sequences of plain values quickly.
+	    int end = pos;
+	    for (; end < length &&
+		   (!objectp (exec[end]) || !exec[end]->is_RXML_p_code_entry);
+		 end++) {
+	      if (end - pos >= 32) {
+		// Use `+ on limited chunks to avoid unbounded stack
+		// consumption.
+		PCODE_COMPACT_MSG ("  Compact: Concatenating chunk "
+				   "%d..%d to %d\n", pos, end, end);
+		exec[end] = `+ (@exec[pos..end]);
+		pos = end;
 	      }
-	      else if (var_chg && item != nil)
-		// Do not allow a VariableChange to switch places with
-		// any object value, since it might look at variables
-		// when it's actually used.
-		break;
-	      else if (item->is_RXML_p_code_entry)
-		break;
-	    end++;
-	  }
-#if 1
-	  // Group in blocks of 10 to avoid wasting losts of stack
-	  // (lfun::`+() is often defined in terms of predef::`+())...
-	  //	/grubba 2004-08-11
-	  --end;
-	  item = exec[pos];
-	  int p;
-	  for (p=pos+10; p < end; p+=10) {
-	    item = `+(item, @exec[p-9..p]);
-	  }
-	  item = `+(item, @exec[p-9..end]);
-#else
-	  item = `+(@exec[pos..--end]);
-#endif
-	  PCODE_COMPACT_MSG ("  Compact: Loop done - concatenating %d..%d to %O\n",
-			     pos, end, item);
-	  pos = end;
+	    }
 
-	  if (var_chg) {
-	    PCODE_COMPACT_MSG ("  Compact: Adding VariableChange at %d\n",
-			       var_chg, length);
-	    exec[length++] = var_chg;
+	    if (end > pos) {
+	      PCODE_COMPACT_MSG ("  Compact: Concatenating %d..%d to %d\n",
+				 pos, end - 1, last);
+	      exec[last] = `+ (@exec[pos..end - 1]);
+	      pos = end;
+	      if (exec[last] == nil) {
+		PCODE_COMPACT_MSG ("  Compact: Ignoring nil at %d\n", last);
+		continue;
+	      }
+	    }
+
+	    else if (objectp (exec[pos]) && exec[pos]->is_RXML_p_code_frame) {
+	      // Frames are currently not accessible to the peep rules
+	      // below. Just copy it and continue.
+	      PCODE_COMPACT_MSG ("  Compact: Moving frame at %d..%d "
+				 "to %d..%d\n", pos, pos + 2, last, last + 2);
+	      exec[last++] = exec[pos++];
+	      exec[last++] = exec[pos++];
+	      exec[last++] = exec[pos++];
+	      beg = last;
+	      continue;
+	    }
+
+	    else {
+	      PCODE_COMPACT_MSG ("  Compact: Shifting %d to %d\n", pos, last);
+	      exec[last] = exec[pos++];
+	    }
 	  }
 
-	  if (item == nil) continue;
+	  // Now reduce the tail as long as any rule applies.
+	  while (last > beg) {
+	    // The peep rules below can assume there are at least two
+	    // elements to operate on.
+
+	    int reduced = 0;
+	    mixed item = exec[last], prev;
+	    PCODE_COMPACT_MSG ("  Compact: -- Before: [%d..%d] =%{ %O%}\n",
+			       max (last - 9, 0), last, exec[last - 9..last]);
+
+	  try_reduce: {
+	      if (!objectp (item) || !item->is_RXML_p_code_entry) {
+		// A constant can be moved back over a sequence of entries that
+		// don't produce any result, and concatenated with the constant
+		// found before them, if any.
+		int i = last - 1;
+		for (; i >= beg &&
+		       objectp (exec[i]) && exec[i]->p_code_no_result;
+		     i--) {}
+
+		if (i != last - 1) {
+		  if (i < beg || (objectp (exec[i]) &&
+				  exec[i]->is_RXML_p_code_entry)) {
+		    // No preceding constant to concatenate with.
+		    i++;
+		    PCODE_COMPACT_MSG ("  Compact: RULE 1a: Moving constant "
+				       "from %d to before %d\n", last, i);
+		    // If i..last is large enough it's faster to create a new
+		    // array using subranges, but the assumption is that there
+		    // never will be a very large range of p_code_no_result
+		    // entries.
+		    for (int j = last; j > i; j--) exec[j] = exec[j - 1];
+		    exec[i] = item;
+		  }
+
+		  else {
+		    PCODE_COMPACT_MSG ("  Compact: RULE 1b: Appending constant "
+				       "at %d to %d\n", last, i);
+		    exec[i] += item;
+		    last--;
+		  }
+
+		  break try_reduce;
+		}
+	      }
+
+	      // Here we know item is a p-code entry object.
+
+	      else if (objectp (prev = exec[last - 1]) &&
+		       prev->is_RXML_p_code_entry) {
+		// Got the two p-code entries ({prev, item}).
+
+		if (prev->is_RXML_VariableChange) {
+		  if (item->is_csf_leave_scope) {
+		    // Got a VariableChange before LeaveScope. Check for
+		    // shadowed contents.
+
+		    CLEANUP_VAR_CHG_SCOPE (prev->settings, "_");
+		    if (string scope_name = item->frame()->scope_name)
+		      CLEANUP_VAR_CHG_SCOPE (prev->settings, scope_name);
+
+		    if (!sizeof (prev->settings)) {
+		      PCODE_COMPACT_MSG ("  Compact: RULE 2: Removing shadowed "
+					 "VariableChange before LeaveScope\n");
+		      exec[--last] = item;
+		      break try_reduce;
+		    }
+		  }
+
+		  else if (item->is_RXML_VariableChange &&
+			   prev->merge (item)) {
+		    PCODE_COMPACT_MSG ("  Compact: RULE 3: Merged two "
+				       "VariableChange's\n");
+		    last--;
+		    break try_reduce;
+		  }
+		}
+
+		else if (prev->is_csf_enter_scope) {
+		  if (item->is_csf_enter_scope) {
+		    if (item->frame() == prev->frame()) {
+		      PCODE_COMPACT_MSG ("  Compact: RULE 4: Removing repeated "
+					 "EnterScope\n");
+		      last--;
+		      break try_reduce;
+		    }
+		  }
+
+		  else if (item->is_csf_leave_scope &&
+			   prev->frame() == item->frame()) {
+		    PCODE_COMPACT_MSG ("  Compact: RULE 5: Removing empty "
+				       "EnterScope/LeaveScope pair\n");
+		    last -= 2;
+		    break try_reduce;
+		  }
+		}
+	      }
+
+	      // No reduction done.
+	      break;
+	    }
+
+	    PCODE_COMPACT_MSG ("  Compact: -- After: [%d..%d] =%{ %O%}\n",
+			       max (last - 9, 0), last, exec[last - 9..last]);
+	  }
+
+	  last++;
 	}
+	length = last;
 
-	PCODE_COMPACT_MSG ("  Compact: Adding %O at %d\n", item, length);
-	exec[length++] = item;
+	PCODE_COMPACT_MSG ("  Compact: Done, got %O\n", exec[..length - 1]);
       }
-
-      PCODE_COMPACT_MSG ("  Compact: Done at %d, got %O\n", max, exec[..length - 1]);
+#endif
     }
 
     else {
@@ -8768,7 +8874,7 @@ class PCode
       return intro + ")" + OBJ_COUNT;
   }
 
-  constant P_CODE_VERSION = "7.0";
+  constant P_CODE_VERSION = "7.1";
   // Version spec encoded with the p-code, so we can detect and reject
   // incompatible p-code dumps even when the encoded format hasn't
   // changed in an obvious way.
