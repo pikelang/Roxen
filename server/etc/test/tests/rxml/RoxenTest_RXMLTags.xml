@@ -2247,6 +2247,500 @@ hej</result>
   </rxml>
   <result>1</result>
 </test>
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="2">
+	&var.theta;
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="1">
+	&var.theta;
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="2">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">y</set>
+	[<nocache>&var.x;</nocache>]
+	<emit source="TESTER" scope="var" maxrows="2">
+	  &var.theta;
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">y</set>
+	[<nocache>&var.x;</nocache>]
+	<emit source="TESTER" scope="var" maxrows="2">
+	  <nocache>&var.theta;</nocache>
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<emit source="TESTER" scope="var" maxrows="2">
+	  &var.theta;
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<emit source="TESTER" scope="var" maxrows="2">
+	  <nocache>&var.theta;</nocache>
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<emit source="TESTER" scope="var" maxrows="1">
+	  &var.theta;
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<emit source="TESTER" scope="var" maxrows="1">
+	  <nocache>&var.theta;</nocache>
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">y</set>
+	[<nocache>&var.x;</nocache>]
+	<emit source="TESTER" scope="var" maxrows="1">
+	  &var.theta;
+	</emit>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">y</set>
+	[<nocache>&var.x;</nocache>]
+	<emit source="TESTER" scope="var" maxrows="1">
+	  <nocache>&var.theta;</nocache>
+	</emit>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">y</set>
+	[&var.x;]
+	<emit source="TESTER" scope="var" maxrows="2">
+	  &var.theta;
+	</emit>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">y</set>
+	[&var.x;]
+	<emit source="TESTER" scope="var" maxrows="2">
+	  <nocache>&var.theta;</nocache>
+	</emit>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">z</set>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][z][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">z</set>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][z][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">z</set>
+	[&var.x;]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][z][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">x</set>
+	[<nocache>&var.x;</nocache>]
+	<nocache><set variable="var.x">y</set></nocache>
+	[<nocache>&var.x;</nocache>]
+	<emit source="TESTER" scope="var" maxrows="1">
+	  <set variable="var.x">z</set>
+	  [<nocache>&var.x;</nocache>]
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[x][y][z][y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">x</set>
+	[&var.x;]
+	<nocache><set variable="var.x">y</set></nocache>
+	[<nocache>&var.x;</nocache>]
+	<emit source="TESTER" scope="var" maxrows="1">
+	  <set variable="var.x">z</set>
+	  [<nocache>&var.x;</nocache>]
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[x][y][z][y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">x</set>
+	[<nocache>&var.x;</nocache>]
+	<nocache><set variable="var.x">y</set></nocache>
+	[&var.x;]
+	<emit source="TESTER" scope="var" maxrows="1">
+	  <set variable="var.x">z</set>
+	  [<nocache>&var.x;</nocache>]
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[x][y][z][y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<set variable="var.x">x</set>
+	[<nocache>&var.x;</nocache>]
+	<nocache><set variable="var.x">y</set></nocache>
+	[<nocache>&var.x;</nocache>]
+	<emit source="TESTER" scope="var" maxrows="1">
+	  <set variable="var.x">z</set>
+	  [&var.x;]
+	</emit>
+	[<nocache>&var.x;</nocache>]
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[x][y][z][y][]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="2">
+	&var.theta;
+      </emit>
+      <emit source="TESTER" scope="var" maxrows="1">
+	&var.theta;
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="2">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      <emit source="TESTER" scope="var" maxrows="1">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][y]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	&var.theta;
+      </emit>
+      <set variable="var.x">z</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="2">
+	&var.theta;
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][z][z]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      <set variable="var.x">z</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="2">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][z][z]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="2">
+	&var.theta;
+      </emit>
+      <set variable="var.x">z</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	&var.theta;
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][z][z]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="2">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      <set variable="var.x">z</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][z][z]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	&var.theta;
+      </emit>
+      <set variable="var.x">z</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="1">
+	&var.theta;
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][z][z]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.x">y</set>
+      [<nocache>&var.x;</nocache>]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      <set variable="var.x">z</set>
+      [&var.x;]
+      <emit source="TESTER" scope="var" maxrows="1">
+	<nocache>&var.theta;</nocache>
+      </emit>
+      [<nocache>&var.x;</nocache>]
+    </cache>
+  </rxml>
+  <result>[y][z][z]</result>
+</test>
 
 
 <!-- ............................................................ -->
