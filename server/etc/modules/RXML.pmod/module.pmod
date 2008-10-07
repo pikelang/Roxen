@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.351 2006/10/26 18:09:03 mast Exp $
+// $Id: module.pmod,v 1.352 2008/10/07 12:16:00 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2295,8 +2295,11 @@ class Context
 
   void enter_scope (Frame|CacheStaticFrame frame, SCOPE_TYPE vars)
   {
+    // Note that vars is zero when called from
+    // CacheStaticFrame.enter_csf_scope.
 #ifdef DEBUG
-    if (!vars) fatal_error ("Got no scope mapping.\n");
+    if (!vars && !frame->is_RXML_CacheStaticFrame)
+      fatal_error ("Got no scope mapping.\n");
 #endif
 
     array rec_chgs = misc->recorded_changes;
@@ -2447,6 +2450,16 @@ class Context
 
   string _encode() {return scope_name;}
   void _decode (string data) {scope_name = data;}
+
+  void enter_csf_scope()
+  {
+    RXML_CONTEXT->enter_scope (this, 0);
+  }
+
+  void leave_csf_scope()
+  {
+    RXML_CONTEXT->leave_scope (this);
+  }
 
   string _sprintf() {return sprintf ("RXML.CacheStaticFrame(%O)", scope_name);}
 }
@@ -3720,12 +3733,11 @@ class Frame
 #define TAG_ENTER_SCOPE(ctx, csf)					\
   do {									\
     if (SCOPE_TYPE vars = this_object()->vars) {			\
-      ENTER_SCOPE (ctx, this_object());					\
       if (flags & FLAG_IS_CACHE_STATIC && ctx->evaled_p_code) {		\
 	if (!csf) csf = CacheStaticFrame (this_object()->scope_name);	\
-	ctx->misc->recorded_changes[-1][csf] = mappingp (vars) ?	\
-	  vars + ([]) : mkmapping (indices (vars), values (vars));	\
+	ctx->misc->recorded_changes += ({csf->enter_csf_scope, ({}), ([])}); \
       }									\
+      ENTER_SCOPE (ctx, this_object());					\
     }									\
   } while (0)
 
@@ -3735,7 +3747,7 @@ class Frame
       LEAVE_SCOPE (ctx, this_object());					\
       if (flags & FLAG_IS_CACHE_STATIC && ctx->evaled_p_code) {		\
 	if (!csf) csf = CacheStaticFrame (this_object()->scope_name);	\
-	ctx->misc->recorded_changes[-1][csf] = 0;			\
+	ctx->misc->recorded_changes += ({csf->leave_csf_scope, ({}), ([])}); \
       }									\
     }									\
   } while (0)
@@ -7139,22 +7151,6 @@ class VariableChange (/*static*/ mapping settings)
 	}
       }
 
-      else if (objectp (encoded_var) && encoded_var->is_RXML_CacheStaticFrame) {
-	// Entering or leaving the local scope of a
-	// FLAG_IS_CACHE_STATIC optimized frame.
-#ifdef DEBUG
-	if (TAG_DEBUG_TEST (ctx->frame))
-	  TAG_DEBUG (ctx->frame, "    %s %s local scope for a cache static frame.\n",
-		     settings[encoded_var] ? "Entering" : "Leaving",
-		     encoded_var->scope_name || "nameless");
-#endif
-	if (mapping(string:mixed) vars = settings[encoded_var])
-	  ctx->enter_scope (encoded_var, vars);
-	else
-	  ctx->leave_scope (encoded_var);
-	continue handle_var_loop;
-      }
-
       else
 	var = encoded_var;
 
@@ -7286,13 +7282,6 @@ class VariableChange (/*static*/ mapping settings)
 	    else ind += sprintf (", del: %O", var);
 	  continue;
 	}
-      }
-      else if (objectp (encoded_var) && encoded_var->is_RXML_CacheStaticFrame) {
-	if (settings[encoded_var])
-	  ind += sprintf (", enter scope: %O", encoded_var->scope_name);
-	else
-	  ind += sprintf (", leave scope: %O", encoded_var->scope_name);
-	continue;
       }
       else var = encoded_var;
       ind += sprintf (", set misc: %O", var);
@@ -7869,7 +7858,7 @@ class PCode
   // the following sequences:
   //
   // ({mapping vars})
-  //   The mapping contains various variable and scope changes. It's
+  //   The mapping contains various variable and scope changes. Its
   //   format is dictated by VariableChange.get.
   //
   // ({string|function callback, array args})
@@ -8069,6 +8058,7 @@ class PCode
 	m_delete (RXML_CONTEXT->misc, "recorded_changes");
       PCODE_MSG ("end result collection\n");
 
+#ifndef DISABLE_RXML_COMPACT
       // Collapse sequences of constants. Could be done when not
       // collecting results too, but it's probably not worth the
       // bother then.
@@ -8167,6 +8157,7 @@ class PCode
       }
 
       PCODE_COMPACT_MSG ("  Compact: Done at %d, got %O\n", max, exec[..length - 1]);
+#endif
     }
 
     else {
