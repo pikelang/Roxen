@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.70 2008/09/28 19:58:06 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.71 2008/10/07 20:00:03 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -204,33 +204,34 @@ string strip_silly_ws (string in)
 
 // --- XML-based test files -------------------------------
 
-void xml_set_module_var(string t, mapping m, string c) {
+void xml_set_module_var(Parser.HTML file_parser, mapping m, string c) {
   conf->find_module(m->module)->getvar(m->variable)->set(c);
   return;
 }
 
-void xml_add_module(string t, mapping m, string c) {
+void xml_add_module(Parser.HTML file_parser, mapping m, string c) {
   conf->enable_module(c);
   return;
 }
 
-void xml_drop_module(string t, mapping m, string c) {
+void xml_drop_module(Parser.HTML file_parser, mapping m, string c) {
   conf->disable_module(c);
   return;
 }
 
-void xml_dummy(string t, mapping m, string c) {
+void xml_dummy(Parser.HTML file_parser, mapping m, string c) {
   return;
 }
 
-void xml_use_module(string t, mapping m, string c,
+void xml_use_module(Parser.HTML file_parser, mapping m, string c,
 		    mapping ignored, multiset(string) used_modules) {
   conf->enable_module(c);
   used_modules[c] = 1;
   return;
 }
 
-void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_cache) {
+void xml_test(Parser.HTML file_parser, mapping args, string c,
+	      mapping(int:RXML.PCode) p_code_cache) {
 
   test_num++;
   RXML.PCode p_code = p_code_cache[test_num];
@@ -258,6 +259,8 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
     if( verbose )
       if( strlen( rxml ) )
 	report_debug("FAIL\n" );
+    report_debug (indent (2, sprintf ("Error at line %d:",
+				      file_parser->at_line())));
     if( strlen( rxml ) )
       report_debug( indent(2, rxml ) );
     rxml="";
@@ -387,21 +390,18 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 			     c = canon_html( c );
 			   if (!no_strip_silly_ws)
 			     c = strip_silly_ws (c);
-			   if(res != c) {
-			     if(m->not) return;
+			   if (m->not ? res == c : res != c) {
 			     test_error("Failed\n(got: %O\nexpected: %O)\n",
 					res, c);
 			     throw(1);
 			   }
-			   // FIXME: m->not
 			   test_ok( );
 			 }
 		       },
 
 		       "glob" :
 		       lambda(object t, mapping m, string c) {
-			 if( !glob(c, res) ) {
-			   if(m->not) return;
+			 if (m->not ? glob(c, res) : !glob(c, res)) {
 			   test_error("Failed\n(result %O\ndoes not match %O)\n",
 				      res, c);
 			   throw(1);
@@ -411,8 +411,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 
 		       "has-value" :
 		       lambda(object t, mapping m, string c) {
-			 if( !has_value(res, c) ) {
-			   if(m->not) return;
+			 if (m->not ? has_value(res, c) : !has_value(res, c)) {
 			   test_error("Failed\n(result %O\ndoes not contain %O)\n",
 				      res, c);
 			   throw(1);
@@ -422,8 +421,8 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 
 		       "regexp" :
 		       lambda(object t, mapping m, string c) {
-			 if( !Regexp(c)->match(res) ) {
-			   if(m->not) return;
+			 if (m->not ? Regexp(c)->match(res) :
+			     !Regexp(c)->match(res)) {
 			   test_error("Failed\n(result %O\ndoes not match %O)\n",
 				      res, c);
 			   throw(1);
@@ -445,8 +444,7 @@ void xml_test(string t, mapping args, string c, mapping(int:RXML.PCode) p_code_c
 				       "get value from %O)\n", c);
 			   throw (1);
 			 }
-			 if (!equal (res, v)) {
-			   if(m->not) return;
+			 if (m->not ? equal (res, v) : !equal (res, v)) {
 			   test_error("Failed\n(result %O\ndoes not match %O)\n",
 				      res, v);
 			   throw(1);
