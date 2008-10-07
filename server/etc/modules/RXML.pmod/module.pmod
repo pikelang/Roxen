@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.374 2008/10/07 19:49:27 mast Exp $
+// $Id: module.pmod,v 1.375 2008/10/07 19:56:14 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7481,7 +7481,7 @@ class VariableChange (/*protected*/ mapping settings)
 	    stringp (scope_name = var[0]) && sizeof (var) > 1) {
 	  string encoded_scope = encode_value_canonic (({scope_name}));
 #ifdef DEBUG
-	  if (val)
+	  if (later_sets[encoded_scope])
 	    error ("Got both scope and variable entry "
 		   "for the same scope %O in %O\n", scope_name, later_sets);
 #endif
