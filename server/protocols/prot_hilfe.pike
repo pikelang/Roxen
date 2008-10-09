@@ -259,7 +259,10 @@ class Connection
     void create()
     {
       ::create();
-      write = lambda(string ... in) { rl->readline->write(sprintf(@in)); };
+      write = lambda (string msg, mixed... args) {
+		if (sizeof (args)) msg = sprintf (msg, @args);
+		rl->readline->write (msg);
+	      };
       constants["RequestID"] = myRequestID;
       constants["conf"] = my_conf;
       constants["port"] = my_port_obj;
