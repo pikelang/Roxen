@@ -861,6 +861,34 @@ a&auml; &amp; b  &gt;
 <test>
   <rxml type="string">
     <define container="x">
+      <contents value-of="elem/@attr" result-set=""/>
+    </define>
+    <set variable="var.a">
+      <x><elem attr="1" foo=""/><elem attr="2" bar=""/></x>
+    </set>
+    &var.a.1;|&var.a.2;
+  </rxml>
+  <result>1|2</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
+      <contents value-of="elem/@*" result-set=""/>
+    </define>
+    <set variable="var.a">
+      <x><elem attr="1" foo="f"/><elem attr="2" bar="b"/></x>
+    </set>
+    <emit source="values" variable="var.a" sort="value">
+      &_.value;|
+    </emit>
+  </rxml>
+  <result>1|2|b|f|</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="x">
       <set variable="_.data"><contents copy-of="item[@ok]" result-set=""/></set>
       <emit source="values" variable="_.data" sort="value">&_.value:none;</emit>
     </define>
