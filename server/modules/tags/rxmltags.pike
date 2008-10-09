@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.544 2008/06/17 09:47:48 erik Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.545 2008/10/09 11:45:21 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3374,13 +3374,15 @@ class UserTagContents
 
 	  else {
 	    if (result_set) {
-	      if (arrayp (res))
-		value = map (res, lambda (mapping|SloppyDOM.Node elem) {
-				    if (objectp (elem))
-				      return elem->get_text_content();
-				    else
-				      return values (res)[0];
-				  });
+	      if (arrayp (res)) {
+		value = ({});
+		foreach (res, mapping|SloppyDOM.Node elem) {
+		  if (objectp (elem))
+		    value += ({elem->get_text_content()});
+		  else
+		    value += values (elem);
+		}
+	      }
 	      else if (objectp (res))
 		value = ({res->get_text_content()});
 	      else if (mappingp (res))
