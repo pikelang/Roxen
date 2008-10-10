@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.566 2008/10/06 15:04:49 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.567 2008/10/10 14:46:12 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2516,6 +2516,23 @@ void got_data(mixed fooid, string s, void|int chained)
       adjust_for_config_path( path );
 
     TIMER_END(find_conf);
+
+    // The "http_request_init" provider hook allows modules to do
+    // things very early in the request path, before the request is
+    // put in the handler queue and before the protocol cache is
+    // queried.
+    //
+    // Use with great care; this is run in the backend thread, and
+    // some things in the id object are still not initialized.
+    foreach (conf->get_providers ("http_request_init"), RoxenModule mod)
+      if (mapping res = mod->http_request_init (this)) {
+	conf->received += sizeof (raw);
+	conf->requests++;
+	// RequestID.make_response_headers assumes the supports multiset exists.
+	if (!supports) supports = (<>);
+	send_result (res);
+	return;
+      }
 
     if (rawauth)
     {
