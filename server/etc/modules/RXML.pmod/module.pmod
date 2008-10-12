@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.375 2008/10/07 19:56:14 mast Exp $
+// $Id: module.pmod,v 1.376 2008/10/12 22:07:05 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2578,6 +2578,8 @@ class Context
       {RXML_CONTEXT->enter_scope (CacheStaticFrame::this, 0); return nil;}
     CacheStaticFrame frame()
       {return CacheStaticFrame::this;}
+    mixed _encode() {}
+    void _decode (mixed v) {}
     protected string _sprintf (int flag)
     {
       return flag == 'O' &&
@@ -2597,6 +2599,8 @@ class Context
       {RXML_CONTEXT->leave_scope (CacheStaticFrame::this); return nil;}
     CacheStaticFrame frame()
       {return CacheStaticFrame::this;}
+    mixed _encode() {}
+    void _decode (mixed v) {}
     protected string _sprintf (int flag)
     {
       return flag == 'O' &&
@@ -2605,7 +2609,7 @@ class Context
     }
   }
 
-  string _sprintf (int flag)
+  protected string _sprintf (int flag)
   {
     return flag == 'O' && sprintf ("RXML.CacheStaticFrame(%O)", scope_name);
   }
