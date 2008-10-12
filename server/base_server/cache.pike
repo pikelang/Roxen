@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: cache.pike,v 1.91 2008/10/04 20:08:14 mast Exp $
+// $Id: cache.pike,v 1.92 2008/10/12 22:15:08 mast Exp $
 
 // #pragma strict_types
 
@@ -73,8 +73,7 @@ int count_memory (int|mapping opts, mixed what)
   if (intp (opts))
     opts = (["lookahead": opts,
 	     "collect_stats": 1,
-	     //"collect_internals": 1,
-	     //"collect_externals": 1,
+	     //"collect_direct_externals": 1,
 	   ]);
   else
     opts += (["collect_stats": 1]);
@@ -87,8 +86,7 @@ int count_memory (int|mapping opts, mixed what)
 	    opts->size, t, opts->internal, opts->cyclic, opts->external,
 	    opts->visits, opts->revisits, opts->rounds, opts->work_queue_alloc);
 #if 0
-  werror ("internals: %O\n", opts->collect_internals);
-  werror ("externals: %O\n", opts->collect_externals);
+  werror ("externals: %O\n", opts->collect_direct_externals);
 #endif
   return opts->size;
 }
@@ -202,7 +200,7 @@ mapping(string:array(int)) status()
     //  We only show names up to the first ":" if present. This lets us
     //  group entries together in the status table.
     string show_name = (name / ":")[0];
-    int size = count_memory (1, cache[name]);
+    int size = count_memory (0, cache[name]);
     array(int) entry = ({ sizeof(cache[name]),
 			  hits[name],
 			  all[name],
@@ -301,8 +299,8 @@ void cache_clean()
 	    continue;
 	  } else {
 #endif /* TIME_BASED_CACHE */
-	    entry[SIZE] = (count_memory (1, idx) +
-			   count_memory (1, entry)) / 100;
+	    entry[SIZE] = (count_memory (0, idx) +
+			   count_memory (0, entry)) / 100;
 	    // The 100 above is an "arbitrary factor", whatever that
 	    // means.. /mast
 #ifdef TIME_BASED_CACHE
@@ -378,7 +376,7 @@ mapping(string:array(int)) ngc_status() {
   mapping(string:array(int)) res = ([]);
 
   foreach(indices(nongc_cache), string cache) {
-    int size = count_memory (1, nongc_cache[cache]);
+    int size = count_memory (0, nongc_cache[cache]);
     res[cache] = ({ sizeof(nongc_cache[cache]), size});
   }
 
