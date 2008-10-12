@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.376 2008/10/12 22:07:05 mast Exp $
+// $Id: module.pmod,v 1.377 2008/10/12 22:07:42 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2571,7 +2571,6 @@ class Context
   {
     constant is_RXML_encodable = 1;
     constant is_RXML_p_code_entry = 1;
-    constant is_csf_scope = 1;
     constant is_csf_enter_scope = 1;
     constant p_code_no_result = 1;
     mixed get (Context ctx)
@@ -2592,7 +2591,6 @@ class Context
   {
     constant is_RXML_encodable = 1;
     constant is_RXML_p_code_entry = 1;
-    constant is_csf_scope = 1;
     constant is_csf_leave_scope = 1;
     constant p_code_no_result = 1;
     mixed get (Context ctx)
