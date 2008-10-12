@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.995 2008/10/02 18:27:02 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.996 2008/10/12 22:14:03 mast Exp $";
 
 //! @appears roxen
 //!
@@ -74,6 +74,9 @@ Thread.Thread backend_thread;
 
 #define DDUMP(X) sol( combine_path( __FILE__, "../../" + X ), dump )
 protected function sol = master()->set_on_load;
+
+// Tell Pike.count_memory this is global.
+constant pike_cycle_depth = 0;
 
 #ifdef TEST_EUID_CHANGE
 int test_euid_change;

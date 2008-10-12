@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.377 2008/10/12 22:07:42 mast Exp $
+// $Id: module.pmod,v 1.378 2008/10/12 22:14:03 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -130,6 +130,9 @@ protected object roxen;
 #define SCOPE_TYPE mapping(string:mixed)|object(Scope)
 #define UNWIND_STATE mapping(string|object:mixed|array)
 #define EVAL_ARGS_FUNC function(Context,Parser|PCode:mapping(string:mixed))|string
+
+// Tell Pike.count_memory this is global.
+constant pike_cycle_depth = 0;
 
 
 // Internal caches and object tracking
@@ -361,6 +364,9 @@ class Tag
   }
 
   // Internals:
+
+  // We assume these objects always are globally referenced.
+  constant pike_cycle_depth = 0;
 
 #define MAKE_FRAME(_frame, _ctx, _parser, _args, _content)		\
   make_new_frame: do {							\
@@ -1072,6 +1078,9 @@ class TagSet
     };
 
   // Internals:
+
+  // We assume these objects always are globally referenced.
+  constant pike_cycle_depth = 0;
 
   void do_notify (function(:void) func)
   {
@@ -5595,6 +5604,9 @@ class Parser
 
   // Internals:
 
+  // We assume these objects always are globally referenced.
+  constant pike_cycle_depth = 0;
+
   mixed _eval (Context ignored, PCode more_p_code)
   // To be call compatible with PCode.
   {
@@ -6386,6 +6398,9 @@ class Type
   }
 
   // Internals:
+
+  // We assume these objects always are globally referenced.
+  constant pike_cycle_depth = 0;
 
   /*private*/ mapping(program:Type) _t_obj_cache;
   // To avoid creating new type objects all the time in `().
@@ -9464,6 +9479,9 @@ class Empty
 //! @[RXML.empty] instance, so this class should never be
 //! instantiated. It's only available to allow inherits.
 {
+  // Tell Pike.count_memory this is global.
+  constant pike_cycle_depth = 0;
+
   mixed `+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
   mixed ``+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
   string _sprintf (int flag) {return flag == 'O' && "RXML.empty";}

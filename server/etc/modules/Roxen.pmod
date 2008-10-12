@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.248 2008/09/04 10:56:30 jonasw Exp $
+// $Id: Roxen.pmod,v 1.249 2008/10/12 22:14:03 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -14,6 +14,9 @@
 #else
 # define HTTP_WERR(X)
 #endif
+
+// Tell Pike.count_memory this is global.
+constant pike_cycle_depth = 0;
 
 object|array(object) parse_xml_tmpl( string ttag, string itag,
 				     string xml_file,

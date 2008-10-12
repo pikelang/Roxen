@@ -1,12 +1,15 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module.pike,v 1.231 2008/08/15 12:33:53 mast Exp $
+// $Id: module.pike,v 1.232 2008/10/12 22:14:03 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
 #include <request_trace.h>
 
 constant __pragma_save_parent__ = 1;
+
+// Tell Pike.count_memory this is global.
+constant pike_cycle_depth = 0;
 
 inherit "basic_defvar";
 mapping(string:array(int)) error_log=([]);

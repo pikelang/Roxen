@@ -7,7 +7,7 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.34 2008/09/28 12:10:07 mast Exp $
+//! $Id: utils.pmod,v 1.35 2008/10/12 22:14:03 mast Exp $
 
 constant is_RXML_encodable = 1;
 
@@ -16,6 +16,9 @@ string _sprintf() {return "RXML.utils.pmod";}
 #endif
 
 constant short_format_length = 40;
+
+// Tell Pike.count_memory this is global.
+constant pike_cycle_depth = 0;
 
 final string format_short (mixed val, void|int length)
 // This one belongs somewhere else..

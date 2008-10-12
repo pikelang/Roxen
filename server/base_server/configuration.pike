@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.657 2008/09/04 09:49:30 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.658 2008/10/12 22:14:03 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -13,6 +13,9 @@ constant cvs_version = "$Id: configuration.pike,v 1.657 2008/09/04 09:49:30 jona
 #include <timers.h>
 
 #define CATCH(P,X) do{mixed e;if(e=catch{X;})report_error("While "+P+"\n"+describe_backtrace(e));}while(0)
+
+// Tell Pike.count_memory this is global.
+constant pike_cycle_depth = 0;
 
 // --- Locale defines ---
 //<locale-token project="roxen_start">   LOC_S  </locale-token>
