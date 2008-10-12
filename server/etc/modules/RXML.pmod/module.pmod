@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.378 2008/10/12 22:14:03 mast Exp $
+// $Id: module.pmod,v 1.379 2008/10/12 22:42:53 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3905,13 +3905,10 @@ class Frame
   do {									\
     if (SCOPE_TYPE vars = this_object()->vars) {			\
       LEAVE_SCOPE (ctx, this_object());					\
-      if (flags & FLAG_IS_CACHE_STATIC && ctx->evaled_p_code) {		\
-	DO_IF_DEBUG (							\
-	  if (!csf) error ("Failed to create CacheStaticFrame "		\
-			   "at scope entry.\n");			\
-	);								\
+      /* csf is usually set, but might not be in the cleanup after	\
+       * exceptions. */							\
+      if (flags & FLAG_IS_CACHE_STATIC && csf && ctx->evaled_p_code)	\
 	ctx->misc->recorded_changes += ({csf->LeaveScope(), ([])});	\
-      }									\
     }									\
   } while (0)
 
