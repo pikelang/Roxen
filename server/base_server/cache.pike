@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: cache.pike,v 1.92 2008/10/12 22:15:08 mast Exp $
+// $Id: cache.pike,v 1.93 2008/10/13 22:35:14 mast Exp $
 
 // #pragma strict_types
 
@@ -67,32 +67,65 @@ protected array(int) memory_usage_summary()
 }
 #endif
 
-#ifdef DEBUG_COUNT_MEM
-int count_memory (int|mapping opts, mixed what)
+protected int sizeof_cache_entry (array entry)
 {
-  if (intp (opts))
-    opts = (["lookahead": opts,
-	     "collect_stats": 1,
-	     //"collect_direct_externals": 1,
-	   ]);
-  else
-    opts += (["collect_stats": 1]);
-  float t = gauge (Pike.count_memory (opts, what));
-  if (!stringp (what))
-    werror ("%s: size %d time %g int %d cyc %d ext %d vis %d revis %d "
-	    "rnd %d wqa %d\n",
-	    (arrayp (what) && sizeof (what) == 4 && objectp (what[1]) ?
-	     sprintf ("%O", what[1]) : sprintf ("%t", what)),
-	    opts->size, t, opts->internal, opts->cyclic, opts->external,
-	    opts->visits, opts->revisits, opts->rounds, opts->work_queue_alloc);
-#if 0
-  werror ("externals: %O\n", opts->collect_direct_externals);
-#endif
-  return opts->size;
-}
+  int res;
+
+#ifdef DEBUG_COUNT_MEM
+  mapping opts = (["lookahead": DEBUG_COUNT_MEM - 1,
+		   "collect_stats": 1,
+		   "collect_direct_externals": 1,
+		 ]);
+  float t = gauge {
 #else
-#define count_memory Pike.count_memory
+#define opts 0
 #endif
+
+      if (function(int|mapping:int) cm_cb =
+	  objectp (entry[DATA]) && entry[DATA]->cache_count_memory)
+	res = cm_cb (opts) + Pike.count_memory (-1, entry);
+      else
+	res = Pike.count_memory (opts, entry);
+
+#ifdef DEBUG_COUNT_MEM
+    };
+  werror ("%s: la %d size %d time %g int %d cyc %d ext %d vis %d revis %d "
+	  "rnd %d wqa %d\n",
+	  (objectp (entry[DATA]) ?
+	   sprintf ("%O", entry[DATA]) : sprintf ("%t", entry[DATA])),
+	  opts->lookahead, opts->size, t, opts->internal, opts->cyclic,
+	  opts->external, opts->visits, opts->revisits, opts->rounds,
+	  opts->work_queue_alloc);
+
+#if 0
+  if (opts->external) {
+    opts->collect_direct_externals = 1;
+    // Raise the lookahead to 1 to recurse the closest externals.
+    if (opts->lookahead < 1) opts->lookahead = 1;
+
+    if (function(int|mapping:int) cm_cb =
+	objectp (entry[DATA]) && entry[DATA]->cache_count_memory)
+      res = cm_cb (opts) + Pike.count_memory (-1, entry);
+    else
+      res = Pike.count_memory (opts, entry);
+
+    array exts = opts->collect_direct_externals;
+    werror ("Externals found using lookahead %d: %O\n",
+	    opts->lookahead, exts);
+#if 0
+    foreach (exts, mixed ext)
+      if (objectp (ext) && ext->locate_my_ext_refs) {
+	werror ("Refs to %O:\n", ext);
+	_locate_references (ext);
+      }
+#endif
+  }
+#endif
+#endif	// DEBUG_COUNT_MEM
+#undef opts
+
+  return res;
+}
 
 void flush_memory_cache (void|string in)
 {
@@ -196,11 +229,19 @@ array(string) cache_indices(string|void in)
 mapping(string:array(int)) status()
 {
   mapping(string:array(int)) ret = ([ ]);
-  foreach(indices(cache), string name) {
+  foreach (cache; string name; mapping(string:array) cache_class) {
+#ifdef DEBUG_COUNT_MEM
+    werror ("\nCache: %s\n", name);
+#endif
     //  We only show names up to the first ":" if present. This lets us
     //  group entries together in the status table.
     string show_name = (name / ":")[0];
-    int size = count_memory (0, cache[name]);
+    int size = 0;
+    foreach (cache_class; string idx; array entry) {
+      if (!entry[SIZE])
+	entry[SIZE] = Pike.count_memory (0, idx) + sizeof_cache_entry (entry);
+      size += entry[SIZE];
+    }
     array(int) entry = ({ sizeof(cache[name]),
 			  hits[name],
 			  all[name],
@@ -263,6 +304,9 @@ void cache_clean()
     int num_entries_before = sizeof (cache_class);
 #endif
     MORE_CACHE_WERR("  Class %O\n", cache_class_name);
+#ifdef DEBUG_COUNT_MEM
+    werror ("\nCache: %s\n", cache_class_name);
+#endif
 
     foreach(cache_class; string idx; array entry)
     {
@@ -275,8 +319,6 @@ void cache_clean()
 	m_delete(cache_class, idx);
       }
       else {
-	if(!entry[SIZE]) {
- 	  // Perform a size calculation.
 #ifdef TIME_BASED_CACHE
 	  if (entry[HRTIME] < 10*60*1000000) {	// 10 minutes.
 	    // Valid HRTIME entry.
@@ -297,26 +339,21 @@ void cache_clean()
 			      idx, t, entry[HITS]);
 	    }
 	    continue;
-	  } else {
-#endif /* TIME_BASED_CACHE */
-	    entry[SIZE] = (count_memory (0, idx) +
-			   count_memory (0, entry)) / 100;
-	    // The 100 above is an "arbitrary factor", whatever that
-	    // means.. /mast
-#ifdef TIME_BASED_CACHE
 	  }
 #endif /* TIME_BASED_CACHE */
-	}
+
+	if(!entry[SIZE])
+	  entry[SIZE] = Pike.count_memory (0, idx) + sizeof_cache_entry (entry);
 	if(entry[TIMESTAMP]+1 < now &&
-	   entry[TIMESTAMP] + gc_time - entry[SIZE] < now)
+	   entry[TIMESTAMP] + gc_time - entry[SIZE] / 100 < now)
 	{
 	  m_delete(cache_class, idx);
-	  MORE_CACHE_WERR("    %O with perceived size %d bytes: Deleted\n",
-			  idx, [int] entry[SIZE] * 100);
+	  MORE_CACHE_WERR("    %O with size %d bytes: Deleted\n",
+			  idx, [int] entry[SIZE]);
 	}
 	else
-	  MORE_CACHE_WERR("    %O with perceived size %d bytes: Ok\n",
-			  idx, [int] entry[SIZE] * 100);
+	  MORE_CACHE_WERR("    %O with size %d bytes: Ok\n",
+			  idx, [int] entry[SIZE]);
       }
     }
 
@@ -375,9 +412,9 @@ void nongarbing_cache_flush(string cache_id) {
 mapping(string:array(int)) ngc_status() {
   mapping(string:array(int)) res = ([]);
 
-  foreach(indices(nongc_cache), string cache) {
-    int size = count_memory (0, nongc_cache[cache]);
-    res[cache] = ({ sizeof(nongc_cache[cache]), size});
+  foreach(nongc_cache; string cache; mapping(string:mixed) cachemap) {
+    int size = Pike.count_memory (0, cachemap);
+    res[cache] = ({ sizeof(cachemap), size});
   }
 
   return res;
