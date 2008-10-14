@@ -605,6 +605,8 @@ void create()
 {
   if (!jvm) return;
 
+  if (!context_class->register_natives)
+    error ("No support for native methods in the Java module.\n");
   natives_bind1 = context_class->register_natives(({
     ({"log", "(Ljava/lang/String;)V", native_log}),
     ({"getRealPath", "(Ljava/lang/String;)Ljava/lang/String;",

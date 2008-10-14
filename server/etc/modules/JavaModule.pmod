@@ -823,6 +823,9 @@ void create()
 {
   if (!jvm) return;
 
+  if (!module_class->register_natives)
+    error ("No support for native methods in the Java module.\n");
+
   natives_bind1 = module_class->register_natives(({
     ({"query", "(Ljava/lang/String;)Ljava/lang/Object;", native_query}),
     ({"set", "(Ljava/lang/String;Ljava/lang/Object;)V", native_set}),
