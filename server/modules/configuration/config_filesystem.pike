@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.116 2008/06/24 16:19:52 mast Exp $";
+  "$Id: config_filesystem.pike,v 1.117 2008/10/15 17:34:31 jonasw Exp $";
 
 constant path = "config_interface/";
 
@@ -159,9 +159,21 @@ mixed find_file( string f, RequestID id )
 		      +"\n", user->name(), host+" ("+id->remoteaddr+")" );
       logged_in[ user->name()+host ] = time(1);
       roxen.adminrequest_get_context( user->name(), host, id );
+
+      //  If we got here through an auth redirect, jump back to original
+      //  location.
+      if (string auth_redir = id->variables->auth_redir)
+	return Roxen.http_redirect(auth_redir, id);
     }
     else
     {
+      //  Authenticate in root directory to avoid repeated browser dialogs
+      string mountpt = query("location");
+      if (!id->variables->auth_redir && (id->not_query != mountpt)) {
+	string redir = Roxen.http_encode_url(id->raw_url);
+	return Roxen.http_redirect(mountpt + "?auth_redir=" + redir, id);
+      }
+      
       report_notice(LOCALE(169,"Login attempt from %s")+"\n",host);
       return id->conf->authenticate_throw( id, "Roxen Administration Interface",
 					   roxen.config_userdb_module );
