@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.115 2008/10/16 08:29:59 jonasw Exp $";
+  "$Id: config_filesystem.pike,v 1.116 2008/10/16 11:09:43 jonasw Exp $";
 
 constant path = "config_interface/";
 
@@ -168,7 +168,8 @@ mixed find_file( string f, RequestID id )
       //  Authenticate in root directory to avoid repeated browser dialogs.
       //  We add an exception for the change_user wizard.
       string mountpt = query("location");
-      if (!id->variables->auth_redir && (id->not_query != mountpt) &&
+      if (id->method == "GET" &&
+	  !id->variables->auth_redir && (id->not_query != mountpt) &&
 	  (id->not_query != (mountpt + "change_user.pike"))) {
 	string redir = Roxen.http_encode_url(id->raw_url);
 	return Roxen.http_redirect(mountpt + "?auth_redir=" + redir, id);
