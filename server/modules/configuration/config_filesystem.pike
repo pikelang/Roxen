@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.114 2005/02/25 16:17:15 grubba Exp $";
+  "$Id: config_filesystem.pike,v 1.115 2008/10/16 08:29:59 jonasw Exp $";
 
 constant path = "config_interface/";
 
@@ -152,9 +152,28 @@ mixed find_file( string f, RequestID id )
 		      +"\n", user->name(), host+" ("+id->remoteaddr+")" );
       logged_in[ user->name()+host ] = time(1);
       roxen.adminrequest_get_context( user->name(), host, id );
+
+      //  If we got here through an auth redirect, jump back to original
+      //  location. We'll pass an empty auth_redir to catch redirect loops.
+      if (string auth_redir = id->variables->auth_redir)
+	if (sizeof(auth_redir)) {
+	  auth_redir +=
+	    (has_value(auth_redir, "?") ? "&" : "?") + "auth_redir=";
+	  return Roxen.http_redirect(auth_redir, id);
+	}
+      m_delete(id->real_variables, "auth_redir");
     }
     else
     {
+      //  Authenticate in root directory to avoid repeated browser dialogs.
+      //  We add an exception for the change_user wizard.
+      string mountpt = query("location");
+      if (!id->variables->auth_redir && (id->not_query != mountpt) &&
+	  (id->not_query != (mountpt + "change_user.pike"))) {
+	string redir = Roxen.http_encode_url(id->raw_url);
+	return Roxen.http_redirect(mountpt + "?auth_redir=" + redir, id);
+      }
+      
       report_notice(LOCALE(169,"Login attempt from %s")+"\n",host);
       return id->conf->authenticate_throw( id, "Roxen Administration Interface",
 					   roxen.config_userdb_module );
