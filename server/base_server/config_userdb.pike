@@ -469,7 +469,7 @@ class ConfigurationSettings
 			    } );
 
 
-    defvar( "devel_mode", 1, LOCALE(180, "Show developer options and actions"),
+    defvar( "devel_mode", 0, LOCALE(180, "Show developer options and actions"),
 	    TYPE_FLAG, 
 	    LOCALE(181, "Show settings and actions that are not normaly "
 		   "useful for non-developer users. If you develop your own "
