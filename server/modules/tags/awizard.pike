@@ -6,7 +6,7 @@ inherit "module";
 #include <module.h>
 #include <config.h>
 
-constant cvs_version = "$Id: awizard.pike,v 1.28 2008/07/22 13:35:38 mast Exp $";
+constant cvs_version = "$Id: awizard.pike,v 1.29 2008/10/20 08:13:21 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Advanced wizards";
@@ -480,7 +480,8 @@ void create()
   defvar("cache_timeout", 60, "Cache timeout", TYPE_INT|VAR_MORE,
 	 "Timeout in minutes for the internal state and data cache.");
 
-  defvar("debug", 0, "Debug mode", TYPE_FLAG|VAR_DEVELOPER, "");
+  defvar("debug", 0, "Debug mode", TYPE_FLAG|VAR_MORE,
+	 "Use GET instead of POST in the form, to make debugging easier.");
 }
 
 

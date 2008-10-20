@@ -15,7 +15,7 @@
 
 // made by Pontus Hagland december -96
 
-constant cvs_version = "$Id: flik.pike,v 1.8 2004/10/11 19:05:54 mast Exp $";
+constant cvs_version = "$Id: flik.pike,v 1.9 2008/10/20 08:13:21 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -30,7 +30,7 @@ int flno=1;
 #define GC_LOOP_TIME QUERY(gc_time)
 void create()
 {
-   defvar("gc_time", 300, "GC time", TYPE_INT|VAR_DEVELOPER,
+   defvar("gc_time", 300, "GC time", TYPE_INT|VAR_MORE,
 	 "Time between gc loop. (It doesn't run when nothing to garb, anyway.)");
 
 }
