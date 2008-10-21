@@ -14,7 +14,7 @@ inherit "module";
 inherit "roxenlib";
 
 string cvs_version =
-       "$Id: perl.pike,v 2.26 2008/08/15 12:33:55 mast Exp $";
+       "$Id: perl.pike,v 2.27 2008/10/21 12:49:43 mast Exp $";
 
 constant module_type = MODULE_FILE_EXTENSION | MODULE_TAG;
 
@@ -151,11 +151,10 @@ protected object gethandler()
 
 protected void fix_settings()
 {
-  string u, g;
   mapping s = ([ ]);
 
 #if constant(getpwnam)
-  if (sscanf(query("identity"), "%s:%s", u, g) == 2)
+  if (sscanf(query("identity"), "%s:%s", string u, string g) == 2)
   {
     array ua = getpwnam(u), ga = getgrnam(g);
 
