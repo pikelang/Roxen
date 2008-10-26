@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.379 2008/10/12 22:42:53 mast Exp $
+// $Id: module.pmod,v 1.380 2008/10/26 21:27:27 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6140,7 +6140,9 @@ class Type
 
   //! @decl constant string name;
   //!
-  //! Unique type identifier. Required and considered constant.
+  //! Unique type identifier. Required and considered constant. This
+  //! is the name used to select the type from the RXML level and as
+  //! display name in error messages etc.
   //!
   //! If it contains a "/", it's treated as a MIME type and should
   //! then follow the rules for a MIME type with subtype (RFC 2045,
@@ -6152,6 +6154,11 @@ class Type
   //! If it doesn't contain a "/", it's treated as a type outside the
   //! MIME system, e.g. "int" for an integer. Any type that can be
   //! mapped to a MIME type should be so.
+
+  //! @decl constant string type_name;
+  //!
+  //! Used as the type name for debug printouts in the default
+  //! @[_sprintf].
 
   constant sequential = 0;
   //! Nonzero if data of this type is sequential, defined as:
@@ -6413,11 +6420,17 @@ class Type
   MARK_OBJECT_ONLY;
   //! @endignore
 
-  string _sprintf (int flag)
+  protected string _sprintf (int flag)
   {
-    return flag == 'O' &&
-      ("RXML.Type(" + this_object()->name + ", " +
-       (parser_prog && parser_prog->name) + ")" + OBJ_COUNT);
+    switch (flag) {
+      case 'O':
+	return ((this->type_name || "RXML.Type") +
+		"(" + this->name + ", " +
+		(parser_prog && parser_prog->name) + ")" + OBJ_COUNT);
+      case 's':
+	// Convenient to get nice type names in error messages etc.
+	return this->name;
+    }
   }
 }
 
@@ -6451,6 +6464,7 @@ class TAny
 {
   inherit Type;
   constant name = "any";
+  constant type_name = "RXML.t_any";
   Type supertype = 0;
   Type conversion_type = 0;
   constant handle_literals = 1;
@@ -6460,12 +6474,6 @@ class TAny
   mixed encode (mixed val, void|Type from)
   {
     return val;
-  }
-
-  string _sprintf (int flag)
-  {
-    return flag == 'O' &&
-      ("RXML.t_any(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT);
   }
 }
 
@@ -6479,6 +6487,7 @@ protected class TBottom
 {
   inherit Type;
   constant name = "bottom";
+  constant type_name = "RXML.t_bottom";
   Type supertype = t_any;
   Type conversion_type = 0;
 
@@ -6496,13 +6505,6 @@ protected class TBottom
   {
     return other->name != "nil";
   }
-
-  string _sprintf (int flag)
-  {
-    return flag == 'O' &&
-      ("RXML.t_bottom(" + (parser_prog && parser_prog->name) + ")" +
-       OBJ_COUNT);
-  }
 }
 
 TNil t_nil = TNil();
@@ -6518,6 +6520,7 @@ protected class TNil
 {
   inherit Type;
   constant name = "nil";
+  constant type_name = "RXML.t_nil";
   Type supertype = t_any;
   Type conversion_type = 0;
 
@@ -6532,12 +6535,6 @@ protected class TNil
   }
 
   int subtype_of (Type other) {return 1;}
-
-  string _sprintf (int flag)
-  {
-    return flag == 'O' &&
-      ("RXML.t_nil(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT);
-  }
 }
 
 TSame t_same = TSame();
@@ -6547,13 +6544,9 @@ protected class TSame
 {
   inherit Type;
   constant name = "same";
+  constant type_name = "RXML.t_same";
   Type supertype = t_any;
   Type conversion_type = 0;
-  string _sprintf (int flag)
-  {
-    return flag == 'O' &&
-      ("RXML.t_same(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT);
-  }
 }
 
 TArray t_array = TArray();
@@ -6568,6 +6561,7 @@ class TArray
 {
   inherit TAny;
   constant name = "array";
+  constant type_name = "RXML.t_array";
   constant sequential = 1;
   constant empty_value = ({});
   Type supertype = t_any;
@@ -6580,13 +6574,6 @@ class TArray
     // of a zero (which afterall has essentially the same meaning on
     // the pike level).
     return ({val != empty && val});
-  }
-
-  string _sprintf (int flag)
-  {
-    return flag == 'O' &&
-      ("RXML.t_array(" + (parser_prog && parser_prog->name) + ")" +
-       OBJ_COUNT);
   }
 }
 
@@ -6601,6 +6588,7 @@ class TMapping
 {
   inherit TAny;
   constant name = "mapping";
+  constant type_name = "RXML.t_mapping";
   constant sequential = 1;
   constant empty_value = ([]);
   Type supertype = t_any;
@@ -6619,13 +6607,6 @@ class TMapping
     type_check (val);
     return val == empty ? empty_value : val;
   }
-
-  string _sprintf (int flag)
-  {
-    return flag == 'O' &&
-      ("RXML.t_mapping(" + (parser_prog && parser_prog->name) + ")" +
-       OBJ_COUNT);
-  }
 }
 
 TType t_type = TType();
@@ -6638,6 +6619,7 @@ protected class TType
 {
   inherit Type;
   constant name = "type";
+  constant type_name = "RXML.t_type";
   constant sequential = 0;
   Type supertype = t_any;
   Type conversion_type = 0;
@@ -6668,12 +6650,6 @@ protected class TType
     parse_error ("Cannot convert %s to type: %s",
 		 format_short (val), describe_error (err));
   }
-
-  string _sprintf (int flag)
-  {
-    return flag == 'O' &&
-      ("RXML.t_type(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT);
-  }
 }
 
 TParser t_parser = TParser();
@@ -6685,6 +6661,7 @@ protected class TParser
 {
   inherit Type;
   constant name = "parser";
+  constant type_name = "RXML.t_parser";
   constant sequential = 0;
   Type supertype = t_any;
   Type conversion_type = 0;
@@ -6713,13 +6690,6 @@ protected class TParser
     parse_error ("Cannot convert %s to parser: %s",
 		 format_short (val), describe_error (err));
   }
-
-  string _sprintf (int flag)
-  {
-    return flag == 'O' &&
-      ("RXML.t_parser(" + (parser_prog && parser_prog->name) + ")" +
-       OBJ_COUNT);
-  }
 }
 
 // Basic types. Even though most of these have a `+ that fulfills
@@ -6737,6 +6707,7 @@ class TScalar
 {
   inherit Type;
   constant name = "scalar";
+  constant type_name = "RXML.t_scalar";
   constant sequential = 0;
   Type supertype = t_any;
   Type conversion_type = 0;
@@ -6761,13 +6732,6 @@ class TScalar
       parse_error ("Cannot convert %s to scalar.\n", format_short (val));
     return [string|int|float] val;
   }
-
-  string _sprintf (int flag)
-  {
-    return flag == 'O' &&
-      ("RXML.t_scalar(" + (parser_prog && parser_prog->name) + ")" +
-       OBJ_COUNT);
-  }
 }
 
 TNum t_num = TNum();
@@ -6779,6 +6743,7 @@ class TNum
 {
   inherit Type;
   constant name = "number";
+  constant type_name = "RXML.t_num";
   constant sequential = 0;
   constant empty_value = 0;
   Type supertype = t_scalar;
@@ -6810,12 +6775,6 @@ class TNum
       parse_error ("Cannot convert %s to number.\n", format_short (val));
     return [int|float] val;
   }
-
-  string _sprintf (int flag)
-  {
-    return flag == 'O' &&
-      ("RXML.t_num(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT);
-  }
 }
 
 TInt t_int = TInt();
@@ -6827,6 +6786,7 @@ class TInt
 {
   inherit Type;
   constant name = "int";
+  constant type_name = "RXML.t_int";
   constant sequential = 0;
   constant empty_value = 0;
   Type supertype = t_num;
@@ -6855,12 +6815,6 @@ class TInt
     parse_error ("Cannot convert %s to integer: %s",
 		 format_short (val), describe_error (err));
   }
-
-  string _sprintf (int flag)
-  {
-    return flag == 'O' &&
-      ("RXML.t_int(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT);
-  }
 }
 
 TFloat t_float = TFloat();
@@ -6872,6 +6826,7 @@ class TFloat
 {
   inherit Type;
   constant name = "float";
+  constant type_name = "RXML.t_float";
   constant sequential = 0;
   constant empty_value = 0;
   Type supertype = t_num;
@@ -6900,12 +6855,6 @@ class TFloat
     parse_error ("Cannot convert %s to float: %s",
 		 format_short (val), describe_error (err));
   }
-
-  string _sprintf (int flag)
-  {
-    return flag == 'O' &&
-      ("RXML.t_float(" + (parser_prog && parser_prog->name) + ")" + OBJ_COUNT);
-  }
 }
 
 TString t_string = TString();
@@ -6932,6 +6881,7 @@ class TString
 {
   inherit Type;
   constant name = "string";
+  constant type_name = "RXML.t_string";
   constant sequential = 1;
   constant empty_value = "";
   Type supertype = t_scalar;
@@ -6978,13 +6928,6 @@ class TString
 
   string capitalize (string val) {return val?String.capitalize (val):val;}
   //! Converts the first literal character in @[val] to uppercase.
-
-  string _sprintf (int flag)
-  {
-    return flag == 'O' &&
-      ("RXML.t_string(" + (parser_prog && parser_prog->name) + ")" +
-       OBJ_COUNT);
-  }
 }
 
 RXML.Type type_for_value (mixed val)
@@ -7032,19 +6975,13 @@ class TAnyText
 {
   inherit TString;
   constant name = "text/*";
+  constant type_name = "RXML.t_any_text";
   constant sequential = 1;
   constant empty_value = "";
   Type supertype = t_scalar;
   Type conversion_type = t_scalar;
   constant free_text = 1;
   constant handle_literals = 0;
-
-  string _sprintf (int flag)
-  {
-    return flag == 'O' &&
-      ("RXML.t_any_text(" + (parser_prog && parser_prog->name) + ")" +
-       OBJ_COUNT);
-  }
 }
 
 TText t_text = TText();
@@ -7056,6 +6993,7 @@ class TText
 {
   inherit TAnyText;
   constant name = "text/plain";
+  constant type_name = "RXML.t_text";
   Type supertype = t_any_text;
 
   string encode (mixed val, void|Type from)
@@ -7071,13 +7009,6 @@ class TText
     parse_error ("Cannot convert %s to %s: %s",
 		 format_short (val), name, describe_error (err));
   }
-
-  string _sprintf (int flag)
-  {
-    return flag == 'O' &&
-      ("RXML.t_text(" + (parser_prog?parser_prog->name:"NULL") + ")" +
-       OBJ_COUNT);
-  }
 }
 
 TXml t_xml = TXml();
@@ -7088,6 +7019,7 @@ class TXml
 {
   inherit TText;
   constant name = "text/xml";
+  constant type_name = "RXML.t_xml";
   Type conversion_type = t_text;
   constant entity_syntax = 1;
   constant encoding_type = "xml"; // For compatibility.
@@ -7243,13 +7175,6 @@ class TXml
   {
     return "&" + entity + ";";
   }
-
-  string _sprintf (int flag)
-  {
-    return flag == 'O' &&
-      ("RXML.t_xml(" + (parser_prog && parser_prog->name) + ")" +
-       OBJ_COUNT);
-  }
 }
 
 THtml t_html = THtml();
@@ -7259,6 +7184,7 @@ class THtml
 {
   inherit TXml;
   constant name = "text/html";
+  constant type_name = "RXML.t_html";
   Type conversion_type = t_xml;
 
   string encode (mixed val, void|Type from)
@@ -7270,13 +7196,6 @@ class THtml
   }
 
   constant decode = 0;		// Cover it; not needed here.
-
-  string _sprintf (int flag)
-  {
-    return flag == 'O' &&
-      ("RXML.t_html(" + (parser_prog && parser_prog->name) + ")" +
-       OBJ_COUNT);
-  }
 }
 
 
