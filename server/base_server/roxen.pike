@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.996 2008/10/12 22:14:03 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.997 2008/10/26 20:26:31 mast Exp $";
 
 //! @appears roxen
 //!
@@ -537,25 +537,36 @@ private void low_shutdown(int exit_code)
   call_out(really_low_shutdown, 0.1, exit_code);
 }
 
+private int shutdown_started;
+
 // Perhaps somewhat misnamed, really...  This function will close all
 // listen ports and then quit.  The 'start' script should then start a
 // new copy of roxen automatically.
 void restart(float|void i, void|int exit_code)
 //! Restart roxen, if the start script is running
 {
+  shutdown_started = 1;
   call_out(low_shutdown, i, exit_code || -1);
 }
 
 void shutdown(float|void i)
 //! Shut down roxen
 {
+  shutdown_started = 1;
   call_out(low_shutdown, i, 0);
 }
 
 void exit_when_done()
 {
   report_notice("Interrupt request received.\n");
+  shutdown_started = 1;
   low_shutdown(-1);
+}
+
+int is_shutting_down()
+//! Returns true if Roxen is shutting down.
+{
+  return shutdown_started;
 }
 
 
@@ -727,7 +738,7 @@ void slow_be_timeout_changed()
 
   if (query ("slow_req_bt_count") && slow_be_timeout > 0.0 &&
       // Don't trig if we're shutting down.
-      !shutdown_recurse) {
+      !shutdown_started) {
     Pike.DefaultBackend->before_callback = slow_be_before_cb;
     Pike.DefaultBackend->after_callback = slow_be_after_cb;
   }
@@ -1177,7 +1188,7 @@ protected void bg_process_queue()
 #endif
 
   if (mixed err = catch {
-    while (bg_queue->size()) {
+    while (bg_queue->size() && !shutdown_started) {
       // Not a race here since only one thread is reading the queue.
       array task = bg_queue->read();
 
@@ -1777,7 +1788,8 @@ class Protocol
   local function sp_fcfu;
 
 
-
+  // FIXME: find_configuration_for_url can be called from the backend
+  // thread, so enable_all_modules should be queued for a handler thread.
 #define INIT(X) do{			\
     mapping _=(X);			\
     string __=_->path;			\
