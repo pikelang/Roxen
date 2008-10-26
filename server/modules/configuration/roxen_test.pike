@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.71 2008/10/07 20:00:03 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.72 2008/10/26 20:29:21 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -58,7 +58,7 @@ int do_continue(int _tests, int _fails)
   
   tests += _tests;
   fails += _fails;
-  call_out( do_tests, 0.5 );
+  roxen.background_run (0.5, do_tests);
   return 1;
 }
 
@@ -84,7 +84,7 @@ void start(int n, Configuration c)
   if(is_ready_to_start())
   {
     running = 1;
-    call_out( do_tests, 0.5 );
+    roxen.background_run (0.5, do_tests);
   }
 }
 
@@ -232,6 +232,8 @@ void xml_use_module(Parser.HTML file_parser, mapping m, string c,
 
 void xml_test(Parser.HTML file_parser, mapping args, string c,
 	      mapping(int:RXML.PCode) p_code_cache) {
+
+  if (roxen.is_shutting_down()) return;
 
   test_num++;
   RXML.PCode p_code = p_code_cache[test_num];
@@ -580,6 +582,8 @@ void run_xml_tests(string data) {
     set_extra (p_code_cache, used_modules)->
     finish(data);
 
+  if (roxen.is_shutting_down()) return;
+
   int test_tags = 0;
 
   Roxen.get_xml_parser()->add_quote_tag ("!--", "", "--")
@@ -602,6 +606,8 @@ void run_xml_tests(string data) {
   ]) )->
     set_extra (p_code_cache, used_modules)->
     finish(data);
+
+  if (roxen.is_shutting_down()) return;
 
   foreach (indices (used_modules), string modname)
     conf->disable_module (modname);
@@ -660,7 +666,7 @@ void continue_find_tests( )
 	  {
 	    if(glob("*.xml",file))
 	    {
-	      call_out( run_xml_tests, 0, Stdio.read_file(file) );
+	      roxen.background_run (0, run_xml_tests, Stdio.read_file(file));
 	      return;
 	    }
 	    else if(glob("*.pike",file))
@@ -672,7 +678,7 @@ void continue_find_tests( )
 			     describe_backtrace(error));
 	      else
 	      {
-		call_out( run_pike_tests,0,test,file );
+		roxen.background_run (0, run_pike_tests,test,file);
 		return;
 	      }
 	    }
@@ -702,9 +708,8 @@ void continue_find_tests( )
 
 void do_tests()
 {
-  remove_call_out( do_tests );
   if(time() - roxen->start_time < 2 ) {
-    call_out( do_tests, 0.2 );
+    roxen.background_run (0.2, do_tests);
     return;
   }
   report_debug("Starting roxen self test in directory %O.\n", query("selftestdir"));
@@ -717,7 +722,7 @@ void do_tests()
 
   file_stack->push( 0 );
   file_stack->push( combine_path(query("selftestdir"), "tests" ));
-  call_out( continue_find_tests, 0 );
+  roxen.background_run (0, continue_find_tests);
 }
 
 // --- Some tags used in the RXML tests ---------------
