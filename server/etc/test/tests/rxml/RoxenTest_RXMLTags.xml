@@ -573,29 +573,51 @@ e</result>
 
 <!-- ............................................................ -->
 <comment>Append</comment>
+
 <test>
-<rxml><set variable='var.foo' value='bar'/><append variable='var.bar' value='y'/>&var.bar;</rxml>
-<result>y</result>
+  <rxml>
+    <set variable='var.foo' value='bar'/>
+    <append variable='var.bar' value='y'/>
+    &var.bar;
+  </rxml>
+  <result>y</result>
 </test>
 
 <test>
-<rxml><set variable='var.foo' value='bar'/><set variable='var.bar' value='baz'/><append variable='var.foo' from='var.bar'/>&var.foo;</rxml>
-<result>barbaz</result>
+  <rxml>
+    <set variable='var.foo' value='bar'/>
+    <set variable='var.bar' value='baz'/>
+    <append variable='var.foo' from='var.bar'/>
+    &var.foo;
+  </rxml>
+  <result>barbaz</result>
 </test>
 
 <test>
-<rxml><set variable='var.foo' value='bar'/><append variable='var.foo' value='baz'/>&var.foo;</rxml>
-<result>barbaz</result>
+  <rxml>
+    <set variable='var.foo' value='bar'/>
+    <append variable='var.foo' value='baz'/>
+    &var.foo;
+  </rxml>
+  <result>barbaz</result>
 </test>
 
 <test>
-<rxml><set variable='var.foo' value='bar'/><append variable='var.foo' value='baz'></append>&var.foo;</rxml>
-<result>barbaz</result>
+  <rxml>
+    <set variable='var.foo' value='bar'/>
+    <append variable='var.foo' value='baz'></append>
+    &var.foo;
+  </rxml>
+  <result>barbaz</result>
 </test>
 
 <test>
-<rxml><set variable='var.foo' value='bar'/><append variable="var.foo">disk</append>&var.foo;</rxml>
-<result>bardisk</result>
+  <rxml>
+    <set variable='var.foo' value='bar'/>
+    <append variable="var.foo">disk</append>
+    &var.foo;
+  </rxml>
+  <result>bardisk</result>
 </test>
 
 
