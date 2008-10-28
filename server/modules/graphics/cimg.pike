@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.75 2007/01/17 12:45:26 jonasw Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.76 2008/10/28 23:23:04 erikd Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -37,6 +37,15 @@ constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
  The path to the indata file.</p>
 
 <ex><cimg src='/internal-roxen-testimage'/></ex>
+</attr>
+
+<attr name='filename' value='string'><p>
+Append the filename value to the path. Recommended is not to append file suffix
+to the filename since there are settings for handling that automatically through
+this module settings.
+</p><p>This is usefull if you want to have images indexed, since many search engines
+uses the filename as a description of the image.</p>
+<ex><cimg-url src='/internal-roxen-testimage' filename='Roxen Test Image'/></ex>
 </attr>
 
 <attr name='data' value='imagedata'><p>
@@ -286,9 +295,12 @@ mapping find_internal( string f, RequestID id )
   //
   //  2. Check str[-4] for '.', consider .jpeg .tiff etc.
   //
+  //  3. Also handle / if filename attribute is used in either tag
+  //
   // However, . is not a valid character in the ID, so just cutting at
-  // the first one works.
-  return the_cache->http_file_answer( (f/".")[0], id );
+  // the first one works as well as also cutting at the first /.
+  sscanf (f, "%[^./]", f);
+  return the_cache->http_file_answer( f, id );
 }
 
 mapping get_my_args( mapping args, RequestID id )
@@ -378,8 +390,11 @@ class TagCimgplugin
       report_debug("%s:%d saved cacheable flags\n", __FILE__, __LINE__);
 #endif
       res->src=(query_absolute_internal_location(id)+the_cache->store( a,id ));
+      if(args->filename && sizeof(args->filename))
+	res->src += "/" + args->filename;
       if(do_ext)
 	res->src += "." + (a->format || "gif");
+      res->src = Roxen.http_encode_invalids(res->src);
       data = the_cache->data( a, id , 0 );
       res["file-size"] = strlen(data);
       res["file-size-kb"] = strlen(data)/1024;
@@ -417,10 +432,14 @@ class TagCImg
       mapping a = get_my_args( check_args( args ), id );
       args -= a;
       string ext = "";
+      string filename = "";
+      if(args->filename && sizeof(args->filename))
+	filename += "/" + m_delete(args, "filename");
       if(do_ext)
 	ext = "." + (a->format || "gif");
-      args->src = query_absolute_internal_location( id )
-		+ the_cache->store( a, id ) + ext;
+      args->src = Roxen.http_encode_invalids( query_absolute_internal_location( id )
+					      + the_cache->store( a, id ) + filename + ext
+					      );
       int no_draw = !id->misc->generate_images;
       if( mapping size = the_cache->metadata( a, id, no_draw ) )
       {
@@ -447,9 +466,14 @@ class TagCImgURL {
 
     array do_return(RequestID id)
     {
-      result = query_absolute_internal_location(id)
-	     + the_cache->store(get_my_args(check_args( args ), id ), id)
-	     + (do_ext ? "." + (args->format || "gif") : "");
+      string filename = "";
+      if(args->filename && sizeof(args->filename))
+	filename = "/" + m_delete(args, "filename");
+      result = Roxen.http_encode_invalids( query_absolute_internal_location(id)
+					   + the_cache->store(get_my_args(check_args( args ), id ), id)
+					   + filename
+					   + (do_ext ? "." + (args->format || "gif") : "")
+					   );
       return 0;
     }
   }
