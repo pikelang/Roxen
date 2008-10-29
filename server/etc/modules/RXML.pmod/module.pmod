@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.381 2008/10/29 21:41:10 mast Exp $
+// $Id: module.pmod,v 1.382 2008/10/29 21:52:23 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6605,10 +6605,11 @@ class TArray
 
       if (val == empty)
 	// Ugly special case to avoid getting RXML.empty in arrays.
-	// Conceptually it's perhaps more correct, but it probably
-	// just gets complicated in practice to handle a quirky object
-	// instead of a zero (which afterall has essentially the same
-	// meaning on the pike level).
+	// From a type theoretical perspective it's arguably more
+	// correct to keep RXML.empty, but it just gets overly
+	// complicated in practice to handle a quirky object instead
+	// of a zero (which afterall has essentially the same meaning
+	// on the pike level).
 	return ({0});
       else {
 	if (val == nil) parse_error ("Cannot convert RXML.nil to array.\n");
