@@ -1,6 +1,6 @@
 // LDAP client protocol implementation for Pike.
 //
-// $Id: client.pike,v 1.11 2008/05/23 18:14:01 grubba Exp $
+// $Id: client.pike,v 1.12 2008/10/29 09:38:45 mast Exp $
 //
 // Honza Petrous, hop@unibase.cz
 //
@@ -662,7 +662,7 @@ typedef mapping(string:ResultAttributeValue) ResultEntry;
   void create(string|mapping(string:mixed)|void url, object|void context)
   {
 
-    info = ([ "code_revision" : ("$Revision: 1.11 $"/" ")[1] ]);
+    info = ([ "code_revision" : ("$Revision: 1.12 $"/" ")[1] ]);
 
     if(!url || !sizeof(url))
       url = LDAP_DEFAULT_URL;
@@ -707,7 +707,8 @@ typedef mapping(string:ResultAttributeValue) ResultEntry;
       //ok = 0;
       //if(con_fail)
       //  con_fail(this, @extra_args);
-      THROW(({"Failed to connect to LDAP server.\n",backtrace()}));
+      ERROR ("Failed to connect to LDAP server: %s\n",
+	     strerror (low_fd->errno()));
     }
 
 #ifdef HAVE_LDAPS_SUPPORT
