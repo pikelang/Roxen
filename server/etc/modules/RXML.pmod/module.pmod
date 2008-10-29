@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.380 2008/10/26 21:27:27 mast Exp $
+// $Id: module.pmod,v 1.381 2008/10/29 21:41:10 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6469,10 +6469,15 @@ class TAny
   Type conversion_type = 0;
   constant handle_literals = 1;
 
-  void type_check (mixed val, void|string msg, mixed... args) {}
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    if (val == nil)
+      type_check_error (msg, args, "Expected value, got RXML.nil.\n");
+  }
 
   mixed encode (mixed val, void|Type from)
   {
+    if (val == nil) parse_error ("Expected value, got RXML.nil.\n");
     return val;
   }
 }
@@ -6551,11 +6556,25 @@ protected class TSame
 
 TArray t_array = TArray();
 //! An array (with any content). This is like @[RXML.t_any] except
-//! that it's sequential and values are always arrays.
+//! that it's sequential and values are always arrays. This is useful
+//! to collect several results to an array (whereas using
+//! @[RXML.t_any] would raise a "Cannot append another value ..."
+//! error if more than one result is given).
 //!
-//! This is useful to collect several results to an array. (Using
-//! @[RXML.t_any] would raise a "Cannot append another value
-//! ..." error if more than one result is given.)
+//! The @[RXML.t_array] type is special in that it is the only type
+//! where values both can be concatenated together and become array
+//! elements. E.g. if we have @expr{a = ({1,2})@} and @expr{b =
+//! ({"a"})@} then @expr{a + b@} could become either
+//! @expr{({1,2,"a"})@} or @expr{({({1,2}),({"a"})})@}. Other
+//! sequential types, e.g. @[RXML.t_string] and @[RXML.t_mapping], can
+//! only be concatenated (to form a new string or mapping), and
+//! nonsequential types like @[RXML.t_int] can never be concatenated.
+//!
+//! In accordance with the behavior mandated for sequential types,
+//! this type opts to concatenate if there is an ambiguity, which is
+//! when @expr{@[RXML.t_array]->encode@} is given an array value and
+//! no type. If an array should be handled as a single element then
+//! specify @[RXML.t_any] as the @expr{from@} type.
 
 class TArray
 {
@@ -6566,14 +6585,45 @@ class TArray
   constant empty_value = ({});
   Type supertype = t_any;
 
+  void type_check (mixed val, void|string msg, mixed... args)
+  {
+    if (!arrayp (val) && val != empty)
+      type_check_error (msg, args, "Expected array, got %t.\n", val);
+  }
+
   array encode (mixed val, void|Type from)
   {
-    // Ugly special case to avoid getting RXML.empty in arrays.
-    // Conceptually it's perhaps more correct, but it probably just
-    // gets complicated in practice to handle a quirky object instead
-    // of a zero (which afterall has essentially the same meaning on
-    // the pike level).
-    return ({val != empty && val});
+    if (from) {
+      if (from->name == local::name) {
+	type_check (val);
+	return val == empty ? empty_value : val;
+      }
+
+      // If we have a different @[from] type then we always create a
+      // single element array. This is what enables this type to be a
+      // sequential variant of RXML.t_any.
+
+      if (val == empty)
+	// Ugly special case to avoid getting RXML.empty in arrays.
+	// Conceptually it's perhaps more correct, but it probably
+	// just gets complicated in practice to handle a quirky object
+	// instead of a zero (which afterall has essentially the same
+	// meaning on the pike level).
+	return ({0});
+      else {
+	if (val == nil) parse_error ("Cannot convert RXML.nil to array.\n");
+	return ({val});
+      }
+    }
+
+    if (arrayp (val))
+      return val;
+    else if (val == empty)
+      return empty_value;
+    else {
+      if (val == nil) parse_error ("Cannot convert RXML.nil to array.\n");
+      return ({val});
+    }
   }
 }
 
