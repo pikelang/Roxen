@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.76 2008/10/28 23:22:02 erikd Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.77 2008/10/29 10:58:08 erikd Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -391,10 +391,9 @@ class TagCimgplugin
 #endif
       res->src=(query_absolute_internal_location(id)+the_cache->store( a,id ));
       if(args->filename && sizeof(args->filename))
-	res->src += "/" + args->filename;
+	res->src += "/" + Roxen.http_encode_url(args->filename);
       if(do_ext)
 	res->src += "." + (a->format || "gif");
-      res->src = Roxen.http_encode_invalids(res->src);
       data = the_cache->data( a, id , 0 );
       res["file-size"] = strlen(data);
       res["file-size-kb"] = strlen(data)/1024;
@@ -434,12 +433,11 @@ class TagCImg
       string ext = "";
       string filename = "";
       if(args->filename && sizeof(args->filename))
-	filename += "/" + m_delete(args, "filename");
+	filename += "/" + Roxen.http_encode_url(m_delete(args, "filename"));
       if(do_ext)
 	ext = "." + (a->format || "gif");
-      args->src = Roxen.http_encode_invalids( query_absolute_internal_location( id )
-					      + the_cache->store( a, id ) + filename + ext
-					      );
+      args->src = query_absolute_internal_location( id )
+		+ the_cache->store( a, id ) + filename + ext;
       int no_draw = !id->misc->generate_images;
       if( mapping size = the_cache->metadata( a, id, no_draw ) )
       {
@@ -468,12 +466,11 @@ class TagCImgURL {
     {
       string filename = "";
       if(args->filename && sizeof(args->filename))
-	filename = "/" + m_delete(args, "filename");
-      result = Roxen.http_encode_invalids( query_absolute_internal_location(id)
-					   + the_cache->store(get_my_args(check_args( args ), id ), id)
-					   + filename
-					   + (do_ext ? "." + (args->format || "gif") : "")
-					   );
+	filename = "/" + Roxen.http_encode_url(m_delete(args, "filename"));
+      result = query_absolute_internal_location(id)
+	     + the_cache->store(get_my_args(check_args( args ), id ), id)
+	     + filename
+	     + (do_ext ? "." + (args->format || "gif") : "");
       return 0;
     }
   }
