@@ -13,7 +13,7 @@
 //!
 //! Created 1999-07-30 by Martin Stjernholm.
 //!
-//! $Id: PXml.pike,v 1.65 2008/08/15 12:33:54 mast Exp $
+//! $Id: PXml.pike,v 1.66 2008/10/29 21:36:40 mast Exp $
 
 //#pragma strict_types // Disabled for now since it doesn't work well enough.
 
@@ -279,7 +279,9 @@ protected mixed value;
 void add_value (mixed val)
 {
   if (type->sequential)
-    value = value + (value = 0, val); // Keep one ref to value.
+    // Keep one ref to value. (This is probably not necessary in
+    // modern pikes.)
+    value = value + (value = 0, val);
   else {
     if (value != RXML.nil)
       RXML.parse_error (
