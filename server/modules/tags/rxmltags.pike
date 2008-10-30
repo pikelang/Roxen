@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.559 2008/10/09 11:44:52 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.560 2008/10/30 09:13:21 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -3517,6 +3517,59 @@ class TagSubstring
       }
 
       return 0;
+    }
+  }
+}
+
+class TagValue
+{
+  inherit RXML.Tag;
+  constant name = "value";
+
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "type": RXML.t_type (RXML.PEnt),
+    "index": RXML.t_any (RXML.PEnt),
+  ]);
+
+  RXML.Type content_type = RXML.t_any (RXML.PXml);
+  array(RXML.Type) result_types = ({RXML.t_any});
+  constant flags = RXML.FLAG_DONT_RECOVER;
+
+  class Frame
+  {
+    inherit RXML.Frame;
+
+    array do_enter (RequestID id)
+    {
+      RXML.Type type = args->type;
+      if (type) content_type = type (RXML.PXml);
+
+      if (args->index) {
+	if (result_type != RXML.t_mapping)
+	  parse_error ("\"index\" attribute only supported "
+		       "in mapping contexts, got %O.\n", result_type);
+      }
+
+      else {
+	if (type)
+	  // Let the rxml framework do the type conversion.
+	  result_type = type;
+	if (result_type == RXML.t_array)
+	  // Avoid that an array value gets spliced into the
+	  // surrounding array. This is the only case where we've got
+	  // a splice/single-value ambiguity.
+	  result_type = RXML.t_any;
+      }
+    }
+
+    array do_return (RequestID id)
+    {
+      if (content == RXML.nil)
+	result = RXML.empty;
+      else if (result_type == RXML.t_mapping)
+	result = ([args->index: content]);
+      else
+	result = content;
     }
   }
 }
@@ -8874,6 +8927,55 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
 <attr name='trimwhites'>
  <p>Shorthand for specifying \"trim-chars\" with all whitespace
  characters, and also slightly faster.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"value": #"<desc type='cont'>
+ <p><short>Creates a single value from its contents.</short> This is
+ mainly useful to build the elements in \"array\" or \"mapping\"
+ contexts. E.g:</p>
+
+ <ex any-result=''>
+<set variable=\"var.arr\" type=\"array\">
+  <value>apple</value>
+  <value>orange</value>
+  <value>banana</value>
+</set>
+&var.arr;</ex>
+
+ <p>This tag takes a \"type\" attribute to set the type of its
+ content, just like e.g. <tag>set</tag>. That can be useful e.g. to
+ build arrays inside arrays:</p>
+
+ <ex any-result=''>
+<value type=\"array\">
+  <value>1</value>
+  <value type=\"array\">
+    <value>1.1</value>
+    <value>1.2</value>
+  </value>
+  <value>2</value>
+</value></ex>
+</desc>
+
+<attr name='type' value='type'>
+ <p>The type of the content. Defaults to \"any\".</p>
+</attr>
+
+<attr name='index'>
+ <p>Used when the surrounding type is a mapping. This specifies the
+ index for the value. E.g:</p>
+
+ <ex any-result=''>
+<value type=\"mapping\">
+  <value index=\"1\">first</value>
+  <value index=\"2\">second</value>
+  <value index=\"3\">third</value>
+</value></ex>
+
+ <p>This attribute cannot be left out when a mapping is constructed,
+ and it must not be given otherwise.</p>
 </attr>",
 
 //----------------------------------------------------------------------
