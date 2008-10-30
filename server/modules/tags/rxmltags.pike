@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.545 2008/10/09 11:45:21 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.546 2008/10/30 09:49:28 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2854,6 +2854,59 @@ class TagRange
   }
 }
 #endif
+
+class TagValue
+{
+  inherit RXML.Tag;
+  constant name = "value";
+
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "type": RXML.t_type (RXML.PEnt),
+    "index": RXML.t_any (RXML.PEnt),
+  ]);
+
+  RXML.Type content_type = RXML.t_any (RXML.PXml);
+  array(RXML.Type) result_types = ({RXML.t_any});
+  constant flags = RXML.FLAG_DONT_RECOVER;
+
+  class Frame
+  {
+    inherit RXML.Frame;
+
+    array do_enter (RequestID id)
+    {
+      RXML.Type type = args->type;
+      if (type) content_type = type (RXML.PXml);
+
+      if (args->index) {
+	if (result_type != RXML.t_mapping)
+	  parse_error ("\"index\" attribute only supported "
+		       "in mapping contexts, got %O.\n", result_type);
+      }
+
+      else {
+	if (type)
+	  // Let the rxml framework do the type conversion.
+	  result_type = type;
+	if (result_type == RXML.t_array)
+	  // Avoid that an array value gets spliced into the
+	  // surrounding array. This is the only case where we've got
+	  // a splice/single-value ambiguity.
+	  result_type = RXML.t_any;
+      }
+    }
+
+    array do_return (RequestID id)
+    {
+      if (content == RXML.nil)
+	result = RXML.empty;
+      else if (result_type == RXML.t_mapping)
+	result = ([args->index: content]);
+      else
+	result = content;
+    }
+  }
+}
 
 class TagCSet {
   inherit RXML.Tag;
