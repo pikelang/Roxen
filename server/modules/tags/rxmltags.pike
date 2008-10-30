@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.560 2008/10/30 09:13:21 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.561 2008/10/30 09:34:44 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -27,21 +27,17 @@ constant module_doc  = "This module provides the common RXML tags.";
 //  Cached copy of conf->query("compat_level"). This setting is defined
 //  to require a module reload to take effect so we only query it when
 //  start() is called.
-float compat_level;
+float compat_level = (float) my_configuration()->query("compat_level");
 
 
 void start()
 {
   add_api_function("query_modified", api_query_modified, ({ "string" }));
   query_tag_set()->prepare_context=set_entities;
-  compat_level = (float) my_configuration()->query("compat_level");
 }
 
 int cache_static_in_2_5()
 {
-  if (compat_level == 0.0) {
-    compat_level = (float) my_configuration()->query("compat_level");
-  }
   return compat_level >= 2.5 && RXML.FLAG_IS_CACHE_STATIC;
 }
 
@@ -3631,7 +3627,6 @@ class TagHelp {
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   class Frame {
-    inherit "rxmlhelp";
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
@@ -3676,7 +3671,8 @@ class TagHelp {
 	  if(tag[0..sizeof(RXML_NAMESPACE)]!=RXML_NAMESPACE+":") {
 	    string enc=tag;
 	    if(enc[0..4]=="&lt;?") enc=enc[4..sizeof(enc)-6];
-	    if(undocumented_tags && undocumented_tags[tag])
+	    if(my_configuration()->undocumented_tags &&
+	       my_configuration()->undocumented_tags[tag])
 	      tag_links += ({ tag });
 	    else
 	      tag_links += ({ sprintf("<a href=\"%s?_r_t_h=%s\">%s</a>\n",
@@ -3701,7 +3697,7 @@ class TagHelp {
 	return ({ ret });
       }
 
-      result=ret+find_tag_doc(help_for, id);
+      result=ret+my_configuration()->find_tag_doc(help_for, id);
     }
   }
 }
