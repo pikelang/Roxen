@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.72 2008/10/26 20:29:21 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.73 2008/11/01 18:37:19 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -685,9 +685,9 @@ void continue_find_tests( )
 	    done++;
 	    break;
 	  }
-	  if( !done )
-	    report_debug( "Skipped (not matched by --tests argument)\n" );
 	}
+	if( !done )
+	  report_debug( "Skipped (not matched by --tests argument)\n" );
       }
     }
   }
