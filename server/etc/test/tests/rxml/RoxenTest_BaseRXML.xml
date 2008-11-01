@@ -3502,3 +3502,232 @@ cd</rxml>
  >1</if><if variable="var.foo = t*">2</if><if variable="var.foo = s??">3</if></rxml>
 <result>13</result>
 </test>
+
+<test no-strip-ws="">
+  <rxml type="text/*">
+    <value type="text/*"> a</value>
+    <value> b</value>
+    c
+    <value>d</value>
+    e
+  </rxml>
+  <result>
+     a
+    b
+    c
+    d
+    e
+  </result>
+</test>
+
+<test no-strip-ws="">
+  <rxml type="string">
+    <value type="text/*"> a</value>
+    <value> b</value>
+    c
+    <value>d</value>
+    <value/>
+    e
+  </rxml>
+  <result> abcde</result>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">1,2</set>
+    &var.x;
+  </rxml>
+  <equal>({"1", "2"})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">1,2</set>
+    <value>&var.x;</value>
+  </rxml>
+  <equal>({({"1", "2"})})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">1,2</set>
+    <value type="array">&var.x;</value>
+  </rxml>
+  <equal>({({"1", "2"})})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" split=",">1,2</set>
+    <range from="2" to="-2">
+      abc
+      &var.x;
+      <range variable="var.x"/>
+    </range>
+  </rxml>
+  <equal>({"1", "2", "1"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" split=",">1,2</set>
+    <range from="2" to="-2">
+      abc
+      <value>&var.x;</value>
+      <range variable="var.x"/>
+    </range>
+  </rxml>
+  <equal>({({"1", "2"}), "1"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <value type="array">
+      <value>foo</value>
+      &roxen.no-such-variable;
+      <value>bar</value>
+      &roxen.locale;
+      <value type="int">17</value>
+      <value/>
+    </value>
+  </rxml>
+  <equal>({"foo", "bar", "eng", 17, 0})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    abc
+def
+    <value>foo</value>
+    <value type="int">17</value>
+    <value type="float">17</value>
+    <value type="array">0</value>
+  </rxml>
+  <equal>({"abc\ndef", "foo", 17, 17.0, ({"0"})})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" type="array">
+      <emit source="TESTER" test="4">
+	&_.a;
+      </emit>
+    </set>
+    &var.x;
+  </rxml>
+  <equal>({"1", "2", "3"})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <emit source="TESTER" test="4">
+      <value type="int">&_.a;</value>
+    </emit>
+  </rxml>
+  <equal>({1, 2, 3})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <emit source="TESTER" test="4">
+      &_.a; &_.b; &_.c;
+    </emit>
+  </rxml>
+  <equal>({"1", "aa", "ca", "2", "ba", "cb", "3", "ab", "ba"})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <emit source="TESTER" test="4">
+      <value type="string"> &_.a;  &_.b; </value>
+    </emit>
+  </rxml>
+  <equal>({"1aa", "2ba", "3ab"})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <emit source="TESTER" test="4">
+      <value type="array"> &_.a;  &_.b; </value>
+    </emit>
+  </rxml>
+  <equal>({({"1", "aa"}), ({"2", "ba"}), ({"3", "ab"})})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <emit source="TESTER" test="4">
+      <if variable="_.a &gt; 1">
+	<value type="text/*"> &_.a;  &_.b; </value>
+      </if>
+    </emit>
+  </rxml>
+  <equal>({" 2  ba ", " 3  ab "})</equal>
+</test>
+
+
+<!-- ............................................................ -->
+<comment>Mapping variables</comment>
+
+<test>
+  <rxml type="mapping">
+    <value index="1">a</value>
+    <value index="2.3">b</value>
+    <value index="3s">c</value>
+  </rxml>
+  <equal>(["1": "a", "2.3": "b", "3s": "c"])</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <value type="mapping">
+      <value index="1">a</value>
+      <value index="2.3">b</value>
+      <value index="3s">c</value>
+    </value>
+  </rxml>
+  <equal>(["1": "a", "2.3": "b", "3s": "c"])</equal>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" type="mapping">
+      <value type="mapping">
+	<value index="1">a</value>
+	<value index="2.3">b</value>
+	<value index="3s">c</value>
+      </value>
+    </set>
+  </rxml>
+  <glob>[Error (parse): "index" attribute required in mapping context.]</glob>
+</test>
+
+<test>
+  <rxml type="mapping">
+    <value index="x" type="mapping">
+      <value index="1">a</value>
+      <value index="2.3">b</value>
+      <value index="3s">c</value>
+    </value>
+  </rxml>
+  <equal>(["x": (["1": "a", "2.3": "b", "3s": "c"])])</equal>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" type="mapping">
+      <emit source="TESTER" test="4">
+	<if variable="_.a &gt; 1">
+	  <value index="&_.a;">&_.b;</value>
+	</if>
+      </emit>
+    </set>
+    <emit source="values" variable="var.x" sort="value">
+      &_.index;: &_.value;<br/>
+    </emit>
+  </rxml>
+  <result>
+    3: ab<br/>
+    2: ba<br/>
+  </result>
+</test>
