@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.562 2008/11/01 16:55:50 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.563 2008/11/01 17:34:16 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -2788,13 +2788,19 @@ class TagSubstring
 
     array do_enter (RequestID id)
     {
-      if (args["result-array"]) {
-	//result_type = RXML.t_array; // FIXME: Add this type.
-	result_type = RXML.t_any;
+      if (result_type == RXML.t_string)
+	// Let's propagate t_string in favor of the default t_any_text.
+	content_type = result_type (RXML.PXml);
+      else if (result_type == RXML.t_array) {
+	if (args->join ||
+	    !(args->separator || args["separator-chars"] ||
+	      args["separator-whites"]))
+	  // Cannot return an array if there's a join attribute or no
+	  // separator attribute.
+	  result_type = RXML.t_string;
       }
       else
-	if (result_type == RXML.t_any)
-	  result_type = RXML.t_string;
+	result_type = RXML.t_string;
       return 0;
     }
 
@@ -3392,20 +3398,20 @@ class TagSubstring
 	    } (trim_chars);
       }
 
-      if (args["result-array"] || sep_chars ||
+      if (result_type == RXML.t_array || sep_chars ||
 	  (sep && (trim_chars || trimwhites || ignore_empty ||
 		   joiner != sep || search_str != content))) {
 	// Need to do things that require a split into an array.
 
-	if (args["result-array"]) {
+#ifdef DEBUG
+	if (result_type == RXML.t_array) {
+	  // do_enter should make sure the following never happens.
 	  if (args->join)
-	    parse_error ("\"join\" and \"result-array\" cannot be used "
-			 "at the same time.\n");
+	    error ("Unexpected join attribute in array context.\n");
 	  if (!sep && !sep_chars)
-	    parse_error ("\"result-array\" only useful together with "
-			 "\"separator\", \"separator-chars\", "
-			 "or \"separator-whites\".\n");
+	    error ("Unexpected array context without separator attribute.\n");
 	}
+#endif
 
 #if 0
 	werror ("split %O, split_str %O, beg %O/%O, end %O/%O\n",
@@ -3497,7 +3503,7 @@ class TagSubstring
 	if (trimmer) split = map (split, trimmer);
 	if (ignore_empty) split -= ({""});
 
-	if (args["result-array"])
+	if (result_type == RXML.t_array)
 	  result = split;
 	else {
 #ifdef DEBUG
@@ -8754,6 +8760,18 @@ Normalize   all whitespace,
  If neither \"to\", \"index\", nor \"before\" is specified then the
  returned substring ends at the end of the input string.</p>
 
+ <p>If <tag>substring</tag> is used in an array context with
+ \"separator\", \"separator-chars\", or \"separator-whites\" then the
+ fields are returned as an array of strings instead of a single
+ string. An example:</p>
+
+ <ex any-result=''><set variable=\"var.list\" type=\"array\">
+  <substring separator-chars=\",:\" trimwhites=\"\">
+    a, , b:c, d::e: f
+  </substring>
+</set>
+&var.list;</ex>
+
  <p>Performance notes: Character indexing is efficient on arbitrarily
  large input. The special case with a large positive
  \"from\"/\"to\"/\"index\" position in combination with
@@ -8881,26 +8899,6 @@ Normalize   all whitespace,
  \"separator-whites\". If several fields are joined together to a
  result string, then this string is used as delimiter between the
  fields.<p>
-</attr>
-
-<attr name='result-array'>
- <p>Only used together with \"separator\", \"separator-chars\", or
- \"separator-whites\". Return the fields as an array of strings
- instead of a string.</p>
-
- <p>The result can not be inserted directly into the page in this
- form, but it can be assigned to a variable and manipulated further,
- e.g. fed to <tag>emit</tag> to iterate over the elements in the
- array:</p>
-
- <ex><set variable=\"var.list\">
-  <substring separator-chars=\",:\" trimwhites=\"\" result-array=\"\">
-    a, , b:c, d::e: f
-  </substring>
-</set>
-<emit source=\"values\" variable=\"var.list\">
-  [&_.value;]
-</emit></ex>
 </attr>
 
 <attr name='case-insensitive'>
