@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.546 2008/10/30 09:49:28 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.547 2008/11/01 18:32:34 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2885,9 +2885,9 @@ class TagValue
       }
 
       else {
-	if (type)
-	  // Let the rxml framework do the type conversion.
-	  result_type = type;
+	if (result_type == RXML.t_mapping)
+	  parse_error ("\"index\" attribute required in mapping context.\n");
+
 	if (result_type == RXML.t_array)
 	  // Avoid that an array value gets spliced into the
 	  // surrounding array. This is the only case where we've got
@@ -2900,8 +2900,10 @@ class TagValue
     {
       if (content == RXML.nil)
 	result = RXML.empty;
-      else if (result_type == RXML.t_mapping)
-	result = ([args->index: content]);
+      else if (string ind = args->index)
+	result = ([ind: content]);
+      else if (result_type != content_type)
+	result = result_type->encode (content, content_type);
       else
 	result = content;
     }
