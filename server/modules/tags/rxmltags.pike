@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.564 2008/11/01 18:32:09 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.565 2008/11/01 18:39:14 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -3516,6 +3516,146 @@ class TagSubstring
       else {
 	result = content[beg_pos..end_pos - 1];
 	if (trimmer) result = trimmer (result);
+      }
+
+      return 0;
+    }
+  }
+}
+
+class TagRange
+{
+  inherit RXML.Tag;
+  constant name = "range";
+
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "from": RXML.t_int (RXML.PEnt),
+    "to": RXML.t_int (RXML.PEnt),
+    "variable": RXML.t_text (RXML.PEnt),
+  ]);
+
+  RXML.Type content_type = RXML.t_array (RXML.PXml);
+  array(RXML.Type) result_types = ({RXML.t_any});
+  constant flags = RXML.FLAG_DONT_RECOVER;
+
+  class Frame
+  {
+    inherit RXML.Frame;
+
+    array do_enter (RequestID id)
+    {
+      if (!args->join)
+	result_type = RXML.t_array;
+      else
+	result_type = RXML.t_string;
+
+      if (args->variable)
+	flags |= RXML.FLAG_EMPTY_ELEMENT;
+
+      return 0;
+    }
+
+    array do_return (RequestID id)
+    {
+      int beg = args->from;
+      if (!beg && !zero_type (beg)) parse_error ("\from\" cannot be zero.\n");
+      int end = args->to;
+      if (!end && !zero_type (end)) parse_error ("\to\" cannot be zero.\n");
+
+      if (args->variable)
+	content = RXML.user_get_var (args->variable);
+      else if (content == RXML.nil)
+	content = ({});
+
+      if (!arrayp (content))
+	parse_error ("Array required as input, got %t.\n", content);
+
+      int beg_pos, end_pos;
+
+    beg_search:
+      if (string after = args->after) {
+	if (!beg) beg = 1;
+
+	if (beg > 0) {
+	  int i = 0;
+	  do {
+	    i = search (content, after, i) + 1;
+	    if (i == 0) {
+	      beg_pos = Int.NATIVE_MAX;
+	      break beg_search;
+	    }
+	  } while (--beg > 0);
+	  beg_pos = i;
+	}
+
+	else {
+	  for (int i = sizeof (content); --i >= 0;) {
+	    if (content[i] == after)
+	      if (!++beg) {
+		beg_pos = i + 1;
+		break beg_search;
+	      }
+	  }
+	  beg_pos = 0;
+	}
+      }
+
+      else {			// Index by position.
+	if (beg > 0)
+	  beg_pos = beg - 1;
+	else if (beg < 0)
+	  beg_pos = max (sizeof (content) + beg, 0);
+	else
+	  beg_pos = 0;
+      }
+
+    end_search:
+      if (string before = args->before) {
+	if (!end) end = 1;
+
+	if (end > 0) {
+	  int i = 0;
+	  do {
+	    i = search (content, before, i) + 1;
+	    if (i == 0) {
+	      end_pos = Int.NATIVE_MAX;
+	      break end_search;
+	    }
+	  } while (--end > 0);
+	  end_pos = i - 1;
+	}
+
+	else {
+	  for (int i = sizeof (content); --i >= 0;) {
+	    if (content[i] == before)
+	      if (!++end) {
+		end_pos = i;
+		break end_search;
+	      }
+	  }
+	  end_pos = 0;
+	}
+      }
+
+      else {			// Index by position.
+	if (end > 0)
+	  end_pos = end;
+	else if (end <= 0)
+	  end_pos = max (sizeof (content) + end + 1, 0);
+      }
+
+#ifdef DEBUG
+      if (beg_pos < 0) error ("Invalid beg_pos %d.\n", beg_pos);
+      if (end_pos < 0) error ("Invalid end_pos %d.\n", end_pos);
+#endif
+
+      result = content[beg_pos..end_pos - 1];
+      if (string joiner = args->join) {
+	if (mixed err = catch (result = (array(string)) result))
+	  parse_error ("Cannot convert %s to array of strings: %s",
+		       RXML.utils.format_short (result),
+		       describe_error (err));
+	result *= joiner;
       }
 
       return 0;
@@ -8923,6 +9063,122 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
 <attr name='trimwhites'>
  <p>Shorthand for specifying \"trim-chars\" with all whitespace
  characters, and also slightly faster.</p>
+</attr>",
+
+//----------------------------------------------------------------------
+
+"range": #"<desc type='cont'>
+ <p><short>Extract a range of an array.</short> The part to extract
+ can be specified using positions or by searching for matching
+ elements. Some examples:</p>
+
+ <p>Given a variable var.x containing an array like this:</p>
+
+<ex any-result=''><set variable=\"var.x\" split=\",\">a,b,c,d,e,f</set>
+&var.x;</ex>
+
+ <p>To pick out ranges based on positions:</p>
+
+ <ex any-result=''><range variable=\"var.x\" from=\"2\"/></ex>
+ <ex any-result=''><range variable=\"var.x\" from=\"-2\"/></ex>
+ <ex any-result=''><range variable=\"var.x\" from=\"2\" to=\"-2\"/></ex></p>
+
+ <p>Given a variable var.x containing an array like this:</p>
+
+ <ex any-result=''><set variable=\"var.x\" type=\"array\">
+  <substring separator-whites=\"\">
+    From the past to the future via the present.
+  </substring>
+</set>
+&var.x;</ex>
+
+ <p>To pick out ranges based on matching elements:</p>
+
+ <ex any-result=''><range variable=\"var.x\" after=\"the\"/></ex>
+ <ex any-result=''><range variable=\"var.x\" after=\"the\" from=\"2\"/></ex>
+ <ex any-result=''><range variable=\"var.x\" after=\"the\" from=\"-1\"/></ex>
+ <ex any-result=''><range variable=\"var.x\" after=\"to\" before=\"the\" to=\"3\"/></ex>
+
+ <p>The \"from\" and \"to\" attributes specifies positions in the
+ input array. What is considered a position depends on other
+ attributes:</p>
+
+ <ul>
+   <li>If the \"after\" attribute is given then \"from\" counts the
+   occurrences of that element.<li>
+
+   <li>Similarly, if the \"before\" attribute is given then \"to\"
+   counts the occurrences of that element.<li>
+
+   <li>If neither of the above applies then positions are counted
+   directly by index.</li>
+ </ul>
+
+ <p>Positive positions count from the start of the input array,
+ beginning with 1. Negative positions counts from the end.</p>
+
+ <p>It is not an error if a position count goes past the array limit
+ (in either direction). The position gets capped by the start or end
+ if that happens. E.g. if a \"from\" position counts from the
+ beginning and goes past the end then the result is an empty array,
+ and if it counts from the end and goes past the beginning then the
+ result starts at the beginning of the input array.</p>
+
+ <p>It is also not an error if the start position ends up after the
+ end position. In that case the result is simply an empty array.</p>
+
+ <p>If neither \"from\", nor \"after\" is specified then the returned
+ range starts at the beginning of the input array. If neither \"to\"
+ nor \"before\" is specified then the returned range ends at the end
+ of the input array.</p>
+
+ <p>If \"join\" is given then the result is returned as a string,
+ otherwise it is an array.</p>
+</desc>
+
+<attr name='variable'>
+ <p>The variable to get the input array from.</p>
+
+ <p>If this is left out then the array is taken from the content,
+ which must contain either a variable reference or a tag that returns
+ an array. Surrounding whitespace and comments are ignored, as this
+ example shows:</p>
+
+ <ex any-result=''>
+<range from=\"2\">
+  <!-- The following tag picks out the part between the first and last
+       \"::\" and then splits on \",\", leaving the elements c, d, and
+       e. The <range> tag then removes the first element (c). -->
+  <substring separator=\",\" trimwhites=\"\"
+	     after=\"::\" before=\"::\" to=\"-1\">
+    a, b :: c, d, e :: f, g
+  </substring>
+</range></ex>
+</attr>
+
+<attr name='from' value='integer'>
+ <p>The position of the start of the range to return.</p>
+</attr>
+
+<attr name='to' value='integer'>
+ <p>The position of the end of the range to return.</p>
+</attr>
+
+<attr name='after'>
+ <p>The range to return begins after the first occurrence of this
+ element. Together with the \"from\" attribute, it specifies the
+ <i>n</i>th occurrence.</p>
+</attr>
+
+<attr name='before'>
+ <p>The range to return ends before the first occurrence of this
+ element. Together with the \"to\" attribute, it specifies the
+ <i>n</i>th occurrence.</p>
+</attr>
+
+<attr name='join' value='string'>
+ <p>Join together the elements of the range to a string, using the
+ value of this attribute as delimiter between the elements.<p>
 </attr>",
 
 //----------------------------------------------------------------------
