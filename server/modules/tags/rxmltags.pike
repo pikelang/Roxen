@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.565 2008/11/01 18:39:14 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.566 2008/11/01 20:19:51 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -1151,8 +1151,9 @@ class TagInsert {
     void do_insert(RXML.Tag plugin, string name, RequestID id) {
       result=plugin->get_data(args[name], args, id, this);
 
-      if(plugin->get_type)
-	result_type=plugin->get_type(args, result);
+      if (RXML.Type new_type = plugin->get_type &&
+	  plugin->get_type (args, result, this))
+	result_type = new_type;
       else if(args->quote=="none")
 	result_type=RXML.t_xml;
       else
@@ -1224,24 +1225,45 @@ class TagInsertVariables {
   constant name = "insert";
   constant plugin_name = "variables";
 
-  string get_data(string var, mapping args) {
+  string|mapping|RXML.Scope get_data (string var, mapping args,
+				      RequestID id, RXML.Frame insert_frame)
+  {
     RXML.Context context=RXML_CONTEXT;
-    if(var=="full")
-      return map(sort(context->list_var(args->scope)),
-		 lambda(string s) {
-		   mixed value = context->get_var(s, args->scope);
-		   if (!zero_type (value))
-		     return sprintf("%s=%O", s, value);
-		   else if (compat_level < 5.0)
-		     // A variable with an undefined value doesn't
-		     // exist by definition, even though list_var
-		     // might still list it. It should therefore be
-		     // ignored, but we keep this compat for
-		     // hysterical reasons.
-		     return sprintf("%s=UNDEFINED", s);
-		 } ) * "\n";
-    return String.implode_nicely(sort(context->list_var(args->scope,
-							compat_level > 4.5)));
+
+    string scope = args->scope;
+    if (!scope)
+      RXML.parse_error ("\"scope\" attribute missing.\n");
+    if (!context->exist_scope (scope))
+      RXML.parse_error ("No such scope %q.\n", scope);
+
+    if (insert_frame->result_type == RXML.t_string ||
+	insert_frame->result_type->subtype_of (RXML.t_any_text) ||
+	compat_level < 5.0) {
+      if(var=="full")
+	return map(sort(context->list_var(scope)),
+		   lambda(string s) {
+		     mixed value = context->get_var(s, scope);
+		     if (!zero_type (value))
+		       return sprintf("%s=%O", s, value);
+		     else if (compat_level < 5.0)
+		       // A variable with an undefined value doesn't
+		       // exist by definition, even though list_var
+		       // might still list it. It should therefore be
+		       // ignored, but we keep this compat for
+		       // hysterical reasons.
+		       return sprintf("%s=UNDEFINED", s);
+		   } ) * "\n";
+
+      return String.implode_nicely(sort(context->list_var(scope,
+							  compat_level > 4.5)));
+    }
+
+    return context->get_scope (scope);
+  }
+
+  RXML.Type get_type (mapping args, mixed result, RXML.Frame insert_frame)
+  {
+    return !stringp (result) && RXML.t_mapping;
   }
 }
 
@@ -8505,20 +8527,35 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 //----------------------------------------------------------------------
 
 "insert#variables":#"<desc type='plugin'><p><short>
- Inserts a listing of all variables in a scope.</short></p><note><p>It is
- possible to create a scope with an infinite number of variables set.
- In this case the programmer of that scope decides which variables that
- should be listable, i.e. this will not cause any problem except that
- all variables will not be listed. It is also possible to hide
- variables so that they are not listed with this tag.
-</p></note></desc>
+ Inserts a listing of all variables in a scope.</short> In a string or
+ text context, the variables are formatted according to the
+ \"variables\" attribute. Otherwise the scope is returned as-is, i.e.
+ as a mapping.</p>
+
+ " // FIXME: The following should be moved to some intro chapter.
+ #"<note><p>It is possible to create a scope with an infinite number
+ of variables. When such a scope is listed in string form (or iterated
+ over with <tag>emit source=\"values\"</tag>), it is up to the
+ implementation which variables are included in the list, i.e. it will
+ not cause any problem except that all variables will not be listed.
+ An implementation of a limited scope might also hide variables so
+ that they don't get listed by this tag.</p></note>
+
+ <p>Compatibility note: If the compatibility level is less than 5.0
+ then a string list is always returned.</p>
+</desc>
 
 <attr name='variables' value='full|plain'>
- <p>Sets how the output should be formatted.</p>
+ <p>Specifies how the output will be formatted in a string context, as
+ shown by the following example. The default is \"plain\".</p>
 
- <ex-box><pre>
-<insert variables='full' scope='roxen'/>
-</pre></ex-box>
+ <ex>
+<set variable=\"var.a\">hello</set>
+<set variable=\"var.b\" type=\"int\">4711</set>
+<set variable=\"var.c\" split=\" \">x y z</set>
+<pre><insert source=\"variables\" variables=\"full\" scope=\"var\"/></pre>
+<hr />
+<pre><insert source=\"variables\" variables=\"plain\" scope=\"var\"/></pre></ex>
 </attr>
 
 <attr name='scope'>
@@ -8589,7 +8626,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
 "maketag":({ #"<desc type='cont'><p><short hide='hide'>
  Makes it possible to create tags.</short>This tag creates tags.
- The contents of the container will be put into the contents of the produced container.
+ The content is used as content of the produced container.
 </p></desc>
 
 <attr name='name' value='string'>
@@ -9610,7 +9647,11 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
  <p>If none of the above attributes are specified, the variable is unset.
  If debug is currently on, more specific debug information is provided
  if the operation failed. See also: <xref href='append.tag' /> and <xref href='../programming/debug.tag' />.</p>
-</attr> ",
+</attr>
+
+<attr name='type' value='type'>
+ <p>The type of the content. Defaults to \"any\".</p>
+</attr>",
 
 //----------------------------------------------------------------------
 
