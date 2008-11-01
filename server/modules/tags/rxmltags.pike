@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.563 2008/11/01 17:34:16 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.564 2008/11/01 18:32:09 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -3553,9 +3553,9 @@ class TagValue
       }
 
       else {
-	if (type)
-	  // Let the rxml framework do the type conversion.
-	  result_type = type;
+	if (result_type == RXML.t_mapping)
+	  parse_error ("\"index\" attribute required in mapping context.\n");
+
 	if (result_type == RXML.t_array)
 	  // Avoid that an array value gets spliced into the
 	  // surrounding array. This is the only case where we've got
@@ -3568,8 +3568,10 @@ class TagValue
     {
       if (content == RXML.nil)
 	result = RXML.empty;
-      else if (result_type == RXML.t_mapping)
-	result = ([args->index: content]);
+      else if (string ind = args->index)
+	result = ([ind: content]);
+      else if (result_type != content_type)
+	result = result_type->encode (content, content_type);
       else
 	result = content;
     }
@@ -8927,8 +8929,8 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
 
 "value": #"<desc type='cont'>
  <p><short>Creates a single value from its contents.</short> This is
- mainly useful to build the elements in \"array\" or \"mapping\"
- contexts. E.g:</p>
+ mainly useful to build the elements in array or mapping contexts.
+ E.g:</p>
 
  <ex any-result=''>
 <set variable=\"var.arr\" type=\"array\">
@@ -8950,6 +8952,20 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
     <value>1.2</value>
   </value>
   <value>2</value>
+</value></ex>
+
+ <p>Note that a variable with an array value is normally spliced into
+ an array context. Here too an extra <tag>value</tag> tag is useful to
+ make it a nested array:</p>
+
+ <ex any-result=''>
+<set variable=\"var.x\" split=\",\">a,b</set>
+<value type=\"array\">
+  <!-- Insert all the elements in var.x -->
+  &var.x;
+  <!-- Compare to the following that adds
+       the var.x array as a single element. -->
+  <value>&var.x;</value>
 </value></ex>
 </desc>
 
