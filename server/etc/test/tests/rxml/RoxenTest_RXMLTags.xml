@@ -1201,8 +1201,8 @@ e</result>
 
 <test>
   <rxml>
-    <set variable="var.foo">
-      <substring separator="" from="3" result-array="">abcdef</substring>
+    <set variable="var.foo" type="array">
+      <substring separator="" from="3">abcdef</substring>
     </set>
     [<emit source="values" variable="var.foo">&_.value;,</emit>]
   </rxml>
@@ -1398,41 +1398,26 @@ e</result>
 </test>
 
 <test>
-  <rxml>
-    <set variable="var.foo">
-      <substring after=":" separator-chars=":," ignore-empty="" trimwhites="" to="6" result-array="">,a,, , b: c,  d ::e : f,, </substring>
-    </set>
-    [<emit source="values" variable="var.foo">&_.value;,</emit>]
+  <rxml type="array">
+    <substring after=":" separator-chars=":," ignore-empty="" trimwhites="" to="6" result-array="">,a,, , b: c,  d ::e : f,, </substring>
   </rxml>
-  <result>
-    [c,d,e,f,]
-  </result>
+  <equal>({"c", "d", "e", "f"})</equal>
 </test>
 
 <test>
-  <rxml>
-    <set variable="var.foo">
-      <substring after=",," before="::"
-		 separator-chars=":," ignore-empty="" trimwhites="" result-array="">,a,, , b: c,  d ::e : f,, </substring>
-    </set>
-    [<emit source="values" variable="var.foo">&_.value;,</emit>]
+  <rxml type="array">
+    <substring after=",," before="::"
+	       separator-chars=":," ignore-empty="" trimwhites="" result-array="">,a,, , b: c,  d ::e : f,, </substring>
   </rxml>
-  <result>
-    [b,c,d,]
-  </result>
+  <equal>({"b", "c", "d"})</equal>
 </test>
 
 <test>
-  <rxml>
-    <set variable="var.foo">
-      <substring after=",," before=",," to="-1"
-		 separator-chars=":," ignore-empty="" trimwhites="" result-array="">,a,, , b: c,  d ::e : f,, g</substring>
-    </set>
-    [<emit source="values" variable="var.foo">&_.value;,</emit>]
+  <rxml type="array">
+    <substring after=",," before=",," to="-1"
+	       separator-chars=":," ignore-empty="" trimwhites="" result-array="">,a,, , b: c,  d ::e : f,, g</substring>
   </rxml>
-  <result>
-    [b,c,d,e,f,]
-  </result>
+  <equal>({"b", "c", "d", "e", "f"})</equal>
 </test>
 
 <test>
