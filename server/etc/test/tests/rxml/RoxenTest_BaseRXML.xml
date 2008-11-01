@@ -3290,7 +3290,7 @@ cd</rxml>
 
 <test>
 <rxml>&client.host;</rxml>
-<result>127.0.0.1</result>
+<regexp>^(127\.0\.0\.1|localhost)$</regexp>
 </test>
 
 <test>
