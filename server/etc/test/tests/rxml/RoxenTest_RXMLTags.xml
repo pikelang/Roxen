@@ -1485,6 +1485,183 @@ e</result>
 
 
 <!-- ............................................................ -->
+<comment>range</comment>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" split=",">a,A,b,B,c,C</set>
+    <range from="2" to="4" variable="var.x"/>
+  </rxml>
+  <equal>({"A", "b", "B"})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">a,A,b,B,c,C</set>
+    <range to="2" variable="var.x"/>
+    <range from="-2" variable="var.x"/>
+  </rxml>
+  <equal>({"a", "A", "c", "C"})</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">a,A,b,B,c,C</set>
+    <value><range from="4" to="2" variable="var.x"/></value>
+    <value><range from="-4" to="-2" variable="var.x"/></value>
+    <value><range from="-2" to="-4" variable="var.x"/></value>
+    <value><range from="2" to="-4" variable="var.x"/></value>
+    <value><range from="-4" to="2" variable="var.x"/></value>
+    <value><range from="-4" to="5" variable="var.x"/></value>
+    <value><range from="5" to="-4" variable="var.x"/></value>
+  </rxml>
+  <equal>({
+    ({}),
+    ({"b", "B", "c"}),
+    ({}),
+    ({"A", "b"}),
+    ({}),
+    ({"b", "B", "c"}),
+    ({}),
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">a,A,b,B,c,C</set>
+    <value><range from="2" variable="var.x"/></value>
+    <value><range from="-2" variable="var.x"/></value>
+    <value><range to="4" variable="var.x"/></value>
+    <value><range to="-4" variable="var.x"/></value>
+    <value><range variable="var.x"/></value>
+  </rxml>
+  <equal>({
+    ({"A", "b", "B", "c", "C"}),
+    ({"c", "C"}),
+    ({"a", "A", "b", "B"}),
+    ({"a", "A", "b"}),
+    ({"a", "A", "b", "B", "c", "C"}),
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">a,A,b,B,c,C</set>
+    <value><range from="17" variable="var.x"/></value>
+    <value><range from="-17" variable="var.x"/></value>
+    <value><range to="17" variable="var.x"/></value>
+    <value><range to="-17" variable="var.x"/></value>
+    <value><range from="17" to="4711" variable="var.x"/></value>
+    <value><range from="-17" to="4711" variable="var.x"/></value>
+    <value><range from="17" to="-4711" variable="var.x"/></value>
+    <value><range from="-17" to="-4711" variable="var.x"/></value>
+    <value><range from="4711" to="17" variable="var.x"/></value>
+    <value><range from="-4711" to="17" variable="var.x"/></value>
+    <value><range from="4711" to="-17" variable="var.x"/></value>
+    <value><range from="-4711" to="-17" variable="var.x"/></value>
+  </rxml>
+  <equal>({
+    ({}),
+    ({"a", "A", "b", "B", "c", "C"}),
+    ({"a", "A", "b", "B", "c", "C"}),
+    ({}),
+    ({}),
+    ({"a", "A", "b", "B", "c", "C"}),
+    ({}),
+    ({}),
+    ({}),
+    ({"a", "A", "b", "B", "c", "C"}),
+    ({}),
+    ({}),
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">bah,feh,feh,bah,bahah,urp,bah,feh,urp</set>
+    <value><range after="bah" variable="var.x"/></value>
+    <value><range after="bah" from="1" variable="var.x"/></value>
+    <value><range after="bah" from="2" variable="var.x"/></value>
+    <value><range after="bah" from="3" variable="var.x"/></value>
+    <value><range after="bah" from="-1" variable="var.x"/></value>
+    <value><range after="bah" from="-2" variable="var.x"/></value>
+    <value><range after="bah" from="-3" variable="var.x"/></value>
+  </rxml>
+  <equal>({
+    ({"feh", "feh", "bah", "bahah", "urp", "bah", "feh", "urp"}),
+    ({"feh", "feh", "bah", "bahah", "urp", "bah", "feh", "urp"}),
+    ({"bahah", "urp", "bah", "feh", "urp"}),
+    ({"feh", "urp"}),
+    ({"feh", "urp"}),
+    ({"bahah", "urp", "bah", "feh", "urp"}),
+    ({"feh", "feh", "bah", "bahah", "urp", "bah", "feh", "urp"}),
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">bah,feh,feh,bah,bahah,urp,bah,feh,urp</set>
+    <value><range before="feh" variable="var.x"/></value>
+    <value><range before="feh" to="1" variable="var.x"/></value>
+    <value><range before="feh" to="2" variable="var.x"/></value>
+    <value><range before="feh" to="3" variable="var.x"/></value>
+    <value><range before="feh" to="-1" variable="var.x"/></value>
+    <value><range before="feh" to="-2" variable="var.x"/></value>
+    <value><range before="feh" to="-3" variable="var.x"/></value>
+  </rxml>
+  <equal>({
+    ({"bah"}),
+    ({"bah"}),
+    ({"bah", "feh"}),
+    ({"bah", "feh", "feh", "bah", "bahah", "urp", "bah"}),
+    ({"bah", "feh", "feh", "bah", "bahah", "urp", "bah"}),
+    ({"bah", "feh"}),
+    ({"bah"}),
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">bah,feh,feh,bah,bahah,urp,bah,feh,urp</set>
+    <value><range after="bah" to="3" variable="var.x"/></value>
+    <value><range after="bah" to="-2" variable="var.x"/></value>
+    <value><range after="bah" from="2" to="3" variable="var.x"/></value>
+    <value><range after="bah" from="2" to="-2" variable="var.x"/></value>
+    <value><range after="bah" from="-1" to="3" variable="var.x"/></value>
+    <value><range after="bah" from="-1" to="-2" variable="var.x"/></value>
+  </rxml>
+  <equal>({
+    ({"feh", "feh"}),
+    ({"feh", "feh", "bah", "bahah", "urp", "bah", "feh"}),
+    ({}),
+    ({"bahah", "urp", "bah", "feh"}),
+    ({}),
+    ({"feh"}),
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <set variable="var.x" split=",">bah,feh,feh,bah,bahah,urp,bah,feh,urp</set>
+    <value><range from="8" before="feh" variable="var.x"/></value>
+    <value><range from="-8" before="feh" variable="var.x"/></value>
+    <value><range from="8" before="feh" to="2" variable="var.x"/></value>
+    <value><range from="-8" before="feh" to="2" variable="var.x"/></value>
+    <value><range from="8" before="feh" to="-1" variable="var.x"/></value>
+    <value><range from="-8" before="feh" to="-1" variable="var.x"/></value>
+  </rxml>
+  <equal>({
+    ({}),
+    ({}),
+    ({}),
+    ({"feh"}),
+    ({}),
+    ({"feh", "feh", "bah", "bahah", "urp",  "bah"}),
+  })</equal>
+</test>
+
+
+<!-- ............................................................ -->
 <comment>Trimlines</comment>
 <test>
 <rxml>x<trimlines>
