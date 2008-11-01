@@ -7,9 +7,9 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.561 2008/10/30 09:34:44 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.562 2008/11/01 16:55:50 mast Exp $";
 constant thread_safe = 1;
-constant language = roxen->language;
+constant language = roxen.language;
 
 #include <module.h>
 #include <config.h>
@@ -240,7 +240,7 @@ class EntityClientHost {
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
     c->id->misc->cacheable=0;
     if(c->id->host) return c->id->host;
-    return c->id->host=roxen->quick_ip_to_host(c->id->remoteaddr);
+    return c->id->host=roxen.quick_ip_to_host(c->id->remoteaddr);
   }
 }
 
@@ -521,7 +521,7 @@ class TagRedirect {
       if (r->extra_heads)
 	RXML_CONTEXT->extend_scope ("header", r->extra_heads);
       // We do not need this as long as r only contains strings and numbers
-      //    foreach(indices(r->extra_heads), string tmp)
+      //    foreach(r->extra_heads; string tmp;)
       //      id->add_response_header(tmp, r->extra_heads[tmp]);
       if (args->text)
 	RXML_CONTEXT->set_misc (" _rettext", args->text);
@@ -1140,21 +1140,21 @@ class TagInsert {
   inherit RXML.Tag;
   constant name = "insert";
   constant flags = RXML.FLAG_EMPTY_ELEMENT | RXML.FLAG_SOCKET_TAG;
-  // FIXME: result_types needs to be updated with all possible outputs
-  // from the plugins.
+
+  array(RXML.Type) result_types = ({RXML.t_any});
+
+  // FIXME: Check arg types for the plugins.
 
   class Frame {
     inherit RXML.Frame;
 
     void do_insert(RXML.Tag plugin, string name, RequestID id) {
-      result=plugin->get_data(args[name], args, id, this_object());
+      result=plugin->get_data(args[name], args, id, this);
 
       if(plugin->get_type)
 	result_type=plugin->get_type(args, result);
       else if(args->quote=="none")
 	result_type=RXML.t_xml;
-      else if(args->quote=="html")
-	result_type=RXML.t_text;
       else
 	result_type=RXML.t_text;
     }
@@ -1167,7 +1167,7 @@ class TagInsert {
 	do_insert(plugin, args->source, id);
 	return 0;
       }
-      foreach((array)get_plugins(), [string name, RXML.Tag plugin]) {
+      foreach(get_plugins(); string name; RXML.Tag plugin) {
 	if(args[name]) {
 	  do_insert(plugin, name, id);
 	  return 0;
@@ -1725,8 +1725,8 @@ class TagCache {
     for (TimeOutEntry t = timeout_list, prev; t; t = t->next) {
       mapping(string:array(int|RXML.PCode)) cachemap = t->timeout_cache[0];
       if (cachemap) {
-	foreach (indices (cachemap), string key)
-	  if (cachemap[key][0] < now) m_delete (cachemap, key);
+	foreach (cachemap; string key; array(int|RXML.PCode) val)
+	  if (val[0] < now) m_delete (cachemap, key);
 	prev = t;
       }
       else
@@ -3757,7 +3757,7 @@ class TagUse {
 
     array(string) ifs = ({}), tags = ({});
 
-    foreach (indices (defs[0]), string defname)
+    foreach (defs[0]; string defname;)
       if (has_prefix (defname, "if\0"))
 	ifs += ({defname[sizeof ("if\0")..]});
       else if (has_prefix (defname, "tag\0"))
@@ -3846,8 +3846,8 @@ class TagUse {
       [mapping(string:mixed) newdefs,
        mapping(string:mixed)|RXML.Scope formvars,
        mapping(string:mixed)|RXML.Scope varvars] = res;
-      foreach (indices (newdefs), string defname) {
-	mixed def = ctx->misc[defname] = newdefs[defname];
+      foreach (newdefs; string defname; mixed def) {
+	ctx->misc[defname] = def;
 	if (has_prefix (defname, "tag\0")) ctx->add_runtime_tag (def[3]);
       }
       ctx->extend_scope ("form", formvars);
@@ -4121,7 +4121,7 @@ class UserTagContents
 
 #ifdef DEBUG
 	if (TAG_DEBUG_TEST (flags & RXML.FLAG_DEBUG))
-	  tag_debug ("%O:   Did %s %O in %s: %s\n", this_object(),
+	  tag_debug ("%O:   Did %s %O in %s: %s\n", this,
 		     insert_type, expr,
 		     RXML.utils.format_short (
 		       objectp (content) ? content->xml_format() : content),
@@ -4566,10 +4566,10 @@ class TagDefine {
 
 #if ROXEN_COMPAT <= 1.3
 	  if(id->conf->old_rxml_compat)
-	    foreach( indices(args), string arg )
+	    foreach( args; string arg; string val )
 	      if( arg[..7] == "default_" )
 	      {
-		defaults[arg[8..]] = args[arg];
+		defaults[arg[8..]] = val;
 		old_rxml_warning(id, "define attribute "+arg,"attrib container");
 		m_delete( args, arg );
 	      }
@@ -4599,9 +4599,9 @@ class TagDefine {
 	    // &_.__contents__17; during preparse since the current
 	    // scope varies.
 	    int id = 0;
-	    foreach (indices (preparsed_contents_tags), string var) {
-	      preparsed_contents_tags["__contents__" + ++id] =
-		preparsed_contents_tags[var];
+	    foreach (preparsed_contents_tags;
+		     string var; UserTagContents.ExpansionFrame frame) {
+	      preparsed_contents_tags["__contents__" + ++id] = frame;
 	      m_delete (preparsed_contents_tags, var);
 	      p->add_entity ("_internal_." + var, "&_.__contents__" + id + ";");
 	      m_delete (ctx->scopes->_internal_, var);
@@ -5023,12 +5023,12 @@ class FrameIf {
     mapping(string:mixed) defs = RXML_CONTEXT->misc;
 
     int ifval=0, plugin_found;
-    foreach(indices (args), string s)
+    foreach(args; string s; string argval)
       if (object(RXML.Tag)|object(UserIf) plugin =
 	  plugins[s] || defs["if\0" + s]) {
 	plugin_found = 1;
 	TRACE_ENTER("Calling if#" + plugin->plugin_name, 0);
-	ifval = plugin->eval( args[s], id, args, and, s );
+	ifval = plugin->eval( argval, id, args, and, s );
 	TRACE_LEAVE("");
 	if(ifval) {
 	  if(!and) {
@@ -5277,24 +5277,24 @@ class TagEmit {
   int(0..1) should_filter(mapping vs, mapping filter, mapping filter_exclude) {
     RXML.Context ctx = RXML_CONTEXT;
     if(filter) {
-      foreach(indices(filter), string v) {
+      foreach(filter; string v; string f) {
 	string|object val = vs[v];
 	if(objectp(val))
 	  val = val->rxml_const_eval ? val->rxml_const_eval(ctx, v, "") :
 	    val->rxml_var_eval(ctx, v, "", RXML.t_text);
 	if(!val)
 	  return 1;
-	if(!glob(filter[v], val))
+	if(!glob(f, val))
 	  return 1;
       }
     }
     if(filter_exclude) {
-      foreach(indices(filter_exclude), string v) {
+      foreach(filter_exclude; string v; string f) {
 	string|object val = vs[v];
 	if(objectp(val))
 	  val = val->rxml_const_eval ? val->rxml_const_eval(ctx, v, "") :
 	    val->rxml_var_eval(ctx, v, "", RXML.t_text);
-	if(val && glob(filter_exclude[v], val))
+	if(val && glob(f, val))
 	  return 1;
       }
     }
@@ -6682,7 +6682,7 @@ class TagEmitFonts
   constant name = "emit", plugin_name = "fonts";
   array get_dataset(mapping args, RequestID id)
   {
-    return roxen->fonts->get_font_information(args->ttf_only);
+    return roxen.fonts->get_font_information(args->ttf_only);
   }
 }
 
