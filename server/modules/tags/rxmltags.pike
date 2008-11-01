@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.566 2008/11/01 20:19:51 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.567 2008/11/01 20:32:33 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -8917,7 +8917,7 @@ Normalize   all whitespace,
    counts the fields. \"ignore-empty\" can be used to not count empty
    fields.</li>
 
-   <li>If neither of the above applies then positions are counted by
+   <li>If neither of the above apply then positions are counted by
    characters.</li>
  </ul>
 
@@ -9147,7 +9147,7 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
    <li>Similarly, if the \"before\" attribute is given then \"to\"
    counts the occurrences of that element.<li>
 
-   <li>If neither of the above applies then positions are counted
+   <li>If neither of the above apply then positions are counted
    directly by index.</li>
  </ul>
 
