@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.569 2008/11/02 16:03:29 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.570 2008/11/02 16:07:30 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -332,7 +332,7 @@ class TagAppend {
   inherit RXML.Tag;
   constant name = "append";
   mapping(string:RXML.Type) req_arg_types = ([ "variable" : RXML.t_text(RXML.PEnt) ]);
-  mapping(string:RXML.Type) opt_arg_types = ([ "type": RXML.t_text(RXML.PEnt) ]);
+  mapping(string:RXML.Type) opt_arg_types = ([ "type": RXML.t_type(RXML.PEnt) ]);
   RXML.Type content_type = RXML.t_any (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
   int flags = RXML.FLAG_DONT_RECOVER;
@@ -340,45 +340,106 @@ class TagAppend {
   class Frame {
     inherit RXML.Frame;
 
+    mixed value;
+    RXML.Type value_type;
+
     array do_enter (RequestID id)
     {
-      if (args->value || args->from) flags |= RXML.FLAG_EMPTY_ELEMENT;
-      if (args->type && args->type != "array") {
-	args->type = RXML.t_type->encode (args->type);
-	content_type = args->type (RXML.PXml);
+      if (args->value || args->from || args->expr)
+	flags |= RXML.FLAG_EMPTY_ELEMENT;
+
+      if (compat_level >= 5.0) {
+	// Before 5.0 the tag got the value after evaluating the content.
+	if (zero_type (value = RXML.user_get_var (args->variable, args->scope)))
+	  value = RXML.nil;
+
+	value_type = 0;
+	if (value != RXML.nil) {
+	  value_type = RXML.type_for_value (value);
+	  if (!value_type || !value_type->sequential) {
+	    value = ({value});
+	    value_type = RXML.t_array;
+	  }
+	}
+
+	if (RXML.Type t = args->type) {
+	  content_type = t (RXML.PXml);
+	  if (t == RXML.t_array && value_type && value_type != RXML.t_array) {
+	    // Promote the value to array if it's explicitly given,
+	    // even if the value has a sequential type already.
+	    value = ({value});
+	    value_type = RXML.t_array;
+	  }
+	}
+	else if (value_type)
+	  content_type = value_type (RXML.PXml);
       }
+
+      else
+	if (RXML.Type t = args->type)
+	  content_type = t (RXML.PXml);
     }
 
-    array do_return(RequestID id) {
-      mixed value=RXML.user_get_var(args->variable, args->scope);
-      if (args->value || args->from) {
-	if (args->value) {
-	  content = args->value;
+    array do_return(RequestID id)
+    {
+    get_content_from_args: {
+	if (string v = args->value)
+	  content = v;
+	else if (string var = args->from) {
+	  // Append the value of another variable.
+	  if (zero_type (content = RXML.user_get_var(var, args->scope)))
+	    parse_error ("From variable %q does not exist.\n", var);
 	}
-	else if (args->from) {
-	  // Append the value of another entity variable.
-	  mixed from=RXML.user_get_var(args->from, args->scope);
-	  if(!from)
-	    parse_error("From variable %O doesn't exist.\n", args->from);
-	  content = from;
+	else if (string expr = args->expr)
+	  content = sexpr_eval (expr);
+	else {
+	  if (content == RXML.nil || content == RXML.empty)
+	    // No value to concatenate with.
+	    return 0;
+	  break get_content_from_args; // The content already got content_type.
 	}
-	if (objectp (args->type))
-	  content = args->type->encode (content);
+
+	if (content_type != RXML.t_any)
+	  content = content_type->encode (content);
       }
 
-      if (args->type == "array" && !arrayp (content))
-	content = ({ content });
+      mixed val;
 
-      // Append a value to an entity variable.
-      if (value)
-      {
-	if(arrayp(content) && !arrayp(value))
-	  value = ({ value });
-	value+=content;
+      if (compat_level < 5.0) {
+	val = RXML.user_get_var(args->variable, args->scope);
+	if (val)
+	{
+	  if(arrayp(content) && !arrayp(val))
+	    val = ({ val });
+	}
+	else {
+	  RXML.user_set_var(args->variable, content, args->scope);
+	  return 0;
+	}
       }
-      else
-	value=content;
-      RXML.user_set_var(args->variable, value, args->scope);
+
+      else {
+	if (!value_type) {	// value_type is zero iff value == RXML.nil.
+	  if (content_type == RXML.t_any && !args->type)
+	    content_type = RXML.type_for_value (content);
+	  RXML.user_set_var (args->variable,
+			     content_type->sequential ?
+			     content : ({content}),
+			     args->scope);
+	  return 0;
+	}
+
+	val = value, value = 0;	// Avoid extra ref for += below.
+	content = value_type->encode (content, content_type);
+      }
+
+      if (mixed err = catch (val += content))
+	run_error ("Failed to append %s to %s: %s",
+		   RXML.utils.format_short (content),
+		   RXML.utils.format_short (val),
+		   err->msg || describe_error (err));
+
+      RXML.user_set_var(args->variable, val, args->scope);
     }
   }
 }
@@ -595,56 +656,74 @@ class TagSet {
 
     array do_enter (RequestID id)
     {
-      if (args->value || args->expr || args->from) flags |= RXML.FLAG_EMPTY_ELEMENT;
-      if (args->type) content_type = args->type (RXML.PXml);
+      if (args->value || args->from || args->expr)
+	flags |= RXML.FLAG_EMPTY_ELEMENT;
+      if (RXML.Type t = args->type)
+	content_type = t (RXML.PXml);
     }
 
     array do_return(RequestID id) {
-      if (args->value) {
-	content = args->value;
-	if (args->type) content = args->type->encode (content);
-      }
-      else {
-	if (args->expr) {
-	  // Set an entity variable to an evaluated expression.
-	  mixed val=sexpr_eval(args->expr);
-	  RXML.user_set_var(args->variable, val, args->scope);
-	  return 0;
+    get_content_from_args: {
+	if (string v = args->value)
+	  content = v;
+
+	else if (string var = args->from) {
+	  // Get the value from another variable.
+	  if (zero_type (content = RXML.user_get_var(var, args->scope)))
+	    parse_error ("From variable %q does not exist.\n", var);
+	  if (compat_level < 5.0) {
+	    RXML.user_set_var(args->variable, content, args->scope);
+	    return 0;
+	  }
 	}
-	if (args->from) {
-	  // Copy a value from another entity variable.
-	  mixed from;
-	  if (zero_type (from = RXML.user_get_var(args->from, args->scope)))
-	    run_error("From variable doesn't exist.\n");
-	  RXML.user_set_var(args->variable, from, args->scope);
-	  return 0;
+
+	else if (string expr = args->expr) {
+	  content = sexpr_eval (expr);
+	  if (compat_level < 5.0) {
+	    RXML.user_set_var(args->variable, content, args->scope);
+	    return 0;
+	  }
 	}
+
+	else {
+	  if (content == RXML.nil) {
+	    if (compat_level >= 4.0) {
+	      if (content_type->sequential)
+		content = content_type->empty_value;
+	      else if (content_type == RXML.t_any)
+		content = RXML.empty;
+	      else
+		parse_error ("The value is missing for "
+			     "non-sequential type %s.\n", content_type);
+	    }
+	    else if (compat_level < 2.2)
+	      content = "";
+	    else
+	      // Bogus behavior between 2.4 and 3.4: The variable
+	      // essentially gets unset.
+	      content = RXML.nil;
+	  }
+
+	  break get_content_from_args; // The content already got content_type.
+	}
+
+#ifdef DEBUG
+	if (content == RXML.nil) error ("Unexpected lack of value.\n");
+#endif
+
+	if (content_type != RXML.t_any)
+	  content = content_type->encode (content);
       }
 
-      // Set an entity variable to a value.
-      if(args->split && content)
-	RXML.user_set_var(args->variable,
-			  RXML.t_string->encode (content) / args->split,
-			  args->scope);
-      else if (content == RXML.nil) {
-	if (compat_level >= 4.0) {
-	  if (content_type->sequential)
-	    RXML.user_set_var (args->variable, content_type->empty_value, args->scope);
-	  else if (content_type == RXML.t_any)
-	    RXML.user_set_var (args->variable, RXML.empty, args->scope);
-	  else
-	    parse_error ("The value is missing for non-sequential type %O.\n",
-			 content_type);
-	}
-	else if (compat_level < 2.2)
-	  RXML.user_set_var (args->variable, "", args->scope);
-	else
-	  // Bogus behavior between 2.4 and 3.4: The variable
-	  // essentially gets unset.
-	  RXML.user_set_var(args->variable, RXML.nil, args->scope);
-      }
+      if (args->split)
+	RXML.user_set_var (args->variable,
+			   RXML.t_string->encode (
+			     content, (content_type != RXML.t_any &&
+				       content_type)) / args->split,
+			   args->scope);
       else
 	RXML.user_set_var(args->variable, content, args->scope);
+
       return 0;
     }
   }
@@ -7420,31 +7499,93 @@ constant tagdoc=([
 //----------------------------------------------------------------------
 
 "append":#"<desc type='both'><p><short>
- Appends a value to a variable. The variable attribute and one more is
- required.</short>
-</p></desc>
+ Appends a value to a variable.</short></p>
+
+ <p>If the variable has a value of a sequential type (i.e. string,
+ array or mapping), then the new value is converted to that type and
+ appended. Otherwise both values are promoted to arrays and
+ concatenated to one array.</p>
+
+ <ex any-result=''>
+<set variable=\"var.x\">a,b</set>
+<append variable=\"var.x\">,c</append>
+&var.x;
+ </ex>
+
+ <ex any-result=''>
+<set variable=\"var.x\" split=\",\">a,b</set>
+<append variable=\"var.x\">c</append>
+&var.x;
+ </ex>
+
+ <ex any-result=''>
+<set variable=\"var.x\" type=\"int\">1</set>
+<append variable=\"var.x\" type=\"int\">2</append>
+&var.x;
+ </ex>
+
+ <p>It is not an error if the variable doesn't have any value already.
+ In that case the new value is simply assigned to the variable, but it
+ is still promoted to an array if necessary, as described above.</p>
+
+ <ex any-result=''>
+<append variable=\"var.x\" type=\"int\">1</append>
+&var.x;
+ </ex>
+
+ <p>Note that strings are sequential but numbers are not. It is
+ therefore crucial to not mix them up, especially since it is fairly
+ common that numbers actually are in string form. C.f:</p>
+
+ <ex any-result=''>
+<set variable=\"var.x\" value=\"1\"/>
+<append variable=\"var.x\" type=\"int\">2</append>
+&var.x;
+ </ex>
+
+ <ex any-result=''>
+<set variable=\"var.x\" type=\"int\" value=\"1\"/>
+<append variable=\"var.x\" type=\"int\">2</append>
+&var.x;
+ </ex>
+
+ <p>To avoid confusion, use \"type\" attributes liberally.</p>
+
+ " // FIXME: Refer to a compatibility notes document.
+ #"<p>Compatibility note: Before 5.0 this tag had a bit quirky
+ behavior in various corner cases of its type handling. That behavior
+ is retained if the compatibility level is less than 5.0.</p>
+</desc>
 
 <attr name='variable' value='string' required='required'>
- <p>The name of the variable.</p>
+ <p>The name of the variable to set.</p>
 </attr>
 
 <attr name='value' value='string'>
- <p>The value the variable should have appended.</p>
+ <p>A value to append. This is an alternative to specifying the value
+ in the content, and the content must be empty if this is used.</p>
 
- <ex>
- <set variable='var.ris' value='Roxen'/>
- <append variable='var.ris' value=' Internet Software'/>
- &var.ris;
- </ex>
+ <p>The difference is that the value always is parsed as text here.
+ Even if a type is specified with the \"type\" attribute this is still
+ parsed as text, and then converted to that type.</p>
 </attr>
 
 <attr name='from' value='string'>
- <p>The name of another variable that the value should be copied
- from.</p>
+ <p>Get the value to append from this variable. The content must be
+ empty if this is used.</p>
 </attr>
 
-<attr name='type' value='string'>
- <p>If type is 'array', the resulting value will be an array.</p>
+<attr name='expr' value='string'>
+ <p>An expression that gets evaluated to produce the value for the
+ variable. See the \"expr\" attribute in the <tag>set</tag> tag for
+ details. The content must be empty if this is used.</p>
+</attr>
+
+<attr name='type' value='type'>
+ <p>The type of the value. If the value is taken from the content then
+ this is the context type while evaluating it. If \"value\", \"from\"
+ or \"expr\" is used then the value is converted to this type.
+ Defaults to \"any\".</p>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -9181,23 +9322,9 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
 </desc>
 
 <attr name='variable'>
- <p>The variable to get the input array from.</p>
-
- <p>If this is left out then the array is taken from the content,
- which must contain either a variable reference or a tag that returns
- an array. Surrounding whitespace and comments are ignored, as this
- example shows:</p>
-
- <ex any-result=''>
-<range from=\"2\">
-  <!-- The following tag picks out the part between the first and last
-       \"::\" and then splits on \",\", leaving the elements c, d, and
-       e. The <range> tag then removes the first element (c). -->
-  <substring separator=\",\" trimwhites=\"\"
-	     after=\"::\" before=\"::\" to=\"-1\">
-    a, b :: c, d, e :: f, g
-  </substring>
-</range></ex>
+ <p>The variable to get the input array from. If this is left out then
+ the array is taken from the content, which is evaluated in an array
+ context.</p>
 </attr>
 
 <attr name='from' value='integer'>
@@ -9363,23 +9490,36 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
 //----------------------------------------------------------------------
 
 "set":#"<desc type='both'><p><short>
- Sets a variable in any scope that isn't read-only.</short>
-</p>
-<ex-box><set variable='var.language'>Pike</set></ex-box>
+ Sets a variable in any scope that isn't read-only.</short></p>
+
+ <ex>
+Before: &var.language;<br />
+<set variable=\"var.language\">Pike</set>
+After: &var.language;<br /></ex>
 </desc>
 
 <attr name='variable' value='string' required='required'>
- <p>The name of the variable.</p>
-<ex-box><set variable='var.foo' value='bar'/></ex-box>
+ <p>The name of the variable to set.</p>
 </attr>
 
 <attr name='value' value='string'>
- <p>The value the variable should have.</p>
+ <p>The value the variable should have. This is an alternative to
+ specifying the value in the content, and the content must be empty if
+ this is used.</p>
+
+ <p>The difference is that the value always is parsed as text here.
+ Even if a type is specified with the \"type\" attribute this is still
+ parsed as text, and then converted to that type.</p>
+</attr>
+
+<attr name='from' value='string'>
+ <p>Get the value from this variable. The content must be empty if
+ this is used.</p>
 </attr>
 
 <attr name='expr' value='string'>
  <p>An expression that gets evaluated to produce the value for the
- variable.</p>
+ variable. The content must be empty if this is used.</p>
 
  " // FIXME: Moved the following to some intro chapter.
  #"<p>Expression values can take any of the following forms:</p>
@@ -9645,20 +9785,32 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
  </table>
 </attr>
 
-<attr name='from' value='string'>
- <p>The name of another variable that the value should be copied from.</p>
+<attr name='type' value='type'>
+ <p>The type of the value. If the value is taken from the content then
+ this is the context type while evaluating it. If \"value\", \"from\"
+ or \"expr\" is used then the value is converted to this type.
+ Defaults to \"any\".</p>
+
+ <p>Tip: The <tag>value</tag> tag is useful to construct nonstring
+ values, such as arrays and mappings:</p>
+
+ <ex any-result=''>
+<set variable=\"var.x\" type=\"array\">
+  <value>alpha</value>
+  <value>beta</value>
+</set>
+&var.x;
+ </ex>
 </attr>
 
 <attr name='split' value='string'>
- <p>The value will be splitted by this string into an array.</p>
+ <p>Split the value on this string to form an array which is set. The
+ value gets converted to a string if it isn't one already.</p>
 
- <p>If none of the above attributes are specified, the variable is unset.
- If debug is currently on, more specific debug information is provided
- if the operation failed. See also: <xref href='append.tag' /> and <xref href='../programming/debug.tag' />.</p>
-</attr>
-
-<attr name='type' value='type'>
- <p>The type of the content. Defaults to \"any\".</p>
+ <ex any-result=''>
+<set variable=\"var.x\" split=\",\">a,b,c</set>
+&var.x;
+ </ex>
 </attr>",
 
 //----------------------------------------------------------------------
