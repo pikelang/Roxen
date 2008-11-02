@@ -15,7 +15,7 @@
 #define _rettext _context_misc[" _rettext"]
 #define _ok _context_misc[" _ok"]
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.78 2008/02/07 13:39:51 mast Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.79 2008/11/02 15:16:05 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -29,11 +29,11 @@ inherit "module";
 // ------------- Module registration and configuration. ---------------
 
 constant module_type = MODULE_FILE_EXTENSION;
-constant module_name = "Tags: RXML 2 parser";
+constant module_name = "Tags: RXML parser";
 constant module_doc  = 
 #"This module handles RXML parsing of pages. Other modules can provide 
 additional tags that will be parsed. Most common RXML tags is provided by
-the <i>RXML 2.0 tags</i> module.";
+the <i>RXML tags</i> module.";
 
 string status()
 {

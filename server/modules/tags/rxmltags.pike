@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.567 2008/11/01 20:32:33 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.568 2008/11/02 15:16:05 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -20,7 +20,7 @@ inherit "module";
 // ---------------- Module registration stuff ----------------
 
 constant module_type = MODULE_TAG | MODULE_PROVIDER;
-constant module_name = "Tags: RXML 2 tags";
+constant module_name = "Tags: RXML tags";
 constant module_doc  = "This module provides the common RXML tags.";
 
 
