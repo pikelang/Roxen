@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.571 2008/11/02 17:13:14 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.572 2008/11/02 18:38:08 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -48,8 +48,9 @@ multiset query_provides() {
 private mapping(string:mixed) sexpr_constants = ([
   "this_program":0,
 
-  // Kludge: These casts are to avoid that the type checker in pike
-  // 7.8 freaks out..
+  // The (function) casts below is to avoid very bulky types that
+  // causes the compiler to take almost a second longer to compile
+  // this file.
 
   "`+": (function) `+,
   "`-": (function) `-,
@@ -73,11 +74,11 @@ private mapping(string:mixed) sexpr_constants = ([
   "sizeof": sizeof,
   "pow":pow,
   "abs": abs,
-  "aggregate": aggregate,
   "search": lambda (mixed a, mixed b) {
 	      return search (a, b) + 1;	// RXML uses base 1.
 	    },
   "reverse": reverse,
+  "uniq": Array.uniq,
 
   "INT":lambda(void|mixed x) {
 	  return intp (x) || floatp (x) || stringp (x) ? (int) x : 0;
@@ -117,12 +118,32 @@ private class SExprCompileHandler
 
 string|int|float sexpr_eval(string what)
 {
-  if (has_value (what, "lambda") ||
-      has_value (what, "program") ||
-      has_value (what, "object") ||
-      has_value (what, "\"") ||
-      has_value (what, ";"))
-    RXML.parse_error ("Syntax error in expr attribute.\n");
+  if (!has_value (what, "\"")) {
+    if (has_value (what, "lambda") ||
+	has_value (what, "program") ||
+	has_value (what, "object") ||
+	// Disallow chars:
+	// o  ';' would provide an obvious code injection possibility.
+	// o  '{' might also allow code injection.
+	// o  '[' to avoid pike indexing and ranges. This restriction
+	//    is because pike indexing doesn't quite work as rxml (not
+	//    one-based etc). It might be solved in a better way
+	//    later.
+	sscanf (what, "%*[^;{[]%*c") > 1)
+      RXML.parse_error ("Syntax error in expr attribute.\n");
+  }
+
+  else {
+    array(string) split = replace (what, "\\\"", "") / "\"";
+    for (int i = 0; i < sizeof (split); i += 2) {
+      string s = split[i];
+      if (has_value (s, "lambda") ||
+	  has_value (s, "program") ||
+	  has_value (s, "object") ||
+	  sscanf (s, "%*[^;{[]%*c") > 1)
+	RXML.parse_error ("Syntax error in expr attribute.\n");
+    }
+  }
 
   SExprCompileHandler handler = SExprCompileHandler();
   string|int|float res;
@@ -9553,18 +9574,16 @@ After: &var.language;<br /></ex>
      \"E\"/\"e\".</td></tr>
 
    <tr valign='top'>
-     <td><tt>({<i>expr1</i>, <i>expr2</i>, ...})</tt></td>
-     <td>An array with the given elements (zero or more).</td></tr>
+     <td><tt>\"hello\"</tt></td>
+     <td>A string inside double quotes. C-style backslash escapes can
+     be used in the string, e.g. a double quote can be included using
+     \\\".</td></tr>
 
    <tr valign='top'>
      <td><tt>(<i>expr</i>)</tt></td>
      <td>Parentheses can be used around an expression for grouping
      inside a larger expression.</td></tr>
  </table>
-
- <p>Note: There is currently no way to specify a string value directly
- in an expression. It must be put in an RXML variable that is used in
- the expression instead.</p>
 
  <p>Value conversion expressions:</p>
 
@@ -9748,6 +9767,13 @@ After: &var.language;<br /></ex>
    <tr valign='top'>
      <td><tt>reverse(<i>expr</i>)</tt></td>
      <td>Returns the reverse of <i>expr</i>.</td></tr>
+
+   <tr valign='top'>
+     <td><tt>uniq(<i>expr</i>)</tt></td>
+     <td>Returns <i>expr</i> with all duplicate elements removed. The
+     order among the remaining elements is kept intact; it is always
+     the first of several duplicate elements that is
+     retained.</td></tr>
  </table>
 
  <p>Expressions for all types of operands:</p>
