@@ -254,6 +254,31 @@ e</result>
 <result>123</result>
 </test>
 
+<test>
+  <rxml>
+    <set variable="var.x" expr='(program) "nasty"'/>
+    &var.x;
+  </rxml>
+  <result>[Error (parse): Syntax error in expr attribute.]</result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x" expr='"(program)"'/>
+    &var.x;
+  </rxml>
+  <result>(program)</result>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" split=",">2,3,4,3</set>
+    <set variable="var.x" expr="uniq (var.x)"/>
+    &var.x;
+  </rxml>
+  <equal>({"2", "3", "4"})</equal>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Smallcaps text</comment>
