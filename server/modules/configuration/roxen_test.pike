@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.73 2008/11/01 18:37:19 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.74 2008/11/02 11:53:34 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -317,14 +317,26 @@ void xml_test(Parser.HTML file_parser, mapping args, string c,
 			     RXML.Parser parser = Roxen.get_rxml_parser (id, type, 1);
 			     parser->context->add_scope ("test", (["pass": 1]));
 			     parser->write_end (rxml);
+#ifdef GAUGE_RXML_TESTS
+			     werror ("Line %d: Test took %.3f us (pass 1)\n",
+				     file_parser->at_line(),
+				     gauge (res = parser->eval()) * 1e9);
+#else
 			     res = parser->eval();
+#endif
 			     parser->p_code->finish();
 			     p_code_cache[ltests] = parser->p_code;
 			   }
 			   else {
 			     RXML.Context ctx = p_code->new_context (id);
 			     ctx->add_scope ("test", (["pass": 2]));
+#ifdef GAUGE_RXML_TESTS
+			     werror ("Line %d: Test took %.3f us (pass 2)\n",
+				     file_parser->at_line(),
+				     gauge (res = p_code->eval (ctx)) * 1e9);
+#else
 			     res = p_code->eval (ctx);
+#endif
 			   }
 			 };
 			 ignore_errors = 0;
