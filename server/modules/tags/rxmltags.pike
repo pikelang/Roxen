@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.570 2008/11/02 16:07:30 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.571 2008/11/02 17:13:14 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -115,20 +115,6 @@ private class SExprCompileHandler
   }
 }
 
-private string try_decode_image(string data, void|string var) {
-    mixed file_data = (data)? data: RXML.user_get_var(var);
-    if(!file_data || !stringp(file_data))
-	return 0;
-    mapping image;
-    mixed error = catch {
-	image = Image.ANY._decode(file_data);
-    };
-    if(image) {
-	return image->type;
-    }
-    return my_configuration()->type_from_filename("nonenonenone");
-}
-
 string|int|float sexpr_eval(string what)
 {
   if (has_value (what, "lambda") ||
@@ -158,6 +144,20 @@ private void old_rxml_warning(RequestID id, string no, string yes) {
   rxml_warning_cache->old_rxml_warning(id, no, yes);
 }
 #endif
+
+private string try_decode_image(string data, void|string var) {
+    mixed file_data = (data)? data: RXML.user_get_var(var);
+    if(!file_data || !stringp(file_data))
+	return 0;
+    mapping image;
+    mixed error = catch {
+	image = Image.ANY._decode(file_data);
+    };
+    if(image) {
+	return image->type;
+    }
+    return my_configuration()->type_from_filename("nonenonenone");
+}
 
 // ----------------- Entities ----------------------
 
