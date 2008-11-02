@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.568 2008/11/02 15:16:05 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.569 2008/11/02 16:03:29 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -8532,7 +8532,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  \"variables\" attribute. Otherwise the scope is returned as-is, i.e.
  as a mapping.</p>
 
- " // FIXME: The following should be moved to some intro chapter.
+ " // FIXME: Moved the following to some intro chapter.
  #"<note><p>It is possible to create a scope with an infinite number
  of variables. When such a scope is listed in string form (or iterated
  over with <tag>emit source=\"values\"</tag>), it is up to the
@@ -9116,9 +9116,12 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
 
  <p>To pick out ranges based on positions:</p>
 
- <ex any-result=''><range variable=\"var.x\" from=\"2\"/></ex>
- <ex any-result=''><range variable=\"var.x\" from=\"-2\"/></ex>
- <ex any-result=''><range variable=\"var.x\" from=\"2\" to=\"-2\"/></ex></p>
+ <ex any-result='' keep-var-scope=''>
+<range variable=\"var.x\" from=\"2\"/></ex>
+ <ex any-result='' keep-var-scope=''>
+<range variable=\"var.x\" from=\"-2\"/></ex>
+ <ex any-result='' keep-var-scope=''>
+<range variable=\"var.x\" from=\"2\" to=\"-2\"/></ex></p>
 
  <p>Given a variable var.x containing an array like this:</p>
 
@@ -9131,10 +9134,14 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
 
  <p>To pick out ranges based on matching elements:</p>
 
- <ex any-result=''><range variable=\"var.x\" after=\"the\"/></ex>
- <ex any-result=''><range variable=\"var.x\" after=\"the\" from=\"2\"/></ex>
- <ex any-result=''><range variable=\"var.x\" after=\"the\" from=\"-1\"/></ex>
- <ex any-result=''><range variable=\"var.x\" after=\"to\" before=\"the\" to=\"3\"/></ex>
+ <ex any-result='' keep-var-scope=''>
+<range variable=\"var.x\" after=\"the\"/></ex>
+ <ex any-result='' keep-var-scope=''>
+<range variable=\"var.x\" after=\"the\" from=\"2\"/></ex>
+ <ex any-result='' keep-var-scope=''>
+<range variable=\"var.x\" after=\"the\" from=\"-1\"/></ex>
+ <ex any-result='' keep-var-scope=''>
+<range variable=\"var.x\" after=\"to\" before=\"the\" to=\"3\"/></ex>
 
  <p>The \"from\" and \"to\" attributes specifies positions in the
  input array. What is considered a position depends on other
@@ -9374,7 +9381,8 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
  <p>An expression that gets evaluated to produce the value for the
  variable.</p>
 
- <p>Expression values can take any of the following forms:</p>
+ " // FIXME: Moved the following to some intro chapter.
+ #"<p>Expression values can take any of the following forms:</p>
 
  <table>
    <tr valign='top'>
@@ -10207,7 +10215,8 @@ the respective attributes below for further information.</p></desc>
  with one node per element (see the result-set attribute for
  details).</p>
 
- <p>The expression is a simplified variant of an XPath location path:
+ " // FIXME: Moved the following to some intro chapter.
+ #"<p>The expression is a simplified variant of an XPath location path:
  It consists of one or more steps delimited by \'<tt>/</tt>\' or
  \'<tt>//</tt>\'. Each step selects some part(s) of the tree starting
  from the current node. The first step operates on the defined tag or
