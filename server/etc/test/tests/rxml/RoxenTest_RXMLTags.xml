@@ -645,6 +645,431 @@ e</result>
   <result>bardisk</result>
 </test>
 
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced 18 prior to 5.0. -->
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>({18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced 18 prior to 5.0. -->
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" from="var.bar"/>
+    &var.foo;
+  </rxml>
+  <equal>({18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" value="&var.bar;"/>
+    &var.foo;
+  </rxml>
+  <equal>"18"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>"1718"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" from="var.bar"/>
+    &var.foo;
+  </rxml>
+  <equal>"1718"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" value="&var.bar;"/>
+    &var.foo;
+  </rxml>
+  <equal>"1718"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" type="array">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>({18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" from="var.bar" type="array"/>
+    &var.foo;
+  </rxml>
+  <equal>({18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" value="&var.bar;" type="array"/>
+    &var.foo;
+  </rxml>
+  <equal>({"18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" type="array">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>({"17", 18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" from="var.bar" type="array"/>
+    &var.foo;
+  </rxml>
+  <equal>({"17", 18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" value="&var.bar;" type="array"/>
+    &var.foo;
+  </rxml>
+  <equal>({"17", "18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced 35 prior to 5.0. -->
+    <set variable="var.foo" type="int">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>({17, 18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced 35 prior to 5.0. -->
+    <set variable="var.foo" type="int">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" from="var.bar"/>
+    &var.foo;
+  </rxml>
+  <equal>({17, 18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced "1718" prior to 5.0. -->
+    <set variable="var.foo" type="int">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" value="&var.bar;"/>
+    &var.foo;
+  </rxml>
+  <equal>({17, "18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" type="int">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" type="array">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>({17, 18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" type="int">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" from="var.bar" type="array"/>
+    &var.foo;
+  </rxml>
+  <equal>({17, 18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" type="int">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" value="&var.bar;" type="array"/>
+    &var.foo;
+  </rxml>
+  <equal>({17, "18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced "1718" prior to 5.0. -->
+    <set variable="var.foo" type="int">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" type="string">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>({17, "18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced "1718" prior to 5.0. -->
+    <set variable="var.foo" type="int">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" from="var.bar" type="string"/>
+    &var.foo;
+  </rxml>
+  <equal>({17, "18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced "1718" prior to 5.0. -->
+    <set variable="var.foo" type="int">17</set>
+    <set variable="var.bar" type="int">18</set>
+    <append variable="var.foo" value="&var.bar;" type="string"/>
+    &var.foo;
+  </rxml>
+  <equal>({17, "18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>"18"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" from="var.bar"/>
+    &var.foo;
+  </rxml>
+  <equal>"18"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" value="&var.bar;"/>
+    &var.foo;
+  </rxml>
+  <equal>"18"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" type="string">17</set>
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>"1718"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" type="string">17</set>
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" from="var.bar"/>
+    &var.foo;
+  </rxml>
+  <equal>"1718"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" type="string">17</set>
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" value="&var.bar;"/>
+    &var.foo;
+  </rxml>
+  <equal>"1718"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced 18 prior to 5.0. -->
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" type="int">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>({18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced 18 prior to 5.0. -->
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" from="var.bar" type="int"/>
+    &var.foo;
+  </rxml>
+  <equal>({18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced 18 prior to 5.0. -->
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" value="&var.bar;" type="int"/>
+    &var.foo;
+  </rxml>
+  <equal>({18})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" type="string">17</set>
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" type="int">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>"1718"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Note: Failed before 5.0. -->
+    <set variable="var.foo" type="array">17</set>
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>({"17", "18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Note: Failed before 5.0. -->
+    <set variable="var.foo" type="array">17</set>
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" from="var.bar"/>
+    &var.foo;
+  </rxml>
+  <equal>({"17", "18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Note: Failed before 5.0. -->
+    <set variable="var.foo" type="array">17</set>
+    <set variable="var.bar" type="string">18</set>
+    <append variable="var.foo" value="&var.bar;"/>
+    &var.foo;
+  </rxml>
+  <equal>({"17", "18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.bar" type="array">18</set>
+    <append variable="var.foo">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <equal>({"18"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.bar" type="array">18</set>
+    <append variable="var.foo" from="var.bar"/>
+    &var.foo;
+  </rxml>
+  <equal>({"18"})</equal>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.bar" type="array">18</set>
+    <append variable="var.foo" value="&var.bar;"/>
+    &var.foo;
+  </rxml>
+  <glob>[Error (parse): Cannot convert * to text/plain: *]</glob>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.foo" type="string">17</set>
+    <set variable="var.bar" type="array">18</set>
+    <?comment Compat difference: The following produced ({"17", "18"})
+      before 5.0 since the content type always was RXML.t_any instead of
+      adapted from the variable. ?>
+    <append variable="var.foo">&var.bar;</append>
+    &var.foo;
+  </rxml>
+  <glob>[Error (parse): Cannot convert * to string: *]
+    17</glob>
+</test>
+
+<test>
+  <rxml>
+    <?comment Compat difference: Produced ({"17", "18"}) prior to 5.0. ?>
+    <set variable="var.foo" type="string">17</set>
+    <set variable="var.bar" type="array">18</set>
+    <append variable="var.foo" from="var.bar"/>
+    &var.foo;
+  </rxml>
+  <glob>[Error (parse): Cannot convert * to string: *]
+    17</glob>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" split=",">a,b,c</set>
+    <append variable="var.foo" type="array">disk</append>
+    &var.foo;
+  </rxml>
+  <equal>({"a", "b", "c", "disk"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Note: Failed before 5.0. -->
+    <set variable="var.foo" split=",">a,b,c</set>
+    <append variable="var.foo">disk</append>
+    &var.foo;
+  </rxml>
+  <equal>({"a", "b", "c", "disk"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <!-- Compat difference: Produced ({"a","b","c","a","b","c"}) prior
+	 to 5.0. -->
+    <set variable="var.foo" split=",">a,b,c</set>
+    <append variable="var.foo" type="any">&var.foo;</append>
+    &var.foo;
+  </rxml>
+  <equal>({"a", "b", "c", ({"a", "b", "c"})})</equal>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Replace</comment>
