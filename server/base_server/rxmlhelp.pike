@@ -183,6 +183,9 @@ protected string ex_cont(TagdocParser parser, mapping m, string c, string rt, vo
 
   string parsed;
 
+  if (!m["keep-var-scope"])
+    RXML_CONTEXT->add_scope ("var", ([]));
+
   if (m["any-result"]) {
     // Use if the example returns a non-xml result, e.g. an array.
     RXML.Parser p = RXML.t_any (id->conf->default_content_type->parser_prog)->
