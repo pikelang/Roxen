@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.382 2008/10/29 21:52:23 mast Exp $
+// $Id: module.pmod,v 1.383 2008/11/03 21:15:20 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6585,6 +6585,10 @@ class TArray
   constant empty_value = ({});
   Type supertype = t_any;
 
+  constant container_type = 1;
+  //! Recognition constant for types for generic data containers, i.e.
+  //! arrays and mappings.
+
   void type_check (mixed val, void|string msg, mixed... args)
   {
     if (!arrayp (val) && val != empty)
@@ -6643,6 +6647,10 @@ class TMapping
   constant sequential = 1;
   constant empty_value = ([]);
   Type supertype = t_any;
+
+  constant container_type = 1;
+  //! Recognition constant for types for generic data containers, i.e.
+  //! arrays and mappings.
 
   void type_check (mixed val, void|string msg, mixed... args)
   {
@@ -6939,6 +6947,10 @@ class TString
   Type conversion_type = t_scalar;
   constant handle_literals = 1;
 
+  constant string_type = 1;
+  //! Recognition constant for all string based types, i.e.
+  //! @[RXML.t_string], @[RXML.t_any_text], and all their subtypes.
+
   void type_check (mixed val, void|string msg, mixed... args)
   {
     if (!stringp (val) && val != empty) {
@@ -7072,8 +7084,26 @@ class TXml
   constant name = "text/xml";
   constant type_name = "RXML.t_xml";
   Type conversion_type = t_text;
-  constant entity_syntax = 1;
   constant encoding_type = "xml"; // For compatibility.
+
+  constant entity_syntax = 1;
+  //! Recognition constant for string types that may contain xml style
+  //! entities, e.g. @tt{&foo;@}, and that can be assumed to
+  //! understand the standard set of html character entity references
+  //! (c.f. @url{http://www.w3.org/TR/html401/sgml/entities.html@}).
+  //!
+  //! In practice, this constant is nonzero for @[RXML.t_xml],
+  //! @[RXML.t_html], and possibly any subtypes.
+
+  constant element_syntax = 1;
+  //! Recognition constant for string types that may contain xml style
+  //! elements, e.g. @tt{<foo a="b">c</foo>@}. It can generally be
+  //! assumed to understand basic html markup as well. It is not safe
+  //! to assume that xml style empty elements are understood, so it's
+  //! generally necessary to use tweaks like @tt{<br />@}.
+  //!
+  //! In practice, this constant is nonzero for @[RXML.t_xml],
+  //! @[RXML.t_html], and possibly any subtypes.
 
   // Note: type_check is not strict.
 
