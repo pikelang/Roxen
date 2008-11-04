@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.573 2008/11/04 16:01:38 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.574 2008/11/04 16:08:48 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -928,11 +928,24 @@ class TagDebug {
   inherit RXML.Tag;
   constant name = "debug";
   constant flags = RXML.FLAG_EMPTY_ELEMENT|RXML.FLAG_CUSTOM_TRACE;
+  array(RXML.Type) result_types = ({RXML.t_any});
 
   class Frame {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
+      if (string var = args->showvar) {
+	TAG_TRACE_ENTER("");
+	mixed val = RXML.user_get_var (var, args->scope);
+	if (zero_type (val))
+	  parse_error ("Variable %q does not exist.\n", var);
+	result = "<pre>" +
+	  Roxen.html_encode_string (sprintf ("%O", val)) +
+	  "</pre>";
+	TAG_TRACE_LEAVE("");
+	return 0;
+      }
+
       if (args->showid) {
 	TAG_TRACE_ENTER("");
 	array path=lower_case(args->showid)/"->";
@@ -946,6 +959,7 @@ class TagDebug {
 	TAG_TRACE_LEAVE("");
 	return 0;
       }
+
       if (args->showlog) {
 	TAG_TRACE_ENTER("");
 	string debuglog = roxen_path("$LOGFILE");
@@ -959,6 +973,7 @@ class TagDebug {
 	TAG_TRACE_LEAVE("");
 	return 0;
       }
+
       if (args->werror) {
 	string msg = replace(args->werror,"\\n","\n");
 	report_debug ("<debug>: [%s] %s:\n"
@@ -969,13 +984,17 @@ class TagDebug {
       }
       else
 	TAG_TRACE_ENTER ("");
+
       if (args->off)
 	id->misc->debug = 0;
       else if (args->toggle)
 	id->misc->debug = !id->misc->debug;
       else
 	id->misc->debug = 1;
-      result = "<!-- Debug is "+(id->misc->debug?"enabled":"disabled")+" -->";
+
+      if (result_type->subtype_of (RXML.t_any_text))
+	result = "<!-- Debug is "+(id->misc->debug?"enabled":"disabled")+" -->";
+
       TAG_TRACE_LEAVE ("");
       return 0;
     }
@@ -8352,6 +8371,11 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
 <attr name='toggle'>
  <p>Toggles debug mode.</p>
+</attr>
+
+<attr name='showvar' value='variable'>
+ <p>Shows the value of the given variable in a generic debug format
+ that works regardless of the type.</p>
 </attr>
 
 <attr name='showlog'>
