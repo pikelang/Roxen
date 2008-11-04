@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.997 2008/10/26 20:26:31 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.998 2008/11/04 18:01:32 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1471,6 +1471,53 @@ int(0..1) host_is_local(string hostname)
   return host_is_local_cache[hostname] = res;
 }
 
+array(Protocol|mapping(string:mixed)) find_port_for_url (
+  Standards.URI url, void|Configuration only_this_conf)
+// Returns ({port_obj, url_data}) for an url that matches the given
+// one. url_data is the mapping for the url in port_obj->urls. If
+// only_this_conf is given then only ports for that configuration are
+// searched.
+{
+  string url_with_port = sprintf("%s://%s:%d%s", url->scheme, url->host,
+				 url->port,
+				 (sizeof(url->path)?url->path:"/"));
+
+  URL2CONF_MSG("URL with port: %s\n", url_with_port);
+
+  foreach (urls; string u; mapping(string:mixed) q)
+  {
+    URL2CONF_MSG("Trying %O:%O\n", u, q);
+    if( glob( u+"*", url_with_port ) )
+    {
+      URL2CONF_MSG("glob match\n");
+      if (Protocol p = q->port)
+	if (mapping(string:mixed) url_data =
+	    p->find_url_data_for_url (url_with_port, 0 ))
+	{
+	  Configuration c = url_data->c;
+	  URL2CONF_MSG("Found config: %O\n", url_data->c);
+
+	  if ((only_this_conf && (c != only_this_conf)) ||
+	      (sscanf (u, "%*[^*?]%*c") == 2 && // u contains * or ?.
+	       // u is something like "http://*:80/"
+	       (!host_is_local(url->host)))) {
+	    // Bad match.
+	    URL2CONF_MSG("Bad match: only_this_conf:%O, host_is_local:%O\n",
+			 (only_this_conf && (c == only_this_conf)),
+			 (!host_is_local(url->host)));
+	    c = 0;
+	    continue;
+	  }
+
+	  URL2CONF_MSG("Result: %O\n", c);
+	  return ({p, url_data});
+	}
+    }
+  }
+
+  return ({0, 0});
+}
+
 Configuration find_configuration_for_url(Standards.URI url,
 					 void|Configuration only_this_conf,
 					 void|array(Protocol) return_port)
@@ -1480,47 +1527,11 @@ Configuration find_configuration_for_url(Standards.URI url,
 //! If @[only_this_conf] has been specified only matches against it
 //! will be returned.
 {
-  Configuration c;
-  Protocol c_portobj;
-  
-  string url_with_port = sprintf("%s://%s:%d%s", url->scheme, url->host,
-				 url->port,
-				 (sizeof(url->path)?url->path:"/"));
-
-  URL2CONF_MSG("URL with port: %s\n", url_with_port);
-
-  foreach( indices(urls), string u )
-  {
-    mixed q = urls[u];
-    URL2CONF_MSG("Trying %O:%O\n", u, q);
-    if( glob( u+"*", url_with_port ) )
-    {
-      URL2CONF_MSG("glob match\n");
-      if( q->port &&
-	  (c = q->port->find_configuration_for_url(url_with_port, 0, 1 )) )
-      {
-	URL2CONF_MSG("Found config: %O\n", c);
-
-	if ((only_this_conf && (c != only_this_conf)) ||
-	    ((search(u, "*") != -1 || search(u, "?") != -1) &&
-	     // u is something like "http://*:80/"
-	     (!host_is_local(url->host)))) {
-	  // Bad match.
-	  URL2CONF_MSG("Bad match: only_this_conf:%O, host_is_local:%O\n",
-		       (only_this_conf && (c == only_this_conf)),
-		       (!host_is_local(url->host)));
-	  c = 0;
-	  continue;
-	}
-	c_portobj = q->port;
-	break;
-      }
-    }
-  }
-  URL2CONF_MSG("Result: %O\n", c);
+  [Protocol port_obj, mapping(string:mixed) url_data] =
+    find_port_for_url (url, only_this_conf);
   if (return_port)
-    return_port[0] = c_portobj;
-  return c;
+    return_port[0] = port_obj;
+  return url_data && url_data->conf;
 }
 
 class InternalRequestID
@@ -1568,9 +1579,13 @@ class InternalRequestID
     raw_url = path;
     method = "GET";
     raw = "GET " + raw_url + " HTTP/1.1\r\n\r\n";
-    array(Protocol) port_array = ({ 0 });
-    conf = find_configuration_for_url(uri, 0, port_array);
-    port_obj = port_array[0];
+    [port_obj, mapping(string:mixed) url_data] = find_port_for_url (uri, 0);
+    if (url_data) {
+      conf = url_data->conf;
+      if (!conf->inited) conf->enable_all_modules();
+    }
+    if (string config_path = url_data->path)
+      adjust_for_config_path (config_path);
     return set_path( raw_url );
   }
 
@@ -1656,7 +1671,7 @@ class Protocol
   array(string) sorted_urls = ({});
   //! Sorted by length, longest first
 
-  mapping(string:mapping) urls = ([]);
+  mapping(string:mapping(string:mixed)) urls = ([]);
   //! .. url -> ([ "conf":.., ... ])
   //!
   //! Indexed by URL. The following data is stored:
@@ -1674,10 +1689,10 @@ class Protocol
   //!     tree when it was last merged.
   //! @endmapping
 
-  mapping(Configuration:mapping) conf_data = ([]);
+  mapping(Configuration:mapping(string:mixed)) conf_data = ([]);
   //! Maps the configuration objects to the data mappings in @[urls].
 
-  void ref(string name, mapping data)
+  void ref(string name, mapping(string:mixed) data)
   //! Add a ref for the URL 'name' with the data 'data'
   {
     if(urls[name])
@@ -1754,7 +1769,7 @@ class Protocol
     return port_obj && port_obj->query_address();
   }
 
-  mapping mu;
+  mapping(string:mixed) mu;
   string rrhf;
   protected void got_connection()
   {
@@ -1785,37 +1800,17 @@ class Protocol
     }
   }
 
-  local function sp_fcfu;
+  private function(string,int:mapping(string:mixed)) sp_fudfu;
 
-
-  // FIXME: find_configuration_for_url can be called from the backend
-  // thread, so enable_all_modules should be queued for a handler thread.
-#define INIT(X) do{			\
-    mapping _=(X);			\
-    string __=_->path;			\
-    c=_->conf;				\
-    if(__&&id->adjust_for_config_path)	\
-      id->adjust_for_config_path(__);	\
-    if(!c->inited)			\
-      c->enable_all_modules();		\
-  } while(0)
-
-  Configuration find_configuration_for_url( string url, RequestID id, 
-                                            int|void no_default )
-  //! Given a url and requestid, try to locate a suitable configuration
-  //! (virtual site) for the request. 
-  //! This interface is not at all set in stone, and might change at 
-  //! any time.
+  mapping(string:mixed) find_url_data_for_url (string url, int no_default)
   {
-    Configuration c;
     if( sizeof( urls ) == 1 && !no_default)
     {
       if(!mu) mu=urls[sorted_urls[0]];
-      INIT( mu );
-      URL2CONF_MSG ("%O %O Only one configuration: %O\n", this_object(), url, c);
-      return c;
+      URL2CONF_MSG ("%O %O Only one configuration: %O\n", this, url, mu->conf);
+      return mu;
     } else if (!sizeof(sorted_urls)) {
-      URL2CONF_MSG("%O %O No active URLS!\n", this_object(), url);
+      URL2CONF_MSG("%O %O No active URLS!\n", this, url);
       return 0;
     }
 
@@ -1829,63 +1824,85 @@ class Protocol
     {
       if( glob( in+"*", url ) )
       {
-        INIT( urls[in] );
-	URL2CONF_MSG ("%O %O sorted_urls: %O\n", this_object(), url, c);
-	return c;
+	URL2CONF_MSG ("%O %O sorted_urls: %O\n", this, url, urls[in]->conf);
+	return urls[in];
       }
     }
     
     if( no_default ) {
-      URL2CONF_MSG ("%O %O no default\n", this_object(), url);
+      URL2CONF_MSG ("%O %O no default\n", this, url);
       return 0;
     }
     
     // No host matched, or no host header was included in the request.
     // Is the URL in the '*' ports?
-    mixed i;
-    if( !functionp(sp_fcfu) && ( i=open_ports[ name ][ 0 ][ port ] ) )
-      sp_fcfu = i->find_configuration_for_url;
-    
-    if( sp_fcfu && (sp_fcfu != find_configuration_for_url)
-	&& (i = sp_fcfu( url, id, 1 ))) {
-      URL2CONF_MSG ("%O %O sp_fcfu: %O\n", this_object(), url, i);
-      return i;
-    }
+    if (!sp_fudfu)
+      if (Protocol p = open_ports[ name ][ 0 ][ port ] )
+	sp_fudfu = p->find_url_data_for_url;
+    if (sp_fudfu && sp_fudfu != find_url_data_for_url)
+      if (mapping(string:mixed) u = sp_fudfu( url, 1 )) {
+	URL2CONF_MSG ("%O %O sp_fudfu: %O\n", this, url, u->conf);
+	return u;
+      }
     
     // No. We have to default to one of the other ports.
     // It might be that one of the servers is tagged as a default server.
-    multiset choices = (< >);
+    mapping(Configuration:int(1..1)) choices = ([]);
     foreach( configurations, Configuration c )
       if( c->query( "default_server" ) )
-	choices |= (< c >);
+	choices[c] = 1;
     
     if( sizeof( choices ) )
     {
-      // First pick default servers bound to this port
-      foreach( values(urls), mapping cc )
+      // Pick a default server bound to this port
+      foreach (urls;; mapping cc)
 	if( choices[ cc->conf ] )
 	{
-          INIT( cc );
-	  URL2CONF_MSG ("%O %O conf in choices: %O\n", this_object(), url, c);
+	  URL2CONF_MSG ("%O %O conf in choices: %O\n", this, url, cc->conf);
+	  return cc;
+	}
+    }
+
+    return 0;
+  }
+
+  Configuration find_configuration_for_url( string url, RequestID id )
+  //! Given a url and requestid, try to locate a suitable configuration
+  //! (virtual site) for the request. 
+  //! This interface is not at all set in stone, and might change at 
+  //! any time.
+  {
+    mapping(string:mixed) url_data = find_url_data_for_url (url, 0);
+
+    if (!url_data) {
+      // Pick the first default server available. FIXME: This makes
+      // it impossible to handle the server path correctly.
+      foreach (configurations, Configuration c)
+	if (c->query ("default_server")) {
+	  URL2CONF_MSG ("%O %O any default server: %O\n", this, url, c);
+	  if(!c->inited)
+	    // FIXME: We can be called from the backend thread, so
+	    // this should be queued for a handler thread.
+	    c->enable_all_modules();
 	  return c;
 	}
 
-      // if there is no such servers, pick the first default server
-      // available. FIXME: This makes it impossible to handle the
-      // server path correctly.
-
-      c = ((array)choices)[0];
-      if(!c->inited) c->enable_all_modules();
-      URL2CONF_MSG ("%O %O any in choices: %O\n", this_object(), url, c);
-      return c;
+      // if we end up here, there is no default port at all available
+      // so grab the first configuration that is available at all.
+      url_data = urls[sorted_urls[0]];
+      if (id) id->misc->defaulted=1;
+      URL2CONF_MSG ("%O %O first in sorted_urls: %O\n", this, url,
+		    url_data->conf);
     }
 
-
-    // if we end up here, there is no default port at all available
-    // so grab the first configuration that is available at all.
-    INIT( urls[sorted_urls[0]] );
-    id->misc->defaulted=1;
-    URL2CONF_MSG ("%O %O first in sorted_urls: %O\n", this_object(), url, c);
+    string config_path = url_data->path;
+    if (config_path && id && id->adjust_for_config_path)
+      id->adjust_for_config_path (config_path);
+    Configuration c = url_data->conf;
+    if(!c->inited)
+      // FIXME: We can be called from the backend thread, so this
+      // should be queued for a handler thread.
+      c->enable_all_modules();
     return c;
   }
 
@@ -2484,7 +2501,7 @@ mapping(string:program/*(Protocol)*/) protocols;
 mapping(string:mapping(string:mapping(int:Protocol))) open_ports = ([ ]);
 
 // url:"port" ==> Protocol.
-mapping(string:mapping(string:Configuration)) urls = ([]);
+mapping(string:mapping(string:mixed)) urls = ([]);
 array sorted_urls = ({});
 
 array(string) find_ips_for( string what )
