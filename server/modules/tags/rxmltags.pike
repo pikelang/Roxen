@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.572 2008/11/02 18:38:08 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.573 2008/11/04 16:01:38 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -618,8 +618,8 @@ class TagGuessContentType
   inherit RXML.Tag;
   constant name = "guess-content-type";
   mapping(string:RXML.Type)
-    opt_arg_types = ([ "filename" : RXML.t_text(RXML.PXml),
-		       "content"     : RXML.t_text(RXML.PXml) ]);
+    opt_arg_types = ([ "filename" : RXML.t_text(RXML.PEnt),
+		       "content"     : RXML.t_text(RXML.PEnt) ]);
   class Frame {
     inherit RXML.Frame;
 
