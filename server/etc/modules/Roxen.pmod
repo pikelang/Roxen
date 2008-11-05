@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.250 2008/11/05 10:27:28 stewa Exp $
+// $Id: Roxen.pmod,v 1.251 2008/11/05 12:17:30 stewa Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2329,7 +2329,7 @@ protected string low_roxen_encode(string val, string encoding)
   case "hex":
     if(String.width(val) > 8)
       RXML.run_error(  "Cannot hex encode wide characters.\n" );
-    return sprintf("%{%02x%}",map(val/1,`[],0));
+    return Crypto.string_to_hex(val);
 
    case "base64":
    case "base-64":
