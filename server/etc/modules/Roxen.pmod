@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.253 2008/11/05 13:25:16 mast Exp $
+// $Id: Roxen.pmod,v 1.254 2008/11/05 13:33:09 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2463,8 +2463,7 @@ protected string low_roxen_encode(string val, string encoding)
 //!   @value "quoted-printable"
 //!   @value "qp"
 //!     Quoted-Printable MIME encoding. Requires octet (i.e. non-wide)
-//!     strings. Requires octet (i.e. non-wide) strings. C.f.
-//!     @[MIME.encode_qp].
+//!     strings. C.f. @[MIME.encode_qp].
 //!
 //!   @value "http"
 //!     HTTP encoding (i.e. using @expr{%xx@} style escapes) of
