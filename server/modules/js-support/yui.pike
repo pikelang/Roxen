@@ -16,7 +16,7 @@ LOCALE(0,"This sets The Yahoo! User Interface Library (YUI) as a virtual file sy
 	 "of your site.");
 
 string module_dir = combine_path(__FILE__, "../");
-string yui_root_dir = (getenv("VARDIR") || "../var") +"/yui/";
+string yui_root_dir = combine_path(getenv("VARDIR") || "../var", "yui/");
 
 int limit_yui_paths;
 
@@ -44,14 +44,18 @@ void setup_yui() {
   if(!file_stat(yui_root_dir))
     mkdir(yui_root_dir);
 
-  multiset missing_versions = yui_versions - (multiset)get_dir(yui_root_dir);
+  multiset missing_versions =
+    yui_versions - (multiset) (get_dir(yui_root_dir) || ({ }) );
 
   foreach(indices(missing_versions), string ver) {
+#ifdef RUN_SELF_TEST
+    report_notice("Self-test detected: Skipping extraction of "
+		  "YUI version " + ver + ".\n");
+#else
     report_notice("Will extraxt YUI version "+ ver+".\n");
     tar_extract(combine_path(module_dir,"yui-"+ver+".tar"), yui_root_dir);
+#endif
   }
-
-
 }
 
 
