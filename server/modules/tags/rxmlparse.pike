@@ -7,15 +7,9 @@
 //This can be turned on when types in dumped files are working properly.
 //#pragma strict_types
 
-#define _id_misc (id->misc)
-#define _context_misc ([mapping(string:mixed)] RXML_CONTEXT->misc)
-#define _stat _context_misc[" _stat"]
-#define _error _context_misc[" _error"]
-//#define _extra_heads _context_misc[" _extra_heads"]
-#define _rettext _context_misc[" _rettext"]
-#define _ok _context_misc[" _ok"]
+#define CTX_MISC ([mapping(string:mixed)] RXML_CONTEXT->misc)
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.80 2008/11/02 15:16:41 mast Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.81 2008/11/05 20:13:46 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -111,7 +105,7 @@ function(string,int|void,string|void:string) file2type;
 
 mapping handle_file_extension(Stdio.File file, string e, RequestID id)
 {
-  Stdio.Stat stat = _id_misc->stat || file->stat();
+  Stdio.Stat stat = id->misc->stat || file->stat();
 
   if(require_exec && !(stat[0] & 07111)) return 0;
   if(!parse_exec && (stat[0] & 07111)) return 0;
@@ -119,7 +113,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
   bytes += stat[1];
 
   string data = file->read();
-  switch( _id_misc->input_charset )
+  switch( id->misc->input_charset )
   {
    case 0:
    case "iso-8859-1":
@@ -131,7 +125,7 @@ mapping handle_file_extension(Stdio.File file, string e, RequestID id)
      data = unicode_to_string( data );
      break;
    default:
-     data = (Locale.Charset.decoder( [string]_id_misc->input_charset )
+     data = (Locale.Charset.decoder( [string]id->misc->input_charset )
 	     ->feed( data )
 	     ->drain());
      break;
@@ -204,7 +198,8 @@ string rxml_run_error(RXML.Backtrace err, RXML.Type type)
 // This is used to report thrown RXML run errors. See
 // RXML.run_error().
 {
-  RequestID id = RXML.get_context()->id;
+  RXML.Context ctx = RXML.get_context();
+  RequestID id = ctx->id;
 
   if(id->conf->get_provider("RXMLRunError")) {
     if(!_run_error)
@@ -227,10 +222,10 @@ string rxml_run_error(RXML.Backtrace err, RXML.Type type)
 #endif
 
   NOCACHE();
-  _ok=0;
+  ctx->misc[" _ok"]=0;
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml) ||
       type->subtype_of (RXML.t_text)) {
-    if(query("quietr") && !_id_misc->debug && !id->prestate->debug)
+    if(query("quietr") && !id->misc->debug && !id->prestate->debug)
       return "";
     if (type->subtype_of (RXML.t_text))
       return "\n" + describe_error (err) + "\n";
@@ -271,7 +266,7 @@ string rxml_parse_error(RXML.Backtrace err, RXML.Type type)
   NOCACHE();
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml) ||
       type->subtype_of (RXML.t_text)) {
-    if(query("quietp") && !_id_misc->debug && !id->prestate->debug)
+    if(query("quietp") && !id->misc->debug && !id->prestate->debug)
       return "";
     if (type->subtype_of (RXML.t_text))
       return "\n" + describe_error (err) + "\n";
@@ -310,13 +305,13 @@ string api_set(RequestID id, string what, string to, void|string scope)
 
 string api_define(RequestID id, string what, string to)
 {
-  _context_misc[what]=to;
+  CTX_MISC[what]=to;
   return ([])[0];
 }
 
 string api_query_define(RequestID id, string what)
 {
-  return (string)_context_misc[what];
+  return (string)CTX_MISC[what];
 }
 
 string api_query_variable(RequestID id, string what, void|string scope)
@@ -372,12 +367,10 @@ int api_set_supports(RequestID id, string p)
 
 int api_set_return_code(RequestID id, int c, void|string p)
 {
-  if(c)
-    if (RXML.Context ctx = RXML_CONTEXT) ctx->set_misc (" _error", c);
-    else _error = c;
-  if(p)
-    if (RXML.Context ctx = RXML_CONTEXT) ctx->set_misc (" _rettext", p);
-    else _rettext = p;
+  if (RXML.Context ctx = RXML_CONTEXT) {
+    if(c) ctx->set_misc (" _error", c);
+    if(p) ctx->set_misc (" _rettext", p);
+  }
   return 1;
 }
 
