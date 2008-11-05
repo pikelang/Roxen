@@ -48,11 +48,14 @@ void setup_yui() {
     yui_versions - (multiset) (get_dir(yui_root_dir) || ({ }) );
 
   foreach(indices(missing_versions), string ver) {
+#ifdef RUN_SELF_TEST
+    report_notice("Self-test detected: Skipping extraction of "
+		  "YUI version " + ver + ".\n");
+#else
     report_notice("Will extraxt YUI version "+ ver+".\n");
     tar_extract(combine_path(module_dir,"yui-"+ver+".tar"), yui_root_dir);
+#endif
   }
-
-
 }
 
 
