@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.252 2008/11/05 12:34:02 mast Exp $
+// $Id: Roxen.pmod,v 1.253 2008/11/05 13:25:16 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -818,7 +818,7 @@ string http_encode_url (string f)
 //! Encode any string to be used as a component part in a URI. This
 //! means that all URI reserved and excluded characters are escaped,
 //! i.e. everything except @expr{A-Z@}, @expr{a-z@}, @expr{0-9@},
-//! @expr{-@}, @expr{.@}, @expr{_@}, and @expr{~@} (see RFC 2396
+//! @expr{-@}, @expr{.@}, @expr{_@}, and @expr{~@} (see RFC 3986
 //! section 2.3).
 //!
 //! @note
@@ -2357,7 +2357,7 @@ protected string low_roxen_encode(string val, string encoding)
      // %-encoded. Although unlikely, it might be possible that the
      // old ambiguous encoding is the one mandated by the WAP/WML
      // standard - I haven't been able to verify it. /mast
-     return correctly_http_encode_url(val);
+     return http_encode_url(val);
 
    case "html":
      return html_encode_string (val);
@@ -2437,59 +2437,101 @@ protected string low_roxen_encode(string val, string encoding)
 //!
 //!   @value "utf8"
 //!   @value "utf-8"
-//!     UTF-8 encoding.
+//!     UTF-8 encoding. C.f. @[string_to_utf8].
+//!
+//!   @value "utf16"
+//!   @value "utf16be"
+//!     (Big endian) UTF-16 encoding. C.f. @[Locale.Charset], encoder
+//!     @expr{"utf16be"@}.
+//!
+//!   @value "utf16le"
+//!     Little endian UTF-16 encoding. C.f. @[Locale.Charset], encoder
+//!     @expr{"utf16le"@}.
+//!
+//!   @value "hex"
+//!     Hexadecimal encoding, e.g. @expr{"foo"@} is encoded to
+//!     @expr{"666f6f"@}. Requires octet (i.e. non-wide) strings.
+//!     C.f. @[String.string2hex].
 //!
 //!   @value "base64"
 //!   @value "base-64"
 //!   @value "b64"
-//!     Base-64 MIME encoding.
+//!     Base-64 MIME encoding. Requires octet (i.e. non-wide) strings.
+//!     C.f. @[MIME.encode_base64].
 //!
 //!   @value "quotedprintable"
 //!   @value "quoted-printable"
 //!   @value "qp"
-//!     Quoted-Printable MIME encoding.
+//!     Quoted-Printable MIME encoding. Requires octet (i.e. non-wide)
+//!     strings. Requires octet (i.e. non-wide) strings. C.f.
+//!     @[MIME.encode_qp].
 //!
 //!   @value "http"
-//!     HTTP encoding.
-//!   @value "cookie"
-//!     HTTP cookie encoding.
+//!     HTTP encoding (i.e. using @expr{%xx@} style escapes) of
+//!     characters that never can occur verbatim in URLs. Other
+//!     URL-special chars, including @expr{%@}, are not encoded. 8-bit
+//!     and wider chars are encoded according to the IRI standard (RFC
+//!     3987). C.f. @[Roxen.http_encode_invalids].
+//!
 //!   @value "url"
-//!     HTTP encoding, including special characters in URL:s.
-//!   @value "wml-url"
-//!     RFC-compliant HTTP URL encoding.
+//!     Similar to the @expr{"http"@} encoding, but encodes all URI
+//!     reserved and excluded chars, that otherwise could have special
+//!     meaning; see RFC 3986. This includes @expr{:@}, @expr{/@},
+//!     @expr{%@}, and quote chars. C.f. @[Roxen.http_encode_url].
+//!
+//!   @value "cookie"
+//!     Nonstandard HTTP-style encoding for cookie values. The Roxen
+//!     HTTP protocol module automatically decodes incoming cookies
+//!     using this encoding, so by using this for @expr{Set-Cookie@}
+//!     headers etc you will get back the original value in the
+//!     @expr{cookie@} scope. Note that @[Roxen.set_cookie] and the
+//!     RXML @expr{<set-cookie>@} tag already do this encoding for
+//!     you. C.f. @[Roxen.http_encode_cookie].
 //!
 //!   @value "html"
-//!     HTML encoding, for generic text in html documents.
+//!     HTML encoding, for generic text in html documents. This means
+//!     encoding chars like @expr{<@}, @expr{&@}, and quotes using
+//!     character reference entities.
+//!
 //!   @value "wml"
 //!     HTML encoding, and doubling of any @tt{$@}'s.
 //!
 //!   @value "pike"
-//!     Pike string quoting, for use in e.g. the @tt{<pike></pike>@} tag.
+//!     Pike string quoting, for use in e.g. the @tt{<pike></pike>@}
+//!     tag. This means backslash escapes for chars that cannot occur
+//!     verbating in Pike string literals.
 //!
 //!   @value "js"
 //!   @value "javascript"
-//!     Javascript string quoting.
+//!     Javascript string quoting, i.e. using backslash escapes for
+//!     @expr{"@}, @expr{\@}, and more.
 //!
 //!   @value "mysql"
-//!     MySQL quoting.
+//!     MySQL quoting. This also means backslash escapes.
 //!
 //!   @value "sql"
 //!   @value "oracle"
-//!     SQL/Oracle quoting.
+//!     SQL/Oracle quoting, i.e. @expr{'@} is encoded as @expr{''@}.
 //!
 //!   @value "mysql-pike"
-//!     Compat.
-//!     MySQL quoting followed by Pike string quoting.
+//!     Compat. MySQL quoting followed by Pike string quoting.
 //!     Equvivalent to using @expr{"mysql.pike"@}.
+//!
+//!   @value "wml-url"
+//!     Compat alias for @expr{"url"@}.
 //!
 //!   @value "dtag"
 //!   @value "stag"
-//!     Compat.
+//!     Compat. @expr{"dtag"@} encodes @expr{"@} as @expr{"'"'"@}, and
+//!     @expr{"stag"@} encodes @expr{'@} as @expr{'"'"'@}. They were
+//!     used frequently before rxml 2.0 to quote rxml attributes, but
+//!     are no longer necessary.
 //!
 //!   @value "mysql-dtag"
 //!   @value "sql-dtag"
 //!   @value "oracle-dtag"
-//!     Compat.
+//!     Compat. Same as @expr{"mysql.dtag"@}, @expr{"sql.dtag"@}, and
+//!     @expr{"oracle.dtag@}, respectively.
 //! @endstring
 //!
 //! Returns zero if the encoding isn't recognized.
