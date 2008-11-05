@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.567 2008/10/10 14:46:12 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.568 2008/11/05 18:19:49 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -13,7 +13,7 @@ inherit "highlight_pike";
 #endif
 
 // HTTP protocol module.
-#include <config.h>
+#include <roxen.h>
 #define TIMER_PREFIX "http:"
 #include <timers.h>
 
@@ -51,9 +51,6 @@ int footime, bartime;
 #else
 #define MARK_FD(X) do {} while (0)
 #endif
-
-#define TOSTR(X)	#X
-#define TOSTR2(X)	TOSTR(X)
 
 #ifdef CONNECTION_DEBUG
 // Currently only used by CONNECTION_DEBUG to label each message with
@@ -331,11 +328,11 @@ void send(string|object what, int|void len,
   if(stringp(what)) {
 #ifdef CONNECTION_DEBUG
     if (connection_debug_verbose
-#if TOSTR2(CONNECTION_DEBUG) != "1"
+#if TOSTR(CONNECTION_DEBUG) != "1"
 	// CONNECTION_DEBUG may be defined to something like "text/"
 	// to see the response content for all content types with that
 	// prefix, only headers are shown otherwise.
-	|| has_prefix(file->type || "", TOSTR2(CONNECTION_DEBUG))
+	|| has_prefix(file->type || "", TOSTR(CONNECTION_DEBUG))
 #endif
        )
       werror ("HTTP[%s]: Response (length %d) ===============================\n"

@@ -1,6 +1,6 @@
 // -*- pike -*-
 //
-// $Id: roxen.h,v 1.30 2006/04/20 09:41:42 grubba Exp $
+// $Id: roxen.h,v 1.31 2008/11/05 18:19:49 mast Exp $
 
 #ifndef _ROXEN_H_
 
@@ -12,6 +12,11 @@
 #ifndef REQUESTID
 #define REQUESTID	id
 #endif
+
+// Various useful macros
+
+#define TOSTR2(X)	#X
+#define TOSTR(X)	TOSTR2(X)
 
 // Localization support
 
