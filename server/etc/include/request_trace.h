@@ -2,7 +2,7 @@
 //
 // Some stuff to do logging of a request through the server.
 //
-// $Id: request_trace.h,v 1.16 2008/09/26 10:20:38 mast Exp $
+// $Id: request_trace.h,v 1.17 2008/11/05 19:24:10 mast Exp $
 
 #ifndef REQUEST_TRACE_H
 #define REQUEST_TRACE_H
@@ -25,50 +25,60 @@
 
 #ifdef REQUEST_TRACE
 
-# define TRACE_ENTER(A,B) Roxen->trace_enter (id, (A), (B))
-# define TRACE_LEAVE(A) Roxen->trace_leave (id, (A))
+# define ID_TRACE_ENTER(ID, A, B) Roxen->trace_enter ((ID), (A), (B))
+# define ID_TRACE_LEAVE(ID, A) Roxen->trace_leave ((ID), (A))
 
 #else
 
-# define TRACE_ENTER(A,B) do{ \
+# define ID_TRACE_ENTER(ID, A, B) do{ \
+    object _iD_ = (ID); \
     function(string,mixed ...:void) _trace_enter; \
-    if(id && \
+    if(_iD_ && \
        (_trace_enter = \
-        [function(string,mixed ...:void)]([mapping(string:mixed)]id->misc)-> \
+	[function(string,mixed ...:void)]([mapping(string:mixed)]_iD_->misc)-> \
           trace_enter)) \
       _trace_enter((A), (B)); \
   }while(0)
 
-# define TRACE_LEAVE(A) do{ \
+# define ID_TRACE_LEAVE(ID, A) do{ \
+    object _iD_ = (ID); \
     function(string:void) _trace_leave; \
-    if(id && \
+    if(_iD_ && \
        (_trace_leave = \
-        [function(string:void)]([mapping(string:mixed)]id->misc)-> \
+	[function(string:void)]([mapping(string:mixed)]_iD_->misc)-> \
           trace_leave)) \
       _trace_leave(A); \
   }while(0)
 
 #endif
 
+#define TRACE_ENTER(A,B) ID_TRACE_ENTER (id, (A), (B))
+#define TRACE_LEAVE(A) ID_TRACE_LEAVE (id, (A))
+
 // SIMPLE_TRACE_ENTER and SIMPLE_TRACE_LEAVE are simpler variants of
 // the above macros since they handle sprintf style format lists. Note
 // the reversed argument order in SIMPLE_TRACE_ENTER compared to
 // TRACE_ENTER.
 
-#define SIMPLE_TRACE_ENTER(OBJ, MSG...) do {				\
+#define SIMPLE_ID_TRACE_ENTER(ID, OBJ, MSG...) do {			\
     array _msg_arr_;							\
-    TRACE_ENTER (  (_msg_arr_ = ({MSG}),				\
+    ID_TRACE_ENTER ((ID),						\
+		    (_msg_arr_ = ({MSG}),				\
 		    sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :	\
 		    (sizeof (_msg_arr_) ? _msg_arr_[0] : "")),		\
 		 (OBJ));						\
   } while (0)
 
-#define SIMPLE_TRACE_LEAVE(MSG...) do {					\
+#define SIMPLE_ID_TRACE_LEAVE(ID, MSG...) do {				\
     array _msg_arr_;							\
-    TRACE_LEAVE (  (_msg_arr_ = ({MSG}),				\
+    ID_TRACE_LEAVE ((ID),						\
+		    (_msg_arr_ = ({MSG}),				\
 		    sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) :	\
 		    (sizeof (_msg_arr_) ? _msg_arr_[0] : "")));		\
   } while (0)
+
+#define SIMPLE_TRACE_ENTER(OBJ, MSG...) SIMPLE_ID_TRACE_ENTER (id, OBJ, MSG)
+#define SIMPLE_TRACE_LEAVE(MSG...) SIMPLE_ID_TRACE_LEAVE (id, MSG)
 
 // The following variant should be used inside RXML.Frame callbacks
 // such as do_enter. In addition to the request trace, it does rxml
