@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.224 2008/08/18 13:18:45 erikd Exp $
+// $Id: Roxen.pmod,v 1.225 2008/11/05 10:27:51 stewa Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2209,6 +2209,18 @@ static string low_roxen_encode(string val, string encoding)
    case "utf8":
    case "utf-8":
      return string_to_utf8(val);
+
+   case "utf16":
+   case "utf16be":
+     return Locale.Charset.encoder("utf16be")->feed(val)->drain();
+
+   case "utf16le":
+     return Locale.Charset.encoder("utf16le")->feed(val)->drain();
+
+  case "hex":
+    if(String.width(val) > 8)
+      RXML.run_error(  "Cannot hex encode wide characters.\n" );
+    return sprintf("%{%02x%}",map(val/1,`[],0));
 
    case "base64":
    case "base-64":
