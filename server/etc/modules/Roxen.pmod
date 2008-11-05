@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.255 2008/11/05 18:21:38 mast Exp $
+// $Id: Roxen.pmod,v 1.256 2008/11/05 18:32:35 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4725,14 +4725,22 @@ array(mapping(string:mixed)|object) rxml_emit_sort (
 
 #ifdef REQUEST_TRACE
 protected string trace_msg (mapping id_misc, string msg,
-			    string|int name_or_time)
+			    string|int name_or_time, int enter)
 {
   array(string) lines = msg / "\n";
-  if (lines[-1] == "") lines = lines[..sizeof (lines) - 2];
+  if (lines[-1] == "") lines = lines[..<1];
 
   if (sizeof (lines)) {
-    string byline = sprintf ("%*s%s", id_misc->trace_level + 1, "",
-			     sizeof (lines) ? lines[-1] : "");
+#if TOSTR (REQUEST_TRACE) == "TIMES"
+    string byline = sprintf ("%*s%c %s",
+			     id_misc->trace_level + 1, "",
+			     enter ? '>' : '<',
+			     lines[-1]);
+#else
+    string byline = sprintf ("%*s%s",
+			     id_misc->trace_level + 1, "",
+			     lines[-1]);
+#endif
 
     string info;
     if (stringp (name_or_time))
@@ -4792,7 +4800,7 @@ void trace_enter (RequestID id, string msg, object|function thing)
     }
     else name = "";
 
-    trace_msg (id_misc, msg, name);
+    trace_msg (id_misc, msg, name, 1);
     int l = ++id_misc->trace_level;
 
     if(function(string,mixed ...:void) _trace_enter =
@@ -4839,7 +4847,7 @@ void trace_leave (RequestID id, string desc)
 	  int t = gethrtime();
 #endif
 	  name_or_time = t - tt[l];
-	  if (desc == "") desc = "Leave: " + id_misc->trace_msgs[l];
+	  if (desc == "") desc = id_misc->trace_msgs[l];
 	}
       id_misc->trace_level--;
     }
@@ -4847,7 +4855,7 @@ void trace_leave (RequestID id, string desc)
     if (id_misc->trace_level) id_misc->trace_level--;
 #endif
 
-    if (sizeof (desc)) trace_msg (id_misc, desc, name_or_time);
+    if (sizeof (desc)) trace_msg (id_misc, desc, name_or_time, 0);
 
     if(function(string:void) _trace_leave =
        [function(string:void)]id_misc->trace_leave)
