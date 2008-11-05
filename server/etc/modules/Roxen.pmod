@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.251 2008/11/05 12:17:30 stewa Exp $
+// $Id: Roxen.pmod,v 1.252 2008/11/05 12:34:02 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2329,7 +2329,7 @@ protected string low_roxen_encode(string val, string encoding)
   case "hex":
     if(String.width(val) > 8)
       RXML.run_error(  "Cannot hex encode wide characters.\n" );
-    return Crypto.string_to_hex(val);
+    return String.string2hex(val);
 
    case "base64":
    case "base-64":
@@ -2491,6 +2491,8 @@ protected string low_roxen_encode(string val, string encoding)
 //!   @value "oracle-dtag"
 //!     Compat.
 //! @endstring
+//!
+//! Returns zero if the encoding isn't recognized.
 //!
 //! @example
 //!   UTF8-encode a string for use in a Mysql query in an HTML page:
