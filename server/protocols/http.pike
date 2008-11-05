@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.568 2008/11/05 18:19:49 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.569 2008/11/05 20:28:57 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -118,10 +118,8 @@ int kept_alive;
 #include <module.h>
 #include <request_trace.h>
 
-#define MY_TRACE_ENTER(A, B) \
-  do {RequestID id = this_object(); TRACE_ENTER (A, B);} while (0)
-#define MY_TRACE_LEAVE(A) \
-  do {RequestID id = this_object(); TRACE_LEAVE (A);} while (0)
+#define MY_TRACE_ENTER(MSG) ID_TRACE_ENTER (this, (MSG), 0)
+#define MY_TRACE_LEAVE(MSG) ID_TRACE_LEAVE (this, (MSG))
 
 mapping(string:array) real_variables = ([]);
 mapping(string:mixed)|FakedVariables variables = FakedVariables( real_variables );
@@ -1870,10 +1868,6 @@ void ready_to_receive()
 void low_send_result(string headers, string data, int|void len,
 		     Stdio.File|void file)
 {
-  MY_TRACE_ENTER(sprintf("Sending %d bytes of headers, "
-			 "%d bytes of string data, "
-			 "len:%d",
-			 sizeof(headers), data && sizeof(data), len), 0);
 
   if (!my_fd) {
     do_log(0);
@@ -1901,7 +1895,9 @@ void low_send_result(string headers, string data, int|void len,
   conf->hsent += sizeof(headers);
   if(!kept_alive && (len > 0) &&
      ((sizeof(headers) + len) < (HTTP_BLOCKING_SIZE_THRESHOLD))) {
-    MY_TRACE_ENTER("Blocking write.", 0);
+    MY_TRACE_ENTER(sprintf("Sending blocking %d bytes of headers and "
+			   "%d bytes of string data",
+			   sizeof(headers), data && sizeof(data)));
     TIMER_START(blocking_write);
     if (data && sizeof(data) != len) {
       data = data[..len-1];
@@ -1920,10 +1916,12 @@ void low_send_result(string headers, string data, int|void len,
 #endif
     int s = my_fd->write(({ headers, data }));
     TIMER_END(blocking_write);
-    MY_TRACE_LEAVE(sprintf("Blocking write wrote %d bytes.", s));
+    MY_TRACE_LEAVE(sprintf("Blocking write wrote %d bytes", s));
     do_log(s);
   } else {
-    MY_TRACE_ENTER("Async write.", 0);
+    MY_TRACE_ENTER(sprintf("Sending async %d bytes of headers and "
+			   "%d bytes of string data",
+			   sizeof(headers), data && sizeof(data)));
 #ifndef CONNECTION_DEBUG
     REQUEST_WERR(sprintf("HTTP: Send headers %O", headers));
 #endif
@@ -1937,10 +1935,10 @@ void low_send_result(string headers, string data, int|void len,
       send(data, len);
     if (file)
       send(file, len);
+    // MY_TRACE_LEAVE before start_sender since it might destruct us.
+    MY_TRACE_LEAVE ("Async sender started");
     start_sender();
-    MY_TRACE_LEAVE("Async write done");
   }
-  MY_TRACE_LEAVE("Result sent.\n");
 }
 
 // Send the result.
@@ -2574,7 +2572,7 @@ void got_data(mixed fooid, string s, void|int chained)
     if(misc->cacheable && !misc->no_proto_cache &&
        (cv = conf->datacache->get(raw_url, this_object())) )
     {
-      MY_TRACE_ENTER(sprintf("Checking entry %O", raw_url), 0);
+      MY_TRACE_ENTER(sprintf("Checking entry %O", raw_url));
       if( !cv[1]->key ) {
 	MY_TRACE_LEAVE("Entry invalid due to zero key");
 	conf->datacache->expire_entry(raw_url, this_object());
@@ -2594,7 +2592,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	  {
 	    foreach( file->callbacks, function f ) {
 	      if (!file->key) break;
-	      MY_TRACE_ENTER (sprintf ("Checking with %O", f), 0);
+	      MY_TRACE_ENTER (sprintf ("Checking with %O", f));
 	      if( !f(this_object(), file->key ) )
 	      {
 		MY_TRACE_LEAVE ("Entry invalid according to callback");
@@ -2825,7 +2823,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	    
 	    MY_TRACE_ENTER (
 	      sprintf("Starting refresh of stale entry "
-		      "(%d seconds past refresh time)", refresh - 1), 0);
+		      "(%d seconds past refresh time)", refresh - 1));
 	    cache_status["protcache"] = 0;
 	    cache_status["refresh"] = 1;
 	    cache_status["stale"] = 0;
