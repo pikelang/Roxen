@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.574 2008/11/04 16:08:48 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.575 2008/11/06 00:50:12 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -4996,11 +4996,32 @@ class TagUndefine {
   }
 }
 
-class Tracer (Configuration conf)
+class Tracer
 {
+  RequestID id;
+  function(string,mixed,int:void) orig_trace_enter;
+  function(string,int:void) orig_trace_leave;
+
+  protected void create (RequestID id)
+  {
+    Tracer::id = id;
+    orig_trace_enter = id->misc->trace_enter;
+    orig_trace_leave = id->misc->trace_leave;
+    id->misc->trace_enter = trace_enter_ol;
+    id->misc->trace_leave = trace_leave_ol;
+  }
+
+  protected void destroy()
+  {
+    if (id) {
+      id->misc->trace_enter = orig_trace_enter;
+      id->misc->trace_leave = orig_trace_leave;
+    }
+  }
+
   // Note: \n is used sparingly in output to make it look nice even
   // inside <pre>.
-  string resolv="<ol>";
+  string resolv="<ol style='padding-left: 3ex'>";
   int level;
 
   string _sprintf()
@@ -5008,39 +5029,56 @@ class Tracer (Configuration conf)
     return "Tracer()";
   }
 
+#if efun(gethrtime) || efun(gethrvtime)
+#define HAVE_CLOCKS
+
 #if constant (gethrtime)
-  mapping et = ([]);
+  mapping rtimes = ([]);
 #endif
 #if constant (gethrvtime)
-  mapping et2 = ([]);
+  mapping vtimes = ([]);
 #endif
 
-  local void start_clock()
+  local void start_clock (int timestamp)
   {
-#if constant (gethrvtime)
-    et2[level] = gethrvtime();
+#if efun (gethrvtime)
+    // timestamp is cputime.
+#if efun (gethrtime)
+    rtimes[level] = gethrtime();
 #endif
-#if constant (gethrtime)
-    et[level] = gethrtime();
-#endif
-  }
-
-  local string stop_clock()
-  {
-    string res;
-#if constant (gethrtime)
-    res = sprintf("%.5f", (gethrtime() - et[level])/1000000.0);
+    vtimes[level] = (timestamp || gethrvtime()) - id->misc->trace_overhead;
 #else
-    res = "";
+    // timestamp is realtime.
+    rtimes[level] = (timestamp || gethrtime()) - id->misc->trace_overhead;
 #endif
-#if constant (gethrvtime)
-    res += sprintf(" (CPU = %.2f)", (gethrvtime() - et2[level])/1000000.0);
-#endif
-    return res;
   }
 
-  void trace_enter_ol(string type, function|object thing)
+  local string stop_clock (int timestamp)
   {
+    int hrnow, hrvnow;
+
+#if efun (gethrvtime)
+    // timestamp is cputime.
+#if efun (gethrtime)
+    hrnow = gethrtime();
+#endif
+    hrvnow = (timestamp || gethrvtime()) - id->misc->trace_overhead;
+#else
+    // timestamp is realtime.
+    hrnow = (timestamp || gethrtime()) - id->misc->trace_overhead;
+#endif
+
+    return ({
+      hrvnow && ("CPU " + Roxen.format_hrtime (hrvnow - vtimes[level])),
+      hrnow && ("real " + Roxen.format_hrtime (hrnow - rtimes[level]))
+    }) * ", ";
+  }
+#endif	// efun (gethrtime) || efun (gethrvtime)
+
+  void trace_enter_ol(string type, function|object thing, int timestamp)
+  {
+    if (orig_trace_enter) orig_trace_enter (type, thing, timestamp);
+
     level++;
 
     if (thing) {
@@ -5048,40 +5086,42 @@ class Tracer (Configuration conf)
       if (name)
 	name = "module " + name;
       else if (this_program conf = Roxen.get_owning_config (thing))
-	name = "configuration " + Roxen.html_encode_string (conf->query_name());
+	name = "configuration " + id->conf->query_name();
       else
-	name = Roxen.html_encode_string (sprintf ("object %O", thing));
+	name = sprintf ("object %O", thing);
       type += " in " + name;
     }
 
-    string efont="", font="";
-    if(level>2) {efont="</font>";font="<font size=-1>";}
-
-    resolv += font + "<li><b>»</b> " + type + "<ol>" + efont;
-    start_clock();
+    resolv += "<li>" + Roxen.html_encode_string (type) +
+      "<ol style='padding-left: 3ex'>";
+#ifdef HAVE_CLOCKS
+    start_clock (timestamp);
+#endif
   }
 
-  void trace_leave_ol(string desc)
+  void trace_leave_ol(string desc, int timestamp)
   {
+    resolv += "</ol>";
+    if (sizeof (desc))
+      resolv += Roxen.html_encode_string(desc);
+#ifdef HAVE_CLOCKS
+    if (sizeof (desc)) resolv += "<br />";
+    resolv += "<i>Time: " + stop_clock (timestamp) + "</i>";
+#endif
+    resolv += "</li>\n";
+
     level--;
 
-    string efont="", font="";
-    if(level>1) {efont="</font>";font="<font size=-1>";}
-
-    resolv += "</ol>" + font;
-    if (sizeof (desc))
-      resolv += "<b>«</b> " + Roxen.html_encode_string(desc);
-    string time = stop_clock();
-    if (sizeof (time)) {
-      if (sizeof (desc)) resolv += "<br />";
-      resolv += "<i>Time: " + time + "</i>";
-    }
-    resolv += efont + "</li>\n";
+    if (orig_trace_leave) orig_trace_leave (desc, timestamp);
   }
+
+  int endtime;
 
   string res()
   {
-    while(level>0) trace_leave_ol("");
+    endtime = HRTIME();
+    while(level>0)
+      trace_leave_ol("Trace nesting inconsistency!", endtime);
     return resolv + "</ol>";
   }
 }
@@ -5092,28 +5132,24 @@ class TagTrace {
 
   class Frame {
     inherit RXML.Frame;
-    function a,b;
     Tracer t;
 
     array do_enter(RequestID id) {
       NOCACHE();
-      t = Tracer(id->conf);
-      a = id->misc->trace_enter;
-      b = id->misc->trace_leave;
-      id->misc->trace_enter = t->trace_enter_ol;
-      id->misc->trace_leave = t->trace_leave_ol;
-      t->start_clock();
+      t = Tracer(id);
+#ifdef HAVE_CLOCKS
+      t->start_clock (HRTIME());
+#endif
       return 0;
     }
 
     array do_return(RequestID id) {
-      id->misc->trace_enter = a;
-      id->misc->trace_leave = b;
       result = "<h3>Tracing</h3>" + content +
 	"<h3>Trace report</h3>" + t->res();
-      string time = t->stop_clock();
-      if (sizeof (time))
-	result += "<h3>Total time: " + time + "</h3>";
+#ifdef HAVE_CLOCKS
+      result += "<h3>Total time: " + t->stop_clock (t->endtime) + "</h3>";
+#endif
+      destruct (t);
       return 0;
     }
   }
