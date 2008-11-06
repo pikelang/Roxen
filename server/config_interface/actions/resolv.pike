@@ -1,9 +1,10 @@
 /*
- * $Id: resolv.pike,v 1.36 2008/10/15 15:25:12 jonasw Exp $
+ * $Id: resolv.pike,v 1.37 2008/11/06 00:47:03 mast Exp $
  */
 inherit "wizard";
 inherit "../logutil";
 #include <roxen.h>
+#include <request_trace.h>
 //<locale-token project="admin_tasks">LOCALE</locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("admin_tasks",X,Y)
 
@@ -62,6 +63,8 @@ string module_name(function|RoxenModule|RXML.Tag m)
 string resolv;
 int level, prev_level;
 
+mapping et = ([]);
+
 string anchor(string title)
 {
   while(level < prev_level)
@@ -75,11 +78,12 @@ string anchor(string title)
   return sprintf("<a name=\"%s\" href=\"#%s\">%s</a>", anchor*".", anchor*".", title);
 }
 
+RequestID nid;
 
-mapping et = ([]);
-mapping et2 = ([]);
+mapping rtimes = ([]);
+mapping vtimes = ([]);
 
-void trace_enter_ol(string type, function|object module)
+void trace_enter_ol(string type, function|object module, void|int timestamp)
 {
   level++;
 
@@ -88,34 +92,45 @@ void trace_enter_ol(string type, function|object module)
   resolv += ((prev_level >= level ? "<br />\n" : "") +
 	     anchor("")+"<li>"+
 	     Roxen.html_encode_string(type) + " " + module_name(module) +
-	     "<br />\n" + font + "<ol>");
+	     "<br />\n" + font + "<ol style='padding-left: 3ex'>");
+
 #if efun(gethrvtime)
-  et2[level] = gethrvtime();
+  // timestamp is cputime.
+#if efun (gethrtime)
+  rtimes[level] = gethrtime();
 #endif
-#if efun(gethrtime)
-  et[level] = gethrtime();
+  vtimes[level] = (timestamp || gethrvtime()) - nid->misc->trace_overhead;
+#elif efun (gethrtime)
+  // timestamp is realtime.
+  rtimes[level] = (timestamp || gethrtime()) - nid->misc->trace_overhead;
 #endif
 }
 
-string format_time (int hrstart, int hrvstart)
-{
-  return
 #if efun(gethrtime) || efun(gethrvtime)
-    "<i>" +
-#if efun(gethrtime)
-    sprintf ("Real time: %.5f", (gethrtime() - hrstart)/1000000.0) +
-#endif
-#if efun(gethrvtime)
-    sprintf (" CPU time: %.2f", (gethrvtime() - hrvstart)/1000000.0) +
-#endif /* efun(gethrvtime) */
-    "</i><br />\n"
-#else
-    ""
-#endif
-    ;
-}
+#define HAVE_TRACE_TIME
+string format_time (int hrrstart, int hrvstart, int timestamp)
+{
+  int hrnow, hrvnow;
 
-void trace_leave_ol(string desc)
+#if efun (gethrvtime)
+  // timestamp is cputime.
+#if efun (gethrtime)
+  hrnow = gethrtime();
+#endif
+  hrvnow = (timestamp || gethrvtime()) - nid->misc->trace_overhead;
+#else
+  // timestamp is realtime.
+  hrnow = (timestamp || gethrtime()) - nid->misc->trace_overhead;
+#endif
+
+  return ({
+    hrvnow && ("CPU time: " + Roxen.format_hrtime (hrvnow - hrvstart)),
+    hrnow && ("Real time: " + Roxen.format_hrtime (hrnow - hrrstart))
+  }) * ", ";
+}
+#endif
+
+void trace_leave_ol(string desc, void|int timestamp)
 {
   string efont="";
   if(level>2) efont="</font>";
@@ -126,7 +141,11 @@ void trace_leave_ol(string desc)
   else if (html_desc != "")
     html_desc += "<br />\n";
   resolv +=
-    "</ol>" + efont + "\n" + html_desc + format_time (et[level], et2[level]);
+    "</ol>" + efont + "\n" + html_desc +
+#ifdef HAVE_TRACE_TIME
+    "<i>" + format_time (rtimes[level], vtimes[level], timestamp) + "</i>"
+#endif
+    ;
   level--;
 }
 
@@ -205,7 +224,7 @@ string parse( RequestID id )
     "</tr></table>\n"
     "<table border='0'><tr><td><cf-ok/></td><td><cf-cancel href='?class=&form.class;'/></td></tr></table>\n";
 
-  roxen.InternalRequestID nid = roxen.InternalRequestID();
+  nid = roxen.InternalRequestID();
   nid->client = id->client;
   nid->client_var = id->client_var + ([]);
   nid->supports = id->supports;
@@ -251,7 +270,7 @@ string parse( RequestID id )
     string err_msg;
     if (mixed err = catch( nid->set_url (id->variables->path) )) {
       err_msg = LOCALE(188, "Unable to parse URL.");
-      report_debug(describe_backtrace(err));
+      report_debug("Unable to parse URL: " + describe_backtrace(err));
     }
     else if(!nid->conf) {
       err_msg = LOCALE(31, "There is no configuration available that matches "
@@ -275,7 +294,7 @@ string parse( RequestID id )
       link(canonic_url, Roxen.html_encode_string (nid->not_query)) +
       " "+LOCALE(33, "in")+" " +
       link_configuration(nid->conf, id->misc->cf_locale) + "<br />\n"
-      "<ol>";
+      "<ol style='padding-left: 3ex'>";
 
     nid->misc->trace_enter = trace_enter_ol;
     nid->misc->trace_leave = trace_leave_ol;
@@ -288,17 +307,39 @@ string parse( RequestID id )
       nid->realauth=id->variables->user+":"+id->variables->password;
     }
 
-    int hrstart, hrvstart;
+    int hrrstart, hrvstart;
 #if efun(gethrtime)
-    hrstart = gethrtime();
+    hrrstart = gethrtime();
 #endif
 #if efun(gethrvtime)
     hrvstart = gethrvtime();
 #endif
+
     resolv_handle_request(nid->conf, nid);
+
+    int endtime = HRTIME();
+    string trace_timetype;
+#if efun (gethrvtime)
+    trace_timetype = "CPU time";
+#elif efun (gethrtime)
+    trace_timetype = "Real time";
+#endif
     while(level>0)
-      nid->misc->trace_leave("");
-    res += resolv + "</ol>\n" + format_time (hrstart, hrvstart);
+      trace_leave_ol ("Trace nesting inconsistency!", endtime);
+    res += resolv + "</ol>\n";
+
+    if (trace_timetype) {
+      res += format_time (hrrstart, hrvstart, endtime);
+      if (int oh = nid->misc->trace_overhead) {
+	res += ", trace overhead (" + trace_timetype + "): " +
+	  Roxen.format_hrtime (oh) + "<br />\n"
+	  "Note: The trace overhead has been mostly canceled out from the " +
+	  trace_timetype + " values above.";
+      }
+    }
   }
+
+  destruct (nid);
+
   return res;
 }
