@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.256 2008/11/05 18:32:35 mast Exp $
+// $Id: Roxen.pmod,v 1.257 2008/11/06 00:45:18 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2066,6 +2066,25 @@ string sizetostring( int size )
     size ++;
   }
   return sprintf("%.1f %s", s, PREFIX[ size ]);
+}
+
+string format_hrtime (int hrtime, void|int pad)
+//! Returns a nicely formatted string for a time lapse value expressed
+//! in microseconds. If @[pad] is nonzero then the value is formatted
+//! right justified in a fixed-length string.
+{
+  if (hrtime < 1000000)
+    return sprintf (pad ? "%7.3f ms" : "%.3f ms", hrtime / 1e3);
+  else if (hrtime < 60 * 1000000)
+    return sprintf (pad ? "%8.3f s" : "%.3f s", hrtime / 1e6);
+  else if (hrtime < 60 * 60 * 1000000)
+    return sprintf (pad ? "%3d:%02d min" : "%d:%02d min",
+		    hrtime / (60 * 1000000), (hrtime / 1000000) % 60);
+  else
+    return sprintf (pad ? "%4d:%02d:%02d" : "%d:%02d:%02d",
+		    hrtime / (60 * 60 * 1000000),
+		    (hrtime / (60 * 1000000)) % 60,
+		    (hrtime / 1000000) % 60);
 }
 
 string html_decode_string(LocaleString str)
@@ -4745,13 +4764,8 @@ protected string trace_msg (mapping id_misc, string msg,
     string info;
     if (stringp (name_or_time))
       info = name_or_time;
-    else if (name_or_time >= 0) {
-      float t = name_or_time / 1e3;
-      if (sizeof (byline) > 40)
-	info = sprintf ("time: %.3fms", t);
-      else
-	info = sprintf ("time: %10.3fms", t);
-    }
+    else if (name_or_time >= 0)
+      info = "time: " + format_hrtime (name_or_time, sizeof (byline) <= 40);
     if (info)
       byline = sprintf ("%-40s  %s", byline, info);
 
@@ -4766,13 +4780,18 @@ protected string trace_msg (mapping id_misc, string msg,
   }
 }
 
-void trace_enter (RequestID id, string msg, object|function thing)
+void trace_enter (RequestID id, string msg, object|function thing,
+		  int timestamp)
 {
   if (id) {
     // Replying on the interpreter lock here. Necessary since requests
     // can finish and be destructed asynchronously which typically
     // leads to races in the TRACE_LEAVE calls in low_get_file.
     mapping id_misc = id->misc;
+
+    if (function(string,mixed,int:void) trace_enter =
+	[function(string,mixed,int:void)] id_misc->trace_enter)
+      trace_enter (msg, thing, timestamp);
 
     if (zero_type (id_misc->trace_level)) {
       id_misc->trace_id_prefix = ({"%%", "##", "||", "**", "@@", "$$", "&&"})[
@@ -4803,10 +4822,6 @@ void trace_enter (RequestID id, string msg, object|function thing)
     trace_msg (id_misc, msg, name, 1);
     int l = ++id_misc->trace_level;
 
-    if(function(string,mixed ...:void) _trace_enter =
-       [function(string,mixed ...:void)]id_misc->trace_enter)
-      _trace_enter (msg, thing);
-
 #if TOSTR (REQUEST_TRACE) == "TIMES"
     array(int) tt = id_misc->trace_times;
     array(string) tm = id_misc->trace_msgs;
@@ -4818,17 +4833,13 @@ void trace_enter (RequestID id, string msg, object|function thing)
       tt = (id_misc->trace_times += allocate (sizeof (tt)));
       tm = (id_misc->trace_msgs += allocate (sizeof (tm)));
     }
-#if efun (gethrvtime)
-    tt[l] = gethrvtime();
-#elif efun (gethrtime)
-    tt[l] = gethrtime();
-#endif
+    tt[l] = timestamp - id_misc->trace_overhead;
     sscanf (msg, "%[^\n]", tm[l]);
 #endif
   }
 }
 
-void trace_leave (RequestID id, string desc)
+void trace_leave (RequestID id, string desc, void|int timestamp)
 {
   if (id) {
     // Replying on the interpreter lock here. Necessary since requests
@@ -4836,18 +4847,14 @@ void trace_leave (RequestID id, string desc)
     // leads to races in the TRACE_LEAVE calls in low_get_file.
     mapping id_misc = id->misc;
 
+    string msg = desc;
     string|int name_or_time = "";
 #if TOSTR (REQUEST_TRACE) == "TIMES"
     if (int l = id_misc->trace_level) {
       if (array(int) tt = id_misc->trace_times)
 	if (sizeof (tt) > l) {
-#if efun (gethrvtime)
-	  int t = gethrvtime();
-#elif efun (gethrtime)
-	  int t = gethrtime();
-#endif
-	  name_or_time = t - tt[l];
-	  if (desc == "") desc = id_misc->trace_msgs[l];
+	  name_or_time = timestamp - id_misc->trace_overhead - tt[l];
+	  if (desc == "") msg = id_misc->trace_msgs[l];
 	}
       id_misc->trace_level--;
     }
@@ -4855,11 +4862,11 @@ void trace_leave (RequestID id, string desc)
     if (id_misc->trace_level) id_misc->trace_level--;
 #endif
 
-    if (sizeof (desc)) trace_msg (id_misc, desc, name_or_time, 0);
+    if (sizeof (msg)) trace_msg (id_misc, msg, name_or_time, 0);
 
-    if(function(string:void) _trace_leave =
-       [function(string:void)]id_misc->trace_leave)
-      _trace_leave (desc);
+    if (function(string,int:void) trace_leave =
+	[function(string:void)] id_misc->trace_leave)
+      trace_leave (desc, timestamp);
   }
 }
 #endif
