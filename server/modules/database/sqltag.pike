@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.113 2008/09/15 18:36:49 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.114 2008/11/06 16:57:32 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -19,9 +19,9 @@ constant module_type=MODULE_TAG|MODULE_PROVIDER;
 LocaleString module_name=LOCALE(1,"Tags: SQL tags");
 LocaleString module_doc =
 LOCALE(2,
-       "The SQL tags module provides the tags <tt>&lt;sqlquery&gt;</tt> and"
+       "The SQL tags module provides the tags <tt>&lt;sqlquery&gt;</tt> and "
        "<tt>&lt;sqltable&gt;</tt> as well as being a source to the "
-       "<tt>&lt;emit&gt;</tt> tag (<tt>&lt;emit source=\"sql\" ...&gt;</tt>)."
+       "<tt>&lt;emit&gt;</tt> tag (<tt>&lt;emit source=\"sql\" ...&gt;</tt>). "
        "All tags send queries to SQL databases.");
 
 TAGDOCUMENTATION
