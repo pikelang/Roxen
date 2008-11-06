@@ -2,7 +2,7 @@
 //
 // Some stuff to do logging of a request through the server.
 //
-// $Id: request_trace.h,v 1.17 2008/11/05 19:24:10 mast Exp $
+// $Id: request_trace.h,v 1.18 2008/11/06 00:43:12 mast Exp $
 
 #ifndef REQUEST_TRACE_H
 #define REQUEST_TRACE_H
@@ -23,37 +23,60 @@
 //   has been removed. The Resolve Path wizard will now quote all
 //   strings instead.
 
+#if efun (gethrvtime)
+#define HRTIME() gethrvtime()
+#elif efun (gethrtime)
+#define HRTIME() gethrtime()
+#else
+#define HRTIME() 0
+#endif
+
 #ifdef REQUEST_TRACE
 
-# define ID_TRACE_ENTER(ID, A, B) Roxen->trace_enter ((ID), (A), (B))
-# define ID_TRACE_LEAVE(ID, A) Roxen->trace_leave ((ID), (A))
+# define ID_TRACE_ENTER(ID, MSG, OBJ) do{				\
+    int _ts_ = HRTIME();						\
+    if (object _id_ = (ID)) {						\
+      Roxen->trace_enter ((ID), (MSG), (OBJ), _ts_);			\
+      _id_->misc->trace_overhead += HRTIME() - _ts_;			\
+    }									\
+  }while(0)
+
+# define ID_TRACE_LEAVE(ID, MSG) do{					\
+    int _ts_ = HRTIME();						\
+    if (object _id_ = (ID)) {						\
+      Roxen->trace_leave ((ID), (MSG), _ts_);				\
+      _id_->misc->trace_overhead += HRTIME() - _ts_;			\
+    }									\
+  }while(0)
 
 #else
 
-# define ID_TRACE_ENTER(ID, A, B) do{ \
-    object _iD_ = (ID); \
-    function(string,mixed ...:void) _trace_enter; \
-    if(_iD_ && \
-       (_trace_enter = \
-	[function(string,mixed ...:void)]([mapping(string:mixed)]_iD_->misc)-> \
-          trace_enter)) \
-      _trace_enter((A), (B)); \
+# define ID_TRACE_ENTER(ID, MSG, OBJ) do{				\
+    int _ts_ = HRTIME();						\
+    if (object _id_ = (ID)) {						\
+      mapping _id_misc_ = _id_->misc;					\
+      if (function(string,mixed,int:void) _trace_enter =		\
+	  ([function(string,mixed,int:void)] _id_misc_->trace_enter))	\
+	_trace_enter ((MSG), (OBJ), _ts_);				\
+      _id_misc_->trace_overhead += HRTIME() - _ts_;			\
+    }									\
   }while(0)
 
-# define ID_TRACE_LEAVE(ID, A) do{ \
-    object _iD_ = (ID); \
-    function(string:void) _trace_leave; \
-    if(_iD_ && \
-       (_trace_leave = \
-	[function(string:void)]([mapping(string:mixed)]_iD_->misc)-> \
-          trace_leave)) \
-      _trace_leave(A); \
+# define ID_TRACE_LEAVE(ID, MSG) do{					\
+    int _ts_ = HRTIME();						\
+    if (object _id_ = (ID)) {						\
+      mapping _id_misc_ = _id_->misc;					\
+      if (function(string,int:void) _trace_leave =			\
+	  ([function(string,int:void)] _id_misc_->trace_leave))		\
+	_trace_leave ((MSG), _ts_);					\
+      _id_misc_->trace_overhead += HRTIME() - _ts_;			\
+    }									\
   }while(0)
 
 #endif
 
-#define TRACE_ENTER(A,B) ID_TRACE_ENTER (id, (A), (B))
-#define TRACE_LEAVE(A) ID_TRACE_LEAVE (id, (A))
+#define TRACE_ENTER(MSG,OBJ) ID_TRACE_ENTER (id, (MSG), (OBJ))
+#define TRACE_LEAVE(MSG) ID_TRACE_LEAVE (id, (MSG))
 
 // SIMPLE_TRACE_ENTER and SIMPLE_TRACE_LEAVE are simpler variants of
 // the above macros since they handle sprintf style format lists. Note
@@ -89,7 +112,7 @@
 #define TAG_TRACE_ENTER(MSG...) do {					\
     array _msg_arr_;							\
     string _msg_;							\
-    TRACE_ENTER ("tag <" + (tag && tag->name) + "> " +		\
+    TRACE_ENTER ("tag <" + (tag && tag->name) + "> " +			\
 		   (_msg_arr_ = ({MSG}),				\
 		    _msg_ = sizeof (_msg_arr_) > 1 ? sprintf (@_msg_arr_) : \
 		    (sizeof (_msg_arr_) ? _msg_arr_[0] : "")),		\
