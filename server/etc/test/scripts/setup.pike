@@ -13,7 +13,8 @@ void main(int argc, array argv)
 
   // Pull in any testsuites from packages.
   // NB: The search of the modules directory is for compat.
-  foreach(long_get_dir("modules") + long_get_dir("packages"), string package) {
+  foreach(sort(long_get_dir("modules") + long_get_dir("packages")),
+	  string package) {
     string pkg_test_dir = package + "/test";
     string pkg_setup =
       combine_path(getcwd(), pkg_test_dir, "scripts/setup.pike");
