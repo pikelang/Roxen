@@ -18,7 +18,7 @@ void main(int argc, array argv)
     string pkg_test_dir = package + "/test";
     string pkg_setup =
       combine_path(getcwd(), pkg_test_dir, "scripts/setup.pike");
-    if (filestat(pkg_setup)) {
+    if (file_stat(pkg_setup)) {
       ((program)pkg_setup)()->main(2, ({ pkg_setup, pkg_test_dir, var_dir }));
     }
   }
