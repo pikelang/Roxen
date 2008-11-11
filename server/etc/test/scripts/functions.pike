@@ -63,6 +63,6 @@ array(string) long_get_dir(string dir)
 {
   return map(get_dir(dir)||({}),
 	     lambda(string f, string dir) {
-	       return dir + "/" + s;
+	       return dir + "/" + f;
 	     }, dir);
 }
