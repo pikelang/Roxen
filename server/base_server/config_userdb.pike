@@ -782,7 +782,14 @@ array(string) list_admin_users()
 /* compatibility and convenience functions */
 string configuration_authenticate(RequestID id, string what, void|int silent)
 {
-  array a = map( list_admin_users(), find_admin_user ) - ({ 0 });
+  //  Search is not ordered so we can just as well try cached users before
+  //  listing all identities.
+  array known = values(admin_users);
+  foreach(known, AdminUser u)
+    if (u->valid_id(id) && u->auth(what))
+      return u->name;
+  
+  array a = map(list_admin_users(), find_admin_user) - ({ 0 }) - known;
   foreach( a, AdminUser u )
     if( u->valid_id( id ) && u->auth( what ) )
       return u->name;
