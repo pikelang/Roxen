@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.46 2008/08/19 08:54:33 erik Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.47 2008/11/14 13:18:15 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -1259,6 +1259,11 @@ constant tagdoc=([
  the sscanf function in the Pike reference manual for a complete
  description.</p>
 </desc>
+
+<attr name='format' value='pattern' required='required'><p>
+The sscanf pattern.
+</p>
+</attr>
 
 <attr name='variables' value='list' required='required'><p>
  A comma separated list with the name of the variables that should be set.</p>
