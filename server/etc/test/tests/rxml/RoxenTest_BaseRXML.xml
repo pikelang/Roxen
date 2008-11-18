@@ -1038,6 +1038,42 @@ a&auml; &amp; b  &gt;
   <result><c hit="yes"/></result>
 </test>
 
+<test>
+  <rxml type="array">
+    <define container="elements">
+      <value type="array">
+	<value type="string">b <inc variable="var.x"/>&var.x;</value>
+	<contents/>
+	<value type="string">e <inc variable="var.x"/>&var.x;</value>
+      </value>
+    </define>
+    <value><inc variable="var.x"/>&var.x;</value>
+    <elements>
+      <value><inc variable="var.x"/>&var.x;</value>
+      <value><inc variable="var.x"/>&var.x;</value>
+    </elements>
+    <value><inc variable="var.x"/>&var.x;</value>
+  </rxml>
+  <equal>({1, ({"b2", 3, 4, "e5"}), 6})</equal>
+</test>
+
+<test>
+  <rxml type="mapping">
+    <define container="elements">
+      <value index="B"><inc variable="var.x"/>&var.x;</value>
+      <contents/>
+      <value index="E"><inc variable="var.x"/>&var.x;</value>
+    </define>
+    <value index="a"><inc variable="var.x"/>&var.x;</value>
+    <elements>
+      <value index="b"><inc variable="var.x"/>&var.x;</value>
+      <value index="c"><inc variable="var.x"/>&var.x;</value>
+    </elements>
+    <value index="d"><inc variable="var.x"/>&var.x;</value>
+  </rxml>
+  <equal>(["a": 1, "B": 2, "b": 3, "c": 4, "E": 5, "d": 6])</equal>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Type tests</comment>
@@ -3281,6 +3317,16 @@ cd</rxml>
 <test>
 <rxml>&client.accept-languages;</rxml>
 <result></result>
+</test>
+
+<test>
+  <rxml type="array">&client.accept-languages;</rxml>
+  <equal>({})</equal>
+</test>
+
+<test>
+  <rxml type="any">&client.accept-languages;</rxml>
+  <equal>RXML.nil</equal>
 </test>
 
 <test>
