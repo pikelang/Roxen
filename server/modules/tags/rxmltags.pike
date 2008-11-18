@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.575 2008/11/06 00:50:12 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.576 2008/11/18 00:29:10 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -229,11 +229,15 @@ class EntityClientAcceptLanguage {
 
 class EntityClientAcceptLanguages {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
+  mixed rxml_var_eval(RXML.Context c, string var, string scope_name,
+		      void|RXML.Type t) {
     c->id->misc->cacheable=0;
-    if(!c->id->misc["accept-language"]) return RXML.nil;
-    // FIXME: Should this be an array instead?
-    return c->id->misc["accept-language"]*", ";
+    array(string) langs = c->id->misc["accept-language"];
+    if(!langs) return RXML.nil;
+    if (t == RXML.t_array)
+      return langs;
+    else
+      return langs * ", ";
   }
 }
 
@@ -248,11 +252,15 @@ class EntityClientLanguage {
 
 class EntityClientLanguages {
   inherit RXML.Value;
-  mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
+  mixed rxml_var_eval(RXML.Context c, string var, string scope_name,
+		      void|RXML.Type t) {
     c->id->misc->cacheable=0;
-    if(!c->id->misc->pref_languages) return RXML.nil;
-    // FIXME: Should this be an array instead?
-    return c->id->misc->pref_languages->get_languages()*", ";
+    PrefLanguages pl = c->id->misc->pref_languages;
+    if(!pl) return RXML.nil;
+    if (t == RXML.t_array)
+      return pl->get_languages();
+    else
+      return pl->get_languages() * ", ";
   }
 }
 
@@ -321,8 +329,6 @@ void set_entities(RXML.Context c) {
     c->id->cache_status->cachetag = 1;
 }
 
-
-// ------------------- Tags ------------------------
 
 class TagRoxenACV {
   inherit RXML.Tag;
@@ -501,6 +507,7 @@ class TagExpireTime {
   inherit RXML.Tag;
   constant name = "expire-time";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
@@ -538,6 +545,7 @@ class TagHeader {
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
   mapping(string:RXML.Type) req_arg_types = ([ "name": RXML.t_text(RXML.PEnt),
 					       "value": RXML.t_text(RXML.PEnt) ]);
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
@@ -568,6 +576,7 @@ class TagRedirect {
   mapping(string:RXML.Type) opt_arg_types = ([ "add": RXML.t_text(RXML.PEnt),
 					       "drop": RXML.t_text(RXML.PEnt),
 					       "drop-all": RXML.t_text(RXML.PEnt) ]);
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
@@ -754,8 +763,9 @@ class TagCopyScope {
   inherit RXML.Tag;
   constant name = "copy-scope";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "from":RXML.t_text,
-					       "to":RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([ "from":RXML.t_text (RXML.PEnt),
+					       "to":RXML.t_text (RXML.PEnt) ]);
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
@@ -763,8 +773,9 @@ class TagCopyScope {
     array do_enter(RequestID id) {
       RXML.Context ctx = RXML_CONTEXT;
       // Filter out undefined values if the compat level allows us.
-      foreach(ctx->list_var(args->from, compat_level > 4.5), string var)
+      foreach(ctx->list_var(args->from, compat_level >= 5.0), string var)
 	ctx->set_var(var, ctx->get_var(var, args->from), args->to);
+      return 0;
     }
   }
 }
@@ -791,15 +802,19 @@ class TagInc {
   inherit RXML.Tag;
   constant name = "inc";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([
+    "variable": RXML.t_text (RXML.PEnt)
+  ]);
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "value": RXML.t_int (RXML.PEnt)
+  ]);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      int val=(int)args->value;
-      if(!val && !args->value) val=1;
+      int val = zero_type (args->value) ? 1 : args->value;
       inc(args, val, id);
       return 0;
     }
@@ -810,15 +825,19 @@ class TagDec {
   inherit RXML.Tag;
   constant name = "dec";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([
+    "variable": RXML.t_text (RXML.PEnt)
+  ]);
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "value": RXML.t_int (RXML.PEnt)
+  ]);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      int val=-(int)args->value;
-      if(!val && !args->value) val=-1;
+      int val = zero_type (args->value) ? -1 : -args->value;
       inc(args, val, id);
       return 0;
     }
@@ -1015,12 +1034,18 @@ class TagFSize {
       catch {
 	Stat s=id->conf->stat_file(Roxen.fix_relative( args->file, id ), id);
 	if (s && (s[1]>= 0)) {
-	  result = Roxen.sizetostring(s[1]);
+	  result =
+	    result_type->subtype_of (RXML.t_any_text) || compat_level < 5.0 ?
+	    Roxen.sizetostring(s[1]) :
+	    result_type->encode (s[1]);
 	  return 0;
 	}
       };
       if(string s=id->conf->try_get_file(Roxen.fix_relative(args->file, id), id) ) {
-	result = Roxen.sizetostring(strlen(s));
+	result =
+	  result_type->subtype_of (RXML.t_any_text) || compat_level < 5.0 ?
+	  Roxen.sizetostring(sizeof (s)) :
+	  result_type->encode (sizeof (s));
 	return 0;
       }
       RXML.run_error("Failed to find file.\n");
@@ -1521,6 +1546,7 @@ class TagReturn {
   inherit RXML.Tag;
   constant name = "return";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
@@ -1542,6 +1568,7 @@ class TagSetCookie {
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
 
   mapping(string:RXML.Type) req_arg_types = ([ "name" : RXML.t_text(RXML.PEnt) ]);
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
@@ -1567,6 +1594,7 @@ class TagRemoveCookie {
     "domain" : RXML.t_text(RXML.PEnt),
     "path" : RXML.t_text(RXML.PEnt),
   ]);
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
@@ -1706,7 +1734,8 @@ class TagSetMaxCache {
   mapping(string:RXML.Type) opt_arg_types = ([
     "force-protocol-cache" : RXML.t_text(RXML.PEnt)
   ]);
-  
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
+
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
@@ -1719,7 +1748,6 @@ class TagSetMaxCache {
 }
 
 
-// ------------------- Containers ----------------
 class TagCharset
 {
   inherit RXML.Tag;
@@ -1792,6 +1820,7 @@ class TagScope {
 
   constant name = "scope";
   mapping(string:RXML.Type) opt_arg_types = ([ "extend" : RXML.t_text(RXML.PEnt) ]);
+  array(RXML.Type) result_types = ({RXML.t_any});
 
   class Frame {
     inherit RXML.Frame;
@@ -1848,6 +1877,7 @@ class TagCache {
 		    RXML.FLAG_DONT_CACHE_RESULT |
 		    RXML.FLAG_CUSTOM_TRACE);
   constant cache_tag_location = "tag_cache";
+  array(RXML.Type) result_types = ({RXML.t_any});
 
   protected class TimeOutEntry (
     TimeOutEntry next,
@@ -2283,6 +2313,8 @@ class TagNocache
   inherit RXML.Tag;
   constant name = "nocache";
   constant flags = RXML.FLAG_DONT_CACHE_RESULT;
+  array(RXML.Type) result_types = ({RXML.t_any});
+
   class Frame
   {
     inherit RXML.Frame;
@@ -2311,6 +2343,7 @@ class TagFor {
   inherit RXML.Tag;
   constant name = "for";
   int flags = cache_static_in_2_5();
+  array(RXML.Type) result_types = ({RXML.t_any});
 
   class Frame {
     inherit RXML.Frame;
@@ -3862,6 +3895,9 @@ class TagValue
 class TagCSet {
   inherit RXML.Tag;
   constant name = "cset";
+  RXML.Type content_type = RXML.t_any_text (RXML.PXml);
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
+
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
@@ -3871,7 +3907,7 @@ class TagCSet {
 	content = Roxen.html_decode_string( content );
 
       RXML.user_set_var(args->variable, content, args->scope);
-      return ({ "" });
+      return 0;
     }
   }
 }
@@ -4013,6 +4049,7 @@ class TagUse {
   inherit RXML.Tag;
   constant name = "use";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   private array(string) list_packages() { 
     return filter(((get_dir("../local/rxml_packages")||({}))
@@ -4086,10 +4123,12 @@ class TagUse {
     array do_return(RequestID id) {
       if(args->packageinfo) {
 	NOCACHE();
-	string res ="<dl>";
+	result ="<dl>";
 	foreach(list_packages(), string f)
-	  res += use_file_doc(f, read_package( f ));
-	return ({ res+"</dl>" });
+	  result += use_file_doc(f, read_package( f ));
+	result += "</dl>";
+	result_type = RXML.t_html;
+	return 0;
       }
 
       if(!args->file && !args->package)
@@ -4125,8 +4164,13 @@ class TagUse {
 	if(!file)
 	  run_error("Failed to fetch "+(args->file||args->package)+".\n");
 
-	if( args->info )
-	  return ({"<dl>"+use_file_doc( args->file || args->package, file )+"</dl>"});
+	if( args->info ) {
+	  result = "<dl>"+
+	    use_file_doc( args->file || args->package, file )+
+	    "</dl>";
+	  result_type = RXML.t_html;
+	  return 0;
+	}
 
 	res = parse_use_package(file, ctx);
 	cache_set("macrofiles", name, res);
@@ -4965,6 +5009,8 @@ class TagUndefine {
   inherit RXML.Tag;
   int flags = RXML.FLAG_EMPTY_ELEMENT;
   constant name = "undefine";
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
+
   class Frame {
     inherit RXML.Frame;
     array do_enter(RequestID id) {
@@ -5211,11 +5257,13 @@ class TagNoOutput {
   inherit RXML.Tag;
   constant name = "nooutput";
   constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
+  RXML.Type content_type = RXML.t_array (RXML.PXml);
+  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
-    array do_process() {
-      return ({""});
+    array do_return() {
+      return 0;
     }
   }
 }
@@ -5224,15 +5272,19 @@ class TagStrLen {
   inherit RXML.Tag;
   constant name = "strlen";
   constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
+  array(RXML.Type) result_types = ({RXML.t_int}) + ::result_types;
 
   class Frame {
     inherit RXML.Frame;
     array do_return() {
       if(!stringp(content)) {
-	result="0";
-	return 0;
+	result=0;
       }
-      result = (string)strlen(content);
+      else
+	result = strlen(content);
+      if (result_type != RXML.t_int)
+	result = result_type->encode (result, RXML.t_int);
+      return 0;
     }
   }
 }
@@ -7284,7 +7336,11 @@ constant tagdoc=([
 
 "&client.accept-languages;":#"<desc type='entity'><p>
  The client prefers to have the page contents presented in these
- languages, according to the accept-language header. An example output: \"en, sv\".
+ languages, according to the accept-language header.</p>
+
+ <p>If used in an array context, an array of language codes are
+ returned. Otherwise they are returned as a comma-separated string,
+ e.g. \"en, sv\".
 </p></desc>",
 
 "&client.language;":#"<desc type='entity'><p>
@@ -7300,7 +7356,11 @@ constant tagdoc=([
  same value as <ent>client.accept-language</ent>, but is possibly altered
  by a customization module like the Preferred language analyzer, or
  reorganized according to quality identifiers according to the HTTP
- specification. An example output: \"en, sv\".
+ specification.</p>
+
+ <p>Like <ent>client.accept-language</ent>, this returns an array of
+ language codes in an array context, and a comma-separated string
+ otherwise.
 </p></desc>",
 
 "&client.authenticated;":#"<desc type='entity'><p>
@@ -8441,7 +8501,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 //----------------------------------------------------------------------
 
 "dec":#"<desc type='tag'><p><short>
- Subtracts 1 from a variable.</short>
+ Decrements an integer variable.</short>
 </p></desc>
 
 <attr name='variable' value='string' required='required'>
@@ -8612,8 +8672,12 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 //----------------------------------------------------------------------
 
 "fsize":#"<desc type='tag'><p><short>
- Prints the size of the specified file.</short>
-</p></desc>
+ Prints the size of the specified file.</short></p>
+
+ <p>In a text/* context, the size is returned in a pretty-print
+ format, like \"42.2 kb\". Otherwise it is returned as a plain
+ integer.</p>
+</desc>
 
 <attr name='file' value='string'>
  <p>Show size for this file.</p>
@@ -8699,7 +8763,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 //----------------------------------------------------------------------
 
 "inc":#"<desc type='tag'><p><short>
- Adds 1 to a variable.</short>
+ Increments an integer variable.</short>
 </p></desc>
 
 <attr name='variable' value='string' required='required'>
