@@ -1083,10 +1083,11 @@ mapping|string parse( RequestID id )
 
     res +=
       "<p>"
-      "<table><tr><td valign=top><font size=-1>"
-      "<textarea rows=8 cols=50 wrap=soft name='query'>" +
+      "<table><tr><td valign=top>"
+      "<textarea rows='12' cols='100' wrap='soft' name='query' "
+      " style='font-size: 90%'>" +
       Roxen.html_encode_string (id->variables->query) + "</textarea>"
-      "</font></td><td valign=top>"
+      "</td><td valign=top>"
       "<submit-gbutton2 name=reset_q> "+_(378,"Reset query")+" </submit-gbutton2>"
       "<br />"
       "<submit-gbutton2 name=run_q> "+_(379,"Run query")+" </submit-gbutton2>"
