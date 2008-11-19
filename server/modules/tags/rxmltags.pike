@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.576 2008/11/18 00:29:10 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.577 2008/11/19 01:30:28 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -4083,7 +4083,7 @@ class TagUse {
 
     array(string) ifs = ({}), tags = ({});
 
-    foreach (defs[0]; string defname;)
+    foreach (defs[1]; string defname;)
       if (has_prefix (defname, "if\0"))
 	ifs += ({defname[sizeof ("if\0")..]});
       else if (has_prefix (defname, "tag\0"))
@@ -4091,7 +4091,7 @@ class TagUse {
 
     constant types = ({ "if plugin", "tag", "form variable", "\"var\" scope variable" });
 
-    array pack = ({ifs, tags, indices(defs[1]), indices(defs[2])});
+    array pack = ({ifs, tags, indices(defs[2]), indices(defs[3])});
 
     for(int i; i<3; i++)
       if(sizeof(pack[i])) {
@@ -4111,6 +4111,7 @@ class TagUse {
     parser->eval();
 
     return ({
+      global::this,
       parser->context->misc - ([" _extra_heads": 1, " _error": 1, " _stat": 1]),
       parser->context->get_scope ("form"),
       parser->context->get_scope ("var")
@@ -4136,6 +4137,7 @@ class TagUse {
 
       array res;
       string name, filename;
+      int is_package;
       if(args->file)
       {
 	filename = Roxen.fix_relative(args->file, id);
@@ -4149,11 +4151,13 @@ class TagUse {
       else
       {
 	name = "|" + args->package;
+	is_package = 1;
       }
       RXML.Context ctx = RXML_CONTEXT;
 
       if(args->info || id->pragma["no-cache"] ||
-	 !(res=cache_lookup("macrofiles",name)) ) {
+	 !(res=cache_lookup("macrofiles",name)) ||
+	 (is_package ? !res[0] : res[0] != global::this)) {
 
 	string file;
 	if(filename)
@@ -4176,7 +4180,8 @@ class TagUse {
 	cache_set("macrofiles", name, res);
       }
 
-      [mapping(string:mixed) newdefs,
+      [RoxenModule ignored,
+       mapping(string:mixed) newdefs,
        mapping(string:mixed)|RXML.Scope formvars,
        mapping(string:mixed)|RXML.Scope varvars] = res;
       foreach (newdefs; string defname; mixed def) {
