@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.384 2008/11/19 02:05:22 mast Exp $
+// $Id: module.pmod,v 1.385 2008/11/19 20:06:46 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7964,10 +7964,6 @@ protected class PikeCompile
   }
 }
 
-#if defined (RXML_PCODE_COMPACT_DEBUG) && !defined (RXML_PCODE_DEBUG)
-#  define RXML_PCODE_DEBUG
-#endif
-
 #ifdef RXML_PCODE_DEBUG
 #  define PCODE_MSG(X...) do {						\
   Context _ctx_ = RXML_CONTEXT;						\
@@ -8390,7 +8386,13 @@ class PCode
   }
 
 #ifdef RXML_PCODE_COMPACT_DEBUG
+#ifdef RXML_PCODE_DEBUG
 #  define PCODE_COMPACT_MSG(X...) PCODE_MSG (X)
+#else
+#  define PCODE_COMPACT_MSG(X...) do {					\
+    report_debug ("PCode()" + OBJ_COUNT + ": " + X);			\
+  } while (0)
+#endif
 #else
 #  define PCODE_COMPACT_MSG(X...) do {} while (0)
 #endif
@@ -8429,152 +8431,133 @@ class PCode
 	// when not collecting results too, but it's probably not
 	// worth the bother then.
 
+	SIMPLE_ID_TRACE_ENTER (ctx->id, ctx->frame || this,
+			       "Compacting p-code of size %d", length);
 	PCODE_COMPACT_MSG ("  Compact: Start with %O\n", exec[..length - 1]);
+
+	// Collects plain values into a single value. This uses the
+	// fact that the order between plain values and all other
+	// types of p-code entries except frames are insignificant.
+	mixed value = empty;
+	String.Buffer strbuf = type->empty_value == "" && String.Buffer();
 
 	// beg is used to limit how far back the peep rules can look. Necessary
 	// to not walk backwards into a frame sequence.
 	int last = 0, beg = 0;
+
+      compact_loop:
 	for (int pos = 0; pos < length;) {
-	  {
-	    // First concatenate sequences of plain values quickly.
-	    int end = pos;
-	    for (; end < length &&
-		   (!objectp (exec[end]) || !exec[end]->is_RXML_p_code_entry);
-		 end++) {
-	      if (end - pos >= 32) {
-		// Use `+ on limited chunks to avoid unbounded stack
-		// consumption.
-		PCODE_COMPACT_MSG ("  Compact: Concatenating chunk "
-				   "%d..%d to %d\n", pos, end, end);
-		exec[end] = `+ (@exec[pos..end]);
-		pos = end;
+	  // First collect sequences of plain values.
+
+	  if (strbuf) {
+	    // Optimize the common string case with a String.Buffer.
+	    while (1) {
+	      mixed elem = exec[pos];
+	      if (!objectp (elem))
+		strbuf->add (elem);
+	      else if (!elem->is_RXML_p_code_entry) {
+		if (!elem->is_rxml_empty_value)
+		  strbuf->add (strbuf->get() + elem);
 	      }
+	      else
+		break;
+	      if (++pos == length)
+		break compact_loop;
+	    }
+	  }
+
+	  else {
+	    mixed elem;
+	    while (!objectp (elem = exec[pos]) || !elem->is_RXML_p_code_entry) {
+	      value += elem;
+	      if (++pos == length)
+		break compact_loop;
+	    }
+	  }
+
+	  if (objectp (exec[pos]) && exec[pos]->is_RXML_p_code_frame) {
+	    // Frames are currently not accessible to the peep rules
+	    // below. Just copy it and continue.
+
+	    if (strbuf && sizeof (strbuf)) {
+	      PCODE_COMPACT_MSG ("  Compact: Adding string at %d\n", last);
+	      exec[last++] = strbuf->get();
+	    }
+	    else if (value != empty) {
+	      PCODE_COMPACT_MSG ("  Compact: Adding collected plain value "
+				 "at %d\n", last);
+	      exec[last++] = value;
+	      value = empty;
 	    }
 
-	    if (end > pos) {
-	      PCODE_COMPACT_MSG ("  Compact: Concatenating %d..%d to %d\n",
-				 pos, end - 1, last);
-	      exec[last] = `+ (@exec[pos..end - 1]);
-	      pos = end;
-	      if (exec[last] == nil) {
-		PCODE_COMPACT_MSG ("  Compact: Ignoring nil at %d\n", last);
-		continue;
-	      }
-	    }
+	    PCODE_COMPACT_MSG ("  Compact: Moving frame at %d..%d "
+			       "to %d..%d\n", pos, pos + 2, last, last + 2);
+	    exec[last++] = exec[pos++];
+	    exec[last++] = exec[pos++];
+	    exec[last++] = exec[pos++];
+	    beg = last;
+	    continue compact_loop;
+	  }
 
-	    else if (objectp (exec[pos]) && exec[pos]->is_RXML_p_code_frame) {
-	      // Frames are currently not accessible to the peep rules
-	      // below. Just copy it and continue.
-	      PCODE_COMPACT_MSG ("  Compact: Moving frame at %d..%d "
-				 "to %d..%d\n", pos, pos + 2, last, last + 2);
-	      exec[last++] = exec[pos++];
-	      exec[last++] = exec[pos++];
-	      exec[last++] = exec[pos++];
-	      beg = last;
-	      continue;
-	    }
-
-	    else {
-	      PCODE_COMPACT_MSG ("  Compact: Shifting %d to %d\n", pos, last);
-	      exec[last] = exec[pos++];
-	    }
+	  else {
+	    PCODE_COMPACT_MSG ("  Compact: Shifting %d to %d\n", pos, last);
+	    exec[last] = exec[pos++];
 	  }
 
 	  // Now reduce the tail as long as any rule applies.
 	  while (last > beg) {
-	    // The peep rules below can assume there are at least two
-	    // elements to operate on.
-
 	    int reduced = 0;
-	    mixed item = exec[last], prev;
+	    mixed item = exec[last], prev = exec[last - 1];
 	    PCODE_COMPACT_MSG ("  Compact: -- Before: [%d..%d] =%{ %O%}\n",
-			       max (last - 9, 0), last, exec[last - 9..last]);
+			       max (last - 5, beg), last,
+			       exec[max (last - 5, beg)..last]);
+
+	    // The peep rules below can assume there are at least two
+	    // p-code elements ({prev, item}) to operate on.
 
 	  try_reduce: {
-	      if (!objectp (item) || !item->is_RXML_p_code_entry) {
-		// A constant can be moved back over a sequence of entries that
-		// don't produce any result, and concatenated with the constant
-		// found before them, if any.
-		int i = last - 1;
-		for (; i >= beg &&
-		       objectp (exec[i]) && exec[i]->p_code_no_result;
-		     i--) {}
+	      if (prev->is_RXML_VariableChange) {
+		if (item->is_csf_leave_scope) {
+		  // Got a VariableChange before LeaveScope. Check for
+		  // shadowed contents.
 
-		if (i != last - 1) {
-		  if (i < beg || (objectp (exec[i]) &&
-				  exec[i]->is_RXML_p_code_entry)) {
-		    // No preceding constant to concatenate with.
-		    i++;
-		    PCODE_COMPACT_MSG ("  Compact: RULE 1a: Moving constant "
-				       "from %d to before %d\n", last, i);
-		    // If i..last is large enough it's faster to create a new
-		    // array using subranges, but the assumption is that there
-		    // never will be a very large range of p_code_no_result
-		    // entries.
-		    for (int j = last; j > i; j--) exec[j] = exec[j - 1];
-		    exec[i] = item;
+		  CLEANUP_VAR_CHG_SCOPE (prev->settings, "_");
+		  if (string scope_name = item->frame()->scope_name)
+		    CLEANUP_VAR_CHG_SCOPE (prev->settings, scope_name);
+
+		  if (!sizeof (prev->settings)) {
+		    PCODE_COMPACT_MSG ("  Compact: RULE 1: Removing shadowed "
+				       "VariableChange before LeaveScope\n");
+		    exec[--last] = item;
+		    break try_reduce;
 		  }
+		}
 
-		  else {
-		    PCODE_COMPACT_MSG ("  Compact: RULE 1b: Appending constant "
-				       "at %d to %d\n", last, i);
-		    exec[i] += item;
-		    last--;
-		  }
-
+		else if (item->is_RXML_VariableChange &&
+			 prev->merge (item)) {
+		  PCODE_COMPACT_MSG ("  Compact: RULE 2: Merged two "
+				     "VariableChange's\n");
+		  last--;
 		  break try_reduce;
 		}
 	      }
 
-	      // Here we know item is a p-code entry object.
-
-	      else if (objectp (prev = exec[last - 1]) &&
-		       prev->is_RXML_p_code_entry) {
-		// Got the two p-code entries ({prev, item}).
-
-		if (prev->is_RXML_VariableChange) {
-		  if (item->is_csf_leave_scope) {
-		    // Got a VariableChange before LeaveScope. Check for
-		    // shadowed contents.
-
-		    CLEANUP_VAR_CHG_SCOPE (prev->settings, "_");
-		    if (string scope_name = item->frame()->scope_name)
-		      CLEANUP_VAR_CHG_SCOPE (prev->settings, scope_name);
-
-		    if (!sizeof (prev->settings)) {
-		      PCODE_COMPACT_MSG ("  Compact: RULE 2: Removing shadowed "
-					 "VariableChange before LeaveScope\n");
-		      exec[--last] = item;
-		      break try_reduce;
-		    }
-		  }
-
-		  else if (item->is_RXML_VariableChange &&
-			   prev->merge (item)) {
-		    PCODE_COMPACT_MSG ("  Compact: RULE 3: Merged two "
-				       "VariableChange's\n");
+	      else if (prev->is_csf_enter_scope) {
+		if (item->is_csf_enter_scope) {
+		  if (item->frame() == prev->frame()) {
+		    PCODE_COMPACT_MSG ("  Compact: RULE 3: Removing repeated "
+				       "EnterScope\n");
 		    last--;
 		    break try_reduce;
 		  }
 		}
 
-		else if (prev->is_csf_enter_scope) {
-		  if (item->is_csf_enter_scope) {
-		    if (item->frame() == prev->frame()) {
-		      PCODE_COMPACT_MSG ("  Compact: RULE 4: Removing repeated "
-					 "EnterScope\n");
-		      last--;
-		      break try_reduce;
-		    }
-		  }
-
-		  else if (item->is_csf_leave_scope &&
-			   prev->frame() == item->frame()) {
-		    PCODE_COMPACT_MSG ("  Compact: RULE 5: Removing empty "
-				       "EnterScope/LeaveScope pair\n");
-		    last -= 2;
-		    break try_reduce;
-		  }
+		else if (item->is_csf_leave_scope &&
+			 prev->frame() == item->frame()) {
+		  PCODE_COMPACT_MSG ("  Compact: RULE 4: Removing empty "
+				     "EnterScope/LeaveScope pair\n");
+		  last -= 2;
+		  break try_reduce;
 		}
 	      }
 
@@ -8588,9 +8571,20 @@ class PCode
 
 	  last++;
 	}
+
+	if (strbuf && sizeof (strbuf)) {
+	  PCODE_COMPACT_MSG ("  Compact: Adding last string at %d\n", last);
+	  exec[last++] = strbuf->get();
+	}
+	else if (value != empty) {
+	  PCODE_COMPACT_MSG ("  Compact: Adding last collected plain value "
+			     "at %d\n", last);
+	  exec[last++] = value;
+	}
 	length = last;
 
 	PCODE_COMPACT_MSG ("  Compact: Done, got %O\n", exec[..length - 1]);
+	SIMPLE_ID_TRACE_LEAVE (ctx->id, "Size reduced to %d", length);
       }
 #endif
     }
@@ -9490,6 +9484,12 @@ class Empty
 {
   // Tell Pike.count_memory this is global.
   constant pike_cycle_depth = 0;
+
+  constant is_rxml_empty_value = 1;
+  //! Used in some places to test for an empty value, i.e. a value
+  //! that may be ignored in concatenations using `+.
+  //!
+  //! This is set in both @[RXML.empty] and @[RXML.nil].
 
   mixed `+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
   mixed ``+ (mixed... vals) {return sizeof (vals) ? predef::`+ (@vals) : this_object();}
