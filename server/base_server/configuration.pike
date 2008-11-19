@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.658 2008/10/12 22:14:03 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.659 2008/11/19 02:07:24 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3486,6 +3486,16 @@ RoxenModule reload_module( string modname )
   throw (err);
 }
 
+void reload_all_modules()
+{
+  if (!inited)
+    enable_all_modules();
+  else {
+    foreach (enabled_modules; string modname;)
+      reload_module (modname);
+  }
+}
+
 #ifdef THREADS
 Thread.Mutex enable_modules_mutex = Thread.Mutex();
 #define MODULE_LOCK(TYPE) \
@@ -4742,7 +4752,7 @@ also set 'URLs'."));
 
   defvar("InternalLoc", internal_location,
 	 DLOCALE(40, "Internal module resource mountpoint"),
-         TYPE_LOCATION|VAR_MORE|VAR_DEVELOPER,
+	 TYPE_LOCATION|VAR_MORE,
          DLOCALE(41, "Some modules may want to create links to internal "
 		 "resources. This setting configures an internally handled "
 		 "location that can be used for such purposes.  Simply select "
