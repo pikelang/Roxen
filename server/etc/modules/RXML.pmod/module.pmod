@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.383 2008/11/03 21:15:20 mast Exp $
+// $Id: module.pmod,v 1.384 2008/11/19 02:05:22 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6550,7 +6550,7 @@ protected class TSame
   inherit Type;
   constant name = "same";
   constant type_name = "RXML.t_same";
-  Type supertype = t_any;
+  Type supertype = t_any_seq;
   Type conversion_type = 0;
 }
 
@@ -6575,6 +6575,8 @@ TArray t_array = TArray();
 //! when @expr{@[RXML.t_array]->encode@} is given an array value and
 //! no type. If an array should be handled as a single element then
 //! specify @[RXML.t_any] as the @expr{from@} type.
+//!
+//! Supertype: @[RXML.t_any]
 
 class TArray
 {
@@ -6632,12 +6634,22 @@ class TArray
   }
 }
 
+TArray t_any_seq = t_array;
+//! A completely unspecified sequential type, i.e. a sequential
+//! variant of @[RXML.t_any]. This is currently an alias for
+//! @[RXML.t_array].
+//!
+//! All "ordinary" types with a nonempty set of values are subtypes of
+//! this (except @[RXML.t_array] itself).
+
 TMapping t_mapping = TMapping();
 //! A mapping.
 //!
 //! This type is sequential, so more pairs can be added to a single
 //! mapping. If there are duplicate indices then later values override
 //! earlier.
+//!
+//! Supertype: @[RXML.t_any_seq]
 
 class TMapping
 {
@@ -6646,7 +6658,7 @@ class TMapping
   constant type_name = "RXML.t_mapping";
   constant sequential = 1;
   constant empty_value = ([]);
-  Type supertype = t_any;
+  Type supertype = t_any_seq;
 
   constant container_type = 1;
   //! Recognition constant for types for generic data containers, i.e.
@@ -6671,7 +6683,7 @@ class TMapping
 TType t_type = TType();
 //! A type with the set of all RXML types as values.
 //!
-//! Supertype: @[RXML.t_any]
+//! Supertype: @[RXML.t_any_seq]
 
 //!
 protected class TType
@@ -6680,7 +6692,7 @@ protected class TType
   constant name = "type";
   constant type_name = "RXML.t_type";
   constant sequential = 0;
-  Type supertype = t_any;
+  Type supertype = t_any_seq;
   Type conversion_type = 0;
   constant handle_literals = 1;
 
@@ -6714,7 +6726,7 @@ protected class TType
 TParser t_parser = TParser();
 //! A type with the set of all RXML parser programs as values.
 //!
-//! Supertype: @[RXML.t_any]
+//! Supertype: @[RXML.t_any_seq]
 
 protected class TParser
 {
@@ -6722,7 +6734,7 @@ protected class TParser
   constant name = "parser";
   constant type_name = "RXML.t_parser";
   constant sequential = 0;
-  Type supertype = t_any;
+  Type supertype = t_any_seq;
   Type conversion_type = 0;
   constant handle_literals = 1;
 
@@ -6760,7 +6772,7 @@ TScalar t_scalar = TScalar();
 //! Any type of scalar, i.e. text or number. It's not sequential, as
 //! opposed to the subtype @[RXML.t_any_text].
 //!
-//! Supertype: @[RXML.t_any]
+//! Supertype: @[RXML.t_any_seq]
 
 class TScalar
 {
@@ -6768,7 +6780,7 @@ class TScalar
   constant name = "scalar";
   constant type_name = "RXML.t_scalar";
   constant sequential = 0;
-  Type supertype = t_any;
+  Type supertype = t_any_seq;
   Type conversion_type = 0;
   constant handle_literals = 1;
 
