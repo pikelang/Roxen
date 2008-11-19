@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.577 2008/11/19 01:30:28 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.578 2008/11/19 02:00:02 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -26,7 +26,7 @@ constant module_doc  = "This module provides the common RXML tags.";
 
 //  Cached copy of conf->query("compat_level"). This setting is defined
 //  to require a module reload to take effect so we only query it when
-//  start() is called.
+//  the module instance is created.
 float compat_level = (float) my_configuration()->query("compat_level");
 
 
@@ -3895,11 +3895,20 @@ class TagValue
 class TagCSet {
   inherit RXML.Tag;
   constant name = "cset";
-  RXML.Type content_type = RXML.t_any_text (RXML.PXml);
-  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
+
+  // No result. Propagate the result type to the content for
+  // compatibility, but allow placement in non-text contexts too.
+  array(RXML.Type) result_types = ::result_types + ({RXML.t_nil});
 
   class Frame {
     inherit RXML.Frame;
+
+    array do_enter (RequestID id)
+    {
+      if (!content_type->subtype_of (RXML.t_any_text))
+	content_type = RXML.t_any_text (RXML.PXml);
+    }
+
     array do_return(RequestID id) {
       if( !args->variable ) parse_error("Variable not specified.\n");
       if(!content) content="";
@@ -5248,6 +5257,8 @@ class TagPICData
 class TagEval {
   inherit RXML.Tag;
   constant name = "eval";
+
+  RXML.Type content_type = RXML.t_any_text (RXML.PXml);
   array(RXML.Type) result_types = ({ RXML.t_any(RXML.PXml) });
 
   class Frame {
@@ -5262,8 +5273,11 @@ class TagNoOutput {
   inherit RXML.Tag;
   constant name = "nooutput";
   constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
-  RXML.Type content_type = RXML.t_array (RXML.PXml);
-  array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
+
+  RXML.Type content_type =
+    compat_level < 5.0 ? ::content_type : RXML.t_any_seq (RXML.PXml);
+  array(RXML.Type) result_types =
+    compat_level < 5.0 ? ::result_types : ({RXML.t_nil}); // No result.
 
   class Frame {
     inherit RXML.Frame;
@@ -8180,8 +8194,9 @@ using the pre tag.
 //----------------------------------------------------------------------
 
 "cset":#"<desc type='cont'><p>
- Sets a variable with its content. This is deprecated in favor of
- using the &lt;set&gt;&lt;/set&gt; construction.</p>
+ Sets a variable with its content. The type of the content is always
+ text. This is deprecated in favor of using <tag>set</tag> with
+ content.</p>
 </desc>
 
 <attr name='variable' value='name'>
