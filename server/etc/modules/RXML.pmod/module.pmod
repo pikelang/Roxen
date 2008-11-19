@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.356 2008/11/19 12:31:05 mast Exp $
+// $Id: module.pmod,v 1.357 2008/11/19 13:37:44 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -8256,7 +8256,7 @@ class PCode
 	    for (t = pos, p=pos+99; p < e; p+=100, t++) {
 	      exec[t] = `+(@exec[p-99..p]);
 	    }
-	    if (p - 99 < e)
+	    if (p - 99 <= e)
 	      exec[t] = `+(@exec[p-99..e]);
 	    else
 	      t--;
