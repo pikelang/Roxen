@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.119 2008/10/16 11:09:45 jonasw Exp $";
+  "$Id: config_filesystem.pike,v 1.120 2008/11/19 02:11:56 mast Exp $";
 
 constant path = "config_interface/";
 
@@ -392,10 +392,6 @@ void start(int n, Configuration cfg)
 {
   if( cfg )
   {
-    if (cfg->query ("compat_level") != roxen.roxen_ver)
-      // The config interface always runs with the current compatibility level.
-      cfg->set ("compat_level", roxen.roxen_ver);
-
     mixed err;
     array(mapping(string:string)) old_version;
     int ver;
@@ -496,6 +492,24 @@ void zap_old_modules()
     my_configuration()->disable_module( "config_userdb#0" );
 }
 
+void ready_to_receive_requests()
+{
+  if (my_configuration()->query ("compat_level") != roxen.roxen_ver)
+    // The config interface always runs with the current compatibility
+    // level. Have to reload all modules after changing it, and that
+    // cannot be done directly from here since we'll get recursive
+    // locks then.
+    roxen.background_run (
+      0, lambda () {
+	   Configuration conf = my_configuration();
+	   report_notice ("Adjusted compat level from %s to %s "
+			  "for the config interface\n",
+			  conf->query ("compat_level"), roxen.roxen_ver);
+	   conf->set ("compat_level", roxen.roxen_ver);
+	   conf->save (1);
+	   conf->reload_all_modules();
+	 });
+}
 
 void create()
 {
