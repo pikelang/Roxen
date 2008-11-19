@@ -279,6 +279,15 @@ e</result>
   <equal>({"2", "3", "4"})</equal>
 </test>
 
+<test>
+  <rxml>
+    <set variable="var.y" value=""/>
+    <set variable="var.x">q &var.y;</set>
+    &var.x;
+  </rxml>
+  <glob>[Error (parse): Cannot append another value * to non-sequential type *]</glob>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Smallcaps text</comment>
