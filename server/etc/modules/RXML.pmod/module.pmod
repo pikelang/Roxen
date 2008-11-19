@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.355 2008/11/18 21:41:46 mast Exp $
+// $Id: module.pmod,v 1.356 2008/11/19 12:31:05 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -8247,11 +8247,13 @@ class PCode
 	  // Group in blocks of 10 to avoid wasting losts of stack
 	  // (lfun::`+() is often defined in terms of predef::`+())...
 	  //	/grubba 2004-08-11
+	  // Adjusted block size to 100 to make the overhead more
+	  // reasonable. /mast
 	  --end;
 	  int e = end;
 	  while (e > pos) {
 	    int t, p;
-	    for (t = pos, p=pos+100; p < e; p+=100, t++) {
+	    for (t = pos, p=pos+99; p < e; p+=100, t++) {
 	      exec[t] = `+(@exec[p-99..p]);
 	    }
 	    if (p - 99 < e)
