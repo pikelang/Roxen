@@ -97,6 +97,45 @@
 </test>
 
 <test>
+  <rxml type="array">
+    <emit source="sql" db="local" query="SELECT * FROM __test" sort="a">
+      <value type="array">&_.id; &_.a;</value>
+    </emit>
+  </rxml>
+  <equal>({
+    ({"3", Roxen.sql_null}),
+    ({"1", "hej"}),
+    ({"2", "hopp"}),
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <emit source="sql" db="local" query="SELECT * FROM __test" sort="*a">
+      <value type="array">&_.id; &_.a;</value>
+    </emit>
+  </rxml>
+  <equal>({
+    ({"3", Roxen.sql_null}),
+    ({"1", "hej"}),
+    ({"2", "hopp"}),
+  })</equal>
+</test>
+
+<test>
+  <rxml type="array">
+    <emit source="sql" db="local" query="SELECT * FROM __test" sort="^a">
+      <value type="array">&_.id; &_.a;</value>
+    </emit>
+  </rxml>
+  <equal>({
+    ({"3", Roxen.sql_null}),
+    ({"1", "hej"}),
+    ({"2", "hopp"}),
+  })</equal>
+</test>
+
+<test>
   <rxml>
     <sqlquery db="local" query="DROP TABLE __test"/>
     &page.last-true;
