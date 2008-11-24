@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.114 2008/11/06 16:57:32 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.115 2008/11/24 17:39:47 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -469,28 +469,6 @@ class TagSQLOutput {
 
 inherit "emit_object";
 
-class SqlNull
-{
-  inherit RXML.Nil;
-  constant is_RXML_encodable = 1;
-  constant is_sqltag_sql_null = 1;
-
-  // Treat these objects as indistinguishable from each other. We
-  // ought to ensure that there's only one in the pike process
-  // instead, but that's tricky to solve in the PCode codec.
-  int `== (mixed other)
-    {return objectp (other) && other->is_sqltag_sql_null;}
-  int __hash() {return 17;}
-
-  string _sprintf (int flag) {return flag == 'O' && "SqlNull()";}
-
-  int _encode() {return 0;}
-  void _decode (int dummy) {}
-}
-
-// Represents the SQL NULL value in RXML.
-SqlNull sql_null = SqlNull();
-
 class SqlEmitResponse {
   inherit EmitObject;
   private object sqlres;
@@ -525,7 +503,7 @@ class SqlEmitResponse {
 	  return x->type;
 #endif
 
-	if (!v) val[i] = sql_null;
+	if (!v) val[i] = Roxen.sql_null;
       }
     }
 

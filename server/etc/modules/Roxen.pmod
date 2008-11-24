@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.258 2008/11/24 13:28:30 mast Exp $
+// $Id: Roxen.pmod,v 1.259 2008/11/24 17:39:47 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4741,6 +4741,35 @@ array(mapping(string:mixed)|object) rxml_emit_sort (
       return 0;
     });
 }
+
+class SqlNull
+//! The class for @[Roxen.sql_null]. Avoid creating more instances of
+//! this.
+{
+  inherit RXML.Nil;
+  constant is_RXML_encodable = 1;
+
+  constant is_sqltag_sql_null = 1;
+  //! Nonzero recognition constant.
+
+  // Treat these objects as indistinguishable from each other. We
+  // ought to ensure that there's only one in the pike process
+  // instead, but that's tricky to solve in the PCode codec.
+  int `== (mixed other)
+    {return objectp (other) && other->is_sqltag_sql_null;}
+  int __hash() {return 17;}
+
+  string _sprintf (int flag) {return flag == 'O' && "SqlNull()";}
+
+  int _encode() {return 0;}
+  void _decode (int dummy) {}
+}
+
+SqlNull sql_null = SqlNull();
+//! Used primarily by emit#sql to represent the SQL NULL value in
+//! RXML. Similar to @[RXML.nil], except that it is a valid value for
+//! an RXML variable. Like @[RXML.nil], it is false in a boolean
+//! context (i.e. @[`!] returns true).
 
 #ifdef REQUEST_TRACE
 protected string trace_msg (mapping id_misc, string msg,
