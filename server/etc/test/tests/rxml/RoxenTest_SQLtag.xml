@@ -60,6 +60,33 @@ a VARCHAR(255))"/>&page.last-true;</rxml>
 </test>
 
 <test>
+  <rxml type="string">
+    <emit source="sql" db="local" query="SELECT * FROM __test" sort="a">
+      &_.id;,&_.a;;
+    </emit>
+  </rxml>
+  <result>3,;1,hej;2,hopp;</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <emit source="sql" db="local" query="SELECT * FROM __test" sort="*a">
+      &_.id;,&_.a;;
+    </emit>
+  </rxml>
+  <result>3,;1,hej;2,hopp;</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <emit source="sql" db="local" query="SELECT * FROM __test" sort="^a">
+      &_.id;,&_.a;;
+    </emit>
+  </rxml>
+  <result>3,;1,hej;2,hopp;</result>
+</test>
+
+<test>
 <rxml><sqlquery db="local" query="DROP TABLE __test"/>&page.last-true;</rxml>
 <result>1</result>
 </test>
