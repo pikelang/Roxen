@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.548 2008/11/04 16:00:46 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.549 2008/11/24 17:48:32 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -4942,7 +4942,8 @@ class TagEmit {
  	        case '^':
 		  if (compat_level > 3.3) {
 		    if (field->lcase) break field_flag_scan;
-		    field->lcase = lower_case;
+		    field->lcase =
+		      lambda (mixed m) {return lower_case ((string) m);};
 		  }
 		  break;
 		  // Fall through.
