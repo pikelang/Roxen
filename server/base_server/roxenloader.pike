@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.397 2008/08/15 12:33:54 mast Exp $
+// $Id: roxenloader.pike,v 1.398 2008/11/25 12:25:22 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.397 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.398 2008/11/25 12:25:22 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -185,16 +185,6 @@ string short_time()
   return ct;
 }
 
-string possibly_encode( string what )
-{
-  if( catch {
-    if( String.width( what ) > 8 )
-      return string_to_utf8( what );
-  } )
-    return string_to_utf8( what );
-  return what;
-}
-
 //! @decl void werror(string format, mixed ... args)
 //! @appears werror
 
@@ -229,11 +219,11 @@ void roxen_perror(string format, mixed ... args)
     int i = search(format, "\n");
 
     if (i == -1) {
-      stderr->write(possibly_encode(format));
+      stderr->write(string_to_utf8(format));
       format = "";
       if (delayed_nl) last_was_nl = -1;
     } else {
-      stderr->write(possibly_encode(format[..i]));
+      stderr->write(string_to_utf8(format[..i]));
       format = format[i+1..];
       last_was_nl = 1;
     }
@@ -250,12 +240,12 @@ void roxen_perror(string format, mixed ... args)
     last_was_nl = format[-1] == '\n';
 
 #ifdef RUN_SELF_TEST
-    stderr->write( possibly_encode( format ) );
+    stderr->write( string_to_utf8( format ) );
 #else
     array(string) a = format/"\n";
     int i;
 
-    a = map( a, possibly_encode );
+    a = map( a, string_to_utf8 );
 
     for(i=0; i < sizeof(a)-1; i++) {
       stderr->write(short_time() + a[i] + "\n");
