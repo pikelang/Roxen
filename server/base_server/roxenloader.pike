@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.399 2008/11/26 00:16:48 mast Exp $
+// $Id: roxenloader.pike,v 1.400 2008/11/26 00:54:53 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.399 2008/11/26 00:16:48 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.400 2008/11/26 00:54:53 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1669,14 +1669,13 @@ Sql.Sql sq_cache_get( string db_name,
       if (master_sql->set_charset) {
 	if (!charset)
 	  charset = default_db_charsets[object_program (master_sql)];
-	string cur_charset = db->get_charset();
-#if !constant (Mysql.mysql.HAVE_MYSQL_FIELD_CHARSETNR)
-	if (cur_charset == "unicode" &&
-	    db->master_sql->unicode_decode_mode_is_broken)
-	  cur_charset = "broken-unicode";
-#endif
-	if (charset != db->get_charset())
+	if (charset != db->get_charset()) {
+	  if (master_sql->set_unicode_decode_mode)
+	    // Ugly special case for mysql: The set_charset call below
+	    // does not reset this state.
+	    master_sql->set_unicode_decode_mode (0);
 	  db->set_charset (charset);
+	}
       }
     return [object(Sql.Sql)] (object) SQLKey (db, db_name, reuse_in_thread);
   }
@@ -1684,8 +1683,6 @@ Sql.Sql sq_cache_get( string db_name,
   return 0;
 }
 
-// No need to map "unicode" to "broken-unicode" below if the mysql lib
-// is old - it's never returned by default anyway.
 #define FIX_CHARSET_FOR_NEW_SQL_CONN(SQLOBJ, CHARSET) do {		\
     if (object master_sql = SQLOBJ->master_sql)				\
       if (master_sql->set_charset) {					\
