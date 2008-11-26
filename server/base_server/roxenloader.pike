@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.398 2008/11/25 12:25:22 mast Exp $
+// $Id: roxenloader.pike,v 1.399 2008/11/26 00:16:48 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.398 2008/11/25 12:25:22 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.399 2008/11/26 00:16:48 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1665,16 +1665,19 @@ Sql.Sql sq_cache_get( string db_name,
   }
 
   if (db) {
-    if (!charset)
-      charset = default_db_charsets[object_program (db->master_sql||db)];
-    string cur_charset = db->get_charset();
+    if (object master_sql = db->master_sql)
+      if (master_sql->set_charset) {
+	if (!charset)
+	  charset = default_db_charsets[object_program (master_sql)];
+	string cur_charset = db->get_charset();
 #if !constant (Mysql.mysql.HAVE_MYSQL_FIELD_CHARSETNR)
-    if (cur_charset == "unicode" &&
-	db->master_sql->unicode_decode_mode_is_broken)
-      cur_charset = "broken-unicode";
+	if (cur_charset == "unicode" &&
+	    db->master_sql->unicode_decode_mode_is_broken)
+	  cur_charset = "broken-unicode";
 #endif
-    if (charset != db->get_charset())
-      db->set_charset (charset);
+	if (charset != db->get_charset())
+	  db->set_charset (charset);
+      }
     return [object(Sql.Sql)] (object) SQLKey (db, db_name, reuse_in_thread);
   }
 
@@ -1683,10 +1686,14 @@ Sql.Sql sq_cache_get( string db_name,
 
 // No need to map "unicode" to "broken-unicode" below if the mysql lib
 // is old - it's never returned by default anyway.
-#define FIX_DEFAULT_DB_CHARSET(SQLOBJ) do {				\
-    if (zero_type (default_db_charsets[object_program (SQLOBJ->master_sql||SQLOBJ)])) \
-      default_db_charsets[object_program (SQLOBJ->master_sql||SQLOBJ)] =	\
-	SQLOBJ->get_charset();						\
+#define FIX_CHARSET_FOR_NEW_SQL_CONN(SQLOBJ, CHARSET) do {		\
+    if (object master_sql = SQLOBJ->master_sql)				\
+      if (master_sql->set_charset) {					\
+	if (zero_type (default_db_charsets[object_program (master_sql)])) \
+	  default_db_charsets[object_program (master_sql)] =		\
+	    SQLOBJ->get_charset();					\
+	if (CHARSET) SQLOBJ->set_charset (CHARSET);			\
+      }									\
   } while (0)
 
 Sql.Sql sq_cache_set( string db_name, Sql.Sql res,
@@ -1696,8 +1703,7 @@ Sql.Sql sq_cache_set( string db_name, Sql.Sql res,
 {
   if( res )
   {
-    FIX_DEFAULT_DB_CHARSET (res);
-    if (charset) res->set_charset (charset);
+    FIX_CHARSET_FOR_NEW_SQL_CONN (res, charset);
     sql_active_list[ db_name ]++;
     return [object(Sql.Sql)] (object) SQLKey( res, db_name, reuse_in_thread);
   }
@@ -1721,8 +1727,7 @@ Sql.Sql connect_to_my_mysql( string|int ro, void|string db,
     // Threads disabled.
     // This can occur if we are called from the compiler.
     Sql.Sql res = low_connect_to_my_mysql(ro, db);
-    FIX_DEFAULT_DB_CHARSET (res);
-    if (charset) res->set_charset (charset);
+    FIX_CHARSET_FOR_NEW_SQL_CONN (res, charset);
     return res;
   }
   string i = db+":"+(intp(ro)?(ro&&"ro")||"rw":ro);
@@ -1756,7 +1761,7 @@ protected mixed low_connect_to_my_mysql( string|int ro, void|string db )
     res = Sql.Sql( replace( my_mysql_path,({"%user%", "%db%" }),
 			    ({ ro, db })) );
 #ifdef ENABLE_MYSQL_UNICODE_MODE
-    if (res && res->master_sql->set_unicode_decode_mode) {
+    if (res && res->master_sql && res->master_sql->set_unicode_decode_mode) {
       // NOTE: The following code only works on Mysql servers 4.1 and later.
       mixed err2 = catch {
 	res->master_sql->set_unicode_decode_mode(1);
