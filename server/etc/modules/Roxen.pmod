@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.259 2008/11/24 17:39:47 mast Exp $
+// $Id: Roxen.pmod,v 1.260 2008/11/26 01:52:04 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4759,7 +4759,7 @@ class SqlNull
     {return objectp (other) && other->is_sqltag_sql_null;}
   int __hash() {return 17;}
 
-  string _sprintf (int flag) {return flag == 'O' && "SqlNull()";}
+  string _sprintf (int flag) {return flag == 'O' && "sql_null";}
 
   int _encode() {return 0;}
   void _decode (int dummy) {}
