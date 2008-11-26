@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.385 2008/11/19 20:06:46 mast Exp $
+// $Id: module.pmod,v 1.386 2008/11/26 01:53:29 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6625,7 +6625,7 @@ class TArray
 
     if (arrayp (val))
       return val;
-    else if (val == empty)
+    else if (val == empty || val == nil)
       return empty_value;
     else {
       if (val == nil) parse_error ("Cannot convert RXML.nil to array.\n");
@@ -6675,8 +6675,15 @@ class TMapping
 
   mapping encode (mixed val, void|Type from)
   {
-    type_check (val);
-    return val == empty ? empty_value : val;
+    if (from)
+      switch (from->name) {
+	case TAny.name: type_check (val); break;
+	case local::name: return [mapping] val;
+	default: return [mapping] indirect_convert (val, from); // FIXME: ?
+      }
+    mixed err = catch {return (mapping) val;};
+    parse_error ("Cannot convert %s to mapping: %s",
+		 format_short (val), describe_error (err));
   }
 }
 
