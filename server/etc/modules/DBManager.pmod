@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.76 2008/08/15 12:33:54 mast Exp $
+// $Id: DBManager.pmod,v 1.77 2008/11/26 01:51:30 mast Exp $
 
 //! Manages database aliases and permissions
 
@@ -640,7 +640,9 @@ Sql.Sql get( string name, void|Configuration conf,
 //!   connection supports this).
 //!
 //!   An error is thrown if the database connection doesn't support
-//!   the given charset or has no charset support at all.
+//!   the given charset, but the argument is ignored if the database
+//!   doesn't have any charset support at all, i.e. no @[set_charset]
+//!   function.
 //!
 //!   See @[Sql.Sql.set_charset] for more information.
 //!
