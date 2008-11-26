@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.115 2008/11/24 17:39:47 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.116 2008/11/26 01:45:54 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -72,13 +72,12 @@ constant tagdoc=([
 
 <attr name='charset' value='string'><p>
  Use the specified charset for the SQL statement. See the description
- for the \"sql\" emit source for more info.</p>
+ of the same attribute for the \"sql\" emit source for more info.</p>
 </attr>
 
 <attr name='ascii'><p>
  Create an ASCII table rather than an HTML table. Useful for
- interacting with <xref href='../graphics/diagram.tag' /> and <xref
- href='../text/tablify.tag' />.</p>
+ interacting with <tag>diagram</tag> or <tag>tablify</tag>.</p>
 </attr>",
 
 "sqlquery":#"
@@ -126,22 +125,25 @@ constant tagdoc=([
 </attr>
 
 <attr name='bindings' value='\"name=variable,name=variable,...\"'><p>
-Specifies binding variables to use with this query. This is comma separated
-list of binding variable names and RXML variables to assign to those
-binding variables.
-<i>Note:</i> For some databases it is necessary to use binding variables when
-inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
-<ex-box>
-<set variable='var.foo' value='texttexttext' />
+ Specifies binding variables to use with this query. This is comma separated
+ list of binding variable names and RXML variables to assign to those
+ binding variables.</p>
+
+ <p><i>Note:</i> For some databases it is necessary to use binding
+ variables when inserting large values. Oracle, for instance, limits
+ the query to 4000 bytes.</p>
+
+ <ex-box>
+<set variable='var.foo' value='texttexttext'/>
 <sqlquery query='insert into mytable VALUES (4,:foo,:bar)' 
-          bindings='foo=var.foo,bar=form.bar' />
+          bindings='foo=var.foo,bar=form.bar'/>
 </ex-box>
-</p>
 </attr>
 
 <attr name='mysql-insert-id' value='variable'><p>
  Set the given variable to the insert id used by MySQL for
- auto-incrementing columns. Note: This is only available with MySQL.</p>
+ auto-incrementing columns. Note: This is only available when MySQL is
+ used.</p>
 </attr>
 
 <attr name='charset' value='string'><p>
@@ -198,31 +200,85 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
 </attr>
 
 <attr name='bindings' value='\"name=variable,name=variable,...\"'><p>
-Specifies binding variables to use with this query. This is comma separated
-list of binding variable names and RXML variables to assign to those
-binding variables.
-<i>Note:</i> For some databases it is necessary to use binding variables when
-inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
-<ex-box>
-<set variable='var.foo' value='texttexttext' />
+ Specifies binding variables to use with this query. This is comma
+ separated list of binding variable names and RXML variables to assign
+ to those binding variables.</p>
+
+ <p><i>Note:</i> For some databases it is necessary to use binding
+ variables when inserting large datas. Oracle, for instance, limits the
+ query to 4000 bytes.</p>
+
+ <ex-box>
+<set variable='var.foo' value='texttexttext'/>
 <sqlquery query='insert into mytable VALUES (4,:foo,:bar)' 
-          bindings='foo=var.foo,bar=form.bar' />
+          bindings='foo=var.foo,bar=form.bar'/>
 </ex-box>
-</p>
 </attr>
 
 <attr name='charset' value='string'><p>
- Use the specified charset for the SQL statement and returned text
- values.</p>
+ Use the specified charset for the sent SQL statement and returned
+ text values.</p>
 
- <p>The valid charsets depend on the type of database connection.
- However, the special value \"unicode\" configures the connection to
- accept and return unencoded (possibly wide) unicode strings (provided
- the connection supports this).</p>
+ <p>This will cause all SQL queries to be encoded with this charset.
+ It will also normally cause all string results to be decoded with
+ this charset, but there are exceptions as explained later. If the
+ database connection supports it, the connection will be configured to
+ use this charset too (at least MySQL 4.1 and later has such
+ support).</p>
 
- <p>An RXML run error is thrown if the database connection doesn't
- support the given charset or has no charset support at all. (At least
- MySQL 4.1 and later has support.)</p>
+ <p>In many cases, it is difficult for the SQL interface to tell text
+ and binary data apart in results. That is a problem since a text
+ string should be decoded according to the charset while a binary
+ octet string must not be decoded.</p>
+
+ <p>If the connection supports it, using the special value
+ <tt>unicode</tt> as charset is guaranteed to handle both text and
+ binary result strings correctly so you don't have to worry about it.
+ In that case you can assume the SQL query and text results covers the
+ full Unicode range, and the connection will handle the charset issues
+ internally. This is known to be supported with MySQL 4.1 and later.
+ An RXML run error is thrown if it isn't supported.</p>
+
+ <p>Otherwise, all string values are assumed to be text and are
+ therefore decoded using the given charset. You can turn it off for
+ specific columns through the \"binary-result\" attribute.</p>
+
+ <p>If you use <tt>none</tt> as charset in this attribute then the
+ charset handling described here is disabled for this query. That is
+ useful to override a charset in the \"Default charset\" module
+ setting.</p>
+
+ <p>The charset specification in this attribute can optionally be a
+ list like this:</p>
+
+ <blockquote>charset=\"<i>recode-charset</i>,
+ <i>connection-charset</i>\"</blockquote>
+
+ <p>In this form, the <i>recode-charset</i> is used by Roxen to recode
+ the query and results, and <i>connection-charset</i> is sent to the
+ database driver to use for the connection. This is useful if the
+ database server uses nonstandard names for its character sets. E.g.
+ MySQL spells <tt>cp1252</tt> as \"<tt>latin1</tt>\" (which is the
+ closest you get to <tt>iso-8859-1</tt> there), so to use that you'd
+ say \"<tt>cp1252,latin1</tt>\" in this attribute. This list form is
+ not applicable for the <tt>unicode</tt> case.</p>
+
+ <p><i>Compatibility note:</i> In Roxen 4.5 this attribute only
+ configured the charset for the connection; it didn't do any
+ conversion of the query nor the results. This behavior still remains
+ if the compatibility level is 4.5 or lower. You can also achieve the
+ same effect by specifying \"<tt>none,<i>whatever</i></tt>\" as
+ charset.</p>
+</attr>
+
+<attr name='binary-result' value='column names'>
+ <p>A comma separated list of columns in the result to not treat as
+ text and decode according to the \"charset\" attribute or the
+ \"Default charset\" module setting. As a special case, no result
+ column is decoded if the value is empty.</p>
+
+ <p>This is only applicable if a charset is being used and it isn't
+ \"unicode\" (or \"broken-unicode\").</p>
 </attr>"
 ]);
 #endif
@@ -230,10 +286,12 @@ inserting large datas. Oracle, for instance, limits the query to 4000 bytes.
 
 // --------------------------- Database query code --------------------------------
 
+float compat_level = my_configuration()->compat_level();
+
 #if ROXEN_COMPAT <= 1.3
 string compat_default_host;
 #endif
-string default_db, default_charset;
+string default_db, default_recode_charset, default_conn_charset;
 
 int allow_sql_urls, allow_module_dbs;
 mapping(string:int(1..1)) allowed_dbs = ([]); // 0 if all dbs are allowed.
@@ -266,6 +324,10 @@ Sql.Sql get_rxml_sql_con (string db, void|string host, void|RequestID id,
 //!   Passed on to @[DBManager.get] (if called). The default charset
 //!   configured in this module is used if @[charset] isn't given.
 //!
+//!   This function recodes neither the query nor the result according
+//!   to the specified charset, as opposed to the charset attribute to
+//!   the sql tags.
+//!
 //! @throws
 //!   Connection errors, access errors and syntax errors in @[db],
 //!   @[host] and @[module] are thrown as RXML errors.
@@ -275,6 +337,9 @@ Sql.Sql get_rxml_sql_con (string db, void|string host, void|RequestID id,
 
   Sql.Sql con;
   mixed error;
+
+  if (!charset) charset = default_conn_charset;
+  if (charset == "none") charset = 0;
 
 #if ROXEN_COMPAT <= 1.3
   if( !db && (real_host || default_db == " none") ) {
@@ -287,8 +352,7 @@ Sql.Sql get_rxml_sql_con (string db, void|string host, void|RequestID id,
       }
 
       error = catch {
-	  con = my_configuration()->
-	    sql_connect(h, charset || default_charset);
+	  con = my_configuration()->sql_connect(h, charset);
 	};
     }
   }
@@ -315,8 +379,8 @@ Sql.Sql get_rxml_sql_con (string db, void|string host, void|RequestID id,
     }
 
     error = catch {
-	con = DBManager.get (db, my_configuration(), read_only,
-			     reuse_in_thread, charset || default_charset);
+	con = DBManager.get (
+	  db, my_configuration(), read_only, reuse_in_thread, charset);
       };
   }
 
@@ -331,9 +395,9 @@ Sql.Sql get_rxml_sql_con (string db, void|string host, void|RequestID id,
   return con;
 }
 
-array|object do_sql_query(mapping args, RequestID id,
-			  void|int(0..1) big_query,
-			  void|int(0..1) ret_con)
+array|Sql.sql_result do_sql_query(mapping args, RequestID id,
+				  void|int(0..1) big_query,
+				  void|int(0..1) ret_con)
 {
   string host;
   if (args->host)
@@ -342,7 +406,7 @@ array|object do_sql_query(mapping args, RequestID id,
     args->host="SECRET";
   }
 #if ROXEN_COMPAT <= 2.1
-  if (args->parse && my_configuration()->compat_level() < 2.2)
+  if (args->parse && compat_level < 2.2)
     args->query = Roxen.parse_rxml(args->query, id);
 #endif
 
@@ -363,6 +427,13 @@ array|object do_sql_query(mapping args, RequestID id,
     }
   }
 
+  string conn_charset;
+  if (string|array(string) cs = args->charset) {
+    if (arrayp (cs)) conn_charset = sizeof (cs) > 1 ? cs[1] : cs[0];
+    else conn_charset = cs;
+  }
+  if (!conn_charset) conn_charset = default_conn_charset;
+
   if( args->module )
   {
     if (!allow_module_dbs) {
@@ -378,7 +449,7 @@ array|object do_sql_query(mapping args, RequestID id,
 		      args->module );
 
     if( error = catch {
-	con = module->get_my_sql (ro, args->charset || default_charset);
+	con = module->get_my_sql (ro, conn_charset != "none" && conn_charset);
       } ) {
 #if 0
       werror (describe_backtrace (error));
@@ -402,7 +473,7 @@ array|object do_sql_query(mapping args, RequestID id,
   }
   else
   {
-    con = get_rxml_sql_con (args->db, host, id, ro, 0, args->charset);
+    con = get_rxml_sql_con (args->db, host, id, ro, 0, conn_charset);
 
     function query_fn = (big_query ? con->big_query : con->query); 
     if( error = catch( result = (bindings ? query_fn(args->query, bindings) : query_fn(args->query))) ) {
@@ -445,9 +516,9 @@ class TagSQLOutput {
     array do_return(RequestID id) {
       NOCACHE();
 
-      array res=do_sql_query(args, id);
+      array res= [array] do_sql_query(args, id);
 
-      if (res && sizeof(res)) {
+      if (res) {
 	result = do_output_tag(args, res, content, id);
 	id->misc->defines[" _ok"] = 1; // The effect of <true>, since res isn't parsed.
 
@@ -471,11 +542,13 @@ inherit "emit_object";
 
 class SqlEmitResponse {
   inherit EmitObject;
-  private object sqlres;
+  Sql.sql_result sqlres;
+  private Locale.Charset.Decoder decoder;
   private array(string) cols;
+  private array(int(0..1)) charset_decode_col;
   private int fetched;
 
-  private mapping(string:mixed) really_get_row() {
+  mapping(string:mixed) really_get_row() {
     array val;
     if(sqlres && (val = sqlres->fetch_row()))
       fetched++;
@@ -484,26 +557,42 @@ class SqlEmitResponse {
       return 0;
     }
 
-    if (my_configuration()->compat_level() > 4.5) {
-      // Change in >= 5.0: Don't abuse RXML.nil for SQL NULL. RXML.nil
-      // means UNDEFINED in this context, i.e. that the variable
-      // doesn't exist at all. An SQL NULL otoh is just a special
-      // value in an existing variable, at least on the RXML level.
+    if (compat_level > 4.5) {
+      if (!decoder) {
+	foreach (val; int i; string v) {
+	  // Change in >= 5.0: Don't abuse RXML.nil for SQL NULL. RXML.nil
+	  // means UNDEFINED in this context, i.e. that the variable
+	  // doesn't exist at all. An SQL NULL otoh is just a special
+	  // value in an existing variable, at least on the RXML level.
 
-      foreach (val; int i; string v) {
 #if 0
-	// Afaics the following isn't of any use since the big_query
-	// wrapper in Sql.oracle handles the dbnull objects when it
-	// converts all types to strings. /mast
+	  // Afaics the following isn't of any use since the big_query
+	  // wrapper in Sql.oracle handles the dbnull objects when it
+	  // converts all types to strings. /mast
 
-	// Might be a dbnull object which considers
-	// itself false (e.g. in the oracle glue).
-	if ((x != 0) && stringp(x->type))
-	  // Transform NULLString to "".
-	  return x->type;
+	  // Might be a dbnull object which considers
+	  // itself false (e.g. in the oracle glue).
+	  if ((x != 0) && stringp(x->type))
+	    // Transform NULLString to "".
+	    return x->type;
 #endif
 
-	if (!v) val[i] = Roxen.sql_null;
+	  if (!v) val[i] = Roxen.sql_null;
+	}
+      }
+
+      else {
+	// Same null handling as above, but also decode charsets.
+	foreach (val; int i; string v) {
+	  if (!v) val[i] = Roxen.sql_null;
+	  else if (charset_decode_col[i]) {
+	    if (mixed err = catch (val[i] = decoder->feed (v)->drain()))
+	      if (objectp (err) && err->is_charset_decode_error)
+		RXML.run_error (err->message());
+	      else
+		throw (err);
+	  }
+	}
       }
     }
 
@@ -530,11 +619,59 @@ class SqlEmitResponse {
     return sqlres->num_rows() - fetched + !!next_row;
   }
 
-  void create(object _sqlres) {
+  void create(Sql.sql_result _sqlres, string charset, string binary_cols) {
     sqlres = _sqlres;
-    if (sqlres) cols = sqlres->fetch_fields()->name;
+    if (sqlres) {
+      cols = sqlres->fetch_fields()->name;
+
+      if (charset) {
+	if (mixed err = catch (decoder = Locale.Charset.decoder (charset))) {
+#if defined (DEBUG) || defined (MODULE_DEBUG)
+	  werror ("Error getting decoder for charset %O: %s",
+		  charset, describe_error (err));
+#endif
+	  RXML.parse_error ("Unknown charset %O for decode.\n", charset);
+	}
+
+	if (binary_cols) {
+	  charset_decode_col = allocate (sizeof (cols), 0);
+	  multiset(string) bin_col_names =
+	    mkmultiset (map (binary_cols / ",",
+			     String.trim_all_whites) - ({""}));
+	  if (sizeof (bin_col_names))
+	    foreach (cols; int i; string name)
+	      charset_decode_col[i] = !bin_col_names[name];
+	}
+	else
+	  charset_decode_col = allocate (sizeof (cols), 1);
+      }
+    }
   }
 }
+
+#define GET_CHARSET_AND_ENCODE_QUERY(args, recode_charset) do {		\
+    if (!recode_charset) recode_charset = default_recode_charset;	\
+    if (!(<0, "none", "unicode", "broken-unicode">)[recode_charset]) {	\
+      Locale.Charset.Encoder encoder;					\
+      if (mixed err = catch {						\
+	  encoder = Locale.Charset.encoder (recode_charset);		\
+	}) {								\
+	DO_IF_DEBUG (							\
+	  werror ("Error getting encoder for charset %O: %s",		\
+		  recode_charset, describe_error (err)));		\
+	RXML.parse_error ("Unknown charset %O for encode.\n", recode_charset); \
+      }									\
+      if (mixed err = catch {						\
+	  args->query = encoder->feed (args->query)->drain();		\
+	})								\
+	if (objectp (err) && err->is_charset_encode_error)		\
+	  RXML.run_error (err->message());				\
+	else								\
+	  throw (err);							\
+    }									\
+    else								\
+      recode_charset = 0;							\
+  } while (0)
 
 class TagSqlplugin {
   inherit RXML.Tag;
@@ -550,7 +687,20 @@ class TagSqlplugin {
     // Haven't verified that the NOCACHE here is actually needed, but
     // in the worst case it's just unnecessary.
     NOCACHE();
-    return SqlEmitResponse(do_sql_query(m+([]), id, 1));
+
+    m += ([]);
+
+    string recode_charset;
+    if (string|array(string) cs = m->charset) {
+      if (stringp (cs))
+	cs = m->charset = array_sscanf (cs, "%[^ \t,]%*[ \t],%*[ \t]%s");
+      recode_charset = cs[0];
+    }
+    GET_CHARSET_AND_ENCODE_QUERY (m, recode_charset);
+
+    return SqlEmitResponse([object(Sql.sql_result)] do_sql_query(m, id, 1),
+			   recode_charset,
+			   recode_charset && m["binary-result"]);
   }
 }
 
@@ -571,10 +721,17 @@ class TagSQLQuery {
     array do_return(RequestID id) {
       NOCACHE();
 
-      array res=do_sql_query(args, id, 0, 1);
+      string recode_charset;
+      if (string|array(string) cs = args->charset) {
+	if (stringp (cs))
+	  cs = args->charset = array_sscanf (cs, "%[^ \t,]%*[ \t],%*[ \t]%s");
+	recode_charset = cs[0];
+      }
+      GET_CHARSET_AND_ENCODE_QUERY (args, recode_charset);
 
-      object con = args->dbobj;
-      m_delete(args, "dbobj");
+      do_sql_query(args, id, 1, 1);
+
+      Sql.Sql con = m_delete(args, "dbobj");
 
       if(args["mysql-insert-id"]) {
 	if(con && con->master_sql)
@@ -607,23 +764,35 @@ class TagSQLTable {
     array do_return(RequestID id) {
       NOCACHE();
 
-      object res=do_sql_query(args, id, 1);
+      string recode_charset;
+      if (string|array(string) cs = args->charset) {
+	if (stringp (cs))
+	  cs = args->charset = array_sscanf (cs, "%[^ \t,]%*[ \t],%*[ \t]%s");
+	recode_charset = cs[0];
+      }
+      GET_CHARSET_AND_ENCODE_QUERY (args, recode_charset);
+
+      Sql.sql_result res = [object(Sql.sql_result)] do_sql_query(args, id, 1);
 
       int ascii=!!args->ascii;
       string ret="";
 
       if (res) {
+	res = SqlEmitResponse (res, recode_charset, 0);
+
 	string nullvalue=args->nullvalue||"";
+
+	array(string) cols = res->sqlres->fetch_fields()->name;
 
 	if (!ascii) {
 	  ret="<tr>";
-	  foreach(res->fetch_fields(), mapping m)
-	    ret += "<th>"+m->name+"</th>";
+	  foreach (cols, string colname)
+	    ret += "<th>" + Roxen.html_encode_string (colname) + "</th>";
 	  ret += "</tr>\n";
 	}
 
-	array row;
-	while(row=res->fetch_row()) {
+	while (mapping(string:mixed) entry = res->really_get_row()) {
+	  array row = rows (entry, cols);
 	  if (ascii)
 	    ret += map(row, lambda(mixed in) {
 			      if(!in) return nullvalue;
@@ -631,8 +800,10 @@ class TagSQLTable {
 			    }) * "\t" + "\n";
 	  else {
 	    ret += "<tr>";
-	    foreach(row, mixed value)
-	      ret += "<td>" + (string)(value || nullvalue) + "</td>";
+	    foreach(row, string|Roxen.SqlNull value)
+	      // FIXME: Missing quoting here.
+	      ret += "<td>" + (value == Roxen.sql_null ?
+			       nullvalue : value) + "</td>";
 	    ret += "</tr>\n";
 	  }
 	}
@@ -641,7 +812,8 @@ class TagSQLTable {
 	  ret=Roxen.make_container("table",
 				   args-(["host":"","database":"","user":"",
 					  "password":"","query":"","db":"",
-					  "nullvalue":"","dbobj":""]), ret);
+					  "nullvalue":"","dbobj":"",
+					  "charset": ""]), ret);
 
 	id->misc->defines[" _ok"] = 1;
 	result=ret;
@@ -741,12 +913,8 @@ inaccessible to the internal modules too.</p>"));
 	  TYPE_STRING,
 	  LOCALE(0, #"\
 <p>The default value to use for the <i>charset</i> attribute to the
-SQL tags. See the description for the \"sql\" emit source for more
-details.</p>
-
-<p>Note that not all database connection supports this, and the tags
-will throw errors if this is used in such cases. MySQL 4.1 or later
-supports it.</p>"));
+SQL tags. See the description of the same attribute for the \"sql\"
+emit source for more details.</p>"));
 }
 
 
@@ -760,8 +928,13 @@ void start()
   compat_default_host = query("hostname");
 #endif
   default_db          = query("db");
-  default_charset = query ("charset");
-  if (default_charset == "") default_charset = 0;
+
+  default_conn_charset = 0;
+  sscanf (query ("charset"), "%[^ \t,]%*[ \t],%*[ \t]%s",
+	  default_recode_charset, default_conn_charset);
+  if (!default_conn_charset) default_conn_charset = default_recode_charset;
+  if (default_recode_charset == "") default_recode_charset = 0;
+  if (default_conn_charset == "") default_conn_charset = 0;
 
   allow_sql_urls = query ("allow_sql_urls");
   allow_module_dbs = query ("allow_module_dbs");
