@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.74 2008/11/02 11:53:34 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.75 2008/11/26 01:49:05 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -578,6 +578,13 @@ void xml_comment(object t, mapping m, string c) {
 void run_xml_tests(string data) {
   mapping(int:RXML.PCode) p_code_cache = ([]);
   multiset(string) used_modules = (<>);
+
+  // El cheapo xml header parser.
+  if (has_prefix (data, "<?xml")) {
+    sscanf (data, "%[^\n]", string s);
+    if (sscanf (s, "%*sencoding=\"%s\"", s) == 2)
+      data = Locale.Charset.decoder (s)->feed (data)->drain();
+  }
 
   ltests=0;
   lfails=0;
