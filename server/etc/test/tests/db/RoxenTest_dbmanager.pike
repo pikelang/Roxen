@@ -1,5 +1,7 @@
 inherit "../pike_test_common.pike";
 
+#charset utf-8
+
 int db_changed;
 void inc_dbcc( ) { db_changed++; };
 
@@ -50,25 +52,35 @@ void run_tests( Configuration c )
   test_false( DBManager.db_url, "local" );
   
 
-  Sql.Sql sql_rw = test_true( DBManager.get, "local" );
-  Sql.Sql sql_ro = test_true( DBManager.get, "local", 0, 1 );
+  Sql.Sql sql_rw = test_true( DBManager.get, "local", 0, 0, 0, "unicode" );
+  Sql.Sql sql_ro = test_true( DBManager.get, "local", 0, 1, 0, "unicode" );
 
-#define CR "CREATE table testtable (id INT PRIMARY KEY AUTO_INCREMENT,foo VARCHAR(20))" 
+#define CR "CREATE table testtable (id INT PRIMARY KEY AUTO_INCREMENT,foo VARCHAR(20),bin VARBINARY(20)) CHARSET utf8"
   test_error( sql_ro->query, CR);
   test( sql_rw->query, CR );
 
   test_equal( ({}), sql_ro->query, "SELECT * from testtable" );
 
-  test_error( sql_ro->query, "INSERT INTO testtable (foo) VALUES ('bar')" );
+  test_error( sql_ro->query,
+	      "INSERT INTO testtable (foo, bin) VALUES ('bar', 'x')" );
   
-  test( sql_rw->query, "INSERT INTO testtable (foo) VALUES ('bar')" );
+  test( sql_rw->query,
+	"INSERT INTO testtable (foo, bin) VALUES ('åäö', 'åäö')" );
+  test( sql_rw->query,
+	"INSERT INTO testtable (foo, bin) VALUES ('åäö€uro', 'åäö€uro')" );
 
   array rows = test_not_equal( ({}),
 			       sql_ro->query,
-			       "SELECT * FROM  testtable WHERE foo='bar'" );
-  if( sizeof( rows ) )
-    test( `==, "bar", rows[0]["foo"] );
-  
+			       "SELECT * FROM  testtable WHERE foo='åäö'" );
+  test_true( `==, "åäö", rows[0]["foo"] );
+  test_true( `==, string_to_utf8 ("åäö"), rows[0]["bin"] );
+
+  rows = test_not_equal( ({}),
+			 sql_ro->query,
+			 "SELECT * FROM  testtable WHERE foo='åäö€uro'" );
+  test_true( `==, "åäö€uro", rows[0]["foo"] );
+  test_true( `==, string_to_utf8 ("åäö€uro"), rows[0]["bin"] );
+
   test_error( sql_ro->query,  "DROP TABLE testtable");
   test( sql_rw->query,            "DROP TABLE testtable" );
   
