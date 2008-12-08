@@ -656,6 +656,7 @@ mapping|string parse( RequestID id )
     " background-color: &usr.matrix12;;"
     "}\n"
     "</style>"
+    "<set variable='var.form-anchor' value='#dbquery'/>"
     "<use file='/template'/><tmpl>"
     "<topmenu base='../' selected='dbs'/>"
     "<content><cv-split><subtablist width='100%'><st-tabs>"
@@ -1082,7 +1083,7 @@ mapping|string parse( RequestID id )
     // Query widget.
 
     res +=
-      "<p>"
+      "<a name='dbquery'/><p>"
       "<textarea rows='12' cols='90' wrap='soft' name='query' "
       " style='font-size: 90%'>" +
       Roxen.html_encode_string (id->variables->query) + "</textarea><br />"
