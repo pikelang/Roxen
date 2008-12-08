@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.659 2008/11/19 02:07:24 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.660 2008/12/08 13:38:09 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4252,11 +4252,14 @@ void low_init(void|int modules_already_enabled)
 
   if (!modules_already_enabled)
   {
+    // Ugly kludge: We let enabled_modules lie about the set of currently
+    //              enabled modules during the init, so that
+    //              module_dependencies() doesn't perform duplicate work.
     enabled_modules = retrieve("EnabledModules", this_object());
 //     roxenloader.LowErrorContainer ec = roxenloader.LowErrorContainer();
 //     roxenloader.push_compile_error_handler( ec );
 
-    array modules_to_process = indices( enabled_modules );
+    array modules_to_process = sort(indices( enabled_modules ));
     string tmp_string;
 
     mixed err;
@@ -4265,7 +4268,8 @@ void low_init(void|int modules_already_enabled)
     foreach( modules_to_process, tmp_string )
     {
       if( !forcibly_added[ tmp_string ] )
-	if(err = catch( enable_module( tmp_string )))
+	if(err = catch( enable_module( tmp_string, UNDEFINED, UNDEFINED,
+				       UNDEFINED, 1)))
 	{
 	  report_error(LOC_M(45, "Failed to enable the module %s. Skipping.")
 		       +"\n%s\n", tmp_string, describe_backtrace(err));
