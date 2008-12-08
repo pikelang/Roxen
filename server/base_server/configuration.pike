@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.636 2008/12/08 13:38:33 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.637 2008/12/08 13:39:58 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4167,7 +4167,8 @@ void low_init(void|int modules_already_enabled)
     foreach( modules_to_process, tmp_string )
     {
       if( !forcibly_added[ tmp_string ] )
-	if(err = catch( enable_module( tmp_string )))
+	if(err = catch( enable_module( tmp_string, UNDEFINED, UNDEFINED,
+				       UNDEFINED, 1 )))
 	{
 	  report_error(LOC_M(45, "Failed to enable the module %s. Skipping.")
 		       +"\n%s\n", tmp_string, describe_backtrace(err));
