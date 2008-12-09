@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.569 2008/11/05 20:28:57 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.570 2008/12/09 11:41:23 stewa Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1834,7 +1834,9 @@ void handle_byte_ranges(mapping(string:mixed) file,
 	      res[j++] = "\r\n--" BOUND "\r\n";
 	      part_heads["Content-Range"] =
 		sprintf("bytes %d-%d/%d", @range, file->len);
-	      res[j++] = Roxen.make_http_headers(part_heads);
+	      //res[j++] = Roxen.make_http_headers(part_heads);
+	      // It seems like Acrobat/IE kan freeze if the content-range header precedes the content-type header
+              res[j++] = "Content-Type: "+part_heads["Content-Type"] + "\r\n" + "Content-Range: "+part_heads["Content-Range"] + "\r\n\r\n";
 	      res[j++] = file->data[range[0]..range[1]];
 	    }
 	    res[j++] = "\r\n--" BOUND "--\r\n";
