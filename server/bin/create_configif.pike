@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.41 2005/02/25 15:24:57 grubba Exp $
+ * $Id: create_configif.pike,v 1.42 2008/12/09 15:09:35 jonasw Exp $
  *
  * Create an initial administration interface server.
  */
@@ -280,6 +280,7 @@ Example of a batch installation:
 #"
 <!-- -*- html -*- -->
 <?XML version=\"1.0\"?>
+<roxen-config>
 
 <region name='EnabledModules'>
   <var name='config_filesystem#0'> <int>1</int>  </var> <!-- Configration Filesystem -->
@@ -317,11 +318,16 @@ ent text/html
   <var name='comment'>
     <str>Automatically created by create_configuration</str>
   </var>
+  <var name='compat_level'>
+    <str>5.0</str>
+  </var>
 
   <var name='name'>
     <str>$NAME$</str>
   </var>
-</region>",
+</region>
+
+</roxen-config>",
  ({ "$NAME$", "$URL$" }),
  ({ name, port }) ));
     write("\n   Administration interface created.\n");
