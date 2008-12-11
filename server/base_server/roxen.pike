@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1001 2008/12/11 15:32:28 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1002 2008/12/11 15:58:42 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -2027,6 +2027,7 @@ class Protocol
     if (has_value(i, ":")) {
       // IPv6
       if (i == "::") return "::";	// IPv6 ANY.
+      if (i == "::1") return "::1";	// IPv6 localhost
       array(string) partitions = i/"::";
       array(int) sections = get_ipv6_sequence(partitions[0]);
       if (sizeof(partitions) > 1) {
@@ -2040,6 +2041,7 @@ class Protocol
 		  @sections);
       // Common case.
       if (i == "0000:0000:0000:0000:0000:0000:0000:0000") return "::";	// ANY
+      if (i == "0000:0000:0000:0000:0000:0000:0000:0001") return "::1";	// localhost
 
       // Compress the longest sequence of zeros.
       partitions = i/":";
@@ -2550,7 +2552,7 @@ string normalize_url(string url)
   url = lower_case( url );
   Standards.URI ui = Standards.URI(url);
   ui->fragment = 0;
-  if (ui->host == "any")
+  if (ui->host == "any" || ui->host == "::")
     ui->host = "*";
   
   string host = ui->host;
@@ -2624,7 +2626,7 @@ int register_url( string url, Configuration conf )
       (string) ui );
     return 0;
   }
-  if (ui->host == "any")
+  if (ui->host == "any" || ui->host == "::")
     ui->host = "*";
   
   protocol = ui->scheme;
