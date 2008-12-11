@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.261 2008/12/11 15:32:28 jonasw Exp $
+// $Id: Roxen.pmod,v 1.262 2008/12/11 17:18:30 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4512,6 +4512,8 @@ string get_world(array(string) urls) {
 
   Standards.URI uri = uris[url];
   string server = uri->host;
+  if (server == "::")
+    server = "*";
   foreach(hosts, string host)
     if (glob(server, host))
       uri->host = host;
