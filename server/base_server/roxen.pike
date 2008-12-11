@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1003 2008/12/11 17:14:02 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1004 2008/12/11 17:17:58 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -2027,7 +2027,7 @@ class Protocol
     if (has_value(i, ":")) {
       // IPv6
       if (i == "::") return "::";	// IPv6 ANY.
-      if (i == "::1") return "::1";	// IPv6 localhost
+      if (i == "::1") return "::1";	// IPv6 loopback
       array(string) partitions = i/"::";
       array(int) sections = get_ipv6_sequence(partitions[0]);
       if (sizeof(partitions) > 1) {
@@ -2041,7 +2041,7 @@ class Protocol
 		  @sections);
       // Common case.
       if (i == "0000:0000:0000:0000:0000:0000:0000:0000") return "::";	// ANY
-      if (i == "0000:0000:0000:0000:0000:0000:0000:0001") return "::1";	// localhost
+      if (i == "0000:0000:0000:0000:0000:0000:0000:0001") return "::1";	// loopback
 
       // Compress the longest sequence of zeros.
       partitions = i/":";
