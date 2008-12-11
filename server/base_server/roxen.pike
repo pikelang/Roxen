@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1002 2008/12/11 15:58:42 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1003 2008/12/11 17:14:02 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2505,7 +2505,7 @@ mapping(string:program/*(Protocol)*/) protocols;
 mapping(string:mapping(string:mapping(int:Protocol))) open_ports = ([ ]);
 
 // url:"port" ==> Protocol.
-mapping(string:mapping(string:mixed)) urls = ([]);
+mapping(string:mapping(string:Configuration|Protocol|string)) urls = ([]);
 array sorted_urls = ({});
 
 array(string) find_ips_for( string what )
@@ -2552,7 +2552,7 @@ string normalize_url(string url)
   url = lower_case( url );
   Standards.URI ui = Standards.URI(url);
   ui->fragment = 0;
-  if (ui->host == "any" || ui->host == "::")
+  if (lower_case(ui->host) == "any" || ui->host == "::")
     ui->host = "*";
   
   string host = ui->host;
@@ -2626,7 +2626,7 @@ int register_url( string url, Configuration conf )
       (string) ui );
     return 0;
   }
-  if (ui->host == "any" || ui->host == "::")
+  if (lower_case(ui->host) == "any" || ui->host == "::")
     ui->host = "*";
   
   protocol = ui->scheme;
@@ -4651,6 +4651,16 @@ int set_u_and_gid (void|int from_handler_thread)
 
   u=query("User");
   sscanf(u, "%s:%s", u, g);
+#if 0
+  // FIXME: Support caching the uid/gid in the setting
+  //        in case of lookup failure further below.
+  sscanf(u, "%d", uid);
+  sscanf(u, "%s(%d)", u, uid);
+  if (g) {
+    sscanf(g, "%d", gid);
+    sscanf(g, "%s(%d)", g, gid);
+  }
+#endif /* 0 */
   if(strlen(u))
   {
     if(getuid())
