@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.110 2008/09/25 22:51:37 mast Exp $
+// $Id: module.pmod,v 1.111 2008/12/11 11:00:06 jonasw Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1882,8 +1882,13 @@ class PortList
     v = v[strlen(path())..];
     if( strlen( va[v+"path"] ) && va[v+"path"][-1] != '/' )
       va[v+"path"]+="/";
+
+    //  Handle IPv6 addresses
+    string host = va[v + "host"];
+    if (has_value(host, ":") && !has_prefix(host, "["))
+      host = "[" + host + "]";
     
-    return (string)Standards.URI(va[v+"prot"]+"://"+va[v+"host"]+
+    return (string)Standards.URI(va[v+"prot"]+"://"+ host +
 				 (va[v+"port"] && sizeof (va[v+"port"]) ?
 				  ":"+ va[v+"port"] : "") +"/"+va[v+"path"]+"#"
 		 // all options below this point
@@ -2007,17 +2012,23 @@ protected array(string) verify_port( string port )
 	      protocol[..strlen(protocol)-2])+"\n";
 #endif
   int pno;
-  if( sscanf( host, "%s:%d", host, pno ) == 2)
-    if( roxenp()->protocols[ lower_case( protocol ) ] 
-        && (pno == roxenp()->protocols[ lower_case( protocol ) ]->default_port ))
-        warning += sprintf(LOCALE(341,"Removed the default port number "
-				  "(%d) from %s"),pno,port)+"\n";
-    else
-      host = host+":"+pno;
-
-
-  port = protocol+"://"+host+path;
-
+  int default_pno =
+    (roxenp()->protocols[lower_case(protocol)] || ([ ]) )->default_port;
+  if (has_value(host, "[")) {
+    //  IPv6 address
+    Standards.URI uri = Standards.URI(port);
+    pno = uri->port;
+    port = (string) uri;
+  } else {
+    if (sscanf(host, "%s:%d", host, pno) == 2)
+      if (pno != default_pno)
+	host = host + ":" + pno;
+    port = protocol+"://"+host+path;
+  }
+  if (default_pno && (pno == default_pno))
+    warning += sprintf(LOCALE(341, "Removed the default port number "
+				   "(%d) from %s"), pno, port) + "\n";
+  
   if( !roxenp()->protocols[ protocol ] )
     warning += sprintf(LOCALE(342,"Warning: The protocol %s is not known "
 			      "by roxen"),protocol)+"\n";
