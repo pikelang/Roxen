@@ -4,7 +4,7 @@
 // seem that I have forgotten who wrote it.
 
 
-string cvs_version = "$Id: wais.pike,v 1.28 2008/08/15 12:33:55 mast Exp $";
+string cvs_version = "$Id: wais.pike,v 1.29 2008/12/11 15:32:28 jonasw Exp $";
 
 #include <config.h>
 #include <module.h>
@@ -2122,7 +2122,13 @@ mapping find_file(string fi, object id)
   if(!f)
     f="";
 
-  sscanf(h, "%s:%d", h, p);
+  if (has_prefix(h, "[")) {
+    //  IPv6
+    if (sscanf(h, "[%s]:%d", h, p))
+      h = "[" + h + "]";
+  } else {
+    sscanf(h, "%s:%d", h, p);
+  }
   if(!p)
     p=210;
 

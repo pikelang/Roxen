@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.260 2008/11/26 01:52:04 mast Exp $
+// $Id: Roxen.pmod,v 1.261 2008/12/11 15:32:28 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3925,9 +3925,14 @@ class ScopeRoxen {
        return ENCODE_RXML_INT(time(),  type);
      case "server":
        return ENCODE_RXML_TEXT (c->id->url_base(), type);
-     case "domain":
-       sscanf(c->id->url_base(), "%*s://%[^:/]", string tmp);
-       return ENCODE_RXML_TEXT(tmp, type);
+      case "domain": {
+	//  Handle hosts and adresses including IPv6 format
+	Standards.URI u = Standards.URI(c->id->url_base());
+	string tmp = u && u->host;
+	if (tmp && has_value(tmp, ":"))
+	  tmp = "[" + tmp + "]";
+	return ENCODE_RXML_TEXT(tmp || "", type);
+      }
      case "locale":
        NOCACHE(c->id);
        return ENCODE_RXML_TEXT(roxenp()->locale->get(), type);
@@ -4484,24 +4489,20 @@ string get_server_url(Configuration c)
 string get_world(array(string) urls) {
   if(!sizeof(urls)) return 0;
 
-  string url=urls[0];
+  string url = urls[0];
+  mapping(string:Standards.URI) uris = ([ ]);
+  foreach (urls, string u)
+    uris[u] = Standards.URI(u);
+  
   foreach( ({"http:","https:","ftp:"}), string p)
     foreach(urls, string u)
-      if(u[0..sizeof(p)-1]==p) {
-	Standards.URI ui = Standards.URI(u);
-	ui->fragment=0;
-	url=(string)ui;
+      if (has_prefix(u, p)) {
+	uris[u]->fragment = 0;
+	url = (string) uris[u];
+	uris[url] = uris[u];
 	break;
       }
-
-  string protocol, server, path="";
-  int port;
-  if(sscanf(url, "%s://%s:%d/%s", protocol, server, port, path)!=4 &&
-     sscanf(url, "%s://%s:%d", protocol, server, port)!=3 &&
-     sscanf(url, "%s://%s/%s", protocol, server, path)!=3 &&
-     sscanf(url, "%s://%s", protocol, server)!=2 )
-    return 0;
-
+  
   array hosts=({ gethostname() }), dns;
 #ifndef NO_DNS
   catch(dns=Protocols.DNS.client()->gethostbyname(hosts[0]));
@@ -4509,14 +4510,12 @@ string get_world(array(string) urls) {
     hosts+=dns[2]+dns[1];
 #endif /* !NO_DNS */
 
+  Standards.URI uri = uris[url];
+  string server = uri->host;
   foreach(hosts, string host)
-    if(glob(server, host)) {
-      server=host;
-      break;
-    }
-
-  if(port) return sprintf("%s://%s:%d/%s", protocol, server, port, path);
-  return sprintf("%s://%s/%s", protocol, server, path);
+    if (glob(server, host))
+      uri->host = host;
+  return (string) uri;
 }
 
 RoxenModule get_owning_module (object|function thing)

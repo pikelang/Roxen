@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.33 2007/10/01 15:30:09 wellhard Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.34 2008/12/11 15:32:54 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";
@@ -123,11 +123,14 @@ class TagWashHtml
   {
     string fix_link(string l)
     {
-      if(l[0..6] == "http://" || l[0..7] == "https://" || l[0..5] == "ftp://")
+      if (has_prefix(l, "http://") ||
+	  has_prefix(l, "https://") ||
+	  has_prefix(l, "ftp://") ||
+	  has_prefix(l, "mailto:"))
 	return l;
       
-      if(l[0..3] == "ftp.")
-	return "ftp://"+l;
+      if (has_prefix(l, "ftp."))
+	return "ftp://" + l;
 
       return "http://"+l;
     };
@@ -226,7 +229,7 @@ class TagWashHtml
                        "unlinkify":RXML.t_text(RXML.PXml),
 		       "close-tags":RXML.t_text(RXML.PXml) ]);
 
-#define VALID_CHARS "[^][ \t\n\r<>\"'`(){}|\1\2]"
+#define VALID_CHARS "[^ \t\n\r<>\"'`(){}|\1\2]"
     link_regexp =
       Regexp("(((http)|(https)|(ftp))://(" VALID_CHARS "+)(\\." VALID_CHARS "+)+)|"
 	     "(((www)|(ftp))(\\." VALID_CHARS "+)+)");

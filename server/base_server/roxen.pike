@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1000 2008/12/03 14:44:44 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1001 2008/12/11 15:32:28 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -1478,10 +1478,12 @@ array(Protocol|mapping(string:mixed)) find_port_for_url (
 // only_this_conf is given then only ports for that configuration are
 // searched.
 {
-  string url_with_port = sprintf("%s://%s:%d%s", url->scheme, url->host,
-				 url->port,
-				 (sizeof(url->path)?url->path:"/"));
-
+  //  Force string coersion to incorporate any separate base URI
+  Standards.URI url2 = Standards.URI((string) url);
+  url2->fragment = 0;
+  url2->query = 0;
+  string url_with_port = (string) url2;
+  
   URL2CONF_MSG("URL with port: %s\n", url_with_port);
 
   foreach (urls; string u; mapping(string:mixed) q)
@@ -1498,7 +1500,7 @@ array(Protocol|mapping(string:mixed)) find_port_for_url (
 	  URL2CONF_MSG("Found config: %O\n", url_data->conf);
 
 	  if ((only_this_conf && (c != only_this_conf)) ||
-	      (sscanf (u, "%*[^*?]%*c") == 2 && // u contains * or ?.
+	      (sscanf (u, "%*s://%*[^*?]%*c") == 3 && // u contains * or ?.
 	       // u is something like "http://*:80/"
 	       (!host_is_local(url->host)))) {
 	    // Bad match.
@@ -2548,26 +2550,16 @@ string normalize_url(string url)
   url = lower_case( url );
   Standards.URI ui = Standards.URI(url);
   ui->fragment = 0;
-  url = (string)ui;
-  url = replace( url, "/ANY", "/*" );
-  url = replace( url, "/any", "/*" );
+  if (ui->host == "any")
+    ui->host = "*";
   
-  string host, path, protocol;
-
-  sscanf( url, "%[^:]://%[^/]%s", protocol, host, path );
-
-  if (!host || !stringp(host)) return "";
-  if (!protocols[ protocol ]) return "";
-
-  int port;
-  sscanf(host, "%[^:]:%d", host, port);
-
-  if( !port )
-  {
-    port = protocols[ protocol ]->default_port;
-    url = protocol+"://"+host+":"+port+path;
-  }
-  return url;
+  string host = ui->host;
+  string protocol = ui->scheme;
+  if (!host || !sizeof(host) || !protocols[protocol])
+    return "";
+  if (!ui->port)
+    ui->port = protocols[protocol]->default_port;
+  return (string) ui;
 }
 
 void unregister_url(string url, Configuration conf)
@@ -2624,44 +2616,36 @@ int register_url( string url, Configuration conf )
     opts[a]=b;
   }
   ui->fragment = 0;
-  url = (string)ui;
-
+  
   if( (int)opts->nobind )
   {
     report_warning(
       LOC_M(61,"Not binding the port %O, disabled in configuration")+"\n",
-      url );
+      (string) ui );
     return 0;
   }
-  url = replace( url, "/ANY", "/*" );
-  url = replace( url, "/any", "/*" );
-
-  sscanf( url, "%[^:]://%[^/]%s", protocol, host, path );
-  if (!host || !stringp(host))
-  {
+  if (ui->host == "any")
+    ui->host = "*";
+  
+  protocol = ui->scheme;
+  host = ui->host;
+  if (!sizeof(host || "") || !protocols[protocol]) {
     report_error(LOC_M(19,"Bad URL '%s' for server `%s'")+"\n",
-		 url, conf->query_name());
-    return 0;
+		 (string) ui, conf->query_name());
   }
+  if (!ui->port)
+    ui->port = protocols[protocol]->default_port;
+  port = ui->port;
 
-  if( !protocols[ protocol ] )
-  {
-    report_error(LOC_M(7,"The protocol '%s' is not available")+"\n", protocol);
-    return 0;
-  }
-
-  sscanf(host, "%[^:]:%d", host, port);
-
-  if( !port )
-  {
-    port = protocols[ protocol ]->default_port;
-    url = protocol+"://"+host+":"+port+path;
-  }
-
-  if( strlen( path ) && ( path[-1] == '/' ) )
-    path = path[..strlen(path)-2];
-  if( !strlen( path ) )
-    path = 0;
+  url = (string) ui;
+  
+  if (path = ui->path)
+    if (sizeof(path)) {
+      if (has_suffix(path, "/"))
+	path = path[..sizeof(path) - 2];
+    } else {
+      path = 0;
+    }
 
   if( urls[ url ]  )
   {
@@ -2693,9 +2677,6 @@ int register_url( string url, Configuration conf )
 		 url, protocol);
     return 0;
   }
-
-  if( !port )
-    port = prot->default_port;
 
   urls[ url ] = ([ "conf":conf, "path":path, "hostname": host ]);
   urls[ ourl ] = urls[url] + ([]);
@@ -4991,8 +4972,6 @@ mapping low_load_image(string f, RequestID id, void|mapping err)
 #ifdef THREADS
       if (sscanf( f, "http://%[^/]", string host ) ||
 	  sscanf (f, "https://%[^/]", host)) {
-	if( sscanf( host, "%*s:%*d" ) != 2)
-	  host += ":80";
 	mapping hd = ([
 	  "User-Agent":version(),
 	  "Host":host,
@@ -5025,8 +5004,6 @@ array(Image.Layer)|mapping load_layers(string f, RequestID id, mapping|void opt)
 #ifdef THREADS
       if (sscanf( f, "http://%[^/]", string host ) ||
 	  sscanf (f, "https://%[^/]", host)) {
-	if( sscanf( host, "%*s:%*d" ) != 2)
-	  host += ":80";
 	mapping hd = ([
 	  "User-Agent":version(),
 	  "Host":host,

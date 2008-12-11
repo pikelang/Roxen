@@ -2,7 +2,7 @@
 
 // Gopher proxy module.
 
-constant cvs_version = "$Id: gopher.pike,v 1.27 2004/06/30 16:59:18 mast Exp $";
+constant cvs_version = "$Id: gopher.pike,v 1.28 2008/12/11 15:32:28 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <config.h>
@@ -301,7 +301,13 @@ mapping find_file(string fi, object id)
 
   sscanf(fi, "%[^/]/%s", h, f);
   if(!f)  f="";
-  sscanf(h, "%s:%d", h, p);
+  if (has_prefix(h, "[")) {
+    //  IPv6
+    if (sscanf(h, "[%s]:%d", h, p))
+      h = "[" + h + "]";
+  } else {
+    sscanf(h, "%s:%d", h, p);
+  }
   if(!p)  p=70;
   GOPHER_WERR("host = "+h+"\nfile = "+f+"\nport = "+p);
   sscanf(id->raw_url, "%*s?%s", q);

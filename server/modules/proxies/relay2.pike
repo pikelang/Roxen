@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.38 2008/05/30 08:58:18 mathias Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.39 2008/12/11 15:32:28 jonasw Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -289,12 +289,14 @@ class Relay
     url = _url;
     options = _options;
 
-    if( sscanf(url,"%*[^:/]://%[^:/]:%d/%s",host,port,file) != 4 )
-    {
-      port=80;
-      sscanf(url,"%*[^:/]://%[^:/]/%s",host,file);
-    }
-
+    //  Support IPv6 addresses
+    Standards.URI uri = Standards.URI(url);
+    host = uri->host;
+    port = uri->port || 80;
+    file = uri->get_path_query();
+    if (has_prefix(file, "/"))
+      file = file[1..];
+    
     if( options->raw )
       request_data = _id->raw;
     else

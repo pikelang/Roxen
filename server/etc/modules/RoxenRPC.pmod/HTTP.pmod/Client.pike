@@ -1,5 +1,5 @@
 //
-// $Id: Client.pike,v 1.10 2008/08/15 12:33:54 mast Exp $
+// $Id: Client.pike,v 1.11 2008/12/11 15:32:28 jonasw Exp $
 //
 // Roxen HTTP RPC
 //
@@ -48,9 +48,8 @@ void create(string url)
   if(url[-1] == '/')
     url = url[0..(sizeof(url)-2)];
   
-  sscanf(url-"http://", "%s:%d/%s", host, port, path);
-  if(!port)
-    port = 80;
-  if(!path)
-    path = "";
+  Standards.URI uri = Standards.URI(url);
+  host = uri->host;
+  port = uri->port || 80;
+  path = uri->path || "";
 }
