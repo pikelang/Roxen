@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module.pike,v 1.233 2008/12/11 15:32:28 jonasw Exp $
+// $Id: module.pike,v 1.234 2008/12/11 17:17:43 jonasw Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -276,10 +276,11 @@ array(string) location_urls()
     error("Please do not call this function from create()!\n");
   array(string) urls = copy_value(_my_configuration->query("URLs"));
   string hostname;
-  if (string world_url = _my_configuration->query ("MyWorldLocation")) {
-    Standards.URI uri = Standards.URI(world_url);
-    hostname = uri->host;
-  }
+  if (string world_url = _my_configuration->query ("MyWorldLocation"))
+    if (sizeof(world_url)) {
+      Standards.URI uri = Standards.URI(world_url);
+      hostname = uri->host;
+    }
   if (!hostname) hostname = gethostname();
   for (int i = 0; i < sizeof (urls); i++)
   {
@@ -307,7 +308,7 @@ string location_url()
     error("Please do not call this function from create()!\n");
   string hostname;
   string world_url = _my_configuration->query("MyWorldLocation");
-  if (world_url) {
+  if (world_url && sizeof(world_url)) {
     Standards.URI uri = Standards.URI(world_url);
     hostname = uri->host;
   }
