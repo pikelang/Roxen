@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.77 2008/10/29 10:58:01 erikd Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.78 2008/12/17 07:11:13 tomas Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -393,7 +393,7 @@ class TagCimgplugin
       if(args->filename && sizeof(args->filename))
 	res->src += "/" + Roxen.http_encode_url(args->filename);
       if(do_ext)
-	res->src += "." + (a->format || "gif");
+	res->src += "." + a->format;
       data = the_cache->data( a, id , 0 );
       res["file-size"] = strlen(data);
       res["file-size-kb"] = strlen(data)/1024;
@@ -435,7 +435,7 @@ class TagCImg
       if(args->filename && sizeof(args->filename))
 	filename += "/" + Roxen.http_encode_url(m_delete(args, "filename"));
       if(do_ext)
-	ext = "." + (a->format || "gif");
+	ext = "." + a->format;
       args->src = query_absolute_internal_location( id )
 		+ the_cache->store( a, id ) + filename + ext;
       int no_draw = !id->misc->generate_images;
@@ -465,12 +465,14 @@ class TagCImgURL {
     array do_return(RequestID id)
     {
       string filename = "";
-      if(args->filename && sizeof(args->filename))
-	filename = "/" + Roxen.http_encode_url(m_delete(args, "filename"));
+      mapping a = get_my_args (check_args (args), id);
+      
+      if(a->filename && sizeof(a->filename))
+	filename = "/" + Roxen.http_encode_url(m_delete(a, "filename"));
       result = query_absolute_internal_location(id)
-	     + the_cache->store(get_my_args(check_args( args ), id ), id)
+	     + the_cache->store(a, id)
 	     + filename
-	     + (do_ext ? "." + (args->format || "gif") : "");
+	     + (do_ext ? "." + a->format : "");
       return 0;
     }
   }

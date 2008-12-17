@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.38 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.39 2008/12/17 07:11:14 tomas Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -16,9 +16,23 @@ LocaleString module_doc  = _(2,"Provides the tag <tt>&lt;gxml&gt;</tt>.");
 
 roxen.ImageCache the_cache;
 
+int do_ext;
+
+void create()
+{
+  defvar("ext", Variable.Flag(0, VAR_MORE,
+			      "Append format to generated images",
+			      "Append the image format (.gif, .png, "
+			      ".jpg, etc) to the generated images. "
+			      "This is not necessary, but might seem "
+			      "nicer, especially to people who try "
+			      "to mirror your site."));
+}
+
 void start()
 {
   the_cache = roxen.ImageCache( "gxml", generate_image );
+  do_ext = query("ext");  
 }
 
 void flush_cache() {
@@ -72,6 +86,8 @@ Image.Layer generate_image( mapping a, mapping node_tree, RequestID id )
 
 mapping find_internal( string f, RequestID id )
 {
+  // Remove file exensions
+  sscanf (f, "%[^./]", f);
   return the_cache->http_file_answer( f, id );
 }
 
@@ -528,7 +544,12 @@ class TagGXML
       mapping node_tree = i->encode();
       // werror("Node tree: %O\n", node_tree);
       string key = the_cache->store( ({ my_args, node_tree }), id);
-      res_args->src = query_internal_location() + key;
+
+      string ext = "";
+      if(do_ext)
+	ext = "." + (my_args->format || "png");
+      
+      res_args->src = query_internal_location() + key + ext;
       int no_draw = !id->misc->generate_images;
       if( mapping size = the_cache->metadata( key, id, no_draw ) )
       {
