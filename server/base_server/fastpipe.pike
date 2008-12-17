@@ -4,7 +4,7 @@
 // Pipe using sendfile, if possible.
 // by Francesco Chemolli, based upon work by Per Hedbor and others.
 
-constant cvs_version="$Id: fastpipe.pike,v 1.9 2004/06/30 16:58:37 mast Exp $";
+constant cvs_version="$Id: fastpipe.pike,v 1.10 2008/12/17 15:23:05 jonasw Exp $";
 
 private array(string) headers=({});
 private Stdio.File file;
@@ -19,7 +19,7 @@ int bytes_sent()
   return sent;
 }
 
-private void sendfile_done(int written, function callback, array(mixed) args) 
+private void sendfile_done(int written, array(mixed) args) 
 {
   sent=written;
   headers=({});
