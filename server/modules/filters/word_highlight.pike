@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: word_highlight.pike,v 1.4 2004/06/30 16:59:02 mast Exp $";
+constant cvs_version = "$Id: word_highlight.pike,v 1.5 2008/12/17 10:01:49 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Word highlighter";
@@ -38,11 +38,14 @@ string do_highlighting(string txt, RequestID id) {
 }
 
 mapping filter(mapping result, RequestID id) {
+  string|array(string) type = result->type;
+  if (arrayp(type))
+    type = type[0];
   if(!result                   // If nobody had anything to say, neither do we.
      || !id->variables->highlight // No highlight?
      || id->variables->highlight==""
      || !stringp(result->data)    // Got a file object. Hardly ever happens anyway.
-     || !glob("text/*", result->type) )
+     || !glob("text/*", type) )
     return 0; // Signal that we didn't rewrite the result for good measure.
 
   result->data = do_highlighting(result->data, id);

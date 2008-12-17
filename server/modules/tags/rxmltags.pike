@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.579 2008/11/26 01:46:45 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.580 2008/12/17 10:01:49 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -639,8 +639,13 @@ class TagGuessContentType
 	if (args->filename) {
 	    if(id->misc->sb)
 		result = id->misc->sb->find_content_type_from_filename(args->filename);
-	    else if(my_configuration()->type_from_filename)
-		result = my_configuration()->type_from_filename(args->filename);
+	    else if(my_configuration()->type_from_filename) {
+	      string|array(string) type =
+		my_configuration()->type_from_filename(args->filename);
+	      if (arrayp(type))
+		type = type[0];
+	      result = type;
+	    }
 	    else
 		RXML.parse_error("No Content type module loaded\n");
 	    return 0;
@@ -6900,8 +6905,13 @@ class TagIfTypeFromFilename {
 	if(RXML.user_get_var(s)) {
 	    if (id->misc->sb)
 		return id->misc->sb->find_content_type_from_filename(RXML.user_get_var(s));
-	    else if(my_configuration()->type_from_filename)
-		return my_configuration()->type_from_filename(RXML.user_get_var(s));
+	    else if(my_configuration()->type_from_filename) {
+	      string|array(string) type =
+		my_configuration()->type_from_filename(RXML.user_get_var(s));
+	      if (arrayp(type))
+		type = type[0];
+	      return type;
+	    }
 	    RXML.parse_error("No Content type module loaded\n");
 	}
 	RXML.run_error("Variable %s do not exists\n",s);

@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.46 2008/09/10 11:53:29 mast Exp $";
+constant cvs_version = "$Id: email.pike,v 1.47 2008/12/17 10:01:49 jonasw Exp $";
 
 constant thread_safe=1;
 
@@ -109,7 +109,7 @@ from the mail's MIME headers will be taken.");
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.46 $"/" ")[1];
+string revision = ("$Revision: 1.47 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -250,7 +250,10 @@ class TagEmail {
 	else
 	{
 	  // We assume container with text (and default type "text/plain")
-	  string guess_mimetype = aname && id->conf->type_from_filename(aname);
+	  string guess_mimetype =
+	    aname && id->conf->type_from_filename(aname);
+	  if (arrayp(guess_mimetype))
+	    guess_mimetype = guess_mimetype[0];
 	  ftype = args->mimetype     || guess_mimetype || "text/plain";
 	  fenc  = args->mimeencoding || "8bit";
 

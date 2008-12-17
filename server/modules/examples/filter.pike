@@ -3,7 +3,7 @@
 inherit "module";
 // All roxen modules must inherit module.pike
 
-constant cvs_version = "$Id: filter.pike,v 1.4 2004/06/30 16:58:58 mast Exp $";
+constant cvs_version = "$Id: filter.pike,v 1.5 2008/12/17 10:01:47 jonasw Exp $";
 constant module_type = MODULE_FILTER;
 constant module_name = "RefDoc for MODULE_FILTER";
 constant module_doc = "This module does nothing, but its inlined "
@@ -35,10 +35,13 @@ mapping|void filter(mapping|void result, RequestID id)
 {
   seen++;
   last_seen = result;
+  string|array(string) type = result->type;
+  if (arrayp(type))
+    type = type[0];
   if(!result                       // If nobody had anything to say, neither do we.
   || !stringp(result->data)        // Got a file descriptor. Hardly ever happens anyway.
   || !id->prestate->filterpass     // No prestate, no action for this module.
-  || !glob("text/*", result->type) // Only touch content types we're interested in.
+  || !glob("text/*", type)         // Only touch content types we're interested in.
     )
     return 0;
 

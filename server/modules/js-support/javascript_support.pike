@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.69 2008/10/01 12:24:30 jonasw Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.70 2008/12/17 10:01:49 jonasw Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -463,7 +463,10 @@ mapping filter(mapping response, RequestID id)
     SIMPLE_TRACE_LEAVE ("Not filtering due to missing response type");
     return 0;
   }
-  if (!glob("text/html*", response->type)) {
+  string|array(string) type = response->type;
+  if (arrayp(type))
+    type = type[0];
+  if (!glob("text/html*", type)) {
     SIMPLE_TRACE_LEAVE ("Not filtering since the type isn't text/html*");
     return 0;
   }

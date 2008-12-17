@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: whitespace_remover.pike,v 1.4 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version = "$Id: whitespace_remover.pike,v 1.5 2008/12/17 10:01:49 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Whitespace Remover";
@@ -54,8 +54,11 @@ array(string) verbatim(Parser.HTML p, mapping(string:string) args, string c) {
 
 mapping filter(mapping result, RequestID id)
 {
+  string|array(string) type = result->type;
+  if (arrayp(type))
+    type = type[0];
   if(!result
-  || !has_prefix(result->type||"", "text/html")
+  || !has_prefix(type||"", "text/html")
   || (id->misc->moreheads && id->misc->moreheads["Content-Type"] &&
       id->misc->moreheads["Content-Type"] != "text/html")
   || !stringp(result->data)

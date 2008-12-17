@@ -6,7 +6,7 @@
  * a "library" program plus a tiny imlpementation module
  */
 
-constant cvs_version="$Id: throttling_bytype.pike,v 1.10 2004/06/30 16:59:32 mast Exp $";
+constant cvs_version="$Id: throttling_bytype.pike,v 1.11 2008/12/17 10:02:18 jonasw Exp $";
 
 #include <module.h>
 inherit "throttlelib";
@@ -49,6 +49,9 @@ constant module_unique = 1;
 array find_rule (mapping res, object id, 
                  array(string) rulenames, mapping rules) {
   if (!res) return 0;
-  return low_find_rule(res->type, rulenames, rules);
+  string|array(string) type = res->type;
+  if (arrayp(type))
+    type = type[0];
+  return low_find_rule(type, rulenames, rules);
 }
 
