@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.221 2008/12/11 15:32:28 jonasw Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.222 2008/12/17 10:05:22 jonasw Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2428,7 +2428,7 @@ class RequestID
       file->error = Protocols.HTTP.HTTP_OK;
 
     if(!file->type) file->type="text/plain";
-    string type = file->type;
+    string type = arrayp(file->type) ? file->type[0] : file->type;
 
     mapping(string:string) heads = ([]);
 

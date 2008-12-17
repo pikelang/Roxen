@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.660 2008/12/08 13:38:09 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.661 2008/12/17 09:59:16 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2366,7 +2366,7 @@ mapping|int(-1..0) low_get_file(RequestID id, int|void no_magic)
     }
     TRACE_ENTER("Content-type mapping module", types_module);
     tmp=type_from_filename(id->not_query, 1, loc);
-    TRACE_LEAVE(tmp?sprintf("Returned type %s %s.", tmp[0], tmp[1]||"")
+    TRACE_LEAVE(tmp?sprintf("Returned type %O %s.", tmp[0], tmp[1]||"")
 		: "Missing type.");
     if(tmp)
     {
