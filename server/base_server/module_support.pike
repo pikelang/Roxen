@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module_support.pike,v 1.135 2008/08/15 12:33:53 mast Exp $
+// $Id: module_support.pike,v 1.136 2008/12/18 09:46:45 mast Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -484,7 +484,7 @@ class ModuleInfo( string sname, string filename )
   }
 
 
-  protected constant nomods = (< "pike-modules", "CVS" >);
+  protected constant nomods = (< "pike-modules", "CVS", ".svn", ".git" >);
 
   protected void rec_find_module_files (string what, string dir,
 					multiset(string) files)
