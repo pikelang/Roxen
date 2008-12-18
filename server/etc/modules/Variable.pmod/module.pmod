@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.111 2008/12/11 11:00:06 jonasw Exp $
+// $Id: module.pmod,v 1.112 2008/12/18 15:04:58 grubba Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -15,7 +15,7 @@ protected int unique_vid;
 protected string unique_prefix = (string) getpid();
 
 // The theory is that most variables (or at least a sizable percentage
-// of all variables) does not have these members. Thus this saves
+// of all variables) do not have these members. Thus this saves
 // quite a respectable amount of memory, the cost is speed. But
 // hopefully not all that great a percentage of speed.
 protected mapping(string:mixed)  changed_values = ([]);
@@ -246,11 +246,19 @@ class Variable
   int get_flags() 
     //! Returns the 'flags' field for this variable.
     //! Flags is a bitwise or of one or more of 
-    //! 
-    //! VAR_EXPERT         Only for experts 
-    //! VAR_MORE           Only visible when more-mode is on (default on)
-    //! VAR_DEVELOPER      Only visible when devel-mode is on (default on)
-    //! VAR_INITIAL        Should be configured initially.
+    //!
+    //! @int
+    //!   @value VAR_EXPERT
+    //!     Only for experts.
+    //!   @value VAR_MORE
+    //!     Only visible when more-mode is on (default on).
+    //!   @value VAR_DEVELOPER
+    //!     Only visible when devel-mode is on (default on).
+    //!   @value VAR_INITIAL
+    //!     Should be configured initially.
+    //!   @value VAR_INVISIBLE
+    //!     The variable is permanently hidden from view.
+    //! @endint
   {
     return all_flags[_id];
   }
@@ -259,10 +267,18 @@ class Variable
     //! Set the flags for this variable.
     //! Flags is a bitwise or of one or more of 
     //!
-    //! VAR_EXPERT         Only for experts 
-    //! VAR_MORE           Only visible when more-mode is on (default on)
-    //! VAR_DEVELOPER      Only visible when devel-mode is on (default on)
-    //! VAR_INITIAL        Should be configured initially.
+    //! @int
+    //!   @value VAR_EXPERT
+    //!     Only for experts.
+    //!   @value VAR_MORE
+    //!     Only visible when more-mode is on (default on).
+    //!   @value VAR_DEVELOPER
+    //!     Only visible when devel-mode is on (default on).
+    //!   @value VAR_INITIAL
+    //!     Should be configured initially.
+    //!   @value VAR_INVISIBLE
+    //!     The variable is permanently hidden from view.
+    //! @endint
   {
     if(!flags )
       m_delete( all_flags, _id );
@@ -276,13 +292,19 @@ class Variable
                         int devel_mode,
                         int initial,
                         int|void variable_in_cfif )
+    //! Check if the variable should be visible to the
+    //! configuration interface user.
+    //!
+    //! @param variable_in_cfif
+    //! If variable_in_cfif is true, the variable is in a module
+    //! that is added to the configuration interface itself.
+    //!
+    //! @returns
     //! Return 1 if this variable should be visible in the
     //! configuration interface. The default implementation check the
     //! 'flags' field, and the invisibility callback, if any. See
     //! get_flags, set_flags and set_invisibibility_check_callback
     //!
-    //! If variable_in_cfif is true, the variable is in a module
-    //! that is added to the configuration interface itself.
   {
     int flags = get_flags();
     function cb;
@@ -1399,36 +1421,35 @@ class UserDBChoice
   }
 }
 
-// FIXME: Consider making a ModuleChoice as well.
-
-//! Select a module that provides the specified interface.
-class ProviderChoice
+//! Select a module in the current configuration.
+class ModuleChoice
 {
   inherit StringChoice;
-  constant type = "ProviderChoice";
+  constant type = "ModuleChoice";
   protected Configuration conf;
-  protected string provides;
+  protected string module_id;
   protected string default_id;
-  protected string local_id = "";
-  protected int isset;
 
   int low_set(RoxenModule to)
   {
     RoxenModule old = changed_values[_id];
-    if (to == old) return 0;
     if (!old) {
-      if (local_id != "") {
-	old = transform_from_form(local_id);
-      }
-      if (!old) {
+      if (module_id) {
+	old = transform_from_form(module_id);
+      } else {
 	old = default_value();
-	if (old) local_id = _name(old);
+	if (old) {
+	  module_id = _name(old);
+	}
       }
-      changed_values[_id] = to;
-      if (to == old) return 0;
+      if (old) {
+	changed_values[_id] = old;
+      }
     }
+    if (to == old) return 0;
     changed_values[_id] = to;
-    local_id = _name(to);
+    if (module_id == _name(to)) return 0;	// Reloaded module or similar.
+    module_id = _name(to);
     if( get_changed_callback() )
       get_changed_callback()( this_object() );
     return 1;
@@ -1438,9 +1459,8 @@ class ProviderChoice
   int set(string|RoxenModule to)
   {
     if (stringp(to)) {
-      local_id = to;
+      module_id = to;
       to = transform_from_form(to);
-      isset = 1;
     }
     return ::set(to);
   }
@@ -1449,16 +1469,14 @@ class ProviderChoice
   {
     RoxenModule res = changed_values[_id];
     if (!res) {
-      if (local_id != "") {
+      if (module_id) {
 	// The module might have been reloaded.
 	// Try locating it again.
-	res = transform_from_form(local_id);
+	res = transform_from_form(module_id);
 	if (res) low_set(res);
-      } else if(!isset) {
+      } else {
 	res = default_value();
-	if(res) {
-	  set(res);
-	}
+	if (res) low_set(res);
       }
     }
     return res;
@@ -1466,7 +1484,8 @@ class ProviderChoice
 
   array get_choice_list()
   {
-    array res = conf->get_providers(provides);
+    array res = indices(conf->otomod);
+    // FIXME: Sort on priority as well?
     sort(map(res, _title), res);
     return res;
   }
@@ -1481,33 +1500,58 @@ class ProviderChoice
     return val?val->module_name:"";
   }
 
-  RoxenModule transform_from_form(string local_id, mapping|void v)
+  RoxenModule transform_from_form(string module_id, mapping|void v)
   {
-    return conf->find_module(local_id);
+    return conf->find_module(module_id);
   }
 
   RoxenModule default_value()
   {
     if (default_id) {
       return transform_from_form(default_id);
-    } else {
-      array(RoxenModule) providers = conf->get_providers(provides);
-      if (sizeof(providers)) {
-	return providers[0];
-      }
-      return UNDEFINED;
     }
+    array(RoxenModule) modules = get_choice_list();
+    if (sizeof(modules)) {
+      return modules[0];
+    }
+    return UNDEFINED;
   }
 
   array(string|mixed) verify_set( mixed new_value )
   {
     if (!new_value) {
-      new_value = query();
-    }
-    if (!new_value) {
       return ({ "Not configured", 0 });
     }
     return ({ 0, new_value });
+  }
+
+  //! @param default_id
+  //!   The @[RoxenModule.module_local_id] of the default value.
+  //! @param conf
+  //!   The current configuration.
+  protected void create(string default_id, int flags,
+			string std_name, string std_doc,
+			Configuration conf)
+  {
+    this_program::default_id = default_id;
+    this_program::conf = conf;
+    ::create(0, ({}), flags, std_name, std_doc);
+  }
+}
+
+//! Select a module that provides the specified interface.
+class ProviderChoice
+{
+  inherit ModuleChoice;
+  constant type = "ProviderChoice";
+  protected string provides;
+
+  array get_choice_list()
+  {
+    array res = conf->get_providers(provides);
+    // FIXME: Sort on priority as well?
+    sort(map(res, _title), res);
+    return res;
   }
 
   //! @param default_id
@@ -1521,9 +1565,7 @@ class ProviderChoice
 			string provides, Configuration conf)
   {
     this_program::provides = provides;
-    this_program::default_id = default_id;
-    this_program::conf = conf;
-    ::create(0, ({}), flags, std_name, std_doc);
+    ::create(default_id, flags, std_name, std_doc, conf);
   }
 }
 
