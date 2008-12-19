@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.112 2008/12/18 15:04:58 grubba Exp $
+// $Id: module.pmod,v 1.113 2008/12/19 12:17:32 grubba Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1482,11 +1482,24 @@ class ModuleChoice
     return res;
   }
 
+  //! Fetch the unsorted list of choices.
+  protected array low_get_choice_list()
+  {
+    return indices(conf->otomod);
+  }
+
   array get_choice_list()
   {
-    array res = indices(conf->otomod);
-    // FIXME: Sort on priority as well?
+    array res = low_get_choice_list();
+    // Sort order:
+    //   priority: descending,
+    //   title: ascending,
+    //   module_id: ascending.
+    sort(res->module_local_id(), res);
     sort(map(res, _title), res);
+    res = reverse(res);
+    sort(res->query("_priority"), res);
+    res = reverse(res);
     return res;
   }
 
@@ -1546,12 +1559,9 @@ class ProviderChoice
   constant type = "ProviderChoice";
   protected string provides;
 
-  array get_choice_list()
+  protected array low_get_choice_list()
   {
-    array res = conf->get_providers(provides);
-    // FIXME: Sort on priority as well?
-    sort(map(res, _title), res);
-    return res;
+    return conf->get_providers(provides);
   }
 
   //! @param default_id
