@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.400 2008/11/26 00:54:53 mast Exp $
+// $Id: roxenloader.pike,v 1.401 2008/12/20 03:17:57 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.400 2008/11/26 00:54:53 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.401 2008/12/20 03:17:57 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1750,7 +1750,7 @@ protected mixed low_connect_to_my_mysql( string|int ro, void|string db )
   if( !db )
     db = "mysql";
   
-  if( mixed err = catch
+  mixed err = catch
   {
     if( intp( ro ) )
       ro = ro?"ro":"rw";
@@ -1776,16 +1776,22 @@ protected mixed low_connect_to_my_mysql( string|int ro, void|string db )
     werror("Connect took %.2fms\n", (gethrtime()-t)/1000.0 );
 #endif
     return res;
-  } )
-    if( db == "mysql" )
-      throw( err );
-#ifdef DB_DEBUG
-    else
-      werror ("Couldn't connect to MySQL as %s: %s", ro, describe_error (err));
-#endif
-  if( db != "mysql" )
-    low_connect_to_my_mysql( 0, "mysql" )
-      ->query( "CREATE DATABASE "+ db );
+  };
+
+  if( db == "mysql" ||
+      // Yep, this is ugly..
+      has_value (describe_error (err), "Access denied"))
+    throw( err );
+
+  if (mixed err_2 = catch {
+      low_connect_to_my_mysql( 0, "mysql" )
+	->query( "CREATE DATABASE "+ db );
+    }) {
+    report_warning ("Attempt to autocreate database %O failed: %s",
+		    db, describe_error (err_2));
+    throw (err);
+  }
+
   return low_connect_to_my_mysql( ro, db );
 }
 
