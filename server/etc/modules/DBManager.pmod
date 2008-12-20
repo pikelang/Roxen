@@ -1,11 +1,14 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.77 2008/11/26 01:51:30 mast Exp $
+// $Id: DBManager.pmod,v 1.78 2008/12/20 03:24:07 mast Exp $
 
 //! Manages database aliases and permissions
 
 #include <roxen.h>
 #include <config.h>
+
+
+// FIXME: There should be mutexes here!
 
 
 #define CN(X) string_to_utf8( X )
@@ -29,6 +32,11 @@ private
     return connect_to_my_mysql( 0, "roxen" )->query( @args );
   }
 
+  Sql.sql_result big_query( mixed ... args )
+  {
+    return connect_to_my_mysql( 0, "roxen" )->big_query( @args );
+  }
+
   string short( string n )
   {
     return lower_case(sprintf("%s%4x", CN(n)[..6],(hash( n )&65535) ));
@@ -50,7 +58,9 @@ private
      * Perform the rotation first, to avoid thread-races.
      */
     sql_url_cache = ([]);
+    user_db_permissions = ([]);
     connection_user_cache = ([]);
+    restricted_user_cache = ([]);
     clear_connect_to_my_mysql_cache();
   }
   
@@ -59,105 +69,264 @@ private
   {
     changed_callbacks-=({0});
     clear_sql_caches();
-    
+
     foreach( changed_callbacks, function cb )
-      catch( cb() );
+      if (mixed err = catch( cb() ))
+	report_error ("Error from dblist changed callback %O: %s",
+		      cb, describe_backtrace (err));
   }
 
-  protected void low_ensure_has_users( Sql.Sql db, Configuration c, string host,
-				       string|void password )
+  int check_db_user (string user, string host)
   {
-    array q = db->query( "SELECT User FROM user WHERE User=%s AND Host=%s",
-			 short(c->name)+"_rw", host );
-    
-    if( sizeof( q ) )
-    {
-      db->query("DELETE FROM user WHERE User=%s AND Host=%s",
-		short(c->name)+"_rw", host );
-      db->query("DELETE FROM user WHERE User=%s AND Host=%s",
-		short(c->name)+"_ro", host );
-    }
-    
+    return connect_to_my_mysql (0, "mysql")->
+      big_query ("SELECT 1 FROM user WHERE Host=%s AND User=%s LIMIT 1",
+		 host, user)->
+      num_rows();
+  }
+
+  protected void low_ensure_has_users( Sql.Sql db, string short_name,
+				       string host, string|void password )
+  {
     if( password )
     {
-      db->query( "INSERT INTO user (Host,User,Password) "
-		 "VALUES (%s, %s, PASSWORD(%s))",
-		 host, short(c->name)+"_rw", password ); 
-      db->query( "INSERT INTO user (Host,User,Password) "
-		 "VALUES (%s, %s, PASSWORD(%s))",
-		 host, short(c->name)+"_ro", password );
+      db->query( "REPLACE INTO user (Host,User,Password) "
+		 "VALUES (%s, %s, PASSWORD(%s)), (%s, %s, PASSWORD(%s))",
+		 host, short_name + "_rw", password,
+		 host, short_name + "_ro", password);
     }
     else
     {
-      db->query( "INSERT INTO user (Host,User,Password) "
-		 "VALUES (%s, %s, '')",
-		 host, short(c->name)+"_rw" ); 
-      db->query( "INSERT INTO user (Host,User,Password) "
-		 "VALUES (%s, %s, '')",
-		 host, short(c->name)+"_ro" );
+      db->query( "REPLACE INTO user (Host,User,Password) "
+		 "VALUES (%s, %s, ''), (%s, %s, '')",
+		 host, short_name + "_rw",
+		 host, short_name + "_ro" );
     }
   }
 
-#if 0
-  // Private and not used anywhere.
-  void ensure_has_users( Sql.Sql db, Configuration c )
+  void set_perms_in_db_table (Sql.Sql db, string host, array(string) dbs,
+			      string user, int level)
   {
-    low_ensure_has_users( db, c, "localhost" );
+    function(string:string) q = db->quote;
+
+    switch (level) {
+      case NONE:
+	db->big_query ("DELETE FROM db WHERE"
+		       " Host='" + q (host) + "'"
+		       " AND Db IN ('" + (map (dbs, q) * "','") + "')"
+		       " AND User='" + q (user) + "'");
+	break;
+
+      case READ:
+	db->big_query ("REPLACE INTO db (Host, Db, User, Select_priv) "
+		       "VALUES " +
+		       map (dbs, lambda (string db_name) {
+				   return "("
+				     "'" + q (host) + "',"
+				     "'" + q (db_name) + "',"
+				     "'" + q (user) + "',"
+				     "'Y')";
+				 }) * ",");
+	break;
+
+      case WRITE:
+	// FIXME: Add more privs when mysql 5.0 upgrade code is in place.
+	db->big_query ("REPLACE INTO db (Host, Db, User,"
+		       " Select_priv, Insert_priv, Update_priv, Delete_priv,"
+		       " Create_priv, Drop_priv, Grant_priv, References_priv,"
+		       " Index_priv, Alter_priv) "
+		       "VALUES " +
+		       map (dbs, lambda (string db_name) {
+				   return "("
+				     "'" + q (host) + "',"
+				     "'" + q (db_name) + "',"
+				     "'" + q (user) + "',"
+				     "'Y','Y','Y','Y',"
+				     "'Y','Y','N','Y',"
+				     "'Y','Y')";
+				 }) * ",");
+	break;
+
+      case -1:
+	// Special case to create a record for a user that got no access.
+	db->big_query ("REPLACE INTO db (Host, Db, User) "
+		       "VALUES " +
+		       map (dbs, lambda (string db_name) {
+				   return "("
+				     "'" + q (host) + "',"
+				     "'" + q (db_name) + "',"
+				     "'" + q (user) + "')";
+				 }) * ",");
+	break;
+
+      default:
+	error ("Invalid level %d.\n", level);
+    }
   }
 
-  void ensure_has_external_users( Sql.Sql db, Configuration c,
-				  string password )
+  void synch_mysql_perms()
   {
-    low_ensure_has_users( db, c, "127.0.0.1", password );
-  }
-#endif
+    Sql.Sql db = connect_to_my_mysql (0, "mysql");
 
-  protected void low_set_user_permissions( Configuration c, string name,
-					   int level, string host,
-					   string|void password )
-  {
-    Sql.Sql db = connect_to_my_mysql( 0, "mysql" );
+    mapping(string:int(1..1)) old_perms = ([]);
 
-    low_ensure_has_users( db, c, host, password );
+    Sql.sql_result sqlres =
+      db->big_query ("SELECT Db, User FROM db WHERE Host='localhost'");
+    while (array(string) ent = sqlres->fetch_row())
+      if (has_suffix (ent[1], "_rw") || has_suffix (ent[1], "_ro"))
+	old_perms[ent[0] + "\0" + ent[1]] = 1;
 
-    db->query("DELETE FROM db "
-	      "  WHERE User LIKE '"+short(c->name)+"%%' "
-	      "    AND Db=%s"
-	      "    AND Host=%s", name, host);
+    mapping(string:int(1..1)) checked_users = ([]);
 
-    if( level > 0 )
-    {
-      db->query("INSERT INTO db (Host,Db,User,Select_priv) "
-                "VALUES (%s, %s, %s, 'Y')",
-                host, name, short(c->name)+"_ro");
-      if( level > 1 ) {
-	// FIXME: Is this correct for Mysql 4.0.18?
-        db->query("INSERT INTO db (Host,Db,User,Select_priv,Insert_priv,"
-		  "Update_priv,Delete_priv,Create_priv,Drop_priv,Grant_priv,"
-		  "References_priv,Index_priv,Alter_priv) VALUES (%s, %s, %s,"
-                  "'Y','Y','Y','Y','Y','Y','N','Y','Y','Y')",
-                  host, name, short(c->name)+"_rw");
-      } else {
-        db->query("INSERT INTO db (Host,Db,User,Select_priv) "
-                  "VALUES (%s, %s, %s, 'Y')",
-                  host, name, short(c->name)+"_rw");
+    sqlres = big_query ("SELECT db, config, permission FROM db_permissions ");
+    while (array(string) ent = sqlres->fetch_row()) {
+      [string db_name, string config, string perm] = ent;
+      string short_name = short (NC (config));
+
+      if (!checked_users[short_name]) {
+	low_ensure_has_users (db, short_name, "localhost");
+	checked_users[short_name] = 1;
+      }
+
+      switch (perm) {
+	case "read":
+	  set_perms_in_db_table (db, "localhost", ({db_name}),
+				 short_name + "_ro", READ);
+	  set_perms_in_db_table (db, "localhost", ({db_name}),
+				 short_name + "_rw", READ);
+	  m_delete (old_perms, db_name + "\0" + short_name + "_ro");
+	  m_delete (old_perms, db_name + "\0" + short_name + "_rw");
+	  break;
+
+	case "write":
+	  set_perms_in_db_table (db, "localhost", ({db_name}),
+				 short_name + "_ro", READ);
+	  set_perms_in_db_table (db, "localhost", ({db_name}),
+				 short_name + "_rw", WRITE);
+	  m_delete (old_perms, db_name + "\0" + short_name + "_ro");
+	  m_delete (old_perms, db_name + "\0" + short_name + "_rw");
+	  break;
       }
     }
+
+    foreach (old_perms; string key;) {
+      sscanf (key, "%s\0%s", string db_name, string user);
+      set_perms_in_db_table (db, "localhost", ({db_name}), user, NONE);
+    }
+
+    db->big_query ("FLUSH PRIVILEGES");
+  }
+
+  string make_autouser_name (int level, multiset(string) want_dbs,
+			     Configuration conf)
+  // Returns the name for a user which wants the given access to the
+  // given databases, subject to the permission settings of the given
+  // configuration (optional). The name begins with "?" if level is
+  // READ or "!" if level is WRITE, then follows a 15 char hash
+  // (without whitespace) based on want_dbs and conf->name. Only the
+  // name is generated; fix_autouser must be called to ensure the user
+  // exists.
+  {
+    if (level < READ) return 0;
+    string s = encode_value_canonic (({want_dbs, conf->name}));
+    s = MIME.encode_base64 (Crypto.SHA1()->update (s)->digest());
+    return (level == READ ? "?" : "!") + s[..14];
+  }
+
+  void fix_autouser (string autouser, multiset(string) write_dbs,
+		     multiset(string) read_dbs, multiset(string) none_dbs)
+  // If the given autouser doesn't exist, it's created with access to
+  // the stated databases. none_dbs is used for databases that the
+  // user wants access to but isn't allowed. It's to make
+  // invalidate_autousers properly detect this user if access is
+  // granted on one of those dbs later.
+  {
+    Sql.Sql db = connect_to_my_mysql (0, "mysql");
+
+    // If the user exists at all we assume it got the right perms.
+    if (check_db_user (autouser, "localhost")) return;
+
+    if (sizeof (write_dbs))
+      set_perms_in_db_table (db, "localhost",
+			     indices (write_dbs), autouser, WRITE);
+    if (sizeof (read_dbs))
+      set_perms_in_db_table (db, "localhost",
+			     indices (read_dbs), autouser, READ);
+    if (sizeof (none_dbs))
+      set_perms_in_db_table (db, "localhost",
+			     indices (none_dbs), autouser, -1);
+
+    db->big_query ("REPLACE INTO user (Host, User, Password) "
+		   "VALUES ('localhost', %s, '')", autouser);
+    db->big_query ("FLUSH PRIVILEGES");
+  }
+
+  void invalidate_autousers (string db_name)
+  // Invalidates the autousers that have any access on the given
+  // database. Invalidates all autousers if db_name is zero.
+  {
+    Sql.Sql db = connect_to_my_mysql (0, "mysql");
+
+    if (db_name) {
+      array(string) users = ({});
+      Sql.sql_result sqlres =
+	db->big_query ("SELECT User FROM db "
+		       "WHERE Host='localhost' AND Db=%s AND "
+		       "(User LIKE '!_______________' OR"
+		       " User LIKE '?_______________')", db_name);
+      while (array(string) ent = sqlres->fetch_row())
+	users += ({ent[0]});
+
+      // We have to delete all affected autousers completely from the
+      // db table to make get_autouser regenerate them.
+      if (sizeof (users)) {
+	string user_list = "('" + map (users, db->quote) * "','" + "')";
+	db->big_query ("DELETE FROM db WHERE User IN " + user_list);
+	db->big_query ("DELETE FROM user WHERE User IN " + user_list);
+      }
+    }
+    else {
+      db->big_query ("DELETE FROM db "
+		     "WHERE Host='localhost' AND "
+		       "(User LIKE '!_______________' OR"
+		       " User LIKE '?_______________')");
+      db->big_query ("DELETE FROM user "
+		     "WHERE Host='localhost' AND "
+		       "(User LIKE '!_______________' OR"
+		       " User LIKE '?_______________')");
+    }
+
+    restricted_user_cache = ([]);
+  }
+
+  void low_set_user_permissions( Sql.Sql db, Configuration c,
+				 string db_name, int level,
+				 string host, string|void password )
+  {
+    string short_name = short (c->name);
+    low_ensure_has_users( db, short_name, host, password );
+    set_perms_in_db_table (db, host, ({db_name}),
+			   short_name + "_ro", min (level, READ));
+    set_perms_in_db_table (db, host, ({db_name}),
+			   short_name + "_rw", level);
+  }
+  
+  void set_user_permissions( Configuration c, string db_name, int level )
+  {
+    Sql.Sql db = connect_to_my_mysql( 0, "mysql" );
+    low_set_user_permissions( db, c, db_name, level, "localhost" );
+    invalidate_autousers (db_name);
     db->query( "FLUSH PRIVILEGES" );
   }
   
-  void set_user_permissions( Configuration c, string name, int level )
-  {
-    low_set_user_permissions( c, name, level, "localhost" );
-  }
-  
-  void set_external_user_permissions( Configuration c, string name, int level,
+  void set_external_user_permissions( Configuration c, string db_name, int level,
 				      string password )
   {
-    low_set_user_permissions( c, name, level, "127.0.0.1", password );
+    Sql.Sql db = connect_to_my_mysql( 0, "mysql" );
+    low_set_user_permissions( db, c, db_name, level, "127.0.0.1", password );
+    db->query( "FLUSH PRIVILEGES" );
   }
 
-  
+
   class ROWrapper( protected Sql.Sql sql )
   {
     protected int pe;
@@ -172,7 +341,7 @@ private
       pe = 1;
       throw( ({ "Permission denied\n", backtrace()}) );
     }
-    protected object big_query( string query, mixed ... args )
+    protected Sql.sql_result big_query( string query, mixed ... args )
     {
       // Get rid of any initial whitespace.
       query = String.trim_all_whites(query);
@@ -217,38 +386,53 @@ private
   }
 
   mapping(string:mapping(string:string)) sql_url_cache = ([]);
-  Sql.Sql low_get( string user, string db, void|int reuse_in_thread,
-		   void|string charset)
-  {
-    if( !user )
-      return 0;
-    mixed res;
-    mapping(string:mixed) d = sql_url_cache[ db ];
-    if( !d )
-    {
-      res = query("SELECT path, local, default_charset "
-		  "  FROM dbs WHERE name=%s", db );
-      if( !sizeof( res ) )
-	return 0;
-      sql_url_cache[db] = d = res[0];
-    }
-
-    if( (int)d->local )
-      return connect_to_my_mysql( user, db, reuse_in_thread,
-				  charset || d->default_charset );
-
-    // Otherwise it's a tad more complex...  
-    if( user[strlen(user)-2..] == "ro" )
-      // The ROWrapper object really has all member functions Sql.Sql
-      // has, but they are hidden behind an overloaded index operator.
-      // Thus, we have to fool the typechecker.
-      return [object(Sql.Sql)](object)
-	ROWrapper( sql_cache_get( d->path, reuse_in_thread,
-				  charset || d->default_charset) );
-    return sql_cache_get( d->path, reuse_in_thread,
-			  charset || d->default_charset);
-  }
 };
+
+Sql.Sql low_get( string user, string db, void|int reuse_in_thread,
+		 void|string charset)
+{
+  if( !user )
+    return 0;
+
+#ifdef MODULE_DEBUG
+  if (!reuse_in_thread)
+    if (mapping(string:TableLockInfo) dbs = table_locks->get())
+      if (TableLockInfo lock_info = dbs[db])
+	werror ("Warning: Another connection was requested to %O "
+		"in a thread that has locked tables %s.\n"
+		"It's likely that this will result in a deadlock - "
+		"consider using the reuse_in_thread flag.\n",
+		db,
+		String.implode_nicely (indices (lock_info->locked_for_read &
+						lock_info->locked_for_write)));
+#endif
+
+  mixed res;
+  mapping(string:mixed) d = sql_url_cache[ db ];
+  if( !d )
+  {
+    res = query("SELECT path, local, default_charset "
+		"  FROM dbs WHERE name=%s", db );
+    if( !sizeof( res ) )
+      return 0;
+    sql_url_cache[db] = d = res[0];
+  }
+
+  if( (int)d->local )
+    return connect_to_my_mysql( user, db, reuse_in_thread,
+				charset || d->default_charset );
+
+  // Otherwise it's a tad more complex...  
+  if( has_suffix (user, "_ro") )
+    // The ROWrapper object really has all member functions Sql.Sql
+    // has, but they are hidden behind an overloaded index operator.
+    // Thus, we have to fool the typechecker.
+    return [object(Sql.Sql)](object)
+      ROWrapper( sql_cache_get( d->path, reuse_in_thread,
+				charset || d->default_charset) );
+  return sql_cache_get( d->path, reuse_in_thread,
+			charset || d->default_charset);
+}
 
 Sql.Sql get_sql_handler(string db_url)
 {
@@ -572,25 +756,128 @@ string db_url( string name,
   return d[0]->path;
 }
 
+protected mapping(string:multiset(string)) user_db_permissions = ([]);
+
+multiset(string) config_db_access (Configuration conf, int read_only)
+//! Returns the set of databases that the given configuration has
+//! access to. If @[read_only] is set then the set includes both read
+//! and write permissions, otherwise only databases with write access
+//! are returned. Don't be destructive on the returned multisets.
+{
+  string key = conf->name + "|" + read_only;
+  if (multiset(string) res = user_db_permissions[key])
+    return res;
+
+  string q;
+  if (read_only)
+    q = "SELECT db FROM db_permissions "
+      "WHERE config=%s AND (permission='read' OR permission='write')";
+  else
+    q = "SELECT db FROM db_permissions "
+      "WHERE config=%s AND permission='write'";
+
+  multiset(string) res = (<>);
+  Sql.sql_result sqlres = big_query (q, CN (conf->name));
+  while (array(string) ent = sqlres->fetch_row())
+    res[ent[0]] = 1;
+
+  return user_db_permissions[key] = res;
+}
+
 protected mapping connection_user_cache  = ([]);
 
-string get_db_user( string name, Configuration c, int ro )
+string get_db_user( string db_name, Configuration conf, int read_only )
+//! Returns the name of a MySQL user which has the requested access.
+//! This user is suitable to pass to @[low_get].
+//!
+//! If @[conf] is zero then a user with global read or read/write
+//! access (according to @[read_only]) is returned.
+//!
+//! Otherwise, if @[db_name] is zero then a user is returned that has
+//! read or read/write access (depending on @[read_only]) to the
+//! databases for @[conf] according to its permission settings.
+//!
+//! Otherwise, a check is done that @[conf] has the requested access
+//! on @[db_name], and if it does then a user is returned that can
+//! access all databases for @[conf] according to its permission
+//! settings.
 {
-  string key = name+"|"+(c&&c->name)+"|"+ro;
+  if (!conf) return read_only ? "ro" : "rw";
+
+  string key = db_name+"|"+(conf&&conf->name)+"|"+read_only;
   if( !zero_type( connection_user_cache[ key ] ) )
     return connection_user_cache[ key ];
 
-  array(mapping(string:mixed)) res;
-  if( c )
+  if (!db_name)
+    return connection_user_cache[key] =
+      short (conf->name) + (read_only ? "_ro" : "_rw");
+
+  array(mapping(string:mixed)) res =
+    query( "SELECT permission FROM db_permissions "
+	   "WHERE db=%s AND config=%s",  db_name, CN(conf->name));
+  if( sizeof( res ) && res[0]->permission != "none" )
+    return connection_user_cache[ key ]=short(conf->name) +
+      ((read_only || res[0]->permission!="write")?"_ro":"_rw");
+
+  return connection_user_cache[ key ] = 0;
+}
+
+protected mapping restricted_user_cache = ([]);
+
+string get_restricted_db_user (multiset(string) dbs, Configuration conf,
+			       int read_only)
+//! Returns the name of a MySQL user which has read or read/write
+//! access (depending on @[read_only]) to the databases listed in
+//! @[dbs]. This user is suitable to pass to @[low_get].
+//!
+//! If @[conf] is given then the access is restricted according to the
+//! permission settings for that configuration. Zero is returned if
+//! @[conf] doesn't have any access on any of the specified databases.
+//!
+//! @note
+//! Returned users can get zapped if db permissions change. Validity
+//! should always be checked with @[is_valid_db_user] before use.
+{
+  multiset(string) conf_ro_dbs = conf && config_db_access (conf, 1);
+  multiset(string) allowed_ro_dbs = conf_ro_dbs ? dbs & conf_ro_dbs : dbs;
+  if (!sizeof (allowed_ro_dbs)) return 0;
+
+  string key = make_autouser_name (read_only ? READ : WRITE, dbs, conf);
   {
-    res = query( "SELECT permission FROM db_permissions "
-                 "WHERE db=%s AND config=%s",  name, CN(c->name));
-    if( sizeof( res ) && res[0]->permission != "none" )
-      return connection_user_cache[ key ]=short(c->name) +
-	((ro || res[0]->permission!="write")?"_ro":"_rw");
-    return connection_user_cache[ key ] = 0;
+    string val = restricted_user_cache[key];
+    if (!zero_type (val)) return val;
   }
-  return connection_user_cache[ key ] = ro?"ro":"rw";
+
+  if (equal (dbs, conf_ro_dbs)) {
+    string nonautouser = short (conf->name) + (read_only ? "_ro" : "_rw");
+    return restricted_user_cache[key] =
+      restricted_user_cache[nonautouser] = nonautouser;
+  }
+
+  multiset(string) denied_dbs = dbs - allowed_ro_dbs;
+  multiset(string) allowed_rw_dbs;
+  if (read_only)
+    allowed_rw_dbs = (<>);
+  else {
+    if (conf) {
+      allowed_rw_dbs = dbs & config_db_access (conf, 0);
+      allowed_ro_dbs -= allowed_rw_dbs;
+    }
+    else {
+      allowed_rw_dbs = dbs;
+      allowed_ro_dbs = (<>);
+    }
+  }
+
+  fix_autouser (key, allowed_rw_dbs, allowed_ro_dbs, denied_dbs);
+  return restricted_user_cache[key] = key;
+}
+
+int is_valid_db_user (string user)
+//! Returns true if @[user] is a valid local access MySQL user.
+{
+  if (restricted_user_cache[user]) return 1;
+  return check_db_user (user, "localhost");
 }
 
 Sql.Sql get( string name, void|Configuration conf,
@@ -653,26 +940,14 @@ Sql.Sql get( string name, void|Configuration conf,
 //! for that matter) is changed some other way then it must be
 //! restored before the connection is released.
 {
-#ifdef MODULE_DEBUG
-  if (!reuse_in_thread)
-    if (mapping(string:TableLockInfo) dbs = table_locks->get())
-      if (TableLockInfo lock_info = dbs[name])
-	werror ("Warning: Another connection was requested to %O "
-		"in a thread that has locked tables %s.\n"
-		"It's likely that this will result in a deadlock - "
-		"consider using the reuse_in_thread flag.\n",
-		name,
-		String.implode_nicely (indices (lock_info->locked_for_read &
-						lock_info->locked_for_write)));
-#endif
   return low_get( get_db_user( name, conf, read_only), name, reuse_in_thread,
 		  charset);
 }
 
-Sql.Sql cached_get( string name, void|Configuration c, void|int ro,
+Sql.Sql cached_get( string name, void|Configuration c, void|int read_only,
 		    void|string charset)
 {
-  return get (name, c, ro, 0, charset);
+  return get (name, c, read_only, 0, charset);
 }
 
 protected Thread.Local table_locks = Thread.Local();
@@ -812,13 +1087,18 @@ void drop_db( string name )
 //! tables will be deleted as well.
 {
   if( (< "local", "mysql", "roxen"  >)[ name ] )
-    error( "Cannot drop the 'local' database\n" );
+    error( "Cannot drop the '%s' database\n", name );
 
   array q = query( "SELECT name,local FROM dbs WHERE name=%s", name );
   if(!sizeof( q ) )
     error( "The database "+name+" does not exist\n" );
-  if( sizeof( q ) && (int)q[0]["local"] )
+  if( sizeof( q ) && (int)q[0]["local"] ) {
+    invalidate_autousers (name);
     query( "DROP DATABASE `"+name+"`" );
+    Sql.Sql db = connect_to_my_mysql (0, "mysql");
+    db->big_query ("DELETE FROM db WHERE Db=%s", name);
+    db->big_query ("FLUSH PRIVILEGES");
+  }
   query( "DELETE FROM dbs WHERE name=%s", name );
   query( "DELETE FROM db_groups WHERE db=%s", name );
   query( "DELETE FROM db_permissions WHERE db=%s", name );
@@ -1395,7 +1675,8 @@ CREATE TABLE db_permissions (
       }, 0 );
   }
 
-	
+  synch_mysql_perms();
+
   if( file_stat( "etc/docs.frm" ) )
   {
     if( !sizeof(query( "SELECT tbl FROM db_backups WHERE "
