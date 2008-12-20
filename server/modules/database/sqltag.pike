@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.116 2008/11/26 01:45:54 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.117 2008/12/20 03:30:27 mast Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -293,8 +293,38 @@ string compat_default_host;
 #endif
 string default_db, default_recode_charset, default_conn_charset;
 
-int allow_sql_urls, allow_module_dbs;
-mapping(string:int(1..1)) allowed_dbs = ([]); // 0 if all dbs are allowed.
+protected int allow_sql_urls, allow_module_dbs;
+
+// 0 if all dbs are allowed. Includes default_db if set.
+protected mapping(string:int(1..1)) allowed_dbs = ([]);
+
+private string restricted_rw_user, restricted_ro_user;
+
+protected string get_restricted_rw_user()
+{
+  if (!restricted_rw_user || !DBManager.is_valid_db_user (restricted_rw_user)) {
+    restricted_rw_user =
+      DBManager.get_restricted_db_user (mkmultiset (indices (allowed_dbs)),
+					my_configuration(), 0);
+#if 0
+    werror ("Got restricted_rw_user %O\n", restricted_rw_user);
+#endif
+  }
+  return restricted_rw_user;
+}
+
+protected string get_restricted_ro_user()
+{
+  if (!restricted_ro_user || !DBManager.is_valid_db_user (restricted_ro_user)) {
+    restricted_ro_user =
+      DBManager.get_restricted_db_user (mkmultiset (indices (allowed_dbs)),
+					my_configuration(), 1);
+#if 0
+    werror ("Got restricted_ro_user %O\n", restricted_ro_user);
+#endif
+  }
+  return restricted_ro_user;
+}
 
 
 Sql.Sql get_rxml_sql_con (string db, void|string host, void|RequestID id,
@@ -361,7 +391,7 @@ Sql.Sql get_rxml_sql_con (string db, void|string host, void|RequestID id,
 #endif
   {
     if (!db) db = real_host;
-    if (db && allowed_dbs && !allowed_dbs[db] && db != default_db) {
+    if (db && allowed_dbs && !allowed_dbs[db]) {
       report_warning ("Connection to database %O attempted from %O.\n",
 		      db, id && id->raw_url);
       RXML.parse_error ("Database %O is not in the list "
@@ -378,9 +408,21 @@ Sql.Sql get_rxml_sql_con (string db, void|string host, void|RequestID id,
 			  "configured.\n");
     }
 
+    string db_user = read_only ?
+      (allowed_dbs ? get_restricted_ro_user() :
+       DBManager.get_db_user (db, my_configuration(), 1)) :
+      (allowed_dbs ? get_restricted_rw_user() :
+       DBManager.get_db_user (db, my_configuration(), 0));
+
+    if (!db_user) {
+      report_warning ("Connection to database %O attempted from %O.\n",
+		      db, id && id->raw_url);
+      RXML.parse_error ("Database %O is not accessible "
+			"from this configuration.\n", db);
+    }
+
     error = catch {
-	con = DBManager.get (
-	  db, my_configuration(), read_only, reuse_in_thread, charset);
+	con = DBManager.low_get (db_user, db, reuse_in_thread, charset);
       };
   }
 
@@ -882,7 +924,8 @@ as.</p>
 connects directly to the socket of Roxen's internal MySQL server,
 thereby bypassing the permissions set under the \"DBs\" tab. It is
 therefore strongly recommended to keep this disabled and instead
-configure all database connections through the \"DBs\" tab.</p>"));
+configure all database connections through the \"DBs\" tab and
+the \"Allowed databases\" setting.</p>"));
 
   defvar ("allowed_dbs", "",
 	  LOCALE(0, "Allowed databases"),
@@ -939,6 +982,8 @@ void start()
   allow_sql_urls = query ("allow_sql_urls");
   allow_module_dbs = query ("allow_module_dbs");
 
+  restricted_rw_user = restricted_ro_user = 0;
+
   string dbs = query ("allowed_dbs");
   if (dbs == "*") allowed_dbs = 0;
   else {
@@ -947,6 +992,8 @@ void start()
       db = String.trim_all_whites (db);
       if (db != "") allowed_dbs[db] = 1;
     }
+    if (default_db != " none")
+      allowed_dbs[default_db] = 1;
   }
 }
 
