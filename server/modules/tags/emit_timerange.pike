@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.33 2008/12/22 15:13:20 mast Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.34 2008/12/22 16:39:57 mast Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -509,7 +509,10 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
   }
 }
 
-protected mapping(string:Calendar.YMD) cached_calendars = ([]);
+private mapping(string:Calendar.YMD) cached_calendars = ([]);
+
+private constant uc_cal_lookup =
+  mkmapping (map (calendars, upper_case), calendars);
 
 Calendar.YMD get_calendar(string name)
 {
@@ -517,11 +520,13 @@ Calendar.YMD get_calendar(string name)
     return calendar;
   if (Calendar.YMD cal = cached_calendars[name])
     return cal;
-  string wanted = calendars[search(map(calendars, upper_case),
-				   upper_case(name))];
-  if(wanted == "unknown")
+  string uc_name = upper_case (name);
+  if (Calendar.YMD cal = cached_calendars[uc_name])
+    return cached_calendars[name] = cal;
+  string wanted = uc_cal_lookup[uc_name];
+  if(!wanted || wanted == "unknown")
     RXML.parse_error(sprintf("Unknown calendar %O.\n", name));
-  return cached_calendars[name] =
+  return cached_calendars[wanted] = cached_calendars[uc_name] =
     Calendar[wanted]->set_timezone (query ("timezone"))
 		    ->set_language (query ("language"));
 }
