@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.386 2008/11/26 01:53:29 mast Exp $
+// $Id: module.pmod,v 1.387 2008/12/22 10:35:40 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1241,7 +1241,7 @@ class TagSet
     for (int i = sizeof (imported) - 1; i >= 0; i--)
       imported[i]->low_get_plugins (prefix, res);
     foreach (tags; string name; Tag tag)
-      if (name[..sizeof (prefix) - 1] == prefix)
+      if (has_prefix (name, prefix))
 	if (tag->plugin_name) res[[string] tag->plugin_name] = tag;
     // We don't cache in plugins; do that only at the top level.
   }
@@ -1321,7 +1321,8 @@ protected class CompositeTagSet
 #ifdef RXML_OBJ_DEBUG
     __object_marker->create (this_object());
 #endif
-    imported = tag_sets;
+    // Make sure TagSet::`-> gets called.
+    this->imported = tag_sets;
   }
 
   string _sprintf (void|int flag)
