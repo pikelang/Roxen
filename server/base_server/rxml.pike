@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.329 2004/06/30 16:58:40 mast Exp $
+// $Id: rxml.pike,v 1.330 2008/12/22 10:33:02 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -13,7 +13,7 @@ inherit "rxmlhelp";
 
 // ------------------------- RXML Parser ------------------------------
 
-RXML.TagSet rxml_tag_set = class
+protected class RXMLTagSet
 // This tag set always has the highest priority.
 {
   inherit RXML.TagSet;
@@ -164,8 +164,9 @@ RXML.TagSet rxml_tag_set = class
 
     PROF_LEAVE( "rxml", "overhead" );
   }
-} (this_object());
+}
 
+RXML.TagSet rxml_tag_set = RXMLTagSet (this);
 RXML.Type default_content_type = RXML.t_html (RXML.PXml);
 RXML.Type default_arg_type = RXML.t_text (RXML.PEnt);
 
