@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.28 2008/12/22 13:40:19 mast Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.29 2008/12/22 15:00:03 mast Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -444,6 +444,10 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
 	  this_object(), ctx, var, scope, want_type);
     RequestID id = ctx->id; NOCACHE();
 
+    // If we further down decide on creating a new TimeRangeValue, this will
+    // be its parent_scope name; let's memorize instead of reconstruct it:
+    string child_scope = scope;
+
     // Just as in `[], we might have arrived via some parent. In the specific
     // case that we arrived via `[], and got called with the same parameters as
     // we were there (e g when resolving "&calendar.next.day;"; i e there was
@@ -467,6 +471,10 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
       DEBUG("\b => ([])[0] (what:%O)\n", what);
       return ([])[0];
     }
+
+    if (functionp (result))
+      return TimeRangeValue (result (time), type, child_scope, lang);
+
     return fetch_and_quote_value(result || what, want_type);
   }
 
