@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.31 2008/12/22 13:37:45 mast Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.32 2008/12/22 14:57:59 mast Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -443,8 +443,11 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
   {
     DEBUG("%O->rxml_var_eval(ctx %O, var %O, scope %O, type %O)\b",
 	  this_object(), ctx, var, scope, want_type);
-    string full_scope = scope;
     RequestID id = ctx->id; NOCACHE();
+
+    // If we further down decide on creating a new TimeRangeValue, this will
+    // be its parent_scope name; let's memorize instead of reconstruct it:
+    string child_scope = scope;
 
     // Just as in `[], we might have arrived via some parent. In the specific
     // case that we arrived via `[], and got called with the same parameters as
@@ -470,10 +473,10 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
       return ([])[0];
     }
     if (!result) result = what;
-    if (!stringp (result))
-      RXML.parse_error ("%O has no printable representation. "
-			"You need to subindex it further.\n",
-			full_scope + "." + var);
+
+    if (functionp (result))
+      return TimeRangeValue (result (time), type, child_scope, lang);
+
     return fetch_and_quote_value(result, want_type);
   }
 
