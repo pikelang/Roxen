@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.32 2008/12/22 14:57:59 mast Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.33 2008/12/22 15:13:20 mast Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -222,7 +222,10 @@ void create(Configuration conf)
 	 "This also defines the time zone for the calendar scope. Some "
 	 "examples of valid time zones include \"Europe/Stockholm\", \"UTC\", "
 	 "\"UTC+3\" and \"UTC+10:30\"."))->set_changed_callback(lambda(object t)
-	 { calendar = calendar->set_timezone(t->query()); });
+	 {
+	   calendar = calendar->set_timezone(t->query());
+	   cached_calendars = ([]);
+	 });
 
   array known_languages = filter(indices(Calendar.Language), is_supported);
   known_languages = sort(map(known_languages, wash_language_name));
@@ -233,6 +236,7 @@ void create(Configuration conf)
 	 ->set_changed_callback(lambda(Variable.Variable language)
 	 {
 	   calendar = calendar->set_language(language->query());
+	   cached_calendars = ([]);
 	 });
 
   defvar ("db_name",
@@ -505,15 +509,21 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
   }
 }
 
+protected mapping(string:Calendar.YMD) cached_calendars = ([]);
+
 Calendar.YMD get_calendar(string name)
 {
   if(!name)
     return calendar;
+  if (Calendar.YMD cal = cached_calendars[name])
+    return cal;
   string wanted = calendars[search(map(calendars, upper_case),
 				   upper_case(name))];
   if(wanted == "unknown")
     RXML.parse_error(sprintf("Unknown calendar %O.\n", name));
-  return Calendar[wanted];
+  return cached_calendars[name] =
+    Calendar[wanted]->set_timezone (query ("timezone"))
+		    ->set_language (query ("language"));
 }
 
 class TagEmitTimeZones
