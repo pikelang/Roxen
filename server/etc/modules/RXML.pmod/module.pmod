@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.387 2008/12/22 10:35:40 mast Exp $
+// $Id: module.pmod,v 1.388 2008/12/22 14:52:40 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1362,6 +1362,11 @@ class Value
   //! @tt{"scope.index1.index2..."@} when this object was encountered
   //! through subindexing. Either @[RXML.nil] or the undefined value
   //! may be returned if the variable doesn't have a value.
+  //!
+  //! If an object with an @[rmxl_var_eval] function is returned, then
+  //! that function is called in turn to produce the real value. As a
+  //! special case, if @[rxml_var_eval] returns this object, the
+  //! object itself is used as value.
   //!
   //! If the @[type] argument is given, it's the type the returned
   //! value should have. If the value can't be converted to that type,
@@ -5163,6 +5168,8 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
 	  val_obj = 0;
 	  break;
 	}
+	else if (val == val_obj)
+	  break;
 	val_obj = 0;
       }
     }
@@ -5193,6 +5200,8 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
 		       ctx, index, scope_name, want_type)) ||
 	  val == nil)
 	return ([])[0];
+      else if (val == val_obj)
+	return val;
 #ifdef MODULE_DEBUG
       else if (mixed err = want_type && catch (want_type->type_check (val)))
 	if (objectp (err) && ([object] err)->is_RXML_Backtrace)
