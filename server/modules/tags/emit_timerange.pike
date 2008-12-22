@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.27 2008/09/15 18:45:47 mast Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.28 2008/12/22 13:40:19 mast Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -630,7 +630,7 @@ class TagEmitTimeRange
 	change_to = 0;
 	weekday_needed = 0;
 	int weekday = to->week_day();
-	if(from->calendar() != Calendar.ISO) {
+	if(cal_type != "ISO" && query("calendar") != "ISO") {
 	  weekday_needed = gregorian_weekdays[what]+1;
 	} else
 	  weekday_needed = iso_weekdays[what]+1;
