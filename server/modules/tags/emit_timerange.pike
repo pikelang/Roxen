@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.30 2008/09/15 18:45:47 mast Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.31 2008/12/22 13:37:45 mast Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -610,8 +610,6 @@ class TagEmitTimeRange
       from = to = get_date("", args, cal);
       from = get_date("from", args, cal) || from || cal->Second();
 
-      int weekday_needed, change_to;
-
       if((what = m_delete(args, "from-week-day")) && from)
       {
         what = lower_case(what);
@@ -619,11 +617,14 @@ class TagEmitTimeRange
           RXML.parse_error(sprintf("Unknown day: %O\n",what));
         int weekday = from->week_day();
 
+	int weekday_needed;
         if(cal_type != "ISO" && query("calendar") != "ISO") {
 	  weekday_needed = gregorian_weekdays[what]+1;
 	}
         else
 	  weekday_needed = iso_weekdays[what]+1;
+
+	int change_to;
         if (weekday < weekday_needed)
           change_to = 7 - (weekday_needed - weekday);
         else if(weekday > weekday_needed)
@@ -638,14 +639,15 @@ class TagEmitTimeRange
 	what = lower_case(what);
 	if(zero_type (gregorian_weekdays[what]))
 	  RXML.parse_error(sprintf("Unknown day: %O\n",what));
-	change_to = 0;
-	weekday_needed = 0;
 	int weekday = to->week_day();
-	if(from->calendar() != Calendar.ISO) {
+
+	int weekday_needed;
+	if(cal_type != "ISO" && query("calendar") != "ISO") {
 	  weekday_needed = gregorian_weekdays[what]+1;
 	} else
 	  weekday_needed = iso_weekdays[what]+1;
 
+	int change_to;
 	if (weekday < weekday_needed)
 	  change_to = weekday_needed - weekday;
 	else if(weekday > weekday_needed)
