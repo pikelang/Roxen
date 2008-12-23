@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1006 2008/12/17 09:59:16 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1007 2008/12/23 13:17:22 mast Exp $";
 
 //! @appears roxen
 //!
@@ -135,7 +135,8 @@ protected int once_mode;
 // with 2.4.
 array(string) compat_levels = ({"2.1", "2.2", "2.4", "2.5",
 				"3.3", "3.4",
-				"4.0", "4.5", "5.0"});
+				"4.0", "4.5",
+				"5.0"});
 
 #ifdef THREADS
 mapping(string:string) thread_names = ([]);
@@ -2554,6 +2555,9 @@ string normalize_url(string url)
   ui->fragment = 0;
   if (ui->host == "any" || ui->host == "::")
     ui->host = "*";
+  else
+    // FIXME: Maybe Standards.URI should do this internally?
+    ui->host = Standards.IDNA.zone_to_ascii (ui->host);
   
   string host = ui->host;
   string protocol = ui->scheme;
@@ -2628,7 +2632,10 @@ int register_url( string url, Configuration conf )
   }
   if (ui->host == "any" || ui->host == "::")
     ui->host = "*";
-  
+  else
+    // FIXME: Maybe Standards.URI should do this internally?
+    ui->host = Standards.IDNA.zone_to_ascii (ui->host);
+
   protocol = ui->scheme;
   host = ui->host;
   if (!sizeof(host || "") || !protocols[protocol]) {
@@ -2819,6 +2826,9 @@ int register_url( string url, Configuration conf )
     return 0;
   }
   sort_urls();
+
+  // The following will show the punycoded version for IDN hostnames.
+  // That is intentional, to make it clear what actually happens.
   report_notice(" "+LOC_S(3, "Registered %s for %s")+"\n",
 		url, conf->query_name() );
   return 1;

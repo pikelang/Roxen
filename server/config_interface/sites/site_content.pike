@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.153 2008/12/11 15:32:28 jonasw Exp $
+// $Id: site_content.pike,v 1.154 2008/12/23 13:17:22 mast Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -695,17 +695,7 @@ string parse( RequestID id )
        foreach( conf->query( "URLs" ), string url )
        {
 	 url = (url/"#")[0];
-
-	 //  If no port number is present we add the default port for
-	 //  the given protocol. This is needed to get a match in the
-	 //  roxen->urls mapping.
-	 Standards.URI uri = Standards.URI(url);
-	 if (!uri->port) {
-	   string proto = uri->scheme;
-	   uri->port =
-	     roxen->protocols[proto] && roxen->protocols[proto]->default_port;
-	 }
-	 string match_url = (string) uri;
+	 string match_url = roxen.normalize_url (url);
 	 
          int open = (roxen->urls[ match_url ] 
                      && roxen->urls[ match_url ]->port 

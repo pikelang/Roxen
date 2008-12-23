@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: hosts.pike,v 1.34 2005/11/30 17:50:00 anders Exp $
+// $Id: hosts.pike,v 1.35 2008/12/23 13:17:22 mast Exp $
 
 #include <roxen.h>
 
@@ -52,6 +52,9 @@ string blocking_ip_to_host(string ip)
 }
 
 array gethostbyname(string name) {
+  // FIXME: IDN coding should probably be done at a lower level.
+  if (String.width (name) > 8 || sscanf (name, "%*[\0-\177]%*c") == 2)
+    name = Standards.IDNA.zone_to_ascii (name);
   return dns->gethostbyname(name);
 }
 

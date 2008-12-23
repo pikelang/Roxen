@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.262 2008/12/11 17:18:30 jonasw Exp $
+// $Id: Roxen.pmod,v 1.263 2008/12/23 13:17:22 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4505,7 +4505,7 @@ string get_world(array(string) urls) {
   
   array hosts=({ gethostname() }), dns;
 #ifndef NO_DNS
-  catch(dns=Protocols.DNS.client()->gethostbyname(hosts[0]));
+  catch(dns=roxen->gethostbyname(hosts[0]));
   if(dns && sizeof(dns))
     hosts+=dns[2]+dns[1];
 #endif /* !NO_DNS */
