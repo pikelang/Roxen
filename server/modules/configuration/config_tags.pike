@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.199 2008/09/25 22:51:20 mast Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.200 2009/01/07 20:50:16 mast Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -26,6 +26,14 @@ void create()
 {
   query_tag_set()->prepare_context=set_entities;
 }
+
+protected mapping(int:string) css_font_size = ([
+  -2: "x-small",
+  -1: "small",
+  //0: "medium",
+  1: "large",
+  2: "x-large",
+]);
 
 class Scope_cf
 {
@@ -381,9 +389,9 @@ string get_var_form( string s, object var, object mod, RequestID id,
   string pre = var->get_warnings();
 
   if( pre )
-    pre = "<font size='+1' color='&usr.warncolor;'><pre>"+
+    pre = "<div style='color: &usr.warncolor;'><pre>"+
         html_encode_string( pre )+
-        "</pre></font>";
+	"</pre></div>";
   else
     pre = "";
   
@@ -407,9 +415,9 @@ string get_var_form( string s, object var, object mod, RequestID id,
   if( mod->check_variable &&
       (tmp = mod->check_variable( s, var->query() ) ))
     pre += 
-        "<font size='+1' color='&usr.warncolor;'><pre>"
+	"<div style='color: &usr.warncolor;'><pre>"
         + html_encode_string( tmp )
-        + "</pre></font>";
+	+ "</pre></div>";
 
   if( !view_mode && var->render_form )
     return pre + var->render_form( id );
@@ -551,14 +559,12 @@ array get_variable_maps( object mod,
     variables = filter( variables,
                         lambda( mapping q ) { return q->sname[0] != '_'; } );
 
-  int f = config_setting("form-font-size");
-  string fs;
-  if( f >= 0 )  fs = "+"+f; else  fs = ""+f;
-
-  map( variables, lambda( mapping q ) {
-                    if( search( q->form, "<" ) != -1 )
-                      q->form=("<font size='"+fs+"'>"+q->form+"</font>");
-                  } );
+  if (string fs = css_font_size[config_setting("form-font-size")])
+    map( variables, lambda( mapping q ) {
+		      if( search( q->form, "<" ) != -1 )
+			q->form=("<div style='font-size: "+fs+"'>"+
+				 q->form+"</div>");
+		    } );
 
   if( m->section && (m->section != "_all"))
   {
@@ -1171,15 +1177,13 @@ string simpletag_cf_render_variable( string t, mapping m,
 
   int chng;
   string dfs, dfe, def="";
-  string df = config_setting( "docs-font-size" );
-  
-  if( !df )
-    dfs = dfe = "";
-  else
-  {
-    dfe = "</font>";
-    dfs = "<font size='"+(df>0?"+":"")+df+"'>";
+  if (string fs = css_font_size[config_setting ("docs-font-size")]) {
+    dfs = "<div style='font-size: "+fs+"'>";
+    dfe = "</div>";
   }
+  else
+    dfs = dfe = "";
+
   if( chng = ((int)_("changed") == 1) )
     if( !(int)_("no-default") )
       def = "<br /><submit-gbutton2 name='"+_("path")+"do_default'> "+
@@ -1216,16 +1220,16 @@ string simpletag_cf_render_variable( string t, mapping m,
 	  extra = 
 	    "<tr bgcolor='"+usr("content-titlebg")+"'>\n"
 	    "<td colspan='2' width='100%'>\n"
-	    "<font size='+1' color='"+usr("content-titlefg")+"'>"+
-	    LOCALE(358,"Changed")+"</font>\n"
+	    "<div style='color: "+usr("content-titlefg")+"'>"+
+	    LOCALE(358,"Changed")+"</div>\n"
 	    "</td>\n"
             "</tr>\n";
 	else
 	  extra = 
 	    "<tr bgcolor='"+usr("content-titlebg")+"'>\n"
 	    "<td colspan='2' width='100%'>\n"
-	    "<font size='+1' color='"+usr("content-titlefg")+"'>"+
-	    LOCALE(359,"Unchanged")+"</font>\n"
+	    "<div style='color: "+usr("content-titlefg")+"'>"+
+	    LOCALE(359,"Unchanged")+"</div>\n"
 	    "</td>\n"
             "</tr>\n";
 
