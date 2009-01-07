@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.65 2008/08/15 12:33:55 mast Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.66 2009/01/07 22:01:46 mast Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -744,6 +744,10 @@ class CGIScript
     stdin = stdin->pipe(/*Stdio.PROP_IPC|Stdio.PROP_NONBLOCK*/);
 
 #if UNIX
+    ;{ string s;
+       if(sizeof(s=query("chroot")))
+	 options->chroot = s;
+     }
     if(!getuid())
     {
       if (uid >= 0) {
@@ -1024,14 +1028,14 @@ void create(Configuration conf)
   defvar("env", Variable.Flag(0, VAR_MORE, "Pass environment variables",
 	 "If this is set, all environment variables roxen has will be "
          "passed to CGI scripts, not only those defined in the CGI/1.1 standard. "
-         "This includes PATH. (For a quick test, try this script with "
+	 "This includes PATH. For a quick test, try this script with "
 	 "and without this variable set:"
 	 "<pre>"
 	 "#!/bin/sh\n\n"
          "echo Content-type: text/plain\n"
 	 "echo ''\n"
 	 "env\n"
-	 "</pre>)"));
+	 "</pre>"));
 
   defvar("rxml", Variable.Flag(0, VAR_MORE, "Parse RXML in CGI-scripts",
 	 "If this is set, the output from CGI-scripts handled by this "
@@ -1139,6 +1143,10 @@ void create(Configuration conf)
 	 " debug log when a script is run as the root user. This will "
 	 "only happend if the 'Run scripts as' variable is set to root (or 0)",
 	 0, getuid);
+
+  defvar("chroot", Variable.Location("", VAR_EXPERT, "Chroot path",
+         "This is the path that is chrooted to before running a program."
+         ));
 
   defvar("runuser", "nobody", "Run scripts as", TYPE_STRING,
 	 "If you start roxen as root, and this variable is set, CGI scripts "
