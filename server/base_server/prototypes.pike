@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.222 2008/12/17 10:05:22 jonasw Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.223 2009/01/07 14:12:02 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -124,6 +124,10 @@ class StringFile( string data, mixed|void _st )
   void seek(int to)
   {
     offset = to;
+  }
+
+  void set_blocking()
+  {
   }
 }
 
