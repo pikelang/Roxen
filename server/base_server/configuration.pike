@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.662 2009/01/07 13:44:56 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.663 2009/01/07 14:00:26 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4408,12 +4408,12 @@ modules.</p>
 # The default format follows the Combined Log Format, a slight
 # extension of the Common Log Format - see
 # http://httpd.apache.org/docs/1.3/logs.html#combined
-*: $ip-number - $user [$cern-date] \"$method $full-resource $protocol\" $response $length \"$referer\" \"$user-agent-raw\"
+*: $ip-number - $user [$cern-date] \"$method $full-resource $protocol\" $response $length \"$referrer\" \"$user-agent-raw\"
 
 # The following line is an extension of the above that adds useful
 # cache info. If you enable this you have to comment out or delete the
 # line above.
-#*: $ip-number - $user [$cern-date] \"$method $full-resource $protocol\" $response $length \"$referer\" \"$user-agent-raw\" $cache-status $eval-status $request-time
+#*: $ip-number - $user [$cern-date] \"$method $full-resource $protocol\" $response $length \"$referrer\" \"$user-agent-raw\" $cache-status $eval-status $request-time
 
 # You might want to enable some of the following lines to get logging
 # of various internal activities in the server. The formats below are
@@ -4575,8 +4575,11 @@ hyphens ('-') occur in the specifier names.</p>
     time that the Roxen server process spent.</td></tr>
 <tr><td>$etag</td>
     <td>The entity tag (aka ETag) header of the result.</td></tr>
-<tr><td>$referer</td>
+<tr><td>$referrer</td>
     <td>The header 'referer' from the request, or '-'.</td></tr>
+<tr><td>$referer</td>
+    <td>Same as $referrer. Common misspelling kept for
+    compatibility.</td></tr>
 <tr><td>$user-agent</td>
     <td>The header 'User-Agent' from the request, or '-'.</td></tr>
 <tr><td>$user-agent-raw</td>
