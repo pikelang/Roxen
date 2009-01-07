@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.47 2009/01/07 17:07:43 mast Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.48 2009/01/07 17:50:05 mast Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -288,8 +288,7 @@ mixed first_try(object id)
   if(!to)
     return 0;
 
-  string url = id->url_base();
-  url=url[..strlen(url)-2];
+  string url = id->url_base()[..<1];
   to = replace(to, "%u", url);
   if(to == url + id->not_query || url == id->not_query)
     return 0;
@@ -297,9 +296,7 @@ mixed first_try(object id)
   id->misc->is_redirected = 1; // Prevent recursive internal redirects
 
   redirs++;
-  if((strlen(to) > 6 &&
-      (to[3]==':' || to[4]==':' ||
-       to[5]==':' || to[6]==':')))
+  if (sscanf (to, "%*[-+.a-zA-Z0-9]://%*c") == 2)
   {
     to=replace(to, ({ "\000", " " }), ({"%00", "%20" }));
     return Roxen.http_low_answer( ret_code, "")
