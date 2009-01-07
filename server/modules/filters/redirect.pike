@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.48 2009/01/07 17:50:05 mast Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.49 2009/01/07 17:57:56 mast Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -210,7 +210,9 @@ constant module_unique = 0;
 
 string status()
 {
-  return sprintf("Number of patterns: %d+%d=%d, Redirects so far: %d",
+  return sprintf("Number of patterns: "
+		 "%d prefix/regexp + %d exact = %d total<br />\n"
+		 "Redirects so far: %d",
 		 sizeof(redirect_from),sizeof(exact_patterns),
 		 sizeof(redirect_from)+sizeof(exact_patterns),
 		 redirs);
