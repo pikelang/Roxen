@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.45 2009/01/07 16:20:37 mast Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.46 2009/01/07 16:38:26 mast Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -37,7 +37,17 @@ pattern rule according to one of the following formats:
 <dt>[<tt>permanent</tt>] <tt>exact</tt> <i>path target</i>
   <dd><p>If the URL path is exactly <i>path</i>, then redirect to
   <i>target</i>.</p>
+
+  <p>These rules are handled more efficiently than the preceding ones.
+  While every rule of the preceding types adds a little bit of extra
+  processing time to every request, there can be almost any amount of
+  'exact' rules without additional slowdown.</p>
 </dl>
+
+<p>Rules with the 'exact' keyword are tested first, then the other
+rules are tested in the order they are written. Therefore more
+specific rules should come before generic ones, and time can be saved
+by putting rules which are hit frequently first.</p>
 
 <p>If <i>target</i> isn't an absolute URL then the redirect is handled
 internally, otherwise a redirect response is sent. The response uses
@@ -215,23 +225,15 @@ mixed first_try(object id)
     return 0;
 
   string m;
-  int ok;
   m = id->not_query;
   if(id->query)
     if(sscanf(id->raw_url, "%*s?%s", tmp))
       m += "?"+tmp;
 
-  foreach(indices(exact_patterns), f)
-  {
-    if(m == f)
-    {
-      to = exact_patterns[f][0];
-      ret_code = exact_patterns[f][1];
-      ok=1;
-      break;	
-    }
-  }
-  if(!ok)
+  if (array exact_ent = exact_patterns[m])
+    [to, ret_code] = exact_ent;
+
+  else
     for (int i = 0; i < sizeof (redirect_from); i++) {
       string f = redirect_from[i];
       if(has_prefix(m, f))
