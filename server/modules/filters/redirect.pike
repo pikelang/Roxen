@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.44 2008/03/20 12:53:21 erikd Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.45 2009/01/07 16:20:37 mast Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -15,62 +15,70 @@ private int redirs = 0;
 void create()
 {
   defvar("fileredirect", "", "Redirect patterns", TYPE_TEXT_FIELD|VAR_INITIAL,
-	 "Redirect one file to another. The syntax is 'regexp to_URL',"
-	 "or 'prefix to_URL', or 'exact file_name to_URL', or 'permanent regexp to_URL', "
-	 "or 'permanent prefix to_URL', or 'permanent exact file_name to_URL'. More patterns "
-	 "can be read from a file by using '#include &lt;filename&gt;' on a line. "
-	 "The path is relative to the Roxen server directory in the real "
-	 "filesystem. Other lines beginning with '#' are treated as comments.\n"
+	 #"\
+A list of patterns to redirect one URL to another. Each line is a
+pattern rule according to one of the following formats:
 
-	 "<p>Some examples:'"
-	 "<pre>"
-         "/from/.*      http://to.roxen.com/to/%f\n"
-         ".*\\.cgi       http://cgi.foo.bar/cgi-bin/%p\n"
-	 "/thb/.*       %u/thb_gone.html\n"
-	 "permanent /from/(.*) %u/to/$1\n"
-	 "/roxen/       http://www.roxen.com/\n"
-	 "exact /       /main/index.html\n"
-	 "</pre>"
+<dl>
+<dt>[<tt>permanent</tt>] <i>regexp target</i>
+  <dd><p>Any URL path that matches <i>regexp</i> is redirected to
+  <i>target</i>. The <i>regexp</i> is assumed to always contain a '*'
+  character, otherwise it is interpreted as a <i>prefix</i> instead -
+  see next rule.</p>
 
-	 "A %f in the 'to' field will be replaced with the filename of "
-	 "the matched file, %p will be replaced with the full path, and %u "
-	 "will be replaced with this server's URL (useful if you want to send "
-	 "a redirect instead of doing an internal one). The last two "
-	 "examples are special cases. <p>"
+  <p>You can use '(' and ')' in <i>regexp</i> to extract parts of it.
+  The parts can then be insterted into the <i>target</i> pattern with
+  $1, $2 etc.</p>
 
-	 "If the first word (or second word after permanent) on the line is 'exact', the filename following "
-	 "must match _exactly_. This is equivalent to entering ^FILE$, but "
-	 "faster. "
+<dt>[<tt>permanent</tt>] <i>prefix target</i>
+  <dd><p>Any URL path that begins with <i>prefix</i> is redirected to
+  <i>target</i>.</p>
 
-	 "<p>You can use '(' and ')' in the regular expression to "
-	 "separate parts of the from-pattern when using regular expressions."
-	 " The parts can then be insterted into the 'to' string with "
-	 " $1, $2 etc.\n"
+<dt>[<tt>permanent</tt>] <tt>exact</tt> <i>path target</i>
+  <dd><p>If the URL path is exactly <i>path</i>, then redirect to
+  <i>target</i>.</p>
+</dl>
 
-	 "<p>More examples:<pre>"
-	 ".*/SE/liu/lysator/(.*)\\.class   /java/classes/SE/liu/lysator/$1.class\n"
-	 "/(.*)\\.en\\.html                 /(en)/$1.html\n"
-	 "(.*)/index\\.html                %u/$1/\n"
-	 "permanent exact / %u/main/index.html\n</pre>"
-	 ""
-	 "<b>If the to file isn't an URL, the redirect will always be handled "
-	 "internally, so add %u to generate an actual redirect (302 Moved Temporarily) "
-	 "or with keyword 'permanent' a permanent redirect (301 Moved Permanently).</b><p>"
-	 ""
-	 "<b>Note 1:</b> "
-	 "For speed reasons: If the from pattern does <i>not</i> contain "
-	 "any '*' characters, it will not be treated like a regular "
-	 "expression, instead it will be treated like a prefix that must "
-	 "match exactly."
+<p>If <i>target</i> isn't an absolute URL then the redirect is handled
+internally, otherwise a redirect response is sent. The response uses
+302 Moved Temporarily by default, but if the rule is preceded by
+'permanent' then a 301 Moved Permanently is sent instead.</p>
 
-	 "<p><b>Note 2:</b> "
-	 "Included files are not rechecked for changes automatically. You "
-	 "have to reload the module to do that."
+<p>\"%f\" in the <i>target</i> field is replaced with the filename of
+the matched file, \"%p\" is replaced with the full path, and \"%u\" is
+replaced with the base URL of the server.</p>
 
-	 "<p><b>Note 3:</b> "
-	 "The keyword 'permanent' in the redirect pattern line, to get a "
-	 "301 redirect response header, only works if you use either %u or "
-	 "a valid url (e.g. http://www.roxen.com) in the 'to url' pattern." );
+<p>\"%u\" is useful in front of <i>target</i> to construct an absolute
+URL. Note that it does not include an ending '/', so you should
+provide one yourself.</p>
+
+<p>In addition, patterns can also be included from another file using
+an include directive:
+
+<blockquote><tt>#include &lt;</tt><i>filename</i><tt>&gt;</tt></blockquote>
+
+The path is relative to the Roxen server directory in the real
+filesystem.</p>
+
+<p>Other lines beginning with '#' are treated as comments. Empty lines
+are ignored.</p>
+
+<p>Some examples:</p>
+
+<pre>/from/.*                        http://to.roxen.com/to/%f
+.*\\.cgi                         http://cgi.foo.bar/cgi-bin/%p
+/thb/.*                         %u/thb_gone.html
+permanent /from/(.*)            %u/to/$1
+/roxen/                         http://www.roxen.com/
+exact /                         /main/index.html
+.*/SE/liu/lysator/(.*)\\.class   /java/classes/SE/liu/lysator/$1.class
+/(.*)\\.en\\.html                 /(en)/$1.html
+(.*)/index\\.html                %u/$1/
+permanent exact /               %u/main/index.html
+</pre>
+
+<p><b>Note:</b> The keyword 'permanent' only works if you use an
+absolute URL, either literally or by starting <i>target</i> with %u.");
   defvar("poll_interval", 60, "Poll interval", TYPE_INT,
 	 "Time in seconds between polls of the files <tt>#include</tt>d "
 	 "in the redirect pattern.");
@@ -94,7 +102,6 @@ mapping(string:array(int|Stdio.Stat)) dependencies = ([]);
 
 void parse_redirect_string(string what, string|void fname)
 {
-  int ret_code = 302;
   foreach(replace(what, "\t", " ")/"\n", string s)
   {
     if (sscanf (s, "#include%*[\t ]<%s>", string file) == 2) {
@@ -109,26 +116,27 @@ void parse_redirect_string(string what, string|void fname)
 	report_warning ("Cannot read redirect patterns from "+file+".\n");
     }
     else if (sizeof(s) && (s[0] != '#')) {
-      if( has_prefix(s, "permanent ") ) {
-	s = s[10..];
+      int ret_code;
+      array(string) a = s/" " - ({""});
+      if (sizeof (a) && a[0] == "permanent") {
+	a = a[1..];
 	ret_code = 301;
       } else
 	ret_code = 302;
-      array(string) a = s/" " - ({""});
       if(sizeof(a)>=3 && a[0]=="exact") {
 	if (exact_patterns[a[1]])
-	  report_warning ("Duplicate redirect pattern %O.\n", a[1]);
+	  report_warning ("Duplicate redirect pattern %O.\n", s);
 	exact_patterns[a[1]] = ({ a[2], ret_code });
       }
       else if (sizeof(a)==2) {
 	if (search (redirect_from, a[0]) >= 0)
-	  report_warning ("Duplicate redirect pattern %O.\n", a[0]);
+	  report_warning ("Duplicate redirect pattern %O.\n", s);
 	redirect_from += ({a[0]});
 	redirect_to += ({a[1]});
 	redirect_code += ({ ret_code });
       }
       else if (sizeof (a))
-	report_warning ("Invalid redirect pattern %O.\n", a[0]);
+	report_warning ("Invalid redirect pattern %O.\n", s);
     }
   }
 }
