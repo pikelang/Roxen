@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.572 2008/12/11 15:32:22 jonasw Exp $";
+constant cvs_version = "$Id: http.pike,v 1.573 2009/01/07 16:19:02 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -334,10 +334,7 @@ void send(string|object what, int|void len,
 #endif
        )
       werror ("HTTP[%s]: Response (length %d) ===============================\n"
-	      "%s\n", DEBUG_GET_FD, sizeof (what),
-	      replace (sprintf ("%O", what),
-		       ({"\\r\\n", "\\n", "\\t"}),
-		       ({"\n",     "\n",  "\t"})));
+	      "%O\n", DEBUG_GET_FD, sizeof (what), what);
     else
       werror ("HTTP[%s]: Response =============================================\n"
 	      "String, length %d\n", DEBUG_GET_FD, sizeof (what));
@@ -1909,10 +1906,8 @@ void low_send_result(string headers, string data, int|void len,
     } else if (!data) data = "";
 #ifdef CONNECTION_DEBUG
     werror("HTTP[%s]: Response (length %d) ===============================\n"
-	   "%s\n", DEBUG_GET_FD, sizeof (headers) + sizeof (data),
-	   replace(sprintf("%O", headers + data),
-		   ({"\\r\\n", "\\n", "\\t"}),
-		   ({"\n",     "\n",  "\t"})));
+	   "%O\n", DEBUG_GET_FD, sizeof (headers) + sizeof (data),
+	   headers + data);
 #else
     REQUEST_WERR(sprintf("HTTP: Send blocking %O", headers + data));
 #endif
@@ -2378,10 +2373,7 @@ void got_data(mixed fooid, string s, void|int chained)
 {
 #ifdef CONNECTION_DEBUG
   werror ("HTTP[%s]: Request ----------------------------------------------\n"
-	  "%s\n", DEBUG_GET_FD,
-	  replace (sprintf ("%O", s),
-		   ({"\\r\\n", "\\n", "\\t"}),
-		   ({"\n",     "\n",  "\t"})));
+	  "%O\n", DEBUG_GET_FD, s);
 #else
   REQUEST_WERR(sprintf("HTTP: Got %O", s));
 #endif
