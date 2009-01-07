@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.46 2009/01/07 16:38:26 mast Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.47 2009/01/07 17:07:43 mast Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -89,6 +89,7 @@ permanent exact /               %u/main/index.html
 
 <p><b>Note:</b> The keyword 'permanent' only works if you use an
 absolute URL, either literally or by starting <i>target</i> with %u.");
+
   defvar("poll_interval", 60, "Poll interval", TYPE_INT,
 	 "Time in seconds between polls of the files <tt>#include</tt>d "
 	 "in the redirect pattern.");
@@ -218,33 +219,35 @@ string status()
 
 mixed first_try(object id)
 {
-  string f, to;
-  mixed tmp;
-  int ret_code = 302;
   if(id->misc->is_redirected)
     return 0;
 
-  string m;
-  m = id->not_query;
+  string from;
+  from = id->not_query;
   if(id->query)
-    if(sscanf(id->raw_url, "%*s?%s", tmp))
-      m += "?"+tmp;
+    if(sscanf(id->raw_url, "%*s?%s", string tmp))
+      from += "?"+tmp;
 
-  if (array exact_ent = exact_patterns[m])
+  string to;
+  int ret_code = 302;
+
+  if (array exact_ent = exact_patterns[from])
     [to, ret_code] = exact_ent;
 
   else
     for (int i = 0; i < sizeof (redirect_from); i++) {
       string f = redirect_from[i];
-      if(has_prefix(m, f))
+
+      if(has_prefix(from, f))
       {
-	to = redirect_to[i] + m[strlen(f)..];
+	to = redirect_to[i] + from[strlen(f)..];
 	ret_code = redirect_code[i];
 	//  Do not explicitly remove the query part of the URL.
 	// sscanf(to, "%s?", to);
 	break;
-      } else if( has_value(f, "*") || has_value( f, "(") ) {
-	array foo;
+      }
+
+      else if( has_value(f, "*") || has_value( f, "(") ) {
 	function split;
 	if(f[0] != '^') f = "^" + f;
 	if(catch (split = Regexp(f)->split))
@@ -257,11 +260,9 @@ mixed first_try(object id)
 	//  of the incoming URL in such cases. If that happens we also
 	//  convert the redirect pattern string so we don't get a mix of
 	//  different encodings in the destination URL.
-	int use_utf8 = String.width(m) > 8;
-	if (use_utf8)
-	  m = string_to_utf8(m);
-	
-	if((foo=split(m)))
+	int use_utf8 = String.width(from) > 8;
+
+	if(array foo = split(use_utf8 ? string_to_utf8(from) : from))
 	{
 	  array bar = Array.map(foo, lambda(string s, mapping f) {
 				       return "$"+(f->num++);
