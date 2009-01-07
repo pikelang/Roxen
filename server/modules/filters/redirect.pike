@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.49 2009/01/07 17:57:56 mast Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.50 2009/01/07 18:05:24 mast Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -292,7 +292,12 @@ mixed first_try(object id)
 
   string url = id->url_base()[..<1];
   to = replace(to, "%u", url);
-  if(to == url + id->not_query || url == id->not_query)
+  if(to == url + from
+#if 0
+     // The following is disabled since it can hardly ever be true. /mast
+     || url == id->not_query
+#endif
+    )
     return 0;
 
   id->misc->is_redirected = 1; // Prevent recursive internal redirects
