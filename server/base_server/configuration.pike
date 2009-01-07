@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.661 2008/12/17 09:59:16 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.662 2009/01/07 13:44:56 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4405,15 +4405,15 @@ modules.</p>
 	 TYPE_FLAG, DLOCALE(29, "Log requests"));
 
   defvar("LogFormat", #"\
-404: $host $referer $user [$cern_date] \"$method $resource $protocol\" 404 -
-500: $host - ERROR [$cern_date] \"$method $resource $protocol\" 500 -
-*: $host - $user [$cern_date] \"$method $resource $protocol\" $response $length
+# The default format follows the Combined Log Format, a slight
+# extension of the Common Log Format - see
+# http://httpd.apache.org/docs/1.3/logs.html#combined
+*: $ip-number - $user [$cern-date] \"$method $full-resource $protocol\" $response $length \"$referer\" \"$user-agent-raw\"
 
-# The following lines are extensions of the above that adds useful cache
-# info. If you enable these you have to comment out or delete those above.
-#404: $host $referer $user [$cern_date] \"$method $resource $protocol\" 404 - $cache-status $eval-status $request-time
-#500: $host - ERROR [$cern_date] \"$method $resource $protocol\" 500 - $cache-status $eval-status $request-time
-#*: $host - $user [$cern_date] \"$method $resource $protocol\" $response $length $cache-status $eval-status $request-time
+# The following line is an extension of the above that adds useful
+# cache info. If you enable this you have to comment out or delete the
+# line above.
+#*: $ip-number - $user [$cern-date] \"$method $full-resource $protocol\" $response $length \"$referer\" \"$user-agent-raw\" $cache-status $eval-status $request-time
 
 # You might want to enable some of the following lines to get logging
 # of various internal activities in the server. The formats below are
@@ -4421,11 +4421,11 @@ modules.</p>
 # still break external log analysis tools.
 
 # To log commits and similar filesystem changes in a sitebuilder file system.
-#sbfs/commit: 0.0.0.0 - - [$cern_date] \"$action $ac-userid:$workarea:$resource sbfs\" - - $commit-type
-#sbfs/*: 0.0.0.0 - - [$cern_date] \"$action $ac-userid:$workarea:$resource sbfs\" - -
+#sbfs/commit: 0.0.0.0 - - [$cern-date] \"$action $ac-userid:$workarea:$resource sbfs\" - - $commit-type
+#sbfs/*: 0.0.0.0 - - [$cern-date] \"$action $ac-userid:$workarea:$resource sbfs\" - -
 
 # Catch-all for internal log messages.
-#*/*: 0.0.0.0 - - [$cern_date] \"$action $resource $facility\" - -",
+#*/*: 0.0.0.0 - - [$cern-date] \"$action $resource $facility\" - -",
 	 DLOCALE(26, "Logging: Format"),
 	 TYPE_TEXT_FIELD|VAR_MORE,
 	 // FIXME: Undocumented: $cs-uri-stem, $cs-uri-query,
