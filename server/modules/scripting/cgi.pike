@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.66 2009/01/07 22:01:46 mast Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.67 2009/01/07 22:07:42 mast Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -1144,9 +1144,9 @@ void create(Configuration conf)
 	 "only happend if the 'Run scripts as' variable is set to root (or 0)",
 	 0, getuid);
 
-  defvar("chroot", Variable.Location("", VAR_EXPERT, "Chroot path",
-         "This is the path that is chrooted to before running a program."
-         ));
+  defvar("chroot", Variable.String("", VAR_MORE, "Chroot path",
+	 "This is the path that is chrooted to before running a program. "
+	 "No chrooting is done if left empty."));
 
   defvar("runuser", "nobody", "Run scripts as", TYPE_STRING,
 	 "If you start roxen as root, and this variable is set, CGI scripts "
@@ -1187,10 +1187,10 @@ void create(Configuration conf)
 				       "The maximum CPU time the script might "
 				       "use in seconds. -2 is unlimited."));
 
-  defvar("datasize", Variable.Int(-2, VAR_EXPERT, "Limits: Memory size",
+  defvar("datasize", Variable.Int(-2, VAR_MORE, "Limits: Memory size",
 	 "The maximum size of the memory used, in Kb. -2 is unlimited."));
 
-  defvar("filesize", Variable.Int(-2, VAR_EXPERT, "Limits: Maximum file size",
+  defvar("filesize", Variable.Int(-2, VAR_MORE, "Limits: Maximum file size",
 	 "The maximum size of any file created, in 512 byte blocks. -2 "
 	 "is unlimited."));
 
@@ -1202,7 +1202,7 @@ void create(Configuration conf)
          "On most systems, there is no limit, but some unix systems still "
          "have a static filetable (Linux and *BSD, basically)."));
 
-  defvar("stack", Variable.Int(-2, VAR_EXPERT, "Limits: Stack size",
+  defvar("stack", Variable.Int(-2, VAR_MORE, "Limits: Stack size",
 	 "The maximum size of the stack used, in kilobytes. -2 is unlimited."));
 #endif
 
