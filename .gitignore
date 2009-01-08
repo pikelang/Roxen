@@ -6,3 +6,10 @@
 *.[oas]
 *.sb
 *.iw
+local
+logs
+server/bin/roxen
+server/bin/roxen_mysql
+server/mysql/*
+server/pike
+var
