@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.663 2009/01/07 14:00:26 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.664 2009/01/08 17:43:21 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1101,9 +1101,9 @@ void log_event (string facility, string action, string resource,
 //! Log an event.
 //!
 //! This function is primarily intended for logging arbitrary internal
-//! events for performance monitoring purposes; see @[log_event] for
-//! details. The events are sent to the access log, where they
-//! typically are formatted in a CommonLog lookalike format.
+//! events for performance monitoring purposes. The events are sent to
+//! the access log, where they typically are formatted in a CommonLog
+//! lookalike format.
 //!
 //! The intention is to extend this function to be able to collect
 //! statistics of these events for polling by e.g. SNMP.
