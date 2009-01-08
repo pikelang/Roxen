@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.114 2008/09/29 15:57:33 mast Exp $
+// $Id: global_variables.pike,v 1.115 2009/01/08 23:14:46 mast Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -765,7 +765,7 @@ be of real use.</p>"));
 			      roxenp()->set_locale();
 			    } );
 
-  string secret=Crypto.MD5()->update(""+time(1)+random(100000))->digest();
+  string secret=Crypto.MD5.hash(""+time(1)+random(100000));
   secret = MIME.encode_base64(secret,1);
   defvar("server_salt", secret[..sizeof(secret)-3], LOCALE(8, "Server secret"),
 	 TYPE_STRING|VAR_MORE|VAR_NO_DEFAULT,
@@ -776,8 +776,7 @@ be of real use.</p>"));
 		"you are satisfied with what your computers random "
 		"generator has produced.") );
 
-  secret = Crypto.MD5()->update(""+time(1)+random(100000)+"x"+gethrtime())
-    ->digest();
+  secret = Crypto.MD5.hash(""+time(1)+random(100000)+"x"+gethrtime());
 
   definvisvar("argcache_secret","",TYPE_STRING|VAR_NO_DEFAULT);
   set( "argcache_secret", secret );

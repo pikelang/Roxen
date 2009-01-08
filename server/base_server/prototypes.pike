@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.223 2009/01/07 14:12:02 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.224 2009/01/08 23:14:46 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2525,8 +2525,7 @@ class RequestID
       }
       file->data = data;
       heads->ETag = misc->etag =
-	sprintf("\"%s\"",
-		String.string2hex(Crypto.MD5()->update(data)->digest()));
+	sprintf("\"%s\"", String.string2hex(Crypto.MD5.hash(data)));
     }
 #endif /* RAM_CACHE */
 

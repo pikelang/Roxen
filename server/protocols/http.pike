@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.573 2009/01/07 16:19:02 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.574 2009/01/08 23:14:46 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1245,7 +1245,7 @@ protected string error_page(string title, void|string msg,
 protected string get_err_md5(array(string|array(string)|array(array)) err_info)
 {
   if (err_info) {
-    return String.string2hex(Crypto.MD5()->update(err_info[3])->digest());
+    return String.string2hex(Crypto.MD5.hash(err_info[3]));
   }
   return "NONE";
 }
@@ -1433,7 +1433,7 @@ array get_error(string eid, string md5)
   mapping e = roxen.query_var("errors");
   if(e) {
     array r = e[(int)eid];
-    if (r && (md5 == String.string2hex(Crypto.MD5()->update(r[3])->digest()))) {
+    if (r && (md5 == String.string2hex(Crypto.MD5.hash(r[3])))) {
       return r;
     }
   }

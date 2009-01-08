@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.581 2009/01/08 22:16:23 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.582 2009/01/08 23:14:46 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -2734,7 +2734,7 @@ string simpletag_random(string tag, mapping m, string s, RequestID id)
   array q = s/(m->separator || m->sep || "\n");
   int index;
   if(m->seed)
-    index = array_sscanf(Crypto.MD5()->update(m->seed)->digest(),
+    index = array_sscanf(Crypto.MD5.hash(m->seed),
 			 "%4c")[0]%sizeof(q);
   else
     index = random(sizeof(q));

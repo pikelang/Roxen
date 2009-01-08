@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1008 2009/01/07 14:00:26 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1009 2009/01/08 23:14:46 mast Exp $";
 
 //! @appears roxen
 //!
@@ -84,8 +84,7 @@ int test_euid_change;
 
 string md5( string what )
 {
-  return Gmp.mpz(Crypto.MD5()->update( what )->digest(),256)
-    ->digits(32);
+  return Gmp.mpz(Crypto.MD5.hash( what ),256)->digits(32);
 }
   
 string query_configuration_dir()
@@ -3011,10 +3010,8 @@ int increase_id()
 private int unique_id_counter;
 string create_unique_id()
 {
-  Crypto.MD5 md5 = Crypto.MD5();
-  md5->update(query("server_salt") + start_time + "|" +
-	      (unique_id_counter++) + "|" + time(1));
-  return String.string2hex(md5->digest());
+  return String.string2hex(Crypto.MD5.hash(query("server_salt") + start_time
+    + "|" + (unique_id_counter++) + "|" + time(1)));
 }
 
 #ifndef __NT__
@@ -4323,7 +4320,7 @@ class ArgCache
   //! data later.
   {
     string encoded_args = encode_value_canonic( args );
-    string id = Gmp.mpz(Crypto.SHA1()->update(encoded_args)->digest(), 256)->digits(36);
+    string id = Gmp.mpz(Crypto.SHA1.hash(encoded_args), 256)->digits(36);
     if( cache[ id ] )
       return id;
     create_key(id, encoded_args);
