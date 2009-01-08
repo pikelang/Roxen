@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.580 2008/12/17 10:01:49 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.581 2009/01/08 22:16:23 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -562,7 +562,11 @@ class TagHeader {
       } else if(args->name=="URI")
 	args->value = "<" + args->value + ">";
 
-      id->add_response_header(args->name, args->value);
+      if((<"Content-Type", "Expires">)[args-name])
+	// FIXME: Extend with more singleton headers.
+        id->set_response_header(args->name, args->value);
+      else
+	id->add_response_header(args->name, args->value);
       return 0;
     }
   }
