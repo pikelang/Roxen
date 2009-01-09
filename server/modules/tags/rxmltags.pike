@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.584 2009/01/09 17:19:42 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.585 2009/01/09 17:56:56 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -8351,23 +8351,52 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 <ex><date date=''/></ex>
 </attr>
 
-<attr name='type' value='discordian|http|iso|number|ordered|stardate|string|unix'>
- <p>Defines in which format the date should be displayed in. 'http' is
- the format specified for use in the HTTP protocol (useful for headers
- etc). Discordian and stardate only make a difference when not using
- part. Note that type='stardate' has a separate companion attribute,
- prec, which sets the precision.</p>
+<attr name='type' value='number|ordered|string|discordian|http|iso|stardate|unix'>
+ <p>Defines in which format the date should be displayed in.</p>
+
+ <p>The following types are only useful together with the \"part\"
+ attribute:</p></p>
 
 <xtable>
-<row><c><p><i>type=discordian</i></p></c><c><ex><date date='' type='discordian'/> </ex></c></row>
-<row><c><p><i>type=http</i></p></c><c><ex><date date='' type='http'/> </ex></c></row>
-<row><c><p><i>type=iso</i></p></c><c><ex><date date='' type='iso'/></ex></c></row>
-<row><c><p><i>type=number</i></p></c><c><ex><date date='' type='number'/></ex></c></row>
-<row><c><p><i>type=ordered</i></p></c><c><ex><date date='' type='ordered'/></ex></c></row>
-<row><c><p><i>type=stardate</i></p></c><c><ex><date date='' type='stardate'/></ex></c></row>
-<row><c><p><i>type=string</i></p></c><c><ex><date date='' type='string'/></ex></c></row>
-<row><c><p><i>type=unix</i></p></c><c><ex><date date='' type='unix'/></ex></c></row>
+<row><c><p><i>type=number</i></p></c><c><ex><date part='day' type='number'/></ex></c></row>
+<row><c><p><i>type=ordered</i></p></c><c><ex><date part='day' type='ordered'/></ex></c></row>
+<row><c><p><i>type=string</i></p></c><c><ex><date part='day' type='string'/></ex></c></row>
 </xtable>
+
+ <p>The following types are only useful without the \"part\"
+ attribute:</p>
+
+<xtable>
+  <row>
+    <c><p><i>type=discordian</i></p></c>
+    <c><ex><date type='discordian'/><br/>
+<date type='discordian' year='' holiday=''/></ex></c>
+  </row>
+  <row>
+    <c><p><i>type=http</i></p></c>
+    <c><ex><date type='http'/> </ex></c>
+  </row>
+  <row>
+    <c><p><i>type=iso</i></p></c>
+    <c><ex><date type='iso' time=''/><br/>
+<date type='iso' date=''/><br/>
+<date type='iso'/></ex></c>
+  </row>
+  <row>
+    <c><p><i>type=stardate</i></p></c>
+    <c><ex><date type='stardate' prec='5'/></ex></c>
+  </row>
+  <row>
+    <c><p><i>type=unix</i></p></c>
+    <c><ex><date type='unix'/></ex></c>
+  </row>
+</xtable>
+
+ <p>'http' is the format specified for use in the HTTP protocol
+ (useful for headers etc).</p>
+
+ <p>'stardate' has a separate companion attribute \"prec\" which sets
+ the precision.</p>
 </attr>
 
 <attr name='part' value='year|month|day|wday|date|mday|hour|minute|second|yday|beat|week|seconds'>
