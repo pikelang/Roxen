@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.401 2008/12/20 03:17:57 mast Exp $
+// $Id: roxenloader.pike,v 1.402 2009/01/09 12:50:35 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.401 2008/12/20 03:17:57 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.402 2009/01/09 12:50:35 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -582,21 +582,23 @@ Process.Process spawn_pike(array(string) args, void|string wd,
 			   Stdio.File|void stdin, Stdio.File|void stdout,
 			   Stdio.File|void stderr)
 {
-  //! @ignore
-  return Process.create_process(
-    ({
+  array(string) cmd = ({
 #ifndef __NT__
-      getcwd()+"/start",
+    getcwd()+"/start",
 #else /* __NT__ */
-      getcwd()+"/../ntstart.exe",
+    getcwd()+"/../ntstart.exe",
 #endif /* __NT__ */
-      "--cd",wd,
-      "--quiet","--program"})+args,
-      (["toggle_uid":1,
-	"stdin":stdin,
-	"stdout":stdout,
-	"stderr":stderr]));
-  //! @endignore
+  });
+
+  if (wd) cmd += ({"--cd", wd});
+
+  cmd += ({"--quiet","--program"}) + args;
+
+  return Process.create_process (cmd,
+				 (["toggle_uid":1,
+				   "stdin":stdin,
+				   "stdout":stdout,
+				   "stderr":stderr]));
 }
 
 // Add a few cache control related efuns
