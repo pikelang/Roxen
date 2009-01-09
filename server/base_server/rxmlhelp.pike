@@ -348,12 +348,12 @@ protected string format_doc(string|mapping doc, string name, object id, int leve
 			ref = (ref/"/")[-1];
 
 		      if (!c || !sizeof (c))
-			c = replace(ref, "_", " ");
+			c = Roxen.html_encode_string (replace(ref, "_", " "));
 
 		      if (is_tag && ref != "")
 			c = "<a href='#tag_doc_" +
 			  Roxen.http_encode_url (ref) + "'>"
-			  "&lt;" + Roxen.html_encode_string (c) + "&gt;"
+			  "&lt;" + c + "&gt;"
 			  "</a>";
 		    }
 
