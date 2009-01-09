@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.263 2008/12/23 13:17:22 mast Exp $
+// $Id: Roxen.pmod,v 1.264 2009/01/09 17:56:03 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2726,8 +2726,8 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
        return http_date (t);
 
      case "discordian":
-#if efun(discdate)
-      array(string) not=discdate(t);
+#if constant (spider.discdate)
+      array(string) not=spider.discdate(t);
       res=not[0];
       if(m->year)
 	res += " in the YOLD of "+not[1];
@@ -2738,8 +2738,8 @@ string tagtime(int t, mapping(string:string) m, RequestID id,
       return "Discordian date support disabled";
 #endif
      case "stardate":
-#if efun(stardate)
-      return (string)stardate(t, (int)m->prec||1);
+#if constant (spider.stardate)
+      return (string)spider.stardate(t, (int)m->prec||1);
 #else
       return "Stardate support disabled";
 #endif
