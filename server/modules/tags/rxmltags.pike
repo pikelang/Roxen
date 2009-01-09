@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.583 2009/01/09 12:20:55 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.584 2009/01/09 17:19:42 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -9940,6 +9940,11 @@ After: &var.language;<br /></ex>
 
  <table>
    <tr valign='top'>
+     <td><tt>!<i>expr</i></tt></td>
+     <td>Logical negation: 1 (true) if <i>expr</i> is the integer 0
+     (zero), otherwise 0 (false).</td></tr>
+
+   <tr valign='top'>
      <td><tt><i>expr1</i> == <i>expr2</i></tt></td>
      <td>1 (true) if <i>expr1</i> and <i>expr2</i> are the same, 0
      (false) otherwise. Note that arrays might be different even
@@ -9948,7 +9953,8 @@ After: &var.language;<br /></ex>
    <tr valign='top'>
      <td><tt><i>expr1</i> != <i>expr2</i></tt></td>
      <td>1 (true) if <i>expr1</i> and <i>expr2</i> are different, 0
-     (false) otherwise.</td></tr>
+     (false) otherwise. This is the inverse of the ==
+     operator.</td></tr>
 
    <tr valign='top'>
      <td><tt>equal(<i>expr1</i>, <i>expr2</i>)</tt></td>
