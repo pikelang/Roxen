@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.575 2009/01/09 13:35:45 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.576 2009/01/09 15:57:26 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2584,10 +2584,6 @@ void got_data(mixed fooid, string s, void|int chained)
 	  leftovers = data||"";
 	
 	string d = cv[ 0 ];
-#ifdef DEBUG
-	if (!stringp (d))
-	  error ("Strange value from data cache for %O: %O\n", raw_url, cv);
-#endif
 	file = cv[1];
 	
 	if( sizeof(file->callbacks) )
