@@ -211,6 +211,7 @@
   })</equal>
 </test>
 
+<!-- Currently disabled due to mysql lib dependency. :(
 <test>
   <rxml type="array">
     <sqlquery db="local" query="DELETE FROM __test"/>
@@ -228,6 +229,7 @@
     "b\345", "2", "b\303\245", "3",
   })</equal>
 </test>
+-->
 
 <test>
   <rxml type="array">

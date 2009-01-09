@@ -52,8 +52,14 @@ void run_tests( Configuration c )
   test_false( DBManager.db_url, "local" );
   
 
+  // Resort to broken-unicode for now due to the mysql lib dependency. :(
+#if 0
   Sql.Sql sql_rw = test_true( DBManager.get, "local", 0, 0, 0, "unicode" );
   Sql.Sql sql_ro = test_true( DBManager.get, "local", 0, 1, 0, "unicode" );
+#else
+  Sql.Sql sql_rw = test_true( DBManager.get, "local", 0, 0, 0, "broken-unicode" );
+  Sql.Sql sql_ro = test_true( DBManager.get, "local", 0, 1, 0, "broken-unicode" );
+#endif
 
 #define CR "CREATE table testtable (id INT PRIMARY KEY AUTO_INCREMENT,foo VARCHAR(20),bin VARBINARY(20)) CHARSET utf8"
   test_error( sql_ro->query, CR);
