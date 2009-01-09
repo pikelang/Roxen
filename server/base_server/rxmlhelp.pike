@@ -59,6 +59,7 @@ protected class TagdocParser (int level)
   TagdocParser clone()
   {
     TagdocParser c = ::clone (level);
+    xml_tag_syntax (2);
     c->misc = misc;
     return c;
   }
@@ -330,13 +331,35 @@ protected string format_doc(string|mapping doc, string name, object id, int leve
 	   "ent":lambda(TagdocParser p, mapping m, string c) {
 		   return ({ "&amp;" + c + ";" });
 		 },
-           "xref":lambda(TagdocParser p, mapping m, string c) {
-		    if( (!c || !sizeof(c)) && m->href ) {
-		      c = m->href;
-		      sscanf(c, "%s.tag", c);
-		      return replace((c/"/")[-1], "_", " ");
+
+	   "xref":lambda(TagdocParser p, mapping m, string c) {
+		    string ref = m->href;
+		    if( ref ) {
+		      int is_tag = sscanf(ref, "%s.tag", ref);
+
+		      if (!is_tag && has_suffix (ref, "/")) {
+			// There are references that look like <xref
+			// href='../if/'/>. Assume it's the tag name
+			// in the path.
+			ref = (ref/"/")[-2];
+			is_tag = 1;
+		      }
+		      else
+			ref = (ref/"/")[-1];
+
+		      if (!c || !sizeof (c))
+			c = replace(ref, "_", " ");
+
+		      if (is_tag && ref != "")
+			c = "<a href='#tag_doc_" +
+			  Roxen.http_encode_url (ref) + "'>"
+			  "&lt;" + Roxen.html_encode_string (c) + "&gt;"
+			  "</a>";
 		    }
-		    return c; },
+
+		    return c;
+		  },
+
            "short":lambda(TagdocParser p, mapping m, string c) {
                      return m->hide?"":c; 
                    },
@@ -508,7 +531,9 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
       RXMLHELP_WERR(name+" not present in result.");
       continue;
     }
-    string res = parse_doc(tagdoc[name], name, id, level);
+    string res =
+      "<a name='tag_doc_" + Roxen.html_encode_string (name) + "' />\n" +
+      parse_doc(tagdoc[name], name, id, level);
 
     mapping(string:RXML.Tag) plugins=tag_set->get_plugins(name);
     if(sizeof(plugins)) {
