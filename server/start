@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.231 2008/06/18 21:15:57 mast Exp $
+# $Id: start,v 1.232 2009/01/09 12:41:08 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -723,7 +723,7 @@ cleanup_pid_file() {
 
 # NOTE: The following function needs to be reentrant.
 signal_exit() {
-  dp "Start script terminating."
+  test "x$once" != x2 && dp "Start script terminating."
   trap "" 2 15
   if [ "x$ROXEN_PID" != "x" ] && \
      kill -0 $ROXEN_PID 2>/dev/null; then
@@ -767,7 +767,7 @@ signal_exit() {
       fi
     fi
   fi
-  dp "Start script terminated."
+  test "x$once" != x2 && dp "Start script terminated."
   exit 0
 }
 
