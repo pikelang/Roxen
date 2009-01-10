@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1009 2009/01/08 23:14:46 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1010 2009/01/10 16:34:08 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1473,7 +1473,7 @@ int(0..1) host_is_local(string hostname)
 
 array(Protocol|mapping(string:mixed)) find_port_for_url (
   Standards.URI url, void|Configuration only_this_conf)
-// Returns ({port_obj, url_data}) for an url that matches the given
+// Returns ({port_obj, url_data}) for a url that matches the given
 // one. url_data is the mapping for the url in port_obj->urls. If
 // only_this_conf is given then only ports for that configuration are
 // searched.
@@ -1494,7 +1494,7 @@ array(Protocol|mapping(string:mixed)) find_port_for_url (
       URL2CONF_MSG("glob match\n");
       if (Protocol p = q->port)
 	if (mapping(string:mixed) url_data =
-	    p->find_url_data_for_url (url_with_port, 0 ))
+	    p->find_url_data_for_url (url_with_port, 0, 0))
 	{
 	  Configuration c = url_data->conf;
 	  URL2CONF_MSG("Found config: %O\n", url_data->conf);
@@ -1642,6 +1642,7 @@ class Protocol
 
   string path;
   constant name = "unknown";
+
   constant supports_ipless = 0;
   //! If true, the protocol handles ip-less virtual hosting
 
@@ -1802,9 +1803,10 @@ class Protocol
     }
   }
 
-  private function(string,int:mapping(string:mixed)) sp_fudfu;
+  private function(string,int,RequestID:mapping(string:mixed)) sp_fudfu;
 
-  mapping(string:mixed) find_url_data_for_url (string url, int no_default)
+  mapping(string:mixed) find_url_data_for_url (string url, int no_default,
+					       RequestID id)
   {
     if( sizeof( urls ) == 1 && !no_default)
     {
@@ -1835,15 +1837,19 @@ class Protocol
       URL2CONF_MSG ("%O %O no default\n", this, url);
       return 0;
     }
-    
+
+    // Note: The docs for RequestID.misc->default_conf has a
+    // description of this fallback procedure.
+
     // No host matched, or no host header was included in the request.
     // Is the URL in the '*' ports?
     if (!sp_fudfu)
       if (Protocol p = open_ports[ name ][ 0 ][ port ] )
 	sp_fudfu = p->find_url_data_for_url;
     if (sp_fudfu && sp_fudfu != find_url_data_for_url)
-      if (mapping(string:mixed) u = sp_fudfu( url, 1 )) {
+      if (mapping(string:mixed) u = sp_fudfu (url, 1, id)) {
 	URL2CONF_MSG ("%O %O sp_fudfu: %O\n", this, url, u->conf);
+	if (id) id->misc->defaulted_conf = 1;
 	return u;
       }
     
@@ -1861,6 +1867,7 @@ class Protocol
 	if( choices[ cc->conf ] )
 	{
 	  URL2CONF_MSG ("%O %O conf in choices: %O\n", this, url, cc->conf);
+	  if (id) id->misc->defaulted_conf = 2;
 	  return cc;
 	}
     }
@@ -1874,7 +1881,7 @@ class Protocol
   //! This interface is not at all set in stone, and might change at 
   //! any time.
   {
-    mapping(string:mixed) url_data = find_url_data_for_url (url, 0);
+    mapping(string:mixed) url_data = find_url_data_for_url (url, 0, id);
 
     if (!url_data) {
       // Pick the first default server available. FIXME: This makes
@@ -1882,6 +1889,7 @@ class Protocol
       foreach (configurations, Configuration c)
 	if (c->query ("default_server")) {
 	  URL2CONF_MSG ("%O %O any default server: %O\n", this, url, c);
+	  if (id) id->misc->defaulted_conf = 3;
 	  if(!c->inited)
 	    // FIXME: We can be called from the backend thread, so
 	    // this should be queued for a handler thread.
@@ -1891,9 +1899,15 @@ class Protocol
 
       // if we end up here, there is no default port at all available
       // so grab the first configuration that is available at all.
-      url_data = urls[sorted_urls[0]];
-      if (id) id->misc->defaulted=1;
-      URL2CONF_MSG ("%O %O first in sorted_urls: %O\n", this, url,
+      // We choose the last entry in sorted_urls since that's the most
+      // generic one and therefore probably the best option for a
+      // fallback.
+      url_data = urls[sorted_urls[-1]];
+      if (id) {
+	id->misc->defaulted_conf = 4;
+	id->misc->defaulted=1;	// Compat.
+      }
+      URL2CONF_MSG ("%O %O last in sorted_urls: %O\n", this, url,
 		    url_data->conf);
     }
 

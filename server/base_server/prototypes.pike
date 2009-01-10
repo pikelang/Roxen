@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.225 2009/01/10 13:53:47 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.226 2009/01/10 16:34:08 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1031,6 +1031,30 @@ class RequestID
   //!   @member string "connection"
   //!     Protocol connection mode. Typically @tt{"keep-alive"@} or
   //!     @tt{"close"@}.
+  //!   @member int "defaulted_conf"
+  //!     If set, then the url-to-configuration resolution failed to
+  //!     find a good configuration based on the interface, port, host
+  //!     header, and port path prefix. The value is an integer
+  //!     showing the "badness" of the fallback configuration chosen:
+  //!     @int
+  //!       @value 1
+  //!         The host, port and path prefix didn't match among the
+  //!         urls registered for the interface the request was
+  //!         received on, but a match was found among the urls
+  //!         registered on an ANY interface for the same port number.
+  //!       @value 2
+  //!         One of the configurations on the receiving port (c.f.
+  //!         @[port_obj]) had the "Default site" flag set and was
+  //!         therefore chosen.
+  //!       @value 3
+  //!         One of the configurations in the server had the "Default
+  //!         site" flag set and was therefore chosen, regardless of
+  //!         the ports it has open.
+  //!       @value 4
+  //!         No configuration with the "Default site" flag set was
+  //!         found, so the one with the least specific url on the
+  //!         receiving port was chosen.
+  //!     @endint
   //!   @member mapping(string:mixed) "defines"
   //!     RXML macros.
   //!   @member int(100..) "error_code"
