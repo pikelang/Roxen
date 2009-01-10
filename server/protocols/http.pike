@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.576 2009/01/09 15:57:26 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.577 2009/01/10 13:53:47 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -966,19 +966,21 @@ private int parse_got( string new_data )
 		       data/"\n");
 	  /* FIXME: Should this be reported to the client? */
 	} else {
-	  foreach(messg->body_parts, object part)
-	  {
-	    if(part->disp_params->filename)
-	    {
-	      real_variables[part->disp_params->name] += ({part->getdata()});
-	      real_variables[part->disp_params->name+".filename"] +=
-	      ({part->disp_params->filename});
-	      misc->files += ({ part->disp_params->name });
-	    } else 
-	      real_variables[part->disp_params->name] += ({part->getdata()});
-	    if(part->headers["content-type"])
-	      real_variables[part->disp_params->name+".mimetype"] +=
-		({ part->headers["content-type"] });
+	  mapping(string:array) post_vars = misc->post_variables = ([]);
+	  foreach (messg->body_parts, object part) {
+	    string n = part->disp_params->name;
+	    string d = part->getdata();
+	    post_vars[n] += ({d});
+	    real_variables[n] += ({d});
+	    if (string fn = part->disp_params->filename) {
+	      post_vars[n + ".filename"] += ({fn});
+	      real_variables[n + ".filename"] += ({fn});
+	      misc->files += ({n});
+	    }
+	    if (string ct = part->headers["content-type"]) {
+	      post_vars[n + ".mimetype"] += ({ct});
+	      real_variables[n + ".mimetype"] += ({ct});
+	    }
 	  }
 	}
 	break;

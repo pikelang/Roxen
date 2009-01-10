@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.224 2009/01/08 23:14:46 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.225 2009/01/10 13:53:47 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -972,8 +972,12 @@ class RequestID
   //! according to @[input_charset] have been decoded). See
   //! @[decode_query] for details.
   //!
+  //! @note
+  //! This mapping is often changed internally to produce an updated
+  //! set of variables that is passed back to the client.
+  //!
   //! @seealso
-  //! @[rest_query]
+  //! @[rest_query], @expr{misc->post_variables@}
 
   mapping(string:mixed)|FakedVariables variables;
   //! @decl mapping(string:mixed) variables;
@@ -1058,6 +1062,9 @@ class RequestID
   //!     Port number from the canonicalized host header.
   //!   @member PrefLanguages "pref_languages"
   //!     Language preferences for the request.
+  //!   @member mapping(string:array) "post_variables"
+  //!     For POST requests, these are the variables parsed from the
+  //!     request body. It is undefined otherwise.
   //!   @member array "proxyauth"
   //!     Decoded proxy authentication information.
   //!   @member string "range"
