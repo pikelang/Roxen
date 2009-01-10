@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.577 2009/01/10 13:53:47 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.578 2009/01/10 17:00:46 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2127,7 +2127,7 @@ void send_result(mapping|void result)
 	  string data = "";
 	  if( file->data ) data = file->data[..file->len-1];
 	  if( file->file ) data = file->file->read(file->len);
-	  conf->datacache->set(raw_url, data,
+	  conf->datacache->set(misc->prot_cache_key, data,
 			       ([
 				 "hs":head_string,
 				 "key":misc->cachekey,
@@ -2476,6 +2476,7 @@ void got_data(mixed fooid, string s, void|int chained)
     // versions of HTTP, all HTTP/1.1 servers MUST accept the absoluteURI
     // form in requests, even though HTTP/1.1 clients will only generate
     // them in requests to proxies. 
+    misc->prot_cache_key = raw_url;
     if (has_prefix(raw_url, port_obj->url_prefix)) {
       sscanf(raw_url[sizeof(port_obj->url_prefix)..], "%[^/]%s",
 	     misc->host, raw_url);
@@ -2497,17 +2498,18 @@ void got_data(mixed fooid, string s, void|int chained)
       // FIXME: port_obj->name & port_obj->default_port are constant
       // consider caching them?
 
-      if (misc->host) {
-	conf =
-	  port_obj->find_configuration_for_url(port_obj->url_prefix +
-					       misc->host + raw_url,
-					       this_object());
-      } else {
-	conf =
-	  port_obj->find_configuration_for_url(port_obj->url_prefix + "*:" +
-					       port_obj->port + raw_url,
-					       this_object());
-      }
+      string port_match_url = misc->host ?
+	port_obj->url_prefix + misc->host + raw_url :
+	port_obj->url_prefix + "*:" + port_obj->port + raw_url;
+      conf = port_obj->find_configuration_for_url(port_match_url, this);
+
+      // Note: The call above might have replaced port_obj from one
+      // bound to a specific interface to one bound to ANY.
+
+      if (misc->defaulted_conf > 1)
+	// Use the full url in the cache if a fallback configuration
+	// (with or without the default_server flag) was chosen.
+	misc->prot_cache_key = port_match_url;
     }
     else if( strlen(path) )
       adjust_for_config_path( path );
@@ -2572,12 +2574,12 @@ void got_data(mixed fooid, string s, void|int chained)
     TIMER_START(cache_lookup);
     array cv;
     if(misc->cacheable && !misc->no_proto_cache &&
-       (cv = conf->datacache->get(raw_url, this_object())) )
+       (cv = conf->datacache->get(misc->prot_cache_key, this)) )
     {
-      MY_TRACE_ENTER(sprintf("Checking entry %O", raw_url));
+      MY_TRACE_ENTER(sprintf("Checking entry %O", misc->prot_cache_key));
       if( !cv[1]->key ) {
 	MY_TRACE_LEAVE("Entry invalid due to zero key");
-	conf->datacache->expire_entry(raw_url, this_object());
+	conf->datacache->expire_entry(misc->prot_cache_key, this);
       }
       else 
       {
@@ -2628,7 +2630,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	  if (!file->key) {
 	    // Invalid.
 	    MY_TRACE_LEAVE ("Entry invalid due to zero key");
-	    conf->datacache->expire_entry(raw_url, this_object());
+	    conf->datacache->expire_entry(misc->prot_cache_key, this);
 	    can_cache = 0;
 	  } else {
 	    cache_status["stale"] = 1;
