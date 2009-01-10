@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1010 2009/01/10 16:34:08 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1011 2009/01/10 16:54:54 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1758,6 +1758,7 @@ class Protocol
 	    m_delete(open_ports, name);
 	}
       }
+      any_port = 0;		// Avoid possibly cyclic ref.
       //destruct( ); // Close the port.
     }
   }
@@ -1803,7 +1804,7 @@ class Protocol
     }
   }
 
-  private function(string,int,RequestID:mapping(string:mixed)) sp_fudfu;
+  private Protocol any_port;
 
   mapping(string:mixed) find_url_data_for_url (string url, int no_default,
 					       RequestID id)
@@ -1843,13 +1844,16 @@ class Protocol
 
     // No host matched, or no host header was included in the request.
     // Is the URL in the '*' ports?
-    if (!sp_fudfu)
-      if (Protocol p = open_ports[ name ][ 0 ][ port ] )
-	sp_fudfu = p->find_url_data_for_url;
-    if (sp_fudfu && sp_fudfu != find_url_data_for_url)
-      if (mapping(string:mixed) u = sp_fudfu (url, 1, id)) {
-	URL2CONF_MSG ("%O %O sp_fudfu: %O\n", this, url, u->conf);
-	if (id) id->misc->defaulted_conf = 1;
+    if (!any_port)
+      any_port = open_ports[ name ][ 0 ][ port ];
+    if (any_port && any_port != this)
+      if (mapping(string:mixed) u =
+	  any_port->find_url_data_for_url (url, 1, id)) {
+	URL2CONF_MSG ("%O %O found on ANY port: %O\n", this, url, u->conf);
+	if (id) {
+	  id->misc->defaulted_conf = 1;
+	  id->port_obj = any_port;
+	}
 	return u;
       }
     
@@ -1910,6 +1914,9 @@ class Protocol
       URL2CONF_MSG ("%O %O last in sorted_urls: %O\n", this, url,
 		    url_data->conf);
     }
+
+    // It's assumed nothing below uses data in this object, since
+    // find_url_data_for_url might have switched Protocol object.
 
     string config_path = url_data->path;
     if (config_path && id && id->adjust_for_config_path)
