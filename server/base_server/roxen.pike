@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1011 2009/01/10 16:54:54 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1012 2009/01/11 14:50:26 mast Exp $";
 
 //! @appears roxen
 //!
@@ -38,10 +38,8 @@ inherit "supports";
 inherit "module_support";
 inherit "config_userdb";
 
-#ifdef THREADS
-// Used when running threaded to find out which thread is the backend thread.
+// Used to find out which thread is the backend thread.
 Thread.Thread backend_thread;
-#endif /* THREADS */
 
 // --- Locale defines ---
 
@@ -5168,11 +5166,7 @@ void describe_all_threads (void|int ignored, // Might be the signal number.
   for(i=0; i < sizeof(threads); i++) {
     report_debug(">> ### Thread 0x%x%s:\n",
 		 threads[i]->id_number(),
-#ifdef THREADS
 		 threads[i] == backend_thread ? " (backend thread)" : ""
-#else
-		 ""
-#endif
 		);
     report_debug(">> " +
 		 replace (describe_backtrace (threads[i]->backtrace()),
@@ -5438,8 +5432,8 @@ int main(int argc, array tmp)
     report_debug("\bdisabled.\n");
 #endif // SNMP_AGENT
 
-#ifdef THREADS
   backend_thread = this_thread();
+#ifdef THREADS
   name_thread( backend_thread, "Backend" );
 #else
   report_debug("\n"
