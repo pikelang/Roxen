@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.264 2009/01/09 17:56:03 mast Exp $
+// $Id: Roxen.pmod,v 1.265 2009/01/11 14:52:29 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3124,14 +3124,14 @@ string make_http_headers(mapping(string:string|array(string)) heads,
 
 class QuotaDB
 {
-#if constant(create_thread)
+#if constant(thread_create)
   object(Thread.Mutex) lock = Thread.Mutex();
 #define LOCK()		mixed key__; catch { key__ = lock->lock(); }
 #define UNLOCK()	do { if (key__) destruct(key__); } while(0)
-#else /* !constant(create_thread) */
+#else /* !constant(thread_create) */
 #define LOCK()
 #define UNLOCK()
-#endif /* constant(create_thread) */
+#endif /* constant(thread_create) */
 
   constant READ_BUF_SIZE = 256;
   constant CACHE_SIZE_LIMIT = 512;
