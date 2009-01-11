@@ -1,3 +1,4 @@
+#if constant(Java.machine)
 protected object jvm = Java.machine;
 
 private inherit "roxenlib";
@@ -861,3 +862,4 @@ void create()
     ({"tagDebug", "(Ljava/lang/String;)V", native_tag_debug}),
   }));
 }
+#endif
