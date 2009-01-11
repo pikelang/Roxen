@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1013 2009/01/11 15:23:12 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1014 2009/01/11 15:51:14 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1664,7 +1664,8 @@ class Protocol
   //! notation with the first longest sequence of zeros compressed.
 
   int refs;
-  //! The number of references to this port
+  //! The number of references to this port. This is the same as the
+  //! size of @[urls] and @[sorted_urls].
 
   program requesthandler;
   //! The per-connection request handling class
@@ -1719,8 +1720,10 @@ class Protocol
 
     m_delete(conf_data, urls[_name]->conf);
     m_delete(urls, _name);
-    if (!path && sizeof (Array.uniq (values (urls)->path)) == 1)
-      path = values (urls)[0]->path;
+    if (!path) {
+      array(string) paths = Array.uniq (values (urls)->path);
+      if (sizeof (paths) == 1) path = paths[0];
+    }
     sorted_urls -= ({_name});
 #ifdef PORT_DEBUG
     report_debug("Protocol(%s)->unref(%O): refs:%d\n",
@@ -1787,7 +1790,7 @@ class Protocol
       {
         if(!mu) 
         {
-          mu = urls[sorted_urls[0]];
+	  mu = get_iterator(urls)->value();
 	  if(!(c=mu->conf)->inited ) {
 	    handle (lambda () {
 		      c->enable_all_modules();
@@ -1807,12 +1810,15 @@ class Protocol
   mapping(string:mixed) find_url_data_for_url (string url, int no_default,
 					       RequestID id)
   {
-    if( sizeof( urls ) == 1 && !no_default)
+    if( refs == 1 )
     {
-      if(!mu) mu=urls[sorted_urls[0]];
-      URL2CONF_MSG ("%O %O Only one configuration: %O\n", this, url, mu->conf);
-      return mu;
-    } else if (!sizeof(sorted_urls)) {
+      if (!no_default) {
+	if(!mu) mu=get_iterator(urls)->value();
+	URL2CONF_MSG ("%O %O Only one configuration: %O\n",
+		      this, url, mu->conf);
+	return mu;
+      }
+    } else if (!refs) {
       URL2CONF_MSG("%O %O No active URLS!\n", this, url);
       return 0;
     }
