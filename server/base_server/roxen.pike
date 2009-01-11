@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1017 2009/01/11 16:02:53 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1018 2009/01/11 18:13:42 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -2576,7 +2576,7 @@ string normalize_url(string url)
 
   Standards.URI ui = Standards.URI(url);
   ui->fragment = 0;
-  if (ui->host == "any" || ui->host == "::")
+  if (ui->host == "any" || ui->host == "ANY" || ui->host == "::")
     ui->host = "*";
   else
     // FIXME: Maybe Standards.URI should do this internally?
@@ -2652,7 +2652,7 @@ int register_url( string url, Configuration conf )
       (string) ui );
     return 0;
   }
-  if (ui->host == "any" || ui->host == "::")
+  if (ui->host == "any" || ui->host == "ANY" || ui->host == "::")
     ui->host = "*";
   else
     // FIXME: Maybe Standards.URI should do this internally?
