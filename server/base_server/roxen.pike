@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1012 2009/01/11 14:50:26 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1013 2009/01/11 15:23:12 mast Exp $";
 
 //! @appears roxen
 //!
@@ -2568,14 +2568,13 @@ string normalize_url(string url)
 {
   if (!sizeof (url - " " - "\t")) return "";
 
-  url = lower_case( url );
   Standards.URI ui = Standards.URI(url);
   ui->fragment = 0;
   if (ui->host == "any" || ui->host == "::")
     ui->host = "*";
   else
     // FIXME: Maybe Standards.URI should do this internally?
-    ui->host = Standards.IDNA.zone_to_ascii (ui->host);
+    ui->host = lower_case(Standards.IDNA.zone_to_ascii (ui->host));
   
   string host = ui->host;
   string protocol = ui->scheme;
