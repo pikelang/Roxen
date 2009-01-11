@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.585 2009/01/09 17:56:56 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.586 2009/01/11 14:58:01 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -4122,8 +4122,6 @@ class TagUse {
   }
 
   private array parse_use_package(string data, RXML.Context ctx) {
-    RequestID id = ctx->id;
-
     RXML.Parser parser = Roxen.get_rxml_parser (ctx->id);
     parser->write_end (data);
     parser->eval();
