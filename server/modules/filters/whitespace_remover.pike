@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: whitespace_remover.pike,v 1.5 2008/12/17 10:01:49 jonasw Exp $";
+constant cvs_version = "$Id: whitespace_remover.pike,v 1.6 2009/01/11 14:56:44 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Whitespace Remover";
@@ -39,7 +39,7 @@ protected string most_significant_whitespace(string ws)
 
 protected array(string) remove_consecutive_whitespace(Parser.HTML p, string in)
 {
-  sscanf(in, "%{%[ \t\r\n]%[^ \t\r\n]%}", array ws_nws);
+  sscanf(in, "%{%[ \t\r\n]%[^ \t\r\n]%}", array(array(string)) ws_nws);
   if(sizeof(ws_nws))
   {
     ws_nws = Array.transpose( ws_nws );
