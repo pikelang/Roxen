@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1015 2009/01/11 15:55:18 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1016 2009/01/11 16:02:32 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1824,7 +1824,6 @@ class Protocol
       return 0;
     }
 
-    url = lower_case( url );
     URL2CONF_MSG("sorted_urls: %O\n"
 		 "url: %O\n", sorted_urls, url);
     // The URLs are sorted from longest to shortest, so that short
@@ -2658,7 +2657,7 @@ int register_url( string url, Configuration conf )
     ui->host = "*";
   else
     // FIXME: Maybe Standards.URI should do this internally?
-    ui->host = Standards.IDNA.zone_to_ascii (ui->host);
+    ui->host = lower_case (Standards.IDNA.zone_to_ascii (ui->host));
 
   protocol = ui->scheme;
   host = ui->host;
