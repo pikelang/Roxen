@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.549 2008/11/24 17:48:32 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.550 2009/01/12 12:25:53 mathias Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -8646,9 +8646,10 @@ just got zapped?
  Changes all characters to upper or lower case letters, or
  capitalizes the first letter in the content.</p>
 
-<ex><case case='upper'>upper</case></ex>
-<ex><case case='lower'>lower</case></ex>
-<ex><case case='capitalize'>capitalize</case></ex>
+<ex><set variable='var.lipsum' value='lOrEm iPsUm' />
+<case case='upper'>&var.lipsum;</case><br/>
+<case case='lower'>&var.lipsum;</case><br/>
+<case case='capitalize'>&var.lipsum;</case></ex>
 </attr>",
 
 //----------------------------------------------------------------------
