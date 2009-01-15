@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.578 2009/01/10 17:00:46 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.579 2009/01/15 14:09:26 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -893,6 +893,18 @@ private int parse_got( string new_data )
 #endif /* DEBUG */
 	 }
 	 misc["new-uri"] = VFS.normalize_path (contents);
+	 break;
+
+       case "expect":
+	 // RFC 2616, section 14.20: "A server that does not
+	 // understand or is unable to comply with any of the
+	 // expectation values in the Expect field of a request MUST
+	 // respond with appropriate error status." We only handle the
+	 // standard 100-continue case (see ready_to_receive).
+	 if (contents != "100-continue") {
+	   my_fd->write ("HTTP/1.1 417 Expectation Failed\r\n\r\n");
+	   return 2;
+	 }
 	 break;
       }
     }
