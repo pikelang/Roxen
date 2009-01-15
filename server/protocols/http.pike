@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.579 2009/01/15 14:09:26 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.580 2009/01/15 17:07:08 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -419,13 +419,20 @@ private void really_set_config(array mod_config)
     // FIXME: Delayed chaining! my_fd_busy.
     CHECK_FD_SAFE_USE;
     url = url_base() + url[1..];
+    string res = prot + " 302 Roxen config coming up\r\n"+
+      (what?what+"\r\n":"")+"Location: "+url+"\r\n"
+      "Connection: close\r\nDate: "+
+      Roxen.http_date(predef::time(1))+
+      "\r\nContent-Type: text/html\r\n"
+      "Content-Length: 1\r\n\r\nx";
+#ifdef CONNECTION_DEBUG
+    werror ("HTTP[%s]: Blocking response (length %d) ========================\n"
+	    "%O\n", DEBUG_GET_FD, sizeof (res), res);
+#else
+    REQUEST_WERR(sprintf("HTTP: Send blocking %O", res));
+#endif
     my_fd->set_blocking();
-    my_fd->write( prot + " 302 Roxen config coming up\r\n"+
-                  (what?what+"\r\n":"")+"Location: "+url+"\r\n"
-                  "Connection: close\r\nDate: "+
-                  Roxen.http_date(predef::time(1))+
-                  "\r\nContent-Type: text/html\r\n"
-                  "Content-Length: 1\r\n\r\nx" );
+    my_fd->write (res);
     my_fd->close();
     my_fd = 0;
     end();
@@ -769,6 +776,12 @@ private int parse_got( string new_data )
 	else
 	{
 	  // FIXME: my_fd_busy.
+#ifdef CONNECTION_DEBUG
+	  werror ("HTTP[%s]: Response =============================================\n"
+		  "%O\n", DEBUG_GET_FD, "PONG\r\n");
+#else
+	  REQUEST_WERR("HTTP: Send PONG");
+#endif
 	  my_fd->write("PONG\r\n");
 	  TIMER_END(parse_got_2_parse_line);
 	  TIMER_END(parse_got_2);
@@ -902,7 +915,14 @@ private int parse_got( string new_data )
 	 // respond with appropriate error status." We only handle the
 	 // standard 100-continue case (see ready_to_receive).
 	 if (contents != "100-continue") {
-	   my_fd->write ("HTTP/1.1 417 Expectation Failed\r\n\r\n");
+	   string res = "HTTP/1.1 417 Expectation Failed\r\n\r\n";
+#ifdef CONNECTION_DEBUG
+	   werror ("HTTP[%s]: Response (length %d) =================================\n"
+		   "%O\n", DEBUG_GET_FD, sizeof (res), res);
+#else
+	   REQUEST_WERR(sprintf("HTTP: Send %O", res));
+#endif
+	   my_fd->write (res);
 	   return 2;
 	 }
 	 break;
@@ -1008,13 +1028,19 @@ private int parse_got( string new_data )
   if (!(< "HTTP/1.0", "HTTP/0.9" >)[prot]) {
     if (!misc->host) {
       // RFC 2616 requires this behaviour.
+      string res = (prot||"HTTP/1.1") +
+	" 400 Bad request (missing host header).\r\n"
+	"Content-Length: 0\r\n"
+	"Date: "+Roxen.http_date(predef::time())+"\r\n"
+	"\r\n";
+#ifdef CONNECTION_DEBUG
+      werror ("HTTP[%s]: Response (length %d) =================================\n"
+	      "%O\n", DEBUG_GET_FD, sizeof (res), res);
+#else
       REQUEST_WERR("HTTP: HTTP/1.1 request without a host header.");
+#endif
       // FIXME: my_fd_busy.
-      my_fd->write((prot||"HTTP/1.1") +
-		   " 400 Bad request (missing host header).\r\n"
-		   "Content-Length: 0\r\n"
-		   "Date: "+Roxen.http_date(predef::time())+"\r\n"
-		   "\r\n");
+      my_fd->write (res);
       TIMER_END(parse_got_2);
       return 2;
     }
@@ -1873,8 +1899,16 @@ void ready_to_receive()
   if (clientprot == "HTTP/1.1" && request_headers->expect &&
       (request_headers->expect ==  "100-continue" ||
        has_value(request_headers->expect, "100-continue" )) &&
-      !my_fd_busy)
-    my_fd->write("HTTP/1.1 100 Continue\r\n\r\n");
+      !my_fd_busy) {
+    string res = "HTTP/1.1 100 Continue\r\n\r\n";
+#ifdef CONNECTION_DEBUG
+    werror ("HTTP[%s]: Response (length %d) =================================\n"
+	    "%O\n", DEBUG_GET_FD, sizeof (res), res);
+#else
+    REQUEST_WERR(sprintf("HTTP: Send %O", res));
+#endif
+    my_fd->write (res);
+  }
 }
 
 // Send and account the formatted result
@@ -1919,7 +1953,7 @@ void low_send_result(string headers, string data, int|void len,
       data = file->read(len);
     } else if (!data) data = "";
 #ifdef CONNECTION_DEBUG
-    werror("HTTP[%s]: Response (length %d) ===============================\n"
+    werror("HTTP[%s]: Blocking response (length %d) ======================\n"
 	   "%O\n", DEBUG_GET_FD, sizeof (headers) + sizeof (data),
 	   headers + data);
 #else
@@ -2449,14 +2483,21 @@ void got_data(mixed fooid, string s, void|int chained)
 	  my_fd->set_nonblocking(got_data, 0, close_cb);
 	return;
 
-      case 1:
+      case 1: {
+	string res = (prot||"HTTP/1.0")+" 500 Illegal request\r\n"
+	  "Content-Length: 0\r\n"+
+	  "Date: "+Roxen.http_date(predef::time())+"\r\n"
+	  "\r\n";
+#ifdef CONNECTION_DEBUG
+	werror ("HTTP[%s]: Response (length %d) =================================\n"
+		"%O\n", DEBUG_GET_FD, sizeof (res), res);
+#else
 	REQUEST_WERR("HTTP: Stupid Client Error.");
-	my_fd->write((prot||"HTTP/1.0")+" 500 Illegal request\r\n"
-		     "Content-Length: 0\r\n"+
-		     "Date: "+Roxen.http_date(predef::time())+"\r\n"
-		     "\r\n");
+#endif
+	my_fd->write (res);
 	end();
 	return;			// Stupid request.
+      }
     
       case 2:
 	REQUEST_WERR("HTTP: Done.");
