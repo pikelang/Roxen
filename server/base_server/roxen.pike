@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1018 2009/01/11 18:13:42 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1019 2009/01/16 14:38:32 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1476,12 +1476,13 @@ array(Protocol|mapping(string:mixed)) find_port_for_url (
 // only_this_conf is given then only ports for that configuration are
 // searched.
 {
-  //  Force string coersion to incorporate any separate base URI
-  Standards.URI url2 = Standards.URI((string) url);
-  url2->fragment = 0;
-  url2->query = 0;
-  string url_with_port = (string) url2;
-  
+  // Cannot use the uri formatter in Standards.URI here since we
+  // always want the port number to be present.
+  string host = url->host;
+  if (has_value (host, ":")) host = "[" + host + "]";
+  string url_with_port = sprintf ("%s://%s:%d%s", url->scheme, host, url->port,
+				  sizeof (url->path) ? url->path : "/");
+
   URL2CONF_MSG("URL with port: %s\n", url_with_port);
 
   foreach (urls; string u; mapping(string:mixed) q)
@@ -2652,31 +2653,33 @@ int register_url( string url, Configuration conf )
       (string) ui );
     return 0;
   }
-  if (ui->host == "any" || ui->host == "ANY" || ui->host == "::")
-    ui->host = "*";
+  if (lower_case (ui->host) == "any" || ui->host == "::")
+    host = "*";
   else
     // FIXME: Maybe Standards.URI should do this internally?
-    ui->host = lower_case (Standards.IDNA.zone_to_ascii (ui->host));
+    host = lower_case (Standards.IDNA.zone_to_ascii (ui->host));
 
   protocol = ui->scheme;
-  host = ui->host;
-  if (!sizeof(host || "") || !protocols[protocol]) {
+  if (host == "" || !protocols[protocol]) {
     report_error(LOC_M(19,"Bad URL '%s' for server `%s'")+"\n",
 		 (string) ui, conf->query_name());
   }
-  if (!ui->port)
-    ui->port = protocols[protocol]->default_port;
-  port = ui->port;
 
-  url = (string) ui;
-  
-  if (path = ui->path)
-    if (sizeof(path)) {
-      if (has_suffix(path, "/"))
-	path = path[..sizeof(path) - 2];
-    } else {
-      path = 0;
-    }
+  port = ui->port || protocols[protocol]->default_port;
+
+  if (path = ui->path) {
+    if (has_suffix(path, "/"))
+      path = path[..<1];
+    if (path == "") path = 0;
+  }
+
+  {
+    string h = has_value (host, ":") ? "[" + host + "]" : host;
+    url = sprintf ("%s://%s:%d%s/", protocol, h, port,
+		   // If the path is set it's assumed to begin with a
+		   // "/", but not end with one.
+		   path || "");
+  }
 
   if( urls[ url ]  )
   {
@@ -5653,8 +5656,8 @@ string check_variable(string name, mixed value)
 int is_ip(string s)
 {
   return s &&
-    ((sscanf(s,"%*d.%*d.%*d.%*d")==4 && s[-1]>='0' && s[-1]<='9') || // IPv4
-     (sizeof(s/":") > 1));	// IPv6
+    (sscanf(s,"%*d.%*d.%*d.%*d%*c")==4 || // IPv4
+     has_value (s, ":"));	// IPv6
 }
 
 protected string _sprintf( )
