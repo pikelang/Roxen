@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.226 2009/01/10 16:34:08 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.227 2009/01/17 13:51:37 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1065,9 +1065,13 @@ class RequestID
   //!   @member array(string) "files"
   //!     Multipart/form-data variables that have an associated filename.
   //!   @member string "host"
-  //!     Canonical host header (lower-case, port number present).
+  //!     Canonical host header (lower-case, port number present). If
+  //!     the host is given as an IPv6 address then it's surrounded by
+  //!     @tt{"[" "]"@}.
   //!   @member string "hostname"
-  //!     Hostname from the canonicalized host header.
+  //!     Hostname from the canonicalized host header. As opposed to
+  //!     the @expr{"host"@} entry, an IPv6 address is not surrounded
+  //!     by @tt{"[" "]"@} here.
   //!   @member int "last_modified"
   //!     Time stamp for when the request was last modified.
   //!   @member int "len"
