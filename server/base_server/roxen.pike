@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1019 2009/01/16 14:38:32 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1020 2009/01/17 13:50:31 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1479,7 +1479,8 @@ array(Protocol|mapping(string:mixed)) find_port_for_url (
   // Cannot use the uri formatter in Standards.URI here since we
   // always want the port number to be present.
   string host = url->host;
-  if (has_value (host, ":")) host = "[" + host + "]";
+  if (has_value (host, ":"))
+    host = "[" + (Protocols.IPv6.normalize_addr_basic (host) || host) + "]";
   string url_with_port = sprintf ("%s://%s:%d%s", url->scheme, host, url->port,
 				  sizeof (url->path) ? url->path : "/");
 
@@ -2019,77 +2020,12 @@ class Protocol
     }
   }
 
-  protected array(int) get_ipv6_sequence(string partition)
-  {
-    array(int) segments = ({});
-    foreach(partition/":", string part) {
-      if (has_value(part, ".")) {
-	array(int) sub_segs = array_sscanf(part, "%d.%d.%d.%d");
-	switch(sizeof(sub_segs)) {
-	default:
-	case 4:
-	  segments += ({ sub_segs[0]*256+sub_segs[1],
-			 sub_segs[2]*256+sub_segs[3] });
-	  break;
-	case 3:
-	  segments += ({ sub_segs[0]*256+sub_segs[1],
-			 sub_segs[2] });
-	  break;
-	case 2:
-	  segments += ({ sub_segs[0]*256 + sub_segs[1]>>16,
-			 sub_segs[1]&0xffff });
-	  break;
-	}
-      } else {
-	segments += array_sscanf(part, "%x");
-      }
-    }
-    return segments;
-  }
-
   string canonical_ip(string i)
   {
     if (!i) return 0;
-    if (has_value(i, ":")) {
-      // IPv6
-      if (i == "::") return "::";	// IPv6 ANY.
-      if (i == "::1") return "::1";	// IPv6 loopback
-      array(string) partitions = i/"::";
-      array(int) sections = get_ipv6_sequence(partitions[0]);
-      if (sizeof(partitions) > 1) {
-	array(int) tail = get_ipv6_sequence(partitions[1]);
-	sections += allocate(8 - sizeof(sections) - sizeof(tail)) + tail;
-      } else if (sizeof(sections) < 8) {
-	sections += allocate(8 - sizeof(sections));
-      }
-      i = sprintf("%04.4x:%04.4x:%04.4x:%04.4x:"
-		  "%04.4x:%04.4x:%04.4x:%04.4x",
-		  @sections);
-      // Common case.
-      if (i == "0000:0000:0000:0000:0000:0000:0000:0000") return "::";	// ANY
-      if (i == "0000:0000:0000:0000:0000:0000:0000:0001") return "::1";	// loopback
-
-      // Compress the longest sequence of zeros.
-      partitions = i/":";
-      int start;
-      int max;
-      int best;
-      foreach(partitions + ({ "SENTINEL" }); int ind; string part) {
-	if (part != "0000") {
-	  if ((ind - start) > max) {
-	    best = start;
-	    max = ind - start;
-	  }
-	  start = ind + 1;
-	}
-      }
-      if (max) {
-	i = (partitions[..best-1] + ({""}) + partitions[best+max..])*":";
-	if (!best) i = ":" + i;
-	if (best + max == 8) i += ":";
-      }
-      return i;
-    } else {
+    if (has_value(i, ":"))
+      return Protocols.IPv6.normalize_addr_short (i);
+    else {
       // IPv4
       array(int) segments = array_sscanf(i, "%d.%d.%d.%d");
       string bytes;
@@ -2674,7 +2610,17 @@ int register_url( string url, Configuration conf )
   }
 
   {
-    string h = has_value (host, ":") ? "[" + host + "]" : host;
+    string h;
+    if (has_value (host, ":")) {
+      h = Protocols.IPv6.normalize_addr_basic (host);
+      if (!h)
+	report_error (
+	  LOC_M(0, "Bad IPv6 address in '%s' for server '%s'") + "\n",
+	  (string) ui, conf->query_name());
+      h = "[" + h + "]";
+    }
+    else
+      h = host;
     url = sprintf ("%s://%s:%d%s/", protocol, h, port,
 		   // If the path is set it's assumed to begin with a
 		   // "/", but not end with one.
