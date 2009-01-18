@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.265 2009/01/11 14:52:29 mast Exp $
+// $Id: Roxen.pmod,v 1.266 2009/01/18 13:46:32 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -5056,9 +5056,12 @@ class LogPipe
   protected void create (Stdio.File read_end, Stdio.File write_end,
 			 int use_read_thread)
   {
+#if constant(thread_create)
     if (use_read_thread)
       thread_create (log_pipe_read_thread, read_end);
-    else {
+    else
+#endif
+    {
       read_end->set_nonblocking (read_cb, 0, close_cb);
       read_end->set_id (read_end);
     }
