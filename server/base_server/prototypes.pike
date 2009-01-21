@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.227 2009/01/17 13:51:37 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.228 2009/01/21 13:07:29 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1065,13 +1065,15 @@ class RequestID
   //!   @member array(string) "files"
   //!     Multipart/form-data variables that have an associated filename.
   //!   @member string "host"
-  //!     Canonical host header (lower-case, port number present). If
-  //!     the host is given as an IPv6 address then it's surrounded by
-  //!     @tt{"[" "]"@}.
+  //!     The host header, exactly as read from the request. Since it
+  //!     isn't normalized, it's useful in e.g. redirects so that the
+  //!     client doesn't falsely conclude that the redirect has
+  //!     switched server (c.f. @[url_base]).
   //!   @member string "hostname"
-  //!     Hostname from the canonicalized host header. As opposed to
-  //!     the @expr{"host"@} entry, an IPv6 address is not surrounded
-  //!     by @tt{"[" "]"@} here.
+  //!     Normalized hostname from the host header. The normalization
+  //!     means it's lowercased, and if it's an IPv6 address then it's
+  //!     converted to the basic @tt{x:x:x:x:x:x:x:x@} form (using
+  //!     @[Protocols.IPv6.normalize_addr_basic]).
   //!   @member int "last_modified"
   //!     Time stamp for when the request was last modified.
   //!   @member int "len"

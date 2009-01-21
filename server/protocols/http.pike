@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.581 2009/01/17 13:50:31 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.582 2009/01/21 13:07:29 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2534,27 +2534,33 @@ void got_data(mixed fooid, string s, void|int chained)
       sscanf(raw_url[sizeof(port_obj->url_prefix)..], "%[^/]%s",
 	     misc->host, raw_url);
     }
-    if (string h = misc->host) {
-      // Parse and canonicalize the host header.
-      misc->port = port_obj->default_port;
-      if (has_prefix(h, "[")) {
+
+    string canon_hostport;
+    if (string host = misc->host) {
+      // Parse and canonicalize the host header for use in the url
+      // used for port matching.
+      int port = port_obj->default_port;
+      if (has_prefix(host, "[")) {
 	//  IPv6 address
-	sscanf(lower_case(h), "[%s]:%d", h, misc->port);
-	misc->hostname = Protocols.IPv6.normalize_addr_basic (h) || h;
-	misc->host = "[" + misc->hostname + "]:" + misc->port;
+	sscanf(lower_case(host), "[%s]:%d", host, port);
+	host = Protocols.IPv6.normalize_addr_basic (host) || host;
+	canon_hostport = "[" + host + "]:" + port;
       } else {
-	sscanf(lower_case(h), "%[^:]:%d", misc->hostname, misc->port);
-	misc->host = misc->hostname + ":" + misc->port;
+	sscanf(lower_case(host), "%[^:]:%d", host, port);
+	canon_hostport = host + ":" + port;
       }
+      misc->hostname = host;
+      misc->port = port;
     }
+
     if( !conf || !(path = port_obj->path ) ||
 	(sizeof( path ) && !has_prefix(raw_url, path)) ) {
       // FIXME: port_obj->name & port_obj->default_port are constant
       // consider caching them?
 
-      string port_match_url = misc->host ?
-	port_obj->url_prefix + misc->host + raw_url :
-	port_obj->url_prefix + "*:" + port_obj->port + raw_url;
+      string port_match_url = (port_obj->url_prefix +
+			       (canon_hostport || ("*:" + port_obj->port)) +
+			       raw_url);
       conf = port_obj->find_configuration_for_url(port_match_url, this);
 
       // Note: The call above might have replaced port_obj from one
