@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1020 2009/01/17 13:50:31 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1021 2009/01/21 00:12:47 mast Exp $";
 
 //! @appears roxen
 //!
@@ -2507,25 +2507,57 @@ array(string) find_ips_for( string what )
   return 0;		// FAIL
 }
 
-string normalize_url(string url)
+string normalize_url(string url, void|int port_match_form)
+//! Normalizes the given url to a short form.
+//!
+//! If @[port_match_form] is set, it normalizes to the form that is
+//! used for port matching, i.e. what
+//! @[roxen.Protocol.find_configuration_for_url] expects.
 {
   if (!sizeof (url - " " - "\t")) return "";
 
   Standards.URI ui = Standards.URI(url);
-  ui->fragment = 0;
-  if (ui->host == "any" || ui->host == "ANY" || ui->host == "::")
-    ui->host = "*";
+  string host = ui->host;
+
+  if (lower_case (host) == "any" || host == "::")
+    host = "*";
   else
     // FIXME: Maybe Standards.URI should do this internally?
-    ui->host = lower_case(Standards.IDNA.zone_to_ascii (ui->host));
-  
-  string host = ui->host;
+    host = lower_case(Standards.IDNA.zone_to_ascii (host));
+
+  if (has_value (host, ":"))
+    if (string h = port_match_form ?
+	Protocols.IPv6.normalize_addr_basic (host) :
+	Protocols.IPv6.normalize_addr_short (host)) {
+      ui->host = h;
+      host = "[" + h + "]";
+    }
+
   string protocol = ui->scheme;
-  if (!host || !sizeof(host) || !protocols[protocol])
+  if (host == "" || !protocols[protocol])
     return "";
-  if (!ui->port)
-    ui->port = protocols[protocol]->default_port;
-  return (string) ui;
+
+  if (port_match_form) {
+    int port = ui->port || protocols[protocol]->default_port;
+
+    string path = ui->path;
+    if (path) {
+      if (has_suffix(path, "/"))
+	path = path[..<1];
+    }
+    else
+      path = "";
+
+    return sprintf ("%s://%s:%d%s/", protocol, host, port,
+		    // If the path is set it's assumed to begin with a
+		    // "/", but not end with one.
+		    path);
+  }
+
+  else {
+    ui->fragment = 0;
+    return (string) ui;
+  }
 }
 
 void unregister_url(string url, Configuration conf)
@@ -2567,10 +2599,6 @@ int register_url( string url, Configuration conf )
 {
   string ourl = url;
   if (!sizeof (url - " " - "\t")) return 1;
-  string protocol;
-  string host;
-  int port;
-  string path;
 
   Standards.URI ui = Standards.URI(url);
   mapping opts = ([]);
@@ -2580,8 +2608,7 @@ int register_url( string url, Configuration conf )
     sscanf( x, "%s=%s", a, b );
     opts[a]=b;
   }
-  ui->fragment = 0;
-  
+
   if( (int)opts->nobind )
   {
     report_warning(
@@ -2589,43 +2616,23 @@ int register_url( string url, Configuration conf )
       (string) ui );
     return 0;
   }
-  if (lower_case (ui->host) == "any" || ui->host == "::")
-    host = "*";
-  else
-    // FIXME: Maybe Standards.URI should do this internally?
-    host = lower_case (Standards.IDNA.zone_to_ascii (ui->host));
 
-  protocol = ui->scheme;
+  url = normalize_url (url, 1);
+  ui = Standards.URI (url);
+
+  string protocol = ui->scheme;
+  string host = ui->host;
   if (host == "" || !protocols[protocol]) {
-    report_error(LOC_M(19,"Bad URL '%s' for server `%s'")+"\n",
-		 (string) ui, conf->query_name());
+    report_error(LOC_M(19,"Bad URL %O for server `%s'")+"\n",
+		 ourl, conf->query_name());
   }
 
-  port = ui->port || protocols[protocol]->default_port;
+  int port = ui->port || protocols[protocol]->default_port;
 
-  if (path = ui->path) {
-    if (has_suffix(path, "/"))
-      path = path[..<1];
-    if (path == "") path = 0;
-  }
-
-  {
-    string h;
-    if (has_value (host, ":")) {
-      h = Protocols.IPv6.normalize_addr_basic (host);
-      if (!h)
-	report_error (
-	  LOC_M(0, "Bad IPv6 address in '%s' for server '%s'") + "\n",
-	  (string) ui, conf->query_name());
-      h = "[" + h + "]";
-    }
-    else
-      h = host;
-    url = sprintf ("%s://%s:%d%s/", protocol, h, port,
-		   // If the path is set it's assumed to begin with a
-		   // "/", but not end with one.
-		   path || "");
-  }
+  string path = ui->path;
+  if (has_suffix(path, "/"))
+    path = path[..<1];
+  if (path == "") path = 0;
 
   if( urls[ url ]  )
   {
