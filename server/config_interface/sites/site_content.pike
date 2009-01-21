@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.154 2008/12/23 13:17:22 mast Exp $
+// $Id: site_content.pike,v 1.155 2009/01/21 00:15:56 mast Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -528,18 +528,12 @@ string module_page( RequestID id, string conf, string module )
 
 array(Protocol|array(string)) get_port_for(string url)
 {
-  string ourl = (url/"#")[0];
-  url = roxen->normalize_url(url);
-  if(!roxen->urls[url]) {
-    //  report_debug(sprintf("site_content.pike:port_for(): URL %O not found!\n",
-    //  	       ourl));
-    //  report_debug(sprintf("Known URLS are:\n"
-    //  	       "%{  %O\n%}\n",
-    //  	       indices(roxen->urls)));
+  mapping(string:Configuration|Protocol|string) url_data =
+    roxen->urls[roxen->normalize_url (url, 1)];
+  if(!url_data) {
     return ({ 0, 0 });
   }
-  Protocol p = roxen->urls[url]->port;
-  return ({ roxen->urls[url]->port, ({ url }) });
+  return ({ url_data->port, ({ roxen->normalize_url (url) }) });
 }
 
 string port_for( string url, int settings )
@@ -555,7 +549,8 @@ string low_port_for(array(Protocol|array(string)) port_info, int settings)
   }
   if(!p) return "<font color='&usr.warncolor;'>Not open</font>";
 
-  string url = urls[0];	// FIXME: Report the others too.
+  string url =			// FIXME: Report the others too.
+    roxen->normalize_url (urls[0], 1);
   string res =
 #"
   <set variable='var.port' value='"+
@@ -695,7 +690,7 @@ string parse( RequestID id )
        foreach( conf->query( "URLs" ), string url )
        {
 	 url = (url/"#")[0];
-	 string match_url = roxen.normalize_url (url);
+	 string match_url = roxen.normalize_url (url, 1);
 	 
          int open = (roxen->urls[ match_url ] 
                      && roxen->urls[ match_url ]->port 

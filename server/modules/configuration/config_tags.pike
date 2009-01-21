@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.200 2009/01/07 20:50:16 mast Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.201 2009/01/21 00:15:56 mast Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -677,7 +677,7 @@ mapping get_url_map( string u, mapping ub )
 {
   if( ub[u] && ub[u]->conf )
     return ([
-      "url":u,
+      "url": roxen.normalize_url (u),
       "conf":replace(ub[u]->conf->name, " ", "-" ),
       "confname":ub[u]->conf->query_name(),
     ]);
