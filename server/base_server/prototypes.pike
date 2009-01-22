@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.228 2009/01/21 13:07:29 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.229 2009/01/22 09:03:25 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1819,7 +1819,6 @@ class RequestID
 	    // NOTE: We want the (probable) port number that the client
 	    //       used here; NOT the actual port number, since there
 	    //       may be port remappers in the way.
-	    port = port_obj->default_port;
 	    // Remove redundant port number.
 	    cached_url_base = scheme + "://" + host;
 	  } else {
@@ -1827,6 +1826,7 @@ class RequestID
 	  }
 	}
       }
+
       // Then use the port object.
       else if (port_obj) {
 	string host = port_obj->conf_data[conf]->hostname;
