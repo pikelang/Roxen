@@ -1132,6 +1132,15 @@ e</result>
 <test>
   <rxml type="any">
     <set variable="var.foo"/>
+    <append variable="var.foo" value="1" type="int"/>
+    &var.foo;
+  </rxml>
+  <equal>({1})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo"/>
     <append variable="var.foo" value="x" type="array"/>
     &var.foo;
   </rxml>
