@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1021 2009/01/21 00:12:47 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1022 2009/01/23 13:20:49 mast Exp $";
 
 //! @appears roxen
 //!
@@ -2563,9 +2563,10 @@ string normalize_url(string url, void|int port_match_form)
 void unregister_url(string url, Configuration conf)
 {
   string ourl = url;
-  if (!sizeof(url = normalize_url(url))) return;
+  if (!sizeof(url = normalize_url(url, 1))) return;
 
-  report_debug("Unregister "+url+"\n");
+  report_debug ("Unregister %s%s.\n", normalize_url (ourl),
+		conf ? sprintf (" for %O", conf->query_name()) : "");
 
   if (urls[url] && (!conf || !urls[url]->conf || (urls[url]->conf == conf)) &&
       urls[url]->port)
