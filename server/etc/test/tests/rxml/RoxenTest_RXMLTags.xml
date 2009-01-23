@@ -1104,6 +1104,58 @@ e</result>
   <equal>({"a", "b", "c", ({"a", "b", "c"})})</equal>
 </test>
 
+<test>
+  <rxml type="any">
+    <append variable="var.foo" value="x"/>
+    &var.foo;
+  </rxml>
+  <equal>"x"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <append variable="var.foo" value="x" type="array"/>
+    &var.foo;
+  </rxml>
+  <equal>({"x"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo"/>
+    <append variable="var.foo" value="x"/>
+    &var.foo;
+  </rxml>
+  <equal>"x"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo"/>
+    <append variable="var.foo" value="x" type="array"/>
+    &var.foo;
+  </rxml>
+  <equal>({"x"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" type="string"/>
+    <append variable="var.foo" value="x"/>
+    &var.foo;
+  </rxml>
+  <equal>"x"</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.foo" type="array"/>
+    <append variable="var.foo" value="x"/>
+    &var.foo;
+  </rxml>
+  <equal>({"x"})</equal>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Replace</comment>
