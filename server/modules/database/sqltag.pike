@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.117 2008/12/20 03:30:27 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.118 2009/01/23 13:34:17 jonasw Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -286,7 +286,7 @@ constant tagdoc=([
 
 // --------------------------- Database query code --------------------------------
 
-float compat_level = my_configuration()->compat_level();
+float compat_level;
 
 #if ROXEN_COMPAT <= 1.3
 string compat_default_host;
@@ -967,6 +967,8 @@ multiset(string) query_provides() {return (<"rxml_sql">);}
 
 void start()
 {
+  compat_level = my_configuration() && my_configuration()->compat_level();
+ 
 #if ROXEN_COMPAT <= 1.3
   compat_default_host = query("hostname");
 #endif
