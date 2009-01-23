@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.587 2009/01/12 12:29:15 mathias Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.588 2009/01/23 17:21:50 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -381,7 +381,7 @@ class TagAppend {
 	  value = RXML.nil;
 
 	value_type = 0;
-	if (value != RXML.nil) {
+	if (!objectp (value) || !value->is_rxml_empty_value) {
 	  value_type = RXML.type_for_value (value);
 	  if (!value_type || !value_type->sequential) {
 	    value = ({value});
@@ -420,7 +420,7 @@ class TagAppend {
 	else if (string expr = args->expr)
 	  content = sexpr_eval (expr);
 	else {
-	  if (content == RXML.nil || content == RXML.empty)
+	  if (objectp (content) && content->is_rxml_empty_value)
 	    // No value to concatenate with.
 	    return 0;
 	  break get_content_from_args; // The content already got content_type.
