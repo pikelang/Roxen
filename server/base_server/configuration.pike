@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.664 2009/01/08 17:43:21 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.665 2009/01/28 17:33:47 marty Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -582,6 +582,15 @@ ADT.Trie generate_module_mib(array(int) oid,
 // Cache some configuration variables.
 private int sub_req_limit = 30;
 private string internal_location = "/_internal/";
+
+#ifdef HTTP_COMPRESSION
+int(0..1) http_compr_enabled;
+mapping(string:int) http_compr_main_mimes = ([]);
+mapping(string:int) http_compr_exact_mimes = ([]);
+int http_compr_minlen;
+int http_compr_maxlen;
+int(0..1) http_compr_dynamic_reqs;
+#endif
 
 // The logging format used. This will probably move to the above
 // mentioned module in the future.
@@ -4873,7 +4882,90 @@ also set 'URLs'."));
 			 VAR_NO_DEFAULT, DLOCALE(39, "License file"),
 			 DLOCALE(336, "The license file for this configuration."),
 			 this_object()));
-  
+
+#ifdef HTTP_COMPRESSION
+  defvar("http_compression_enabled", 1,
+	 DLOCALE(0, "Compression: Enable HTTP compression"),
+	 TYPE_FLAG,
+	 DLOCALE(0, 
+#"Whether to enable HTTP protocol compression. Many types of text
+content (HTML, CSS, JavaScript etc.) can be compressed quite a lot, so
+enabling HTTP compression may improve the visitors' perception of the
+site's performance. It's however a trade-off between server processing
+power and bandwidth. Requests that end up in the protocol cache will
+be served in the compressed form directly from the protocol cache, so
+for such requests the processing power overhead can be held relatively
+low."))->add_changed_callback(lambda(object v) 
+			      { http_compr_enabled = v->query(); });
+  http_compr_enabled = query("http_compression_enabled");
+
+  defvar("http_compression_main_mimetypes", ({ "text" }),
+	 DLOCALE(0, "Compression: Main MIME-types"),
+	 TYPE_STRING_LIST,
+	 DLOCALE(0, "The main MIME types for which to enable compression. "
+		 "Example: to turn on compression for \"text/*\", add "
+		 "\"text\" to this list."))
+    ->add_changed_callback(lambda(object v) 
+			   { array tmp = v->query();
+			     http_compr_main_mimes = 
+			       mkmapping(tmp, ({ 1 }) * sizeof(tmp)); });
+  array tmp = query("http_compression_main_mimetypes");
+  http_compr_main_mimes = mkmapping(tmp, ({ 1 }) * sizeof(tmp));
+
+  defvar("http_compression_exact_mimetypes", 
+	 ({ "application/javascript",
+	    "application/x-javascript" }),
+	 DLOCALE(0, "Compression: Exact MIME-types"),
+	 TYPE_STRING_LIST,
+	 DLOCALE(0, "The exact MIME types for which to enable compression. "
+		 "Example: \"application/javascript\""))
+    ->add_changed_callback(lambda(object v) 
+			   { array tmp = v->query();
+			     http_compr_exact_mimes = 
+			       mkmapping(tmp, ({ 1 }) * sizeof(tmp)); });
+  tmp = query("http_compression_exact_mimetypes");
+  http_compr_exact_mimes = mkmapping(tmp, ({ 1 }) * sizeof(tmp));
+
+  defvar("http_compression_min_size", 1024,
+	 DLOCALE(0, "Compression: Minimum content size"),
+	 TYPE_INT,
+	 DLOCALE(0, "The minimum file size for which to enable compression. "
+		 "(It might not be worth it to compress a request if it can "
+		 "fit into a single TCP/IP packet anyways.)"))
+    ->add_changed_callback(lambda(object v) 
+			   { http_compr_minlen = v->query(); });
+  http_compr_minlen = query("http_compression_min_size");
+
+  defvar("http_compression_max_size", 1048576,
+	 DLOCALE(0, "Compression: Maximum content size"),
+	 TYPE_INT,
+	 DLOCALE(0, "The maximum file size for which to enable compression."))
+    ->add_changed_callback(lambda(object v) 
+			   { http_compr_maxlen = v->query(); });
+  http_compr_maxlen = query("http_compression_max_size");
+
+  Variable.Int comp_level = 
+    Variable.Int(5, 0, DLOCALE(0, "Compression: Compression level"),
+		 DLOCALE(0, "The compression level to use (integer between 1 "
+			 "and 9). Higher number means more compression at the"
+			 " cost of processing power and vice versa. You may "
+			 "need to restart the server for this setting to "
+			 "take effect."));
+  comp_level->set_range(1, 9);
+  defvar("http_compression_level", comp_level);
+		 
+  defvar("http_compression_dynamic_reqs", 0,
+	 DLOCALE(0, "Compression: Compress dynamic requests"),
+	 TYPE_FLAG,
+	 DLOCALE(0, "If enabled, even requests that aren't cacheable in the "
+		 "protocol cache will be compressed. If the site has many "
+		 "lightweight requests that are not protocol cacheable, the "
+		 "processing overhead may become relatively large with this "
+		 "setting turned on."))
+    ->add_changed_callback(lambda(object v) 
+			   { http_compr_dynamic_reqs = v->query(); });
+  http_compr_dynamic_reqs = query("http_compression_dynamic_reqs");
+#endif  
   
 
   class NoSuchFileOverride

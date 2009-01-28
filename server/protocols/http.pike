@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.582 2009/01/21 13:07:29 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.583 2009/01/28 17:33:47 marty Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1986,6 +1986,88 @@ void low_send_result(string headers, string data, int|void len,
   }
 }
 
+#ifdef HTTP_COMPRESSION
+Thread.Local gzfileobj = Thread.Local();
+
+private string gzip_data(string data)
+{
+  Stdio.FakeFile f = Stdio.FakeFile("", "w");
+
+  // Reuse the Gz.File object to reduce the overhead of instantiating
+  // Gz.deflate objects etc.
+  Gz.File gzfile = gzfileobj->get();
+  if(!gzfile) {
+    gzfile = Gz.File(f, "w");
+    gzfile->setparams(conf->query("http_compression_level"), 
+		      Gz.DEFAULT_STRATEGY); 
+    gzfileobj->set(gzfile);
+  } else {
+    gzfile->open(f, "w");
+  }
+
+  gzfile->write(data);
+  gzfile->close();
+
+  return (string)f;
+}
+
+private string gunzip_data(string data)
+{
+  Stdio.FakeFile f = Stdio.FakeFile(data, "r");
+
+  Gz.File gzfile = gzfileobj->get();
+  if(!gzfile) {
+    gzfile = Gz.File(f, "r");
+    gzfile->setparams(conf->query("http_compression_level"), 
+		      Gz.DEFAULT_STRATEGY);
+    gzfileobj->set(gzfile);
+  } else {
+    gzfile->open(f, "r");
+  }
+
+  string res = gzfile->read();
+  gzfile->close();
+  return res;
+}
+
+private string try_gzip_data(string data, string mimetype)
+{
+  int min_data_length = conf->http_compr_minlen;
+  int max_data_length = conf->http_compr_maxlen;
+
+  mapping(string:int) compress_exact_mimetypes = conf->http_compr_exact_mimes;
+  mapping(string:int) compress_main_mimetypes = conf->http_compr_main_mimes;
+
+  int len = sizeof(data);
+
+  if(conf->http_compr_enabled &&
+     mimetype && 
+     (compress_exact_mimetypes[mimetype] ||
+     (sscanf (mimetype, "%[^/]", string main_type) &&
+      compress_main_mimetypes[main_type])) &&
+     len >= min_data_length && 
+     (!max_data_length || len <= max_data_length)) {
+    return gzip_data(data);
+  }
+  return 0;
+}
+
+private int(0..1) compress_dynamic_requests()
+{
+  return conf->http_compr_dynamic_reqs;
+}
+
+private int(0..1) client_gzip_enabled()
+{
+  multiset(string) accept_encodings = 
+    (multiset)map(lower_case(request_headers["accept-encoding"] || "") / ",", 
+                  String.trim_whites);
+
+  return accept_encodings["gzip"];
+}
+
+#endif // HTTP_COMPRESSION
+
 // Send the result.
 void send_result(mapping|void result)
 {
@@ -2116,6 +2198,14 @@ void send_result(mapping|void result)
 					      "Connection":"",
 					      "Expires":"",
 					      "Cache-Control": "",
+#ifdef HTTP_COMPRESSION
+                                              "Content-Encoding":"",
+                                              "ETag":"",
+					      // Keeping the ETag
+					      // while transforming
+					      // content (gzip) may
+					      // confuse clients.
+#endif
     ]) & heads;
     m_delete(heads, "Date");
     m_delete(heads, "Content-Type");
@@ -2123,6 +2213,10 @@ void send_result(mapping|void result)
     m_delete(heads, "Connection");
     m_delete(heads, "Expires");
     m_delete(heads, "Cache-Control");
+#ifdef HTTP_COMPRESSION
+    m_delete(heads, "Content-Encoding");
+    m_delete(heads, "ETag");
+#endif
 
     // FIXME: prot.
     head_string = sprintf(" %s\r\n", head_status ||
@@ -2173,6 +2267,19 @@ void send_result(mapping|void result)
 	  string data = "";
 	  if( file->data ) data = file->data[..file->len-1];
 	  if( file->file ) data = file->file->read(file->len);
+
+#ifdef HTTP_COMPRESSION
+          string uncompressed = data;
+          string compressed;
+	  string encoding;
+          if(!file->encoding) {
+            if(compressed = try_gzip_data(data, file->type)) {
+              data = compressed;
+              file->encoding = encoding = "gzip";
+            }
+          }
+#endif
+
 	  conf->datacache->set(misc->prot_cache_key, data,
 			       ([
 				 "hs":head_string,
@@ -2192,16 +2299,50 @@ void send_result(mapping|void result)
 				 "rf":realfile,
 				 "refresh":predef::time(1) +
 				 5 + 3*misc->cacheable/4,
+#ifdef HTTP_COMPRESSION
+                                 "encoding" : file->encoding,
+#endif				 
 			       ]),
 			       misc->cacheable, this_object());
 	  file = ([
-	    "data":data,
-	    "raw":file->raw,
+#ifndef HTTP_COMPRESSION
+            "data":data,
 	    "len":strlen(data),
+#endif
+	    "raw":file->raw,
 	    "error":file->error,
 	    "type":variant_heads["Content-Type"],
 	  ]);
+
+#ifdef HTTP_COMPRESSION
+	  if(client_gzip_enabled()) {
+	    file->data = compressed;
+	    file->encoding = encoding;
+	    file->compressed = 1;
+	  } else {
+	    file->data = uncompressed;
+	  }
+	  file->len = sizeof(file->data);
+	  variant_heads["Content-Length"] = (string)file->len;
+#endif
 	  cache_status["protstore"] = 1;
+	}
+      }
+    }
+#endif
+
+#ifdef HTTP_COMPRESSION
+    if(!file->compressed && file->data && 
+       compress_dynamic_requests() && client_gzip_enabled()) {
+      if(string compressed = try_gzip_data(file->data, file->type)) {
+	file->data = compressed;
+	file->len = sizeof(file->data);
+	variant_heads["Content-Length"] = (string)file->len;
+	file->encoding = "gzip";
+	if(misc->etag) {
+	  string etag = misc->etag;
+	  if(etag[sizeof(etag)-1..] == "\"")
+	    misc->etag = etag[..sizeof(etag)-2] + ";gzip\"";
 	}
       }
     }
@@ -2295,6 +2436,13 @@ void send_result(mapping|void result)
       file->data = "";
       file->file = 0;
     } else {
+#ifdef HTTP_COMPRESSION
+      if(misc->etag)
+        variant_heads["ETag"] = misc->etag;
+      if(file->encoding)
+        variant_heads["Content-Encoding"] = file->encoding;
+      // Perhaps set some gzip log status if file->encoding == "gzip" here?
+#endif
       if (misc->range) {
 	// Handle byte ranges.
 	int skip;
@@ -2733,6 +2881,25 @@ void got_data(mixed fooid, string s, void|int chained)
 
 	    int code = file->error;
 	    int len = sizeof(d);
+            mapping(string:string) variant_heads = ([]);
+#ifdef HTTP_COMPRESSION
+            if(file->encoding == "gzip") {
+              if(client_gzip_enabled()) {
+                variant_heads["Content-Encoding"] = file->encoding;
+                if(file->etag) {
+                  string etag = file->etag;
+                  if(etag[sizeof(etag)-1..] == "\"")
+                    etag = etag[..sizeof(etag)-2] + ";gzip\"";
+                  variant_heads["ETag"] = etag;
+                }
+		// Perhaps set some gzip log status here?
+              } else {
+                d = gunzip_data(d);
+                len = sizeof(d);
+                variant_heads["ETag"] = file->etag;
+              }
+            }
+#endif
 	    // Make sure we don't mess with the RAM cache.
 	    file += ([]);
 	    if (none_match) {
@@ -2766,7 +2933,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	    if (method == "HEAD") {
 	      d = "";
 	    }
-	    mapping(string:string) variant_heads = ([
+	    variant_heads += ([
 	      "Date":Roxen.http_date(predef::time(1)),
 	      "Content-Length":(string)len,
 	      "Content-Type":file->type,
