@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.588 2009/01/23 17:21:50 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.589 2009/01/28 17:31:29 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -8353,7 +8353,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  <p>Defines in which format the date should be displayed in.</p>
 
  <p>The following types are only useful together with the \"part\"
- attribute:</p></p>
+ attribute:</p>
 
 <xtable>
 <row><c><p><i>type=number</i></p></c><c><ex><date part='day' type='number'/></ex></c></row>
@@ -9255,10 +9255,10 @@ Normalize   all whitespace,
 
  <ul>
    <li>If the \"after\" attribute is given then \"from\" counts the
-   occurrences of that string.<li>
+   occurrences of that string.</li>
 
    <li>Similarly, if the \"before\" attribute is given then \"to\"
-   counts the occurrences of that string.<li>
+   counts the occurrences of that string.</li>
 
    <li>Otherwise, if the \"separator\", \"separator-chars\", or
    \"separator-whites\" attribute is given then the input string is
@@ -9426,7 +9426,7 @@ Normalize   all whitespace,
  <p>Only used together with \"separator\", \"separator-chars\", or
  \"separator-whites\". If several fields are joined together to a
  result string, then this string is used as delimiter between the
- fields.<p>
+ fields.</p>
 </attr>
 
 <attr name='case-insensitive'>
@@ -9470,7 +9470,7 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
  <ex any-result='' keep-var-scope=''>
 <range variable=\"var.x\" from=\"-2\"/></ex>
  <ex any-result='' keep-var-scope=''>
-<range variable=\"var.x\" from=\"2\" to=\"-2\"/></ex></p>
+<range variable=\"var.x\" from=\"2\" to=\"-2\"/></ex>
 
  <p>Given a variable var.x containing an array like this:</p>
 
@@ -9498,10 +9498,10 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
 
  <ul>
    <li>If the \"after\" attribute is given then \"from\" counts the
-   occurrences of that element.<li>
+   occurrences of that element.</li>
 
    <li>Similarly, if the \"before\" attribute is given then \"to\"
-   counts the occurrences of that element.<li>
+   counts the occurrences of that element.</li>
 
    <li>If neither of the above apply then positions are counted
    directly by index.</li>
@@ -9557,7 +9557,7 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
 
 <attr name='join' value='string'>
  <p>Join together the elements of the range to a string, using the
- value of this attribute as delimiter between the elements.<p>
+ value of this attribute as delimiter between the elements.</p>
 </attr>",
 
 //----------------------------------------------------------------------

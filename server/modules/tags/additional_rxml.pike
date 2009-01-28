@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.47 2008/11/14 13:18:15 jonasw Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.48 2009/01/28 17:31:29 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -1233,6 +1233,7 @@ constant tagdoc=([
 <else>
   <p>XML-RPC call failed: &var.fault-string; (code &var.fault-code;)</p>
 </else></ex-box>
+</desc>
 
 <attr name='href' value='URL' required='yes'>
  <p>URL to the server to make the call to.</p>
