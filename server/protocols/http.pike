@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.583 2009/01/28 17:33:47 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.584 2009/01/28 18:28:37 jonasw Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2059,11 +2059,9 @@ private int(0..1) compress_dynamic_requests()
 
 private int(0..1) client_gzip_enabled()
 {
-  multiset(string) accept_encodings = 
-    (multiset)map(lower_case(request_headers["accept-encoding"] || "") / ",", 
-                  String.trim_whites);
-
-  return accept_encodings["gzip"];
+  if (string ae = request_headers["accept-encoding"])
+    return has_value("," + lower_case(ae - " " - "\t") + ",", ",gzip,");
+  return 0;
 }
 
 #endif // HTTP_COMPRESSION
@@ -2315,7 +2313,7 @@ void send_result(mapping|void result)
 	  ]);
 
 #ifdef HTTP_COMPRESSION
-	  if(client_gzip_enabled()) {
+	  if(compressed && client_gzip_enabled()) {
 	    file->data = compressed;
 	    file->encoding = encoding;
 	    file->compressed = 1;
