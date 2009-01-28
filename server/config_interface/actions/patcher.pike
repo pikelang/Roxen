@@ -19,10 +19,8 @@ Write_back wb = class Write_back
 
 		  void write_mess(string s) 
 		  { 
-		    s = replace(s, ([ 
-			"ok.\n"   : "<b style='color: green'>ok.</b><br />",
-			"Done!\n" : "<b style='color: green'>Done!</b><br />" ])
-				);
+		    s = replace(s, ([ "<green>"  : "<b style='color: green'>",
+				      "</green>" : "</b>" ]) );
 		    all_messages += ({ (["message":s ]) }); 
 		  }
 		  
@@ -93,11 +91,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
   }
   else if (which_list == "imported")
   {
-    list = map(po->file_list_imported(), lambda(mapping m)
-					 {
-					   return ([ "metadata" : m ]);
-					 }
-	       );
+    list = po->file_list_imported();
     colspan = 4;
   }
   else
@@ -131,6 +125,17 @@ string list_patches(RequestID id, Patcher po, string which_list)
 				 );
       }
 
+      string deps = "";
+      foreach(po->get_dependencies(item->metadata->id) || ({ }); 
+	      int i; 
+	      string s)
+      {
+	if (i > 0)
+	  deps += ", ";
+
+	deps += s; 
+      }
+
       res += sprintf("      <tr style='background-color: %s' >\n"
 		     "        <td class='folded' id='%s_img'"
 		     " style='background-color: %[0]s' "
@@ -142,8 +147,9 @@ string list_patches(RequestID id, Patcher po, string which_list)
 		     " onmouseover='this.style.cursor=\"pointer\"'>%s</td>\n"
 		     "%s"
 		     "        <td><input type='checkbox' id='%[2]s'"
-		     " name='%s' value='%[2]s' %s"
-		     " onclick='toggle(\"%[2]s\", \"%[5]s\")' /></td>\n"
+		     " name='%s' value='%[2]s' dependencies='%s'" +
+		     " onclick='toggle_%[5]s(%s)' />"
+		     "</td>\n"
 		     "      </tr>\n",
 		     table_bgcolor,
 		     replace(item->metadata->id, "-", ""),
@@ -151,13 +157,53 @@ string list_patches(RequestID id, Patcher po, string which_list)
 		     item->metadata->name,
 		     installed_date,
 		     (which_list == "imported") ? "install" : "uninstall",
-		     (i > 0) ? "disabled=''" : " ");
+		     deps,
+		     (which_list == "installed") ? 
+		                         "\"" + item->metadata->id + "\"" : "");
 	
-      array md = ({
-	//   	({ "Installed:"      , inst_date }),
-	// 	({ "Installed by:"   , (obj->user) ? obj->user : "Unknown" }),
-	({ "Description:"    , item->metadata->description }),
-	({ "Originator:"     , item->metadata->originator  }) });
+      array md = ({ });
+      if (which_list == "installed")
+      {
+	md += ({
+	  ({ "Installed by:"	, item->user || "Unknown" }),
+	});
+      }
+      else if (item->installed)
+      {
+	string date = sprintf("%4d-%02d-%02d %02d:%02d",
+			      (item->year < 1900) ? 
+			      item->installed->year + 1900 : 
+			      item->installed->year,
+			      item->installed->mon,
+			      item->installed->mday,
+			      item->installed->hour,
+			      item->installed->min);
+	md += ({
+	  ({ "Installed:"	, date }),
+	  ({ "Installed by:"	, item->user || "Unknown" }),
+	});
+      }
+     
+      if (item->uninstalled)
+      {
+	string date = sprintf("%4d-%02d-%02d %02d:%02d",
+			      (item->year < 1900) ? 
+			      item->installed->year + 1900 : 
+			      item->installed->year,
+			      item->installed->mon,
+			      item->installed->mday,
+			      item->installed->hour,
+			      item->installed->min);
+	md += ({
+	  ({ "Uninstalled:"	 , date }),
+	  ({ "Uninstalled by:" , item->uninstall_user || "Unknown" }),
+	});
+      }
+
+      md += ({
+        ({ "Description:"    , item->metadata->description }),
+	({ "Originator:"     , item->metadata->originator  }) 
+      });
       
 
       string active_flags = "        <table class='module-sub-list-2'"
@@ -214,10 +260,27 @@ string list_patches(RequestID id, Patcher po, string which_list)
       
       if (item->metadata->depends)
       {
+	string dep_list = "";
+	foreach (item->metadata->depends, string dep_id)
+	{
+	  string dep_stat;
+	  switch(po->patch_status(dep_id)->status)
+	  {
+	    case "installed":
+	      dep_stat = "installed";
+	      break;
+	    case "uninstalled":
+	    case "imported":
+	      dep_stat = "imported";
+	      break;
+	    default:
+	      dep_stat = "unavailable";
+	      break;
+	  }
+	  dep_list += sprintf("%s (%s)<br />", dep_id, dep_stat);
+	}
 	md += ({
-	  ({ "Dependencies:", 
-	     sprintf("%{%s<br />\n%}",
-		     item->metadata->depends) })
+	  ({ "Dependencies:", dep_list })
 	});
       }
       else
@@ -357,6 +420,10 @@ string list_patches(RequestID id, Patcher po, string which_list)
 
 mixed parse(RequestID id)
 {
+  string current_user = sprintf("%s (%s)", 
+				RXML.get_var("user-name", "usr"),
+				RXML.get_var("user-uid", "usr"));
+
   // Init patch-object
   Patcher plib = Patcher(wb->write_mess,
   			 wb->write_error,
@@ -415,56 +482,7 @@ mixed parse(RequestID id)
           pictureToToggle.className = 'folded';
         }
       }
-
-      function checkall(name)
-      {
-        var i;
-        var reference = document.getElementById(name + '_all');
-        var elements = document.getElementsByName(name)
-        for (i = 0; i < elements.length; i++)
-        {
-          elements[i].checked = reference.checked;
-          if (i > 1)
-          {
-            elements[i].disabled = !reference.checked;
-          }
-        }
-      }
-
-      function toggle(id, name)
-      {
-        var currentElement = document.getElementById(id);
-        var allElements = document.getElementsByName(name)
-        var currentNo = 0;
-        if (allElements.length > 1)
-        {
-          
-          for (var i = 1; i < allElements.length; i++)
-          {
-            if (currentNo && i > (currentNo + 1))
-            {
-              allElements[i].checked = false;
-              allElements[i].disabled = true;
-            }
-            else if (allElements[i].id == id)
-            {
-              currentNo = i;
-
-              if ((i+1) < allElements.length)
-              {
-                allElements[0].checked = false;
-                allElements[i+1].checked = false;
-                allElements[i+1].disabled = !currentElement.checked;
-              }
-              else
-              {
-                allElements[0].checked = currentElement.checked;
-              }
-            }
-          }
-        }
-      }
-      // ]]>
+      // ]]> 
     </script>";
 
   if (id->real_variables["OK.x"] &&
@@ -516,7 +534,7 @@ mixed parse(RequestID id)
     {
       if (patch != "on")
       {
-	successful_uninstalls += plib->uninstall_patch(patch);
+	successful_uninstalls += plib->uninstall_patch(patch, current_user);
 	no_of_patches++;
 	PatchObject md = plib->get_metadata(patch);
 	if (md && md->flags)
@@ -585,7 +603,7 @@ mixed parse(RequestID id)
       if (patch != "on")
       {
 	successful_installs += 
-	  plib->install_patch(patch, id->misc->config_user->real_name);
+	  plib->install_patch(patch, current_user);
 	no_of_patches++;
 	PatchObject md = plib->get_metadata(patch);
 	if (md && md->flags)
@@ -673,7 +691,7 @@ mixed parse(RequestID id)
             <input type='checkbox' 
                    name='install'
                    id='install_all'
-                   onclick='checkall(\"install\")'/>
+                   onclick='check_all(\"install\")'/>
           </th>
 	</tr>
 ";
@@ -703,7 +721,7 @@ mixed parse(RequestID id)
             <input type='checkbox'
                    name='uninstall'
                    id='uninstall_all'
-                   onclick='checkall(\"uninstall\")'/>
+                   onclick='check_all(\"uninstall\")'/>
           </th>
 	</tr>
 ";
@@ -716,6 +734,96 @@ mixed parse(RequestID id)
     <br />
     <link-gbutton href='./?class=" + action + #"'>Back</link-gbutton>
 ";
+  res += #"
+    <script type='text/javascript'>
+      // <![CDATA[
+      function check_all(name)
+      {
+        var i;
+        var reference = document.getElementById(name + '_all');
+        var elements = document.getElementsByName(name)
+        for (i = 0; i < elements.length; i++)
+        {
+	  elements[i].checked = reference.checked;
+	  if (name == 'install')
+	  {
+	    toggle_install();
+	  }
+	  else if (name == 'uninstall' && i > 1)
+	  {
+	    elements[i].disabled = !elements[i].checked;
+	  }
+        }
+      }
 
+      function toggle_install()
+      {
+        var allElements = document.getElementsByName('install');          
+	for (var i = 0; i < allElements.length; i++)
+	{
+	  allElements[i].disabled = false;
+	  toggle_dep_install(allElements[i]);
+	}
+      }
+
+      function toggle_uninstall(id)
+      {
+	var currentElement = document.getElementById(id);
+	var allElements = document.getElementsByName('uninstall');
+	var currentNo = 0;
+	for (var i = 0; i < allElements.length; i++)
+	{
+	  if (currentNo && i > (currentNo + 1))
+	  {
+	    allElements[i].checked = false;
+	    allElements[i].disabled = true;
+	  }
+	  else if (allElements[i].id == id)
+	  {
+	    currentNo = i;
+	    
+	    if ((i+1) < allElements.length)
+	    {
+	      allElements[0].checked = false;
+	      allElements[i+1].checked = false;
+	      allElements[i+1].disabled = !currentElement.checked;
+	    }
+	    else
+	    {
+	      allElements[0].checked = currentElement.checked;
+	    }
+	  }
+	}
+      }
+
+      function toggle_dep_install(checkBox)
+      {
+	var deps = checkBox.getAttribute('dependencies');
+        if (deps && deps.length > 0)
+        { 
+	  deps = deps.split(', ');
+          for (var i = 0; i < deps.length; i++)
+          {
+            var dep_element = document.getElementById(deps[i]);
+            if (!dep_element || (dep_element &&
+				 !(dep_element.name == 'uninstall' ||
+				   dep_element.checked == true)))
+            {
+              checkBox.checked  = false;
+              checkBox.disabled = true;
+            }
+          }
+        }
+	else
+	  checkBox.disabled = false;
+      }
+
+      (function()
+       { 
+         toggle_install();
+         check_all('uninstall');  
+       })();
+      // ]]> 
+    </script>";
   return res;
 }
