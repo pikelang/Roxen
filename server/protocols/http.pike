@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.586 2009/01/29 22:00:57 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.587 2009/01/29 22:07:33 marty Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2351,12 +2351,14 @@ void send_result(mapping|void result)
 	file->len = sizeof(file->data);
 	variant_heads["Content-Length"] = (string)file->len;
 	file->encoding = "gzip";
-	if(misc->etag) {
-	  string etag = misc->etag;
-	  if(etag[sizeof(etag)-1..] == "\"")
-	    misc->etag = etag[..sizeof(etag)-2] + ";gzip\"";
-	}
+	file->compressed = 1;
       }
+    }
+    
+    if(file->compressed && misc->etag) {
+      string etag = misc->etag;
+      if(etag[sizeof(etag)-1..] == "\"")
+	misc->etag = etag[..sizeof(etag)-2] + ";gzip\"";
     }
 #endif
 
