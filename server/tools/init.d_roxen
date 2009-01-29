@@ -1,6 +1,7 @@
 #!/bin/sh
 # init.d script for Roxen. Set the variables below to something fitting..
 # This is only an example script.
+# $Id: init.d_roxen,v 1.31 2009/01/29 10:08:49 wellhard Exp $
 #############
 
 # Configurations collection directory. If available, it overrides
@@ -64,13 +65,6 @@ trap "" 1
 
 run_server()
 {
-    if test x"$configdir" = x
-    then
-	configdir=../configurations
-    else
-	flags="$flags --config-dir=$configdir"
-    fi
-    
     test x"$pidfile" = x && pidfile="$configdir"/_roxen_pid
     flags="$flags --pid-file=$pidfile"
     
@@ -208,6 +202,8 @@ run_server()
 get_variables()
 {
     configdir="$1"
+    flags="$flags --config-dir=$configdir"
+    
     echo "Configuration dir: $configdir"
     test -r "$configdir"/_startparams && source "$configdir"/_startparams
     if [ ! -d "$roxenhome" ]
@@ -258,6 +254,13 @@ then
 	run_server "$1"
     fi
 else
+    if test x"$configdir" = x
+    then
+	configdir=../configurations
+    else
+	flags="$flags --config-dir=$configdir"
+    fi
+    
     roxenhome=`find_server_dir`
     run_server "$@"
 fi
