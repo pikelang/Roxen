@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.584 2009/01/28 18:28:37 jonasw Exp $";
+constant cvs_version = "$Id: http.pike,v 1.585 2009/01/29 20:43:46 marty Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1991,18 +1991,18 @@ Thread.Local gzfileobj = Thread.Local();
 
 private string gzip_data(string data)
 {
-  Stdio.FakeFile f = Stdio.FakeFile("", "w");
+  Stdio.FakeFile f = Stdio.FakeFile("", "wb");
 
   // Reuse the Gz.File object to reduce the overhead of instantiating
   // Gz.deflate objects etc.
   Gz.File gzfile = gzfileobj->get();
   if(!gzfile) {
-    gzfile = Gz.File(f, "w");
+    gzfile = Gz.File(f, "wb");
     gzfile->setparams(conf->query("http_compression_level"), 
 		      Gz.DEFAULT_STRATEGY); 
     gzfileobj->set(gzfile);
   } else {
-    gzfile->open(f, "w");
+    gzfile->open(f, "wb");
   }
 
   gzfile->write(data);
@@ -2013,16 +2013,16 @@ private string gzip_data(string data)
 
 private string gunzip_data(string data)
 {
-  Stdio.FakeFile f = Stdio.FakeFile(data, "r");
+  Stdio.FakeFile f = Stdio.FakeFile(data, "rb");
 
   Gz.File gzfile = gzfileobj->get();
   if(!gzfile) {
-    gzfile = Gz.File(f, "r");
+    gzfile = Gz.File(f, "rb");
     gzfile->setparams(conf->query("http_compression_level"), 
 		      Gz.DEFAULT_STRATEGY);
     gzfileobj->set(gzfile);
   } else {
-    gzfile->open(f, "r");
+    gzfile->open(f, "rb");
   }
 
   string res = gzfile->read();
