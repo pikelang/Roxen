@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.665 2009/01/28 17:33:47 marty Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.666 2009/01/29 20:48:08 marty Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4899,32 +4899,39 @@ low."))->add_changed_callback(lambda(object v)
 			      { http_compr_enabled = v->query(); });
   http_compr_enabled = query("http_compression_enabled");
 
-  defvar("http_compression_main_mimetypes", ({ "text" }),
-	 DLOCALE(0, "Compression: Main MIME-types"),
-	 TYPE_STRING_LIST,
-	 DLOCALE(0, "The main MIME types for which to enable compression. "
-		 "Example: to turn on compression for \"text/*\", add "
-		 "\"text\" to this list."))
-    ->add_changed_callback(lambda(object v) 
-			   { array tmp = v->query();
-			     http_compr_main_mimes = 
-			       mkmapping(tmp, ({ 1 }) * sizeof(tmp)); });
-  array tmp = query("http_compression_main_mimetypes");
-  http_compr_main_mimes = mkmapping(tmp, ({ 1 }) * sizeof(tmp));
+  void set_mimetypes(array(string) mimetypes)
+  {
+    array main_mimes = ({});
+    array exact_mimes = ({});
 
-  defvar("http_compression_exact_mimetypes", 
-	 ({ "application/javascript",
-	    "application/x-javascript" }),
-	 DLOCALE(0, "Compression: Exact MIME-types"),
+    foreach(mimetypes, string m) {
+      if(has_suffix(m, "/*"))
+	main_mimes += ({ m[..sizeof(m)-3] });
+      else if(!has_value(m, "*"))
+	exact_mimes += ({ m });
+    }
+
+    http_compr_exact_mimes = mkmapping(exact_mimes, 
+				       ({ 1 }) * sizeof(exact_mimes));
+    http_compr_main_mimes = mkmapping(main_mimes,
+				      ({ 1 }) * sizeof(main_mimes));
+  };
+  defvar("http_compression_mimetypes", 
+	 ({ "text/*", 
+	    "application/javascript",
+	    "application/x-javascript",
+	    "application/xhtml+xml" }),
+	 DLOCALE(0, "Compression: Enabled MIME-types"),
 	 TYPE_STRING_LIST,
-	 DLOCALE(0, "The exact MIME types for which to enable compression. "
-		 "Example: \"application/javascript\""))
+	 DLOCALE(0, "The MIME types for which to enable compression. The "
+		 "forms \"maintype/*\" and \"maintype/subtype\" are allowed, "
+		 "but globbing on the general form (such as "
+		 "\"maintype/*subtype\") is not allowed and such globs will "
+		 "be silently ignored."))
     ->add_changed_callback(lambda(object v) 
-			   { array tmp = v->query();
-			     http_compr_exact_mimes = 
-			       mkmapping(tmp, ({ 1 }) * sizeof(tmp)); });
-  tmp = query("http_compression_exact_mimetypes");
-  http_compr_exact_mimes = mkmapping(tmp, ({ 1 }) * sizeof(tmp));
+			   { set_mimetypes(v->query()); 
+			   });
+  set_mimetypes(query("http_compression_mimetypes"));
 
   defvar("http_compression_min_size", 1024,
 	 DLOCALE(0, "Compression: Minimum content size"),
@@ -4939,7 +4946,12 @@ low."))->add_changed_callback(lambda(object v)
   defvar("http_compression_max_size", 1048576,
 	 DLOCALE(0, "Compression: Maximum content size"),
 	 TYPE_INT,
-	 DLOCALE(0, "The maximum file size for which to enable compression."))
+	 DLOCALE(0, "The maximum file size for which to enable compression. "
+		 "Note that the general protocol cache entry size limit "
+		 "applies, so if the compression of dynamic requests is "
+		 "disabled, files larger than the protocol cache maximum "
+		 "file size setting will never be served compressed "
+		 "regardless of this setting."))
     ->add_changed_callback(lambda(object v) 
 			   { http_compr_maxlen = v->query(); });
   http_compr_maxlen = query("http_compression_max_size");
