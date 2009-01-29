@@ -1,7 +1,7 @@
 #! /home/mathias/roxen/server-4.5.241/bin/roxen 
 //FIXME! ^
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.3 2009/01/29 14:47:58 jonasw Exp $";
+constant cvs_string = "$Id: rxnpatch.pike,v 1.4 2009/01/29 15:49:05 mathias Exp $";
 
 import RoxenPatch;
 
@@ -894,7 +894,8 @@ private constant help_usage = ([
   "general"   : 
 #"Usage: <b>rxnpatch</b> [rxnpatch-options] <command> [command-options-and-argument]
   where rxnpatch-options are --no-color, --dry-run etc.
-  where command is import, install, help etc.
+  where command is <u>create</u>, <u>import</u>, <u>install</u>, <u>help</u>, <u>list</u>,
+     <u>uninstall</u>, <u>status</u> or <u>version</u>.
   where command-options-and-arguments depends on the command.
 
 ",
@@ -920,7 +921,7 @@ private constant help_usage = ([
   "version"   : "Usage: rxnpatch version" ]);
 
 private constant help_help = #"
-Write rxnpatch help <<u>command|switch</u>> for detailed information about a given
+Write <b>rxnpatch help</b> <<u>command|switch</u>> for detailed information about a given
 command or switch. I.e. <b>help -i</b> would give information about -i.\n\n";
 constant help_default = "\n<b>%s</b> is not a known switch or command\n\n";
 
