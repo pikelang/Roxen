@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.585 2009/01/29 20:43:46 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.586 2009/01/29 22:00:57 marty Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2180,6 +2180,18 @@ void send_result(mapping|void result)
 	head_status = map (head_status / "\n", String.trim_all_whites) * " ";
     }
 
+#ifdef HTTP_COMPRESSION
+    if(conf->http_compr_enabled) {
+      // Notify proxies etc. that we depend on the Accept-Encoding header,
+      // but we don't want to register it as a vary callback since it's
+      // handled directly by the protocol cache.
+      if(!misc->vary)
+	misc->vary = (< "Accept-Encoding" >);
+      else
+	misc->vary["Accept-Encoding"] = 1;
+    }
+#endif
+
     mapping(string:string) heads = make_response_headers (file);
 
     // Notes about the variant headers:
@@ -2313,7 +2325,7 @@ void send_result(mapping|void result)
 	  ]);
 
 #ifdef HTTP_COMPRESSION
-	  if(compressed && client_gzip_enabled()) {
+	  if(!misc->range && compressed && client_gzip_enabled()) {
 	    file->data = compressed;
 	    file->encoding = encoding;
 	    file->compressed = 1;
@@ -2330,7 +2342,9 @@ void send_result(mapping|void result)
 #endif
 
 #ifdef HTTP_COMPRESSION
-    if(!file->compressed && file->data && 
+    // Don't use compression if we're dealing with byte ranges. Who
+    // knows what kind of interesting effects that might have.
+    if(!file->compressed && file->data && !misc->range &&
        compress_dynamic_requests() && client_gzip_enabled()) {
       if(string compressed = try_gzip_data(file->data, file->type)) {
 	file->data = compressed;
@@ -2882,7 +2896,7 @@ void got_data(mixed fooid, string s, void|int chained)
             mapping(string:string) variant_heads = ([]);
 #ifdef HTTP_COMPRESSION
             if(file->encoding == "gzip") {
-              if(client_gzip_enabled()) {
+              if(!misc->range && client_gzip_enabled()) {
                 variant_heads["Content-Encoding"] = file->encoding;
                 if(file->etag) {
                   string etag = file->etag;
