@@ -532,7 +532,7 @@ string find_tag_doc(string name, RequestID id, int|void no_undoc,
       continue;
     }
     string res =
-      "<a name='tag_doc_" + Roxen.html_encode_string (name) + "' />\n" +
+      "<a name='tag_doc_" + Roxen.html_encode_string (name) + "'></a>\n" +
       parse_doc(tagdoc[name], name, id, level);
 
     mapping(string:RXML.Tag) plugins=tag_set->get_plugins(name);
