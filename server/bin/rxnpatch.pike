@@ -1,7 +1,7 @@
 #! /home/mathias/roxen/server-4.5.241/bin/roxen 
 //FIXME! ^
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.2 2009/01/28 17:01:33 mathias Exp $";
+constant cvs_string = "$Id: rxnpatch.pike,v 1.3 2009/01/29 14:47:58 jonasw Exp $";
 
 import RoxenPatch;
 
@@ -600,7 +600,7 @@ int main(int argc, array(string) argv)
 
   if (cmd_n_files[1] == "version")
   {
-    sscanf(cvs_string, "$Id: rxnpatch.pike,v 1.2 2009/01/28 17:01:33 mathias Exp $", string cvs_version);
+    sscanf(cvs_string, "$""Id%s""$", string cvs_version);
     write("Roxen Patch Tool\n\nCVS Version: %s\nRXP Version: %s\n",
 	  cvs_version || "n/a",
 	  plib->current_version());
