@@ -1,7 +1,7 @@
 #! /home/mathias/roxen/server-4.5.241/bin/roxen 
 //FIXME! ^
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.4 2009/01/29 15:49:05 mathias Exp $";
+constant cvs_string = "$Id: rxnpatch.pike,v 1.5 2009/01/30 10:41:01 mathias Exp $";
 
 import RoxenPatch;
 
@@ -600,7 +600,7 @@ int main(int argc, array(string) argv)
 
   if (cmd_n_files[1] == "version")
   {
-    sscanf(cvs_string, "$""Id%s""$", string cvs_version);
+    sscanf(cvs_string, "$""Id: %s""$", string cvs_version);
     write("Roxen Patch Tool\n\nCVS Version: %s\nRXP Version: %s\n",
 	  cvs_version || "n/a",
 	  plib->current_version());
@@ -899,10 +899,10 @@ private constant help_usage = ([
   where command-options-and-arguments depends on the command.
 
 ",
-  "create"    : "Usage:\n <b>rxnpatch</b> create [-S <u>PATH</u>] [--no-colour]"
+  "create"    : "Usage:\n <b>rxnpatch</b> [-S <u>PATH</u>] [--no-colour]"
   		" [-sf] create -m <u>FILE</u>\n"
   		" [-k <u>ID</u>] [-t <u>DIRECTORY</u>]\n"
-		"<b>rxnpatch</b> create [-S <u>PATH</u>] [--no-colour]"
+		"<b>rxnpatch</b> [-S <u>PATH</u>] [--no-colour] create"
   		"-N <u>NAME</u> [-O <u>EMAIL_ADDRESS</u>] [-D [<u>FILE</u>]]\n"
   		"[-P <u>PLATFORM</u>]... [-V <u>VERSION</u>]..."
 		" [-p [<u>FILE</u>]]... [-n <u>FILE</u>]...\n" 
