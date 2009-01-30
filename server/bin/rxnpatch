@@ -1,8 +1,8 @@
 #! /bin/sh
 # (c) Roxen IS AB 2008-2009
-# $Id: rxnpatch,v 1.1 2009/01/30 09:05:12 mathias Exp $
+# $Id: rxnpatch,v 1.2 2009/01/30 13:10:19 mathias Exp $
 
 dn="`dirname $0`"
 modules="$dn"/../etc/modules
 server="$dn"/../
-exec "$dn"/pike -M"$modules" "$dn"/rxnpatch.pike -S"$server" "$@"
+exec "$dn"/roxen -M"$modules" "$dn"/rxnpatch.pike -S"$server" "$@"
