@@ -2,7 +2,7 @@
 // Copyright © 1996 - 2004, Roxen IS.
 
 #include <config.h>
-constant cvs_version = "$Id: old.pike,v 1.13 2008/11/13 07:32:14 jonasw Exp $";
+constant cvs_version = "$Id: old.pike,v 1.14 2009/02/06 11:53:24 jonasw Exp $";
 
 constant name = "Compatibility bitmap fonts";
 constant doc = 
@@ -95,7 +95,7 @@ string fix_name( string what )
 array has_font( string name, int size )
 {
   string base_dir;
-  array available, fallback_available;
+  array available;
   if( String.width( name ) > 8 )
     return 0;
 
