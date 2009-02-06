@@ -1123,12 +1123,11 @@ class Patcher
 	po = parse_metadata(mdblock, 
 			    extract_id_from_filename(mdfile));
 
+      
+	res += ({ ([ "installed" : inst_date,
+		     "user"      : user,
+		     "metadata"  : po ]) });
       }
-      else
-	break;
-      res += ({ ([ "installed" : inst_date,
-		   "user"      : user,
-		   "metadata"  : po ]) });
     }
 
     return Array.sort_array(res, lambda (mapping a, mapping b)
@@ -1226,14 +1225,12 @@ class Patcher
 	po = parse_metadata(mdblock, 
 			    extract_id_from_filename(mdfile));
 
+	res += ({ ([ "installed"		: inst_date,
+		     "user"		: inst_user,
+		     "uninstalled"	: uninst_date,
+		     "uninstall_user"	: uninst_user,
+		     "metadata"		: po ]) });
       }
-      else
-	break;
-      res += ({ ([ "installed"		: inst_date,
-		   "user"		: inst_user,
-		   "uninstalled"	: uninst_date,
-		   "uninstall_user"	: uninst_user,
-		   "metadata"		: po ]) });
     }
 
     return Array.sort_array(res, lambda (mapping a, mapping b)
