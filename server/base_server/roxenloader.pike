@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.403 2009/01/18 13:46:32 mast Exp $
+// $Id: roxenloader.pike,v 1.404 2009/02/06 11:56:39 jonasw Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.403 2009/01/18 13:46:32 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.404 2009/02/06 11:56:39 jonasw Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1337,10 +1337,90 @@ void do_main_wrapper(int argc, array(string) argv)
   trace_exit(1);
 }
 
-string query_mysql_dir()
+mapping parse_mysql_location()
 {
-  // FIXME: Should be configurable.
-  return combine_path( __FILE__, "../../mysql/" );
+  string check_paths(array(string) paths)
+  {
+    foreach(paths, string p)
+      if (file_stat(p))
+	return p;
+    return 0;
+  };
+  
+  //  If there's a "mysql_location.txt" file at the root of the server
+  //  tree we'll check it for a path to the MySQL installation. If
+  //  missing we fall back on the traditional /mysql/ directory.
+  //
+  //  It should contain lines on this format:
+  //
+  //    # comment
+  //    key1 = value
+  //    key2 = value
+  //
+  //  All non-absolute paths will be interpreted relative to server-x.y.z.
+  
+  string server_dir = combine_path(__FILE__, "../../");
+  mapping res = ([ "basedir" : combine_path(server_dir, "mysql/") ]);
+
+  string mysql_loc_file = combine_path(server_dir, "mysql-location.txt");
+  if (string data = Stdio.read_bytes(mysql_loc_file)) {
+    data = replace(replace(data, "\r\n", "\n"), "\r", "\n");
+    foreach(data / "\n", string line) {
+      line = String.trim_whites((line / "#")[0]);
+      if (sizeof(line)) {
+	sscanf(line, "%s%*[ \t]=%*[ \t]%s", string key, string val);
+	if (key && val && sizeof(val)) {
+	  //  Check for valid key
+	  key = lower_case(key);
+	  if (key != "basedir" && key != "mysqld" && key != "myisamchk") {
+	    report_warning("mysql-location.txt: Unknown key '%s'.\n", key);
+	    continue;
+	  }
+	  
+	  //  Convert to absolute path and check for existence
+	  string path = combine_path(server_dir, val);
+	  if (check_paths( ({ path }) )) {
+	    res[key] = path;
+	  } else {
+	    report_warning("mysql-location.txt: "
+			   "Ignoring non-existing path for key '%s': %s\n",
+			   key, path);
+	  }
+	}
+      }
+    }
+  }
+  
+  //  Find specific paths derived from the MySQL base directory
+  if (res->basedir) {
+    //  Locate mysqld
+    if (!res->mysqld) {
+#ifdef __NT__
+      string binary = "mysqld-nt.exe";
+#else
+      string binary = "mysqld";
+#endif
+      res->mysqld =
+	check_paths( ({ combine_path(res->basedir, "libexec", binary),
+			combine_path(res->basedir, "bin", binary),
+			combine_path(res->basedir, "sbin", binary) }) );
+    }
+    
+    //  Locate myisamchk
+    if (!res->myisamchk) {
+#ifdef __NT__
+      string binary = "myisamchk.exe";
+#else
+      string binary = "myisamchk";
+#endif
+      res->myisamchk =
+	check_paths( ({ combine_path(res->basedir, "libexec", binary),
+			combine_path(res->basedir, "bin", binary),
+			combine_path(res->basedir, "sbin", binary) }) );
+    }
+  }
+  
+  return res;
 }
 
 string query_mysql_data_dir()
@@ -1848,7 +1928,7 @@ protected void do_tailf( int loop, string file )
   } while( loop );
 }
 
-protected void low_check_mysql(string basedir, string datadir,
+protected void low_check_mysql(string myisamchk, string datadir,
 			       array(string) args, void|Stdio.File errlog)
 {
   array(string) files = ({});
@@ -1863,27 +1943,6 @@ protected void low_check_mysql(string basedir, string datadir,
   if(!sizeof(files))
     return;
   
-#ifdef __NT__
-  string myisamchk = "myisamchk.exe";
-#else
-  string myisamchk = "myisamchk";
-#endif
-  string bindir = basedir+"libexec/";
-  if( !file_stat( bindir+myisamchk ) )
-  {
-    bindir = basedir+"bin/";
-    if( !file_stat( bindir+myisamchk ) )
-    {
-      bindir = basedir+"sbin/";
-      if( !file_stat( bindir+myisamchk ) )
-      {
-	report_warning ("No myisamchk found in %s. Tables not checked.\n",
-			basedir);
-	return;
-      }
-    }
-  }
-
   Stdio.File  devnull
 #ifndef __NT__
     = Stdio.File( "/dev/null", "w" )
@@ -1892,7 +1951,7 @@ protected void low_check_mysql(string basedir, string datadir,
   
   report_debug("Checking MySQL tables with %O...\n", args*" ");
   mixed err = catch {
-      Process.create_process(({ combine_path(bindir, myisamchk) }) +
+      Process.create_process(({ myisamchk }) +
 			     args + sort(files),
 			     ([
 			       "stdin":devnull,
@@ -1905,7 +1964,6 @@ protected void low_check_mysql(string basedir, string datadir,
 }
 
 void low_start_mysql( string datadir,
-		      string basedir,
 		      string uid )
 {
   void rotate_log(string path)
@@ -1915,26 +1973,13 @@ void low_start_mysql( string datadir,
       mv(path+"."+(string)i, path+"."+(string)(i+1));
   };
 
-  string mysqld =
-#ifdef __NT__
-    "mysqld-nt.exe";
-#else
-    "mysqld";
-#endif
-  string bindir = basedir+"libexec/";
-  if( !file_stat( bindir+mysqld ) )
-  {
-    bindir = basedir+"bin/";
-    if( !file_stat( bindir+mysqld ) )
-    {
-      bindir = basedir+"sbin/";
-      if( !file_stat( bindir+mysqld ) )
-      {
-	report_debug( "\nNo MySQL found in "+basedir+"!\n" );
-	exit( 1 );
-      }
-    }
+  //  Get mysql base directory and binary paths
+  mapping mysql_location = parse_mysql_location();
+  if (!mysql_location->mysqld) {
+    report_debug("\nNo MySQL found in "+ mysql_location->basedir + "!\n");
+    exit(1);
   }
+  
   string pid_file = datadir + "/mysql_pid";
   string err_log  = datadir + "/error_log";
   string slow_query_log;
@@ -1962,7 +2007,7 @@ void low_start_mysql( string datadir,
 #endif
 		  "--skip-locking",
 		  "--skip-name-resolve",
-		  "--basedir="+basedir,
+		  "--basedir=" + mysql_location->basedir,
 		  "--datadir="+datadir,
   });
 
@@ -2008,20 +2053,7 @@ void low_start_mysql( string datadir,
 
   if(!file_stat( datadir+"/my.cfg" ))
     catch(Stdio.write_file(datadir+"/my.cfg", cfg_file));
-
-#ifdef __NT__
-  string binary = "bin/roxen_mysql.exe";
-#else
-  string binary = "bin/roxen_mysql";
-#endif
-  rm( binary );
-#if constant(hardlink)
-  if( catch(hardlink( bindir+mysqld, binary )) )
-#endif
-    if( !Stdio.cp( bindir+mysqld, binary ) ||
-	catch(chmod( binary, 0500 )) )
-      binary = bindir+mysqld;
-
+  
   Stdio.File errlog = Stdio.File( err_log, "wct" );
 
   string mysql_table_check =
@@ -2032,14 +2064,20 @@ void low_start_mysql( string datadir,
 			"--myisam-recover=QUICK,FORCE\n";
   sscanf(mysql_table_check, "%s\n%s\n",
 	 string myisamchk_args, string mysqld_extra_args);
-  if(myisamchk_args && sizeof(myisamchk_args))
-    low_check_mysql(basedir, datadir, (myisamchk_args/" ") - ({ "" }),
-		    errlog);
+  if(myisamchk_args && sizeof(myisamchk_args)) {
+    if (string myisamchk = mysql_location->myisamchk)
+      low_check_mysql(myisamchk, datadir, (myisamchk_args / " ") - ({ "" }),
+		      errlog);
+    else {
+      report_warning("No myisamchk found in %s. Tables not checked.\n",
+		     mysql_location->basedir);
+    }
+  }
 
   if(mysqld_extra_args && sizeof(mysqld_extra_args))
     args += (mysqld_extra_args/" ") - ({ "" });
 
-  args = ({ binary }) + args;
+  args = ({ mysql_location->mysqld }) + args;
 
   Stdio.File  devnull
 #ifndef __NT__
@@ -2217,7 +2255,7 @@ void start_mysql()
   }
 
 
-  low_start_mysql( mysqldir,query_mysql_dir(),
+  low_start_mysql( mysqldir,
 #if constant(getpwuid)
 		   (getpwuid(getuid()) || ({0}))[ 0 ]
 #else /* Ignored by the start_mysql script */
