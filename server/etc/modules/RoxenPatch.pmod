@@ -910,7 +910,7 @@ class Patcher
     mapping res = ([ ]);
     string file_path = id_to_filepath(id);
     
-    if (!file_path && sizeof(file_path))
+    if (!(file_path && sizeof(file_path)))
       return ([ "status" : "unknown" ]);
 
     // Get metadata
