@@ -9,8 +9,8 @@ constant action = "maintenance";
 
 constant long_flags = ([ "restart" : "Need to restart server" ]);
 
-string name= LOCALE(165, "Patch management");
-string doc = LOCALE(166, "Show information about the available patches and "
+string name= LOCALE(0, "Patch management");
+string doc = LOCALE(0, "Show information about the available patches and "
 			 "their status.");
 
 Write_back wb = class Write_back
