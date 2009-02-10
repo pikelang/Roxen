@@ -111,18 +111,23 @@ string list_patches(RequestID id, Patcher po, string which_list)
       string installed_date = "";
       if(which_list == "installed")
       {
-	installed_date = sprintf("        <td><date strftime='%%c'"
-				 " iso-time='%d-%02d-%02d %02d:%02d:%02d' />"
-				 "</td>\n",
-				 (item->year < 1900) ? 
-				 item->installed->year + 1900 : 
-				 item->installed->year,
-				 item->installed->mon,
-				 item->installed->mday,
-				 item->installed->hour,
-				 item->installed->min,
-				 item->installed->sec
-				 );
+	if (item->installed)
+	{
+	  installed_date = sprintf("        <td><date strftime='%%c'"
+				   " iso-time='%d-%02d-%02d %02d:%02d:%02d' />"
+				   "</td>\n",
+				   (item->installed->year < 1900) ? 
+				   item->installed->year + 1900 : 
+				   item->installed->year,
+				   item->installed->mon,
+				   item->installed->mday,
+				   item->installed->hour,
+				   item->installed->min,
+				   item->installed->sec
+				   );
+	}
+	else
+	  installed_date = "        <td><red>Unknown<red></td>\n";
       }
 
       string deps = "";
@@ -171,7 +176,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
       else if (item->installed)
       {
 	string date = sprintf("%4d-%02d-%02d %02d:%02d",
-			      (item->year < 1900) ? 
+			      (item->installed->year < 1900) ? 
 			      item->installed->year + 1900 : 
 			      item->installed->year,
 			      item->installed->mon,
