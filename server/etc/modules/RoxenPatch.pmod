@@ -68,6 +68,15 @@ string wash_output(string s)
 		 );
 }
 
+string unixify_path(string s)
+//! This is for utils of MSYS that needs /c/ instead of c:\
+{
+  if (s[0] == '/' || s[0] == '\\' || s[1] == ':')
+    return append_path_nt("/", s);
+
+  return s;
+}
+
 //!
 class Patcher
 {
@@ -98,6 +107,13 @@ class Patcher
   private string server_platform = "";
   //! The current platform. This should map to the platforms for which we build
   //! Roxen but I have no idea how to extract that information yet.
+
+  private mapping ext_proc_env = getenv();
+  //! Environiment variables for external processes that are launched.
+
+  private string tar_bin = "tar";
+  private string patch_bin = "patch";
+  //! Command for the external executable.
 
   function write_mess;
   //! Callback function for status messages. Should take a string as argument
@@ -179,6 +195,14 @@ class Patcher
 
     // Set temp dir
     set_temp_dir(temp_dir);
+
+    // Set external process environment and path to exectuables
+#ifdef __NT__
+    tar_bin = combine_path(server_path, "bin/tar");
+    patch_bin = combine_path(server_path, "bin/patch");
+    ext_proc_env += (["PATH" : combine_path(server_path, "bin") + ";" +
+		               ext_proc_env->PATH ]);
+#endif
 
     // Set server version
     string version_h = combine_path(server_path, "etc/include/version.h");
@@ -680,7 +704,7 @@ class Patcher
 	write_log(0, "Applying patch ... ");
 	udiff_data->seek(0); // Start from the beginning of the file again.
 
-	array args = ({ "patch",
+	array args = ({ patch_bin,
 			"-p0",
 			// Reject file
 // 			"--global-reject-file=" +
@@ -694,6 +718,7 @@ class Patcher
 	  Process.create_process(args, 
 				 ([ 
 				   "cwd"   : server_path, 
+ 				   "env"   : ext_proc_env,
 				   "stdin" : udiff_data 
 				 ]));
 
@@ -702,6 +727,9 @@ class Patcher
 	  error_count++;
 	  error = 1;
 	}
+	
+	// Close file object again
+	udiff_data->close();
       }
  
       if (error)
@@ -718,7 +746,18 @@ class Patcher
       write_log(0, "Moving patch files ...");
       string dest_path = combine_path(installed_path,
 				      basename(source_path));
-      if (mv(source_path, dest_path))
+      // This is because the file locks in Windows are evil and don't let go as
+      // soon as one would wish. That's why a time out before reporting
+      // permission denied is needed. 
+      int i = 8; // Two seconds
+      int mv_status = mv(source_path, dest_path);
+      while (!mv_status && errno() == 13 && i > 0)
+      {
+	sleep(0.25);
+	mv_status = mv(source_path, dest_path);
+	i--;
+      }
+      if (mv_status)
       {
 	write_log(0, "<green>ok.</green>\n");
 	// Set a new destination for the log file
@@ -726,7 +765,7 @@ class Patcher
       }
       else
       {
-	write_log(1, "Failed to move patch files\n");
+	write_log(1, "Failed to move patch files: %O\n", strerror(errno()));
 	error_count++;
 	if (!force)
 	{
@@ -1513,11 +1552,13 @@ class Patcher
   //! Creates a directory in target_dir named after the patch's id and 
   //! extracts the patch there. Then returns the parsed metadata.
   {
-    werror("Extract_patch: %s\n", dry_run ? "Dry run" : "sharp");
-    write_mess("Extracting %s to %s ... ", file, target_dir);
-    array args = ({ "tar", "-xzf", combine_path(getcwd(), file) });
+    string source_file = combine_path(getcwd(), file);
+    write_mess("Extracting %s to %s ... ", source_file, target_dir);
+    source_file = unixify_path(source_file);
+    array args = ({ tar_bin, "-xzf", source_file });
     Process.create_process p = Process.create_process(args, 
-						      ([ "cwd" : target_dir ]));
+						      ([ "env" : ext_proc_env,
+							 "cwd" : target_dir ]));
 
     if (p->wait())
     {
@@ -2068,11 +2109,13 @@ class Patcher
       dest = combine_path(dest_path, id + ".rxp");
     else
       dest = combine_path(getcwd(), id + ".rxp");
+    dest = unixify_path(dest);
     write_mess("Creating tar file %s ... ", dest);
-    array args = ({ "tar", "-czf", dest, id });
+    array args = ({ tar_bin, "-czf", dest, id });
   
     Process.create_process p = Process.create_process(args, 
-						      ([ "cwd" : temp_path ]));
+						      ([ "env" : ext_proc_env,
+							 "cwd" : temp_path ]));
     if (p->wait())
     {
       write_err("FAILED: Could not create tar file!\n");
@@ -2091,10 +2134,13 @@ class Patcher
   //! created automagically by tar. @tt{file_name@} cannot be a relative path
   //! higher than base_path.
   {
-    array args = ({ "tar", "-rf", tar_archive, simplify_path(file_name) });
+    array args = ({ tar_bin, "-rf", 
+		    unixify_path(tar_archive), 
+		    simplify_path(unixify_path(file_name)) });
   
     Process.create_process p = Process.create_process(args,
-						      ([ "cwd" : base_path ]));
+						      ([ "env" : ext_proc_env,
+							 "cwd" : base_path ]));
     if (p->wait())
       return 0;
   
@@ -2106,10 +2152,11 @@ class Patcher
 				string path) 
   //! Extracts a tar archive to @tt{path@}.
   {
-    array args = ({ "tar", "-xf", simplify_path(file_name) });
+    array args = ({ tar_bin, "-xf", simplify_path(unixify_path(file_name)) });
   
     Process.create_process p = Process.create_process(args,
-						      ([ "cwd" : path ]));
+						      ([ "env" : ext_proc_env,
+							 "cwd" : path ]));
     if (p->wait())
       return 0;
   
