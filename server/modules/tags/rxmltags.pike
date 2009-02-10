@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.589 2009/01/28 17:31:29 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.590 2009/02/10 12:43:15 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -609,7 +609,19 @@ class TagRedirect {
 	foreach((m_delete(args,"drop") - " ")/",", string s)
 	  prestate[s]=0;
 
-      mapping r = Roxen.http_redirect(args->to, id, prestate);
+      int http_code;
+      if (string type = args->type) {
+	http_code = ([
+	  "permanent":	Protocols.HTTP.HTTP_MOVED_PERM,
+	  "found":	Protocols.HTTP.HTTP_FOUND,
+	  "see-other":	Protocols.HTTP.HTTP_SEE_OTHER,
+	  "temporary":	Protocols.HTTP.HTTP_TEMP_REDIRECT,
+	])[type];
+	if (!http_code)
+	  if (sscanf (type, "%d%*c", http_code) != 1) http_code = 0;
+      }
+
+      mapping r = Roxen.http_redirect(args->to, id, prestate, 0, http_code);
 
       if (r->error)
 	RXML_CONTEXT->set_misc (" _error", r->error);
@@ -9087,6 +9099,13 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 
 <attr name='to' value='URL' required='required'>
  <p>The location to where the client should be sent.</p>
+</attr>
+
+<attr name='type' value='string'>
+  <p>The type of redirect, i.e. the http status code. This can be one
+  of the strings \"permanent\" (301), \"found\" (302), \"see-other\"
+  (303), or \"temporary\" (307). It can also be an integer code. The
+  default is 302.</p>
 </attr>
 
 <attr name='add' value='string'>
