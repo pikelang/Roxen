@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.266 2009/01/18 13:46:32 mast Exp $
+// $Id: Roxen.pmod,v 1.267 2009/02/10 12:04:22 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -987,11 +987,15 @@ string make_absolute_url (string url, RequestID|void id,
 }
 
 mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
-		       mapping|void variables)
+		       mapping|void variables, void|int http_code)
 //! Returns a http-redirect message to the specified URL. The absolute
 //! URL that is required for the @expr{Location@} header is built from
 //! the given components using @[make_absolute_url]. See that function
 //! for details.
+//!
+//! If @[http_code] is nonzero, it specifies the http status code to
+//! use in the response. It's @[Protocols.HTTP.HTTP_FOUND] (i.e. 302)
+//! by default.
 {
   // If we don't get any URL we don't know what to do.
   // But we do!  /per
@@ -1002,7 +1006,8 @@ mapping http_redirect( string url, RequestID|void id, multiset|void prestates,
 
   HTTP_WERR("Redirect -> "+url);
 
-  return http_status( 302, "Redirect to " + url)
+  return http_status( http_code || Protocols.HTTP.HTTP_FOUND,
+		      "Redirect to " + url)
     + ([ "extra_heads":([ "Location":url ]) ]);
 }
 
