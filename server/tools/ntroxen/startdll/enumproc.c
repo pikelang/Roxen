@@ -397,6 +397,8 @@ BOOL KillMySql(const char *confdir)
 		 "--socket=\"%s\" "
 		 "shutdown "
 	    /*">NUL: 2>&1"*/, long_pipe_path);
+    fprintf(stderr, "-------- shutdown _MAX_PATH: %d, cmd:\n%s\n-----------",
+	    _MAX_PATH, cmd);
     system(cmd);
   }
   
