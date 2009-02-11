@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.405 2009/02/06 13:43:44 jonasw Exp $
+// $Id: roxenloader.pike,v 1.406 2009/02/11 10:38:13 jonasw Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.405 2009/02/06 13:43:44 jonasw Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.406 2009/02/11 10:38:13 jonasw Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1978,6 +1978,9 @@ protected void low_check_mysql(string myisamchk, string datadir,
 void low_start_mysql( string datadir,
 		      string uid )
 {
+  array MYSQL_GOOD_VERSION = ({ "5.0.*" });
+  array MYSQL_MAYBE_VERSION = ({ "5.1.*", "6.*" });
+  
   void rotate_log(string path)
   {
     rm(path+".5");
@@ -1989,6 +1992,53 @@ void low_start_mysql( string datadir,
   mapping mysql_location = parse_mysql_location();
   if (!mysql_location->mysqld) {
     report_debug("\nNo MySQL found in "+ mysql_location->basedir + "!\n");
+    exit(1);
+  }
+
+  //  Start by verifying the mysqld version
+  string version_fatal_error = 0;
+  string version = popen(mysql_location->mysqld + " --version");
+  if (!version) {
+    version_fatal_error =
+      sprintf("Unable to determine MySQL version with this command:\n\n"
+	      "  %s --version\n\n",
+	      mysql_location->mysqld);
+  } else {
+    //  Parse version string
+    if (sscanf(lower_case(version), "%*sver%*[^0-9]%[0-9.]", version) != 3) {
+      version_fatal_error =
+	sprintf("Failed to parse MySQL version string %q.\n", version);
+    } else {
+      //  Determine if version is acceptable
+      if (has_value(glob(MYSQL_GOOD_VERSION[*], version), 1)) {
+	//  Everything is fine
+      } else if (has_value(glob(MYSQL_MAYBE_VERSION[*], version), 1)) {
+	//  Don't allow unless user gives special define
+#ifdef ALLOW_UNSUPPORTED_MYSQL
+	report_debug("\nWARNING: Forcing Roxen to run with unsupported "
+		     "MySQL version (%s).\n",
+		     version);
+#else
+	version_fatal_error =
+	  sprintf("This version of MySQL (%s) is not officially supported "
+		  "with Roxen.\n"
+		  "If you want to override this restriction, use this "
+		  "option:\n\n"
+		  "  -DALLOW_UNSUPPORTED_MYSQL\n\n",
+		  version);
+#endif
+      } else {
+	//  Version not recognized (maybe too old or too new) so bail out
+	version_fatal_error =
+	  sprintf("MySQL version %s detected.\n\n", version);
+      }
+    }
+  }
+  if (version_fatal_error) {
+    report_debug("\n%s"
+		 "Roxen cannot run unknown/unsupported versions for data\n"
+                 "integrity reasons and will therefore terminate.\n\n",
+		 version_fatal_error);
     exit(1);
   }
   
