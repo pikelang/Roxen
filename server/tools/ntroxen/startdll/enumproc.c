@@ -374,6 +374,29 @@ BOOL KillMySql(const char *confdir)
   if(!FoundProc)
     return TRUE;
 */
+
+
+  //  First choice is to kill via mysqladmin since that will avoid table
+  //  corruption. However, it relies on finding the binary at a given
+  //  path relative to the server so we'll preserve the brutal process
+  //  termination for situations where this isn't valid.
+
+  TCHAR long_pipe_path[_MAX_PATH + 1];
+  if (GetFullPathName("..\\configurations\\_mysql\\pipe", _MAX_PATH,
+		      long_pipe_path, NULL)) {
+    TCHAR cmd[4000];
+    
+    //  Convert full path into a valid MySQL pipe identifier
+    if (long_pipe_path[1] == ':')
+      long_pipe_path[1] = '_';
+    sprintf(cmd, "mysql\\bin\\mysqladmin "
+		 "-u rw "
+		 "--pipe "
+		 "--socket=%s "
+		 "shutdown "
+	    /*">NUL: 2>&1"*/, long_pipe_path);
+    system(cmd);
+  }
   
   Sleep(1000);
 

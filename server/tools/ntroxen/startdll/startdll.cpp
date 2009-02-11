@@ -1,6 +1,6 @@
 // startdll.cpp : Implementation of WinMain
 //
-// $Id: startdll.cpp,v 1.21 2004/10/01 11:36:00 stewa Exp $
+// $Id: startdll.cpp,v 1.22 2009/02/11 13:00:57 jonasw Exp $
 //
 
 
@@ -637,8 +637,8 @@ void CServiceModule::Run()
 
     if (m_roxen != NULL)
     {
-      // Wait 5 sec for the pike process to terminate before killing it
-      if (WaitForSingleObject(m_roxen->GetProcess(), 5000) == WAIT_TIMEOUT)
+      // Wait 15 sec for the pike process to terminate before killing it
+      if (WaitForSingleObject(m_roxen->GetProcess(), 15000) == WAIT_TIMEOUT)
         TerminateProcess(m_roxen->GetProcess(), 1000);
 
       delete m_roxen;
@@ -789,8 +789,10 @@ extern "C" int __cdecl _tmain(int argc, _TCHAR **argv, _TCHAR **envp)
       strcpy(szServiceName, "");
 
     // Kill the internal roxen MySql server
-    if (!cmdline.IsKeepMysql())
+    if (!cmdline.IsKeepMysql()) {
+	  _Module.LogEvent(_T("Shutting down MySQL."));
       KillMySql(cmdline.GetConfigDir().c_str());
+	}
 
     // When we get here, the service has been stopped
     return _Module.m_status.dwWin32ExitCode;
