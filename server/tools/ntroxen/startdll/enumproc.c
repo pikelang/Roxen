@@ -3,6 +3,8 @@
 #include "EnumProc.h"
 #include <tlhelp32.h>
 #include <vdmdbg.h>
+#include <stdio.h>
+
 
 //extern FoundProc;
 static FoundProc;
@@ -392,7 +394,7 @@ BOOL KillMySql(const char *confdir)
     sprintf(cmd, "mysql\\bin\\mysqladmin "
 		 "-u rw "
 		 "--pipe "
-		 "--socket=%s "
+		 "--socket=\"%s\" "
 		 "shutdown "
 	    /*">NUL: 2>&1"*/, long_pipe_path);
     system(cmd);
