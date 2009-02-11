@@ -382,13 +382,15 @@ BOOL KillMySql(const char *confdir)
   //  corruption. However, it relies on finding the binary at a given
   //  path relative to the server so we'll preserve the brutal process
   //  termination for situations where this isn't valid.
-
-  TCHAR long_pipe_path[_MAX_PATH + 1];
-  if (GetFullPathName("..\\configurations\\_mysql\\pipe", _MAX_PATH,
-		      long_pipe_path, NULL)) {
+  char short_pipe_path[_MAX_PATH];
+  TCHAR long_pipe_path[_MAX_PATH];
+  strcpy(short_pipe_path, confdir);
+  strcat(short_pipe_path, "\\_mysql\\pipe");
+  if (GetFullPathName(short_pipe_path, _MAX_PATH, long_pipe_path, NULL)) {
     TCHAR cmd[4000];
     
-    //  Convert full path into a valid MySQL pipe identifier
+    //  Convert full path into a valid MySQL pipe identifier on the form
+    //  "C_\path\to\configurations\_mysql\pipe".
     if (long_pipe_path[1] == ':')
       long_pipe_path[1] = '_';
     sprintf(cmd, "mysql\\bin\\mysqladmin "
@@ -397,8 +399,6 @@ BOOL KillMySql(const char *confdir)
 		 "--socket=\"%s\" "
 		 "shutdown "
 	    /*">NUL: 2>&1"*/, long_pipe_path);
-    fprintf(stderr, "-------- shutdown _MAX_PATH: %d, cmd:\n%s\n-----------",
-	    _MAX_PATH, cmd);
     system(cmd);
   }
   
