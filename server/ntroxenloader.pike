@@ -1,6 +1,6 @@
 /* This file is executed by Pike to bootstrap Roxen on NT.
  *
- * $Id: ntroxenloader.pike,v 1.9 2008/08/15 12:33:53 mast Exp $
+ * $Id: ntroxenloader.pike,v 1.10 2009/02/11 08:50:18 jonasw Exp $
  */
 
 string dir;
@@ -60,6 +60,15 @@ void read_from_stdin()
 {
   while(!file_stat(key)) sleep(2);
   rm(key);
+
+  //  Ask for orderly shutdown. The signal has potentially already been
+  //  delivered but it doesn't hurt to make sure.
+  if (object rxn = roxen()) {
+    if (!rxn->is_shutting_down())
+      rxn->exit_when_done();
+  }
+  sleep(60);
+  werror("Roxen not shutting down nicely... forcing termination\n");
   exit(0);
 }
 
