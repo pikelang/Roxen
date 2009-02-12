@@ -1228,7 +1228,7 @@ Click "Next" to start the installation.</Text>
       <Custom Action="SetCreateMysql32Location" After="CreateConfigInterface">REMOVE="" AND MYSQLD32LOCATION&lt;&gt;""</Custom>
       <Custom Action="SetCreateMysql64Location" After="SetCreateMysql32Location">REMOVE="" AND MYSQLD64LOCATION&lt;&gt;""</Custom>
       <Custom Action="CreateMysqlLocation" After="SetCreateMysql64Location">REMOVE=""</Custom>
-      <Custom Action="SetCreatePikeLocation" After="CreateMysqlInterface">REMOVE=""</Custom>
+      <Custom Action="SetCreatePikeLocation" After="CreateMysqlLocation">REMOVE=""</Custom>
       <Custom Action="CreatePikeLocation" After="SetCreatePikeLocation">REMOVE=""</Custom>
       <Custom Action="SetCreateEnvironment" After="CreatePikeLocation">REMOVE=""</Custom>
       <Custom Action="CreateEnvironment" After="SetCreateEnvironment">REMOVE=""</Custom>
