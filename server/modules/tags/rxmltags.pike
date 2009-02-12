@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.590 2009/02/10 12:43:15 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.591 2009/02/12 14:57:37 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -11279,8 +11279,8 @@ the respective attributes below for further information.</p></desc>
 
 "if#match":#"<desc type='plugin'><p><short>
  Evaluates patterns.</short> More information can be found in the
- <xref href='../../tutorial/if_tags/plugins.xml'>If tags
- tutorial</xref>. Match is an <i>Eval</i> plugin.</p></desc>
+ <xref href='../../tutorial/'>If tags tutorial</xref>. Match is an
+ <i>Eval</i> plugin.</p></desc>
 
 <attr name='match' value='pattern' required='required'><p>
  Choose what pattern to test. The pattern could be any expression.</p>
@@ -11426,8 +11426,8 @@ Specify scope to test for existence.</p>
  Choose variable to test. Valid operators are '=', '==', 'is', '!=',
  '&lt;' and '&gt;'.</p>
  <p>Examples of how this <i>Eval</i> plugin exists in <tag>if</tag>
-    documentation and the <xref href='../../tutorial/if_tags/plugins.xml'>If tags
- tutorial</xref>.</p>
+    documentation and the <xref href='../../tutorial/'>If tags
+    tutorial</xref>.</p>
 </attr>",
 
 //----------------------------------------------------------------------
