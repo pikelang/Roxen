@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.410 2009/02/12 22:31:51 mast Exp $
+// $Id: roxenloader.pike,v 1.411 2009/02/12 22:33:45 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.410 2009/02/12 22:31:51 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.411 2009/02/12 22:33:45 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1230,21 +1230,32 @@ Roxen 5.0 should be run with Pike 7.8 or newer.
 #endif
 
   // Check if IPv6 support is available.
-  catch {
+  if (mixed err = catch {
     // Note: Attempt to open a port on the IPv6 loopback (::1)
     //       rather than on IPv6 any (::), to make sure some
     //       IPv6 support is actually configured. This is needed
     //       since eg Solaris happily opens ports on :: even
     //       if no IPv6 interfaces are configured.
     //       Try IPv6 any (::) too for paranoia reasons.
+    string interface;
     Stdio.Port p = Stdio.Port();
-    if (p->bind(0, 0, "::1") &&
-	p->bind(0, 0, "::")) {
+    if (p->bind(0, 0, interface = "::1") &&
+	p->bind(0, 0, interface = "::")) {
       add_constant("__ROXEN_SUPPORTS_IPV6__", 1);
       report_debug("Support for IPv6 enabled.\n");
     }
+    else
+      report_debug ("IPv6 support check failed: Could not bind %s: %s\n",
+		    interface, strerror (p->errno()));
     destruct(p);
-  };
+  })
+    report_debug ("IPv6 support check failed: %s",
+#ifdef DEBUG
+		  describe_backtrace (err)
+#else
+		  describe_error (err)
+#endif
+		 );
 
   // (. Note: Optimal implementation. .)
   array av = copy_value( argv );
