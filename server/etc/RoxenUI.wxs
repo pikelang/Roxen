@@ -1204,7 +1204,7 @@ Click "Next" to start the installation.</Text>
     <Property Id="MYISAMCHK32LOCATION">
       <DirectorySearchRef Id="Mysql32Bin" Parent="Mysql32Base">
         <FileSearch LongName="myisamchk.exe" />
-      </DirectorySearch>
+      </DirectorySearchRef>
     </Property>
     <Property Id="MYSQL32BASE">
       <DirectorySearchRef Id="Mysql32Base"/>
@@ -1221,7 +1221,7 @@ Click "Next" to start the installation.</Text>
     <Property Id="MYISAMCHK64LOCATION">
       <DirectorySearchRef Id="Mysql64Bin" Parent="Mysql64Base">
         <FileSearch LongName="myisamchk.exe" />
-      </DirectorySearch>
+      </DirectorySearchRef>
     </Property>
     <Property Id="MYSQL64BASE">
       <DirectorySearchRef Id="Mysql64Base"/>
