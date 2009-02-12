@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.408 2009/02/11 17:17:18 jonasw Exp $
+// $Id: roxenloader.pike,v 1.409 2009/02/12 13:21:29 jonasw Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.408 2009/02/11 17:17:18 jonasw Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.409 2009/02/12 13:21:29 jonasw Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1359,6 +1359,11 @@ mapping parse_mysql_location()
 	return p;
     return 0;
   };
+
+  multiset(string) valid_keys =
+    //  NOTE: "mysqladmin" not used but listed here since NT starter
+    //  looks for it.
+    (< "basedir", "mysqld", "myisamchk", "mysqladmin" >);
   
   //  If the path file is missing we fall back on the traditional
   //  /mysql/ subdirectory. The file should contain lines on this
@@ -1383,12 +1388,17 @@ mapping parse_mysql_location()
 	if (key && val && sizeof(val)) {
 	  //  Check for valid key
 	  key = lower_case(key);
-	  if (key != "basedir" && key != "mysqld" && key != "myisamchk") {
+	  if (!valid_keys[key]) {
 	    report_warning("mysql-location.txt: Unknown key '%s'.\n", key);
 	    continue;
 	  }
 	  
 	  //  Convert to absolute path and check for existence
+	  if (val[0] == '"' || val[0] == '\'')
+	    val = val[1..];
+	  if (sizeof(val))
+	    if (val[-1] == '"' || val[-1] == '\'')
+	      val = val[..sizeof(val) - 2];
 	  string path = combine_path(server_dir, val);
 	  if (check_paths( ({ path }) )) {
 	    res[key] = path;
