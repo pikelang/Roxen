@@ -1173,6 +1173,11 @@ Click "Next" to start the installation.</Text>
 	<FileSearch LongName="Global_Variables" MinSize="128" />
       </DirectorySearch>
     </Property>
+    <Property Id="MYSQLLOCATIONLOCATION">
+      <DirectorySearch Id="MysqlLocationLocation" Path="[TARGETDIR]">
+        <FileSearch LongName="mysql-location.txt" />
+      </DirectorySearch>
+    </Property>
     <Property Id="MYSQLLOCATION">
       <RegistrySearch Id="MysqlLocation" Root="HKLM"
         Key="SOFTWARE\MySQL AB" Type="raw">
@@ -1182,22 +1187,22 @@ Click "Next" to start the installation.</Text>
       </RegistrySearch>
     </Property>
     <Property Id="MYSQLD32LOCATION">
-      <DirectorySearch Id="Mysqld32Location" Path="[ProgramFiles]/MySQL" Depth="1">
+      <DirectorySearch Id="Mysqld32Location" Path="[ProgramFiles]\MySQL" Depth="1">
         <FileSearch LongName="mysqld.exe" />
       </DirectorySearch>
     </Property>
     <Property Id="MYSQLD64LOCATION">
-      <DirectorySearch Id="Mysqld64Location" Path="[ProgramFiles64]/MySQL" Depth="1">
+      <DirectorySearch Id="Mysqld64Location" Path="[ProgramFiles64]\MySQL" Depth="1">
         <FileSearch LongName="mysqld.exe" />
       </DirectorySearch>
     </Property>
     <Property Id="MYISAMCHK32LOCATION">
-      <DirectorySearch Id="Myisamchk32Location" Path="[ProgramFiles]/MySQL" Depth="1">
+      <DirectorySearch Id="Myisamchk32Location" Path="[ProgramFiles]\MySQL" Depth="1">
         <FileSearch LongName="myisamchk.exe" />
       </DirectorySearch>
     </Property>
     <Property Id="MYISAMCHK64LOCATION">
-      <DirectorySearch Id="Myisamchk64Location" Path="[ProgramFiles64]/MySQL" Depth="1">
+      <DirectorySearch Id="Myisamchk64Location" Path="[ProgramFiles64]\MySQL" Depth="1">
         <FileSearch LongName="myisamchk.exe" />
       </DirectorySearch>
     </Property>
@@ -1227,7 +1232,7 @@ Click "Next" to start the installation.</Text>
       <Custom Action="CreateConfigInterface" After="SetCreateConfigInterface">(REMOVE="") AND (OLDCONFIGDIR="")</Custom>
       <Custom Action="SetCreateMysql32Location" After="CreateConfigInterface">REMOVE="" AND MYSQLD32LOCATION&lt;&gt;""</Custom>
       <Custom Action="SetCreateMysql64Location" After="SetCreateMysql32Location">REMOVE="" AND MYSQLD64LOCATION&lt;&gt;""</Custom>
-      <Custom Action="CreateMysqlLocation" After="SetCreateMysql64Location">REMOVE=""</Custom>
+      <Custom Action="CreateMysqlLocation" After="SetCreateMysql64Location">REMOVE="" AND MYSQLLOCATIONLOCATION &lt;&gt; ""</Custom>
       <Custom Action="SetCreatePikeLocation" After="CreateMysqlLocation">REMOVE=""</Custom>
       <Custom Action="CreatePikeLocation" After="SetCreatePikeLocation">REMOVE=""</Custom>
       <Custom Action="SetCreateEnvironment" After="CreatePikeLocation">REMOVE=""</Custom>
