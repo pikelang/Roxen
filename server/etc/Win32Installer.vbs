@@ -1,5 +1,5 @@
 '
-' $Id: Win32Installer.vbs,v 1.15 2009/02/12 13:26:31 grubba Exp $
+' $Id: Win32Installer.vbs,v 1.16 2009/02/12 14:36:10 grubba Exp $
 '
 ' Companion file to RoxenUI.wxs with custom actions.
 '
@@ -23,15 +23,17 @@ Function RemoveOldService()
 End Function
 
 ' At call time the CustomActionData property has been set to
-' [SERVERDIR];[MYSQLDLOCATION];[MYISAMCHKLOCATION].
+' [SERVERDIR];[MYSQLBASE];[MYSQLDLOCATION];[MYISAMCHKLOCATION].
 '
 ' Creates "[SERVERDIR]mysql-location.txt" with the
-' content "mysqld=[MYSQLDLOCATION]"
+' content "basedir=[MYSQLBASE]"
+'         "mysqld=[MYSQLDLOCATION]"
 '         "myisamchk=[MYISAMCHKLOCATION]"
 Function CreateMysqlLocation()
-  Dim re, matches, match, fso, tf, serverdir, mysqld, myisamchk
+  Dim re, matches, match, fso, tf, serverdir, mysqlbase, mysqld, myisamchk
 
   serverdir = ""
+  mysqlbase = ""
   mysqld = ""
   myisamchk = ""
 
@@ -42,6 +44,8 @@ Function CreateMysqlLocation()
   For Each match in matches
     If serverdir = "" Then
       serverdir = match.Value
+    Else If mysqlbase = "" Then
+      mysqlbase = match.Value
     Else If mysqld = "" Then
       mysqld = match.Value
     Else If myisamchk = "" Then
@@ -52,7 +56,8 @@ Function CreateMysqlLocation()
   Set fso = CreateObject("Scripting.FileSystemObject")
 
   Set tf = fso.CreateTextFile(serverdir & "mysql-location.txt", True)
-  tf.writeLine("# Created by $Id: Win32Installer.vbs,v 1.15 2009/02/12 13:26:31 grubba Exp $")
+  tf.writeLine("# Created by $Id: Win32Installer.vbs,v 1.16 2009/02/12 14:36:10 grubba Exp $")
+  tf.writeLine("basedir=" & mysqlbase")
   tf.writeLine("mysqld=" & mysqld")
   tf.writeLine("myisamchk=" & myisamchk")
   tf.Close
