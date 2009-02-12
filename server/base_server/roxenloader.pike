@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.409 2009/02/12 13:21:29 jonasw Exp $
+// $Id: roxenloader.pike,v 1.410 2009/02/12 22:31:51 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.409 2009/02/12 13:21:29 jonasw Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.410 2009/02/12 22:31:51 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1384,7 +1384,7 @@ mapping parse_mysql_location()
     foreach(data / "\n", string line) {
       line = String.trim_whites((line / "#")[0]);
       if (sizeof(line)) {
-	sscanf(line, "%s%*[ \t]=%*[ \t]%s", string key, string val);
+	sscanf(line, "%[^ \t=]%*[ \t]=%*[ \t]%s", string key, string val);
 	if (key && val && sizeof(val)) {
 	  //  Check for valid key
 	  key = lower_case(key);
@@ -2502,7 +2502,7 @@ Please install a newer version of Pike.
 Roxen requires MySQL support in Pike since version 2.4.
 Your Pike has been compiled without support for MySQL.
 Please install MySQL client libraries and reconfigure
-and rebuild Pike from scratch.
+and rebuild Pike from source.
 ******************************************************
 
 
