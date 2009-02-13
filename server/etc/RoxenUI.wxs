@@ -1186,11 +1186,7 @@ Click "Next" to start the installation.</Text>
     </Property>
     <Property Id="MYSQLLOCATION">
       <RegistrySearch Id="MysqlLocation" Root="HKLM"
-        Key="SOFTWARE\MySQL AB" Type="raw">
-        <DirectorySearch Id="MysqlVersionLocation">
-          <FileSearch LongName="Location" MinVersion="4.1"/>
-        </DirectorySearch>
-      </RegistrySearch>
+        Key="SOFTWARE\MySQL AB" Name="Location" Type="raw" />
     </Property>
     <Property Id="MYSQLD32LOCATION">
       <DirectorySearch Id="Mysqld32Location" Path="[ProgramFiles]\MySQL" Depth="2">
@@ -1202,7 +1198,7 @@ Click "Next" to start the installation.</Text>
       </DirectorySearch>
     </Property>
     <Property Id="MYISAMCHK32LOCATION">
-      <DirectorySearchRef Id="Mysql32Bin" Parent="Mysql32Base" Path="bin">
+      <DirectorySearchRef Id="Mysql32Bin2" Parent="Mysql32Base" Path="bin">
         <FileSearch LongName="myisamchk.exe" />
       </DirectorySearchRef>
     </Property>
@@ -1219,7 +1215,7 @@ Click "Next" to start the installation.</Text>
       </DirectorySearch>
     </Property>
     <Property Id="MYISAMCHK64LOCATION">
-      <DirectorySearchRef Id="Mysql64Bin" Parent="Mysql64Base" Path="bin">
+      <DirectorySearchRef Id="Mysql64Bin2" Parent="Mysql64Base" Path="bin">
         <FileSearch LongName="myisamchk.exe" />
       </DirectorySearchRef>
     </Property>
