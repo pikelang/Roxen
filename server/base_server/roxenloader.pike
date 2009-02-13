@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.411 2009/02/12 22:33:45 mast Exp $
+// $Id: roxenloader.pike,v 1.412 2009/02/13 16:32:34 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.411 2009/02/12 22:33:45 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.412 2009/02/13 16:32:34 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2064,7 +2064,7 @@ void low_start_mysql( string datadir,
 		 version_fatal_error);
     exit(1);
   }
-  
+
   string pid_file = datadir + "/mysql_pid";
   string err_log  = datadir + "/error_log";
   string slow_query_log;
@@ -2169,6 +2169,12 @@ void low_start_mysql( string datadir,
     = Stdio.File( "/dev/null", "w" )
 #endif
     ;
+
+#ifdef DEBUG
+  report_debug ("MySQL server command: %s%{\n    %s%}\n", args[0], args[1..]);
+#else
+  report_debug ("MySQL server executable: %s\n", args[0]);
+#endif
 
   Process.create_process p = Process.create_process( args,
 			  ([
