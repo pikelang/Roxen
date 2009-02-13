@@ -1196,7 +1196,14 @@ Click "Next" to start the installation.</Text>
         </DirectorySearch>
       </DirectorySearch>
     </Property>
+    <Property Id="MYSQLNAME">
+      <RegistrySearch Id="Mysql51Location" Root="HKLM"
+        Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{8F5E3B9E-ABBD-4B35-BB68-626CB9BE98D6}"
+        Name="DisplayName" Type="raw"/>
+    </Property>
     <Property Id="MYSQLLOCATION">
+      <RegistrySearch Id="MysqlLocation" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\[MYSQLNAME]" Name="Location" Type="raw" />
       <RegistrySearch Id="Mysql51Location" Root="HKLM"
         Key="SOFTWARE\MySQL AB\MySQL Server 5.1" Name="Location" Type="raw" />
       <RegistrySearch Id="Mysql50Location" Root="HKLM"
