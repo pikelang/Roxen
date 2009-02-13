@@ -1207,7 +1207,7 @@ Click "Next" to start the installation.</Text>
       </DirectorySearchRef>
     </Property>
     <Property Id="MYSQL32BASE">
-      <DirectorySearchRef Id="Mysql32Base"/>
+      <DirectorySearchRef Id="Mysql32Base" Parent="Mysqld32Location" />
     </Property>
     <Property Id="MYSQLD64LOCATION">
       <DirectorySearch Id="Mysqld64Location" Path="[ProgramFiles64]\MySQL" Depth="2">
@@ -1224,7 +1224,7 @@ Click "Next" to start the installation.</Text>
       </DirectorySearchRef>
     </Property>
     <Property Id="MYSQL64BASE">
-      <DirectorySearchRef Id="Mysql64Base"/>
+      <DirectorySearchRef Id="Mysql64Base" Parent="Mysql64Location" />
     </Property>
     <AdminExecuteSequence>
       <Custom Action="DONT_INSTALL_SERVICE" Before="DIRCA_TARGETDIR">NOT VersionNT</Custom>
