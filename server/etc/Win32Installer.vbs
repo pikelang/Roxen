@@ -1,5 +1,5 @@
 '
-' $Id: Win32Installer.vbs,v 1.16 2009/02/12 14:36:10 grubba Exp $
+' $Id: Win32Installer.vbs,v 1.17 2009/02/13 17:00:56 grubba Exp $
 '
 ' Companion file to RoxenUI.wxs with custom actions.
 '
@@ -44,19 +44,25 @@ Function CreateMysqlLocation()
   For Each match in matches
     If serverdir = "" Then
       serverdir = match.Value
-    Else If mysqlbase = "" Then
-      mysqlbase = match.Value
-    Else If mysqld = "" Then
-      mysqld = match.Value
-    Else If myisamchk = "" Then
-      myisamchk = match.Value
+    Else
+      If mysqlbase = "" Then
+        mysqlbase = match.Value
+      Else
+        If mysqld = "" Then
+          mysqld = match.Value
+        Else
+          If myisamchk = "" Then
+            myisamchk = match.Value
+          End If
+        End If
+      End If
     End If
   Next
 
   Set fso = CreateObject("Scripting.FileSystemObject")
 
   Set tf = fso.CreateTextFile(serverdir & "mysql-location.txt", True)
-  tf.writeLine("# Created by $Id: Win32Installer.vbs,v 1.16 2009/02/12 14:36:10 grubba Exp $")
+  tf.writeLine("# Created by $Id: Win32Installer.vbs,v 1.17 2009/02/13 17:00:56 grubba Exp $")
   tf.writeLine("basedir=" & mysqlbase")
   tf.writeLine("mysqld=" & mysqld")
   tf.writeLine("myisamchk=" & myisamchk")
