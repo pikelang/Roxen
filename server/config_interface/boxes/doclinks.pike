@@ -6,7 +6,7 @@
 
 
 constant box      = "small";
-constant box_initial = 1;
+constant box_initial = 0;
 constant box_position = -1;
 
 LocaleString box_name = _(363,"Documentation links");
@@ -37,7 +37,7 @@ string parse( RequestID id )
     }
   };
   
-  foreach( ({ "docs/roxen/4.5/" }), string rpath )
+  foreach( ({ "docs/roxen/5.0/" }), string rpath )
   {
     add_doc_link(rpath + "content_editor_manual/index.xml",
 		 _(524, "Content Editor"));
@@ -65,28 +65,6 @@ string parse( RequestID id )
 
     add_doc_link(rpath + "faq/main/index.xml",
 		 _(458, "FAQ"));  }
-
-  foreach( ({ "docs/roxen/2.2/", "docs/roxen/2.1/" }), string rpath )
-  {
-    add_doc_link(rpath + "creator/index.html",
-		 _(391, "Web Site Creator"));
-
-    add_doc_link(rpath + "administrator/index.html",
-		 _(392, "Administrator Manual"));
-
-    add_doc_link(rpath + "user/index.html",
-		 _(393, "User Manual"));
-
-    if (exists(rpath + "tutorial/rxml/index.html"))
-      add_doc_link(rpath + "tutorial/rxml/index.html",
-		   _(394, "RXML Tutorial"));
-    else if (exists(rpath + "tutorial/rxml_tutorial.html"))
-      add_doc_link(rpath + "tutorial/rxml/index.html",
-		   _(394, "RXML Tutorial"));
-
-    add_doc_link(rpath + "programmer/index.html",
-		 _(395, "Programmer Manual"));
-  }
 
   foreach( ({"docs/pike/7.1/","docs/pike/7.0/" }), string ppath )
   {
