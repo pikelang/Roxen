@@ -1219,13 +1219,22 @@ Click "Next" to start the installation.</Text>
           <FileSearch LongName="mysqld.exe" />
         </DirectorySearch>
       </DirectorySearch>
-      <DirectorySearch Id="Mysqld64Location" Path="[ProgramFiles64Folder]\MySQL" Depth="2">
-        <DirectorySearch Id="Mysqld64Base">
-          <DirectorySearch Id="Mysqld64Bin" Path="bin">
+      <DirectorySearch Id="Mysql64Location" Path="[ProgramFiles64Folder]\MySQL" Depth="2">
+        <DirectorySearch Id="Mysql64Base">
+          <DirectorySearch Id="Mysql64Bin" Path="bin">
             <FileSearch LongName="mysqld.exe" />
           </DirectorySearch>
         </DirectorySearch>
       </DirectorySearch>
+      <DirectorySearch Id="Mysql32Location" Path="[ProgramFilesFolder]\MySQL" Depth="2">
+        <DirectorySearch Id="Mysql32Base">
+          <DirectorySearch Id="Mysql32Bin" Path="bin">
+            <FileSearch LongName="mysqld.exe" />
+          </DirectorySearch>
+        </DirectorySearch>
+      </DirectorySearch>
+    </Property>
+    <Property Id="MYSQLD32LOCATION">
       <DirectorySearch Id="Mysqld32Location" Path="[ProgramFilesFolder]\MySQL" Depth="2">
         <DirectorySearch Id="Mysqld32Base">
           <DirectorySearch Id="Mysqld32Bin" Path="bin">
@@ -1234,19 +1243,10 @@ Click "Next" to start the installation.</Text>
         </DirectorySearch>
       </DirectorySearch>
     </Property>
-    <Property Id="MYSQLD32LOCATION">
-      <DirectorySearch Id="Mysqld32Location" Path="[ProgramFilesFolder]\MySQL" Depth="2">
-        <DirectorySearch Id="Mysql32Base">
-          <DirectorySearch Id="Mysql32Bin" Path="bin">
-            <FileSearch LongName="mysqld.exe" />
-          </DirectorySearch>
-        </DirectorySearch>
-      </DirectorySearch>
-    </Property>
     <Property Id="MYISAMCHK32LOCATION">
       <DirectorySearch Id="Mysqld32Location2" Path="[ProgramFilesFolder]\MySQL" Depth="2">
-        <DirectorySearch Id="Mysql32Base2">
-          <DirectorySearch Id="Mysql32Bin2" Path="bin">
+        <DirectorySearch Id="Mysqld32Base2">
+          <DirectorySearch Id="Mysqld32Bin2" Path="bin">
             <FileSearch LongName="myisamchk.exe" />
           </DirectorySearch>
         </DirectorySearch>
@@ -1257,8 +1257,8 @@ Click "Next" to start the installation.</Text>
     </Property>
     <Property Id="MYSQLD64LOCATION">
       <DirectorySearch Id="Mysqld64Location" Path="[ProgramFiles64]\MySQL" Depth="2">
-        <DirectorySearch Id="Mysql64Base">
-          <DirectorySearch Id="Mysql64Bin" Path="bin">
+        <DirectorySearch Id="Mysqld64Base">
+          <DirectorySearch Id="Mysqld64Bin" Path="bin">
             <FileSearch LongName="mysqld.exe" />
           </DirectorySearch>
         </DirectorySearch>
@@ -1266,15 +1266,15 @@ Click "Next" to start the installation.</Text>
     </Property>
     <Property Id="MYISAMCHK64LOCATION">
       <DirectorySearch Id="Mysqld64Location2" Path="[ProgramFiles64]\MySQL" Depth="2">
-        <DirectorySearch Id="Mysql64Base2">
-          <DirectorySearch Id="Mysql64Bin2" Path="bin">
+        <DirectorySearch Id="Mysqld64Base2">
+          <DirectorySearch Id="Mysqld64Bin2" Path="bin">
             <FileSearch LongName="myisamchk.exe" />
           </DirectorySearch>
         </DirectorySearch>
       </DirectorySearch>
     </Property>
     <Property Id="MYSQL64BASE">
-      <DirectorySearchRef Id="Mysql64Base" Parent="Mysqld64Location" />
+      <DirectorySearchRef Id="Mysqld64Base" Parent="Mysqld64Location" />
     </Property>
     <AdminExecuteSequence>
       <Custom Action="DONT_INSTALL_SERVICE" Before="DIRCA_TARGETDIR">NOT VersionNT</Custom>
