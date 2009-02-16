@@ -22,10 +22,8 @@
       Execute="immediate" />
     <CustomAction Id="CreateConfigInterface" BinaryKey="RoxenInstaller"
       VBScriptCall="CreateConfigInterface" Execute="deferred" Impersonate="no" />
-    <CustomAction Id="SetCreateMysql32Location" Property="CreateMysqlLocation"
-      Value="[SERVERDIR];[MYSQL32BASE];[MYSQLD32LOCATION];[MYISAMCHK32LOCATION]" Execute="immediate" />
-    <CustomAction Id="SetCreateMysql64Location" Property="CreateMysqlLocation"
-      Value="[SERVERDIR];[MYSQL64BASE];[MYSQLD64LOCATION];[MYISAMCHK32LOCATION]" Execute="immediate" />
+    <CustomAction Id="SetCreateMysqlLocation" Property="CreateMysqlLocation"
+      Value="[SERVERDIR];[MYSQLBASE];[MYSQLDEXE];[MYISAMCHKEXE]" Execute="immediate" />
     <CustomAction Id="CreateMysqlLocation" BinaryKey="RoxenInstaller"
       VBScriptCall="CreateMysqlLocation" Execute="deferred" Impersonate="no" />
     <CustomAction Id="SetCreatePikeLocation" Property="CreatePikeLocation"
@@ -1185,11 +1183,14 @@ Click "Next" to start the installation.</Text>
       </DirectorySearch>
     </Property>
     <Property Id="MYSQLDUMMY">
+      <!-- Fallback in case the registry searches fail. -->
+      <!--
       <DirectorySearch Id="MysqlLocation64" Path="[ProgramFiles64Folder]\MySQL" Depth="2">
         <DirectorySearch Id="MysqlBase64">
           <DirectorySearch Id="MysqlBin64" Path="bin"/>
         </DirectorySearch>
       </DirectorySearch>
+      -->
       <DirectorySearch Id="MysqlLocation32" Path="[ProgramFilesFolder]\MySQL" Depth="2">
         <DirectorySearch Id="MysqlBase32">
           <DirectorySearch Id="MysqlBin32" Path="bin"/>
@@ -1197,11 +1198,12 @@ Click "Next" to start the installation.</Text>
       </DirectorySearch>
     </Property>
     <Property Id="MYSQLNAME">
+      <!-- Used to find the proper key in the registry. -->
       <RegistrySearch Id="MysqlName" Root="HKLM"
         Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{8F5E3B9E-ABBD-4B35-BB68-626CB9BE98D6}"
         Name="DisplayName" Type="raw"/>
     </Property>
-    <Property Id="MYSQLLOCATION">
+    <Property Id="MYSQLBASE">
       <RegistrySearch Id="MysqlLocation" Root="HKLM"
         Key="SOFTWARE\MySQL AB\[MYSQLNAME]" Name="Location" Type="raw" />
       <RegistrySearch Id="Mysql51Location" Root="HKLM"
@@ -1210,71 +1212,24 @@ Click "Next" to start the installation.</Text>
         Key="SOFTWARE\MySQL AB\MySQL Server 5.0" Name="Location" Type="raw" />
       <RegistrySearch Id="Mysql41Location" Root="HKLM"
         Key="SOFTWARE\MySQL AB\MySQL Server 4.1" Name="Location" Type="raw" />
+      <!--
       <DirectorySearchRef Id="MysqlBase64" Parent="MysqlLocation64"/>
+      -->
       <DirectorySearchRef Id="MysqlBase32" Parent="MysqlLocation32"/>
     </Property>
-    <Property Id="MYSQLDLOCATION">
-      <DirectorySearch Id="MysqldLocation" Path="[MYSQLLOCATION]">
+    <Property Id="MYSQLDEXE">
+      <DirectorySearch Id="MysqldBase" Path="[MYSQLBASE]">
         <DirectorySearch Id="MysqldBin" Path="bin">
           <FileSearch LongName="mysqld.exe" />
         </DirectorySearch>
       </DirectorySearch>
-      <DirectorySearch Id="Mysql64Location" Path="[ProgramFiles64Folder]\MySQL" Depth="2">
-        <DirectorySearch Id="Mysql64Base">
-          <DirectorySearch Id="Mysql64Bin" Path="bin">
-            <FileSearch LongName="mysqld.exe" />
-          </DirectorySearch>
+    </Property>
+    <Property Id="MYISAMCHKEXE">
+      <DirectorySearch Id="MyisamBase" Path="[MYSQLBASE]">
+        <DirectorySearch Id="MyisamBin" Path="bin">
+          <FileSearch LongName="myisamchk.exe" />
         </DirectorySearch>
       </DirectorySearch>
-      <DirectorySearch Id="Mysql32Location" Path="[ProgramFilesFolder]\MySQL" Depth="2">
-        <DirectorySearch Id="Mysql32Base">
-          <DirectorySearch Id="Mysql32Bin" Path="bin">
-            <FileSearch LongName="mysqld.exe" />
-          </DirectorySearch>
-        </DirectorySearch>
-      </DirectorySearch>
-    </Property>
-    <Property Id="MYSQLD32LOCATION">
-      <DirectorySearch Id="Mysqld32Location" Path="[ProgramFilesFolder]\MySQL" Depth="2">
-        <DirectorySearch Id="Mysqld32Base">
-          <DirectorySearch Id="Mysqld32Bin" Path="bin">
-            <FileSearch LongName="mysqld.exe" />
-          </DirectorySearch>
-        </DirectorySearch>
-      </DirectorySearch>
-    </Property>
-    <Property Id="MYISAMCHK32LOCATION">
-      <DirectorySearch Id="Mysqld32Location2" Path="[ProgramFilesFolder]\MySQL" Depth="2">
-        <DirectorySearch Id="Mysqld32Base2">
-          <DirectorySearch Id="Mysqld32Bin2" Path="bin">
-            <FileSearch LongName="myisamchk.exe" />
-          </DirectorySearch>
-        </DirectorySearch>
-      </DirectorySearch>
-    </Property>
-    <Property Id="MYSQL32BASE">
-      <DirectorySearchRef Id="Mysqld32Base" Parent="Mysqld32Location" />
-    </Property>
-    <Property Id="MYSQLD64LOCATION">
-      <DirectorySearch Id="Mysqld64Location" Path="[ProgramFiles64]\MySQL" Depth="2">
-        <DirectorySearch Id="Mysqld64Base">
-          <DirectorySearch Id="Mysqld64Bin" Path="bin">
-            <FileSearch LongName="mysqld.exe" />
-          </DirectorySearch>
-        </DirectorySearch>
-      </DirectorySearch>
-    </Property>
-    <Property Id="MYISAMCHK64LOCATION">
-      <DirectorySearch Id="Mysqld64Location2" Path="[ProgramFiles64]\MySQL" Depth="2">
-        <DirectorySearch Id="Mysqld64Base2">
-          <DirectorySearch Id="Mysqld64Bin2" Path="bin">
-            <FileSearch LongName="myisamchk.exe" />
-          </DirectorySearch>
-        </DirectorySearch>
-      </DirectorySearch>
-    </Property>
-    <Property Id="MYSQL64BASE">
-      <DirectorySearchRef Id="Mysqld64Base" Parent="Mysqld64Location" />
     </Property>
     <AdminExecuteSequence>
       <Custom Action="DONT_INSTALL_SERVICE" Before="DIRCA_TARGETDIR">NOT VersionNT</Custom>
@@ -1300,9 +1255,8 @@ Click "Next" to start the installation.</Text>
       <Custom Action="RemoveOldService" After="SetRemoveOldService">REMOVE="" AND INSTALL_SERVICE="1"</Custom>
       <Custom Action="SetCreateConfigInterface" Sequence="5100">REMOVE=""</Custom>
       <Custom Action="CreateConfigInterface" After="SetCreateConfigInterface">(REMOVE="") AND (OLDCONFIGDIR="")</Custom>
-      <Custom Action="SetCreateMysql32Location" After="CreateConfigInterface" />
-      <Custom Action="SetCreateMysql64Location" After="SetCreateMysql32Location">MYSQLD64LOCATION&lt;&gt;""</Custom>
-      <Custom Action="CreateMysqlLocation" After="SetCreateMysql64Location">REMOVE="" AND MYSQLLOCATIONLOCATION &lt;&gt; ""</Custom>
+      <Custom Action="SetCreateMysqlLocation" After="CreateConfigInterface" />
+      <Custom Action="CreateMysqlLocation" After="SetCreateMysqlLocation">REMOVE="" AND MYSQLLOCATIONLOCATION</Custom>
       <Custom Action="SetCreatePikeLocation" After="CreateMysqlLocation">REMOVE=""</Custom>
       <Custom Action="CreatePikeLocation" After="SetCreatePikeLocation">REMOVE=""</Custom>
       <Custom Action="SetCreateEnvironment" After="CreatePikeLocation">REMOVE=""</Custom>
