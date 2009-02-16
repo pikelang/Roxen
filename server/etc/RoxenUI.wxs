@@ -1253,7 +1253,7 @@ Click "Next" to start the installation.</Text>
       </DirectorySearch>
     </Property>
     <Property Id="MYSQL32BASE">
-      <DirectorySearchRef Id="Mysql32Base" Parent="Mysqld32Location" />
+      <DirectorySearchRef Id="Mysqld32Base" Parent="Mysqld32Location" />
     </Property>
     <Property Id="MYSQLD64LOCATION">
       <DirectorySearch Id="Mysqld64Location" Path="[ProgramFiles64]\MySQL" Depth="2">
