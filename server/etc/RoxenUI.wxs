@@ -1183,27 +1183,21 @@ Click "Next" to start the installation.</Text>
       </DirectorySearch>
     </Property>
     <Property Id="MYSQLNAME">
-      <!-- Used to find the proper key in the registry.
-           Unfortunately, this doesn't work, since the evaluation order
-           is unspecified.
-           -->
       <RegistrySearch Id="MysqlName" Root="HKLM"
         Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{8F5E3B9E-ABBD-4B35-BB68-626CB9BE98D6}"
         Name="DisplayName" Type="raw"/>
     </Property>
     <Property Id="MYSQLDEXE">
-      <!-- NB: This rule would do the right thing if the evaluation
-           order was specified... -->
-      <RegistrySearch Id="MysqlLocation" Root="HKLM"
-        Key="SOFTWARE\MySQL AB\[MYSQLNAME]" Name="Location" Type="raw">
-        <DirectorySearch Id="MysqldBin1" Path="bin">
-          <FileSearch LongName="mysqld.exe" />
+      <DirectorySearch Id="MysqlLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
+        <DirectorySearch Id="MysqlBase5">
+          <DirectorySearch Id="MysqlBin5" Path="bin">
+            <FileSearch LongName="mysqld.exe" />
+          </DirectorySearch>
         </DirectorySearch>
-      </RegistrySearch>
-      <!-- Instead we need to fall back to doing it be hand... -->
-      <RegistrySearch Id="Mysql51Location" Root="HKLM"
-        Key="SOFTWARE\MySQL AB\MySQL Server 5.1" Name="Location" Type="raw">
-        <DirectorySearch Id="MysqldBin2" Path="bin">
+      </DirectorySearch>
+      <RegistrySearch Id="Mysql41Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 4.1" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqldBin4" Path="bin">
           <FileSearch LongName="mysqld.exe" />
         </DirectorySearch>
       </RegistrySearch>
@@ -1213,31 +1207,30 @@ Click "Next" to start the installation.</Text>
           <FileSearch LongName="mysqld.exe" />
         </DirectorySearch>
       </RegistrySearch>
-      <RegistrySearch Id="Mysql41Location" Root="HKLM"
-        Key="SOFTWARE\MySQL AB\MySQL Server 4.1" Name="Location" Type="raw">
-        <DirectorySearch Id="MysqldBin4" Path="bin">
+      <RegistrySearch Id="Mysql51Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.1" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqldBin2" Path="bin">
           <FileSearch LongName="mysqld.exe" />
         </DirectorySearch>
       </RegistrySearch>
-      <!-- Not in the registry, try searching in Program Files. -->
-      <DirectorySearch Id="MysqlLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
-        <DirectorySearch Id="MysqlBase5">
-          <DirectorySearch Id="MysqlBin5" Path="bin">
-            <FileSearch LongName="mysqld.exe" />
+      <RegistrySearch Id="MysqlLocation" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\[MYSQLNAME]" Name="Location" Type="raw">
+        <DirectorySearch Id="MysqldBin1" Path="bin">
+          <FileSearch LongName="mysqld.exe" />
+        </DirectorySearch>
+      </RegistrySearch>
+    </Property>
+    <Property Id="MYISAMCHKEXE">
+      <DirectorySearch Id="MyisamLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
+        <DirectorySearch Id="MyisamBase5">
+          <DirectorySearch Id="MyisamBin5" Path="bin">
+            <FileSearch LongName="myisamchk.exe" />
           </DirectorySearch>
         </DirectorySearch>
       </DirectorySearch>
-    </Property>
-    <Property Id="MYISAMCHKEXE">
-      <RegistrySearch Id="MyisamLocation" Root="HKLM"
-        Key="SOFTWARE\MySQL AB\[MYSQLNAME]" Name="Location" Type="raw">
-        <DirectorySearch Id="MyisamBin1" Path="bin">
-          <FileSearch LongName="myisamchk.exe" />
-        </DirectorySearch>
-      </RegistrySearch>
-      <RegistrySearch Id="Myisam51Location" Root="HKLM"
-        Key="SOFTWARE\MySQL AB\MySQL Server 5.1" Name="Location" Type="raw">
-        <DirectorySearch Id="MyisamBin2" Path="bin">
+      <RegistrySearch Id="Myisam41Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 4.1" Name="Location" Type="raw">
+        <DirectorySearch Id="MyisamBin4" Path="bin">
           <FileSearch LongName="myisamchk.exe" />
         </DirectorySearch>
       </RegistrySearch>
@@ -1247,26 +1240,25 @@ Click "Next" to start the installation.</Text>
           <FileSearch LongName="myisamchk.exe" />
         </DirectorySearch>
       </RegistrySearch>
-      <RegistrySearch Id="Myisam41Location" Root="HKLM"
-        Key="SOFTWARE\MySQL AB\MySQL Server 4.1" Name="Location" Type="raw">
-        <DirectorySearch Id="MyisamBin4" Path="bin">
+      <RegistrySearch Id="Myisam51Location" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\MySQL Server 5.1" Name="Location" Type="raw">
+        <DirectorySearch Id="MyisamBin2" Path="bin">
           <FileSearch LongName="myisamchk.exe" />
         </DirectorySearch>
       </RegistrySearch>
-      <DirectorySearch Id="MyisamLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
-        <DirectorySearch Id="MyisamBase5">
-          <DirectorySearch Id="MyisamBin5" Path="bin">
-            <FileSearch LongName="myisamchk.exe" />
-          </DirectorySearch>
+      <RegistrySearch Id="MyisamLocation" Root="HKLM"
+        Key="SOFTWARE\MySQL AB\[MYSQLNAME]" Name="Location" Type="raw">
+        <DirectorySearch Id="MyisamBin1" Path="bin">
+          <FileSearch LongName="myisamchk.exe" />
         </DirectorySearch>
-      </DirectorySearch>
+      </RegistrySearch>
     </Property>
     <Property Id="MYSQLBASE">
-      <RegistrySearchRef Id="MysqlLocation" />
-      <RegistrySearchRef Id="Mysql51Location" />
-      <RegistrySearchRef Id="Mysql50Location" />
-      <RegistrySearchRef Id="Mysql41Location" />
       <DirectorySearchRef Id="MysqlBase5" Parent="MysqlLocation5"/>
+      <RegistrySearchRef Id="Mysql41Location" />
+      <RegistrySearchRef Id="Mysql50Location" />
+      <RegistrySearchRef Id="Mysql51Location" />
+      <RegistrySearchRef Id="MysqlLocation" />
     </Property>
     <Property Id="MYSQLDEBUG1">
       <RegistrySearchRef Id="MysqlLocation" />
