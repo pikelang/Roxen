@@ -1,5 +1,5 @@
 '
-' $Id: Win32Installer.vbs,v 1.18 2009/02/16 11:59:13 grubba Exp $
+' $Id: Win32Installer.vbs,v 1.19 2009/02/16 14:33:59 grubba Exp $
 '
 ' Companion file to RoxenUI.wxs with custom actions.
 '
@@ -23,35 +23,35 @@ Function RemoveOldService()
 End Function
 
 ' At call time the CustomActionData property has been set to
-' [SERVERDIR];[MYSQLBASE];[MYSQLDLOCATION];[MYISAMCHKLOCATION].
+' [SERVERDIR];[MYSQLBASE];[MYSQLDEXE];[MYISAMCHKEXE].
 '
 ' Creates "[SERVERDIR]mysql-location.txt" with the
 ' content "basedir=[MYSQLBASE]"
-'         "mysqld=[MYSQLDLOCATION]"
-'         "myisamchk=[MYISAMCHKLOCATION]"
+'         "mysqld=[MYSQLDEXE]"
+'         "myisamchk=[MYISAMCHKEXE]"
 Function CreateMysqlLocation()
   Dim re, matches, match, fso, tf, serverdir, mysqlbase, mysqld, myisamchk
 
-  serverdir = 0
-  mysqlbase = 0
-  mysqld = 0
-  myisamchk = 0
+  serverdir = ""
+  mysqlbase = ""
+  mysqld = ""
+  myisamchk = ""
 
   Set re = New RegExp
   re.Pattern = "[^;]*"
   re.Global = True
   Set matches = re.Execute(Session.Property("CustomActionData"))
   For Each match in matches
-    If serverdir = 0 Then
+    If serverdir = "" Then
       serverdir = match.Value
     Else
-      If mysqlbase = 0 Then
+      If mysqlbase = "" Then
         mysqlbase = match.Value
       Else
-        If mysqld = 0 Then
+        If mysqld = "" Then
           mysqld = match.Value
         Else
-          If myisamchk = 0 Then
+          If myisamchk = "" Then
             myisamchk = match.Value
           End If
         End If
@@ -62,12 +62,12 @@ Function CreateMysqlLocation()
   Set fso = CreateObject("Scripting.FileSystemObject")
 
   Set tf = fso.CreateTextFile(serverdir & "mysql-location.txt", True)
-  tf.writeLine("# Created by $Id: Win32Installer.vbs,v 1.18 2009/02/16 11:59:13 grubba Exp $")
+  tf.writeLine("# Created by $Id: Win32Installer.vbs,v 1.19 2009/02/16 14:33:59 grubba Exp $")
   tf.writeLine("basedir=" & mysqlbase)
-  If (mysqld <> 0) And (mysqld <> "") Then
+  If mysqld <> "" Then
     tf.writeLine("mysqld=" & mysqld)
   End If
-  If (myisamchk <> 0) And (myisamchk <> "") Then
+  If myisamchk <> "" Then
     tf.writeLine("myisamchk=" & myisamchk)
   End If
   tf.Close
