@@ -1191,13 +1191,13 @@ Click "Next" to start the installation.</Text>
         </DirectorySearch>
       </DirectorySearch>
       <DirectorySearch Id="MysqlLocation32" Path="[ProgramFilesFolder]\MySQL" Depth="2">
-        <DirectorySearch Id="MysqlBase64">
-          <DirectorySearch Id="MysqlBin64" Path="bin"/>
+        <DirectorySearch Id="MysqlBase32">
+          <DirectorySearch Id="MysqlBin32" Path="bin"/>
         </DirectorySearch>
       </DirectorySearch>
     </Property>
     <Property Id="MYSQLNAME">
-      <RegistrySearch Id="Mysql51Location" Root="HKLM"
+      <RegistrySearch Id="MysqlName" Root="HKLM"
         Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{8F5E3B9E-ABBD-4B35-BB68-626CB9BE98D6}"
         Name="DisplayName" Type="raw"/>
     </Property>
