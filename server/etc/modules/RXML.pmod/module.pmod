@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.389 2009/01/08 23:14:46 mast Exp $
+// $Id: module.pmod,v 1.390 2009/02/16 16:43:36 jonasw Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -8651,9 +8651,17 @@ class PCode
 	m_delete (ctx->unwind_state, this_object());
     else {
       parts = allocate (length);
-      if (protocol_cache_time >= 0 && ctx->id)
+      if (protocol_cache_time >= 0 && ctx->id) {
+#ifdef DEBUG_CACHEABLE
+	int old_c = ctx->id->misc->cacheable;
+	report_debug("RXML.pmod/module.pmod::_eval() setting cacheable "
+		     "to %d (was: %d)\n",
+		     min(ctx->id->misc->cacheable, protocol_cache_time),
+		     ctx->id->misc->cacheable);
+#endif
 	ctx->id->misc->cacheable = min (ctx->id->misc->cacheable,
 					protocol_cache_time);
+      }
     }
 
     PCODE_MSG ((p_code_comp ?

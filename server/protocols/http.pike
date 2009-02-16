@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.587 2009/01/29 22:07:33 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.588 2009/02/16 16:43:50 jonasw Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1059,6 +1059,9 @@ int set_max_cache( int t )
 {
   int ot = misc->cacheable;
   misc->cacheable = t;
+#ifdef DEBUG_CACHEABLE
+  report_debug("http::set_max_cache() set cacheable to %d (was: %d)\n", t, ot);
+#endif
   return ot;
 }
 
