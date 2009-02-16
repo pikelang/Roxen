@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.229 2009/01/22 09:03:25 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.230 2009/02/16 16:43:09 jonasw Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -615,7 +615,7 @@ class PrefLanguages
 {
   int decoded=0;
   int sorted=0;
-  array(string) subtags=({});
+  //  array(string) subtags=({});
   array(string) languages=({});
   array(float) qualities=({});
 
@@ -659,8 +659,8 @@ class PrefLanguages
   void sort_lang() {
     if(sorted && decoded) return;
     array(float) q;
-    array(string) s=reverse(languages)-({""}), u=({});
-
+    array(string) s=reverse(languages)-({""}) /*, u=({})*/;
+    
     if(!decoded) {
       q=({});
       s=Array.map(s, lambda(string x) {
@@ -671,7 +671,7 @@ class PrefLanguages
 		       sscanf(x, "%s-%s", x, sub);
 		       if(x == "" ) return "";
 		       q+=({n});
-		       u+=({sub});
+		       //  u+=({sub});
 		       return x;
 		     });
       s-=({""});
@@ -680,10 +680,25 @@ class PrefLanguages
     else
       q=reverse(qualities);
 
-    sort(q,s,u);
+    sort(q, s /*, u */);
     languages=reverse(s);
     qualities=reverse(q);
-    subtags=reverse(u);
+    //  subtags=reverse(u);
+
+    //  Remove duplicate entries caused by varying subtags
+    multiset(string) known_langs = (< >);
+    for (int i = 0; i < sizeof(languages); i++) {
+      string l = languages[i];
+      if (known_langs[l]) {
+	languages[i] = 0;
+	qualities[i] = 0;
+      } else {
+	known_langs[l] = 1;
+      }
+    }
+    languages -= ({ 0 });
+    qualities -= ({ 0 });
+    
     sorted=1;
   }
 }
