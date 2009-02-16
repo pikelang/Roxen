@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.591 2009/02/12 14:57:37 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.592 2009/02/16 16:48:50 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -185,7 +185,7 @@ private string try_decode_image(string data, void|string var) {
 class EntityClientTM {
   inherit RXML.Value;
   mixed rxml_var_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    c->id->misc->cacheable=0;
+    c->id->register_vary_callback("user-agent", 0);
     if(c->id->supports->trade) return ENCODE_RXML_XML("&trade;", type);
     if(c->id->supports->supsub) return ENCODE_RXML_XML("<sup>TM</sup>", type);
     return ENCODE_RXML_XML("&lt;TM&gt;", type);
@@ -195,7 +195,7 @@ class EntityClientTM {
 class EntityClientReferrer {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
-    c->id->misc->cacheable=0;
+    c->id->register_vary_callback("referer");
     array referrer=c->id->referer;
     return referrer && sizeof(referrer)? referrer[0] :RXML.nil;
   }
@@ -204,7 +204,7 @@ class EntityClientReferrer {
 class EntityClientName {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
-    c->id->misc->cacheable=0;
+    c->id->register_vary_callback("user-agent");
     array client=c->id->client;
     return client && sizeof(client)? client[0] :RXML.nil;
   }
@@ -213,7 +213,7 @@ class EntityClientName {
 class EntityClientIP {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
-    c->id->misc->cacheable=0;
+    c->id->register_vary_callback("host");
     return c->id->remoteaddr;
   }
 }
@@ -221,7 +221,7 @@ class EntityClientIP {
 class EntityClientAcceptLanguage {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
-    c->id->misc->cacheable=0;
+    c->id->register_vary_callback("accept-language");
     if(!c->id->misc["accept-language"]) return RXML.nil;
     return c->id->misc["accept-language"][0];
   }
@@ -231,7 +231,7 @@ class EntityClientAcceptLanguages {
   inherit RXML.Value;
   mixed rxml_var_eval(RXML.Context c, string var, string scope_name,
 		      void|RXML.Type t) {
-    c->id->misc->cacheable=0;
+    c->id->register_vary_callback("accept-language");
     array(string) langs = c->id->misc["accept-language"];
     if(!langs) return RXML.nil;
     if (t == RXML.t_array)
@@ -244,7 +244,7 @@ class EntityClientAcceptLanguages {
 class EntityClientLanguage {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
-    c->id->misc->cacheable=0;
+    c->id->register_vary_callback("accept-language");
     if(!c->id->misc->pref_languages) return RXML.nil;
     return c->id->misc->pref_languages->get_language();
   }
@@ -254,7 +254,7 @@ class EntityClientLanguages {
   inherit RXML.Value;
   mixed rxml_var_eval(RXML.Context c, string var, string scope_name,
 		      void|RXML.Type t) {
-    c->id->misc->cacheable=0;
+    c->id->register_vary_callback("accept-language");
     PrefLanguages pl = c->id->misc->pref_languages;
     if(!pl) return RXML.nil;
     if (t == RXML.t_array)
@@ -267,7 +267,7 @@ class EntityClientLanguages {
 class EntityClientHost {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
-    c->id->misc->cacheable=0;
+    c->id->register_vary_callback("host");
     if(c->id->host) return c->id->host;
     return c->id->host=roxen.quick_ip_to_host(c->id->remoteaddr);
   }
@@ -1280,6 +1280,9 @@ class TagDate {
       int cache_time;
       if (args->cache) {
         cache_time = (int) args->cache;
+      } else if (args["iso-time"] || args["unix-time"] || args["http-time"]) {
+	//  Result not based on current time so enable caching
+	cache_time = 99999;
       } else if((<"year", "month", "week", "day", "wday", "date", "mday",
                   "hour", "min", "minute", "yday">)[args->part] ||
 		  (args->type == "iso" && args->date)) {
@@ -6574,7 +6577,11 @@ class TagIfExists {
   constant plugin_name = "exists";
 
   int eval(string u, RequestID id) {
+    //  For CMS installations we depend on the built-in dependency system
+#if !constant(Sitebuilder)
     CACHE(5);
+#endif
+    
     return id->conf->is_file(Roxen.fix_relative(u, id), id);
   }
 }
@@ -6585,7 +6592,11 @@ class TagIfInternalExists {
   constant plugin_name = "internal-exists";
 
   int eval(string u, RequestID id) {
+    //  For CMS installations we depend on the built-in dependency system
+#if !constant(Sitebuilder)
     CACHE(5);
+#endif
+    
     return id->conf->is_file(Roxen.fix_relative(u, id), id, 1);
   }
 }
@@ -6638,7 +6649,9 @@ class TagIfFalse {
 class TagIfAccept {
   inherit IfMatch;
   constant plugin_name = "accept";
+  constant cache = -1;
   array source(RequestID id) {
+    id->register_vary_callback("accept");
     if( !id->request_headers->accept ) // .. there might be no header
       return ({});
     if( arrayp(id->request_headers->accept) ) // .. there might be multiple
@@ -6667,6 +6680,7 @@ class TagIfConfig {
 class TagIfCookie {
   inherit IfIs;
   constant plugin_name = "cookie";
+  constant cache = -1; //  Will get Vary header from cookie access
   string source(RequestID id, string s) {
     return id->cookies[s];
   }
@@ -6675,7 +6689,9 @@ class TagIfCookie {
 class TagIfClient {
   inherit IfMatch;
   constant plugin_name = "client";
+  constant cache = -1;
   array source(RequestID id) {
+    id->register_vary_callback("user-agent");
     return id->client;
   }
 }
@@ -6701,7 +6717,9 @@ class TagIfDefined {
 class TagIfDomain {
   inherit IfMatch;
   constant plugin_name = "domain";
+  constant cache = -1;
   string source(RequestID id) {
+    id->register_vary_callback("host");
     return id->host;
   }
 }
@@ -6709,7 +6727,9 @@ class TagIfDomain {
 class TagIfIP {
   inherit IfMatch;
   constant plugin_name = "ip";
+  constant cache = -1;
   string source(RequestID id) {
+    id->register_vary_callback("host");
     return id->remoteaddr;
   }
 }
@@ -6724,7 +6744,9 @@ class TagIfHost {
 class TagIfLanguage {
   inherit IfMatch;
   constant plugin_name = "language";
+  constant cache = -1;
   array source(RequestID id) {
+    id->register_vary_callback("accept-language");
     return id->misc->pref_languages->get_languages();
   }
 }
@@ -6732,7 +6754,11 @@ class TagIfLanguage {
 class TagIfMatch {
   inherit IfIs;
   constant plugin_name = "match";
+  constant cache = -1;
   string source(RequestID id, string s) {
+    //  See comment in TagIfVariable
+    if (id->method != "GET")
+      NO_PROTO_CACHE();
     return s;
   }
 }
@@ -6746,7 +6772,9 @@ class TagIfMaTcH {
 class TagIfPragma {
   inherit IfIs;
   constant plugin_name = "pragma";
+  constant cache = -1;
   string source(RequestID id, string s) {
+    id->register_vary_callback("pragma");
     if(id->pragma[s]) return "";
     return 0;
   }
@@ -6765,7 +6793,9 @@ class TagIfPrestate {
 class TagIfReferrer {
   inherit IfMatch;
   constant plugin_name = "referrer";
+  constant cache = -1;
   array source(RequestID id) {
+    id->register_vary_callback("referer");
     return id->referer;
   }
 }
@@ -6773,7 +6803,9 @@ class TagIfReferrer {
 class TagIfSupports {
   inherit IfIs;
   constant plugin_name = "supports";
+  constant cache = -1;
   string source(RequestID id, string s) {
+    id->register_vary_callback("user-agent");
     if(id->supports[s]) return "";
     return 0;
   }
@@ -6782,7 +6814,7 @@ class TagIfSupports {
 class TagIfScope {
   inherit IfIs;
   constant plugin_name = "scope";
-  constant cache = 1;
+  constant cache = -1;
   mixed source(RequestID id, string s, void|int check_set_only) {
 
     if (RXML_CONTEXT->get_scope (s)) return 1;
@@ -6794,8 +6826,18 @@ class TagIfScope {
 class TagIfVariable {
   inherit IfIs;
   constant plugin_name = "variable";
-  constant cache = 1;
+
+  //  URL variables will be recognized in the protocol-level cache unless
+  //  the page is POSTed (which we handle separately below). Any other
+  //  variable internal to the page is considered invariant.
+  constant cache = -1;
+  
   mixed source(RequestID id, string s, void|int check_set_only) {
+    //  The protocol-level cache doesn't see posted variables, only
+    //  variables in the URL.
+    if (id->method != "GET")
+      NO_PROTO_CACHE();
+    
     mixed var;
     if (compat_level == 2.2) {
       // The check below makes it impossible to tell the value 0 from
@@ -6860,7 +6902,9 @@ class TagIfSizeof {
 class TagIfClientvar {
   inherit IfIs;
   constant plugin_name = "clientvar";
+  constant cache = -1;
   string source(RequestID id, string s) {
+    id->register_vary_callback("user-agent");
     return id->client_var[s];
   }
 }
@@ -6904,6 +6948,7 @@ class TagIfTestLicense {
 class TagIfTypeFromData {
     inherit IfIs;
     constant plugin_name = "type-from-data";
+    constant cache = -1;
     string source(RequestID id, string s) {
 	if(RXML.user_get_var(s)) {
 	    return try_decode_image(0, s);
@@ -6915,6 +6960,7 @@ class TagIfTypeFromData {
 class TagIfTypeFromFilename {
     inherit IfIs;
     constant plugin_name = "type-from-filename";
+    constant cache = -1;
     string source(RequestID id, string s) {
 	if(RXML.user_get_var(s)) {
 	    if (id->misc->sb)
