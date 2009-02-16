@@ -1268,6 +1268,21 @@ Click "Next" to start the installation.</Text>
       <RegistrySearchRef Id="Mysql41Location" />
       <DirectorySearchRef Id="MysqlBase5" Parent="MysqlLocation5"/>
     </Property>
+    <Property Id="MYSQLDEBUG1">
+      <RegistrySearchRef Id="MysqlLocation" />
+    </Property>
+    <Property Id="MYSQLDEBUG2">
+      <RegistrySearchRef Id="Mysql51Location" />
+    </Property>
+    <Property Id="MYSQLDEBUG3">
+      <RegistrySearchRef Id="Mysql50Location" />
+    </Property>
+    <Property Id="MYSQLDEBUG4">
+      <RegistrySearchRef Id="Mysql41Location" />
+    </Property>
+    <Property Id="MYSQLDEBUG5">
+      <DirectorySearchRef Id="MysqlBase5" Parent="MysqlLocation5"/>
+    </Property>
     <AdminExecuteSequence>
       <Custom Action="DONT_INSTALL_SERVICE" Before="DIRCA_TARGETDIR">NOT VersionNT</Custom>
       <Custom Action="DIRCA_TARGETDIR" Before="CostInitialize"><![CDATA[TARGETDIR=""]]></Custom>
