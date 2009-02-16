@@ -1229,25 +1229,25 @@ Click "Next" to start the installation.</Text>
       </DirectorySearch>
     </Property>
     <Property Id="MYISAMCHKEXE">
-      <RegistrySearch Id="MysqlLocation" Root="HKLM"
+      <RegistrySearch Id="MyisamLocation" Root="HKLM"
         Key="SOFTWARE\MySQL AB\[MYSQLNAME]" Name="Location" Type="directory">
         <DirectorySearch Id="MyisamBin1" Path="bin">
           <FileSearch LongName="myisamchk.exe" />
         </DirectorySearch>
       </RegistrySearch>
-      <RegistrySearch Id="Mysql51Location" Root="HKLM"
+      <RegistrySearch Id="Myisam51Location" Root="HKLM"
         Key="SOFTWARE\MySQL AB\MySQL Server 5.1" Name="Location" Type="directory">
         <DirectorySearch Id="MyisamBin2" Path="bin">
           <FileSearch LongName="myisamchk.exe" />
         </DirectorySearch>
       </RegistrySearch>
-      <RegistrySearch Id="Mysql50Location" Root="HKLM"
+      <RegistrySearch Id="Myisam50Location" Root="HKLM"
         Key="SOFTWARE\MySQL AB\MySQL Server 5.0" Name="Location" Type="directory">
         <DirectorySearch Id="MyisamBin3" Path="bin">
           <FileSearch LongName="myisamchk.exe" />
         </DirectorySearch>
       </RegistrySearch>
-      <RegistrySearch Id="Mysql41Location" Root="HKLM"
+      <RegistrySearch Id="Myisam41Location" Root="HKLM"
         Key="SOFTWARE\MySQL AB\MySQL Server 4.1" Name="Location" Type="directory">
         <DirectorySearch Id="MyisamBin4" Path="bin">
           <FileSearch LongName="myisamchk.exe" />
