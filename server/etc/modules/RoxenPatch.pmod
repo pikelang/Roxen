@@ -108,9 +108,6 @@ class Patcher
   //! The current platform. This should map to the platforms for which we build
   //! Roxen but I have no idea how to extract that information yet.
 
-  private mapping ext_proc_env = getenv();
-  //! Environiment variables for external processes that are launched.
-
   private string tar_bin = "tar";
   private string patch_bin = "patch";
   //! Command for the external executable.
@@ -197,12 +194,13 @@ class Patcher
     set_temp_dir(temp_dir);
 
     // Set external process environment and path to exectuables
+    master()->putenv("PATH",
 #ifdef __NT__
-    tar_bin = combine_path(server_path, "bin/tar");
-    patch_bin = combine_path(server_path, "bin/patch");
-    ext_proc_env += (["PATH" : combine_path(server_path, "bin") + ";" +
-		               ext_proc_env->PATH ]);
+		     combine_path(server_path, "bin/msys/bin") + ";"
+#else
+		     combine_path(server_path, "gnu") + ":"
 #endif
+		     + getenv("PATH");
 
     // Set server version
     string version_h = combine_path(server_path, "etc/include/version.h");
@@ -718,7 +716,6 @@ class Patcher
 	  Process.create_process(args, 
 				 ([ 
 				   "cwd"   : server_path, 
- 				   "env"   : ext_proc_env,
 				   "stdin" : udiff_data 
 				 ]));
 
@@ -1557,8 +1554,7 @@ class Patcher
     source_file = unixify_path(source_file);
     array args = ({ tar_bin, "-xzf", source_file });
     Process.create_process p = Process.create_process(args, 
-						      ([ "env" : ext_proc_env,
-							 "cwd" : target_dir ]));
+						      ([ "cwd" : target_dir ]));
 
     if (p->wait())
     {
@@ -2114,8 +2110,7 @@ class Patcher
     array args = ({ tar_bin, "-czf", dest, id });
   
     Process.create_process p = Process.create_process(args, 
-						      ([ "env" : ext_proc_env,
-							 "cwd" : temp_path ]));
+						      ([ "cwd" : temp_path ]));
     if (p->wait())
     {
       write_err("FAILED: Could not create tar file!\n");
@@ -2139,8 +2134,7 @@ class Patcher
 		    simplify_path(unixify_path(file_name)) });
   
     Process.create_process p = Process.create_process(args,
-						      ([ "env" : ext_proc_env,
-							 "cwd" : base_path ]));
+						      ([ "cwd" : base_path ]));
     if (p->wait())
       return 0;
   
@@ -2155,8 +2149,7 @@ class Patcher
     array args = ({ tar_bin, "-xf", simplify_path(unixify_path(file_name)) });
   
     Process.create_process p = Process.create_process(args,
-						      ([ "env" : ext_proc_env,
-							 "cwd" : path ]));
+						      ([ "cwd" : path ]));
     if (p->wait())
       return 0;
   

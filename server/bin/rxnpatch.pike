@@ -1,12 +1,11 @@
-#! /home/mathias/roxen/server-4.5.241/bin/roxen 
-//FIXME! ^
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.5 2009/01/30 10:41:01 mathias Exp $";
+constant cvs_string = "$Id: rxnpatch.pike,v 1.6 2009/02/17 13:49:58 mathias Exp $";
 
 import RoxenPatch;
 
 int main(int argc, array(string) argv)
-{  
+{ 
+  werror("argv: %O\n", argv);
   array switch_list = ({
     ({ "server_path",     Getopt.HAS_ARG,      ({ "-S", "--server"        }),
        "ROXEN_SERVER" /* Environment variable */ }),
@@ -38,10 +37,17 @@ int main(int argc, array(string) argv)
     ({ "help",	    	  Getopt.NO_ARG,       ({ "-h", "--help"	  }) }),
   });
 
-  string current_user	= sprintf("%s@localhost", getpwuid(getuid())[0]);
+  string current_user;
+#ifndef __NT__
+  current_user = sprintf("%s@localhost", getpwuid(getuid())[0]);
+#endif
 
   string server_path	= 0;
+#ifndef __NT__
   int(0..1) color	= 1;
+#else
+  int(0..1) color       = 0;
+#endif
   int(0..1) dryrun	= 0;
   int(0..1) force	= 0;
   int(0..1) recursive	= 0;
@@ -110,12 +116,6 @@ int main(int argc, array(string) argv)
     switches = Array.filter(switches, lambda(array a) {return !!a;});
   }
    
-  if (!server_path)
-  {
-    werror(err_no_server_dir);
-    return 0;
-  }
-
   // Set output according to given switches
   function write_mess;
   function write_err;
@@ -153,6 +153,19 @@ int main(int argc, array(string) argv)
     write_mess = lambda(string s) { write(wash_output(s)); };
     write_err = lambda(string s) { werror(wash_output(s)); };
   }
+
+  if (!server_path)
+  {
+    write_err(err_no_server_dir);
+    return 0;
+  }
+
+  if (!current_user)
+  {
+    write_err(err_no_email);
+    return 0;
+  }    
+
 
   // Instantiate the Patcher class
   Patcher plib = Patcher(write_mess, write_err, server_path);
@@ -344,7 +357,7 @@ int main(int argc, array(string) argv)
 	  ptc_obj->id = argument[1];
 	  break;
 	default:
-	  write_err("Unexpected argument: %O\n", argument[0]);
+	  plib->write_err("Unexpected argument: %O\n", argument[0]);
       }
     }
 
@@ -392,9 +405,9 @@ int main(int argc, array(string) argv)
     {
       string id = plib->import_file(file, dryrun);
       if(id)
-	write_mess("%s is successfully imported!\n", id);
+	plib->write_mess("%s is successfully imported!\n", id);
       else
-	write_err("Couldn't import %s.\n", file);
+	plib->write_err("Couldn't import %s.\n", file);
     }
     return 0;
   }
@@ -451,7 +464,7 @@ int main(int argc, array(string) argv)
       if(id)
 	ins_list += ({ id });
       else
-	write_err("Couldn't install %s.\n", file);
+	plib->write_err("Couldn't install %s.\n", file);
     }
   
     // Install everything.
@@ -493,7 +506,7 @@ int main(int argc, array(string) argv)
       }
       else
       {
-	write_err("Couldn't install %s.\n", id);
+	plib->write_err("Couldn't install %s.\n", id);
 	// Clean up if we're doing a dry run
 	if (dryrun)
 	{
@@ -858,7 +871,12 @@ private string launch_external_editor(Patcher aux)
   // Start by creating a tempfile
   string tempfile = combine_path(aux->get_temp_dir(), 
 				 "description_" + aux->create_id());
+#ifdef __NT__
+  tempfile += ".txt";
+  string editor = "notepad.exe";
+#else
   string editor = "vi";
+#endif
 
   // Check if the EDITOR envvar is set.
   mapping env = getenv();
@@ -888,6 +906,9 @@ constant err_stdin = "Several flags cannot be set to read from standard input"
 		     " at once!\n";
 constant err_patch_id = "Patch id not correctly formatted";
 constant err_no_server_dir = "Could not resolve server path. Quitting.\n";
+constant err_no_email = "Name or email of the current user could not be "
+			"resolved.\nTry setting the environment variable "
+			"ROXEN_USER or use -O\n"; 
 constant err_email_not_valid = "Not a valid e-mail address: -O\n";
 // ****************************** Help texts ***********************************
 private constant help_usage = ([
