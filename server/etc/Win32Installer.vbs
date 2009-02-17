@@ -1,5 +1,5 @@
 '
-' $Id: Win32Installer.vbs,v 1.19 2009/02/16 14:33:59 grubba Exp $
+' $Id: Win32Installer.vbs,v 1.20 2009/02/17 13:47:06 grubba Exp $
 '
 ' Companion file to RoxenUI.wxs with custom actions.
 '
@@ -30,7 +30,7 @@ End Function
 '         "mysqld=[MYSQLDEXE]"
 '         "myisamchk=[MYISAMCHKEXE]"
 Function CreateMysqlLocation()
-  Dim re, matches, match, fso, tf, serverdir, mysqlbase, mysqld, myisamchk
+  Dim re, matches, match, fso, tf, serverdir, mysqlbase, mysqld, myisamchk, i
 
   serverdir = ""
   mysqlbase = ""
@@ -41,28 +41,31 @@ Function CreateMysqlLocation()
   re.Pattern = "[^;]*"
   re.Global = True
   Set matches = re.Execute(Session.Property("CustomActionData"))
+  i = 0
   For Each match in matches
-    If serverdir = "" Then
+    If i = 0 Then
       serverdir = match.Value
     Else
-      If mysqlbase = "" Then
+      If i = 1 Then
         mysqlbase = match.Value
       Else
-        If mysqld = "" Then
+        If i = 2 Then
           mysqld = match.Value
         Else
-          If myisamchk = "" Then
+          If i = 3 Then
             myisamchk = match.Value
           End If
         End If
       End If
     End If
+    i = i+1
   Next
 
   Set fso = CreateObject("Scripting.FileSystemObject")
 
   Set tf = fso.CreateTextFile(serverdir & "mysql-location.txt", True)
-  tf.writeLine("# Created by $Id: Win32Installer.vbs,v 1.19 2009/02/16 14:33:59 grubba Exp $")
+  tf.writeLine("# Created by $Id: Win32Installer.vbs,v 1.20 2009/02/17 13:47:06 grubba Exp $")
+  tf.writeLine("# DEBUG: " & Session.Property("CustomActionData"))
   tf.writeLine("basedir=" & mysqlbase)
   If mysqld <> "" Then
     tf.writeLine("mysqld=" & mysqld)
