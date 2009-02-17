@@ -16,6 +16,12 @@
       Value="[TARGETDIR]" Execute="immediate" />
     <CustomAction Id="RemoveOldService" BinaryKey="RoxenInstaller"
       VBScriptCall="RemoveOldService" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="FallbackMysqldExe" Property="MYSQLDEXE"
+      Value="[FALLBACKMYSQLDEXE]" Execute="immediate" />
+    <CustomAction Id="FallbackMyisamchkExe" Property="MYISAMCHKEXE"
+      Value="[FALLBACKMYISAMCHKEXE]" Execute="immediate" />
+    <CustomAction Id="FallbackMysqlBase" Property="MYSQLBASE"
+      Value="[FALLBACKMYSQLBASE]" Execute="immediate" />
     <CustomAction Id="SetCreateConfigInterface"
       Property="CreateConfigInterface"
       Value="[SERVERDIR];[SERVER_NAME];[SERVER_PROTOCOL];[SERVER_PORT];[ADM_USER];[ADM_PASS1]"
@@ -1173,7 +1179,7 @@ Click "Next" to start the installation.</Text>
     </Property>
     <Condition Message="Windows Scripting Host is required to run this installer.">Installed OR WSH</Condition>
     <Property Id="OLDCONFIGDIR">
-      <DirectorySearch Id="OLDCONFIGURATIONS" Path="[TARGETDIR]configurations">
+      <DirectorySearch Id="OLDCONFIGURATIONS" Path="[TARGETDIR]..\configurations">
 	<FileSearch LongName="Global_Variables" MinSize="128" />
       </DirectorySearch>
     </Property>
@@ -1188,13 +1194,6 @@ Click "Next" to start the installation.</Text>
         Name="DisplayName" Type="raw"/>
     </Property>
     <Property Id="MYSQLDEXE">
-      <DirectorySearch Id="MysqlLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
-        <DirectorySearch Id="MysqlBase5">
-          <DirectorySearch Id="MysqlBin5" Path="bin">
-            <FileSearch LongName="mysqld.exe" />
-          </DirectorySearch>
-        </DirectorySearch>
-      </DirectorySearch>
       <RegistrySearch Id="Mysql41Location" Root="HKLM"
         Key="SOFTWARE\MySQL AB\MySQL Server 4.1" Name="Location" Type="raw">
         <DirectorySearch Id="MysqldBin4" Path="bin">
@@ -1220,14 +1219,16 @@ Click "Next" to start the installation.</Text>
         </DirectorySearch>
       </RegistrySearch>
     </Property>
-    <Property Id="MYISAMCHKEXE">
-      <DirectorySearch Id="MyisamLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
-        <DirectorySearch Id="MyisamBase5">
-          <DirectorySearch Id="MyisamBin5" Path="bin">
-            <FileSearch LongName="myisamchk.exe" />
+    <Property Id="FALLBACKMYSQLDEXE">
+      <DirectorySearch Id="MysqlLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
+        <DirectorySearch Id="MysqlBase5">
+          <DirectorySearch Id="MysqlBin5" Path="bin">
+            <FileSearch LongName="mysqld.exe" />
           </DirectorySearch>
         </DirectorySearch>
       </DirectorySearch>
+    </Property>
+    <Property Id="MYISAMCHKEXE">
       <RegistrySearch Id="Myisam41Location" Root="HKLM"
         Key="SOFTWARE\MySQL AB\MySQL Server 4.1" Name="Location" Type="raw">
         <DirectorySearch Id="MyisamBin4" Path="bin">
@@ -1253,12 +1254,23 @@ Click "Next" to start the installation.</Text>
         </DirectorySearch>
       </RegistrySearch>
     </Property>
+    <Property Id="FALLBACKMYISAMCHKEXE">
+      <DirectorySearch Id="MyisamLocation5" Path="[ProgramFilesFolder]\MySQL" Depth="2">
+        <DirectorySearch Id="MyisamBase5">
+          <DirectorySearch Id="MyisamBin5" Path="bin">
+            <FileSearch LongName="myisamchk.exe" />
+          </DirectorySearch>
+        </DirectorySearch>
+      </DirectorySearch>
+    </Property>
     <Property Id="MYSQLBASE">
-      <DirectorySearchRef Id="MysqlBase5" Parent="MysqlLocation5"/>
       <RegistrySearchRef Id="Mysql41Location" />
       <RegistrySearchRef Id="Mysql50Location" />
       <RegistrySearchRef Id="Mysql51Location" />
       <RegistrySearchRef Id="MysqlLocation" />
+    </Property>
+    <Property Id="FALLBACKMYSQLBASE">
+      <DirectorySearchRef Id="MysqlBase5" Parent="MysqlLocation5"/>
     </Property>
     <Property Id="MYSQLDEBUG1">
       <RegistrySearchRef Id="MysqlLocation" />
@@ -1299,7 +1311,10 @@ Click "Next" to start the installation.</Text>
       <Custom Action="RemoveOldService" After="SetRemoveOldService">REMOVE="" AND INSTALL_SERVICE="1"</Custom>
       <Custom Action="SetCreateConfigInterface" Sequence="5100">REMOVE=""</Custom>
       <Custom Action="CreateConfigInterface" After="SetCreateConfigInterface">(REMOVE="") AND (OLDCONFIGDIR="")</Custom>
-      <Custom Action="SetCreateMysqlLocation" After="CreateConfigInterface" />
+      <Custom Action="FallbackMysqldExe" After="CreateConfigInterface">MYSQLDEXE=""</Custom>
+      <Custom Action="FallbackMyisamchkExe" After="FallbackMysqldExe">MYISAMCHKEXE=""</Custom>
+      <Custom Action="FallbackMysqlBase" After="FallbackMyisamchkExe">MYSQLBASE=""</Custom>
+      <Custom Action="SetCreateMysqlLocation" After="FallbackMysqlBase" />
       <Custom Action="CreateMysqlLocation" After="SetCreateMysqlLocation">REMOVE="" AND MYSQLLOCATIONLOCATION = ""</Custom>
       <Custom Action="SetCreatePikeLocation" After="CreateMysqlLocation">REMOVE=""</Custom>
       <Custom Action="CreatePikeLocation" After="SetCreatePikeLocation">REMOVE=""</Custom>
