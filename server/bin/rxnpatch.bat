@@ -1,0 +1,1 @@
+@"%~dp0..\pike\bin\pike" -M"%~dp0../etc/modules" "%~dp0rxnpatch.pike" -S"%~dp0../" %*

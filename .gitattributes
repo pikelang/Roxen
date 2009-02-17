@@ -1,7 +1,7 @@
 [attr]binary -text -crlf -diff -ident
 * text ident
 *.DSW eol=crlf
-*.bat eol=crlf
+/server/bin/mysql_client_nt.bat eol=crlf
 /server/tools/ntroxen/startdll/enumproc.c eol=crlf
 *.cif binary
 *.cpp eol=crlf
