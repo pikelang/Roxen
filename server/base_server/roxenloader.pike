@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.412 2009/02/13 16:32:34 mast Exp $
+// $Id: roxenloader.pike,v 1.413 2009/02/17 13:27:05 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.412 2009/02/13 16:32:34 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.413 2009/02/17 13:27:05 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -511,7 +511,14 @@ void report_error_sparsely (LocaleString message, mixed... args)
 //! Starts the specified process and returns a string
 //! with the result. Mostly a compatibility functions, uses
 //! Process.create_process
-string popen(string s, void|mapping env, int|void uid, int|void gid)
+//!
+//! If @[cmd] is a string then it's interpreted as a command line with
+//! glob expansion, argument splitting, etc according to the command
+//! shell rules on the system. If it's an array of strings then it's
+//! taken as processed argument list and is sent to
+//! @[Process.create_process] as-is.
+string popen(string|array(string) cmd, void|mapping env,
+	     int|void uid, int|void gid)
 {
   Stdio.File f = Stdio.File(), p = f->pipe(Stdio.PROP_IPC);
 
@@ -534,11 +541,14 @@ string popen(string s, void|mapping env, int|void uid, int|void gid)
     }
   }
   opts->noinitgroups = 1;
+  if (stringp (cmd)) {
 #if defined(__NT__) || defined(__amigaos__)
-  Process.Process proc = Process.Process(Process.split_quoted_string(s), opts);
+    cmd = Process.split_quoted_string(cmd);
 #else /* !__NT||__amigaos__ */
-  Process.Process proc = Process.Process(({"/bin/sh", "-c", s}), opts);
+    cmd = ({"/bin/sh", "-c", cmd});
 #endif /* __NT__ || __amigaos__ */
+  }
+  Process.Process proc = Process.Process (cmd, opts);
   p->close();
 
   if( proc )
@@ -2018,7 +2028,7 @@ void low_start_mysql( string datadir,
 
   //  Start by verifying the mysqld version
   string version_fatal_error = 0;
-  string version = popen(mysql_location->mysqld + " --version");
+  string version = popen(({mysql_location->mysqld, "--version"}));
   if (!version) {
     version_fatal_error =
       sprintf("Unable to determine MySQL version with this command:\n\n"
@@ -2027,7 +2037,11 @@ void low_start_mysql( string datadir,
   } else {
     //  Parse version string
     string orig_version = version;
-    if (sscanf(lower_case(version), "%*s ver %[0-9.]", version) != 2) {
+    if (has_prefix (version, mysql_location->mysqld))
+      // mysqld puts $0 first in the version string. Cut it off to
+      // avoid possible false matches.
+      version = version[sizeof (mysql_location->mysqld)..];
+    if (sscanf(lower_case(version), "%*s  ver %[0-9.]", version) != 2) {
       version_fatal_error =
 	sprintf("Failed to parse MySQL version string %q.\n", version);
     } else {
