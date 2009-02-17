@@ -1189,10 +1189,10 @@ Click "Next" to start the installation.</Text>
       </DirectorySearch>
     </Property>
     <Property Id="MYSQLNAME">
-      <RegistrySearch Id="MysqlName" Root="HKLM"
+      <RegistrySearch Id="MysqlName50" Root="HKLM"
         Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\\{E9CF8701-483A-4344-8119-0002BD0992A8}"
         Name="DisplayName" Type="raw"/><!-- MySQL 5.0 -->
-      <RegistrySearch Id="MysqlName" Root="HKLM"
+      <RegistrySearch Id="MysqlName51" Root="HKLM"
         Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{8F5E3B9E-ABBD-4B35-BB68-626CB9BE98D6}"
         Name="DisplayName" Type="raw"/><!-- MySQL 5.1 -->
     </Property>
@@ -1314,7 +1314,7 @@ Click "Next" to start the installation.</Text>
     <Property Id="MYSQLDEBUG1">
       <RegistrySearchRef Id="MysqlLocation" />
     </Property>
-    <Property Id="MYSQLDEBUG1">
+    <Property Id="MYSQLDEBUG11">
       <RegistrySearchRef Id="MysqlLocation1" />
     </Property>
     <Property Id="MYSQLDEBUG2">
