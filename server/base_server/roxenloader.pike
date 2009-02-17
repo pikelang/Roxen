@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.413 2009/02/17 13:27:05 mast Exp $
+// $Id: roxenloader.pike,v 1.414 2009/02/17 17:18:58 jonasw Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.413 2009/02/17 13:27:05 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.414 2009/02/17 17:18:58 jonasw Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2372,7 +2372,7 @@ void start_mysql()
   while( 1 )
   {
     sleep( 0.1 );
-    if( repeat++ > 100 )
+    if( repeat++ > 200 )
     {
       if( !do_tailf_threaded ) do_tailf(0, err_log );
       report_fatal("\nFailed to start MySQL. Aborting\n");
