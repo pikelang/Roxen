@@ -198,9 +198,9 @@ class Patcher
 #ifdef __NT__
 		     combine_path(server_path, "bin/msys/bin") + ";"
 #else
-		     combine_path(server_path, "gnu") + ":"
+		     combine_path(server_path, "bin/gnu") + ":"
 #endif
-		     + getenv("PATH");
+		     + getenv("PATH"));
 
     // Set server version
     string version_h = combine_path(server_path, "etc/include/version.h");
