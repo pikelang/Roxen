@@ -1,5 +1,5 @@
 '
-' $Id: Win32Installer.vbs,v 1.21 2009/02/17 17:19:57 grubba Exp $
+' $Id: Win32Installer.vbs,v 1.22 2009/02/18 10:37:05 grubba Exp $
 '
 ' Companion file to RoxenUI.wxs with custom actions.
 '
@@ -46,33 +46,32 @@ Function CreateMysqlLocation()
   Set matches = re.Execute(Session.Property("CustomActionData"))
   i = 0
   For Each match in matches
-    If i = 0 Then
+    ' NOTE: For some reason we get an empty match before each true match.
+    '       Therefore we only look at the matches where i is odd.
+    If i = 1 Then
       serverdir = match.Value
-      i = 1
     Else
-      If i = 1 Then
+      If i = 3 Then
         mysqlbase = match.Value
-	i = 2
       Else
-        If i = 2 Then
+        If i = 5 Then
           mysqld = match.Value
-	  i = 3
         Else
-          If i = 3 Then
+          If i = 7 Then
             myisamchk = match.Value
-	    i = 4
 	  Else
 	    rest = rest & ";" & match.Value
           End If
         End If
       End If
     End If
+    i = i + 1
   Next
 
   Set fso = CreateObject("Scripting.FileSystemObject")
 
   Set tf = fso.CreateTextFile(serverdir & "mysql-location.txt", True)
-  tf.writeLine("# Created by $Id: Win32Installer.vbs,v 1.21 2009/02/17 17:19:57 grubba Exp $")
+  tf.writeLine("# Created by $Id: Win32Installer.vbs,v 1.22 2009/02/18 10:37:05 grubba Exp $")
   tf.writeLine("# DEBUG: " & Session.Property("CustomActionData"))
   tf.writeLine("# DEBUG: " & rest & ";")
   tf.writeLine("basedir=" & mysqlbase)
