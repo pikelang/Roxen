@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.267 2009/02/10 12:04:22 mast Exp $
+// $Id: Roxen.pmod,v 1.268 2009/02/19 15:22:05 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -155,6 +155,54 @@ function(string, RequestID:string) get_cookie_callback(string cookie)
   if (cb) return cb;
   cb = CookieChecker(cookie);
   return cookie_callbacks[cookie] = cb;
+}
+
+protected mapping(string:function(string, RequestID:string)) lang_callbacks = ([ ]);
+
+protected class LangChecker(multiset(string) known_langs, string header,
+			    string extra)
+{
+  string `()(string path, RequestID id)
+  {
+    string proto_key = "";
+
+    switch (header) {
+    case "accept-language":
+      //  Make sure the Accept-Language header has been parsed for this request
+      PrefLanguages pl = id->misc->pref_languages;
+      if (!pl) {
+	id->init_pref_languages();
+	pl = id->misc->pref_languages;
+      }
+      proto_key = filter(pl->get_languages(), known_langs) * ",";
+      break;
+
+    case "cookies":
+      //  Avoid cookie jar tracking
+      if (string cookie_val = id->real_cookies[extra]) {
+	if (known_langs[cookie_val])
+	  proto_key = cookie_val;
+      }
+      break;
+    }
+    
+    return proto_key;
+  }
+  
+  string _sprintf(int c)
+  {
+    return (c == 'O') && sprintf("LangChecker(%O,%O,%O)",
+				 indices(known_langs) * "+", header, extra);
+  }
+}
+
+function(string, RequestID:string) get_lang_vary_cb(multiset(string) known_langs,
+						    string header, string extra)
+{
+  string key = sort(indices(known_langs)) * "+" + "|" + header + "|" + extra;
+  return
+    lang_callbacks[key] ||
+    (lang_callbacks[key] = LangChecker(known_langs, header, extra));
 }
 
 //! Return id->remoteaddr.

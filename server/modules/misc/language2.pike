@@ -7,7 +7,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: language2.pike,v 1.22 2004/06/30 16:59:16 mast Exp $";
+constant cvs_version = "$Id: language2.pike,v 1.23 2009/02/19 15:22:05 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_URL | MODULE_TAG;
 constant module_name = "Language module II";
@@ -50,15 +50,6 @@ void start(int n, Configuration c) {
 
 
 // ------------- Find the best language file -------------
-
-array(string) find_language(RequestID id) {
-  if (id->misc->pref_languages) {
-    return (id->misc->pref_languages->get_languages() +
-	    ({ default_language })) & languages;
-  } else {
-    return ({ default_language }) & languages;
-  }
-}
 
 object remap_url(RequestID id, string url) {
   if (!languages) return 0;   //  module not initialized
@@ -103,10 +94,18 @@ object remap_url(RequestID id, string url) {
   else
     [found,files]=split;
 
-
-  // Remap
-
-  foreach(find_language(id), string lang) {
+  //  Register known languages with the protocol cache
+  PrefLanguages pl = id->misc->pref_languages;
+  if (pl)
+    pl->register_known_language_forks(found, id);
+  
+  //  Get language search order
+  array(string) find_lang =
+    (pl ? pl->get_languages() : ({ }) ) + ({ default_language });
+  find_lang &= languages;
+  
+  //  Remap
+  foreach(find_lang, string lang) {
     if(found[lang]) {
       url=Roxen.fix_relative(url, id);
       string type=id->conf->type_from_filename(url);

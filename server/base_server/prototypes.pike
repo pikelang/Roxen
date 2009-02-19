@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.230 2009/02/16 16:43:09 jonasw Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.231 2009/02/19 15:21:59 jonasw Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -619,9 +619,84 @@ class PrefLanguages
   array(string) languages=({});
   array(float) qualities=({});
 
+  //  Default action for delayed vary handling is to depend on the
+  //  Accept-Language header since that is init_pref_languages() uses.
+  //  If Preferred Language Analyzer is loaded it will update this array
+  //  based on what request properties it bases its language decision on.
+  //  Only when the request processing completes will we know all language
+  //  forks and can then install a vary callback.
+  array(array(string|array)) delayed_vary_actions =
+    ({ ({ "accept-language", 0 }) });
+  multiset(string) known_langs = (< >);
+  
   protected string _sprintf(int c, mapping|void attrs)
   {
     return sprintf("PrefLanguages(%O)", get_languages());
+  }
+
+  void register_known_language_forks(multiset(string) langs, void|RequestID id)
+  {
+    //  Accumulate all known languages for this page. If the entry is
+    //  placed in the protocol cache we will be able to construct a vary
+    //  callback that can determine a proper cache key.
+    known_langs |= langs;
+
+    //  If caller provides the current RequestID we can also propagate
+    //  the language set in the parent request.
+    if (RequestID parent_id = id && id->misc->orig) {
+      PrefLanguages parent_pl = parent_id->misc->pref_languages;
+      parent_pl->register_known_language_forks(langs, parent_id);
+    }
+  }
+
+  multiset(string) get_known_language_forks()
+  {
+    return known_langs;
+  }
+  
+  void finalize_delayed_vary(RequestID id)
+  {
+    //  No point in installing protocol cache arbitration when the requested
+    //  page isn't multilingual.
+    if (sizeof(known_langs) < 2)
+      return;
+    
+    VARY_DEBUG("finalize_delayed_vary: actions: %O\n", delayed_vary_actions);
+    foreach (delayed_vary_actions, array(string|array(string)) item) {
+      function cb;
+      switch (item[0]) {
+      case "accept-language":
+	cb = Roxen->get_lang_vary_cb(known_langs, "accept-language");
+	id->register_vary_callback("accept-language", cb);
+	break;
+	
+      case "cookies":
+	string lang_cookie = item[1];
+	cb = Roxen->get_lang_vary_cb(known_langs, "cookies", lang_cookie);
+	id->register_vary_callback("cookies", cb);
+	break;
+	
+      case "host":
+	id->register_vary_callback("host");
+	break;
+	
+      case "variable":
+      case "prestate":
+      case "path":
+	//  All three are implicitly managed in the protocol cache since
+	//  they are part of the page URL.
+	break;
+      }
+
+      //  Don't depend on further properties as soon as one of the known
+      //  languages have appeared (since that language will be the one
+      //  shown in the page).
+      if (array(string) property_langs = item[-1]) {
+	foreach (property_langs, string lang)
+	  if (known_langs[lang])
+	    return;
+      }
+    }
   }
   
   array(string) get_languages() {
@@ -655,7 +730,7 @@ class PrefLanguages
     sorted=1;
     decoded=1;
   }
-
+  
   void sort_lang() {
     if(sorted && decoded) return;
     array(float) q;
@@ -2488,6 +2563,11 @@ class RequestID
 
     mapping(string:string) heads = ([]);
 
+    //  Collect info about language forks and their protocol cache callbacks
+    //  and Vary header effects.
+    if (PrefLanguages pl = misc->pref_languages)
+      pl->finalize_delayed_vary(this);
+    
     if( !zero_type(misc->cacheable) &&
 	(misc->cacheable != INITIAL_CACHEABLE) ) {
       if (!misc->cacheable) {

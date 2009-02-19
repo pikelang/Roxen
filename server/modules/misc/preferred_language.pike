@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.32 2008/08/15 12:33:55 mast Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.33 2009/02/19 15:22:05 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -259,11 +259,6 @@ void create() {
          "&lt;emit source=\"languages\"&gt; to switch langauge.\n"));
 }
 
-class PrefLang {
-  array(string) get_languages();
-  string get_language();
-  void set_sorted(array(string));
-}
 
 constant alias = ({
   "ca",
@@ -367,38 +362,72 @@ array(string) get_prestate_langs(RequestID id) {
 }
 
 RequestID first_try(RequestID id) {
+  array delayed_vary_actions = ({ });
   array(string) lang = ({ });
-
-  array accept_languages = ([object(PrefLang)]id->misc->pref_languages)->get_languages();
+  PrefLanguages pl = id->misc->pref_languages;
 
   foreach(compose_list_script, array action) {
     switch(action[0]) {
     case "accept-language":
+      array(string) accept_languages = pl->get_languages();
       lang += accept_languages;
+      delayed_vary_actions += ({ ({ "accept-language", accept_languages }) });
       break;
+      
     case "prestate":
-      lang += get_prestate_langs(id);
+      array(string) prestate_langs = get_prestate_langs(id);
+      lang += prestate_langs;
+      delayed_vary_actions += ({ ({ "prestate", prestate_langs }) });
       break;
+      
     case "roxen-config":
-      lang += get_config_langs(id);
+      array(string) config_langs = get_config_langs(id);
+      lang += config_langs;
+      delayed_vary_actions += ({ ({ "cookies", "RoxenConfig", config_langs }) });
       break;
+      
     case "cookie":
-      if(sizeof(action) > 1)
-	lang += ({ id->cookies[action[1]] || "" });
+      if(sizeof(action) > 1) {
+	//  Use id->real_cookies to avoid registering dependency right now
+	string cookie_name = action[1];
+	if (string cookie_value = id->real_cookies[cookie_name]) {
+	  lang += ({ cookie_value });
+	  delayed_vary_actions += ({ ({ "cookies", cookie_name,
+					({ cookie_value }) }) });
+	}
+      }
       break;
+      
     case "variable":
-      if(sizeof(action) > 1)
-	lang += ({ (id->real_variables[action[1]]  || ({ "" }) ) [0] });
+      if(sizeof(action) > 1) {
+	string var_name = action[1];
+	if (array(string) var_value = id->real_variables[var_name]) {
+	  lang += ({ var_value[0] });
+	  delayed_vary_actions += ({ ({ "variable", var_name,
+					({ var_value[0] }) }) });
+	}
+      }
       break;
+      
     case "hostmatch":
-      if(sizeof(action) > 2)
-	if(glob(action[1], id->misc->host || ""))
-	  lang+= map(action[2]/",",String.trim_all_whites);
+      if(sizeof(action) > 2) {
+	if(glob(action[1], id->misc->host || "")) {
+	  array(string) host_langs = map(action[2]/",",String.trim_all_whites);
+	  lang += host_langs;
+	  delayed_vary_actions += ({ ({ "host", host_langs }) });
+	} else {
+	  delayed_vary_actions += ({ ({ "host", 0 }) });
+	}
+      }
       break;
+      
     case "pathmatch":
       if(sizeof(action) > 2)
-	if(glob(action[1], id->raw_url || ""))
-	  lang+= map(action[2]/",",String.trim_all_whites);
+	if(glob(action[1], id->raw_url || "")) {
+	  array(string) path_langs = map(action[2]/",",String.trim_all_whites);
+	  lang += path_langs;
+	  delayed_vary_actions += ({ ({ "path", path_langs }) });
+	}
       break;
     }
   }
@@ -414,7 +443,8 @@ RequestID first_try(RequestID id) {
     ([mapping(string:mixed)]id->misc->defines)->theme_language=lang[0];
   }
 
-  ([object(PrefLang)]id->misc->pref_languages)->set_sorted(lang);
+  pl->set_sorted(lang);
+  pl->delayed_vary_actions = delayed_vary_actions;
   return 0;
 }
 
@@ -436,7 +466,7 @@ class TagEmitLanguages {
       langs=defaults;
 
     object locale_obj =
-      language_low(( [object(PrefLang)] id->misc->pref_languages)
+      language_low(( [object(PrefLanguages)] id->misc->pref_languages)
 		   ->get_language() || "eng");
     function(string:string) localized =
       locale_obj && [function(string:string)] locale_obj->language;
