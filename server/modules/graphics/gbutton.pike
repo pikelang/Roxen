@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.116 2008/05/22 14:43:04 mast Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.117 2009/02/19 17:20:41 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -774,7 +774,6 @@ int get_file_stat( string f, RequestID id  )
   int was_internal = id->misc->internal_get;
   id->misc->internal_get = 1;
   res = stat_cache[ f ] = (id->conf->stat_file( f,id ) ||
-			   file_stat( f ) ||
 			   ({ 0,0,0,0 }) )[ST_MTIME] || -1;
   if (!was_internal)
     m_delete(id->misc, "internal_get");

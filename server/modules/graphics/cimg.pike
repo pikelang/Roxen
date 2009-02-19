@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.79 2009/01/08 22:23:32 mast Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.80 2009/02/19 17:20:41 jonasw Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -322,8 +322,7 @@ mapping get_my_args( mapping args, RequestID id )
     mixed err = catch 
     {
       a->src = Roxen.fix_relative( args->src, id );
-      array(int)|Stat st = (id->conf->try_stat_file(a->src, id) ||
-			    file_stat(a->src));
+      array(int)|Stat st = (id->conf->try_stat_file(a->src, id));
       if (st)
       {
 	string fn = id->conf->real_file( a->src, id );
