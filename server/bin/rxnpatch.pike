@@ -1,5 +1,5 @@
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.6 2009/02/17 13:49:58 mathias Exp $";
+constant cvs_string = "$Id: rxnpatch.pike,v 1.7 2009/02/19 15:00:22 mathias Exp $";
 
 import RoxenPatch;
 
@@ -330,10 +330,18 @@ int main(int argc, array(string) argv)
 	  }
 	  break;
 	case "new_file":
-	  ptc_obj->new += plib->parse_src_dest_path(argument[1]);
+	  array new_file = plib->parse_src_dest_path(argument[1]);
+	  if (new_file && sizeof(new_file))
+	    ptc_obj->new += new_file;
+	  else
+	    return 0;
 	  break;
 	case "replace_file":
-	  ptc_obj->replace += plib->parse_src_dest_path(argument[1]);
+	  array replace_file = plib->parse_src_dest_path(argument[1]); 
+	  if (replace_file && sizeof(replace_file))
+	    ptc_obj->replace += replace_file;
+	  else
+	    return 0;
 	  break;
 	case "delete_file":
 	  ptc_obj->delete += ({ argument[1] });

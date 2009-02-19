@@ -1736,7 +1736,8 @@ class Patcher
     else
     {
       string parsed_src = find_file(raw_path), parsed_dest = raw_path;
-      res = ({ (["source":parsed_src, "destination":parsed_dest ]) });
+      if (parsed_src)
+	res = ({ (["source":parsed_src, "destination":parsed_dest ]) });
     }
     return res;
   }
