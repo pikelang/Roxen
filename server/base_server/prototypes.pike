@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.231 2009/02/19 15:21:59 jonasw Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.232 2009/02/19 15:29:26 jonasw Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -661,7 +661,7 @@ class PrefLanguages
     if (sizeof(known_langs) < 2)
       return;
     
-    VARY_DEBUG("finalize_delayed_vary: actions: %O\n", delayed_vary_actions);
+    VARY_WERROR("finalize_delayed_vary: actions: %O\n", delayed_vary_actions);
     foreach (delayed_vary_actions, array(string|array(string)) item) {
       function cb;
       switch (item[0]) {
