@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.33 2009/02/19 15:22:05 jonasw Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.34 2009/02/19 17:52:19 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -390,6 +390,8 @@ RequestID first_try(RequestID id) {
       if(sizeof(action) > 1) {
 	//  Use id->real_cookies to avoid registering dependency right now
 	string cookie_name = action[1];
+	if (!id->real_cookies)
+	  id->init_cookies();
 	if (string cookie_value = id->real_cookies[cookie_name]) {
 	  lang += ({ cookie_value });
 	  delayed_vary_actions += ({ ({ "cookies", cookie_name,
