@@ -1197,18 +1197,6 @@ Click "Next" to start the installation.</Text>
         Name="DisplayName" Type="raw"/><!-- MySQL 5.1 -->
     </Property>
     <Property Id="MYSQLDEXE">
-      <RegistrySearch Id="Mysql41Location" Root="HKLM"
-        Key="SOFTWARE\MySQL AB\MySQL Server 4.1" Name="Location" Type="raw">
-        <DirectorySearch Id="MysqldBin4" Path="bin">
-          <FileSearch LongName="mysqld.exe" />
-        </DirectorySearch>
-      </RegistrySearch>
-      <RegistrySearch Id="Mysql41Location1" Root="HKLM"
-        Key="SOFTWARE\MySQL AB\MySQL Server 4.1" Name="Location" Type="raw">
-        <DirectorySearch Id="MysqldBin41" Path="bin">
-          <FileSearch LongName="mysqld-nt.exe" />
-        </DirectorySearch>
-      </RegistrySearch>
       <RegistrySearch Id="Mysql50Location" Root="HKLM"
         Key="SOFTWARE\MySQL AB\MySQL Server 5.0" Name="Location" Type="raw">
         <DirectorySearch Id="MysqldBin3" Path="bin">
@@ -1263,12 +1251,6 @@ Click "Next" to start the installation.</Text>
       </DirectorySearch>
     </Property>
     <Property Id="MYISAMCHKEXE">
-      <RegistrySearch Id="Myisam41Location" Root="HKLM"
-        Key="SOFTWARE\MySQL AB\MySQL Server 4.1" Name="Location" Type="raw">
-        <DirectorySearch Id="MyisamBin4" Path="bin">
-          <FileSearch LongName="myisamchk.exe" />
-        </DirectorySearch>
-      </RegistrySearch>
       <RegistrySearch Id="Myisam50Location" Root="HKLM"
         Key="SOFTWARE\MySQL AB\MySQL Server 5.0" Name="Location" Type="raw">
         <DirectorySearch Id="MyisamBin3" Path="bin">
@@ -1298,8 +1280,6 @@ Click "Next" to start the installation.</Text>
       </DirectorySearch>
     </Property>
     <Property Id="MYSQLBASE">
-      <RegistrySearchRef Id="Mysql41Location" />
-      <RegistrySearchRef Id="Mysql41Location1" />
       <RegistrySearchRef Id="Mysql50Location" />
       <RegistrySearchRef Id="Mysql50Location1" />
       <RegistrySearchRef Id="Mysql51Location" />
@@ -1328,12 +1308,6 @@ Click "Next" to start the installation.</Text>
     </Property>
     <Property Id="MYSQLDEBUG31">
       <RegistrySearchRef Id="Mysql50Location1" />
-    </Property>
-    <Property Id="MYSQLDEBUG4">
-      <RegistrySearchRef Id="Mysql41Location" />
-    </Property>
-    <Property Id="MYSQLDEBUG41">
-      <RegistrySearchRef Id="Mysql41Location1" />
     </Property>
     <Property Id="MYSQLDEBUG5">
       <DirectorySearchRef Id="MysqlBase5" Parent="MysqlLocation5"/>
