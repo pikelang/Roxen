@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.592 2009/02/16 16:48:50 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.593 2009/02/20 14:02:36 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -213,7 +213,7 @@ class EntityClientName {
 class EntityClientIP {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
-    c->id->register_vary_callback("host");
+    c->id->register_vary_callback(0);
     return c->id->remoteaddr;
   }
 }
@@ -267,7 +267,7 @@ class EntityClientLanguages {
 class EntityClientHost {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
-    c->id->register_vary_callback("host");
+    c->id->register_vary_callback(0);
     if(c->id->host) return c->id->host;
     return c->id->host=roxen.quick_ip_to_host(c->id->remoteaddr);
   }
@@ -6719,7 +6719,7 @@ class TagIfDomain {
   constant plugin_name = "domain";
   constant cache = -1;
   string source(RequestID id) {
-    id->register_vary_callback("host");
+    id->register_vary_callback(0);
     return id->host;
   }
 }
@@ -6729,7 +6729,7 @@ class TagIfIP {
   constant plugin_name = "ip";
   constant cache = -1;
   string source(RequestID id) {
-    id->register_vary_callback("host");
+    id->register_vary_callback(0);
     return id->remoteaddr;
   }
 }
