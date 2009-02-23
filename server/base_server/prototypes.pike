@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.232 2009/02/19 15:29:26 jonasw Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.233 2009/02/23 17:30:03 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1094,9 +1094,12 @@ class RequestID
   //! These are some of the defined entries:
   //! @mapping
   //!   @member int "cacheable"
-  //!     Time in seconds that the request is cacheable.
-  //!     Use @[get_max_cache()], @[set_max_cache()] or one of the
-  //!     cache macros to access.
+  //!     Time in seconds that the request is cacheable. Use
+  //!     @[get_max_cache()], @[set_max_cache()] or one of the cache
+  //!     macros to access. This setting both controls the maximum
+  //!     cache time in the protocol cache and the timestamp returned
+  //!     in the @expr{Expires@} header (an @expr{"expires"@} entry in
+  //!     the result mapping will override it, though).
   //!   @member array(function) "_cachecallbacks"
   //!     Callbacks to verify that the cache entry is valid.
   //!   @member CacheKey "cachekey"
