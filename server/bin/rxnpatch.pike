@@ -1,5 +1,5 @@
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.7 2009/02/19 15:00:22 mathias Exp $";
+constant cvs_string = "$Id: rxnpatch.pike,v 1.8 2009/02/24 16:41:18 mathias Exp $";
 
 import RoxenPatch;
 
@@ -300,10 +300,25 @@ int main(int argc, array(string) argv)
 	  }
 	  break;
 	case "platform":
-	  ptc_obj->platform += plib->parse_platform(argument[1]);
+	  array platform = plib->parse_platform(argument[1]);
+	  if (platform && sizeof(platform))
+	    ptc_obj->platform += platform;
+	  else
+	  {
+	    plib->write_err("Unkown platform: %s. Quitting.\n", argument[1]);
+	    return 0;
+	  }
 	  break;
 	case "version":
-	  ptc_obj->version += plib->parse_version(argument[1]);
+	  array version = plib->parse_version(argument[1]);
+	  if (version && sizeof(version))
+	    ptc_obj->version += version;
+	  else
+	  {
+	    plib->write_err("Unkown version format: %s. Quitting.\n", 
+			    argument[1]);
+	    return 0;
+	  }
 	  break;
 	case "udiff":
 	  // Check if we're going to read from standard in and if anyone else

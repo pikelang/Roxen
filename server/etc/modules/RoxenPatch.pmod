@@ -9,7 +9,15 @@ constant rxp_version = "1.0";
 constant known_flags = ([ "restart" : "Need to restart server" ]);
 //! All flags that are supported by the rxp fileformat.
 
-constant known_platforms = ([  ]);
+constant known_platforms = (< "macosx_ppc32", 
+			      "macosx_x86",
+			      "macosx_x86_64",
+			      "rhel4_x86",
+			      "rhel4_x86_64",
+			      "rhel5_x86",
+			      "rhel5_x86_64",
+			      "sol10_x86_64",
+			      "win32_x86" >);
 
 typedef mapping(string:string |
 		  multiset(string) |
@@ -80,7 +88,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "0.1 pre-pre-pre-alpha";
+  private constant lib_version = "$ID:$";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -106,7 +114,7 @@ class Patcher
 
   private string server_platform = "";
   //! The current platform. This should map to the platforms for which we build
-  //! Roxen but I have no idea how to extract that information yet.
+  //! Roxen and is taken from [server_path]/OS.
 
   private string tar_bin = "tar";
   private string patch_bin = "patch";
@@ -217,6 +225,14 @@ class Patcher
       throw(({"Can't fetch server version"}));
 
     write_mess("Server version ... <green>%s</green>\n", server_version);
+
+    // Set current platform
+    string os_file = combine_path(server_path, "OS");
+    if (is_file(os_file))
+      server_platform = trim_all_whites(read_file(os_file));
+    else
+      server_platform = "unknown";
+    write_mess("Platform ... <green>%s</green>\n", server_platform);
   }
   
   string extract_id_from_filename(string filename)
@@ -381,7 +397,7 @@ class Patcher
     write_log(0, "Checking platform ... ");
     if (ptchdata->platform)
     {
-      if (!sizeof(filter(ptchdata->version, check_platform)))
+      if (!sizeof(filter(ptchdata->platform, check_platform)))
       {
 	write_log(1, "FAILED: current platform not supported by this patch.\n");
 	
@@ -1441,7 +1457,6 @@ class Patcher
     
     if (is_imported(id))
     {
-      werror("got_dependers: %O", pretend_installed);
       array file_list = file_list_imported();
       array filtered_list = filter(file_list, lambda (mapping m)
 					      {
@@ -1701,14 +1716,23 @@ class Patcher
   array(string) parse_platform(string raw_string)
   //! Takes a raw string and checks if it's a correctly formatted platform id.
   {
-    return ({ raw_string }); // FIXME!
+    if (known_platforms[raw_string])
+      return ({ raw_string });
+
+    return 0;
   }
 
   array(string) parse_version(string raw_string)
-  //! Takes a raw string and checks if it's a correctly formatted server version.
-  //! A correctly has the format MAJOR.MINOR.BUILD
+  //! Takes a raw string and checks if it's a correctly formatted server 
+  //! version and returns a list of versions parsed.
   {
-    return ({ raw_string }); // FIXME!
+    if (sscanf(raw_string, "%1d.%d.%d", int major, int minor, int build) == 3)
+    {
+      string version = major + "." + minor + "." + build;
+      return ({ version });
+    }
+
+    return 0;
   }
 
   array(mapping(string:string)) parse_src_dest_path(string raw_path)
@@ -1970,8 +1994,6 @@ class Patcher
   //! @returns
   //!  an array of matching files.
   {
-    werror("Pattern: %s\n", glob_pattern);
-    werror("Recursive: %s\n", recursive ? "Yes" : "No");
     // First of all extract the path that is not a glob and use that as base
     // directory.
     array(string) all_files;
