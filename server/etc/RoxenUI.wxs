@@ -1204,10 +1204,17 @@ Click "Next" to start the installation.</Text>
     <Property Id="Custom2Buttons_PrevArgs"><![CDATA[FolderForm]]></Property>
     <Property Id="Custom2Buttons_NextArgs"><![CDATA[CustomTextA]]></Property>
     <Property Id="CustomTextA_PrevArgs"><![CDATA[Custom2Buttons]]></Property>
+    <!--
     <Property Id="CustomTextA_NextArgs"><![CDATA[CustomTextB]]></Property>
     <Property Id="CustomTextB_PrevArgs"><![CDATA[CustomTextA]]></Property>
     <Property Id="CustomTextB_NextArgs"><![CDATA[ConfirmInstallForm]]></Property>
     <Property Id="ConfirmInstallForm_PrevArgs"><![CDATA[CustomTextB]]></Property>
+    -->
+    <Property Id="CustomTextA_NextArgs"><![CDATA[ConfirmInstallForm]]></Property>
+    <Property Id="CustomTextB_PrevArgs"><![CDATA[CustomTextA]]></Property>
+    <Property Id="CustomTextB_NextArgs"><![CDATA[ConfirmInstallForm]]></Property>
+    <Property Id="ConfirmInstallForm_PrevArgs"><![CDATA[CustomTextA]]></Property>
+    <!-- -->
 
     <Property Id="VSDIISMSG"><![CDATA[This setup requires Internet Information Server 4.0 or higher and Windows NT 4.0, Windows 2000, or Windows XP.  This setup cannot be installed on Windows 95, Windows 98, or Windows Me.  Please install Internet Information Server and run this setup again.]]></Property>
     <Property Id="FolderForm_AllUsersVisible"><![CDATA[1]]></Property>
@@ -1254,7 +1261,7 @@ Click "Next" to start the installation.</Text>
     </Property>
     <Property Id="MYSQLNAME">
       <RegistrySearch Id="MysqlName50" Root="HKLM"
-        Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\\{E9CF8701-483A-4344-8119-0002BD0992A8}"
+        Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{E9CF8701-483A-4344-8119-0002BD0992A8}"
         Name="DisplayName" Type="raw"/><!-- MySQL 5.0 -->
       <RegistrySearch Id="MysqlName51" Root="HKLM"
         Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{8F5E3B9E-ABBD-4B35-BB68-626CB9BE98D6}"
