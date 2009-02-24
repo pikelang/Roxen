@@ -11,6 +11,10 @@
     <CustomAction Id="CustomTextA_SetProperty_EDIT4" Property="ADM_USER" Value="administrator" Execute="firstSequence" />
     <CustomAction Id="Override_CustomTextA_1" Property="Custom2Buttons_NextArgs" Value="[CustomTextA_NextArgs]" Execute="firstSequence" />
     <CustomAction Id="Override_CustomTextA_2" Property="ConfirmInstallForm_PrevArgs" Value="[CustomTextA_PrevArgs]" Execute="firstSequence" />
+    <CustomAction Id="Disable_CustomTextB_Next" Property="CustomTextA_NextArgs" Value="[CustomTextB_NextArgs]" Execute="firstSequence" />
+    <CustomAction Id="Disable_CustomTextB_Prev" Property="ConfirmInstallForm_PrevArgs" Value="[CustomTextB_PrevArgs]" Execute="firstSequence" />
+    <CustomAction Id="Enable_CustomTextB_Next" Property="CustomTextA_NextArgs" Value="CustomTextB" Execute="firstSequence" />
+    <CustomAction Id="Enable_CustomTextB_Prev" Property="ConfirmInstallForm_PrevArgs" Value="CustomTextB" Execute="firstSequence" />
     <CustomAction Id="VSDCA_FolderForm_AllUsers" Property="FolderForm_AllUsers" Value="ALL" />
     <CustomAction Id="SetRemoveOldService" Property="RemoveOldService"
       Value="[TARGETDIR]" Execute="immediate" />
@@ -954,6 +958,64 @@ Click "Next" to start the installation.</Text>
           <Text>{\VSI_MS_Sans_Serif16.0_1_0}MsiHorizontalLine</Text>
         </Control>
       </Dialog>
+      <Dialog Id="CustomTextB" Width="373" Height="287" Title="[ProductName]">
+        <Control Id="NextButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Next &gt;</Text>
+          <Publish Event="EndDialog" Value="Return"><![CDATA[(CustomTextB_NextArgs="") AND (ADM_PASS1=ADM_PASS2)]]></Publish>
+          <Publish Event="NewDialog" Value="[CustomTextB_NextArgs]"><![CDATA[(CustomTextB_NextArgs<>"") AND (ADM_PASS1=ADM_PASS2)]]></Publish>
+          <Condition Action="disable"><![CDATA[(MYSQLDEXE="") AND (MYSQLBASE="")]]></Condition>
+          <Condition Action="enable"><![CDATA[(MYSQLDEXE<>"") OR (MYSQLBASE<>"")]]></Condition>
+        </Control>
+
+        <Control Id="Label1" Type="Text" X="18" Y="108" Width="348" Height="12" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MySQL base directory:</Text>
+        </Control>
+        <Control Id="Edit1" Type="Edit" X="18" Y="120" Width="348" Height="18" Property="MYSQLBASE" Sunken="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
+	  <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
+	  <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
+        </Control>
+
+        <Control Id="Mysqld_Label" Type="Text" X="18" Y="144" Width="165" Height="12" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Mysqld binary:</Text>
+        </Control>
+        <Control Id="MysqldSelector" Type="ComboBox" X="18" Y="156" Width="165" Height="18" Property="MYSQLDEXE" Sunken="yes" ComboList="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiComboBox</Text>
+	  <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
+	  <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
+        </Control>
+
+        <Control Id="Myisamchk_Label" Type="Text" X="18" Y="180" Width="348" Height="12" TabSkip="no">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Myisamchk binary:</Text>
+        </Control>
+        <Control Id="MyisamchkSelector" Type="Edit" X="18" Y="192" Width="348" Height="18" Property="MYISAMCHKEXE" Sunken="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
+        </Control>
+
+        <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}Cancel</Text>
+          <Publish Event="SpawnDialog" Value="Cancel"><![CDATA[]]></Publish>
+        </Control>
+        <Control Id="PreviousButton" Type="PushButton" X="228" Y="261" Width="66" Height="18">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}&lt; &amp;Back</Text>
+          <Publish Event="NewDialog" Value="[CustomTextB_PrevArgs]"><![CDATA[CustomTextA_PrevArgs<>""]]></Publish>
+          <Condition Action="disable"><![CDATA[CustomTextB_PrevArgs=""]]></Condition>
+          <Condition Action="enable"><![CDATA[CustomTextB_PrevArgs<>""]]></Condition>
+        </Control>
+        <Control Id="BannerBmp" Type="Bitmap" X="0" Y="0" Width="375" Height="52" TabSkip="no" Text="DefBannerBitmap" />
+        <Control Id="BannerText" Type="Text" X="9" Y="9" Width="306" Height="33" Transparent="yes">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}MySQL Settings</Text>
+        </Control>
+        <Control Id="BodyText" Type="Text" X="9" Y="63" Width="354" Height="42">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MySQL settings</Text>
+        </Control>
+        <Control Id="Control273" Type="Line" X="0" Y="252" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiHorizontalLine</Text>
+        </Control>
+        <Control Id="Control278" Type="Line" X="0" Y="52" Width="375" Height="6">
+          <Text>{\VSI_MS_Sans_Serif16.0_1_0}MsiHorizontalLine</Text>
+        </Control>
+      </Dialog>
       <Dialog Id="WelcomeForm" Width="373" Height="287" Title="[ProductName]">
         <Control Id="NextButton" Type="PushButton" X="300" Y="261" Width="66" Height="18" Default="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}&amp;Next &gt;</Text>
@@ -1142,8 +1204,10 @@ Click "Next" to start the installation.</Text>
     <Property Id="Custom2Buttons_PrevArgs"><![CDATA[FolderForm]]></Property>
     <Property Id="Custom2Buttons_NextArgs"><![CDATA[CustomTextA]]></Property>
     <Property Id="CustomTextA_PrevArgs"><![CDATA[Custom2Buttons]]></Property>
-    <Property Id="CustomTextA_NextArgs"><![CDATA[ConfirmInstallForm]]></Property>
-    <Property Id="ConfirmInstallForm_PrevArgs"><![CDATA[CustomTextA]]></Property>
+    <Property Id="CustomTextA_NextArgs"><![CDATA[CustomTextB]]></Property>
+    <Property Id="CustomTextB_PrevArgs"><![CDATA[CustomTextA]]></Property>
+    <Property Id="CustomTextB_NextArgs"><![CDATA[ConfirmInstallForm]]></Property>
+    <Property Id="ConfirmInstallForm_PrevArgs"><![CDATA[CustomTextB]]></Property>
 
     <Property Id="VSDIISMSG"><![CDATA[This setup requires Internet Information Server 4.0 or higher and Windows NT 4.0, Windows 2000, or Windows XP.  This setup cannot be installed on Windows 95, Windows 98, or Windows Me.  Please install Internet Information Server and run this setup again.]]></Property>
     <Property Id="FolderForm_AllUsersVisible"><![CDATA[1]]></Property>
