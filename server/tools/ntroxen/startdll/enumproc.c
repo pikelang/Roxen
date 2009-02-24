@@ -517,19 +517,23 @@ BOOL GetMySQLBinaryPath(char *inProgramName, char *outPath,
       p = line;
       while (*p == ' ' || *p == '\t')
 	p++;
-
+      
       //  Extract key name
       key = p;
       while (*p && !(*p == ' ' || *p == '\t' || *p == '='))
 	p++;
       if (!*p)
 	continue;
-      *p++ = 0;
-      while (*p == ' ' || *p == '\t')
+      if (*p == '=') {
+	*p++ = 0;
+      } else {
+	*p++ = 0;
+	while (*p == ' ' || *p == '\t')
+	  p++;
+	if (!*p || *p != '=')
+	  continue;
 	p++;
-      if (!*p || *p != '=')
-	continue;
-      p++;
+      }
       
       //  Extract key value and trim whitespace and optional quotes
       while (*p == ' ' || *p == '\t')
@@ -543,6 +547,8 @@ BOOL GetMySQLBinaryPath(char *inProgramName, char *outPath,
 	  *p = 0;
 	else if (*p == '"' || *p == '\'') {
 	  *p = 0;
+	  break;
+	} else {
 	  break;
 	}
 	--p;
