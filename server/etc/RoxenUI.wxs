@@ -979,7 +979,7 @@ Click "Next" to start the installation.</Text>
         <Control Id="Mysqld_Label" Type="Text" X="18" Y="144" Width="165" Height="12" TabSkip="no">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Mysqld binary:</Text>
         </Control>
-        <Control Id="MysqldSelector" Type="ComboBox" X="18" Y="156" Width="165" Height="18" Property="MYSQLDEXE" Sunken="yes" ComboList="yes">
+        <Control Id="MysqldEdit" Type="Edit" X="18" Y="156" Width="348" Height="18" Property="MYSQLDEXE" Sunken="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}MsiComboBox</Text>
 	  <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
 	  <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
@@ -988,8 +988,10 @@ Click "Next" to start the installation.</Text>
         <Control Id="Myisamchk_Label" Type="Text" X="18" Y="180" Width="348" Height="12" TabSkip="no">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Myisamchk binary:</Text>
         </Control>
-        <Control Id="MyisamchkSelector" Type="Edit" X="18" Y="192" Width="348" Height="18" Property="MYISAMCHKEXE" Sunken="yes">
+        <Control Id="MyisamchkEdit" Type="Edit" X="18" Y="192" Width="348" Height="18" Property="MYISAMCHKEXE" Sunken="yes">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}</Text>
+	  <Condition Action="disable">INSTALLATION_TYPE="2"</Condition>
+	  <Condition Action="enable">INSTALLATION_TYPE&lt;&gt;"2"</Condition>
         </Control>
 
         <Control Id="CancelButton" Type="PushButton" X="156" Y="261" Width="66" Height="18" Cancel="yes">
