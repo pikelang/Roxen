@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.666 2009/01/29 20:48:08 marty Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.667 2009/02/24 16:48:43 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -236,12 +236,19 @@ class DataCache
 #endif
   }
 
+  // Heuristic to calculate the entry size. Besides the data itself,
+  // we add the size of the key. Even though it's a shared string we
+  // can pretty much assume it has no other permanent refs. 128 is a
+  // constant penalty that accounts for the keypair in the mapping and
+  // that leaf entries are stored in arrays.
+#define CALC_ENTRY_SIZE(key, data) (sizeof (data) + sizeof (key) + 128)
+
   // Expire a single entry.
   protected void really_low_expire_entry(string key)
   {
     EntryType e = m_delete(cache, key);
     if (arrayp(e)) {
-      current_size -= sizeof(e[0]);
+      current_size -= CALC_ENTRY_SIZE (key, e[0]);
       if (e[1]->co_handle) {
 	remove_call_out(e[1]->co_handle);
       }
@@ -280,7 +287,7 @@ class DataCache
     while(1) {
       EntryType val;
       if (arrayp(val = cache[key_prefix])) {
-	current_size -= sizeof(val[0]);
+	current_size -= CALC_ENTRY_SIZE (key_prefix, val[0]);
 	m_delete(cache, key_prefix);
 	return;
       }
@@ -305,6 +312,7 @@ class DataCache
   //! Clear ~1/10th of the cache.
   protected void clear_some_cache()
   {
+    // FIXME: Use an iterator to avoid indices() here.
     array(string) q = indices(cache);
     if(!sizeof(q))
     {
@@ -329,19 +337,21 @@ class DataCache
 
   void set(string url, string data, mapping meta, int expire, RequestID id)
   {
-    if( strlen( data ) > max_file_size ) {
+    int entry_size = CALC_ENTRY_SIZE (url, data);
+
+    if( entry_size > max_file_size ) {
       // NOTE: There's a possibility of a stale entry remaining in the
       //       cache until it expires, rather than being replaced here.
       SIMPLE_TRACE_ENTER (this, "Result of size %d is too large "
 			  "to store in the protocol cache (limit %d)",
-			  sizeof (data), max_file_size);
+			  entry_size, max_file_size);
       SIMPLE_TRACE_LEAVE ("");
       return;
     }
 
     SIMPLE_TRACE_ENTER (this, "Storing result of size %d in the protocol cache "
 			"using key %O (expire in %ds)",
-			sizeof (data), url, expire);
+			entry_size, url, expire);
     string key = url;
 
     foreach(id->misc->vary_cb_order || ({}),
@@ -397,7 +407,7 @@ class DataCache
     else
       SIMPLE_TRACE_LEAVE ("");
 
-    current_size += strlen( data );
+    current_size += entry_size;
     cache[key] = ({ data, meta });
 
     // Only the actual cache entry is expired.
