@@ -1,11 +1,10 @@
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.8 2009/02/24 16:41:18 mathias Exp $";
+constant cvs_string = "$Id: rxnpatch.pike,v 1.9 2009/02/25 10:38:18 mathias Exp $";
 
 import RoxenPatch;
 
 int main(int argc, array(string) argv)
 { 
-  werror("argv: %O\n", argv);
   array switch_list = ({
     ({ "server_path",     Getopt.HAS_ARG,      ({ "-S", "--server"        }),
        "ROXEN_SERVER" /* Environment variable */ }),
