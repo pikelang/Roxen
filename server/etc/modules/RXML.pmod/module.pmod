@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.390 2009/02/16 16:43:36 jonasw Exp $
+// $Id: module.pmod,v 1.391 2009/02/26 23:44:56 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -416,10 +416,10 @@ class Tag
       else {								\
 	if (PCode p_code = _parser->p_code) {				\
 	  PCODE_UPDATE_MSG (						\
-	    "%O: Restoring p-code update count from %d to %d "		\
-	    "since the frame is stored unevaluated "			\
+	    "%O (frame %O): Restoring p-code update count "		\
+	    "from %d to %d since the frame is stored unevaluated "	\
 	    "due to exception.\n",					\
-	    _frame, _ctx->state_updated, orig_state_updated);		\
+	    _ctx, _frame, _ctx->state_updated, orig_state_updated);	\
 	  _ctx->state_updated = orig_state_updated;			\
 	  p_code->add_frame (_ctx, _frame, PCode, 1);			\
 	}								\
@@ -1645,12 +1645,9 @@ class Context
   //! implementors that means whenever the value that
   //! @[RXML.Frame.save] would return changes.
   {
-#ifdef RXML_PCODE_UPDATE_DEBUG
-    array a = backtrace();
-    PCODE_UPDATE_MSG ("%O: P-code update by request from %s",
-		      this_object(),
-		      describe_backtrace (a[sizeof (a) - 2..sizeof (a) - 2]));
-#endif
+    PCODE_UPDATE_MSG ("%O: P-code update to %d by request from %s",
+		      this_object(), state_updated + 1,
+		      describe_backtrace (backtrace()[<1..<1]));
     state_updated++;
   }
 
@@ -4360,9 +4357,10 @@ class Frame
 		}
 
 		in_args = _prepare (ctx, type, args && args + ([]), comp);
-		PCODE_UPDATE_MSG ("%O: P-code update since args has been compiled.\n",
-				  this_object());
 		ctx->state_updated++;
+		PCODE_UPDATE_MSG ("%O (frame %O): P-code update to %d "
+				  "since args have been compiled.\n",
+				  ctx, this_object(), ctx->state_updated);
 		break eval_only;
 	      }
 
@@ -4695,9 +4693,10 @@ class Frame
 		  if (unevaled_content) {
 		    unevaled_content->finish();
 		    in_content = unevaled_content;
-		    PCODE_UPDATE_MSG ("%O: P-code update since content "
-				      "has been compiled.\n", this_object());
 		    ctx->state_updated++;
+		    PCODE_UPDATE_MSG ("%O (frame %O): P-code update to %d "
+				      "since content has been compiled.\n",
+				      ctx, this_object(), ctx->state_updated);
 		    ctx->make_p_code = orig_make_p_code; // Reset before do_return.
 		  }
 		  flags |= FLAG_MAY_CACHE_RESULT;
@@ -8036,6 +8035,7 @@ final void p_code_stale_error (string msg, mixed... args)
 {
   if (sizeof (args)) msg = sprintf (msg, @args);
   array bt = backtrace();
+  PCODE_UPDATE_MSG ("Throwing PCodeStaleError: %s\n", describe_backtrace (bt));
   throw (PCodeStaleError (msg, bt[..sizeof (bt) - 2]));
 }
 
@@ -8079,9 +8079,11 @@ class PCode
   //! Returns whether the p-code is stale or not. Should be called
   //! before @[eval] to ensure it won't fail for that reason.
   {
-#ifdef TAGSET_GENERATION_DEBUG
-    werror ("%O is_stale test: generation=%d, %O->generation=%d\n",
-	    this_object(), generation, tag_set, tag_set && tag_set->generation);
+#if defined (TAGSET_GENERATION_DEBUG) || defined (RXML_PCODE_UPDATE_DEBUG)
+    if (tag_set && tag_set->generation != generation)
+      werror ("%O is_stale test: generation=%d, %O->generation=%d\n",
+	      this_object(), generation,
+	      tag_set, tag_set && tag_set->generation);
 #endif
     return tag_set && tag_set->generation != generation;
   }
@@ -8093,6 +8095,10 @@ class PCode
   {
     int updated = flags & UPDATED;
     flags &= ~UPDATED;
+    PCODE_UPDATE_MSG ("%O: is_updated returns %s and resets flag "
+		      "by request from %s", this,
+		      updated ? "true" : "false",
+		      describe_backtrace (backtrace()[<1..<1]));
     return updated;
   }
 
@@ -8171,6 +8177,8 @@ class PCode
       exec = allocate (16);
       length = 0;
       flags |= UPDATED;
+      PCODE_UPDATE_MSG ("%O (ctx %O): Marked as updated by create or reset.\n",
+			this, ctx);
       protocol_cache_time = -1;
       p_code_comp = _p_code_comp || PikeCompile();
       PCODE_MSG ("create or reset (with %s %O)\n",
@@ -8714,6 +8722,9 @@ class PCode
 		  exec[pos + 1] = exec[pos + 2] = nil;
 		  flags |= UPDATED;
 		  update_count = ++ctx->state_updated;
+		  PCODE_UPDATE_MSG ("%O (ctx %O, frame %O): P-code update to "
+				    "%d due to result collection.\n",
+				    this, ctx, frame, update_count);
 		  if (new_p_code) new_p_code->add_frame (ctx, frame, item, 1);
 		}
 
@@ -8729,6 +8740,10 @@ class PCode
 			p_code_comp->resolve (frame_state[0]);
 		    exec[pos + 2] = frame_state;
 		    flags |= UPDATED;
+		    PCODE_UPDATE_MSG ("%O (ctx %O, frame %O): Marked as "
+				      "updated due to ctx->state_updated "
+				      "%d > %d.\n", this, ctx, frame,
+				      ctx->state_updated, update_count);
 		    update_count = ctx->state_updated;
 		  }
 		  if (!exec[pos + 1]) {
@@ -8760,7 +8775,12 @@ class PCode
 	ctx->eval_finish (1);
 	ctx->id->eval_status["rxmlpcode"] = 1;
 
-	if (ctx->state_updated > update_count) flags |= UPDATED;
+	if (ctx->state_updated > update_count) {
+	  PCODE_UPDATE_MSG ("%O (ctx %O): Marked as updated due to "
+			    "ctx->state_updated %d > %d.\n", this, ctx, frame,
+			    ctx->state_updated, update_count);
+	  flags |= UPDATED;
+	}
 
 	if (!ppos)
 	  return type->sequential ? type->empty_value : nil;
@@ -8779,10 +8799,10 @@ class PCode
 
 	else {
 	  PCODE_UPDATE_MSG (
-	    "%O: Restoring p-code update count from %d to %d "
-	    "since the frame is stored unevaluated "
+	    "%O (item %O): Restoring p-code update count "
+	    "from %d to %d since the frame is stored unevaluated "
 	    "due to exception.\n",
-	    item, ctx->state_updated, update_count);
+	    ctx, item, ctx->state_updated, update_count);
 	  ctx->state_updated = update_count;
 
 	  if (new_p_code)
@@ -9040,6 +9060,8 @@ class RenewablePCode
 	else parser->finish();	// Might unwind.
 	res = parser->eval();	// Might undwind.
 	flags |= UPDATED;
+	PCODE_UPDATE_MSG ("%O (ctx %O): Marked as updated after "
+			  "reevaluation.\n", this, ctx);
       }) {
 	ctx->make_p_code = orig_make_p_code;
 	if (objectp (err) && err->thrown_at_unwind) {
@@ -9052,6 +9074,8 @@ class RenewablePCode
       renewed_p_code->finish();
       if (new_p_code) new_p_code->finish();
       renewed_p_code->flags |= UPDATED;
+      PCODE_UPDATE_MSG ("%O (ctx %O): Marked as updated after "
+			"reevaluation.\n", renewed_p_code, ctx);
       _take (renewed_p_code);	// Assumed to be atomic.
 
       type->give_back (parser, tag_set);
