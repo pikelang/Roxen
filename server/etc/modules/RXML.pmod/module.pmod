@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.391 2009/02/26 23:44:56 mast Exp $
+// $Id: module.pmod,v 1.392 2009/02/26 23:52:25 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3416,6 +3416,20 @@ class Frame
   //! each iteration). This variable is not automatically saved and
   //! restored (see @[save] and @[restore]).
 
+  optional void exec_array_state_update();
+  //! If this is defined, it is called whenever p-code or frames are
+  //! evaluated in an exec array (as returned by any of the
+  //! @tt{do_*@} functions), and that evaluation causes their
+  //! persistent state to change.
+  //!
+  //! Its typical use is to contain a call to
+  //! @expr{RXML_CONTEXT->state_update@} to propagate the state update
+  //! event if the exec array is part of the persistent state of this
+  //! frame.
+  //!
+  //! @seealso
+  //! @[do_enter], @[do_process], @[do_return], @[Context.state_update]
+
   optional string format_rxml_backtrace_frame();
   //! Define this to control how the frame is formatted in RXML
   //! backtraces. The returned string should be one line, without a
@@ -3699,6 +3713,7 @@ class Frame
     mixed res = nil;
     Parser subparser = 0;
     int orig_make_p_code = ctx->make_p_code;
+    int orig_state_updated = ctx->state_updated;
     PCode orig_evaled_p_code = ctx->evaled_p_code;
     ctx->evaled_p_code = 0;
 
@@ -3749,9 +3764,6 @@ class Frame
 		// Could perhaps collect adjacent PCode objects here.
 		p_code->finish();
 		exec[i] = p_code;
-		// Not flagging the update here in ctx->state_updated,
-		// since we don't know whether this will be part of
-		// the persistent p-code or not.
 	      }
 	      result_type->give_back (subparser, ctx->tag_set);
 	      subparser = 0;
@@ -3826,6 +3838,18 @@ class Frame
 
       ctx->make_p_code = orig_make_p_code;
       ctx->evaled_p_code = orig_evaled_p_code;
+
+      if (ctx->state_updated != orig_state_updated) {
+	PCODE_UPDATE_MSG ("%O (frame %O): Restoring p-code update count "
+			  "from %d to %d after evaluating exec array.\n",
+			  ctx, this, ctx->state_updated, orig_state_updated);
+	ctx->state_updated = orig_state_updated;
+	if (exec_array_state_update) {
+	  PCODE_UPDATE_MSG ("Calling %O->exec_array_state_update.\n", this);
+	  exec_array_state_update();
+	}
+      }
+
       return res;
     };
 
@@ -3833,6 +3857,18 @@ class Frame
 
     ctx->make_p_code = orig_make_p_code;
     ctx->evaled_p_code = orig_evaled_p_code;
+
+    if (ctx->state_updated != orig_state_updated) {
+      PCODE_UPDATE_MSG ("%O (frame %O): Restoring p-code update count "
+			"from %d to %d after evaluating exec array.\n",
+			ctx, this, ctx->state_updated, orig_state_updated);
+      ctx->state_updated = orig_state_updated;
+      if (exec_array_state_update) {
+	PCODE_UPDATE_MSG ("Calling %O->exec_array_state_update.\n", this);
+	exec_array_state_update();
+      }
+    }
+
     if (objectp (err) && ([object] err)->thrown_at_unwind) {
       THIS_TAG_DEBUG ("Exec: Interrupted at position %d\n", i);
       UNWIND_STATE ustate;
