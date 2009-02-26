@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.593 2009/02/20 14:02:36 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.594 2009/02/26 23:54:44 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -4785,6 +4785,8 @@ class UserTag {
 
     array save() {return ({content_text, compiled_content});}
     void restore (array saved) {[content_text, compiled_content] = saved;}
+
+    void exec_array_state_update() {RXML_CONTEXT->state_update();}
 
     string _sprintf ()
     {
