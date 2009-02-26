@@ -615,9 +615,9 @@ class Patcher
     // Handle files to be deleted
     if (ptchdata->delete)
     {
-      foreach (ptchdata->delete, mapping file)
+      foreach (ptchdata->delete, string file)
       {
-	string dest = append_path(server_path, file->destination);
+	string dest = append_path(server_path, file);
 	write_log(0, "Removing file <u>%s</u> ... ", dest);
 	
 	// Make sure that the destination already exists
@@ -627,7 +627,7 @@ class Patcher
 	  write_log(0, "Backing up <u>%s</u> to </u>%s</u> ... ", 
 		    dest, 
 		    basename(backup_file));
-	  if (add_file_to_tar_archive(file->destination,
+	  if (add_file_to_tar_archive(file,
 				      server_path,
 				      backup_file))
 	    write_log(0, "<green>ok.</green>\n");       
