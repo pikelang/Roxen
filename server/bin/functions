@@ -1,7 +1,7 @@
 # -*- sh -*-
 # Support functions for the startscript and some other scripts.
 #
-# $Id: functions,v 1.19 2008/08/15 12:33:54 mast Exp $
+# $Id: functions,v 1.20 2009/03/02 12:27:28 mast Exp $
 #
 
 # Default number of generations for log rotation.
@@ -148,12 +148,11 @@ find_pike() {
    exit 1
  fi
 
- # Check version of Pike.
- if [ x`"$pike" -e 'if (__VERSION__ > 7.4) write("new");'` = "xnew" ]; then
-   # Currently we're targetting for Pike 7.4.
-   #DEFINES="-V7.4 $DEFINES"
-   export DEFINES
- fi
+ # Check pike version if we're targeting something older than the latest.
+# if [ x`"$pike" -e 'if (__VERSION__ > 7.4) write("new");'` = "xnew" ]; then
+#   DEFINES="-V7.4 $DEFINES"
+#   export DEFINES
+# fi
 
  PIKE="$pike"
  export PIKE
