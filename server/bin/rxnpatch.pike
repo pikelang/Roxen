@@ -1,5 +1,5 @@
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.9 2009/02/25 10:38:18 mathias Exp $";
+constant cvs_string = "$Id: rxnpatch.pike,v 1.10 2009/03/03 17:27:53 mathias Exp $";
 
 import RoxenPatch;
 
@@ -53,7 +53,7 @@ int main(int argc, array(string) argv)
   int(0..1) silent      = 0;
 
 
-  // If we have the command 'help' normal rules doesn't apply.
+  // If we have the command 'help' normal rules don't apply.
   int h = search(argv, "help");
   array(array) switches;
   array(string) cmd_n_files;
@@ -61,7 +61,6 @@ int main(int argc, array(string) argv)
   {
     cmd_n_files = ({ "dummy" }) + argv[h..];
     switches = Getopt.find_all_options(argv[0..h], switch_list);
-    server_path="";
   }
   else
   {
@@ -118,7 +117,9 @@ int main(int argc, array(string) argv)
   // Set output according to given switches
   function write_mess;
   function write_err;
-  if (silent)
+  if (silent && h == -1) 
+    // "silent" removes all output, not a good thing in combination with "help"
+    // hence h == -1
   {
     write_mess = lambda(string s) { };
     write_err = lambda(string s) { };
@@ -153,6 +154,38 @@ int main(int argc, array(string) argv)
     write_err = lambda(string s) { werror(wash_output(s)); };
   }
 
+  // Again treat "help" differently. We don't want to insantiate the Patcher
+  // class if we're only going to show help
+  if (sizeof(cmd_n_files) < 2)
+  {
+    if (sizeof(switches))
+    {
+      array topics = ({ });
+      foreach (switches, array a)
+      {
+	if (a[0] == "help")
+	  topics += ({ (string) a[1] });
+      }
+      display_help(write_mess, topics);
+    }
+    else
+      display_help(write_mess);
+    return 0;
+  }
+  else if (cmd_n_files[1] == "help")
+  {
+    if (sizeof(cmd_n_files) < 3)
+    {
+      display_help(write_mess);
+      return 0;
+    }
+
+    display_help(write_mess, cmd_n_files[2..]);
+
+    return 0;
+  }
+
+  // Check server path and current user before instantiating the Patcher class
   if (!server_path)
   {
     write_err(err_no_server_dir);
@@ -170,23 +203,6 @@ int main(int argc, array(string) argv)
   Patcher plib = Patcher(write_mess, write_err, server_path);
 
   // Handle the different commands.
-  if (sizeof(cmd_n_files) < 2)
-  {
-    if (sizeof(switches))
-    {
-      array topics = ({ });
-      foreach (switches, array a)
-      {
-	if (a[0] == "help")
-	  topics += ({ (string) a[1] });
-      }
-      display_help(write_mess || write, topics);
-    }
-    else
-      display_help(write_mess || write);
-    return 0;
-  }
-  
   if (cmd_n_files[1] == "create")
   {
     PatchObject ptc_obj = ([ ]);
@@ -643,19 +659,6 @@ int main(int argc, array(string) argv)
     return 0;
   }
 
-  if (cmd_n_files[1] == "help")
-  {
-    if (sizeof(cmd_n_files) < 3)
-    {
-      display_help(write_mess || write);
-      return 0;
-    }
-
-    display_help(write_mess || write, cmd_n_files[2..]);
-
-    return 0;
-  }
-
   display_help(write_mess);
   return 0;
 }
@@ -936,39 +939,69 @@ constant err_email_not_valid = "Not a valid e-mail address: -O\n";
 private constant help_usage = ([
   "general"   : 
 #"Usage: <b>rxnpatch</b> [rxnpatch-options] <command> [command-options-and-argument]
+
   where rxnpatch-options are --no-color, --dry-run etc.
   where command is <u>create</u>, <u>import</u>, <u>install</u>, <u>help</u>, <u>list</u>,
      <u>uninstall</u>, <u>status</u> or <u>version</u>.
   where command-options-and-arguments depends on the command.
-
 ",
   "create"    : "Usage:\n <b>rxnpatch</b> [-S <u>PATH</u>] [--no-colour]"
   		" [-sf] create -m <u>FILE</u>\n"
   		" [-k <u>ID</u>] [-t <u>DIRECTORY</u>]\n"
 		"<b>rxnpatch</b> [-S <u>PATH</u>] [--no-colour] create"
-  		"-N <u>NAME</u> [-O <u>EMAIL_ADDRESS</u>] [-D [<u>FILE</u>]]\n"
+  		" -N <u>NAME</u> [-O <u>EMAIL_ADDRESS</u>] [-D [<u>FILE</u>]]\n"
   		"[-P <u>PLATFORM</u>]... [-V <u>VERSION</u>]..."
 		" [-p [<u>FILE</u>]]... [-n <u>FILE</u>]...\n" 
   		"[-R <u>FILE</u>]... [-X <u>FILE</u>]... [-d <u>ID</u>]..."
   		" [-F <u>FLAG</u>]... [-L <u>MODULE_NAME</u>]...\n"
 		"[-k <u>ID</u>] [-t <u>DIRECTORY</u>]\n",
-  "help"      : "Usage: <b>rxnpatch</b> [--no-colour] help [command|switch]\n",
-  "import"    : "Usage: <b>rxnpatch</b> [-S path] [--dry-run] [--no-colour] [-sf]"
-                " import file...\n",
+  "help"      : #"Usage: <b>rxnpatch</b> [--no-colour] help [command|switch]
+
+Special cases:
+  <b>rxnpatch help command</b>	- lists all available commands and what they do.
+  <b>rxnpatch help options</b>	- lists all global options such as --silent,
+			  --server etc.
+",
+  "import"    : 
+#"Usage: <b>rxnpatch</b> [-S path] [--dry-run] [--no-colour] [-sf] import file...
+
+Importing a does not alter any files in the server-x.x.xxx directory, it just
+means that the patch will become available for installation and that you can
+list information about the patch such as dependencies and which files will be affected upon installation.",
   "install"   : "Usage: <b>rxnpatch</b>  [-S path] [--dry-run] [--no-colour]"
                 "  [-sf] install [id...|file...]\n",
   "list"      : "Usage: rxnpatch [--no-colour] list [-iu] \n",
   "uninstall" : "Usage: rxnpatch [-S path] [--dry-run] [--no-colour] [-sf]"
                 " unintall [id...]\n",
   "status"    : "Usage: rxnpatch [-S path] [--no-colour] status id\n",
-  "version"   : "Usage: rxnpatch version" ]);
+  "version"   : "Usage: rxnpatch version\n",
+  // special cases
+  "options"   : "The global options are:\n",
+  "commands"  : #"Available commands are:
+  <b>create</b>	Create a patch package.
+  <b>help</b>		Get help with commands and options available.
+  <b>import</b>	Import patch(es).
+  <b>install</b>	Install patch(es).
+  <b>list</b>		List imported and/or installed patches.
+  <b>uninstall</b>	Uninstall patch(es).
+  <b>status</b>	Shows the status for a patch, e.g. if it's installed or not.
+  <b>version</b>	Shows version info for <b>rxnpatch</b>."
+]);
 
 private constant help_help = #"
-Write <b>rxnpatch help</b> <<u>command|switch</u>> for detailed information about a given
-command or switch. I.e. <b>help -i</b> would give information about -i.\n\n";
+Write <b>rxnpatch help</b> <<u>command|switch</u>> for detailed information 
+about a given command or switch. I.e. <b>help -i</b> would give information 
+about -i.
+
+Special cases:
+  <b>rxnpatch help command</b>	- lists all available commands and what they do.
+  <b>rxnpatch help options</b>	- lists all global options such as --silent,
+			  --server etc.
+";
 constant help_default = "\n<b>%s</b> is not a known switch or command\n\n";
 
-constant help_stdin = "If more than one flags are set to  read from stdin then an error will be thrown.\n";
+constant help_stdin = "If more than one flags are set to  read from stdin then"
+		      " an error will be thrown.\n";
 constant help_flags = ([
   "S": ([ "syntax" : ({ "<b>-S</b> <u>PATH</u>",
 			"<b>--server=</b><u>PATH</u>" }),
@@ -978,13 +1011,11 @@ constant help_flags = ([
 	  "scope"  : ({ "global" }) ]),
   "i": ([ "syntax" : ({ "<b>-i</b>",
 			"<b>--list-installed</b>" }),
-	  "hlptxt" : ({ "List installed patches only. Invalidates if it's used",
-			"together with -u." }),
+	  "hlptxt" : ({ "List installed patches only." }),
 	  "scope"  : ({ "list" }) ]),
   "u": ([ "syntax" : ({ "<b>-u</b>",
 			"<b>--list-imported</b>" }),
-	  "hlptxt" : ({	"List imported patches only. Invalidates if it's used",
-			"together with -u." }),
+	  "hlptxt" : ({	"List imported patches only." }),
 	  "scope"  : ({ "list" }) ]),
   "f": ([ "syntax" : ({ "<b>-f</b>",
 			"<b>--force</b>" }),
@@ -1121,10 +1152,10 @@ constant help_flags = ([
 			"<b>--no-colour</b>",
 			"<b>--nocolor</b>",
 			"<b>--nocolour</b>" }),
-	  "hlptxt" : ({ "Turns of 'Christmas light mode' making all output plain",
-			"text without underlines, colors etc. This is useful if",
-			"you're piping the output to a file or simply don't like",
-			"colored output." }),
+	  "hlptxt" : ({ "Turns off 'Christmas light mode' making all output",
+			"plain text without underlines, colors etc. This is",
+			"useful if you're piping the output to a file or simply",
+			"don't like colored output." }),
 	  "scope"  : ({ "global" }) ]),
   "r": ([ "syntax" : ({ "<b>-r</b>", "<b>--recurse</b>" }),
 	  "hlptxt" : ({ "When using globs this will traverse down the directory",
@@ -1142,7 +1173,7 @@ constant help_flags = ([
 ]);
 
 constant flag_map = ([
-  "server"		: "s",
+  "server"		: "S",
   "list-installed"	: "i",
   "list-imported"	: "u",
   "force"		: "f",
@@ -1218,7 +1249,7 @@ void help_write_flag(function write_out, mapping flag_desc)
     else
       write_out("\n");
   }
-  write_out("\n");
+  write_out("\n"); 
 }
 
 void display_help(function write_out, void|string|array(string) topics)
@@ -1244,6 +1275,10 @@ void display_help(function write_out, void|string|array(string) topics)
       mapping flags = map(help_flags, 
 			  lambda(mapping m, string command)
 			  {
+			    // Special case
+			    if (command == "options")
+			      command = "global";
+
 			    mapping res = ([ ]);
 			    int i = -1;
 			    if (arrayp(m->scope))
