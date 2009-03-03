@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.78 2008/12/20 03:24:07 mast Exp $
+// $Id: DBManager.pmod,v 1.79 2009/03/03 14:17:34 mast Exp $
 
 //! Manages database aliases and permissions
 
@@ -1640,20 +1640,25 @@ CREATE TABLE dbs (
  local INT UNSIGNED NOT NULL,
  default_charset VARCHAR(64) )
  " );
-    create_db( "local",  0, 1 );
-    create_db( "roxen",  0, 1 );
-    create_db( "mysql",  0, 1 );
-
-    is_module_db( 0, "local",
-		  "The local database contains data that "
-		  "should not be shared between multiple-frontend servers" );
   } else if (catch { query("SELECT default_charset FROM dbs LIMIT 1"); }) {
     // The default_charset field is missing.
     // Upgraded Roxen?
     query("ALTER TABLE dbs "
 	  "  ADD default_charset VARCHAR(64)");
   }
-  
+
+  if (!get ("local")) {
+    create_db( "local",  0, 1 );
+    is_module_db( 0, "local",
+		  "The local database contains data that "
+		  "should not be shared between multiple-frontend servers" );
+  }
+
+  if (!get ("roxen"))
+    create_db( "roxen",  0, 1 );
+  if (!get ("mysql"))
+    create_db( "mysql",  0, 1 );
+
   if( !q->db_permissions )
   {
     query(#"
