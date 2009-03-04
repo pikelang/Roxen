@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.157 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.158 2009/03/04 13:07:04 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -34,9 +34,9 @@ constant thread_safe=1;
 
 #if constant(System.normalize_path)
 #define NORMALIZE_PATH(X)	System.normalize_path(X)
-#else /* !constant(system.normalize_path) */
+#else /* !constant(System.normalize_path) */
 #define NORMALIZE_PATH(X)	(X)
-#endif /* constant(system.normalize_path) */
+#endif /* constant(System.normalize_path) */
 
 constant module_type = MODULE_LOCATION;
 LocaleString module_name = LOCALE(51,"File systems: Normal File system");
@@ -269,25 +269,27 @@ void start()
 
   
 
-#if constant(system.normalize_path)
+#if constant(System.normalize_path)
   if (catch {
     if ((<'/','\\'>)[path[-1]]) {
-      normalized_path = system.normalize_path(path + ".");
+      normalized_path = System.normalize_path(path + ".");
     } else {
-      normalized_path = system.normalize_path(path);
+      normalized_path = System.normalize_path(path);
     }
+  }) {
+    report_error(LOCALE(1, "Path verification of %s failed.\n"), mountpoint);
+    normalized_path = path;
+  }
+#else /* !constant(System.normalize_path) */
+  normalized_path = path;
+#endif /* constant(System.normalize_path) */
+  if ((normalized_path == "") || !(<'/','\\'>)[normalized_path[-1]]) {
 #ifdef __NT__
     normalized_path += "\\";
 #else /* !__NT__ */
     normalized_path += "/";
 #endif /* __NT__ */    
-  }) {
-    report_error(LOCALE(1, "Path verification of %s failed.\n"), mountpoint);
-    normalized_path = path;
   }
-#else /* !constant(system.normalize_path) */
-  normalized_path = path;
-#endif /* constant(system.normalize_path) */
   FILESYSTEM_WERR("Online at "+query("mountpoint")+" (path="+path+")");
   cache_expire("stat_cache");
 }
@@ -297,6 +299,46 @@ string query_location()
   return mountpoint;
 }
 
+ADT.Trie query_snmp_mib(array(int) base_oid, array(int) oid_suffix)
+{
+  return SNMP.SimpleMIB(base_oid, oid_suffix,
+			({
+			  UNDEFINED,
+			  SNMP.String(query_location, "location",
+				      "Mount point in the virtual filesystem."),
+			  SNMP.String(query_name, "name"),
+			  SNMP.String(lambda() {
+					return query("charset");
+				      }, "charset"),
+			  SNMP.Counter(lambda() {
+					 return accesses;
+				       }, "accesses"),
+			  SNMP.Counter(lambda() {
+					 return errors;
+				       }, "errors"),
+			  SNMP.Counter(lambda() {
+					 return redirects;
+				       }, "redirects"),
+			  SNMP.Counter(lambda() {
+					 return dirlists;
+				       }, "dirlists"),
+			  SNMP.Counter(lambda() {
+					 return puts;
+				       }, "puts"),
+			  SNMP.Counter(lambda() {
+					 return mkdirs;
+				       }, "mkdirs"),
+			  SNMP.Counter(lambda() {
+					 return moves;
+				       }, "moves"),
+			  SNMP.Counter(lambda() {
+					 return chmods;
+				       }, "chmods"),
+			  SNMP.Counter(lambda() {
+					 return deletes;
+				       }, "deletes"),
+			}));
+}
 
 #define FILTER_INTERNAL_FILE(f, id) \
   (!id->misc->internal_get && sizeof (filter (internal_files, glob, (f/"/")[-1])))
@@ -375,7 +417,7 @@ string decode_path( string p )
 
 string real_path(string f, RequestID id)
 {
-  f = path + f;
+  f = normalized_path + f;
   if (FILTER_INTERNAL_FILE(f, id)) return 0;
   catch {
     f = NORMALIZE_PATH(decode_path(f));
@@ -800,7 +842,7 @@ mixed find_file( string f, RequestID id )
   catch {
     /* NOTE: NORMALIZE_PATH() may throw errors. */
     f = norm_f = NORMALIZE_PATH(f = decode_path(path + f));
-#if constant(system.normalize_path)
+#if constant(System.normalize_path)
     if (!has_prefix(norm_f, normalized_path) &&
 #ifdef __NT__
 	(norm_f+"\\" != normalized_path)
@@ -824,7 +866,7 @@ mixed find_file( string f, RequestID id )
     if (sizeof(oldf) && (oldf[-1] == '/')) {
       id->not_query += "/";
     }
-#endif /* constant(system.normalize_path) */
+#endif /* constant(System.normalize_path) */
   };
 
   // NOTE: Sets id->misc->stat.
@@ -1002,8 +1044,8 @@ mixed find_file( string f, RequestID id )
       TRACE_LEAVE("Failure");
       if (id->method == "MKCOL") {
 	if (err_code ==
-#if constant(system.ENOENT)
-	    system.ENOENT
+#if constant(System.ENOENT)
+	    System.ENOENT
 #elif constant(System.ENOENT)
 	    System.ENOENT
 #else
@@ -1720,9 +1762,12 @@ mapping copy_file(string source, string dest, PropertyBehavior behavior,
 
 string query_name()
 {
-  if (sizeof(path) > 20) {
-    return sprintf((string)LOCALE(63,"%s from %s...%s"),
-		   mountpoint, path[..7], path[sizeof(path)-8..]);
+  if (path) {
+    if (sizeof(path) > 20) {
+      return sprintf((string)LOCALE(63,"%s from %s...%s"),
+		     mountpoint, path[..7], path[sizeof(path)-8..]);
+    }
+    return sprintf((string)LOCALE(50,"%s from %s"), mountpoint, path);
   }
-  return sprintf((string)LOCALE(50,"%s from %s"), mountpoint, path);
+  return "NOT MOUNTED";
 }
