@@ -1,5 +1,5 @@
 '
-' $Id: Win32Installer.vbs,v 1.23 2009/02/18 12:59:57 grubba Exp $
+' $Id: Win32Installer.vbs,v 1.24 2009/03/04 10:38:53 grubba Exp $
 '
 ' Companion file to RoxenUI.wxs with custom actions.
 '
@@ -23,12 +23,13 @@ Function RemoveOldService()
 End Function
 
 ' At call time the CustomActionData property has been set to
-' [SERVERDIR];[MYSQLBASE];[MYSQLDEXE];[MYISAMCHKEXE].
+' [SERVERDIR];[MYSQLBASE];[MYSQLDEXE];[MYISAMCHKEXE];[MYSQLADMINEXE].
 '
 ' Creates "[SERVERDIR]mysql-location.txt" with the
 ' content "basedir=[MYSQLBASE]"
 '         "mysqld=[MYSQLDEXE]"
 '         "myisamchk=[MYISAMCHKEXE]"
+'         "mysqladmin=[MYSQLADMINEXE]"
 Function CreateMysqlLocation()
   Dim re, matches, match, fso, tf, serverdir, mysqlbase, mysqld, myisamchk, i
   Dim rest
@@ -37,6 +38,7 @@ Function CreateMysqlLocation()
   mysqlbase = ""
   mysqld = ""
   myisamchk = ""
+  mysqladmin = ""
 
   rest = ""
 
@@ -60,7 +62,11 @@ Function CreateMysqlLocation()
           If i = 6 Then
             myisamchk = match.Value
 	  Else
-	    rest = rest & ";" & match.Value
+            If i = 8 Then
+              mysqladmin = match.Value
+	    Else
+	      rest = rest & ";" & match.Value
+            End If
           End If
         End If
       End If
@@ -71,15 +77,34 @@ Function CreateMysqlLocation()
   Set fso = CreateObject("Scripting.FileSystemObject")
 
   Set tf = fso.CreateTextFile(serverdir & "mysql-location.txt", True)
-  tf.writeLine("# Created by $Id: Win32Installer.vbs,v 1.23 2009/02/18 12:59:57 grubba Exp $")
+  tf.writeLine("# Created by $Id: Win32Installer.vbs,v 1.24 2009/03/04 10:38:53 grubba Exp $")
   tf.writeLine("# DEBUG: " & Session.Property("CustomActionData"))
   tf.writeLine("# DEBUG: " & rest & ";")
+  tf.writeLine("")
+  tf.writeLine("# Configuration file for locating the MySQL installation.")
+  tf.writeLine("")
+  tf.writeLine("# Note that the keys are case-sensitive and must be")
+  tf.writeLine("# provided in lower-case.")
+  tf.writeLine("")
+  tf.writeLine("# basedir is the base directory for the MySQL installation.")
   tf.writeLine("basedir=" & mysqlbase)
+  tf.writeLine("# mysqld is the full path to the mysqld binary.")
   If mysqld <> "" Then
     tf.writeLine("mysqld=" & mysqld)
+  Else
+    tf.writeLine("#mysqld=")
   End If
+  tf.writeLine("# myisamchk is the full path to the myisamchk binary.")
   If myisamchk <> "" Then
     tf.writeLine("myisamchk=" & myisamchk)
+  Else
+    tf.writeLine("#myisamchk=")
+  End If
+  tf.writeLine("# mysqladmin is the full path to the mysqladmin binary.")
+  If mysqladmin <> "" Then
+    tf.writeLine("mysqladmin=" & myisamchk)
+  Else
+    tf.writeLine("#mysqladmin=")
   End If
   tf.Close
 
