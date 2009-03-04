@@ -88,7 +88,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.16 2009/03/04 12:31:50 mathias Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.17 2009/03/04 12:40:33 mathias Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -1296,7 +1296,8 @@ class Patcher
   //! @returns
   //!   current version of the patch file lib.
   {
-    return lib_version;
+    sscanf(lib_version, "$""Id: %s""$", string ver);
+    return ver || "n/a";
   }
   
   void set_installed_path(string path) 

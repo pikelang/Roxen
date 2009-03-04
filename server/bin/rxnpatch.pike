@@ -1,5 +1,5 @@
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.10 2009/03/03 17:27:53 mathias Exp $";
+constant cvs_string = "$Id: rxnpatch.pike,v 1.11 2009/03/04 12:40:33 mathias Exp $";
 
 import RoxenPatch;
 
@@ -652,7 +652,7 @@ int main(int argc, array(string) argv)
   if (cmd_n_files[1] == "version")
   {
     sscanf(cvs_string, "$""Id: %s""$", string cvs_version);
-    write("Roxen Patch Tool\n\nCVS Version: %s\nRXP Version: %s\n",
+    write("CVS Version ... %s\nRXP Version ... %s\n",
 	  cvs_version || "n/a",
 	  plib->current_version());
 	  
