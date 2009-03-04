@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2007, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.8 2008/08/15 12:33:55 mast Exp $
+ * $Id: prot_snmp.pike,v 2.9 2009/03/04 14:37:14 grubba Exp $
  *
  * SNMP protocol support.
  *
@@ -51,6 +51,15 @@ class SNMP_Port {
 
   protected int udp_errno = 0;
 
+  // The following symbols are only for API-compatibility with Stdio.Port.
+  mixed _accept_callback;
+  mixed _id;
+  int bind_unix(string path, mixed|void callback){}
+  int listen_fd(int fd, mixed|void callback){}
+  mixed set_id(mixed id){ return _id = id; }
+  mixed query_id(){ return _id;}
+  Stdio.File accept(){}
+
   int errno()
   {
     return udp_errno;
@@ -80,7 +89,7 @@ class SNMP_Port {
   protected void create() {}
 }
 
-SNMP_Port port_obj;
+protected SNMP_Port port_obj;
 
 ADT.Trie mib = ADT.Trie();
 
@@ -91,12 +100,16 @@ class SystemMIB
 
   protected void create()
   {
+#if 0
+    SNMP.add_oid_path(SNMP.INTERNET_OID + ({ 2, 1, 1 }),
+		      "iso.organizations.dod.internet.mgmt.mib-2.system");
+#endif /* 0 */
     ::create(SNMP.INTERNET_OID + ({ 2, 1, 1 }), ({}),
 	     ({
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.8 $"/" ")[1],
+			   ("$Revision: 2.9 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
@@ -142,6 +155,10 @@ class SNMPMIB
 
   protected void create()
   {
+#if 0
+    SNMP.add_oid_path(SNMP.INTERNET_OID + ({ 2, 1, 1 }),
+		      "iso.organizations.dod.internet.mgmt.mib-2.snmp");
+#endif /* 0 */
     ::create(SNMP.INTERNET_OID + ({ 2, 1, 11 }), ({}),
 	     ({
 	       UNDEFINED,
@@ -217,6 +234,11 @@ class RoxenGlobalMIB
 
   protected void create()
   {
+#if 0
+    SNMP.add_oid_path(SNMP.RIS_OID_WEBSERVER + ({ 1 }),
+		      "iso.organizations.dod.internet.private."
+		      "enterprises.roxenis.app.webserver.global");
+#endif /* 0 */
     ::create(SNMP.RIS_OID_WEBSERVER + ({ 1 }), ({}),
 	     ({
 	       UNDEFINED,
@@ -250,6 +272,11 @@ class DBManagerMIB
 
   protected void create()
   {
+#if 0
+    SNMP.add_oid_path(SNMP.RIS_OID_WEBSERVER + ({ 1, 3 }),
+		      "iso.organizations.dod.internet.private."
+		      "enterprises.roxenis.app.webserver.global.dbManager");
+#endif /* 0 */
     ::create(SNMP.RIS_OID_WEBSERVER + ({ 1, 3 }), ({}),
 	     ({
 	       UNDEFINED,
@@ -470,13 +497,6 @@ protected void got_connection(mapping data)
     if (!c->inited) {
       c->enable_all_modules();
     }
-    ADT.Trie submib;
-    if (submib = c->mib) {
-      if (c->mib_version >= mu->mib_version) {
-	mu->mib_version = c->mib_version;
-	mib->merge(submib);
-      }
-    }
   }
 
   msgid = pdata->msgid;
@@ -625,8 +645,27 @@ protected void bind(void|int ignore_eaddrinuse)
   }
 }
 
-protected void create( mixed ... args )
+<<<<<<< prot_snmp.pike
+void unref(string url)
 {
+  mapping(string:Configuration|Protocol|string) port_info = roxen.urls[url];
+  if (port_info) {
+    Configuration conf = port_info->conf;
+    if (conf) {
+      SNMP.remove_owned(mib, conf, UNDEFINED);
+    }
+  }
+  ::unref(url);
+}
+
+static void create( mixed ... args )
+=======
+protected void create( mixed ... args )
+>>>>>>> 2.8
+{
+  werror("Creating an SNMP protocol object...\n"
+	 "Backtrace: %s\n",
+	 describe_backtrace(backtrace()));
 #if constant(roxen.set_up_snmp_variables)
   roxen.set_up_snmp_variables( this_object() );
 #else
@@ -671,4 +710,6 @@ protected void create( mixed ... args )
          "primarily offers.");
 #endif
   ::create( @args );
+
+  
 }
