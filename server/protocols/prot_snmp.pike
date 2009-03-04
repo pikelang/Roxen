@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2007, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.9 2009/03/04 14:37:14 grubba Exp $
+ * $Id: prot_snmp.pike,v 2.10 2009/03/04 14:55:41 grubba Exp $
  *
  * SNMP protocol support.
  *
@@ -109,7 +109,7 @@ class SystemMIB
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.9 $"/" ")[1],
+			   ("$Revision: 2.10 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
@@ -645,7 +645,6 @@ protected void bind(void|int ignore_eaddrinuse)
   }
 }
 
-<<<<<<< prot_snmp.pike
 void unref(string url)
 {
   mapping(string:Configuration|Protocol|string) port_info = roxen.urls[url];
@@ -658,10 +657,7 @@ void unref(string url)
   ::unref(url);
 }
 
-static void create( mixed ... args )
-=======
 protected void create( mixed ... args )
->>>>>>> 2.8
 {
   werror("Creating an SNMP protocol object...\n"
 	 "Backtrace: %s\n",
