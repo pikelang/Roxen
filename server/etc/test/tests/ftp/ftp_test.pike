@@ -1,4 +1,4 @@
-// $Id: ftp_test.pike,v 1.4 2008/08/15 12:33:54 mast Exp $
+// $Id: ftp_test.pike,v 1.5 2009/03/05 15:48:31 grubba Exp $
 //
 // Tests of the ftp protocol module.
 //
@@ -179,24 +179,17 @@ class do_active_read
     got_code = ({ ({ "150", got_connection_open }) });
   }
 
-  int con_open;
-
   void got_connect(mixed ignored)
   {
     fd = port->accept();
     destruct(port);
     port = 0;
 
-    if (con_open) {
-      fd->set_nonblocking(got_data, 0, data_closed);
-    }
+    fd->set_nonblocking(got_data, 0, data_closed);
   }
 
   void got_connection_open(string code, string lines)
   {
-    if (fd) {
-      fd->set_nonblocking(got_data, 0, data_closed);
-    }
     con_open = 1;
     got_code = ({ ({ "226", got_transfer_done }) });
   }
@@ -206,26 +199,32 @@ class do_active_read
     buf += str;
   }
 
+  int con_state = 0;
+
   void data_closed()
   {
     fd->close();
     fd = 0;
-    
-    if (!con_open) {
-      call_out(done_cb, 0, buf);
-      buf = "";
-      done_cb = 0;
-    }
+
+    con_state |= 1;	/* CONNECTION_CLOSED */
+
+    check_done();
   }
 
   void got_transfer_done(string code, string lines)
   {
-    if (!fd) {
+    con_state |= 2;	/* COMMAND_DONE */
+
+    check_done();
+  }
+
+  void check_done()
+  {
+    if (con_state == 3) {
       call_out(done_cb, 0, buf);
       buf = "";
       done_cb = 0;
     }
-    con_open = 0;
   }
 }
 
