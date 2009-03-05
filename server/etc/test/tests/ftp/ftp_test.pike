@@ -1,4 +1,4 @@
-// $Id: ftp_test.pike,v 1.5 2009/03/05 15:48:31 grubba Exp $
+// $Id: ftp_test.pike,v 1.6 2009/03/05 17:13:55 grubba Exp $
 //
 // Tests of the ftp protocol module.
 //
@@ -190,7 +190,6 @@ class do_active_read
 
   void got_connection_open(string code, string lines)
   {
-    con_open = 1;
     got_code = ({ ({ "226", got_transfer_done }) });
   }
 
@@ -224,6 +223,7 @@ class do_active_read
       call_out(done_cb, 0, buf);
       buf = "";
       done_cb = 0;
+      con_state = 4;
     }
   }
 }
