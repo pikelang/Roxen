@@ -1,8 +1,9 @@
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.11 2009/03/04 12:40:33 mathias Exp $";
+constant cvs_string = "$Id: rxnpatch.pike,v 1.12 2009/03/05 13:36:14 mathias Exp $";
 
 import RoxenPatch;
 
+int(0..1) stdin;
 int main(int argc, array(string) argv)
 { 
   array switch_list = ({
@@ -207,7 +208,7 @@ int main(int argc, array(string) argv)
   {
     PatchObject ptc_obj = ([ ]);
     string target_dir;
-    int(0..1) metadata, cfcl, stdin;
+    int(0..1) metadata, cfcl;
     foreach(switches, array argument)
     {
       switch (argument[0])
@@ -901,6 +902,10 @@ private string launch_external_editor(Patcher aux)
   string editor = "notepad.exe";
 #else
   string editor = "vi";
+  
+  // If the flag stdin is set then we need to set stdin to /dev/tty
+  if (stdin)
+    Stdio.stdin->open("/dev/tty");
 #endif
 
   // Check if the EDITOR envvar is set.
@@ -958,8 +963,8 @@ private constant help_usage = ([
   "help"      : #"Usage: <b>rxnpatch</b> [--no-colour] help [command|switch]
 
 Special cases:
-  <b>rxnpatch help command</b>	- lists all available commands and what they do.
-  <b>rxnpatch help options</b>	- lists all global options such as --silent,
+  <b>rxnpatch help commands</b> - lists all available commands and what they do.
+  <b>rxnpatch help options</b>  - lists all global options such as --silent,
 			  --server etc.
 ",
   "import"    : 
@@ -994,8 +999,8 @@ about a given command or switch. I.e. <b>help -i</b> would give information
 about -i.
 
 Special cases:
-  <b>rxnpatch help command</b>	- lists all available commands and what they do.
-  <b>rxnpatch help options</b>	- lists all global options such as --silent,
+  <b>rxnpatch help commands</b> - lists all available commands and what they do.
+  <b>rxnpatch help options</b>  - lists all global options such as --silent,
 			  --server etc.
 ";
 constant help_default = "\n<b>%s</b> is not a known switch or command\n\n";
@@ -1125,7 +1130,11 @@ constant help_flags = ([
   "F": ([ "syntax" : ({ "<b>-F</b> <u>FLAG</u>",
 			"<b>--flag=</b><u>FLAG</u>" }),
 	  "hlptxt" : ({ "Sets the flag <u>FLAG</u> to true. Flags that are",
-			"omitted will default to FALSE." }),
+			"omitted will default to FALSE.",
+			"",
+			"The following flags are supported:" }) +
+	  	     // Nicely format the list of known flags
+	             sprintf("%{%s: %s,%}", (array) known_flags) / ",",
 	  "scope"  : ({ "create" }) ]),
   "L": ([ "syntax" : ({ "<b>-L</b> <u>MODULE</u>",
 			"<b>--reload</b> <u>MODULE</u>" }),
@@ -1258,7 +1267,7 @@ void display_help(function write_out, void|string|array(string) topics)
 
   // write(help_usage["general"]);
 
-  if (!topics)
+  if (!(topics && sizeof(topics)))
     topics = ({ "general" });
   else if(stringp(topics))
     topics = ({ topics });
