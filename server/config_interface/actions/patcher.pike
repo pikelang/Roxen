@@ -130,6 +130,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
 	  installed_date = "        <td><red>Unknown<red></td>\n";
       }
 
+      // Calculate dependencies of other patches
       string deps = "";
       foreach(po->get_dependencies(item->metadata->id) || ({ }); 
 	      int i; 
@@ -141,6 +142,25 @@ string list_patches(RequestID id, Patcher po, string which_list)
 	deps += s; 
       }
 
+      // Make sure that only patches for the right platform and version are
+      // installable
+      int is_right_version = 1;
+      int is_right_platform = 1;
+      if (which_list == "imported" &&
+	  item->metadata->version)
+	is_right_version = !!sizeof(filter(item->metadata->version,
+					   po->check_server_version));
+
+      if (which_list == "imported" &&
+	  item->metadata->platform)
+	is_right_platform = !!sizeof(filter(item->metadata->platform,
+					    po->check_platform));
+
+      if (!(is_right_version &&
+	    is_right_platform))
+	deps += "not_installable";
+      
+
       res += sprintf("      <tr style='background-color: %s' >\n"
 		     "        <td class='folded' id='%s_img'"
 		     " style='background-color: %[0]s' "
@@ -151,7 +171,8 @@ string list_patches(RequestID id, Patcher po, string which_list)
 		     "        <td onclick='expand(\"%[1]s\");'"
 		     " onmouseover='this.style.cursor=\"pointer\"'>%s</td>\n"
 		     "%s"
-		     "        <td><input type='checkbox' id='%[2]s'"
+		     "        <td style='width:20px;text-align:right'>\n"
+		     "          <input type='checkbox' id='%[2]s'"
 		     " name='%s' value='%[2]s' dependencies='%s'" +
 		     " onclick='toggle_%[5]s(%s)' />"
 		     "</td>\n"
@@ -217,8 +238,8 @@ string list_patches(RequestID id, Patcher po, string which_list)
       {
 	active_flags += sprintf("          <tr><td>%s</td>"
 				"<td>&nbsp;</td>"
-				"<td style='width: 2em'>%s</td></tr>\n",
-				long_reading + ":",
+				"<td style='width: 100%%'>%s</td></tr>\n",
+				replace(long_reading, " ", "&nbsp;") + ":",
 				(item->metadata->flags && 
 				 item->metadata->flags[index]) ?
 				"<b style='color: green'>Yes</b>" : 
@@ -236,13 +257,18 @@ string list_patches(RequestID id, Patcher po, string which_list)
 	       sizeof(item->metadata->platform) == 1)
       {
 	md += ({
-	  ({ "Platform:", item->metadata->platform[0] })
+	  ({ is_right_platform ? 
+	     "Platform:" :
+	     "<b style='color:red'>Platform:</b>", 
+	     item->metadata->platform[0] })
 	});
       }
       else
       {
 	md += ({
-	  ({ "Platforms:", 
+	  ({ is_right_platform ? 
+	     "Platforms:" :
+	     "<b style='color:red'>Platform</b>", 
 	     sprintf("%{%s<br />\n%}",
 		     item->metadata->platform) })
 	});
@@ -251,7 +277,9 @@ string list_patches(RequestID id, Patcher po, string which_list)
       if (item->metadata->version)
       {
 	md += ({
-	  ({ "Target version:", 
+	  ({ is_right_version ? 
+	     "Target version:":
+	     "<b style='color:red'>Target version:</b>", 
 	     sprintf("%{%s<br />\n%}",
 		     item->metadata->version) })
 	});
@@ -279,7 +307,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
 	      dep_stat = "imported";
 	      break;
 	    default:
-	      dep_stat = "unavailable";
+	      dep_stat = "<b style='color:red'>unavailable</b>";
 	      break;
 	  }
 	  dep_list += sprintf("%s (%s)<br />", dep_id, dep_stat);
@@ -430,6 +458,7 @@ mixed parse(RequestID id)
 				RXML.get_var("user-uid", "usr"));
 
   // Init patch-object
+  wb->clear_all();
   Patcher plib = Patcher(wb->write_mess,
   			 wb->write_error,
   			 getcwd(),
