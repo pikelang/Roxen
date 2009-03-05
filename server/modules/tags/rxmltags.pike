@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.594 2009/02/26 23:54:44 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.595 2009/03/05 12:42:15 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -276,9 +276,10 @@ class EntityClientHost {
 class EntityClientAuthenticated {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
+    RequestID id = c->id;
     // Actually, it is cacheable, but _only_ if there is no authentication.
-    c->id->misc->cacheable=0;
-    User u = c->id->conf->authenticate(c->id);
+    NOCACHE();
+    User u = id->conf->authenticate(id);
     if (!u) return RXML.nil;
     return u->name();
   }
@@ -287,10 +288,11 @@ class EntityClientAuthenticated {
 class EntityClientUser {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
-    c->id->misc->cacheable=0;
-    if (c->id->realauth) {
+    RequestID id = c->id;
+    NOCACHE();
+    if (id->realauth) {
       // Extract the username.
-      return (c->id->realauth/":")[0];
+      return (id->realauth/":")[0];
     }
     return RXML.nil;
   }
@@ -299,10 +301,11 @@ class EntityClientUser {
 class EntityClientPassword {
   inherit RXML.Value;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name) {
+    RequestID id = c->id;
     array tmp;
-    c->id->misc->cacheable=0;
-    if( c->id->realauth
-       && (sizeof(tmp = c->id->realauth/":") > 1) )
+    NOCACHE();
+    if( id->realauth
+       && (sizeof(tmp = id->realauth/":") > 1) )
       return tmp[1..]*":";
     return RXML.nil;
   }
@@ -532,7 +535,7 @@ class TagExpireTime {
       // Update Last-Modified to negative expire time.
       int last_modified = 2*t2 - t;
       if (last_modified > id->misc->last_modified) {
-	id->misc->last_modified = last_modified;
+	RXML_CONTEXT->set_id_misc ("last_modified", last_modified);
       }
       return 0;
     }
@@ -1026,11 +1029,11 @@ class TagDebug {
 	TAG_TRACE_ENTER ("");
 
       if (args->off)
-	id->misc->debug = 0;
+	RXML_CONTEXT->set_id_misc ("debug", 0);
       else if (args->toggle)
-	id->misc->debug = !id->misc->debug;
+	RXML_CONTEXT->set_id_misc ("debug", !id->misc->debug);
       else
-	id->misc->debug = 1;
+	RXML_CONTEXT->set_id_misc ("debug", 1);
 
       if (result_type->subtype_of (RXML.t_any_text))
 	result = "<!-- Debug is "+(id->misc->debug?"enabled":"disabled")+" -->";
@@ -1521,10 +1524,12 @@ class TagInsertFile {
     // Propagate last_modified to parent request...
     if (result_mapping->stat &&
 	result_mapping->stat[ST_MTIME] > id->misc->last_modified)
-      id->misc->last_modified = result_mapping->stat[ST_MTIME];
+      RXML_CONTEXT->set_id_misc ("last_modified",
+				 result_mapping->stat[ST_MTIME]);
     // ... and also in recursive inserts.
     if (result_mapping->last_modified > id->misc->last_modified)
-      id->misc->last_modified = result_mapping->last_modified;
+      RXML_CONTEXT->set_id_misc ("last_modified",
+				 result_mapping->last_modified);
 
     // Restore previous language state.
     if (args->langauge && pl) {
@@ -1763,10 +1768,11 @@ class TagSetMaxCache {
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
-      id->misc->cacheable = Roxen.time_dequantifier(args);
+      RXML.Context ctx = RXML_CONTEXT;
+      ctx->set_id_misc ("cacheable", Roxen.time_dequantifier(args));
       
       if(args["force-protocol-cache"])
-	id->misc->no_proto_cache = 0;
+	ctx->set_id_misc ("no_proto_cache", 0);
     }
   }
 }
@@ -2486,9 +2492,10 @@ class TagMaketag {
 
     class Frame {
       inherit RXML.Frame;
+      TagMaketag.Frame parent_frame;
 
       array do_return(RequestID id) {
-	id->misc->makeargs[args->name] = content || "";
+	parent_frame->makeargs[args->name] = content || "";
 	return 0;
       }
     }
@@ -2499,14 +2506,8 @@ class TagMaketag {
 
   class Frame {
     inherit RXML.Frame;
-    mixed old_args;
     RXML.TagSet additional_tags = internal;
-
-    array do_enter(RequestID id) {
-      old_args = id->misc->makeargs;
-      id->misc->makeargs = ([]);
-      return 0;
-    }
+    mapping(string:mixed) makeargs = ([]);
 
     array do_return(RequestID id) {
       if (!content) content = "";
@@ -2517,11 +2518,11 @@ class TagMaketag {
 	break;
       case "container":
 	if(!args->name) parse_error("Type 'container' requires a name attribute.\n");
-	result = RXML.t_xml->format_tag(args->name, id->misc->makeargs, content, RXML.FLAG_RAW_ARGS);
+	result = RXML.t_xml->format_tag(args->name, makeargs, content, RXML.FLAG_RAW_ARGS);
 	break;
       case "tag":
 	if(!args->name) parse_error("Type 'tag' requires a name attribute.\n");
-	result = RXML.t_xml->format_tag(args->name, id->misc->makeargs, 0,
+	result = RXML.t_xml->format_tag(args->name, makeargs, 0,
 					(args->noxml?RXML.FLAG_COMPAT_PARSE:0)|
 					RXML.FLAG_EMPTY_ELEMENT|RXML.FLAG_RAW_ARGS);
 	break;
@@ -2532,7 +2533,6 @@ class TagMaketag {
 	result = "<![CDATA[" + content/"]]>"*"]]]]><![CDATA[>" + "]]>";
 	break;
       }
-      id->misc->makeargs = old_args;
       return 0;
     }
   }
@@ -4764,7 +4764,7 @@ class UserTag {
       vars["rest-args"] = Roxen.make_tag_attributes(args - defaults)[1..];
       vars->contents = content;
       if (preparsed_contents_tags) vars += preparsed_contents_tags;
-      id->misc->last_tag_args = vars;
+      ctx->set_id_misc ("last_tag_args", vars);
       got_content_result = 0;
 
       if (compat_level > 2.1) {
@@ -5088,6 +5088,11 @@ class Tracer
 
   protected void create (RequestID id)
   {
+    // NB: We're not using RXML_CONTEXT->set_id_misc here since that'd
+    // give us unencodable function references in the p-code. The
+    // effect is that if a <trace> tag gets completely cached, it
+    // won't trace anything. It's unlikely to be a problem though,
+    // since if there's an uncached tag inside it, it won't be cached.
     Tracer::id = id;
     orig_trace_enter = id->misc->trace_enter;
     orig_trace_leave = id->misc->trace_leave;
@@ -5745,19 +5750,20 @@ class TagEmit {
     class Frame {
       inherit RXML.Frame;
 
+      TagEmit.Frame parent_frame;
+
       array do_return(RequestID id) {
-	TagEmit.Frame emit_frame = id->misc->emit_frame;
-	object|array res = emit_frame->res;
-	if(!emit_frame->filter && !emit_frame->filter_exclude) {
+	object|array res = parent_frame->res;
+	if(!parent_frame->filter && !parent_frame->filter_exclude) {
 	  if( objectp(res) ? res->peek() :
-	      emit_frame->counter < sizeof(res) )
+	      parent_frame->counter < sizeof(res) )
 	    result = content;
 	  return 0;
 	}
-	if(emit_frame->args->maxrows &&
-	   emit_frame->args->maxrows == emit_frame->counter)
+	if(parent_frame->args->maxrows &&
+	   parent_frame->args->maxrows == parent_frame->counter)
 	  return 0;
-	if(more_rows(emit_frame))
+	if(more_rows(parent_frame))
 	  result = content;
 	return 0;
       }
@@ -5804,10 +5810,6 @@ class TagEmit {
     int real_counter;
     // The actual index of the current scope in res. Only used when
     // filtering an array result.
-
-    // Used to store id->misc->emit_frame that otherwise would be
-    // overwritten when emits are nested.
-    Frame outer_emit_frame;
 
     object plugin;
     array(mapping(string:mixed))|object res;
@@ -5884,9 +5886,6 @@ class TagEmit {
  	}
  	if(!sizeof(filter_exclude)) filter_exclude = 0;
       }
-
-      outer_emit_frame = id->misc->emit_frame;
-      id->misc->emit_frame = this;
 
       if(objectp(res))
 	if(args->sort ||
@@ -6073,8 +6072,6 @@ class TagEmit {
 
     array do_return(RequestID id) {
       result = content;
-
-      id->misc->emit_frame = outer_emit_frame;
 
       int rounds = counter - !!args["do-once"];
       _ok = !!rounds;
