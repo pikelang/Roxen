@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.127 2009/03/06 10:24:45 grubba Exp $
+ * $Id: ftp.pike,v 2.128 2009/03/06 11:02:45 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1600,6 +1600,7 @@ class FTPSession
   // RFC 1123 4.1.2.12
   string local_addr;
   int local_port;
+  string e_mode = "1";	/* IPv4 */
 
   // The listen port object
   roxen.Protocol port_obj;
@@ -3115,6 +3116,11 @@ class FTPSession
       return;
     }
 
+    if (e_mode != "1") {
+      send(530, ({ "'PASV': Method not allowed on IPv6 connections." }));
+      return;
+    }
+
     if(pasv_port)
       destruct(pasv_port);
 
@@ -3153,12 +3159,12 @@ class FTPSession
     int min;
     int max;
 
-    if (!(< 0, "1", "2" >)[args]) {
+    if (!(< 0, e_mode >)[args]) {
       if (lower_case(args) == "all") {
 	epsv_only = 1;
 	send(200, ({ "Entering EPSV ALL mode." }));
       } else {
-	send(522, ({ "Network protocol not supported, use (1 or 2)" }));
+	send(522, ({ "Network protocol not supported, use " + e_mode + "." }));
       }
       return;
     }
@@ -3973,6 +3979,7 @@ class FTPSession
     array a = fd->query_address(1)/" ";
     local_addr = a[0];
     local_port = (int)a[1];
+    e_mode = has_value(local_addr, ":")?"2":"1";
 
     call_out(timeout, FTP2_TIMEOUT);
 
