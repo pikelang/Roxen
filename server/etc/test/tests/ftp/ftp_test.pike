@@ -1,4 +1,4 @@
-// $Id: ftp_test.pike,v 1.6 2009/03/05 17:13:55 grubba Exp $
+// $Id: ftp_test.pike,v 1.7 2009/03/06 10:23:47 grubba Exp $
 //
 // Tests of the ftp protocol module.
 //
@@ -14,22 +14,37 @@ constant BADDATA = 8;
 
 // Connection setup.
 
+int ipv6;
+string remote_host;
+
+string local_host = "127.0.0.1";
+
 array get_host_port( string url )
 {
   string host;
   int port;
 
-  if( sscanf( url, "ftp://%s:%d/", host, port ) != 2 )
+  if(sscanf( url, "ftp://[%s]:%d/", host, port ) == 2)
+    ipv6 = 1;
+  else if (sscanf( url, "ftp://%s:%d/", host, port ) != 2 )
     exit( BADARG );
+  if (host == "*") {
+    host = ipv6?"::1":"127.0.0.1";
+  }
   return ({ host, port });
 }
 
 Stdio.File connect( string url )
 {
   Stdio.File f = Stdio.File();
-  [string host, int port] = get_host_port( url );
-  if( !f->connect( (host=="*"?"127.0.0.1":host), port ) )
+  [remote_host, int port] = get_host_port( url );
+  if( !f->connect( remote_host, port ) )
     exit( NOCONN );
+
+  string s = f->query_address(1);
+  array(string) segments = s/" ";
+  local_host = segments[0];
+  ipv6 = has_value(local_host, ":");
 
   return f;
 }
@@ -111,7 +126,7 @@ string last_sent = "";
 
 void send(string command)
 {
-  //werror("FTP: send(%O)\n", command);
+  // werror("FTP: send(%O)\n", command);
 
   if (!sizeof(sendq)) {
     con->set_write_callback(do_send);
@@ -167,9 +182,13 @@ class do_active_read
 
   void send_port()
   {
-    port = Stdio.Port(0, got_connect, "127.0.0.1");
+    port = Stdio.Port(0, got_connect, local_host);
     int pno = (int)(port->query_address()/" ")[1];
-    send(sprintf("PORT 127,0,0,1,%d,%d", pno>>8, pno & 0xff));
+    if (ipv6) {
+      send(sprintf("EPRT |2|::1|%d|", pno));
+    } else {
+      send(sprintf("PORT %{%s,%}%d,%d", local_host/".", pno>>8, pno & 0xff));
+    }
     got_code = ({ ({ "200", send_cmd }) });
   }
 
@@ -181,6 +200,7 @@ class do_active_read
 
   void got_connect(mixed ignored)
   {
+    // werror("Got connect.\n");
     fd = port->accept();
     destruct(port);
     port = 0;
@@ -195,6 +215,7 @@ class do_active_read
 
   void got_data(mixed ignored, string str)
   {
+    // werror("Got data (%d bytes).\n", sizeof(str||""));
     buf += str;
   }
 
@@ -202,6 +223,7 @@ class do_active_read
 
   void data_closed()
   {
+    // werror("Got close.\n");
     fd->close();
     fd = 0;
 
@@ -219,6 +241,7 @@ class do_active_read
 
   void check_done()
   {
+    // werror("Check done (state: %d).\n", con_state);
     if (con_state == 3) {
       call_out(done_cb, 0, buf);
       buf = "";
@@ -244,11 +267,35 @@ class do_passive_read
 
   void send_pasv()
   {
-    send("PASV");
-    got_code = ({ ({ "227", send_cmd }) });
+    send(ipv6?"EPSV":"PASV");
+    got_code = ({ ({ "227", parse_pasv }),
+		  ({ "229", parse_epsv }), });
   }
 
-  void send_cmd(string code, string lines)
+  void parse_epsv(string code, string lines)
+  {
+    string port_info;
+    array(string) segments;
+    int portno;
+    if ((sscanf(lines, "229%*s(%s)", port_info) != 2) ||
+	!sizeof(port_info) ||
+	(sizeof(segments = port_info/port_info[0..0]) != 5) ||
+	!(portno = (int)segments[3])) {
+      werror("Failed to parse EPSV code: %O\n"
+	     "Parsed result: %s\n",
+	     lines, port_info);
+      exit(BADARG);
+    }
+    fd = Stdio.File();
+    if (!fd->connect(remote_host, portno)) {
+      werror("Failed to connect to extended passive port: %s\n", port_info);
+      exit(NOCONN);
+    }
+    fd->set_nonblocking(got_data, 0, data_closed);
+    send_cmd(code, lines);
+  }
+
+  void parse_pasv(string code, string lines)
   {
     port_info = array_sscanf(lines, "227%*s%d,%d,%d,%d,%d,%d");
     if (sizeof(port_info) != 6) {
@@ -264,7 +311,8 @@ class do_passive_read
 	     ((array(string))port_info)*",");
       exit(NOCONN);
     }
-    ::send_cmd(code, lines);
+    fd->set_nonblocking(got_data, 0, data_closed);
+    send_cmd(code, lines);
   }
 }
 
