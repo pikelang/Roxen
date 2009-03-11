@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.79 2009/03/03 14:17:34 mast Exp $
+// $Id: DBManager.pmod,v 1.80 2009/03/11 14:21:27 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -117,23 +117,27 @@ private
 	break;
 
       case READ:
-	db->big_query ("REPLACE INTO db (Host, Db, User, Select_priv) "
+	db->big_query ("REPLACE INTO db (Host, Db, User, Select_priv, "
+		       "Execute_priv) "
 		       "VALUES " +
 		       map (dbs, lambda (string db_name) {
 				   return "("
 				     "'" + q (host) + "',"
 				     "'" + q (db_name) + "',"
 				     "'" + q (user) + "',"
-				     "'Y')";
+				     "'Y','Y')";
 				 }) * ",");
 	break;
 
       case WRITE:
-	// FIXME: Add more privs when mysql 5.0 upgrade code is in place.
+	// Current as of MySQL 5.0.70.
 	db->big_query ("REPLACE INTO db (Host, Db, User,"
 		       " Select_priv, Insert_priv, Update_priv, Delete_priv,"
 		       " Create_priv, Drop_priv, Grant_priv, References_priv,"
-		       " Index_priv, Alter_priv) "
+		       " Index_priv, Alter_priv, Create_tmp_table_priv,"
+		       " Lock_tables_priv, Create_view_priv, Show_view_priv,"
+		       " Create_routine_priv, Alter_routine_priv,"
+		       " Execute_priv) "
 		       "VALUES " +
 		       map (dbs, lambda (string db_name) {
 				   return "("
@@ -142,7 +146,10 @@ private
 				     "'" + q (user) + "',"
 				     "'Y','Y','Y','Y',"
 				     "'Y','Y','N','Y',"
-				     "'Y','Y')";
+				     "'Y','Y','Y',"
+				     "'Y','Y','Y',"
+				     "'Y','Y',"
+				     "'Y')";
 				 }) * ",");
 	break;
 
@@ -160,6 +167,40 @@ private
 
       default:
 	error ("Invalid level %d.\n", level);
+    }
+  }
+
+  protected void check_upgrade_mysql()
+  {
+    Sql.Sql db = connect_to_my_mysql(0, "mysql");
+
+    multiset(string) missing_privs = (<
+      // Current as of MySQL 5.0.70.
+      "Select", "Insert", "Update", "Delete", "Create", "Drop", "Grant",
+      "References", "Index", "Alter", "Create_tmp_table", "Lock_tables",
+      "Create_view", "Show_view", "Create_routine", "Alter_routine",
+      "Execute",
+    >);
+    foreach(db->query("DESCRIBE db"), mapping(string:string) row) {
+      string field = row->Field || row->field;
+      if (!field) {
+	werror("DBManager: Failed to analyse privileges table mysql.db.\n"
+	       "row: %O\n", row);
+	return;
+      }
+      if (has_suffix(field, "_privs")) {
+	// Note the extra space below.
+	m_delete(missing_privs, field[..sizeof(field)-sizeof(" _privs")]);
+      }
+    }
+    if (sizeof(missing_privs)) {
+      werror("DBManager: Updating priviliges table mysql.db with the fields\n"
+	     "           %s...", indices(missing_privs)*", ");
+      foreach(indices(missing_privs), string priv) {
+	db->query("ALTER TABLE db "
+		  "  ADD COLUMN " + priv+ "_priv "
+		  "      ENUM('N','Y') DEFAULT 'N' NOT NULL");
+      }
     }
   }
 
@@ -1679,6 +1720,8 @@ CREATE TABLE db_permissions (
 	}
       }, 0 );
   }
+
+  check_upgrade_mysql();
 
   synch_mysql_perms();
 
