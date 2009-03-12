@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.81 2009/03/12 12:35:18 grubba Exp $
+// $Id: DBManager.pmod,v 1.82 2009/03/12 14:03:46 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -89,11 +89,22 @@ private
   {
     if( password )
     {
-      // FIXME: Probably ought to use OLDPASSWORD!
-      db->query( "REPLACE INTO user (Host,User,Password) "
-		 "VALUES (%s, %s, PASSWORD(%s)), (%s, %s, PASSWORD(%s))",
-		 host, short_name + "_rw", password,
-		 host, short_name + "_ro", password);
+      // According to the documentation MySQL is 4.1 or newer is required
+      // for OLD_PASWORD(). There does however seem to exist versions of
+      // at least 4.0 that know of OLD_PASSWORD().
+      if (db->server_info() >= "mysql/4.1") {
+	db->query( "REPLACE INTO user (Host,User,Password) "
+		   "VALUES (%s, %s, OLD_PASSWORD(%s)), "
+		   "       (%s, %s, OLD_PASSWORD(%s))",
+		   host, short_name + "_rw", password,
+		   host, short_name + "_ro", password);
+      } else {
+	db->query( "REPLACE INTO user (Host,User,Password) "
+		   "VALUES (%s, %s, PASSWORD(%s)), "
+		   "       (%s, %s, PASSWORD(%s))",
+		   host, short_name + "_rw", password,
+		   host, short_name + "_ro", password);
+      }
     }
     else
     {
