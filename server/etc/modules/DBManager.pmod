@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.80 2009/03/11 14:21:27 grubba Exp $
+// $Id: DBManager.pmod,v 1.81 2009/03/12 12:35:18 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -89,6 +89,7 @@ private
   {
     if( password )
     {
+      // FIXME: Probably ought to use OLDPASSWORD!
       db->query( "REPLACE INTO user (Host,User,Password) "
 		 "VALUES (%s, %s, PASSWORD(%s)), (%s, %s, PASSWORD(%s))",
 		 host, short_name + "_rw", password,
@@ -188,9 +189,9 @@ private
 	       "row: %O\n", row);
 	return;
       }
-      if (has_suffix(field, "_privs")) {
+      if (has_suffix(field, "_priv")) {
 	// Note the extra space below.
-	m_delete(missing_privs, field[..sizeof(field)-sizeof(" _privs")]);
+	missing_privs[field[..sizeof(field)-sizeof(" _priv")]] = 0;
       }
     }
     if (sizeof(missing_privs)) {
