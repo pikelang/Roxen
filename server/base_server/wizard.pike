@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2004, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.164 2006/05/31 13:38:03 jonasw Exp $
+// $Id: wizard.pike,v 1.165 2009/03/13 12:30:53 anders Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -1104,12 +1104,16 @@ mapping get_actions(RequestID id, string base,string dir, array args)
 	string sm,rn = (get_wizard(act,dir,@args)->name||act), name;
 	if(sscanf(rn, "%*s:%s", name) != 2) name = rn;
 	sscanf(name, "%s//%s", sm, name);
-	if(!acts[sm]) acts[sm] = ({ ([]) });
+	if(!acts[sm]) acts[sm] = ({ });
 
 	if(id->misc->raw_wizard_actions)
+	{
+	  // This is probably dead code.
+	  if(!sizeof(acts[sm])) acts[sm] += ({ ([]) });
  	  acts[sm][0][name]=
  	    ({ name, base, (["action":act,"unique":(string)(zonk++) ]),
  		  (get_wizard(act,dir,@args)->doc||"") });
+	}
  	else
 	  acts[sm]+=
 	    ({"<!-- "+rn+" --><dt><font size=\"+2\">"
