@@ -33,6 +33,7 @@
 *.raw binary
 *.rc eol=crlf
 *.rgs eol=crlf
+*.rxp binary
 *.sln eol=crlf
 *.tar binary
 *.ttf binary
