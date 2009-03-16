@@ -88,7 +88,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.17 2009/03/04 12:40:33 mathias Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.18 2009/03/16 14:06:40 mathias Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -1361,6 +1361,12 @@ class Patcher
   string get_installed_dir() { return installed_path; }
   //! Return the current installed patches directory.
 
+  string get_server_version() { return server_version; }
+  //! Return the current server version
+
+  string get_server_platform() { return server_platform; }
+  // Return the current server platform 
+
   string build_metadata_block(PatchObject metadata)
   //! Builds an XML metadatablock from the mapping provided.
   //! Throws an exception if the PatchObject is not complete.
@@ -1443,16 +1449,18 @@ class Patcher
   //!   Returns 0 if there are no dependers, 1 if there are and -1 if the patch
   //!   is neither installed nor imported.
   {
+    if (!pretend_installed)
+      pretend_installed = (< >);
     if (is_installed(id))
     {
       array file_list = file_list_installed();
     
-      array filtered_list = filter(file_list, lambda (mapping m)
-					      {
-						return m->metadata->id > id &&
-						  !pretend_installed[m->id];
-					      }
-				   );
+      array filtered_list = filter(file_list, 
+				   lambda (mapping m)
+				   {
+				     return m->metadata->id > id &&
+				       !pretend_installed[m->metadata->id];
+				   } );
       return !!sizeof(filtered_list);
     }
     
@@ -2181,7 +2189,7 @@ class Patcher
   }
 
 
-  void clean_up(string temp_path, void|int(0..1) silent)
+  int(0..1) clean_up(string temp_path, void|int(0..1) silent)
   //! Deletes temporary data when we're done with it.
   {
     if (!silent)
@@ -2191,10 +2199,11 @@ class Patcher
     {
       if (!silent) 
 	write_mess("<green>Done!</green>\n");
-      return;
+      return 1;
     }
     if (!silent)
       write_err("FAILED: Could not delete %s\n", temp_path);
+    return 0;
   }
 
   int(0..1) check_server_version(string version)
