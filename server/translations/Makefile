@@ -1,5 +1,5 @@
 # configurable stuff
-EXTRACT=/home/anders/Pike/7.2/bin/extract.pike
+EXTRACT=/home/anders/Pike/7.8/bin/extract.pike
 PIKE=../bin/pike
 
 LANG=C
@@ -41,7 +41,7 @@ translations:
 	@echo "3. Rebuilding translation files"
 	@for a in configs/*.xml ; do  \
 		pkg=`echo $$a | sed -e s',\.xml,,' -e s',.*/,,'`; \
-		./scripts/build_from_config  configs/$$pkg.xml $(PIKE) $(EXTRACT); \
+		$(PIKE) -x extract_locale --config=configs/$$pkg.xml --wipe --sync --notime; \
 	done
 
 
