@@ -1,5 +1,4 @@
 # configurable stuff
-EXTRACT=/home/anders/Pike/7.8/bin/extract.pike
 PIKE=../bin/pike
 
 LANG=C
