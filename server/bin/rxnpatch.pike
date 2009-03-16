@@ -1,5 +1,5 @@
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.12 2009/03/05 13:36:14 mathias Exp $";
+constant cvs_string = "$Id: rxnpatch.pike,v 1.13 2009/03/16 14:11:41 mathias Exp $";
 
 import RoxenPatch;
 
@@ -515,11 +515,11 @@ int main(int argc, array(string) argv)
       // imported that is not installed.
       if(plib->got_dependers(id, is_installed) == 1)
       {
-	write_err("Couldn't install %s. There are older patches imported "
-		  "that are not installed yet. Please install them first "
-		  "or include them when installing the current patch.\n\n"
-		  "Quitting.\n", id);
-
+	plib->write_err("Couldn't install %s. There are older patches imported "
+			"that are not installed yet. Please install them first "
+			"or include them when installing the current patch.\n\n"
+			"Quitting.\n", id);
+	
 	// Clean up if we're doing a dry run
 	if (dryrun)
 	{
