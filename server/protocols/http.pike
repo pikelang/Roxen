@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.536 2008/12/09 12:45:05 stewa Exp $";
+constant cvs_version = "$Id: http.pike,v 1.537 2009/03/17 07:46:27 marty Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2623,11 +2623,6 @@ void got_data(mixed fooid, string s, void|int chained)
 	      ((st = file_stat( file->rf )) && st->mtime == file->mtime ))
 #endif
 	  {
-	    if (objectp(cookies)) {
-	      // Disconnect the cookie jar.
-	      real_cookies = cookies = ~cookies;
-	    }
-
 	    int refresh;
 	    if (cv[1]->refresh && (cv[1]->refresh <= predef::time(1))) {
 	      // We might need to refresh the entry.
@@ -2735,6 +2730,12 @@ void got_data(mixed fooid, string s, void|int chained)
 	    cache_status["protcache"] = 1;
 
 	    if (!refresh) {
+	      // No need to refresh the cached entry, so we just send it,
+	      // disconnect the cookie jar, and are done.
+	      if (objectp(cookies)) {
+		// Disconnect the cookie jar just before sending the reply.
+		real_cookies = cookies = ~cookies;
+	      }
 	      TIMER_END(cache_lookup);
 	      low_send_result(full_headers, d, sizeof(d));
 	      return;
@@ -2745,7 +2746,15 @@ void got_data(mixed fooid, string s, void|int chained)
 	    RequestID id = clone_me();
 	    id->hrtime = hrtime;
 	    if (cookies) {
-	      id->cookies = id->real_cookies = real_cookies + ([]);
+	      if (objectp(cookies)) {
+		// Disconnect the cookie jar from the RequestID used
+		// to send the cached response.  (We want to keep the
+		// cookie jar for the refresh request in order for
+		// cookie callbacks to be registered correctly.)
+		id->cookies = id->real_cookies = ~cookies;
+	      } else {
+		id->cookies = id->real_cookies = real_cookies + ([]);
+	      }
 	    }
 	    id->my_fd = my_fd;
 	    id->file = file;
