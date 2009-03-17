@@ -88,7 +88,7 @@ Check that your password database is correct for user %s(%d),
 </str>
 
 <str id="19">
-<o>Bad URL '%s' for server `%s'</o>
+<o>Bad URL %O for server `%s'</o>
 <t></t>
 </str>
 
@@ -240,11 +240,6 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 
 <str id="46">
 <o>Cannot possibly bind to %O, that host is unknown. Substituting with ANY</o>
-<t></t>
-</str>
-
-<str id="7">
-<o>The protocol '%s' is not available</o>
 <t></t>
 </str>
 

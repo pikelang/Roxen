@@ -9,8 +9,8 @@ constant action = "maintenance";
 
 // constant long_flags = ([ "restart" : LOCALE(0, "Need to restart server") ]);
 
-string name= LOCALE(0, "Patch management");
-string doc = LOCALE(0, "Show information about the available patches and "
+string name= LOCALE(326, "Patch management");
+string doc = LOCALE(327, "Show information about the available patches and "
 			 "their status.");
 
 Write_back wb = class Write_back
@@ -191,7 +191,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
       if (which_list == "installed")
       {
 	md += ({
-	  ({ LOCALE(0, "Installed by:")	, item->user || "Unknown" }),
+	  ({ LOCALE(328, "Installed by:")	, item->user || "Unknown" }),
 	});
       }
       else if (item->installed)
@@ -205,8 +205,8 @@ string list_patches(RequestID id, Patcher po, string which_list)
 			      item->installed->hour,
 			      item->installed->min);
 	md += ({
-	  ({ LOCALE(0, "Installed:")	, date }),
-	  ({ LOCALE(0, "Installed by:")	, item->user || LOCALE(0, "Unknown") }),
+	  ({ LOCALE(329, "Installed:")	, date }),
+	  ({ LOCALE(328, "Installed by:")	, item->user || LOCALE(330, "Unknown") }),
 	});
       }
      
@@ -221,15 +221,15 @@ string list_patches(RequestID id, Patcher po, string which_list)
 			      item->installed->hour,
 			      item->installed->min);
 	md += ({
-	  ({ LOCALE(0, "Uninstalled:")	 , date }),
-	  ({ LOCALE(0, "Uninstalled by:") , 
-	     item->uninstall_user || LOCALE(0, "Unknown") }),
+	  ({ LOCALE(331, "Uninstalled:")	 , date }),
+	  ({ LOCALE(332, "Uninstalled by:") , 
+	     item->uninstall_user || LOCALE(330, "Unknown") }),
 	});
       }
 
       md += ({
-        ({ LOCALE(0, "Description:")	, item->metadata->description }),
-	({ LOCALE(0, "Originator:")	, item->metadata->originator  }) 
+        ({ LOCALE(333, "Description:")	, item->metadata->description }),
+	({ LOCALE(334, "Originator:")	, item->metadata->originator  }) 
       });
       
 
@@ -244,15 +244,15 @@ string list_patches(RequestID id, Patcher po, string which_list)
 				(item->metadata->flags && 
 				 item->metadata->flags[index]) ?
 				"<b style='color: green'>" + 
-				LOCALE(0, "Yes") + "</b>" : 
-				"<b>" + LOCALE(0, "No") + "</b>");
+				LOCALE(335, "Yes") + "</b>" : 
+				"<b>" + LOCALE(336, "No") + "</b>");
       }
-      md += ({ ({ LOCALE(0, "Flags:"), active_flags + "        </table>\n"}) });
+      md += ({ ({ LOCALE(337, "Flags:"), active_flags + "        </table>\n"}) });
  
       if (!item->metadata->platform)
       {
 	md += ({
-	  ({ LOCALE(0, "Platforms:"), LOCALE(0, "All platforms") })
+	  ({ LOCALE(338, "Platforms:"), LOCALE(339, "All platforms") })
 	});
       }
       else if (item->metadata->platform && 
@@ -260,8 +260,8 @@ string list_patches(RequestID id, Patcher po, string which_list)
       {
 	md += ({
 	  ({ is_right_platform ? 
-	     LOCALE(0, "Platform:") :
-	     "<b style='color:red'>" + LOCALE(0, "Platform:") + "</b>", 
+	     LOCALE(340, "Platform:") :
+	     "<b style='color:red'>" + LOCALE(340, "Platform:") + "</b>", 
 	     item->metadata->platform[0] })
 	});
       }
@@ -269,8 +269,8 @@ string list_patches(RequestID id, Patcher po, string which_list)
       {
 	md += ({
 	  ({ is_right_platform ? 
-	     LOCALE(0, "Platforms:") :
-	     "<b style='color:red'>" + LOCALE(0, "Platform") + "</b>", 
+	     LOCALE(338, "Platforms:") :
+	     "<b style='color:red'>" + LOCALE(341, "Platform") + "</b>", 
 	     sprintf("%{%s<br />\n%}",
 		     item->metadata->platform) })
 	});
@@ -280,8 +280,8 @@ string list_patches(RequestID id, Patcher po, string which_list)
       {
 	md += ({
 	  ({ is_right_version ? 
-	     LOCALE(0, "Target version:"):
-	     "<b style='color:red'>" + LOCALE(0, "Target version:") + "</b>", 
+	     LOCALE(342, "Target version:"):
+	     "<b style='color:red'>" + LOCALE(342, "Target version:") + "</b>", 
 	     sprintf("%{%s<br />\n%}",
 		     item->metadata->version) })
 	});
@@ -289,7 +289,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
       else
       {
 	md += ({
-	  ({ LOCALE(0, "Target version:"), LOCALE(0, "All versions") })
+	  ({ LOCALE(342, "Target version:"), LOCALE(343, "All versions") })
 	});
       }
       
@@ -302,41 +302,41 @@ string list_patches(RequestID id, Patcher po, string which_list)
 	  switch(po->patch_status(dep_id)->status)
 	  {
 	    case "installed":
-	      dep_stat = LOCALE(0, "installed");
+	      dep_stat = LOCALE(344, "installed");
 	      break;
 	    case "uninstalled":
 	    case "imported":
-	      dep_stat = LOCALE(0, "imported");
+	      dep_stat = LOCALE(345, "imported");
 	      break;
 	    default:
-	      dep_stat = "<b style='color:red'>" + LOCALE(0, "unavailable") + 
+	      dep_stat = "<b style='color:red'>" + LOCALE(346, "unavailable") + 
 		         "</b>";
 	      break;
 	  }
 	  dep_list += sprintf("%s (%s)<br />", dep_id, dep_stat);
 	}
 	md += ({
-	  ({ LOCALE(0, "Dependencies:"), dep_list })
+	  ({ LOCALE(347, "Dependencies:"), dep_list })
 	});
       }
       else
       {
 	md += ({
-	  ({ LOCALE(0, "Dependencies:"), LOCALE(0, "None") }),
+	  ({ LOCALE(347, "Dependencies:"), LOCALE(348, "None") }),
 	});
       }
       
       if (item->metadata->new && sizeof(item->metadata->new) == 1)
       {
 	md += ({ 
-	  ({ LOCALE(0, "New file:"), sprintf("%s", 
+	  ({ LOCALE(349, "New file:"), sprintf("%s", 
 				  item->metadata->new[0]->destination) }) 
 	});
       }
       else if (item->metadata->new)
       {
 	md += ({ 
-	  ({ LOCALE(0, "New files:"), sprintf("%{%s<br />\n%}", 
+	  ({ LOCALE(350, "New files:"), sprintf("%{%s<br />\n%}", 
 				   item->metadata->new->destination) })
 	});
       }
@@ -344,14 +344,14 @@ string list_patches(RequestID id, Patcher po, string which_list)
       if (item->metadata->replace && sizeof(item->metadata->replace) == 1)
       {
 	md += ({ 
-	  ({ LOCALE(0, "Replaced file:"),  
+	  ({ LOCALE(351, "Replaced file:"),  
 	     sprintf("%s", item->metadata->replace[0]->destination) })
 	});
       }
       else if (item->metadata->replace)
       {
 	md += ({ 
-	  ({ LOCALE(0, "Replaced files:"), 
+	  ({ LOCALE(352, "Replaced files:"), 
 	     sprintf("%{%s<br />\n%}", item->metadata->replace->destination) })
 	});
       }
@@ -359,14 +359,14 @@ string list_patches(RequestID id, Patcher po, string which_list)
       if (item->metadata->delete && sizeof(item->metadata->delete) == 1)
       {
 	md += ({ 
-	  ({ LOCALE(0, "Deleted file:"), 
+	  ({ LOCALE(353, "Deleted file:"), 
 	     sprintf("%s", item->metadata->delete[0]) })
 	});
       }
       else if (item->metadata->delete)
       {
 	md += ({
-	  ({ LOCALE(0, "Deleted files:"), 
+	  ({ LOCALE(354, "Deleted files:"), 
 	     sprintf("%{%s<br />\n%}", item->metadata->delete) })
 	});
       }
@@ -391,14 +391,14 @@ string list_patches(RequestID id, Patcher po, string which_list)
 	if (sizeof(patched_files_list) == 1)
 	{
 	  md += ({
-	    ({ LOCALE(0, "Patched file:"),
+	    ({ LOCALE(355, "Patched file:"),
 	       sprintf("%s\n", patched_files_list[0]) })
 	  });
 	}
 	else
 	{
 	  md += ({
-	    ({ LOCALE(0, "Patched files:"),
+	    ({ LOCALE(356, "Patched files:"),
 	       sprintf("%{%s<br />\n%}", patched_files_list) })
 	  });
 	  }
@@ -429,7 +429,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
     res += sprintf("      <tr bgcolor='&usr.content-bg;'>\n"
 		   "        <td colspan='%d'" 
 		   " style='text-align:center;font-style:italic'>\n"
-		   "          " + LOCALE(0, "No patches found") + "\n"
+		   "          " + LOCALE(357, "No patches found") + "\n"
 		   "        </td>\n"
 		   "      </tr>\n",
 		   colspan);
@@ -445,7 +445,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
 		 colspan,
 		 (which_list == "installed") ? "uninstall" : "install",
 		 (which_list == "installed") ? 
-		 LOCALE(0, "Uninstall") : LOCALE(0, "Install"));
+		 LOCALE(358, "Uninstall") : LOCALE(359, "Install"));
 
   return res; //+ sprintf("<td>&nbsp;</td>"
 // 		       "<td>&nbsp;</td>"
@@ -539,16 +539,16 @@ mixed parse(RequestID id)
 
     if (patch_id)
       res += sprintf("<font size='+1' ><b>"
-		     + LOCALE(0, "Importing") +" %s</b></font><br /><br />\n"
+		     + LOCALE(360, "Importing") +" %s</b></font><br /><br />\n"
 		     "<p><b style='color: green'>"
-		     + LOCALE(0, "Patch successfully imported.") + "</b></p>",
+		     + LOCALE(361, "Patch successfully imported.") + "</b></p>",
 		     patch_id);
     else
       res += "<font size='+1' ><b>"
-	     + LOCALE(0, "Importing") + " &form.fixedfilename;</b></font>"
+	     + LOCALE(360, "Importing") + " &form.fixedfilename;</b></font>"
 	     "<br /><br />\n"
 	     "<p><b style='color: red'>"
-	     + LOCALE(0, "Could not import patch.") + "</b></p>";
+	     + LOCALE(362, "Could not import patch.") + "</b></p>";
     
     
     
@@ -582,21 +582,21 @@ mixed parse(RequestID id)
 	  flags += md->flags;
       }
     }
-    res += "<font size='+1' ><b>" + LOCALE(0, "Uninstalling") + 
-	   "</b></font><br/><br/>\n<h1>" + LOCALE(0, "Done!") + "</h1><br/>";
+    res += "<font size='+1' ><b>" + LOCALE(363, "Uninstalling") + 
+	   "</b></font><br/><br/>\n<h1>" + LOCALE(364, "Done!") + "</h1><br/>";
 
     if (no_of_patches == 1)
     {
       if (!successful_uninstalls)
-	res += "<p>" + LOCALE(0, "Failed to uninstall the patch. See the log"
+	res += "<p>" + LOCALE(365, "Failed to uninstall the patch. See the log"
 				 " below for details") + "</p>\n";
       else
-	res += "<p>" + LOCALE(0, "Patch uninstalled successfully. See the log"
+	res += "<p>" + LOCALE(366, "Patch uninstalled successfully. See the log"
 				 " below for details") + "</p>\n";
     }
     else
     {
-      res += sprintf("<p>" + LOCALE(0, "%d out of %d patches sucessfully"
+      res += sprintf("<p>" + LOCALE(367, "%d out of %d patches sucessfully"
 		     " uninstalled. See the log below for details.") + "</p>\n",
 		     successful_uninstalls,
 		     no_of_patches);
@@ -606,9 +606,9 @@ mixed parse(RequestID id)
     if (flags->restart)
     {
       res += "<blockquote><br />\n"
-	     + LOCALE(0, "The server needs to be restarted.") + #" 
+	     + LOCALE(368, "The server needs to be restarted.") + #" 
   <cf-perm perm='Restart'>
-    " + LOCALE(0, "Would you like to do  that now?") + #"<br />
+    " + LOCALE(369, "Would you like to do  that now?") + #"<br />
     <gbutton href='?what=restart&action=restart.pike&class=maintenance' 
              width=250 icon_src=&usr.err-2;> " + LOCALE(197,"Restart") + 
 #" </gbutton>
@@ -650,18 +650,18 @@ mixed parse(RequestID id)
 	  flags += md->flags;
       }
     }
-    res += "<font size='+1' ><b>" + LOCALE(0, "Installing") + 
+    res += "<font size='+1' ><b>" + LOCALE(370, "Installing") + 
            "</b></font><br/><br/>\n"
-	   "<h1>" + LOCALE(0, "Done!") + "</h1><br/>\n";
+	   "<h1>" + LOCALE(364, "Done!") + "</h1><br/>\n";
 
     if (no_of_patches == 1)
     {
       if (!successful_installs)
 	res += "<p>" +
-	       LOCALE(0, "Failed to install the patch. See the log below for "
+	       LOCALE(371, "Failed to install the patch. See the log below for "
 			 "details") + "</p>\n";
       else
-	res += "<p>" + LOCALE(0 ,"Patch successfully installed. See the log below"
+	res += "<p>" + LOCALE(372 ,"Patch successfully installed. See the log below"
 			         "for details") + "</p>\n";
     }
     else
@@ -676,9 +676,9 @@ mixed parse(RequestID id)
     if (flags->restart)
     {
       res += "<blockquote><br />\n"
-	     + LOCALE(0, "The server needs to be restarted.") + #" 
+	     + LOCALE(368, "The server needs to be restarted.") + #" 
   <cf-perm perm='Restart'>
-    " + LOCALE(0, "Would you like to do  that now?") + #"<br />
+    " + LOCALE(369, "Would you like to do  that now?") + #"<br />
     <gbutton href='?what=restart&action=restart.pike&class=maintenance' 
              width=250 icon_src=&usr.err-2;> " +
       LOCALE(197,"Restart") + #" </gbutton>
@@ -703,20 +703,20 @@ mixed parse(RequestID id)
   }
 
   res += #" 
-    <font size='+1'><b>" + LOCALE(0, "Import a New Patch") + #"</b></font>
-    <p>\n" + LOCALE(0,"Select local file to upload:") + #"<br />
+    <font size='+1'><b>" + LOCALE(373, "Import a New Patch") + #"</b></font>
+    <p>\n" + LOCALE(374,"Select local file to upload:") + #"<br />
         <input type='file' name='file' size='40'/>
         <input type='hidden' name='fixedfilename' value='' />
         <submit-gbutton name='ok' width='75' align='center'
       onClick=\"this.form.fixedfilename.value=this.form.file.value.replace(/\\\\/g,'\\\\\\\\')\"><translate id=\"201\">OK</translate></submit-gbutton>
       <br /><br />
     </p>
-    <font size='+1'><b>" + LOCALE(0, "Imported Patches") + #"</b></font>
+    <font size='+1'><b>" + LOCALE(375, "Imported Patches") + #"</b></font>
     <p>" +
-    LOCALE(0, "These are patches that are not currently installed;"
+    LOCALE(376, "These are patches that are not currently installed;"
 	      "they are imported but not applied.") +
    "</p>\n    <p>" +
-    LOCALE(0, "Click on a patch for more information.") +
+    LOCALE(377, "Click on a patch for more information.") +
   #"</p>
     <box-frame width='100%' iwidth='100%' bodybg='&usr.content-bg;'
 	       box-frame='yes' padding='0'>\n
@@ -742,9 +742,9 @@ mixed parse(RequestID id)
     <br clear='all' />
     <br />
 
-    <font size='+1'><b>" + LOCALE(0, "Installed Patches") + #"</b></font>
+    <font size='+1'><b>" + LOCALE(378, "Installed Patches") + #"</b></font>
     <p>" +
-    LOCALE(0, "Click on a Patch for more information.") +
+    LOCALE(379, "Click on a Patch for more information.") +
   #"</p>
     <input type='hidden' name='action' value='&form.action;'/>
     <box-frame width='100%' iwidth='100%' bodybg='&usr.contentbg;'

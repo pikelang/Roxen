@@ -1,5 +1,5 @@
 /*
- * $Id: resolv.pike,v 1.37 2008/11/06 00:47:03 mast Exp $
+ * $Id: resolv.pike,v 1.38 2009/03/17 16:37:52 jonasw Exp $
  */
 inherit "wizard";
 inherit "../logutil";
@@ -207,13 +207,13 @@ string parse( RequestID id )
     "<table cellpadding='0' cellspacing='10' border='0'>\n"
     "<tr><th align='left'>" +LOCALE(29, "URL")+ ": </th><td>"
     "<input name='path' value='&form.path;' size='60' /></td></tr>\n"
-    "<tr><th align='left'>" + LOCALE(0, "HTTP auth") + ": </th>"
+    "<tr><th align='left'>" + LOCALE(296, "HTTP auth") + ": </th>"
     "<td>" +LOCALE(206, "User")+ ": "
     "<input name='user'  value='&form.user;' size='12' />"
     "&nbsp;&nbsp;&nbsp;" +LOCALE(30,"Password")+ ": "
     "<input name='password' value='&form.password;' type='password' "
     "size='12' /></td></tr>\n"
-    "<tr><td align='left' valign='top'>" + LOCALE(0, "Form variables") + ":</td><td align='left'>"
+    "<tr><td align='left' valign='top'>" + LOCALE(297, "Form variables") + ":</td><td align='left'>"
     "<input type='text' size='60' name='form_vars' value='&form.form_vars;' />"
     "<br/>Example: <tt>id=234&amp;page=3&amp;hidden=1</tt></td>\n"
     "</tr><tr><td align='left' valign='top'>" + LOCALE(325, "HTTP Cookies") + ": </td><td align='left'>"

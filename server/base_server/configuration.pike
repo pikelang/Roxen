@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.667 2009/02/24 16:48:43 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.668 2009/03/17 16:37:50 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4895,9 +4895,9 @@ also set 'URLs'."));
 
 #ifdef HTTP_COMPRESSION
   defvar("http_compression_enabled", 1,
-	 DLOCALE(0, "Compression: Enable HTTP compression"),
+	 DLOCALE(1000, "Compression: Enable HTTP compression"),
 	 TYPE_FLAG,
-	 DLOCALE(0, 
+	 DLOCALE(1001, 
 #"Whether to enable HTTP protocol compression. Many types of text
 content (HTML, CSS, JavaScript etc.) can be compressed quite a lot, so
 enabling HTTP compression may improve the visitors' perception of the
@@ -4931,9 +4931,9 @@ low."))->add_changed_callback(lambda(object v)
 	    "application/javascript",
 	    "application/x-javascript",
 	    "application/xhtml+xml" }),
-	 DLOCALE(0, "Compression: Enabled MIME-types"),
+	 DLOCALE(1002, "Compression: Enabled MIME-types"),
 	 TYPE_STRING_LIST,
-	 DLOCALE(0, "The MIME types for which to enable compression. The "
+	 DLOCALE(1003, "The MIME types for which to enable compression. The "
 		 "forms \"maintype/*\" and \"maintype/subtype\" are allowed, "
 		 "but globbing on the general form (such as "
 		 "\"maintype/*subtype\") is not allowed and such globs will "
@@ -4944,9 +4944,9 @@ low."))->add_changed_callback(lambda(object v)
   set_mimetypes(query("http_compression_mimetypes"));
 
   defvar("http_compression_min_size", 1024,
-	 DLOCALE(0, "Compression: Minimum content size"),
+	 DLOCALE(1004, "Compression: Minimum content size"),
 	 TYPE_INT,
-	 DLOCALE(0, "The minimum file size for which to enable compression. "
+	 DLOCALE(1005, "The minimum file size for which to enable compression. "
 		 "(It might not be worth it to compress a request if it can "
 		 "fit into a single TCP/IP packet anyways.)"))
     ->add_changed_callback(lambda(object v) 
@@ -4954,9 +4954,9 @@ low."))->add_changed_callback(lambda(object v)
   http_compr_minlen = query("http_compression_min_size");
 
   defvar("http_compression_max_size", 1048576,
-	 DLOCALE(0, "Compression: Maximum content size"),
+	 DLOCALE(1006, "Compression: Maximum content size"),
 	 TYPE_INT,
-	 DLOCALE(0, "The maximum file size for which to enable compression. "
+	 DLOCALE(1007, "The maximum file size for which to enable compression. "
 		 "Note that the general protocol cache entry size limit "
 		 "applies, so if the compression of dynamic requests is "
 		 "disabled, files larger than the protocol cache maximum "
@@ -4967,8 +4967,8 @@ low."))->add_changed_callback(lambda(object v)
   http_compr_maxlen = query("http_compression_max_size");
 
   Variable.Int comp_level = 
-    Variable.Int(5, 0, DLOCALE(0, "Compression: Compression level"),
-		 DLOCALE(0, "The compression level to use (integer between 1 "
+    Variable.Int(5, 0, DLOCALE(1008, "Compression: Compression level"),
+		 DLOCALE(1009, "The compression level to use (integer between 1 "
 			 "and 9). Higher number means more compression at the"
 			 " cost of processing power and vice versa. You may "
 			 "need to restart the server for this setting to "
@@ -4977,9 +4977,9 @@ low."))->add_changed_callback(lambda(object v)
   defvar("http_compression_level", comp_level);
 		 
   defvar("http_compression_dynamic_reqs", 0,
-	 DLOCALE(0, "Compression: Compress dynamic requests"),
+	 DLOCALE(1010, "Compression: Compress dynamic requests"),
 	 TYPE_FLAG,
-	 DLOCALE(0, "If enabled, even requests that aren't cacheable in the "
+	 DLOCALE(1011, "If enabled, even requests that aren't cacheable in the "
 		 "protocol cache will be compressed. If the site has many "
 		 "lightweight requests that are not protocol cacheable, the "
 		 "processing overhead may become relatively large with this "

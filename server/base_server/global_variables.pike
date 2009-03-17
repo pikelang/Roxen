@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.115 2009/01/08 23:14:46 mast Exp $
+// $Id: global_variables.pike,v 1.116 2009/03/17 16:37:51 jonasw Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -96,8 +96,8 @@ void set_up_snmp_variables( Protocol o )
          "primarily offers.");
 #if 0
   defvar("site_id", 0,
-	 LOCALE(0, "SNMP sub-MIB"), TYPE_INT,
-	 LOCALE(0, "MIB suffix to 1.3.6.1.4.1.8614.1.1.2 "
+	 LOCALE(1012, "SNMP sub-MIB"), TYPE_INT,
+	 LOCALE(1013, "MIB suffix to 1.3.6.1.4.1.8614.1.1.2 "
 		"identifying this site."));
 #endif /* 0 */
 }
@@ -299,8 +299,8 @@ void define_global_variables(  )
 			      "Normal check and repair",
 			      "Medium check and repair",
 			      "Extended check and repair" }),
-			   0, LOCALE(0, "MySQL table check"), 
-			   LOCALE(0, "Check MySQL tables on server start, "
+			   0, LOCALE(1014, "MySQL table check"), 
+			   LOCALE(1015, "Check MySQL tables on server start, "
 				  "and automatically repair if necessary. "
 				  "<b>Fast</b> checks only tables that haven't "
 				  "been closed properly. "
@@ -639,8 +639,8 @@ process to get a thread dump.</p>
 
   v = Variable.TmpInt (
     0, 0,
-    LOCALE(0, "Logging: Dump threads for slow requests"),
-    LOCALE(0, #"\
+    LOCALE(1016, "Logging: Dump threads for slow requests"),
+    LOCALE(1017, #"\
 <p>This enables a monitor that dumps all the threads in the debug log
 whenever any request, background job or the backend thread has been
 running for more than a set number of seconds, which is configured
@@ -670,14 +670,14 @@ or in the DEFINES environment variable).</p>
 #ifndef NO_SLOW_REQ_BT
       slow_req_count_changed();
 #else
-      v->set_warning (LOCALE(0, "Feature disabled by NO_SLOW_REQ_BT define."));
+      v->set_warning (LOCALE(1018, "Feature disabled by NO_SLOW_REQ_BT define."));
 #endif
     });
 
   v = defvar ("slow_req_bt_timeout", 10.0,
-	      LOCALE(0, "Logging: Slow request timeout"),
+	      LOCALE(1019, "Logging: Slow request timeout"),
 	      TYPE_FLOAT,
-	      LOCALE(0, #"\
+	      LOCALE(1020, #"\
 <p>The timeout in seconds for requests or background jobs to trig a
 thread dump. Zero disables monitoring of those. See the \"Dump threads
 for slow requests\" setting for details.</p>"));
@@ -690,9 +690,9 @@ for slow requests\" setting for details.</p>"));
 #endif
 
   v = defvar ("slow_be_bt_timeout", 0.05,
-	      LOCALE(0, "Logging: Slow backend timeout"),
+	      LOCALE(1021, "Logging: Slow backend timeout"),
 	      TYPE_FLOAT,
-	      LOCALE(0, #"\
+	      LOCALE(1022, #"\
 <p>The timeout in seconds for the backend thread to trig a thread
 dump. Zero disables monitoring of it. See the \"Dump threads for slow
 requests\" setting for details.</p>

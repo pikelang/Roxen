@@ -1,4 +1,4 @@
-// $Id: add_module.pike,v 1.89 2008/10/01 09:20:18 jonasw Exp $
+// $Id: add_module.pike,v 1.90 2009/03/17 16:37:52 jonasw Exp $
 
 #include <config_interface.h>
 #include <module.h>
@@ -347,7 +347,7 @@ array(string) get_module_list( function describe_module,
 		   m->sname + "\0" +
 		   m->filename + "\0" +
 		   Roxen.html_decode_string((string) m->get_description() ||
-					    LOCALE(0, "Undocumented")));
+					    LOCALE(1023, "Undocumented")));
     search_miss:
       {
 	foreach(mod_query_words, string w)
@@ -453,7 +453,7 @@ function describe_module_normal( int image )
 	(image?module_image(module->type):""),
 	module->sname,
 	LOCALE(251, "Add Module"),
-	module->get_description() || LOCALE(0, "Undocumented"),
+	module->get_description() || LOCALE(1023, "Undocumented"),
 	LOCALE(266, "Will be loaded from: ")+module->filename
 );
     } else {
@@ -560,7 +560,7 @@ return sprintf(
    module->sname,
    //Roxen.html_encode_string(strip_leading(module->get_name())),
    Roxen.html_encode_string(module->get_name()),
-   module->get_description() || LOCALE(0, "Undocumented"),
+   module->get_description() || LOCALE(1023, "Undocumented"),
    LOCALE(266, "Will be loaded from: ")+module->filename
   );
   } else {

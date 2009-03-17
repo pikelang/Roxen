@@ -336,8 +336,11 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
     time that the Roxen server process spent.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$etag&lt;/td&gt;
     &lt;td&gt;The entity tag (aka ETag) header of the result.&lt;/td&gt;&lt;/tr&gt;
-&lt;tr&gt;&lt;td&gt;$referer&lt;/td&gt;
+&lt;tr&gt;&lt;td&gt;$referrer&lt;/td&gt;
     &lt;td&gt;The header 'referer' from the request, or '-'.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$referer&lt;/td&gt;
+    &lt;td&gt;Same as $referrer. Common misspelling kept for
+    compatibility.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$user-agent&lt;/td&gt;
     &lt;td&gt;The header 'User-Agent' from the request, or '-'.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$user-agent-raw&lt;/td&gt;
@@ -355,22 +358,31 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
 
 &lt;tr&gt;&lt;td&gt;$cache-status&lt;/td&gt;
     &lt;td&gt;A comma separated list of words (containing no whitespace)
-    that describes which cache(s) the page was delivered from:
+    that describes how the request got handled by various caches:
 
     &lt;table&gt;&lt;tbody valign='top'&gt;
     &lt;tr&gt;&lt;td&gt;protcache&lt;/td&gt;
-	&lt;td&gt;The low-level cache in the HTTP protocol module.&lt;/td&gt;&lt;/tr&gt;
+	&lt;td&gt;The page is served from the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;protstore&lt;/td&gt;
-	&lt;td&gt;The page got stored in the low-level cache in the HTTP
-	protocol module.&lt;/td&gt;&lt;/tr&gt;
-    &lt;tr&gt;&lt;td&gt;xsltcache&lt;/td&gt;
-	&lt;td&gt;The XSLT cache.&lt;/td&gt;&lt;/tr&gt;
+	&lt;td&gt;The page is stored in the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;stale&lt;/td&gt;
+	&lt;td&gt;There is a stale entry in the HTTP protocol cache. A
+	refresh is underway in the background and the stale entry is
+	sent in the meantime to avoid a long response time and server
+	congestion.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;refresh&lt;/td&gt;
+	&lt;td&gt;This is the finishing of the background refresh request
+	for the entry in the HTTP protocol cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;pcoderam&lt;/td&gt;
-	&lt;td&gt;RXML parse tree RAM cache.&lt;/td&gt;&lt;/tr&gt;
+	&lt;td&gt;A hit in the RXML p-code RAM cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;pcodedisk&lt;/td&gt;
-	&lt;td&gt;RXML parse tree persistent cache.&lt;/td&gt;&lt;/tr&gt;
+	&lt;td&gt;A hit in the RXML p-code persistent cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;cachetag&lt;/td&gt;
-	&lt;td&gt;No RXML &amp;lt;cache&amp;gt; tag misses.&lt;/td&gt;&lt;/tr&gt;
+	&lt;td&gt;RXML was evaluated without any cache miss in any RXML
+	&amp;lt;cache&amp;gt; tag. The &amp;lt;nocache&amp;gt; tag does not count as a
+	miss.&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;xsltcache&lt;/td&gt;
+	&lt;td&gt;There is a hit XSLT cache.&lt;/td&gt;&lt;/tr&gt;
     &lt;tr&gt;&lt;td&gt;nocache&lt;/td&gt;
 	&lt;td&gt;No hit in any known cache, and not added to the HTTP
 	protocol cache.&lt;/td&gt;&lt;/tr&gt;
@@ -2067,7 +2079,7 @@ användas: /foo/bar/404.inc, /foo/404.inc eller /404.inc.</t>
 </str>
 
 <str id="270">
-<o>
+<changed from="
 The name of the configuration must contain characters
 other than space and tab, it should not end with
 ~, and it must not be 'CVS', 'Global Variables' or
@@ -2077,6 +2089,16 @@ used. This name will show up in the sites menu, a
 lowercased, filesystem-friendly version will become
 the virtual server's configuration file name as well
 as the name of its log file directory.
+"/>
+<o>
+The name of the configuration must contain characters other than space
+and tab, it must not contain '?', '!', '/', '\', '~', '"', ''', '`',
+'#', '$', '%', '&amp;amp;', '=', ';', ':', '_', '&amp;lt;', '&amp;gt;', '|', '*',
+and it must not be 'CVS', 'Global Variables' or 'global variables',
+nor the name of an existing configuration. This name will show up in
+the sites menu, a lowercased, filesystem-friendly version will become
+the virtual server's configuration file name as well as the name of
+its log file directory.
 </o>
 <t>Namnet på konfigurationen måste innehålla tecken utöver
 mellanslag eller tab, det får inte sluta med ~ och
@@ -2541,33 +2563,6 @@ modules.&lt;/p&gt;
 <new/>
 <o>Fetching data from %s...</o>
 <t></t>
-</str>
-
-<str id="391">
-<new/>
-<o>Web Site Creator</o>
-<t></t>
-</str>
-
-<str id="392">
-<o>Administrator Manual</o>
-<t>Administratörsmanual</t>
-</str>
-
-<str id="393">
-<o>User Manual</o>
-<t>Användarmanual</t>
-</str>
-
-<str id="394">
-<new/>
-<o>RXML Tutorial</o>
-<t></t>
-</str>
-
-<str id="395">
-<o>Programmer Manual</o>
-<t>Programmerarmanual</t>
 </str>
 
 <str id="396">
@@ -3662,5 +3657,189 @@ process to get a thread dump.&lt;/p&gt;
 <str id="551">
 <new/>
 <o>Module Priorities</o>
+<t></t>
+</str>
+
+<str id="1000">
+<new/>
+<o>Compression: Enable HTTP compression</o>
+<t></t>
+</str>
+
+<str id="1001">
+<new/>
+<o>Whether to enable HTTP protocol compression. Many types of text
+content (HTML, CSS, JavaScript etc.) can be compressed quite a lot, so
+enabling HTTP compression may improve the visitors' perception of the
+site's performance. It's however a trade-off between server processing
+power and bandwidth. Requests that end up in the protocol cache will
+be served in the compressed form directly from the protocol cache, so
+for such requests the processing power overhead can be held relatively
+low.</o>
+<t></t>
+</str>
+
+<str id="1002">
+<new/>
+<o>Compression: Enabled MIME-types</o>
+<t></t>
+</str>
+
+<str id="1003">
+<new/>
+<o>The MIME types for which to enable compression. The forms "maintype/*" and "maintype/subtype" are allowed, but globbing on the general form (such as "maintype/*subtype") is not allowed and such globs will be silently ignored.</o>
+<t></t>
+</str>
+
+<str id="1004">
+<new/>
+<o>Compression: Minimum content size</o>
+<t></t>
+</str>
+
+<str id="1005">
+<new/>
+<o>The minimum file size for which to enable compression. (It might not be worth it to compress a request if it can fit into a single TCP/IP packet anyways.)</o>
+<t></t>
+</str>
+
+<str id="1006">
+<new/>
+<o>Compression: Maximum content size</o>
+<t></t>
+</str>
+
+<str id="1007">
+<new/>
+<o>The maximum file size for which to enable compression. Note that the general protocol cache entry size limit applies, so if the compression of dynamic requests is disabled, files larger than the protocol cache maximum file size setting will never be served compressed regardless of this setting.</o>
+<t></t>
+</str>
+
+<str id="1008">
+<new/>
+<o>Compression: Compression level</o>
+<t></t>
+</str>
+
+<str id="1009">
+<new/>
+<o>The compression level to use (integer between 1 and 9). Higher number means more compression at the cost of processing power and vice versa. You may need to restart the server for this setting to take effect.</o>
+<t></t>
+</str>
+
+<str id="1010">
+<new/>
+<o>Compression: Compress dynamic requests</o>
+<t></t>
+</str>
+
+<str id="1011">
+<new/>
+<o>If enabled, even requests that aren't cacheable in the protocol cache will be compressed. If the site has many lightweight requests that are not protocol cacheable, the processing overhead may become relatively large with this setting turned on.</o>
+<t></t>
+</str>
+
+<str id="1012">
+<new/>
+<o>SNMP sub-MIB</o>
+<t></t>
+</str>
+
+<str id="1013">
+<new/>
+<o>MIB suffix to 1.3.6.1.4.1.8614.1.1.2 identifying this site.</o>
+<t></t>
+</str>
+
+<str id="1014">
+<new/>
+<o>MySQL table check</o>
+<t></t>
+</str>
+
+<str id="1015">
+<new/>
+<o>Check MySQL tables on server start, and automatically repair if necessary. &lt;b&gt;Fast&lt;/b&gt; checks only tables that haven't been closed properly. &lt;b&gt;Normal&lt;/b&gt; checks for general errors. &lt;b&gt;Medium&lt;/b&gt; catches 99.99 % of all errors. Should be good enough for most cases. &lt;b&gt;Extended&lt;/b&gt; checks the tables VERY throughly.  Only use this in extreme cases as myisamchk should normally be able to find out if the table is OK even without this switch.</o>
+<t></t>
+</str>
+
+<str id="1016">
+<new/>
+<o>Logging: Dump threads for slow requests</o>
+<t></t>
+</str>
+
+<str id="1017">
+<new/>
+<o>&lt;p&gt;This enables a monitor that dumps all the threads in the debug log
+whenever any request, background job or the backend thread has been
+running for more than a set number of seconds, which is configured
+with the "Slow request timeout" and "Slow backend timeout"
+settings.&lt;/p&gt;
+
+&lt;p&gt;This setting is a counter: A positive number stops the monitor
+after that many thread dumps have been made, -1 enables the monitor
+permanently, and zero disables it. Positive numbers aren't persistent,
+so will be reset to zero whenever the server is restarted.&lt;/p&gt;
+
+&lt;p&gt;&lt;b&gt;Warning:&lt;/b&gt; If you set the timeout too low, combined with a
+high or no limit, then the debug log can fill up very quickly and the
+server become very slow due to the amount of logging. If that happens
+and it gets difficult to change back the value then you can force the
+monitor to be disabled from the start by adding the define
+"NO_SLOW_REQ_BT" (i.e. add "-DNO_SLOW_REQ_BT" to the start script
+or in the DEFINES environment variable).&lt;/p&gt;
+
+&lt;p&gt;Enabling this creates a dedicated thread.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="1018">
+<new/>
+<o>Feature disabled by NO_SLOW_REQ_BT define.</o>
+<t></t>
+</str>
+
+<str id="1019">
+<new/>
+<o>Logging: Slow request timeout</o>
+<t></t>
+</str>
+
+<str id="1020">
+<new/>
+<o>&lt;p&gt;The timeout in seconds for requests or background jobs to trig a
+thread dump. Zero disables monitoring of those. See the "Dump threads
+for slow requests" setting for details.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="1021">
+<new/>
+<o>Logging: Slow backend timeout</o>
+<t></t>
+</str>
+
+<str id="1022">
+<new/>
+<o>&lt;p&gt;The timeout in seconds for the backend thread to trig a thread
+dump. Zero disables monitoring of it. See the "Dump threads for slow
+requests" setting for details.&lt;/p&gt;
+
+&lt;p&gt;The backend thread is a special thread that manages most I/O and
+directs the incoming requests to the handler threads. It should never
+be occupied for a significant amount of time since that would make the
+server essentially unresponsive. Therefore this timeout should be
+small.&lt;/p&gt;
+
+&lt;p&gt;Note that a good value for this is very dependent on hardware. The
+default setting here is conservative and probably should be lowered to
+be of real use.&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="1023">
+<new/>
+<o>Undocumented</o>
 <t></t>
 </str>

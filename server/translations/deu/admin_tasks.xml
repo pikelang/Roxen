@@ -19,6 +19,7 @@
 <file>../config_interface/actions/make_selfsigned_rsa.pike</file>
 <file>../config_interface/actions/make_site_template.pike</file>
 <file>../config_interface/actions/openfiles.pike</file>
+<file>../config_interface/actions/patcher.pike</file>
 <file>../config_interface/actions/pike_profiling.pike</file>
 <file>../config_interface/actions/proc.pike</file>
 <file>../config_interface/actions/reloadconfigurations.pike</file>
@@ -964,7 +965,8 @@ ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 </str>
 
 <str id="166">
-<o>Show information about the installed licenses and there usage.</o>
+<changed from="Show information about the installed licenses and there usage."/>
+<o>Show information about the installed licenses and their usage.</o>
 <t>Zeigt Informationen über die installierten Lizenzen und deren Verwendung</t>
 </str>
 
@@ -1109,5 +1111,347 @@ ist, kann diese Auswahl die aktuell laufende Version wechseln.</t>
 <str id="188">
 <new/>
 <o>Unable to parse URL.</o>
+<t></t>
+</str>
+
+<str id="296">
+<new/>
+<o>HTTP auth</o>
+<t></t>
+</str>
+
+<str id="297">
+<new/>
+<o>Form variables</o>
+<t></t>
+</str>
+
+<str id="325">
+<new/>
+<o>HTTP Cookies</o>
+<t></t>
+</str>
+
+<str id="326">
+<new/>
+<o>Patch management</o>
+<t></t>
+</str>
+
+<str id="327">
+<new/>
+<o>Show information about the available patches and their status.</o>
+<t></t>
+</str>
+
+<str id="328">
+<new/>
+<o>Installed by:</o>
+<t></t>
+</str>
+
+<str id="329">
+<new/>
+<o>Installed:</o>
+<t></t>
+</str>
+
+<str id="330">
+<new/>
+<o>Unknown</o>
+<t></t>
+</str>
+
+<str id="331">
+<new/>
+<o>Uninstalled:</o>
+<t></t>
+</str>
+
+<str id="332">
+<new/>
+<o>Uninstalled by:</o>
+<t></t>
+</str>
+
+<str id="333">
+<new/>
+<o>Description:</o>
+<t></t>
+</str>
+
+<str id="334">
+<new/>
+<o>Originator:</o>
+<t></t>
+</str>
+
+<str id="335">
+<new/>
+<o>Yes</o>
+<t></t>
+</str>
+
+<str id="336">
+<new/>
+<o>No</o>
+<t></t>
+</str>
+
+<str id="337">
+<new/>
+<o>Flags:</o>
+<t></t>
+</str>
+
+<str id="338">
+<new/>
+<o>Platforms:</o>
+<t></t>
+</str>
+
+<str id="339">
+<new/>
+<o>All platforms</o>
+<t></t>
+</str>
+
+<str id="340">
+<new/>
+<o>Platform:</o>
+<t></t>
+</str>
+
+<str id="341">
+<new/>
+<o>Platform</o>
+<t></t>
+</str>
+
+<str id="342">
+<new/>
+<o>Target version:</o>
+<t></t>
+</str>
+
+<str id="343">
+<new/>
+<o>All versions</o>
+<t></t>
+</str>
+
+<str id="344">
+<new/>
+<o>installed</o>
+<t></t>
+</str>
+
+<str id="345">
+<new/>
+<o>imported</o>
+<t></t>
+</str>
+
+<str id="346">
+<new/>
+<o>unavailable</o>
+<t></t>
+</str>
+
+<str id="347">
+<new/>
+<o>Dependencies:</o>
+<t></t>
+</str>
+
+<str id="348">
+<new/>
+<o>None</o>
+<t></t>
+</str>
+
+<str id="349">
+<new/>
+<o>New file:</o>
+<t></t>
+</str>
+
+<str id="350">
+<new/>
+<o>New files:</o>
+<t></t>
+</str>
+
+<str id="351">
+<new/>
+<o>Replaced file:</o>
+<t></t>
+</str>
+
+<str id="352">
+<new/>
+<o>Replaced files:</o>
+<t></t>
+</str>
+
+<str id="353">
+<new/>
+<o>Deleted file:</o>
+<t></t>
+</str>
+
+<str id="354">
+<new/>
+<o>Deleted files:</o>
+<t></t>
+</str>
+
+<str id="355">
+<new/>
+<o>Patched file:</o>
+<t></t>
+</str>
+
+<str id="356">
+<new/>
+<o>Patched files:</o>
+<t></t>
+</str>
+
+<str id="357">
+<new/>
+<o>No patches found</o>
+<t></t>
+</str>
+
+<str id="358">
+<new/>
+<o>Uninstall</o>
+<t></t>
+</str>
+
+<str id="359">
+<new/>
+<o>Install</o>
+<t></t>
+</str>
+
+<str id="360">
+<new/>
+<o>Importing</o>
+<t></t>
+</str>
+
+<str id="361">
+<new/>
+<o>Patch successfully imported.</o>
+<t></t>
+</str>
+
+<str id="362">
+<new/>
+<o>Could not import patch.</o>
+<t></t>
+</str>
+
+<str id="363">
+<new/>
+<o>Uninstalling</o>
+<t></t>
+</str>
+
+<str id="364">
+<new/>
+<o>Done!</o>
+<t></t>
+</str>
+
+<str id="365">
+<new/>
+<o>Failed to uninstall the patch. See the log below for details</o>
+<t></t>
+</str>
+
+<str id="366">
+<new/>
+<o>Patch uninstalled successfully. See the log below for details</o>
+<t></t>
+</str>
+
+<str id="367">
+<new/>
+<o>%d out of %d patches sucessfully uninstalled. See the log below for details.</o>
+<t></t>
+</str>
+
+<str id="368">
+<new/>
+<o>The server needs to be restarted.</o>
+<t></t>
+</str>
+
+<str id="369">
+<new/>
+<o>Would you like to do  that now?</o>
+<t></t>
+</str>
+
+<str id="370">
+<new/>
+<o>Installing</o>
+<t></t>
+</str>
+
+<str id="371">
+<new/>
+<o>Failed to install the patch. See the log below for details</o>
+<t></t>
+</str>
+
+<str id="372">
+<new/>
+<o>Patch successfully installed. See the log belowfor details</o>
+<t></t>
+</str>
+
+<str id="373">
+<new/>
+<o>Import a New Patch</o>
+<t></t>
+</str>
+
+<str id="374">
+<new/>
+<o>Select local file to upload:</o>
+<t></t>
+</str>
+
+<str id="375">
+<new/>
+<o>Imported Patches</o>
+<t></t>
+</str>
+
+<str id="376">
+<new/>
+<o>These are patches that are not currently installed;they are imported but not applied.</o>
+<t></t>
+</str>
+
+<str id="377">
+<new/>
+<o>Click on a patch for more information.</o>
+<t></t>
+</str>
+
+<str id="378">
+<new/>
+<o>Installed Patches</o>
+<t></t>
+</str>
+
+<str id="379">
+<new/>
+<o>Click on a Patch for more information.</o>
 <t></t>
 </str>
