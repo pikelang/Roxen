@@ -52,6 +52,7 @@ void run_tests(Configuration c)
   string clt_path = test_true(combine_path, getcwd(), "bin", "rxnpatch"); 
   Process.create_process p = test(Process.create_process,
 				  ({ clt_path, 
+				     "--no-colour",
 				     "install", 
 				     combine_path(temp_path, 
 						  "2009-02-25T1628.rxp") }) );
@@ -59,6 +60,7 @@ void run_tests(Configuration c)
 
   // Create a patch using the command line tool and then install it.
   array clt_args = ({ clt_path, "create", 
+		      "--no-colour",
 		      "-k", "2009-02-25T1728",
 		      "-N", "Test Patch 3: patching",
 		      "-D", 
