@@ -1,5 +1,5 @@
 /*
- * $Id: create_configif.pike,v 1.42 2008/12/09 15:09:35 jonasw Exp $
+ * $Id: create_configif.pike,v 1.43 2009/03/18 21:29:33 mast Exp $
  *
  * Create an initial administration interface server.
  */
@@ -266,7 +266,6 @@ Example of a batch installation:
       else
 	write("\n");
     } while(!strlen(password) || (password != passwd2));
-    write("\n");
   } while( strlen( passwd2 = read_string(rl, "Are the settings above correct [Y/n]?", "", batch->ok ) ) && passwd2[0]=='n' );
 
   if( !admin )
