@@ -22,8 +22,17 @@ void run_tests(Configuration c)
 			       combine_path("etc", "test","tests", "patcher"));
   string temp_path = combine_path(test_true(po->get_temp_dir), 
 				  "roxen_self_test");
-  test_true(mkdir, temp_path);
+  if(!test_true(mkdir, temp_path))
+  {
+    werror("Seems that the temp directory %s already exists. Probably because "
+	   "the last self-test failed. Trying to clear that folder.\n");
+    test(po->clean_up, temp_path, 1);
+    test_true(mkdir, temp_path);
+  }
   
+  // Place all temporary files in the same directory
+  test(po->set_temp_dir, temp_path);
+
   // Try importing and installing a patch directly through the lib. 
   string patch_id = test_true(po->import_file, 
 			      combine_path(test_path, "2009-02-25T1124.rxp"), 
@@ -56,7 +65,7 @@ void run_tests(Configuration c)
 				     "install", 
 				     combine_path(temp_path, 
 						  "2009-02-25T1628.rxp") }) );
-  test_false(p->wait);
+  test_false(p && p->wait);
 
   // Create a patch using the command line tool and then install it.
   array clt_args = ({ clt_path, "create", 
@@ -71,9 +80,9 @@ void run_tests(Configuration c)
   Stdio.File desc = Stdio.File();
   p = test(Process.create_process, clt_args, ([ "stdin" : desc.pipe() ]) );
   
-  desc.write("Created by self_test.");
-  desc.close();
-  test_false(p->wait);
+  test(desc.write, "Created by self_test.");
+  test(desc.close);
+  test_false(p && p->wait);
   
   patch_id = test_true(po->import_file,
 		       combine_path(temp_path, "2009-02-25T1728.rxp"),
