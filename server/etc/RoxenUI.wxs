@@ -42,6 +42,8 @@
       Value="[SERVERDIR]" Execute="immediate" />
     <CustomAction Id="CreatePikeLocation" BinaryKey="RoxenInstaller"
       VBScriptCall="CreatePikeLocation" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="DontStartServer" Property="START_SERVER"
+      Value="0" Execute="immediate" />
     <CustomAction Id="StartBrowser" Property="BROWSER"
       ExeCommand="[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/"
       Execute="deferred" Return="asyncNoWait" />
@@ -869,6 +871,7 @@ Click "Next" to start the installation.</Text>
         </Control>
 	<Control Id="StartServerGroup" Type="RadioButtonGroup" X="18" Y="137" Width="348" Height="48" Property="START_SERVER">
           <Text>{\VSI_MS_Shell_Dlg13.0_0_0}MsiRadioButtonGroup</Text>
+	  <Condition Action="disable">NOT MYSQLDEXE</Condition>
         </Control>
         <Control Id="InstallServiceText" Type="Text" X="9" Y="185" Width="354" Height="14">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Install as service</Text>
@@ -1196,6 +1199,8 @@ Click "Next" to start the installation.</Text>
         <Custom Action="CustomTextA_SetProperty_EDIT3" After="CustomTextA_SetProperty_EDIT2" />
         <Custom Action="CustomTextA_SetProperty_EDIT4" After="CustomTextA_SetProperty_EDIT3" />
         <Custom Action="DIRCA_TARGETDIR" After="CustomTextA_SetProperty_EDIT4"><![CDATA[TARGETDIR=""]]></Custom>
+        <Custom Action="FallbackMysqldExe" After="DIRCA_TARGETDIR">MYSQLDEXE=""</Custom>
+        <Custom Action="DontStartServer" After="FallbackMysqldExe">MYSQLDEXE=""</Custom>
         <Show Dialog="WelcomeForm" After="IsolateComponents"><![CDATA[Installed="" AND NOT RESUME]]></Show>
         <Custom Action="VSDCA_FolderForm_AllUsers" After="WelcomeForm"><![CDATA[Installed="" AND NOT RESUME AND ALLUSERS=1]]></Custom>
         <Show Dialog="ResumeForm" After="VSDCA_FolderForm_AllUsers"><![CDATA[Installed="" AND RESUME]]></Show>
@@ -1418,6 +1423,7 @@ Click "Next" to start the installation.</Text>
       <Custom Action="CreatePikeLocation" After="SetCreatePikeLocation">REMOVE=""</Custom>
       <Custom Action="SetCreateEnvironment" After="CreatePikeLocation">REMOVE=""</Custom>
       <Custom Action="CreateEnvironment" After="SetCreateEnvironment">REMOVE=""</Custom>
+      <Custom Action="DontStartServer" After="CreateEnvironment">MYSQLDEXE=""</Custom>
       <Custom Action="ConsoleStartServer" After="StartServices">((NOT VersionNT) OR INSTALL_SERVICE&lt;&gt;"1") AND START_SERVER="1"</Custom>
     </InstallExecuteSequence>
     <Binary Id="DefBannerBitmap" src="Banner.bmp" />
