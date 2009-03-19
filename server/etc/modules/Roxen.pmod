@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.269 2009/02/19 17:52:16 jonasw Exp $
+// $Id: Roxen.pmod,v 1.270 2009/03/19 20:38:49 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4806,14 +4806,14 @@ class SqlNull
   inherit RXML.Nil;
   constant is_RXML_encodable = 1;
 
-  constant is_sqltag_sql_null = 1;
+  constant is_sql_null = 1;
   //! Nonzero recognition constant.
 
   // Treat these objects as indistinguishable from each other. We
   // ought to ensure that there's only one in the pike process
   // instead, but that's tricky to solve in the PCode codec.
   int `== (mixed other)
-    {return objectp (other) && other->is_sqltag_sql_null;}
+    {return objectp (other) && other->is_sql_null;}
   int __hash() {return 17;}
 
   string _sprintf (int flag) {return flag == 'O' && "sql_null";}
