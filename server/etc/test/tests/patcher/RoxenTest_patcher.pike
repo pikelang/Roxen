@@ -22,12 +22,25 @@ void run_tests(Configuration c)
 			       combine_path("etc", "test","tests", "patcher"));
   string temp_path = combine_path(test_true(po->get_temp_dir), 
 				  "roxen_self_test");
-  if(!test_true(mkdir, temp_path))
+#ifdef __NT__
+  test_path = replace(test_path, "/", "\\");
+  temp_path = replace(temp_path, "/", "\\");
+#endif
+  if(!mkdir(temp_path))
   {
-    werror("Seems that the temp directory %s already exists. Probably because "
-	   "the last self-test failed. Trying to clear that folder.\n");
-    test(po->clean_up, temp_path, 1);
-    test_true(mkdir, temp_path);
+    if (test_true(Stdio.is_dir, temp_path)) {
+      werror("The temporary directory %O already exists.\n"
+	     "This is most likely due to a previous self-test run "
+	     "having failed.\n"
+	     "Trying to clear the directory.\n",
+	     temp_path);
+      test(po->clean_up, temp_path, 1);
+      test_true(mkdir, temp_path);
+    } else {
+      werror("Creation of the test directory failed: %s\n\n",
+	     strerror(errno()));
+      return;
+    }
   }
   
   // Place all temporary files in the same directory
