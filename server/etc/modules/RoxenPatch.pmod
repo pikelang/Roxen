@@ -88,7 +88,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.18 2009/03/16 14:06:40 mathias Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.19 2009/03/19 10:44:03 grubba Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -145,14 +145,15 @@ class Patcher
   //! @param error_callback
   //!   A callback function which is used for status callback.
   //! @param server_dir
-  //!   Path the the roxen server directory 
-  //!   I.e. @tt{/usr/local/roxen/server-x.x.xxx/@}
+  //!   Path to the the roxen server directory 
+  //!   Eg @tt{/usr/local/roxen/server-x.x.xxx/@}
   //! @param local_dir
-  //!   Path the the roxen local directory 
-  //!   Defaults to @tt{../local/@} relative the server path.
+  //!   Path to the the roxen local directory 
+  //!   Defaults to @expr{"../local/"@} relative the server path.
   //! @param temp_dir
-  //!   Path the the system temp dir. Depending on operating system it
-  //!   will either default to @tt{/tmp/@} or the path set in the envvar TEMP
+  //!   Path to the the system temp dir. Depending on operating system it
+  //!   will either default to @expr{"/tmp/"@} or the path set in the
+  //!   environment variable @tt{TEMP@}
   {
     // Set callback functions
     write_mess = lambda(mixed ... arg) 
@@ -735,7 +736,7 @@ class Patcher
 				   "stdin" : udiff_data 
 				 ]));
 
-	if (p->wait())
+	if (!p || p->wait())
 	{
 	  error_count++;
 	  error = 1;
@@ -1580,7 +1581,7 @@ class Patcher
     Process.create_process p = Process.create_process(args, 
 						      ([ "cwd" : target_dir ]));
 
-    if (p->wait())
+    if (!p || p->wait())
     {
       write_err("FAILED: Could not extract file.\n");
       return 0;
@@ -1913,7 +1914,7 @@ class Patcher
   }
 
   string find_file(string raw_path)
-  //! Searches for a file by checking each directory from the given path up to 
+  //! Search for a file by checking each directory from the given path up to 
   //! root
   {
     string res = "";
@@ -1974,7 +1975,7 @@ class Patcher
   }
 
   array(string) recursive_find_all_files(void|string path)
-  //! Finds all files in directory and its subdirectories.
+  //! Find all files in directory and its subdirectories.
   //! @returns
   //!   Returns an array of file paths.
   {
@@ -1995,13 +1996,13 @@ class Patcher
   }
 
   array find_files_with_globs(string glob_pattern, void|int(0..1) recursive)
-  //! Finds files using a glob pattern.
+  //! Find files using a glob pattern.
   //! @param recursive
   //!   If this is set then this function will start by building a list of all
   //!   files in the specified directory and then apply the glob to each and
   //!   every one of them by using glob.
   //! @returns
-  //!  an array of matching files.
+  //!   An array of matching files.
   {
     // First of all extract the path that is not a glob and use that as base
     // directory.
@@ -2027,7 +2028,7 @@ class Patcher
   }
 
   int(0..1) copy_file_to_temp_dir(mapping m, string temp_data_path)
-  //! Copies the file in the mapping m to a temporary directory while
+  //! Copy the file in @[m] to a temporary directory while
   //! preserving the original path.
   {
     string filename = basename(m->source);
@@ -2064,7 +2065,7 @@ class Patcher
   }
 
   int write_file_to_disk(string path, string data)
-  //! Writes data to file in temp dir
+  //! Write data to file in temp dir.
   {
     write_mess("Writing patch data to %s ... ", path);
 
@@ -2089,7 +2090,7 @@ class Patcher
   }
 
   string create_id(void|object time)
-  //! Creates a string on the format YYYY-MM-DDThhmm based on the current time.
+  //! Create a string on the format YYYY-MM-DDThhmm based on the current time.
   {
     if (!time)
       time = Calendar.ISO->now();
@@ -2143,7 +2144,7 @@ class Patcher
   
     Process.create_process p = Process.create_process(args, 
 						      ([ "cwd" : temp_path ]));
-    if (p->wait())
+    if (!p || p->wait())
     {
       write_err("FAILED: Could not create tar file!\n");
       return 0;
@@ -2157,8 +2158,8 @@ class Patcher
   int(0..1) add_file_to_tar_archive(string file_name,
 				    string base_path,
 				    string tar_archive)
-  //! Adds a file to @tt{tar_archive@}. If the archive doesn't exist it will be 
-  //! created automagically by tar. @tt{file_name@} cannot be a relative path
+  //! Add a file to @[tar_archive]. If the archive doesn't exist it will be 
+  //! created automagically by tar. @[file_name] cannot be a relative path
   //! higher than base_path.
   {
     array args = ({ tar_bin, "-rf", 
@@ -2167,7 +2168,7 @@ class Patcher
   
     Process.create_process p = Process.create_process(args,
 						      ([ "cwd" : base_path ]));
-    if (p->wait())
+    if (!p || p->wait())
       return 0;
   
     return 1; 
@@ -2176,13 +2177,13 @@ class Patcher
 
   int(0..1) extract_tar_archive(string file_name, 
 				string path) 
-  //! Extracts a tar archive to @tt{path@}.
+  //! Extract a tar archive to @[path].
   {
     array args = ({ tar_bin, "-xf", simplify_path(unixify_path(file_name)) });
   
     Process.create_process p = Process.create_process(args,
 						      ([ "cwd" : path ]));
-    if (p->wait())
+    if (!p || p->wait())
       return 0;
   
     return 1; 
