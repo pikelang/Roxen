@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1024 2009/02/19 16:27:10 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1025 2009/03/20 14:38:17 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -3138,6 +3138,8 @@ class ImageCache
     mixed args = Array.map( Array.map( name/"$", argcache->lookup,
 				       id->client ), frommapp);
 
+    id->cache_status["icachedraw"] = 1;
+
     mapping meta;
     string data;
     array guides;
@@ -3832,8 +3834,10 @@ class ImageCache
 	return rid->conf->authenticate_throw(rid, "User");
     }
 
-    if( rst_cache[ id ] )
+    if( rst_cache[ id ] ) {
+      rid->cache_status["icacheram"] = 1;
       return rst_cache[ id ] + ([]);
+    }
 
 #ifdef ARG_CACHE_DEBUG
       werror("restore %O\n", id );
@@ -3851,6 +3855,7 @@ class ImageCache
 			id, name, describe_error (err));
 	if( !m ) return 0;
 
+	rid->cache_status["icachedisk"] = 1;
 	m = Roxen.http_string_answer( f, m->type||("image/gif") );
 
 	if( strlen( f ) > 6000 )
