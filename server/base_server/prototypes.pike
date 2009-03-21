@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.233 2009/02/23 17:30:03 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.234 2009/03/21 18:26:05 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1060,7 +1060,7 @@ class RequestID
   //! All data (names and values) have been decoded from the transport
   //! encoding (i.e. @expr{%XX@} style escapes and the charset
   //! according to @[input_charset] have been decoded). See
-  //! @[decode_query] for details.
+  //! @[decode_query_charset] for details.
   //!
   //! @note
   //! This mapping is often changed internally to produce an updated
@@ -1185,9 +1185,12 @@ class RequestID
   //!     Port number from the canonicalized host header.
   //!   @member PrefLanguages "pref_languages"
   //!     Language preferences for the request.
-  //!   @member mapping(string:array) "post_variables"
+  //!   @member mapping(string:array(string)) "post_variables"
   //!     For POST requests, these are the variables parsed from the
   //!     request body. It is undefined otherwise.
+  //!   @member mapping(string:array(MIME.Message)) "post_parts"
+  //!     For multipart/form-data POST requests, this holds the MIME
+  //!     message object for each part. It is undefined otherwise.
   //!   @member array "proxyauth"
   //!     Decoded proxy authentication information.
   //!   @member string "range"
@@ -1524,7 +1527,7 @@ class RequestID
   //! is effectively the same as if the charset was ISO-8859-1.
   //!
   //! @seealso
-  //! @[decode_query]
+  //! @[decode_query_charset]
 
   string extra_extension;
 
@@ -2377,23 +2380,42 @@ class RequestID
       });
   }
 
-  string decode_query (string path, array(string) split_query,
-		       string decode_charset)
-  //! Parses and decodes a query.
+  void split_query_vars (string query_vars, mapping(string:array(string)) vars)
+  {
+    array(string) rests = ({});
+
+    foreach (query_vars / "&", string v) {
+      if(sscanf(v, "%s=%s", string a, string b) == 2)
+      {
+	a = _Roxen.http_decode_string(replace(a, "+", " "));
+	b = _Roxen.http_decode_string(replace(b, "+", " "));
+	vars[ a ] += ({ b });
+      } else
+	rests += ({_Roxen.http_decode_string( v )});
+    }
+
+    if (sizeof (rests)) {
+      string rest = rests * "&";
+#ifdef ENABLE_IDIOTIC_STUPID_STANDARD
+      // This comes from http.pike with the illustrious comment "IDIOTIC
+      // STUPID STANDARD". I fail to find any standard that says
+      // anything about this, so nowadays it's disabled by default.
+      // /mast
+      rest=replace(rest, "+", "\000");
+#endif
+      vars[""] = ({rest});
+    }
+  }
+
+  string decode_query_charset (string path,
+			       mapping(string:array(string)) vars,
+			       string decode_charset)
+  //! Decodes the charset encoding of a query.
   //!
-  //! @[path] is returned after decoding the transport encoding.
-  //!
-  //! Each element in @[split_query] is parsed as a variable tuple on
-  //! the form @expr{var=val@} according to the MIME type
-  //! application/x-www-form-urlencoded (see section 17.13.4 in the
-  //! HTML 4.01 standard).
-  //!
-  //! All elements containing @expr{"="@} are treated as form variable
-  //! bindings and are added to @[real_variables] after the
-  //! @expr{%XX@} style transport encoding has been decoded.
-  //!
-  //! Any remaining elements are added to @[rest_query] after decoding
-  //! the transport encoding.
+  //! @[path] is the path part of the query. It is returned after
+  //! decoding. @[vars] contains the query variables, and they are
+  //! assigned to @[real_variables] after decoding. Both @[path] and
+  //! @[vars] are assumed to be transport decoded already.
   //!
   //! If @[decode_charset] is a string, it defines a charset to decode
   //! with after the transport encoding has been removed. The string
@@ -2430,32 +2452,6 @@ class RequestID
   //! wider chars. That is compliant with the IRI standard (RFC 3987)
   //! and HTML 4.01 (appendix B.2.1).
   {
-    path = _Roxen.http_decode_string (path);
-
-    mapping(string:array(string)) vars = ([]);
-    string rest;
-    {
-      array(string) rests = ({});
-      foreach (split_query, string v) {
-	if(sscanf(v, "%s=%s", string a, string b) == 2)
-	{
-	  a = _Roxen.http_decode_string(replace(a, "+", " "));
-	  b = _Roxen.http_decode_string(replace(b, "+", " "));
-	  vars[ a ] += ({ b });
-	} else
-	  rests += ({_Roxen.http_decode_string( v )});
-      }
-      rest = rests * "&";
-    }
-
-#ifdef ENABLE_IDIOTIC_STUPID_STANDARD
-    // This comes from http.pike with the illustrious comment "IDIOTIC
-    // STUPID STANDARD". I fail to find any standard that says
-    // anything about this, so nowadays it's disabled by default.
-    // /mast
-    rest=replace(rest, "+", "\000");
-#endif
-
   do_decode_charset:
     if (decode_charset == "roxen-http-default") {
       array(string) magic = vars->magic_roxen_automatic_charset_variable;
@@ -2468,20 +2464,18 @@ class RequestID
       if (mixed err = catch {
 	  path = decoder (path);
 	  foreach (vars; string var; array(string) vals)
-	    decoded_vars[var] = map (vals, decoder);
-	  rest = decoder (rest);
+	    decoded_vars[decoder (var)] = map (vals, decoder);
 	}) {
 #ifdef DEBUG
 	if (decode_charset)
 	  report_debug ("Failed to decode query %O using charset %O derived "
 			"from magic_roxen_automatic_charset_variable %O: %s",
-			({path, (split_query + ({rest})) * "&"}) * "?",
-			decode_charset, magic[0], describe_error (err));
+			raw_url, decode_charset, magic[0],
+			describe_error (err));
 #if 0
 	else
 	  report_debug ("Failed to decode query %O using UTF-8: %s",
-			({path, (split_query + ({rest})) * "&"}) * "?",
-			describe_error (err));
+			raw_url, describe_error (err));
 #endif
 #endif
       }
@@ -2502,9 +2496,11 @@ class RequestID
       function(string:string) decoder =
 	Roxen->get_decoder_for_client_charset (decode_charset);
       path = decoder (path);
+
+      mapping(string:array(string)) decoded_vars = ([]);
       foreach (vars; string var; array(string) vals)
-	vars[var] = map (vals, decoder);
-      rest = decoder (rest);
+	decoded_vars[decoder (var)] = map (vals, decoder);
+      vars = decoded_vars;
       input_charset = decode_charset; // Set this after we're done.
     }
 
@@ -2517,15 +2513,16 @@ class RequestID
       variables = FakedVariables (vars);
     }
 
-    rest_query = rest;
-
     return path;
   }
 
   string scan_for_query( string f )
   {
-    if(sscanf(f,"%s?%s", f, query) == 2)
-      f = decode_query (f, query / "&", 0);
+    if(sscanf(f,"%s?%s", f, query) == 2) {
+      mapping(string:array(string)) vars = ([]);
+      split_query_vars (query, vars);
+      f = decode_query_charset (_Roxen.http_decode_string (f), vars, 0);
+    }
     return f;
   }
 
