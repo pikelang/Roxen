@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.589 2009/03/17 07:46:45 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.590 2009/03/21 18:25:14 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -564,33 +564,74 @@ int things_to_do_when_not_sending_from_cache( )
       }
     }
 
-  decode_query: {
-      string post_form = m_delete (misc, "post_form");
-      if (post_form || query) {
-	array(string) split_query =
-	  post_form && query ?
-	  (post_form / "&") + (query / "&") : (post_form || query) / "&";
+    {
+      mapping(string:array(string)) vars =
+	misc->post_variables ? misc->post_variables + ([]) : ([]);
+      if (query)
+	split_query_vars (query, vars);
 
-	if (input_charset) {
-	  if (mixed err = catch {
-	      f = decode_query (f, split_query, input_charset);
-	    }) {
-	    report_debug ("Client %O sent query %O which failed to decode with "
-			  "its own charset %O: %s",
-			  client_var->fullname, f + "?" + split_query * "&",
-			  input_charset, describe_error (err));
-	    input_charset = 0;
+      if (sizeof (vars)) {
+      decode_query: {
+	  if (input_charset) {
+	    if (mixed err = catch {
+		f = decode_query_charset (_Roxen.http_decode_string (f),
+					  vars, input_charset);
+	      }) {
+	      report_debug ("Client %O sent query %O which failed to decode "
+			    "with its own charset %O: %s",
+			    client_var->fullname, raw_url,
+			    input_charset, describe_error (err));
+	      input_charset = 0;
+	    }
+	    else break decode_query;
 	  }
-	  else break decode_query;
+
+	  f = decode_query_charset (_Roxen.http_decode_string (f),
+				    vars, "roxen-http-default");
 	}
 
-	f = decode_query (f, split_query, "roxen-http-default");
+	if (input_charset && misc->post_variables) {
+	  if (query) {
+	    // Complicated to repopulate misc->post_variables with
+	    // decoded values.
+	    function(string:string) decoder =
+	      Roxen.get_decoder_for_client_charset (input_charset);
+	    mapping(string:array(string)) decoded_vars = ([]);
+	    foreach (misc->post_variables; string var; array(string) vals) {
+	      var = decoder (var);
+	      // We know the post_variables are first in the array values.
+	      decoded_vars[var] = real_variables[var][..sizeof (vals) - 1];
+	    }
+	    misc->post_variables = decoded_vars;
+	  }
+	  else
+	    misc->post_variables = real_variables + ([]);
+
+	  // Ensure that the variable names in misc->post_parts and
+	  // misc->files are decoded too.
+	  if (misc->post_parts) {
+	    mapping(string:string) decoded_names = ([]);
+	    function(string:string) decoder =
+	      Roxen.get_decoder_for_client_charset (input_charset);
+
+	    mapping(string:array(MIME.Message)) decoded_post_parts = ([]);
+	    foreach (misc->post_parts; string var; array(MIME.Message) parts) {
+	      string decoded_var = decoder (var);
+	      decoded_names[var] = decoded_var;
+	      decoded_post_parts[decoded_var] = parts;
+	    }
+	    misc->post_parts = decoded_post_parts;
+
+	    if (misc->files)
+	      misc->files = map (misc->files, decoded_names);
+	  }
+	}
       }
 
       else {
-	// No query to decode, only the path. Optimize decode_query
-	// with "roxen-http-default" since we know there's no
-	// magic_roxen_automatic_charset_variable.
+	// No variables to decode, only the path. Optimize
+	// decode_query with "roxen-http-default" since we know
+	// there's no magic_roxen_automatic_charset_variable.
 	f = http_decode_string (f);
 	if (input_charset) {
 	  if (mixed err = catch {
@@ -603,6 +644,20 @@ int things_to_do_when_not_sending_from_cache( )
 	}
 	else
 	  catch (f = utf8_to_string (f));
+      }
+
+      // Now after charset decode we can add the multipart/form-data
+      // variables in case they were rfc 2388 correct.
+      if (mapping(string:array(string)) ppv =
+	  m_delete (misc, "proper_post_vars")) {
+	misc->post_variables = ppv;
+	foreach (ppv; string var; array(string) val) {
+	  if (array(string) oldval = real_variables[var])
+	    // Ensure POST variables come first, for consistency.
+	    real_variables[var] = val + oldval;
+	  else
+	    real_variables[var] = val;
+	}
       }
     }
 
@@ -953,13 +1008,11 @@ private int parse_got( string new_data )
     switch(method) {
     case "POST":
       // See http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4
-      // for spec of the format of form submissions.
+      // and rfc 2388 for specs of the format of form submissions.
       switch (misc->content_type_type)
       {
       case "application/x-www-form-urlencoded": {
 	// Form data.
-
-	string v;
 
 	// Ok.. This might seem somewhat odd, but IE seems to add a
 	// (spurious) \r\n to the end of the data, and some versions of
@@ -972,23 +1025,21 @@ private int parse_got( string new_data )
 	// applauncher did that). (This is safe for correct
 	// applauncher/x-www-form-urlencoded data since it doesn't
 	// contain any whitespace.)
-	v = String.trim_all_whites (data);
+	string v = String.trim_all_whites (data);
 
-	// Store it temporarily in the misc mapping so we can decode
-	// it together with the query string in
+	// This will be charset decoded later in
 	// things_to_do_when_not_sending_from_cache.
-	//
-	// Note: This is just kludgy temporary storage. It's nothing
-	// to rely on and it should not be documented.
-	misc->post_form = v;
+	split_query_vars (v, misc->post_variables = ([]));
 	break;
       }
 	    
       case "multipart/form-data": {
 	// Set Guess to one in order to fix the incorrect quoting of paths
 	// from Internet Explorer when sending a file.
-	object messg = MIME.Message(data, request_headers, UNDEFINED, 1);
-	if (!messg->body_parts) {
+	MIME.Message messg = MIME.Message(data, request_headers, UNDEFINED, 1);
+	array(MIME.Message) parts = messg->body_parts;
+
+	if (!parts) {
 	  report_error("HTTP: Bad multipart/form-data.\n"
 		       "  headers:\n"
 		       "%{    %O:%O\n%}"
@@ -997,21 +1048,119 @@ private int parse_got( string new_data )
 		       (array)request_headers,
 		       data/"\n");
 	  /* FIXME: Should this be reported to the client? */
-	} else {
-	  mapping(string:array) post_vars = misc->post_variables = ([]);
-	  foreach (messg->body_parts, object part) {
-	    string n = part->disp_params->name;
-	    string d = part->getdata();
-	    post_vars[n] += ({d});
-	    real_variables[n] += ({d});
-	    if (string fn = part->disp_params->filename) {
-	      post_vars[n + ".filename"] += ({fn});
-	      real_variables[n + ".filename"] += ({fn});
-	      misc->files += ({n});
+	}
+
+	else {
+	  // We got two cases here: On one hand we got what rfc 2388 says, and
+	  // on the other we got how essentially all browsers actually behave.
+	  //
+	  // The latter means that the text values and form variable names are
+	  // sent in some poorly defined encoding, which is best to treat like
+	  // the same sorry situation for url variables and
+	  // application/x-www-form-urlencoded.
+	  //
+	  // On the first hint that the data actually is correct according to
+	  // rfc 2388, we skip the bug compat charset handling. The hints we
+	  // look for are:
+	  //
+	  // o  A Content-Disposition parameter which is rfc 2047 encoded.
+	  // o  A Content-Type header which specifies a charset.
+
+	  {
+	    // Another difference is that multiple values for the same field
+	    // are simply included as multiple body parts by browsers, while
+	    // rfc 2388 mandates using one multipart/mixed entry. Let's
+	    // convert to the simpler de-facto form.
+	    array(MIME.Message) subparts = ({});
+	    foreach (parts; int i; MIME.Message part)
+	      if (array(MIME.Message) sub = part->body_parts) {
+		// Assume multipart/mixed - it should never be anything else.
+		subparts += sub;
+		parts[i] = 0;
+	      }
+	    if (sizeof (subparts))
+	      parts = parts - ({0}) + subparts; // Note: Keeps order per field.
+	  }
+
+	  mapping(string:string) rfc2047_decoded = ([]);
+	  int rfc2388_mode;
+	  foreach (parts, MIME.Message part) {
+	    foreach (part->disp_params;; string param) {
+	      string decoded;
+	      if (!catch (decoded = MIME.decode_words_text_remapped (param)) &&
+		  decoded != param)
+		rfc2047_decoded[param] = decoded;
 	    }
-	    if (string ct = part->headers["content-type"]) {
-	      post_vars[n + ".mimetype"] += ({ct});
-	      real_variables[n + ".mimetype"] += ({ct});
+	    if (part->params->charset)
+	      rfc2388_mode = 1;
+	  }
+	  if (sizeof (rfc2047_decoded))
+	    rfc2388_mode = 1;
+
+	  mapping(string:array(MIME.Message)) post_parts =
+	    misc->post_parts = ([]);
+
+	  if (rfc2388_mode) {
+	    // Will this be executed ever?
+
+	    // misc->proper_post_vars is temporary storage that is moved into
+	    // real_variables after charset decode in
+	    // things_to_do_when_not_sending_from_cache.
+	    mapping(string:array(string)) post_vars =
+	      misc->proper_post_vars = ([]);
+
+	    foreach (parts, MIME.Message part) {
+	      string name = part->disp_params->name;
+	      if (string decoded = rfc2047_decoded[name]) name = decoded;
+
+	      post_parts[name] += ({part});
+
+	      string data = part->getdata();
+	      if (string charset = part->param->charset) {
+		if (mixed err = catch {
+		    data = Locale.Charset.decoder (charset)->
+		      feed (data)->drain();
+		  })
+		  report_debug ("Client %q sent data for %q which failed to "
+				"decode with supplied charset %q: %s",
+				client_var->fullname, name, charset,
+				describe_error (err));
+	      }
+	      post_vars[name] += ({data});
+
+	      if (part->headers["content-type"])
+		// Use type and subtype fields to avoid any extra parameters.
+		post_vars[name + ".mimetype"] += ({part->type + "/" +
+						   part->subtype});
+
+	      if (string filename = part->disp_params->filename) {
+		if (string decoded = rfc2047_decoded[filename])
+		  filename = decoded;
+		post_vars[name + ".filename"] += ({filename});
+		misc->files += ({name});
+	      }
+	    }
+	  }
+
+	  else {
+	    mapping(string:array(string)) post_vars =
+	      misc->post_variables = ([]);
+	    foreach (parts, MIME.Message part) {
+	      string name = part->disp_params->name;
+
+	      post_parts[name] += ({part}); // Note: name still encoded here.
+
+	      post_vars[name] += ({part->getdata()});
+
+	      if (part->headers["content-type"])
+		// Use type and subtype fields to avoid any extra parameters.
+		post_vars[name + ".mimetype"] += ({part->type + "/" +
+						   part->subtype});
+
+	      if (string filename = part->disp_params->filename) {
+		post_vars[name + ".filename"] += ({filename});
+		misc->files += ({name}); // Note: name still encoded here.
+	      }
 	    }
 	  }
 	}
@@ -2900,7 +3049,7 @@ void got_data(mixed fooid, string s, void|int chained)
                 variant_heads["Content-Encoding"] = file->encoding;
                 if(file->etag) {
                   string etag = file->etag;
-                  if(etag[sizeof(etag)-1..] == "\"")
+		  if(etag[sizeof(etag)-1..] == "\"")
                     etag = etag[..sizeof(etag)-2] + ";gzip\"";
                   variant_heads["ETag"] = etag;
                 }
