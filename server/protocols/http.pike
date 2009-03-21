@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.590 2009/03/21 18:25:14 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.591 2009/03/21 18:38:21 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -181,90 +181,6 @@ class AuthEmulator
 }
 
 array|AuthEmulator auth;
-
-#if 0
-// This is a smidgen too blunt, methinks. /mast
-
-void decode_map( mapping what, function decoder )
-{
-  foreach(what; mixed q; mixed val)
-  {
-    string ni;
-    if( stringp( q ) )
-      catch { ni = decoder( q ); };
-    // Don't touch stuff that has a mimetype.
-    if (!stringp(q) || (!what[q + ".mimetype"] && !what[ni + ".mimetype"])) {
-      if( stringp( val ) )
-	catch { val = decoder( val ); };
-      else if( arrayp( val ) )
-	val = map( val, lambda( mixed q ) {
-			  if( stringp( q ) )
-			    catch { return decoder( q ); };
-			  return q;
-			} );
-      else if( mappingp( val ) )
-	decode_map( val, decoder );
-      else if( multisetp( val ) )
-	val = mkmultiset( map( indices(val),
-			       lambda( mixed q ) {
-				 if( stringp( q ) )
-				   catch { return decoder( q ); };
-				 return q;
-			       } ));
-    }
-    what[ni] = val;
-    if( q != ni )
-      m_delete( what, q );
-  }
-}
-
-void decode_charset_encoding( string|function(string:string) decoder )
-{
-  if( misc->request_charset_decoded )
-    return;
-  if(stringp(decoder))
-    decoder = Roxen._charset_decoder(Locale.Charset.decoder(decoder))->decode;
-  if( !decoder )
-    return;
-  
-  misc->request_charset_decoded = 1;
-
-  string safe_decoder(string s) {
-    catch { return decoder(s); };
-    return s;
-  };
-
-  if( prot ) prot = safe_decoder( prot );
-  if( clientprot ) clientprot = safe_decoder( clientprot );
-  if( method ) method = safe_decoder( method );
-  if( rest_query ) rest_query = safe_decoder( rest_query );
-  if( query ) query = safe_decoder( query );
-  if( not_query ) not_query = safe_decoder( not_query );
-  if( realauth )
-  {
-    rawauth = safe_decoder( rawauth );
-    realauth = safe_decoder( realauth );
-  }
-  if( since )
-    since = safe_decoder( since );
-
-  decode_map( real_variables, decoder );
-  decode_map( misc, decoder );
-  //decode_map( cookies, decoder );
-  decode_map( request_headers, decoder );
-
-  if( client )
-    client = map( client, safe_decoder );
-  if( referer )
-    referer = map( referer, safe_decoder );
-  prestate = mkmultiset( map( (array(string))indices( prestate ),
-			      safe_decoder ) );
-  config = mkmultiset( map( (array(string))indices( config ),
-			    safe_decoder ) );
-  pragma = mkmultiset( map( (array(string))indices( pragma ),
-			    safe_decoder ) );
-}
-#endif
 
 // Parse a HTTP/1.1 HTTP/1.0 or 0.9 request, including form data and
 // state variables.  Return 0 if more is expected, 1 if done, and -1
