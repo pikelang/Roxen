@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.591 2009/03/21 18:38:21 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.592 2009/03/21 18:43:40 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -505,6 +505,9 @@ int things_to_do_when_not_sending_from_cache( )
 	  f = decode_query_charset (_Roxen.http_decode_string (f),
 				    vars, "roxen-http-default");
 	}
+
+	if (array(string) rest = m_delete (real_variables, ""))
+	  rest_query = rest[0];
 
 	if (input_charset && misc->post_variables) {
 	  if (query) {
