@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.82 2009/03/12 14:03:46 grubba Exp $
+// $Id: DBManager.pmod,v 1.83 2009/03/21 14:06:50 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -186,32 +186,48 @@ private
   {
     Sql.Sql db = connect_to_my_mysql(0, "mysql");
 
-    multiset(string) missing_privs = (<
-      // Current as of MySQL 5.0.70.
-      "Select", "Insert", "Update", "Delete", "Create", "Drop", "Grant",
-      "References", "Index", "Alter", "Create_tmp_table", "Lock_tables",
-      "Create_view", "Show_view", "Create_routine", "Alter_routine",
-      "Execute",
-    >);
-    foreach(db->query("DESCRIBE db"), mapping(string:string) row) {
-      string field = row->Field || row->field;
-      if (!field) {
-	werror("DBManager: Failed to analyse privileges table mysql.db.\n"
-	       "row: %O\n", row);
-	return;
+    mapping(string:string) mysql_location = roxenloader->parse_mysql_location();
+    string update_mysql;
+    if ((mysql_location->basedir) && 
+	(update_mysql =
+	 Stdio.read_bytes(combine_path(mysql_location->basedir,
+				       "share/mysql",
+				       "mysql_fix_privilege_tables.sql")))) {
+      // Split on semi-colon, but not inside strings...
+      array(string) queries =
+	map(Parser.C.split(update_mysql)/({";"}), `*, "");
+      foreach(queries[..sizeof(queries)-2], string q) {
+	// Don't complain about failures here, they're expected...
+	catch {db->query(q);};
       }
-      if (has_suffix(field, "_priv")) {
-	// Note the extra space below.
-	missing_privs[field[..sizeof(field)-sizeof(" _priv")]] = 0;
+    } else {
+      multiset(string) missing_privs = (<
+	// Current as of MySQL 5.0.70.
+	"Select", "Insert", "Update", "Delete", "Create", "Drop", "Grant",
+	"References", "Index", "Alter", "Create_tmp_table", "Lock_tables",
+	"Create_view", "Show_view", "Create_routine", "Alter_routine",
+	"Execute",
+      >);
+      foreach(db->query("DESCRIBE db"), mapping(string:string) row) {
+	string field = row->Field || row->field;
+	if (!field) {
+	  werror("DBManager: Failed to analyse privileges table mysql.db.\n"
+		 "row: %O\n", row);
+	  return;
+	}
+	if (has_suffix(field, "_priv")) {
+	  // Note the extra space below.
+	  missing_privs[field[..sizeof(field)-sizeof(" _priv")]] = 0;
+	}
       }
-    }
-    if (sizeof(missing_privs)) {
-      werror("DBManager: Updating priviliges table mysql.db with the fields\n"
-	     "           %s...", indices(missing_privs)*", ");
-      foreach(indices(missing_privs), string priv) {
-	db->query("ALTER TABLE db "
-		  "  ADD COLUMN " + priv+ "_priv "
-		  "      ENUM('N','Y') DEFAULT 'N' NOT NULL");
+      if (sizeof(missing_privs)) {
+	werror("DBManager: Updating priviliges table mysql.db with the fields\n"
+	       "           %s...", indices(missing_privs)*", ");
+	foreach(indices(missing_privs), string priv) {
+	  db->query("ALTER TABLE db "
+		    "  ADD COLUMN " + priv+ "_priv "
+		    "      ENUM('N','Y') DEFAULT 'N' NOT NULL");
+	}
       }
     }
   }
