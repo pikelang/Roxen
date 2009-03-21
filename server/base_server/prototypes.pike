@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.234 2009/03/21 18:26:05 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.235 2009/03/21 18:43:56 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2443,8 +2443,8 @@ class RequestID
   //! used if @[decode_charset] was given. The charset decoding uses
   //! an all-or-nothing approach - if there is an error decoding any
   //! string then no string is decoded. If the function throws an
-  //! error due to a decode failure then @[real_variables] and
-  //! @[rest_query] remain unchanged.
+  //! error due to a decode failure then @[real_variables] remain
+  //! unchanged.
   //!
   //! @note
   //! Using @expr{"utf-8"@} as @[decode_charset] reverses the URI
