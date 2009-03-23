@@ -1,6 +1,8 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2000 - 2004, Roxen IS.
-// $Id: basic_defvar.pike,v 1.31 2008/09/28 17:41:49 mast Exp $
+// $Id: basic_defvar.pike,v 1.32 2009/03/23 10:43:55 jonasw Exp $
+
+//! @appears BasicDefvar
 
 mapping(string:Variable.Variable)  variables=([]);
 //! Please do not modify this list directly, instead use 
