@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.63 2007/10/11 09:01:21 grubba Exp $
+# $Id: extensions,v 1.64 2009/03/23 13:58:48 jonasw Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to mime-type
@@ -668,6 +668,7 @@ gtar	application/x-gtar
 hdf	application/x-hdf
 hpf	application/x-icq
 ica	application/x-ica
+indd	application/x-indesign
 ins	application/x-internet-signup
 #ins	application/x-NET-install
 ips	application/x-ipscript
