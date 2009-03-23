@@ -1,4 +1,4 @@
-#charset iso-8859-2
+#charset utf-8
 constant required_charset = "iso-8859-2";
 
 // Czech language support for Roxen
@@ -17,7 +17,7 @@ constant required_charset = "iso-8859-2";
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: czech.pike,v 1.18 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version = "$Id: czech.pike,v 1.19 2009/03/23 13:55:09 jonasw Exp $";
 constant _id = ({ "cs", "czech", ".BŽèesky" });
 constant _aliases = ({ "cs", "cz", "cze", "ces", "czech" });
 

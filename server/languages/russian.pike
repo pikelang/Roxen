@@ -1,4 +1,4 @@
-#charset iso-8859-5
+#charset utf-8
 constant required_charset = "iso-8859-5";
 /* Bugs by: Per, jhs */
 /*
@@ -8,7 +8,7 @@ constant required_charset = "iso-8859-5";
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: russian.pike,v 1.10 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version = "$Id: russian.pike,v 1.11 2009/03/23 13:55:09 jonasw Exp $";
 constant _id = ({ "ru", "russian", ".LÀãááÚØÙ" });
 constant _aliases = ({ "ru", "rus", "russian", "ÒÕÓÓËÉÊ" });
 
