@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.155 2009/01/21 00:15:56 mast Exp $
+// $Id: site_content.pike,v 1.156 2009/03/23 16:31:21 jonasw Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -285,7 +285,31 @@ string get_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
   array(int) segment = conf->generate_module_oid_segment(o);
   array(int) oid_prefix =
     conf->query_oid() + ({ 8, 2 }) + segment[..sizeof(segment)-2];
-  array(int) oid_suffix = ({ conf->query("snmp_site_id"), segment[-1] });
+
+  array(string) res = ({
+    "<th align='left'>Name</th>"
+    "<th align='left'>Value</th>"
+    "<th align='left'>OID</th>",
+  });
+
+  foreach(conf->registered_urls, string url) {
+    mapping(string:string|Configuration|Protocol|array(Protocol)) port_info =
+      roxen.urls[url];
+
+    foreach((port_info && port_info->ports) || ({}), Protocol prot) {
+      if ((prot->prot_name != "snmp") || (!prot->mib)) {
+	continue;
+      }
+
+      string path = port_info->path || "";
+      if (has_prefix(path, "/")) {
+	path = path[1..];
+      }
+      if (has_suffix(path, "/")) {
+	path = path[..sizeof(path)-2];
+      }
+
+      array(int) oid_suffix = ({ sizeof(path), @((array(int))path) });
 
   ADT.Trie mib = ADT.Trie();
 
@@ -294,12 +318,6 @@ string get_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
   mib->merge(conf->generate_module_mib(conf->query_oid() + ({ 8, 1 }),
 				       oid_suffix[..0],
 				       o, moduleinfo, UNDEFINED));
-
-  array(string) res = ({
-    "<th align='left'>Name</th>"
-    "<th align='left'>Value</th>"
-    "<th align='left'>OID</th>",
-  });
 
   for (array(int) oid = mib->first(); oid; oid = mib->next(oid)) {
     string oid_string = ((array(string)) oid) * ".";
@@ -339,6 +357,8 @@ string get_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
       res += ({
 	sprintf("<td></td><td colspan='2'><font size='-1'>%s</font></td>", doc),
       });
+    }
+  }
     }
   }
 
