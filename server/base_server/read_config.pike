@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: read_config.pike,v 1.69 2008/09/25 12:56:34 mast Exp $
+// $Id: read_config.pike,v 1.70 2009/03/23 10:33:54 jonasw Exp $
 
 #include <module.h>
 
@@ -111,11 +111,11 @@ private void really_save_it( string cl, mapping data, int counter )
     fd->close();
 
     fd = open( new, "r" );
-    config_stat_cache[cl] = fd->stat();
     
     if(!fd)
       error("Failed to open new config file (" + new + ") for reading"
 	    " (" + strerror (errno()) + ")\n" );
+    config_stat_cache[cl] = fd->stat();
 
     string read_data = fd->read();
     if (!read_data)
