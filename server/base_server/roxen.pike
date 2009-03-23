@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1026 2009/03/23 12:51:13 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1027 2009/03/23 13:45:49 mast Exp $";
 
 //! @appears roxen
 //!
@@ -2467,7 +2467,8 @@ mapping(string:program/*(Protocol)*/) protocols;
 mapping(string:mapping(string:mapping(int:Protocol))) open_ports = ([ ]);
 
 // url:"port" ==> Protocol.
-mapping(string:mapping(string:Configuration|Protocol|string)) urls = ([]);
+mapping(string:mapping(string:Configuration|Protocol|string|array(Protocol)))
+  urls = ([]);
 array sorted_urls = ({});
 
 array(string) find_ips_for( string what )
@@ -2685,7 +2686,7 @@ int register_url( string url, Configuration conf )
     return 0;
   }
 
-  mapping m;
+  mapping(string:mapping(int:Protocol)) m;
   if( !( m = open_ports[ protocol ] ) )
     // always add 'ANY' (0) and 'IPv6_ANY' (::) here, as empty mappings,
     // for speed reasons.
