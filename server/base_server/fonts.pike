@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: fonts.pike,v 1.87 2008/08/15 12:33:53 mast Exp $
+// $Id: fonts.pike,v 1.88 2009/03/23 10:49:54 jonasw Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -403,7 +403,7 @@ protected void create()
   report_debug("Loading font handlers ...\n" );
   foreach( r_get_dir( "font_handlers" ), string fh )
   {
-    catch {
+    mixed err = catch {
       if(has_suffix(fh, ".pike"))
       {
         FontHandler f = ((program)( roxen_path( "font_handlers/"+fh ) ))( );
@@ -418,6 +418,10 @@ protected void create()
         }
       }
     };
+    if (err) {
+      report_error(sprintf("Failed to initialize font handler %s:\n"
+			   "%s\n", fh, describe_backtrace(err)));
+    }
   }
   report_debug("Done [%.1fms]\n", (gethrtime()-h)/1000.0 );
 }
