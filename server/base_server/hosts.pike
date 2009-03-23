@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: hosts.pike,v 1.35 2008/12/23 13:17:22 mast Exp $
+// $Id: hosts.pike,v 1.36 2009/03/23 14:24:11 grubba Exp $
 
 #include <roxen.h>
 
@@ -26,7 +26,7 @@ mapping lookup_funs=([IP_TO_HOST:dns->ip_to_host,HOST_TO_IP:dns->host_to_ip]);
 
 #define lookup(MODE,NAME) lookup_funs[MODE](NAME, got_one_result)
 #define LOOKUP(MODE,NAME,CB,ARGS) do{if(!do_when_found[NAME]){do_when_found[NAME]=(CB?({({CB,ARGS})}):({}));lookup(MODE, NAME);} else if(CB) do_when_found[NAME]+=({({CB,ARGS})});}while(0)
-#define ISIP(H,CODE) do {mixed entry;if(sizeof(entry = H / "." ) == 4){int isip = 1;foreach(entry, string s)if((string)((int)s) != s)isip = 0;if(isip) {CODE;};} else if (has_value(H, ":")) {CODE;}}while(0)
+#define ISIP(H,CODE) do {mixed entry;if (has_value(H, ":")) {CODE;} else if(sizeof(entry = H / "." ) == 4){int isip = 1;foreach(entry, string s)if((string)((int)s) != s)isip = 0;if(isip) {CODE;};}}while(0)
 
 void got_one_result(string from, string to)
 {
@@ -44,11 +44,14 @@ string blocking_ip_to_host(string ip)
   if(!stringp(ip))
     return ip;
   ISIP(ip,
-       if(mixed foo = cache_lookup("hosts", ip)) return foo;
-       catch { return gethostbyaddr( ip )[0] || ip; };
+       mixed foo;
+       if(foo = cache_lookup("hosts", ip)) return foo;
+       catch { foo = gethostbyaddr( ip )[0]; };
+       foo = foo || ip;
+       cache_set("hosts", ip, foo);
+       return foo;
        );
   return ip;
-
 }
 
 array gethostbyname(string name) {
