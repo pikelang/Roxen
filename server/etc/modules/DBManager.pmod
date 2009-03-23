@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.83 2009/03/21 14:06:50 grubba Exp $
+// $Id: DBManager.pmod,v 1.84 2009/03/23 12:31:14 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -200,34 +200,34 @@ private
 	// Don't complain about failures here, they're expected...
 	catch {db->query(q);};
       }
-    } else {
-      multiset(string) missing_privs = (<
-	// Current as of MySQL 5.0.70.
-	"Select", "Insert", "Update", "Delete", "Create", "Drop", "Grant",
-	"References", "Index", "Alter", "Create_tmp_table", "Lock_tables",
-	"Create_view", "Show_view", "Create_routine", "Alter_routine",
-	"Execute",
-      >);
-      foreach(db->query("DESCRIBE db"), mapping(string:string) row) {
-	string field = row->Field || row->field;
-	if (!field) {
-	  werror("DBManager: Failed to analyse privileges table mysql.db.\n"
-		 "row: %O\n", row);
-	  return;
-	}
-	if (has_suffix(field, "_priv")) {
-	  // Note the extra space below.
-	  missing_privs[field[..sizeof(field)-sizeof(" _priv")]] = 0;
-	}
+    }
+
+    multiset(string) missing_privs = (<
+      // Current as of MySQL 5.0.70.
+      "Select", "Insert", "Update", "Delete", "Create", "Drop", "Grant",
+      "References", "Index", "Alter", "Create_tmp_table", "Lock_tables",
+      "Create_view", "Show_view", "Create_routine", "Alter_routine",
+      "Execute",
+    >);
+    foreach(db->query("DESCRIBE db"), mapping(string:string) row) {
+      string field = row->Field || row->field;
+      if (!field) {
+	werror("DBManager: Failed to analyse privileges table mysql.db.\n"
+	       "row: %O\n", row);
+	return;
       }
-      if (sizeof(missing_privs)) {
-	werror("DBManager: Updating priviliges table mysql.db with the fields\n"
-	       "           %s...", indices(missing_privs)*", ");
-	foreach(indices(missing_privs), string priv) {
-	  db->query("ALTER TABLE db "
-		    "  ADD COLUMN " + priv+ "_priv "
-		    "      ENUM('N','Y') DEFAULT 'N' NOT NULL");
-	}
+      if (has_suffix(field, "_priv")) {
+	// Note the extra space below.
+	missing_privs[field[..sizeof(field)-sizeof(" _priv")]] = 0;
+      }
+    }
+    if (sizeof(missing_privs)) {
+      werror("DBManager: Updating priviliges table mysql.db with the fields\n"
+	     "           %s...", indices(missing_privs)*", ");
+      foreach(indices(missing_privs), string priv) {
+	db->query("ALTER TABLE db "
+		  "  ADD COLUMN " + priv+ "_priv "
+		  "      ENUM('N','Y') DEFAULT 'N' NOT NULL");
       }
     }
   }
