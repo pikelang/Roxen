@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.330 2008/12/22 10:33:02 mast Exp $
+// $Id: rxml.pike,v 1.331 2009/03/24 16:41:58 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -29,6 +29,10 @@ protected class RXMLTagSet
   // Each element in the imported array is the registered tag set of a
   // parser module. This array contains the corresponding module
   // object.
+
+  int censor_request;
+  // Remove sensitive auth data from the request before parsing. The
+  // data is lost and will not be available again afterwards.
 
   void sort_on_priority()
   {
@@ -56,8 +60,11 @@ protected class RXMLTagSet
   mixed `->= (string var, mixed val)
   // Currently necessary due to misfeature in Pike.
   {
-    if (var == "modules") modules = val;
-    else ::`->= (var, val);
+    switch (var) {
+      case "modules": modules = val; break;
+      case "censor_request": censor_request = val; break;
+      default: ::`->= (var, val);
+    }
     return val;
   }
 
@@ -111,6 +118,32 @@ protected class RXMLTagSet
       id->misc->defines = misc;
     }
     misc->rxml_misc = 1;
+
+    if (censor_request) {
+      id->rawauth = 0;
+      if (string auth = id->realauth) {
+	if (sscanf (auth, "%[^:]%*c", auth) == 2)
+	  id->realauth = auth + ":"; // Let's keep the username.
+	else
+	  id->realauth = 0;
+      }
+
+      if (m_delete (id->request_headers, "authorization")) {
+	string raw = id->raw;
+	int i = search (lower_case (raw), "authorization:");
+	if (i >= 0) {
+	  id->raw = raw[..i - 1];
+	  // Buglet: This doesn't handle header continuations.
+	  int j = search (raw, "\n", i);
+	  if (j >= 0) id->raw += raw[j + 1..];
+	}
+      }
+
+      // The Proxy-Authorization header has already been removed from
+      // the raw request by the protocol module.
+      m_delete (id->request_headers, "proxy-authorization");
+      m_delete (id->misc, "proxyauth");
+    }
 
 #if ROXEN_COMPAT <= 1.3
     if (old_rxml_compat) ctx->compatible_scope = 1;

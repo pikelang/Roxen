@@ -9,7 +9,7 @@
 
 #define CTX_MISC ([mapping(string:mixed)] RXML_CONTEXT->misc)
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.81 2008/11/05 20:13:46 mast Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.82 2009/03/24 16:41:58 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -60,6 +60,21 @@ The RXML parser will cache the parse trees (known as \"p-code\") for
 the RXML pages in RAM when this is enabled, which speeds up the
 evaluation of them.");
 
+  defvar ("censor_request", 0, "Security:Censor sensitive data",
+	  TYPE_FLAG, #"\
+<p>If this is set, some sensitive data is removed from the incoming
+requests before RXML evaluation begins. Specifically, any
+authorization data derived from the Authorization or
+Proxy-Authorization http headers is removed. A notable effect is that
+the RXML variable &amp;client.password; will not reveal the real
+password, but it won't be possible to recover the authorization data
+any other way either.</p>
+
+<p>Note that this setting only affects the authorization headers as
+described above. A web application might have other places, e.g.
+cookies or form variables, where potentially sensitive data gets
+stored.</p>");
+
   defvar("logerrorsp", 0, "RXML Errors:Log RXML parse errors", TYPE_FLAG,
 	 "If enabled, all RXML parse errors will be logged in the debug log.");
 
@@ -87,6 +102,7 @@ void start(int q, Configuration c)
   ram_cache_name = query ("ram_cache_pages") && "p-code:" + c->name;
   c->rxml_tag_set->handle_run_error = rxml_run_error;
   c->rxml_tag_set->handle_parse_error = rxml_parse_error;
+  c->rxml_tag_set->censor_request = query ("censor_request");
 }
 
 array(string) query_file_extensions()
