@@ -1411,9 +1411,7 @@ Click "Next" to start the installation.</Text>
       <StartServices Sequence="5900">VersionNT AND INSTALL_SERVICE="1" AND START_SERVER="1"</StartServices>
       <Custom Action="SetRemoveOldService" After="InstallFiles">REMOVE="" AND INSTALL_SERVICE="1"</Custom>
       <Custom Action="RemoveOldService" After="SetRemoveOldService">REMOVE="" AND INSTALL_SERVICE="1"</Custom>
-      <Custom Action="SetCreateConfigInterface" Sequence="5100">REMOVE=""</Custom>
-      <Custom Action="CreateConfigInterface" After="SetCreateConfigInterface">(REMOVE="") AND (OLDCONFIGDIR="")</Custom>
-      <Custom Action="FallbackMysqldExe" After="CreateConfigInterface">MYSQLDEXE=""</Custom>
+      <Custom Action="FallbackMysqldExe" Sequence="5100">MYSQLDEXE=""</Custom>
       <Custom Action="FallbackMyisamchkExe" After="FallbackMysqldExe">MYISAMCHKEXE=""</Custom>
       <Custom Action="FallbackMysqladminExe" After="FallbackMysqldExe">MYSQLADMINEXE=""</Custom>
       <Custom Action="FallbackMysqlBase" After="FallbackMysqladminExe">MYSQLBASE=""</Custom>
@@ -1424,6 +1422,8 @@ Click "Next" to start the installation.</Text>
       <Custom Action="SetCreateEnvironment" After="CreatePikeLocation">REMOVE=""</Custom>
       <Custom Action="CreateEnvironment" After="SetCreateEnvironment">REMOVE=""</Custom>
       <Custom Action="DontStartServer" After="CreateEnvironment">MYSQLDEXE=""</Custom>
+      <Custom Action="SetCreateConfigInterface" Before="CreateConfigInterface">REMOVE=""</Custom>
+      <Custom Action="CreateConfigInterface" Before="StartServices">(REMOVE="") AND (OLDCONFIGDIR="")</Custom>
       <Custom Action="ConsoleStartServer" After="StartServices">((NOT VersionNT) OR INSTALL_SERVICE&lt;&gt;"1") AND START_SERVER="1"</Custom>
     </InstallExecuteSequence>
     <Binary Id="DefBannerBitmap" src="Banner.bmp" />
