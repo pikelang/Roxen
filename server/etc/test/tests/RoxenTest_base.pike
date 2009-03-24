@@ -208,7 +208,7 @@ void run_tests( Configuration c )
   mapping(string:string) mysql_location =
     test_true(roxenloader->parse_mysql_location);
 
-  if (mysql_location && test_true(predef::`->, mysql_location, basedir)) {
+  if (mysql_location && test_true(predef::`->, mysql_location, "basedir")) {
     // Check that the MySQL upgrade code is available.
     test_true(Stdio.read_bytes,
 	      combine_path(mysql_location->basedir,
