@@ -1121,325 +1121,271 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 </str>
 
 <str id="326">
-<new/>
 <o>Patch management</o>
-<t></t>
+<t>Patchhantering</t>
 </str>
 
 <str id="327">
-<new/>
 <o>Show information about the available patches and their status.</o>
-<t></t>
+<t>Visa information och status för patchpaket.</t>
 </str>
 
 <str id="328">
-<new/>
 <o>Installed by:</o>
-<t></t>
+<t>Installerad av:</t>
 </str>
 
 <str id="329">
-<new/>
 <o>Installed:</o>
-<t></t>
+<t>Installerad:</t>
 </str>
 
 <str id="330">
-<new/>
 <o>Unknown</o>
-<t></t>
+<t>Okänd</t>
 </str>
 
 <str id="331">
-<new/>
 <o>Uninstalled:</o>
-<t></t>
+<t>Avinstallerad:</t>
 </str>
 
 <str id="332">
-<new/>
 <o>Uninstalled by:</o>
-<t></t>
+<t>Avinstallerad av:</t>
 </str>
 
 <str id="333">
-<new/>
 <o>Description:</o>
-<t></t>
+<t>Patchbeskrivning:</t>
 </str>
 
 <str id="334">
-<new/>
 <o>Originator:</o>
-<t></t>
+<t>Upphovsman:</t>
 </str>
 
 <str id="335">
-<new/>
 <o>Yes</o>
-<t></t>
+<t>Ja</t>
 </str>
 
 <str id="336">
-<new/>
 <o>No</o>
-<t></t>
+<t>Nej</t>
 </str>
 
 <str id="337">
-<new/>
 <o>Flags:</o>
-<t></t>
+<t>Flaggor:</t>
 </str>
 
 <str id="338">
-<new/>
 <o>Platforms:</o>
-<t></t>
+<t>Plattformar:</t>
 </str>
 
 <str id="339">
-<new/>
 <o>All platforms</o>
-<t></t>
+<t>Alla plattformar</t>
 </str>
 
 <str id="340">
-<new/>
 <o>Platform:</o>
-<t></t>
+<t>Plattform:</t>
 </str>
 
 <str id="341">
-<new/>
 <o>Platform</o>
-<t></t>
+<t>Plattform</t>
 </str>
 
 <str id="342">
-<new/>
 <o>Target version:</o>
-<t></t>
+<t>Avsedd för version:</t>
 </str>
 
 <str id="343">
-<new/>
 <o>All versions</o>
-<t></t>
+<t>Alla versioner</t>
 </str>
 
 <str id="344">
-<new/>
 <o>installed</o>
-<t></t>
+<t>installerad</t>
 </str>
 
 <str id="345">
-<new/>
 <o>imported</o>
-<t></t>
+<t>importerad</t>
 </str>
 
 <str id="346">
-<new/>
 <o>unavailable</o>
-<t></t>
+<t>ej tillgänglig</t>
 </str>
 
 <str id="347">
-<new/>
 <o>Dependencies:</o>
-<t></t>
+<t>Beroenden:</t>
 </str>
 
 <str id="348">
-<new/>
 <o>None</o>
-<t></t>
+<t>Inga</t>
 </str>
 
 <str id="349">
-<new/>
 <o>New file:</o>
-<t></t>
+<t>Ny fil:</t>
 </str>
 
 <str id="350">
-<new/>
 <o>New files:</o>
-<t></t>
+<t>Nya filer:</t>
 </str>
 
 <str id="351">
-<new/>
 <o>Replaced file:</o>
-<t></t>
+<t>Utbytt fil:</t>
 </str>
 
 <str id="352">
-<new/>
 <o>Replaced files:</o>
-<t></t>
+<t>Utbytta filer:</t>
 </str>
 
 <str id="353">
-<new/>
 <o>Deleted file:</o>
-<t></t>
+<t>Borttagen fil:</t>
 </str>
 
 <str id="354">
-<new/>
 <o>Deleted files:</o>
-<t></t>
+<t>Borttagna filer:</t>
 </str>
 
 <str id="355">
-<new/>
 <o>Patched file:</o>
-<t></t>
+<t>Patchad fil:</t>
 </str>
 
 <str id="356">
-<new/>
 <o>Patched files:</o>
-<t></t>
+<t>Patchade filer:</t>
 </str>
 
 <str id="357">
-<new/>
 <o>No patches found</o>
-<t></t>
+<t>Inga patchar funna</t>
 </str>
 
 <str id="358">
-<new/>
 <o>Uninstall</o>
-<t></t>
+<t>Avinstallera</t>
 </str>
 
 <str id="359">
-<new/>
 <o>Install</o>
-<t></t>
+<t>Installera</t>
 </str>
 
 <str id="360">
-<new/>
 <o>Importing</o>
-<t></t>
+<t>Importerar</t>
 </str>
 
 <str id="361">
-<new/>
 <o>Patch successfully imported.</o>
-<t></t>
+<t>Patchen är nu importerad.</t>
 </str>
 
 <str id="362">
-<new/>
 <o>Could not import patch.</o>
-<t></t>
+<t>Kunden inte importera patch.</t>
 </str>
 
 <str id="363">
-<new/>
 <o>Uninstalling</o>
-<t></t>
+<t>Avinstallerar</t>
 </str>
 
 <str id="364">
-<new/>
 <o>Done!</o>
-<t></t>
+<t>Klar!</t>
 </str>
 
 <str id="365">
-<new/>
 <o>Failed to uninstall the patch. See the log below for details</o>
-<t></t>
+<t>Misslyckades med att avinstallera patchen. Vidare information finns i nedanstående logg.</t>
 </str>
 
 <str id="366">
-<new/>
 <o>Patch uninstalled successfully. See the log below for details</o>
-<t></t>
+<t>Patchen är nu avinstallerad. Vidare information finns i nedanstående logg.</t>
 </str>
 
 <str id="367">
-<new/>
 <o>%d out of %d patches sucessfully uninstalled. See the log below for details.</o>
-<t></t>
+<t>%d av %d patchar är avinstallerade. Vidare information finns i nedanstående logg.</t>
 </str>
 
 <str id="368">
-<new/>
 <o>The server needs to be restarted.</o>
-<t></t>
+<t>Roxen behöver startas om.</t>
 </str>
 
 <str id="369">
-<new/>
 <o>Would you like to do  that now?</o>
-<t></t>
+<t>Vill du göra det nu?</t>
 </str>
 
 <str id="370">
-<new/>
 <o>Installing</o>
-<t></t>
+<t>Installerar</t>
 </str>
 
 <str id="371">
-<new/>
 <o>Failed to install the patch. See the log below for details</o>
-<t></t>
+<t>Misslyckades med att installera patchen. Vidare information finns i nedanstående logg.</t>
 </str>
 
 <str id="372">
-<new/>
 <o>Patch successfully installed. See the log belowfor details</o>
-<t></t>
+<t>Patchen är nu installerad. Vidare information finns i nedanstående logg.</t>
 </str>
 
 <str id="373">
-<new/>
 <o>Import a New Patch</o>
-<t></t>
+<t>Importera ett patchpaket</t>
 </str>
 
 <str id="374">
-<new/>
 <o>Select local file to upload:</o>
-<t></t>
+<t>Välj en fil som du vill ladda upp:</t>
 </str>
 
 <str id="375">
-<new/>
 <o>Imported Patches</o>
-<t></t>
+<t>Importerade patchpaket</t>
 </str>
 
 <str id="376">
-<new/>
 <o>These are patches that are not currently installed;they are imported but not applied.</o>
-<t></t>
+<t>Nedanstående patchpaket är inte installerade, bara importerade.</t>
 </str>
 
 <str id="377">
-<new/>
 <o>Click on a patch for more information.</o>
-<t></t>
+<t>Klicka på patchnamnet eller patchID:t för mer information.</t>
 </str>
 
 <str id="378">
-<new/>
 <o>Installed Patches</o>
-<t></t>
+<t>Installerade patchpaket</t>
 </str>
 
 <str id="379">
-<new/>
 <o>Click on a Patch for more information.</o>
-<t></t>
+<t>Klicka på patchnamnet eller patchID:t för mer information.</t>
 </str>
