@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.414 2009/02/17 17:18:58 jonasw Exp $
+// $Id: roxenloader.pike,v 1.415 2009/03/24 12:56:54 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.414 2009/02/17 17:18:58 jonasw Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.415 2009/03/24 12:56:54 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -193,7 +193,7 @@ string short_time()
 
 protected int last_was_nl = 1;
 // Used to print error/debug messages
-void roxen_perror(string format, mixed ... args)
+void roxen_perror(sprintf_format format, sprintf_args ... args)
 {
   if(sizeof(args))
     format=sprintf(format,@args);
@@ -363,7 +363,7 @@ void init_logger()
 #endif
 }
 
-void report_debug(string message, mixed ... foo)
+void report_debug(sprintf_format message, sprintf_args ... foo)
 //! @appears report_debug
 //! Print a debug message in the server's debug log.
 //! Shares argument prototype with @[sprintf()].
@@ -401,7 +401,7 @@ array(object) find_module_and_conf_for_log( array(array) q )
 
 #define MC @find_module_and_conf_for_log(backtrace())
 
-void report_warning(LocaleString message, mixed ... foo)
+void report_warning(LocaleString|sprintf_format message, sprintf_args ... foo)
 //! @appears report_warning
 //! Report a warning message, that will show up in the server's debug log and
 //! in the event logs, along with the yellow exclamation mark warning sign.
@@ -416,7 +416,7 @@ void report_warning(LocaleString message, mixed ... foo)
 #endif
 }
 
-void report_notice(LocaleString message, mixed ... foo)
+void report_notice(LocaleString|sprintf_format message, sprintf_args ... foo)
 //! @appears report_notice
 //! Report a status message of some sort for the server's debug log and event
 //! logs, along with the blue informational notification sign. Shares argument
@@ -431,7 +431,7 @@ void report_notice(LocaleString message, mixed ... foo)
 #endif
 }
 
-void report_error(LocaleString message, mixed ... foo)
+void report_error(LocaleString|sprintf_format message, sprintf_args ... foo)
 //! @appears report_error
 //! Report an error message, that will show up in the server's debug log and
 //! in the event logs, along with the red exclamation mark sign. Shares
@@ -446,7 +446,7 @@ void report_error(LocaleString message, mixed ... foo)
 #endif
 }
 
-void report_fatal(string message, mixed ... foo)
+void report_fatal(sprintf_format message, sprintf_args ... foo)
 //! @appears report_fatal
 //! Print a fatal error message.
 {
@@ -471,7 +471,8 @@ protected void garb_sparsely_dont_log()
   call_out (garb_sparsely_dont_log, 10*60);
 }
 
-void report_warning_sparsely (LocaleString message, mixed ... args)
+void report_warning_sparsely (LocaleString|sprintf_format message,
+			      sprintf_args ... args)
 //! @appears report_warning_sparsely
 //! Like @[report_warning], but doesn't repeat the same message if
 //! it's been logged in the last ten minutes. Useful in situations
@@ -489,7 +490,8 @@ void report_warning_sparsely (LocaleString message, mixed ... args)
 #endif
 }
 
-void report_error_sparsely (LocaleString message, mixed... args)
+void report_error_sparsely (LocaleString|sprintf_format message,
+			    sprintf_args ... args)
 //! @appears report_error_sparsely
 //! Like @[report_error], but doesn't repeat the same message if it's
 //! been logged in the last ten minutes. Useful in situations where an
@@ -2391,7 +2393,7 @@ void start_mysql()
   }
 }
 
-int dump( string file, program|void p )
+int low_dump( string file, program|void p )
 {
 #ifdef ENABLE_DUMPING
   if( file[0] != '/' )
@@ -2448,6 +2450,14 @@ int dump( string file, program|void p )
 #endif
 #endif // ENABLE_DUMPING
   return 0;
+}
+
+int dump( string file, program|void p )
+{
+  // int t = gethrtime();
+  int res = low_dump(file, p);
+  // werror("dump(%O, %O): %.1fms\n", file, p, (gethrtime()-t)/1000.0);
+  return res;
 }
 
 object(Stdio.Stat)|array(int) da_Stat_type;
@@ -2815,6 +2825,9 @@ library should be enough.
   add_constant( "color_name",  nm_resolv("Colors.color_name")  );
   add_constant( "colors",      nm_resolv("Colors")             );
 
+  // report_debug("Loading prototypes ... \b");
+  // t = gethrtime();
+
   // Load prototypes (after the master is replaces, thus making it
   // possible to dump them to a .o file (in the mysql))
   object prototypes = (object)"base_server/prototypes.pike";
@@ -2822,9 +2835,18 @@ library should be enough.
   foreach (indices (prototypes), string id)
     if (!prototypes->ignore_identifiers[id])
       add_constant (id, prototypes[id]);
-  prototypes->Roxen = master()->resolv ("Roxen");
+  // report_debug("\bDone [%.1fms]\n", (gethrtime()-t)/1000.0);
 
+  // report_debug("Resolving Roxen ... \b");
+  // t = gethrtime();
+  prototypes->Roxen = master()->resolv ("Roxen");
+  // report_debug("\bDone [%.1fms]\n", (gethrtime()-t)/1000.0);
+
+  // report_debug("Initiating cache system ... \b");
+  // t = gethrtime();
   object cache = initiate_cache();
+  // report_debug("\bDone [%.1fms]\n", (gethrtime()-t)/1000.0);
+
   load_roxen();
 
   int retval = roxen->main(argc,hider);
