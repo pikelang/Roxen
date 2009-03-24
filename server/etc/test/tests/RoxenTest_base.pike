@@ -203,6 +203,18 @@ void run_tests( Configuration c )
   test_equal( "foo_bar", Roxen.short_name, "Foo/Bar" );
   test_equal( "foo_bar_1_2", Roxen.short_name, "Foo/Bar\xa7\xbd" );
 
+  // Some MySQL configuration tests.
+
+  mapping(string:string) mysql_location =
+    test_true(roxenloader->parse_mysql_location);
+
+  if (mysql_location && test_true(predef::`->, mysql_location, basedir)) {
+    // Check that the MySQL upgrade code is available.
+    test_true(Stdio.read_bytes,
+	      combine_path(mysql_location->basedir,
+			   "share/mysql/mysql_fix_privilege_tables.sql"));
+  }
+
   // Test logging functions.
 
   class FakeID(
