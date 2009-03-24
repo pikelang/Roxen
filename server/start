@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.232 2009/01/09 12:41:08 mast Exp $
+# $Id: start,v 1.233 2009/03/24 12:28:58 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -376,10 +376,10 @@ parse_args() {
     setup_for_tests
   ;;
   '--self-test-quiet')
-    debug=-1
     SILENT_START=y
     do_pipe="| grep '  |'"
     setup_for_tests
+    debug=-1
   ;;
   '--self-test-verbose')
     pass="$pass --tests-verbose=1"
