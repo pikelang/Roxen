@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.84 2009/03/23 12:31:14 grubba Exp $
+// $Id: DBManager.pmod,v 1.85 2009/03/24 15:29:15 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -190,9 +190,12 @@ private
     string update_mysql;
     if ((mysql_location->basedir) && 
 	(update_mysql =
-	 Stdio.read_bytes(combine_path(mysql_location->basedir,
-				       "share/mysql",
-				       "mysql_fix_privilege_tables.sql")))) {
+	 (Stdio.read_bytes(combine_path(mysql_location->basedir,
+					"share/mysql",
+					"mysql_fix_privilege_tables.sql")) ||
+	  Stdio.read_bytes(combine_path(mysql_location->basedir,
+					"share",
+					"mysql_fix_privilege_tables.sql"))))) {
       // Split on semi-colon, but not inside strings...
       array(string) queries =
 	map(Parser.C.split(update_mysql)/({";"}), `*, "");
@@ -200,6 +203,8 @@ private
 	// Don't complain about failures here, they're expected...
 	catch {db->query(q);};
       }
+    } else {
+      report_warning("Couldn't find MySQL upgrading script.\n");
     }
 
     multiset(string) missing_privs = (<
