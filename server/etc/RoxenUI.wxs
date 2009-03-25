@@ -1200,6 +1200,10 @@ Click "Next" to start the installation.</Text>
       <ProgressText Action="StartServices" Template="Service: [1]">Starting services</ProgressText>
       <ProgressText Action="InstallAdminPackage" Template="File: [9]\[1] ([6] bytes)">Copying files to the network</ProgressText>
       <ProgressText Action="UnmoveFiles" Template="File: [9]\[1] ([6] bytes)">Restoring moved files</ProgressText>
+      <ProgressText Action="CreateConfigInterface" Template="File: [TARGETDIR]\configurations\AdministrationInterface">Creating administration interface</ProgressText>
+      <ProgressText Action="CreateMysqlLocation" Template="File: [SERVERDIR]\mysql-location.txt">Creating mysql-location.txt</ProgressText>
+      <ProgressText Action="CreatePikeLocation" Template="File: [SERVERDIR]\pikelocation.txt">Creating pikelocation.txt</ProgressText>
+      <ProgressText Action="CreateEnviroment" Template="File: [TARGETDIR]\local\environment.ini">Creating environment.ini</ProgressText>
       <AdminUISequence>
         <Show Dialog="AdminFatalErrorForm" OnExit="error" />
         <Show Dialog="AdminUserExitForm" OnExit="cancel" />
