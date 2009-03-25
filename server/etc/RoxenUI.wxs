@@ -1179,6 +1179,17 @@ Click "Next" to start the installation.</Text>
       <UIText Id="VolumeCostRequired">Required</UIText>
       <UIText Id="VolumeCostSize">Disk Size</UIText>
       <UIText Id="VolumeCostVolume">Volume</UIText>
+      <ProgressText Action="StopServices" Template="Service: [1]">Stopping services</ProgressText>
+      <ProgressText Action="DeleteServices" Template="Service: [1]">Deleting services</ProgressText>
+      <ProgressText Action="RemoveRegistryValues" Template="Key: [1]\[2]">Removing registry values</ProgressText>
+      <ProgressText Action="RemoveFiles" Template="File: [9]\[1]">Removing files</ProgressText>
+      <ProgressText Action="MoveFiles" Template="File: [9]\[1] ([6] bytes)">Moving files</ProgressText>
+      <ProgressText Action="InstallFiles" Template="File: [9]\[1] ([6] bytes)">Installing new files</ProgressText>
+      <ProgressText Action="WriteRegistryValues" Template="Key: [1]\[2] = [3]">Writing values to registry</ProgressText>
+      <ProgressText Action="WriteIniValues" Template="File: [1], Section: [2] Key: [3] = [4]">Writing INI-files</ProgressText>
+      <ProgressText Action="StartServices" Template="Service: [1]">Starting services</ProgressText>
+      <ProgressText Action="InstallAdminPackage" Template="File: [9]\[1] ([6] bytes)">Copying files to the network</ProgressText>
+      <ProgressText Action="UnmoveFiles" Template="File: [9]\[1] ([6] bytes)">Restoring moved files</ProgressText>
       <AdminUISequence>
         <Show Dialog="AdminFatalErrorForm" OnExit="error" />
         <Show Dialog="AdminUserExitForm" OnExit="cancel" />
