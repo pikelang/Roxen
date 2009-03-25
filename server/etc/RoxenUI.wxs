@@ -406,6 +406,7 @@ Click "Close" to exit.</Text>
         <Control Id="ProgressLabel" Type="Text" X="18" Y="96" Width="336" Height="12">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Please wait...</Text>
           <Subscribe Event="ActionText" Attribute="Text"/>
+          <Subscribe Event="ScriptInProgress" Attribute="Text"/>
         </Control>
         <Control Id="ProgressData" Type="Text" X="18" Y="123" Width="336" Height="12">
           <Subscribe Event="ActionData" Attribute="Text"/>
@@ -508,6 +509,7 @@ Click "Close" to exit.</Text>
         <Control Id="ProgressLabel" Type="Text" X="18" Y="96" Width="336" Height="12">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Please wait...</Text>
           <Subscribe Event="ActionText" Attribute="Text"/>
+          <Subscribe Event="ScriptInProgress" Attribute="Text"/>
         </Control>
         <Control Id="ProgressData" Type="Text" X="18" Y="123" Width="336" Height="12">
           <Subscribe Event="ActionData" Attribute="Text"/>
