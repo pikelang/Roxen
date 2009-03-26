@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.235 2009/03/21 18:43:56 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.236 2009/03/26 13:51:18 jonasw Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2588,7 +2588,8 @@ class RequestID
     if (misc->last_modified)
       heads["Last-Modified"] = Roxen->http_date(misc->last_modified);
 
-    if (has_prefix (type, "text/") && !ct_charset_search->match (type)) {
+    //  Only process output encoding if no "; charset=" suffix is available.
+    if (!ct_charset_search->match (type)) {
       string charset;
 
       if( stringp(file->data) ) {
@@ -2599,8 +2600,10 @@ class RequestID
 	if (sizeof (output_charset) || (String.width(file->data) > 8))
 	{
 	  int allow_entities =
-	    has_prefix(type, "text/xml") ||
-	    has_prefix(type, "text/html");
+	    (type == "text/xml") ||
+	    (type == "text/html") ||
+	    (type == "application/xml") ||
+	    sscanf(type, "application/%*s+xml");
 	  [charset, file->data] = output_encode( file->data, allow_entities );
 	}
       }
