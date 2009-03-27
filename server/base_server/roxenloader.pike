@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.415 2009/03/24 12:56:54 grubba Exp $
+// $Id: roxenloader.pike,v 1.416 2009/03/27 10:20:09 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.415 2009/03/24 12:56:54 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.416 2009/03/27 10:20:09 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1140,6 +1140,9 @@ void add_package(string package_dir)
   }
   default_roxen_module_path = ({ combine_path(package_dir, "modules/") }) +
     default_roxen_module_path;
+  if (Stdio.is_dir(sub_dir = combine_path(package_dir, "roxen-modules/"))) {
+    default_roxen_module_path = ({ sub_dir }) + default_roxen_module_path;
+  }
   if (Stdio.is_dir(sub_dir = combine_path(package_dir, "fonts/"))) {
     default_roxen_font_path = ({ sub_dir }) + default_roxen_font_path;
   }
@@ -2011,7 +2014,7 @@ protected void low_check_mysql(string myisamchk, string datadir,
 void low_start_mysql( string datadir,
 		      string uid )
 {
-  array MYSQL_GOOD_VERSION = ({ "5.0.*" });
+  array MYSQL_GOOD_VERSION = ({ "*", "5.0.*" });
   array MYSQL_MAYBE_VERSION = ({ "5.1.*", "6.*" });
   
   void rotate_log(string path)
