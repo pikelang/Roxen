@@ -33,7 +33,7 @@
       Value="[SERVERDIR];[SERVER_NAME];[SERVER_PROTOCOL];[SERVER_PORT];[ADM_USER];[ADM_PASS1]"
       Execute="immediate" />
     <CustomAction Id="CreateConfigInterface" BinaryKey="RoxenInstaller"
-      VBScriptCall="CreateConfigInterface" Execute="deferred" Impersonate="no" />
+      VBScriptCall="CreateConfigInterface" Execute="commit" Impersonate="no" />
     <CustomAction Id="SetCreateMysqlLocation" Property="CreateMysqlLocation"
       Value="[SERVERDIR];[MYSQLBASE];[MYSQLDEXE];[MYISAMCHKEXE];[MYSQLADMINEXE]" Execute="immediate" />
     <CustomAction Id="CreateMysqlLocation" BinaryKey="RoxenInstaller"
@@ -46,14 +46,15 @@
       Value="0" Execute="immediate" />
     <CustomAction Id="StartBrowser" Property="BROWSER"
       ExeCommand="[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/"
-      Execute="deferred" Return="asyncNoWait" />
+      Execute="commit" Return="asyncNoWait" />
     <CustomAction Id="ConsoleStartServer" Directory="TARGETDIR"
       ExeCommand='"[TARGETDIR]ntstart"'
-      Execute="deferred" Return="asyncNoWait" />
+      Execute="commit" Return="asyncNoWait" />
     <CustomAction Id="SetCreateEnvironment"
       Property="CreateEnvironment"
       Value="[TARGETDIR]local/environment.ini"
       Execute="immediate" />
+    <!-- FIXME: Consider using the MSI-builtin support for INI-files. -->
     <CustomAction Id="CreateEnvironment" BinaryKey="RoxenInstaller"
       VBScriptCall="CreateEnvironment" Execute="deferred" Impersonate="no" />
     <UI>
