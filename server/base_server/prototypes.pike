@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.236 2009/03/26 13:51:18 jonasw Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.237 2009/03/27 10:39:12 jonasw Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2607,11 +2607,13 @@ class RequestID
 	  [charset, file->data] = output_encode( file->data, allow_entities );
 	}
       }
-
-      // Always set the charset. At least Firefox 2.0 is known to
-      // propagate the charset from the frameset page to the frame
-      // pages if they lack explicit charsets.
-      type += "; charset=" + (charset || "ISO-8859-1");
+      
+      //  Only declare charset if we have exact knowledge of it. We cannot
+      //  provide a default for other requests since e.g. Firefox will
+      //  complain if it receives a charset=ISO-8859-1 header for text data
+      //  that starts with a UTF-8 BOM.
+      if (charset)
+	type += "; charset=" + charset;
     }
 
     heads["Content-Type"] = type;
