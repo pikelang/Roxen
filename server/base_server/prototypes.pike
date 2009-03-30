@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.237 2009/03/27 10:39:12 jonasw Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.238 2009/03/30 12:01:57 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2599,11 +2599,12 @@ class RequestID
 
 	if (sizeof (output_charset) || (String.width(file->data) > 8))
 	{
+	  sscanf (type, "%[-!#$%&´*+./0-9A-Z^_`a-z{|}~]", string ct);
 	  int allow_entities =
-	    (type == "text/xml") ||
-	    (type == "text/html") ||
-	    (type == "application/xml") ||
-	    sscanf(type, "application/%*s+xml");
+	    (ct == "text/xml") ||
+	    (ct == "text/html") ||
+	    (ct == "application/xml") ||
+	    sscanf(ct, "application/%*s+xml%*c") == 1;
 	  [charset, file->data] = output_encode( file->data, allow_entities );
 	}
       }
