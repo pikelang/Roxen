@@ -25,7 +25,8 @@ void tar_extract(string tar_file, string dest_dir) {
     Filesystem.Tar(tar_file)->tar->extract("/", dest_dir);
   };
   if (err) {
-    werror("Extracting tar file %s failed: %O\n.", tar_file, err);
+    report_debug("%s: Extracting tar file %s failed: %O\n.", module_name, tar_file,
+		 describe_backtrace(err));
   }
 }
 
