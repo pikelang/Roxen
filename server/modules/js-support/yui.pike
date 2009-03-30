@@ -21,14 +21,11 @@ string yui_root_dir = combine_path(getenv("VARDIR") || "../var", "yui/");
 int limit_yui_paths;
 
 void tar_extract(string tar_file, string dest_dir) {
-  object fs = Filesystem.Tar(tar_file);
-  array files = fs->find();
-
-  foreach(files, Stdio.Stat s) {
-    if(s->isdir())
-      Stdio.mkdirhier(yui_root_dir+s->fullpath);
-    else if(s->isreg()) 
-      Stdio.write_file(yui_root_dir+s->fullpath, fs->open(s->fullpath,"r")->read());
+  mixed err = catch {
+    Filesystem.Tar(tar_file)->tar->extract("/", dest_dir);
+  };
+  if (err) {
+    werror("Extracting tar file %s failed: %O\n.", tar_file, err);
   }
 }
 
