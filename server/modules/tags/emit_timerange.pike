@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.31 2009/03/09 09:58:35 wellhard Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.32 2009/03/30 12:46:14 mathias Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -332,10 +332,10 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
   void _decode( array(int|string) a )
   {
     [int t, string cal_name, string type, string tz, parent_scope, lang] = a;
-    Calendar.TimeRange cal = Calendar[cal_name||"ISO"]["Second"](t);
+    time = Calendar[cal_name||"ISO"]["Second"](t);
     if(tz && sizeof(tz))
-      cal = cal->set_timezone(tz);
-    cal->set_language(lang);
+      time = time->set_timezone(tz);
+    time->set_language(lang);
   }
 
   //! Once we have the string pointing out the correct time object
