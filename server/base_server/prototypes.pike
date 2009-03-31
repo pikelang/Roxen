@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.238 2009/03/30 12:01:57 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.239 2009/03/31 13:45:13 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2463,8 +2463,14 @@ class RequestID
       mapping(string:array(string)) decoded_vars = ([]);
       if (mixed err = catch {
 	  path = decoder (path);
-	  foreach (vars; string var; array(string) vals)
-	    decoded_vars[decoder (var)] = map (vals, decoder);
+	  foreach (vars; string var; array(string) vals) {
+	    if (vars[var + ".mimetype"])
+	      // Don't decode the value if it has a mime type (which
+	      // we assume comes from a multipart/form-data POST).
+	      decoded_vars[decoder (var)] = vals;
+	    else
+	      decoded_vars[decoder (var)] = map (vals, decoder);
+	  }
 	}) {
 #ifdef DEBUG
 	if (decode_charset)
@@ -2498,8 +2504,14 @@ class RequestID
       path = decoder (path);
 
       mapping(string:array(string)) decoded_vars = ([]);
-      foreach (vars; string var; array(string) vals)
-	decoded_vars[decoder (var)] = map (vals, decoder);
+      foreach (vars; string var; array(string) vals) {
+	if (vars[var + ".mimetype"])
+	  // Don't decode the value if it has a mime type (which we
+	  // assume comes from a multipart/form-data POST).
+	  decoded_vars[decoder (var)] = vals;
+	else
+	  decoded_vars[decoder (var)] = map (vals, decoder);
+      }
       vars = decoded_vars;
       input_charset = decode_charset; // Set this after we're done.
     }
