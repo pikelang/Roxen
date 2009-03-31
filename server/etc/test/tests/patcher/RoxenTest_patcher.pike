@@ -71,9 +71,16 @@ void run_tests(Configuration c)
 	    temp_path);
 
   // Install it using the command line tool
-  string clt_path = test_true(combine_path, getcwd(), "bin", "rxnpatch"); 
+  string clt_path = test_true(combine_path, getcwd(), "bin", 
+#ifdef __NT__
+"rxnpatch.bat"
+#else
+"rxnpatch"
+#endif
+);
   Process.create_process p = test(Process.create_process,
 				  ({ clt_path, 
+				     "-O", "self_test@roxen.com",
 				     "--no-colour",
 				     "install", 
 				     combine_path(temp_path, 
