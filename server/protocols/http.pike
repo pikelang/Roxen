@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.592 2009/03/21 18:43:40 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.593 2009/03/31 13:44:22 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -926,6 +926,8 @@ private int parse_got( string new_data )
 
     switch(method) {
     case "POST":
+      // FIXME: Get this POST variable munching out of the backend thread!
+
       // See http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4
       // and rfc 2388 for specs of the format of form submissions.
       switch (misc->content_type_type)
@@ -1068,6 +1070,11 @@ private int parse_got( string new_data )
 	      string name = part->disp_params->name;
 
 	      post_parts[name] += ({part}); // Note: name still encoded here.
+
+	      // Buglet: The following split into xxx, xxx.mimetype and
+	      // xxx.filename doesn't work well if the same variable xxx is
+	      // used both for files and other variables in the same form.
+	      // That's a quite odd case, though.
 
 	      post_vars[name] += ({part->getdata()});
 
