@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.593 2009/03/31 13:44:22 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.594 2009/04/01 14:05:09 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -888,7 +888,10 @@ private int parse_got( string new_data )
 	 // expectation values in the Expect field of a request MUST
 	 // respond with appropriate error status." We only handle the
 	 // standard 100-continue case (see ready_to_receive).
-	 if (contents != "100-continue") {
+	 // Also: "Comparison of expectation values is case-insensitive
+	 // for unquoted tokens (including the 100-continue token), and
+	 // is case-sensitive for quoted-string expectation-extensions."
+	 if (String.trim_all_whites(lower_case(contents)) != "100-continue") {
 	   string res = "HTTP/1.1 417 Expectation Failed\r\n\r\n";
 #ifdef CONNECTION_DEBUG
 	   werror ("HTTP[%s]: Response (length %d) =================================\n"
@@ -1974,10 +1977,9 @@ void handle_byte_ranges(mapping(string:mixed) file,
 void ready_to_receive()
 {
   // FIXME: Only send once?
-  if (clientprot == "HTTP/1.1" && request_headers->expect &&
-      (request_headers->expect ==  "100-continue" ||
-       has_value(request_headers->expect, "100-continue" )) &&
-      !my_fd_busy) {
+  if (clientprot == "HTTP/1.1" && stringp(request_headers->expect) &&
+      (String.trim_all_whites(lower_case(request_headers->expect)) == 
+       "100-continue") && !my_fd_busy) {
     string res = "HTTP/1.1 100 Continue\r\n\r\n";
 #ifdef CONNECTION_DEBUG
     werror ("HTTP[%s]: Response (length %d) =================================\n"
