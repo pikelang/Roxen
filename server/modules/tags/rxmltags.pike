@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.595 2009/03/05 12:42:15 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.596 2009/04/01 14:11:48 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -9317,22 +9317,22 @@ Normalize   all whitespace,
  in the input string. What is considered a position depends on other
  attributes:</p>
 
- <ul>
-   <li>If the \"after\" attribute is given then \"from\" counts the
-   occurrences of that string.</li>
+ <list type='ul'>
+   <item><p>If the \"after\" attribute is given then \"from\" counts the
+   occurrences of that string.</p></item>
 
-   <li>Similarly, if the \"before\" attribute is given then \"to\"
-   counts the occurrences of that string.</li>
+   <item><p>Similarly, if the \"before\" attribute is given then \"to\"
+   counts the occurrences of that string.</p></item>
 
-   <li>Otherwise, if the \"separator\", \"separator-chars\", or
+   <item><p>Otherwise, if the \"separator\", \"separator-chars\", or
    \"separator-whites\" attribute is given then the input string is
    split into fields according to the separator, and the position
    counts the fields. \"ignore-empty\" can be used to not count empty
-   fields.</li>
+   fields.</p></item>
 
-   <li>If neither of the above apply then positions are counted by
-   characters.</li>
- </ul>
+   <item><p>If neither of the above apply then positions are counted by
+   characters.</p></item>
+ </list>
 
  <p>Positive positions count from the start of the input string,
  beginning with 1. Negative positions counts from the end.</p>
@@ -9421,31 +9421,31 @@ Normalize   all whitespace,
  <p>The syntax of this string is the same as in a \"%[...]\" format to
  Pikes sscanf() function. That means:</p>
 
- <ul>
-   <li>Ranges of characters can be defined by using a '-' between the
+ <list type='ul'>
+   <item><p>Ranges of characters can be defined by using a '-' between the
    first and the last character to be included in the range. Example:
-   \"0-9H\" means any digit or 'H'.</li>
+   \"0-9H\" means any digit or 'H'.</p></item>
 
-   <li>If the first character is '^', and this character does not
+   <item><p>If the first character is '^', and this character does not
    begin a range, it means that the set is complemented, which is to
-   say that any character except those in the set is matched.</li>
+   say that any character except those in the set is matched.</p></item>
 
-   <li>To include the character '-', you must have it first (not
+   <item><p>To include the character '-', you must have it first (not
    possible in complemented sets, see below) or last to avoid having a
    range defined. To include the character ']', it must be first too.
    If both '-' and ']' should be included then put ']' first and '-'
-   last.</li>
+   last.</p></item>
 
-   <li>It is not possible to make a range that ends with ']'; make the
+   <item><p>It is not possible to make a range that ends with ']'; make the
    range end with '\\' instead and put ']' at the beginning. Likewise
    it is generally not possible to have a range start with '-'; make
    the range start with '.' instead and put '-' at the end of the
-   set.</li>
+   set.</p></item>
 
-   <li>To include '-' in a complemented set, it must be put last, not
+   <item><p>To include '-' in a complemented set, it must be put last, not
    first. To include '^' in a non-complemented set, it can be put
-   anywhere but first, or be specified as a range (\"^-^\").</li>
- </ul>
+   anywhere but first, or be specified as a range (\"^-^\").</p></item>
+ </list>
 
  <p>If \"separator-chars\" is an empty string (i.e. \"\") then the
  input string is treated as an array of single character fields.
@@ -9560,16 +9560,16 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
  input array. What is considered a position depends on other
  attributes:</p>
 
- <ul>
-   <li>If the \"after\" attribute is given then \"from\" counts the
-   occurrences of that element.</li>
+ <list type='ul'>
+   <item><p>If the \"after\" attribute is given then \"from\" counts the
+   occurrences of that element.</p></item>
 
-   <li>Similarly, if the \"before\" attribute is given then \"to\"
-   counts the occurrences of that element.</li>
+   <item><p>Similarly, if the \"before\" attribute is given then \"to\"
+   counts the occurrences of that element.</p></item>
 
-   <li>If neither of the above apply then positions are counted
-   directly by index.</li>
- </ul>
+   <item><p>If neither of the above apply then positions are counted
+   directly by index.</p></item>
+ </list>
 
  <p>Positive positions count from the start of the input array,
  beginning with 1. Negative positions counts from the end.</p>
