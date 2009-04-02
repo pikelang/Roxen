@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.669 2009/04/01 14:59:50 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.670 2009/04/02 13:13:20 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -5014,14 +5014,16 @@ low."))->add_changed_callback(lambda(object v)
     {
       ::create(
 #"<nooutput><emit source=values scope=ef variable='modvar.site.404-files'>
-   <set variable='var.base' value=''/>
-   <emit source='path'>
-     <append variable='var.base' value='/&_.name;'/>
-     <set variable='var.404' value='&var.base;/&ef.value;'/>
-     <if exists='&var.404;'>
-       <set variable='var.errfile' from='var.404'/>
-     </if>
-   </emit>
+   <if not='' variable='ef.value is '>
+     <set variable='var.base' value=''/>
+     <emit source='path'>
+       <append variable='var.base' value='/&_.name;'/>
+       <set variable='var.404' value='&var.base;/&ef.value;'/>
+       <if exists='&var.404;'>
+         <set variable='var.errfile' from='var.404'/>
+       </if>
+     </emit>
+   </if>
 </emit>
 </nooutput><if variable='var.errfile'><eval><insert file='&var.errfile;?orig-url=&page.url:url;&amp;orig-file=&page.virtfile:url;'/></eval></if><else><eval>&modvar.site.404-message:none;</eval></else>", 0, 0, 0 );
     }
@@ -5134,14 +5136,16 @@ low."))->add_changed_callback(lambda(object v)
     {
       ::create(
 #"<nooutput><emit source=values scope=ef variable='modvar.site.401-files'>
-   <set variable='var.base' value=''/>
-   <emit source='path'>
-     <append variable='var.base' value='/&_.name;'/>
-     <set variable='var.401' value='&var.base;/&ef.value;'/>
-     <if exists='&var.401;'>
-       <set variable='var.errfile' from='var.401'/>
-     </if>
-   </emit>
+   <if not='' variable='ef.value is '>
+     <set variable='var.base' value=''/>
+     <emit source='path'>
+       <append variable='var.base' value='/&_.name;'/>
+       <set variable='var.401' value='&var.base;/&ef.value;'/>
+       <if exists='&var.401;'>
+         <set variable='var.errfile' from='var.401'/>
+       </if>
+     </emit>
+   </if>
 </emit>
 </nooutput><if variable='var.errfile'><eval><insert file='&var.errfile;?orig-url=&page.url:url;&amp;orig-file=&page.virtfile:url;'/></eval></if><else><eval>&modvar.site.401-message:none;</eval></else>", 0, 0, 0 );
     }
@@ -5250,15 +5254,6 @@ low."))->add_changed_callback(lambda(object v)
 	 "The URL syntax is: snmptrap://community@hostname:portnumber"
 	 "</p><br/>",
 	 0, snmp_disabled);
-
-  if (query("snmp_process")) {
-    if(objectp(roxen()->snmpagent)) {
-      int servid;
-      servid = roxen()->snmpagent->add_virtserv(get_config_id());
-      // todo: make invisible varibale and set it to this value for future reference
-      // (support for per-reload persistence of server index?)
-    } else
-      report_error("SNMPagent: something gets wrong! The main agent is disabled!\n");  }
 #endif
 
   definvisvar( "no_delayed_load", 0, TYPE_FLAG|VAR_PUBLIC );
@@ -5273,6 +5268,18 @@ low."))->add_changed_callback(lambda(object v)
   setvars( retrieved_vars );
 
 //   report_debug("[restore: %.1fms] ", (gethrtime()-st)/1000.0 );
+
+#ifdef SNMP_AGENT
+  if (query("snmp_process")) {
+    if(objectp(roxen()->snmpagent)) {
+      int servid;
+      servid = roxen()->snmpagent->add_virtserv(get_config_id());
+      // todo: make invisible varibale and set it to this value for future reference
+      // (support for per-reload persistence of server index?)
+    } else
+      report_error("SNMPagent: something gets wrong! The main agent is disabled!\n");
+  }
+#endif
 }
 
 protected int arent_we_throttling_server () {
