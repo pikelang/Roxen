@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.131 2009/04/02 12:50:38 grubba Exp $
+ * $Id: ftp.pike,v 2.132 2009/04/02 12:58:18 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -57,29 +57,29 @@
  * More or less obsolete RFC's:
  *
  * RFC 412	User FTP documentation
- * *RFC 438	FTP server-server interaction
- * *RFC 448	Print files in FTP
- * *RFC 458	Mail retrieval via FTP
- * *RFC 463	FTP comments and response to RFC 430
- * *RFC 468	FTP data compression
+ * RFC 438	FTP server-server interaction
+ * RFC 448	Print files in FTP
+ * RFC 458	Mail retrieval via FTP
+ * RFC 463	FTP comments and response to RFC 430
+ * RFC 468	FTP data compression
  * *RFC 475	FTP and network mail system
- * *RFC 478	FTP server-server interaction - II
- * *RFC 479	Use of FTP by the NIC Journal
- * *RFC 480	Host-dependent FTP parameters
- * *RFC 505	Two solutions to a file transfer access problem
- * *RFC 506	FTP command naming problem
- * *RFC 520	Memo to FTP group: Proposal for File Access Protocol
- * *RFC 532	UCSD-CC Server-FTP facility
+ * RFC 478	FTP server-server interaction - II
+ * RFC 479	Use of FTP by the NIC Journal
+ * RFC 480	Host-dependent FTP parameters
+ * RFC 505	Two solutions to a file transfer access problem
+ * RFC 506	FTP command naming problem
+ * RFC 520	Memo to FTP group: Proposal for File Access Protocol
+ * RFC 532	UCSD-CC Server-FTP facility
  * RFC 542	File Transfer Protocol for the ARPA Network
  * RFC 561	Standardizing Network Mail Headers
- * *RFC 571	Tenex FTP problem
- * *RFC 630	FTP error code usage for more reliable mail service
- * *RFC 686	Leaving well enough alone
- * *RFC 697	CWD Command of FTP
+ * RFC 571	Tenex FTP problem
+ * RFC 630	FTP error code usage for more reliable mail service
+ * RFC 686	Leaving well enough alone
+ * RFC 697	CWD Command of FTP
  * RFC 751	SURVEY OF FTP MAIL AND MLFL
  * RFC 754	Out-of-Net Host Addresses for Mail
  *
- * (RFC's marked with * are not available from http://www.roxen.com/rfc/)
+ * (RFC's marked with * are not available from http://rfc.roxen.com/)
  */
 
 
