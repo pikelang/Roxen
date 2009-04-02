@@ -165,9 +165,11 @@ protected string ex_quote(string in)
   else
     in = in[..<sizeof (trailing_ws)];
 
-  string s = replace(in, "&lt;", "__LT__");
-  s = "<pre>"+replace(s, ({"<",">","&"}), ({"&lt;","&gt;","&amp;"}) )+"</pre>";
-  return replace(s, "__LT__", "&lt;");
+  // FIXME: Find out why we have the "&lt;" inconsistency and eliminate it.
+  return "<div style='white-space: pre; font-family: monospace'>" +
+    replace(in,
+	    ({"<",    ">",    "&",     "&lt;"}),
+	    ({"&lt;", "&gt;", "&amp;", "&lt;"}) )+"</div>";
 }
 
 protected string ex_cont(TagdocParser parser, mapping m, string c, string rt, void|object id)
@@ -196,8 +198,13 @@ protected string ex_cont(TagdocParser parser, mapping m, string c, string rt, vo
     parsed = String.capitalize (sprintf ("%t result: ", res)) +
       Roxen.html_encode_string (RXML.utils.format_short (res, 1024));
   }
-  else
-    parsed = parse_rxml (c, id);
+  else {
+    RXML.Parser p =
+      id->conf->default_content_type->
+      get_parser (RXML_CONTEXT, RXML_CONTEXT->tag_set);
+    p->write_end (c);
+    parsed = p->eval();
+  }
 
   switch(m->type) {
   case "hr":
