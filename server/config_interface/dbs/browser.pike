@@ -416,9 +416,22 @@ mixed clear_db( string db, RequestID id )
 
   Sql.Sql sq = DBManager.get( db );
 
-  foreach( DBManager.db_tables( db ), string r )
-    sq->query( "drop table "+r );
-
+  // Note: Drop table may fail due to foreign key references
+  //       in some databases. Thus the outer loop and the catch.
+  array(string) table_cnt;
+  array(string) remaining_tables = DBManager.db_tables( db );
+  do {
+    foreach( remaining_tables, string r ) {
+      catch { sq->query( "DROP TABLE "+r ); };
+    }
+    table_cnt = sizeof(remaining_tables);
+    remaining_tables = DBManager.db_tables( db );
+  } while (sizeof(remaining_tables) &&
+	   (table_cnt > sizeof(remaining_tables)));
+  if (sizeof(remaining_tables)) {
+    // We've failed to drop some tables, try forcing an error.
+    sq->query( "DROP TABLE " + remaining_tables[0]);
+  }
   return 0;
 }
 
