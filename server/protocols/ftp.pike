@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.130 2009/04/02 12:49:13 grubba Exp $
+ * $Id: ftp.pike,v 2.131 2009/04/02 12:50:38 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -35,7 +35,6 @@
  * RFC 1639	FTP Operation Over Big Address Records (FOOBAR)
  * RFC 2228	FTP Security Extensions
  * RFC 2428	FTP Extensions for IPv6 and NATs
- * RFC 4217	Securing FTP with TLS
  *
  * IETF draft 12 Extended Directory Listing, TVFS,
  *		 and Restart Mechanism for FTP
@@ -49,6 +48,7 @@
  * RFC 691	One More Try on the FTP
  * RFC 724	Proposed Official Standard for the
  * 		Format of ARPA Network Messages
+ * RFC 4217	Securing FTP with TLS
  *
  * RFC's describing gateways and proxies:
  *
