@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.270 2009/03/19 20:38:49 mast Exp $
+// $Id: Roxen.pmod,v 1.271 2009/04/03 20:45:58 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -405,6 +405,70 @@ int _match(string w, array (string) a)
       return 1;
 }
 
+
+string canonicalize_http_header (string header)
+//! Returns the given http header on the canonical capitalization form
+//! as given in RFC 2616. E.g. @expr{"content-type"@} or
+//! @expr{"CONTENT-TYPE"@} is returned as @expr{"Content-Type"@}.
+//! Returns zero if the given string isn't a known http header.
+//!
+//! @seealso
+//! @[RequestID.add_response_header]
+{
+  return ([
+    // RFC 2616 section 4.5: General Header Fields
+    "cache-control":		"Cache-Control",
+    "connection":		"Connection",
+    "date":			"Date",
+    "pragma":			"Pragma",
+    "trailer":			"Trailer",
+    "transfer-encoding":	"Transfer-Encoding",
+    "upgrade":			"Upgrade",
+    "via":			"Via",
+    "warning":			"Warning",
+    // RFC 2616 section 5.3: Request Header Fields
+    "accept":			"Accept",
+    "accept-charset":		"Accept-Charset",
+    "accept-encoding":		"Accept-Encoding",
+    "accept-language":		"Accept-Language",
+    "authorization":		"Authorization",
+    "expect":			"Expect",
+    "from":			"From",
+    "host":			"Host",
+    "if-match":			"If-Match",
+    "if-modified-since":	"If-Modified-Since",
+    "if-none-match":		"If-None-Match",
+    "if-range":			"If-Range",
+    "if-unmodified-since":	"If-Unmodified-Since",
+    "max-forwards":		"Max-Forwards",
+    "proxy-authorization":	"Proxy-Authorization",
+    "range":			"Range",
+    "referer":			"Referer",
+    "te":			"TE",
+    "user-agent":		"User-Agent",
+    // RFC 2616 section 6.2: Response Header Fields
+    "accept-ranges":		"Accept-Ranges",
+    "age":			"Age",
+    "etag":			"ETag",
+    "location":			"Location",
+    "proxy-authenticate":	"Proxy-Authenticate",
+    "retry-after":		"Retry-After",
+    "server":			"Server",
+    "vary":			"Vary",
+    "www-authenticate":		"WWW-Authenticate",
+    // RFC 2616 section 7.1: Entity Header Fields
+    "allow":			"Allow",
+    "content-encoding":		"Content-Encoding",
+    "content-language":		"Content-Language",
+    "content-length":		"Content-Length",
+    "content-location":		"Content-Location",
+    "content-md5":		"Content-MD5",
+    "content-range":		"Content-Range",
+    "content-type":		"Content-Type",
+    "expires":			"Expires",
+    "last-modified":		"Last-Modified",
+  ])[lower_case (header)];
+}
 
 mapping(string:mixed) http_low_answer( int status_code, string data )
 //! Return a result mapping with the specified HTTP status code and
@@ -2559,7 +2623,7 @@ protected string low_roxen_encode(string val, string encoding)
 //!     using this encoding, so by using this for @expr{Set-Cookie@}
 //!     headers etc you will get back the original value in the
 //!     @expr{cookie@} scope. Note that @[Roxen.set_cookie] and the
-//!     RXML @expr{<set-cookie>@} tag already do this encoding for
+//!     RXML @expr{<set-cookie>@} tag already does this encoding for
 //!     you. C.f. @[Roxen.http_encode_cookie].
 //!
 //!   @value "html"
@@ -2573,7 +2637,7 @@ protected string low_roxen_encode(string val, string encoding)
 //!   @value "pike"
 //!     Pike string quoting, for use in e.g. the @tt{<pike></pike>@}
 //!     tag. This means backslash escapes for chars that cannot occur
-//!     verbating in Pike string literals.
+//!     verbatim in Pike string literals.
 //!
 //!   @value "js"
 //!   @value "javascript"
