@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.596 2009/04/01 14:11:48 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.597 2009/04/03 21:10:05 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -554,7 +554,9 @@ class TagHeader {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      if(args->name == "WWW-Authenticate") {
+      string name = Roxen.canonicalize_http_header (args->name) || args->name;
+
+      if(name == "WWW-Authenticate") {
 	string r;
 	if(r = args->value) {
 	  if(!sscanf(args->value, "Realm=%s", r))
@@ -562,14 +564,17 @@ class TagHeader {
 	} else
 	  r="Users";
 	args->value="basic realm=\""+r+"\"";
-      } else if(args->name=="URI")
+      } else if(name=="URI")
+	// What's this? RFC 2616 doesn't mention any "URI" header.
 	args->value = "<" + args->value + ">";
 
-      if((<"Content-Type", "Expires">)[args->name])
-	// FIXME: Extend with more singleton headers.
-        id->set_response_header(args->name, args->value);
-      else
-	id->add_response_header(args->name, args->value);
+      switch (args->mode || "auto") {
+	case "add": id->add_response_header (name, args->value); break;
+	case "set": id->set_response_header (name, args->value); break;
+	case "auto": id->add_or_set_response_header (name, args->value); break;
+	default: parse_error ("Invalid mode %q.\n", args->mode);
+      }
+
       return 0;
     }
   }
@@ -8837,12 +8842,22 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  chapter 14, 'Header field definitions' in <a href='http://community.roxen.com/developers/idocs/rfc/rfc2616.html'>RFC 2616</a>, available at Roxen Community.
 </p></desc>
 
-<attr name='name' value='string'>
+<attr name='name' value='string' required='required'>
  <p>The name of the header.</p>
 </attr>
 
-<attr name='value' value='string'>
+<attr name='value' value='string' required='required'>
  <p>The value of the header.</p>
+</attr>
+
+<attr name='mode' value='add|set|auto'>
+ <p>How to add the header to the response: The value \"add\" appends
+ another value to the header, after any values it got already (not all
+ response headers allow this). \"set\" sets the header to the given
+ value, overriding any existing value(s). \"auto\" uses \"add\" mode
+ for all headers which are specified to accept multiple values in RFC
+ 2616, and \"set\" mode for all other headers. \"auto\" is the default
+ if this attribute is left out.</p>
 </attr>",
 
 //----------------------------------------------------------------------
