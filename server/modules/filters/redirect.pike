@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.51 2009/01/10 13:53:47 mast Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.52 2009/04/03 19:04:04 grubba Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -102,11 +102,11 @@ mapping(string:array(string|int)) exact_patterns = ([]);
 
 //! Mapping from filename to
 //! @array
-//!   @item int poll_interval
+//!   @elem int poll_interval
 //!     Poll interval in seconds.
-//!   @item int last_poll
+//!   @elem int last_poll
 //!     Time the file was last polled.
-//!   @item Stdio.Stat stat
+//!   @elem Stdio.Stat stat
 //!     Stat at the time of @[last_poll].
 //! @endarray
 mapping(string:array(int|Stdio.Stat)) dependencies = ([]);
