@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.392 2009/02/26 23:52:25 mast Exp $
+// $Id: module.pmod,v 1.393 2009/04/03 19:25:01 grubba Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -9501,6 +9501,7 @@ string p_code_to_string (PCode p_code, void|Configuration default_config)
     (p_code_encoders[default_config] = PCodeEncoder (default_config));
   return encode_value (p_code, encoder);
 }
+
 protected mapping(Configuration:array(PCodeDecoder)) p_code_decoders = ([]);
 
 PCode string_to_p_code (string str, void|Configuration default_config,
