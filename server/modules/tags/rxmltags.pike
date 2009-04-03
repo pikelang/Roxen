@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.598 2009/04/03 21:20:24 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.599 2009/04/03 23:40:25 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -5325,7 +5325,8 @@ class TagStrLen {
   inherit RXML.Tag;
   constant name = "strlen";
   constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
-  RXML.Type content_type = RXML.t_xml (RXML.PXml);
+  RXML.Type content_type =
+    compat_level < 5.0 ? RXML.t_xml (RXML.PXml) : RXML.t_text (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_int}) + ::result_types;
 
   class Frame {
@@ -11610,10 +11611,24 @@ Specify scope to test for existence.</p>
 //----------------------------------------------------------------------
 
 "strlen":#"<desc type='cont'><p><short>
- Returns the length of the contents.</short></p>
+ Returns the length of the content, which is treated as
+ text/plain.</short></p>
 
  <ex>There are <strlen>foo bar gazonk</strlen> characters
  inside the tag.</ex>
+
+ <p>See also the <xref href='elements.tag'/> tag for use with
+ non-string types.</p>
+
+ <p>Compatibility note: Before 5.0, this tag HTML encoded values from
+ variable entities in the content. If you e.g. had the single
+ character <tt>&lt;</tt> in the variable var.a then
+ <tt><tag>strlen</tag><ent>var.a</ent><tag>/strlen</tag></tt> would
+ produce 4 instead of 1 because it converted the <tt>&lt;</tt> to
+ <tt>&amp;lt;</tt> first. That no longer occurs, which makes this tag
+ consistent with e.g. <tag>if sizeof</tag> and the sizeof() expression
+ operator. The old behavior is retained if the compatibility level is
+ 4.5 or less.</p>
 </desc>",
 
 //----------------------------------------------------------------------
@@ -11623,7 +11638,11 @@ Specify scope to test for existence.</p>
  isn't of a type which contains several elements (includes strings), 1
  is returned. That makes it consistent with variable indexing, e.g.
  var.foo.1 takes the first element in var.foo if it's an array, and if
- it isn't then it's the same as var.foo.</p></desc>
+ it isn't then it's the same as var.foo.</p>
+
+ <p>See also the <xref href='strlen.tag'/> tag for use with
+ strings.</p>
+</desc>
 
 <attr name='variable' value='string'>
  <p>The name of the variable.</p>
