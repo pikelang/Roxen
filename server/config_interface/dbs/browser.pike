@@ -418,7 +418,7 @@ mixed clear_db( string db, RequestID id )
 
   // Note: Drop table may fail due to foreign key references
   //       in some databases. Thus the outer loop and the catch.
-  array(string) table_cnt;
+  int table_cnt;
   array(string) remaining_tables = DBManager.db_tables( db );
   do {
     foreach( remaining_tables, string r ) {
