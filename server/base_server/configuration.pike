@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.670 2009/04/02 13:13:20 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.671 2009/04/03 19:47:40 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -558,8 +558,9 @@ array(int) query_oid()
 //! @returns
 //!   Returns an array with two elements:
 //!   @array
-//!     @item array(int) oid
-//!     @item array(int) oid_suffix
+//!     @elem array(int) oid
+//!
+//!     @elem array(int) oid_suffix
 //!   @endarray
 array(int) generate_module_oid_segment(RoxenModule me)
 {
@@ -1287,7 +1288,7 @@ User authenticate( RequestID id, UserDB|void database)
 mapping authenticate_throw( RequestID id, string realm,
 			    UserDB|void database)
 //! Returns a reply mapping, similar to @[Roxen.http_rxml_reply] with
-//! friends. If no @[database] is specified, all datbases in the
+//! friends. If no @[database] is specified, all databases in the
 //! current configuration are searched in priority order.
 {
   mapping m;
