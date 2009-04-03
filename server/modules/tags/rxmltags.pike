@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.597 2009/04/03 21:10:05 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.598 2009/04/03 21:20:24 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -8837,7 +8837,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 //----------------------------------------------------------------------
 
 "header":#"<desc type='tag'><p><short>
- Adds a HTTP header to the page sent back to the client.</short> For
+ Adds an HTTP header to the page sent back to the client.</short> For
  more information about HTTP headers please steer your browser to
  chapter 14, 'Header field definitions' in <a href='http://community.roxen.com/developers/idocs/rfc/rfc2616.html'>RFC 2616</a>, available at Roxen Community.
 </p></desc>
@@ -8850,7 +8850,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  <p>The value of the header.</p>
 </attr>
 
-<attr name='mode' value='add|set|auto'>
+<attr name='mode' value='add|set|auto' default='auto'>
  <p>How to add the header to the response: The value \"add\" appends
  another value to the header, after any values it got already (not all
  response headers allow this). \"set\" sets the header to the given
