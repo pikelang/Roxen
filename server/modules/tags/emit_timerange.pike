@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.36 2009/03/30 12:59:15 mathias Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.37 2009/04/03 17:45:14 grubba Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -340,7 +340,7 @@ class TimeRangeValue(Calendar.TimeRange time,	// the time object we represent
   }
 
   //! Once we have the string pointing out the correct time object
-  //! method, this method calls it from the @code{time@} object and
+  //! method, this method calls it from the @[time] object and
   //! returns the result, properly quoted.
   //! @param calendar_method
   //!   the name of a method in a @[Calendar.TimeRange] object,
@@ -958,6 +958,8 @@ array(mapping) db_query(string q,string db_name)
   return result;
 }
 
+//! @ignore
+
 #define DOC_SCOPE(SCOPE_NAME)  \
   "&"##SCOPE_NAME + ".year;":"<desc type='entity'><p>"\
   "  Returns the year i.e. 2003</p></desc>",\
@@ -1415,3 +1417,5 @@ constant tagdoc = ([
   ", ([ DOC_SCOPE("_") ])
  })
 ]);
+
+//! @endignore

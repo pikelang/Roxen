@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1027 2009/03/23 13:45:49 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1028 2009/04/03 17:47:19 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1680,15 +1680,15 @@ class Protocol
   //!
   //! Indexed by URL. The following data is stored:
   //! @mapping
-  //!   @entry Configuration "conf"
+  //!   @member Configuration "conf"
   //!     The Configuration object for this URL.
-  //!   @entry string "hostname"
+  //!   @member string "hostname"
   //!     The hostname from the URL.
-  //!   @entry string|void "path"
+  //!   @member string|void "path"
   //!     The path (if any) from the URL.
-  //!   @entry Protocol "port"
+  //!   @member Protocol "port"
   //!     The protocol handler for this URL.
-  //!   @entry int "mib_version"
+  //!   @member int "mib_version"
   //!     (Only SNMP). The version number for the configuration MIB
   //!     tree when it was last merged.
   //! @endmapping

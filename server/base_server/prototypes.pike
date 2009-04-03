@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.239 2009/03/31 13:45:13 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.240 2009/04/03 17:49:05 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1387,11 +1387,11 @@ class RequestID
   }
 
   void init_pref_languages()
-  //! Call to initialize @code{@[misc]->pref_languages@}.
+  //! Call to initialize @expr{@[misc]->pref_languages@}.
   //!
   //! Typically called from callbacks installed with
   //! @[register_vary_callback()] to ensure
-  //! @code{@[misc]->pref_languages@} is initialized.
+  //! @expr{@[misc]->pref_languages@} is initialized.
   {
     if (!misc->pref_languages) {
       misc->pref_languages=PrefLanguages();
