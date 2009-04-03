@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.240 2009/04/03 17:49:05 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.241 2009/04/03 21:00:52 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1175,7 +1175,14 @@ class RequestID
   //!     Value to add to @expr{file->len@} to get the length
   //!     to report in the access log.
   //!   @member mapping(string:string|array(string)) "moreheads"
-  //!     Response headers. See @[add_response_header()] for details.
+  //!     If this exists, it contains headers to send in the response.
+  //!     It overrides automatically calculated headers and headers
+  //!     given in a response mapping (as returned by e.g.
+  //!     @[RoxenModule.find_file]). Although http headers are case
+  //!     insensitive, the header names in this mapping are not. All
+  //!     names should follow the capitalization forms used in RFC
+  //!     2616 (c.f. @[Roxen.canonicalize_http_header]). See
+  //!     @[add_response_header()] for more details.
   //!   @member int(1..1) "no_proto_cache"
   //!     Flag indicating that the result should not be cached in
   //!     the protocol cache.
@@ -1973,11 +1980,12 @@ class RequestID
   //! @note
   //! Although case is insignificant in http header names, it is
   //! significant here. @[name] should always follow the
-  //! capitalization used in RFC 2616.
+  //! capitalization used in RFC 2616. Use
+  //! @[Roxen.canonicalize_http_header] if necessary.
   //!
   //! @seealso
-  //! @[set_response_header], @[get_response_headers],
-  //! @[remove_response_headers]
+  //! @[set_response_header], @[add_or_set_response_header],
+  //! @[get_response_headers], @[remove_response_headers]
   {
     mapping(string:string|array(string)) hdrs =
       misc->defines && misc->defines[" _extra_heads"] || misc->moreheads;
@@ -2026,7 +2034,8 @@ class RequestID
   //! capitalization used in RFC 2616.
   //!
   //! @seealso
-  //! @[get_response_headers], @[remove_response_headers]
+  //! @[add_or_set_response_header], @[get_response_headers],
+  //! @[remove_response_headers]
   {
     if (misc->defines && misc->defines[" _extra_heads"]) {
       misc->defines[" _extra_heads"][name] = value;
@@ -2037,6 +2046,35 @@ class RequestID
       if (!misc->moreheads) misc->moreheads = ([]);
       misc->moreheads[name] = value;
     }
+  }
+
+  void add_or_set_response_header (string name, string value)
+  //! Calls either @[add_response_header] or @[set_response_header] as
+  //! appropriate for the specific header: If a header is known to
+  //! allow multiple values (from RFC 2616) then
+  //! @[add_response_header] is called to add another value to it,
+  //! otherwise @[set_response_header] is called to override the old
+  //! value if there is any.
+  {
+    if ((["Accept-Ranges": 1,
+	  "Allow": 1,
+	  "Cache-Control": 1,
+	  "Connection": 1,
+	  "Content-Encoding": 1,
+	  "Content-Language": 1,
+	  "Pragma": 1,
+	  "Proxy-Authenticate": 1,
+	  "Trailer": 1,
+	  "Transfer-Encoding": 1,
+	  "Upgrade": 1,
+	  "Vary": 1,
+	  "Via": 1,
+	  "Warning": 1,
+	  "WWW-Authenticate": 1,
+	])[name])
+      add_response_header (name, value);
+    else
+      set_response_header (name, value);
   }
 
   protected constant http_nontoken_chars = ([
