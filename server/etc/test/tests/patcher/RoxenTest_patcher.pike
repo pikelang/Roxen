@@ -46,6 +46,10 @@ void run_tests(Configuration c)
   // Place all temporary files in the same directory
   test(po->set_temp_dir, temp_path);
 
+  // Add temp path to environment (to be passed on to external processes)
+  mapping env = getenv() || ([ ]);
+  env->TEMP = temp_path;
+
   // Try importing and installing a patch directly through the lib. 
   string patch_id = test_true(po->import_file, 
 			      combine_path(test_path, "2009-02-25T1124.rxp"), 
@@ -84,7 +88,8 @@ void run_tests(Configuration c)
 				     "--no-colour",
 				     "install", 
 				     combine_path(temp_path, 
-						  "2009-02-25T1628.rxp") }) );
+						  "2009-02-25T1628.rxp") }),
+				  ([ "env" : env ]) );
   test_false(p && p->wait);
 
   // Create a patch using the command line tool and then install it.
@@ -98,7 +103,8 @@ void run_tests(Configuration c)
 		      "--patch=" + combine_path(test_path, "testfile.patch"),
 		      "-t", temp_path });
   Stdio.File desc = Stdio.File();
-  p = test(Process.create_process, clt_args, ([ "stdin" : desc.pipe() ]) );
+  p = test(Process.create_process, clt_args, ([ "stdin" : desc.pipe(),
+	   					"env"	: env ]) );
   
   test(desc.write, "Created by self_test.");
   test(desc.close);
