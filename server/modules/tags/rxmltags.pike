@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.600 2009/04/06 12:36:04 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.601 2009/04/06 17:09:45 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -3074,13 +3074,13 @@ class TagSubstring
 	  parse_error ("\"index\" attribute cannot be used "
 		       "together with \"after\" or \"before\".\n");
 	beg = end = args->index;
-	if (!beg) parse_error ("\index\" cannot be zero.\n");
+	if (!beg) parse_error ("\"index\" cannot be zero.\n");
       }
       else {
 	beg = args->from;
-	if (!beg && !zero_type (beg)) parse_error ("\from\" cannot be zero.\n");
+	if (!beg && !zero_type (beg)) parse_error ("\"from\" cannot be zero.\n");
 	end = args->to;
-	if (!end && !zero_type (end)) parse_error ("\to\" cannot be zero.\n");
+	if (!end && !zero_type (end)) parse_error ("\"to\" cannot be zero.\n");
       }
 
       if (content == RXML.nil) content = "";
@@ -3764,9 +3764,9 @@ class TagRange
     array do_return (RequestID id)
     {
       int beg = args->from;
-      if (!beg && !zero_type (beg)) parse_error ("\from\" cannot be zero.\n");
+      if (!beg && !zero_type (beg)) parse_error ("\"from\" cannot be zero.\n");
       int end = args->to;
-      if (!end && !zero_type (end)) parse_error ("\to\" cannot be zero.\n");
+      if (!end && !zero_type (end)) parse_error ("\"to\" cannot be zero.\n");
 
       if (args->variable)
 	content = RXML.user_get_var (args->variable);
