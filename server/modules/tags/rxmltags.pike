@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.599 2009/04/03 23:40:25 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.600 2009/04/06 12:36:04 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -1634,14 +1634,17 @@ class TagRemoveCookie {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
+#if 0
 //    really... is this error a good idea?  I don't think so, it makes
 //    it harder to make pages that use cookies. But I'll let it be for now.
 //       /Per
 
+      // I agree, but I don't let it be. /mast
 
       if(!id->cookies[args->name])
-        RXML.run_error("That cookie does not exist.\n");
-      Roxen.remove_cookie( id, args->name, 
+	RXML.run_error("That cookie does not exist.\n");
+#endif
+      Roxen.remove_cookie( id, args->name,
                            (args->value||id->cookies[args->name]||""), 
                            args->domain, args->path );
       return 0;
