@@ -1588,8 +1588,9 @@ b</strlen></rxml>
 </test>
 
 <test>
-<rxml><strlen>Roxen<b>&ouml;</b></strlen></rxml>
-<result>18</result>
+  <!-- Used to return 18 in 4.5 and earlier. -->
+  <rxml><strlen>Roxen<b>&ouml;</b></strlen></rxml>
+  <result>13</result>
 </test>
 
 <test>
@@ -1600,6 +1601,14 @@ b</strlen></rxml>
 <test>
 <rxml><strlen></strlen></rxml>
 <result>0</result>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.x"><![CDATA[<>%&'"]]></set>
+    <strlen>&var.x;</strlen>
+  </rxml>
+  <result>6</result>
 </test>
 
 
