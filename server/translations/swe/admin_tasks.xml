@@ -1281,13 +1281,13 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 </str>
 
 <str id="358">
-<o>Uninstall</o>
-<t>Avinstallera</t>
+<o>Uninstall selected patches</o>
+<t>Avinstallera valda patchpaket</t>
 </str>
 
 <str id="359">
-<o>Install</o>
-<t>Installera</t>
+<o>Install selected patches</o>
+<t>Installera valda patchpaket</t>
 </str>
 
 <str id="360">
@@ -1371,8 +1371,12 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 </str>
 
 <str id="376">
-<o>These are patches that are not currently installed;they are imported but not applied.</o>
-<t>Nedanstående patchpaket är inte installerade, bara importerade.</t>
+<o>These are patches that are not currently installed; they are imported but 
+   not applied. It should be safe to remove them from disk. They can be found
+   in local/patches/.</o>
+<t>Nedanstående patchpaket är inte installerade, bara importerade. Det bör vara
+   säkert att ta bort dem från disk. De kan i så fall hittas i local/patches/.
+</t>
 </str>
 
 <str id="377">

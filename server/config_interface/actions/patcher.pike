@@ -445,7 +445,8 @@ string list_patches(RequestID id, Patcher po, string which_list)
 		 colspan,
 		 (which_list == "installed") ? "uninstall" : "install",
 		 (which_list == "installed") ? 
-		 LOCALE(358, "Uninstall") : LOCALE(359, "Install"));
+		 LOCALE(358, "Uninstall selected patches") : 
+		 LOCALE(359, "Install selected patches"));
 
   return res; //+ sprintf("<td>&nbsp;</td>"
 // 		       "<td>&nbsp;</td>"
@@ -713,8 +714,9 @@ mixed parse(RequestID id)
     </p>
     <font size='+1'><b>" + LOCALE(375, "Imported Patches") + #"</b></font>
     <p>" +
-    LOCALE(376, "These are patches that are not currently installed;"
-	      "they are imported but not applied.") +
+    LOCALE(376, "These are patches that are not currently installed; "
+		"they are imported but not applied. It should be safe to "
+		"remove them from disk. They can be found in local/patches/.") +
    "</p>\n    <p>" +
     LOCALE(377, "Click on a patch for more information.") +
   #"</p>
