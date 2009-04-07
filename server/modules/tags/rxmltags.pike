@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.603 2009/04/07 15:57:57 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.604 2009/04/07 23:14:19 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -3907,13 +3907,33 @@ class TagValue
 	  // a splice/single-value ambiguity.
 	  result_type = RXML.t_any;
       }
+
+      if (args->from || args->expr)
+	flags |= RXML.FLAG_EMPTY_ELEMENT;
     }
 
     array do_return (RequestID id)
     {
-      if (content == RXML.nil)
-	result = RXML.empty;
-      else if (string ind = args->index)
+      if (string var = args->from) {
+	// Get the value from another variable.
+	if (zero_type (content = RXML.user_get_var(var, args->scope)))
+	  parse_error ("From variable %q does not exist.\n", var);
+      }
+
+      else if (string expr = args->expr)
+	content = sexpr_eval (expr);
+
+      else if (content == RXML.nil) {
+	if (content_type->sequential)
+	  content = content_type->empty_value;
+	else if (content_type == RXML.t_any)
+	  content = RXML.empty;
+	else
+	  parse_error ("The value is missing for "
+		       "non-sequential type %s.\n", content_type);
+      }
+
+      if (string ind = args->index)
 	result = ([ind: content]);
       else if (result_type != content_type)
 	result = result_type->encode (content, content_type);
@@ -9645,9 +9665,9 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
 //----------------------------------------------------------------------
 
 "value": #"<desc type='cont'>
- <p><short>Creates a single value from its contents.</short> This is
- mainly useful to build the elements in array or mapping contexts.
- E.g:</p>
+ <p><short>Creates a single value from its contents or some other
+ source.</short> This is mainly useful to build the elements in array
+ or mapping contexts. E.g:</p>
 
  <ex any-result=''>
 <set variable=\"var.arr\" type=\"array\">
@@ -9687,7 +9707,9 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
 </desc>
 
 <attr name='type' value='type'>
- <p>The type of the content. Defaults to \"any\".</p>
+ <p>The type of the content and the result (except if it's \"array\" -
+ then the result is \"any\" to avoid splicing the array into the
+ surrounding array, as shown above). Defaults to \"any\".</p>
 </attr>
 
 <attr name='index'>
@@ -9703,6 +9725,16 @@ Pikes sscanf() function. See the \"separator-chars\" attribute for a
 
  <p>This attribute cannot be left out when a mapping is constructed,
  and it must not be given otherwise.</p>
+</attr>
+
+<attr name='from' value='string'>
+ <p>Get the value from this variable. The content must be empty if
+ this is used.</p>
+</attr>
+
+<attr name='expr' value='string'>
+ <p>An expression that gets evaluated to produce the value. The
+ content must be empty if this is used.</p>
 </attr>",
 
 //----------------------------------------------------------------------
