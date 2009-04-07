@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.602 2009/04/07 15:56:53 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.603 2009/04/07 15:57:57 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -985,10 +985,9 @@ class TagDebug {
       if (string var = args->showvar) {
 	TAG_TRACE_ENTER("");
 	mixed val = RXML.user_get_var (var, args->scope);
-	if (zero_type (val))
-	  parse_error ("Variable %q does not exist.\n", var);
 	result = "<pre>" +
-	  Roxen.html_encode_string (sprintf ("%O", val)) +
+	  (zero_type (val) ? "UNDEFINED" :
+	   Roxen.html_encode_string (sprintf ("%O", val))) +
 	  "</pre>";
 	TAG_TRACE_LEAVE("");
 	return 0;
