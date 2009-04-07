@@ -67,12 +67,14 @@ void start(int when) {
 
 void set_invisible(string var)
 {
-  getvar(var) && getvar(var)->
-    set_invisibility_check_callback(
+  if (Variable.Variable v = getvar(var)) {
+    v->set_invisibility_check_callback(
       lambda(RequestID id, Variable.Variable var)
       {
 	return 1;
       });
+    v->set_flags(v->get_flags() & ~VAR_INITIAL);
+  }
 }
 
 
