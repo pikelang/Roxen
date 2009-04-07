@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.393 2009/04/03 19:25:01 grubba Exp $
+// $Id: module.pmod,v 1.394 2009/04/07 16:04:43 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7097,6 +7097,14 @@ TAnyText t_any_text = TAnyText();
 //! (which are typically literal) should be given the type
 //! @[RXML.t_text] and not this type, so that they get correctly
 //! encoded when inserted into e.g. XML markup.
+//!
+//! Otoh, tags that treat their content as text should usually use
+//! this type rather than @[RXML.t_text]. The effect is that if a
+//! (typed) xml value is inserted in the content then it will be
+//! interpreted directly as text without trying to decode charrefs etc
+//! in it (which is usually what is expected when the value isn't
+//! literal). If @[RXML.t_text] was used instead, it might throw
+//! errors at that point if the xml value contains tags.
 
 class TAnyText
 {
