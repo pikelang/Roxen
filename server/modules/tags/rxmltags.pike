@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.601 2009/04/06 17:09:45 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.602 2009/04/07 15:56:53 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -5329,7 +5329,7 @@ class TagStrLen {
   constant name = "strlen";
   constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
   RXML.Type content_type =
-    compat_level < 5.0 ? RXML.t_xml (RXML.PXml) : RXML.t_text (RXML.PXml);
+    compat_level < 5.0 ? RXML.t_xml (RXML.PXml) : RXML.t_any_text (RXML.PXml);
   array(RXML.Type) result_types = ({RXML.t_int}) + ::result_types;
 
   class Frame {
