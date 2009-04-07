@@ -1611,6 +1611,47 @@ b</strlen></rxml>
   <result>6</result>
 </test>
 
+<!-- The following rather tests conversion behavior between the
+     different text types. -->
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" type="text/*">Roxen<b>&ouml;</b></set>
+    <!-- var.x contains a decoded entity from the PXml parser. -->
+    <strlen>&var.x;</strlen>
+  </rxml>
+  <equal>13</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" type="text/xml">Roxen<b>&ouml;</b></set>
+    <!-- var.x contains an encoded entity since it's an xml value. -->
+    <strlen>&var.x;</strlen>
+  </rxml>
+  <equal>18</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" type="text/xml">Roxen<b>&ouml;</b></set>
+    <!-- var.x contains an encoded entity since it's an xml value.
+	 Using the <value> tag below we also insert it with the
+	 text/xml type. That would break if TagStrLen had content_type
+	 RXML.t_text. -->
+    <strlen><value type="text/xml">&var.x:none;</value></strlen>
+  </rxml>
+  <equal>18</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.x" type="text/xml">Roxen<b>&ouml;</b></set>
+    <strlen><value type="text/plain">&var.x:none;</value></strlen>
+  </rxml>
+  <equal>18</equal>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>User Ifs</comment>
