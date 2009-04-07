@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.394 2009/04/07 16:04:43 mast Exp $
+// $Id: module.pmod,v 1.395 2009/04/07 22:06:37 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6996,8 +6996,7 @@ TString t_string = TString();
 //! @note
 //! The whitespace handling implemented by this type is a bit
 //! inadequate and doesn't conform to e.g. the XML whitespace
-//! normalization rules. Therefore this type should be expected to
-//! change.
+//! normalization rules.
 
 //!
 class TString
