@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2004, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.165 2009/03/13 12:30:53 anders Exp $
+// $Id: wizard.pike,v 1.166 2009/04/08 15:51:54 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -1166,9 +1166,17 @@ mixed wizard_menu(RequestID id, string dir, string base, mixed ... args)
       if(id->misc->raw_wizard_actions)
 	return acts[id->variables->sm];
       string res;
-      res= ("<table cellpadding=\"3\"><tr><td valign=\"top\" bgcolor=\"#eeeeee\">"+
-	    act_describe_submenues(indices(acts),base,id->variables->sm)+
-	    "</td>\n\n<td valign=\"top\">"+
+      string submenus =
+	act_describe_submenues(indices(acts),base,id->variables->sm);
+      if (sizeof(submenus)) {
+	submenus =
+	  "<td valign='top' bgcolor='#eeeeee'>" +
+	  submenus +
+	  "</td>\n";
+      }
+      res= ("<table cellpadding=\"3\"><tr>" +
+	    submenus +
+	    "<td valign=\"top\">"+
 	    (sizeof(acts)>1 && acts[id->variables->sm]?"<font size=\"+3\">"+
 	     (id->variables->sm||"Misc")+"</font><dl>":"<dl>")+
 	    (sort(acts[id->variables->sm]||({}))*"\n")+
