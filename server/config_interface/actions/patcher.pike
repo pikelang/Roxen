@@ -560,13 +560,15 @@ mixed parse(RequestID id)
     
     
     
-    res += sprintf("<p><span id='log_img' class='folded'"
+    res += sprintf("<p><span id='log_img' class='%s'"
 		   " onmouseover='this.style.cursor=\"pointer\"'"
 		   " onclick='expand(\"log\")'>log</span>"
-		   "<div style='display: none' id='idlog'>%s</div></p>\n"
+		   "<div style='%s' id='idlog'>%s</div></p>\n"
 		   "<br clear='all' /><br />\n"
 		   "<cf-ok-button href='?action=patcher.pike&"
 		   "class=maintenance' />",
+		   patch_id ? "folded" : "unfolded",
+		   patch_id ? "display: none" : "",
 		   wb->get_all_messages());
     wb->clear_all();
     return res;
@@ -634,13 +636,16 @@ mixed parse(RequestID id)
   </cf-perm>";
     }
 
-    res += sprintf("<p><span id='log_img' class='folded'"
+    res += sprintf("<p><span id='log_img' class='%s'"
 		   " onmouseover='this.style.cursor=\"pointer\"'"
 		   " onclick='expand(\"log\")'>log</span>"
-		   "<div style='display: none' id='idlog'>%s</div></p>\n"
+		   "<div style='%s' id='idlog'>%s</div></p>\n"
 		   "<cf-ok-button href='?action=patcher.pike&"
 		   "class=maintenance' />",
-		  wb->get_all_messages());
+		   successful_uninstalls < no_of_patches ? "unfolded" : 
+		   "folded",
+		   successful_uninstalls < no_of_patches ? "" : "display: none",
+		   wb->get_all_messages());
     wb->clear_all();
     return Roxen.http_string_answer(res);
   }
@@ -710,13 +715,15 @@ mixed parse(RequestID id)
 ";
     }
 
-    res += sprintf("<p><span id='log_img' class='folded'"
+    res += sprintf("<p><span id='log_img' class='%s'"
 		   " onmouseover='this.style.cursor=\"pointer\"'"
 		   " onclick='expand(\"log\")'>log</span>"
-		   "<div style='display: none' id='idlog'>%s</div></p>\n"
+		   "<div style='%s' id='idlog'>%s</div></p>\n"
 		   "<cf-ok-button href='?action=patcher.pike&"
 		   "class=maintenance' />",
-		  wb->get_all_messages());
+		   successful_installs < no_of_patches ? "unfolded" : "folded",
+		   successful_installs < no_of_patches ? "" : "display: none",
+		   wb->get_all_messages());
     wb->clear_all();
     return Roxen.http_string_answer(res);
   }
