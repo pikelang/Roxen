@@ -4,7 +4,7 @@
 // another. This can be done using "internal" redirects (much like a
 // symbolic link in unix), or with normal HTTP redirects.
 
-constant cvs_version = "$Id: redirect.pike,v 1.52 2009/04/03 19:04:04 grubba Exp $";
+constant cvs_version = "$Id: redirect.pike,v 1.53 2009/04/08 13:58:59 jonasw Exp $";
 constant thread_safe = 1;
 
 inherit "module";
@@ -309,11 +309,6 @@ mixed first_try(object id)
     return Roxen.http_low_answer( ret_code, "")
       + ([ "extra_heads":([ "Location":to ]) ]);
   } else {
-    id->real_variables = id->misc->post_variables ?
-      id->misc->post_variables + ([]) : ([]);
-    id->variables = FakedVariables(id->real_variables);
-    id->raw_url = Roxen.http_encode_invalids(to);
-    id->not_query = id->scan_for_query( to );
     if (!id->misc->redirected_raw_url) {
       // Keep track of the original raw_url.
       id->misc->redirected_raw_url = id->raw_url;
@@ -321,5 +316,11 @@ mixed first_try(object id)
       // And our destination (in case of chained redirects).
       id->misc->redirected_to = to;
     }
+    
+    id->real_variables = id->misc->post_variables ?
+      id->misc->post_variables + ([]) : ([]);
+    id->variables = FakedVariables(id->real_variables);
+    id->raw_url = Roxen.http_encode_invalids(to);
+    id->not_query = id->scan_for_query( to );
   }
 }
