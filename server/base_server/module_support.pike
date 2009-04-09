@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module_support.pike,v 1.136 2008/12/18 09:46:45 mast Exp $
+// $Id: module_support.pike,v 1.137 2009/04/09 09:20:03 anders Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -547,7 +547,8 @@ class ModuleInfo( string sname, string filename )
     {
       if( data->sname && data->sname != sname )
       {
-        report_fatal( "Inconsistency in module cache. Ouch\n");
+        report_fatal( "Inconsistency in module cache. Ouch (%O != %O)\n",
+		      data->sname, sname);
         return find_module(sname);
       }
       if( filename && (data->filename != filename ))
