@@ -113,16 +113,18 @@ function clearToPopup(popup)
   }
 }
 
-function boundPopup(name)
+function boundPopup(name, want_x, want_y)
 {
-  var p_l = getObjectLeft(name);    // this.left
-  var p_t = getObjectTop(name);     // this.top
-  var p_h = getObjectHeight(name);  // clip.height 
-  var p_w = getObjectWidth(name);   // clip.width
-  var c_h = getClientHeight();      // window.innerHeight
-  var c_w = getClientWidth();       // window.innerWidth
-  var s_l = getScrollLeft();        // window.pageXOffset
-  var s_t = getScrollTop();         // window.pageYOffset
+  //  If caller provides <want_x, want_y> we use that instead of the current
+  //  popup location.
+  var p_l = want_x ? want_x : getObjectLeft(name);
+  var p_t = want_y ? want_y : getObjectTop(name);
+  var p_h = getObjectHeight(name);
+  var p_w = getObjectWidth(name);
+  var c_h = getClientHeight() - 8;
+  var c_w = getClientWidth() - 8;
+  var s_l = getScrollLeft();
+  var s_t = getScrollTop();
   
   if((p_l + p_w - s_l) > c_w)
     p_l = Math.max(0, c_w - p_w + s_l);

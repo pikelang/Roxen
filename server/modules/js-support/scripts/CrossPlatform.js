@@ -165,13 +165,13 @@ function getObjectWidth(obj)  {
 // Retrieving the actual top scrollposition
 function getScrollTop()  {
   if (isNav4||isNav5) return window.pageYOffset;
-  else return document.body.scrollTop;
+  else return document.documentElement.scrollTop;
 }
 
 // Retrieving the actual left scrollposition
 function getScrollLeft()  {
   if (isNav4||isNav5) return window.pageXOffset;
-  else return document.body.scrollLeft;
+  else return document.documentElement.scrollLeft;
 }
 
 // Set the actual top scrollposition
@@ -188,22 +188,30 @@ function scrollHorizontal(h)  {
 
 // Retrieving the clients viewable hight
 function getClientHeight()  {
-  //  client* is non-standard but preferred since it accounts for margins
-  //  and scrollbars.
-  if (document.body.clientHeight)
-    return document.body.clientHeight;
-  if (innerHeight)
-    return innerHeight;
+  if (document.documentElement.clientHeight)
+    return document.documentElement.clientHeight;
+
+  if (isNav4 || isNav5) {
+    //  Horizontal scrollbar at the bottom that reduces vertical space?
+    var adjust_bottom = 0;
+    if (document.body.scrollWidth > document.body.clientWidth)
+      adjust_bottom += 16;
+    return innerHeight - adjustButton;
+  }
 }
 
 // Retrieving the clients viewable width
 function getClientWidth()  {
-  //  client* is non-standard but preferred since it accounts for margins
-  //  and scrollbars.
-  if (document.body.clientWidth)
-    return document.body.clientWidth;
-  if (innerWidth)
+  if (document.documentElement.clientWidth)
+    return document.documentElement.clientWidth;
+  
+  if (isNav4 || isNav5) {
+    //  Vertical scrollbar at right that reduces horizontal space?
+    var adjust_right = 0;
+    if (document.body.scrollHeight > document.body.clientHeight)
+      adjust_right += 16;
     return innerWidth;
+  }
 }
 
 function showProps(o) {

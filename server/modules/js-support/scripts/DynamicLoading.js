@@ -162,8 +162,16 @@ function loadLayer(e, layer_name, src, properties, parent)
 
   var pos = new properties.LayerPosition(new TriggerCoord(e, 0), 0,
 					 properties);
-  if(!properties.stay_put)
-    shiftTo(layer_name, pos.x, pos.y);
+  if (!properties.stay_put) {
+    if (properties.dont_bound_popup)
+      //  Need to move into final position at once
+      shiftTo(layer_name, pos.x, pos.y);
+    else
+      //  Will call boundPopup later with pos.x and pos.y, but for now place
+      //  the hidden popup in top left corner where it will have minimal
+      //  impact on window scrollbars.
+      shiftTo(layer_name, 0, 0);
+  }
   
   //  Dinosaur browsers
   if(isNav4) {
@@ -205,8 +213,12 @@ function loadLayer(e, layer_name, src, properties, parent)
 	  if (req.status == 200 || req.status == undefined) {
 	    var o = getObject(layer_name);
 	    o.innerHTML = req.responseText;
-	    if (!properties.dont_bound_popup)
-	      boundPopup(layer_name);
+	    if (!properties.dont_bound_popup) {
+	      if (properties.stay_put)
+		boundPopup(layer_name);
+	      else
+		boundPopup(layer_name, pos.x, pos.y);
+	    }
 	    addPopup(layer_name, properties);
 	    captureMouseEvent(popupMove);
 	    show(layer_name);
