@@ -196,7 +196,7 @@ function getClientHeight()  {
     var adjust_bottom = 0;
     if (document.body.scrollWidth > document.body.clientWidth)
       adjust_bottom += 16;
-    return innerHeight - adjustButton;
+    return innerHeight - adjust_bottom;
   }
 }
 
@@ -210,7 +210,7 @@ function getClientWidth()  {
     var adjust_right = 0;
     if (document.body.scrollHeight > document.body.clientHeight)
       adjust_right += 16;
-    return innerWidth;
+    return innerWidth - adjust_right;
   }
 }
 
