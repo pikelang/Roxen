@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module_support.pike,v 1.137 2009/04/09 09:20:03 anders Exp $
+// $Id: module_support.pike,v 1.138 2009/04/14 16:01:32 jonasw Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -165,6 +165,7 @@ class BasicModule
 
   void report_fatal( mixed ... args )  { predef::report_fatal( @args );  }
   void report_error( mixed ... args )  { predef::report_error( @args );  }
+  void report_warning( mixed ... args ){ predef::report_warning( @args );}
   void report_notice( mixed ... args ) { predef::report_notice( @args ); }
   void report_debug( mixed ... args )  { predef::report_debug( @args );  }
 
