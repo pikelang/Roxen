@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.605 2009/04/15 12:29:27 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.606 2009/04/15 15:42:36 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -7643,6 +7643,13 @@ constant tagdoc=([
  deleting or changing in this scope updates the client's cookies. There
  are no predefined entities for this scope. When adding cookies to
  this scope they are automatically set to expire after two years.
+</p></desc>",
+
+//----------------------------------------------------------------------
+
+"&header;":#"<desc type='scope'><p><short>
+ This scope is deprecated.</short> Please use the
+ <xref href='../protocol/header.tag'/> tag instead to create HTTP headers.
 </p></desc>",
 
 //----------------------------------------------------------------------
