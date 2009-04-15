@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: module.pike,v 1.235 2009/04/14 16:01:32 jonasw Exp $
+// $Id: module.pike,v 1.236 2009/04/15 08:46:52 jonasw Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -44,11 +44,16 @@ RXML.TagSet module_tag_set;
  * they are logged from a module. This solution is not really all that
  * beautiful, but it works. :-)
  */
-void report_fatal( mixed ... args )  { predef::report_fatal( @args );  }
-void report_error( mixed ... args )  { predef::report_error( @args );  }
-void report_warning( mixed ... args ){ predef::report_warning( @args );}
-void report_notice( mixed ... args ) { predef::report_notice( @args ); }
-void report_debug( mixed ... args )  { predef::report_debug( @args );  }
+void report_fatal(sprintf_format fmt, sprintf_args ... args)
+  { predef::report_fatal(fmt, @args); }
+void report_error(sprintf_format fmt, sprintf_args ... args)
+  { predef::report_error(fmt, @args); }
+void report_warning(sprintf_format fmt, sprintf_args ... args)
+  { predef::report_warning(fmt, @args); }
+void report_notice(sprintf_format fmt, sprintf_args ... args)
+  { predef::report_notice(fmt, @args); }
+void report_debug(sprintf_format fmt, sprintf_args ... args)
+  { predef::report_debug(fmt, @args); }
 
 void log_event (string facility, string action, string resource,
 		void|mapping(string:mixed) info)
