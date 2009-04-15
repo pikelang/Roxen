@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.604 2009/04/07 23:14:19 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.605 2009/04/15 12:29:27 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -5759,6 +5759,7 @@ class TagEmit {
   class TagDelimiter {
     inherit RXML.Tag;
     constant name = "delimiter";
+    int flags = cache_static_in_2_5();
 
     protected int(0..1) more_rows(TagEmit.Frame emit_frame) {
       object|array res = emit_frame->res;
@@ -5777,22 +5778,24 @@ class TagEmit {
 
     class Frame {
       inherit RXML.Frame;
-
       TagEmit.Frame parent_frame;
 
-      array do_return(RequestID id) {
+      int do_iterate;
+
+      array do_enter (RequestID id) {
+	do_iterate = -1;
 	object|array res = parent_frame->res;
 	if(!parent_frame->filter && !parent_frame->filter_exclude) {
-	  if( objectp(res) ? res->peek() :
-	      parent_frame->counter < sizeof(res) )
-	    result = content;
-	  return 0;
+	  if (objectp(res) ? res->peek() :
+	      parent_frame->counter < sizeof(res))
+	    do_iterate = 1;
 	}
-	if(parent_frame->args->maxrows &&
-	   parent_frame->args->maxrows == parent_frame->counter)
-	  return 0;
-	if(more_rows(parent_frame))
-	  result = content;
+	else {
+	  if (!(parent_frame->args->maxrows &&
+		parent_frame->args->maxrows == parent_frame->counter) &&
+	      more_rows(parent_frame))
+	    do_iterate = 1;
+	}
 	return 0;
       }
     }
