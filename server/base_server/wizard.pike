@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2004, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.166 2009/04/08 15:51:54 jonasw Exp $
+// $Id: wizard.pike,v 1.167 2009/04/15 11:01:50 jonasw Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -586,7 +586,7 @@ string wizard_tag_var(string n, mapping m, mixed a, mixed|void b)
 		       ({"\\,", "\\:"}),
 		       ({"__CoMma__", "__CoLon__"}));
 
-    return make_container("select", m2, map(m->choices/",",
+    return make_container("select", m2, map(m->choices/"," - ({ "" }),
 				 lambda(string s, array c, mapping m) {
       string t;
       if(sscanf(s, "%s:%s", s, t) != 2)
