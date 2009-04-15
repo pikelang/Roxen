@@ -2770,6 +2770,23 @@ b</strlen></rxml>
 <result>1:2:3:4:0</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <cache>
+      <set variable="var.num" value="1,2,3,4,5,6,7"/>
+      <emit source="values" variable="var.num" split=",">
+	&_.value;
+	<delimiter>
+	  <nocache>
+	    <random separator="#">_#_#_#_</random>
+	  </nocache>
+	</delimiter>
+      </emit>
+    </cache>
+  </rxml>
+  <result>1_2_3_4_5_6_7</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Values emit plugin</comment>
