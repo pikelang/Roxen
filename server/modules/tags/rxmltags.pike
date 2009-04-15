@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.606 2009/04/15 15:42:36 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.607 2009/04/15 20:26:24 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -2509,7 +2509,7 @@ class TagMaketag {
   }
 
   RXML.TagSet internal =
-    RXML.shared_tag_set (0, "/rxmltags/maketag", ({ TagAttrib() }) );
+    RXML.shared_tag_set (global::this, "maketag", ({ TagAttrib() }) );
 
   class Frame {
     inherit RXML.Frame;
@@ -5683,7 +5683,7 @@ class TagCond
   }
 
   RXML.TagSet cond_tags =
-    RXML.shared_tag_set (0, "/rxmltags/cond", ({TagCase(), TagDefault()}));
+    RXML.shared_tag_set (global::this, "cond", ({TagCase(), TagDefault()}));
 
   class Frame
   {
@@ -5802,7 +5802,7 @@ class TagEmit {
   }
 
   RXML.TagSet internal =
-    RXML.shared_tag_set (0, "/rxmltags/emit", ({ TagDelimiter() }) );
+    RXML.shared_tag_set (global::this, "emit", ({ TagDelimiter() }) );
 
   protected class VarsCounterWrapper (RXML.Scope vars, int counter)
   // Used when the emit source returns a variable scope that is a
