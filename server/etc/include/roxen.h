@@ -1,6 +1,6 @@
 // -*- pike -*-
 //
-// $Id: roxen.h,v 1.31 2008/11/05 18:19:49 mast Exp $
+// $Id: roxen.h,v 1.32 2009/04/15 13:54:30 marty Exp $
 
 #ifndef _ROXEN_H_
 
@@ -77,8 +77,7 @@ mixed get_locale();
       ([mapping(string:mixed)]REQUESTID->misc)->cacheable;		\
     ([mapping(string:mixed)]REQUESTID->misc)->cacheable = 0;		\
     report_debug("%s:%d set cacheable to 0 (was: %d)\n",		\
-		 __FILE__, __LINE__, old_cacheable,			\
-		 ([mapping(string:mixed)]REQUESTID->misc)->cacheable);	\
+		 __FILE__, __LINE__, old_cacheable);	                \
   } while(0)
 #  define NO_PROTO_CACHE() do {						\
     ([mapping(string:mixed)]REQUESTID->misc)->no_proto_cache = 1;	\

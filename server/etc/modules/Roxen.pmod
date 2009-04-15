@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.271 2009/04/03 20:45:58 mast Exp $
+// $Id: Roxen.pmod,v 1.272 2009/04/15 13:54:30 marty Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3233,8 +3233,7 @@ string make_http_headers(mapping(string:string|array(string)) heads,
   int old_cacheable = ([mapping(string:mixed)]id->misc)->cacheable;           \
   ([mapping(string:mixed)]id->misc)->cacheable = 0;                           \
   report_debug("%s:%d set cacheable to 0 (was: %d)\n",                        \
-               __FILE__, __LINE__, old_cacheable,                             \
-               ([mapping(string:mixed)]id->misc)->cacheable);                 \
+               __FILE__, __LINE__, old_cacheable);                            \
 } while(0)
 #else /* !DEBUG_CACHEABLE */
 #define CACHE(id,X) ([mapping(string:mixed)]id->misc)->cacheable=min(([mapping(string:mixed)]id->misc)->cacheable,X)
