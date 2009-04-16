@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2007, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.10 2009/03/04 14:55:41 grubba Exp $
+ * $Id: prot_snmp.pike,v 2.11 2009/04/16 09:28:37 jonasw Exp $
  *
  * SNMP protocol support.
  *
@@ -109,7 +109,7 @@ class SystemMIB
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.10 $"/" ")[1],
+			   ("$Revision: 2.11 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
@@ -659,9 +659,6 @@ void unref(string url)
 
 protected void create( mixed ... args )
 {
-  werror("Creating an SNMP protocol object...\n"
-	 "Backtrace: %s\n",
-	 describe_backtrace(backtrace()));
 #if constant(roxen.set_up_snmp_variables)
   roxen.set_up_snmp_variables( this_object() );
 #else
