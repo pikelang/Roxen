@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.607 2009/04/15 20:26:24 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.608 2009/04/16 09:17:00 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -2355,6 +2355,18 @@ class TagNocache
   class Frame
   {
     inherit RXML.Frame;
+
+    array do_enter (RequestID id)
+    {
+      if (args["enable-protocol-cache"])
+	;
+      else {
+	NO_PROTO_CACHE();
+	if (!args["enable-client-cache"])
+	  NOCACHE();
+      }
+      return 0;
+    }
   }
 }
 
@@ -8197,13 +8209,22 @@ using the pre tag.
 
 "nocache": #"<desc type='cont'><p><short>
  Avoid caching of a part inside a <tag>cache</tag> tag.</short> This
- is the same as using the <tag>cache</tag> tag with the nocache
+ is the same as using the <tag>cache</tag> tag with the \"nocache\"
  attribute.</p>
 
  <p>Note that when a part inside a <tag>cache</tag> tag isn't cached,
  it implies that any RXML tags that enclose the <tag>nocache</tag> tag
  inside the <tag>cache</tag> tag also aren't cached.</p>
-</desc>",
+</desc>
+
+<attr name='enable-client-cache'>
+ <p>Mark output as cachable in browsers.</p>
+</attr>
+
+<attr name='enable-protocol-cache'>
+ <p>Mark output as cachable in server-side protocol cache and browser
+    cache.</p>
+</attr>",
 
 //----------------------------------------------------------------------
 
