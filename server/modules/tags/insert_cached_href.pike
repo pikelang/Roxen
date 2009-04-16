@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.23 2008/09/09 11:21:46 liin Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.24 2009/04/16 10:42:36 liin Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -711,9 +711,16 @@ class HTTPClient {
     
     if(!request_headers)
       request_headers = ([]);
+
+    string host_header;
+    if (url->scheme == "http" && url->port == 80)
+      host_header = sprintf("%s", url->host);
+    else
+      host_header = sprintf("%s:%d", url->host, url->port);
+
     mapping default_headers = ([
       "user-agent" : "Mozilla/4.0 compatible (Pike HTTP client)",
-      "host" : sprintf("%s:%d", url->host, url->port) ]);
+      "host" : host_header ]);
     
     if(url->user || url->passwd)
       default_headers->authorization = "Basic "
