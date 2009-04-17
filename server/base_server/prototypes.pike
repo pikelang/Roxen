@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.243 2009/04/17 12:29:02 jonasw Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.244 2009/04/17 15:40:20 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1095,11 +1095,18 @@ class RequestID
   //! @mapping
   //!   @member int "cacheable"
   //!     Time in seconds that the request is cacheable. Use
-  //!     @[get_max_cache()], @[set_max_cache()] or one of the cache
+  //!     @[get_max_cache()], @[lower_max_cache()],
+  //!     @[raise_max_cache()], @[set_max_cache()] or one of the cache
   //!     macros to access. This setting both controls the maximum
   //!     cache time in the protocol cache and the timestamp returned
   //!     in the @expr{Expires@} header (an @expr{"expires"@} entry in
   //!     the result mapping will override it, though).
+  //!   @member mapping(mixed:int) "local_cacheable"
+  //!     If this mapping exists, each value in it will be modified by
+  //!     @[set_max_cache], @[lower_max_cache] and @[raise_max_cache]
+  //!     in the same way they modify @expr{misc->cacheable@}. It's
+  //!     used to track cache time changes during specific parts of
+  //!     the request.
   //!   @member array(function) "_cachecallbacks"
   //!     Callbacks to verify that the cache entry is valid.
   //!   @member CacheKey "cachekey"
@@ -1749,6 +1756,111 @@ class RequestID
     IF_HDR_MSG("get_if_data(): Parsed if header: %s:\n"
 	       "%O\n", raw_header, res);
     return if_data = res;
+  }
+
+  int get_max_cache()
+  //! Returns the maximum cacheable time in seconds. See
+  //! @expr{@[misc]->cacheable@}.
+  {
+    return misc->cacheable;
+  }
+
+  int lower_max_cache (int seconds)
+  //! Lowers the maximum cacheable time to @[seconds] if it currently
+  //! has a higher value. Returns the old value. See
+  //! @expr{@[misc]->cacheable@}.
+  {
+    if (mapping(mixed:int) lc = misc->local_cacheable)
+      foreach (lc; mixed ind; int old)
+	if (seconds < old)
+	  lc[ind] = seconds;
+
+    int old = misc->cacheable;
+    if (seconds < old) {
+      object/*(RXML.Context)*/ ctx = RXML_CONTEXT;
+      if (ctx && ctx->id == this)
+	ctx->set_id_misc ("cacheable", seconds);
+      else
+	misc->cacheable = seconds;
+
+#ifdef DEBUG_CACHEABLE
+      object frame = backtrace()[-2];
+      report_debug ("%s:%d: Lower cacheable to %d (was %d)\n",
+		    frame[0], frame[1], seconds, old);
+#endif
+    }
+
+#ifdef DEBUG_CACHEABLE
+    else {
+      object frame = backtrace()[-2];
+      report_debug ("%s:%d: Not lowering cacheable to %d (is %d)\n",
+		    frame[0], frame[1], seconds, old);
+    }
+#endif
+
+    return old;
+  }
+
+  int raise_max_cache (int seconds)
+  //! Raises the maximum cacheable time to @[seconds] if it currently
+  //! has a lower value. Returns the old value. See
+  //! @expr{@[misc]->cacheable@}.
+  {
+    if (mapping(mixed:int) lc = misc->local_cacheable)
+      foreach (lc; mixed ind; int old)
+	if (seconds > old)
+	  lc[ind] = seconds;
+
+    int old = misc->cacheable;
+    if (seconds > old) {
+      object/*(RXML.Context)*/ ctx = RXML_CONTEXT;
+      if (ctx && ctx->id == this)
+	ctx->set_id_misc ("cacheable", seconds);
+      else
+	misc->cacheable = seconds;
+
+#ifdef DEBUG_CACHEABLE
+      object frame = backtrace()[-2];
+      report_debug ("%s:%d: Raise cacheable to %d (was %d)\n",
+		    frame[0], frame[1], seconds, old);
+#endif
+    }
+
+#ifdef DEBUG_CACHEABLE
+    else {
+      object frame = backtrace()[-2];
+      report_debug ("%s:%d: Not raising cacheable to %d (is %d)\n",
+		    frame[0], frame[1], seconds, old);
+    }
+#endif
+
+    return old;
+  }
+
+  int set_max_cache( int seconds )
+  //! Sets the maximum cacheable time to @[seconds]. Returns the old
+  //! value. See @expr{@[misc]->cacheable@}.
+  {
+    if (mapping(mixed:int) lc = misc->local_cacheable)
+      foreach (lc; mixed ind;)
+	lc[ind] = seconds;
+
+    int old = misc->cacheable;
+    if (seconds != old) {
+      object/*(RXML.Context)*/ ctx = RXML_CONTEXT;
+      if (ctx && ctx->id == this)
+	ctx->set_id_misc ("cacheable", seconds);
+      else
+	misc->cacheable = seconds;
+    }
+
+#ifdef DEBUG_CACHEABLE
+    object frame = backtrace()[-2];
+    report_debug ("%s:%d: Set cacheable to %d (was %d)\n",
+		  frame[0], frame[1], seconds, old);
+#endif
+
+    return old;
   }
 
   //! Register that the result was dependant on the request header

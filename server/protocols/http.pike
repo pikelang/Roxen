@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.596 2009/04/17 13:44:22 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.597 2009/04/17 15:40:20 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1126,21 +1126,6 @@ private int parse_got( string new_data )
   TIMER_END(parse_got_2);
 
   return 3;	// Done.
-}
-
-int get_max_cache()
-{
-  return misc->cacheable;
-}
-
-int set_max_cache( int t )
-{
-  int ot = misc->cacheable;
-  misc->cacheable = t;
-#ifdef DEBUG_CACHEABLE
-  report_debug("http::set_max_cache() set cacheable to %d (was: %d)\n", t, ot);
-#endif
-  return ot;
 }
 
 void disconnect()
@@ -2893,6 +2878,10 @@ void got_data(mixed fooid, string s, void|int chained)
 	  leftovers = data||"";
 	
 	string d = cv[ 0 ];
+#ifdef DEBUG
+	if (!stringp (d))
+	  error ("Strange value from data cache for %O: %O\n", raw_url, cv);
+#endif
 	file = cv[1];
 	
 	if( sizeof(file->callbacks) )
