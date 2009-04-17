@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.594 2009/04/01 14:05:09 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.595 2009/04/17 07:53:37 marty Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2127,7 +2127,9 @@ private string try_gzip_data(string data, string mimetype)
       compress_main_mimetypes[main_type])) &&
      len >= min_data_length && 
      (!max_data_length || len <= max_data_length)) {
-    return gzip_data(data);
+    data = gzip_data(data);
+    if(len>sizeof(data))
+      return data;
   }
   return 0;
 }
@@ -2363,7 +2365,8 @@ void send_result(mapping|void result)
           string compressed;
 	  string encoding;
           if(!file->encoding) {
-            if(compressed = try_gzip_data(data, file->type)) {
+            if(compressed = 
+	       try_gzip_data(data, variant_heads["Content-Type"])) {
               data = compressed;
               file->encoding = encoding = "gzip";
             }
