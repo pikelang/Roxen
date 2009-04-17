@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.595 2009/04/17 07:53:37 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.596 2009/04/17 13:44:22 marty Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2268,9 +2268,9 @@ void send_result(mapping|void result)
       // but we don't want to register it as a vary callback since it's
       // handled directly by the protocol cache.
       if(!misc->vary)
-	misc->vary = (< "Accept-Encoding" >);
+	misc->vary = (< "accept-encoding" >);
       else
-	misc->vary["Accept-Encoding"] = 1;
+	misc->vary["accept-encoding"] = 1;
     }
 #endif
 
