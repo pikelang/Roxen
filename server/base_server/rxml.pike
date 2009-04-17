@@ -3,7 +3,7 @@
 //
 // The Roxen RXML Parser. See also the RXML Pike modules.
 //
-// $Id: rxml.pike,v 1.331 2009/03/24 16:41:58 mast Exp $
+// $Id: rxml.pike,v 1.332 2009/04/17 15:38:13 mast Exp $
 
 
 inherit "rxmlhelp";
@@ -40,6 +40,17 @@ protected class RXMLTagSet
     Thread.MutexKey lock = lists_mutex->lock();
 #endif
     int i = search (imported, Roxen.entities_tag_set);
+#ifdef DEBUG
+    if (i < 0) error ("Module list does not contain "
+		      "Roxen.entities_tag_set: %O\n", imported);
+    {
+      int j = search (imported, Roxen.entities_tag_set, i + 1);
+      if (j != -1)
+	error ("Module list matches Roxen.entities_tag_set "
+	       "more than once (at %d and %d): %O\n", i, j, imported);
+    }
+#endif
+
     array(RXML.TagSet) new_imported = imported[..i-1] + imported[i+1..];
     array(RoxenModule) new_modules = modules[..i-1] + modules[i+1..];
     array(string) module_ids = new_modules->module_identifier();
