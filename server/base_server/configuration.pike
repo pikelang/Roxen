@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.671 2009/04/03 19:47:40 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.672 2009/04/17 07:57:40 marty Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4970,7 +4970,7 @@ low."))->add_changed_callback(lambda(object v)
   http_compr_maxlen = query("http_compression_max_size");
 
   Variable.Int comp_level = 
-    Variable.Int(5, 0, DLOCALE(1008, "Compression: Compression level"),
+    Variable.Int(1, 0, DLOCALE(1008, "Compression: Compression level"),
 		 DLOCALE(1009, "The compression level to use (integer between 1 "
 			 "and 9). Higher number means more compression at the"
 			 " cost of processing power and vice versa. You may "
@@ -4979,7 +4979,7 @@ low."))->add_changed_callback(lambda(object v)
   comp_level->set_range(1, 9);
   defvar("http_compression_level", comp_level);
 		 
-  defvar("http_compression_dynamic_reqs", 0,
+  defvar("http_compression_dynamic_reqs", 1,
 	 DLOCALE(1010, "Compression: Compress dynamic requests"),
 	 TYPE_FLAG,
 	 DLOCALE(1011, "If enabled, even requests that aren't cacheable in the "
