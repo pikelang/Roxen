@@ -1,6 +1,6 @@
 // -*- pike -*-
 //
-// $Id: roxen.h,v 1.32 2009/04/15 13:54:30 marty Exp $
+// $Id: roxen.h,v 1.33 2009/04/17 15:42:11 mast Exp $
 
 #ifndef _ROXEN_H_
 
@@ -53,32 +53,13 @@ mixed get_locale();
 #define ASSERT_IF_DEBUG(TEST, ARGS...) do {} while (0)
 #endif
 
+// These macros are for compatibility. The recommended way is to call
+// the functions in RequestID directly instead.
+#define CACHE(seconds) REQUESTID->lower_max_cache (seconds)
+#define RAISE_CACHE(seconds) REQUESTID->raise_max_cache (seconds)
+#define NOCACHE() REQUESTID->set_max_cache (0)
+
 #ifdef DEBUG_CACHEABLE
-#  define CACHE(seconds) do {						\
-    int old_cacheable =							\
-      ([mapping(string:mixed)]REQUESTID->misc)->cacheable;		\
-    ([mapping(string:mixed)]REQUESTID->misc)->cacheable =		\
-      min(([mapping(string:mixed)]REQUESTID->misc)->cacheable,seconds);	\
-    report_debug("%s:%d lowered cacheable to %d (was: %d, now: %d)\n",	\
-		 __FILE__, __LINE__, seconds, old_cacheable,		\
-		 ([mapping(string:mixed)]REQUESTID->misc)->cacheable);	\
-  } while(0)
-#  define RAISE_CACHE(seconds) do {					\
-    int old_cacheable =							\
-      ([mapping(string:mixed)]REQUESTID->misc)->cacheable;		\
-    ([mapping(string:mixed)]REQUESTID->misc)->cacheable =		\
-      max(([mapping(string:mixed)]REQUESTID->misc)->cacheable,seconds);	\
-    report_debug("%s:%d raised cacheable to %d (was: %d, now: %d)\n",	\
-		 __FILE__, __LINE__, seconds, old_cacheable,		\
-		 ([mapping(string:mixed)]REQUESTID->misc)->cacheable);	\
-  } while(0)
-#  define NOCACHE() do {						\
-    int old_cacheable =							\
-      ([mapping(string:mixed)]REQUESTID->misc)->cacheable;		\
-    ([mapping(string:mixed)]REQUESTID->misc)->cacheable = 0;		\
-    report_debug("%s:%d set cacheable to 0 (was: %d)\n",		\
-		 __FILE__, __LINE__, old_cacheable);	                \
-  } while(0)
 #  define NO_PROTO_CACHE() do {						\
     ([mapping(string:mixed)]REQUESTID->misc)->no_proto_cache = 1;	\
     report_debug("%s:%d disabled proto cache\n", __FILE__, __LINE__);	\
@@ -88,14 +69,6 @@ mixed get_locale();
     report_debug("%s:%d enabled proto cache\n", __FILE__, __LINE__);	\
   } while(0)
 #else
-#  define CACHE(seconds)						\
-  ([mapping(string:mixed)]REQUESTID->misc)->cacheable =			\
-    min(([mapping(string:mixed)]REQUESTID->misc)->cacheable,seconds)
-#  define RAISE_CACHE(seconds)						\
-  ([mapping(string:mixed)]REQUESTID->misc)->cacheable =			\
-    max(([mapping(string:mixed)]REQUESTID->misc)->cacheable,seconds)
-#  define NOCACHE()					\
-  ([mapping(string:mixed)]REQUESTID->misc)->cacheable=0
 #  define NO_PROTO_CACHE()					\
   ([mapping(string:mixed)]REQUESTID->misc)->no_proto_cache = 1
 #  define PROTO_CACHE()						\
