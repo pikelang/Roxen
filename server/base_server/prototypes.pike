@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.242 2009/04/14 14:30:15 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.243 2009/04/17 12:29:02 jonasw Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -670,10 +670,10 @@ class PrefLanguages
 	id->register_vary_callback("accept-language", cb);
 	break;
 	
-      case "cookies":
+      case "cookie":
 	string lang_cookie = item[1];
-	cb = Roxen->get_lang_vary_cb(known_langs, "cookies", lang_cookie);
-	id->register_vary_callback("cookies", cb);
+	cb = Roxen->get_lang_vary_cb(known_langs, "cookie", lang_cookie);
+	id->register_vary_callback("cookie", cb);
 	break;
 	
       case "host":

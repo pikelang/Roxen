@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.34 2009/02/19 17:52:19 jonasw Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.35 2009/04/17 12:29:05 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -383,7 +383,7 @@ RequestID first_try(RequestID id) {
     case "roxen-config":
       array(string) config_langs = get_config_langs(id);
       lang += config_langs;
-      delayed_vary_actions += ({ ({ "cookies", "RoxenConfig", config_langs }) });
+      delayed_vary_actions += ({ ({ "cookie", "RoxenConfig", config_langs }) });
       break;
       
     case "cookie":
@@ -394,7 +394,7 @@ RequestID first_try(RequestID id) {
 	  id->init_cookies();
 	if (string cookie_value = id->real_cookies[cookie_name]) {
 	  lang += ({ cookie_value });
-	  delayed_vary_actions += ({ ({ "cookies", cookie_name,
+	  delayed_vary_actions += ({ ({ "cookie", cookie_name,
 					({ cookie_value }) }) });
 	}
       }

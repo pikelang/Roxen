@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.272 2009/04/15 13:54:30 marty Exp $
+// $Id: Roxen.pmod,v 1.273 2009/04/17 12:29:04 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -177,7 +177,7 @@ protected class LangChecker(multiset(string) known_langs, string header,
       proto_key = filter(pl->get_languages(), known_langs) * ",";
       break;
 
-    case "cookies":
+    case "cookie":
       if (!id->real_cookies)
 	id->init_cookies();
       
