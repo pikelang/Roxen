@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.395 2009/04/07 22:06:37 mast Exp $
+// $Id: module.pmod,v 1.396 2009/04/17 15:46:42 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3224,6 +3224,12 @@ class Frame
   //! closest surrounding tag that defined this tag in its
   //! @[additional_tags] or @[local_tags]. Useful to access the
   //! "mother tag" from the subtags it defines.
+  //!
+  //! @note
+  //! If the parent tag is cache static, this will not be set when the
+  //! parent frame is optimized away. If that is a problem then either
+  //! make this tag cache static too, or don't make the parent tag
+  //! cache static.
 
   //! @decl optional string raw_tag_text;
   //!
@@ -8222,7 +8228,17 @@ class PCode
       flags |= UPDATED;
       PCODE_UPDATE_MSG ("%O (ctx %O): Marked as updated by create or reset.\n",
 			this, ctx);
-      protocol_cache_time = -1;
+
+      if (RequestID id = ctx->id) {
+	mapping(mixed:int) lc =
+	  id->misc->local_cacheable || (id->misc->local_cacheable = ([]));
+	lc[this] = Int.NATIVE_MAX;
+#ifdef DEBUG_CACHEABLE
+	report_debug ("%O: Starting tracking of local cache time changes.\n",
+		      this);
+#endif
+      }
+
       p_code_comp = _p_code_comp || PikeCompile();
       PCODE_MSG ("create or reset (with %s %O)\n",
 		 _p_code_comp ? "old" : "new", p_code_comp);
@@ -8475,7 +8491,16 @@ class PCode
     if (flags & COLLECT_RESULTS) {
       Context ctx = RXML_CONTEXT;
 
-      protocol_cache_time = ctx->id && ctx->id->misc->cacheable;
+      if (RequestID id = ctx->id) {
+	protocol_cache_time = m_delete (id->misc->local_cacheable, this);
+#ifdef DEBUG_CACHEABLE
+	if (protocol_cache_time != Int.NATIVE_MAX)
+	  report_debug ("%O: Recording max cache time %d.\n",
+			this, protocol_cache_time);
+	else
+	  report_debug ("%O: Max cache time not changed.\n", this);
+#endif
+      }
 
       // Install any trailing variable changes. This is useful to
       // catch the last scope leave from a FLAG_IS_CACHE_STATIC
@@ -8702,17 +8727,8 @@ class PCode
 	m_delete (ctx->unwind_state, this_object());
     else {
       parts = allocate (length);
-      if (protocol_cache_time >= 0 && ctx->id) {
-#ifdef DEBUG_CACHEABLE
-	int old_c = ctx->id->misc->cacheable;
-	report_debug("RXML.pmod/module.pmod::_eval() setting cacheable "
-		     "to %d (was: %d)\n",
-		     min(ctx->id->misc->cacheable, protocol_cache_time),
-		     ctx->id->misc->cacheable);
-#endif
-	ctx->id->misc->cacheable = min (ctx->id->misc->cacheable,
-					protocol_cache_time);
-      }
+      if (protocol_cache_time < Int.NATIVE_MAX && ctx->id)
+	ctx->id->lower_max_cache (protocol_cache_time);
     }
 
     PCODE_MSG ((p_code_comp ?
@@ -8988,7 +9004,7 @@ class PCode
       return intro + ")" + OBJ_COUNT;
   }
 
-  constant P_CODE_VERSION = "7.1";
+  constant P_CODE_VERSION = "7.2";
   // Version spec encoded with the p-code, so we can detect and reject
   // incompatible p-code dumps even when the encoded format hasn't
   // changed in an obvious way.
