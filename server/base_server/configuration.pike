@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.672 2009/04/17 07:57:40 marty Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.673 2009/04/20 14:09:30 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -5097,7 +5097,8 @@ low."))->add_changed_callback(lambda(object v)
           <td><img src='/internal-roxen-roxen-mini.gif' /></td>
           <td class='info'>
             &nbsp;&nbsp;<b>&roxen.product-name;</b> <font color='#ffbe00'>|</font>
-            version &roxen.dist-version;
+            version &roxen.dist-version; <font color='#ffbe00'>|</font>
+            &roxen.dist-os;
           </td>
         </tr>
       </table>
@@ -5219,7 +5220,8 @@ low."))->add_changed_callback(lambda(object v)
           <td><img src='/internal-roxen-roxen-mini.gif' /></td>
           <td class='info'>
             &nbsp;&nbsp;<b>&roxen.product-name;</b> <font color='#ffbe00'>|</font>
-            version &roxen.dist-version;
+            version &roxen.dist-version; <font color='#ffbe00'>|</font>
+            &roxen.dist-os;
           </td>
         </tr>
       </table>

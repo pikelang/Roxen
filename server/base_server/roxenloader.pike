@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.417 2009/03/27 11:44:20 jonasw Exp $
+// $Id: roxenloader.pike,v 1.418 2009/04/20 14:09:30 jonasw Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.417 2009/03/27 11:44:20 jonasw Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.418 2009/04/20 14:09:30 jonasw Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1004,6 +1004,7 @@ constant mf = Stdio.File;
 
 protected string release;
 protected string dist_version;
+protected string dist_os;
 protected int roxen_is_cms;
 protected string roxen_product_name;
 
@@ -1295,6 +1296,9 @@ Roxen 5.0 should be run with Pike 7.8 or newer.
   else
     dist_version = roxen_version();
 
+  // Get build OS for dist
+  dist_os = Stdio.read_bytes("OS") || "src dist";
+  
   // Get package directories.
   add_package(getenv("LOCALDIR") || "../local");
   foreach(package_directories + ({ "." }), string dir) {
@@ -2615,6 +2619,7 @@ the correct system time.
   add_constant("roxen_path",    roxen_path);
   add_constant("roxen_version", roxen_version);
   add_constant("roxen_dist_version", dist_version);
+  add_constant("roxen_dist_os", dist_os);
   add_constant("roxen_release", release || roxen_release);
   add_constant("roxen_is_cms",  roxen_is_cms);
   add_constant("roxen_product_name", roxen_product_name);
