@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.397 2009/04/20 11:22:41 mast Exp $
+// $Id: module.pmod,v 1.398 2009/04/20 13:03:18 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -4247,7 +4247,7 @@ class Frame
 #define EVSTAT_LAST_ITER 3
 #define EVSTAT_ITER_DONE 4
     int eval_state = EVSTAT_NONE;
-    EVAL_ARGS_FUNC in_args = 0;
+    mapping(string:mixed)|EVAL_ARGS_FUNC in_args = 0;
     string|PCode in_content = 0;
     int iter;
 #ifdef DEBUG
@@ -4407,7 +4407,9 @@ class Frame
 	      }
 
 	      THIS_TAG_TOP_DEBUG ("Evaluating unparsed\n");
+	      in_args = args;
 	      _prepare (ctx, type, args && args + ([]), 0);
+	      if (args == in_args) in_args = 0;
 	    }
 
 	    in_content = content;
