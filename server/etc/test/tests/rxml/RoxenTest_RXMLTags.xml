@@ -3471,6 +3471,34 @@ hej</result>
   <result>[y][z][z]</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <!-- Use <eval><![CDATA[..]]> to get result compilation without
+	 source compilation. -->
+    <eval>
+      <![CDATA[
+	<cache shared="yes">
+	  <set variable="var.foo" type="text/plain">
+	    <nocache>tjo</nocache>
+	  </set>
+	</cache>
+      ]]>
+    </eval>
+  </rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml type="string">
+    <cache shared="yes">
+      <set variable="var.foo" type="text/plain">
+	<nocache>tjo</nocache>
+      </set>
+    </cache>
+  </rxml>
+  <result></result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Random tests</comment>
