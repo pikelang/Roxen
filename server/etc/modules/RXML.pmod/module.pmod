@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.396 2009/04/17 15:46:42 mast Exp $
+// $Id: module.pmod,v 1.397 2009/04/20 11:22:41 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -8229,6 +8229,7 @@ class PCode
       PCODE_UPDATE_MSG ("%O (ctx %O): Marked as updated by create or reset.\n",
 			this, ctx);
 
+      protocol_cache_time = Int.NATIVE_MAX;
       if (RequestID id = ctx->id) {
 	mapping(mixed:int) lc =
 	  id->misc->local_cacheable || (id->misc->local_cacheable = ([]));
