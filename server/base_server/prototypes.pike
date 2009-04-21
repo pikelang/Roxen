@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.244 2009/04/17 15:40:20 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.245 2009/04/21 12:55:27 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -3404,7 +3404,7 @@ class RoxenModule
   void ready_to_receive_requests (void|Configuration conf);
   //! This function is called after all modules in a configuration
   //! have been loaded and @[start]ed. If a function is added later on
-  //! it's called directly @[start].
+  //! it's called directly after @[start].
   //!
   //! When a configuration is loaded on server start, this function is
   //! still called before the handler threads are started.
@@ -3414,11 +3414,16 @@ class RoxenModule
   //!
   //! @note
   //! This function is intended for things that can't be done in
-  //! @[start] because all modules might not be loaded by then. There
-  //! is no well defined order between calls to
-  //! @[ready_to_receive_requests], so its usefulness diminishes the
-  //! more module that use it. In other words, don't use unless you
-  //! absolutely have to.
+  //! @[start] because all modules might not be loaded by then, e.g.
+  //! for starting crawlers. There is no well defined order between
+  //! calls to @[ready_to_receive_requests], so its usefulness
+  //! diminishes the more modules that use it. In other words, don't
+  //! use unless you absolutely have to.
+  //!
+  //! Calls to @[module_dependencies] with the third @expr{now@}
+  //! argument set is a better way to sequence module startups, but
+  //! that requires that the depended modules don't (ab)use
+  //! @[ready_to_receive_requests].
 
   string query_internal_location();
   string query_location();
