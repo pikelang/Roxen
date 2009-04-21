@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.156 2009/03/23 16:31:21 jonasw Exp $
+// $Id: site_content.pike,v 1.157 2009/04/21 18:14:09 mast Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -516,11 +516,19 @@ string find_module_documentation( string conf, string mn, RequestID id )
     RXML.TagSet tags=m->query_tag_set();
     if(!tags) return "";
     id = id->clone_me();
-    id->conf = c;
+
+    if (has_prefix (mn, "rxmltags!"))
+      // Ugly kludge: The rxmltags tagdoc has rxml examples that require a
+      // late compat level to render correctly, so we switch to the admin
+      // UI config since it always uses the latest compat level.
+      id->conf = roxen.get_admin_configuration();
+    else
+      id->conf = c;
+
     mapping(string:int) documented_tags = ([]);
     foreach(sort(indices(tags->get_tag_names())), string name)
     {
-      string tag_doc = c->find_tag_doc( name, id, 1, 0, documented_tags);
+      string tag_doc = id->conf->find_tag_doc( name, id, 1, 0, documented_tags);
       if (tag_doc && sizeof(tag_doc))
 	full_doc += "<p>"+tag_doc+"</p>";
     }
