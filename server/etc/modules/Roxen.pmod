@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.274 2009/04/20 14:09:30 jonasw Exp $
+// $Id: Roxen.pmod,v 1.275 2009/04/21 12:38:00 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -3218,28 +3218,6 @@ string make_http_headers(mapping(string:string|array(string)) heads,
 #define QD_WRITE(X)
 #endif /* QUOTA_DEBUG */
 
-#undef CACHE
-#undef NOCACHE
-#ifdef DEBUG_CACHEABLE
-#define CACHE(id,seconds) do {                                                \
-  int old_cacheable = ([mapping(string:mixed)]id->misc)->cacheable;           \
-  ([mapping(string:mixed)]id->misc)->cacheable =                              \
-    min(([mapping(string:mixed)]id->misc)->cacheable,seconds);                \
-  report_debug("%s:%d lowered cacheable to %d (was: %d, now: %d)\n",          \
-               __FILE__, __LINE__, seconds, old_cacheable,                    \
-               ([mapping(string:mixed)]id->misc)->cacheable);                 \
-} while(0)
-#define NOCACHE(id) do {                                                      \
-  int old_cacheable = ([mapping(string:mixed)]id->misc)->cacheable;           \
-  ([mapping(string:mixed)]id->misc)->cacheable = 0;                           \
-  report_debug("%s:%d set cacheable to 0 (was: %d)\n",                        \
-               __FILE__, __LINE__, old_cacheable);                            \
-} while(0)
-#else /* !DEBUG_CACHEABLE */
-#define CACHE(id,X) ([mapping(string:mixed)]id->misc)->cacheable=min(([mapping(string:mixed)]id->misc)->cacheable,X)
-#define NOCACHE(id) ([mapping(string:mixed)]id->misc)->cacheable=0
-#endif /* DEBUG_CACHEABLE */
-
 
 class QuotaDB
 {
@@ -3989,38 +3967,38 @@ class ScopeRoxen {
      case "nodename":
        return uname()->nodename;
      case "uptime":
-       CACHE(c->id,1);
+       c->id->lower_max_cache (1);
        return ENCODE_RXML_INT(time(1)-roxenp()->start_time, type);
      case "uptime-days":
-       CACHE(c->id,3600*2);
+       c->id->lower_max_cache (3600 * 2);
        return ENCODE_RXML_INT((time(1)-roxenp()->start_time)/3600/24, type);
      case "uptime-hours":
-       CACHE(c->id,1800);
+       c->id->lower_max_cache (1800);
        return ENCODE_RXML_INT((time(1)-roxenp()->start_time)/3600, type);
      case "uptime-minutes":
-       CACHE(c->id,60);
+       c->id->lower_max_cache (60);
        return ENCODE_RXML_INT((time(1)-roxenp()->start_time)/60, type);
      case "hits-per-minute":
-       CACHE(c->id,2);
+       c->id->lower_max_cache (2);
        // FIXME: Use float here instead?
        return ENCODE_RXML_INT(c->id->conf->requests / ((time(1)-roxenp()->start_time)/60 + 1),
 			      type);
      case "hits":
-       NOCACHE(c->id);
+       c->id->set_max_cache (0);
        return ENCODE_RXML_INT(c->id->conf->requests, type);
      case "sent-mb":
-       CACHE(c->id,10);
+       c->id->lower_max_cache (10);
        // FIXME: Use float here instead?
        return ENCODE_RXML_TEXT(sprintf("%1.2f",c->id->conf->sent / (1024.0*1024.0)), type);
      case "sent":
-       NOCACHE(c->id);
+       c->id->set_max_cache (0);
        return ENCODE_RXML_INT(c->id->conf->sent, type);
      case "sent-per-minute":
-       CACHE(c->id,2);
+       c->id->lower_max_cache (2);
        return ENCODE_RXML_INT(c->id->conf->sent / ((time(1)-roxenp()->start_time)/60 || 1),
 			      type);
      case "sent-kbit-per-second":
-       CACHE(c->id,2);
+       c->id->lower_max_cache (2);
        // FIXME: Use float here instead?
        return ENCODE_RXML_TEXT(sprintf("%1.2f",((c->id->conf->sent*8)/1024.0/
 						(time(1)-roxenp()->start_time || 1))),
@@ -4042,7 +4020,7 @@ class ScopeRoxen {
      case "product-name":
        return ENCODE_RXML_TEXT(roxen_product_name, type);     
      case "time":
-       CACHE(c->id,1);
+       c->id->lower_max_cache (1);
        return ENCODE_RXML_INT(time(),  type);
      case "server":
        return ENCODE_RXML_TEXT (c->id->url_base(), type);
@@ -4055,7 +4033,7 @@ class ScopeRoxen {
 	return ENCODE_RXML_TEXT(tmp || "", type);
       }
      case "locale":
-       NOCACHE(c->id);
+       c->id->set_max_cache (0);
        return ENCODE_RXML_TEXT(roxenp()->locale->get(), type);
      case "path":
        return ENCODE_RXML_TEXT(c->id->misc->site_prefix_path, type);
@@ -4211,7 +4189,7 @@ class ScopeCookie {
 
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
     if (!c) c = RXML_CONTEXT;
-    NOCACHE(c->id);
+    c->id->set_max_cache (0);
     return ENCODE_RXML_TEXT(c->id->cookies[var], type);
   }
 
@@ -4235,7 +4213,7 @@ class ScopeCookie {
 
   array(string) _indices(void|RXML.Context c) {
     if (!c) c = RXML_CONTEXT;
-    NOCACHE(c->id);
+    c->id->set_max_cache (0);
     return indices(c->id->cookies);
   }
 
