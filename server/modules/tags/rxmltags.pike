@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.609 2009/04/20 14:09:27 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.610 2009/04/21 14:42:15 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -1775,11 +1775,9 @@ class TagSetMaxCache {
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
-      RXML.Context ctx = RXML_CONTEXT;
-      ctx->set_id_misc ("cacheable", Roxen.time_dequantifier(args));
-      
+      id->set_max_cache (Roxen.time_dequantifier(args));
       if(args["force-protocol-cache"])
-	ctx->set_id_misc ("no_proto_cache", 0);
+	RXML_CONTEXT->set_id_misc ("no_proto_cache", 0);
     }
   }
 }
@@ -2022,7 +2020,7 @@ class TagCache {
 	ADD_VARIABLE_TO_KEYMAP (ctx, var);
     }
 
-    protected void make_key_from_keymap(RequestID id)
+    protected void make_key_from_keymap (RequestID id, int timeout)
     {
       // Caching is not allowed if there are keys except '1' and
       // page.path, i.e. when different cache entries might be chosen
@@ -2037,6 +2035,8 @@ class TagCache {
 	    NOCACHE();
 	}
       }
+      else if (timeout)
+	id->lower_max_cache (timeout);
 
       key = encode_value_canonic (keymap);
       if (!args["disable-key-hash"])
@@ -2145,7 +2145,7 @@ class TagCache {
 	}
       }
 
-      make_key_from_keymap(id);
+      make_key_from_keymap (id, timeout);
 
       // Now we have the cache key.
 
@@ -2221,7 +2221,7 @@ class TagCache {
 	  // subvariables is part of the persistent state, but we'll
 	  // come to state_update later anyway if it should be called.
 	  add_subvariables_to_keymap();
-	  make_key_from_keymap(id);
+	  make_key_from_keymap (id, timeout);
 	}
 
 	if (args->shared) {
@@ -8166,12 +8166,18 @@ using the pre tag.
 </attr>
 
 <attr name='enable-client-cache'>
- <p>Mark output as cachable in browsers.</p>
+ <p>Mark output as cachable by clients. Note that this is likely to
+ introduce overcaching - see the \"enable-protocol-cache\"
+ attribute for details.</p>
 </attr>
 
 <attr name='enable-protocol-cache'>
- <p>Mark output as cachable in server-side protocol cache and browser
-    cache.</p>
+ <p>Mark output as cachable by clients and in server-side protocol
+ cache. Note that this is likely to introduce overcaching since
+ neither the cache key(s) nor any timeout attributes are taken into
+ account by those caches. You can use <xref href='set-max-cache.tag'/>
+ to set a timeout for the protocol cache and for the client-side
+ caching.</p>
 </attr>
 
 <attr name='years' value='number'>
@@ -10259,15 +10265,15 @@ After: &var.language;<br /></ex>
 //----------------------------------------------------------------------
 
 "set-max-cache":#"<desc type='tag'><p><short>
- Sets the maximum time this document can be cached in any ram
- caches.</short></p>
+ Sets the maximum time this document can be cached in the protocol
+ cache or client-side.</short></p>
 
  <p>Default is to get this time from the other tags in the document
  (as an example, <xref href='../if/if_supports.tag' /> sets the time to
  0 seconds since the result of the test depends on the client used.</p>
 
- <p>You must do this at the end of the document, since many of the
- normal tags will override this value.</p>
+ <p>You must use this tag at the end of the document, since many of
+ the normal tags will override the cache value.</p>
 </desc>
 
 <attr name='years' value='number'>
