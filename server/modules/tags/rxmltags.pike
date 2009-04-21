@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.610 2009/04/21 14:42:15 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.611 2009/04/21 16:12:17 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -1536,7 +1536,7 @@ class TagInsertFile {
 				 result_mapping->last_modified);
 
     // Restore previous language state.
-    if (args->langauge && pl) {
+    if (args->language && pl) {
       pl->set_sorted(old_lang, old_qualities);
     }
 

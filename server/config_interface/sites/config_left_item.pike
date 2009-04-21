@@ -46,7 +46,7 @@ string selected_item( string q, Configuration c, RequestID id,
 		  "var" );
   }
   pre +=
-    "<script langauge='javascript' "
+    "<script language='javascript' "
     "        charset='iso-8859-1' type='text/javascript' >\n"
     "  function p_on(item)  { item.className = 'module-list-item-hover'; }\n"
     "  function p_off(item) { item.className = 'module-list-item'; }\n"

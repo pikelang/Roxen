@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.35 2009/04/17 12:29:05 jonasw Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.36 2009/04/21 16:09:43 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -256,7 +256,7 @@ void create() {
 	 "ISO 639 language codes are considered to be language settings. Otherwise entries "
 	 "starting with $ are used for selecting language. Note that this option affects which "
 	 "prestates and config cookie entries that are removed when using "
-         "&lt;emit source=\"languages\"&gt; to switch langauge.\n"));
+         "&lt;emit source=\"languages\"&gt; to switch language.\n"));
 }
 
 
