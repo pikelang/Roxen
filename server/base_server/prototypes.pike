@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.245 2009/04/21 12:55:27 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.246 2009/04/21 18:11:39 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -421,7 +421,7 @@ class Configuration
                           int|void status, int|void nocache,
                           int|void not_internal, mapping|void result_mapping);
   int(0..1) is_file(string virt_path, RequestID id, int(0..1)|void internal);
-  void start(int num);
+  int start(int num);
   void save_me();
   int save_one( RoxenModule o );
   RoxenModule reload_module( string modname );

@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.673 2009/04/20 14:09:30 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.674 2009/04/21 18:11:39 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3262,7 +3262,7 @@ int(0..1) is_file(string virt_path, RequestID id, int(0..1)|void internal)
 
 array registered_urls = ({}), failed_urls = ({ });
 array do_not_log_patterns = 0;
-void start(int num)
+int start(int num)
 {
   fix_my_url();
 
@@ -3365,6 +3365,10 @@ void start(int num)
       prot->mib->merge(mib);
     }
   }
+
+  if (retrieve ("EnabledModules", this)["config_filesystem#0"])
+    return 1;			// Signal that this is the admin UI config.
+  return 0;
 }
 
 void save_me()

@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1028 2009/04/03 17:47:19 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1029 2009/04/21 18:11:39 mast Exp $";
 
 //! @appears roxen
 //!
@@ -4904,6 +4904,15 @@ Configuration get_configuration (string name)
   return config_lookup[name];
 }
 
+private Configuration admin_config;
+
+Configuration get_admin_configuration()
+//! Returns the admin UI configuration, which is the one containing a
+//! config_filesystem module instance.
+{
+  return admin_config;
+}
+
 Configuration enable_configuration(string name)
 {
 #ifdef DEBUG
@@ -4941,10 +4950,16 @@ void enable_configurations()
   foreach(list_all_configurations(), string config)
   {
     int t = gethrtime();
+    Configuration conf_obj;
+    int is_admin_config;
     report_debug("\nEnabling the configuration %s ...\n", config);
-    if(err=catch( enable_configuration(config)->start(0) ))
+    if(err=catch {
+	conf_obj = enable_configuration(config);
+	is_admin_config = conf_obj->start(0);
+      })
       report_error("\n"+LOC_M(35, "Error while loading configuration %s%s"),
-                   config+":\n", describe_backtrace(err)+"\n");
+		   config+":\n", describe_backtrace(err)+"\n");
+    if (is_admin_config) admin_config = conf_obj;
     report_debug("Enabled %s in %.1fms\n", config, (gethrtime()-t)/1000.0 );
   }
   foreach( configurations, Configuration c )
