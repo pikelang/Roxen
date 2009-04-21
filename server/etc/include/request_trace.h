@@ -2,7 +2,7 @@
 //
 // Some stuff to do logging of a request through the server.
 //
-// $Id: request_trace.h,v 1.18 2008/11/06 00:43:12 mast Exp $
+// $Id: request_trace.h,v 1.19 2009/04/21 14:48:48 jonasw Exp $
 
 #ifndef REQUEST_TRACE_H
 #define REQUEST_TRACE_H
@@ -52,24 +52,20 @@
 #else
 
 # define ID_TRACE_ENTER(ID, MSG, OBJ) do{				\
-    int _ts_ = HRTIME();						\
     if (object _id_ = (ID)) {						\
       mapping _id_misc_ = _id_->misc;					\
       if (function(string,mixed,int:void) _trace_enter =		\
 	  ([function(string,mixed,int:void)] _id_misc_->trace_enter))	\
-	_trace_enter ((MSG), (OBJ), _ts_);				\
-      _id_misc_->trace_overhead += HRTIME() - _ts_;			\
+	_trace_enter ((MSG), (OBJ), HRTIME());				\
     }									\
   }while(0)
 
 # define ID_TRACE_LEAVE(ID, MSG) do{					\
-    int _ts_ = HRTIME();						\
     if (object _id_ = (ID)) {						\
       mapping _id_misc_ = _id_->misc;					\
       if (function(string,int:void) _trace_leave =			\
 	  ([function(string,int:void)] _id_misc_->trace_leave))		\
-	_trace_leave ((MSG), _ts_);					\
-      _id_misc_->trace_overhead += HRTIME() - _ts_;			\
+	_trace_leave ((MSG), HRTIME());					\
     }									\
   }while(0)
 
