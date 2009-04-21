@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.275 2009/04/21 12:38:00 mast Exp $
+// $Id: Roxen.pmod,v 1.276 2009/04/21 13:17:34 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4189,7 +4189,8 @@ class ScopeCookie {
 
   mixed `[] (string var, void|RXML.Context c, void|string scope, void|RXML.Type type) {
     if (!c) c = RXML_CONTEXT;
-    c->id->set_max_cache (0);
+    if (c->id->conf->compat_level() < 5.0)
+      c->id->set_max_cache (0);
     return ENCODE_RXML_TEXT(c->id->cookies[var], type);
   }
 
@@ -4213,7 +4214,8 @@ class ScopeCookie {
 
   array(string) _indices(void|RXML.Context c) {
     if (!c) c = RXML_CONTEXT;
-    c->id->set_max_cache (0);
+    if (c->id->conf->compat_level() < 5.0)
+      c->id->set_max_cache (0);
     return indices(c->id->cookies);
   }
 
