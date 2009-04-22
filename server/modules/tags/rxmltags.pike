@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.611 2009/04/21 16:12:17 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.612 2009/04/22 10:46:47 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -2022,11 +2022,24 @@ class TagCache {
 
     protected void make_key_from_keymap (RequestID id, int timeout)
     {
-      // Caching is not allowed if there are keys except '1' and
-      // page.path, i.e. when different cache entries might be chosen
-      // for the same page.
-      array(string|int) keys = indices(keymap) - ({1}) - ({"page.path"});
-      if (sizeof(keys)) {
+      // Protocol/client caching is disabled if there are keys except
+      // '1' and page.path, i.e. when different cache entries might be
+      // chosen for the same page.
+      //
+      // We could consider doing this for the cookie scope too since
+      // the protocol cache now tracks cookie dependencies through the
+      // CookieJar. However, modifying it has compat implications with
+      // overcaching that could be difficult to track down, and it's
+      // possible that the protocol cache will be tunable in the
+      // future in this regard. So it appears better to just leave
+      // this as fixed behavior and let the user do other things
+      // explicitly.
+
+      int ignored = 0;
+      if (keymap[1]) ignored++;
+      if (keymap["page.path"]) ignored++;
+
+      if (sizeof (keymap) != ignored) {
 	if (args["enable-protocol-cache"])
 	  ;
 	else {
