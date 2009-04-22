@@ -94,6 +94,17 @@
 
 <test>
   <rxml type="string">
+    <emit source="sql" db="local" query="SELECT NULL as foo">
+      [&sql.foo;]
+      <copy-scope from="sql" to="var"/>
+      [&var.foo;]
+    </emit>
+  </rxml>
+  <result>[][]</result>
+</test>
+
+<test>
+  <rxml type="string">
     <emit source="sql" db="local" query="SELECT a FROM __test">
       &_.a;,
       <if variable-exists="_.a">exists</if>,
