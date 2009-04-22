@@ -105,6 +105,15 @@
 
 <test>
   <rxml type="string">
+    <emit source="sql" db="local" query="SELECT NULL as foo">
+      <if variable="sql.foo">a</if><else>b</else>
+    </emit>
+  </rxml>
+  <result>b</result>
+</test>
+
+<test>
+  <rxml type="string">
     <emit source="sql" db="local" query="SELECT a FROM __test">
       &_.a;,
       <if variable-exists="_.a">exists</if>,
