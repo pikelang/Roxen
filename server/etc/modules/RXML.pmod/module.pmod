@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.399 2009/04/23 11:43:00 mast Exp $
+// $Id: module.pmod,v 1.400 2009/04/23 17:52:14 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7228,13 +7228,13 @@ class TXml
   }
 
   string lower_case (string val)
-    {return val && lowercaser->clone()->finish (val)->read();}
+    {return val ? lowercaser->clone()->finish (val)->read() : val;}
 
   string upper_case (string val)
-    {return val && uppercaser->clone()->finish (val)->read();}
+    {return val ? uppercaser->clone()->finish (val)->read() : val;}
 
   string capitalize (string val)
-    {return val && capitalizer->clone()->finish (val)->read();}
+    {return val ? capitalizer->clone()->finish (val)->read() : val;}
 
   array(string|mapping(string:string)) parse_tag (string tag_text)
   //! Parses the first tag in @[tag_text] and returns an array where
