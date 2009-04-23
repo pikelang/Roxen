@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.118 2009/01/23 13:34:17 jonasw Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.119 2009/04/23 22:13:43 jonasw Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -46,7 +46,7 @@ constant tagdoc=([
 
  <p>The database URL is on this format:</p>
 
- <blockquote><i>driver</i><b>://</b>[<i>username</i>[<b>:</b><i>password</i>]<b>@</b>]<i>host</i>[<b>:</b><i>port</i>][<b>/</b><i>database</i>]</blockquote>
+ <blockquote><p><i>driver</i><b>://</b>[<i>username</i>[<b>:</b><i>password</i>]<b>@</b>]<i>host</i>[<b>:</b><i>port</i>][<b>/</b><i>database</i>]</p></blockquote>
 
  <p>where <i>driver</i> is the database protocol, e.g. \"odbc\",
  \"mysql\", \"oracle\", \"postgres\", etc.</p>
@@ -100,7 +100,7 @@ constant tagdoc=([
 
  <p>The database URL is on this format:</p>
 
- <blockquote><i>driver</i><b>://</b>[<i>username</i>[<b>:</b><i>password</i>]<b>@</b>]<i>host</i>[<b>:</b><i>port</i>][<b>/</b><i>database</i>]</blockquote>
+ <blockquote><p><i>driver</i><b>://</b>[<i>username</i>[<b>:</b><i>password</i>]<b>@</b>]<i>host</i>[<b>:</b><i>port</i>][<b>/</b><i>database</i>]</p></blockquote>
 
  <p>where <i>driver</i> is the database protocol, e.g. \"odbc\",
  \"mysql\", \"oracle\", \"postgres\", etc.</p>
@@ -124,7 +124,7 @@ constant tagdoc=([
  and will have no effect if the server compatibility level is above 2.1.</p>
 </attr>
 
-<attr name='bindings' value='\"name=variable,name=variable,...\"'><p>
+<attr name='bindings' value='name=variable,name=variable,...'><p>
  Specifies binding variables to use with this query. This is comma separated
  list of binding variable names and RXML variables to assign to those
  binding variables.</p>
@@ -181,7 +181,7 @@ constant tagdoc=([
 
  <p>The database URL is on this format:</p>
 
- <blockquote><i>driver</i><b>://</b>[<i>username</i>[<b>:</b><i>password</i>]<b>@</b>]<i>host</i>[<b>:</b><i>port</i>][<b>/</b><i>database</i>]</blockquote>
+ <blockquote><p><i>driver</i><b>://</b>[<i>username</i>[<b>:</b><i>password</i>]<b>@</b>]<i>host</i>[<b>:</b><i>port</i>][<b>/</b><i>database</i>]</p></blockquote>
 
  <p>where <i>driver</i> is the database protocol, e.g. \"odbc\",
  \"mysql\", \"oracle\", \"postgres\", etc.</p>
@@ -199,7 +199,7 @@ constant tagdoc=([
  The actual SQL-statement.</p>
 </attr>
 
-<attr name='bindings' value='\"name=variable,name=variable,...\"'><p>
+<attr name='bindings' value='name=variable,name=variable,...'><p>
  Specifies binding variables to use with this query. This is comma
  separated list of binding variable names and RXML variables to assign
  to those binding variables.</p>
@@ -251,8 +251,8 @@ constant tagdoc=([
  <p>The charset specification in this attribute can optionally be a
  list like this:</p>
 
- <blockquote>charset=\"<i>recode-charset</i>,
- <i>connection-charset</i>\"</blockquote>
+ <blockquote><p>charset=\"<i>recode-charset</i>,
+ <i>connection-charset</i>\"</p></blockquote>
 
  <p>In this form, the <i>recode-charset</i> is used by Roxen to recode
  the query and results, and <i>connection-charset</i> is sent to the

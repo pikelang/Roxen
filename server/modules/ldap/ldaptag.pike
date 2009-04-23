@@ -2,7 +2,7 @@
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.38 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.39 2009/04/23 22:22:50 jonasw Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>
@@ -107,37 +107,37 @@ Modify (adds a second value to an existing attribute):
 <attr name='op' value='add|delete|modify|replace' required='required'><p>
  The actual LDAP operation:</p>
 
- <dl>
-   <dt>add</dt>
-     <dd><p>Add a new object. The \"attr\" argument specifies the
+ <list type='dl'>
+   <item name='add'>
+     <p>Add a new object. The \"attr\" argument specifies the
      attributes for the new object. The \"add-attr\" argument also
-     works for this.</p></dd>
+     works for this.</p></item>
 
-   <dt>delete</dt>
-     <dd><p>Delete an object.</p></dd>
+   <item name='delete'>
+     <p>Delete an object.</p></item>
 
-   <dt>modify</dt>
-     <dd><p>Modify an existing object. The \"add-attr\",
+   <item name='modify'>
+     <p>Modify an existing object. The \"add-attr\",
      \"replace-attr\", and \"delete-attr\" arguments specifies the
      attribute values to add, replace, and delete, respectively. The
      same attribute name may not occur in both \"add-attr\" and
      \"delete-attr\".</p>
 
      <p>For compatibility, the \"attr\" argument is the same as
-     \"add-attr\".</p></dd>
+     \"add-attr\".</p></item>
 
-   <dt>replace</dt>
-     <dd><p>This operation exists for compatibility only. It's the
+   <item name='replace'>
+     <p>This operation exists for compatibility only. It's the
      same as \"modify\" except that the \"attr\" argument is an alias
-     for \"replace-attr\" instead.</p></dd>
- </dl>
+     for \"replace-attr\" instead.</p></item>
+ </list>
 </attr>
 
 <attr name='attr' value='(attr:[val[,...]])[(attr:...)...]'><p>
  Specifies the attributes for the new object in the \"add\" operation.</p>
 
  <p>The format consists of a series of parentheses on the form
- \"<code>(</code><i>attr</i><code>:</code><i>values</i><code>)</code>\"
+ \"<tt>(</tt><i>attr</i><tt>:</tt><i>values</i><tt>)</tt>\"
  where <i>attr</i> is the attribute name and <i>values</i> a comma
  separated list of zero or more values to give it. Whitespace which is
  ignored may occur around the parentheses, the colon and the commas.
