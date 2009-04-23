@@ -180,7 +180,7 @@
 <comment>Define/undefine</comment>
 <test>
 <rxml><define if='x'>3</define><if x='3'>1</if><undefine if='x'/><if x='3'>1</if><else>0</else></rxml>
-<glob>1[Error (parse): *]</glob>
+<glob>1[Error (parse): *]0</glob>
 </test>
 
 <test no-strip-ws="">
@@ -1662,7 +1662,7 @@ b</strlen></rxml>
 
 <test>
 <rxml><if q>X</if><else>Y</else></rxml>
-<glob>[Error (parse): *]</glob>
+<glob>[Error (parse): *]Y</glob>
 </test>
 
 <test>
