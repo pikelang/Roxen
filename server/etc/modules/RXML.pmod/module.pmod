@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.398 2009/04/20 13:03:18 mast Exp $
+// $Id: module.pmod,v 1.399 2009/04/23 11:43:00 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -2312,6 +2312,10 @@ class Context
 	      CompiledError comp_err = CompiledError (err);
 	      p_code_error->add (RXML_CONTEXT, comp_err, comp_err);
 	    }
+
+	    if (!id || !id->conf || id->conf->compat_level() >= 5.0)
+	      misc[" _ok"] = 0;
+
 	    TAG_DEBUG (RXML_CONTEXT->frame,
 		       "RXML exception %O reported - continuing\n", err);
 	    return;
