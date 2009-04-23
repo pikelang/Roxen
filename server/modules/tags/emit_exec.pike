@@ -3,7 +3,7 @@
 // Created 20060210 by Marcus Wellhardh <wellhard@roxen.com> as a
 // consultancy job for Randstad.
 
-// $Id: emit_exec.pike,v 1.4 2008/08/15 12:33:55 mast Exp $
+// $Id: emit_exec.pike,v 1.5 2009/04/23 10:53:37 jonasw Exp $
 
 #include <module.h>
 inherit "module";
@@ -186,7 +186,7 @@ constant tagdoc=([
   to be specified in the <i>Available Applications</i> module
   variable. The result can be parsed and variables can be extracted by
   settting delimiter characters. The return value and the raw result
-  from the application can be retreived with special variables.
+  from the application can be retrieved with special variables.</p>
 
   <note><p>All <xref href='emit.tag'/> attributes apply.</p></note>
 </desc>
@@ -227,13 +227,13 @@ Load 15 min: &var.load-15;<br/></ex-box>
   the result is splitted to extract the entiry name and its value.</p>
 </attr>
 
-<attr name='raw-variable' value='variablename'>
+<attr name='raw-variable' value='variable name'>
   <p>Define this attribute to a variable name to store the raw result
   from the application in this variable. The variable will also be
   available after the emit</p>
 </attr>
 
-<attr name='return-variable' value='variablename'>
+<attr name='return-variable' value='variable name'>
   <p>Define this attribute to a variable name to store the return value 
   from the application in this variable. The variable will also be
   available after the emit</p>
