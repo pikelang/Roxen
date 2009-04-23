@@ -147,6 +147,11 @@
 <result>A &amp; &#34; <br /></result>
 </test>
 
+<test>
+  <rxml><case case="upper"></case></rxml>
+  <result></result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Comment</comment>
