@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.400 2009/04/23 17:52:14 mast Exp $
+// $Id: module.pmod,v 1.401 2009/04/23 20:15:24 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -4530,6 +4530,10 @@ class Frame
 		fatal_error ("FLAG_IS_CACHE_STATIC cannot be set when "
 			     "FLAG_GET_EVALED_CONTENT is.\n");
 #endif
+
+	      if (ctx->evaled_p_code)
+		// Record any variable changes from do_enter or do_iterate.
+		ctx->evaled_p_code->add (ctx, nil, nil);
 
 	      for (; iter > 0; iter-- DO_IF_DEBUG (, debug_iter++)) {
 	      eval_content: {
