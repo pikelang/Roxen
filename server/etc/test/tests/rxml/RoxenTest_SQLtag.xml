@@ -18,6 +18,17 @@
 
 <test>
   <rxml>
+    <sqlquery db="local"
+	      query="INSERT INTO __test (a) VALUES ('&foo.bar:mysql;')"/>
+    <emit source="sql" db="local" query="SELECT count(*) AS n FROM __test">
+      &_.n;
+    </emit>
+  </rxml>
+  <glob>[Error (parse): *]*0</glob>
+</test>
+
+<test>
+  <rxml>
     <sqlquery db="local" query="INSERT INTO __test (a) VALUES ('hej')"/>
     &page.last-true;
   </rxml>
@@ -39,6 +50,14 @@
     &page.last-true;
   </rxml>
   <result>1</result>
+</test>
+
+<test>
+  <rxml>
+    <sqlquery db="local" query="INSERT INTO __test (c) VALUES ('foo')"/>
+    &page.last-true;
+  </rxml>
+  <glob>[Error (run): *]*0</glob>
 </test>
 
 <test>
