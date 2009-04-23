@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.613 2009/04/23 20:37:18 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.614 2009/04/23 21:14:15 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -9899,77 +9899,77 @@ After: &var.language;<br /></ex>
  " // FIXME: Moved the following to some intro chapter.
  #"<p>Expression values can take any of the following forms:</p>
 
- <table>
-   <tr valign='top'>
-     <td><tt><i>scope</i>.<i>var</i></tt></td>
-     <td>The value of the given RXML variable. Note that it is not
+ <xtable>
+   <row valign='top'>
+     <c><p><tt><i>scope</i>.<i>var</i></tt></p></c>
+     <c><p>The value of the given RXML variable. Note that it is not
      written as an entity reference; i.e. it is written without the
-     surrounding \"&amp;\" and \";\".</td></tr>
+     surrounding \"&amp;\" and \";\".</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>49</tt></td>
-     <td>A decimal integer.</td></tr>
+   <row valign='top'>
+     <c><p><tt>49</tt></p></c>
+     <c><p>A decimal integer.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>0xFE</tt>, <tt>0xfe</tt></td>
-     <td>A hexadecimal integer is preceded by \"0x\".</td></tr>
+   <row valign='top'>
+     <c><p><tt>0xFE</tt>, <tt>0xfe</tt></p></c>
+     <c><p>A hexadecimal integer is preceded by \"0x\".</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>040</tt></td>
-     <td>An octal integer is preceded by \"0\".</td></tr>
+   <row valign='top'>
+     <c><p><tt>040</tt></p></c>
+     <c><p>An octal integer is preceded by \"0\".</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>0b10100110</tt></td>
-     <td>A binary integer is preceded by \"0b\".</td></tr>
+   <row valign='top'>
+     <c><p><tt>0b10100110</tt></p></c>
+     <c><p>A binary integer is preceded by \"0b\".</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>1.43</tt>, <tt>1.6e-5</tt></td>
-     <td>A floating point number contains \".\" and/or
-     \"E\"/\"e\".</td></tr>
+   <row valign='top'>
+     <c><p><tt>1.43</tt>, <tt>1.6e-5</tt></p></c>
+     <c><p>A floating point number contains \".\" and/or
+     \"E\"/\"e\".</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>\"hello\"</tt></td>
-     <td>A string inside double quotes. C-style backslash escapes can
+   <row valign='top'>
+     <c><p><tt>\"hello\"</tt></p></c>
+     <c><p>A string inside double quotes. C-style backslash escapes can
      be used in the string, e.g. a double quote can be included using
-     \\\".</td></tr>
+     \\\".</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>(<i>expr</i>)</tt></td>
-     <td>Parentheses can be used around an expression for grouping
-     inside a larger expression.</td></tr>
- </table>
+   <row valign='top'>
+     <c><p><tt>(<i>expr</i>)</tt></p></c>
+     <c><p>Parentheses can be used around an expression for grouping
+     inside a larger expression.</p></c></row>
+ </xtable>
 
  <p>Value conversion expressions:</p>
 
- <table>
-   <tr valign='top'>
-     <td><tt>(int) <i>expr</i></tt></td>
-     <td>Casts a numeric or string expression (containing a formatted
-     number on one of the formats above) to an integer.</td></tr>
+ <xtable>
+   <row valign='top'>
+     <c><p><tt>(int) <i>expr</i></tt></p></c>
+     <c><p>Casts a numeric or string expression (containing a formatted
+     number on one of the formats above) to an integer.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>(float) <i>expr</i></tt></td>
-     <td>Casts a numeric or string expression (containing a formatted
+   <row valign='top'>
+     <c><p><tt>(float) <i>expr</i></tt></p></c>
+     <c><p>Casts a numeric or string expression (containing a formatted
      number on one of the formats above) to a floating point
-     number.</td></tr>
+     number.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>(string) <i>expr</i></tt></td>
-     <td>Casts a numeric or string expression to a string. If it is an
+   <row valign='top'>
+     <c><p><tt>(string) <i>expr</i></tt></p></c>
+     <c><p>Casts a numeric or string expression to a string. If it is an
      integer then it is formatted as a decimal number. If it is a
      floating point number then it is formatted on the form
-     <i>[-]XX[.XX][e[-]XX]</i>.</td></tr>
+     <i>[-]XX[.XX][e[-]XX]</i>.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>INT(<i>expr</i>)</tt>, <tt>FLOAT(<i>expr</i>)</tt>,
-     <tt>STRING(<i>expr</i>)</tt></td>
-     <td>These functions cast their arguments to integer, float, or
+   <row valign='top'>
+     <c><p><tt>INT(<i>expr</i>)</tt>, <tt>FLOAT(<i>expr</i>)</tt>,
+     <tt>STRING(<i>expr</i>)</tt></p></c>
+     <c><p>These functions cast their arguments to integer, float, or
      string, respectively. They behave like the cast operators above
      except that they do not generate any error if <i>expr</i> cannot
      be cast successfully. Instead a zero number or an empty string is
      returned as appropriate. This is useful if <i>expr</i> is a value
-     from the client that might be bogus.</td></tr>
- </table>
+     from the client that might be bogus.</p></c></row>
+ </xtable>
 
  <p>Note that values in RXML variables often are strings even though
  they might appear as (formatted) numbers. It is therefore a good idea
@@ -9978,197 +9978,197 @@ After: &var.language;<br /></ex>
 
  <p>Expressions for numeric operands:</p>
 
- <table>
-   <tr valign='top'>
-     <td><tt><i>expr1</i> * <i>expr2</i></tt></td>
-     <td>Multiplication.</td></tr>
+ <xtable>
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> * <i>expr2</i></tt></p></c>
+     <c><p>Multiplication.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> / <i>expr2</i></tt></td>
-     <td>Division.</td></tr>
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> / <i>expr2</i></tt></p></c>
+     <c><p>Division.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> % <i>expr2</i></tt></td>
-     <td>Modulo.</td></tr>
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> % <i>expr2</i></tt></p></c>
+     <c><p>Modulo.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> + <i>expr2</i></tt></td>
-     <td>Addition.</td></tr>
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> + <i>expr2</i></tt></p></c>
+     <c><p>Addition.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> - <i>expr2</i></tt></td>
-     <td>Subtraction.</td></tr>
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> - <i>expr2</i></tt></p></c>
+     <c><p>Subtraction.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> &lt; <i>expr2</i></tt></td>
-     <td>Less than.</td></tr>
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> &lt; <i>expr2</i></tt></p></c>
+     <c><p>Less than.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> &gt; <i>expr2</i></tt></td>
-     <td>Greater than.</td></tr>
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> &gt; <i>expr2</i></tt></p></c>
+     <c><p>Greater than.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> &lt;= <i>expr2</i></tt></td>
-     <td>Less than or equal.</td></tr>
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> &lt;= <i>expr2</i></tt></p></c>
+     <c><p>Less than or equal.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> &gt;= <i>expr2</i></tt></td>
-     <td>Greater than or equal.</td></tr>
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> &gt;= <i>expr2</i></tt></p></c>
+     <c><p>Greater than or equal.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> &amp; <i>expr2</i></tt></td>
-     <td>Bitwise AND (integer operands only).</td></tr>
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> &amp; <i>expr2</i></tt></p></c>
+     <c><p>Bitwise AND (integer operands only).</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> ^ <i>expr2</i></tt></td>
-     <td>Bitwise XOR (integer operands only).</td></tr>
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> ^ <i>expr2</i></tt></p></c>
+     <c><p>Bitwise XOR (integer operands only).</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> | <i>expr2</i></tt></td>
-     <td>Bitwise OR (integer operands only).</td></tr>
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> | <i>expr2</i></tt></p></c>
+     <c><p>Bitwise OR (integer operands only).</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>pow(<i>expr1</i>, <i>expr2</i>)</tt></td>
-     <td>Returns the value <i>expr1</i> raised to the power of
-     <i>expr2</i>.</td></tr>
+   <row valign='top'>
+     <c><p><tt>pow(<i>expr1</i>, <i>expr2</i>)</tt></p></c>
+     <c><p>Returns the value <i>expr1</i> raised to the power of
+     <i>expr2</i>.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>abs(<i>expr</i>)</tt></td>
-     <td>Returns the absolute value of <i>expr</i>.</td></tr>
- </table>
+   <row valign='top'>
+     <c><p><tt>abs(<i>expr</i>)</tt></p></c>
+     <c><p>Returns the absolute value of <i>expr</i>.</p></c></row>
+ </xtable>
 
  <p>Expressions for string operands:</p>
 
- <table>
-   <tr valign='top'>
-     <td><tt><i>expr</i> * <i>num</i></tt></td>
-     <td>Returns <i>expr</i> repeated <i>num</i> times.</td></tr>
+ <xtable>
+   <row valign='top'>
+     <c><p><tt><i>expr</i> * <i>num</i></tt></p></c>
+     <c><p>Returns <i>expr</i> repeated <i>num</i> times.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> / <i>expr2</i></tt></td>
-     <td>Returns an array with <i>expr1</i> split on <i>expr2</i>.
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> / <i>expr2</i></tt></p></c>
+     <c><p>Returns an array with <i>expr1</i> split on <i>expr2</i>.
      E.g. the string \"a,b,c\" split on \",\" is an array with the
-     three elements \"a\", \"b\", and \"c\".</td></tr>
+     three elements \"a\", \"b\", and \"c\".</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> + <i>expr2</i></tt></td>
-     <td>Returns <i>expr1</i> concatenated with <i>expr2</i>.</td></tr>
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> + <i>expr2</i></tt></p></c>
+     <c><p>Returns <i>expr1</i> concatenated with <i>expr2</i>.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> - <i>expr2</i></tt></td>
-     <td>Returns <i>expr1</i> without any occurrences of <i>expr2</i>.</td></tr>
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> - <i>expr2</i></tt></p></c>
+     <c><p>Returns <i>expr1</i> without any occurrences of <i>expr2</i>.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>sizeof(<i>expr</i>)</tt></td>
-     <td>Returns the number of characters in <i>expr</i>.</td></tr>
+   <row valign='top'>
+     <c><p><tt>sizeof(<i>expr</i>)</tt></p></c>
+     <c><p>Returns the number of characters in <i>expr</i>.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>search(<i>expr1</i>, <i>expr2</i>)</tt></td>
-     <td>Returns the starting position of the first occurrence of the
+   <row valign='top'>
+     <c><p><tt>search(<i>expr1</i>, <i>expr2</i>)</tt></p></c>
+     <c><p>Returns the starting position of the first occurrence of the
      substring <i>expr2</i> inside <i>expr1</i>, counting from 1, or 0
-     if <i>expr2</i> does not occur in <i>expr1</i>.</td></tr>
+     if <i>expr2</i> does not occur in <i>expr1</i>.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>reverse(<i>expr</i>)</tt></td>
-     <td>Returns the reverse of <i>expr</i>.</td></tr>
- </table>
+   <row valign='top'>
+     <c><p><tt>reverse(<i>expr</i>)</tt></p></c>
+     <c><p>Returns the reverse of <i>expr</i>.</p></c></row>
+ </xtable>
 
  <p>Expressions for array operands:</p>
 
- <table>
-   <tr valign='top'>
-     <td><tt><i>expr</i> * <i>num</i></tt></td>
-     <td>Returns <i>expr</i> repeated <i>num</i> times.</td></tr>
+ <xtable>
+   <row valign='top'>
+     <c><p><tt><i>expr</i> * <i>num</i></tt></p></c>
+     <c><p>Returns <i>expr</i> repeated <i>num</i> times.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> + <i>expr2</i></tt></td>
-     <td>Returns <i>expr1</i> concatenated with <i>expr2</i>.</td></tr>
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> + <i>expr2</i></tt></p></c>
+     <c><p>Returns <i>expr1</i> concatenated with <i>expr2</i>.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> - <i>expr2</i></tt></td>
-     <td>Returns <i>expr1</i> without any of the elements in
-     <i>expr2</i>.</td></tr>
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> - <i>expr2</i></tt></p></c>
+     <c><p>Returns <i>expr1</i> without any of the elements in
+     <i>expr2</i>.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> &amp; <i>expr2</i></tt></td>
-     <td>Returns the elements that exist in both <i>expr1</i> and
-     <i>expr2</i>, ordered according to <i>expr1</i>.</td></tr>
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> &amp; <i>expr2</i></tt></p></c>
+     <c><p>Returns the elements that exist in both <i>expr1</i> and
+     <i>expr2</i>, ordered according to <i>expr1</i>.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> ^ <i>expr2</i></tt></td>
-     <td>Returns the elements that exist in either <i>expr1</i> or
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> ^ <i>expr2</i></tt></p></c>
+     <c><p>Returns the elements that exist in either <i>expr1</i> or
      <i>expr2</i> but not in both. The order is <i>expr1</i> followed
-     by <i>expr2</i>.</td></tr>
+     by <i>expr2</i>.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> | <i>expr2</i></tt></td>
-     <td>Returns the elements that exist in either <i>expr1</i> or
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> | <i>expr2</i></tt></p></c>
+     <c><p>Returns the elements that exist in either <i>expr1</i> or
      <i>expr2</i>. The order is <i>expr1</i> followed by <i>expr2</i>.
      (The difference from <i>expr1</i> + <i>expr2</i> is that elements
      in <i>expr2</i> aren't repeated if they occur in
-     <i>expr1</i>.)</td></tr>
+     <i>expr1</i>.)</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>sizeof(<i>expr</i>)</tt></td>
-     <td>Returns the number of elements in <i>expr</i>.</td></tr>
+   <row valign='top'>
+     <c><p><tt>sizeof(<i>expr</i>)</tt></p></c>
+     <c><p>Returns the number of elements in <i>expr</i>.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>search(<i>arr</i>, <i>expr</i>)</tt></td>
-     <td>Returns the position of the first occurrence of the element
+   <row valign='top'>
+     <c><p><tt>search(<i>arr</i>, <i>expr</i>)</tt></p></c>
+     <c><p>Returns the position of the first occurrence of the element
      <i>expr</i> inside the array <i>arr</i>, counting from 1, or 0
-     if <i>expr</i> does not exist in <i>arr</i>.</td></tr>
+     if <i>expr</i> does not exist in <i>arr</i>.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>reverse(<i>expr</i>)</tt></td>
-     <td>Returns the reverse of <i>expr</i>.</td></tr>
+   <row valign='top'>
+     <c><p><tt>reverse(<i>expr</i>)</tt></p></c>
+     <c><p>Returns the reverse of <i>expr</i>.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>uniq(<i>expr</i>)</tt></td>
-     <td>Returns <i>expr</i> with all duplicate elements removed. The
+   <row valign='top'>
+     <c><p><tt>uniq(<i>expr</i>)</tt></p></c>
+     <c><p>Returns <i>expr</i> with all duplicate elements removed. The
      order among the remaining elements is kept intact; it is always
      the first of several duplicate elements that is
-     retained.</td></tr>
- </table>
+     retained.</p></c></row>
+ </xtable>
 
  <p>Expressions for all types of operands:</p>
 
- <table>
-   <tr valign='top'>
-     <td><tt>!<i>expr</i></tt></td>
-     <td>Logical negation: 1 (true) if <i>expr</i> is the integer 0
-     (zero), otherwise 0 (false).</td></tr>
+ <xtable>
+   <row valign='top'>
+     <c><p><tt>!<i>expr</i></tt></p></c>
+     <c><p>Logical negation: 1 (true) if <i>expr</i> is the integer 0
+     (zero), otherwise 0 (false).</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> == <i>expr2</i></tt></td>
-     <td>1 (true) if <i>expr1</i> and <i>expr2</i> are the same, 0
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> == <i>expr2</i></tt></p></c>
+     <c><p>1 (true) if <i>expr1</i> and <i>expr2</i> are the same, 0
      (false) otherwise. Note that arrays might be different even
-     though they contain the same sequence of elements.</td></tr>
+     though they contain the same sequence of elements.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> != <i>expr2</i></tt></td>
-     <td>1 (true) if <i>expr1</i> and <i>expr2</i> are different, 0
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> != <i>expr2</i></tt></p></c>
+     <c><p>1 (true) if <i>expr1</i> and <i>expr2</i> are different, 0
      (false) otherwise. This is the inverse of the ==
-     operator.</td></tr>
+     operator.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt>equal(<i>expr1</i>, <i>expr2</i>)</tt></td>
-     <td>1 (true) if <i>expr1</i> and <i>expr2</i> are structurally
+   <row valign='top'>
+     <c><p><tt>equal(<i>expr1</i>, <i>expr2</i>)</tt></p></c>
+     <c><p>1 (true) if <i>expr1</i> and <i>expr2</i> are structurally
      equal, 0 (false) otherwise. As opposed to the == operator above,
      this returns 1 if two arrays contain the same sequence of
-     elements.</td></tr>
+     elements.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> &amp;&amp; <i>expr2</i></tt></td>
-     <td>Nonzero (true) if both expressions are nonzero (true), 0
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> &amp;&amp; <i>expr2</i></tt></p></c>
+     <c><p>Nonzero (true) if both expressions are nonzero (true), 0
      (false) otherwise. A true return value is actually the value of
-     <i>expr2</i>.</td></tr>
+     <i>expr2</i>.</p></c></row>
 
-   <tr valign='top'>
-     <td><tt><i>expr1</i> || <i>expr2</i></tt></td>
-     <td>Nonzero (true) if either expression is nonzero (true), 0
+   <row valign='top'>
+     <c><p><tt><i>expr1</i> || <i>expr2</i></tt></p></c>
+     <c><p>Nonzero (true) if either expression is nonzero (true), 0
      (false) otherwise. A true return value is actually the value of
-     the last true expression.</td></tr>
- </table>
+     the last true expression.</p></c></row>
+ </xtable>
 </attr>
 
 <attr name='type' value='type'>
