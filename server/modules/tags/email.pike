@@ -6,7 +6,7 @@
 
 #define EMAIL_LABEL	"Email: "
 
-constant cvs_version = "$Id: email.pike,v 1.48 2008/12/17 18:17:03 jonasw Exp $";
+constant cvs_version = "$Id: email.pike,v 1.49 2009/04/23 21:28:36 jonasw Exp $";
 
 constant thread_safe=1;
 
@@ -109,7 +109,7 @@ from the mail's MIME headers will be taken.");
 
 array mails = ({}), errs = ({});
 string msglast = "";
-string revision = ("$Revision: 1.48 $"/" ")[1];
+string revision = ("$Revision: 1.49 $"/" ")[1];
 
 class TagEmail {
   inherit RXML.Tag;
@@ -711,13 +711,16 @@ value=''><p>
 <attr name='main-mimetype' value='MIME type'><p>
  Overrides the MIME type of the enclosing message when attachments are
  used. Default is 'multipart/mixed' but it might be useful to set
- this to 'multipart/related' when sending HTML-mail with inlined
- images.
+ this to 'multipart/related' when sending HTML mail with inlined
+ images. Note that HTML mails should use either <tt>quoted-printable</tt>
+ or <tt>base64</tt> transfer encoding to ensure that you don't exceed the
+ SMTP line length maximum.
 </p>
 </attr>
 
 <attr name='mimeencoding' value='MIME encoding'><p>
- Sets the MIME encoding of the message.</p>
+ Sets the MIME encoding of the message. Typical values are <tt>8bit</tt>,
+ <tt>quoted-printable</tt> and <tt>base64</tt>.</p>
 </attr>
 
 <attr name='charset' value='' default='iso-8859-1'><p>
