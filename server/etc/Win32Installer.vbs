@@ -1,5 +1,5 @@
 '
-' $Id: Win32Installer.vbs,v 1.24 2009/03/04 10:38:53 grubba Exp $
+' $Id: Win32Installer.vbs,v 1.25 2009/04/23 15:38:47 jonasw Exp $
 '
 ' Companion file to RoxenUI.wxs with custom actions.
 '
@@ -77,7 +77,7 @@ Function CreateMysqlLocation()
   Set fso = CreateObject("Scripting.FileSystemObject")
 
   Set tf = fso.CreateTextFile(serverdir & "mysql-location.txt", True)
-  tf.writeLine("# Created by $Id: Win32Installer.vbs,v 1.24 2009/03/04 10:38:53 grubba Exp $")
+  tf.writeLine("# Created by $Id: Win32Installer.vbs,v 1.25 2009/04/23 15:38:47 jonasw Exp $")
   tf.writeLine("# DEBUG: " & Session.Property("CustomActionData"))
   tf.writeLine("# DEBUG: " & rest & ";")
   tf.writeLine("")
@@ -102,7 +102,7 @@ Function CreateMysqlLocation()
   End If
   tf.writeLine("# mysqladmin is the full path to the mysqladmin binary.")
   If mysqladmin <> "" Then
-    tf.writeLine("mysqladmin=" & myisamchk)
+    tf.writeLine("mysqladmin=" & mysqladmin)
   Else
     tf.writeLine("#mysqladmin=")
   End If
