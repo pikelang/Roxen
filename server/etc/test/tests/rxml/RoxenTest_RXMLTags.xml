@@ -3499,6 +3499,34 @@ hej</result>
   <result></result>
 </test>
 
+<test>
+  <rxml>
+    <set variable="var.data" split="|">a|b|c|d</set>
+    <define container="x">
+      <nocache/><c>&values.counter;:<contents/></c>
+    </define>
+    <cache shared="">
+      <emit source="values" variable="var.data"><x>&_.value;</x></emit>
+    </cache>
+  </rxml>
+  <result><c>1:a</c><c>2:b</c><c>3:c</c><c>4:d</c></result>
+</test>
+
+<test>
+  <rxml type="string">
+    <set variable="var.data" split="|">a|b|c|d</set>
+    <define container="x">
+      <nocache/>&values.counter;:<contents/>,
+    </define>
+    <cache shared="">
+      <emit source="values" variable="var.data">
+	<x>&_.value;</x>
+      </emit>
+    </cache>
+  </rxml>
+  <result>1:a,2:b,3:c,4:d,</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Random tests</comment>
