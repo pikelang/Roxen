@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.612 2009/04/22 10:46:47 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.613 2009/04/23 20:37:18 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -10465,8 +10465,8 @@ just got zapped?
 </desc>
 
 <attr name='expr' value='expression'>
- <p>The expression to test. See the expr attribute to <xref href='set.tag'/>
- for a description of the syntax.</p>
+ <p>The expression to test. See the expr attribute to <xref
+ href='../variable/set.tag'/> for a description of the syntax.</p>
 </attr>",
 
 //----------------------------------------------------------------------
@@ -11704,8 +11704,8 @@ Specify scope to test for existence.</p>
  <ex>There are <strlen>foo bar gazonk</strlen> characters
  inside the tag.</ex>
 
- <p>See also the <xref href='elements.tag'/> tag for use with
- non-string types.</p>
+ <p>See also the <xref href='../variable/elements.tag'/> tag for use
+ with non-string types.</p>
 
  <p>Compatibility note: Before 5.0, this tag HTML encoded values from
  variable entities in the content. If you e.g. had the single
@@ -11727,7 +11727,7 @@ Specify scope to test for existence.</p>
  var.foo.1 takes the first element in var.foo if it's an array, and if
  it isn't then it's the same as var.foo.</p>
 
- <p>See also the <xref href='strlen.tag'/> tag for use with
+ <p>See also the <xref href='../text/strlen.tag'/> tag for use with
  strings.</p>
 </desc>
 
