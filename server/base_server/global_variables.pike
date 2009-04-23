@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2004, Roxen IS.
-// $Id: global_variables.pike,v 1.116 2009/03/17 16:37:51 jonasw Exp $
+// $Id: global_variables.pike,v 1.117 2009/04/23 18:06:35 jonasw Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -25,8 +25,10 @@ mixed save()
 // less clobbered.
 
 private int(0..1) cache_disabled_p() { return !query("cache");         }
-private int(0..1) syslog_disabled()  { return query("LogA")!="syslog"; }
 private int(0..1) ident_disabled_p() { return [int(0..1)]query("default_ident"); }
+#if efun(syslog)
+private int(0..1) syslog_disabled()  { return query("LogA")!="syslog"; }
+#endif
 
 protected void cdt_changed (Variable.Variable v);
 void slow_req_count_changed();
