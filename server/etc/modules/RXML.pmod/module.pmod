@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.401 2009/04/23 20:15:24 mast Exp $
+// $Id: module.pmod,v 1.402 2009/04/24 11:55:12 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7071,6 +7071,9 @@ class TString
   string capitalize (string val) {return val?String.capitalize (val):val;}
   //! Converts the first literal character in @[val] to uppercase.
 }
+
+// FIXME: Add an "xml" type that strips whitespace and comments and
+// allows unknown xml tags.
 
 RXML.Type type_for_value (mixed val)
 //! Returns the type that fits the given value, or zero if none is
