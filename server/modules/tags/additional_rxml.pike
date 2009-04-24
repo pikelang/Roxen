@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.48 2009/01/28 17:31:29 jonasw Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.49 2009/04/24 08:56:53 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -1302,7 +1302,7 @@ format='%4d%2d%2d'>19771003</sscanf>
 </attr>
 
 <attr name='split' value='charater'><p>
-  If used, the tag content will be splitted with the given string.</p>
+  If used, the tag content will be split with the given string.</p>
 <ex>
 <sprintf format='#%02x%02x%02x' split=','>250,0,33</sprintf>
 </ex>

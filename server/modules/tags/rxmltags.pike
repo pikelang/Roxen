@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.614 2009/04/23 21:14:15 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.615 2009/04/24 08:56:53 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -9017,7 +9017,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
 </attr>
 
 <attr name='split' value='string'>
- <p>A string with which the variable value should be splitted into an
+ <p>A string with which the variable value should be split into an
  array, so that the index attribute may be used.</p>
 </attr>",
 
@@ -11038,7 +11038,7 @@ the respective attributes below for further information.</p></desc>
  equality. They can furthermore do pattern matching with the right
  operand. If it doesn't match the left one directly then it's
  interpreted as a glob pattern with \"*\" and \"?\". If it still
- doesn't match then it's splitted on \",\" and each part is tried as a
+ doesn't match then it's split on \",\" and each part is tried as a
  glob pattern to see if any one matches.</p>
 
  <p>In a glob pattern, \"*\" means match zero or more arbitrary
@@ -11906,7 +11906,7 @@ Specify scope to test for existence.</p>
 
 "emit#values":({ #"<desc type='plugin'><p><short>
  Iterates over the component values of a string or a compound
- value.</short> If it's a string, it's splitted into pieces using a
+ value.</short> If it's a string, it's split into pieces using a
  separator string, and the plugin then iterates over the pieces. If
  it's a compound value like an array then the plugin iterates over its
  elements.
@@ -11938,7 +11938,7 @@ Specify scope to test for existence.</p>
 </attr>
 
 <attr name='advanced' value='lines|words|chars'><p>
- If the value is a string it can be splitted into separate lines,
+ If the value is a string it can be split into separate lines,
  words or characters by using this attribute.</p>
 </attr>
 

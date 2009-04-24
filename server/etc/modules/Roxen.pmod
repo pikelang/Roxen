@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2004, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.276 2009/04/21 13:17:34 mast Exp $
+// $Id: Roxen.pmod,v 1.277 2009/04/24 08:56:51 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2567,7 +2567,7 @@ protected string low_roxen_encode(string val, string encoding)
 //!
 //! The @[encoding] string is split on @expr{"."@}, and encoded in order.
 //!
-//! The segments in the splitted @[encoding] string can be any of
+//! The segments in the split @[encoding] string can be any of
 //! the following:
 //! @string
 //!   @value ""

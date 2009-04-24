@@ -3,7 +3,7 @@
 // Created 20060210 by Marcus Wellhardh <wellhard@roxen.com> as a
 // consultancy job for Randstad.
 
-// $Id: emit_exec.pike,v 1.6 2009/04/24 08:26:19 wellhard Exp $
+// $Id: emit_exec.pike,v 1.7 2009/04/24 08:56:53 jonasw Exp $
 
 #include <module.h>
 inherit "module";
@@ -226,17 +226,17 @@ Load 15 min: &var.load-15;<br/></ex-box>
 
 <attr name='loop-split' value='string'>
   <p>This attribute defines the delimiter to use when the result is
-  splitted to extract each loop step.</p>
+  split to extract each loop step.</p>
 </attr>
 
 <attr name='entity-split' value='string' default='newline'>
   <p>This attribute defines the delimiter to use when each loop of
-  the result is splitted to extract entities.</p>
+  the result is split to extract entities.</p>
 </attr>
 
 <attr name='value-split' value='string' default='='>
   <p>This attribute defines the delimiter to use when each entity of
-  the result is splitted to extract the entry name and its value.</p>
+  the result is split to extract the entry name and its value.</p>
 </attr>
 
 <attr name='raw-variable' value='variable name'>
