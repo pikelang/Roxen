@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.233 2009/03/24 12:28:58 grubba Exp $
+# $Id: start,v 1.234 2009/04/24 18:27:47 jonasw Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -147,13 +147,9 @@ if uname | grep 'SunOS' >/dev/null 2>&1; then
     DEFINES="$DEFINES -DENABLE_THREADS"
   fi
 fi
-# Darwin 1.4/5.x or later (Mac OS X 10.1 or newer) also uses threads.
+# Darwin uses threads.
 if uname | grep 'Darwin' >/dev/null 2>&1; then
-  if uname -r | grep '^1\.[4-9]' >/dev/null 2>&1; then
-    DEFINES="$DEFINES -DENABLE_THREADS"
-  elif uname -r | grep '^[5-9]' >/dev/null 2>&1; then
-    DEFINES="$DEFINES -DENABLE_THREADS"
-  fi
+  DEFINES="$DEFINES -DENABLE_THREADS"
 fi
 # Also enabled on Linux.
 if uname | grep 'Linux' >/dev/null 2>&1; then
