@@ -407,7 +407,7 @@ Click "Close" to exit.</Text>
         <Control Id="ProgressLabel" Type="Text" X="18" Y="96" Width="336" Height="12">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Please wait...</Text>
           <Subscribe Event="ActionText" Attribute="Text"/>
-          <Subscribe Event="ScriptInProgress" Attribute="Text"/>
+          <!-- Subscribe Event="ScriptInProgress" Attribute="Text"/ -->
         </Control>
         <Control Id="ProgressData" Type="Text" X="18" Y="123" Width="336" Height="12">
           <Subscribe Event="ActionData" Attribute="Text"/>
@@ -510,7 +510,7 @@ Click "Close" to exit.</Text>
         <Control Id="ProgressLabel" Type="Text" X="18" Y="96" Width="336" Height="12">
           <Text>{\VSI_MS_Sans_Serif13.0_0_0}Please wait...</Text>
           <Subscribe Event="ActionText" Attribute="Text"/>
-          <Subscribe Event="ScriptInProgress" Attribute="Text"/>
+          <!-- Subscribe Event="ScriptInProgress" Attribute="Text"/ -->
         </Control>
         <Control Id="ProgressData" Type="Text" X="18" Y="123" Width="336" Height="12">
           <Subscribe Event="ActionData" Attribute="Text"/>
@@ -1192,6 +1192,7 @@ Click "Next" to start the installation.</Text>
       <UIText Id="VolumeCostVolume">Volume</UIText>
 
       <ProgressText Action="AllocateRegistrySpace" Template="Amount: [1] KB">Allocating registry space</ProgressText>
+      <ProgressText Action="AppSearch">Searching for previously installed applications</ProgressText>
       <ProgressText Action="ConsoleStartServer">Starting Roxen</ProgressText>
       <ProgressText Action="CostFinalize">Computing space requirements</ProgressText>
       <ProgressText Action="CostInitialize">Computing space requirements</ProgressText>
@@ -1205,10 +1206,11 @@ Click "Next" to start the installation.</Text>
       <ProgressText Action="ExecuteAction">Installing</ProgressText>
       <ProgressText Action="FileCost">Computing space requirements</ProgressText>
       <ProgressText Action="FindRelatedProducts" Template="Product: [1]">Searching for related products</ProgressText>
+      <ProgressText Action="INSTALL">Installing</ProgressText>
       <ProgressText Action="InstallAdminPackage" Template="File: [9][1] ([6] bytes)">Installing administrative files</ProgressText>
       <ProgressText Action="InstallFiles" Template="File: [9][1] ([6] bytes)">Installing new files</ProgressText>
       <ProgressText Action="InstallFinalize">Finalizing</ProgressText>
-      <ProgressText Action="InstallInitialize">Initilizing</ProgressText>
+      <ProgressText Action="InstallInitialize">Initializing</ProgressText>
       <ProgressText Action="InstallServices">Installing services</ProgressText>
       <ProgressText Action="InstallValidate">Validating install</ProgressText>
       <ProgressText Action="IsolateComponents">Installing DLLs</ProgressText>
@@ -1230,8 +1232,11 @@ Click "Next" to start the installation.</Text>
       <ProgressText Action="RollbackCleanup" Template="[1]">Removing backup files</ProgressText>
       <ProgressText Action="StartServices" Template="Service: [1]">Starting services</ProgressText>
       <ProgressText Action="StopServices" Template="Service: [1]">Stopping services</ProgressText>
+      <ProgressText Action="SxsInstallCA">Installing Assemblies</ProgressText>
+      <ProgressText Action="SystemFolder.21022.08.Microsoft_VC90_CRT_x86.RTM.0138F525_6C8A_333F_A105_14AE030B9A54.">Please wait...</ProgressText>
       <ProgressText Action="UnpublishFeatures" Template="Feature: [1]">Unpublishing product features</ProgressText>
       <ProgressText Action="ValidateProductID">Validating Product ID</ProgressText>
+      <ProgressText Action="WindowsFolder.21022.08.Microsoft_VC90_CRT_x86.RTM.0138F525_6C8A_333F_A105_14AE030B9A54.">Please wait...</ProgressText>
       <ProgressText Action="WriteRegistryValues" Template="Key: [1][2] = [3]">Writing values to registry</ProgressText>
 
       <AdminUISequence>
