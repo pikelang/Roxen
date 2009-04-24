@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.615 2009/04/24 08:56:53 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.616 2009/04/24 09:21:00 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -4748,6 +4748,7 @@ class UserTag {
     int compile;
 
     array tagdef;
+    array(string|RXML.PCode) comp_def;
 
     array do_enter (RequestID id)
     {
@@ -4769,11 +4770,18 @@ class UserTag {
       if (!tagdef) return ({propagate_tag()});
       RXML.Context ctx = RXML_CONTEXT;
 
-      [array(string|RXML.PCode) def, mapping defaults,
-       string def_scope_name, UserTag ignored,
-       mapping(string:UserTagContents.ExpansionFrame) preparsed_contents_tags] = tagdef;
+      [array(string) src_def,
+       mapping defaults,
+       string def_scope_name,
+       UserTag ignored,
+       mapping(string:UserTagContents.ExpansionFrame) preparsed_contents_tags,
+       RXML.Type comp_type,
+       comp_def] = tagdef;
       vars = defaults+args;
       scope_name = def_scope_name || name;
+
+      if (comp_type != result_type)
+	comp_def = src_def + ({});
 
       if (content_text)
 	// A previously evaluated tag was restored.
@@ -4782,8 +4790,8 @@ class UserTag {
 	if(content && args->trimwhites)
 	  content = String.trim_all_whites(content);
 
-	if (stringp (def[0])) {
 #if ROXEN_COMPAT <= 1.3
+	if (stringp (comp_def[0])) {
 	  if(id->conf->old_rxml_compat) {
 	    array replace_from, replace_to;
 	    if (flags & RXML.FLAG_EMPTY_ELEMENT) {
@@ -4799,14 +4807,14 @@ class UserTag {
 		({ Roxen.make_tag_attributes(vars)[1..], content });
 	    }
 	    string c2;
-	    c2 = replace(def[0], replace_from, replace_to);
-	    if(c2!=def[0]) {
+	    c2 = replace(comp_def[0], replace_from, replace_to);
+	    if(c2!=comp_def[0]) {
 	      vars=([]);
 	      return ({c2});
 	    }
 	  }
-#endif
 	}
+#endif
 
 	content_text = content || "";
 	compile = ctx->make_p_code;
@@ -4832,13 +4840,18 @@ class UserTag {
 	saved_hidden = ctx->hidden;
       }
 
-      return def;
+      return comp_def;
     }
 
     array save() {return ({content_text, compiled_content});}
     void restore (array saved) {[content_text, compiled_content] = saved;}
 
-    void exec_array_state_update() {RXML_CONTEXT->state_update();}
+    void exec_array_state_update()
+    {
+      tagdef[5] = result_type;
+      tagdef[6] = comp_def;
+      RXML_CONTEXT->state_update();
+    }
 
     string _sprintf ()
     {
@@ -5066,11 +5079,11 @@ class TagDefine {
 	    !((user_tag = oldtagdef[3])->flags & RXML.FLAG_EMPTY_ELEMENT) ==
 	    !(moreflags & RXML.FLAG_EMPTY_ELEMENT)) // Redefine.
 	  ctx->set_misc (lookup_name, ({def, defaults, args->scope, user_tag,
-					preparsed_contents_tags}));
+					preparsed_contents_tags, 0, 0}));
 	else {
 	  user_tag = UserTag (n, moreflags);
 	  ctx->set_misc (lookup_name, ({def, defaults, args->scope, user_tag,
-					preparsed_contents_tags}));
+					preparsed_contents_tags, 0, 0}));
 	  ctx->add_runtime_tag(user_tag);
 	}
 	return 0;
