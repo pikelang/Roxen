@@ -1202,7 +1202,7 @@ Click "Next" to start the installation.</Text>
       <ProgressText Action="CreateShortcuts" Template="Shortcut: [1]">Creating shortcuts</ProgressText>
       <ProgressText Action="DeleteServices" Template="Service: [1]">Deleting services</ProgressText>
       <ProgressText Action="DuplicateFiles" Template="File: [9][1] ([6] bytes)">Installing duplicate files</ProgressText>
-      <ProgressTest Action="ExecuteAction">Installing</ProgressTest>
+      <ProgressText Action="ExecuteAction">Installing</ProgressText>
       <ProgressText Action="FileCost">Computing space requirements</ProgressText>
       <ProgressText Action="FindRelatedProducts" Template="Product: [1]">Searching for related products</ProgressText>
       <ProgressText Action="InstallAdminPackage" Template="File: [9][1] ([6] bytes)">Installing administrative files</ProgressText>
