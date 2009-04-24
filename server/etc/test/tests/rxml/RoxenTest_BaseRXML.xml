@@ -1079,6 +1079,82 @@ a&auml; &amp; b  &gt;
   <equal>(["a": 1, "B": 2, "b": 3, "c": 4, "E": 5, "d": 6])</equal>
 </test>
 
+<test no-strip-ws="">
+  <rxml>
+    <define container="x">
+      <!-- comment -->
+      <maketag type="container" name="y">
+        <contents/>
+      </maketag>
+    </define>
+
+    <z>
+      <x>
+        <!-- comment 1 -->
+        foo
+      </x>
+    </z>
+
+    <z>
+      <x>
+        <!-- comment 2 -->
+        bar
+      </x>
+    </z>
+
+    [<value type="string">
+      &lt;z>
+        <x>
+          <!-- comment 3 -->
+          upp
+        </x>
+      &lt;/z>
+    </value>]
+
+    [<value type="string">
+      &lt;z>
+        <x>
+          <!-- comment 4 -->
+          ner
+        </x>
+      &lt;/z>
+    </value>]
+  </rxml>
+  <equal>
+    "\n"
+    "    \n"
+    "\n"
+    "    <z>\n"
+    "      \n"
+    "      <!-- comment -->\n"
+    "      <y>\n"
+    "        \n"
+    "        <!-- comment 1 -->\n"
+    "        foo\n"
+    "      \n"
+    "      </y>\n"
+    "    \n"
+    "    </z>\n"
+    "\n"
+    "    <z>\n"
+    "      \n"
+    "      <!-- comment -->\n"
+    "      <y>\n"
+    "        \n"
+    "        <!-- comment 2 -->\n"
+    "        bar\n"
+    "      \n"
+    "      </y>\n"
+    "    \n"
+    "    </z>\n"
+    "\n"
+    "    [<z><y>upp</y></z>]\n"
+    "\n"
+    "    [<z><y>ner</y></z>]\n"
+    "  "
+  </equal>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Type tests</comment>
