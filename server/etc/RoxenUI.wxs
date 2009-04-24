@@ -1190,21 +1190,50 @@ Click "Next" to start the installation.</Text>
       <UIText Id="VolumeCostRequired">Required</UIText>
       <UIText Id="VolumeCostSize">Disk Size</UIText>
       <UIText Id="VolumeCostVolume">Volume</UIText>
-      <ProgressText Action="StopServices" Template="Service: [1]">Stopping services</ProgressText>
-      <ProgressText Action="DeleteServices" Template="Service: [1]">Deleting services</ProgressText>
-      <ProgressText Action="RemoveRegistryValues" Template="Key: [1]\[2]">Removing registry values</ProgressText>
-      <ProgressText Action="RemoveFiles" Template="File: [9]\[1]">Removing files</ProgressText>
-      <ProgressText Action="MoveFiles" Template="File: [9]\[1] ([6] bytes)">Moving files</ProgressText>
-      <ProgressText Action="InstallFiles" Template="File: [9]\[1] ([6] bytes)">Installing new files</ProgressText>
-      <ProgressText Action="WriteRegistryValues" Template="Key: [1]\[2] = [3]">Writing values to registry</ProgressText>
-      <ProgressText Action="WriteIniValues" Template="File: [1], Section: [2] Key: [3] = [4]">Writing INI-files</ProgressText>
-      <ProgressText Action="StartServices" Template="Service: [1]">Starting services</ProgressText>
-      <ProgressText Action="InstallAdminPackage" Template="File: [9]\[1] ([6] bytes)">Copying files to the network</ProgressText>
-      <ProgressText Action="UnmoveFiles" Template="File: [9]\[1] ([6] bytes)">Restoring moved files</ProgressText>
+
+      <ProgressText Action="AllocateRegistrySpace" Template="Amount: [1] KB">Allocating registry space</ProgressText>
+      <ProgressText Action="ConsoleStartServer">Starting Roxen</ProgressText>
+      <ProgressText Action="CostFinalize">Computing space requirements</ProgressText>
+      <ProgressText Action="CostInitialize">Computing space requirements</ProgressText>
       <ProgressText Action="CreateConfigInterface" Template="File: [TARGETDIR]\configurations\AdministrationInterface">Creating administration interface</ProgressText>
+      <ProgressText Action="CreateEnviroment" Template="File: [TARGETDIR]\local\environment.ini">Creating environment.ini</ProgressText>
       <ProgressText Action="CreateMysqlLocation" Template="File: [SERVERDIR]\mysql-location.txt">Creating mysql-location.txt</ProgressText>
       <ProgressText Action="CreatePikeLocation" Template="File: [SERVERDIR]\pikelocation.txt">Creating pikelocation.txt</ProgressText>
-      <ProgressText Action="CreateEnviroment" Template="File: [TARGETDIR]\local\environment.ini">Creating environment.ini</ProgressText>
+      <ProgressText Action="CreateShortcuts" Template="Shortcut: [1]">Creating shortcuts</ProgressText>
+      <ProgressText Action="DeleteServices" Template="Service: [1]">Deleting services</ProgressText>
+      <ProgressText Action="DuplicateFiles" Template="File: [9][1] ([6] bytes)">Installing duplicate files</ProgressText>
+      <ProgressTest Action="ExecuteAction">Installing</ProgressTest>
+      <ProgressText Action="FileCost">Computing space requirements</ProgressText>
+      <ProgressText Action="FindRelatedProducts" Template="Product: [1]">Searching for related products</ProgressText>
+      <ProgressText Action="InstallAdminPackage" Template="File: [9][1] ([6] bytes)">Installing administrative files</ProgressText>
+      <ProgressText Action="InstallFiles" Template="File: [9][1] ([6] bytes)">Installing new files</ProgressText>
+      <ProgressText Action="InstallFinalize">Finalizing</ProgressText>
+      <ProgressText Action="InstallInitialize">Initilizing</ProgressText>
+      <ProgressText Action="InstallServices">Installing services</ProgressText>
+      <ProgressText Action="InstallValidate">Validating install</ProgressText>
+      <ProgressText Action="IsolateComponents">Installing DLLs</ProgressText>
+      <ProgressText Action="LaunchConditions">Evaluating launch conditions</ProgressText>
+      <ProgressText Action="MsiPublishAssemblies" Template="Assembly: [2], Context: [1]">Publishing assemblies</ProgressText>
+      <ProgressText Action="MsiUnpublishAssemblies" Template="Assembly: [2], Context: [1]">Unpublishing assemblies</ProgressText>
+      <ProgressText Action="ProcessComponents" Template="Product: [1], Component: [2]">Updating component registration</ProgressText>
+      <ProgressText Action="PublishFeatures" Template="Feature: [1]">Publishing product features</ProgressText>
+      <ProgressText Action="PublishProduct" Template="Product: [1]">Publishing product information</ProgressText>
+      <ProgressText Action="RegisterFonts" Template="Font: [1]">Registering fonts</ProgressText>
+      <ProgressText Action="RegisterProduct" Template="Product: [1]">Registering product</ProgressText>
+      <ProgressText Action="RegisterUser" Template="User: [1]">Registering user</ProgressText>
+      <ProgressText Action="RemoveExistingProducts" Template="Product: [1]">Removing old products</ProgressText>
+      <ProgressText Action="RemoveFiles" Template="File: [9][1]">Removing files</ProgressText>
+      <ProgressText Action="RemoveFolders" Template="Folder: [1]">Removing folders</ProgressText>
+      <ProgressText Action="RemoveRegistryValues" Template="Key: [1][2]">Removing registry values</ProgressText>
+      <ProgressText Action="RemoveShortcuts" Template="Shortcut: [1]">Removing shortcuts</ProgressText>
+      <ProgressText Action="Rollback" Template="[1]">Rolling back action:</ProgressText>
+      <ProgressText Action="RollbackCleanup" Template="[1]">Removing backup files</ProgressText>
+      <ProgressText Action="StartServices" Template="Service: [1]">Starting services</ProgressText>
+      <ProgressText Action="StopServices" Template="Service: [1]">Stopping services</ProgressText>
+      <ProgressText Action="UnpublishFeatures" Template="Feature: [1]">Unpublishing product features</ProgressText>
+      <ProgressText Action="ValidateProductID">Validating Product ID</ProgressText>
+      <ProgressText Action="WriteRegistryValues" Template="Key: [1][2] = [3]">Writing values to registry</ProgressText>
+
       <AdminUISequence>
         <Show Dialog="AdminFatalErrorForm" OnExit="error" />
         <Show Dialog="AdminUserExitForm" OnExit="cancel" />
