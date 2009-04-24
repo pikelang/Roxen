@@ -117,6 +117,30 @@
 <result>2</result>
 </test>
 
+<test>
+  <rxml type="string">
+    <define tag="t">
+      <if variable="_.a is t"/>
+      <then>
+	1t
+	<if variable="_.b is t"/>
+      </then>
+      <else>
+	1f
+	<if variable="_.c is t"/>
+      </else>
+      <then>2t</then>
+      <else>2f</else>
+    </define>
+
+    <t a="t" b="t"/>,
+    <t a="t" b=""/>, <!-- 1t2f would have been more logical. -->
+    <t a=""  c="t"/>,
+    <t a=""  c=""/>,
+  </rxml>
+  <result>1t2t,1t2t,1f2t,1f2f,</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Case</comment>
