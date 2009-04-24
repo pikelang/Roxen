@@ -3207,6 +3207,16 @@ cd</rxml>
 </test>
 
 <test>
+  <rxml type="array">
+    <set variable="form.foo" value="a,b" split=","/>
+    <value type="any">&form.foo;</value>
+    <value type="text/*">&form.foo;</value>
+    <value type="text/html">&form.foo;</value>
+  </rxml>
+  <equal>({({"a", "b"}), "a\0b", "a&#0;b"})</equal>
+</test>
+
+<test>
 <add what="variable" name="bar" value="q"/>
 <rxml>&form.bar;</rxml>
 <result>q</result>
