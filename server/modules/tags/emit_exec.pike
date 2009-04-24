@@ -3,7 +3,7 @@
 // Created 20060210 by Marcus Wellhardh <wellhard@roxen.com> as a
 // consultancy job for Randstad.
 
-// $Id: emit_exec.pike,v 1.3 2007/06/12 17:15:26 mast Exp $
+// $Id: emit_exec.pike,v 1.4 2009/04/24 08:26:17 wellhard Exp $
 
 #include <module.h>
 inherit "module";
@@ -200,11 +200,23 @@ Load  1 min: &var.load-1;<br/>
 Load  5 min: &var.load-5;<br/>
 Load 15 min: &var.load-15;<br/></ex-box>
 
+<ex-box><emit source='exec'
+     application='cat'
+     arguments='/proc/meminfo'
+     value-split=':'>
+  MemTotal: &_.MemTotal;<br/>
+  MemFree: &_.MemFree;<br/>
+</emit></ex-box>
+
 <attr name='application' value='string'>
   <p>A symbolic name of the application to execute. The path to the
   application is looked up in the <i>Available Applications</i>
   module variable. The application has to be defined in the list,
   an error will be generated otherwise.</p>
+</attr>
+
+<attr name='arguments' value='string'>
+  <p>Defines the arguments sent to the application.</p>
 </attr>
 
 <attr name='timeout' value='seconds' default='60'>
@@ -224,7 +236,7 @@ Load 15 min: &var.load-15;<br/></ex-box>
 
 <attr name='value-split' value='string' default='='>
   <p>This attribute defines the delimiter to use when each entity of
-  the result is splitted to extract the entiry name and its value.</p>
+  the result is splitted to extract the entry name and its value.</p>
 </attr>
 
 <attr name='raw-variable' value='variablename'>
