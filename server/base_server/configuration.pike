@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.674 2009/04/21 18:11:39 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.675 2009/04/28 11:07:48 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3106,6 +3106,9 @@ int|string try_get_file(string s, RequestID id,
   array a = open_file( fake_id->not_query, "r", fake_id, !not_internal );
 
   m = a[1];
+
+  // Propagate vary callbacks from the subrequest.
+  id->propagate_vary_callbacks(fake_id);
 
   if (result_mapping) {
     foreach(indices(m), string i)
