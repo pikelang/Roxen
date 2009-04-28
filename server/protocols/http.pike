@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.597 2009/04/17 15:40:20 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.598 2009/04/28 13:53:06 marty Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -3218,7 +3218,12 @@ object clone_me()
   c->referer = referer;
   c->pragma = pragma;
 
-  c->cookies = cookies;
+  if (objectp(cookies)) {
+    c->cookies = c->CookieJar(real_cookies + ([]));
+  } else {
+    c->real_cookies = real_cookies + ([]);
+    c->cookies = cookies + ([]);
+  }
   c->request_headers = request_headers + ([]);
   c->my_fd = 0;
   c->prot = prot;
