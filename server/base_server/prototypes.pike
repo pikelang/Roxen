@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.249 2009/04/28 16:42:57 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.250 2009/04/28 16:49:20 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2986,7 +2986,7 @@ class RequestID
     } else if (cookies) {
       c->cookies = c->real_cookies = real_cookies + ([]);
     } else {
-      c->cookies = c->real_cookies = ([]);
+      c->cookies = c->real_cookies = 0;
     }
     c->request_headers = request_headers + ([]);
     c->my_fd = 0;
