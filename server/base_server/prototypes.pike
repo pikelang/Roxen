@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.247 2009/04/28 11:06:27 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.248 2009/04/28 13:55:08 marty Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1253,7 +1253,7 @@ class RequestID
   //!
   //! @seealso
   //!   @[cookies], @[register_vary_callback()], @[Roxen.get_cookie_callback()]
-  protected class CookieJar
+  class CookieJar
   {
     //! Contains the set of cookies that have been zapped in some way.
     protected mapping(string:string) eaten = ([]);
