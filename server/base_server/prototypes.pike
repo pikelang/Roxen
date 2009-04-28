@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.246 2009/04/21 18:11:39 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.247 2009/04/28 11:06:27 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1258,13 +1258,19 @@ class RequestID
     //! Contains the set of cookies that have been zapped in some way.
     protected mapping(string:string) eaten = ([]);
 
-    protected void create(string|array(string)|void contents)
+    protected void create(string|array(string)|mapping(string:string)|void
+			  contents)
     {
       VARY_WERROR("Initiating cookie jar.\n");
       real_cookies = ([]);
 
       if(!contents)
 	return;
+
+      if (mappingp(contents)) {
+	real_cookies = contents;
+	return;
+      }
 
       array tmp = arrayp(contents) ? contents : ({ contents});
   
@@ -1898,7 +1904,7 @@ class RequestID
   //!   object may be valid yet.
   //!
   //! @seealso
-  //!   @[NOCACHE()]
+  //!   @[NOCACHE()], @[propagate_vary_callbacks()]
   void register_vary_callback(string|void vary,
 			      function(string, RequestID: string|int)|void cb)
   {
@@ -1952,7 +1958,10 @@ class RequestID
   //! unregistered.
   //!
   //! @note
-  //! Try to avoid this function. It's ugly practice.
+  //!   Try to avoid this function. It's ugly practice.
+  //!
+  //! @seealso
+  //!   @[register_vary_callback()]
   {
     if (misc->vary)
       misc->vary[vary || "*"] = 0;
@@ -1997,6 +2006,63 @@ class RequestID
 	}
       }
     }
+  }
+
+  //! Propagate vary callbacks from another @[RequestID] object.
+  //!
+  //! This function is typically used when a subrequest has
+  //! been performed to propagate vary callbacks from the
+  //! subrequest to the present request.
+  //!
+  //! @seealso
+  //!   @[register_vary_callback()]
+  void propagate_vary_callbacks(RequestID id)
+  {
+    VARY_WERROR("Propagating vary information from %O to %O...\n",
+		id, this_object());
+    if (id->misc->vary) {
+      mapping(function(string,RequestID:string|int):multiset(string))
+	reverse_cb_set;
+      foreach(id->misc->vary_cb_order || ({}),
+	      string|function(string, RequestID: string|int)|object vary_cb) {
+	if (stringp(vary_cb)) {
+	  VARY_WERROR("Propagating vary header %O.\n", vary_cb);
+	  register_vary_callback(vary_cb);
+	} else if (objectp(vary_cb) && vary_cb->cookie) {
+	  // Update indirectly via the CookieJar.
+	  VARY_WERROR("Propagating cookie %O.\n", vary_cb->cookie);
+	  mixed ignored = cookies[vary_cb->cookie];
+	} else {
+	  if (!reverse_cb_set) {
+	    // This gets complicated...
+	    // Build a reverse lookup from callback to the headers.
+	    VARY_WERROR("Building reverse vary lookup.\n", vary_cb->cookie);
+	    reverse_cb_set = ([]);
+	    foreach(id->misc->vary_cb_set || ([]); string vary;
+		    multiset(function(string,RequestID:string|int))|
+		    int(1..1) cb_info) {
+	      if (multisetp(cb_info)) {
+		foreach(cb_info;
+			function(string,RequestID:string|int) cb;) {
+		  if (reverse_cb_set[cb]) {
+		    reverse_cb_set[cb][vary] = 1;
+		  } else {
+		    reverse_cb_set[cb] = (< vary >);
+		  }
+		}
+	      }
+	    }
+	  }
+	  VARY_WERROR("Propagating generic vary callback: %O (headers: %O)\n",
+		      vary_cb, reverse_cb_set[vary_cb]);
+	  foreach(reverse_cb_set[vary_cb] || (< 0 >); string vary;) {
+	    register_vary_callback(vary, vary_cb);
+	  }
+	}
+      }
+    }
+    VARY_WERROR("Propagation of vary information from %O to %O complete.\n",
+		id, this_object());
   }
 
   protected string cached_url_base;
@@ -2915,7 +2981,12 @@ class RequestID
     c->referer = referer;
     c->pragma = pragma;
 
-    c->cookies = cookies;
+    if (objectp(cookies)) {
+      c->cookies = c->CookieJar(real_cookies + ([]));
+    } else {
+      c->real_cookies = real_cookies + ([]);
+      c->cookies = cookies + ([]);
+    }
     c->request_headers = request_headers + ([]);
     c->my_fd = 0;
     c->prot = prot;
