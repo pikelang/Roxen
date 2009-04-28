@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.599 2009/04/28 16:42:57 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.600 2009/04/28 16:47:18 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -3116,17 +3116,6 @@ void got_data(mixed fooid, string s, void|int chained)
 	    // We need to copy lots of stuff to keep the log functions happy.
 	    RequestID id = clone_me();
 	    id->hrtime = hrtime;
-	    if (cookies) {
-	      if (objectp(cookies)) {
-		// Disconnect the cookie jar from the RequestID used
-		// to send the cached response.  (We want to keep the
-		// cookie jar for the refresh request in order for
-		// cookie callbacks to be registered correctly.)
-		id->cookies = id->real_cookies = ~cookies;
-	      } else {
-		id->cookies = id->real_cookies = real_cookies + ([]);
-	      }
-	    }
 	    id->my_fd = my_fd;
 	    id->file = file;
 	    id->kept_alive = kept_alive;
