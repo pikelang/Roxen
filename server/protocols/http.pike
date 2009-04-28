@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.598 2009/04/28 13:53:06 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.599 2009/04/28 16:42:57 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2845,6 +2845,8 @@ void got_data(mixed fooid, string s, void|int chained)
       if (sizeof(misc->proxyauth) >= 2)
       {
 	//    misc->proxyauth[1] = MIME.decode_base64(misc->proxyauth[1]);
+	//
+	// FIXME: Obsolete API!
 	if (conf->auth_module)
 	  misc->proxyauth
 	    = conf->auth_module->auth(misc->proxyauth,this_object() );
@@ -3220,9 +3222,10 @@ object clone_me()
 
   if (objectp(cookies)) {
     c->cookies = c->CookieJar(real_cookies + ([]));
+  } else if (cookies) {
+    c->cookies = c->real_cookies = real_cookies + ([]);
   } else {
-    c->real_cookies = real_cookies + ([]);
-    c->cookies = cookies + ([]);
+    c->cookies = c->real_cookies = ([]);
   }
   c->request_headers = request_headers + ([]);
   c->my_fd = 0;
