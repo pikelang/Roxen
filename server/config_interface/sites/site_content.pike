@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.157 2009/04/21 18:14:09 mast Exp $
+// $Id: site_content.pike,v 1.158 2009/04/29 16:05:11 grubba Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -296,20 +296,33 @@ string get_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
     mapping(string:string|Configuration|Protocol|array(Protocol)) port_info =
       roxen.urls[url];
 
-    foreach((port_info && port_info->ports) || ({}), Protocol prot) {
-      if ((prot->prot_name != "snmp") || (!prot->mib)) {
+    Protocol prot;
+    foreach((port_info && port_info->ports) || ({}), Protocol any_prot) {
+      if ((any_prot->prot_name != "snmp") || (!any_prot->mib)) {
 	continue;
       }
 
-      string path = port_info->path || "";
-      if (has_prefix(path, "/")) {
-	path = path[1..];
-      }
-      if (has_suffix(path, "/")) {
-	path = path[..sizeof(path)-2];
-      }
+      prot = any_prot;
+      break;
+    }
+    if (!prot) continue;
 
-      array(int) oid_suffix = ({ sizeof(path), @((array(int))path) });
+#if 0
+    res += ({ sprintf("<th colspan='3' align='left'>%s</th>",
+		      Roxen.html_encode_string(roxen->normalize_url(url))),
+    });
+#endif /* 0 */
+
+    // Normalize the path.
+    string path = port_info->path || "";
+    if (has_prefix(path, "/")) {
+      path = path[1..];
+    }
+    if (has_suffix(path, "/")) {
+      path = path[..sizeof(path)-2];
+    }
+
+    array(int) oid_suffix = ({ sizeof(path), @((array(int))path) });
 
   ADT.Trie mib = ADT.Trie();
 
@@ -359,7 +372,6 @@ string get_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
       });
     }
   }
-    }
   }
 
   return "<h3>SNMP</h3>\n"
