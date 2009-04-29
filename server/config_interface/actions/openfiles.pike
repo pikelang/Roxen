@@ -1,5 +1,5 @@
 /*
- * $Id: openfiles.pike,v 1.12 2007/02/16 19:03:26 mast Exp $
+ * $Id: openfiles.pike,v 1.13 2009/04/29 21:46:58 mast Exp $
  */
 inherit "wizard";
 
@@ -43,9 +43,6 @@ string parse( RequestID id )
      (Array.map(get_all_active_fd(),
 	  lambda(int fd)
 	  {
-	    // FIXME: This way of creating an Stdio.File object from
-	    // an fd doesn't work in pike >= 7.6. It actually causes a
-	    // fatal in the backend. :(
 	    object f = Stdio.File(fd);
 	    object stat = f->stat();
 	    if (!stat)
