@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.67 2009/01/07 22:07:42 mast Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.68 2009/04/29 15:14:44 grubba Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -865,7 +865,8 @@ class CGIScript
     environment =(query("env")?getenv():([]));
     environment |= global_env;
     environment |= Roxen.build_env_vars( id->realfile, id, id->misc->path_info );
-    environment |= Roxen.build_roxen_env_vars(id);
+    if (query("roxen_env"))
+      environment |= Roxen.build_roxen_env_vars(id);
     if(id->misc->ssi_env)
       environment |= id->misc->ssi_env;
     if(id->rawauth && query("rawauth"))
@@ -1047,6 +1048,33 @@ void create(Configuration conf)
 	 "NAME=value\n"
 	 "NAME=value\n"
 	 "</pre>Please note that normal CGI variables will override these."));
+
+  defvar("roxen_env",
+	 Variable.Flag(1, VAR_MORE, "Extended environment variables",
+	   "<p>Pass extra enviroment variables to simplify "
+	   "cgi script authoring.</p>\n"
+	   "<table><tr><th>For each:</th>"
+	   "<th>Environment variable</th><th>Notes</th></tr>\n"
+	   "<tr><td>Cookie</td>"
+	   "<td><tt>COOKIE_<i>cookiename</i>=<i>cookievalue</i></tt></td>"
+	   "<td>&nbsp;</td></tr>\n"
+	   "<tr><td>Variable</td>"
+	   "<td><tt>VAR_<i>variablename</i>=<i>variablename</i></tt></td>"
+	   "<td>Multiple values are separated with <tt>'#'</tt>.</td></tr>"
+	   "<tr><td>Variable</td>"
+	   "<td><tt>QUERY_<i>variablename</i>=<i>variablename</i></tt></td>"
+	   "<td>Multiple values are separated with "
+	   "<tt>' '</tt> (space).</td></tr>\n"
+	   "<tr><td>Prestate</td>"
+	   "<td><tt>PRESTATE_<i>x</i>=true</tt></td>"
+	   "<td>&nbsp;</td></tr>\n"
+	   "<tr><td>Config</td>"
+	   "<td><tt>CONFIG_<i>x</i>=true</tt></td>"
+	   "<td>&nbsp;</td></tr>\n"
+	   "<tr><td>Supports flag</td>"
+	   "<td><tt>SUPPORTS_<i>x</i>=true</tt></td>"
+	   "<td>&nbsp;</td></tr>\n"
+	   "</table>"));
 
   defvar("location", Variable.Location("/cgi-bin/", 0, "CGI-bin path",
 	 "This is where the module will be inserted in the "
