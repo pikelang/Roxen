@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: cgi.pike,v 2.68 2009/04/29 15:14:44 grubba Exp $";
+constant cvs_version = "$Id: cgi.pike,v 2.69 2009/04/29 16:06:18 grubba Exp $";
 
 #if !defined(__NT__) && !defined(__AmigaOS__)
 # define UNIX 1
@@ -1053,8 +1053,9 @@ void create(Configuration conf)
 	 Variable.Flag(1, VAR_MORE, "Extended environment variables",
 	   "<p>Pass extra enviroment variables to simplify "
 	   "cgi script authoring.</p>\n"
-	   "<table><tr><th>For each:</th>"
-	   "<th>Environment variable</th><th>Notes</th></tr>\n"
+	   "<table><tr><th align='left'>For each:</th>"
+	   "<th align='left'>Environment variable</th>"
+	   "<th align='left'>Notes</th></tr>\n"
 	   "<tr><td>Cookie</td>"
 	   "<td><tt>COOKIE_<i>cookiename</i>=<i>cookievalue</i></tt></td>"
 	   "<td>&nbsp;</td></tr>\n"
