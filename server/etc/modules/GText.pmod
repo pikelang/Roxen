@@ -273,7 +273,7 @@ array(Image.Image)|mapping make_text_image(
     return err;
   if (bg_info) {
     background = bg_info->img;
-  } else if (sizeof(args->background) > 1) {
+  } else if (args->background && sizeof(args->background) > 1) {
     if (background =
 	Image.Image(xsize,ysize, @(parse_color(args->background[1..]))))
       background_is_color = 1;
