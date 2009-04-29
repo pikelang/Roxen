@@ -688,7 +688,14 @@ mapping|string parse( RequestID id )
 
   Sql.Sql db;
   catch {
-    db = DBManager.get( id->variables->db );
+    db = DBManager.get( id->variables->db, 0, 0, 0,
+#if constant (Mysql.mysql.HAVE_MYSQL_FIELD_CHARSETNR)
+			"unicode"
+#else
+			// Works most of the time, at least..
+			"broken-unicode"
+#endif
+		      );
   };
   string url = DBManager.db_url( id->variables->db );
 
