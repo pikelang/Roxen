@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.676 2009/04/29 09:45:21 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.677 2009/04/29 12:06:36 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4886,7 +4886,7 @@ also set 'URLs'."));
 		 "form.orig-file and form.orig-url to identify the original "
 		 "page that was requested.") );
 
-  defvar("401-files", ({ "401.inc" }),
+  defvar("401-files", ({ }),
 	 DLOCALE(411, "Authentication failed message override files"),
 	 TYPE_STRING_LIST|VAR_PUBLIC,
 	 DLOCALE(412,
