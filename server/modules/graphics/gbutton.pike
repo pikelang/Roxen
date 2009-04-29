@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.117 2009/02/19 17:20:41 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.118 2009/04/29 15:16:48 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -861,6 +861,14 @@ class ButtonFrame {
       //  current language fork.
       if (Sitebuilder.sb_prepare_imagecache)
 	new_args = Sitebuilder.sb_prepare_imagecache(new_args, fi, id);
+#endif
+    }
+
+    if (string icn_path = new_args->icn) {
+      new_args->stat_icn = get_file_stat(icn_path, id);
+#if constant(Sitebuilder)
+      if (Sitebuilder.sb_prepare_imagecache)
+	new_args = Sitebuilder.sb_prepare_imagecache(new_args, icn_path, id);
 #endif
     }
 

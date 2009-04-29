@@ -693,7 +693,7 @@ class LazyImage( LazyImage parent )
     return a;
   }
   
-  protected Layers process( Layers layers )
+  protected Layers|mapping process( Layers layers )
   //! Do the actual work needed to process the image.
   //! The default implementation does nothing but return the image
   //! layers.
@@ -701,7 +701,7 @@ class LazyImage( LazyImage parent )
     return layers;
   }
   
-  Layers run(int|void i, RequestID|void id)
+  Layers|mapping run(int|void i, RequestID|void id)
   //! Apply all operations needed to actually generate the image. 
   //! After the first time this function is called, the result is
   //! cached.
@@ -714,9 +714,13 @@ class LazyImage( LazyImage parent )
 
     if( parent )
     {
-      if( !ignore_parent )
-	result = parent->run(i+1);
-	
+      if( !ignore_parent ) {
+	/*Layers*/array(Image.Layer)|mapping res = parent->run(i+1);
+	if (mappingp(res))
+	  return res;
+	result = res;
+      }
+      
       if( parent->refs > 1 ) 
       {
 	// only copy if the parent data is used in more places than this.
@@ -739,7 +743,10 @@ class LazyImage( LazyImage parent )
     werror("%20s:", operation_name);
     float t = gauge{
 #endif /* GXML_DEBUG */
-	result = process( result );
+	/*Layers*/array(Image.Layer)|mapping process_res = process( result );
+	if (mappingp(process_res))
+	  return process_res;
+	result = process_res;
 #ifdef GXML_DEBUG
       };
     werror(" %.3f %.3f\n",t,(gethrtime()-t2)/1000000.0 );
@@ -747,14 +754,17 @@ class LazyImage( LazyImage parent )
     return result;
   }
 
-  Image.Layer render()
+  Image.Layer|mapping render()
   //! Apply all operations needed to actually generate the image, and
   //! render the array of layers to a single layer. After the first
   //! time this function is called, the result is cached.
   {
     if( render_result )
       return render_result;
-    return render_result = Image.lay( run(0) );
+    /*Layers*/array(Image.Layer)|mapping run_res = run(0);
+    if (mappingp(run_res))
+      return run_res;
+    return render_result = Image.lay(run_res);
   }
 
   string _hash;
@@ -810,7 +820,7 @@ class LoadImage
 
   protected
   {
-    Layers process( Layers layers)
+    Layers|mapping process( Layers layers)
     {
       RequestID id = request_id->get();
       if(!id)
@@ -827,8 +837,11 @@ class LoadImage
       {
 	res = roxen.load_layers(args->src, id);
       }
-      if( !res || mappingp(res) )
+      if( !res || mappingp(res) ) {
+	if (mappingp(res) && res->error == Protocols.HTTP.HTTP_UNAUTH)
+	  return res;
 	RXML.parse_error("Failed to load %O\n", args->src );
+      }
       if( args->tiled )
 	foreach( res, Image.Layer l )
 	  l->set_tiled( 1 );
@@ -1156,12 +1169,16 @@ class Join
       }
     }
   };
-  Layers run( int|void i, RequestID|void id )
+  Layers|mapping run( int|void i, RequestID|void id )
   {
     if(id)
       request_id->set(id);
     
-    return `+( ({}), @args->contents->run(i+1) );
+    array(Layers|mapping) res_array = args->contents->run(i + 1);
+    foreach(res_array, /*Layers*/array(Image.Layer)|mapping res)
+      if (mappingp(res))
+	return res;
+    return `+( ({}), @res_array );
   }
 
   mapping encode()

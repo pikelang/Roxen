@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.39 2008/12/17 07:11:14 tomas Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.40 2009/04/29 15:16:49 jonasw Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -51,12 +51,14 @@ string status() {
 		 s[0], Roxen.sizetostring(s[1]));
 }
 
-Image.Layer generate_image( mapping a, mapping node_tree, RequestID id )
+Image.Layer|mapping generate_image(mapping a, mapping node_tree, RequestID id)
 {
   LazyImage.clear_cache();
   LazyImage.LazyImage image = LazyImage.decode(node_tree);
-  array ll = image->run(0, id);
+  array|mapping ll = image->run(0, id);
   LazyImage.clear_cache();
+  if (mappingp(ll))
+    return ll;
   
   mapping e;
   if( a->size )

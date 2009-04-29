@@ -140,7 +140,9 @@ Image.Image load_image(string f,string bd, object|void id)
 #endif /* constant(roxen) */
 
 
-array(Image.Image) make_text_image(
+//  Returns error mapping if subresources (e.g. background or texture)
+//  cannot be loaded.
+array(Image.Image)|mapping make_text_image(
   mapping args, Image.Font font, string text, RequestID id)
 {
   if( args->encoding )
@@ -236,10 +238,17 @@ array(Image.Image) make_text_image(
 
   Image.Image background,foreground;
 
+#if constant(Sitebuilder)
+  if (Sitebuilder.sb_start_use_imagecache) {
+    Sitebuilder.sb_start_use_imagecache(args, id);
+  }
+#endif
+
   if(args->texture)
   {
     extend_alpha = 1;
-    Image.Image t = roxen.load_image(args->texture,id);
+    mapping err = ([ ]);
+    Image.Image t = roxen.load_image(args->texture, id, err);
     if( t )
     {
       foreground = t;
@@ -249,28 +258,39 @@ array(Image.Image) make_text_image(
       } else if(args->mirrortile) {
 	foreground = do_mirrortile(foreground, xsize, ysize);
       }
-    } else
+    } else {
+      if (err->error == Protocols.HTTP.HTTP_UNAUTH)
+	return err;
       werror("Failed to load image for "+args->texture+"\n");
+    }
   }
   int background_is_color;
   Image.Image alpha;
-  mapping(string:string|Image.Image) bg_info;
-  if(args->background &&
-     (((bg_info = roxen.low_load_image(args->background, id)) &&
-       (background = bg_info->img)) ||
-      (sizeof(args->background)>1 &&
-       (background=Image.Image(xsize,ysize,
-                               @(parse_color(args->background[1..]))))
-       && (background_is_color=1))))
-  {
+  mapping err = ([ ]);
+  mapping(string:string|Image.Image) bg_info =
+    args->background && roxen.low_load_image(args->background, id, err);
+  if (!bg_info && err->error == Protocols.HTTP.HTTP_UNAUTH)
+    return err;
+  if (bg_info) {
+    background = bg_info->img;
+  } else if (sizeof(args->background) > 1) {
+    if (background =
+	Image.Image(xsize,ysize, @(parse_color(args->background[1..]))))
+      background_is_color = 1;
+  }
+  if (background) {
     extend_alpha = 1;
-    if(args->alpha && (alpha = roxen.load_image(args->alpha,id)) && background_is_color)
-    {
-      xsize=max(xsize,alpha->xsize());
-      ysize=max(ysize,alpha->ysize());
-      if((float)args->scale)
-	alpha=alpha->scale(1/(float)args->scale);
-      background=Image.Image(xsize,ysize, @(parse_color(args->background[1..])));
+    if (args->alpha && background_is_color) {
+      if (alpha = roxen.load_image(args->alpha, id, err)) {
+	xsize=max(xsize,alpha->xsize());
+	ysize=max(ysize,alpha->ysize());
+	if((float)args->scale)
+	  alpha=alpha->scale(1/(float)args->scale);
+	background=Image.Image(xsize,ysize, @(parse_color(args->background[1..])));
+      } else {
+	if (err->error == Protocols.HTTP.HTTP_UNAUTH)
+	  return err;
+      }
     } else if (bg_info) {
       alpha = bg_info->alpha;
       if((float)args->scale >= 0.1 && alpha)
@@ -297,6 +317,12 @@ array(Image.Image) make_text_image(
   } else
     background = Image.Image(xsize, ysize, @bgcolor);
 
+#if constant(Sitebuilder)
+  if (Sitebuilder.sb_end_use_imagecache) {
+    Sitebuilder.sb_end_use_imagecache(args, id);
+  }
+#endif
+  
   int xsize2 = (int)args->xsize || xsize;
   int ysize2 = (int)args->ysize || ysize;
   switch(lower_case(args->talign||"left")) {

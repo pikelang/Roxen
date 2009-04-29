@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.305 2008/08/14 09:41:27 erik Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.306 2009/04/29 15:16:49 jonasw Exp $";
 
 #include <module.h>
 inherit "module";
@@ -704,8 +704,11 @@ private Image.Image|mapping draw_callback(mapping args, string text, RequestID i
           (args->afont||args->font||args->nfont)+ ")!\n");
 
   // Fonts and such are now initialized.
-  [img, Image.Image alpha] = GText.make_text_image(args, font, text, id);
-
+  array|mapping make_res = GText.make_text_image(args, font, text, id);
+  if (mappingp(make_res))
+    return make_res;
+  [img, Image.Image alpha] = make_res;
+  
   // Now we have the image in 'img'.
 
   if( !args->scroll && !args->fadein )
@@ -780,7 +783,6 @@ mapping find_internal(string f, RequestID id)
       }
     }
     return image_cache->http_file_answer( f, id );
-  return 0;
 }
 
 
@@ -874,6 +876,30 @@ string gtext_javascript(RequestID id) {
   return res;
 }
 
+private int get_file_stat( string f, RequestID id  )
+{
+  int res;
+  mapping stat_cache;
+  
+  //  -1 is used to cache negative results. When SiteBuilder crawler runs
+  //  we must let the stat_file() run unconditionally to register
+  //  dependencies properly.
+  if (stat_cache = id->misc->gtext_statcache) {
+    if (!id->misc->persistent_cache_crawler)
+      if (res = stat_cache[f])
+	return (res > 0) && res;
+  } else
+    stat_cache = id->misc->gtext_statcache = ([ ]);
+  
+  int was_internal = id->misc->internal_get;
+  id->misc->internal_get = 1;
+  res = stat_cache[ f ] = (id->conf->stat_file( f,id ) ||
+			   ({ 0,0,0,0 }) )[ST_MTIME] || -1;
+  if (!was_internal)
+    m_delete(id->misc, "internal_get");
+  return (res > 0) && res;
+}
+
 private mapping mk_gtext_arg(mapping arg, RequestID id)
 {
   mapping p=([]); //Picture rendering arguments.
@@ -905,11 +931,19 @@ private mapping mk_gtext_arg(mapping arg, RequestID id)
 #endif
 
    foreach(filearg, string tmp)
-     if(arg[tmp]) 
+     if(string path = arg[tmp]) 
      {
-       if(tmp[0..5]!="magic-") {
-	 p[tmp]=Roxen.fix_relative(arg[tmp],id);
-	 m_delete(arg,tmp);
+       if (!has_prefix(tmp, "magic-")) {
+	 p[tmp] = Roxen.fix_relative(path, id);
+	 p[tmp + "_stat"] = get_file_stat(path, id);
+#if constant(Sitebuilder)
+	 //  The file we called get_file_stat() on above may be a SiteBuilder
+	 //  file. If so we need to extend the argument data with e.g.
+	 //  current language fork.
+	 if (Sitebuilder.sb_prepare_imagecache)
+	   p = Sitebuilder.sb_prepare_imagecache(p, path, id);
+#endif
+	 m_delete(arg, tmp);
        } else {
 	 // The magic-* attributes will be removed later.
 	 arg[tmp]=Roxen.fix_relative(arg[tmp],id);
