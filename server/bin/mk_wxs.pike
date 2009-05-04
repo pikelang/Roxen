@@ -1,5 +1,5 @@
 /*
- * $Id: mk_wxs.pike,v 1.19 2009/05/04 12:19:55 grubba Exp $
+ * $Id: mk_wxs.pike,v 1.20 2009/05/04 13:37:02 grubba Exp $
  *
  * Make a Windows Installer XML Source file (wxs) suitable
  * for a Roxen installer.
@@ -41,7 +41,7 @@ int main(int argc, array(string) argv)
       if (stringp(opt[1])) {
 	version_str = opt[1];
       } else {
-	werror("$Id: mk_wxs.pike,v 1.19 2009/05/04 12:19:55 grubba Exp $\n");
+	werror("$Id: mk_wxs.pike,v 1.20 2009/05/04 13:37:02 grubba Exp $\n");
 	exit(0);
       }
       break;
@@ -142,11 +142,11 @@ int main(int argc, array(string) argv)
   sub_menu->low_add_shortcut("Start Roxen (log to file)", "ProductMenuFolder", 0,
 			     "[TARGETDIR]ntstart",
 			     "\"[TARGETDIR]ntstart.exe\" --quiet",
-			     "[TARGETDIR]", "minimized");
+			     "TARGETDIR", "minimized");
   sub_menu->low_add_shortcut("Start Roxen (log to window)", "ProductMenuFolder", 0,
 			     "[TARGETDIR]ntstart",
 			     "\"[TARGETDIR]ntstart.exe\"",
-			     "[TARGETDIR]");
+			     "TARGETDIR");
   feature_node->add_child(WixNode("ComponentRef", ([
 				    "Id":"C_" + sub_menu->id,
 				  ])))->
