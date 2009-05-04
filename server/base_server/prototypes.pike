@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.250 2009/04/28 16:49:20 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.251 2009/05/04 12:09:51 marty Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2036,7 +2036,7 @@ class RequestID
 	  if (!reverse_cb_set) {
 	    // This gets complicated...
 	    // Build a reverse lookup from callback to the headers.
-	    VARY_WERROR("Building reverse vary lookup.\n", vary_cb->cookie);
+	    VARY_WERROR("Building reverse vary lookup.\n");
 	    reverse_cb_set = ([]);
 	    foreach(id->misc->vary_cb_set || ([]); string vary;
 		    multiset(function(string,RequestID:string|int))|
