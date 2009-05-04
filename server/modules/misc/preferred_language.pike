@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.36 2009/04/21 16:09:43 jonasw Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.37 2009/05/04 12:51:12 marty Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -392,11 +392,12 @@ RequestID first_try(RequestID id) {
 	string cookie_name = action[1];
 	if (!id->real_cookies)
 	  id->init_cookies();
-	if (string cookie_value = id->real_cookies[cookie_name]) {
+	string cookie_value;
+	if (cookie_value = id->real_cookies[cookie_name]) {
 	  lang += ({ cookie_value });
-	  delayed_vary_actions += ({ ({ "cookie", cookie_name,
-					({ cookie_value }) }) });
 	}
+	delayed_vary_actions += ({ ({ "cookie", cookie_name,
+				      cookie_value && ({ cookie_value }) }) });
       }
       break;
       
