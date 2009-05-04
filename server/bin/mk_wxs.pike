@@ -1,5 +1,5 @@
 /*
- * $Id: mk_wxs.pike,v 1.17 2009/02/18 14:46:53 grubba Exp $
+ * $Id: mk_wxs.pike,v 1.18 2009/05/04 09:41:15 grubba Exp $
  *
  * Make a Windows Installer XML Source file (wxs) suitable
  * for a Roxen installer.
@@ -39,7 +39,7 @@ int main(int argc, array(string) argv)
       if (stringp(opt[1])) {
 	version_str = opt[1];
       } else {
-	werror("$Id: mk_wxs.pike,v 1.17 2009/02/18 14:46:53 grubba Exp $\n");
+	werror("$Id: mk_wxs.pike,v 1.18 2009/05/04 09:41:15 grubba Exp $\n");
 	exit(0);
       }
       break;
@@ -105,6 +105,11 @@ int main(int argc, array(string) argv)
     feature_node->add_child(WixNode("MergeRef", ([ "Id":id ])))->
       add_child(line_feed);
   }
+
+  // configurations/server_version
+  Stdio.write_file("server_version", server_dir);
+  Directory d = root->low_add_path(({ "configurations" }));
+  d->low_install_file("server_version", "server_version");
 
   // Add cleanup.
   root->uninstall_file(combine_path(server_dir, "bin/roxen*.exe"));
