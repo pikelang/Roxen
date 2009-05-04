@@ -1500,13 +1500,13 @@ change the currently running version.</o>
 
 <str id="358">
 <new/>
-<o>Uninstall</o>
+<o>Uninstall selected patches</o>
 <t></t>
 </str>
 
 <str id="359">
 <new/>
-<o>Install</o>
+<o>Install selected patches</o>
 <t></t>
 </str>
 
@@ -1608,7 +1608,7 @@ change the currently running version.</o>
 
 <str id="376">
 <new/>
-<o>These are patches that are not currently installed;they are imported but not applied.</o>
+<o>These are patches that are not currently installed; they are imported but not applied. It should be safe to remove them from disk. They can be found in local/patches/.</o>
 <t></t>
 </str>
 

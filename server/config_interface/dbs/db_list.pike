@@ -40,7 +40,7 @@ string format_table_owner (mapping(string:string) mod_info, void|int skip_conf)
     }
     else
       mn = Roxen.html_encode_string (
-	sprintf ((string) _(0, "the deleted site %O"), mod_info->conf));
+	sprintf ((string) _(542, "the deleted site %O"), mod_info->conf));
   }
 
   if( m ) {
@@ -49,19 +49,19 @@ string format_table_owner (mapping(string:string) mod_info, void|int skip_conf)
       replace(mod_info->module,"#","!")+"/"+
       "'>"+ Roxen.html_encode_string (i->get_name())+"</a>";
     if (mn)
-      mn = sprintf ((string) _(0, "%s in %s"), module, mn);
+      mn = sprintf ((string) _(543, "%s in %s"), module, mn);
     else
       mn = module;
   }
   else if( i ) {
     if (mn)
       mn = sprintf (
-	(string) _(0, "the deleted module %s in %s"),
+	(string) _(544, "the deleted module %s in %s"),
 	Roxen.html_encode_string (sprintf ("%O", (string) i->get_name())),
 	mn);
     else
       mn = sprintf (
-	(string) _(0, "the deleted module %s"),
+	(string) _(545, "the deleted module %s"),
 	Roxen.html_encode_string (sprintf ("%O", (string) i->get_name())));
   }
 
@@ -92,7 +92,7 @@ string|mapping parse( RequestID id )
 
   mapping(string:mapping(string:int)) q = DBManager.get_permission_map( );
   if( !sizeof( q ) )
-    return _(0, "No defined databases.\n");
+    return _(549, "No defined databases.\n");
 	
   string res = "<style type='text/css'>\n"
     "#tbl {"
@@ -193,16 +193,16 @@ string|mapping parse( RequestID id )
 
     if (db == "local")
       res += "<td>" +
-	_(0, "Internal data that cannot be shared between servers.") +
+	_(546, "Internal data that cannot be shared between servers.") +
 	"</td>";
     else if (db == "shared")
       res += "<td>" +
-	_(0, "Internal data that may be shared between servers.") +
+	_(547, "Internal data that may be shared between servers.") +
 	"</td>";
     else if (db == "docs")
-      res += "<td>" + _(0, "Contains all documentation.") + "</td>";
+      res += "<td>" + _(1024, "Contains all documentation.") + "</td>";
     else if (!sizeof (db_mod_info))
-      res += "<td>" + _(0, "Unknown database") + "</td>";
+      res += "<td>" + _(1025, "Unknown database") + "</td>";
     else if (string owner = format_table_owner (db_mod_info))
       res += "<td>" + String.capitalize (owner) + "</td>";
     else

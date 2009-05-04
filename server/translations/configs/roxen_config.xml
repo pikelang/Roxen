@@ -25,12 +25,20 @@
   <file>../config_interface/dbs/browser.pike</file>
   <file>../config_interface/dbs/create_db.html</file>
   <file>../config_interface/dbs/create_group.html</file>
+  <file>../config_interface/dbs/db_list.pike</file>
+  <file>../config_interface/dbs/db_maintenance.pike</file>
   <file>../config_interface/dbs/db_matrix.pike</file>
+  <file>../config_interface/dbs/db_optimizeall.html</file>
+  <file>../config_interface/dbs/db_optimizeall_ajax.pike</file>
+  <file>../config_interface/dbs/db_repairall.html</file>
+  <file>../config_interface/dbs/db_repairall_ajax.pike</file>
   <file>../config_interface/dbs/edit_group.pike</file>
   <file>../config_interface/dbs/import_dbs.pike</file>
   <file>../config_interface/dbs/index.html</file>
+  <file>../config_interface/dbs/maintenance.html</file>
   <file>../config_interface/dbs/new_db.pike</file>
   <file>../config_interface/dbs/new_group.pike</file>
+  <file>../config_interface/dbs/permissions.html</file>
   <file>../config_interface/dbs/restore_db.pike</file>
   <file>../config_interface/dbs/status.html</file>
   <file>../config_interface/dbs/status.pike</file>
@@ -53,6 +61,7 @@
   <file>../config_interface/sites/site_content.pike</file>
   <file>../config_interface/sites/site_header.pike</file>
   <file>../config_interface/statusinfo.pike</file>
+  <file>../config_interface/template-insert</file>
   <file>../config_interface/template</file>
   <file>../config_interface/topmenu.pike</file>
   <file>../config_interface/user_delete.pike</file>

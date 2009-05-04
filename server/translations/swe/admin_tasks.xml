@@ -977,7 +977,6 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 </str>
 
 <str id="166">
-<changed from="Show information about the installed licenses and there usage."/>
 <o>Show information about the installed licenses and their usage.</o>
 <t>Visa information om installerade licenser och deras användning.</t>
 </str>
@@ -1103,21 +1102,18 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 </str>
 
 <str id="296">
-<new/>
 <o>HTTP auth</o>
-<t></t>
+<t>HTTP-auth</t>
 </str>
 
 <str id="297">
-<new/>
 <o>Form variables</o>
-<t></t>
+<t>Formulärvariabler</t>
 </str>
 
 <str id="325">
-<new/>
 <o>HTTP Cookies</o>
-<t></t>
+<t>HTTP-cookies</t>
 </str>
 
 <str id="326">
@@ -1371,9 +1367,7 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 </str>
 
 <str id="376">
-<o>These are patches that are not currently installed; they are imported but 
-   not applied. It should be safe to remove them from disk. They can be found
-   in local/patches/.</o>
+<o>These are patches that are not currently installed; they are imported but not applied. It should be safe to remove them from disk. They can be found in local/patches/.</o>
 <t>Nedanstående patchpaket är inte installerade, bara importerade. Det bör vara
    säkert att ta bort dem från disk. De kan i så fall hittas i local/patches/.
 </t>

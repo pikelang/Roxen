@@ -79,7 +79,7 @@ ERROR
 	  "totally ignored for databases defined internally in Roxen")+"</i>"
       "</td>"+
     "<td valign=top colspan='2'><i>"
-    +_(447,"This group is used to group the databses. For internal databases, the group can also be used to select which MySQL server the database should be created in")+"</i>"
+    +_(447,"This group is used to group the databses. For external databases, the group can also be used to select which MySQL server the database should be created in")+"</i>"
       "</td></tr>"
 #"<tr><td valign=top><nbsp><b>"+_(448,"Comment")+#":</b></nbsp></td>
       <td colspan=3><textarea name='comment' cols=50 rows=10>&form.comment;</textarea></td></tr>"
@@ -112,15 +112,15 @@ ERROR
        case "mysql": case "roxen":
        case "local":
          error = sprintf("<font color='&usr.warncolor;'>"+
-                         _(409,"%s is an internal database, used by roxen."
-			   "Please select another name")+
+                         _(409,"%s is an internal database, used by Roxen. "
+			   "Please select another name.")+
                          "</font>", id->variables->name );
          break;
        default:
 	 if( Roxen.is_mysql_keyword( id->variables->name ) )
 	   error = sprintf("<font color='&usr.warncolor;'>"+
-			   _(410,"%s is a MySQL keyword, used by MySQL."
-			     "Please select another name")+
+			   _(410,"%s is a MySQL keyword, used by MySQL. "
+			     "Please select another name.")+
 			   "</font>", id->variables->name );
 	 else
 	 {

@@ -95,9 +95,8 @@ Kontrollera att gruppdatabasen stämmer, och att lösenordsdatabasen för användare
 </str>
 
 <str id="19">
-<changed from="Bad URL '%s' for server `%s'"/>
 <o>Bad URL %O for server `%s'</o>
-<t>Felaktig URL '%s' för server `%s'</t>
+<t>Felaktig URL %O för server `%s'</t>
 </str>
 
 <str id="20">

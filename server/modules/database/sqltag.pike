@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.119 2009/04/23 22:13:43 jonasw Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.120 2009/05/04 18:43:13 jonasw Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -912,9 +912,9 @@ then this is the only database that the tags will use, and the
 \"host\" and \"db\" attributes are effectively disabled.</p>") ) );
 
   defvar ("allow_sql_urls", 0,
-	  LOCALE(0, "Allow SQL URLs"),
+	  LOCALE(10, "Allow SQL URLs"),
 	  TYPE_FLAG,
-	  LOCALE(0, #"\
+	  LOCALE(11, #"\
 <p>Allow generic SQL URLs in the \"host\" attribute to the tags. This
 can be a security hazard if users are allowed to write RXML - the
 server will make the connection as the user it is configured to run
@@ -928,9 +928,9 @@ configure all database connections through the \"DBs\" tab and
 the \"Allowed databases\" setting.</p>"));
 
   defvar ("allowed_dbs", "",
-	  LOCALE(0, "Allowed databases"),
+	  LOCALE(12, "Allowed databases"),
 	  TYPE_STRING,
-	  LOCALE(0, #"\
+	  LOCALE(13, #"\
 <p>A comma-separated list of the databases under the \"DBs\" tab that
 are allowed in the \"db\" attribute to the tags. The database in the
 \"Default database\" setting is also implicitly allowed. Set to \"*\"
@@ -946,15 +946,15 @@ to those databases under the \"DBs\" tab since that would make them
 inaccessible to the internal modules too.</p>"));
 
   defvar ("allow_module_dbs", 0,
-	  LOCALE(0, "Support \"module\" attribute"),
+	  LOCALE(14, "Support \"module\" attribute"),
 	  TYPE_FLAG,
-	  LOCALE(0, #"\
+	  LOCALE(15, #"\
 <p>Support the deprecated \"module\" attribute to the tags.</p>"));
 
   defvar ("charset", "",
-	  LOCALE(0, "Default charset"),
+	  LOCALE(16, "Default charset"),
 	  TYPE_STRING,
-	  LOCALE(0, #"\
+	  LOCALE(17, #"\
 <p>The default value to use for the <i>charset</i> attribute to the
 SQL tags. See the description of the same attribute for the \"sql\"
 emit source for more details.</p>"));
@@ -1032,23 +1032,23 @@ string status()
   // not worth bothering the user with these warnings.
 
   if (allow_sql_urls)
-    res += "<p><font color=\"red\">" + LOCALE(0, "Security warning:") +
+    res += "<p><font color=\"red\">" + LOCALE(18, "Security warning:") +
       "</font> " +
-      LOCALE(0, "Connections to arbitrary databases allowed. See the "
+      LOCALE(19, "Connections to arbitrary databases allowed. See the "
 	     "\"Allow SQL URLs\" setting.") +
       "</p>\n";
 
   if (!allowed_dbs)
-    res += "<p><font color=\"red\">" + LOCALE(0, "Security warning:") +
+    res += "<p><font color=\"red\">" + LOCALE(18, "Security warning:") +
       "</font> " +
-      LOCALE(0, "Connections to all configured database allowed. See the "
+      LOCALE(20, "Connections to all configured database allowed. See the "
 	     "\"Allowed databases\" setting.") +
       "</p>\n";
 
   if (allow_module_dbs)
-    res += "<p><font color=\"red\">" + LOCALE(0, "Security warning:") +
+    res += "<p><font color=\"red\">" + LOCALE(18, "Security warning:") +
       "</font> " +
-      LOCALE(0, "Connections to module databases allowed. See the "
+      LOCALE(21, "Connections to module databases allowed. See the "
 	     "\"Support 'module' attribute\" setting.") +
       "</p>\n";
 #endif

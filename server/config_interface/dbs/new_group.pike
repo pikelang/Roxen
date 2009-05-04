@@ -37,10 +37,10 @@ mapping|string parse( RequestID id )
 <gtext scale=0.6>"+_(450,"Create a new database group")+#"</gtext><br />
 "+_(451,"The groups are used mainly to group the databases in the\n"
 "Administration interface, but also to indicate the default MySQL server\n"
-"internal databases will be created in.\n"
+"external databases will be created in.\n"
 "\n"
 "<p> If a group has a URL set, it will be used to select the database\n"
-"server in which the database will be created, please note that this\n"
+"server in which the database will be created. Please note that this\n"
     "server must be a MySQL server, nothing else will work.\n")+#"<br /><p>
 <font size=+1><b>ERROR</b></font>
 <table>

@@ -272,15 +272,15 @@ mixed move_db( string db, RequestID id )
        case "mysql":
        case "roxen":
          warning = sprintf("<font color='&usr.warncolor;'>"+
-                         _(409,"%s is an internal database, used by roxen."
-			   "Please select another name")+
+                         _(409,"%s is an internal database, used by Roxen. "
+			   "Please select another name.")+
                          "</font>", id->variables->name );
          break;
 	default:
 	 if( Roxen.is_mysql_keyword( id->variables->name ) )
 	   warning = sprintf("<font color='&usr.warncolor;'>"+
-			     _(410,"%s is a MySQL keyword, used by MySQL."
-			       "Please select another name")+
+			     _(410,"%s is a MySQL keyword, used by MySQL. "
+			       "Please select another name.")+
 			     "</font>", id->variables->name );
 	 if( DBManager.cached_get( id->variables->name ) &&
 	     db != id->variables->name )

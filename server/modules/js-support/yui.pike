@@ -9,10 +9,10 @@ inherit "roxen-module://filesystem";
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_filesystem",X,Y)
 // end of the locale related stuff
 
-LocaleString module_name = LOCALE(0,"JavaScript Support: The Yahoo! User "
+LocaleString module_name = LOCALE(67,"JavaScript Support: The Yahoo! User "
 				    "Interface Library");
 LocaleString module_doc =
-LOCALE(0,"This sets The Yahoo! User Interface Library (YUI) as a virtual file system "
+LOCALE(68,"This sets The Yahoo! User Interface Library (YUI) as a virtual file system "
 	 "of your site.");
 
 string module_dir = combine_path(__FILE__, "../");
@@ -105,17 +105,17 @@ void create()
 {
   ::create();
   
-  defvar("mountpoint", "/yui/", LOCALE(0,"Mount point"),
+  defvar("mountpoint", "/yui/", LOCALE(15,"Mount point"),
 	 TYPE_LOCATION,
-	 LOCALE(0,"Where the module will be mounted in the site's virtual "
+	 LOCALE(16,"Where the module will be mounted in the site's virtual "
 		"file system."));
 
   set("searchpath", yui_root_dir);
   set_invisible("searchpath");
 
 
-  defvar("limit-yui-paths", 1, LOCALE(0, "Limit YUI paths"), TYPE_FLAG,
-         LOCALE(0, "If set, access is limited to the assets and build directories."));
+  defvar("limit-yui-paths", 1, LOCALE(69, "Limit YUI paths"), TYPE_FLAG,
+         LOCALE(70, "If set, access is limited to the assets and build directories."));
 
 }
 
