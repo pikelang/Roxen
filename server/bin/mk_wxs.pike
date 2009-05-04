@@ -1,5 +1,5 @@
 /*
- * $Id: mk_wxs.pike,v 1.18 2009/05/04 09:41:15 grubba Exp $
+ * $Id: mk_wxs.pike,v 1.19 2009/05/04 12:19:55 grubba Exp $
  *
  * Make a Windows Installer XML Source file (wxs) suitable
  * for a Roxen installer.
@@ -12,6 +12,8 @@ import Standards.XML.Wix;
 #ifdef ROXEN_VERSION
 constant roxen_ver = "5.0";
 constant roxen_build = "0";
+#define __roxen_version__ roxen_ver
+#define __roxen_build__ roxen_build
 #else
 #include "../etc/include/version.h"
 #endif
@@ -19,7 +21,7 @@ constant roxen_build = "0";
 int main(int argc, array(string) argv)
 {
   string base_guid = "e0eb949e-2d84-11d9-8482-77582478aab0"; // WebServer.
-  string version_str = roxen_ver+"."+roxen_build;
+  string version_str = __roxen_version__+"."+__roxen_build__;
   string title = "Roxen Webserver";
   string manufacturer = "Roxen Internet Software";
   string pike_module = "Pike_module.msm";
@@ -39,7 +41,7 @@ int main(int argc, array(string) argv)
       if (stringp(opt[1])) {
 	version_str = opt[1];
       } else {
-	werror("$Id: mk_wxs.pike,v 1.18 2009/05/04 09:41:15 grubba Exp $\n");
+	werror("$Id: mk_wxs.pike,v 1.19 2009/05/04 12:19:55 grubba Exp $\n");
 	exit(0);
       }
       break;
@@ -58,7 +60,7 @@ int main(int argc, array(string) argv)
   argv = Getopt.get_args(argv);
 
   string version_guid =
-    Standards.UUID.make_version3(base_guid, version_str)->str();
+    Standards.UUID.make_version3(version_str, base_guid)->str();
   Directory root = Directory("SourceDir",
 			     Standards.UUID.UUID(version_guid)->encode(),
 			     "TARGETDIR");
@@ -119,6 +121,7 @@ int main(int argc, array(string) argv)
 				  ])))->
     add_child(line_feed);
   root->uninstall_file(combine_path(server_dir, "pikelo*.txt"));
+  root->uninstall_file(combine_path(server_dir, "mysql*.txt"));
   feature_node->add_child(WixNode("ComponentRef", ([
 				    "Id":"C_" + root->sub_dirs[server_dir]->id,
 				  ])))->
@@ -126,21 +129,21 @@ int main(int argc, array(string) argv)
 
   // Start menu.
   Directory start_menu =
-    root->low_add_path(({"Start Menu"}), "StartMenuFolder");
+    root->low_add_path(({"Program Menu"}), "ProgramMenuFolder");
 
-  Directory sub_menu = start_menu->low_add_path(({"Programs", title}),
-						  "START_MENU");
-  sub_menu->low_add_shortcut("Roxen Administration", "START_MENU", 0,
+  Directory sub_menu = start_menu->low_add_path(({title}),
+						"ProductMenuFolder");
+  sub_menu->low_add_shortcut("Roxen Administration", "ProductMenuFolder", 0,
 			     "[BROWSER]",
 			     "[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/");
-  sub_menu->low_add_shortcut("Roxen Documentation", "START_MENU", 0,
+  sub_menu->low_add_shortcut("Roxen Documentation", "ProductMenuFolder", 0,
 			     "[BROWSER]",
 			     "[SERVER_PROTOCOL]://localhost:[SERVER_PORT]/docs/");
-  sub_menu->low_add_shortcut("Start Roxen (log to file)", "START_MENU", 0,
+  sub_menu->low_add_shortcut("Start Roxen (log to file)", "ProductMenuFolder", 0,
 			     "[TARGETDIR]ntstart",
 			     "\"[TARGETDIR]ntstart.exe\" --quiet",
 			     "[TARGETDIR]", "minimized");
-  sub_menu->low_add_shortcut("Start Roxen (log to window)", "START_MENU", 0,
+  sub_menu->low_add_shortcut("Start Roxen (log to window)", "ProductMenuFolder", 0,
 			     "[TARGETDIR]ntstart",
 			     "\"[TARGETDIR]ntstart.exe\"",
 			     "[TARGETDIR]");
@@ -192,6 +195,13 @@ int main(int argc, array(string) argv)
 					    "Cabinet":"Roxen.cab",
 					    "EmbedCab":"yes",
 					    "Id":"1",
+					  ])))->
+			add_child(line_feed)->
+			// Same as [ProductName], but without
+			// the version number.
+			add_child(WixNode("Property", ([
+					    "Id":"ROXEN_TITLE",
+					    "Value":title,
 					  ])))->
 			add_child(line_feed)->
 			add_child(root->gen_xml())->
