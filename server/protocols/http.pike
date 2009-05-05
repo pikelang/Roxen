@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.601 2009/04/28 16:49:20 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.602 2009/05/05 15:39:12 marty Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2966,6 +2966,8 @@ void got_data(mixed fooid, string s, void|int chained)
 	    int len = sizeof(d);
             mapping(string:string) variant_heads = ([]);
 #ifdef HTTP_COMPRESSION
+	    if(file->etag)
+	      variant_heads["ETag"] = file->etag;
             if(file->encoding == "gzip") {
               if(!misc->range && client_gzip_enabled()) {
                 variant_heads["Content-Encoding"] = file->encoding;
@@ -2979,7 +2981,6 @@ void got_data(mixed fooid, string s, void|int chained)
               } else {
                 d = gunzip_data(d);
                 len = sizeof(d);
-                variant_heads["ETag"] = file->etag;
               }
             }
 #endif
