@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
+// This is a roxen module. Copyright Â© 2000 - 2004, Roxen IS.
 //
 
 #include <module.h>
@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.43 2008/08/19 08:54:31 erik Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.44 2009/05/05 16:08:30 mathias Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -478,6 +478,58 @@ class TagSscanf {
 
       if(args->return)
 	RXML.user_set_var(args->return, sizeof(vals), args->scope);
+      return 0;
+    }
+  }
+}
+
+class TagBaseName {
+  inherit RXML.Tag;
+  constant name = "basename";
+
+  class Frame 
+  {
+    inherit RXML.Frame;
+
+    string do_return(RequestID id) 
+    {
+      mixed err = catch {
+	result = basename(replace(content || "", "\\", "/"));
+      };
+      if(err) 
+      {
+        string msg = "Unknown error.\n";
+        if(arrayp(err) && sizeof(err) && stringp(err[0]))
+          msg = err[0];
+        RXML.run_error(msg);
+      }
+
+      return 0;
+    }
+  }
+}
+
+class TagDirName {
+  inherit RXML.Tag;
+  constant name = "dirname";
+
+  class Frame 
+  {
+    inherit RXML.Frame;
+
+    string do_return(RequestID id) 
+    {
+      mixed err = catch {
+	result = dirname(replace(content || "", "\\", "/"));
+      };
+      if(err) 
+      {
+        string msg = "Unknown error.\n";
+        if(arrayp(err) && sizeof(err) && stringp(err[0]))
+          msg = err[0];
+        RXML.run_error(msg);
+      }
+
       return 0;
     }
   }
@@ -983,6 +1035,18 @@ format='%4d%2d%2d'>19771003</sscanf>
 </ex>
 </attr>",
 
+  "basename":#"<desc type='cont'><p><short>
+Returns the last segment of a path.</short></p>
+<p><ex><basename>/some/path/file.name</basename></ex></p>",
+
+  "dirname":#"<desc type='cont'><p><short>
+Returns all but the last segment of a path. </short>Some example inputs and outputs:</p>
+<p><ex>1 <dirname>/a/b</dirname><br/>
+2 <dirname>/a/</dirname><br/>
+3 <dirname>/a</dirname><br/>
+4 <dirname>/</dirname><br/>
+5 <dirname></dirname></ex></p>",
+
   "format-number":#"<desc type='cont'><p><short>
 Formats a number according to pattern passed as an argument. </short>
 Useful for adding grouping and rounding numbers to a fixed number 
@@ -1206,7 +1270,7 @@ of fraction digit characters.
 </desc>",
 			  "&_.name;":#"<desc type='entity'>
  <p>The name of the language in the language itself, for example
- \"français\" for french.</p>
+ \"franÃ§ais\" for french.</p>
 </desc>",
 			  "&_.englishname;":#"<desc type='entity'>
  <p>The name of the language in English.</p>
