@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.45 2009/05/06 07:39:23 mathias Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.46 2009/05/06 19:22:43 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -1037,7 +1037,8 @@ format='%4d%2d%2d'>19771003</sscanf>
 
   "basename":#"<desc type='cont'><p><short>
 Returns the last segment of a path.</short></p>
-<p><ex><basename>/some/path/file.name</basename></ex></p>",
+<p><ex><basename>/some/path/file.name</basename></ex></p>
+</desc>",
 
   "dirname":#"<desc type='cont'><p><short>
 Returns all but the last segment of a path. </short>Some example inputs and outputs:</p>
@@ -1045,7 +1046,8 @@ Returns all but the last segment of a path. </short>Some example inputs and outp
 2 <dirname>/a/</dirname><br/>
 3 <dirname>/a</dirname><br/>
 4 <dirname>/</dirname><br/>
-5 <dirname></dirname></ex></p>",
+5 <dirname></dirname></ex></p>
+</desc>",
 
   "format-number":#"<desc type='cont'><p><short>
 Formats a number according to pattern passed as an argument. </short>
