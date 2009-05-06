@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.49 2009/04/24 08:56:53 jonasw Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.50 2009/05/06 12:09:23 mathias Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -729,6 +729,58 @@ class TagSscanf {
   }
 }
 
+class TagBaseName {
+  inherit RXML.Tag;
+  constant name = "basename";
+
+  class Frame 
+  {
+    inherit RXML.Frame;
+
+    string do_return(RequestID id) 
+    {
+      mixed err = catch {
+	result = basename(replace(content || "", "\\", "/"));
+      };
+      if(err) 
+      {
+        string msg = "Unknown error.\n";
+        if(arrayp(err) && sizeof(err) && stringp(err[0]))
+          msg = err[0];
+        RXML.run_error(msg);
+      }
+
+      return 0;
+    }
+  }
+}
+
+class TagDirName {
+  inherit RXML.Tag;
+  constant name = "dirname";
+
+  class Frame 
+  {
+    inherit RXML.Frame;
+
+    string do_return(RequestID id) 
+    {
+      mixed err = catch {
+	result = dirname(replace(content || "", "\\", "/"));
+      };
+      if(err) 
+      {
+        string msg = "Unknown error.\n";
+        if(arrayp(err) && sizeof(err) && stringp(err[0]))
+          msg = err[0];
+        RXML.run_error(msg);
+      }
+
+      return 0;
+    }
+  }
+}
+
 class TagDice {
   inherit RXML.Tag;
   constant name = "dice";
@@ -1307,6 +1359,18 @@ format='%4d%2d%2d'>19771003</sscanf>
 <sprintf format='#%02x%02x%02x' split=','>250,0,33</sprintf>
 </ex>
 </attr>",
+
+  "basename":#"<desc type='cont'><p><short>
+Returns the last segment of a path.</short></p>
+<p><ex><basename>/some/path/file.name</basename></ex></p>",
+
+  "dirname":#"<desc type='cont'><p><short>
+Returns all but the last segment of a path. </short>Some example inputs and outputs:</p>
+<p><ex>1 <dirname>/a/b</dirname><br/>
+2 <dirname>/a/</dirname><br/>
+3 <dirname>/a</dirname><br/>
+4 <dirname>/</dirname><br/>
+5 <dirname></dirname></ex></p>",
 
   "format-number":#"<desc type='cont'><p><short>
 Formats a number according to pattern passed as an argument. </short>
