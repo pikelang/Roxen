@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.616 2009/04/24 09:21:00 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.617 2009/05/06 13:35:21 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -3981,7 +3981,8 @@ class TagCSet {
 
     array do_enter (RequestID id)
     {
-      if (!content_type->subtype_of (RXML.t_any_text))
+      if (!content_type->subtype_of (RXML.t_any_text) ||
+	  content_type == RXML.t_nil)
 	content_type = RXML.t_any_text (RXML.PXml);
     }
 
