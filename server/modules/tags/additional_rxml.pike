@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright Â© 2000 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 //
 
 #include <module.h>
@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.44 2009/05/05 16:08:30 mathias Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.45 2009/05/06 07:39:23 mathias Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -1270,7 +1270,7 @@ of fraction digit characters.
 </desc>",
 			  "&_.name;":#"<desc type='entity'>
  <p>The name of the language in the language itself, for example
- \"franÃ§ais\" for french.</p>
+ \"français\" for french.</p>
 </desc>",
 			  "&_.englishname;":#"<desc type='entity'>
  <p>The name of the language in English.</p>
