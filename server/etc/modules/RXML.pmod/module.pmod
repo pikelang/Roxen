@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.402 2009/04/24 11:55:12 mast Exp $
+// $Id: module.pmod,v 1.403 2009/05/06 13:05:30 jonasw Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -8850,7 +8850,7 @@ class PCode
 
 	if (ctx->state_updated > update_count) {
 	  PCODE_UPDATE_MSG ("%O (ctx %O): Marked as updated due to "
-			    "ctx->state_updated %d > %d.\n", this, ctx, frame,
+			    "ctx->state_updated %d > %d.\n", this, ctx,
 			    ctx->state_updated, update_count);
 	  flags |= UPDATED;
 	}
