@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1999 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 1999 - 2009, Roxen IS.
 //
 
 #include <module.h>
@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.80 2009/02/19 17:20:41 jonasw Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.81 2009/05/07 14:15:54 mast Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "

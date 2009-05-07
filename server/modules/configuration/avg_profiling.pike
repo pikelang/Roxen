@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2001 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 2001 - 2009, Roxen IS.
 
 inherit "module.pike";
 

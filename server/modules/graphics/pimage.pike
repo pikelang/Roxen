@@ -1,6 +1,6 @@
-// This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 1997 - 2009, Roxen IS.
 
-string cvs_version="$Id: pimage.pike,v 1.31 2008/08/15 12:33:54 mast Exp $";
+string cvs_version="$Id: pimage.pike,v 1.32 2009/05/07 14:15:54 mast Exp $";
 
 #include <module.h>
 inherit "module";

@@ -1,12 +1,12 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2004, Roxen IS.
+// Copyright © 1996 - 2009, Roxen IS.
 //
 // The Roxen WebServer main program.
 //
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1031 2009/05/06 11:58:29 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1032 2009/05/07 14:15:53 mast Exp $";
 
 //! @appears roxen
 //!

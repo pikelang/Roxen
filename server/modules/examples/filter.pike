@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
 
 inherit "module";
 // All roxen modules must inherit module.pike
 
-constant cvs_version = "$Id: filter.pike,v 1.5 2008/12/17 10:01:47 jonasw Exp $";
+constant cvs_version = "$Id: filter.pike,v 1.6 2009/05/07 14:15:54 mast Exp $";
 constant module_type = MODULE_FILTER;
 constant module_name = "RefDoc for MODULE_FILTER";
 constant module_doc = "This module does nothing, but its inlined "

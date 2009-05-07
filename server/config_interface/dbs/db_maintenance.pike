@@ -1,4 +1,4 @@
-// Copyright 2007 Roxen Internet Software
+// Copyright 2007 - 2009 Roxen Internet Software
 // Contributed by:
 // Digital Fractions 2007
 // www.digitalfractions.net

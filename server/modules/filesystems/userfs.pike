@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 // User filesystem. Uses the userdatabase (and thus the system passwd
 // database) to find the home-dir of users, and then looks in a
@@ -24,7 +24,7 @@
 
 inherit "filesystem" : filesystem;
 
-constant cvs_version="$Id: userfs.pike,v 1.71 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version="$Id: userfs.pike,v 1.72 2009/05/07 14:15:54 mast Exp $";
 constant module_type = MODULE_LOCATION;
 LocaleString module_name = _(1,"File systems: User file system");
 LocaleString module_doc  = 

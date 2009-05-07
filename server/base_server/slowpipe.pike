@@ -1,5 +1,5 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1999 - 2004, Roxen IS.
+// Copyright © 1999 - 2009, Roxen IS.
 //
 //
 // A throttling pipe connection
@@ -10,7 +10,7 @@
 // on demand might be very interesting to save memory and increase
 // performance. We'll see.
 
-constant cvs_version="$Id: slowpipe.pike,v 1.15 2004/06/30 16:58:41 mast Exp $";
+constant cvs_version="$Id: slowpipe.pike,v 1.16 2009/05/07 14:15:53 mast Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG

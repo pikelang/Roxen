@@ -1,8 +1,8 @@
 // Version information
-// $Id: version.h,v 1.51 2009/03/02 15:45:43 dist Exp $
+// $Id: version.h,v 1.52 2009/05/07 14:15:57 mast Exp $
 // 
 
-#define COPYRIGHT "Copyright (C) 2000-2008 Roxen Internet Software AB"
+#define COPYRIGHT "Copyright (C) 2000-2009 Roxen Internet Software AB"
 
 #define NTSTART_MAJOR_VERSION 4
 #define NTSTART_MINOR_VERSION 1

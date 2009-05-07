@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
 
 inherit "module";
 
-constant cvs_version = "$Id: robots.txt.pike,v 1.5 2004/08/18 12:15:52 grubba Exp $";
+constant cvs_version = "$Id: robots.txt.pike,v 1.6 2009/05/07 14:15:55 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST;
 constant module_name = "robots.txt generator";

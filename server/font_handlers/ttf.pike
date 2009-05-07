@@ -1,10 +1,10 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2004, Roxen IS.
+// Copyright © 1996 - 2009, Roxen IS.
 
 #if !constant(Image.FreeType.Face)
 #if constant(has_Image_TTF)
 #include <config.h>
-constant cvs_version = "$Id: ttf.pike,v 1.18 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version = "$Id: ttf.pike,v 1.19 2009/05/07 14:15:53 mast Exp $";
 
 constant name = "TTF fonts";
 constant doc = "True Type font loader. Uses freetype to render text.";

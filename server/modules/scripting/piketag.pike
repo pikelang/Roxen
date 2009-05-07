@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 //
 // Adds support for inline pike in documents.
 //
@@ -7,7 +7,7 @@
 //  return "Hello world!\n";
 // </pike>
  
-constant cvs_version = "$Id: piketag.pike,v 2.38 2008/08/15 12:33:55 mast Exp $";
+constant cvs_version = "$Id: piketag.pike,v 2.39 2009/05/07 14:15:55 mast Exp $";
 constant thread_safe=1;
 
 inherit "module";

@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 // This module log the accesses of each user in their home dirs, if
 // they create a file named 'AccessLog' in that directory, and allow
 // write access for roxen.
 
-constant cvs_version="$Id: home_logger.pike,v 1.35 2008/08/15 12:33:55 mast Exp $";
+constant cvs_version="$Id: home_logger.pike,v 1.36 2009/05/07 14:15:55 mast Exp $";
 constant thread_safe=1;
 
 #include <config.h>

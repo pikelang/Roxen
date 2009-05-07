@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright Ã‚Â© 1996 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 // by Mirar <mirar@roxen.com>
 
 // Adds the <sed> tag, to emulate a subset of sed operations in rxml
@@ -36,7 +36,7 @@
 //
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.19 2009/03/23 15:28:26 jonasw Exp $";
+constant cvs_version = "$Id: sed.pike,v 1.20 2009/05/07 14:15:56 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>

@@ -1,8 +1,8 @@
 // This is a roxen protocol module.
-// Copyright © 2001 - 2007, Roxen IS.
+// Copyright © 2001 - 2009, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.11 2009/04/16 09:28:37 jonasw Exp $
+ * $Id: prot_snmp.pike,v 2.12 2009/05/07 14:15:57 mast Exp $
  *
  * SNMP protocol support.
  *
@@ -109,7 +109,7 @@ class SystemMIB
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.11 $"/" ")[1],
+			   ("$Revision: 2.12 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,

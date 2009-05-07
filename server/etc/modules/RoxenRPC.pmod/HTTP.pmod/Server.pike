@@ -1,9 +1,9 @@
 //
-// $Id: Server.pike,v 1.6 2008/08/15 12:33:54 mast Exp $
+// $Id: Server.pike,v 1.7 2009/05/07 14:15:53 mast Exp $
 //
 // Roxen HTTP RPC
 //
-// Copyright © 1996 - 2004, Roxen IS
+// Copyright © 1996 - 2009, Roxen IS
 //
 
 private int port;

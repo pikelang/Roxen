@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 1999 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 1999 - 2009, Roxen IS.
 
 #include <module.h>
 inherit "module";
 
 constant thread_safe=1;
-constant cvs_version="$Id: throttletags.pike,v 1.15 2004/06/30 16:59:31 mast Exp $";
+constant cvs_version="$Id: throttletags.pike,v 1.16 2009/05/07 14:15:56 mast Exp $";
 
 #ifdef THROTTLING_DEBUG
 #undef THROTTLING_DEBUG

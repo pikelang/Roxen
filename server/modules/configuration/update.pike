@@ -1,8 +1,8 @@
 /*
- * $Id: update.pike,v 1.40 2008/08/15 12:33:54 mast Exp $
+ * $Id: update.pike,v 1.41 2009/05/07 14:15:54 mast Exp $
  *
  * The Roxen Update Client
- * Copyright © 2000 - 2004, Roxen IS.
+ * Copyright © 2000 - 2009, Roxen IS.
  *
  * Author: Johan Schön
  * January-March 2000, June 2001

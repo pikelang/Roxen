@@ -1,11 +1,11 @@
-// The outlined box module, Copyright © 1996 - 2004, Roxen IS.
+// The outlined box module, Copyright © 1996 - 2009, Roxen IS.
 //
 // Fredrik Noring et al
 //
 // Several modifications by Francesco Chemolli.
 
 
-constant cvs_version = "$Id: obox.pike,v 1.41 2008/08/15 12:33:55 mast Exp $";
+constant cvs_version = "$Id: obox.pike,v 1.42 2009/05/07 14:15:56 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>

@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
 
 inherit "module";
 
-constant cvs_version= "$Id: tarfs.pike,v 1.11 2004/06/30 16:59:00 mast Exp $";
+constant cvs_version= "$Id: tarfs.pike,v 1.12 2009/05/07 14:15:54 mast Exp $";
 
 // The Filesystem.Tar module is not threadsafe.
 constant thread_safe=0;

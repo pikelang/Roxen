@@ -1,7 +1,7 @@
-// This is a roxen module. Copyright © 1997 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 1997 - 2009, Roxen IS.
 // Makes a tab list like the one in the config interface.
 
-constant cvs_version="$Id: tablist.pike,v 1.59 2004/06/30 16:59:04 mast Exp $";
+constant cvs_version="$Id: tablist.pike,v 1.60 2009/05/07 14:15:54 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>

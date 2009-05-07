@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 inherit "module";
 
-constant cvs_version= "$Id: sqlfs.pike,v 1.9 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version= "$Id: sqlfs.pike,v 1.10 2009/05/07 14:15:54 mast Exp $";
 
 #include <module.h>
 #include <roxen.h>

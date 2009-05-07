@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2001 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 2001 - 2009, Roxen IS.
 #include <module.h>
 
 // Some defines for the translation system
@@ -28,7 +28,7 @@ constant name = "example";
 //! will be impossible to know which of them will be used when
 //! authentication is done, however..
 
-constant cvs_version="$Id: userdb_ex.pike,v 1.8 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version="$Id: userdb_ex.pike,v 1.9 2009/05/07 14:15:54 mast Exp $";
 
 LocaleString module_name = LOCALE(1,"RefDoc for MODULE_USERDB");
 

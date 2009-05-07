@@ -1,4 +1,4 @@
-/* This is a roxen module. Copyright © 1999 - 2004, Roxen IS.
+/* This is a roxen module. Copyright © 1999 - 2009, Roxen IS.
  *
  * Draws diagrams pleasing to the eye.
  *
@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.152 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version = "$Id: business.pike,v 1.153 2009/05/07 14:15:54 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";

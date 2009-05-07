@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright 2000 - 2005, Roxen IS
+// This is a roxen module. Copyright 2000 - 2009, Roxen IS
 //
 // Module code updated to new 2.0 API
 
-constant cvs_version="$Id: ldaptag.pike,v 2.39 2009/04/23 22:22:50 jonasw Exp $";
+constant cvs_version="$Id: ldaptag.pike,v 2.40 2009/05/07 14:15:55 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 #include <config.h>

@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 //
 
 #define _stat RXML_CONTEXT->misc[" _stat"]
@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.617 2009/05/06 13:35:21 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.618 2009/05/07 14:15:56 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 

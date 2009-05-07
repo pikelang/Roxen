@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 1998 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 1998 - 2009, Roxen IS.
 
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: pathinfo.pike,v 1.21 2007/05/16 16:26:17 jonasw Exp $";
+constant cvs_version = "$Id: pathinfo.pike,v 1.22 2009/05/07 14:15:55 mast Exp $";
 constant thread_safe = 1;
 
 #ifdef PATHINFO_DEBUG

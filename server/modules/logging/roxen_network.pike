@@ -1,4 +1,4 @@
-// The Roxen Network module. Copyright © 2000 - 2004, Roxen IS.
+// The Roxen Network module. Copyright © 2000 - 2009, Roxen IS.
 //
 
 #include <module.h>
@@ -8,7 +8,7 @@ inherit "module";
 
 // ---------------- Module registration stuff ----------------
 
-constant cvs_version = "$Id: roxen_network.pike,v 1.15 2008/06/24 16:19:52 mast Exp $";
+constant cvs_version = "$Id: roxen_network.pike,v 1.16 2009/05/07 14:15:55 mast Exp $";
 constant module_type = MODULE_ZERO;
 constant thread_safe = 1;
 constant module_name = "Roxen Network module";

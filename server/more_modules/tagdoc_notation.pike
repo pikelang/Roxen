@@ -1,9 +1,9 @@
-// This is a roxen module. Copyright © 2001 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 2001 - 2009, Roxen IS.
 
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: tagdoc_notation.pike,v 2.3 2004/06/30 16:59:33 mast Exp $";
+constant cvs_version = "$Id: tagdoc_notation.pike,v 2.4 2009/05/07 14:15:56 mast Exp $";
 constant thread_safe = 1;
 constant module_name = "TagDoc Notation exemplifier";
 constant module_type = MODULE_TAG;

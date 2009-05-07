@@ -1,11 +1,11 @@
-// This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 //
 
 #include <module.h>
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.57 2008/08/15 12:33:55 mast Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.58 2009/05/07 14:15:55 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";

@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
 //
 
 #include <module.h>
@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.24 2009/04/16 10:42:36 liin Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.25 2009/05/07 14:15:56 mast Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;

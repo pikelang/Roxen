@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 // Logs the User-agent fields in a separate log.
 
-constant cvs_version = "$Id: client_logger.pike,v 1.16 2004/06/30 16:59:14 mast Exp $";
+constant cvs_version = "$Id: client_logger.pike,v 1.17 2009/05/07 14:15:55 mast Exp $";
 constant thread_safe=1;
 #include <module.h>
 

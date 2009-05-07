@@ -1,9 +1,9 @@
 /*
  * By Francesco Chemolli
- * This is a Roxen module. Copyright © 2000 - 2004, Roxen IS.
+ * This is a Roxen module. Copyright © 2000 - 2009, Roxen IS.
  */
 
-constant cvs_version="$Id: throttling_bytime.pike,v 1.8 2008/08/15 12:33:55 mast Exp $";
+constant cvs_version="$Id: throttling_bytime.pike,v 1.9 2009/05/07 14:15:56 mast Exp $";
 
 
 #include <module.h>

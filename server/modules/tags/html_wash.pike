@@ -1,10 +1,10 @@
-// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
 //
 
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.34 2008/12/11 15:32:54 jonasw Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.35 2009/05/07 14:15:56 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";

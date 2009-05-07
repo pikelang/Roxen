@@ -1,6 +1,6 @@
 #!NO MODULE
 
-// This file is part of Roxen WebServer. Copyright © 2001 - 2004, Roxen IS.
+// This file is part of Roxen WebServer. Copyright © 2001 - 2009, Roxen IS.
 protected array md_callbacks = ({});
 protected mapping md; // ID3 etc.
 

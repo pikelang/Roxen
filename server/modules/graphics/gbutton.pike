@@ -1,7 +1,7 @@
 //  Button module. Generates graphical buttons for use in Roxen config
 //  interface, Roxen SiteBuilder and other places.
 //
-//  Copyright © 1999 - 2004, Roxen IS. Author: Jonas Walldén, <jonasw@roxen.com>
+//  Copyright © 1999 - 2009, Roxen IS. Author: Jonas Walldén, <jonasw@roxen.com>
 
 
 //  Usage:
@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.118 2009/04/29 15:16:48 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.119 2009/05/07 14:15:54 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>

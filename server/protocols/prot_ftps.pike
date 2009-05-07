@@ -1,5 +1,5 @@
 // This is a roxen protocol module.
-// Copyright © 2001 - 2004, Roxen IS.
+// Copyright © 2001 - 2009, Roxen IS.
 
 // cf http://en.wikipedia.org/wiki/FTPS
 inherit SSLProtocol;

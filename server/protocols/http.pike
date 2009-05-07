@@ -1,8 +1,8 @@
 // This is a roxen protocol module.
 // Modified by Francesco Chemolli to add throttling capabilities.
-// Copyright © 1996 - 2004, Roxen IS.
+// Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.602 2009/05/05 15:39:12 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.603 2009/05/07 14:15:56 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 

@@ -1,4 +1,4 @@
-// This is a Roxen module. Copyright © 1996 - 2004, Roxen IS.
+// This is a Roxen module. Copyright © 1996 - 2009, Roxen IS.
 //
 // Directory listings mark 3
 //
@@ -15,7 +15,7 @@
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_directories",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: directories.pike,v 1.95 2004/12/28 17:15:05 anders Exp $";
+constant cvs_version = "$Id: directories.pike,v 1.96 2009/05/07 14:15:54 mast Exp $";
 constant thread_safe = 1;
 
 constant default_template= #"

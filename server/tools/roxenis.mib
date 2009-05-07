@@ -1,13 +1,14 @@
 --
 -- Roxen Internet Software MIB
--- Copyright (C) 2001 Honza Petrous, hop@unibase.cz
+-- Contributed by Honza Petrous, hop@unibase.cz
+-- Copyright (C) 2001 - 2009 Roxen IS
 --
 -- This mib file defines the common OBJECT IDENTIFIER
 -- used by all the RIS products
 --
 -- Creator: Honza Petrous (hop@roxen.com)
 --
--- $Id: roxenis.mib,v 1.3 2002/02/12 16:52:34 hop Exp $
+-- $Id: roxenis.mib,v 1.4 2009/05/07 14:15:57 mast Exp $
 
 
 ROXENIS-MIB DEFINITIONS ::= 

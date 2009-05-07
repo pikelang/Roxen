@@ -1,8 +1,8 @@
-// This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
 
 inherit "module";
 
-constant cvs_version = "$Id: whitespace_remover.pike,v 1.7 2009/01/26 09:54:55 mast Exp $";
+constant cvs_version = "$Id: whitespace_remover.pike,v 1.8 2009/05/07 14:15:54 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Whitespace Remover";

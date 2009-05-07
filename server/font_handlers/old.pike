@@ -1,8 +1,8 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1996 - 2004, Roxen IS.
+// Copyright © 1996 - 2009, Roxen IS.
 
 #include <config.h>
-constant cvs_version = "$Id: old.pike,v 1.14 2009/02/06 11:53:24 jonasw Exp $";
+constant cvs_version = "$Id: old.pike,v 1.15 2009/05/07 14:15:53 mast Exp $";
 
 constant name = "Compatibility bitmap fonts";
 constant doc = 

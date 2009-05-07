@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
+// This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
 // Adds the <fl>, <ft> and <fd> tags. This makes it easy to
 // build a folder list or an outline. Example:
@@ -15,7 +15,7 @@
 
 // made by Pontus Hagland december -96
 
-constant cvs_version = "$Id: flik.pike,v 1.9 2008/10/20 08:13:21 mast Exp $";
+constant cvs_version = "$Id: flik.pike,v 1.10 2009/05/07 14:15:53 mast Exp $";
 constant thread_safe=1;
 
 #include <module.h>

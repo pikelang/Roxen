@@ -1,8 +1,8 @@
 // This file is part of Roxen WebServer.
-// Copyright © 1999 - 2004, Roxen IS.
+// Copyright © 1999 - 2009, Roxen IS.
 //
 // Handles supports
-// $Id: supports.pike,v 1.26 2004/06/30 16:58:41 mast Exp $
+// $Id: supports.pike,v 1.27 2009/05/07 14:15:53 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>

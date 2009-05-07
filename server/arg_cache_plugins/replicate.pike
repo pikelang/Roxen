@@ -1,7 +1,7 @@
 // This file is part of Roxen WebServer.
-// Copyright © 2001 - 2006, Roxen IS.
+// Copyright © 2001 - 2009, Roxen IS.
 
-constant cvs_version="$Id: replicate.pike,v 1.27 2008/08/15 12:33:53 mast Exp $";
+constant cvs_version="$Id: replicate.pike,v 1.28 2009/05/07 14:15:52 mast Exp $";
 
 #if constant(WS_REPLICATE)
 
