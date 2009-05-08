@@ -2,7 +2,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: word_highlight.pike,v 1.6 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version = "$Id: word_highlight.pike,v 1.7 2009/05/08 12:43:30 anders Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FILTER;
 constant module_name = "Word highlighter";
@@ -38,6 +38,7 @@ string do_highlighting(string txt, RequestID id) {
 }
 
 mapping filter(mapping result, RequestID id) {
+  if (!result) return;
   string|array(string) type = result->type;
   if (arrayp(type))
     type = type[0];
