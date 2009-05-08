@@ -13,7 +13,7 @@
 #define _ok	id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: writefile.pike,v 1.20 2008/08/15 12:33:55 mast Exp $";
+ "$Id: writefile.pike,v 1.21 2009/05/08 15:39:36 mathias Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -278,6 +278,9 @@ constant tagdoc=([
  <p>Additional functionality includes removal or renaming of already
   existing files.  This container tag will set the truth value depending
   on success or failure of the requested operation.</p>
+
+ <p>This tag does not work on CMS filesystems. Insted we recommend
+  using <xref href='../sitebuilder-internal/sb-edit-area.tag' /></p>
 </desc>
 
 <attr name='filename' value='string'>
