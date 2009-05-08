@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.550 2009/01/12 12:25:53 mathias Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.551 2009/05/08 15:02:45 mathias Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -7889,7 +7889,8 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  realfile plugin compared to the file plugin is that the realfile
  plugin needs the inserted file to exist, and can't fetch files from e.g.
  an arbitrary location module. Note that the realfile insert plugin
- can not fetch files from outside the virtual file system.
+ can not fetch files from outside the virtual file system or files in a
+ CMS filesystem.
 </p></desc>
 
 <attr name='realfile' value='string'>
