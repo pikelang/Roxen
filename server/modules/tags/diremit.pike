@@ -12,8 +12,11 @@ class Imagesize(mapping m, RequestID id) {
   inherit RXML.Value;
   int x,y;
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    if( !x && !y && (m->type / "/")[0] == "image" ) {
-      switch( (m->type / "/")[-1] ) {
+    string|array(string) ct = m->type;
+    if (arrayp(ct))
+      ct = ct[0];
+    if( !x && !y && (ct / "/")[0] == "image" ) {
+      switch( (ct / "/")[-1] ) {
       case "gif":
       case "jpeg":
       case "jpg":
@@ -76,7 +79,10 @@ class Thumbnail(mapping m, mapping args, RequestID id) {
   inherit RXML.Value;
 
   mixed rxml_const_eval(RXML.Context c, string var, string scope_name, void|RXML.Type type) {
-    if( (m->type / "/")[0] == "image" ) {
+    string|array(string) ct = m->type;
+    if (arrayp(ct))
+      ct = ct[0];
+    if( (ct / "/")[0] == "image" ) {
       string ms = (args["thumbnail-size"]?args["thumbnail-size"]:"60");
       mapping cia = ([
 	"max-width":ms,
@@ -159,6 +165,8 @@ class TagDirectoryplugin
         m["type-img"] = "internal-gopher-menu";
       } else {
         m->type = id->conf->type_from_filename( file );
+	if (arrayp(m->type))
+	  m->type = m->type[0];
         m->size = Roxen.sizetostring( st[ ST_SIZE ] );
         m["type-img"] = Roxen.image_from_type( m->type );
       }
