@@ -1,14 +1,16 @@
-# $Id: extensions,v 1.64 2009/03/23 13:58:48 jonasw Exp $
+# $Id: extensions,v 1.65 2009/05/11 13:57:47 grubba Exp $
 #
 # ---- Extension database ----
-# The database used by the content typ module to map from extension to mime-type
-# (example: *.gif to image/gif). Lines are commented with ## to resolve name
-# conflicts (same extension mapping to several MIME-types). Up to date with IANA
-# MIME-type listing 03-SEP-1999. Chemical/* is not included since they collide with
-# quite a few other mime types. They can be found in the file
-# more_extensions/chemical.
+# The database used by the content typ module to map from extension to
+# mime-type (example: *.gif to image/gif). Lines are commented with ## to
+# resolve name conflicts (same extension mapping to several MIME-types).
+# Up to date with IANA MIME-type listing 03-SEP-1999. Chemical/* is not
+# included since they collide with quite a few other mime types. They can
+# be found in the file more_extensions/chemical.
 #
 # Last synchronized with IANA media types list: 2000-09-20
+
+# Some mime-types from RFC 3023 have been added.
 
 # -------------------- Audio ---------------------
 
@@ -361,6 +363,8 @@ xlm	application/vnd.ms-excel
 xls	application/vnd.ms-excel
 xlt	application/vnd.ms-excel
 xlw	application/vnd.ms-excel
+xsl	application/xslt+xml
+xslt	application/xslt+xml
 ppa	application/vnd.ms-powerpoint
 pot	application/vnd.ms-powerpoint
 ppt	application/vnd.ms-powerpoint
