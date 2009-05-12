@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.133 2009/05/07 14:15:56 mast Exp $
+ * $Id: ftp.pike,v 2.134 2009/05/12 09:21:21 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1522,6 +1522,8 @@ class FTPSession
     }
   }
 
+  int(0..1) busy;
+
   void send(int code, array(string) data, int|void enumerate_all)
   {
     DWRITE("FTP2: send(%d, %O)\n", code, data);
@@ -1556,6 +1558,11 @@ class FTPSession
       }
     } else {
       DWRITE("FTP2: send(): Nothing to send!\n");
+    }
+    if (code >= 200) {
+      // Command finished, get the next.
+      busy = 0;
+      next_cmd();
     }
   }
 
@@ -3815,6 +3822,8 @@ class FTPSession
     }
   }
 
+  private ADT.Queue cmd_queue = ADT.Queue();
+
   private void got_command(mixed ignored, string line)
   {
     DWRITE("FTP2: got_command(X, \"%s\")\n", line);
@@ -3842,6 +3851,22 @@ class FTPSession
       // in backtraces.
       line = cmd + " CENSORED_PASSWORD";
     }
+
+    cmd_queue->put(({ line, cmd, args }));
+    if (!busy)
+      next_cmd();
+  }
+
+  private void next_cmd()
+  {
+    array(string|array(string)) cmd_entry = cmd_queue->get();
+    if (!cmd_entry) return;
+
+    string line = cmd_entry[0];
+    string cmd = cmd_entry[1];
+    array(string) args = cmd_entry[2];
+
+    busy = 1;
 
 #if 0
     if (!conf->extra_statistics) {
