@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.420 2009/05/07 14:15:53 mast Exp $
+// $Id: roxenloader.pike,v 1.421 2009/05/13 16:23:15 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.420 2009/05/07 14:15:53 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.421 2009/05/13 16:23:15 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1376,6 +1376,7 @@ void do_main_wrapper(int argc, array(string) argv)
 //       "basedir"   : <absolute path to MySQL server directory>
 //       "mysqld"    : <absolute path to mysqld[-nt.exe]>
 //       "myisamchk" : <absolute path to myisamchk[.exe]>
+//       "mysqldump" : <absolute path to mysqldump[.exe]>
 //    ])
 //
 //  If a path cannot be resolved it will be set to 0. If the file
@@ -1394,7 +1395,7 @@ mapping parse_mysql_location()
   multiset(string) valid_keys =
     //  NOTE: "mysqladmin" not used but listed here since NT starter
     //  looks for it.
-    (< "basedir", "mysqld", "myisamchk", "mysqladmin" >);
+    (< "basedir", "mysqld", "myisamchk", "mysqladmin", "mysqldump" >);
   
   //  If the path file is missing we fall back on the traditional
   //  /mysql/ subdirectory. The file should contain lines on this
@@ -1466,6 +1467,19 @@ mapping parse_mysql_location()
       string binary = "myisamchk";
 #endif
       res->myisamchk =
+	check_paths( ({ combine_path(res->basedir, "libexec", binary),
+			combine_path(res->basedir, "bin", binary),
+			combine_path(res->basedir, "sbin", binary) }) );
+    }
+
+    //  Locate mysqldump
+    if (!res->mysqldump) {
+#ifdef __NT__
+      string binary = "mysqldump.exe";
+#else
+      string binary = "mysqldump";
+#endif
+      res->mysqldump =
 	check_paths( ({ combine_path(res->basedir, "libexec", binary),
 			combine_path(res->basedir, "bin", binary),
 			combine_path(res->basedir, "sbin", binary) }) );
@@ -2019,7 +2033,11 @@ protected void low_check_mysql(string myisamchk, string datadir,
 void low_start_mysql( string datadir,
 		      string uid )
 {
-  array MYSQL_GOOD_VERSION = ({ "5.0.*" });
+  array MYSQL_GOOD_VERSION = ({ "5.0.*",
+#ifdef YES_I_KNOW_WHAT_I_AM_DOING
+				"*"
+#endif
+  });
   array MYSQL_MAYBE_VERSION = ({ "5.1.*", "6.*" });
   
   void rotate_log(string path)
