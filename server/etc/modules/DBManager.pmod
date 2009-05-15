@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.86 2009/05/15 12:30:26 grubba Exp $
+// $Id: DBManager.pmod,v 1.87 2009/05/15 14:22:20 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -1936,7 +1936,7 @@ void create_db( string name, string path, int is_internal,
 
   if (default_charset) {
     query( "INSERT INTO dbs (name, path, local, default_charset) "
-	   "VALUES (%s, %s, %s, %s, NULL)", name,
+	   "VALUES (%s, %s, %s, %s)", name,
 	   (is_internal?name:path), (is_internal?"1":"0"), default_charset );
   } else {
     query( "INSERT INTO dbs (name, path, local) "
