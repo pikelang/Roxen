@@ -26,13 +26,19 @@ mapping|string parse( RequestID id )
   
   if( !id->variables->db )
   {
+    res += "<table width='100%'>\n"
+      "<tr><th colspan='2' align='left'>" + _(0, "Database") +
+      "</th><th align='left'>"+_(405,"Directory")+
+      "</th><th align='left'>"+_(459,"Date")+"</th></tr>\n";
     foreach( sort( indices( bks ) ), string bk )
     {
+#ifndef YES_I_KNOW_WHAT_I_AM_DOING
+      // Hide the Roxen-internal databases.
+      if ((<"roxen", "mysql">)[bk]) continue;
+#endif
       mapping done = ([ ]);
-      res += "<gtext scale='0.6'>"+bk+"</gtext>";
-      res += "<table>";
-      res += "<tr><td></td><td><b>"+_(405,"Directory")+"</b></td><td><b>"+
-	_(459,"Date")+"</b></td></tr>\n";
+      res += "<tr><td colspan='4'><gtext scale='0.6'>" +
+	Roxen.html_encode_string(bk) + "</gtext></td></tr>\n";
 
       foreach( bks[bk], mapping b )
       {
@@ -56,13 +62,14 @@ mapping|string parse( RequestID id )
       foreach( sort( values( done ) ), array r )
       {
 	res += "<tr>";
+	res += "  <td>&nbsp;</td>\n";
 	res += "  <td>"+r[3]+"</td>\n";
 	res += "  <td>"+r[1]+"</td>\n";
 	res += "  <td>"+isodate((int)r[0])+"</td>\n";
-	res += "</tr>";
+	res += "</tr>\n";
       }
-      res += "</table>";
     }
+    res += "</table>\n";
   }
   else
   {
@@ -132,7 +139,7 @@ mapping|string parse( RequestID id )
       
       res += "</blockquote><table width='100%'><tr><td>"
 	"<submit-gbutton2 name='ok'>"+_(201,"OK")+"</submit-gbutton2></td>\n"
-	"<td align=right><cf-cancel href=''/></td>\n</table>\n";
+	"<td align=right><cf-cancel href='backups.html'/></td></tr>\n</table>\n";
     }
   }
   if( !id->variables->db )
