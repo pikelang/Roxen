@@ -4,6 +4,23 @@
 //<locale-token project="roxen_config">LOCALE</locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
+//! Page definitions.
+//! @array
+//!   @elem array(string) 0..
+//!     Page definition.
+//!     @array
+//!       @elem string 0
+//!         Page identifier.
+//!       @elem string 1
+//!         URL.
+//!       @elem string 2
+//!         Permissions.
+//!       @elem zero 3
+//!         Userwants (disabled).
+//!       @elem string 4
+//!         Title.
+//!     @endarray
+//! @endarray
 array pages =
 ({
   ({ "dbs",         "./", "View Settings", 0, LOCALE(164, "Databases") }),
@@ -11,6 +28,10 @@ array pages =
      LOCALE(550, "Site Permissions") }),
   ({ "backups",      "backups.html",   "Edit Global Variables",   0,
      LOCALE(465, "Database Backups") }),
+#ifdef ENABLE_DB_BACKUPS
+  ({ "schedules",    "schedules.html",   "Edit Global Variables",   0,
+     LOCALE(0, "Backup schedules") }),
+#endif
 #ifdef MORE_DB_OPTS
   ({ "maintenance", "maintenance.html", "Edit Global Variables", 0,
      "MySQL Maintenance" }),
