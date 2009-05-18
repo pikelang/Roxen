@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.87 2009/05/15 14:22:20 grubba Exp $
+// $Id: DBManager.pmod,v 1.88 2009/05/18 08:56:21 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -2197,10 +2197,13 @@ CREATE TABLE dbs (
  name VARCHAR(64) NOT NULL PRIMARY KEY,
  path VARCHAR(100) NOT NULL, 
  local INT UNSIGNED NOT NULL,
- default_charset VARCHAR(64),
+ default_charset VARCHAR(64)"
+#ifdef ENABLE_DB_BACKUPS
+ #",
  schedule_id INT DEFAULT 1,
- INDEX schedule_id (schedule_id)
- )
+ INDEX schedule_id (schedule_id)"
+#endif
+ #")
  " );
   } else {
     if (catch { query("SELECT default_charset FROM dbs LIMIT 1"); }) {
