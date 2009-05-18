@@ -23,7 +23,7 @@ mapping|string parse( RequestID id )
 		(int)id->variables["time-" + schedule];
 	      int generations = (int)id->variables["generations-" + schedule];
 	      string method = id->variables["method-" + schedule];
-	      string dir = id->variables["dir-" + schedule];
+	      string dir = id->variables["directories-" + schedule];
 	      db->query("UPDATE db_schedules "
 			"   SET period = %d, "
 			"       offset = %d, "
