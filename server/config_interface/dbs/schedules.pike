@@ -23,7 +23,7 @@ mapping|string parse( RequestID id )
 		(int)id->variables["time-" + schedule];
 	      int generations = (int)id->variables["generations-" + schedule];
 	      string method = id->variables["method-" + schedule];
-	      string dir = id->variables["dir-" + schedule];
+	      string dir = id->variables["directory-" + schedule];
 	      db->query("UPDATE db_schedules "
 			"   SET period = %d, "
 			"       offset = %d, "
@@ -31,7 +31,8 @@ mapping|string parse( RequestID id )
 			"       method = %s, "
 			"       dir = %s "
 			" WHERE id = %s",
-			period, offset, generations, dir, method, schedule);
+			period, offset, generations, dir||"", method,
+			schedule);
 	    } else {
 	      db->query("UPDATE db_schedules "
 			"   SET period = 0 "
