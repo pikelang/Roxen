@@ -31,7 +31,7 @@ mapping|string parse( RequestID id )
 			"       method = %s, "
 			"       dir = %s "
 			" WHERE id = %s",
-			period, offset, generations, dir||"", method,
+			period, offset, method, generations, dir||"",
 			schedule);
 	    } else {
 	      db->query("UPDATE db_schedules "
