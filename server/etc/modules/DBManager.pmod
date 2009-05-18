@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.88 2009/05/18 08:56:21 grubba Exp $
+// $Id: DBManager.pmod,v 1.89 2009/05/18 13:43:59 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -1488,7 +1488,8 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
     db,
   });
 
-  werror("Starting mysqldump command: %O...\n", cmd);
+  werror("Backing up database %s to %s/dump.sql...\n", dbname, directory);
+  // werror("Starting mysqldump command: %O...\n", cmd);
 
   if (Process.create_process(cmd)->wait()) {
     error("Mysql dump command failed for DB %s.\n", dbname);
