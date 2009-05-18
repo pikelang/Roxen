@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.70 2009/05/18 13:24:00 grubba Exp $
+// $Id: DBManager.pmod,v 1.71 2009/05/18 13:44:05 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -1033,7 +1033,7 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
   string mysqldump;
   foreach(({ "libexec", "bin", "sbin" }), string dir) {
     foreach(({ "mysqldump.exe", "mysqldump" }), string bin) {
-      string path = combine_path(getcwd(), dir, bin);
+      string path = combine_path(getcwd(), "mysql", dir, bin);
       if (Stdio.is_file(path)) {
 	mysqldump = path;
 	break;
@@ -1043,8 +1043,7 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
   }
   if (!mysqldump) {
     error("Mysqldump backup method not supported "
-	  "without a mysqldump binary.\n"
-	  "%O\n", roxenloader->parse_mysql_location());
+	  "without a mysqldump binary.\n");
   }
 
   if( !directory )
@@ -1068,7 +1067,7 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
   if (sizeof(arr) > 1) {
     // User and/or password specified
     host = arr[-1];
-    arr = (arr[..<1]*"@")/":";
+    arr = (arr[..sizeof(arr)-2]*"@")/":";
     if (!user && sizeof(arr[0])) {
       user = arr[0];
     }
@@ -1081,7 +1080,7 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
   }
   arr = host/"/";
   if (sizeof(arr) > 1) {
-    host = arr[..<1]*"/";
+    host = arr[..sizeof(arr)-2]*"/";
     db = arr[-1];
   } else {
     error("No database specified in DB-URL for DB alias %s.\n", dbname);
@@ -1123,7 +1122,8 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
     db,
   });
 
-  werror("Starting mysqldump command: %O...\n", cmd);
+  werror("Backing up database %s to %s/dump.sql...\n", dbname, directory);
+  // werror("Starting mysqldump command: %O...\n", cmd);
 
   if (Process.create_process(cmd)->wait()) {
     error("Mysql dump command failed for DB %s.\n", dbname);
