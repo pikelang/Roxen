@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.89 2009/05/18 13:43:59 grubba Exp $
+// $Id: DBManager.pmod,v 1.90 2009/05/18 13:47:42 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -1505,9 +1505,9 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
 	   dbname, table, directory, time(), tag );
   }
 
-  if (Process.create_process(({ "bzip2", "-9", directory + "/dump.sql" }))->
+  if (Process.create_process(({ "bzip2", "-f9", directory + "/dump.sql" }))->
       wait() &&
-      Process.create_process(({ "gzip", "-9", directory + "/dump.sql" }))->
+      Process.create_process(({ "gzip", "-f9", directory + "/dump.sql" }))->
       wait()) {
     werror("Failed to compress the database dump.\n");
   }
