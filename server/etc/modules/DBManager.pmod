@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.69 2008/06/11 17:21:39 jonasw Exp $
+// $Id: DBManager.pmod,v 1.70 2009/05/18 13:24:00 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -109,6 +109,21 @@ private
     low_ensure_has_users( db, c, "127.0.0.1", password );
   }
 
+  static void execute_sql_script(Sql.Sql db, string script,
+				 int|void quiet)
+  {
+    // Split on semi-colon, but not inside strings...
+    array(string) queries =
+      map(Parser.C.split(script)/({";"}), `*, "");
+    foreach(queries[..sizeof(queries)-2], string q) {
+      mixed err = catch {db->query(q);};
+      if (err && !quiet) {
+	// Complain about failures only if they're not expected.
+	master()->handle_error(err);
+      }
+    }
+  }
+
   static void low_set_user_permissions( Configuration c, string name,
 					int level, string host,
 					string|void password )
@@ -214,20 +229,29 @@ private
   }
 
   mapping(string:mapping(string:string)) sql_url_cache = ([]);
+
+  mapping(string:mixed) get_db_url_info(string db)
+  {
+    mapping(string:mixed) d = sql_url_cache[ db ];
+    if( !d )
+    {
+      array(mapping(string:string)) res;
+      res = query("SELECT path,local FROM dbs WHERE name=%s", db );
+      if( !sizeof( res ) )
+	return 0;
+      sql_url_cache[db] = d = res[0];
+    }
+    return d;
+  }
+
   Sql.Sql low_get( string user, string db, void|int reuse_in_thread,
 		   void|string charset)
   {
     if( !user )
       return 0;
     mixed res;
-    mapping(string:mixed) d = sql_url_cache[ db ];
-    if( !d )
-    {
-      res = query("SELECT path,local FROM dbs WHERE name=%s", db );
-      if( !sizeof( res ) )
-	return 0;
-      sql_url_cache[db] = d = res[0];
-    }
+    mapping(string:mixed) d = get_db_url_info(db);
+    if( !d ) return 0;
 
     if( (int)d->local )
       return connect_to_my_mysql( user, db, reuse_in_thread, charset );
@@ -855,9 +879,16 @@ array(mapping) restore( string dbname, string directory, string|void todb,
 //! Restore the contents of the database dbname from the backup
 //! directory. New tables will not be deleted.
 //!
+//! This function supports restoring both backups generated with @[backup()]
+//! and with @[dump()].
+//!
 //! The format of the result is as for the second element in the
 //! return array from @[backup]. If todb is specified, the backup will
 //! be restored in todb, not in dbname.
+//!
+//! @note
+//!   When restoring backups generated with @[dump()] the @[tables]
+//!   parameter is ignored.
 {
   Sql.Sql db = cached_get( todb || dbname );
 
@@ -868,6 +899,37 @@ array(mapping) restore( string dbname, string directory, string|void todb,
     error("Illegal database\n");
 
   directory = combine_path( getcwd(), directory );
+
+  string fname;
+
+  if (Stdio.is_file(fname = directory + "/dump.sql") ||
+      Stdio.is_file(fname = directory + "/dump.sql.bz2") ||
+      Stdio.is_file(fname = directory + "/dump.sql.gz")) {
+    // mysqldump-style backup.
+
+    Stdio.File raw = Stdio.File(fname, "r");
+    Stdio.File cooked = raw;
+    if (has_suffix(fname, ".bz2")) {
+      cooked = Stdio.File();
+      Process.create_process(({ "bzip2", "-cd" }),
+			     ([ "stdout":cooked->pipe(Stdio.PROP_IPC),
+				"stdin":raw,
+			     ]));
+      raw->close();
+    } else if (has_suffix(fname, ".gz")) {
+      cooked = Stdio.File();
+      Process.create_process(({ "gzip", "-cd" }),
+			     ([ "stdout":cooked->pipe(Stdio.PROP_IPC),
+				"stdin":raw,
+			     ]));
+      raw->close();
+    }
+    report_notice("Restoring backup file %s to database %s...\n",
+		  fname, todb || dbname);
+    execute_sql_script(db, cooked->read());
+    // FIXME: Return a proper result.
+    return ({});
+  }
 
   array q =
     tables ||
@@ -885,25 +947,53 @@ array(mapping) restore( string dbname, string directory, string|void todb,
 }
 
 void delete_backup( string dbname, string directory )
-//! Delete a backup previously done with @[backup].
+//! Delete a backup previously done with @[backup()] or @[dump()].
 {
   // 1: Delete all backup files.
-  directory = combine_path( getcwd(), directory );
-
-  foreach( query( "SELECT tbl FROM db_backups WHERE db=%s AND directory=%s",
-		  dbname, directory )->tbl, string table )
+  array(string) tables =
+    query( "SELECT tbl FROM db_backups WHERE db=%s AND directory=%s",
+	   dbname, directory )->tbl;
+  if (!sizeof(tables)) {
+    // Backward compat...
+    directory = combine_path( getcwd(), directory );
+    tables =
+      query( "SELECT tbl FROM db_backups WHERE db=%s AND directory=%s",
+	     dbname, directory )->tbl;
+  }
+  foreach( tables, string table )
   {
     rm( directory+"/"+table+".frm" );
     rm( directory+"/"+table+".MYD" );
   }
+  rm( directory+"/dump.sql" );
+  rm( directory+"/dump.sql.bz2" );
+  rm( directory+"/dump.sql.gz" );
+  rm( directory );
+
   // 2: Delete the information about this backup.
   query( "DELETE FROM db_backups WHERE db=%s AND directory=%s",
 	 dbname, directory );
 }
 
-array(string|array(mapping)) backup( string dbname, string directory )
-//! Make a backup of all data in the specified database.
+#ifdef ENABLE_DB_BACKUPS
+array(string|array(mapping)) dump(string dbname, string|void directory,
+				  string|void tag)
+//! Make a backup using @tt{mysqldump@} of all data in the specified database.
 //! If a directory is not specified, one will be created in $VARDIR.
+//!
+//! @param dbname
+//!   Database to backup.
+//! @param directory
+//!   Directory to store the backup in.
+//!   Defaults to a directory under @tt{$VARDIR@}.
+//! @param tag
+//!   Flag indicating the subsystem that requested the backup
+//!   (eg @[timed_backup()] sets it to @expr{"timed_backup"@}.
+//!   This flag is used to let the backup generation cleanup
+//!   differentiate between its backups and others.
+//!
+//! This function is similar to @[backup()], but uses a different
+//! storage format, and supports backing up external (MySQL) databases.
 //!
 //! @returns
 //!   Returns an array with the following structure:
@@ -931,7 +1021,189 @@ array(string|array(mapping)) backup( string dbname, string directory )
 //!   @endarray
 //!
 //! @note
+//!   This function currently only works for MySQL databases.
+//!
+//! @seealso
+//!   @[backup()]
+{
+  mapping(string:mixed) db_url_info = get_db_url_info(dbname);
+  if (!db_url_info)
+    error("Illegal database.\n");
+
+  string mysqldump;
+  foreach(({ "libexec", "bin", "sbin" }), string dir) {
+    foreach(({ "mysqldump.exe", "mysqldump" }), string bin) {
+      string path = combine_path(getcwd(), dir, bin);
+      if (Stdio.is_file(path)) {
+	mysqldump = path;
+	break;
+      }
+    }
+    if (mysqldump) break;
+  }
+  if (!mysqldump) {
+    error("Mysqldump backup method not supported "
+	  "without a mysqldump binary.\n"
+	  "%O\n", roxenloader->parse_mysql_location());
+  }
+
+  if( !directory )
+    directory = roxen_path( "$VARDIR/"+dbname+"-"+isodate(time(1)) );
+  directory = combine_path( getcwd(), directory );
+
+  string db_url = db_url_info->path;
+
+  if (db_url_info->local) {
+    db_url = replace(roxenloader->my_mysql_path, ({ "%user%", "%db%" }),
+		     ({ "ro", dbname || "mysql" }));
+  }
+  if (!has_prefix(db_url, "mysql://"))
+    error("Currently only supports MySQL databases.\n");
+  string host = (db_url/"://")[1..]*"://";
+  string port;
+  string user;
+  string password;
+  string db;
+  array(string) arr = host/"@";
+  if (sizeof(arr) > 1) {
+    // User and/or password specified
+    host = arr[-1];
+    arr = (arr[..<1]*"@")/":";
+    if (!user && sizeof(arr[0])) {
+      user = arr[0];
+    }
+    if (!password && (sizeof(arr) > 1)) {
+      password = arr[1..]*":";
+      if (password == "") {
+	password = 0;
+      }
+    }
+  }
+  arr = host/"/";
+  if (sizeof(arr) > 1) {
+    host = arr[..<1]*"/";
+    db = arr[-1];
+  } else {
+    error("No database specified in DB-URL for DB alias %s.\n", dbname);
+  }
+  arr = host/":";
+  if (sizeof(arr) > 1) {
+    port = arr[1..]*":";
+    host = arr[0];
+  }
+
+  // Time to build the command line...
+  array(string) cmd = ({ mysqldump, "--add-drop-table", "--all",
+			 "--complete-insert", "--compress",
+			 "--extended-insert", "--hex-blob",
+			 "--quick", "--quote-names" });
+  if ((host == "") || (host == "localhost")) {
+    // Socket.
+    if (port) {
+      cmd += ({ "--socket=" + port });
+    }
+  } else {
+    // Hostname.
+    cmd += ({ "--host=" + host });
+    if (port) {
+      cmd += ({ "--port=" + port });
+    }
+  }
+  if (user) {
+    cmd += ({ "--user=" + user });
+  }
+  if (password) {
+    cmd += ({ "--password=" + password });
+  }
+
+  mkdirhier( directory+"/" );
+
+  cmd += ({
+    "--result-file=" + directory + "/dump.sql",
+    db,
+  });
+
+  werror("Starting mysqldump command: %O...\n", cmd);
+
+  if (Process.create_process(cmd)->wait()) {
+    error("Mysql dump command failed for DB %s.\n", dbname);
+  }
+
+  foreach( db_tables( dbname ), string table )
+  {
+    query( "DELETE FROM db_backups WHERE "
+	   "db=%s AND directory=%s AND tbl=%s",
+	   dbname, directory, table );
+    query( "INSERT INTO db_backups (db,tbl,directory,whn,tag) "
+	   "VALUES (%s,%s,%s,%d,%s)",
+	   dbname, table, directory, time(), tag );
+  }
+
+  if (Process.create_process(({ "bzip2", "-9", directory + "/dump.sql" }))->
+      wait() &&
+      Process.create_process(({ "gzip", "-9", directory + "/dump.sql" }))->
+      wait()) {
+    werror("Failed to compress the database dump.\n");
+  }
+
+  // FIXME: Fix the returned table_info!
+  return ({ directory,
+	    map(db_tables(dbname),
+		lambda(string table) {
+		  return ([ "Table":table,
+			    "Msg_type":"status",
+			    "Msg_text":"Backup ok",
+		  ]);
+		}),
+  });
+}
+#endif
+
+array(string|array(mapping)) backup( string dbname, string|void directory,
+				     string|void tag)
+//! Make a backup of all data in the specified database.
+//! If a directory is not specified, one will be created in $VARDIR.
+//!
+//! @param dbname
+//!   (Internal) database to backup.
+//! @param directory
+//!   Directory to store the backup in.
+//!   Defaults to a directory under @tt{$VARDIR@}.
+//! @param tag
+//!   Flag indicating the subsystem that requested the backup
+//!   (eg @[timed_backup()] sets it to @expr{"timed_backup"@}.
+//!   This flag is used to let the backup generation cleanup
+//!   differentiate between its backups and others.
+//!
+//! @returns
+//!   Returns an array with the following structure:
+//!   @array
+//!   	@elem string directory
+//!   	  Name of the directory.
+//!   	@array
+//!   	  @elem mapping(string:string) table_info
+//!   	    @mapping
+//!   	      @member string "Table"
+//!   		Table name.
+//!   	      @member string "Msg_type"
+//!   		one of:
+//!   		@string
+//!   		  @value "status"
+//!   		  @value "error"
+//!   		  @value "info"
+//!   		  @value "warning"
+//!   		@endstring
+//!   	      @member string "Msg_text"
+//!   		The message.
+//!   	    @endmapping
+//!   	@endarray
+//!   @endarray
+//!
+//! @note
 //!   Currently this function only works for internal databases.
+//!
+//! @seealso
+//!   @[dump()]
 {
   Sql.Sql db = cached_get( dbname );
 
@@ -949,14 +1221,21 @@ array(string|array(mapping)) backup( string dbname, string directory )
     array res = ({});
     foreach( tables, string table )
     {
+      res += db->query( "BACKUP TABLE "+table+" TO %s",directory);
       query( "DELETE FROM db_backups WHERE "
 	     "db=%s AND directory=%s AND tbl=%s",
 	     dbname, directory, table );
-      query( "INSERT INTO db_backups (db,tbl,directory,whn) "
-	     "VALUES (%s,%s,%s,%d)",
-	     dbname, table, directory, time() );
-      res += db->query( "BACKUP TABLE "+table+" TO %s",directory);
+      if (tag) {
+	query( "INSERT INTO db_backups (db,tbl,directory,whn,tag) "
+	       "VALUES (%s,%s,%s,%d,%s)",
+	       dbname, table, directory, time(), tag );
+      } else {
+	query( "INSERT INTO db_backups (db,tbl,directory,whn,tag) "
+	       "VALUES (%s,%s,%s,%d,NULL)",
+	       dbname, table, directory, time() );
+      }
     }
+
     return ({ directory,res });
   }
   else
@@ -966,6 +1245,202 @@ array(string|array(mapping)) backup( string dbname, string directory )
   }
 }
 
+#ifdef ENABLE_DB_BACKUPS
+//! Call-out id's for backup schedules.
+protected mapping(int:mixed) backup_cos = ([]);
+
+//! Perform a scheduled database backup.
+//!
+//! @param schedule_id
+//!   Database to backup.
+//!
+//! This function is called by the database backup scheduler
+//! to perform the scheduled backup.
+//!
+//! @seealso
+//!   @[set_backup_timer()]
+void timed_backup(int schedule_id)
+{
+  mixed co = m_delete(backup_cos, schedule_id);
+  if (co) remove_call_out(co);
+
+  array(mapping(string:string))
+    backup_info = query("SELECT schedule, period, offset, dir, "
+			"       generations, method "
+			"  FROM db_schedules "
+			" WHERE id = %d "
+			"   AND period > 0 ",
+			schedule_id);
+  if (!sizeof(backup_info)) return;	// Timed backups disabled.
+  string base_dir = backup_info[0]->dir || "";
+  if (!has_prefix(base_dir, "/")) {
+    base_dir = "$VARDIR/" + base_dir;
+  }
+
+  report_notice("Performing database backup according to schedule %s...\n",
+		backup_info[0]->schedule);
+
+  foreach(query("SELECT name "
+		"  FROM dbs "
+		" WHERE schedule_id = %d",
+		schedule_id)->name, string db) {
+    mixed err = catch {
+	mapping lt = localtime(time(1));
+	string dir = roxen_path(base_dir + "/" + db + "-" + isodate(time(1)) +
+				sprintf("T%02d-%02d", lt->hour, lt->min));
+
+	switch(backup_info[0]->method) {
+	default:
+	  report_error("Unsupported database backup method: %O for DB %O\n"
+		       "Falling back to the default \"mysqldump\" method.\n",
+		       backup_info[0]->method, db);
+	  // FALL_THROUGH
+	case "mysqldump":
+	  dump(db, dir, "timed_backup");
+	  break;
+	case "backup":
+	  backup(db, dir, "timed_backup");
+	  break;
+	}
+	int generations = (int)backup_info[0]->generations;
+	if (generations) {
+	  foreach(query("SELECT directory FROM db_backups "
+			" WHERE db = %s "
+			"   AND tag = %s "
+			" GROUP BY directory "
+			" ORDER BY whn DESC "
+			" LIMIT %d, 65536",
+			db, "timed_backup", generations)->directory,
+		  string dir) {
+	    report_notice("Removing old backup %O of DB %O...\n",
+			  dir, db);
+	    delete_backup(db, dir);
+	  }
+	}
+      };
+    if (err) {
+      master()->handle_error(err);
+      err = catch {
+	  if (has_prefix(err[0], "Unsupported ")) {
+	    report_error("Disabling timed backup of database %s.\n", db);
+	    query("UPDATE dbs "
+		  "   SET schedule_id = NULL "
+		  " WHERE name = %s ",
+		  db);
+	  }
+	};
+      if (err) {
+	master()->handle_error(err);
+      }
+    }
+  }
+
+  report_notice("Database backup according to schedule %s completed.\n",
+		backup_info[0]->schedule);
+
+  start_backup_timer(schedule_id, (int)backup_info[0]->period,
+		     (int)backup_info[0]->offset);
+}
+
+//! Set (and restart) a backup schedule.
+//!
+//! @param schedule_id
+//!   Backup schedule to configure.
+//! @param period
+//!   Backup interval. @expr{0@} (zero) to disable automatic backups.
+//! @param offset
+//!   Backup interval offset.
+//!
+//! See @[start_backup_timer()] for details about @[period] and @[offset].
+//!
+//! @seealso
+//!   @[start_backup_timer()]
+void low_set_backup_timer(int schedule_id, int period, int offset)
+{
+  query("UPDATE db_schedules "
+	"   SET period = %d, "
+	"       offset = %d "
+	" WHERE id = %d",
+	period, offset, schedule_id);
+
+  start_backup_timer(schedule_id, period, offset);
+}
+
+//! Set (and restart) a backup schedule.
+//!
+//! @param schedule_id
+//!   Backup schedule to configure.
+//! @param period
+//!   Backup interval in seconds.
+//!   Typically @expr{604800@} (weekly) or @expr{86400@} (dayly),
+//!   or @expr{0@} (zero - disabled).
+//! @param weekday
+//!   Day of week to perform backups on (if weekly backups).
+//!   @expr{0@} (zero) or @expr{7@} for Sunday.
+//! @param tod
+//!   Time of day in seconds to perform the backup.
+//!
+//! @seealso
+//!   @[low_set_backup_timer()]
+void set_backup_timer(int schedule_id, int period, int weekday, int tod)
+{
+  low_set_backup_timer(schedule_id, period, tod + ((weekday + 3)%7)*86400);
+}
+
+//! (Re-)start the timer for a backup schedule.
+//!
+//! @param schedule_id
+//!   Backup schedule to (re-)start.
+//! @param period
+//!   Backup interval in seconds (example: @expr{604800@} for weekly).
+//!   Specifying a period of @expr{0@} (zero) disables the backup timer
+//!   for the database temporarily (until the next call or server restart).
+//! @param offset
+//!   Offset in seconds from Thursday 1970-01-01 00:00:00 local time
+//!   for the backup period (example: @expr{266400@} (@expr{3*86400 + 2*3600@})
+//!   for Sundays at 02:00).
+//!
+//! @seealso
+//!   @[timed_backup()], @[start_backup_timers()]
+void start_backup_timer(int schedule_id, int period, int offset)
+{
+  mixed co = m_delete(backup_cos, schedule_id);
+  if (co) remove_call_out(co);
+
+  if (!period) return;
+
+  int t = -time(1);
+  mapping(string:int) lt = localtime(-t);
+  t += offset + lt->timezone;
+  t %= period;
+
+  if (!t) t += period;
+
+  backup_cos[schedule_id] =
+    roxenp()->background_run(t, timed_backup, schedule_id);
+}
+
+//! (Re-)start backup timers for all databases.
+//!
+//! This function calls @[start_backup_timer()] for
+//! all configured databases.
+//!
+//! @seealso
+//!   @[start_backup_timer()]
+void start_backup_timers()
+{
+  foreach(query("SELECT id, schedule, period, offset "
+		"  FROM db_schedules "
+		" WHERE period > 0 "
+		" ORDER BY id ASC"),
+	  mapping(string:string) backup_info) {
+    report_notice("Starting the backup timer for the %s backup schedule.\n",
+		  backup_info->schedule);
+    start_backup_timer((int)backup_info->id, (int)backup_info->period,
+		       (int)backup_info->offset);
+  }
+}
+#endif
 
 void rename_db( string oname, string nname )
 //! Rename a database. Please note that the actual data (in the case of
@@ -1102,6 +1577,11 @@ void create_db( string name, string path, int is_internal,
 
   query( "INSERT INTO dbs (name,path,local) VALUES (%s,%s,%s)", name,
 	 (is_internal?name:path), (is_internal?"1":"0") );
+#ifdef ENABLE_DB_BACKUPS
+  if (!is_internal && !has_prefix(path, "mysql://")) {
+    query("UPDATE dbs SET schedule_id = NULL WHERE name = %s", name);
+  }
+#endif
   if( is_internal )
     catch(query( "CREATE DATABASE `"+name+"`"));
   changed();
@@ -1255,7 +1735,15 @@ static void create()
 	  " tbl varchar(80) not null, "
 	  " directory varchar(255) not null, "
 	  " whn int unsigned not null, "
+	  " tag varchar(20) null, "
 	  " INDEX place (db,directory))");
+
+    if (catch { query("SELECT tag FROM db_backups LIMIT 1"); }) {
+      // The tag field is missing.
+      // Upgraded Roxen?
+      query("ALTER TABLE db_backups "
+	    "  ADD tag varchar(20) null");
+    }
        
   query("CREATE TABLE IF NOT EXISTS db_groups ("
 	" db varchar(80) not null, "
@@ -1279,6 +1767,25 @@ static void create()
 	"  INDEX place (db,tbl), "
 	"  INDEX own (conf,module) "
 	")");
+
+#ifdef ENABLE_DB_BACKUPS
+  query("CREATE TABLE IF NOT EXISTS db_schedules ("
+	"id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, "
+	"schedule VARCHAR(255) NOT NULL, "
+	"dir VARCHAR(255) NULL, "
+	"period INT UNSIGNED NOT NULL DEFAULT 604800, "
+	"offset INT UNSIGNED NOT NULL DEFAULT 266400, "
+	"generations INT UNSIGNED NOT NULL DEFAULT 1, "
+	"method VARCHAR(20) NOT NULL DEFAULT 'mysqldump')");
+
+  if (!sizeof(query("SELECT schedule "
+		    "  FROM db_schedules "
+		    " WHERE id = 1"))) {
+    query("INSERT INTO db_schedules "
+	  "       (id, schedule) "
+	  "VALUES (1, 'Default')");
+  }
+#endif
     
   multiset q = (multiset)query( "SHOW TABLES" )->Tables_in_roxen;
   if( !q->dbs )
@@ -1287,7 +1794,13 @@ static void create()
 CREATE TABLE dbs (
  name VARCHAR(64) NOT NULL PRIMARY KEY,
  path VARCHAR(100) NOT NULL, 
- local INT UNSIGNED NOT NULL )
+ local INT UNSIGNED NOT NULL"
+#ifdef ENABLE_DB_BACKUPS
+ #",
+ schedule_id INT DEFAULT 1,
+ INDEX schedule_id (schedule_id)"
+#endif
+ #")
  " );
     create_db( "local",  0, 1 );
     create_db( "roxen",  0, 1 );
@@ -1296,6 +1809,27 @@ CREATE TABLE dbs (
     is_module_db( 0, "local",
 		  "The local database contains data that "
 		  "should not be shared between multiple-frontend servers" );
+    is_module_db( 0, "roxen",
+		  "The roxen database contains data about the other databases "
+		  "in the server." );    
+    is_module_db( 0, "mysql",
+		  "The mysql database contains data about access "
+		  "rights for the internal MySQL database." );
+#ifdef ENABLE_DB_BACKUPS
+  } else {
+    if (catch { query("SELECT schedule_id FROM dbs LIMIT 1"); }) {
+      // The schedule_id field is missing.
+      // Upgraded Roxen?
+      query("ALTER TABLE dbs "
+	    "  ADD schedule_id INT DEFAULT 1, "
+	    "  ADD INDEX schedule_id (schedule_id)");
+      // Don't attempt to backup non-mysql databases.
+      query("UPDATE dbs "
+	    "   SET schedule_id = NULL "
+	    " WHERE local = 0 "
+	    "   AND path NOT LIKE 'mysql://%'");
+    }
+#endif
   }
   
   if( !q->db_permissions )
@@ -1328,6 +1862,11 @@ CREATE TABLE db_permissions (
       query("INSERT INTO db_backups (db,tbl,directory,whn) "
 	    "VALUES ('docs','docs','"+getcwd()+"/etc','"+time()+"')");
   }
+
+#ifdef ENABLE_DB_BACKUPS
+  // Start the backup timers when we have finished booting.
+  call_out(start_backup_timers, 0);
+#endif
   
   return;
   };
