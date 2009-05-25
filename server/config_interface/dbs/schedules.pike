@@ -106,7 +106,7 @@ mapping|string parse( RequestID id )
       "<td><default name='method-" + schedule->id +
       "' value='" + schedule->method + "'>"
       "<select name='method-" + schedule->id + "'>\n"
-      "<option value='mysqldump'>" + _(0, "MySQLDump (recomended)") + "</option>\n"
+      "<option value='mysqldump'>" + _(0, "MySQLDump (recommended)") + "</option>\n"
       "<option value='backup'>" + _(0, "Backup (internal databases only)") + "</option>\n"
       "</select></default></td>\n"
       "</tr>\n"
