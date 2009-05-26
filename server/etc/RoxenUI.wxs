@@ -31,7 +31,7 @@
     <CustomAction Id="FallbackMysqlBase" Property="MYSQLBASE"
       Value="[FALLBACKMYSQLBASE]" Execute="immediate" />
     <CustomAction Id="CreateServerVersion" BinaryKey="RoxenInstaller"
-      VBScriptCall="CreateServerVersion" Execure="deferred" Impersonate="no" />
+      VBScriptCall="CreateServerVersion" Execute="deferred" Impersonate="no" />
     <CustomAction Id="SetCreateConfigInterface"
       Property="CreateConfigInterface"
       Value="[SERVERDIR];[SERVER_NAME];[SERVER_PROTOCOL];[SERVER_PORT];[ADM_USER];[ADM_PASS1]"
