@@ -20,6 +20,8 @@
       Value="[TARGETDIR]" Execute="immediate" />
     <CustomAction Id="RemoveOldService" BinaryKey="RoxenInstaller"
       VBScriptCall="RemoveOldService" Execute="deferred" Impersonate="no" />
+    <CustomAction Id="StartRoxenService" BinaryKey="RoxenInstaller"
+      VBScriptCall="StartRoxenService" Execute="commit" Impersonate="no" />
     <CustomAction Id="FallbackMysqldExe" Property="MYSQLDEXE"
       Value="[FALLBACKMYSQLDEXE]" Execute="immediate" />
     <CustomAction Id="FallbackMyisamchkExe" Property="MYISAMCHKEXE"
@@ -28,6 +30,8 @@
       Value="[FALLBACKMYSQLADMINEXE]" Execute="immediate" />
     <CustomAction Id="FallbackMysqlBase" Property="MYSQLBASE"
       Value="[FALLBACKMYSQLBASE]" Execute="immediate" />
+    <CustomAction Id="CreateServerVersion" BinaryKey="RoxenInstaller"
+      VBScriptCall="CreateServerVersion" Execure="deferred" Impersonate="no" />
     <CustomAction Id="SetCreateConfigInterface"
       Property="CreateConfigInterface"
       Value="[SERVERDIR];[SERVER_NAME];[SERVER_PROTOCOL];[SERVER_PORT];[ADM_USER];[ADM_PASS1]"
@@ -1194,6 +1198,7 @@ Click "Next" to start the installation.</Text>
       <ProgressText Action="ConsoleStartServer">Starting Roxen</ProgressText>
       <ProgressText Action="CostFinalize">Computing space requirements</ProgressText>
       <ProgressText Action="CostInitialize">Computing space requirements</ProgressText>
+      <ProgressText Action="CreateServerVersion" Template="File: [TARGETDIR]\configurations\server_version">Creating administration interface</ProgressText>
       <ProgressText Action="CreateConfigInterface" Template="File: [TARGETDIR]\configurations\AdministrationInterface">Creating administration interface</ProgressText>
       <ProgressText Action="CreateEnviroment" Template="File: [TARGETDIR]\local\environment.ini">Creating environment.ini</ProgressText>
       <ProgressText Action="CreateMysqlLocation" Template="File: [SERVERDIR]\mysql-location.txt">Creating mysql-location.txt</ProgressText>
@@ -1466,7 +1471,8 @@ Click "Next" to start the installation.</Text>
       <StopServices Sequence="1900">VersionNT AND INSTALL_SERVICE="1"</StopServices>
       <DeleteServices Sequence="2000">VersionNT AND INSTALL_SERVICE="1"</DeleteServices>
       <InstallServices Sequence="5800">VersionNT AND INSTALL_SERVICE="1"</InstallServices>
-      <StartServices Sequence="5900">VersionNT AND INSTALL_SERVICE="1" AND START_SERVER="1"</StartServices>
+      <!-- <StartServices Sequence="5900">VersionNT AND INSTALL_SERVICE="1" AND START_SERVER="1"</StartServices> -->
+      <Custom Action="StartRoxenService" Sequence="5901">VersionNT AND INSTALL_SERVICE="1" AND START_SERVER="1"</Custom>
       <Custom Action="SetRemoveOldService" After="InstallFiles">REMOVE="" AND INSTALL_SERVICE="1"</Custom>
       <Custom Action="RemoveOldService" After="SetRemoveOldService">REMOVE="" AND INSTALL_SERVICE="1"</Custom>
       <Custom Action="FallbackMysqldExe" Sequence="5100">MYSQLDEXE=""</Custom>
@@ -1480,6 +1486,7 @@ Click "Next" to start the installation.</Text>
       <Custom Action="SetCreateEnvironment" After="CreatePikeLocation">REMOVE=""</Custom>
       <Custom Action="CreateEnvironment" After="SetCreateEnvironment">REMOVE=""</Custom>
       <Custom Action="DontStartServer" After="CreateEnvironment">MYSQLDEXE=""</Custom>
+      <!-- <Custom Action="CreateServerVersion" Before="SetCreateConfigInterface">REMOVE=""</Custom> -->
       <Custom Action="SetCreateConfigInterface" Before="CreateConfigInterface">REMOVE=""</Custom>
       <Custom Action="CreateConfigInterface" Before="StartServices">(REMOVE="") AND (OLDCONFIGDIR="")</Custom>
       <Custom Action="ConsoleStartServer" After="StartServices">((NOT VersionNT) OR INSTALL_SERVICE&lt;&gt;"1") AND START_SERVER="1"</Custom>

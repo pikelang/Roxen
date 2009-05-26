@@ -1,5 +1,5 @@
 '
-' $Id: Win32Installer.vbs,v 1.25 2009/04/23 15:38:47 jonasw Exp $
+' $Id: Win32Installer.vbs,v 1.26 2009/05/26 14:15:37 grubba Exp $
 '
 ' Companion file to RoxenUI.wxs with custom actions.
 '
@@ -20,6 +20,26 @@ Function RemoveOldService()
   WshShell.Run """" & targetdir & "ntstart"" --remove", 0, True
 
   RemoveOldService = 1
+End Function
+
+' Start the Roxen Service.
+'
+' This kludge is needed to delay the start of the service until
+' after COMMIT, which is needed to allow the side-by-side assemblies
+' to complete installation before we try to use them.
+'
+' Why couldn't MS do the senisible thing and have inodes instead of
+' having kludges upon kludges to work around their design bugs?
+' Both side-by-side assemblies and their activation after COMMIT
+' are kludges around the lack of inodes.
+Function StartRoxenService()
+  Dim WshShell
+
+  Set WshShell = CreateObject("WScript.Shell")
+
+  WshShell.Run "NET START RoxenService", 0, True
+
+  StartRoxenService = 1
 End Function
 
 ' At call time the CustomActionData property has been set to
@@ -77,7 +97,7 @@ Function CreateMysqlLocation()
   Set fso = CreateObject("Scripting.FileSystemObject")
 
   Set tf = fso.CreateTextFile(serverdir & "mysql-location.txt", True)
-  tf.writeLine("# Created by $Id: Win32Installer.vbs,v 1.25 2009/04/23 15:38:47 jonasw Exp $")
+  tf.writeLine("# Created by $Id: Win32Installer.vbs,v 1.26 2009/05/26 14:15:37 grubba Exp $")
   tf.writeLine("# DEBUG: " & Session.Property("CustomActionData"))
   tf.writeLine("# DEBUG: " & rest & ";")
   tf.writeLine("")
