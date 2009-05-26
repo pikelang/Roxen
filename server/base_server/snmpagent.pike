@@ -1,9 +1,8 @@
 /*
- * $Id: snmpagent.pike,v 1.25 2009/05/07 14:15:53 mast Exp $
+ * $Id: snmpagent.pike,v 1.26 2009/05/26 14:26:15 mast Exp $
  *
  * The Roxen SNMP agent
- * Contributed by Honza Petrous, hop@unibase.cz
- * Copyright © 2001 - 2009 Roxen IS
+ * Copyright © 2001, Honza Petrous, hop@unibase.cz
  *
  * Author: Honza Petrous
  * January 2001
@@ -777,7 +776,7 @@ class SubMIBManager {
 
 //! External function for MIB object 'system.sysDescr'
 array get_description() {
-  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.25 $"/" ")[1]+" (devel. rel.)");
+  return OBJ_STR("Roxen Webserver SNMP agent v"+("$Revision: 1.26 $"/" ")[1]+" (devel. rel.)");
 }
 
 //! External function for MIB object 'system.sysOID'
