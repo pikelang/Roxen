@@ -3,9 +3,8 @@ inherit "socket";
 #include <module.h>
 
 /*
- * This software is (C) 1998 Francesco Chemolli,
- * and is freely availible under the terms of the
- * GNU General Public License, version 2.
+ * This software is (C) 1998 Francesco Chemolli.
+ * See COPYING in the server directory for license information.
  * This software comes with NO WARRANTY of ANY KIND, EITHER IMPLICIT
  * OR EXPLICIT. Use at your own risk.
  *
@@ -25,7 +24,7 @@ inherit "socket";
  * thing...
  */
 
-constant cvs_version="$Id: port_forwarder.pike,v 1.13 2008/06/24 10:57:18 jonasw Exp $";
+constant cvs_version="$Id: port_forwarder.pike,v 1.14 2009/05/26 14:20:25 mast Exp $";
 
 
 
@@ -33,8 +32,8 @@ constant module_type = MODULE_ZERO;
 constant module_name = "TCP Port Forwarder: ";
 constant module_doc  = "A basic port-forwarder"
   "&copy; 1998 Francesco Chemolli "
-  "&lt;kinkie@kame.usr.dsi.unimi.it&gt;,<br />\nfreely distributed "
-  "under the terms of the GNU General Public License, version 2";
+  "&lt;kinkie@kame.usr.dsi.unimi.it&gt;,<br />\n"
+  "See COPYING in the server directory for license information.";
 constant module_unique  = 0;
 
 multiset(Connection) connections=(<>);

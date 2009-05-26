@@ -2,10 +2,7 @@
 // Copyright (c) 2001, Stephen R. van den Berg, The Netherlands.
 //                     <srb@cuci.nl>
 //
-// This module is open source software; you can redistribute it and/or
-// modify it under the terms of the GNU General Public License as published
-// by the Free Software Foundation; either version 2, or (at your option) any
-// later version.
+// See COPYING in the server directory for license information.
 //
 
 //<locale-token project="mod_writefile">_</locale-token>
@@ -13,7 +10,7 @@
 #define _ok	id->misc->defines[" _ok"]
 
 constant cvs_version =
- "$Id: writefile.pike,v 1.21 2009/05/08 15:39:36 mathias Exp $";
+ "$Id: writefile.pike,v 1.22 2009/05/26 14:20:25 mast Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -31,10 +28,7 @@ LocaleString module_doc  = _(2,
  "<p>Copyright &copy; 2001-2002, by "
  "<a href='mailto:srb@cuci.nl'>Stephen R. van den Berg</a>, "
  "The Netherlands.</p>"
- "<p>This module is open source software; you can redistribute it and/or "
- "modify it under the terms of the GNU General Public License as published "
- "by the Free Software Foundation; either version 2, or (at your option) any "
- "later version.</p>");
+ "<p>See COPYING in the server directory for license information.</p>");
 
 void create() {
   set_module_creator("Stephen R. van den Berg <srb@cuci.nl>");

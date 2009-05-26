@@ -5,8 +5,8 @@
 
 /*
  *	This code is copyright Francesco Chemolli (kinkie@kame.usr.dsi.unimi.it)
- *	It is free for use in the Roxen WWW server, under the terms of the
- *	GNU General Public License.
+ *	It is free for use in the Roxen WWW server. See COPYING in the server
+ *	directory for license information.
  *	Feel free to change it in any way, except removing my name from it.
  *	This code is provided AS IS, without any warranty of any kind, implicit
  *	or explicit.
@@ -16,7 +16,7 @@
 
 inherit "abstract";
 
-constant cvs_version = "$Id: italian.pike,v 1.13 2008/08/15 12:33:54 mast Exp $";
+constant cvs_version = "$Id: italian.pike,v 1.14 2009/05/26 14:20:25 mast Exp $";
 constant _id = ({ "it", "italian", "italiano" });
 constant _aliases = ({ "it", "ita", "italiano", "italian" });
 
