@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.604 2009/05/07 14:45:40 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.605 2009/05/29 10:23:00 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -788,7 +788,8 @@ private int parse_got( string new_data )
 	  sscanf(remoteaddr, "%s %*s", remoteaddr);
       }
       if(!remoteaddr) {
-	REQUEST_WERR("HTTP: No remote address.");
+	REQUEST_WERR(sprintf ("HTTP: No remote address (error %d).",
+			      my_fd->errno()));
 	TIMER_END(parse_got_2);
 	return 2;
       }
