@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.278 2009/05/07 14:15:53 mast Exp $
+// $Id: Roxen.pmod,v 1.279 2009/05/29 11:32:29 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -521,7 +521,7 @@ mapping(string:mixed) http_method_not_allowed (
 {
   mapping(string:mixed) response =
     http_status (Protocols.HTTP.HTTP_METHOD_INVALID, message, @args);
-  response->extra_heads = (["allow": allowed_methods]);
+  response->extra_heads = (["Allow": allowed_methods]);
   return response;
 }
 
