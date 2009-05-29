@@ -77,7 +77,7 @@ mapping|string parse( RequestID id )
 		     Roxen.html_encode_string(day));
     }
 #ifdef YES_I_KNOW_WHAT_I_AM_DOING
-    res += "<option value='60:0'>Every minute</option>\n"
+    res += "<option value='60:0'>Every Minute</option>\n"
       "<option value='3600:0'>" + _(0, "Every Hour") + "</option>\n";
 #endif
     res +=
@@ -114,7 +114,9 @@ mapping|string parse( RequestID id )
       _(0, "Backup directory") +
       ": <input size='60%' name='directory-" + schedule->id +
       "' type='string' value='" + Roxen.html_encode_string(schedule->dir||"") +
-      "' /></td><td>&nbsp;</td></tr>\n";
+      "' />"
+      + ("<br/>Default directory: "+roxen_path("$VARDIR/backup/")) +
+      "</td><td>&nbsp;</td></tr>\n";
     if (schedule->id == "1") {
       res += "<tr><td>&nbsp;</td><td colspan='3'>" +
 	_(0, "Note: This schedule is also used to schedule backups for "
