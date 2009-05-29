@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.90 2009/05/18 13:47:42 grubba Exp $
+// $Id: DBManager.pmod,v 1.91 2009/05/29 12:58:48 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -182,12 +182,80 @@ private
     }
   }
 
+  //! Split on semi-colon, but not inside strings or comments...
+  protected array(string) split_sql_script(string script)
+  {
+    array(string) res = ({});
+    int start = 0;
+    int i;
+    for (i = 0; i < sizeof(script); i++) {
+      int c = script[i];
+      int cc;
+      switch(c) {
+      case ';':
+	res += ({ script[start..i-1] });
+	start = i+1;
+	break;
+
+	// Quote characters...
+      case '\"': case '\'': case '\`': case '\´':
+	while (i < sizeof(script)) {
+	  i++;
+	  if ((cc = script[i]) == c) {
+	    if (script[i+1] == c) {
+	      i++;
+	      continue;
+	    }
+	    break;
+	  }
+	  if (cc == '\\') i++;
+	}
+	break;
+
+	// Comments...
+      case '/':
+	i++;
+	if ((cc = script[i]) == '*') {
+	  // C-style comment.
+	  int p = search(script, "*/", i+1);
+	  if (p > i) i = p+1;
+	  else i = sizeof(script)-1;
+	}
+	break;
+      case '-':
+	i++;
+	if ((script[i] == '-') &&
+	    ((script[i+1] == ' ') || (script[i+1] == '\t'))) {
+	  // "-- "-style comment.
+	  int p = search(script, "\n", i+2);
+	  int p2 = search(script, "\r", i+2);
+	  if ((p < p2) && (p > i)) i = p;
+	  else if (p2 > i) i = p2;
+	  else if (p > i) i = p;
+	  else i = sizeof(script)-1;
+	}
+	break;
+      case '#':
+	{
+	  // #-style comment.
+	  int p = search(script, "\n", i+1);
+	  int p2 = search(script, "\r", i+1);
+	  if ((p < p2) && (p > i)) i = p;
+	  else if (p2 > i) i = p2;
+	  else if (p > i) i = p;
+	  else i = sizeof(script)-1;
+	}
+	break;
+      }
+    }
+    res += ({ script[start..i-1] });
+    return res;
+  }
+
   protected void execute_sql_script(Sql.Sql db, string script,
 				    int|void quiet)
   {
-    // Split on semi-colon, but not inside strings...
-    array(string) queries =
-      map(Parser.C.split(script)/({";"}), `*, "");
+    array(string) queries = split_sql_script(script);
     foreach(queries[..sizeof(queries)-2], string q) {
       mixed err = catch {db->query(q);};
       if (err && !quiet) {
