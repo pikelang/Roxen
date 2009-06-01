@@ -6,7 +6,7 @@
 //! mode.
 //!
 //! Objects of this class are usually created through
-//! @[RoxenModule()->query_properties()].
+//! @[RoxenModule.query_property_set].
 
 #include <roxen.h>
 
@@ -27,7 +27,7 @@ RequestID id;
 
 //! Create a new property set.
 //!
-//! Usually called via @[query_properties()].
+//! Usually called via @[RoxenModule.query_propery_set].
 protected void create(string path, string abs_path, RequestID id)
 {
   global::path = path;
