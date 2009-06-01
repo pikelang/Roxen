@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.91 2009/05/29 12:58:48 grubba Exp $
+// $Id: DBManager.pmod,v 1.92 2009/06/01 13:40:45 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -1472,6 +1472,11 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
   mapping(string:mixed) db_url_info = get_db_url_info(dbname);
   if (!db_url_info)
     error("Illegal database.\n");
+
+  if (!sizeof(db_tables( dbname ))) {
+    // Nothing to backup.
+    return 0;
+  }
 
   string mysqldump = roxenloader->parse_mysql_location()->mysqldump;
   if (!mysqldump) {
