@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.605 2009/05/29 10:23:00 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.606 2009/06/03 16:41:15 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -672,8 +672,156 @@ int things_to_do_when_not_sending_from_cache( )
   }
 }
 
+//! @param fragment
+//!   Some incremental data received from the client.
+//!
+//! @returns
+//!   @int
+//!     @value 0
+//!       More data needed.
+//!     @value 1
+//!       Failure (not used).
+//!     @value 2
+//!       Done and handled (not used).
+//!     @value 3
+//!       Processing done.
+//!   @endint
+private int got_chunk_fragment(string fragment)
+{
+  string buf = fragment;
+  int chunk_offset;
+  if (misc->chunk_len) {
+    if (misc->chunk_len >= sizeof(fragment)) {
+      data_buffer->add(fragment);      
+      misc->chunk_len -= sizeof(fragment);
+      return 0; // More data needed (eg EOF marker).
+    } else {
+      data_buffer->add(fragment[..misc->chunk_len - 1]);
+      chunk_offset = misc->chunk_len;
+      misc->chunk_len = 0;
+    }
+  } else {
+    buf = misc->chunk_buf + buf;
+  }
+  misc->chunk_buf = "";
+
+  while(misc->chunked == 1) {
+    int chunk_data_offset;
+    string chunk_extras;
+    int n = sscanf(buf, "%" + (chunk_offset || "") + "*s%x%s\r\n%n",
+		   misc->chunk_len, chunk_extras,
+		   chunk_data_offset);
+    if (n < 4) {
+      misc->chunk_buf = buf[chunk_offset..];
+      misc->chunk_len = 0;
+      return 0; // More data needed to parse the chunk length.
+    }
+
+    // FIXME: Currently we ignore the chunk_extras.
+
+    if (sizeof(buf) < chunk_data_offset + misc->chunk_len) {
+      if (!data_buffer) {
+	// The 16384 is some reasonable extra padding to
+	// avoid having to realloc.
+	data_buffer =
+	  String.Buffer(sizeof(data||"") + misc->chunk_len + 16384);
+	if (data && sizeof(data)) data_buffer->add(data);
+	data = "";
+      }
+      data_buffer->add(buf[chunk_data_offset..]);
+      misc->chunk_len -= sizeof(buf) - chunk_data_offset;
+      return 0; // More data needed for the chunk.
+    } else if (misc->chunk_len) {
+      string str =
+	buf[chunk_data_offset..chunk_data_offset + misc->chunk_len - 1];
+      if (data && sizeof(data) && !data_buffer) {
+	// The 16384 is some reasonable extra padding to
+	// avoid having to realloc.
+	data_buffer = String.Buffer(sizeof(data) + misc->chunk_len + 16384);
+	data_buffer->add(data);
+	data_buffer->add(str);
+	data = "";
+      }
+      if (data_buffer) {
+	data_buffer->add(str);
+      } else {
+	data = str;
+      }
+      chunk_offset = chunk_data_offset + misc->chunk_len;
+    } else {
+      // End marker for chunks!
+      if (data_buffer) {
+	data = data_buffer->get();
+	data_buffer = 0;
+      }
+      chunk_offset = chunk_data_offset;
+      misc->len = sizeof(data);
+      misc->chunked = 2;
+      break;
+    }
+  }
+
+  // Entity headers...
+  if (misc->chunked == 2) {
+    if (!misc->chunked_hp) {
+      if (buf[chunk_offset..chunk_offset + 1] == "\r\n") {
+	// Special case: No entity headers; done.
+	leftovers = buf[chunk_offset+2..];
+	misc->chunked = 3;
+	return 3;
+      }
+      misc->chunked_hp = Roxen.HeaderParser();
+      misc->chunked_hp->feed("   \r\n"); // Dummy first line...
+      // Note: At least three spaces in the first line are needed
+      //       to avoid the HTTP/0.9 support in the header parser.
+    }
+    array res;
+    if (mixed err = catch {
+	res = misc->chunked_hp->feed(buf[chunk_offset..]);
+      }) {
+#ifdef DEBUG
+      report_debug ("Got bad request (chunked), HeaderParser error: " +
+		    describe_error (err));
+#endif
+      // Assume no entity headers, and ensure that the connection won't be
+      // reused.
+      misc->connection = "close";
+      leftovers = "";
+    } else {
+      if (!res) return 0;
+      leftovers = res[0];
+      request_headers |= res[2];
+      // Note: None of the headers special-cased in parse_got() below is
+      //       allowed as entity headers, so there's no need for extra
+      //       parsing here (as is done for the main headers there).
+    }
+    misc->chunked = 3;
+    m_delete(misc, "chunked_hp");
+  }
+  return 3;
+}
+
 protected Roxen.HeaderParser hp = Roxen.HeaderParser();
 
+//! Parse some data received from the client.
+//!
+//! @param new_data
+//!   Incremental data from the client.
+//!
+//! This function is called from @[got_data] when it has received
+//! some data to parse the request headers.
+//!
+//! @returns
+//!   @int
+//!     @value 0
+//!       Need more data.
+//!     @value 1
+//!       Failure.
+//!     @value 2
+//!       Done and handled.
+//!     @value 3
+//!       Done.
+//!   @endint
 private int parse_got( string new_data )
 {
   if (hp) {
@@ -805,6 +953,15 @@ private int parse_got( string new_data )
        case "pragma": pragma|=(multiset)((contents-" ")/",");  break;
 
        case "content-length": misc->len = (int)contents;       break;
+       case "transfer-encoding":
+	 misc->transfer_encoding =
+	   map(lower_case(contents)/";", String.trim_all_whites);
+	 if (has_value(misc->transfer_encoding, "chunked")) {
+	   misc->chunked = 1;
+	   misc->chunk_buf = "";
+	   new_data = data || ""; // For got_chunk_fragment() below.
+	 }
+	 break;
        case "authorization":  rawauth = contents;              break;
        case "referer": referer = ({contents}); break;
        case "if-modified-since": since=contents; break;
@@ -910,7 +1067,16 @@ private int parse_got( string new_data )
   }
 
   TIMER_START(parse_got_2_more_data);
-  if(misc->len)
+  if (misc->chunked) {
+    int ret = got_chunk_fragment(new_data);
+    if (ret != 3) {
+      REQUEST_WERR(sprintf("HTTP: More data needed in %s (chunked).", method));
+      ready_to_receive();
+      TIMER_END(parse_got_2_more_data);
+      TIMER_END(parse_got_2);
+      return ret;
+    }
+  } else if(misc->len)
   {
     if(!data) data="";
     int l = misc->len;
@@ -927,7 +1093,11 @@ private int parse_got( string new_data )
     }
     leftovers = data[l+2..];
     data = data[..l+1];
-
+  } else {
+    leftovers = data;
+    data = 0;
+  }
+  if (data && sizeof(data)) {
     switch(method) {
     case "POST":
       // FIXME: Get this POST variable munching out of the backend thread!
@@ -1099,8 +1269,6 @@ private int parse_got( string new_data )
       }
       break;
     }
-  } else {
-    leftovers = data;
   }
   TIMER_END(parse_got_2_more_data);
 
@@ -2688,6 +2856,18 @@ void got_data(mixed fooid, string s, void|int chained)
       data_buffer = 0;
     } else {
       data += s;
+    }
+  } else if (misc->chunked) {
+    if (!got_chunk_fragment(s)) {
+      REQUEST_WERR("HTTP: We want more data (chunked).");
+
+      // Reset timeout.
+      remove_call_out(do_timeout);
+      call_out(do_timeout, 90);
+
+      if (chained)
+	my_fd->set_nonblocking(got_data, 0, close_cb);
+      return;
     }
   }
 
