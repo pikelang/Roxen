@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.606 2009/06/03 16:41:15 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.607 2009/06/04 09:09:20 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -708,7 +708,7 @@ private int got_chunk_fragment(string fragment)
   while(misc->chunked == 1) {
     int chunk_data_offset;
     string chunk_extras;
-    int n = sscanf(buf, "%" + (chunk_offset || "") + "*s%x%s\r\n%n",
+    int n = sscanf(buf, "%" + chunk_offset + "*s%x%s\r\n%n",
 		   misc->chunk_len, chunk_extras,
 		   chunk_data_offset);
     if (n < 4) {
