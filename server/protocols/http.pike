@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.607 2009/06/04 09:09:20 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.608 2009/06/05 09:11:14 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -688,6 +688,14 @@ int things_to_do_when_not_sending_from_cache( )
 //!   @endint
 private int got_chunk_fragment(string fragment)
 {
+#ifdef CONNECTION_DEBUG
+  werror("HTTP[%s]: Fragment (length %d+%d/%d) ============================\n"
+	 "%O\n", DEBUG_GET_FD,
+	 sizeof(fragment), sizeof(misc->chunk_buf||""), misc->chunk_len,
+	 fragment);
+#else
+  REQUEST_WERR(sprintf("HTTP: Got Fragment %O", fragment));
+#endif
   string buf = fragment;
   int chunk_offset;
   if (misc->chunk_len) {
@@ -716,6 +724,11 @@ private int got_chunk_fragment(string fragment)
       misc->chunk_len = 0;
       return 0; // More data needed to parse the chunk length.
     }
+
+#ifdef CONNECTION_DEBUG
+    werror("HTTP[%s]: Got chunk with %d bytes of data.\n",
+	   DEBUG_GET_FD, misc->chunk_len);
+#endif
 
     // FIXME: Currently we ignore the chunk_extras.
 
@@ -764,8 +777,14 @@ private int got_chunk_fragment(string fragment)
   // Entity headers...
   if (misc->chunked == 2) {
     if (!misc->chunked_hp) {
+#ifdef CONNECTION_DEBUG
+      werror("HTTP[%s]: Parsing entity headers...\n", DEBUG_GET_FD);
+#endif
       if (buf[chunk_offset..chunk_offset + 1] == "\r\n") {
 	// Special case: No entity headers; done.
+#ifdef CONNECTION_DEBUG
+	werror("HTTP[%s]: No entity headers.\n", DEBUG_GET_FD);
+#endif
 	leftovers = buf[chunk_offset+2..];
 	misc->chunked = 3;
 	return 3;
@@ -779,7 +798,7 @@ private int got_chunk_fragment(string fragment)
     if (mixed err = catch {
 	res = misc->chunked_hp->feed(buf[chunk_offset..]);
       }) {
-#ifdef DEBUG
+#if defined(DEBUG) || defined(CONNECTION_DEBUG)
       report_debug ("Got bad request (chunked), HeaderParser error: " +
 		    describe_error (err));
 #endif
@@ -789,6 +808,9 @@ private int got_chunk_fragment(string fragment)
       leftovers = "";
     } else {
       if (!res) return 0;
+#ifdef CONNECTION_DEBUG
+      werror("HTTP[%s]: Got entity headers: %O.\n", DEBUG_GET_FD, res[2]);
+#endif
       leftovers = res[0];
       request_headers |= res[2];
       // Note: None of the headers special-cased in parse_got() below is
@@ -798,6 +820,9 @@ private int got_chunk_fragment(string fragment)
     misc->chunked = 3;
     m_delete(misc, "chunked_hp");
   }
+#ifdef CONNECTION_DEBUG
+  werror("HTTP[%s]: Chunked parsing done.\n", DEBUG_GET_FD);
+#endif
   return 3;
 }
 
