@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.637 2008/12/08 13:39:58 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.638 2009/06/10 12:55:30 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4506,11 +4506,24 @@ hyphens ('-') occur in the specifier names.</p>
     <td>The length of the data section of the reply.</td></tr>
 <tr><td>$bin-length</td>
     <td>Same, but as a 32 bit integer in network byte order.</td></tr>
+<tr><td>$queue-time</td>
+    <td>Time in seconds that the request spent in the internal handler
+    queue, waiting to be processed by a handler thread.</td></tr>
+<tr><td>$handle-time</td>
+    <td>Time in seconds spent processing the request in a handler
+    thread. This measures the server processing time, excluding I/O
+    and time spent in the handler queue. Note however that this
+    measures real time, not virtual process time. I.e. if there are
+    other handler threads or processes using the CPU then this might
+    not accurately show the time that the Roxen server spent on the
+    request. Also note that if a handler thread has to wait for
+    responses from other servers then that wait time is included in
+    this measurement.</td></tr>
 <tr><td>$request-time</td>
-    <td>The time the request took (seconds). Note that this measures
-    real time, not virtual process time. I.e. if there are other
-    processes using the CPU then this will not accurately show the
-    time that the Roxen server process spent.</td></tr>
+    <td>Time in seconds that the whole request took on the server
+    side, including I/O time for receiving the request and sending the
+    response. Note that this measures real time - see $handle-time for
+    further discussion.</td></tr>
 <tr><td>$etag</td>
     <td>The entity tag (aka ETag) header of the result.</td></tr>
 <tr><td>$referer</td>
