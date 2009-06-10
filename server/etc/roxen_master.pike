@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.151 2008/09/29 17:22:26 mast Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.152 2009/06/10 16:04:44 grubba Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -24,6 +24,10 @@ constant out_of_date_warning = 0;
 
 #include <security.h>
 
+#if !constant(master.master_file_stat)
+constant master_file_stat = predef::file_stat;
+constant master_get_dir = predef::get_dir;
+#endif
 
 #ifdef SECURITY
 #if constant(thread_local)
