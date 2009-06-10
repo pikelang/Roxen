@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1032 2009/05/07 14:15:53 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1033 2009/06/10 12:40:35 mast Exp $";
 
 //! @appears roxen
 //!
@@ -5887,17 +5887,19 @@ protected constant formats = ([
 				    "        request_id->hrtime) /"
 				    "1000000.0"),
 			  1, "\"-\"", 0}),
-#if 0
-  // This needs to be solved better to work correctly when gethrvtime
-  // tracks thread local vtime and not.
-#if constant (gethrvtime)
-  // Note: This function exists on a lot more platforms in pike >= 7.6.
-  "request-vtime":	({"%1.4f", ("(float)(gethrvtime() - "
-				    "        request_id->hrvtime) /"
-				    "1000000.0"),
+  "queue-time":		({"%1.4f",
+			  "(float) request_id->queue_time / 1000000.0",
 			  1, "\"-\"", 0}),
+  "handle-time":	({"%1.4f",
+			  "(float) request_id->handle_time / 1000000.0",
+			  1, "\"-\"", 0}),
+  "handle-cputime":	({
+#if constant(System.CPU_TIME_IS_THREAD_LOCAL)
+    "%1.4f", "(float) request_id->handle_vtime / 1000000.0",
+#else
+    "%s", "\"-\"",
 #endif
-#endif
+    1, "\"-\"", 0}),
   "etag":		({"%s", "request_id->misc->etag || \"-\"",
 			  1, "\"-\"", 0}),
   "referrer":		({"%s", ("sizeof(request_id->referer||({}))?"
