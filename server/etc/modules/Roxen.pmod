@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.279 2009/05/29 11:32:29 mast Exp $
+// $Id: Roxen.pmod,v 1.280 2009/06/10 08:55:53 wellhard Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4086,7 +4086,7 @@ class ScopeRoxen {
 
 int get_ssl_strength(string ignored, RequestID id)
 {
-  if (!id->my_fd || !id->my_fd->SSLConnection ||
+  if (!id->my_fd || !id->my_fd->get_peer_certificate_info ||
       !id->my_fd->query_connection())
     return 0;
   return id->my_fd->query_connection()->session->cipher_spec->key_bits;
