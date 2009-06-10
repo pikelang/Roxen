@@ -88,7 +88,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.19 2009/03/19 10:44:03 grubba Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.20 2009/06/10 15:18:05 mathias Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -2230,6 +2230,8 @@ class Patcher
     
     if (patch_data)
     {
+      // Check for Windows line breaks.
+      patch_data = replace(patch_data, "\r\n", "\n");
       // Split on "@@" and then on newline to find file name.
       foreach(patch_data / "@@\n", string chunk)
       {

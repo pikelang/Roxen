@@ -1,5 +1,5 @@
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.13 2009/03/16 14:11:41 mathias Exp $";
+constant cvs_string = "$Id: rxnpatch.pike,v 1.14 2009/06/10 15:18:05 mathias Exp $";
 
 import RoxenPatch;
 
@@ -840,7 +840,9 @@ private void write_list(Patcher plib,
 	if (obj->metadata->patch)
 	{
 	  string patch_data = "";
-	  string patch_path = combine_path(plib->get_installed_dir(),
+	  string patch_path = combine_path((list_name == "installed") ?
+					   plib->get_installed_dir() :
+					   plib->get_import_dir(),
 					   obj->metadata->id);
 	  foreach(obj->metadata->patch, string patch_file)
 	  {
