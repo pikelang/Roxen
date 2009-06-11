@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1033 2009/06/10 12:40:35 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1034 2009/06/11 07:48:12 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1282,6 +1282,16 @@ protected void bg_process_queue()
 }
 #endif
 
+protected function get_enqueue_func (function func, array args)
+{
+  return lambda()
+	 {
+	   bg_queue->write (({func, args}));
+	   if (!bg_process_running)
+	     handle (bg_process_queue);
+	 };
+}
+
 mixed background_run (int|float delay, function func, mixed... args)
 //! Enqueue a task to run in the background in a way that makes as
 //! little impact as possible on the incoming requests. No matter how
@@ -1330,20 +1340,11 @@ mixed background_run (int|float delay, function func, mixed... args)
     // stop_handler_threads is running; ignore more work.
     return 0;
 
-  function enqueue = lambda()
-  {
-    bg_queue->write (({func, args}));
-    if (!bg_process_running)
-      handle (bg_process_queue);
-  };
-
   mixed res;
   if (delay)
-    res = call_out (enqueue, delay);
+    res = call_out (get_enqueue_func (func, args), delay);
   else
-    enqueue();
-
-  enqueue = 0;			// To avoid garbage.
+    get_enqueue_func (func, args)();
 
   return res;
 #else
