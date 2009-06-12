@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.609 2009/06/10 12:40:36 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.610 2009/06/12 15:53:49 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2817,6 +2817,7 @@ void handle_request( )
 
   mapping result;
   array e = catch(result = conf->handle_request( this_object() ));
+  destruct_threadbound_session_objects();
 
   handle_time = gethrtime() - handle_time;
 #if constant(System.CPU_TIME_IS_THREAD_LOCAL)

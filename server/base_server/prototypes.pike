@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.253 2009/06/10 12:48:15 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.254 2009/06/12 15:53:50 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1011,8 +1011,7 @@ class RequestID
 //! scripts, RXML and so on. It gets passed round to almost all API callbacks
 //! worth mentioning. A RequestID object is born when an incoming request is
 //! encountered, and its life expectancy is short, as it dies again when the
-//! request has passed through all levels of the <ref>module type calling
-//! sequence</ref>.
+//! request has passed through all levels of the module type calling sequence.
 {
 #ifdef ID_OBJ_DEBUG
   RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this);
@@ -2070,6 +2069,62 @@ class RequestID
 		id, this_object());
   }
 
+  protected array(object) threadbound_session_objects;
+
+  void add_threadbound_session_object (object obj)
+  //! This can be used to register some kind of session object (e.g. a
+  //! mutex lock) which will have the same lifetime as this request in
+  //! the current thread. I.e. @[obj] will be destructed when a
+  //! handler thread is done with this request, or when this object is
+  //! destructed, whichever comes first.
+  //!
+  //! @[obj] is destructed even if a handler thread is aborted due to
+  //! an exception. It is not an error if @[obj] already is destructed
+  //! when the lifetime ends.
+  //!
+  //! @note
+  //! If you want to be able to retrieve @[obj] later, put it into
+  //! @[misc] too.
+  {
+    if (threadbound_session_objects)
+      threadbound_session_objects += ({obj});
+    else
+      threadbound_session_objects = ({obj});
+  }
+
+  int remove_threadbound_session_object (object obj)
+  //! Removes an object which has earlier been passed to
+  //! @[add_threadbound_session_object].
+  //!
+  //! @returns
+  //! 1 if @[obj] was among the threadbound session objects, zero
+  //! otherwise.
+  {
+    if (!threadbound_session_objects)
+      return 0;
+    int s = sizeof (threadbound_session_objects);
+    threadbound_session_objects -= ({obj});
+    return sizeof (threadbound_session_objects) != s;
+  }
+
+  void destruct_threadbound_session_objects()
+  //! Explicitly destructs all objects registered with
+  //! @[add_threadbound_session_object]. Should normally only be used
+  //! internally.
+  {
+    if (array(object) objs = threadbound_session_objects) {
+      threadbound_session_objects = 0;
+      foreach (objs, object obj) {
+	if (mixed err = catch {
+	    if (obj)
+	      // Relying on the interpreter lock here.
+	      destruct (obj);
+	  })
+	  master()->handle_error (err);
+      }
+    }
+  }
+
   protected string cached_url_base;
 
   string url_base()
@@ -3023,6 +3078,11 @@ class RequestID
   //! is handling the request.
   {
     return conf;
+  }
+
+  protected void destroy()
+  {
+    destruct_threadbound_session_objects();
   }
 
   string _sprintf (int flag)
