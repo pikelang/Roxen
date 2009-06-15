@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.74 2009/06/01 13:40:45 grubba Exp $
+// $Id: DBManager.pmod,v 1.75 2009/06/15 15:19:14 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -182,7 +182,7 @@ private
   static void execute_sql_script(Sql.Sql db, string script,
 				 int|void quiet)
   {
-    array(string) queries = split_sql_string(script);
+    array(string) queries = split_sql_script(script);
     foreach(queries[..sizeof(queries)-2], string q) {
       mixed err = catch {db->query(q);};
       if (err && !quiet) {
