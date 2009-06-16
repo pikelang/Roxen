@@ -1,5 +1,5 @@
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.15 2009/06/16 15:41:35 mathias Exp $";
+constant cvs_string = "$Id: rxnpatch.pike,v 1.16 2009/06/16 15:55:35 mathias Exp $";
 
 import RoxenPatch;
 
@@ -1061,7 +1061,11 @@ constant help_flags = ([
 	  "hlptxt" : ({ "Read patch description from <u>FILE</u>. If no filename",
 			"is given then the description will be read from",
 			"standard input. If more than one flags are set to read",
-			"from stdin then an error will be thrown." }),
+			"from stdin then an error will be thrown.",
+			"",
+			"If this flag is omitted then <b>rxnpatch</b> will try",
+			"to launch the system editor set in the <u>EDITOR</u>",
+			"environment variable" }),
 	  "scope"  : ({ "create" }) ]),
   "P": ([ "syntax" : ({ "<b>-P</b> <u>PLATFORM</u>...",
 			"<b>--platform=</b><u>PLATFORM</u>..." }),
