@@ -1,5 +1,5 @@
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.14 2009/06/10 15:18:05 mathias Exp $";
+constant cvs_string = "$Id: rxnpatch.pike,v 1.15 2009/06/16 15:41:35 mathias Exp $";
 
 import RoxenPatch;
 
@@ -202,6 +202,7 @@ int main(int argc, array(string) argv)
 
   // Instantiate the Patcher class
   Patcher plib = Patcher(write_mess, write_err, server_path);
+  plib->write_mess("Current user ... %s\n", current_user);
 
   // Handle the different commands.
   if (cmd_n_files[1] == "create")
