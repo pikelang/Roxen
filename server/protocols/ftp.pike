@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.135 2009/06/23 11:04:29 grubba Exp $
+ * $Id: ftp.pike,v 2.136 2009/06/23 13:02:30 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1531,6 +1531,11 @@ class FTPSession
     if (!data || end_marker) {
       end_marker = 1;
       ::set_write_callback(write_cb);
+      if (code >= 200) {
+	// Command finished, get the next.
+	busy = 0;
+	next_cmd();
+      }
       return;
     }
 
