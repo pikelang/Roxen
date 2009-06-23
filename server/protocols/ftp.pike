@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.134 2009/05/12 09:21:21 grubba Exp $
+ * $Id: ftp.pike,v 2.135 2009/06/23 11:04:29 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -3868,6 +3868,12 @@ class FTPSession
 
     busy = 1;
 
+    if (!line) {
+      // Command queue terminator.
+      terminate_connection();
+      return;
+    }
+
 #if 0
     if (!conf->extra_statistics) {
       conf->extra_statistics = ([ "ftp": (["commands":([ cmd:1 ])])]);
@@ -3927,26 +3933,45 @@ class FTPSession
     touch_me();
   }
 
-  void con_closed()
+  private void terminate_connection()
   {
-    DWRITE("FTP2: con_closed()\n");
+    DWRITE("FTP2: terminate_connection()\n");
 
     logout();
+
+    if (pasv_port) {
+      destruct(pasv_port);
+      pasv_port = 0;
+    }
 
     master_session->method = "QUIT";
     master_session->not_query = user || "Anonymous";
     conf->log(([ "error":204, "request_time":(time(1)-master_session->time) ]),
 	      master_session);
-
-    if (fd) {
-      fd->close();
-    }
-    if (pasv_port) {
-      destruct(pasv_port);
-      pasv_port = 0;
-    }
     // Make sure we disappear...
     destruct();
+  }
+
+  void con_closed()
+  {
+    DWRITE("FTP2: con_closed()\n");
+
+    send(0, 0);		// EOF marker.
+
+    if (fd) {
+      // There's no reason to keep the command connection around any more.
+      fd->close();
+      destruct(fd);
+      fd = 0;
+    }
+
+    // Queue a command queue terminator.
+    // This will terminate the connection as soon as all pending commands
+    // have finished. There apparently exists ftp clients that shut down
+    // the command connection before their uploads etc have finished.
+    cmd_queue->put(({ 0, 0, 0 }));
+    if (!busy)
+      next_cmd();
   }
 
   void destroy()
