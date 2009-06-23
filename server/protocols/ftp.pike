@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.136 2009/06/23 13:02:30 grubba Exp $
+ * $Id: ftp.pike,v 2.137 2009/06/23 13:21:39 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -261,11 +261,13 @@ class FileWrapper
 
   private void close_callback(mixed i)
   {
-    close_cb(id);
     if (f) {
+      // FIXME: Not really kosher, closing should be and is done
+      //        by the close_cb.
       BACKEND_CLOSE(f);
     }
     ftpsession->touch_me();
+    close_cb(id);
   }
 
   private void delayed_nonblocking(function w_cb)
