@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.113 2008/12/19 12:17:32 grubba Exp $
+// $Id: module.pmod,v 1.114 2009/06/24 09:33:31 jonasw Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1369,6 +1369,13 @@ class DatabaseChoice
 
   array get_choice_list( )
   {
+    if (!functionp(config)) {
+      //  Some modules apparently send in a configration reference instead of
+      //  a function pointer when calling set_configuration_pointer().
+      report_warning("Incorrect usage of Variable.DatabaseChoice:\n\n%s",
+		     describe_backtrace(backtrace()));
+      return ({ " none" });
+    }
     return ({ " none" }) + sort(DBManager.list( config() ));
   }
 
