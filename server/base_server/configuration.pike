@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.638 2009/06/10 12:55:30 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.639 2009/06/24 11:37:59 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4506,6 +4506,9 @@ hyphens ('-') occur in the specifier names.</p>
     <td>The length of the data section of the reply.</td></tr>
 <tr><td>$bin-length</td>
     <td>Same, but as a 32 bit integer in network byte order.</td></tr>
+<tr><td>$queue-length</td>
+    <td>Number of jobs waiting to be processed by the handler threads
+    at the time this request was added to the queue.</td></tr>
 <tr><td>$queue-time</td>
     <td>Time in seconds that the request spent in the internal handler
     queue, waiting to be processed by a handler thread.</td></tr>

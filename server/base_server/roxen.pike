@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.963 2009/06/10 12:55:30 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.964 2009/06/24 11:37:59 mast Exp $";
 
 //! @appears roxen
 //!
@@ -734,9 +734,14 @@ local static void handler_thread(int id)
   }
 }
 
- void handle(function f, mixed ... args)
+void handle(function f, mixed ... args)
 {
   handle_queue->write(({f, args }));
+}
+
+int handle_queue_length()
+{
+  return handle_queue->size();
 }
 
 int number_of_threads;
@@ -5951,6 +5956,8 @@ static constant formats = ([
   "bin-response":	({"%2c", "(int)(file->error || 200)", 1, "\"\\0\\0\"", 0}),
   "length":		({"%d", "(int)file->len", 1, "\"0\"", 0}),
   "bin-length":		({"%4c", "(int)file->len", 1, "\"\\0\\0\\0\\0\"", 0}),
+  "queue-length":	({"%d", "(int) request_id->queue_length",
+			  1, "\"-\"", 0}),
   "request-time":	({"%1.4f", ("(float)(gethrtime() - "
 				    "        request_id->hrtime) /"
 				    "1000000.0"),

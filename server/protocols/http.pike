@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.538 2009/06/10 12:55:30 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.539 2009/06/24 11:38:00 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2810,6 +2810,7 @@ void got_data(mixed fooid, string s, void|int chained)
 
     REQUEST_WERR("HTTP: Calling roxen.handle().");
     queue_time = gethrtime();
+    queue_length = roxen.handle_queue_length();
     roxen.handle(handle_request);
   })
   {
