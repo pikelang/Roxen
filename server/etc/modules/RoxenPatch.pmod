@@ -76,6 +76,15 @@ string wash_output(string s)
 		 );
 }
 
+// Encode <, > and & of our own since this must be able to work outside Roxen.
+string html_encode(string s)
+{
+  s = replace(s, (["&":"&amp;", "<":"&lt;", ">":"&gt;"]));
+  return replace(s, (["&amp;amp;":"&amp;",
+		      "&amp;lt;" :"&lt;", 
+		      "&amp;gt;" :"&gt;"]));
+}
+
 string unixify_path(string s)
 //! This is for utils of MSYS that needs /c/ instead of c:\
 {
@@ -88,7 +97,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.20 2009/06/10 15:18:05 mathias Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.21 2009/06/25 11:39:28 mathias Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -1375,17 +1384,15 @@ class Patcher
     string xml = "<?xml version=\"1.0\"?>\n";
     xml += sprintf("<rxp version=\"%s\">\n", rxp_version);
     
-    xml += sprintf("  <name>%s</name>\n", metadata->name);
+    xml += sprintf("  <name>%s</name>\n", 
+		   html_encode(metadata->name));
     
     // Reformat the description
     string desc = "   ";
     int col_count = 3;
     foreach(trim_ALL_redundant_whites(metadata->description) / " ", string s)
     {
-      s = replace(s, (["&":"&amp;", "<":"&lt;", ">":"&gt;"]));
-      s = replace(s, (["&amp;amp;":"&amp;",
-		       "&amp;lt;" :"&lt;", 
-		       "&amp;gt;" :"&gt;"]));
+      s = html_encode(s);
       if((col_count + sizeof(s) + 1) < 80)
       {
 	  desc += " " + s;

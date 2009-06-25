@@ -187,7 +187,7 @@ string list_patches(RequestID id, Patcher po, string which_list)
 		     table_bgcolor,
 		     replace(item->metadata->id, "-", ""),
 		     item->metadata->id,
-		     item->metadata->name,
+		     Roxen.html_encode_string(item->metadata->name),
 		     installed_date,
 		     (which_list == "imported") ? "install" : "uninstall",
 		     deps,
@@ -235,7 +235,8 @@ string list_patches(RequestID id, Patcher po, string which_list)
       }
 
       md += ({
-        ({ LOCALE(333, "Description:")	, item->metadata->description }),
+        ({ LOCALE(333, "Description:")	, 
+	   Roxen.html_encode_string(item->metadata->description) }),
 	({ LOCALE(334, "Originator:")	, item->metadata->originator  }) 
       });
       
