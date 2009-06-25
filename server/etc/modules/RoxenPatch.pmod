@@ -97,7 +97,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.21 2009/06/25 11:39:28 mathias Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.22 2009/06/25 16:36:49 mathias Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -749,16 +749,32 @@ class Patcher
 	{
 	  error_count++;
 	  error = 1;
+	  switch (p->wait())
+	  {
+	    case 1:
+	      if (!force)
+		write_log(1, "FAILED: Some hunks could not be patched.\n"
+			     "If you want to patch anyway run rxnpatch from "
+			     "the prompt with --force\n");
+	      break;
+	    case 2:
+	      write_log(1, "FAILED: Permission denied.\n");
+	      break;
+	    default:
+	      write_log(1, "FAILED!\n");
+	  }
+	  if (!force)
+	  {
+	    udiff_data->close();
+	    undo_changes_and_dump_log_to_file();
+	    return 0;
+	  }
 	}
 	
 	// Close file object again
 	udiff_data->close();
       }
- 
-      if (error)
-	// These error are no show stoppers either
-	write_err("FAILED!\n");
-      else
+      if (!error)
 	write_log(0, "<green>ok.</green>\n");
       
     }
@@ -1448,8 +1464,8 @@ class Patcher
   
   int(-1..1) got_dependers(string id, void|multiset(string) pretend_installed)
   //! Checks if there are patches installed after this one. If the patch given
-  //! isn't installed instead return true if there are patches imported that
-  //! are older than the given one
+  //! isn't installed instead return true if it depends on patches that are not
+  //! installed.
   //! @param pretend_installed
   //!   Pretend that the given ids are installed patches. Useful when batch
   //!   processing files in "dry run" mode.
@@ -1474,13 +1490,20 @@ class Patcher
     
     if (is_imported(id))
     {
-      array file_list = file_list_imported();
-      array filtered_list = filter(file_list, lambda (mapping m)
-					      {
-						string mid = m->metadata->id;
-						return mid < id &&
-						  !pretend_installed[mid];
-					      }
+      PatchObject po = get_metadata(id);
+
+      if (!po)
+	return -1;
+
+      if (!po->depends)
+	return 0;
+      
+      array filtered_list = filter(po->depends, 
+				   lambda (string id)
+				   {
+				     return !(is_installed(id) ||
+					      pretend_installed[id]);
+				   }
 				   );
       return !!sizeof(filtered_list);
     }
