@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.421 2009/05/13 16:23:15 grubba Exp $
+// $Id: roxenloader.pike,v 1.422 2009/06/25 10:56:21 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.421 2009/05/13 16:23:15 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.422 2009/06/25 10:56:21 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2031,7 +2031,8 @@ protected void low_check_mysql(string myisamchk, string datadir,
 }
 
 void low_start_mysql( string datadir,
-		      string uid )
+		      string uid,
+		      void|int log_queries_to_stdout)
 {
   array MYSQL_GOOD_VERSION = ({ "5.0.*",
 #ifdef YES_I_KNOW_WHAT_I_AM_DOING
@@ -2161,6 +2162,9 @@ void low_start_mysql( string datadir,
     report_debug("Setting MySQL's slow query log to \"%s.1\"\n", slow_query_log);
   }
 
+  if (log_queries_to_stdout)
+    args += ({"--log=/dev/stdout"});
+
   // Create the configuration file.
   string cfg_file = ("[mysqld]\n"
 		     "set-variable = max_allowed_packet=16M\n"
@@ -2233,7 +2237,7 @@ void low_start_mysql( string datadir,
 
 
 int mysql_path_is_remote;
-void start_mysql()
+void start_mysql (void|int log_queries_to_stdout)
 {
   Sql.Sql db;
   int st = gethrtime();
@@ -2390,11 +2394,11 @@ void start_mysql()
 
   low_start_mysql( mysqldir,
 #if constant(getpwuid)
-		   (getpwuid(getuid()) || ({0}))[ 0 ]
+		   (getpwuid(getuid()) || ({0}))[ 0 ],
 #else /* Ignored by the start_mysql script */
-		0
+		   0,
 #endif
-		 );
+		   log_queries_to_stdout);
 
   int repeat;
   while( 1 )
@@ -2679,7 +2683,14 @@ the correct system time.
 
   add_constant("_cur_rxml_context", Thread.Local());
 
-  start_mysql();
+
+  if (has_value (hider, "--mysql-log-queries")) {
+    hider -= ({"--mysql-log-queries"});
+    argc = sizeof (hider);
+    start_mysql (1);
+  }
+  else
+    start_mysql (0);
 
   if (err = catch {
     if(master()->relocate_module) add_constant("PIKE_MODULE_RELOC", 1);

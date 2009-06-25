@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.234 2009/04/24 18:27:47 jonasw Exp $
+# $Id: start,v 1.235 2009/06/25 10:56:21 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -483,6 +483,10 @@ the default arguments.
 
       .B--module-debugB.:             Enable more internal debug checks to
                                   simplify debugging of Roxen modules.
+
+      .B--mysql-log-queriesB.:        Instruct the MySQL server to log all
+                                  queries so that they end up in the Roxen
+                                  debug log.
 
       .B--fd-debugB.:                 Enable FD debug.
 
