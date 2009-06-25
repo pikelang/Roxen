@@ -1,5 +1,5 @@
 
-constant cvs_string = "$Id: rxnpatch.pike,v 1.16 2009/06/16 15:55:35 mathias Exp $";
+constant cvs_string = "$Id: rxnpatch.pike,v 1.17 2009/06/25 16:03:26 mathias Exp $";
 
 import RoxenPatch;
 
@@ -516,7 +516,8 @@ int main(int argc, array(string) argv)
       // imported that is not installed.
       if(plib->got_dependers(id, is_installed) == 1)
       {
-	plib->write_err("Couldn't install %s. There are older patches imported "
+	plib->write_err("Couldn't install %s. "
+			"This patch depends on other patches"
 			"that are not installed yet. Please install them first "
 			"or include them when installing the current patch.\n\n"
 			"Quitting.\n", id);
@@ -841,10 +842,7 @@ private void write_list(Patcher plib,
 	if (obj->metadata->patch)
 	{
 	  string patch_data = "";
-	  string patch_path = combine_path((list_name == "installed") ?
-					   plib->get_installed_dir() :
-					   plib->get_import_dir(),
-					   obj->metadata->id);
+	  string patch_path = plib->id_to_filepath(obj->metadata->id);
 	  foreach(obj->metadata->patch, string patch_file)
 	  {
 	    patch_data += Stdio.read_file(combine_path(patch_path,
