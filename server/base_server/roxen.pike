@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1035 2009/06/24 11:38:00 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1036 2009/06/29 13:15:24 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1287,16 +1287,6 @@ protected void bg_process_queue()
 }
 #endif
 
-protected function get_enqueue_func (function func, array args)
-{
-  return lambda()
-	 {
-	   bg_queue->write (({func, args}));
-	   if (!bg_process_running)
-	     handle (bg_process_queue);
-	 };
-}
-
 mixed background_run (int|float delay, function func, mixed... args)
 //! Enqueue a task to run in the background in a way that makes as
 //! little impact as possible on the incoming requests. No matter how
@@ -1345,13 +1335,24 @@ mixed background_run (int|float delay, function func, mixed... args)
     // stop_handler_threads is running; ignore more work.
     return 0;
 
-  mixed res;
-  if (delay)
-    res = call_out (get_enqueue_func (func, args), delay);
-  else
-    get_enqueue_func (func, args)();
+  function enqueue = lambda()
+  {
+    bg_queue->write (({func, args}));
+    if (!bg_process_running)
+      handle (bg_process_queue);
+  };
 
-  return res;
+  // Be careful to zero enqueue below to avoid trampoline garbage.
+
+  if (delay)
+    // A trick to zero enqueue without putting the call_out return
+    // value into a local variable.
+    return call_out (enqueue, (enqueue = 0, delay));
+  else {
+    enqueue();
+    enqueue = 0;
+    return 0;
+  }
 #else
   // Can't do much better when we haven't got threads..
   return call_out (func, delay, @args);
@@ -2620,18 +2621,19 @@ int register_url( string url, Configuration conf )
   if( (int)opts->nobind )
   {
     report_warning(
-      LOC_M(61,"Not binding the port %O, disabled in configuration")+"\n",
+      LOC_M(61,"Not binding the port %O - disabled in configuration.")+"\n",
       (string) ui );
     return 0;
   }
 
+  string display_url = normalize_url (url, 0);
   url = normalize_url (url, 1);
   ui = Standards.URI (url);
 
   string protocol = ui->scheme;
   string host = ui->host;
   if (host == "" || !protocols[protocol]) {
-    report_error(LOC_M(19,"Bad URL %O for server `%s'")+"\n",
+    report_error(LOC_M(19,"Bad URL %O for server %O.")+"\n",
 		 ourl, conf->query_name());
   }
 
@@ -2651,9 +2653,9 @@ int register_url( string url, Configuration conf )
       if( urls[ url ]->conf != conf )
       {
 	report_error(LOC_M(20,
-			   "Cannot register URL %s, "
-			   "already registered by %s!")+"\n",
-		     url, urls[ url ]->conf->name);
+			   "Cannot register URL %s - "
+			   "already registered by %s.")+"\n",
+		     display_url, urls[ url ]->conf->name);
 	return 0;
       }
       urls[ url ]->port->ref(url, urls[url]);
@@ -2667,9 +2669,9 @@ int register_url( string url, Configuration conf )
 
   if( !( prot = protocols[ protocol ] ) )
   {
-    report_error(LOC_M(21, "Cannot register URL %s, "
-			  "cannot find the protocol %s!")+"\n",
-		 url, protocol);
+    report_error(LOC_M(21, "Cannot register URL %s - "
+			  "cannot find the protocol %s.")+"\n",
+		 display_url, protocol);
     return 0;
   }
 
@@ -2682,14 +2684,13 @@ int register_url( string url, Configuration conf )
   if (is_ip(host))
     required_hosts = ({ host });
   else if(!sizeof(required_hosts =
-		  filter(replace(opts->ip||"", " ","")/",", is_ip)) )
+		  filter(replace(opts->ip||"", " ","")/",", is_ip)) ) {
     required_hosts = find_ips_for( host );
-
-  if (!required_hosts) {
-    // FIXME: Used to fallback to ANY.
-    //        Will this work with glob URLs?
-    report_error(LOC_M(23, "Cannot register URL %s!")+"\n", url);
-    return 0;
+    if (!required_hosts) {
+      // FIXME: Used to fallback to ANY.
+      //        Will this work with glob URLs?
+      return 0;
+    }
   }
 
   mapping(string:mapping(int:Protocol)) m;
@@ -2722,8 +2723,9 @@ int register_url( string url, Configuration conf )
 #else
     if (sizeof(ipv6)) {
       foreach(ipv6, string p) {
-	report_warning(LOC_M(65, "IPv6 port for URL %s disabled: %s\n"),
-		       url, p);
+	report_warning(LOC_M(65, "Cannot open port %s for URL %s - "
+			     "IPv6 support disabled.\n"),
+		       p, display_url);
       }
     }
     required_hosts = ipv4;
@@ -2754,8 +2756,10 @@ int register_url( string url, Configuration conf )
     if( !m[ required_host ] )
       m[ required_host ] = ([ ]);
 
+
+    Protocol prot_obj;
     if (mixed err = catch {
-	m[ required_host ][ port ] =
+	prot_obj = m[ required_host ][ port ] =
 	  prot( port, required_host,
 		// Don't complain if binding IPv6 ANY fails with
 		// EADDRINUSE after we've bound IPv4 ANY. At least on
@@ -2765,37 +2769,28 @@ int register_url( string url, Configuration conf )
 		required_host == "::" && opened_ipv4_any_port);
       }) {
       failures++;
+#if 0
       if (has_prefix(describe_error(err), "Invalid address") &&
 	  required_host && has_value(required_host, ":")) {
 	report_error(sprintf("Failed to initialize IPv6 port for URL %s"
-			     " (ip %s). Not supported?\n",
-			     url, required_host));
-      } else {
-	report_error(sprintf("Initializing the port handler for URL %s"
-			     " failed! (ip %s)\n"
-			     "%s\n",
-			     url,
+			     " (ip %s).\n",
+			     display_url, required_host));
+      } else
+#endif
+	report_error(sprintf("Initializing the port handler for "
+			     "URL %s (ip %s) failed: %s\n",
+			     display_url,
 			     required_host||"ANY",
-			     describe_backtrace(err)));
-      }
+#ifdef DEBUG
+			     describe_backtrace(err)
+#else
+			     describe_error (err)
+#endif
+			    ));
       continue;
     }
 
     if (!required_host) opened_ipv4_any_port = 1;
-
-    Protocol prot_obj = m[required_host][port];
-
-    if( !prot_obj )
-    {
-      m_delete( m[ required_host ], port );
-      failures++;
-      if (required_host) {
-	report_warning(LOC_M(22, "Binding the port on IP %s failed\n"
-			     "   for URL %s!\n"),
-		       required_host, url);
-      }
-      continue;
-    }
 
     if (prot_obj->bound == -1) {
       // Got EADDRINUSE for the IPv6 case - see above. Just forget
@@ -2818,15 +2813,16 @@ int register_url( string url, Configuration conf )
   }
   if (failures == sizeof(required_hosts)) 
   {
-    report_error(LOC_M(23, "Cannot register URL %s!")+"\n", url);
+    report_error(LOC_M(23, "Failed to register URL %s for %O.")+"\n",
+		 display_url, conf->query_name());
     return 0;
   }
   sort_urls();
 
   // The following will show the punycoded version for IDN hostnames.
   // That is intentional, to make it clear what actually happens.
-  report_notice(" "+LOC_S(3, "Registered %s for %s")+"\n",
-		url, conf->query_name() );
+  report_notice(" "+LOC_S(3, "Registered URL %s for %O.")+"\n",
+		display_url, conf->query_name() );
   return 1;
 }
 
