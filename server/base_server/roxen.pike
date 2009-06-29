@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.964 2009/06/24 11:37:59 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.965 2009/06/29 13:22:54 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1058,7 +1058,7 @@ static void bg_process_queue()
 }
 #endif
 
-void background_run (int|float delay, function func, mixed... args)
+mixed background_run (int|float delay, function func, mixed... args)
 //! Enqueue a task to run in the background in a way that makes as
 //! little impact as possible on the incoming requests. No matter how
 //! many tasks are queued to run in the background, only one is run at
@@ -1072,6 +1072,11 @@ void background_run (int|float delay, function func, mixed... args)
 //! never run for a considerable time. Instead do another call to
 //! @[background_run] to queue it up again after some work has been
 //! done, or use @[BackgroundProcess].
+//!
+//! @returns
+//! If the function is queued for execution right away then zero is
+//! returned. Otherwise its call out identifier is returned, which can
+//! be used with @[find_call_out] or @[remove_call_out].
 {
 #ifdef DEBUG_BACKGROUND_RUN
   report_debug ("background_run enqueue %s (%s) [%d jobs in queue]\n",
@@ -1090,7 +1095,7 @@ void background_run (int|float delay, function func, mixed... args)
 #ifdef THREADS
   if (!hold_wakeup_cond)
     // stop_handler_threads is running; ignore more work.
-    return;
+    return 0;
 
   function enqueue = lambda()
   {
@@ -1099,16 +1104,20 @@ void background_run (int|float delay, function func, mixed... args)
       handle (bg_process_queue);
   };
 
+  // Be careful to zero enqueue below to avoid trampoline garbage.
+
   if (delay)
-    call_out (enqueue, delay);
-  else
+    // A trick to zero enqueue without putting the call_out return
+    // value into a local variable.
+    return call_out (enqueue, (enqueue = 0, delay));
+  else {
     enqueue();
-
-  enqueue = 0;			// To avoid garbage.
-
+    enqueue = 0;
+    return 0;
+  }
 #else
   // Can't do much better when we haven't got threads..
-  call_out (func, delay, @args);
+  return call_out (func, delay, @args);
 #endif
 }
 
