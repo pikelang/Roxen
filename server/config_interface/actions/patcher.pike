@@ -686,7 +686,7 @@ mixed parse(RequestID id)
 	       LOCALE(371, "Failed to install the patch. See the log below for "
 			 "details") + "</p>\n";
       else
-	res += "<p>" + LOCALE(372 ,"Patch successfully installed. See the log below"
+	res += "<p>" + LOCALE(372 ,"Patch successfully installed. See the log below "
 			         "for details") + "</p>\n";
     }
     else
