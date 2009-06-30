@@ -52,7 +52,7 @@ void setup_yui() {
     report_notice("Self-test detected: Skipping extraction of "
 		  "YUI version " + ver + ".\n");
 #else
-    report_notice("Will extraxt YUI version "+ ver+".\n");
+    report_notice("Will extract YUI version "+ ver+".\n");
     tar_extract(combine_path(module_dir,"yui-"+ver+".tar"), yui_root_dir);
 #endif
   }
