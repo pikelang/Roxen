@@ -1,5 +1,5 @@
 <!-- -*- html -*- -->
-<!-- $Id: template,v 1.126 2009/04/20 14:09:30 jonasw Exp $ -->
+<!-- $Id: template,v 1.127 2009/06/30 10:56:19 jonasw Exp $ -->
 
 <define tag='cfg-variables'>
   <set variable='form.__redirect' value='1' />
@@ -139,9 +139,14 @@
 
 <define container="submit-gbutton2" scope="submit-gbutton2">
 <attrib name="img-align">center</attrib>
+<attrib name="onclick"/>
+<set variable="var.onclick-confirm" value=""/>
+<if variable="_.onclick = ?*">
+  <set variable="var.onclick-confirm" value='onclick="&_.onclick;"'/>
+</if>
 <define variable="var.url" preparse="1"><gbutton-url ::='&submit-gbutton2.args;'><contents scope="submit-gbutton2"/></gbutton-url></define>
    <set variable="contents" type="text/xml"><eval>&_.contents:none;</eval></set>
-   <input vspace='4' align="&_.img-align;" type="image" name="&_.name;" value="&_.contents;" src="&var.url;" border="0" />
+   <input vspace='4' align="&_.img-align;" type="image" name="&_.name;" value="&_.contents;" src="&var.url;" border="0" ::="&var.onclick-confirm;" />
 </define>
 
 <define tag="cf-save"> <submit-gbutton2 width="&usr.gbutton-width;" align="center" name="save" img-align="right"> <translate id="bA">Save</translate> </submit-gbutton2> </define>
