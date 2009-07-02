@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.404 2009/07/02 12:39:39 mast Exp $
+// $Id: module.pmod,v 1.405 2009/07/02 18:29:20 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -203,6 +203,20 @@ class Tag
   //! The names and types of the required and optional arguments. If a
   //! type specifies a parser, it'll be used on the argument value.
   //! Note that the order in which arguments are parsed is arbitrary.
+  //!
+  //! If an argument got a nonsequential type, it takes exactly one
+  //! value. More than one value trigs a parse error. If no value is
+  //! given (e.g. the attribute value is just an empty string) then a
+  //! parse error is trigged if the argument is required, otherwise
+  //! the argument is considered missing altogether.
+  //!
+  //! For instance, if you have @expr{@[opt_arg_types] = (["foo":
+  //! RXML.t_int(RXML.PEnt)])@} then @expr{<my-tag foo=""/>@} is the
+  //! same as @expr{<my-tag/>@} since the attribute value @expr{""@}
+  //! contains no integer.
+  //!
+  //! The above does not apply to sequential types, since they always
+  //! can be assigned an empty value.
 
   Type def_arg_type = t_text (PEnt);
   //! The type used for arguments that isn't present in neither
@@ -346,13 +360,23 @@ class Tag
     if (mixed err = catch {
 #endif
 	if (ignore_args)
-	  foreach (indices (args) - ignore_args, string arg)
-	    args[arg] = (atypes[arg] || def_arg_type)->eval (
-	      args[arg], ctx);	// Should not unwind.
+	  foreach (indices (args) - ignore_args, string arg) {
+	    Type t = atypes[arg] || def_arg_type;
+	    mixed v = t->eval_opt (args[arg], ctx); // Should not unwind.
+	    if (v == nil)
+	      set_nil_arg (args, arg, t, req_arg_types, ctx->id);
+	    else
+	      args[arg] = v;
+	  }
 	else
-	  foreach (args; string arg; mixed val)
-	    args[arg] = (atypes[arg] || def_arg_type)->eval (
-	      val, ctx);	// Should not unwind.
+	  foreach (args; string arg; mixed val) {
+	    Type t = atypes[arg] || def_arg_type;
+	    mixed v = t->eval_opt (val, ctx); // Should not unwind.
+	    if (v == nil)
+	      set_nil_arg (args, arg, t, req_arg_types, ctx->id);
+	    else
+	      args[arg] = v;
+	  }
 #ifdef MODULE_DEBUG
     }) {
       if (objectp (err) && ([object] err)->thrown_at_unwind)
@@ -515,12 +539,19 @@ class Tag
 	  TAG_DEBUG (RXML_CONTEXT->frame,
 		     "Evaluating argument value %s with %O\n",
 		     format_short (val), parser);
+
 	  parser->finish (val); // Should not unwind.
-	  raw_args[arg] = parser->eval(); // Should not unwind.
+	  mixed v = parser->eval(); // Should not unwind.
+	  t->give_back (parser, ctx->tag_set);
+
+	  if (v == nil)
+	    set_nil_arg (raw_args, arg, t, req_arg_types, ctx->id);
+	  else
+	    raw_args[arg] = v;
+
 	  TAG_DEBUG (RXML_CONTEXT->frame,
 		     "Setting dynamic argument %s to %s\n",
 		     format_short (arg), format_short (val));
-	  t->give_back (parser, ctx->tag_set);
 	}
       }
 #ifdef MODULE_DEBUG
@@ -927,7 +958,7 @@ class TagSet
   //! definitions.
   //!
   //! @note
-  //! In the non-persistent case it's much more efficient to use
+  //! In the nonpersistent case it's much more efficient to use
   //! @[generation] to track changes in the tag set.
   {
     if (!hash)
@@ -2813,6 +2844,37 @@ class Backtrace
   }
 }
 
+protected void nil_for_nonseq_error (RequestID id, Type type,
+				     void|string msg, mixed... args)
+{
+  if (!id || !id->conf || id->conf->compat_level() >= 5.0) {
+    if (sizeof (args)) msg = sprintf (msg, @args);
+    parse_error ("No value given for nonsequential type %s%s.\n",
+		 type->name, msg || "");
+  }
+}
+
+protected void set_nil_arg (mapping(string:mixed) args, string arg,
+			    Type type, mapping(string:Type) req_args,
+			    RequestID id)
+// Helper to do the work to assign nil to an attribute value.
+{
+  if (type->sequential)
+    args[arg] = type->empty_value;
+  else if (req_args[arg]) {
+    nil_for_nonseq_error (id, type, " in attribute %s", format_short (arg));
+    args[arg] = nil;		// < 5.0 compat.
+  }
+  else
+    // If an optional attribute has a nonsequential type and the value
+    // is missing after parsing then let's treat it as if the
+    // attribute was never given, since that's more useful than
+    // complaining. It's not strictly 4.5-compatible (which would be
+    // to assign nil just like above), but that incompatibility is not
+    // expected to cause problems.
+    m_delete (args, arg);
+}
+
 
 // Current context:
 
@@ -3153,6 +3215,16 @@ class Frame
   //! are called. Initialized to @[RXML.nil] every time the frame
   //! executed (unless the frame was made with the finished content
   //! directly, e.g. by @[RXML.make_tag]).
+  //!
+  //! @note
+  //! Even if @[content_type] is nonsequential, this value might be
+  //! @[RXML.nil], indicating the lack of any value at all. That can
+  //! be considered an error since nonsequential types have exactly
+  //! one value. The reason it is allowed is because the content often
+  //! is simply propagated to the result, and we want to allow another
+  //! sibling tag to produce a value for the surrounding tag (at most
+  //! one tag or variable entity in the surrounding tag may have a
+  //! non-nil result).
 
   Type result_type;
   //! The required result type. If it has a parser, it will affect how
@@ -3689,7 +3761,7 @@ class Frame
     if (from != nil) {							\
       if (to != nil)							\
 	parse_error (							\
-	  "Cannot append another value %s to non-sequential " desc	\
+	  "Cannot append another value %s to nonsequential " desc	\
 	  " of type %s.\n", format_short (from), to_type->name);	\
       THIS_TAG_DEBUG ("Setting " desc " to %s\n", format_short (from));	\
       to = from;							\
@@ -4091,17 +4163,21 @@ class Frame
 		throw_fatal (err);
 	      }
 #endif
-	      if (comp)
+	      if (comp) {
 		if (tag)
 		  fn_text_add (
-		    "return ", comp->bind (tag->_eval_splice_args), "(ctx,",
+		    "mapping(string:mixed) args = ",
+		    comp->bind (tag->_eval_splice_args), "(ctx,",
 		    comp->bind (xml_tag_parser->parse_tag_args), "((",
 		    sub_p_code->compile_text (comp), ")||\"\"),",
-		    comp->bind (splice_req_types), ")+([\n");
+		    comp->bind (splice_req_types), ");\n");
 		else
 		  fn_text_add (
-		    "return ", comp->bind (xml_tag_parser->parse_tag_args), "((",
-		    sub_p_code->compile_text (comp), ")||\"\")+([\n");
+		    "mapping(string:mixed) args = ",
+		    comp->bind (xml_tag_parser->parse_tag_args), "((",
+		    sub_p_code->compile_text (comp), ")||\"\");\n");
+	      }
+
 	      splice_arg_type->give_back (parser, ctx->tag_set);
 	      if (tag)
 		cooked_args = tag->_eval_splice_args (
@@ -4113,7 +4189,7 @@ class Frame
 
 	    else {
 	      cooked_args = ([]);
-	      if (comp) fn_text_add ("return ([\n");
+	      if (comp) fn_text_add ("mapping(string:mixed) args = ([]);\n");
 	    }
 
 #ifdef MODULE_DEBUG
@@ -4123,6 +4199,7 @@ class Frame
 	      TagSet ctx_tag_set = ctx->tag_set;
 	      Type default_type = tag ? tag->def_arg_type : t_any_text (PNone);
 	      if (comp) {
+		string req_args_var = comp->bind (tag->req_arg_types);
 		foreach (raw_args; string arg; string val) {
 		  Type t = atypes[arg] || default_type;
 		  if (t->parser_prog != PNone) {
@@ -4132,18 +4209,35 @@ class Frame
 				    "argument value %s with %O\n",
 				    format_short (val), parser);
 		    parser->finish (val); // Should not unwind.
-		    cooked_args[arg] = parser->eval(); // Should not unwind.
+		    mixed v = parser->eval(); // Should not unwind.
+		    t->give_back (parser, ctx_tag_set);
+
+		    if (t->sequential)
+		      fn_text_add (sprintf ("args[%O] = %s;\n", arg,
+					    sub_p_code->compile_text (comp)));
+		    else
+		      fn_text_add (
+			"tmp=", sub_p_code->compile_text (comp), ";\n",
+			sprintf ("if (tmp == RXML.nil)"
+				 " set_nil_arg(args,%O,%s,%s,ctx->id);\n"
+				 "else args[%O] = tmp;\n",
+				 arg, comp->bind (t), req_args_var, arg));
+
+		    if (v == nil)
+		      set_nil_arg (cooked_args, arg, t,
+				   tag->req_arg_types, ctx->id);
+		    else
+		      cooked_args[arg] = v;
+
 		    THIS_TAG_DEBUG ("Setting argument %s to %s\n",
 				    format_short (arg),
 				    format_short (cooked_args[arg]));
-		    fn_text_add (sprintf ("%O: %s,\n", arg,
-					  sub_p_code->compile_text (comp)));
-		    t->give_back (parser, ctx_tag_set);
 		  }
 
 		  else {
 		    cooked_args[arg] = val;
-		    fn_text_add (sprintf ("%O: %s,\n", arg, comp->bind (val)));
+		    fn_text_add (sprintf ("args[%O] = %s;\n",
+					  arg, comp->bind (val)));
 		  }
 		}
 	      }
@@ -4156,11 +4250,18 @@ class Frame
 		    THIS_TAG_DEBUG ("Evaluating argument value %s with %O\n",
 				    format_short (val), parser);
 		    parser->finish (val); // Should not unwind.
-		    cooked_args[arg] = parser->eval(); // Should not unwind.
+		    mixed v = parser->eval(); // Should not unwind.
+		    t->give_back (parser, ctx_tag_set);
+
+		    if (v == nil)
+		      set_nil_arg (cooked_args, arg, t,
+				   tag->req_arg_types, ctx->id);
+		    else
+		      cooked_args[arg] = v;
+
 		    THIS_TAG_DEBUG ("Setting argument %s to %s\n",
 				    format_short (arg),
 				    format_short (cooked_args[arg]));
-		    t->give_back (parser, ctx_tag_set);
 		  }
 
 		  else
@@ -4176,7 +4277,7 @@ class Frame
 #endif
 
 	    if (comp) {
-	      fn_text_add ("]);\n");
+	      fn_text_add ("return args;\n");
 	      func = comp->add_func (
 		"mapping(string:mixed)", "object ctx, object evaler", fn_text->get());
 	    }
@@ -5110,7 +5211,7 @@ final mixed rxml_index (mixed val, string|int|array(string|int) index,
 //!  @item
 //!   Arrays are indexed with 1 for the first element, or
 //!   alternatively -1 for the last. Indexing an array of size n with
-//!   0, n+1 or greater, -n-1 or less, or with a non-integer is an
+//!   0, n+1 or greater, -n-1 or less, or with a noninteger is an
 //!   error.
 //!  @item
 //!   Strings, along with integers and floats, are treated as simple
@@ -6176,7 +6277,25 @@ class Type
 	      void|Parser|PCode parent, void|int dont_switch_ctx)
   //! Parses and evaluates the value in the given string. If a context
   //! isn't given, the current one is used. The current context and
-  //! ctx are assumed to be the same if dont_switch_ctx is nonzero.
+  //! @[ctx] are assumed to be the same if @[dont_switch_ctx] is
+  //! nonzero.
+  {
+    mixed res = eval_opt (in, ctx, tag_set, parent, dont_switch_ctx);
+    // FOO
+    if (res == nil) {
+      if (sequential)
+	res = this->empty_value;
+      else
+	nil_for_nonseq_error (ctx->id, this);
+    }
+    return res;
+  }
+
+  mixed eval_opt (string in, void|Context ctx, void|TagSet tag_set,
+		  void|Parser|PCode parent, void|int dont_switch_ctx)
+  //! Like @[eval], but doesn't check for missing value for
+  //! nonsequential types. @[RXML.nil] is returned instead in such
+  //! cases.
   {
     mixed res;
     if (!ctx) ctx = RXML_CONTEXT;
@@ -7841,7 +7960,10 @@ protected class PikeCompile
   protected mapping(string:int) cur_ids = ([]);
   protected mapping(mixed:mixed) delayed_resolve_places = ([]);
 
-  protected mapping(string:mixed) bindings = ([]);
+  protected mapping(string:mixed) bindings = ([
+    // Prepopulate with standard things we need access to.
+    "set_nil_arg": set_nil_arg,
+  ]);
 
   string bind (mixed val)
   {
@@ -9709,7 +9831,7 @@ mixed add_to_value (Type type, mixed value, mixed piece)
   else
     if (piece == nil) return value;
     else if (value != nil)
-      parse_error ("Cannot append another value %s to non-sequential "
+      parse_error ("Cannot append another value %s to nonsequential "
 		   "result of type %s.\n", format_short (piece), type->name);
     else return piece;
 }
