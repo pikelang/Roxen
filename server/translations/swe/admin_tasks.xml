@@ -1347,7 +1347,7 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 </str>
 
 <str id="372">
-<o>Patch successfully installed. See the log belowfor details</o>
+<o>Patch successfully installed. See the log below for details</o>
 <t>Patchen är nu installerad. Vidare information finns i nedanstående logg.</t>
 </str>
 

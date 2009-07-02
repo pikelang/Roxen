@@ -13,7 +13,7 @@ inherit "roxenlib";
 
 #define CU_AUTH id->misc->config_user->auth
 
-constant cvs_version = "$Id: config_tags.pike,v 1.203 2009/06/30 10:56:17 jonasw Exp $";
+constant cvs_version = "$Id: config_tags.pike,v 1.204 2009/07/02 14:12:55 jonasw Exp $";
 constant module_type = MODULE_TAG|MODULE_CONFIG;
 constant module_name = "Tags: Administration interface tags";
 
@@ -1188,7 +1188,7 @@ string simpletag_cf_render_variable( string t, mapping m,
     if( !(int)_("no-default") )
       def = "<br /><submit-gbutton2 name='"+_("path")+"do_default' "
 	"onclick=\"return confirm('" +
-	LOCALE(0, "Are you sure you want to restore the default value?") +
+	LOCALE(1041, "Are you sure you want to restore the default value?") +
 	"');\" > "+
 	LOCALE(475,"Restore default value")+" "+_("diff-txt")+
 	" </submit-gbutton2> "+_("diff")+"\n";

@@ -40,6 +40,8 @@
   <file>../config_interface/dbs/new_group.pike</file>
   <file>../config_interface/dbs/permissions.html</file>
   <file>../config_interface/dbs/restore_db.pike</file>
+  <file>../config_interface/dbs/schedules.html</file>
+  <file>../config_interface/dbs/schedules.pike</file>
   <file>../config_interface/dbs/status.html</file>
   <file>../config_interface/dbs/status.pike</file>
   <file>../config_interface/dbs/subtabs.pike</file>

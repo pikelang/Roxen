@@ -27,7 +27,7 @@ mapping|string parse( RequestID id )
   if( !id->variables->db )
   {
     res += "<table width='100%'>\n"
-      "<tr><th colspan='2' align='left'>" + _(0, "Database") +
+      "<tr><th colspan='2' align='left'>" + _(463, "Database") +
       "</th><th align='left'>"+_(405,"Directory")+
       "</th><th align='left'>"+_(459,"Date")+"</th></tr>\n";
     foreach( sort( indices( bks ) ), string bk )

@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.115 2009/06/30 10:56:20 jonasw Exp $
+// $Id: module.pmod,v 1.116 2009/07/02 14:12:55 jonasw Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -67,7 +67,7 @@ string get_diff_def_html( Variable v,
     }
   }
   m = ([ "href" : def_url,
-	 "onclick" : "return confirm('" + LOCALE(0, "Are you sure you want "
+	 "onclick" : "return confirm('" + LOCALE(1041, "Are you sure you want "
 						    "to restore the default "
 						    "value?") + "');" ]);
   return diff_button + " " +

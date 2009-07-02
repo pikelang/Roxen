@@ -20,13 +20,23 @@
 <file>../config_interface/dbs/browser.pike</file>
 <file>../config_interface/dbs/create_db.html</file>
 <file>../config_interface/dbs/create_group.html</file>
+<file>../config_interface/dbs/db_list.pike</file>
+<file>../config_interface/dbs/db_maintenance.pike</file>
 <file>../config_interface/dbs/db_matrix.pike</file>
+<file>../config_interface/dbs/db_optimizeall.html</file>
+<file>../config_interface/dbs/db_optimizeall_ajax.pike</file>
+<file>../config_interface/dbs/db_repairall.html</file>
+<file>../config_interface/dbs/db_repairall_ajax.pike</file>
 <file>../config_interface/dbs/edit_group.pike</file>
 <file>../config_interface/dbs/import_dbs.pike</file>
 <file>../config_interface/dbs/index.html</file>
+<file>../config_interface/dbs/maintenance.html</file>
 <file>../config_interface/dbs/new_db.pike</file>
 <file>../config_interface/dbs/new_group.pike</file>
+<file>../config_interface/dbs/permissions.html</file>
 <file>../config_interface/dbs/restore_db.pike</file>
+<file>../config_interface/dbs/schedules.html</file>
+<file>../config_interface/dbs/schedules.pike</file>
 <file>../config_interface/dbs/status.html</file>
 <file>../config_interface/dbs/status.pike</file>
 <file>../config_interface/dbs/subtabs.pike</file>
@@ -49,6 +59,7 @@
 <file>../config_interface/sites/site_header.pike</file>
 <file>../config_interface/statusinfo.pike</file>
 <file>../config_interface/template</file>
+<file>../config_interface/template-insert</file>
 <file>../config_interface/topmenu.pike</file>
 <file>../config_interface/user_delete.pike</file>
 <file>../config_interface/user_form.pike</file>
@@ -288,11 +299,35 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
     &lt;td&gt;The length of the data section of the reply.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$bin-length&lt;/td&gt;
     &lt;td&gt;Same, but as a 32 bit integer in network byte order.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$queue-length&lt;/td&gt;
+    &lt;td&gt;Number of jobs waiting to be processed by the handler threads
+    at the time this request was added to the queue.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$queue-time&lt;/td&gt;
+    &lt;td&gt;Time in seconds that the request spent in the internal handler
+    queue, waiting to be processed by a handler thread.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$handle-time&lt;/td&gt;
+    &lt;td&gt;Time in seconds spent processing the request in a handler
+    thread. This measures the server processing time, excluding I/O
+    and time spent in the handler queue. Note however that this
+    measures real time, not virtual process time. I.e. if there are
+    other handler threads or processes using the CPU then this might
+    not accurately show the time that the Roxen server spent on the
+    request. Also note that if a handler thread has to wait for
+    responses from other servers then that wait time is included in
+    this measurement.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;$handle-cputime&lt;/td&gt;
+    &lt;td&gt;CPU time in seconds spent processing the request in a handler
+    thread. Similar to $handle-time, but only includes the actual CPU
+    time spent on this request only. Time spent waiting for responses
+    from external server is not included here. Note that this time
+    might have very low accuracy on some platforms. There are also
+    platforms where this measurement isn't available at all, and in
+    that case this fields expands to "-".&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$request-time&lt;/td&gt;
-    &lt;td&gt;The time the request took (seconds). Note that this measures
-    real time, not virtual process time. I.e. if there are other
-    processes using the CPU then this will not accurately show the
-    time that the Roxen server process spent.&lt;/td&gt;&lt;/tr&gt;
+    &lt;td&gt;Time in seconds that the whole request took on the server
+    side, including I/O time for receiving the request and sending the
+    response. Note that this measures real time - see $handle-time for
+    further discussion.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$etag&lt;/td&gt;
     &lt;td&gt;The entity tag (aka ETag) header of the result.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$referrer&lt;/td&gt;
@@ -744,14 +779,14 @@ lösenordsautenticering skall ske behöver du ha modulen "Autenticering: Lösenord"
 </str>
 
 <str id="91">
-<o>If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will still be correct.</o>
+<o>If this toggle is enabled log entries for restored connections will log the amount of sent data plus the restoration location. Ie if a user has downloaded 100 bytes of a file already, and makes a Range request fetching the remaining 900 bytes, the log entry will log it as if the entire 1000 bytes were downloaded. &lt;p&gt;This is useful if you want to know if downloads were successful (the user has the complete file downloaded). The drawback is that bandwidth statistics on the log file will be incorrect. The statistics in Roxen will still be correct.&lt;/p&gt;</o>
 <t>När den här flaggan är satt så loggar Roxen hela längden på
 en fil vars nerladdning återstartas. Om en användare först
 laddar hem 100 bytes av en fil och sedan laddar hem de 
 återstående 900 bytes av filen med en Range-request så 
 kommer Roxen logga det som alla 1000 bytes hade laddats hem.
 &lt;p&gt;Detta kan vara användbart om du vill se om en användare
-har lyckats ladda hem hela filen. Nackdelen är att bandbreddsstatistiken i loggfilen är inkorrekt. Statistiken i Roxen kommer dock vara rätt.</t>
+har lyckats ladda hem hela filen. Nackdelen är att bandbreddsstatistiken i loggfilen är inkorrekt. Statistiken i Roxen kommer dock vara rätt.&lt;/p&gt;</t>
 </str>
 
 <str id="92">
@@ -2398,6 +2433,8 @@ modules.&lt;/p&gt;
   &lt;td&gt;Corresponds to Roxen 4.0.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr valign='top'&gt;&lt;td&gt;4.5&amp;nbsp;&amp;nbsp;&lt;/td&gt;
   &lt;td&gt;Corresponds to Roxen 4.5.&lt;/td&gt;&lt;/tr&gt;
+&lt;tr valign='top'&gt;&lt;td&gt;5.0&amp;nbsp;&amp;nbsp;&lt;/td&gt;
+  &lt;td&gt;Corresponds to Roxen 5.0.&lt;/td&gt;&lt;/tr&gt;
 &lt;/table&gt;&lt;/p&gt;</o>
 <t></t>
 </str>
@@ -3563,4 +3600,127 @@ be of real use.&lt;/p&gt;</o>
 <str id="1023">
 <o>Undocumented</o>
 <t>Odokumenterad</t>
+</str>
+
+<str id="381">
+<new/>
+<o>Failed to connect</o>
+<t></t>
+</str>
+
+<str id="1024">
+<new/>
+<o>Contains all documentation.</o>
+<t></t>
+</str>
+
+<str id="1025">
+<new/>
+<o>Unknown database</o>
+<t></t>
+</str>
+
+<str id="1042">
+<new/>
+<o>
+	    &lt;b&gt;Warning!&lt;/b&gt;&lt;br /&gt;
+	    This might take a long time to complete.&lt;br/&gt;
+	    The amount of time this takes depends on how large the tables are.&lt;br/&gt;
+	  </o>
+<t></t>
+</str>
+
+<str id="1026">
+<new/>
+<o>Backup schedules</o>
+<t></t>
+</str>
+
+<str id="1027">
+<new/>
+<o>Schedule</o>
+<t></t>
+</str>
+
+<str id="1028">
+<new/>
+<o>Period</o>
+<t></t>
+</str>
+
+<str id="1029">
+<new/>
+<o>Time</o>
+<t></t>
+</str>
+
+<str id="1030">
+<new/>
+<o>Generations</o>
+<t></t>
+</str>
+
+<str id="1031">
+<new/>
+<o>Method</o>
+<t></t>
+</str>
+
+<str id="1032">
+<new/>
+<o>Sundays,Mondays,Tuesdays,Wednesdays,Thursdays,Fridays,Saturdays</o>
+<t></t>
+</str>
+
+<str id="1033">
+<new/>
+<o>Every Hour</o>
+<t></t>
+</str>
+
+<str id="1034">
+<new/>
+<o>Every Day</o>
+<t></t>
+</str>
+
+<str id="1035">
+<new/>
+<o>At</o>
+<t></t>
+</str>
+
+<str id="1036">
+<new/>
+<o>Unlimited</o>
+<t></t>
+</str>
+
+<str id="1037">
+<new/>
+<o>MySQLDump (recommended)</o>
+<t></t>
+</str>
+
+<str id="1038">
+<new/>
+<o>Backup (internal databases only)</o>
+<t></t>
+</str>
+
+<str id="1039">
+<new/>
+<o>Backup directory</o>
+<t></t>
+</str>
+
+<str id="1040">
+<new/>
+<o>Note: This schedule is also used to schedule backups for Roxen's internal databases.</o>
+<t></t>
+</str>
+
+<str id="1041">
+<o>Are you sure you want to restore the default value?</o>
+<t>Är du säker på att du vill återställa standardvärdet?</t>
 </str>

@@ -46,13 +46,13 @@ mapping|string parse( RequestID id )
   }
 
   string res =
-    "<h3>" + _(0, "Backup schedules") + ":</h3>\n"
+    "<h3>" + _(1026, "Backup schedules") + ":</h3>\n"
     "<table width='100%'>\n"
-    "<tr><th align='left'>" + _(0, "Schedule") +
-    "</th><th align='left'>" + _(0, "Period") +
-    "</th><th align='left'>" + _(0, "Time") +
-    "</th><th align='left'>" + _(0, "Generations") +
-    "</th><th align='left'>" + _(0, "Method") +
+    "<tr><th align='left'>" + _(1027, "Schedule") +
+    "</th><th align='left'>" + _(1028, "Period") +
+    "</th><th align='left'>" + _(1029, "Time") +
+    "</th><th align='left'>" + _(1030, "Generations") +
+    "</th><th align='left'>" + _(1031, "Method") +
     "</th></tr>\n";
 
   foreach(db->query("SELECT id, schedule, period, offset, dir, "
@@ -69,8 +69,8 @@ mapping|string parse( RequestID id )
       "<td><default name='period-" + schedule->id + "' value='" +
       (schedule->period?(schedule->period + ":" + (day*86400)):"") +
       "'><select name='period-" + schedule->id + "'>\n"
-      "<option value=''>" + _(0, "Never") + "</option>\n";
-    foreach(_(0, "Sundays,Mondays,Tuesdays,Wednesdays,Thursdays,"
+      "<option value=''>" + _(482, "Never") + "</option>\n";
+    foreach(_(1032, "Sundays,Mondays,Tuesdays,Wednesdays,Thursdays,"
 	      "Fridays,Saturdays")/","; int dayno; string day) {
       res += sprintf("<option value='%d:%d'>%s</option>\n",
 		     86400*7, (((dayno + 3)%7)*86400),
@@ -78,12 +78,12 @@ mapping|string parse( RequestID id )
     }
 #ifdef YES_I_KNOW_WHAT_I_AM_DOING
     res += "<option value='60:0'>Every Minute</option>\n"
-      "<option value='3600:0'>" + _(0, "Every Hour") + "</option>\n";
+      "<option value='3600:0'>" + _(1033, "Every Hour") + "</option>\n";
 #endif
     res +=
-      "<option value='86400:0'>" + _(0, "Every Day") + "</option>\n"
+      "<option value='86400:0'>" + _(1034, "Every Day") + "</option>\n"
       "</select></default></td>\n"
-      "<td>" + _(0, "At") +
+      "<td>" + _(1035, "At") +
       " <default name='time-" + schedule->id + "' value='" +
       hour*3600 + "'>"
       "<select name='time-" + schedule->id + "'>\n";
@@ -95,7 +95,7 @@ mapping|string parse( RequestID id )
       "<td><default name='generations-" + schedule->id + "' "
       "value='" + schedule->generations +
       "'><select name='generations-" + schedule->id + "'>\n"
-      "<option value='0'>" + _(0, "Unlimited") + "</option>\n"
+      "<option value='0'>" + _(1036, "Unlimited") + "</option>\n"
       "<option value='1'>1</option>\n"
       "<option value='2'>2</option>\n"
       "<option value='3'>3</option>\n"
@@ -106,12 +106,12 @@ mapping|string parse( RequestID id )
       "<td><default name='method-" + schedule->id +
       "' value='" + schedule->method + "'>"
       "<select name='method-" + schedule->id + "'>\n"
-      "<option value='mysqldump'>" + _(0, "MySQLDump (recommended)") + "</option>\n"
-      "<option value='backup'>" + _(0, "Backup (internal databases only)") + "</option>\n"
+      "<option value='mysqldump'>" + _(1037, "MySQLDump (recommended)") + "</option>\n"
+      "<option value='backup'>" + _(1038, "Backup (internal databases only)") + "</option>\n"
       "</select></default></td>\n"
       "</tr>\n"
       "<tr><td>&nbsp;</td><td colspan='3'>" +
-      _(0, "Backup directory") +
+      _(1039, "Backup directory") +
       ": <input size='60%' name='directory-" + schedule->id +
       "' type='string' value='" + Roxen.html_encode_string(schedule->dir||"") +
       "' />"
@@ -119,7 +119,7 @@ mapping|string parse( RequestID id )
       "</td><td>&nbsp;</td></tr>\n";
     if (schedule->id == "1") {
       res += "<tr><td>&nbsp;</td><td colspan='3'>" +
-	_(0, "Note: This schedule is also used to schedule backups for "
+	_(1040, "Note: This schedule is also used to schedule backups for "
 	  "Roxen's internal databases.") +
 	"</td><td>&nbsp;</td></tr>\n";
     }

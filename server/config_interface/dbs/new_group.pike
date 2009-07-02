@@ -104,8 +104,8 @@ mapping|string parse( RequestID id )
     if( !strlen( error ) )
       if( Roxen.is_mysql_keyword( id->variables->name ) )
 	error = sprintf("<font color='&usr.warncolor;'>"+
-			_(410,"%s is a MySQL keyword, used by MySQL."
-			  "Please select another name")+
+			_(410,"%s is a MySQL keyword, used by MySQL. "
+			  "Please select another name.")+
 			"</font>", id->variables->name );
       else
       {
