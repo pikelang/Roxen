@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.403 2009/05/06 13:05:30 jonasw Exp $
+// $Id: module.pmod,v 1.404 2009/07/02 12:39:39 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -4016,6 +4016,7 @@ class Frame
 	_run_error ("Too deep recursion -- exceeding %d nested tags.\n",
 		    Context.max_frame_depth);
 
+      mapping(string:mixed) cooked_args;
       EVAL_ARGS_FUNC|string func;
 
       if (raw_args) {
@@ -4027,7 +4028,7 @@ class Frame
 #ifdef MAGIC_HELP_ARG
 	if (raw_args->help) {
 	  func = utils->return_help_arg;
-	  args = raw_args;
+	  cooked_args = raw_args;
 	}
 	else
 #endif
@@ -4103,23 +4104,25 @@ class Frame
 		    sub_p_code->compile_text (comp), ")||\"\")+([\n");
 	      splice_arg_type->give_back (parser, ctx->tag_set);
 	      if (tag)
-		args = tag->_eval_splice_args (
+		cooked_args = tag->_eval_splice_args (
 		  ctx, xml_tag_parser->parse_tag_args (splice_arg || ""),
 		  splice_req_types);
 	      else
-		args = xml_tag_parser->parse_tag_args (splice_arg || "");
+		cooked_args = xml_tag_parser->parse_tag_args (splice_arg || "");
 	    }
+
 	    else {
-	      args = raw_args;
+	      cooked_args = ([]);
 	      if (comp) fn_text_add ("return ([\n");
 	    }
 
 #ifdef MODULE_DEBUG
 	    if (mixed err = catch {
 #endif
+
 	      TagSet ctx_tag_set = ctx->tag_set;
 	      Type default_type = tag ? tag->def_arg_type : t_any_text (PNone);
-	      if (comp)
+	      if (comp) {
 		foreach (raw_args; string arg; string val) {
 		  Type t = atypes[arg] || default_type;
 		  if (t->parser_prog != PNone) {
@@ -4129,18 +4132,22 @@ class Frame
 				    "argument value %s with %O\n",
 				    format_short (val), parser);
 		    parser->finish (val); // Should not unwind.
-		    args[arg] = parser->eval(); // Should not unwind.
+		    cooked_args[arg] = parser->eval(); // Should not unwind.
 		    THIS_TAG_DEBUG ("Setting argument %s to %s\n",
-				    format_short (arg), format_short (args[arg]));
+				    format_short (arg),
+				    format_short (cooked_args[arg]));
 		    fn_text_add (sprintf ("%O: %s,\n", arg,
 					  sub_p_code->compile_text (comp)));
 		    t->give_back (parser, ctx_tag_set);
 		  }
+
 		  else {
-		    args[arg] = val;
+		    cooked_args[arg] = val;
 		    fn_text_add (sprintf ("%O: %s,\n", arg, comp->bind (val)));
 		  }
 		}
+	      }
+
 	      else
 		foreach (raw_args; string arg; string val) {
 		  Type t = atypes[arg] || default_type;
@@ -4149,14 +4156,17 @@ class Frame
 		    THIS_TAG_DEBUG ("Evaluating argument value %s with %O\n",
 				    format_short (val), parser);
 		    parser->finish (val); // Should not unwind.
-		    args[arg] = parser->eval(); // Should not unwind.
+		    cooked_args[arg] = parser->eval(); // Should not unwind.
 		    THIS_TAG_DEBUG ("Setting argument %s to %s\n",
-				    format_short (arg), format_short (args[arg]));
+				    format_short (arg),
+				    format_short (cooked_args[arg]));
 		    t->give_back (parser, ctx_tag_set);
 		  }
+
 		  else
-		    args[arg] = val;
+		    cooked_args[arg] = val;
 		}
+
 #ifdef MODULE_DEBUG
 	    }) {
 	      if (objectp (err) && ([object] err)->thrown_at_unwind)
@@ -4173,7 +4183,7 @@ class Frame
 	  }
 	  else {
 	    func = utils->return_empty_mapping;
-	    args = raw_args;
+	    cooked_args = raw_args;
 	  }
       }
       else
@@ -4229,6 +4239,9 @@ class Frame
 			     content_type->name);
       }
       else THIS_TAG_DEBUG ("Keeping content_type %s\n", content_type->name);
+
+      if (raw_args)
+	args = cooked_args;
 
       return func;
   }
