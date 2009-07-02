@@ -218,6 +218,13 @@ e</result>
 </test>
 
 <test>
+  <rxml>
+    <set variable="var.x" type="int"/>
+  </rxml>
+  <glob>[Error (parse): The value is missing for non-sequential type*]</glob>
+</test>
+
+<test>
 <rxml><set variable='var.a..b' value='5'/>&var.a..b;</rxml>
 <result>5</result>
 </test>
