@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.77 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.78 2009/07/02 18:30:02 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -802,6 +802,35 @@ class TagTestSleep {
 
     array do_return(RequestID id) {
       sleep((int)args->time);
+    }
+  }
+}
+
+class TagTestArgs
+{
+  inherit RXML.Tag;
+  constant name = "test-args";
+
+  array(RXML.Type) result_types = ({RXML.t_mapping});
+
+  mapping(string:RXML.Type) req_arg_types = ([
+    "req-string": RXML.t_string (RXML.PEnt),
+    "req-int": RXML.t_int (RXML.PEnt),
+  ]);
+
+  mapping(string:RXML.Type) opt_arg_types = ([
+    "opt-string": RXML.t_string (RXML.PEnt),
+    "opt-int": RXML.t_int (RXML.PEnt),
+    "opt-float": RXML.t_float (RXML.PEnt),
+  ]);
+
+  class Frame
+  {
+    inherit RXML.Frame;
+
+    array do_return()
+    {
+      result = args;
     }
   }
 }

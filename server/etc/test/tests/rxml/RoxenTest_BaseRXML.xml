@@ -3959,3 +3959,78 @@ def
     2: ba<br/>
   </result>
 </test>
+
+
+<!-- ............................................................ -->
+<comment>Attribute tests</comment>
+
+<test>
+  <rxml type="any">
+    <test-args req-string="x" req-int="1"
+	       opt-string="&var.x;" opt-int="&var.x;" opt-float="&var.x;"/>
+  </rxml>
+  <equal>([
+    "req-string": "x",
+    "req-int": 1,
+    "opt-string": "",
+  ])</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.args" type="text/*">
+      req-string="x" req-int="1"
+      opt-string="&var.x;" opt-int="&var.x;" opt-float="&var.x;"
+    </set>
+    <test-args ::="&var.args;"/>
+  </rxml>
+  <equal>([
+    "req-string": "x",
+    "req-int": 1,
+    "opt-string": "",
+  ])</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <test-args req-string="x" req-int="1"
+	       opt-string="" opt-int="" opt-float=""/>
+  </rxml>
+  <equal>([
+    "req-string": "x",
+    "req-int": 1,
+    "opt-string": "",
+  ])</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.args" type="text/*">
+      req-string="x" req-int="1"
+      opt-string="" opt-int="" opt-float=""
+    </set>
+    <test-args ::="&var.args;"/>
+  </rxml>
+  <equal>([
+    "req-string": "x",
+    "req-int": 1,
+    "opt-string": "",
+  ])</equal>
+</test>
+
+<test>
+  <rxml>
+    <test-args req-string="" req-int=""/>
+  </rxml>
+  <glob>[Error (parse): No value given for nonsequential type int*]</glob>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.args" type="text/*">
+      req-string="" req-int=""
+    </set>
+    <test-args ::="&var.args;"/>
+  </rxml>
+  <glob>[Error (parse): No value given for nonsequential type int*]</glob>
+</test>
