@@ -225,6 +225,14 @@ e</result>
 </test>
 
 <test>
+  <rxml>
+    <set variable="var.x" type="string"/>
+    &var.x;
+  </rxml>
+  <result></result>
+</test>
+
+<test>
 <rxml><set variable='var.a..b' value='5'/>&var.a..b;</rxml>
 <result>5</result>
 </test>
