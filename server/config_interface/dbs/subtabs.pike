@@ -9,7 +9,7 @@ array pages =
   ({ "dbs",         "./", "View Settings", 0, LOCALE(164, "Databases") }),
   ({ "backups",      "backups.html",   "Edit Global Variables",   0,
      LOCALE(465, "Database Backups") }),
-#ifdef ENABLE_DB_BACKUPS
+#if 1 /* ENABLE_DB_BACKUPS */
   ({ "schedules",    "schedules.html",   "Edit Global Variables",   0,
      LOCALE(0, "Backup schedules") }),
 #endif

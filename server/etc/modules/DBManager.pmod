@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.76 2009/07/03 08:49:03 grubba Exp $
+// $Id: DBManager.pmod,v 1.77 2009/07/03 11:55:34 noring Exp $
 
 //! Manages database aliases and permissions
 
@@ -1043,7 +1043,7 @@ void delete_backup( string dbname, string directory )
 	 dbname, directory );
 }
 
-#ifdef ENABLE_DB_BACKUPS
+#if 1 /* ENABLE_DB_BACKUPS */
 array(string|array(mapping)) dump(string dbname, string|void directory,
 				  string|void tag)
 //! Make a backup using @tt{mysqldump@} of all data in the specified database.
@@ -1318,7 +1318,7 @@ array(string|array(mapping)) backup( string dbname, string|void directory,
   }
 }
 
-#ifdef ENABLE_DB_BACKUPS
+#if 1 /* ENABLE_DB_BACKUPS */
 //! Call-out id's for backup schedules.
 protected mapping(int:mixed) backup_cos = ([]);
 
@@ -1650,7 +1650,7 @@ void create_db( string name, string path, int is_internal,
 
   query( "INSERT INTO dbs (name,path,local) VALUES (%s,%s,%s)", name,
 	 (is_internal?name:path), (is_internal?"1":"0") );
-#ifdef ENABLE_DB_BACKUPS
+#if 1 /* ENABLE_DB_BACKUPS */
   if (!is_internal && !has_prefix(path, "mysql://")) {
     query("UPDATE dbs SET schedule_id = NULL WHERE name = %s", name);
   }
@@ -1841,7 +1841,7 @@ static void create()
 	"  INDEX own (conf,module) "
 	")");
 
-#ifdef ENABLE_DB_BACKUPS
+#if 1 /* ENABLE_DB_BACKUPS */
   query("CREATE TABLE IF NOT EXISTS db_schedules ("
 	"id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, "
 	"schedule VARCHAR(255) NOT NULL, "
@@ -1868,7 +1868,7 @@ CREATE TABLE dbs (
  name VARCHAR(64) NOT NULL PRIMARY KEY,
  path VARCHAR(100) NOT NULL, 
  local INT UNSIGNED NOT NULL"
-#ifdef ENABLE_DB_BACKUPS
+#if 1 /* ENABLE_DB_BACKUPS */
  #",
  schedule_id INT DEFAULT 1,
  INDEX schedule_id (schedule_id)"
@@ -1888,7 +1888,7 @@ CREATE TABLE dbs (
     is_module_db( 0, "mysql",
 		  "The mysql database contains data about access "
 		  "rights for the internal MySQL database." );
-#ifdef ENABLE_DB_BACKUPS
+#if 1 /* ENABLE_DB_BACKUPS */
   } else {
     if (catch { query("SELECT schedule_id FROM dbs LIMIT 1"); }) {
       // The schedule_id field is missing.
@@ -1936,7 +1936,7 @@ CREATE TABLE db_permissions (
 	    "VALUES ('docs','docs','"+getcwd()+"/etc','"+time()+"')");
   }
 
-#ifdef ENABLE_DB_BACKUPS
+#if 1 /* ENABLE_DB_BACKUPS */
   // Start the backup timers when we have finished booting.
   call_out(start_backup_timers, 0);
 #endif
