@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.92 2009/06/01 13:40:45 grubba Exp $
+// $Id: DBManager.pmod,v 1.93 2009/07/03 08:29:47 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -1428,7 +1428,7 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
 //!   Database to backup.
 //! @param directory
 //!   Directory to store the backup in.
-//!   Defaults to a directory under @tt{$VARDIR@}.
+//!   Defaults to a directory under @tt{$VARDIR@}/backup.
 //! @param tag
 //!   Flag indicating the subsystem that requested the backup
 //!   (eg @[timed_backup()] sets it to @expr{"timed_backup"@}.
@@ -1486,7 +1486,7 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
   }
 
   if( !directory )
-    directory = roxen_path( "$VARDIR/"+dbname+"-"+isodate(time(1)) );
+    directory = roxen_path( "$VARDIR/backup/"+dbname+"-"+isodate(time(1)) );
   directory = combine_path( getcwd(), directory );
 
   string db_url = db_url_info->path;
@@ -1607,7 +1607,7 @@ array(string|array(mapping)) backup( string dbname, string|void directory,
 //!   (Internal) database to backup.
 //! @param directory
 //!   Directory to store the backup in.
-//!   Defaults to a directory under @tt{$VARDIR@}.
+//!   Defaults to a directory under @tt{$VARDIR@}/backup.
 //! @param tag
 //!   Flag indicating the subsystem that requested the backup
 //!   (eg @[timed_backup()] sets it to @expr{"timed_backup"@}.
@@ -1650,7 +1650,7 @@ array(string|array(mapping)) backup( string dbname, string|void directory,
     error("Illegal database\n");
 
   if( !directory )
-    directory = roxen_path( "$VARDIR/"+dbname+"-"+isodate(time(1)) );
+    directory = roxen_path( "$VARDIR/backup/"+dbname+"-"+isodate(time(1)) );
   directory = combine_path( getcwd(), directory );
 
   if( is_internal( dbname ) )
@@ -1707,7 +1707,7 @@ void timed_backup(int schedule_id)
   if (!sizeof(backup_info)) return;	// Timed backups disabled.
   string base_dir = backup_info[0]->dir || "";
   if (!has_prefix(base_dir, "/")) {
-    base_dir = "$VARDIR/" + base_dir;
+    base_dir = "$VARDIR/backup/" + base_dir;
   }
 
   report_notice("Performing database backup according to schedule %s...\n",
