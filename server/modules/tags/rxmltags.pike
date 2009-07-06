@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.619 2009/05/08 15:37:46 mathias Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.620 2009/07/06 13:03:48 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -7022,7 +7022,7 @@ class TagIfTypeFromData {
 	if(RXML.user_get_var(s)) {
 	    return try_decode_image(0, s);
 	}
-	RXML.run_error("Variable %s do not exists\n",s);
+	RXML.run_error("Variable %s does not exist.\n",s);
     }
 }
 
@@ -7041,9 +7041,9 @@ class TagIfTypeFromFilename {
 		type = type[0];
 	      return type;
 	    }
-	    RXML.parse_error("No Content type module loaded\n");
+	    RXML.parse_error("No Content type module loaded.\n");
 	}
-	RXML.run_error("Variable %s do not exists\n",s);
+	RXML.run_error("Variable %s does not exist.\n",s);
     }
 }
 
