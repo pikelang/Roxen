@@ -3962,7 +3962,7 @@ def
 
 
 <!-- ............................................................ -->
-<comment>Missing nonsequential values tests</comment>
+<comment>Attribute tests</comment>
 
 <test>
   <rxml type="any">
@@ -4033,28 +4033,4 @@ def
     <test-args ::="&var.args;"/>
   </rxml>
   <glob>[Error (parse): No value given for nonsequential type int*]</glob>
-</test>
-
-<test>
-  <rxml type="any">
-    <test-required-content>
-      <value type="int">17</value>
-    </test-required-content>
-  </rxml>
-  <equal>17</equal>
-</test>
-
-<test>
-  <rxml>
-    <test-required-content/>
-  </rxml>
-  <glob>[Error (parse): Missing value for nonsequential content*]</glob>
-</test>
-
-<test>
-  <rxml>
-    <test-required-content>
-    </test-required-content>
-  </rxml>
-  <glob>[Error (parse): Missing value for nonsequential content*]</glob>
 </test>
