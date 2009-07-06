@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.121 2009/05/07 14:15:54 mast Exp $";
+  "$Id: config_filesystem.pike,v 1.122 2009/07/06 11:49:22 jonasw Exp $";
 
 constant path = "config_interface/";
 
@@ -146,6 +146,7 @@ mixed find_file( string f, RequestID id )
     // Patch it in. This is needed for the image-cache authentication handling.
     id->conf->set_userdb_module_cache( ({ roxen.config_userdb_module }) );
 
+  request_auth:
     if( user = id->conf->authenticate( id, roxen.config_userdb_module ) )
     {
       if( !id->misc->cf_theme )
@@ -172,6 +173,15 @@ mixed find_file( string f, RequestID id )
     }
     else
     {
+      //  We exclude theme resources from authentication since we often
+      //  cannot prevent repeated auth dialogs despite the redirect below.
+      if (has_prefix(f, "themes/") &&
+	  (< "png", "gif", "jpg", "css", "xcf", "ico" >)[(f / ".")[-1]]) {
+	//  Fake some settings
+	roxen.adminrequest_get_context(" no-auth ", host, id);
+	break request_auth;
+      }
+      
       //  Authenticate in root directory to avoid repeated browser dialogs.
       //  We add an exception for the change_user wizard.
       string mountpt = query("location");
