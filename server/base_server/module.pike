@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module.pike,v 1.237 2009/05/07 14:15:52 mast Exp $
+// $Id: module.pike,v 1.238 2009/07/07 14:15:26 jonasw Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -340,7 +340,10 @@ string location_url()
     werror("  Protocol: %s\n", p);
 #endif
     Standards.URI uri = Standards.URI(url);
-    uri->fragment = "ip="+(p->ip? p->ip: "127.0.0.1");
+    string ip = p->ip || "127.0.0.1";
+    if (ip == "::")
+      ip = "::1";
+    uri->fragment = "ip=" + ip;
     if(has_value(uri->host, "*") || has_value(uri->host, "?"))
       if(glob(uri->host, hostname))
 	uri->host = hostname;
