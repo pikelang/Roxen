@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1037 2009/06/29 13:30:03 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1038 2009/07/07 11:57:39 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -4031,8 +4031,9 @@ class ImageCache
 #else
 	a->format = "png";
 #endif
-      if( id->misc->authenticated_user &&
-	  !id->misc->authenticated_user->is_transient )
+	if( get_admin_configuration() != id->conf &&
+	    id->misc->authenticated_user &&
+	    !id->misc->authenticated_user->is_transient )
 	// This entry is not actually used, it's only there to
 	// generate a unique key.
 	a["\0u"] = user = id->misc->authenticated_user->name();
