@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.81 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.82 2009/07/08 09:31:52 anders Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -468,8 +468,8 @@ class TagCImgURL {
       string filename = "";
       mapping a = get_my_args (check_args (args), id);
       
-      if(a->filename && sizeof(a->filename))
-	filename = "/" + Roxen.http_encode_url(m_delete(a, "filename"));
+      if(args->filename && sizeof(args->filename))
+	filename = "/" + Roxen.http_encode_url(args->filename);
       result = query_absolute_internal_location(id)
 	     + the_cache->store(a, id)
 	     + filename
