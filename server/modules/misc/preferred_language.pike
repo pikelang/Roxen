@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.38 2009/05/07 14:15:55 mast Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.39 2009/07/08 16:15:38 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -414,7 +414,11 @@ RequestID first_try(RequestID id) {
       
     case "hostmatch":
       if(sizeof(action) > 2) {
-	if(glob(action[1], id->misc->host || "")) {
+	//  Ignore port number if present. Will not handle IPv6 addresses
+	//  in numeric form but those are rather pointless for this filter
+	//  anyway.
+	string host = ((id->misc->host || "") / ":")[0];
+	if(glob(action[1], host)) {
 	  array(string) host_langs = map(action[2]/",",String.trim_all_whites);
 	  lang += host_langs;
 	  delayed_vary_actions += ({ ({ "host", host_langs }) });
