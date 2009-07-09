@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.620 2009/07/06 13:03:48 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.621 2009/07/09 15:37:49 anders Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -1208,13 +1208,10 @@ class TagDate {
 
 	    // Check for seconds and/or timezone
 	    stripped_date = String.trim_whites(stripped_date || "");
-	    if (sscanf(stripped_date, ":%d%*[ \t]%s", second, time_zone) > 0)
-	      args->timezone = time_zone || args->timezone;
-	    else
+	    if (sscanf(stripped_date, ":%d%*[ \t]%s", second, time_zone) == 0)
 	    {
 	      second = 0;
-	      args->timezone = (sizeof(stripped_date) ? 
-				stripped_date : args->time_zone);
+	      time_zone = sizeof(stripped_date) && stripped_date;
 	    }
 	    err = catch {
 		t = mktime(([ "sec"  : second,
@@ -1226,6 +1223,21 @@ class TagDate {
 	      };
 	    if (err)
 	      RXML.run_error("Unsupported date.\n");
+	    if (time_zone) {
+	      // Convert from given zone to GMT
+	      object tz = Calendar.Timezone[time_zone];
+	      if(tz)
+		t += tz->tz_ux(t)[0];
+	      else
+		RXML.run_error("Unsupported timezone %O in http-time.\n",
+			       time_zone);
+	      // Convert to local zone
+	      object lz = Calendar.Timezone.locale;
+	      if(lz)
+		t -= lz->tz_ux(t)[0];
+	      else
+		RXML.run_error("Unknown local timezone in http-time.\n");
+	    }
 	  }
 	  else 
 	    RXML.parse_error("Attribute http-time needs to be on the format "
