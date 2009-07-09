@@ -1,7 +1,7 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2001 - 2006, Roxen IS.
 
-constant cvs_version="$Id: replicate.pike,v 1.25 2007/07/17 09:24:05 marty Exp $";
+constant cvs_version="$Id: replicate.pike,v 1.26 2009/07/09 15:55:06 wellhard Exp $";
 
 #if constant(WS_REPLICATE)
 #ifdef ENABLE_NEW_ARGCACHE
@@ -36,6 +36,8 @@ Sql.Sql get_sdb()
   object db = DBManager.cached_get( "replicate" );
   // Make sure the db is online.
   db->query("SELECT 1;");
+  // Make sure a database is selected.
+  db->query("SHOW TABLES");
   return db;
 }
 
@@ -125,7 +127,8 @@ static void create( object c )
   if( err )
   {
     off = -1;
-    report_warning("The replicate database is currently down\n" );
+    report_warning("The replicate database is currently down: %O\n",
+		   DBManager.db_url("replicate", 1) );
     return;
   }
 
@@ -244,6 +247,8 @@ Sql.Sql get_sdb()
   object db = DBManager.cached_get( "replicate" );
   // Make sure the db is online.
   db->query("SELECT 1;");
+  // Make sure a database is selected.
+  db->query("SHOW TABLES");
   return db;
 }
 
@@ -393,7 +398,8 @@ static void create( object c )
   if( !d )
   {
     off = -1;
-    report_warning("The replicate database is currently down\n" );
+    report_warning("The replicate database is currently down: %O\n",
+		   DBManager.db_url("replicate", 1) );
     return;
   }
 
