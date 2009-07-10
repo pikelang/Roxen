@@ -1,7 +1,7 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2001 - 2009, Roxen IS.
 
-constant cvs_version="$Id: replicate.pike,v 1.29 2009/07/09 15:55:07 wellhard Exp $";
+constant cvs_version="$Id: replicate.pike,v 1.30 2009/07/10 07:18:06 wellhard Exp $";
 
 #if constant(WS_REPLICATE)
 
@@ -34,6 +34,8 @@ object cache;
 Sql.Sql get_sdb()
 {
   object db = DBManager.cached_get( "replicate" );
+  if(!db)
+    return 0;
   // Make sure the db is online.
   db->query("SELECT 1;");
   // Make sure a database is selected.
