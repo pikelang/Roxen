@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.255 2009/06/24 11:38:00 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.256 2009/07/10 14:31:40 stewa Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2868,7 +2868,7 @@ class RequestID
 	// It expired a year ago.
 	heads["Expires"] = Roxen->http_date( predef::time(1)-31557600 );
 	// Force the vary header generated below to be "*".
-	misc->vary = (< 0 >);
+	misc->vary = (< "*" >);
 	VARY_WERROR("Not cacheable. Force vary *.\n");
       } else
 	heads["Expires"] = Roxen->http_date( predef::time(1)+misc->cacheable );
@@ -2972,7 +2972,7 @@ class RequestID
 	heads->Expires = Roxen->http_date(predef::time(1)-31557600);
 #endif /* !DISABLE_VARY_EXPIRES_FALLBACK */
 	VARY_WERROR("Vary not supported by the browser.\n");
-      } else if (misc->vary[0]) {
+      } else if (misc->vary["*"]) {
 	// Depends on non-headers.
 	heads->Vary = "*";
       } else {
