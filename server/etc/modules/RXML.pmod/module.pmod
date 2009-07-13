@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.408 2009/07/13 09:27:07 mast Exp $
+// $Id: module.pmod,v 1.409 2009/07/13 10:28:49 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -4685,7 +4685,6 @@ class Frame
 			       evaler->p_code_comp ||
 			       evaler->p_code && evaler->p_code->p_code_comp);
 		      this_object()->evaled_content->finish();
-		      werror ("evaled content: %O\n", content);
 		    }
 
 		    // No content to handle.
