@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.80 2009/07/06 11:59:42 jonasw Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.81 2009/07/13 09:27:06 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -832,6 +832,22 @@ class TagTestArgs
     {
       result = args;
     }
+  }
+}
+
+class TagTestContentReq
+{
+  inherit RXML.Tag;
+  constant name = "test-required-content";
+
+  RXML.Type content_type = RXML.t_any (RXML.PXml);
+  array(RXML.Type) result_types = ({RXML.t_any});
+
+  int flags = RXML.FLAG_CONTENT_VAL_REQ;
+
+  class Frame
+  {
+    inherit RXML.Frame;
   }
 }
 

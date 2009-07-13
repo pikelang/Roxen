@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.407 2009/07/06 10:45:42 jonasw Exp $
+// $Id: module.pmod,v 1.408 2009/07/13 09:27:07 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -3049,6 +3049,27 @@ constant FLAG_UNPARSED		= 0x00001000;
 //! This flag should never be set in @[RXML.Tag.flags], but it's
 //! useful when creating frames directly (see @[make_unparsed_tag]).
 
+constant FLAG_CONTENT_VAL_REQ	= 0x00200000;
+//! Set this if the content must produce a value.
+//!
+//! This is only relevant if the content type is nonsequential:
+//! Normally the parser checks that at most one tag or variable entity
+//! in the content produces a value (i.e. not @[RXML.nil]), since
+//! values for nonsequential types cannot be concatenated. It does
+//! however not by default check that exactly one value is produced,
+//! so the content might be @[RXML.nil]. This flag adds that check, so
+//! the tag can assume that the content never gets set to @[RXML.nil].
+//!
+//! The above is not applicable for sequential types since they always
+//! have a value (the empty value, at least) even if there is no
+//! content.
+//!
+//! @note
+//! The reason no value is allowed for nonsequential types by default
+//! is because the content often is simply propagated to the result,
+//! and we want to allow another sibling tag to produce a value for
+//! the surrounding tag.
+
 constant FLAG_DONT_RECOVER	= 0x00002000;
 //! If set, RXML errors are never recovered when parsing the content
 //! in the tag. If any occurs, it will instead abort the execution of
@@ -3216,15 +3237,10 @@ class Frame
   //! executed (unless the frame was made with the finished content
   //! directly, e.g. by @[RXML.make_tag]).
   //!
-  //! @note
   //! Even if @[content_type] is nonsequential, this value might be
-  //! @[RXML.nil], indicating the lack of any value at all. That can
-  //! be considered an error since nonsequential types have exactly
-  //! one value. The reason it is allowed is because the content often
-  //! is simply propagated to the result, and we want to allow another
-  //! sibling tag to produce a value for the surrounding tag (at most
-  //! one tag or variable entity in the surrounding tag may have a
-  //! non-nil result).
+  //! @[RXML.nil], indicating the lack of any value at all. The parser
+  //! can be forced to check that a value is produced by setting
+  //! @[FLAG_CONTENT_VAL_REQ].
 
   Type result_type;
   //! The required result type. If it has a parser, it will affect how
@@ -3756,16 +3772,20 @@ class Frame
     to = to + (to = 0, from);						\
   } while (0)
 
+#define SET_NONNIL_NONSEQUENTIAL(from, to, to_type, desc)		\
+  do {									\
+    if (to != nil)							\
+      parse_error (							\
+	"Cannot append another value %s to nonsequential " desc		\
+	" of type %s.\n", format_short (from), to_type->name);		\
+    THIS_TAG_DEBUG ("Setting " desc " to %s\n", format_short (from));	\
+    to = from;								\
+  } while (0)
+
 #define SET_NONSEQUENTIAL(from, to, to_type, desc)			\
   do {									\
-    if (from != nil) {							\
-      if (to != nil)							\
-	parse_error (							\
-	  "Cannot append another value %s to nonsequential " desc	\
-	  " of type %s.\n", format_short (from), to_type->name);	\
-      THIS_TAG_DEBUG ("Setting " desc " to %s\n", format_short (from));	\
-      to = from;							\
-    }									\
+    if (from != nil)							\
+      SET_NONNIL_NONSEQUENTIAL (from, to, to_type, desc);		\
   } while (0)
 
 #define CONVERT_VALUE(from, from_type, to, to_type, desc)		\
@@ -4665,8 +4685,23 @@ class Frame
 			       evaler->p_code_comp ||
 			       evaler->p_code && evaler->p_code->p_code_comp);
 		      this_object()->evaled_content->finish();
+		      werror ("evaled content: %O\n", content);
 		    }
-		    break eval_content; // No content to handle.
+
+		    // No content to handle.
+		    if (flags & FLAG_UNPARSED) {
+		      if (content_type->sequential) {
+			THIS_TAG_DEBUG ("Setting content to empty value: %s\n",
+					format_short (
+					  content_type->empty_value));
+			content = content_type->empty_value;
+		      }
+		      else if (flags & FLAG_CONTENT_VAL_REQ)
+			parse_error ("Missing value for nonsequential "
+				     "content of type %s.\n",
+				     content_type->name);
+		    }
+		    break eval_content;
 		  }
 
 		  else {
@@ -4842,10 +4877,27 @@ class Frame
 			  ctx,
 			  flags & (FLAG_GET_EVALED_CONTENT|FLAG_IS_CACHE_STATIC) &&
 			  ctx->evaled_p_code); // Might unwind.
-			if (content_type->sequential)
-			  SET_SEQUENTIAL (res, content, "content");
-			else if (res != nil)
-			  SET_NONSEQUENTIAL (res, content, content_type, "content");
+
+			if (res == nil) {
+			  if (content_type->sequential) {
+			    THIS_TAG_DEBUG (
+			      "Setting content to empty value: %s\n",
+			      format_short (content_type->empty_value));
+			    content = content_type->empty_value;
+			  }
+			  else if (flags & FLAG_CONTENT_VAL_REQ)
+			    parse_error ("Missing value for nonsequential "
+					 "content of type %s.\n",
+					 content_type->name);
+			}
+			else {
+			  if (content_type->sequential)
+			    SET_SEQUENTIAL (res, content, "content");
+			  else
+			    SET_NONNIL_NONSEQUENTIAL (res, content,
+						      content_type, "content");
+			}
+
 			break eval_sub;
 		      }
 		    }
