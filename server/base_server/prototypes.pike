@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.256 2009/07/10 14:31:40 stewa Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.257 2009/07/14 12:22:36 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2269,7 +2269,8 @@ class RequestID
   //! @note
   //! Although case is insignificant in http header names, it is
   //! significant here. @[name] should always follow the
-  //! capitalization used in RFC 2616.
+  //! capitalization used in RFC 2616. Use
+  //! @[Roxen.canonicalize_http_header] if necessary.
   //!
   //! @seealso
   //! @[add_or_set_response_header], @[get_response_headers],
