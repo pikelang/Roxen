@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1038 2009/07/07 11:57:39 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1039 2009/07/15 15:28:03 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2529,9 +2529,15 @@ string normalize_url(string url, void|int port_match_form)
 
   if (lower_case (host) == "any" || host == "::")
     host = "*";
-  else
-    // FIXME: Maybe Standards.URI should do this internally?
-    host = lower_case(Standards.IDNA.zone_to_ascii (host));
+  else {
+    // Note: zone_to_ascii() can throw errors on invalid hostnames.
+    if (catch {
+	// FIXME: Maybe Standards.URI should do this internally?
+	host = lower_case(Standards.IDNA.zone_to_ascii (host));
+      }) {
+      host = lower_case(host);
+    }
+  }
 
   if (has_value (host, ":"))
     if (string h = port_match_form ?
