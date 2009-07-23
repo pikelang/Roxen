@@ -1610,7 +1610,7 @@ BASIC_I_OR_A_OPERATION( Gamma, "gamma", gamma,
 BASIC_I_OR_A_OPERATION( Invert, "invert", invert, );
 BASIC_I_OR_A_OPERATION( Grey,   "grey", grey, );
 BASIC_I_OR_A_OPERATION( Color,  "color", color,
-			translate_color(args->color));
+			@translate_color(args->color)->rgb());
 BASIC_I_OR_A_OPERATION( Clear,  "clear", clear,
 			translate_color(args->color));
 BASIC_I_OR_A_OPERATION( MirrorX, "mirror-x", mirrorx, );
@@ -1621,7 +1621,8 @@ BASIC_I_OR_A_OPERATION( Distance,"color-distance",distancesq,
 			translate_color(args->color));
 BASIC_I_OR_A_OPERATION( SelectFrom,"select-from",select_from,
 			@({translate_coordinate( args->x,0,layers ),
-			   translate_coordinate( args->y,0,layers )}));
+			   translate_coordinate( args->y,0,layers ),
+			   (int)args["edge-value"] % 256 }));
 //! @endignore
 
 class Expand
