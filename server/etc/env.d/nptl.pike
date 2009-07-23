@@ -1,4 +1,4 @@
-// $Id: nptl.pike,v 1.2 2005/10/31 17:28:01 grubba Exp $
+// $Id: nptl.pike,v 1.3 2009/07/23 09:22:20 grubba Exp $
 //
 // Detection and workaround for Redhat 9's New Posix Thread Library.
 //
@@ -13,9 +13,34 @@ void run(object env)
   if (search(Process.popen("/usr/bin/getconf GNU_LIBPTHREAD_VERSION 2>/dev/null"),
 	     "NPTL") >= 0) {
     write("yes (%s)\n");
-    env->set("LD_ASSUME_KERNEL", "2.4.1");
-  } else {
-    write("no\n");
+    write("   Checking if LD_ASSUME_KERNEL might work... ");
+    // On recent releases of Linux, binaries often fail with
+    //   error while loading shared libraries: libc.so.6: cannot
+    //   open shared object file: No such file or directory
+    // when LD_ASSUME_KERNEL is set. We test with a binary that
+    // the start-script will attempt to use: sed.
+    object in = Stdio.File();
+    object out = Stdio.File();
+    object err = Stdio.File();
+    Process.Process p =
+      Process.create_process(({ "sed", "-ed" }), ([
+			       "stdin": in->pipe(Stdio.PROP_REVERSE),
+			       "stdout": out->pipe(),
+			       "stderr": err->pipe(),
+			       "env":getenv() + ([
+				 "LD_ASSUME_KERNEL":"2.4.1",
+			       ])
+			     ]));
+    in->close();
+    out->close();
+    err->read();
+    err->close();
+    if (!p->wait()) {
+      write("yes\n");
+      env->set("LD_ASSUME_KERNEL", "2.4.1");
+      return;
+    }
   }
+  write("no\n");
 #endif
 }
