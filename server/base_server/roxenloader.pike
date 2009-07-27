@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.422 2009/06/25 10:56:21 mast Exp $
+// $Id: roxenloader.pike,v 1.423 2009/07/27 17:26:10 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.422 2009/06/25 10:56:21 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.423 2009/07/27 17:26:10 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1369,21 +1369,32 @@ void do_main_wrapper(int argc, array(string) argv)
 }
 
 
-//  Reads "mysql-location.txt" in the server-x.y.z directory and
-//  constructs a mapping with the following MySQL-related paths:
-//
-//    ([
-//       "basedir"   : <absolute path to MySQL server directory>
-//       "mysqld"    : <absolute path to mysqld[-nt.exe]>
-//       "myisamchk" : <absolute path to myisamchk[.exe]>
-//       "mysqldump" : <absolute path to mysqldump[.exe]>
-//    ])
-//
-//  If a path cannot be resolved it will be set to 0. If the file
-//  "mysql-location.txt" doesn't exist default values based on the
-//  server-x.y.z/mysql/ subdirectory will be substituted.
-mapping parse_mysql_location()
+protected mapping(string:string) cached_mysql_location;
+
+//!  Returns a mapping with the following MySQL-related paths:
+//!
+//!  @code
+//!    ([
+//!       "basedir"   : <absolute path to MySQL server directory>
+//!       "mysqld"    : <absolute path to mysqld[-nt.exe]>
+//!       "myisamchk" : <absolute path to myisamchk[.exe]>
+//!       "mysqldump" : <absolute path to mysqldump[.exe]>
+//!    ])
+//!  @endcode
+//!
+//!  If a path cannot be resolved it will be set to 0.
+//!
+//!  The paths are read from "mysql-location.txt" in the server-x.y.z
+//!  directory. If that file doesn't exist then default values based
+//!  on the server-x.y.z/mysql/ subdirectory will be substituted.
+//!
+//!  @note
+//!  Don't be destructive on the returned mapping.
+mapping(string:string) mysql_location()
 {
+  if (cached_mysql_location)
+    return cached_mysql_location;
+
   string check_paths(array(string) paths)
   {
     foreach(paths, string p)
@@ -1486,9 +1497,14 @@ mapping parse_mysql_location()
     }
   }
   
-  return res;
+  return cached_mysql_location = res;
 }
 
+mapping(string:string) parse_mysql_location()
+// Compatibility alias.
+{
+  return mysql_location();
+}
 
 string query_mysql_data_dir()
 {
@@ -2049,7 +2065,7 @@ void low_start_mysql( string datadir,
   };
 
   //  Get mysql base directory and binary paths
-  mapping mysql_location = parse_mysql_location();
+  mapping mysql_location = this_program::mysql_location();
   if (!mysql_location->mysqld) {
     report_debug("\nNo MySQL found in "+ mysql_location->basedir + "!\n");
     exit(1);
