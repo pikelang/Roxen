@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.235 2009/06/25 10:56:21 mast Exp $
+# $Id: start,v 1.236 2009/08/05 16:07:12 grubba Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -712,6 +712,15 @@ DEFINES="$DEBUG $DEFINES"
 
 ####### END PIKE OPTIONS
 
+####### START MySQL
+
+if [ -f "mysql-location.txt" ]; then :; else
+  if [ "x$passhelp" = "x1" ]; then :; else
+    dp "Warning: No mysql-location.txt"
+  fi
+fi
+
+####### END MySQL
 
 #
 # Some useful functions
