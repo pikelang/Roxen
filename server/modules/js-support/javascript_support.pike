@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.71 2009/05/07 14:15:55 mast Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.72 2009/08/10 14:36:52 jonasw Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -164,7 +164,22 @@ string c_js_quote(string name, mapping args, string contents)
 			 "<SCRIPT", "</SCRIPT>" }),
 		      ({ "\\\"", "<scr\" + \"ipt", "</scr\" + \"ipt>",
 			 "<SCR\" + \"IPT", "</SCR\" + \"IPT>" }) ) / "\n", 
-	      lambda(string row) {return "r += \"" + row; }) * "\\n\";\n";
+	      lambda(string row) {
+		//  Quote wide characters inside JavaScript var assignment
+		//  using \uXXXX form.
+		if (String.width(row) > 8) {
+		  String.Buffer b = String.Buffer(sizeof(row));
+		  for (int i = 0; i < sizeof(row); i++) {
+		    int ch = row[i];
+		    if (ch > 255)
+		      b->add(sprintf("\\u%x", ch));
+		    else
+		      b->add((string) ({ ch }) );
+		  }
+		  row = b->get();
+		}
+		return "r += \"" + row;
+	      }) * "\\n\";\n";
   r += "\";\ndocument.write(r);\n";
   return r;
 };
