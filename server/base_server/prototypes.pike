@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.257 2009/07/14 12:22:36 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.258 2009/08/19 08:29:42 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1374,7 +1374,8 @@ class RequestID
 
     protected string _sprintf(int fmt)
     {
-      return fmt == 'O' && sprintf("CookieJar(%O)", real_cookies);
+      return fmt == 'O' && sprintf("CookieJar(%O)",
+				   RequestID::this && real_cookies);
     }
   }
 
