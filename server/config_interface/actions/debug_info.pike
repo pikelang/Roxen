@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.40 2008/08/15 12:33:54 mast Exp $
+ * $Id: debug_info.pike,v 1.41 2009/08/19 08:28:57 mast Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -180,10 +180,14 @@ mixed page_0( object id )
   if (no_save_numobjs) save_numobjs = ([]);
 
   foreach (allobj; string|program prog; array objs)
-    for (int i = 0; i < sizeof (objs); i++)
-      // The object might have become destructed since the walk above.
-      // Just ignore it in that case.
-      objs[i] = !zero_type (objs[i]) && sprintf ("%O", objs[i]);
+    for (int i = 0; i < sizeof (objs); i++) {
+      if (catch {
+	  // The object might have become destructed since the walk above.
+	  // Just ignore it in that case.
+	  objs[i] = !zero_type (objs[i]) && sprintf ("%O", objs[i]);
+	})
+	objs[i] = 0;
+    }
 
   if (destructed_objs) {
     allobj["    "] = ({"<destructed object>"});
