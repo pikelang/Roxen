@@ -1,5 +1,7 @@
 //! Generic extensible lazy-evaluation image processing.
 
+#include <module.h>
+
 typedef array(Image.Layer) Layers;
 //! The 'Layers' type.
 
@@ -840,7 +842,12 @@ class LoadImage
       if( !res || mappingp(res) ) {
 	if (mappingp(res) && res->error == Protocols.HTTP.HTTP_UNAUTH)
 	  return res;
-	RXML.parse_error("Failed to load %O\n", args->src );
+	if (RXML_CONTEXT)
+	  // This can be called from within the gxml tag if
+	  // id->misc->generate_images is set.
+	  RXML.parse_error("Failed to load specified image [%O]\n", args->src );
+	else
+	  error("Failed to load specified image [%O]\n", args->src );
       }
       if( args->tiled )
 	foreach( res, Image.Layer l )
@@ -855,19 +862,22 @@ class LoadImage
       RequestID id = RXML.get_context()->id;
       args->src = Roxen.fix_relative( args->src, id );
       Stat s = id->conf->try_stat_file( args->src, id );
-      if( !s )
-	RXML.parse_error("Can't find file %s\n", args->src);
       
-      string fn = id->conf->real_file( args->src, id );
-      if( fn ) Roxen.add_cache_stat_callback( id, fn, s[ST_MTIME] );
-      args->stat = s[ ST_MTIME ];
+      // try_stat_file() may fail although it is a valid image,
+      // e.g. /internal-roxen-*.
+      if (s)
+      {
+	string fn = id->conf->real_file( args->src, id );
+	if( fn ) Roxen.add_cache_stat_callback( id, fn, s[ST_MTIME] );
+	args->stat = s[ ST_MTIME ];
 #if constant(Sitebuilder)
-      //  The file we called try_stat_file() on above may be a SiteBuilder
-      //  file. If so we need to extend the argument data with e.g.
-      //  current language fork.
-      if (Sitebuilder.sb_prepare_imagecache)
-	args = Sitebuilder.sb_prepare_imagecache(args, args->src, id);
+	//  The file we called try_stat_file() on above may be a SiteBuilder
+	//  file. If so we need to extend the argument data with e.g.
+	//  current language fork.
+	if (Sitebuilder.sb_prepare_imagecache)
+	  args = Sitebuilder.sb_prepare_imagecache(args, args->src, id);
 #endif
+      }
       return args;
     }
   };
