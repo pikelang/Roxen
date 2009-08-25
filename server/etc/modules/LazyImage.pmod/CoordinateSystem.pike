@@ -79,12 +79,33 @@ protected
 
     string do_sprintf( string format, mixed data )
     {
-      switch( strlen(format)?format[-1]:'f' )
+      string f = "f";
+      sscanf(format-"%%", "%*s%%%*s%[bduoxXcfgGeEFtsqOHn]", f);
+      switch( f )
       {
-	case 's': return sprintf( format, (string) data );
-	case 'd': return sprintf( format, (int) data );
-	case 'f': 
-	default:  return sprintf( format, (float)data );
+	case "s":
+	case "q":
+	case "O":
+	case "H":
+	case "n":
+	  return sprintf( format, (string) data );
+	case "b":
+	case "d":
+	case "u":
+	case "o":
+	case "x":
+	case "X":
+	case "c":
+	  return sprintf( format, (int) data );
+	case "f":
+	case "g":
+	case "G":
+	case "e":
+	case "E":
+	case "F":
+	case "t":
+	default:
+	  return sprintf( format, (float)data );
       }
     };
       
