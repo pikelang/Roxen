@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.389 2008/04/21 15:09:08 mast Exp $
+// $Id: roxenloader.pike,v 1.390 2009/08/26 12:30:15 noring Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.389 2008/04/21 15:09:08 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.390 2009/08/26 12:30:15 noring Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1393,6 +1393,10 @@ static class SQLResKey
   {
     return real->fetch_row();
   }
+  static int|string fetch_json_result()
+  {
+    return real->fetch_json_result();
+  }
 
   static int(0..1) `!()
   {
@@ -1407,13 +1411,14 @@ static class SQLResKey
   {
     switch( what )
     {
-    case "real":         return real;
-    case "num_rows":     return num_rows;
-    case "num_fields":   return num_fields;
-    case "eof":          return eof;
-    case "fetch_fields": return fetch_fields;
-    case "seek":         return seek;
-    case "fetch_row":    return fetch_row;
+    case "real":              return real;
+    case "num_rows":          return num_rows;
+    case "num_fields":        return num_fields;
+    case "eof":               return eof;
+    case "fetch_fields":      return fetch_fields;
+    case "seek":              return seek;
+    case "fetch_row":         return fetch_row;
+    case "fetch_json_result": return fetch_json_result;
     }
     return real[what];
   }
