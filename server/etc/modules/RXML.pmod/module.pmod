@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.409 2009/07/13 10:28:49 mast Exp $
+// $Id: module.pmod,v 1.410 2009/09/02 11:47:25 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -5679,6 +5679,8 @@ class Parser
 	    TAG_DEBUG (context->frame, "    Got value %s after conversion "
 		       "with encoding %s\n", format_short (val), encoding);
 #endif
+	  if (want_type->empty_value != "")
+	    val = want_type->encode (val, t_any_text);
 	}
 #ifdef DEBUG
 	else
@@ -7600,6 +7602,8 @@ class VarRef (string scope, string|array(string|int) var,
 	  TAG_DEBUG (ctx->frame, "    Got value %s after conversion "
 		     "with encoding %s\n", format_short (val), encoding);
 #endif
+	if (want_type->empty_value != "")
+	  val = want_type->encode (val, t_any_text);
       }
 
       else

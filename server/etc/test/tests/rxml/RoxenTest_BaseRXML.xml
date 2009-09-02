@@ -1242,6 +1242,24 @@ a&auml; &amp; b  &gt;
   <result><TM><TM></result>
 </test>
 
+<test>
+  <rxml type="any">
+    <set variable="var.a" type="string">17</set>
+    <set variable="var.b" type="int">&var.a:sql;</set>
+    &var.b;
+  </rxml>
+  <equal>17</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <set variable="var.a" type="string">17</set>
+    <set variable="var.b" type="int">&var.a;</set>
+    &var.b;
+  </rxml>
+  <equal>17</equal>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>String number test</comment>
