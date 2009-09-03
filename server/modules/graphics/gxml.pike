@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright © 2001 - 2009, Roxen IS.
+// This is a roxen module. Copyright Â© 2001 - 2009, Roxen IS.
 //
 #include <module.h>
 inherit "module";
@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.42 2009/08/28 15:10:15 mathias Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.43 2009/09/03 16:02:44 mathias Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -602,8 +602,7 @@ constant tagdoc = ([
   "gxml": ({ #"<desc type='cont'><p><short>Manipulates images in different ways
     using layers.</short></p><p>It is possible to make much more advanced
     manipulation using <tag>gtext</tag><tag>/gtext</tag> than with for instance
-    <tag>cimg/</tag>. This is probably one of the most complex RXML tags in
-    Roxen and there is no guarantee that the documentation is correct.</desc>
+    <tag>cimg/</tag>.</p></desc>
     <attr name='url'><p>
       Instead of generating a <tag>img</tag> return the url to the generated
       image.
@@ -682,8 +681,8 @@ constant tagdoc = ([
       </p></attr>
       <attr name='layers-id' value='layer-id'><p>
         Layer to replace alpha.
-      </attr>
-      <Attr name='from' value='layer'><p>
+      </p></attr>
+      <attr name='from' value='layer'><p>
         Layer to copy alpha channel from.
       </p></attr>
       <attr name='from-id' value='layer-id'><p>
@@ -722,20 +721,25 @@ constant tagdoc = ([
     "set-layer-mode" : #"<desc type='both'><p>Set layer mode.</p></desc>
       <attr name='mode' value='mode' default='normal'><p>
         Mode is one of these:</p>
-        <dl compact>
-          <dt><i>The variables in the expression:</i></dt>
-          <dt>L</dt><dd><i>The active layer</i></dd>
-          <dt>S</dt><dd><i>The source layer (the sum of the layers below)</i>
-            </dd>
-          <dt>D</dt><dd><i>The destintion layer (the result)</i></dd>
-          <dt>Xrgb</dt><dd><i>Layer red (<b>Xr</b>), green (<b>Xg</b>) or blue
-              channel (<b>Xb</b>) </i></dd>
-          <dt>Xhsv</dt><dd><i>Layer hue (<b>Xh</b>), saturation (<b>Xs</b>) or
-              value channel (<b>Xv</b>) (virtual channels)</i></dd>
-          <dt>Xhls</dt><dd><i>Layer hue (<b>Xh</b>), lightness channel 
-              (<b>Xl</b>) or saturation (<b>Xs</b>) (virtual channels)</i></dd>
-          <dt>aX</dt><dd><i>Layer alpha, channel in layer alpha</i></dd>
-        </dl>
+        <xtable>
+          <row><h>variable</h><h>Meaning</h></row>
+          <row><c><p>L</p></c><c><p>The active layer</p></c></row>
+          <row><c><p>S</p></c>
+	    <c><p>The source layer (the sum of the layers below)</p></c></row>
+          <row><c><p>D</p></c>
+	    <c><p>The destintion layer (the result)</p></c></row>
+          <row><c><p>Xrgb</p></c>
+	    <c><p>Layer red (<b>Xr</b>), green (<b>Xg</b>) or blue
+              channel (<b>Xb</b>) </p></c></row>
+          <row><c><p>Xhsv</p></c>
+	    <c><p>Layer hue (<b>Xh</b>), saturation (<b>Xs</b>) or
+              value channel (<b>Xv</b>) (virtual channels)</p></c></row>
+          <row><c><p>Xhls</p></c>
+	    <c><p>Layer hue (<b>Xh</b>), lightness channel (<b>Xl</b>) or
+	      saturation (<b>Xs</b>) (virtual channels)</p></c></row>
+          <row><c><p>aX</p></c>
+	    <c><p>Layer alpha, channel in layer alpha</p></c></row>
+        </xtable>
         <i>All channels are calculated separately, if nothing else is
            specified.</i>
         <h4>Bottom layer:</h4>
@@ -996,18 +1000,16 @@ constant tagdoc = ([
       </p></attr>",
     "color-distance" : #"<desc type='both'><p>Makes an grey-scale image, 
         for alpha-channel use.</p>
-      <p>The given value (or current color) are used for coordinates in the
+      <p>The given value (or current color) is used for coordinates in the
         color cube. Each resulting pixel is the distance from this point to the
         source pixel color, in the color cube, squared, rightshifted 8 steps:
       </p>
-      <dl compact>
-        <dt>p</dt><dd><i>pixel color</i></dd>
-        <dt>o</dt><dd><i>given color</i></dd>
-        <dt>d</dt><dd><i>destination pixel</i></dd>
-        <dt><i>d.red=d.blue=d.green=
-           ((o.red-p.red)²+(o.green-p.green)²+(o.blue-p.blue)²)&gt;&gt;8</i>
-        </dt>
-      </dl>
+      <ex-box>
+        p - pixel color
+        o - given color
+        d - destination pixel
+        d.red=d.blue=d.green=((o.red-p.red)Â²+(o.green-p.green)Â²+(o.blue-p.blue)Â²)>>8
+      </ex-box>
       <ex>
         <gxml format='jpeg'>
           <load-image src='/internal-roxen-testimage' />
@@ -1076,7 +1078,7 @@ constant tagdoc = ([
       <attr name='y' value='number'><p>Originating pixel in the image</p></attr>
       <attr name='edge-value' value='{0-255}' default='30'><p>
         Tolerance level of how much the current pixels color may different from
-        the originating pixel's.
+        the originating pixel's.</p>
       <ex-html>
         <emit source='values' scope='values'
               values='4,8,16,32,64,128,255' split=','> 
@@ -1085,7 +1087,7 @@ constant tagdoc = ([
 			 edge-value='&values.value;' what='image'>
 	      <load-image src='/internal-roxen-testimage' />
 	    </select-from>
-            <text color='white' color='green' 
+            <text color='green' 
                   fontsize='16'
                   x='3' y='3'>x: 100, y: 100\nedge-value: &values.value;</text>
           </gxml>
@@ -1543,7 +1545,7 @@ constant tagdoc = ([
 	      </p></attr>
 	      <attr name='lenght' value='lenght in pixels' required=''><p>
 		Lenght of the marker.
-	      </attr>",
+	      </p></attr>",
 		]),
 	      }),
 	"y" : ({ #"<desc type='cont'><p>Contains tags about how to draw the 
@@ -1599,7 +1601,7 @@ constant tagdoc = ([
 	      </p></attr>
 	      <attr name='lenght' value='lenght in pixels' required=''><p>
 		Lenght of the marker.
-	      </attr>",
+	      </p></attr>",
 	      ]),
 	    }),
 	  ]),
