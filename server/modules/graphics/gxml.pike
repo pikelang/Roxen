@@ -1,4 +1,4 @@
-// This is a roxen module. Copyright Â© 2001 - 2009, Roxen IS.
+// This is a roxen module. Copyright © 2001 - 2009, Roxen IS.
 //
 #include <module.h>
 inherit "module";
@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.43 2009/09/03 16:02:44 mathias Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.44 2009/09/03 16:08:52 anders Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -1008,7 +1008,7 @@ constant tagdoc = ([
         p - pixel color
         o - given color
         d - destination pixel
-        d.red=d.blue=d.green=((o.red-p.red)Â²+(o.green-p.green)Â²+(o.blue-p.blue)Â²)>>8
+        d.red=d.blue=d.green=((o.red-p.red)²+(o.green-p.green)²+(o.blue-p.blue)²)>>8
       </ex-box>
       <ex>
         <gxml format='jpeg'>
