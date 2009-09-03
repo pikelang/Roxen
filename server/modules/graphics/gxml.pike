@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.44 2009/09/03 16:08:52 anders Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.45 2009/09/03 16:34:34 anders Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -643,7 +643,7 @@ constant tagdoc = ([
       <attr name='exclude' value='glob'></attr>
       <attr name='exclude-id' value='layer-id'></attr>",
     "text" : #"<desc type='cont'><p>Render text onto the specified layer or,
-      if no layer is specified, onto a new layer.
+      if no layer is specified, onto a new layer.</p></desc>
       <attr name='layers-id' value='layer-id'><p>
         Layer to render the text to.
       </p></attr>
@@ -1367,7 +1367,7 @@ constant tagdoc = ([
       </line>
     </shadow>
     <shadow soft='6'>
-      <legend fontsize=12 border='black' bgcolor='white' fgcolor='black' 
+      <legend fontsize='12' border='black' bgcolor='white' fgcolor='black' 
               background='100%' square-border='black' font='Haru'>
         <label color='orange'>Sugar</label>
         <label color='red'>Spice</label>
