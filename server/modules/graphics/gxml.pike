@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.45 2009/09/03 16:34:34 anders Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.46 2009/09/04 07:16:07 mathias Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -592,7 +592,7 @@ mapping tagdocumentation()
 </ex-html></p>",
 		  mode, Roxen.html_encode_string(desc));
   }
-  string s = doc["gxml"][1]["set-layer-mode"][..<7] + ex + "</desc>"; 
+  string s = doc["gxml"][1]["set-layer-mode"][..<7] + ex + "</attr>"; 
   doc["gxml"][1]["set-layer-mode"] = s;
   return doc;
 }
