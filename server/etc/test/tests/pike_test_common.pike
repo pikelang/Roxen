@@ -255,7 +255,10 @@ void low_run_tests( Configuration c,
   mixed err = catch {
     run_tests( c );
   };
-  if( err )
+  if( err ) {
     write( describe_backtrace( err ) );
-  go_on(  current_test, tests_failed  );
+    go_on (++current_test, ++tests_failed);
+  }
+  else
+    go_on (++current_test, tests_failed);
 }
