@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2004, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.37 2008/05/30 08:44:13 erik Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.38 2009/09/14 12:21:48 wellhard Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -245,13 +245,14 @@ class Relay
     if( !how )
     {
 #ifdef RELAY_DEBUG
-      werror("RELAY: Connection failed\n");
+      werror("RELAY: Connection failed: %s (%d)\n",
+             strerror (fd->errno()), fd->errno());
 #endif
       NOCACHE();
-      id->send_result( ([
-        "type":"text/plain",
-        "data":"Connection to remote HTTP host failed."
-      ]) );
+      id->send_result(
+	Roxen.http_low_answer(Protocols.HTTP.HTTP_GW_TIMEOUT,
+			      "504 Gateway Timeout: "
+			      "Connection to remote HTTP host failed."));
       destruct();
       return;
     }
