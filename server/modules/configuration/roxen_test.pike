@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.81 2009/07/13 09:27:06 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.82 2009/09/15 15:44:08 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -621,11 +621,15 @@ void continue_find_tests( )
 	    {
 	      object test;
 	      mixed error;
-	      if( error=catch( test=compile_file(file)( verbose ) ) )
+	      if( error=catch( test=compile_file(file)( verbose ) ) ) {
 		report_error("Failed to compile %s:\n%s", file,
 			     describe_backtrace(error));
+		tests++;
+		fails++;
+	      }
 	      else
 	      {
+		tests++;
 		roxen.background_run (0, run_pike_tests,test,file);
 		return;
 	      }
