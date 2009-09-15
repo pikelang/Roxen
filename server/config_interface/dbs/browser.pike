@@ -455,7 +455,7 @@ int is_encode_value( string what )
 {
   if( !stringp(what) )
     return 0;
-  return strlen(what) >= 5 && !search( what, "¶ke" );
+  return strlen(what) >= 5 && has_prefix (what, "¶ke");
 }
 
 string format_decode_value( string what )
@@ -497,30 +497,6 @@ string store_image( string x )
     "len":strlen(x),
   ]);
   return id;
-}
-
-string format_float( float x )
-{
-  if( x >= 10000.0 )    return (string)((int)x);
-  if( x >= 100.0 )      return sprintf("%.1f", x );
-  if( x >= 10.0 )       return sprintf("%.2f", x );
-  return sprintf("%.3f", x );
-}
-
-int is_int( mixed what )
-{
-  return stringp(what) && equal(({what}),array_sscanf(what, "%[0-9]"));
-}
-
-// NOTE: Returns true for integers too.
-int is_float( mixed what )
-{
-  return stringp(what) && equal(what/".",array_sscanf(what, "%[0-9].%[0-9]"));
-}
-
-string format_int( int x )
-{
-  return (string)x;
 }
 
 string db_switcher( RequestID id )
@@ -790,18 +766,37 @@ mapping|string parse( RequestID id )
 	int column;
 	if( big_q )
 	{
+	  array(string) col_types = ({});
+
 	  foreach( big_q->fetch_fields(), mapping field )
 	  {
 	    switch( field->type  )
 	    {
-	      case "long":
-	      case "int":
+	      case "bit":
+	      case "char":	// Actually a TINYINT.
 	      case "short":
+	      case "int":
+	      case "long":
+	      case "int24":
+	      case "longlong":
 		right_columns[column]=1;
 		qres += "<th class='num'>";
+		col_types += ({"int"});
+		break;
+	      case "float":
+	      case "double":
+		right_columns[column]=1;
+		qres += "<th class='num'>";
+		col_types += ({"float"});
+		break;
+	      case "decimal":
+	      case "numeric":
+		qres += "<th class='num'>";
+		col_types += ({"string"});
 		break;
 	      default:
 		qres += "<th>";
+		col_types += ({"string"});
 	    }
 	    qres += Roxen.html_encode_string (field->name) + "</th>\n";
 	    column++;
@@ -816,10 +811,10 @@ mapping|string parse( RequestID id )
 	      qres += right_columns[i] ? "<td class='num'>" : "<td>";
 	      if( !q[i] )
 		qres += "<i>NULL</i>";
-	      else if( intp( q[i] ) || is_int(q[i]) )
-		qres += format_int((int)q[i]);
-	      else if( floatp( q[i] ) || is_float(q[i]) )
-		qres += format_float((float)q[i]);
+	      else if( intp( q[i] ) || col_types[i] == "int" )
+		qres += (string) (int) q[i];
+	      else if( floatp( q[i] ) || col_types[i] == "float" )
+		qres += (string) (float) q[i];
 	      else if( is_image( q[i] ) )
 		qres +=
 		  "<img src='browser.pike?image="+store_image( q[i] )+ "' />";
