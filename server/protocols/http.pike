@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2004, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.539 2009/06/24 11:38:00 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.540 2009/09/21 17:12:46 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1930,6 +1930,8 @@ void send_result(mapping|void result)
   if (my_fd)
     CHECK_FD_SAFE_USE;
 
+  handle_time = gethrtime() - handle_time;
+
   array err;
   int tmp;
   if (result)
@@ -2322,8 +2324,6 @@ void handle_request( )
 
   mapping result;
   array e = catch(result = conf->handle_request( this_object() ));
-
-  handle_time = gethrtime() - handle_time;
 
   if(e)
     INTERNAL_ERROR( e );
