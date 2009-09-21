@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.611 2009/06/24 11:38:00 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.612 2009/09/21 17:07:39 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2335,6 +2335,13 @@ void send_result(mapping|void result)
   if (my_fd)
     CHECK_FD_SAFE_USE;
 
+  destruct_threadbound_session_objects();
+
+  handle_time = gethrtime() - handle_time;
+#if constant(System.CPU_TIME_IS_THREAD_LOCAL)
+  handle_vtime = gethrvtime() - handle_vtime;
+#endif
+
   array err;
   if (result)
     file = result;
@@ -2817,20 +2824,15 @@ void handle_request( )
 
   mapping result;
   array e = catch(result = conf->handle_request( this_object() ));
-  destruct_threadbound_session_objects();
-
-  handle_time = gethrtime() - handle_time;
-#if constant(System.CPU_TIME_IS_THREAD_LOCAL)
-  handle_vtime = gethrvtime() - handle_vtime;
-#endif
+  // Note: Could be destructed here already since handle_request might
+  // have handed over us to another thread that finished quickly. The
+  // right place to put code is probably send_result instead.
 
   if(e)
     INTERNAL_ERROR( e );
 
   else {
     if (result && result->pipe) {
-      // Could be destructed here already since handle_request might
-      // have handed over us to another thread that finished quickly.
       REQUEST_WERR("HTTP: handle_request: pipe in progress.");
       TIMER_END(handle_request);
       return;
