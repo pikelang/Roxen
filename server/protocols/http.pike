@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.613 2009/09/22 09:20:26 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.614 2009/09/22 09:21:15 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2502,10 +2502,8 @@ void send_result(mapping|void result)
 
     if (mixed err = catch(head_string += Roxen.make_http_headers(heads, 1)))
     {
-#ifdef DEBUG
-      report_debug("Roxen.make_http_headers failed: " +
-		   describe_error (err));
-#endif
+      report_debug("Roxen.make_http_headers failed on %O: %s",
+		   heads, describe_error (err));
       foreach(heads; string x; string|array(string) val) {
 	if( !arrayp( val ) ) val = ({val});
 	foreach( val, string xx ) {
