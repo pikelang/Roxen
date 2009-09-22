@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.612 2009/09/21 17:07:39 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.613 2009/09/22 09:20:26 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2521,7 +2521,6 @@ void send_result(mapping|void result)
 	    head_string += x+": "+xx+"\r\n";
 	}
       }
-      head_string += "\r\n";
     }
 
     if (objectp(cookies)) {
