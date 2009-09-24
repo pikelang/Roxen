@@ -4,28 +4,13 @@ int verbose;
 void create( int vb ) { verbose = vb; }
 
 
-string describe_arglist( array args )
-{
-  array res = ({});
-  foreach( args, mixed arg )
-    if( mappingp(arg) || arrayp(arg) )
-      res+=({sprintf("%t<%d>",arg,sizeof(arg))});
-    else if( objectp( arg ) )
-      if( arg->is_module )
-	res += ({ sprintf("%s",arg->my_configuration()->otomod[arg])});
-      else if( arg->is_configuration )
-	res += ({ sprintf("%s", arg->name ) });
-      else
-	res += ({ sprintf("%O", arg ) });
-    else
-      res+=({sprintf("%O",arg)});
-  return replace(res * ", ","%","%%");
-}
-
 string describe_test (function|string cb, array args)
 {
-  if (functionp (cb))
-    return sprintf ("%O(%s)", cb, describe_arglist (args));
+  if (!stringp (cb)) {
+    object describer = master()->Describer();
+    return describer->describe (cb) +
+      "(" + describer->describe_comma_list (args, 512) + ")";
+  }
   if (sizeof (args))
     catch {return sprintf (cb, @args);};
   return cb;
@@ -142,11 +127,15 @@ mixed test_really_generic( function check_return, function(void:mixed) test_fn,
 {
   current_test++;
   mixed result;
-  report_1st( test_text, test_text_args, check_return );
   int st = gethrtime();
   mixed err = catch {
       result = test_fn();
   };
+
+  // Write out the test after running it, since the macros change
+  // test_text_args in the test.
+  report_1st( test_text, test_text_args, check_return );
+
   if( check_return )
     check_return( result, err, test_text, test_text_args,st );
   else if( err )
@@ -191,6 +180,14 @@ void check_is_configuration( mixed res, mixed err,
       report_test_ok( err, cb, args, st );
 }
 
+void silent_check_true( mixed res, mixed err,
+			function|string|array cb, array args, int st )
+{
+  if (err || !res)
+    report_test_failure( err, cb, args, st );
+  else
+    report_test_ok( 0, cb, args, st );
+}
 
 void check_true( mixed res, mixed err,
 		 function|string|array cb, array args, int st )
@@ -271,11 +268,10 @@ function check_not_equal( mixed m )
     };
 }
 
-
 mixed cpp_test_true (string file, int line, function(void:mixed) test_fn,
 		     string test_text, array test_text_args)
 {
-  return test_really_generic (check_true, test_fn,
+  return test_really_generic (silent_check_true, test_fn,
 			      ({file, line, test_text}), test_text_args);
 }
 
