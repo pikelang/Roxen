@@ -10,7 +10,7 @@ inherit "module";
 int inited;
 
 constant cvs_version =
-  "$Id: userdb_sql.pike,v 1.10 2008/08/15 12:33:55 mast Exp $";
+  "$Id: userdb_sql.pike,v 1.11 2009/10/08 11:11:00 mast Exp $";
 
 LocaleString module_name = _(1,"Authentication: SQL user database");
 LocaleString module_doc  = _(2,"This module implements a user database via "
@@ -41,6 +41,9 @@ class SqlUser
     switch(query("passwd_type")) {
       case "password":
 	return (int)sql_query("SELECT PASSWORD(%s) = %s as pswmatch",
+			      password, crypted_password())[0]->pswmatch;
+      case "old-password":
+	return (int)sql_query("SELECT OLD_PASSWORD(%s) = %s as pswmatch",
 			      password, crypted_password())[0]->pswmatch;
       case "crypt":
 	return (crypt(password, crypted_password()));
@@ -216,6 +219,8 @@ void create()
           Variable.StringChoice("password",
 				([
 				  "password":_(5,"MySQL Password"),
+				  "old-password":_(0,"MySQL OLD_PASSWORD() "
+						   "(4.0 Compat Mode)"),
 				  "crypt":_(6,"Unix crypt"),
 				  "clear text":_(7,"Clear text"),
 				  "md5 crypt":_(8,"MD5 crypt"),
