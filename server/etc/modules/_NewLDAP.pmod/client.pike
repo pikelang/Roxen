@@ -1,6 +1,6 @@
 // LDAP client protocol implementation for Pike.
 //
-// $Id: client.pike,v 1.12 2008/10/29 09:38:45 mast Exp $
+// $Id: client.pike,v 1.13 2009/10/08 14:50:59 mast Exp $
 //
 // Honza Petrous, hop@unibase.cz
 //
@@ -58,7 +58,7 @@
 //	RFC 1558			  (search filter representations)
 //	RFC 1777,1778,1779		  (version2 spec)
 //	RFC 1823			  (v2 API)
-//	RFC 2251,2252,2253,2254,2255,2256 (version3 spec)
+//	RFC 4510-4519                     (version3 spec)
 //	draft-ietf-asid-ldap-c-api-00.txt (v3 API)
 //	RFC 2279   			  (UTF-8)
 //	RFC 2696			  (paged requests)
@@ -662,7 +662,7 @@ typedef mapping(string:ResultAttributeValue) ResultEntry;
   void create(string|mapping(string:mixed)|void url, object|void context)
   {
 
-    info = ([ "code_revision" : ("$Revision: 1.12 $"/" ")[1] ]);
+    info = ([ "code_revision" : ("$Revision: 1.13 $"/" ")[1] ]);
 
     if(!url || !sizeof(url))
       url = LDAP_DEFAULT_URL;
@@ -2096,6 +2096,15 @@ static mapping(string:mixed) parse_schema_terms (
 {
   string orig_str = str, oid;
 
+  // The following parser is much more lax than the ABNF in RFC 4512,
+  // since real-world cases are known to break the RFC in any number
+  // of ways. Basically anything that isn't explicitly used as a
+  // separator char ('(', ')', ' ') or a qdescr/qdstring starter (')
+  // is considered a token constituent. Note that $ is also used as
+  // separator in an oidlist but isn't used as a generic separator
+  // chars since it's known to occur in symbolic oids in some Domino
+  // schemas.
+
   // RFC 2252 mandates a dotted decimal oid here, but some servers
   // (e.g. iPlanet) might use symbolic strings so we have to do a lax
   // syntax check.
@@ -2104,11 +2113,11 @@ static mapping(string:mixed) parse_schema_terms (
   // oids in such cases, to make later lookups easier. However there
   // are no docs saying that it's ok to do so, and I prefer to play
   // safe. /mast
-  if (!sscanf (str, "(%*[ ]%[-;a-zA-Z0-9.]%*[ ]%s", oid, str))
+  if (!sscanf (str, "(%*[ ]%[^ '()]%*[ ]%s", oid, str))
     ERROR ("%sExpected '(' at beginning: %O\n",
 	   errmsg_prefix, orig_str);
   if (!sizeof (oid))
-    ERROR ("%sNumeric object identifier missing at start: %O\n",
+    ERROR ("%sObject identifier missing at start: %O\n",
 	   errmsg_prefix, orig_str);
 
   mapping(string:mixed) res = (["oid": oid]);
@@ -2138,8 +2147,10 @@ static mapping(string:mixed) parse_schema_terms (
     lambda (string what)
     {
       string name;
-      // No strict syntax check here.
-      switch (sscanf (str, "'%[-;a-zA-Z0-9]'%*[ ]%s", name, str)) {
+      // RFC 4512 restricts this to a letter followed by letters,
+      // digits or hyphens. However, real world cases shows that
+      // other chars can occur here ('.', at least), so let's be lax.
+      switch (sscanf (str, "'%[^']'%*[ ]%s", name, str)) {
 	case 0:
 	  ERROR ("%sExpected %s after term %O at pos %d: %O\n",
 		 errmsg_prefix, what, term_id, sizeof (orig_str) - pos, orig_str);
@@ -2150,12 +2161,13 @@ static mapping(string:mixed) parse_schema_terms (
       return name;
     };
 
-  do {
+  while (!sscanf (str, ")%s", str)) {
     pos = sizeof (str);
 
-    // Note: RFC 2252 is not clear on what chars are allowed in term
-    // identifier. We assume the same set as for attribute names.
-    sscanf (str, "%[-;a-zA-Z0-9]%*[ ]%s", term_id, str);
+    // Note: RFC 4512 is not clear on what chars are allowed in a term
+    // identifier. Since all terms should be followed by a space
+    // separator, we read everything up to the next space.
+    sscanf (str, "%[^ '()]%*[ ]%s", term_id, str);
     if (!sizeof (term_id))
       ERROR ("%sTerm identifier expected at pos %d: %O\n",
 	     errmsg_prefix, sizeof (orig_str) - pos, orig_str);
@@ -2170,31 +2182,56 @@ static mapping(string:mixed) parse_schema_terms (
 	res[term_id] = 1;
 	break;
 
-      case "oid": {		// Numeric oid or name.
-	// No strict syntax check here.
-	sscanf (str, "%[-;a-zA-Z0-9.]%*[ ]%s", string oid, str);
-	if (!sizeof (oid))
-	  ERROR ("%sExpected oid after term %O at pos %d: %O\n",
-		 errmsg_prefix, term_id, sizeof (orig_str) - pos, orig_str);
-	res[term_id] = oid;
+      case "oid": 		// Numeric oid or name.
+	string parse_oid()
+	{
+	  sscanf (str, "%[^ '()]%*[ ]%s", string oid, str);
+	  if (!sizeof (oid))
+	    ERROR ("%sExpected oid after term %O at pos %d: %O\n",
+		   errmsg_prefix, term_id, sizeof (orig_str) - pos, orig_str);
+	  return oid;
+	};
+	res[term_id] = parse_oid();
 	break;
-      }
+
+      case "oids": // Numeric oid or name or $-separated list of them.
+	if (sscanf (str, "(%*[ ]%s", str)) {
+	  array(string) list = ({});
+	  while (1) {
+	    if (str == "")
+	      ERROR ("%sUnterminated parenthesis after term %O at pos %d: %O\n",
+		     errmsg_prefix, term_id, sizeof (orig_str) - pos, orig_str);
+	    sscanf (str, "%[^ '()$]%*[ ]%s", string oid, str);
+	    if (!sizeof (oid))
+	      ERROR ("%sExpected oid after term %O at pos %d: %O\n",
+		     errmsg_prefix, term_id, sizeof (orig_str) - pos, orig_str);
+	    list += ({oid});
+	    if (sscanf (str, ")%*[ ]%s", str))
+	      break;
+	    if (!sscanf (str, "$%*[ ]%s", str))
+	      ERROR ("%sExpected '$' between oids after term %O at pos %d: "
+		     "%O\n", errmsg_prefix, term_id, sizeof (orig_str) - pos,
+		     orig_str);
+	  }
+	  res[term_id] = list;
+	}
+	else
+	  res[term_id] = ({parse_oid()});
+	break;
 
       case "oidlen": {		// OID with optional length.
 	// Cope with Microsoft AD which incorrectly quotes this field
-	// and allows a name (RFC 2252 section 4.3.2 specifies a
+	// and allows a name (RFC 4512 section 4.1.2 specifies a
 	// numeric oid only).
 
 	int ms_kludge;
 	string oid;
 	if (has_prefix (str, "'")) {
 	  ms_kludge = 1;
-	  // No strict syntax check here.
-	  sscanf (str, "'%[-;a-zA-Z0-9.]%s", oid, str);
+	  sscanf (str, "'%[^'{]%s", oid, str);
 	}
 	else {
-	  // No strict syntax check here.
-	  sscanf (str, "%[0-9.]%s", oid, str);
+	  sscanf (str, "%[^ '(){]%s", oid, str);
 	}
 
 	if (!sizeof (oid))
@@ -2255,7 +2292,7 @@ static mapping(string:mixed) parse_schema_terms (
       default:
 	if (multisetp (term_syntax) || mappingp (term_syntax)) {
 	  // One of a set.
-	  sscanf (str, "%[-;a-zA-Z0-9.]%*[ ]%s", string choice, str);
+	  sscanf (str, "%[^ '()]%*[ ]%s", string choice, str);
 	  if (!sizeof (choice))
 	    ERROR ("%sExpected keyword after term %O at pos %d: %O\n",
 		   errmsg_prefix, term_id, sizeof (orig_str) - pos, orig_str);
@@ -2270,7 +2307,7 @@ static mapping(string:mixed) parse_schema_terms (
 
 	ERROR ("Unknown syntax %O in known_perms.\n", term_syntax);
     }
-  } while (!sscanf (str, ")%s", str));
+  }
 
   // Necessary in 7.2 to avoid garbage.
   parse_qdstring = parse_qdescr = 0;

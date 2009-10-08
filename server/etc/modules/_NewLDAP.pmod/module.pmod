@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.4 2007/05/23 14:53:28 mast Exp $
+// $Id: module.pmod,v 1.5 2009/10/08 14:50:59 mast Exp $
 
 #include "ldap_globals.h"
 
@@ -244,8 +244,13 @@ string ldap_decode_string (string str)
       // Use two %1x to force reading of exactly two hex digits;
       // something like %2.2x is currently not supported.
       res += sprintf ("%c", (high << 4) + low);
-    else
-      ERROR ("Invalid backslash escape %O in string %O.\n", rest[..2], str);
+    else {
+      // Treat invalid escapes as literal backslashes. At least Tivoli
+      // and Lotus Domino are known to have an attribute description
+      // with quoting errors in it, as noted by Dan Nelson.
+      res += "\\";
+      rest = rest[1..];
+    }
   }
   return res;
 }
