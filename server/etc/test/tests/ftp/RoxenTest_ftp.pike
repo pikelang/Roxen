@@ -1,4 +1,4 @@
-// $Id: RoxenTest_ftp.pike,v 1.2 2001/10/05 15:08:03 per Exp $
+// $Id: RoxenTest_ftp.pike,v 1.3 2009/10/12 12:30:13 grubba Exp $
 //
 // Tests of the ftp protocol module.
 //
@@ -15,6 +15,7 @@ string simple_check()
     5:"Connection closed",
     6:"Write failed",
     7:"Bad protocol code",
+    8:"Bad data",
   ]));
 }
 
