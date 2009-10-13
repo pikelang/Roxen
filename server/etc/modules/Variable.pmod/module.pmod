@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.104 2008/12/19 12:17:39 grubba Exp $
+// $Id: module.pmod,v 1.105 2009/10/13 11:43:07 mast Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1431,7 +1431,12 @@ class ModuleChoice
   {
     if (stringp(to)) {
       module_id = to;
-      to = transform_from_form(to);
+      RoxenModule mod = transform_from_form(to);
+      if (!mod && conf->enabled_modules[to])
+	// The module exists but isn't started yet. Don't call set()
+	// in this case since that will cause a bogus warning.
+	return 0;
+      to = mod;
     }
     return ::set(to);
   }
