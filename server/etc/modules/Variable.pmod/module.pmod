@@ -1,4 +1,4 @@
-// $Id: module.pmod,v 1.116 2009/07/02 14:12:55 jonasw Exp $
+// $Id: module.pmod,v 1.117 2009/10/13 11:55:27 mast Exp $
 
 #include <module.h>
 #include <roxen.h>
@@ -1439,6 +1439,7 @@ class ModuleChoice
   protected Configuration conf;
   protected string module_id;
   protected string default_id;
+  protected int automatic_dependency;
 
   int low_set(RoxenModule to)
   {
@@ -1470,7 +1471,16 @@ class ModuleChoice
   {
     if (stringp(to)) {
       module_id = to;
-      to = transform_from_form(to);
+      RoxenModule mod = transform_from_form (to);
+      if (!mod && automatic_dependency && conf->enabled_modules[to]) {
+	conf->add_modules (({to}), 1);
+	mod = transform_from_form (to);
+      }
+      if (!mod && conf->enabled_modules[to])
+	// The module exists but isn't started yet. Don't call set()
+	// in this case since that will cause a bogus warning.
+	return 0;
+      to = mod;
     }
     return ::set(to);
   }
@@ -1552,12 +1562,19 @@ class ModuleChoice
   //!   The @[RoxenModule.module_local_id] of the default value.
   //! @param conf
   //!   The current configuration.
+  //! @param no_automatic_dependency
+  //!   Do not automatically depend on the chosen module. Normally, if
+  //!   it already exists in the configuration then it will be loaded
+  //!   before @expr{start@} in this module is called. Setting this
+  //!   flag disables that.
   protected void create(string default_id, int flags,
 			string std_name, string std_doc,
-			Configuration conf)
+			Configuration conf,
+			void|int no_automatic_dependency)
   {
     this_program::default_id = default_id;
     this_program::conf = conf;
+    automatic_dependency = !no_automatic_dependency;
     ::create(0, ({}), flags, std_name, std_doc);
   }
 }
