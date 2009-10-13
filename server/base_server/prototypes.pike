@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.258 2009/08/19 08:29:42 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.259 2009/10/13 09:11:45 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -316,7 +316,7 @@ class Configuration
 {
   inherit BasicDefvar;
   constant is_configuration = 1;
-  mapping enabled_modules = ([]);
+  mapping(string:int(1..1)) enabled_modules = ([]);
   mapping(string:array(int)) error_log=([]);
 
 #ifdef PROFILE
