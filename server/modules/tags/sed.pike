@@ -36,7 +36,7 @@
 //
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.20 2008/02/05 15:41:56 mathias Exp $";
+constant cvs_version = "$Id: sed.pike,v 1.21 2009/10/16 12:49:04 mathias Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -207,7 +207,6 @@ array execute_sed(array(string) e,array(string) in,int suppress)
 	       {
 		  in[start]=sa[1];
 		  print+=sa[0];
-		  if (!flags["g"]) break;
 	       }
 	       start++;
 	    }
