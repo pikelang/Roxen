@@ -36,7 +36,7 @@
 //
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.21 2009/10/16 12:56:02 mathias Exp $";
+constant cvs_version = "$Id: sed.pike,v 1.22 2009/10/16 15:15:09 mathias Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -46,6 +46,7 @@ inherit "module";
 mapping flcache=([]);
    // not_query:(flno: 1=fodled 2=unfolded )
 int flno=1;
+float compat_level;
 
 #define GC_LOOP_TIME QUERY(gc_time)
 
@@ -207,6 +208,7 @@ array execute_sed(array(string) e,array(string) in,int suppress)
 	       {
 		  in[start]=sa[1];
 		  print+=sa[0];
+		  if (compat_level < 5.0 && !flags["g"]) break;
 	       }
 	       start++;
 	    }
@@ -299,6 +301,7 @@ string container_sed(string tag,mapping m,string cont,object id)
 {
    mapping c=(["e":({})]);
    string|array d;
+   compat_level = (float) my_configuration()->query("compat_level");
 
    parse_html(cont,
 	      (["source":lambda(string tag,mapping m,mapping c,object id)
@@ -418,7 +421,10 @@ constant tagdoc=([
 	       <item name='l'><p>Print current space</p></item>
 	       <item name='p'><p>Print first line in data</p></item>
 	       <item name='q'><p>Quit evaluating</p></item>
-	       <item name='s'><p>Replace</p>
+	       <item name='s'><p>Replace. Will quit after the first match in
+				every line. If Compatability Level is set to 4.5
+				or lower, it will quit after the first match
+				regarless of how many lines there are left.</p>
 	                      <p>Usage: <b>s/</b>[<i>regexp</i>]<b>/</b>[<i>with</i>]<b>/</b>[<i>x</i>]</p></item>
 	       <item name='y'><p>Replace chars</p>
 	                      <p>Usage: <b>y/</b>[<i>chars</i>]<b>/</b>[<i>chars</i>]<b>/</b></p></item></list></desc>
