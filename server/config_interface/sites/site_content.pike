@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.159 2009/10/22 11:15:20 grubba Exp $
+// $Id: site_content.pike,v 1.160 2009/10/22 14:32:58 grubba Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -571,7 +571,7 @@ array(Protocol|array(string)) get_port_for(string url)
   mapping(string:Configuration|Protocol|string) url_data =
     roxen->urls[roxen->normalize_url (url, 1)];
   if(!url_data) {
-    return ({ 0, 0 });
+    return ({ 0, ({ url }) });
   }
   return ({ url_data->port, ({ roxen->normalize_url (url) }) });
 }
@@ -704,7 +704,6 @@ string parse( RequestID id )
 	 map(conf->query("URLs"), get_port_for);
        mapping(Protocol:array(Protocol|array(string))) prot_info = ([]);
        foreach(ports, array(Protocol|array(string)) port) {
-	 if (!port) continue;
 	 array(Protocol|array(string)) prev;
 	 if (prev = prot_info[port[0]]) {
 	   if (prev[1]) {
