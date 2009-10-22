@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.149 2008/04/07 13:04:47 grubba Exp $
+// $Id: site_content.pike,v 1.150 2009/10/22 11:15:20 grubba Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -687,6 +687,7 @@ string parse( RequestID id )
 	 map(conf->query("URLs"), get_port_for);
        mapping(Protocol:array(Protocol|array(string))) prot_info = ([]);
        foreach(ports, array(Protocol|array(string)) port) {
+	 if (!port) continue;
 	 array(Protocol|array(string)) prev;
 	 if (prev = prot_info[port[0]]) {
 	   if (prev[1]) {
