@@ -3,14 +3,18 @@
 //<locale-token project="roxen_config">LOCALE</locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
-constant modules = ({});
+//! @decl array(string) modules = ({});
+//!
+//! Modules to include in the configuration. Any initial variables in
+//! them get shown in the wizard to be set by the user.
 
-constant silent_modules = ({}); 
+//! @decl array(string) silent_modules = ({});
+//!
 //! Silent modules does not get their initial variables shown.
 
 int unlocked(License.Key license)
 {
-  foreach(modules, string module)
+  foreach(this->modules || ({}), string module)
     if(!license->is_module_unlocked(module))
       return 0;
   return 1;
@@ -27,7 +31,7 @@ object load_modules(Configuration conf)
   // The stuff below ought to be in configuration.pike and not here;
   // we have to meddle with locks and stuff that should be internal.
 
-  foreach( modules, string mod )
+  foreach( this->modules || ({}), string mod )
   {
     RoxenModule module;
 
@@ -79,7 +83,7 @@ string initial_form( Configuration conf, RequestID id, int setonly )
   string res = "";
   int num;
 
-  foreach( modules, string mod )
+  foreach( this->modules || ({}), string mod )
   {
     ModuleInfo mi = roxen.find_module( (mod/"!")[0] );
     RoxenModule moo = conf->find_module( replace(mod,"!","#") );
@@ -117,7 +121,7 @@ string initial_form( Configuration conf, RequestID id, int setonly )
 int form_is_ok( RequestID id )
 {
   Configuration conf = id->misc->new_configuration;
-  foreach( modules, string mod )
+  foreach( this->modules || ({}), string mod )
   {
     ModuleInfo mi = roxen.find_module( mod );
     if( mi )
@@ -174,7 +178,7 @@ mixed parse( RequestID id, mapping|void opt )
       conf->add_module_pre_callback (0, "start", psc->pre_start_cb);
     }
 
-    foreach( modules, string mod )
+    foreach( this->modules || ({}), string mod )
     {
       RoxenModule module = conf->find_module( mod );
       if(module)
@@ -185,7 +189,7 @@ mixed parse( RequestID id, mapping|void opt )
     }
     
     License.Key key = conf->getvar("license")->get_key();
-    foreach( silent_modules, string mod )
+    foreach( this->silent_modules || ({}), string mod )
     {
       // If the module list doesn't explicitly state that more than
       // one module copy is wanted then avoid it.
