@@ -44,8 +44,31 @@ object load_modules(Configuration conf)
   return enable_modules_lock;
 }
 
-void init_modules(Configuration conf, RequestID id)
+void init_module (Configuration conf, RoxenModule mod, RequestID id);
+//! Called in each newly added module just before
+//! @[RoxenModule.start].
+//!
+//! This is suitable to configure initial values for the module
+//! variables. In that case you should probably use
+//! @expr{mod->low_set@} to bypass the module checks, since the module
+//! hasn't been properly initialized yet.
+
+void init_modules(Configuration conf, RequestID id);
+//! Called after all modules have been enabled but before their
+//! variables are saved.
+//!
+//! This function is not the right place to initialize module
+//! variables, since it is called after the first call to the
+//! @[RoxenModule.start] functions. Use @[init_module] for that
+//! instead.
+
+protected class PreStartCb (RequestID id)
 {
+  void pre_start_cb (RoxenModule mod, int save_vars,
+		     Configuration conf, int newly_added)
+  {
+    init_module (conf, mod, id);
+  }
 }
 
 string initial_form( Configuration conf, RequestID id, int setonly )
@@ -144,6 +167,13 @@ mixed parse( RequestID id, mapping|void opt )
   if( id->variables["ok.x"] && form_is_ok( id ) )
   {
     conf->set( "MyWorldLocation", Roxen.get_world(conf->query("URLs"))||"");
+
+    PreStartCb psc;
+    if (init_module) {
+      psc = PreStartCb (id);
+      conf->add_module_pre_callback (0, "start", psc->pre_start_cb);
+    }
+
     foreach( modules, string mod )
     {
       RoxenModule module = conf->find_module( mod );
@@ -171,7 +201,11 @@ mixed parse( RequestID id, mapping|void opt )
       conf->enable_module( mod );
     }
 
-    init_modules( conf, id );
+    if (psc)
+      destruct (psc);
+
+    if (init_modules)
+      init_modules( conf, id );
 
     conf->fix_no_delayed_load_flag();
     conf->save (1); // Call start callbacks and save it all in one go.
