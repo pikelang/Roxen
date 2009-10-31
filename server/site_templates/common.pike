@@ -157,6 +157,12 @@ mixed parse( RequestID id, mapping|void opt )
     License.Key key = conf->getvar("license")->get_key();
     foreach( silent_modules, string mod )
     {
+      // If the module list doesn't explicitly state that more than
+      // one module copy is wanted then avoid it.
+      if (!has_value (mod, "#")) mod += "#0";
+      if (conf->enabled_modules[mod])
+	continue;
+
       ModuleInfo module = roxen.find_module(mod);
       if(module->locked && (!key || !module->unlocked(key)) ) {
 	report_debug("Ignoring module "+mod+", disabled in license.\n");
