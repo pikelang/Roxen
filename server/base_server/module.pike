@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module.pike,v 1.238 2009/07/07 14:15:26 jonasw Exp $
+// $Id: module.pike,v 1.239 2009/10/31 13:37:34 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -88,9 +88,11 @@ RoxenModule this_module()
   return this_object(); // To be used from subclasses.
 }
 
+DECLARE_OBJ_COUNT;
+
 string _sprintf()
 {
-  return sprintf ("RoxenModule(%s)", _module_identifier || "?");
+  return sprintf ("RoxenModule(%s)" + OBJ_COUNT, _module_identifier || "?");
 }
 
 array register_module()

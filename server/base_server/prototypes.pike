@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.259 2009/10/13 09:11:45 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.260 2009/10/31 13:37:34 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -170,7 +170,10 @@ class ModuleCopies
   {
     return values(copies);
   }
-  string _sprintf( ) { return "ModuleCopies("+sizeof(copies)+")"; }
+  string _sprintf (int flag)
+  {
+    return flag == 'O' && ("ModuleCopies("+sizeof(copies)+")");
+  }
 }
 
 // Simulate an import of useful stuff from Parser.XML.Tree.
@@ -296,10 +299,12 @@ class DAVLock
     return res;
   }
 
+  DECLARE_OBJ_COUNT;
+
   protected string _sprintf (int flag)
   {
     return flag == 'O' &&
-      sprintf ("DAVLock(%O on %O, %s, %s%s)", locktoken, path,
+      sprintf ("DAVLock(%O on %O, %s, %s%s)" + OBJ_COUNT, locktoken, path,
 	       recursive ? "rec" : "norec",
 	       lockscope == "DAV:exclusive" ? "excl" :
 	       lockscope == "DAV:shared" ? "shared" :
@@ -325,9 +330,9 @@ class Configuration
 
   class Priority
   {
-    string _sprintf()
+    string _sprintf (int flag)
     {
-      return "Priority()";
+      return flag == 'O' && "Priority()";
     }
 
     array (RoxenModule) url_modules = ({ });
@@ -468,10 +473,12 @@ class Configuration
 
   AuthModule find_auth_module( string name );
   UserDB find_user_database( string name );
-  
-  protected string _sprintf( )
+
+  DECLARE_OBJ_COUNT;
+
+  protected string _sprintf (int flag)
   {
-    return "Configuration("+name+")";
+    return flag == 'O' && ("Configuration("+name+")" + OBJ_COUNT);
   }
 }
 
@@ -567,12 +574,14 @@ class FakedVariables( mapping real_variables )
       return 1;
   }
 
+  DECLARE_OBJ_COUNT;
+
   protected string _sprintf( int f )
   {
     switch( f )
     {
       case 'O':
-	return sprintf( "FakedVariables(%O)", real_variables );
+	return sprintf( "FakedVariables(%O)" + OBJ_COUNT, real_variables );
       default:
 	return sprintf( sprintf("%%%c", f ), real_variables );
     }
@@ -631,7 +640,7 @@ class PrefLanguages
   
   protected string _sprintf(int c, mapping|void attrs)
   {
-    return sprintf("PrefLanguages(%O)", get_languages());
+    return c == 'O' && sprintf("PrefLanguages(%O)", get_languages());
   }
 
   void register_known_language_forks(multiset(string) langs, void|RequestID id)
@@ -821,6 +830,8 @@ class CacheKey
 {
 #ifdef ID_CACHEKEY_DEBUG
   RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this);
+#else
+  DECLARE_OBJ_COUNT;
 #endif
 
   protected array(array(CacheActivationCB|array)) activation_cbs;
@@ -925,7 +936,7 @@ class CacheKey
 #ifdef ID_CACHEKEY_DEBUG
 	       __marker ? "[" + __marker->count + "]" : "",
 #else
-	       ""
+	       OBJ_COUNT
 #endif
 	      );
   }
@@ -1015,6 +1026,8 @@ class RequestID
 {
 #ifdef ID_OBJ_DEBUG
   RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this);
+#else
+  DECLARE_OBJ_COUNT;
 #endif
 
   Configuration conf;
@@ -1372,9 +1385,11 @@ class RequestID
       return real_cookies + eaten;
     }
 
+    DECLARE_OBJ_COUNT;
+
     protected string _sprintf(int fmt)
     {
-      return fmt == 'O' && sprintf("CookieJar(%O)",
+      return fmt == 'O' && sprintf("CookieJar(%O)" + OBJ_COUNT,
 				   RequestID::this && real_cookies);
     }
   }
@@ -3092,6 +3107,8 @@ class RequestID
     return flag == 'O' && ("RequestID(" + (raw_url||"") + ")"
 #ifdef ID_OBJ_DEBUG
 			   + (__marker ? "[" + __marker->count + "]" : "")
+#else
+			   + OBJ_COUNT
 #endif
 			  );
   }

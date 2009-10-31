@@ -1,6 +1,6 @@
 // -*- pike -*-
 //
-// $Id: roxen.h,v 1.33 2009/04/17 15:42:11 mast Exp $
+// $Id: roxen.h,v 1.34 2009/10/31 13:37:34 mast Exp $
 
 #ifndef _ROXEN_H_
 
@@ -74,5 +74,17 @@ mixed get_locale();
 #  define PROTO_CACHE()						\
   ([mapping(string:mixed)]REQUESTID->misc)->no_proto_cache = 0
 #endif /* DEBUG_CACHEABLE */
+
+// The OBJ_COUNT_DEBUG define adds a suffix "[xxx]" to the end of many
+// _sprintf('O') strings, where xxx is a unique number for the object
+// instance. Useful to see the real lifetime of objects.
+#ifdef OBJ_COUNT_DEBUG
+#define DECLARE_OBJ_COUNT \
+  protected int __object_count = ++all_constants()->_obj_count
+#define OBJ_COUNT ("[" + this_program::__object_count + "]")
+#else
+#define DECLARE_OBJ_COUNT ;
+#define OBJ_COUNT ""
+#endif
 
 #endif  /* !_ROXEN_H_ */
