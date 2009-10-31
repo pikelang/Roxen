@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.260 2009/10/31 13:37:34 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.261 2009/10/31 19:37:33 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -368,6 +368,47 @@ class Configuration
 
   // Protocol specific statistics.
   int requests, sent, hsent, received;
+
+  void add_module_pre_callback (string mod_name, string func,
+				function(RoxenModule,mixed...:void) cb);
+  void delete_module_pre_callback (string mod_name, string func,
+				   function(RoxenModule,mixed...:void) cb);
+  void add_module_post_callback (string mod_name, string func,
+				function(RoxenModule,mixed...:void) cb);
+  void delete_module_post_callback (string mod_name, string func,
+				    function(RoxenModule,mixed...:void) cb);
+  //! These functions add or delete callbacks which are called before
+  //! or after specific functions in @[RoxenModule] instances. In
+  //! particular this can be used to add callbacks to call before or
+  //! after @[RoxenModule.start] in specific modules.
+  //!
+  //! A callback is never added multiple times on the same callback
+  //! list. Callbacks in destructed objects are automatically pruned
+  //! from the callback lists.
+  //!
+  //! @param mod_name
+  //! The base identifier (i.e. without the @expr{"#n"@} part) of the
+  //! module that the callback should be registered for. If it is zero
+  //! then the callback is called for any module in the configuration.
+  //! This is a string to be able to register callbacks for modules
+  //! that are not yet loaded.
+  //!
+  //! @param func
+  //! The function in the module to register the callback for. The
+  //! only supported functions are currently @expr{"start"@} and
+  //! @expr{"stop"@}.
+  //!
+  //! @param cb
+  //! The callback to add or delete from the callback list. If a
+  //! callback is deleted then @[mod_name] and @[func] must be the
+  //! same as when it was registered.
+  //!
+  //! The callback get the @[RoxenModule] instance as the first
+  //! argument. The remaining arguments are the same as the
+  //! corresponding function in @[RoxenModule] gets called with.
+  //!
+  //! Note that post callbacks won't get called if the real
+  //! @[RoxenModule] function failed with an exception.
 
   function(string:int) log_function;
   DataCache datacache;

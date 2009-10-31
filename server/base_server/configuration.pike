@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.680 2009/06/24 11:38:00 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.681 2009/10/31 19:37:33 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -645,7 +645,8 @@ private Thread.Mutex modules_stopped_mutex = Thread.Mutex();
 #endif
 private void safe_stop_module (RoxenModule mod, string desc)
 {
-  if (mixed err = catch (mod && mod->stop && mod->stop()))
+  if (mixed err = catch (mod && mod->stop &&
+			 call_module_func_with_cbs (mod, "stop")))
     report_error ("While stopping " + desc + ": " + describe_backtrace (err));
 #ifdef THREADS
   Thread.MutexKey lock = modules_stopped_mutex->lock();
@@ -3374,6 +3375,114 @@ int start(int num)
   return 0;
 }
 
+// ([func: ([mod_name: ({cb, cb, ...})])])
+protected mapping(string:
+		  mapping(string:
+			  array(function(RoxenModule,mixed...:void))))
+  module_pre_callbacks = ([]), module_post_callbacks = ([]);
+
+void add_module_pre_callback (string mod_name, string func,
+			      function(RoxenModule,mixed...:void) cb)
+{
+  ASSERT_IF_DEBUG ((<"start", "stop">)[func]);
+  mapping(string:array(function(RoxenModule,mixed...:void))) func_cbs =
+    module_pre_callbacks[func] || (module_pre_callbacks[func] = ([]));
+  if (func_cbs[mod_name] && has_value (func_cbs[mod_name], cb))
+    return;
+  func_cbs[mod_name] += ({cb});
+}
+
+void delete_module_pre_callback (string mod_name, string func,
+				 function(RoxenModule,mixed...:void) cb)
+{
+  if (mapping(string:array(function(RoxenModule,mixed...:void))) func_cbs =
+      module_pre_callbacks[func])
+    if (func_cbs[mod_name])
+      func_cbs[mod_name] -= ({cb});
+}
+
+void add_module_post_callback (string mod_name, string func,
+			       function(RoxenModule,mixed...:void) cb)
+{
+  ASSERT_IF_DEBUG ((<"start", "stop">)[func]);
+  mapping(string:array(function(RoxenModule,mixed...:void))) func_cbs =
+    module_post_callbacks[func] || (module_post_callbacks[func] = ([]));
+  if (func_cbs[mod_name] && has_value (func_cbs[mod_name], cb))
+    return;
+  func_cbs[mod_name] += ({cb});
+}
+
+void delete_module_post_callback (string mod_name, string func,
+				  function(RoxenModule,mixed...:void) cb)
+{
+  if (mapping(string:array(function(RoxenModule,mixed...:void))) func_cbs =
+      module_post_callbacks[func])
+    if (func_cbs[mod_name])
+      func_cbs[mod_name] -= ({cb});
+}
+
+void call_module_func_with_cbs (RoxenModule mod, string func, mixed... args)
+{
+  string mod_name;
+
+  if (mapping(string:array(function(RoxenModule,mixed...:void))) func_cbs =
+      module_pre_callbacks[func]) {
+    sscanf (mod->module_local_id(), "%[^#]", mod_name);
+    array(function(RoxenModule,mixed...:void)) cbs;
+    if (array(function(RoxenModule,mixed...:void)) a = func_cbs[mod_name]) {
+      func_cbs[mod_name] = (a -= ({0}));
+      cbs = a;
+    }
+    if (array(function(RoxenModule,mixed...:void)) a = func_cbs[0]) {
+      func_cbs[0] = (a -= ({0}));
+      if (cbs) cbs += a; else cbs = a;
+    }
+    if (cbs) {
+      foreach (cbs, function(RoxenModule,mixed...:void) cb) {
+#ifdef MODULE_CB_DEBUG
+	werror ("Calling callback before %O->%s: %O\n", mod, func, cb);
+#endif
+	if (mixed err = catch (cb (mod, @args)))
+	  report_error ("Error calling callback %O before %O->%s:\n%s\n",
+			cb, mod, func, describe_backtrace (err));
+      }
+    }
+  }
+
+  // Exceptions thrown here are the responsibility of the caller.
+#ifdef MODULE_CB_DEBUG
+  werror ("Calling %O->%s (%s)\n", mod, func,
+	  map (args, lambda (mixed arg)
+		       {return sprintf ("%O", arg);}) * ", ");
+#endif
+  mod[func] (@args);
+
+  if (mapping(string:array(function(RoxenModule,mixed...:void))) func_cbs =
+      module_post_callbacks[func]) {
+    if (!mod_name)
+      sscanf (mod->module_local_id(), "%[^#]", mod_name);
+    array(function(RoxenModule,mixed...:void)) cbs;
+    if (array(function(RoxenModule,mixed...:void)) a = func_cbs[mod_name]) {
+      func_cbs[mod_name] = (a -= ({0}));
+      cbs = a;
+    }
+    if (array(function(RoxenModule,mixed...:void)) a = func_cbs[0]) {
+      func_cbs[0] = (a -= ({0}));
+      if (cbs) cbs += a; else cbs = a;
+    }
+    if (cbs) {
+      foreach (cbs, function(RoxenModule,mixed...:void) cb) {
+#ifdef MODULE_CB_DEBUG
+	werror ("Calling callback after %O->%s: %O\n", mod, func, cb);
+#endif
+	if (mixed err = catch (cb (mod, @args)))
+	  report_error ("Error calling callback %O after %O->%s:\n%s\n",
+			cb, mod, func, describe_backtrace (err));
+      }
+    }
+  }
+}
+
 void save_me()
 {
   save_one( 0 );
@@ -3420,7 +3529,8 @@ int save_one( RoxenModule o )
   store(q, o->query(), 0, this_object());
   invalidate_cache();
   mixed error;
-  if( error = catch( o->start(2, this_object(), 0) ) )
+  if( o->start &&
+      (error = catch( call_module_func_with_cbs (o, "start", 2, this, 0) )) )
   {
     if( objectp(error ) )
       error = (array)error;
@@ -3611,7 +3721,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if(module[id] && module[id] != me)
   {
     if( module[id]->stop ) {
-      if (err = catch( module[id]->stop() )) {
+      if (err = catch( call_module_func_with_cbs (module[id], "stop") )) {
 	string bt=describe_backtrace(err);
 	report_error("disable_module(): " +
 		     LOC_M(44, "Error while disabling module %s%s"),
@@ -3950,7 +4060,8 @@ void call_high_start_callbacks (RoxenModule me, ModuleInfo moduleinfo,
 
   mixed err;
   if((me->start) &&
-     (err = catch( me->start(0, this_object(), newly_added) ) ) )
+     (err = catch( call_module_func_with_cbs (me, "start",
+					      0, this, newly_added) ) ) )
   {
 #ifdef MODULE_DEBUG
     if (enable_module_batch_msgs) 
@@ -4124,7 +4235,7 @@ int disable_module( string modname, int|void nodest )
   }
 
   if(me->stop)
-    if (mixed err = catch (me->stop())) {
+    if (mixed err = catch (call_module_func_with_cbs (me, "stop"))) {
       string bt=describe_backtrace(err);
       report_error("disable_module(): " +
 		   LOC_M(44, "Error while disabling module %s%s"),
