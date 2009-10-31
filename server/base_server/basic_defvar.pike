@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2000 - 2009, Roxen IS.
-// $Id: basic_defvar.pike,v 1.33 2009/05/07 14:15:52 mast Exp $
+// $Id: basic_defvar.pike,v 1.34 2009/10/31 17:12:34 mast Exp $
 
 //! @appears BasicDefvar
 
@@ -38,6 +38,15 @@ void set(string var, mixed value)
     report_error( "Setting undefined variable: "+var+".\n" );
   else
     variables[var]->set( value );
+}
+
+void low_set(string var, mixed value)
+//! Set the variable 'var' to the specified value without any checking.
+{
+  if(!variables[var]) 
+    report_error( "Setting undefined variable: "+var+".\n" );
+  else
+    variables[var]->low_set( value );
 }
 
 int killvar(string var)
