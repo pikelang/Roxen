@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.681 2009/10/31 19:37:33 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.682 2009/11/01 21:34:33 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3858,15 +3858,21 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
     me->defvar("_priority", 0, "", TYPE_INT, "", 0, 1);
   }
 
-  mapping(string:mixed) stored_vars = retrieve(modname + "#" + id, this_object());
-  int has_stored_vars = sizeof (stored_vars); // A little ugly, but it suffices.
-  me->setvars(stored_vars);
-
   if (!module[id])
     counters[moduleinfo->counter]++;
 
   module[ id ] = me;
   otomod[ me ] = modname+"#"+id;
+
+  roxen->bootstrap_info->set (0);
+
+  // Below we may have recursive calls to this function. They may
+  // occur already in setvars due to e.g. automatic dependencies in
+  // Variable.ModuleChoice.
+
+  mapping(string:mixed) stored_vars = retrieve(modname + "#" + id, this_object());
+  int has_stored_vars = sizeof (stored_vars); // A little ugly, but it suffices.
+  me->setvars(stored_vars);
 
   if(!nostart) call_start_callbacks( me, moduleinfo, module );
 
@@ -3895,7 +3901,6 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if( me->no_delayed_load && got_no_delayed_load >= 0 )
     got_no_delayed_load = 1;
 
-  roxen->bootstrap_info->set (0);
   return me;
 }
 
