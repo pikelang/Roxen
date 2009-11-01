@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module.pike,v 1.239 2009/10/31 13:37:34 mast Exp $
+// $Id: module.pike,v 1.240 2009/11/01 21:35:55 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -30,6 +30,10 @@ private string _module_identifier =
       [_my_configuration, _module_local_identifier] = init_info;
       return _my_configuration->name + "/" + _module_local_identifier;
     }
+#ifdef DEBUG
+    else
+      error ("Got invalid bootstrap info for module: %O\n", init_info);
+#endif
   }();
 protected mapping _api_functions = ([]);
 

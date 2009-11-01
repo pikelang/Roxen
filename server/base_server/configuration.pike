@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.682 2009/11/01 21:34:33 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.683 2009/11/01 21:35:55 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3661,6 +3661,13 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if( sscanf(modname, "%s#%d", modname, id ) != 2 )
     while( modules[ modname ] && modules[ modname ][ id ] )
       id++;
+
+#ifdef DEBUG
+  if (mixed init_info = roxen->bootstrap_info->get())
+    if (arrayp (init_info))
+      error ("Invalid recursive call to enable_module while enabling %O/%s.\n",
+	     init_info[0], init_info[1]);
+#endif
 
   roxen->bootstrap_info->set (({this_object(), modname + "#" + id}));
 
