@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module_support.pike,v 1.140 2009/05/07 14:15:52 mast Exp $
+// $Id: module_support.pike,v 1.141 2009/11/03 14:08:44 mast Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -354,7 +354,8 @@ class ModuleInfo( string sname, string filename )
     }
   }
   
-  RoxenModule instance( Configuration conf, void|int silent )
+  RoxenModule instance( Configuration conf, void|int silent,
+			void|int copy_num)
   {
     // werror("Instance %O <%O,%O,%O,%O,%O,%O>\n", this_object(),
     //        time()-last_checked,type,multiple_copies,name,description,locked);
@@ -362,13 +363,26 @@ class ModuleInfo( string sname, string filename )
       // Module not found.
       return silent?0:LoadFailed(0);
     }
+
+    // conf is zero if we're making the dummy instance for the
+    // ModuleInfo class. Use the admin config as a replacement for
+    // bootstrap_info just to avoid returning zero from
+    // RoxenModule.my_configuration().
+    Configuration bootstrap_conf = conf || roxenp()->get_admin_configuration();
+
     roxenloader.ErrorContainer ec = roxenloader.ErrorContainer();
     roxenloader.push_compile_error_handler( ec );
     mixed err = catch
     {
       if( (has_suffix (filename, ".class") || has_suffix (filename, ".jar")) &&
-	  got_java())
-	return ((program)"javamodule.pike")(conf, filename);
+	  got_java()) {
+	program java_wrapper = (program)"javamodule.pike";
+	roxenp()->bootstrap_info->set (({bootstrap_conf,
+					 sname + "#" + copy_num}));
+	RoxenModule ret = java_wrapper(conf, filename);
+	roxenp()->bootstrap_info->set (0);
+	return ret;
+      }
       // Check if the module is locked. Throw an empty string to not
       // generate output, this is handled later.
       object key = conf && conf->getvar("license")->get_key();
@@ -378,10 +392,15 @@ class ModuleInfo( string sname, string filename )
       }
       else
 	m_delete(config_locked, conf);
-      RoxenModule ret = load( filename, silent )( conf );
+      function|program prog = load( filename, silent );
+      roxenp()->bootstrap_info->set (({bootstrap_conf,
+				       sname + "#" + copy_num}));
+      RoxenModule ret = prog( conf );
+      roxenp()->bootstrap_info->set (0);
       return ret;
     };
     roxenloader.pop_compile_error_handler( );
+    roxenp()->bootstrap_info->set (0);
     if( err )
       if( stringp( err ) )
       {

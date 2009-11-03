@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.684 2009/11/03 10:00:39 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.685 2009/11/03 14:08:44 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3554,7 +3554,8 @@ int save_one( RoxenModule o )
 RoxenModule reload_module( string modname )
 {
   RoxenModule old_module = find_module( modname );
-  ModuleInfo mi = roxen.find_module( (modname/"#")[0] );
+  sscanf (modname, "%s#%d", string base_modname, int mod_copy);
+  ModuleInfo mi = roxen.find_module( base_modname );
 
   if( !old_module ) return 0;
 
@@ -3579,10 +3580,7 @@ RoxenModule reload_module( string modname )
       RoxenModule nm;
 
       // Load up a new instance.
-      roxen->bootstrap_info->set (({this_object(), modname }));
-      nm = mi->instance( this_object() );
-      roxen->bootstrap_info->set (0);
-
+      nm = mi->instance( this_object(), 0, mod_copy);
       // If this is a faked module, let's call it a failure.
       if( nm->not_a_module )
       {
@@ -3670,8 +3668,6 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 	     init_info[0], init_info[1]);
 #endif
 
-  roxen->bootstrap_info->set (({this_object(), modname + "#" + id}));
-
 #ifdef MODULE_DEBUG
   int start_time = gethrtime();
 #endif
@@ -3685,7 +3681,6 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
       report_warning("Failed to load %s. The module probably "
                      "doesn't exist in the module path.\n", modname);
       got_no_delayed_load = -1;
-      roxen->bootstrap_info->set (0);
       return 0;
     }
   }
@@ -3707,7 +3702,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 
   if( !me )
   {
-    if(err = catch(me = moduleinfo->instance(this_object())))
+    if(err = catch(me = moduleinfo->instance(this_object(), 0, id)))
     {
 #ifdef MODULE_DEBUG
       if (enable_module_batch_msgs) report_debug("\bERROR\n");
@@ -3721,7 +3716,6 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
       }
 #endif
       got_no_delayed_load = -1;
-      roxen->bootstrap_info->set (0);
       return module[id];
     }
   }
@@ -3756,7 +3750,6 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 		   "called in random order."),
 		   ({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
       }) {
-	roxen->bootstrap_info->set (0);
 	throw(err);
       }
     }
@@ -3871,8 +3864,6 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 
   module[ id ] = me;
   otomod[ me ] = modname+"#"+id;
-
-  roxen->bootstrap_info->set (0);
 
   // Below we may have recursive calls to this function. They may
   // occur already in setvars due to e.g. automatic dependencies in
