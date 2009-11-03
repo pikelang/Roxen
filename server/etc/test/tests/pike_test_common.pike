@@ -54,9 +54,23 @@ void report_1st(function|string|array cb, array args, function check )
 string indent( int l, string what )
 {
   array q = what/"\n";
-//   if( q[-1] == "" )  q = q[..sizeof(q)-2];
+  int trailing_nl = q[-1] == "";
+  if (trailing_nl) q = q[..<1];
   string i = (" "*l+"|  ");
-  return i+q*("\n"+i);
+  return i+q*("\n"+i) + (trailing_nl ? "\n" : "");
+}
+
+void log (string msg, mixed... args)
+{
+  if (sizeof (args)) msg = sprintf (msg, @args);
+  report_debug (indent (2, msg));
+}
+
+void log_verbose (string msg, mixed... args)
+{
+  if (!verbose) return;
+  if (sizeof (args)) msg = sprintf (msg, @args);
+  report_debug (indent (2, msg));
 }
 
 string do_describe_error( mixed err )
