@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.683 2009/11/01 21:35:55 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.684 2009/11/03 10:00:39 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3556,8 +3556,6 @@ RoxenModule reload_module( string modname )
   RoxenModule old_module = find_module( modname );
   ModuleInfo mi = roxen.find_module( (modname/"#")[0] );
 
-  roxen->bootstrap_info->set (({this_object(), modname }));
-
   if( !old_module ) return 0;
 
   // Temporarily shift out of the rxml parsing context if we're inside
@@ -3581,7 +3579,10 @@ RoxenModule reload_module( string modname )
       RoxenModule nm;
 
       // Load up a new instance.
+      roxen->bootstrap_info->set (({this_object(), modname }));
       nm = mi->instance( this_object() );
+      roxen->bootstrap_info->set (0);
+
       // If this is a faked module, let's call it a failure.
       if( nm->not_a_module )
       {
