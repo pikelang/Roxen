@@ -13,6 +13,11 @@
 		 lambda() {return (EXPR);},				\
 		 #EXPR, ({ARGS}))
 
+#define TEST_FALSE(EXPR, ARGS...)					\
+  cpp_test_true (__FILE__, __LINE__,					\
+		 lambda() {return !(EXPR);},				\
+		 #EXPR, ({ARGS}))
+
 #define TEST_EQUAL(A, B)						\
   do {									\
     int len__ = min (max (sizeof (#A), sizeof (#B)), 40);		\
