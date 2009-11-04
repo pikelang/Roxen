@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.261 2009/10/31 19:37:33 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.262 2009/11/04 16:17:26 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -829,7 +829,7 @@ class PrefLanguages
 }
 
 
-typedef function(CacheKey,mixed...:void) CacheActivationCB;
+typedef function(object,mixed...:void) CacheActivationCB;
 
 class CacheKey
 //! @appears CacheKey
@@ -903,6 +903,10 @@ class CacheKey
   //! called with an already destructed object.
   //!
   //! @note
+  //! @[cb] should also be prepared to get a destruct key that isn't a
+  //! @[CacheKey] as first argument - see @[merge_activation_list].
+  //!
+  //! @note
   //! Take care to avoid cyclic refs when the activation callback is
   //! registered. This object should e.g. not be among @[args], and
   //! @[cb] should not be a lambda that contains references to this
@@ -912,8 +916,57 @@ class CacheKey
     if (activation_cbs)
       // Relying on the interpreter lock here too.
       activation_cbs += ({({cb, args})});
-    else
+    else {
+#if 0
+      werror ("Key %O already active - calling %O(%{%O, %})\n", this, cb, args);
+#endif
       cb (this, @args);
+    }
+  }
+
+  void add_activation_list (array(array(CacheActivationCB|array)) cbs)
+  // For internal use by merge_activation_list.
+  {
+    // Relying on the interpreter lock here.
+    if (activation_cbs)
+      // Relying on the interpreter lock here too.
+      activation_cbs += cbs;
+    else
+      foreach (cbs, [CacheActivationCB cb, array args]) {
+#if 0
+	werror ("Key %O already active - calling %O(%{%O, %})\n",
+		this, cb, args);
+#endif
+	cb (this, @args);
+      }
+  }
+
+  int merge_activation_list (object merge_target)
+  //! Merges the activation list in this key into @[merge_target].
+  //!
+  //! If @[merge_target] already is active or if it isn't capable of
+  //! delayed activation then our activation list is executed for it
+  //! right away. If this key already is active then zero is returned
+  //! and nothing is done.
+  {
+    // Relying on the interpreter lock here.
+    if (array(array(CacheActivationCB|array)) cbs = activation_cbs) {
+      // vvv Relying on the interpreter lock from here.
+      if (objectp (merge_target) && merge_target->add_activation_list) {
+	merge_target->add_activation_list (cbs);
+	// ^^^ Relying on the interpreter lock up to this call.
+      }
+      else
+	foreach (cbs, [CacheActivationCB cb, array args]) {
+#if 0
+	  werror ("Merge from %O - activating key %O: Calling %O(%{%O, %})\n",
+		  this, merge_target, cb, args);
+#endif
+	  cb (merge_target, @args);
+	}
+      return 1;
+    }
+    return 0;
   }
 
   int activate()
