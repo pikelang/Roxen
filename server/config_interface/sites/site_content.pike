@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.160 2009/10/22 14:32:58 grubba Exp $
+// $Id: site_content.pike,v 1.161 2009/11/04 12:37:44 mast Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -288,8 +288,7 @@ string get_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
 
   array(string) res = ({
     "<th align='left'>Name</th>"
-    "<th align='left'>Value</th>"
-    "<th align='left'>OID</th>",
+    "<th align='left'>Value</th>",
   });
 
   foreach(conf->registered_urls, string url) {
@@ -308,7 +307,7 @@ string get_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
     if (!prot) continue;
 
 #if 0
-    res += ({ sprintf("<th colspan='3' align='left'>%s</th>",
+    res += ({ sprintf("<th colspan='2' align='left'>%s</th>",
 		      Roxen.html_encode_string(roxen->normalize_url(url))),
     });
 #endif /* 0 */
@@ -359,16 +358,15 @@ string get_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
 	"</tt>";
     }
     res += ({
-	sprintf("<td><b>%s:</b></td>"
-		"<td>%s</td>"
-		"<td><font size='-1'>%s</font></td>",
+	sprintf("<td><b><a href=\"urn:oid:%s\">%s:</a></b></td>"
+		"<td>%s</td>",
+		oid_string,
 		Roxen.html_encode_string(name),
-		Roxen.html_encode_string(val),
-		oid_string),
+		Roxen.html_encode_string(val)),
     });
     if (sizeof(doc)) {
       res += ({
-	sprintf("<td></td><td colspan='2'><font size='-1'>%s</font></td>", doc),
+	sprintf("<td></td><td><font size='-1'>%s</font></td>", doc),
       });
     }
   }
