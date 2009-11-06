@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module_support.pike,v 1.141 2009/11/03 14:08:44 mast Exp $
+// $Id: module_support.pike,v 1.142 2009/11/06 15:46:29 mast Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -365,10 +365,12 @@ class ModuleInfo( string sname, string filename )
     }
 
     // conf is zero if we're making the dummy instance for the
-    // ModuleInfo class. Use the admin config as a replacement for
-    // bootstrap_info just to avoid returning zero from
-    // RoxenModule.my_configuration().
-    Configuration bootstrap_conf = conf || roxenp()->get_admin_configuration();
+    // ModuleInfo class. Find a fallback for bootstrap_info just to
+    // avoid returning zero from RoxenModule.my_configuration().
+    Configuration bootstrap_conf = conf ||
+      roxenp()->get_admin_configuration() ||
+      // There should be at least one configuration present here.
+      roxenp()->configurations[0];
 
     roxenloader.ErrorContainer ec = roxenloader.ErrorContainer();
     roxenloader.push_compile_error_handler( ec );
