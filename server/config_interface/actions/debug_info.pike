@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.41 2009/08/19 08:28:57 mast Exp $
+ * $Id: debug_info.pike,v 1.42 2009/11/07 12:00:18 jonasw Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -318,10 +318,10 @@ mixed parse( RequestID id )
     "</b></font>"
     "<p />"
     "<input type='hidden' name='action' value='debug_info.pike' />\n"
-    "<p><submit-gbutton2 name='refresh'> "
+    "<p><submit-gbutton2 name='refresh' img-align='middle'> "
     "<translate id='520'>Refresh</translate> "// <cf-refresh> doesn't submit.
     "</submit-gbutton2>\n"
-    "<submit-gbutton2 name='gc'> "
+    "<submit-gbutton2 name='gc' img-align='middle'> "
     "<translate id='0'>Run garbage collector</translate> "
     "</submit-gbutton2>\n"
     "<cf-cancel href='?class=&form.class;'/>\n" +
