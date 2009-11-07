@@ -89,12 +89,39 @@ mixed parse( RequestID id )
     });
 
   string res =
+    #"
+    <style type='text/css'>
+      ol.open li   { display: list-item; }
+      ol.closed li { display: none; }
+      h3 {
+        cursor: pointer;
+        background: url('&usr.fold;') -4px 60% no-repeat;
+        padding-left: 18px;
+      }
+      h3.closed {
+        background-image: url('&usr.unfold;');
+      }
+    </style>
+    <script language='javascript'>
+     function toggle_vis(div_id, h3) {
+       var div = document.getElementById(div_id); 
+       var is_open = (div.className == 'open');
+       div.className = is_open ? 'closed' : 'open';
+       h3.className = is_open ? 'closed' : 'open';
+     }
+     </script>" +
     "<font size='+1'><b>" + name + "</b></font>\n"
     "<p><cf-refresh/></p>\n";
-  for (int i = 0; i < sizeof (threads); i++)
+  int div_num = 1;
+  for (int i = 0; i < sizeof (threads); i++) {
+    string open_state = (threads[i] == this_thread()) ? "closed" : "open";
     res +=
-      sprintf ("<h3>%s 0x%x%s</h3>\n"
-	       "<ol> %s</ol>\n",
+      sprintf ("<h3 class='%s' "
+	       " onclick='toggle_vis(\"%s\", this); return false;'>"
+	       "%s 0x%x%s</h3>\n"
+	       "<ol class='%s' id='%s'> %s</ol>\n",
+	       open_state,
+	       "bt_" + div_num,
 	       LOCALE(39,"Thread"), threads[i]->id_number(),
 #ifdef THREADS
 	       (threads[i] == roxen->backend_thread ?
@@ -102,8 +129,12 @@ mixed parse( RequestID id )
 #else
 	       "",
 #endif
+	       open_state,
+	       "bt_" + div_num,
 	       format_backtrace(describe_backtrace(threads[i]->backtrace())/
 				"\n", id));
+    div_num++;
+  }
 
   return res+"<p><cf-ok/></p>";
 }
