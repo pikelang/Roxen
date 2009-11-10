@@ -6,10 +6,17 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.75 2009/05/07 14:15:55 mast Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.76 2009/11/10 18:25:47 mast Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
+
+protected class DestructWrapper (object o)
+{
+  protected void destroy() {if (o) destruct (o);}
+}
+
+protected mapping destruct_wrappers = ([]);
 
 #include <config.h>
 #include <module.h>
@@ -177,6 +184,7 @@ mapping handle_file_extension(Stdio.File f, string e, RequestID id)
   mixed err;
   program p;
   object o;
+  DestructWrapper avoid_destruct = destruct_wrappers[id->not_query];
 
   if(scripts[ id->not_query ])
   {
@@ -193,7 +201,10 @@ mapping handle_file_extension(Stdio.File f, string e, RequestID id)
       if(!(o->no_reload && o->no_reload(id)))
       {
         master()->refresh( p, 1 );
-        destruct(o);
+	// Destruct the script instance as soon as no other thread is
+	// executing it.
+	m_delete (destruct_wrappers, id->not_query);
+	avoid_destruct = 0;
         p = 0;
         m_delete( scripts, id->not_query);
       }
@@ -245,6 +256,7 @@ mapping handle_file_extension(Stdio.File f, string e, RequestID id)
       /* Should not happen */
       return Roxen.http_string_answer("<h1>No string parse(object id) "
                                 "function in pike-script</h1>\n");
+    destruct_wrappers[id->not_query] = DestructWrapper (o);
   }
 
   err = call_script(fun, id, f);
