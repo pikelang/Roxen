@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.685 2009/11/03 14:08:44 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.686 2009/11/10 12:53:32 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1142,7 +1142,8 @@ void log_event (string facility, string action, string resource,
 //!   be enumerable. Valid characters are @expr{[-_.#a-zA-Z0-9]@}.
 //!
 //! @param resource
-//!   Identifies the resource that the event acts on.
+//!   Identifies the resource that the event acts on. Pass zero if a
+//!   resource isn't applicable.
 //!
 //!   If applicable, this is the path within the virtual file system
 //!   of the module, beginning with a "@expr{/@}".
@@ -1199,7 +1200,7 @@ void log_event (string facility, string action, string resource,
 			log_format[modname + "/*"]) ||
       log_format["*/*"])
     roxen.run_log_event_format (format, log_function,
-				facility, action, resource, info);
+				facility, action, resource || "-", info);
 }
 
 array(string) userinfo(string u, RequestID|void id)
@@ -4671,7 +4672,8 @@ hyphens ('-') occur in the specifier names.</p>
 <tr><td>$resource</td>
     <td>Resource identifier. For events, this is either a path to a
     file (if it begins with '<code>/</code>') or some other kind of
-    resource indentifier (otherwise).</td></tr>
+    resource identifier (otherwise). It is '-' for events that doesn't
+    act on any specific resource.</td></tr>
 <tr><td>$server-uptime</td>
     <td>Server uptime in seconds.</td></tr>
 <tr><td>$server-cputime</td>
