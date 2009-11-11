@@ -6,7 +6,7 @@
 
 // This is an extension module.
 
-constant cvs_version="$Id: pikescript.pike,v 1.76 2009/11/10 18:25:47 mast Exp $";
+constant cvs_version="$Id: pikescript.pike,v 1.77 2009/11/11 14:29:23 mast Exp $";
 
 constant thread_safe=1;
 mapping scripts=([]);
@@ -256,7 +256,7 @@ mapping handle_file_extension(Stdio.File f, string e, RequestID id)
       /* Should not happen */
       return Roxen.http_string_answer("<h1>No string parse(object id) "
                                 "function in pike-script</h1>\n");
-    destruct_wrappers[id->not_query] = DestructWrapper (o);
+    avoid_destruct = destruct_wrappers[id->not_query] = DestructWrapper (o);
   }
 
   err = call_script(fun, id, f);
