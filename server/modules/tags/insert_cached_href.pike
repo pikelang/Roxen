@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.24 2009/04/16 09:49:24 liin Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.25 2009/11/11 15:42:25 stewa Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -404,10 +404,10 @@ class HrefDatabase {
 #endif
     
     sql_query("UPDATE " + request_table + " SET latest_request=" + time() 
-	      + " WHERE url='" + args["cached-href"] + "' AND fetch_interval=" 
+	      + " WHERE url=%s AND fetch_interval=" 
 	      + args["fetch-interval"] + " AND fresh_time=" + args["fresh-time"] 
 	      + " AND ttl=" + args["ttl"] + " AND timeout=" + args["timeout"]
-	      + " AND time_of_day=" + args["time-of-day"]);
+	      + " AND time_of_day=" + args["time-of-day"], args["cached-href"] );
     
     sql_query("INSERT IGNORE INTO " + request_table 
 	      + " values (%s, %d, %d, %d, %d, %d, %d, %d)", args["cached-href"], 
@@ -417,9 +417,9 @@ class HrefDatabase {
     sql_query("INSERT IGNORE INTO " + data_table + " values (%s, '', 0)", 
 	      args["cached-href"]); 
     
-    result = sql_query("SELECT data FROM " + data_table + " WHERE url='" + 
-		       args["cached-href"] + "' AND (" + time() + " - latest_write < " 
-		       + args["fresh-time"] + " OR " + args["fresh-time"] + " = 0)");
+    result = sql_query("SELECT data FROM " + data_table + " WHERE url=%s " 
+		       " AND (" + time() + " - latest_write < " 
+		       + args["fresh-time"] + " OR " + args["fresh-time"] + " = 0)", args["cached-href"]);
     
     if (result && sizeof(result) && result[0]["data"] != "") {
       DWRITE("get_data(): Returning cached data for " + args["cached-href"]);
