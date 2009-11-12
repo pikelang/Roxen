@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.95 2009/11/12 14:43:59 mast Exp $
+// $Id: cache.pike,v 1.96 2009/11/12 17:28:31 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -271,6 +271,7 @@ class CacheManager
   }
 }
 
+#if 0
 class CM_Random
 {
   inherit CacheManager;
@@ -331,6 +332,7 @@ overhead is minimal.";
 }
 
 protected CM_Random cm_random = CM_Random (default_cache_size);
+#endif
 
 class CM_GreedyDual
 //! Base class for cache managers that works with some variant of the
@@ -558,9 +560,9 @@ protected Thread.Local cache_contexts = Thread.Local();
 //
 // FIXME: Doesn't work with callbacks etc.
 
-class CM_GD_TimeCost
-//! Like @[CM_GreedyDual] but adds support for calculating cost based
-//! on passed time as the basis for the entry creation cost.
+class CM_GDS_Time
+//! Like @[CM_GDS_1] but adds support for calculating cost based on
+//! passed time as the basis for the entry creation cost.
 {
   inherit CM_GreedyDual;
 
@@ -579,7 +581,8 @@ class CM_GD_TimeCost
 #endif
 
   protected int gettime_func();
-  //! Returns the current time for cost calculation.
+  //! Returns the current time for cost calculation. (@[format_cost]
+  //! assumes this is in microseconds.)
 
   void got_miss (string cache_name, mixed key, mapping cache_context)
   {
@@ -615,9 +618,8 @@ class CM_GD_TimeCost
     }
   }
 
-  int entry_create_hrtime (string cache_name, mixed key,
-			   mapping cache_context)
-  //! Returns the time spent since the @[got_miss] call for the given key.
+  protected int entry_create_hrtime (string cache_name, mixed key,
+				     mapping cache_context)
   {
     if (mapping all_ctx = cache_context || cache_contexts->get())
       if (mapping(mixed:int) ctx = all_ctx[cache_name]) {
@@ -636,34 +638,11 @@ class CM_GD_TimeCost
 #endif
     return 0;
   }
-}
-
-class CM_GDS_RealTime
-{
-  inherit CM_GD_TimeCost;
-
-  constant name = "GDS(real time)";
-  constant doc = #"\
-This cache manager implements <a
-href='http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.30.7285'>GreedyDual-Size</a>
-with the cost of each entry determined by the real (wall) time it took
-to create it.";
 
   protected float mean_cost;
   protected int mean_count = 0;
   // This is not a real mean value since we (normally) don't keep
   // track of the cost of each entry. Instead it's a decaying average.
-
-  float pval_limit = 1e-6 / Float.EPSILON;
-  // FIXME: Tune.
-
-  protected int gettime_func()
-  {
-    // The real time includes a lot of noise that isn't appropriate
-    // for cache entry cost measurement. Let's compensate for the time
-    // spent in the pike gc, at least.
-    return gethrtime() - Pike.implicit_gc_real_time();
-  }
 
   float calc_value (string cache_name, CacheEntry entry,
 		    int old_entry, mapping cache_context)
@@ -705,12 +684,9 @@ to create it.";
   }
 }
 
-protected CM_GDS_RealTime cm_gds_realtime =
-  CM_GDS_RealTime (default_cache_size);
-
 class CM_GDS_CPUTime
 {
-  inherit CM_GDS_RealTime;
+  inherit CM_GDS_Time;
 
   constant name = "GDS(cpu time)";
   constant doc = #"\
@@ -719,6 +695,12 @@ href='http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.30.7285'>GreedyDua
 with the cost of each entry determined by the CPU time it took to
 create it.";
 
+  float pval_limit = 1e-4 / Float.EPSILON;
+  // From GDS(1)'s pval_limit we get an epsilon at 1e-6. Here it's
+  // multiplied with the creation time in microseconds. A cache entry
+  // should at least take on the order of 100 microseconds to be worth
+  // caching, so raise it two digits.
+
   protected int gettime_func()
   {
     return gethrvtime();
@@ -726,6 +708,34 @@ create it.";
 }
 
 protected CM_GDS_CPUTime cm_gds_cputime = CM_GDS_CPUTime (default_cache_size);
+
+class CM_GDS_RealTime
+{
+  inherit CM_GDS_Time;
+
+  constant name = "GDS(real time)";
+  constant doc = #"\
+This cache manager implements <a
+href='http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.30.7285'>GreedyDual-Size</a>
+with the cost of each entry determined by the real (wall) time it took
+to create it.";
+
+  float pval_limit = 1e-4 / Float.EPSILON;
+  // Currently the same as GDS(cpu time), but we might consider
+  // raising this a bit since real time always is larger that cpu
+  // time.
+
+  protected int gettime_func()
+  {
+    // The real time includes a lot of noise that isn't appropriate
+    // for cache entry cost measurement. Let's compensate for the time
+    // spent in the pike gc, at least.
+    return gethrtime() - Pike.implicit_gc_real_time();
+  }
+}
+
+protected CM_GDS_RealTime cm_gds_realtime =
+  CM_GDS_RealTime (default_cache_size);
 
 //! The preferred managers according to various caching requirements:
 //!
@@ -746,7 +756,7 @@ protected CM_GDS_CPUTime cm_gds_cputime = CM_GDS_CPUTime (default_cache_size);
 //!   @[cache_set].
 //! @enddl
 mapping(string:CacheManager) cache_manager_prefs = ([
-  "default": cm_gds_realtime,
+  "default": cm_gds_cputime,
   "no_thread_timings": cm_gds_realtime,
   "no_timings": cm_gds_1,
 ]);
@@ -756,8 +766,13 @@ array(CacheManager) cache_managers =
   Array.uniq (({cache_manager_prefs->default,
 		cache_manager_prefs->no_thread_timings,
 		cache_manager_prefs->no_timings,
+#if 0
 		cm_random,
-	      }) + values (cache_manager_prefs));
+#endif
+		cm_gds_1,
+		cm_gds_realtime,
+		cm_gds_cputime,
+	      }));
 
 protected mapping(string:CacheManager) caches = ([]);
 // Maps the named caches to the cache managers that handle them.
@@ -995,7 +1010,18 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
 		   "collect_direct_externals": 1,
 		 ]);
   float t = gauge {
-      new_entry->size = Pike.count_memory (0, new_entry, key, data);
+#else
+#define opts 0
+#endif
+
+      if (function(int|mapping:int) cm_cb =
+	  objectp (data) && data->cache_count_memory)
+	new_entry->size =
+	  cm_cb (opts) + Pike.count_memory (-1, new_entry, key);
+      else
+	new_entry->size = Pike.count_memory (opts, new_entry, key, data);
+
+#ifdef DEBUG_COUNT_MEM
     };
   werror ("%O -> %s: la %d size %d time %g int %d cyc %d ext %d vis %d "
 	  "revis %d rnd %d wqa %d\n",
@@ -1027,9 +1053,7 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
 #endif
   }
 #endif
-#else  // !DEBUG_COUNT_MEM
-  new_entry->size = Pike.count_memory (0, new_entry, key, data);
-#endif
+#endif	// DEBUG_COUNT_MEM
 
   if (timeout)
     new_entry->timeout = time (1) + timeout;
