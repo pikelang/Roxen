@@ -124,7 +124,7 @@ string parse( RequestID id )
 	  Roxen.sizetostring (grp_size) + "</td>"
 #ifdef RAMCACHE_STATS
 	  "<td>" + format_hit_rate (grp_byte_hits, grp_byte_misses) + "</td>"
-	  "<td>" + mgr->format_cost (cost) + "</td>"
+	  "<td>" + mgr->format_cost (grp_cost) + "</td>"
 	  "<td>" + format_hit_rate (grp_cost_hits, grp_cost_misses) + "</td>"
 #endif
 	  "</tr>\n";
