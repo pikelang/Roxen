@@ -1,5 +1,5 @@
 /*
- * $Id: pike_profiling.pike,v 1.7 2004/05/26 11:52:58 anders Exp $
+ * $Id: pike_profiling.pike,v 1.8 2009/11/12 12:54:04 jonasw Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -132,7 +132,7 @@ mixed parse( RequestID id )
     "<p />"
 #if constant( get_profiling_info )
     "<input type='hidden' name='action' value='pike_profiling.pike' />\n"
-    "<p /><submit-gbutton2 name='refresh' width='75' align='center'>" +
+    "<p /><submit-gbutton2 name='refresh' width='75' img-align='middle' align='center'>" +
     LOCALE(186,"Refresh") +
     "</submit-gbutton2>\n"
     "<cf-cancel href='?class=&form.class;'/><p />\n" +
