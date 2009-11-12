@@ -68,52 +68,78 @@ string parse( RequestID id )
       int|float tot_cost_hits, tot_cost_misses, tot_cost;
 #endif
 
-      // FIXME: Cache grouping.
+      mapping(string:array(string)) cache_groups = ([]);
+      foreach (caches; string cache_name;) {
+	sscanf (cache_name, "%[^:]", string group_name);
+	cache_groups[group_name] += ({cache_name});
+      }
 
       mapping(string:string) name_trans =
-	mkmapping (indices (caches), indices (caches));
+	mkmapping (indices (cache_groups), indices (cache_groups));
       foreach (trans; string name; string trans)
 	if (m_delete (name_trans, name))
 	  name_trans[trans] = name;
 
       foreach (sort (indices (name_trans)); int row; string trans_name) {
-	string cache_name = name_trans[trans_name];
-	cache.CacheStats st = caches[cache_name];
+	string group_name = name_trans[trans_name];
 
 	got_caches = 1;
 
-	tot_count += st->count;
-	tot_hits += st->hits;
-	tot_misses += st->misses;
-	tot_size += st->size;
+	int grp_count, grp_size;
+	int grp_hits, grp_misses;
 #ifdef RAMCACHE_STATS
-	tot_byte_hits += st->byte_hits;
-	tot_byte_misses += st->byte_misses;
-	tot_cost_hits += st->cost_hits;
-	tot_cost_misses += st->cost_misses;
-
-	int|float cost;
-	foreach (cache.cache_entries (cache_name);; cache.CacheEntry entry)
-	  cost += entry->cost;
-	tot_cost += cost;
+	int grp_byte_hits, grp_byte_misses;
+	int|float grp_cost_hits, grp_cost_misses, grp_cost;
 #endif
+
+	foreach (cache_groups[group_name], string cache_name) {
+	  cache.CacheStats st = caches[cache_name];
+
+	  grp_count += st->count;
+	  grp_hits += st->hits;
+	  grp_misses += st->misses;
+	  grp_size += st->size;
+#ifdef RAMCACHE_STATS
+	  grp_byte_hits += st->byte_hits;
+	  grp_byte_misses += st->byte_misses;
+	  grp_cost_hits += st->cost_hits;
+	  grp_cost_misses += st->cost_misses;
+
+	  int|float cost;
+	  foreach (cache.cache_entries (cache_name);; cache.CacheEntry entry)
+	    cost += entry->cost;
+	  grp_cost += cost;
+#endif
+	}
 
 	table +=
 	  "<tr align=\"right\" bgcolor=\"" +
 	  (row/3%2?"&usr.fade1;":"&usr.obox-bodybg;") + "\">"
 	  "<td align=\"left\">" +
-	  Roxen.html_encode_string (trans[cache_name] || cache_name) + "</td>"
-	  "<td>" + st->count + "</td>"
-	  "<td>" + (st->hits + st->misses) + "</td>"
-	  "<td>" + format_hit_rate (st->hits, st->misses) + "</td>"
+	  Roxen.html_encode_string (trans[group_name] || group_name) + "</td>"
+	  "<td>" + grp_count + "</td>"
+	  "<td>" + (grp_hits + grp_misses) + "</td>"
+	  "<td>" + format_hit_rate (grp_hits, grp_misses) + "</td>"
 	  "<td style='white-space: nowrap;'>" +
-	  Roxen.sizetostring (st->size) + "</td>"
+	  Roxen.sizetostring (grp_size) + "</td>"
 #ifdef RAMCACHE_STATS
-	  "<td>" + format_hit_rate (st->byte_hits, st->byte_misses) + "</td>"
+	  "<td>" + format_hit_rate (grp_byte_hits, grp_byte_misses) + "</td>"
 	  "<td>" + mgr->format_cost (cost) + "</td>"
-	  "<td>" + format_hit_rate (st->cost_hits, st->cost_misses) + "</td>"
+	  "<td>" + format_hit_rate (grp_cost_hits, grp_cost_misses) + "</td>"
 #endif
 	  "</tr>\n";
+
+	tot_count += grp_count;
+	tot_hits += grp_hits;
+	tot_misses += grp_misses;
+	tot_size += grp_size;
+#ifdef RAMCACHE_STATS
+	tot_byte_hits += grp_byte_hits;
+	tot_byte_misses += grp_byte_misses;
+	tot_cost_hits += grp_cost_hits;
+	tot_cost_misses += grp_cost_misses;
+	tot_cost += grp_cost;
+#endif
       }
 
       if (got_caches)
