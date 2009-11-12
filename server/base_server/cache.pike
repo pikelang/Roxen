@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.96 2009/11/12 17:28:31 mast Exp $
+// $Id: cache.pike,v 1.97 2009/11/12 17:35:59 marty Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1388,7 +1388,7 @@ mapping(string:array(int)) status()
 			  all[name],
 			  size });
     if (!zero_type(ret[show_name]))
-      for (int idx = 0; idx < 3; idx++)
+      for (int idx = 0; idx <= 3; idx++)
 	ret[show_name][idx] += entry[idx];
     else
       ret[show_name] = entry;
