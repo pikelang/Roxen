@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1041 2009/11/03 14:06:10 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1042 2009/11/12 14:40:32 mast Exp $";
 
 //! @appears roxen
 //!
@@ -5815,7 +5815,7 @@ protected mapping(string:function) compiled_log_event = ([ ]);
 #define LOG_NEED_GTIME		(16 | LOG_NEED_TIMESTAMP)
 
 // Elements of a format array arr:
-// arr[0]: sprintf format for acccess logging (run_log_format).
+// arr[0]: sprintf format for access logging (run_log_format).
 // arr[1]: Code for the corresponding sprintf argument of arr[0].
 // arr[2]: sprintf format for event logging (run_log_event_format).
 //   May be 0 to reuse arr[0] and arr[1].
