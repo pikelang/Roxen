@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.280 2009/06/10 08:55:53 wellhard Exp $
+// $Id: Roxen.pmod,v 1.281 2009/11/12 14:17:38 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4446,7 +4446,11 @@ array(int) parse_since(string date)
   if(!(t=since_cache[dat])) {
     int day, year = -1, month, hour, minute, second;
     string m;
-    if(sscanf(dat, "%d-%s-%d %d:%d:%d", day, m, year, hour, minute, second)>2)
+    if((sscanf(dat, "%d-%d-%d %d:%d:%d", year, month, day, hour, minute, second)>2) ||
+       (sscanf(dat, "%d-%d-%dT%d:%d:%d", year, month, day, hour, minute, second)>2))
+    {
+      // ISO-format.
+    } else if(sscanf(dat, "%d-%s-%d %d:%d:%d", day, m, year, hour, minute, second)>2)
     {
       month=monthnum[m];
     } else if(!(int)dat) {
@@ -4851,6 +4855,9 @@ class SqlNull
   inherit RXML.Nil;
   constant is_RXML_encodable = 1;
 
+#if constant(Sql.Null)
+  inherit Sql.Null;
+#else
   constant is_sql_null = 1;
   //! Nonzero recognition constant.
 
@@ -4862,6 +4869,7 @@ class SqlNull
   int __hash() {return 17;}
 
   string _sprintf (int flag) {return flag == 'O' && "sql_null";}
+#endif
 
   int _encode() {return 0;}
   void _decode (int dummy) {}
