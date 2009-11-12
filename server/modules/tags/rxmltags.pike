@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.621 2009/07/09 15:37:49 anders Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.622 2009/11/12 14:50:14 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -1923,7 +1923,8 @@ class TagCache {
 		    RXML.FLAG_GET_EVALED_CONTENT |
 		    RXML.FLAG_DONT_CACHE_RESULT |
 		    RXML.FLAG_CUSTOM_TRACE);
-  constant cache_tag_location = "tag_cache";
+  constant cache_tag_eval_loc = "RXML <cache> eval";
+  constant cache_tag_save_loc = "RXML <cache> save";
   array(RXML.Type) result_types = ({RXML.t_any});
 
   protected class TimeOutEntry (
@@ -1951,14 +1952,23 @@ class TagCache {
 	if (prev) prev->next = t->next;
 	else timeout_list = t->next;
     }
+#ifdef NEW_RAM_CACHE
+    roxen.background_run (roxen.query("mem_cache_gc_2"), do_timeouts);
+#else
     roxen.background_run (roxen.query("mem_cache_gc"), do_timeouts);
+#endif
   }
 
   protected void add_timeout_cache (
     mapping(string:array(int|RXML.PCode)) timeout_cache)
   {
-    if (!timeout_list)
+    if (!timeout_list) {
+#ifdef NEW_RAM_CACHE
+      roxen.background_run (roxen.query("mem_cache_gc_2"), do_timeouts);
+#else
       roxen.background_run (roxen.query("mem_cache_gc"), do_timeouts);
+#endif
+    }
     else
       for (TimeOutEntry t = timeout_list; t; t = t->next)
 	if (t->timeout_cache[0] == timeout_cache) return;
@@ -2175,7 +2185,7 @@ class TagCache {
       // Now we have the cache key.
 
       object(RXML.PCode)|array(int|RXML.PCode) entry = args->shared ?
-	cache_lookup (cache_tag_location, key) :
+	cache_lookup (cache_tag_eval_loc, key) :
 	alternatives && alternatives[key];
 
       int removed = 0; // 0: not removed, 1: stale, 2: timeout, 3: pragma no-cache
@@ -2198,7 +2208,7 @@ class TagCache {
 
 	if (removed) {
 	  if (args->shared)
-	    cache_remove (cache_tag_location, key);
+	    cache_remove (cache_tag_eval_loc, key);
 	  else
 	    if (alternatives) m_delete (alternatives, key);
 	}
@@ -2250,7 +2260,7 @@ class TagCache {
 	}
 
 	if (args->shared) {
-	  cache_set (cache_tag_location, key, evaled_content, timeout);
+	  cache_set (cache_tag_eval_loc, key, evaled_content, timeout);
 	  TAG_TRACE_LEAVE ("added shared%s cache entry with key %s",
 			   timeout ? " timeout" : "",
 			   RXML.utils.format_short (keymap, 200));
@@ -2277,7 +2287,7 @@ class TagCache {
 		error ("Unexpected non-shared cache identifier: %O\n",
 		       cache_id);
 #endif
-	      cache_set (cache_tag_location, cache_id, alternatives, timeout);
+	      cache_set (cache_tag_save_loc, cache_id, alternatives, timeout);
 	    }
 	    TAG_TRACE_LEAVE ("added%s %ds timeout cache entry with key %s",
 			     persistent_cache ? " (possibly persistent)" : "",
@@ -2298,7 +2308,7 @@ class TagCache {
 		  error ("Unexpected non-shared cache identifier: %O\n",
 			 cache_id);
 #endif
-		cache_set (cache_tag_location, cache_id, alternatives, 0);
+		cache_set (cache_tag_save_loc, cache_id, alternatives, 0);
 	      }
 	    }
 	    alternatives[key] = evaled_content;
@@ -2345,7 +2355,7 @@ class TagCache {
 	    // unique identifier so that we find the cache again when
 	    // the tag is reinstated.
 	    cache_id = "ci" + roxen.new_uuid_string();
-	    cache_set (cache_tag_location, cache_id, alternatives, timeout);
+	    cache_set (cache_tag_save_loc, cache_id, alternatives, timeout);
 	  }
 	}
       }
@@ -2364,9 +2374,15 @@ class TagCache {
 	  error ("Cache unexpectedly stored persistently.\n"
 		 "cache_id: %O, alternatives: %O)\n", cache_id, alternatives);
 #endif
-	alternatives = cache_lookup (cache_tag_location, cache_id);
+	alternatives = cache_lookup (cache_tag_save_loc, cache_id);
       }
     }
+  }
+
+  protected void create()
+  {
+    cache.cache_register (cache_tag_eval_loc);
+    cache.cache_register (cache_tag_save_loc, "no_timings");
   }
 }
 
