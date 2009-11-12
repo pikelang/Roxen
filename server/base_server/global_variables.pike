@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: global_variables.pike,v 1.118 2009/05/07 14:15:52 mast Exp $
+// $Id: global_variables.pike,v 1.119 2009/11/12 14:43:59 mast Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -807,6 +807,30 @@ be of real use.</p>"));
 	{return !query("suicide_engage");}
     );
 
+#ifdef NEW_RAM_CACHE
+
+  defvar ("mem_cache_gc_2", 5 * 60,
+	  LOCALE(170, "Cache: Memory cache GC interval"),
+	  TYPE_INT,
+	  LOCALE(171, #"\
+<p>Interval in seconds between RAM cache garbage collector runs. This
+GC removes entries from the RAM caches that have timed out or are
+stale for other reasons, thereby making more room for new entries. The
+configured cache size limits are enforced when entries are added, so
+this GC is not required to keep the cache sizes down.</p>
+
+<p>Running this GC too seldom causes some RAM caches to contain many
+invalid cache entries, which could push out valid cache entries.
+Running it too often causes unnecessary server load.</p>"))
+    ->set_range (1, Variable.no_limit);
+
+  // This was the variable that used to control the gc interval, but
+  // since the effect of the gc is radically different now we
+  // intentionally use a different variable name to reset the value.
+  definvisvar ("mem_cache_gc", 300, TYPE_INT);
+
+#else  // !NEW_RAM_CACHE
+
   defvar("mem_cache_gc",
 	 Variable.Int(300, 0, 
 		      LOCALE(170, "Cache: Memory Cache Garbage Collect Interval"),
@@ -816,6 +840,8 @@ be of real use.</p>"));
 			     "what supports flags matches what client.")))
 	 ->set_range(1, 60*60*24);
 	 // Note that the upper limit is arbitrary.
+
+#endif	// !NEW_RAM_CACHE
 
   defvar("replicate", 0,
 	 LOCALE(163, "Enable replication system" ),

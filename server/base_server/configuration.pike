@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.686 2009/11/10 12:53:32 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.687 2009/11/12 14:43:59 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4819,7 +4819,24 @@ hyphens ('-') occur in the specifier names.</p>
 <p>The known event logging facilities and modules are described
 below.</p>
 
-<dl>
+<dl>"
+#ifdef NEW_RAM_CACHE
+		 #"\n
+<dt>Facility: roxen</dt>
+    <dd><p>This is logging for systems in the Roxen WebServer core.
+    For logging that is not related to any specific configuration, the
+    configuration for the Administration Interface is used.</p>
+
+    <p>The known events are:</p>
+
+    <table><tbody valign='top'>
+    <tr><td>ram-gc</td>
+	<td>Logged after the RAM cache GC has run. $handle-time and
+	$handle-cputime are set to the time the GC took (see
+	descriptions above for details).</td></tr>
+    </tbody></table></dd>"
+#endif
+		 #"\n
 <dt>Facility: sbfs</dt>
     <dd><p>A SiteBuilder file system.</p>
 
