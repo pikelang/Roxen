@@ -11,19 +11,34 @@ string doc = LOCALE(60,
 
 string format_hit_rate (int|float hits, int|float misses)
 {
-  if ((hits == 0 || hits == 0.0) && (misses == 0 || misses == 0.0))
-    return "-";
-  return sprintf ("%.2f%%", hits * 100.0 / (hits + misses));
+  float res = 0.0;
+  catch (res = hits * 100.0 / (hits + misses));
+  return sprintf ("%.2f%%", res);
 }
+
+// Should use external css instead. I'm lazy..
+#define TABLE_ATTRS							\
+  "style='border-collapse: collapse; white-space: nowrap;'"
+#define HDR_TR_ATTRS							\
+  "style='text-align: center; border-bottom: 1px solid;'"
+#define BODY_TR_ATTRS(ROW)						\
+  "style='text-align: right; " +					\
+    (ROW ? "border-top: 2px solid transparent;" : "") + "'"
+#define FTR_TR_ATTRS							\
+  "style='text-align: right; border-top: 1px solid;'"
+#define FIRST_CELL							\
+  "style='text-align: left; padding: 0;'"
+#define REST_CELLS							\
+  "style='white-space: nowrap; padding: 0 0 0 1ex;'"
 
 string parse( RequestID id )
 {
   string res =
+    "<input type='hidden' name='action' value='cachestatus.pike' />"
+    "<p><cf-refresh/> <cf-cancel href='?class=&form.class;'/></p>\n"
     "<p><font size='+1'><b>"+
     LOCALE(61, "WebServer Memory Cache")+
-    "</b></font></p>\n"
-    "<input type='hidden' name='action' value='cachestatus.pike' />"
-    "<p><cf-refresh/> <cf-cancel href='?class=&form.class;'/></p>";
+    "</b></font></p>\n";
 
 #ifdef NEW_RAM_CACHE
 
@@ -44,23 +59,23 @@ string parse( RequestID id )
 	"<p>" + mgr->doc + "</p>\n";
 
       string table =
-	"<table cellpadding=\"3\" cellspacing=\"0\""
-	"       style='border-width: 1px; border-style: solid;'>\n"
-	"<tr align='center' bgcolor=\"&usr.obox-titlebg;\""
-	"    style='white-space: nowrap;'>"
-	"<th align=\"left\">"+LOCALE(62, "Cache")+"</th>"
-	"<th>"+LOCALE(295, "Entries")+"</th>"
-	"<th>"+LOCALE(0, "Lookups")+"</th>"
-	"<th>"+LOCALE(67, "Hit rate")+"</th>"
-	"<th>"+LOCALE(64, "Size")+"</th>"
+	"<table " TABLE_ATTRS ">\n"
+	"<tr " HDR_TR_ATTRS ">"
+	"<th " FIRST_CELL ">"+LOCALE(62, "Cache")+"</th>"
+	"<th " REST_CELLS ">"+LOCALE(295, "Entries")+"</th>"
+	"<th " REST_CELLS ">"+LOCALE(0, "Lookups")+"</th>"
+	"<th " REST_CELLS ">"+LOCALE(67, "Hit rate")+"</th>"
+	"<th " REST_CELLS ">"+LOCALE(64, "Size")+"</th>"
+	"<th " REST_CELLS ">"+LOCALE(0, "Size/entry")+"</th>"
 #ifdef RAMCACHE_STATS
-	"<th>"+LOCALE(0, "Byte HR")+"</th>"
-	"<th>"+LOCALE(0, "Create cost")+"</th>"
-	"<th>"+LOCALE(0, "Cost HR")+"</th>"
+	"<th " REST_CELLS ">"+LOCALE(0, "Byte HR")+"</th>"
+	"<th " REST_CELLS ">"+LOCALE(0, "Create cost")+"</th>"
+	"<th " REST_CELLS ">"+LOCALE(0, "Cost/entry")+"</th>"
+	"<th " REST_CELLS ">"+LOCALE(0, "Cost HR")+"</th>"
 #endif
 	"</tr>\n";
 
-      int got_caches;
+      int num_caches;
       int tot_count, tot_size;
       int tot_hits, tot_misses;
 #ifdef RAMCACHE_STATS
@@ -83,7 +98,7 @@ string parse( RequestID id )
       foreach (sort (indices (name_trans)); int row; string trans_name) {
 	string group_name = name_trans[trans_name];
 
-	got_caches = 1;
+	num_caches++;
 
 	int grp_count, grp_size;
 	int grp_hits, grp_misses;
@@ -113,19 +128,27 @@ string parse( RequestID id )
 	}
 
 	table +=
-	  "<tr align=\"right\" bgcolor=\"" +
-	  (row/3%2?"&usr.fade1;":"&usr.obox-bodybg;") + "\">"
-	  "<td align=\"left\">" +
+	  "<tr " BODY_TR_ATTRS (row) ">"
+	  "<td " FIRST_CELL ">" +
 	  Roxen.html_encode_string (trans[group_name] || group_name) + "</td>"
-	  "<td>" + grp_count + "</td>"
-	  "<td>" + (grp_hits + grp_misses) + "</td>"
-	  "<td>" + format_hit_rate (grp_hits, grp_misses) + "</td>"
-	  "<td style='white-space: nowrap;'>" +
+	  "<td " REST_CELLS ">" + grp_count + "</td>"
+	  "<td " REST_CELLS ">" + (grp_hits + grp_misses) + "</td>"
+	  "<td " REST_CELLS ">" +
+	  format_hit_rate (grp_hits, grp_misses) + "</td>"
+	  "<td " REST_CELLS ">" +
 	  Roxen.sizetostring (grp_size) + "</td>"
+	  "<td " REST_CELLS ">" +
+	  Roxen.sizetostring (grp_count && grp_size / grp_count) +
+	  "</td>"
 #ifdef RAMCACHE_STATS
-	  "<td>" + format_hit_rate (grp_byte_hits, grp_byte_misses) + "</td>"
-	  "<td>" + mgr->format_cost (grp_cost) + "</td>"
-	  "<td>" + format_hit_rate (grp_cost_hits, grp_cost_misses) + "</td>"
+	  "<td " REST_CELLS ">" +
+	  format_hit_rate (grp_byte_hits, grp_byte_misses) + "</td>"
+	  "<td " REST_CELLS ">" +
+	  mgr->format_cost (grp_cost) + "</td>"
+	  "<td " REST_CELLS ">" +
+	  mgr->format_cost (grp_count && grp_cost / grp_count) + "</td>"
+	  "<td " REST_CELLS ">" +
+	  format_hit_rate (grp_cost_hits, grp_cost_misses) + "</td>"
 #endif
 	  "</tr>\n";
 
@@ -142,22 +165,34 @@ string parse( RequestID id )
 #endif
       }
 
-      if (got_caches)
-	res += table +
-	  "<tr align=\"right\" bgcolor=\"&usr.fade2;\">"
-	  "<td align=\"left\"><b>"+LOCALE(178, "Total")+"</b></td>"
-	  "<td>" + tot_count + "</td>"
-	  "<td>" + (tot_hits + tot_misses) + "</td>"
-	  "<td>" + format_hit_rate (tot_hits, tot_misses) + "</td>"
-	  "<td style='white-space: nowrap;'>" +
-	  Roxen.sizetostring (tot_size) + "</td>"
+      if (num_caches) {
+	res += table;
+	if (num_caches > 1)
+	  res +=
+	    "<tr " FTR_TR_ATTRS ">"
+	    "<td " FIRST_CELL "><b>"+LOCALE(178, "Total")+"</b></td>"
+	    "<td " REST_CELLS ">" + tot_count + "</td>"
+	    "<td " REST_CELLS ">" + (tot_hits + tot_misses) + "</td>"
+	    "<td " REST_CELLS ">" +
+	    format_hit_rate (tot_hits, tot_misses) + "</td>"
+	    "<td " REST_CELLS ">" +
+	    Roxen.sizetostring (tot_size) + "</td>"
+	    "<td " REST_CELLS ">" +
+	    Roxen.sizetostring (tot_count && tot_size / tot_count) +
+	    "</td>"
 #ifdef RAMCACHE_STATS
-	  "<td>" + format_hit_rate (tot_byte_hits, tot_byte_misses) + "</td>"
-	  "<td>" + mgr->format_cost (tot_cost) + "</td>"
-	  "<td>" + format_hit_rate (tot_cost_hits, tot_cost_misses) + "</td>"
+	    "<td " REST_CELLS ">" +
+	    format_hit_rate (tot_byte_hits, tot_byte_misses) + "</td>"
+	    "<td " REST_CELLS ">" +
+	    mgr->format_cost (tot_cost) + "</td>"
+	    "<td " REST_CELLS ">" +
+	    mgr->format_cost (tot_count && tot_cost / tot_count) + "</td>"
+	    "<td " REST_CELLS ">" +
+	    format_hit_rate (tot_cost_hits, tot_cost_misses) + "</td>"
 #endif
-	  "</tr>\n"
-	  "</table>\n";
+	    "</tr>\n";
+	res += "</table>\n";
+      }
     }
 
 #ifdef RAMCACHE_STATS
@@ -172,15 +207,14 @@ the addition of a new cache entry.</p>\n") + "</font>";
 #else  // !NEW_RAM_CACHE
 
   res +=
-    "<table cellpadding=\"3\" cellspacing=\"0\""
-    "       style='border-width: 1px; border-style: solid;'>\n"
-    "<tr bgcolor=\"&usr.obox-titlebg;\">"
-    "<th align=\"left\">"+LOCALE(62, "Class")+"</th>"
-    "<th align=\"right\">"+LOCALE(295, "Entries")+"</th>"
-    "<th align=\"right\">"+LOCALE(64, "Size")+"</th>"
-    "<th align=\"right\">"+LOCALE(293, "Hits")+"</th>"
-    "<th align=\"right\">"+LOCALE(294, "Misses")+"</th>"
-    "<th align=\"right\">"+LOCALE(67, "Hit rate")+"</th></tr>\n";
+    "<table " TABLE_ATTRS ">\n"
+    "<tr " HDR_TR_ATTRS ">"
+    "<th " FIRST_CELL ">"+LOCALE(62, "Class")+"</th>"
+    "<th " REST_CELLS ">"+LOCALE(295, "Entries")+"</th>"
+    "<th " REST_CELLS ">"+LOCALE(64, "Size")+"</th>"
+    "<th " REST_CELLS ">"+LOCALE(293, "Hits")+"</th>"
+    "<th " REST_CELLS ">"+LOCALE(294, "Misses")+"</th>"
+    "<th " REST_CELLS ">"+LOCALE(67, "Hit rate")+"</th></tr>\n";
 
   mapping c=cache->status();
 
@@ -196,32 +230,36 @@ the addition of a new cache entry.</p>\n") + "</font>";
       m_delete(c, n);
     }
 
-  int i, totale, totalm, totalh, totalt;
-  foreach(sort(indices(c)), string n)
+  int totale, totalm, totalh, totalt;
+  foreach(sort(indices(c)); int row; string n)
   {
     array ent=c[n];
-    res += ("<tr align=\"right\" bgcolor=\"" + (i/3%2?"&usr.fade1;":"&usr.obox-bodybg;") +
-	    "\"><td align=\"left\">"+ n +"</td><td>"+ ent[0] + "</td><td>" + Roxen.sizetostring(ent[3])
-	    + "</td><td>" + ent[1] + "</td><td>" + (ent[2]-ent[1]) + "</td>");
+    res += "<tr " BODY_TR_ATTRS (row) ">"
+      "<td " FIRST_CELL ">"+ Roxen.html_encode_string (n) +"</td>"
+      "<td " REST_CELLS ">"+ ent[0] + "</td>"
+      "<td " REST_CELLS ">" + Roxen.sizetostring(ent[3]) + "</td>"
+      "<td " REST_CELLS ">" + ent[1] + "</td>"
+      "<td " REST_CELLS ">" + (ent[2]-ent[1]) + "</td>";
     if(ent[2])
-      res += "<td>" + (ent[1]*100)/ent[2] + "%</td>";
+      res += "<td " REST_CELLS ">" + (ent[1]*100)/ent[2] + "%</td>";
     else
-      res += "<td>0%</td>";
+      res += "<td " REST_CELLS ">0%</td>";
     res += "</tr>";
     totale += ent[0];
     totalm += ent[3];
     totalh += ent[1];
     totalt += ent[2];
-    i++;
   }
-  res += "<tr align=\"right\" bgcolor=\"&usr.fade2;\">"
-    "<td align=\"left\"><b>"+LOCALE(178, "Total")+"</b></td><td>" +
-    totale + "</td><td>" + Roxen.sizetostring(totalm) + "</td>" +
-    "<td>" + totalh + "</td><td>" + (totalt-totalh) + "</td>";
+  res += "<tr " FTR_TR_ATTRS ">"
+    "<td " FIRST_CELL "><b>"+LOCALE(178, "Total")+"</b></td>"
+    "<td " REST_CELLS ">" + totale + "</td>"
+    "<td " REST_CELLS ">" + Roxen.sizetostring(totalm) + "</td>" +
+    "<td " REST_CELLS ">" + totalh + "</td>"
+    "<td " REST_CELLS ">" + (totalt-totalh) + "</td>";
   if(totalt)
-    res += "<td>"+(totalh*100)/totalt+"%</td>";
+    res += "<td " REST_CELLS ">"+(totalh*100)/totalt+"%</td>";
   else
-    res += "<td>0%</td>";
+    res += "<td " REST_CELLS ">0%</td>";
 
   res += "</tr></table>\n";
 
@@ -237,43 +275,48 @@ the addition of a new cache entry.</p>\n") + "</font>";
   if(sizeof(ngc)) {
     res += "<p><font size='+1'><b>"+
       LOCALE(87, "Non-garbing Memory Cache")+"</b></font></p>\n"
-      "<table cellpadding=\"3\" cellspacing=\"0\""
-      "       style='border-width: 1px; border-style: solid;'>\n"
-      "<tr bgcolor=\"&usr.obox-titlebg;\">"
-      "<th align=\"left\">"+LOCALE(62, "Class")+"</th>"
-      "<th align=\"right\">"+LOCALE(295, "Entries")+"</th>"
-      "<th align=\"right\">"+LOCALE(64, "Size")+"</th></tr>";
+      "<table " TABLE_ATTRS ">\n"
+      "<tr " HDR_TR_ATTRS ">"
+      "<th " FIRST_CELL ">"+LOCALE(62, "Class")+"</th>"
+      "<th " REST_CELLS ">"+LOCALE(295, "Entries")+"</th>"
+      "<th " REST_CELLS ">"+LOCALE(64, "Size")+"</th></tr>";
 
-    int i, totale, totalm;
-    foreach(sort(indices(ngc)), string name) {
+    int row, totale, totalm;
+    foreach(sort(indices(ngc)); row; string name) {
       array ent = ngc[name];
-      res += ("<tr align=\"right\" bgcolor=\"" +
-	      (i/3%2?"&usr.fade1;":"&usr.obox-bgcolor;") +
-	      "\"><td align=\"left\">"+ name +"</td><td>"+ ent[0] +
-	      "</td><td>" +
-	      Roxen.sizetostring(ent[1]) + "</td></tr>");
+      res += "<tr " BODY_TR_ATTRS (row) ">"
+	"<td " FIRST_CELL ">"+ name +"</td>"
+	"<td " REST_CELLS ">"+ ent[0] + "</td>"
+	"<td " REST_CELLS ">" + Roxen.sizetostring(ent[1]) + "</td></tr>";
       totale += ent[0];
       totalm += ent[1];
-      i++;
     }
 
-    res += "<tr align=\"right\" bgcolor=\"&usr.fade2;\">"
-      "<td align=\"left\"><b>"+LOCALE(178, "Total")+"</b></td><td>" +
-      totale + "</td><td>" + Roxen.sizetostring(totalm) + "</td></tr>\n"
-      "</table>\n";
+    if (row >= 1)
+      res += "<tr " FTR_TR_ATTRS ">"
+	"<td " FIRST_CELL "><b>"+LOCALE(178, "Total")+"</b></td>"
+	"<td " REST_CELLS ">" + totale + "</td>"
+	"<td " REST_CELLS ">" + Roxen.sizetostring(totalm) + "</td></tr>\n";
+    res += "</table>\n";
   }
 
   // ---
 
   mapping l=Locale.cache_status();
   res += "<p><font size='+1'><b>"+LOCALE(71, "Locale Cache")+"</b></font></p>"
-    "<table cellpadding=\"3\" cellspacing=\"0\""
-    "       style='border-width: 1px; border-style: solid;'>\n"
-    "<tr>\n"
-    "<td>"+LOCALE(72, "Used languages:")+"</td><td>"+l->languages+"</td></tr>\n"
-    "<tr><td>"+LOCALE(73, "Registered projects:")+"</td><td>"+l->reg_proj+"</td></tr>\n"
-    "<tr><td>"+LOCALE(74, "Loaded project files:")+"</td><td>"+l->load_proj+"</td></tr>\n"
-    "<tr><td>"+LOCALE(75, "Current cache size:")+"</td><td>"+Roxen.sizetostring(l->bytes)+"</td></tr>\n"
+    "<table " TABLE_ATTRS ">\n"
+    "<tr " BODY_TR_ATTRS (0) ">"
+    "<td " FIRST_CELL ">"+LOCALE(72, "Used languages:")+"</td>"
+    "<td " REST_CELLS ">"+l->languages+"</td></tr>\n"
+    "<tr " BODY_TR_ATTRS (1) ">"
+    "<td " FIRST_CELL ">"+LOCALE(73, "Registered projects:")+"</td>"
+    "<td " REST_CELLS ">"+l->reg_proj+"</td></tr>\n"
+    "<tr " BODY_TR_ATTRS (2) ">"
+    "<td " FIRST_CELL ">"+LOCALE(74, "Loaded project files:")+"</td>"
+    "<td " REST_CELLS ">"+l->load_proj+"</td></tr>\n"
+    "<tr " BODY_TR_ATTRS (3) ">"
+    "<td " FIRST_CELL ">"+LOCALE(75, "Current cache size:")+"</td>"
+    "<td " REST_CELLS ">"+Roxen.sizetostring(l->bytes)+"</td></tr>\n"
     "</table>\n";
 
   return res;
