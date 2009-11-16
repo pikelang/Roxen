@@ -20,12 +20,12 @@ string format_hit_rate (int|float hits, int|float misses)
 #define TABLE_ATTRS							\
   "style='border-collapse: collapse; white-space: nowrap;'"
 #define HDR_TR_ATTRS							\
-  "style='text-align: center; border-bottom: 1px solid;'"
+  "style='text-align: center; border-bottom: 1px solid #666;'"
 #define BODY_TR_ATTRS(ROW)						\
   "style='text-align: right; " +					\
     (ROW ? "border-top: 2px solid transparent;" : "") + "'"
 #define FTR_TR_ATTRS							\
-  "style='text-align: right; border-top: 1px solid;'"
+  "style='text-align: right; border-top: 1px solid #666;'"
 #define FIRST_CELL							\
   "style='text-align: left; padding: 0;'"
 #define REST_CELLS							\
@@ -36,9 +36,9 @@ string parse( RequestID id )
   string res =
     "<input type='hidden' name='action' value='cachestatus.pike' />"
     "<p><cf-refresh/> <cf-cancel href='?class=&form.class;'/></p>\n"
-    "<p><font size='+1'><b>"+
+    "<h3>"+
     LOCALE(61, "WebServer Memory Cache")+
-    "</b></font></p>\n";
+    "</h3>\n";
 
 #ifdef NEW_RAM_CACHE
 
@@ -273,8 +273,8 @@ the addition of a new cache entry.</p>\n") + "</font>";
   mapping ngc = cache->ngc_status();
 
   if(sizeof(ngc)) {
-    res += "<p><font size='+1'><b>"+
-      LOCALE(87, "Non-garbing Memory Cache")+"</b></font></p>\n"
+    res += "<br/><h3>"+
+      LOCALE(87, "Non-garbing Memory Cache")+"</h3>\n"
       "<table " TABLE_ATTRS ">\n"
       "<tr " HDR_TR_ATTRS ">"
       "<th " FIRST_CELL ">"+LOCALE(62, "Class")+"</th>"
@@ -303,7 +303,7 @@ the addition of a new cache entry.</p>\n") + "</font>";
   // ---
 
   mapping l=Locale.cache_status();
-  res += "<p><font size='+1'><b>"+LOCALE(71, "Locale Cache")+"</b></font></p>"
+  res += "<br/><h3>"+LOCALE(71, "Locale Cache")+"</h3>"
     "<table " TABLE_ATTRS ">\n"
     "<tr " BODY_TR_ATTRS (0) ">"
     "<td " FIRST_CELL ">"+LOCALE(72, "Used languages:")+"</td>"
