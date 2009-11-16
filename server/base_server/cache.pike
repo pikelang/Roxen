@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.97 2009/11/12 17:35:59 marty Exp $
+// $Id: cache.pike,v 1.98 2009/11/16 10:28:34 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -136,7 +136,7 @@ class CacheManager
       cs->misses++;
   }
 
-  void got_hit (string cache_name, CacheEntry entry);
+  void got_hit (string cache_name, CacheEntry entry, mapping cache_context);
   //! Called when @[cache_lookup] records a cache hit.
 
   protected void account_hit (string cache_name, CacheEntry entry)
@@ -291,7 +291,7 @@ overhead is minimal.";
     account_miss (cache_name);
   }
 
-  void got_hit (string cache_name, CacheEntry entry)
+  void got_hit (string cache_name, CacheEntry entry, mapping cache_context)
   {
     account_hit (cache_name, entry);
   }
@@ -405,7 +405,7 @@ class CM_GreedyDual
     account_miss (cache_name);
   }
 
-  void got_hit (string cache_name, CacheEntry entry)
+  void got_hit (string cache_name, CacheEntry entry, mapping cache_context)
   {
     account_hit (cache_name, entry);
 
@@ -561,8 +561,8 @@ protected Thread.Local cache_contexts = Thread.Local();
 // FIXME: Doesn't work with callbacks etc.
 
 class CM_GDS_Time
-//! Like @[CM_GDS_1] but adds support for calculating cost based on
-//! passed time as the basis for the entry creation cost.
+//! Like @[CM_GDS_1] but adds support for calculating entry cost based
+//! on passed time.
 {
   inherit CM_GreedyDual;
 
@@ -584,12 +584,9 @@ class CM_GDS_Time
   //! Returns the current time for cost calculation. (@[format_cost]
   //! assumes this is in microseconds.)
 
-  void got_miss (string cache_name, mixed key, mapping cache_context)
+  protected void save_start_hrtime (string cache_name, mixed key,
+				    mapping cache_context)
   {
-    //werror ("Miss.\n%s\n", describe_backtrace (backtrace()));
-
-    account_miss (cache_name);
-
     if (mapping all_ctx = cache_context || cache_contexts->get()) {
       int start = gettime_func() - all_ctx[0];
 
@@ -616,6 +613,22 @@ class CM_GDS_Time
 	      Thread.this_thread(), describe_backtrace (backtrace()));
 #endif
     }
+  }
+
+  void got_miss (string cache_name, mixed key, mapping cache_context)
+  {
+    //werror ("Miss.\n%s\n", describe_backtrace (backtrace()));
+    account_miss (cache_name);
+    save_start_hrtime (cache_name, key, cache_context);
+  }
+
+  void got_hit (string cache_name, CacheEntry entry, mapping cache_context)
+  {
+    // It shouldn't be necessary to record the start time for cache
+    // hits, but do it anyway for now since there are caches that on
+    // cache hits extend the entries with more data.
+    account_hit (cache_name, entry);
+    save_start_hrtime (cache_name, entry->key, cache_context);
   }
 
   protected int entry_create_hrtime (string cache_name, mixed key,
@@ -698,7 +711,7 @@ create it.";
   float pval_limit = 1e-4 / Float.EPSILON;
   // From GDS(1)'s pval_limit we get an epsilon at 1e-6. Here it's
   // multiplied with the creation time in microseconds. A cache entry
-  // should at least take on the order of 100 microseconds to be worth
+  // should usually take on the order of 100 microseconds to be worth
   // caching, so raise it two digits.
 
   protected int gettime_func()
@@ -932,7 +945,7 @@ mixed cache_lookup (string cache_name, mixed key, void|mapping cache_context)
 	return 0;
       }
 
-      mgr->got_hit (cache_name, entry);
+      mgr->got_hit (cache_name, entry, cache_context);
       MORE_CACHE_WERR ("cache_lookup (%O, %s): Hit\n",
 		       cache_name, RXML.utils.format_short (key));
       return entry->data;
