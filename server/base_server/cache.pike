@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.98 2009/11/16 10:28:34 mast Exp $
+// $Id: cache.pike,v 1.99 2009/11/16 14:00:57 marty Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -898,7 +898,7 @@ void cache_expire (void|string cache_name)
 {
   // Currently not very efficiently implemented, but this function
   // doesn't have to be quick.
-  foreach (cache_name ? ({cache_name}) : indices (caches); string cn;) {
+  foreach (cache_name ? ({cache_name}) : indices (caches), string cn) {
     CACHE_WERR ("Emptying cache %O.\n", cn);
     if (CacheManager mgr = caches[cn]) {
       mgr->evict (0);
