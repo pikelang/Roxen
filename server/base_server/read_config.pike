@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: read_config.pike,v 1.71 2009/05/07 14:15:53 mast Exp $
+// $Id: read_config.pike,v 1.72 2009/11/16 14:18:20 grubba Exp $
 
 #include <module.h>
 
@@ -209,7 +209,7 @@ mapping read_it(string cl)
     if( fd )
     {
       string data = fd->read();
-      if( strlen( data ) )
+      if( data && strlen( data ) )
       {
 	config_stat_cache[cl] = fd->stat();
 	fd->close();
@@ -222,8 +222,8 @@ mapping read_it(string cl)
 
   if (err) {
     string backup_file;
-    if (file_stat (base + "~")) backup_file = base + "~";
     if (file_stat (base + "~2~")) backup_file = base + "~2~";
+    if (file_stat (base + "~")) backup_file = base + "~";
     report_error("Failed to read configuration file (%s) for %O.%s\n"
 		 "%s\n",
 		 base, cl,
