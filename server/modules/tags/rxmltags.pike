@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.622 2009/11/12 14:50:14 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.623 2009/11/17 10:09:02 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -2260,6 +2260,11 @@ class TagCache {
 	}
 
 	if (args->shared) {
+	  if (object/*(RXML.PikeCompile)*/ comp = evaled_content->p_code_comp) {
+	    // Don't cache the PikeCompile objects.
+	    comp->compile();
+	    evaled_content->p_code_comp = 0;
+	  }
 	  cache_set (cache_tag_eval_loc, key, evaled_content, timeout);
 	  TAG_TRACE_LEAVE ("added shared%s cache entry with key %s",
 			   timeout ? " timeout" : "",
@@ -2287,6 +2292,9 @@ class TagCache {
 		error ("Unexpected non-shared cache identifier: %O\n",
 		       cache_id);
 #endif
+	      // Avoid extra refs that mess up the size calculation in
+	      // cache_set.
+	      evaled_content = key = 0;
 	      cache_set (cache_tag_save_loc, cache_id, alternatives, timeout);
 	    }
 	    TAG_TRACE_LEAVE ("added%s %ds timeout cache entry with key %s",
@@ -4192,8 +4200,11 @@ class TagUse {
     sscanf(data, "%*shelp=%d", help);
     res = "<dt><b>"+f+"</b></dt><dd>"+(doc?doc+"<br />":"")+"</dd>";
 
-    array defs = parse_use_package(data, RXML_CONTEXT);
-    cache_set("macrofiles", "|"+f, defs, 300);
+    array defs = cache_lookup ("macrofiles", "|" + f);
+    if (!defs) {
+      defs = parse_use_package(data, RXML_CONTEXT);
+      cache_set("macrofiles", "|"+f, defs, 300);
+    }
 
     array(string) ifs = ({}), tags = ({});
 
@@ -4289,6 +4300,8 @@ class TagUse {
 	}
 
 	res = parse_use_package(file, ctx);
+	// DEBUG_CACHE_SIZES note: These cache entries can become
+	// larger, e.g. as more parts of the rxml tree gets compiled.
 	cache_set("macrofiles", name, res);
       }
 
