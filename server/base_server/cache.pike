@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.99 2009/11/16 14:00:57 marty Exp $
+// $Id: cache.pike,v 1.100 2009/11/17 09:55:56 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -35,6 +35,15 @@ class CacheEntry (mixed key, mixed data)
   int size;
   //! The size of this cache entry, as measured by @[Pike.count_memory].
 
+#ifdef DEBUG_CACHE_SIZES
+  int cmp_size;
+  // Size without counting strings. Used to compare the size between
+  // cache_set and cache_clean. Strings are excluded since they might
+  // get or lose unrelated refs in the time between which would make
+  // the comparison unreliable. This might make us miss significant
+  // strings though, but it's hard to get around it.
+#endif
+
   int timeout;
   //! Unix time when the entry times out, or zero if there's no
   //! timeout.
@@ -44,13 +53,23 @@ class CacheEntry (mixed key, mixed data)
   //! The creation cost for the entry, according to the metric used by
   //! the cache manager (provided it implements cost).
 
+  protected string format_key()
+  {
+    if (stringp (key)) {
+      if (sizeof (key) > 20)
+	return sprintf ("%q...", key[..19 - sizeof ("...")]);
+      else
+	return sprintf ("%q", key);
+    }
+    else if (objectp (key))
+      return sprintf ("%O", key);
+    else
+      return sprintf ("%t", key);
+  }
+
   protected string _sprintf (int flag)
   {
-    return flag == 'O' &&
-      sprintf ("CacheEntry(%s, %db)",
-	       (stringp (key) ? key[..20] :
-		sprintf (objectp (key) ? "%O" : "%t", key)),
-	       size);
+    return flag == 'O' && sprintf ("CacheEntry(%s, %db)", format_key(), size);
   }
 }
 
@@ -375,8 +394,8 @@ class CM_GreedyDual
 
     protected string _sprintf (int flag)
     {
-      return flag == 'O' && sprintf ("CacheEntry(%O, %db, %O)",
-				     key, size, value);
+      return flag == 'O' && sprintf ("CacheEntry(%s, %db, %O)",
+				     format_key(), size, value);
     }
   }
 
@@ -574,8 +593,8 @@ class CM_GDS_Time
 
     protected string _sprintf (int flag)
     {
-      return flag == 'O' && sprintf ("CacheEntry(%O, %db, %O, %O)",
-				     key, size, value, cost);
+      return flag == 'O' && sprintf ("CacheEntry(%s, %db, %O, %O)",
+				     format_key(), size, value, cost);
     }
   }
 #endif
@@ -702,11 +721,16 @@ class CM_GDS_CPUTime
   inherit CM_GDS_Time;
 
   constant name = "GDS(cpu time)";
-  constant doc = #"\
+  string doc = #"\
 This cache manager implements <a
 href='http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.30.7285'>GreedyDual-Size</a>
 with the cost of each entry determined by the CPU time it took to
-create it.";
+create it. The CPU time implementation is " +
+    Roxen.html_encode_string (System.CPU_TIME_IMPLEMENTATION) +
+    " which is " +
+    (System.CPU_TIME_IS_THREAD_LOCAL ? "thread local" : "not thread local") +
+    " and has a resolution of " +
+    (System.CPU_TIME_RESOLUTION / 1e6) + " ms.";
 
   float pval_limit = 1e-4 / Float.EPSILON;
   // From GDS(1)'s pval_limit we get an epsilon at 1e-6. Here it's
@@ -727,11 +751,16 @@ class CM_GDS_RealTime
   inherit CM_GDS_Time;
 
   constant name = "GDS(real time)";
-  constant doc = #"\
+  string doc = #"\
 This cache manager implements <a
 href='http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.30.7285'>GreedyDual-Size</a>
 with the cost of each entry determined by the real (wall) time it took
-to create it.";
+to create it. The real time implementation is " +
+    Roxen.html_encode_string (System.REAL_TIME_IMPLEMENTATION) +
+    " which is " +
+    (System.REAL_TIME_IS_MONOTONIC ? "monotonic" : "not monotonic") +
+    " and has a resolution of " +
+    (System.REAL_TIME_RESOLUTION / 1e6) + " ms.";
 
   float pval_limit = 1e-4 / Float.EPSILON;
   // Currently the same as GDS(cpu time), but we might consider
@@ -749,6 +778,28 @@ to create it.";
 
 protected CM_GDS_RealTime cm_gds_realtime =
   CM_GDS_RealTime (default_cache_size);
+
+#ifdef DEBUG_CACHE_SIZES
+protected int cmp_sizeof_cache_entry (CacheEntry entry)
+{
+  int res;
+  mixed data = entry->data;
+  mapping opts = (["block_strings": 1,
+#if DEBUG_CACHE_SIZES > 1
+		   "collect_internals": 1,
+#endif
+		 ]);
+  if (function(int|mapping:int) cm_cb =
+      objectp (data) && data->cache_count_memory)
+    res = cm_cb (opts) + Pike.count_memory (-1, entry, entry->key);
+  else
+    res = Pike.count_memory (opts, entry, entry->key, data);
+#if DEBUG_CACHE_SIZES > 1
+  werror ("Internals counted for %O: %O\n", entry, opts->collect_internals);
+#endif
+  return res;
+}
+#endif
 
 //! The preferred managers according to various caching requirements:
 //!
@@ -769,7 +820,12 @@ protected CM_GDS_RealTime cm_gds_realtime =
 //!   @[cache_set].
 //! @enddl
 mapping(string:CacheManager) cache_manager_prefs = ([
-  "default": cm_gds_cputime,
+  "default": (System.CPU_TIME_IS_THREAD_LOCAL != "yes" ||
+	      System.CPU_TIME_RESOLUTION > 10000 ?
+	      // Don't use cpu time if it's too bad. Buglet: We just
+	      // assume the real time is better.
+	      cm_gds_realtime :
+	      cm_gds_cputime),
   "no_thread_timings": cm_gds_realtime,
   "no_timings": cm_gds_1,
 ]);
@@ -1029,19 +1085,18 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
 
       if (function(int|mapping:int) cm_cb =
 	  objectp (data) && data->cache_count_memory)
-	new_entry->size =
-	  cm_cb (opts) + Pike.count_memory (-1, new_entry, key);
+	new_entry->size = cm_cb (opts) + Pike.count_memory (-1, new_entry, key);
       else
 	new_entry->size = Pike.count_memory (opts, new_entry, key, data);
 
 #ifdef DEBUG_COUNT_MEM
     };
-  werror ("%O -> %s: la %d size %d time %g int %d cyc %d ext %d vis %d "
-	  "revis %d rnd %d wqa %d\n",
-	  key, sprintf (objectp (data) ? "%O" : "%t", data),
-	  opts->lookahead, opts->size, t, opts->internal, opts->cyclic,
+  werror ("%O: la %d size %d time %g int %d cyc %d ext %d vis %d revis %d "
+	  "rnd %d wqa %d\n",
+	  entry, opts->lookahead, opts->size, t, opts->internal, opts->cyclic,
 	  opts->external, opts->visits, opts->revisits, opts->rounds,
 	  opts->work_queue_alloc);
+
 #if 0
   if (opts->external) {
     opts->collect_direct_externals = 1;
@@ -1049,10 +1104,10 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
     if (opts->lookahead < 1) opts->lookahead = 1;
 
     if (function(int|mapping:int) cm_cb =
-	objectp (entry[DATA]) && entry[DATA]->cache_count_memory)
-      res = cm_cb (opts) + Pike.count_memory (-1, entry);
+	objectp (data) && data->cache_count_memory)
+      res = cm_cb (opts) + Pike.count_memory (-1, entry, key);
     else
-      res = Pike.count_memory (opts, entry);
+      res = Pike.count_memory (opts, entry, key, data);
 
     array exts = opts->collect_direct_externals;
     werror ("Externals found using lookahead %d: %O\n",
@@ -1066,7 +1121,13 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
 #endif
   }
 #endif
+
 #endif	// DEBUG_COUNT_MEM
+#undef opts
+
+#ifdef DEBUG_CACHE_SIZES
+  new_entry->cmp_size = cmp_sizeof_cache_entry (new_entry);
+#endif
 
   if (timeout)
     new_entry->timeout = time (1) + timeout;
@@ -1136,12 +1197,25 @@ protected void cache_clean()
 
   foreach (caches;; CacheManager mgr) {
     foreach (mgr->lookup; string cache_name; mapping(mixed:CacheEntry) lm)
-      foreach (lm;; CacheEntry entry)
+      foreach (lm;; CacheEntry entry) {
 	if (!entry->data || entry->timeout && entry->timeout <= now) {
 	  MORE_CACHE_WERR ("%s: Removing %s entry %O\n", cache_name,
 			   entry->data ? "timed out" : "destructed", entry);
 	  mgr->remove_entry (cache_name, entry);
 	}
+
+	else {
+#ifdef DEBUG_CACHE_SIZES
+	  int size = cmp_sizeof_cache_entry (entry);
+	  if (size != entry->cmp_size) {
+	    werror ("Size difference for %O / %O: Is %d, expected %d.\n",
+		    cache_name, entry, size, entry->cmp_size);
+	    // Update to avoid repeated messages.
+	    entry->cmp_size = size;
+	  }
+#endif
+	}
+      }
     mgr->after_gc();
   }
 
