@@ -9,7 +9,7 @@
 
 #define CTX_MISC ([mapping(string:mixed)] RXML_CONTEXT->misc)
 
-constant cvs_version = "$Id: rxmlparse.pike,v 1.83 2009/05/07 14:15:56 mast Exp $";
+constant cvs_version = "$Id: rxmlparse.pike,v 1.84 2009/11/17 10:06:33 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -238,7 +238,7 @@ string rxml_run_error(RXML.Backtrace err, RXML.Type type)
 #endif
 
   NOCACHE();
-  ctx->misc[" _ok"]=0;
+  ctx->misc[" _ok"]=0;		// Unnecessary unless in < 5.0 compat mode.
   if (type->subtype_of (RXML.t_html) || type->subtype_of (RXML.t_xml) ||
       type->subtype_of (RXML.t_text)) {
     if(query("quietr") && !id->misc->debug && !id->prestate->debug)
