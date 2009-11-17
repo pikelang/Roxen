@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.104 2009/11/17 18:47:03 mast Exp $
+// $Id: cache.pike,v 1.105 2009/11/17 21:24:09 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -414,15 +414,18 @@ class CM_GreedyDual
   //! A list of all entries in priority order, by using the multiset
   //! builtin sorting through @[CacheEntry.`<].
 
-  int|float pval_limit = Int.NATIVE_MAX / 2;
-  //! Approximate limit for priority values. When they get over this,
-  //! the base will be reset to zero on the next gc.
-  // Should be a constant, but we currently can't create an int|float
-  // type on a constant.
-
-  protected int|float max_used_pval;
-  // Save the max used pval since the multiset iterator currently
-  // can't access the last element efficiently.
+  protected int max_used_pval;
+  // Used to detect when the entry pval's get too big to warrant a
+  // reset.
+  //
+  // For integers, this is the maximum used pval and we reset at the
+  // next gc when it gets over Int.NATIVE_MAX/2 (to have some spare
+  // room for the gc delay).
+  //
+  // For floats, we reset whenever L is so big that less than 8
+  // significant bits remains when v(p) is added to it. In that case
+  // max_used_pval only works as a flag, and we set it to
+  // Int.NATIVE_MAX when that state is reached.
 
   int|float calc_value (string cache_name, CacheEntry entry,
 			int old_entry, mapping cache_context);
@@ -435,33 +438,41 @@ class CM_GreedyDual
     account_miss (cache_name);
   }
 
+  local protected int|float calc_pval (CacheEntry entry)
+  {
+    int|float pval;
+    if (CacheEntry lowest = get_iterator (priority_list)->index()) {
+      int|float l = lowest->pval, v = entry->value;
+      pval = l + v;
+
+      if (floatp (v)) {
+	if (v != 0.0 && v < l * (Float.EPSILON * 0x10)) {
+#ifdef DEBUG
+	  if (max_used_pval != Int.NATIVE_MAX)
+	    werror ("%O: Ran out of significant digits for cache entry %O - "
+		    "got min priority %O and entry value %O.\n",
+		    this, entry, l, v);
+#endif
+	  // Force a reset of the pvals in the next gc.
+	  max_used_pval = Int.NATIVE_MAX;
+	}
+      }
+      else if (pval > max_used_pval)
+	max_used_pval = pval;
+    }
+    else
+      // Assume entry->value isn't greater than Int.NATIVE_MAX/2 right away.
+      pval = entry->value;
+    return pval;
+  }
+
   void got_hit (string cache_name, CacheEntry entry, mapping cache_context)
   {
     account_hit (cache_name, entry);
-
-    int|float pv;
-    if (CacheEntry lowest = get_iterator (priority_list)->index()) {
-      pv = entry->value + lowest->pval;
-
-      if (floatp (pv) && pv == lowest->pval &&
-	  entry->value != 0.0 && lowest->pval != 0.0) {
-#ifdef DEBUG
-	werror ("Cache %s: Ran out of significant digits for cache entry %O - "
-		"got min priority %O and entry value %O.\n",
-		cache_name, entry, lowest->pval, entry->value);
-#endif
-	// Force a reset of the pvals in the next gc.
-	max_used_pval = pval_limit * 2;
-      }
-    }
-    else
-      pv = entry->value;
-
-    if (pv > max_used_pval) max_used_pval = pv;
-
+    int|float pval = calc_pval (entry);
     // vvv Relying on the interpreter lock from here.
     priority_list[entry] = 0;
-    entry->pval = pv;
+    entry->pval = pval;
     priority_list[entry] = 1;
     // ^^^ Relying on the interpreter lock to here.
   }
@@ -475,26 +486,7 @@ class CM_GreedyDual
 
     if (!low_add_entry (cache_name, entry)) return 0;
 
-    int|float pv;
-    if (CacheEntry lowest = get_iterator (priority_list)->index()) {
-      pv = entry->pval = v + lowest->pval;
-
-      if (floatp (pv) && pv == lowest->pval &&
-	  v != 0.0 && lowest->pval != 0.0) {
-#ifdef DEBUG
-	werror ("Cache %s: Ran out of significant digits for cache entry %O - "
-		"got min priority %O and entry value %O.\n",
-		cache_name, entry, lowest->pval, v);
-#endif
-	// Force a reset of the pvals in the next gc.
-	max_used_pval = pval_limit * 2;
-      }
-    }
-    else
-      pv = entry->pval = v;
-
-    if (pv > max_used_pval) max_used_pval = pv;
-
+    entry->pval = calc_pval (entry);
     priority_list[entry] = 1;
 
     if (size > size_limit) evict (size_limit);
@@ -521,13 +513,12 @@ class CM_GreedyDual
 
   void after_gc()
   {
-    if (max_used_pval > pval_limit) {
+    if (max_used_pval > Int.NATIVE_MAX / 2) {
       // The neat thing to do here is to lower all priority values,
       // but it has to be done atomically. Since this presumably
       // happens so seldom we take the easy way and just empty the
       // caches instead.
-      CACHE_WERR ("%O: Max priority value %O over limit %O - resetting.\n",
-		  this, max_used_pval, pval_limit);
+      CACHE_WERR ("%O: Max priority value too large - resetting.\n", this);
 
       if (Configuration admin_config = roxenp()->get_admin_configuration())
 	// Log an event, in case it doesn't happen that seldom afterall.
@@ -535,14 +526,8 @@ class CM_GreedyDual
 
       while (sizeof (priority_list))
 	evict (0);
-      max_used_pval = intp (pval_limit) ? 0 : 0.0;
+      max_used_pval = 0;
     }
-  }
-
-  protected void create (int total_size_limit)
-  {
-    ::create (total_size_limit);
-    max_used_pval = intp (pval_limit) ? 0 : 0.0;
   }
 }
 
@@ -556,18 +541,6 @@ This cache manager implements <a
 href='http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.30.7285'>GreedyDual-Size</a>
 with the cost of each entry fixed at 1, which makes it optimize the
 cache hit ratio.";
-
-  float pval_limit = 1e-6 / Float.EPSILON;
-  // Put the limit before we start to lose too much precision. Since
-  // calc_value returns 1.0/(size in bytes), the issue becomes to
-  // avoid L + c(p) == L for reasonably sized entries. Assuming most
-  // entries are in the range 1-10 kb we get c(p) in the range 1e-3 to
-  // 1e-4. We also need some significant digits afterwards, say at
-  // least two. So put our epsilon at approx 1e-6.
-  //
-  // FIXME: For 32 bit architectures with a standard pike, that puts
-  // the limit close to 1.0, so the risk of too frequent resets is
-  // real.
 
   float calc_value (string cache_name, CacheEntry entry,
 		    int old_entry, mapping cache_context)
@@ -586,8 +559,6 @@ protected Thread.Local cache_contexts = Thread.Local();
 // In an entry with index 0 in the mapping, the time spent creating
 // cache entries is accumulated. It is used to deduct the time for
 // creating entries in subcaches.
-//
-// FIXME: Doesn't work with callbacks etc.
 
 class CM_GDS_Time
 //! Like @[CM_GDS_1] but adds support for calculating entry cost based
@@ -742,12 +713,6 @@ create it. The CPU time implementation is " +
     " and has a resolution of " +
     (System.CPU_TIME_RESOLUTION / 1e6) + " ms.";
 
-  float pval_limit = 1e-4 / Float.EPSILON;
-  // From GDS(1)'s pval_limit we get an epsilon at 1e-6. Here it's
-  // multiplied with the creation time in microseconds. A cache entry
-  // should usually take on the order of 100 microseconds to be worth
-  // caching, so raise it two digits.
-
   protected int gettime_func()
   {
     return gethrvtime();
@@ -771,11 +736,6 @@ to create it. The real time implementation is " +
     (System.REAL_TIME_IS_MONOTONIC ? "monotonic" : "not monotonic") +
     " and has a resolution of " +
     (System.REAL_TIME_RESOLUTION / 1e6) + " ms.";
-
-  float pval_limit = 1e-4 / Float.EPSILON;
-  // Currently the same as GDS(cpu time), but we might consider
-  // raising this a bit since real time always is larger that cpu
-  // time.
 
   protected int gettime_func()
   {
