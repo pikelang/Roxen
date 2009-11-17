@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.102 2009/11/17 15:46:45 mast Exp $
+// $Id: cache.pike,v 1.103 2009/11/17 16:30:11 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -814,12 +814,19 @@ protected int cmp_sizeof_cache_entry (string cache_name, CacheEntry entry)
 }
 #endif
 
-//! The preferred managers according to various caching requirements:
+//! The preferred managers according to various caching requirements.
+//! When several apply for a cache, choose the first one in this list.
 //!
 //! @dl
 //! @item "default"
 //!   The default manager for caches that do not specify any
 //!   requirements.
+//!
+//! @item "no_cpu_timings"
+//!   The manager to use for caches where a cache entry is created
+//!   synchronously by one thread, but that thread spends most of its
+//!   time waiting for a result from an external party, meaning that
+//!   consumed cpu time is not an accurate measurement of the cost.
 //!
 //! @item "no_thread_timings"
 //!   The manager to use for caches where a cache entry isn't created
@@ -839,6 +846,7 @@ mapping(string:CacheManager) cache_manager_prefs = ([
 	      // assume the real time is better.
 	      cm_gds_realtime :
 	      cm_gds_cputime),
+  "no_cpu_timings": cm_gds_realtime,
   "no_thread_timings": cm_gds_realtime,
   "no_timings": cm_gds_1,
 ]);
