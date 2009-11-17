@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.103 2009/11/17 16:30:11 mast Exp $
+// $Id: cache.pike,v 1.104 2009/11/17 18:47:03 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1221,7 +1221,10 @@ protected void cache_clean()
   // time it doesn't matter much, but the risk is that the size limit
   // gets unacceptably off after a while.
 
+  mapping(CacheManager:int(1..1)) used_mgrs = ([]);
+
   foreach (caches; string cache_name; CacheManager mgr) {
+    used_mgrs[mgr] = 1;
     if (mapping(mixed:CacheEntry) lm = mgr->lookup[cache_name])
       foreach (lm;; CacheEntry entry) {
 	if (!entry->data || entry->timeout && entry->timeout <= now) {
@@ -1244,8 +1247,10 @@ protected void cache_clean()
 #endif
 	}
       }
-    mgr->after_gc();
   }
+
+  foreach (used_mgrs; CacheManager mgr;)
+    mgr->after_gc();
 
   vt = gethrvtime() - vt;	// -1 - -1 if cpu time isn't working.
   t = gethrtime() - t;
