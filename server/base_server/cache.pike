@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.100 2009/11/17 09:55:56 mast Exp $
+// $Id: cache.pike,v 1.101 2009/11/17 13:41:52 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -56,8 +56,8 @@ class CacheEntry (mixed key, mixed data)
   protected string format_key()
   {
     if (stringp (key)) {
-      if (sizeof (key) > 20)
-	return sprintf ("%q...", key[..19 - sizeof ("...")]);
+      if (sizeof (key) > 40)
+	return sprintf ("%q...", key[..39 - sizeof ("...")]);
       else
 	return sprintf ("%q", key);
     }
@@ -179,6 +179,18 @@ class CacheManager
   //! the entry got added to the cache. Returns 0 if the function
   //! chose to evict it immediately or if the cache has disappeared.
 
+  private void account_remove_entry (string cache_name, CacheEntry entry)
+  {
+    if (CacheStats cs = stats[cache_name]) {
+      cs->count--;
+      cs->size -= entry->size;
+      ASSERT_IF_DEBUG (cs->size /*%O*/ >= 0, cs->size);
+      ASSERT_IF_DEBUG (cs->count /*%O*/ >= 0, cs->count);
+    }
+    size -= entry->size;
+    ASSERT_IF_DEBUG (size /*%O*/ >= 0, size);
+  }
+
   protected int low_add_entry (string cache_name, CacheEntry entry)
   {
     ASSERT_IF_DEBUG (entry->size /*%O*/, entry->size);
@@ -197,8 +209,10 @@ class CacheManager
 	lm[entry->key] = entry;
 	// ^^^ Relying on the interpreter lock to here.
 
-	if (old_entry)
+	if (old_entry) {
+	  account_remove_entry (cache_name, old_entry);
 	  remove_entry (cache_name, old_entry);
+	}
 
 	cs->count++;
 	cs->size += entry->size;
@@ -219,26 +233,23 @@ class CacheManager
   }
 
   int remove_entry (string cache_name, CacheEntry entry);
-  //! Called to delete an entry from the cache. Returns 1 if the entry
-  //! got removed from the cache. Returns 0 if the entry wasn't found
-  //! in the cache or if the cache has disappeared.
+  //! Called to delete an entry from the cache. Should use
+  //! @[low_remove_entry] to do the atomic removal. Must ensure the
+  //! entry is removed from any extra data structures, regardless
+  //! whether it's already gone from the @[lookup] mapping or not.
+  //! Returns the return value from @[low_remove_entry].
 
   protected int low_remove_entry (string cache_name, CacheEntry entry)
+  //! Returns 1 if the entry got removed from the cache, or 0 if it
+  //! wasn't found in the cache or if the cache has disappeared.
   {
     if (mapping(mixed:CacheEntry) lm = lookup[cache_name])
-      if (m_delete (lm, entry->key)) {
-	if (CacheStats cs = stats[cache_name]) {
-	  cs->count--;
-	  cs->size -= entry->size;
-	  ASSERT_IF_DEBUG (cs->size /*%O*/ >= 0, cs->size);
-	  ASSERT_IF_DEBUG (cs->count /*%O*/ >= 0, cs->count);
-	}
-	size -= entry->size;
-	ASSERT_IF_DEBUG (size /*%O*/ >= 0, size);
-
+      if (lm[entry->key] == entry) {
+	// Relying on the interpreter here.
+	m_delete (lm, entry->key);
+	account_remove_entry (cache_name, entry);
 	return 1;
       }
-
     return 0;
   }
 
@@ -492,9 +503,8 @@ class CM_GreedyDual
 
   int remove_entry (string cache_name, CacheEntry entry)
   {
-    if (!low_remove_entry (cache_name, entry)) return 0;
     priority_list[entry] = 0;
-    return 1;
+    return low_remove_entry (cache_name, entry);
   }
 
   void evict (int max_size)
@@ -1152,7 +1162,7 @@ void cache_remove (string cache_name, mixed key)
   MORE_CACHE_WERR ("cache_remove (%O, %O)\n", cache_name, key);
   if (CacheManager mgr = caches[cache_name])
     if (mapping(mixed:CacheEntry) lm = mgr->lookup[cache_name])
-      if (CacheEntry entry = m_delete (lm, key))
+      if (CacheEntry entry = lm[key])
 	mgr->remove_entry (cache_name, entry);
 }
 
