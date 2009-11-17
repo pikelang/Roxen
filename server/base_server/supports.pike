@@ -2,7 +2,7 @@
 // Copyright © 1999 - 2009, Roxen IS.
 //
 // Handles supports
-// $Id: supports.pike,v 1.27 2009/05/07 14:15:53 mast Exp $
+// $Id: supports.pike,v 1.28 2009/11/17 10:03:42 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -152,8 +152,10 @@ private array(multiset(string)|mapping(string:string)) lookup_supports(string fr
 #endif
   }
   sup -= nsup;
-  cache_set("supports", from, ({sup,m}));
-  return ({ sup, m });
+  array res = ({sup, m});
+  sup = m = 0;	     // Discard refs for memory counting in cache_set.
+  cache_set("supports", from, res);
+  return res + ({});
 }
 
 
