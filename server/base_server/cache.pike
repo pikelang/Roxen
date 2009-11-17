@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.101 2009/11/17 13:41:52 mast Exp $
+// $Id: cache.pike,v 1.102 2009/11/17 15:46:45 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -790,7 +790,7 @@ protected CM_GDS_RealTime cm_gds_realtime =
   CM_GDS_RealTime (default_cache_size);
 
 #ifdef DEBUG_CACHE_SIZES
-protected int cmp_sizeof_cache_entry (CacheEntry entry)
+protected int cmp_sizeof_cache_entry (string cache_name, CacheEntry entry)
 {
   int res;
   mixed data = entry->data;
@@ -805,7 +805,10 @@ protected int cmp_sizeof_cache_entry (CacheEntry entry)
   else
     res = Pike.count_memory (opts, entry, entry->key, data);
 #if DEBUG_CACHE_SIZES > 1
-  werror ("Internals counted for %O: %O\n", entry, opts->collect_internals);
+  werror ("Internals counted for %O / %O: ({\n%{%s,\n%}})\n",
+	  cache_name, entry,
+	  sort (map (opts->collect_internals,
+		     lambda (mixed m) {return sprintf ("%O", m);})));
 #endif
   return res;
 }
@@ -1136,7 +1139,7 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
 #undef opts
 
 #ifdef DEBUG_CACHE_SIZES
-  new_entry->cmp_size = cmp_sizeof_cache_entry (new_entry);
+  new_entry->cmp_size = cmp_sizeof_cache_entry (cache_name, new_entry);
 #endif
 
   if (timeout)
@@ -1205,8 +1208,13 @@ protected void cache_clean()
 
   CACHE_WERR ("Starting RAM cache cleanup.\n");
 
-  foreach (caches;; CacheManager mgr) {
-    foreach (mgr->lookup; string cache_name; mapping(mixed:CacheEntry) lm)
+  // Note: Might be necessary to always recheck the sizes here, since
+  // entries can change in size for a number of reasons. Most of the
+  // time it doesn't matter much, but the risk is that the size limit
+  // gets unacceptably off after a while.
+
+  foreach (caches; string cache_name; CacheManager mgr) {
+    if (mapping(mixed:CacheEntry) lm = mgr->lookup[cache_name])
       foreach (lm;; CacheEntry entry) {
 	if (!entry->data || entry->timeout && entry->timeout <= now) {
 	  MORE_CACHE_WERR ("%s: Removing %s entry %O\n", cache_name,
@@ -1216,10 +1224,12 @@ protected void cache_clean()
 
 	else {
 #ifdef DEBUG_CACHE_SIZES
-	  int size = cmp_sizeof_cache_entry (entry);
+	  int size = cmp_sizeof_cache_entry (cache_name, entry);
 	  if (size != entry->cmp_size) {
-	    werror ("Size difference for %O / %O: Is %d, expected %d.\n",
-		    cache_name, entry, size, entry->cmp_size);
+	    werror ("Size difference for %O / %O: "
+		    "Is %d, was %d in cache_set() - diff %d.\n",
+		    cache_name, entry, size, entry->cmp_size,
+		    size - entry->cmp_size);
 	    // Update to avoid repeated messages.
 	    entry->cmp_size = size;
 	  }
