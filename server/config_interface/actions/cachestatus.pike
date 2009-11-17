@@ -38,7 +38,9 @@ string parse( RequestID id )
     "<p><cf-refresh/> <cf-cancel href='?class=&form.class;'/></p>\n"
     "<h3>"+
     LOCALE(61, "WebServer Memory Cache")+
-    "</h3>\n";
+    "</h3>\n"
+    "<p><a href='/global_settings/?section=Cache'>"
+    "Configure cache settings</a></p>\n";
 
 #ifdef NEW_RAM_CACHE
 
@@ -81,6 +83,12 @@ string parse( RequestID id )
 #ifdef RAMCACHE_STATS
       int tot_byte_hits, tot_byte_misses;
       int|float tot_cost_hits, tot_cost_misses, tot_cost;
+#ifdef DEBUG_CACHE_MANAGER
+      int min_size = Int.NATIVE_MAX, max_size;
+      int|float min_cost = Float.MAX, max_cost;
+      int|float min_value = Float.MAX, max_value;
+      int|float min_pval = Float.MAX, max_pval;
+#endif
 #endif
 
       mapping(string:array(string)) cache_groups = ([]);
@@ -121,8 +129,23 @@ string parse( RequestID id )
 	  grp_cost_misses += st->cost_misses;
 
 	  int|float cost;
-	  foreach (cache.cache_entries (cache_name);; cache.CacheEntry entry)
-	    cost += entry->cost;
+	  foreach (cache.cache_entries (cache_name);; cache.CacheEntry entry) {
+	    int|float c = entry->cost;
+	    cost += c;
+#ifdef DEBUG_CACHE_MANAGER
+	    if (c > max_cost) max_cost = c;
+	    if (c < min_cost) min_cost = c;
+	    int s = entry->size;
+	    if (s > max_size) max_size = s;
+	    if (s < min_size) min_size = s;
+	    int|float v = entry->value;
+	    if (v > max_value) max_value = v;
+	    if (v < min_value) min_value = v;
+	    v = entry->pval;
+	    if (v > max_pval) max_pval = v;
+	    if (v < min_pval) min_pval = v;
+#endif
+	  }
 	  grp_cost += cost;
 #endif
 	}
@@ -164,6 +187,23 @@ string parse( RequestID id )
 	tot_cost += grp_cost;
 #endif
       }
+
+#if defined (RAMCACHE_STATS) && defined (DEBUG_CACHE_MANAGER)
+      if (tot_count) {
+	res += "<p>"
+	  "Entry size range: " + min_size + " .. " + max_size;
+	if (tot_cost)
+	  res += "<br />\n"
+	    "Entry cost range: " + min_cost + " .. " + max_cost;
+	res += "<br />\n"
+	  "Entry value range: " + min_value + " .. " + max_value;
+	if (min_pval < max_pval)
+	  // CM_GreedyDual specific.
+	  res += "<br />\n"
+	    "Entry priority value range: " + min_pval + " .. " + max_pval +
+	    "</p>\n";
+      }
+#endif
 
       if (num_caches) {
 	res += table;
