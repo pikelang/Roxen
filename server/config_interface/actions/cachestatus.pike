@@ -250,21 +250,23 @@ that both use the approximation that every cache miss is followed by
 the addition of a new cache entry.</p>\n") + "</font>";
 #endif
 
-  if (cache->last_gc_run) {
-    res += "<p><b>" + LOCALE(0, "Garbage Collector") + "</b></p>\n"
-      "<p>" + sprintf (LOCALE(0, "%d seconds since the last garbage "
-			      "collection. The following are averages over "
-			      "approximately the last hour."),
-		       time() - cache->last_gc_run) + "</p>\n"
+  res += "<p><b>" + LOCALE(0, "Garbage Collector") + "</b></p>\n";
+  if (!cache->last_gc_run)
+    res += "<p>" +
+      LOCALE(0, "The garbage collector has not run yet.") + "</p>\n";
+  else {
+    res += "<p>" +
+      sprintf (LOCALE(0, "%d seconds since the last garbage collection. "
+		      "The following are totals over approximately "
+		      "the last hour."),
+	       time() - cache->last_gc_run) + "</p>\n"
       "<table " TABLE_ATTRS ">\n"
-      DESCR_ROW (0, LOCALE(0, "Number of garbage collector runs:"),
-		 sprintf ("%.1f", cache->sum_gc_runs))
-      DESCR_ROW (1, LOCALE(0, "Time spent in the garbage collector:"),
+      DESCR_ROW (0, LOCALE(0, "Time spent in the garbage collector:"),
 		 Roxen.format_hrtime ((int) cache->sum_gc_time))
-      DESCR_ROW (2, LOCALE(0, "Size of garbage collected invalid entries:"),
-		 Roxen.sizetostring ((int) cache->avg_destruct_garbage_size))
-      DESCR_ROW (3, LOCALE(0, "Size of garbage collected timed out entries:"),
-		 Roxen.sizetostring ((int) cache->avg_timeout_garbage_size))
+      DESCR_ROW (1, LOCALE(0, "Size of garbage collected invalid entries:"),
+		 Roxen.sizetostring ((int) cache->sum_destruct_garbage_size))
+      DESCR_ROW (2, LOCALE(0, "Size of garbage collected timed out entries:"),
+		 Roxen.sizetostring ((int) cache->sum_timeout_garbage_size))
       "</table>\n";
   }
 

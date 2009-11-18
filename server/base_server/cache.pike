@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.108 2009/11/18 16:08:44 mast Exp $
+// $Id: cache.pike,v 1.109 2009/11/18 17:43:43 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1179,12 +1179,12 @@ mapping(CacheManager:mapping(string:CacheStats)) cache_stats()
   return res;
 }
 
-// GC statistics. These are decaying sums/averages over the last
+// GC statistics. These are decaying sums over the last
 // gc_stats_period seconds.
 constant gc_stats_period = 60 * 60;
 float sum_gc_runs = 0.0, sum_gc_time = 0.0;
-float avg_destruct_garbage_size = 0.0;
-float avg_timeout_garbage_size = 0.0;
+float sum_destruct_garbage_size = 0.0;
+float sum_timeout_garbage_size = 0.0;
 
 protected int cache_start_time = time();
 int last_gc_run;
@@ -1249,32 +1249,31 @@ protected void cache_clean()
   int startup = stat_tot_period < gc_stats_period;
   if (!startup) stat_tot_period = gc_stats_period;
 
-  float weight_last = (float) stat_last_period / stat_tot_period;
-  float weight_old = 1.0 - weight_last;
-
   if (stat_last_period > stat_tot_period) {
     // GC intervals are larger than the statistics interval, so just
     // set the values. Note that stat_last_period is very large on the
     // first call since last_gc_run is zero, so we always get here then.
     sum_gc_time = (float) (vt || t);
     sum_gc_runs = 1.0;
-    avg_destruct_garbage_size = (float) destr_garb_size;
-    avg_timeout_garbage_size = (float) timeout_garb_size;
+    sum_destruct_garbage_size = (float) destr_garb_size;
+    sum_timeout_garbage_size = (float) timeout_garb_size;
+  }
+
+  else if (startup) {
+    sum_gc_time += (float) (vt || t);
+    sum_gc_runs += 1.0;
+    sum_destruct_garbage_size += (float) destr_garb_size;
+    sum_timeout_garbage_size += (float) timeout_garb_size;
   }
 
   else {
-    if (startup) {
-      sum_gc_time += (float) (vt || t);
-      sum_gc_runs += 1.0;
-    }
-    else {
-      sum_gc_runs = weight_old * sum_gc_runs + 1.0;
-      sum_gc_time = weight_old * sum_gc_time + (float) (vt || t);
-    }
-    avg_destruct_garbage_size = (weight_old * avg_destruct_garbage_size +
-				 weight_last * (float) destr_garb_size);
-    avg_timeout_garbage_size = (weight_old * avg_timeout_garbage_size +
-				weight_last * (float) timeout_garb_size);
+    float weight = 1.0 - (float) stat_last_period / stat_tot_period;
+    sum_gc_runs = weight * sum_gc_runs + 1.0;
+    sum_gc_time = weight * sum_gc_time + (float) (vt || t);
+    sum_destruct_garbage_size = (weight * sum_destruct_garbage_size +
+				 (float) destr_garb_size);
+    sum_timeout_garbage_size = (weight * sum_timeout_garbage_size +
+				(float) timeout_garb_size);
   }
 
   last_gc_run = now;
