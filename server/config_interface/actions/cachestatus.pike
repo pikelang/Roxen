@@ -257,16 +257,42 @@ the addition of a new cache entry.</p>\n") + "</font>";
   else {
     res += "<p>" +
       sprintf (LOCALE(0, "%d seconds since the last garbage collection. "
-		      "The following are totals over approximately "
+		      "The following statistics are over approximately "
 		      "the last hour."),
 	       time() - cache->last_gc_run) + "</p>\n"
       "<table " TABLE_ATTRS ">\n"
-      DESCR_ROW (0, LOCALE(0, "Time spent in the garbage collector:"),
-		 Roxen.format_hrtime ((int) cache->sum_gc_time))
-      DESCR_ROW (1, LOCALE(0, "Size of garbage collected invalid entries:"),
-		 Roxen.sizetostring ((int) cache->sum_destruct_garbage_size))
-      DESCR_ROW (2, LOCALE(0, "Size of garbage collected timed out entries:"),
-		 Roxen.sizetostring ((int) cache->sum_timeout_garbage_size))
+      "<tr " BODY_TR_ATTRS (0) ">"
+      "<td " FIRST_CELL ">" +
+      LOCALE(0, "Time spent in the garbage collector:") + "</td>"
+      "<td " REST_CELLS " colspan='3'>" +
+      Roxen.format_hrtime ((int) cache->sum_gc_time) + "</td>"
+      "</tr>"
+      "<tr " BODY_TR_ATTRS (1) ">"
+      "<td " FIRST_CELL ">" +
+      LOCALE(0, "Size of garbage collected entries:") + "</td>"
+      "<td " REST_CELLS ">" +
+      Roxen.sizetostring ((int) cache->sum_destruct_garbage_size) + " " +
+      LOCALE(0, "stale") + " +</td>"
+      "<td " REST_CELLS ">" +
+      Roxen.sizetostring ((int) cache->sum_timeout_garbage_size) + " " +
+      LOCALE(0, "timed out") + " =</td>"
+      "<td " REST_CELLS ">" +
+      Roxen.sizetostring ((int) cache->sum_destruct_garbage_size +
+			  (int) cache->sum_timeout_garbage_size) + "</td>"
+      "</tr>"
+      "<tr " BODY_TR_ATTRS (1) ">"
+      "<td " FIRST_CELL ">" +
+      LOCALE(0, "Garbage collection ratio:") + "</td>"
+      "<td " REST_CELLS ">" +
+      sprintf ("%.2f%%", cache->avg_destruct_garbage_ratio * 100.0) + " " +
+      LOCALE(0, "stale") + " +</td>"
+      "<td " REST_CELLS ">" +
+      sprintf ("%.2f%%", cache->avg_timeout_garbage_ratio * 100.0) + " " +
+      LOCALE(0, "timed out") + " =</td>"
+      "<td " REST_CELLS ">" +
+      sprintf ("%.2f%%", (cache->avg_destruct_garbage_ratio +
+			  cache->avg_timeout_garbage_ratio) * 100.0) + "</td>"
+      "</tr>"
       "</table>\n";
   }
 

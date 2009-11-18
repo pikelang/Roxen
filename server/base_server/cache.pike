@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.109 2009/11/18 17:43:43 mast Exp $
+// $Id: cache.pike,v 1.110 2009/11/18 22:11:03 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1179,12 +1179,14 @@ mapping(CacheManager:mapping(string:CacheStats)) cache_stats()
   return res;
 }
 
-// GC statistics. These are decaying sums over the last
+// GC statistics. These are decaying sums/averages over the last
 // gc_stats_period seconds.
 constant gc_stats_period = 60 * 60;
 float sum_gc_runs = 0.0, sum_gc_time = 0.0;
 float sum_destruct_garbage_size = 0.0;
 float sum_timeout_garbage_size = 0.0;
+float avg_destruct_garbage_ratio = 0.0;
+float avg_timeout_garbage_ratio = 0.0;
 
 protected int cache_start_time = time();
 int last_gc_run;
@@ -1194,7 +1196,7 @@ protected void cache_clean()
 {
   int now = time (1);
   int vt = gethrvtime(), t = gethrtime();
-  int destr_garb_size, timeout_garb_size;
+  int total_size, destr_garb_size, timeout_garb_size;
 
   CACHE_WERR ("Starting RAM cache cleanup.\n");
 
@@ -1236,8 +1238,10 @@ protected void cache_clean()
       }
   }
 
-  foreach (cache_managers, CacheManager mgr)
+  foreach (cache_managers, CacheManager mgr) {
     mgr->after_gc();
+    total_size += mgr->size;
+  }
 
   vt = gethrvtime() - vt;	// -1 - -1 if cpu time isn't working.
   t = gethrtime() - t;
@@ -1257,23 +1261,38 @@ protected void cache_clean()
     sum_gc_runs = 1.0;
     sum_destruct_garbage_size = (float) destr_garb_size;
     sum_timeout_garbage_size = (float) timeout_garb_size;
-  }
-
-  else if (startup) {
-    sum_gc_time += (float) (vt || t);
-    sum_gc_runs += 1.0;
-    sum_destruct_garbage_size += (float) destr_garb_size;
-    sum_timeout_garbage_size += (float) timeout_garb_size;
+    if (total_size) {
+      avg_destruct_garbage_ratio = (float) destr_garb_size / total_size;
+      avg_timeout_garbage_ratio = (float) timeout_garb_size / total_size;
+    }
   }
 
   else {
-    float weight = 1.0 - (float) stat_last_period / stat_tot_period;
-    sum_gc_runs = weight * sum_gc_runs + 1.0;
-    sum_gc_time = weight * sum_gc_time + (float) (vt || t);
-    sum_destruct_garbage_size = (weight * sum_destruct_garbage_size +
-				 (float) destr_garb_size);
-    sum_timeout_garbage_size = (weight * sum_timeout_garbage_size +
-				(float) timeout_garb_size);
+    float our_weight = (float) stat_last_period / stat_tot_period;
+    float old_weight = 1.0 - our_weight;
+
+    if (startup) {
+      sum_gc_time += (float) (vt || t);
+      sum_gc_runs += 1.0;
+      sum_destruct_garbage_size += (float) destr_garb_size;
+      sum_timeout_garbage_size += (float) timeout_garb_size;
+    }
+
+    else {
+      sum_gc_runs = old_weight * sum_gc_runs + 1.0;
+      sum_gc_time = old_weight * sum_gc_time + (float) (vt || t);
+      sum_destruct_garbage_size = (old_weight * sum_destruct_garbage_size +
+				   (float) destr_garb_size);
+      sum_timeout_garbage_size = (old_weight * sum_timeout_garbage_size +
+				  (float) timeout_garb_size);
+    }
+
+    if (total_size) {
+      avg_destruct_garbage_ratio = (old_weight * avg_destruct_garbage_ratio +
+				    our_weight * destr_garb_size / total_size);
+      avg_timeout_garbage_ratio = (old_weight * avg_timeout_garbage_ratio +
+				   our_weight * timeout_garb_size / total_size);
+    }
   }
 
   last_gc_run = now;
