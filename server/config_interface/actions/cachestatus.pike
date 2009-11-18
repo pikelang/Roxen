@@ -31,6 +31,12 @@ string format_hit_rate (int|float hits, int|float misses)
 #define REST_CELLS							\
   "style='white-space: nowrap; padding: 0 0 0 1ex;'"
 
+#define DESCR_ROW(ROW, DESCR, VALUE)					\
+  "<tr " BODY_TR_ATTRS (ROW) ">"					\
+    "<td " FIRST_CELL ">" + (DESCR) + "</td>"				\
+    "<td " REST_CELLS ">" + (VALUE) + "</td>"				\
+    "</tr>"
+
 string parse( RequestID id )
 {
   string res =
@@ -244,6 +250,24 @@ that both use the approximation that every cache miss is followed by
 the addition of a new cache entry.</p>\n") + "</font>";
 #endif
 
+  if (cache->last_gc_run) {
+    res += "<p><b>" + LOCALE(0, "Garbage Collector") + "</b></p>\n"
+      "<p>" + sprintf (LOCALE(0, "%d seconds since the last garbage "
+			      "collection. The following are averages over "
+			      "approximately the last hour."),
+		       time() - cache->last_gc_run) + "</p>\n"
+      "<table " TABLE_ATTRS ">\n"
+      DESCR_ROW (0, LOCALE(0, "Number of gc runs:"),
+		 sprintf ("%.1f", cache->sum_gc_runs))
+      DESCR_ROW (1, LOCALE(0, "Time spent in gc:"),
+		 Roxen.format_hrtime ((int) cache->sum_gc_time))
+      DESCR_ROW (2, LOCALE(0, "Size of invalid gc'd entries:"),
+		 Roxen.sizetostring ((int) cache->avg_destruct_garbage_size))
+      DESCR_ROW (3, LOCALE(0, "Size of timed out gc'd entries:"),
+		 Roxen.sizetostring ((int) cache->avg_timeout_garbage_size))
+      "</table>\n";
+  }
+
 #else  // !NEW_RAM_CACHE
 
   res +=
@@ -345,18 +369,11 @@ the addition of a new cache entry.</p>\n") + "</font>";
   mapping l=Locale.cache_status();
   res += "<br/><h3>"+LOCALE(71, "Locale Cache")+"</h3>"
     "<table " TABLE_ATTRS ">\n"
-    "<tr " BODY_TR_ATTRS (0) ">"
-    "<td " FIRST_CELL ">"+LOCALE(72, "Used languages:")+"</td>"
-    "<td " REST_CELLS ">"+l->languages+"</td></tr>\n"
-    "<tr " BODY_TR_ATTRS (1) ">"
-    "<td " FIRST_CELL ">"+LOCALE(73, "Registered projects:")+"</td>"
-    "<td " REST_CELLS ">"+l->reg_proj+"</td></tr>\n"
-    "<tr " BODY_TR_ATTRS (2) ">"
-    "<td " FIRST_CELL ">"+LOCALE(74, "Loaded project files:")+"</td>"
-    "<td " REST_CELLS ">"+l->load_proj+"</td></tr>\n"
-    "<tr " BODY_TR_ATTRS (3) ">"
-    "<td " FIRST_CELL ">"+LOCALE(75, "Current cache size:")+"</td>"
-    "<td " REST_CELLS ">"+Roxen.sizetostring(l->bytes)+"</td></tr>\n"
+    DESCR_ROW (0, LOCALE(72, "Used languages:"), l->languages)
+    DESCR_ROW (1, LOCALE(73, "Registered projects:"), l->reg_proj)
+    DESCR_ROW (2, LOCALE(74, "Loaded project files:"), l->load_proj)
+    DESCR_ROW (3, LOCALE(75, "Current cache size:"),
+	       Roxen.sizetostring(l->bytes))
     "</table>\n";
 
   return res;

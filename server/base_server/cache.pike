@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.106 2009/11/18 10:52:44 mast Exp $
+// $Id: cache.pike,v 1.107 2009/11/18 16:05:40 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1179,11 +1179,22 @@ mapping(CacheManager:mapping(string:CacheStats)) cache_stats()
   return res;
 }
 
+// GC statistics. These are decaying sums/averages over the last
+// gc_stats_period seconds.
+constant gc_stats_period = 60 * 60;
+float sum_gc_runs = 0.0, sum_gc_time = 0.0;
+float avg_destruct_garbage_size = 0.0;
+float avg_timeout_garbage_size = 0.0;
+
+protected int cache_start_time = time();
+int last_gc_run;
+
 protected void cache_clean()
 // Periodic gc, to clean up timed out and destructed entries.
 {
   int now = time (1);
   int vt = gethrvtime(), t = gethrtime();
+  int destr_garb_size, timeout_garb_size;
 
   CACHE_WERR ("Starting RAM cache cleanup.\n");
 
@@ -1195,9 +1206,17 @@ protected void cache_clean()
   foreach (caches; string cache_name; CacheManager mgr) {
     if (mapping(mixed:CacheEntry) lm = mgr->lookup[cache_name])
       foreach (lm;; CacheEntry entry) {
-	if (!entry->data || entry->timeout && entry->timeout <= now) {
-	  MORE_CACHE_WERR ("%s: Removing %s entry %O\n", cache_name,
-			   entry->data ? "timed out" : "destructed", entry);
+	if (!entry->data) {
+	  MORE_CACHE_WERR ("%s: Removing destructed entry %O\n",
+			   cache_name, entry);
+	  destr_garb_size += entry->size;
+	  mgr->remove_entry (cache_name, entry);
+	}
+
+	else if (entry->timeout && entry->timeout <= now) {
+	  MORE_CACHE_WERR ("%s: Removing timed out entry %O\n",
+			   cache_name, entry);
+	  timeout_garb_size += entry->size;
 	  mgr->remove_entry (cache_name, entry);
 	}
 
@@ -1221,9 +1240,45 @@ protected void cache_clean()
     mgr->after_gc();
 
   vt = gethrvtime() - vt;	// -1 - -1 if cpu time isn't working.
-  t = gethrtime() - t;
+  t = vt || gethrtime() - t;
   CACHE_WERR ("Finished RAM cache cleanup - took %s.\n",
-	      Roxen.format_hrtime (vt || t));
+	      Roxen.format_hrtime (t));
+
+  int stat_last_period = now - last_gc_run;
+  int stat_tot_period = now - cache_start_time;
+  int startup = stat_tot_period < gc_stats_period;
+  if (!startup) stat_tot_period = gc_stats_period;
+
+  float weight_last = (float) stat_last_period / stat_tot_period;
+  float weight_old = 1.0 - weight_last;
+
+  if (stat_last_period > stat_tot_period) {
+    // GC intervals are larger than the statistics interval, so just
+    // set the values. Note that stat_last_period is very large on the
+    // first call since last_gc_run is zero, so we always get here then.
+    sum_gc_time = (float) t;
+    sum_gc_runs = 1.0;
+    avg_destruct_garbage_size = (float) destr_garb_size;
+    avg_timeout_garbage_size = (float) timeout_garb_size;
+  }
+
+  else {
+    if (startup) {
+      sum_gc_time += (float) t;
+      sum_gc_runs += 1.0;
+    }
+    else {
+      sum_gc_runs = weight_old * sum_gc_runs + 1.0;
+      sum_gc_time = weight_old * sum_gc_time + (float) t;
+    }
+
+    avg_destruct_garbage_size = (weight_old * avg_destruct_garbage_size +
+				 weight_last * (float) destr_garb_size);
+    avg_timeout_garbage_size = (weight_old * avg_timeout_garbage_size +
+				weight_last * (float) timeout_garb_size);
+  }
+
+  last_gc_run = now;
 
   if (Configuration admin_config = roxenp()->get_admin_configuration())
     admin_config->log_event ("roxen", "ram-gc", 0, ([
