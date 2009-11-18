@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.110 2009/11/18 22:11:03 mast Exp $
+// $Id: cache.pike,v 1.111 2009/11/18 23:12:33 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1205,9 +1205,17 @@ protected void cache_clean()
   // time it doesn't matter much, but the risk is that the size limit
   // gets unacceptably off after a while.
 
+#ifdef DEBUG_CACHE_SIZES
+  mapping(CacheManager:int) cache_sizes = ([]);
+#endif
+
   foreach (caches; string cache_name; CacheManager mgr) {
-    if (mapping(mixed:CacheEntry) lm = mgr->lookup[cache_name])
+#ifdef DEBUG_CACHE_SIZES
+    int cache_count, cache_size;
+#endif
+    if (mapping(mixed:CacheEntry) lm = mgr->lookup[cache_name]) {
       foreach (lm;; CacheEntry entry) {
+
 	if (!entry->data) {
 	  MORE_CACHE_WERR ("%s: Removing destructed entry %O\n",
 			   cache_name, entry);
@@ -1224,8 +1232,15 @@ protected void cache_clean()
 
 	else {
 #ifdef DEBUG_CACHE_SIZES
+	  cache_count++;
+	  cache_size += entry->size;
 	  int size = cmp_sizeof_cache_entry (cache_name, entry);
 	  if (size != entry->cmp_size) {
+	    // Note that there are a lot of sources for false alarms here.
+	    // E.g. RXML trees can increase in size due to new <if>/<else>
+	    // branches getting visited, the entry might just happen to be in
+	    // use during the count_memory call here, and there are often
+	    // minor differences for whatever reason..
 	    werror ("Size difference for %O / %O: "
 		    "Is %d, was %d in cache_set() - diff %d.\n",
 		    cache_name, entry, size, entry->cmp_size,
@@ -1236,11 +1251,34 @@ protected void cache_clean()
 #endif
 	}
       }
+    }
+
+#ifdef DEBUG_CACHE_SIZES
+    mapping(string:int)|CacheStats st = mgr->stats[cache_name] || ([]);
+    // These might show false alarms due to races.
+    if (cache_count != st->count)
+      werror ("Entry count difference for %O: "
+	      "Have %d, expected %d - diff %d.\n",
+	      cache_name, cache_count, st->count, cache_count - st->count);
+    if (cache_size != st->size)
+      werror ("Entry size difference for %O: "
+	      "Have %d, expected %d - diff %d.\n",
+	      cache_name, cache_size, st->size, cache_size - st->size);
+    cache_sizes[mgr] += st->size;
+#endif
   }
 
   foreach (cache_managers, CacheManager mgr) {
     mgr->after_gc();
     total_size += mgr->size;
+
+#ifdef DEBUG_CACHE_SIZES
+    // This might show false alarms due to races.
+    if (cache_sizes[mgr] != mgr->size)
+      werror ("Cache size difference for %O: "
+	      "Have %d, expected %d - diff %d.\n",
+	      mgr, cache_sizes[mgr], mgr->size, cache_sizes[mgr] - mgr->size);
+#endif
   }
 
   vt = gethrvtime() - vt;	// -1 - -1 if cpu time isn't working.
