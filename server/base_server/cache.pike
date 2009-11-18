@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.105 2009/11/17 21:24:09 mast Exp $
+// $Id: cache.pike,v 1.106 2009/11/18 10:52:44 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -23,8 +23,8 @@
 
 // FIXME: Statistics from the gc for invalid cache entry ratio.
 
-constant default_cache_size = 50 * 1024 * 1024;
-// FIXME: Better way to deduce the default size.
+constant startup_cache_size = 1024 * 1024;
+// Cache size per manager to use before we've read the config setting.
 
 class CacheEntry (mixed key, mixed data)
 //! Base class for cache entries.
@@ -361,7 +361,7 @@ overhead is minimal.";
   }
 }
 
-protected CM_Random cm_random = CM_Random (default_cache_size);
+protected CM_Random cm_random = CM_Random (startup_cache_size);
 #endif
 
 class CM_GreedyDual
@@ -550,7 +550,7 @@ cache hit ratio.";
   }
 }
 
-protected CM_GDS_1 cm_gds_1 = CM_GDS_1 (default_cache_size);
+protected CM_GDS_1 cm_gds_1 = CM_GDS_1 (startup_cache_size);
 
 protected Thread.Local cache_contexts = Thread.Local();
 // A thread local mapping to store the timestamp from got_miss so it
@@ -719,7 +719,7 @@ create it. The CPU time implementation is " +
   }
 }
 
-protected CM_GDS_CPUTime cm_gds_cputime = CM_GDS_CPUTime (default_cache_size);
+protected CM_GDS_CPUTime cm_gds_cputime = CM_GDS_CPUTime (startup_cache_size);
 
 class CM_GDS_RealTime
 {
@@ -747,7 +747,7 @@ to create it. The real time implementation is " +
 }
 
 protected CM_GDS_RealTime cm_gds_realtime =
-  CM_GDS_RealTime (default_cache_size);
+  CM_GDS_RealTime (startup_cache_size);
 
 #ifdef DEBUG_CACHE_SIZES
 protected int cmp_sizeof_cache_entry (string cache_name, CacheEntry entry)
@@ -814,6 +814,7 @@ mapping(string:CacheManager) cache_manager_prefs = ([
 //! All available cache managers.
 array(CacheManager) cache_managers =
   Array.uniq (({cache_manager_prefs->default,
+		cache_manager_prefs->no_cpu_timings,
 		cache_manager_prefs->no_thread_timings,
 		cache_manager_prefs->no_timings,
 #if 0
@@ -830,6 +831,16 @@ protected mapping(string:CacheManager) caches = ([]);
 protected Thread.Mutex cache_mgmt_mutex = Thread.Mutex();
 // Locks operations that manipulate named caches, i.e. changes in the
 // caches, CacheManager.stats and CacheManager.lookup mappings.
+
+void set_total_size_limit (int size)
+//! Sets the total size limit available to all caches.
+{
+  // FIXME: Currently this is per-cache.
+  foreach (cache_managers, CacheManager mgr) {
+    mgr->total_size_limit = size;
+    mgr->update_size_limit();
+  }
+}
 
 mapping(string:CacheManager) cache_list()
 //! Returns a list of all currently registered caches and their
@@ -1181,10 +1192,7 @@ protected void cache_clean()
   // time it doesn't matter much, but the risk is that the size limit
   // gets unacceptably off after a while.
 
-  mapping(CacheManager:int(1..1)) used_mgrs = ([]);
-
   foreach (caches; string cache_name; CacheManager mgr) {
-    used_mgrs[mgr] = 1;
     if (mapping(mixed:CacheEntry) lm = mgr->lookup[cache_name])
       foreach (lm;; CacheEntry entry) {
 	if (!entry->data || entry->timeout && entry->timeout <= now) {
@@ -1209,7 +1217,7 @@ protected void cache_clean()
       }
   }
 
-  foreach (used_mgrs; CacheManager mgr;)
+  foreach (cache_managers, CacheManager mgr)
     mgr->after_gc();
 
   vt = gethrvtime() - vt;	// -1 - -1 if cpu time isn't working.

@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: global_variables.pike,v 1.119 2009/11/12 14:43:59 mast Exp $
+// $Id: global_variables.pike,v 1.120 2009/11/18 10:52:44 mast Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -828,6 +828,31 @@ Running it too often causes unnecessary server load.</p>"))
   // since the effect of the gc is radically different now we
   // intentionally use a different variable name to reset the value.
   definvisvar ("mem_cache_gc", 300, TYPE_INT);
+
+  v = defvar ("mem_cache_size", 50,
+	      LOCALE(0, "Cache: Memory cache size"),
+	      TYPE_INT,
+	      LOCALE(0, #"\
+<p>Maximum size in Mb for all RAM caches taken together. This limit
+covers the caches visible in the <a
+href='/actions/?action=cachestatus.pike&class=status'>Cache status</a>
+page.</p>
+
+<p>Note that there are many more things in the Roxen WebServer that
+take space, including some caches that are not handled by the common
+RAM cache. Also, there is various indirect memory overhead that is not
+directly accounted for by the size calculations. All these taken
+together means that the figure configured here cannot be mapped
+straightly to the size of the Roxen process as reported by the OS. The
+optimal setting here is the one that in general keeps the Roxen
+process at a size that avoids swapping and leaves enough memory for
+buffers and other processes that need to run at the same time (e.g.
+the Roxen instance of the MySQL server).</p>"));
+  v->set_range (1, Variable.no_limit);
+  v->set_changed_callback (
+    lambda (Variable.Int v) {
+      cache.set_total_size_limit (v->query() * 1024 * 1024);
+    });
 
 #else  // !NEW_RAM_CACHE
 
