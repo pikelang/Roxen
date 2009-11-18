@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1043 2009/11/18 10:52:44 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1044 2009/11/18 13:48:58 mast Exp $";
 
 //! @appears roxen
 //!
@@ -5373,7 +5373,9 @@ int main(int argc, array tmp)
 
   restore_global_variables(); // restore settings...
 
+#ifdef NEW_RAM_CACHE
   cache.set_total_size_limit (query ("mem_cache_size") * 1024 * 1024);
+#endif
 
   if( query("replicate" ) )
   {
