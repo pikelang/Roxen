@@ -39,8 +39,8 @@ string parse( RequestID id )
     "<h3>"+
     LOCALE(61, "WebServer Memory Cache")+
     "</h3>\n"
-    "<p><a href='/global_settings/?section=Cache'>"
-    "Configure cache settings</a></p>\n";
+    "<p><a href='/global_settings/?section=Cache'>" +
+    LOCALE(0, "Configure cache settings") + "</a></p>\n";
 
 #ifdef NEW_RAM_CACHE
 
