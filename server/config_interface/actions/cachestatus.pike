@@ -257,13 +257,13 @@ the addition of a new cache entry.</p>\n") + "</font>";
 			      "approximately the last hour."),
 		       time() - cache->last_gc_run) + "</p>\n"
       "<table " TABLE_ATTRS ">\n"
-      DESCR_ROW (0, LOCALE(0, "Number of gc runs:"),
+      DESCR_ROW (0, LOCALE(0, "Number of garbage collector runs:"),
 		 sprintf ("%.1f", cache->sum_gc_runs))
-      DESCR_ROW (1, LOCALE(0, "Time spent in gc:"),
+      DESCR_ROW (1, LOCALE(0, "Time spent in the garbage collector:"),
 		 Roxen.format_hrtime ((int) cache->sum_gc_time))
-      DESCR_ROW (2, LOCALE(0, "Size of invalid gc'd entries:"),
+      DESCR_ROW (2, LOCALE(0, "Size of garbage collected invalid entries:"),
 		 Roxen.sizetostring ((int) cache->avg_destruct_garbage_size))
-      DESCR_ROW (3, LOCALE(0, "Size of timed out gc'd entries:"),
+      DESCR_ROW (3, LOCALE(0, "Size of garbage collected timed out entries:"),
 		 Roxen.sizetostring ((int) cache->avg_timeout_garbage_size))
       "</table>\n";
   }
