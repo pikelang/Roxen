@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.262 2009/11/04 16:17:26 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.263 2009/11/19 13:37:24 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -3610,6 +3610,7 @@ enum Overwrite {
 //! @endmixed
 typedef int(0..1)|multiset(string) PropertyBehavior;
 
+//! The Roxen module interface.
 class RoxenModule
 {
   inherit BasicDefvar;
