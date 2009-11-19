@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.281 2009/11/12 14:17:38 grubba Exp $
+// $Id: Roxen.pmod,v 1.282 2009/11/19 23:50:26 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -51,6 +51,7 @@ object|array(object) parse_xml_tmpl( string ttag, string itag,
 			       }
 			     } );
     string code = p->feed( tmpl )->finish()->read();
+    p = 0;			// To avoid trampoline garbage.
     return compile_string( code, xml_file )();
   };
 
@@ -93,9 +94,12 @@ object|array(object) parse_xml_tmpl( string ttag, string itag,
 			->feed( c )
 			->finish();
 		      data += ({ row });
+		      p = 0;	// To avoid trampoline garbage.
 		    } )
     ->feed( Stdio.read_file( xml_file ) )
     ->finish();
+
+  p = 0;			// To avoid trampoline garbage.
 
   if( ident )
   {
