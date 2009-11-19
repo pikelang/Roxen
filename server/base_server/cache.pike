@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.112 2009/11/19 14:12:33 mast Exp $
+// $Id: cache.pike,v 1.113 2009/11/19 14:17:46 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -639,8 +639,8 @@ class CM_GDS_Time
 	int start = m_delete (ctx, key);
 	if (!zero_type (start)) {
 	  int duration = (gettime_func() - all_ctx[0]) - start;
-	  ASSERT_IF_DEBUG (duration /*%O*/ >= 0 /* all_ctx: %O */,
-			   duration, all_ctx);
+	  ASSERT_IF_DEBUG (duration /*%O*/ >= 0 /* start: %O, all_ctx: %O */,
+			   duration, start, all_ctx);
 	  all_ctx[0] += duration;
 	  return duration;
 	}
