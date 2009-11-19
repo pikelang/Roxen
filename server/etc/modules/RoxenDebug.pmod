@@ -1,6 +1,6 @@
 // Some debug tools.
 //
-// $Id: RoxenDebug.pmod,v 1.12 2008/08/15 12:33:54 mast Exp $
+// $Id: RoxenDebug.pmod,v 1.13 2009/11/19 18:51:59 mast Exp $
 
 
 //! Helper to locate leaking objects. Use a line like this to mark a
@@ -32,12 +32,13 @@ class ObjectMarker
   find_good_frame: {
       for (i = -1 - ignore_frames; i >= -sizeof (bt); i--)
 	if ((file = bt[i][0]) && bt[i][1] && bt[i][2] &&
-	    !(<"__INIT", "create">)[function_name(bt[i][2])])
+	    !(<"__INIT", "create", "ObjectMarker">)[function_name(bt[i][2])])
 	  break find_good_frame;
 
       for (i = -1 - ignore_frames; i >= -sizeof (bt); i--)
 	if ((file = bt[i][0]) &&
-	    !(<"__INIT", "create">)[function_name(bt[i][2] || debug_msg)])
+	    !(<"__INIT", "create", "ObjectMarker">)[
+	      function_name(bt[i][2] || debug_msg)])
 	  break find_good_frame;
 
       for (i = -1 - ignore_frames; i >= -sizeof (bt); i--)
