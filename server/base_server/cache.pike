@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.114 2009/11/20 13:59:32 mast Exp $
+// $Id: cache.pike,v 1.115 2009/11/20 14:01:44 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -651,6 +651,9 @@ class CM_GDS_Time
 	  int duration = (gettime_func() - all_ctx[0]) - start;
 	  ASSERT_IF_DEBUG (duration /*%O*/ >= 0 /* start: %O, all_ctx: %O */,
 			   duration, start, all_ctx);
+	  if (duration < 0)
+	    // Limit the breakage somewhat when the assertion isn't active.
+	    duration = 0;
 	  all_ctx[0] += duration;
 	  return duration;
 	}
