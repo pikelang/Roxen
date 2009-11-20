@@ -4,7 +4,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: html_wash.pike,v 1.35 2009/05/07 14:15:56 mast Exp $";
+constant cvs_version = "$Id: html_wash.pike,v 1.36 2009/11/20 00:17:20 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: HTML washer";
@@ -149,7 +149,9 @@ class TagWashHtml
 				    link+"</a>";
 				}) ) }); });
 
-    return parser->finish(s)->read();
+    string res = parser->finish(s)->read();
+    parser = 0;			// Avoid trampoline garbage.
+    return res;
   }
 
   string remove_illegal_chars(string s)
