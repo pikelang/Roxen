@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.113 2009/11/19 14:17:46 mast Exp $
+// $Id: cache.pike,v 1.114 2009/11/20 13:59:32 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -145,6 +145,11 @@ class CacheManager
   //! @decl program CacheEntry;
   //!
   //! The manager-specific class to use to create @[CacheEntry] objects.
+
+  void clear_cache_context() {}
+  //! Called to clear any thread-local state that the manager keeps to
+  //! track execution times etc. This is called before a thread starts
+  //! with a new request or other kind of job.
 
   void got_miss (string cache_name, mixed key, mapping cache_context);
   //! Called when @[cache_lookup] records a cache miss.
@@ -552,14 +557,6 @@ cache hit ratio.";
 
 protected CM_GDS_1 cm_gds_1 = CM_GDS_1 (startup_cache_size);
 
-protected Thread.Local cache_contexts = Thread.Local();
-// A thread local mapping to store the timestamp from got_miss so it
-// can be read from the (presumably) following add_entry.
-//
-// In an entry with index 0 in the mapping, the time spent creating
-// cache entries is accumulated. It is used to deduct the time for
-// creating entries in subcaches.
-
 class CM_GDS_Time
 //! Like @[CM_GDS_1] but adds support for calculating entry cost based
 //! on passed time.
@@ -579,6 +576,19 @@ class CM_GDS_Time
     }
   }
 #endif
+
+  protected Thread.Local cache_contexts = Thread.Local();
+  // A thread local mapping to store the timestamp from got_miss so it
+  // can be read from the (presumably) following add_entry.
+  //
+  // In an entry with index 0 in the mapping, the time spent creating
+  // cache entries is accumulated. It is used to deduct the time for
+  // creating entries in subcaches.
+
+  void clear_cache_context()
+  {
+    cache_contexts->set (([]));
+  }
 
   protected int gettime_func();
   //! Returns the current time for cost calculation. (@[format_cost]
@@ -960,7 +970,7 @@ void flush_memory_cache (void|string cache_name) {cache_expire (cache_name);}
 
 void cache_clear_deltas()
 {
-  cache_contexts->set (([]));
+  cache_managers->clear_cache_context();
 }
 
 mixed cache_lookup (string cache_name, mixed key, void|mapping cache_context)
