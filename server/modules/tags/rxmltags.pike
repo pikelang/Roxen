@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.551 2009/05/08 15:02:45 mathias Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.552 2009/11/20 00:17:20 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -2406,6 +2406,7 @@ class TagAutoformat {
 	  });
 
 	s = p->finish (s)->read();
+	p = 0;			// Avoid trampoline garbage.
 	if (got_toplevel_data)
 	  s += "</p>";
       }
