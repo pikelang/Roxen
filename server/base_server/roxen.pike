@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1044 2009/11/18 13:48:58 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1045 2009/11/23 15:38:41 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -4212,7 +4212,9 @@ class ArgCache
 	    "ctime     DATETIME NOT NULL, "
 	    "atime     DATETIME NOT NULL, "
 	    "rep_time  DATETIME NOT NULL, "
+	    "timeout   INT NULL, "
 	    "contents  MEDIUMBLOB NOT NULL)");
+      // FIXME: Add index on timeout for garb?
     }
 
     if (catch (QUERY ("SELECT rep_time FROM " + name + "2 LIMIT 0")))
@@ -4221,6 +4223,14 @@ class ArgCache
       QUERY ("ALTER TABLE " + name + "2"
 	     " ADD rep_time DATETIME NOT NULL"
 	     " AFTER atime");
+    }
+
+    if (catch (QUERY ("SELECT timeout FROM " + name + "2 LIMIT 0")))
+    {
+      // Upgrade a table without timeout.
+      QUERY ("ALTER TABLE " + name + "2"
+	     " ADD timeout INT NULL"
+	     " AFTER rep_time");
     }
 
     catch {
@@ -4234,6 +4244,26 @@ class ArgCache
     };
   }
 
+  protected void do_cleanup()
+  {
+    QUERY("DELETE LOW_PRIORITY FROM " + name + "2 "
+	  " WHERE timeout IS NOT NULL "
+	  "   AND timeout < %d", time());
+  }
+
+  protected void cleanup_process( )
+  {
+    //  Flushes may be costly in large sites (since there's no index
+    //  on the timeout field) so schedule next run sometime after
+    //  04:30 the day after tomorrow.
+    int now = time();
+    mapping info = localtime(now);
+    int wait = (int) ((24 - info->hour) + 24 + 4.5) * 3600 + random(500);
+    background_run(wait, cleanup_process);
+
+    do_cleanup();
+  }
+  
   protected void init_db()
   {
     // Delay DBManager resolving to before the 'roxen' object is
@@ -4241,6 +4271,9 @@ class ArgCache
     cache = ([]);
     db = dbm_cached_get("local");
     setup_table( );
+
+    // Cleanup exprired entries on start.
+    background_run( 10, cleanup_process );
   }
 
   protected void create( string _name )
@@ -4261,15 +4294,16 @@ class ArgCache
     if(!sizeof(res))
       return 0;
     if (!dont_update_atime)
-      QUERY("UPDATE "+name+"2 "
+      QUERY("UPDATE LOW_PRIORITY "+name+"2 "
 	    "   SET atime = NOW() "
 	    " WHERE id = %s", id);
     return res[0]->contents;
   }
 
   //  Callback used in replicate.pike
-  void create_key( string id, string encoded_args )
+  void create_key( string id, string encoded_args, int|void timeout )
   {
+    if (!zero_type(timeout) && (timeout < time(1))) return; // Expired.
     LOCK();
     array(mapping) rows =
       QUERY("SELECT id, contents FROM "+name+"2 WHERE id = %s", id );
@@ -4283,15 +4317,34 @@ class ArgCache
       }
 
     if(sizeof(rows)) {
-      QUERY("UPDATE "+name+"2 "
+      QUERY("UPDATE LOW_PRIORITY "+name+"2 "
 	    "   SET atime = NOW() "
 	    " WHERE id = %s", id);
+      if (zero_type(timeout)) {
+	QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+	      "   SET timeout = NULL "
+	      " WHERE id = %s", id);
+      } else {
+	QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+	      "   SET timeout = %d "
+	      " WHERE id = %s "
+	      "   AND timeout IS NOT NULL "
+	      "   AND timeout < %d",
+	      timeout, id, timeout);
+      }
       return;
     }
 
     QUERY( "INSERT INTO "+name+"2 "
 	   "(id, contents, ctime, atime) VALUES "
 	   "(%s, " MYSQL__BINARY "%s, NOW(), NOW())", id, encoded_args );
+
+    if (!zero_type(timeout)) {
+      QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+	    "   SET timeout = %d "
+	    " WHERE id = %s",
+	    timeout, id);
+    }
 
     dwerror("ArgCache: Create new key %O\n", id);
 
@@ -4321,20 +4374,40 @@ class ArgCache
     return 0;
   }
 
-  string store( mapping args )
+  string store( mapping args, int|void timeout )
   //! Store a mapping (of purely encode_value:able data) in the
   //! argument cache. The string returned is your key to retrieve the
   //! data later.
+  //!
+  //! @param timeout
+  //!    Timeout for the entry in seconds from now. If @expr{UNDEFINED@},
+  //!    the entry will not expire.
   {
+    args += ([]);
+    if (!zero_type(timeout)) timeout += time();
     string encoded_args = encode_value_canonic( args );
     string id = Gmp.mpz(Crypto.SHA1.hash(encoded_args), 256)->digits(36);
-    if( cache[ id ] )
+    if( cache[ id ] ) {
+      if (zero_type(timeout)) {
+	// No timeout.
+	QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+	      "   SET timeout = NULL "
+	      " WHERE id = %s", id);
+      } else {
+	QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+	      "   SET timeout = %d "
+	      " WHERE id = %s "
+	      "   AND timeout IS NOT NULL "
+	      "   AND timeout < %d",
+	      timeout, id, timeout);
+      }
       return id;
-    create_key(id, encoded_args);
-    if( !cache[ id ] )
-      cache[ id ] = args+([]);
+    }
+    create_key(id, encoded_args, timeout);
     if( sizeof( cache ) >= CACHE_SIZE )
       cache = ([]);
+    if( !cache[ id ] )
+      cache[ id ] = args;
     return id;
   }
 
@@ -4350,10 +4423,10 @@ class ArgCache
       error("Requesting unknown key (not found in db)\n");
     }
     mapping args = decode_value(encoded_args);
-    cache[id] = args + ([]);
     if( sizeof( cache ) >= CACHE_SIZE )
       // Yowza! Garbing bulldoze style. /mast
       cache = ([]);
+    cache[id] = args + ([]);
     return args;
   }
 
@@ -4410,23 +4483,24 @@ class ArgCache
 	//
 	// A lock will be necessary here if a garb is added, though.
 
+	array(mapping(string:string)) entries;
 	if(from_time)
 	  // Only replicate entries accessed during the prefetch crawling.
-	  ids = 
-	    (array(string))
-	    QUERY( "SELECT id from "+name+"2 "
+	  entries = 
+	    QUERY( "SELECT id, timeout from "+name+"2 "
 		   " WHERE rep_time >= FROM_UNIXTIME(%d) "
-		   " LIMIT %d, %d", from_time, cursor, FETCH_ROWS)->id;
+		   " LIMIT %d, %d", from_time, cursor, FETCH_ROWS);
 	else
 	  // Make sure _every_ entry is replicated when a dump is created.
-	  ids = 
-	    (array(string))
-	    QUERY( "SELECT id from "+name+"2 "
-		   " LIMIT %d, %d", cursor, FETCH_ROWS)->id;
-	
+	  entries = 
+	    QUERY( "SELECT id, timeout from "+name+"2 "
+		   " LIMIT %d, %d", cursor, FETCH_ROWS);
+
+	ids = entries->id;
+	array(string) timeouts = entries->timeout;
 	cursor += FETCH_ROWS;
 	
-	foreach(ids, string id) {
+	foreach(ids; int i; string id) {
 	  dwerror("ArgCache.write_dump(): %O\n", id);
 
 	  string encoded_args;
@@ -4437,9 +4511,22 @@ class ArgCache
 	    if (!encoded_args) error ("ArgCache entry %O disappeared.\n", id);
 	  }
 
-	  string s = 
-	    MIME.encode_base64(encode_value(({ id, encoded_args })),
-			       1)+"\n";
+	  string s;
+	  if (timeouts[i]) {
+	    int timeout = (int)timeouts[i];
+	    if (timeout < time(1)) {
+	      // Expired entry. Don't replicate.
+	      continue;
+	    }
+	    s = 
+	      MIME.encode_base64(encode_value(({ id, encoded_args, timeout })),
+				 1)+"\n";
+	  } else {
+	    // No timeout. Backward-compatible format.
+	    s = 
+	      MIME.encode_base64(encode_value(({ id, encoded_args })),
+				 1)+"\n";
+	  }
 	  if(sizeof(s) != file->write(s))
 	    return 0;
 	  entry_count++;
@@ -4485,10 +4572,10 @@ class ArgCache
 #endif
 	  store(mkmapping(i, v));
 	}
-      } else if (sizeof(a) == 2) {
-	// New style argcache dump.
+      } else if ((sizeof(a) == 2) || (sizeof(a) == 3)) {
+	// New style argcache dump, possibly with timeout.
 	dwerror("ArgCache.read_dump(): %O\n", a[0]);
-	create_key(a[0], a[1]);
+	create_key(@a);
       } else
 	return "Decode failed for argcache record (wrong size on key array)\n";
     }
