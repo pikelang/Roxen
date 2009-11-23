@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1047 2009/11/23 16:52:01 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1048 2009/11/23 17:21:22 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -4195,7 +4195,15 @@ class ArgCache
 #define dwerror(ARGS...) 0
 #endif    
 
+  //! Cache of the latest entries requested or stored.
+  //! Limited to @[CACHE_SIZE] (currently @expr{900@}) entries.
   protected mapping(string|int:mixed) cache = ([ ]);
+
+  //! Cache of cache-ids that have no expiration time.
+  //! This cache is maintained in sync with @[cache].
+  //! Note that entries not in this cache may still have
+  //! unlimited expiration time.
+  protected mapping(string|int:int) no_expiry = ([ ]);
 
   protected void setup_table()
   {
@@ -4271,6 +4279,7 @@ class ArgCache
     // Delay DBManager resolving to before the 'roxen' object is
     // compiled.
     cache = ([]);
+    no_expiry = ([]);
     db = dbm_cached_get("local");
     setup_table( );
 
@@ -4385,31 +4394,42 @@ class ArgCache
   //!    Timeout for the entry in seconds from now. If @expr{UNDEFINED@},
   //!    the entry will not expire.
   {
-    args += ([]);
     if (!zero_type(timeout)) timeout += time();
     string encoded_args = encode_value_canonic( args );
     string id = Gmp.mpz(Crypto.SHA1.hash(encoded_args), 256)->digits(36);
     if( cache[ id ] ) {
-      if (zero_type(timeout)) {
-	// No timeout.
-	QUERY("UPDATE LOW_PRIORITY "+name+"2 "
-	      "   SET timeout = NULL "
-	      " WHERE id = %s", id);
-      } else {
-	QUERY("UPDATE LOW_PRIORITY "+name+"2 "
-	      "   SET timeout = %d "
-	      " WHERE id = %s "
-	      "   AND timeout IS NOT NULL "
-	      "   AND timeout < %d",
-	      timeout, id, timeout);
+      if (!no_expiry[id]) {
+	// The cache id may have a timeout.
+	if (zero_type(timeout)) {
+	  // No timeout now, but there may have been one earlier.
+	  QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+		"   SET timeout = NULL "
+		" WHERE id = %s "
+		"   AND timeout IS NOT NULL", id);
+	  no_expiry[id] = 1;
+	} else {
+	  // Attempt to bump the timeout.
+	  QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+		"   SET timeout = %d "
+		" WHERE id = %s "
+		"   AND timeout IS NOT NULL "
+		"   AND timeout < %d",
+		timeout, id, timeout);
+	}
       }
       return id;
     }
     create_key(id, encoded_args, timeout);
-    if( sizeof( cache ) >= CACHE_SIZE )
+    if( sizeof( cache ) >= CACHE_SIZE ) {
       cache = ([]);
-    if( !cache[ id ] )
-      cache[ id ] = args;
+      no_expiry = ([]);
+    }
+    if( !cache[ id ] ) {
+      cache[ id ] = args + ([]);
+    }
+    if (zero_type(timeout)) {
+      no_expiry[ id ] = 1;
+    }
     return id;
   }
 
@@ -4425,9 +4445,11 @@ class ArgCache
       error("Requesting unknown key (not found in db)\n");
     }
     mapping args = decode_value(encoded_args);
-    if( sizeof( cache ) >= CACHE_SIZE )
+    if( sizeof( cache ) >= CACHE_SIZE ) {
       // Yowza! Garbing bulldoze style. /mast
       cache = ([]);
+      no_expiry = ([]);
+    }
     cache[id] = args + ([]);
     return args;
   }
