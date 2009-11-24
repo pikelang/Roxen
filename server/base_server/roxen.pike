@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1048 2009/11/23 17:21:22 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1049 2009/11/24 13:01:03 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -4017,10 +4017,15 @@ class ImageCache
     return ([ "":what ]);
   }
 
-  string store( array|string|mapping data, RequestID id )
+  string store( array|string|mapping data, RequestID id, int|void timeout )
   //! Store the data your draw callback expects to receive as its
   //! first argument(s). If the data is an array, the draw callback
   //! will be called like <pi>callback( @@data, id )</pi>.
+  //!
+  //! @param timeout
+  //!    Timeout for the entry in seconds from now. If @expr{UNDEFINED@},
+  //!    the entry will not expire. Currently just passed along to
+  //!    the @[ArgCache].
   {
     string ci, user;
     function update_args = lambda ( mapping a )
@@ -4043,14 +4048,14 @@ class ImageCache
     if( mappingp( data ) )
     {
       update_args( data );
-      ci = argcache->store( data );
+      ci = argcache->store( data, timeout );
     }
     else if( arrayp( data ) )
     {
       if( !mappingp( data[0] ) )
 	error("Expected mapping as the first element of the argument array\n");
       update_args( data[0] );
-      ci = map( map( data, tomapp ), argcache->store )*"$";
+      ci = map( map( data, tomapp ), argcache->store, timeout )*"$";
     } else
       ci = data;
     update_args = 0;		// To avoid garbage.
