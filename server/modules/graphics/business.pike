@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.153 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version = "$Id: business.pike,v 1.154 2009/11/24 15:17:33 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -710,7 +710,23 @@ string container_diagram(string tag, mapping m, string contents,
   string ext = "";
   if(query("ext")) ext="."+res->format;
 
-  m->src = query_absolute_internal_location(id) + image_cache->store( res,id )+ext;
+  int timeout = UNDEFINED;
+  if (m["unix-time"]) {
+    timeout = (int)m["unix-time"] - time(1);
+  }
+  timeout = Roxen.time_dequantifier(m, timeout);
+  if (!zero_type(timeout)) {
+    // Clean up the args mapping.
+    foreach(({ "unix-time", "seconds", "minutes", "beats", "hours",
+	       "days", "weeks", "months", "years" }), string arg) {
+      m_delete(m, arg);
+    }
+    // Make sure the timeout is positive (and reasonable).
+    if (timeout < 60) timeout = 60;
+  }
+
+  m->src = query_absolute_internal_location(id) +
+    image_cache->store( res, id, timeout )+ext;
 
   if( mapping size = image_cache->metadata( m, id, 1 ) )
   {

@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.82 2009/07/08 09:31:52 anders Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.83 2009/11/24 15:17:33 grubba Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -379,6 +379,22 @@ class TagCimgplugin
     mapping res = ([ ]);
     mapping a = get_my_args( check_args( args ), id );
     string data;
+
+    int timeout = UNDEFINED;
+    if (args["unix-time"]) {
+      timeout = (int)args["unix-time"] - time(1);
+    }
+    timeout = Roxen.time_dequantifier(args, timeout);
+    if (!zero_type(timeout)) {
+      // Clean up the args mapping.
+      foreach(({ "unix-time", "seconds", "minutes", "beats", "hours",
+		 "days", "weeks", "months", "years" }), string arg) {
+	m_delete(args, arg);
+      }
+      // Make sure the timeout is positive (and reasonable).
+      if (timeout < 60) timeout = 60;
+    }
+
     mixed err = catch // This code will fail if the image does not exist.
     {
       // Store misc->cacheable since the image cache can raise it and
@@ -388,7 +404,8 @@ class TagCimgplugin
 #ifdef DEBUG_CACHEABLE
       report_debug("%s:%d saved cacheable flags\n", __FILE__, __LINE__);
 #endif
-      res->src=(query_absolute_internal_location(id)+the_cache->store( a,id ));
+      res->src=(query_absolute_internal_location(id)+
+		the_cache->store( a, id, timeout ));
       if(args->filename && sizeof(args->filename))
 	res->src += "/" + Roxen.http_encode_url(args->filename);
       if(do_ext)
@@ -427,6 +444,20 @@ class TagCImg
 
     array do_return(RequestID id) 
     {
+      int timeout = UNDEFINED;
+      if (args["unix-time"]) {
+	timeout = (int)args["unix-time"] - time(1);
+      }
+      timeout = Roxen.time_dequantifier(args, timeout);
+      if (!zero_type(timeout)) {
+	// Clean up the args mapping.
+	foreach(({ "unix-time", "seconds", "minutes", "beats", "hours",
+		   "days", "weeks", "months", "years" }), string arg) {
+	  m_delete(args, arg);
+	}
+	// Make sure the timeout is positive (and reasonable).
+	if (timeout < 60) timeout = 60;
+      }
       mapping a = get_my_args( check_args( args ), id );
       args -= a;
       string ext = "";
@@ -436,7 +467,7 @@ class TagCImg
       if(do_ext)
 	ext = "." + a->format;
       args->src = query_absolute_internal_location( id )
-		+ the_cache->store( a, id ) + filename + ext;
+	+ the_cache->store( a, id, timeout ) + filename + ext;
       int no_draw = !id->misc->generate_images;
       mapping size;
       if( !args->width && !args->height
@@ -465,13 +496,27 @@ class TagCImgURL {
 
     array do_return(RequestID id)
     {
+      int timeout = UNDEFINED;
+      if (args["unix-time"]) {
+	timeout = (int)args["unix-time"] - time(1);
+      }
+      timeout = Roxen.time_dequantifier(args, timeout);
+      if (!zero_type(timeout)) {
+	// Clean up the args mapping.
+	foreach(({ "unix-time", "seconds", "minutes", "beats", "hours",
+		   "days", "weeks", "months", "years" }), string arg) {
+	  m_delete(args, arg);
+	}
+	// Make sure the timeout is positive (and reasonable).
+	if (timeout < 60) timeout = 60;
+      }
       string filename = "";
       mapping a = get_my_args (check_args (args), id);
       
       if(args->filename && sizeof(args->filename))
 	filename = "/" + Roxen.http_encode_url(args->filename);
       result = query_absolute_internal_location(id)
-	     + the_cache->store(a, id)
+	+ the_cache->store(a, id, timeout)
 	     + filename
 	     + (do_ext ? "." + a->format : "");
       return 0;

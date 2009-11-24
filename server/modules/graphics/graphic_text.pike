@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.307 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.308 2009/11/24 15:17:33 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -777,9 +777,10 @@ mapping find_internal(string f, RequestID id)
     {
       array id_text = f/"/";
       if( sizeof(id_text)==2 )
-      {   // It's a gtext-id
-        string second_key = roxen->argcache->store( (["":id_text[1]]) );
-        return image_cache->http_file_answer( id_text[0][1..] +"$"+ second_key, id );
+      {   // It's a gtext-id, let it live for an hour.
+        string second_key = roxen->argcache->store( (["":id_text[1]]), 3600 );
+        return image_cache->http_file_answer( id_text[0][1..] +"$"+ second_key,
+					      id, UNDEFINED, 3600 );
       }
     }
     return image_cache->http_file_answer( f, id );
@@ -1046,10 +1047,15 @@ class TagGTextURL {
       if(args->href && !p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
       string ext="";
       if(query("ext")) ext="."+(p->format || "gif");
+      int timeout = UNDEFINED;
+      if (args["unix-time"]) {
+	timeout = (int)args["unix-time"] - time(1);
+      }
+      timeout = Roxen.time_dequantifier(args, timeout);
       if(!args->short)
 	return ({ query_absolute_internal_location(id) +
-		  image_cache->store( ({p,content}), id )+ext });
-      return ({ "+"+image_cache->store( ({p,content}), id )+ext });
+		  image_cache->store( ({p,content}), id, timeout )+ext });
+      return ({ "+"+image_cache->store( ({p,content}), id, timeout )+ext });
     }
   }
 }
@@ -1079,10 +1085,15 @@ class TagGTextID {
     array do_return(RequestID id) {
       mapping p=mk_gtext_arg(args,id);
       if(args->href && !p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
+      int timeout = UNDEFINED;
+      if (args["unix-time"]) {
+	timeout = (int)args["unix-time"] - time(1);
+      }
+      timeout = Roxen.time_dequantifier(args, timeout);
       if(!args->short)
 	return ({ query_absolute_internal_location(id) +
-		  "$"+image_cache->store(p, id)+"/" });
-      return ({ "+"+image_cache->store(p, id )+"/foo" });
+		  "$"+image_cache->store(p, id, timeout)+"/" });
+      return ({ "+"+image_cache->store(p, id, timeout)+"/foo" });
     }
   }
 }
@@ -1165,6 +1176,20 @@ private string do_gtext(mapping arg, string c, RequestID id)
   m_delete(arg, "border");
   arg->style = "border: none;" + (arg->style || "");
 
+  int timeout = UNDEFINED;
+  if (arg["unix-time"]) {
+    timeout = (int)arg["unix-time"] - time(1);
+  }
+  timeout = Roxen.time_dequantifier(arg, timeout);
+  if (!zero_type(timeout)) {
+    // Clean up the args mapping.
+    foreach(({ "unix-time", "seconds", "minutes", "beats", "hours",
+	       "days", "weeks", "months", "years" }), string a) {
+      m_delete(arg, a);
+    }
+    // Make sure the timeout is positive (and reasonable).
+    if (timeout < 60) timeout = 60;
+  }
   int no_draw = !id->misc->generate_images;
   if(arg->split)
   {
@@ -1175,7 +1200,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
     int setalt=!arg->alt;
     foreach(c/split-({""}), string word)
     {
-      string fn = image_cache->store( ({ p, word }),id );
+      string fn = image_cache->store( ({ p, word }), id, timeout );
       mapping size = image_cache->metadata( fn, id, no_draw);
       if(setalt) arg->alt=word;
       arg->src=query_absolute_internal_location(id)+fn+ext;
@@ -1193,7 +1218,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
     return sprintf(lp,res);
   }
 
-  string num = image_cache->store( ({ p, c }), id );
+  string num = image_cache->store( ({ p, c }), id, timeout );
   mapping size = image_cache->metadata( num, id, no_draw );
   if(!arg->alt) arg->alt=replace(c,"\"","'");
 
@@ -1216,7 +1241,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
     if(!p->fgcolor) p->fgcolor=id->misc->defines->theme_alink||
 			id->misc->defines->alink||"#ff0000";
 
-    string num2 = image_cache->store( ({ p, c }),id );
+    string num2 = image_cache->store( ({ p, c }), id, timeout );
     size = image_cache->metadata( num2, id );
     if(size) {
       arg->width=(string)max(arg->xsize,size->xsize);
