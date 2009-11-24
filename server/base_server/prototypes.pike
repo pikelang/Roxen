@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.264 2009/11/19 13:41:08 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.265 2009/11/24 15:21:51 stewa Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -299,7 +299,9 @@ class DAVLock
     return res;
   }
 
+  //! @ignore
   DECLARE_OBJ_COUNT;
+  //! @endignore
 
   protected string _sprintf (int flag)
   {
@@ -515,7 +517,9 @@ class Configuration
   AuthModule find_auth_module( string name );
   UserDB find_user_database( string name );
 
+  //! @ignore
   DECLARE_OBJ_COUNT;
+  //! @endignore
 
   protected string _sprintf (int flag)
   {
@@ -615,7 +619,9 @@ class FakedVariables( mapping real_variables )
       return 1;
   }
 
+  //! @ignore
   DECLARE_OBJ_COUNT;
+  //! @endignore
 
   protected string _sprintf( int f )
   {
@@ -872,7 +878,9 @@ class CacheKey
 #ifdef ID_CACHEKEY_DEBUG
   RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this);
 #else
+  //! @ignore
   DECLARE_OBJ_COUNT;
+  //! @endignore
 #endif
 
   protected array(array(CacheActivationCB|array)) activation_cbs;
@@ -1121,7 +1129,9 @@ class RequestID
 #ifdef ID_OBJ_DEBUG
   RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this);
 #else
+  //! @ignore
   DECLARE_OBJ_COUNT;
+  //! @endignore
 #endif
 
   Configuration conf;
@@ -1479,7 +1489,9 @@ class RequestID
       return real_cookies + eaten;
     }
 
+    //! @ignore
     DECLARE_OBJ_COUNT;
+    //! @endignore
 
     protected string _sprintf(int fmt)
     {
