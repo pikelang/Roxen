@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.115 2009/11/20 14:01:44 mast Exp $
+// $Id: cache.pike,v 1.116 2009/11/24 22:53:24 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -286,6 +286,14 @@ class CacheManager
 		  size_limit, mgr_oh, total_size_limit);
       evict (size_limit);
     }
+  }
+
+  int free_space()
+  //! Returns the amount of unused space left. Might be negative in
+  //! some narrow time windows when the cache is over its limit and
+  //! @[evict] hasn't yet catched up.
+  {
+    return size_limit - size;
   }
 
   string format_cost (int|float cost) {return "-";}
@@ -917,6 +925,13 @@ void cache_unregister (string cache_name)
     foreach (lm;; CacheEntry entry)
       mgr->remove_entry (cache_name, entry);
   }
+}
+
+CacheManager cache_get_manager (string cache_name)
+//! Returns the cache manager for the given cache, or zero if the
+//! cache isn't registered.
+{
+  return caches[cache_name];
 }
 
 void cache_change_manager (string cache_name, CacheManager manager)
