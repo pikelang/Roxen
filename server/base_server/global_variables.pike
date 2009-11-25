@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: global_variables.pike,v 1.120 2009/11/18 10:52:44 mast Exp $
+// $Id: global_variables.pike,v 1.121 2009/11/25 10:50:18 jonasw Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -833,7 +833,7 @@ Running it too often causes unnecessary server load.</p>"))
 	      LOCALE(0, "Cache: Memory cache size"),
 	      TYPE_INT,
 	      LOCALE(0, #"\
-<p>Maximum size in Mb for all RAM caches taken together. This limit
+<p>Maximum size in MByte for all RAM caches taken together. This limit
 covers the caches visible in the <a
 href='/actions/?action=cachestatus.pike&class=status'>Cache status</a>
 page.</p>
