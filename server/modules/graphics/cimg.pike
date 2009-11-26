@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.83 2009/11/24 15:17:33 grubba Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.84 2009/11/26 15:12:33 grubba Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -380,20 +380,7 @@ class TagCimgplugin
     mapping a = get_my_args( check_args( args ), id );
     string data;
 
-    int timeout = UNDEFINED;
-    if (args["unix-time"]) {
-      timeout = (int)args["unix-time"] - time(1);
-    }
-    timeout = Roxen.time_dequantifier(args, timeout);
-    if (!zero_type(timeout)) {
-      // Clean up the args mapping.
-      foreach(({ "unix-time", "seconds", "minutes", "beats", "hours",
-		 "days", "weeks", "months", "years" }), string arg) {
-	m_delete(args, arg);
-      }
-      // Make sure the timeout is positive (and reasonable).
-      if (timeout < 60) timeout = 60;
-    }
+    int timeout = Roxen.timeout_dequantifier(args);
 
     mixed err = catch // This code will fail if the image does not exist.
     {
@@ -444,20 +431,7 @@ class TagCImg
 
     array do_return(RequestID id) 
     {
-      int timeout = UNDEFINED;
-      if (args["unix-time"]) {
-	timeout = (int)args["unix-time"] - time(1);
-      }
-      timeout = Roxen.time_dequantifier(args, timeout);
-      if (!zero_type(timeout)) {
-	// Clean up the args mapping.
-	foreach(({ "unix-time", "seconds", "minutes", "beats", "hours",
-		   "days", "weeks", "months", "years" }), string arg) {
-	  m_delete(args, arg);
-	}
-	// Make sure the timeout is positive (and reasonable).
-	if (timeout < 60) timeout = 60;
-      }
+      int timeout = Roxen.timeout_dequantifier(args);
       mapping a = get_my_args( check_args( args ), id );
       args -= a;
       string ext = "";
@@ -496,20 +470,7 @@ class TagCImgURL {
 
     array do_return(RequestID id)
     {
-      int timeout = UNDEFINED;
-      if (args["unix-time"]) {
-	timeout = (int)args["unix-time"] - time(1);
-      }
-      timeout = Roxen.time_dequantifier(args, timeout);
-      if (!zero_type(timeout)) {
-	// Clean up the args mapping.
-	foreach(({ "unix-time", "seconds", "minutes", "beats", "hours",
-		   "days", "weeks", "months", "years" }), string arg) {
-	  m_delete(args, arg);
-	}
-	// Make sure the timeout is positive (and reasonable).
-	if (timeout < 60) timeout = 60;
-      }
+      int timeout = Roxen.timeout_dequantifier(args);
       string filename = "";
       mapping a = get_my_args (check_args (args), id);
       

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.308 2009/11/24 15:17:33 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.309 2009/11/26 15:12:34 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -1042,16 +1042,12 @@ class TagGTextURL {
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
+      int timeout = Roxen.timeout_dequantifier(args);
       content=fix_text(content||"",args,id);
       mapping p=mk_gtext_arg(args,id);
       if(args->href && !p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
       string ext="";
       if(query("ext")) ext="."+(p->format || "gif");
-      int timeout = UNDEFINED;
-      if (args["unix-time"]) {
-	timeout = (int)args["unix-time"] - time(1);
-      }
-      timeout = Roxen.time_dequantifier(args, timeout);
       if(!args->short)
 	return ({ query_absolute_internal_location(id) +
 		  image_cache->store( ({p,content}), id, timeout )+ext });
@@ -1083,13 +1079,9 @@ class TagGTextID {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
+      int timeout = Roxen.timeout_dequantifier(args, timeout);
       mapping p=mk_gtext_arg(args,id);
       if(args->href && !p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
-      int timeout = UNDEFINED;
-      if (args["unix-time"]) {
-	timeout = (int)args["unix-time"] - time(1);
-      }
-      timeout = Roxen.time_dequantifier(args, timeout);
       if(!args->short)
 	return ({ query_absolute_internal_location(id) +
 		  "$"+image_cache->store(p, id, timeout)+"/" });
@@ -1176,20 +1168,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
   m_delete(arg, "border");
   arg->style = "border: none;" + (arg->style || "");
 
-  int timeout = UNDEFINED;
-  if (arg["unix-time"]) {
-    timeout = (int)arg["unix-time"] - time(1);
-  }
-  timeout = Roxen.time_dequantifier(arg, timeout);
-  if (!zero_type(timeout)) {
-    // Clean up the args mapping.
-    foreach(({ "unix-time", "seconds", "minutes", "beats", "hours",
-	       "days", "weeks", "months", "years" }), string a) {
-      m_delete(arg, a);
-    }
-    // Make sure the timeout is positive (and reasonable).
-    if (timeout < 60) timeout = 60;
-  }
+  int timeout = Roxen.timeout_dequantifier(arg);
   int no_draw = !id->misc->generate_images;
   if(arg->split)
   {

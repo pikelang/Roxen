@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.120 2009/11/24 15:17:33 grubba Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.121 2009/11/26 15:12:34 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -853,20 +853,7 @@ class ButtonFrame {
     m_delete(args, "extra-mask-layers");
     m_delete(args, "extra-frame-layers");
     
-    int timeout = UNDEFINED;
-    if (args["unix-time"]) {
-      timeout = (int)args["unix-time"] - time(1);
-    }
-    timeout = Roxen.time_dequantifier(args, timeout);
-    if (!zero_type(timeout)) {
-      // Clean up the args mapping.
-      foreach(({ "unix-time", "seconds", "minutes", "beats", "hours",
-		 "days", "weeks", "months", "years" }), string arg) {
-	m_delete(args, arg);
-      }
-      // Make sure the timeout is positive (and reasonable).
-      if (timeout < 60) timeout = 60;
-    }
+    int timeout = Roxen.timeout_dequantifier(args);
 
     if( fi ) {
       new_args->stat = get_file_stat( fi, id );
