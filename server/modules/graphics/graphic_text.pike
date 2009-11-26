@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.305 2009/11/26 15:43:48 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.306 2009/11/26 15:45:55 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -1045,7 +1045,7 @@ class TagGTextID {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
-      int timeout = Roxen.timeout_dequantifier(args, timeout);
+      int timeout = Roxen.timeout_dequantifier(args);
       mapping p=mk_gtext_arg(args,id);
       if(args->href && !p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
       if(!args->short)
