@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.38 2008/12/17 07:10:55 tomas Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.39 2009/11/26 15:43:48 grubba Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -525,6 +525,8 @@ class TagGXML
       if( !i )
 	parse_error( "No image\n");
 
+      int timeout = Roxen.timeout_dequantifier(args);
+
       mapping my_args = ([
 	"quant":     args->quant,
 	"crop":      args->crop,
@@ -543,7 +545,7 @@ class TagGXML
       mapping res_args = args - my_args;
       mapping node_tree = i->encode();
       // werror("Node tree: %O\n", node_tree);
-      string key = the_cache->store( ({ my_args, node_tree }), id);
+      string key = the_cache->store( ({ my_args, node_tree }), id, timeout);
 
       string ext = "";
       if(do_ext)

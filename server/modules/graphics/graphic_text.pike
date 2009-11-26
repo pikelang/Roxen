@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2004, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.304 2008/08/14 09:41:34 erik Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.305 2009/11/26 15:43:48 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -774,9 +774,10 @@ mapping find_internal(string f, RequestID id)
     {
       array id_text = f/"/";
       if( sizeof(id_text)==2 )
-      {   // It's a gtext-id
-        string second_key = roxen->argcache->store( (["":id_text[1]]) );
-        return image_cache->http_file_answer( id_text[0][1..] +"$"+ second_key, id );
+      {   // It's a gtext-id, let it live for an hour.
+        string second_key = roxen->argcache->store( (["":id_text[1]]), 3600 );
+        return image_cache->http_file_answer( id_text[0][1..] +"$"+ second_key,
+					      id, UNDEFINED, 3600 );
       }
     }
     return image_cache->http_file_answer( f, id );
@@ -1007,6 +1008,7 @@ class TagGTextURL {
   class Frame {
     inherit RXML.Frame;
     array do_return(RequestID id) {
+      int timeout = Roxen.timeout_dequantifier(args);
       content=fix_text(content||"",args,id);
       mapping p=mk_gtext_arg(args,id);
       if(args->href && !p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
@@ -1014,8 +1016,8 @@ class TagGTextURL {
       if(query("ext")) ext="."+(p->format || "gif");
       if(!args->short)
 	return ({ query_absolute_internal_location(id) +
-		  image_cache->store( ({p,content}), id )+ext });
-      return ({ "+"+image_cache->store( ({p,content}), id )+ext });
+		  image_cache->store( ({p,content}), id, timeout )+ext });
+      return ({ "+"+image_cache->store( ({p,content}), id, timeout )+ext });
     }
   }
 }
@@ -1043,12 +1045,13 @@ class TagGTextID {
     inherit RXML.Frame;
 
     array do_return(RequestID id) {
+      int timeout = Roxen.timeout_dequantifier(args, timeout);
       mapping p=mk_gtext_arg(args,id);
       if(args->href && !p->fgcolor) p->fgcolor=id->misc->gtext_link||"#0000ff";
       if(!args->short)
 	return ({ query_absolute_internal_location(id) +
-		  "$"+image_cache->store(p, id)+"/" });
-      return ({ "+"+image_cache->store(p, id )+"/foo" });
+		  "$"+image_cache->store(p, id, timeout)+"/" });
+      return ({ "+"+image_cache->store(p, id, timeout)+"/foo" });
     }
   }
 }
@@ -1131,6 +1134,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
   m_delete(arg, "border");
   arg->style = "border: none;" + (arg->style || "");
 
+  int timeout = Roxen.timeout_dequantifier(arg);
   int no_draw = !id->misc->generate_images;
   if(arg->split)
   {
@@ -1141,7 +1145,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
     int setalt=!arg->alt;
     foreach(c/split-({""}), string word)
     {
-      string fn = image_cache->store( ({ p, word }),id );
+      string fn = image_cache->store( ({ p, word }), id, timeout );
       mapping size = image_cache->metadata( fn, id, no_draw);
       if(setalt) arg->alt=word;
       arg->src=query_absolute_internal_location(id)+fn+ext;
@@ -1159,7 +1163,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
     return sprintf(lp,res);
   }
 
-  string num = image_cache->store( ({ p, c }), id );
+  string num = image_cache->store( ({ p, c }), id, timeout );
   mapping size = image_cache->metadata( num, id, no_draw );
   if(!arg->alt) arg->alt=replace(c,"\"","'");
 
@@ -1182,7 +1186,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
     if(!p->fgcolor) p->fgcolor=id->misc->defines->theme_alink||
 			id->misc->defines->alink||"#ff0000";
 
-    string num2 = image_cache->store( ({ p, c }),id );
+    string num2 = image_cache->store( ({ p, c }), id, timeout );
     size = image_cache->metadata( num2, id );
     if(size) {
       arg->width=(string)max(arg->xsize,size->xsize);

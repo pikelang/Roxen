@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.115 2006/01/25 09:21:47 jonasw Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.116 2009/11/26 15:43:48 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -854,6 +854,8 @@ class ButtonFrame {
     m_delete(args, "extra-mask-layers");
     m_delete(args, "extra-frame-layers");
     
+    int timeout = Roxen.timeout_dequantifier(args);
+
     if( fi ) {
       new_args->stat = get_file_stat( fi, id );
 #if constant(Sitebuilder)
@@ -878,7 +880,7 @@ class ButtonFrame {
 //     t = gethrtime();
     string img_src =
       query_absolute_internal_location(id) +
-      button_cache->store( ({ new_args, (string)content }), id);
+      button_cache->store( ({ new_args, (string)content }), id, timeout);
 
     if(do_ext)
       img_src += "." + (new_args->format || "gif");

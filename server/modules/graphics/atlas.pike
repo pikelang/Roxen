@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.17 2005/12/16 17:50:51 jonasw Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.18 2009/11/26 15:43:48 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";
@@ -179,8 +179,10 @@ class TagAtlas {
     array do_return(RequestID id) {
       mapping state = id->misc->atlas_state;
 
+      int timeout = Roxen.timeout_dequantifier(args);
+
       args->src = query_absolute_internal_location(id) +
-	the_cache->store(state, id);
+	the_cache->store(state, id, timeout);
       if(do_ext)
 	args->src += ".gif";
 

@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.151 2008/03/18 10:38:42 stewa Exp $";
+constant cvs_version = "$Id: business.pike,v 1.152 2009/11/26 15:43:48 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -710,7 +710,10 @@ string container_diagram(string tag, mapping m, string contents,
   string ext = "";
   if(query("ext")) ext="."+res->format;
 
-  m->src = query_absolute_internal_location(id) + image_cache->store( res,id )+ext;
+  int timeout = Roxen.timeout_dequantifier(m);
+
+  m->src = query_absolute_internal_location(id) +
+    image_cache->store( res, id, timeout )+ext;
 
   if( mapping size = image_cache->metadata( m, id, 1 ) )
   {
