@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.282 2009/11/19 23:50:26 mast Exp $
+// $Id: Roxen.pmod,v 1.283 2009/11/26 15:05:59 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2966,6 +2966,36 @@ int time_dequantifier(mapping m, void|int t )
       t+=(int)((float)(m->years)*3600*24*365.242190);
   }
   return (int)t;
+}
+
+//! This function is typically used to conveniently calculate
+//! timeout values for eg the @[roxen.ArgCache] and @[roxen.ImageCache].
+//!
+//! It's similar to @[time_dequantifier()], but returns time relative
+//! to @expr{time(1)@}, and modifies the argument mapping @[args]
+//! destructively.
+//!
+//! @returns
+//!   Returns @[UNDEFINED] if no timeout was specified, and seconds
+//!   since @expr{time(1)@} otherwise.
+int timeout_dequantifier(mapping args)
+{
+  int res = UNDEFINED;
+
+  if (args["unix-time"]) {
+    // "unix-time" isn't handled by time_dequantifier().
+    res = (int)args["unix-time"] - time(1);
+  }
+
+  res = time_dequantifier(args, res);
+
+  if (!zero_type(res)) {
+    foreach(({ "unix-time", "seconds", "minutes", "beats", "hours",
+	       "days", "weeks", "months", "years" }), string arg) {
+      m_delete(args, arg);
+    }
+  }
+  return res;
 }
 
 class _charset_decoder(object cs)
