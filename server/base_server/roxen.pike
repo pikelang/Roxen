@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.966 2009/11/26 15:36:52 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.967 2009/11/26 15:56:30 wellhard Exp $";
 
 //! @appears roxen
 //!
@@ -4193,14 +4193,12 @@ class ArgCache
 	if(from_time)
 	  // Only replicate entries accessed during the prefetch crawling.
 	  entries = 
-	    (array(string))
 	    QUERY( "SELECT id, timeout from "+name+"2 "
 		   " WHERE atime >= FROM_UNIXTIME(%d) "
 		   " LIMIT %d, %d", from_time, cursor, FETCH_ROWS);
 	else
 	  // Make sure _every_ entry is replicated when a dump is created.
 	  entries = 
-	    (array(string))
 	    QUERY( "SELECT id, timeout from "+name+"2 "
 		   " LIMIT %d, %d", cursor, FETCH_ROWS);
 	
