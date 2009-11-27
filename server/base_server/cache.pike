@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.120 2009/11/27 13:37:53 mast Exp $
+// $Id: cache.pike,v 1.121 2009/11/27 13:43:28 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -42,6 +42,12 @@ constant rebalance_keep_factor =
 //! Every time @[update_cache_size_balance] is called, the size
 //! assigned to each cache manager is allowed to shrink to no more
 //! than its currently assigned size multiplied by this factor.
+//!
+//! @note
+//! It's possible that cache managers are rebalanced a lot quicker
+//! than this: If a manager overshoots in one iteration then all
+//! caches are shrunk linearly in the next, and that is not limited by
+//! this value. Remains to be seen whether that is a feature or a bug.
 
 constant rebalance_min_size = 100 * 1024;
 //! Minimum size to give a cache manager.
