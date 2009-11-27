@@ -59,9 +59,34 @@ string parse( RequestID id )
     "hosts":LOCALE(70,"DNS"),
   ]);
 
-  foreach (cache.cache_managers, cache.CacheManager mgr)
+  string mgr_summary = "<p>" +
+    sprintf (LOCALE(0, #"\
+The configured maximum size %s is divided dynamically between the
+cache managers based on the usage for the last half hour. If the
+caches are not full then all free space is assigned to each one of
+them. They will shrink to the configured maximum size as they fill up."),
+	     Roxen.sizetostring (cache->total_size_limit)) + "</p>\n"
+    "<table " TABLE_ATTRS ">\n"
+    "<tr " HDR_TR_ATTRS ">"
+    "<th " FIRST_CELL ">" + LOCALE(0, "Cache manager") + "</th>"
+    "<th " REST_CELLS ">" + LOCALE(0, "Size") + "</th>"
+    "<th " REST_CELLS ">" + LOCALE(0, "Size limit") + "</th>"
+    "<th " REST_CELLS ">" + LOCALE(0, "Input rate") + "</th>"
+    "<th " REST_CELLS ">" + LOCALE(0, "Hit rate") + "</th>"
+    "<th " REST_CELLS ">" + LOCALE(0, "Cost HR") + "</th>"
+#ifdef DEBUG_CACHE_MANAGER
+    "<th " REST_CELLS " colspan='2'>Entry size</th>"
+    "<th " REST_CELLS " colspan='2'>Entry cost</th>"
+    "<th " REST_CELLS " colspan='2'>Entry value</th>"
+    "<th " REST_CELLS " colspan='2'>Entry pri val</th>"
+#endif
+    "</tr>\n";
+
+  string mgr_stats = "";
+
+  foreach (cache.cache_managers; int mgr_idx; cache.CacheManager mgr)
     if (mapping(string:cache.CacheStats) caches = stats[mgr]) {
-      res +=
+      mgr_stats +=
 	"<p><b>" + (LOCALE(0, "Cache manager: ") +
 		    Roxen.html_encode_string (mgr->name)) + "</b></p>\n"
 	"<p>" + mgr->doc + "</p>\n";
@@ -75,26 +100,26 @@ string parse( RequestID id )
 	"<th " REST_CELLS ">"+LOCALE(67, "Hit rate")+"</th>"
 	"<th " REST_CELLS ">"+LOCALE(64, "Size")+"</th>"
 	"<th " REST_CELLS ">"+LOCALE(0, "Size/entry")+"</th>"
-#ifdef RAMCACHE_STATS
+#ifdef CACHE_BYTE_HR_STATS
 	"<th " REST_CELLS ">"+LOCALE(0, "Byte HR")+"</th>"
+#endif
 	"<th " REST_CELLS ">"+LOCALE(0, "Create cost")+"</th>"
 	"<th " REST_CELLS ">"+LOCALE(0, "Cost/entry")+"</th>"
 	"<th " REST_CELLS ">"+LOCALE(0, "Cost HR")+"</th>"
-#endif
 	"</tr>\n";
 
       int num_caches;
       int tot_count, tot_size;
       int tot_hits, tot_misses;
-#ifdef RAMCACHE_STATS
+#ifdef CACHE_BYTE_HR_STATS
       int tot_byte_hits, tot_byte_misses;
+#endif
       int|float tot_cost_hits, tot_cost_misses, tot_cost;
 #ifdef DEBUG_CACHE_MANAGER
       int min_size = Int.NATIVE_MAX, max_size;
       int|float min_cost = Float.MAX, max_cost;
       int|float min_value = Float.MAX, max_value;
       int|float min_pval = Float.MAX, max_pval;
-#endif
 #endif
 
       mapping(string:array(string)) cache_groups = ([]);
@@ -116,10 +141,10 @@ string parse( RequestID id )
 
 	int grp_count, grp_size;
 	int grp_hits, grp_misses;
-#ifdef RAMCACHE_STATS
+#ifdef CACHE_BYTE_HR_STATS
 	int grp_byte_hits, grp_byte_misses;
-	int|float grp_cost_hits, grp_cost_misses, grp_cost;
 #endif
+	int|float grp_cost_hits, grp_cost_misses, grp_cost;
 
 	foreach (cache_groups[group_name], string cache_name) {
 	  cache.CacheStats st = caches[cache_name];
@@ -128,9 +153,10 @@ string parse( RequestID id )
 	  grp_hits += st->hits;
 	  grp_misses += st->misses;
 	  grp_size += st->size;
-#ifdef RAMCACHE_STATS
+#ifdef CACHE_BYTE_HR_STATS
 	  grp_byte_hits += st->byte_hits;
 	  grp_byte_misses += st->byte_misses;
+#endif
 	  grp_cost_hits += st->cost_hits;
 	  grp_cost_misses += st->cost_misses;
 
@@ -153,7 +179,6 @@ string parse( RequestID id )
 #endif
 	  }
 	  grp_cost += cost;
-#endif
 	}
 
 	table +=
@@ -169,52 +194,84 @@ string parse( RequestID id )
 	  "<td " REST_CELLS ">" +
 	  Roxen.sizetostring (grp_count && grp_size / grp_count) +
 	  "</td>"
-#ifdef RAMCACHE_STATS
+#ifdef CACHE_BYTE_HR_STATS
 	  "<td " REST_CELLS ">" +
 	  format_hit_rate (grp_byte_hits, grp_byte_misses) + "</td>"
-	  "<td " REST_CELLS ">" +
-	  mgr->format_cost (grp_cost) + "</td>"
-	  "<td " REST_CELLS ">" +
-	  mgr->format_cost (grp_count && grp_cost / grp_count) + "</td>"
-	  "<td " REST_CELLS ">" +
-	  format_hit_rate (grp_cost_hits, grp_cost_misses) + "</td>"
 #endif
+	  "<td " REST_CELLS ">" +
+	  (mgr->has_cost ? mgr->format_cost (grp_cost) : "n/a") + "</td>"
+	  "<td " REST_CELLS ">" +
+	  (mgr->has_cost ?
+	   mgr->format_cost (grp_count && grp_cost / grp_count) : "n/a") +
+	  "</td>"
+	  "<td " REST_CELLS ">" +
+	  (mgr->has_cost ?
+	   format_hit_rate (grp_cost_hits, grp_cost_misses) : "n/a") + "</td>"
 	  "</tr>\n";
 
 	tot_count += grp_count;
 	tot_hits += grp_hits;
 	tot_misses += grp_misses;
 	tot_size += grp_size;
-#ifdef RAMCACHE_STATS
+#ifdef CACHE_BYTE_HR_STATS
 	tot_byte_hits += grp_byte_hits;
 	tot_byte_misses += grp_byte_misses;
+#endif
 	tot_cost_hits += grp_cost_hits;
 	tot_cost_misses += grp_cost_misses;
 	tot_cost += grp_cost;
-#endif
       }
 
-#if defined (RAMCACHE_STATS) && defined (DEBUG_CACHE_MANAGER)
-      if (tot_count) {
-	res += "<p>"
-	  "Entry size range: " + min_size + " .. " + max_size;
-	if (tot_cost)
-	  res += "<br />\n"
-	    "Entry cost range: " + min_cost + " .. " + max_cost;
-	res += "<br />\n"
-	  "Entry value range: " + min_value + " .. " + max_value;
-	if (min_pval < max_pval)
-	  // CM_GreedyDual specific.
-	  res += "<br />\n"
-	    "Entry priority value range: " + min_pval + " .. " + max_pval +
-	    "</p>\n";
-      }
+      mgr_summary += "<tr " BODY_TR_ATTRS (mgr_idx) ">"
+	"<td " FIRST_CELL ">" + Roxen.html_encode_string (mgr->name) + "</td>"
+	"<td " REST_CELLS ">" +
+	Roxen.sizetostring (tot_size) + "</td>"
+	"<td " REST_CELLS ">" +
+	Roxen.sizetostring (mgr->total_size_limit) + "</td>"
+	"<td " REST_CELLS ">" +
+	(mgr->add_rate < 10.0 ?
+	 sprintf ("%g bytes", mgr->add_rate) :
+	 Roxen.sizetostring ((int) mgr->add_rate)) + "/s</td>"
+	"<td " REST_CELLS ">" +
+	format_hit_rate (mgr->hits, mgr->misses) + "</td>"
+	"<td " REST_CELLS ">" +
+	(mgr->has_cost ?
+	 format_hit_rate (mgr->cost_hits, mgr->cost_misses) :
+	 format_hit_rate (mgr->hits, mgr->misses)) + "</td>"
+#ifdef DEBUG_CACHE_MANAGER
+	+ (tot_count ?
+	   "<td " REST_CELLS ">" +
+	   Roxen.sizetostring (min_size) + " ..</td>"
+	   "<td " REST_CELLS " align='left'>" +
+	   Roxen.sizetostring (max_size) + "</td>" +
+	   (mgr->has_cost ?
+	    "<td " REST_CELLS ">" +
+	    (floatp (min_cost) ? sprintf ("%.3g", min_cost) : min_cost) +
+	    " ..</td>" +
+	    "<td " REST_CELLS " align='left'>" +
+	    (floatp (max_cost) ? sprintf ("%.3g", max_cost) : max_cost) +
+	    "</td>" :
+	    "<td " REST_CELLS " colspan='2' align='center'>n/a</td>") +
+	   "<td " REST_CELLS ">" +
+	   (floatp (min_value) ? sprintf ("%.3g", min_value) : min_value) +
+	   " ..</td>" +
+	   "<td " REST_CELLS " align='left'>" +
+	   (floatp (max_value) ? sprintf ("%.3g", max_value) : max_value) +
+	   "</td>"
+	   "<td " REST_CELLS ">" +
+	   (floatp (min_pval) ? sprintf ("%.3g", min_pval) : min_pval) +
+	   " ..</td>" +
+	   "<td " REST_CELLS " align='left'>" +
+	   (floatp (max_pval) ? sprintf ("%.3g", max_pval) : max_pval) +
+	   "</td>" :
+	   "<td " REST_CELLS " colspan='8'></td>") +
 #endif
+	"</tr>\n";
 
       if (num_caches) {
-	res += table;
+	mgr_stats += table;
 	if (num_caches > 1)
-	  res +=
+	  mgr_stats +=
 	    "<tr " FTR_TR_ATTRS ">"
 	    "<td " FIRST_CELL "><b>"+LOCALE(178, "Total")+"</b></td>"
 	    "<td " REST_CELLS ">" + tot_count + "</td>"
@@ -226,29 +283,40 @@ string parse( RequestID id )
 	    "<td " REST_CELLS ">" +
 	    Roxen.sizetostring (tot_count && tot_size / tot_count) +
 	    "</td>"
-#ifdef RAMCACHE_STATS
+#ifdef CACHE_BYTE_HR_STATS
 	    "<td " REST_CELLS ">" +
 	    format_hit_rate (tot_byte_hits, tot_byte_misses) + "</td>"
-	    "<td " REST_CELLS ">" +
-	    mgr->format_cost (tot_cost) + "</td>"
-	    "<td " REST_CELLS ">" +
-	    mgr->format_cost (tot_count && tot_cost / tot_count) + "</td>"
-	    "<td " REST_CELLS ">" +
-	    format_hit_rate (tot_cost_hits, tot_cost_misses) + "</td>"
 #endif
+	    "<td " REST_CELLS ">" +
+	    (mgr->has_cost ? mgr->format_cost (tot_cost) : "n/a") + "</td>"
+	    "<td " REST_CELLS ">" +
+	    (mgr->has_cost ?
+	     mgr->format_cost (tot_count && tot_cost / tot_count) : "n/a") +
+	    "</td>"
+	    "<td " REST_CELLS ">" +
+	    (mgr->has_cost ?
+	     format_hit_rate (tot_cost_hits, tot_cost_misses) : "n/a") + "</td>"
 	    "</tr>\n";
-	res += "</table>\n";
+	mgr_stats += "</table>\n";
       }
     }
 
-#ifdef RAMCACHE_STATS
-  res += "<font size='-1'>" + LOCALE(0, #"\
-<p><i>Byte HR</i> is the byte hit rate, i.e. every hit and miss is
-weighted with the size of the entry. <i>Cost HR</i> weights each entry
-with its cost according to the cost metric of the cache manager. Note
-that both use the approximation that every cache miss is followed by
-the addition of a new cache entry.</p>\n") + "</font>";
+  mgr_stats += "<div style='font-size: smaller;'><p>" +
+#ifdef CACHE_BYTE_HR_STATS
+    LOCALE(0, #"\
+<i>Byte HR</i> is the byte hit rate, i.e. every hit and miss is
+weighted with the size of the entry.") + " " +
 #endif
+    LOCALE(0, #"\
+<i>Cost HR</i> weights each entry hit and miss with its cost according
+to the cost metric of the cache manager. Note that it uses the
+approximation that every cache miss is followed by the addition of a
+new cache entry.") +
+    "</p></div>\n";
+
+  mgr_summary += "</table>\n";
+
+  res += mgr_summary + mgr_stats;
 
   res += "<p><b>" + LOCALE(0, "Garbage Collector") + "</b></p>\n";
   if (!cache->last_gc_run)

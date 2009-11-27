@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.117 2009/11/27 01:44:59 mast Exp $
+// $Id: cache.pike,v 1.118 2009/11/27 01:49:02 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -23,8 +23,38 @@
 
 #ifdef NEW_RAM_CACHE
 
-constant startup_cache_size = 1024 * 1024;
-// Cache size per manager to use before we've read the config setting.
+int total_size_limit = 1024 * 1024;
+//! Maximum cache size for all cache managers combined. Start out with
+//! a bit of space before the setting is read.
+
+constant rebalance_adaptivity = 30 * 60;
+//! Number of seconds it should take to update the size balance
+//! between the cache managers for a different workload.
+//!
+//! Note: If this changes then the help texts in
+//! config_interface/actions/cachestatus.pike should be updated.
+
+constant rebalance_interval = 10;
+//! Seconds between @[update_cache_size_balance] calls.
+
+constant rebalance_keep_factor =
+  1.0 - 1.0 / (rebalance_adaptivity / rebalance_interval);
+//! Every time @[update_cache_size_balance] is called, the size
+//! assigned to each cache manager is allowed to shrink to no more
+//! than its currently assigned size multiplied by this factor.
+
+constant rebalance_min_size = 100 * 1024;
+//! Minimum size to give a cache manager.
+
+protected constant cm_stats_avg_period = rebalance_adaptivity;
+// Approximate time period for which the decaying average/sum stats in
+// CacheManager apply.
+
+void set_total_size_limit (int size)
+//! Sets the total size limit available to all caches.
+{
+  total_size_limit = size;
+}
 
 class CacheEntry (mixed key, mixed data)
 //! Base class for cache entries.
@@ -83,19 +113,21 @@ class CacheStats
   //! The sum of @[CacheEntry.size] for all cache entries in the cache.
 
   int hits, misses;
-  //! Plain counts of cache hits and misses.
-
-#ifdef RAMCACHE_STATS
-  int byte_hits, byte_misses;
-  //! Byte hit and miss count. Note that @[byte_misses] is determined
-  //! when a new entry is added - it will not include when no new
-  //! entry was created after a cache miss.
+  //! Plain counts of cache hits and misses since the creation of the
+  //! cache.
 
   int|float cost_hits, cost_misses;
-  //! Hit and miss count according to the cache manager cost metric.
-  //! Note that @[cost_misses] is determined when a new entry is added
-  //! - it will not include when no new entry was created after a
-  //! cache miss.
+  //! Hit and miss count according to the cache manager cost metric
+  //! since the creation of the cache. Note that @[cost_misses] is
+  //! determined when a new entry is added - it will not include when
+  //! no new entry was created after a cache miss.
+
+#ifdef CACHE_BYTE_HR_STATS
+  int byte_hits, byte_misses;
+  //! Byte hit and miss count since the creation of the cache. Note
+  //! that @[byte_misses] is determined when a new entry is added - it
+  //! will not include when no new entry was created after a cache
+  //! miss.
 #endif
 
   protected string _sprintf (int flag)
@@ -119,13 +151,16 @@ class CacheManager
   //!
   //! A description of the manager and its eviction policy in html.
 
-  int total_size_limit;
+  constant has_cost = 0;
+  //! Nonzero if this cache manager implements a cost metric.
+
+  int total_size_limit = global::total_size_limit;
   //! Maximum allowed size including the cache manager overhead.
 
   int size;
   //! The sum of @[CacheStats.size] for all named caches.
 
-  int size_limit;
+  int size_limit = global::total_size_limit;
   //! Maximum allowed size for cache entries - @[size] should never
   //! greater than this. This is a cached value calculated from
   //! @[total_size_limit] on regular intervals.
@@ -156,6 +191,7 @@ class CacheManager
 
   protected void account_miss (string cache_name)
   {
+    recent_misses++;
     if (CacheStats cs = stats[cache_name])
       cs->misses++;
   }
@@ -165,11 +201,13 @@ class CacheManager
 
   protected void account_hit (string cache_name, CacheEntry entry)
   {
+    recent_hits++;
+    recent_cost_hits += entry->cost;
     if (CacheStats cs = stats[cache_name]) {
       cs->hits++;
-#ifdef RAMCACHE_STATS
-      cs->byte_hits += entry->size;
       cs->cost_hits += entry->cost;
+#ifdef CACHE_BYTE_HR_STATS
+      cs->byte_hits += entry->size;
 #endif
     }
   }
@@ -193,6 +231,7 @@ class CacheManager
       ASSERT_IF_DEBUG (cs->count /*%O*/ >= 0, cs->count);
     }
     size -= entry->size;
+    recent_added_bytes -= entry->size;
     ASSERT_IF_DEBUG (size /*%O*/ >= 0, size);
   }
 
@@ -200,12 +239,14 @@ class CacheManager
   {
     ASSERT_IF_DEBUG (entry->size /*%O*/, entry->size);
 
+    // Assume that the addition of the new entry came about due to a
+    // cache miss.
+    recent_cost_misses += entry->cost;
+
     if (CacheStats cs = stats[cache_name]) {
-#ifdef RAMCACHE_STATS
-      // Assume that the addition of the new entry came about due to a
-      // cache miss.
-      cs->byte_misses += entry->size;
       cs->cost_misses += entry->cost;
+#ifdef CACHE_BYTE_HR_STATS
+      cs->byte_misses += entry->size;
 #endif
 
       if (mapping(mixed:CacheEntry) lm = lookup[cache_name]) {
@@ -222,6 +263,7 @@ class CacheManager
 	cs->count++;
 	cs->size += entry->size;
 	size += entry->size;
+	recent_added_bytes += entry->size;
 
 	if (!(cs->misses & 0x3fff)) // = 16383
 	  // Approximate the number of misses as the number of new entries
@@ -274,6 +316,59 @@ class CacheManager
 	    Pike.count_memory ((["block_objects": 1]), lookup));
   }
 
+  float add_rate = 0.0;
+  //! The number of newly added bytes per second, calculated as a
+  //! decaying average over the last @[cm_stats_avg_period] seconds.
+  //! Note that the returned value could become negative if valid
+  //! entries are removed.
+
+  float hits = 0.0, misses = 0.0;
+  //! Decaying sums over the hits and misses during approximately the
+  //! last @[cm_stats_avg_period] seconds.
+
+  float cost_hits = 0.0, cost_misses = 0.0;
+  //! Decaying sums over the cost weighted hits and misses during
+  //! approximately the last @[cm_stats_avg_period] seconds. Only
+  //! applicable if @[has_cost] is set.
+
+  protected int recent_added_bytes;
+  protected int recent_hits, recent_misses;
+  protected int|float recent_cost_hits, recent_cost_misses;
+
+  void update_decaying_stats (int start_time, int last_update, int now)
+  // Should only be called at regular intervals from
+  // update_cache_size_balance.
+  {
+    float last_period = (float) (now - last_update);
+    float tot_period = (float) (now - start_time);
+    int startup = tot_period < cm_stats_avg_period;
+    if (!startup) tot_period = (float) cm_stats_avg_period;
+
+    float our_weight = min (last_period / tot_period, 1.0);
+    float old_weight = 1.0 - our_weight;
+
+    if (startup) {
+      hits += (float) recent_hits;
+      misses += (float) recent_misses;
+      cost_hits += (float) recent_cost_hits;
+      cost_misses += (float) recent_cost_misses;
+    }
+
+    else {
+      hits = old_weight * hits + (float) recent_hits;
+      misses = old_weight * misses + (float) recent_misses;
+      cost_hits = old_weight * cost_hits + (float) recent_cost_hits;
+      cost_misses = old_weight * cost_misses + (float) recent_cost_misses;
+    }
+
+    add_rate = (old_weight * add_rate +
+		our_weight * (recent_added_bytes / last_period));
+
+    recent_added_bytes = 0;
+    recent_hits = recent_misses = 0;
+    recent_cost_hits = recent_cost_misses = 0;
+  }
+
   void update_size_limit()
   {
     MORE_CACHE_WERR ("%O: update_size_limit\n", this);
@@ -299,12 +394,6 @@ class CacheManager
   string format_cost (int|float cost) {return "-";}
   //! Function to format a cost measurement for display in the status
   //! page.
-
-  protected void create (int total_size_limit)
-  {
-    this_program::total_size_limit = total_size_limit;
-    update_size_limit();
-  }
 
   protected string _sprintf (int flag)
   {
@@ -374,7 +463,7 @@ overhead is minimal.";
   }
 }
 
-protected CM_Random cm_random = CM_Random (startup_cache_size);
+protected CM_Random cm_random = CM_Random();
 #endif
 
 class CM_GreedyDual
@@ -568,7 +657,7 @@ cache hit ratio.";
   }
 }
 
-protected CM_GDS_1 cm_gds_1 = CM_GDS_1 (startup_cache_size);
+protected CM_GDS_1 cm_gds_1 = CM_GDS_1();
 
 class CM_GDS_Time
 //! Like @[CM_GDS_1] but adds support for calculating entry cost based
@@ -576,7 +665,8 @@ class CM_GDS_Time
 {
   inherit CM_GreedyDual;
 
-#ifdef RAMCACHE_STATS
+  constant has_cost = 1;
+
   class CacheEntry
   {
     inherit CM_GreedyDual::CacheEntry;
@@ -588,7 +678,6 @@ class CM_GDS_Time
 				     format_key(), size, value, cost);
     }
   }
-#endif
 
   protected Thread.Local cache_contexts = Thread.Local();
   // A thread local mapping to store the timestamp from got_miss so it
@@ -689,10 +778,7 @@ class CM_GDS_Time
   {
     if (int hrtime = !old_entry &&
 	entry_create_hrtime (cache_name, entry->key, cache_context)) {
-      float cost = (float) hrtime;
-#ifdef RAMCACHE_STATS
-      entry->cost = cost;
-#endif
+      float cost = entry->cost = (float) hrtime;
 
       if (!mean_count) {
 	mean_cost = cost;
@@ -746,7 +832,7 @@ create it. The CPU time implementation is " +
   }
 }
 
-protected CM_GDS_CPUTime cm_gds_cputime = CM_GDS_CPUTime (startup_cache_size);
+protected CM_GDS_CPUTime cm_gds_cputime = CM_GDS_CPUTime();
 
 class CM_GDS_RealTime
 {
@@ -773,8 +859,7 @@ to create it. The real time implementation is " +
   }
 }
 
-protected CM_GDS_RealTime cm_gds_realtime =
-  CM_GDS_RealTime (startup_cache_size);
+protected CM_GDS_RealTime cm_gds_realtime = CM_GDS_RealTime();
 
 //! The preferred managers according to various caching requirements.
 //! When several apply for a cache, choose the first one in this list.
@@ -831,14 +916,168 @@ protected Thread.Mutex cache_mgmt_mutex = Thread.Mutex();
 // Locks operations that manipulate named caches, i.e. changes in the
 // caches, CacheManager.stats and CacheManager.lookup mappings.
 
-void set_total_size_limit (int size)
-//! Sets the total size limit available to all caches.
+protected int cache_start_time = time();
+protected int last_cache_size_balance = time();
+
+protected void update_cache_size_balance()
+//! Updates the balance between the fractions of the total size
+//! allocated to each cache manager.
 {
-  // FIXME: Currently this is per-cache.
-  foreach (cache_managers, CacheManager mgr) {
-    mgr->total_size_limit = size;
-    mgr->update_size_limit();
+  Thread.MutexKey lock = cache_mgmt_mutex->lock();
+
+  int now = time();
+  mapping(CacheManager:int) mgr_used = ([]);
+  int used_size;
+
+  // Update the decaying sums in the CacheStats objects.
+  foreach (cache_managers, CacheManager mgr)
+    mgr->update_decaying_stats (cache_start_time, last_cache_size_balance, now);
+
+  if (!total_size_limit) {
+    // Caches are effectively disabled. Ignore rebalance_min_size in this case.
+    foreach (cache_managers, CacheManager mgr) {
+      mgr->total_size_limit = 0;
+      mgr->update_size_limit();
+    }
   }
+
+  else {
+    foreach (cache_managers, CacheManager mgr)
+      used_size += mgr_used[mgr] =
+	mgr->size + (mgr->total_size_limit - mgr->size_limit);
+
+    if (used_size < (int) (0.9 * total_size_limit)) {
+      // The caches are underpopulated. Set the limits so that they all can
+      // grow freely until the total limit is reached. The way this is done
+      // might cause the combined size overshoot the limit, but we assume
+      // update_cache_size_balance runs often enough to not let it get
+      // seriously out of hand.
+      int extra = total_size_limit - used_size;
+      CACHE_WERR ("Rebalance: %db under the limit - free growth "
+		  "(overshoot %db).\n", extra,
+		  extra * sizeof (cache_managers) + used_size -
+		  total_size_limit);
+
+      foreach (cache_managers, CacheManager mgr) {
+	mgr->total_size_limit = mgr_used[mgr] + extra;
+	mgr->update_size_limit();
+      }
+    }
+
+    else {
+      int reserved_size;
+#ifdef CACHE_DEBUG
+      int overshoot_size;
+#endif
+      mapping(CacheManager:int) mgr_reserved_size = ([]);
+      mapping(CacheManager:float) mgr_weights = ([]);
+      float total_weight = 0.0;
+
+      foreach (cache_managers, CacheManager mgr) {
+	int reserved = (int) (rebalance_keep_factor * mgr_used[mgr]);
+	if (reserved < rebalance_min_size) {
+	  // Don't reserve more than the used size - the rest is up for grabs
+	  // by whichever cache fills it first. If that's under
+	  // rebalance_min_size it means we get some "overshoot" room here
+	  // too, like above.
+	  reserved = mgr_used[mgr];
+#ifdef CACHE_DEBUG
+	  overshoot_size += rebalance_min_size - reserved;
+#endif
+	}
+	reserved_size += mgr_reserved_size[mgr] = reserved;
+
+	float lookups = mgr->has_cost ?
+	  mgr->cost_hits + mgr->cost_misses : mgr->hits + mgr->misses;
+	float hit_rate_per_byte = lookups != 0.0 && mgr_used[mgr] ?
+	  mgr->hits / lookups / mgr_used[mgr] : 0.0;
+
+	// add_rate is a measurement on how many new bytes a cache could put
+	// into use, and hit_rate_per_byte weighs in a projection on how
+	// successful it would be caching those bytes.
+	float weight = max (mgr->add_rate * hit_rate_per_byte, 0.0);
+	mgr_weights[mgr] = weight;
+	total_weight += weight;
+
+	CACHE_WERR ("Rebalance weight %s: Reserved %db, "
+		    "add rate %g, hr %g, hr/b %g, weight %g.\n",
+		    mgr->name, reserved, mgr->add_rate,
+		    lookups != 0.0 ? mgr->hits / lookups : 0.0,
+		    hit_rate_per_byte, weight);
+      }
+
+      if (total_weight > 0.0) {
+	// Don't change anything if there's no weight on any cache
+	// manager. That means there's no activity.
+
+	if (reserved_size > total_size_limit) {
+	  // The caches are over the limit so much there's no room for
+	  // weighted redistribution. Either total_size_limit has shrunk or
+	  // they have overshot it as a result of the free growth policy.
+	  // Shrink each cache manager relative to its current size.
+
+	  // Ensure no manager gets below rebalance_min_size. Note that if a
+	  // cache uses less than rebalance_min_size then the remaining space
+	  // is available to the other caches, which means that sum of the
+	  // limits might get larger than total_size_limit. That's intentional
+	  // - it's a variant of the "overshoot" policy above.
+	  int total_above_min = total_size_limit;
+	  foreach (cache_managers, CacheManager mgr) {
+	    int reserved = min (mgr_used[mgr], rebalance_min_size);
+	    used_size -= reserved;
+	    mgr_used[mgr] -= reserved;
+	    total_above_min -= reserved;
+	  }
+
+	  if (used_size > 0) {
+	    CACHE_WERR ("Rebalance: %db over the limit - shrinking linearly "
+			"(overshoot %db).\n", used_size - total_above_min,
+			rebalance_min_size * sizeof (cache_managers) +
+			total_above_min - total_size_limit);
+
+	    foreach (cache_managers, CacheManager mgr) {
+	      int new_size = rebalance_min_size +
+		(int) (((float) mgr_used[mgr] / used_size) * total_above_min);
+	      CACHE_WERR ("Rebalance shrink %s: From %db to %db - diff %db.\n",
+			  mgr->name, mgr->total_size_limit, new_size,
+			  new_size - mgr->total_size_limit);
+	      mgr->total_size_limit = new_size;
+	      mgr->update_size_limit();
+	    }
+	  }
+	}
+
+	else {
+	  int size_for_rebalance = total_size_limit - reserved_size;
+	  CACHE_WERR ("Rebalance: %db for rebalance (reserved %db, "
+		      "overshoot %db)\n", size_for_rebalance, reserved_size,
+		      overshoot_size);
+
+	  foreach (cache_managers, CacheManager mgr) {
+	    int new_size = max (mgr_reserved_size[mgr] +
+				(int) ((mgr_weights[mgr] / total_weight) *
+				       size_for_rebalance),
+				rebalance_min_size);
+	    CACHE_WERR ("Rebalance on weight %s: From %db to %db - diff %db.\n",
+			mgr->name, mgr->total_size_limit, new_size,
+			new_size - mgr->total_size_limit);
+	    mgr->total_size_limit = new_size;
+	    mgr->update_size_limit();
+	  }
+	}
+      }
+    }
+  }
+
+#ifdef DEBUG
+  foreach (cache_managers, CacheManager mgr)
+    ASSERT_IF_DEBUG (mgr/*%O*/->total_size_limit /*%O*/ == 0 ||
+		     mgr->total_size_limit >= rebalance_min_size,
+		     mgr, mgr->total_size_limit);
+#endif
+
+  last_cache_size_balance = now;
+  roxenp()->background_run (rebalance_interval, update_cache_size_balance);
 }
 
 #ifdef DEBUG_CACHE_SIZES
@@ -1223,7 +1462,6 @@ float sum_timeout_garbage_size = 0.0;
 float avg_destruct_garbage_ratio = 0.0;
 float avg_timeout_garbage_ratio = 0.0;
 
-protected int cache_start_time = time();
 int last_gc_run;
 
 protected void cache_clean()
@@ -1951,6 +2189,9 @@ void init_session_cache() {
 void init_call_outs()
 {
   roxenp()->background_run(60, cache_clean);
+#ifdef NEW_RAM_CACHE
+  roxenp()->background_run (0, update_cache_size_balance);
+#endif
   roxenp()->background_run(SESSION_SHIFT_TIME, session_cache_handler);
 
   CACHE_WERR("Cache garb call outs installed.\n");
