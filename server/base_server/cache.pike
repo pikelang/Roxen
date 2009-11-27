@@ -1,6 +1,8 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.116 2009/11/24 22:53:24 mast Exp $
+// $Id: cache.pike,v 1.117 2009/11/27 01:44:59 mast Exp $
+
+// FIXME: Add argcache, imagecache & protcache
 
 #include <roxen.h>
 #include <config.h>
@@ -20,8 +22,6 @@
 #endif
 
 #ifdef NEW_RAM_CACHE
-
-// FIXME: Statistics from the gc for invalid cache entry ratio.
 
 constant startup_cache_size = 1024 * 1024;
 // Cache size per manager to use before we've read the config setting.
@@ -363,8 +363,8 @@ overhead is minimal.";
 	if (sizeof (lm)) {
 	  // Relying on the interpreter lock here.
 	  CacheEntry entry = random (lm)[1];
-	  MORE_CACHE_WERR ("%s: Size is %d - evicting %O.\n",
-			   cache_name, size, entry);
+	  MORE_CACHE_WERR ("evict: Size %db > %db - evicting %O / %O.\n",
+			   size, max_size, cache_name, entry);
 	  low_remove_entry (cache_name, entry);
 	}
 	else
@@ -517,11 +517,16 @@ class CM_GreedyDual
     while (size > max_size) {
       CacheEntry entry = get_iterator (priority_list)->index();
       if (!entry) break;
-      MORE_CACHE_WERR ("%s: Size is %d - evicting %O.\n",
-		       entry->cache_name, size, entry);
+      MORE_CACHE_WERR ("evict: Size %db > %db - evicting %O / %O.\n",
+		       size, max_size, entry->cache_name, entry);
       priority_list[entry] = 0;
       low_remove_entry (entry->cache_name, entry);
     }
+  }
+
+  int manager_size_overhead()
+  {
+    return Pike.count_memory (-1, priority_list) + ::manager_size_overhead();
   }
 
   void after_gc()
@@ -771,31 +776,6 @@ to create it. The real time implementation is " +
 protected CM_GDS_RealTime cm_gds_realtime =
   CM_GDS_RealTime (startup_cache_size);
 
-#ifdef DEBUG_CACHE_SIZES
-protected int cmp_sizeof_cache_entry (string cache_name, CacheEntry entry)
-{
-  int res;
-  mixed data = entry->data;
-  mapping opts = (["block_strings": 1,
-#if DEBUG_CACHE_SIZES > 1
-		   "collect_internals": 1,
-#endif
-		 ]);
-  if (function(int|mapping:int) cm_cb =
-      objectp (data) && data->cache_count_memory)
-    res = cm_cb (opts) + Pike.count_memory (-1, entry, entry->key);
-  else
-    res = Pike.count_memory (opts, entry, entry->key, data);
-#if DEBUG_CACHE_SIZES > 1
-  werror ("Internals counted for %O / %O: ({\n%{%s,\n%}})\n",
-	  cache_name, entry,
-	  sort (map (opts->collect_internals,
-		     lambda (mixed m) {return sprintf ("%O", m);})));
-#endif
-  return res;
-}
-#endif
-
 //! The preferred managers according to various caching requirements.
 //! When several apply for a cache, choose the first one in this list.
 //!
@@ -847,9 +827,6 @@ array(CacheManager) cache_managers =
 		cm_gds_cputime,
 	      }));
 
-protected mapping(string:CacheManager) caches = ([]);
-// Maps the named caches to the cache managers that handle them.
-
 protected Thread.Mutex cache_mgmt_mutex = Thread.Mutex();
 // Locks operations that manipulate named caches, i.e. changes in the
 // caches, CacheManager.stats and CacheManager.lookup mappings.
@@ -863,6 +840,34 @@ void set_total_size_limit (int size)
     mgr->update_size_limit();
   }
 }
+
+#ifdef DEBUG_CACHE_SIZES
+protected int cmp_sizeof_cache_entry (string cache_name, CacheEntry entry)
+{
+  int res;
+  mixed data = entry->data;
+  mapping opts = (["block_strings": 1,
+#if DEBUG_CACHE_SIZES > 1
+		   "collect_internals": 1,
+#endif
+		 ]);
+  if (function(int|mapping:int) cm_cb =
+      objectp (data) && data->cache_count_memory)
+    res = cm_cb (opts) + Pike.count_memory (-1, entry, entry->key);
+  else
+    res = Pike.count_memory (opts, entry, entry->key, data);
+#if DEBUG_CACHE_SIZES > 1
+  werror ("Internals counted for %O / %O: ({\n%{%s,\n%}})\n",
+	  cache_name, entry,
+	  sort (map (opts->collect_internals,
+		     lambda (mixed m) {return sprintf ("%O", m);})));
+#endif
+  return res;
+}
+#endif
+
+protected mapping(string:CacheManager) caches = ([]);
+// Maps the named caches to the cache managers that handle them.
 
 mapping(string:CacheManager) cache_list()
 //! Returns a list of all currently registered caches and their
@@ -888,7 +893,7 @@ CacheManager cache_register (string cache_name,
 //! interface gets populated timely.
 
 {
-  Thread.Mutex lock =
+  Thread.MutexKey lock =
     cache_mgmt_mutex->lock (2); // Called from cache_change_manager too.
 
   if (CacheManager mgr = caches[cache_name])
@@ -912,7 +917,7 @@ void cache_unregister (string cache_name)
 //! Unregisters the specified cache. This empties the cache and also
 //! removes it from the cache overview in the admin interface.
 {
-  Thread.Mutex lock = cache_mgmt_mutex->lock();
+  Thread.MutexKey lock = cache_mgmt_mutex->lock();
 
   // vvv Relying on the interpreter lock from here.
   if (CacheManager mgr = m_delete (caches, cache_name)) {
@@ -940,7 +945,7 @@ void cache_change_manager (string cache_name, CacheManager manager)
 //! give them an accurate cost (typically applies to cost derived from
 //! the creation time).
 {
-  Thread.Mutex lock = cache_mgmt_mutex->lock();
+  Thread.MutexKey lock = cache_mgmt_mutex->lock();
 
   // vvv Relying on the interpreter lock from here.
   CacheManager old_mgr = m_delete (caches, cache_name);
@@ -1014,11 +1019,12 @@ mixed cache_lookup (string cache_name, mixed key, void|mapping cache_context)
   if (mapping(mixed:CacheEntry) lm = mgr->lookup[cache_name])
     if (CacheEntry entry = lm[key]) {
 
-      if (entry->timeout && entry->timeout <= time (1)) {
+      if (entry->timeout && entry->timeout <= time (1) || !entry->data) {
 	mgr->remove_entry (cache_name, entry);
 	mgr->got_miss (cache_name, key, cache_context);
-	MORE_CACHE_WERR ("cache_lookup (%O, %s): Timed out\n",
-			 cache_name, RXML.utils.format_short (key));
+	MORE_CACHE_WERR ("cache_lookup (%O, %s): %s\n",
+			 cache_name, RXML.utils.format_short (key),
+			 entry->data ? "Timed out" : "Destructed");
 	return 0;
       }
 
@@ -1270,10 +1276,10 @@ protected void cache_clean()
 	    // branches getting visited, the entry might just happen to be in
 	    // use during the count_memory call here, and there are often
 	    // minor differences for whatever reason..
-	    werror ("Size difference for %O / %O: "
-		    "Is %d, was %d in cache_set() - diff %d.\n",
-		    cache_name, entry, size, entry->cmp_size,
-		    size - entry->cmp_size);
+	    werror ("Size diff in %O: Is %d, was %d in cache_set() - "
+		    "diff %d: %O\n",
+		    cache_name, size, entry->cmp_size,
+		    size - entry->cmp_size, entry);
 	    // Update to avoid repeated messages.
 	    entry->cmp_size = size;
 	  }
@@ -1312,7 +1318,9 @@ protected void cache_clean()
 
   vt = gethrvtime() - vt;	// -1 - -1 if cpu time isn't working.
   t = gethrtime() - t;
-  CACHE_WERR ("Finished RAM cache cleanup - took %s.\n",
+  CACHE_WERR ("Finished RAM cache cleanup: "
+	      "%db stale, %db timed out, took %s.\n",
+	      destr_garb_size, timeout_garb_size,
 	      Roxen.format_hrtime (vt || t));
 
   int stat_last_period = now - last_gc_run;
@@ -1339,8 +1347,8 @@ protected void cache_clean()
     float old_weight = 1.0 - our_weight;
 
     if (startup) {
-      sum_gc_time += (float) (vt || t);
       sum_gc_runs += 1.0;
+      sum_gc_time += (float) (vt || t);
       sum_destruct_garbage_size += (float) destr_garb_size;
       sum_timeout_garbage_size += (float) timeout_garb_size;
     }
@@ -1368,6 +1376,8 @@ protected void cache_clean()
     admin_config->log_event ("roxen", "ram-gc", 0, ([
 			       "handle-cputime": vt,
 			       "handle-time": t,
+			       "stale-size": destr_garb_size,
+			       "timed-out-size": timeout_garb_size,
 			     ]));
 
   // Fall back to 60 secs just in case the config is messed up somehow.
