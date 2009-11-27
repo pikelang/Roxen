@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.118 2009/11/27 01:49:02 mast Exp $
+// $Id: cache.pike,v 1.119 2009/11/27 13:29:41 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -572,11 +572,17 @@ class CM_GreedyDual
   {
     account_hit (cache_name, entry);
     int|float pval = calc_pval (entry);
-    // vvv Relying on the interpreter lock from here.
+
+    // Note: Won't have the interpreter lock during the operation below. The
+    // tricky situation occur if the same entry is processed by another
+    // got_hit, where we might get it inserted in more than one place and one
+    // of them will be inconsistent with the pval value. evict() has a
+    // consistency check that should detect and correct this eventually. The
+    // worst thing that happens is that the eviction order is more or less
+    // wrong until then.
     priority_list[entry] = 0;
     entry->pval = pval;
     priority_list[entry] = 1;
-    // ^^^ Relying on the interpreter lock to here.
   }
 
   int add_entry (string cache_name, CacheEntry entry,
@@ -603,14 +609,41 @@ class CM_GreedyDual
 
   void evict (int max_size)
   {
+    object threads_disabled;
+
     while (size > max_size) {
       CacheEntry entry = get_iterator (priority_list)->index();
       if (!entry) break;
+
+      if (!priority_list[entry]) {
+	// The order in the list has become inconsistent with the pval values.
+	// It might happen due to the race in got_hit(), or it might just be
+	// interference from a concurrent evict() call.
+	if (!threads_disabled)
+	  // Take a hefty lock and retry, to rule out the second case.
+	  threads_disabled = _disable_threads();
+	else {
+	  // Got the lock so it can't be a race, i.e. the priority_list order
+	  // is funky. Have to rebuild it without interventions.
+	  report_warning ("Warning: Recovering from race inconsistency "
+			  "in %O->priority_list.\n", this);
+	  priority_list = (<>);
+	  foreach (lookup; string cache_name; mapping(mixed:CacheEntry) lm)
+	    foreach (lm;; CacheEntry entry)
+	      priority_list[entry] = 1;
+	}
+	continue;
+      }
+
+      priority_list[entry] = 0;
+
       MORE_CACHE_WERR ("evict: Size %db > %db - evicting %O / %O.\n",
 		       size, max_size, entry->cache_name, entry);
-      priority_list[entry] = 0;
+
       low_remove_entry (entry->cache_name, entry);
     }
+
+    threads_disabled = 0;
   }
 
   int manager_size_overhead()
