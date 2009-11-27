@@ -2,7 +2,7 @@
 // Copyright © 1997 - 2009, Roxen IS.
 //
 // Wizard generator
-// $Id: wizard.pike,v 1.168 2009/05/07 14:15:53 mast Exp $
+// $Id: wizard.pike,v 1.169 2009/11/27 13:39:27 stewa Exp $
 
 /* wizard_automaton operation (old behavior if it isn't defined):
 
@@ -964,18 +964,10 @@ mapping|string wizard_for(RequestID id,string cancel,mixed ... args)
       if (page_state && v->_page != oldpage) {
 	redirect = page_state[0];
 	if (functionp (redirect)) {
-	  if (dispatcher == redirect)
-	    // The previous page state had the same dispatcher as this
-	    // one; it's unnecessary to re-run it since it shouldn't
-	    // change its mind. This is also important since most of
-	    // the heavy work is often done there.
-	    dispatcher = redirect = 0;
-	  else {
-	    dispatcher = redirect;
-	    DEBUGMSG (sprintf ("Wizard: Running dispatch function %O for page %s\n",
-			       dispatcher, v->_page));
-	    redirect = dispatcher (id, v->_page, @args);
-	  }
+	  dispatcher = redirect;
+	  DEBUGMSG (sprintf ("Wizard: Running dispatch function %O for page %s\n",
+			     dispatcher, v->_page));
+	  redirect = dispatcher (id, v->_page, @args);
 	}
 	else dispatcher = 0;
       }
