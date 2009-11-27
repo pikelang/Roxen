@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.119 2009/11/27 13:29:41 mast Exp $
+// $Id: cache.pike,v 1.120 2009/11/27 13:37:53 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -654,19 +654,64 @@ class CM_GreedyDual
   void after_gc()
   {
     if (max_used_pval > Int.NATIVE_MAX / 2) {
-      // The neat thing to do here is to lower all priority values,
-      // but it has to be done atomically. Since this presumably
-      // happens so seldom we take the easy way and just empty the
-      // caches instead.
-      CACHE_WERR ("%O: Max priority value too large - resetting.\n", this);
+      int|float pval_base;
+      if (CacheEntry lowest = get_iterator (priority_list)->index())
+	pval_base = lowest->pval;
+      else
+	return;
+
+      // To cope with concurrent updates, we replace the lookup
+      // mapping and start adding back the entries from the old one.
+      // Need _disable_threads to make the resets of the CacheStats
+      // fields atomic.
+      object threads_disabled = _disable_threads();
+      mapping(string:mapping(mixed:CacheEntry)) old_lookup = lookup;
+      lookup = ([]);
+      foreach (old_lookup; string cache_name;) {
+	lookup[cache_name] = ([]);
+	if (CacheStats cs = stats[cache_name]) {
+	  cs->count = 0;
+	  cs->size = 0;
+	}
+      }
+      priority_list = (<>);
+      size = 0;
+      max_used_pval = 0;
+      threads_disabled = 0;
+
+      int|float max_pval;
+
+      foreach (old_lookup; string cache_name; mapping(mixed:CacheEntry) old_lm)
+	if (CacheStats cs = stats[cache_name])
+	  if (mapping(mixed:CacheEntry) new_lm = lookup[cache_name])
+	    foreach (old_lm; mixed key; CacheEntry entry) {
+	      int|float pval = entry->pval -= pval_base;
+	      if (!new_lm[key]) {
+		// Relying on the interpreter lock here.
+		new_lm[key] = entry;
+
+		priority_list[entry] = 1;
+		if (pval > max_pval) max_pval = pval;
+
+		cs->count++;
+		cs->size += entry->size;
+		size += entry->size;
+	      }
+	    }
+
+      if (intp (max_pval))
+	max_used_pval = max_pval;
+
+      CACHE_WERR ("%O: Rebased priority values - "
+		  "old base was %O, new range is 0..%O.\n",
+		  this, pval_base, max_pval);
 
       if (Configuration admin_config = roxenp()->get_admin_configuration())
-	// Log an event, in case it doesn't happen that seldom afterall.
-	admin_config->log_event ("roxen", "reset-ram-cache", this->name);
-
-      while (sizeof (priority_list))
-	evict (0);
-      max_used_pval = 0;
+	// Log an event, in case we suspect this starts to happen a lot.
+	admin_config->log_event ("roxen", "ram-cache-rebase", this->name, ([
+				   "old-pval-base": pval_base,
+				   "new-max-pval": max_pval,
+				 ]));
     }
   }
 }
@@ -1644,7 +1689,7 @@ protected void cache_clean()
   last_gc_run = now;
 
   if (Configuration admin_config = roxenp()->get_admin_configuration())
-    admin_config->log_event ("roxen", "ram-gc", 0, ([
+    admin_config->log_event ("roxen", "ram-cache-gc", 0, ([
 			       "handle-cputime": vt,
 			       "handle-time": t,
 			       "stale-size": destr_garb_size,

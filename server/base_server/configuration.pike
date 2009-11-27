@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.687 2009/11/12 14:43:59 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.688 2009/11/27 13:37:53 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4830,10 +4830,14 @@ below.</p>
     <p>The known events are:</p>
 
     <table><tbody valign='top'>
-    <tr><td>ram-gc</td>
+    <tr><td>ram-cache-gc</td>
 	<td>Logged after the RAM cache GC has run. $handle-time and
 	$handle-cputime are set to the time the GC took (see
 	descriptions above for details).</td></tr>
+    <tr><td>ram-cache-rebase</td>
+	<td>Logged when the RAM cache has performed a rebias of the
+	priority queue values. Is a problem only if it starts to
+	happen too often.</td></tr>
     </tbody></table></dd>"
 #endif
 		 #"\n
