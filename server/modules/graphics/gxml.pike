@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.48 2009/11/26 15:12:34 grubba Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.49 2009/11/30 15:01:58 grubba Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -611,7 +611,52 @@ constant tagdoc = ([
     </p></attr>
     <attr name='noxml'><p>
       Don't self close the generated <tag>img</tag>.
-    </p></attr>", ([
+    </p></attr>
+
+<h1>Timeout</h1>
+
+<p>The generated image will by default never expire, but
+in some circumstances it may be pertinent to limit the
+time the image and its associated data is kept. Its
+possible to set an (advisory) timeout on the image data
+using the following attributes.</p>
+
+<attr name='unix-time' value='number'><p>
+Set the base expiry time to this absolute time.</p><p>
+If left out, the other attributes are relative to current time.</p>
+</attr>
+
+<attr name='years' value='number'><p>
+Add this number of years to the time this entry is valid.</p>
+</attr>
+
+<attr name='months' value='number'><p>
+Add this number of months to the time this entry is valid.</p>
+</attr>
+
+<attr name='weeks' value='number'><p>
+Add this number of weeks to the time this entry is valid.</p>
+</attr>
+
+<attr name='days' value='number'><p>
+Add this number of days to the time this entry is valid.</p>
+</attr>
+
+<attr name='hours' value='number'><p>
+Add this number of hours to the time this entry is valid.</p>
+</attr>
+
+<attr name='beats' value='number'><p>
+Add this number of beats to the time this entry is valid.</p>
+</attr>
+
+<attr name='minutes' value='number'><p>
+Add this number of minutes to the time this entry is valid.</p>
+</attr>
+
+<attr name='seconds' value='number'><p>
+Add this number of seconds to the time this entry is valid.</p>
+</attr>", ([
     "&_.layers.{name}.l;" : #"<desc type='entity'><p>
       Position of the left side of the layer <i>name</i>.
       </p></desc>",

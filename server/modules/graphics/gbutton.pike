@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.121 2009/11/26 15:12:34 grubba Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.122 2009/11/30 15:01:58 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -176,7 +176,52 @@ constant gbuttonattr=#"
   <i>middle</i>.</p>
 </attr>
 
-<attr name='font' value='fontname'><p></p></attr>";
+<attr name='font' value='fontname'><p></p></attr>
+
+<h1>Timeout</h1>
+
+<p>The generated image will by default never expire, but
+in some circumstances it may be pertinent to limit the
+time the image and its associated data is kept. Its
+possible to set an (advisory) timeout on the image data
+using the following attributes.</p>
+
+<attr name='unix-time' value='number'><p>
+Set the base expiry time to this absolute time.</p><p>
+If left out, the other attributes are relative to current time.</p>
+</attr>
+
+<attr name='years' value='number'><p>
+Add this number of years to the time this entry is valid.</p>
+</attr>
+
+<attr name='months' value='number'><p>
+Add this number of months to the time this entry is valid.</p>
+</attr>
+
+<attr name='weeks' value='number'><p>
+Add this number of weeks to the time this entry is valid.</p>
+</attr>
+
+<attr name='days' value='number'><p>
+Add this number of days to the time this entry is valid.</p>
+</attr>
+
+<attr name='hours' value='number'><p>
+Add this number of hours to the time this entry is valid.</p>
+</attr>
+
+<attr name='beats' value='number'><p>
+Add this number of beats to the time this entry is valid.</p>
+</attr>
+
+<attr name='minutes' value='number'><p>
+Add this number of minutes to the time this entry is valid.</p>
+</attr>
+
+<attr name='seconds' value='number'><p>
+Add this number of seconds to the time this entry is valid.</p>
+</attr>";
 #endif
 
 function TIMER( function f )

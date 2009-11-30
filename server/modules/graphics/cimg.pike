@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.84 2009/11/26 15:12:33 grubba Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.85 2009/11/30 15:01:58 grubba Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -75,6 +75,51 @@ automatically exclude layers that are not shown in the original
 image. This is only useful in combination with the
 'process-all-layers' attribute.</p>
 </attr>
+
+<h1>Timeout</h1>
+
+<p>The generated image will by default never expire, but
+in some circumstances it may be pertinent to limit the
+time the image and its associated data is kept. Its
+possible to set an (advisory) timeout on the image data
+using the following attributes.</p>
+
+<attr name='unix-time' value='number'><p>
+Set the base expiry time to this absolute time.</p><p>
+If left out, the other attributes are relative to current time.</p>
+</attr>
+
+<attr name='years' value='number'><p>
+Add this number of years to the time this entry is valid.</p>
+</attr>
+
+<attr name='months' value='number'><p>
+Add this number of months to the time this entry is valid.</p>
+</attr>
+
+<attr name='weeks' value='number'><p>
+Add this number of weeks to the time this entry is valid.</p>
+</attr>
+
+<attr name='days' value='number'><p>
+Add this number of days to the time this entry is valid.</p>
+</attr>
+
+<attr name='hours' value='number'><p>
+Add this number of hours to the time this entry is valid.</p>
+</attr>
+
+<attr name='beats' value='number'><p>
+Add this number of beats to the time this entry is valid.</p>
+</attr>
+
+<attr name='minutes' value='number'><p>
+Add this number of minutes to the time this entry is valid.</p>
+</attr>
+
+<attr name='seconds' value='number'><p>
+Add this number of seconds to the time this entry is valid.</p>
+</attr>
 ",
 
 "cimg-url":#"<desc tag='tag'><p><short>
@@ -97,6 +142,51 @@ image. This is only useful in combination with the
 <ex-box><emit source='sql' query='select imagedata from images where id=37'>
   <cimg-url data='&sql.imagedata;'/>
 </emit></ex-box>
+</attr>
+
+<h1>Timeout</h1>
+
+<p>The generated image will by default never expire, but
+in some circumstances it may be pertinent to limit the
+time the image and its associated data is kept. Its
+possible to set an (advisory) timeout on the image data
+using the following attributes.</p>
+
+<attr name='unix-time' value='number'><p>
+Set the base expiry time to this absolute time.</p><p>
+If left out, the other attributes are relative to current time.</p>
+</attr>
+
+<attr name='years' value='number'><p>
+Add this number of years to the time this entry is valid.</p>
+</attr>
+
+<attr name='months' value='number'><p>
+Add this number of months to the time this entry is valid.</p>
+</attr>
+
+<attr name='weeks' value='number'><p>
+Add this number of weeks to the time this entry is valid.</p>
+</attr>
+
+<attr name='days' value='number'><p>
+Add this number of days to the time this entry is valid.</p>
+</attr>
+
+<attr name='hours' value='number'><p>
+Add this number of hours to the time this entry is valid.</p>
+</attr>
+
+<attr name='beats' value='number'><p>
+Add this number of beats to the time this entry is valid.</p>
+</attr>
+
+<attr name='minutes' value='number'><p>
+Add this number of minutes to the time this entry is valid.</p>
+</attr>
+
+<attr name='seconds' value='number'><p>
+Add this number of seconds to the time this entry is valid.</p>
 </attr>",
 
 "emit#cimg":({ #"<desc type='plugin'><p><short>
