@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: global_variables.pike,v 1.121 2009/11/25 10:50:18 jonasw Exp $
+// $Id: global_variables.pike,v 1.122 2009/11/30 15:20:54 mast Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -829,7 +829,7 @@ Running it too often causes unnecessary server load.</p>"))
   // intentionally use a different variable name to reset the value.
   definvisvar ("mem_cache_gc", 300, TYPE_INT);
 
-  v = defvar ("mem_cache_size", 50,
+  v = defvar ("mem_cache_size", 100,
 	      LOCALE(0, "Cache: Memory cache size"),
 	      TYPE_INT,
 	      LOCALE(0, #"\
