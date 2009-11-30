@@ -302,16 +302,11 @@ them. They will shrink to the configured maximum size as they fill up."),
     }
 
   mgr_stats += "<div style='font-size: smaller;'><p>" +
-#ifdef CACHE_BYTE_HR_STATS
     LOCALE(0, #"\
-<i>Byte HR</i> is the byte hit rate, i.e. every hit and miss is
-weighted with the size of the entry.") + " " +
-#endif
-    LOCALE(0, #"\
-<i>Cost HR</i> weights each entry hit and miss with its cost according
-to the cost metric of the cache manager. Note that it uses the
-approximation that every cache miss is followed by the addition of a
-new cache entry.") +
+<i>Cost HR</i> is the cost hit rate, i.e. every hit and miss is
+weighted with the cost for each entry according to the cost metric of
+the cache manager. Note that it uses the approximation that every
+cache miss is followed by the addition of a new cache entry.") +
     "</p></div>\n";
 
   mgr_summary += "</table>\n";
