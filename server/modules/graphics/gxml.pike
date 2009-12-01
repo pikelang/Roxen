@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.49 2009/11/30 15:01:58 grubba Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.50 2009/12/01 18:06:38 grubba Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -555,7 +555,7 @@ class TagGXML
       
       res_args->src = query_internal_location() + key + ext;
       int no_draw = !id->misc->generate_images;
-      if( mapping size = the_cache->metadata( key, id, no_draw ) )
+      if( mapping size = the_cache->metadata( key, id, no_draw, timeout ) )
       {
 	res_args->width = size->xsize;
 	res_args->height = size->ysize;

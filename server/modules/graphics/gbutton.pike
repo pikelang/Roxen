@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.122 2009/11/30 15:01:58 grubba Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.123 2009/12/01 18:06:38 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -938,7 +938,7 @@ class ButtonFrame {
       img_src += "." + (new_args->format || "gif");
 
 //     werror("argcache->store took %dµs\n", gethrtime()-t );
-    return ({ img_src, new_args });
+    return ({ img_src, new_args, timeout });
   }
 }
 
@@ -972,7 +972,7 @@ class TagGButton {
       string title = args->title;
       m_delete(args, "img-align");
       
-      [string img_src, mapping new_args]=mk_url(id);
+      [string img_src, mapping new_args, int timeout]=mk_url(id);
 
       mapping img_attrs = ([ "src"    : img_src,
 			     "alt"    : args->alt || (string)content,
@@ -986,7 +986,7 @@ class TagGButton {
       
       int no_draw = !id->misc->generate_images;
       if (mapping size = button_cache->metadata( ({ new_args, (string)content }),
-						 id, no_draw)) {
+						 id, no_draw, timeout)) {
 	//  Image in cache (no_draw above prevents generation on-the-fly, i.e.
 	//  first image will lack sizes).
 	img_attrs->width = size->xsize;

@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.311 2009/11/30 15:01:58 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.312 2009/12/01 18:06:38 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -1225,7 +1225,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
     foreach(c/split-({""}), string word)
     {
       string fn = image_cache->store( ({ p, word }), id, timeout );
-      mapping size = image_cache->metadata( fn, id, no_draw);
+      mapping size = image_cache->metadata( fn, id, no_draw, timeout);
       if(setalt) arg->alt=word;
       arg->src=query_absolute_internal_location(id)+fn+ext;
       if( size )
@@ -1243,7 +1243,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
   }
 
   string num = image_cache->store( ({ p, c }), id, timeout );
-  mapping size = image_cache->metadata( num, id, no_draw );
+  mapping size = image_cache->metadata( num, id, no_draw, timeout );
   if(!arg->alt) arg->alt=replace(c,"\"","'");
 
   arg->src=query_absolute_internal_location(id)+num+ext;
@@ -1266,7 +1266,7 @@ private string do_gtext(mapping arg, string c, RequestID id)
 			id->misc->defines->alink||"#ff0000";
 
     string num2 = image_cache->store( ({ p, c }), id, timeout );
-    size = image_cache->metadata( num2, id );
+    size = image_cache->metadata( num2, id, UNDEFINED, timeout );
     if(size) {
       arg->width=(string)max(arg->xsize,size->xsize);
       arg->height=(string)max(arg->ysize,size->ysize);
