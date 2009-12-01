@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.122 2009/12/01 10:23:33 mast Exp $
+// $Id: cache.pike,v 1.123 2009/12/01 16:30:19 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -1043,7 +1043,7 @@ protected void update_cache_size_balance()
 		  total_size_limit);
 
       foreach (cache_managers, CacheManager mgr) {
-	mgr->total_size_limit = mgr_used[mgr] + extra;
+	mgr->total_size_limit = max (rebalance_min_size, mgr_used[mgr] + extra);
 	mgr->update_size_limit();
       }
     }
