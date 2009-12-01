@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1052 2009/11/26 17:25:06 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1053 2009/12/01 18:04:41 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -3992,13 +3992,17 @@ class ImageCache
 
   mapping metadata( array|string|mapping data,
 		    RequestID id,
-		    int|void nodraw )
+		    int|void nodraw,
+		    int|void timeout )
   //! Returns a mapping of image metadata for an image generated from
   //! the data given (as sent to @[store()]). If a non-zero
   //! @[nodraw] parameter is given and the image was not in the cache,
   //! it will not be rendered on the fly to get the correct data.
+  //!
+  //! @param timeout
+  //!   The @[timeout] is sent unmodified to @[store()].
   {
-    string na = store( data,id );
+    string na = store( data, id, timeout );
     mapping res;
 #ifdef ARG_CACHE_DEBUG
       werror("meta %O\n", na );
