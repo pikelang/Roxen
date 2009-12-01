@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.121 2009/11/27 13:43:28 mast Exp $
+// $Id: cache.pike,v 1.122 2009/12/01 10:23:33 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -49,7 +49,7 @@ constant rebalance_keep_factor =
 //! caches are shrunk linearly in the next, and that is not limited by
 //! this value. Remains to be seen whether that is a feature or a bug.
 
-constant rebalance_min_size = 100 * 1024;
+constant rebalance_min_size = 1024 * 1024;
 //! Minimum size to give a cache manager.
 
 protected constant cm_stats_avg_period = rebalance_adaptivity;
