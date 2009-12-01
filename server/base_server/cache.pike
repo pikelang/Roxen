@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.123 2009/12/01 16:30:19 mast Exp $
+// $Id: cache.pike,v 1.124 2009/12/01 16:32:12 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -237,7 +237,6 @@ class CacheManager
       ASSERT_IF_DEBUG (cs->count /*%O*/ >= 0, cs->count);
     }
     size -= entry->size;
-    recent_added_bytes -= entry->size;
     ASSERT_IF_DEBUG (size /*%O*/ >= 0, size);
   }
 
@@ -263,6 +262,7 @@ class CacheManager
 
 	if (old_entry) {
 	  account_remove_entry (cache_name, old_entry);
+	  recent_added_bytes -= entry->size;
 	  remove_entry (cache_name, old_entry);
 	}
 
@@ -325,8 +325,8 @@ class CacheManager
   float add_rate = 0.0;
   //! The number of newly added bytes per second, calculated as a
   //! decaying average over the last @[cm_stats_avg_period] seconds.
-  //! Note that the returned value could become negative if valid
-  //! entries are removed.
+  //! Note that the returned value could become negative if entries
+  //! are replaced with smaller ones.
 
   float hits = 0.0, misses = 0.0;
   //! Decaying sums over the hits and misses during approximately the
