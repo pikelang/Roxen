@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.80 2009/11/26 15:43:48 grubba Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.81 2009/12/01 18:06:52 grubba Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -403,7 +403,7 @@ class TagCimgplugin
       res["file-size-kb"] = strlen(data)/1024;
       if (lower_case(args->nodata || "no") == "no")
 	res["data"] = data;
-      res |= the_cache->metadata( a, id, 0 ); // enforce generation
+      res |= the_cache->metadata( a, id, 0, timeout ); // enforce generation
 #ifdef DEBUG_CACHEABLE
       report_debug("%s:%d restored cacheable flags\n", __FILE__, __LINE__);
 #endif
@@ -444,7 +444,7 @@ class TagCImg
       args->src = query_absolute_internal_location( id )
 	+ the_cache->store( a, id, timeout ) + filename + ext;
       int no_draw = !id->misc->generate_images;
-      if( mapping size = the_cache->metadata( a, id, no_draw ) )
+      if( mapping size = the_cache->metadata( a, id, no_draw, timeout ) )
       {
 	// image in cache (no_draw above prevents generation on-the-fly)
 	args->width = size->xsize;
