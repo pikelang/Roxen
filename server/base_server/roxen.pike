@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.967 2009/11/26 15:56:30 wellhard Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.968 2009/12/01 16:43:40 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -4521,7 +4521,7 @@ class ArgCache
     return low_key_exists( i[0] ) && low_key_exists( i[1] );
   }
 
-  string store( mapping args )
+  string store( mapping args, int|void ignored_timeout )
   //! Store a mapping (of purely encode_value:able data) in the
   //! argument cache. The string returned is your key to retrieve the
   //! data later.
