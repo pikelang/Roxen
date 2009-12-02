@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.283 2009/11/26 15:05:59 grubba Exp $
+// $Id: Roxen.pmod,v 1.284 2009/12/02 12:22:30 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2170,26 +2170,32 @@ string image_from_type( string t )
   return "internal-gopher-unknown";
 }
 
-#define  PREFIX ({ "bytes", "kb", "Mb", "Gb", "Tb", "Pb", "Eb", "Zb", "Yb" })
+protected constant size_suffix =
+  ({ "B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" });
+
 string sizetostring( int size )
   //! Returns the size as a memory size string with suffix,
-  //! e.g. 43210 is converted into "42.2 kb". To be correct
+  //! e.g. 43210 is converted into "42.2 kB". To be correct
   //! to the latest standards it should really read "42.2 KiB",
   //! but we have chosen to keep the old notation for a while.
   //! The function knows about the quantifiers kilo, mega, giga,
   //! tera, peta, exa, zetta and yotta.
 {
-  if(size<0) return "--------";
-  float s = (float)size;
-  size=0;
+  int neg = size < 0;
+  if (neg) size = -size;
 
-  if(s<1024.0) return (int)s+" bytes";
+  if (size < 1024)
+    return (neg ? -size : size) + " " + size_suffix[0];
+
+  float s = (float) size;
+  size=0;
   while( s > 1024.0 )
   {
     s /= 1024.0;
     size ++;
   }
-  return sprintf("%.1f %s", s, PREFIX[ size ]);
+  if (neg) s = -s;
+  return sprintf("%.1f %s", s, size_suffix[ size ]);
 }
 
 string format_hrtime (int hrtime, void|int pad)
