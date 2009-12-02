@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1053 2009/12/01 18:04:41 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1054 2009/12/02 00:53:31 jonasw Exp $";
 
 //! @appears roxen
 //!
@@ -3906,14 +3906,15 @@ class ImageCache
   }
 
 
-  string data( array|string|mapping args, RequestID id, int|void nodraw )
+  string data( array|string|mapping args, RequestID id, int|void nodraw,
+			   int|void timeout )
   //! Returns the actual raw image data of the image rendered from the
   //! @[args] instructions.
   //!
   //! A non-zero @[nodraw] parameter means an image not already in the
   //! cache will not be rendered on the fly, but instead return zero.
   {
-    mapping res = http_file_answer( args, id, nodraw );
+    mapping res = http_file_answer( args, id, nodraw, timeout );
     return res && res->data;
   }
 
@@ -4340,20 +4341,20 @@ class ArgCache
       }
 
     if(sizeof(rows)) {
-      QUERY("UPDATE LOW_PRIORITY "+name+"2 "
-	    "   SET atime = NOW() "
-	    " WHERE id = %s", id);
       if (zero_type(timeout)) {
-	QUERY("UPDATE LOW_PRIORITY "+name+"2 "
-	      "   SET timeout = NULL "
-	      " WHERE id = %s", id);
+        QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+              "   SET atime = NOW(), timeout = NULL "
+              " WHERE id = %s", id);
       } else {
-	QUERY("UPDATE LOW_PRIORITY "+name+"2 "
-	      "   SET timeout = %d "
-	      " WHERE id = %s "
-	      "   AND timeout IS NOT NULL "
-	      "   AND timeout < %d",
-	      timeout, id, timeout);
+        QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+              "   SET atime = NOW() "
+              " WHERE id = %s", id);
+        QUERY("UPDATE LOW_PRIORITY "+name+"2 "
+              "   SET timeout = %d "
+              " WHERE id = %s "
+              "   AND timeout IS NOT NULL "
+              "   AND timeout < %d",
+              timeout, id, timeout);
       }
       return;
     }
