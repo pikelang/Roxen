@@ -1,4 +1,4 @@
-/* $Id: RoxenSSLFile.pike,v 1.26 2007/03/27 14:17:00 mast Exp $
+/* $Id: RoxenSSLFile.pike,v 1.27 2009/12/03 15:04:41 mast Exp $
  */
 
 // This is SSL.sslfile from Pike 7.6, slightly modified for the old
@@ -830,10 +830,15 @@ int write (string|array(string) data, mixed... args)
     if (arrayp (data)) {
       int idx = 0, pos = 0;
 
-      while (idx < sizeof (data) && !sizeof (write_buffer)) {
+      while (idx < sizeof (data) && !sizeof (write_buffer) &&
+	     // Always stop after 64k data in nonblocking mode, so
+	     // that we don't loop here arbitrarily long if the write
+	     // is very large and the bottleneck is in the encryption.
+	     (!nonblocking_mode || written < 65536)) {
 	int size = sizeof (data[idx]) - pos;
 	if (size > SSL.constants.PACKET_MAX_SIZE) {
-	  int n = conn->send_streaming_data (data[idx][pos..]);
+	  int n = conn->send_streaming_data (
+	    data[idx][pos..pos + SSL.constants.PACKET_MAX_SIZE - 1]);
 	  SSL3_DEBUG_MSG ("SSL.sslfile->write: Queued data[%d][%d..%d]\n",
 			  idx, pos, pos + n - 1);
 	  written += n;
@@ -866,8 +871,12 @@ int write (string|array(string) data, mixed... args)
     }
 
     else			// data is a string.
-      while (written < sizeof (data) && !sizeof (write_buffer)) {
-	int n = conn->send_streaming_data (data[written..]);
+      while (written < sizeof (data) && !sizeof (write_buffer) &&
+	     // Limit the amount written in a single call, for the
+	     // same reason as above.
+	     (!nonblocking_mode || written < 65536)) {
+	int n = conn->send_streaming_data (
+	  data[written..written + SSL.constants.PACKET_MAX_SIZE - 1]);
 	SSL3_DEBUG_MSG ("SSL.sslfile->write: Queued data[%d..%d]\n",
 			written, written + n - 1);
 	written += n;
