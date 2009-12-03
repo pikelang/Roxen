@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.124 2009/12/01 16:32:12 mast Exp $
+// $Id: cache.pike,v 1.125 2009/12/03 23:19:37 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -337,9 +337,9 @@ class CacheManager
   //! approximately the last @[cm_stats_avg_period] seconds. Only
   //! applicable if @[has_cost] is set.
 
-  protected int recent_added_bytes;
-  protected int recent_hits, recent_misses;
-  protected int|float recent_cost_hits, recent_cost_misses;
+  int recent_added_bytes;
+  int recent_hits, recent_misses;
+  int|float recent_cost_hits, recent_cost_misses;
 
   void update_decaying_stats (int start_time, int last_update, int now)
   // Should only be called at regular intervals from
@@ -971,12 +971,24 @@ protected CM_GDS_RealTime cm_gds_realtime = CM_GDS_RealTime();
 //!   @[cache_set].
 //! @enddl
 mapping(string:CacheManager) cache_manager_prefs = ([
+#if 0
+  // Workaround: The following uses GDS(cpu time) for most caches,
+  // which should be more accurate. But since several caches cannot
+  // use it, we get a balancing problem between it and GDS(real time).
+  // Because update_cache_size_balance still isn't good enough at
+  // responding to workload changes quickly, we stick to GDS(real
+  // time) for now to make this problem less significant (there might
+  // also be a few caches in GDS(1), but it's not large enough to
+  // really matter).
   "default": (System.CPU_TIME_IS_THREAD_LOCAL != "yes" ||
 	      System.CPU_TIME_RESOLUTION > 10000 ?
 	      // Don't use cpu time if it's too bad. Buglet: We just
 	      // assume the real time is better.
 	      cm_gds_realtime :
 	      cm_gds_cputime),
+#else
+  "default": cm_gds_realtime,
+#endif
   "no_cpu_timings": cm_gds_realtime,
   "no_thread_timings": cm_gds_realtime,
   "no_timings": cm_gds_1,
@@ -988,12 +1000,6 @@ array(CacheManager) cache_managers =
 		cache_manager_prefs->no_cpu_timings,
 		cache_manager_prefs->no_thread_timings,
 		cache_manager_prefs->no_timings,
-#if 0
-		cm_random,
-#endif
-		cm_gds_1,
-		cm_gds_realtime,
-		cm_gds_cputime,
 	      }));
 
 protected Thread.Mutex cache_mgmt_mutex = Thread.Mutex();
