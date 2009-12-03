@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.125 2009/12/03 23:19:37 mast Exp $
+// $Id: cache.pike,v 1.126 2009/12/03 23:20:23 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -337,9 +337,9 @@ class CacheManager
   //! approximately the last @[cm_stats_avg_period] seconds. Only
   //! applicable if @[has_cost] is set.
 
-  int recent_added_bytes;
-  int recent_hits, recent_misses;
-  int|float recent_cost_hits, recent_cost_misses;
+  protected int recent_added_bytes;
+  protected int recent_hits, recent_misses;
+  protected int|float recent_cost_hits, recent_cost_misses;
 
   void update_decaying_stats (int start_time, int last_update, int now)
   // Should only be called at regular intervals from
