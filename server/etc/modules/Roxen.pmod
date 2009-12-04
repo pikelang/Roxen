@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.284 2009/12/02 12:22:30 mast Exp $
+// $Id: Roxen.pmod,v 1.285 2009/12/04 13:59:57 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2173,7 +2173,7 @@ string image_from_type( string t )
 protected constant size_suffix =
   ({ "B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" });
 
-string sizetostring( int size )
+string sizetostring( int|float size )
   //! Returns the size as a memory size string with suffix,
   //! e.g. 43210 is converted into "42.2 kB". To be correct
   //! to the latest standards it should really read "42.2 KiB",
@@ -2182,17 +2182,22 @@ string sizetostring( int size )
   //! tera, peta, exa, zetta and yotta.
 {
   int neg = size < 0;
-  if (neg) size = -size;
+  int|float abs_size = abs (size);
 
-  if (size < 1024)
-    return (neg ? -size : size) + " " + size_suffix[0];
+  if (abs_size < 1024) {
+    if (intp (size))
+      return size + " " + size_suffix[0];
+    return size < 10.0 ?
+      sprintf ("%.2f %s", size, size_suffix[0]) :
+      sprintf ("%.0f %s", size, size_suffix[0]);
+  }
 
-  float s = (float) size;
+  float s = (float) abs_size;
   size=0;
-  while( s > 1024.0 )
+  while( s >= 1024.0 )
   {
     s /= 1024.0;
-    size ++;
+    if (++size == sizeof (size_suffix) - 1) break;
   }
   if (neg) s = -s;
   return sprintf("%.1f %s", s, size_suffix[ size ]);
