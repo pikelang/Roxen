@@ -104,6 +104,7 @@ worldmap binary
 /server/bin/rxnpatch.pike foreign_ident
 /server/bin/setup_nsr.pike foreign_ident
 /server/bin/sqladduser.pike foreign_ident
+/server/config_interface/actions/cachestatus.pike foreign_ident
 /server/config_interface/actions/debug_info.pike foreign_ident
 /server/config_interface/actions/debug_summary.pike foreign_ident
 /server/config_interface/actions/flush.pike foreign_ident

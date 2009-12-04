@@ -1,3 +1,4 @@
+// $Id: cachestatus.pike,v 1.25 2009/12/04 14:02:35 mast Exp $
 
 #include <roxen.h>
 //<locale-token project="admin_tasks">LOCALE</locale-token>
@@ -192,7 +193,7 @@ them. They will shrink to the configured maximum size as they fill up."),
 	  "<td " REST_CELLS ">" +
 	  Roxen.sizetostring (grp_size) + "</td>"
 	  "<td " REST_CELLS ">" +
-	  Roxen.sizetostring (grp_count && grp_size / grp_count) +
+	  Roxen.sizetostring (grp_count && (float) grp_size / grp_count) +
 	  "</td>"
 #ifdef CACHE_BYTE_HR_STATS
 	  "<td " REST_CELLS ">" +
@@ -229,9 +230,7 @@ them. They will shrink to the configured maximum size as they fill up."),
 	"<td " REST_CELLS ">" +
 	Roxen.sizetostring (mgr->total_size_limit) + "</td>"
 	"<td " REST_CELLS ">" +
-	(mgr->add_rate < 10.0 ?
-	 sprintf ("%g bytes", mgr->add_rate) :
-	 Roxen.sizetostring ((int) mgr->add_rate)) + "/s</td>"
+	Roxen.sizetostring (mgr->add_rate) + "/s</td>"
 	"<td " REST_CELLS ">" +
 	format_hit_rate (mgr->hits, mgr->misses) + "</td>"
 	"<td " REST_CELLS ">" +
@@ -281,7 +280,7 @@ them. They will shrink to the configured maximum size as they fill up."),
 	    "<td " REST_CELLS ">" +
 	    Roxen.sizetostring (tot_size) + "</td>"
 	    "<td " REST_CELLS ">" +
-	    Roxen.sizetostring (tot_count && tot_size / tot_count) +
+	    Roxen.sizetostring (tot_count && (float) tot_size / tot_count) +
 	    "</td>"
 #ifdef CACHE_BYTE_HR_STATS
 	    "<td " REST_CELLS ">" +
@@ -334,14 +333,14 @@ cache miss is followed by the addition of a new cache entry.") +
       "<td " FIRST_CELL ">" +
       LOCALE(0, "Size of garbage collected entries:") + "</td>"
       "<td " REST_CELLS ">" +
-      Roxen.sizetostring ((int) cache->sum_destruct_garbage_size) + " " +
+      Roxen.sizetostring (cache->sum_destruct_garbage_size) + " " +
       LOCALE(0, "stale") + " +</td>"
       "<td " REST_CELLS ">" +
-      Roxen.sizetostring ((int) cache->sum_timeout_garbage_size) + " " +
+      Roxen.sizetostring (cache->sum_timeout_garbage_size) + " " +
       LOCALE(0, "timed out") + " =</td>"
       "<td " REST_CELLS ">" +
-      Roxen.sizetostring ((int) cache->sum_destruct_garbage_size +
-			  (int) cache->sum_timeout_garbage_size) + "</td>"
+      Roxen.sizetostring (cache->sum_destruct_garbage_size +
+			  cache->sum_timeout_garbage_size) + "</td>"
       "</tr>"
       "<tr " BODY_TR_ATTRS (1) ">"
       "<td " FIRST_CELL ">" +
