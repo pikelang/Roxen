@@ -1285,7 +1285,7 @@ a&auml; &amp; b  &gt;
 
 <test>
 <rxml><number num=61254312 type=memory /></rxml>
-<result>58.4 Mb</result>
+<result>58.4 MB</result>
 </test>
 
 
@@ -3079,7 +3079,7 @@ boo</set><emit source="values" values="&var.x;" advanced="words">&_.value; </emi
 
 <test>
 <rxml><number type="memory" num="14588"/></rxml>
-<result>14.2 kb</result>
+<result>14.2 kB</result>
 </test>
 
 <test>
