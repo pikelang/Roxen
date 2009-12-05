@@ -1,4 +1,4 @@
-// $Id: cachestatus.pike,v 1.25 2009/12/04 14:02:35 mast Exp $
+// $Id: cachestatus.pike,v 1.26 2009/12/05 01:03:57 jonasw Exp $
 
 #include <roxen.h>
 //<locale-token project="admin_tasks">LOCALE</locale-token>
@@ -47,7 +47,7 @@ string parse( RequestID id )
     LOCALE(61, "WebServer Memory Cache")+
     "</h3>\n"
     "<p><a href='/global_settings/?section=Cache'>" +
-    LOCALE(0, "Configure cache settings") + "</a></p>\n";
+    LOCALE(380, "Configure cache settings") + "</a></p>\n";
 
 #ifdef NEW_RAM_CACHE
 
@@ -61,7 +61,7 @@ string parse( RequestID id )
   ]);
 
   string mgr_summary = "<p>" +
-    sprintf (LOCALE(0, #"\
+    sprintf (LOCALE(381, #"\
 The configured maximum size %s is divided dynamically between the
 cache managers based on the usage for the last half hour. If the
 caches are not full then all free space is assigned to each one of
@@ -69,12 +69,12 @@ them. They will shrink to the configured maximum size as they fill up."),
 	     Roxen.sizetostring (cache->total_size_limit)) + "</p>\n"
     "<table " TABLE_ATTRS ">\n"
     "<tr " HDR_TR_ATTRS ">"
-    "<th " FIRST_CELL ">" + LOCALE(0, "Cache manager") + "</th>"
-    "<th " REST_CELLS ">" + LOCALE(0, "Size") + "</th>"
-    "<th " REST_CELLS ">" + LOCALE(0, "Size limit") + "</th>"
-    "<th " REST_CELLS ">" + LOCALE(0, "Input rate") + "</th>"
-    "<th " REST_CELLS ">" + LOCALE(0, "Hit rate") + "</th>"
-    "<th " REST_CELLS ">" + LOCALE(0, "Cost HR") + "</th>"
+    "<th " FIRST_CELL ">" + LOCALE(382, "Cache manager") + "</th>"
+    "<th " REST_CELLS ">" + LOCALE(64, "Size") + "</th>"
+    "<th " REST_CELLS ">" + LOCALE(383, "Size limit") + "</th>"
+    "<th " REST_CELLS ">" + LOCALE(384, "Input rate") + "</th>"
+    "<th " REST_CELLS ">" + LOCALE(67, "Hit rate") + "</th>"
+    "<th " REST_CELLS ">" + LOCALE(385, "Cost HR") + "</th>"
 #ifdef DEBUG_CACHE_MANAGER
     "<th " REST_CELLS " colspan='2'>Entry size</th>"
     "<th " REST_CELLS " colspan='2'>Entry cost</th>"
@@ -88,25 +88,25 @@ them. They will shrink to the configured maximum size as they fill up."),
   foreach (cache.cache_managers; int mgr_idx; cache.CacheManager mgr)
     if (mapping(string:cache.CacheStats) caches = stats[mgr]) {
       mgr_stats +=
-	"<p><b>" + (LOCALE(0, "Cache manager: ") +
+	"<p><b>" + (LOCALE(386, "Cache manager: ") +
 		    Roxen.html_encode_string (mgr->name)) + "</b></p>\n"
 	"<p>" + mgr->doc + "</p>\n";
 
       string table =
 	"<table " TABLE_ATTRS ">\n"
 	"<tr " HDR_TR_ATTRS ">"
-	"<th " FIRST_CELL ">"+LOCALE(62, "Cache")+"</th>"
+	"<th " FIRST_CELL ">"+LOCALE(402, "Cache")+"</th>"
 	"<th " REST_CELLS ">"+LOCALE(295, "Entries")+"</th>"
-	"<th " REST_CELLS ">"+LOCALE(0, "Lookups")+"</th>"
+	"<th " REST_CELLS ">"+LOCALE(387, "Lookups")+"</th>"
 	"<th " REST_CELLS ">"+LOCALE(67, "Hit rate")+"</th>"
 	"<th " REST_CELLS ">"+LOCALE(64, "Size")+"</th>"
-	"<th " REST_CELLS ">"+LOCALE(0, "Size/entry")+"</th>"
+	"<th " REST_CELLS ">"+LOCALE(388, "Size/entry")+"</th>"
 #ifdef CACHE_BYTE_HR_STATS
-	"<th " REST_CELLS ">"+LOCALE(0, "Byte HR")+"</th>"
+	"<th " REST_CELLS ">"+LOCALE(389, "Byte HR")+"</th>"
 #endif
-	"<th " REST_CELLS ">"+LOCALE(0, "Create cost")+"</th>"
-	"<th " REST_CELLS ">"+LOCALE(0, "Cost/entry")+"</th>"
-	"<th " REST_CELLS ">"+LOCALE(0, "Cost HR")+"</th>"
+	"<th " REST_CELLS ">"+LOCALE(390, "Create cost")+"</th>"
+	"<th " REST_CELLS ">"+LOCALE(391, "Cost/entry")+"</th>"
+	"<th " REST_CELLS ">"+LOCALE(385, "Cost HR")+"</th>"
 	"</tr>\n";
 
       int num_caches;
@@ -301,7 +301,7 @@ them. They will shrink to the configured maximum size as they fill up."),
     }
 
   mgr_stats += "<div style='font-size: smaller;'><p>" +
-    LOCALE(0, #"\
+    LOCALE(392, #"\
 <i>Cost HR</i> is the cost hit rate, i.e. every hit and miss is
 weighted with the cost for each entry according to the cost metric of
 the cache manager. Note that it uses the approximation that every
@@ -312,45 +312,45 @@ cache miss is followed by the addition of a new cache entry.") +
 
   res += mgr_summary + mgr_stats;
 
-  res += "<p><b>" + LOCALE(0, "Garbage Collector") + "</b></p>\n";
+  res += "<p><b>" + LOCALE(393, "Garbage Collector") + "</b></p>\n";
   if (!cache->last_gc_run)
     res += "<p>" +
-      LOCALE(0, "The garbage collector has not run yet.") + "</p>\n";
+      LOCALE(394, "The garbage collector has not run yet.") + "</p>\n";
   else {
     res += "<p>" +
-      sprintf (LOCALE(0, "%d seconds since the last garbage collection. "
+      sprintf (LOCALE(395, "%d seconds since the last garbage collection. "
 		      "The following statistics are over approximately "
 		      "the last hour."),
 	       time() - cache->last_gc_run) + "</p>\n"
       "<table " TABLE_ATTRS ">\n"
       "<tr " BODY_TR_ATTRS (0) ">"
       "<td " FIRST_CELL ">" +
-      LOCALE(0, "Time spent in the garbage collector:") + "</td>"
+      LOCALE(396, "Time spent in the garbage collector:") + "</td>"
       "<td " REST_CELLS " colspan='3'>" +
       Roxen.format_hrtime ((int) cache->sum_gc_time) + "</td>"
       "</tr>"
       "<tr " BODY_TR_ATTRS (1) ">"
       "<td " FIRST_CELL ">" +
-      LOCALE(0, "Size of garbage collected entries:") + "</td>"
+      LOCALE(397, "Size of garbage collected entries:") + "</td>"
       "<td " REST_CELLS ">" +
       Roxen.sizetostring (cache->sum_destruct_garbage_size) + " " +
-      LOCALE(0, "stale") + " +</td>"
+      LOCALE(398, "stale") + " +</td>"
       "<td " REST_CELLS ">" +
       Roxen.sizetostring (cache->sum_timeout_garbage_size) + " " +
-      LOCALE(0, "timed out") + " =</td>"
+      LOCALE(399, "timed out") + " =</td>"
       "<td " REST_CELLS ">" +
       Roxen.sizetostring (cache->sum_destruct_garbage_size +
 			  cache->sum_timeout_garbage_size) + "</td>"
       "</tr>"
       "<tr " BODY_TR_ATTRS (1) ">"
       "<td " FIRST_CELL ">" +
-      LOCALE(0, "Garbage collection ratio:") + "</td>"
+      LOCALE(400, "Garbage collection ratio:") + "</td>"
       "<td " REST_CELLS ">" +
       sprintf ("%.2f%%", cache->avg_destruct_garbage_ratio * 100.0) + " " +
-      LOCALE(0, "stale") + " +</td>"
+      LOCALE(398, "stale") + " +</td>"
       "<td " REST_CELLS ">" +
       sprintf ("%.2f%%", cache->avg_timeout_garbage_ratio * 100.0) + " " +
-      LOCALE(0, "timed out") + " =</td>"
+      LOCALE(399, "timed out") + " =</td>"
       "<td " REST_CELLS ">" +
       sprintf ("%.2f%%", (cache->avg_destruct_garbage_ratio +
 			  cache->avg_timeout_garbage_ratio) * 100.0) + "</td>"
@@ -373,7 +373,7 @@ cache miss is followed by the addition of a new cache entry.") +
   mapping c=cache->status();
 
   mapping trans = ([
-    "supports":LOCALE(68,"supportdb"),
+    "supports":LOCALE(68,"Supports database"),
     "fonts":LOCALE(69,"Fonts"),
     "hosts":LOCALE(70,"DNS"),
   ]);

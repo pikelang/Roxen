@@ -287,7 +287,8 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
 &lt;tr&gt;&lt;td&gt;$resource&lt;/td&gt;
     &lt;td&gt;Resource identifier. For events, this is either a path to a
     file (if it begins with '&lt;code&gt;/&lt;/code&gt;') or some other kind of
-    resource indentifier (otherwise).&lt;/td&gt;&lt;/tr&gt;
+    resource identifier (otherwise). It is '-' for events that doesn't
+    act on any specific resource.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$server-uptime&lt;/td&gt;
     &lt;td&gt;Server uptime in seconds.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$server-cputime&lt;/td&gt;
@@ -434,6 +435,25 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
 below.&lt;/p&gt;
 
 &lt;dl&gt;
+
+&lt;dt&gt;Facility: roxen&lt;/dt&gt;
+    &lt;dd&gt;&lt;p&gt;This is logging for systems in the Roxen WebServer core.
+    For logging that is not related to any specific configuration, the
+    configuration for the Administration Interface is used.&lt;/p&gt;
+
+    &lt;p&gt;The known events are:&lt;/p&gt;
+
+    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;tr&gt;&lt;td&gt;ram-cache-gc&lt;/td&gt;
+	&lt;td&gt;Logged after the RAM cache GC has run. $handle-time and
+	$handle-cputime are set to the time the GC took (see
+	descriptions above for details).&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;ram-cache-rebase&lt;/td&gt;
+	&lt;td&gt;Logged when the RAM cache has performed a rebias of the
+	priority queue values. Is a problem only if it starts to
+	happen too often.&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;&lt;/table&gt;&lt;/dd&gt;
+
 &lt;dt&gt;Facility: sbfs&lt;/dt&gt;
     &lt;dd&gt;&lt;p&gt;A SiteBuilder file system.&lt;/p&gt;
 
@@ -4089,5 +4109,51 @@ be of real use.&lt;/p&gt;</o>
 <str id="1041">
 <new/>
 <o>Are you sure you want to restore the default value?</o>
+<t></t>
+</str>
+
+<str id="1043">
+<new/>
+<o>Cache: Memory cache size</o>
+<t></t>
+</str>
+
+<str id="1044">
+<new/>
+<o>&lt;p&gt;Maximum size in MByte for all RAM caches taken together. This limit
+covers the caches visible in the &lt;a
+href='/actions/?action=cachestatus.pike&amp;class=status'&gt;Cache status&lt;/a&gt;
+page.&lt;/p&gt;
+
+&lt;p&gt;Note that there are many more things in the Roxen WebServer that
+take space, including some caches that are not handled by the common
+RAM cache. Also, there is various indirect memory overhead that is not
+directly accounted for by the size calculations. All these taken
+together means that the figure configured here cannot be mapped
+straightly to the size of the Roxen process as reported by the OS. The
+optimal setting here is the one that in general keeps the Roxen
+process at a size that avoids swapping and leaves enough memory for
+buffers and other processes that need to run at the same time (e.g.
+the Roxen instance of the MySQL server).&lt;/p&gt;</o>
+<t></t>
+</str>
+
+<str id="1045">
+<new/>
+<o>Cache: Memory cache GC interval</o>
+<t></t>
+</str>
+
+<str id="1046">
+<new/>
+<o>&lt;p&gt;Interval in seconds between RAM cache garbage collector runs. This
+GC removes entries from the RAM caches that have timed out or are
+stale for other reasons, thereby making more room for new entries. The
+configured cache size limits are enforced when entries are added, so
+this GC is not required to keep the cache sizes down.&lt;/p&gt;
+
+&lt;p&gt;Running this GC too seldom causes some RAM caches to contain many
+invalid cache entries, which could push out valid cache entries.
+Running it too often causes unnecessary server load.&lt;/p&gt;</o>
 <t></t>
 </str>

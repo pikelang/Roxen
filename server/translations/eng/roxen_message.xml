@@ -88,29 +88,22 @@ Check that your password database is correct for user %s(%d),
 </str>
 
 <str id="19">
-<o>Bad URL %O for server `%s'</o>
+<o>Bad URL %O for server %O.</o>
 <t></t>
 </str>
 
 <str id="20">
-<o>Cannot register URL %s, already registered by %s!</o>
+<o>Cannot register URL %s - already registered by %s.</o>
 <t></t>
 </str>
 
 <str id="21">
-<o>Cannot register URL %s, cannot find the protocol %s!</o>
-<t></t>
-</str>
-
-<str id="22">
-<o>Binding the port on IP %s failed
-   for URL %s!
-</o>
+<o>Cannot register URL %s - cannot find the protocol %s.</o>
 <t></t>
 </str>
 
 <str id="23">
-<o>Cannot register URL %s!</o>
+<o>Failed to register URL %s for %O.</o>
 <t></t>
 </str>
 
@@ -335,7 +328,7 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </str>
 
 <str id="61">
-<o>Not binding the port %O, disabled in configuration</o>
+<o>Not binding the port %O - disabled in configuration.</o>
 <t></t>
 </str>
 
@@ -345,7 +338,7 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </str>
 
 <str id="65">
-<o>IPv6 port for URL %s disabled: %s
+<o>Cannot open port %s for URL %s - IPv6 support disabled.
 </o>
 <t></t>
 </str>

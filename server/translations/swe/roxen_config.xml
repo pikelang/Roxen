@@ -258,7 +258,8 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
 &lt;tr&gt;&lt;td&gt;$resource&lt;/td&gt;
     &lt;td&gt;Resource identifier. For events, this is either a path to a
     file (if it begins with '&lt;code&gt;/&lt;/code&gt;') or some other kind of
-    resource indentifier (otherwise).&lt;/td&gt;&lt;/tr&gt;
+    resource identifier (otherwise). It is '-' for events that doesn't
+    act on any specific resource.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$server-uptime&lt;/td&gt;
     &lt;td&gt;Server uptime in seconds.&lt;/td&gt;&lt;/tr&gt;
 &lt;tr&gt;&lt;td&gt;$server-cputime&lt;/td&gt;
@@ -405,6 +406,25 @@ hyphens ('-') occur in the specifier names.&lt;/p&gt;
 below.&lt;/p&gt;
 
 &lt;dl&gt;
+
+&lt;dt&gt;Facility: roxen&lt;/dt&gt;
+    &lt;dd&gt;&lt;p&gt;This is logging for systems in the Roxen WebServer core.
+    For logging that is not related to any specific configuration, the
+    configuration for the Administration Interface is used.&lt;/p&gt;
+
+    &lt;p&gt;The known events are:&lt;/p&gt;
+
+    &lt;table&gt;&lt;tbody valign='top'&gt;
+    &lt;tr&gt;&lt;td&gt;ram-cache-gc&lt;/td&gt;
+	&lt;td&gt;Logged after the RAM cache GC has run. $handle-time and
+	$handle-cputime are set to the time the GC took (see
+	descriptions above for details).&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;td&gt;ram-cache-rebase&lt;/td&gt;
+	&lt;td&gt;Logged when the RAM cache has performed a rebias of the
+	priority queue values. Is a problem only if it starts to
+	happen too often.&lt;/td&gt;&lt;/tr&gt;
+    &lt;/tbody&gt;&lt;/table&gt;&lt;/dd&gt;
+
 &lt;dt&gt;Facility: sbfs&lt;/dt&gt;
     &lt;dd&gt;&lt;p&gt;A SiteBuilder file system.&lt;/p&gt;
 
@@ -3603,21 +3623,18 @@ be of real use.&lt;/p&gt;</o>
 </str>
 
 <str id="381">
-<new/>
 <o>Failed to connect</o>
-<t></t>
+<t>Misslyckades att ansluta</t>
 </str>
 
 <str id="1024">
-<new/>
 <o>Contains all documentation.</o>
-<t></t>
+<t>Innehåller all dokumentation.</t>
 </str>
 
 <str id="1025">
-<new/>
 <o>Unknown database</o>
-<t></t>
+<t>Okänd databas</t>
 </str>
 
 <str id="1042">
@@ -3631,96 +3648,143 @@ be of real use.&lt;/p&gt;</o>
 </str>
 
 <str id="1026">
-<new/>
 <o>Backup schedules</o>
-<t></t>
+<t>Schema för backup</t>
 </str>
 
 <str id="1027">
-<new/>
 <o>Schedule</o>
-<t></t>
+<t>Schema</t>
 </str>
 
 <str id="1028">
-<new/>
 <o>Period</o>
-<t></t>
+<t>Period</t>
 </str>
 
 <str id="1029">
-<new/>
 <o>Time</o>
-<t></t>
+<t>Tid</t>
 </str>
 
 <str id="1030">
-<new/>
 <o>Generations</o>
-<t></t>
+<t>Generationer</t>
 </str>
 
 <str id="1031">
-<new/>
 <o>Method</o>
-<t></t>
+<t>Metod</t>
 </str>
 
 <str id="1032">
-<new/>
 <o>Sundays,Mondays,Tuesdays,Wednesdays,Thursdays,Fridays,Saturdays</o>
-<t></t>
+<t>Söndagar,Måndagar,Tisdagar,Onsdagar,Torsdagar,Fredagar,Lördagar</t>
 </str>
 
 <str id="1033">
-<new/>
 <o>Every Hour</o>
-<t></t>
+<t>Varje timme</t>
 </str>
 
 <str id="1034">
-<new/>
 <o>Every Day</o>
-<t></t>
+<t>Varje dag</t>
 </str>
 
 <str id="1035">
-<new/>
 <o>At</o>
-<t></t>
+<t>vid</t>
 </str>
 
 <str id="1036">
-<new/>
 <o>Unlimited</o>
-<t></t>
+<t>Obegränsad</t>
 </str>
 
 <str id="1037">
-<new/>
 <o>MySQLDump (recommended)</o>
-<t></t>
+<t>MySQLDump (rekommenderad)</t>
 </str>
 
 <str id="1038">
-<new/>
 <o>Backup (internal databases only)</o>
-<t></t>
+<t>Backup (endast interna databaser)</t>
 </str>
 
 <str id="1039">
-<new/>
 <o>Backup directory</o>
-<t></t>
+<t>Backup-katalog</t>
 </str>
 
 <str id="1040">
-<new/>
 <o>Note: This schedule is also used to schedule backups for Roxen's internal databases.</o>
-<t></t>
+<t>Observera: Detta schema används också för backup av Roxens interna databaser.</t>
 </str>
 
 <str id="1041">
 <o>Are you sure you want to restore the default value?</o>
 <t>Är du säker på att du vill återställa standardvärdet?</t>
+</str>
+
+<str id="1043">
+<o>Cache: Memory cache size</o>
+<t>Cache: Storlek på minnescache</t>
+</str>
+
+<str id="1044">
+<o>&lt;p&gt;Maximum size in MByte for all RAM caches taken together. This limit
+covers the caches visible in the &lt;a
+href='/actions/?action=cachestatus.pike&amp;class=status'&gt;Cache status&lt;/a&gt;
+page.&lt;/p&gt;
+
+&lt;p&gt;Note that there are many more things in the Roxen WebServer that
+take space, including some caches that are not handled by the common
+RAM cache. Also, there is various indirect memory overhead that is not
+directly accounted for by the size calculations. All these taken
+together means that the figure configured here cannot be mapped
+straightly to the size of the Roxen process as reported by the OS. The
+optimal setting here is the one that in general keeps the Roxen
+process at a size that avoids swapping and leaves enough memory for
+buffers and other processes that need to run at the same time (e.g.
+the Roxen instance of the MySQL server).&lt;/p&gt;</o>
+<t>&lt;p&gt;Maximal storlek i MByte för alla RAM-cachar tillsammans. Denna gräns
+påverkar de cachar som syns i &lt;a
+href='/actions/?action=cachestatus.pike&amp;class=status'&gt;Cachestatus&lt;/a&gt;-sidan.&lt;/p&gt;
+
+&lt;p&gt;Observera att det finns många fler saker i Roxen WebServer som
+kräver minnesutrymme, bland annat cachar som inte hanteras av den gemensamma
+RAM-cachen. Det finns också olika former av indirekt minnesförbrukning som
+inte redovisas i storleksberäkningarna. Allt sammantaget betyder det att värdet
+som anges här inte rakt av kan översättas till storleken på Roxen-processen så
+som operativsystemet visar den. En optimal inställning här vore sådan att Roxen
+i normalfallet är tillräckligt liten för att undvika swappning och lämnar
+lagom plats för buffrar och andra processer som kör samtidigt (t.ex. den
+MySQL-server som Roxen använder).&lt;/p&gt;</t>
+</str>
+
+<str id="1045">
+<o>Cache: Memory cache GC interval</o>
+<t>Cache: Intervall för minnesskräpsamling</t>
+</str>
+
+<str id="1046">
+<o>&lt;p&gt;Interval in seconds between RAM cache garbage collector runs. This
+GC removes entries from the RAM caches that have timed out or are
+stale for other reasons, thereby making more room for new entries. The
+configured cache size limits are enforced when entries are added, so
+this GC is not required to keep the cache sizes down.&lt;/p&gt;
+
+&lt;p&gt;Running this GC too seldom causes some RAM caches to contain many
+invalid cache entries, which could push out valid cache entries.
+Running it too often causes unnecessary server load.&lt;/p&gt;</o>
+<t>&lt;p&gt;Intervall i sekunder mellan skräpsamling av RAM-minnet. Denna
+skräpsamlare tar bort poster i RAM-cachar som har nått sin tidsgräns eller
+är ogiltiga av andra anledningar och gör därmed plats för nya poster. Den
+inställda storleksgränsen upprätthålls när nya poster läggs till så denna
+skräpsamling är inte nödvändig för att begränsa utrymmet.&lt;/p&gt;
+
+&lt;p&gt;Om denna skräpsamling sker för sällan kommer vissa RAM-cachar
+innehålla många ogiltiga poster vilket tränger undan giltiga poster. För
+täta intervall kan öka belastningen på servern i onödan.&lt;/p&gt;
 </str>

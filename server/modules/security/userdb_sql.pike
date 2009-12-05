@@ -10,7 +10,7 @@ inherit "module";
 int inited;
 
 constant cvs_version =
-  "$Id: userdb_sql.pike,v 1.11 2009/10/08 11:11:00 mast Exp $";
+  "$Id: userdb_sql.pike,v 1.12 2009/12/05 01:04:00 jonasw Exp $";
 
 LocaleString module_name = _(1,"Authentication: SQL user database");
 LocaleString module_doc  = _(2,"This module implements a user database via "
@@ -219,7 +219,7 @@ void create()
           Variable.StringChoice("password",
 				([
 				  "password":_(5,"MySQL Password"),
-				  "old-password":_(0,"MySQL OLD_PASSWORD() "
+				  "old-password":_(11,"MySQL OLD_PASSWORD() "
 						   "(4.0 Compat Mode)"),
 				  "crypt":_(6,"Unix crypt"),
 				  "clear text":_(7,"Clear text"),

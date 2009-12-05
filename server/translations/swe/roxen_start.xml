@@ -18,8 +18,8 @@
 </str>
 
 <str id="3">
-<o>Registered %s for %s</o>
-<t>Registrerade %s åt %s</t>
+<o>Registered URL %s for %O.</o>
+<t>Registrerade URL %s åt %s.</t>
 </str>
 
 <str id="4">

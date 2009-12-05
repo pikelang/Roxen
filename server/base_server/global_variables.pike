@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: global_variables.pike,v 1.122 2009/11/30 15:20:54 mast Exp $
+// $Id: global_variables.pike,v 1.123 2009/12/05 01:04:00 jonasw Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -810,9 +810,9 @@ be of real use.</p>"));
 #ifdef NEW_RAM_CACHE
 
   defvar ("mem_cache_gc_2", 5 * 60,
-	  LOCALE(170, "Cache: Memory cache GC interval"),
+	  LOCALE(1045, "Cache: Memory cache GC interval"),
 	  TYPE_INT,
-	  LOCALE(171, #"\
+	  LOCALE(1046, #"\
 <p>Interval in seconds between RAM cache garbage collector runs. This
 GC removes entries from the RAM caches that have timed out or are
 stale for other reasons, thereby making more room for new entries. The
@@ -830,9 +830,9 @@ Running it too often causes unnecessary server load.</p>"))
   definvisvar ("mem_cache_gc", 300, TYPE_INT);
 
   v = defvar ("mem_cache_size", 100,
-	      LOCALE(0, "Cache: Memory cache size"),
+	      LOCALE(1043, "Cache: Memory cache size"),
 	      TYPE_INT,
-	      LOCALE(0, #"\
+	      LOCALE(1044, #"\
 <p>Maximum size in MByte for all RAM caches taken together. This limit
 covers the caches visible in the <a
 href='/actions/?action=cachestatus.pike&class=status'>Cache status</a>

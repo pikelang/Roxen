@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.43 2009/11/17 21:37:03 mast Exp $
+ * $Id: debug_info.pike,v 1.44 2009/12/05 01:03:57 jonasw Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -306,7 +306,7 @@ mixed page_0( object id )
 	     Roxen.html_encode_string (gc_status[field])) +
       "</tr>\n";
   res += "</table></p>\n"
-    "<p><font size='-1'>" + LOCALE(0, #"\
+    "<p><font size='-1'>" + LOCALE(401, #"\
 Note that the garbage collector referred to here is not the same as
 the one for the <a
 href='/actions/?action=cachestatus.pike&class=status'>Roxen memory

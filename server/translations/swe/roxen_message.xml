@@ -95,31 +95,23 @@ Kontrollera att gruppdatabasen stämmer, och att lösenordsdatabasen för användare
 </str>
 
 <str id="19">
-<o>Bad URL %O for server `%s'</o>
-<t>Felaktig URL %O för server `%s'</t>
+<o>Bad URL %O for server %O.</o>
+<t>Felaktig URL %O för server %O.</t>
 </str>
 
 <str id="20">
-<o>Cannot register URL %s, already registered by %s!</o>
-<t>Kan ej registera URL %s, redan använd av %s!</t>
+<o>Cannot register URL %s - already registered by %s.</o>
+<t>Kan ej registera URL %s - används redan av %s.</t>
 </str>
 
 <str id="21">
-<o>Cannot register URL %s, cannot find the protocol %s!</o>
-<t>Kan ej registrera URL %s, protokollet %s okänt!</t>
-</str>
-
-<str id="22">
-<o>Binding the port on IP %s failed
-   for URL %s!
-</o>
-<t>Misslyckades med att binda porten på IP %s åt URL %s!
-</t>
+<o>Cannot register URL %s - cannot find the protocol %s.</o>
+<t>Kan ej registrera URL %s -  protokollet %s okänt.</t>
 </str>
 
 <str id="23">
-<o>Cannot register URL %s!</o>
-<t>Kan ej registrera URL %s!</t>
+<o>Failed to register URL %s for %O.</o>
+<t>Kan ej registrera URL %s för %O.</t>
 </str>
 
 <str id="24">
@@ -349,8 +341,8 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </str>
 
 <str id="61">
-<o>Not binding the port %O, disabled in configuration</o>
-<t>Binder ej port %O, avstängd i konfigurationen</t>
+<o>Not binding the port %O - disabled in configuration.</o>
+<t>Binder ej port %O - avstängd i konfigurationen.</t>
 </str>
 
 <str id="62">
@@ -359,9 +351,9 @@ string setting_uid_gid(int uid, int gid, string uname, string gname) {
 </str>
 
 <str id="65">
-<o>IPv6 port for URL %s disabled: %s
+<o>Cannot open port %s for URL %s - IPv6 support disabled.
 </o>
-<t>IPv6-port för URL:en %s avstängd: %s
+<t>Kan ej öppna port %s för URL %s - IPv6-support är avstängd.
 </t>
 </str>
 

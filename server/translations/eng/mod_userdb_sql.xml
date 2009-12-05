@@ -54,3 +54,8 @@
 <o>Password hashing method. By changing this variable you can select the meaning of password field. By default the passwords are supposed to be hashed by internal MySQL PASSWORD() function.</o>
 <t></t>
 </str>
+
+<str id="11">
+<o>MySQL OLD_PASSWORD() (4.0 Compat Mode)</o>
+<t></t>
+</str>

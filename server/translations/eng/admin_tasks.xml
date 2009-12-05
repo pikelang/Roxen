@@ -402,7 +402,7 @@
 </str>
 
 <str id="68">
-<o>supportdb</o>
+<o>Supports database</o>
 <t></t>
 </str>
 
@@ -1361,5 +1361,130 @@ change the currently running version.</o>
 
 <str id="379">
 <o>Click on a Patch for more information.</o>
+<t></t>
+</str>
+
+<str id="380">
+<o>Configure cache settings</o>
+<t></t>
+</str>
+
+<str id="381">
+<o>The configured maximum size %s is divided dynamically between the
+cache managers based on the usage for the last half hour. If the
+caches are not full then all free space is assigned to each one of
+them. They will shrink to the configured maximum size as they fill up.</o>
+<t></t>
+</str>
+
+<str id="382">
+<o>Cache manager</o>
+<t></t>
+</str>
+
+<str id="383">
+<o>Size limit</o>
+<t></t>
+</str>
+
+<str id="384">
+<o>Input rate</o>
+<t></t>
+</str>
+
+<str id="385">
+<o>Cost HR</o>
+<t></t>
+</str>
+
+<str id="386">
+<o>Cache manager: </o>
+<t></t>
+</str>
+
+<str id="387">
+<o>Lookups</o>
+<t></t>
+</str>
+
+<str id="388">
+<o>Size/entry</o>
+<t></t>
+</str>
+
+<str id="389">
+<o>Byte HR</o>
+<t></t>
+</str>
+
+<str id="390">
+<o>Create cost</o>
+<t></t>
+</str>
+
+<str id="391">
+<o>Cost/entry</o>
+<t></t>
+</str>
+
+<str id="392">
+<o>&lt;i&gt;Cost HR&lt;/i&gt; is the cost hit rate, i.e. every hit and miss is
+weighted with the cost for each entry according to the cost metric of
+the cache manager. Note that it uses the approximation that every
+cache miss is followed by the addition of a new cache entry.</o>
+<t></t>
+</str>
+
+<str id="393">
+<o>Garbage Collector</o>
+<t></t>
+</str>
+
+<str id="394">
+<o>The garbage collector has not run yet.</o>
+<t></t>
+</str>
+
+<str id="395">
+<o>%d seconds since the last garbage collection. The following statistics are over approximately the last hour.</o>
+<t></t>
+</str>
+
+<str id="396">
+<o>Time spent in the garbage collector:</o>
+<t></t>
+</str>
+
+<str id="397">
+<o>Size of garbage collected entries:</o>
+<t></t>
+</str>
+
+<str id="398">
+<o>stale</o>
+<t></t>
+</str>
+
+<str id="399">
+<o>timed out</o>
+<t></t>
+</str>
+
+<str id="400">
+<o>Garbage collection ratio:</o>
+<t></t>
+</str>
+
+<str id="401">
+<o>Note that the garbage collector referred to here is not the same as
+the one for the &lt;a
+href='/actions/?action=cachestatus.pike&amp;class=status'&gt;Roxen memory
+cache&lt;/a&gt;. This is the low-level garbage collector used internally by
+the Pike interpreter.</o>
+<t></t>
+</str>
+
+<str id="402">
+<o>Cache</o>
 <t></t>
 </str>

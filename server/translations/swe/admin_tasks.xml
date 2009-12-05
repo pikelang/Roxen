@@ -405,8 +405,8 @@ processen försvinner efter senast 15 minuter.</t>
 </str>
 
 <str id="68">
-<o>supportdb</o>
-<t>supportdb</t>
+<o>Supports database</o>
+<t>supports-databas</t>
 </str>
 
 <str id="69">
@@ -1386,4 +1386,136 @@ istället editera filen %O manuellt och sedan ta ner server, och köra
 <str id="379">
 <o>Click on a Patch for more information.</o>
 <t>Klicka på patchnamnet eller patchID:t för mer information.</t>
+</str>
+
+<str id="380">
+<o>Configure cache settings</o>
+<t>Konfigurera cache-inställningar</t>
+</str>
+
+<str id="381">
+<o>The configured maximum size %s is divided dynamically between the
+cache managers based on the usage for the last half hour. If the
+caches are not full then all free space is assigned to each one of
+them. They will shrink to the configured maximum size as they fill up.</o>
+<t>Den inställda maxstorleken %s fördelas dynamiskt mellan olika cache-hanterare
+baserat på deras utnyttjande den senaste halvtimmen. Om cacharna inte är fulla
+så läggs allt ledigt utrymme till var och en av dem. De kommer krympa till den
+angivna maxstorleken alltefter de fylls upp.</t>
+</str>
+
+<str id="382">
+<o>Cache manager</o>
+<t>Cache-hanterare</t>
+</str>
+
+<str id="383">
+<o>Size limit</o>
+<t>Storleksgräns</t>
+</str>
+
+<str id="384">
+<o>Input rate</o>
+<t>Inflödestakt</t>
+</str>
+
+<str id="385">
+<o>Cost HR</o>
+<t>Cost HR</t>
+</str>
+
+<str id="386">
+<o>Cache manager: </o>
+<t>Cache-hanterare: </t>
+</str>
+
+<str id="387">
+<o>Lookups</o>
+<t>Uppslagningar</t>
+</str>
+
+<str id="388">
+<o>Size/entry</o>
+<t>Storlek/post</t>
+</str>
+
+<str id="389">
+<o>Byte HR</o>
+<t>Byte HR</t>
+</str>
+
+<str id="390">
+<o>Create cost</o>
+<t>Skapande-kostnad</t>
+</str>
+
+<str id="391">
+<o>Cost/entry</o>
+<t>Kostnad/post</t>
+</str>
+
+<str id="392">
+<o>&lt;i&gt;Cost HR&lt;/i&gt; is the cost hit rate, i.e. every hit and miss is
+weighted with the cost for each entry according to the cost metric of
+the cache manager. Note that it uses the approximation that every
+cache miss is followed by the addition of a new cache entry.</o>
+<t>&lt;i&gt;Cost HR&lt;/i&gt; är Cost Hit Rate, det vill säga att alla
+träffar och missar vägs samman med kostnaden för varje post enligt cache-hanterarens
+kostnadsmodell. Observera att detta bygger på antagandet att alla cache-missar
+följs av en lagring av en ny post.</t>
+</str>
+
+<str id="393">
+<o>Garbage Collector</o>
+<t>Skräpsamling</t>
+</str>
+
+<str id="394">
+<o>The garbage collector has not run yet.</o>
+<t>Skräpsamlaren har inte kört än.</t>
+</str>
+
+<str id="395">
+<o>%d seconds since the last garbage collection. The following statistics are over approximately the last hour.</o>
+<t>%d sekunder sedan senaste skräpsamlingen. Nedanstående statistik är sammanställd sedan c:a en timme tillbaka.</t>
+</str>
+
+<str id="396">
+<o>Time spent in the garbage collector:</o>
+<t>Tid förbrukad på skräpsamling:</t>
+</str>
+
+<str id="397">
+<o>Size of garbage collected entries:</o>
+<t>Storlek på skräpsamlade poster:</t>
+</str>
+
+<str id="398">
+<o>stale</o>
+<t>ogiltig</t>
+</str>
+
+<str id="399">
+<o>timed out</o>
+<t>utgången</t>
+</str>
+
+<str id="400">
+<o>Garbage collection ratio:</o>
+<t>Kvot för skräpsamling:</t>
+</str>
+
+<str id="401">
+<new/>
+<o>Note that the garbage collector referred to here is not the same as
+the one for the &lt;a
+href='/actions/?action=cachestatus.pike&amp;class=status'&gt;Roxen memory
+cache&lt;/a&gt;. This is the low-level garbage collector used internally by
+the Pike interpreter.</o>
+<t></t>
+</str>
+
+<str id="402">
+<o>Cache</o>
+<t>Cache</t>
 </str>
