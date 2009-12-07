@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.126 2009/12/03 23:20:23 mast Exp $
+// $Id: cache.pike,v 1.127 2009/12/07 00:29:09 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -820,10 +820,10 @@ class CM_GDS_Time
 
   void got_hit (string cache_name, CacheEntry entry, mapping cache_context)
   {
+    account_hit (cache_name, entry);
     // It shouldn't be necessary to record the start time for cache
     // hits, but do it anyway for now since there are caches that on
     // cache hits extend the entries with more data.
-    account_hit (cache_name, entry);
     save_start_hrtime (cache_name, entry->key, cache_context);
   }
 
@@ -845,7 +845,7 @@ class CM_GDS_Time
 	}
       }
 #ifdef DEBUG
-    werror ("Warning: No preceding missed lookup for this key - "
+    werror ("Warning: No preceding lookup for this key - "
 	    "cannot determine entry creation time.\n%s\n",
 	    describe_backtrace (backtrace()));
 #endif
@@ -1396,7 +1396,7 @@ mixed cache_peek (string cache_name, mixed key)
 }
 
 mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
-		 void|mapping cache_context)
+		 void|mapping|int(1..1) cache_context)
 //! Adds an entry to a cache.
 //!
 //! @param cache_name
@@ -1420,6 +1420,10 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
 //! The cache context mapping given to the earlier @[cache_lookup]
 //! which failed to find the entry that this call adds to the cache.
 //! See @[cache_lookup] for more details.
+//!
+//! @[cache_context] can also be the integer 1, which is a flag that
+//! this entry got created without any prior lookup, so cache managers
+//! tracking cost has to fall back to some default then.
 //!
 //! @returns
 //! Returns @[data].
@@ -1488,7 +1492,8 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
   if (timeout)
     new_entry->timeout = time (1) + timeout;
 
-  mgr->add_entry (cache_name, new_entry, 0, cache_context);
+  mgr->add_entry (cache_name, new_entry, intp (cache_context),
+		  mappingp (cache_context) && cache_context);
 
   MORE_CACHE_WERR ("cache_set (%O, %s, %s, %O): %O\n",
 		   cache_name, RXML.utils.format_short (key),
