@@ -9,7 +9,7 @@ inherit "module";
 #define LOCALE(X,Y)  _DEF_LOCALE("mod_emit_timerange",X,Y)
 // end locale stuff
 
-constant cvs_version = "$Id: emit_timerange.pike,v 1.39 2009/07/06 13:03:48 jonasw Exp $";
+constant cvs_version = "$Id: emit_timerange.pike,v 1.40 2009/12/07 10:37:27 jonasw Exp $";
 constant thread_safe = 1;
 constant module_uniq = 1;
 constant module_type = MODULE_TAG;
@@ -835,7 +835,7 @@ class TagEmitTimeRange
 	} //End foreach
 
       } else {
-	RXML.run_error(sprintf("Timerange %s plugin does not exist.\n", plugin));
+	RXML.run_error(sprintf("<emit#timerange> plugin %O does not exist.\n", plugin));
       }
     }
     // End Eriks stuff, july 8 2004
