@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.194 2009/08/19 08:29:42 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.195 2009/12/08 16:10:06 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -717,7 +717,7 @@ class CacheKey
 //! can never assume that @expr{id->misc->cachekey@} exists to begin
 //! with. The wrapper functions in @[RequestID] handles all this.
 {
-#if ID_CACHEKEY_DEBUG
+#ifdef ID_CACHEKEY_DEBUG
   RoxenDebug.ObjectMarker __marker = RoxenDebug.ObjectMarker (this);
 #endif
 
