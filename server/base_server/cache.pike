@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.127 2009/12/07 00:29:09 mast Exp $
+// $Id: cache.pike,v 1.128 2009/12/08 12:54:17 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -1980,7 +1980,7 @@ void cache_remove(string in, mixed what)
 
 // Add an entry to a cache
 mixed cache_set(string in, mixed what, mixed to, int|void tm,
-		void|mapping ignored)
+		void|mapping|int(1..1) ignored)
 {
   MORE_CACHE_WERR("cache_set(%O, %O, %O)\n", in, what, /* to */ _typeof(to));
   int t=time(1);
