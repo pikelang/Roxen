@@ -9,6 +9,8 @@ inherit "roxen-module://filesystem";
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_filesystem",X,Y)
 // end of the locale related stuff
 
+constant cvs_version = "$Id: yui.pike,v 1.16 2009/12/08 14:40:55 grubba Exp $";
+
 LocaleString module_name = LOCALE(67,"JavaScript Support: The Yahoo! User "
 				    "Interface Library");
 LocaleString module_doc =
@@ -37,6 +39,10 @@ void setup_yui() {
     string ver;
     sscanf(s, "yui-%s.tar", ver);
     yui_versions[ver] = 1;
+  }
+
+  if (!sizeof(yui_versions)) {
+    report_debug("%s: No yui distributions found!\n", module_name);
   }
   
   if(!file_stat(yui_root_dir))
