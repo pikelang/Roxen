@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.86 2009/12/01 18:06:38 grubba Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.87 2009/12/08 20:38:43 jonasw Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -43,7 +43,7 @@ constant tagdoc=(["cimg":#"<desc tag='tag'><p><short>
 Append the filename value to the path. Recommended is not to append file suffix
 to the filename since there are settings for handling that automatically through
 this module settings.
-</p><p>This is usefull if you want to have images indexed, since many search engines
+</p><p>This is useful if you want to have images indexed, since many search engines
 uses the filename as a description of the image.</p>
 <ex><cimg-url src='/internal-roxen-testimage' filename='Roxen Test Image'/></ex>
 </attr>
