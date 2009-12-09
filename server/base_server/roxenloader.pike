@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.426 2009/11/19 23:46:41 mast Exp $
+// $Id: roxenloader.pike,v 1.427 2009/12/09 19:01:51 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.426 2009/11/19 23:46:41 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.427 2009/12/09 19:01:51 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -627,6 +627,9 @@ private object initiate_cache()
   add_constant("cache_remove", cache->cache_remove);
   add_constant("cache_expire", cache->cache_expire);
   add_constant("cache_clear",  cache->cache_expire);
+#ifdef NEW_RAM_CACHE
+  add_constant("cache_entries",cache->cache_entries);
+#endif
   add_constant("cache_indices",cache->cache_indices);
 
   return cache;
