@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.427 2009/12/09 19:01:51 mast Exp $
+// $Id: roxenloader.pike,v 1.428 2009/12/09 19:03:58 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -32,10 +32,11 @@ constant s = spider; // compatibility
 
 int      remove_dumped;
 string   configuration_dir;
+int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.427 2009/12/09 19:01:51 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.428 2009/12/09 19:03:58 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2209,8 +2210,10 @@ void low_start_mysql( string datadir,
 
   if(!file_stat( datadir+"/my.cfg" ))
     catch(Stdio.write_file(datadir+"/my.cfg", cfg_file));
-  
-  Stdio.File errlog = Stdio.File( err_log, "wct" );
+
+  // Keep mysql's logging to stdout and stderr when running in --once
+  // mode, to get it more synchronous.
+  Stdio.File errlog = !once_mode && Stdio.File( err_log, "wct" );
 
   string mysql_table_check =
     Stdio.read_file(combine_path(query_configuration_dir(),
@@ -2334,7 +2337,7 @@ void start_mysql (void|int log_queries_to_stdout)
       add_constant("ROXEN_MYSQL_SUPPORTS_UNICODE", 1);
     }
 
-    if( !do_tailf_threaded ) do_tailf(0, err_log );
+    if( !do_tailf_threaded && !once_mode ) do_tailf(0, err_log );
     assure_that_base_tables_exists();
   };
 
@@ -2366,7 +2369,7 @@ void start_mysql (void|int log_queries_to_stdout)
 #endif
   }
   else {
-    start_tailf();
+    if (!once_mode) start_tailf();
     connected_ok(1);
     return;
   }
@@ -2431,7 +2434,7 @@ void start_mysql (void|int log_queries_to_stdout)
     sleep( 0.1 );
     if( repeat++ > 200 )
     {
-      if( !do_tailf_threaded ) do_tailf(0, err_log );
+      if( !do_tailf_threaded && !once_mode ) do_tailf(0, err_log );
       report_fatal("\nFailed to start MySQL. Aborting\n");
       exit(1);
     }
@@ -2521,6 +2524,8 @@ void do_main( int argc, array(string) argv )
 {
   array(string) hider = argv;
   argv = 0;
+
+  catch (once_mode = (int)Getopt.find_option(hider + ({}), "o", "once"));
 
 #ifdef GC_TRACE
   trace (GC_TRACE, "gc");
@@ -2707,7 +2712,6 @@ the correct system time.
   add_constant("ErrorContainer", ErrorContainer);
 
   add_constant("_cur_rxml_context", Thread.Local());
-
 
   if (has_value (hider, "--mysql-log-queries")) {
     hider -= ({"--mysql-log-queries"});
