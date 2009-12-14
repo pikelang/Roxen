@@ -9,7 +9,7 @@ inherit "roxen-module://filesystem";
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_filesystem",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: yui.pike,v 1.16 2009/12/08 14:40:55 grubba Exp $";
+constant cvs_version = "$Id: yui.pike,v 1.17 2009/12/14 16:46:06 tor Exp $";
 
 LocaleString module_name = LOCALE(67,"JavaScript Support: The Yahoo! User "
 				    "Interface Library");
@@ -46,7 +46,7 @@ void setup_yui() {
   }
   
   if(!file_stat(yui_root_dir))
-    mkdir(yui_root_dir);
+    mkdir(yui_root_dir, 1);
 
   multiset missing_versions =
     yui_versions - (multiset) (get_dir(yui_root_dir) || ({ }) );
@@ -65,6 +65,7 @@ void setup_yui() {
 
 void start(int when) {
   set("searchpath", yui_root_dir);
+  set("no-parse", 1);
   ::start();
   limit_yui_paths = query("limit-yui-paths");
   if(when == 0)
@@ -104,7 +105,9 @@ mixed find_file( string f, RequestID id )
 {
   if(is_hidden(f))
     return 0;
-  return ::find_file(f,id);
+  mixed m = ::find_file(f,id);
+  RAISE_CACHE(31536000);
+  return m;
 }
 
 void create()
@@ -118,7 +121,7 @@ void create()
 
   set("searchpath", yui_root_dir);
   set_invisible("searchpath");
-
+  set_invisible("no-parse");
 
   defvar("limit-yui-paths", 1, LOCALE(69, "Limit YUI paths"), TYPE_FLAG,
          LOCALE(70, "If set, access is limited to the assets and build directories."));
