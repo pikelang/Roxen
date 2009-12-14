@@ -799,7 +799,7 @@ mixed parse(RequestID id)
 
     <br clear='all' />
     <br />
-    <cf-ok-button href='?action=patcher.pike&class=maintenance' />
+    <cf-ok-button href='?class=maintenance' />
 ";
   res += #"
     <script type='text/javascript'>
