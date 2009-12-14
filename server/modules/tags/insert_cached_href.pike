@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.27 2009/11/11 15:41:57 stewa Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.28 2009/12/14 13:37:03 jonasw Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -382,19 +382,20 @@ class HrefDatabase {
   public string get_data(mapping args, mapping header) {
     int next_fetch = 0;
     array(mapping(string:mixed)) result;
-
+    int now = time();
+    
     /* if the tag argument time-of-day is provided, the database column next_fetch
        needs to be calculated: */
     if (args["time-of-day"]) { 
-      mapping now = localtime(time());
+      mapping now_lt = localtime(now);
       
-      now["hour"] = 0;
-      now["min"] = 0;
-      now["sec"] = 0;
+      now_lt["hour"] = 0;
+      now_lt["min"] = 0;
+      now_lt["sec"] = 0;
       
-      next_fetch = mktime(now) + args["time-of-day"];
+      next_fetch = mktime(now_lt) + args["time-of-day"];
       
-      if (next_fetch < time())
+      if (next_fetch < now)
 	next_fetch += 24 * 3600;
     }
     
@@ -403,38 +404,53 @@ class HrefDatabase {
     remove_old_entrys();
 #endif
     
-    sql_query("UPDATE " + request_table + " SET latest_request=" + time() 
-	      + " WHERE url=%s AND fetch_interval=" 
-	      + args["fetch-interval"] + " AND fresh_time=" + args["fresh-time"] 
-	      + " AND ttl=" + args["ttl"] + " AND timeout=" + args["timeout"]
-	      + " AND time_of_day=" + args["time-of-day"], args["cached-href"] );
+    string url = args["cached-href"];
+    sql_query("UPDATE " + request_table +
+	      "   SET latest_request = " + now +
+	      " WHERE url = %s "
+	      "   AND fetch_interval = %d "
+	      "   AND fresh_time = %d "
+	      "   AND ttl = %d "
+	      "   AND timeout = %d "
+	      "   AND time_of_day = %d",
+	      url, args["fetch-interval"], args["fresh-time"], args["ttl"],
+	      args["timeout"], args["time-of-day"]);
     
-    sql_query("INSERT IGNORE INTO " + request_table 
-	      + " values (%s, %d, %d, %d, %d, %d, %d, %d)", args["cached-href"], 
+    sql_query("INSERT IGNORE INTO " + request_table +
+	      " VALUES (%s, %d, %d, %d, %d, %d, %d, %d)",
+	      url,
 	      args["fetch-interval"], args["fresh-time"], args["ttl"],	
-	      args["timeout"], args["time-of-day"], next_fetch, time());
+	      args["timeout"], args["time-of-day"], next_fetch, now);
     
-    sql_query("INSERT IGNORE INTO " + data_table + " values (%s, '', 0)", 
-	      args["cached-href"]); 
+    sql_query("INSERT IGNORE INTO " + data_table +
+	      " VALUES (%s, '', 0)", 
+	      url);
     
-    result = sql_query("SELECT data FROM " + data_table + " WHERE url=%s " 
-		       " AND (" + time() + " - latest_write < " 
-		       + args["fresh-time"] + " OR " + args["fresh-time"] + " = 0)", args["cached-href"]);
+    result = sql_query("SELECT data "
+		       "  FROM " + data_table +
+		       " WHERE url = %s " 
+		       "   AND (" + now + " - latest_write < %d "
+		       "    OR %d = 0)",
+		       url, args["fresh-time"], args["fresh-time"]);
     
     if (result && sizeof(result) && result[0]["data"] != "") {
-      DWRITE("get_data(): Returning cached data for " + args["cached-href"]);
+      DWRITE("get_data(): Returning cached data for " + url);
       
       return utf8_to_string(result[0]["data"]);
     } else if (!args["pure-db"]) {
-      DWRITE("get_data(): No cached data existed for " + args["cached-href"] + " so performing a synchronous fetch");
+      DWRITE("get_data(): No cached data existed for " + url +
+	     " so performing a synchronous fetch");
       
-      string data = fetch_url((["url":args["cached-href"], "timeout":args["timeout"], 
-				"sync":1]), header);
+      string data = fetch_url( ([ "url"     : url,
+				  "timeout" : args["timeout"], 
+				  "sync"    : 1]),
+			       header);
       
       return data;
     } else {
-      DWRITE("get_data(): No cached data existed for " + args["cached-href"] + " and pure-db data "
-	     "was desired, so simply returning the empty string");
+      DWRITE("get_data(): No cached data existed for " + url +
+	     " and pure-db data was desired, so simply returning the "
+	     "empty string");
       
       return "";
     }
@@ -458,57 +474,65 @@ class HrefDatabase {
   }
   
   private void remove_old_entrys() {
-    sql_query("DELETE FROM " + request_table + " WHERE " + time() + " - latest_request "
-								    "> ttl");
+    sql_query("DELETE FROM " + request_table +
+	      "      WHERE " + time() + " - latest_request > ttl");
     
-    sql_query("DELETE " + data_table + " FROM " + data_table + " LEFT JOIN " + 
-	      request_table + " ON " + data_table + ".url=" + request_table + 
-	      ".url WHERE " + request_table + ".url IS NULL");
+    sql_query("    DELETE " + data_table +
+	      "      FROM " + data_table +
+	      " LEFT JOIN " + request_table +
+	      "        ON " + data_table + ".url=" + request_table + ".url "
+              "     WHERE " + request_table + ".url IS NULL");
   }
   
   private array(mapping(string:mixed)) urls_to_fetch() {
     array(mapping(string:mixed)) to_fetch = ({});
+    int now = time();
     
-    array(mapping(string:mixed)) result = sql_query("SELECT " + data_table + ".url, " 
-						    + request_table + ".timeout FROM " 
-						    + data_table + " LEFT JOIN " + 
-						    request_table + " ON " + data_table 
-						    + ".url=" + request_table + 
-						    ".url WHERE " + data_table + 
-						    ".data='' ORDER BY "
-						    "url, timeout DESC");
+    array(mapping(string:mixed)) result =
+      sql_query("     SELECT " + data_table + ".url, " + request_table + ".timeout "
+                "      FROM " + data_table +
+		" LEFT JOIN " + request_table +
+		"        ON " + data_table + ".url=" + request_table + ".url "
+                "     WHERE " + data_table + ".data='' "
+                "  ORDER BY url, timeout DESC");
     
     foreach(result, mapping row) {
       to_fetch = no_duplicate_add(to_fetch, row["url"], 0);
     }
 
-    result = sql_query("SELECT " + data_table + ".url, " + request_table + ".timeout, " 
+    result = sql_query("    SELECT " + data_table + ".url, " + request_table + ".timeout, " 
 		       + data_table + ".latest_write, " + request_table + 
-		       ".fetch_interval FROM " + data_table + " LEFT JOIN " 
-		       + request_table + " ON " + data_table + ".url=" + request_table + 
-		       ".url WHERE " + data_table + ".data!='' AND " + request_table + 
-		       ".fetch_interval > 0 AND ((" + time() + " - " + data_table + 
-		       ".latest_write) > " + request_table + ".fetch_interval) ORDER BY "
-		       "url, timeout DESC");
+		       ".fetch_interval "
+		       "      FROM " + data_table +
+		       " LEFT JOIN " + request_table +
+		       "        ON " + data_table + ".url=" + request_table + ".url "
+                       "     WHERE " + data_table + ".data!='' "
+                       "       AND " + request_table + ".fetch_interval > 0 "
+		       "       AND ((" + now + " - " + data_table + ".latest_write) > " + request_table + ".fetch_interval) "
+                       "  ORDER BY url, timeout DESC");
     
     foreach(result, mapping row) {
       to_fetch = no_duplicate_add(to_fetch, row["url"], 0);
     }
     
-    result = sql_query("SELECT " + data_table + ".url, " + request_table + ".timeout, " 
+    result = sql_query("    SELECT " + data_table + ".url, " + request_table + ".timeout, " 
 		       + request_table + ".time_of_day, " + request_table + 
-		       ".next_fetch FROM " + data_table + " LEFT JOIN " + request_table 
-		       + " ON " + data_table + ".url=" + request_table + ".url WHERE " 
-		       + data_table + ".data!='' AND " + request_table + 
-		       ".time_of_day > 0 AND " + time() + " > " + request_table + 
-		       ".next_fetch ORDER BY url, timeout DESC");
+		       ".next_fetch "
+		       "      FROM " + data_table +
+		       " LEFT JOIN " + request_table +
+		       "        ON " + data_table + ".url=" + request_table + ".url "
+                       "     WHERE " + data_table + ".data!='' "
+                       "       AND " + request_table + ".time_of_day > 0 "
+                       "       AND " + now + " > " + request_table + ".next_fetch "
+                       "  ORDER BY url, timeout DESC");
     
     foreach(result, mapping row) {
       to_fetch = no_duplicate_add(to_fetch, row["url"], 0);
     }
     
-    result = sql_query("SELECT url, max(timeout) FROM " + request_table + 
-		       " AS url GROUP BY url");
+    result = sql_query("  SELECT url, max(timeout) "
+		       "    FROM " + request_table + " AS url "
+		       "GROUP BY url");
     
     foreach(to_fetch, mapping one) {
       foreach(result, mapping row) {
@@ -526,12 +550,16 @@ class HrefDatabase {
     DWRITE(sprintf("update_data(): Saving the fetched data to the db for url %s"
 		   ,  url));
     
-    sql_query("UPDATE " + data_table + " SET data=%s, latest_write=%d WHERE url=%s", 
+    sql_query("UPDATE " + data_table + " "
+	      "   SET data=%s, latest_write=%d "
+	      " WHERE url=%s", 
 	      string_to_utf8(data), time(), url);
     
-    sql_query("UPDATE " + request_table + " SET next_fetch=next_fetch + " + (24 * 3600) 
-	      + " WHERE time_of_day > 0 AND " + time() + " > next_fetch AND url='" 
-	      + url + "'");
+    sql_query("UPDATE " + request_table + " "
+	      "   SET next_fetch=next_fetch + " + (24 * 3600) +
+	      " WHERE time_of_day > 0 "
+	      "   AND " + time(1) + " > next_fetch "
+	      "   AND url=%s" , url);
   }
 }
 
