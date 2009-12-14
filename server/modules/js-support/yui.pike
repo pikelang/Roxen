@@ -9,7 +9,7 @@ inherit "roxen-module://filesystem";
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_filesystem",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: yui.pike,v 1.17 2009/12/14 16:46:06 tor Exp $";
+constant cvs_version = "$Id: yui.pike,v 1.18 2009/12/14 16:58:00 tor Exp $";
 
 LocaleString module_name = LOCALE(67,"JavaScript Support: The Yahoo! User "
 				    "Interface Library");
@@ -46,7 +46,7 @@ void setup_yui() {
   }
   
   if(!file_stat(yui_root_dir))
-    mkdir(yui_root_dir, 1);
+    mkdir(yui_root_dir);
 
   multiset missing_versions =
     yui_versions - (multiset) (get_dir(yui_root_dir) || ({ }) );
