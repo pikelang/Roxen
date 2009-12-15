@@ -1,5 +1,5 @@
 /*
- * $Id: debug_info.pike,v 1.44 2009/12/05 01:03:57 jonasw Exp $
+ * $Id: debug_info.pike,v 1.45 2009/12/15 15:56:24 grubba Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -32,6 +32,7 @@ mixed page_0( object id )
 
   mapping(string|program:array) allobj = ([]);
   mapping(string|program:int) numobjs = ([]);
+  mapping(string:int) refs = ([]);
 
   object threads_disabled = _disable_threads();
 
@@ -57,6 +58,10 @@ mixed page_0( object id )
       p = functionp (p) && Function.defined (p) ||
 	programp (p) && Program.defined (p) ||
 	p;
+      catch {
+	// Paranoia catch.
+	refs[p] += _refs(obj) - 2; // obj and stack.
+      };
       if (++numobjs[p] <= 50) {
 #if 0
 	if (stringp (p) && has_suffix (p, "my-file.pike:4711"))
@@ -240,7 +245,8 @@ mixed page_0( object id )
 	else color = same_color;
       }
 
-      table[i] = ({color, progstr, objstr, numobjs[prog], change});
+      table[i] = ({ color, progstr, objstr,
+		    numobjs[prog], change, refs[prog] });
     }
     else table[i] = 0;
   }
@@ -256,7 +262,7 @@ mixed page_0( object id )
 	  progstr = prog;
       }
       else progstr = "";
-      table += ({({dec_color, progstr, entry[1], 0, -entry[0]})});
+      table += ({({dec_color, progstr, entry[1], 0, -entry[0], 0})});
     }
     entry[0] = 0;
   }
@@ -273,6 +279,7 @@ mixed page_0( object id )
   res += "<p><table style='font-size: 9px' border='0' cellpadding='0'>\n<tr>\n" +
     HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(141,"Source")) +
     HCELL ("align='left' ", "&usr.fgcolor;", (string)LOCALE(142,"Program")) +
+    HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(0,"References")) +
     HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(143,"Clones")) +
     HCELL ("align='right'", "&usr.fgcolor;", (string)LOCALE(5,"Change")) +
     "</tr>\n";
@@ -288,6 +295,7 @@ mixed page_0( object id )
 	     replace (Roxen.html_encode_string (trim_path(entry[1])), " ", "\0240")) +
       TCELL ("align='left' ", entry[0],
 	     replace (Roxen.html_encode_string (entry[2]), " ", "\0240")) +
+      TCELL ("align='right'", entry[0], entry[5]) +
       TCELL ("align='right'", entry[0], entry[3]) +
       TCELL ("align='right'", entry[0], entry[4]) + "</tr>\n";
   res += "</table></p>\n";
