@@ -3,14 +3,14 @@
 //<locale-token project="roxen_config">LOCALE</locale-token>
 #define LOCALE(X,Y)	_STR_LOCALE("roxen_config",X,Y)
 
-//! @decl array(string) modules = ({});
+//! @decl optional array(string) modules = ({});
 //!
-//! Modules to include in the configuration. Any initial variables in
-//! them get shown in the wizard to be set by the user.
+//! Modules to include in the configuration. Any @tt{VAR_INITIAL@}
+//! variables in them get shown in the wizard to be set by the user.
 
-//! @decl array(string) silent_modules = ({});
+//! @decl optional array(string) silent_modules = ({});
 //!
-//! Silent modules does not get their initial variables shown.
+//! Silent modules do not get their @tt{VAR_INITIAL@} variables shown.
 
 int unlocked(License.Key license)
 {
