@@ -5,13 +5,6 @@ import RoxenPatch;
 //<locale-token project="admin_tasks"> LOCALE </locale-token>
 #define LOCALE(X,Y)  _STR_LOCALE("admin_tasks",X,Y)
 
-// Yupp, this looks weird but it's to avoid putting blame on the pike script
-// module for stuff we write to the event log. 
-inherit "module";
-string modulename = LOCALE(326, "Patch management");
-constant module_type = MODULE_ZERO;
-
-
 constant action = "maintenance";
 
 // constant long_flags = ([ "restart" : LOCALE(0, "Need to restart server") ]);
@@ -588,11 +581,12 @@ mixed parse(RequestID id)
       {
 	if (plib->uninstall_patch(patch, current_user))
 	{
-	  report_notice("Patch manager: Successfully uninstalled %s.\n", patch);
+	  report_notice_for(0, "Patch manager: Successfully uninstalled %s.\n",
+			    patch);
 	  successful_uninstalls++;
 	}
 	else
-	  report_error("Patch manager: Failed to uninstall %s\n", patch);
+	  report_error_for(0, "Patch manager: Failed to uninstall %s\n", patch);
 	no_of_patches++;
 	PatchObject md = plib->get_metadata(patch);
 	if (md && md->flags)
@@ -664,11 +658,11 @@ mixed parse(RequestID id)
       {
 	if ( plib->install_patch(patch, current_user) )
 	{
-	  report_notice("Patch manager: Installed %s.\n", patch);
+	  report_notice_for(0, "Patch manager: Installed %s.\n", patch);
 	  successful_installs++;
 	}
 	else
-	  report_error("Patch manager: Failed to install %s.\n", patch);
+	  report_error_for(0, "Patch manager: Failed to install %s.\n", patch);
 	no_of_patches++;
 	PatchObject md = plib->get_metadata(patch);
 	if (md && md->flags)
