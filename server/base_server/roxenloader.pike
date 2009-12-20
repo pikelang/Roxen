@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.430 2009/12/20 17:22:22 mast Exp $
+// $Id: roxenloader.pike,v 1.431 2009/12/20 17:26:43 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.430 2009/12/20 17:22:22 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.431 2009/12/20 17:26:43 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -231,11 +231,7 @@ void roxen_perror(sprintf_format format, sprintf_args ... args)
   }
 
   if (sizeof(format)) {
-#if efun(syslog)
-    if(use_syslog && (loggingfield&LOG_DEBUG))
-      foreach(format/"\n"-({""}), string message)
-	syslog(LOG_DEBUG, replace(message+"\n", "%", "%%"));
-#endif
+    syslog_report (format, LOG_DEBUG);
 
     if (last_was_nl == -1) stderr->write("\n");
     last_was_nl = format[-1] == '\n';
@@ -477,11 +473,7 @@ void report_warning_sparsely (LocaleString|sprintf_format message,
   if (sparsely_dont_log[message] >= now) return;
   sparsely_dont_log[message] = now + 10*60;
   nwrite([string]message,0,2,MC);
-#if efun(syslog)
-  if(use_syslog && (loggingfield&LOG_WARNING))
-    foreach([string]message/"\n", message)
-      syslog(LOG_WARNING, replace([string]message+"\n", "%", "%%"));
-#endif
+  if (use_syslog) syslog_report (message, LOG_WARNING);
 }
 
 void report_error_sparsely (LocaleString|sprintf_format message,
@@ -496,11 +488,7 @@ void report_error_sparsely (LocaleString|sprintf_format message,
   if (sparsely_dont_log[message] >= now - 10*60*60) return;
   sparsely_dont_log[message] = now;
   nwrite([string]message,0,3,MC);
-#if efun(syslog)
-  if(use_syslog && (loggingfield&LOG_ERR))
-    foreach([string]message/"\n", message)
-      syslog(LOG_ERR, replace([string]message+"\n", "%", "%%"));
-#endif
+  if (use_syslog) syslog_report (message, LOG_ERR);
 }
 
 //! @appears popen
