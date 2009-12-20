@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.431 2009/12/20 17:26:43 mast Exp $
+// $Id: roxenloader.pike,v 1.432 2009/12/20 17:54:47 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.431 2009/12/20 17:26:43 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.432 2009/12/20 17:54:47 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -399,8 +399,8 @@ protected void syslog_report (string message, int level)
 {
 #if efun(syslog)
   if(use_syslog && (loggingfield&level))
-    foreach([string]message/"\n", message)
-      syslog(level, replace([string]message+"\n", "%", "%%"));
+    foreach(message/"\n", message)
+      syslog(level, replace(message+"\n", "%", "%%"));
 #endif
 }
 
@@ -412,6 +412,9 @@ void report_warning(LocaleString|sprintf_format message, sprintf_args ... foo)
 //! Report a warning message, that will show up in the server's debug log and
 //! in the event logs, along with the yellow exclamation mark warning sign.
 //! Shares argument prototype with @[sprintf()].
+//!
+//! @seealso
+//! @[report_warning_sparsely], @[report_warning_for]
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite([string]message,0,2,MC);
@@ -423,6 +426,9 @@ void report_notice(LocaleString|sprintf_format message, sprintf_args ... foo)
 //! Report a status message of some sort for the server's debug log and event
 //! logs, along with the blue informational notification sign. Shares argument
 //! prototype with @[sprintf()].
+//!
+//! @seealso
+//! @[report_notice_for]
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite([string]message,0,1,MC);
@@ -434,6 +440,9 @@ void report_error(LocaleString|sprintf_format message, sprintf_args ... foo)
 //! Report an error message, that will show up in the server's debug log and
 //! in the event logs, along with the red exclamation mark sign. Shares
 //! argument prototype with @[sprintf()].
+//!
+//! @seealso
+//! @[report_error_sparsely], @[report_error_for]
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite([string]message,0,3,MC);
@@ -443,9 +452,67 @@ void report_error(LocaleString|sprintf_format message, sprintf_args ... foo)
 void report_fatal(sprintf_format message, sprintf_args ... foo)
 //! @appears report_fatal
 //! Print a fatal error message.
+//!
+//! @seealso
+//! @[report_fatal_for]
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite(message,0,3,MC);
+  if (use_syslog) syslog_report (message, LOG_EMERG);
+}
+
+void report_warning_for (object/*(Configuration|RoxenModule)*/ where,
+			 LocaleString|sprintf_format message,
+			 sprintf_args ... args)
+//! @appears report_warning_for
+//! See @[report_error_for].
+{
+  if (sizeof (args)) message = sprintf (message, @args);
+  nwrite (message, 0, 2,
+	  where && where->is_module && where,
+	  where && where->is_configuration && where);
+  if (use_syslog) syslog_report (message, LOG_WARNING);
+}
+
+void report_notice_for (object/*(Configuration|RoxenModule)*/ where,
+			LocaleString|sprintf_format message,
+			sprintf_args ... args)
+//! @appears report_notice_for
+//! See @[report_error_for].
+{
+  if (sizeof (args)) message = sprintf (message, @args);
+  nwrite (message, 0, 1,
+	  where && where->is_module && where,
+	  where && where->is_configuration && where);
+  if (use_syslog) syslog_report (message, LOG_NOTICE);
+}
+
+void report_error_for (object/*(Configuration|RoxenModule)*/ where,
+		       LocaleString|sprintf_format message,
+		       sprintf_args ... args)
+//! @appears report_error_for
+//! Like @[report_error], but logs the message for the given
+//! configuration or Roxen module @[where], or globally if @[where] is
+//! zero. @[report_error] searches the call stack to find that out,
+//! but this function is useful to specify it explicitly.
+{
+  if (sizeof (args)) message = sprintf (message, @args);
+  nwrite (message, 0, 3,
+	  where && where->is_module && where,
+	  where && where->is_configuration && where);
+  if (use_syslog) syslog_report (message, LOG_ERR);
+}
+
+void report_fatal_for (object/*(Configuration|RoxenModule)*/ where,
+		       LocaleString|sprintf_format message,
+		       sprintf_args ... args)
+//! @appears report_fatal_for
+//! See @[report_error_for].
+{
+  if (sizeof (args)) message = sprintf (message, @args);
+  nwrite (message, 0, 3,
+	  where && where->is_module && where,
+	  where && where->is_configuration && where);
   if (use_syslog) syslog_report (message, LOG_EMERG);
 }
 
@@ -2664,6 +2731,10 @@ the correct system time.
   add_constant("report_warning",report_warning);
   add_constant("report_error",  report_error);
   add_constant("report_fatal",  report_fatal);
+  add_constant("report_notice_for", report_notice_for);
+  add_constant("report_warning_for", report_warning_for);
+  add_constant("report_error_for", report_error_for);
+  add_constant("report_fatal_for", report_fatal_for);
   add_constant("report_warning_sparsely", report_warning_sparsely);
   add_constant("report_error_sparsely", report_error_sparsely);
   add_constant("werror",        roxen_perror);
