@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.429 2009/12/10 11:01:46 mast Exp $
+// $Id: roxenloader.pike,v 1.430 2009/12/20 17:22:22 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.429 2009/12/10 11:01:46 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.430 2009/12/20 17:22:22 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -399,6 +399,15 @@ array(object) find_module_and_conf_for_log( array(array) q )
   return ({ mod,conf });
 }
 
+protected void syslog_report (string message, int level)
+{
+#if efun(syslog)
+  if(use_syslog && (loggingfield&level))
+    foreach([string]message/"\n", message)
+      syslog(level, replace([string]message+"\n", "%", "%%"));
+#endif
+}
+
 
 #define MC @find_module_and_conf_for_log(backtrace())
 
@@ -410,11 +419,7 @@ void report_warning(LocaleString|sprintf_format message, sprintf_args ... foo)
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite([string]message,0,2,MC);
-#if efun(syslog)
-  if(use_syslog && (loggingfield&LOG_WARNING))
-    foreach([string]message/"\n", message)
-      syslog(LOG_WARNING, replace([string]message+"\n", "%", "%%"));
-#endif
+  if (use_syslog) syslog_report (message, LOG_WARNING);
 }
 
 void report_notice(LocaleString|sprintf_format message, sprintf_args ... foo)
@@ -425,11 +430,7 @@ void report_notice(LocaleString|sprintf_format message, sprintf_args ... foo)
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite([string]message,0,1,MC);
-#if efun(syslog)
-  if(use_syslog && (loggingfield&LOG_NOTICE))
-    foreach([string]message/"\n", message)
-      syslog(LOG_NOTICE, replace([string]message+"\n", "%", "%%"));
-#endif
+  if (use_syslog) syslog_report (message, LOG_NOTICE);
 }
 
 void report_error(LocaleString|sprintf_format message, sprintf_args ... foo)
@@ -440,11 +441,7 @@ void report_error(LocaleString|sprintf_format message, sprintf_args ... foo)
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite([string]message,0,3,MC);
-#if efun(syslog)
-  if(use_syslog && (loggingfield&LOG_ERR))
-    foreach([string]message/"\n", message)
-      syslog(LOG_ERR, replace([string]message+"\n", "%", "%%"));
-#endif
+  if (use_syslog) syslog_report (message, LOG_ERR);
 }
 
 void report_fatal(sprintf_format message, sprintf_args ... foo)
@@ -453,11 +450,7 @@ void report_fatal(sprintf_format message, sprintf_args ... foo)
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite(message,0,3,MC);
-#if efun(syslog)
-  if(use_syslog && (loggingfield&LOG_EMERG))
-    foreach(message/"\n", message)
-      syslog(LOG_EMERG, replace(message+"\n", "%", "%%"));
-#endif
+  if (use_syslog) syslog_report (message, LOG_EMERG);
 }
 
 protected mapping(string:int) sparsely_dont_log = (garb_sparsely_dont_log(), ([]));
