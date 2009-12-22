@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.688 2009/11/27 13:37:53 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.689 2009/12/22 14:11:05 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4672,7 +4672,7 @@ hyphens ('-') occur in the specifier names.</p>
 <tr><td>$resource</td>
     <td>Resource identifier. For events, this is either a path to a
     file (if it begins with '<code>/</code>') or some other kind of
-    resource identifier (otherwise). It is '-' for events that doesn't
+    resource identifier (otherwise). It is '-' for events that don't
     act on any specific resource.</td></tr>
 <tr><td>$server-uptime</td>
     <td>Server uptime in seconds.</td></tr>
