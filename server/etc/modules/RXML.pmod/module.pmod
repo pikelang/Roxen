@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.410 2009/09/02 11:47:25 mast Exp $
+// $Id: module.pmod,v 1.411 2009/12/23 20:27:17 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7683,7 +7683,9 @@ class VariableChange (/*protected*/ mapping settings)
 			   replace (var[0], ".", ".."), sizeof (val));
 #endif
 	      if (val)
-		ctx->add_scope (var[0], val);
+		ctx->add_scope (var[0],
+				objectp (val) && val->clone ? val->clone() :
+				val);
 	      else
 		ctx->remove_scope (var[0]);
 	    }
