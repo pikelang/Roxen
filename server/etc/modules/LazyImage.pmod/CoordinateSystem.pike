@@ -83,11 +83,15 @@ protected
       sscanf(format-"%%", "%*s%%%*s%[bduoxXcfgGeEFtsqOHn]", f);
       switch( f )
       {
+	case "n":
+	case "t":
+	case "O":
+	  // mixed
+	  return sprintf( format, data );
 	case "s":
 	case "q":
-	case "O":
 	case "H":
-	case "n":
+	  // string
 	  return sprintf( format, (string) data );
 	case "b":
 	case "d":
@@ -96,6 +100,7 @@ protected
 	case "x":
 	case "X":
 	case "c":
+	  // int
 	  return sprintf( format, (int) data );
 	case "f":
 	case "g":
@@ -103,9 +108,9 @@ protected
 	case "e":
 	case "E":
 	case "F":
-	case "t":
 	default:
-	  return sprintf( format, (float)data );
+	  // float
+	  return sprintf( format, (float) data );
       }
     };
       
