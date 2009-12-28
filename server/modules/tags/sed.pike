@@ -36,7 +36,7 @@
 //
 // where line is numeral, first line==1
 
-constant cvs_version = "$Id: sed.pike,v 1.23 2009/12/28 13:00:03 grubba Exp $";
+constant cvs_version = "$Id: sed.pike,v 1.24 2009/12/28 13:06:17 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -421,10 +421,12 @@ constant tagdoc=([
 	       <item name='l'><p>Print current space</p></item>
 	       <item name='p'><p>Print first line in data</p></item>
 	       <item name='q'><p>Quit evaluating</p></item>
-	       <item name='s'><p>Replace. Will quit after the first match in
-				each line. If Compatability Level is set to 4.5
-				or lower, it will quit after the first matching
-				line unless the <i>g</i> flag is active.</p>
+	       <item name='s'><p>Replace. Replaces the first match on each
+                                line unless the flag <i>g</i> is active, in
+                                which case all matches will be replaced.
+                                In 4.5 and earlier compat mode the
+                                replacement will terminate after the first
+                                matching line (unless <i>g</i> is active).</p>
 	                      <p>Usage: <b>s/</b>[<i>regexp</i>]<b>/</b>[<i>with</i>]<b>/</b>[<i>x</i>]</p></item>
 	       <item name='y'><p>Replace chars</p>
 	                      <p>Usage: <b>y/</b>[<i>chars</i>]<b>/</b>[<i>chars</i>]<b>/</b></p></item></list></desc>
