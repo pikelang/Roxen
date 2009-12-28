@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.153 2009/12/28 14:21:13 mast Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.154 2009/12/28 14:23:06 mast Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -19,6 +19,11 @@ constant out_of_date_warning = 0;
 #define relocate_module(x) (x)
 #define unrelocate_module(x) (x)
 #endif
+
+protected string _sprintf (int flag)
+{
+  return flag == 'O' && "roxen_master()";
+}
 
 #define SECURITY_DEBUG 1
 
