@@ -10,7 +10,7 @@ mixed sql_query( string q, mixed ... e )
  * Roxen's customized master.
  */
 
-constant cvs_version = "$Id: roxen_master.pike,v 1.152 2009/06/10 16:04:44 grubba Exp $";
+constant cvs_version = "$Id: roxen_master.pike,v 1.153 2009/12/28 14:21:13 mast Exp $";
 
 // Disable the precompiled file is out of date warning.
 constant out_of_date_warning = 0;
@@ -872,6 +872,28 @@ void handle_error(array(mixed)|object trace)
   ::handle_error (trace);
 }
 #endif
+
+void compile_warning(string file,int line,string err)
+{
+  if (!line) {
+    // Ugly way to detect the appropriate warning made by the pike master.
+    int i = search (err, "Decode failed:");
+    if (i >= 0) {
+      // Can get errors when decoding the dumped modules that come with pike
+      // since there are various resolver differences. E.g. the exit efun is
+      // replaced with a pike function in roxenloader.pike, and decode_value
+      // cannot handle that difference. Let's just make a little bit of noise
+      // in debug mode.
+#ifdef DEBUG
+      werror ("Debug notice: Failed to decode %s:%s\n",
+	      file, err[i + sizeof ("Decode failed:")..]);
+#endif
+      return;
+    }
+  }
+
+  ::compile_warning (file, line, err);
+}
 
 void clear_compilation_failures()
 {
