@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.432 2009/12/20 17:54:47 mast Exp $
+// $Id: roxenloader.pike,v 1.433 2010/01/11 16:24:51 jonasw Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.432 2009/12/20 17:54:47 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.433 2010/01/11 16:24:51 jonasw Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -231,7 +231,9 @@ void roxen_perror(sprintf_format format, sprintf_args ... args)
   }
 
   if (sizeof(format)) {
+#if efun(syslog)
     syslog_report (format, LOG_DEBUG);
+#endif
 
     if (last_was_nl == -1) stderr->write("\n");
     last_was_nl = format[-1] == '\n';
@@ -418,7 +420,9 @@ void report_warning(LocaleString|sprintf_format message, sprintf_args ... foo)
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite([string]message,0,2,MC);
+#if efun(syslog)
   if (use_syslog) syslog_report (message, LOG_WARNING);
+#endif
 }
 
 void report_notice(LocaleString|sprintf_format message, sprintf_args ... foo)
@@ -432,7 +436,9 @@ void report_notice(LocaleString|sprintf_format message, sprintf_args ... foo)
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite([string]message,0,1,MC);
+#if efun(syslog)
   if (use_syslog) syslog_report (message, LOG_NOTICE);
+#endif
 }
 
 void report_error(LocaleString|sprintf_format message, sprintf_args ... foo)
@@ -446,7 +452,9 @@ void report_error(LocaleString|sprintf_format message, sprintf_args ... foo)
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite([string]message,0,3,MC);
+#if efun(syslog)
   if (use_syslog) syslog_report (message, LOG_ERR);
+#endif
 }
 
 void report_fatal(sprintf_format message, sprintf_args ... foo)
@@ -458,7 +466,9 @@ void report_fatal(sprintf_format message, sprintf_args ... foo)
 {
   if( sizeof( foo ) ) message = sprintf((string)message, @foo );
   nwrite(message,0,3,MC);
+#if efun(syslog)
   if (use_syslog) syslog_report (message, LOG_EMERG);
+#endif
 }
 
 void report_warning_for (object/*(Configuration|RoxenModule)*/ where,
@@ -471,7 +481,9 @@ void report_warning_for (object/*(Configuration|RoxenModule)*/ where,
   nwrite (message, 0, 2,
 	  where && where->is_module && where,
 	  where && where->is_configuration && where);
+#if efun(syslog)
   if (use_syslog) syslog_report (message, LOG_WARNING);
+#endif
 }
 
 void report_notice_for (object/*(Configuration|RoxenModule)*/ where,
@@ -484,7 +496,9 @@ void report_notice_for (object/*(Configuration|RoxenModule)*/ where,
   nwrite (message, 0, 1,
 	  where && where->is_module && where,
 	  where && where->is_configuration && where);
+#if efun(syslog)
   if (use_syslog) syslog_report (message, LOG_NOTICE);
+#endif
 }
 
 void report_error_for (object/*(Configuration|RoxenModule)*/ where,
@@ -500,7 +514,9 @@ void report_error_for (object/*(Configuration|RoxenModule)*/ where,
   nwrite (message, 0, 3,
 	  where && where->is_module && where,
 	  where && where->is_configuration && where);
+#if efun(syslog)
   if (use_syslog) syslog_report (message, LOG_ERR);
+#endif
 }
 
 void report_fatal_for (object/*(Configuration|RoxenModule)*/ where,
@@ -513,7 +529,9 @@ void report_fatal_for (object/*(Configuration|RoxenModule)*/ where,
   nwrite (message, 0, 3,
 	  where && where->is_module && where,
 	  where && where->is_configuration && where);
+#if efun(syslog)
   if (use_syslog) syslog_report (message, LOG_EMERG);
+#endif
 }
 
 protected mapping(string:int) sparsely_dont_log = (garb_sparsely_dont_log(), ([]));
@@ -540,7 +558,9 @@ void report_warning_sparsely (LocaleString|sprintf_format message,
   if (sparsely_dont_log[message] >= now) return;
   sparsely_dont_log[message] = now + 10*60;
   nwrite([string]message,0,2,MC);
+#if efun(syslog)
   if (use_syslog) syslog_report (message, LOG_WARNING);
+#endif
 }
 
 void report_error_sparsely (LocaleString|sprintf_format message,
@@ -555,7 +575,9 @@ void report_error_sparsely (LocaleString|sprintf_format message,
   if (sparsely_dont_log[message] >= now - 10*60*60) return;
   sparsely_dont_log[message] = now;
   nwrite([string]message,0,3,MC);
+#if efun(syslog)
   if (use_syslog) syslog_report (message, LOG_ERR);
+#endif
 }
 
 //! @appears popen
