@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.433 2010/01/11 16:24:51 jonasw Exp $
+// $Id: roxenloader.pike,v 1.434 2010/01/13 14:34:01 jonasw Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.433 2010/01/11 16:24:51 jonasw Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.434 2010/01/13 14:34:01 jonasw Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -1096,30 +1096,33 @@ string roxen_version()
 //!
 //! @string
 //!   @value "$LOCALDIR"
-//!     The local directory of the webserver, Normally "../local",
+//!     The local directory of the web server, Normally "../local",
 //!     but it can be changed in by setting the environment
 //!     variable LOCALDIR.
 //!   @value "$LOGDIR"
-//!     The log directory of the webserver. Normally "../logs",
+//!     The log directory of the web server. Normally "../logs",
 //!     but it can be changed in the configuration interface under
 //!     global settings.
 //!   @value "$LOGFILE"
-//!     The debuglog of the webserver. Normally
+//!     The debug log of the web server. Normally
 //!     "../logs/debug/default.1", but it can be the name of the
 //!     configuration directory if multiple instances are used.
 //!   @value "$VARDIR"
-//!     The webservers var directory. Normally "../var", but it can
+//!     The web server's var directory. Normally "../var", but it can
 //!     be changed by setting the environment variable VARDIR.
 //!   @value "$VVARDIR"
-//!     Same as $VARDIR, but with a server version specific subdirectory
-//!     prepended.
+//!     Same as $VARDIR, but with a server version specific subdirectory.
+//!   @value "$SERVERDIR"
+//!     Base path for the version-specific installation directory.
 //! @endstring
 string roxen_path( string filename )
 {
-  filename = replace( filename, ({"$VVARDIR","$LOCALDIR","$LOGFILE"}),
+  filename = replace( filename,
+		      ({"$VVARDIR","$LOCALDIR","$LOGFILE","$SERVERDIR"}),
                       ({"$VARDIR/"+roxen_version(),
                         getenv ("LOCALDIR") || "../local",
-			getenv ("LOGFILE") || "$LOGDIR/debug/default.1" }) );
+			getenv ("LOGFILE") || "$LOGDIR/debug/default.1",
+			getcwd() }) );
   if( roxen )
     filename = replace( filename, 
                         "$LOGDIR", 
