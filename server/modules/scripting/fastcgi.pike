@@ -2,7 +2,7 @@
 
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.14 2009/05/07 14:15:55 mast Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.15 2010/01/13 12:37:02 grubba Exp $";
 
 #include <roxen.h>
 #include <module.h>
@@ -363,6 +363,18 @@ class Stream
     string buffer = "";
     function read_callback, close_callback, close_callback_2;
     mixed fid;
+
+#if constant(thread_create)
+    // Note: buffer is accessed both from the read_thread,
+    //       and from other threads due to the implementation
+    //       of set_blocking() and set_nonblocking().
+    Thread.Mutex read_cb_mutex = Thread.Mutex();
+#define LOCK()		read_cb_mutex->lock()
+#define UNLOCK(KEY)	destruct(key)
+#else
+#define LOCK()	0
+#define UNLOCK(KEY)
+#endif
   }
 
   string _sprintf( )
@@ -374,6 +386,24 @@ class Stream
   {
     if( fd )
       fd->unregister_stream( id, reqid );
+  }
+
+  protected void do_close(int level)
+  {
+    if (level == 2) {
+      if( close_callback_2 )
+      {
+        closed = 1;
+	// Delay 1 second to ensure that any data is cleared first.
+        call_out(close_callback_2, 1, this_object());
+      }
+    } else {
+      closed = 1;
+      if (close_callback) {
+	// Delay 1 second to ensure that any data is cleared first.
+	call_out(close_callback, 1, fid);
+      }
+    }
   }
 
   void close()
@@ -409,15 +439,19 @@ class Stream
 #if constant( thread_create )
         while( !closed && !strlen( buffer ) ) sleep(0.1);
 #endif
+	mixed key = LOCK();
         string b = buffer;
         buffer="";
+	UNLOCK(key);
         return b;
       }
 #if constant( thread_create )
       while( !closed ) sleep( 0.1 );
 #endif
+      mixed key = LOCK();
       string b = buffer;
       buffer=0;
+      UNLOCK(key);
       return b;
     }
     if( !closed && !noblock )
@@ -433,8 +467,10 @@ class Stream
 #if constant( thread_create )
     while( !closed && !strlen( buffer ) ) sleep(0.1);
 #endif
+    mixed key = LOCK();
     string b = buffer[..nbytes-1];
     buffer = buffer[nbytes..];
+    UNLOCK(key);
     return b;
   }
 
@@ -461,7 +497,9 @@ class Stream
 #endif
       return;
     }
+    mixed key = LOCK();
     buffer += d;
+    UNLOCK(key);
 
     if( read_callback )
     {
@@ -469,24 +507,19 @@ class Stream
       if( !strlen( d ) )
       {
         /* EOS record. */
-        closed = 1;
-        if( close_callback )     close_callback( fid );
-        return;
+	do_close(1);
       }
+      return;
     }
     if( !strlen( d ) )
-      if( close_callback_2 )
-      {
-        closed = 1;
-        close_callback_2( this_object() );
-      }
+      do_close(2);
   }
 
   void set_close_callback( function f )
   {
     close_callback = f;
     if( f && closed )
-      close_callback( fid );
+      do_close(1);
   }
 
   void set_read_callback( function f )
@@ -507,7 +540,7 @@ class Stream
   {
     close_callback_2 = q;
     if( closed )
-      close_callback_2( this_object() );
+      do_close(2);
   }
 
   void set_blocking()
@@ -521,12 +554,33 @@ class Stream
     fid = to;
   }
 
+  // MUST be called from the backend thread!
+  protected void really_do_read_callback()
+  {
+    mixed key = LOCK();
+    string data = buffer;
+    buffer = "";
+    UNLOCK(key);
+    if( strlen( data ) )
+    {
+      read_callback(fid, data);
+    }
+  }
+
+  // Called from:
+  //   FCGIChannel::got_data ==> got_data
+  //   FCGIChannel::read_thread/read_cb ==> FCGIChannel::got_data ==> got_data
+  //   set_read_callback
+  //   set_nonblocking ==> set_read_callback
+  //   set_blocking ==> set_read_callback
+  // which may execute concurrently, which causes a race on buffer.
+  //
+  // We attempt to solve this by sequencing through the main backend.
   void do_read_callback()
   {
     if( strlen( buffer ) )
     {
-      read_callback( fid, buffer );
-      buffer="";
+      call_out(really_do_read_callback, 0);
     }
   }
 
@@ -902,7 +956,10 @@ class FCGI
 //                                         "FCGI_MAX_REQS",
 //                                         "FCGI_MPXS_CONNS") );
 #endif
+
+      call_out(reaperman, 1);
     }
+
   } /* end of  protected */
 
 
