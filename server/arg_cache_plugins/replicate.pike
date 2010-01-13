@@ -1,7 +1,7 @@
 // This file is part of Roxen WebServer.
 // Copyright © 2001 - 2009, Roxen IS.
 
-constant cvs_version="$Id: replicate.pike,v 1.30 2009/07/10 07:18:06 wellhard Exp $";
+constant cvs_version="$Id: replicate.pike,v 1.31 2010/01/13 14:21:07 jonasw Exp $";
 
 #if constant(WS_REPLICATE)
 
@@ -119,8 +119,8 @@ protected void create( object c )
   cache = c;
   mixed err = catch {
     if( !(d = get_sdb()) ) {
-      report_error("You must create a database named 'replicate' in a\n"
-		   "shared MySQL for this module to work.\n" );
+      report_error("NOTE: You must create a database named 'replicate' in a\n"
+		   "      shared MySQL for this module to work.\n" );
       off = 1;
       return;
     }
@@ -129,7 +129,7 @@ protected void create( object c )
   if( err )
   {
     off = -1;
-    report_warning("The replicate database is currently down: %O\n",
+    report_warning("NOTE: The replicate database is currently down: %O\n",
 		   DBManager.db_url("replicate", 1) );
     return;
   }
