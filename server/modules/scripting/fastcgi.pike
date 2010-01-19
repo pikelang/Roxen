@@ -2,7 +2,7 @@
 
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.16 2010/01/19 13:04:25 grubba Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.17 2010/01/19 13:16:00 grubba Exp $";
 
 #include <roxen.h>
 #include <module.h>
@@ -1001,6 +1001,14 @@ class FCGI
     return new_channel();
 #endif
   }
+
+  // Just for debugging
+  array show_all_pids() {
+    return all_pids;
+  }
+  array show_channels() {
+    return channels;
+  }
 }
 
 mapping(string:FCGI) fcgis = ([]);
@@ -1086,4 +1094,31 @@ void create(Configuration conf)
 	 "FCGI-scripts.");
 
   killvar("cgi_tag");
+}
+
+string status()
+{
+  string statmessage = "<h3>FastCGI object status</h3>\n";
+  foreach (fcgis; string cmd; FCGI f) {
+    int count = 0;
+    statmessage += 
+      "<h4>" + Roxen.html_encode_string(cmd)) + "</h4>\n"
+      "<pre>Object: " + Roxen.html_encode_string(sprintf("%O", f)) + "</pre>\n"
+      "<h5>pids</h5>\n"
+      "<ul>\n";
+    foreach (f->show_all_pids(),mixed p)
+      statmessage += sprintf("<li>%d Pid: %d, status: %d</li>",
+			     ++count, p->pid(), p->status());
+    statmessage +=
+      "</ul>\n"
+      "<h5>Channels</h5>\n"
+      "<ul>\n";
+    count = 0;
+    foreach (f->show_channels(),FCGIChannel ch)
+      statmessage +=
+	sprintf("<li>%d %O<br /><pre>%O</pre></li>",
+		++count, ch, ch->request_ids);
+    statmessage += "</ul>\n";
+  }
+  return statmessage;
 }
