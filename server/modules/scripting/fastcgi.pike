@@ -2,7 +2,7 @@
 
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.15 2010/01/13 12:37:02 grubba Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.16 2010/01/19 13:04:25 grubba Exp $";
 
 #include <roxen.h>
 #include <module.h>
@@ -113,12 +113,14 @@ class FCGIChannel
               written = fd->write( wbuffer );
               if( written <= 0 )
               {
-                break;
                 ok=0;
+                break;
               }
               wbuffer = wbuffer[written..];
-            } else
+            } else {
               ok=0;
+	      break;
+	    }
 	  if(!ok) break;
 	  Thread.MutexKey lock = cond_mutex->lock();
 	  if (!sizeof (wbuffer))
