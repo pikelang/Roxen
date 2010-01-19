@@ -2,7 +2,7 @@
 
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.17 2010/01/19 13:16:00 grubba Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.18 2010/01/19 13:27:05 grubba Exp $";
 
 #include <roxen.h>
 #include <module.h>
@@ -1102,7 +1102,7 @@ string status()
   foreach (fcgis; string cmd; FCGI f) {
     int count = 0;
     statmessage += 
-      "<h4>" + Roxen.html_encode_string(cmd)) + "</h4>\n"
+      "<h4>" + Roxen.html_encode_string(cmd) + "</h4>\n"
       "<pre>Object: " + Roxen.html_encode_string(sprintf("%O", f)) + "</pre>\n"
       "<h5>pids</h5>\n"
       "<ul>\n";
