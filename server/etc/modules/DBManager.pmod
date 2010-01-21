@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.77 2009/07/03 11:55:34 noring Exp $
+// $Id: DBManager.pmod,v 1.78 2010/01/21 13:07:32 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -110,7 +110,7 @@ private
   }
 
   //! Split on semi-colon, but not inside strings or comments...
-  protected array(string) split_sql_script(string script)
+  static array(string) split_sql_script(string script)
   {
     array(string) res = ({});
     int start = 0;
@@ -179,11 +179,72 @@ private
     return res;
   }
 
+  static class SqlFileSplitIterator
+  {
+    inherit String.SplitIterator;
+
+    static void create(Stdio.File script_file)
+    {
+      ::create("", ';', 0, script_file->read_function(8192));
+      next();
+    }
+
+    static int _sizeof()
+    {
+      return -1;
+    }
+
+    static string current = "";
+
+    int next()
+    {
+      if (!current) return 0;
+      current = 0;
+      if (::value()) {
+	string buf = "";
+	while (1) {
+	  buf += ::value() + ";";
+	  if (!::next()) break;	// Skip the trailer.
+
+	  array(string) a = split_sql_script(buf);
+	  if (sizeof(a) > 1) {
+	    current = a[0];
+	    // NB: a[1] should always be "" here.
+	    return 1;
+	  }
+	}
+      }
+      return 0;
+    }
+
+    int index()
+    {
+      return current?-1:UNDEFINED;
+    }
+
+    string value()
+    {
+      return current || UNDEFINED;
+    }
+  }
+
   static void execute_sql_script(Sql.Sql db, string script,
 				 int|void quiet)
   {
     array(string) queries = split_sql_script(script);
     foreach(queries[..sizeof(queries)-2], string q) {
+      mixed err = catch {db->query(q);};
+      if (err && !quiet) {
+	// Complain about failures only if they're not expected.
+	master()->handle_error(err);
+      }
+    }
+  }
+
+  static void execute_sql_script_file(Sql.Sql db, Stdio.File script_file,
+				      int|void quiet)
+  {
+    foreach(SqlFileSplitIterator(script_file);; string q) {
       mixed err = catch {db->query(q);};
       if (err && !quiet) {
 	// Complain about failures only if they're not expected.
@@ -994,7 +1055,9 @@ array(mapping) restore( string dbname, string directory, string|void todb,
     }
     report_notice("Restoring backup file %s to database %s...\n",
 		  fname, todb || dbname);
-    execute_sql_script(db, cooked->read());
+    execute_sql_script_file(db, cooked);
+    report_notice("Backup file %s restored to database %s.\n",
+		  fname, todb || dbname);
     // FIXME: Return a proper result.
     return ({});
   }
@@ -1320,7 +1383,7 @@ array(string|array(mapping)) backup( string dbname, string|void directory,
 
 #if 1 /* ENABLE_DB_BACKUPS */
 //! Call-out id's for backup schedules.
-protected mapping(int:mixed) backup_cos = ([]);
+static mapping(int:mixed) backup_cos = ([]);
 
 //! Perform a scheduled database backup.
 //!
