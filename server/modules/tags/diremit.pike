@@ -241,11 +241,9 @@ class TagDirectoryplugin
 
   array get_dataset(mapping args, RequestID id)
   {
-    foreach(tagset->get_overridden_tags("emit#dir"), RXML.Tag t) {
-      werror ("%O %O\n", this, t);
+    foreach(tagset->get_overridden_tags("emit#dir"), RXML.Tag t)
       if(t && t->sb_dir)
 	return t->get_dataset(args, id) || ({});
-    }
     return ::get_dataset (args, id);
   }
 }
