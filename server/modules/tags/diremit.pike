@@ -6,7 +6,7 @@ inherit "module";
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Dir emit source";
 constant module_doc = "This module provies the 'dir' emit source. It "
-  "or anoter compatible module is required by the Directory Listings module";
+  "or another compatible module is required by the Directory Listings module";
 
 class Imagesize(mapping m, RequestID id) {
   inherit RXML.Value;
@@ -100,19 +100,14 @@ class Thumbnail(mapping m, mapping args, RequestID id) {
   }
 }
 
-class TagDirectoryplugin
+class TagWSDirectoryplugin
 {
   inherit RXML.Tag;
   constant name = "emit";
-  constant plugin_name = "dir";
+  constant plugin_name = "ws-dir";
 
   array get_dataset(mapping args, RequestID id)
   {
-    foreach(tagset->get_overridden_tags("emit#dir"), RXML.Tag t)
-      if(t && t->sb_dir)
-	return t->get_dataset(args, id) || ({});
-
-    // Now..
     string d;
     if( args->directory )
       d = Roxen.fix_relative( args->directory, id );
@@ -236,6 +231,22 @@ class TagDirectoryplugin
     if( args["sort-reverse"] )
       res = reverse( res );
     return res;
+  }
+}
+
+class TagDirectoryplugin
+{
+  inherit TagWSDirectoryplugin;
+  constant plugin_name = "dir";
+
+  array get_dataset(mapping args, RequestID id)
+  {
+    foreach(tagset->get_overridden_tags("emit#dir"), RXML.Tag t) {
+      werror ("%O %O\n", this, t);
+      if(t && t->sb_dir)
+	return t->get_dataset(args, id) || ({});
+    }
+    return ::get_dataset (args, id);
   }
 }
 
@@ -397,6 +408,12 @@ constant tagdoc=([
  Returns the height of the image.
 </p></desc>",
 ])
-		 })
+	   }),
+
+"emit#ws-dir": #"<desc type='plugin'><p><short>
+ Alias for the \"dir\" emit source that lists directories.</short>
+ This can be used in case the WebServer \"dir\" plugin has been
+ overridden. See <xref href='emit_dir.tag'/> for full documentation.
+</p></desc>",
 ]);
 #endif
