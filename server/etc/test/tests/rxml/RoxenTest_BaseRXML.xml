@@ -1668,6 +1668,13 @@ data=TestNull(),</result>
 </result>
 </test>
 
+<test>
+  <rxml>
+    <sort></sort>
+  </rxml>
+  <result></result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>If caller test</comment>

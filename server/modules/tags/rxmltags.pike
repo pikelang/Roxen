@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.624 2009/11/20 00:17:20 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.625 2010/01/22 18:43:46 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -2945,16 +2945,16 @@ string simpletag_sort(string t, mapping m, string c, RequestID id)
   string pre="", post="";
   array lines = c/m->separator;
 
-  while(lines[0] == "")
+  while(sizeof (lines) && lines[0] == "")
   {
     pre += m->separator;
     lines = lines[1..];
   }
 
-  while(lines[-1] == "")
+  while(sizeof (lines) && lines[-1] == "")
   {
     post += m->separator;
-    lines = lines[..sizeof(lines)-2];
+    lines = lines[..<1];
   }
 
   lines=sort(lines);
