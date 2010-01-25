@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.625 2010/01/22 18:43:46 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.626 2010/01/25 15:48:13 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -10983,7 +10983,7 @@ the respective attributes below for further information.</p></desc>
 
 "guess-content-type":#"<desc type='tag'><p><short>
  Tries to find a content type from content, filename or file path.</short>
- Either <em>content</em> or <em>filename</em> attributes must be supplied.
+ Either \"content\" or \"filename\" attributes must be supplied.
 </p>
 </desc>
 
@@ -10993,15 +10993,15 @@ the respective attributes below for further information.</p></desc>
    content format isn't recognized then the fallback content type in the
    Content Types module is returned. That type is
    \"application/octet-stream\" by default.
- .</p>
+ </p>
 <ex-box><guess-content-type content='&form.image;'/></ex-box>
 </attr>
 
 <attr name='filename' value='filename|path'><p>
- It will make its guess from by the path or just the filename. It will use
- the filename suffix. If you want it to verify that the file is an image
- by its file content use <em>content</em> attribute instead.
- .</p>
+ The tag makes its guess from the filename suffix, but you may provide a
+ full path for convenience. If you want it to verify that the file is an
+ image by its file content use the \"content\" attribute instead.
+ </p>
 <ex><guess-content-type filename='/foo/bar.jpg'/></ex>
 </attr>",
 
