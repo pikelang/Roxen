@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.51 2010/01/25 15:56:56 jonasw Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.52 2010/01/25 16:02:49 jonasw Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -581,7 +581,7 @@ mapping tagdocumentation()
 			     Image.Layer()->descriptions()})),
 	   [string mode,string desc])
   {
-    ex += sprintf(#"<h4>%s</h4><p>%s<br/>
+    ex += sprintf(#"<p><b>%s</b></p><p>%s<br/>
 <ex-html>
 <div style='background-image: url(\"/internal-roxen-squares\"); width: 480px;'>
   <gxml true-alpha='' format='png'>
