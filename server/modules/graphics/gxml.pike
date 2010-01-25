@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.50 2009/12/01 18:06:38 grubba Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.51 2010/01/25 15:56:56 jonasw Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -789,7 +789,7 @@ Add this number of seconds to the time this entry is valid.</p>
         </xtable>
         <i>All channels are calculated separately, if nothing else is
            specified.</i>
-        <h4>Bottom layer:</h4>
+        <p><b>Bottom layer:</b></p>
         <p><ex-html>
           <gxml true-alpha='' format='png'>
             <new-layer xsize='480' ysize='80' transparent=''>
@@ -798,7 +798,7 @@ Add this number of seconds to the time this entry is valid.</p>
             <load-image src='/internal-roxen-bottom-layer' />
           </gxml>
         </ex-html></p>
-        <h4>Top layer:</h4>
+        <p><b>Top layer:</b></p>
         <p><ex-html>
           <gxml true-alpha='' format='png'>
             <new-layer xsize='480' ysize='80' transparent=''>
@@ -832,7 +832,7 @@ Add this number of seconds to the time this entry is valid.</p>
         Default is a fully opaque layer.
       </p></attr>
       <attr name='mode' value='mode' default='normal'><p>Sets the mode for
-        the new layer. See <xref href='set-layer-mode.tag' />
+        the new layer. See <tag>set-layer-mode</tag>.
       </p></attr> ",
     "crop" : #"<desc type='both'><p>Crop the specified layer(s).
       </p><ex>
@@ -892,7 +892,7 @@ Add this number of seconds to the time this entry is valid.</p>
       <attr name='degrees' value='degrees' required=''><p>Number of degrees to
         rotate the layer(s)
       </p></attr>",
-    "grey-blur" : #"<desc type='both'><p>Same as <xref href='blur.tag' /> but
+    "grey-blur" : #"<desc type='both'><p>Same as <tag>blur</tag> but
       up to three times faster. Works only for greyscale images though.
       </p></desc>
       <attr name='layers' value='glob'><p>Layer to blur.</p></attr>
@@ -1448,7 +1448,7 @@ Add this number of seconds to the time this entry is valid.</p>
     </ex>
   </attr>
   <attr name='mode' value='mode' default='normal'><p>Sets the mode for
-    the new layer. See <xref href='set-layer-mode.tag' />.</p>
+    the new layer. See <tag>set-layer-mode</tag>.</p>
   </attr>", ([
     "data" : ({ #"<desc type='cont'><p>Used for tags used to describe the 
       coordinate system.</p></desc>", ([
@@ -1532,7 +1532,7 @@ Add this number of seconds to the time this entry is valid.</p>
 		hexadecimal, octal or binary. The format used is the same as
 		used by <xref href='../variable/sprintf.tag' /></p>
 		<p>This attribute is required if no content is given to 
-		<xref href='labels.tag' />.</p>
+		<tag>labels</tag>.</p>
                 <ex>
 <gxml format='png' true-alpha='1'>
   <new-layer color='white' xsize='32' ysize='32' tiled='1' />
@@ -1559,7 +1559,7 @@ Add this number of seconds to the time this entry is valid.</p>
 	      <attr name='color' value='color'><p>Color of the labels.
 	      </p></attr>",
 	    "ticks" : #"<desc type='tag'><p>Draw lines that denote the scale.
-	      This tag works in much the same way as <xref href='labels.tag' />.
+	      This tag works in much the same way as <tag>labels</tag>.
               </p>
               <ex>
 <gxml format='png' true-alpha='1'>
@@ -1605,7 +1605,7 @@ Add this number of seconds to the time this entry is valid.</p>
 	  </p></attr>", ([
 	    "labels" : #"<desc type='both'><p>Labels to put along the y-axis.
               This tag works the same as the corresponding tag for 
-	      <xref href='x.tag'/>.</p></desc>
+	      <tag>x</tag>.</p></desc>
 	      <attr name='start' value='number' required=''><p>
 		The first number in the sequence of labels along the y-axis.
               </p></attr>
@@ -1620,7 +1620,7 @@ Add this number of seconds to the time this entry is valid.</p>
 		many digits should be used. The format used is the same as used
 		by <xref href='../variable/sprintf.tag' /></p>
 		<p>This attribute is required if no content is given to 
-		<xref href='labels.tag' />.</p>
+		<tag>labels</tag>.</p>
 	      </attr>
 	      <attr name='font' value='font'><p>Font to use for the labels.
 	      </p></attr>
@@ -1632,7 +1632,7 @@ Add this number of seconds to the time this entry is valid.</p>
 	      <attr name='color' value='color'><p>Color of the labels.
 	      </p></attr>",
 	    "ticks" : #"<desc type='tag'><p>Draw lines that denote the scale.
-	      This tag works in much the same way as <xref href='labels.tag' />.
+	      This tag works in much the same way as <tag>labels</tag>.
               </p></desc>
 	      <attr name='start' value='number' required=''><p>
 		The first position to draw a marker on.
