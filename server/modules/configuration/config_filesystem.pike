@@ -18,7 +18,7 @@ LocaleString module_doc =
 
 constant module_unique = 1;
 constant cvs_version =
-  "$Id: config_filesystem.pike,v 1.122 2009/07/06 11:49:22 jonasw Exp $";
+  "$Id: config_filesystem.pike,v 1.123 2010/01/26 17:51:36 jonasw Exp $";
 
 constant path = "config_interface/";
 
@@ -465,7 +465,7 @@ void start(int n, Configuration cfg)
       "config_tags", "contenttypes",    "indexfiles", "atlas",
       "gbutton",     "graphic_text",    "pathinfo",   "javascript_support",
       "pikescript",  "translation_mod", "rxmlparse",  "rxmltags",
-      "tablist",     "cimg",
+      "tablist",     "cimg",		"gxml",
 #ifdef AVERAGE_PROFILING
       "avg_profiling",
 #endif
