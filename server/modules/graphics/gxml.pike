@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.52 2010/01/25 16:02:49 jonasw Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.53 2010/01/26 11:59:41 jonasw Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -1089,7 +1089,7 @@ Add this number of seconds to the time this entry is valid.</p>
     "color" : #"<desc type='both'><p>Clear layer to a given color.</p>
         <ex>
 <gxml format='jpeg'>
-  <color color='FF0077'>
+  <color color='#FF0077'>
     <load-image src='/internal-roxen-testimage' />
   </color>
 </gxml>
