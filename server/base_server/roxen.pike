@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1054 2009/12/02 00:53:31 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1055 2010/01/27 16:46:45 mast Exp $";
 
 //! @appears roxen
 //!
@@ -6951,7 +6951,14 @@ class LogFile(string fname, string|void compressor_program)
   {
     if( !opened ) do_open();
     if( !opened ) return 0;
-    fd->write( write_buf );
+    if (mixed err = catch (fd->write( write_buf ))) {
+      catch {
+	foreach (write_buf, string str)
+	  if (String.width (str) > 8)
+	    werror ("Got wide string in log output: %O\n", str);
+      };
+      throw (err);
+    }
     write_buf = ({});
     remove_call_out( do_close );
     call_out( do_close, 10.0 );
