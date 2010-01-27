@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.970 2010/01/27 16:46:46 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.971 2010/01/27 17:01:56 mast Exp $";
 
 //! @appears roxen
 //!
@@ -6102,14 +6102,17 @@ static constant formats = ([
 			  1, "\"-\"", 0}),
   "etag":		({"%s", "request_id->misc->etag || \"-\"",
 			  1, "\"-\"", 0}),
+  // UTF8 encoding of id->referer and id->client is necessary because
+  // they get decoded by decode_charset_encoding in http.pike. In 5.0
+  // and later they aren't decoded and thus need no utf8 encoding here.
   "referer":		({"%s", ("sizeof(request_id->referer||({}))?"
-				 "request_id->referer[0]:\"-\""),
+				 "string_to_utf8 (request_id->referer[0]):\"-\""),
 			  1, "\"-\"", 0}),
   "user-agent":		({"%s", ("request_id->client?"
-				 "request_id->client*\"%20\":\"-\""),
+				 "string_to_utf8 (request_id->client*\"%20\"):\"-\""),
 			  1, "\"-\"", 0}),
   "user-agent-raw":	({"%s", ("request_id->client?"
-				 "request_id->client*\" \":\"-\""),
+				 "string_to_utf8 (request_id->client*\" \"):\"-\""),
 			  1, "\"-\"", 0}),
   "user":		({"%s", "extract_user( request_id->realauth )",
 			  1, "\"-\"", 0}),
