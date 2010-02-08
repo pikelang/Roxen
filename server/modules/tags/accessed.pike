@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.58 2009/05/07 14:15:55 mast Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.59 2010/02/08 13:27:41 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -36,6 +36,17 @@ void create(Configuration c) {
 	 "Select a accessed database backend",
          ({ "File database", "SQL database", "Memory database" }) );
 
+  string default_db = "local";
+#if constant(WS_REPLICATE)
+  default_db = "replicate";
+#endif
+  
+  defvar("db",
+	 Variable.DatabaseChoice(default_db, 0, "Database",
+				 "The database where data are stored."))->
+    set_invisibility_check_callback(
+      lambda() { return query("backend") != "SQL database"; });
+  
   //------ File database settings
   defvar("Accesslog","$LOGDIR/"+Roxen.short_name(c?c->name:".")+"/Accessed",
 	 "Access database file", TYPE_FILE|VAR_MORE,
@@ -407,9 +418,7 @@ class SQLCounter {
   
   void create()
   {
-#if constant(WS_REPLICATE)
-    set_my_db( "replicate" );
-#endif
+    set_my_db( module::query("db") );
     
     if( create_sql_tables( defs,
 			   "Hits per file database for the accessed tag "
