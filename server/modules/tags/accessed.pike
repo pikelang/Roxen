@@ -5,15 +5,32 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.59 2010/02/08 13:27:41 wellhard Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.60 2010/02/09 13:40:18 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
 constant module_doc  = "This module provides access counters, through the "
 "<tt>&lt;accessed&gt;</tt> tag and the <tt>&amp;page.accessed;</tt> entity.";
 
-string status() {
-  return counter->size()+" entries in the accessed database.<br />";
+string status()
+{
+  string backend = query("backend");
+  string res = "<b>Backend:</b> " + backend + "<br />\n";
+ 
+  if (backend == "SQL database")
+    res += "<b>Database:</b> " + query("db") + "<br />\n";
+  
+  int entries;
+  if ( mixed err = catch {
+      entries = counter->size();
+    })
+  {
+    return res + "<font color='red'>Unable to connect to database</font>";
+  }
+  
+  return res +
+    "<b>Entries:</b> " + entries + " entries in the accessed "
+    "database.<br />";
 }
 
 void create(Configuration c) {
@@ -45,7 +62,8 @@ void create(Configuration c) {
 	 Variable.DatabaseChoice(default_db, 0, "Database",
 				 "The database where data are stored."))->
     set_invisibility_check_callback(
-      lambda() { return query("backend") != "SQL database"; });
+      lambda(RequestID id, Variable var)
+      { return query("backend") != "SQL database"; });
   
   //------ File database settings
   defvar("Accesslog","$LOGDIR/"+Roxen.short_name(c?c->name:".")+"/Accessed",
