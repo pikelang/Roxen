@@ -5,15 +5,32 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.55 2006/05/03 08:23:40 erik Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.56 2010/02/09 13:48:07 wellhard Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
 constant module_doc  = "This module provides access counters, through the "
 "<tt>&lt;accessed&gt;</tt> tag and the <tt>&amp;page.accessed;</tt> entity.";
 
-string status() {
-  return counter->size()+" entries in the accessed database.<br />";
+string status()
+{
+  string backend = query("backend");
+  string res = "<b>Backend:</b> " + backend + "<br />\n";
+ 
+  if (backend == "SQL database")
+    res += "<b>Database:</b> " + query("db") + "<br />\n";
+  
+  int entries;
+  if ( mixed err = catch {
+      entries = counter->size();
+    })
+  {
+    return res + "<font color='red'>Unable to connect to database</font>";
+  }
+  
+  return res +
+    "<b>Entries:</b> " + entries + " entries in the accessed "
+    "database.<br />";
 }
 
 void create(Configuration c) {
@@ -36,6 +53,18 @@ void create(Configuration c) {
 	 "Select a accessed database backend",
          ({ "File database", "SQL database", "Memory database" }) );
 
+  string default_db = "local";
+#if constant(WS_REPLICATE)
+  default_db = "replicate";
+#endif
+  
+  defvar("db",
+	 Variable.DatabaseChoice(default_db, 0, "Database",
+				 "The database where data are stored."))->
+    set_invisibility_check_callback(
+      lambda(RequestID id, Variable var)
+      { return query("backend") != "SQL database"; });
+  
   //------ File database settings
   defvar("Accesslog","$LOGDIR/"+Roxen.short_name(c?c->name:".")+"/Accessed",
 	 "Access database file", TYPE_FILE|VAR_MORE,
@@ -407,9 +436,7 @@ class SQLCounter {
   
   void create()
   {
-#if constant(WS_REPLICATE)
-    set_my_db( "replicate" );
-#endif
+    set_my_db( module::query("db") );
     
     if( create_sql_tables( defs,
 			   "Hits per file database for the accessed tag "
