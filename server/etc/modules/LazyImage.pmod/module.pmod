@@ -1967,8 +1967,18 @@ LazyImage join_images( LazyImage ... i )
 //! Create a new @[LazyImage] that contains all layers in the
 //! specified images.
 {
-  Join j =  Join( 0 );
-  j->set_args( ([ "contents":i ]) );
+  Join j = Join( 0 );
+
+  // Merge any join nodes in the arguments here to avoid deep recursion.
+  array(LazyImage) contents =
+    map(i, lambda(LazyImage i) {
+	     if (i && (i->operation_name == "join") && i->args) {
+	       return [array(LazyImage)]i->args->contents;
+	     }
+	     return ({ i });
+	   }) * ({});
+  
+  j->set_args( ([ "contents":contents ]) );
   return j;
 }
 
