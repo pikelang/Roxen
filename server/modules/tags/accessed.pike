@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: accessed.pike,v 1.60 2010/02/09 13:40:18 wellhard Exp $";
+constant cvs_version = "$Id: accessed.pike,v 1.61 2010/02/18 17:30:16 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_LOGGER;
 constant module_name = "Tags: Accessed counter";
@@ -62,7 +62,7 @@ void create(Configuration c) {
 	 Variable.DatabaseChoice(default_db, 0, "Database",
 				 "The database where data are stored."))->
     set_invisibility_check_callback(
-      lambda(RequestID id, Variable var)
+      lambda(RequestID id, Variable.Variable var)
       { return query("backend") != "SQL database"; });
   
   //------ File database settings
