@@ -1,5 +1,5 @@
 /*
- * $Id: ssl_common.pike,v 1.8 2008/08/15 12:33:54 mast Exp $
+ * $Id: ssl_common.pike,v 1.9 2010/02/19 13:44:21 mast Exp $
  */
 
 #if constant (Nettle)
@@ -114,13 +114,13 @@ string generic_key_size_string =
 string rsa_key_form = 
       ("<p><font size='+1'>" + key_size_question + "</font></p>"
        "<b>" + LOCALE(94, "Key size") + "</b><br />"
-       "<var name='key_size' type='int' default='1024'/><br />\n<blockquote>" 
+       "<var name='key_size' type='int' default='2048'/><br />\n<blockquote>"
        "<p>"+generic_key_size_string+"</p><help>" +
 // http://www.rsasecurity.com/rsalabs/challenges/factoring/status.html
        LOCALE(95,"The largest key that is publicly known to have been broken "
 	      "was 155 decimal digits, or 512 bits large. This "
 	      "effort required approximately 8000 MIPS-years.<p>"
-	      "A key 1024 bits large should be secure enough for most "
+	      "A key 2048 bits large should be secure enough for most "
 	      "applications, but of course you can you use an even larger key "
 	      "if you so wish.") +
        "</help></blockquote>");
