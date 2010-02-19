@@ -32,7 +32,7 @@ class Connection
     string remoteaddr = "127.0.0.1";
     protected string _sprintf()
     {
-      return sprintf("RequestID(conf=%O; not_query=%O)", conf, not_query );
+      return sprintf("myRequestID(conf=%O; not_query=%O)", conf, not_query );
     }
 
     protected void create()
