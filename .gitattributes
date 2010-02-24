@@ -206,6 +206,7 @@ worldmap binary
 /server/languages/chinese.pike foreign_ident
 /server/languages/croatian.pike foreign_ident
 /server/languages/czech.pike foreign_ident
+/server/languages/danish.pike foreign_ident
 /server/languages/dutch.pike foreign_ident
 /server/languages/english.pike foreign_ident
 /server/languages/finnish.pike foreign_ident
