@@ -2,7 +2,7 @@
 
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.19 2010/02/22 17:39:34 grubba Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.20 2010/02/25 16:40:05 grubba Exp $";
 
 #include <roxen.h>
 #include <module.h>
@@ -583,7 +583,7 @@ class Stream
     if( strlen( data ) < 65535 )
       fd->send_packet( Packet( id, reqid, data ) );
     else
-      foreach( data / 8192, string d )
+      foreach( data / 8192.0, string d )
         fd->send_packet( Packet( id, reqid, d ) );
     return strlen(data);
   }
@@ -794,6 +794,7 @@ Packet packet_get_values( string ... values )
 
 Packet packet_abort_request( int requestid )
 {
+  PACKET_DEBUG(sprintf("Abort request for %d",requestid));
   return Packet( FCGI_ABORT_REQUEST, requestid, "" );
 }
 
@@ -923,7 +924,7 @@ class FCGI
       THREAD_DEBUG(sprintf("FCGI::do_connect with fd: %O, q: %O\n",fd,q));
 
       IO_DEBUG(" Connecting...\n" );
-      while( fd->connect( "localhost",(int)(socket->query_address()/" ")[1]) )
+      while( !fd->connect( "localhost",(int)(socket->query_address()/" ")[1]) )
       {
 	IO_DEBUG(" Connection failed...\n" );
         sleep( 0.1 );
@@ -1237,6 +1238,7 @@ class CGIScript
     DTFUNC("CGIScript::done");
     PROCESS_DEBUG(sprintf("fastcgi.pike::CGIScript::done close stderr %O for %O\n  stdin: %O\n  stdout: %O\n",
 			  stderr,fcgi,stdin,stdout));
+    stderr->close();
   }
 
   CGIScript run()
