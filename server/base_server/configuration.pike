@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.689 2009/12/22 14:11:05 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.690 2010/02/25 13:49:18 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -5102,6 +5102,7 @@ low."))->add_changed_callback(lambda(object v)
 	 ({ "text/*", 
 	    "application/javascript",
 	    "application/x-javascript",
+	    "application/json",
 	    "application/xhtml+xml" }),
 	 DLOCALE(1002, "Compression: Enabled MIME-types"),
 	 TYPE_STRING_LIST,
