@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.285 2009/12/04 13:59:57 mast Exp $
+// $Id: Roxen.pmod,v 1.286 2010/03/04 15:54:58 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -4636,6 +4636,8 @@ string get_server_url(Configuration c)
   return c->get_url();
 }
 
+static private array(string) local_addrs;
+
 string get_world(array(string) urls) {
   if(!sizeof(urls)) return 0;
 
@@ -4653,20 +4655,87 @@ string get_world(array(string) urls) {
 	break;
       }
   
-  array hosts=({ gethostname() }), dns;
-#ifndef NO_DNS
-  catch(dns=roxen->gethostbyname(hosts[0]));
-  if(dns && sizeof(dns))
-    hosts+=dns[2]+dns[1];
-#endif /* !NO_DNS */
-
   Standards.URI uri = uris[url];
   string server = uri->host;
   if (server == "::")
     server = "*";
+  if (!has_value(server, "*")) return (string)uri;
+
+  // The host part of the URL is a glob.
+  // Lets find some suitable hostnames and IPs to match it against.
+
+  array hosts=({ gethostname() }), dns;
+
+#ifndef NO_DNS
+  catch(dns=roxen->gethostbyname(hosts[0]));
+  if(dns && sizeof(dns))
+    hosts+=dns[2]+dns[1];
+  if (!local_addrs) {
+    string ifconfig =
+      Process.locate_binary(({ "/sbin", "/usr/sbin", "/bin", "/usr/bin",
+			       "/etc" }), "ifconfig");
+    local_addrs = dns[1];
+    if (ifconfig) {
+      foreach(Process.run(({ ifconfig, "-a" }))->stdout/"\n", string line) {
+	int i;
+
+	// We need to parse lines with the following formats:
+	//
+	// IPv4:
+	//   inet 127.0.0.1			Solaris, MacOS X.
+	//   inet addr:127.0.0.1		Linux.
+	//
+	// IPv6:
+	//   inet6 ::1				MacOS X.
+	//   inet6 ::1/128			Solaris.
+	//   inet6 addr: ::1/128		Linux, note the space!
+	//   inet6 fe80::ffff/10		Solaris.
+	//   inet6 fe80::ffff%en0		MacOS X, note the suffix!
+	//   inet6 addr: fe80::ffff/64		Linux, note the space!
+	while ((i = search(line, "inet")) >= 0) {
+	  line = line[i..];
+	  string addr;
+	  if (has_prefix(line, "inet ")) {
+	    line = line[5..];
+	  } else if (has_prefix(line, "inet6 ")) {
+	    line = line[6..];
+	  }
+	  if (has_prefix(line, "addr: ")) {
+	    line = line[6..];
+	  } else if (has_prefix(line, "addr:")) {
+	    line = line[5..];
+	  }
+	  sscanf(line, "%[^ ]%s", addr, line);
+	  if (addr && sizeof(addr)) {
+	    addr = (addr/"/")[0];	// We don't care about the prefix bits.
+	    addr = (addr/"%")[0];	// MacOS X.
+	    local_addrs += ({ addr });
+	  }
+	}
+      }
+      local_addrs = Array.uniq(local_addrs);
+    }
+    foreach(local_addrs, string addr) {
+      if ((dns = Protocols.DNS.gethostbyaddr(addr)) && sizeof(dns)) {
+	if (dns[0]) {
+	  hosts += ({ dns[0] });
+	}
+	hosts += dns[1] + ({ addr });
+	if ((sizeof(dns[2]) != 1) || (dns[2][0] != addr)) {
+	  hosts += dns[2];
+	}
+      }
+    }
+    hosts = Array.uniq(hosts);
+    // werror("Hosts: %O\n", hosts);
+  }
+#endif /* !NO_DNS */
+
   foreach(hosts, string host)
-    if (glob(server, host))
+    if (glob(server, host)) {
       uri->host = host;
+      break;
+    }
   return (string) uri;
 }
 
