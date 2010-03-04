@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module_support.pike,v 1.142 2009/11/06 15:46:29 mast Exp $
+// $Id: module_support.pike,v 1.143 2010/03/04 12:37:55 grubba Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -259,9 +259,24 @@ class FakeModuleInfo( string sname )
     }
   }
 
-  RoxenModule instance( Configuration conf, void|int silent )
+  RoxenModule instance( Configuration conf, void|int silent,
+			void|int copy_num )
   {
-    return NotAModule();
+    // conf is zero if we're making the dummy instance for the
+    // ModuleInfo class. Find a fallback for bootstrap_info just to
+    // avoid returning zero from RoxenModule.my_configuration().
+    Configuration bootstrap_conf = conf ||
+      roxenp()->get_admin_configuration() ||
+      // There should be at least one configuration present here.
+      roxenp()->configurations[0];
+
+    roxenp()->bootstrap_info->set (({bootstrap_conf,
+				     sname + "#" + copy_num}));
+ 
+    RoxenModule ret = NotAModule();
+
+    roxenp()->bootstrap_info->set (0);
+    return ret;
   }
 }
 
