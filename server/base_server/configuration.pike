@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.690 2010/02/25 13:49:18 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.691 2010/03/04 12:40:58 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3880,6 +3880,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if (enable_module_batch_msgs) {
     if(moduleinfo->config_locked[this_object()])
       report_debug("\bLocked %6.1fms\n", (gethrtime()-start_time)/1000.0);
+    else if (me->not_a_module)
+      report_debug("\bN/A %6.1fms\n", (gethrtime()-start_time)/1000.0);
     else
       report_debug("\bOK %6.1fms\n", (gethrtime()-start_time)/1000.0);
   }
@@ -3887,6 +3889,8 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   if(moduleinfo->config_locked[this_object()])
     report_error("   Error: \"%s\" not loaded (license restriction).\n",
 		 moduleinfo->get_name());
+  else if (me->not_a_module)
+    report_debug("   Note: \"%s\" not available.\n", moduleinfo->get_name());
 #endif
   if( !enabled_modules[modname+"#"+id] )
   {
