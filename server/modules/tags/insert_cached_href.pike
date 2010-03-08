@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.28 2009/12/14 13:37:03 jonasw Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.29 2010/03/08 16:09:20 grubba Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -193,9 +193,12 @@ public string get_result_sync(HTTPClient client, mapping args, mapping header) {
   
   if (!location || !sizeof(location))
     return decode_data(client->data(), client->con->headers);
-  
+
   DWRITE("Following redirect from " + (string)client->url + 
 	 " to " + location);
+
+  // Normalize; Some sites (dn.se) use relative locations.
+  location = (string)Standards.URI(location, client->url);
   
   args["cached-href"] = location;
   HTTPClient new_client = HTTPClient(args, header);
@@ -213,6 +216,8 @@ public string get_result_sync(HTTPClient client, mapping args, mapping header) {
     DWRITE("Following redirect from " + (string)new_client->url + 
 	   " to " + location);
     
+    location = (string)Standards.URI(location, new_client->url);
+  
     args["cached-href"] = location;
     new_client = HTTPClient(args, header);
     new_client->orig_url = (string)client->url;
@@ -241,6 +246,9 @@ public void get_result_async(HTTPClient client, mapping args, mapping header) {
     
   DWRITE("Following redirect from " + (string)client->url + 
 	 " to " + location);
+  
+  // Normalize; Some sites (dn.se) use relative locations.
+  location = (string)Standards.URI(location, client->url);
   
   args["cached-href"] = location;
   HTTPClient new_client = HTTPClient(args, header);
