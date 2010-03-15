@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: roxenlib.pike,v 1.225 2009/05/07 14:15:53 mast Exp $
+// $Id: roxenlib.pike,v 1.226 2010/03/15 15:48:30 mast Exp $
 
 //#pragma strict_types
 
@@ -42,7 +42,10 @@ constant cern_http_date = Roxen.cern_http_date;
 constant http_status_message = Roxen.http_status_message;
 constant http_date = Roxen.http_date;
 constant iso8601_date_time = Roxen.iso8601_date_time;
+#if !defined (MODULE_DEBUG) ||						\
+  defined (ENABLE_INHERENTLY_BROKEN_HTTP_ENCODE_STRING_FUNCTION)
 constant http_encode_string = Roxen.http_encode_string;
+#endif
 constant http_encode_invalids = Roxen.http_encode_invalids;
 constant http_encode_cookie = Roxen.http_encode_cookie;
 constant http_encode_url = Roxen.http_encode_url;

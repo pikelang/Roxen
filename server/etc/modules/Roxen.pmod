@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.286 2010/03/04 15:54:58 grubba Exp $
+// $Id: Roxen.pmod,v 1.287 2010/03/15 15:34:32 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -786,6 +786,13 @@ string iso8601_date_time(int ts, int|void ns)
 		 gmt->hour, gmt->min, gmt->sec, ns);
 }
 
+#if !defined (MODULE_DEBUG) ||						\
+  defined (ENABLE_INHERENTLY_BROKEN_HTTP_ENCODE_STRING_FUNCTION)
+// Since http_encode_string is broken by design we don't define it in
+// module debug mode, so that modules still using it can be detected
+// easily during compilation. If you for some reason choose to
+// disregard the STRONG deprecation of this function, then you can use
+// the other define above to always enable it.
 string http_encode_string(string f)
 //! Encode dangerous characters in a string so that it can be used as
 //! a URL. Specifically, nul, space, tab, newline, linefeed, %, ' and
@@ -805,15 +812,10 @@ string http_encode_string(string f)
 //! @[http_encode_invalids] on the complete URI to only encode any
 //! chars that can't occur raw in the HTTP protocol.
 {
-#ifdef MODULE_DEBUG
-  // We're being very naughty for now. This sucker gotta go! (Ought to
-  // look at the compat level here, but it's kinda hard without an id
-  // object.)
-  error ("Switch to http_encode_url or http_encode_invalids!\n");
-#endif
   return replace(f, ({ "\000", " ", "\t", "\n", "\r", "%", "'", "\"" }),
 		 ({"%00", "%20", "%09", "%0A", "%0D", "%25", "%27", "%22"}));
 }
+#endif
 
 string http_encode_invalids (string f)
 //! Encode dangerous chars to be included as a URL in an HTTP message
