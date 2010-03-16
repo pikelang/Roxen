@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: hosts.pike,v 1.39 2009/12/22 14:14:03 grubba Exp $
+// $Id: hosts.pike,v 1.40 2010/03/16 13:47:01 jonasw Exp $
 
 #include <roxen.h>
 
@@ -102,7 +102,9 @@ string quick_ip_to_host(string ipnumber)
 #ifdef NO_REVERSE_LOOKUP
   return ipnumber;
 #endif
-  if(!(int)ipnumber || !strlen(ipnumber)) return ipnumber;
+  if (!ipnumber || ipnumber == "" ||
+      !(has_value(ipnumber, ":") || (int)ipnumber))
+    return ipnumber;
   ipnumber=(ipnumber/" ")[0]; // ?
   mapping cache_ctx = ([]);
   if(mixed foo = cache_lookup("hosts", ipnumber, cache_ctx)) return foo;
@@ -126,7 +128,8 @@ void ip_to_host(string ipnumber, function callback, mixed ... args)
 #ifdef NO_REVERSE_LOOKUP
   return callback(ipnumber, @args);
 #endif
-  if(!((int)ipnumber)) return callback(ipnumber, @args);
+  if (!has_value(ipnumber, ":") && !(int)ipnumber)
+    return callback(ipnumber, @args);
   mapping cache_ctx = ([]);
   if(string entry=cache_lookup("hosts", ipnumber, cache_ctx))
   {
