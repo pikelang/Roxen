@@ -279,6 +279,12 @@ inline string do_replace(string s, mapping m, RequestID id)
 		   LOCALE(31,"the replace tag"));
 }
 
+protected string compat_broken_http_encode_string(string f)
+{
+  return replace(f, ({ "\000", " ", "\t", "\n", "\r", "%", "'", "\"" }),
+		 ({"%00", "%20", "%09", "%0A", "%0D", "%25", "%27", "%22"}));
+}
+
 string|array tag_insert(string tag,mapping m,RequestID id)
 {
   string n;
@@ -353,14 +359,14 @@ string|array tag_insert(string tag,mapping m,RequestID id)
       n=do_replace(n, m, id);
       // Should probably be html_encode_string below, but, well..
       // compat is compat. :P /mast
-      return m->quote!="html"?n:({ Roxen.http_encode_string(n) });
+      return m->quote!="html"?n:({ compat_broken_http_encode_string(n) });
     }
     n=id->conf->try_get_file(fix_relative(m->file,id),id);
     if(!n) RXML.run_error("No such file ("+m->file+").\n");
     n=do_replace(n, m-(["file":""]), id);
     // Should probably be html_encode_string below, but, well.. compat
     // is compat. :P /mast
-    return m->quote!="html"?n:({ Roxen.http_encode_string(n) });
+    return m->quote!="html"?n:({ compat_broken_http_encode_string(n) });
   }
 
   if(m->var) {
