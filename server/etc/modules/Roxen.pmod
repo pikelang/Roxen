@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.287 2010/03/15 15:34:32 mast Exp $
+// $Id: Roxen.pmod,v 1.288 2010/03/22 13:54:50 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2429,8 +2429,11 @@ string get_modfullname (RoxenModule module)
       };
     if (!(name && sizeof (name)) && module->query_name)
       name = module->query_name();
-    if (!(name && sizeof (name)))
+    if (!(name && sizeof (name))) {
       name = [string]module->register_module()[1];
+      sscanf (module->module_local_id(), "%*s#%d", int mod_copy);
+      if (mod_copy) name += " # " + mod_copy;
+    }
     if (mappingp (name))
       name = name->standard;
     return (string) name;
