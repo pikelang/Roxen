@@ -287,28 +287,20 @@ mixed move_db( string db, RequestID id )
 			     _(410,"%s is a MySQL keyword, used by MySQL. "
 			       "Please select another name.")+
 			     "</font>", id->variables->name );
-	 if (mixed err = catch {
-	     if( DBManager.cached_get( id->variables->name ) &&
-		 db != id->variables->name )
-	       warning = sprintf("<font color='&usr.warncolor;'>"+
-				 _(529,"the database %s does already exist")+
-				 "</font>", id->variables->name );
-	     // FIXME: Also check if the name is a valid db name.
-	   }) {
-	   report_error("%s\n", describe_backtrace(err));
-	   warning = sprintf("<font color='&usr.warncolor;'>"+
-			     _(407,"It is not possible to connect to %s.")+
-			     "<br /> (%s)"
-			     "</font>",
-			     id->variables->name,
-			     describe_error(err));
-	 }
+	 catch {
+	   if( DBManager.cached_get( id->variables->name ) &&
+	       db != id->variables->name )
+	     warning = sprintf("<font color='&usr.warncolor;'>"+
+			       _(529,"the database %s does already exist")+
+			       "</font>", id->variables->name );
+	   // FIXME: Also check if the name is a valid db name.
+	 };
 	 break;
       }
     if( !strlen( warning ) )
     {
       // In all cases, create the new db.
-      if(!(DBManager.cached_get(id->variables->name))) {
+      if(!(DBManager.get_db_url_info(id->variables->name))) {
 	DBManager.create_db(id->variables->name, id->variables->url,
 			    internal, id->variables->group);
       } else {
