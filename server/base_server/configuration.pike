@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.691 2010/03/04 12:40:58 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.692 2010/03/26 16:31:10 marty Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -601,6 +601,7 @@ mapping(string:int) http_compr_exact_mimes = ([]);
 int http_compr_minlen;
 int http_compr_maxlen;
 int(0..1) http_compr_dynamic_reqs;
+Thread.Local gz_file_pool = Thread.Local();
 #endif
 
 // The logging format used. This will probably move to the above
