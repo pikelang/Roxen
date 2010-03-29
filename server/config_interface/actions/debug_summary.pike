@@ -1,5 +1,5 @@
 /*
- * $Id: debug_summary.pike,v 1.14 2010/01/27 10:01:06 mast Exp $
+ * $Id: debug_summary.pike,v 1.15 2010/03/29 12:06:12 jonasw Exp $
  */
 #include <stat.h>
 #include <roxen.h>
@@ -139,7 +139,7 @@ string make_configuration_summary(string configuration)
   foreach(values(c->modules), mixed modulecopies)
     foreach(values(modulecopies->copies), RoxenModule module)
       res += sprintf("%s%s%s\n\n",
-		     make_headline(module->module_identifier()),
+		     make_headline(module->module_identifier() || "?"),
 		     make_variables_summary(module->getvars()),
 		     indent(make_extra_module_info(module),1));
   return res;
