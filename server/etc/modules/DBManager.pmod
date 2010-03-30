@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.95 2010/03/30 11:51:33 grubba Exp $
+// $Id: DBManager.pmod,v 1.96 2010/03/30 12:02:03 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -881,14 +881,21 @@ mapping db_table_information( string db, string table )
       }
     }
     default:
-#if 0
-      mixed err = catch{
-	return ([
-	  "rows":
-	  (int)(get(db)->query( "SELECT COUNT(*) AS C FROM `"+table+"`" )[0]->C),
-	]);
-      };
-#endif
+    {
+      object gdb=get(db);
+      if (gdb->list_fields) {
+	mixed err = catch {
+	    array a = gdb->list_fields(table);
+	    mapping res = sizeof(a) && a[0];
+	    if (res) {
+	      res->data_length = res->data_length || res->datasize;
+	      res->rows = res->rows || res->rowcount;
+	      res->index_legth = res->index_length || res->indexsize;
+	    }
+	    return res;
+	  };
+      }
+    }
   }
   return 0;
 }
