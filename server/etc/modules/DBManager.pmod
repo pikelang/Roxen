@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.94 2010/01/20 13:28:12 grubba Exp $
+// $Id: DBManager.pmod,v 1.95 2010/03/30 11:51:33 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -787,20 +787,15 @@ array(mapping(string:mixed)) db_table_fields( string name, string table )
 //! the protocol handler. Otherwise returns 0.
 {
   Sql.Sql db = cached_get( name );
-#if 0
-  // fetch_fields provides more info.
-  catch {
-    if( db->list_fields )
-    {
-      mixed res = db->list_fields( table );
-      if( res ) return res;
-    }
-  };
-#endif
-
   object q;
   if (mixed err = catch (
 	q = db->big_query ("SELECT * FROM `" + table + "` LIMIT 0"))) {
+    // Syntax error for query. Fall back to using the generic stuff.
+    catch {
+      // fetch_fields provides more info.
+      return db->list_fields( table );
+    };
+    // list_fields() failed as well. Report the original error.
     report_debug ("Error listing fields in %O: %s",
 		  table, describe_error (err));
     return 0;
