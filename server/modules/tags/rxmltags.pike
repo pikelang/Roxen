@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.627 2010/03/30 12:11:37 grubba Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.628 2010/03/30 15:26:49 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -7194,6 +7194,71 @@ class TagEmitValues {
 			    return word;
 			  });
 	  break;
+	case "csv":
+	  {
+	    array out=({});
+	    int i=0;
+	    string values=m->values;
+#define FETCHAR(c,buf,i)	(catch((c)=(buf)[(i)++])?((c)=-1):(c))
+	    array(string) words=({});
+	    int c,leadspace=1,inquotes=0;
+	    String.Buffer word=String.Buffer();
+	    FETCHAR(c,values,i);
+	    while(c>=0) {
+	      switch(c) {
+	      case ',':case ';':
+		if(!inquotes)
+		{
+		  words += ({ word->get() });
+		  leadspace=1;
+		  break;
+		}
+		word->putchar(c);
+		break;
+              case '"':
+		leadspace=0;
+                if(!inquotes)
+                  inquotes=1;
+                else if(FETCHAR(c,values,i)=='"')
+                  word->putchar(c);
+                else
+                {
+		  inquotes=0;
+                  continue;
+                }
+                break;
+              case ' ':case '\t':
+		if (leadspace) break;
+		// FALL_THROUGH
+              default:
+		leadspace=0;
+		string s;
+		sscanf(values[--i..],"%[^,;\"\r\x1a\n]",s);
+		word->add(s);
+		i+=sizeof(s);
+                break;
+              case '\r':case '\x1a':
+		// Ignore these. NB: 0x1a is Ctrl-Z (EOF on CP/M and DOS).
+                break;
+              case '\n':
+                if(!inquotes)
+                {
+		  if(!sizeof(words)&&!sizeof(word))
+                    break;
+                  out += ({ words + ({ word->get() }) });
+	          words=({});
+	          break;
+                }
+                word->putchar(c);
+		break;
+	      }
+	      FETCHAR(c,values,i);
+	    }
+	    m->values = !sizeof(out)&&!sizeof(word) ? ""
+	      :out + ({ words + ({ word->get() }) });
+	    break;
+	  }
+	  break;
 	}
       }
       if(stringp(m->values)) {
@@ -11994,9 +12059,10 @@ Specify scope to test for existence.</p>
  string.</p>
 </attr>
 
-<attr name='advanced' value='lines|words|chars'><p>
+<attr name='advanced' value='lines|words|csv|chars'><p>
  If the value is a string it can be split into separate lines,
- words or characters by using this attribute.</p>
+ words, CSV (comma separated values) fields or characters by using
+ this attribute.</p>
 </attr>
 
 <attr name='case' value='upper|lower'><p>
