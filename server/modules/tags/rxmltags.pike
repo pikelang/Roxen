@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.626 2010/01/25 15:48:13 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.627 2010/03/30 12:11:37 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -2928,7 +2928,7 @@ private int|array internal_tag_select(string t, mapping m, string c, string name
 string simpletag_default( string t, mapping m, string c, RequestID id)
 {
   multiset value=(<>);
-  if(m->value) value=mkmultiset((m->value||"")/(m->separator||","));
+  if(m->value) value=mkmultiset(((string)m->value)/(m->separator||","));
   if(m->variable) value+=(<RXML.user_get_var(m->variable, m->scope)>);
   if(value==(<>)) return c;
 
