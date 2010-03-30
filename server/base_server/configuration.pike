@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.692 2010/03/26 16:31:10 marty Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.693 2010/03/30 11:41:23 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3737,13 +3737,9 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
   me->set_configuration( this_object() );
 
   module_type = moduleinfo->type;
-  if (module_type & (MODULE_LOCATION|MODULE_EXTENSION|
-                     MODULE_CONFIG|MODULE_FILE_EXTENSION|MODULE_LOGGER|
-                     MODULE_URL|MODULE_LAST|MODULE_PROVIDER|
-                     MODULE_FILTER|MODULE_TAG|MODULE_FIRST|
-                     MODULE_USERDB))
+  if (module_type & MODULE_TYPE_MASK)
   {
-    if(module_type != MODULE_CONFIG)
+    if(!(module_type & MODULE_CONFIG))
     {
       if (err = catch {
 	me->defvar("_priority", 5, DLOCALE(12, "Priority"), TYPE_INT_LIST,
