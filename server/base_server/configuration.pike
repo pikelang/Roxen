@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.693 2010/03/30 11:41:23 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.694 2010/03/30 12:19:42 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3783,10 +3783,10 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 			 "  <dd>Match the remote IP-address.</dd>\n"
 			 " \n"
 			 "  <dt>CMD <b>user</b>=<i>name[,name,...]</i>  [return]</dt>\n"
-			 "  <dd>Requires a authenticated user. If the user name 'any' is used, any "
+			 "  <dd>Requires an authenticated user. If the user name 'any' is used, any "
 			 "valid user will be OK. Otherwise, one of the listed users are required.</dd>"
 			 "  <dt>CMD <b>group</b>=<i>name[,name,...]</i> [return]</dt>\n"
-			 "<dd>Requires a authenticated user with a group. If the group name "
+			 "<dd>Requires an authenticated user with a group. If the group name "
 			 " 'any' is used, any valid group will be OK. Otherwise, one of the "
 			 "listed groups are required.</dd>\n"
 			 " \n"
