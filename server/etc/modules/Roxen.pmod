@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.288 2010/03/22 13:54:50 mast Exp $
+// $Id: Roxen.pmod,v 1.289 2010/03/30 15:27:40 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2558,6 +2558,15 @@ protected string low_roxen_encode(string val, string encoding)
    case "oracle":
      return replace (val, "'", "''");
 
+   case "csv":
+     if (sizeof(val) &&
+	 ((<' ', '\t'>)[val[0]] || (<' ', '\t'>)[val[-1]] ||
+	  has_value(val, ",") || has_value(val, ";") ||
+	  has_value(val, "\"") || has_value(val, "\n"))) {
+       return "\"" + replace(val, "\"", "\"\"") + "\"";
+     }
+     return val;
+
    case "mysql-dtag":
      // This is left for compatibility
      return replace (val,
@@ -2653,6 +2662,11 @@ protected string low_roxen_encode(string val, string encoding)
 //!
 //!   @value "wml"
 //!     HTML encoding, and doubling of any @tt{$@}'s.
+//!
+//!   @value "csv"
+//!     CSV (Comma Separated Values) encoding. Properly quotes all
+//!     separator characters in CSV records (comma, semicolon, double-quotes
+//!     leading spaces and newlines).
 //!
 //!   @value "pike"
 //!     Pike string quoting, for use in e.g. the @tt{<pike></pike>@}
