@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.128 2009/12/08 12:54:17 mast Exp $
+// $Id: cache.pike,v 1.129 2010/03/30 19:06:14 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -2056,8 +2056,13 @@ void cache_clean()
 
 	if(!entry[SIZE])
 	  entry[SIZE] = Pike.count_memory (0, idx) + sizeof_cache_entry (entry);
-	if(entry[TIMESTAMP]+1 < now &&
-	   entry[TIMESTAMP] + gc_time - entry[SIZE] / 100 < now)
+	if(
+#ifdef OLD_RAM_CACHE_FIXED_GC
+	  entry[TIMEOUT]+1 < now
+#else
+	  entry[TIMESTAMP]+1 < now
+#endif
+	  && entry[TIMESTAMP] + gc_time - entry[SIZE] / 100 < now)
 	{
 	  m_delete(cache_class, idx);
 	  MORE_CACHE_WERR("    %O with size %d bytes: Deleted\n",
