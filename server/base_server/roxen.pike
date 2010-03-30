@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1056 2010/02/19 15:58:28 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1057 2010/03/30 12:28:54 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -6401,8 +6401,8 @@ array(array(string|int|array)) security_checks = ({
       return ({sprintf("(< %{%O, %}>)", x/"," )});
     },
 
-    "    if ((user || (user = authmethod->authenticate(id, userdb_module)))\n"
-    "         && ((%[0]s->any) || (%[0]s[user->name()]))) ",
+    "    if (((user || (user = authmethod->authenticate(id, userdb_module)))\n"
+    "          && ((%[0]s->any) || (%[0]s[user->name()]))) || %[0]s->ANY) ",
     (<"  User user" >),
    // No need to NOCACHE () here, since it's up to the
    // auth-modules to do that.

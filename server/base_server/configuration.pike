@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.694 2010/03/30 12:19:42 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.695 2010/03/30 12:28:54 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3784,7 +3784,9 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 			 " \n"
 			 "  <dt>CMD <b>user</b>=<i>name[,name,...]</i>  [return]</dt>\n"
 			 "  <dd>Requires an authenticated user. If the user name 'any' is used, any "
-			 "valid user will be OK. Otherwise, one of the listed users are required.</dd>"
+			 "valid user will be OK; if the user name 'ANY' is used, "
+			 "a valid user is preferred, but not required. "
+			 "Otherwise, one of the listed users is required.</dd>"
 			 "  <dt>CMD <b>group</b>=<i>name[,name,...]</i> [return]</dt>\n"
 			 "<dd>Requires an authenticated user with a group. If the group name "
 			 " 'any' is used, any valid group will be OK. Otherwise, one of the "
