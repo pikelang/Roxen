@@ -126,7 +126,7 @@ protected string|array(string) mailparser(string address)
     if(c=="(") comment_level++;
     if(c==")") {
       if(!comment_level)
-	return ({ "Mismatched paranthesis", address });
+	return ({ "Mismatched parenthesis", address });
       c="";
       comment_level--;
     }
