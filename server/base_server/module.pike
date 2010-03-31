@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module.pike,v 1.241 2009/11/24 15:21:51 stewa Exp $
+// $Id: module.pike,v 1.242 2010/03/31 13:47:11 marty Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -590,7 +590,7 @@ mapping(string:mixed) recurse_find_properties(string path, string mode,
     if (properties->get_stat()->isdir) {
       if (depth <= 0) {
 	SIMPLE_TRACE_LEAVE ("Not recursing due to depth limit");
-	return 0;
+	return ([]);
       }
       depth--;
       foreach(find_dir(path, id) || ({}), string filename) {
