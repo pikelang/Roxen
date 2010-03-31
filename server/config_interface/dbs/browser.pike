@@ -224,9 +224,12 @@ mixed backup_db( string db, RequestID id )
 {
   if( id->variables["ok.x"] )
   {
-    DBManager.backup( db,
-		      (id->variables->dir == "auto" ? 0 :
-		       id->variables->dir )  );
+#ifdef ENABLE_DB_BACKUPS
+    DBManager.dump
+#else
+    DBManager.backup
+#endif
+      (db, id->variables->dir == "auto" ? 0 : id->variables->dir);
     return 0;
   }
   return
@@ -669,18 +672,23 @@ mapping|string parse( RequestID id )
       return tmp;
   }
 
-  Sql.Sql db;
-  catch {
-    db = DBManager.get( id->variables->db, 0, 0, 0,
-#if constant (Mysql.mysql.HAVE_MYSQL_FIELD_CHARSETNR)
-			"unicode"
-#else
-			// Works most of the time, at least..
-			"broken-unicode"
-#endif
-		      );
-  };
   string url = DBManager.db_url( id->variables->db );
+
+  string charset = "unicode";
+#if !constant (Mysql.mysql.HAVE_MYSQL_FIELD_CHARSETNR)
+  if (DBManager.is_mysql (url))
+      // Ugly kludge for broken mysql client lib. Works most of the
+      // time, at least..
+      charset = "broken-unicode";
+  }
+#endif
+
+  Sql.Sql db;
+  mixed db_connect_error =
+    catch (db = DBManager.get (id->variables->db, 0, 0, 0, charset));
+  if (db_connect_error)
+    // Try again without charset.
+    db_connect_error = catch (db = DBManager.get (id->variables->db));
 
   string qres="";
   
@@ -863,6 +871,12 @@ mapping|string parse( RequestID id )
     "<td>" + db_switcher( id ) + "</td></tr></table>\n"
     "</p>\n"
     "<h3>Database " + Roxen.html_encode_string (id->variables->db) + "</h3>\n";
+
+  if (db_connect_error)
+    res += "<p><font color='red'>" +
+      _(0, "Error connecting to database: ") +
+      Roxen.html_encode_string (describe_error (db_connect_error)) +
+      "</font></p>\n";
 
   // Bullet list with generic database info.
 
