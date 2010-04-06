@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1059 2010/03/30 19:10:36 jonasw Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1060 2010/04/06 14:17:56 marty Exp $";
 
 //! @appears roxen
 //!
@@ -4079,7 +4079,7 @@ class ImageCache
     }
 
 #ifndef NO_ARG_CACHE_SB_REPLICATE
-    if(id->misc->persistent_cache_crawler) {
+    if(id->misc->persistent_cache_crawler || id->misc->do_replicate_argcache) {
       // Force an update of rep_time for the requested arg cache id.
       foreach(ci/"$", string key) {
 #if ARGCACHE_DEBUG
