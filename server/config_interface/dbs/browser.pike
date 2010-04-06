@@ -676,7 +676,7 @@ mapping|string parse( RequestID id )
 
   string charset = "unicode";
 #if !constant (Mysql.mysql.HAVE_MYSQL_FIELD_CHARSETNR)
-  if (DBManager.is_mysql (url))
+  if (DBManager.is_mysql (url)) {
       // Ugly kludge for broken mysql client lib. Works most of the
       // time, at least..
       charset = "broken-unicode";
