@@ -3,7 +3,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: captcha.pike,v 1.1 2010/03/17 12:37:29 marty Exp $";
+constant cvs_version = "$Id: captcha.pike,v 1.2 2010/04/08 12:44:41 grubba Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = "Tags: Captcha";
@@ -210,7 +210,9 @@ class TagEmitCaptcha {
   }
 }
 
+//! @ignore
 TAGDOCUMENTATION;
+//! @endignore
 #ifdef manual
 constant tagdoc = ([
   "emit#captcha":
