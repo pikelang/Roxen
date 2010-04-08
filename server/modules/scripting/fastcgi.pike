@@ -2,7 +2,7 @@
 
 inherit "cgi.pike": normalcgi;
 
-constant cvs_version = "$Id: fastcgi.pike,v 2.20 2010/02/25 16:40:05 grubba Exp $";
+constant cvs_version = "$Id: fastcgi.pike,v 2.21 2010/04/08 13:36:34 grubba Exp $";
 
 #include <roxen.h>
 #include <module.h>
@@ -593,7 +593,8 @@ class Stream
     DTFUNC("Stream::got_data");
     if( closed )
     {
-      IO_DEBUG(sprintf("%O::got_data ***Got data for closed stream(%s)***!",this_object(),name));
+      IO_DEBUG(sprintf("%O::got_data ***Got data for closed stream(%s)!***",
+		       this_object(),name));
       return;
     }
     DWERR(sprintf("stream::got_data called with strlen %d",strlen(d)));
