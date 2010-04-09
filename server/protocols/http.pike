@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.615 2010/03/26 16:31:11 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.616 2010/04/09 15:30:42 marty Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2296,6 +2296,8 @@ private string try_gzip_data(string data, string mimetype)
   mapping(string:int) compress_main_mimetypes = conf->http_compr_main_mimes;
 
   int len = sizeof(data);
+
+  mimetype = (mimetype / ";")[0]; // We are not interested in the charset spec.
 
   if(conf->http_compr_enabled &&
      mimetype && 
