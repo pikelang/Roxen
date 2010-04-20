@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.411 2009/12/23 20:27:17 mast Exp $
+// $Id: module.pmod,v 1.412 2010/04/20 13:09:55 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -356,6 +356,7 @@ class Tag
 		      "argument " + missing[0] + " is") + " missing.\n");
       }
     atypes += args & opt_arg_types;
+    if (!ctx) ctx = RXML_CONTEXT;
 #ifdef MODULE_DEBUG
     if (mixed err = catch {
 #endif
