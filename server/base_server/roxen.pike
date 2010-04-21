@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1060 2010/04/06 14:17:56 marty Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1061 2010/04/21 11:22:29 stewa Exp $";
 
 //! @appears roxen
 //!
@@ -2725,7 +2725,7 @@ int register_url( string url, Configuration conf )
       // We have a non-ANY IPv6 IP number.
       ipv6 = ({ "::" });
     }
-    required_hosts = ipv4 + ipv6;
+    required_hosts = ipv6 + ipv4;
 #else
     if (sizeof(ipv6)) {
       foreach(ipv6, string p) {
@@ -2739,13 +2739,13 @@ int register_url( string url, Configuration conf )
   }
 
   int failures;
-  int opened_ipv4_any_port;
+  int opened_ipv6_any_port;
 
   foreach(required_hosts, string required_host)
   {
     if( m[ required_host ] && m[ required_host ][ port ] )
     {
-      if (!required_host) opened_ipv4_any_port = 1;
+      if (required_host == "::") opened_ipv6_any_port = 1;
 
       m[required_host][port]->ref(url, urls[url]);
 
@@ -2767,12 +2767,11 @@ int register_url( string url, Configuration conf )
     if (mixed err = catch {
 	prot_obj = m[ required_host ][ port ] =
 	  prot( port, required_host,
-		// Don't complain if binding IPv6 ANY fails with
-		// EADDRINUSE after we've bound IPv4 ANY. At least on
-		// Linux, it seems that IPv4 and IPv6 can share the
-		// same interface, and in that case we're already done
-		// if we've bound the IPv4 ANY.
-		required_host == "::" && opened_ipv4_any_port);
+		// Don't complain if binding IPv4 ANY fails with
+		// EADDRINUSE after we've bound IPv6 ANY. 
+		// Most systems seems to bind booth IPv4 ANY and
+		// IPv6 ANY for "::"
+		!required_host && opened_ipv6_any_port);
       }) {
       failures++;
 #if 0
@@ -2796,7 +2795,7 @@ int register_url( string url, Configuration conf )
       continue;
     }
 
-    if (!required_host) opened_ipv4_any_port = 1;
+    if (required_host == "::") opened_ipv6_any_port = 1;
 
     if (prot_obj->bound == -1) {
       // Got EADDRINUSE for the IPv6 case - see above. Just forget
