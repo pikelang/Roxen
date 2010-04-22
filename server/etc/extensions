@@ -1,4 +1,4 @@
-# $Id: extensions,v 1.66 2010/04/22 09:53:50 grubba Exp $
+# $Id: extensions,v 1.67 2010/04/22 09:55:48 grubba Exp $
 #
 # ---- Extension database ----
 # The database used by the content typ module to map from extension to
@@ -263,6 +263,7 @@ wmls	text/vnd.wap.wmlscript
 # text/vnd.IPTC.NewsML
 # text/vnd.IPTC.NITF
 # text/vnd.curl
+manifest	text/cache-manifest
 
 # Other
 
