@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.289 2010/03/30 15:27:40 grubba Exp $
+// $Id: Roxen.pmod,v 1.290 2010/04/22 10:46:12 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2684,6 +2684,8 @@ protected string low_roxen_encode(string val, string encoding)
 //!   @value "sql"
 //!   @value "oracle"
 //!     SQL/Oracle quoting, i.e. @expr{'@} is encoded as @expr{''@}.
+//!     NOTE: Do NOT use this quoting method when creating
+//!           sql-queries intended for MySQL!
 //!
 //!   @value "mysql-pike"
 //!     Compat. MySQL quoting followed by Pike string quoting.
