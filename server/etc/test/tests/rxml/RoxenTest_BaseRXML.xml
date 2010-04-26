@@ -1179,6 +1179,31 @@ a&auml; &amp; b  &gt;
   </equal>
 </test>
 
+<test>
+  <rxml type="string">
+    <define container="tag">
+      <if variable="_.contents">"&_.contents;"</if>
+    </define>
+    [<tag/>,
+    <tag></tag>,
+    <tag> </tag>]
+  </rxml>
+  <!-- Note: This produced [,," "] in 4.5 and 5.0 release 1 and 2. -->
+  <result>["",""," "]</result>
+</test>
+
+<test>
+  <rxml type="string">
+    <define container="tag">
+      <if sizeof="_.contents &gt; 0">"&_.contents;"</if>
+    </define>
+    [<tag/>,
+    <tag></tag>,
+    <tag> </tag>]
+  </rxml>
+  <result>[,," "]</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Type tests</comment>
