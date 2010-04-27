@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module.pike,v 1.242 2010/03/31 13:47:11 marty Exp $
+// $Id: module.pike,v 1.243 2010/04/27 15:33:49 mast Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -258,7 +258,7 @@ string comment() { return ""; }
 
 string query_internal_location()
 //! Returns the internal mountpoint, where <ref>find_internal()</ref>
-//! is mounted.
+//! is mounted. It always ends with a '/'.
 {
   if(!_my_configuration)
     error("Please do not call this function from create()!\n");
@@ -266,7 +266,8 @@ string query_internal_location()
 }
 
 string query_absolute_internal_location(RequestID id)
-//! Returns the internal mountpoint as an absolute path.
+//! Returns the internal mountpoint as an absolute path. It always
+//! ends with a '/'.
 {
   return (id->misc->site_prefix_path || "") + query_internal_location();
 }
