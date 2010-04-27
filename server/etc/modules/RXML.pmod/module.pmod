@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.412 2010/04/20 13:09:55 mast Exp $
+// $Id: module.pmod,v 1.413 2010/04/27 20:37:29 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -1972,6 +1972,9 @@ class Context
       if (check_nil)
 	res = filter (res, lambda (string var) {
 			     mixed val = vars[var];
+			     if (objectp (val) && ([object] val)->rxml_var_eval)
+			       val = ([object(Value)] val)->rxml_var_eval (
+				 this, var, scope_name, 0);
 			     return val != nil && !zero_type (val);
 			   });
       return res;
