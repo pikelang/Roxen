@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1061 2010/04/21 11:22:29 stewa Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1062 2010/04/27 13:39:10 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -479,6 +479,8 @@ private void really_low_shutdown(int exit_code)
 	})
       werror (describe_backtrace (err));
   }
+  // Zap some of the remaining caches.
+  destruct (argcache);
   destruct (cache);
 #if 0
   // Disabled since it's lying when the server is shut down with a
@@ -508,6 +510,8 @@ private void low_shutdown(int exit_code)
 	catch (report_notice("Exiting roxen (spurious signals received).\n")) ||
 	catch (stop_all_configurations()))
       werror (describe_backtrace (err));
+    // Zap some of the remaining caches.
+    destruct(argcache);
     destruct(cache);
 #ifdef THREADS
     if (mixed err = catch (stop_handler_threads()))
