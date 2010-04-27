@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.628 2010/03/30 15:26:49 grubba Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.629 2010/04/27 20:41:21 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -802,8 +802,15 @@ class TagCopyScope {
     array do_enter(RequestID id) {
       RXML.Context ctx = RXML_CONTEXT;
       // Filter out undefined values if the compat level allows us.
-      foreach(ctx->list_var(args->from, compat_level >= 5.0), string var)
-	ctx->set_var(var, ctx->get_var(var, args->from), args->to);
+      if (compat_level > 4.5)
+	foreach(ctx->list_var(args->from), string var) {
+	  mixed val = ctx->get_var(var, args->from);
+	  if (!zero_type (val))
+	    ctx->set_var(var, val, args->to);
+	}
+      else
+	foreach(ctx->list_var(args->from), string var)
+	  ctx->set_var(var, ctx->get_var(var, args->from), args->to);
       return 0;
     }
   }
@@ -1428,11 +1435,18 @@ class TagInsertVariables {
 	compat_level < 5.0) {
       if(var=="full")
 	return map(sort(context->list_var(scope)),
+		   compat_level > 4.5 ?
 		   lambda(string s) {
 		     mixed value = context->get_var(s, scope);
 		     if (!zero_type (value))
 		       return sprintf("%s=%O", s, value);
-		     else if (compat_level < 5.0)
+		     return 0;
+		   } :
+		   lambda(string s) {
+		     mixed value = context->get_var(s, scope);
+		     if (!zero_type (value))
+		       return sprintf("%s=%O", s, value);
+		     else
 		       // A variable with an undefined value doesn't
 		       // exist by definition, even though list_var
 		       // might still list it. It should therefore be
@@ -1467,7 +1481,14 @@ class TagInsertScopes {
 	result += scope+"\n";
 	// Filter out undefined values if the compat level allows us.
 	result += Roxen.html_encode_string(
-	  map(sort(context->list_var(args->scope, compat_level > 4.5)),
+	  map(sort(context->list_var(args->scope)),
+	      compat_level > 4.5 ?
+	      lambda(string s) {
+		mixed val = context->get_var(s, args->scope);
+		if (!zero_type (val))
+		  return sprintf("%s.%s=%O", scope, s, val);
+		return 0;
+	      } :
 	      lambda(string s) {
 		return sprintf("%s.%s=%O", scope, s,
 			       context->get_var(s, args->scope) );
@@ -7159,9 +7180,14 @@ class TagEmitValues {
       m->values=([]);
       RXML.Context context=RXML_CONTEXT;
       // Filter out undefined values if the compat level allows us.
-      foreach (context->list_var(m["from-scope"], compat_level > 4.5),
-	       string var)
-	m->values[var]=context->get_var(var, m["from-scope"]);
+      if (compat_level > 4.5)
+	foreach (context->list_var(m["from-scope"]), string var) {
+	  mixed val = context->get_var(var, m["from-scope"]);
+	  if (!zero_type (val)) m->values[var] = val;
+	}
+      else
+	foreach (context->list_var(m["from-scope"]), string var)
+	  m->values[var] = context->get_var(var, m["from-scope"]);
     }
 
     if ((m->variable &&
