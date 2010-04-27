@@ -6,7 +6,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: atlas.pike,v 1.21 2009/11/30 15:01:58 grubba Exp $";
+constant cvs_version = "$Id: atlas.pike,v 1.22 2010/04/27 13:36:56 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG | MODULE_EXPERIMENTAL;
 constant module_name = "Graphics: Atlas";
@@ -20,6 +20,11 @@ int do_ext;
 void start() {
   the_cache = roxen.ImageCache( "atlas", generate_image );
   do_ext = query("ext");
+}
+
+void stop()
+{
+  destruct(the_cache);
 }
 
 void create()

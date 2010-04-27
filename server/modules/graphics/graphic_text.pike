@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.312 2009/12/01 18:06:38 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.313 2010/04/27 13:36:56 grubba Exp $";
 
 #include <module.h>
 inherit "module";
@@ -645,6 +645,11 @@ void start(int num, Configuration conf)
   if(query("colorparse")) module_dependencies(conf, ({ "wiretap" }) );
   compat_level = conf->query("compat_level");
   honor_supports = query("honor_supports");
+}
+
+void stop()
+{
+  destruct(image_cache);
 }
 
 private constant nbsp = Roxen.iso88591["&nbsp;"];

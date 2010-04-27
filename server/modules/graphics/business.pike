@@ -11,7 +11,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: business.pike,v 1.157 2009/12/01 18:06:38 grubba Exp $";
+constant cvs_version = "$Id: business.pike,v 1.158 2010/04/27 13:36:56 grubba Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Business graphics";
@@ -53,6 +53,7 @@ void stop()
           string to_delete)
     m_delete(progs, to_delete);
 #endif
+  destruct(image_cache);
 }
 
 void create()

@@ -8,7 +8,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: gxml.pike,v 1.53 2010/01/26 11:59:41 jonasw Exp $";
+constant cvs_version = "$Id: gxml.pike,v 1.54 2010/04/27 13:36:56 grubba Exp $";
 constant module_type = MODULE_TAG;
 
 LocaleString module_name = _(1,"Graphics: GXML tag");
@@ -33,6 +33,11 @@ void start()
 {
   the_cache = roxen.ImageCache( "gxml", generate_image );
   do_ext = query("ext");  
+}
+
+void stop()
+{
+  destruct(the_cache);
 }
 
 void flush_cache() {

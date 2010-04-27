@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.123 2009/12/01 18:06:38 grubba Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.124 2010/04/27 13:36:56 grubba Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -242,6 +242,11 @@ void start()
 {
   button_cache = roxen.ImageCache("gbutton", TIMER(draw_button));
   do_ext = query("ext");
+}
+
+void stop()
+{
+  destruct(button_cache);
 }
 
 string status() {
