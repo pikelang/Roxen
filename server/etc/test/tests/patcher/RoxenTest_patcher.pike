@@ -4,7 +4,8 @@ void run_tests(Configuration c)
 {
   // Replace this with global var later.
   string ptfm_str = test_true(Stdio.read_file, combine_path(getcwd(), "OS"));
-  if (ptfm_str) ptfm_str = String.trim_all_whites(ptfm_str);
+  if (!ptfm_str) return;
+  ptfm_str = String.trim_all_whites(ptfm_str);
 
   RoxenPatch.Patcher po = test(RoxenPatch.Patcher, 
 			       lambda(string s)
@@ -100,9 +101,9 @@ void run_tests(Configuration c)
 		      "-N", "Test Patch 3: patching",
 		      "-D", 
 		      "-O", "self_test@roxen.com", 
+		      "--platform=" + ptfm_str,
 		      "--patch=" + combine_path(test_path, "testfile.patch"),
 		      "-t", temp_path });
-  if (ptfm_str) clt_args += ({"--platform=" + ptfm_str});
   Stdio.File desc = Stdio.File();
   p = test(Process.create_process, clt_args, ([ "stdin" : desc.pipe(),
 	   					"env"	: env ]) );
