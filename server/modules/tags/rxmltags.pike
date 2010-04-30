@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.629 2010/04/27 20:41:21 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.630 2010/04/30 12:00:53 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -3127,7 +3127,10 @@ class TagSubstring
 	// The %{...%} bit won't match the last field because of
 	// the length restriction on the sep_chars pattern.
 	res += ({({tail, ""})});
-      return Array.transpose (res);
+      if (sizeof (res))
+	return Array.transpose (res);
+      else
+	return ({({}), ({})});
     }
 
     protected array(array(string)) split_on_set_seq (string str, string set)
@@ -3141,7 +3144,10 @@ class TagSubstring
       if (mixed err = catch {
 	  sscanf (str, "%{%[" + compl_set + "]%[" + set + "]%}", res);
 	}) set_format_error ("separator-chars", err);
-      return Array.transpose (res);
+      if (sizeof (res))
+	return Array.transpose (res);
+      else
+	return ({({}), ({})});
     }
 
     array do_return (RequestID id)

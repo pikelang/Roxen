@@ -2043,6 +2043,20 @@ e</result>
   </result>
 </test>
 
+<test>
+  <rxml type="any">
+    <substring separator-chars="/" index="-1"></substring>
+  </rxml>
+  <equal>""</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <substring separator-chars="/" index="-1" ignore-empty=""></substring>
+  </rxml>
+  <equal>""</equal>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>range</comment>
