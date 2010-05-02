@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.129 2010/03/30 19:06:14 mast Exp $
+// $Id: cache.pike,v 1.130 2010/05/02 19:39:37 marty Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -60,6 +60,14 @@ void set_total_size_limit (int size)
 //! Sets the total size limit available to all caches.
 {
   total_size_limit = size;
+
+  // Rebalance immediately after setting the total size limit. This is
+  // important mostly at server startup since modules otherwise might
+  // do cache-intensive processing before the cache manager size has
+  // been raised from its minimum value, resulting in sub-optimal
+  // performance or even halting cache-filler operations
+  // (e.g. Sitebuilder's workarea prefetcher.)
+  update_cache_size_balance();
 }
 
 class CacheEntry (mixed key, mixed data)
@@ -1006,8 +1014,11 @@ protected Thread.Mutex cache_mgmt_mutex = Thread.Mutex();
 // Locks operations that manipulate named caches, i.e. changes in the
 // caches, CacheManager.stats and CacheManager.lookup mappings.
 
-protected int cache_start_time = time();
-protected int last_cache_size_balance = time();
+protected int cache_start_time = time() - 1;
+protected int last_cache_size_balance = time() - 1;
+// Subtract 1 from the initial values to avoid division by zero in
+// update_decaying_stats if update_cache_size_balance gets called
+// really soon after startup.
 
 protected void update_cache_size_balance()
 //! Updates the balance between the fractions of the total size
@@ -1167,7 +1178,13 @@ protected void update_cache_size_balance()
 #endif
 
   last_cache_size_balance = now;
-  roxenp()->background_run (rebalance_interval, update_cache_size_balance);
+}
+
+protected void periodic_update_cache_size_balance()
+{
+  update_cache_size_balance();
+  roxenp()->background_run (rebalance_interval, 
+			    periodic_update_cache_size_balance);
 }
 
 #ifdef DEBUG_CACHE_SIZES
@@ -2290,7 +2307,7 @@ void init_call_outs()
 {
   roxenp()->background_run(60, cache_clean);
 #ifdef NEW_RAM_CACHE
-  roxenp()->background_run (0, update_cache_size_balance);
+  roxenp()->background_run (0, periodic_update_cache_size_balance);
 #endif
   roxenp()->background_run(SESSION_SHIFT_TIME, session_cache_handler);
 
