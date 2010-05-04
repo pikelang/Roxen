@@ -1,7 +1,7 @@
 //
 // SNMP helper stuff.
 //
-// $Id: SNMP.pmod,v 1.11 2010/05/04 13:38:22 grubba Exp $
+// $Id: SNMP.pmod,v 1.12 2010/05/04 13:46:56 grubba Exp $
 //
 // 2007-08-29 Henrik Grubbström
 //
@@ -271,7 +271,7 @@ class SimpleMIB
     foreach(values; int i;
 	    function|Standards.ASN1.Types.Object|array|mapping val) {
       if (arrayp(val) || mappingp(val)) {
-	init(oid, oid_suffix + ({ i }), val);
+	init(oid + ({ i }), oid_suffix, val);
       } else if (!zero_type(val)) {
 	insert(oid + ({ i }) + oid_suffix + ({ 0 }), val);
       }
