@@ -1,7 +1,7 @@
 //
 // SNMP helper stuff.
 //
-// $Id: SNMP.pmod,v 1.10 2008/08/15 12:33:54 mast Exp $
+// $Id: SNMP.pmod,v 1.11 2010/05/04 13:38:22 grubba Exp $
 //
 // 2007-08-29 Henrik Grubbström
 //
@@ -261,17 +261,32 @@ class SimpleMIB
 {
   inherit ADT.Trie;
 
-  protected void create(array(int) oid,
-			array(int) oid_suffix,
-			array(Standards.ASN1.Types.Object|function)|
-			mapping(int:Standards.ASN1.Types.Object|function) values)
+  protected void init(array(int) oid,
+		      array(int) oid_suffix,
+		      array(Standards.ASN1.Types.Object|
+			    function|array|mapping)|
+		      mapping(int:Standards.ASN1.Types.Object|
+			      function|array|mapping) values)
   {
-    ::create(oid);
-    foreach(values; int i; function|Standards.ASN1.Types.Object val) {
-      if (!zero_type(val)) {
+    foreach(values; int i;
+	    function|Standards.ASN1.Types.Object|array|mapping val) {
+      if (arrayp(val) || mappingp(val)) {
+	init(oid, oid_suffix + ({ i }), val);
+      } else if (!zero_type(val)) {
 	insert(oid + ({ i }) + oid_suffix + ({ 0 }), val);
       }
     }
+  }
+
+  protected void create(array(int) oid,
+			array(int) oid_suffix,
+			array(Standards.ASN1.Types.Object|
+			      function|array|mapping)|
+			mapping(int:Standards.ASN1.Types.Object|
+				function|array|mapping) values)
+  {
+    ::create(oid);
+    init(oid, oid_suffix, values);
   }
 
   Standards.ASN1.Types.Object lookup(array(int) key)
