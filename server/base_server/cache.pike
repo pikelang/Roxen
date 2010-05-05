@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.130 2010/05/02 19:39:37 marty Exp $
+// $Id: cache.pike,v 1.131 2010/05/05 06:07:24 marty Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -353,6 +353,10 @@ class CacheManager
   // Should only be called at regular intervals from
   // update_cache_size_balance.
   {
+    // Skip updating if we did it recently (avoid division by zero below.)
+    if (now == last_update)
+      return;
+
     float last_period = (float) (now - last_update);
     float tot_period = (float) (now - start_time);
     int startup = tot_period < cm_stats_avg_period;
