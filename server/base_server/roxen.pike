@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.973 2010/05/06 10:58:56 noring Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.974 2010/05/06 13:21:08 noring Exp $";
 
 //! @appears roxen
 //!
@@ -636,6 +636,7 @@ int handler_num_runs_1s = 0;
 int handler_num_runs_5s = 0;
 int handler_num_runs_15s = 0;
 int handler_acc_time = 0;
+int handler_acc_cpu_time = 0;
 
 local static void handler_thread(int id)
 //! The actual handling function. This functions read function and
@@ -680,20 +681,25 @@ local static void handler_thread(int id)
 					  this_thread());
 #endif
 	  handler_num_runs++;
-	  int st = gethrtime();
+
+	  int start_hrtime = gethrtime();
+	  float handler_vtime = gauge {
 	  h[0](@h[1]);
-	  int dt = gethrtime() - st;
+	    };
+	  float handler_rtime = (gethrtime() - start_hrtime)/1E6;
+
 	  h=0;
 	  busy_threads--;
 	  thread_flagged_as_busy = 0;
-	  if (dt >    10000) handler_num_runs_001s++;
-	  if (dt >    50000) handler_num_runs_005s++;
-	  if (dt >   150000) handler_num_runs_015s++;
-	  if (dt >   500000) handler_num_runs_05s++;
-	  if (dt >  1000000) handler_num_runs_1s++;
-	  if (dt >  5000000) handler_num_runs_5s++;
-	  if (dt > 15000000) handler_num_runs_15s++;
-	  handler_acc_time += dt;
+	  if (handler_rtime >  0.01) handler_num_runs_001s++;
+	  if (handler_rtime >  0.05) handler_num_runs_005s++;
+	  if (handler_rtime >  0.15) handler_num_runs_015s++;
+	  if (handler_rtime >  0.50) handler_num_runs_05s++;
+	  if (handler_rtime >  1.00) handler_num_runs_1s++;
+	  if (handler_rtime >  5.00) handler_num_runs_5s++;
+	  if (handler_rtime > 15.00) handler_num_runs_15s++;
+	  handler_acc_cpu_time += (int)(1E6*handler_vtime);
+	  handler_acc_time += (int)(1E6*handler_rtime);
 #ifdef SLOW_REQ_BT
 	  slow_req_monitor->remove_call_out (slow_req_call_out);
 #endif
