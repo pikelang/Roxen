@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.695 2010/03/30 12:28:54 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.696 2010/05/06 22:41:25 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -647,7 +647,7 @@ private Thread.Mutex modules_stopped_mutex = Thread.Mutex();
 private void safe_stop_module (RoxenModule mod, string desc)
 {
   if (mixed err = catch (mod && mod->stop &&
-			 call_module_func_with_cbs (mod, "stop")))
+			 call_module_func_with_cbs (mod, "stop", 0)))
     report_error ("While stopping " + desc + ": " + describe_backtrace (err));
 #ifdef THREADS
   Thread.MutexKey lock = modules_stopped_mutex->lock();
@@ -3591,7 +3591,7 @@ RoxenModule reload_module( string modname )
 	return old_module;
       }
 
-      disable_module( modname, 1 );
+      disable_module( modname, nm );
       destruct( old_module ); 
 
       mixed err = catch {
@@ -3724,8 +3724,10 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 
   if(module[id] && module[id] != me)
   {
+    // Don't know when this happens, because reload_module has already
+    // called disable_module on the old instance.
     if( module[id]->stop ) {
-      if (err = catch( call_module_func_with_cbs (module[id], "stop") )) {
+      if (err = catch( call_module_func_with_cbs (module[id], "stop", me) )) {
 	string bt=describe_backtrace(err);
 	report_error("disable_module(): " +
 		     LOC_M(44, "Error while disabling module %s%s"),
@@ -4201,7 +4203,7 @@ void clean_up_for_module( ModuleInfo moduleinfo,
   }
 }
 
-int disable_module( string modname, int|void nodest )
+int disable_module( string modname, void|RoxenModule new_instance )
 {
   MODULE_LOCK (2);
   RoxenModule me;
@@ -4243,7 +4245,9 @@ int disable_module( string modname, int|void nodest )
   }
 
   if(me->stop)
-    if (mixed err = catch (call_module_func_with_cbs (me, "stop"))) {
+    if (mixed err = catch (
+	  call_module_func_with_cbs (me, "stop", new_instance)
+	)) {
       string bt=describe_backtrace(err);
       report_error("disable_module(): " +
 		   LOC_M(44, "Error while disabling module %s%s"),
@@ -4256,8 +4260,9 @@ int disable_module( string modname, int|void nodest )
 
   clean_up_for_module( moduleinfo, me );
 
-  if( !nodest )
+  if( !new_instance )
   {
+    // Not a reload, so it's being dropped.
     m_delete( enabled_modules, modname + "#" + id );
     m_delete( forcibly_added, modname + "#" + id );
     store( "EnabledModules",enabled_modules, 1, this_object());

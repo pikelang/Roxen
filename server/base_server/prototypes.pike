@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.266 2010/01/18 17:15:23 anders Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.267 2010/05/06 22:41:25 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -3660,10 +3660,16 @@ class RoxenModule
   //! administrator might for instance have edited the configuration
   //! file directly.
 
-  void stop();
+  void stop (void|RoxenModule new_instance);
   //! This function is called when a running module is stopped either
   //! because it's being dropped or reloaded in the admin interface,
   //! or the server is being shut down orderly.
+  //!
+  //! If the module is being stopped because of a reload then
+  //! @[new_instance] is the new module instance that is replacing
+  //! this one. Note that @[new_instance] is not properly initialized
+  //! at this stage; among other things its @[start] function has not
+  //! yet been run.
 
   void ready_to_receive_requests (void|Configuration conf);
   //! This function is called after all modules in a configuration
