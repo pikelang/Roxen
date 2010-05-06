@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1997 - 2009, Roxen IS.
 //
 
-constant cvs_version = "$Id: sqltag.pike,v 1.121 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version = "$Id: sqltag.pike,v 1.122 2010/05/06 12:31:53 grubba Exp $";
 constant thread_safe = 1;
 #include <module.h>
 
@@ -463,8 +463,9 @@ array|Sql.sql_result do_sql_query(mapping args, RequestID id,
     bindings = ([ ]);
     foreach(args->bindings / ",", string tmp) {
       string tmp2,tmp3;
-      if(sscanf(String.trim_all_whites(tmp),"%s=%s", tmp2, tmp3) == 2) {
-	bindings[tmp2] = RXML.user_get_var( tmp3 );
+      if(sscanf(tmp, "%s=%s", tmp2, tmp3) == 2) {
+	bindings[String.trim_all_whites(tmp2)] =
+	  RXML.user_get_var( String.trim_all_whites(tmp3) );
       }
     }
   }
