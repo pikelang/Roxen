@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.435 2010/05/06 10:38:36 noring Exp $
+// $Id: roxenloader.pike,v 1.436 2010/05/06 14:26:20 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.435 2010/05/06 10:38:36 noring Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.436 2010/05/06 14:26:20 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -2809,6 +2809,8 @@ the correct system time.
     exit(1);
   }
 
+  // Restore describe_backtrace(), which was zapped by the new master.
+  add_constant ("describe_backtrace", describe_backtrace);
 
 #if constant( Gz.inflate )
   add_constant("grbz",lambda(string d){return Gz.inflate()->inflate(d);});
