@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.972 2010/04/06 15:20:52 marty Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.973 2010/05/06 10:58:56 noring Exp $";
 
 //! @appears roxen
 //!
@@ -626,6 +626,17 @@ static void dump_slow_req (Thread.Thread thread)
 }
 #endif
 
+// Global variables for statistics
+int handler_num_runs = 0;
+int handler_num_runs_001s = 0;
+int handler_num_runs_005s = 0;
+int handler_num_runs_015s = 0;
+int handler_num_runs_05s = 0;
+int handler_num_runs_1s = 0;
+int handler_num_runs_5s = 0;
+int handler_num_runs_15s = 0;
+int handler_acc_time = 0;
+
 local static void handler_thread(int id)
 //! The actual handling function. This functions read function and
 //! parameters from the queue, calls it, then reads another one. There
@@ -668,10 +679,21 @@ local static void handler_thread(int id)
 	      slow_req_monitor->call_out (dump_slow_req, SLOW_REQ_BT,
 					  this_thread());
 #endif
+	  handler_num_runs++;
+	  int st = gethrtime();
 	  h[0](@h[1]);
+	  int dt = gethrtime() - st;
 	  h=0;
 	  busy_threads--;
 	  thread_flagged_as_busy = 0;
+	  if (dt >    10000) handler_num_runs_001s++;
+	  if (dt >    50000) handler_num_runs_005s++;
+	  if (dt >   150000) handler_num_runs_015s++;
+	  if (dt >   500000) handler_num_runs_05s++;
+	  if (dt >  1000000) handler_num_runs_1s++;
+	  if (dt >  5000000) handler_num_runs_5s++;
+	  if (dt > 15000000) handler_num_runs_15s++;
+	  handler_acc_time += dt;
 #ifdef SLOW_REQ_BT
 	  slow_req_monitor->remove_call_out (slow_req_call_out);
 #endif
@@ -999,6 +1021,21 @@ static int bg_process_running;
 static constant bg_time_buffer_max = 30;
 static constant bg_time_buffer_min = 0;
 static int bg_last_busy = 0;
+int bg_num_runs = 0;
+int bg_num_runs_001s = 0;
+int bg_num_runs_005s = 0;
+int bg_num_runs_015s = 0;
+int bg_num_runs_05s = 0;
+int bg_num_runs_1s = 0;
+int bg_num_runs_5s = 0;
+int bg_num_runs_15s = 0;
+int bg_acc_time = 0;
+int bg_acc_cpu_time = 0;
+
+int bg_queue_length()
+{
+  return bg_queue->size();
+}
 
 static void bg_process_queue()
 {
@@ -1036,14 +1073,26 @@ static void bg_process_queue()
 		    map (task[1], lambda (mixed arg)
 				  {return sprintf ("%O", arg);}) * ", ",
 		    bg_queue->size());
-      float task_time = gauge {
 #endif
+      bg_num_runs++;
+      int st = gethrtime();
+      float task_time = gauge {
 	  if (task[0])		// Ignore things that have become destructed.
 	  // Note: BackgroundProcess.repeat assumes that there are
 	  // exactly two refs to task[0] during the call below.
 	    task[0] (@task[1]);
-#ifdef DEBUG_BACKGROUND_RUN
 	};
+      int dt = gethrtime() - st;
+      if (dt >    10000) bg_num_runs_001s++;
+      if (dt >    50000) bg_num_runs_005s++;
+      if (dt >   150000) bg_num_runs_015s++;
+      if (dt >   500000) bg_num_runs_05s++;
+      if (dt >  1000000) bg_num_runs_1s++;
+      if (dt >  5000000) bg_num_runs_5s++;
+      if (dt > 15000000) bg_num_runs_15s++;
+      bg_acc_cpu_time += (int)(1E6*task_time);
+      bg_acc_time += dt;
+#ifdef DEBUG_BACKGROUND_RUN
       report_debug ("background_run done, took %f sec\n", task_time);
 #endif
 
