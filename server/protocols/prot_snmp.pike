@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2009, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.13 2010/05/06 12:24:57 noring Exp $
+ * $Id: prot_snmp.pike,v 2.14 2010/05/06 13:24:42 noring Exp $
  *
  * SNMP protocol support.
  *
@@ -109,7 +109,7 @@ class SystemMIB
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.13 $"/" ")[1],
+			   ("$Revision: 2.14 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
@@ -294,8 +294,8 @@ class RoxenGlobalMIB
 		       "in centiseconds."),
 		     SNMP.Counter(lambda()
 				  { return roxen->handler_acc_cpu_time/10000; },
-		       "handlerCpuTime",
-		       "Accumulated total cpu time in handler threads "
+		       "handlerUserTime",
+		       "Accumulated total user time in handler threads "
 		       "in centiseconds."),
 		   }),
 		   ({
@@ -340,8 +340,8 @@ class RoxenGlobalMIB
 		       "Accumulated total background run real time in centiseconds."),
 		     SNMP.Counter(lambda()
 				  { return roxen->bg_acc_cpu_time/10000; },
-		       "bgCpuTime",
-		       "Accumulated total background run cpu time in centiseconds."),
+		       "bgUserTime",
+		       "Accumulated total background run user time in centiseconds."),
 		   }),
 		   ({
 		     UNDEFINED,
