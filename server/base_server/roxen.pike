@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1063 2010/05/03 12:18:49 marty Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1064 2010/05/06 12:20:40 noring Exp $";
 
 //! @appears roxen
 //!
@@ -801,6 +801,18 @@ local protected int thread_reap_cnt;
 protected int threads_on_hold;
 //! Number of handler threads on hold.
 
+// Global variables for statistics
+int handler_num_runs = 0;
+int handler_num_runs_001s = 0;
+int handler_num_runs_005s = 0;
+int handler_num_runs_015s = 0;
+int handler_num_runs_05s = 0;
+int handler_num_runs_1s = 0;
+int handler_num_runs_5s = 0;
+int handler_num_runs_15s = 0;
+int handler_acc_time = 0;
+int handler_acc_cpu_time = 0;
+
 local protected void handler_thread(int id)
 //! The actual handling function. This functions read function and
 //! parameters from the queue, calls it, then reads another one. There
@@ -837,24 +849,40 @@ local protected void handler_thread(int id)
 	  set_locale();
 	  busy_threads++;
 	  thread_flagged_as_busy = 1;
+	  handler_num_runs++;
 
+	  int start_hrtime = gethrtime();
+	  float handler_vtime = gauge {
 #ifndef NO_SLOW_REQ_BT
-	  if (h[0] != bg_process_queue &&
-	      // Leave out bg_process_queue. It makes a timeout on
-	      // every individual job instead.
-	      (monitor = slow_req_monitor) && slow_req_timeout > 0.0) {
-	    call_out = monitor->call_out (dump_slow_req, slow_req_timeout,
-					  this_thread(), slow_req_timeout);
-	    h[0](@h[1]);
-	    monitor->remove_call_out (call_out);
-	  }
-	  else
+	      if (h[0] != bg_process_queue &&
+		  // Leave out bg_process_queue. It makes a timeout on
+		  // every individual job instead.
+		  (monitor = slow_req_monitor) && slow_req_timeout > 0.0) {
+		call_out = monitor->call_out (dump_slow_req, slow_req_timeout,
+					      this_thread(), slow_req_timeout);
+		h[0](@h[1]);
+		monitor->remove_call_out (call_out);
+	      }
+	      else
 #endif
-	    h[0](@h[1]);
+		{
+		  h[0](@h[1]);
+		}
+	    };
+	  float handler_rtime = (gethrtime() - start_hrtime)/1E6;
 
 	  h=0;
 	  busy_threads--;
 	  thread_flagged_as_busy = 0;
+	  if (handler_rtime >  0.01) handler_num_runs_001s++;
+	  if (handler_rtime >  0.05) handler_num_runs_005s++;
+	  if (handler_rtime >  0.15) handler_num_runs_015s++;
+	  if (handler_rtime >  0.50) handler_num_runs_05s++;
+	  if (handler_rtime >  1.00) handler_num_runs_1s++;
+	  if (handler_rtime >  5.00) handler_num_runs_5s++;
+	  if (handler_rtime > 15.00) handler_num_runs_15s++;
+	  handler_acc_cpu_time += (int)(1E6*handler_vtime);
+	  handler_acc_time += (int)(1E6*handler_rtime);
 	} else if(!h) {
 	  // Roxen is shutting down.
 	  report_debug("Handle thread ["+id+"] stopped.\n");
@@ -1179,6 +1207,21 @@ protected int bg_process_running;
 protected constant bg_time_buffer_max = 30;
 protected constant bg_time_buffer_min = 0;
 protected int bg_last_busy = 0;
+int bg_num_runs = 0;
+int bg_num_runs_001s = 0;
+int bg_num_runs_005s = 0;
+int bg_num_runs_015s = 0;
+int bg_num_runs_05s = 0;
+int bg_num_runs_1s = 0;
+int bg_num_runs_5s = 0;
+int bg_num_runs_15s = 0;
+int bg_acc_time = 0;
+int bg_acc_cpu_time = 0;
+
+int bg_queue_length()
+{
+  return bg_queue->size();
+}
 
 protected void bg_process_queue()
 {
@@ -1224,6 +1267,7 @@ protected void bg_process_queue()
 #endif
 
       float task_vtime, task_rtime;
+      bg_num_runs++;
 
 #ifndef NO_SLOW_REQ_BT
       if ((monitor = slow_req_monitor) && slow_req_timeout > 0.0) {
@@ -1249,6 +1293,16 @@ protected void bg_process_queue()
 	  };
 	task_rtime = (gethrtime (1) - start_hrtime) / 1e9;
       }
+
+      if (task_rtime >  0.01) bg_num_runs_001s++;
+      if (task_rtime >  0.05) bg_num_runs_005s++;
+      if (task_rtime >  0.15) bg_num_runs_015s++;
+      if (task_rtime >  0.50) bg_num_runs_05s++;
+      if (task_rtime >  1.00) bg_num_runs_1s++;
+      if (task_rtime >  5.00) bg_num_runs_5s++;
+      if (task_rtime > 15.00) bg_num_runs_15s++;
+      bg_acc_cpu_time += (int)(1E6*task_vtime);
+      bg_acc_time += (int)(1E6*task_rtime);
 
       if (task_rtime > 60.0)
 	report_warning ("Warning: Background job took more than one minute "
