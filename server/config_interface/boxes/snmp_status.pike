@@ -84,6 +84,10 @@ conf_loop:
     }
   }
 
+  if (sizeof(res) <= 1) {
+    res = ({ "<th align='left'>No active SNMP ports.</th>" });
+  }
+
   return
     "<box type='"+box+"' title='"+box_name+"'><table cellpadding='0'><tr>" +
     res * "</tr>\n<tr>" +
