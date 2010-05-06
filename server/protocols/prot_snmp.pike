@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2007, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.2 2010/05/06 11:07:46 noring Exp $
+ * $Id: prot_snmp.pike,v 2.3 2010/05/06 13:23:07 noring Exp $
  *
  * SNMP protocol support.
  *
@@ -96,7 +96,7 @@ class SystemMIB
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.2 $"/" ")[1],
+			   ("$Revision: 2.3 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
@@ -270,6 +270,11 @@ class RoxenGlobalMIB
 		       "handlerTime",
 		       "Accumulated total time in handler threads "
 		       "in centiseconds."),
+		     SNMP.Counter(lambda()
+				  { return roxen->handler_acc_cpu_time/10000; },
+		       "handlerUserTime",
+		       "Accumulated total user time in handler threads "
+		       "in centiseconds."),
 		   }),
 		   ({
 		     UNDEFINED,
@@ -278,16 +283,16 @@ class RoxenGlobalMIB
 				  "Total number of handler runs."),
 		     SNMP.Counter(lambda() { return roxen->handler_num_runs_001s; },
 				  "handlerNumRuns001s",
-				  "Number of handler runs longer than 0.01 second."),
+				  "Number of handler runs longer than 0.01 seconds."),
 		     SNMP.Counter(lambda() { return roxen->handler_num_runs_005s; },
 				  "handlerNumRuns005s",
-				  "Number of handler runs longer than 0.05 second."),
+				  "Number of handler runs longer than 0.05 seconds."),
 		     SNMP.Counter(lambda() { return roxen->handler_num_runs_015s; },
 				  "handlerNumRuns015s",
-				  "Number of handler runs longer than 0.15 second."),
+				  "Number of handler runs longer than 0.15 seconds."),
 		     SNMP.Counter(lambda() { return roxen->handler_num_runs_05s; },
 				  "handlerNumRuns05s",
-				  "Number of handler runs longer than 0.5 second."),
+				  "Number of handler runs longer than 0.5 seconds."),
 		     SNMP.Counter(lambda() { return roxen->handler_num_runs_1s; },
 				  "handlerNumRuns1s",
 				  "Number of handler runs longer than 1 second."),
@@ -313,8 +318,8 @@ class RoxenGlobalMIB
 		       "Accumulated total background run real time in centiseconds."),
 		     SNMP.Counter(lambda()
 				  { return roxen->bg_acc_cpu_time/10000; },
-		       "bgCpuTime",
-		       "Accumulated total background run cpu time in centiseconds."),
+		       "bgUserTime",
+		       "Accumulated total background run user time in centiseconds."),
 		   }),
 		   ({
 		     UNDEFINED,
@@ -325,19 +330,19 @@ class RoxenGlobalMIB
 		     SNMP.Counter(lambda()
 				  { return roxen->bg_num_runs_001s; },
 		       "bgNumRuns001s",
-		       "Number of background run runs longer than 0.01 second."),
+		       "Number of background run runs longer than 0.01 seconds."),
 		     SNMP.Counter(lambda()
 				  { return roxen->bg_num_runs_005s; },
 		       "bgNumRuns005s",
-		       "Number of background run runs longer than 0.05 second."),
+		       "Number of background run runs longer than 0.05 seconds."),
 		     SNMP.Counter(lambda()
 				  { return roxen->bg_num_runs_015s; },
 		       "bgNumRuns015s",
-		       "Number of background run runs longer than 0.15 second."),
+		       "Number of background run runs longer than 0.15 seconds."),
 		     SNMP.Counter(lambda()
 				  { return roxen->bg_num_runs_05s; },
 		       "bgNumRuns05s",
-		       "Number of background run runs longer than 0.5 second."),
+		       "Number of background run runs longer than 0.5 seconds."),
 		     SNMP.Counter(lambda()
 				  { return roxen->bg_num_runs_1s; },
 		       "bgNumRuns1s",
