@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.390 2009/08/26 12:30:15 noring Exp $
+// $Id: roxenloader.pike,v 1.391 2010/05/06 10:38:02 noring Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.390 2009/08/26 12:30:15 noring Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.391 2010/05/06 10:38:02 noring Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -152,8 +152,10 @@ void add_cvs_ids(mixed to)
     }
 }
 
+int num_describe_backtrace = 0; // For statistics
 string describe_backtrace (mixed err, void|int linewidth)
 {
+  num_describe_backtrace++;
   add_cvs_ids (err);
   return predef::describe_backtrace (err, 999999);
 }
