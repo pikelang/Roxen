@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.267 2010/05/06 22:41:25 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.268 2010/05/06 22:41:57 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -892,6 +892,15 @@ class CacheKey
   {
     if (!activate_immediately) activation_cbs = ({});
   }
+
+#if 0
+  protected void destroy()
+  {
+    if (activation_cbs)
+      werror ("%O: activation list size at destroy: %d\n",
+	      this, sizeof (activation_cbs));
+  }
+#endif
 
   void add_activation_cb (CacheActivationCB cb, mixed... args)
   //! Register a callback that will be called if and when this cache
