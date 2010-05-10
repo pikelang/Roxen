@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1065 2010/05/10 14:01:55 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1066 2010/05/10 14:22:25 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1426,9 +1426,11 @@ class BackgroundProcess
 //! itself and the callback won't be called anymore.
 {
   int|float period;
+  function func;
+  array args;
   int stopping = 0;
 
-  protected void repeat (function func, mixed args)
+  protected void repeat (function func, array args)
   {
     // Got a minimum of four refs to this:
     // o  One in the task array in bg_process_queue.
@@ -1476,9 +1478,11 @@ class BackgroundProcess
   //!
   //! The repetition will stop if @[stop] is called, or if @[func]
   //! throws an error.
-  protected void create (int|float period_, function func, mixed... args)
+  protected void create (int|float period_, function func_, mixed... args_)
   {
     period = period_;
+    func = func_;
+    args = args_;
     background_run (period, repeat, func, args);
   }
 
