@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1064 2010/05/06 12:20:40 noring Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1065 2010/05/10 14:01:55 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1440,7 +1440,10 @@ class BackgroundProcess
     if (self_refs < 4)
       error ("Minimum ref calculation wrong - have only %d refs.\n", self_refs);
 #endif
-    if (stopping || (self_refs <= 4) || !func) return;
+    if (stopping || (self_refs <= 4) || !func) {
+      stopping = 2;	// Stopped.
+      return;
+    }
     mixed err = catch {
 	func (@args);
       };
@@ -1482,7 +1485,17 @@ class BackgroundProcess
   void stop()
   //! Sets a flag to stop the succession of calls.
   {
-    stopping = 1;
+    stopping |= 1;
+  }
+
+  void start()
+  //! Restart a stopped process.
+  {
+    int state = stopping;
+    stopping = 0;
+    if (state & 2) {
+      background_run (period, repeat, func, args);
+    }
   }
 
   string _sprintf() {return "BackgroundProcess()";}
