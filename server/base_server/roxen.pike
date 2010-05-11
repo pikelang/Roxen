@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.974 2010/05/06 13:21:08 noring Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.975 2010/05/11 13:14:47 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -1185,6 +1185,8 @@ class BackgroundProcess
 //! itself and the callback won't be called anymore.
 {
   int|float period;
+  function func;
+  array args;
   int stopping = 0;
 
   static void repeat (function func, mixed args)
@@ -1199,7 +1201,10 @@ class BackgroundProcess
     if (self_refs < 4)
       error ("Minimum ref calculation wrong - have only %d refs.\n", self_refs);
 #endif
-    if (stopping || (self_refs <= 4) || !func) return;
+    if (stopping || (self_refs <= 4) || !func) {
+      stopping = 2;	// Stopped.
+      return;
+    }
     mixed err = catch {
 	func (@args);
       };
@@ -1228,16 +1233,28 @@ class BackgroundProcess
   //!
   //! The repetition will stop if @[stop] is called, or if @[func]
   //! throws an error.
-  static void create (int|float period_, function func, mixed... args)
+  static void create (int|float period_, function func_, mixed... args_)
   {
     period = period_;
+    func = func_;
+    args = args_;
     background_run (period, repeat, func, args);
   }
 
   void stop()
   //! Sets a flag to stop the succession of calls.
   {
-    stopping = 1;
+    stopping |= 1;
+  }
+
+  void start()
+  //! Restart a stopped process.
+  {
+    int state = stopping;
+    stopping = 0;
+    if (state & 2) {
+      background_run (period, repeat, func, args);
+    }
   }
 
   string _sprintf() {return "BackgroundProcess()";}
