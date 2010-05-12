@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.161 2009/11/04 12:37:44 mast Exp $
+// $Id: site_content.pike,v 1.162 2010/05/12 11:52:38 grubba Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -321,7 +321,8 @@ string get_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
       path = path[..sizeof(path)-2];
     }
 
-    array(int) oid_suffix = ({ sizeof(path), @((array(int))path) });
+    array(int) oid_suffix = ({ sizeof(path), @((array(int))path),
+			       segment[-1] });
 
   ADT.Trie mib = ADT.Trie();
 
@@ -359,10 +360,10 @@ string get_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
     }
     res += ({
 	sprintf("<td><b><a href=\"urn:oid:%s\">%s:</a></b></td>"
-		"<td>%s</td>",
+		"<td>%s</td><td>%O</td>",
 		oid_string,
 		Roxen.html_encode_string(name),
-		Roxen.html_encode_string(val)),
+		Roxen.html_encode_string(val), oid),
     });
     if (sizeof(doc)) {
       res += ({
