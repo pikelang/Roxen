@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.151 2009/10/22 14:32:58 grubba Exp $
+// $Id: site_content.pike,v 1.152 2010/05/12 11:52:44 grubba Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -308,7 +308,8 @@ string get_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
 	path = path[..sizeof(path)-2];
       }
 
-      array(int) oid_suffix = ({ sizeof(path), @((array(int))path) });
+      array(int) oid_suffix = ({ sizeof(path), @((array(int))path),
+				 segment[-1] });
 
       ADT.Trie mib = ADT.Trie();
 
