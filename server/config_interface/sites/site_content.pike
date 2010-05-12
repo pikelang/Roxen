@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.162 2010/05/12 11:52:38 grubba Exp $
+// $Id: site_content.pike,v 1.163 2010/05/12 11:56:48 grubba Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -360,10 +360,10 @@ string get_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
     }
     res += ({
 	sprintf("<td><b><a href=\"urn:oid:%s\">%s:</a></b></td>"
-		"<td>%s</td><td>%O</td>",
+		"<td>%s</td>",
 		oid_string,
 		Roxen.html_encode_string(name),
-		Roxen.html_encode_string(val), oid),
+		Roxen.html_encode_string(val)),
     });
     if (sizeof(doc)) {
       res += ({
