@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.290 2010/04/22 10:46:12 grubba Exp $
+// $Id: Roxen.pmod,v 1.291 2010/05/17 11:21:00 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2550,9 +2550,11 @@ protected string low_roxen_encode(string val, string encoding)
 		       "\\'", "\\\"" }));
 
    case "mysql":
+     // Note: Quotes the single-quote (') in traditional sql-style,
+     //       for maximum compatibility with other sql databases.
      return replace (val,
 		    ({ "\"", "'", "\\" }),
-		    ({ "\\\"" , "\\'", "\\\\" }) );
+		    ({ "\\\"" , "''", "\\\\" }) );
 
    case "sql":
    case "oracle":
