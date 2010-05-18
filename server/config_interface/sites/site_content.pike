@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.152 2010/05/12 11:52:44 grubba Exp $
+// $Id: site_content.pike,v 1.153 2010/05/18 15:12:56 noring Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -275,7 +275,7 @@ string get_eventlog( roxen.ModuleInfo o, RequestID id, int|void no_links )
   return "<h3>"+LOCALE(216, "Events")+"</h3>" + (report[..1000]*"");
 }
 
-string get_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
+string get_module_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
 {
   if (!o->query_snmp_mib) return "";
 
@@ -286,86 +286,102 @@ string get_snmp(RoxenModule o, ModuleInfo moduleinfo, RequestID id)
   array(int) oid_prefix =
     conf->query_oid() + ({ 8, 2 }) + segment[..sizeof(segment)-2];
 
+  foreach(conf->registered_urls, string url) {
+    mapping(string:string|Configuration|Protocol) port_info = roxen.urls[url];
+
+    foreach((port_info && port_info->ports) || ({}), Protocol prot) {
+      if ((prot->prot_name != "snmp") || (!prot->mib)) continue;
+      string path = port_info->path || "";
+      if (has_prefix(path, "/")) path = path[1..];
+      if (has_suffix(path, "/")) path = path[..sizeof(path)-2];
+
+      ADT.Trie mib = ADT.Trie();
+      array(int) oid_suffix = ({ sizeof(path), @((array(int))path),
+				 segment[-1] });
+      mib->merge(o->query_snmp_mib(oid_prefix, oid_suffix));
+      mib->merge(conf->generate_module_mib(conf->query_oid() + ({ 8, 1 }),
+					   oid_suffix[..0],
+					   o, moduleinfo, UNDEFINED));
+
+      return "<h3>SNMP</h3>\n" + get_snmp_values(mib, mib->first());
+    }
+  }
+
+  return "";
+}
+
+string get_site_snmp(Configuration conf)
+{
+  foreach(conf->registered_urls, string url) {
+    mapping(string:string|Configuration|Protocol) port_info = roxen.urls[url];
+
+    foreach((port_info && port_info->ports) || ({}), Protocol prot) {
+      if ((prot->prot_name != "snmp") || (!prot->mib)) continue;
+      string path = port_info->path || "";
+      if (has_prefix(path, "/")) path = path[1..];
+      if (has_suffix(path, "/")) path = path[..sizeof(path)-2];
+
+      return "<h3>SNMP</h3>\n" +
+	get_snmp_values(prot->mib, conf->query_oid(), conf->query_oid()+({8}));
+    }
+  }
+
+  return "";
+}
+
+string get_snmp_values(ADT.Trie mib,
+		       array(int) oid_start,
+		       void|array(int) oid_ignore)
+{
   array(string) res = ({
     "<th align='left'>Name</th>"
     "<th align='left'>Value</th>"
     "<th align='left'>OID</th>",
   });
 
-  foreach(conf->registered_urls, string url) {
-    mapping(string:string|Configuration|Protocol) port_info = roxen.urls[url];
-
-    foreach((port_info && port_info->ports) || ({}), Protocol prot) {
-      if ((prot->prot_name != "snmp") || (!prot->mib)) {
-	continue;
-      }
-
-      string path = port_info->path || "";
-      if (has_prefix(path, "/")) {
-	path = path[1..];
-      }
-      if (has_suffix(path, "/")) {
-	path = path[..sizeof(path)-2];
-      }
-
-      array(int) oid_suffix = ({ sizeof(path), @((array(int))path),
-				 segment[-1] });
-
-      ADT.Trie mib = ADT.Trie();
-
-      mib->merge(o->query_snmp_mib(oid_prefix, oid_suffix));
-
-      mib->merge(conf->generate_module_mib(conf->query_oid() + ({ 8, 1 }),
-					   oid_suffix[..0],
-					   o, moduleinfo, UNDEFINED));
-
-      for (array(int) oid = mib->first(); oid; oid = mib->next(oid)) {
-	string oid_string = ((array(string)) oid) * ".";
-	string name = "";
-	string doc = "";
-	mixed val = "";
-	mixed err = catch {
-	    val = mib->lookup(oid);
-	    if (zero_type(val)) continue;
-	    if (objectp(val)) {
-	      if (val->update_value) {
-		val->update_value();
-	      }
-	      name = val->name || "";
-	      doc = val->doc || "";
-	      val = sprintf("%s", val);
-	    }
-	    val = (string)val;
-	  };
-	if (err) {
-	  name = "Error";
-	  val = "";
-	  doc = "<tt>" +
-	    replace(Roxen.html_encode_string(describe_backtrace(err)),
-		    "\n", "<br />\n") +
-	    "</tt>";
+  for (array(int) oid = oid_start; oid; oid = mib->next(oid)) {
+    if (oid_ignore && has_prefix((string)oid, (string)oid_ignore)) continue;
+    string oid_string = ((array(string)) oid) * ".";
+    string name = "";
+    string doc = "";
+    mixed val = "";
+    mixed err = catch {
+	val = mib->lookup(oid);
+	if (zero_type(val)) continue;
+	if (objectp(val)) {
+	  if (val->update_value) {
+	    val->update_value();
+	  }
+	  name = val->name || "";
+	  doc = val->doc || "";
+	  val = sprintf("%s", val);
 	}
-	res += ({
-	  sprintf("<td><b>%s:</b></td>"
-		  "<td>%s</td>"
-		  "<td><font size='-1'>%s</font></td>",
-		  Roxen.html_encode_string(name),
-		  Roxen.html_encode_string(val),
-		  oid_string),
-	});
-	if (sizeof(doc)) {
-	  res += ({
-	    sprintf("<td></td><td colspan='2'><font size='-1'>%s</font></td>", doc),
-	  });
-	}
-      }
+	val = (string)val;
+      };
+    if (err) {
+      name = "Error";
+      val = "";
+      doc = "<tt>" +
+	replace(Roxen.html_encode_string(describe_backtrace(err)),
+		"\n", "<br />\n") +
+	"</tt>";
+    }
+    res += ({
+      sprintf("<td><b>%s:</b></td>"
+	      "<td>%s</td>"
+	      "<td><font size='-1'>%s</font></td>",
+	      Roxen.html_encode_string(name),
+	      Roxen.html_encode_string(val),
+	      oid_string),
+    });
+    if (sizeof(doc)) {
+      res += ({
+	sprintf("<td></td><td colspan='2'><font size='-1'>%s</font></td>", doc),
+      });
     }
   }
 
-  return "<h3>SNMP</h3>\n"
-    "<table><tr>" +
-    res * "</tr>\n<tr>" +
-    "</tr></table>\n";
+  return "<table><tr>" + (res * "</tr>\n<tr>") + "</tr></table>\n";
 }
 
 #define EC(X) niceerror( lambda(){ return (X); } , #X)
@@ -408,7 +424,7 @@ string find_module_doc( string cn, string mn, RequestID id )
 
   ModuleInfo mi = roxen.find_module( (mn/"!")[0] );
 
-  string snmp = get_snmp(m, mi, id);
+  string snmp = get_module_snmp(m, mi, id);
 
   string eventlog = get_eventlog( m, id );
 
@@ -814,7 +830,9 @@ string parse( RequestID id )
        res+="<h1>"+LOCALE(216, "Events")+"</h1><insert file='log.pike' nocache='1' />";
        if( sizeof( conf->error_log ) )
 	 res+="<submit-gbutton>"+LOCALE(247, "Clear Log")+"</submit-gbutton>";
-       return res+"<br />\n";
+       res += "<br />\n";
+       res += get_site_snmp(conf);
+       return res;
     }
   } else
     return module_page( id, path[0], path[2] );
