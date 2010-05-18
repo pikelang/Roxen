@@ -6,7 +6,7 @@
 #include <module.h>
 #include <variables.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.195 2009/12/08 16:10:06 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.196 2010/05/18 15:05:48 noring Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -360,6 +360,31 @@ class Configuration
 
   // Protocol specific statistics.
   int requests, sent, hsent, received;
+
+  int request_num_runs_001s;
+  int request_num_runs_005s;
+  int request_num_runs_015s;
+  int request_num_runs_05s;
+  int request_num_runs_1s;
+  int request_num_runs_5s;
+  int request_num_runs_15s;
+  int request_acc_time;
+  int handle_num_runs_001s;
+  int handle_num_runs_005s;
+  int handle_num_runs_015s;
+  int handle_num_runs_05s;
+  int handle_num_runs_1s;
+  int handle_num_runs_5s;
+  int handle_num_runs_15s;
+  int handle_acc_time;
+  int queue_num_runs_001s;
+  int queue_num_runs_005s;
+  int queue_num_runs_015s;
+  int queue_num_runs_05s;
+  int queue_num_runs_1s;
+  int queue_num_runs_5s;
+  int queue_num_runs_15s;
+  int queue_acc_time;
 
   function(string:int) log_function;
   DataCache datacache;

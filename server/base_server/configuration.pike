@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.639 2009/06/24 11:37:59 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.640 2010/05/18 15:06:53 noring Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3273,6 +3273,123 @@ void start(int num)
 			 SNMP.Counter64(lambda() { return hsent; }),
 			 SNMP.Counter64(lambda() { return requests; }),
 			 UNDEFINED,	// NOTE: Reserved for modules!
+			 ({
+			   UNDEFINED,
+			   ({
+			     UNDEFINED,
+			     ({
+			       UNDEFINED,
+			       SNMP.Counter(lambda()
+					    { return request_acc_time/10000; },
+				 "requestTime",
+				 "Accumulated total request time "
+				 "in centiseconds."),
+			     }),
+			     ({
+			       UNDEFINED,
+			       SNMP.Counter(lambda() { return requests; },
+					    "requestNumRuns",
+					    "Total number of request runs."),
+			       SNMP.Counter(lambda() { return request_num_runs_001s; },
+					    "requestNumRuns001s",
+					    "Number of request runs longer than 0.01 seconds."),
+			       SNMP.Counter(lambda() { return request_num_runs_005s; },
+					    "requestNumRuns005s",
+					    "Number of request runs longer than 0.05 seconds."),
+			       SNMP.Counter(lambda() { return request_num_runs_015s; },
+					    "requestNumRuns015s",
+					    "Number of request runs longer than 0.15 seconds."),
+			       SNMP.Counter(lambda() { return request_num_runs_05s; },
+					    "requestNumRuns05s",
+					    "Number of request runs longer than 0.5 seconds."),
+			       SNMP.Counter(lambda() { return request_num_runs_1s; },
+					    "requestNumRuns1s",
+					    "Number of request runs longer than 1 second."),
+			       SNMP.Counter(lambda() { return request_num_runs_5s; },
+					    "requestNumRuns5s",
+					    "Number of request runs longer than 5 seconds."),
+			       SNMP.Counter(lambda() { return request_num_runs_15s; },
+					    "requestNumRuns15s",
+					    "Number of request runs longer than 15 seconds."),
+			     }),
+			   }),
+			   ({
+			     UNDEFINED,
+			     ({
+			       UNDEFINED,
+			       SNMP.Counter(lambda()
+					    { return handle_acc_time/10000; },
+				 "handleTime",
+				 "Accumulated total handle time "
+			       "in centiseconds."),
+			     }),
+			     ({
+			       UNDEFINED,
+			       SNMP.Counter(lambda() { return requests; },
+					    "handleNumRuns",
+					    "Total number of handle runs."),
+			       SNMP.Counter(lambda() { return handle_num_runs_001s; },
+					    "handleNumRuns001s",
+					    "Number of handle runs longer than 0.01 seconds."),
+			       SNMP.Counter(lambda() { return handle_num_runs_005s; },
+					    "handleNumRuns005s",
+					    "Number of handle runs longer than 0.05 seconds."),
+			       SNMP.Counter(lambda() { return handle_num_runs_015s; },
+					    "handleNumRuns015s",
+					    "Number of handle runs longer than 0.15 seconds."),
+			       SNMP.Counter(lambda() { return handle_num_runs_05s; },
+					    "handleNumRuns05s",
+					    "Number of handle runs longer than 0.5 seconds."),
+			       SNMP.Counter(lambda() { return handle_num_runs_1s; },
+					    "handleNumRuns1s",
+					    "Number of handle runs longer than 1 second."),
+			       SNMP.Counter(lambda() { return handle_num_runs_5s; },
+					    "handleNumRuns5s",
+					    "Number of handle runs longer than 5 seconds."),
+			       SNMP.Counter(lambda() { return handle_num_runs_15s; },
+					    "handleNumRuns15s",
+					    "Number of handle runs longer than 15 seconds."),
+			     }),
+			   }),
+			   ({
+			     UNDEFINED,
+			     ({
+			       UNDEFINED,
+			       SNMP.Counter(lambda()
+					    { return queue_acc_time/10000; },
+				 "queueTime",
+				 "Accumulated total queue time "
+				 "in centiseconds."),
+			     }),
+			     ({
+			       UNDEFINED,
+			       SNMP.Counter(lambda() { return requests; },
+					    "queueNumRuns",
+					    "Total number of queue runs."),
+			       SNMP.Counter(lambda() { return queue_num_runs_001s; },
+					    "queueNumRuns001s",
+					    "Number of queue runs longer than 0.01 seconds."),
+			       SNMP.Counter(lambda() { return queue_num_runs_005s; },
+					    "queueNumRuns005s",
+					    "Number of queue runs longer than 0.05 seconds."),
+			       SNMP.Counter(lambda() { return queue_num_runs_015s; },
+					    "queueNumRuns015s",
+					    "Number of queue runs longer than 0.15 seconds."),
+			       SNMP.Counter(lambda() { return queue_num_runs_05s; },
+					    "queueNumRuns05s",
+					    "Number of queue runs longer than 0.5 seconds."),
+			       SNMP.Counter(lambda() { return queue_num_runs_1s; },
+					    "queueNumRuns1s",
+					    "Number of queue runs longer than 1 second."),
+			       SNMP.Counter(lambda() { return queue_num_runs_5s; },
+					    "queueNumRuns5s",
+					    "Number of queue runs longer than 5 seconds."),
+			       SNMP.Counter(lambda() { return queue_num_runs_15s; },
+					    "queueNumRuns15s",
+					    "Number of queue runs longer than 15 seconds."),
+			     }),
+			   })
+			 })
 		       }));
       SNMP.set_owner(mib, this_object());
       prot->mib->merge(mib);
