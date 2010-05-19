@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.391 2010/05/06 10:38:02 noring Exp $
+// $Id: roxenloader.pike,v 1.392 2010/05/19 11:16:53 noring Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.391 2010/05/06 10:38:02 noring Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.392 2010/05/19 11:16:53 noring Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -158,6 +158,47 @@ string describe_backtrace (mixed err, void|int linewidth)
   num_describe_backtrace++;
   add_cvs_ids (err);
   return predef::describe_backtrace (err, 999999);
+}
+
+int co_num_call_out = 0;    // For statistics
+int co_num_do_call_out = 0;
+int co_num_runs_001s = 0;
+int co_num_runs_005s = 0;
+int co_num_runs_015s = 0;
+int co_num_runs_05s = 0;
+int co_num_runs_1s = 0;
+int co_num_runs_5s = 0;
+int co_num_runs_15s = 0;
+int co_acc_time = 0;
+int co_acc_cpu_time = 0;
+mixed call_out(function f, float|int delay, mixed ... args)
+{
+  co_num_call_out++;
+  return predef::call_out(class (function f) {
+      int __hash() { return hash_value(f); }
+      int `==(mixed g) { return f == g; }
+      string _sprintf() { return sprintf("%O", f); }
+      mixed `()(mixed ... args)
+      {
+	co_num_do_call_out++;
+	mixed res;
+	int start_hrtime = gethrtime();
+	mixed err;
+	float co_vtime = gauge { err = catch { res = f(@args); }; };
+	float co_rtime = (gethrtime() - start_hrtime)/1E6;
+	if (co_rtime >  0.01) co_num_runs_001s++;
+	if (co_rtime >  0.05) co_num_runs_005s++;
+	if (co_rtime >  0.15) co_num_runs_015s++;
+	if (co_rtime >  0.50) co_num_runs_05s++;
+	if (co_rtime >  1.00) co_num_runs_1s++;
+	if (co_rtime >  5.00) co_num_runs_5s++;
+	if (co_rtime > 15.00) co_num_runs_15s++;
+	co_acc_cpu_time += (int)(1E6*co_vtime);
+	co_acc_time += (int)(1E6*co_rtime);
+	if (err) throw(err);
+	return res;
+      }
+    }(f), delay, @args);
 }
 
 static int(0..5) last_was_change;
@@ -2394,6 +2435,7 @@ the correct system time.
   add_constant ("get_cvs_id", get_cvs_id);
   add_constant ("add_cvs_ids", add_cvs_ids);
   add_constant ("describe_backtrace", describe_backtrace);
+  add_constant ("call_out", call_out);
 
 #ifdef INTERNAL_ERROR_DEBUG
   add_constant("throw", paranoia_throw);

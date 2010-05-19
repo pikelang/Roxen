@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2007, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.3 2010/05/06 13:23:07 noring Exp $
+ * $Id: prot_snmp.pike,v 2.4 2010/05/19 11:16:53 noring Exp $
  *
  * SNMP protocol support.
  *
@@ -96,7 +96,7 @@ class SystemMIB
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.3 $"/" ")[1],
+			   ("$Revision: 2.4 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
@@ -355,6 +355,60 @@ class RoxenGlobalMIB
 				  { return roxen->bg_num_runs_15s; },
 		       "bgNumRuns15s",
 		       "Number of background run runs longer than 15 seconds."),
+		   }),
+		 }),
+		 ({
+		   UNDEFINED,
+		   SNMP.Gauge(lambda()
+			      { return roxenloader->co_num_call_out -
+				  roxenloader->co_num_do_call_out; },
+		     "coQueueSize",
+		     "Call out queue size."),
+		   ({
+		     UNDEFINED,
+		     SNMP.Counter(lambda()
+				  { return roxenloader->co_acc_time/10000; },
+		       "coTime",
+		       "Accumulated total call out real time in centiseconds."),
+		     SNMP.Counter(lambda()
+				  { return roxenloader->co_acc_cpu_time/10000; },
+		       "coUserTime",
+		       "Accumulated total call out user time in centiseconds."),
+		   }),
+		   ({
+		     UNDEFINED,
+		     SNMP.Counter(lambda()
+				  { return roxenloader->co_num_do_call_out; },
+		       "coNumRuns",
+		       "Total number of call outs."),
+		     SNMP.Counter(lambda()
+				  { return roxenloader->co_num_runs_001s; },
+		       "coNumRuns001s",
+		       "Number of call outs longer than 0.01 seconds."),
+		     SNMP.Counter(lambda()
+				  { return roxenloader->co_num_runs_005s; },
+		       "coNumRuns005s",
+		       "Number of call outs longer than 0.05 seconds."),
+		     SNMP.Counter(lambda()
+				  { return roxenloader->co_num_runs_015s; },
+		       "coNumRuns015s",
+		       "Number of call outs longer than 0.15 seconds."),
+		     SNMP.Counter(lambda()
+				  { return roxenloader->co_num_runs_05s; },
+		       "coNumRuns05s",
+		       "Number of call outs longer than 0.5 seconds."),
+		     SNMP.Counter(lambda()
+				  { return roxenloader->co_num_runs_1s; },
+		       "coNumRuns1s",
+		       "Number of call outs longer than 1 second."),
+		     SNMP.Counter(lambda()
+				  { return roxenloader->co_num_runs_5s; },
+		       "cgNumRuns5s",
+		       "Number of call outs longer than 5 seconds."),
+		     SNMP.Counter(lambda()
+				  { return roxenloader->co_num_runs_15s; },
+		       "coNumRuns15s",
+		       "Number of call outs longer than 15 seconds."),
 		   }),
 		 }),
 	       }),
