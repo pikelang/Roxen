@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.437 2010/05/19 11:28:51 noring Exp $
+// $Id: roxenloader.pike,v 1.438 2010/05/19 15:03:31 noring Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.437 2010/05/19 11:28:51 noring Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.438 2010/05/19 15:03:31 noring Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -162,7 +162,6 @@ string describe_backtrace (mixed err, void|int linewidth)
 }
 
 int co_num_call_out = 0;    // For statistics
-int co_num_do_call_out = 0;
 int co_num_runs_001s = 0;
 int co_num_runs_005s = 0;
 int co_num_runs_015s = 0;
@@ -174,17 +173,15 @@ int co_acc_time = 0;
 int co_acc_cpu_time = 0;
 mixed call_out(function f, float|int delay, mixed ... args)
 {
-  co_num_call_out++;
   return predef::call_out(class (function f) {
       int __hash() { return hash_value(f); }
       int `==(mixed g) { return f == g; }
       string _sprintf() { return sprintf("%O", f); }
       mixed `()(mixed ... args)
       {
-	co_num_do_call_out++;
-	mixed res;
+	co_num_call_out++;
+	mixed err, res;
 	int start_hrtime = gethrtime();
-	mixed err;
 	float co_vtime = gauge { err = catch { res = f(@args); }; };
 	float co_rtime = (gethrtime() - start_hrtime)/1E6;
 	if (co_rtime >  0.01) co_num_runs_001s++;
