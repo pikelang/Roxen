@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2007, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.4 2010/05/19 11:16:53 noring Exp $
+ * $Id: prot_snmp.pike,v 2.5 2010/05/19 15:03:17 noring Exp $
  *
  * SNMP protocol support.
  *
@@ -96,7 +96,7 @@ class SystemMIB
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.4 $"/" ")[1],
+			   ("$Revision: 2.5 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
@@ -360,8 +360,7 @@ class RoxenGlobalMIB
 		 ({
 		   UNDEFINED,
 		   SNMP.Gauge(lambda()
-			      { return roxenloader->co_num_call_out -
-				  roxenloader->co_num_do_call_out; },
+			      { return Pike.DefaultBackend.get_stats()->num_call_outs; },
 		     "coQueueSize",
 		     "Call out queue size."),
 		   ({
@@ -378,7 +377,7 @@ class RoxenGlobalMIB
 		   ({
 		     UNDEFINED,
 		     SNMP.Counter(lambda()
-				  { return roxenloader->co_num_do_call_out; },
+				  { return roxenloader->co_num_call_out; },
 		       "coNumRuns",
 		       "Total number of call outs."),
 		     SNMP.Counter(lambda()
