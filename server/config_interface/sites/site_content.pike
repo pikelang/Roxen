@@ -1,4 +1,4 @@
-// $Id: site_content.pike,v 1.153 2010/05/18 15:12:56 noring Exp $
+// $Id: site_content.pike,v 1.154 2010/05/19 07:42:24 noring Exp $
 
 inherit "../inheritinfo.pike";
 inherit "../logutil.pike";
@@ -317,9 +317,6 @@ string get_site_snmp(Configuration conf)
 
     foreach((port_info && port_info->ports) || ({}), Protocol prot) {
       if ((prot->prot_name != "snmp") || (!prot->mib)) continue;
-      string path = port_info->path || "";
-      if (has_prefix(path, "/")) path = path[1..];
-      if (has_suffix(path, "/")) path = path[..sizeof(path)-2];
 
       return "<h3>SNMP</h3>\n" +
 	get_snmp_values(prot->mib, conf->query_oid(), conf->query_oid()+({8}));
