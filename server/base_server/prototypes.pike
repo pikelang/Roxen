@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.268 2010/05/06 22:41:57 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.269 2010/05/19 06:56:41 noring Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -370,6 +370,31 @@ class Configuration
 
   // Protocol specific statistics.
   int requests, sent, hsent, received;
+
+  int request_num_runs_001s;
+  int request_num_runs_005s;
+  int request_num_runs_015s;
+  int request_num_runs_05s;
+  int request_num_runs_1s;
+  int request_num_runs_5s;
+  int request_num_runs_15s;
+  int request_acc_time;
+  int handle_num_runs_001s;
+  int handle_num_runs_005s;
+  int handle_num_runs_015s;
+  int handle_num_runs_05s;
+  int handle_num_runs_1s;
+  int handle_num_runs_5s;
+  int handle_num_runs_15s;
+  int handle_acc_time;
+  int queue_num_runs_001s;
+  int queue_num_runs_005s;
+  int queue_num_runs_015s;
+  int queue_num_runs_05s;
+  int queue_num_runs_1s;
+  int queue_num_runs_5s;
+  int queue_num_runs_15s;
+  int queue_acc_time;
 
   void add_module_pre_callback (string mod_name, string func,
 				function(RoxenModule,mixed...:void) cb);

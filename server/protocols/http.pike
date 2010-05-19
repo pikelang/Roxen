@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.616 2010/04/09 15:30:42 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.617 2010/05/19 06:56:41 noring Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1827,6 +1827,41 @@ void do_log( int|void fsent )
     {
       if(file->len > 0) conf->sent+=file->len;
       file->len += misc->_log_cheat_addition;
+
+      {
+	float t = (gethrtime() - hrtime)/1E6;
+	if (t >  0.01) conf->request_num_runs_001s++;
+	if (t >  0.05) conf->request_num_runs_005s++;
+	if (t >  0.15) conf->request_num_runs_015s++;
+	if (t >  0.50) conf->request_num_runs_05s++;
+	if (t >  1.00) conf->request_num_runs_1s++;
+	if (t >  5.00) conf->request_num_runs_5s++;
+	if (t > 15.00) conf->request_num_runs_15s++;
+	conf->request_acc_time += (int)(1E6*t);
+      }
+      {
+	float t = handle_time/1E6;
+	if (t >  0.01) conf->handle_num_runs_001s++;
+	if (t >  0.05) conf->handle_num_runs_005s++;
+	if (t >  0.15) conf->handle_num_runs_015s++;
+	if (t >  0.50) conf->handle_num_runs_05s++;
+	if (t >  1.00) conf->handle_num_runs_1s++;
+	if (t >  5.00) conf->handle_num_runs_5s++;
+	if (t > 15.00) conf->handle_num_runs_15s++;
+	conf->handle_acc_time += (int)(1E6*t);
+      }
+      {
+	float t = queue_time/1E6;
+	if (t >  0.01) conf->queue_num_runs_001s++;
+	if (t >  0.05) conf->queue_num_runs_005s++;
+	if (t >  0.15) conf->queue_num_runs_015s++;
+	if (t >  0.50) conf->queue_num_runs_05s++;
+	if (t >  1.00) conf->queue_num_runs_1s++;
+	if (t >  5.00) conf->queue_num_runs_5s++;
+	if (t > 15.00) conf->queue_num_runs_15s++;
+	conf->queue_acc_time += (int)(1E6*t);
+      }
+
       conf->log(file, this_object());
     }
   }
