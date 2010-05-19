@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.617 2010/05/19 06:56:41 noring Exp $";
+constant cvs_version = "$Id: http.pike,v 1.618 2010/05/19 14:33:51 marty Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2281,6 +2281,20 @@ void low_send_result(string headers, string data, int|void len,
 }
 
 #ifdef HTTP_COMPRESSION
+private int(0..1) compression_enabled_for_mimetype (string mimetype)
+{
+  mapping(string:int) compress_exact_mimetypes = conf->http_compr_exact_mimes;
+  mapping(string:int) compress_main_mimetypes = conf->http_compr_main_mimes;
+
+  mimetype = (mimetype / ";")[0]; // We are not interested in the charset spec.
+
+  return (conf->http_compr_enabled &&
+	  mimetype &&
+	  (compress_exact_mimetypes[mimetype] ||
+	   (sscanf (mimetype, "%[^/]", string main_type) &&
+	    compress_main_mimetypes[main_type])));
+}
+
 private string gzip_data(string data)
 {
   Stdio.FakeFile f = Stdio.FakeFile("", "wb");
@@ -2327,18 +2341,9 @@ private string try_gzip_data(string data, string mimetype)
   int min_data_length = conf->http_compr_minlen;
   int max_data_length = conf->http_compr_maxlen;
 
-  mapping(string:int) compress_exact_mimetypes = conf->http_compr_exact_mimes;
-  mapping(string:int) compress_main_mimetypes = conf->http_compr_main_mimes;
-
   int len = sizeof(data);
 
-  mimetype = (mimetype / ";")[0]; // We are not interested in the charset spec.
-
-  if(conf->http_compr_enabled &&
-     mimetype && 
-     (compress_exact_mimetypes[mimetype] ||
-     (sscanf (mimetype, "%[^/]", string main_type) &&
-      compress_main_mimetypes[main_type])) &&
+  if(compression_enabled_for_mimetype (mimetype) &&
      len >= min_data_length && 
      (!max_data_length || len <= max_data_length)) {
     data = gzip_data(data);
@@ -2484,7 +2489,7 @@ void send_result(mapping|void result)
     }
 
 #ifdef HTTP_COMPRESSION
-    if(conf->http_compr_enabled) {
+    if(compression_enabled_for_mimetype (file->type)) {
       // Notify proxies etc. that we depend on the Accept-Encoding header,
       // but we don't want to register it as a vary callback since it's
       // handled directly by the protocol cache.
