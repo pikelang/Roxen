@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.554 2010/01/29 09:51:27 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.555 2010/05/24 15:21:33 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -1609,10 +1609,21 @@ class TagRecode
 			   args->from);
       }
       
-      if(args->to && catch {
-	  content = Locale.Charset.encoder(args->to)->feed(content)->drain(); })
-	RXML.run_error("Invalid charset, or unable to encode data: %s\n",
-		       args->to);
+      if (args->to) {
+	//  User may provide substitution string or numeric entities for
+	//  characters that don't fit in the requested encoding.
+	int use_entity_fallback =
+	  lower_case(args["entity-fallback"] || "no") != "no";
+	string str_fallback = args["string-fallback"];
+	if (catch {
+	    content = Locale.Charset.encoder(args->to, str_fallback,
+					     use_entity_fallback &&
+					     lambda(string ch) {
+					       return "&#" + ch[0] + ";";
+					     })->feed(content)->drain(); })
+	  RXML.run_error("Invalid charset, or unable to encode data: %s\n",
+			 args->to);
+      }
       
       return ({ content });
     }
@@ -7150,6 +7161,34 @@ using the pre tag.
  Converts the contents of the charset tag from the internal representation
  to the character set indicated by this attribute. Useful for encoding data
  before storing it into a database.</p>
+
+ <p>Any characters that cannot be represented in the selected encoding will
+ generate a run-time error unless the <tt>entity-fallback</tt> or
+ <tt>string-fallback</tt> attributes are provided.</p>
+</attr>
+
+<attr name='string-fallback' value='string'><p>
+ Only applicable together with the <tt>to</tt> attribute. This string
+ will be used for characters falling outside the target encoding instead of
+ generating a run-time error.</p>
+
+ <p>This example shows the HTML output for 7-bit US ASCII encoding which
+ cannot represent the Swedish <tt>ö</tt> character:</p>
+
+ <ex-src><p><recode to='ASCII' string-fallback='?'>Björn Borg</recode></p></ex-src>
+</attr>
+
+<attr name='entity-fallback' value='yes|no'><p>
+ Only applicable together with the <tt>to</tt> attribute. Default is
+ <tt>no</tt>, but if set to <tt>yes</tt> any characters falling outside the
+ target encoding will be output as numerical HTML entities instead of
+ generating a run-time error. If both this and <tt>string-fallback</tt> are
+ used at the same time this attribute will take precedence.</p>
+
+ <p>This example shows the HTML output for 7-bit US ASCII encoding which
+ cannot represent the Swedish <tt>ö</tt> character:</p>
+
+ <ex-src><p><recode to='ASCII' entity-fallback='yes'>Björn Borg</recode></p></ex-src>
 </attr>
 ",
 
