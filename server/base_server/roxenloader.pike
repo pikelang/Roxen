@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.393 2010/05/19 15:03:17 noring Exp $
+// $Id: roxenloader.pike,v 1.394 2010/05/25 09:37:10 grubba Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -35,7 +35,7 @@ string   configuration_dir;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.393 2010/05/19 15:03:17 noring Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.394 2010/05/25 09:37:10 grubba Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -181,7 +181,7 @@ mixed call_out(function f, float|int delay, mixed ... args)
 	co_num_call_out++;
 	mixed err, res;
 	int start_hrtime = gethrtime();
-	float co_vtime = gauge { err = catch { res = f(@args); }; };
+	float co_vtime = gauge { err = catch { res = f && f(@args); }; };
 	float co_rtime = (gethrtime() - start_hrtime)/1E6;
 	if (co_rtime >  0.01) co_num_runs_001s++;
 	if (co_rtime >  0.05) co_num_runs_005s++;
