@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.269 2010/05/19 06:56:41 noring Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.270 2010/05/25 09:04:54 marty Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2971,6 +2971,23 @@ class RequestID
     return f;
   }
 
+  string get_response_content_type (mapping file,
+				    void|int(1..1) destructive)
+  {
+    string|array(string) type = file->type;
+    if (mappingp (file->extra_heads) && file->extra_heads["Content-Type"]) {
+      type = file->extra_heads["Content-Type"];
+      if (destructive) m_delete (file->extra_heads, "Content-Type");
+    }
+    if (mappingp (misc->moreheads) && misc->moreheads["Content-Type"]) {
+      type = misc->moreheads["Content-Type"];
+      if (destructive) m_delete (misc->moreheads, "Content-Type");
+    }
+    if (arrayp (type)) type = type[0];
+
+    return type || "text/plain";
+  }
+
   mapping(string:string|array(string)) make_response_headers (
     mapping(string:mixed) file)
   //! Make the response headers from a response mapping for this
@@ -3003,14 +3020,7 @@ class RequestID
     if (!file->error)
       file->error = Protocols.HTTP.HTTP_OK;
 
-    if(!file->type) file->type="text/plain";
-
-    string|array(string) type = file->type;
-    if (mappingp (file->extra_heads) && file->extra_heads["Content-Type"])
-      type = m_delete (file->extra_heads, "Content-Type");
-    if (mappingp (misc->moreheads) && misc->moreheads["Content-Type"])
-      type = m_delete (misc->moreheads, "Content-Type");
-    if (arrayp (type)) type = type[0];
+    string type = get_response_content_type (file, 1);
 
     mapping(string:string) heads = ([]);
 
