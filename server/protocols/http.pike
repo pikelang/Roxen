@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.618 2010/05/19 14:33:51 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.619 2010/05/25 09:06:17 marty Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2286,7 +2286,9 @@ private int(0..1) compression_enabled_for_mimetype (string mimetype)
   mapping(string:int) compress_exact_mimetypes = conf->http_compr_exact_mimes;
   mapping(string:int) compress_main_mimetypes = conf->http_compr_main_mimes;
 
-  mimetype = (mimetype / ";")[0]; // We are not interested in the charset spec.
+  if (mimetype)
+    // We are not interested in the charset spec.
+    mimetype = (mimetype / ";")[0];
 
   return (conf->http_compr_enabled &&
 	  mimetype &&
@@ -2489,7 +2491,8 @@ void send_result(mapping|void result)
     }
 
 #ifdef HTTP_COMPRESSION
-    if(compression_enabled_for_mimetype (file->type)) {
+    if(compression_enabled_for_mimetype (get_response_content_type (file)) ||
+       (misc->vary && misc->vary["content-type"])) {
       // Notify proxies etc. that we depend on the Accept-Encoding header,
       // but we don't want to register it as a vary callback since it's
       // handled directly by the protocol cache.
