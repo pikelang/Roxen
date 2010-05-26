@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.620 2010/05/26 06:37:40 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.621 2010/05/26 14:10:39 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2181,7 +2181,8 @@ void handle_byte_ranges(mapping(string:mixed) file,
 	// Reply with a 416 Requested Range not satisfiable.
 	file->error = 416;
 	variant_heads["Content-Range"] = "*/"+file->len;
-	file->file = file->data = file->type = file->len = 0;
+	file->file = file->type = file->len = 0;
+	file->data = "";
       }
     }
   }
