@@ -1,4 +1,4 @@
-// $Id: ftp_test.pike,v 1.7 2009/03/06 10:23:47 grubba Exp $
+// $Id: ftp_test.pike,v 1.8 2010/05/26 09:36:14 grubba Exp $
 //
 // Tests of the ftp protocol module.
 //
@@ -18,6 +18,14 @@ int ipv6;
 string remote_host;
 
 string local_host = "127.0.0.1";
+
+array(array(string)) cmd_log = ({});
+
+string format_cmd_log()
+{
+  sprintf("Command channel log:\n"
+	  "%{%s%O\n%}", cmd_log);  
+}
 
 array get_host_port( string url )
 {
@@ -63,7 +71,9 @@ void timer()
   int t = time();
 
   if (t - timestamp > 30) {
+    werror(format_cmd_log());
     werror("TIMEOUT!\n");
+    werror(format_cmd_log());
     werror("Last sent: %O\n", last_sent);
     werror("got_code: %O\n", got_code);
     exit(TIMEOUT);
@@ -85,6 +95,7 @@ array(array(string|function(string, string:void))) got_code = ({
 
 void got_data(mixed ignored, string data)
 {
+  cmd_log += ({ ({ "<", data }) });
   inbuf += data;
 
   array(string) lines = inbuf/"\r\n";
@@ -145,6 +156,7 @@ void do_send(mixed ignored)
     exit(CONCLOSED);
   }
   last_sent = sendq[..bytes-1];
+  cmd_log += ({ ({ ">", last_sent }) });
   if (bytes == sizeof(sendq)) {
     con->set_write_callback(0);
     sendq = "";
@@ -157,7 +169,8 @@ void do_send(mixed ignored)
 // High-level protocol stuff.
 
 void bad_code(string code, string lines)
-{
+{  
+  werror(format_cmd_log());
   werror("Unexpected response code: %O\n", code);
   werror("Last sent:%O\n", last_sent);
   werror("Raw:\n%s\n", lines);
@@ -281,6 +294,7 @@ class do_passive_read
 	!sizeof(port_info) ||
 	(sizeof(segments = port_info/port_info[0..0]) != 5) ||
 	!(portno = (int)segments[3])) {
+      werror(format_cmd_log());
       werror("Failed to parse EPSV code: %O\n"
 	     "Parsed result: %s\n",
 	     lines, port_info);
@@ -288,6 +302,7 @@ class do_passive_read
     }
     fd = Stdio.File();
     if (!fd->connect(remote_host, portno)) {
+      werror(format_cmd_log());
       werror("Failed to connect to extended passive port: %s\n", port_info);
       exit(NOCONN);
     }
@@ -299,6 +314,7 @@ class do_passive_read
   {
     port_info = array_sscanf(lines, "227%*s%d,%d,%d,%d,%d,%d");
     if (sizeof(port_info) != 6) {
+      werror(format_cmd_log());
       werror("Failed to parse PASV code: %O\n"
 	     "Parsed result: { %{%O, %}}\n",
 	     lines, port_info);
@@ -307,6 +323,7 @@ class do_passive_read
     fd = Stdio.File();
     if (!fd->connect(((array(string))port_info[..3])*".",
 		     port_info[4]*256+port_info[5])) {
+      werror(format_cmd_log());
       werror("Failed to connect to passive port: %s\n",
 	     ((array(string))port_info)*",");
       exit(NOCONN);
@@ -383,6 +400,7 @@ void send_passive_list()
 void got_passive_list(string list)
 {
   if (list != active_list) {
+    werror(format_cmd_log());
     werror("Active and passive LIST differ:\n"
 	   "Active LIST:\n"
 	   "%s\n"
@@ -409,6 +427,7 @@ void send_active_retr_10k()
 void got_active_10k(string raw_10k)
 {
   if (raw_10k != ("\0"*10240)) {
+    werror(format_cmd_log());
     werror("Failed to retrieve (active) 10k.\n"
 	   "len: %d\n",
 	   sizeof(raw_10k));
@@ -425,6 +444,7 @@ void send_passive_retr_10k()
 void got_passive_10k(string raw_10k)
 {
   if (raw_10k != ("\0"*10240)) {
+    werror(format_cmd_log());
     werror("Failed to retrieve (passive) 10k.\n"
 	   "len: %d\n",
 	   sizeof(raw_10k));
