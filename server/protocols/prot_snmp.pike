@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2007, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.5 2010/05/19 15:03:17 noring Exp $
+ * $Id: prot_snmp.pike,v 2.6 2010/05/26 11:44:37 noring Exp $
  *
  * SNMP protocol support.
  *
@@ -96,7 +96,7 @@ class SystemMIB
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.5 $"/" ")[1],
+			   ("$Revision: 2.6 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
@@ -402,7 +402,7 @@ class RoxenGlobalMIB
 		       "Number of call outs longer than 1 second."),
 		     SNMP.Counter(lambda()
 				  { return roxenloader->co_num_runs_5s; },
-		       "cgNumRuns5s",
+		       "coNumRuns5s",
 		       "Number of call outs longer than 5 seconds."),
 		     SNMP.Counter(lambda()
 				  { return roxenloader->co_num_runs_15s; },
@@ -452,7 +452,7 @@ class DBManagerMIB
 			    }, "protocolVersion"),
 	       SNMP.Tick(lambda() {
 			   return db_status("Uptime")*100;
-			 }, "numQueries"),
+			 }, "uptime"),
 	       SNMP.Gauge(lambda() {
 			    return db_status("Threads_connected");
 			  }, "numThreads"),
