@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.138 2009/06/23 13:31:35 grubba Exp $
+ * $Id: ftp.pike,v 2.139 2010/05/26 12:13:00 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -3602,6 +3602,20 @@ class FTPSession
        * should include current values of all transfer parameters and
        * the status of connections.
        */
+      string local_addr = fd->query_address(1);
+      if (has_value(local_addr, ":")) {
+	// IPv6.
+	local_addr = "[" + replace(local_addr, " ", "]:");
+      } else {
+	local_addr = replace(local_addr, " ", ":");
+      }
+      string remote_addr = fd->query_address();
+      if (has_value(remote_addr, ":")) {
+	// IPv6.
+	remote_addr = "[" + replace(remote_addr, " ", "]:");
+      } else {
+	remote_addr = replace(remote_addr, " ", ":");
+      }
       send(211,
 	   sprintf("%s FTP server status:\n"
 		   "Version %s\n"
@@ -3610,10 +3624,10 @@ class FTPSession
 		   "Logged in %s\n"
 		   "TYPE: %s, FORM: %s; STRUcture: %s; transfer MODE: %s\n"
 		   "End of status",
-		   replace(fd->query_address(1), " ", ":"),
+		   local_addr,
 		   roxen.version(),
 		   port_obj->sorted_urls * "\nListening on ",
-		   replace(fd->query_address(), " ", ":"),
+		   remote_addr,
 		   user?sprintf("as %s", user):"anonymously",
 		   (["A":"ASCII", "E":"EBCDIC", "I":"IMAGE", "L":"LOCAL"])
 		   [mode],
