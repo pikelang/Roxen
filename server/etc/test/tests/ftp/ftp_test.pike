@@ -1,4 +1,4 @@
-// $Id: ftp_test.pike,v 1.8 2010/05/26 09:36:14 grubba Exp $
+// $Id: ftp_test.pike,v 1.9 2010/05/26 10:52:18 grubba Exp $
 //
 // Tests of the ftp protocol module.
 //
@@ -23,8 +23,8 @@ array(array(string)) cmd_log = ({});
 
 string format_cmd_log()
 {
-  sprintf("Command channel log:\n"
-	  "%{%s%O\n%}", cmd_log);  
+  return sprintf("Command channel log:\n"
+		 "%{%s %O\n%}", cmd_log);  
 }
 
 array get_host_port( string url )
