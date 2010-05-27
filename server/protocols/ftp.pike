@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.139 2010/05/26 12:13:00 grubba Exp $
+ * $Id: ftp.pike,v 2.140 2010/05/27 11:52:11 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -1790,7 +1790,18 @@ class FTPSession
 		    dataport_addr, dataport_port));
 #endif
 
-    if(catch(raw_connection->connect(dataport_addr, dataport_port))) {
+    if(catch{
+	if (!(raw_connection->connect(dataport_addr, dataport_port))) {
+	  DWRITE("FTP: connect(%O, %O) failed with: %s!\n"
+		 "FTP: local_addr: %O:%O (%O)\n",
+		 dataport_addr, dataport_port,
+		 strerror(raw_connection->errno()),
+		 local_addr, local_port-1, raw_connection->query_address(1));
+	  destruct(f);
+	  fun(0, 0, @args);
+	  return;
+	}
+      }) {
       DWRITE("FTP: Illegal internet address in connect in async comm.\n");
       destruct(f);
       fun(0, 0, @args);
@@ -1967,7 +1978,7 @@ class FTPSession
   private void connected_to_send(object fd, string ignored,
 				 mapping file, object session)
   {
-    DWRITE("FTP: connected_to_send(X, %O, %O, X)\n", ignored, file);
+    DWRITE("FTP: connected_to_send(%O, %O, %O, X)\n", fd, ignored, file);
 
     touch_me();
 
