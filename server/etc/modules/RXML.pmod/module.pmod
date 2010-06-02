@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.358 2009/04/23 20:18:14 mast Exp $
+// $Id: module.pmod,v 1.359 2010/06/02 14:36:49 grubba Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -4026,6 +4026,16 @@ class Frame
   Thread.Thread using_thread;
 #endif
 
+  //! Frame cleanup callback.
+  //!
+  //! Overload this function with code to cleanup
+  //! any state that shouldn't be kept for the next
+  //! use of the frame.
+  //!
+  //! This function is called after @[do_return()],
+  //! and also during exception processing.
+  static void cleanup() {}
+
   mixed _eval (Context ctx, TagSetParser|PCode evaler, Type type)
   // Note: It might be somewhat tricky to override this function,
   // since it handles unwinding and rewinding.
@@ -4615,6 +4625,9 @@ class Frame
 			   "%O != %O\n",				\
 			   ctx->misc, ctx->id->misc->defines);		\
 	  );								\
+	  if (mixed err = catch { cleanup(); }) {			\
+	    master()->handle_error(err);				\
+	  }								\
 	  if (in_args) {						\
 	    args = in_args;						\
 	    if (stringp (in_args))					\
