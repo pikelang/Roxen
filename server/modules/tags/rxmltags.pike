@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.631 2010/05/24 14:15:11 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.632 2010/06/02 14:38:18 grubba Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -6246,10 +6246,14 @@ class TagEmit {
       }
 
       do_iterate = 0;
-      res = 0;
       return 0;
     }
-
+ 
+    static void cleanup()
+    {
+      res = 0;
+      ::cleanup();
+    }
   }
 }
 
