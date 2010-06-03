@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.975 2010/05/11 13:14:47 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.976 2010/06/03 12:06:48 noring Exp $";
 
 //! @appears roxen
 //!
@@ -1152,22 +1152,23 @@ mixed background_run (int|float delay, function func, mixed... args)
     // stop_handler_threads is running; ignore more work.
     return 0;
 
-  function enqueue = lambda()
+  class enqueue(function func, mixed ... args)
   {
-    bg_queue->write (({func, args}));
-    if (!bg_process_running)
-      handle (bg_process_queue);
+    int __hash() { return hash_value(func); }
+    int `==(mixed gunc) { return func == gunc; }
+    string _sprintf() { return sprintf("background_run(%O)", func); }
+    mixed `()()
+    {
+      bg_queue->write (({func, args}));
+      if (!bg_process_running)
+	handle (bg_process_queue);
+    }
   };
 
-  // Be careful to zero enqueue below to avoid trampoline garbage.
-
   if (delay)
-    // A trick to zero enqueue without putting the call_out return
-    // value into a local variable.
-    return call_out (enqueue, (enqueue = 0, delay));
+    return call_out (enqueue(func, @args), delay);
   else {
-    enqueue();
-    enqueue = 0;
+    enqueue(func, @args)();
     return 0;
   }
 #else
@@ -1257,7 +1258,10 @@ class BackgroundProcess
     }
   }
 
-  string _sprintf() {return "BackgroundProcess()";}
+  string _sprintf()
+  {
+    return sprintf("BackgroundProcess(%O, %O)", period, func);
+  }
 }
 
 
