@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.699 2010/06/06 12:08:47 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.700 2010/06/06 12:10:25 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -712,8 +712,9 @@ void stop (void|int asynch)
     unregister_urls();
 
     roxen.handle (do_stop_all_modules, lock);
-    if (!asynch) stop_all_modules_mutex->lock (1);
   }
+
+  if (!asynch) stop_all_modules_mutex->lock (1);
 }
 
 string|array(string) type_from_filename( string file, int|void to,
