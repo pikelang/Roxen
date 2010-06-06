@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.697 2010/05/19 06:56:41 noring Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.698 2010/06/06 11:43:43 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -617,6 +617,10 @@ mapping modules = ([]);
 
 mapping (RoxenModule:string) otomod = ([]);
 //! A mapping from the module objects to module names
+
+int module_set_counter = 1;
+//! Incremented whenever the set of enabled modules changes, or if a
+//! module is reloaded.
 
 mapping(string:int) counters = ([]);
 
@@ -3983,6 +3987,7 @@ RoxenModule enable_module( string modname, RoxenModule|void me,
 
   module[ id ] = me;
   otomod[ me ] = modname+"#"+id;
+  module_set_counter++;
 
   // Below we may have recursive calls to this function. They may
   // occur already in setvars due to e.g. automatic dependencies in
@@ -4343,6 +4348,7 @@ int disable_module( string modname, void|RoxenModule new_instance )
 
   me = module[id];
   m_delete(module->copies, id);
+  module_set_counter++;
 
   if(!sizeof(module->copies))
     m_delete( modules, modname );
