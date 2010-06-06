@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.698 2010/06/06 11:43:43 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.699 2010/06/06 12:08:47 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -643,62 +643,36 @@ void unregister_urls()
   registered_urls = ({});
 }
 
-private int num_modules = 0;
-#ifdef THREADS
-private Thread.Condition modules_stopped = Thread.Condition();
-private Thread.Mutex modules_stopped_mutex = Thread.Mutex();
-#endif
 private void safe_stop_module (RoxenModule mod, string desc)
 {
   if (mixed err = catch (mod && mod->stop &&
 			 call_module_func_with_cbs (mod, "stop", 0)))
     report_error ("While stopping " + desc + ": " + describe_backtrace (err));
-#ifdef THREADS
-  Thread.MutexKey lock = modules_stopped_mutex->lock();
-  if (!--num_modules)
-    modules_stopped->signal();
-  lock = 0;
-#else
-  --num_modules;
-#endif
 }
 
-void stop (void|int asynch)
-//! Unregisters the urls and calls stop in all modules. Uses the
-//! handler threads to lessen the impact if a module hangs. Doesn't
-//! wait for all modules to finish if @[asynch] is nonzero.
+private Thread.Mutex stop_all_modules_mutex = Thread.Mutex();
+
+private void do_stop_all_modules (Thread.MutexKey stop_lock)
 {
-
-#ifdef SNMP_AGENT
-  if(query("snmp_process") && objectp(roxen->snmpagent)) {
-    roxen->snmpagent->vs_stop_trap(get_config_id());
-    roxen->snmpagent->del_virtserv(get_config_id());
-  }
-#endif
-
-  unregister_urls();
-
-  multiset allmods = mkmultiset (indices (otomod));
-  num_modules = 17;
+  mapping(RoxenModule:string) allmods = otomod + ([]);
 
   if (types_module) {
-    num_modules++;
-    roxen.handle (safe_stop_module, types_module, "type module");
-    allmods[types_module] = 0;
+    safe_stop_module (types_module, "type module");
+    m_delete (allmods, types_module);
   }
+
   if (dir_module) {
-    num_modules++;
-    roxen.handle (safe_stop_module, dir_module, "directory module");
-    allmods[dir_module] = 0;
+    safe_stop_module (dir_module, "directory module");
+    m_delete (allmods, dir_module);
   }
+
   for(int i=0; i<10; i++)
     if (Priority p = pri[i]) {
 #define STOP_MODULES(MODS, DESC)					\
       foreach(MODS, RoxenModule m)					\
         if (allmods[m]) {						\
-	  num_modules++;						\
-	  roxen.handle (safe_stop_module, m, DESC);			\
-	  allmods[m] = 0;						\
+	  safe_stop_module (m, DESC);					\
+	  m_delete (allmods, m);					\
 	}
       STOP_MODULES (p->url_modules, "url module");
       STOP_MODULES (p->logger_modules, "logging module");
@@ -708,25 +682,37 @@ void stop (void|int asynch)
       STOP_MODULES (p->first_modules, "first module");
       STOP_MODULES (indices (p->provider_modules), "provider module");
     }
+
   if (mixed err = catch {
     if (object m = log_function && function_object (log_function)) {
       destruct (m);
       allmods[m] = 0;
     }
   }) report_error ("While stopping the logger: " + describe_backtrace (err));
+
   STOP_MODULES(indices (allmods), "unclassified module");
 #undef STOP_MODULES
 
-  if (!asynch) {
-#ifdef THREADS
-    Thread.MutexKey lock = modules_stopped_mutex->lock();
-    num_modules -= 17;
-    if (num_modules) modules_stopped->wait (lock);
-    lock = 0;
-#else
-    if (num_modules != 17)
-      error ("num_modules shouldn't be nonzero here when running nonthreaded.\n");
+  destruct (stop_lock);
+}
+
+void stop (void|int asynch)
+//! Unregisters the urls and calls stop in all modules. Uses a handler
+//! thread to lessen the impact if a module hangs. Doesn't wait for
+//! all modules to finish if @[asynch] is nonzero.
+{
+  if (Thread.MutexKey lock = stop_all_modules_mutex->trylock()) {
+#ifdef SNMP_AGENT
+    if(query("snmp_process") && objectp(roxen->snmpagent)) {
+      roxen->snmpagent->vs_stop_trap(get_config_id());
+      roxen->snmpagent->del_virtserv(get_config_id());
+    }
 #endif
+
+    unregister_urls();
+
+    roxen.handle (do_stop_all_modules, lock);
+    if (!asynch) stop_all_modules_mutex->lock (1);
   }
 }
 
