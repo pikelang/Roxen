@@ -8,7 +8,7 @@
 # everywhere. Another user may be specified with -u, but it must be
 # the first argument then.
 #
-# $Id: mysql_client,v 1.4 2010/05/05 17:04:47 mast Exp $
+# $Id: mysql_client,v 1.5 2010/06/07 14:37:09 grubba Exp $
 
 dn="`dirname $0`"
 case "$dn" in 
@@ -41,9 +41,9 @@ else
 fi
 
 socket="`pwd`/../configurations/_mysql/socket"
-if [ ! -e "$socket" ]; then
+if [ ! -w "$socket" ]; then
   test_socket="`pwd`/../var/test_config/_mysql/socket"
-  test -e "$test_socket" && socket="$test_socket"
+  test -w "$test_socket" && socket="$test_socket"
 fi
 
 LD_LIBRARY_PATH="$MYSQL_BASE/lib"
