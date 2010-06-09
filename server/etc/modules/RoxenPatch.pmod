@@ -97,7 +97,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.22 2009/06/25 16:36:49 mathias Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.23 2010/06/09 16:31:35 jonasw Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -1607,7 +1607,7 @@ class Patcher
     string source_file = combine_path(getcwd(), file);
     write_mess("Extracting %s to %s ... ", source_file, target_dir);
     source_file = unixify_path(source_file);
-    array args = ({ tar_bin, "-xzf", source_file });
+    array args = ({ tar_bin, "--no-same-permissions", "-oxzf", source_file });
     Process.create_process p = Process.create_process(args, 
 						      ([ "cwd" : target_dir ]));
 
@@ -2209,7 +2209,8 @@ class Patcher
 				string path) 
   //! Extract a tar archive to @[path].
   {
-    array args = ({ tar_bin, "-xf", simplify_path(unixify_path(file_name)) });
+    array args = ({ tar_bin, "--no-same-permissions", "-oxf",
+		    simplify_path(unixify_path(file_name)) });
   
     Process.create_process p = Process.create_process(args,
 						      ([ "cwd" : path ]));
