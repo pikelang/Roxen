@@ -531,9 +531,14 @@ mixed parse(RequestID id)
       id->real_variables["file"] &&
       sizeof(id->real_variables["file"][0]))
   {
+    //  With Windows browsers the submitted filename may contain a full path
+    //  with drive letter etc. When the Patcher processes it later it will
+    //  convert slashes etc, but for our file to be accessible in that layer
+    //  we must perform the same cleanup in the naming of our temp file.
+    string patch_name =
+      basename(RoxenPatch.unixify_path(id->real_variables["fixedfilename"][0]));
     string temp_file = 
-      Stdio.append_path(plib->get_temp_dir(),
-			basename(id->real_variables["fixedfilename"][0]));
+      Stdio.append_path(plib->get_temp_dir(), patch_name);
 
     plib->write_file_to_disk(temp_file, id->real_variables["file"][0]);
     string patch_id = plib->import_file(temp_file);
