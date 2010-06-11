@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.291 2010/05/17 11:21:00 grubba Exp $
+// $Id: Roxen.pmod,v 1.292 2010/06/11 17:17:02 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2338,6 +2338,9 @@ string strftime(string fmt, int t,
       break;
     case 'p':	// a.m. or p.m.
       res += lt->hour<12 ? "a.m." : "p.m.";
+      break;
+    case 'P':	// am or pm
+      res += lt->hour<12 ? "am" : "pm";
       break;
     case 'r':	// Time in 12-hour clock format with %p
       res += strftime("%l:%M %p", t);
