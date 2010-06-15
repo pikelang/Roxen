@@ -15,7 +15,7 @@ constant module_type = MODULE_TAG;
 string module_name = "XML-DB Mirror";
 string module_doc = #"
 <p>Mirrors records from an XML file to a MySQL database. The module expects
-   the source file to be structured in this format:</p>
+   the source file to have this structure:</p>
 
 <pre>  &lt;?xml version=\"1.0\" encoding=\"...\"?>
   &lt;database name=\"...\"&gt;
@@ -93,7 +93,7 @@ void create(Configuration conf)
 	 ({ "/path/to/db.xml" }),
 	 "Source files",
 	 TYPE_STRING_LIST | VAR_INITIAL,
-	 "Path to XML files to be monitored and imported on change.");
+	 "Paths to XML files to be monitored and imported when changed.");
   
   defvar("poll_interval",
 	 120,
@@ -117,10 +117,20 @@ string status()
     "</tr>";
   foreach (sort(indices(import_info)), string path) {
     mapping info = import_info[path];
-    string mtime_str =
-      info->mtime ?
-      ("<date brief='yes' unix-time='" + info->mtime + "'/>") :
-      "n/a";
+    if (!info->mtime) {
+      //  None of the info is reliable since this module instance hasn't
+      //  successfully imported anything.
+      res +=
+	"<tr>"
+	"<td>" + Roxen.html_encode_string(path) + "&nbsp;&nbsp;</td>"
+	"<td>n/a</td>"
+	"<td align='right'>&nbsp;&nbsp;n/a</td>"
+	"<td align='right'>&nbsp;&nbsp;n/a</td>"
+	"<td align='right'>&nbsp;&nbsp;n/a</td>"
+	"</tr>";
+      continue;
+    }
+    string mtime_str ="<date brief='yes' unix-time='" + info->mtime + "'/>";
     res +=
       "<tr>"
       "<td>" + Roxen.html_encode_string(path) + "&nbsp;&nbsp;</td>"
@@ -262,7 +272,9 @@ void periodic_import()
   Thread.MutexKey key = import_mutex->lock();
 
   mixed err = catch {
-      //  Open file and read data timestamp is newer than last import
+      //  Open file and read data if timestamp is newer than last import
+      //
+      //  FIXME: Let recently changed files stabilize before importing?
       array(string) paths = query("source_files");
       foreach (paths, string path) {
 	Stdio.File f = Stdio.File();
@@ -389,7 +401,7 @@ int(0..1) import_xml(string path, string xml)
 	      "  KEY (id)"
 	      ") DEFAULT CHARACTER SET utf8");
     db->query("CREATE TABLE IF NOT EXISTS " + tbl_name + "_hash ("
-  	      "  md5   VARCHAR(32),"
+  	      "  md5 CHAR(32) BINARY,"
 	      "  id INT,"
 	      "  PRIMARY KEY (md5),"
 	      "  KEY (id)"
@@ -398,25 +410,25 @@ int(0..1) import_xml(string path, string xml)
     DBManager.is_module_table(this_object(), db_name, tbl_name + "_html");
     DBManager.is_module_table(this_object(), db_name, tbl_name + "_hash");
     
-    //  Find max record ID in existing database
+    //  Load existing MD5 hashes for quick detection of unchanged records.
+    //  Also find next suitable record ID.
     mapping(int:int) valid_ids = ([ ]);
     int next_id = 1;
-    array(mapping) countrec =
-      db->query("SELECT MAX(id) AS max_id FROM " + tbl_name + "_hash");
-    if (sizeof(countrec) == 1)
-      next_id = (int) countrec[0]->max_id + 1;
-
-    //  Load existing MD5 hashes for quick detection of unchanged records
-    mapping (string:int) md5hashes = ([ ]);
+    mapping(string:int) md5hashes = ([ ]);
     array(mapping) md5recs = db->query("SELECT md5, id "
 				       "  FROM " + tbl_name + "_hash");
-    foreach (md5recs, mapping rec)
-      md5hashes[rec->md5] = (int) rec->id;
+    foreach (md5recs, mapping rec) {
+      int rec_id = (int) rec->id;
+      md5hashes[rec->md5] = rec_id;
+      if (rec_id >= next_id)
+	next_id = rec_id + 1;
+    }
     md5recs = 0;
     
     //  Process records
     mapping info = ([ "count_total"     : 0,
-		      "count_unchanged" : 0 ]);
+		      "count_unchanged" : 0,
+		      "count_deleted"   : 0 ]);
     foreach (find_nodes(db_node, "dbrecord"), SimpleNode rec_node) {
       info->count_total++;
       
@@ -471,10 +483,7 @@ int(0..1) import_xml(string path, string xml)
     }
     
     //  Delete all old records whose IDs are no longer valid
-    array(mapping) all_ids =
-      db->query("SELECT id FROM " + tbl_name + "_hash");
-    array(int) delete_ids =
-      (array(int)) all_ids->id - indices(valid_ids);
+    array(int) delete_ids = values(md5hashes) - indices(valid_ids);
     info->count_deleted = sizeof(delete_ids);
     if (info->count_deleted) {
       sort(delete_ids);
