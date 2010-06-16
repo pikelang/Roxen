@@ -12,7 +12,7 @@ import Parser.XML.Tree;
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
-string module_name = "XML-DB Mirror";
+string module_name = "Tags: XML-DB Mirror";
 string module_doc = #"
 <p>Mirrors records from an XML file to a MySQL database. The module expects
    the source file to have this structure:</p>
