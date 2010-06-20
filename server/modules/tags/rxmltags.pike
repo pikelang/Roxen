@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.633 2010/06/11 17:18:05 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.634 2010/06/20 15:49:26 jonasw Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -5320,8 +5320,8 @@ class Tracer
       string name = Roxen.get_modfullname (Roxen.get_owning_module (thing));
       if (name)
 	name = "module " + name;
-      else if (this_program conf = Roxen.get_owning_config (thing))
-	name = "configuration " + id->conf->query_name();
+      else if (Configuration conf = Roxen.get_owning_config (thing))
+	name = "configuration " + conf->query_name();
       else
 	name = sprintf ("object %O", thing);
       type += " in " + name;
