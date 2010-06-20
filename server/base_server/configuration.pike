@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.700 2010/06/06 12:10:25 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.701 2010/06/20 15:48:27 jonasw Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2640,8 +2640,10 @@ array(int)|Stat stat_file(string file, RequestID id)
 
   file=replace(file, "//", "/"); // "//" is really "/" here...
 
-  if (has_prefix(file, internal_location))
+  if (has_prefix(file, internal_location)) {
+    TRACE_LEAVE("");
     return 0;
+  }
   
 #ifdef URL_MODULES
   // Map URL-modules
