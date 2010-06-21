@@ -649,6 +649,6 @@ constant tagdoc = ([
      and <tt>?</tt> wildcards.</p>
 </attr>
 "
-  });
+  })
 ]);
 #endif
