@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.292 2010/06/11 17:17:02 jonasw Exp $
+// $Id: Roxen.pmod,v 1.293 2010/06/22 09:52:06 agehall Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2444,27 +2444,30 @@ string get_modfullname (RoxenModule module)
   else return 0;
 }
 
-protected constant xml_invalids = ((string)({
-   0,  1,  2,  3,  4,  5,  6,  7,
-   8,         11, 12,     14, 15,
-  16, 17, 18, 19, 20, 21, 22, 23,
-  24, 25, 26, 27, 28, 29, 30, 31,
-      127
-}))/"";
-
-protected constant xml_printables = ((string)({
-  0x2400, 0x2401, 0x2402, 0x2403, 0x2404, 0x2405, 0x2406, 0x2407,
-  0x2408,                 0x240b, 0x240c,         0x240e, 0x240f,
-  0x2410, 0x2411, 0x2412, 0x2413, 0x2414, 0x2415, 0x2416, 0x2417,
-  0x2418, 0x2419, 0x241a, 0x241b, 0x241c, 0x241d, 0x241e, 0x241f,
-          0x2421,
-}))/"";
+static constant xml_invalid_mappings = ([
+  "\0":"\22000",  "\1":"\22001",
+  "\2":"\22002",  "\3":"\22003",
+  "\4":"\22004",  "\5":"\22005",
+  "\6":"\22006",  "\7":"\22007",
+  "\b":"\22010",  "\13":"\22013",
+  "\14":"\22014", "\16":"\22016",
+  "\17":"\22017", "\20":"\22020",
+  "\21":"\22021", "\22":"\22022",
+  "\23":"\22023", "\24":"\22024",
+  "\25":"\22025", "\26":"\22026",
+  "\27":"\22027", "\30":"\22030",
+  "\31":"\22031", "\32":"\22032",
+  "\33":"\22033", "\34":"\22034",
+  "\35":"\22035", "\36":"\22036",
+  "\37":"\22037", "\177":"\22041",
+  "\xFFFE":"", "\xFFFF":"" // Invalid unicode chars in XML!
+]);
 
 string encode_xml_invalids(string s)
 //! Remap control characters not valid in XML-documents to their
 //! corresponding printable code points (@tt{U2400 - U2421@}).
 {
-  return replace(s, xml_invalids, xml_printables);
+  return replace(s, xml_invalid_mappings);
 }
 
 //! Encode a single segment of @[roxen_encode()].
