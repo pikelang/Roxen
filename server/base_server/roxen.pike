@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1067 2010/06/03 12:07:25 noring Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1068 2010/06/22 12:11:52 noring Exp $";
 
 //! @appears roxen
 //!
@@ -6930,25 +6930,23 @@ protected string cached_hostname = gethostname();
 
 class LogFile(string fname, string|void compressor_program)
 {
-  Stdio.File fd;
-  int opened;
+  private Thread.Mutex lock = Thread.Mutex();
+  private Stdio.File fd;
+  private int opened;
 
   // FIXME: compress_logs is limited to scanning files with filename
   // substitutions within a fixed directory (e.g.
   // "$LOGDIR/test/Log.%y-%m-%d", not "$LOGDIR/test/%y/Log.%m-%d").
-  Process.Process compressor_process;
-  int last_compressor_scan_time;
-  protected void compress_logs(string fname, string active_log)
+  private Process.Process compressor_process;
+  private int last_compressor_scan_time;
+  private void compress_logs(string fname, string active_log)
   {
     if(!compressor_program || !sizeof(compressor_program))
-      // No compressor program specified...
-      return;
+      return; // No compressor program specified...
     if(compressor_process && !compressor_process->status())
-      // The compressor is already running...
-      return;
+      return; // The compressor is already running...
     if(time(1) - last_compressor_scan_time < 300)
-      // Scan for compressable files at most once every 5 minutes...
-      return;
+      return; // Scan for compressable files at most once every 5 minutes...
     last_compressor_scan_time = time(1);
     fname = roxen_path(fname);
     active_log = roxen_path(active_log);
@@ -6956,8 +6954,7 @@ class LogFile(string fname, string|void compressor_program)
     foreach(sort(get_dir(dir) || ({})), string filename_candidate)
     {
       if(filename_candidate == basename(active_log))
-       // Don't try to compress the active log just yet...
-       continue;
+       continue; // Don't try to compress the active log just yet...
       if(Regexp("^"+replace(basename(fname),
                            ({ "%y", "%m", "%d", "%h", "%H" }),
                            ({ "[0-9][0-9][0-9][0-9]", "[0-9][0-9]",
@@ -6967,8 +6964,7 @@ class LogFile(string fname, string|void compressor_program)
        string compress_file = combine_path(dir, filename_candidate);
        Stdio.Stat stat = file_stat(compress_file);
        if(!stat || time(1) < stat->mtime + 1200)
-         // Wait at least 20 minutes before compressing log file...
-         continue;
+         continue; // Wait at least 20 minutes before compressing log file...
        werror("Compressing log file %O\n", compress_file);
        compressor_process = Process.create_process(({ compressor_program,
                                                       compress_file }));
@@ -6977,15 +6973,20 @@ class LogFile(string fname, string|void compressor_program)
     }
   }
 
-  void do_open()
+  private void do_open_co() { handle(do_open); }
+  private void do_open(void|object mutex_key)
   {
+    if (!this_object()) return; // We've been destructed, return
+    if (!mutex_key) mutex_key = lock->lock();
+    if (!this_object()) return; // We've been destructed, return
+
     mixed parent;
     if (catch { parent = function_object(object_program(this_object())); } ||
 	!parent) {
       // Our parent (aka the configuration) has been destructed.
       // Time to die.
-      remove_call_out(do_open);
-      remove_call_out(do_close);
+      remove_call_out(do_open_co);
+      remove_call_out(do_close_co);
       destruct();
       return;
     }
@@ -7006,8 +7007,8 @@ class LogFile(string fname, string|void compressor_program)
     fd = open( ff, "wac" );
     if(!fd) 
     {
-      remove_call_out( do_open );
-      call_out( do_open, 120 ); 
+      remove_call_out(do_open_co);
+      call_out(do_open_co, 120); 
       report_error(LOC_M(37, "Failed to open logfile")+" "+fname+" "
 #if constant(strerror)
                    "(" + strerror(errno()) + ")"
@@ -7016,39 +7017,56 @@ class LogFile(string fname, string|void compressor_program)
       return;
     }
     opened = 1;
-    remove_call_out( do_open );
-    call_out( do_open, 900 ); 
+    remove_call_out(do_open_co);
+    call_out(do_open_co, 900); 
+    remove_call_out(do_close_co);
+    call_out(do_close_co, 10.0);
   }
-  
-  void do_close()
+
+  private void do_close_co() { handle(do_close); }
+  private void do_close()
   {
+    if (!this_object()) return; // We've been destructed, return
+    object mutex_key = lock->lock();
+    if (!this_object()) return; // We've been destructed, return
+
     destruct( fd );
     opened = 0;
   }
 
-  array(string) write_buf = ({});
-  protected void do_the_write( )
+  private array(string) write_buf = ({});
+  private void do_the_write_co() { handle(do_the_write); }
+  private void do_the_write()
   {
-    if( !opened ) do_open();
-    if( !opened ) return 0;
-    if (mixed err = catch (fd->write( write_buf ))) {
+    if (!this_object()) return; // We've been destructed, return
+    object mutex_key = lock->lock();
+    if (!this_object()) return; // We've been destructed, return
+
+    if (!opened) do_open(mutex_key);
+    if (!opened) return;
+    mixed err = catch (fd->write(write_buf));
+    if (err)
       catch {
 	foreach (write_buf, string str)
 	  if (String.width (str) > 8)
 	    werror ("Got wide string in log output: %O\n", str);
       };
-      throw (err);
-    }
     write_buf = ({});
-    remove_call_out( do_close );
-    call_out( do_close, 10.0 );
+    remove_call_out(do_close_co);
+    call_out(do_close_co, 10.0);
+    if (err)
+      throw (err);
   }
 
   int write( string what )
   {
-    if( !sizeof( write_buf ) )
-      call_out( do_the_write, 1 );
-    write_buf += ({what});
+    if (!this_object()) return 0; // We've been destructed, return
+    object mutex_key = lock->lock();
+    if (!this_object()) return 0; // We've been destructed, return
+
+    if (!sizeof(write_buf))
+      call_out(do_the_write_co, 1);
+    write_buf += ({ what });
     return strlen(what); 
   }
 }
