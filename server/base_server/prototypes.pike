@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.270 2010/05/25 09:04:54 marty Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.271 2010/06/22 11:48:48 marty Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1749,7 +1749,7 @@ class RequestID
 
   SimpleNode get_xml_data()
   {
-    if (!sizeof(data)) return 0;
+    if (!data || !sizeof(data)) return 0;
     if (xml_data) return xml_data;
     // FIXME: Probably ought to check that the content-type for
     //        the request is text/xml.
