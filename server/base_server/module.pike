@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module.pike,v 1.243 2010/04/27 15:33:49 mast Exp $
+// $Id: module.pike,v 1.244 2010/06/28 06:57:57 marty Exp $
 
 #include <module_constants.h>
 #include <module.h>
@@ -20,6 +20,14 @@ constant is_module = 1;
 // constant module_doc     = "Undocumented";
 constant module_unique  = 1;
 
+//! Specifies that the module is opaque when it comes WebDAV
+//! requests. Normally, recursive WebDAV requests will iterate through
+//! all matching location modules even after a successful result has
+//! been returned by some module. With this flag set, iteration will
+//! stop after the call to this module. Useful if the module wants to
+//! handle all requests for the specified location itself with no
+//! fallback to other modules.
+constant webdav_opaque = 0;
 
 private Configuration _my_configuration;
 private string _module_local_identifier;

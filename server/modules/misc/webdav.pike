@@ -1,6 +1,6 @@
 // Protocol support for RFC 2518
 //
-// $Id: webdav.pike,v 1.38 2008/08/15 12:33:55 mast Exp $
+// $Id: webdav.pike,v 1.39 2010/06/28 06:57:48 marty Exp $
 //
 // 2003-09-17 Henrik Grubbström
 
@@ -9,7 +9,7 @@ inherit "module";
 #include <module.h>
 #include <request_trace.h>
 
-constant cvs_version = "$Id: webdav.pike,v 1.38 2008/08/15 12:33:55 mast Exp $";
+constant cvs_version = "$Id: webdav.pike,v 1.39 2010/06/28 06:57:48 marty Exp $";
 constant thread_safe = 1;
 constant module_name = "WebDAV: Protocol support";
 constant module_type = MODULE_FIRST;
@@ -658,6 +658,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
   int start_ms_size = id->multi_status_size();
   string href = id->not_query;
   string href_prefix = combine_path(href, "./");
+  RoxenModule opaque_module;
   foreach(conf->location_modules(), [string loc, function fun]) {
     int d = depth;
     string path;	// Module location relative path.
@@ -691,6 +692,7 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     }
 #endif
     RoxenModule c = function_object(fun);
+    if (c->webdav_opaque) opaque_module = c;
     TRACE_ENTER("Performing the work...", c);
     ASSERT_IF_DEBUG (has_prefix (loc, "/"));
     mapping(string:mixed) ret = recur_func(path, loc, d, c, id, @extras);
@@ -703,8 +705,14 @@ mapping(string:mixed)|int(-1..0) handle_webdav(RequestID id)
     }
     TRACE_LEAVE("Done.");
     TRACE_LEAVE("Done.");
+    if (opaque_module) break;
   }
-  TRACE_LEAVE("DAV request done.");
+  if (opaque_module)
+    TRACE_LEAVE(sprintf("DAV request done (returned early after %O).",
+			opaque_module));
+  else
+    TRACE_LEAVE("DAV request done.");
+
   recur_func = 0;		// Avoid garbage.
   if (id->multi_status_size() == start_ms_size) {
     return empty_result || Roxen.http_status(404);

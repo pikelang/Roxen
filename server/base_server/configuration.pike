@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.701 2010/06/20 15:48:27 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.702 2010/06/28 06:57:57 marty Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1803,6 +1803,7 @@ DAVLock|LockFlag check_locks(string path, int(0..1) recursive, RequestID id)
 	lock_info &= ~1;
     if (lock_info > state) state = lock_info;
     if (state == LOCK_EXCL_AT) return LOCK_EXCL_AT; // Doesn't get any worse.
+    if (function_object(func)->webdav_opaque) break;
   }
   return state;
 }
@@ -1836,6 +1837,7 @@ mapping(string:mixed) unlock_file(string path, DAVLock lock, RequestID id)
       // FIXME: Semantics for partial unlocking?
       if (ret) return ret;
     }
+    if (function_object(func)->webdav_opaque) break;
   }
   active_locks[lock] = 0;
   // destruct(lock);
@@ -1973,6 +1975,7 @@ mapping(string:mixed)|DAVLock lock_file(string path,
       // destruct(lock);
       return lock_error;
     }
+    if (function_object(func)->webdav_opaque) break;
   }
 
   if (expiry_delta) {
