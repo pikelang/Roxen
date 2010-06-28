@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module_support.pike,v 1.143 2010/03/04 12:37:55 grubba Exp $
+// $Id: module_support.pike,v 1.144 2010/06/28 16:06:14 mast Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -510,6 +510,8 @@ class ModuleInfo( string sname, string filename )
       RoxenModule mod = instance( 0, 1 );
       if(!mod)
         throw(sprintf("Failed to instance %s (%s)\n", sname,what));
+      if (mod->module_is_disabled)
+	return 0;
       if(!mod->register_module)
         throw(sprintf("The module %s (%s) has no register_module function\n",
                       sname, what ));
