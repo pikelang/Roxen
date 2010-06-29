@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.271 2010/06/22 11:48:48 marty Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.272 2010/06/29 13:29:53 grubba Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -1706,10 +1706,28 @@ class RequestID
 
   string extra_extension;
 
-  string data;
+  string data = "";
   //! The raw request body, containing non-decoded post variables et cetera.
+  //!
+  //! @note
+  //!   In versions of Roxen prior to 5.0.505 this variable could sometimes
+  //!   contain @expr{0@}, which should be regarded as equvivalent to
+  //!   @expr{""@}.
+  //!
+  //! @note
+  //!   If the amount of request data is unknown (ie @expr{misc->len@}
+  //!   is @expr{0x7fffffff@}), then additional data can be retrieved
+  //!   from @[connection()]. This is typically the case with eg STOR
+  //!   (aka PUT) and the ftp protocol.
 
-  string leftovers;
+  string leftovers = "";
+  //! Raw data belonging to the next request.
+  //!
+  //! @note
+  //!   In versions of Roxen prior to 5.0.505 this variable could sometimes
+  //!   contain @expr{0@}, which should be regarded as equvivalent to
+  //!   @expr{""@}.
+
   string rawauth, realauth; // Used by many modules, so let's keep this.
   string since;
 

@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.140 2010/05/27 11:52:11 grubba Exp $
+ * $Id: ftp.pike,v 2.141 2010/06/29 13:29:53 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -3444,7 +3444,7 @@ class FTPSession
 
     RequestID session = RequestID2(master_session);
 
-    session->data = 0;
+    session->data = "";
     session->misc->len = 0;
     session->method = "DELETE";
 
@@ -3465,7 +3465,7 @@ class FTPSession
 
     RequestID session = RequestID2(master_session);
 
-    session->data = 0;
+    session->data = "";
     session->misc->len = 0;
     session->method = "DELETE";
 
@@ -3510,7 +3510,7 @@ class FTPSession
     RequestID session = RequestID2(master_session);
 
     session->method = "MKDIR";
-    session->data = 0;
+    session->data = "";
     session->misc->len = 0;
 
     if (open_file(args, session, "MKD")) {

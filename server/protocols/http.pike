@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.621 2010/05/26 14:10:39 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.622 2010/06/29 13:29:53 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -147,6 +147,7 @@ mapping file;
 
 string rest_query="";
 string raw="";
+int raw_bytes = 0;
 string extra_extension = ""; // special hack for the language module
 
 protected mapping connection_stats = ([]);
@@ -737,8 +738,8 @@ private int got_chunk_fragment(string fragment)
 	// The 16384 is some reasonable extra padding to
 	// avoid having to realloc.
 	data_buffer =
-	  String.Buffer(sizeof(data||"") + misc->chunk_len + 16384);
-	if (data && sizeof(data)) data_buffer->add(data);
+	  String.Buffer(sizeof(data) + misc->chunk_len + 16384);
+	if (sizeof(data)) data_buffer->add(data);
 	data = "";
       }
       data_buffer->add(buf[chunk_data_offset..]);
@@ -747,7 +748,7 @@ private int got_chunk_fragment(string fragment)
     } else if (misc->chunk_len) {
       string str =
 	buf[chunk_data_offset..chunk_data_offset + misc->chunk_len - 1];
-      if (data && sizeof(data) && !data_buffer) {
+      if (sizeof(data) && !data_buffer) {
 	// The 16384 is some reasonable extra padding to
 	// avoid having to realloc.
 	data_buffer = String.Buffer(sizeof(data) + misc->chunk_len + 16384);
@@ -813,7 +814,7 @@ private int got_chunk_fragment(string fragment)
 #endif
       leftovers = res[0];
       request_headers |= res[2];
-      // Note: None of the headers special-cased in parse_got() below is
+      // Note: None of the headers special-cased in parse_got() below are
       //       allowed as entity headers, so there's no need for extra
       //       parsing here (as is done for the main headers there).
     }
@@ -950,7 +951,6 @@ private int parse_got( string new_data )
     REQUEST_WERR(sprintf("HTTP: data (length %d) %O", strlen(data),data));
     raw_url    = f;
     time       = predef::time(1);
-    // if(!data) data = "";
     //REQUEST_WERR(sprintf("HTTP: raw_url %O", raw_url));
 
     if(!remoteaddr)
@@ -984,7 +984,8 @@ private int parse_got( string new_data )
 	 if (has_value(misc->transfer_encoding, "chunked")) {
 	   misc->chunked = 1;
 	   misc->chunk_buf = "";
-	   new_data = data || ""; // For got_chunk_fragment() below.
+	   new_data = data; // For got_chunk_fragment() below.
+	   data = "";
 	 }
 	 break;
        case "authorization":  rawauth = contents;              break;
@@ -1103,7 +1104,6 @@ private int parse_got( string new_data )
     }
   } else if(misc->len)
   {
-    if(!data) data="";
     int l = misc->len;
     wanted_data=l;
     have_data=strlen(data);
@@ -1120,9 +1120,9 @@ private int parse_got( string new_data )
     data = data[..l+1];
   } else {
     leftovers = data;
-    data = 0;
+    data = "";
   }
-  if (data && sizeof(data)) {
+  if (sizeof(data)) {
     switch(method) {
     case "POST":
       // FIXME: Get this POST variable munching out of the backend thread!
@@ -2216,7 +2216,7 @@ void low_send_result(string headers, string data, int|void len,
     return;
   }
 
-  if (data && String.width (data) != 8) {
+  if (String.width (data) != 8) {
     int from, to;
     foreach (data; from; int chr)
       if (chr > 255)
@@ -2239,14 +2239,14 @@ void low_send_result(string headers, string data, int|void len,
      ((sizeof(headers) + len) < (HTTP_BLOCKING_SIZE_THRESHOLD))) {
     MY_TRACE_ENTER(sprintf("Sending blocking %d bytes of headers and "
 			   "%d bytes of string data",
-			   sizeof(headers), data && sizeof(data)));
+			   sizeof(headers), sizeof(data)));
     TIMER_START(blocking_write);
-    if (data && sizeof(data) != len) {
+    if (sizeof(data) != len) {
       data = data[..len-1];
     }
     if (file) {
       data = file->read(len);
-    } else if (!data) data = "";
+    }
 #ifdef CONNECTION_DEBUG
     werror("HTTP[%s]: Blocking response (length %d) ======================\n"
 	   "%O\n", DEBUG_GET_FD, sizeof (headers) + sizeof (data),
@@ -2261,7 +2261,7 @@ void low_send_result(string headers, string data, int|void len,
   } else {
     MY_TRACE_ENTER(sprintf("Sending async %d bytes of headers and "
 			   "%d bytes of string data",
-			   sizeof(headers), data && sizeof(data)));
+			   sizeof(headers), sizeof(data)));
 #ifndef CONNECTION_DEBUG
     REQUEST_WERR(sprintf("HTTP: Send headers %O", headers));
 #endif
@@ -2271,7 +2271,7 @@ void low_send_result(string headers, string data, int|void len,
 	   1
 #endif
 	  );
-    if (data && sizeof(data))
+    if (sizeof(data))
       send(data, len);
     if (file)
       send(file, len);
@@ -2417,9 +2417,6 @@ void send_result(mapping|void result)
 #endif
 
   if( prot == "HTTP/0.9" )  NO_PROTO_CACHE();
-
-  if(!leftovers) 
-    leftovers = data||"";
 
   if(!mappingp(file))
   {
@@ -2907,6 +2904,9 @@ void got_data(mixed fooid, string s, void|int chained)
   REQUEST_WERR(sprintf("HTTP: Got %O", s));
 #endif
 
+  // Keep track of how much data we've received.
+  raw_bytes += sizeof(s);
+
   if(wanted_data)
   {
     // NOTE: No need to make a data buffer if it's a small request.
@@ -2951,6 +2951,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	my_fd->set_nonblocking(got_data, 0, close_cb);
       return;
     }
+    s = "";
   }
 
   if (mixed err = catch {
@@ -3078,7 +3079,7 @@ void got_data(mixed fooid, string s, void|int chained)
     // some things in the id object are still not initialized.
     foreach (conf->get_providers ("http_request_init"), RoxenModule mod)
       if (mapping res = mod->http_request_init (this)) {
-	conf->received += sizeof (raw);
+	conf->received += raw_bytes - sizeof(leftovers);
 	conf->requests++;
 	// RequestID.make_response_headers assumes the supports multiset exists.
 	if (!supports) supports = (<>);
@@ -3117,7 +3118,7 @@ void got_data(mixed fooid, string s, void|int chained)
     }
 
     conf->connection_add( this_object(), connection_stats );
-    conf->received += strlen(raw);
+    conf->received += raw_bytes - sizeof(leftovers);
     conf->requests++;
 
     CHECK_FD_SAFE_USE;
@@ -3139,9 +3140,6 @@ void got_data(mixed fooid, string s, void|int chained)
       else 
       {
 	int can_cache = 1;
-	if(!leftovers) 
-	  leftovers = data||"";
-	
 	string d = cv[ 0 ];
 #ifdef DEBUG
 	if (!stringp (d))
@@ -3491,6 +3489,7 @@ object clone_me()
 // realfile virtfile   // Should not be copied.
   c->rest_query = rest_query;
   c->raw = raw;
+  c->raw_bytes = raw_bytes;
   c->query = query;
   c->not_query = not_query;
   c->data = data;
