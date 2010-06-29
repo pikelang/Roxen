@@ -7,7 +7,7 @@
 inherit "module";
 inherit "socket";
 
-constant cvs_version= "$Id: filesystem.pike,v 1.160 2009/05/07 14:15:54 mast Exp $";
+constant cvs_version= "$Id: filesystem.pike,v 1.161 2010/06/29 13:30:31 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -1133,12 +1133,16 @@ mixed find_file( string f, RequestID id )
     string msg = safe_chmod(f, 0666 & ~(id->misc->umask || 022));
     privs = 0;
 
-    putting[id->my_fd] = id->misc->len;
-    if(id->data && strlen(id->data))
+    Stdio.File my_fd = id->connection();
+
+    putting[my_fd] = id->misc->len;
+    if(strlen(id->data))
     {
-      // FIXME: What if sizeof(id->data) > id->misc->len ?
+      // Note: What if sizeof(id->data) > id->misc->len ?
+      //   This is not a problem, since that has been handled
+      //   by the protocol module.
       if (id->misc->len > 0) {
-	putting[id->my_fd] -= strlen(id->data);
+	putting[my_fd] -= strlen(id->data);
       }
       int bytes = to->write( id->data );
       if (id->misc->quota_obj) {
@@ -1150,7 +1154,7 @@ mixed find_file( string f, RequestID id )
 	}
       }
     }
-    if(!putting[id->my_fd]) {
+    if(!putting[my_fd]) {
       TRACE_LEAVE("PUT: Just a string");
       TRACE_LEAVE("Put: Success");
       if (size < 0) {
@@ -1161,11 +1165,9 @@ mixed find_file( string f, RequestID id )
       }
     }
 
-    if(id->clientprot == "HTTP/1.1") {
-      id->my_fd->write("HTTP/1.1 100 Continue\r\n");
-    }
-    id->my_fd->set_id( ({ to, id->my_fd, id, URI, size }) );
-    id->my_fd->set_nonblocking(got_put_data, 0, done_with_put);
+    id->ready_to_receive();
+    my_fd->set_id( ({ to, my_fd, id, URI, size }) );
+    my_fd->set_nonblocking(got_put_data, 0, done_with_put);
     TRACE_LEAVE("PUT: Pipe in progress");
     TRACE_LEAVE("PUT: Success so far");
     return Roxen.http_pipe_in_progress();
