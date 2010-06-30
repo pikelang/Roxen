@@ -12,14 +12,14 @@ constant required_charset = "iso-8859-2";
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: polish.pike,v 1.7 2000/11/27 14:09:15 per Exp $";
+constant cvs_version = "$Id: polish.pike,v 1.8 2010/06/30 13:52:54 grubba Exp $";
 constant _id = ({ "pl", "polish", "" });
 constant _aliases = ({ "pl", "po", "pol", "polish" });
 
 constant months = ({
-  "Styczeñ", "Luty", "Marzec", "Kwiecieñ", "Maj",
-  "Czerwiec", "Lipiec", "Sierpieñ", "Wrzesieñ", "Pa¼dziernik",
-  "Listopad", "Grudzieñ" });
+  "Stycznia", "Lutego", "Marzca", "Kwietnia", "Maja",
+  "Czerwca", "Lipca", "Sierpnia", "Wrze¶nia", "Pa¼dziernika",
+  "Listopada", "Grudnia" });
 
 constant days = ({
   "Niedziela","Poniedzia³ek","Wtorek","¦roda",
