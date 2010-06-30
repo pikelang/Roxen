@@ -12,7 +12,7 @@ constant required_charset = "iso-8859-2";
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: polish.pike,v 1.9 2010/06/30 14:40:04 grubba Exp $";
+constant cvs_version = "$Id: polish.pike,v 1.10 2010/06/30 15:22:35 grubba Exp $";
 constant _id = ({ "pl", "polish", "" });
 constant _aliases = ({ "pl", "po", "pol", "polish" });
 
@@ -72,10 +72,10 @@ string date(int timestamp, mapping|void m)
     return ctime(timestamp)[11..15]+", "+
 	   ordered(t1["mday"]) + " " +
            month(t1["mon"]+1, 1) + " " +
-           (t2["year"]+1900);
+           (t1["year"]+1900);
   if(m["date"])
     return (ordered(t1["mday"]) + " " + month(t1["mon"]+1, 1) + " " +
-       (t2["year"]+1900));
+       (t1["year"]+1900));
   if(m["time"])
     return ctime(timestamp)[11..15];
 }
