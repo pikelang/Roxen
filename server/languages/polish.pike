@@ -12,18 +12,28 @@ constant required_charset = "iso-8859-2";
 
 inherit "abstract.pike";
 
-constant cvs_version = "$Id: polish.pike,v 1.8 2010/06/30 13:52:54 grubba Exp $";
+constant cvs_version = "$Id: polish.pike,v 1.9 2010/06/30 14:40:04 grubba Exp $";
 constant _id = ({ "pl", "polish", "" });
 constant _aliases = ({ "pl", "po", "pol", "polish" });
 
 constant months = ({
-  "Stycznia", "Lutego", "Marzca", "Kwietnia", "Maja",
+  "Styczeñ", "Luty", "Marzec", "Kwiecieñ", "Maj",
+  "Czerwiec", "Lipiec", "Sierpieñ", "Wrzesien", "Pa¼dziernik",
+  "Listopad", "Grudzieñ" });
+
+constant dated_months = ({
+  "Stycznia", "Lutego", "Marca", "Kwietnia", "Maja",
   "Czerwca", "Lipca", "Sierpnia", "Wrze¶nia", "Pa¼dziernika",
   "Listopada", "Grudnia" });
 
 constant days = ({
   "Niedziela","Poniedzia³ek","Wtorek","¦roda",
   "Czwartek","Pi±tek","Sobota" });
+
+string month(int(1..12) num, int|void dated)
+{
+  return (dated?dated_months:months)[ num - 1 ];
+}
 
 string ordered(int i)
 {
@@ -56,15 +66,15 @@ string date(int timestamp, mapping|void m)
 
     if(t1["year"] != t2["year"])
       return (month(t1["mon"]+1) + " " + (t1["year"]+1900));
-    return (ordered(t1["mday"]) + " " + month(t1["mon"]+1));
+    return (ordered(t1["mday"]) + " " + month(t1["mon"]+1, 1));
   }
   if(m["full"])
     return ctime(timestamp)[11..15]+", "+
 	   ordered(t1["mday"]) + " " +
-           month(t1["mon"]+1) + " " +
+           month(t1["mon"]+1, 1) + " " +
            (t2["year"]+1900);
   if(m["date"])
-    return (ordered(t1["mday"]) + " " + month(t1["mon"]+1) + " " +
+    return (ordered(t1["mday"]) + " " + month(t1["mon"]+1, 1) + " " +
        (t2["year"]+1900));
   if(m["time"])
     return ctime(timestamp)[11..15];
