@@ -12,9 +12,14 @@
 inherit "abstract.pike";
 inherit Locale.Language.pol : pol;
 
-constant cvs_version = "$Id: polish.pike,v 1.9 2010/06/30 13:24:27 grubba Exp $";
+constant cvs_version = "$Id: polish.pike,v 1.10 2010/06/30 13:26:50 grubba Exp $";
 constant _id = ({ pol::iso_639_1, pol::iso_639_2, pol::english_name, pol::name });
 constant _aliases = pol::aliases;
+
+array aliases()
+{
+  return _aliases;
+}
 
 string date(int timestamp, mapping|void m)
 {
