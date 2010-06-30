@@ -1267,6 +1267,48 @@ a&auml; &amp; b  &gt;
   <equal>({"x", "y"})</equal>
 </test>
 
+<test>
+  <rxml type="any">
+    <define container="test">
+      <contents value-of="a/b[c[1]/@* = '2']/d" result-set=""/>
+    </define>
+    <test>
+      <a>
+	<b>
+	  <c type="1" foo="2"/>
+	  <d>x</d>
+	</b>
+	<b>
+	  <c type="2" foo="17"/>
+	  <d>y</d>
+	</b>
+      </a>
+    </test>
+  </rxml>
+  <equal>({"x", "y"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <define container="test">
+      <contents value-of="a/b[c = '2']/d" result-set=""/>
+    </define>
+    <test>
+      <a>
+	<b>
+	  <c type="1" foo="2">1</c>
+	  <d>x</d>
+	</b>
+	<b>
+	  <c type="2" foo="17">2</c>
+	  <d>y</d>
+	</b>
+      </a>
+    </test>
+  </rxml>
+  <equal>({"y"})</equal>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Type tests</comment>
