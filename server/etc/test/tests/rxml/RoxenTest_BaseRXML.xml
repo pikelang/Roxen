@@ -1204,6 +1204,69 @@ a&auml; &amp; b  &gt;
   <result>[,," "]</result>
 </test>
 
+<test>
+  <rxml type="any">
+    <define container="test">
+      <contents value-of="a/b[c/@type = '2']/d" result-set=""/>
+    </define>
+    <test>
+      <a>
+	<b>
+	  <c type="1"/>
+	  <d>x</d>
+	</b>
+	<b>
+	  <c type="2"/>
+	  <d>y</d>
+	</b>
+      </a>
+    </test>
+  </rxml>
+  <equal>({"y"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <define container="test">
+      <contents value-of="a/b[c/@* = '2']/d" result-set=""/>
+    </define>
+    <test>
+      <a>
+	<b>
+	  <c type="1" foo="17"/>
+	  <d>x</d>
+	</b>
+	<b>
+	  <c type="2" foo="17"/>
+	  <d>y</d>
+	</b>
+      </a>
+    </test>
+  </rxml>
+  <equal>({"y"})</equal>
+</test>
+
+<test>
+  <rxml type="any">
+    <define container="test">
+      <contents value-of="a/b[c/@* = '2']/d" result-set=""/>
+    </define>
+    <test>
+      <a>
+	<b>
+	  <c type="1" foo="2"/>
+	  <d>x</d>
+	</b>
+	<b>
+	  <c type="2" foo="17"/>
+	  <d>y</d>
+	</b>
+      </a>
+    </test>
+  </rxml>
+  <equal>({"x", "y"})</equal>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Type tests</comment>
