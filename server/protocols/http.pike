@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.622 2010/06/29 13:29:53 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.623 2010/06/30 09:19:10 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2215,6 +2215,9 @@ void low_send_result(string headers, string data, int|void len,
     do_log(0);
     return;
   }
+
+  // Note: data may be UNDEFINED.
+  if (!data) data = "";
 
   if (String.width (data) != 8) {
     int from, to;
