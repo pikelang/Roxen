@@ -97,7 +97,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.23 2010/06/09 16:31:35 jonasw Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.24 2010/07/08 11:58:31 grubba Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -1606,12 +1606,8 @@ class Patcher
   {
     string source_file = combine_path(getcwd(), file);
     write_mess("Extracting %s to %s ... ", source_file, target_dir);
-    source_file = unixify_path(source_file);
-    array args = ({ tar_bin, "--no-same-permissions", "-oxzf", source_file });
-    Process.create_process p = Process.create_process(args, 
-						      ([ "cwd" : target_dir ]));
 
-    if (!p || p->wait())
+    if (!extract_tar_archive(source_file, target_dir, 1))
     {
       write_err("FAILED: Could not extract file.\n");
       return 0;
@@ -2170,7 +2166,7 @@ class Patcher
       dest = combine_path(getcwd(), id + ".rxp");
     dest = unixify_path(dest);
     write_mess("Creating tar file %s ... ", dest);
-    array args = ({ tar_bin, "-czf", dest, id });
+    array args = ({ tar_bin, "czf", dest, id });
   
     Process.create_process p = Process.create_process(args, 
 						      ([ "cwd" : temp_path ]));
@@ -2192,7 +2188,7 @@ class Patcher
   //! created automagically by tar. @[file_name] cannot be a relative path
   //! higher than base_path.
   {
-    array args = ({ tar_bin, "-rf", 
+    array args = ({ tar_bin, "rf", 
 		    unixify_path(tar_archive), 
 		    simplify_path(unixify_path(file_name)) });
   
@@ -2205,18 +2201,29 @@ class Patcher
   }
 
 
-  int(0..1) extract_tar_archive(string file_name, 
-				string path) 
+  int(0..1) extract_tar_archive(string file_name, string path, int|void gzip) 
   //! Extract a tar archive to @[path].
   {
-    array args = ({ tar_bin, "--no-same-permissions", "-oxf",
-		    simplify_path(unixify_path(file_name)) });
-  
-    Process.create_process p = Process.create_process(args,
-						      ([ "cwd" : path ]));
-    if (!p || p->wait())
+    Stdio.File file = Stdio.File(file_name, "rb");
+
+    if (gzip) {
+      file = Gz.File(file, "rb");
+    }
+
+    // NB: We use Filesystem.Tar here so that we don't need
+    //     to rely on tar binary options that are known not
+    //     to be compatible across operating systems.
+    Filesystem.Tar tarfs = Filesystem.Tar(file_name, UNDEFINED, file);
+
+    if (mixed err = catch {
+	tarfs->tar->extract("", path, UNDEFINED,
+			    Filesystem.Tar.EXTRACT_SKIP_MODE|
+			    Filesystem.Tar.EXTRACT_SKIP_MTIME);
+      }) {
+      werror("%s\n", describe_backtrace(err));
       return 0;
-  
+    }
+
     return 1; 
   }
 
