@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.414 2010/06/02 14:38:18 grubba Exp $
+// $Id: module.pmod,v 1.415 2010/07/12 17:01:53 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6773,6 +6773,31 @@ protected class TBottom
   {
     return other->name != "nil";
   }
+}
+
+TIgnore t_ignore = TIgnore();
+//! A special variant of @[RXML.t_any] that accepts any value but
+//! ignores it, always producing @[RXML.nil] instead. That way it can
+//! accept any value or combination of values, even free text.
+//!
+//! This type is basically useless except for the @tt{<noooutput>@}
+//! tag.
+
+protected class TIgnore
+{
+  inherit TAny;
+  constant name = "ignore";
+  constant type_name = "RXML.t_ignore";
+  constant sequential = 1;
+  mixed empty_value = nil;
+  Type supertype = t_any;
+  Type conversion_type = 0;
+  constant free_text = 1;
+  constant handle_literals = 0;
+
+  void type_check (mixed val, void|string msg, mixed... args) {}
+
+  TNil encode (mixed val, void|Type from) {return nil;}
 }
 
 TNil t_nil = TNil();
