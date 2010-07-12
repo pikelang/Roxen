@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.634 2010/06/20 15:49:26 jonasw Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.635 2010/07/12 17:07:37 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -5449,8 +5449,11 @@ class TagNoOutput {
   constant name = "nooutput";
   constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
 
+  // RXML.t_ignore is a special type made only for this situation. It
+  // accepts and ignores all content and allows free text but still
+  // evaluates all rxml tags (for side effects).
   RXML.Type content_type =
-    compat_level < 5.0 ? ::content_type : RXML.t_any_seq (RXML.PXml);
+    compat_level < 5.0 ? ::content_type : RXML.t_ignore (RXML.PXml);
   array(RXML.Type) result_types =
     compat_level < 5.0 ? ::result_types : ({RXML.t_nil}); // No result.
 
