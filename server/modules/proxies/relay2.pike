@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 2000 - 2009, Roxen IS.
 
 #include <module.h>
-constant cvs_version = "$Id: relay2.pike,v 1.41 2009/09/14 12:21:49 wellhard Exp $";
+constant cvs_version = "$Id: relay2.pike,v 1.42 2010/07/12 20:46:56 mast Exp $";
 
 inherit "module";
 constant module_type = MODULE_FIRST|MODULE_LAST;
@@ -30,22 +30,54 @@ class Relay
 
   Stdio.File fd;
 
-  mapping make_headers( object from, int trim )
+  mapping make_headers( RequestID from, int trim )
   {
-    mapping res = ([ "Proxy-Software":roxen->version(), ]);
+    mapping res = ([
+      "Proxy-Software":roxen->version(),
+      // These are set by Apaches mod_proxy and are more or less
+      // defacto standard.
+      "X-Forwarded-For": from->remoteaddr,
+      "X-Forwarded-Host": from->request_headers->host,
+    ]);
+
+    // Also try to model X-Forwarded-Server after Apaches mod_proxy.
+    // The following is ripped from RequestID.url_base.
+    string server_host;
+    if (Protocol port = from->port_obj) {
+      server_host = port->conf_data[from->conf]->hostname;
+      if (server_host == "*")
+	server_host = from->conf->get_host();
+    }
+    else
+      server_host = my_configuration()->get_host();
+    if (server_host)
+      res["X-Forwarded-Server"] = server_host;
+
     if( trim ) return res;
-    foreach( indices(from->request_headers), string i )
+    foreach( from->request_headers; string i; string v)
     {
-      switch( lower_case(i) )
+      switch( i )
       {
        case "connection": /* We do not support keep-alive yet. */
 	 res->Connection = "close";
          break;
        case "host":
          res->Host = host+":"+port;
-         break;
+	 break;
+       case "x-forwarded-for":
+	 res["X-Forwarded-For"] = v + "," + res["X-Forwarded-For"];
+	 break;
+       case "x-forwarded-host":
+	 res["X-Forwarded-Host"] = v + "," + res["X-Forwarded-Host"];
+	 break;
+       case "x-forwarded-server":
+	 if (server_host)
+	   res["X-Forwarded-Server"] = v + "," + server_host;
+	 else
+	   res["X-Forwarded-Server"] = v;
+	 break;
        default:
-	 res[String.capitalize( i )] = from->request_headers[i];
+	 res[Roxen.canonicalize_http_header (i) || String.capitalize (i)] = v;
          break;
       }
     }
