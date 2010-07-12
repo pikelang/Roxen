@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.702 2010/06/28 06:57:57 marty Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.703 2010/07/12 20:07:43 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4448,7 +4448,7 @@ Sql.Sql sql_connect(string db, void|string charset)
 // END SQL
 #endif
 
-protected string my_url;
+protected string my_url, my_host;
 
 void fix_my_url()
 {
@@ -4460,11 +4460,22 @@ void fix_my_url()
     my_url = "";
   else
     if (!has_suffix (my_url, "/")) my_url += "/";
+
+  if (sscanf (my_url, "%*s://[%s]", string hostv6) == 2 ||
+      sscanf (my_url, "%*s://%[^:/]", string hostv4) == 2)
+    my_host = hostv6 ? "[" + hostv6 + "]" : hostv4;
+  else
+    my_host = 0;
 }
 
 //! Returns some URL for accessing the configuration. (Should be
 //! used instead of querying MyWorldLocation directly.)
 string get_url() {return my_url;}
+
+//! Returns the host part of the URL returned by @[get_url]. Returns
+//! zero when @[get_url] cannot return any useful value (i.e. it
+//! returns the empty string).
+string get_host() {return my_host;}
 
 array after_init_hooks = ({});
 mixed add_init_hook( mixed what )

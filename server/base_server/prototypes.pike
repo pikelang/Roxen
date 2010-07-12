@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.272 2010/06/29 13:29:53 grubba Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.273 2010/07/12 20:07:43 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -451,6 +451,7 @@ class Configuration
 					   string|void myext );
 
   string get_url();
+  string get_host();
 
   array (RoxenModule) get_providers(string provides);
   RoxenModule get_provider(string provides);
@@ -2345,16 +2346,13 @@ class RequestID
       // Then use the port object.
       else if (port_obj) {
 	string host = port_obj->conf_data[conf]->hostname;
-	if (host == "*")
-	  if (conf && sizeof (host = conf->get_url()) &&
-	      (sscanf (host, "%*s://[%s]", string hostv6) == 2 ||
-	       sscanf (host, "%*s://%[^:/]", string hostv4) == 2)) {
-	    // Use the hostname in the configuration url.
-	    host = hostv6 ? ("[" + hostv6 + "]") : hostv4;
-	  }
-	  else
+	if (host == "*") {
+	  // Use the hostname in the configuration url.
+	  host = conf && conf->get_host();
+	  if (!host)
 	    // Fall back to the numeric ip.
 	    host = port_obj->ip;
+	}
 	cached_url_base = port_obj->prot_name + "://" + host;
 	if (port_obj->port != port_obj->default_port)
 	  cached_url_base += ":" + port_obj->port;
