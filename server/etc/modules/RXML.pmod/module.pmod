@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.415 2010/07/12 17:01:53 mast Exp $
+// $Id: module.pmod,v 1.416 2010/07/12 17:29:27 mast Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -6777,11 +6777,13 @@ protected class TBottom
 
 TIgnore t_ignore = TIgnore();
 //! A special variant of @[RXML.t_any] that accepts any value but
-//! ignores it, always producing @[RXML.nil] instead. That way it can
-//! accept any value or combination of values, even free text.
+//! ignores it. That way it can accept any value or combination of
+//! values, even free text.
 //!
-//! This type is basically useless except for the @tt{<noooutput>@}
-//! tag.
+//! The result of parsing with this type is officially always
+//! @[RXML.nil], but it can currently produce other values due to
+//! implementation details. It is basically useless except for the
+//! @tt{<nooutput>@} tag.
 
 protected class TIgnore
 {
