@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.293 2010/06/22 09:52:06 agehall Exp $
+// $Id: Roxen.pmod,v 1.294 2010/07/12 20:42:51 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -471,6 +471,12 @@ string canonicalize_http_header (string header)
     "content-type":		"Content-Type",
     "expires":			"Expires",
     "last-modified":		"Last-Modified",
+    // The obsolete RFC 2068 defined this header for compatibility (19.7.1.1).
+    "keep-alive":		"Keep-Alive",
+    // RFC 2965
+    "cookie":			"Cookie",
+    "cookie2":			"Cookie2",
+    "set-cookie2":		"Set-Cookie2",
   ])[lower_case (header)];
 }
 
@@ -2687,11 +2693,14 @@ protected string low_roxen_encode(string val, string encoding)
 //!     @expr{"@}, @expr{\@}, and more.
 //!
 //!   @value "mysql"
-//!     MySQL quoting. This also means backslash escapes.
+//!     MySQL quoting. This also means backslash escapes, except the
+//!     @expr{'@} character which is quoted in SQL style as
+//!     @expr{''@}.
 //!
 //!   @value "sql"
 //!   @value "oracle"
 //!     SQL/Oracle quoting, i.e. @expr{'@} is encoded as @expr{''@}.
+//!
 //!     NOTE: Do NOT use this quoting method when creating
 //!           sql-queries intended for MySQL!
 //!
@@ -4990,6 +4999,11 @@ array(mapping(string:mixed)|object) rxml_emit_sort (
       return 0;
     });
 }
+
+// FIXME: Having a Roxen.sql_null that is different from but `== equal
+// to pikes Sql.NULL isn't good. We should remove this class, but then
+// a lot of type conversion functions in RXML.pmod need special cases
+// for Sql.NULL.
 
 class SqlNull
 //! The class for @[Roxen.sql_null]. Avoid creating more instances of
