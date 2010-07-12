@@ -3267,6 +3267,38 @@ boo</set><emit source="values" values="&var.x;" advanced="words">&_.value; </emi
 <result>zx</result>
 </test>
 
+<test>
+  <rxml>
+    <nooutput><p>foo</p></nooutput>
+  </rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml>
+    <nooutput>
+      <value type="array"><value>17</value></value>
+      <value type="mapping"/>
+    </nooutput>
+  </rxml>
+  <result></result>
+</test>
+
+<test>
+  <rxml>
+    <nooutput>
+      <p>foo</p>
+      <set variable="var.a">x</set>
+      <value type="array">
+	<value>17</value>
+	<set variable="var.b">y</set>
+      </value>
+    </nooutput>
+    &var.a;&var.b;
+  </rxml>
+  <result>xy</result>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Strlen tests</comment>
