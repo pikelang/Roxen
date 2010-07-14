@@ -97,7 +97,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.24 2010/07/08 11:58:31 grubba Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.25 2010/07/14 11:47:54 grubba Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -854,7 +854,7 @@ class Patcher
     write_mess("Checking if the patch got dependers ... ");
     if (got_dependers(id))
     {
-      write_err("FAILED: Other patches depends on this patch!\n");
+      write_err("FAILED: Other patches depend on this patch!\n");
       return 0;
     }
     write_mess("<green>Done!</green>\n");
@@ -876,13 +876,13 @@ class Patcher
 					  "metadata"));
     if (!(mdxml && sizeof(mdxml)))
     {
-      write_err("FAILED!\n");
+      write_err("FAILED: No metadata!\n");
       return 0;
     }
     PatchObject metadata = parse_metadata(mdxml, id);
     if (!metadata)
     {
-      write_err("FAILED!\n");
+      write_err("FAILED: Invalid meradata!\n");
       return 0;
     }
     write_mess("<green>Done!</green>\n");
@@ -897,7 +897,7 @@ class Patcher
     { 
       if ( !(backup_file && sizeof(backup_file)) )
       {
-	write_err("FAILED!\n");
+	write_err("FAILED: No known backups!\n");
 	return 0;
       }
       backup_file = combine_path(installed_path, id, basename(backup_file));
@@ -928,12 +928,12 @@ class Patcher
     // Unroll tarball.
     if (backup_file)
     {
-      write_mess("Restoring backed up files ... ");
+      write_mess("Restoring backed up files from %O... ", backup_file);
       if (extract_tar_archive(backup_file, server_path))
 	write_mess("<green>Done!</green>\n");
       else
       {
-	write_mess("FAILED!\n");
+	write_err("FAILED!\n");
 	errors++;
       }
     }
@@ -945,7 +945,8 @@ class Patcher
       write_mess("<green>Done!</green>\n");
     else
     {
-      write_err("FAILED to move patch files\n");
+      write_err("FAILED to move patch files\n"
+		"%O ==> %O\n", append_path(installed_path, id), dest_path);
       errors++;
     }
 
