@@ -97,7 +97,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.25 2010/07/14 11:47:54 grubba Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.26 2010/07/15 09:43:30 grubba Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -945,8 +945,10 @@ class Patcher
       write_mess("<green>Done!</green>\n");
     else
     {
-      write_err("FAILED to move patch files\n"
-		"%O ==> %O\n", append_path(installed_path, id), dest_path);
+      write_err("FAILED to move patch files (%d: %s)\n"
+		"%O ==> %O\n",
+		errno(), strerror(errno()),
+		append_path(installed_path, id), dest_path);
       errors++;
     }
 
