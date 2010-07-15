@@ -29,6 +29,7 @@
 		   "%-*s  (is %O) equals\n"				\
 		   "%-*s  (is %O)?",					\
 		   args__);						\
+    args__ = 0;								\
   } while (0)
 
 #define TEST_NOT_EQUAL(A, B)						\
@@ -42,6 +43,7 @@
 		   "%-*s  (is %O) does not equal\n"			\
 		   "%-*s  (is %O)?",					\
 		   args__);						\
+    args__ = 0;								\
   } while (0)
 
 #define TEST_CMP(A, OP, B)						\
@@ -55,6 +57,7 @@
 		   "%-*s  (is %O) " #OP "\n"				\
 		   "%-*s  (is %O)?",					\
 		   args__);						\
+    args__ = 0;								\
   } while (0)
 
 #define TEST_ERROR(CODE, ARGS...)					\
