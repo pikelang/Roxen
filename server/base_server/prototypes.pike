@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.273 2010/07/12 20:07:43 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.274 2010/07/26 14:41:55 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2344,15 +2344,13 @@ class RequestID
       }
 
       // Then use the port object.
-      else if (port_obj) {
-	string host = port_obj->conf_data[conf]->hostname;
-	if (host == "*") {
+      else if (mapping(string:mixed) conf_data =
+	       port_obj && port_obj->conf_data[conf]) {
+	string host = conf_data->hostname;
+	if (host == "*")
 	  // Use the hostname in the configuration url.
-	  host = conf && conf->get_host();
-	  if (!host)
-	    // Fall back to the numeric ip.
-	    host = port_obj->ip;
-	}
+	  // Fall back to the numeric ip.
+	  host = conf->get_host() || port_obj->ip;
 	cached_url_base = port_obj->prot_name + "://" + host;
 	if (port_obj->port != port_obj->default_port)
 	  cached_url_base += ":" + port_obj->port;
