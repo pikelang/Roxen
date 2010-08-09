@@ -4,7 +4,7 @@
 /*
  * FTP protocol mk 2
  *
- * $Id: ftp.pike,v 2.141 2010/06/29 13:29:53 grubba Exp $
+ * $Id: ftp.pike,v 2.142 2010/08/09 09:12:17 grubba Exp $
  *
  * Henrik Grubbström <grubba@roxen.com>
  */
@@ -4065,6 +4065,11 @@ void create(object f, object c)
   {
     c->sessions++;
     c->ftp_users++;
+    if (f->set_keepalive) {
+      // Try to keep stupid firewalls from killing
+      // the connection during long uploads.
+      f->set_keepalive(1);
+    }
     FTPSession(f, c);
   }
 }
