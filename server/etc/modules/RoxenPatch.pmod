@@ -97,7 +97,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.26 2010/07/15 09:43:30 grubba Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.27 2010/08/18 11:54:14 erik Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -882,7 +882,7 @@ class Patcher
     PatchObject metadata = parse_metadata(mdxml, id);
     if (!metadata)
     {
-      write_err("FAILED: Invalid meradata!\n");
+      write_err("FAILED: Invalid metadata!\n");
       return 0;
     }
     write_mess("<green>Done!</green>\n");
