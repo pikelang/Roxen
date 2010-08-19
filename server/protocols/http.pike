@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.623 2010/06/30 09:19:10 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.624 2010/08/19 15:14:52 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2813,7 +2813,7 @@ void send_result(mapping|void result)
   TIMER_END(send_result);
 }
 
-// Execute the request
+// Execute the request. This is called from a handler thread.
 void handle_request( )
 {
   REQUEST_WERR("HTTP: handle_request()");
@@ -2867,6 +2867,13 @@ void handle_request( )
   // Note: Could be destructed here already since handle_request might
   // have handed over us to another thread that finished quickly. The
   // right place to put code is probably send_result instead.
+  //
+  // I wonder exactly where that handing-over might happen. There
+  // should probably be destruct_threadbound_session_objects calls
+  // there too. /mast
+
+  if (this)
+    destruct_threadbound_session_objects();
 
   if(e)
     INTERNAL_ERROR( e );
