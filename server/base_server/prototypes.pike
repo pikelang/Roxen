@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.274 2010/07/26 14:41:55 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.275 2010/08/19 15:11:02 mast Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -2287,7 +2287,7 @@ class RequestID
   //! @[add_threadbound_session_object]. Should normally only be used
   //! internally.
   {
-    if (array(object) objs = threadbound_session_objects) {
+    if (array(object) objs = this && threadbound_session_objects) {
       threadbound_session_objects = 0;
       foreach (objs, object obj) {
 	if (mixed err = catch {
