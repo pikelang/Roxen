@@ -61,13 +61,6 @@ void run_tests( Configuration c )
 	   "ximg", "userdb", "htmlparse", "directories2",
 	   "fastdir" >)[m->sname] )
       continue;
-    if (m->locked) {
-      if (!key || !m->unlocked(key, c)) {
-	werror("Locked module: %O lock: %O\n",
-	       m->name || m->sname, m->locked * ":");
-	continue;
-      }
-    }
     current_test++;
     new += ({ m->sname });
     test_generic( check_is_module, c->enable_module, m->sname );

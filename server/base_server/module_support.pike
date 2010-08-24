@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module_support.pike,v 1.144 2010/06/28 16:06:14 mast Exp $
+// $Id: module_support.pike,v 1.145 2010/08/24 17:59:10 mast Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -405,6 +405,10 @@ class ModuleInfo( string sname, string filename )
       object key = conf && conf->getvar("license")->get_key();
       if(locked && !(key && unlocked(key, conf))) {
 	config_locked[conf] = 1;
+#ifdef RUN_SELF_TEST
+	werror ("Locked module: %O lock: %O\n",
+		(string) (name || sname), locked * ":");
+#endif
 	throw( "" );
       }
       else
