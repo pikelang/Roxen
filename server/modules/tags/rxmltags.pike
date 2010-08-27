@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.635 2010/07/12 17:07:37 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.636 2010/08/27 09:31:15 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -6264,8 +6264,12 @@ class TagComment {
   inherit RXML.Tag;
   constant name = "comment";
   constant flags = RXML.FLAG_DONT_REPORT_ERRORS;
-  RXML.Type content_type = RXML.t_any (RXML.PXml);
+
+  // This content type is relevant only with the old "preparse" attribute.
+  RXML.Type content_type = RXML.t_ignore (RXML.PXml);
+
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
+
   class Frame {
     inherit RXML.Frame;
     int do_iterate;
