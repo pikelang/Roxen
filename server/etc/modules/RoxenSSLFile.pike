@@ -1,4 +1,4 @@
-/* $Id: RoxenSSLFile.pike,v 1.27 2009/12/03 15:04:41 mast Exp $
+/* $Id: RoxenSSLFile.pike,v 1.28 2010/08/30 14:19:41 mast Exp $
  */
 
 // This is SSL.sslfile from Pike 7.6, slightly modified for the old
@@ -134,12 +134,16 @@ static Pike.Backend local_backend;
 static int nonblocking_mode;
 
 static enum CloseState {
+  ABRUPT_CLOSE = -1,
   STREAM_OPEN = 0,
   STREAM_UNINITIALIZED = 1,
   NORMAL_CLOSE = 2,		// The caller has requested a normal close.
   CLEAN_CLOSE = 3,		// The caller has requested a clean close.
 }
 static CloseState close_state = STREAM_UNINITIALIZED;
+// ABRUPT_CLOSE is set if there's a remote close without close packet.
+// The stream is still considered open locally, but reading or writing
+// to it trigs System.EPIPE.
 
 static enum ClosePacketSendState {
   CLOSE_PACKET_NOT_SCHEDULED = 0,
@@ -217,7 +221,8 @@ static constant epipe_errnos = (<
   ((read_callback || write_callback || close_callback || accept_callback) && \
    close_state < NORMAL_CLOSE)
 
-#define SSL_HANDSHAKING (!conn->handshake_finished)
+#define SSL_HANDSHAKING (!conn->handshake_finished &&			\
+			 close_state != ABRUPT_CLOSE)
 #define SSL_CLOSING_OR_CLOSED						\
   (close_packet_send_state >= CLOSE_PACKET_SCHEDULED ||			\
    /* conn->closing & 2 is more accurate, but the following is quicker	\
@@ -411,6 +416,7 @@ static THREAD_T op_thread;
 			  "signalling delayed error from writing close message\n"); \
 	  close_packet_send_state = CLOSE_PACKET_WRITE_ERROR;		\
 	  cb_errno = System.EPIPE;					\
+	  close_state = ABRUPT_CLOSE;					\
 	}								\
 									\
 	FIX_ERRNOS ({							\
@@ -627,13 +633,14 @@ Stdio.File shutdown()
       RETURN (0);
     }
 
-    if (close_state != CLEAN_CLOSE)
+    if (close_state == STREAM_OPEN || close_state == NORMAL_CLOSE)
       // If we didn't request a clean close then we pretend to have
       // received a close message. According to the standard it's ok
       // anyway as long as the transport isn't used for anything else.
       conn->closing |= 2;
 
     SSL3_DEBUG_MSG ("SSL.sslfile->shutdown(): %s\n",
+		    close_state != ABRUPT_CLOSE &&
 		    conn->closing & 2 &&
 		    close_packet_send_state == CLOSE_PACKET_QUEUED_OR_DONE &&
 		    !sizeof (write_buffer) ?
@@ -714,7 +721,7 @@ static void destroy()
     // cleanup code that doesn't take care to destruct things in the
     // right order.
     if (stream && read_buffer && conn) {
-      if (close_state <= STREAM_OPEN &&
+      if (close_state == STREAM_OPEN &&
 	  // Don't bother with closing nicely if there's an error from
 	  // an earlier operation. close() will throw an error for it.
 	  !cb_errno) {
@@ -1219,7 +1226,7 @@ int is_open()
 {
   SSL3_DEBUG_MSG ("SSL.sslfile->is_open()\n");
   ENTER (0, 0) {
-    if (close_state <= STREAM_OPEN && stream && stream->is_open()) {
+    if (close_state == STREAM_OPEN && stream && stream->is_open()) {
       // Have to check if there's a close packet waiting to be read.
       // This is common in keep-alive situations since the remote end
       // might have sent a close packet and closed the connection a
@@ -1408,10 +1415,13 @@ static int direct_write()
   }
 
   else {
-    if (queue_write() < 0) {
+    if (queue_write() < 0 || close_state == ABRUPT_CLOSE) {
       SSL3_DEBUG_MSG ("direct_write: "
 		      "Connection closed abruptly - simulating System.EPIPE\n");
       local_errno = System.EPIPE;
+      // Don't set close_state = ABRUPT_CLOSE here. It's either set
+      // already, or there's an abrupt close due to an ALERT_fatal,
+      // which we shouldn't mix up with ABRUPT_CLOSE.
       return 0;
     }
 
@@ -1443,7 +1453,8 @@ static int ssl_read_callback (int called_from_real_backend, string input)
 
     if (input) {
       int handshake_already_finished = conn->handshake_finished;
-      string|int data = conn->got_data (input);
+      string|int data =
+	close_state == ABRUPT_CLOSE ? -1 : conn->got_data (input);
 
 #ifdef DEBUG
       if (got_extra_read_call_out)
@@ -1537,6 +1548,7 @@ static int ssl_read_callback (int called_from_real_backend, string input)
     else {
       call_read_cb =
 	called_from_real_backend && read_callback && sizeof (read_buffer) &&
+	// Shouldn't get here when close_state == ABRUPT_CLOSE.
 	close_state < NORMAL_CLOSE;
       do_close_stuff =
 	!!((conn->closing & 2) || cb_errno);
@@ -1909,6 +1921,7 @@ static int ssl_close_callback (int called_from_real_backend)
 	  SSL3_DEBUG_MSG ("ssl_close_callback: Abrupt close - "
 			  "simulating System.EPIPE\n");
 	cb_errno = System.EPIPE;
+	close_state = ABRUPT_CLOSE;
       }
     }
 
