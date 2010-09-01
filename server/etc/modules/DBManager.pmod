@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.96 2010/03/30 12:02:03 grubba Exp $
+// $Id: DBManager.pmod,v 1.97 2010/09/01 15:19:49 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -782,25 +782,35 @@ int is_mysql( string db )
   return !(db = db_url( db )) || has_prefix( db, "mysql://" );
 }
 
+static mapping(string:mixed) convert_obj_to_mapping(object|mapping o)
+{
+  if (mappingp(o)) return o;
+  return mkmapping(indices(o), values(o));
+}
+
 array(mapping(string:mixed)) db_table_fields( string name, string table )
 //! Returns a mapping of fields in the database, if it's supported by
 //! the protocol handler. Otherwise returns 0.
 {
   Sql.Sql db = cached_get( name );
   object q;
-  if (mixed err = catch (
+  if (catch (
 	q = db->big_query ("SELECT * FROM `" + table + "` LIMIT 0"))) {
     // Syntax error for query. Fall back to using the generic stuff.
     catch {
       // fetch_fields provides more info.
       return db->list_fields( table );
     };
-    // list_fields() failed as well. Report the original error.
-    report_debug ("Error listing fields in %O: %s",
-		  table, describe_error (err));
-    return 0;
+    // list_fields() failed as well.
+    // Try the original query, without the MySQL-specific syntax.
+    // Now, this is slow, but very generic. :-)
+    if (mixed err = catch (q = db->big_query ("SELECT * FROM " + table))) {
+      report_debug ("Error listing fields in %O: %s",
+		    table, describe_error (err));
+      return 0;
+    }
   }
-  return q->fetch_fields();
+  return map(q->fetch_fields(), convert_obj_to_mapping);
 }
 
 array(string) db_tables( string name )
