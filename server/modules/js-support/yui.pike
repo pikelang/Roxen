@@ -9,7 +9,9 @@ inherit "roxen-module://filesystem";
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_filesystem",X,Y)
 // end of the locale related stuff
 
-constant cvs_version = "$Id: yui.pike,v 1.18 2009/12/14 16:58:00 tor Exp $";
+#define EXPIRE_TIME 31536000
+
+constant cvs_version = "$Id: yui.pike,v 1.19 2010/09/02 13:55:16 marty Exp $";
 
 LocaleString module_name = LOCALE(67,"JavaScript Support: The Yahoo! User "
 				    "Interface Library");
@@ -106,7 +108,14 @@ mixed find_file( string f, RequestID id )
   if(is_hidden(f))
     return 0;
   mixed m = ::find_file(f,id);
-  RAISE_CACHE(31536000);
+
+  if (!m->extra_heads)
+    m->extra_heads = ([]);
+
+  m->extra_heads["Cache-Control"] =
+    sprintf ("public, max-age=%d", EXPIRE_TIME);
+
+  RAISE_CACHE(EXPIRE_TIME);
   return m;
 }
 
