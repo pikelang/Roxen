@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.624 2010/08/19 15:14:52 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.625 2010/09/02 16:03:40 marty Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2285,6 +2285,110 @@ void low_send_result(string headers, string data, int|void len,
 }
 
 #ifdef HTTP_COMPRESSION
+#ifdef HTTP_COMPR_STREAM
+class GzStreamingFile
+{ 
+  //! Class that will compress a file on the fly, i.e. read() will
+  //! return compressed data from the source file fed to @[create] or
+  //! @[open]. Writing is not supported currently.
+ 
+  protected Gz.deflate def; 
+  protected Stdio.File srcfile; 
+  protected string read_buf; 
+  protected int crc; 
+  protected int file_pos; 
+  protected int at_eof; 
+  protected int src_at_eof; 
+  protected int trailer_written;
+  protected int level;
+ 
+  constant default_level = 7;
+  constant read_chunk_size = 1024*128; 
+ 
+  void create (void|Stdio.File file, void|int level)
+  //! If the argument @[file] is provided, @[open] will be called with
+  //! that file as argument. @[level] is the compression level.
+  {
+    if (level)
+      this_program::level = level;
+    else
+      this_program::level = default_level;
+
+    if (file)
+      open (file);
+  } 
+ 
+  int open (Stdio.File file) 
+  //! Opens the stream for reading with @[file] as source. 
+  { 
+    read_buf = make_header(); 
+    file_pos = 0; 
+    srcfile = file; 
+    crc = Gz.crc32(""); 
+    at_eof = 0; 
+    src_at_eof = 0; 
+    trailer_written = 0; 
+    def = Gz.deflate (-level, Gz.DEFAULT_STRATEGY); 
+    return 1; 
+  } 
+ 
+  string read (int len) 
+  {
+    String.Buffer buf = String.Buffer(); 
+    while (sizeof (read_buf) + sizeof (buf) < len && !src_at_eof) { 
+      string chunk = srcfile->read (read_chunk_size); 
+      if (sizeof (chunk) < read_chunk_size) 
+        src_at_eof = 1;
+      buf->add (def->deflate (chunk, Gz.NO_FLUSH)); 
+      crc = Gz.crc32 (chunk, crc); 
+    } 
+ 
+    if (src_at_eof && !trailer_written) {
+      buf->add (def->deflate ("", Gz.FINISH)); 
+      buf->add (sprintf("%-4c%-4c", crc, srcfile->tell())); 
+      trailer_written = 1; 
+    } 
+ 
+    read_buf += buf->get(); 
+ 
+    string result = read_buf[..len-1]; 
+    read_buf = read_buf[sizeof(result)..]; 
+    file_pos += sizeof (result); 
+    if (src_at_eof && !sizeof (read_buf)) 
+      at_eof = 1; 
+
+    return result; 
+  } 
+  int tell() 
+  { 
+    return file_pos; 
+  } 
+ 
+  int eof() 
+  { 
+    return at_eof; 
+  } 
+ 
+  int seek (int pos) 
+  //! Note: the source file won't be seeked automatically. 
+  { 
+    open (srcfile); 
+    int offset; 
+    while (offset + read_chunk_size < pos) 
+      offset += sizeof (read (read_chunk_size)); 
+ 
+    read (pos-offset); 
+    return file_pos; 
+  } 
+ 
+  string make_header() 
+  { 
+    return sprintf("%1c%1c%1c%1c%4c%1c%1c", 
+                   0x1f, 0x8b, 8, 0, 0, 0, 3); 
+  } 
+}
+#endif
+
 private int(0..1) compression_enabled_for_mimetype (string mimetype)
 {
   mapping(string:int) compress_exact_mimetypes = conf->http_compr_exact_mimes;
@@ -2342,19 +2446,32 @@ private string gunzip_data(string data)
   return res;
 }
 
-private string try_gzip_data(string data, string mimetype)
+private
+#ifdef HTTP_COMPR_STREAM
+GzStreamingFile|
+#endif
+string try_gzip_data(Stdio.File|string data,
+		     string mimetype)
 {
   int min_data_length = conf->http_compr_minlen;
   int max_data_length = conf->http_compr_maxlen;
 
   int len = sizeof(data);
 
-  if(compression_enabled_for_mimetype (mimetype) &&
-     len >= min_data_length && 
-     (!max_data_length || len <= max_data_length)) {
-    data = gzip_data(data);
-    if(len>sizeof(data))
-      return data;
+  if (compression_enabled_for_mimetype (mimetype)) {
+    if (stringp (data)) {
+      if (len >= min_data_length &&
+	  (!max_data_length || len <= max_data_length)) {
+	data = gzip_data(data);
+	if (len>sizeof(data))
+	  return data;
+      }
+    }
+#ifdef HTTP_COMPR_STREAM
+    else if (objectp (data)) {
+      return GzStreamingFile (data, conf->query ("http_compression_level"));
+    }
+#endif
   }
   return 0;
 }
@@ -2653,14 +2770,21 @@ void send_result(mapping|void result)
 #ifdef HTTP_COMPRESSION
     // Don't use compression if we're dealing with byte ranges. Who
     // knows what kind of interesting effects that might have.
-    if(!file->compressed && file->data && !misc->range &&
+    if(!file->compressed && (file->data || file->file) && !misc->range &&
        compress_dynamic_requests() && client_gzip_enabled()) {
-      if(string compressed = try_gzip_data(file->data, file->type)) {
-	file->data = compressed;
-	file->len = sizeof(file->data);
-	variant_heads["Content-Length"] = (string)file->len;
+      if (mixed /*Stdio.File|string*/ compressed =
+	  try_gzip_data(file->data ? file->data : file->file, file->type)) {
+	if (file->data) {
+	  file->data = compressed;
+	  file->len = sizeof(file->data);
+	  variant_heads["Content-Length"] = (string)file->len;
+	} else if (file->file) {
+	  file->file = compressed;
+	  m_delete (file, "len"); // We don't know the length since we will be streaming compressed data...
+	  m_delete (variant_heads, "Content-Length");
+	}
 	file->encoding = "gzip";
-	file->compressed = 1;
+	file->compressed = 1;      
       }
     }
     
