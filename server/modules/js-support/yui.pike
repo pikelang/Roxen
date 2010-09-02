@@ -11,7 +11,7 @@ inherit "roxen-module://filesystem";
 
 #define EXPIRE_TIME 31536000
 
-constant cvs_version = "$Id: yui.pike,v 1.19 2010/09/02 13:55:16 marty Exp $";
+constant cvs_version = "$Id: yui.pike,v 1.20 2010/09/02 14:57:46 marty Exp $";
 
 LocaleString module_name = LOCALE(67,"JavaScript Support: The Yahoo! User "
 				    "Interface Library");
@@ -109,11 +109,8 @@ mixed find_file( string f, RequestID id )
     return 0;
   mixed m = ::find_file(f,id);
 
-  if (!m->extra_heads)
-    m->extra_heads = ([]);
-
-  m->extra_heads["Cache-Control"] =
-    sprintf ("public, max-age=%d", EXPIRE_TIME);
+  id->set_response_header ("Cache-Control",
+			   sprintf ("public, max-age=%d", EXPIRE_TIME));
 
   RAISE_CACHE(EXPIRE_TIME);
   return m;
