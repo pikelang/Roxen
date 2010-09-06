@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.97 2010/09/01 15:19:49 grubba Exp $
+// $Id: DBManager.pmod,v 1.98 2010/09/06 12:10:01 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -798,13 +798,15 @@ array(mapping(string:mixed)) db_table_fields( string name, string table )
 	q = db->big_query ("SELECT * FROM `" + table + "` LIMIT 0"))) {
     // Syntax error for query. Fall back to using the generic stuff.
     catch {
-      // fetch_fields provides more info.
-      return db->list_fields( table );
+      // fetch_fields provides more info (if it exists...).
+      if (db->master_sql->list_fields)
+	return db->list_fields( table );
     };
     // list_fields() failed as well.
     // Try the original query, without the MySQL-specific syntax.
-    // Now, this is slow, but very generic. :-)
-    if (mixed err = catch (q = db->big_query ("SELECT * FROM " + table))) {
+    // This is very generic.
+    if (mixed err = catch (q = db->big_query ("SELECT * FROM " + table +
+					      " WHERE 1 = 0"))) {
       report_debug ("Error listing fields in %O: %s",
 		    table, describe_error (err));
       return 0;
