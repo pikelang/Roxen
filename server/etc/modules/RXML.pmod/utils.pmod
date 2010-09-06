@@ -7,7 +7,9 @@
 //!
 //! Created 2000-01-21 by Martin Stjernholm
 //!
-//! $Id: utils.pmod,v 1.35 2008/10/12 22:14:03 mast Exp $
+//! $Id: utils.pmod,v 1.36 2010/09/06 13:32:45 mast Exp $
+
+#define RXML_CONTEXT (_cur_rxml_context->get())
 
 constant is_RXML_encodable = 1;
 
@@ -86,6 +88,19 @@ final mapping(string:string) return_empty_mapping (mixed... ignored)
 final mapping(string:string) return_help_arg (mixed... ignored)
   {return (["help": "help"]);}
 
+protected string type_attribute_hint (RXML.Type type)
+{
+  // If this happens for t_any inside a <set> or <append> without any
+  // type attribute, it's probably the common pitfall with the default
+  // type for those tags.
+  if (type == RXML.t_any)
+    if (RXML.Context ctx = RXML_CONTEXT)
+      if (ctx->frame && (<"set", "append">)[ctx->frame->tag->name] &&
+	  zero_type (ctx->frame->args->type))
+	return "Maybe an attribute type=\"text/*\" is missing.\n";
+  return "";
+}
+
 final mixed get_non_nil (RXML.Type type, mixed... vals)
 // Returns the single argument in vals that isn't RXML.nil, or
 // RXML.nil if all of them are that value. Throws an rxml parse error
@@ -99,8 +114,9 @@ final mixed get_non_nil (RXML.Type type, mixed... vals)
   for (pos++; pos < sizeof (vals); pos++)
     if (vals[pos] != RXML.nil)
       RXML.parse_error (
-	"Cannot append another value %s to non-sequential value of type %s.\n",
-	format_short (vals[pos]), type->name);
+	"Cannot append another value %s to non-sequential "
+	"value of type %s.\n%s",
+	format_short (vals[pos]), type->name, type_attribute_hint (type));
   return res;
 }
 
@@ -108,8 +124,9 @@ final int(1..1)|string|array unknown_tag_error (object/*(RMXL.PXml)*/ p, string 
 {
   p->context->handle_exception (
     catch (RXML.parse_error (
-	     "Unknown tag %s is not allowed in context of type %s.\n",
-	     format_short (p->tag_name()), p->type->name)),
+	     "Unknown tag %s is not allowed in context of type %s.\n%s",
+	     format_short (p->tag_name()), p->type->name,
+	     type_attribute_hint (p->type))),
     p, p->p_code);
   return ({});
 }
@@ -119,8 +136,10 @@ final int(1..1)|string|array unknown_pi_tag_error (object/*(RMXL.PXml)*/ p, stri
   sscanf (str, "%[^ \t\n\r]", str);
   p->context->handle_exception (
     catch (RXML.parse_error (
-	     "Unknown processing instruction %s not allowed in context of type %s.\n",
-	     format_short ("<" + p->tag_name() + str), p->type->name)),
+	     "Unknown processing instruction %s not allowed "
+	     "in context of type %s.\n%s",
+	     format_short ("<" + p->tag_name() + str), p->type->name,
+	     type_attribute_hint (p->type))),
     p, p->p_code);
   return ({});
 }
@@ -129,8 +148,9 @@ final int(1..1)|string|array invalid_cdata_error (object/*(RXML.PXml)*/ p, strin
 {
   p->context->handle_exception (
     catch (RXML.parse_error (
-	     "CDATA text %O is not allowed in context of type %s.\n",
-	     format_short (str), p->type->name)),
+	     "CDATA text %O is not allowed in context of type %s.\n%s",
+	     format_short (str), p->type->name,
+	     type_attribute_hint (p->type))),
     p, p->p_code);
   return ({});
 }

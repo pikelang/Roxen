@@ -303,6 +303,20 @@ e</result>
   <glob>[Error (parse): Cannot append another value * to non-sequential type *]</glob>
 </test>
 
+<test>
+  <rxml>
+    <set variable="var.foo">blah <p>bleh</p></set>
+  </rxml>
+  <glob>[Error (parse): *Maybe an attribute type="text/*" is missing.*]</glob>
+</test>
+
+<test>
+  <rxml>
+    <set variable="var.foo" type="any">blah <p>bleh</p></set>
+  </rxml>
+  <glob not="">[Error (parse): *Maybe an attribute type="text/*" is missing.*]</glob>
+</test>
+
 
 <!-- ............................................................ -->
 <comment>Smallcaps text</comment>
