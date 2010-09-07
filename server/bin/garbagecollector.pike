@@ -6,7 +6,7 @@
  * doc = "This is the proxy garbage collector";
  */
 
-string cvs_version = "$Id: garbagecollector.pike,v 1.23 2008/08/15 12:33:54 mast Exp $";
+string cvs_version = "$Id: garbagecollector.pike,v 1.24 2010/09/07 09:47:04 grubba Exp $";
 
 //#define DEBUG
 
@@ -150,7 +150,7 @@ void current_cache_message()
 		   "\t%1.3f MB (%d files) removed in last gc run\n"
 		   "\tremoved files were last accessed %s\n",
 		   gctime, (float)BLOCK_TO_KB(removed)/1024.0, removed_files,
-		   gctime, ctime(garbage_time)-"\n"));
+		   ctime(garbage_time)-"\n"));
   }
 }
 
