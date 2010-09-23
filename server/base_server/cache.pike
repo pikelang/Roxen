@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.133 2010/09/23 19:07:57 mast Exp $
+// $Id: cache.pike,v 1.134 2010/09/23 20:02:41 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -324,9 +324,11 @@ class CacheManager
   //! Returns the size consumed by the manager itself, excluding the
   //! cache entries.
   {
-    return (Pike.count_memory (-1, this) +
-	    Pike.count_memory (0, stats) +
-	    Pike.count_memory ((["block_objects": 1]), lookup));
+    int res = (Pike.count_memory (-1, this, lookup) +
+	       Pike.count_memory (0, stats));
+    foreach (lookup;; mapping(mixed:CacheEntry) lm)
+      res += Pike.count_memory (-1, lm);
+    return res;
   }
 
   float add_rate = 0.0;
