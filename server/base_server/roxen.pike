@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1068 2010/06/22 12:11:52 noring Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1069 2010/09/23 15:27:30 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -6451,29 +6451,54 @@ protected LogFormat compile_log_format( string fmt )
 //!   @[RequestID()->register_vary_callback()], @[NOCACHE()],
 //!   @[NO_PROTO_CACHE()], @[array_sscanf()]
 array(array(string|int|array)) security_checks = ({
-  ({ "ip=%s:%s",2,({
-    lambda( string a, string b ){
-      int net  = Roxen.ip_to_int( a );
-      int mask = Roxen.ip_to_int( b );
-      net &= mask;
-      return ({ net, sprintf("%c",mask)[0] });
+  ({ "ip=%s", 1, ({
+    lambda(string x) {
+      mapping(int:array(int)) ip_masks = ([]);
+      array(string) globs = ({});
+      string ret;
+      foreach(x/",", string ip_mask) {
+	if (sscanf(ip_mask, "%s:%s", string ip, string mask) == 2) {
+	  int m = Roxen.ip_to_int(mask);
+	  if (m & 0x80000000) m -= 0x100000000;
+	  ip_masks[m] += ({ Roxen.ip_to_int(ip)  });
+	} else if (sscanf(ip_mask, "%s/%d", string ip, int mask) == 2) {
+	  mask = -1 - (0xffffffff >> mask);
+	  ip_masks[mask] += ({ Roxen.ip_to_int(ip) });
+	} else {
+	  globs += ({ ip_mask });
+	}
+      }
+      if (sizeof(ip_masks)) {
+	foreach(ip_masks; int mask; array(int) ip) {
+	  if (!mask) continue;
+	  if (ret) ret += " ||\n        ";
+	  else ret = "";
+	  if (sizeof(ip) == 1) {
+	    ret +=
+	      sprintf("((remote_ip & ~0x%08x) == 0x%08x)",
+		      ~mask, ip[0] & mask);
+	  } else {
+	    ret +=
+	      sprintf("(<%{0x%08x,%}>)[remote_ip & ~0x%08x]",
+		      map(ip, `&, mask), ~mask);
+	  }
+	}
+      }
+      foreach(globs, string glob) {
+	if (ret) ret += " ||\n        ";
+	else ret = "";
+	ret += sprintf("glob(%O, id->remoteaddr)", glob);
+      }
+      return ({
+	ret,
+      });
     },
-    "    if ((Roxen.ip_to_int(id->remoteaddr) & %[1]d) == %[0]d)",
-  }), "ip" }),
-  ({ "ip=%s/%d",2,({
-    lambda( string a, int b ){
-      int net  = Roxen.ip_to_int( a );
-      int mask = ((~0<<(32-b))&0xffffffff);
-      net &= mask;
-      return ({ net, sprintf("%c",mask)[0] });
-    },
-    "    if ((Roxen.ip_to_int(id->remoteaddr) & %[1]d) == %[0]d) ",
-  }), "ip", }),
-  ({ "ip=%s",1,({
-    "    if (sizeof(filter(%[0]O/\",\",\n"
-    "                      lambda(string q){\n"
-    "                        return glob(q,id->remoteaddr);\n"
-    "                      })))",
+#if defined(SECURITY_PATTERN_DEBUG) || defined(HTACCESS_DEBUG)
+    "    report_debug(sprintf(\"Verifying against IP %%O (0x%%08x).\\n\",\n"
+    "                         id->remoteaddr, remote_ip));\n"
+#endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
+    "    if (%s)",
+    (< "  int remote_ip = Roxen.ip_to_int(id->remoteaddr)" >),
   }), "ip", }),
   ({ "user=%s",1,({ 1,
     lambda( string x ) {
@@ -6601,6 +6626,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 
   string kmd5 = md5( pattern );
 
+#if !defined(HTACCESS_DEBUG) && !defined(SECURITY_PATTERN_DEBUG)
   array tmp =
     dbm_cached_get( "local" )
     ->query("SELECT full,enc FROM compiled_formats WHERE md5=%s", kmd5 );
@@ -6615,7 +6641,7 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 		 describe_backtrace(err));
 // #endif
   }
-
+#endif /* !defined(HTACCESS_DEBUG) && !defined(SECURITY_PATTERN_DEBUG) */
 
 
   string code = "";
@@ -6919,9 +6945,12 @@ function(RequestID:mapping|int) compile_security_pattern( string pattern,
 #endif /* SECURITY_PATTERN_DEBUG || HTACCESS_DEBUG */
   mixed res = compile_string( code );
    
+#if !defined(HTACCESS_DEBUG) && !defined(SECURITY_PATTERN_DEBUG)
   dbm_cached_get( "local" )
     ->query("REPLACE INTO compiled_formats (md5,full,enc) VALUES (%s,%s,%s)",
 	    kmd5,pattern,encode_value( res, master()->Encoder (res) ) );
+#endif /* !defined(HTACCESS_DEBUG) && !defined(SECURITY_PATTERN_DEBUG) */
+
   return compile_string(code)()->f;
 }
 
