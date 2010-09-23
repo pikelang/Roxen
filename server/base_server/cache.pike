@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.132 2010/09/23 17:16:05 mast Exp $
+// $Id: cache.pike,v 1.133 2010/09/23 19:07:57 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -179,6 +179,9 @@ class CacheManager
   //! greater than this. This is a cached value calculated from
   //! @[total_size_limit] on regular intervals.
 
+  int entry_add_count;
+  //! Number of entries added since this cache manager was created.
+
   mapping(string:mapping(mixed:CacheEntry)) lookup = ([]);
   //! Lookup mapping on the form @expr{(["cache_name": ([key: data])])@}.
   //!
@@ -279,11 +282,7 @@ class CacheManager
 	size += entry->size;
 	recent_added_bytes += entry->size;
 
-	if (!(cs->misses & 0x3fff)) // = 16383
-	  // Approximate the number of misses as the number of new entries
-	  // added to the cache. That should be a suitable unit to use for the
-	  // update interval since the manager overhead should be linear to
-	  // the number of cached entries.
+	if (!(++entry_add_count & 0x3fff)) // = 16383
 	  update_size_limit();
       }
 
