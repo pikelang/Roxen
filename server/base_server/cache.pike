@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.131 2010/05/05 06:07:24 marty Exp $
+// $Id: cache.pike,v 1.132 2010/09/23 17:16:05 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -1474,9 +1474,9 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
     };
   werror ("%O: la %d size %d time %g int %d cyc %d ext %d vis %d revis %d "
 	  "rnd %d wqa %d\n",
-	  entry, opts->lookahead, opts->size, t, opts->internal, opts->cyclic,
-	  opts->external, opts->visits, opts->revisits, opts->rounds,
-	  opts->work_queue_alloc);
+	  new_entry, opts->lookahead, opts->size, t, opts->internal,
+	  opts->cyclic, opts->external, opts->visits, opts->revisits,
+	  opts->rounds, opts->work_queue_alloc);
 
 #if 0
   if (opts->external) {
