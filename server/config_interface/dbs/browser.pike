@@ -460,6 +460,13 @@ string is_image( string x )
     return "png";
 }
 
+int is_deflated (string what)
+{
+  // This detection is an estimate - it may give false positives.
+  if (!stringp (what) || sizeof (what) < 3)
+    return 0;
+  return ((what[0] & 0x0f) == 8) && !(((what[0] << 8) + what[1]) % 31);
+}
 
 int is_encode_value( string what )
 {
@@ -833,10 +840,20 @@ mapping|string parse( RequestID id )
 	      else if( is_image( q[i] ) )
 		qres +=
 		  "<img src='browser.pike?image="+store_image( q[i] )+ "' />";
-	      else if( is_encode_value( q[i] ) )
-		qres += format_decode_value(q[i]);
-	      else
-		qres += Roxen.html_encode_string(q[i]);
+	      else {
+		mixed tmp = q[i];
+		if (is_deflated (q[i])) {
+		  // is_deflated _may_ give false positives, hence the catch.
+		  catch {
+		    tmp = Gz.inflate()->inflate (q[i]);
+		  };
+		}
+
+		if( is_encode_value( tmp ) )
+		  qres += format_decode_value(tmp);
+		else
+		  qres += Roxen.html_encode_string(tmp);
+	      }
 	      qres += "</td>";
 	    }
 	    qres += "</tr>\n";
