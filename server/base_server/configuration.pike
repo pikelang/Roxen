@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.703 2010/07/12 20:07:43 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.704 2010/09/28 12:23:32 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -2726,17 +2726,21 @@ array(int)|Stat stat_file(string file, RequestID id)
 
 mapping error_file( RequestID id )
 {
-  mapping res;  
-  if (id->not_query == "/favicon.ico") {
-    //  The most popular 404 request ever? Skip the fancy error page.
+  mapping res;
+  // Avoid recursion in 404 messages.
+  if (id->root_id->misc->generate_file_not_found ||
+      //  The most popular 404 request ever? Skip the fancy error page.
+      id->not_query == "/favicon.ico") {
     res = Roxen.http_string_answer("No such file", "text/plain");
   } else {
+    id->root_id->misc->generate_file_not_found = 1;
     string data = query("ZNoSuchFile");
 #if ROXEN_COMPAT <= 2.1
     data = replace(data,({"$File", "$Me"}),
 		   ({"&page.virtfile;", "&roxen.server;"}));
 #endif
     res = Roxen.http_rxml_answer( data, id, 0, "text/html" );
+    id->root_id->misc->generate_file_not_found = 0;
   }
   res->error = 404;
   NOCACHE();
@@ -2745,16 +2749,17 @@ mapping error_file( RequestID id )
 
 mapping auth_failed_file( RequestID id, string message )
 {
-  // Avoid recurssion in 401 messages. This could occure if the
-  // 401 messages used files that also where access denied.
-  if(id->misc->generate_auth_failed)
+  // Avoid recursion in 401 messages. This could occur if the 401
+  // messages used files that also cause access denied.
+  if(id->root_id->misc->generate_auth_failed)
     return Roxen.http_low_answer(401, "<title>Access Denied</title>"
 				 "<h2 align=center>Access Denied</h2>");
-  id->misc->generate_auth_failed = 1;
+  id->root_id->misc->generate_auth_failed = 1;
   
   string data = query("ZAuthFailed");
   NOCACHE();
   mapping res = Roxen.http_rxml_answer( data, id, 0, "text/html" );
+  id->root_id->misc->generate_auth_failed = 0;
   res->error = 401;
   return res;
 }
