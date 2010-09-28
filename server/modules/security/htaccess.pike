@@ -1,9 +1,13 @@
 // This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 
-// .htaccess compability by David Hedbor, neotron@roxen.com
-//   Changed into module by Per Hedbor, per@roxen.com
+// .htaccess compability by David Hedbor <neotron@roxen.com>
+//   Changed into module by Per Hedbor <per@roxen.com>
+//   Support for many extensions added by Henrik Grubbström <grubba@roxen.com>
+//
+// The canonical documentation for the .htaccess format seems to be
+//   http://httpd.apache.org/docs/1.3/mod/mod_access.html
 
-constant cvs_version="$Id: htaccess.pike,v 1.107 2009/05/07 14:15:55 mast Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.108 2010/09/28 13:59:38 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -174,6 +178,9 @@ function(RequestID:mapping|int) allow_deny( function allow,
   return lambda( RequestID id ) {
 	   mixed not_allowed = allow && allow( id );
 	   mixed denied  = deny && deny( id );
+	   // Note: not_allowed is 1 or a mapping if none of the allow
+	   //       patterns matched.
+	   //       denied is 0 if none of the deny patterns matched.
 #ifdef HTACCESS_DEBUG
 	   report_debug("HTACCESS: not_allowed: %O\n"
 			"          denied: %O\n"
@@ -185,24 +192,27 @@ function(RequestID:mapping|int) allow_deny( function allow,
 			  0:"deny, allow"])[order] || "UNKNOWN",
 			allow, deny);
 #endif /* HTACCESS_DEBUG */
+	   // Note: Returns 1 or a mapping on access denied.
+	   //       Returns 0 on access permitted.
 	   switch( order )
 	   {
-	     case 1: //allow,deny
-	       if( not_allowed ) return not_allowed;
-	       if( denied )      return denied;
-	       return 0;
-
 	     case -1: // mutual-failure
-	       if( not_allowed && denied )
-		 return mappingp( not_allowed ) ? not_allowed : denied;
-	       return 0;
+	       // Deprecated, equvivalent to allow,deny.
+	     case 1: //allow,deny
+	       // * At least one allow pattern MUST match.
+	       // AND
+	       // * All deny patterns MUST NOT match.
+	       if( not_allowed ) return not_allowed;
+	       return denied;
 
 	     case 0: // deny,allow
-	       if( !denied )
-		 return 0;
-	       if( not_allowed )
-		 return not_allowed;
+	       // * All deny patterna MUST NOT match.
+	       // OR
+	       // * At least one allow pattern MUST match.
+	       if( !denied ) return 0;
+	       return not_allowed;
 	   }
+	   return 0;
 	 };
 }
 					    
@@ -334,6 +344,9 @@ mapping parse_and_find_htaccess( RequestID id )
 
     flush_patterns();
 
+    // Make the deny handler default to allowing all.
+    // This means that the result will only return 1
+    // is there was a rule that matched.
     roxen_deny += "allow ip=*\n";
 
     if( any_ok ) {
