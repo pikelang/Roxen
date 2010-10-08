@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.625 2010/09/02 16:03:40 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.626 2010/10/08 15:54:09 marty Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2385,7 +2385,12 @@ class GzStreamingFile
   { 
     return sprintf("%1c%1c%1c%1c%4c%1c%1c", 
                    0x1f, 0x8b, 8, 0, 0, 0, 3); 
-  } 
+  }
+
+  string _sprintf()
+  {
+    return sprintf ("GzStreamingFile (%O)", srcfile);
+  }
 }
 #endif
 
@@ -2468,7 +2473,8 @@ string try_gzip_data(Stdio.File|string data,
       }
     }
 #ifdef HTTP_COMPR_STREAM
-    else if (objectp (data)) {
+    else if (objectp (data) && functionp (data->read) &&
+	     functionp (data->tell)) {
       return GzStreamingFile (data, conf->query ("http_compression_level"));
     }
 #endif
