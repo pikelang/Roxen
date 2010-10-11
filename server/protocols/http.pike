@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.626 2010/10/08 15:54:09 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.627 2010/10/11 09:50:35 stewa Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -1369,9 +1369,13 @@ void end(int|void keepit)
     // Now.. Transfer control to a new http-object. Reset all variables etc..
     object o = object_program(this_object())(0, 0, 0);
     o->remoteaddr = remoteaddr;
-    o->client = client;
-    o->supports = supports;
-    o->client_var = client_var;
+
+    // Don't share these since proxies can send different user-agent headers
+    // when multiplexing several clients into one connection
+    //o->client = client;
+    //o->supports = supports;
+    //o->client_var = client_var;
+
     o->host = host;
     o->conf = conf;
     o->my_fd_busy = !!pipe;
