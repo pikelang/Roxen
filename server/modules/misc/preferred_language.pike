@@ -5,7 +5,7 @@
 
 inherit "module";
 
-constant cvs_version = "$Id: preferred_language.pike,v 1.39 2009/07/08 16:15:38 jonasw Exp $";
+constant cvs_version = "$Id: preferred_language.pike,v 1.40 2010/10/11 15:46:33 jonasw Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_FIRST | MODULE_TAG;
 constant module_name = "Preferred Language Analyzer";
@@ -490,7 +490,7 @@ class TagEmitLanguages {
 	({ lang, "Unknown", "Unknown" });
       
       res+=({ (["code":lid[0],
-		"en":lid[1],
+		"en": (lid[1] == "standard") ? "english" : lid[1],
 		"local":lid[2],
 		"preurl":Roxen.add_pre_state(url, id->prestate - 
 					     (iso639 ? aggregate_multiset(@languages) : 
