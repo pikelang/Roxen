@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.236 2009/08/05 16:07:12 grubba Exp $
+# $Id: start,v 1.237 2010/10/13 13:05:26 stewa Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -131,7 +131,8 @@ setup_environment
 ####### BEGIN ARGUMENT PARSING
 
 
-DEFINES="$DEFINES -DRAM_CACHE"
+DEFINES="$DEFINES -DRAM_CACHE -DNEW_RAM_CACHE -DHTTP_COMPRESSION"
+
 
 # Thread enabling.
 # FIXME: Ought to use case...esac.
@@ -252,6 +253,12 @@ parse_args() {
   ;;
   '--without-ram-cache'|'--disable-ram-cache')
     DEFINES="`echo $DEFINES | sed -e 's/-DRAM_CACHE//g'`"
+  ;;
+  '--without-new-ram-cache'|'--disable-new-ram-cache')
+    DEFINES="`echo $DEFINES | sed -e 's/-DNEW_RAM_CACHE//g'`"
+  ;;
+  '--without-http-compression'|'--disable-http-compression')
+    DEFINES="`echo $DEFINES | sed -e 's/-DHTTP_COMPRESSION//g'`"
   ;;
   '--without-ram-cache-stat'|'--disable-ram-cache-stat')
     DEFINES="`-DRAM_CACHE_ASUME_STATIC_CONTENT`"
@@ -427,12 +434,17 @@ the default arguments.
       .B--without-ram-cacheB.:        Do not use a protocol level RAM cache to speed
 				  things up. Saves RAM at the cost of speed.
 
+      .B--without-new-ram-cacheB.:    Do not use a the new protocol level RAM cache
+				  introduced in Roxen 5.0-release4.
+
       .B--without-ram-cache-statB.:   Disable the stat that is usually done
 				  for files in the protocol cache to ensure that
 				  they are not changed before they are sent.
                                   Improves performance at the cost of constant
                                   aggravation if the site is edited. Useful for
 				  truly static sites.
+
+      .B--without-http-compressionB.: Disable gzip compression for HTTP requests.
 
       .B--with-threadsB.:             If threads are available, use them.
 
