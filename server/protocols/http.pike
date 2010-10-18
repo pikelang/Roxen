@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.627 2010/10/11 09:50:35 stewa Exp $";
+constant cvs_version = "$Id: http.pike,v 1.628 2010/10/18 07:42:38 marty Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2493,8 +2493,18 @@ private int(0..1) compress_dynamic_requests()
 
 private int(0..1) client_gzip_enabled()
 {
-  if (string ae = request_headers["accept-encoding"])
-    return has_value("," + lower_case(ae - " " - "\t") + ",", ",gzip,");
+  array(string)|string accept_encoding = request_headers["accept-encoding"];
+
+  if (stringp (accept_encoding)) {
+    return has_value("," + lower_case(accept_encoding - " " - "\t") + ",",
+		     ",gzip,");
+  } else if (arrayp (accept_encoding)) {
+    foreach (accept_encoding, string ae) {
+      if (has_value("," + lower_case(ae - " " - "\t") + ",", ",gzip,"))
+	return 1;
+    }
+  }
+
   return 0;
 }
 
