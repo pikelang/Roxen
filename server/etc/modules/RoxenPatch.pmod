@@ -97,7 +97,7 @@ string unixify_path(string s)
 //!
 class Patcher
 {
-  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.27 2010/08/18 11:54:14 erik Exp $";
+  private constant lib_version = "$Id: RoxenPatch.pmod,v 1.28 2010/10/25 16:06:38 jonasw Exp $";
 
   //! Should be relative the server dir.
   private constant default_local_dir     = "../local/";
@@ -2224,9 +2224,11 @@ class Patcher
 			    Filesystem.Tar.EXTRACT_SKIP_MTIME);
       }) {
       werror("%s\n", describe_backtrace(err));
+      file->close();
       return 0;
     }
-
+    
+    file->close();
     return 1; 
   }
 
