@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.636 2010/08/27 09:31:15 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.637 2010/10/26 14:32:35 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -9171,7 +9171,7 @@ between the date and the time can be either \" \" (space) or \"T\" (the letter T
  <p>The base path.</p>
 </attr>
 
-<attr name='path' value='number' required='required'>
+<attr name='path' value='string' required='required'>
  <p>The path to be combined (appended) to the base path.</p>
 </attr>",
 
