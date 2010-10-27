@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.439 2010/05/25 09:37:25 grubba Exp $
+// $Id: roxenloader.pike,v 1.440 2010/10/27 13:56:29 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.439 2010/05/25 09:37:25 grubba Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.440 2010/10/27 13:56:29 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -133,8 +133,12 @@ string get_cvs_id(string from)
     object f = open(from,"r");
     string id;
     id = f->read(1024);
-    if(sscanf(id, "%*s$"+"Id: %*s,v %s ", id) == 3)
-      return last_id=" (version "+id+")";
+    if (sscanf (id, "%*s$""Id: %s $", id) == 2) {
+      if(sscanf(id, "%*s,v %[0-9.] %*s", string rev) == 3)
+	return last_id=" (rev "+rev+")"; // cvs
+      if (sscanf (id, "%[0-9a-z]%*c", id) == 1)
+	return last_id = " (" + id[..7] + ")"; // git
+    }
   };
   last_id = "";
   return "";
