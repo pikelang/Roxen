@@ -6,7 +6,7 @@ inherit "module";
 
 constant thread_safe=1;
 
-constant cvs_version = "$Id: check_spelling.pike,v 1.36 2009/05/07 14:15:56 mast Exp $";
+constant cvs_version = "$Id: check_spelling.pike,v 1.37 2010/10/27 15:32:22 jonasw Exp $";
 
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Tags: Spell checker";
@@ -62,6 +62,11 @@ void create() {
   defvar("prestate", "", "Prestate",TYPE_STRING,
          "If specified, only check spelling in the &lt;spell&gt; tag "
 	 "when this prestate is present.");
+
+  defvar("use_utf8", 1, "Enable UTF-8 support",
+	 TYPE_FLAG,
+	 "If set takes advantage of UTF-8 support in Aspell. NOTE: Requires "
+	 "Aspell version 0.60 or later.");
 
 }
 
@@ -226,6 +231,7 @@ string run_spellcheck(string|array(string) words, void|string dict)
   object file3=Stdio.File();
   object file4=file3->pipe();
   string spell_res;
+  int use_utf8 = query("use_utf8");
 
   if(stringp(words))
     words = replace(words, "\n", " ");
@@ -236,8 +242,9 @@ string run_spellcheck(string|array(string) words, void|string dict)
   }
   Process.Process p =
     Process.create_process(({ query("spellchecker"), "-a", "-C" }) +
-                           (stringp(words) ? ({ "-H" })       : ({})) +
-                           (dict           ? ({ "-d", dict }) : ({})),
+			   (use_utf8 ? ({ "--encoding=utf-8" }) : ({ }) ) +
+                           (stringp(words) ? ({ "-H" })         : ({ }) ) +
+                           (dict           ? ({ "-d", dict })   : ({ }) ),
                            ([ "stdin":file2,"stdout":file4 ]));
 
   string text = stringp(words) ?
@@ -246,9 +253,12 @@ string run_spellcheck(string|array(string) words, void|string dict)
                             below. */ :
                " "+words*"\n "+"\n" /* Compatibility mode. */;
 
-  // FIXME: Aspell can be fed with other charsets.
-  text = Locale.Charset.encoder("iso-8859-1", "\xa0")->feed(text)->drain();
-
+  //  Aspell 0.60 or later understands UTF-8 encoding natively
+  if (use_utf8)
+    text = string_to_utf8(text);
+  else
+    text = Locale.Charset.encoder("iso-8859-1", "\xa0")->feed(text)->drain();
+  
   Stdio.sendfile(({ text }), 0, 0, -1, 0, file1,
                  lambda(int bytes) { file1->close(); });
 
@@ -256,7 +266,10 @@ string run_spellcheck(string|array(string) words, void|string dict)
   file4->close();
   spell_res=file3->read();
   file3->close();
-
+  
+  if (use_utf8 && spell_res)
+    catch { spell_res = utf8_to_string(spell_res); };
+  
   return p->wait() == 0 ? spell_res : 0;
 }
 
