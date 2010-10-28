@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.637 2010/10/26 14:32:35 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.638 2010/10/28 21:58:03 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -12314,7 +12314,8 @@ Specify scope to test for existence.</p>
 </desc>",
 
 "&_.counter;":#"<desc type='entity'><p>
- Gives the current number of loops inside the <tag>emit</tag> tag.
+ Gives the current number of loops inside the <tag>emit</tag> tag,
+ starting from zero.
 </p>
 </desc>"
 
