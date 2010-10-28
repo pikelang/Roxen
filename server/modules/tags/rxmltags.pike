@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.556 2010/06/02 14:36:49 grubba Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.557 2010/10/28 12:25:52 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen->language;
 
@@ -672,7 +672,9 @@ class TagInc {
   inherit RXML.Tag;
   constant name = "inc";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([
+    "variable":RXML.t_text (RXML.PEnt)
+  ]);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
@@ -691,7 +693,9 @@ class TagDec {
   inherit RXML.Tag;
   constant name = "dec";
   constant flags = RXML.FLAG_EMPTY_ELEMENT;
-  mapping(string:RXML.Type) req_arg_types = ([ "variable":RXML.t_text ]);
+  mapping(string:RXML.Type) req_arg_types = ([
+    "variable":RXML.t_text (RXML.PEnt)
+  ]);
   array(RXML.Type) result_types = ({RXML.t_nil}); // No result.
 
   class Frame {
