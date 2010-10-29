@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.294 2010/07/12 20:42:51 mast Exp $
+// $Id: Roxen.pmod,v 1.295 2010/10/29 14:03:31 wellhard Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -5380,3 +5380,60 @@ LogPipe get_log_pipe()
 
 constant DecodeError = Locale.Charset.DecodeError;
 constant EncodeError = Locale.Charset.EncodeError;
+
+mapping(string:int) get_memusage()
+//! Returns a mapping of the memory used by the Roxen process.
+//!
+//! @returns
+//!   @mapping
+//!     @member string "resident"
+//!       Resident memory in KiB.
+//!     @member string "virtual"
+//!       Virtual memory in KiB.
+//!
+//! @note Uses the ps binary in unix and wmic on Windows.
+//! @note Is a bit expensive on Windows.
+{
+  constant default_value = ([ "virtual":0, "resident":0 ]);
+  string res;
+#ifdef __NT__
+  constant divisor = 1024;
+  if(mixed err = catch { 
+      res = Process.run( ({ "wmic", "process", "where",
+			    "ProcessId=" + (string)getpid(),
+			    "get", "ProcessId,VirtualSize,WorkingSetSize" }) )->stdout;
+    })
+  {
+#ifdef MODULE_DEBUG
+    werror("The wmic command failed with: %O\n", describe_backtrace(err));
+#endif
+    return default_value;
+  }
+#else
+  constant divisor = 1;
+  string ps_location =
+    Process.locate_binary( ({ "/sbin", "/usr/sbin", "/bin", "/usr/bin" }), "ps");
+  if(!ps_location)
+    return default_value;
+  
+  if(mixed err = catch { 
+      res = Process.run( ({ ps_location, "-o", "pid,vsz,rss",
+			    (string)getpid() }) )->stdout;
+    })
+  {
+#ifdef MODULE_DEBUG
+    werror("The ps command failed with: %O\n", describe_backtrace(err));
+#endif
+    return default_value;
+  }
+#endif
+  array rows = (res / "\n") - ({ "" });
+  if(sizeof(rows) < 2)
+    return default_value;
+  
+  array values = (rows[1]/" ") - ({ "" });
+  if(sizeof(values) < 3)
+    return default_value;
+  
+  return ([ "virtual": (int)values[1]/divisor, "resident": (int)values[2]/divisor ]);
+}
