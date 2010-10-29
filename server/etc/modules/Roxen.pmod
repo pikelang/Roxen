@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.296 2010/10/29 21:37:33 mast Exp $
+// $Id: Roxen.pmod,v 1.297 2010/10/29 21:56:06 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -5488,7 +5488,7 @@ string lookup_real_path_case_insens (string path, void|int no_warn)
     }
 
     string dir = dirname (path);
-    if (dir != "/") dir = recur (dir);
+    if (dir != "" && dir != path) dir = recur (dir);
 
   search_dir:
     if (array(string) dir_list = get_dir (dir)) {
