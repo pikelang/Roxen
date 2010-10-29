@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.295 2010/10/29 14:03:31 wellhard Exp $
+// $Id: Roxen.pmod,v 1.296 2010/10/29 21:37:33 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -17,6 +17,21 @@
 
 // Tell Pike.count_memory this is global.
 constant pike_cycle_depth = 0;
+
+// Thunks to be able to access the cache from here, since this module
+// is compiled and instantiated before cache.pike.
+function cache_lookup =
+  lambda (mixed... args) {
+    return (cache_lookup = all_constants()["cache_lookup"]) (@args);
+  };
+function cache_set =
+  lambda (mixed... args) {
+    return (cache_set = all_constants()["cache_set"]) (@args);
+  };
+function cache_remove =
+  lambda (mixed... args) {
+    return (cache_remove = all_constants()["cache_remove"]) (@args);
+  };
 
 object|array(object) parse_xml_tmpl( string ttag, string itag,
 				     string xml_file,
@@ -5436,4 +5451,75 @@ mapping(string:int) get_memusage()
     return default_value;
   
   return ([ "virtual": (int)values[1]/divisor, "resident": (int)values[2]/divisor ]);
+}
+
+string lookup_real_path_case_insens (string path, void|int no_warn)
+//! Looks up the given path case insensitively to a path in the real
+//! file system. I.e. all segments in @[path] that exist in the file
+//! system when matched case insensitively are converted to the same
+//! case they have when listed by @[get_dir]. Segments that don't
+//! exist are kept as-is.
+//!
+//! If a segment ambiguously matches several entries in a directory
+//! then it and all remaining segments are returned as-is. A warning
+//! is also logged in this case, unless @[no_warn] is nonzero.
+//!
+//! The given path is assumed to be absolute, and it is normalized
+//! with @[combine_path] before being checked. If there's a trailing
+//! slash then it's kept intact.
+//!
+//! Existing paths are cached without any time limit, but the cached
+//! paths are always verified to still exist before being reused. Thus
+//! the only overcaching effect that can occur is if the underlying
+//! file system is case insensitive and some path segment only has
+//! changed in case.
+{
+  ASSERT_IF_DEBUG (is_absolute_path (path));
+
+  string recur (string path)
+  {
+    string lc_path = lower_case (path);
+    if (string cached = cache_lookup ("case_insens_paths", lc_path)) {
+      if (Stdio.exist (cached)) {
+	// werror ("path %q -> %q (cached)\n", path, cached);
+	return cached;
+      }
+      cache_remove ("case_insens_paths", lc_path);
+    }
+
+    string dir = dirname (path);
+    if (dir != "/") dir = recur (dir);
+
+  search_dir:
+    if (array(string) dir_list = get_dir (dir)) {
+      string lc_name = basename (lc_path);
+      string real_name;
+      foreach (dir_list, string ent)
+	if (lower_case (ent) == lc_name) {
+	  if (real_name) {
+	    if (!no_warn)
+	      report_warning ("Ambiguous path %q matches both %q and %q "
+			      "in %q.\n", path, real_name, ent, dir);
+	    break search_dir;
+	  }
+	  real_name = ent;
+	}
+      if (real_name) {
+	string real_path = combine_path (dir, real_name);
+	// werror ("path %q -> %q\n", path, real_path);
+	cache_set ("case_insens_paths", lc_path, real_path);
+	return real_path;
+      }
+    }
+
+    // Nonexisting file or dir - keep the case in that part.
+    // werror ("path %q -> %q (nonexisting)\n", path, combine_path (dir, basename (path)));
+    return combine_path (dir, basename (path));
+  };
+
+  path = combine_path (path);
+  if (has_suffix (path, "/"))
+    return recur (path[..<1]) + "/";
+  else
+    return recur (path);
 }
