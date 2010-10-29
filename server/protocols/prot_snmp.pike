@@ -2,7 +2,7 @@
 // Copyright © 2001 - 2009, Roxen IS.
 
 /*
- * $Id: prot_snmp.pike,v 2.17 2010/05/26 11:41:32 noring Exp $
+ * $Id: prot_snmp.pike,v 2.18 2010/10/29 14:04:12 wellhard Exp $
  *
  * SNMP protocol support.
  *
@@ -109,7 +109,7 @@ class SystemMIB
 	       UNDEFINED,
 	       // system.sysDescr
 	       SNMP.String("Roxen Webserver SNMP agent v" +
-			   ("$Revision: 2.17 $"/" ")[1],
+			   ("$Revision: 2.18 $"/" ")[1],
 			   "sysDescr"),
 	       // system.sysObjectID
 	       SNMP.OID(SNMP.RIS_OID_WEBSERVER,
@@ -244,6 +244,18 @@ class RoxenGlobalMIB
     return rusage_data;
   }
 
+  protected int memusage_time;
+  protected mapping(string:int) memusage_data;
+  protected mapping(string:int) update_memusage()
+  {
+    if(!memusage_data || time(1) != memusage_time)
+    {
+      memusage_data = Roxen.get_memusage();
+      memusage_time = time(1);
+    }
+    return memusage_data;
+  }
+  
   protected void create()
   {
 #if 0
@@ -270,7 +282,12 @@ class RoxenGlobalMIB
 		 SNMP.Counter(lambda()
 			      { return update_rusage()->stime/10; }, "sysTime",
 		   "System time expressed in centiseconds."),
-		 // FIXME: Add resistant and virtual memory, etc.
+		 SNMP.Gauge(lambda()
+			    { return update_memusage()->resident; }, "residentMemory",
+		   "Resident memory in KiB."),
+		 SNMP.Gauge(lambda()
+			    { return update_memusage()->virtual; }, "virtualMemory",
+		   "Virtual memory in KiB."),
 	       }),
 	       ({
 		 UNDEFINED,
