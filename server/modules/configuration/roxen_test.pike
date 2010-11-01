@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.83 2009/09/18 14:37:32 grubba Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.84 2010/11/01 16:12:48 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -50,6 +50,9 @@ int tests, ltests, test_num;
 int fails, lfails;
 int pass;
 string tag_test_data;
+int bkgr_fails;
+
+void background_failure() {bkgr_fails++;}
 
 int do_continue(int _tests, int _fails)
 {
@@ -560,7 +563,15 @@ void run_xml_tests(string data) {
   foreach (indices (used_modules), string modname)
     conf->disable_module (modname);
 
-  report_debug("Did %d tests, failed on %d.\n", ltests, lfails);
+  report_debug("Did %d tests, failed on %d%s.\n", ltests, lfails,
+	      bkgr_fails ?
+	       ", detected " + bkgr_fails + " background failures" : "");
+
+  if (bkgr_fails) {
+    fails += bkgr_fails;
+    bkgr_fails = 0;
+  }
+
   continue_find_tests();
 }
 
@@ -573,7 +584,16 @@ void run_pike_tests(object test, string path)
   {
     tests+=tsts;
     fails+=fail;
-    report_debug("Did %d tests, failed on %d.\n", tsts, fail);
+
+    report_debug("Did %d tests, failed on %d%s.\n", tsts, fail,
+		 bkgr_fails ?
+		 ", detected " + bkgr_fails + " background failures" : "");
+
+    if (bkgr_fails) {
+      fails += bkgr_fails;
+      bkgr_fails = 0;
+    }
+
     continue_find_tests();
   };
 
@@ -647,7 +667,8 @@ void continue_find_tests( )
   finished = 1;
   if(is_last_test_configuration())
   {
-    report_debug("\n\nDid a grand total of %d tests, %d failed.\n",
+    // Note that e.g. the distmaker parses this string.
+    report_debug("\nDid a grand total of %d tests, %d failed.\n\n",
 		 tests, fails);
     roxen.restart(0, fails > 127 ? 127 : fails);
   }

@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.440 2010/10/27 13:56:29 mast Exp $
+// $Id: roxenloader.pike,v 1.441 2010/11/01 16:12:48 mast Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.440 2010/10/27 13:56:29 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.441 2010/11/01 16:12:48 mast Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -161,6 +161,19 @@ int num_describe_backtrace = 0; // For statistics
 string describe_backtrace (mixed err, void|int linewidth)
 {
   num_describe_backtrace++;
+
+#ifdef RUN_SELF_TEST
+  // Count this as a failure if it occurs during the self test. This
+  // is somewhat blunt, but it should catch all the places (typically
+  // in other threads) where we catch errors, log them, and continue.
+  if (roxen)
+    foreach (roxen->configurations, object/*(Configuration)*/ conf)
+      if (object/*(RoxenModule)*/ mod = conf->get_provider ("roxen_test")) {
+	mod->background_failure();
+	break;
+      }
+#endif
+
   add_cvs_ids (err);
   return predef::describe_backtrace (err, 999999);
 }
