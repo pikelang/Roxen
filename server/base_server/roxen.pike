@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1069 2010/09/23 15:27:30 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1070 2010/11/02 17:09:59 marty Exp $";
 
 //! @appears roxen
 //!
@@ -1238,7 +1238,14 @@ protected void bg_process_queue()
 #endif
 
   if (mixed err = catch {
-    while (bg_queue->size() && !shutdown_started) {
+    // Make sure we don't run forever if background jobs are queued
+    // over and over again, to avoid starving other threads. (If they
+    // are starved enough, busy_threads will never be incremented.)
+    // If jobs are enqueued while running another background job,
+    // bg_process_queue is put on the handler queue again at the very
+    // end of this function.
+    int jobs_to_process = bg_queue->size();
+    while (jobs_to_process-- && !shutdown_started) {
       // Not a race here since only one thread is reading the queue.
       array task = bg_queue->read();
 
@@ -1342,6 +1349,7 @@ protected void bg_process_queue()
     throw (err);
   }
   bg_process_running = 0;
+  if (bg_queue->size()) handle (bg_process_queue);
 }
 #endif
 
