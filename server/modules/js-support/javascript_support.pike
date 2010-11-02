@@ -1,6 +1,6 @@
 // This is a roxen module. Copyright © 1999 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: javascript_support.pike,v 1.72 2009/08/10 14:36:52 jonasw Exp $";
+constant cvs_version = "$Id: javascript_support.pike,v 1.73 2010/11/02 15:20:09 jonasw Exp $";
 
 #include <module.h>
 #include <request_trace.h>
@@ -208,7 +208,7 @@ string container_js_write(string name, mapping args, string contents,
 private
 string make_args_unquoted(mapping args)
 {
-  return map(indices(args),
+  return map(sort(indices(args)),
 	     lambda(string key)
 	     {
 	       string arg = replace(args[key], "\"", "'");

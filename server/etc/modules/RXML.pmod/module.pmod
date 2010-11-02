@@ -2,7 +2,7 @@
 //
 // Created 1999-07-30 by Martin Stjernholm.
 //
-// $Id: module.pmod,v 1.417 2010/07/12 20:21:22 mast Exp $
+// $Id: module.pmod,v 1.418 2010/11/02 15:20:09 jonasw Exp $
 
 // Kludge: Must use "RXML.refs" somewhere for the whole module to be
 // loaded correctly.
@@ -7551,10 +7551,11 @@ class TXml
 
     if (args)
       if (flags & FLAG_RAW_ARGS)
-	foreach (args; string arg; string val)
-	  add (" ", arg, "=\"", replace (val, "\"", "\"'\"'\""), "\"");
+	foreach (sort(indices(args)), string arg)
+	  add (" ", arg, "=\"", replace (args[arg], "\"", "\"'\"'\""), "\"");
       else
-	foreach (args; string arg; string val) {
+	foreach (sort(indices(args)), string arg) {
+	  string val = args[arg];
 	  // Three serial replaces are currently faster than one parallell.
 	  val = replace (val, "&", "&amp;");
 	  val = replace (val, "\"", "&quot;");

@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.297 2010/10/29 21:56:06 mast Exp $
+// $Id: Roxen.pmod,v 1.298 2010/11/02 15:20:07 jonasw Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -1986,11 +1986,12 @@ string make_tag_attributes(mapping(string:string) in,
   };
   
   string res = "";
+  array(string) sorted_attrs = sort(indices(in));
   if (preserve_roxen_entities) {
-    foreach(indices(in), string a)
+    foreach(sorted_attrs, string a)
       res += " " + a + "=\"" + quote_fn((string) in[a]) + "\"";
   } else {
-    foreach(indices(in), string a)
+    foreach(sorted_attrs, string a)
       res += " " + a + "=\"" + html_encode_string((string) in[a]) + "\"";
   }
   return res;
