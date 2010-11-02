@@ -1,12 +1,12 @@
 Author:  Marcus Wellhardh, Roxen Internet Software AB, 2007-11-12
-Version: 1.0
+Version: 2.0
 
 ABOUT
 -----
 
 This package can be used to create graphs in cacti that monitors a
 Roxen Webserver, Roxen CMS or a Roxen Editorial Portal server. The
-package contains about 20 graphable data source, some examples:
+package contains about 70 graphable data source, some examples:
 
   - Requests per second
   - Transfered bytes
@@ -46,7 +46,7 @@ FILES
 REQUIREMENTS
 ------------
 
-  The templates was created and tested on cacti version 0.8.6j. The
+  The templates was created and tested on cacti version 0.8.7e. The
   templates might be compatible with earlier versions. Cacti can be
   downloaded from:
 
@@ -72,8 +72,8 @@ INSTALL
 
   Create a device that should be monitored, example:
 
-    Description:    "PRINT metro.roxen.com"
-    Hostname:       "metro.roxen.com"
+    Description:    "PRINT example.roxen.com"
+    Hostname:       "example.roxen.com"
     Host Template:  "Roxen MIB - Editorial Portal"
     SNMP Community: "public"
     SNMP Port:      "16180"
@@ -97,18 +97,53 @@ CONTENTS
   
   Graph Templates:
   
+    Roxen MIB - Site - Requests
+    Roxen MIB - Site - Runs
+    Roxen MIB - Site - Runs (log)
+    Roxen MIB - Site - Time
+    Roxen MIB - Site - Traffic (bytes/sec)
+    
+    Roxen MIB - Core - BG Queue Size
+    Roxen MIB - Core - BG Runs
+    Roxen MIB - Core - BG Runs (log)
+    Roxen MIB - Core - BG Time
+    Roxen MIB - Core - BG Time per run
+    Roxen MIB - Core - Backtraces
+    Roxen MIB - Core - CO Queue Size
+    Roxen MIB - Core - CO Runs
+    Roxen MIB - Core - CO Runs (log)
+    Roxen MIB - Core - CO Time
+    Roxen MIB - Core - CO Time per run
+    Roxen MIB - Core - CPU
+    Roxen MIB - Core - Handler Queue Size
+    Roxen MIB - Core - Handler Runs
+    Roxen MIB - Core - Handler Runs (log)
+    Roxen MIB - Core - Handler Time
+    Roxen MIB - Core - Handler Time per run
     Roxen MIB - Core - Requests   	
-    Roxen MIB - Core - Traffic (bytes/sec) 	
-    Roxen MIB - Feed - Last Import 	
-    Roxen MIB - Feed - Minimum Disk Space 	
-    Roxen MIB - Feed - Scanned Files 	
-    Roxen MIB - Feed - Total Last Import 	
-    Roxen MIB - Feed - Total Scanned Files 	
+    Roxen MIB - Core - Traffic (bytes/sec)
+    Roxen MIB - Core - Uptime
+
     Roxen MIB - MySQL - Connections 	
     Roxen MIB - MySQL - Queries 	
     Roxen MIB - MySQL - Slow Queries 	
-    Roxen MIB - MySQL - Uptime 	
-    Roxen MIB - Print - Actions 	
+    Roxen MIB - MySQL - Uptime
+
+    Roxen MIB - Feed - Last Import 	
+    Roxen MIB - Feed - Minimum Disk Space 	
+    Roxen MIB - Feed - Scan Time
+    Roxen MIB - Feed - Scan Time per monitor
+    Roxen MIB - Feed - Scan Time per run
+    Roxen MIB - Feed - Scanned Files 	
+    Roxen MIB - Feed - Scanned Monitors
+    Roxen MIB - Feed - Scans
+    Roxen MIB - Feed - Total Last Import 	
+    Roxen MIB - Feed - Total Scanned Files
+
+    Roxen MIB - Print - Action Time
+    Roxen MIB - Print - Action Time per run
+    Roxen MIB - Print - Actions
+    Roxen MIB - Print - Actions (log)
     Roxen MIB - Print - Available Disk Space 	
     Roxen MIB - Print - Backup Disk Space 	
     Roxen MIB - Print - Backup Errors 	
@@ -120,42 +155,21 @@ CONTENTS
     Roxen MIB - Print - Issues 	
     Roxen MIB - Print - Page Versions 	
     Roxen MIB - Print - Pages 	
+    Roxen MIB - Print - RAL Operations
+    Roxen MIB - Print - RAL Traffic
     Roxen MIB - Print - Stories 	
     Roxen MIB - Print - Story Item Versions 	
     Roxen MIB - Print - Story Items
-  
-  Data Templates:
-  
-    Roxen MIB - Core
-    Roxen MIB - Core - Uptime
-    Roxen MIB - Feed
-    Roxen MIB - Feed - lastImport
-    Roxen MIB - Feed - minFeedDiskCapacity
-    Roxen MIB - Feed - minFeedDiskFree
-    Roxen MIB - Feed - minFeedDiskUsage
-    Roxen MIB - Feed - pendingDeletionsTotal
-    Roxen MIB - Feed - pendingFilesTotal
-    Roxen MIB - Feed - scannedFilesTotal
-    Roxen MIB - MySQL - Connections
-    Roxen MIB - MySQL - Queries
-    Roxen MIB - MySQL - Slow Queries
-    Roxen MIB - MySQL - Uptime
-    Roxen MIB - Print - backupDiskCapacity
-    Roxen MIB - Print - backupDiskFree
-    Roxen MIB - Print - backupDiskUsed
-    Roxen MIB - Print - backupErrors
-    Roxen MIB - Print - backupIdleTime
-    Roxen MIB - Print - backupOperations
-    Roxen MIB - Print - backupQueueLength
-    Roxen MIB - Print - databaseDiskCapacity
-    Roxen MIB - Print - databaseDiskUsed
-    Roxen MIB - Print - databaseFreeDisk
-    Roxen MIB - Print - numActions
-    Roxen MIB - Print - numEditions
-    Roxen MIB - Print - numFeedItems
-    Roxen MIB - Print - numIssues
-    Roxen MIB - Print - numPages
-    Roxen MIB - Print - numPageVersions
-    Roxen MIB - Print - numStories
-    Roxen MIB - Print - numStoryItems
-    Roxen MIB - Print - numStoryItemVersions
+    
+    Roxen MIB - Clients - Bad User Applications
+    Roxen MIB - Clients - Browser Users
+    Roxen MIB - Clients - RAL Users
+    Roxen MIB - Clients - RMC Users
+
+    Roxen MIB - InDesign - Queue Size
+    Roxen MIB - InDesign - Queue Time
+    Roxen MIB - InDesign - Request Time
+    Roxen MIB - InDesign - Request Time per run
+    Roxen MIB - InDesign - Requests
+
+
