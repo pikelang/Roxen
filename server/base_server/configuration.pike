@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.704 2010/09/28 12:23:32 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.705 2010/11/02 17:17:52 marty Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -1861,17 +1861,20 @@ int expire_locks(RequestID id)
   return min_time - t;
 }
 
+mixed expire_lock_loop_handle;
+
 protected void expire_lock_loop()
 {
   int t = expire_locks(0);	// NOTE: Called with RequestID 0!
 
   if (sizeof(active_locks)) {
-    // Expire locks at least once every hour.
-    if (t < 3600) {
-      roxen.background_run(t, expire_lock_loop);
-    } else {
-      roxen.background_run(3600, expire_lock_loop);
-    }
+    t = max (t, 1); // Wait at least one second before the next run.
+    t = min (t, 3600); // Expire locks at least once every hour.
+
+    if (expire_lock_loop_handle)
+      remove_call_out (expire_lock_loop_handle);
+
+    expire_lock_loop_handle = roxen.background_run(t, expire_lock_loop);
   }
 }
 
@@ -1881,7 +1884,10 @@ protected void expire_lock_loop()
 void refresh_lock(DAVLock lock)
 {
   if (lock->expiry_delta) {
-    lock->expiry_time = lock->expiry_delta + time(1);
+    // Use time() instead of time(1) to avoid expiring the lock too
+    // early if the returned time is old. Probably unlikely, but
+    // anyways.
+    lock->expiry_time = lock->expiry_delta + time();
   }
 }
 
