@@ -6,14 +6,14 @@ ABOUT
 
 This package can be used to create graphs in cacti that monitors a
 Roxen Webserver, Roxen CMS or a Roxen Editorial Portal server. The
-package contains about 70 graphable data source, some examples:
+package contains about 70 graphable data sources. Some examples:
 
   - Requests per second
   - Transfered bytes
   - MySQL queries
 
-The templates fetches data via the SNMP protocol. You will have to
-enable SNMP on the Roxen server that should be monitored.
+The templates fetche data via the SNMP protocol. You will have to
+enable SNMP on the Roxen servers that should be monitored.
 
 A short introduction to cacti can be fond on cacti.net:
 
@@ -46,7 +46,7 @@ FILES
 REQUIREMENTS
 ------------
 
-  The templates was created and tested on cacti version 0.8.7e. The
+  The templates were created and tested on cacti version 0.8.7e. The
   templates might be compatible with earlier versions. Cacti can be
   downloaded from:
 
@@ -58,8 +58,8 @@ INSTALL
 
   Make sure the cacti installation works as intended.
 
-  Make sure the SNMP support is enabled on the Roxen server that
-  should be monitored
+  Make sure the SNMP support is enabled on the Roxen servers that
+  should be monitored.
 
   Copy "roxen-mib_core.xml" and "roxen-mib_feed.xml" to the
   "resource/snmp_queries" directory in the cacti installation, this is
@@ -70,7 +70,7 @@ INSTALL
   Import the "cacti_host_template_roxen_mib_editorial_portal.xml" file
   into cacti via the "Import Templates" function.
 
-  Create a device that should be monitored, example:
+  Create a device that should be monitored. For example:
 
     Description:    "PRINT example.roxen.com"
     Hostname:       "example.roxen.com"
