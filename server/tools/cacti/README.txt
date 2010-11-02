@@ -12,7 +12,7 @@ package contains about 70 graphable data sources. Some examples:
   - Transfered bytes
   - MySQL queries
 
-The templates fetche data via the SNMP protocol. You will have to
+The templates fetch data via the SNMP protocol. You will have to
 enable SNMP on the Roxen servers that should be monitored.
 
 A short introduction to cacti can be fond on cacti.net:
