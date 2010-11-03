@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.21 2008/08/15 12:33:55 mast Exp $
+// $Id: cmdline.cpp,v 1.22 2010/11/03 11:39:52 stewa Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -25,6 +25,8 @@ static char *defPikeArgs[] = {
 static char *defPikeDefines[] = {
   "-DRAM_CACHE",
   "-DENABLE_THREADS",
+  "-DNEW_RAM_CACHE",
+  "-DHTTP_COMPRESSION",
 
   // List terminator
   NULL
@@ -403,12 +405,17 @@ void CCmdLine::PrintHelp()
     "      .B--without-ram-cacheB.:        Do not use an in-RAM cache to speed",
     "                                  things up. Saves RAM at the cost of speed.",
     "",
+    "      .B--without-new-ram-cacheB.:    Do not use a the new RAM cache",
+    "				  introduced in Roxen 5.0-release4.",
+    "",
     "      .B--without-ram-cache-statB.:   Disable the stat that is usually done",
     "                                  for files in the ram cache to ensure that",
     "                                  they are not changed before they are sent.",
     "                                  Improves performance at the cost of constant",
     "                                  aggravation if the site is edited. Useful for",
     "                                  truly static sites.",
+    "",
+    "      .B--without-http-compressionB.: Disable gzip compression for HTTP requests.",
     "",
     "      .B--with-threadsB.:             If threads are available, use them.",
     "",
@@ -978,6 +985,27 @@ int CCmdLine::ParseArg(int argc, char *argv[], CCmdLine::tArgType & type)
     Match(*argv, "--disable-ram-cache", NULL, NULL) )
   {
     m_saPikeDefines.Remove("-DRAM_CACHE");
+    type = eArgPike;
+    return 1;
+  }
+
+  //'--without-new-ram-cache'|'--disable-new-ram-cache')
+  //  DEFINES="`echo $DEFINES | sed -e 's/-DNEW_RAM_CACHE//g'`"
+  if (Match(*argv, "--without-new-ram-cache", NULL, NULL) ||
+    Match(*argv, "--disable-new-ram-cache", NULL, NULL) )
+  {
+    m_saPikeDefines.Remove("-DNEW_DRAM_CACHE");
+    type = eArgPike;
+    return 1;
+  }
+
+  //'--without-http-compression'|'--disable-http-compression')
+  //  DEFINES="`echo $DEFINES | sed -e 's/-DHTTP_COMPRESSION//g'`"
+  //;;
+  if (Match(*argv, "--without-http-compression", NULL, NULL) ||
+    Match(*argv, "--disable-http-compression", NULL, NULL) )
+  {
+    m_saPikeDefines.Remove("-DHTTP_COMPRESSION");
     type = eArgPike;
     return 1;
   }
