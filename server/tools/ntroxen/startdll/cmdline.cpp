@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.22 2010/11/03 11:39:52 stewa Exp $
+// $Id: cmdline.cpp,v 1.23 2010/11/03 12:59:05 stewa Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -994,7 +994,7 @@ int CCmdLine::ParseArg(int argc, char *argv[], CCmdLine::tArgType & type)
   if (Match(*argv, "--without-new-ram-cache", NULL, NULL) ||
     Match(*argv, "--disable-new-ram-cache", NULL, NULL) )
   {
-    m_saPikeDefines.Remove("-DNEW_DRAM_CACHE");
+    m_saPikeDefines.Remove("-DNEW_RAM_CACHE");
     type = eArgPike;
     return 1;
   }
