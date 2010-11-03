@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.237 2010/10/13 13:05:26 stewa Exp $
+# $Id: start,v 1.238 2010/11/03 10:13:09 stewa Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -434,7 +434,7 @@ the default arguments.
       .B--without-ram-cacheB.:        Do not use a protocol level RAM cache to speed
 				  things up. Saves RAM at the cost of speed.
 
-      .B--without-new-ram-cacheB.:    Do not use a the new protocol level RAM cache
+      .B--without-new-ram-cacheB.:    Do not use a the new RAM cache
 				  introduced in Roxen 5.0-release4.
 
       .B--without-ram-cache-statB.:   Disable the stat that is usually done
