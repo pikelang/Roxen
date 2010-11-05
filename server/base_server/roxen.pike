@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1070 2010/11/02 17:09:59 marty Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1071 2010/11/05 16:01:15 mast Exp $";
 
 //! @appears roxen
 //!
@@ -586,6 +586,9 @@ Thread do_thread_create(string id, function f, mixed ... args)
   return t;
 }
 
+#if 1
+constant Queue = Thread.Queue;
+#else
 // Shamelessly uses facts about pikes preemting algorithm.
 // Might have to be fixed in the future.
 class Queue 
@@ -649,6 +652,7 @@ class Queue
     r_cond::signal();
   }
 }
+#endif
 
 #ifndef NO_SLOW_REQ_BT
 // This is a system to dump all threads whenever a request takes
