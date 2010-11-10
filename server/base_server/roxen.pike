@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1073 2010/11/10 19:22:57 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1074 2010/11/10 19:23:49 mast Exp $";
 
 //! @appears roxen
 //!
@@ -817,6 +817,22 @@ int handler_num_runs_15s = 0;
 int handler_acc_time = 0;
 int handler_acc_cpu_time = 0;
 
+protected string debug_format_queue_task (array(function|array) task)
+// Debug formatter of an entry in the handler or background_run queues.
+{
+  return ((functionp (task[0]) ?
+	   sprintf ("%s: %s", Function.defined (task[0]),
+		    master()->describe_function (task[0])) :
+	   programp (task[0]) ?
+	   sprintf ("%s: %s", Program.defined (task[0]),
+		    master()->describe_program (task[0])) :
+	   sprintf ("%O", task[0])) +
+	  "(" +
+	  map (task[1], lambda (mixed arg)
+			  {return sprintf ("%O", arg);}) * ", " +
+	  ")");
+}
+
 local protected void handler_thread(int id)
 //! The actual handling function. This functions read function and
 //! parameters from the queue, calls it, then reads another one. There
@@ -848,8 +864,8 @@ local protected void handler_thread(int id)
 	cache_clear_deltas();
 	THREAD_WERR("Handle thread ["+id+"] waiting for next event");
 	if(arrayp(h=handle_queue->read()) && h[0]) {
-	  THREAD_WERR(sprintf("Handle thread [%O] calling %O(%{%O, %})",
-				id, h[0], h[1] / 1));
+	  THREAD_WERR(sprintf("Handle thread [%O] calling %s",
+			      id, debug_format_queue_task (h)));
 	  set_locale();
 	  busy_threads++;
 	  thread_flagged_as_busy = 1;
@@ -1263,16 +1279,8 @@ protected void bg_process_queue()
       }
 
 #ifdef DEBUG_BACKGROUND_RUN
-      report_debug ("background_run run %s (%s) [%d jobs left in queue]\n",
-		    functionp (task[0]) ?
-		    sprintf ("%s: %s", Function.defined (task[0]),
-			     master()->describe_function (task[0])) :
-		    programp (task[0]) ?
-		    sprintf ("%s: %s", Program.defined (task[0]),
-			     master()->describe_program (task[0])) :
-		    sprintf ("%O", task[0]),
-		    map (task[1], lambda (mixed arg)
-				  {return sprintf ("%O", arg);}) * ", ",
+      report_debug ("background_run run %s [%d jobs left in queue]\n",
+		    debug_format_queue_task (task),
 		    bg_queue->size());
 #endif
 
@@ -5369,9 +5377,10 @@ void describe_all_threads (void|int ignored, // Might be the signal number.
     // have the backtraces. It also gives an atomic view of the state.
     threads_disabled = _disable_threads();
 
-  report_debug("###### Describing all Pike threads:\n>>\n");
-
   array(Thread.Thread) threads = all_threads();
+
+  report_debug("###### Describing all %d pike threads:\n>>\n",
+	       sizeof (threads));
 
   threads = Array.sort_array (
     threads,
@@ -5397,8 +5406,35 @@ void describe_all_threads (void|int ignored, // Might be the signal number.
 		 "\n");
   }
 
-  report_debug ("###### Total %d Pike threads\n\n", sizeof (threads));
+  array(array) queue = handle_queue->peek_array();
 
+  if (!sizeof (queue))
+    report_debug ("###### No entries in the handler queue\n");
+  else {
+    report_debug ("###### %d entries in the handler queue:\n>>\n",
+		  sizeof (queue));
+    foreach (queue; int i; array task)
+      report_debug (">> %d: %s\n", i,
+		    replace (debug_format_queue_task (task), "\n", "\n>> "));
+    report_debug (">> \n");
+  }
+
+  queue = bg_queue->peek_array();
+
+  if (!sizeof (queue))
+    report_debug ("###### No entries in the background_run queue\n");
+  else {
+    report_debug ("###### %d entries in the background_run queue:\n>>\n",
+		  sizeof (queue));
+    foreach (queue; int i; array task)
+      report_debug (">> %d: %s\n", i,
+		    replace (debug_format_queue_task (task), "\n", "\n>> "));
+    report_debug (">> \n");
+  }
+
+  report_debug ("###### Thread and queue dumps done at %s\n", ctime (time()));
+
+  queue = 0;
   threads = 0;
   threads_disabled = 0;
 
