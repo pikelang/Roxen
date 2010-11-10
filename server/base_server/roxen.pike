@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1072 2010/11/10 18:39:28 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1073 2010/11/10 19:22:57 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1234,7 +1234,7 @@ protected void bg_process_queue()
   bg_process_running = 1;
 
   int maxbeats =
-    min (time() - bg_last_busy, bg_time_buffer_max) * (int) (1 / 0.04);
+    min (time() - bg_last_busy, bg_time_buffer_max) * (int) (1 / 0.01);
 
 #ifndef NO_SLOW_REQ_BT
   Pike.Backend monitor;
