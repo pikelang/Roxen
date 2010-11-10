@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.628 2010/10/18 07:42:38 marty Exp $";
+constant cvs_version = "$Id: http.pike,v 1.629 2010/11/10 10:18:13 marty Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -3380,6 +3380,8 @@ void got_data(mixed fooid, string s, void|int chained)
 	    int code = file->error;
 	    int len = sizeof(d);
             mapping(string:string) variant_heads = ([]);
+	    // Make sure we don't mess with the RAM cache.
+	    file += ([]);
 #ifdef HTTP_COMPRESSION
 	    if(file->etag)
 	      variant_heads["ETag"] = file->etag;
@@ -3390,7 +3392,7 @@ void got_data(mixed fooid, string s, void|int chained)
                   string etag = file->etag;
 		  if(etag[sizeof(etag)-1..] == "\"")
                     etag = etag[..sizeof(etag)-2] + ";gzip\"";
-                  variant_heads["ETag"] = etag;
+                  file->etag = variant_heads["ETag"] = etag;
                 }
 		// Perhaps set some gzip log status here?
               } else {
@@ -3399,8 +3401,6 @@ void got_data(mixed fooid, string s, void|int chained)
               }
             }
 #endif
-	    // Make sure we don't mess with the RAM cache.
-	    file += ([]);
 	    if (none_match) {
 	      //  RFC 2616, Section 14.26:
 	      //
