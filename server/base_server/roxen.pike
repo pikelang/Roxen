@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1071 2010/11/05 16:01:15 mast Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1072 2010/11/10 18:39:28 mast Exp $";
 
 //! @appears roxen
 //!
@@ -1255,11 +1255,10 @@ protected void bg_process_queue()
 
       // Wait a while if another thread is busy already.
       if (busy_threads > 1) {
-	for (maxbeats = max (maxbeats, (int) (bg_time_buffer_min / 0.04));
+	for (maxbeats = max (maxbeats, (int) (bg_time_buffer_min / 0.01));
 	     busy_threads > 1 && maxbeats > 0;
 	     maxbeats--)
-	  // Pike implementation note: If 0.02 or smaller, we'll busy wait here.
-	  sleep (0.04);
+	  sleep (0.01);
 	bg_last_busy = time();
       }
 
@@ -1353,7 +1352,13 @@ protected void bg_process_queue()
     throw (err);
   }
   bg_process_running = 0;
-  if (bg_queue->size()) handle (bg_process_queue);
+  if (bg_queue->size()) {
+    handle (bg_process_queue);
+    // Sleep a short while to encourage a thread switch. This is a
+    // kludge to avoid starving non-handler threads, since pike
+    // currently (7.8.503) doesn't switch threads reliably on yields.
+    sleep (0.001);
+  }
 }
 #endif
 
