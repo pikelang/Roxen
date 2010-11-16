@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.631 2010/11/16 17:19:44 jonasw Exp $";
+constant cvs_version = "$Id: http.pike,v 1.632 2010/11/16 17:43:58 jonasw Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2794,7 +2794,7 @@ void send_result(mapping|void result)
        compress_dynamic_requests() && client_gzip_enabled()) {
       if (mixed /*Stdio.File|string*/ compressed =
 	  try_gzip_data(file->data ? file->data : file->file,
-			get_response_content_type(file))) {
+			variant_heads["Content-Type"])) {
 	if (file->data) {
 	  file->data = compressed;
 	  file->len = sizeof(file->data);
