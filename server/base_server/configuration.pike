@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.706 2010/11/10 14:23:05 jonasw Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.707 2010/11/17 19:05:20 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3709,7 +3709,9 @@ RoxenModule reload_module( string modname )
       // Load up a new instance.
       nm = mi->instance( this_object(), 0, mod_copy);
       // If this is a faked module, let's call it a failure.
-      if( nm->not_a_module )
+      if (nm->module_is_disabled)
+	report_notice (LOC_C(0, "Module is disabled") + "\n");
+      else if( nm->not_a_module )
       {
 	old_module->report_error(LOC_C(385,"Reload failed")+"\n");
 	RXML.set_context (old_ctx);
