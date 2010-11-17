@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: module_support.pike,v 1.145 2010/08/24 17:59:10 mast Exp $
+// $Id: module_support.pike,v 1.146 2010/11/17 19:02:49 mast Exp $
 
 #define IN_ROXEN
 #include <roxen.h>
@@ -368,6 +368,34 @@ class ModuleInfo( string sname, string filename )
       return sprintf("LoadFailed(%s)", sname);
     }
   }
+
+  protected class DisabledModule
+  {
+    inherit BasicModule;
+    constant not_a_module = 1;
+    constant module_is_disabled = 1;
+    array register_module()
+    {
+      return ({
+	0, // type
+	"Disabled module '"+sname+"'",
+	"The module "+sname+" is disabled.",
+	0,1
+      });
+    }
+    string query_location()
+    {
+      return 0;
+    }
+    object query_tag_set()
+    {
+      return 0;
+    }
+    array(string)|multiset(string)|string query_provides()
+    {
+      return 0;
+    }
+  }
   
   RoxenModule instance( Configuration conf, void|int silent,
 			void|int copy_num)
@@ -418,6 +446,10 @@ class ModuleInfo( string sname, string filename )
 				       sname + "#" + copy_num}));
       RoxenModule ret = prog( conf );
       roxenp()->bootstrap_info->set (0);
+      if (ret->module_is_disabled) {
+	destruct (ret);
+	return DisabledModule();
+      }
       return ret;
     };
     roxenloader.pop_compile_error_handler( );
