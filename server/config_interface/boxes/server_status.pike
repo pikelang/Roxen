@@ -54,6 +54,11 @@ string parse( RequestID id )
 			       _(6,"min")) );
   contents += add_row( _(7,"Received data"), Roxen.sizetostring(total->received));
 
+#if constant(System.getloadavg)
+  contents += add_row( _(0, "System load"),
+		       sprintf ("%{%.2f %}", System.getloadavg()));
+#endif
+
   return ("<box type='"+box+"' title='"+box_name+"'><table cellpadding='0'>"+
 	  contents+"</table></box>");
 }
