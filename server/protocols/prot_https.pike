@@ -1,7 +1,7 @@
 // This is a roxen protocol module.
 // Copyright © 2001 - 2009, Roxen IS.
 
-// $Id: prot_https.pike,v 2.16 2009/05/07 14:15:57 mast Exp $
+// $Id: prot_https.pike,v 2.17 2010/11/18 15:17:01 stewa Exp $
 
 // --- Debug defines ---
 
@@ -113,9 +113,15 @@ class fallback_redirect_request
 	      ip = "[" + ip + "]";
 	    }
 	    prefix = "https://" + ip + ":" + port;
-	  } else if (prefix[..4] == "http:") {
-	    /* Broken MyWorldLocation -- fix. */
-	    prefix = "https:" + prefix[5..];
+	  } else {
+	    mixed err = catch {
+		object uri = Standards.URI(prefix);
+		uri->scheme = "https";
+		uri->port = port;
+		prefix = (string)uri;
+	      };
+	    if(err)
+	      report_error("Malformed Primary Server URL : %O\n", prefix);
 	  }
 	}
 	out = sprintf("HTTP/1.0 301 Redirect to secure server\r\n"
@@ -147,7 +153,7 @@ class fallback_redirect_request
   {
     SSL3_WERR(sprintf("fallback_redirect_request(X, %O, %O, %d)", s, l||"CONFIG PORT", p));
     f = socket;
-    default_prefix = l;
+    default_prefix = sizeof(l) && l;
     port = p;
     f->set_nonblocking(read_callback, 0, die);
     read_callback(f, s);
@@ -186,9 +192,9 @@ class http_fallback
       }
 
       /* Redirect to a https-url */
+      Configuration conf = sizeof(urls) && values(urls)[0]->conf; // Should be just one possible config for https
       fallback_redirect_request(raw_fd, data,
-				my_fd->config &&
-				my_fd->config->query("MyWorldLocation"),
+				conf && conf->query("MyWorldLocation"),
 				port);
 
       if (!my_fd->shutdown) {
