@@ -3,7 +3,7 @@
 //
 // Roxen bootstrap program.
 
-// $Id: roxenloader.pike,v 1.441 2010/11/01 16:12:48 mast Exp $
+// $Id: roxenloader.pike,v 1.442 2010/11/19 15:19:55 marty Exp $
 
 #define LocaleString Locale.DeferredLocale|string
 
@@ -36,7 +36,7 @@ int once_mode;
 
 #define werror roxen_perror
 
-constant cvs_version="$Id: roxenloader.pike,v 1.441 2010/11/01 16:12:48 mast Exp $";
+constant cvs_version="$Id: roxenloader.pike,v 1.442 2010/11/19 15:19:55 marty Exp $";
 
 int pid = getpid();
 Stdio.File stderr = Stdio.File("stderr");
@@ -170,7 +170,6 @@ string describe_backtrace (mixed err, void|int linewidth)
     foreach (roxen->configurations, object/*(Configuration)*/ conf)
       if (object/*(RoxenModule)*/ mod = conf->get_provider ("roxen_test")) {
 	mod->background_failure();
-	break;
       }
 #endif
 

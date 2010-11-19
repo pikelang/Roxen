@@ -3,7 +3,7 @@
 #include <module.h>
 inherit "module";
 
-constant cvs_version = "$Id: roxen_test.pike,v 1.84 2010/11/01 16:12:48 mast Exp $";
+constant cvs_version = "$Id: roxen_test.pike,v 1.85 2010/11/19 15:20:15 marty Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG|MODULE_PROVIDER;
 constant module_name = "Roxen self test module";
@@ -52,13 +52,22 @@ int pass;
 string tag_test_data;
 int bkgr_fails;
 
-void background_failure() {bkgr_fails++;}
+void background_failure()
+{
+  // Called in all configurations/instances of this module, by
+  // describe_backtrace() (roxenloader.pike), in self test mode. We
+  // need to check whether it's for us or not by checking if we're
+  // running currently.
+  if (is_running())
+    bkgr_fails++;
+}
 
 int do_continue(int _tests, int _fails)
 {
   if(finished)
     return 0;
-  
+
+  running = 1;
   tests += _tests;
   fails += _fails;
   roxen.background_run (0.5, do_tests);
