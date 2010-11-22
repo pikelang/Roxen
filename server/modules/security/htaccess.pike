@@ -7,7 +7,7 @@
 // The canonical documentation for the .htaccess format seems to be
 //   http://httpd.apache.org/docs/1.3/mod/mod_access.html
 
-constant cvs_version="$Id: htaccess.pike,v 1.108 2010/09/28 13:59:38 grubba Exp $";
+constant cvs_version="$Id: htaccess.pike,v 1.109 2010/11/22 14:04:53 grubba Exp $";
 constant thread_safe=1;
 
 #include <module.h>
@@ -206,7 +206,7 @@ function(RequestID:mapping|int) allow_deny( function allow,
 	       return denied;
 
 	     case 0: // deny,allow
-	       // * All deny patterna MUST NOT match.
+	       // * All deny patterns MUST NOT match.
 	       // OR
 	       // * At least one allow pattern MUST match.
 	       if( !denied ) return 0;
@@ -346,7 +346,7 @@ mapping parse_and_find_htaccess( RequestID id )
 
     // Make the deny handler default to allowing all.
     // This means that the result will only return 1
-    // is there was a rule that matched.
+    // if there was a rule that matched.
     roxen_deny += "allow ip=*\n";
 
     if( any_ok ) {
