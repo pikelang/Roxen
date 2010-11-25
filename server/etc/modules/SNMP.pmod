@@ -1,7 +1,7 @@
 //
 // SNMP helper stuff.
 //
-// $Id: SNMP.pmod,v 1.2 2010/05/04 13:48:35 grubba Exp $
+// $Id: SNMP.pmod,v 1.3 2010/11/25 14:05:36 grubba Exp $
 //
 // 2007-08-29 Henrik Grubbström
 //
@@ -211,7 +211,7 @@ class Tick
   static string _sprintf(int t)
   {
     if (t == 's') {
-      return Roxen.short_date(time(1) - ((int)value)/100);
+      return Roxen.short_date((int)(time(1) - value/100));
     }
     return ::_sprintf(t);
   }
