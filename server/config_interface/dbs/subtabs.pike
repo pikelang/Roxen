@@ -28,10 +28,8 @@ array pages =
      LOCALE(550, "Site Permissions") }),
   ({ "backups",      "backups.html",   "Edit Global Variables",   0,
      LOCALE(465, "Database Backups") }),
-#ifdef ENABLE_DB_BACKUPS
   ({ "schedules",    "schedules.html",   "Edit Global Variables",   0,
      LOCALE(1026, "Backup schedules") }),
-#endif
 #ifdef MORE_DB_OPTS
   ({ "maintenance", "maintenance.html", "Edit Global Variables", 0,
      "MySQL Maintenance" }),

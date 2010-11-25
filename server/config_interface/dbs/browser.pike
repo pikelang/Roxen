@@ -224,12 +224,13 @@ mixed backup_db( string db, RequestID id )
 {
   if( id->variables["ok.x"] )
   {
-#ifdef ENABLE_DB_BACKUPS
-    DBManager.dump
-#else
-    DBManager.backup
-#endif
-      (db, id->variables->dir == "auto" ? 0 : id->variables->dir);
+    if (roxenloader->parse_mysql_location()->mysqldump) {
+      DBManager.dump
+	(db, id->variables->dir == "auto" ? 0 : id->variables->dir);
+    } else {
+      DBManager.backup
+	(db, id->variables->dir == "auto" ? 0 : id->variables->dir);
+    }
     return 0;
   }
   return
@@ -696,6 +697,9 @@ mapping|string parse( RequestID id )
   if (db_connect_error)
     // Try again without charset.
     db_connect_error = catch (db = DBManager.get (id->variables->db));
+  if (!db && !db_connect_error) {
+    db_connect_error = ({ "Failed to connect to database.\n", ({}) });
+  }
 
   string qres="";
   

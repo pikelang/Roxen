@@ -1,6 +1,6 @@
 // Symbolic DB handling. 
 //
-// $Id: DBManager.pmod,v 1.98 2010/09/06 12:10:01 grubba Exp $
+// $Id: DBManager.pmod,v 1.99 2010/11/25 10:34:18 grubba Exp $
 
 //! Manages database aliases and permissions
 
@@ -1495,7 +1495,6 @@ void delete_backup( string dbname, string directory )
 	 dbname, directory );
 }
 
-#ifdef ENABLE_DB_BACKUPS
 array(string|array(mapping)) dump(string dbname, string|void directory,
 				  string|void tag)
 //! Make a backup using @tt{mysqldump@} of all data in the specified database.
@@ -1673,7 +1672,6 @@ array(string|array(mapping)) dump(string dbname, string|void directory,
 		}),
   });
 }
-#endif
 
 array(string|array(mapping)) backup( string dbname, string|void directory,
 				     string|void tag)
@@ -1755,7 +1753,6 @@ array(string|array(mapping)) backup( string dbname, string|void directory,
   }
 }
 
-#ifdef ENABLE_DB_BACKUPS
 //! Call-out id's for backup schedules.
 protected mapping(int:mixed) backup_cos = ([]);
 
@@ -1950,7 +1947,6 @@ void start_backup_timers()
 		       (int)backup_info->offset);
   }
 }
-#endif
 
 void rename_db( string oname, string nname )
 //! Rename a database. Please note that the actual data (in the case of
@@ -2094,11 +2090,9 @@ void create_db( string name, string path, int is_internal,
 	   "VALUES (%s, %s, %s)",
 	   name, (is_internal?name:path), (is_internal?"1":"0") );
   }
-#ifdef ENABLE_DB_BACKUPS
   if (!is_internal && !has_prefix(path, "mysql://")) {
     query("UPDATE dbs SET schedule_id = NULL WHERE name = %s", name);
   }
-#endif
   if( is_internal )
     catch(query( "CREATE DATABASE `"+name+"`"));
   changed();
@@ -2321,7 +2315,6 @@ protected void create()
 	"  INDEX own (conf,module) "
 	")");
 
-#ifdef ENABLE_DB_BACKUPS
   query("CREATE TABLE IF NOT EXISTS db_schedules ("
 	"id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, "
 	"schedule VARCHAR(255) NOT NULL, "
@@ -2334,11 +2327,11 @@ protected void create()
   if (!sizeof(query("SELECT schedule "
 		    "  FROM db_schedules "
 		    " WHERE id = 1"))) {
+    // Add the Default schedule with a disabled backup for minimal intrusion.
     query("INSERT INTO db_schedules "
-	  "       (id, schedule) "
-	  "VALUES (1, 'Default')");
+	  "       (id, schedule, period) "
+	  "VALUES (1, 'Default', 0)");
   }
-#endif
     
   multiset q = (multiset)query( "SHOW TABLES" )->Tables_in_roxen;
   if( !q->dbs )
@@ -2348,14 +2341,10 @@ CREATE TABLE dbs (
  name VARCHAR(64) NOT NULL PRIMARY KEY,
  path VARCHAR(100) NOT NULL, 
  local INT UNSIGNED NOT NULL,
- default_charset VARCHAR(64)"
-#ifdef ENABLE_DB_BACKUPS
- #",
+ default_charset VARCHAR(64),
  schedule_id INT DEFAULT 1,
- INDEX schedule_id (schedule_id)"
-#endif
- #")
- " );
+ INDEX schedule_id (schedule_id)
+)" );
   } else {
     if (catch { query("SELECT default_charset FROM dbs LIMIT 1"); }) {
       // The default_charset field is missing.
@@ -2363,7 +2352,6 @@ CREATE TABLE dbs (
       query("ALTER TABLE dbs "
 	    "  ADD default_charset VARCHAR(64)");
     }
-#ifdef ENABLE_DB_BACKUPS
     if (catch { query("SELECT schedule_id FROM dbs LIMIT 1"); }) {
       // The schedule_id field is missing.
       // Upgraded Roxen?
@@ -2376,7 +2364,6 @@ CREATE TABLE dbs (
 	    " WHERE local = 0 "
 	    "   AND path NOT LIKE 'mysql://%'");
     }
-#endif
   }
 
   if (!get ("local")) {
@@ -2433,10 +2420,8 @@ CREATE TABLE db_permissions (
 	    "VALUES ('docs','docs','"+getcwd()+"/etc','"+time()+"')");
   }
 
-#ifdef ENABLE_DB_BACKUPS
   // Start the backup timers when we have finished booting.
   call_out(start_backup_timers, 0);
-#endif
   
   return;
   };
