@@ -7,7 +7,7 @@ constant thread_safe=1;
 
 roxen.ImageCache the_cache;
 
-constant cvs_version = "$Id: cimg.pike,v 1.89 2010/11/26 17:11:52 mast Exp $";
+constant cvs_version = "$Id: cimg.pike,v 1.90 2010/11/26 17:22:01 mast Exp $";
 constant module_type = MODULE_TAG;
 constant module_name = "Graphics: Image converter";
 constant module_doc  = "Provides the tag <tt>&lt;cimg&gt;</tt> that can be used "
@@ -505,9 +505,8 @@ class TagCimgplugin
     report_error("<emit#cimg> error in get_dataset(): %s\n",
 		 describe_backtrace(err));
 #endif
-    string msg = describe_error (err);
-    if (has_suffix (msg, "\n")) msg = msg[..<1];
-    RXML.parse_error( "Illegal arguments or image (%s).\n", msg);
+    RXML.parse_error( "Illegal arguments or image: %s",
+		      describe_error (err));
   }
 }
 
