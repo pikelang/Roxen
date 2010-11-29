@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.298 2010/11/02 15:20:07 jonasw Exp $
+// $Id: Roxen.pmod,v 1.299 2010/11/29 15:25:04 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -5406,9 +5406,12 @@ mapping(string:int) get_memusage()
 //!       Resident memory in KiB.
 //!     @member string "virtual"
 //!       Virtual memory in KiB.
+//!   @endmapping
 //!
-//! @note Uses the ps binary in unix and wmic on Windows.
-//! @note Is a bit expensive on Windows.
+//! @note
+//!   Uses the @tt{ps@} binary in unix and @tt{wmic@} on Windows.
+//! @note
+//!   Is a bit expensive on Windows.
 {
   constant default_value = ([ "virtual":0, "resident":0 ]);
   string res;
