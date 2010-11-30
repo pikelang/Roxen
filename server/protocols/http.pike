@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.632 2010/11/16 17:43:58 jonasw Exp $";
+constant cvs_version = "$Id: http.pike,v 1.633 2010/11/30 16:28:34 grubba Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2290,12 +2290,11 @@ void low_send_result(string headers, string data, int|void len,
 
 #ifdef HTTP_COMPRESSION
 #ifdef HTTP_COMPR_STREAM
+//! Class that will compress a file on the fly, i.e. read() will
+//! return compressed data from the source file fed to @[create] or
+//! @[open]. Writing is not supported currently.
 class GzStreamingFile
-{ 
-  //! Class that will compress a file on the fly, i.e. read() will
-  //! return compressed data from the source file fed to @[create] or
-  //! @[open]. Writing is not supported currently.
- 
+{
   protected Gz.deflate def; 
   protected Stdio.File srcfile; 
   protected string read_buf; 
