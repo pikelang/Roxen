@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.638 2010/10/28 21:58:03 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.639 2010/11/30 11:55:11 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -2416,6 +2416,11 @@ class TagCache {
 #endif
 	alternatives = cache_lookup (cache_tag_save_loc, cache_id);
       }
+    }
+
+    void exec_array_state_update()
+    {
+      RXML_CONTEXT->state_update();
     }
   }
 
