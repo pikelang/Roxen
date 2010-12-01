@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.299 2010/11/29 15:25:04 grubba Exp $
+// $Id: Roxen.pmod,v 1.300 2010/12/01 22:07:27 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -790,6 +790,201 @@ string http_date( mixed t )
   return(sprintf("%s, %02d %s %04d %02d:%02d:%02d GMT",
 		 days[l->wday], l->mday, months[l->mon], 1900+l->year,
 		 l->hour, l->min, l->sec));
+}
+
+string parse_http_response (string response,
+			    void|mapping(string:mixed) response_map,
+			    void|mapping(string:string) headers,
+			    void|int|string on_error)
+//! Parses a raw http response and converts it to a response mapping
+//! suitable to return from @[RoxenModule.find_file] etc.
+//!
+//! The charset, if any is found, is used to decode the body. If a
+//! charset isn't found in the Content-Type header, some heuristics is
+//! used on the body to try to find one.
+//!
+//! @param response
+//!   The raw http response message, starting with formatted headers
+//!   that are terminated by an empty line.
+//!
+//! @param response_map
+//!   If this is set, it's filled in as a response mapping. The body
+//!   of the response is included in @expr{@[response_map]->data@}.
+//!
+//! @param headers
+//!   If this is set, it's filled in with all the http headers from
+//!   the response. The indices are lowercased, but otherwise the
+//!   headers aren't processed much (see also @[_Roxen.HeaderParser]).
+//!
+//! @param on_error
+//!   What to do if a parse error occurs. Throws a normal error if
+//!   zero, throws an RXML run error if 1, or ignores it and tries to
+//!   recover if -1. If it's a string then it's logged in the debug
+//!   log with the string inserted to explain the context.
+//!
+//! @returns
+//! Returns the body of the response message, with charset decoded if
+//! applicable.
+//!
+//! @note
+//! Does not currently support the Content-Encoding header.
+{
+  array parsed = Roxen.HeaderParser()->feed (response);
+  if (!parsed) {
+    string err_msg = "Could not find http headers.\n";
+    if (stringp (on_error))
+      werror ("Error parsing http response%s: %s",
+	      on_error != "" ? " " + on_error : "", err_msg);
+    else if (on_error == 0)
+      error (err_msg);
+    else if (on_error == 1)
+      RXML.run_error (err_msg);
+    return response;
+  }
+
+  mapping(string:string) hdr = parsed[2];
+  if (headers)
+    foreach (hdr; string name; string val)
+      headers[name] = val;
+
+  return low_parse_http_response (hdr, parsed[0], response_map, on_error);
+}
+
+string low_parse_http_response (mapping(string:string) headers,
+				string body,
+				void|mapping(string:mixed) response_map,
+				void|int|string on_error)
+//! Similar to @[parse_http_response], but takes a http response
+//! message that has been split into headers in @[headers] and the
+//! message body in @[body].
+//!
+//! The indices in @[headers] are assumed to be in lower case.
+{
+  string err_msg;
+
+proc: {
+    if (response_map) {
+      if (string lm = headers["last-modified"])
+	// Let's just ignore parse errors in the date.
+	response_map->last_modified = parse_since (lm)[0];
+    }
+
+    string type, subtype, charset;
+
+    if (string ct = headers["content-type"]) {
+      // Use the MIME module to parse the Content-Type header. It
+      // doesn't need the data.
+      MIME.Message m = MIME.Message ("", (["content-type": ct]), 0, 1);
+      type = m->type;
+      subtype = m->subtype;
+      charset = m->charset;
+      if (charset == "us-ascii" && !has_value (lower_case (ct), "us-ascii"))
+	// MIME.Message is a bit too "convenient" and defaults to
+	// "us-ascii" if no charset is specified.
+	charset = 0;
+      if (response_map)
+	response_map->type = type + "/" + subtype;
+    }
+
+    if (string ce = headers["content-encoding"]) {
+      err_msg = "Content-Encoding header not supported.\n";
+      break proc;
+    }
+
+    if (!charset) {
+      // Guess the charset from the content. Adapted from insert#href,
+      // insert#cached-href and SiteBuilder.pmod.
+      if (type == "text" ||
+	  (type == "application" &&
+	   (subtype == "xml" || has_prefix (subtype || "", "xml-")))) {
+
+	if (subtype == "html") {
+	  Parser.HTML parser = Parser.HTML();
+	  parser->case_insensitive_tag(1);
+	  parser->lazy_entity_end(1);
+	  parser->ignore_unknown(1);
+	  parser->match_tag(0);
+	  parser->add_quote_tag ("!--", "", "--");
+	  parser->add_tag (
+	    "meta",
+	    lambda (Parser.HTML p, mapping m)
+	    {
+	      string val = m->content;
+	      if(val && m["http-equiv"] &&
+		 lower_case(m["http-equiv"]) == "content-type") {
+		MIME.Message m =
+		  MIME.Message ("", (["content-type": val]), 0, 1);
+		charset = m->charset;
+		if (charset == "us-ascii" &&
+		    !has_value (lower_case (val), "us-ascii"))
+		  charset = 0;
+		throw (0);	// Done.
+	      }
+	    });
+	  if (mixed err = catch (parser->finish (body))) {
+	    err_msg = describe_error (err);
+	    break proc;
+	  }
+	}
+
+	else if (subtype == "xml" || has_prefix (subtype || "", "xml-")) {
+	  // Look for BOM, then an xml header. The BOM is stripped off
+	  // since we use it to decode the data here.
+	  if (sscanf (body, "\xef\xbb\xbf%s", body))
+	    charset = "utf-8";
+	  else if (sscanf (body, "\xfe\xff%s", body))
+	    charset = "utf-16";
+	  else if (sscanf (body, "\xff\xfe%s", body))
+	    charset = "utf-16le";
+	  else if (sscanf (body, "\x00\x00\xfe\xff%s", body))
+	    charset = "utf-32";
+	  else if (sscanf (body, "\xfe\xff\x00\x00%s", body))
+	    charset = "utf-32le";
+
+	  else if (sizeof(body) > 6 &&
+		   has_prefix(body, "<?xml") &&
+		   Parser.XML.isspace(body[5]) &&
+		   sscanf(body, "<?%s?>", string hdr)) {
+	    hdr += "?";
+	    if (sscanf(lower_case(hdr), "%*sencoding=%s%*[\n\r\t ?]",
+		       string xml_enc) == 3)
+	      charset = xml_enc - "'" - "\"";
+	  }
+	}
+      }
+    }
+
+    if (charset) {
+      Locale.Charset.Decoder decoder;
+      if (mixed err = catch (decoder = Locale.Charset.decoder (charset))) {
+	err_msg = sprintf ("Unrecognized charset %q.\n", charset);
+	break proc;
+      }
+      if (mixed err = catch (body = decoder->feed (body)->drain())) {
+	if (objectp (err) && err->is_charset_decode_error) {
+	  err_msg = describe_error (err);
+	  break proc;
+	}
+	throw (err);
+      }
+    }
+
+    if (response_map)
+      response_map->data = body;
+
+    return body;
+  }
+
+  // Get here on error.
+  if (stringp (on_error))
+    werror ("Error parsing http response%s: %s",
+	    on_error != "" ? " " + on_error : "", err_msg);
+  else if (on_error == 0)
+    error (err_msg);
+  else if (on_error == 1)
+    RXML.run_error ("Error parsing http response: " + err_msg);
+
+  return body;
 }
 
 //! Returns a timestamp formatted according to ISO 8601 Date and Time

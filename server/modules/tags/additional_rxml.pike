@@ -6,7 +6,7 @@ inherit "module";
 
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: additional_rxml.pike,v 1.53 2009/09/17 13:21:56 mast Exp $";
+constant cvs_version = "$Id: additional_rxml.pike,v 1.54 2010/12/01 22:07:27 mast Exp $";
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
 constant module_name = "Tags: Additional RXML tags";
@@ -288,51 +288,8 @@ class TagInsertHref {
       RXML.user_set_var(args["status-variable"],q->status);
     
     if(q && q->status>0 && q->status<400) {
-      string data =  q->data();
-
-      function get_ct_charset =
-	lambda(string ct) {
-	  string cs;
-	  foreach((ct/";")[1..], string s) {
-	    string s2 = String.trim_all_whites(s);
-	    string _cs;
-	    if(sscanf(s2, "charset=%s", _cs) == 1)
-	      cs = String.trim_all_whites(_cs);
-	  }
-	  return cs;
-	};
-      
-      if(string ct = q->con->headers["content-type"]) {
-	ct = String.trim_all_whites(ct);
-	string cs;
-	if(has_prefix(ct,"text/")) {
-	  cs = get_ct_charset(ct);
-	  if(!cs && has_prefix(ct,"text/html")) {
-	    Parser.HTML parser = Parser.HTML();
-	    parser->case_insensitive_tag(1);
-	    parser->lazy_entity_end(1);
-	    parser->ignore_unknown(1);
-	    parser->match_tag(0);
-	    parser->add_tags( ([ "meta": lambda( Parser.HTML p, mapping m) 
-					 {
-					   if(m["content"] && m["http-equiv"] && 
-					      lower_case(m["http-equiv"]) == "content-type")
-					     cs = get_ct_charset(m["content"]);
-					 } ]) );
-	    parser->finish(data);
-	  }
-	}
-	
-	if(cs) {
-	  catch {
-	    data = Locale.Charset.decoder(cs)->feed(data)->drain();
-	  };
-	}
-
-      }
-      
-      return data;
-    }    
+      return Roxen.low_parse_http_response (q->con->headers, q->data(), 0, 1);
+    }
 
     _ok = 0;
 

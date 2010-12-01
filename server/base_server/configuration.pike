@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.707 2010/11/17 19:05:20 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.708 2010/12/01 22:07:27 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3125,6 +3125,12 @@ int|string try_get_file(string s, RequestID id,
     foreach(indices(m), string i)
       result_mapping[i] = m[i];
     if (string|function(string:string) charset = fake_id->get_output_charset())
+      // Note that a "charset" field currently isn't supported very
+      // much in a response mapping. In particular, the http protocol
+      // module doesn't look at it.
+      //
+      // Maybe we should read in the result and decode it using this
+      // charset instead, just like we do in the m->raw case below.
       result_mapping->charset = charset;
     result_mapping->last_modified = fake_id->misc->last_modified;
   }
@@ -3149,7 +3155,6 @@ int|string try_get_file(string s, RequestID id,
     res = m->data;
   else
     res="";
-  m->data = 0;
 
   if( objectp(m->file) )
   {
@@ -3158,15 +3163,10 @@ int|string try_get_file(string s, RequestID id,
       // Some wrappers may destruct themselves in read()...
       destruct(m->file);
     }
-    m->file = 0;
   }
 
   if(m->raw)
-  {
-    res -= "\r";
-    if(!sscanf(res, "%*s\n\n%s", res))
-      sscanf(res, "%*s\n%s", res);
-  }
+    res = Roxen.parse_http_response (res, result_mapping, 0, "from " + s);
   return res;
 }
 

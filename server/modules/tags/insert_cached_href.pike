@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.29 2010/03/08 16:09:20 grubba Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.30 2010/12/01 22:07:27 mast Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -186,13 +186,13 @@ public int(0..1) is_redirect(int status) {
 */
 public string get_result_sync(HTTPClient client, mapping args, mapping header) {
   if (!is_redirect(client->status) || !MAX_REDIRECTS)
-    return decode_data(client->data(), client->con->headers);
-  
+    return decode_data(client->data(), client->con->headers, client->url);
+
   int counter;
   string location = client->con->headers->location;
   
   if (!location || !sizeof(location))
-    return decode_data(client->data(), client->con->headers);
+    return decode_data(client->data(), client->con->headers, client->url);
 
   DWRITE("Following redirect from " + (string)client->url + 
 	 " to " + location);
@@ -211,7 +211,8 @@ public string get_result_sync(HTTPClient client, mapping args, mapping header) {
     location = new_client->con->headers->location;
     
     if (!location || !sizeof(location))
-      return decode_data(new_client->data(), new_client->con->headers);
+      return decode_data(new_client->data(), new_client->con->headers,
+			 new_client->url);
     
     DWRITE("Following redirect from " + (string)new_client->url + 
 	   " to " + location);
@@ -225,7 +226,8 @@ public string get_result_sync(HTTPClient client, mapping args, mapping header) {
     counter++;
   }
   
-  return decode_data(new_client->data(), new_client->con->headers);
+  return decode_data(new_client->data(), new_client->con->headers,
+		     new_client->url);
 }
 
 /*
@@ -290,7 +292,7 @@ public void|string fetch_url(mapping(string:mixed) to_fetch, void|mapping header
   // In practice a server never runs unthreaded. Keep it 
   // simple and only return when status code < 300:
   if(client && client->status > 0 && client->status < 300) {
-    string data = decode_data(client->data(), client->headers);
+    string data = decode_data(client->data(), client->headers, client->url);
     href_database->update_data(to_fetch["url"], data);
     return data;
   } else
@@ -841,9 +843,12 @@ class HTTPClient {
 
     if (href_database)
       if (orig_url)
-	href_database->update_data(orig_url, decode_data(con->data(), con->headers));
+	href_database->update_data(orig_url,
+				   decode_data(con->data(), con->headers,
+					       orig_url));
       else
-	href_database->update_data((string)url, decode_data(con->data(), con->headers));
+	href_database->update_data((string)url,
+				   decode_data(con->data(), con->headers, url));
     
     if (sync)
       queue->write("@");
@@ -887,93 +892,12 @@ class HTTPClient {
    data content, meta http-equiv for html and BOM + encoding='' 
    for xml 
 */
-string decode_data(string data, mapping headers) {
+string decode_data(string data, mapping headers, string|Standards.URI url) {
   if (data == "" || !headers)
     return data;
-
-  function get_ct_cs =
-    lambda(string ct) {
-      string cs;
-      foreach((ct/";")[1..], string s) {
-	string s2 = String.trim_all_whites(s);
-	string _cs;
-	if(sscanf(s2, "charset=%s", _cs) == 1)
-	  cs = String.trim_all_whites(_cs);
-      }
-      return cs;
-    };
-  
-  function get_cs_from_html = 
-    lambda(string data) {
-      string cs;
-      Parser.HTML parser = Parser.HTML();
-      parser->case_insensitive_tag(1);
-      parser->lazy_entity_end(1);
-      parser->ignore_unknown(1);
-      parser->match_tag(0);
-      parser->add_tags( ([ "meta": lambda( Parser.HTML p, mapping m) 
-				   {
-				     if(m["content"] && m["http-equiv"] && 
-					lower_case(m["http-equiv"]) == "content-type")
-				       cs = get_ct_cs(m["content"]);
-				   } ]) );
-      parser->finish(data);
-      return cs;
-    };
-  
-  function get_cs_from_xml_enc = 
-    lambda(string data) {
-      string cs,tmp;
-      sscanf(data, "%*s<?xml%s?>%*s", tmp);
-      sscanf(lower_case(tmp), "%*sencoding=\"%s\"%*s", cs);
-      if (!cs)
-	cs = "utf-8"; // UTF-8 is default XML encoding when omitted
-      return cs;
-    };
-
-  string ct, cs;
-  
-  if(!(ct = headers["content-type"])) {
-    // Don't even try to decode, might be binary for all we know
-    return data;
-  }
-  
-  ct = String.trim_all_whites(lower_case(ct));
-
-  // If text, look for charset:  
-  if(has_prefix(ct,"text/") || has_prefix(ct, "application/xml")) {
-    cs = get_ct_cs(ct);
-    
-    if (!cs) {
-      // No charset in content-type header, look in data for encoding hints
-
-      if(has_prefix(ct, "text/html")) {
-	cs = get_cs_from_html(data);
-      } else if(has_prefix(ct, "text/xml") || has_prefix(ct, "application/xml")) {
-	string data2;
-	mixed result = catch {
-	  data2 = Parser.XML.Simple()->autoconvert(data);
-	};
-	
-	if (!result)
-	  return remove_bom(data2);
-	
-	cs = get_cs_from_xml_enc(data);
-      }
-    }
-  }
-  
-  if(has_prefix(ct, "text/xml") || has_prefix(ct, "application/xml"))
-    data = remove_bom(data);
-
-  if(cs) {
-    catch {
-      data = Locale.Charset.decoder(cs)->feed(data)->drain();
-      return data;
-    };
-  }
-
-  return data;
+  return Roxen.low_parse_http_response (
+    headers, data, 0,
+    "retrieved from " + (string) url + " by <insert cached-href>");
 }
 
 string remove_bom(string data) {
