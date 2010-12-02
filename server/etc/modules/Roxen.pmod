@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.301 2010/12/02 12:15:56 grubba Exp $
+// $Id: Roxen.pmod,v 1.302 2010/12/02 13:07:25 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2950,21 +2950,26 @@ string roxen_encode(string val, string encoding)
   return val;
 }
 
-string fix_relative( string file, RequestID id )
+string fix_relative( string file, RequestID|void id )
 //! Using @expr{@[id]->not_query@}, turns a relative (or already
 //! absolute) virtual path into an absolute virtual path, i.e. one
 //! rooted at the virtual server's root directory. The returned path
 //! is simplified to not contain any @expr{"."@} or @expr{".."@}
 //! segments.
 {
-  Standards.URI uri = Standards.URI(file, Standards.URI(id->not_query, "://"));
+  Standards.URI uri = Standards.URI("://");
+  if (id) {
+    uri = Standards.URI(id->not_query, uri);
+  }
+  uri = Standards.URI(file, uri);
   uri->path = (uri->combine_uri_path("", uri->path)/"/" - ({ ".." })) * "/";  
   string res = sprintf("%s", uri);
   // +(id->misc->path_info?id->misc->path_info:"");
   if (has_prefix(res, "://") && !has_prefix(file, "://") &&
-      !has_prefix(id->not_query, "://")) {
+      (!id || !has_prefix(id->not_query, "://"))) {
     // No scheme.
-    if (!has_prefix(file, "//") && !has_prefix(id->not_query, "//")) {
+    if (!has_prefix(file, "//") &&
+	(!id || !has_prefix(id->not_query, "//"))) {
       // No host.
       return res[sizeof("://")..];
     }
