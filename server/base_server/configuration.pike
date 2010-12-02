@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.708 2010/12/01 22:07:27 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.709 2010/12/02 13:38:57 grubba Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4682,6 +4682,8 @@ modules.</p>
   <td>Corresponds to Roxen 4.5.</td></tr>
 <tr valign='top'><td>5.0&nbsp;&nbsp;</td>
   <td>Corresponds to Roxen 5.0.</td></tr>
+<tr valign='top'><td>5.1&nbsp;&nbsp;</td>
+  <td>Corresponds to Roxen 5.1.</td></tr>
 </table></p>")));
 
   set ("compat_level", roxen.roxen_ver);
