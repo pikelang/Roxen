@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.300 2010/12/01 22:07:27 mast Exp $
+// $Id: Roxen.pmod,v 1.301 2010/12/02 12:15:56 grubba Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -2957,22 +2957,20 @@ string fix_relative( string file, RequestID id )
 //! is simplified to not contain any @expr{"."@} or @expr{".."@}
 //! segments.
 {
-  if (sscanf (file, "%[-+.a-zA-Z0-9]://%s", string prot, file) == 2)
-    return prot + ":/" + combine_path ("/", file);
-
-#if 0
-  // This is immensely suspect considering we're dealing with virtual
-  // paths here. /mast
-  [string prefix, file] = win_drive_prefix(file);
-#endif
-
+  Standards.URI uri = Standards.URI(file, Standards.URI(id->not_query, "://"));
+  uri->path = (uri->combine_uri_path("", uri->path)/"/" - ({ ".." })) * "/";  
+  string res = sprintf("%s", uri);
   // +(id->misc->path_info?id->misc->path_info:"");
-  if (has_prefix (file, "/"))
-    return /*prefix +*/ combine_path ("/", file);
-  else if (has_prefix (file, "#"))
-    return /*prefix +*/ combine_path ("/", id->not_query + file);
-  else
-    return /*prefix +*/ combine_path ("/", dirname (id->not_query), file);
+  if (has_prefix(res, "://") && !has_prefix(file, "://") &&
+      !has_prefix(id->not_query, "://")) {
+    // No scheme.
+    if (!has_prefix(file, "//") && !has_prefix(id->not_query, "//")) {
+      // No host.
+      return res[sizeof("://")..];
+    }
+    return res[1..];
+  }
+  return res;
 }
 
 Stdio.File open_log_file( string logfile )
