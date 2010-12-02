@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.709 2010/12/02 13:38:57 grubba Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.710 2010/12/02 16:11:02 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -3165,8 +3165,23 @@ int|string try_get_file(string s, RequestID id,
     }
   }
 
-  if(m->raw)
-    res = Roxen.parse_http_response (res, result_mapping, 0, "from " + s);
+  if(m->raw) {
+    if (compat_level() > 5.0)
+      res = Roxen.parse_http_response (res, result_mapping, 0, "from " + s);
+    else {
+      // This function used to simply toss the headers and return the
+      // data as-is, losing the content type and charset. Need to be
+      // bug compatible with the lack of charset handling, since
+      // callers might be compensating. (The old code also deleted all
+      // CR's in the whole body, regardless of content type(!), but we
+      // don't have to be bug compatible with that at least.)
+      sscanf (res, "%*s\r\n\r\n%s", res) ||
+	sscanf (res, "%*s\n\n%s", res) ||
+	sscanf (res, "%*s\r\n%s", res) ||
+	sscanf (res, "%*s\n%s", res);
+    }
+  }
+
   return res;
 }
 
