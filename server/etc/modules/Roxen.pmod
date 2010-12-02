@@ -1,6 +1,6 @@
 // This is a roxen pike module. Copyright © 1999 - 2009, Roxen IS.
 //
-// $Id: Roxen.pmod,v 1.302 2010/12/02 13:07:25 grubba Exp $
+// $Id: Roxen.pmod,v 1.303 2010/12/02 16:08:09 mast Exp $
 
 #include <roxen.h>
 #include <config.h>
@@ -934,12 +934,12 @@ proc: {
 	    charset = "utf-8";
 	  else if (sscanf (body, "\xfe\xff%s", body))
 	    charset = "utf-16";
+	  else if (sscanf (body, "\xff\xfe\x00\x00%s", body))
+	    charset = "utf-32le";
 	  else if (sscanf (body, "\xff\xfe%s", body))
 	    charset = "utf-16le";
 	  else if (sscanf (body, "\x00\x00\xfe\xff%s", body))
 	    charset = "utf-32";
-	  else if (sscanf (body, "\xfe\xff\x00\x00%s", body))
-	    charset = "utf-32le";
 
 	  else if (sizeof(body) > 6 &&
 		   has_prefix(body, "<?xml") &&
