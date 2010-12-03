@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.633 2010/11/30 16:28:34 grubba Exp $";
+constant cvs_version = "$Id: http.pike,v 1.634 2010/12/03 21:30:51 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2960,6 +2960,8 @@ void send_result(mapping|void result)
 // Execute the request. This is called from a handler thread.
 void handle_request( )
 {
+  if (mixed err = catch {
+
   REQUEST_WERR("HTTP: handle_request()");
   TIMER_START(handle_request);
   
@@ -3044,6 +3046,11 @@ void handle_request( )
 
   TIMER_END(handle_request);
   send_result();
+
+  }) {
+    disconnect();
+    report_error("Internal server error: " + describe_backtrace(err));
+  }
 }
 
 /* We got some data on a socket.
@@ -3052,6 +3059,8 @@ void handle_request( )
 // array ccd = ({});
 void got_data(mixed fooid, string s, void|int chained)
 {
+  if (mixed err = catch {
+
 #ifdef CONNECTION_DEBUG
   werror ("HTTP[%s]: Request ----------------------------------------------\n"
 	  "%O\n", DEBUG_GET_FD, s);
@@ -3109,7 +3118,6 @@ void got_data(mixed fooid, string s, void|int chained)
     s = "";
   }
 
-  if (mixed err = catch {
     MARK_FD("HTTP got data");
     raw += s;
 
@@ -3587,8 +3595,8 @@ void got_data(mixed fooid, string s, void|int chained)
     roxen.handle(handle_request);
   })
   {
-    report_error("Internal server error: " + describe_backtrace(err));
     disconnect();
+    report_error("Internal server error: " + describe_backtrace(err));
   }
 }
 
