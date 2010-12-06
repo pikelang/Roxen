@@ -525,7 +525,7 @@ mapping(string:mixed) set_property(string prop_name,
 //!    maintaining the consistency of the syntax and semantics of a
 //!    dead property.
 mapping(string:mixed) set_dead_property(string prop_name,
-					array(SimpleNode) value)
+					string|array(SimpleNode) value)
 {
   return Roxen.http_status (Protocols.HTTP.HTTP_METHOD_INVALID,
 			    "Setting of dead properties is not supported.");
