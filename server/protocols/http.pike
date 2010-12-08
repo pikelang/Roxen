@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.634 2010/12/03 21:30:51 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.635 2010/12/08 14:19:48 mast Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -3048,7 +3048,7 @@ void handle_request( )
   send_result();
 
   }) {
-    disconnect();
+    call_out (disconnect, 0);
     report_error("Internal server error: " + describe_backtrace(err));
   }
 }
@@ -3595,8 +3595,8 @@ void got_data(mixed fooid, string s, void|int chained)
     roxen.handle(handle_request);
   })
   {
-    disconnect();
     report_error("Internal server error: " + describe_backtrace(err));
+    disconnect();
   }
 }
 
