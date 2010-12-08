@@ -2,7 +2,7 @@
 // Modified by Francesco Chemolli to add throttling capabilities.
 // Copyright © 1996 - 2009, Roxen IS.
 
-constant cvs_version = "$Id: http.pike,v 1.635 2010/12/08 14:19:48 mast Exp $";
+constant cvs_version = "$Id: http.pike,v 1.636 2010/12/08 14:56:03 marty Exp $";
 // #define REQUEST_DEBUG
 #define MAGIC_ERROR
 
@@ -2707,6 +2707,7 @@ void send_result(mapping|void result)
 
     int varies = misc->vary && (sizeof(misc->vary) - misc->vary["host"]);
 #ifdef RAM_CACHE
+    int stored_in_cache;
     if( (misc->cacheable > 0) && !misc->no_proto_cache)
     {
       if ((<"HEAD","GET">)[method]) {
@@ -2759,6 +2760,7 @@ void send_result(mapping|void result)
 #endif				 
 			       ]),
 			       misc->cacheable, this_object());
+	  stored_in_cache = 1;
 	  file = ([
 #ifndef HTTP_COMPRESSION
             "data":data,
@@ -2783,6 +2785,15 @@ void send_result(mapping|void result)
 	  cache_status["protstore"] = 1;
 	}
       }
+    }
+
+    if (!stored_in_cache && misc->is_spci_refresh) {
+      // If this was a protocol cache refresh request that didn't make
+      // it to the protocol cache, remove the stale entry to prevent
+      // overcaching. Reasons for the refresh request not to make it
+      // to the cache include files that were removed recently,
+      // transitions from cacheable to non-cacheable etc.
+      conf->datacache->expire_entry (misc->prot_cache_key, 0);
     }
 #endif
 
@@ -3560,6 +3571,7 @@ void got_data(mixed fooid, string s, void|int chained)
 	    host = 0;
 	    my_fd = 0;
 	    misc->connection = "close";
+	    misc->is_spci_refresh = 1;
 	    
 	    MY_TRACE_ENTER (
 	      sprintf("Starting refresh of stale entry "
