@@ -6,7 +6,7 @@
 // Per Hedbor, Henrik Grubbström, Pontus Hagland, David Hedbor and others.
 // ABS and suicide systems contributed freely by Francesco Chemolli
 
-constant cvs_version="$Id: roxen.pike,v 1.1075 2010/12/02 13:42:11 grubba Exp $";
+constant cvs_version="$Id: roxen.pike,v 1.1076 2010/12/21 14:52:28 grubba Exp $";
 
 //! @appears roxen
 //!
@@ -2250,6 +2250,19 @@ class SSLProtocol
     return;								\
   } while (0)
 
+  protected void filter_preferred_suites() {
+#ifndef ALLOW_WEAK_SSL
+    // Filter weak and really weak cipher suites.
+    ctx->preferred_suites -= ({
+      SSL.Constants.SSL_rsa_export_with_rc4_40_md5,
+      SSL.Constants.SSL_rsa_with_null_sha,
+      SSL.Constants.SSL_rsa_with_null_md5,
+      SSL.Constants.SSL_dhe_dss_export_with_des40_cbc_sha,
+      SSL.Constants.SSL_null_with_null_null,
+    });
+#endif
+  }
+
   void certificates_changed(Variable.Variable|void ignored,
 			    void|int ignore_eaddrinuse)
   {
@@ -2357,6 +2370,7 @@ class SSLProtocol
 	// ctx->long_rsa = Crypto.RSA()->generate_key(rsa->rsa_size(), ctx->random);
       }
       ctx->rsa_mode();
+      filter_preferred_suites();
 
       array(int) key_matches =
 	map(decoded_certs,
@@ -2409,6 +2423,7 @@ class SSLProtocol
 #endif
 
       ctx->dhe_dss_mode();
+      filter_preferred_suites();
 
       // FIXME: Add cert <-> private key check.
 
@@ -2470,6 +2485,8 @@ class SSLProtocol
   void create(int pn, string i, void|int ignore_eaddrinuse)
   {
     ctx->random = Crypto.Random.random_string;
+
+    filter_preferred_suites();
 
     set_up_ssl_variables( this_object() );
 
