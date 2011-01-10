@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.134 2010/09/23 20:02:41 mast Exp $
+// $Id: cache.pike,v 1.135 2011/01/10 14:25:23 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -1514,7 +1514,8 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
   if (timeout)
     new_entry->timeout = time (1) + timeout;
 
-  mgr->add_entry (cache_name, new_entry, intp (cache_context),
+  mgr->add_entry (cache_name, new_entry,
+		  intp (cache_context) && cache_context,
 		  mappingp (cache_context) && cache_context);
 
   MORE_CACHE_WERR ("cache_set (%O, %s, %s, %O): %O\n",
