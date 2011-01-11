@@ -5,7 +5,7 @@
 #include <config.h>
 #include <module.h>
 #include <module_constants.h>
-constant cvs_version="$Id: prototypes.pike,v 1.276 2010/09/28 12:24:44 mast Exp $";
+constant cvs_version="$Id: prototypes.pike,v 1.277 2011/01/11 08:47:16 marty Exp $";
 
 #ifdef DAV_DEBUG
 #define DAV_WERROR(X...)	werror(X)
@@ -862,6 +862,7 @@ class PrefLanguages
 
 
 typedef function(object,mixed...:void) CacheActivationCB;
+typedef function(object,mixed...:void) CacheDestructionCB;
 
 class CacheKey
 //! @appears CacheKey
@@ -914,19 +915,34 @@ class CacheKey
   // together with some result in a cache. Zero when the key already
   // is active.
 
+  protected array(array(CacheDestructionCB|array)) destruction_cbs;
+  // Functions to call when the cache key is destructed.
+
   protected void create (void|int activate_immediately)
   {
     if (!activate_immediately) activation_cbs = ({});
+    destruction_cbs = ({});
   }
 
-#if 0
   protected void destroy()
   {
+    foreach (destruction_cbs, [CacheDestructionCB cb, array args]) {
+      cb (this, @args);
+    }
+
+#if 0
     if (activation_cbs)
       werror ("%O: activation list size at destroy: %d\n",
 	      this, sizeof (activation_cbs));
-  }
 #endif
+  }
+
+  void add_destruction_cb (CacheDestructionCB cb, mixed... args)
+  //! Register a callback that will be called when this cache key is
+  //! destructed. See also @[add_activation_cb].
+  {
+    destruction_cbs += ({({cb, args })});
+  }
 
   void add_activation_cb (CacheActivationCB cb, mixed... args)
   //! Register a callback that will be called if and when this cache
