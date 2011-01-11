@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.135 2011/01/10 14:25:23 mast Exp $
+// $Id: cache.pike,v 1.136 2011/01/11 20:15:47 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -858,6 +858,9 @@ class CM_GDS_Time
 	}
       }
 #ifdef DEBUG
+    // Note that this also happens if the caller calls cache_set()
+    // several times to add the same entry. That should be avoided
+    // (see the docs for cache_set).
     werror ("Warning: No preceding lookup for this key - "
 	    "cannot determine entry creation time.\n%s\n",
 	    describe_backtrace (backtrace()));
@@ -1449,11 +1452,23 @@ mixed cache_set (string cache_name, mixed key, mixed data, void|int timeout,
 //!
 //! @returns
 //! Returns @[data].
+//!
+//! @note
+//! Cache managers commonly uses the time from the closest preceding
+//! @[cache_lookup] call to calculate a weight for the entry. That
+//! means the caller should avoid repeated calls to @[cache_set] for
+//! the same entry.
 {
   ASSERT_IF_DEBUG (data);
 
   CacheManager mgr = caches[cache_name] || cache_register (cache_name);
   CacheEntry new_entry = mgr->CacheEntry (key, data);
+
+  // We always create a new entry, even if the given key already
+  // exists in the cache with the same data. That's to ensure we get
+  // an up-to-date cost for the entry. (It's also a bit tricky to
+  // atomically check for an existing entry here before creating a new
+  // one.)
 
 #ifdef DEBUG_COUNT_MEM
   mapping opts = (["lookahead": DEBUG_COUNT_MEM - 1,
