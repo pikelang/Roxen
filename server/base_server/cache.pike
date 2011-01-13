@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.137 2011/01/11 20:18:42 mast Exp $
+// $Id: cache.pike,v 1.138 2011/01/13 16:05:31 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -848,8 +848,17 @@ class CM_GDS_Time
 	int start = m_delete (ctx, key);
 	if (!zero_type (start)) {
 	  int duration = (gettime_func() - all_ctx[0]) - start;
+#if 0
+	  // This assertion is disabled for now, since it doesn't work
+	  // correctly when entry creations are interleaved instead of
+	  // properly nested. FIXME: Need a better method to cope with
+	  // that.
+	  //
+	  // Also note that this assertion might trig if gettime_func
+	  // isn't monotonic (c.f. FIXME in CM_GDS_RealTime.gettime_func).
 	  ASSERT_IF_DEBUG (duration /*%O*/ >= 0 /* start: %O, all_ctx: %O */,
 			   duration, start, all_ctx);
+#endif
 	  if (duration < 0)
 	    // Limit the breakage somewhat when the assertion isn't active.
 	    duration = 0;
@@ -957,6 +966,9 @@ to create it. The real time implementation is " +
     // The real time includes a lot of noise that isn't appropriate
     // for cache entry cost measurement. Let's compensate for the time
     // spent in the pike gc, at least.
+    //
+    // FIXME: This function isn't monotonic if it's used inside gc
+    // runs. That should be rare though, so we ignore it for now.
     return gethrtime() - Pike.implicit_gc_real_time();
   }
 }
