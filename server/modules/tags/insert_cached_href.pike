@@ -7,7 +7,7 @@ inherit "module";
 //<locale-token project="mod_insert_cached_href">LOCALE</locale-token>
 #define LOCALE(X,Y)	_DEF_LOCALE("mod_insert_cached_href",X,Y)
 
-constant cvs_version = "$Id: insert_cached_href.pike,v 1.30 2010/12/01 22:07:27 mast Exp $";
+constant cvs_version = "$Id: insert_cached_href.pike,v 1.31 2011/01/17 10:29:25 marty Exp $";
 
 constant thread_safe = 1;
 constant module_type = MODULE_TAG;
@@ -866,6 +866,7 @@ class HTTPClient {
   private void finish_up() {
     mutex_key = mutex->lock();
     initiated -= ({this_object()});
+    con->set_callbacks (0, 0);
     mutex_key = 0;
   }
   
