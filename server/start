@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# $Id: start,v 1.238 2010/11/03 10:13:09 stewa Exp $
+# $Id: start,v 1.239 2011/01/20 17:23:46 mast Exp $
 
 ### If --silent-start is given as the first argument,
 ### nothing will be printed to stdout by the script.
@@ -131,7 +131,7 @@ setup_environment
 ####### BEGIN ARGUMENT PARSING
 
 
-DEFINES="$DEFINES -DRAM_CACHE -DNEW_RAM_CACHE -DHTTP_COMPRESSION"
+DEFINES="$DEFINES -DRAM_CACHE -DHTTP_COMPRESSION"
 
 
 # Thread enabling.
@@ -253,9 +253,6 @@ parse_args() {
   ;;
   '--without-ram-cache'|'--disable-ram-cache')
     DEFINES="`echo $DEFINES | sed -e 's/-DRAM_CACHE//g'`"
-  ;;
-  '--without-new-ram-cache'|'--disable-new-ram-cache')
-    DEFINES="`echo $DEFINES | sed -e 's/-DNEW_RAM_CACHE//g'`"
   ;;
   '--without-http-compression'|'--disable-http-compression')
     DEFINES="`echo $DEFINES | sed -e 's/-DHTTP_COMPRESSION//g'`"
@@ -433,9 +430,6 @@ the default arguments.
 
       .B--without-ram-cacheB.:        Do not use a protocol level RAM cache to speed
 				  things up. Saves RAM at the cost of speed.
-
-      .B--without-new-ram-cacheB.:    Do not use a the new RAM cache
-				  introduced in Roxen 5.0-release4.
 
       .B--without-ram-cache-statB.:   Disable the stat that is usually done
 				  for files in the protocol cache to ensure that

@@ -1,6 +1,6 @@
 // cmdline.cpp: implementation of the CCmdLine class.
 //
-// $Id: cmdline.cpp,v 1.23 2010/11/03 12:59:05 stewa Exp $
+// $Id: cmdline.cpp,v 1.24 2011/01/20 17:23:46 mast Exp $
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -25,7 +25,6 @@ static char *defPikeArgs[] = {
 static char *defPikeDefines[] = {
   "-DRAM_CACHE",
   "-DENABLE_THREADS",
-  "-DNEW_RAM_CACHE",
   "-DHTTP_COMPRESSION",
 
   // List terminator
@@ -985,16 +984,6 @@ int CCmdLine::ParseArg(int argc, char *argv[], CCmdLine::tArgType & type)
     Match(*argv, "--disable-ram-cache", NULL, NULL) )
   {
     m_saPikeDefines.Remove("-DRAM_CACHE");
-    type = eArgPike;
-    return 1;
-  }
-
-  //'--without-new-ram-cache'|'--disable-new-ram-cache')
-  //  DEFINES="`echo $DEFINES | sed -e 's/-DNEW_RAM_CACHE//g'`"
-  if (Match(*argv, "--without-new-ram-cache", NULL, NULL) ||
-    Match(*argv, "--disable-new-ram-cache", NULL, NULL) )
-  {
-    m_saPikeDefines.Remove("-DNEW_RAM_CACHE");
     type = eArgPike;
     return 1;
   }

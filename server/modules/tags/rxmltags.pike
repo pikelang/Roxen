@@ -7,7 +7,7 @@
 #define _rettext RXML_CONTEXT->misc[" _rettext"]
 #define _ok RXML_CONTEXT->misc[" _ok"]
 
-constant cvs_version = "$Id: rxmltags.pike,v 1.639 2010/11/30 11:55:11 mast Exp $";
+constant cvs_version = "$Id: rxmltags.pike,v 1.640 2011/01/20 17:23:46 mast Exp $";
 constant thread_safe = 1;
 constant language = roxen.language;
 
@@ -1984,23 +1984,14 @@ class TagCache {
 	if (prev) prev->next = t->next;
 	else timeout_list = t->next;
     }
-#ifdef NEW_RAM_CACHE
     roxen.background_run (roxen.query("mem_cache_gc_2"), do_timeouts);
-#else
-    roxen.background_run (roxen.query("mem_cache_gc"), do_timeouts);
-#endif
   }
 
   protected void add_timeout_cache (
     mapping(string:array(int|RXML.PCode)) timeout_cache)
   {
-    if (!timeout_list) {
-#ifdef NEW_RAM_CACHE
+    if (!timeout_list)
       roxen.background_run (roxen.query("mem_cache_gc_2"), do_timeouts);
-#else
-      roxen.background_run (roxen.query("mem_cache_gc"), do_timeouts);
-#endif
-    }
     else
       for (TimeOutEntry t = timeout_list; t; t = t->next)
 	if (t->timeout_cache[0] == timeout_cache) return;

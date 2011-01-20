@@ -5,7 +5,7 @@
 // @appears Configuration
 //! A site's main configuration
 
-constant cvs_version = "$Id: configuration.pike,v 1.710 2010/12/02 16:11:02 mast Exp $";
+constant cvs_version = "$Id: configuration.pike,v 1.711 2011/01/20 17:23:46 mast Exp $";
 #include <module.h>
 #include <module_constants.h>
 #include <roxen.h>
@@ -4984,9 +4984,7 @@ hyphens ('-') occur in the specifier names.</p>
 <p>The known event logging facilities and modules are described
 below.</p>
 
-<dl>"
-#ifdef NEW_RAM_CACHE
-		 #"\n
+<dl>
 <dt>Facility: roxen</dt>
     <dd><p>This is logging for systems in the Roxen WebServer core.
     For logging that is not related to any specific configuration, the
@@ -5003,9 +5001,8 @@ below.</p>
 	<td>Logged when the RAM cache has performed a rebias of the
 	priority queue values. Is a problem only if it starts to
 	happen too often.</td></tr>
-    </tbody></table></dd>"
-#endif
-		 #"\n
+    </tbody></table></dd>
+
 <dt>Facility: sbfs</dt>
     <dd><p>A SiteBuilder file system.</p>
 

@@ -1,4 +1,4 @@
-// $Id: cachestatus.pike,v 1.26 2009/12/05 01:03:57 jonasw Exp $
+// $Id: cachestatus.pike,v 1.27 2011/01/20 17:23:46 mast Exp $
 
 #include <roxen.h>
 //<locale-token project="admin_tasks">LOCALE</locale-token>
@@ -48,8 +48,6 @@ string parse( RequestID id )
     "</h3>\n"
     "<p><a href='/global_settings/?section=Cache'>" +
     LOCALE(380, "Configure cache settings") + "</a></p>\n";
-
-#ifdef NEW_RAM_CACHE
 
   mapping(cache.CacheManager:mapping(string:cache.CacheStats)) stats =
     cache.cache_stats();
@@ -357,67 +355,6 @@ cache miss is followed by the addition of a new cache entry.") +
       "</tr>"
       "</table>\n";
   }
-
-#else  // !NEW_RAM_CACHE
-
-  res +=
-    "<table " TABLE_ATTRS ">\n"
-    "<tr " HDR_TR_ATTRS ">"
-    "<th " FIRST_CELL ">"+LOCALE(62, "Class")+"</th>"
-    "<th " REST_CELLS ">"+LOCALE(295, "Entries")+"</th>"
-    "<th " REST_CELLS ">"+LOCALE(64, "Size")+"</th>"
-    "<th " REST_CELLS ">"+LOCALE(293, "Hits")+"</th>"
-    "<th " REST_CELLS ">"+LOCALE(294, "Misses")+"</th>"
-    "<th " REST_CELLS ">"+LOCALE(67, "Hit rate")+"</th></tr>\n";
-
-  mapping c=cache->status();
-
-  mapping trans = ([
-    "supports":LOCALE(68,"Supports database"),
-    "fonts":LOCALE(69,"Fonts"),
-    "hosts":LOCALE(70,"DNS"),
-  ]);
-
-  foreach(indices(c), string n)
-    if(trans[n]) {
-      c[trans[n]]=c[n];
-      m_delete(c, n);
-    }
-
-  int totale, totalm, totalh, totalt;
-  foreach(sort(indices(c)); int row; string n)
-  {
-    array ent=c[n];
-    res += "<tr " BODY_TR_ATTRS (row) ">"
-      "<td " FIRST_CELL ">"+ Roxen.html_encode_string (n) +"</td>"
-      "<td " REST_CELLS ">"+ ent[0] + "</td>"
-      "<td " REST_CELLS ">" + Roxen.sizetostring(ent[3]) + "</td>"
-      "<td " REST_CELLS ">" + ent[1] + "</td>"
-      "<td " REST_CELLS ">" + (ent[2]-ent[1]) + "</td>";
-    if(ent[2])
-      res += "<td " REST_CELLS ">" + (ent[1]*100)/ent[2] + "%</td>";
-    else
-      res += "<td " REST_CELLS ">0%</td>";
-    res += "</tr>";
-    totale += ent[0];
-    totalm += ent[3];
-    totalh += ent[1];
-    totalt += ent[2];
-  }
-  res += "<tr " FTR_TR_ATTRS ">"
-    "<td " FIRST_CELL "><b>"+LOCALE(178, "Total")+"</b></td>"
-    "<td " REST_CELLS ">" + totale + "</td>"
-    "<td " REST_CELLS ">" + Roxen.sizetostring(totalm) + "</td>" +
-    "<td " REST_CELLS ">" + totalh + "</td>"
-    "<td " REST_CELLS ">" + (totalt-totalh) + "</td>";
-  if(totalt)
-    res += "<td " REST_CELLS ">"+(totalh*100)/totalt+"%</td>";
-  else
-    res += "<td " REST_CELLS ">0%</td>";
-
-  res += "</tr></table>\n";
-
-#endif	// !NEW_RAM_CACHE
 
   res += (roxen->query("cache")? "<br />" + roxen->get_garb_info():"");
 

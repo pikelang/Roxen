@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: global_variables.pike,v 1.123 2009/12/05 01:04:00 jonasw Exp $
+// $Id: global_variables.pike,v 1.124 2011/01/20 17:23:46 mast Exp $
 
 // #pragma strict_types
 #define DEFVAR mixed...:object
@@ -807,8 +807,6 @@ be of real use.</p>"));
 	{return !query("suicide_engage");}
     );
 
-#ifdef NEW_RAM_CACHE
-
   defvar ("mem_cache_gc_2", 5 * 60,
 	  LOCALE(1045, "Cache: Memory cache GC interval"),
 	  TYPE_INT,
@@ -853,20 +851,6 @@ the Roxen instance of the MySQL server).</p>"));
     lambda (Variable.Int v) {
       cache.set_total_size_limit (v->query() * 1024 * 1024);
     });
-
-#else  // !NEW_RAM_CACHE
-
-  defvar("mem_cache_gc",
-	 Variable.Int(300, 0, 
-		      LOCALE(170, "Cache: Memory Cache Garbage Collect Interval"),
-		      LOCALE(171, "The number of seconds between every garbage collect "
-			     "(removal of old content) from the memory cache. The "
-			     "memory cache is used for various tasks like remembering "
-			     "what supports flags matches what client.")))
-	 ->set_range(1, 60*60*24);
-	 // Note that the upper limit is arbitrary.
-
-#endif	// !NEW_RAM_CACHE
 
   defvar("replicate", 0,
 	 LOCALE(163, "Enable replication system" ),
