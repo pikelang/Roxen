@@ -827,6 +827,18 @@ class LoadImage
       RequestID id = request_id->get();
       if(!id)
 	error("Oops, no request id object.");
+      
+      //  Reject empty source paths for sufficiently high compat_level
+      if ((args->src || "") == "") {
+	float compat_level = (float) id->conf->query("compat_level");
+	if (compat_level >= 5.2) {
+	  if (RXML_CONTEXT)
+	    RXML.parse_error("Empty src attribute not allowed.");
+	  else
+	    error("Empty src attribute not allowed.");
+	}
+      }
+      
       array|mapping res;
 #if constant(Sitebuilder)
       //  Let SiteBuilder get a chance to decode its argument data

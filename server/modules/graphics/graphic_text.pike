@@ -1,7 +1,7 @@
 // This is a roxen module. Copyright © 1996 - 2009, Roxen IS.
 //
 
-constant cvs_version="$Id: graphic_text.pike,v 1.313 2010/04/27 13:36:56 grubba Exp $";
+constant cvs_version="$Id: graphic_text.pike,v 1.314 2011/01/20 23:49:17 jonasw Exp $";
 
 #include <module.h>
 inherit "module";
@@ -984,6 +984,10 @@ private mapping mk_gtext_arg(mapping arg, RequestID id)
    foreach(filearg, string tmp)
      if(string path = arg[tmp]) 
      {
+       //  Reject empty file paths for sufficiently high compat_level
+       if (path == "" && compat_level >= "5.2")
+	 RXML.parse_error("Empty " + tmp + " attribute not allowed.");
+       
        if (!has_prefix(tmp, "magic-")) {
 	 p[tmp] = Roxen.fix_relative(path, id);
 	 p[tmp + "_stat"] = get_file_stat(path, id);

@@ -27,7 +27,7 @@
 //  must also be aligned left or right.
 
 
-constant cvs_version = "$Id: gbutton.pike,v 1.124 2010/04/27 13:36:56 grubba Exp $";
+constant cvs_version = "$Id: gbutton.pike,v 1.125 2011/01/20 23:49:17 jonasw Exp $";
 constant thread_safe = 1;
 
 #include <module.h>
@@ -223,6 +223,11 @@ Add this number of minutes to the time this entry is valid.</p>
 Add this number of seconds to the time this entry is valid.</p>
 </attr>";
 #endif
+
+//  Cached copy of conf->query("compat_level"). This setting is defined
+//  to require a module reload to take effect so we only query it when
+//  the module instance is created.
+float compat_level = (float) my_configuration()->query("compat_level");
 
 function TIMER( function f )
 {
@@ -838,8 +843,13 @@ class ButtonFrame {
 //     int t = gethrtime();
     string fi = (args["frame-image"] ||
 		 id->misc->defines["gbutton-frame-image"]);
-    if( fi )
+    if( fi ) {
+      //  Reject empty file paths for sufficiently high compat_level
+      if (fi == "" && compat_level >= 5.2)
+	RXML.parse_error("Empty frame-image attribute not allowed.");
+      
       fi = Roxen.fix_relative( fi, id );
+    }
     m_delete(args, "frame-image");
     
     //  Harmonize some attribute names to RXML standards...
@@ -850,6 +860,9 @@ class ButtonFrame {
     m_delete(args, "icon-src");
     m_delete(args, "icon-data");
     m_delete(args, "align-icon");
+
+    if (args->icon_src == "" && compat_level >= 5.2)
+      RXML.parse_error("Empty icon-src attribute not allowed.");
     
     mapping new_args =
       ([
