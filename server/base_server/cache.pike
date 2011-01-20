@@ -1,6 +1,6 @@
 // This file is part of Roxen WebServer.
 // Copyright © 1996 - 2009, Roxen IS.
-// $Id: cache.pike,v 1.138 2011/01/13 16:05:31 mast Exp $
+// $Id: cache.pike,v 1.139 2011/01/20 17:09:32 mast Exp $
 
 // FIXME: Add argcache, imagecache & protcache
 
@@ -866,7 +866,6 @@ class CM_GDS_Time
 	  return duration;
 	}
       }
-#ifndef RUN_SELF_TEST
 #ifdef DEBUG
     // Note that this also happens if the caller calls cache_set()
     // several times to add the same entry. That should be avoided
@@ -874,7 +873,6 @@ class CM_GDS_Time
     werror ("Warning: No preceding lookup for this key - "
 	    "cannot determine entry creation time.\n%s\n",
 	    describe_backtrace (backtrace()));
-#endif
 #endif
     return 0;
   }
